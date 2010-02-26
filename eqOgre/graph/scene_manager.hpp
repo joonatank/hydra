@@ -1,0 +1,186 @@
+/*	Joonatan Kuosa
+ *	2010-02
+ *
+ *	Manages one particular Scene.
+ *	Owns all the objects in that scene and keeps them sync.
+ *
+ *	This class should not depend on any external library.
+ *	All conversions to external libraries should be done in separate class
+ *	either through inheritance or aggregation.
+ */
+
+#ifndef VL_GRAPH_SCENE_MANAGER_HPP
+#define VL_GRAPH_SCENE_MANAGER_HPP
+
+#include <eq/client/object.h>
+
+#include "scene_node.hpp"
+#include "entity.hpp"
+#include "movable_object.hpp"
+#include "camera.hpp"
+
+namespace vl
+{
+
+namespace graph
+{
+	// Functor used by the master when new node is created
+	// Rendering engine nodes have a similar but different Functor
+	// which calls mapObject.
+	// FIXME these can't work as the objects don't have IDs before
+	// they are registered so we need to register them when they are
+	// created.
+	// We can still use similar functors for slaves though.
+	class CreateNodeFunc : public SceneFunctor<SceneNode *>
+	{
+		public :
+			// SceneManager of which scene graph this functor operates
+			CreateNodeFunc( SceneManager *sm );
+
+			virtual SceneNode *operator()( uint32_t const &id );
+
+	};	// class CreateNodeFunc
+
+	class DeleteNodeFunc : public SceneFunctor<SceneNode *>
+	{
+		public :
+			// SceneManager of which scene graph this functor operates
+			DeleteNodeFunc( SceneManager *sm );
+
+			virtual SceneNode *operator()( uint32_t const &id );
+
+	};	// class DeleteNodeFunc
+
+	class CreateObjectFunc : public SceneFunctor<MovableObject *>
+	{
+		public :
+			// SceneManager of which scene graph this functor operates
+			CreateObjectFunc( SceneManager *sm );
+
+			virtual MovableObject *operator()( uint32_t const &id );
+
+	};	// class CreateObjectFunc
+
+	class DeleteObjectFunc : public SceneFunctor<MovableObject *>
+	{
+		public :
+			// SceneManager of which scene graph this functor operates
+			DeleteObjectFunc( SceneManager *sm );
+
+			virtual MovableObject *operator()( uint32_t const &id );
+
+	};	// class DeleteObjectFunc
+
+	// Abstract class for managing the scene,
+	// might be concrete we need to see about that.
+	//
+	// Needs to be overriden by the used rendering engines scene manager
+	//
+	// For the application we only need the shared data without the rendering
+	// engine implementation so this class might work as the concrete
+	// implementation of application data structure.
+	// Nodes still have to use the rendering engine specific class.
+	class SceneManager : public eq::Object
+	{
+		public :
+
+			SceneManager( std::string const &name );
+
+			virtual ~SceneManager( void )
+			{}
+
+			// TODO move the deallocators to protected impl code.
+			virtual void destroy( SceneNode *node )
+			{ delete node; }
+
+			virtual void destroy( MovableObject *obj )
+			{ delete obj; }
+
+			virtual vl::graph::SceneNode *getRootNode( void )
+			{
+				if( !_root )
+				{ _root = createNodeImpl( "Root" ); }
+				return _root;
+			}
+
+			virtual vl::graph::SceneNode *createNode(
+					std::string const &name = std::string() )
+			{
+				return getRootNode()->createChild( name );
+			}
+
+			virtual SceneNode *createNodeImpl( std::string const &name );
+
+			virtual MovableObject* createEntity(
+					std::string const &name, std::string const &meshName );
+
+			virtual Camera *createCamera( std::string const & )
+			{ return 0; }
+
+			virtual SceneNode *getNode( std::string const &name );
+
+			virtual SceneNode *getNode( uint32_t id );
+
+			virtual MovableObject *getObject( uint32_t id );
+
+			// Equalizer overrides
+	
+			/* Object::serialize() */
+			virtual void serialize( eq::net::DataOStream& os,
+									const uint64_t dirtyBits );
+
+			/* Object::deserialize() */
+			virtual void deserialize( eq::net::DataIStream& is,
+									  const uint64_t dirtyBits );
+
+			/* Object::ChangeType */
+			virtual ChangeType getChangeType() const
+			{ return DELTA; }
+
+			enum DirtyBits
+			{
+				// Dirty for the object container
+				DIRTY_OBJECTS = eq::Object::DIRTY_CUSTOM << 0,
+				// Dirty for the node container
+				DIRTY_NODES = eq::Object::DIRTY_CUSTOM << 1,
+				DIRTY_ACTIVE_CAMERA = eq::Object::DIRTY_CUSTOM << 2,
+				DIRTY_AMBIENT_LIGHT = eq::Object::DIRTY_CUSTOM << 3,
+				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 4
+			};
+
+		//	typedef std::map<uint32_t, SceneNode *> NodeMap;
+		//	typedef std::map<uint32_t, MovableObject *> ObjectMap;
+			void finalize( void );
+
+		protected :
+			virtual SceneNode *_createSceneNodeImpl( std::string const &name );
+
+			virtual MovableObject* _createMovableObjectImpl(
+					std::string const &typeName,
+					std::string const &name,
+					vl::NamedValuePairList const &params
+						= vl::NamedValuePairList() );
+
+			virtual void _createDistribContainers( void );
+
+			// We'll use distributed container for created objects now.
+			// Makes searching bit slower but we have easier time distributing
+			// them. (and we can use functors to create and destroy objects).
+			DistributedContainer<SceneNode *> *_nodes;
+			DistributedContainer<MovableObject *> *_objects;
+
+			CreateObjectFunc *_objectCreateFunc;
+			DeleteObjectFunc *_objectDeleteFunc;
+
+			CreateNodeFunc *_nodeCreateFunc;
+			DeleteNodeFunc *_nodeDeleteFunc;
+
+			SceneNode *_root;
+
+	};	// class SceneManager
+
+}	// namespace graph
+
+}	// namespace vl
+
+#endif

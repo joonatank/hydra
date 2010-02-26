@@ -1,0 +1,8 @@
+Joonatan Kuosa
+2010-02-26
+
+TODO:
+Tests should be converted to boost::test format.
+Tests should be dived in to unit and integration tests.
+Missing tests should be writen for all classes.
+
