@@ -1,16 +1,7 @@
 #ifndef EQOGRE_UTILITY_HPP
 #define EQOGRE_UTILITY_HPP
 
-#include <iostream>
-#include <vector>
-
-#define NOT_IMPLEMENTED() std::cerr << "NOT IMPLEMENTED" << std::endl;
-
-#define NOT_TESTED() std::cerr << "NOT TESTED" << std::endl;
-
-#include <OGRE/OgrePrerequisites.h>
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
+#include <map>
 
 #include <eq/net/dataOStream.h>
 #include <eq/net/dataIStream.h>
