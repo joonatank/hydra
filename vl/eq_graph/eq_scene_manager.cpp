@@ -1,60 +1,60 @@
-#include "scene_manager.hpp"
+#include "eq_scene_manager.hpp"
 
 #include <eq/net/session.h>
 
 // Functors
-vl::graph::CreateNodeFunc::CreateNodeFunc( vl::graph::SceneManager *sm )
-	: vl::graph::SceneFunctor<vl::graph::SceneNode *>(sm)
+vl::cl::CreateNodeFunc::CreateNodeFunc( vl::cl::SceneManager *sm )
+	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm)
 {}
 
-vl::graph::SceneNode *
-vl::graph::CreateNodeFunc::operator()( uint32_t const &id )
+vl::cl::SceneNode *
+vl::cl::CreateNodeFunc::operator()( uint32_t const &id )
 {
 	EQASSERT( _manager );
 
-	SceneNode *node = _manager->getNode( id );
+	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
 	EQASSERT( node );
 	return node;
 }
 
-vl::graph::DeleteNodeFunc::DeleteNodeFunc( vl::graph::SceneManager *sm )
-	: vl::graph::SceneFunctor<vl::graph::SceneNode *>(sm)
+vl::cl::DeleteNodeFunc::DeleteNodeFunc( vl::cl::SceneManager *sm )
+	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm)
 {}
 
-vl::graph::SceneNode *
-vl::graph::DeleteNodeFunc::operator()( uint32_t const &id )
+vl::cl::SceneNode *
+vl::cl::DeleteNodeFunc::operator()( uint32_t const &id )
 {
 	EQASSERT( _manager );
 
-	SceneNode *node = _manager->getNode( id );
+	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
 	EQASSERT( node );
 	return node;
 }
 
-vl::graph::CreateObjectFunc::CreateObjectFunc( vl::graph::SceneManager *sm )
-	: vl::graph::SceneFunctor<vl::graph::MovableObject *>(sm)
+vl::cl::CreateObjectFunc::CreateObjectFunc( vl::cl::SceneManager *sm )
+	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm)
 {}
 
-vl::graph::MovableObject *
-vl::graph::CreateObjectFunc::operator()( uint32_t const &id )
+vl::cl::MovableObject *
+vl::cl::CreateObjectFunc::operator()( uint32_t const &id )
 {
 	EQASSERT( _manager );
 
-	MovableObject *obj = _manager->getObject( id );
+	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
 	EQASSERT( obj );
 	return obj;
 }
 
-vl::graph::DeleteObjectFunc::DeleteObjectFunc( vl::graph::SceneManager *sm )
-	: vl::graph::SceneFunctor<vl::graph::MovableObject *>(sm)
+vl::cl::DeleteObjectFunc::DeleteObjectFunc( vl::cl::SceneManager *sm )
+	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm)
 {}
 
-vl::graph::MovableObject *
-vl::graph::DeleteObjectFunc::operator()( uint32_t const &id )
+vl::cl::MovableObject *
+vl::cl::DeleteObjectFunc::operator()( uint32_t const &id )
 {
 	EQASSERT( _manager );
 
-	MovableObject *obj = _manager->getObject( id );
+	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
 	EQASSERT( obj );
 	return obj;
 }
@@ -62,7 +62,7 @@ vl::graph::DeleteObjectFunc::operator()( uint32_t const &id )
 // ENDOF Functors
 
 // SceneManager
-vl::graph::SceneManager::SceneManager( std::string const &name )
+vl::cl::SceneManager::SceneManager( std::string const &name )
 	: _nodes(0), _objects(0), _objectCreateFunc(0), 
 	  _objectDeleteFunc(0), _nodeCreateFunc(0), _nodeDeleteFunc(0), _root(0)
 {
@@ -75,9 +75,9 @@ vl::graph::SceneManager::SceneManager( std::string const &name )
 }
 
 vl::graph::SceneNode *
-vl::graph::SceneManager::createNodeImpl( std::string const &name )
+vl::cl::SceneManager::createNodeImpl( std::string const &name )
 {
-	vl::graph::SceneNode *node = _createSceneNodeImpl( name );
+	vl::cl::SceneNode *node = _createSceneNodeImpl( name );
 
 	// TODO add to nodes, we should also share it here so there
 	// will be ID generated for this node
@@ -97,7 +97,7 @@ vl::graph::SceneManager::createNodeImpl( std::string const &name )
 }
 
 vl::graph::MovableObject *
-vl::graph::SceneManager::createEntity(
+vl::cl::SceneManager::createEntity(
 		std::string const &name, std::string const &meshName )
 {
 	vl::NamedValuePairList params;
@@ -110,7 +110,7 @@ vl::graph::SceneManager::createEntity(
 }
 
 vl::graph::SceneNode *
-vl::graph::SceneManager::getNode( std::string const &name )
+vl::cl::SceneManager::getNode( std::string const &name )
 {
 	std::cout << "SceneManager::getNode : " << name << std::endl;
 	std::cout << "size = " << _nodes->size() << std::endl;
@@ -127,7 +127,7 @@ vl::graph::SceneManager::getNode( std::string const &name )
 }
 
 vl::graph::SceneNode *
-vl::graph::SceneManager::getNode( uint32_t id )
+vl::cl::SceneManager::getNode( uint32_t id )
 {
 	for( size_t i = 0; i < _nodes->size(); i++ )
 	{
@@ -139,7 +139,7 @@ vl::graph::SceneManager::getNode( uint32_t id )
 }
 
 vl::graph::MovableObject *
-vl::graph::SceneManager::getObject( uint32_t id )
+vl::cl::SceneManager::getObject( uint32_t id )
 {
 	for( size_t i = 0; i < _objects->size(); i++ )
 	{
@@ -152,7 +152,7 @@ vl::graph::SceneManager::getObject( uint32_t id )
 
 // equalizer overrides
 void
-vl::graph::SceneManager::serialize( eq::net::DataOStream& os,
+vl::cl::SceneManager::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
 	if( DIRTY_OBJECTS & dirtyBits )
@@ -182,7 +182,7 @@ vl::graph::SceneManager::serialize( eq::net::DataOStream& os,
 }
 
 void
-vl::graph::SceneManager::deserialize( eq::net::DataIStream& is,
+vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 						  const uint64_t dirtyBits )
 {
 	if( DIRTY_OBJECTS & dirtyBits )
@@ -214,7 +214,7 @@ vl::graph::SceneManager::deserialize( eq::net::DataIStream& is,
 }
 
 void
-vl::graph::SceneManager::finalize( void )
+vl::cl::SceneManager::finalize( void )
 {
 	std::cout << "SceneManager::finalize" << std::endl;
 	// TODO we need to check that we are registered here
@@ -228,14 +228,14 @@ vl::graph::SceneManager::finalize( void )
 	}
 }
 
-vl::graph::SceneNode *
-vl::graph::SceneManager::_createSceneNodeImpl( std::string const &name )
+vl::cl::SceneNode *
+vl::cl::SceneManager::_createSceneNodeImpl( std::string const &name )
 {
-	return new vl::graph::SceneNode( this, name );
+	return new vl::cl::SceneNode( this, name );
 }
 
-vl::graph::MovableObject *
-vl::graph::SceneManager::_createMovableObjectImpl(
+vl::cl::MovableObject *
+vl::cl::SceneManager::_createMovableObjectImpl(
 		std::string const &typeName, std::string const &name,
 		vl::NamedValuePairList const &params )
 {
@@ -243,11 +243,11 @@ vl::graph::SceneManager::_createMovableObjectImpl(
 	if( typeName != "Entity" )
 	{ return 0; }
 
-	return new vl::graph::Entity( name, params );
+	return new vl::cl::Entity( name, params );
 }
 
 void
-vl::graph::SceneManager::_createDistribContainers( void )
+vl::cl::SceneManager::_createDistribContainers( void )
 {
 	_objectCreateFunc = new CreateObjectFunc( this );
 	_objectDeleteFunc = new DeleteObjectFunc( this );

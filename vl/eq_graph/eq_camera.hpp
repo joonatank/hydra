@@ -9,42 +9,25 @@
  *	These cameras are only used for interface to engine specific
  *	cameras and are not user accessible.
  */
-#ifndef VL_OGRE_CAMERA_HPP
-#define VL_OGRE_CAMERA_HPP
+#ifndef VL_EQ_GRAPH_CAMERA_HPP
+#define VL_EQ_GRAPH_CAMERA_HPP
 
-#include "../graph/camera.hpp"
-
-#include <OGRE/OgreCamera.h>
+#include "interface/camera.hpp"
 
 namespace vl
 {
-namespace ogre 
+namespace cl
 {
 	class Camera : public vl::graph::Camera
 	{
 		public :
-			Camera( Ogre::Camera *cam )
-				: _ogre_camera(cam)
-			{
-				EQASSERT( _ogre_camera );
-			}
+			Camera( void ) {}
 
 			virtual ~Camera( void ) {}
 
-			Ogre::Camera *getNative( void )
-			{ return _ogre_camera; }
-
-			virtual void setProjectionMatrix( vmml::mat4d const &m )
-			{
-				if( _ogre_camera )
-				{
-					_ogre_camera->setCustomProjectionMatrix( true,
-							vl::math::convert(m) );
-				}
-			}
+			virtual void setProjectionMatrix( vmml::mat4d const &m ) = 0;
 
 		protected :
-			Ogre::Camera *_ogre_camera;
 
 	};	// class Camera
 

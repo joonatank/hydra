@@ -1,14 +1,14 @@
 #ifndef VL_OGRE_SCENE_MANAGER_HPP
 #define VL_OGRE_SCENE_MANAGER_HPP
 
-#include "../graph/scene_manager.hpp"
+#include "eq_graph/eq_scene_manager.hpp"
 
 #include <OGRE/OgreSceneManager.h>
 
-#include "../math/conversion.hpp"
+#include "eq_ogre/conversion.hpp"
 
-#include "ogre_camera.hpp"
-#include "ogre_scene_node.hpp"
+#include "eq_ogre/ogre_camera.hpp"
+#include "eq_ogre/ogre_scene_node.hpp"
 
 namespace vl
 {
@@ -16,47 +16,47 @@ namespace ogre
 {
 	// Functors for creation and destruction of objects,
 	// these handle mapping of objects.
-	class CreateNodeFunc : public vl::graph::CreateNodeFunc
+	class CreateNodeFunc : public vl::cl::CreateNodeFunc
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			CreateNodeFunc( vl::graph::SceneManager *sm );
+			CreateNodeFunc( vl::cl::SceneManager *sm );
 
-			virtual vl::graph::SceneNode *operator()( uint32_t id );
+			virtual vl::cl::SceneNode *operator()( uint32_t id );
 
 	};	// class CreateNodeFunc
 
-	class DeleteNodeFunc : public vl::graph::DeleteNodeFunc
+	class DeleteNodeFunc : public vl::cl::DeleteNodeFunc
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			DeleteNodeFunc( vl::graph::SceneManager *sm );
+			DeleteNodeFunc( vl::cl::SceneManager *sm );
 
-			virtual vl::graph::SceneNode *operator()( uint32_t id );
+			virtual vl::cl::SceneNode *operator()( uint32_t id );
 
 	};	// class DeleteNodeFunc
 
-	class CreateObjectFunc : public vl::graph::CreateObjectFunc
+	class CreateObjectFunc : public vl::cl::CreateObjectFunc
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			CreateObjectFunc( vl::graph::SceneManager *sm );
+			CreateObjectFunc( vl::cl::SceneManager *sm );
 
-			virtual vl::graph::MovableObject *operator()( uint32_t id );
+			virtual vl::cl::MovableObject *operator()( uint32_t id );
 
 	};	// class CreateObjectFunc
 
-	class DeleteObjectFunc : public vl::graph::DeleteObjectFunc
+	class DeleteObjectFunc : public vl::cl::DeleteObjectFunc
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			DeleteObjectFunc( vl::graph::SceneManager *sm );
+			DeleteObjectFunc( vl::cl::SceneManager *sm );
 
-			virtual vl::graph::MovableObject *operator()( uint32_t id );
+			virtual vl::cl::MovableObject *operator()( uint32_t id );
 
 	};	// class DeleteObjectFunc
 
-	class SceneManager : public vl::graph::SceneManager
+	class SceneManager : public vl::cl::SceneManager
 	{
 		public :
 
@@ -73,10 +73,10 @@ namespace ogre
 
 		protected :
 			// Override creation methods
-			virtual vl::graph::SceneNode *
+			virtual vl::cl::SceneNode *
 				_createSceneNodeImpl( std::string const &name );
 
-			virtual vl::graph::MovableObject* _createMovableObjectImpl(
+			virtual vl::cl::MovableObject* _createMovableObjectImpl(
 					std::string const &typeName,
 					std::string const &name,
 					vl::NamedValuePairList const &params

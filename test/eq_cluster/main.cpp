@@ -1,8 +1,8 @@
-#include "client.hpp"
+#include "eq_cluster/client.hpp"
 //#include "root.hpp"
 //#include "camera.hpp"
 //#include "initData.hpp"
-#include "nodeFactory.hpp"
+#include "eq_cluster/nodeFactory.hpp"
 
 int main( int const argc, char **argv )
 {

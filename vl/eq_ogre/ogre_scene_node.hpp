@@ -1,13 +1,13 @@
 #ifndef VL_OGRE_SCENE_NODE_HPP
 #define VL_OGRE_SCENE_NODE_HPP
 
-#include "../graph/scene_node.hpp"
+#include "eq_graph/eq_scene_node.hpp"
+
+#include "eq_ogre/conversion.hpp"
+
+#include "eq_ogre/ogre_movable_object.hpp"
 
 #include <OGRE/OgreSceneNode.h>
-
-#include "../math/conversion.hpp"
-
-#include "ogre_movable_object.hpp"
 
 namespace vl
 {
@@ -16,10 +16,10 @@ namespace ogre
 	class SceneManager;
 	// Concrete class that manages updating Ogre SceneNode from distributed
 	// nodes.
-	class SceneNode : public vl::graph::SceneNode
+	class SceneNode : public vl::cl::SceneNode
 	{
 		public :
-			SceneNode( SceneManager *creator,
+			SceneNode( vl::ogre::SceneManager *creator,
 					std::string const &name = std::string() );
 
 			Ogre::SceneNode *getNative( void )

@@ -18,7 +18,7 @@
 #include <vmmlib/vector.hpp>
 #include <vmmlib/quaternion.hpp>
 
-#include "typedefs.hpp"
+#include "base/typedefs.hpp"
 
 
 //#include <OGRE/OgreCommon.h>
@@ -38,18 +38,13 @@ namespace base
 
 	const uint32_t ID_INVALID = 0;
 
-	enum CMD_TYPE
+	enum
 	{
-		CMD_INVALID = 0,
-		CMD_CREATE,
+		CMD_CREATE = CMD_UNUSED,
 		CMD_DELETE,
 		CMD_MOVE,
 		CMD_ROTATE,
-		CMD_LOOKAT,
-		CMD_ROOT_TRANS,
-		CMD_CAMERA_TRANS,
-		CMD_WINDOW_TRANS,
-		CMD_VIEWPORT_TRANS
+		CMD_LOOKAT
 	};
 
 	enum TransformSpace

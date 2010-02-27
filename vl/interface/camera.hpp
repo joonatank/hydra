@@ -23,8 +23,6 @@ namespace graph
 
 			virtual ~Camera( void ) {}
 
-			virtual void setProjectionMatrix( vmml::mat4d const &m ) = 0;
-
 		protected :
 
 	};	// class Camera

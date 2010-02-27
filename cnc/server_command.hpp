@@ -3,7 +3,7 @@
 
 #include "command.hpp"
 
-#include "graph/root.hpp"
+#include "interface/root.hpp"
 
 namespace vl
 {

@@ -1,18 +1,20 @@
 
-#ifndef VL_GRAPH_MOVABLE_OBJECT_HPP
-#define VL_GRAPH_MOVABLE_OBJECT_HPP
+#ifndef VL_EQ_GRAPH_MOVABLE_OBJECT_HPP
+#define VL_EQ_GRAPH_MOVABLE_OBJECT_HPP
 
 #include <eq/client/object.h>
 
-#include "typedefs.hpp"
-#include "utility.hpp"
+#include "base/typedefs.hpp"
+#include "eq_cluster/utility.hpp"
+
+#include "interface/movable_object.hpp"
 
 namespace vl
 {
 
-namespace graph
+namespace cl
 {
-	class MovableObject : public eq::Object
+	class MovableObject : public eq::Object, public vl::graph::MovableObject
 	{
 		public :
 			MovableObject( std::string const &name,
@@ -21,6 +23,9 @@ namespace graph
 			{
 				eq::Object::setName( name );
 			}
+
+			virtual uint32_t getID( void ) const 
+			{ return eq::Object::getID(); }
 
 			// Equalizer overrides
 			

@@ -1,5 +1,5 @@
 #include "config.hpp"
-#include "ogre/ogre_root.hpp"
+#include "eq_ogre/ogre_root.hpp"
 #include "channel.hpp"
 
 #include <OgreDefaultHardwareBufferManager.h>
@@ -10,7 +10,7 @@ const size_t FIFO_LENGTH = 128;
 
 eqOgre::Node::Node (eq::Config* parent )
 	: eq::Node( parent),
-	  _read_client_fifo(0),
+//	  _read_client_fifo(0),
 	  _write_pipe_fifo(0),
 	  _root(0),
 	  _sm(0),
@@ -59,10 +59,10 @@ eqOgre::Node::configInit( const uint32_t initID )
 	config->setNodeFifo( _write_pipe_fifo );
 
 	// Get fifo buffer for reading commands from client (or mainloop)
-	_read_client_fifo = config->getClientFifo();
-	EQASSERT( _read_client_fifo );
+//	_read_client_fifo = config->getClientFifo();
+//	EQASSERT( _read_client_fifo );
 	// We test that we haven't passed wrong pointer to setFifo()
-	EQASSERT( (void *)_read_client_fifo  != (void *)_write_pipe_fifo );
+//	EQASSERT( (void *)_read_client_fifo  != (void *)_write_pipe_fifo );
 
     return true;
 }
@@ -175,6 +175,7 @@ eqOgre::Node::createScene( void )
 void
 eqOgre::Node::_processCommands( void )
 {
+	/*
 	EQASSERT( _read_client_fifo );
 
 	vl::server::Command *cmd = 0;
@@ -190,4 +191,5 @@ eqOgre::Node::_processCommands( void )
 //		eqOgre::SceneManager *sm = 0;
 
 	}
+	*/
 }

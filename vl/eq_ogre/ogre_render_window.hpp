@@ -18,7 +18,7 @@
 #ifndef VL_OGRE_RENDER_WINDOW_HPP
 #define VL_OGRE_RENDER_WINDOW_HPP
 
-#include "../graph/render_window.hpp"
+#include "eq_graph/eq_render_window.hpp"
 
 #include <OGRE/OgreRenderWindow.h>
 

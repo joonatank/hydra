@@ -4,7 +4,7 @@
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent ),
-	  _client_fifo(0),
+	  //_client_fifo(0),
 	  _node_fifo(0)
 {}
 

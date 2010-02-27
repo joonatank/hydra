@@ -9,22 +9,23 @@
  *	either through inheritance or aggregation.
  */
 
-#ifndef VL_GRAPH_SCENE_NODE_HPP
-#define VL_GRAPH_SCENE_NODE_HPP
+#ifndef VL_EQ_GRAPH_SCENE_NODE_HPP
+#define VL_EQ_GRAPH_SCENE_NODE_HPP
 
 #include <eq/client/object.h>
 
 #include <vmmlib/vector.hpp>
 #include <vmmlib/quaternion.hpp>
 
-#include "movable_object.hpp"
-#include "../distrib_container.hpp"
+#include "interface/scene_node.hpp"
 
+#include "eq_movable_object.hpp"
+#include "eq_cluster/distrib_container.hpp"
 
 namespace vl
 {
 
-namespace graph
+namespace cl
 {
 //	typedef std::vector<vl::graph::MovableObject *> MovableContainer;
 //	typedef std::vector<vl::graph::SceneNode *> SceneNodeContainer;
@@ -41,7 +42,7 @@ namespace graph
 	class SceneFunctor : public ConversionFunctor<T, uint32_t>
 	{
 		public :
-			SceneFunctor( SceneManager *sm )
+			SceneFunctor( vl::cl::SceneManager *sm )
 				: _manager(sm)
 			{}
 
@@ -51,7 +52,7 @@ namespace graph
 		protected :
 			// SceneManager holds a list of all objects in the scene
 			// and we can use it to convert IDs to object pointers
-			SceneManager *_manager;
+			vl::cl::SceneManager *_manager;
 	};	// class SceneFunctor
 
 	// Pointer specialization
@@ -59,7 +60,7 @@ namespace graph
 	class SceneFunctor<T *> : public ConversionFunctor<T *, uint32_t>
 	{
 		public :
-			SceneFunctor( SceneManager *sm )
+			SceneFunctor( vl::cl::SceneManager *sm )
 				: _manager(sm)
 			{}
 
@@ -69,70 +70,74 @@ namespace graph
 		protected :
 			// SceneManager holds a list of all objects in the scene
 			// and we can use it to convert IDs to object pointers
-			SceneManager *_manager;
+			vl::cl::SceneManager *_manager;
 	};	// class SceneFunctor
 
 	// Functor to which inherit conversion from id -> SceneNode
 	// can also perform the necessary task of attaching node with id
 	// to the parent (given when constructed).
-	class AttachNodeFunc : public SceneFunctor<SceneNode *>
+	class AttachNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
 			// Owner node, that is the parent node for any attached nodes.
 			// Use NULL owner to just convert id to node
-			AttachNodeFunc( SceneManager *sm, SceneNode *owner = 0);
+			AttachNodeFunc( vl::cl::SceneManager *sm,
+					vl::cl::SceneNode *owner = 0);
 
-			virtual SceneNode *operator()( uint32_t const &id );
+			virtual vl::cl::SceneNode *operator()( uint32_t const &id );
 
 		protected :
-			SceneNode *_owner;
+			vl::cl::SceneNode *_owner;
 
 	};	// class NodeModFunc
 
-	class DetachNodeFunc : public SceneFunctor<SceneNode *>
+	class DetachNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
 			// Owner node, that is the parent node for any attached nodes.
 			// Use NULL owner to just convert id to node
-			DetachNodeFunc( SceneManager *sm, SceneNode *owner = 0);
+			DetachNodeFunc( vl::cl::SceneManager *sm,
+					vl::cl::SceneNode *owner = 0);
 
-			virtual SceneNode *operator()( uint32_t const &id );
+			virtual vl::cl::SceneNode *operator()( uint32_t const &id );
 
 		protected :
-			SceneNode *_owner;
+			vl::cl::SceneNode *_owner;
 
 	};	// class NodeModFunc
 
-	class AttachObjectFunc : public SceneFunctor<MovableObject *>
+	class AttachObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
 			// Owner node, that is the parent node for any attached nodes.
 			// Use NULL owner to just convert id to node
-			AttachObjectFunc( SceneManager *sm, SceneNode *owner = 0);
+			AttachObjectFunc( vl::cl::SceneManager *sm,
+					vl::cl::SceneNode *owner = 0);
 
-			virtual MovableObject *operator()( uint32_t const &id );
+			virtual vl::cl::MovableObject *operator()( uint32_t const &id );
 
 		protected :
-			SceneNode *_owner;
+			vl::cl::SceneNode *_owner;
 
 	};	// class NodeModFunc
 
-	class DetachObjectFunc : public SceneFunctor<MovableObject *>
+	class DetachObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
 			// Owner node, that is the parent node for any attached nodes.
 			// Use NULL owner to just convert id to node
-			DetachObjectFunc( SceneManager *sm, SceneNode *owner = 0);
+			DetachObjectFunc( vl::cl::SceneManager *sm,
+					vl::cl::SceneNode *owner = 0);
 
 			// Detaches this object from _owner
-			virtual MovableObject *operator()( uint32_t const &id );
+			virtual vl::cl::MovableObject *operator()( uint32_t const &id );
 
 		protected :
-			SceneNode *_owner;
+			vl::cl::SceneNode *_owner;
 
 	};	// class NodeModFunc
 
@@ -141,15 +146,17 @@ namespace graph
 	// (MovableObjects can be only be leafs).
 	// It manages the attributes of the whole branch, like transformation
 	// (combined, but nodes transformation is always applied).
-	class SceneNode : public eq::Object
+	class SceneNode : public eq::Object, public vl::graph::SceneNode
 	{
 		public :
-			SceneNode( SceneManager *creator,
+			SceneNode( vl::cl::SceneManager *creator,
 					std::string const &name = std::string() );
 
 			// Frees the memory, called from SceneManager
-			virtual ~SceneNode( void )
-			{}
+			virtual ~SceneNode( void ) {}
+
+			//virtual uint32_t getID( void ) const
+			//{ return eq::Object::getID(); }
 
 			// Instructs SceneManager to free this Node, all the ChildNodes
 			// and all attached objects
@@ -222,31 +229,32 @@ namespace graph
 				}
 			}
 
-			virtual void attachObject( MovableObject *object );
+			virtual void attachObject( vl::graph::MovableObject *object );
 
-			virtual void detachObject( MovableObject *object );
+			virtual void detachObject( vl::graph::MovableObject *object );
 
-			virtual SceneNode *createChild(
+			virtual vl::graph::SceneNode *createChild(
 					std::string const &name = std::string() );
 
-			virtual void setParent( SceneNode *parent );
+			virtual void setParent( vl::graph::SceneNode *parent );
 
-			virtual void addChild( SceneNode *child );
+			virtual void addChild( vl::graph::SceneNode *child );
 
-			virtual void removeChild( SceneNode *child )
+			virtual void removeChild( vl::graph::SceneNode *child )
 			{
+				vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
 				for( size_t i = 0; i < _childs.size(); ++i )
 				{
-					if( _childs.at(i) == child )
+					if( _childs.at(i) == cl_child )
 					{
 						_childs.remove(i);
-						child->setParent( 0 );
+						cl_child->setParent( 0 );
 						break;
 					}
 				}
 			}
 
-			SceneNode *parent( void )
+			virtual vl::graph::SceneNode *parent( void )
 			{ return _parent; }
 
 			// Equalizer overrides
@@ -290,26 +298,21 @@ namespace graph
 					vmml::quaterniond const & )
 			{}
 
-			virtual void _setScale( vmml::vec3d const & )
-			{}
+			virtual void _setScale( vmml::vec3d const & ) {}
 
-			virtual void _attachObject( MovableObject *)
-			{} 
+			virtual void _attachObject( vl::graph::MovableObject *) {} 
 
-			virtual void _detachObject( MovableObject *)
-			{}
+			virtual void _detachObject( vl::graph::MovableObject *) {}
 
-			virtual void _addChild( SceneNode *)
-			{}
+			virtual void _addChild( vl::graph::SceneNode *) {}
 
-			virtual void _removeChild( SceneNode *)
-			{}
+			virtual void _removeChild( vl::graph::SceneNode *) {}
 
 		protected :
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
 			// destruction of all objects contained in it.
-			SceneManager *_creator;
+			vl::cl::SceneManager *_creator;
 
 			vmml::vec3d _position;
 			vmml::quaterniond _rotation;
@@ -325,18 +328,18 @@ namespace graph
 			// For large scenegraphs this will be problematic, because we need
 			// to update the whole vector at once.
 			// So we need to develop versioned container to replace this later.
-			DistributedContainer<MovableObject *> _attached;
+			DistributedContainer<vl::cl::MovableObject *> _attached;
 
 			// Parent node, we need this to inform our current parent
 			// if we are moved to another.
-			SceneNode *_parent;
+			vl::graph::SceneNode *_parent;
 
 			// The childs we own, if we are destroyed we will destroy these.
-			DistributedContainer<SceneNode *> _childs;
+			DistributedContainer<vl::cl::SceneNode *> _childs;
 
 	};	// class SceneNode
 
-}	// namespace graph
+}	// namespace eq
 
 }	// namespace vl
 

@@ -1,19 +1,21 @@
 #include "client.hpp"
 
-#include "config.hpp"
-#include "server_command.hpp"
+#include "eq_cluster/config.hpp"
+//#include "server_command.hpp"
 
-#include "graph/scene_manager.hpp"
+#include "interface/scene_manager.hpp"
+
+#include "eq_graph/eq_root.hpp"
+
 
 size_t const FIFO_LENGTH = 128;
 unsigned int PORT = 5333;
 
 eqOgre::Client::Client( void )
 	: _state(0),
-	  _config(0),
-	  _udp_server( PORT )
-{
-} 
+	  _config(0)
+//	  _udp_server( PORT )
+{} 
 
 bool
 eqOgre::Client::initLocal( int argc, char **argv )
@@ -69,14 +71,14 @@ eqOgre::Client::initialise( void )
     }
 
 	std::cout << "Client creating root" << std::endl;
-	_root = new vl::graph::Root();
+	_root = new vl::cl::Root();
 	_config->registerObject( _root );
     // 3. init config
 	eq::base::Clock clock;
 
-	_write_node_fifo
-		= new vl::base::fifo_buffer<vl::server::Command *>(FIFO_LENGTH);
-	_config->setClientFifo( _write_node_fifo );
+//	_write_node_fifo
+//		= new vl::base::fifo_buffer<vl::server::Command *>(FIFO_LENGTH);
+//	_config->setClientFifo( _write_node_fifo );
 
 	// Create Ogre::Root and set it as the initial distributed data to config.
 
@@ -116,7 +118,7 @@ eqOgre::Client::startRendering( void )
 	
 	while( _config->isRunning() )
 	{
-		_receive();
+//		_receive();
 		renderOneFrame();
 	}
 
@@ -143,7 +145,7 @@ eqOgre::Client::renderOneFrame( void )
 	// Init the SceneGraph
 	if( _state == 0 )
 	{
-		EQASSERT( _write_node_fifo );
+//		EQASSERT( _write_node_fifo );
 
 		std::cout << "Init SceneGraph" << std::endl;
 
@@ -154,7 +156,7 @@ eqOgre::Client::renderOneFrame( void )
 			std::cout << "Client : Found Feet" << std::endl;
 		}
 		_root->commit();
-		sm->commit();
+//		sm->commit();
 		//vl::graph::SceneNode *node = sm->createNode();
 		/*	Removed the command based scene graph
 		// We create the SceneManager
@@ -181,6 +183,7 @@ eqOgre::Client::renderOneFrame( void )
 	// Move an object
 	else if( _state > 0 )
 	{
+		/*
 		EQASSERT( _write_node_fifo );
 
 		static bool right = false;
@@ -202,6 +205,7 @@ eqOgre::Client::renderOneFrame( void )
 		vl::server::Command *cmd =
 			new vl::server::MoveCmd( "RobotNode", "SceneNode", vec );
 		_write_node_fifo->push( cmd );
+		*/
 	}
 
 	_config->startFrame( ++frameNumber );
@@ -244,6 +248,7 @@ eqOgre::Client::shutdown( void )
     _server = 0;
 }
 
+/*
 void
 eqOgre::Client::_receive( void )
 {
@@ -264,6 +269,7 @@ eqOgre::Client::_pumpMessage( std::auto_ptr<vl::server::Command> cmd )
 	{ return; }
 	_write_node_fifo->push( cmd.release() );
 }
+*/
 
 bool
 eqOgre::Client::clientLoop( void )

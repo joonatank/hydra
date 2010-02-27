@@ -13,19 +13,21 @@
  *	either through inheritance or aggregation.
  */
 
-#ifndef VL_GRAPH_ROOT_HPP
-#define VL_GRAPH_ROOT_HPP
+#ifndef VL_EQ_GRAPH_ROOT_HPP
+#define VL_EQ_GRAPH_ROOT_HPP
 
 #include <eq/client/object.h>
 
-#include "scene_manager.hpp"
-#include "render_window.hpp"
+#include "eq_scene_manager.hpp"
+#include "eq_render_window.hpp"
+
+#include "interface/root.hpp"
 
 namespace vl
 {
-namespace graph
+namespace cl
 {
-	class Root : public eq::Object
+	class Root : public eq::Object, public vl::graph::Root
 	{
 		public :
 			Root( void );
@@ -49,7 +51,7 @@ namespace graph
 
 			// For now we only allow one SceneManager to exists per
 			// instance.
-			virtual SceneManager *getSceneManager(
+			virtual vl::graph::SceneManager *getSceneManager(
 					std::string const &name = std::string() );
 
 			// Equalizer overrides

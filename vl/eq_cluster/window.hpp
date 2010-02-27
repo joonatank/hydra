@@ -9,8 +9,8 @@
 //#include "vertexBufferState.h"
 #include <string>
 
-#include "graph/render_window.hpp"
-#include "graph/camera.hpp"
+#include "eq_graph/eq_render_window.hpp"
+#include "eq_graph/eq_camera.hpp"
 
 namespace eqOgre
 {
@@ -81,8 +81,8 @@ namespace eqOgre
 
 		unsigned int _state;
 
-		vl::graph::RenderWindow *_render_window;
-		vl::graph::Camera *_camera;
+		vl::cl::RenderWindow *_render_window;
+		vl::cl::Camera *_camera;
 //		Ogre::Window *_ogre_window;
 //		Ogre::Camera *_camera;
 

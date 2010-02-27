@@ -1,19 +1,28 @@
 #ifndef VL_BASE_MESSAGE_HPP
 #define VL_BASE_MESSAGE_HPP
 
-#include "command.hpp"
+//#include "command.hpp"
 
 // Needed for pointer transfer commands
-#include <OgreRenderTarget.h>
-//#include <OgreRoot.h>
-#include <OgreCamera.h>
-#include "graph/root.hpp"
+#include "interface/root.hpp"
+#include "interface/camera.hpp"
+#include "interface/render_window.hpp"
 
 namespace vl
 {
 
 namespace base
 {
+	enum CMD_TYPE
+	{
+		CMD_INVALID = 0,
+		CMD_ROOT_TRANS,
+		CMD_CAMERA_TRANS,
+		CMD_WINDOW_TRANS,
+		CMD_VIEWPORT_TRANS,
+		CMD_UNUSED
+	};
+
 	// Dummy class where to derive different types of Messages used to
 	// transmit dynamically allocated commands so that they can be
 	// put to the same container (buffer).
@@ -50,7 +59,6 @@ namespace base
 
 			CMD_TYPE cmdType;
 	};
-
 
 	// Class to Transfer the ownership of an object across threads
 	// Transmits pointer to allocated object from one thread (responsible for
@@ -93,16 +101,16 @@ namespace base
 	class CameraTransfer: public vl::base::TransferObject
 	{
 		public :
-			CameraTransfer( Ogre::Camera *cam )
+			CameraTransfer( vl::graph::Camera *cam )
 				: TransferObject( CMD_CAMERA_TRANS ),
 				  camera( cam )
 			{}
 
 			// Function operator
-			Ogre::Camera *operator()( void )
+			vl::graph::Camera *operator()( void )
 			{ return camera; }
 
-			Ogre::Camera *camera;
+			vl::graph::Camera *camera;
 	};
 
 	// Command to transmit RenderTarget (Window) from one thread to another
@@ -110,16 +118,16 @@ namespace base
 	class WindowTransfer : public vl::base::TransferObject
 	{
 		public :
-			WindowTransfer( Ogre::RenderTarget *t )
+			WindowTransfer( vl::graph::RenderWindow *t )
 				: TransferObject( CMD_WINDOW_TRANS ),
 				  target( t )
 			{}
 
 			// Function operator
-			Ogre::RenderTarget *operator()( void )
+			vl::graph::RenderWindow *operator()( void )
 			{ return target; }
 
-			Ogre::RenderTarget *target;
+			vl::graph::RenderWindow *target;
 	};
 
 }	// namespace base

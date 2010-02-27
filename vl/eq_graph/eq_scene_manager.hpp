@@ -9,20 +9,22 @@
  *	either through inheritance or aggregation.
  */
 
-#ifndef VL_GRAPH_SCENE_MANAGER_HPP
-#define VL_GRAPH_SCENE_MANAGER_HPP
+#ifndef VL_EQ_GRAPH_SCENE_MANAGER_HPP
+#define VL_EQ_GRAPH_SCENE_MANAGER_HPP
+
+#include "interface/scene_manager.hpp"
+
+#include "eq_scene_node.hpp"
+#include "eq_entity.hpp"
+//#include "eq_movable_object.hpp"
+#include "eq_camera.hpp"
 
 #include <eq/client/object.h>
-
-#include "scene_node.hpp"
-#include "entity.hpp"
-#include "movable_object.hpp"
-#include "camera.hpp"
 
 namespace vl
 {
 
-namespace graph
+namespace cl
 {
 	// Functor used by the master when new node is created
 	// Rendering engine nodes have a similar but different Functor
@@ -31,7 +33,7 @@ namespace graph
 	// they are registered so we need to register them when they are
 	// created.
 	// We can still use similar functors for slaves though.
-	class CreateNodeFunc : public SceneFunctor<SceneNode *>
+	class CreateNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
@@ -41,31 +43,31 @@ namespace graph
 
 	};	// class CreateNodeFunc
 
-	class DeleteNodeFunc : public SceneFunctor<SceneNode *>
+	class DeleteNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			DeleteNodeFunc( SceneManager *sm );
+			DeleteNodeFunc( vl::cl::SceneManager *sm );
 
 			virtual SceneNode *operator()( uint32_t const &id );
 
 	};	// class DeleteNodeFunc
 
-	class CreateObjectFunc : public SceneFunctor<MovableObject *>
+	class CreateObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			CreateObjectFunc( SceneManager *sm );
+			CreateObjectFunc( vl::cl::SceneManager *sm );
 
 			virtual MovableObject *operator()( uint32_t const &id );
 
 	};	// class CreateObjectFunc
 
-	class DeleteObjectFunc : public SceneFunctor<MovableObject *>
+	class DeleteObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
 	{
 		public :
 			// SceneManager of which scene graph this functor operates
-			DeleteObjectFunc( SceneManager *sm );
+			DeleteObjectFunc( vl::cl::SceneManager *sm );
 
 			virtual MovableObject *operator()( uint32_t const &id );
 
@@ -80,7 +82,7 @@ namespace graph
 	// engine implementation so this class might work as the concrete
 	// implementation of application data structure.
 	// Nodes still have to use the rendering engine specific class.
-	class SceneManager : public eq::Object
+	class SceneManager : public eq::Object, public vl::graph::SceneManager
 	{
 		public :
 
@@ -90,10 +92,10 @@ namespace graph
 			{}
 
 			// TODO move the deallocators to protected impl code.
-			virtual void destroy( SceneNode *node )
+			virtual void destroy( vl::graph::SceneNode *node )
 			{ delete node; }
 
-			virtual void destroy( MovableObject *obj )
+			virtual void destroy( vl::graph::MovableObject *obj )
 			{ delete obj; }
 
 			virtual vl::graph::SceneNode *getRootNode( void )
@@ -109,19 +111,20 @@ namespace graph
 				return getRootNode()->createChild( name );
 			}
 
-			virtual SceneNode *createNodeImpl( std::string const &name );
+			virtual vl::graph::SceneNode *createNodeImpl(
+					std::string const &name );
 
-			virtual MovableObject* createEntity(
+			virtual vl::graph::MovableObject* createEntity(
 					std::string const &name, std::string const &meshName );
 
-			virtual Camera *createCamera( std::string const & )
+			virtual vl::graph::Camera *createCamera( std::string const & )
 			{ return 0; }
 
-			virtual SceneNode *getNode( std::string const &name );
+			virtual vl::graph::SceneNode *getNode( std::string const &name );
 
-			virtual SceneNode *getNode( uint32_t id );
+			virtual vl::graph::SceneNode *getNode( uint32_t id );
 
-			virtual MovableObject *getObject( uint32_t id );
+			virtual vl::graph::MovableObject *getObject( uint32_t id );
 
 			// Equalizer overrides
 	
@@ -175,7 +178,7 @@ namespace graph
 			CreateNodeFunc *_nodeCreateFunc;
 			DeleteNodeFunc *_nodeDeleteFunc;
 
-			SceneNode *_root;
+			vl::graph::SceneNode *_root;
 
 	};	// class SceneManager
 

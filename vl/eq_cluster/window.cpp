@@ -9,10 +9,11 @@
 
 #include "pipe.hpp"
 #include "config.hpp"
-#include "graph/root.hpp"
 #include "channel.hpp"
 
-#include "math/conversion.hpp"
+#include "eq_graph/eq_root.hpp"
+
+#include "eq_ogre/conversion.hpp"
 
 unsigned int eqOgre::Window::n_windows = 0;
 

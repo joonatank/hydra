@@ -5,9 +5,9 @@
 
 // members
 //#include "initData.hpp"
-#include "message.hpp"
-#include "server_command.hpp"
-#include "fifo_buffer.hpp"
+#include "base/message.hpp"
+//#include "server_command.hpp"
+#include "base/fifo_buffer.hpp"
 //#include "frameData.h"
 //#include "tracker.h"
 //#include "cameraAnimation.h"
@@ -41,11 +41,13 @@ namespace eqOgre
         /** @sa eq::Config::startFrame. */
  //       virtual uint32_t startFrame (void);
 
+		/*
 		void setClientFifo( vl::base::fifo_buffer<vl::server::Command *> *buf )
 		{ _client_fifo = buf; }
 
 		vl::base::fifo_buffer<vl::server::Command *> *getClientFifo( void )
 		{ return _client_fifo; }
+		*/
 
 		void setNodeFifo( vl::base::fifo_buffer<vl::base::Message *> *buf )
 		{ _node_fifo = buf; }
@@ -82,7 +84,7 @@ namespace eqOgre
 
        // eq::Canvas* _currentCanvas;
 
-		vl::base::fifo_buffer<vl::server::Command *> *_client_fifo;
+//		vl::base::fifo_buffer<vl::server::Command *> *_client_fifo;
 		vl::base::fifo_buffer<vl::base::Message *> *_node_fifo;
 
     private:

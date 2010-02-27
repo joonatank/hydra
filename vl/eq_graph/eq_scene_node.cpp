@@ -1,20 +1,20 @@
-#include "scene_node.hpp"
+#include "eq_scene_node.hpp"
 
-#include "scene_manager.hpp"
+#include "eq_scene_manager.hpp"
 
 #include <eq/net/session.h>
 
 // Functors
-vl::graph::AttachNodeFunc::AttachNodeFunc( vl::graph::SceneManager *sm,
-		vl::graph::SceneNode *owner )
-	: vl::graph::SceneFunctor<SceneNode *>(sm),
+vl::cl::AttachNodeFunc::AttachNodeFunc( vl::cl::SceneManager *sm,
+		vl::cl::SceneNode *owner )
+	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm),
 	  _owner( owner )
 {}
 
-vl::graph::SceneNode *
-vl::graph::AttachNodeFunc::operator()( uint32_t const &id )
+vl::cl::SceneNode *
+vl::cl::AttachNodeFunc::operator()( uint32_t const &id )
 {
-	SceneNode *node = _manager->getNode( id );
+	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
 	if( node )
 	{
 		// Call the protected function which handles
@@ -29,19 +29,20 @@ vl::graph::AttachNodeFunc::operator()( uint32_t const &id )
 	return node;
 }
 
-vl::graph::DetachNodeFunc::DetachNodeFunc( SceneManager *sm, SceneNode *owner)
-	: SceneFunctor<SceneNode *>(sm),
+vl::cl::DetachNodeFunc::DetachNodeFunc( vl::cl::SceneManager *sm,
+		vl::cl::SceneNode *owner)
+	: SceneFunctor<vl::cl::SceneNode *>(sm),
 	  _owner( owner )
 {}
 
-vl::graph::SceneNode *
-vl::graph::DetachNodeFunc::operator()( uint32_t const &id )
+vl::cl::SceneNode *
+vl::cl::DetachNodeFunc::operator()( uint32_t const &id )
 {
 	EQASSERT( id != EQ_ID_INVALID );
 
 	// This should remove the node from the owners list of
 	// childs
-	SceneNode *node= _manager->getNode( id );
+	SceneNode *node= (vl::cl::SceneNode *)_manager->getNode( id );
 	if( node )
 	{
 		// Call the protected function which handles
@@ -56,16 +57,16 @@ vl::graph::DetachNodeFunc::operator()( uint32_t const &id )
 	return node;
 }
 
-vl::graph::AttachObjectFunc::AttachObjectFunc( vl::graph::SceneManager *sm,
-		vl::graph::SceneNode *owner )
-	: vl::graph::SceneFunctor<vl::graph::MovableObject *>(sm),
+vl::cl::AttachObjectFunc::AttachObjectFunc( vl::cl::SceneManager *sm,
+		vl::cl::SceneNode *owner )
+	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm),
 	  _owner( owner )
 {}
 
-vl::graph::MovableObject *
-vl::graph::AttachObjectFunc::operator()( uint32_t const &id )
+vl::cl::MovableObject *
+vl::cl::AttachObjectFunc::operator()( uint32_t const &id )
 {
-	MovableObject *obj = _manager->getObject( id );
+	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
 	if( obj )
 	{
 		// Call the protected function which handles
@@ -80,16 +81,16 @@ vl::graph::AttachObjectFunc::operator()( uint32_t const &id )
 	return obj;
 }
 
-vl::graph::DetachObjectFunc::DetachObjectFunc( vl::graph::SceneManager *sm,
-		vl::graph::SceneNode *owner )
-	: vl::graph::SceneFunctor<MovableObject *>(sm),
+vl::cl::DetachObjectFunc::DetachObjectFunc( vl::cl::SceneManager *sm,
+		vl::cl::SceneNode *owner )
+	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm),
 	  _owner( owner )
 {}
 
-vl::graph::MovableObject *
-vl::graph::DetachObjectFunc::operator()( uint32_t const &id )
+vl::cl::MovableObject *
+vl::cl::DetachObjectFunc::operator()( uint32_t const &id )
 {
-	MovableObject *obj = _manager->getObject( id );
+	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
 	if( obj )
 	{
 		// Call the protected function which handles
@@ -106,7 +107,7 @@ vl::graph::DetachObjectFunc::operator()( uint32_t const &id )
 // ENDOF Functors
 
 // SceneNode
-vl::graph::SceneNode::SceneNode( vl::graph::SceneManager *creator,
+vl::cl::SceneNode::SceneNode( vl::cl::SceneManager *creator,
 		std::string const &name )
 	: _creator(creator),
 	  _childDetachFunc( creator, this ),
@@ -121,7 +122,7 @@ vl::graph::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 }
 
 void
-vl::graph::SceneNode::destroy( void )
+vl::cl::SceneNode::destroy( void )
 {
 	for( size_t i = 0; i < _attached.size(); ++i )
 	{ _creator->destroy( _attached.at(i) ); }
@@ -132,28 +133,30 @@ vl::graph::SceneNode::destroy( void )
 	_creator->destroy( this );
 }
 void
-vl::graph::SceneNode::attachObject( vl::graph::MovableObject *object )
+vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 {
+	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
 	bool found = false;
 	for( size_t i = 0; i < _attached.size(); i++ )
 	{
-		if( object == _attached.at(i) )
+		if( cl_obj == _attached.at(i) )
 		{ found = true; break; }
 	}
 	if( !found )
 	{
 	//	setDirty( DIRTY_ATTACHED );
 
-		_attached.push( object );
+		_attached.push( cl_obj );
 	}
 }
 
 void
-vl::graph::SceneNode::detachObject( vl::graph::MovableObject *object )
+vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 {
+	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
 	for( size_t i = 0; i < _attached.size(); i++ )
 	{
-		if( object == _attached.at(i) )
+		if( cl_obj == _attached.at(i) )
 		{
 			_attached.remove( i );
 		}
@@ -166,7 +169,7 @@ vl::graph::SceneNode::detachObject( vl::graph::MovableObject *object )
 }
 
 vl::graph::SceneNode *
-vl::graph::SceneNode::createChild( std::string const &name )
+vl::cl::SceneNode::createChild( std::string const &name )
 {
 	// TODO we should use the SceneManager to allocate the Nodes
 	// and manage a list of created nodes.
@@ -181,7 +184,7 @@ vl::graph::SceneNode::createChild( std::string const &name )
 // providing this function).
 // Without moving the internal implementation to protected.
 void
-vl::graph::SceneNode::setParent( vl::graph::SceneNode *parent )
+vl::cl::SceneNode::setParent( vl::graph::SceneNode *parent )
 {
 	// TODO should throw
 	if( this == parent )
@@ -193,10 +196,12 @@ vl::graph::SceneNode::setParent( vl::graph::SceneNode *parent )
 }
 
 void
-vl::graph::SceneNode::addChild( vl::graph::SceneNode *child )
+vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
 {
+	vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
+
 	// TODO should throw
-	if( !child || this == child || child->parent() == this )
+	if( !cl_child || this == cl_child || cl_child->parent() == this )
 	{ return; }
 
 	// Set dirty
@@ -204,21 +209,21 @@ vl::graph::SceneNode::addChild( vl::graph::SceneNode *child )
 
 	for( size_t i = 0; i < _childs.size(); i++ )
 	{
-		if( _childs.at(i) == child )
+		if( _childs.at(i) == cl_child )
 		{
 			// TODO this should throw, as the parent and child are
 			// inconsistent
 			return;
 		}
 	}
-	child->setParent( this );
-	_childs.push( child );
+	cl_child->setParent( this );
+	_childs.push( cl_child );
 }
 
 
 // ---- Equalizer overrides ----
 void
-vl::graph::SceneNode::serialize( eq::net::DataOStream& os,
+vl::cl::SceneNode::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
 	eq::Object::serialize( os, dirtyBits );
@@ -243,7 +248,7 @@ vl::graph::SceneNode::serialize( eq::net::DataOStream& os,
 }
 
 void
-vl::graph::SceneNode::deserialize( eq::net::DataIStream& is,
+vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 		const uint64_t dirtyBits )
 {
 	eq::Object::deserialize( is, dirtyBits );

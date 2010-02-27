@@ -4,7 +4,7 @@
 
 vl::ogre::SceneNode::SceneNode(
 		vl::ogre::SceneManager *creator, std::string const &name )
-	: vl::graph::SceneNode( creator, name ), _ogre_node(0)
+	: vl::cl::SceneNode( creator, name ), _ogre_node(0)
 {
 	EQASSERT( creator );
 	// TODO create Ogre::SceneNode

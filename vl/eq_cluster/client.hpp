@@ -11,10 +11,10 @@
 //#include "entity.hpp"
 //#include "light.hpp"
 
-#include "fifo_buffer.hpp"
-#include "server_command.hpp"
-//#include "root.hpp"
-#include "udp_server.hpp"
+#include "base/fifo_buffer.hpp"
+//#include "server_command.hpp"
+#include "eq_graph/eq_root.hpp"
+//#include "udp_server.hpp"
 
 namespace eqOgre
 {
@@ -49,23 +49,23 @@ namespace eqOgre
 		// These are passed further to Node (for now they are all passed to,
 		// Nodes).
 		// This function will throw if error occures.
-		void _receive( void );
+//		void _receive( void );
 
 		// Pumps messages further, that is for now it will pump all messages
 		// to Node (there exists only one node per client).
-		void _pumpMessage( std::auto_ptr<vl::server::Command> cmd );
+//		void _pumpMessage( std::auto_ptr<vl::server::Command> cmd );
 		
 		eq::ServerPtr _server;
 
 		// State the object is in, we use this to init the SceneGraph
 		unsigned int _state;
 
-		vl::base::fifo_buffer< vl::server::Command * > *_write_node_fifo;
+//		vl::base::fifo_buffer< vl::server::Command * > *_write_node_fifo;
 		eqOgre::Config *_config;
 
-		vl::udp::Server _udp_server;
+//		vl::udp::Server _udp_server;
 
-		vl::graph::Root *_root;
+		vl::cl::Root *_root;
     };	// class Client
 
 }	// namespace eqOgre

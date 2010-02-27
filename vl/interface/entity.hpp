@@ -14,10 +14,6 @@
 
 #include "movable_object.hpp"
 
-#include "../typedefs.hpp"
-
-#include <string>
-
 namespace vl
 {
 
@@ -29,17 +25,13 @@ namespace graph
 	class Entity : public MovableObject
 	{
 		public :
-			Entity( std::string const &name,
-					vl::NamedValuePairList const &params )
-				: MovableObject(name, params)
-			{}
+			Entity( void ) {}
 
 			virtual ~Entity( void ) {}
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( SceneManager *) 
-			{}
+			virtual void load( SceneManager *) = 0;
 
 	};	// class Entity
 

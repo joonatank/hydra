@@ -9,39 +9,38 @@
  *	either through inheritance or aggregation.
  */
 
-#ifndef VL_OGRE_ENTITY_HPP
-#define VL_OGRE_ENTITY_HPP
+#ifndef VL_EQ_GRAPH_ENTITY_HPP
+#define VL_EQ_GRAPH_ENTITY_HPP
 
-#include <OGRE/OgreEntity.h>
+#include "eq_movable_object.hpp"
 
-#include "ogre_movable_object.hpp"
+#include "base/typedefs.hpp"
 
-#include "../graph/entity.hpp"
+#include <string>
+
+#include "interface/scene_manager.hpp"
 
 namespace vl
 {
 
-namespace ogre
+namespace cl
 {
-	class Entity : public vl::graph::Entity, public vl::ogre::MovableObject
+	// Forward decalrations
+	class SceneManager;
+
+	class Entity : public MovableObject
 	{
 		public :
 			Entity( std::string const &name,
 					vl::NamedValuePairList const &params )
-				: vl::graph::Entity(name, params), _ogre_entity(0)
+				: MovableObject(name, params)
 			{}
 
 			virtual ~Entity( void ) {}
 
-			virtual Ogre::MovableObject *getNative( void )
-			{ return _ogre_entity; }
-
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( vl::graph::SceneManager *sm );
-
-		protected :
-			Ogre::Entity *_ogre_entity;
+			virtual void load( vl::graph::SceneManager *) {}
 
 	};	// class Entity
 

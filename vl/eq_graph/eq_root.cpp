@@ -1,13 +1,13 @@
-#include "root.hpp"
+#include "eq_root.hpp"
 
 #include <eq/net/session.h>
 
-vl::graph::Root::Root( void )
+vl::cl::Root::Root( void )
 	: _scene_manager(0)
 {}
 
 vl::graph::SceneManager *
-vl::graph::Root::getSceneManager( std::string const &name )
+vl::cl::Root::getSceneManager( std::string const &name )
 {
 	if( !_scene_manager )
 	{
@@ -24,7 +24,7 @@ vl::graph::Root::getSceneManager( std::string const &name )
 }
 
 void
-vl::graph::Root::serialize( eq::net::DataOStream& os,
+vl::cl::Root::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
 	if( DIRTY_SCENE_MANAGER & dirtyBits )
@@ -43,7 +43,7 @@ vl::graph::Root::serialize( eq::net::DataOStream& os,
 }
 
 void
-vl::graph::Root::deserialize( eq::net::DataIStream& is,
+vl::cl::Root::deserialize( eq::net::DataIStream& is,
 		  const uint64_t dirtyBits )
 {
 	if( DIRTY_SCENE_MANAGER & dirtyBits )

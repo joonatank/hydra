@@ -12,7 +12,7 @@
 #ifndef VL_OGRE_VIEWPORT_HPP
 #define VL_OGRE_VIEWPORT_HPP
 
-#include "../graph/viewport.hpp"
+#include "eq_graph/eq_viewport.hpp"
 
 #include <OGRE/OgreViewport.h>
 

@@ -4,8 +4,11 @@
 
 #include <eq/eq.h>
 
+#include "base/message.hpp"
+
 // Distributed root
-#include "graph/root.hpp"
+#include "eq_graph/eq_root.hpp"
+#include "eq_graph/eq_scene_manager.hpp"
 
 namespace eqOgre
 {
@@ -49,14 +52,14 @@ namespace eqOgre
 
 		// TODO this should be UDP command buffer
 		// for now we use client to issue commands.
-		vl::base::fifo_buffer<vl::server::Command *> *_read_client_fifo;
+//		vl::base::fifo_buffer<vl::server::Command *> *_read_client_fifo;
 
 		vl::base::fifo_buffer<vl::base::Message *> *_write_pipe_fifo;
 
-		vl::graph::Root *_root;
+		vl::cl::Root *_root;
 
 		// SceneManager synced from Client
-		vl::graph::SceneManager *_sm;
+		vl::cl::SceneManager *_sm;
 
 		int _state;
 

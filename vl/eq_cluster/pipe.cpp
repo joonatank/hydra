@@ -20,8 +20,6 @@
 #include <eq/eq.h>
 
 #include "config.hpp"
-//#include "camera.hpp"
-#include "graph/root.hpp"
 
 #include "pipe.hpp"
 
@@ -99,6 +97,7 @@ eqOgre::Pipe::_processCommands( void )
 		// to here.
 		switch( cmd->cmdType )
 		{
+			/*
 			case vl::base::CMD_ROOT_TRANS :
 			{
 				vl::base::RootTransfer *cc = (vl::base::RootTransfer *)cmd;
@@ -106,6 +105,7 @@ eqOgre::Pipe::_processCommands( void )
 				_root = cc->root;
 			}
 			break;
+			*/
 
 			default :
 				EQWARN << "Unhandled command!" << std::endl;

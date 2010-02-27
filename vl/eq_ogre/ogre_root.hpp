@@ -20,18 +20,18 @@
 
 #include "ogre_scene_manager.hpp"
 
-#include "../graph/root.hpp"
+#include "eq_graph/eq_root.hpp"
 
 #include <OGRE/OgreRoot.h>
 
 #include "ogre_render_window.hpp"
-#include "../typedefs.hpp"
+#include "base/typedefs.hpp"
 
 namespace vl
 {
 namespace ogre 
 {
-	class Root : public vl::graph::Root
+	class Root : public vl::cl::Root
 	{
 		public :
 			Root( void )
@@ -107,7 +107,7 @@ namespace ogre
 			*/
 
 		protected :
-			virtual vl::graph::SceneManager *_createSceneManager(
+			virtual vl::cl::SceneManager *_createSceneManager(
 					std::string const &name = std::string() )
 			{
 				return new SceneManager( name );

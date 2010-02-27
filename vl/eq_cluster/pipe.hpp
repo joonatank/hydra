@@ -4,10 +4,13 @@
 
 #include <eq/eq.h>
 
-#include "fifo_buffer.hpp"
-#include "command.hpp"
-#include "message.hpp"
+#include "base/fifo_buffer.hpp"
+//#include "command.hpp"
+#include "base/message.hpp"
 
+#include "eq_graph/eq_root.hpp"
+
+/*
 namespace vl
 {
 	namespace graph
@@ -15,6 +18,7 @@ namespace vl
 		class Root;
 	}
 }
+*/
 
 namespace eqOgre
 {
@@ -46,7 +50,7 @@ namespace eqOgre
     public:
         Pipe( eq::Node *parent );
 
-		vl::graph::Root *getRoot( void )
+		vl::cl::Root *getRoot( void )
 		{ return _root; }
 
     protected:
@@ -68,7 +72,7 @@ namespace eqOgre
 		vl::base::fifo_buffer<vl::base::Message *> *_read_node_fifo;
 		//eqOgre::fifo_buffer<Command *> *_read_client_fifo;
 
-		vl::graph::Root *_root;
+		vl::cl::Root *_root;
 
     };	// class Pipe
 
