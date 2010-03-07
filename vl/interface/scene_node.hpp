@@ -12,8 +12,7 @@
 #ifndef VL_GRAPH_SCENE_NODE_HPP
 #define VL_GRAPH_SCENE_NODE_HPP
 
-#include <vmmlib/vector.hpp>
-#include <vmmlib/quaternion.hpp>
+#include "math/math.hpp"
 
 #include <vector>
 
@@ -48,25 +47,25 @@ namespace graph
 			// they need to be overriden by the implementation which has
 			// knowledge about the rendering engine types, unless of course
 			// for the application (only the Nodes have concrete data).
-			virtual void translate( vmml::vec3d const &v ) = 0;
+			virtual void translate( vl::vector const &v ) = 0;
 
-			virtual void setTranslation( vmml::vec3d const &v ) = 0;
+			virtual void setTranslation( vl::vector const &v ) = 0;
 
-			virtual vmml::vec3d const &getTranslation( void ) = 0;
+			virtual vl::vector const &getTranslation( void ) = 0;
 
-			virtual void rotate( vmml::quaterniond const &q ) = 0;
+			virtual void rotate( vl::quaternion const &q ) = 0;
 
-			virtual void setRotation( vmml::quaterniond const &q ) = 0;
+			virtual void setRotation( vl::quaternion const &q ) = 0;
 
-			virtual vmml::quaterniond const &getRotation( void ) = 0;
+			virtual vl::quaternion const &getRotation( void ) = 0;
 
-			virtual void scale( vmml::vec3d const &s ) = 0;
+			virtual void scale( vl::vector const &s ) = 0;
 
-			virtual void scale( double const s ) = 0;
+			virtual void scale( vl::scalar const s ) = 0;
 
-			virtual void setScale( vmml::vec3d const &s ) = 0;
+			virtual void setScale( vl::vector const &s ) = 0;
 
-			virtual vmml::vec3d const &getScale( void ) = 0;
+			virtual vl::vector const &getScale( void ) = 0;
 
 			virtual void attachObject( MovableObject *object ) = 0;
 
@@ -81,20 +80,25 @@ namespace graph
 
 			virtual void removeChild( SceneNode *child ) = 0;
 
-			virtual ChildContainer const &getChilds( void ) = 0;
+			virtual ChildContainer const &getChilds( void ) const = 0;
 
 			virtual SceneNode *getParent( void ) = 0;
 
-			virtual ObjectContainer const &getAttached( void ) = 0;
+			virtual ObjectContainer const &getAttached( void ) const = 0;
+
+			virtual SceneManager *getCreator( void ) = 0;
 
 			// Overloadable functions to modify the Rendering engine
 			// These have to be overriden but they are not pure abstracts
 			// because this class can be used in the Application without
 			// rendering engine.
-			virtual void _setTransform( vmml::vec3d const &,
-					vmml::quaterniond const & ) = 0;
+			// TODO
+			// Renaming them to callbacks might be usefull like
+			// transformationSet, scaleSet, objectAttached etc.
+			virtual void _setTransform( vl::vector const &,
+					vl::quaternion const & ) = 0;
 
-			virtual void _setScale( vmml::vec3d const & ) = 0;
+			virtual void _setScale( vl::vector const & ) = 0;
 
 			virtual void _attachObject( MovableObject *) = 0;
 

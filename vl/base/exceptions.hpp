@@ -1,3 +1,6 @@
+#ifndef VL_EXCEPTIONS_HPP
+#define VL_EXCEPTIONS_HPP
+
 namespace vl
 {
 	class exception
@@ -11,6 +14,30 @@ namespace vl
 			const char *where;
 	};
 
+	class null_pointer : public exception
+	{
+		public :
+			null_pointer( const char *wher )
+				: exception( "null_pointer", wher )
+			{}
+	};
+
+	class scale_quaternion : public exception
+	{
+		public :
+			scale_quaternion( const char *wher )
+				: exception( "scale quaternion", wher )
+			{}
+	};
+
+	class zero_scale : public exception
+	{
+		public :
+			zero_scale( const char *wher )
+				: exception( "zero scale", wher )
+			{}
+	};
+
 	class fifo_full : public exception
 	{
 		public :
@@ -18,4 +45,7 @@ namespace vl
 				: exception( "fifo_full", wher )
 			{}
 	};
-}
+
+}	// namespace vl
+
+#endif

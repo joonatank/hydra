@@ -109,9 +109,14 @@ vl::cl::DetachObjectFunc::operator()( uint32_t const &id )
 // ENDOF Functors
 
 // SceneNode
-vl::cl::SceneNode::SceneNode( vl::cl::SceneManager *creator,
+vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 		std::string const &name )
-	: _creator(creator)
+	: _creator(creator),
+	  _position(vl::vector::ZERO),
+	  _rotation(vl::quaternion::IDENTITY),
+	  _scale(1.0, 1.0, 1.0),
+	  _attached(),
+	  _childs()
 	/*
 	  _childDetachFunc( creator, this ),
 	  _childAttachFunc( creator, this ),
@@ -121,6 +126,9 @@ vl::cl::SceneNode::SceneNode( vl::cl::SceneManager *creator,
 	  _childs(&_childAttachFunc, &_childDetachFunc)
   */
 {
+	if( !_creator )
+	{ throw vl::null_pointer("SceneNode::SceneNode"); }
+
 	if( !name.empty() )
 	{ eq::Object::setName( name ); }
 }

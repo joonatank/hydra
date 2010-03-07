@@ -14,12 +14,11 @@
 
 #include <eq/client/object.h>
 
-#include <vmmlib/vector.hpp>
-#include <vmmlib/quaternion.hpp>
-
 #include "interface/scene_node.hpp"
 
 #include "eq_movable_object.hpp"
+#include "base/exceptions.hpp"
+
 //#include "eq_cluster/distrib_container.hpp"
 
 namespace vl
@@ -151,7 +150,7 @@ namespace cl
 	class SceneNode : public eq::Object, public vl::graph::SceneNode
 	{
 		public :
-			SceneNode( vl::cl::SceneManager *creator,
+			SceneNode( vl::graph::SceneManager *creator,
 					std::string const &name = std::string() );
 
 			// Frees the memory, called from SceneManager
@@ -168,16 +167,16 @@ namespace cl
 			// they need to be overriden by the implementation which has
 			// knowledge about the rendering engine types, unless of course
 			// for the application (only the Nodes have concrete data).
-			virtual void translate( vmml::vec3d const &v )
+			virtual void translate( vl::vector const &v )
 			{
-				if( v != vmml::vec3d::ZERO )
+				if( v != vl::vector::ZERO )
 				{
 					setDirty( DIRTY_TRANSFORM );
 					_position += v;
 				}
 			}
 
-			virtual void setTranslate( vmml::vec3d const &v )
+			virtual void setTranslation( vl::vector const &v )
 			{
 				if( v != _position )
 				{
@@ -186,62 +185,77 @@ namespace cl
 				}
 			}
 
-			virtual vmml::vec3d const &getTranslation( void )
+			virtual vl::vector const &getTranslation( void )
 			{
 				return _position;
 			}
 
-			virtual void rotate( vmml::quaterniond const &q )
+			virtual void rotate( vl::quaternion const &q )
 			{
-				if( q == vmml::quaterniond::IDENTITY )
+				if( !vl::equal( q.abs(), 1.0 ) )
+				{ throw vl::scale_quaternion("SceneNode::rotate"); }
+
+				if( !vl::equal(q, vl::quaternion::IDENTITY) )
 				{
 					setDirty( DIRTY_TRANSFORM );
 					_rotation *= q;
 				}
 			}
 
-			virtual void setRotation( vmml::quaterniond const &q )
+			virtual void setRotation( vl::quaternion const &q )
 			{
-				if( q != _rotation )
+				if( !vl::equal( q.abs(), 1.0 ) )
+				{ throw vl::scale_quaternion("SceneNode::setRotation"); }
+
+				if( !vl::equal(q, _rotation) )
 				{
 					setDirty( DIRTY_TRANSFORM );
 					_rotation = q;
 				}
 			}
 
-			virtual vmml::quaterniond const &getRotation( void )
+			virtual vl::quaternion const &getRotation( void )
 			{
 				return _rotation;
 			}
 
-			virtual void scale( vmml::vec3d const &s )
+			virtual void scale( vl::vector const &s )
 			{
-				if( s != vmml::vec3d( 1, 1, 1 ) )
+				if( vl::equal(s, vl::vector::ZERO) )
+				{ throw vl::zero_scale("scene_node::scale"); }
+
+				if( !vl::equal(s, vl::vector( 1, 1, 1 )) )
 				{
 					setDirty( DIRTY_SCALE );
 					_scale *= s;
 				}
 			}
 
-			virtual void scale( double const s )
+			virtual void scale( vl::scalar const s )
 			{
-				if( s != 1 )
+				if( vl::equal(s, 0.0) )
+				{ throw vl::zero_scale("scene_node::scale"); }
+
+				if( !vl::equal(s, 1.0) )
 				{
 					setDirty( DIRTY_SCALE );
 					_scale *= s;
 				}
 			}
 
-			virtual void setScale( vmml::vec3d const &s )
+			virtual void setScale( vl::vector const &s )
 			{
-				if( s != _scale )
+				if( vl::equal(s, vl::vector::ZERO) )
+				{ throw vl::zero_scale("scene_node::scale"); }
+
+				if( !vl::equal(s, _scale) )
 				{
 					setDirty( DIRTY_SCALE );
 					_scale = s;
 				}
 			}
 
-			virtual vmml::vec3d const &getScale( void )
+			virtual vl::vector const &getScale( void )
 			{ return _scale; }
 
 			virtual void attachObject( vl::graph::MovableObject *object );
@@ -257,8 +271,19 @@ namespace cl
 
 			virtual void removeChild( vl::graph::SceneNode *child );
 
-			virtual vl::graph::SceneNode *parent( void )
+			virtual vl::graph::ChildContainer const &getChilds( void ) const
+			{ return _childs; }
+
+			virtual vl::graph::SceneNode *getParent( void )
 			{ return _parent; }
+
+			virtual vl::graph::ObjectContainer const &getAttached( void ) const
+			{ return _attached; }
+
+			virtual vl::graph::SceneManager *getCreator( void )
+			{ return _creator; }
+
+			// Sync/Commit methods, needed for tree based syncing in eq
 
 			// Equalizer overrides
 			
@@ -297,11 +322,11 @@ namespace cl
 			// These have to be overriden but they are not pure abstracts
 			// because this class can be used in the Application without
 			// rendering engine.
-			virtual void _setTransform( vmml::vec3d const &,
-					vmml::quaterniond const & )
+			virtual void _setTransform( vl::vector const &,
+					vl::quaternion const & )
 			{}
 
-			virtual void _setScale( vmml::vec3d const & ) {}
+			virtual void _setScale( vl::vector const & ) {}
 
 			virtual void _attachObject( vl::graph::MovableObject *) {} 
 
@@ -315,11 +340,11 @@ namespace cl
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
 			// destruction of all objects contained in it.
-			vl::cl::SceneManager *_creator;
+			vl::graph::SceneManager *_creator;
 
-			vmml::vec3d _position;
-			vmml::quaterniond _rotation;
-			vmml::vec3d _scale;
+			vl::vector _position;
+			vl::quaternion _rotation;
+			vl::vector _scale;
 
 			// Functors for distributed containers
 			/*
