@@ -2,6 +2,7 @@ project("vl" CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
+message( "Building vl" )
 # TODO add define rendering engine (Ogre/OpenSG)
 # include vl lib
 # Using include instead of subdirectory because with include we can just
@@ -18,20 +19,13 @@ link_directories(/usr/local/lib)
 include_directories(vl)
 
 # include cnc lib inclde directories
-include_directories(cnc)
+#include_directories(cnc)
 
 # TODO add tests
-SET( EQOGRE_SOURCES test/eq_cluster/main.cpp
-	vl/eq_cluster/channel.cpp vl/eq_cluster/config.cpp
-	vl/eq_cluster/client.cpp vl/eq_cluster/node.cpp
-	vl/eq_cluster/pipe.cpp vl/eq_cluster/window.cpp
-	vl/eq_ogre/ogre_scene_manager.cpp
-	vl/eq_ogre/ogre_scene_node.cpp vl/eq_ogre/ogre_entity.cpp
-	vl/eq_graph/eq_scene_manager.cpp
-	vl/eq_graph/eq_scene_node.cpp
-	vl/eq_graph/eq_root.cpp
-	)
-	
-add_executable( eqOgre ${EQOGRE_SOURCES} )
-target_link_libraries( eqOgre OgreMain eq eqserver GLEW pthread )
+# Tests should be in different CMake file
+subdirs( ${CMAKE_CURRENT_SOURCE_DIR}/test )
+
+#add_executable( eqOgre ${EQOGRE_SOURCES} )
+# TODO libraries can be found using CMake facilities
+#target_link_libraries( eqOgre OgreMain eq eqserver GLEW pthread )
 

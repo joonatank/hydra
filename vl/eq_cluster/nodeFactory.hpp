@@ -14,9 +14,6 @@ namespace eqOgre {
 class NodeFactory : public eq::NodeFactory
 {
 	public:
-//		eqOgre::NodeFactory &getInstance( void );
-//		eqOgre::NodeFactory *getInstancePtr( void );
-		
 		virtual eq::Config *createConfig( eq::ServerPtr parent )
 		{ return new eqOgre::Config( parent ); }
 
@@ -32,11 +29,6 @@ class NodeFactory : public eq::NodeFactory
 		virtual eq::Channel *createChannel( eq::Window* parent )
 		{ return new eqOgre::Channel( parent ); }
 
-//		virtual eq::View *createView( void )
-//		{ return new eqOgre::View(); }
-	
-//	private :
-//		static eqOgre::NodeFactory *_instance;
 };
 
 }

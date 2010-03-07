@@ -5,6 +5,7 @@
 #include <eq/net/session.h>
 
 // Functors
+/*
 vl::cl::AttachNodeFunc::AttachNodeFunc( vl::cl::SceneManager *sm,
 		vl::cl::SceneNode *owner )
 	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm),
@@ -103,19 +104,22 @@ vl::cl::DetachObjectFunc::operator()( uint32_t const &id )
 	}
 	return obj;
 }
+*/
 
 // ENDOF Functors
 
 // SceneNode
 vl::cl::SceneNode::SceneNode( vl::cl::SceneManager *creator,
 		std::string const &name )
-	: _creator(creator),
+	: _creator(creator)
+	/*
 	  _childDetachFunc( creator, this ),
 	  _childAttachFunc( creator, this ),
 	  _objectDetachFunc( creator, this ),
 	  _objectAttachFunc( creator, this ),
 	  _attached(&_objectAttachFunc,  &_objectDetachFunc),
 	  _childs(&_childAttachFunc, &_childDetachFunc)
+  */
 {
 	if( !name.empty() )
 	{ eq::Object::setName( name ); }
@@ -135,6 +139,7 @@ vl::cl::SceneNode::destroy( void )
 void
 vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 {
+	/*
 	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
 	bool found = false;
 	for( size_t i = 0; i < _attached.size(); i++ )
@@ -148,11 +153,13 @@ vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 
 		_attached.push( cl_obj );
 	}
+	*/
 }
 
 void
 vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 {
+	/*
 	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
 	for( size_t i = 0; i < _attached.size(); i++ )
 	{
@@ -161,6 +168,8 @@ vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 			_attached.remove( i );
 		}
 	}
+	*/
+
 		// TODO we have a problem with allocation and deallocation
 		// here, so we just let application programmer to
 		// destroy the object... RefPtrs would work better.
@@ -171,12 +180,15 @@ vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 vl::graph::SceneNode *
 vl::cl::SceneNode::createChild( std::string const &name )
 {
+	/*
 	// TODO we should use the SceneManager to allocate the Nodes
 	// and manage a list of created nodes.
 	vl::graph::SceneNode *child = _creator->createNodeImpl( name );
 	addChild( child );
 
 	return child;
+	*/
+	return 0;
 }
 
 // This function is only for internal usage, addChild and removeChild
@@ -186,6 +198,7 @@ vl::cl::SceneNode::createChild( std::string const &name )
 void
 vl::cl::SceneNode::setParent( vl::graph::SceneNode *parent )
 {
+	/*
 	// TODO should throw
 	if( this == parent )
 	{ return; }
@@ -193,11 +206,13 @@ vl::cl::SceneNode::setParent( vl::graph::SceneNode *parent )
 	// We need to inform our current owner of the transfer
 	// and we need to inform our new owner after that.
 	_parent = parent;
+	*/
 }
 
 void
 vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
 {
+	/*
 	vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
 
 	// TODO should throw
@@ -218,8 +233,25 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
 	}
 	cl_child->setParent( this );
 	_childs.push( cl_child );
+	*/
 }
 
+void
+vl::cl::SceneNode::removeChild( vl::graph::SceneNode *child )
+{
+	/*
+	vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
+	for( size_t i = 0; i < _childs.size(); ++i )
+	{
+		if( _childs.at(i) == cl_child )
+		{
+			_childs.remove(i);
+			cl_child->setParent( 0 );
+			break;
+		}
+	}
+	*/
+}
 
 // ---- Equalizer overrides ----
 void
@@ -234,6 +266,7 @@ vl::cl::SceneNode::serialize( eq::net::DataOStream& os,
 	if( dirtyBits & DIRTY_SCALE )
 	{ os << _scale; }
 
+	/*
 	if( dirtyBits & DIRTY_ATTACHED )
 	{
 		// TODO this should register _attached as eq distributed object
@@ -245,6 +278,7 @@ vl::cl::SceneNode::serialize( eq::net::DataOStream& os,
 		// TODO this should register _childs as eq distributed object
 		os << _childs.getID();
 	}
+	*/
 }
 
 void
@@ -265,6 +299,7 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 		_setScale( _scale );
 	}
 
+	/*
 	if( dirtyBits & DIRTY_ATTACHED )
 	{
 		uint32_t id;
@@ -280,5 +315,6 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 		// TODO this should map _childs to eq distributed object
 		getSession()->mapObject( &_childs, id );
 	}
+	*/
 
 }

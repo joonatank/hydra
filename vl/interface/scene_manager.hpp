@@ -30,29 +30,39 @@ namespace graph
 	{
 		public :
 
-			// TODO move the deallocators to protected impl code.
+			// Destroyers
 			virtual void destroy( SceneNode *node ) = 0;
 
 			virtual void destroy( MovableObject *obj ) = 0;
 
+			// Get the root of the scene graph,
+			// created implicitly
 			virtual SceneNode *getRootNode( void ) = 0;
 
+			// Create a hanging SceneNode that is not attached to scene graph
 			virtual SceneNode *createNode(
 					std::string const &name = std::string() ) = 0;
 
-			virtual SceneNode *createNodeImpl( std::string const &name ) = 0;
+			// Removed because we should use createNode instead
+	//		virtual SceneNode *createNodeImpl( std::string const &name ) = 0;
 
+			// Create an entity, not attached to scene graph.
 			virtual MovableObject* createEntity(
 					std::string const &name, std::string const &meshName ) = 0;
 
+			// Create a camera
 			virtual Camera *createCamera( std::string const & ) = 0;
 
+			// Get scene node by name
 			virtual SceneNode *getNode( std::string const &name ) = 0;
 
+			// Get scene node by id
 			virtual SceneNode *getNode( uint32_t id ) = 0;
 
+			// Get movable object by id
 			virtual MovableObject *getObject( uint32_t id ) = 0;
 
+			// Huh? Is this necessary method?
 			virtual void finalize( void ) = 0;
 
 		protected :

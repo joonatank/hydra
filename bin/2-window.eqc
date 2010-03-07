@@ -10,10 +10,6 @@ server
         {
             pipe
             {
-				attributes
-				{
-					hint_thread OFF
-				}
                 window
                 {
                     name "left"

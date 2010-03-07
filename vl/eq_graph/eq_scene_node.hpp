@@ -20,7 +20,7 @@
 #include "interface/scene_node.hpp"
 
 #include "eq_movable_object.hpp"
-#include "eq_cluster/distrib_container.hpp"
+//#include "eq_cluster/distrib_container.hpp"
 
 namespace vl
 {
@@ -38,6 +38,7 @@ namespace cl
 	// Abstract functor for all conversion functors that use the SceneManager
 	// (anything to do with the scene graph).
 	// Also we have locked to input type to id now.
+	/*
 	template<typename T>
 	class SceneFunctor : public ConversionFunctor<T, uint32_t>
 	{
@@ -140,6 +141,7 @@ namespace cl
 			vl::cl::SceneNode *_owner;
 
 	};	// class NodeModFunc
+	*/
 
 	// SceneNode is a basic element in scene graph and it is the only element
 	// that can be other than leafs of the tree
@@ -184,6 +186,11 @@ namespace cl
 				}
 			}
 
+			virtual vmml::vec3d const &getTranslation( void )
+			{
+				return _position;
+			}
+
 			virtual void rotate( vmml::quaterniond const &q )
 			{
 				if( q == vmml::quaterniond::IDENTITY )
@@ -200,6 +207,11 @@ namespace cl
 					setDirty( DIRTY_TRANSFORM );
 					_rotation = q;
 				}
+			}
+
+			virtual vmml::quaterniond const &getRotation( void )
+			{
+				return _rotation;
 			}
 
 			virtual void scale( vmml::vec3d const &s )
@@ -229,6 +241,9 @@ namespace cl
 				}
 			}
 
+			virtual vmml::vec3d const &getScale( void )
+			{ return _scale; }
+
 			virtual void attachObject( vl::graph::MovableObject *object );
 
 			virtual void detachObject( vl::graph::MovableObject *object );
@@ -240,19 +255,7 @@ namespace cl
 
 			virtual void addChild( vl::graph::SceneNode *child );
 
-			virtual void removeChild( vl::graph::SceneNode *child )
-			{
-				vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
-				for( size_t i = 0; i < _childs.size(); ++i )
-				{
-					if( _childs.at(i) == cl_child )
-					{
-						_childs.remove(i);
-						cl_child->setParent( 0 );
-						break;
-					}
-				}
-			}
+			virtual void removeChild( vl::graph::SceneNode *child );
 
 			virtual vl::graph::SceneNode *parent( void )
 			{ return _parent; }
@@ -319,23 +322,28 @@ namespace cl
 			vmml::vec3d _scale;
 
 			// Functors for distributed containers
+			/*
 			DetachNodeFunc _childDetachFunc;
 			AttachNodeFunc _childAttachFunc;
 			DetachObjectFunc _objectDetachFunc;
 			AttachObjectFunc _objectAttachFunc;
+			*/
 
 			// For now we use one vector to manage all attached objects.
 			// For large scenegraphs this will be problematic, because we need
 			// to update the whole vector at once.
 			// So we need to develop versioned container to replace this later.
-			DistributedContainer<vl::cl::MovableObject *> _attached;
+			//DistributedContainer<vl::cl::MovableObject *> _attached;
+			//std::vector<vl::cl::MovableObject *
+			vl::graph::ObjectContainer _attached;
 
 			// Parent node, we need this to inform our current parent
 			// if we are moved to another.
 			vl::graph::SceneNode *_parent;
 
 			// The childs we own, if we are destroyed we will destroy these.
-			DistributedContainer<vl::cl::SceneNode *> _childs;
+			//DistributedContainer<vl::cl::SceneNode *> _childs;
+			vl::graph::ChildContainer _childs;
 
 	};	// class SceneNode
 

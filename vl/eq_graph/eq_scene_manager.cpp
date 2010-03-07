@@ -3,6 +3,7 @@
 #include <eq/net/session.h>
 
 // Functors
+/*
 vl::cl::CreateNodeFunc::CreateNodeFunc( vl::cl::SceneManager *sm )
 	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm)
 {}
@@ -58,13 +59,20 @@ vl::cl::DeleteObjectFunc::operator()( uint32_t const &id )
 	EQASSERT( obj );
 	return obj;
 }
+*/
 
 // ENDOF Functors
 
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: _nodes(0), _objects(0), _objectCreateFunc(0), 
-	  _objectDeleteFunc(0), _nodeCreateFunc(0), _nodeDeleteFunc(0), _root(0)
+	: /*_nodes(0),
+	  _objects(0),
+	  _objectCreateFunc(0), 
+	  _objectDeleteFunc(0),
+	  _nodeCreateFunc(0),
+	  _nodeDeleteFunc(0),
+	  */
+	  _root(0)
 {
 	eq::Object::setName( name );
 //	_createDistribContainers( );
@@ -75,7 +83,7 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 }
 
 vl::graph::SceneNode *
-vl::cl::SceneManager::createNodeImpl( std::string const &name )
+vl::cl::SceneManager::createNode( std::string const &name )
 {
 	vl::cl::SceneNode *node = _createSceneNodeImpl( name );
 
@@ -85,14 +93,14 @@ vl::cl::SceneManager::createNodeImpl( std::string const &name )
 	// Um the ID is invalid so we need to register the scene_manager first
 	// or register the objects later.
 	getSession()->registerObject( node );
-	std::cout << "Creating scene node = " << node->getName()
-		<< " with ID = " << node->getID() << std::endl;
-	std::cout << "node ID ==  EQ_ID_INVALID = "
-		<< (node->getID() == EQ_ID_INVALID) << std::endl;
+//	std::cout << "Creating scene node = " << node->getName()
+//		<< " with ID = " << node->getID() << std::endl;
+//	std::cout << "node ID ==  EQ_ID_INVALID = "
+//		<< (node->getID() == EQ_ID_INVALID) << std::endl;
 	// This needs the ID to be generated already so we need to
 	// register the node first.
-	_nodes->push( node );
-	_nodes->commit();
+	//_nodes->push( node );
+	//_nodes->commit();
 	return node;
 }
 
@@ -109,9 +117,11 @@ vl::cl::SceneManager::createEntity(
 	return obj;
 }
 
+// Find function needs scene graph traversal to be implemented
 vl::graph::SceneNode *
 vl::cl::SceneManager::getNode( std::string const &name )
 {
+	/*
 	std::cout << "SceneManager::getNode : " << name << std::endl;
 	std::cout << "size = " << _nodes->size() << std::endl;
 	for( size_t i = 0; i < _nodes->size(); ++i )
@@ -122,30 +132,37 @@ vl::cl::SceneManager::getNode( std::string const &name )
 			return _nodes->at(i);
 		}
 	}
+	*/
 
 	return 0;
 }
 
+// Find function needs scene graph traversal to be implemented
 vl::graph::SceneNode *
 vl::cl::SceneManager::getNode( uint32_t id )
 {
+	/*
 	for( size_t i = 0; i < _nodes->size(); i++ )
 	{
 		if( _nodes->at(i)->getID() == id )
 		{ return _nodes->at(i); }
 	}
+	*/
 
 	return 0;
 }
 
+// Find function needs scene graph traversal to be implemented
 vl::graph::MovableObject *
 vl::cl::SceneManager::getObject( uint32_t id )
 {
+	/*
 	for( size_t i = 0; i < _objects->size(); i++ )
 	{
 		if( _objects->at(i)->getID() == id )
 		{ return _objects->at(i); }
 	}
+	*/
 
 	return 0;
 }
@@ -155,6 +172,7 @@ void
 vl::cl::SceneManager::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
+	/*
 	if( DIRTY_OBJECTS & dirtyBits )
 	{
 		if ( _objects )
@@ -179,12 +197,14 @@ vl::cl::SceneManager::serialize( eq::net::DataOStream& os,
 		else
 		{ os << EQ_ID_INVALID; }
 	}
+	*/
 }
 
 void
 vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 						  const uint64_t dirtyBits )
 {
+	/*
 	if( DIRTY_OBJECTS & dirtyBits )
 	{
 		uint32_t id;
@@ -211,11 +231,13 @@ vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 			{ std::cerr << "no _nodes to map" << std::endl; }
 		}
 	}
+	*/
 }
 
 void
 vl::cl::SceneManager::finalize( void )
 {
+	/*
 	std::cout << "SceneManager::finalize" << std::endl;
 	// TODO we need to check that we are registered here
 	_createDistribContainers( );
@@ -226,6 +248,7 @@ vl::cl::SceneManager::finalize( void )
 		getSession()->registerObject( _nodes );
 		setDirty( DIRTY_NODES );
 	}
+	*/
 }
 
 vl::cl::SceneNode *
@@ -246,6 +269,7 @@ vl::cl::SceneManager::_createMovableObjectImpl(
 	return new vl::cl::Entity( name, params );
 }
 
+/*
 void
 vl::cl::SceneManager::_createDistribContainers( void )
 {
@@ -261,3 +285,4 @@ vl::cl::SceneManager::_createDistribContainers( void )
 	_nodes = new DistributedContainer<SceneNode *>(
 			_nodeCreateFunc, _nodeDeleteFunc );
 }
+*/

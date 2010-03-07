@@ -15,7 +15,7 @@
 #include <vmmlib/vector.hpp>
 #include <vmmlib/quaternion.hpp>
 
-#include <stdint.h>
+#include <vector>
 
 namespace vl
 {
@@ -25,6 +25,10 @@ namespace graph
 	// Forward declarations
 	class SceneManager;
 	class MovableObject;
+	class SceneNode;
+
+	typedef std::vector<SceneNode *> ChildContainer;
+	typedef std::vector<MovableObject *> ObjectContainer;
 
 	// Abstract scene node interface.
 	// SceneNode is a basic element in scene graph and it is the only element
@@ -46,17 +50,23 @@ namespace graph
 			// for the application (only the Nodes have concrete data).
 			virtual void translate( vmml::vec3d const &v ) = 0;
 
-			virtual void setTranslate( vmml::vec3d const &v ) = 0;
+			virtual void setTranslation( vmml::vec3d const &v ) = 0;
+
+			virtual vmml::vec3d const &getTranslation( void ) = 0;
 
 			virtual void rotate( vmml::quaterniond const &q ) = 0;
 
 			virtual void setRotation( vmml::quaterniond const &q ) = 0;
+
+			virtual vmml::quaterniond const &getRotation( void ) = 0;
 
 			virtual void scale( vmml::vec3d const &s ) = 0;
 
 			virtual void scale( double const s ) = 0;
 
 			virtual void setScale( vmml::vec3d const &s ) = 0;
+
+			virtual vmml::vec3d const &getScale( void ) = 0;
 
 			virtual void attachObject( MovableObject *object ) = 0;
 
@@ -71,7 +81,11 @@ namespace graph
 
 			virtual void removeChild( SceneNode *child ) = 0;
 
-			virtual SceneNode *parent( void ) = 0;
+			virtual ChildContainer const &getChilds( void ) = 0;
+
+			virtual SceneNode *getParent( void ) = 0;
+
+			virtual ObjectContainer const &getAttached( void ) = 0;
 
 			// Overloadable functions to modify the Rendering engine
 			// These have to be overriden but they are not pure abstracts

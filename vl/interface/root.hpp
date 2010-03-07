@@ -40,8 +40,8 @@ namespace graph
 			virtual void init( void ) = 0;
 
 			virtual vl::graph::RenderWindow *createWindow(
-					std::string const &, unsigned int ,
-					unsigned int ,
+					std::string const &name, unsigned int w,
+					unsigned int h,
 					vl::NamedValuePairList const & ) = 0;
 
 			// For now we only allow one SceneManager to exists per

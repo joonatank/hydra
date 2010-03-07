@@ -84,6 +84,7 @@ eqOgre::Node::frameStart(const uint32_t frameID, const uint32_t frameNumber )
 		if( _root )
 		{
 			//std::cout
+			std::cout << "EQ log level = " << eq::base::Log::level << std::endl;
 			EQERROR << "Root sync" << std::endl;
 			_root->sync();
 			vl::graph::SceneManager *sm = _root->getSceneManager();
@@ -93,16 +94,19 @@ eqOgre::Node::frameStart(const uint32_t frameID, const uint32_t frameNumber )
 
 			if( sm )
 			{
-				std::cout << "SceneManager present" << std::endl;
+				//std::cout
+				EQINFO << "SceneManager present" << std::endl;
 				vl::graph::SceneNode *node = sm->getNode( std::string("Feet") );
 				if( node )
 				{
-					std::cout << "Feet found from scene graph" << std::endl;
+					//std::cout
+					EQINFO << "Feet found from scene graph" << std::endl;
 					//++_state;
 				}
 				else
 				{
-					std::cout << "Feet NOT found" << std::endl;
+					//std::cout
+					EQINFO << "Feet NOT found" << std::endl;
 				}
 			}
 		}

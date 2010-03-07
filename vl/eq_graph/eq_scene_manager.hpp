@@ -33,6 +33,7 @@ namespace cl
 	// they are registered so we need to register them when they are
 	// created.
 	// We can still use similar functors for slaves though.
+	/*
 	class CreateNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
 	{
 		public :
@@ -72,6 +73,7 @@ namespace cl
 			virtual MovableObject *operator()( uint32_t const &id );
 
 	};	// class DeleteObjectFunc
+	*/
 
 	// Abstract class for managing the scene,
 	// might be concrete we need to see about that.
@@ -101,15 +103,17 @@ namespace cl
 			virtual vl::graph::SceneNode *getRootNode( void )
 			{
 				if( !_root )
-				{ _root = createNodeImpl( "Root" ); }
+				{ _root = createNode( "Root" ); }
 				return _root;
 			}
 
+			/*
 			virtual vl::graph::SceneNode *createNode(
 					std::string const &name = std::string() )
 			{
 				return getRootNode()->createChild( name );
 			}
+			*/
 
 			virtual vl::graph::SceneNode *createNodeImpl(
 					std::string const &name );
@@ -117,6 +121,9 @@ namespace cl
 			virtual vl::graph::MovableObject* createEntity(
 					std::string const &name, std::string const &meshName );
 
+			// There is no implementation of vl::cl::Camera, because
+			// it's render engine sepcifc and not distributed so this method
+			// will always return NULL.
 			virtual vl::graph::Camera *createCamera( std::string const & )
 			{ return 0; }
 
@@ -143,9 +150,9 @@ namespace cl
 			enum DirtyBits
 			{
 				// Dirty for the object container
-				DIRTY_OBJECTS = eq::Object::DIRTY_CUSTOM << 0,
+				DIRTY_ROOT = eq::Object::DIRTY_CUSTOM << 0,
 				// Dirty for the node container
-				DIRTY_NODES = eq::Object::DIRTY_CUSTOM << 1,
+				//DIRTY_NODES = eq::Object::DIRTY_CUSTOM << 1,
 				DIRTY_ACTIVE_CAMERA = eq::Object::DIRTY_CUSTOM << 2,
 				DIRTY_AMBIENT_LIGHT = eq::Object::DIRTY_CUSTOM << 3,
 				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 4
@@ -153,6 +160,9 @@ namespace cl
 
 		//	typedef std::map<uint32_t, SceneNode *> NodeMap;
 		//	typedef std::map<uint32_t, MovableObject *> ObjectMap;
+
+			// Nasty function to test some distribution stuff
+			// remove when they are working.
 			void finalize( void );
 
 		protected :
@@ -164,11 +174,12 @@ namespace cl
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
-			virtual void _createDistribContainers( void );
+			//virtual void _createDistribContainers( void );
 
 			// We'll use distributed container for created objects now.
 			// Makes searching bit slower but we have easier time distributing
 			// them. (and we can use functors to create and destroy objects).
+			/*
 			DistributedContainer<SceneNode *> *_nodes;
 			DistributedContainer<MovableObject *> *_objects;
 
@@ -177,6 +188,7 @@ namespace cl
 
 			CreateNodeFunc *_nodeCreateFunc;
 			DeleteNodeFunc *_nodeDeleteFunc;
+			*/
 
 			vl::graph::SceneNode *_root;
 

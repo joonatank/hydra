@@ -1,0 +1,1412 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Rendering Framework for VR systems
+\end_layout
+
+\begin_layout Author
+Joonatan Kuosa
+\begin_inset Newline newline
+\end_inset
+
+Tampere University of Technology
+\begin_inset Newline newline
+\end_inset
+
+Department of Mechanics and Design
+\end_layout
+
+\begin_layout Abstract
+We present a design for a Rendering Framework that can be used to drive
+ any existing rendering engine with minimal effort to make it Virtual Reality
+ (VR) aware.
+ These rendering engines can be part of game engine e.g.
+ id Tech
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.idsoftware.com/"
+
+\end_inset
+
+ or independent e.g.
+ Ogre3D
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.ogre3d.org/"
+
+\end_inset
+
+.
+ This Framework also can be utilized as a compatibility layer for already
+ VR aware rendering engines e.g.
+ OpenSG
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.opensg.org/"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Abstract
+We also present a design to drive this Rendering Framework using RPC methods
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+RPC, remote procedure call, methods are implemented as UDP packets.
+\end_layout
+
+\end_inset
+
+ which allows us to completely divide the tasks in Visualization and Simulators
+ to different machines inside a computer cluster.
+ The sender for these RPC commands can be implemented in various game engines
+ e.g.
+ Virtools
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add reference.
+\end_layout
+
+\end_inset
+
+ or using scripting enviroment e.g.
+ Python
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add reference.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Abstract
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+We divide the problem into distinct domains:
+\end_layout
+
+\begin_layout Enumerate
+The abstract architecture (Rendering Framework).
+\end_layout
+
+\begin_layout Enumerate
+VR specific features which are same for all engines.
+\end_layout
+
+\begin_layout Enumerate
+The rendering engine specific implementation.
+\end_layout
+
+\begin_layout Enumerate
+RPC command system.
+\end_layout
+
+\begin_layout Standard
+People working on this project:
+\end_layout
+
+\begin_layout Itemize
+Joonatan Kuosa
+\end_layout
+
+\begin_layout Itemize
+Jukka Kuusisto
+\end_layout
+
+\begin_layout Itemize
+Joonas Reunamo
+\end_layout
+
+\begin_layout Itemize
+Ville Lepokorpi
+\end_layout
+
+\begin_layout Standard
+We should do work assignments here.
+\end_layout
+
+\begin_layout Itemize
+Architecture Design, everybody
+\end_layout
+
+\begin_layout Itemize
+Programming Rendering Engine, Kuosa
+\end_layout
+
+\begin_layout Itemize
+Programming Commands, Reunamo
+\end_layout
+
+\begin_layout Itemize
+Scripting, Lepokorpi
+\end_layout
+
+\begin_layout Itemize
+User side requirements, Lepokorpi
+\end_layout
+
+\begin_layout Standard
+Because we have no real client I think Lepokorpi should be assigned to represent
+ the client in this development.
+ He would have responsibility of the reports to anyone outside this workgroup
+ and that those reports would be undestandable by non-programmers also.
+ He would also have the right to request such documentation from programmers
+ and also to have us explain things such that non-programmers can understand
+ them.
+ He would also oversee that client requirements would be met i.e.
+ that the program will be really useful.
+\end_layout
+
+\begin_layout Section
+Rendering Framework Architecture
+\end_layout
+
+\begin_layout Standard
+The abstract architeture that has to be implement by specific Rendering
+ Engine Wrapper.
+\end_layout
+
+\begin_layout Subsection
+Scene Graph
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Scene-Graph"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Scene graph is the basis of the rendering system because it's the most used
+ in current generation engines and also the most versatile.
+ It allows nodes to be added and removed from the hierarchy easily, combine
+ transformations, easy to represent in a tree data structure for example
+ xml.
+\end_layout
+
+\begin_layout Standard
+Our scene graph needs the following managers:
+\end_layout
+
+\begin_layout Itemize
+Root : manages all the scene graphs.
+\end_layout
+
+\begin_layout Itemize
+Scene Manager : manages one scene graph.
+\end_layout
+
+\begin_layout Standard
+Our scene graph consist of these elements
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+This list will grow when new objects are introduced.
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+Scene Node : an element that has transformation and childs.
+\end_layout
+
+\begin_layout Itemize
+Object : an element that has particular function e.g.
+ 3d model.
+\end_layout
+
+\begin_layout Itemize
+Observer : a human in VR system.
+\end_layout
+
+\begin_layout Subsection
+Goals
+\end_layout
+
+\begin_layout Standard
+Provide abstract representation of the scene.
+ This representation is in the form of scene graph, that is hierarchical
+ collection of 3d models and assorted objects.
+ This scene graph could be loaded from file and the abstract interface can
+ be used to create the scene graph in software.
+ Also all commands on the scene objects use the abstract interface defined
+ here.
+\end_layout
+
+\begin_layout Standard
+All subsequent specific implementations need to implement this abstract
+ interface.
+\end_layout
+
+\begin_layout Standard
+We use our own scene graph for the rendering framework, even though mostly
+ our scene graph is just a way to access specific rendering engine scene
+ graph it's still independent and specific implementations use agration
+ to implement rendering engine specific scene objects.
+\end_layout
+
+\begin_layout Section
+Abstract VR Renderer
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Change the title, it's ambigous.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For non-VR rendering engines we use Equalizer Graphics
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add reference.
+\end_layout
+
+\end_inset
+
+ to provide us a way to distribute our own scene graph around the Nodes
+ and Pipes.
+ We use our own scene graph rather than engine specific because it avoids
+ us having to redo the distribution code specifically for all rendering
+ engines.
+ Now we only need to map our scene graph to rendering engine scene graph.
+\end_layout
+
+\begin_layout Standard
+Later we might consider sharing the rendering engine scene graph because
+ it saves memory and also can reduce computational requirements, for example
+ we might divide the culling of the scene graph to two different processes
+ or threads and then synchronize the scene graphs.
+ This is interesting but not necessary at the moment, also Ogre3D is working
+ on task based scene graph system which would basicly implement multi-threaded
+ culling and similar CPU heavy tasks in parallel maner so we might as well
+ wait for that
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Ogre3D is under MIT license so we can basicly copy some of their code.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Equalizer needs following system to do clustering
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add picture.
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+Config, description of the cluster
+\end_layout
+
+\begin_layout Itemize
+Node, single computer or process in the cluster
+\end_layout
+
+\begin_layout Itemize
+Pipe, single GPU in the Node
+\end_layout
+
+\begin_layout Itemize
+Channel, single Renderer in Pipe
+\end_layout
+
+\begin_layout Itemize
+Window, single RenderingTarget in a Channel
+\end_layout
+
+\begin_layout Standard
+We need our own implementation of these classes using our own scene graph
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Scene-Graph"
+
+\end_inset
+
+.
+ And also for using our own rendering methods, which just forward the call
+ to the rendering engine these classes are:
+\end_layout
+
+\begin_layout Itemize
+cameras
+\end_layout
+
+\begin_layout Itemize
+rendering windows
+\end_layout
+
+\begin_layout Itemize
+viewports
+\end_layout
+
+\begin_layout Standard
+For VR ready engines like OpenSG we only have to do specific implementation
+ of the Rendering Framework for those libraries.
+\end_layout
+
+\begin_layout Section
+Ogre3D Renderer
+\end_layout
+
+\begin_layout Standard
+The specific 3D Rendering Engine Wrapper.
+ We use Ogre3D as a test case.
+ This inherits from the equalizer renderer so all it's objects are already
+ versioned and the scene graph is shared between nodes in the cluster.
+\end_layout
+
+\begin_layout Standard
+For the scene graph we implement creation of Ogre3D objects corresponding
+ to our scene graph objects using agregation.
+ And callbacks from our scene graph to call respective methods in Ogre3D
+ objects.
+\end_layout
+
+\begin_layout Standard
+For the rendering we need to implement the camera, rendering window and
+ viewport classes.
+ These too only need to have Ogre3D objects as agration and call respective
+ methods in them when they are called.
+\end_layout
+
+\begin_layout Subsection
+Goals
+\end_layout
+
+\begin_layout Standard
+These are short time goals for deciding wether or not we should pursue this
+ particular part of the project or give it up.
+ We have the possibility of using OpenSG instead.
+ These problems are VR specific and not natively implemented by Ogre3D.
+ A roadmap and deadline for these goals to be decided within a month.
+\end_layout
+
+\begin_layout Itemize
+Render quad-buffer stereo image.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows with same head matrix, panorama.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows with head tracking.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows using different Pipes (GPUs).
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows using multiple Nodes (computers).
+\end_layout
+
+\begin_layout Section
+Commands
+\end_layout
+
+\begin_layout Standard
+Commands are the RPC method which we use to communicate between Rendering
+ Framework and the Controller
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Controller is anyone controlling the rendering, usually script engine.
+\end_layout
+
+\end_inset
+
+.
+ Commands are transmitted using UDP and executed at the receiving end.
+\end_layout
+
+\begin_layout Standard
+Command design could be normal structures, so they are easy to pack or they
+ could be complex objects.
+\end_layout
+
+\begin_layout Subsection
+boost::asio
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:boost::asio"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Should we use boost::asio for Commands? It provides relatively easy to use
+ asyncronious udp messaging, c++ interface for sockets and is platform independe
+nt.
+\end_layout
+
+\begin_layout Subsection
+Goals
+\end_layout
+
+\begin_layout Subsection
+Why processes are better than threads
+\end_layout
+
+\begin_layout Standard
+Unlike threads processes protect their own memory and can be independently
+ verified e.g.
+ one process can not crash another but a thread can crash another thread
+ in the same process.
+ 
+\end_layout
+
+\begin_layout Section
+UML modeling
+\end_layout
+
+\begin_layout Standard
+We'll use UML as a modeling language throughout this project.
+ 
+\end_layout
+
+\begin_layout Section
+Testing
+\end_layout
+
+\begin_layout Standard
+Testing is integral part of any bigger software project.
+ That is why this section is here and why there should be much attention
+ to be paid to it.
+ Following will explain some of the terms used in software testing and also
+ how the methodology is applicable to this project in particularly.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add some references.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Test-Driven Development
+\end_layout
+
+\begin_layout Standard
+Test-Driven Development (TDD) is methodology where the tests are writen
+ before the real program code.
+ This quaranties that every piece of software is tested thoroughly, that
+ the programmer wastes as little time as possible in writing useless implementat
+ion and that design errors are caught as fast as possible before all the
+ implementation is done.
+\end_layout
+
+\begin_layout Standard
+All tests will work as documentation on already working parts of the program
+ and also as regression test when new features are added.
+ This is the main reason why tests should be writen before any code or at
+ the least they should be writen before any code is integrated in to the
+ main library or deemed usable.
+\end_layout
+
+\begin_layout Subsubsection
+Our usage
+\end_layout
+
+\begin_layout Standard
+In my opinion we should focus on using TDD style without the strict constraints
+ Extreme Programming (XP) uses, that is we need not write unit test modules
+ for everything and unit tests need not be complete.
+ 
+\end_layout
+
+\begin_layout Standard
+Small test code is easier to write, compile and errors are easier to find
+ when the code that failed uses only one or two classes.
+ Also if we create as many tests as possible without beign redundant we
+ have already writen regression test set.
+ So we don't need to worry if new features will break the program as we
+ can just run the regression test set.
+\end_layout
+
+\begin_layout Subsection
+Unit Testing
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add description of Unit tests for those that don't know
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Unit test is the smallest possible test one can perform.
+ One unit test does not depend on more than single function
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+To be exact usually read/write access is needed.
+\end_layout
+
+\end_inset
+
+ in a single class.
+ Unit test module contains all the test necessary to completely test a single
+ class, this includes tests for exceptions and special cases.
+\end_layout
+
+\begin_layout Subsubsection
+Our usage
+\end_layout
+
+\begin_layout Standard
+Every custom data structure and independent class should have unit test
+ module.
+ Meaning basicly that if the class does not depend on other than our own
+ classes and/or simple external data structures we should have unit tests
+ and mock objects for it.
+\end_layout
+
+\begin_layout Standard
+Problem with unit testing when using mostly outside library code is that
+ we would need to use huge amount of time to study the libraries to be able
+ to isolate the classes they use.
+ For example Ogre3D uses lots of Singletons
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Singleton is c++ style global variable.
+\end_layout
+
+\end_inset
+
+ which make unit testing almost impossible.
+ Also Equalizer will create number of objects before it's features are usable
+ so anything depending on those features must initialize almost the complete
+ Equalizer library.
+\end_layout
+
+\begin_layout Subsection
+Integration Testing
+\end_layout
+
+\begin_layout Standard
+Apart from unit tests most code initially will be writen in small units
+ which are bit larger than a unit tests and depend on the libraries we use.
+ I call these integration tests for now.
+ One test program is responsible for testing interaction between minimal
+ number of classes.
+ 
+\end_layout
+
+\begin_layout Standard
+Integration tests are designed based on the classes they need and the purpose
+ of those classes.
+ Unlike unit tests which test one class completely integration tests purpose
+ is to test the interaction of multiple classes.
+\end_layout
+
+\begin_layout Subsection
+Functional Testing
+\end_layout
+
+\begin_layout Standard
+Functional tests are the easiest tests to understand and implement because
+ they need to test only specific functionality of a collection of classes
+ for example: sending data from one thread to another.
+ Also the restrictions of unit tests and integration tests that they are
+ complete and have minimal number of depedencies are lifted for functional
+ tests.
+\end_layout
+
+\begin_layout Standard
+Functional tests can usually be broken down to smaller tests (task) and
+ we need to find the smallest feasable tasks to break it down.
+ But on the other hand functional tests can be designed using large tasks
+ which are broken down before implementing the test.
+\end_layout
+
+\begin_layout Standard
+If we follow TDD and we break functional tests to the smallest possible
+ tasks we can, our functional tests will become our unit and integration
+ tests because we have no code that does not have a test assosiated with
+ it.
+\end_layout
+
+\begin_layout Standard
+Needed funtional tests, some examples this list should be expanded and then
+ divided to smaller tests:
+\end_layout
+
+\begin_layout Enumerate
+Ability to quit
+\end_layout
+
+\begin_layout Enumerate
+Scene graphs containing scene nodes are in sync.
+\end_layout
+
+\begin_layout Enumerate
+Scene graphs containing scene nodes and objects are in sync.
+\end_layout
+
+\begin_layout Enumerate
+Rendering one model in multiple windows.
+\end_layout
+
+\begin_layout Enumerate
+Rendering one model in quad-buffer stereo.
+\end_layout
+
+\begin_layout Enumerate
+Rendering one model with multiple Pipes.
+\end_layout
+
+\begin_layout Enumerate
+Rendering one model with multiple Nodes.
+\end_layout
+
+\begin_layout Section
+Tools and Libraries
+\end_layout
+
+\begin_layout Standard
+Some information about the chosen tools, this list should be up to date
+ and it should list reasons why specific tool or library was chosen.
+ Any objections to these should be discussed as soon as possible.
+\end_layout
+
+\begin_layout Subsection
+Version Control
+\end_layout
+
+\begin_layout Standard
+Version control done with Mercurial
+\begin_inset CommandInset href
+LatexCommand href
+target "http://mercurial.selenic.com/"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Mercurial is good because: 
+\end_layout
+
+\begin_layout Itemize
+It is distributed version control system so it can be branched by the users
+\begin_inset Newline newline
+\end_inset
+
+and those branches can be easily merged back to the main tip.
+\end_layout
+
+\begin_layout Itemize
+It is really easy to use.
+\end_layout
+
+\begin_layout Itemize
+It's easier to set up than Subversion.
+\end_layout
+
+\begin_layout Itemize
+Has similar syntax to Subversion.
+\end_layout
+
+\begin_layout Itemize
+Has Windows and Mac OS X clients with GUI.
+\end_layout
+
+\begin_layout Subsection
+Build system
+\end_layout
+
+\begin_layout Standard
+We are going to use CMake
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.cmake.org/"
+
+\end_inset
+
+ build system because:
+\end_layout
+
+\begin_layout Itemize
+It is completely portable: Linux, UNIX, Windows, Mac OS X
+\end_layout
+
+\begin_layout Itemize
+It is easy to use.
+\end_layout
+
+\begin_layout Itemize
+It does not depend on other tools.
+\end_layout
+
+\begin_layout Subsection
+UML
+\end_layout
+
+\begin_layout Standard
+ArgoUML
+\begin_inset CommandInset href
+LatexCommand href
+target "http://argouml.tigris.org/"
+
+\end_inset
+
+ is good I think.
+ Any suggestions?
+\end_layout
+
+\begin_layout Standard
+Any other design tools we need execpt UML editor and basic text, vector
+ graphics editors?
+\end_layout
+
+\begin_layout Subsubsection
+Use-Case Diagrams
+\end_layout
+
+\begin_layout Standard
+Anyone has any particular knowledge on what and how we should make use-case
+ diagrams?
+\end_layout
+
+\begin_layout Standard
+I had one stab at this and I was not that pleased with it.
+\end_layout
+
+\begin_layout Subsection
+Libraries
+\end_layout
+
+\begin_layout Subsubsection
+Ogre3D
+\end_layout
+
+\begin_layout Standard
+Rendering library we use for the implementation.
+ There should be descriptive document ogre3d which descripes the features
+ and problems with this engine.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic and static linking allowed from propietary code.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Equalizer Graphics
+\end_layout
+
+\begin_layout Standard
+Graphics library that handles VR releated features like cluster, quad-buffer
+ stereo, asymmetric frustum
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Head tracking creates asymmetric frustum.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Equalizer has features like multi-GPU or multi Pipe support, multi Node
+ support and also new Nodes can be introduced after a process has started.
+ GPUs can render to texture and that texture is deliver to display Node,
+ so we can create huge clusters rendering one screen.
+ Equalizer also supports assigning GPUs for different eyes and rendering
+ different models with different GPUs.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic linking allowed from propietary code.
+ Need to check about static linking.
+\end_layout
+
+\begin_layout Subsubsection
+vmml
+\end_layout
+
+\begin_layout Standard
+Mathematics library distributed with Equalizer Graphics.
+ Not the best one around, but for simple things it is adequate.
+ Mentioned here so if we need a better one we can make a notice here.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic linking allowed from propietary code.
+ Need to check about static linking.
+\end_layout
+
+\begin_layout Subsubsection
+VRPN
+\end_layout
+
+\begin_layout Standard
+Virtual Reality Peripheral Network is simple and efficient library to connect
+ to different tracking services and also to different joysticks, gamepads
+ and mouses.
+\end_layout
+
+\begin_layout Standard
+As most tracking systems have vrpn support we will use it as our main tracking
+ system and no other tracking system implementation is planned for now.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic linking allowed from propietary code.
+ Need to check about static linking.
+\end_layout
+
+\begin_layout Subsubsection
+RakNet
+\end_layout
+
+\begin_layout Standard
+Networking library designed for games.
+ Includes number of advanced features like voice sending.
+ Not sure if this is the right libary for us though as it's designed for
+ communications over the Internet specifically and has huge amount of features
+ we don't need for this project.
+\end_layout
+
+\begin_layout Standard
+Licenses both free and cheap comercial licenses.
+\end_layout
+
+\begin_layout Subsubsection
+boost::asio
+\end_layout
+
+\begin_layout Standard
+Networking library designed around asynchronous messages
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Asynchronous communications are specifically non-blocking so they do not
+ waste computational time idling.
+\end_layout
+
+\end_inset
+
+.
+ Boost quality design, documentation, interface and code.
+ Though boost style difficult to get started.
+ Also dependency on a huge template library, but the use of boost is increasing
+ and I think Equalizer is moving to use boost::asio anyway.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic linking allowed from propietary code.
+ Need to check about static linking.
+\end_layout
+
+\begin_layout Subsubsection
+OpenSG
+\end_layout
+
+\begin_layout Standard
+Alternative rendering engine.
+ There should be descriptive document opensg which descripes the features
+ and problems with this engine.
+\end_layout
+
+\begin_layout Standard
+Completely free and dynamic linking allowed from propietary code.
+ Need to check about static linking.
+\end_layout
+
+\begin_layout Subsection
+Linux development enviroment
+\end_layout
+
+\begin_layout Standard
+I will be using mostly Linux for development, specifically Gentoo 64-bit.
+ Reunamo is using also Linux, specifically Debian 32-bit.
+ Also as Linux is far superior for clusters
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+As Linux has ssh service easily available, it's easier to start programs
+ remotely.
+\end_layout
+
+\end_inset
+
+ and low latency computing
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Windows XP lowest latency is 8-10ms, with current Linux 1ms.
+\end_layout
+
+\end_inset
+
+ I think we should concentrate more on testing and development on it.
+ This would mean also to move our VR system whether it be one computer or
+ a cluster to Linux.
+ 
+\end_layout
+
+\begin_layout Standard
+Mind that I'm not suggesting to abandon Windows though, we should keep all
+ releases and hopefully all development versions compiling and running in
+ Windows, because that will be the most likely enviroment our clients will
+ want and we will need Windows for Seinäjoki Cave, workstations and laptops
+ also.
+ In the next section I outline the development enviroment used with Windows.
+\end_layout
+
+\begin_layout Subsubsection
+Installing the tools
+\end_layout
+
+\begin_layout Standard
+This section needs to have all necessary tools and the minimum versions
+ we use.
+\end_layout
+
+\begin_layout Standard
+CMake 2.8, GCC 4.2
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Check the correct version.
+\end_layout
+
+\end_inset
+
+, Mercurial, Subversion
+\end_layout
+
+\begin_layout Subsection
+Windows development enviroment
+\end_layout
+
+\begin_layout Subsubsection
+Visual Studio
+\end_layout
+
+\begin_layout Standard
+Using Visual Studio 2010.
+ For now this is release candidate, freely availabale
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add url to load it from.
+\end_layout
+
+\end_inset
+
+.
+ After it's release we need ask University for a license or buy licenses
+ (200 euros each).
+\end_layout
+
+\begin_layout Standard
+Only the Standard and Professional versions of Visual Studio include 64-bit
+ compiler and they work out-of-box with CMake to compile 64-bit binaries
+ so I think it's easier to work with the paid for versions than the free
+ Express edition which you would have to hack to get it working correctly
+ with CMake.
+ Still need to run tests for 32-bit and if the Express is good for that.
+\end_layout
+
+\begin_layout Subsubsection
+CMake
+\end_layout
+
+\begin_layout Standard
+CMake 2.8 or higher.
+ CMake provides downloads for 32-bit binary which works perfectly.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add url to load it from.
+\end_layout
+
+\end_inset
+
+ CMake is necessary for configuring Ogre3D, boost
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+You can also get boost jam version.
+ Please don't ask help in getting it working.
+\end_layout
+
+\end_inset
+
+ and our Renderer and Command libs.
+\end_layout
+
+\begin_layout Subsubsection
+TortoiseHg
+\end_layout
+
+\begin_layout Standard
+I would suggest using TortoiseHg
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+target "http://tortoisehg.bitbucket.org/"
+
+\end_inset
+
+ for Mercurial as it's relatively easy to use and works from Windows explorer.
+ Any other Mercurial client is good also but unsupported.
+\end_layout
+
+\begin_layout Standard
+We use Mercurial as our versioning system so anyone working with any resource
+ be it code, script, data or documentation needs to lear to use it.
+ In the minimum checking out the current version, if you are only testing.
+\end_layout
+
+\begin_layout Standard
+I'm not sure how well it can be integrated to Visual Studio 2010, I'll see
+ if it can be done.
+\end_layout
+
+\begin_layout Subsubsection
+TorteiseSVN
+\end_layout
+
+\begin_layout Standard
+I would suggest using TortoiseSVN
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+target "http://tortoisesvn.tigris.org/"
+
+\end_inset
+
+ for Subversion as it's relative easy to use and integrates to Windows Explorer.
+ Any other client is good also but unsupported.
+ Subversion is only needed for checking out Ogre3D and Equalizer Graphics.
+\end_layout
+
+\begin_layout Subsubsection
+Ogre3D
+\end_layout
+
+\begin_layout Standard
+Ogre3D from subversion
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add url to load it from.
+\end_layout
+
+\end_inset
+
+.
+ We will use the latest development version throughout the delopment, this
+ will avoid the first maintanance hasle after new version of Ogre3D is released
+ after our software is at the release or maintanace state so we slide smoothly
+ to the new version.
+ Also there is quite a nice bunch of future features in Ogre3D 1.8: like
+ new threading model for background loading and maybe some work on task
+ based rendering also.
+\end_layout
+
+\begin_layout Standard
+Ogre3D Dependencies from Ogre website.
+ I will provide VS2010 compiled static libs of these for 32-bit and 64-bit.
+ Also I will include to this my package all extra libraries if necessary.
+\end_layout
+
+\begin_layout Standard
+Compiling, this should have information on compiling.
+\end_layout
+
+\begin_layout Subsubsection
+Equalizer Graphics
+\end_layout
+
+\begin_layout Standard
+Equalizer Graphics from subversion
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Add url to load it from.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Compiling, this should have information on compiling.
+\end_layout
+
+\begin_layout Subsubsection
+Boost
+\end_layout
+
+\begin_layout Standard
+Boost 1.40
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+There is a cmake version of this and it's hugely easier to compile than
+ the boost jam version.
+\end_layout
+
+\end_inset
+
+, later versions should be fine.
+ Boost is needed for Ogre3D threads, equalizer uses boost::asio for UDP
+ but it downloads and compiles it's own version.
+ We also are thinking of using boost::asio for the Commands
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "sub:boost::asio"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+I will provide this already compiled with VS2010 for 32-bit and 64-bit as
+ it's going to change rarely.
+ 
+\end_layout
+
+\begin_layout Standard
+Compiling if you like to or need to compile boost:
+\end_layout
+
+\begin_layout Enumerate
+you need to have CMake, 
+\end_layout
+
+\begin_layout Enumerate
+unzip the sources 
+\end_layout
+
+\begin_layout Enumerate
+run cmake-gui
+\end_layout
+
+\begin_layout Enumerate
+select source dir
+\end_layout
+
+\begin_layout Enumerate
+configure
+\end_layout
+
+\begin_layout Enumerate
+generate 
+\end_layout
+
+\begin_layout Enumerate
+open the created VS solution
+\end_layout
+
+\begin_layout Enumerate
+compile with VS
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "key-1"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
