@@ -3,3 +3,4 @@ syntax: glob
 build
 ogre_demos
 *.bak
+*.swp
