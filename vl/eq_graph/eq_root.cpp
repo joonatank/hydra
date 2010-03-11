@@ -3,12 +3,13 @@
 #include <eq/net/session.h>
 
 vl::cl::Root::Root( void )
-	: _scene_manager(0)
+	: _scene_managers()
 {}
 
 vl::graph::SceneManager *
 vl::cl::Root::getSceneManager( std::string const &name )
 {
+	/*
 	if( !_scene_manager )
 	{
 		_scene_manager = _createSceneManager( name );
@@ -20,13 +21,16 @@ vl::cl::Root::getSceneManager( std::string const &name )
 		}
 		_scene_manager->finalize();
 	}
-	return _scene_manager;
+	*/
+	return 0;
 }
 
 void
 vl::cl::Root::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
+	eq::Object::serialize( os, dirtyBits );
+	/*
 	if( DIRTY_SCENE_MANAGER & dirtyBits )
 	{
 		if( _scene_manager )
@@ -40,12 +44,15 @@ vl::cl::Root::serialize( eq::net::DataOStream& os,
 			os << EQ_ID_INVALID;
 		}
 	}
+	*/
 }
 
 void
 vl::cl::Root::deserialize( eq::net::DataIStream& is,
 		  const uint64_t dirtyBits )
 {
+	eq::Object::deserialize( is, dirtyBits );
+	/*
 	if( DIRTY_SCENE_MANAGER & dirtyBits )
 	{
 		uint32_t id;
@@ -66,4 +73,5 @@ vl::cl::Root::deserialize( eq::net::DataIStream& is,
 			}
 		}
 	}
+	*/
 }

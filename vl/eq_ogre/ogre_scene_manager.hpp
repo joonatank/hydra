@@ -14,6 +14,7 @@ namespace vl
 {
 namespace ogre
 {
+	/*
 	// Functors for creation and destruction of objects,
 	// these handle mapping of objects.
 	class CreateNodeFunc : public vl::cl::CreateNodeFunc
@@ -55,6 +56,7 @@ namespace ogre
 			virtual vl::cl::MovableObject *operator()( uint32_t id );
 
 	};	// class DeleteObjectFunc
+	*/
 
 	class SceneManager : public vl::cl::SceneManager
 	{
@@ -83,7 +85,7 @@ namespace ogre
 						= vl::NamedValuePairList() );
 
 			// Override the container functors
-			virtual void _createDistribContainers( void );
+	//		virtual void _createDistribContainers( void );
 
 			Ogre::SceneManager *_ogre_sm;
 

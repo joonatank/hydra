@@ -107,16 +107,13 @@ namespace cl
 				return _root;
 			}
 
-			/*
 			virtual vl::graph::SceneNode *createNode(
-					std::string const &name = std::string() )
-			{
-				return getRootNode()->createChild( name );
-			}
-			*/
+					std::string const &name = std::string() );
 
+			/*
 			virtual vl::graph::SceneNode *createNodeImpl(
 					std::string const &name );
+			*/
 
 			virtual vl::graph::MovableObject* createEntity(
 					std::string const &name, std::string const &meshName );

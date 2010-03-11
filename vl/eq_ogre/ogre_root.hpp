@@ -35,7 +35,7 @@ namespace ogre
 	{
 		public :
 			Root( void )
-				: _ogre_root(0)
+				: vl::cl::Root(), _ogre_root(0)
 			{
 				_ogre_root = new Ogre::Root( "", "" );
 			}
@@ -48,7 +48,7 @@ namespace ogre
 			Ogre::Root *getNative( void )
 			{ return _ogre_root; }
 
-			virtual void createRenderingSystem( void )
+			virtual void createRenderSystem( void )
 			{
 				EQASSERT( _ogre_root );
 #if defined(_DEBUG)
@@ -76,7 +76,8 @@ namespace ogre
 			virtual vl::graph::RenderWindow *createWindow(
 					std::string const &name, unsigned int width,
 					unsigned int height,
-					vl::NamedValuePairList const &params )
+					vl::NamedValuePairList const &params
+						= vl::NamedValuePairList() )
 			{
 				if( _ogre_root )
 				{

@@ -26,7 +26,8 @@ namespace ogre
 			Viewport( Ogre::Viewport *view )
 				: _ogre_viewport( view )
 			{
-				EQASSERT( _ogre_viewport );
+				if( !_ogre_viewport )
+				{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
 			}
 
 			virtual Ogre::Viewport *getNative( void )

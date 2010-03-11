@@ -1,0 +1,456 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Overview of the Rendering Framework
+\end_layout
+
+\begin_layout Author
+Joonatan Kuosa
+\end_layout
+
+\begin_layout Section
+Definitions
+\end_layout
+
+\begin_layout Subsection
+User story
+\end_layout
+
+\begin_layout Standard
+User stories which are used as for the creation of the acceptance tests
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Acceptance test tells us if the software does what the customer wants.
+\end_layout
+
+\end_inset
+
+, the user stories are designed with use cases which descripe the specific
+ technology.
+ After use case is ready collection of tasks are provided that are necessary
+ to implement the use case then we can implement unit tests for those tasks
+ and acceptance test for the user story based on current design.
+\end_layout
+
+\begin_layout Subsection
+Spike
+\end_layout
+
+\begin_layout Standard
+Spikes are initial technology tests done by the programmer.
+ Purpose of a spike is not to give any functional code to the software but
+ to test wether or not the technology can be used in a way the programmer
+ thinks.
+\end_layout
+
+\begin_layout Subsection
+Render Engine
+\end_layout
+
+\begin_layout Section
+Rendering Framework Architecture
+\end_layout
+
+\begin_layout Standard
+The abstract architeture that has to be implement by specific Rendering
+ Engine Wrapper.
+ The framework has no knowledge about the clustering or specific implementation
+ of the engine.
+\end_layout
+
+\begin_layout Subsection
+Scene Graph
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Scene-Graph"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Scene graph is the basis of the rendering system because it's the most used
+ in current generation engines and also the most versatile.
+ It allows nodes to be added and removed from the hierarchy easily, combine
+ transformations, easy to represent in a tree data structure such as xml.
+\end_layout
+
+\begin_layout Standard
+Our scene graph needs the following managers:
+\end_layout
+
+\begin_layout Itemize
+Root : manages all the scene graphs.
+\end_layout
+
+\begin_layout Itemize
+Scene Manager : manages one scene graph.
+\end_layout
+
+\begin_layout Standard
+Our scene graph consist of these elements
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+This list will grow when new objects are introduced.
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+Scene Node : an element that has transformation and childs.
+\end_layout
+
+\begin_layout Itemize
+Object : an element that has particular function e.g.
+ 3d model.
+\end_layout
+
+\begin_layout Itemize
+Observer : a human in VR system.
+\end_layout
+
+\begin_layout Subsection
+Goals
+\end_layout
+
+\begin_layout Standard
+Provide abstract representation of the scene.
+ This representation is in the form of scene graph, that is hierarchical
+ collection of transformations and assorted objects.
+ This scene graph could be loaded from file and the abstract interface can
+ be used to create the scene graph in software.
+ Also all commands on the scene objects use the abstract interface defined
+ here.
+\end_layout
+
+\begin_layout Standard
+All subsequent specific implementations need to implement this abstract
+ interface.
+\end_layout
+
+\begin_layout Section
+Abstract VR Renderer
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Change the title, it's ambigous.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For non-VR rendering engines we use Equalizer Graphics
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add reference.
+\end_layout
+
+\end_inset
+
+ to provide us a way to distribute our own scene graph around the Nodes
+ and Pipes.
+ Nodes are computers in a cluster, Pipes are Graphics Processing Units (GPUs)
+ in the Node.
+ We use our own scene graph rather than engine specific because it avoids
+ us having to redo the distribution code specifically for all rendering
+ engines.
+ For implementing the specific rendering engine we need to map our scene
+ graph to rendering engine scene graph.
+\end_layout
+
+\begin_layout Standard
+Equalizer needs following system to do clustering
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Add picture.
+\end_layout
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+Config, description of the cluster
+\end_layout
+
+\begin_layout Itemize
+Node, single computer or process in the cluster
+\end_layout
+
+\begin_layout Itemize
+Pipe, single GPU in the Node
+\end_layout
+
+\begin_layout Itemize
+Channel, single Renderer in Pipe
+\end_layout
+
+\begin_layout Itemize
+Window, single Rendering Target in a Channel
+\end_layout
+
+\begin_layout Standard
+We need our own implementation of these classes using our own scene graph
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Scene-Graph"
+
+\end_inset
+
+.
+ And also for using our own rendering methods, which just forward the call
+ to the rendering engine these classes are:
+\end_layout
+
+\begin_layout Itemize
+Cameras
+\end_layout
+
+\begin_layout Itemize
+Rendering windows
+\end_layout
+
+\begin_layout Itemize
+Viewports
+\end_layout
+
+\begin_layout Standard
+For VR ready engines like OpenSG we don't need this part of the library
+ as they already do clustering in their own.
+\end_layout
+
+\begin_layout Subsection
+Spikes
+\end_layout
+
+\begin_layout Itemize
+Ability to quit.
+\end_layout
+
+\begin_layout Itemize
+Scene graphs containing scene nodes are in sync.
+\end_layout
+
+\begin_layout Itemize
+Scene graphs containing scene nodes and objects are in sync.
+\end_layout
+
+\begin_layout Section
+Ogre3D Renderer
+\end_layout
+
+\begin_layout Standard
+The specific 3D Rendering Engine Wrapper.
+ We use Ogre3D as a test case.
+ This inherits from the Abstract VR Renderer so all it's objects are already
+ versioned and the scene graph is shared between Nodes in the cluster.
+\end_layout
+
+\begin_layout Standard
+For the scene graph we implement creation of Ogre3D objects corresponding
+ to our scene graph objects using agregation.
+ And callbacks from our scene graph to call respective methods in Ogre3D
+ objects.
+\end_layout
+
+\begin_layout Standard
+For the rendering we need to implement the camera, rendering window and
+ viewport classes.
+ These too only need to have Ogre3D objects as agregation and call respective
+ methods in them when they are called.
+\end_layout
+
+\begin_layout Subsection
+Spikes
+\end_layout
+
+\begin_layout Standard
+These spikes are used for deciding wether or not we should pursue this particula
+r part of the project or give it up.
+ We have the possibility of using OpenSG instead.
+ These problems are VR specific and not natively implemented by Ogre3D.
+ Some examples :
+\end_layout
+
+\begin_layout Itemize
+Render quad-buffer stereo image.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows with same head matrix, panorama.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows with head tracking.
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows using different Pipes (GPUs).
+\end_layout
+
+\begin_layout Itemize
+Render multiple windows using multiple Nodes (computers).
+\end_layout
+
+\begin_layout Section
+Commands
+\end_layout
+
+\begin_layout Standard
+Commands are the RPC method which we use to communicate between Rendering
+ Framework and the Controller
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Controller is anyone controlling the rendering, usually script engine.
+\end_layout
+
+\end_inset
+
+.
+ Commands are transmitted using UDP and executed at the receiving end.
+\end_layout
+
+\begin_layout Subsection
+TCP and UDP
+\end_layout
+
+\begin_layout Standard
+For real time applications TCPs latency is so bad that I don't think it's
+ a viable option
+\begin_inset CommandInset citation
+LatexCommand cite
+key "TCP-problems"
+
+\end_inset
+
+.
+ It is not proof that it could not be done by TCP but not that many networked
+ games use TCP and I don't think there is even one real-time simulator or
+ tracking system that uses TCP.
+\end_layout
+
+\begin_layout Standard
+The maximum size of an UDP datagram is 64 kbytes what this means is that
+ UDP message larger than this is fragmented at the sending end to smaller
+ pieces.
+ The receiving end will handle defragmenting the datagrams to a complete
+ message but if one of the fragments is lost in the transaction then all
+ the fragments are disgarded.
+ This is acceptable if we are sending couple of times larger messages than
+ 64 kbytes say 512 kbytes, but not so good if we are sending for example
+ 8 Mbytes messages, this would translate to 128 fragments from which anyone
+ can be missing and all the fragments need to be retransmitted.
+\end_layout
+
+\begin_layout Subsection
+Spikes
+\end_layout
+
+\begin_layout Standard
+If we are using UDP we need these spikes:
+\end_layout
+
+\begin_layout Itemize
+Reliable UDP e.g.
+ acknowledgin a message.
+\end_layout
+
+\begin_layout Itemize
+Divide large messages and sequencing UDP datagrams.
+\end_layout
+
+\begin_layout Itemize
+Timestamping.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "TCP-problems"
+
+\end_inset
+
+Wikipedia article 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://en.wikipedia.org/wiki/Transmission_Control_Protocol#Alternatives"
+
+\end_inset
+
+, retrieved 2010-03-09
+\end_layout
+
+\end_body
+\end_document

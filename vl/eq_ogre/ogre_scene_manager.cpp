@@ -7,7 +7,9 @@
 #include <eq/net/session.h>
 
 #include <OGRE/OgreSceneManagerEnumerator.h>
+
 // Functors
+/*
 vl::ogre::CreateNodeFunc::CreateNodeFunc( vl::cl::SceneManager *sm )
 	: vl::cl::CreateNodeFunc(sm)
 {}
@@ -69,6 +71,7 @@ vl::ogre::DeleteObjectFunc::operator()( uint32_t id )
 	return obj;
 }
 
+*/
 // ENDOF Functors
 
 // SceneManager
@@ -92,6 +95,7 @@ vl::ogre::SceneManager::_createMovableObjectImpl(
 		vl::NamedValuePairList const &params )
 {
 	// For now we only use entities
+	// TODO this should throw
 	if( typeName != "Entity" )
 	{ return 0; }
 
@@ -103,6 +107,7 @@ vl::ogre::SceneManager::_createMovableObjectImpl(
 	return ent;
 }
 
+/*
 void
 vl::ogre::SceneManager::_createDistribContainers( void )
 {
@@ -118,3 +123,4 @@ vl::ogre::SceneManager::_createDistribContainers( void )
 	_nodes = new vl::DistributedContainer<vl::cl::SceneNode *>(
 			_nodeCreateFunc, _nodeDeleteFunc );
 }
+*/

@@ -93,10 +93,7 @@ vl::cl::SceneManager::createNode( std::string const &name )
 	// Um the ID is invalid so we need to register the scene_manager first
 	// or register the objects later.
 	getSession()->registerObject( node );
-//	std::cout << "Creating scene node = " << node->getName()
-//		<< " with ID = " << node->getID() << std::endl;
-//	std::cout << "node ID ==  EQ_ID_INVALID = "
-//		<< (node->getID() == EQ_ID_INVALID) << std::endl;
+
 	// This needs the ID to be generated already so we need to
 	// register the node first.
 	//_nodes->push( node );
@@ -108,6 +105,7 @@ vl::graph::MovableObject *
 vl::cl::SceneManager::createEntity(
 		std::string const &name, std::string const &meshName )
 {
+	/*
 	vl::NamedValuePairList params;
 	params["meshName"] = meshName;
 	MovableObject *obj = _createMovableObjectImpl(
@@ -115,6 +113,8 @@ vl::cl::SceneManager::createEntity(
 	_objects->push( obj );
 
 	return obj;
+	*/
+	return 0;
 }
 
 // Find function needs scene graph traversal to be implemented

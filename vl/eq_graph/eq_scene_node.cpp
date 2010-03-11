@@ -298,13 +298,11 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 	if( dirtyBits & DIRTY_TRANSFORM )
 	{
 		is >> _position >> _rotation;
-		_setTransform( _position, _rotation );
 	}
 
 	if( dirtyBits & DIRTY_SCALE )
 	{
 		is >> _scale;
-		_setScale( _scale );
 	}
 
 	/*

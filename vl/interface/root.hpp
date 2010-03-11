@@ -35,14 +35,15 @@ namespace graph
 			
 			// Some initialization methods
 			// Engine specific mostly, so they need to be overriden
-			virtual void createRenderingSystem( void ) = 0;
+			virtual void createRenderSystem( void ) = 0;
 
 			virtual void init( void ) = 0;
 
 			virtual vl::graph::RenderWindow *createWindow(
 					std::string const &name, unsigned int w,
 					unsigned int h,
-					vl::NamedValuePairList const & ) = 0;
+					vl::NamedValuePairList const &
+						= vl::NamedValuePairList() ) = 0;
 
 			// For now we only allow one SceneManager to exists per
 			// instance.

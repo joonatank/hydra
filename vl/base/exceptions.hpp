@@ -38,6 +38,14 @@ namespace vl
 			{}
 	};
 
+	class duplicate : public exception
+	{
+		public :
+			duplicate( const char *wher )
+				: exception( "duplicate", wher )
+			{}
+	};
+
 	class fifo_full : public exception
 	{
 		public :

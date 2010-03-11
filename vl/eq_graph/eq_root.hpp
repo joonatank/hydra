@@ -37,14 +37,15 @@ namespace cl
 			
 			// Some initialization methods
 			// Engine specific mostly, so they need to be overriden
-			virtual void createRenderingSystem( void ) {}
+			virtual void createRenderSystem( void ) {}
 
 			virtual void init( void ) {}
 
 			virtual vl::graph::RenderWindow *createWindow(
 					std::string const &, unsigned int ,
 					unsigned int ,
-					vl::NamedValuePairList const & )
+					vl::NamedValuePairList const &
+						= vl::NamedValuePairList() )
 			{
 				return 0;
 			}
@@ -86,8 +87,8 @@ namespace cl
 				return new SceneManager( name );
 			}
 
-			// For now we only manage one scene manager.
-			SceneManager *_scene_manager;
+			std::vector<SceneManager *> _scene_managers;
+
 	};	// class Root
 
 }	// namespace graph

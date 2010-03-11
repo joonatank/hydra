@@ -70,18 +70,18 @@ eqOgre::Client::initialise( void )
         return -1;
     }
 
+	/*
 	std::cout << "Client creating root" << std::endl;
 	_root = new vl::cl::Root();
 	_config->registerObject( _root );
-    // 3. init config
 	eq::base::Clock clock;
+	*/
 
 //	_write_node_fifo
 //		= new vl::base::fifo_buffer<vl::server::Command *>(FIFO_LENGTH);
 //	_config->setClientFifo( _write_node_fifo );
 
-	// Create Ogre::Root and set it as the initial distributed data to config.
-
+    // 3. init config
 	// TODO this should register data, that is the initData should be registered
 	// it also should update at everyframe instead of just in the start.
 	if( !_config->init( _root->getID() ) )
@@ -93,10 +93,12 @@ eqOgre::Client::initialise( void )
 		return -1;
 	}
 
+	/*
 	std::cout << "Client config inited" << std::endl;
 
 	EQLOG( eq::LOG_STATS ) << "Config init took " << clock.getTimef() << " ms"
 		<< std::endl;
+	*/
 
 	return 0;
 }	// initialise
@@ -139,7 +141,7 @@ eqOgre::Client::renderOneFrame( void )
     if( !_config->isRunning () )
     {
 		throw vl::exception( "Config is not running!",
-				"Client::renderOneFrame" );
+			"Client::renderOneFrame" );
 	}
 
 	// Init the SceneGraph
@@ -147,6 +149,7 @@ eqOgre::Client::renderOneFrame( void )
 	{
 //		EQASSERT( _write_node_fifo );
 
+		/*
 		std::cout << "Init SceneGraph" << std::endl;
 
 		vl::graph::SceneManager *sm = _root->getSceneManager( "SceneManager" );
@@ -156,6 +159,7 @@ eqOgre::Client::renderOneFrame( void )
 			std::cout << "Client : Found Feet" << std::endl;
 		}
 		_root->commit();
+		*/
 //		sm->commit();
 		//vl::graph::SceneNode *node = sm->createNode();
 		/*	Removed the command based scene graph
@@ -234,7 +238,7 @@ eqOgre::Client::renderOneFrame( void )
 void
 eqOgre::Client::shutdown( void )
 {
-	std::cout << "Client shutting down" << std::endl;
+//	std::cout << "Client shutting down" << std::endl;
 
 	// 5. exit config
 	EQASSERT( _config );

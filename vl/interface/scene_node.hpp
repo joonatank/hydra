@@ -71,6 +71,8 @@ namespace graph
 
 			virtual void detachObject( MovableObject *object ) = 0;
 
+			virtual ObjectContainer const &getAttached( void ) const = 0;
+
 			virtual SceneNode *createChild(
 					std::string const &name = std::string() ) = 0;
 
@@ -83,8 +85,6 @@ namespace graph
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
 			virtual SceneNode *getParent( void ) = 0;
-
-			virtual ObjectContainer const &getAttached( void ) const = 0;
 
 			virtual SceneManager *getCreator( void ) = 0;
 

@@ -34,7 +34,11 @@ namespace ogre
 			RenderWindow( Ogre::RenderWindow *win )
 				: _ogre_window( win )
 			{
-				EQASSERT( _ogre_window );
+				if( !_ogre_window )
+				{
+					throw vl::null_pointer(
+							"vl::ogre::RenderWindow::RenderWindow" );
+				}
 			}
 
 			virtual ~RenderWindow( void ) {}

@@ -26,7 +26,8 @@ namespace ogre
 			Camera( Ogre::Camera *cam )
 				: _ogre_camera(cam)
 			{
-				EQASSERT( _ogre_camera );
+				if( !_ogre_camera)
+				{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
 			}
 
 			virtual ~Camera( void ) {}
