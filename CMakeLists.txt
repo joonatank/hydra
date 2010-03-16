@@ -1,6 +1,8 @@
 project("vl" CXX)
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
+
+enable_testing()
 
 message( "Building vl" )
 # TODO add define rendering engine (Ogre/OpenSG)

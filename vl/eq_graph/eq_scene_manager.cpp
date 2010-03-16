@@ -74,7 +74,9 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 	  */
 	  _root(0)
 {
-	eq::Object::setName( name );
+	if( !name.empty() )
+	{ eq::Object::setName( name ); }
+
 //	_createDistribContainers( );
 	// This is problematic as if we call this it will call
 	// register object, so equalizer has to be running in
@@ -92,7 +94,7 @@ vl::cl::SceneManager::createNode( std::string const &name )
 	// Seems not to need to be registered.
 	// Um the ID is invalid so we need to register the scene_manager first
 	// or register the objects later.
-	getSession()->registerObject( node );
+	//getSession()->registerObject( node );
 
 	// This needs the ID to be generated already so we need to
 	// register the node first.
