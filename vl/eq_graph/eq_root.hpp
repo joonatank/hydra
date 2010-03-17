@@ -53,7 +53,13 @@ namespace cl
 			// For now we only allow one SceneManager to exists per
 			// instance.
 			virtual vl::graph::SceneManager *getSceneManager(
-					std::string const &name = std::string() );
+					std::string const &name );
+
+			virtual vl::graph::SceneManager *createSceneManager(
+					std::string const &name );
+
+			virtual void destroySceneManager(
+					std::string const &name );
 
 			// Equalizer overrides
 	
@@ -81,8 +87,12 @@ namespace cl
 		protected :
 			// Internal method for creating the SceneManagers
 			// must be overloaded by the classes that inherit.
+			//
+			// We use this to provide factory pattern, so that
+			// createSceneManager need not be overloaded
+			// (it also handles distribution)
 			virtual SceneManager *_createSceneManager(
-					std::string const &name = std::string() )
+					std::string const &name )
 			{
 				return new SceneManager( name );
 			}

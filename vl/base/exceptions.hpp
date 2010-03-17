@@ -22,6 +22,24 @@ namespace vl
 			{}
 	};
 
+	class empty_param : public exception
+	{
+		public :
+			empty_param( const char *wher )
+				: exception( "empty_param", wher )
+			{}
+
+	};
+
+	class no_object : public exception
+	{
+		public :
+			no_object( const char *wher )
+				: exception( "no_object", wher )
+			{}
+
+	};
+
 	class scale_quaternion : public exception
 	{
 		public :

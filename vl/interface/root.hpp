@@ -48,13 +48,13 @@ namespace graph
 			// For now we only allow one SceneManager to exists per
 			// instance.
 			virtual SceneManager *getSceneManager(
-					std::string const &name = std::string() ) = 0;
+					std::string const &name ) = 0;
 
-		protected :
-			// Internal method for creating the SceneManagers
-			// must be overloaded by the classes that inherit.
-		//	virtual SceneManager *_createSceneManager(
-		//			std::string const &name = std::string() ) = 0;
+			virtual SceneManager *createSceneManager(
+					std::string const &name ) = 0;
+
+			virtual void destroySceneManager(
+					std::string const &name ) = 0;
 
 	};	// class Root
 

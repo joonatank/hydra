@@ -9,20 +9,47 @@ vl::cl::Root::Root( void )
 vl::graph::SceneManager *
 vl::cl::Root::getSceneManager( std::string const &name )
 {
-	/*
-	if( !_scene_manager )
+	if( name.empty() )
+	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
+
+	std::vector<SceneManager *>::iterator iter = _scene_managers.begin();
+	for( ; iter != _scene_managers.end(); ++iter )
 	{
-		_scene_manager = _createSceneManager( name );
-		// TODO we need to check that we are registered here
-		if( isMaster() )
-		{
-			getSession()->registerObject( _scene_manager );
-			setDirty( DIRTY_SCENE_MANAGER );
-		}
-		_scene_manager->finalize();
+		if( (*iter)->getName() == name )
+		{ return *iter; }
 	}
-	*/
+
 	return 0;
+}
+
+vl::graph::SceneManager *
+vl::cl::Root::createSceneManager( std::string const &name )
+{
+	if( name.empty() )
+	{ throw vl::empty_param("vl::cl::Root::createSceneManager"); }
+
+	vl::cl::SceneManager *man = _createSceneManager( name );
+	_scene_managers.push_back( man );
+	return man;
+}
+
+void
+vl::cl::Root::destroySceneManager( std::string const &name )
+{
+	if( name.empty() )
+	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
+
+	std::vector<SceneManager *>::iterator iter = _scene_managers.begin();
+	for( ; iter != _scene_managers.end(); ++iter )
+	{
+		if( (*iter)->getName() == name )
+		{
+			delete *iter;
+			_scene_managers.erase( iter );
+			return;
+		}
+	}
+	throw vl::no_object("vl::cl::Root::getSceneManager");
 }
 
 void
