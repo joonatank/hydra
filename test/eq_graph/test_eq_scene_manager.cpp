@@ -9,13 +9,6 @@
 
 using vl::cl::SceneManager;
 
-namespace vl
-{
-namespace cl
-{
-	// TODO provide stub implementation of vl::cl::SceneNode here
-}
-}
 
 BOOST_AUTO_TEST_CASE( constructor_test )
 {
