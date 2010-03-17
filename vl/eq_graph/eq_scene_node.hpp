@@ -154,8 +154,6 @@ namespace cl
 
 			virtual void addChild( vl::graph::SceneNode *child );
 
-			virtual void removeChild( vl::graph::SceneNode *child );
-
 			virtual vl::graph::ChildContainer const &getChilds( void ) const
 			{ return _childs; }
 
@@ -207,6 +205,7 @@ namespace cl
 			// These have to be overriden but they are not pure abstracts
 			// because this class can be used in the Application without
 			// rendering engine.
+			/*
 			virtual void _setTransform( vl::vector const &,
 					vl::quaternion const & )
 			{}
@@ -220,8 +219,15 @@ namespace cl
 			virtual void _addChild( vl::graph::SceneNode *) {}
 
 			virtual void _removeChild( vl::graph::SceneNode *) {}
+			*/
 
 		protected :
+			void _addChild( vl::graph::SceneNode *child );
+
+			void _setParent( vl::graph::SceneNode *parent );
+
+			void _removeChild( vl::graph::SceneNode *child );
+
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
 			// destruction of all objects contained in it.
@@ -230,14 +236,6 @@ namespace cl
 			vl::vector _position;
 			vl::quaternion _rotation;
 			vl::vector _scale;
-
-			// Functors for distributed containers
-			/*
-			DetachNodeFunc _childDetachFunc;
-			AttachNodeFunc _childAttachFunc;
-			DetachObjectFunc _objectDetachFunc;
-			AttachObjectFunc _objectAttachFunc;
-			*/
 
 			// For now we use one vector to manage all attached objects.
 			// For large scenegraphs this will be problematic, because we need

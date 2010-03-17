@@ -80,8 +80,6 @@ namespace graph
 
 			virtual void addChild( SceneNode *child ) = 0;
 
-			virtual void removeChild( SceneNode *child ) = 0;
-
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
 			virtual SceneNode *getParent( void ) = 0;
@@ -95,6 +93,7 @@ namespace graph
 			// TODO
 			// Renaming them to callbacks might be usefull like
 			// transformationSet, scaleSet, objectAttached etc.
+			/*
 			virtual void _setTransform( vl::vector const &,
 					vl::quaternion const & ) = 0;
 
@@ -107,6 +106,7 @@ namespace graph
 			virtual void _addChild( SceneNode *) = 0;
 
 			virtual void _removeChild( SceneNode *) = 0;
+			*/
 
 	};	// class SceneNode
 

@@ -174,19 +174,26 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_EQUAL( c2->getParent(), parent);
 	BOOST_CHECK_EQUAL( parent->getChilds().size(), 2 );
 
-	// remove the first child
-	parent->removeChild( c1 );
-	BOOST_CHECK_EQUAL( c1->getParent(), (vl::graph::SceneNode *)0 );
-	BOOST_CHECK_EQUAL( parent->getChilds().size(), 1 );
-
-	// Check throwing by trying to
-	// add the second child again
+	// Disallow adding node multiple times
 	BOOST_CHECK_THROW( parent->addChild( c2 ), vl::duplicate );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_NO_THROW( c2->addChild( c1 ) );
 	BOOST_CHECK_NO_THROW( parent->addChild( c1 ) );
 	BOOST_CHECK_EQUAL( c1->getParent(), parent );
 	BOOST_CHECK_THROW( c2->setParent( parent ), vl::duplicate );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+
+	// Disallow setting node as it's own parent
+	BOOST_CHECK_THROW( c2->addChild( c2 ), vl::exception );
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_THROW( c2->setParent( c2 ), vl::exception );
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_THROW( c2->setParent( c2 ), vl::exception );
+
+	// Disallow setting null parent
+	BOOST_CHECK_THROW( c2->setParent( 0 ), vl::null_pointer );
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_THROW( c2->addChild( 0 ), vl::null_pointer );
 }
 
 BOOST_AUTO_TEST_CASE( attachment_test )
@@ -210,6 +217,7 @@ BOOST_AUTO_TEST_CASE( attachment_test )
 // Used for callback test so we see if the callback is called
 // FIXME Callback design is still in half way, should they be called when
 // the public interface functions are called or when the data is deserialized?
+/*
 MOCK_BASE_CLASS( mock_scene_node, vl::cl::SceneNode )
 {
 	MOCK_METHOD( _setTransform, 2 );
@@ -219,6 +227,7 @@ MOCK_BASE_CLASS( mock_scene_node, vl::cl::SceneNode )
 	MOCK_METHOD( _addChild, 1 );
 	MOCK_METHOD( _removeChild, 1 );
 };
+*/
 
 BOOST_AUTO_TEST_CASE( callbacks )
 {

@@ -12,6 +12,7 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 	  _rotation(vl::quaternion::IDENTITY),
 	  _scale(1.0, 1.0, 1.0),
 	  _attached(),
+	  _parent(0),
 	  _childs()
 {
 	if( !_creator )
@@ -24,6 +25,7 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 void
 vl::cl::SceneNode::destroy( void )
 {
+	/*
 	for( size_t i = 0; i < _attached.size(); ++i )
 	{ _creator->destroy( _attached.at(i) ); }
 
@@ -31,60 +33,50 @@ vl::cl::SceneNode::destroy( void )
 	{ _creator->destroy( _childs.at(i) ); }
 
 	_creator->destroy( this );
+	*/
 }
 void
 vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 {
-	/*
-	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
-	bool found = false;
-	for( size_t i = 0; i < _attached.size(); i++ )
+	vl::graph::ObjectContainer::iterator iter = _attached.begin();
+	for( ; iter != _attached.end(); ++iter )
 	{
-		if( cl_obj == _attached.at(i) )
-		{ found = true; break; }
+		if( *iter == object )
+		{ throw vl::duplicate( "vl::cl::SceneNode::attachObject" ); }
 	}
-	if( !found )
-	{
-	//	setDirty( DIRTY_ATTACHED );
 
-		_attached.push( cl_obj );
-	}
-	*/
+	_attached.push_back( object );
 }
 
 void
 vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 {
-	/*
-	vl::cl::MovableObject *cl_obj = (vl::cl::MovableObject *)object;
-	for( size_t i = 0; i < _attached.size(); i++ )
+	vl::graph::ObjectContainer::iterator iter = _attached.begin();
+	for( ; iter != _attached.end(); ++iter )
 	{
-		if( cl_obj == _attached.at(i) )
+		if( *iter == object )
 		{
-			_attached.remove( i );
+			_attached.erase( iter );
+			return;
 		}
 	}
-	*/
 
-		// TODO we have a problem with allocation and deallocation
-		// here, so we just let application programmer to
-		// destroy the object... RefPtrs would work better.
-		//
-		// Should movableObjects be owned by only one node or not?
+	// TODO we have a problem with allocation and deallocation
+	// here, so we just let application programmer to
+	// destroy the object... RefPtrs would work better.
+	//
+	// Should movableObjects be owned by only one node or not?
 }
 
 vl::graph::SceneNode *
 vl::cl::SceneNode::createChild( std::string const &name )
 {
-	/*
 	// TODO we should use the SceneManager to allocate the Nodes
 	// and manage a list of created nodes.
-	vl::graph::SceneNode *child = _creator->createNodeImpl( name );
+	vl::graph::SceneNode *child = _creator->createNode( name );
 	addChild( child );
 
 	return child;
-	*/
-	return 0;
 }
 
 // This function is only for internal usage, addChild and removeChild
@@ -94,59 +86,39 @@ vl::cl::SceneNode::createChild( std::string const &name )
 void
 vl::cl::SceneNode::setParent( vl::graph::SceneNode *parent )
 {
-	/*
 	// TODO should throw
-	if( this == parent )
-	{ return; }
+	if( (vl::graph::SceneNode *)this == parent )
+	{
+		throw vl::duplicate( //"Can not be child and parent",
+			"vl::cl::SceneNode::setParent" );
+	}
 
-	// We need to inform our current owner of the transfer
-	// and we need to inform our new owner after that.
-	_parent = parent;
-	*/
+	if( 0 == parent )
+	{ throw vl::null_pointer( "vl::cl::SceneNode::setParent" ); }
+
+	if( _parent == parent )
+	{
+		throw vl::duplicate( "vl::cl::SceneNode::setParent" );
+	}
+
+	((SceneNode *)parent)->_addChild( this );
+	_setParent( parent );
 }
 
 void
 vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
 {
-	/*
-	vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
+	if( 0 == child )
+	{ throw vl::null_pointer( "vl::cl::SceneNode::addChild" ); }
 
-	// TODO should throw
-	if( !cl_child || this == cl_child || cl_child->parent() == this )
-	{ return; }
-
-	// Set dirty
-//	setDirty( DIRTY_CHILD );
-
-	for( size_t i = 0; i < _childs.size(); i++ )
+	if( this == child )
 	{
-		if( _childs.at(i) == cl_child )
-		{
-			// TODO this should throw, as the parent and child are
-			// inconsistent
-			return;
-		}
+		throw vl::duplicate( //"Can not be child and parent",
+			"vl::cl::SceneNode::addChild" );
 	}
-	cl_child->setParent( this );
-	_childs.push( cl_child );
-	*/
-}
 
-void
-vl::cl::SceneNode::removeChild( vl::graph::SceneNode *child )
-{
-	/*
-	vl::cl::SceneNode *cl_child = (vl::cl::SceneNode *)child;
-	for( size_t i = 0; i < _childs.size(); ++i )
-	{
-		if( _childs.at(i) == cl_child )
-		{
-			_childs.remove(i);
-			cl_child->setParent( 0 );
-			break;
-		}
-	}
-	*/
+	_addChild( child );
+	((SceneNode *)child)->_setParent( this );
 }
 
 // ---- Equalizer overrides ----
@@ -211,4 +183,43 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 	}
 	*/
 
+}
+
+// ------- Protected ---------
+void
+vl::cl::SceneNode::_addChild( vl::graph::SceneNode *child )
+{
+	vl::graph::ChildContainer::iterator iter = _childs.begin();
+	for( ; iter != _childs.end(); ++iter )
+	{
+		if( *iter == child )
+		{ throw vl::duplicate("vl::cl::SceneNode::_addChild"); }
+	}
+
+	_childs.push_back( child );
+}
+
+void
+vl::cl::SceneNode::_setParent( vl::graph::SceneNode *parent )
+{
+	if( _parent )
+	{ ((SceneNode *)_parent)->_removeChild( this ); }
+
+	_parent = parent;
+}
+
+void
+vl::cl::SceneNode::_removeChild( vl::graph::SceneNode *child )
+{
+	vl::graph::ChildContainer::iterator iter = _childs.begin();
+	for( ; iter != _childs.end(); ++iter )
+	{
+		if( *iter == child )
+		{
+			_childs.erase( iter );
+			return;
+		}
+	}
+
+	throw vl::exception("Child not found", "vl::cl::SceneNode::_removeChild" );
 }
