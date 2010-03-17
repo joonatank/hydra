@@ -26,55 +26,6 @@ namespace vl
 
 namespace cl
 {
-	// Functor used by the master when new node is created
-	// Rendering engine nodes have a similar but different Functor
-	// which calls mapObject.
-	// FIXME these can't work as the objects don't have IDs before
-	// they are registered so we need to register them when they are
-	// created.
-	// We can still use similar functors for slaves though.
-	/*
-	class CreateNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			CreateNodeFunc( SceneManager *sm );
-
-			virtual SceneNode *operator()( uint32_t const &id );
-
-	};	// class CreateNodeFunc
-
-	class DeleteNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			DeleteNodeFunc( vl::cl::SceneManager *sm );
-
-			virtual SceneNode *operator()( uint32_t const &id );
-
-	};	// class DeleteNodeFunc
-
-	class CreateObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			CreateObjectFunc( vl::cl::SceneManager *sm );
-
-			virtual MovableObject *operator()( uint32_t const &id );
-
-	};	// class CreateObjectFunc
-
-	class DeleteObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			DeleteObjectFunc( vl::cl::SceneManager *sm );
-
-			virtual MovableObject *operator()( uint32_t const &id );
-
-	};	// class DeleteObjectFunc
-	*/
-
 	// Abstract class for managing the scene,
 	// might be concrete we need to see about that.
 	//
@@ -146,13 +97,11 @@ namespace cl
 
 			enum DirtyBits
 			{
-				// Dirty for the object container
+				// Dirty SceneGraph Root object
 				DIRTY_ROOT = eq::Object::DIRTY_CUSTOM << 0,
-				// Dirty for the node container
-				//DIRTY_NODES = eq::Object::DIRTY_CUSTOM << 1,
-				DIRTY_ACTIVE_CAMERA = eq::Object::DIRTY_CUSTOM << 2,
-				DIRTY_AMBIENT_LIGHT = eq::Object::DIRTY_CUSTOM << 3,
-				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 4
+				DIRTY_ACTIVE_CAMERA = eq::Object::DIRTY_CUSTOM << 1,
+				DIRTY_AMBIENT_LIGHT = eq::Object::DIRTY_CUSTOM << 2,
+				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 3
 			};
 
 		//	typedef std::map<uint32_t, SceneNode *> NodeMap;
@@ -170,22 +119,6 @@ namespace cl
 					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
-
-			//virtual void _createDistribContainers( void );
-
-			// We'll use distributed container for created objects now.
-			// Makes searching bit slower but we have easier time distributing
-			// them. (and we can use functors to create and destroy objects).
-			/*
-			DistributedContainer<SceneNode *> *_nodes;
-			DistributedContainer<MovableObject *> *_objects;
-
-			CreateObjectFunc *_objectCreateFunc;
-			DeleteObjectFunc *_objectDeleteFunc;
-
-			CreateNodeFunc *_nodeCreateFunc;
-			DeleteNodeFunc *_nodeDeleteFunc;
-			*/
 
 			vl::graph::SceneNode *_root;
 

@@ -4,110 +4,6 @@
 
 #include <eq/net/session.h>
 
-// Functors
-/*
-vl::cl::AttachNodeFunc::AttachNodeFunc( vl::cl::SceneManager *sm,
-		vl::cl::SceneNode *owner )
-	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm),
-	  _owner( owner )
-{}
-
-vl::cl::SceneNode *
-vl::cl::AttachNodeFunc::operator()( uint32_t const &id )
-{
-	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
-	if( node )
-	{
-		// Call the protected function which handles
-		// the lower level engine specific functionality
-		if( _owner )
-		{ _owner->_addChild( node); }
-	}
-	else
-	{
-		// Should throw
-	}
-	return node;
-}
-
-vl::cl::DetachNodeFunc::DetachNodeFunc( vl::cl::SceneManager *sm,
-		vl::cl::SceneNode *owner)
-	: SceneFunctor<vl::cl::SceneNode *>(sm),
-	  _owner( owner )
-{}
-
-vl::cl::SceneNode *
-vl::cl::DetachNodeFunc::operator()( uint32_t const &id )
-{
-	EQASSERT( id != EQ_ID_INVALID );
-
-	// This should remove the node from the owners list of
-	// childs
-	SceneNode *node= (vl::cl::SceneNode *)_manager->getNode( id );
-	if( node )
-	{
-		// Call the protected function which handles
-		// the lower level engine specific functionality
-		if( _owner )
-		{ _owner->_removeChild( node ); }
-	}
-	else
-	{
-		// Should throw
-	}
-	return node;
-}
-
-vl::cl::AttachObjectFunc::AttachObjectFunc( vl::cl::SceneManager *sm,
-		vl::cl::SceneNode *owner )
-	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm),
-	  _owner( owner )
-{}
-
-vl::cl::MovableObject *
-vl::cl::AttachObjectFunc::operator()( uint32_t const &id )
-{
-	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
-	if( obj )
-	{
-		// Call the protected function which handles
-		// the lower level engine specific functionality
-		if( _owner )
-		{ _owner->_attachObject( obj ); }
-	}
-	else
-	{
-		// Should throw
-	}
-	return obj;
-}
-
-vl::cl::DetachObjectFunc::DetachObjectFunc( vl::cl::SceneManager *sm,
-		vl::cl::SceneNode *owner )
-	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm),
-	  _owner( owner )
-{}
-
-vl::cl::MovableObject *
-vl::cl::DetachObjectFunc::operator()( uint32_t const &id )
-{
-	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
-	if( obj )
-	{
-		// Call the protected function which handles
-		// the lower level engine specific functionality
-		_owner->_detachObject( obj );
-	}
-	else
-	{
-		// Should throw
-	}
-	return obj;
-}
-*/
-
-// ENDOF Functors
-
 // SceneNode
 vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 		std::string const &name )
@@ -117,14 +13,6 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 	  _scale(1.0, 1.0, 1.0),
 	  _attached(),
 	  _childs()
-	/*
-	  _childDetachFunc( creator, this ),
-	  _childAttachFunc( creator, this ),
-	  _objectDetachFunc( creator, this ),
-	  _objectAttachFunc( creator, this ),
-	  _attached(&_objectAttachFunc,  &_objectDetachFunc),
-	  _childs(&_childAttachFunc, &_childDetachFunc)
-  */
 {
 	if( !_creator )
 	{ throw vl::null_pointer("SceneNode::SceneNode"); }

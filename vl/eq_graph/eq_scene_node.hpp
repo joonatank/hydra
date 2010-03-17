@@ -26,121 +26,9 @@ namespace vl
 
 namespace cl
 {
-//	typedef std::vector<vl::graph::MovableObject *> MovableContainer;
-//	typedef std::vector<vl::graph::SceneNode *> SceneNodeContainer;
-
 	// Forward declarations
 	class SceneManager;
 	class SceneNode;
-
-	// Functor declarations
-	// Abstract functor for all conversion functors that use the SceneManager
-	// (anything to do with the scene graph).
-	// Also we have locked to input type to id now.
-	/*
-	template<typename T>
-	class SceneFunctor : public ConversionFunctor<T, uint32_t>
-	{
-		public :
-			SceneFunctor( vl::cl::SceneManager *sm )
-				: _manager(sm)
-			{}
-
-			// Conversion function
-			virtual T &operator()( uint32_t const &id ) = 0;
-
-		protected :
-			// SceneManager holds a list of all objects in the scene
-			// and we can use it to convert IDs to object pointers
-			vl::cl::SceneManager *_manager;
-	};	// class SceneFunctor
-
-	// Pointer specialization
-	template<typename T>
-	class SceneFunctor<T *> : public ConversionFunctor<T *, uint32_t>
-	{
-		public :
-			SceneFunctor( vl::cl::SceneManager *sm )
-				: _manager(sm)
-			{}
-
-			// Conversion function
-			virtual T *operator()( uint32_t const &id ) = 0;
-
-		protected :
-			// SceneManager holds a list of all objects in the scene
-			// and we can use it to convert IDs to object pointers
-			vl::cl::SceneManager *_manager;
-	};	// class SceneFunctor
-
-	// Functor to which inherit conversion from id -> SceneNode
-	// can also perform the necessary task of attaching node with id
-	// to the parent (given when constructed).
-	class AttachNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			// Owner node, that is the parent node for any attached nodes.
-			// Use NULL owner to just convert id to node
-			AttachNodeFunc( vl::cl::SceneManager *sm,
-					vl::cl::SceneNode *owner = 0);
-
-			virtual vl::cl::SceneNode *operator()( uint32_t const &id );
-
-		protected :
-			vl::cl::SceneNode *_owner;
-
-	};	// class NodeModFunc
-
-	class DetachNodeFunc : public SceneFunctor<vl::cl::SceneNode *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			// Owner node, that is the parent node for any attached nodes.
-			// Use NULL owner to just convert id to node
-			DetachNodeFunc( vl::cl::SceneManager *sm,
-					vl::cl::SceneNode *owner = 0);
-
-			virtual vl::cl::SceneNode *operator()( uint32_t const &id );
-
-		protected :
-			vl::cl::SceneNode *_owner;
-
-	};	// class NodeModFunc
-
-	class AttachObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			// Owner node, that is the parent node for any attached nodes.
-			// Use NULL owner to just convert id to node
-			AttachObjectFunc( vl::cl::SceneManager *sm,
-					vl::cl::SceneNode *owner = 0);
-
-			virtual vl::cl::MovableObject *operator()( uint32_t const &id );
-
-		protected :
-			vl::cl::SceneNode *_owner;
-
-	};	// class NodeModFunc
-
-	class DetachObjectFunc : public SceneFunctor<vl::cl::MovableObject *>
-	{
-		public :
-			// SceneManager of which scene graph this functor operates
-			// Owner node, that is the parent node for any attached nodes.
-			// Use NULL owner to just convert id to node
-			DetachObjectFunc( vl::cl::SceneManager *sm,
-					vl::cl::SceneNode *owner = 0);
-
-			// Detaches this object from _owner
-			virtual vl::cl::MovableObject *operator()( uint32_t const &id );
-
-		protected :
-			vl::cl::SceneNode *_owner;
-
-	};	// class NodeModFunc
-	*/
 
 	// SceneNode is a basic element in scene graph and it is the only element
 	// that can be other than leafs of the tree
@@ -155,9 +43,6 @@ namespace cl
 
 			// Frees the memory, called from SceneManager
 			virtual ~SceneNode( void ) {}
-
-			//virtual uint32_t getID( void ) const
-			//{ return eq::Object::getID(); }
 
 			// Instructs SceneManager to free this Node, all the ChildNodes
 			// and all attached objects

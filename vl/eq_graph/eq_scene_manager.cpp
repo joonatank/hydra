@@ -2,86 +2,12 @@
 
 #include <eq/net/session.h>
 
-// Functors
-/*
-vl::cl::CreateNodeFunc::CreateNodeFunc( vl::cl::SceneManager *sm )
-	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm)
-{}
-
-vl::cl::SceneNode *
-vl::cl::CreateNodeFunc::operator()( uint32_t const &id )
-{
-	EQASSERT( _manager );
-
-	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
-	EQASSERT( node );
-	return node;
-}
-
-vl::cl::DeleteNodeFunc::DeleteNodeFunc( vl::cl::SceneManager *sm )
-	: vl::cl::SceneFunctor<vl::cl::SceneNode *>(sm)
-{}
-
-vl::cl::SceneNode *
-vl::cl::DeleteNodeFunc::operator()( uint32_t const &id )
-{
-	EQASSERT( _manager );
-
-	SceneNode *node = (vl::cl::SceneNode *)_manager->getNode( id );
-	EQASSERT( node );
-	return node;
-}
-
-vl::cl::CreateObjectFunc::CreateObjectFunc( vl::cl::SceneManager *sm )
-	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm)
-{}
-
-vl::cl::MovableObject *
-vl::cl::CreateObjectFunc::operator()( uint32_t const &id )
-{
-	EQASSERT( _manager );
-
-	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
-	EQASSERT( obj );
-	return obj;
-}
-
-vl::cl::DeleteObjectFunc::DeleteObjectFunc( vl::cl::SceneManager *sm )
-	: vl::cl::SceneFunctor<vl::cl::MovableObject *>(sm)
-{}
-
-vl::cl::MovableObject *
-vl::cl::DeleteObjectFunc::operator()( uint32_t const &id )
-{
-	EQASSERT( _manager );
-
-	MovableObject *obj = (vl::cl::MovableObject *)_manager->getObject( id );
-	EQASSERT( obj );
-	return obj;
-}
-*/
-
-// ENDOF Functors
-
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: /*_nodes(0),
-	  _objects(0),
-	  _objectCreateFunc(0), 
-	  _objectDeleteFunc(0),
-	  _nodeCreateFunc(0),
-	  _nodeDeleteFunc(0),
-	  */
-	  _root(0)
+	: _root(0)
 {
 	if( !name.empty() )
 	{ eq::Object::setName( name ); }
-
-//	_createDistribContainers( );
-	// This is problematic as if we call this it will call
-	// register object, so equalizer has to be running in
-	// main loop already.
-//	_root = createNodeImpl( "Root" );
 }
 
 vl::graph::SceneNode *
@@ -174,83 +100,23 @@ void
 vl::cl::SceneManager::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {
-	/*
-	if( DIRTY_OBJECTS & dirtyBits )
+	if( DIRTY_ROOT & dirtyBits )
 	{
-		if ( _objects )
-		{
-			std::cout << "Registering object container" << std::endl;
-			//getSession()->registerObject( _objects );
-			os << _objects->getID();
-		}
-		else
-		{ os << EQ_ID_INVALID; }
 	}
-	if( DIRTY_NODES & dirtyBits )
-	{
-		if( _nodes )
-		{
-			std::cout << "Registering node container" << std::endl;
-			// We can't register objects here, because this is called by
-			// get getInstanceData() which is called by registerObject()
-			//getSession()->registerObject( _nodes );
-			os << _nodes->getID();
-		}
-		else
-		{ os << EQ_ID_INVALID; }
-	}
-	*/
 }
 
 void
 vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 						  const uint64_t dirtyBits )
 {
-	/*
-	if( DIRTY_OBJECTS & dirtyBits )
+	if( DIRTY_ROOT & dirtyBits )
 	{
-		uint32_t id;
-		is >> id;
-		if( id != EQ_ID_INVALID )
-		{
-			std::cout << "mapping objects container" << std::endl;
-			if( _objects )
-			{ getSession()->mapObject( _objects, id ); }
-			else
-			{ std::cerr << "no _objects to map" << std::endl; }
-		}
 	}
-	if( DIRTY_NODES & dirtyBits )
-	{
-		uint32_t id;
-		is >> id;
-		if( id != EQ_ID_INVALID )
-		{
-			std::cout << "mapping nodes container" << std::endl;
-			if( _nodes )
-			{ getSession()->mapObject( _nodes, id ); }
-			else
-			{ std::cerr << "no _nodes to map" << std::endl; }
-		}
-	}
-	*/
 }
 
 void
 vl::cl::SceneManager::finalize( void )
 {
-	/*
-	std::cout << "SceneManager::finalize" << std::endl;
-	// TODO we need to check that we are registered here
-	_createDistribContainers( );
-	if( isMaster() )
-	{
-		getSession()->registerObject( _objects );
-		setDirty( DIRTY_OBJECTS );
-		getSession()->registerObject( _nodes );
-		setDirty( DIRTY_NODES );
-	}
-	*/
 }
 
 vl::cl::SceneNode *
@@ -271,20 +137,3 @@ vl::cl::SceneManager::_createMovableObjectImpl(
 	return new vl::cl::Entity( name, params );
 }
 
-/*
-void
-vl::cl::SceneManager::_createDistribContainers( void )
-{
-	_objectCreateFunc = new CreateObjectFunc( this );
-	_objectDeleteFunc = new DeleteObjectFunc( this );
-
-	_objects = new DistributedContainer<MovableObject *>(
-			_objectCreateFunc, _objectDeleteFunc );
-
-	_nodeCreateFunc = new CreateNodeFunc( this );
-	_nodeDeleteFunc = new DeleteNodeFunc( this );
-
-	_nodes = new DistributedContainer<SceneNode *>(
-			_nodeCreateFunc, _nodeDeleteFunc );
-}
-*/
