@@ -20,7 +20,6 @@ MOCK_BASE_CLASS( mock_scene_manager, SceneManager )
 	MOCK_METHOD_EXT( getNode, 1, SceneNode*( uint32_t ), getById )
 	MOCK_METHOD_EXT( getNode, 1, SceneNode*( std::string const & ), getByName )
 	MOCK_METHOD( getObject, 1 )
-	MOCK_METHOD( finalize, 0 )
 };
 
 #endif

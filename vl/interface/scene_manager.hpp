@@ -30,21 +30,12 @@ namespace graph
 	{
 		public :
 
-			// Destroyers
-			virtual void destroy( SceneNode *node ) = 0;
-
-			virtual void destroy( MovableObject *obj ) = 0;
-
-			// Get the root of the scene graph,
-			// created implicitly
+			// Get the root of the scene graph, created implicitly
 			virtual SceneNode *getRootNode( void ) = 0;
 
 			// Create a hanging SceneNode that is not attached to scene graph
 			virtual SceneNode *createNode(
 					std::string const &name = std::string() ) = 0;
-
-			// Removed because we should use createNode instead
-	//		virtual SceneNode *createNodeImpl( std::string const &name ) = 0;
 
 			// Create an entity, not attached to scene graph.
 			virtual MovableObject* createEntity(
@@ -61,22 +52,6 @@ namespace graph
 
 			// Get movable object by id
 			virtual MovableObject *getObject( uint32_t id ) = 0;
-
-			// Huh? Is this necessary method?
-			virtual void finalize( void ) = 0;
-
-		protected :
-			/*
-			virtual SceneNode *_createSceneNodeImpl( std::string const &name );
-
-			virtual MovableObject* _createMovableObjectImpl(
-					std::string const &typeName,
-					std::string const &name,
-					vl::NamedValuePairList const &params
-						= vl::NamedValuePairList() );
-
-			virtual void _createDistribContainers( void );
-			*/
 
 	};	// class SceneManager
 

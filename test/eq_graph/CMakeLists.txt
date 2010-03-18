@@ -25,7 +25,6 @@ message( "vl source dir = ${vl_SOURCE_DIR}" )
 FOREACH( source ${TEST_SOURCES} )
 	target_link_libraries( test_${source} boost_unit_test_framework eq )
 	add_test( ${source} ${PROJECT_BINARY_DIR}/test_${source} )
-	message( "${PROJECT_BINARY_DIR}" )
 ENDFOREACH( source )
 
 

@@ -26,7 +26,7 @@ namespace graph
 			{}
 
 			virtual void setBackgroundColour(
-					vmml::vector<4, double> &colour ) = 0;
+					vmml::vector<4, double> const &colour ) = 0;
 
 		protected :
 

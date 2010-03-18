@@ -14,10 +14,6 @@ namespace graph
 
 			virtual ~MovableObject( void ) {}
 
-//			virtual uint32_t getID( void ) const = 0;
-
-		protected :
-
 	};	// class MovableObject
 
 }	// namespace graph

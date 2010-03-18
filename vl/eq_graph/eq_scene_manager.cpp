@@ -6,8 +6,10 @@
 vl::cl::SceneManager::SceneManager( std::string const &name )
 	: _root(0)
 {
-	if( !name.empty() )
-	{ eq::Object::setName( name ); }
+	if( name.empty() )
+	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
+
+	eq::Object::setName( name );
 }
 
 vl::graph::SceneNode *
@@ -33,35 +35,18 @@ vl::graph::MovableObject *
 vl::cl::SceneManager::createEntity(
 		std::string const &name, std::string const &meshName )
 {
-	/*
 	vl::NamedValuePairList params;
-	params["meshName"] = meshName;
+	params["mesh"] = meshName;
 	MovableObject *obj = _createMovableObjectImpl(
 			"Entity", name, params );
-	_objects->push( obj );
 
 	return obj;
-	*/
-	return 0;
 }
 
 // Find function needs scene graph traversal to be implemented
 vl::graph::SceneNode *
 vl::cl::SceneManager::getNode( std::string const &name )
 {
-	/*
-	std::cout << "SceneManager::getNode : " << name << std::endl;
-	std::cout << "size = " << _nodes->size() << std::endl;
-	for( size_t i = 0; i < _nodes->size(); ++i )
-	{
-		std::cout << "node name = " << _nodes->at(i)->getName() << std::endl;
-		if( _nodes->at(i)->getName() == name )
-		{
-			return _nodes->at(i);
-		}
-	}
-	*/
-
 	return 0;
 }
 
@@ -112,11 +97,6 @@ vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 	if( DIRTY_ROOT & dirtyBits )
 	{
 	}
-}
-
-void
-vl::cl::SceneManager::finalize( void )
-{
 }
 
 vl::cl::SceneNode *

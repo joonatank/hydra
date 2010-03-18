@@ -16,14 +16,12 @@ namespace vl
 {
 namespace graph
 {
-	class Camera
+	class Camera : public MovableObject
 	{
 		public :
 			Camera( void ) {}
 
 			virtual ~Camera( void ) {}
-
-		protected :
 
 	};	// class Camera
 

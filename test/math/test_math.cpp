@@ -11,6 +11,7 @@ BOOST_AUTO_TEST_CASE( vector_test )
 	v += vl::vector(0.0, 1.0, 2.0);
 
 	BOOST_CHECK( vl::equal(v, vl::vector(0.0, 1.0, 2.0) ) );
+	BOOST_CHECK_EQUAL( v, vl::vector(0.0, 1.0, 2.0) );
 }
 
 BOOST_AUTO_TEST_CASE( quaternion_test )
@@ -19,6 +20,14 @@ BOOST_AUTO_TEST_CASE( quaternion_test )
 	q *= vl::quaternion(0.7071, 0, 0, 0.7071);
 
 	BOOST_CHECK( vl::equal(q, vl::quaternion(0.7071, 0, 0, 0.7071) ) );
+	BOOST_CHECK_EQUAL( q, vl::quaternion(0.7071, 0, 0, 0.7071) );
+
+	vl::scalar half_a = (M_PI/2)/2;
+	q = vl::quaternion( std::sin(half_a), 0, 0, std::cos(half_a) );
+	BOOST_CHECK_EQUAL( q.w(), std::cos(half_a) );
+	BOOST_CHECK_EQUAL( q.x(), std::sin(half_a) );
+	BOOST_CHECK_EQUAL( q.y(), 0 );
+	BOOST_CHECK_EQUAL( q.y(), 0 );
 }
 
 BOOST_AUTO_TEST_CASE( matrix_test )

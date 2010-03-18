@@ -104,14 +104,8 @@ namespace cl
 				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 3
 			};
 
-		//	typedef std::map<uint32_t, SceneNode *> NodeMap;
-		//	typedef std::map<uint32_t, MovableObject *> ObjectMap;
-
-			// Nasty function to test some distribution stuff
-			// remove when they are working.
-			void finalize( void );
-
 		protected :
+			// Factory methods, need to be overloaded by child classes
 			virtual SceneNode *_createSceneNodeImpl( std::string const &name );
 
 			virtual MovableObject* _createMovableObjectImpl(
