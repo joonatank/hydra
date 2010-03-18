@@ -3,7 +3,7 @@
 
 #include "eq_graph/eq_scene_node.hpp"
 
-#include "eq_ogre/conversion.hpp"
+#include "math/conversion.hpp"
 
 #include "eq_ogre/ogre_movable_object.hpp"
 
@@ -25,45 +25,25 @@ namespace ogre
 			Ogre::SceneNode *getNative( void )
 			{ return _ogre_node; }
 
-			virtual ~SceneNode( void )
-			{}
+			virtual ~SceneNode( void );
 
-			virtual void _setTransform( vmml::vec3d const &vec,
-					vmml::quaterniond const &q )
-			{
-				_ogre_node->setPosition( vl::math::convert( vec ) );
-				_ogre_node->setOrientation( vl::math::convert(q) );
-			}
+			virtual void translate( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT );
 
-			virtual void _setScale( vmml::vec3d const &s )
-			{
-				_ogre_node->setScale( vl::math::convert(s) );
-			}
+			virtual void setPosition( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT );
 
-			virtual void _attachObject( vl::graph::MovableObject *obj )
-			{
-				MovableObject *ogre_obj = (MovableObject *)obj;
-				_ogre_node->attachObject( ogre_obj->getNative() );
-			}
+			virtual void rotate( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL );
 
-			virtual void _detachObject( vl::graph::MovableObject *obj )
-			{
-				MovableObject *ogre_obj = (MovableObject *)obj;
-				_ogre_node->detachObject( ogre_obj->getNative() );
-			}
+			virtual void setOrientation( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL );
 
-			virtual void _addChild( vl::graph::SceneNode *child)
-			{
-				SceneNode *ogre_child = (SceneNode *)child;
-				_ogre_node->addChild( ogre_child->getNative() );
-			}
+			virtual void scale( vl::vector const &s );
 
-			virtual void _removeChild( vl::graph::SceneNode *child )
-			{
-				SceneNode *ogre_child = (SceneNode *)child;
-				_ogre_node->removeChild( ogre_child->getNative() );
-			}
+			virtual void scale( vl::scalar const s );
 
+			virtual void setScale( vl::vector const &s );
 		protected :
 			Ogre::SceneNode *_ogre_node;
 	};

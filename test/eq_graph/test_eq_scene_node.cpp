@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 	BOOST_CHECK_EQUAL( n2.getCreator(), man );
 
 	// Check that the scene node is initialized correctly
-	BOOST_CHECK_EQUAL( n2.getTranslation(), vl::vector::ZERO );
+	BOOST_CHECK_EQUAL( n2.getPosition(), vl::vector::ZERO );
 	BOOST_CHECK_EQUAL( n2.getScale(), vl::vector(1.0, 1.0, 1.0) );
-	BOOST_CHECK_EQUAL( n2.getRotation(), vl::quaternion::IDENTITY );
+	BOOST_CHECK_EQUAL( n2.getOrientation(), vl::quaternion::IDENTITY );
 
 	// Test childs, parents and attached are initialized correctly
 	BOOST_CHECK( n2.getParent() == NULL );
@@ -74,22 +74,22 @@ BOOST_AUTO_TEST_CASE( trans_throws_test )
 
 	// Can not rotate with quaternions including scale factor
 
-	BOOST_CHECK_NO_THROW( node.setRotation(vl::quaternion::IDENTITY) );
+	BOOST_CHECK_NO_THROW( node.setOrientation(vl::quaternion::IDENTITY) );
 
 	vl::quaternion q = vl::quaternion::ZERO;
 	BOOST_CHECK_THROW( node.rotate(q), vl::scale_quaternion );
 	// We should be in consistent state after throw
-	BOOST_CHECK( vl::equal(node.getRotation(), vl::quaternion::IDENTITY) );
+	BOOST_CHECK( vl::equal(node.getOrientation(), vl::quaternion::IDENTITY) );
 
 	q = vl::quaternion(2, 0, 0, 0);
 	BOOST_CHECK_THROW( node.rotate(q), vl::scale_quaternion );
 	// We should be in consistent state after throw
-	BOOST_CHECK( vl::equal(node.getRotation(), vl::quaternion::IDENTITY) );
+	BOOST_CHECK( vl::equal(node.getOrientation(), vl::quaternion::IDENTITY) );
 
 	q = vl::quaternion(0, 0, 0, 2);
 	BOOST_CHECK_THROW( node.rotate(q), vl::scale_quaternion );
 	// We should be in consistent state after throw
-	BOOST_CHECK( vl::equal(node.getRotation(), vl::quaternion::IDENTITY) );
+	BOOST_CHECK( vl::equal(node.getOrientation(), vl::quaternion::IDENTITY) );
 }
 
 BOOST_AUTO_TEST_CASE( transformations_test )
@@ -98,24 +98,24 @@ BOOST_AUTO_TEST_CASE( transformations_test )
 	vl::cl::SceneNode node(&man);
 	
 	// Check that the node is correctly initialized
-	BOOST_CHECK( vl::equal(node.getTranslation(), vl::vector::ZERO) );
-	BOOST_CHECK( vl::equal(node.getRotation(), vl::quaternion::IDENTITY) );
+	BOOST_CHECK( vl::equal(node.getPosition(), vl::vector::ZERO) );
+	BOOST_CHECK( vl::equal(node.getOrientation(), vl::quaternion::IDENTITY) );
 	BOOST_CHECK( vl::equal(node.getScale(), vl::vector(1.0, 1.0, 1.0)) );
 
-	// Translation test
+	// Position test
 	vl::vector v = vl::vector(0.0, 0.0, 50.0);
 	BOOST_CHECK_NO_THROW( node.translate(v) );
 	// Math library limitations, it does not provide epsilon comparison
 	// And BOOS_CHECK_CLOSE does not work on ZERO, because it uses procentual
 	// difference not absolute...
-	BOOST_CHECK( vl::equal( node.getTranslation(), v ) );
+	BOOST_CHECK( vl::equal( node.getPosition(), v ) );
 	
 	node.translate(2.0*v);
-	BOOST_CHECK( vl::equal( node.getTranslation(), 3.0*v ) );
+	BOOST_CHECK( vl::equal( node.getPosition(), 3.0*v ) );
 
 	v = vl::vector(10, 20, -20);
-	BOOST_CHECK_NO_THROW( node.setTranslation(v) );
-	BOOST_CHECK( vl::equal( node.getTranslation(), v ) );
+	BOOST_CHECK_NO_THROW( node.setPosition(v) );
+	BOOST_CHECK( vl::equal( node.getPosition(), v ) );
 
 	// 90 degree rotation around x
 	vl::scalar half_a = (M_PI/2)/2;
@@ -127,16 +127,16 @@ BOOST_AUTO_TEST_CASE( transformations_test )
 	BOOST_REQUIRE( vl::equal(r.abs(), 1.0) );
 
 	BOOST_CHECK_NO_THROW( node.rotate( q ) );
-	BOOST_CHECK( vl::equal( node.getRotation(), q ) );
+	BOOST_CHECK( vl::equal( node.getOrientation(), q ) );
 
 	BOOST_CHECK_NO_THROW( node.rotate( r ) );
-	BOOST_CHECK( vl::equal( node.getRotation(), q*r ) );
+	BOOST_CHECK( vl::equal( node.getOrientation(), q*r ) );
 
-	BOOST_CHECK_NO_THROW( node.setRotation( r ) );
-	BOOST_CHECK( vl::equal( node.getRotation(), r ) );
+	BOOST_CHECK_NO_THROW( node.setOrientation( r ) );
+	BOOST_CHECK( vl::equal( node.getOrientation(), r ) );
 
-	BOOST_CHECK_NO_THROW( node.setRotation( vl::quaternion::IDENTITY ) );
-	BOOST_CHECK( vl::equal( node.getRotation(), vl::quaternion::IDENTITY ) );
+	BOOST_CHECK_NO_THROW( node.setOrientation( vl::quaternion::IDENTITY ) );
+	BOOST_CHECK( vl::equal( node.getOrientation(), vl::quaternion::IDENTITY ) );
 
 	// scale
 	BOOST_CHECK_NO_THROW( node.setScale( 10 ) );
@@ -242,18 +242,18 @@ BOOST_FIXTURE_TEST_CASE( equalizer_test, EqFixture )
 	// Test transmitting translation
 	mainloop();
 
-	node->setTranslation( TRANS_VEC[0] );
+	node->setPosition( TRANS_VEC[0] );
 	node->commit();
 	mainloop();
 
 	// Test transmitting rotation
-	node->setRotation( ROT_QUAT[0] );
+	node->setOrientation( ROT_QUAT[0] );
 	node->commit();
 	mainloop();
 
 	node->setScale( SCALE_VEC[0] );
-	node->setRotation( ROT_QUAT[1] );
-	node->setTranslation( TRANS_VEC[1] );
+	node->setOrientation( ROT_QUAT[1] );
+	node->setPosition( TRANS_VEC[1] );
 	node->commit();
 	mainloop();
 

@@ -88,7 +88,7 @@ public :
 			case 1 :
 			{
 				node->sync();
-				BOOST_CHECK( vl::equal( node->getTranslation(), TRANS_VEC[0] ) );
+				BOOST_CHECK( vl::equal( node->getPosition(), TRANS_VEC[0] ) );
 				++state;
 
 			}
@@ -97,15 +97,15 @@ public :
 			case 2 :
 			{
 				node->sync();
-				BOOST_CHECK( vl::equal( node->getRotation(), ROT_QUAT[0] ) );
+				BOOST_CHECK( vl::equal( node->getOrientation(), ROT_QUAT[0] ) );
 				++state;
 			}
 			break;
 			case 3 :
 			{
 				BOOST_CHECK( vl::equal( node->getScale(), SCALE_VEC[0] ) );
-				BOOST_CHECK( vl::equal( node->getRotation(), ROT_QUAT[1] ) );
-				BOOST_CHECK( vl::equal( node->getTranslation(), TRANS_VEC[1] ) );
+				BOOST_CHECK( vl::equal( node->getOrientation(), ROT_QUAT[1] ) );
+				BOOST_CHECK( vl::equal( node->getPosition(), TRANS_VEC[1] ) );
 
 				++state;
 			}

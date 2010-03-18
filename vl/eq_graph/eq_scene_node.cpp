@@ -23,18 +23,94 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
 }
 
 void
-vl::cl::SceneNode::destroy( void )
+vl::cl::SceneNode::translate( vl::vector const &v,
+		TransformSpace relativeTo )
 {
-	/*
-	for( size_t i = 0; i < _attached.size(); ++i )
-	{ _creator->destroy( _attached.at(i) ); }
-
-	for( size_t i = 0; i < _childs.size(); ++i )
-	{ _creator->destroy( _childs.at(i) ); }
-
-	_creator->destroy( this );
-	*/
+	if( v != vl::vector::ZERO )
+	{
+		setDirty( DIRTY_TRANSFORM );
+		_position += v;
+	}
 }
+
+void
+vl::cl::SceneNode::setPosition( vl::vector const &v,
+		TransformSpace relativeTo )
+{
+	if( v != _position )
+	{
+		setDirty( DIRTY_TRANSFORM );
+		_position = v;
+	}
+}
+
+void
+vl::cl::SceneNode::rotate( vl::quaternion const &q,
+		TransformSpace relativeTo )
+{
+	if( !vl::equal( q.abs(), 1.0 ) )
+	{ throw vl::scale_quaternion("SceneNode::rotate"); }
+
+	if( !vl::equal(q, vl::quaternion::IDENTITY) )
+	{
+		setDirty( DIRTY_TRANSFORM );
+		_rotation *= q;
+	}
+}
+
+void
+vl::cl::SceneNode::setOrientation( vl::quaternion const &q,
+		TransformSpace relativeTo )
+{
+	if( !vl::equal( q.abs(), 1.0 ) )
+	{ throw vl::scale_quaternion("SceneNode::setOrientation"); }
+
+	if( !vl::equal(q, _rotation) )
+	{
+		setDirty( DIRTY_TRANSFORM );
+		_rotation = q;
+	}
+}
+
+void
+vl::cl::SceneNode::scale( vl::vector const &s )
+{
+	if( vl::equal(s, vl::vector::ZERO) )
+	{ throw vl::zero_scale("scene_node::scale"); }
+
+	if( !vl::equal(s, vl::vector( 1, 1, 1 )) )
+	{
+		setDirty( DIRTY_SCALE );
+		_scale *= s;
+	}
+}
+
+void
+vl::cl::SceneNode::scale( vl::scalar const s )
+{
+	if( vl::equal(s, 0.0) )
+	{ throw vl::zero_scale("scene_node::scale"); }
+
+	if( !vl::equal(s, 1.0) )
+	{
+		setDirty( DIRTY_SCALE );
+		_scale *= s;
+	}
+}
+
+void 
+vl::cl::SceneNode::setScale( vl::vector const &s )
+{
+	if( vl::equal(s, vl::vector::ZERO) )
+	{ throw vl::zero_scale("scene_node::scale"); }
+
+	if( !vl::equal(s, _scale) )
+	{
+		setDirty( DIRTY_SCALE );
+		_scale = s;
+	}
+}
+
 void
 vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 {

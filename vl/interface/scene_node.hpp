@@ -38,26 +38,39 @@ namespace graph
 	class SceneNode
 	{
 		public :
+			enum TransformSpace
+			{
+				TS_LOCAL = 0,
+				TS_PARENT,
+				TS_WORLD
+			};
+
 			// Instructs SceneManager to free this Node, all the ChildNodes
 			// and all attached objects
-			virtual void destroy( void ) = 0;
+			//virtual void destroy( void ) = 0;
 
 			//virtual uint32_t getID( void ) const = 0;
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
 			// knowledge about the rendering engine types, unless of course
 			// for the application (only the Nodes have concrete data).
-			virtual void translate( vl::vector const &v ) = 0;
+			virtual void translate( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT ) = 0;
 
-			virtual void setTranslation( vl::vector const &v ) = 0;
+			virtual void setPosition( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT ) = 0;
 
-			virtual vl::vector const &getTranslation( void ) = 0;
+			virtual vl::vector const &getPosition(
+					TransformSpace relativeTo = TS_PARENT ) = 0;
 
-			virtual void rotate( vl::quaternion const &q ) = 0;
+			virtual void rotate( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL ) = 0;
 
-			virtual void setRotation( vl::quaternion const &q ) = 0;
+			virtual void setOrientation( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL ) = 0;
 
-			virtual vl::quaternion const &getRotation( void ) = 0;
+			virtual vl::quaternion const &getOrientation(
+					TransformSpace relativeTo = TS_LOCAL ) = 0;
 
 			virtual void scale( vl::vector const &s ) = 0;
 
@@ -73,6 +86,8 @@ namespace graph
 
 			virtual ObjectContainer const &getAttached( void ) const = 0;
 
+			virtual uint16_t numAttached( void ) = 0;
+
 			virtual SceneNode *createChild(
 					std::string const &name = std::string() ) = 0;
 
@@ -82,31 +97,11 @@ namespace graph
 
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
+			virtual uint16_t numChildren( void ) = 0;
+
 			virtual SceneNode *getParent( void ) = 0;
 
 			virtual SceneManager *getCreator( void ) = 0;
-
-			// Overloadable functions to modify the Rendering engine
-			// These have to be overriden but they are not pure abstracts
-			// because this class can be used in the Application without
-			// rendering engine.
-			// TODO
-			// Renaming them to callbacks might be usefull like
-			// transformationSet, scaleSet, objectAttached etc.
-			/*
-			virtual void _setTransform( vl::vector const &,
-					vl::quaternion const & ) = 0;
-
-			virtual void _setScale( vl::vector const & ) = 0;
-
-			virtual void _attachObject( MovableObject *) = 0;
-
-			virtual void _detachObject( MovableObject *) = 0;
-
-			virtual void _addChild( SceneNode *) = 0;
-
-			virtual void _removeChild( SceneNode *) = 0;
-			*/
 
 	};	// class SceneNode
 

@@ -46,99 +46,37 @@ namespace cl
 
 			// Instructs SceneManager to free this Node, all the ChildNodes
 			// and all attached objects
-			virtual void destroy( void );
+			//virtual void destroy( void );
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
 			// knowledge about the rendering engine types, unless of course
 			// for the application (only the Nodes have concrete data).
-			virtual void translate( vl::vector const &v )
-			{
-				if( v != vl::vector::ZERO )
-				{
-					setDirty( DIRTY_TRANSFORM );
-					_position += v;
-				}
-			}
+			virtual void translate( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT );
 
-			virtual void setTranslation( vl::vector const &v )
-			{
-				if( v != _position )
-				{
-					setDirty( DIRTY_TRANSFORM );
-					_position = v;
-				}
-			}
+			virtual void setPosition( vl::vector const &v,
+					TransformSpace relativeTo = TS_PARENT );
 
-			virtual vl::vector const &getTranslation( void )
-			{
-				return _position;
-			}
+			virtual vl::vector const &getPosition( 
+					TransformSpace relativeTo = TS_PARENT )
+			{ return _position; }
 
-			virtual void rotate( vl::quaternion const &q )
-			{
-				if( !vl::equal( q.abs(), 1.0 ) )
-				{ throw vl::scale_quaternion("SceneNode::rotate"); }
+			virtual void rotate( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL );
 
-				if( !vl::equal(q, vl::quaternion::IDENTITY) )
-				{
-					setDirty( DIRTY_TRANSFORM );
-					_rotation *= q;
-				}
-			}
+			virtual void setOrientation( vl::quaternion const &q,
+					TransformSpace relativeTo = TS_LOCAL );
 
-			virtual void setRotation( vl::quaternion const &q )
-			{
-				if( !vl::equal( q.abs(), 1.0 ) )
-				{ throw vl::scale_quaternion("SceneNode::setRotation"); }
+			virtual vl::quaternion const &getOrientation(
+					TransformSpace relativeTo = TS_LOCAL )
+			{ return _rotation; }
 
-				if( !vl::equal(q, _rotation) )
-				{
-					setDirty( DIRTY_TRANSFORM );
-					_rotation = q;
-				}
-			}
+			virtual void scale( vl::vector const &s );
 
-			virtual vl::quaternion const &getRotation( void )
-			{
-				return _rotation;
-			}
+			virtual void scale( vl::scalar const s );
 
-			virtual void scale( vl::vector const &s )
-			{
-				if( vl::equal(s, vl::vector::ZERO) )
-				{ throw vl::zero_scale("scene_node::scale"); }
-
-				if( !vl::equal(s, vl::vector( 1, 1, 1 )) )
-				{
-					setDirty( DIRTY_SCALE );
-					_scale *= s;
-				}
-			}
-
-			virtual void scale( vl::scalar const s )
-			{
-				if( vl::equal(s, 0.0) )
-				{ throw vl::zero_scale("scene_node::scale"); }
-
-				if( !vl::equal(s, 1.0) )
-				{
-					setDirty( DIRTY_SCALE );
-					_scale *= s;
-				}
-			}
-
-			virtual void setScale( vl::vector const &s )
-			{
-				if( vl::equal(s, vl::vector::ZERO) )
-				{ throw vl::zero_scale("scene_node::scale"); }
-
-				if( !vl::equal(s, _scale) )
-				{
-					setDirty( DIRTY_SCALE );
-					_scale = s;
-				}
-			}
+			virtual void setScale( vl::vector const &s );
 
 			virtual vl::vector const &getScale( void )
 			{ return _scale; }
@@ -157,11 +95,17 @@ namespace cl
 			virtual vl::graph::ChildContainer const &getChilds( void ) const
 			{ return _childs; }
 
+			virtual uint16_t numChildren( void )
+			{ return _childs.size(); }
+
 			virtual vl::graph::SceneNode *getParent( void )
 			{ return _parent; }
 
 			virtual vl::graph::ObjectContainer const &getAttached( void ) const
 			{ return _attached; }
+
+			virtual uint16_t numAttached( void )
+			{ return _attached.size(); }
 
 			virtual vl::graph::SceneManager *getCreator( void )
 			{ return _creator; }
