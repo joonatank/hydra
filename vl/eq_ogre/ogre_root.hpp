@@ -34,82 +34,31 @@ namespace ogre
 	class Root : public vl::cl::Root
 	{
 		public :
-			Root( void )
-				: vl::cl::Root(), _ogre_root(0)
-			{
-				_ogre_root = new Ogre::Root( "", "" );
-			}
+			Root( void );
 
 			virtual ~Root( void )
-			{}
+			{
+				delete _ogre_root;
+			}
 			
 			// Hack to provide native access, we should really never
 			// need this for the Root object.
 			Ogre::Root *getNative( void )
 			{ return _ogre_root; }
 
-			virtual void createRenderSystem( void )
-			{
-				EQASSERT( _ogre_root );
-#if defined(_DEBUG)
-				_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL_d");
-#else
-				_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
-#endif
+			virtual void createRenderSystem( void );
 
-				Ogre::RenderSystemList::iterator r_it;
-				Ogre::RenderSystemList renderSystems
-					= _ogre_root->getAvailableRenderers();
-				EQASSERT( !renderSystems.empty() );
-				r_it = renderSystems.begin();
-				_ogre_root->setRenderSystem(*r_it);
-			}
-
-			virtual void init( void )
-			{
-				_ogre_root->initialise( false );
-				Ogre::ResourceGroupManager::getSingleton()
-					.addResourceLocation( "resources",
-							"FileSystem", "General" );
-			}
+			virtual void init( void );
 
 			virtual vl::graph::RenderWindow *createWindow(
 					std::string const &name, unsigned int width,
 					unsigned int height,
 					vl::NamedValuePairList const &params
-						= vl::NamedValuePairList() )
-			{
-				if( _ogre_root )
-				{
-					Ogre::NameValuePairList misc;
-					vl::NamedValuePairList::const_iterator iter 
-						= params.begin();
-					for( ; iter != params.end(); ++iter )
-					{ misc[iter->first] = iter->second; }
-
-					Ogre::RenderWindow *win =
-						_ogre_root->createRenderWindow( name, width, height,
-							false, &misc );
-					return new vl::ogre::RenderWindow( win );
-				}
-				return 0;
-			}
-
-			// For now we only allow one SceneManager to exists per
-			// instance.
-			/*
-			virtual vl::graph::SceneManager *getSceneManager(
-					std::string const &name = std::string() )
-			{
-				if( !_scene_manager )
-				{ _scene_manager = new SceneManager( name ); }
-				return _scene_manager;
-			}
-			*/
+						= vl::NamedValuePairList() );
 
 		protected :
 			virtual vl::cl::SceneManager *_createSceneManager(
-					std::string const &name = std::string() )
+					std::string const &name )
 			{
 				return new SceneManager( name );
 			}

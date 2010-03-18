@@ -12,6 +12,8 @@ vl::ogre::Entity::load( vl::graph::SceneManager *sm )
 	for( ; iter != _params.end(); ++iter )
 	{
 		parm[iter->first] = iter->second;
+		std::cout << "first = " <<  iter->first << " : second = "
+			<< iter->second << std::endl;
 	}
 	_ogre_entity = (Ogre::Entity *)( ogre_sm->getNative()->createMovableObject(
 				getName(), "Entity", &parm) );

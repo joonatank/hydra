@@ -37,7 +37,7 @@ namespace ogre
 			{}
 
 			virtual void setBackgroundColour(
-					vmml::vector<4, double> &colour )
+					vmml::vector<4, double> const &colour )
 			{
 				if( _ogre_viewport )
 				{

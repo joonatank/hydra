@@ -16,6 +16,8 @@
 
 #include <OGRE/OgreCamera.h>
 
+#include "math/conversion.hpp"
+
 namespace vl
 {
 namespace ogre 
@@ -35,7 +37,7 @@ namespace ogre
 			Ogre::Camera *getNative( void )
 			{ return _ogre_camera; }
 
-			virtual void setProjectionMatrix( vmml::mat4d const &m )
+			virtual void setProjectionMatrix( vl::matrix const &m )
 			{
 				if( _ogre_camera )
 				{
