@@ -72,6 +72,9 @@ namespace cl
 					TransformSpace relativeTo = TS_LOCAL )
 			{ return _rotation; }
 
+			// TODO  implement
+			virtual void lookAt( vl::vector const &v ) {}
+
 			virtual void scale( vl::vector const &s );
 
 			virtual void scale( vl::scalar const s );

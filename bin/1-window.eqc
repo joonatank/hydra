@@ -1,0 +1,47 @@
+#Equalizer 1.0 ascii
+
+global
+{
+	EQ_WINDOW_IATTR_HINT_STEREO			AUTO	
+	EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER	ON
+	EQ_COMPOUND_IATTR_STEREO_MODE		QUAD
+}
+
+server
+{
+    config
+    {
+        appNode
+        {
+            pipe
+            {
+                window
+                {
+                    name "window"
+                    viewport [ 0 0 800 600 ]
+                    channel
+                    {
+                        name "channel"
+                    }
+                }
+            }
+        }
+        observer {}
+        layout { view { observer 0 }}
+        canvas
+        {
+            layout 0
+            wall
+            {
+                bottom_left  [ -.32 -.1 -0.75 ]
+                bottom_right [  .32 -.1 -0.75 ]
+                top_left     [ -.32  .3 -0.75 ]
+            }
+            segment
+            { 
+                channel "channel"
+                viewport [ 0 0 1 1 ]
+            }
+        }
+    }    
+}

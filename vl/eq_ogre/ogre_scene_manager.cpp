@@ -17,7 +17,8 @@ vl::ogre::SceneManager::SceneManager( std::string const &name )
 
 vl::ogre::SceneManager::~SceneManager( void )
 {
-	delete _ogre_sm;
+	//	Can not call delete here, Ogre does not like it.
+//	delete _ogre_sm;
 	// TODO delete all SceneNodes also
 }
 

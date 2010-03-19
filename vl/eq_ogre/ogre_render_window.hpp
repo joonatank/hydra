@@ -49,7 +49,7 @@ namespace ogre
 			virtual void swapBuffers( void )
 			{
 				if( _ogre_window )
-				{ _ogre_window->swapBuffers(); }
+				{ _ogre_window->swapBuffers( false ); }
 			}
 
 			virtual void update( void )
@@ -58,11 +58,15 @@ namespace ogre
 				{ _ogre_window->update( false ); }
 			}
 
+			virtual void clear( void )
+			{
+			}
+
 			virtual vl::graph::Viewport *addViewport( vl::graph::Camera *cam )
 			{
 				Camera *c = (Camera *)cam;
 				Ogre::Viewport *ogre_view
-					= _ogre_window->addViewport( c->getNative() );
+					= _ogre_window->addViewport( (Ogre::Camera *)c->getNative() );
 				Viewport *view = new Viewport( ogre_view );
 				_viewports.push_back(view);
 				return view;

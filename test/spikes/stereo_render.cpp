@@ -17,35 +17,65 @@
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_ogre/ogre_scene_manager.hpp"
 #include "eq_ogre/ogre_scene_node.hpp"
+#include "eq_ogre/ogre_entity.hpp"
+#include "eq_ogre/ogre_camera.hpp"
+#include "eq_ogre/ogre_render_window.hpp"
 
-class Node : public eq::Node
+class Channel : public eq::Channel
 {
 public :
-	Node( eq::Config *parent )
-		: eq::Node(parent), state(0), ogre_root(0), man(0), feet(0), robot(0)
+	Channel( eq::Window *parent )
+		: eq::Channel(parent), state(0), ogre_root(0), win(0),
+		man(0), feet(0), robot(0)
 	{} 
 
-	virtual ~Node( void )
+	virtual ~Channel( void )
 	{
 		delete ogre_root;
 	}
 
 	virtual bool configInit( const uint32_t initID )
 	{
-		BOOST_REQUIRE( eq::Node::configInit( initID ) );
+		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
+		// Initialise ogre
 		ogre_root = new vl::ogre::Root();
+		ogre_root->createRenderSystem();
+		vl::NamedValuePairList params;
+		params["currentGLContext"] = std::string("True");
+		win = ogre_root->createWindow( "Win", 800, 600, params );
+		ogre_root->init();
+
+		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
 		BOOST_REQUIRE( man );
+
+		// Create camera and viewport
 		vl::graph::SceneNode *root = man->getRootNode();
-		BOOST_REQUIRE( root );
+		cam = man->createCamera( "Cam" );
+		vl::graph::Viewport *view = win->addViewport( cam );
+		view->setBackgroundColour( vmml::vector<4, double>(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild();
+		feet->lookAt( vl::vector(0,0,300) );
+		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+
+		// Create robot Entity
+		BOOST_REQUIRE( root );
+		vl::ogre::Entity *ent = dynamic_cast<vl::ogre::Entity *>(
+				man->createEntity( "robot", "robot.mesh" ) );
+		ent->load(man);
 		robot = root->createChild();
+		robot->setPosition( vl::vector(0, 0, 300) );
+		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
+
+		setNearFar( 100.0, 100.0e3 );
+
+		return true;
 	}
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
-		eq::Node::frameStart( frameID, frameNumber );
+		eq::Channel::frameStart( frameID, frameNumber );
 
 		switch( state )
 		{
@@ -88,10 +118,19 @@ public :
 			default :
 			break;
 		}
+	}
 
+	virtual void frameDraw( const uint32_t frameID )
+	{
+		eq::Frustumf frust = getFrustum();
+		cam->setProjectionMatrix( frust.compute_matrix() );
+		win->update();
+		win->swapBuffers();
 	}
 
 	vl::graph::Root *ogre_root;
+	vl::graph::RenderWindow *win;
+	vl::graph::Camera *cam;
 	vl::graph::SceneManager *man;
 	vl::graph::SceneNode *feet;
 	vl::graph::SceneNode *robot;
@@ -101,13 +140,13 @@ public :
 class NodeFactory : public eq::NodeFactory
 {
 public :
-	virtual Node *createNode( eq::Config *parent )
-	{ return new ::Node( parent ); }
+	virtual Channel *createChannel( eq::Window *parent )
+	{ return new ::Channel( parent ); }
 };
 
-const int argc = 2;
+const int argc = 4;
 char NAME[] = "TEST\0";
-char *argv[argc] = { NAME, "\0" };
+char *argv[argc] = { NAME, "--eq-config\0", "1-window.eqc\0", "\0" };
 
 struct RenderFixture
 {

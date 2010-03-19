@@ -14,6 +14,8 @@
 
 #include "eq_graph/eq_camera.hpp"
 
+#include "ogre_movable_object.hpp"
+
 #include <OGRE/OgreCamera.h>
 
 #include "math/conversion.hpp"
@@ -22,7 +24,7 @@ namespace vl
 {
 namespace ogre 
 {
-	class Camera : public vl::graph::Camera
+	class Camera : public vl::graph::Camera, public vl::ogre::MovableObject
 	{
 		public :
 			Camera( Ogre::Camera *cam )
@@ -34,8 +36,12 @@ namespace ogre
 
 			virtual ~Camera( void ) {}
 
-			Ogre::Camera *getNative( void )
-			{ return _ogre_camera; }
+			virtual Ogre::MovableObject *getNative( void )
+			{
+				std::cout << "vl::ogre::Camera::getNative = " << _ogre_camera
+					<< std::endl;
+				return _ogre_camera;
+			}
 
 			virtual void setProjectionMatrix( vl::matrix const &m )
 			{

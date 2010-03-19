@@ -72,6 +72,8 @@ namespace graph
 			virtual vl::quaternion const &getOrientation(
 					TransformSpace relativeTo = TS_LOCAL ) = 0;
 
+			virtual void lookAt( vl::vector const &v ) = 0;
+
 			virtual void scale( vl::vector const &s ) = 0;
 
 			virtual void scale( vl::scalar const s ) = 0;

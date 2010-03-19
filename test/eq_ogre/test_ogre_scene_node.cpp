@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE( transform_test )
 	n1->rotate(q);
 	BOOST_CHECK_EQUAL( n1->getNative()->getOrientation(), vl::math::convert(q) );
 	n1->rotate(q);
-	BOOST_CHECK_EQUAL( vl::math::convert( n1->getNative()->getOrientation() ),
-			q*q );
+	vl::quaternion orient = vl::math::convert(n1->getNative()->getOrientation());
+	BOOST_CHECK( vl::equal( orient, q*q ) );
 	// 45 degree rotation around y
 	half_a = (M_PI/4)/2;
 	q = vl::quaternion(0, std::sin(half_a), 0, std::cos(half_a));
@@ -88,11 +88,20 @@ BOOST_AUTO_TEST_CASE( child_test )
 			n1->getName() );
 	parent->addChild( n2 );
 	BOOST_CHECK_EQUAL( parent->getNative()->numChildren(), 2 );
-	BOOST_CHECK_EQUAL( parent->getNative()->getChild(1)->getName(),
+	BOOST_CHECK_EQUAL( parent->getNative()->getChild(0)->getName(),
 			n2->getName() );
+
+	delete n1;
+	delete n2;
+	delete parent;
+	delete man;
 }
 
 BOOST_AUTO_TEST_CASE( attachement_test )
 {
-
+	vl::ogre::SceneManager *man = new vl::ogre::SceneManager("Man");
+	vl::ogre::SceneNode *node= new vl::ogre::SceneNode(man, "parent");
+	
+	delete node;
+	delete man;
 }

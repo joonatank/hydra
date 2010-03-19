@@ -39,11 +39,22 @@ namespace ogre
 			virtual void setOrientation( vl::quaternion const &q,
 					TransformSpace relativeTo = TS_LOCAL );
 
+			virtual void lookAt( vl::vector const &v );
+
 			virtual void scale( vl::vector const &s );
 
 			virtual void scale( vl::scalar const s );
 
 			virtual void setScale( vl::vector const &s );
+
+			virtual void attachObject( vl::graph::MovableObject *object );
+
+			virtual void detachObject( vl::graph::MovableObject *object );
+
+			virtual void setParent( vl::graph::SceneNode *parent );
+
+			virtual void addChild( vl::graph::SceneNode *child );
+
 		protected :
 			Ogre::SceneNode *_ogre_node;
 	};

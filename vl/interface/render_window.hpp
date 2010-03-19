@@ -36,6 +36,8 @@ namespace graph
 
 			virtual void update( void ) = 0;
 
+			virtual void clear( void ) = 0;
+
 			virtual Viewport *addViewport( Camera *cam ) = 0;
 
 		protected :

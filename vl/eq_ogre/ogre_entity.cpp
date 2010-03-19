@@ -17,4 +17,7 @@ vl::ogre::Entity::load( vl::graph::SceneManager *sm )
 	}
 	_ogre_entity = (Ogre::Entity *)( ogre_sm->getNative()->createMovableObject(
 				getName(), "Entity", &parm) );
+
+	if( !_ogre_entity )
+	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
 }

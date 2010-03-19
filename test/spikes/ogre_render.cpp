@@ -11,7 +11,7 @@
 struct OgreFixture
 {
 	OgreFixture( void )
-		: ogre_root( 0 )
+		: ogre_root( 0 ), win(0), robot(0), ent(0)
 	{
 		ogre_root = new vl::ogre::Root();
 		ogre_root->createRenderSystem();
@@ -20,15 +20,28 @@ struct OgreFixture
 
 		vl::graph::SceneManager *man = ogre_root->createSceneManager("Manager");
 		
-		vl::graph::Camera *cam = man->createCamera( "Cam" );
+		vl::ogre::Camera *cam = dynamic_cast<vl::ogre::Camera *>(
+				man->createCamera( "Cam" ) );
+ 		((Ogre::Camera *)cam->getNative())->setNearClipDistance(0.1);
+
 		win->addViewport( cam )->setBackgroundColour(
 				vmml::vector<4, double>(1.0, 0.0, 0.0, 0.0) );
-		vl::graph::MovableObject *ent = man->createEntity("robot", "robot.mesh");
-		((vl::ogre::Entity *)ent)->load(man);
-		man->getRootNode()->attachObject(ent);
-		vl::graph::SceneNode *feet = man->getRootNode()->createChild();
-		feet->setPosition( vl::vector(0, 10, 500) );
-		feet->attachObject( cam );
+
+		ent = dynamic_cast<vl::ogre::Entity *>(
+				man->createEntity("robot", "robot.mesh") );
+		BOOST_REQUIRE( ent );
+		BOOST_CHECK_NO_THROW( ent->load(man) );
+		robot = dynamic_cast<vl::ogre::SceneNode *>
+			( man->getRootNode()->createChild( "RobotNode" ) );
+		BOOST_REQUIRE( robot );
+		robot->setPosition( vl::vector(0, 0, 300) );
+		BOOST_CHECK_NO_THROW( robot->attachObject(ent) );
+
+		feet = dynamic_cast<vl::ogre::SceneNode *>(
+				man->getRootNode()->createChild( "feet" ) );
+		BOOST_REQUIRE( feet );
+		feet->lookAt( vl::vector(0,0,300) );
+		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
 	}
 
 	void mainloop( void )
@@ -44,11 +57,20 @@ struct OgreFixture
 
 	vl::ogre::Root *ogre_root;
 	vl::graph::RenderWindow *win;
+	vl::ogre::SceneNode *robot;
+	vl::ogre::SceneNode *feet;
+	vl::ogre::Entity *ent;
 		
 };
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 {
+	BOOST_CHECK_EQUAL( robot->getNative()->numAttachedObjects(), 1 );
+	BOOST_CHECK_EQUAL( feet->getNative()->numAttachedObjects(), 1 );
+	BOOST_CHECK( feet->getNative()->isInSceneGraph() );
+	BOOST_CHECK( robot->getNative()->isInSceneGraph() );
+	BOOST_CHECK( ent->getNative()->isInScene() );
+
 	for( size_t i = 0; i < 4000; i++ )
 	{ mainloop(); }
 }

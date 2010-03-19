@@ -34,7 +34,11 @@ namespace ogre
 			virtual ~Entity( void ) {}
 
 			virtual Ogre::MovableObject *getNative( void )
-			{ return _ogre_entity; }
+			{
+				std::cout << "vl::ogre::Entity::getNative = " << _ogre_entity
+					<< std::endl;
+				return _ogre_entity;
+			}
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
