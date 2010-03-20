@@ -25,10 +25,6 @@ namespace graph
 	class Entity : public MovableObject
 	{
 		public :
-			Entity( void ) {}
-
-			virtual ~Entity( void ) {}
-
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
 			virtual void load( SceneManager *) = 0;

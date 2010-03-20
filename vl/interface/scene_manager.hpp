@@ -38,7 +38,7 @@ namespace graph
 					std::string const &name = std::string() ) = 0;
 
 			// Create an entity, not attached to scene graph.
-			virtual MovableObject* createEntity(
+			virtual Entity* createEntity(
 					std::string const &name, std::string const &meshName ) = 0;
 
 			// Create a camera

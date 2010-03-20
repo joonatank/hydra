@@ -36,7 +36,7 @@ vl::ogre::SceneManager::_createSceneNodeImpl( std::string const &name )
 	return new vl::ogre::SceneNode( this, name );
 }
 
-vl::cl::MovableObject *
+vl::graph::MovableObject *
 vl::ogre::SceneManager::_createMovableObjectImpl(
 		std::string const &typeName,
 		std::string const &name,

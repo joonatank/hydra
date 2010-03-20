@@ -31,16 +31,16 @@ vl::cl::SceneManager::createNode( std::string const &name )
 	return node;
 }
 
-vl::graph::MovableObject *
+vl::graph::Entity *
 vl::cl::SceneManager::createEntity(
 		std::string const &name, std::string const &meshName )
 {
 	vl::NamedValuePairList params;
 	params["mesh"] = meshName;
-	MovableObject *obj = _createMovableObjectImpl(
+	vl::graph::MovableObject *obj = _createMovableObjectImpl(
 			"Entity", name, params );
 
-	return obj;
+	return (Entity *)obj;
 }
 
 // Find function needs scene graph traversal to be implemented
@@ -105,7 +105,7 @@ vl::cl::SceneManager::_createSceneNodeImpl( std::string const &name )
 	return new vl::cl::SceneNode( this, name );
 }
 
-vl::cl::MovableObject *
+vl::graph::MovableObject *
 vl::cl::SceneManager::_createMovableObjectImpl(
 		std::string const &typeName, std::string const &name,
 		vl::NamedValuePairList const &params )

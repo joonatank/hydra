@@ -66,7 +66,7 @@ namespace cl
 					std::string const &name );
 			*/
 
-			virtual vl::graph::MovableObject* createEntity(
+			virtual vl::graph::Entity * createEntity(
 					std::string const &name, std::string const &meshName );
 
 			// There is no implementation of vl::cl::Camera, because
@@ -108,7 +108,7 @@ namespace cl
 			// Factory methods, need to be overloaded by child classes
 			virtual SceneNode *_createSceneNodeImpl( std::string const &name );
 
-			virtual MovableObject* _createMovableObjectImpl(
+			virtual vl::graph::MovableObject* _createMovableObjectImpl(
 					std::string const &typeName,
 					std::string const &name,
 					vl::NamedValuePairList const &params

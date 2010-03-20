@@ -38,8 +38,6 @@ namespace ogre
 
 			virtual Ogre::MovableObject *getNative( void )
 			{
-				std::cout << "vl::ogre::Camera::getNative = " << _ogre_camera
-					<< std::endl;
 				return _ogre_camera;
 			}
 

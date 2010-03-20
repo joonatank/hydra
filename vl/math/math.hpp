@@ -23,6 +23,7 @@ namespace vl
 	typedef vmml::mat4d matrix;
 	typedef vmml::vec3d vector;
 	typedef double scalar;
+	typedef vmml::vector<4,double> colour;
 
 	const scalar epsilon = 1e-10;
 	

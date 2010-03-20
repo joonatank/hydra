@@ -10,8 +10,6 @@
 
 #include <eq/eq.h>
 
-#include <fstream>
-
 #include <boost/test/unit_test.hpp>
 
 #include "eq_ogre/ogre_root.hpp"
@@ -20,6 +18,10 @@
 #include "eq_ogre/ogre_entity.hpp"
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
+
+#include "eq_test_fixture.hpp"
+
+char *argv[argc] = { "stereo_render\0", "--eq-config\0", "1-window.eqc\0", "\0" };
 
 class Channel : public eq::Channel
 {
@@ -44,7 +46,7 @@ public :
 		vl::NamedValuePairList params;
 		params["currentGLContext"] = std::string("True");
 		win = ogre_root->createWindow( "Win", 800, 600, params );
-		ogre_root->init();
+		//ogre_root->init();
 
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
@@ -54,7 +56,7 @@ public :
 		vl::graph::SceneNode *root = man->getRootNode();
 		cam = man->createCamera( "Cam" );
 		vl::graph::Viewport *view = win->addViewport( cam );
-		view->setBackgroundColour( vmml::vector<4, double>(1.0, 0.0, 0.0, 0.0) );
+		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild();
 		feet->lookAt( vl::vector(0,0,300) );
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
@@ -144,62 +146,9 @@ public :
 	{ return new ::Channel( parent ); }
 };
 
-const int argc = 4;
-char NAME[] = "TEST\0";
-char *argv[argc] = { NAME, "--eq-config\0", "1-window.eqc\0", "\0" };
+eq::NodeFactory *g_nodeFactory = new ::NodeFactory;
 
-struct RenderFixture
-{
-	// Init code for this test
-	RenderFixture( void )
-		: error( false ), frameNumber(0), config(0),
-		  log_file( "render_test.log" )
-	{
-		// Redirect logging
-		eq::base::Log::setOutput( log_file );
-
-		// 1. Equalizer initialization
-		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
-		
-		// 2. get a configuration
-		config = eq::getConfig( argc, argv );
-		BOOST_REQUIRE( config );
-
-		// 3. init config
-		BOOST_REQUIRE( config->init(0));
-	}
-
-	// Controlled mainloop function so the test can run the loop
-	void mainloop( void )
-	{
-		BOOST_REQUIRE( config->isRunning() );
-	
-		config->startFrame( ++frameNumber );
-		config->finishFrame();
-	}
-
-	// Clean up code for this test
-	~RenderFixture( void )
-	{
-		// 5. exit config
-		if( config )
-		{ BOOST_CHECK( config->exit() ); }
-
-		// 6. release config
-		eq::releaseConfig( config );
-
-		// 7. exit
-		BOOST_CHECK( eq::exit() );
-	}
-
-	bool error;
-	uint32_t frameNumber;
-	eq::Config *config;
-	NodeFactory nodeFactory;
-	std::ofstream log_file;
-};
-
-BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
+BOOST_FIXTURE_TEST_CASE( render_test, EqFixture )
 {
 	BOOST_REQUIRE( config );
 

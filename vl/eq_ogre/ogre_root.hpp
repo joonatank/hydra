@@ -24,6 +24,8 @@
 
 #include <OGRE/OgreRoot.h>
 
+#include <boost/thread.hpp>
+
 #include "ogre_render_window.hpp"
 #include "base/typedefs.hpp"
 
@@ -38,7 +40,10 @@ namespace ogre
 
 			virtual ~Root( void )
 			{
-				delete _ogre_root;
+				// FIXME this can not destroy ogre root if we have multiple
+				// Roots pointing to same ogre singleton.
+				if( _primary )
+				{ delete _ogre_root; }
 			}
 			
 			// Hack to provide native access, we should really never
@@ -64,6 +69,9 @@ namespace ogre
 			}
 
 			Ogre::Root *_ogre_root;
+			
+			// Wether we own the Ogre::Root instance
+			bool _primary;
 
 	};	// class Root
 

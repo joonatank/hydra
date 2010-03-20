@@ -10,8 +10,6 @@ namespace graph
 	class MovableObject
 	{
 		public :
-			MovableObject( void ) {}
-
 			virtual ~MovableObject( void ) {}
 
 	};	// class MovableObject

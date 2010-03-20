@@ -30,7 +30,7 @@ namespace ogre
 			virtual vl::cl::SceneNode *
 				_createSceneNodeImpl( std::string const &name );
 
-			virtual vl::cl::MovableObject* _createMovableObjectImpl(
+			virtual vl::graph::MovableObject* _createMovableObjectImpl(
 					std::string const &typeName,
 					std::string const &name,
 					vl::NamedValuePairList const &params

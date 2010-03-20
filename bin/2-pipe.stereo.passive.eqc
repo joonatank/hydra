@@ -1,0 +1,58 @@
+#Equalizer 1.0 ascii
+
+# two pipe fullscreen config for passive stereo output onto a 2x2 meter wall
+# Note: the root compound channel is chosen arbitrarily to define the frustum.
+
+global
+{
+    EQ_WINDOW_IATTR_HINT_FULLSCREEN OFF
+}
+
+server
+{
+    config
+    {
+        appNode
+        {
+            pipe
+            {
+                device 0
+                window
+                {
+                    viewport [ 0 0 800 600 ]
+                    channel { name "channel-left" }
+                }
+            }
+            pipe
+            {
+                device 0
+                window
+                {
+                    viewport [ 800 0 800 600 ]
+                    channel { name "channel-right" }
+                }
+            }
+        }
+        compound 
+        {
+            wall
+            {
+                bottom_left  [ -1 -1 -1 ]
+                bottom_right [  1 -1 -1 ]
+                top_left     [ -1  1 -1 ]
+            }
+            compound
+            {
+                channel "channel-left"
+                eye [ LEFT ]
+                swapbarrier{}
+            }
+            compound
+            {
+                channel "channel-right"
+                eye [ RIGHT ]
+                swapbarrier{}
+            }
+        }
+    }    
+}

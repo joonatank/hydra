@@ -28,5 +28,4 @@ namespace ogre
 }	// namespace ogre
 
 }	// namespace vl
-
 #endif

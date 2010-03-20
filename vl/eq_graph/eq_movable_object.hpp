@@ -14,7 +14,7 @@ namespace vl
 
 namespace cl
 {
-	class MovableObject : public eq::Object, public vl::graph::MovableObject
+	class MovableObject : public eq::Object
 	{
 		public :
 			MovableObject( std::string const &name,
@@ -24,8 +24,8 @@ namespace cl
 				eq::Object::setName( name );
 			}
 
-			virtual uint32_t getID( void ) const 
-			{ return eq::Object::getID(); }
+			//virtual uint32_t getID( void ) const 
+			//{ return eq::Object::getID(); }
 
 			// Equalizer overrides
 			
@@ -70,5 +70,4 @@ namespace cl
 }	// namespace graph
 
 }	// namespace vl
-
 #endif
