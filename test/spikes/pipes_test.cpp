@@ -17,10 +17,10 @@
 
 #include "eq_test_fixture.hpp"
 
-//char *argv[argc] = { "PipeTest\0", "--eq-config\0", "2-pipe.eqc\0", "\0" };
+char *argv[argc] = { "PipeTest\0", "--eq-config\0", "2-pipe.eqc\0", "\0" };
 //char *argv[argc] = { "PipeTest\0", "--eq-config\0", "1-window.eqc\0", "\0" };
 //char *argv[argc] = { "pipes_test\0", "--eq-config\0", "2-nodes.eqc\0", "\0" };
-char *argv[argc] = { "/home/jotu/work/eqOgre/build/test/spikes/pipes_test\0", "\0" };
+//char *argv[argc] = { "/home/jotu/work/eqOgre/build/test/spikes/pipes_test\0", "\0" };
 
 /*
 class Node : public eq::Node

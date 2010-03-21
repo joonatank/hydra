@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-const int argc = 2;
+const int argc = 4;
 extern char *argv[argc];
 
 extern eq::NodeFactory *g_nodeFactory;

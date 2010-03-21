@@ -58,18 +58,35 @@ namespace ogre
 				{ _ogre_window->update( false ); }
 			}
 
-			virtual void clear( void )
-			{
-			}
-
 			virtual vl::graph::Viewport *addViewport( vl::graph::Camera *cam )
 			{
 				Camera *c = (Camera *)cam;
-				Ogre::Viewport *ogre_view
-					= _ogre_window->addViewport( (Ogre::Camera *)c->getNative() );
+				Ogre::Viewport *ogre_view = _ogre_window->addViewport(
+							(Ogre::Camera *)c->getNative() );
 				Viewport *view = new Viewport( ogre_view );
 				_viewports.push_back(view);
 				return view;
+			}
+
+			virtual uint16_t getNumViewports( void ) const
+			{
+				return _ogre_window->getNumViewports();
+			}
+
+			virtual Viewport *getViewport( uint16_t index )
+			{
+			}
+
+			virtual Viewport *getViewportByZOrder( int ZOrder )
+			{
+			}
+
+			virtual bool hasViewportWithZOrder( int ZOrder ) 
+			{
+			}
+
+			virtual void removeViewport( int ZOrder )
+			{
 			}
 
 		protected :

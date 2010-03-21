@@ -1,53 +1,147 @@
 
-/* Copyright (c) 2007, Stefan Eilemann <eile@equalizergraphics.com> 
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License version 2.1 as published
- * by the Free Software Foundation.
- *  
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
- *
- * Equalizer 'Hello, World!' example. Shows the minimum Equalizer program,
- * rendering spinning quads around the origin.
- */
-
 #include <eq/eq.h>
 #include <stdlib.h>
+
+#include "eq_ogre/ogre_root.hpp"
 
 using namespace eq::base;
 using namespace std;
 
-namespace eqHello
+
+class RenderWindow : public eq::Window
 {
+public :
+	RenderWindow( eq::Pipe *parent )
+		: eq::Window( parent ), root(0), win(0), cam(0), man(0), feet(0),
+		robot(0)
+	{
+	}
+
+	virtual bool configInit( const uint32_t initID )
+	{
+		if( !eq::Window::configInit( initID ) )
+		{ return false; }
+
+		root = new vl::ogre::Root;
+		// Initialise ogre
+		root->createRenderSystem();
+
+		vl::NamedValuePairList params;
+		params["currentGLContext"] = std::string("True");
+		eq::GLXWindow *oswin = dynamic_cast<eq::GLXWindow *>( getOSWindow() );
+		EQASSERT( oswin );
+		std::stringstream ss(std::stringstream::in | std::stringstream::out);
+		ss <<  oswin->getXDrawable();
+		params["parentWindowHandle"] = ss.str();
+		win = dynamic_cast<vl::ogre::RenderWindow *>(
+				root->createWindow( "win", 800, 600, params ) );
+
+		man = root->createSceneManager("SceneManager");
+		cam = man->createCamera("Cam");
+
+		feet = man->getRootNode()->createChild("feet");
+		feet->attachObject( cam );
+		feet->lookAt( vl::vector(0,0,300) );
+
+		vl::graph::Entity *ent;
+		ent = man->createEntity("robot", "robot.mesh");
+		ent->load(man);
+		robot = man->getRootNode()->createChild("robot");
+		robot->setPosition( vl::vector(0, 0, 300) );
+		robot->attachObject( ent );
+		
+		return true;
+	}
+	
+	virtual void swapBuffers( void )
+	{
+		eq::Window::swapBuffers();
+		if( win )
+		{ win->swapBuffers(); }
+	}
+
+	vl::graph::RenderWindow *getRenderWindow( void )
+	{
+		return win;
+	}
+
+	vl::graph::Camera *getCamera( void )
+	{
+		return cam;
+	}
+
+	vl::ogre::Root *root;
+	vl::ogre::RenderWindow *win;
+	vl::graph::Camera *cam;
+
+	vl::graph::SceneManager *man;
+	vl::graph::SceneNode *feet;
+	vl::graph::SceneNode *robot;
+};
+
 class Channel : public eq::Channel
 {
-public:
-    Channel( eq::Window* parent ) : eq::Channel( parent ) {}
+public :
+	Channel( eq::Window *parent )
+		: eq::Channel(parent), window((::RenderWindow *)parent)
+	{}
 
-protected:
-    virtual void frameDraw( const uint32_t spin );
+	virtual bool configInit( const uint32_t initID )
+	{
+		if( !eq::Channel::configInit( initID ) )
+		{ return false; }
+
+		win = window->getRenderWindow();
+		EQASSERT( win );
+
+		camera = window->getCamera();
+		EQASSERT( camera );
+
+		viewport = win->addViewport( camera );
+		viewport->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
+
+		setNearFar( 100.0, 100.0e3 );
+
+		return true;
+	}
+
+	virtual void frameDraw( const uint32_t frameID )
+	{
+		if( camera && win )
+		{
+			eq::Frustumf frust = getFrustum();
+			camera->setProjectionMatrix( frust.compute_matrix() );
+			viewport->update();
+		}
+	}
+
+	vl::graph::Camera *camera;
+	vl::graph::Viewport *viewport;
+	vl::graph::RenderWindow *win;
+	::RenderWindow *window;
 };
 
 class NodeFactory : public eq::NodeFactory
 {
 public:
-    virtual eq::Channel* createChannel( eq::Window* parent )
-        { return new Channel( parent ); }
+	virtual eq::Window *createWindow( eq::Pipe *parent )
+	{ return new ::RenderWindow( parent ); }
+
+	virtual Channel *createChannel( eq::Window *parent )
+	{ return new ::Channel( parent ); }
 };
-}
 
 int main( const int argc, char** argv )
 {
+	std::cout << "arguments = ";
+	for(int i = 0; i < argc; i++ )
+	{
+		std::cout << argv[i] << " ";
+	}
+	std::cout << std::endl;
+
     // 1. Equalizer initialization
-    eqHello::NodeFactory nodeFactory;
+    ::NodeFactory nodeFactory;
     if( !eq::init( argc, argv, &nodeFactory ))
     {
         EQERROR << "Equalizer init failed" << endl;
@@ -94,79 +188,3 @@ int main( const int argc, char** argv )
     return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-/** The rendering routine, a.k.a., glutDisplayFunc() */
-void eqHello::Channel::frameDraw( const uint32_t spin )
-{
-    // setup OpenGL State
-    eq::Channel::frameDraw( spin );
-    
-    const float lightPos[] = { 0.0f, 0.0f, 1.0f, 0.0f };
-    glLightfv( GL_LIGHT0, GL_POSITION, lightPos );
-
-    const float lightAmbient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    glLightfv( GL_LIGHT0, GL_AMBIENT, lightAmbient );
-
-    // rotate scene around the origin
-    glRotatef( static_cast< float >( spin ) * 0.1f, 1.0f, 0.5f, 0.25f );
-
-    // render six axis-aligned colored quads around the origin
-    //  front
-    glColor3f( 1.0f, 0.5f, 0.5f );
-    glNormal3f( 0.0f, 0.0f, 1.0f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f(  .7f,  .7f, -1.0f );
-    glVertex3f( -.7f,  .7f, -1.0f );
-    glVertex3f(  .7f, -.7f, -1.0f );
-    glVertex3f( -.7f, -.7f, -1.0f );
-    glEnd();
-
-    //  bottom
-    glColor3f( 0.5f, 1.0f, 0.5f );
-    glNormal3f( 0.0f, 1.0f, 0.0f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f(  .7f, -1.0f,  .7f );
-    glVertex3f( -.7f, -1.0f,  .7f );
-    glVertex3f(  .7f, -1.0f, -.7f );
-    glVertex3f( -.7f, -1.0f, -.7f );
-    glEnd();
-
-    //  back
-    glColor3f( 0.5f, 0.5f, 1.0f );
-    glNormal3f( 0.0f, 0.0f, -1.0f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f(  .7f,  .7f, 1.0f );
-    glVertex3f( -.7f,  .7f, 1.0f );
-    glVertex3f(  .7f, -.7f, 1.0f );
-    glVertex3f( -.7f, -.7f, 1.0f );
-    glEnd();
-
-    //  top
-    glColor3f( 1.0f, 1.0f, 0.5f );
-    glNormal3f( 0.f, -1.f, 0.f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f(  .7f, 1.0f,  .7f );
-    glVertex3f( -.7f, 1.0f,  .7f );
-    glVertex3f(  .7f, 1.0f, -.7f );
-    glVertex3f( -.7f, 1.0f, -.7f );
-    glEnd();
-
-    //  right
-    glColor3f( 1.0f, 0.5f, 1.0f );
-    glNormal3f( -1.f, 0.f, 0.f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f( 1.0f,  .7f,  .7f );
-    glVertex3f( 1.0f, -.7f,  .7f );
-    glVertex3f( 1.0f,  .7f, -.7f );
-    glVertex3f( 1.0f, -.7f, -.7f );
-    glEnd();
-
-    //  left
-    glColor3f( 0.5f, 1.0f, 1.0f );
-    glNormal3f( 1.f, 0.f, 0.f );
-    glBegin( GL_TRIANGLE_STRIP );
-    glVertex3f( -1.0f,  .7f,  .7f );
-    glVertex3f( -1.0f, -.7f,  .7f );
-    glVertex3f( -1.0f,  .7f, -.7f );
-    glVertex3f( -1.0f, -.7f, -.7f );
-    glEnd();
-}

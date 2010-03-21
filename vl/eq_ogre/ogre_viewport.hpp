@@ -12,7 +12,7 @@
 #ifndef VL_OGRE_VIEWPORT_HPP
 #define VL_OGRE_VIEWPORT_HPP
 
-#include "eq_graph/eq_viewport.hpp"
+#include "interface/viewport.hpp"
 
 #include <OGRE/OgreViewport.h>
 
@@ -30,14 +30,47 @@ namespace ogre
 				{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
 			}
 
-			virtual Ogre::Viewport *getNative( void )
-			{ return _ogre_viewport; }
-
 			virtual ~Viewport( void )
 			{}
 
+			virtual Ogre::Viewport *getNative( void )
+			{ return _ogre_viewport; }
+
+			// Rendering methods
+			virtual void update( void ) 
+			{
+				_ogre_viewport->update();
+			}
+
+			virtual void clear( void )
+			{
+				_ogre_viewport->clear();
+			}
+
+			virtual vl::graph::RenderWindow *getTarget( void )
+			{
+			//	return _ogre_viewport->getTarget();
+				return 0;
+			}
+
+			virtual vl::graph::Camera *getCamera( void )
+			{
+			//	return _ogre_viewport->getCamera();
+				return 0;
+			}
+
+			virtual void setCamera( vl::graph::Camera *cam )
+			{
+			//	_ogre_viewport->setCamera(cam);
+			}
+
+			virtual int getZOrder( void )
+			{
+				return _ogre_viewport->getZOrder();
+			}
+
 			virtual void setBackgroundColour(
-					vmml::vector<4, double> const &colour )
+					vl::colour const &colour )
 			{
 				if( _ogre_viewport )
 				{

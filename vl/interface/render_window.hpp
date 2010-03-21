@@ -32,15 +32,23 @@ namespace graph
 
 			virtual ~RenderWindow( void ) {}
 			
+			// Rendering tasks
 			virtual void swapBuffers( void ) = 0;
 
 			virtual void update( void ) = 0;
 
-			virtual void clear( void ) = 0;
-
+			// Viewport handling
 			virtual Viewport *addViewport( Camera *cam ) = 0;
 
-		protected :
+			virtual uint16_t getNumViewports( void ) const = 0;
+
+			virtual Viewport *getViewport( uint16_t index ) = 0;
+
+			virtual Viewport *getViewportByZOrder( int ZOrder ) = 0;
+
+			virtual bool hasViewportWithZOrder( int ZOrder ) = 0;
+
+			virtual void removeViewport( int ZOrder ) = 0;
 	};
 
 }
