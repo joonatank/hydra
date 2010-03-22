@@ -9,9 +9,9 @@
 #ifndef VL_MATH_MATH_HPP
 #define VL_MATH_MATH_HPP
 
-//#include <cml/quaternion.h>
-//#include <cml/matrix.h>
-//#include <cml/vector.h>
+// For MSV compilers to get M_PI
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include <vmmlib/vector.hpp>
 #include <vmmlib/math.hpp>

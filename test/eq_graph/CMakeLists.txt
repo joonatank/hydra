@@ -19,11 +19,9 @@ add_executable( test_eq_root
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_root
 	)
 
-message( "vl binary dir = ${vl_BINARY_DIR}" )
-message( "vl source dir = ${vl_SOURCE_DIR}" )
-
 FOREACH( source ${TEST_SOURCES} )
-	target_link_libraries( test_${source} boost_unit_test_framework eq )
+	target_link_libraries( test_${source} ${Boost_LIBRARIES}
+		${EQ_LIBRARIES} )
 	add_test( ${source} ${PROJECT_BINARY_DIR}/test_${source} )
 ENDFOREACH( source )
 

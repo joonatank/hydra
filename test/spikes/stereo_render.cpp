@@ -5,7 +5,7 @@
  *	rendering loop.
  *	Very small equalizer and Ogre initialization.
  */
-#define BOOST_TEST_DYN_LINK
+//#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE stereo_render
 
 #include <eq/eq.h>

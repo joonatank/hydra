@@ -27,8 +27,8 @@ add_executable( test_ogre_scene_node
 	)
 
 FOREACH( source ${TEST_SOURCES} )
-	target_link_libraries( test_${source} boost_unit_test_framework eq
-		OgreMain )
+	target_link_libraries( test_${source} ${Boost_LIBRARIES} 
+		 ${OpenGL_LIBRARIES} ${OGRE_LIBRARIES} ${EQ_LIBRARIES} )
 ENDFOREACH( source )
 
 

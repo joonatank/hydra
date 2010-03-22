@@ -19,6 +19,8 @@
 #include "eq_movable_object.hpp"
 #include "base/exceptions.hpp"
 
+#include "math/math.hpp"
+
 //#include "eq_cluster/distrib_container.hpp"
 
 namespace vl

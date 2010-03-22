@@ -55,11 +55,14 @@ public :
 
 	virtual bool configInit( const uint32_t initID )
 	{
+		BOOST_REQUIRE( eq::Node::configInit( initID ) );
+
 		_id = initID;
 		BOOST_REQUIRE( initID != EQ_ID_INVALID );
-		BOOST_REQUIRE( eq::Node::configInit( initID ) );
+
 		BOOST_REQUIRE( man = new mock_scene_manager() );
 		node = new vl::cl::SceneNode(man);
+		return true;
 	}
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )

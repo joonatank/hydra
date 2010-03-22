@@ -24,11 +24,9 @@ add_executable( ogre_render
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_manager
 	)
 
+set( LIBS ${OpenGL_LIBRARIES} ${OGRE_LIBRARIES} ${Boost_LIBRARIES}
+	${EQ_LIBRARIES} )
+
 FOREACH( source ${TEST_SOURCES} )
-	target_link_libraries( ${source} boost_unit_test_framework eq
-		OgreMain )
-	message( "${PROJECT_BINARY_DIR}" )
+	target_link_libraries( ${source} ${LIBS} )
 ENDFOREACH( source )
-
-#add_test( ${source} ${PROJECT_BINARY_DIR}/test_${source} )
-

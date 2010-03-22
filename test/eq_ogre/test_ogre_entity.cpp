@@ -1,4 +1,4 @@
-#define BOOST_TEST_DYN_LINK
+//#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE ogre_entity
 
 #include <boost/test/unit_test.hpp>
