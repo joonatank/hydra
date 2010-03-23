@@ -11,9 +11,9 @@ vl::ogre::Root::createRenderSystem( void )
 {
 	EQASSERT( _ogre_root );
 #if defined(_DEBUG)
-	_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL_d");
+	_ogre_root->loadPlugin("RenderSystem_GL_d");
 #else
-	_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
+	_ogre_root->loadPlugin("RenderSystem_GL");
 #endif
 
 	Ogre::RenderSystemList::iterator r_it;
@@ -28,6 +28,7 @@ void
 vl::ogre::Root::init( void )
 {
 	_ogre_root->initialise( false );
+
 	Ogre::ResourceGroupManager::getSingleton()
 		.addResourceLocation( "resources",
 				"FileSystem", "General" );

@@ -42,20 +42,46 @@ public :
 		ogre_root = new vl::ogre::Root();
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
-		params["currentGLContext"] = std::string("True");
-		win = ogre_root->createWindow( "Win", 800, 600, params );
+		
+		if( dynamic_cast<eq::WGLWindow *>( getWindow()->getOSWindow() ) )
+		{
+			eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
+			std::stringstream ss( std::stringstream::in | std::stringstream::out );
+			ss << os_win->getWGLWindowHandle();
+			params["externalWindowHandle"] = ss.str();
+			ss.str("");
+			params["externalGLControl"] = std::string("True");
+			ss << os_win->getWGLContext();
+			params["externalGLContext"] = ss.str();
+		}
+		else
+		{
+			params["currentGLContext"] = std::string("True");
+		}
+		
+		try {
+			win = ogre_root->createWindow( "Win", 800, 600, params );
+		}
+		catch( Ogre::Exception const &e)
+		{
+			std::cout << "Exception when creating window: " << e.what() 
+				<< std::endl;
+			throw;
+		}
+		
 		ogre_root->init();
 
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
 		BOOST_REQUIRE( man );
 
+		
 		// Create camera and viewport
 		vl::graph::SceneNode *root = man->getRootNode();
 		cam = man->createCamera( "Cam" );
 		vl::graph::Viewport *view = win->addViewport( cam );
 		view->setBackgroundColour( vmml::vector<4, double>(1.0, 0.0, 0.0, 0.0) );
-		feet = root->createChild();
+		feet = root->createChild( "Feet" );
 		feet->lookAt( vl::vector(0,0,300) );
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
 
@@ -67,7 +93,6 @@ public :
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 300) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
-
 		setNearFar( 100.0, 100.0e3 );
 
 		return true;
@@ -88,7 +113,6 @@ public :
 			case 1 :
 			{
 				++state;
-
 			}
 			break;
 
@@ -126,6 +150,7 @@ public :
 		cam->setProjectionMatrix( frust.compute_matrix() );
 		win->update();
 		win->swapBuffers();
+		
 	}
 
 	vl::graph::Root *ogre_root;
@@ -156,7 +181,7 @@ struct RenderFixture
 		  log_file( "render_test.log" )
 	{
 		// Redirect logging
-		eq::base::Log::setOutput( log_file );
+		//eq::base::Log::setOutput( log_file );
 
 		// 1. Equalizer initialization
 		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
