@@ -9,10 +9,6 @@
 #ifndef VL_MATH_MATH_HPP
 #define VL_MATH_MATH_HPP
 
-//#include <cml/quaternion.h>
-//#include <cml/matrix.h>
-//#include <cml/vector.h>
-
 #include <vmmlib/vector.hpp>
 #include <vmmlib/math.hpp>
 #include <vmmlib/quaternion.hpp>
@@ -54,9 +50,6 @@ namespace vl
 		{ return true; }
 		return false;
 	}
-
-	//template< size_t N >
-	//using cml::zero<N>();
-};
+}
 
 #endif

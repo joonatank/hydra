@@ -19,6 +19,8 @@ namespace graph
 	class Camera : public MovableObject
 	{
 		public :
+			virtual ~Camera( void ) {}
+
 			virtual void setProjectionMatrix( vl::matrix const &m ) = 0;
 
 	};	// class Camera

@@ -28,8 +28,6 @@ namespace graph
 	class RenderWindow
 	{
 		public :
-			RenderWindow( void ) {}
-
 			virtual ~RenderWindow( void ) {}
 			
 			// Rendering tasks

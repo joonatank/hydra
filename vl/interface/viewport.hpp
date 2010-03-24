@@ -24,6 +24,8 @@ namespace graph
 	class Viewport 
 	{
 		public :
+			virtual ~Viewport( void ) {}
+
 			virtual void update( void ) = 0;
 
 			virtual void clear( void ) = 0;

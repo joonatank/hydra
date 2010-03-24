@@ -29,8 +29,6 @@ namespace graph
 	{
 		
 		public :
-			Root( void ) {}
-
 			virtual ~Root( void ) {}
 			
 			// Some initialization methods

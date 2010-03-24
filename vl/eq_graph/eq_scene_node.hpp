@@ -44,9 +44,8 @@ namespace cl
 			// Frees the memory, called from SceneManager
 			virtual ~SceneNode( void ) {}
 
-			// Instructs SceneManager to free this Node, all the ChildNodes
-			// and all attached objects
-			//virtual void destroy( void );
+			virtual std::string const &getName( void )
+			{ return eq::Object::getName(); }
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
@@ -94,6 +93,14 @@ namespace cl
 			virtual void setParent( vl::graph::SceneNode *parent );
 
 			virtual void addChild( vl::graph::SceneNode *child );
+
+			virtual vl::graph::SceneNode *getChild( uint16_t index );
+
+			virtual vl::graph::SceneNode *getChild( std::string const &name );
+
+			virtual vl::graph::SceneNode *removeChild( uint16_t index );
+
+			virtual vl::graph::SceneNode *removeChild( std::string const &name );
 
 			virtual vl::graph::ChildContainer const &getChilds( void ) const
 			{ return _childs; }
@@ -175,6 +182,7 @@ namespace cl
 
 			void _removeChild( vl::graph::SceneNode *child );
 
+			vl::cl::SceneNode *_findChild( std::string const &name );
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
 			// destruction of all objects contained in it.

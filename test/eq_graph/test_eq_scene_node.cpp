@@ -12,7 +12,7 @@
 #include "base/exceptions.hpp"
 
 #include "mock_scene_manager.hpp"
-#include "equalizer_fixture.hpp"
+#include "scenenode_equalizer_fixture.hpp"
 
 using vl::graph::SceneNode;
 using vl::graph::SceneManager;
@@ -51,8 +51,6 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 
 BOOST_AUTO_TEST_CASE( trans_throws_test )
 {
-	vl::scalar epsilon = 1e-8;
-
 	mock_scene_manager man;
 	vl::cl::SceneNode node(&man);
 
@@ -152,27 +150,41 @@ BOOST_AUTO_TEST_CASE( transformations_test )
 
 BOOST_AUTO_TEST_CASE( child_test )
 {
-	mock_scene_manager man;
-	vl::graph::SceneNode *c1 = new vl::cl::SceneNode(&man, "Child1");
-	vl::graph::SceneNode *c2 = new vl::cl::SceneNode(&man, "Child2");
-	vl::graph::SceneNode *parent = new vl::cl::SceneNode(&man, "Parent");
+	mock_scene_manager *man = new mock_scene_manager;
+	vl::graph::SceneNode *c1 = new vl::cl::SceneNode(man, "Child1");
+	vl::graph::SceneNode *c2 = new vl::cl::SceneNode(man, "Child2");
+	vl::graph::SceneNode *parent = new vl::cl::SceneNode(man, "Parent");
 
 	// Start conditions, no childs or parents
 	BOOST_CHECK_EQUAL( c1->getParent(), (vl::graph::SceneNode *)0);
 	BOOST_CHECK_EQUAL( c2->getParent(), (vl::graph::SceneNode *)0);
-	BOOST_CHECK_EQUAL( parent->getChilds().size(), 0 );
+	BOOST_CHECK_EQUAL( parent->numChildren(), 0 );
 
 	// add first child, with setParent
 	c1->setParent( parent );
 	BOOST_CHECK_EQUAL( c1->getParent(), parent);
-	BOOST_CHECK_EQUAL( parent->getChilds().size(), 1 );
-	if( parent->getChilds().size() > 0 )
+	BOOST_CHECK_EQUAL( parent->numChildren(), 1 );
+	if( parent->numChildren() > 0 )
 	{ BOOST_CHECK_EQUAL( parent->getChilds().at(0), c1 ); }
 
 	// add second child, with addChild
 	parent->addChild( c2 );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent);
-	BOOST_CHECK_EQUAL( parent->getChilds().size(), 2 );
+	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
+
+	// Removing by name
+	BOOST_CHECK_EQUAL( parent->removeChild( "Child1" ), c1);
+	BOOST_REQUIRE_EQUAL( parent->numChildren(), 1 );
+	BOOST_CHECK_EQUAL( c1->getParent(), (vl::graph::SceneNode *)0 );
+	parent->addChild( c1 );
+	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
+
+	// Getting by name
+	BOOST_CHECK_EQUAL( parent->getChild( "Child2" ), c2 );
+	BOOST_CHECK_EQUAL( parent->getChild( "Child1" ), c1 );
+	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_EQUAL( c1->getParent(), parent );
 
 	// Disallow adding node multiple times
 	BOOST_CHECK_THROW( parent->addChild( c2 ), vl::duplicate );
@@ -194,6 +206,33 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_THROW( c2->setParent( 0 ), vl::null_pointer );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_THROW( c2->addChild( 0 ), vl::null_pointer );
+
+	delete man;
+	delete parent;
+	delete c1;
+	delete c2;
+}
+
+BOOST_AUTO_TEST_CASE( node_creation_test )
+{
+	mock_scene_manager man;
+
+	MOCK_EXPECT( man, getRootNode ).once()
+		.returns( new vl::cl::SceneNode(&man, "Root") );
+	MOCK_EXPECT( man, createNode ).exactly(2).with("Child")
+		.returns( new vl::cl::SceneNode(&man, "Child") );
+	MOCK_EXPECT( man, createNode ).once().with("Child2")
+		.returns( new vl::cl::SceneNode(&man, "Child2") );
+	vl::graph::SceneNode *root = man.getRootNode();
+	BOOST_REQUIRE( root );
+	BOOST_CHECK_EQUAL( root->getName(), "Root" );
+
+	// Creating childs, that is calling SceneManager
+	vl::graph::SceneNode *child = 0;
+	vl::graph::SceneNode *child2 = 0;
+	BOOST_CHECK_NO_THROW( child = root->createChild("Child") );
+	BOOST_CHECK_NO_THROW( child2 = root->createChild("Child2") );
+	BOOST_CHECK_THROW( root->createChild("Child"), vl::duplicate );
 }
 
 BOOST_AUTO_TEST_CASE( attachment_test )
@@ -202,62 +241,28 @@ BOOST_AUTO_TEST_CASE( attachment_test )
 	vl::graph::SceneNode *n= new vl::cl::SceneNode(&man);
 	vl::graph::MovableObject obj1, obj2;
 
-	BOOST_CHECK_EQUAL( n->getAttached().size(), 0 );
+	BOOST_CHECK_EQUAL( n->numAttached(), 0 );
 	BOOST_CHECK_NO_THROW( n->attachObject(&obj1) );
-	BOOST_CHECK_EQUAL( n->getAttached().size(), 1 );
-	if( n->getAttached().size() > 0 )
+	BOOST_CHECK_EQUAL( n->numAttached(), 1 );
+	if( n->numAttached() > 0 )
 	{ BOOST_CHECK_EQUAL( n->getAttached().at(0), &obj1 ); }
 	BOOST_CHECK_THROW( n->attachObject(&obj1), vl::duplicate );
-	BOOST_CHECK_EQUAL( n->getAttached().size(), 1 );
+	BOOST_CHECK_EQUAL( n->numAttached(), 1 );
 
 	BOOST_CHECK_NO_THROW( n->attachObject(&obj2) );
-	BOOST_CHECK_EQUAL( n->getAttached().size(), 2 );
+	BOOST_CHECK_EQUAL( n->numAttached(), 2 );
 }
 
-// Used for callback test so we see if the callback is called
-// FIXME Callback design is still in half way, should they be called when
-// the public interface functions are called or when the data is deserialized?
-/*
-MOCK_BASE_CLASS( mock_scene_node, vl::cl::SceneNode )
-{
-	MOCK_METHOD( _setTransform, 2 );
-	MOCK_METHOD( _setScale, 1 );
-	MOCK_METHOD( _attachObject, 1 );
-	MOCK_METHOD( _detachObject, 1 );
-	MOCK_METHOD( _addChild, 1 );
-	MOCK_METHOD( _removeChild, 1 );
-};
-*/
-
-BOOST_AUTO_TEST_CASE( callbacks )
-{
-
-}
-
+// TODO this should be moved to different directory where we have
+// all the synchronization tests.
 BOOST_FIXTURE_TEST_CASE( equalizer_test, EqFixture )
 {
 	BOOST_CHECK( config );
-	//for( size_t i = 0; i < 1000; ++i )
 
 	// Test transmitting translation
-	mainloop();
 
-	node->setPosition( TRANS_VEC[0] );
-	node->commit();
-	mainloop();
-
-	// Test transmitting rotation
-	node->setOrientation( ROT_QUAT[0] );
-	node->commit();
-	mainloop();
-
-	node->setScale( SCALE_VEC[0] );
-	node->setOrientation( ROT_QUAT[1] );
-	node->setPosition( TRANS_VEC[1] );
-	node->commit();
-	mainloop();
-
-	// TODO test attachement
-
-	// TODO test children
+	while( sync_fixture->testRemaining() )
+	{
+		mainloop();
+	}
 }

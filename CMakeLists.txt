@@ -5,6 +5,10 @@ cmake_minimum_required(VERSION 2.6)
 enable_testing()
 
 message( "Building vl" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic" )
+message( "CXX_FLAGS = ${CMAKE_CXX_FLAGS}" )
+message( "CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}" )
+message( "CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}" )
 # TODO add define rendering engine (Ogre/OpenSG)
 # include vl lib
 # Using include instead of subdirectory because with include we can just

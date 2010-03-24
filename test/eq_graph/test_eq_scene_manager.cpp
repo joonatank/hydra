@@ -12,9 +12,12 @@ using vl::cl::SceneManager;
 
 BOOST_AUTO_TEST_CASE( constructor_test )
 {
-	BOOST_CHECK_NO_THROW( SceneManager sm("Name") );
+	vl::graph::SceneManager *sm;
+	BOOST_CHECK_NO_THROW( sm = new SceneManager("Name") );
 
-	BOOST_CHECK_THROW( SceneManager sm(""), vl::empty_param );
+	BOOST_CHECK_THROW( SceneManager(""), vl::empty_param );
+
+	delete sm;
 }
 
 BOOST_AUTO_TEST_CASE( movable_object_test )

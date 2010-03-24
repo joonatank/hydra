@@ -30,6 +30,8 @@ namespace graph
 	{
 		public :
 
+			virtual ~SceneManager( void ) {}
+
 			// Get the root of the scene graph, created implicitly
 			virtual SceneNode *getRootNode( void ) = 0;
 

@@ -197,6 +197,43 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
 	((SceneNode *)child)->_setParent( this );
 }
 
+vl::graph::SceneNode *
+vl::cl::SceneNode::getChild( uint16_t index )
+{
+	return _childs.at(index);
+}
+
+vl::graph::SceneNode *
+vl::cl::SceneNode::getChild( std::string const &name )
+{
+	vl::graph::SceneNode *child = _findChild( name );
+	return child;
+}
+
+vl::graph::SceneNode *
+vl::cl::SceneNode::removeChild( uint16_t index )
+{
+	vl::cl::SceneNode *child = (vl::cl::SceneNode *)_childs.at(index);
+	if( child )
+	{
+		_removeChild(child);
+		child->_parent = 0;
+	}
+	return child;
+}
+
+vl::graph::SceneNode *
+vl::cl::SceneNode::removeChild( std::string const &name )
+{
+	vl::cl::SceneNode *child = _findChild( name );
+	if( child )
+	{
+		_removeChild(child);
+		child->_parent = 0;
+	}
+	return child;
+}
+
 // ---- Equalizer overrides ----
 void
 vl::cl::SceneNode::serialize( eq::net::DataOStream& os,
@@ -298,4 +335,19 @@ vl::cl::SceneNode::_removeChild( vl::graph::SceneNode *child )
 	}
 
 	throw vl::exception("Child not found", "vl::cl::SceneNode::_removeChild" );
+}
+
+vl::cl::SceneNode *
+vl::cl::SceneNode::_findChild( std::string const &name )
+{
+	vl::graph::ChildContainer::iterator iter = _childs.begin();
+	for( ; iter != _childs.end(); ++iter )
+	{
+		if( (*iter)->getName() == name )
+		{
+			return (vl::cl::SceneNode *)(*iter);
+		}
+	}
+
+	return 0;
 }

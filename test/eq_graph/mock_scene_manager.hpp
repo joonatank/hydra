@@ -13,7 +13,7 @@ MOCK_BASE_CLASS( mock_scene_manager, SceneManager )
 {
 	MOCK_METHOD_EXT( destroy, 1, void( MovableObject* ), destroyObj)
 	MOCK_METHOD_EXT( destroy, 1, void( SceneNode* ), destroyNode )
-	MOCK_METHOD( getRootNode, 0 )
+	MOCK_METHOD_EXT( getRootNode, 0, SceneNode*(), getRootNode )
 	MOCK_METHOD( createNode, 1 )
 	MOCK_METHOD( createEntity, 2 )
 	MOCK_METHOD( createCamera, 1 )

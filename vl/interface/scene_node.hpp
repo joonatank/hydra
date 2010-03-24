@@ -45,11 +45,10 @@ namespace graph
 				TS_WORLD
 			};
 
-			// Instructs SceneManager to free this Node, all the ChildNodes
-			// and all attached objects
-			//virtual void destroy( void ) = 0;
+			virtual ~SceneNode( void ) {}
 
-			//virtual uint32_t getID( void ) const = 0;
+			virtual std::string const &getName( void ) = 0;
+
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
 			// knowledge about the rendering engine types, unless of course
@@ -96,6 +95,14 @@ namespace graph
 			virtual void setParent( SceneNode *parent ) = 0;
 
 			virtual void addChild( SceneNode *child ) = 0;
+
+			virtual SceneNode *getChild( uint16_t index ) = 0;
+
+			virtual SceneNode *getChild( std::string const &name ) = 0;
+
+			virtual SceneNode *removeChild( uint16_t index ) = 0;
+
+			virtual SceneNode *removeChild( std::string const &name ) = 0;
 
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
