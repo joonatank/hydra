@@ -5,7 +5,6 @@
  *	rendering loop.
  *	Very small equalizer and Ogre initialization.
  */
-//#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE stereo_render
 
 #include <eq/eq.h>
@@ -146,11 +145,47 @@ public :
 
 	virtual void frameDraw( const uint32_t frameID )
 	{
+		eq::Channel::frameDraw( frameID );
+
+		/*
+		 * Example get draw buffer
+		int param;
+		glGetIntegerv( GL_DRAW_BUFFER, &param );
+		std::cout << "Draw buffer = ";
+		if ( param == GL_NONE )
+		{ std::cout << "GL_NONE" << std::endl; }
+		else if ( param == GL_BACK )
+		{ std::cout << "GL_BACK" << std::endl; }
+		else if ( param == GL_BACK_LEFT )
+		{ std::cout << "GL_BACK_LEFT" << std::endl; }
+		else if ( param == GL_BACK_RIGHT )
+		{ std::cout << "GL_BACK_RIGHT" << std::endl; }
+		*/
+		/* Example get win32 PixelFormat and check we have stereo
+		if( dynamic_cast<eq::WGLWindow *>( getWindow()->getOSWindow() ) )
+		{
+			eq::WGLWindow *os_win 
+				= (eq::WGLWindow *)( getWindow()->getOSWindow() );
+			HDC hdc = os_win->getWGLDC();
+			int pformat = GetPixelFormat(hdc);
+			PIXELFORMATDESCRIPTOR  pfd;
+			// obtain a detailed description of that pixel format  
+			DescribePixelFormat(hdc, pformat, 
+        			sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+			std::cout << "pfd.flags = " << pfd.dwFlags << std::endl;
+			std::cout << "flags contain";
+			if( pfd.dwFlags & PFD_DOUBLEBUFFER )
+			{ std::cout << " doublebuffer "; }
+			if( pfd.dwFlags & PFD_STEREO )
+			{ std::cout << " stereo "; }
+			if( pfd.dwFlags & PFD_SUPPORT_OPENGL )
+			{ std::cout << " opengl "; }
+			std::cout << std::endl;
+		}
+		*/
 		eq::Frustumf frust = getFrustum();
 		cam->setProjectionMatrix( frust.compute_matrix() );
 		win->update();
-		win->swapBuffers();
-		
 	}
 
 	vl::graph::Root *ogre_root;
