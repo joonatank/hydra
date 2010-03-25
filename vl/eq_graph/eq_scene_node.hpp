@@ -152,28 +152,8 @@ namespace cl
 				// move them behind one variable.
 				DIRTY_VISIBILITY = eq::Object::DIRTY_CUSTOM << 4,
 				DIRTY_SHOW_BOUNDINGBOX = eq::Object::DIRTY_CUSTOM << 5,
-				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 6,
+				DIRTY_CUSTOM = eq::Object::DIRTY_CUSTOM << 6
 			};
-
-			// Overloadable functions to modify the Rendering engine
-			// These have to be overriden but they are not pure abstracts
-			// because this class can be used in the Application without
-			// rendering engine.
-			/*
-			virtual void _setTransform( vl::vector const &,
-					vl::quaternion const & )
-			{}
-
-			virtual void _setScale( vl::vector const & ) {}
-
-			virtual void _attachObject( vl::graph::MovableObject *) {} 
-
-			virtual void _detachObject( vl::graph::MovableObject *) {}
-
-			virtual void _addChild( vl::graph::SceneNode *) {}
-
-			virtual void _removeChild( vl::graph::SceneNode *) {}
-			*/
 
 		protected :
 			void _addChild( vl::graph::SceneNode *child );

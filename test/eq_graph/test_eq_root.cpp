@@ -29,4 +29,6 @@ BOOST_AUTO_TEST_CASE( scene_manager )
 			(vl::graph::SceneManager *)0 );
 	BOOST_CHECK_THROW( root->destroySceneManager( "Scene" ), vl::no_object );
 	BOOST_CHECK_THROW( root->destroySceneManager( "" ), vl::empty_param );
+
+	delete root;
 }

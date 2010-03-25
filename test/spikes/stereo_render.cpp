@@ -130,13 +130,13 @@ public :
 		win->swapBuffers();
 	}
 
+	int state;
 	vl::graph::Root *ogre_root;
 	vl::graph::RenderWindow *win;
 	vl::graph::Camera *cam;
 	vl::graph::SceneManager *man;
 	vl::graph::SceneNode *feet;
 	vl::graph::SceneNode *robot;
-	int state;
 };
 
 class NodeFactory : public eq::NodeFactory

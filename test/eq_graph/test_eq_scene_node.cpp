@@ -1,18 +1,15 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE eq_scene_node
 #include <boost/test/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-
-#include <turtle/mock.hpp>
+//#include <boost/test/floating_point_comparison.hpp>
 
 #include "eq_graph/eq_scene_node.hpp"
-//#include "eq_graph/eq_scene_manager.hpp"
+
 #include "interface/scene_manager.hpp"
 
 #include "base/exceptions.hpp"
 
 #include "mock_scene_manager.hpp"
-#include "scenenode_equalizer_fixture.hpp"
 
 using vl::graph::SceneNode;
 using vl::graph::SceneManager;
@@ -253,16 +250,3 @@ BOOST_AUTO_TEST_CASE( attachment_test )
 	BOOST_CHECK_EQUAL( n->numAttached(), 2 );
 }
 
-// TODO this should be moved to different directory where we have
-// all the synchronization tests.
-BOOST_FIXTURE_TEST_CASE( equalizer_test, EqFixture )
-{
-	BOOST_CHECK( config );
-
-	// Test transmitting translation
-
-	while( sync_fixture->testRemaining() )
-	{
-		mainloop();
-	}
-}

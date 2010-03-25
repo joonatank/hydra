@@ -75,14 +75,19 @@ namespace ogre
 
 			virtual Viewport *getViewport( uint16_t index )
 			{
+				return 0;
 			}
 
 			virtual Viewport *getViewportByZOrder( int ZOrder )
 			{
+				return 0;
 			}
 
 			virtual bool hasViewportWithZOrder( int ZOrder ) 
 			{
+				if( ZOrder == 0 )
+				{ return true; }
+				return false;
 			}
 
 			virtual void removeViewport( int ZOrder )
