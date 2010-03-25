@@ -42,21 +42,18 @@ public :
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
 		
-		if( dynamic_cast<eq::WGLWindow *>( getWindow()->getOSWindow() ) )
-		{
-			eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
-			std::stringstream ss( std::stringstream::in | std::stringstream::out );
-			ss << os_win->getWGLWindowHandle();
-			params["externalWindowHandle"] = ss.str();
-			ss.str("");
-			params["externalGLControl"] = std::string("True");
-			ss << os_win->getWGLContext();
-			params["externalGLContext"] = ss.str();
-		}
-		else
-		{
-			params["currentGLContext"] = std::string("True");
-		}
+#ifdef OGRE_PLATFORM_WIN32
+		eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
+		std::stringstream ss( std::stringstream::in | std::stringstream::out );
+		ss << os_win->getWGLWindowHandle();
+		params["externalWindowHandle"] = ss.str();
+		ss.str("");
+		params["externalGLControl"] = std::string("True");
+		ss << os_win->getWGLContext();
+		params["externalGLContext"] = ss.str();
+#else
+		params["currentGLContext"] = std::string("True");
+#endif
 		
 		try {
 			win = ogre_root->createWindow( "Win", 800, 600, params );
@@ -100,47 +97,6 @@ public :
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
 		eq::Channel::frameStart( frameID, frameNumber );
-
-		switch( state )
-		{
-			case 0 :
-			{
-				++state;
-			}
-			break;
-
-			case 1 :
-			{
-				++state;
-			}
-			break;
-
-			case 2 :
-			{
-				++state;
-			}
-			break;
-			case 3 :
-			{
-				++state;
-			}
-			break;
-
-			case 4 :
-			{
-				++state;
-			}
-			break;
-
-			case 5 :
-			{ 
-				++state;
-			}
-			break;
-
-			default :
-			break;
-		}
 	}
 
 	virtual void frameDraw( const uint32_t frameID )

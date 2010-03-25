@@ -1,4 +1,4 @@
-project( "eq_graph_test" CXX )
+project( "spikes" CXX )
 
 SET( TEST_SOURCES stereo_render ogre_render )
 
