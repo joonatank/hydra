@@ -1,7 +1,0 @@
-Joonatan Kuosa
-2010-02-26
-
-TODO
-Add some scripting capabilities to the sender.
-Either using python (we need to do the bindings) or using text files
-where we have the time delay and the command to send to the server.

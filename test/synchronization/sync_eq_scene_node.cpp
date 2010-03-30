@@ -1,4 +1,7 @@
+#ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
+#endif
+
 #define BOOST_TEST_MODULE sync_eq_scene_node
 #include <boost/test/unit_test.hpp>
 
