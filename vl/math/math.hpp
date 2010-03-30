@@ -9,6 +9,10 @@
 #ifndef VL_MATH_MATH_HPP
 #define VL_MATH_MATH_HPP
 
+// For MSV compilers to get M_PI
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <vmmlib/vector.hpp>
 #include <vmmlib/math.hpp>
 #include <vmmlib/quaternion.hpp>

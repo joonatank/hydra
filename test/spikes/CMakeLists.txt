@@ -27,15 +27,17 @@ add_executable( pipes_test
 	${COMMON_SOURCES}
 	)
 
+set( LIBS ${OpenGL_LIBRARIES} ${OGRE_LIBRARIES} ${Boost_LIBRARIES}
+	${EQ_LIBRARIES} )
+
 add_executable( node_test
 	node_test.cpp
 	${COMMON_SOURCES}
 	)
 
-target_link_libraries( node_test eq OgreMain )
-
 FOREACH( source ${TEST_SOURCES} )
-	target_link_libraries( ${source} boost_unit_test_framework eq
-		OgreMain boost_thread )
+	target_link_libraries( ${source} ${LIBS} )
 ENDFOREACH( source )
+
+target_link_libraries( node_test ${OGRE_LIBRARIES} ${EQ_LIBRARIES} )
 

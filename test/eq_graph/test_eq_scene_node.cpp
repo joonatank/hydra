@@ -1,7 +1,8 @@
+#ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
+#endif
 #define BOOST_TEST_MODULE eq_scene_node
 #include <boost/test/unit_test.hpp>
-//#include <boost/test/floating_point_comparison.hpp>
 
 #include "eq_graph/eq_scene_node.hpp"
 

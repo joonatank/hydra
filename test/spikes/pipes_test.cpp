@@ -4,7 +4,10 @@
  * 	Pipe test
  *	Small test to determine if two pipes can render simultaneously.
  */
+#ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
+#endif
+
 #define BOOST_TEST_MODULE pipe_test
 
 #include <boost/test/unit_test.hpp>

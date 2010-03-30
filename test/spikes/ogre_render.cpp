@@ -1,4 +1,7 @@
+#ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
+#endif
+
 #define BOOST_TEST_MODULE ogre_render
 
 #include <boost/test/unit_test.hpp>
