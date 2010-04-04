@@ -12,14 +12,15 @@
 #ifndef VL_EQ_GRAPH_SCENE_MANAGER_HPP
 #define VL_EQ_GRAPH_SCENE_MANAGER_HPP
 
+#include <eq/client/object.h>
+
+#include <boost/enable_shared_from_this.hpp>
+
 #include "interface/scene_manager.hpp"
 
 #include "eq_scene_node.hpp"
 #include "eq_entity.hpp"
-//#include "eq_movable_object.hpp"
 #include "eq_camera.hpp"
-
-#include <eq/client/object.h>
 
 namespace vl
 {
@@ -35,51 +36,53 @@ namespace cl
 	// engine implementation so this class might work as the concrete
 	// implementation of application data structure.
 	// Nodes still have to use the rendering engine specific class.
-	class SceneManager : public eq::Object, public vl::graph::SceneManager
+	class SceneManager : public eq::Object, public vl::graph::SceneManager,
+						 public boost::enable_shared_from_this<SceneManager>
 	{
 		public :
 
 			SceneManager( std::string const &name );
 
-			virtual ~SceneManager( void )
-			{}
+			virtual ~SceneManager( void );
 
-			// TODO move the deallocators to protected impl code.
-			virtual void destroy( vl::graph::SceneNode *node )
-			{ delete node; }
+			virtual std::string const &getName( void )
+			{ return eq::Object::getName(); }
 
-			virtual void destroy( vl::graph::MovableObject *obj )
-			{ delete obj; }
+			virtual void destroyGraph( void );
 
-			virtual vl::graph::SceneNode *getRootNode( void )
-			{
-				if( !_root )
-				{ _root = createNode( "Root" ); }
-				return _root;
-			}
+			virtual vl::graph::SceneNodeRefPtr getRootNode( void );
 
-			virtual vl::graph::SceneNode *createNode(
+			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );
 
-			/*
-			virtual vl::graph::SceneNode *createNodeImpl(
-					std::string const &name );
-			*/
+			virtual vl::graph::MovableObjectRefPtr createMovableObject(
+					std::string const &name,
+					std::string const &typeName,
+					vl::NamedValuePairList const &params
+						= vl::NamedValuePairList() );
 
-			virtual vl::graph::Entity * createEntity(
+			virtual vl::graph::EntityRefPtr createEntity(
 					std::string const &name, std::string const &meshName );
 
 			// There is no implementation of vl::cl::Camera, because
 			// it's render engine sepcifc and not distributed so this method
 			// will always return NULL.
-			virtual vl::graph::Camera *createCamera( std::string const & )
-			{ return 0; }
+			virtual vl::graph::CameraRefPtr createCamera( std::string const & )
+			{ return vl::graph::CameraRefPtr(); }
 
-			virtual vl::graph::SceneNode *getNode( std::string const &name );
+			virtual vl::graph::SceneNodeRefPtr getNode( std::string const &name );
 
-			virtual vl::graph::SceneNode *getNode( uint32_t id );
+			virtual vl::graph::SceneNodeRefPtr getNode( uint32_t id );
 
-			virtual vl::graph::MovableObject *getObject( uint32_t id );
+			virtual vl::graph::MovableObjectRefPtr getObject( uint32_t id );
+
+			virtual void pushChildAddedStack( uint32_t id,
+					vl::graph::ChildAddedFunctor const &handle );
+
+			virtual void pushChildRemovedStack( vl::graph::SceneNodeRefPtr child );
+
+			virtual void setSceneNodeFactory(
+					vl::graph::SceneNodeFactoryPtr factory );
 
 			// Equalizer overrides
 	
@@ -106,15 +109,21 @@ namespace cl
 
 		protected :
 			// Factory methods, need to be overloaded by child classes
-			virtual SceneNode *_createSceneNodeImpl( std::string const &name );
+			/*
+			virtual vl::graph::SceneNodeRefPtr
+				_createSceneNodeImpl( std::string const &name );
 
-			virtual vl::graph::MovableObject* _createMovableObjectImpl(
+			virtual vl::graph::MovableObjectRefPtr _createMovableObjectImpl(
 					std::string const &typeName,
 					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
+			*/
 
-			vl::graph::SceneNode *_root;
+			vl::graph::SceneNodeRefPtr _root;
+
+			vl::graph::SceneNodeFactoryPtr _scene_node_factory;
+			std::vector<vl::graph::MovableObjectFactoryPtr> _movable_factories;
 
 	};	// class SceneManager
 

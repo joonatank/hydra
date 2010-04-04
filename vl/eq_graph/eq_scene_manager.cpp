@@ -1,10 +1,14 @@
 #include "eq_scene_manager.hpp"
 
+#include "interface/movable_object.hpp"
+#include "interface/entity.hpp"
+#include "eq_scene_node.hpp"
+
 #include <eq/net/session.h>
 
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: _root(0)
+	: _root()
 {
 	if( name.empty() )
 	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
@@ -12,10 +16,34 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 	eq::Object::setName( name );
 }
 
-vl::graph::SceneNode *
+vl::cl::SceneManager::~SceneManager( void )
+{
+}
+
+void
+vl::cl::SceneManager::destroyGraph( void )
+{
+
+}
+
+vl::graph::SceneNodeRefPtr
+vl::cl::SceneManager::getRootNode( void )
+{
+	if( !_root )
+	{ _root = createNode( "Root" ); }
+	return _root;
+}
+
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::createNode( std::string const &name )
 {
-	vl::cl::SceneNode *node = _createSceneNodeImpl( name );
+	// TODO replace with the factory
+	//	= _createSceneNodeImpl( name );
+	if( !_scene_node_factory.get() )
+	{ _scene_node_factory.reset(new DefaultSceneNodeFactory); }
+
+	vl::graph::SceneNodeRefPtr node =
+		_scene_node_factory->create( shared_from_this(), name );
 
 	// TODO add to nodes, we should also share it here so there
 	// will be ID generated for this node
@@ -31,27 +59,49 @@ vl::cl::SceneManager::createNode( std::string const &name )
 	return node;
 }
 
-vl::graph::Entity *
+vl::graph::EntityRefPtr
 vl::cl::SceneManager::createEntity(
 		std::string const &name, std::string const &meshName )
 {
 	vl::NamedValuePairList params;
 	params["mesh"] = meshName;
-	vl::graph::MovableObject *obj = _createMovableObjectImpl(
+	vl::graph::MovableObjectRefPtr obj = createMovableObject(
 			"Entity", name, params );
 
-	return (Entity *)obj;
+	return boost::static_pointer_cast<vl::graph::Entity>( obj );
+}
+
+vl::graph::MovableObjectRefPtr
+vl::cl::SceneManager::createMovableObject(
+		std::string const &name, std::string const &typeName,
+		vl::NamedValuePairList const &params )
+{
+	// For now we only use entities
+	std::vector<vl::graph::MovableObjectFactoryPtr>::iterator iter;
+	for( iter = _movable_factories.begin(); iter != _movable_factories.end();
+			++iter )
+	{
+		if( typeName == (*iter)->typeName() )
+		{
+			return (*iter)->create( name, params );
+		}
+	}
+
+	return vl::graph::MovableObjectRefPtr();
+
+	// TODO replace with factory::create
+	//return new vl::cl::Entity( name, params );
 }
 
 // Find function needs scene graph traversal to be implemented
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::getNode( std::string const &name )
 {
-	return 0;
+	return vl::graph::SceneNodeRefPtr();
 }
 
 // Find function needs scene graph traversal to be implemented
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::getNode( uint32_t id )
 {
 	/*
@@ -62,11 +112,11 @@ vl::cl::SceneManager::getNode( uint32_t id )
 	}
 	*/
 
-	return 0;
+	return vl::graph::SceneNodeRefPtr();
 }
 
 // Find function needs scene graph traversal to be implemented
-vl::graph::MovableObject *
+vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::getObject( uint32_t id )
 {
 	/*
@@ -77,7 +127,27 @@ vl::cl::SceneManager::getObject( uint32_t id )
 	}
 	*/
 
-	return 0;
+	return vl::graph::MovableObjectRefPtr();
+}
+
+void
+vl::cl::SceneManager::pushChildAddedStack( uint32_t id,
+		vl::graph::ChildAddedFunctor const &handle )
+{
+
+}
+
+void
+vl::cl::SceneManager::pushChildRemovedStack( vl::graph::SceneNodeRefPtr child )
+{
+
+}
+
+void
+vl::cl::SceneManager::setSceneNodeFactory(
+		vl::graph::SceneNodeFactoryPtr factory )
+{
+
 }
 
 // equalizer overrides
@@ -99,13 +169,17 @@ vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 	}
 }
 
-vl::cl::SceneNode *
+/*
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::_createSceneNodeImpl( std::string const &name )
 {
-	return new vl::cl::SceneNode( this, name );
+	if( !_scene_node_factory.get() )
+	{ _scene_node_factory.reset(new DefaultSceneNodeFactory); }
+
+	return _scene_node_factory->create( this, name );
 }
 
-vl::graph::MovableObject *
+vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::_createMovableObjectImpl(
 		std::string const &typeName, std::string const &name,
 		vl::NamedValuePairList const &params )
@@ -114,6 +188,8 @@ vl::cl::SceneManager::_createMovableObjectImpl(
 	if( typeName != "Entity" )
 	{ return 0; }
 
+	// TODO replace with factory::create
 	return new vl::cl::Entity( name, params );
 }
+*/
 

@@ -30,21 +30,19 @@ class Channel : public eq::Channel
 {
 public :
 	Channel( eq::Window *parent )
-		: eq::Channel(parent), state(0), ogre_root(0), win(0),
-		man(0), feet(0), robot(0)
+		: eq::Channel(parent), state(0), ogre_root(), win(),
+		man(), feet(), robot()
 	{} 
 
 	virtual ~Channel( void )
-	{
-		delete ogre_root;
-	}
+	{}
 
 	virtual bool configInit( const uint32_t initID )
 	{
 		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
 		// Initialise ogre
-		ogre_root = new vl::ogre::Root();
+		ogre_root.reset( new vl::ogre::Root() );
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
 		
@@ -78,9 +76,9 @@ public :
 		BOOST_REQUIRE( man );
 		
 		// Create camera and viewport
-		vl::graph::SceneNode *root = man->getRootNode();
+		vl::graph::SceneNodeRefPtr root = man->getRootNode();
 		cam = man->createCamera( "Cam" );
-		vl::graph::Viewport *view = win->addViewport( cam );
+		vl::graph::ViewportRefPtr view = win->addViewport( cam );
 		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild( "Feet" );
 		feet->lookAt( vl::vector(0,0,300) );
@@ -88,7 +86,7 @@ public :
 
 		// Create robot Entity
 		BOOST_REQUIRE( root );
-		vl::ogre::Entity *ent = dynamic_cast<vl::ogre::Entity *>(
+		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
 		ent->load(man);
 		robot = root->createChild();
@@ -150,12 +148,12 @@ public :
 	}
 
 	int state;
-	vl::graph::Root *ogre_root;
-	vl::graph::RenderWindow *win;
-	vl::graph::Camera *cam;
-	vl::graph::SceneManager *man;
-	vl::graph::SceneNode *feet;
-	vl::graph::SceneNode *robot;
+	vl::graph::RootRefPtr ogre_root;
+	vl::graph::RenderWindowRefPtr win;
+	vl::graph::CameraRefPtr cam;
+	vl::graph::SceneManagerRefPtr man;
+	vl::graph::SceneNodeRefPtr feet;
+	vl::graph::SceneNodeRefPtr robot;
 };
 
 class NodeFactory : public eq::NodeFactory

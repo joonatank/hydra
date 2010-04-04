@@ -12,17 +12,15 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root(0), win(0), cam(0), man(0), feet(0),
-		robot(0)
-	{
-	}
+		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot()
+	{}
 
 	virtual bool configInit( const uint32_t initID )
 	{
 		if( !eq::Window::configInit( initID ) )
 		{ return false; }
 
-		root = new vl::ogre::Root;
+		root.reset( new vl::ogre::Root );
 		// Initialise ogre
 		root->createRenderSystem();
 
@@ -33,7 +31,7 @@ public :
 		std::stringstream ss(std::stringstream::in | std::stringstream::out);
 		ss <<  oswin->getXDrawable();
 		params["parentWindowHandle"] = ss.str();
-		win = dynamic_cast<vl::ogre::RenderWindow *>(
+		win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
 				root->createWindow( "win", 800, 600, params ) );
 
 		man = root->createSceneManager("SceneManager");
@@ -43,7 +41,7 @@ public :
 		feet->attachObject( cam );
 		feet->lookAt( vl::vector(0,0,300) );
 
-		vl::graph::Entity *ent;
+		vl::graph::EntityRefPtr ent;
 		ent = man->createEntity("robot", "robot.mesh");
 		ent->load(man);
 		robot = man->getRootNode()->createChild("robot");
@@ -60,23 +58,23 @@ public :
 		{ win->swapBuffers(); }
 	}
 
-	vl::graph::RenderWindow *getRenderWindow( void )
+	boost::shared_ptr<vl::graph::RenderWindow> getRenderWindow( void )
 	{
 		return win;
 	}
 
-	vl::graph::Camera *getCamera( void )
+	vl::graph::CameraRefPtr getCamera( void )
 	{
 		return cam;
 	}
 
-	vl::ogre::Root *root;
-	vl::ogre::RenderWindow *win;
-	vl::graph::Camera *cam;
+	boost::shared_ptr<vl::ogre::Root> root;
+	boost::shared_ptr<vl::ogre::RenderWindow> win;
+	vl::graph::CameraRefPtr cam;
 
-	vl::graph::SceneManager *man;
-	vl::graph::SceneNode *feet;
-	vl::graph::SceneNode *robot;
+	vl::graph::SceneManagerRefPtr man;
+	vl::graph::SceneNodeRefPtr feet;
+	vl::graph::SceneNodeRefPtr robot;
 };
 
 class Channel : public eq::Channel
@@ -115,9 +113,9 @@ public :
 		}
 	}
 
-	vl::graph::Camera *camera;
-	vl::graph::Viewport *viewport;
-	vl::graph::RenderWindow *win;
+	boost::shared_ptr<vl::graph::Camera> camera;
+	boost::shared_ptr<vl::graph::Viewport> viewport;
+	boost::shared_ptr<vl::graph::RenderWindow> win;
 	::RenderWindow *window;
 };
 
@@ -181,7 +179,7 @@ int main( const int argc, char** argv )
     {
         EQERROR << "Cannot get config" << endl;
         error = true;
-    }    
+    }
 
     // 7. exit
     eq::exit();

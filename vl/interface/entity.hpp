@@ -29,7 +29,7 @@ namespace graph
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( SceneManager *) = 0;
+			virtual void load( SceneManagerRefPtr ) = 0;
 
 	};	// class Entity
 

@@ -12,6 +12,8 @@
 #ifndef VL_GRAPH_CAMERA_HPP
 #define VL_GRAPH_CAMERA_HPP
 
+#include "movable_object.hpp"
+
 namespace vl
 {
 namespace graph

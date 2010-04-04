@@ -14,13 +14,12 @@
 
 #include "math/math.hpp"
 
+#include "base/typedefs.hpp"
+
 namespace vl
 {
 namespace graph
 {
-	class RenderWindow;
-	class Camera;
-
 	class Viewport 
 	{
 		public :
@@ -30,17 +29,17 @@ namespace graph
 
 			virtual void clear( void ) = 0;
 
-			virtual RenderWindow *getTarget( void ) = 0;
+			virtual RenderWindowRefPtr getTarget( void ) = 0;
 
-			virtual Camera *getCamera( void ) = 0;
+			virtual CameraRefPtr getCamera( void ) = 0;
 
-			virtual void setCamera( Camera *cam ) = 0;
+			virtual void setCamera( CameraRefPtr cam ) = 0;
 
 			virtual int getZOrder( void ) = 0;
 
 			virtual void setBackgroundColour( vl::colour const &colour ) = 0;
 
-	};
+	};	// class Viewport
 
 }	// namespace graph
 

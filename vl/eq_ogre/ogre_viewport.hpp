@@ -47,19 +47,19 @@ namespace ogre
 				_ogre_viewport->clear();
 			}
 
-			virtual vl::graph::RenderWindow *getTarget( void )
+			virtual vl::graph::RenderWindowRefPtr getTarget( void )
 			{
 			//	return _ogre_viewport->getTarget();
-				return 0;
+				return vl::graph::RenderWindowRefPtr();
 			}
 
-			virtual vl::graph::Camera *getCamera( void )
+			virtual vl::graph::CameraRefPtr getCamera( void )
 			{
 			//	return _ogre_viewport->getCamera();
-				return 0;
+				return vl::graph::CameraRefPtr();
 			}
 
-			virtual void setCamera( vl::graph::Camera *cam )
+			virtual void setCamera( vl::graph::CameraRefPtr cam )
 			{
 			//	_ogre_viewport->setCamera(cam);
 			}
@@ -69,8 +69,7 @@ namespace ogre
 				return _ogre_viewport->getZOrder();
 			}
 
-			virtual void setBackgroundColour(
-					vl::colour const &colour )
+			virtual void setBackgroundColour( vl::colour const &colour )
 			{
 				if( _ogre_viewport )
 				{

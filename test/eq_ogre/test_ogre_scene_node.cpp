@@ -13,24 +13,23 @@
 
 BOOST_AUTO_TEST_CASE( constructors_test )
 {
-	vl::ogre::SceneManager *man = new vl::ogre::SceneManager("Man");
-	vl::ogre::SceneNode *n1, *n2;
-	BOOST_CHECK_NO_THROW( n1 = new vl::ogre::SceneNode(man, "Node") );
-	BOOST_CHECK_NO_THROW( n2 = new vl::ogre::SceneNode(man) );
+	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager("Man") );
+	boost::shared_ptr<vl::ogre::SceneNode> n1, n2;
+	BOOST_CHECK_NO_THROW( n1.reset( new vl::ogre::SceneNode(man, "Node") ) );
+	BOOST_CHECK_NO_THROW( n2.reset( new vl::ogre::SceneNode(man) ) );
 	BOOST_CHECK_EQUAL( Ogre::Vector3(0, 0, 0), n1->getNative()->getPosition() );
 	BOOST_CHECK_EQUAL( Ogre::Quaternion::IDENTITY,
 			n1->getNative()->getOrientation() );
 	BOOST_CHECK_EQUAL( 0, n1->getNative()->numAttachedObjects() );
 	BOOST_CHECK_EQUAL( 0, n1->getNative()->numChildren() );
-	delete n1;
-	delete n2;
-	delete man;
 }
+
+// TODO test factory
 
 BOOST_AUTO_TEST_CASE( transform_test )
 {
-	vl::ogre::SceneManager *man = new vl::ogre::SceneManager("Man");
-	vl::ogre::SceneNode *n1 = new vl::ogre::SceneNode(man, "Node1");
+	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager("Man") );
+	boost::shared_ptr<vl::ogre::SceneNode> n1( new vl::ogre::SceneNode(man, "Node1") );
 
 	// Translate
 	vl::vector v(10,0,20);
@@ -72,39 +71,32 @@ BOOST_AUTO_TEST_CASE( transform_test )
 	n1->setScale(s);
 	BOOST_CHECK_EQUAL( n1->getNative()->getScale(), vl::math::convert(s) );
 	n1->setScale(1);
-
-	delete n1;
-	delete man;
 }
 
 BOOST_AUTO_TEST_CASE( child_test )
 {
-	vl::ogre::SceneManager *man = new vl::ogre::SceneManager("Man");
-	vl::ogre::SceneNode *parent = new vl::ogre::SceneNode(man, "parent");
-	vl::ogre::SceneNode *n1 = new vl::ogre::SceneNode(man, "Node1");
-	vl::ogre::SceneNode *n2 = new vl::ogre::SceneNode(man, "Node2");
+	boost::shared_ptr<vl::ogre::SceneManager>
+		man( new vl::ogre::SceneManager("Man") );
 
+	boost::shared_ptr<vl::ogre::SceneNode>
+		parent( new vl::ogre::SceneNode(man, "parent") ),
+		n1( new vl::ogre::SceneNode(man, "Node1") ),
+		n2( new vl::ogre::SceneNode(man, "Node2") );
+
+	Ogre::SceneNode *ogre_parent = parent->getNative();
 	parent->addChild( n1 );
-	BOOST_REQUIRE_EQUAL( parent->getNative()->numChildren(), 1 );
+	BOOST_REQUIRE_EQUAL( ogre_parent->numChildren(), 1 );
 	// Check that we have correct childs
-	BOOST_CHECK_EQUAL( parent->getNative()->getChild(0)->getName(),
-			n1->getName() );
+	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n1->getName() );
 	parent->addChild( n2 );
-	BOOST_CHECK_EQUAL( parent->getNative()->numChildren(), 2 );
-	BOOST_CHECK_EQUAL( parent->getNative()->getChild(0)->getName(),
-			n2->getName() );
-
-	delete n1;
-	delete n2;
-	delete parent;
-	delete man;
+	BOOST_CHECK_EQUAL( ogre_parent->numChildren(), 2 );
+	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n2->getName() );
 }
 
 BOOST_AUTO_TEST_CASE( attachement_test )
 {
-	vl::ogre::SceneManager *man = new vl::ogre::SceneManager("Man");
-	vl::ogre::SceneNode *node= new vl::ogre::SceneNode(man, "parent");
-	
-	delete node;
-	delete man;
+	boost::shared_ptr<vl::ogre::SceneManager>
+		man( new vl::ogre::SceneManager("Man") );
+	boost::shared_ptr<vl::ogre::SceneNode>
+		node( new vl::ogre::SceneNode(man, "parent") );
 }

@@ -19,7 +19,7 @@ namespace ogre
 	class SceneNode : public vl::cl::SceneNode
 	{
 		public :
-			SceneNode( vl::ogre::SceneManager *creator,
+			SceneNode( vl::graph::SceneManagerRefPtr creator,
 					std::string const &name = std::string() );
 
 			Ogre::SceneNode *getNative( void )
@@ -47,18 +47,21 @@ namespace ogre
 
 			virtual void setScale( vl::vector const &s );
 
-			virtual void attachObject( vl::graph::MovableObject *object );
+			virtual void attachObject( vl::graph::MovableObjectRefPtr object );
 
-			virtual void detachObject( vl::graph::MovableObject *object );
+			virtual void detachObject( vl::graph::MovableObjectRefPtr object );
 
-			virtual void setParent( vl::graph::SceneNode *parent );
+			virtual void setParent( vl::graph::SceneNodeRefPtr parent );
 
-			virtual void addChild( vl::graph::SceneNode *child );
+			virtual void addChild( vl::graph::SceneNodeRefPtr child );
 
 		protected :
 			Ogre::SceneNode *_ogre_node;
-	};
+
+	};	// class SceneNode
+
 }	// namespace ogre
 
 }	// namespace vl
+
 #endif

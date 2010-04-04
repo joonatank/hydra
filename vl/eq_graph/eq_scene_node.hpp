@@ -15,11 +15,15 @@
 #include <eq/client/object.h>
 
 #include "interface/scene_node.hpp"
+#include "interface/entity.hpp"
+#include "interface/movable_object.hpp"
 
 #include "eq_movable_object.hpp"
 #include "base/exceptions.hpp"
 
 #include "math/math.hpp"
+
+#include <boost/enable_shared_from_this.hpp>
 
 //#include "eq_cluster/distrib_container.hpp"
 
@@ -32,19 +36,39 @@ namespace cl
 	class SceneManager;
 	class SceneNode;
 
+	// Handle addition to syncronization stack functor
+	class ChildAddedFunctor : public vl::graph::ChildAddedFunctor
+	{
+	public :
+		ChildAddedFunctor( vl::graph::SceneNode *owner )
+			: _owner( owner )
+		{}
+
+		virtual ~ChildAddedFunctor( void ) {}
+
+		virtual void operator()( vl::graph::SceneNode *me )
+		{
+		}
+
+	protected :
+		// The new owner
+		vl::graph::SceneNode *_owner;
+	};
+
 	// SceneNode is a basic element in scene graph and it is the only element
 	// that can be other than leafs of the tree
 	// (MovableObjects can be only be leafs).
 	// It manages the attributes of the whole branch, like transformation
 	// (combined, but nodes transformation is always applied).
-	class SceneNode : public eq::Object, public vl::graph::SceneNode
+	class SceneNode : public eq::Object, public vl::graph::SceneNode,
+					  public boost::enable_shared_from_this<SceneNode>
 	{
 		public :
-			SceneNode( vl::graph::SceneManager *creator,
+			SceneNode( vl::graph::SceneManagerRefPtr creator,
 					std::string const &name = std::string() );
 
 			// Frees the memory, called from SceneManager
-			virtual ~SceneNode( void ) {}
+			virtual ~SceneNode( void );
 
 			virtual std::string const &getName( void )
 			{ return eq::Object::getName(); }
@@ -85,24 +109,32 @@ namespace cl
 			virtual vl::vector const &getScale( void )
 			{ return _scale; }
 
-			virtual void attachObject( vl::graph::MovableObject *object );
+			virtual void attachObject( vl::graph::MovableObjectRefPtr object );
 
-			virtual void detachObject( vl::graph::MovableObject *object );
+			virtual void detachObject( vl::graph::MovableObjectRefPtr object );
 
-			virtual vl::graph::SceneNode *createChild(
+			virtual vl::graph::SceneNodeRefPtr createChild(
 					std::string const &name = std::string() );
 
-			virtual void setParent( vl::graph::SceneNode *parent );
+			/* Set the parent SceneNode,
+			 * Parent can be NULL pointer which will destroy this SceneNode if
+			 * no other parent is set before the this ref ptr goes out of scope.
+			 *
+			 * Throws vl::duplicate if parent is this.
+			 */
+			virtual void setParent( vl::graph::SceneNodeRefPtr parent );
 
-			virtual void addChild( vl::graph::SceneNode *child );
+			virtual void addChild( vl::graph::SceneNodeRefPtr child );
 
-			virtual vl::graph::SceneNode *getChild( uint16_t index );
+			virtual void removeChild( vl::graph::SceneNodeRefPtr child );
 
-			virtual vl::graph::SceneNode *getChild( std::string const &name );
+			virtual vl::graph::SceneNodeRefPtr removeChild( uint16_t index );
 
-			virtual vl::graph::SceneNode *removeChild( uint16_t index );
+			virtual vl::graph::SceneNodeRefPtr removeChild( std::string const &name );
 
-			virtual vl::graph::SceneNode *removeChild( std::string const &name );
+			virtual vl::graph::SceneNodeRefPtr getChild( uint16_t index );
+
+			virtual vl::graph::SceneNodeRefPtr getChild( std::string const &name );
 
 			virtual vl::graph::ChildContainer const &getChilds( void ) const
 			{ return _childs; }
@@ -110,8 +142,8 @@ namespace cl
 			virtual uint16_t numChildren( void )
 			{ return _childs.size(); }
 
-			virtual vl::graph::SceneNode *getParent( void )
-			{ return _parent; }
+			virtual vl::graph::SceneNodeRefPtr getParent( void )
+			{ return _parent.lock(); }
 
 			virtual vl::graph::ObjectContainer const &getAttached( void ) const
 			{ return _attached; }
@@ -119,8 +151,8 @@ namespace cl
 			virtual uint16_t numAttached( void )
 			{ return _attached.size(); }
 
-			virtual vl::graph::SceneManager *getCreator( void )
-			{ return _creator; }
+			virtual vl::graph::SceneManagerRefPtr getManager( void )
+			{ return _manager.lock(); }
 
 			// Sync/Commit methods, needed for tree based syncing in eq
 
@@ -158,17 +190,24 @@ namespace cl
 			};
 
 		protected :
+			/*
 			void _addChild( vl::graph::SceneNode *child );
 
 			void _setParent( vl::graph::SceneNode *parent );
 
 			void _removeChild( vl::graph::SceneNode *child );
+			*/
 
-			vl::cl::SceneNode *_findChild( std::string const &name );
+			vl::graph::SceneNodeRefPtr _findChild( std::string const &name );
+
+			vl::graph::ChildContainer::iterator _findChildIter( std::string const &name );
+
+			//vl::graph::ChildContainer::iterator _findChildIter( vl::graph::
+
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
 			// destruction of all objects contained in it.
-			vl::graph::SceneManager *_creator;
+			vl::graph::SceneManagerWeakPtr _manager;
 
 			vl::vector _position;
 			vl::quaternion _rotation;
@@ -184,13 +223,28 @@ namespace cl
 
 			// Parent node, we need this to inform our current parent
 			// if we are moved to another.
-			vl::graph::SceneNode *_parent;
+			vl::graph::SceneNodeWeakPtr _parent;
 
 			// The childs we own, if we are destroyed we will destroy these.
 			//DistributedContainer<vl::cl::SceneNode *> _childs;
 			vl::graph::ChildContainer _childs;
 
 	};	// class SceneNode
+
+	class DefaultSceneNodeFactory : public vl::graph::SceneNodeFactory
+	{
+		public :
+			DefaultSceneNodeFactory( void ) {}
+
+			virtual ~DefaultSceneNodeFactory( void ) {}
+
+			virtual vl::graph::SceneNodeRefPtr create(
+					vl::graph::SceneManagerRefPtr manager, std::string const &name )
+			{
+				return vl::graph::SceneNodeRefPtr( new SceneNode( manager, name ) );
+			}
+
+	};	// class DefaultSceneNodeFactory
 
 }	// namespace eq
 

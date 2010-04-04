@@ -5,21 +5,30 @@
 #include <eq/net/session.h>
 
 // SceneNode
-vl::cl::SceneNode::SceneNode( vl::graph::SceneManager *creator,
+vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 		std::string const &name )
-	: _creator(creator),
+	: _manager(creator),
 	  _position(vl::vector::ZERO),
 	  _rotation(vl::quaternion::IDENTITY),
 	  _scale(1.0, 1.0, 1.0),
 	  _attached(),
-	  _parent(0),
+	  _parent(),
 	  _childs()
 {
-	if( !_creator )
+	if( !creator )
 	{ throw vl::null_pointer("SceneNode::SceneNode"); }
 
+	// TODO add random name generator
 	if( !name.empty() )
 	{ eq::Object::setName( name ); }
+}
+
+vl::cl::SceneNode::~SceneNode( void )
+{
+	if( isMaster() )
+	{ getSession()->deregisterObject( this ); }
+	else
+	{ getSession()->unmapObject( this ); }
 }
 
 void
@@ -112,7 +121,7 @@ vl::cl::SceneNode::setScale( vl::vector const &s )
 }
 
 void
-vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
+vl::cl::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::graph::ObjectContainer::iterator iter = _attached.begin();
 	for( ; iter != _attached.end(); ++iter )
@@ -125,7 +134,7 @@ vl::cl::SceneNode::attachObject( vl::graph::MovableObject *object )
 }
 
 void
-vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
+vl::cl::SceneNode::detachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::graph::ObjectContainer::iterator iter = _attached.begin();
 	for( ; iter != _attached.end(); ++iter )
@@ -144,12 +153,12 @@ vl::cl::SceneNode::detachObject( vl::graph::MovableObject *object )
 	// Should movableObjects be owned by only one node or not?
 }
 
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::createChild( std::string const &name )
 {
 	// TODO we should use the SceneManager to allocate the Nodes
 	// and manage a list of created nodes.
-	vl::graph::SceneNode *child = _creator->createNode( name );
+	vl::graph::SceneNodeRefPtr child = _manager.lock()->createNode( name );
 	addChild( child );
 
 	return child;
@@ -160,77 +169,141 @@ vl::cl::SceneNode::createChild( std::string const &name )
 // providing this function).
 // Without moving the internal implementation to protected.
 void
-vl::cl::SceneNode::setParent( vl::graph::SceneNode *parent )
+vl::cl::SceneNode::setParent( vl::graph::SceneNodeRefPtr parent )
 {
-	// TODO should throw
-	if( (vl::graph::SceneNode *)this == parent )
-	{
-		throw vl::duplicate( //"Can not be child and parent",
-			"vl::cl::SceneNode::setParent" );
-	}
+	if( parent == shared_from_this() )
+	{ throw vl::duplicate( "vl::cl::SceneNode::setParent" ); }
 
-	if( 0 == parent )
-	{ throw vl::null_pointer( "vl::cl::SceneNode::setParent" ); }
+	//if( !parent )
+	//{ throw vl::null_pointer( "vl::cl::SceneNode::setParent" ); }
 
-	if( _parent == parent )
-	{
-		throw vl::duplicate( "vl::cl::SceneNode::setParent" );
-	}
+	if( _parent.lock() == parent )
+	{ return; }
+	// Removed because throwing seems excessive.
+	//{ throw vl::duplicate( "vl::cl::SceneNode::setParent" ); }
 
-	((SceneNode *)parent)->_addChild( this );
-	_setParent( parent );
+	// We have to change the parent here, so that removeChild knows
+	// that it's called by setParent.
+	vl::graph::SceneNodeRefPtr old_parent = _parent.lock();
+	_parent = parent;
+
+	old_parent->removeChild( shared_from_this() );
+	
+	// We allow NULL parents, only add childs if the parent is not NULL
+	if( parent )
+	{ parent->addChild( shared_from_this() ); }
+
+	//((SceneNode *)parent->get())->_addChild( this );
+	//_setParent( parent );
 }
 
 void
-vl::cl::SceneNode::addChild( vl::graph::SceneNode *child )
+vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 {
-	if( 0 == child )
+	if( !child )
 	{ throw vl::null_pointer( "vl::cl::SceneNode::addChild" ); }
 
-	if( this == child )
+	if( shared_from_this() == child )
+	{ throw vl::duplicate( "vl::cl::SceneNode::addChild" ); }
+
+	// Parent has been already set, break the recursion
+	if( child->getParent() == shared_from_this() )
 	{
-		throw vl::duplicate( //"Can not be child and parent",
-			"vl::cl::SceneNode::addChild" );
+		_childs.push_back( child );
+	}
+	else
+	{
+		child->setParent( shared_from_this() );
 	}
 
-	_addChild( child );
-	((SceneNode *)child)->_setParent( this );
+//	_addChild( child );
+//	((SceneNode *)child->get())->_setParent( this );
 }
 
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::getChild( uint16_t index )
 {
 	return _childs.at(index);
 }
 
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::getChild( std::string const &name )
 {
-	vl::graph::SceneNode *child = _findChild( name );
+	vl::graph::SceneNodeRefPtr child = _findChild( name );
 	return child;
 }
 
-vl::graph::SceneNode *
+void
+vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
+{
+	if( shared_from_this() == child )
+	{ throw vl::duplicate( "vl::cl::SceneNode::removeChild" ); }
+
+	if( !child )
+	{ throw vl::no_object( "vl::cl::SceneNode::removeChild" ); }
+
+	// New parent is already set so called from setParent, break the recursion.
+	if( child->getParent() != shared_from_this() )
+	{
+		vl::graph::ChildContainer::iterator iter =
+			std::find( _childs.begin(), _childs.end(), child );
+		if( iter != _childs.end() )
+		{
+			_childs.erase( iter );
+		}
+		// Throw as we assume that such child exists
+		else
+		{ throw vl::no_object( "vl::cl::SceneNode::removeChild" ); }
+	}
+	// Called from user space
+	else
+	{ child->setParent( shared_from_this() ); }
+}
+
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::removeChild( uint16_t index )
 {
-	vl::cl::SceneNode *child = (vl::cl::SceneNode *)_childs.at(index);
+	vl::graph::SceneNodeRefPtr child = _childs.at(index);
+	//vl::cl::SceneNode *child = ptr.get();
 	if( child )
 	{
-		_removeChild(child);
-		child->_parent = 0;
+		removeChild( child );
+		/*
+		child->_parent.reset();
+		vl::graph::ChildContainer::iterator iter =
+			std::find( _childs.begin(), _childs.end(), child );
+		if( iter != _childs.end() )
+		{ _childs.erase( iter ); }
+		*/
+
+	//	_removeChild( child );
+	//	child->_parent = 0;
 	}
 	return child;
 }
 
-vl::graph::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::removeChild( std::string const &name )
 {
-	vl::cl::SceneNode *child = _findChild( name );
+	vl::graph::SceneNodeRefPtr child = _findChild( name );
 	if( child )
+	{ removeChild( child ); }
+	//vl::graph::ChildContainer::iterator iter = _findChild(name);
+	//vl::graph::SceneNodeRefPtr child = *iter;
+	//if( child )
+	/*
+	if( iter != _childs.end() )
 	{
-		_removeChild(child);
-		child->_parent = 0;
+		(*iter)->_parent.reset();
+		//vl::graph::ChildContainer::iterator iter =
+		//	std::find( _childs.begin(), _childs.end(), child );
+		//if( iter != _childs.end() )
+		_childs.erase( iter );
+
+		//_removeChild( child );
+		//child->_parent = 0;
 	}
+	*/
 	return child;
 }
 
@@ -299,6 +372,7 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 }
 
 // ------- Protected ---------
+/*
 void
 vl::cl::SceneNode::_addChild( vl::graph::SceneNode *child )
 {
@@ -336,8 +410,9 @@ vl::cl::SceneNode::_removeChild( vl::graph::SceneNode *child )
 
 	throw vl::exception("Child not found", "vl::cl::SceneNode::_removeChild" );
 }
+*/
 
-vl::cl::SceneNode *
+vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::_findChild( std::string const &name )
 {
 	vl::graph::ChildContainer::iterator iter = _childs.begin();
@@ -345,9 +420,24 @@ vl::cl::SceneNode::_findChild( std::string const &name )
 	{
 		if( (*iter)->getName() == name )
 		{
-			return (vl::cl::SceneNode *)(*iter);
+			return (*iter);
 		}
 	}
 
-	return 0;
+	return vl::graph::SceneNodeRefPtr();
+}
+
+vl::graph::ChildContainer::iterator 
+vl::cl::SceneNode::_findChildIter( std::string const &name )
+{
+	vl::graph::ChildContainer::iterator iter = _childs.begin();
+	for( ; iter != _childs.end(); ++iter )
+	{
+		if( (*iter)->getName() == name )
+		{
+			return iter;
+		}
+	}
+
+	return _childs.end();
 }

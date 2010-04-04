@@ -44,7 +44,7 @@ namespace cl
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( vl::graph::SceneManager *) {}
+			virtual void load( vl::graph::SceneManagerRefPtr ) {}
 
 			// Equalizer overrides
 

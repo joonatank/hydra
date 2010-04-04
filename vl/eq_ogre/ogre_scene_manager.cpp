@@ -22,14 +22,15 @@ vl::ogre::SceneManager::~SceneManager( void )
 	// TODO delete all SceneNodes also
 }
 
-vl::graph::Camera *
+vl::graph::CameraRefPtr
 vl::ogre::SceneManager::createCamera( std::string const &name )
 {
 	Ogre::Camera *ogre_cam = _ogre_sm->createCamera(name);
-	return new Camera( ogre_cam );
+	return vl::graph::CameraRefPtr( new Camera( ogre_cam ) );
 }
 
 // ---- protected -----
+/*
 vl::cl::SceneNode *
 vl::ogre::SceneManager::_createSceneNodeImpl( std::string const &name )
 {
@@ -55,4 +56,4 @@ vl::ogre::SceneManager::_createMovableObjectImpl(
 	//ent->load( this );
 	return ent;
 }
-
+*/

@@ -3,9 +3,14 @@
 #include "ogre_scene_manager.hpp"
 
 void
-vl::ogre::Entity::load( vl::graph::SceneManager *sm ) 
+vl::ogre::Entity::load( vl::graph::SceneManagerRefPtr sm ) 
 {
-	SceneManager *ogre_sm = (SceneManager *)sm;
+	boost::shared_ptr<SceneManager> ogre_sm
+		= boost::dynamic_pointer_cast<SceneManager>( sm );
+
+	if( !ogre_sm )
+	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+
 	// TODO this can be used for all MovableObjects not just meshes
 	Ogre::NameValuePairList parm;
 	vl::NamedValuePairList::iterator iter = _params.begin();

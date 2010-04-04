@@ -6,30 +6,32 @@ vl::cl::Root::Root( void )
 	: _scene_managers()
 {}
 
-vl::graph::SceneManager *
+vl::graph::SceneManagerRefPtr
 vl::cl::Root::getSceneManager( std::string const &name )
 {
 	if( name.empty() )
 	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
 
-	std::vector<SceneManager *>::iterator iter = _scene_managers.begin();
+	std::vector<vl::graph::SceneManagerRefPtr>::iterator iter
+		= _scene_managers.begin();
 	for( ; iter != _scene_managers.end(); ++iter )
 	{
 		if( (*iter)->getName() == name )
 		{ return *iter; }
 	}
 
-	return 0;
+	return vl::graph::SceneManagerRefPtr();
 }
 
-vl::graph::SceneManager *
+vl::graph::SceneManagerRefPtr
 vl::cl::Root::createSceneManager( std::string const &name )
 {
 	if( name.empty() )
 	{ throw vl::empty_param("vl::cl::Root::createSceneManager"); }
 
-	vl::cl::SceneManager *man = _createSceneManager( name );
+	vl::graph::SceneManagerRefPtr man = _createSceneManager( name );
 	_scene_managers.push_back( man );
+
 	return man;
 }
 
@@ -39,16 +41,17 @@ vl::cl::Root::destroySceneManager( std::string const &name )
 	if( name.empty() )
 	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
 
-	std::vector<SceneManager *>::iterator iter = _scene_managers.begin();
-	for( ; iter != _scene_managers.end(); ++iter )
+	std::vector<vl::graph::SceneManagerRefPtr>::iterator iter;
+	for( iter = _scene_managers.begin(); iter != _scene_managers.end(); ++iter )
 	{
 		if( (*iter)->getName() == name )
 		{
-			delete *iter;
+			//delete *iter;
 			_scene_managers.erase( iter );
 			return;
 		}
 	}
+
 	throw vl::no_object("vl::cl::Root::getSceneManager");
 }
 

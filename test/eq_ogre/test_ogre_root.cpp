@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE( init )
 
 	BOOST_CHECK_NO_THROW( root->createRenderSystem() );
 	BOOST_CHECK_NO_THROW( root->init() );
-	vl::graph::RenderWindow *win = 0;
+	vl::graph::RenderWindowRefPtr win;
 	BOOST_CHECK_NO_THROW( win = root->createWindow("win", 800, 600) );
 	BOOST_CHECK( win );
 

@@ -105,12 +105,11 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root(0), win(0), cam(0), man(0), feet(0),
-		robot(0)
+		: eq::Window( parent ), root( new vl::ogre::Root ), win(), cam(), man(), feet(),
+		robot()
 	{
-		boost::mutex::scoped_lock lock(test_mutex);
+	//	boost::mutex::scoped_lock lock(test_mutex);
 
-		root = new vl::ogre::Root;
 		// Initialise ogre
 		root->createRenderSystem();
 	}
@@ -122,10 +121,10 @@ public :
 
 		vl::NamedValuePairList params;
 		params["currentGLContext"] = std::string("True");
-		win = dynamic_cast<vl::ogre::RenderWindow *>(
+		win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
 				root->createWindow( "win", 800, 600, params ) );
 
-		boost::mutex::scoped_lock lock(test_mutex);
+//		boost::mutex::scoped_lock lock(test_mutex);
 		BOOST_REQUIRE( root );
 		BOOST_CHECK_NO_THROW( man = root->createSceneManager("SceneManager") );
 		BOOST_REQUIRE( man );
@@ -133,7 +132,7 @@ public :
 		ss << "Cam" << n_windows;
 		BOOST_CHECK_NO_THROW( cam = man->createCamera(ss.str()) );
 		BOOST_REQUIRE( win );
-		vl::graph::Viewport *view;
+		vl::graph::ViewportRefPtr view;
 		BOOST_CHECK_NO_THROW( view = win->addViewport( cam ) );
 		BOOST_REQUIRE( view );
 		BOOST_CHECK_NO_THROW( view->setBackgroundColour(
@@ -143,7 +142,7 @@ public :
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
 		feet->lookAt( vl::vector(0,0,300) );
 
-		vl::graph::Entity *ent;
+		vl::graph::EntityRefPtr ent;
 		BOOST_CHECK_NO_THROW( ent = man->createEntity("robot", "robot.mesh") );
 		ent->load(man);
 		BOOST_CHECK_NO_THROW(
@@ -159,26 +158,26 @@ public :
 	
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
-		boost::mutex::scoped_lock lock(test_mutex);
+//		boost::mutex::scoped_lock lock(test_mutex);
 
 		win->update();
 		win->swapBuffers();
 	}
 
-	static boost::mutex test_mutex;
+//	static boost::mutex test_mutex;
 	static int n_windows;
 
-	vl::ogre::Root *root;
-	vl::ogre::RenderWindow *win;
-	vl::graph::Camera *cam;
+	boost::shared_ptr<vl::ogre::Root> root;
+	boost::shared_ptr<vl::ogre::RenderWindow> win;
+	vl::graph::CameraRefPtr cam;
 
-	vl::graph::SceneManager *man;
-	vl::graph::SceneNode *feet;
-	vl::graph::SceneNode *robot;
+	vl::graph::SceneManagerRefPtr man;
+	vl::graph::SceneNodeRefPtr feet;
+	vl::graph::SceneNodeRefPtr robot;
 };
 
 int ::RenderWindow::n_windows = 0;
-boost::mutex RenderWindow::test_mutex;
+//boost::mutex RenderWindow::test_mutex;
 /*
 class Pipe : public eq::Pipe
 {

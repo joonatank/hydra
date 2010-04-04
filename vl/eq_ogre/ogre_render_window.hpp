@@ -58,13 +58,18 @@ namespace ogre
 				{ _ogre_window->update( false ); }
 			}
 
-			virtual vl::graph::Viewport *addViewport( vl::graph::Camera *cam )
+			virtual vl::graph::ViewportRefPtr addViewport( vl::graph::CameraRefPtr cam )
 			{
-				Camera *c = (Camera *)cam;
+				boost::shared_ptr<Camera> c
+					= boost::dynamic_pointer_cast<Camera>( cam );
+				if( !c )
+				{ throw vl::null_pointer( "vl::ogre::RenderWindow::addViewport" ); }
+
 				Ogre::Viewport *ogre_view = _ogre_window->addViewport(
 							(Ogre::Camera *)c->getNative() );
-				Viewport *view = new Viewport( ogre_view );
+				vl::graph::ViewportRefPtr view( new Viewport( ogre_view ) );
 				_viewports.push_back(view);
+
 				return view;
 			}
 
@@ -73,14 +78,14 @@ namespace ogre
 				return _ogre_window->getNumViewports();
 			}
 
-			virtual Viewport *getViewport( uint16_t index )
+			virtual vl::graph::ViewportRefPtr getViewport( uint16_t index )
 			{
-				return 0;
+				return vl::graph::ViewportRefPtr();
 			}
 
-			virtual Viewport *getViewportByZOrder( int ZOrder )
+			virtual vl::graph::ViewportRefPtr getViewportByZOrder( int ZOrder )
 			{
-				return 0;
+				return vl::graph::ViewportRefPtr();
 			}
 
 			virtual bool hasViewportWithZOrder( int ZOrder ) 
@@ -96,7 +101,7 @@ namespace ogre
 
 		protected :
 			Ogre::RenderWindow *_ogre_window;
-			std::vector<vl::graph::Viewport *> _viewports;
+			std::vector<vl::graph::ViewportRefPtr> _viewports;
 
 	};	// class RenderWindow
 

@@ -16,18 +16,30 @@
 
 #include <vector>
 
+#include <memory>	// for std::auto_ptr
+#include <boost/shared_ptr.hpp>		// for ref counted ptrs
+
+#include "base/typedefs.hpp"
+
 namespace vl
 {
 
 namespace graph
 {
 	// Forward declarations
-	class SceneManager;
-	class MovableObject;
-	class SceneNode;
+	//class SceneManagerRefPtr;
+	//class MovableObjectRefPtr;
+	//class SceneNode;
 
-	typedef std::vector<SceneNode *> ChildContainer;
-	typedef std::vector<MovableObject *> ObjectContainer;
+	class ChildAddedFunctor
+	{
+	public :
+		virtual ~ChildAddedFunctor( void ) {}
+
+		virtual void operator()( vl::graph::SceneNode *child ) = 0;
+
+		virtual void operator()( std::string const &name ) = 0;
+	};
 
 	// Abstract scene node interface.
 	// SceneNode is a basic element in scene graph and it is the only element
@@ -81,38 +93,50 @@ namespace graph
 
 			virtual vl::vector const &getScale( void ) = 0;
 
-			virtual void attachObject( MovableObject *object ) = 0;
+			virtual void attachObject( MovableObjectRefPtr object ) = 0;
 
-			virtual void detachObject( MovableObject *object ) = 0;
+			virtual void detachObject( MovableObjectRefPtr object ) = 0;
 
 			virtual ObjectContainer const &getAttached( void ) const = 0;
 
 			virtual uint16_t numAttached( void ) = 0;
 
-			virtual SceneNode *createChild(
+			virtual SceneNodeRefPtr createChild(
 					std::string const &name = std::string() ) = 0;
 
-			virtual void setParent( SceneNode *parent ) = 0;
+			virtual void setParent( SceneNodeRefPtr parent ) = 0;
 
-			virtual void addChild( SceneNode *child ) = 0;
+			virtual void addChild( SceneNodeRefPtr child ) = 0;
 
-			virtual SceneNode *getChild( uint16_t index ) = 0;
+			virtual void removeChild( vl::graph::SceneNodeRefPtr child ) = 0;
 
-			virtual SceneNode *getChild( std::string const &name ) = 0;
+			virtual SceneNodeRefPtr removeChild( uint16_t index ) = 0;
 
-			virtual SceneNode *removeChild( uint16_t index ) = 0;
+			virtual SceneNodeRefPtr removeChild( std::string const &name ) = 0;
 
-			virtual SceneNode *removeChild( std::string const &name ) = 0;
+			virtual SceneNodeRefPtr getChild( uint16_t index ) = 0;
+
+			virtual SceneNodeRefPtr getChild( std::string const &name ) = 0;
 
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
 			virtual uint16_t numChildren( void ) = 0;
 
-			virtual SceneNode *getParent( void ) = 0;
+			virtual SceneNodeRefPtr getParent( void ) = 0;
 
-			virtual SceneManager *getCreator( void ) = 0;
+			virtual SceneManagerRefPtr getManager( void ) = 0;
 
 	};	// class SceneNode
+
+	// Factory class for creating SceneNodes
+	class SceneNodeFactory
+	{
+		public :
+			virtual ~SceneNodeFactory( void ) {}
+
+			virtual SceneNodeRefPtr create(
+					SceneManagerRefPtr manager, std::string const &name ) = 0;
+	};
 
 }	// namespace graph
 

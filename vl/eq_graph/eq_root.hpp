@@ -18,10 +18,10 @@
 
 #include <eq/client/object.h>
 
+#include "interface/root.hpp"
+
 #include "eq_scene_manager.hpp"
 #include "eq_render_window.hpp"
-
-#include "interface/root.hpp"
 
 namespace vl
 {
@@ -41,25 +41,22 @@ namespace cl
 
 			virtual void init( void ) {}
 
-			virtual vl::graph::RenderWindow *createWindow(
+			virtual vl::graph::RenderWindowRefPtr createWindow(
 					std::string const &, unsigned int ,
 					unsigned int ,
 					vl::NamedValuePairList const &
 						= vl::NamedValuePairList() )
-			{
-				return 0;
-			}
+			{ return vl::graph::RenderWindowRefPtr(); }
 
 			// For now we only allow one SceneManager to exists per
 			// instance.
-			virtual vl::graph::SceneManager *getSceneManager(
+			virtual vl::graph::SceneManagerRefPtr getSceneManager(
 					std::string const &name );
 
-			virtual vl::graph::SceneManager *createSceneManager(
+			virtual vl::graph::SceneManagerRefPtr createSceneManager(
 					std::string const &name );
 
-			virtual void destroySceneManager(
-					std::string const &name );
+			virtual void destroySceneManager( std::string const &name );
 
 			// Equalizer overrides
 	
@@ -91,13 +88,13 @@ namespace cl
 			// We use this to provide factory pattern, so that
 			// createSceneManager need not be overloaded
 			// (it also handles distribution)
-			virtual SceneManager *_createSceneManager(
+			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )
 			{
-				return new SceneManager( name );
+				return vl::graph::SceneManagerRefPtr( new SceneManager( name ) );
 			}
 
-			std::vector<SceneManager *> _scene_managers;
+			std::vector<vl::graph::SceneManagerRefPtr> _scene_managers;
 
 	};	// class Root
 

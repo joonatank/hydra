@@ -4,16 +4,22 @@
 #include "ogre_camera.hpp"
 #include "ogre_entity.hpp"
 
-vl::ogre::SceneNode::SceneNode(
-		vl::ogre::SceneManager *creator, std::string const &name )
+vl::ogre::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
+		std::string const &name )
 	: vl::cl::SceneNode( creator, name ), _ogre_node(0)
 {
+	boost::shared_ptr<SceneManager> man
+		= boost::dynamic_pointer_cast<SceneManager>( creator );
+	// TODO this should throw failed dynamic cast
+	if( !man )
+	{ throw vl::null_pointer( "vl::ogre::SceneNode::translate" ); }
+
 	if( name == "Root" )
-	{ _ogre_node = creator->getNative()->getRootSceneNode(); }
+	{ _ogre_node = man->getNative()->getRootSceneNode(); }
 	else if( name.empty() )
-	{ _ogre_node = creator->getNative()->createSceneNode(); }
+	{ _ogre_node = man->getNative()->createSceneNode(); }
 	else
-	{ _ogre_node = creator->getNative()->createSceneNode( name ); }
+	{ _ogre_node = man->getNative()->createSceneNode( name ); }
 }
 
 vl::ogre::SceneNode::~SceneNode( void )
@@ -97,12 +103,12 @@ vl::ogre::SceneNode::setScale( vl::vector const &s )
 }
 
 void
-vl::ogre::SceneNode::attachObject( vl::graph::MovableObject *object )
+vl::ogre::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::cl::SceneNode::attachObject( object );
 
-	vl::ogre::MovableObject *og_mov =
-		dynamic_cast<MovableObject *>(object);
+	boost::shared_ptr<vl::ogre::MovableObject> og_mov
+		= boost::dynamic_pointer_cast<MovableObject>(object);
 	if( !og_mov )
 	{
 		throw vl::exception( "vl::ogre::SceneNode::attachObject",
@@ -117,11 +123,12 @@ vl::ogre::SceneNode::attachObject( vl::graph::MovableObject *object )
 }
 
 void
-vl::ogre::SceneNode::detachObject( vl::graph::MovableObject *object )
+vl::ogre::SceneNode::detachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::cl::SceneNode::detachObject( object );
-	vl::ogre::MovableObject *og_mov =
-		dynamic_cast<MovableObject *>(object);
+
+	boost::shared_ptr<vl::ogre::MovableObject> og_mov
+		= boost::dynamic_pointer_cast<MovableObject>(object);
 	if( !og_mov )
 	{
 		throw vl::exception( "vl::ogre::SceneNode::attachObject",
@@ -136,16 +143,22 @@ vl::ogre::SceneNode::detachObject( vl::graph::MovableObject *object )
 }
 
 void
-vl::ogre::SceneNode::setParent( vl::graph::SceneNode *parent )
+vl::ogre::SceneNode::setParent( vl::graph::SceneNodeRefPtr parent )
 {
 	vl::cl::SceneNode::setParent( parent );
-	((SceneNode *)parent)->getNative()->addChild(this->getNative());
+
+	boost::shared_ptr<SceneNode> og_parent
+		= boost::dynamic_pointer_cast<SceneNode>( parent );
+	og_parent->getNative()->addChild( this->getNative() );
 }
 
 void
-vl::ogre::SceneNode::addChild( vl::graph::SceneNode *child )
+vl::ogre::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 {
 	vl::cl::SceneNode::addChild( child );
-	this->getNative()->addChild( ((SceneNode *)child)->getNative() );
+
+	boost::shared_ptr<SceneNode> og_child
+		= boost::dynamic_pointer_cast<SceneNode>( child );
+	this->getNative()->addChild( og_child->getNative() );
 }
 

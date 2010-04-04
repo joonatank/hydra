@@ -55,17 +55,17 @@ namespace ogre
 
 			virtual void init( void );
 
-			virtual vl::graph::RenderWindow *createWindow(
+			virtual vl::graph::RenderWindowRefPtr createWindow(
 					std::string const &name, unsigned int width,
 					unsigned int height,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
 		protected :
-			virtual vl::cl::SceneManager *_createSceneManager(
+			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )
 			{
-				return new SceneManager( name );
+				return vl::graph::SceneManagerRefPtr( new SceneManager( name ) );
 			}
 
 			Ogre::Root *_ogre_root;

@@ -49,10 +49,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 	virtual ~SceneNodeSyncFixture( void )
 	{
 		if( node->isMaster() )
-		{ config->deregisterObject( node ); }
-
-		delete node;
-		delete man;
+		{ config->deregisterObject( node.get() ); }
 	}
 
 	uint32_t init( uint32_t id = EQ_ID_INVALID )
@@ -62,7 +59,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 		if( id == EQ_ID_INVALID )
 		{
 			// Register new object
-			BOOST_REQUIRE( config->registerObject( node ) );
+			BOOST_REQUIRE( config->registerObject( node.get() ) );
 			BOOST_REQUIRE( node->getID() != EQ_ID_INVALID );
 			return node->getID();
 		}
@@ -72,7 +69,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 			// We can not register the object in configInit for some reason
 			// equalizer syncs the object and crashes...
 			// All registrations have to be done after the first frameStart
-			BOOST_REQUIRE( config->mapObject( node, id ) );
+			BOOST_REQUIRE( config->mapObject( node.get(), id ) );
 			return id;
 		}
 	}
@@ -82,11 +79,11 @@ struct SceneNodeSyncFixture : public SyncFixture
 		if( node->isMaster() )
 		{
 			test(state);
-			node->commit();
+			//node->commit();
 		}
 		else
 		{
-			node->sync();
+			//node->sync();
 			test(state);
 		}
 
@@ -103,9 +100,11 @@ struct SceneNodeSyncFixture : public SyncFixture
 				if( node->isMaster() )
 				{
 					node->setPosition( TRANS_VEC[0] );
+					node->commit();
 				}
 				else 
 				{
+					node->sync();
 					BOOST_CHECK( vl::equal(
 								node->getPosition(), TRANS_VEC[0] ) );
 				}
@@ -118,9 +117,11 @@ struct SceneNodeSyncFixture : public SyncFixture
 				if( node->isMaster() )
 				{
 					node->setOrientation( ROT_QUAT[0] );
+					node->commit();
 				}
 				else
 				{
+					node->sync();
 					BOOST_CHECK( vl::equal(
 								node->getOrientation(), ROT_QUAT[0] ) );
 				}
@@ -134,9 +135,11 @@ struct SceneNodeSyncFixture : public SyncFixture
 					node->setScale( SCALE_VEC[0] );
 					node->setOrientation( ROT_QUAT[1] );
 					node->setPosition( TRANS_VEC[1] );
+					node->commit();
 				}
 				else
 				{
+					node->sync();
 					BOOST_CHECK( vl::equal(
 								node->getScale(), SCALE_VEC[0] ) );
 					BOOST_CHECK( vl::equal(
@@ -153,31 +156,31 @@ struct SceneNodeSyncFixture : public SyncFixture
 				if( node->isMaster() )
 				{
 					MOCK_EXPECT( man, createNode ).once().with("child1")
-						.returns( new vl::cl::SceneNode(man, "child1") );
+						.returns( boost::shared_ptr<vl::cl::SceneNode>(
+									new vl::cl::SceneNode(man, "child1") ) );
 					MOCK_EXPECT( man, createNode ).once().with("child2")
-						.returns( new vl::cl::SceneNode(man, "child2") );
+						.returns( boost::shared_ptr<vl::cl::SceneNode>(
+									new vl::cl::SceneNode(man, "child2") ) );
 
 					// Creating childs, that is calling SceneManager
 					//vl::graph::SceneNode *child = 0;
 					//vl::graph::SceneNode *child2 = 0;
 					node->createChild( "child1" );
 					node->createChild( "child2" );
+					node->commit();
 				}
 				else
 				{
 					// Create childs with incorrect names
 					// We should have the node calling these I think.
-					MOCK_EXPECT( man, createNode ).once().with("c1")
-						.returns( new vl::cl::SceneNode(man, "c1") );
-					MOCK_EXPECT( man, createNode ).once().with("c2")
-						.returns( new vl::cl::SceneNode(man, "c2") );
+					MOCK_EXPECT( man, pushChildAddedStack ).exactly(2);
+					node->sync();
 
-					node->createChild( "c1" );
-					node->createChild( "c2" );
-
+					/*
 					BOOST_CHECK( vl::equal( node->numChildren(), 2 ) );
 					BOOST_CHECK( node->getChild( "child1" ) );
 					BOOST_CHECK( node->getChild( "child2" ) );
+					*/
 				}
 			}
 			break;
@@ -187,12 +190,17 @@ struct SceneNodeSyncFixture : public SyncFixture
 			{
 				if( node->isMaster() )
 				{
-					delete node->removeChild( "child2" );
+					node->removeChild( "child2" );
+					node->commit();
 				}
 				else
 				{
+					MOCK_EXPECT( man, pushChildRemovedStack ).exactly(1);
+					node->sync();
+					/*
 					BOOST_CHECK( vl::equal( node->numChildren(), 1 ) );
 					BOOST_CHECK( node->getChild( "child1" ) );
+					*/
 				}
 			}
 			break;
@@ -215,8 +223,8 @@ struct SceneNodeSyncFixture : public SyncFixture
 		}
 	}
 
-	mock_scene_manager *man;
-	vl::cl::SceneNode *node;
+	boost::shared_ptr<mock_scene_manager> man;
+	boost::shared_ptr<vl::cl::SceneNode> node;
 };
 
 #endif

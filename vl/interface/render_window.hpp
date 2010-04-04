@@ -18,8 +18,7 @@
 #ifndef VL_GRAPH_WINDOW_HPP
 #define VL_GRAPH_WINDOW_HPP
 
-#include "viewport.hpp"
-#include "camera.hpp"
+#include "base/typedefs.hpp"
 
 namespace vl
 {
@@ -36,21 +35,22 @@ namespace graph
 			virtual void update( void ) = 0;
 
 			// Viewport handling
-			virtual Viewport *addViewport( Camera *cam ) = 0;
+			virtual ViewportRefPtr addViewport( CameraRefPtr cam ) = 0;
 
 			virtual uint16_t getNumViewports( void ) const = 0;
 
-			virtual Viewport *getViewport( uint16_t index ) = 0;
+			virtual ViewportRefPtr getViewport( uint16_t index ) = 0;
 
-			virtual Viewport *getViewportByZOrder( int ZOrder ) = 0;
+			virtual ViewportRefPtr getViewportByZOrder( int ZOrder ) = 0;
 
 			virtual bool hasViewportWithZOrder( int ZOrder ) = 0;
 
 			virtual void removeViewport( int ZOrder ) = 0;
-	};
 
-}
+	};	// class RenderWindow
 
-}
+}	// namespace graph
+
+}	// namespace vl
 
 #endif

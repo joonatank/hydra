@@ -22,12 +22,8 @@ namespace vl
 {
 namespace graph
 {
-	class RenderWindow;
-	class SceneManager;
-
 	class Root
 	{
-		
 		public :
 			virtual ~Root( void ) {}
 			
@@ -37,22 +33,20 @@ namespace graph
 
 			virtual void init( void ) = 0;
 
-			virtual vl::graph::RenderWindow *createWindow(
-					std::string const &name, unsigned int w,
-					unsigned int h,
+			virtual vl::graph::RenderWindowRefPtr createWindow(
+					std::string const &name, unsigned int w, unsigned int h,
 					vl::NamedValuePairList const &
 						= vl::NamedValuePairList() ) = 0;
 
 			// For now we only allow one SceneManager to exists per
 			// instance.
-			virtual SceneManager *getSceneManager(
+			virtual SceneManagerRefPtr getSceneManager(
 					std::string const &name ) = 0;
 
-			virtual SceneManager *createSceneManager(
+			virtual SceneManagerRefPtr createSceneManager(
 					std::string const &name ) = 0;
 
-			virtual void destroySceneManager(
-					std::string const &name ) = 0;
+			virtual void destroySceneManager( std::string const &name ) = 0;
 
 	};	// class Root
 

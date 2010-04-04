@@ -10,27 +10,23 @@
 
 BOOST_AUTO_TEST_CASE( scene_manager )
 {
-	vl::graph::Root *root = new vl::cl::Root();
+	vl::graph::RootRefPtr root( new vl::cl::Root() );
 	// Test scene manager creation
-	vl::graph::SceneManager *man = root->createSceneManager( "Man" );
+	vl::graph::SceneManagerRefPtr man = root->createSceneManager( "Man" );
 	BOOST_CHECK( man );
 //	BOOST_CHECK( dynamic_cast<vl::cl::SceneManager *>( man ) );
 	BOOST_CHECK_THROW( root->createSceneManager(""), vl::empty_param );
-	vl::graph::SceneManager *man2 = root->createSceneManager( "Manager" );
+	vl::graph::SceneManagerRefPtr man2 = root->createSceneManager( "Manager" );
 	
 	// Test scene manager retrieval
 	BOOST_CHECK_EQUAL( root->getSceneManager( "Man" ), man );
 	BOOST_CHECK_EQUAL( root->getSceneManager( "Manager" ), man2 );
-	BOOST_CHECK_EQUAL( root->getSceneManager( "Scene" ),
-			(vl::graph::SceneManager *)0 );
+	BOOST_CHECK( !root->getSceneManager( "Scene" ) );
 	BOOST_CHECK_THROW( root->getSceneManager( "" ), vl::empty_param );
 	
 	// Test scene manager destruction
 	BOOST_CHECK_NO_THROW( root->destroySceneManager( "Man" ) );
-	BOOST_CHECK_EQUAL( root->getSceneManager( "Man" ),
-			(vl::graph::SceneManager *)0 );
+	BOOST_CHECK( !root->getSceneManager( "Man" ) );
 	BOOST_CHECK_THROW( root->destroySceneManager( "Scene" ), vl::no_object );
 	BOOST_CHECK_THROW( root->destroySceneManager( "" ), vl::empty_param );
-
-	delete root;
 }

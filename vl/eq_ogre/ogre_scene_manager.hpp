@@ -23,11 +23,13 @@ namespace ogre
 			Ogre::SceneManager *getNative( void )
 			{ return _ogre_sm; }
 
-			virtual vl::graph::Camera *createCamera( std::string const &name );
+			virtual vl::graph::CameraRefPtr createCamera( std::string const &name );
 
 		protected :
 			// Override creation methods
-			virtual vl::cl::SceneNode *
+			// TODO provide factory
+			/*
+			virtual vl::cl::SceneNodeRefPtr
 				_createSceneNodeImpl( std::string const &name );
 
 			virtual vl::graph::MovableObject* _createMovableObjectImpl(
@@ -35,6 +37,7 @@ namespace ogre
 					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
+			*/
 
 			Ogre::SceneManager *_ogre_sm;
 

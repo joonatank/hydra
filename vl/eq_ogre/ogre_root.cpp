@@ -33,8 +33,7 @@ vl::ogre::Root::createRenderSystem( void )
 #endif
 
 	Ogre::RenderSystemList::iterator r_it;
-	Ogre::RenderSystemList renderSystems
-		= _ogre_root->getAvailableRenderers();
+	Ogre::RenderSystemList renderSystems = _ogre_root->getAvailableRenderers();
 	EQASSERT( !renderSystems.empty() );
 	r_it = renderSystems.begin();
 	_ogre_root->setRenderSystem(*r_it);
@@ -49,12 +48,12 @@ vl::ogre::Root::init( void )
 		.addResourceLocation( "resources", "FileSystem", "General" );
 }
 
-vl::graph::RenderWindow *
+vl::graph::RenderWindowRefPtr
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, vl::NamedValuePairList const &params )
 {
 	if( !_ogre_root )
-	{ return 0; }
+	{ return vl::graph::RenderWindowRefPtr(); }
 
 	static int n_windows = 0;
 	static boost::mutex window_mutex;
@@ -76,6 +75,6 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 	if( !_ogre_root->isInitialised() )
 	{ init(); }
 
-	return new vl::ogre::RenderWindow( win );
+	return vl::graph::RenderWindowRefPtr( new vl::ogre::RenderWindow( win ) );
 }
 

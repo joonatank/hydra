@@ -19,14 +19,14 @@ using vl::graph::MovableObject;
 BOOST_AUTO_TEST_CASE( constructors_test )
 {
 	// TODO this should throw as scene manager can't be NULL
-	BOOST_CHECK_THROW( vl::cl::SceneNode n1(0), vl::null_pointer );
+	BOOST_CHECK_THROW( vl::cl::SceneNode n1( SceneManagerRefPtr() ), vl::null_pointer );
 
-	mock_scene_manager mock_man;
-	SceneManager *man = &mock_man;
+	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
+	//SceneManager *man = &mock_man;
 
 	// Check that the creator is recorded correctly
 	vl::cl::SceneNode n2(man);
-	BOOST_CHECK_EQUAL( n2.getCreator(), man );
+	BOOST_CHECK_EQUAL( n2.getManager(), man );
 
 	// Check that the scene node is initialized correctly
 	BOOST_CHECK_EQUAL( n2.getPosition(), vl::vector::ZERO );
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 	BOOST_CHECK_EQUAL( n2.getOrientation(), vl::quaternion::IDENTITY );
 
 	// Test childs, parents and attached are initialized correctly
-	BOOST_CHECK( n2.getParent() == NULL );
+	BOOST_CHECK( !n2.getParent() );
 	BOOST_CHECK_EQUAL( n2.getChilds().size(), 0);
 	BOOST_CHECK_EQUAL( n2.getAttached().size(), 0);
 
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 
 BOOST_AUTO_TEST_CASE( trans_throws_test )
 {
-	mock_scene_manager man;
-	vl::cl::SceneNode node(&man);
+	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
+	vl::cl::SceneNode node(man);
 
 	// Critical transformation checks
 	// Scale can not be zero
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE( trans_throws_test )
 
 BOOST_AUTO_TEST_CASE( transformations_test )
 {
-	mock_scene_manager man;
-	vl::cl::SceneNode node(&man);
+	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
+	vl::cl::SceneNode node(man);
 	
 	// Check that the node is correctly initialized
 	BOOST_CHECK( vl::equal(node.getPosition(), vl::vector::ZERO) );
@@ -148,32 +148,32 @@ BOOST_AUTO_TEST_CASE( transformations_test )
 
 BOOST_AUTO_TEST_CASE( child_test )
 {
-	mock_scene_manager *man = new mock_scene_manager;
-	vl::graph::SceneNode *c1 = new vl::cl::SceneNode(man, "Child1");
-	vl::graph::SceneNode *c2 = new vl::cl::SceneNode(man, "Child2");
-	vl::graph::SceneNode *parent = new vl::cl::SceneNode(man, "Parent");
+	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
+	vl::graph::SceneNodeRefPtr c1( new vl::cl::SceneNode(man, "Child1") );
+	vl::graph::SceneNodeRefPtr c2( new vl::cl::SceneNode(man, "Child2") );
+	vl::graph::SceneNodeRefPtr parent( new vl::cl::SceneNode(man, "Parent") );
 
 	// Start conditions, no childs or parents
-	BOOST_CHECK_EQUAL( c1->getParent(), (vl::graph::SceneNode *)0);
-	BOOST_CHECK_EQUAL( c2->getParent(), (vl::graph::SceneNode *)0);
+	BOOST_CHECK( !c1->getParent() );
+	BOOST_CHECK( !c2->getParent() );
 	BOOST_CHECK_EQUAL( parent->numChildren(), 0 );
 
 	// add first child, with setParent
 	c1->setParent( parent );
-	BOOST_CHECK_EQUAL( c1->getParent(), parent);
+	BOOST_CHECK_EQUAL( c1->getParent(), parent );
 	BOOST_CHECK_EQUAL( parent->numChildren(), 1 );
 	if( parent->numChildren() > 0 )
 	{ BOOST_CHECK_EQUAL( parent->getChilds().at(0), c1 ); }
 
 	// add second child, with addChild
 	parent->addChild( c2 );
-	BOOST_CHECK_EQUAL( c2->getParent(), parent);
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
 
 	// Removing by name
 	BOOST_CHECK_EQUAL( parent->removeChild( "Child1" ), c1);
 	BOOST_REQUIRE_EQUAL( parent->numChildren(), 1 );
-	BOOST_CHECK_EQUAL( c1->getParent(), (vl::graph::SceneNode *)0 );
+	BOOST_CHECK( !c1->getParent() );
 	parent->addChild( c1 );
 	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
 
@@ -200,34 +200,30 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_THROW( c2->setParent( c2 ), vl::exception );
 
-	// Disallow setting null parent
-	BOOST_CHECK_THROW( c2->setParent( 0 ), vl::null_pointer );
-	BOOST_CHECK_EQUAL( c2->getParent(), parent );
-	BOOST_CHECK_THROW( c2->addChild( 0 ), vl::null_pointer );
-
-	delete man;
-	delete parent;
-	delete c1;
-	delete c2;
+	// Allow setting null parent
+	// TODO add tests
+	BOOST_CHECK_NO_THROW( c2->setParent( SceneNodeRefPtr() ) );
+///	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+//	BOOST_CHECK_THROW( c2->addChild( 0 ), vl::null_pointer );
 }
 
 BOOST_AUTO_TEST_CASE( node_creation_test )
 {
-	mock_scene_manager man;
+	boost::shared_ptr<mock_scene_manager> man( new mock_scene_manager );
 
 	MOCK_EXPECT( man, getRootNode ).once()
-		.returns( new vl::cl::SceneNode(&man, "Root") );
+		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Root") ) );
 	MOCK_EXPECT( man, createNode ).exactly(2).with("Child")
-		.returns( new vl::cl::SceneNode(&man, "Child") );
+		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child") ) );
 	MOCK_EXPECT( man, createNode ).once().with("Child2")
-		.returns( new vl::cl::SceneNode(&man, "Child2") );
-	vl::graph::SceneNode *root = man.getRootNode();
+		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child2") ) );
+	vl::graph::SceneNodeRefPtr root = man->getRootNode();
 	BOOST_REQUIRE( root );
 	BOOST_CHECK_EQUAL( root->getName(), "Root" );
 
 	// Creating childs, that is calling SceneManager
-	vl::graph::SceneNode *child = 0;
-	vl::graph::SceneNode *child2 = 0;
+	vl::graph::SceneNodeRefPtr child, child2;
+	//vl::graph::SceneNodeRefPtr 
 	BOOST_CHECK_NO_THROW( child = root->createChild("Child") );
 	BOOST_CHECK_NO_THROW( child2 = root->createChild("Child2") );
 	BOOST_CHECK_THROW( root->createChild("Child"), vl::duplicate );
@@ -235,19 +231,21 @@ BOOST_AUTO_TEST_CASE( node_creation_test )
 
 BOOST_AUTO_TEST_CASE( attachment_test )
 {
-	mock_scene_manager man;
-	vl::graph::SceneNode *n= new vl::cl::SceneNode(&man);
-	vl::graph::MovableObject obj1, obj2;
+	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
+
+	vl::graph::SceneNodeRefPtr n( new vl::cl::SceneNode(man) );
+	vl::graph::MovableObjectRefPtr obj1( new vl::graph::MovableObject );
+	vl::graph::MovableObjectRefPtr obj2( new vl::graph::MovableObject );
 
 	BOOST_CHECK_EQUAL( n->numAttached(), 0 );
-	BOOST_CHECK_NO_THROW( n->attachObject(&obj1) );
+	BOOST_CHECK_NO_THROW( n->attachObject(obj1) );
 	BOOST_CHECK_EQUAL( n->numAttached(), 1 );
 	if( n->numAttached() > 0 )
-	{ BOOST_CHECK_EQUAL( n->getAttached().at(0), &obj1 ); }
-	BOOST_CHECK_THROW( n->attachObject(&obj1), vl::duplicate );
+	{ BOOST_CHECK_EQUAL( n->getAttached().at(0), obj1 ); }
+	BOOST_CHECK_THROW( n->attachObject(obj1), vl::duplicate );
 	BOOST_CHECK_EQUAL( n->numAttached(), 1 );
 
-	BOOST_CHECK_NO_THROW( n->attachObject(&obj2) );
+	BOOST_CHECK_NO_THROW( n->attachObject(obj2) );
 	BOOST_CHECK_EQUAL( n->numAttached(), 2 );
 }
 
