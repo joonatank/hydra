@@ -10,6 +10,7 @@ SET( COMMON_SOURCES
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_root
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_manager
+	${vl_SOURCE_DIR}/vl/eq_graph/eq_entity
 	)
 
 add_executable( stereo_render 

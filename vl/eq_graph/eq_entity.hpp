@@ -27,9 +27,6 @@ namespace vl
 
 namespace cl
 {
-	// Forward decalrations
-	class SceneManager;
-
 	class Entity : public eq::Object, public vl::graph::Entity
 	{
 		public :
@@ -50,23 +47,11 @@ namespace cl
 
 			/* Object::serialize() */
 			virtual void serialize( eq::net::DataOStream& os,
-									const uint64_t dirtyBits )
-			{
-				if( DIRTY_PARAMS & dirtyBits )
-				{
-					os << _params;
-				}
-			}
+									const uint64_t dirtyBits );
 
 			/* Object::deserialize() */
 			virtual void deserialize( eq::net::DataIStream& is,
-									  const uint64_t dirtyBits )
-			{
-				if( DIRTY_PARAMS & dirtyBits )
-				{
-					is >> _params;
-				}
-			}
+									  const uint64_t dirtyBits );
 
 			/* Object::ChangeType */
 			virtual ChangeType getChangeType() const
@@ -83,6 +68,23 @@ namespace cl
 			vl::NamedValuePairList _params;
 
 	};	// class Entity
+
+	class EntityFactory : public vl::graph::MovableObjectFactory
+	{
+		public :
+			EntityFactory( void ) {}
+
+			virtual ~EntityFactory( void ) {}
+
+			virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
+					vl::NamedValuePairList const &params );
+			
+			virtual std::string const &typeName( void )
+			{ return TYPENAME; }
+
+			static const std::string TYPENAME;
+
+	};	// class MovableObjectFactory
 
 }	// namespace graph
 

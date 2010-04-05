@@ -45,8 +45,8 @@ namespace graph
 	typedef std::vector<SceneNodeRefPtr> ChildContainer;
 	typedef std::vector<MovableObjectRefPtr> ObjectContainer;
 
-	typedef std::auto_ptr<SceneNodeFactory> SceneNodeFactoryPtr;
-	typedef std::auto_ptr<MovableObjectFactory> MovableObjectFactoryPtr;
+	typedef boost::shared_ptr<SceneNodeFactory> SceneNodeFactoryPtr;
+	typedef boost::shared_ptr<MovableObjectFactory> MovableObjectFactoryPtr;
 
 }
 

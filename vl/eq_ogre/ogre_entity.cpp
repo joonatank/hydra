@@ -26,3 +26,13 @@ vl::ogre::Entity::load( vl::graph::SceneManagerRefPtr sm )
 	if( !_ogre_entity )
 	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
 }
+
+// ---------- EntityFactory ----------
+const std::string vl::ogre::EntityFactory::TYPENAME("Entity");
+
+vl::graph::MovableObjectRefPtr
+vl::ogre::EntityFactory::create( std::string const &name,
+		vl::NamedValuePairList const &params )
+{
+	return vl::graph::MovableObjectRefPtr( new Entity( name, params ) );
+}

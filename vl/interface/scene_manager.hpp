@@ -52,8 +52,8 @@ namespace graph
 					std::string const &name = std::string() ) = 0;
 
 			virtual MovableObjectRefPtr createMovableObject(
-					std::string const &name,
 					std::string const &typeName,
+					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() ) = 0;
 
@@ -83,6 +83,18 @@ namespace graph
 			// i.e. no root node.
 			// If scene graph is present it will throw.
 			virtual void setSceneNodeFactory( SceneNodeFactoryPtr factory )= 0;
+
+			virtual void addMovableObjectFactory(
+					vl::graph::MovableObjectFactoryPtr factory,
+					bool overwrite = false ) = 0;
+
+			virtual void removeMovableObjectFactory(
+					vl::graph::MovableObjectFactoryPtr factory ) = 0;
+
+			virtual void removeMovableObjectFactory(
+					std::string const &typeName ) = 0;
+
+			virtual std::vector<std::string> movableObjectFactories( void ) = 0;
 
 	};	// class SceneManager
 

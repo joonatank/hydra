@@ -84,6 +84,28 @@ namespace cl
 			virtual void setSceneNodeFactory(
 					vl::graph::SceneNodeFactoryPtr factory );
 
+			virtual void addMovableObjectFactory(
+					vl::graph::MovableObjectFactoryPtr factory,
+					bool overwrite = false );
+
+			virtual void removeMovableObjectFactory(
+					vl::graph::MovableObjectFactoryPtr factory );
+
+			virtual void removeMovableObjectFactory(
+					std::string const &typeName );
+
+			virtual std::vector<std::string> movableObjectFactories( void )
+			{
+				std::vector<std::string> names;
+				std::map<std::string, vl::graph::MovableObjectFactoryPtr>::iterator iter;
+				for( iter = _movable_factories.begin(); iter != _movable_factories.end();
+						++iter )
+				{
+					names.push_back( iter->first );
+				}
+				return names;
+			}
+
 			// Equalizer overrides
 	
 			/* Object::serialize() */
@@ -123,7 +145,8 @@ namespace cl
 			vl::graph::SceneNodeRefPtr _root;
 
 			vl::graph::SceneNodeFactoryPtr _scene_node_factory;
-			std::vector<vl::graph::MovableObjectFactoryPtr> _movable_factories;
+			std::map<std::string, vl::graph::MovableObjectFactoryPtr>
+				_movable_factories;
 
 	};	// class SceneManager
 

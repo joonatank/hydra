@@ -9,9 +9,9 @@ add_executable( test_eq_scene_node
 add_executable( test_eq_scene_manager
 	test_eq_scene_manager.cpp
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_manager
-	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
 	)
 
+#${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
 add_executable( test_eq_root
 	test_eq_root.cpp
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node

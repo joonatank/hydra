@@ -177,17 +177,20 @@ vl::cl::SceneNode::setParent( vl::graph::SceneNodeRefPtr parent )
 	//if( !parent )
 	//{ throw vl::null_pointer( "vl::cl::SceneNode::setParent" ); }
 
-	if( _parent.lock() == parent )
-	{ return; }
-	// Removed because throwing seems excessive.
-	//{ throw vl::duplicate( "vl::cl::SceneNode::setParent" ); }
-
 	// We have to change the parent here, so that removeChild knows
 	// that it's called by setParent.
 	vl::graph::SceneNodeRefPtr old_parent = _parent.lock();
+
+	if( old_parent == parent )
+	{ return; }
+
+	// Removed because throwing seems excessive.
+	//{ throw vl::duplicate( "vl::cl::SceneNode::setParent" ); }
+
 	_parent = parent;
 
-	old_parent->removeChild( shared_from_this() );
+	if( old_parent )
+	{ old_parent->removeChild( shared_from_this() ); }
 	
 	// We allow NULL parents, only add childs if the parent is not NULL
 	if( parent )
@@ -240,7 +243,7 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 	{ throw vl::duplicate( "vl::cl::SceneNode::removeChild" ); }
 
 	if( !child )
-	{ throw vl::no_object( "vl::cl::SceneNode::removeChild" ); }
+	{ throw vl::null_pointer( "vl::cl::SceneNode::removeChild" ); }
 
 	// New parent is already set so called from setParent, break the recursion.
 	if( child->getParent() != shared_from_this() )
@@ -257,7 +260,7 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 	}
 	// Called from user space
 	else
-	{ child->setParent( shared_from_this() ); }
+	{ child->setParent( vl::graph::SceneNodeRefPtr() ); }
 }
 
 vl::graph::SceneNodeRefPtr

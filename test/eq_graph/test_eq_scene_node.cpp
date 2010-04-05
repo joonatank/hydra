@@ -18,11 +18,12 @@ using vl::graph::MovableObject;
 
 BOOST_AUTO_TEST_CASE( constructors_test )
 {
-	// TODO this should throw as scene manager can't be NULL
-	BOOST_CHECK_THROW( vl::cl::SceneNode n1( SceneManagerRefPtr() ), vl::null_pointer );
+	vl::graph::SceneManagerRefPtr man;
 
-	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
-	//SceneManager *man = &mock_man;
+	// TODO this should throw as scene manager can't be NULL
+	BOOST_CHECK_THROW( vl::cl::SceneNode n1( man ), vl::null_pointer );
+
+	man.reset( new mock_scene_manager );
 
 	// Check that the creator is recorded correctly
 	vl::cl::SceneNode n2(man);
@@ -149,10 +150,13 @@ BOOST_AUTO_TEST_CASE( transformations_test )
 BOOST_AUTO_TEST_CASE( child_test )
 {
 	vl::graph::SceneManagerRefPtr man( new mock_scene_manager );
-	vl::graph::SceneNodeRefPtr c1( new vl::cl::SceneNode(man, "Child1") );
-	vl::graph::SceneNodeRefPtr c2( new vl::cl::SceneNode(man, "Child2") );
-	vl::graph::SceneNodeRefPtr parent( new vl::cl::SceneNode(man, "Parent") );
+	vl::graph::SceneNodeRefPtr parent, c1, c2;
 
+	BOOST_CHECK_NO_THROW( c1.reset( new vl::cl::SceneNode(man, "Child1") ) );
+	BOOST_CHECK_NO_THROW( c2.reset( new vl::cl::SceneNode(man, "Child2") ) );
+	BOOST_CHECK_NO_THROW( parent.reset( new vl::cl::SceneNode(man, "Parent") ) );
+
+	BOOST_REQUIRE( c1 && c2 && parent );
 	// Start conditions, no childs or parents
 	BOOST_CHECK( !c1->getParent() );
 	BOOST_CHECK( !c2->getParent() );
@@ -168,6 +172,13 @@ BOOST_AUTO_TEST_CASE( child_test )
 	// add second child, with addChild
 	parent->addChild( c2 );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
+
+	// remove
+	BOOST_CHECK_NO_THROW( parent->removeChild(c1) );
+	BOOST_REQUIRE_EQUAL( parent->numChildren(), 1 );
+	BOOST_CHECK( !c1->getParent() );
+	parent->addChild( c1 );
 	BOOST_CHECK_EQUAL( parent->numChildren(), 2 );
 
 	// Removing by name
@@ -210,20 +221,21 @@ BOOST_AUTO_TEST_CASE( child_test )
 BOOST_AUTO_TEST_CASE( node_creation_test )
 {
 	boost::shared_ptr<mock_scene_manager> man( new mock_scene_manager );
+	vl::graph::SceneNodeRefPtr child, child2;
+	vl::graph::SceneNodeRefPtr root;
 
-	MOCK_EXPECT( man, getRootNode ).once()
-		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Root") ) );
-	MOCK_EXPECT( man, createNode ).exactly(2).with("Child")
-		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child") ) );
-	MOCK_EXPECT( man, createNode ).once().with("Child2")
-		.returns( SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child2") ) );
-	vl::graph::SceneNodeRefPtr root = man->getRootNode();
-	BOOST_REQUIRE( root );
+	root = SceneNodeRefPtr( new vl::cl::SceneNode(man, "Root") );
+	child = SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child") );
+	child2 = SceneNodeRefPtr( new vl::cl::SceneNode(man, "Child2") );
+
+	MOCK_EXPECT( man, getRootNode ).once().returns( root );
+	MOCK_EXPECT( man, createNode ).exactly(2).with("Child").returns( child );
+	MOCK_EXPECT( man, createNode ).once().with("Child2").returns( child2 );
+
+	BOOST_CHECK_EQUAL( man->getRootNode(), root );
 	BOOST_CHECK_EQUAL( root->getName(), "Root" );
 
 	// Creating childs, that is calling SceneManager
-	vl::graph::SceneNodeRefPtr child, child2;
-	//vl::graph::SceneNodeRefPtr 
 	BOOST_CHECK_NO_THROW( child = root->createChild("Child") );
 	BOOST_CHECK_NO_THROW( child2 = root->createChild("Child2") );
 	BOOST_CHECK_THROW( root->createChild("Child"), vl::duplicate );

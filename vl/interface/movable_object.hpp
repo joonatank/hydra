@@ -24,7 +24,7 @@ namespace graph
 			virtual MovableObjectRefPtr create( std::string const &name,
 					vl::NamedValuePairList const &params ) = 0;
 			
-			virtual std::string typeName( void ) = 0;
+			virtual std::string const &typeName( void ) = 0;
 
 	};	// class MovableObjectFactory
 

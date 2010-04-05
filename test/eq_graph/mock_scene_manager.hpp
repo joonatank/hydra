@@ -28,6 +28,12 @@ MOCK_BASE_CLASS( mock_scene_manager, vl::graph::SceneManager )
 	MOCK_METHOD( pushChildAddedStack, 2 )
 	MOCK_METHOD( pushChildRemovedStack, 1 )
 	MOCK_METHOD( setSceneNodeFactory, 1 )
+	MOCK_METHOD( addMovableObjectFactory, 2 )
+	MOCK_METHOD_EXT( removeMovableObjectFactory, 1,
+			void( vl::graph::MovableObjectFactoryPtr ), remMovableFactoryByPtr )
+	MOCK_METHOD_EXT( removeMovableObjectFactory, 1,
+			void( std::string const & ), remMovableFactoryByName )
+	MOCK_METHOD( movableObjectFactories, 0 )
 };
 
 #endif

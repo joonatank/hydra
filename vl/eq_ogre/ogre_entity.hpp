@@ -35,8 +35,6 @@ namespace ogre
 
 			virtual Ogre::MovableObject *getNative( void )
 			{
-				std::cout << "vl::ogre::Entity::getNative = " << _ogre_entity
-					<< std::endl;
 				return _ogre_entity;
 			}
 
@@ -48,6 +46,23 @@ namespace ogre
 			Ogre::Entity *_ogre_entity;
 
 	};	// class Entity
+
+	class EntityFactory : public vl::graph::MovableObjectFactory
+	{
+		public :
+			EntityFactory( void ) {}
+
+			virtual ~EntityFactory( void ) {}
+
+			virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
+					vl::NamedValuePairList const &params );
+			
+			virtual std::string const &typeName( void )
+			{ return TYPENAME; }
+
+			static const std::string TYPENAME;
+
+	};	// class EntityFactory
 
 }	// namespace graph
 
