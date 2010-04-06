@@ -190,6 +190,12 @@ namespace cl
 			};
 
 		protected :
+			// Callbacks
+			// These handle both the setting dirty bits and also can be
+			// overloaded by Rendering Backend to implement similar functionality.
+			virtual void childAdded( vl::graph::SceneNodeRefPtr child );
+			virtual void childRemoved( vl::graph::SceneNodeRefPtr child );
+
 			/*
 			void _addChild( vl::graph::SceneNode *child );
 

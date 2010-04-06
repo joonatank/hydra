@@ -51,14 +51,33 @@ namespace ogre
 
 			virtual void detachObject( vl::graph::MovableObjectRefPtr object );
 
+			/*
 			virtual void setParent( vl::graph::SceneNodeRefPtr parent );
 
 			virtual void addChild( vl::graph::SceneNodeRefPtr child );
+			*/
 
 		protected :
+			/* Override Callbacks
+			 * 
+			 */
+			virtual void childAdded( vl::graph::SceneNodeRefPtr child );
+			virtual void childRemoved( vl::graph::SceneNodeRefPtr child );
+
 			Ogre::SceneNode *_ogre_node;
 
 	};	// class SceneNode
+
+	
+	// Factory class for creating SceneNodes
+	class SceneNodeFactory : public vl::graph::SceneNodeFactory
+	{
+		public :
+			virtual ~SceneNodeFactory( void ) {}
+
+			virtual vl::graph::SceneNodeRefPtr create(
+					vl::graph::SceneManagerRefPtr manager, std::string const &name );
+	};
 
 }	// namespace ogre
 

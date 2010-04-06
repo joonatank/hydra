@@ -143,22 +143,42 @@ vl::ogre::SceneNode::detachObject( vl::graph::MovableObjectRefPtr object )
 }
 
 void
-vl::ogre::SceneNode::setParent( vl::graph::SceneNodeRefPtr parent )
+vl::ogre::SceneNode::childAdded( vl::graph::SceneNodeRefPtr child )
 {
-	vl::cl::SceneNode::setParent( parent );
-
-	boost::shared_ptr<SceneNode> og_parent
-		= boost::dynamic_pointer_cast<SceneNode>( parent );
-	og_parent->getNative()->addChild( this->getNative() );
-}
-
-void
-vl::ogre::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
-{
-	vl::cl::SceneNode::addChild( child );
+	vl::cl::SceneNode::childAdded( child );
 
 	boost::shared_ptr<SceneNode> og_child
 		= boost::dynamic_pointer_cast<SceneNode>( child );
+	if( !og_child )
+	{
+		throw vl::exception( "vl::ogre::SceneNode::attachObject",
+				"no scene node" );
+	}
+
 	this->getNative()->addChild( og_child->getNative() );
+}
+
+void
+vl::ogre::SceneNode::childRemoved( vl::graph::SceneNodeRefPtr child )
+{
+	vl::cl::SceneNode::childRemoved( child );
+
+	boost::shared_ptr<SceneNode> og_child
+		= boost::dynamic_pointer_cast<SceneNode>( child );
+	if( !og_child )
+	{
+		throw vl::exception( "vl::ogre::SceneNode::attachObject",
+				"no movable object" );
+	}
+
+	this->getNative()->removeChild( og_child->getNative() );
+}
+
+// ---------- SceneNodeFactory ----------
+vl::graph::SceneNodeRefPtr
+vl::ogre::SceneNodeFactory::create( vl::graph::SceneManagerRefPtr manager,
+		std::string const &name )
+{
+	return vl::graph::SceneNodeRefPtr( new SceneNode( manager, name ) );
 }
 

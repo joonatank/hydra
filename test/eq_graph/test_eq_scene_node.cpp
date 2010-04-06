@@ -196,26 +196,29 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_EQUAL( c1->getParent(), parent );
 
 	// Disallow adding node multiple times
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_THROW( parent->addChild( c2 ), vl::duplicate );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_NO_THROW( c2->addChild( c1 ) );
+	BOOST_CHECK_EQUAL( c1->getParent(), c2 );
 	BOOST_CHECK_NO_THROW( parent->addChild( c1 ) );
 	BOOST_CHECK_EQUAL( c1->getParent(), parent );
-	BOOST_CHECK_THROW( c2->setParent( parent ), vl::duplicate );
+
+	//	Setting parent same multiple times just returns
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
+	BOOST_CHECK_NO_THROW( c2->setParent( parent ) );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 
 	// Disallow setting node as it's own parent
+	BOOST_CHECK_EQUAL( c2->getParent(), parent );
 	BOOST_CHECK_THROW( c2->addChild( c2 ), vl::exception );
 	BOOST_CHECK_EQUAL( c2->getParent(), parent );
-	BOOST_CHECK_THROW( c2->setParent( c2 ), vl::exception );
-	BOOST_CHECK_EQUAL( c2->getParent(), parent );
-	BOOST_CHECK_THROW( c2->setParent( c2 ), vl::exception );
 
 	// Allow setting null parent
 	// TODO add tests
+	BOOST_CHECK_NE( c2->getParent(), SceneNodeRefPtr() );
 	BOOST_CHECK_NO_THROW( c2->setParent( SceneNodeRefPtr() ) );
-///	BOOST_CHECK_EQUAL( c2->getParent(), parent );
-//	BOOST_CHECK_THROW( c2->addChild( 0 ), vl::null_pointer );
+	BOOST_CHECK_EQUAL( c2->getParent(), SceneNodeRefPtr() );
 }
 
 BOOST_AUTO_TEST_CASE( node_creation_test )

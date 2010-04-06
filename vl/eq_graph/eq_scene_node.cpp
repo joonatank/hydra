@@ -206,13 +206,19 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 	if( !child )
 	{ throw vl::null_pointer( "vl::cl::SceneNode::addChild" ); }
 
+	// Can not add this as child
 	if( shared_from_this() == child )
+	{ throw vl::duplicate( "vl::cl::SceneNode::addChild" ); }
+
+	// We already have this as a child
+	if( std::find( _childs.begin(), _childs.end(), child ) != _childs.end() )
 	{ throw vl::duplicate( "vl::cl::SceneNode::addChild" ); }
 
 	// Parent has been already set, break the recursion
 	if( child->getParent() == shared_from_this() )
 	{
 		_childs.push_back( child );
+		childAdded( child );
 	}
 	else
 	{
@@ -253,6 +259,7 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 		if( iter != _childs.end() )
 		{
 			_childs.erase( iter );
+			childRemoved( child );
 		}
 		// Throw as we assume that such child exists
 		else
@@ -375,6 +382,19 @@ vl::cl::SceneNode::deserialize( eq::net::DataIStream& is,
 }
 
 // ------- Protected ---------
+
+// ---------- Callbacks ----------
+void
+vl::cl::SceneNode::childAdded( vl::graph::SceneNodeRefPtr child )
+{
+}
+
+void
+vl::cl::SceneNode::childRemoved( vl::graph::SceneNodeRefPtr child )
+{
+
+}
+
 /*
 void
 vl::cl::SceneNode::_addChild( vl::graph::SceneNode *child )

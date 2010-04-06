@@ -25,7 +25,7 @@ namespace vl
 	typedef double scalar;
 	typedef vmml::vector<4,double> colour;
 
-	const scalar epsilon = 1e-10;
+	const scalar epsilon = 1e-6;
 	
 	inline bool equal( scalar const &a, scalar const &b )
 	{
