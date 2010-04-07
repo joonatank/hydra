@@ -26,6 +26,7 @@ namespace graph
 	class Viewport;
 	class RenderWindow;
 	class Root;
+	class Light;
 
 	typedef boost::shared_ptr<Root> RootRefPtr;
 
@@ -35,6 +36,7 @@ namespace graph
 	typedef boost::shared_ptr<MovableObject> MovableObjectRefPtr;
 	typedef boost::shared_ptr<Entity> EntityRefPtr;
 	typedef boost::shared_ptr<Camera> CameraRefPtr;
+	typedef boost::shared_ptr<Light> LightRefPtr;
 
 	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
 	typedef boost::weak_ptr<SceneManager> SceneManagerWeakPtr;
