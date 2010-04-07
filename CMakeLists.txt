@@ -76,11 +76,14 @@ include_directories(
 
 link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} )
 
+link_directories( ${vl_BINARY_DIR}/vl )
+
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
 # Tests should be in different CMake file
-subdirs( ${CMAKE_CURRENT_SOURCE_DIR}/test )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 
 #add_executable( eqOgre ${EQOGRE_SOURCES} )
 # TODO libraries can be found using CMake facilities
