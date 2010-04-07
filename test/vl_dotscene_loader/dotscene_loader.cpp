@@ -1,36 +1,49 @@
-#include "DotSceneLoader.h"
+#include "dotscene_loader.hpp"
+
+// Ogre includes TODO remove
+#include <OGRE/OgreLogManager.h>
+#include <OGRE/OgreResourceManager.h>
+/*
 #include <Ogre.h>
 #include <Terrain/OgreTerrain.h>
 #include <Terrain/OgreTerrainGroup.h>
 #include <Terrain/OgreTerrainMaterialGeneratorA.h>
+*/
 
 #include <sstream>
 
-#pragma warning(disable:4390)
-#pragma warning(disable:4305)
+#include "base/string_utils.hpp"
+#include "interface/scene_node.hpp"
+#include "interface/scene_manager.hpp"
+#include "interface/entity.hpp"
+#include "interface/light.hpp"
+#include "interface/camera.hpp"
 
+/* For now we are using Ogre::LogManager and Ogre::ResourceGroupManager
+ * Because we don't have our own logging or resource system in place.
+ * TODO should be removed as soon as possible.
+ */
 
-DotSceneLoader::DotSceneLoader() : mSceneMgr(0), mTerrainGroup(0) 
+DotSceneLoader::DotSceneLoader()
 {
-    mTerrainGlobalOptions = OGRE_NEW Ogre::TerrainGlobalOptions();
 }
 
 
 DotSceneLoader::~DotSceneLoader()
 {
-    if(mTerrainGroup)
-	{
-		OGRE_DELETE mTerrainGroup;
-	}
-
-    OGRE_DELETE mTerrainGlobalOptions;
 }
 
-void DotSceneLoader::parseDotScene(const Ogre::String &SceneName, const Ogre::String &groupName, Ogre::SceneManager *yourSceneMgr, Ogre::SceneNode *pAttachNode, const Ogre::String &sPrependNode)
+void
+DotSceneLoader::parseDotScene(
+		const std::string &SceneName,
+		const std::string &groupName,
+		vl::graph::SceneManagerRefPtr sceneMgr,
+		vl::graph::SceneNodeRefPtr attachNode,
+		const std::string &sPrependNode )
 {
 	// set up shared object values
 	m_sGroupName = groupName;
-	mSceneMgr = yourSceneMgr;
+	_scene_mgr = sceneMgr;
 	m_sPrependNode = sPrependNode;
 	staticObjects.clear();
 	dynamicObjects.clear();
@@ -56,9 +69,9 @@ void DotSceneLoader::parseDotScene(const Ogre::String &SceneName, const Ogre::St
 	}
 
 	// figure out where to attach any nodes we create
-	mAttachNode = pAttachNode;
-	if( !mAttachNode )
-	{ mAttachNode = mSceneMgr->getRootSceneNode(); }
+	_attach_node = pAttachNode;
+	if( !_attach_node )
+	{ _attach_node = mSceneMgr->getRootSceneNode(); }
 
 	// Process the scene
 	processScene(XMLRoot);
@@ -67,27 +80,27 @@ void DotSceneLoader::parseDotScene(const Ogre::String &SceneName, const Ogre::St
 void DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 {
 	// Process the scene parameters
-	Ogre::String version = getAttrib(XMLRoot, "formatVersion", "unknown");
+	std::string version = getAttrib(XMLRoot, "formatVersion", "unknown");
 
-	Ogre::String message = "[DotSceneLoader] Parsing dotScene file with version " + version;
+	std::string message = "[DotSceneLoader] Parsing dotScene file with version " + version;
 	if(XMLRoot->first_attribute("ID"))
 	{
-		message += ", id " + Ogre::String(XMLRoot->first_attribute("ID")->value());
+		message += ", id " + std::string(XMLRoot->first_attribute("ID")->value());
 	}
 	if(XMLRoot->first_attribute("sceneManager"))
 	{
 		message += ", scene manager "
-			+ Ogre::String(XMLRoot->first_attribute("sceneManager")->value());
+			+ std::string(XMLRoot->first_attribute("sceneManager")->value());
 	}
 	if(XMLRoot->first_attribute("minOgreVersion"))
 	{
 		message += ", min. Ogre version "
-			+ Ogre::String(XMLRoot->first_attribute("minOgreVersion")->value());
+			+ std::string(XMLRoot->first_attribute("minOgreVersion")->value());
 	}
 	if(XMLRoot->first_attribute("author"))
 	{
 		message += ", author "
-			+ Ogre::String(XMLRoot->first_attribute("author")->value());
+			+ std::string(XMLRoot->first_attribute("author")->value());
 	}
 
 	Ogre::LogManager::getSingleton().logMessage(message);
@@ -97,27 +110,27 @@ void DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	// Process environment (?)
 	pElement = XMLRoot->first_node("environment");
 	if(pElement)
-		processEnvironment(pElement);
+	{ processEnvironment(pElement); }
 
 	// Process nodes (?)
 	pElement = XMLRoot->first_node("nodes");
-	if(pElement)
-		processNodes(pElement);
+	if( pElement )
+	{ processNodes(pElement); }
 
 	// Process externals (?)
 	pElement = XMLRoot->first_node("externals");
 	if(pElement)
-		processExternals(pElement);
+	{ processExternals(pElement); }
 
 	// Process userDataReference (?)
 	pElement = XMLRoot->first_node("userDataReference");
 	if(pElement)
-		processUserDataReference(pElement);
+	{ processUserDataReference(pElement); }
 
 	// Process octree (?)
 	pElement = XMLRoot->first_node("octree");
 	if(pElement)
-		processOctree(pElement);
+	{ processOctree(pElement); }
 
 	// Process light (?)
 	//pElement = XMLRoot->first_node("light");
@@ -127,12 +140,12 @@ void DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	// Process camera (?)
 	pElement = XMLRoot->first_node("camera");
 	if(pElement)
-		processCamera(pElement);
+	{ processCamera(pElement); }
 
 	// Process terrain (?)
 	pElement = XMLRoot->first_node("terrain");
 	if(pElement)
-		processTerrain(pElement);
+	{ processTerrain(pElement); }
 }
 
 void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
@@ -151,24 +164,24 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
 	{
-		mAttachNode->setPosition(parseVector3(pElement));
-		mAttachNode->setInitialState();
+		_attach_node->setPosition(parseVector3(pElement));
+		_attach_node->setInitialState();
 	}
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
 	{
-		mAttachNode->setOrientation(parseQuaternion(pElement));
-		mAttachNode->setInitialState();
+		_attach_node->setOrientation(parseQuaternion(pElement));
+		_attach_node->setInitialState();
 	}
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
 	{
-		mAttachNode->setScale(parseVector3(pElement));
-		mAttachNode->setInitialState();
+		_attach_node->setScale(parseVector3(pElement));
+		_attach_node->setInitialState();
 	}
 }
 
@@ -184,70 +197,71 @@ void DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 	// Process camera (?)
 	pElement = XMLNode->first_node("camera");
 	if(pElement)
-		processCamera(pElement);
+	{ processCamera(pElement); }
 
 	// Process fog (?)
 	pElement = XMLNode->first_node("fog");
 	if(pElement)
-		processFog(pElement);
+	{ processFog(pElement); }
 
 	// Process skyBox (?)
 	pElement = XMLNode->first_node("skyBox");
 	if(pElement)
-		processSkyBox(pElement);
+	{ processSkyBox(pElement); }
 
 	// Process skyDome (?)
 	pElement = XMLNode->first_node("skyDome");
-	if(pElement)
-		processSkyDome(pElement);
+	if( pElement )
+	{ processSkyDome(pElement); }
 
 	// Process skyPlane (?)
 	pElement = XMLNode->first_node("skyPlane");
-	if(pElement)
-		processSkyPlane(pElement);
+	if( pElement )
+	{ processSkyPlane(pElement); }
 
 	// Process clipping (?)
 	pElement = XMLNode->first_node("clipping");
-	if(pElement)
-		processClipping(pElement);
+	if( pElement )
+	{ processClipping(pElement); }
 
 	// Process colourAmbient (?)
 	pElement = XMLNode->first_node("colourAmbient");
-	if(pElement)
-		mSceneMgr->setAmbientLight(parseColour(pElement));
+	if( pElement )
+	{ mSceneMgr->setAmbientLight(parseColour(pElement)); }
 
 	// Process colourBackground (?)
 	//! @todo Set the background colour of all viewports (RenderWindow has to be provided then)
 	pElement = XMLNode->first_node("colourBackground");
-	if(pElement)
+	if( pElement )
 		;//mSceneMgr->set(parseColour(pElement));
 
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
-	if(pElement)
-		processUserDataReference(pElement);
+	if( pElement )
+	{ processUserDataReference(pElement); }
 }
 
-void DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
+void
+DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 {
-	Ogre::Real worldSize = getAttribReal(XMLNode, "worldSize");
-	int mapSize = Ogre::StringConverter::parseInt(XMLNode->first_attribute("mapSize")->value());
+	/*	Terrain not yet Implemented
+	vl::scalar worldSize = getAttribReal(XMLNode, "worldSize");
+	int mapSize = std::stringConverter::parseInt(XMLNode->first_attribute("mapSize")->value());
 	//	Not used
-/*	int rows = Ogre::StringConverter::parseInt(XMLNode->first_attribute("rows")->value());
-	int columns = Ogre::StringConverter::parseInt(XMLNode->first_attribute("columns")->value());
+	int rows = std::stringConverter::parseInt(XMLNode->first_attribute("rows")->value());
+	int columns = std::stringConverter::parseInt(XMLNode->first_attribute("columns")->value());
 	bool colourmapEnabled = getAttribBool(XMLNode, "colourmapEnabled");
-	int colourMapTextureSize = Ogre::StringConverter::
+	int colourMapTextureSize = std::stringConverter::
 			parseInt(XMLNode->first_attribute("colourMapTextureSize")->value());
-*/
 
-	Ogre::Vector3 lightdir(0, -0.3, 0.75);
+	vl::vector3 lightdir(0, -0.3, 0.75);
 	lightdir.normalise();
-	Ogre::Light* l = mSceneMgr->createLight("tstLight");
-	l->setType(Ogre::Light::LT_DIRECTIONAL);
+	vl::graph::LightRefPtr* l = mSceneMgr->createLight("tstLight");
+	l->setType(vl::graph::LightRefPtr::LT_DIRECTIONAL);
 	l->setDirection(lightdir);
-	l->setDiffuseColour(Ogre::ColourValue(1.0, 1.0, 1.0));
-	l->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
-	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.6, 0.6, 0.6));
+	l->setDiffuseColour(vl::ColourValue(1.0, 1.0, 1.0));
+	l->setSpecularColour(vl::ColourValue(0.4, 0.4, 0.4));
+	mSceneMgr->setAmbientLight(vl::ColourValue(0.6, 0.6, 0.6));
 
 	mTerrainGlobalOptions->setMaxPixelError(1);
 	mTerrainGlobalOptions->setCompositeMapDistance(2000);
@@ -257,7 +271,7 @@ void DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 
 	mTerrainGroup = OGRE_NEW Ogre::TerrainGroup(mSceneMgr,
 			Ogre::Terrain::ALIGN_X_Z, mapSize, worldSize);
-	mTerrainGroup->setOrigin(Ogre::Vector3::ZERO);
+	mTerrainGroup->setOrigin(vl::vector3::ZERO);
 
 	rapidxml::xml_node<>* pElement;
 	rapidxml::xml_node<>* pPageElement;
@@ -290,28 +304,29 @@ void DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 	}
 	mTerrainGroup->freeTemporaryResources();
 	//mTerrain->setPosition(mTerrainPosition);
+	*/
 }
 
-void DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
+void
+DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 {
-	Ogre::String name = getAttrib(XMLNode, "name");
-	int pageX = Ogre::StringConverter::parseInt(XMLNode->first_attribute("pageX")->value());
-	int pageY = Ogre::StringConverter::parseInt(XMLNode->first_attribute("pageY")->value());
-	Ogre::Real worldSize = getAttribReal(XMLNode, "worldSize");
+	/*
+	std::string name = getAttrib(XMLNode, "name");
+	int pageX = std::stringConverter::parseInt(XMLNode->first_attribute("pageX")->value());
+	int pageY = std::stringConverter::parseInt(XMLNode->first_attribute("pageY")->value());
+	vl::scalar worldSize = getAttribReal(XMLNode, "worldSize");
 
-	size_t mapSize; //= Ogre::StringConverter::parseInt(
+	size_t mapSize; //= std::stringConverter::parseInt(
 	std::stringstream ss( std::stringstream::in | std::stringstream::out );
 	ss << XMLNode->first_attribute("mapSize")->value();
 	ss >> mapSize;
 
-	/*
 	bool colourmapEnabled = getAttribBool(XMLNode, "colourmapEnabled");
-	int colourmapTexturesize = Ogre::StringConverter::parseInt(
+	int colourmapTexturesize = std::stringConverter::parseInt(
 			XMLNode->first_attribute("colourmapTexturesize")->value());
-	*/
-	int layerCount = Ogre::StringConverter::parseInt(XMLNode->first_attribute("layerCount")->value());
+	int layerCount = std::stringConverter::parseInt(XMLNode->first_attribute("layerCount")->value());
 
-	Ogre::String filename = mTerrainGroup->generateFilename(pageX, pageY);
+	std::string filename = mTerrainGroup->generateFilename(pageX, pageY);
 	if( Ogre::ResourceGroupManager::getSingleton()
 			.resourceExists(mTerrainGroup->getResourceGroup(), filename ))
 	{ mTerrainGroup->defineTerrain(pageX, pageY); }
@@ -324,7 +339,7 @@ void DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 			mTerrainPosition = parseVector3(pElement);
 
 		Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-			.openResource(name + Ogre::String(".ohm"), "General" );
+			.openResource(name + std::string(".ohm"), "General" );
 		size_t size = stream.get()->size();
 		if(size != mapSize * mapSize * 4)
 		{
@@ -357,7 +372,7 @@ void DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 			pTerrainLayer = pElement->first_node("layer");
 			while(pTerrainLayer)
 			{
-				int worldSize = Ogre::StringConverter::parseInt(
+				int worldSize = std::stringConverter::parseInt(
 						pTerrainLayer->first_attribute("worldSize")->value());
 				pTerrainTextures = pTerrainLayer->first_node("textures");
 				pTerrainTexture = pTerrainTextures->first_node("texture");
@@ -365,7 +380,7 @@ void DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 				{
 					imp.layerList[count].textureNames.push_back(getAttrib(
 								pTerrainTexture,"name",""));
-                    imp.layerList[count].worldSize = (Ogre::Real)worldSize;
+                    imp.layerList[count].worldSize = (vl::scalar)worldSize;
 					pTerrainTexture = pTerrainTexture->next_sibling("texture");
 				}
 				count++;
@@ -377,16 +392,19 @@ void DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 		
 		mTerrainGroup->defineTerrain(pageX, pageY, &imp);
 	}
+	*/
 }
 
-void DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
+void
+DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
 {
-	int pageX = Ogre::StringConverter::parseInt(
+	/* TODO implement Terrain
+	int pageX = std::stringConverter::parseInt(
 			XMLNode->first_attribute("pageX")->value());
-	int pageY = Ogre::StringConverter::parseInt(
+	int pageY = std::stringConverter::parseInt(
 			XMLNode->first_attribute("pageY")->value());
 
-	Ogre::String filename = mTerrainGroup->generateFilename(pageX, pageY);
+	std::string filename = mTerrainGroup->generateFilename(pageX, pageY);
 	// skip this is terrain page has been saved already
 	if( !Ogre::ResourceGroupManager::getSingleton()
 			.resourceExists(mTerrainGroup->getResourceGroup(), filename) )
@@ -394,7 +412,7 @@ void DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
 		rapidxml::xml_node<>* pElement;
 
 		// Process blendmaps (*)
-		std::vector<Ogre::String> blendMaps;
+		std::vector<std::string> blendMaps;
 		rapidxml::xml_node<>* pBlendmap;
 		pElement = XMLNode->first_node("blendMaps");
 		pBlendmap = pElement->first_node("blendMap");
@@ -424,11 +442,12 @@ void DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
 			blendmap->update();
 		}
 	}
+	*/
 }
 
 void
 DotSceneLoader::processUserDataReference(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
 	//! @todo Implement this
 }
@@ -440,108 +459,117 @@ DotSceneLoader::processOctree(rapidxml::xml_node<>* XMLNode)
 }
 
 void
-DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode, Ogre::SceneNode *pParent)
+DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
+		vl::graph::SceneNodeRefPtr parent)
 {
 	// Process attributes
-	Ogre::String name = getAttrib(XMLNode, "name");
-	Ogre::String id = getAttrib(XMLNode, "id");
+	std::string name = getAttrib(XMLNode, "name");
+	std::string id = getAttrib(XMLNode, "id");
 
 	// Create the light
-	Ogre::Light *pLight = mSceneMgr->createLight(name);
-	if(pParent)
-		pParent->attachObject(pLight);
+	vl::graph::LightRefPtr light = mSceneMgr->createLight(name);
+	if( parent )
+	{ parent->attachObject(light); }
 
-	Ogre::String sValue = getAttrib(XMLNode, "type");
+	std::string sValue = getAttrib(XMLNode, "type");
 	if(sValue == "point")
-		pLight->setType(Ogre::Light::LT_POINT);
+	{ light->setType(vl::graph::Light::LT_POINT); }
 	else if(sValue == "directional")
-		pLight->setType(Ogre::Light::LT_DIRECTIONAL);
+	{ light->setType(vl::graph::Light::LT_DIRECTIONAL); }
 	else if(sValue == "spot")
-		pLight->setType(Ogre::Light::LT_SPOTLIGHT);
+	{ light->setType(vl::graph::Light::LT_SPOTLIGHT); }
 	else if(sValue == "radPoint")
-		pLight->setType(Ogre::Light::LT_POINT);
+	{ light->setType(vl::graph::Light::LT_POINT); }
 
-	pLight->setVisible(getAttribBool(XMLNode, "visible", true));
-	pLight->setCastShadows(getAttribBool(XMLNode, "castShadows", true));
+	light->setVisible(getAttribBool(XMLNode, "visible", true));
+	light->setCastShadows(getAttribBool(XMLNode, "castShadows", true));
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-		pLight->setPosition(parseVector3(pElement));
+		light->setPosition(parseVector3(pElement));
 
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
 	if(pElement)
-		pLight->setDirection(parseVector3(pElement));
+		light->setDirection(parseVector3(pElement));
 
 	pElement = XMLNode->first_node("directionVector");
 	if(pElement)
 	{
-		pLight->setDirection(parseVector3(pElement));
+		light->setDirection(parseVector3(pElement));
 		mLightDirection = parseVector3(pElement);
 	}
 
 	// Process colourDiffuse (?)
 	pElement = XMLNode->first_node("colourDiffuse");
 	if(pElement)
-		pLight->setDiffuseColour(parseColour(pElement));
+		light->setDiffuseColour(parseColour(pElement));
 
 	// Process colourSpecular (?)
 	pElement = XMLNode->first_node("colourSpecular");
 	if(pElement)
-		pLight->setSpecularColour(parseColour(pElement));
+		light->setSpecularColour(parseColour(pElement));
 
 	if(sValue != "directional")
 	{
 		// Process lightRange (?)
 		pElement = XMLNode->first_node("lightRange");
 		if(pElement)
-			processLightRange(pElement, pLight);
+			processLightRange(pElement, light);
 
 		// Process lightAttenuation (?)
 		pElement = XMLNode->first_node("lightAttenuation");
 		if(pElement)
-			processLightAttenuation(pElement, pLight);
+			processLightAttenuation(pElement, light);
 	}
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
 	if(pElement)
-		;//processUserDataReference(pElement, pLight);
+		;//processUserDataReference(pElement, light);
 }
 
 void
 DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
-	// Process attributes
-	Ogre::String name = getAttrib(XMLNode, "name");
-	Ogre::String id = getAttrib(XMLNode, "id");
-	//	TODO not implemented
-//	Ogre::Real fov = getAttribReal(XMLNode, "fov", 45);
-//	Ogre::Real aspectRatio = getAttribReal(XMLNode, "aspectRatio", 1.3333);
-	Ogre::String projectionType = getAttrib(XMLNode, "projectionType", "perspective");
+	if( !parent )
+	{ throw vl::exception( "No parent", "DotSceneLoader::processCamera" ); }
 
+	// Process attributes
+	std::string name = getAttrib(XMLNode, "name");
+	std::string id = getAttrib(XMLNode, "id");
+	//	TODO not implemented
+//	vl::scalar fov = getAttribReal(XMLNode, "fov", 45);
+//	vl::scalar aspectRatio = getAttribReal(XMLNode, "aspectRatio", 1.3333);
+	std::string projectionType = getAttrib(XMLNode, "projectionType", "perspective");
+
+	std::string node_name = name + std::string("Node");
 	// Create the camera
-	Ogre::Camera *pCamera = mSceneMgr->createCamera(name);
-	
-	//TODO: make a flag or attribute indicating whether or not the camera should be attached to any parent node.
-	//if(pParent)
-	//	pParent->attachObject(pCamera);
+	vl::graph::CameraRefPtr camera = _scene_mgr->createCamera( name );
+	vl::graph::SceneNodeRefPtr node = _scene_mgr->createSceneNode( node_name );
+	node->attachObject( camera );
+	parent->addChild( camera );
+
+	// TODO: make a flag or attribute indicating whether or not the camera
+	// should be attached to any parent node.
 
 	// Set the field-of-view
 	//! @todo Is this always in degrees?
-	//pCamera->setFOVy(Ogre::Degree(fov));
+	//camera->setFOVy(Ogre::Degree(fov));
 
 	// Set the aspect ratio
-	//pCamera->setAspectRatio(aspectRatio);
+	//camera->setAspectRatio(aspectRatio);
 	
 	// Set the projection type
+	/*	TODO not implemented
 	if(projectionType == "perspective")
-		pCamera->setProjectionType(Ogre::PT_PERSPECTIVE);
+	{ camera->setProjectionType(Ogre::PT_PERSPECTIVE); }
 	else if(projectionType == "orthographic")
-		pCamera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
+	{ camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC); }
+	*/
 
 	rapidxml::xml_node<>* pElement;
 
@@ -549,22 +577,22 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("clipping");
 	if(pElement)
 	{
-		Ogre::Real nearDist = getAttribReal(pElement, "near");
-		pCamera->setNearClipDistance(nearDist);
+		vl::scalar nearDist = getAttribReal(pElement, "near");
+		camera->setNearClipDistance(nearDist);
 
-		Ogre::Real farDist =  getAttribReal(pElement, "far");
-		pCamera->setFarClipDistance(farDist);
+		vl::scalar farDist =  getAttribReal(pElement, "far");
+		camera->setFarClipDistance(farDist);
 	}
 
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-		pCamera->setPosition(parseVector3(pElement));
+	{ camera->setPosition(parseVector3(pElement)); }
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
-		pCamera->setOrientation(parseQuaternion(pElement));
+	{ camera->setOrientation(parseQuaternion(pElement)); }
 
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
@@ -587,43 +615,36 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 		;//!< @todo Implement the camera user data reference
 
 	// construct a scenenode is no parent
-	if(!pParent)
+	/*
+	if( !parent )
 	{
-		Ogre::SceneNode* pNode = mAttachNode->createChildSceneNode(name);
-		pNode->setPosition(pCamera->getPosition());
-		pNode->setOrientation(pCamera->getOrientation());
-		pNode->scale(1,1,1);
+		vl::graph::SceneNodeRefPtr* node = _attach_node->createChildSceneNode(name);
+		node->setPosition(camera->getPosition());
+		node->setOrientation(camera->getOrientation());
+		node->scale(1,1,1);
 	}
+	*/
 }
 
 void
 DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
 	// Construct the node's name
-	Ogre::String name = m_sPrependNode + getAttrib(XMLNode, "name");
+	std::string name = m_sPrependNode + getAttrib(XMLNode, "name");
 
 	// Create the scene node
-	Ogre::SceneNode *pNode;
-	if(name.empty())
-	{
-		// Let Ogre choose the name
-		if(pParent)
-			pNode = pParent->createChildSceneNode();
-		else
-			pNode = mAttachNode->createChildSceneNode();
-	}
+	vl::graph::SceneNodeRefPtr node;
+
+	// TODO this function should always be called with parent
+	// so that if no other parent is then _attachNode becomes the parent.
+	if(parent)
+	{ node = parent->createChildSceneNode(name); }
 	else
-	{
-		// Provide the name
-		if(pParent)
-			pNode = pParent->createChildSceneNode(name);
-		else
-			pNode = mAttachNode->createChildSceneNode(name);
-	}
+	{ node = _attach_node->createChildSceneNode(name); }
 
 	// Process other attributes
-	Ogre::String id = getAttrib(XMLNode, "id");
+	std::string id = getAttrib(XMLNode, "id");
 	// Not used
 //	bool isTarget = getAttribBool(XMLNode, "isTarget");
 
@@ -631,43 +652,43 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
-	if(pElement)
+	if( pElement )
 	{
-		pNode->setPosition(parseVector3(pElement));
-		pNode->setInitialState();
+		node->setPosition(parseVector3(pElement));
+		node->setInitialState();
 	}
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
-	if(pElement)
+	if( pElement )
 	{
-		pNode->setOrientation(parseQuaternion(pElement));
-		pNode->setInitialState();
+		node->setOrientation(parseQuaternion(pElement));
+		node->setInitialState();
 	}
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
 	{
-		pNode->setScale(parseVector3(pElement));
-		pNode->setInitialState();
+		node->setScale(parseVector3(pElement));
+		node->setInitialState();
 	}
 
 	// Process lookTarget (?)
 	pElement = XMLNode->first_node("lookTarget");
 	if(pElement)
-		processLookTarget(pElement, pNode);
+	{ processLookTarget(pElement, node); }
 
 	// Process trackTarget (?)
 	pElement = XMLNode->first_node("trackTarget");
 	if(pElement)
-		processTrackTarget(pElement, pNode);
+		processTrackTarget(pElement, node);
 
 	// Process node (*)
 	pElement = XMLNode->first_node("node");
 	while(pElement)
 	{
-		processNode(pElement, pNode);
+		processNode(pElement, node);
 		pElement = pElement->next_sibling("node");
 	}
 
@@ -675,7 +696,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("entity");
 	while(pElement)
 	{
-		processEntity(pElement, pNode);
+		processEntity(pElement, node);
 		pElement = pElement->next_sibling("entity");
 	}
 
@@ -683,7 +704,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	//pElement = XMLNode->first_node("light");
 	//while(pElement)
 	//{
-	//	processLight(pElement, pNode);
+	//	processLight(pElement, node);
 	//	pElement = pElement->next_sibling("light");
 	//}
 
@@ -691,7 +712,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("camera");
 	while(pElement)
 	{
-		processCamera(pElement, pNode);
+		processCamera(pElement, node);
 		pElement = pElement->next_sibling("camera");
 	}
 
@@ -699,60 +720,62 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("particleSystem");
 	while(pElement)
 	{
-		processParticleSystem(pElement, pNode);
+		processParticleSystem(pElement, node);
 		pElement = pElement->next_sibling("particleSystem");
 	}
 
 	// Process billboardSet (*)
 	pElement = XMLNode->first_node("billboardSet");
-	while(pElement)
+	while( pElement )
 	{
-		processBillboardSet(pElement, pNode);
+		processBillboardSet(pElement, node);
 		pElement = pElement->next_sibling("billboardSet");
 	}
 
 	// Process plane (*)
 	pElement = XMLNode->first_node("plane");
-	while(pElement)
+	while( pElement )
 	{
-		processPlane(pElement, pNode);
+		processPlane(pElement, node);
 		pElement = pElement->next_sibling("plane");
 	}
 
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
-	if(pElement)
-		processUserDataReference(pElement, pNode);
+	if( pElement )
+	{ processUserDataReference(pElement, node); }
 }
 
 void
 DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
 	//! @todo Is this correct? Cause I don't have a clue actually
+	/*	TODO this needs SceneManager find by name and SceneNode::lookAt
 
 	// Process attributes
-	Ogre::String nodeName = getAttrib(XMLNode, "nodeName");
+	std::string nodeName = getAttrib(XMLNode, "nodeName");
 
-	Ogre::Node::TransformSpace relativeTo = Ogre::Node::TS_PARENT;
-	Ogre::String sValue = getAttrib(XMLNode, "relativeTo");
+	vl::graph::SceneNode::TransformSpace relativeTo
+		= vl::graph::SceneNode::TS_PARENT;
+	std::string sValue = getAttrib(XMLNode, "relativeTo");
 	if(sValue == "local")
-		relativeTo = Ogre::Node::TS_LOCAL;
+		relativeTo = vl::graph::SceneNode::TS_LOCAL;
 	else if(sValue == "parent")
-		relativeTo = Ogre::Node::TS_PARENT;
+		relativeTo = vl::graph::SceneNode::TS_PARENT;
 	else if(sValue == "world")
-		relativeTo = Ogre::Node::TS_WORLD;
+		relativeTo = vl::graph::SceneNode::TS_WORLD;
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process position (?)
-	Ogre::Vector3 position;
+	vl::vector position;
 	pElement = XMLNode->first_node("position");
 	if(pElement)
 		position = parseVector3(pElement);
 
 	// Process localDirection (?)
-	Ogre::Vector3 localDirection = Ogre::Vector3::NEGATIVE_UNIT_Z;
+	vl::vector localDirection = vl::vector::NEGATIVE_UNIT_Z;
 	pElement = XMLNode->first_node("localDirection");
 	if(pElement)
 		localDirection = parseVector3(pElement);
@@ -760,68 +783,78 @@ DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
 	// Setup the look target
 	try
 	{
-		if(!nodeName.empty())
+		if( !nodeName.empty() )
 		{
-			Ogre::SceneNode *pLookNode = mSceneMgr->getSceneNode(nodeName);
+			vl::graph::SceneNodeRefPtr pLookNode = mSceneMgr->getSceneNode(nodeName);
 			position = pLookNode->_getDerivedPosition();
 		}
 
-		pParent->lookAt(position, relativeTo, localDirection);
+		parent->lookAt(position, relativeTo, localDirection);
 	}
-	catch(Ogre::Exception &/*e*/)
+	catch( Ogre::Exception & )
 	{
 		std::string msg("[DotSceneLoader] Error processing a look target!");
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
+	*/
 }
 
-void DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, Ogre::SceneNode *pParent)
+void
+DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, vl::graph::SceneNodeRefPtr parent)
 {
+	/*	TODO this needs SceneNode::autoTracking
+	 *
 	// Process attributes
-	Ogre::String nodeName = getAttrib(XMLNode, "nodeName");
+	std::string nodeName = getAttrib(XMLNode, "nodeName");
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process localDirection (?)
-	Ogre::Vector3 localDirection = Ogre::Vector3::NEGATIVE_UNIT_Z;
+	vl::vector localDirection = vl::vector::NEGATIVE_UNIT_Z;
 	pElement = XMLNode->first_node("localDirection");
-	if(pElement)
-		localDirection = parseVector3(pElement);
+	if( pElement )
+	{ localDirection = parseVector3(pElement); }
 
 	// Process offset (?)
-	Ogre::Vector3 offset = Ogre::Vector3::ZERO;
+	vl::vector offset = vl::vector::ZERO;
 	pElement = XMLNode->first_node("offset");
-	if(pElement)
-		offset = parseVector3(pElement);
+	if( pElement )
+	{ offset = parseVector3(pElement); }
 
 	// Setup the track target
 	try
 	{
-		Ogre::SceneNode *pTrackNode = mSceneMgr->getSceneNode(nodeName);
-		pParent->setAutoTracking(true, pTrackNode, localDirection, offset);
+		vl::graph::SceneNodeRefPtr *pTrackNode = mSceneMgr->getSceneNode(nodeName);
+		parent->setAutoTracking(true, pTrackNode, localDirection, offset);
 	}
-	catch(Ogre::Exception &/*e*/)
+	catch(Ogre::Exception & )
 	{
 		std::string msg("[DotSceneLoader] Error processing a track target!");
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
+	*/
 }
 
-void DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode, Ogre::SceneNode *pParent)
+void
+DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
+		vl::graph::SceneNodeRefPtr parent)
 {
+	// TODO this needs SceneNode::attachObject,
+	// Entity::setCastShadows, Entity::setMaterialName
+
 	// Process attributes
-	Ogre::String name = getAttrib(XMLNode, "name");
-	Ogre::String id = getAttrib(XMLNode, "id");
-	Ogre::String meshFile = getAttrib(XMLNode, "meshFile");
-	Ogre::String materialFile = getAttrib(XMLNode, "materialFile");
+	std::string name = getAttrib(XMLNode, "name");
+	std::string id = getAttrib(XMLNode, "id");
+	std::string meshFile = getAttrib(XMLNode, "meshFile");
+	std::string materialFile = getAttrib(XMLNode, "materialFile");
 	bool isStatic = getAttribBool(XMLNode, "static", false);;
 	bool castShadows = getAttribBool(XMLNode, "castShadows", true);
 
 	// TEMP: Maintain a list of static and dynamic objects
 	if(isStatic)
-		staticObjects.push_back(name);
+	{ staticObjects.push_back(name); }
 	else
-		dynamicObjects.push_back(name);
+	{ dynamicObjects.push_back(name); }
 
 	rapidxml::xml_node<>* pElement;
 
@@ -836,16 +869,16 @@ void DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode, Ogre::SceneNod
 		;//processIndexBuffer(pElement);
 
 	// Create the entity
-	Ogre::Entity *pEntity = 0;
+	vl::graph::EntityRefPtr entity;
 	try
 	{
-		Ogre::MeshManager::getSingleton().load(meshFile, m_sGroupName);
-		pEntity = mSceneMgr->createEntity(name, meshFile);
-		pEntity->setCastShadows(castShadows);
-		pParent->attachObject(pEntity);
+		//Ogre::MeshManager::getSingleton().load(meshFile, m_sGroupName);
+		entity = _scene_mgr->createEntity(name, meshFile);
+		entity->setCastShadows(castShadows);
+		parent->attachObject(entity);
 		
-		if(!materialFile.empty())
-			pEntity->setMaterialName(materialFile);
+		if( !materialFile.empty() )
+		{ entity->setMaterialName(materialFile); }
 	}
 	catch(Ogre::Exception &/*e*/)
 	{
@@ -855,59 +888,60 @@ void DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode, Ogre::SceneNod
 
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
-	if(pElement)
-	{ processUserDataReference(pElement, pEntity); }
-
-	
+	if( pElement )
+	{ processUserDataReference(pElement, entity); }
 }
 
 void
 DotSceneLoader::processParticleSystem(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
+	/*	TODO this needs ParticleSystems
 	// Process attributes
-	Ogre::String name = getAttrib(XMLNode, "name");
-	Ogre::String id = getAttrib(XMLNode, "id");
-	Ogre::String file = getAttrib(XMLNode, "file");
+	std::string name = getAttrib(XMLNode, "name");
+	std::string id = getAttrib(XMLNode, "id");
+	std::string file = getAttrib(XMLNode, "file");
 
 	// Create the particle system
 	try
 	{
 		Ogre::ParticleSystem *pParticles
 			= mSceneMgr->createParticleSystem(name, file);
-		pParent->attachObject(pParticles);
+		parent->attachObject(pParticles);
 	}
-	catch(Ogre::Exception &/*e*/)
+	catch(Ogre::Exception & )
 	{
 		std::string msg("[DotSceneLoader] Error creating a particle system!");
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
+	*/
 }
 
 void
 DotSceneLoader::processBillboardSet(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
 	//! @todo Implement this
 }
 
 void
 DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *pParent)
+		vl::graph::SceneNodeRefPtr parent)
 {
-    Ogre::String name = getAttrib(XMLNode, "name");
-    Ogre::Real distance = getAttribReal(XMLNode, "distance");
-    Ogre::Real width = getAttribReal(XMLNode, "width");
-    Ogre::Real height = getAttribReal(XMLNode, "height");
-    int xSegments = Ogre::StringConverter::parseInt(getAttrib(XMLNode, "xSegments"));
-    int ySegments = Ogre::StringConverter::parseInt(getAttrib(XMLNode, "ySegments"));
-    int numTexCoordSets = Ogre::StringConverter::parseInt(getAttrib(XMLNode, "numTexCoordSets"));
-    Ogre::Real uTile = getAttribReal(XMLNode, "uTile");
-    Ogre::Real vTile = getAttribReal(XMLNode, "vTile");
-    Ogre::String material = getAttrib(XMLNode, "material");
+/*	TODO implement plane
+    std::string name = getAttrib(XMLNode, "name");
+    vl::scalar distance = getAttribReal(XMLNode, "distance");
+    vl::scalar width = getAttribReal(XMLNode, "width");
+    vl::scalar height = getAttribReal(XMLNode, "height");
+    int xSegments = std::stringConverter::parseInt(getAttrib(XMLNode, "xSegments"));
+    int ySegments = std::stringConverter::parseInt(getAttrib(XMLNode, "ySegments"));
+    int numTexCoordSets = std::stringConverter::parseInt(getAttrib(XMLNode, "numTexCoordSets"));
+    vl::scalar uTile = getAttribReal(XMLNode, "uTile");
+    vl::scalar vTile = getAttribReal(XMLNode, "vTile");
+    std::string material = getAttrib(XMLNode, "material");
     bool hasNormals = getAttribBool(XMLNode, "hasNormals");
-    Ogre::Vector3 normal = parseVector3(XMLNode->first_node("normal"));
-    Ogre::Vector3 up = parseVector3(XMLNode->first_node("upVector"));
+    vl::vector normal = parseVector3(XMLNode->first_node("normal"));
+    vl::vector up = parseVector3(XMLNode->first_node("upVector"));
 
     Ogre::Plane plane(normal, distance);
     Ogre::MeshPtr res = Ogre::MeshManager::getSingletonPtr()->createPlane(
@@ -915,23 +949,25 @@ DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
 						plane, width, height, xSegments, ySegments, hasNormals,
 						numTexCoordSets, uTile, vTile, up );
 
-    Ogre::Entity* ent = mSceneMgr->createEntity(name, name + "mesh");
+    vl::graph::EntityRefPtr ent = _scene_mgr->createEntity(name, name + "mesh");
 
     ent->setMaterialName(material);
 
-    pParent->attachObject(ent);
+    parent->attachObject(ent);
+*/
 }
 
 void
 DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 {
+/*	TODO implement Fog
 	// Process attributes
-	Ogre::Real expDensity = getAttribReal(XMLNode, "density", 0.001);
-	Ogre::Real linearStart = getAttribReal(XMLNode, "start", 0.0);
-	Ogre::Real linearEnd = getAttribReal(XMLNode, "end", 1.0);
+	vl::scalar expDensity = getAttribReal(XMLNode, "density", 0.001);
+	vl::scalar linearStart = getAttribReal(XMLNode, "start", 0.0);
+	vl::scalar linearEnd = getAttribReal(XMLNode, "end", 1.0);
 
 	Ogre::FogMode mode = Ogre::FOG_NONE;
-	Ogre::String sMode = getAttrib(XMLNode, "mode");
+	std::string sMode = getAttrib(XMLNode, "mode");
 	if(sMode == "none")
 		mode = Ogre::FOG_NONE;
 	else if(sMode == "exp")
@@ -944,21 +980,23 @@ DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 	rapidxml::xml_node<>* pElement;
 
 	// Process colourDiffuse (?)
-	Ogre::ColourValue colourDiffuse = Ogre::ColourValue::White;
+	vl::ColourValue colourDiffuse = vl::ColourValue::White;
 	pElement = XMLNode->first_node("colour");
 	if(pElement)
 		colourDiffuse = parseColour(pElement);
 
 	// Setup the fog
 	mSceneMgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
+*/
 }
 
 void
 DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 {
+/*	TODO implement SkyBox
 	// Process attributes
-	Ogre::String material = getAttrib(XMLNode, "material", "BaseWhite");
-	Ogre::Real distance = getAttribReal(XMLNode, "distance", 5000);
+	std::string material = getAttrib(XMLNode, "material", "BaseWhite");
+	vl::scalar distance = getAttribReal(XMLNode, "distance", 5000);
 	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
 	bool active = getAttribBool(XMLNode, "active", false);
 	if(!active)
@@ -967,29 +1005,31 @@ DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 	rapidxml::xml_node<>* pElement;
 
 	// Process rotation (?)
-	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+	vl::quaternion rotation = vl::quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
 		rotation = parseQuaternion(pElement);
 
 	// Setup the sky box
 	mSceneMgr->setSkyBox(true, material, distance, drawFirst, rotation, m_sGroupName);
+*/
 }
 
 void
 DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 {
+/*	TODO implement SkyDome
 	// Process attributes
-	Ogre::String material = XMLNode->first_attribute("material")->value();
-	Ogre::Real curvature = getAttribReal(XMLNode, "curvature", 10);
-	Ogre::Real tiling = getAttribReal(XMLNode, "tiling", 8);
-	Ogre::Real distance = getAttribReal(XMLNode, "distance", 4000);
+	std::string material = XMLNode->first_attribute("material")->value();
+	vl::scalar curvature = getAttribReal(XMLNode, "curvature", 10);
+	vl::scalar tiling = getAttribReal(XMLNode, "tiling", 8);
+	vl::scalar distance = getAttribReal(XMLNode, "distance", 4000);
 	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process rotation (?)
-	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+	vl::quaternion rotation = vl::quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
 		rotation = parseQuaternion(pElement);
@@ -997,28 +1037,31 @@ DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 	// Setup the sky dome
 	mSceneMgr->setSkyDome( true, material, curvature, tiling,
 			distance, drawFirst, rotation, 16, 16, -1, m_sGroupName );
+*/
 }
 
 void
 DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 {
+/*	TODO implement SkyPlane
 	// Process attributes
-	Ogre::String material = getAttrib(XMLNode, "material");
-	Ogre::Real planeX = getAttribReal(XMLNode, "planeX", 0);
-	Ogre::Real planeY = getAttribReal(XMLNode, "planeY", -1);
-	Ogre::Real planeZ = getAttribReal(XMLNode, "planeX", 0);
-	Ogre::Real planeD = getAttribReal(XMLNode, "planeD", 5000);
-	Ogre::Real scale = getAttribReal(XMLNode, "scale", 1000);
-	Ogre::Real bow = getAttribReal(XMLNode, "bow", 0);
-	Ogre::Real tiling = getAttribReal(XMLNode, "tiling", 10);
+	std::string material = getAttrib(XMLNode, "material");
+	vl::scalar planeX = getAttribReal(XMLNode, "planeX", 0);
+	vl::scalar planeY = getAttribReal(XMLNode, "planeY", -1);
+	vl::scalar planeZ = getAttribReal(XMLNode, "planeX", 0);
+	vl::scalar planeD = getAttribReal(XMLNode, "planeD", 5000);
+	vl::scalar scale = getAttribReal(XMLNode, "scale", 1000);
+	vl::scalar bow = getAttribReal(XMLNode, "bow", 0);
+	vl::scalar tiling = getAttribReal(XMLNode, "tiling", 10);
 	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
 
 	// Setup the sky plane
 	Ogre::Plane plane;
-	plane.normal = Ogre::Vector3(planeX, planeY, planeZ);
+	plane.normal = vl::vector3(planeX, planeY, planeZ);
 	plane.d = planeD;
 	mSceneMgr->setSkyPlane( true, plane, material, scale, tiling,
 			drawFirst, bow, 1, 1, m_sGroupName );
+*/
 }
 
 void
@@ -1027,40 +1070,40 @@ DotSceneLoader::processClipping(rapidxml::xml_node<>* /*XMLNode */)
 	//! @todo Implement this
 
 	// Process attributes
-//	Ogre::Real fNear = getAttribReal(XMLNode, "near", 0);
-//	Ogre::Real fFar = getAttribReal(XMLNode, "far", 1);
+//	vl::scalar fNear = getAttribReal(XMLNode, "near", 0);
+//	vl::scalar fFar = getAttribReal(XMLNode, "far", 1);
 }
 
 void
-DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *pLight)
+DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, vl::graph::LightRefPtr light)
 {
 	// Process attributes
-	Ogre::Real inner = getAttribReal(XMLNode, "inner");
-	Ogre::Real outer = getAttribReal(XMLNode, "outer");
-	Ogre::Real falloff = getAttribReal(XMLNode, "falloff", 1.0);
+	vl::scalar inner = getAttribReal(XMLNode, "inner");
+	vl::scalar outer = getAttribReal(XMLNode, "outer");
+	vl::scalar falloff = getAttribReal(XMLNode, "falloff", 1.0);
 
 	// Setup the light range
-	pLight->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
+	light->setSpotlightRange(vl::angle(inner), vl::angle(outer), falloff);
 }
 
 void
 DotSceneLoader::processLightAttenuation(rapidxml::xml_node<>* XMLNode,
-		Ogre::Light *pLight)
+		vl::graph::LightRefPtr light)
 {
 	// Process attributes
-	Ogre::Real range = getAttribReal(XMLNode, "range");
-	Ogre::Real constant = getAttribReal(XMLNode, "constant");
-	Ogre::Real linear = getAttribReal(XMLNode, "linear");
-	Ogre::Real quadratic = getAttribReal(XMLNode, "quadratic");
+	vl::scalar range = getAttribReal(XMLNode, "range");
+	vl::scalar constant = getAttribReal(XMLNode, "constant");
+	vl::scalar linear = getAttribReal(XMLNode, "linear");
+	vl::scalar quadratic = getAttribReal(XMLNode, "quadratic");
 
 	// Setup the light attenuation
-	pLight->setAttenuation(range, constant, linear, quadratic);
+	light->setAttenuation(range, constant, linear, quadratic);
 }
 
 
-Ogre::String
+std::string
 DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
-		const Ogre::String &attrib, const Ogre::String &defaultValue )
+		const std::string &attrib, const std::string &defaultValue )
 {
 	if(XMLNode->first_attribute(attrib.c_str()))
 	{ return XMLNode->first_attribute(attrib.c_str())->value(); }
@@ -1068,13 +1111,13 @@ DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
 	{ return defaultValue; }
 }
 
-Ogre::Real
+vl::scalar
 DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
-		const Ogre::String &attrib, Ogre::Real defaultValue )
+		const std::string &attrib, vl::scalar defaultValue )
 {
 	if(XMLNode->first_attribute(attrib.c_str()))
 	{
-		return Ogre::StringConverter::parseReal(
+		return vl::string_convert<vl::scalar>(
 				XMLNode->first_attribute(attrib.c_str())->value() );
 	}
 	else
@@ -1083,97 +1126,103 @@ DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
 
 bool
 DotSceneLoader::getAttribBool( rapidxml::xml_node<>* XMLNode,
-		const Ogre::String &attrib, bool defaultValue )
+		const std::string &attrib, bool defaultValue )
 {
 	if( !XMLNode->first_attribute(attrib.c_str()) )
 	{ return defaultValue; }
 
-	if( Ogre::String(XMLNode->first_attribute(attrib.c_str())->value()) == "true" )
+	if( std::string(XMLNode->first_attribute(attrib.c_str())->value()) == "true" )
 	{ return true; }
 
 	return false;
 }
 
-Ogre::Vector3 DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
+vl::vector
+DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
 {
-	return Ogre::Vector3(
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("x")->value()),
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("y")->value()),
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("z")->value())
+	return vl::vector(
+		vl::string_convert<vl::scalar>(XMLNode->first_attribute("x")->value()),
+		vl::string_convert<vl::scalar>(XMLNode->first_attribute("y")->value()),
+		vl::string_convert<vl::scalar>(XMLNode->first_attribute("z")->value())
 	);
 }
 
-Ogre::Quaternion
+vl::quaternion
 DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 {
 	//! @todo Fix this crap!
 
-	Ogre::Quaternion orientation;
+	vl::scalar x, y, z, w;
 
 	if(XMLNode->first_attribute("qx"))
 	{
-		orientation.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qx")->value());
-		orientation.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qy")->value());
-		orientation.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qz")->value());
-		orientation.w = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qw")->value());
+		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qx")->value());
+		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qy")->value());
+		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qz")->value());
+		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qw")->value());
 	}
 	if(XMLNode->first_attribute("qw"))
 	{
-		orientation.w = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qw")->value());
-		orientation.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qx")->value());
-		orientation.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qy")->value());
-		orientation.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("qz")->value());
+		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qw")->value());
+		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qx")->value());
+		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qy")->value());
+		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qz")->value());
 	}
 	else if(XMLNode->first_attribute("axisX"))
 	{
-		Ogre::Vector3 axis;
-		axis.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("axisX")->value());
-		axis.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("axisY")->value());
-		axis.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("axisZ")->value());
-		Ogre::Real angle = Ogre::StringConverter::parseReal(XMLNode->first_attribute("angle")->value());;
-		orientation.FromAngleAxis(Ogre::Angle(angle), axis);
+		// TODO implement
+//		vl::vector axis;
+//		axis.x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisX")->value());
+//		axis.y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisY")->value());
+//		axis.z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisZ")->value());
+//		vl::scalar angle = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angle")->value());;
+//		orientation.FromAngleAxis(Ogre::Angle(angle), axis);
 	}
 	else if(XMLNode->first_attribute("angleX"))
 	{
-		Ogre::Vector3 axis;
-		axis.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("angleX")->value());
-		axis.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("angleY")->value());
-		axis.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("angleZ")->value());
+//		vl::vector axis;
+//		axis.x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleX")->value());
+//		axis.y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleY")->value());
+//		axis.z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleZ")->value());
 		//orientation.FromAxes(&axis);
 		//orientation.F
 	}
 	else if(XMLNode->first_attribute("x"))
 	{
-		orientation.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("x")->value());
-		orientation.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("y")->value());
-		orientation.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("z")->value());
-		orientation.w = Ogre::StringConverter::parseReal(XMLNode->first_attribute("w")->value());
+		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("x")->value());
+		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("y")->value());
+		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("z")->value());
+		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("w")->value());
 	}
 	else if(XMLNode->first_attribute("w"))
 	{
-		orientation.w = Ogre::StringConverter::parseReal(XMLNode->first_attribute("w")->value());
-		orientation.x = Ogre::StringConverter::parseReal(XMLNode->first_attribute("x")->value());
-		orientation.y = Ogre::StringConverter::parseReal(XMLNode->first_attribute("y")->value());
-		orientation.z = Ogre::StringConverter::parseReal(XMLNode->first_attribute("z")->value());
+		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("w")->value());
+		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("x")->value());
+		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("y")->value());
+		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("z")->value());
 	}
 
-	return orientation;
+	return vl::quaternion(x, y, z, w);
 }
 
-Ogre::ColourValue
+vl::colour
 DotSceneLoader::parseColour(rapidxml::xml_node<>* XMLNode)
 {
-	return Ogre::ColourValue(
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("r")->value()),
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("g")->value()),
-		Ogre::StringConverter::parseReal(XMLNode->first_attribute("b")->value()),
-		XMLNode->first_attribute("a") != NULL ? Ogre::StringConverter::parseReal(XMLNode->first_attribute("a")->value()) : 1
-	);
+	vl::scalar r, g, b, a;
+	r = vl::string_convert<vl::scalar>( XMLNode->first_attribute("r")->value() );
+	g = vl::string_convert<vl::scalar>( XMLNode->first_attribute("g")->value() );
+	b = vl::string_convert<vl::scalar>( XMLNode->first_attribute("b")->value() );
+	if(  XMLNode->first_attribute("a") != NULL )
+	{ a = vl::string_convert<vl::scalar>( XMLNode->first_attribute("a")->value() ); }
+	else
+	{ a = 1; }
+
+	return vl::colour(r, g, b, a);
 }
 
-Ogre::String
-DotSceneLoader::getProperty(const Ogre::String &ndNm,
-		const Ogre::String &prop)
+std::string
+DotSceneLoader::getProperty(const std::string &ndNm,
+		const std::string &prop)
 {
 	for ( unsigned int i = 0 ; i < nodeProperties.size(); i++ )
 	{
@@ -1186,10 +1235,12 @@ DotSceneLoader::getProperty(const Ogre::String &ndNm,
 	return "";
 }
 
+/*
 void
 DotSceneLoader::processUserDataReference( rapidxml::xml_node<>* XMLNode,
-		Ogre::Entity *pEntity )
+		vl::graph::EntityRefPtr pEntity )
 {
-	Ogre::String str = XMLNode->first_attribute("id")->value();
+	std::string str = XMLNode->first_attribute("id")->value();
 	pEntity->setUserAny(Ogre::Any(str));
 }
+*/

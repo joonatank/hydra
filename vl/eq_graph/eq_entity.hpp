@@ -43,6 +43,12 @@ namespace cl
 			// Only usefull on Nodes
 			virtual void load( vl::graph::SceneManagerRefPtr ) {}
 
+			virtual void setCastShadows( bool castShadows)
+			{}
+
+			virtual void setMaterialName( std::string const &materialFile)
+			{}
+
 			// Equalizer overrides
 
 			/* Object::serialize() */

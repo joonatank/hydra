@@ -27,8 +27,16 @@
 		Ogre::String valueName;
 		Ogre::String typeName;
 
-		nodeProperty(const Ogre::String &node, const Ogre::String &propertyName, const Ogre::String &value, const Ogre::String &type)
-			: nodeName(node), propertyNm(propertyName), valueName(value), typeName(type) {}
+		nodeProperty( const Ogre::String &node,
+				const Ogre::String &propertyName,
+				const Ogre::String &value,
+				const Ogre::String &type )
+			: nodeName(node),
+			  propertyNm(propertyName),
+			  valueName(value),
+			  typeName(type)
+		{}
+
 	};
 
 	class DotSceneLoader
@@ -39,8 +47,14 @@
         DotSceneLoader();
 		virtual ~DotSceneLoader();
 
-		void parseDotScene(const Ogre::String &SceneName, const Ogre::String &groupName, Ogre::SceneManager *yourSceneMgr, Ogre::SceneNode *pAttachNode = NULL, const Ogre::String &sPrependNode = "");
-		Ogre::String getProperty(const Ogre::String &ndNm, const Ogre::String &prop);
+		void parseDotScene(const Ogre::String &SceneName,
+				const Ogre::String &groupName,
+				Ogre::SceneManager *yourSceneMgr,
+				Ogre::SceneNode *pAttachNode = NULL,
+				const Ogre::String &sPrependNode = "");
+
+		Ogre::String getProperty(const Ogre::String &ndNm,
+				const Ogre::String &prop);
 
 		Ogre::TerrainGroup* getTerrainGroup() { return mTerrainGroup; }
 
@@ -80,9 +94,15 @@
 		void processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *pLight);
 		void processLightAttenuation(rapidxml::xml_node<>* XMLNode, Ogre::Light *pLight);
 
-		Ogre::String getAttrib(rapidxml::xml_node<>* XMLNode, const Ogre::String &parameter, const Ogre::String &defaultValue = "");
-		Ogre::Real getAttribReal(rapidxml::xml_node<>* XMLNode, const Ogre::String &parameter, Ogre::Real defaultValue = 0);
-		bool getAttribBool(rapidxml::xml_node<>* XMLNode, const Ogre::String &parameter, bool defaultValue = false);
+		Ogre::String getAttrib(rapidxml::xml_node<>* XMLNode,
+				const Ogre::String &parameter,
+				const Ogre::String &defaultValue = "");
+
+		Ogre::Real getAttribReal(rapidxml::xml_node<>* XMLNode,
+				const Ogre::String &parameter, Ogre::Real defaultValue = 0);
+
+		bool getAttribBool(rapidxml::xml_node<>* XMLNode,
+				const Ogre::String &parameter, bool defaultValue = false);
 
 		Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
 		Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
