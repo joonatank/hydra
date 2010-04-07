@@ -50,19 +50,11 @@ endif( WIN32 )
 find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread REQUIRED)
 # TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
-message( "Boost version = ${Boost_VERSION}. Boost libraries = ${Boost_LIBRARIES}")
-
 if( WIN32 )
 	set( EQ_LIBRARIES Equalizer )
 elseif( UNIX )
 	set( EQ_LIBRARIES eq )
 endif( WIN32 )
-
-# TODO add define rendering engine (Ogre/OpenSG)
-# include vl lib
-# Using include instead of subdirectory because with include we can just
-# add to source/headers list and directories without building anything.
-#include(vl/CMakeList.txt)
 
 include_directories( 
  	${OpenGL_INCLUDE_DIR}
@@ -84,8 +76,4 @@ include_directories(vl)
 # Tests should be in different CMake file
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
-
-#add_executable( eqOgre ${EQOGRE_SOURCES} )
-# TODO libraries can be found using CMake facilities
-#target_link_libraries( eqOgre OgreMain eq eqserver GLEW pthread )
 
