@@ -38,10 +38,15 @@ vl::cl::SceneManager::getRootNode( void )
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::createNode( std::string const &name )
 {
+	const char *where = "vl::cl::SceneManager::createNode";
+
 	// TODO replace with the factory
 	//	= _createSceneNodeImpl( name );
 //	if( !_scene_node_factory )
 //	{ _scene_node_factory.reset(new DefaultSceneNodeFactory); }
+
+	if( !_scene_node_factory )
+	{ throw vl::exception( "No SceneNodeFactory", where ); }
 
 	vl::graph::SceneNodeRefPtr node =
 		_scene_node_factory->create( shared_from_this(), name );
@@ -83,61 +88,31 @@ vl::cl::SceneManager::createMovableObject(
 	if( iter != _movable_factories.end() )
 	{ return iter->second->create( name, params ); }
 
-	/*
-	std::vector<vl::graph::MovableObjectFactoryPtr>::iterator iter;
-	for( iter = _movable_factories.begin(); iter != _movable_factories.end();
-			++iter )
-	{
-		if( typeName == (*iter)->typeName() )
-		{
-			return (*iter)->create( name, params );
-		}
-	}
-	*/
-
 	return vl::graph::MovableObjectRefPtr();
-
-	// TODO replace with factory::create
-	//return new vl::cl::Entity( name, params );
 }
 
-// Find function needs scene graph traversal to be implemented
+// TODO Find function needs scene graph traversal to be implemented
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::getNode( std::string const &name )
 {
 	return vl::graph::SceneNodeRefPtr();
 }
 
-// Find function needs scene graph traversal to be implemented
+// TODO Find function needs scene graph traversal to be implemented
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::getNode( uint32_t id )
 {
-	/*
-	for( size_t i = 0; i < _nodes->size(); i++ )
-	{
-		if( _nodes->at(i)->getID() == id )
-		{ return _nodes->at(i); }
-	}
-	*/
-
 	return vl::graph::SceneNodeRefPtr();
 }
 
-// Find function needs scene graph traversal to be implemented
+// TODO Find function needs scene graph traversal to be implemented
 vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::getObject( uint32_t id )
 {
-	/*
-	for( size_t i = 0; i < _objects->size(); i++ )
-	{
-		if( _objects->at(i)->getID() == id )
-		{ return _objects->at(i); }
-	}
-	*/
-
 	return vl::graph::MovableObjectRefPtr();
 }
 
+// TODO implement
 void
 vl::cl::SceneManager::pushChildAddedStack( uint32_t id,
 		vl::graph::ChildAddedFunctor const &handle )
@@ -145,6 +120,7 @@ vl::cl::SceneManager::pushChildAddedStack( uint32_t id,
 
 }
 
+// TODO implement
 void
 vl::cl::SceneManager::pushChildRemovedStack( vl::graph::SceneNodeRefPtr child )
 {
@@ -179,7 +155,7 @@ vl::cl::SceneManager::addMovableObjectFactory(
 	iter = _movable_factories.find( factory->typeName() );
 	if( iter != _movable_factories.end() )
 	{ 
-		// we either overwrite or it's error
+		// we either overwrite or it's an error
 		if( overwrite )
 		{ iter->second = factory; }
 		else
@@ -239,28 +215,3 @@ vl::cl::SceneManager::deserialize( eq::net::DataIStream& is,
 	{
 	}
 }
-
-/*
-vl::graph::SceneNodeRefPtr
-vl::cl::SceneManager::_createSceneNodeImpl( std::string const &name )
-{
-	if( !_scene_node_factory.get() )
-	{ _scene_node_factory.reset(new DefaultSceneNodeFactory); }
-
-	return _scene_node_factory->create( this, name );
-}
-
-vl::graph::MovableObjectRefPtr
-vl::cl::SceneManager::_createMovableObjectImpl(
-		std::string const &typeName, std::string const &name,
-		vl::NamedValuePairList const &params )
-{
-	// For now we only use entities
-	if( typeName != "Entity" )
-	{ return 0; }
-
-	// TODO replace with factory::create
-	return new vl::cl::Entity( name, params );
-}
-*/
-

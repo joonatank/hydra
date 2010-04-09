@@ -38,13 +38,7 @@ namespace ogre
 		public :
 			Root( void );
 
-			virtual ~Root( void )
-			{
-				// FIXME this can not destroy ogre root if we have multiple
-				// Roots pointing to same ogre singleton.
-				if( _primary )
-				{ delete _ogre_root; }
-			}
+			virtual ~Root( void );
 			
 			// Hack to provide native access, we should really never
 			// need this for the Root object.

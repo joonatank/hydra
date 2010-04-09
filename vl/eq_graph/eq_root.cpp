@@ -52,7 +52,6 @@ vl::cl::Root::destroySceneManager( std::string const &name )
 	{
 		if( (*iter)->getName() == name )
 		{
-			//delete *iter;
 			_scene_managers.erase( iter );
 			return;
 		}

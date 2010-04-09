@@ -23,6 +23,14 @@ vl::ogre::Root::Root( void )
 	}
 }
 
+vl::ogre::Root::~Root( void )
+{
+	// FIXME this can not destroy ogre root if we have multiple
+	// Roots pointing to same ogre singleton.
+	if( _primary )
+	{ delete _ogre_root; }
+}
+
 void
 vl::ogre::Root::createRenderSystem( void )
 {
@@ -30,44 +38,15 @@ vl::ogre::Root::createRenderSystem( void )
 	{ return; }
 
 	EQASSERT( _ogre_root );
-	/*
-#if defined(_DEBUG)
-#ifdef VL_UNIX
-	_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL_d");
-#else
-	_ogre_root->loadPlugin("RenderSystem_GL_d");
-#endif
-#else
-#ifdef VL_UNIX
-	_ogre_root->loadPlugin("/usr/local/lib/OGRE/RenderSystem_GL");
-#else
-	_ogre_root->loadPlugin("RenderSystem_GL");
-#endif
-#endif
-	*/
 
-	//Ogre::RenderSystemList::iterator r_it;
-	//Ogre::RenderSystemList renderSystems = _ogre_root->getAvailableRenderers();
-	//EQASSERT( !renderSystems.empty() );
-	/*
-	for( r_it = renderSystems.begin(); r_it != renderSystems.end(); ++r_it )
-	{
-		if( dynamic_cast<Ogre::GLRenderSystem *>( *r_it ) )
-		{
-			_ogre_root->setRenderSystem(*r_it);
-			break;
-		}
-	}
-	*/
+	// We only support OpenGL rasterizer
 	Ogre::RenderSystem *rast
 		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
 	if( !rast )
 	{ throw vl::exception( "No OpenGL rendering system plugin found",
 			"vl::ogre::Root::createRenderSystem" ); }
 	else
-	{
-		_ogre_root->setRenderSystem( rast );
-	}
+	{ _ogre_root->setRenderSystem( rast ); }
 }
 
 void
@@ -77,8 +56,6 @@ vl::ogre::Root::init( void )
 
 	setupResources();
 	loadResources();
-//	Ogre::ResourceGroupManager::getSingleton()
-//		.addResourceLocation( "resources", "FileSystem", "General" );
 }
 
 /// Method which will define the source of resources (other than current folder)
@@ -153,6 +130,8 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		_ogre_root->createRenderWindow( ss.str(), width, height, false, &misc );
 	++n_windows;
 
+	// Initialise the rendering system and load resources automatically when
+	// first window is created.
 	if( !_ogre_root->isInitialised() )
 	{ init(); }
 
