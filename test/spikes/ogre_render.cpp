@@ -22,6 +22,11 @@ struct OgreFixture
 
 		vl::graph::SceneManagerRefPtr man = ogre_root->createSceneManager("Manager");
 		
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::EntityFactory ) );
+		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+					new vl::ogre::SceneNodeFactory ) );
+
 		boost::shared_ptr<vl::ogre::Camera> cam
 			= boost::dynamic_pointer_cast<vl::ogre::Camera>(
 					man->createCamera( "Cam" ) );

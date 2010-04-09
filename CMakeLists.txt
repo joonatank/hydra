@@ -14,6 +14,11 @@ elseif( UNIX )
 	add_definitions( -DVL_UNIX )
 endif( WIN32 )
 
+# Set unix debug flag
+if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+	add_definitions( -DDEBUG )
+endif()
+
 if( WIN32 )
 	set( EQUALIZER "c:/libs/equalizer" )
 	set( TURTLE "C:/jotu/libs/turtle/src/libraries" )

@@ -74,10 +74,17 @@ public :
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
 		BOOST_REQUIRE( man );
+
+		// Set factories
+		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+					new vl::ogre::SceneNodeFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::EntityFactory ) );
 		
 		// Create camera and viewport
-		vl::graph::SceneNodeRefPtr root = man->getRootNode();
-		cam = man->createCamera( "Cam" );
+		vl::graph::SceneNodeRefPtr root;
+		BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
+		BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
 		vl::graph::ViewportRefPtr view = win->addViewport( cam );
 		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild( "Feet" );

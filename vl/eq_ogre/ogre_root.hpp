@@ -61,6 +61,10 @@ namespace ogre
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
+			virtual void setupResources(void);
+
+			virtual void loadResources(void);
+
 		protected :
 			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )

@@ -2,9 +2,15 @@
 
 #include <eq/net/session.h>
 
+#include <cstdlib>
+
 vl::cl::Root::Root( void )
 	: _scene_managers()
-{}
+{
+	char *dir = ::getenv( "VL_DIR" );
+	if( dir )
+	{ _base_dir = dir; }
+}
 
 vl::graph::SceneManagerRefPtr
 vl::cl::Root::getSceneManager( std::string const &name )

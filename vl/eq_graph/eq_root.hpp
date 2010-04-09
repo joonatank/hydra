@@ -96,6 +96,10 @@ namespace cl
 
 			std::vector<vl::graph::SceneManagerRefPtr> _scene_managers;
 
+			// Data directory, contains config files for Ogre, equalizer and
+			// our own.
+			std::string _base_dir;
+
 	};	// class Root
 
 }	// namespace graph

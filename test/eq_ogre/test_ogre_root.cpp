@@ -25,9 +25,13 @@ BOOST_AUTO_TEST_CASE( init )
 	BOOST_CHECK_NO_THROW( root = new vl::ogre::Root );
 
 	BOOST_CHECK_NO_THROW( root->createRenderSystem() );
-	BOOST_CHECK_NO_THROW( root->init() );
+
+	// Window needs to be created before init, because init loads the
+	// resources which need the Rasterizer to be initialized, which needs
+	// the window.
 	vl::graph::RenderWindowRefPtr win;
 	BOOST_CHECK_NO_THROW( win = root->createWindow("win", 800, 600) );
+	BOOST_CHECK_NO_THROW( root->init() );
 	BOOST_CHECK( win );
 
 	// TODO check window creation with different parameters
