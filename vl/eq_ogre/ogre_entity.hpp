@@ -45,6 +45,8 @@ namespace ogre
 		protected :
 			Ogre::Entity *_ogre_entity;
 
+			std::string _name;
+
 	};	// class Entity
 
 	class EntityFactory : public vl::graph::MovableObjectFactory

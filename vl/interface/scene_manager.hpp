@@ -38,7 +38,7 @@ namespace graph
 
 			virtual ~SceneManager( void ) {}
 
-			virtual std::string const &getName( void ) = 0;
+			virtual std::string getName( void ) = 0;
 
 			// Get the root of the scene graph, created implicitly
 			virtual SceneNodeRefPtr getRootNode( void ) = 0;

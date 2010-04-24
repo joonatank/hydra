@@ -15,6 +15,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+// eqOgre project includes
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_ogre/ogre_scene_manager.hpp"
 #include "eq_ogre/ogre_scene_node.hpp"
@@ -22,9 +23,9 @@
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
 
+// Test includes
 #include "eq_test_fixture.hpp"
-
-char *argv[argc] = { "stereo_render\0", "--eq-config\0", "1-window.eqc\0", "\0" };
+#include "args.hpp"
 
 class Channel : public eq::Channel
 {
@@ -179,6 +180,15 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
+		Args args;
+		args.addArg("stereo_render");
+		args.addArg("--eq-config" );
+		args.addArg("1-window.eqc");
+
+		char **argv = args.argv;
+
+		std::cout << args << std::endl;
+
 		// Redirect logging
 		//eq::base::Log::setOutput( log_file );
 

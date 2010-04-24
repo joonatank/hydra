@@ -13,7 +13,7 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 	if( name.empty() )
 	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
 
-	eq::Object::setName( name );
+//	eq::Object::setName( name );
 }
 
 vl::cl::SceneManager::~SceneManager( void )

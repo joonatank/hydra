@@ -32,12 +32,13 @@ namespace cl
 		public :
 			Entity( std::string const &name,
 					vl::NamedValuePairList const &params )
-				: eq::Object(), _params(params)
-			{
-				eq::Object::setName( name );
-			}
+				: eq::Object(), _name(name), _params(params)
+			{}
 
 			virtual ~Entity( void ) {}
+
+			virtual std::string const &getName( void )
+			{ return _name; }
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
@@ -71,6 +72,8 @@ namespace cl
 			};
 
 		protected :
+			std::string _name;
+
 			vl::NamedValuePairList _params;
 
 	};	// class Entity

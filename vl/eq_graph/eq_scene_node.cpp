@@ -19,8 +19,8 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 	{ throw vl::null_pointer("SceneNode::SceneNode"); }
 
 	// TODO add random name generator
-	if( !name.empty() )
-	{ eq::Object::setName( name ); }
+//	if( !name.empty() )
+//	{ eq::Object::setName( name ); }
 }
 
 vl::cl::SceneNode::~SceneNode( void )

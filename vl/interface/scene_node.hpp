@@ -59,7 +59,7 @@ namespace graph
 
 			virtual ~SceneNode( void ) {}
 
-			virtual std::string const &getName( void ) = 0;
+			virtual std::string getName( void ) = 0;
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has

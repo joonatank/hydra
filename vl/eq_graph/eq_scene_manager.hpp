@@ -45,8 +45,10 @@ namespace cl
 
 			virtual ~SceneManager( void );
 
-			virtual std::string const &getName( void )
-			{ return eq::Object::getName(); }
+			virtual std::string getName( void )
+			{ return std::string(); }
+
+//			{ return eq::Object::getName(); }
 
 			virtual void destroyGraph( void );
 

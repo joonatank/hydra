@@ -52,6 +52,28 @@ namespace graph
 
 }
 
+namespace physics
+{
+	class iWorld;
+	class iBody;
+	class iCollisionShape;
+//	class iMotionState;
+
+	typedef boost::shared_ptr<iWorld> iWorldRefPtr;
+	typedef boost::shared_ptr<iBody> iBodyRefPtr;
+	typedef boost::shared_ptr<iBody> iCollisionShapeRefPtr;
+//	typedef boost::shared_ptr<iBody> iMotionStateRefPtr;
+}
+
+namespace audio
+{
+	class iManager;
+	class iSource;
+
+	typedef boost::shared_ptr<iManager> iManager;
+	typedef boost::shared_ptr<iSource> iSource;
+}
+
 }	// namespace vl
 
 #endif

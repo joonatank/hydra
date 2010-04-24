@@ -11,7 +11,7 @@ endif( UNIX )
 if( WIN32 )
 	add_definitions( -DVL_WIN32 )
 elseif( UNIX )
-	add_definitions( -DVL_UNIX )
+	add_definitions( -DVL_UNIX -DLinux )
 endif( WIN32 )
 
 # Set unix debug flag
@@ -61,6 +61,25 @@ elseif( UNIX )
 	set( EQ_LIBRARIES eq )
 endif( WIN32 )
 
+# Physics, Bullet for now
+# TODO should be a plugin
+set( BULLET_LIBRARIES BulletCollision BulletDynamics )
+
+if( WIN32 )
+	set( BULLET_LIB_DIR "" CACHE PATH "Bullet library path" )
+	set( BULLET_INCLUDE_DIR "" CACHE PATH "Bullet include path" )
+endif()
+	
+# Audio, cAudio for now
+# TODO should be a plugin
+set( CAUDIO_LIBRARIES cAudio )
+
+if( WIN32 )
+	set( CAUDIO_LIB_DIR "" CACHE PATH "cAudio library path" )
+	set( CAUDIO_INCLUDE_DIR "" CACHE PATH "cAudio include path" )
+endif()
+
+
 include_directories( 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIRS}
@@ -69,9 +88,12 @@ include_directories(
 	${EQ_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
+	${BULLET_INCLUDE_DIR}
+	${CAUDIO_INCLUDE_DIR}
 	)
 
-link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} )
+link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${BULLET_LIB_DIR}
+	${CAUDIO_LIB_DIR} )
 
 link_directories( ${vl_BINARY_DIR}/vl )
 

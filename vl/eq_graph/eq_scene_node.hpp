@@ -70,8 +70,11 @@ namespace cl
 			// Frees the memory, called from SceneManager
 			virtual ~SceneNode( void );
 
-			virtual std::string const &getName( void )
-			{ return eq::Object::getName(); }
+			virtual std::string getName( void )
+			{
+			//	return eq::Object::getName();
+				return std::string();
+			}
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
