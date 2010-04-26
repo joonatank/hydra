@@ -24,7 +24,7 @@ namespace vl
 {
 namespace ogre 
 {
-	class Camera : public vl::graph::Camera, public vl::ogre::MovableObject
+	class Camera : public vl::cl::Camera, public vl::ogre::MovableObject
 	{
 		public :
 			Camera( Ogre::Camera *cam )
@@ -48,6 +48,16 @@ namespace ogre
 					_ogre_camera->setCustomProjectionMatrix( true,
 							vl::math::convert(m) );
 				}
+			}
+
+			virtual void setFarClipDistance( vl::scalar const &dist )
+			{
+				_ogre_camera->setFarClipDistance( dist );
+			}
+
+			virtual void setNearClipDistance( vl::scalar const &dist )
+			{
+				_ogre_camera->setNearClipDistance( dist );
 			}
 
 		protected :

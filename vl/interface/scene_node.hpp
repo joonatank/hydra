@@ -19,6 +19,8 @@
 #include <memory>	// for std::auto_ptr
 #include <boost/shared_ptr.hpp>		// for ref counted ptrs
 
+#include <stdint.h>
+
 #include "base/typedefs.hpp"
 
 namespace vl
@@ -82,6 +84,8 @@ namespace graph
 
 			virtual vl::quaternion const &getOrientation(
 					TransformSpace relativeTo = TS_LOCAL ) = 0;
+
+			virtual void setDirection( vl::vector const &v ) = 0;
 
 			virtual void lookAt( vl::vector const &v ) = 0;
 

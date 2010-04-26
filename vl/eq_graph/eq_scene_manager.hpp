@@ -58,13 +58,21 @@ namespace cl
 					std::string const &name = std::string() );
 
 			virtual vl::graph::MovableObjectRefPtr createMovableObject(
-					std::string const &name,
 					std::string const &typeName,
+					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
+			// TODO testing and implementation
+			virtual void setAmbientLight( vl::colour const &col )
+			{
+			}
+
 			virtual vl::graph::EntityRefPtr createEntity(
 					std::string const &name, std::string const &meshName );
+
+			// TODO testing and implementation
+			virtual vl::graph::LightRefPtr createLight( std::string const & );
 
 			// There is no implementation of vl::cl::Camera, because
 			// it's render engine sepcifc and not distributed so this method

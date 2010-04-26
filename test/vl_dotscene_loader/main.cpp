@@ -137,7 +137,7 @@ int main( const int argc, char** argv )
     ::NodeFactory nodeFactory;
     if( !eq::init( argc, argv, &nodeFactory ))
     {
-        EQERROR << "Equalizer init failed" << endl;
+        EQERROR << "Equalizer init failed" << std::endl;
         return EXIT_FAILURE;
     }
     
@@ -163,7 +163,7 @@ int main( const int argc, char** argv )
         else
         {
             EQERROR << "Config initialization failed: " 
-                    << config->getErrorMessage() << endl;
+                    << config->getErrorMessage() << std::endl;
             error = true;
         }
 
@@ -172,7 +172,7 @@ int main( const int argc, char** argv )
     }
     else
     {
-        EQERROR << "Cannot get config" << endl;
+        EQERROR << "Cannot get config" << std::endl;
         error = true;
     }
 

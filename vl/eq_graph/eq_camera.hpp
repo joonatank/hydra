@@ -18,7 +18,7 @@ namespace vl
 {
 namespace cl
 {
-	class Camera : public vl::graph::Camera
+	class Camera : public eq::Object, public vl::graph::Camera
 	{
 		public :
 			Camera( void ) {}
@@ -26,6 +26,12 @@ namespace cl
 			virtual ~Camera( void ) {}
 
 			virtual void setProjectionMatrix( vmml::mat4d const &m ) = 0;
+
+			virtual void setFarClipDistance( vl::scalar const &dist )
+			{}
+
+			virtual void setNearClipDistance( vl::scalar const &dist )
+			{}
 
 		protected :
 

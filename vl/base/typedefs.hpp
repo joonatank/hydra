@@ -12,6 +12,9 @@ namespace vl
 {
 	typedef std::map<std::string, std::string> NamedValuePairList;
 
+	// TODO define angle class
+	typedef double angle;
+
 	// Graph typedefs
 namespace graph
 {
@@ -50,28 +53,6 @@ namespace graph
 	typedef boost::shared_ptr<SceneNodeFactory> SceneNodeFactoryPtr;
 	typedef boost::shared_ptr<MovableObjectFactory> MovableObjectFactoryPtr;
 
-}
-
-namespace physics
-{
-	class iWorld;
-	class iBody;
-	class iCollisionShape;
-//	class iMotionState;
-
-	typedef boost::shared_ptr<iWorld> iWorldRefPtr;
-	typedef boost::shared_ptr<iBody> iBodyRefPtr;
-	typedef boost::shared_ptr<iBody> iCollisionShapeRefPtr;
-//	typedef boost::shared_ptr<iBody> iMotionStateRefPtr;
-}
-
-namespace audio
-{
-	class iManager;
-	class iSource;
-
-	typedef boost::shared_ptr<iManager> iManager;
-	typedef boost::shared_ptr<iSource> iSource;
 }
 
 }	// namespace vl

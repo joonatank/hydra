@@ -1,5 +1,5 @@
-#ifndef DOT_SCENELOADER_H
-#define DOT_SCENELOADER_H
+#ifndef VL_DOT_SCENELOADER_H
+#define VL_DOT_SCENELOADER_H
 
 // Includes
 // OGre includes should be removed
@@ -12,7 +12,7 @@
 #include <string>
 
 // Own includes
-#include "base/rapidxml.hpp"
+#include "rapidxml.hpp"
 #include "base/typedefs.hpp"
 #include "math/math.hpp"
 
@@ -90,7 +90,7 @@ protected:
 			vl::graph::SceneNodeRefPtr parent  = vl::graph::SceneNodeRefPtr() );
 
 	void processNode(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNode parent = vl::graph::SceneNodeRefPtr() );
+			vl::graph::SceneNodeRefPtr parent = vl::graph::SceneNodeRefPtr() );
 	void processLookTarget(rapidxml::xml_node<>* XMLNode,
 			vl::graph::SceneNodeRefPtr parent);
 	void processTrackTarget(rapidxml::xml_node<>* XMLNode,
@@ -135,16 +135,16 @@ protected:
 	vl::graph::SceneNodeRefPtr _attach_node;
 
 	// Ogre Resource group Name
-	std::string m_sGroupName;
+	std::string _sGroupName;
 
-	std::string m_sPrependNode;
+	std::string _sPrependNode;
 
 	// No terrain support for now
 //	Ogre::TerrainGroup* mTerrainGroup;
 //	Ogre::Vector3 mTerrainPosition;
 
 	// Eh what the 
-	vl::vector mLightDirection;
+//	vl::vector mLightDirection;
 };
 
 #endif // DOT_SCENELOADER_H

@@ -1,18 +1,9 @@
 #include "dotscene_loader.hpp"
 
-// Ogre includes TODO remove
-#include <OGRE/OgreLogManager.h>
-#include <OGRE/OgreResourceManager.h>
-/*
-#include <Ogre.h>
-#include <Terrain/OgreTerrain.h>
-#include <Terrain/OgreTerrainGroup.h>
-#include <Terrain/OgreTerrainMaterialGeneratorA.h>
-*/
-
 #include <sstream>
 
 #include "base/string_utils.hpp"
+#include "base/exceptions.hpp"
 #include "interface/scene_node.hpp"
 #include "interface/scene_manager.hpp"
 #include "interface/entity.hpp"
@@ -23,6 +14,9 @@
  * Because we don't have our own logging or resource system in place.
  * TODO should be removed as soon as possible.
  */
+#include <OGRE/OgreLogManager.h>
+#include <OGRE/OgreResourceManager.h>
+
 
 DotSceneLoader::DotSceneLoader()
 {
@@ -42,9 +36,9 @@ DotSceneLoader::parseDotScene(
 		const std::string &sPrependNode )
 {
 	// set up shared object values
-	m_sGroupName = groupName;
+	_sGroupName = groupName;
 	_scene_mgr = sceneMgr;
-	m_sPrependNode = sPrependNode;
+	_sPrependNode = sPrependNode;
 	staticObjects.clear();
 	dynamicObjects.clear();
 
@@ -54,7 +48,7 @@ DotSceneLoader::parseDotScene(
 
 	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
 		.openResource(SceneName, groupName );
-	char* scene = strdup(stream->getAsString().c_str());
+	char* scene = strdup( stream->getAsString().c_str() );
 	XMLDoc.parse<0>(scene);
 
 	// Grab the scene node
@@ -69,9 +63,9 @@ DotSceneLoader::parseDotScene(
 	}
 
 	// figure out where to attach any nodes we create
-	_attach_node = pAttachNode;
+//	_attach_node = pAttachNode;
 	if( !_attach_node )
-	{ _attach_node = mSceneMgr->getRootSceneNode(); }
+	{ _attach_node = _scene_mgr->getRootNode(); }
 
 	// Process the scene
 	processScene(XMLRoot);
@@ -165,7 +159,7 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	if(pElement)
 	{
 		_attach_node->setPosition(parseVector3(pElement));
-		_attach_node->setInitialState();
+//		_attach_node->setInitialState();
 	}
 
 	// Process rotation (?)
@@ -173,7 +167,7 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	if(pElement)
 	{
 		_attach_node->setOrientation(parseQuaternion(pElement));
-		_attach_node->setInitialState();
+//		_attach_node->setInitialState();
 	}
 
 	// Process scale (?)
@@ -181,7 +175,7 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	if(pElement)
 	{
 		_attach_node->setScale(parseVector3(pElement));
-		_attach_node->setInitialState();
+//		_attach_node->setInitialState();
 	}
 }
 
@@ -227,13 +221,13 @@ void DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 	// Process colourAmbient (?)
 	pElement = XMLNode->first_node("colourAmbient");
 	if( pElement )
-	{ mSceneMgr->setAmbientLight(parseColour(pElement)); }
+	{ _scene_mgr->setAmbientLight( parseColour(pElement) ); }
 
 	// Process colourBackground (?)
 	//! @todo Set the background colour of all viewports (RenderWindow has to be provided then)
 	pElement = XMLNode->first_node("colourBackground");
 	if( pElement )
-		;//mSceneMgr->set(parseColour(pElement));
+		;
 
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
@@ -256,20 +250,20 @@ DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 
 	vl::vector3 lightdir(0, -0.3, 0.75);
 	lightdir.normalise();
-	vl::graph::LightRefPtr* l = mSceneMgr->createLight("tstLight");
+	vl::graph::LightRefPtr* l = scene_mgr->createLight("tstLight");
 	l->setType(vl::graph::LightRefPtr::LT_DIRECTIONAL);
 	l->setDirection(lightdir);
 	l->setDiffuseColour(vl::ColourValue(1.0, 1.0, 1.0));
 	l->setSpecularColour(vl::ColourValue(0.4, 0.4, 0.4));
-	mSceneMgr->setAmbientLight(vl::ColourValue(0.6, 0.6, 0.6));
+	scene_mgr->setAmbientLight(vl::ColourValue(0.6, 0.6, 0.6));
 
 	mTerrainGlobalOptions->setMaxPixelError(1);
 	mTerrainGlobalOptions->setCompositeMapDistance(2000);
 	mTerrainGlobalOptions->setLightMapDirection(lightdir);
-	mTerrainGlobalOptions->setCompositeMapAmbient(mSceneMgr->getAmbientLight());
+	mTerrainGlobalOptions->setCompositeMapAmbient( scene_mgr->getAmbientLight() );
 	mTerrainGlobalOptions->setCompositeMapDiffuse(l->getDiffuseColour());
 
-	mTerrainGroup = OGRE_NEW Ogre::TerrainGroup(mSceneMgr,
+	mTerrainGroup = OGRE_NEW Ogre::TerrainGroup( scene_mgr,
 			Ogre::Terrain::ALIGN_X_Z, mapSize, worldSize);
 	mTerrainGroup->setOrigin(vl::vector3::ZERO);
 
@@ -462,14 +456,22 @@ void
 DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 		vl::graph::SceneNodeRefPtr parent)
 {
+	// If no parent is provided we use Root node
+	if( !parent )
+	{ parent = _attach_node; }
+
 	// Process attributes
 	std::string name = getAttrib(XMLNode, "name");
 	std::string id = getAttrib(XMLNode, "id");
 
 	// Create the light
-	vl::graph::LightRefPtr light = mSceneMgr->createLight(name);
-	if( parent )
-	{ parent->attachObject(light); }
+	vl::graph::LightRefPtr light = _scene_mgr->createLight(name);
+
+	// Create light node
+	std::string node_name = name + "Node";
+	vl::graph::SceneNodeRefPtr light_node
+		= parent->createChild( node_name );
+	light_node->attachObject(light);
 
 	std::string sValue = getAttrib(XMLNode, "type");
 	if(sValue == "point")
@@ -489,42 +491,40 @@ DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-		light->setPosition(parseVector3(pElement));
+	{ light_node->setPosition(parseVector3(pElement)); }
 
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
 	if(pElement)
-		light->setDirection(parseVector3(pElement));
+	{ light_node->setDirection(parseVector3(pElement)); }
 
 	pElement = XMLNode->first_node("directionVector");
 	if(pElement)
-	{
-		light->setDirection(parseVector3(pElement));
-		mLightDirection = parseVector3(pElement);
-	}
+	{ light_node->setDirection(parseVector3(pElement)); }
 
 	// Process colourDiffuse (?)
 	pElement = XMLNode->first_node("colourDiffuse");
 	if(pElement)
-		light->setDiffuseColour(parseColour(pElement));
+	{ light->setDiffuseColour(parseColour(pElement)); }
 
 	// Process colourSpecular (?)
 	pElement = XMLNode->first_node("colourSpecular");
 	if(pElement)
-		light->setSpecularColour(parseColour(pElement));
+	{ light->setSpecularColour(parseColour(pElement)); }
 
 	if(sValue != "directional")
 	{
 		// Process lightRange (?)
 		pElement = XMLNode->first_node("lightRange");
 		if(pElement)
-			processLightRange(pElement, light);
+		{ processLightRange(pElement, light); }
 
 		// Process lightAttenuation (?)
 		pElement = XMLNode->first_node("lightAttenuation");
 		if(pElement)
-			processLightAttenuation(pElement, light);
+		{ processLightAttenuation(pElement, light); }
 	}
+
 	// Process userDataReference (?)
 	pElement = XMLNode->first_node("userDataReference");
 	if(pElement)
@@ -535,8 +535,9 @@ void
 DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 		vl::graph::SceneNodeRefPtr parent)
 {
+	// If no parent is provided we use Root node
 	if( !parent )
-	{ throw vl::exception( "No parent", "DotSceneLoader::processCamera" ); }
+	{ parent = _attach_node; }
 
 	// Process attributes
 	std::string name = getAttrib(XMLNode, "name");
@@ -549,9 +550,9 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	std::string node_name = name + std::string("Node");
 	// Create the camera
 	vl::graph::CameraRefPtr camera = _scene_mgr->createCamera( name );
-	vl::graph::SceneNodeRefPtr node = _scene_mgr->createSceneNode( node_name );
-	node->attachObject( camera );
-	parent->addChild( camera );
+	vl::graph::SceneNodeRefPtr cam_node
+		= parent->createChild( node_name );
+	cam_node->attachObject( camera );
 
 	// TODO: make a flag or attribute indicating whether or not the camera
 	// should be attached to any parent node.
@@ -587,12 +588,12 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-	{ camera->setPosition(parseVector3(pElement)); }
+	{ cam_node->setPosition( parseVector3(pElement) ); }
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
-	{ camera->setOrientation(parseQuaternion(pElement)); }
+	{ cam_node->setOrientation( parseQuaternion(pElement) ); }
 
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
@@ -618,7 +619,7 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	/*
 	if( !parent )
 	{
-		vl::graph::SceneNodeRefPtr* node = _attach_node->createChildSceneNode(name);
+		vl::graph::SceneNodeRefPtr* node = _attach_node->createChild(name);
 		node->setPosition(camera->getPosition());
 		node->setOrientation(camera->getOrientation());
 		node->scale(1,1,1);
@@ -630,18 +631,15 @@ void
 DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		vl::graph::SceneNodeRefPtr parent)
 {
+	// If no parent is provided we use Root node
+	if( !parent )
+	{ parent = _attach_node; }
+
 	// Construct the node's name
-	std::string name = m_sPrependNode + getAttrib(XMLNode, "name");
+	std::string name = _sPrependNode + getAttrib(XMLNode, "name");
 
 	// Create the scene node
-	vl::graph::SceneNodeRefPtr node;
-
-	// TODO this function should always be called with parent
-	// so that if no other parent is then _attachNode becomes the parent.
-	if(parent)
-	{ node = parent->createChildSceneNode(name); }
-	else
-	{ node = _attach_node->createChildSceneNode(name); }
+	vl::graph::SceneNodeRefPtr node = parent->createChild(name);
 
 	// Process other attributes
 	std::string id = getAttrib(XMLNode, "id");
@@ -655,7 +653,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	if( pElement )
 	{
 		node->setPosition(parseVector3(pElement));
-		node->setInitialState();
+//		node->setInitialState();
 	}
 
 	// Process rotation (?)
@@ -663,7 +661,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	if( pElement )
 	{
 		node->setOrientation(parseQuaternion(pElement));
-		node->setInitialState();
+//		node->setInitialState();
 	}
 
 	// Process scale (?)
@@ -671,7 +669,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{
 		node->setScale(parseVector3(pElement));
-		node->setInitialState();
+//		node->setInitialState();
 	}
 
 	// Process lookTarget (?)
@@ -682,7 +680,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	// Process trackTarget (?)
 	pElement = XMLNode->first_node("trackTarget");
 	if(pElement)
-		processTrackTarget(pElement, node);
+	{ processTrackTarget(pElement, node); }
 
 	// Process node (*)
 	pElement = XMLNode->first_node("node");
@@ -785,7 +783,7 @@ DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
 	{
 		if( !nodeName.empty() )
 		{
-			vl::graph::SceneNodeRefPtr pLookNode = mSceneMgr->getSceneNode(nodeName);
+			vl::graph::SceneNodeRefPtr pLookNode = sceneMgr->getSceneNode(nodeName);
 			position = pLookNode->_getDerivedPosition();
 		}
 
@@ -824,7 +822,7 @@ DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, vl::graph::Sce
 	// Setup the track target
 	try
 	{
-		vl::graph::SceneNodeRefPtr *pTrackNode = mSceneMgr->getSceneNode(nodeName);
+		vl::graph::SceneNodeRefPtr *pTrackNode = _scene_mgr->getSceneNode(nodeName);
 		parent->setAutoTracking(true, pTrackNode, localDirection, offset);
 	}
 	catch(Ogre::Exception & )
@@ -841,6 +839,10 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 {
 	// TODO this needs SceneNode::attachObject,
 	// Entity::setCastShadows, Entity::setMaterialName
+
+	// If no parent is provided we use Root node
+	if( !parent )
+	{ parent = _attach_node; }
 
 	// Process attributes
 	std::string name = getAttrib(XMLNode, "name");
@@ -872,7 +874,7 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	vl::graph::EntityRefPtr entity;
 	try
 	{
-		//Ogre::MeshManager::getSingleton().load(meshFile, m_sGroupName);
+		//Ogre::MeshManager::getSingleton().load(meshFile, _sGroupName);
 		entity = _scene_mgr->createEntity(name, meshFile);
 		entity->setCastShadows(castShadows);
 		parent->attachObject(entity);
@@ -906,7 +908,7 @@ DotSceneLoader::processParticleSystem(rapidxml::xml_node<>* XMLNode,
 	try
 	{
 		Ogre::ParticleSystem *pParticles
-			= mSceneMgr->createParticleSystem(name, file);
+			= scene_mgr->createParticleSystem(name, file);
 		parent->attachObject(pParticles);
 	}
 	catch(Ogre::Exception & )
@@ -986,7 +988,7 @@ DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 		colourDiffuse = parseColour(pElement);
 
 	// Setup the fog
-	mSceneMgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
+	scene_mgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
 */
 }
 
@@ -1011,7 +1013,7 @@ DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 		rotation = parseQuaternion(pElement);
 
 	// Setup the sky box
-	mSceneMgr->setSkyBox(true, material, distance, drawFirst, rotation, m_sGroupName);
+	scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation, _sGroupName);
 */
 }
 
@@ -1035,8 +1037,8 @@ DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 		rotation = parseQuaternion(pElement);
 
 	// Setup the sky dome
-	mSceneMgr->setSkyDome( true, material, curvature, tiling,
-			distance, drawFirst, rotation, 16, 16, -1, m_sGroupName );
+	scene_mgr->setSkyDome( true, material, curvature, tiling,
+			distance, drawFirst, rotation, 16, 16, -1, _sGroupName );
 */
 }
 
@@ -1059,8 +1061,8 @@ DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 	Ogre::Plane plane;
 	plane.normal = vl::vector3(planeX, planeY, planeZ);
 	plane.d = planeD;
-	mSceneMgr->setSkyPlane( true, plane, material, scale, tiling,
-			drawFirst, bow, 1, 1, m_sGroupName );
+	scene_mgr->setSkyPlane( true, plane, material, scale, tiling,
+			drawFirst, bow, 1, 1, _sGroupName );
 */
 }
 
@@ -1235,12 +1237,12 @@ DotSceneLoader::getProperty(const std::string &ndNm,
 	return "";
 }
 
-/*
 void
 DotSceneLoader::processUserDataReference( rapidxml::xml_node<>* XMLNode,
 		vl::graph::EntityRefPtr pEntity )
 {
+/*
 	std::string str = XMLNode->first_attribute("id")->value();
 	pEntity->setUserAny(Ogre::Any(str));
-}
 */
+}

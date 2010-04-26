@@ -3,6 +3,7 @@
 #include "interface/movable_object.hpp"
 #include "interface/entity.hpp"
 #include "eq_scene_node.hpp"
+#include "eq_light.hpp"
 
 #include <eq/net/session.h>
 
@@ -75,6 +76,15 @@ vl::cl::SceneManager::createEntity(
 			"Entity", name, params );
 
 	return boost::static_pointer_cast<vl::graph::Entity>( obj );
+}
+
+vl::graph::LightRefPtr
+vl::cl::SceneManager::createLight( std::string const &name )
+{
+	vl::graph::MovableObjectRefPtr obj = createMovableObject(
+			"Light", name );
+
+	return boost::static_pointer_cast<vl::graph::Light>( obj );
 }
 
 vl::graph::MovableObjectRefPtr

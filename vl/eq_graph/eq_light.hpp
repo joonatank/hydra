@@ -10,7 +10,7 @@
 #ifndef VL_CL_LIGHT_HPP
 #define VL_CL_LIGHT_HPP
 
-#include "movable_object.hpp"
+#include "interface/light.hpp"
 
 namespace vl
 {

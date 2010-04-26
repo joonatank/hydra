@@ -56,6 +56,8 @@ namespace graph
 					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() ) = 0;
+			
+			virtual void setAmbientLight( vl::colour const &col ) = 0;
 
 			// Create an entity, not attached to scene graph.
 			virtual EntityRefPtr createEntity(
@@ -63,6 +65,9 @@ namespace graph
 
 			// Create a camera
 			virtual CameraRefPtr createCamera( std::string const & ) = 0;
+
+			// Create a light
+			virtual LightRefPtr createLight( std::string const & ) = 0;
 
 			// Get scene node by name
 			virtual SceneNodeRefPtr getNode( std::string const &name ) = 0;

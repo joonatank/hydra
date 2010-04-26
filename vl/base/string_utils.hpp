@@ -15,7 +15,7 @@ namespace vl
 	inline
 	std::string string_convert( T const &t )
 	{
-		std::stringstream ss(std::stringstream in | std::stringstream::out );
+		std::stringstream ss(std::stringstream::in | std::stringstream::out );
 		ss << t;
 		return ss.str();
 	}
@@ -24,7 +24,7 @@ namespace vl
 	inline
 	T string_convert( std::string const &str )
 	{
-		std::stringstream ss(std::stringstream in | std::stringstream::out );
+		std::stringstream ss(std::stringstream::in | std::stringstream::out );
 		ss << str;
 		T tmp;
 		ss >> tmp;
