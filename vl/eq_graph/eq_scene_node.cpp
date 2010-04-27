@@ -13,14 +13,15 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 	  _scale(1.0, 1.0, 1.0),
 	  _attached(),
 	  _parent(),
-	  _childs()
+	  _childs(),
+	  _name( name )
 {
 	if( !creator )
 	{ throw vl::null_pointer("SceneNode::SceneNode"); }
 
 	// TODO add random name generator
-//	if( !name.empty() )
-//	{ eq::Object::setName( name ); }
+	if( _name.empty() )
+		;
 }
 
 vl::cl::SceneNode::~SceneNode( void )
@@ -230,13 +231,13 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 }
 
 vl::graph::SceneNodeRefPtr
-vl::cl::SceneNode::getChild( uint16_t index )
+vl::cl::SceneNode::getChild( uint16_t index ) const
 {
 	return _childs.at(index);
 }
 
 vl::graph::SceneNodeRefPtr
-vl::cl::SceneNode::getChild( std::string const &name )
+vl::cl::SceneNode::getChild( std::string const &name ) const
 {
 	vl::graph::SceneNodeRefPtr child = _findChild( name );
 	return child;
@@ -436,9 +437,9 @@ vl::cl::SceneNode::_removeChild( vl::graph::SceneNode *child )
 */
 
 vl::graph::SceneNodeRefPtr
-vl::cl::SceneNode::_findChild( std::string const &name )
+vl::cl::SceneNode::_findChild( std::string const &name ) const
 {
-	vl::graph::ChildContainer::iterator iter = _childs.begin();
+	vl::graph::ChildContainer::const_iterator iter = _childs.begin();
 	for( ; iter != _childs.end(); ++iter )
 	{
 		if( (*iter)->getName() == name )

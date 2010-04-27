@@ -59,6 +59,8 @@ namespace graph
 			
 			virtual void setAmbientLight( vl::colour const &col ) = 0;
 
+			virtual vl::colour const &getAmbientLight( void ) = 0;
+
 			// Create an entity, not attached to scene graph.
 			virtual EntityRefPtr createEntity(
 					std::string const &name, std::string const &meshName ) = 0;
@@ -77,6 +79,12 @@ namespace graph
 
 			// Get movable object by id
 			virtual MovableObjectRefPtr getObject( uint32_t id ) = 0;
+
+			// Get camera
+			virtual CameraRefPtr getCamera( std::string const &name ) = 0;
+
+			// Get light
+			virtual LightRefPtr getLight( std::string const &name ) = 0;
 
 			virtual void pushChildAddedStack( uint32_t id,
 					ChildAddedFunctor const &handle ) = 0;

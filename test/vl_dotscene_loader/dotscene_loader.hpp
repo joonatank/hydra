@@ -16,18 +16,6 @@
 #include "base/typedefs.hpp"
 #include "math/math.hpp"
 
-// Forward declarations
-/*
-namespace Ogre
-{
-	class SceneManager;
-	class SceneNode;
-	class TerrainGroup;
-	class TerrainGlobalOptions;
-}
-*/
-
-
 class nodeProperty
 {
 public:
@@ -51,8 +39,6 @@ public:
 class DotSceneLoader
 {
 public:
-//	Ogre::TerrainGlobalOptions *mTerrainGlobalOptions;
-	
 	DotSceneLoader();
 	virtual ~DotSceneLoader();
 
@@ -63,8 +49,6 @@ public:
 			const std::string &sPrependNode = "" );
 
 	std::string getProperty(const std::string &ndNm, const std::string &prop);
-
-//	Ogre::TerrainGroup* getTerrainGroup() { return mTerrainGroup; }
 
 	std::vector<nodeProperty> nodeProperties;
 	std::vector<std::string> staticObjects;

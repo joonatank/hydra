@@ -70,11 +70,8 @@ namespace cl
 			// Frees the memory, called from SceneManager
 			virtual ~SceneNode( void );
 
-			virtual std::string getName( void )
-			{
-			//	return eq::Object::getName();
-				return std::string();
-			}
+			virtual std::string const &getName( void ) const
+			{ return _name; }
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
@@ -97,7 +94,7 @@ namespace cl
 					TransformSpace relativeTo = TS_LOCAL );
 
 			virtual vl::quaternion const &getOrientation(
-					TransformSpace relativeTo = TS_LOCAL )
+					TransformSpace relativeTo = TS_LOCAL ) const
 			{ return _rotation; }
 
 			// TODO  implement and test
@@ -112,7 +109,7 @@ namespace cl
 
 			virtual void setScale( vl::vector const &s );
 
-			virtual vl::vector const &getScale( void )
+			virtual vl::vector const &getScale( void ) const
 			{ return _scale; }
 
 			virtual void attachObject( vl::graph::MovableObjectRefPtr object );
@@ -138,26 +135,26 @@ namespace cl
 
 			virtual vl::graph::SceneNodeRefPtr removeChild( std::string const &name );
 
-			virtual vl::graph::SceneNodeRefPtr getChild( uint16_t index );
+			virtual vl::graph::SceneNodeRefPtr getChild( uint16_t index ) const;
 
-			virtual vl::graph::SceneNodeRefPtr getChild( std::string const &name );
+			virtual vl::graph::SceneNodeRefPtr getChild( std::string const &name ) const;
 
 			virtual vl::graph::ChildContainer const &getChilds( void ) const
 			{ return _childs; }
 
-			virtual uint16_t numChildren( void )
+			virtual uint16_t numChildren( void ) const
 			{ return _childs.size(); }
 
-			virtual vl::graph::SceneNodeRefPtr getParent( void )
+			virtual vl::graph::SceneNodeRefPtr getParent( void ) const
 			{ return _parent.lock(); }
 
 			virtual vl::graph::ObjectContainer const &getAttached( void ) const
 			{ return _attached; }
 
-			virtual uint16_t numAttached( void )
+			virtual uint16_t numAttached( void ) const
 			{ return _attached.size(); }
 
-			virtual vl::graph::SceneManagerRefPtr getManager( void )
+			virtual vl::graph::SceneManagerRefPtr getManager( void ) const
 			{ return _manager.lock(); }
 
 			// Sync/Commit methods, needed for tree based syncing in eq
@@ -210,7 +207,7 @@ namespace cl
 			void _removeChild( vl::graph::SceneNode *child );
 			*/
 
-			vl::graph::SceneNodeRefPtr _findChild( std::string const &name );
+			vl::graph::SceneNodeRefPtr _findChild( std::string const &name ) const;
 
 			vl::graph::ChildContainer::iterator _findChildIter( std::string const &name );
 
@@ -241,6 +238,8 @@ namespace cl
 			//DistributedContainer<vl::cl::SceneNode *> _childs;
 			vl::graph::ChildContainer _childs;
 
+			std::string _name;
+
 	};	// class SceneNode
 
 	class DefaultSceneNodeFactory : public vl::graph::SceneNodeFactory
@@ -258,8 +257,43 @@ namespace cl
 
 	};	// class DefaultSceneNodeFactory
 
+// Finding
+template< typename T >
+boost::shared_ptr<T> find( vl::graph::SceneNodeRefPtr node, std::string const &name, std::string const &typeName );
+
 }	// namespace eq
 
 }	// namespace vl
+
+
+// Finding
+// Simple tree find algorithm
+template< typename T >
+boost::shared_ptr<T>
+vl::cl::find( vl::graph::SceneNodeRefPtr node, std::string const &name, std::string const &typeName )
+{
+	/*
+	// go through the attached objects
+	if( typeName != "SceneNode" )
+	{
+		for( int i = 0; _attached.size(); i++ )
+		{
+			vl::graph::MovableObjectRefPtr obj = _attached.at(i);
+			if( obj->typeName() == typeName && obj->getName() == name )
+			{ return obj; }
+		}
+	}
+	else
+	{
+		if( getName() == name )
+		{ return shared_from_this(); }
+	}
+	
+	for( int i = 0; i < _childs.size(); i++ )
+	{
+		return 
+	}
+	*/
+}
 
 #endif

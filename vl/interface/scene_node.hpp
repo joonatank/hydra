@@ -61,7 +61,7 @@ namespace graph
 
 			virtual ~SceneNode( void ) {}
 
-			virtual std::string getName( void ) = 0;
+			virtual std::string const &getName( void ) const = 0;
 
 			// These methods just add dirtyBits to stored data,
 			// they need to be overriden by the implementation which has
@@ -83,7 +83,7 @@ namespace graph
 					TransformSpace relativeTo = TS_LOCAL ) = 0;
 
 			virtual vl::quaternion const &getOrientation(
-					TransformSpace relativeTo = TS_LOCAL ) = 0;
+					TransformSpace relativeTo = TS_LOCAL ) const = 0;
 
 			virtual void setDirection( vl::vector const &v ) = 0;
 
@@ -95,16 +95,18 @@ namespace graph
 
 			virtual void setScale( vl::vector const &s ) = 0;
 
-			virtual vl::vector const &getScale( void ) = 0;
+			virtual vl::vector const &getScale( void ) const = 0;
 
+			// Attached object manipulation
 			virtual void attachObject( MovableObjectRefPtr object ) = 0;
 
 			virtual void detachObject( MovableObjectRefPtr object ) = 0;
 
 			virtual ObjectContainer const &getAttached( void ) const = 0;
 
-			virtual uint16_t numAttached( void ) = 0;
+			virtual uint16_t numAttached( void ) const = 0;
 
+			// Child manipulation
 			virtual SceneNodeRefPtr createChild(
 					std::string const &name = std::string() ) = 0;
 
@@ -118,17 +120,17 @@ namespace graph
 
 			virtual SceneNodeRefPtr removeChild( std::string const &name ) = 0;
 
-			virtual SceneNodeRefPtr getChild( uint16_t index ) = 0;
+			virtual SceneNodeRefPtr getChild( uint16_t index ) const = 0;
 
-			virtual SceneNodeRefPtr getChild( std::string const &name ) = 0;
+			virtual SceneNodeRefPtr getChild( std::string const &name ) const = 0;
 
 			virtual ChildContainer const &getChilds( void ) const = 0;
 
-			virtual uint16_t numChildren( void ) = 0;
+			virtual uint16_t numChildren( void ) const = 0;
 
-			virtual SceneNodeRefPtr getParent( void ) = 0;
+			virtual SceneNodeRefPtr getParent( void ) const = 0;
 
-			virtual SceneManagerRefPtr getManager( void ) = 0;
+			virtual SceneManagerRefPtr getManager( void ) const = 0;
 
 	};	// class SceneNode
 

@@ -25,9 +25,6 @@ namespace ogre
 			Ogre::SceneNode *getNative( void )
 			{ return _ogre_node; }
 
-			virtual std::string getName( void )
-			{ return _ogre_node->getName(); }
-
 			virtual ~SceneNode( void );
 
 			virtual void translate( vl::vector const &v,

@@ -30,6 +30,37 @@ public :
 				root->createWindow( "win", 800, 600, params ) );
 
 		man = root->createSceneManager("SceneManager");
+
+		/*
+		 * TODO implement
+		std::string scene_path = root->getDataDir() + "testScene.xml";
+
+		DotSceneLoader loader;
+		loader.parseDotScene( scene_path, "General", man );
+
+		// Loop through all cameras and grab their name and set their debug representation
+//		Ogre::SceneManager::CameraIterator cameras = mSceneMgr->getCameraIterator();
+//		while (cameras.hasMoreElements())
+//		{
+//			Ogre::Camera* camera = cameras.getNext();
+//			mCamNames.push_back(camera->getName());
+//		}
+		// Grab the first available camera, for now
+		Ogre::String cameraName = mCamNames[0];
+		try
+		{
+			mActiveCamera = mSceneMgr->getCamera(cameraName);
+			mWindow->getViewport(0)->setCamera(mActiveCamera);
+			mCameraMan->setCamera(mActiveCamera);
+			mSceneMgr->getEntity(mActiveCamera->getName() + Ogre::String("_debug"))->setVisible(false);
+		}
+		catch (Ogre::Exception& e)
+		{
+			Ogre::LogManager::getSingleton().logMessage("SampleApp::createScene : setting the active camera to (\"" +
+            cameraName + ") failed: " + e.getFullDescription());
+		}
+		*/
+		/*
 		cam = man->createCamera("Cam");
 
 		feet = man->getRootNode()->createChild("feet");
@@ -42,6 +73,7 @@ public :
 		robot = man->getRootNode()->createChild("robot");
 		robot->setPosition( vl::vector(0, 0, 300) );
 		robot->attachObject( ent );
+		*/
 		
 		return true;
 	}

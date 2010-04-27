@@ -54,6 +54,15 @@ namespace cl
 
 			virtual vl::graph::SceneNodeRefPtr getRootNode( void );
 
+			// TODO testing and implementation
+			virtual void setAmbientLight( vl::colour const &col )
+			{
+			}
+
+			// TODO testing and implementation
+			virtual vl::colour const &getAmbientLight( void )
+			{}
+
 			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );
 
@@ -62,11 +71,6 @@ namespace cl
 					std::string const &name,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
-
-			// TODO testing and implementation
-			virtual void setAmbientLight( vl::colour const &col )
-			{
-			}
 
 			virtual vl::graph::EntityRefPtr createEntity(
 					std::string const &name, std::string const &meshName );
@@ -85,6 +89,20 @@ namespace cl
 			virtual vl::graph::SceneNodeRefPtr getNode( uint32_t id );
 
 			virtual vl::graph::MovableObjectRefPtr getObject( uint32_t id );
+
+			// Get camera
+			// TODO testing and implementation
+			virtual vl::graph::CameraRefPtr getCamera( std::string const &name )
+			{
+				return vl::graph::CameraRefPtr();
+			}
+
+			// Get light
+			// TODO testing and implementation
+			virtual vl::graph::LightRefPtr getLight( std::string const &name )
+			{
+				return vl::graph::LightRefPtr();
+			}
 
 			virtual void pushChildAddedStack( uint32_t id,
 					vl::graph::ChildAddedFunctor const &handle );
