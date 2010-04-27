@@ -72,8 +72,8 @@ namespace cl
 			};
 
 		protected :
-			std::string _name;
 
+			std::string _name;
 			vl::NamedValuePairList _params;
 
 	};	// class Entity

@@ -45,10 +45,8 @@ namespace cl
 
 			virtual ~SceneManager( void );
 
-			virtual std::string getName( void )
-			{ return std::string(); }
-
-//			{ return eq::Object::getName(); }
+			virtual std::string const &getName( void ) const
+			{ return _name; }
 
 			virtual void destroyGraph( void );
 
@@ -103,11 +101,6 @@ namespace cl
 			{
 				return vl::graph::LightRefPtr();
 			}
-
-			virtual void pushChildAddedStack( uint32_t id,
-					vl::graph::ChildAddedFunctor const &handle );
-
-			virtual void pushChildRemovedStack( vl::graph::SceneNodeRefPtr child );
 
 			virtual void setSceneNodeFactory(
 					vl::graph::SceneNodeFactoryPtr factory );
@@ -175,6 +168,8 @@ namespace cl
 			vl::graph::SceneNodeFactoryPtr _scene_node_factory;
 			std::map<std::string, vl::graph::MovableObjectFactoryPtr>
 				_movable_factories;
+				
+			std::string _name;
 
 	};	// class SceneManager
 

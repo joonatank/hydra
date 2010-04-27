@@ -21,11 +21,7 @@ namespace cl
 					vl::NamedValuePairList const &params )
 				: eq::Object(), _params(params)
 			{
-				//eq::Object::setName( name );
 			}
-
-			//virtual uint32_t getID( void ) const 
-			//{ return eq::Object::getID(); }
 
 			// Equalizer overrides
 			

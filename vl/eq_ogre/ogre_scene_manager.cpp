@@ -10,9 +10,10 @@
 
 // SceneManager
 vl::ogre::SceneManager::SceneManager( std::string const &name )
-	: vl::cl::SceneManager(name), _ogre_sm(0)
+	: vl::cl::SceneManager(name), _ogre_sm( new Ogre::DefaultSceneManager( name ) )
 {
-	_ogre_sm = new Ogre::DefaultSceneManager( name );
+	if( !_ogre_sm )
+	{ throw vl::null_pointer("vl::ogre::SceneManager::SceneManager"); }
 }
 
 vl::ogre::SceneManager::~SceneManager( void )

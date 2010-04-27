@@ -9,12 +9,10 @@
 
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: _root()
+	: _root(), _name(name)
 {
-	if( name.empty() )
+	if( _name.empty() )
 	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
-
-//	eq::Object::setName( name );
 }
 
 vl::cl::SceneManager::~SceneManager( void )
@@ -120,21 +118,6 @@ vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::getObject( uint32_t id )
 {
 	return vl::graph::MovableObjectRefPtr();
-}
-
-// TODO implement
-void
-vl::cl::SceneManager::pushChildAddedStack( uint32_t id,
-		vl::graph::ChildAddedFunctor const &handle )
-{
-
-}
-
-// TODO implement
-void
-vl::cl::SceneManager::pushChildRemovedStack( vl::graph::SceneNodeRefPtr child )
-{
-
 }
 
 void
