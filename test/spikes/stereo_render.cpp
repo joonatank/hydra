@@ -107,6 +107,7 @@ public :
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
+		std::cout << "frameStart " << frameNumber << std::endl;
 		eq::Channel::frameStart( frameID, frameNumber );
 	}
 
@@ -237,6 +238,6 @@ BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
 	BOOST_REQUIRE( config );
 
-	for( size_t i = 0; i < 1000; i++ )
+	for( size_t i = 0; i < 10000; i++ )
 	{ mainloop(); }
 }

@@ -52,7 +52,7 @@ elseif( UNIX )
 endif( WIN32 )
 
 
-find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread REQUIRED)
+find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread filesystem REQUIRED)
 # TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
 if( WIN32 )
