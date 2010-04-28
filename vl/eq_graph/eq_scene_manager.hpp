@@ -46,9 +46,7 @@ namespace cl
 			virtual ~SceneManager( void );
 
 			virtual std::string getName( void )
-			{ return std::string(); }
-
-//			{ return eq::Object::getName(); }
+			{ return _name; }
 
 			virtual void destroyGraph( void );
 
@@ -61,7 +59,9 @@ namespace cl
 
 			// TODO testing and implementation
 			virtual vl::colour const &getAmbientLight( void )
-			{}
+			{
+				return vl::colour();
+			}
 
 			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );
@@ -158,17 +158,7 @@ namespace cl
 			};
 
 		protected :
-			// Factory methods, need to be overloaded by child classes
-			/*
-			virtual vl::graph::SceneNodeRefPtr
-				_createSceneNodeImpl( std::string const &name );
-
-			virtual vl::graph::MovableObjectRefPtr _createMovableObjectImpl(
-					std::string const &typeName,
-					std::string const &name,
-					vl::NamedValuePairList const &params
-						= vl::NamedValuePairList() );
-			*/
+			std::string _name;
 
 			vl::graph::SceneNodeRefPtr _root;
 

@@ -9,12 +9,10 @@
 
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: _root()
+	: _name( name ), _root()
 {
-	if( name.empty() )
+	if( _name.empty() )
 	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
-
-//	eq::Object::setName( name );
 }
 
 vl::cl::SceneManager::~SceneManager( void )
@@ -40,11 +38,6 @@ vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::createNode( std::string const &name )
 {
 	const char *where = "vl::cl::SceneManager::createNode";
-
-	// TODO replace with the factory
-	//	= _createSceneNodeImpl( name );
-//	if( !_scene_node_factory )
-//	{ _scene_node_factory.reset(new DefaultSceneNodeFactory); }
 
 	if( !_scene_node_factory )
 	{ throw vl::exception( "No SceneNodeFactory", where ); }

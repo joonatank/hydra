@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE( constructor_test )
 {
 	vl::graph::SceneManagerRefPtr sm;
 	BOOST_CHECK_NO_THROW( sm.reset( new vl::cl::SceneManager("Name") ) );
+	BOOST_CHECK_EQUAL( sm->getName(), "Name" );
 
 	BOOST_CHECK_THROW( vl::cl::SceneManager(""), vl::empty_param );
 }
