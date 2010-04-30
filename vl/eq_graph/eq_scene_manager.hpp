@@ -45,7 +45,7 @@ namespace cl
 
 			virtual ~SceneManager( void );
 
-			virtual std::string getName( void )
+			virtual std::string const &getName( void ) const
 			{ return _name; }
 
 			virtual void destroyGraph( void );
@@ -58,7 +58,7 @@ namespace cl
 			}
 
 			// TODO testing and implementation
-			virtual vl::colour const &getAmbientLight( void )
+			virtual vl::colour const &getAmbientLight( void ) const
 			{
 				return vl::colour();
 			}
@@ -103,11 +103,6 @@ namespace cl
 			{
 				return vl::graph::LightRefPtr();
 			}
-
-			virtual void pushChildAddedStack( uint32_t id,
-					vl::graph::ChildAddedFunctor const &handle );
-
-			virtual void pushChildRemovedStack( vl::graph::SceneNodeRefPtr child );
 
 			virtual void setSceneNodeFactory(
 					vl::graph::SceneNodeFactoryPtr factory );

@@ -20,9 +20,6 @@ namespace ogre
 
 			virtual ~SceneManager( void );
 
-			virtual std::string getName( void )
-			{ return _ogre_sm->getName(); }
-
 			Ogre::SceneManager *getNative( void )
 			{ return _ogre_sm; }
 

@@ -62,7 +62,8 @@ vl::ogre::Root::init( void )
 void
 vl::ogre::Root::setupResources(void)
 {
-	std::string resource_file( _base_dir + std::string("/data/") );
+	std::string resource_path( _base_dir + std::string("/data/") );
+	std::string resource_file( resource_path );
 #if( OGRE_DEBUG_MODE == 1 )
 	resource_file += "resources_d.cfg";
 #else
@@ -97,7 +98,7 @@ vl::ogre::Root::setupResources(void)
 				std::string(macBundlePath() + "/" + archName), typeName, secName);
 #else
 			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-					archName, typeName, secName);
+					resource_path + archName, typeName, secName);
 #endif
 		}
 	}

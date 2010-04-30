@@ -38,6 +38,7 @@ struct OgreFixture
 		ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity("robot", "robot.mesh") );
 		BOOST_REQUIRE( ent );
+		
 		BOOST_CHECK_NO_THROW( ent->load(man) );
 		robot = boost::dynamic_pointer_cast<vl::ogre::SceneNode>
 			( man->getRootNode()->createChild( "RobotNode" ) );

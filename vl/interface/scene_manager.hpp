@@ -38,7 +38,7 @@ namespace graph
 
 			virtual ~SceneManager( void ) {}
 
-			virtual std::string getName( void ) = 0;
+			virtual std::string const &getName( void ) const = 0;
 
 			// Get the root of the scene graph, created implicitly
 			virtual SceneNodeRefPtr getRootNode( void ) = 0;
@@ -59,7 +59,7 @@ namespace graph
 			
 			virtual void setAmbientLight( vl::colour const &col ) = 0;
 
-			virtual vl::colour const &getAmbientLight( void ) = 0;
+			virtual vl::colour const &getAmbientLight( void ) const = 0;
 
 			// Create an entity, not attached to scene graph.
 			virtual EntityRefPtr createEntity(
@@ -86,10 +86,10 @@ namespace graph
 			// Get light
 			virtual LightRefPtr getLight( std::string const &name ) = 0;
 
-			virtual void pushChildAddedStack( uint32_t id,
-					ChildAddedFunctor const &handle ) = 0;
+//			virtual void pushChildToAddedStack( uint32_t id,
+//					ChildAddedFunctor const &handle ) = 0;
 
-			virtual void pushChildRemovedStack( SceneNodeRefPtr child ) = 0;
+//			virtual void pushChildToRemovedStack( SceneNodeRefPtr child ) = 0;
 
 			// Set the manager used to create SceneNodes
 			// This call is only valid when there is no scene graph

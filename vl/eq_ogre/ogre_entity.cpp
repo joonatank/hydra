@@ -20,6 +20,10 @@ vl::ogre::Entity::load( vl::graph::SceneManagerRefPtr sm )
 		std::cout << "first = " <<  iter->first << " : second = "
 			<< iter->second << std::endl;
 	}
+	
+	if( !ogre_sm->getNative() )
+	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+	
 	_ogre_entity = (Ogre::Entity *)( ogre_sm->getNative()->createMovableObject(
 				getName(), "Entity", &parm) );
 

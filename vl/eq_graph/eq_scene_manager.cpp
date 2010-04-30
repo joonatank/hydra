@@ -115,21 +115,6 @@ vl::cl::SceneManager::getObject( uint32_t id )
 	return vl::graph::MovableObjectRefPtr();
 }
 
-// TODO implement
-void
-vl::cl::SceneManager::pushChildAddedStack( uint32_t id,
-		vl::graph::ChildAddedFunctor const &handle )
-{
-
-}
-
-// TODO implement
-void
-vl::cl::SceneManager::pushChildRemovedStack( vl::graph::SceneNodeRefPtr child )
-{
-
-}
-
 void
 vl::cl::SceneManager::setSceneNodeFactory(
 		vl::graph::SceneNodeFactoryPtr factory )
