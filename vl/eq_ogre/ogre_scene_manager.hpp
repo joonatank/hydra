@@ -25,6 +25,16 @@ namespace ogre
 
 			virtual vl::graph::CameraRefPtr createCamera( std::string const &name );
 
+			// Get camera
+			// TODO testing and implementation
+			virtual vl::graph::CameraRefPtr getCamera( std::string const &name )
+			{
+				if( !_cameras.empty() )
+				{ return _cameras.at(0).lock(); }
+				else
+				{ return vl::graph::CameraRefPtr(); }
+			}
+
 		protected :
 			// Override creation methods
 			// TODO provide factory
@@ -39,6 +49,7 @@ namespace ogre
 						= vl::NamedValuePairList() );
 			*/
 
+			std::vector<vl::graph::CameraWeakPtr> _cameras;
 			Ogre::SceneManager *_ogre_sm;
 
 	};	// class SceneManager

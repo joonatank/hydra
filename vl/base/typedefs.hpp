@@ -38,8 +38,11 @@ namespace graph
 
 	typedef boost::shared_ptr<MovableObject> MovableObjectRefPtr;
 	typedef boost::shared_ptr<Entity> EntityRefPtr;
+	typedef boost::weak_ptr<Entity> EntityWeakPtr;
 	typedef boost::shared_ptr<Camera> CameraRefPtr;
+	typedef boost::weak_ptr<Camera> CameraWeakPtr;
 	typedef boost::shared_ptr<Light> LightRefPtr;
+	typedef boost::weak_ptr<Light> LightWeakPtr;
 
 	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
 	typedef boost::weak_ptr<SceneManager> SceneManagerWeakPtr;

@@ -3,9 +3,9 @@
 
 // Includes
 // OGre includes should be removed
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
-#include <OgreResourceGroupManager.h>
+//#include <OgreVector3.h>
+//#include <OgreQuaternion.h>
+//#include <OgreResourceGroupManager.h>
 
 // Standard library includes
 #include <vector>

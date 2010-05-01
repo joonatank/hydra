@@ -3,6 +3,8 @@
 
 #include "eq_ogre/ogre_root.hpp"
 
+#include "dotscene_loader.hpp"
+
 class RenderWindow : public eq::Window
 {
 public :
@@ -31,8 +33,8 @@ public :
 
 		man = root->createSceneManager("SceneManager");
 
-		/*
-		 * TODO implement
+		
+		// TODO implement
 		std::string scene_path = root->getDataDir() + "testScene.xml";
 
 		DotSceneLoader loader;
@@ -46,6 +48,12 @@ public :
 //			mCamNames.push_back(camera->getName());
 //		}
 		// Grab the first available camera, for now
+		vl::graph::CameraRefPtr cam = man->getCamera("");
+		if( !cam )
+		{ cam = man->createCamera("Cam"); }
+		win->addViewport( cam );
+
+		/*
 		Ogre::String cameraName = mCamNames[0];
 		try
 		{
@@ -60,6 +68,7 @@ public :
             cameraName + ") failed: " + e.getFullDescription());
 		}
 		*/
+
 		/*
 		cam = man->createCamera("Cam");
 

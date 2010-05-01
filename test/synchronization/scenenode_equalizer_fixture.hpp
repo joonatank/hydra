@@ -4,10 +4,9 @@
 
 #include "eq_graph/eq_scene_node.hpp"
 
-#include "../eq_graph/mock_scene_manager.hpp"
+#include "../eq_graph/mocks.hpp"
 
 #include "sync_fixture.hpp"
-//#include "equalizer_fixture.hpp"
 
 // Test variables we transmit over the synchronization
 vl::vector const TRANS_VEC[3] =
@@ -42,7 +41,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 {
 	SceneNodeSyncFixture( eq::Config *conf )
 		: SyncFixture( conf, 6),
-		  man( new mock_scene_manager ),
+		  man( new mock::SceneManager ),
 		  node( new vl::cl::SceneNode(man) )
 	{}
 
@@ -221,7 +220,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 		}
 	}
 
-	boost::shared_ptr<mock_scene_manager> man;
+	mock::SceneManagerPtr man;
 	boost::shared_ptr<vl::cl::SceneNode> node;
 };
 

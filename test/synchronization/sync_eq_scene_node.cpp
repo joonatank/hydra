@@ -7,8 +7,6 @@
 
 #include "eq_graph/eq_scene_node.hpp"
 
-#include "../eq_graph/mock_scene_manager.hpp"
-
 #include "scenenode_equalizer_fixture.hpp"
 #include "equalizer_fixture.hpp"
 
