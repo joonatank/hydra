@@ -38,8 +38,8 @@ struct ChildNodeFixture : public SceneNodeFixture
 	ChildNodeFixture( void )
 		: child1( new vl::cl::SceneNode( man, "Child1" ) ),
 		  child2( new vl::cl::SceneNode( man, "Child2" ) ),
-		  obj1( new vl::MovableObject ),
-		  obj2( new vl::MovableObject )
+		  obj1( new mock::MovableObject ),
+		  obj2( new mock::MovableObject )
 	{}
 
 	~ChildNodeFixture( void ) { }

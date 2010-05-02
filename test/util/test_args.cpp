@@ -7,8 +7,7 @@
 
 #include "eq_graph/eq_root.hpp"
 #include "base/exceptions.hpp"
-
-#include "args.hpp"
+#include "base/args.hpp"
 
 BOOST_AUTO_TEST_CASE( args_test )
 {

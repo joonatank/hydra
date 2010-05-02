@@ -45,10 +45,9 @@ BOOST_FIXTURE_TEST_SUITE( ObjectTests, SceneManFixture )
 
 BOOST_AUTO_TEST_CASE( movable_object_test )
 {
+	// Add Entity factory
 	mock::ObjectFactoryPtr obj_fac( new mock::ObjectFactory );
-
 	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Entity" );
-
 	man->addMovableObjectFactory( obj_fac );
 
 	vl::NamedValuePairList params;
@@ -57,10 +56,24 @@ BOOST_AUTO_TEST_CASE( movable_object_test )
 		.returns( vl::graph::MovableObjectRefPtr( new mock::MovableObject ) );
 
 	// Test Entity creation
-	vl::graph::MovableObjectRefPtr ent = man->createEntity( "ent", "ent.mesh" );
+	vl::graph::EntityRefPtr ent = man->createEntity( "ent", "ent.mesh" );
 	BOOST_CHECK( ent );
 	
 	// Test object finding
+}
+
+BOOST_AUTO_TEST_CASE( camera_test )
+{
+	// Add Camera factory
+	mock::ObjectFactoryPtr obj_fac( new mock::ObjectFactory );
+	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Camera" );
+	man->addMovableObjectFactory( obj_fac );
+
+	MOCK_EXPECT( obj_fac, create ).once().with( "cam", vl::NamedValuePairList() )
+		.returns( vl::graph::MovableObjectRefPtr( new mock::MovableObject ) );
+
+	vl::graph::CameraRefPtr cam = man->createCamera( "cam" );
+	BOOST_CHECK( cam );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -174,11 +187,6 @@ BOOST_AUTO_TEST_CASE( replace_SceneNode_factory )
 }
 
 BOOST_AUTO_TEST_CASE( find_node )
-{
-
-}
-
-BOOST_AUTO_TEST_CASE( get_camera )
 {
 
 }

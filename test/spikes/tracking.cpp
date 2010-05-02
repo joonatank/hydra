@@ -38,10 +38,10 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
 #include "math/conversion.hpp"
+#include "base/args.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
-#include "args.hpp"
 
 /*****************************************************************************
  *

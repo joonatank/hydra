@@ -1,6 +1,10 @@
 #include "eq_entity.hpp"
 
 void
+vl::cl::Entity::setManager( vl::graph::SceneManagerRefPtr man )
+{ _manager = man; }
+
+void
 vl::cl::Entity::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )
 {

@@ -14,6 +14,10 @@
 
 #include "interface/camera.hpp"
 
+#include <string>
+
+#include <eq/client/object.h>
+
 namespace vl
 {
 namespace cl
@@ -21,11 +25,19 @@ namespace cl
 	class Camera : public eq::Object, public vl::graph::Camera
 	{
 		public :
-			Camera( void ) {}
+			Camera( std::string name, vl::NamedValuePairList const &params )
+				: _name( name )
+			{}
 
 			virtual ~Camera( void ) {}
 
-			virtual void setProjectionMatrix( vmml::mat4d const &m ) = 0;
+			virtual void setManager( vl::graph::SceneManagerRefPtr man )
+			{
+				_manager = man;
+			}
+
+			virtual void setProjectionMatrix( vmml::mat4d const &m )
+			{}
 
 			virtual void setFarClipDistance( vl::scalar const &dist )
 			{}
@@ -34,8 +46,25 @@ namespace cl
 			{}
 
 		protected :
+			vl::graph::SceneManagerWeakPtr _manager;
+			std::string _name;
 
 	};	// class Camera
+
+	struct CameraFactory : public vl::graph::MovableObjectFactory
+	{
+		CameraFactory( void ) {}
+
+		virtual ~CameraFactory( void ) {}
+
+		virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
+				vl::NamedValuePairList const &params );
+			
+		virtual std::string const &typeName( void )
+		{ return TYPENAME; }
+
+		static const std::string TYPENAME;
+	};
 
 }	// namespace graph
 

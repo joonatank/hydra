@@ -24,6 +24,8 @@ struct OgreFixture
 		
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
 		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
 					new vl::ogre::SceneNodeFactory ) );
 

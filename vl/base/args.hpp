@@ -9,8 +9,8 @@
  *
  *	Also useful for testing application command line parsers.
  */
-#ifndef VL_TEST_ARGS_HPP
-#define VL_TEST_ARGS_HPP
+#ifndef VL_FAKE_ARGS_HPP
+#define VL_FAKE_ARGS_HPP
 
 #include <ostream>
 

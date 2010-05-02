@@ -23,15 +23,6 @@ vl::ogre::SceneManager::~SceneManager( void )
 	// TODO delete all SceneNodes also
 }
 
-vl::graph::CameraRefPtr
-vl::ogre::SceneManager::createCamera( std::string const &name )
-{
-	Ogre::Camera *ogre_cam = _ogre_sm->createCamera(name);
-	vl::graph::CameraRefPtr cam( new Camera( ogre_cam ) );
-	_cameras.push_back( cam );
-	return cam;
-}
-
 // ---- protected -----
 /*
 vl::cl::SceneNode *

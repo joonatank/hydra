@@ -9,15 +9,14 @@ ENDIF(NOT OIS_FOUND)
 #message( "OIS include = ${OIS_INCLUDE_DIRS} " )
 #message( "OIS libs = ${OIS_LIBRARIES} " )
 
-SET(SRCS
+SET( SRCS
 	BaseApplication.cpp
 	SampleApp.cpp
 	DotSceneLoader.cpp
 	BaseApplication.h
 	SampleApp.h
 	DotSceneLoader.h
-	rapidxml.hpp
-)
+	)
 
 include_directories( SYSTEM ${OIS_INCLUDE_DIRS}
 	)

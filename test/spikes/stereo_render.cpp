@@ -22,10 +22,10 @@
 #include "eq_ogre/ogre_entity.hpp"
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
+#include "base/args.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
-#include "args.hpp"
 
 class Channel : public eq::Channel
 {
@@ -79,6 +79,8 @@ public :
 		// Set factories
 		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
 					new vl::ogre::SceneNodeFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
 		

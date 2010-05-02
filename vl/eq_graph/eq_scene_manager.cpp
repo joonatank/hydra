@@ -9,7 +9,7 @@
 
 // SceneManager
 vl::cl::SceneManager::SceneManager( std::string const &name )
-	: _name( name ), _root()
+	: _name( name ), _root(), _ambient_colour(0., 0., 0., 0. )
 {
 	if( _name.empty() )
 	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
@@ -80,18 +80,31 @@ vl::cl::SceneManager::createLight( std::string const &name )
 	return boost::static_pointer_cast<vl::graph::Light>( obj );
 }
 
+vl::graph::CameraRefPtr
+vl::cl::SceneManager::createCamera( std::string const &name )
+{
+	vl::graph::CameraRefPtr cam = boost::static_pointer_cast<vl::graph::Camera>(
+				createMovableObject( "Camera", name ) );
+
+	return cam;
+}
+
 vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::createMovableObject(
 		std::string const &typeName, std::string const &name,
 		vl::NamedValuePairList const &params )
 {
-	// For now we only use entities
+	vl::graph::MovableObjectRefPtr obj;
+
 	std::map<std::string, vl::graph::MovableObjectFactoryPtr>::iterator iter;
 	iter = _movable_factories.find( typeName );
 	if( iter != _movable_factories.end() )
-	{ return iter->second->create( name, params ); }
+	{
+		obj = iter->second->create( name, params );
+		obj->setManager( shared_from_this() );
+	}
 
-	return vl::graph::MovableObjectRefPtr();
+	return obj;
 }
 
 // TODO Find function needs scene graph traversal to be implemented
@@ -113,6 +126,18 @@ vl::graph::MovableObjectRefPtr
 vl::cl::SceneManager::getObject( uint32_t id )
 {
 	return vl::graph::MovableObjectRefPtr();
+}
+
+vl::graph::LightRefPtr
+vl::cl::SceneManager::getLight( std::string const &name )
+{
+	return vl::graph::LightRefPtr();
+}
+
+vl::graph::CameraRefPtr
+vl::cl::SceneManager::getCamera( std::string const &name )
+{
+	return vl::graph::CameraRefPtr();
 }
 
 void
@@ -183,6 +208,19 @@ vl::cl::SceneManager::removeMovableObjectFactory( std::string const &typeName )
 		throw vl::exception( "No such factory",
 					"vl::cl::SceneManager::addMovableObjectFactory" );
 	}
+}
+
+std::vector<std::string>
+vl::cl::SceneManager::movableObjectFactories( void )
+{
+	std::vector<std::string> names;
+	std::map<std::string, vl::graph::MovableObjectFactoryPtr>::iterator iter;
+	for( iter = _movable_factories.begin(); iter != _movable_factories.end();
+			++iter )
+	{
+		names.push_back( iter->first );
+	}
+	return names;
 }
 
 // equalizer overrides

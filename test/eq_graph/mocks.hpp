@@ -23,7 +23,7 @@ MOCK_BASE_CLASS( ObjectFactory, vl::graph::MovableObjectFactory )
 
 MOCK_BASE_CLASS( MovableObject, vl::graph::MovableObject )
 {
-
+	MOCK_METHOD( setManager, 1 )
 };
 
 MOCK_BASE_CLASS( SceneNode, vl::graph::SceneNode )

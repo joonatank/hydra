@@ -27,6 +27,8 @@
 
 #include "movable_object.hpp"
 
+#include "math/math.hpp"
+
 namespace vl
 {
 namespace graph
