@@ -127,6 +127,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 			}
 			break;
 
+			// Test all trasnformations
 			case 2 :
 			{
 				if( node->isMaster() )

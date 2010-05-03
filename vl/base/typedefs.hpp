@@ -56,6 +56,25 @@ namespace graph
 
 	typedef boost::shared_ptr<SceneNodeFactory> SceneNodeFactoryPtr;
 	typedef boost::shared_ptr<MovableObjectFactory> MovableObjectFactoryPtr;
+}
+
+namespace cl
+{
+	class SceneNode;
+	class SceneManager;
+
+	typedef boost::shared_ptr<SceneNode> SceneNodeRefPtr;
+	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
+
+}
+
+namespace ogre
+{
+	class SceneNode;
+	class SceneManager;
+
+	typedef boost::shared_ptr<SceneNode> SceneNodeRefPtr;
+	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
 
 }
 
