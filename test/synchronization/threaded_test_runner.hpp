@@ -10,8 +10,6 @@
 
 #include <deque>
 
-#include <eq/eq.h>
-
 namespace vl
 {
 
@@ -49,19 +47,6 @@ struct TestRunner
 
 	std::deque<Test *> tests;
 };	// struct TestRunner
-
-struct SyncFixture
-{
-	virtual ~SyncFixture( void ) {}
-
-	virtual void init( eq::Config *conf ) = 0;
-	
-	virtual uint32_t reg( uint32_t id ) = 0;
-
-	virtual void test( void ) = 0;
-	
-	virtual bool remaining( void ) const = 0;
-};
 
 }	// namespace vl
 

@@ -2,17 +2,17 @@
 #define BOOST_TEST_DYN_LINK
 #endif
 
-#define BOOST_TEST_MODULE sync_eq_scene_node_new
+#define BOOST_TEST_MODULE sync_eq_scene_node
 
 #include <boost/test/unit_test.hpp>
 
-#include "threaded_test_runner.hpp"
-
-#include "equalizer_fixture.hpp"
-
-#include "../eq_graph/mocks.hpp"
-
 #include "eq_graph/eq_scene_node.hpp"
+
+// Test helpers
+#include "sync_fixture.hpp"
+#include "../eq_graph/mocks.hpp"
+#include "equalizer_fixture.hpp"
+#include "threaded_test_runner.hpp"
 
 namespace vl
 {
@@ -201,15 +201,14 @@ struct AttachTest : public SceneNodeTest
 
 // TODO most of this can be moved to be equalizer specific but object independent
 // using eq::Object
-struct SceneNodeSyncFixture : public vl::SyncFixture
+struct SceneNodeSyncFixture : public vl::EqSyncFixture
 {
 	SceneNodeSyncFixture( bool m)
-		: master(m),
-		  config(0),
-		  runner(),
+		: EqSyncFixture( m, 0 ),
 		  man( new mock::SceneManager ),
 		  node( new vl::cl::SceneNode( man, "node") )
 	{
+		object = node.get();
 		runner.addTest( new TranslateTest( master, node, man ) );
 		runner.addTest( new RotateTest( master, node, man ) );
 		runner.addTest( new TransformTest( master, node, man ) );
@@ -217,38 +216,8 @@ struct SceneNodeSyncFixture : public vl::SyncFixture
 		runner.addTest( new AttachTest( master, node, man) );
 	}
 
-	~SceneNodeSyncFixture( void )
-	{}
+	~SceneNodeSyncFixture( void ) {}
 
-	virtual void init( eq::Config *conf ) 
-	{ config = conf; }
-	
-	virtual uint32_t reg( uint32_t id )
-	{
-		if( master )
-		{
-			BOOST_REQUIRE( config->registerObject( node.get() ) );
-			BOOST_REQUIRE( node->getID() != EQ_ID_INVALID );
-			return node->getID();
-		}
-		else
-		{
-			BOOST_REQUIRE( id != EQ_ID_INVALID );
-			BOOST_REQUIRE( config );
-			BOOST_REQUIRE( config->mapObject( node.get(), id ) );
-			return node->getID();
-		}
-	}
-
-	virtual void test( void )
-	{ runner.runTest(); }
-
-	virtual bool remaining( void ) const
-	{ return runner.remaining(); }
-
-	bool master;
-	eq::Config *config;
-	vl::TestRunner runner;
 	mock::SceneManagerPtr man;
 	vl::cl::SceneNodeRefPtr node;
 };

@@ -5,11 +5,12 @@
 
 #include <fstream>
 
-#include "../eq_graph/mocks.hpp"
-
 #include "eq_graph/eq_scene_node.hpp"
 
+// Test helpers
+#include "../eq_graph/mocks.hpp"
 #include "threaded_test_runner.hpp"
+#include "sync_fixture.hpp"
 
 namespace vl
 {
