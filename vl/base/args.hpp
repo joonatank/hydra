@@ -13,6 +13,10 @@
 #define VL_FAKE_ARGS_HPP
 
 #include <ostream>
+#include <cstring>
+
+namespace vl
+{
 
 struct Args
 {
@@ -69,7 +73,11 @@ struct Args
 	int size;
 };
 
-std::ostream &operator<<( std::ostream &os, ::Args const &arg )
+std::ostream &operator<<( std::ostream &os, Args const &arg );
+}	// namespace vl
+
+inline std::ostream &
+vl::operator<<( std::ostream &os, vl::Args const &arg )
 {
 	for( int i = 0; i < arg.argc; ++i )
 	{ os << arg.argv[i] << ' '; }

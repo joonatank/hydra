@@ -9,6 +9,9 @@
 
 #include <string>
 
+#include "base/args.hpp"
+#include "base/rapidxml.hpp"
+
 namespace vl
 {
 
@@ -19,31 +22,80 @@ class Settings
 
 		~Settings( void );
 
+		std::string const &getOgrePluginsPath( void )
+		{
+			return _plugin_file;
+		}
+		
+		std::string const &getOgreResourcePath( void )
+		{
+			return _resource_file;
+		}
+
+		std::string const &getScenePath( void )
+		{
+			return _scene_file;
+		}
+
+		vl::Args const &getEqArgs( void )
+		{
+			return _eq_args;
+		}
+
+		friend class SettingsSerializer;
+		friend class SettingsDeserializer;
 	private :
+		std::string _root_path;
 		std::string _file_path;
-		std::string _eq_config_path;
-		std::string _scene_file_path;
+		std::string _eq_config;
+		std::string _scene_file;
+		std::string _plugin_file;
+		std::string _resource_file;
+		vl::Args _eq_args;
 
 };	// class Settings
 
 class SettingsSerializer
 {
 	public :
-		SettingsSerializer( void );
-
+		SettingsSerializer( Settings *settings );
+ 
 		~SettingsSerializer( void );
 
-	private :
+		void readFile( std::string const &file_path );
+
+	protected :
+		void processConfig( rapidxml::xml_node<>* XMLNode );
+
+		void processPath( rapidxml::xml_node<>* XMLNode );
+
+		void processPlugins( rapidxml::xml_node<>* XMLNode );
+
+		void processResources( rapidxml::xml_node<>* XMLNode );
+
+		void processEqc( rapidxml::xml_node<>* XMLNode );
+
+		void processScene( rapidxml::xml_node<>* XMLNode );
+
+		std::string getAttrib( rapidxml::xml_node<>* XMLNode,
+				std::string const &attrib, std::string const &defaul_value );
+
+		Settings *_settings;
+
+		// file content needed for rapidxml
+		char *xml_data;
 };
 
 class SettingsDeserializer
 {
 	public :
-		SettingsDeserializer( void );
+		SettingsDeserializer( Settings *settings );
 
 		~SettingsDeserializer( void );
 
-	private :
+		void writeFile( std::string const &file_path );
+
+	protected :
 
 };
 

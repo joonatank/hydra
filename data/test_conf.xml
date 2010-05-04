@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config>
+	<path>${VL_DATA_PATH}</path>
+	<plugins>plugins.cfg</plugins>
+	<resources>resources.cfg</resources>
+	<eqc>eqc/1-window.eqc</eqc>
+	<scene>test.scene</scene>
+</config>

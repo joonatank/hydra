@@ -52,8 +52,9 @@ BOOST_AUTO_TEST_CASE( movable_object_test )
 
 	vl::NamedValuePairList params;
 	params["mesh"] = "ent.mesh";
-	MOCK_EXPECT( obj_fac, create ).once().with( "ent", params )
-		.returns( vl::graph::MovableObjectRefPtr( new mock::MovableObject ) );
+	mock::MovableObjectPtr obj( new mock::MovableObject );
+	MOCK_EXPECT( obj_fac, create ).once().with( "ent", params ).returns( obj );
+	MOCK_EXPECT( obj, setManager ).once().with( man );
 
 	// Test Entity creation
 	vl::graph::EntityRefPtr ent = man->createEntity( "ent", "ent.mesh" );
@@ -69,8 +70,10 @@ BOOST_AUTO_TEST_CASE( camera_test )
 	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Camera" );
 	man->addMovableObjectFactory( obj_fac );
 
+	mock::MovableObjectPtr obj( new mock::MovableObject );
 	MOCK_EXPECT( obj_fac, create ).once().with( "cam", vl::NamedValuePairList() )
-		.returns( vl::graph::MovableObjectRefPtr( new mock::MovableObject ) );
+		.returns( obj );
+	MOCK_EXPECT( obj, setManager ).once().with( man );
 
 	vl::graph::CameraRefPtr cam = man->createCamera( "cam" );
 	BOOST_CHECK( cam );

@@ -214,7 +214,7 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-		Args args;
+		vl::Args args;
 		args.addArg("stereo_render");
 		args.addArg("--eq-config" );
 		args.addArg("1-window.eqc");

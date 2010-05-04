@@ -72,6 +72,21 @@ namespace vl
 			{}
 	};
 
+	class missing_file : public exception
+	{
+		public :
+			missing_file( const char *wher )
+				: exception( "missing_file", wher )
+			{}
+	};
+
+	class invalid_file : public exception
+	{
+		public :
+			invalid_file( const char *wher )
+				: exception( "invalid file", wher )
+			{}
+	};
 }	// namespace vl
 
 #endif

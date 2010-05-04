@@ -11,7 +11,7 @@
 
 BOOST_AUTO_TEST_CASE( args_test )
 {
-	::Args args;
+	vl::Args args;
 	BOOST_CHECK( args.size == 1 );
 	BOOST_CHECK( args.argc == 1 );
 	BOOST_CHECK( 0 == ::strcmp( args.argv[0], "\0" ) );
