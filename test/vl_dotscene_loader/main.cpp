@@ -18,16 +18,31 @@ public :
 		root.reset( new vl::ogre::Root );
 		// Initialise ogre
 		root->createRenderSystem();
-
 		vl::NamedValuePairList params;
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+		eq::WGLWindow *os_win = (eq::WGLWindow *)(getOSWindow());
+		std::stringstream ss( std::stringstream::in | std::stringstream::out );
+		ss << os_win->getWGLWindowHandle();
+		params["externalWindowHandle"] = ss.str();
+		ss.str("");
+		params["externalGLControl"] = std::string("True");
+		ss << os_win->getWGLContext();
+		params["externalGLContext"] = ss.str();
+#else
 		params["currentGLContext"] = std::string("True");
-		eq::GLXWindow *oswin = dynamic_cast<eq::GLXWindow *>( getOSWindow() );
-		EQASSERT( oswin );
-		std::stringstream ss(std::stringstream::in | std::stringstream::out);
-		ss <<  oswin->getXDrawable();
-		params["parentWindowHandle"] = ss.str();
-		win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
+#endif
+		
+		try {
+			win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
 				root->createWindow( "win", 800, 600, params ) );
+		}
+		catch( Ogre::Exception const &e)
+		{
+			std::cout << "Exception when creating window: " << e.what() 
+				<< std::endl;
+			throw;
+		}
 
 		man = root->createSceneManager("SceneManager");
 

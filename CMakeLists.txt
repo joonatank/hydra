@@ -9,7 +9,7 @@ if( UNIX )
 endif( UNIX )
 
 if( WIN32 )
-	add_definitions( -DVL_WIN32 )
+	add_definitions( -DVL_WIN32 -DNOMINMAX )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
 endif( WIN32 )
@@ -69,6 +69,11 @@ if( WIN32 )
 	set( BULLET_LIB_DIR "" CACHE PATH "Bullet library path" )
 	set( BULLET_INCLUDE_DIR "" CACHE PATH "Bullet include path" )
 endif()
+
+if( WIN32 )
+	set( VRPN_INCLUDE_DIR "" CACHE PATH "VRPN include path" )
+	set( VRPN_LIB_DIR "" CACHE PATH "VRPN lib path" )
+endif()
 	
 # Audio, cAudio for now
 # TODO should be a plugin
@@ -90,10 +95,11 @@ include_directories(
 	${TURTLE_INCLUDE_DIR}
 	${BULLET_INCLUDE_DIR}
 	${CAUDIO_INCLUDE_DIR}
+	${VRPN_INCLUDE_DIR}
 	)
 
 link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${BULLET_LIB_DIR}
-	${CAUDIO_LIB_DIR} )
+	${CAUDIO_LIB_DIR} ${VRPN_LIB_DIR} )
 
 link_directories( ${vl_BINARY_DIR}/vl )
 

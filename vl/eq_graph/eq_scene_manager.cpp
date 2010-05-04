@@ -1,4 +1,4 @@
-#include "eq_scene_manager.hpp"
+ #include "eq_scene_manager.hpp"
 
 #include "interface/movable_object.hpp"
 #include "interface/entity.hpp"
@@ -17,6 +17,7 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 
 vl::cl::SceneManager::~SceneManager( void )
 {
+	destroyGraph();
 }
 
 void

@@ -21,6 +21,11 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 */
 
 
+#ifdef VL_WIN32
+#include <WinSock2.h>
+#include <Windows.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -72,15 +77,15 @@ void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
   // userdata is whatever you passed into the register_change_handler function.
   // vrpn sucks it up and spits it back out at you. It's not used by vrpn internally
 
-g_trackerData = t;
+	g_trackerData = t;
 
-  printf("handle_tracker\tSensor %d is now at (%g,%g,%g)\n", 
-	 t.sensor,
-	 t.pos[0], t.pos[1], t.pos[2]);
-  std::cout << "Quaternion = ";
-  for( int i = 0; i < 4; i++ )
-  { std::cout << t.quat[i] << ", "; }
-  std::cout << std::endl;
+ 	printf("handle_tracker\tSensor %d is now at (%g,%g,%g)\n", 
+		t.sensor, t.pos[0], t.pos[1], t.pos[2]);
+  	
+	std::cout << "Quaternion = ";
+  	for( int i = 0; i < 4; i++ )
+  	{ std::cout << t.quat[i] << ", "; }
+  	std::cout << std::endl;
 }
 
 class Channel : public eq::Channel
@@ -145,7 +150,7 @@ public :
 		vl::graph::ViewportRefPtr view = win->addViewport( cam );
 		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild( "Feet" );
-		feet->lookAt( vl::vector(0,0,300) );
+		feet->lookAt( vl::vector(0,0,3) );
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
 
 		// Create robot Entity
@@ -154,9 +159,9 @@ public :
 				man->createEntity( "robot", "robot.mesh" ) );
 		ent->load(man);
 		robot = root->createChild();
-		robot->setPosition( vl::vector(0, 0, 300) );
+		robot->setPosition( vl::vector(0, 0, 3) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
-		setNearFar( 100.0, 100.0e3 );
+		setNearFar( 0.1, 100.0 );
 
 		return true;
 	}
@@ -185,6 +190,7 @@ public :
 		eq::Channel::frameDraw( frameID );
 
 		eq::Frustumf frust = getFrustum();
+		std::cout << "Frustrum = " << frust.compute_matrix() << std::endl;
 		cam->setProjectionMatrix( frust.compute_matrix() );
 		win->update();
 	}
@@ -271,22 +277,22 @@ BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
 	BOOST_REQUIRE( config );
 
-        // Open the tracker
-        vrpn_Tracker_Remote *tkr = new vrpn_Tracker_Remote("glasses@130.230.58.16");
-		
+    // Open the tracker
+    vrpn_Tracker_Remote *tkr = new vrpn_Tracker_Remote("glasses@130.230.58.16");
+	
 	// Set up the tracker callback handler
-        tkr->register_change_handler(NULL, handle_tracker);
+    tkr->register_change_handler(NULL, handle_tracker);
 
-        for ( int i = 0; i < 4000; i++ )
+    for ( int i = 0; i < 4000; i++ )
 	{
-	  tkr->mainloop();
-	  mainloop(); 
+	  	tkr->mainloop();
+	  	mainloop(); 
 	  
-	  // Sleep
-	  timespec tv;
-	  tv.tv_sec = 0;
-	  tv.tv_nsec = 1000*1000;
-	  nanosleep(&tv, 0);
-        }
+		break;
+	  	// Sleep
+		eq::base::sleep(1);
+	}
+
+	delete tkr;
 }
 

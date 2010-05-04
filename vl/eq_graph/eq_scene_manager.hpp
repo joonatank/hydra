@@ -59,7 +59,7 @@ namespace cl
 
 			// TODO testing and implementation
 			virtual vl::colour const &getAmbientLight( void )
-			{}
+			{ return vl::colour(); }
 
 			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );

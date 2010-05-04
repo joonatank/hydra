@@ -27,7 +27,7 @@ public :
 
 		vl::NamedValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-		eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
+		eq::WGLWindow *os_win = (eq::WGLWindow *)(getOSWindow());
 		std::stringstream ss( std::stringstream::in | std::stringstream::out );
 		ss << os_win->getWGLWindowHandle();
 		params["externalWindowHandle"] = ss.str();
