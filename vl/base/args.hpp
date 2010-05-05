@@ -15,72 +15,65 @@
 #include <ostream>
 #include <cstring>
 
+#include "base/exceptions.hpp"
+
 namespace vl
 {
 
-struct Args
+class Args
 {
-	Args( void )
-		: argv(0), argc(1), size(1)
-	{
-		argv = new char*[size];
-		argv[0] = new char[1];
-		argv[0][0] = '\0';
-	}
+public :
+	Args( void );
 
-	~Args( void )
-	{
-		for( int i = 0; i < size; i++ )
-		{
-			delete [] argv[i];
-		}
-		delete [] argv;
-	}
+	Args( Args const &arg );
 
-	void addArg( char const *arg )
-	{
-		if( arg[0] == '\0' )
-		{ return; }
-	
-		if( size == argc )
-		{
-			grow();
-		}
+	Args &operator=( Args const &arg );
 
-		// Move the last null
-		argv[argc] = argv[argc-1];
+	~Args( void );
 
-		// Copy the argument
-		argv[argc-1] = new char[strlen(arg)+1];
-		strcpy( argv[argc-1], arg );
+	void add( char const *arg );
 
-		++argc;
-	}
+	void insert( size_t index, char const *str );
 
-	void grow( void )
-	{
-		size *= 2;
-		char **tmp = new char*[size];
-		for( int i = 0; i < argc; ++i )
-		{ tmp[i] = argv[i]; }
+	char *operator[ ]( size_t index )
+	{ return _argv[index]; }
 
-		delete [] argv;
-		argv = tmp;
-	}
+	char const *operator[ ]( size_t index ) const
+	{ return _argv[index]; }
 
-	char **argv;
-	int argc;
-	int size;
+	char *at( size_t index );
+
+	char const *at( size_t index ) const;
+
+	size_t size( void ) const
+	{ return _argc; }
+
+	bool empty( void ) const
+	{ return 0 == _argc; }
+
+	char **getData( void )
+	{ return _argv; }
+
+	void clear( void );
+
+	friend std::ostream &operator<<( std::ostream &os, Args const &arg );
+
+private :
+	void grow( void );
+
+	char **_argv;
+	size_t _argc;
+	size_t _size;
 };
 
-std::ostream &operator<<( std::ostream &os, Args const &arg );
+	std::ostream &operator<<( std::ostream &os, Args const &arg );
 }	// namespace vl
 
 inline std::ostream &
 vl::operator<<( std::ostream &os, vl::Args const &arg )
 {
-	for( int i = 0; i < arg.argc; ++i )
-	{ os << arg.argv[i] << ' '; }
+	for( size_t i = 0; i < arg._argc; ++i )
+	{ os << arg._argv[i] << ' '; }
 
 	return os;
 }

@@ -1,6 +1,9 @@
 project( "util_test" CXX )
 
-add_executable( test_args test_args.cpp )
+add_executable( test_args
+	test_args.cpp
+	${vl_SOURCE_DIR}/vl/base/args
+	)
 
 add_executable( test_fs test_fs.cpp )
 

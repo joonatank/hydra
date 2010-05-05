@@ -11,6 +11,7 @@
 
 #include "base/args.hpp"
 #include "base/rapidxml.hpp"
+#include "base/filesystem.hpp"
 
 namespace vl
 {
@@ -22,35 +23,54 @@ class Settings
 
 		~Settings( void );
 
-		std::string const &getOgrePluginsPath( void )
-		{
-			return _plugin_file;
-		}
+		fs::path const &getRootPath( void ) const
+		{ return _root_path; }
+
+		fs::path const &getFilePath( void ) const
+		{ return _file_path; }
+
+		fs::path const &getEqConfigPath( void ) const
+		{ return _eq_config; }
+
+		fs::path const &getOgrePluginsPath( void ) const
+		{ return _plugin_file; }
 		
-		std::string const &getOgreResourcePath( void )
-		{
-			return _resource_file;
-		}
+		fs::path const &getOgreResourcePath( void ) const
+		{ return _resource_file; }
 
-		std::string const &getScenePath( void )
-		{
-			return _scene_file;
-		}
+		fs::path const &getScenePath( void ) const
+		{ return _scene_file; }
 
-		vl::Args const &getEqArgs( void )
-		{
-			return _eq_args;
-		}
+		vl::Args const &getEqArgs( void ) const
+		{ return _eq_args; }
+
+		void setExePath( std::string const &path );
+
+		// TODO we need both fs::path, std::string path and relative to root path
+		// Supports both absolute and relative paths (current directory)
+		void setRootPath( std::string const &path )
+		{ _root_path = path; }
+
+		// Supports both absolute and relative paths (root directory)
+		void setEqConfigPath( std::string const &path );
+
+		void setOgrePluginsPath( std::string const &path );
+
+		void setOgreResourcePath( std::string const &path );
+
+		void setScenePath( std::string const &path );
 
 		friend class SettingsSerializer;
 		friend class SettingsDeserializer;
+
 	private :
-		std::string _root_path;
-		std::string _file_path;
-		std::string _eq_config;
-		std::string _scene_file;
-		std::string _plugin_file;
-		std::string _resource_file;
+		fs::path _exe_path;
+		fs::path _root_path;
+		fs::path _file_path;
+		fs::path _eq_config;
+		fs::path _scene_file;
+		fs::path _plugin_file;
+		fs::path _resource_file;
 		vl::Args _eq_args;
 
 };	// class Settings

@@ -14,12 +14,18 @@ namespace vl
 			const char *where;
 	};
 
-	class null_pointer : public exception
+	struct null_pointer : public exception
 	{
-		public :
-			null_pointer( const char *wher )
-				: exception( "null_pointer", wher )
-			{}
+		null_pointer( const char *wher )
+			: exception( "null_pointer", wher )
+		{}
+	};
+
+	struct bad_index : public exception
+	{
+		bad_index( const char *wher )
+			: exception( "bad_index", wher )
+		{}
 	};
 
 	class empty_param : public exception

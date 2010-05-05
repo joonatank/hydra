@@ -13,8 +13,10 @@ set( SOURCES
 	eq_graph/eq_light.hpp
 	eq_graph/eq_light.cpp
 	eq_graph/eq_camera.hpp
-	settings
-	settings_manager
+	base/args.hpp
+	base/args.cpp
+	settings.cpp
+	settings.hpp
 	)
 
 add_library( eqOgre ${SOURCES} )

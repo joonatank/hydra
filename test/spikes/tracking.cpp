@@ -215,11 +215,11 @@ struct RenderFixture
 		  log_file( "render_test.log" )
 	{
 		vl::Args args;
-		args.addArg("stereo_render");
-		args.addArg("--eq-config" );
-		args.addArg("1-window.eqc");
+		args.add("stereo_render");
+		args.add("--eq-config" );
+		args.add("1-window.eqc");
 
-		char **argv = args.argv;
+		char **argv = args.getData();
 
 		std::cout << args << std::endl;
 

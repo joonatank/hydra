@@ -10,6 +10,72 @@ vl::Settings::Settings( void ) { }
 
 vl::Settings::~Settings( void ) { }
 
+void
+vl::Settings::setExePath( std::string const &path )
+{
+	_exe_path = path;
+
+	// Update args
+	_eq_args.clear();
+	if( !_exe_path.empty() )
+	{ _eq_args.add( _exe_path.string().c_str() ); }
+	if( !_eq_config.empty() )
+	{
+		_eq_args.add( "--eq-config" );
+		_eq_args.add( _eq_config.string().c_str() );
+	}
+}
+
+void
+vl::Settings::setEqConfigPath( std::string const &path )
+{
+	fs::path tmp( path );
+	if( tmp.root_directory() == "/" )
+	{ _eq_config = tmp; }
+	else
+	{ _eq_config = _root_path / tmp; }
+
+	// Update args
+	_eq_args.clear();
+	if( !_exe_path.empty() )
+	{ _eq_args.add( _exe_path.string().c_str() ); }
+	if( !_eq_config.empty() )
+	{
+		_eq_args.add( "--eq-config" );
+		_eq_args.add( _eq_config.string().c_str() );
+	}
+}
+
+void
+vl::Settings::setOgrePluginsPath( std::string const &path )
+{
+	fs::path tmp( path );
+	if( tmp.root_directory() == "/" )
+	{ _plugin_file = tmp; }
+	else
+	{ _plugin_file = _root_path / tmp; }
+}
+
+void 
+vl::Settings::setOgreResourcePath( std::string const &path )
+{
+	fs::path tmp( path );
+	if( tmp.root_directory() == "/" )
+	{ _resource_file = tmp; }
+	else
+	{ _resource_file = _root_path / tmp; }
+}
+
+void
+vl::Settings::setScenePath( std::string const &path )
+{
+	fs::path tmp( path );
+	if( tmp.root_directory() == "/" )
+	{ _scene_file = tmp; }
+	else
+	{ _scene_file = _root_path / tmp; }
+}
+
 // --- SettingsSerializer ---
 vl::SettingsSerializer::SettingsSerializer( Settings *settings )
 	: _settings(settings), xml_data(0)
@@ -77,31 +143,31 @@ vl::SettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 void
 vl::SettingsSerializer::processPath( rapidxml::xml_node<>* xml_node )
 {
-	_settings->_root_path = xml_node->value();
+	_settings->setRootPath( xml_node->value() );
 }
 
 void
 vl::SettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 {
-	_settings->_plugin_file = xml_node->value();
+	_settings->setOgrePluginsPath( xml_node->value() );
 }
 
 void
 vl::SettingsSerializer::processResources( rapidxml::xml_node<>* xml_node )
 {
-	_settings->_resource_file = xml_node->value();
+	_settings->setOgreResourcePath( xml_node->value() );
 }
 
 void 
 vl::SettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
 {
-	_settings->_eq_config = xml_node->value();
+	_settings->setEqConfigPath( xml_node->value() );
 }
 
 void
 vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node )
 {
-	_settings->_scene_file = xml_node->value();
+	_settings->setScenePath( xml_node->value() );
 }
 
 std::string
