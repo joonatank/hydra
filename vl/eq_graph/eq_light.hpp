@@ -12,6 +12,10 @@
 
 #include "interface/light.hpp"
 
+#include <string>
+
+#include "math/math.hpp"
+
 namespace vl
 {
 
@@ -20,9 +24,14 @@ namespace cl
 	class Light : public graph::Light
 	{
 		public :
-			Light( void ) {}
+			Light( std::string const &name, vl::NamedValuePairList const &params )
+				: _name(name)
+			{}
 
 			virtual ~Light( void ) {}
+
+			virtual void setManager( vl::graph::SceneManagerRefPtr man )
+			{ _manager = man; }
 
 			virtual void setSpotlightRange( vl::angle const inner,
 					vl::angle const outer,
@@ -33,6 +42,18 @@ namespace cl
 					vl::scalar const linear, vl::scalar const quadratic );
 
 			virtual void setType( TYPE type );
+
+			virtual void setVisible( bool visible ) {}
+
+			virtual void setCastShadows( bool shadows ) {}
+
+			virtual void setDiffuseColour( vl::colour col ) {}
+
+			virtual void setSpecularColour( vl::colour col ) {}
+
+		protected :
+			vl::graph::SceneManagerRefPtr _manager;
+			std::string _name;
 
 	};	// class Light
 

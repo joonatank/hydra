@@ -58,6 +58,9 @@ namespace cl
 
 			virtual void destroySceneManager( std::string const &name );
 
+			virtual std::string getDataDir( void )
+			{ return _base_dir + "/data/"; }
+
 			// Equalizer overrides
 	
 			/* Object::serialize() */

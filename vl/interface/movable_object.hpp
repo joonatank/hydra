@@ -2,7 +2,7 @@
 #ifndef VL_GRAPH_MOVABLE_OBJECT_HPP
 #define VL_GRAPH_MOVABLE_OBJECT_HPP
 
-#include <boost/shared_ptr.hpp>
+#include "base/typedefs.hpp"
 
 namespace vl
 {
@@ -13,6 +13,8 @@ namespace graph
 	{
 		public :
 			virtual ~MovableObject( void ) {}
+
+			virtual void setManager( vl::graph::SceneManagerRefPtr man ) = 0;
 
 	};	// class MovableObject
 

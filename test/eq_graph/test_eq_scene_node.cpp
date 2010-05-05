@@ -6,12 +6,13 @@
 
 #include "eq_graph/eq_scene_node.hpp"
 
-#include "interface/scene_manager.hpp"
+//#include "interface/scene_manager.hpp"
 
 #include "base/exceptions.hpp"
 #include "base/string_utils.hpp"
 
-#include "mock_scene_manager.hpp"
+#include "mocks.hpp"
+//#include "mock_scene_manager.hpp"
 
 namespace vl
 {
@@ -21,14 +22,14 @@ namespace vl
 struct SceneNodeFixture
 {
 	SceneNodeFixture( void )
-		: man( new mock_scene_manager ),
+		: man( new mock::SceneManager ),
 		  node( new vl::cl::SceneNode( man, "Node" ) )
 	{}
 
 	~SceneNodeFixture( void ) { }
 
 //	vl::SceneManagerRefPtr man;
-	boost::shared_ptr<mock_scene_manager> man;
+	mock::SceneManagerPtr man;
 	vl::SceneNodeRefPtr node;
 };
 
@@ -37,8 +38,8 @@ struct ChildNodeFixture : public SceneNodeFixture
 	ChildNodeFixture( void )
 		: child1( new vl::cl::SceneNode( man, "Child1" ) ),
 		  child2( new vl::cl::SceneNode( man, "Child2" ) ),
-		  obj1( new vl::MovableObject ),
-		  obj2( new vl::MovableObject )
+		  obj1( new mock::MovableObject ),
+		  obj2( new mock::MovableObject )
 	{}
 
 	~ChildNodeFixture( void ) { }
@@ -266,9 +267,9 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_EQUAL( child2->getParent(), node );
 
 	// Allow setting null parent
-	BOOST_CHECK_NE( child2->getParent(), SceneNodeRefPtr() );
-	BOOST_CHECK_NO_THROW( child2->setParent( SceneNodeRefPtr() ) );
-	BOOST_CHECK_EQUAL( child2->getParent(), SceneNodeRefPtr() );
+	BOOST_CHECK_NE( child2->getParent(), vl::SceneNodeRefPtr() );
+	BOOST_CHECK_NO_THROW( child2->setParent( vl::SceneNodeRefPtr() ) );
+	BOOST_CHECK_EQUAL( child2->getParent(), vl::SceneNodeRefPtr() );
 }
 
 BOOST_AUTO_TEST_CASE( node_creation_test )

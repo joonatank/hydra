@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.6)
 enable_testing()
 
 if( UNIX )
-	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic" )
+	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
 endif( UNIX )
 
 if( WIN32 )
@@ -52,7 +52,7 @@ elseif( UNIX )
 endif( WIN32 )
 
 
-find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread REQUIRED)
+find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread filesystem REQUIRED)
 # TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
 if( WIN32 )

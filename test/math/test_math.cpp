@@ -22,8 +22,7 @@ BOOST_AUTO_TEST_CASE( quaternion_test )
 	vl::quaternion q(0, 0, 0, 1);
 	q *= vl::quaternion(0.7071, 0, 0, 0.7071);
 
-	BOOST_CHECK( vl::equal(q, vl::quaternion(0.7071, 0, 0, 0.7071) ) );
-	BOOST_CHECK_EQUAL( q, vl::quaternion(0.7071, 0, 0, 0.7071) );
+	BOOST_CHECK( vl::equal( q, vl::quaternion(0.7071, 0, 0, 0.7071) ) );
 
 	vl::scalar half_a = (M_PI/2)/2;
 	q = vl::quaternion( std::sin(half_a), 0, 0, std::cos(half_a) );

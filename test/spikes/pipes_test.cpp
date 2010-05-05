@@ -144,7 +144,7 @@ public :
 
 		vl::graph::EntityRefPtr ent;
 		BOOST_CHECK_NO_THROW( ent = man->createEntity("robot", "robot.mesh") );
-		ent->load(man);
+		ent->load();
 		BOOST_CHECK_NO_THROW(
 				robot = man->getRootNode()->createChild("robot") );
 		BOOST_REQUIRE( robot );

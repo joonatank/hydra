@@ -59,7 +59,7 @@ namespace graph
 			
 			virtual void setAmbientLight( vl::colour const &col ) = 0;
 
-			virtual vl::colour const &getAmbientLight( void ) = 0;
+			virtual vl::colour const &getAmbientLight( void ) const = 0;
 
 			// Create an entity, not attached to scene graph.
 			virtual EntityRefPtr createEntity(

@@ -1,11 +1,21 @@
-#ifndef EQUALIZER_FIXTURE_HPP
-#define EQUALIZER_FIXTURE_HPP
+#ifndef EQUALIZER_FIXTURE_NEW_HPP
+#define EQUALIZER_FIXTURE_NEW_HPP
 
 #include <eq/eq.h>
 
 #include <fstream>
 
+#include "eq_graph/eq_scene_node.hpp"
+
+// Test helpers
+#include "../eq_graph/mocks.hpp"
+#include "threaded_test_runner.hpp"
 #include "sync_fixture.hpp"
+
+namespace vl
+{
+	using namespace graph;
+}
 
 const int argc = 2;
 char NAME[] = "TEST\0";
@@ -16,14 +26,15 @@ class Node : public eq::Node
 {
 public :
 	Node( eq::Config *parent )
-		: eq::Node(parent), state(0), sync_fixture(0)
+		: eq::Node(parent), state(0)
 	{
 		BOOST_TEST_MESSAGE( "Node::Node" );
+
+		sync_fixture->init( parent );
 	}
 
 	virtual ~Node( void )
 	{
-		delete sync_fixture;
 	}
 
 	virtual bool configInit( const uint32_t initID )
@@ -31,9 +42,8 @@ public :
 		BOOST_REQUIRE( initID != EQ_ID_INVALID );
 		BOOST_REQUIRE( eq::Node::configInit( initID ) );
 
-		sync_fixture = new SceneNodeSyncFixture( getConfig() );
-
-		sync_fixture->init( initID );
+		BOOST_REQUIRE( sync_fixture );
+		sync_fixture->reg( initID );
 
 		return true;
 	}
@@ -44,11 +54,11 @@ public :
 		eq::Node::frameStart( frameID, frameNumber );
 		BOOST_TEST_MESSAGE( "Node::frameStart" );
 
-		sync_fixture->update();
+		sync_fixture->test();
 	}
 
 	int state;
-	SyncFixture *sync_fixture;
+	static vl::SyncFixture *sync_fixture;
 };
 
 class NodeFactory : public eq::NodeFactory
@@ -62,8 +72,7 @@ struct EqFixture
 {
 	// Init code for this test
 	EqFixture( void )
-		: error( false ), frameNumber(0), config(0), 
-		  sync_fixture(0), log_file( "equalize.log" )
+		: error( false ), frameNumber(0), config(0), log_file( "equalize.log" )
 	{
 		// Redirect logging
 		eq::base::Log::setOutput( log_file );
@@ -75,9 +84,9 @@ struct EqFixture
 		config = eq::getConfig( argc, argv );
 		BOOST_REQUIRE( config );
 
-		sync_fixture = new SceneNodeSyncFixture( config );
+		sync_fixture->init( config );
 
-		uint32_t id = sync_fixture->init();
+		uint32_t id = sync_fixture->reg( EQ_ID_INVALID );
 		BOOST_REQUIRE( id != EQ_ID_INVALID );
 
 		// 3. init config
@@ -89,7 +98,8 @@ struct EqFixture
 	{
 		BOOST_REQUIRE( config->isRunning() );
 	
-		sync_fixture->update();
+		BOOST_REQUIRE( sync_fixture );
+		sync_fixture->test();
 
 		config->startFrame( ++frameNumber );
 		config->finishFrame();
@@ -100,8 +110,6 @@ struct EqFixture
 	{
 		// All registered objects need to be deregistered before exiting the
 		// config, otherwise equalizer crashes...
-
-		delete sync_fixture;
 
 		// 5. exit config
 		if( config )
@@ -117,7 +125,8 @@ struct EqFixture
 	bool error;
 	uint32_t frameNumber;
 	eq::Config *config;
-	SyncFixture *sync_fixture;
+	static vl::SyncFixture *sync_fixture;
+
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
 };

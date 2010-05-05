@@ -8,7 +8,7 @@
 #include <OgreResourceGroupManager.h>
 #include <vector>
 
-#include "rapidxml.hpp"
+#include "base/rapidxml.hpp"
 
 	// Forward declarations
 	namespace Ogre

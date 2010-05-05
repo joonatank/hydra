@@ -1,18 +1,12 @@
 #ifndef VL_DOT_SCENELOADER_H
 #define VL_DOT_SCENELOADER_H
 
-// Includes
-// OGre includes should be removed
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
-#include <OgreResourceGroupManager.h>
-
 // Standard library includes
 #include <vector>
 #include <string>
 
 // Own includes
-#include "rapidxml.hpp"
+#include "base/rapidxml.hpp"
 #include "base/typedefs.hpp"
 #include "math/math.hpp"
 

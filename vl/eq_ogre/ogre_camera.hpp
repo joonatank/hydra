@@ -27,43 +27,42 @@ namespace ogre
 	class Camera : public vl::cl::Camera, public vl::ogre::MovableObject
 	{
 		public :
-			Camera( Ogre::Camera *cam )
-				: _ogre_camera(cam)
-			{
-				if( !_ogre_camera)
-				{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
-			}
+			Camera( std::string name, vl::NamedValuePairList const &params )
+				: vl::cl::Camera( name, params )
+			{}
 
 			virtual ~Camera( void ) {}
 
+			virtual void setManager( vl::graph::SceneManagerRefPtr man );
+			
 			virtual Ogre::MovableObject *getNative( void )
-			{
-				return _ogre_camera;
-			}
+			{ return _ogre_camera; }
 
-			virtual void setProjectionMatrix( vl::matrix const &m )
-			{
-				if( _ogre_camera )
-				{
-					_ogre_camera->setCustomProjectionMatrix( true,
-							vl::math::convert(m) );
-				}
-			}
+			virtual void setProjectionMatrix( vl::matrix const &m );
 
-			virtual void setFarClipDistance( vl::scalar const &dist )
-			{
-				_ogre_camera->setFarClipDistance( dist );
-			}
+			virtual void setFarClipDistance( vl::scalar const &dist );
 
-			virtual void setNearClipDistance( vl::scalar const &dist )
-			{
-				_ogre_camera->setNearClipDistance( dist );
-			}
+			virtual void setNearClipDistance( vl::scalar const &dist );
 
 		protected :
 			Ogre::Camera *_ogre_camera;
 
 	};	// class Camera
+
+	struct CameraFactory : public vl::graph::MovableObjectFactory
+	{
+		CameraFactory( void ) {}
+
+		virtual ~CameraFactory( void ) {}
+
+		virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
+				vl::NamedValuePairList const &params );
+			
+		virtual std::string const &typeName( void )
+		{ return TYPENAME; }
+
+		static const std::string TYPENAME;
+	};
 
 }	// namespace graph
 

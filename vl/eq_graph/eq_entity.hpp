@@ -12,15 +12,13 @@
 #ifndef VL_EQ_GRAPH_ENTITY_HPP
 #define VL_EQ_GRAPH_ENTITY_HPP
 
-#include "eq_movable_object.hpp"
+#include "interface/entity.hpp"
 
-#include "base/typedefs.hpp"
+#include <eq/eq.h>
 
 #include <string>
 
 #include "interface/scene_manager.hpp"
-
-#include "interface/entity.hpp"
 
 namespace vl
 {
@@ -37,12 +35,14 @@ namespace cl
 
 			virtual ~Entity( void ) {}
 
+			virtual void setManager( vl::graph::SceneManagerRefPtr man );
+
 			virtual std::string const &getName( void )
 			{ return _name; }
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( vl::graph::SceneManagerRefPtr ) {}
+			virtual void load( void ) {}
 
 			virtual void setCastShadows( bool castShadows)
 			{}
@@ -72,28 +72,28 @@ namespace cl
 			};
 
 		protected :
+			vl::graph::SceneManagerWeakPtr _manager;
 
 			std::string _name;
 			vl::NamedValuePairList _params;
 
 	};	// class Entity
 
-	class EntityFactory : public vl::graph::MovableObjectFactory
+	struct EntityFactory : public vl::graph::MovableObjectFactory
 	{
-		public :
-			EntityFactory( void ) {}
+		EntityFactory( void ) {}
 
-			virtual ~EntityFactory( void ) {}
+		virtual ~EntityFactory( void ) {}
 
-			virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
-					vl::NamedValuePairList const &params );
+		virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
+				vl::NamedValuePairList const &params );
 			
-			virtual std::string const &typeName( void )
-			{ return TYPENAME; }
+		virtual std::string const &typeName( void )
+		{ return TYPENAME; }
 
-			static const std::string TYPENAME;
+		static const std::string TYPENAME;
 
-	};	// class MovableObjectFactory
+	};	// class EntityFactory
 
 }	// namespace graph
 

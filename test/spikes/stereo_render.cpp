@@ -22,10 +22,10 @@
 #include "eq_ogre/ogre_entity.hpp"
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
+#include "base/args.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
-#include "args.hpp"
 
 class Channel : public eq::Channel
 {
@@ -80,6 +80,8 @@ public :
 		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
 					new vl::ogre::SceneNodeFactory ) );
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
 		
 		// Create camera and viewport
@@ -96,7 +98,7 @@ public :
 		BOOST_REQUIRE( root );
 		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load(man);
+		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 300) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
@@ -107,6 +109,7 @@ public :
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
+		std::cout << "frameStart " << frameNumber << std::endl;
 		eq::Channel::frameStart( frameID, frameNumber );
 	}
 
@@ -180,12 +183,17 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-		Args args;
-		args.addArg("stereo_render");
-		args.addArg("--eq-config" );
-		args.addArg("1-window.eqc");
+#ifdef VL_WIN32 && _DEBUG
 
-		char **argv = args.argv;
+	_CrtSetDbgFlag( 0 );
+	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
+#endif
+		vl::Args args;
+		args.add("stereo_render");
+		args.add("--eq-config" );
+		args.add("1-window.eqc");
+
+		char **argv = args.getData();
 
 		std::cout << args << std::endl;
 

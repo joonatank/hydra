@@ -3,10 +3,10 @@
 #include "ogre_scene_manager.hpp"
 
 void
-vl::ogre::Entity::load( vl::graph::SceneManagerRefPtr sm ) 
+vl::ogre::Entity::load( void ) 
 {
 	boost::shared_ptr<SceneManager> ogre_sm
-		= boost::dynamic_pointer_cast<SceneManager>( sm );
+		= boost::dynamic_pointer_cast<SceneManager>( _manager.lock() );
 
 	if( !ogre_sm )
 	{ throw vl::null_pointer("vl::ogre::Entity::load"); }

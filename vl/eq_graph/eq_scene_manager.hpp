@@ -55,11 +55,14 @@ namespace cl
 			// TODO testing and implementation
 			virtual void setAmbientLight( vl::colour const &col )
 			{
+				_ambient_colour = col;
 			}
 
 			// TODO testing and implementation
-			virtual vl::colour const &getAmbientLight( void )
-			{ return vl::colour(); }
+			virtual vl::colour const &getAmbientLight( void ) const
+			{
+				return _ambient_colour;
+			}
 
 			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );
@@ -79,8 +82,7 @@ namespace cl
 			// There is no implementation of vl::cl::Camera, because
 			// it's render engine sepcifc and not distributed so this method
 			// will always return NULL.
-			virtual vl::graph::CameraRefPtr createCamera( std::string const & )
-			{ return vl::graph::CameraRefPtr(); }
+			virtual vl::graph::CameraRefPtr createCamera( std::string const & );
 
 			virtual vl::graph::SceneNodeRefPtr getNode( std::string const &name );
 
@@ -90,17 +92,11 @@ namespace cl
 
 			// Get camera
 			// TODO testing and implementation
-			virtual vl::graph::CameraRefPtr getCamera( std::string const &name )
-			{
-				return vl::graph::CameraRefPtr();
-			}
+			virtual vl::graph::CameraRefPtr getCamera( std::string const &name );
 
 			// Get light
 			// TODO testing and implementation
-			virtual vl::graph::LightRefPtr getLight( std::string const &name )
-			{
-				return vl::graph::LightRefPtr();
-			}
+			virtual vl::graph::LightRefPtr getLight( std::string const &name );
 
 			virtual void setSceneNodeFactory(
 					vl::graph::SceneNodeFactoryPtr factory );
@@ -115,17 +111,7 @@ namespace cl
 			virtual void removeMovableObjectFactory(
 					std::string const &typeName );
 
-			virtual std::vector<std::string> movableObjectFactories( void )
-			{
-				std::vector<std::string> names;
-				std::map<std::string, vl::graph::MovableObjectFactoryPtr>::iterator iter;
-				for( iter = _movable_factories.begin(); iter != _movable_factories.end();
-						++iter )
-				{
-					names.push_back( iter->first );
-				}
-				return names;
-			}
+			virtual std::vector<std::string> movableObjectFactories( void );
 
 			// Equalizer overrides
 	
@@ -151,25 +137,15 @@ namespace cl
 			};
 
 		protected :
-			// Factory methods, need to be overloaded by child classes
-			/*
-			virtual vl::graph::SceneNodeRefPtr
-				_createSceneNodeImpl( std::string const &name );
-
-			virtual vl::graph::MovableObjectRefPtr _createMovableObjectImpl(
-					std::string const &typeName,
-					std::string const &name,
-					vl::NamedValuePairList const &params
-						= vl::NamedValuePairList() );
-			*/
+			std::string _name;
 
 			vl::graph::SceneNodeRefPtr _root;
 
 			vl::graph::SceneNodeFactoryPtr _scene_node_factory;
 			std::map<std::string, vl::graph::MovableObjectFactoryPtr>
 				_movable_factories;
-				
-			std::string _name;
+
+			vl::colour _ambient_colour;
 
 	};	// class SceneManager
 

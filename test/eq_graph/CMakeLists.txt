@@ -11,7 +11,6 @@ add_executable( test_eq_scene_manager
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_manager
 	)
 
-#${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
 add_executable( test_eq_root
 	test_eq_root.cpp
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
@@ -19,9 +18,10 @@ add_executable( test_eq_root
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_root
 	)
 
+set( LIBS ${Boost_LIBRARIES} ${EQ_LIBRARIES} )
+
 FOREACH( source ${TEST_SOURCES} )
-	target_link_libraries( test_${source} ${Boost_LIBRARIES}
-		${EQ_LIBRARIES} )
+	target_link_libraries( test_${source} ${LIBS} )
 	add_test( ${source} ${PROJECT_BINARY_DIR}/test_${source} )
 ENDFOREACH( source )
 

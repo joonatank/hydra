@@ -6,178 +6,155 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <turtle/mock.hpp>
-
 #include "eq_graph/eq_scene_manager.hpp"
 
-MOCK_BASE_CLASS( mock_node_factory, vl::graph::SceneNodeFactory )
+#include "mocks.hpp"
+
+struct SceneManFixture
 {
-	MOCK_METHOD( create, 2 )
+	SceneManFixture( void )
+		: man( new vl::cl::SceneManager( "Name" ) )
+	{
+	}
+
+	vl::graph::SceneManagerRefPtr man;
 };
 
-MOCK_BASE_CLASS( mock_object_factory, vl::graph::MovableObjectFactory )
+struct NodeFactoryFixture : public SceneManFixture
 {
-	MOCK_METHOD( create, 2 )
-	MOCK_METHOD( typeName, 0 )
+	NodeFactoryFixture( void )
+		: sn_fac( new mock::NodeFactory )
+	{
+		BOOST_CHECK_NO_THROW( man->setSceneNodeFactory( sn_fac ) );
+	}
+
+	mock::NodeFactoryPtr sn_fac;
 };
 
-MOCK_BASE_CLASS( mock_movable_object, vl::graph::MovableObject )
-{
-
-};
-
-MOCK_BASE_CLASS( mock_scene_node, vl::graph::SceneNode )
-{
-	MOCK_METHOD( getName, 0 )
-	MOCK_METHOD( translate, 2 )
-	MOCK_METHOD( setPosition, 2 )
-	MOCK_METHOD( getPosition, 1 )
-	MOCK_METHOD( rotate, 2 )
-	MOCK_METHOD( setOrientation, 2 )
-	MOCK_METHOD( getOrientation, 1 )
-	MOCK_METHOD( lookAt, 1 )
-	MOCK_METHOD( setDirection, 1 )
-	MOCK_METHOD_EXT( scale, 1, void( vl::vector const & ), scaleVector )
-	MOCK_METHOD_EXT( scale, 1, void( vl::scalar const ), scaleScalar )
-	MOCK_METHOD( setScale, 1 )
-	MOCK_METHOD( getScale, 0 )
-	MOCK_METHOD( attachObject, 1 )
-	MOCK_METHOD( detachObject, 1 )
-	MOCK_METHOD( getAttached, 0 )
-	MOCK_METHOD( numAttached, 0 )
-	MOCK_METHOD( createChild, 1 )
-	MOCK_METHOD( setParent, 1 )
-	MOCK_METHOD( addChild, 1 )
-	MOCK_METHOD_EXT( removeChild, 1, void( vl::graph::SceneNodeRefPtr ), removeChild )
-	MOCK_METHOD_EXT( removeChild, 1,
-			vl::graph::SceneNodeRefPtr( uint16_t ), removeChildByIndex )
-	MOCK_METHOD_EXT( removeChild, 1,
-			vl::graph::SceneNodeRefPtr( std::string const & ), removeChildByName )
-	MOCK_METHOD_EXT( getChild, 1, vl::graph::SceneNodeRefPtr( uint16_t ), getChildByIndex )
-	MOCK_METHOD_EXT( getChild, 1,
-			vl::graph::SceneNodeRefPtr( std::string const & ), getChildByName )
-	MOCK_METHOD( getChilds, 0 )
-	MOCK_METHOD( numChildren, 0 )
-	MOCK_METHOD( getParent, 0 )
-	MOCK_METHOD( getManager, 0 )
-};
 
 BOOST_AUTO_TEST_CASE( constructor_test )
 {
 	vl::graph::SceneManagerRefPtr sm;
 	BOOST_CHECK_NO_THROW( sm.reset( new vl::cl::SceneManager("Name") ) );
+	BOOST_CHECK_EQUAL( sm->getName(), "Name" );
 
 	BOOST_CHECK_THROW( vl::cl::SceneManager(""), vl::empty_param );
 }
 
+BOOST_FIXTURE_TEST_SUITE( ObjectTests, SceneManFixture )
+
+BOOST_AUTO_TEST_CASE( movable_object_test )
+{
+	// Add Entity factory
+	mock::ObjectFactoryPtr obj_fac( new mock::ObjectFactory );
+	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Entity" );
+	man->addMovableObjectFactory( obj_fac );
+
+	vl::NamedValuePairList params;
+	params["mesh"] = "ent.mesh";
+	mock::MovableObjectPtr obj( new mock::MovableObject );
+	MOCK_EXPECT( obj_fac, create ).once().with( "ent", params ).returns( obj );
+	MOCK_EXPECT( obj, setManager ).once().with( man );
+
+	// Test Entity creation
+	vl::graph::EntityRefPtr ent = man->createEntity( "ent", "ent.mesh" );
+	BOOST_CHECK( ent );
+	
+	// Test object finding
+}
+
+BOOST_AUTO_TEST_CASE( camera_test )
+{
+	// Add Camera factory
+	mock::ObjectFactoryPtr obj_fac( new mock::ObjectFactory );
+	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Camera" );
+	man->addMovableObjectFactory( obj_fac );
+
+	mock::MovableObjectPtr obj( new mock::MovableObject );
+	MOCK_EXPECT( obj_fac, create ).once().with( "cam", vl::NamedValuePairList() )
+		.returns( obj );
+	MOCK_EXPECT( obj, setManager ).once().with( man );
+
+	vl::graph::CameraRefPtr cam = man->createCamera( "cam" );
+	BOOST_CHECK( cam );
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE( FactoryTests, NodeFactoryFixture )
+
 BOOST_AUTO_TEST_CASE( factory_test )
 {
-	vl::graph::SceneManagerRefPtr sm( new vl::cl::SceneManager("Name") );
-	boost::shared_ptr<mock_node_factory> node_fact( new mock_node_factory );
-	boost::shared_ptr<mock_object_factory> obj_fact( new mock_object_factory );
-	boost::shared_ptr<mock_object_factory> obj_fact2( new mock_object_factory );
-	boost::shared_ptr<mock_object_factory> obj_fact3( new mock_object_factory );
+	mock::ObjectFactoryPtr obj_fact( new mock::ObjectFactory );
+	mock::ObjectFactoryPtr obj_fact2( new mock::ObjectFactory );
+	mock::ObjectFactoryPtr obj_fact3( new mock::ObjectFactory );
 	
 	MOCK_EXPECT( obj_fact, typeName ).at_least(1).returns( "Entity" );
 	MOCK_EXPECT( obj_fact2, typeName ).at_least(2).returns( "Entity" );
 	MOCK_EXPECT( obj_fact3, typeName ).at_least(1).returns( "Light" );
 
-	// Test adding sceneNode factory
-	// TODO add test case to add scene nodes, trying to add
-	// a new node factory and destroying the graph
-	BOOST_CHECK_NO_THROW( sm->setSceneNodeFactory( node_fact ) );
-
 	// add one movable object factory
-	BOOST_CHECK_NO_THROW( sm->addMovableObjectFactory( obj_fact ) );
-	std::vector<std::string> names = sm->movableObjectFactories();
+	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact ) );
+	std::vector<std::string> names = man->movableObjectFactories();
 	BOOST_CHECK_EQUAL( names.size(), 1 );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Entity" ) !=
 			names.end() );
 	// Try to add non existing movable object factory
-	BOOST_CHECK_THROW( sm->addMovableObjectFactory(
+	BOOST_CHECK_THROW( man->addMovableObjectFactory(
 				vl::graph::MovableObjectFactoryPtr() ), vl::null_pointer );
-	BOOST_CHECK_EQUAL( sm->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
 	// add the factory we already added again
-	BOOST_CHECK_THROW( sm->addMovableObjectFactory( obj_fact ), vl::exception );
-	BOOST_CHECK_EQUAL( sm->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_THROW( man->addMovableObjectFactory( obj_fact ), vl::exception );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
 	// add another factory with a different type
-	BOOST_CHECK_NO_THROW( sm->addMovableObjectFactory( obj_fact3 ) );
-	names = sm->movableObjectFactories();
+	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact3 ) );
+	names = man->movableObjectFactories();
 	BOOST_CHECK_EQUAL( names.size(), 2 );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Light" ) !=
 			names.end() );
 	// add another factory with the same type without overwrite
-	BOOST_CHECK_THROW( sm->addMovableObjectFactory( obj_fact2 ), vl::exception );
-	BOOST_CHECK_EQUAL( sm->movableObjectFactories().size(), 2 );
+	BOOST_CHECK_THROW( man->addMovableObjectFactory( obj_fact2 ), vl::exception );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 2 );
 	// add another factory with the same type with overwrite
-	BOOST_CHECK_NO_THROW( sm->addMovableObjectFactory( obj_fact2, true ) );
-	names = sm->movableObjectFactories();
+	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact2, true ) );
+	names = man->movableObjectFactories();
 	BOOST_CHECK_EQUAL( names.size(), 2 );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Entity" ) !=
 			names.end() );
 
-//	MOCK_VERIFY( obj_fact, typeName );
-//	MOCK_VERIFY( obj_fact2, typeName );
-//	MOCK_VERIFY( obj_fact3, typeName );
-
 	// test factory removals
-	BOOST_CHECK_NO_THROW( sm->removeMovableObjectFactory( obj_fact2 ) );
-	names = sm->movableObjectFactories();
+	BOOST_CHECK_NO_THROW( man->removeMovableObjectFactory( obj_fact2 ) );
+	names = man->movableObjectFactories();
 	BOOST_CHECK_EQUAL( names.size(), 1 );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Light" ) !=
 			names.end() );
 	//  trying to remove not existing factory
-	BOOST_CHECK_THROW( sm->removeMovableObjectFactory( obj_fact ), vl::exception );
-	BOOST_CHECK_EQUAL( sm->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_THROW( man->removeMovableObjectFactory( obj_fact ), vl::exception );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
 	// remove by name
-	BOOST_CHECK_NO_THROW( sm->removeMovableObjectFactory( "Light" ) );
-	BOOST_CHECK_EQUAL( sm->movableObjectFactories().size(), 0 );
-}
-
-BOOST_AUTO_TEST_CASE( movable_object_test )
-{
-	vl::graph::SceneManagerRefPtr sm( new vl::cl::SceneManager("Name") );
-	boost::shared_ptr<mock_object_factory> obj_fac( new mock_object_factory );
-
-	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Entity" );
-
-	sm->addMovableObjectFactory( obj_fac );
-
-	vl::NamedValuePairList params;
-	params["mesh"] = "ent.mesh";
-	MOCK_EXPECT( obj_fac, create ).once().with( "ent", params )
-		.returns( vl::graph::MovableObjectRefPtr( new mock_movable_object ) );
-
-	// Test Entity creation
-	vl::graph::MovableObjectRefPtr ent = sm->createEntity( "ent", "ent.mesh" );
-	BOOST_CHECK( ent );
-	
-	// Test object finding
-
+	BOOST_CHECK_NO_THROW( man->removeMovableObjectFactory( "Light" ) );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 0 );
 }
 
 BOOST_AUTO_TEST_CASE( node_test )
 {
-	vl::graph::SceneManagerRefPtr sm( new vl::cl::SceneManager("Name") );
-	boost::shared_ptr<mock_node_factory> sn_fact( new mock_node_factory );
+	MOCK_EXPECT( sn_fac, create ).once().with( man, "Root")
+		.returns( vl::graph::SceneNodeRefPtr( new mock::SceneNode ) );
 
-	MOCK_EXPECT( sn_fact, create ).once().with( sm, "Root")
-		.returns( vl::graph::SceneNodeRefPtr( new mock_scene_node ) );
-
-	MOCK_EXPECT( sn_fact, create ).once().with( sm, "Node")
-		.returns( vl::graph::SceneNodeRefPtr( new mock_scene_node ) );
+	MOCK_EXPECT( sn_fac, create ).once().with( man, "Node")
+		.returns( vl::graph::SceneNodeRefPtr( new mock::SceneNode ) );
 
 	// Set the node factory to mock
-	sm->setSceneNodeFactory( sn_fact );
+	man->setSceneNodeFactory( sn_fac );
 
 	// Test that root node is created
 	vl::graph::SceneNodeRefPtr root;
-	BOOST_CHECK_NO_THROW( root = sm->getRootNode() );
+	BOOST_CHECK_NO_THROW( root = man->getRootNode() );
 	BOOST_CHECK( root );
 
 	// Test creating new nodes
 	vl::graph::SceneNodeRefPtr n;
-	BOOST_CHECK_NO_THROW( n = sm->createNode("Node") );
+	BOOST_CHECK_NO_THROW( n = man->createNode("Node") );
 	BOOST_CHECK( n );
 
 	// Test finding Nodes, by name
@@ -185,32 +162,37 @@ BOOST_AUTO_TEST_CASE( node_test )
 	// Equalizer needs to be initialized before we can search by IDs
 }
 
-BOOST_AUTO_TEST_CASE( scene_node_factory_test )
+// Test replacing the scene node factory
+BOOST_AUTO_TEST_CASE( replace_SceneNode_factory )
 {
 	// Initialize
-	vl::graph::SceneManagerRefPtr sm( new vl::cl::SceneManager("Name") );
-	boost::shared_ptr<mock_node_factory> sn_fac( new mock_node_factory );
-	boost::shared_ptr<mock_node_factory> sn_fac2( new mock_node_factory );
+	mock::NodeFactoryPtr sn_fac2( new mock::NodeFactory );
 
-	MOCK_EXPECT( sn_fac, create ).once().with( sm, "Root")
-		.returns( vl::graph::SceneNodeRefPtr( new mock_scene_node ) );
-
-	sm->setSceneNodeFactory( sn_fac );
+	MOCK_EXPECT( sn_fac, create ).once().with( man, "Root")
+		.returns( vl::graph::SceneNodeRefPtr( new mock::SceneNode ) );
 
 	// Test that we can not change SceneNode factory if the scene graph exists
-	vl::graph::SceneNodeRefPtr root = sm->getRootNode();
-	BOOST_CHECK_THROW( sm->setSceneNodeFactory( sn_fac2 ), vl::exception );
+	vl::graph::SceneNodeRefPtr root = man->getRootNode();
+	BOOST_CHECK_THROW( man->setSceneNodeFactory( sn_fac2 ), vl::exception );
 
 	MOCK_VERIFY( sn_fac, create );
 
-	MOCK_EXPECT( sn_fac2, create ).once().with( sm, "Root")
-		.returns( vl::graph::SceneNodeRefPtr( new mock_scene_node ) );
+	MOCK_EXPECT( sn_fac2, create ).once().with( man, "Root")
+		.returns( vl::graph::SceneNodeRefPtr( new mock::SceneNode ) );
 
 	// Test that we can destroy the SceneGraph
-	sm->destroyGraph();
+	man->destroyGraph();
 	// Test that we can set new factory if there is no SceneGraph
-	BOOST_CHECK_NO_THROW( sm->setSceneNodeFactory( sn_fac2 ) );
-	sm->getRootNode();
+	BOOST_CHECK_NO_THROW( man->setSceneNodeFactory( sn_fac2 ) );
+	man->getRootNode();
 
 	MOCK_VERIFY( sn_fac2, create );
 }
+
+BOOST_AUTO_TEST_CASE( find_node )
+{
+
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+

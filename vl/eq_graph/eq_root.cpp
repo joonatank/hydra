@@ -4,12 +4,38 @@
 
 #include <cstdlib>
 
+#include "base/filesystem.hpp"
+
 vl::cl::Root::Root( void )
 	: _scene_managers()
 {
+	// TODO CMake should set variable VL_SOURCE_DIR when configuring
+	// TODO should also be able to use VL_INSTALL_DIR for later use with installer
 	char *dir = ::getenv( "VL_DIR" );
 	if( dir )
-	{ _base_dir = dir; }
+	{
+		fs::path path(dir);
+		if( fs::exists( path ) )
+		{ _base_dir = dir; }
+		else
+		{
+			// Try to find based on the current VL_DIR
+			path = find_parent_dir( "data", path );
+			if( !fs::exists( path ) )
+			{
+				path = find_parent_dir( "data", fs::current_path() );
+			}
+			path.remove_filename();
+			_base_dir = path.file_string();
+		}
+	}
+	else
+	{
+		// Find path based on current directory
+		fs::path path = find_parent_dir( "data", fs::current_path());
+		path.remove_filename();
+		_base_dir = path.file_string();
+	}
 }
 
 vl::graph::SceneManagerRefPtr

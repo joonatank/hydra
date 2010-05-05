@@ -40,7 +40,7 @@ namespace ogre
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( vl::graph::SceneManagerRefPtr sm );
+			virtual void load( void );
 
 		protected :
 			Ogre::Entity *_ogre_entity;

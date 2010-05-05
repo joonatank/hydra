@@ -43,10 +43,10 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
 #include "math/conversion.hpp"
+#include "base/args.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
-#include "args.hpp"
 
 /*****************************************************************************
  *
@@ -157,7 +157,7 @@ public :
 		BOOST_REQUIRE( root );
 		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load(man);
+		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 3) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
@@ -220,12 +220,18 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-		Args args;
-		args.addArg("stereo_render");
-		args.addArg("--eq-config" );
-		args.addArg("1-window.eqc");
+#ifdef VL_WIN32 && _DEBUG
 
-		char **argv = args.argv;
+	_CrtSetDbgFlag( 0 );
+	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
+#endif
+
+		vl::Args args;
+		args.add("stereo_render");
+		args.add("--eq-config" );
+		args.add("1-window.eqc");
+
+		char **argv = args.getData();
 
 		std::cout << args << std::endl;
 

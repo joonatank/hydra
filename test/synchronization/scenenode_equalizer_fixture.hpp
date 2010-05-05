@@ -4,10 +4,9 @@
 
 #include "eq_graph/eq_scene_node.hpp"
 
-#include "../eq_graph/mock_scene_manager.hpp"
+#include "../eq_graph/mocks.hpp"
 
 #include "sync_fixture.hpp"
-//#include "equalizer_fixture.hpp"
 
 // Test variables we transmit over the synchronization
 vl::vector const TRANS_VEC[3] =
@@ -42,7 +41,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 {
 	SceneNodeSyncFixture( eq::Config *conf )
 		: SyncFixture( conf, 6),
-		  man( new mock_scene_manager ),
+		  man( new mock::SceneManager ),
 		  node( new vl::cl::SceneNode(man) )
 	{}
 
@@ -128,6 +127,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 			}
 			break;
 
+			// Test all trasnformations
 			case 2 :
 			{
 				if( node->isMaster() )
@@ -173,7 +173,6 @@ struct SceneNodeSyncFixture : public SyncFixture
 				{
 					// Create childs with incorrect names
 					// We should have the node calling these I think.
-//					MOCK_EXPECT( man, pushChildAddedStack ).exactly(2);
 					node->sync();
 
 					/*
@@ -195,7 +194,6 @@ struct SceneNodeSyncFixture : public SyncFixture
 				}
 				else
 				{
-//					MOCK_EXPECT( man, pushChildRemovedStack ).exactly(1);
 					node->sync();
 					/*
 					BOOST_CHECK( vl::equal( node->numChildren(), 1 ) );
@@ -223,7 +221,7 @@ struct SceneNodeSyncFixture : public SyncFixture
 		}
 	}
 
-	boost::shared_ptr<mock_scene_manager> man;
+	mock::SceneManagerPtr man;
 	boost::shared_ptr<vl::cl::SceneNode> node;
 };
 

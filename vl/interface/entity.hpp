@@ -26,7 +26,7 @@ namespace graph
 
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
-			virtual void load( SceneManagerRefPtr ) = 0;
+			virtual void load( void ) = 0;
 
 			virtual void setCastShadows( bool castShadows) = 0;
 

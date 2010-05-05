@@ -70,7 +70,7 @@ public :
 		vl::graph::EntityRefPtr ent;
 		ent = man->createEntity("robot", "robot.mesh");
 		EQASSERT( ent );
-		ent->load(man);
+		ent->load();
 		robot = man->getRootNode()->createChild("robot");
 		robot->setPosition( vl::vector(0, 0, 300) );
 		robot->attachObject( ent );
