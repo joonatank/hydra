@@ -2,10 +2,10 @@
 
 global
 {
-	EQ_CONFIG_FATTR_EYE_BASE		0.025
-	EQ_WINDOW_IATTR_HINT_STEREO		AUTO	
-	EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER	ON
-	EQ_COMPOUND_IATTR_STEREO_MODE		QUAD
+	#EQ_CONFIG_FATTR_EYE_BASE		0.025
+	#EQ_WINDOW_IATTR_HINT_STEREO		AUTO	
+	#EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER	ON
+	#EQ_COMPOUND_IATTR_STEREO_MODE		QUAD
 }
 
 server
@@ -20,7 +20,7 @@ server
                 {
                     name "window"
                     viewport [ 0 0 800 600 ]
-					attributes { hint_stereo ON }
+					#attributes { hint_stereo ON }
                     channel
                     { name "channel" }
                 }
@@ -29,7 +29,7 @@ server
 
 		compound
         {
-			eye [ LEFT RIGHT ]
+			#eye [ LEFT RIGHT ]
 			channel "channel"
 			wall
 			{

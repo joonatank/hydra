@@ -2,8 +2,31 @@
 #include <eq/eq.h>
 
 #include "eq_ogre/ogre_root.hpp"
+#include "settings.hpp"
 
 #include "dotscene_loader.hpp"
+
+class Config : public eq::Config
+{
+public :
+	Config( eq::base::RefPtr< eq::Server > parent )
+		: eq::Config( parent )
+	{
+	}
+
+	void setSettings( vl::Settings const &set )
+	{
+		_settings = set;
+	}
+
+	vl::Settings const &getSettings( void ) const
+	{
+		return _settings;
+	}
+
+protected :
+	vl::Settings _settings;
+};
 
 class RenderWindow : public eq::Window
 {
@@ -16,6 +39,9 @@ public :
 	{
 		if( !eq::Window::configInit( initID ) )
 		{ return false; }
+
+		::Config *config = static_cast< ::Config * >( getConfig() );
+		vl::Settings const &settings = config->getSettings();
 
 		root.reset( new vl::ogre::Root );
 		// Initialise ogre
@@ -31,14 +57,17 @@ public :
 		win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
 				root->createWindow( "win", 800, 600, params ) );
 
+		// Resource registration
+		root->setupResources( settings );
+		root->loadResources();
+
 		man = root->createSceneManager("SceneManager");
 
-		
 		// TODO implement
-		std::string scene_path = root->getDataDir() + "testScene.xml";
+//		std::string scene_path = root->getDataDir() + "testScene.xml";
 
 		DotSceneLoader loader;
-		loader.parseDotScene( scene_path, "General", man );
+		loader.parseDotScene( settings.getScene(), man );
 
 		// Loop through all cameras and grab their name and set their debug representation
 //		Ogre::SceneManager::CameraIterator cameras = mSceneMgr->getCameraIterator();
@@ -161,22 +190,45 @@ public:
 	virtual eq::Window *createWindow( eq::Pipe *parent )
 	{ return new ::RenderWindow( parent ); }
 
-	virtual Channel *createChannel( eq::Window *parent )
+	virtual eq::Channel *createChannel( eq::Window *parent )
 	{ return new ::Channel( parent ); }
+
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new ::Config( parent ); }
 };
 
 int main( const int argc, char** argv )
 {
+	/*
 	std::cout << "arguments = ";
 	for(int i = 0; i < argc; i++ )
 	{
 		std::cout << argv[i] << " ";
 	}
 	std::cout << std::endl;
+	*/
+
+	vl::Settings settings;
+
+	// Read settings
+	if( argc > 1 )
+	{
+		// settings xml
+		std::string filename( argv[1] );
+		vl::SettingsSerializer ser(&settings);
+		ser.readFile(filename);
+	}
+	else
+	{
+		std::cerr << "No settings xml provided." << std::endl;
+		return -1;
+	}
+	settings.setExePath( argv[0] );
+	vl::Args &arg = settings.getEqArgs();
 
     // 1. Equalizer initialization
     ::NodeFactory nodeFactory;
-    if( !eq::init( argc, argv, &nodeFactory ))
+    if( !eq::init( arg.size(), arg.getData(), &nodeFactory ))
     {
         EQERROR << "Equalizer init failed" << std::endl;
         return EXIT_FAILURE;
@@ -184,9 +236,10 @@ int main( const int argc, char** argv )
     
     // 2. get a configuration
     bool        error  = false;
-    eq::Config* config = eq::getConfig( argc, argv );
+    ::Config* config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
     if( config )
     {
+		config->setSettings( settings );
         // 3. init config
         if( config->init( 0 ))
         {

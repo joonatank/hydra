@@ -27,6 +27,23 @@
 // Test includes
 #include "eq_test_fixture.hpp"
 
+class Config : public eq::Config
+{
+public :
+	Config( eq::base::RefPtr< eq::Server > parent )
+		: eq::Config( parent )
+	{}
+
+	void setSettings( vl::Settings const &set )
+	{ _settings = set; }
+
+	vl::Settings const &getSettings( void ) const
+	{ return _settings; }
+
+protected :
+	vl::Settings _settings;
+};
+
 class Channel : public eq::Channel
 {
 public :
@@ -71,6 +88,11 @@ public :
 		}
 		
 		ogre_root->init();
+
+		// Setup resources
+		::Config *conf = static_cast< ::Config *>( getConfig() );
+		vl::Settings const &set = conf->getSettings();
+		(boost::static_pointer_cast<vl::ogre::Root>(ogre_root))->setupResources( set );
 
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
@@ -172,6 +194,9 @@ class NodeFactory : public eq::NodeFactory
 public :
 	virtual Channel *createChannel( eq::Window *parent )
 	{ return new ::Channel( parent ); }
+
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new ::Config( parent ); }
 };
 
 eq::NodeFactory *g_nodeFactory = new ::NodeFactory;
@@ -183,10 +208,19 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-		vl::Args args;
+		std::string filename( "test_conf.xml" );
+		vl::SettingsSerializer ser(&settings);
+		BOOST_CHECK_NO_THROW( ser.readFile(filename) );
+
+		settings.setExePath( "stereo_render" );
+		vl::Args &args = settings.getEqArgs();
+		/*
 		args.add("stereo_render");
 		args.add("--eq-config" );
 		args.add("1-window.eqc");
+		*/
+
+		std::cout << args << std::endl;
 
 		char **argv = args.getData();
 
@@ -234,6 +268,7 @@ struct RenderFixture
 	eq::Config *config;
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
+	vl::Settings settings;
 };
 
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )

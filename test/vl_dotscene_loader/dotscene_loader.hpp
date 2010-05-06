@@ -9,6 +9,7 @@
 #include "base/rapidxml.hpp"
 #include "base/typedefs.hpp"
 #include "math/math.hpp"
+#include "base/filesystem.hpp"
 
 class nodeProperty
 {
@@ -37,7 +38,6 @@ public:
 	virtual ~DotSceneLoader();
 
 	void parseDotScene( const std::string &SceneName,
-			const std::string &groupName,
 			vl::graph::SceneManagerRefPtr sceneMgr,
 			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr() ,
 			const std::string &sPrependNode = "" );
@@ -117,6 +117,7 @@ protected:
 
 	std::string _sPrependNode;
 
+	char *_xml_data;
 	// No terrain support for now
 //	Ogre::TerrainGroup* mTerrainGroup;
 //	Ogre::Vector3 mTerrainPosition;

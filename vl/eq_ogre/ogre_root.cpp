@@ -53,14 +53,11 @@ void
 vl::ogre::Root::init( void )
 {
 	_ogre_root->initialise( false );
-
-	setupResources();
-	loadResources();
 }
 
 /// Method which will define the source of resources (other than current folder)
 void
-vl::ogre::Root::setupResources(void)
+vl::ogre::Root::setupResources( vl::Settings const &set )
 {
 	std::string resource_path( _base_dir + std::string("/data/") );
 	std::string resource_file( resource_path );

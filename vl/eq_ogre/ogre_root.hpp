@@ -28,6 +28,7 @@
 
 #include "ogre_render_window.hpp"
 #include "base/typedefs.hpp"
+#include "settings.hpp"
 
 namespace vl
 {
@@ -55,7 +56,7 @@ namespace ogre
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
-			virtual void setupResources(void);
+			virtual void setupResources( vl::Settings const &set );
 
 			virtual void loadResources(void);
 

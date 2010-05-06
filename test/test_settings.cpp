@@ -18,25 +18,37 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 	vl::SettingsSerializer ser(&settings);
 	BOOST_CHECK_NO_THROW( ser.readFile(filename) );
 
-	fs::path path = settings.getRootPath();
-	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
-	BOOST_CHECK( fs::exists(path) );
+	BOOST_CHECK_EQUAL( settings.nRoots(), 2 );
+	for( size_t i = 0; i < settings.nRoots(); ++i )
+	{
+		vl::Settings::Root const &root = settings.getRoot(i);
+		BOOST_CHECK_EQUAL( root.path.root_directory(), "/" );
+		BOOST_CHECK( fs::exists(root.path) );
+		BOOST_TEST_MESSAGE( "root " << i << " path = " << root.path );
+	}
 
-	path = settings.getEqConfigPath();
+	fs::path path = settings.getEqConfigPath();
 	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
 	BOOST_CHECK_EQUAL( path.filename(), "1-window.eqc" );
 
-	path = settings.getScenePath();
-	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
+	path = settings.getScene();
 	BOOST_CHECK_EQUAL( path.filename(), "test.scene" );
+	BOOST_TEST_MESSAGE( "scene = " << path );
 
-	path = settings.getOgreResourcePath();
-	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
-	BOOST_CHECK_EQUAL( path.filename(), "resources.cfg" );
+	std::vector<fs::path> resource_paths = settings.getOgreResourcePaths();
+	BOOST_CHECK_EQUAL( resource_paths.size(), 2 );
+	for( size_t i = 0; i < resource_paths.size(); ++i )
+	{
+		fs::path const &res_path = resource_paths.at(i);
+		BOOST_CHECK_EQUAL( res_path.root_directory(), "/" );
+		BOOST_CHECK_EQUAL( res_path.filename(), "resources.cfg" );
+		BOOST_TEST_MESSAGE( "resource path = " << res_path );
+	}
 
 	path = settings.getOgrePluginsPath();
 	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
 	BOOST_CHECK_EQUAL( path.filename(),  "plugins.cfg" );
+	BOOST_TEST_MESSAGE( "plugin path = "<< path );
 
 	vl::Args const &arg = settings.getEqArgs();
 	BOOST_TEST_MESSAGE( "args = "<< arg );

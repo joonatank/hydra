@@ -12,6 +12,8 @@ subdirs( util math eq_graph spikes eq_ogre synchronization dotscene_loader
 set( LIBS ${Boost_LIBRARIES} eqOgre )
 
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
+
 configure_file( ${vl_SOURCE_DIR}/data/test_conf.xml
 	${PROJECT_BINARY_DIR}/test_conf.xml )
 configure_file( ${vl_SOURCE_DIR}/data/inv_conf.xml

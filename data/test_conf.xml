@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <config>
-	<path>${VL_DATA_PATH}</path>
-	<plugins>plugins.cfg</plugins>
-	<resources>resources.cfg</resources>
-	<eqc>eqc/1-window.eqc</eqc>
+	<root path="${VL_DATA_PATH}">
+		<plugins>plugins.cfg</plugins>
+		<eqc>eqc/1-window.eqc</eqc>
+		<resources>resources.cfg</resources>
+	</root>
+	<root path="${VL_MEDIA_PATH}">
+		<resources>resources.cfg</resources>
+	</root>
 	<scene>test.scene</scene>
 </config>

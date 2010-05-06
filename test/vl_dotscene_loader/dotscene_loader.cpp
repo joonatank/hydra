@@ -15,28 +15,30 @@
  * TODO should be removed as soon as possible.
  */
 #include <OGRE/OgreLogManager.h>
+#include <OGRE/OgreException.h>
 #include <OGRE/OgreResourceManager.h>
 
 
 DotSceneLoader::DotSceneLoader()
+	: _xml_data(0)
 {
 }
 
 
 DotSceneLoader::~DotSceneLoader()
 {
+	delete [] _xml_data;
 }
 
 void
 DotSceneLoader::parseDotScene(
-		const std::string &SceneName,
-		const std::string &groupName,
+		const std::string &sceneName,
 		vl::graph::SceneManagerRefPtr sceneMgr,
 		vl::graph::SceneNodeRefPtr attachNode,
 		const std::string &sPrependNode )
 {
 	// set up shared object values
-	_sGroupName = groupName;
+//	_sGroupName = groupName;
 	_scene_mgr = sceneMgr;
 	_sPrependNode = sPrependNode;
 	staticObjects.clear();
@@ -47,9 +49,12 @@ DotSceneLoader::parseDotScene(
 	rapidxml::xml_node<>* XMLRoot;
 
 	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-		.openResource(SceneName, groupName );
-	char* scene = strdup( stream->getAsString().c_str() );
-	XMLDoc.parse<0>(scene);
+		.openResource( sceneName );
+	delete [] _xml_data;
+	char* _xml_data = strdup( stream->getAsString().c_str() );
+//	std::ifstream fs( scenePath.c_str(), std::ios::binary );
+//	_xml_data.readStream( fs );
+	XMLDoc.parse<0>( _xml_data );
 
 	// Grab the scene node
 	XMLRoot = XMLDoc.first_node("scene");
@@ -71,7 +76,8 @@ DotSceneLoader::parseDotScene(
 	processScene(XMLRoot);
 }
 
-void DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
+void
+DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 {
 	// Process the scene parameters
 	std::string version = getAttrib(XMLRoot, "formatVersion", "unknown");
