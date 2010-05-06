@@ -1,3 +1,5 @@
+PROJECT( "eqOgre" CXX )
+
 set( SOURCES
 	eq_ogre/ogre_scene_node.cpp
 	eq_ogre/ogre_scene_node.hpp
@@ -27,6 +29,7 @@ set( SOURCES
 	base/args.cpp
 	settings.cpp
 	settings.hpp
+	base/exceptions.hpp
 	)
 
 add_library( eqOgre ${SOURCES} )

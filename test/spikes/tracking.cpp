@@ -47,7 +47,9 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 
 // Test includes
 #include "eq_test_fixture.hpp"
+#include "../fixtures.hpp"
 
+BOOST_GLOBAL_FIXTURE( InitFixture )
 /*****************************************************************************
  *
 
@@ -79,6 +81,7 @@ void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 
 	g_trackerData = t;
 
+	/*
  	printf("handle_tracker\tSensor %d is now at (%g,%g,%g)\n", 
 		t.sensor, t.pos[0], t.pos[1], t.pos[2]);
   	
@@ -86,6 +89,7 @@ void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
   	for( int i = 0; i < 4; i++ )
   	{ std::cout << t.quat[i] << ", "; }
   	std::cout << std::endl;
+	*/
 }
 
 class Channel : public eq::Channel
@@ -142,6 +146,8 @@ public :
 					new vl::ogre::SceneNodeFactory ) );
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
 		
 		// Create camera and viewport
 		vl::graph::SceneNodeRefPtr root;
@@ -160,6 +166,7 @@ public :
 		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 3) );
+		robot->scale( 1./100 );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
 		setNearFar( 0.1, 100.0 );
 
@@ -173,26 +180,48 @@ public :
 
 	virtual void frameDraw( const uint32_t frameID )
 	{
+		try {
+		eq::Channel::frameDraw( frameID );
 	  
-	  // Note: real applications would use one tracking device per observer
+		Ogre::Quaternion q( g_trackerData.quat[1], g_trackerData.quat[2], g_trackerData.quat[3], g_trackerData.quat[4]);
+		q.normalise();
+		Ogre::Vector3 v3( g_trackerData.pos[0], g_trackerData.pos[1], g_trackerData.pos[2]);
+		//feet->setPosition( vl::math::convert(v3) );
+
+		//vl::quaternion quat = vl::math::convert(q);
+		//quat.normalize();
+		//feet->setOrientation( quat );
+		
+		// Note: real applications would use one tracking device per observer
+				
+		Ogre::Matrix4 oq ( q );
+		//= Ogre::Matrix4::IDENTITY; //
+		//oq.setTrans( v3 );
+		//Ogre::Vector3 v(0., 1, 0.);
+		oq.setTrans( v3 );
 
 	    const eq::ObserverVector& observers = getConfig()->getObservers();
 	    for( eq::ObserverVector::const_iterator i = observers.begin();
 			i != observers.end(); ++i )
 	    {   
-			Ogre::Quaternion q( g_trackerData.quat[0], g_trackerData.quat[1], g_trackerData.quat[2], g_trackerData.quat[3]);
-			Ogre::Matrix4 oq( q );
-			Ogre::Vector3 v3( g_trackerData.pos[0], g_trackerData.pos[1], g_trackerData.pos[2]);
-			oq.setTrans( v3 );
+			std::cerr << "Head Matrix : " << std::endl
+				<< (*i)->getHeadMatrix() << std::endl;
+			std::cerr << "Tracker matrix : " << std::endl 
+				<< vl::math::convert(oq) << std::endl;
+		
 			(*i)->setHeadMatrix( vl::math::convert(oq) );
 		}
-	  
-		eq::Channel::frameDraw( frameID );
+		
 
 		eq::Frustumf frust = getFrustum();
-		std::cout << "Frustrum = " << frust.compute_matrix() << std::endl;
+		//std::cout << "Frustrum = " << frust.compute_matrix() << std::endl;
 		cam->setProjectionMatrix( frust.compute_matrix() );
 		win->update();
+		}
+		catch( vl::exception const &e )
+		{
+			std::cerr << "Exception : " << e.what << " in " << e.where << std::endl;
+		}
 	}
 
 	int state;
@@ -289,12 +318,11 @@ BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 	// Set up the tracker callback handler
     tkr->register_change_handler(NULL, handle_tracker);
 
-    for ( int i = 0; i < 4000; i++ )
+    for ( int i = 0; i < 2000; i++ )
 	{
 	  	tkr->mainloop();
 	  	mainloop(); 
-	  
-		break;
+
 	  	// Sleep
 		eq::base::sleep(1);
 	}

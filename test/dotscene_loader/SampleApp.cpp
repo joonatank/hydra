@@ -111,6 +111,7 @@ bool SampleApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
 	bool ret = BaseApplication::frameRenderingQueued(evt);
 
+	/*
 	if (!mFly)
 	{
 		// clamp to terrain
@@ -136,8 +137,9 @@ bool SampleApp::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			mActiveCamera->setPosition(camPos.x, newy, camPos.z);
 		}
 	}
+	*/
 
-	if (!mLoader->getTerrainGroup()->isDerivedDataUpdateInProgress())
+	if ( mLoader->getTerrainGroup() && !mLoader->getTerrainGroup()->isDerivedDataUpdateInProgress())
 	{
 		if (mTerrainImported)
 		{

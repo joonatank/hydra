@@ -26,6 +26,7 @@
 
 // Test includes
 #include "eq_test_fixture.hpp"
+#include "../fixtures.hpp"
 
 class Channel : public eq::Channel
 {
@@ -183,11 +184,6 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-#ifdef VL_WIN32 && _DEBUG
-
-	_CrtSetDbgFlag( 0 );
-	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
-#endif
 		vl::Args args;
 		args.add("stereo_render");
 		args.add("--eq-config" );
@@ -240,6 +236,8 @@ struct RenderFixture
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
 };
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {

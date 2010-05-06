@@ -29,10 +29,8 @@ namespace cl
 	{
 		public :
 			Entity( std::string const &name,
-					vl::NamedValuePairList const &params )
-				: eq::Object(), _name(name), _params(params)
-			{}
-
+					vl::NamedValuePairList const &params );
+			
 			virtual ~Entity( void ) {}
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );

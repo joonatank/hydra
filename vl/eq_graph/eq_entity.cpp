@@ -1,5 +1,10 @@
 #include "eq_entity.hpp"
 
+vl::cl::Entity::Entity( std::string const &name, 
+	vl::NamedValuePairList const &params )
+	: eq::Object(), _name(name), _params(params)
+{}
+
 void
 vl::cl::Entity::setManager( vl::graph::SceneManagerRefPtr man )
 { _manager = man; }

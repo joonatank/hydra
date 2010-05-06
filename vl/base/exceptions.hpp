@@ -1,6 +1,10 @@
 #ifndef VL_EXCEPTIONS_HPP
 #define VL_EXCEPTIONS_HPP
 
+/* TODO move to using strings
+ * add support for descriptions on the specific casts
+ * add what(), where() functions.
+ */
 namespace vl
 {
 	class exception
@@ -18,6 +22,13 @@ namespace vl
 	{
 		null_pointer( const char *wher )
 			: exception( "null_pointer", wher )
+		{}
+	};
+
+	struct bad_cast : public exception
+	{
+		bad_cast( const char *wher )
+			: exception( "bad_cast", wher )
 		{}
 	};
 

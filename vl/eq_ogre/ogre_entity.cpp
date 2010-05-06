@@ -2,6 +2,14 @@
 
 #include "ogre_scene_manager.hpp"
 
+vl::ogre::Entity::Entity( std::string const &name, vl::NamedValuePairList const &params )
+	: vl::cl::Entity(name, params), _ogre_entity(0)
+{}
+
+Ogre::MovableObject *
+vl::ogre::Entity::getNative( void )
+{ return _ogre_entity; }
+
 void
 vl::ogre::Entity::load( void ) 
 {
@@ -9,9 +17,8 @@ vl::ogre::Entity::load( void )
 		= boost::dynamic_pointer_cast<SceneManager>( _manager.lock() );
 
 	if( !ogre_sm )
-	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+	{ throw vl::bad_cast("vl::ogre::Entity::load"); }
 
-	// TODO this can be used for all MovableObjects not just meshes
 	Ogre::NameValuePairList parm;
 	vl::NamedValuePairList::iterator iter = _params.begin();
 	for( ; iter != _params.end(); ++iter )

@@ -14,6 +14,8 @@
 
 #include "interface/camera.hpp"
 
+#include "base/exceptions.hpp"
+
 #include <string>
 
 #include <eq/client/object.h>
@@ -25,17 +27,12 @@ namespace cl
 	class Camera : public eq::Object, public vl::graph::Camera
 	{
 		public :
-			Camera( std::string name, vl::NamedValuePairList const &params )
-				: _name( name )
-			{}
+			Camera( std::string name, vl::NamedValuePairList const &params );
 
 			virtual ~Camera( void ) {}
 
-			virtual void setManager( vl::graph::SceneManagerRefPtr man )
-			{
-				_manager = man;
-			}
-
+			virtual void setManager( vl::graph::SceneManagerRefPtr man );
+			
 			virtual void setProjectionMatrix( vmml::mat4d const &m )
 			{}
 

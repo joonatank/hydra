@@ -10,7 +10,6 @@ vl::ogre::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 {
 	boost::shared_ptr<SceneManager> man
 		= boost::dynamic_pointer_cast<SceneManager>( creator );
-	// TODO this should throw failed dynamic cast
 	if( !man )
 	{ throw vl::null_pointer( "vl::ogre::SceneNode::translate" ); }
 

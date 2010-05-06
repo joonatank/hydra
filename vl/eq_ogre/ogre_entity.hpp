@@ -27,17 +27,12 @@ namespace ogre
 	{
 		public :
 			Entity( std::string const &name,
-					vl::NamedValuePairList const &params )
-				: vl::cl::Entity(name, params), _ogre_entity(0)
-			{}
-
+					vl::NamedValuePairList const &params );
+			
 			virtual ~Entity( void ) {}
 
-			virtual Ogre::MovableObject *getNative( void )
-			{
-				return _ogre_entity;
-			}
-
+			virtual Ogre::MovableObject *getNative( void );
+			
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
 			virtual void load( void );

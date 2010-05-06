@@ -27,16 +27,13 @@ namespace ogre
 	class Camera : public vl::cl::Camera, public vl::ogre::MovableObject
 	{
 		public :
-			Camera( std::string name, vl::NamedValuePairList const &params )
-				: vl::cl::Camera( name, params )
-			{}
-
+			Camera( std::string name, vl::NamedValuePairList const &params );
+			
 			virtual ~Camera( void ) {}
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );
 			
-			virtual Ogre::MovableObject *getNative( void )
-			{ return _ogre_camera; }
+			virtual Ogre::MovableObject *getNative( void );
 
 			virtual void setProjectionMatrix( vl::matrix const &m );
 

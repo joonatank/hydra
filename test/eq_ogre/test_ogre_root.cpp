@@ -7,6 +7,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "eq_ogre/ogre_root.hpp"
+#include "../fixtures.hpp"
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_AUTO_TEST_CASE( constructor_test )
 {

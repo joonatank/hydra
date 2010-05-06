@@ -16,12 +16,12 @@ namespace ogre
 	{
 		public :
 
-			SceneManager( std::string const &name );
+			SceneManager( Ogre::SceneManager *man, 
+				std::string const &name = std::string() );
 
 			virtual ~SceneManager( void );
 
-			Ogre::SceneManager *getNative( void )
-			{ return _ogre_sm; }
+			Ogre::SceneManager *getNative( void );
 
 		protected :
 			Ogre::SceneManager *_ogre_sm;

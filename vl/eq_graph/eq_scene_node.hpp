@@ -199,19 +199,9 @@ namespace cl
 			virtual void childAdded( vl::graph::SceneNodeRefPtr child );
 			virtual void childRemoved( vl::graph::SceneNodeRefPtr child );
 
-			/*
-			void _addChild( vl::graph::SceneNode *child );
-
-			void _setParent( vl::graph::SceneNode *parent );
-
-			void _removeChild( vl::graph::SceneNode *child );
-			*/
-
 			vl::graph::SceneNodeRefPtr _findChild( std::string const &name ) const;
 
 			vl::graph::ChildContainer::iterator _findChildIter( std::string const &name );
-
-			//vl::graph::ChildContainer::iterator _findChildIter( vl::graph::
 
 			// Owner and creator of this node, we need this to create new
 			// objects. As the scene manager handles ultimately creation and
@@ -226,8 +216,6 @@ namespace cl
 			// For large scenegraphs this will be problematic, because we need
 			// to update the whole vector at once.
 			// So we need to develop versioned container to replace this later.
-			//DistributedContainer<vl::cl::MovableObject *> _attached;
-			//std::vector<vl::cl::MovableObject *
 			vl::graph::ObjectContainer _attached;
 
 			// Parent node, we need this to inform our current parent
@@ -235,7 +223,6 @@ namespace cl
 			vl::graph::SceneNodeWeakPtr _parent;
 
 			// The childs we own, if we are destroyed we will destroy these.
-			//DistributedContainer<vl::cl::SceneNode *> _childs;
 			vl::graph::ChildContainer _childs;
 
 			std::string _name;

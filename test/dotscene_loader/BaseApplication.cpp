@@ -211,10 +211,26 @@ void BaseApplication::loadResources(void)
 //-------------------------------------------------------------------------------------
 void BaseApplication::go(void)
 {
-	if (!setup())
-		return;
+	time_log.open("timer.log");
+	
+	time_log << "BaseApplication::go : \t" << mTimer.getMilliseconds()
+		<< " ms. " << std::endl;
+	if( !setup() )
+	{ return; }
 
-	mRoot->startRendering();
+	Ogre::Timer timer;
+	mRoot->renderOneFrame();
+	time_log << "BaseApplication::setup : Render first frame took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	time_log.close();
+	
+	bool exit = false;
+	while( !exit )
+	{
+		exit = !mRoot->renderOneFrame();
+	}
 
 	// clean up
 	destroyScene();
@@ -222,6 +238,9 @@ void BaseApplication::go(void)
 //-------------------------------------------------------------------------------------
 bool BaseApplication::setup(void)
 {
+	time_log << "BaseApplication::setup : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	Ogre::Timer timer;
 #ifdef _DEBUG
 	// TODO add reporting if file not found.
 	mRoot = new Ogre::Root("plugins_debug.cfg");
@@ -229,26 +248,81 @@ bool BaseApplication::setup(void)
 	// TODO add reporting if file not found.
 	mRoot = new Ogre::Root();
 #endif
-	setupResources();
+	time_log << "BaseApplication::setup : Root create took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
-	if (!configure()) return false;
+	setupResources();
+	time_log << "BaseApplication::setup : setupResources took \t" 
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
+
+	if( !configure() ) 
+	{ return false; }
+	time_log << "BaseApplication::setup : configure took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
 	chooseSceneManager();
+	time_log << "BaseApplication::setup : chooseSceneManager took \t" 
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
+
 	createCamera();
+	time_log << "BaseApplication::setup : createCamera took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
+
 	createViewports();
+	time_log << "BaseApplication::setup : createViewports took \t" 
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t Since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
 	// Set default mipmap level (NB some APIs ignore this)
 	Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(5);
 
 	// Create any resource listeners (for loading screens)
 	createResourceListener();
+	time_log << "BaseApplication::setup : createResourceListener took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
+
 	// Load resources
 	loadResources();
+	time_log << "BaseApplication::setup : loadResources took \t" 
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
 	// Create the scene
 	createScene();
+	time_log << "BaseApplication::setup : createScene took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
 	createFrameListener();
+	time_log << "BaseApplication::setup : createFrameListener took \t"
+		<< timer.getMilliseconds() << " ms. "
+		<< "\t since start : " << mTimer.getMilliseconds() << " ms. "
+		<< std::endl;
+	timer.reset();
 
 	return true;
 };

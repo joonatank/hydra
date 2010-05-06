@@ -1,8 +1,14 @@
 project( "eq_ogre_test" CXX )
 
-add_executable( test_ogre_root test_ogre_root.cpp )
+add_executable( test_ogre_root 
+	test_ogre_root.cpp 
+	../fixtures.hpp 
+	)
 
-add_executable( test_ogre_scene_node test_ogre_scene_node.cpp )
+add_executable( test_ogre_scene_node 
+	test_ogre_scene_node.cpp 
+	../fixtures.hpp 
+	)
 
 set( LIBS
 	${Boost_LIBRARIES}

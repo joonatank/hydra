@@ -11,9 +11,16 @@
 
 #include "math/conversion.hpp"
 
+#include <OgreSceneManagerEnumerator.h>
+
+#include "../fixtures.hpp"
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
+
 BOOST_AUTO_TEST_CASE( constructors_test )
 {
-	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager("Man") );
+	Ogre::SceneManager *og_sm = new Ogre::DefaultSceneManager("Man");
+	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager( og_sm, "Man") );
 	boost::shared_ptr<vl::ogre::SceneNode> n1, n2;
 	BOOST_CHECK_NO_THROW( n1.reset( new vl::ogre::SceneNode(man, "Node") ) );
 	BOOST_CHECK_NO_THROW( n2.reset( new vl::ogre::SceneNode(man) ) );
@@ -28,7 +35,8 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 
 BOOST_AUTO_TEST_CASE( transform_test )
 {
-	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager("Man") );
+	Ogre::SceneManager *og_sm = new Ogre::DefaultSceneManager("Man");
+	boost::shared_ptr<vl::ogre::SceneManager> man( new vl::ogre::SceneManager( og_sm, "Man") );
 	boost::shared_ptr<vl::ogre::SceneNode> n1( new vl::ogre::SceneNode(man, "Node1") );
 
 	// Translate
@@ -75,8 +83,9 @@ BOOST_AUTO_TEST_CASE( transform_test )
 
 BOOST_AUTO_TEST_CASE( child_test )
 {
+	Ogre::SceneManager *og_sm = new Ogre::DefaultSceneManager("Man");
 	boost::shared_ptr<vl::ogre::SceneManager>
-		man( new vl::ogre::SceneManager("Man") );
+		man( new vl::ogre::SceneManager( og_sm, "Man") );
 
 //	man->setSceneNodeFactory(
 //			vl::graph::SceneNodeFactoryPtr( new vl::ogre::SceneNodeFactory ) );
@@ -100,13 +109,14 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n1->getName() );
 	BOOST_CHECK_NO_THROW( parent->addChild( n2 ) );
 	BOOST_CHECK_EQUAL( ogre_parent->numChildren(), 2 );
-	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n2->getName() );
+	BOOST_CHECK_EQUAL( ogre_parent->getChild(1)->getName(), n2->getName() );
 }
 
 BOOST_AUTO_TEST_CASE( attachement_test )
 {
+	Ogre::SceneManager *og_sm = new Ogre::DefaultSceneManager("Man");
 	boost::shared_ptr<vl::ogre::SceneManager>
-		man( new vl::ogre::SceneManager("Man") );
+		man( new vl::ogre::SceneManager( og_sm, "Man") );
 	boost::shared_ptr<vl::ogre::SceneNode>
 		node( new vl::ogre::SceneNode(man, "parent") );
 }

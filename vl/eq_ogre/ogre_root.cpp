@@ -127,7 +127,7 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 
 	std::stringstream ss( std::stringstream::in | std::stringstream::out );
 	ss << name << "-" << n_windows;
-	Ogre::RenderWindow *win =
+	Ogre::RenderWindow *og_win =
 		_ogre_root->createRenderWindow( ss.str(), width, height, false, &misc );
 	++n_windows;
 
@@ -136,6 +136,7 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 	if( !_ogre_root->isInitialised() )
 	{ init(); }
 
-	return vl::graph::RenderWindowRefPtr( new vl::ogre::RenderWindow( win ) );
+	vl::graph::RenderWindowRefPtr win( new vl::ogre::RenderWindow( og_win ) );
+	return win;
 }
 

@@ -101,8 +101,18 @@ vl::cl::SceneManager::createMovableObject(
 	if( iter != _movable_factories.end() )
 	{
 		obj = iter->second->create( name, params );
-		shared_from_this();
-		//obj->setManager( shared_from_this() );
+		if( obj )
+		{
+			std::cerr << "movable Object created." << std::endl;
+			//shared_from_this();
+			obj->setManager( shared_from_this() );
+			std::cerr << "Manager setted to movable object." << std::endl;
+		}
+		else
+		{ 
+			throw vl::exception("can not create movable object",
+					"SceneManager::createMovableObject" );
+		}
 	}
 
 	return obj;

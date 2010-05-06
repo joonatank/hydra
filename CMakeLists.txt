@@ -32,7 +32,7 @@ set(EQ_LIB_DIR ${EQUALIZER}/lib CACHE PATH "Equalizer library dir")
 set(TURTLE_INCLUDE_DIR ${TURTLE} CACHE PATH "Turtle include dir")
 
 if( WIN32 )
-	set(CMAKE_MODULE_PATH "$ENV{OGRE_SDK}/CMake")
+	set(CMAKE_MODULE_PATH "$ENV{OGRE_HOME}/CMake")
 elseif( UNIX )
 	set(CMAKE_MODULE_PATH "/usr/local/lib/OGRE/cmake")
 endif( WIN32 )

@@ -63,7 +63,14 @@ namespace ogre
 			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )
 			{
-				return vl::graph::SceneManagerRefPtr( new SceneManager( name ) );
+				EQASSERT( _ogre_root );
+
+				Ogre::SceneManager *og_man 
+					= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
+				EQASSERT( og_man );
+				vl::graph::SceneManagerRefPtr man( 
+					new vl::ogre::SceneManager( og_man, name ) );
+				return man;
 			}
 
 			Ogre::Root *_ogre_root;

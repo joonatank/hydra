@@ -11,34 +11,25 @@
 #include "eq_ogre/ogre_scene_node.hpp"
 #include "eq_ogre/ogre_entity.hpp"
 
-#ifdef VL_WIN32 && _DEBUG
-
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-
-#endif
+#include "../fixtures.hpp"
 
 struct OgreFixture
 {
 	OgreFixture( void )
 		: ogre_root( new vl::ogre::Root ), win(), robot(), ent()
 	{
-			
-#ifdef VL_WIN32 && _DEBUG
-
-	_CrtSetDbgFlag( 0 );
-	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
-#endif
-
+		try {
 		ogre_root->createRenderSystem();
 		win = ogre_root->createWindow( "Win", 800, 600 );
 		//ogre_root->init();
 		BOOST_TEST_MESSAGE( "window created" );
 
-		vl::graph::SceneManagerRefPtr man = ogre_root->createSceneManager("Manager");
+		boost::shared_ptr<vl::ogre::SceneManager> man 
+			= boost::dynamic_pointer_cast<vl::ogre::SceneManager>(
+				ogre_root->createSceneManager("Manager") );
 		BOOST_REQUIRE( man );
 		BOOST_TEST_MESSAGE( "manager created" );
+		man->getNative();
 
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
@@ -50,10 +41,12 @@ struct OgreFixture
 					new vl::ogre::SceneNodeFactory ) );
 		BOOST_TEST_MESSAGE( "scenenode factory added" );
 
-		vl::graph::CameraRefPtr cam = man->createCamera( "Cam" );
+		vl::graph::CameraRefPtr cam;
+	
+		cam = man->createCamera( "Cam" );
 		BOOST_REQUIRE( cam );
 		BOOST_TEST_MESSAGE( "camera created" );
-
+		
 		boost::shared_ptr<vl::ogre::Camera> og_cam
 			= boost::dynamic_pointer_cast<vl::ogre::Camera>(cam);
 		BOOST_REQUIRE( og_cam );
@@ -61,7 +54,6 @@ struct OgreFixture
 
 		BOOST_REQUIRE( og_cam->getNative() );
  		((Ogre::Camera *)og_cam->getNative())->setNearClipDistance(0.1);
-		
 
 		win->addViewport( cam )->setBackgroundColour(
 				vl::colour(1.0, 0.0, 0.0, 0.0) );
@@ -73,7 +65,7 @@ struct OgreFixture
 		BOOST_REQUIRE( ent );
 		BOOST_TEST_MESSAGE( "entity created" );
 
-		BOOST_CHECK_NO_THROW( ent->load() );
+		ent->load();
 		robot = boost::dynamic_pointer_cast<vl::ogre::SceneNode>
 			( man->getRootNode()->createChild( "RobotNode" ) );
 		BOOST_REQUIRE( robot );
@@ -86,6 +78,11 @@ struct OgreFixture
 		BOOST_REQUIRE( feet );
 		feet->lookAt( vl::vector(0,0,300) );
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+		}
+		catch (vl::exception const &e)
+		{
+			std::cerr << "Exception : " << e.what << " in " << e.where << std::endl;
+		}
 	}
 
 	void mainloop( void )
@@ -105,6 +102,8 @@ struct OgreFixture
 	boost::shared_ptr<vl::ogre::Entity> ent;
 		
 };
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 {
