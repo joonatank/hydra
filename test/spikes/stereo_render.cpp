@@ -92,6 +92,7 @@ public :
 		// Setup resources
 		::Config *conf = static_cast< ::Config *>( getConfig() );
 		vl::Settings const &set = conf->getSettings();
+		BOOST_REQUIRE( set.getOgreResourcePaths().size() > 0 );
 		(boost::static_pointer_cast<vl::ogre::Root>(ogre_root))->setupResources( set );
 
 		// Create Scene Manager
@@ -233,8 +234,9 @@ struct RenderFixture
 		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
 		
 		// 2. get a configuration
-		config = eq::getConfig( argc, argv );
+		config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
 		BOOST_REQUIRE( config );
+		config->setSettings( settings );
 
 		// 3. init config
 		BOOST_REQUIRE( config->init(0));
@@ -265,7 +267,7 @@ struct RenderFixture
 
 	bool error;
 	uint32_t frameNumber;
-	eq::Config *config;
+	::Config *config;
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
 	vl::Settings settings;

@@ -23,9 +23,6 @@ class Settings
 
 		~Settings( void );
 
-//		fs::path const &getRootPath( void ) const
-//		{ return _root_path; }
-
 		fs::path const &getFilePath( void ) const
 		{ return _file_path; }
 
@@ -59,17 +56,10 @@ class Settings
 
 		void setExePath( std::string const &path );
 
-		// TODO we need both fs::path, std::string path and relative to root path
-		// Supports both absolute and relative paths (current directory)
-//		void setRootPath( std::string const &path )
-//		{ _root_path = path; }
-
 		// Supports both absolute and relative paths (root directory)
 		void setEqConfigPath( std::string const &path );
 
 		void setOgrePluginsPath( std::string const &path );
-
-		void setOgreResourcePath( std::string const &path );
 
 		void setScene( std::string const &path );
 
@@ -121,12 +111,10 @@ class Settings
 		// All the paths
 		std::vector<Settings::Root> _roots;
 		fs::path _exe_path;
-//		fs::path _root_path;
 		fs::path _file_path;
 		fs::path _eq_config;
 		std::string _scene;
 		fs::path _plugin_file;
-//		fs::path _resource_file;
 		vl::Args _eq_args;
 
 };	// class Settings

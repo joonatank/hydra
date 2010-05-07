@@ -61,6 +61,8 @@ namespace ogre
 			virtual void loadResources(void);
 
 		protected :
+			virtual void setupResource( fs::path const &file );
+
 			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )
 			{

@@ -59,20 +59,33 @@ vl::ogre::Root::init( void )
 void
 vl::ogre::Root::setupResources( vl::Settings const &set )
 {
-	std::string resource_path( _base_dir + std::string("/data/") );
-	std::string resource_file( resource_path );
-#if( OGRE_DEBUG_MODE == 1 )
-	resource_file += "resources_d.cfg";
-#else
-	resource_file += "resources.cfg";
-#endif
+	std::string msg( "setupResources" );
+	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::string msg( "Using resource file = " + resource_file );
+	std::vector<fs::path> resources = set.getOgreResourcePaths();
+	for( size_t i = 0; i < resources.size(); ++i )
+	{
+		setupResource( resources.at(i).file_string() );
+	}
+}
+
+void
+vl::ogre::Root::loadResources(void)
+{
+	// Initialise, parse scripts etc
+	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+}
+
+void
+vl::ogre::Root::setupResource( fs::path const &file )
+{
+	std::string msg( "Using resource file = ");
+	msg += file.file_string();
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
 	// Load resource paths from config file
 	Ogre::ConfigFile cf;
-	cf.load( resource_file );
+	cf.load( file.file_string() );
 
 	// Go through all sections & settings in the file
 	Ogre::ConfigFile::SectionIterator seci = cf.getSectionIterator();
@@ -95,17 +108,11 @@ vl::ogre::Root::setupResources( vl::Settings const &set )
 				std::string(macBundlePath() + "/" + archName), typeName, secName);
 #else
 			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-					resource_path + archName, typeName, secName);
+					file.parent_path().file_string() + "/" + archName,
+					typeName, secName);
 #endif
 		}
 	}
-}
-
-void
-vl::ogre::Root::loadResources(void)
-{
-	// Initialise, parse scripts etc
-	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
 vl::graph::RenderWindowRefPtr
