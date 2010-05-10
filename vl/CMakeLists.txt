@@ -17,6 +17,8 @@ set( SOURCES
 	base/args.cpp
 	settings.cpp
 	settings.hpp
+	dotscene_loader.cpp
+	dotscene_loader.hpp
 	)
 
 add_library( eqOgre ${SOURCES} )

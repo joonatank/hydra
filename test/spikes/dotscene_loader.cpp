@@ -2,6 +2,10 @@
 #include <eq/eq.h>
 
 #include "eq_ogre/ogre_root.hpp"
+#include "eq_ogre/ogre_scene_manager.hpp"
+#include "eq_ogre/ogre_entity.hpp"
+#include "eq_ogre/ogre_camera.hpp"
+//#include "eq_ogre/ogre_light.hpp"
 #include "settings.hpp"
 
 #include "dotscene_loader.hpp"
@@ -37,6 +41,8 @@ public :
 
 	virtual bool configInit( const uint32_t initID )
 	{
+		try
+		{
 		if( !eq::Window::configInit( initID ) )
 		{ return false; }
 
@@ -63,6 +69,15 @@ public :
 
 		man = root->createSceneManager("SceneManager");
 
+		// Set factories
+		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+					new vl::ogre::SceneNodeFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::EntityFactory ) );
+
+		std::cout << "Load scene = " << settings.getScene() << std::endl;
 		// TODO implement
 //		std::string scene_path = root->getDataDir() + "testScene.xml";
 
@@ -112,6 +127,12 @@ public :
 		robot->setPosition( vl::vector(0, 0, 300) );
 		robot->attachObject( ent );
 		*/
+		}
+		catch( vl::exception const &e )
+		{
+			std::cerr << "Exception : " << e.what << " in " << e.where
+				<<std::endl;
+		}
 		
 		return true;
 	}

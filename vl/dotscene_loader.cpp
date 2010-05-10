@@ -705,12 +705,12 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	}
 
 	// Process light (*)
-	//pElement = XMLNode->first_node("light");
-	//while(pElement)
-	//{
-	//	processLight(pElement, node);
-	//	pElement = pElement->next_sibling("light");
-	//}
+	pElement = XMLNode->first_node("light");
+	while(pElement)
+	{
+		processLight(pElement, node);
+		pElement = pElement->next_sibling("light");
+	}
 
 	// Process camera (*)
 	pElement = XMLNode->first_node("camera");

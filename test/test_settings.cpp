@@ -11,8 +11,32 @@
 
 #include <iostream>
 
+// TODO files are unreliable we should generate the xml file here
+// bit by bit and check that each individual element is processed correctly
+// We can then save these files and read them from disk if necessary.
+BOOST_AUTO_TEST_CASE( test_root_elem )
+{
+
+}
+
+BOOST_AUTO_TEST_CASE( test_plugins_elem )
+{
+
+}
+
+BOOST_AUTO_TEST_CASE( test_resources_elem )
+{
+
+}
+
+BOOST_AUTO_TEST_CASE( test_scene_elem )
+{
+
+}
+
 BOOST_AUTO_TEST_CASE( read_from_file )
 {
+
 	std::string filename( "test_conf.xml" );
 	vl::Settings settings;
 	vl::SettingsSerializer ser(&settings);
@@ -32,7 +56,8 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 	BOOST_CHECK_EQUAL( path.filename(), "1-window.eqc" );
 
 	path = settings.getScene();
-	BOOST_CHECK_EQUAL( path.filename(), "test.scene" );
+	BOOST_CHECK_NE( path.root_directory(), "/" );
+	BOOST_CHECK_EQUAL( path.filename(), "T7.scene" );
 	BOOST_TEST_MESSAGE( "scene = " << path );
 
 	std::vector<fs::path> resource_paths = settings.getOgreResourcePaths();

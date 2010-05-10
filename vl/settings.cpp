@@ -190,8 +190,7 @@ void
 vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node,
 		vl::Settings::Root const &root )
 {
-	_settings->setScene( root.path.file_string() + "/" +
-			xml_node->value() );
+	_settings->setScene( xml_node->value() );
 }
 
 std::string
