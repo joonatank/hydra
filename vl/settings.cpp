@@ -6,95 +6,74 @@
 #include <iostream>
 #include <fstream>
 
-vl::Settings::Settings( void ) { }
+vl::Settings::Settings( void )
+{
+}
 
-vl::Settings::~Settings( void ) { }
+vl::Settings::~Settings( void )
+{
+}
 
 void
 vl::Settings::setExePath( std::string const &path )
 {
 	_exe_path = path;
 
+	updateArgs();
+}
+
+void
+vl::Settings::setEqConfig( Settings::Eqc const &eqc )
+{
+	_eq_config = eqc;
+
+	updateArgs();
+}
+
+void
+vl::Settings::addPlugins( Settings::Plugins const &plugins )
+{
+	_plugins = plugins;
+}
+
+void
+vl::Settings::addResources( Settings::Resources const &resource )
+{
+	_resources.push_back( resource );
+}
+
+void
+vl::Settings::addScene( Settings::Scene const &scene )
+{
+	_scenes.push_back( scene );
+}
+
+// --------- Settings Private --------
+void
+vl::Settings::updateArgs( void )
+{
 	// Update args
 	_eq_args.clear();
 	if( !_exe_path.empty() )
 	{ _eq_args.add( _exe_path.string().c_str() ); }
-	if( !_eq_config.empty() )
+
+	fs::path path = _eq_config.getPath();
+	if( !path.empty() )
 	{
 		_eq_args.add( "--eq-config" );
-		_eq_args.add( _eq_config.string().c_str() );
+		_eq_args.add( path.string().c_str() );
 	}
-}
-
-void
-vl::Settings::setEqConfigPath( std::string const &path )
-{
-	_eq_config = path;
-	/*
-	fs::path tmp( path );
-	if( tmp.root_directory() == "/" )
-	{ _eq_config = tmp; }
-	else
-	{ _eq_config = _root_path / tmp; }
-	*/
-
-	// Update args
-	_eq_args.clear();
-	if( !_exe_path.empty() )
-	{ _eq_args.add( _exe_path.string().c_str() ); }
-	if( !_eq_config.empty() )
-	{
-		_eq_args.add( "--eq-config" );
-		_eq_args.add( _eq_config.string().c_str() );
-	}
-}
-
-void
-vl::Settings::setOgrePluginsPath( std::string const &path )
-{
-	_plugin_file = path;
-	/*
-	fs::path tmp( path );
-	if( tmp.root_directory() == "/" )
-	{ _plugin_file = tmp; }
-	else
-	{ _plugin_file = _root_path / tmp; }
-	*/
-}
-
-/*
-void 
-vl::Settings::setOgreResourcePath( std::string const &path )
-{
-	fs::path tmp( path );
-	if( tmp.root_directory() == "/" )
-	{ _resource_file = tmp; }
-	else
-	{ _resource_file = _root_path / tmp; }
-}
-*/
-
-void
-vl::Settings::setScene( std::string const &scene )
-{
-	_scene = scene;
-	/*
-	fs::path tmp( path );
-	if( tmp.root_directory() == "/" )
-	{ _scene_file = tmp; }
-	else
-	{ _scene_file = _root_path / tmp; }
-	*/
 }
 
 // --- SettingsSerializer ---
 vl::SettingsSerializer::SettingsSerializer( Settings *settings )
-	: _settings(settings), xml_data()
+	: _settings(settings), _xml_data(0)
 {
 }
 
 vl::SettingsSerializer::~SettingsSerializer( void )
 {
+	delete _xml_data;
 }
 
 void
@@ -102,27 +81,58 @@ vl::SettingsSerializer::readFile( std::string const &file_path )
 {
 	if( !fs::exists( file_path ) )
 	{ throw vl::missing_file( "vl::SettingsSerializer::readFile" ); }
+	
+	// Set the file path for the last file loaded, so settings can be saved
+	// back to that file.
 	_settings->_file_path = file_path;
 
+	// Open in binary mode, so we don't mess up the file
 	std::ifstream stream( file_path.c_str(), std::ios::binary );
 
-	xml_data.readStream( stream );
+	// Read the stream using FileStream class
+	delete _xml_data;
+	_xml_data = new vl::FileString( );
+	_xml_data->readStream( stream );
 
+	// Pass the data to dataReader.
+	readData();
+}
+
+void
+vl::SettingsSerializer::readData( std::string const &xml_data )
+{
+	delete _xml_data;
+	_xml_data = new vl::FileString( xml_data );
+	readData();
+}
+
+void
+vl::SettingsSerializer::readData( char *xml_data )
+{
+	delete _xml_data;
+	_xml_data = new vl::FileString( xml_data );
+	readData();
+}
+
+void
+vl::SettingsSerializer::readData( )
+{
 	rapidxml::xml_document<> xmlDoc;
-
 	rapidxml::xml_node<> *xmlRoot;
-	xmlDoc.parse<0>( xml_data.data );
+	
+	assert( _xml_data );
+	xmlDoc.parse<0>( _xml_data->data );
 
 	xmlRoot = xmlDoc.first_node("config");
 	if( !xmlRoot )
-	{ throw vl::invalid_file( "vl::SettingsSerailizer::readFile" ); }
+	{ throw vl::invalid_xml( "vl::SettingsSerailizer::readData" ); }
 
 	processConfig( xmlRoot );
 }
 
 void
 vl::SettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
-{
+{	
 	rapidxml::xml_node<>* xml_elem;
 
 	xml_elem = xml_root->first_node("root");
@@ -130,67 +140,155 @@ vl::SettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	{ processRoot( xml_elem ); }
 
 	xml_elem = xml_root->first_node("scene");
+	if( xml_elem )
 	{ processScene( xml_elem ); }
+
+	xml_elem = xml_root->first_node("plugins");
+	if( xml_elem )
+	{ processPlugins( xml_elem ); }
+
+	xml_elem = xml_root->first_node("resources");
+	if( xml_elem )
+	{ processResources( xml_elem ); }
+
+	xml_elem = xml_root->first_node("eqc");
+	if( xml_elem )
+	{ processEqc( xml_elem ); }
 }
 
 void
 vl::SettingsSerializer::processRoot( rapidxml::xml_node<>* xml_node )
 {
-	vl::Settings::Root root;
-	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute( "path" );
+	std::string name, path;
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute( "name" );
 	if( attrib )
-	{ root.setPath( attrib->value() ); }
+	{ name = attrib->value(); }
 
-	rapidxml::xml_node<> *xml_elem = xml_node->first_node("plugins");
-	if( xml_elem )
-	{ processPlugins( xml_elem, root ); }
+	rapidxml::xml_node<> *pElement= xml_node->first_node("path");
+	if( pElement )
+	{ path = pElement->value(); }
 
-	xml_elem = xml_node->first_node("resources");
-	if( xml_elem )
-	{ processResources( xml_elem, root ); }
+	// Both name and path should be present
+	if( name.empty() || path.empty() )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerializer::processRoot" );
+	}
 
-	xml_elem = xml_node->first_node("eqc");
-	if( xml_elem )
-	{ processEqc( xml_elem, root ); }
-
-	xml_elem = xml_node->first_node("scene");
-	if( xml_elem )
-	{ processScene( xml_elem, root ); }
-
+	// Name should be unique
+	if( _settings->findRoot( name ) )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerializer::processRoot" );
+	}
+	
+	Settings::Root root( name, path );
 	_settings->addRoot( root );
 
-	// Process the rest root nodes
-	rapidxml::xml_node<> *pElement = xml_node->next_sibling("root");
+	// Process the rest of root nodes
+	pElement = xml_node->next_sibling("root");
 	if( pElement )
 	{ processRoot( pElement ); }
 }
 
 void
-vl::SettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node,
-		vl::Settings::Root const &root )
+vl::SettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 {
-	_settings->setOgrePluginsPath( root.path.file_string() +"/" + xml_node->value() );
+	vl::Settings::Root *root = getRootAttrib( xml_node );
+	std::string file;
+	
+	rapidxml::xml_node<> *pElement = xml_node->first_node("file");
+	if( pElement )
+	{
+		file = pElement->value();
+	}
+
+	// File is a must have element
+	if( file.empty() )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerailizer::processPlugins" );
+	}
+	
+	Settings::Plugins plugins( file, root );
+	_settings->addPlugins( plugins );
 }
 
 void
-vl::SettingsSerializer::processResources( rapidxml::xml_node<>* xml_node,
-		vl::Settings::Root &root )
+vl::SettingsSerializer::processResources( rapidxml::xml_node<>* xml_node )
 {
-	root.resources.push_back( xml_node->value() );
+	vl::Settings::Root *root = getRootAttrib( xml_node );
+	std::string file;
+	
+	rapidxml::xml_node<> *pElement = xml_node->first_node("file");
+	if( pElement )
+	{ file = pElement->value(); }
+
+	if( file.empty() )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerailizer::processResources" );
+	}
+	
+	Settings::Resources resource( file, root );
+	_settings->addResources( resource );
+
+	// Process the rest of resource nodes
+	pElement = xml_node->next_sibling("resources");
+	if( pElement )
+	{ processResources( pElement ); }
 }
 
 void 
-vl::SettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node,
-		vl::Settings::Root const &root )
+vl::SettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
 {
-	_settings->setEqConfigPath( root.path.file_string() + "/" + xml_node->value() );
+	std::string file;
+	Settings::Root *root = getRootAttrib( xml_node );
+	rapidxml::xml_node<> *pElement = xml_node->first_node( "file" );
+	if( pElement )
+	{ file = pElement->value(); }
+
+	if( file.empty() )
+	{ throw vl::invalid_xml( "vl::SettingsSerializer::processEqc" ); }
+	
+	Settings::Eqc eqc( file, root );
+	_settings->setEqConfig( eqc );
 }
 
 void
-vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node,
-		vl::Settings::Root const &root )
+vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node )
 {
-	_settings->setScene( xml_node->value() );
+	std::string name, file, attach, type;
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute( "name" );
+	if( attrib )
+	{ name = attrib->value(); }
+
+	rapidxml::xml_node<> *pElement = xml_node->first_node( "file" );
+	if( pElement )
+	{ file = pElement->value(); }
+
+	// File element is a must
+	if( file.empty() )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerailizer::processScene" );
+	}
+
+	pElement = xml_node->first_node( "attach" );
+	if( pElement )
+	{ attach = pElement->value(); }
+	
+	pElement = xml_node->first_node( "type" );
+	if( pElement )
+	{ type = pElement->value(); }
+	
+	Settings::Scene scene( file, name, attach, type );
+	_settings->addScene( scene );
+
+	// Process the rest of scene nodes
+	pElement = xml_node->next_sibling("scene");
+	if( pElement )
+	{ processScene( pElement ); }
 }
 
 std::string

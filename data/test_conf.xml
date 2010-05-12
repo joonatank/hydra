@@ -8,5 +8,5 @@
 	<root path="${VL_MEDIA_PATH}">
 		<resources>resources.cfg</resources>
 	</root>
-	<scene>test.scene</scene>
+	<scene>T7.scene</scene>
 </config>

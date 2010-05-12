@@ -77,12 +77,16 @@ public :
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
 
-		std::cout << "Load scene = " << settings.getScene() << std::endl;
+		std::vector<vl::Settings::Scene> const &scenes = settings.getScenes();
+		if( scenes.empty() )
+		{ return false; }
+		
+		std::cout << "Load scene = " << scenes.at(0).file << std::endl;
 		// TODO implement
 //		std::string scene_path = root->getDataDir() + "testScene.xml";
 
 		DotSceneLoader loader;
-		loader.parseDotScene( settings.getScene(), man );
+		loader.parseDotScene( scenes.at(0).file, man );
 
 		// Loop through all cameras and grab their name and set their debug representation
 //		Ogre::SceneManager::CameraIterator cameras = mSceneMgr->getCameraIterator();

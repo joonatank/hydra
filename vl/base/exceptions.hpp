@@ -86,11 +86,11 @@ namespace vl
 			{}
 	};
 
-	class invalid_file : public exception
+	class invalid_xml  : public exception
 	{
 		public :
-			invalid_file( const char *wher )
-				: exception( "invalid file", wher )
+			invalid_xml( const char *wher )
+				: exception( "invalid xml", wher )
 			{}
 	};
 }	// namespace vl

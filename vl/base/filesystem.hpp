@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 
 #include <fstream>
+#include <cstring>
 
 namespace fs = boost::filesystem;
 
@@ -65,13 +66,30 @@ struct FileString
 {
 	// Read the file in to memory
 	FileString( std::ifstream &in )
-		: data(0)
+		: data(0), length(0)
 	{
 		readStream( in );
 	}
 
+	// Copy std::string data to modifiable FileString
+	FileString( std::string const &str )
+		: data(0), length(0)
+	{
+		length = str.length();
+		data = new char[length+1];
+		::strcpy( data, str.c_str() );
+	}
+
+	// Give the ownership of buf to FileString
+	// buf is assumed to be null terminated
+	FileString( char *buf )
+		: data( buf ), length( 0 )
+	{
+		length = ::strlen( buf );
+	}
+	
 	FileString( void )
-		: data(0)
+		: data(0), length(0)
 	{}
 
 	~FileString( void )
@@ -82,17 +100,19 @@ struct FileString
 	void readStream( std::ifstream &in )
 	{
 		in.seekg( 0, std::ios::end );
-		int length = in.tellg();
+		length = in.tellg();
+		length -= 1;
 		in.seekg( 0, std::ios::beg );
 
 		delete [] data;
-		data = new char[length];
-		in.read( data, length-1 );
+		data = new char[length+1];
+		in.read( data, length );
 		in.close();
-		data[length-1] = '\0';
+		data[length] = '\0';
 	}
 
 	char *data;
+	size_t length;
 
 private :
 	/** Disallow copy

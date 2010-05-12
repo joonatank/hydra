@@ -2,23 +2,38 @@
 <config>
 	<!-- Setting paths -->
 
-	<!-- Root path which can be referenced later and made paths relative to. -->
-	<root name="data" path="${VL_DATA_PATH}" />
-	<root name="media" path="${VL_MEDIA_PATH}" />
+	<!-- Root path which can be referenced later and made paths relative to.
+	name attribute is used to reference the root. Needs to be present and unique.
+	path element is the path this root is relative to. Needs to be present.
+	-->
+	<root name="data">
+		<path>${VL_DATA_PATH}</path>
+	</root>
+	<root name="media">
+		<path>${VL_MEDIA_PATH}</path>
+	</root>
 
 	<!-- Ogre plugins file, only one of these is supported,
 	root is a reference to the directory containing this file.
 	No root need to be present but then the file is assumed to be in the
 	directory where the program is started in.
 	-->
-	<plugins root="data" >plugins.cfg</plugins>
+	<plugins root="data" >
+		<file>plugins.cfg</file>
+	</plugins>
 
 	<!-- Equalizer VR configuration, only one of these is supported -->
-	<eqc root="data" >eqc/1-window.eqc</eqc>
+	<eqc root="data" >
+		<file>eqc/1-window.eqc</file>
+	</eqc>
 
 	<!-- Ogre resource file, multiple of these can be present -->
-	<resources root="data" >resources.cfg</resources>
-	<resources root="media" >resources.cfg</resources>
+	<resources root="data" >
+		<file>resources.cfg</file>
+	</resources>
+	<resources root="media" >
+		<file>resources.cfg</file>
+	</resources>
 
 	<!-- Scene files to load. Should be in Ogre resource path to be loaded.
 	Name is the reference used inside the program. Can be empty.
