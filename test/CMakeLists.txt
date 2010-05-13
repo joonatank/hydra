@@ -8,9 +8,9 @@ subdirs( util math eq_graph spikes eq_ogre synchronization dotscene_loader )
 
 set( LIBS ${Boost_LIBRARIES} eqOgre )
 
-set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
-set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
-
+# Config files
+#set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+#set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
 #configure_file( ${vl_SOURCE_DIR}/data/test_conf.xml
 #	${PROJECT_BINARY_DIR}/test_conf.xml )
 #configure_file( ${vl_SOURCE_DIR}/data/inv_conf.xml
@@ -22,7 +22,7 @@ add_executable( test_dotscene test_dotscene.cpp )
 
 target_link_libraries( test_filestring ${LIBS} )
 target_link_libraries( test_settings ${LIBS} )
-target_link_libraries( test_dotscene ${LIBS} ${EQ_LIBRARIES} )
+target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
 
 add_test( filestring ${PROJECT_BINARY_DIR}/test_filestring )
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )

@@ -14,7 +14,7 @@
  * Because we don't have our own logging or resource system in place.
  * TODO should be removed as soon as possible.
  */
-#include <OGRE/OgreLogManager.h>
+//#include <OGRE/OgreLogManager.h>
 #include <OGRE/OgreException.h>
 #include <OGRE/OgreResourceManager.h>
 
@@ -24,22 +24,37 @@ DotSceneLoader::DotSceneLoader()
 {
 }
 
-
 DotSceneLoader::~DotSceneLoader()
 {
 	delete [] _xml_data;
 }
+void
+DotSceneLoader::parseDotScene(
+		std::string const &sceneName,
+		std::string const &groupName,
+		vl::graph::SceneManagerRefPtr sceneMgr,
+		vl::graph::SceneNodeRefPtr attachNode,
+		std::string const &sPrependNode )
+{
+	// set up shared object values
+	_sGroupName = groupName;
+
+	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
+		.openResource( sceneName, groupName );
+		
+	parseDotScene( stream->getAsString(), sceneMgr, attachNode, sPrependNode );
+}
 
 void
 DotSceneLoader::parseDotScene(
-		const std::string &sceneName,
+		std::string const &scene_data,
 		vl::graph::SceneManagerRefPtr sceneMgr,
 		vl::graph::SceneNodeRefPtr attachNode,
-		const std::string &sPrependNode )
+		std::string const &sPrependNode )
 {
 	// set up shared object values
-//	_sGroupName = groupName;
 	_scene_mgr = sceneMgr;
+	_attach_node = attachNode;
 	_sPrependNode = sPrependNode;
 	staticObjects.clear();
 	dynamicObjects.clear();
@@ -48,10 +63,10 @@ DotSceneLoader::parseDotScene(
 
 	rapidxml::xml_node<>* XMLRoot;
 
-	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-		.openResource( sceneName );
 	delete [] _xml_data;
-	char* _xml_data = strdup( stream->getAsString().c_str() );
+	_xml_data = new char[scene_data.length()+1];
+	::strcpy( _xml_data, scene_data.c_str() );
+	
 //	std::ifstream fs( scenePath.c_str(), std::ios::binary );
 //	_xml_data.readStream( fs );
 	XMLDoc.parse<0>( _xml_data );
@@ -63,12 +78,11 @@ DotSceneLoader::parseDotScene(
 	if( getAttrib(XMLRoot, "formatVersion", "") == "")
 	{
 		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
-		Ogre::LogManager::getSingleton().logMessage( message );
-		return;
+		//	TODO add logging
+		//Ogre::LogManager::getSingleton().logMessage( message );
+		throw vl::invalid_xml( "vl::DotSceneLoader::parseDotScene" );
 	}
 
-	// figure out where to attach any nodes we create
-//	_attach_node = pAttachNode;
 	if( !_attach_node )
 	{ _attach_node = _scene_mgr->getRootNode(); }
 
@@ -103,7 +117,8 @@ DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 			+ std::string(XMLRoot->first_attribute("author")->value());
 	}
 
-	Ogre::LogManager::getSingleton().logMessage(message);
+//	TODO add logging
+//	Ogre::LogManager::getSingleton().logMessage(message);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -551,7 +566,7 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	//	TODO not implemented
 //	vl::scalar fov = getAttribReal(XMLNode, "fov", 45);
 //	vl::scalar aspectRatio = getAttribReal(XMLNode, "aspectRatio", 1.3333);
-	std::string projectionType = getAttrib(XMLNode, "projectionType", "perspective");
+//	std::string projectionType = getAttrib(XMLNode, "projectionType", "perspective");
 
 	std::string node_name = name + std::string("Node");
 	// Create the camera
@@ -601,6 +616,7 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{ cam_node->setOrientation( parseQuaternion(pElement) ); }
 
+/*
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
 	if(pElement)
@@ -620,7 +636,7 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("userDataReference");
 	if(pElement)
 		;//!< @todo Implement the camera user data reference
-
+*/
 	// construct a scenenode is no parent
 	/*
 	if( !parent )
@@ -648,7 +664,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	vl::graph::SceneNodeRefPtr node = parent->createChild(name);
 
 	// Process other attributes
-	std::string id = getAttrib(XMLNode, "id");
+//	std::string id = getAttrib(XMLNode, "id");
 	// Not used
 //	bool isTarget = getAttribBool(XMLNode, "isTarget");
 
@@ -661,7 +677,6 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		node->setPosition(parseVector3(pElement));
 //		node->setInitialState();
 	}
-
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
@@ -669,7 +684,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		node->setOrientation(parseQuaternion(pElement));
 //		node->setInitialState();
 	}
-
+	
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
@@ -678,17 +693,26 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 //		node->setInitialState();
 	}
 
-	// Process lookTarget (?)
+	/*	Process lookTarget (?)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("lookTarget");
 	if(pElement)
 	{ processLookTarget(pElement, node); }
+	*/
 
-	// Process trackTarget (?)
+	/*	Process trackTarget (?)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("trackTarget");
 	if(pElement)
 	{ processTrackTarget(pElement, node); }
+	*/
 
-	// Process node (*)
+	/*	Process node (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
+	 */
 	pElement = XMLNode->first_node("node");
 	while(pElement)
 	{
@@ -696,58 +720,79 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("node");
 	}
 
-	// Process entity (*)
+	/*	Process entity (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
+	 */
 	pElement = XMLNode->first_node("entity");
 	while(pElement)
 	{
 		processEntity(pElement, node);
 		pElement = pElement->next_sibling("entity");
 	}
-
-	// Process light (*)
+	
+	/*	Process light (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("light");
 	while(pElement)
 	{
 		processLight(pElement, node);
 		pElement = pElement->next_sibling("light");
 	}
-
-	// Process camera (*)
+	*/
+	
+	/*	Process camera (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("camera");
 	while(pElement)
 	{
 		processCamera(pElement, node);
 		pElement = pElement->next_sibling("camera");
 	}
+	*/
 
-	// Process particleSystem (*)
+	/*	Process particleSystem (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("particleSystem");
 	while(pElement)
 	{
 		processParticleSystem(pElement, node);
 		pElement = pElement->next_sibling("particleSystem");
 	}
+	*/
 
-	// Process billboardSet (*)
+	/*	Process billboardSet (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("billboardSet");
 	while( pElement )
 	{
 		processBillboardSet(pElement, node);
 		pElement = pElement->next_sibling("billboardSet");
 	}
+	*/
 
-	// Process plane (*)
+	/*	Process plane (*)
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("plane");
 	while( pElement )
 	{
 		processPlane(pElement, node);
 		pElement = pElement->next_sibling("plane");
 	}
-
-	// Process userDataReference (?)
+	*/
+	
+	/*	Process userDataReference 
+	 *	TODO not supported yet
+	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("userDataReference");
 	if( pElement )
 	{ processUserDataReference(pElement, node); }
+	*/
 }
 
 void
@@ -891,7 +936,8 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	catch(Ogre::Exception &/*e*/)
 	{
 		std::string msg("[DotSceneLoader] Error loading an entity!");
-		Ogre::LogManager::getSingleton().logMessage(msg);
+		//	TODO add logging
+		//Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
 	// Process userDataReference (?)
@@ -968,34 +1014,32 @@ DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
 void
 DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 {
-/*	TODO implement Fog
 	// Process attributes
 	vl::scalar expDensity = getAttribReal(XMLNode, "density", 0.001);
 	vl::scalar linearStart = getAttribReal(XMLNode, "start", 0.0);
 	vl::scalar linearEnd = getAttribReal(XMLNode, "end", 1.0);
 
-	Ogre::FogMode mode = Ogre::FOG_NONE;
+	vl::FOG_MODE mode = vl::FOG_NONE;
 	std::string sMode = getAttrib(XMLNode, "mode");
 	if(sMode == "none")
-		mode = Ogre::FOG_NONE;
+	{ mode = vl::FOG_NONE; }
 	else if(sMode == "exp")
-		mode = Ogre::FOG_EXP;
+	{ mode = vl::FOG_EXP; }
 	else if(sMode == "exp2")
-		mode = Ogre::FOG_EXP2;
+	{ mode = vl::FOG_EXP2; }
 	else if(sMode == "linear")
-		mode = Ogre::FOG_LINEAR;
+	{ mode = vl::FOG_LINEAR; }
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process colourDiffuse (?)
-	vl::ColourValue colourDiffuse = vl::ColourValue::White;
+	vl::colour colourDiffuse = vl::colour(1.0, 1.0, 1.0, 1.0);
 	pElement = XMLNode->first_node("colour");
 	if(pElement)
-		colourDiffuse = parseColour(pElement);
+	{ colourDiffuse = parseColour(pElement); }
 
 	// Setup the fog
-	scene_mgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
-*/
+	_scene_mgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
 }
 
 void
@@ -1158,59 +1202,36 @@ DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
 vl::quaternion
 DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 {
-	//! @todo Fix this crap!
-
 	vl::scalar x, y, z, w;
 
-	if(XMLNode->first_attribute("qx"))
-	{
-		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qx")->value());
-		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qy")->value());
-		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qz")->value());
-		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qw")->value());
-	}
-	if(XMLNode->first_attribute("qw"))
-	{
-		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qw")->value());
-		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qx")->value());
-		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qy")->value());
-		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("qz")->value());
-	}
-	else if(XMLNode->first_attribute("axisX"))
-	{
-		// TODO implement
-//		vl::vector axis;
-//		axis.x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisX")->value());
-//		axis.y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisY")->value());
-//		axis.z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("axisZ")->value());
-//		vl::scalar angle = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angle")->value());;
-//		orientation.FromAngleAxis(Ogre::Angle(angle), axis);
-	}
-	else if(XMLNode->first_attribute("angleX"))
-	{
-//		vl::vector axis;
-//		axis.x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleX")->value());
-//		axis.y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleY")->value());
-//		axis.z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("angleZ")->value());
-		//orientation.FromAxes(&axis);
-		//orientation.F
-	}
-	else if(XMLNode->first_attribute("x"))
-	{
-		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("x")->value());
-		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("y")->value());
-		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("z")->value());
-		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("w")->value());
-	}
-	else if(XMLNode->first_attribute("w"))
-	{
-		w = vl::string_convert<vl::scalar>(XMLNode->first_attribute("w")->value());
-		x = vl::string_convert<vl::scalar>(XMLNode->first_attribute("x")->value());
-		y = vl::string_convert<vl::scalar>(XMLNode->first_attribute("y")->value());
-		z = vl::string_convert<vl::scalar>(XMLNode->first_attribute("z")->value());
-	}
+	// TODO add axisX, axisY, axisZ
+	// TODO add angleX, angleY, angleZ
 
-	return vl::quaternion(x, y, z, w);
+	// Default attribute names
+	rapidxml::xml_attribute<> *attrX = XMLNode->first_attribute("qx");
+	rapidxml::xml_attribute<> *attrY = XMLNode->first_attribute("qy");
+	rapidxml::xml_attribute<> *attrZ = XMLNode->first_attribute("qz");
+	rapidxml::xml_attribute<> *attrW = XMLNode->first_attribute("qw");
+
+	// Alternative attribute names
+	if( !attrX )
+	{ attrX = XMLNode->first_attribute( "x" ); }
+	if( !attrY )
+	{ attrY = XMLNode->first_attribute( "y" ); }
+	if( !attrZ )
+	{ attrZ = XMLNode->first_attribute( "z" ); }
+	if( !attrW )
+	{ attrW = XMLNode->first_attribute( "w" ); }
+
+	if( !attrX || !attrY || !attrZ || !attrW )
+	{ throw vl::invalid_xml("vl::DotSceneLoader::parseQuaternion" ); }
+
+	x = vl::string_convert<vl::scalar>( attrX->value() );
+	y = vl::string_convert<vl::scalar>( attrY->value() );
+	z = vl::string_convert<vl::scalar>( attrZ->value() );
+	w = vl::string_convert<vl::scalar>( attrW->value() );
+	
+	return vl::quaternion( w, x, y, z );
 }
 
 vl::colour

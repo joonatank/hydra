@@ -37,10 +37,18 @@ public:
 	DotSceneLoader();
 	virtual ~DotSceneLoader();
 
-	void parseDotScene( const std::string &SceneName,
+	// Load dotscene file using Ogre resource system
+	void parseDotScene( std::string const &sceneName,
+			std::string const &groupName,
 			vl::graph::SceneManagerRefPtr sceneMgr,
-			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr() ,
-			const std::string &sPrependNode = "" );
+			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr(),
+			std::string const &sPrependNode = std::string() );
+
+	// Parse dotscene which is already loaded to scene_data
+	void parseDotScene( std::string const &scene_data,
+			vl::graph::SceneManagerRefPtr sceneMgr,
+			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr(),
+			std::string const &sPrependNode = std::string() );
 
 	std::string getProperty(const std::string &ndNm, const std::string &prop);
 

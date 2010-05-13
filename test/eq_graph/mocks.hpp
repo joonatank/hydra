@@ -5,6 +5,9 @@
 
 #include "interface/scene_node.hpp"
 #include "interface/movable_object.hpp"
+#include "interface/light.hpp"
+#include "interface/entity.hpp"
+#include "interface/camera.hpp"
 #include "interface/scene_manager.hpp"
 
 namespace mock
@@ -24,6 +27,34 @@ MOCK_BASE_CLASS( ObjectFactory, vl::graph::MovableObjectFactory )
 MOCK_BASE_CLASS( MovableObject, vl::graph::MovableObject )
 {
 	MOCK_METHOD( setManager, 1 )
+};
+
+MOCK_BASE_CLASS( Camera, vl::graph::Camera )
+{
+	MOCK_METHOD( setManager, 1 )
+	MOCK_METHOD( setProjectionMatrix, 1 )
+	MOCK_METHOD( setFarClipDistance, 1 )
+	MOCK_METHOD( setNearClipDistance, 1 )
+};
+
+MOCK_BASE_CLASS( Entity, vl::graph::Entity )
+{
+	MOCK_METHOD( setManager, 1 )
+	MOCK_METHOD( setMaterialName, 1 )
+	MOCK_METHOD( load, 0 )
+	MOCK_METHOD( setCastShadows, 1 )
+};
+
+MOCK_BASE_CLASS( Light, vl::graph::Light )
+{
+	MOCK_METHOD( setManager, 1 )
+	MOCK_METHOD( setSpotlightRange, 3 )
+	MOCK_METHOD( setAttenuation, 4 )
+	MOCK_METHOD( setType, 1 )
+	MOCK_METHOD( setVisible, 1 )
+	MOCK_METHOD( setCastShadows, 1 )
+	MOCK_METHOD( setDiffuseColour, 1 )
+	MOCK_METHOD( setSpecularColour, 1 )
 };
 
 MOCK_BASE_CLASS( SceneNode, vl::graph::SceneNode )
@@ -69,6 +100,7 @@ MOCK_BASE_CLASS( SceneManager, vl::graph::SceneManager )
 	MOCK_METHOD( getRootNode, 0 )
 	MOCK_METHOD( setAmbientLight, 1 )
 	MOCK_METHOD( getAmbientLight, 0 )
+	MOCK_METHOD( setFog, 5 )
 	MOCK_METHOD( createNode, 1 )
 	MOCK_METHOD( createMovableObject, 3 )
 	MOCK_METHOD( createEntity, 2 )
@@ -91,6 +123,9 @@ MOCK_BASE_CLASS( SceneManager, vl::graph::SceneManager )
 typedef boost::shared_ptr<NodeFactory> NodeFactoryPtr;
 typedef boost::shared_ptr<ObjectFactory> ObjectFactoryPtr;
 typedef boost::shared_ptr<MovableObject> MovableObjectPtr;
+typedef boost::shared_ptr<Entity> EntityPtr;
+typedef boost::shared_ptr<Light> LightPtr;
+typedef boost::shared_ptr<Camera> CameraPtr;
 typedef boost::shared_ptr<SceneNode> SceneNodePtr;
 typedef boost::shared_ptr<SceneManager> SceneManagerPtr;
 

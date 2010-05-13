@@ -64,6 +64,11 @@ namespace cl
 				return _ambient_colour;
 			}
 
+			virtual void setFog( vl::FOG_MODE mode, vl::colour const &colourDiffuse,
+								 vl::scalar expDensity, vl::scalar linearStart,
+								 vl::scalar linearEnd )
+			{}
+								 
 			virtual vl::graph::SceneNodeRefPtr createNode(
 					std::string const &name = std::string() );
 
