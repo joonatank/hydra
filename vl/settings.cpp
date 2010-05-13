@@ -301,12 +301,3 @@ vl::SettingsSerializer::getAttrib(rapidxml::xml_node<>* xml_node,
     { return default_value; }
 }
 
-// --- SettingsDeserializer ---
-vl::SettingsDeserializer::SettingsDeserializer( Settings *settings )
-{
-}
-
-vl::SettingsDeserializer::~SettingsDeserializer( void ) {}
-
-void
-vl::SettingsDeserializer::writeFile( std::string const &file_path ) {}

@@ -418,89 +418,103 @@ BOOST_AUTO_TEST_CASE( multiple_scenes )
 	BOOST_CHECK_EQUAL( settings.getScenes().size(), 0u );
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+struct CompleteXMLFixture : public SettingsFixture
+{
+	CompleteXMLFixture(void )
+	{
+		// First root node
+		rapidxml::xml_node<> *root
+			= doc.allocate_node(rapidxml::node_element, "root" );
+		config->append_node( root );
+		rapidxml::xml_node<> *path
+			= doc.allocate_node(rapidxml::node_element, "path", "local/work" );
+		root->append_node(path);
+		rapidxml::xml_attribute<> *attrib = doc.allocate_attribute("name", "data");
+		root->append_attribute( attrib );
+
+		// Second root node
+		root = doc.allocate_node(rapidxml::node_element, "root" );
+		config->append_node( root );
+		path = doc.allocate_node(rapidxml::node_element, "path", "local/home" );
+		root->append_node(path);
+		attrib = doc.allocate_attribute("name", "media");
+		root->append_attribute( attrib );
+
+		// First resources node
+		rapidxml::xml_node<> *resource
+			= doc.allocate_node(rapidxml::node_element, "resources" );
+		config->append_node( resource );
+		rapidxml::xml_node<> *file
+			= doc.allocate_node(rapidxml::node_element, "file", "resources.cfg" );
+		resource->append_node(file);
+		attrib = doc.allocate_attribute("root", "data");
+		resource->append_attribute( attrib );
+
+		// Second resources node
+		resource
+			= doc.allocate_node(rapidxml::node_element, "resources" );
+		config->append_node( resource );
+		file = doc.allocate_node(rapidxml::node_element, "file", "resources.cfg" );
+		resource->append_node(file);
+		attrib = doc.allocate_attribute("root", "media");
+		resource->append_attribute( attrib );
+
+		// eqc
+		rapidxml::xml_node<> *eqc
+			= doc.allocate_node(rapidxml::node_element, "eqc" );
+		config->append_node( eqc );
+		file = doc.allocate_node(rapidxml::node_element, "file", "1-window.eqc" );
+		eqc->append_node(file);
+		attrib = doc.allocate_attribute("root", "data");
+		eqc->append_attribute( attrib );
+
+		// plugins
+		rapidxml::xml_node<> *plugins
+			= doc.allocate_node(rapidxml::node_element, "plugins" );
+		config->append_node( plugins );
+		file = doc.allocate_node(rapidxml::node_element, "file", "plugins.cfg" );
+		plugins->append_node(file);
+		attrib = doc.allocate_attribute("root", "media");
+		plugins->append_attribute( attrib );
+
+		// First scene
+		rapidxml::xml_node<> *scene
+			= doc.allocate_node(rapidxml::node_element, "scene" );
+		config->append_node( scene );
+		file = doc.allocate_node(rapidxml::node_element, "file", "T7.scene" );
+		scene->append_node(file);
+		attrib = doc.allocate_attribute("name", "T7");
+		scene->append_attribute( attrib );
+
+		// Second scene
+		scene = doc.allocate_node(rapidxml::node_element, "scene" );
+		config->append_node( scene );
+		file = doc.allocate_node(rapidxml::node_element, "file", "ruukki.scene" );
+		scene->append_node(file);
+		attrib = doc.allocate_attribute("name", "ruukki");
+		scene->append_attribute( attrib );
+
+		// Third scene
+		scene = doc.allocate_node(rapidxml::node_element, "scene" );
+		config->append_node( scene );
+		file = doc.allocate_node(rapidxml::node_element, "file", "ruukki.scene" );
+		scene->append_node(file);
+	}
+
+	~CompleteXMLFixture(void )
+	{
+	}
+
+};
+
+BOOST_FIXTURE_TEST_SUITE( IntegrationTests, CompleteXMLFixture )
 // TODO write
 // Real world use case. We have two roots, two resource files, three scenes,
 // one plugins file, one eqc. Everything except scenes need root reference.
 BOOST_AUTO_TEST_CASE( root_references )
 {
-	// First root node
-	rapidxml::xml_node<> *root
-		= doc.allocate_node(rapidxml::node_element, "root" );
-	config->append_node( root );
-	rapidxml::xml_node<> *path
-		= doc.allocate_node(rapidxml::node_element, "path", "local/work" );
-	root->append_node(path);
-	rapidxml::xml_attribute<> *attrib = doc.allocate_attribute("name", "data");
-	root->append_attribute( attrib );
-
-	// Second root node
-	root = doc.allocate_node(rapidxml::node_element, "root" );
-	config->append_node( root );
-	path = doc.allocate_node(rapidxml::node_element, "path", "local/home" );
-	root->append_node(path);
-	attrib = doc.allocate_attribute("name", "media");
-	root->append_attribute( attrib );
-
-	// First resources node
-	rapidxml::xml_node<> *resource
-		= doc.allocate_node(rapidxml::node_element, "resources" );
-	config->append_node( resource );
-	rapidxml::xml_node<> *file
-		= doc.allocate_node(rapidxml::node_element, "file", "resource.cfg" );
-	resource->append_node(file);
-	attrib = doc.allocate_attribute("root", "data");
-	resource->append_attribute( attrib );
-
-	// Second resources node
-	resource
-		= doc.allocate_node(rapidxml::node_element, "resources" );
-	config->append_node( resource );
-	file = doc.allocate_node(rapidxml::node_element, "file", "resource.cfg" );
-	resource->append_node(file);
-	attrib = doc.allocate_attribute("root", "media");
-	resource->append_attribute( attrib );
-
-	// eqc
-	rapidxml::xml_node<> *eqc
-		= doc.allocate_node(rapidxml::node_element, "eqc" );
-	config->append_node( eqc );
-	file = doc.allocate_node(rapidxml::node_element, "file", "1-window.eqc" );
-	eqc->append_node(file);
-	attrib = doc.allocate_attribute("root", "data");
-	eqc->append_attribute( attrib );
-
-	// plugins
-	rapidxml::xml_node<> *plugins
-		= doc.allocate_node(rapidxml::node_element, "plugins" );
-	config->append_node( plugins );
-	file = doc.allocate_node(rapidxml::node_element, "file", "plugins.cfg" );
-	plugins->append_node(file);
-	attrib = doc.allocate_attribute("root", "media");
-	plugins->append_attribute( attrib );
-
-	// First scene
-	rapidxml::xml_node<> *scene
-		= doc.allocate_node(rapidxml::node_element, "scene" );
-	config->append_node( scene );
-	file = doc.allocate_node(rapidxml::node_element, "file", "T7.scene" );
-	scene->append_node(file);
-	attrib = doc.allocate_attribute("name", "T7");
-	scene->append_attribute( attrib );
-
-	// Second scene
-	scene = doc.allocate_node(rapidxml::node_element, "scene" );
-	config->append_node( scene );
-	file = doc.allocate_node(rapidxml::node_element, "file", "ruukki.scene" );
-	scene->append_node(file);
-	attrib = doc.allocate_attribute("name", "ruukki");
-	scene->append_attribute( attrib );
-
-	// Third scene
-	scene = doc.allocate_node(rapidxml::node_element, "scene" );
-	config->append_node( scene );
-	file = doc.allocate_node(rapidxml::node_element, "file", "ruukki.scene" );
-	scene->append_node(file);
-
 	BOOST_CHECK_NO_THROW( readXML() );
 	
 	// Check roots
@@ -531,37 +545,55 @@ BOOST_AUTO_TEST_CASE( root_references )
 	}
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
 // TODO add creation of the xml file and saving it,
 // then reading it and parsing it to settings.
 BOOST_AUTO_TEST_CASE( read_from_file )
 {
-
+	// Write to out file
 	std::string filename( "test_conf.xml" );
-	vl::Settings settings;
-	vl::SettingsSerializer ser(&settings);
-	BOOST_CHECK_NO_THROW( ser.readFile(filename) );
+	data.clear();
+	rapidxml::print(std::back_inserter(data), doc, 0);
+	std::ofstream os( filename.c_str() );
+	os << data;
+	os.close();
+	
+	BOOST_CHECK_NO_THROW( ser->readFile(filename) );
 
 	BOOST_CHECK_EQUAL( settings.nRoots(), 2u );
 	for( size_t i = 0; i < settings.nRoots(); ++i )
 	{
 		vl::Settings::Root const &root = settings.getRoot(i);
-		BOOST_CHECK_EQUAL( root.path.root_directory(), "/" );
-		BOOST_CHECK( fs::exists(root.path) );
-		BOOST_TEST_MESSAGE( "root " << i << " path = " << root.path );
+		if( i == 0 )
+		{
+			BOOST_CHECK_EQUAL( root.getPath(), "local/work" );
+		}
+		else if( i == 1 )
+		{
+			BOOST_CHECK_EQUAL( root.getPath(), "local/home" );
+		}
 	}
 
 	fs::path path = settings.getEqConfigPath();
-	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
-	BOOST_CHECK_EQUAL( path.filename(), "1-window.eqc" );
+	BOOST_CHECK_EQUAL( path, "local/work/1-window.eqc" );
 
 	std::vector<vl::Settings::Scene> const &scenes = settings.getScenes();
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		BOOST_CHECK_EQUAL( scenes.at(i).file, "T7.scene" );
-		BOOST_CHECK_EQUAL( scenes.at(i).name, "T7" );
-		BOOST_TEST_MESSAGE( "scene = " << path );
+		if( i == 0 )
+		{
+			BOOST_CHECK_EQUAL( scenes.at(i).file, "T7.scene" );
+			BOOST_CHECK_EQUAL( scenes.at(i).name, "T7" );
+		}
+		else if( i == 1 )
+		{
+			BOOST_CHECK_EQUAL( scenes.at(i).file, "ruukki.scene" );
+			BOOST_CHECK_EQUAL( scenes.at(i).name, "ruukki" );
+		}
+		else if( i == 2 )
+		{
+			BOOST_CHECK_EQUAL( scenes.at(i).file, "ruukki.scene" );
+			BOOST_CHECK( scenes.at(i).name.empty() );
+		}
 	}
 	
 	std::vector<fs::path> resource_paths = settings.getOgreResourcePaths();
@@ -569,15 +601,18 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 	for( size_t i = 0; i < resource_paths.size(); ++i )
 	{
 		fs::path const &res_path = resource_paths.at(i);
-		BOOST_CHECK_EQUAL( res_path.root_directory(), "/" );
-		BOOST_CHECK_EQUAL( res_path.filename(), "resources.cfg" );
-		BOOST_TEST_MESSAGE( "resource path = " << res_path );
+		if( i == 0 )
+		{
+			BOOST_CHECK_EQUAL( res_path, "local/work/resources.cfg" );
+		}
+		if( i == 1 )
+		{
+			BOOST_CHECK_EQUAL( res_path, "local/home/resources.cfg" );
+		}
 	}
 
 	path = settings.getOgrePluginsPath();
-	BOOST_CHECK_EQUAL( path.root_directory(), "/" );
-	BOOST_CHECK_EQUAL( path.filename(),  "plugins.cfg" );
-	BOOST_TEST_MESSAGE( "plugin path = "<< path );
+	BOOST_CHECK_EQUAL( path,  "local/home/plugins.cfg" );
 
 	vl::Args const &arg = settings.getEqArgs();
 	BOOST_TEST_MESSAGE( "args = "<< arg );
@@ -596,23 +631,17 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 		path = arg.at(2);
 		BOOST_CHECK_EQUAL( path.filename(), "1-window.eqc" );
 	}
+	
+	fs::remove( filename );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE( missing_read_file )
 {
 	std::string missing_filename( "conf.xml" );
-	std::string invalid_filename( "inv_conf.xml" );
 	vl::Settings settings;
 	vl::SettingsSerializer ser(&settings);
-	BOOST_REQUIRE( fs::exists( invalid_filename ) );
 	BOOST_REQUIRE( !fs::exists( missing_filename ) );
 	BOOST_CHECK_THROW( ser.readFile( missing_filename ), vl::missing_file );
-	BOOST_CHECK_THROW( ser.readFile( invalid_filename ), vl::invalid_xml );
-}
-
-// TODO implement using Serializer
-// TODO Serializer and Deserializer are named incorrectly.
-BOOST_AUTO_TEST_CASE( write_to_file )
-{
-
 }

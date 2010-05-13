@@ -287,19 +287,6 @@ class SettingsSerializer
 		vl::FileString *_xml_data;
 };
 
-class SettingsDeserializer
-{
-	public :
-		SettingsDeserializer( Settings *settings );
-
-		~SettingsDeserializer( void );
-
-		void writeFile( std::string const &file_path );
-
-	protected :
-
-};
-
 }	// namespace vl
 
 #endif
