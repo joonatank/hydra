@@ -48,6 +48,7 @@ MOCK_BASE_CLASS( Entity, vl::graph::Entity )
 MOCK_BASE_CLASS( Light, vl::graph::Light )
 {
 	MOCK_METHOD( setManager, 1 )
+	MOCK_METHOD( setDirection, 1 )
 	MOCK_METHOD( setSpotlightRange, 3 )
 	MOCK_METHOD( setAttenuation, 4 )
 	MOCK_METHOD( setType, 1 )

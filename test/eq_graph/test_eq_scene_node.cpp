@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE( constructors_test )
 
 	// Test childs, parents and attached are initialized correctly
 	BOOST_CHECK( !node->getParent() );
-	BOOST_CHECK_EQUAL( node->getChilds().size(), 0);
-	BOOST_CHECK_EQUAL( node->getAttached().size(), 0);
+	BOOST_CHECK_EQUAL( node->getChilds().size(), 0u);
+	BOOST_CHECK_EQUAL( node->getAttached().size(), 0u);
 
 	BOOST_CHECK_EQUAL( node->getName(), "Node" );
 

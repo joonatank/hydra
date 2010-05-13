@@ -33,6 +33,8 @@ namespace cl
 			virtual void setManager( vl::graph::SceneManagerRefPtr man )
 			{ _manager = man; }
 
+			virtual void setDirection( vl::vector const &dir ) {}
+			
 			virtual void setSpotlightRange( vl::angle const inner,
 					vl::angle const outer,
 					vl::scalar const falloff );

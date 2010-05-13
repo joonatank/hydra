@@ -138,19 +138,23 @@ DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	{ processExternals(pElement); }
 
 	// Process userDataReference (?)
+	/*
 	pElement = XMLRoot->first_node("userDataReference");
 	if(pElement)
 	{ processUserDataReference(pElement); }
-
+	*/
+	
 	// Process octree (?)
+	/*
 	pElement = XMLRoot->first_node("octree");
 	if(pElement)
 	{ processOctree(pElement); }
-
+	*/
+	
 	// Process light (?)
-	//pElement = XMLRoot->first_node("light");
-	//if(pElement)
-	//	processLight(pElement);
+	pElement = XMLRoot->first_node("light");
+	if(pElement)
+	{ processLight(pElement); }
 
 	// Process camera (?)
 	pElement = XMLRoot->first_node("camera");
@@ -563,10 +567,6 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	// Process attributes
 	std::string name = getAttrib(XMLNode, "name");
 	std::string id = getAttrib(XMLNode, "id");
-	//	TODO not implemented
-//	vl::scalar fov = getAttribReal(XMLNode, "fov", 45);
-//	vl::scalar aspectRatio = getAttribReal(XMLNode, "aspectRatio", 1.3333);
-//	std::string projectionType = getAttrib(XMLNode, "projectionType", "perspective");
 
 	std::string node_name = name + std::string("Node");
 	// Create the camera
@@ -574,24 +574,6 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	vl::graph::SceneNodeRefPtr cam_node
 		= parent->createChild( node_name );
 	cam_node->attachObject( camera );
-
-	// TODO: make a flag or attribute indicating whether or not the camera
-	// should be attached to any parent node.
-
-	// Set the field-of-view
-	//! @todo Is this always in degrees?
-	//camera->setFOVy(Ogre::Degree(fov));
-
-	// Set the aspect ratio
-	//camera->setAspectRatio(aspectRatio);
-	
-	// Set the projection type
-	/*	TODO not implemented
-	if(projectionType == "perspective")
-	{ camera->setProjectionType(Ogre::PT_PERSPECTIVE); }
-	else if(projectionType == "orthographic")
-	{ camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC); }
-	*/
 
 	rapidxml::xml_node<>* pElement;
 
@@ -673,29 +655,20 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if( pElement )
-	{
-		node->setPosition(parseVector3(pElement));
-//		node->setInitialState();
-	}
+	{ node->setPosition(parseVector3(pElement)); }
+	
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
-	{
-		node->setOrientation(parseQuaternion(pElement));
-//		node->setInitialState();
-	}
+	{ node->setOrientation(parseQuaternion(pElement)); }
 	
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
-	{
-		node->setScale(parseVector3(pElement));
-//		node->setInitialState();
-	}
+	{ node->setScale(parseVector3(pElement)); }
 
 	/*	Process lookTarget (?)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("lookTarget");
 	if(pElement)
 	{ processLookTarget(pElement, node); }
@@ -703,16 +676,12 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	/*	Process trackTarget (?)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("trackTarget");
 	if(pElement)
 	{ processTrackTarget(pElement, node); }
 	*/
 
-	/*	Process node (*)
-	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
-	 */
+	/*	Process node (*) */
 	pElement = XMLNode->first_node("node");
 	while(pElement)
 	{
@@ -720,10 +689,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("node");
 	}
 
-	/*	Process entity (*)
-	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
-	 */
+	/*	Process entity (*) */
 	pElement = XMLNode->first_node("entity");
 	while(pElement)
 	{
@@ -731,20 +697,17 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("entity");
 	}
 	
-	/*	Process light (*)
-	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
+	/*	Process light (*) */
 	pElement = XMLNode->first_node("light");
 	while(pElement)
 	{
 		processLight(pElement, node);
 		pElement = pElement->next_sibling("light");
 	}
-	*/
+	
 	
 	/*	Process camera (*)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("camera");
 	while(pElement)
 	{
@@ -755,7 +718,6 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	/*	Process particleSystem (*)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("particleSystem");
 	while(pElement)
 	{
@@ -766,7 +728,6 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	/*	Process billboardSet (*)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("billboardSet");
 	while( pElement )
 	{
@@ -777,7 +738,6 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	/*	Process plane (*)
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("plane");
 	while( pElement )
 	{
@@ -788,7 +748,6 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	
 	/*	Process userDataReference 
 	 *	TODO not supported yet
-	 *	TODO add logging of not supported element
 	pElement = XMLNode->first_node("userDataReference");
 	if( pElement )
 	{ processUserDataReference(pElement, node); }

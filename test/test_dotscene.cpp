@@ -137,9 +137,10 @@ BOOST_AUTO_TEST_SUITE_END()
 // Enviroment test cases
 BOOST_FIXTURE_TEST_SUITE( environment, EnvironmentFixture )
 
+// TODO Not supported at the moment
 BOOST_AUTO_TEST_CASE( test_viewport )
 {
-	// Not supported at the moment
+	
 }
 
 BOOST_AUTO_TEST_CASE( test_camera )
@@ -211,25 +212,25 @@ BOOST_AUTO_TEST_CASE( test_camera )
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
 
+// TODO Not supported at the moment
 BOOST_AUTO_TEST_CASE( test_skybox )
 {
 
 }
 
+// TODO Not supported at the moment
 BOOST_AUTO_TEST_CASE( test_skydome )
 {
 
 }
 
+// TODO Not supported at the moment
 BOOST_AUTO_TEST_CASE( test_skyplane )
 {
 
 }
 
 // Test environment element containing one fog element
-// TODO test default values : start, end, density
-// TODO test modes : none, linear, exp, exp2
-// other mode than above will default to FOG_NONE
 BOOST_AUTO_TEST_CASE( test_fog )
 {
 	mock::SceneNodePtr root( new mock::SceneNode );
@@ -448,6 +449,7 @@ BOOST_AUTO_TEST_CASE( test_entity )
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
 
+
 // Test three nodes which are childs of root node
 // Also two nodes which are childs of the first rock node.
 BOOST_AUTO_TEST_CASE( test_node_hierarchy )
@@ -490,19 +492,209 @@ BOOST_AUTO_TEST_CASE( test_node_hierarchy )
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
 
-// TODO add two lights to the rock node
-// TODO test colourSpecular, colourDiffuse, direction, position,
-// type, light range, attenuation, castShadows
-BOOST_AUTO_TEST_CASE( test_light )
-{
-	// Create two lights
-	// Attach them to the node
-	BOOST_CHECK_NO_THROW( loadXML() );
-}
-
 // TODO add two cameras to the rock node and process them
 BOOST_AUTO_TEST_CASE( test_camera )
 {
+	BOOST_CHECK_NO_THROW( loadXML() );
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+struct LightFixture : public SceneNodeFixture
+{
+	LightFixture( void )
+	{
+
+	}
+
+	~LightFixture( void )
+	{
+	}
+
+	void createLight( std::string const &name, vl::graph::Light::TYPE type )
+	{
+		mock::LightPtr light( new mock::Light );
+		_lights.push_back( light );
+		
+		// Create light
+		rapidxml::xml_node<> *xml_light
+			= doc.allocate_node(rapidxml::node_element, "light");
+		node->append_node( xml_light );
+		rapidxml::xml_attribute<> *attrb
+			= doc.allocate_attribute("name", name.c_str() );
+		xml_light->append_attribute(attrb);
+
+		if( type == vl::graph::Light::LT_DIRECTIONAL )
+		{ attrb = doc.allocate_attribute("type", "directional" ); }
+		else if( type == vl::graph::Light::LT_SPOTLIGHT )
+		{ attrb = doc.allocate_attribute("type", "spot" ); }
+		else	// ( type == vl::graph::Light::LT_POINT )
+		{ attrb = doc.allocate_attribute("type", "point" ); }
+		xml_light->append_attribute(attrb);
+		
+		attrb = doc.allocate_attribute("castShadows", "true");
+		xml_light->append_attribute(attrb);
+
+		MOCK_EXPECT( sm, createLight ).once().with( name ).returns( light );
+		MOCK_EXPECT(light, setType).once().with( type );
+		MOCK_EXPECT(light, setCastShadows).once().with( true );
+		MOCK_EXPECT(light, setVisible).once().with( true );
+		
+		// Create position
+		rapidxml::xml_node<> *xml_pos
+			= doc.allocate_node(rapidxml::node_element, "position");
+		xml_light->append_node( xml_pos );
+		attrb = doc.allocate_attribute("x", "-1");
+		xml_pos->append_attribute(attrb);
+		attrb = doc.allocate_attribute("y", "0");
+		xml_pos->append_attribute(attrb);
+		attrb = doc.allocate_attribute("z", "1");
+		xml_pos->append_attribute(attrb);
+
+		std::string nodeName = name+"Node";
+		mock::SceneNodePtr light_node( new mock::SceneNode );
+		_light_nodes.push_back(light_node);
+		
+		MOCK_EXPECT( rock, createChild ).once().with( nodeName )
+			.returns( light_node);
+		MOCK_EXPECT( light_node, attachObject ).once().with( light );
+		MOCK_EXPECT(light_node, setPosition).once()
+			.with( vl::vector(-1, 0, 1), vl::graph::SceneNode::TS_PARENT );
+			
+		// Create direction
+		rapidxml::xml_node<> *xml_rot
+			= doc.allocate_node(rapidxml::node_element, "directionVector");
+		xml_light->append_node( xml_rot );
+		attrb = doc.allocate_attribute("x", "0");
+		xml_rot->append_attribute(attrb);
+		attrb = doc.allocate_attribute("y", "0");
+		xml_rot->append_attribute(attrb);
+		attrb = doc.allocate_attribute("z", "-1");
+		xml_rot->append_attribute(attrb);
+
+		MOCK_EXPECT(light_node, setDirection).once()
+			.with( vl::vector(0, 0, -1) );
+		
+		// Attenuation
+		rapidxml::xml_node<> *xml_att
+			= doc.allocate_node(rapidxml::node_element, "lightAttenuation");
+		xml_light->append_node(xml_att);
+		attrb = doc.allocate_attribute("range", "100");
+		xml_att->append_attribute(attrb);
+		attrb = doc.allocate_attribute("constant", "1");
+		xml_att->append_attribute(attrb);
+		attrb = doc.allocate_attribute("linear", "0.5");
+		xml_att->append_attribute(attrb);
+		attrb = doc.allocate_attribute("quadratic", "1");
+		xml_att->append_attribute(attrb);
+
+		if( type != vl::graph::Light::LT_DIRECTIONAL )
+		{
+			MOCK_EXPECT(light, setAttenuation).once().with(100, 1, 0.5, 1);
+		}
+		
+		// Range
+		rapidxml::xml_node<> *xml_range
+			= doc.allocate_node(rapidxml::node_element, "lightRange");
+		xml_light->append_node( xml_range );
+		attrb = doc.allocate_attribute("inner", "15");
+		xml_range->append_attribute(attrb);
+		attrb = doc.allocate_attribute("outer", "30");
+		xml_range->append_attribute(attrb);
+		attrb = doc.allocate_attribute("falloff", "1");
+		xml_range->append_attribute(attrb);
+
+		if( type != vl::graph::Light::LT_DIRECTIONAL )
+		{
+			MOCK_EXPECT(light, setSpotlightRange).once().with(15, 30, 1);
+		}
+		// Colour Diffuse
+		rapidxml::xml_node<> *xml_diffuse
+			= doc.allocate_node(rapidxml::node_element, "colourDiffuse");
+		xml_light->append_node( xml_diffuse );
+		attrb = doc.allocate_attribute("r", "0.7");
+		xml_diffuse->append_attribute(attrb);
+		attrb = doc.allocate_attribute("g", "0.7");
+		xml_diffuse->append_attribute(attrb);
+		attrb = doc.allocate_attribute("b", "0.7");
+		xml_diffuse->append_attribute(attrb);
+
+		MOCK_EXPECT(light, setDiffuseColour).once()
+			.with( vl::colour(0.7, 0.7, 0.7, 1.0) );
+		
+		// Colour Specular
+		rapidxml::xml_node<> *xml_specular
+			= doc.allocate_node(rapidxml::node_element, "colourSpecular");
+		xml_light->append_node( xml_specular );
+		attrb = doc.allocate_attribute("r", "1");
+		xml_specular->append_attribute(attrb);
+		attrb = doc.allocate_attribute("g", "1");
+		xml_specular->append_attribute(attrb);
+		attrb = doc.allocate_attribute("b", "1");
+		xml_specular->append_attribute(attrb);
+
+		MOCK_EXPECT(light, setSpecularColour).once()
+			.with( vl::colour(1., 1., 1., 1.0) );
+	}
+
+	std::vector<mock::LightPtr> _lights;
+	std::vector<mock::SceneNodePtr> _light_nodes;
+};
+
+BOOST_FIXTURE_TEST_SUITE( lightTests, LightFixture )
+
+BOOST_AUTO_TEST_CASE( test_dir_light )
+{
+	createLight( "dir_light", vl::graph::Light::LT_DIRECTIONAL );
+
+	BOOST_CHECK_NO_THROW( loadXML() );
+}
+
+
+BOOST_AUTO_TEST_CASE( test_point_light )
+{
+	createLight( "point_light", vl::graph::Light::LT_POINT );
+	
+	BOOST_CHECK_NO_THROW( loadXML() );
+}
+
+
+BOOST_AUTO_TEST_CASE( test_spot_light )
+{
+	createLight( "spot_light", vl::graph::Light::LT_SPOTLIGHT );
+	
+	BOOST_CHECK_NO_THROW( loadXML() );
+}
+
+// Create multiple lights to rock node
+// Create one light to scene level i.e. to root node
+BOOST_AUTO_TEST_CASE( multiple_lights )
+{
+	mock::LightPtr light( new mock::Light );
+	mock::SceneNodePtr light_node( new mock::SceneNode );
+
+	// Create light
+	rapidxml::xml_node<> *xml_light
+		= doc.allocate_node(rapidxml::node_element, "light");
+	scene->append_node( xml_light );
+	rapidxml::xml_attribute<> *attrb
+		= doc.allocate_attribute("name", "nodes_ligth" );
+	xml_light->append_attribute(attrb);
+	attrb = doc.allocate_attribute("type", "point" );
+	xml_light->append_attribute(attrb);
+
+	MOCK_EXPECT( sm, createLight ).once().with( "nodes_ligth" ).returns( light );
+	MOCK_EXPECT( root, createChild ).once().with( "nodes_ligthNode" )
+		.returns( light_node );
+	MOCK_EXPECT( light_node, attachObject ).once().with( light );
+	MOCK_EXPECT(light, setType).once().with( vl::graph::Light::LT_POINT );
+	MOCK_EXPECT(light, setCastShadows).once().with( true );
+	MOCK_EXPECT(light, setVisible).once().with( true );
+
+	createLight( "spot_light", vl::graph::Light::LT_SPOTLIGHT );
+	createLight( "dir_light", vl::graph::Light::LT_DIRECTIONAL );
+	createLight( "point_light", vl::graph::Light::LT_POINT );
+
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
 
