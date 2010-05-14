@@ -42,6 +42,13 @@ vl::ogre::Camera::setNearClipDistance( vl::scalar const &dist )
 	{ _ogre_camera->setNearClipDistance( dist ); }
 }
 
+void
+vl::ogre::Camera::setPosition( vl::vector const &pos )
+{
+	if( _ogre_camera )
+	{ _ogre_camera->setPosition( vl::math::convert( pos ) ); }
+}
+
 // ---------- CameraFactory	----------
 vl::graph::MovableObjectRefPtr
 vl::ogre::CameraFactory::create( std::string const &name,

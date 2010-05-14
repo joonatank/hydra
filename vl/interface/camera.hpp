@@ -44,6 +44,8 @@ namespace graph
 
 			virtual void setNearClipDistance( vl::scalar const &dist ) = 0;
 
+			virtual void setPosition( vl::vector const &pos ) = 0;
+
 	};	// class Camera
 
 }	// namespace graph

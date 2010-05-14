@@ -45,6 +45,9 @@ namespace cl
 			virtual void setNearClipDistance( vl::scalar const &dist )
 			{}
 
+			virtual void setPosition( vl::vector const &pos )
+			{}
+
 		protected :
 			vl::graph::SceneManagerWeakPtr _manager;
 			std::string _name;

@@ -44,6 +44,7 @@ namespace ogre
 
 			virtual void setNearClipDistance( vl::scalar const &dist );
 
+			virtual void setPosition( vl::vector const &pos );
 		protected :
 			Ogre::Camera *_ogre_camera;
 

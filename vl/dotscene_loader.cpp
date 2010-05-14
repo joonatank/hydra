@@ -704,17 +704,16 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		processLight(pElement, node);
 		pElement = pElement->next_sibling("light");
 	}
-	
-	
+
 	/*	Process camera (*)
 	 *	TODO not supported yet
+	 */
 	pElement = XMLNode->first_node("camera");
 	while(pElement)
 	{
 		processCamera(pElement, node);
 		pElement = pElement->next_sibling("camera");
 	}
-	*/
 
 	/*	Process particleSystem (*)
 	 *	TODO not supported yet
@@ -1190,7 +1189,7 @@ DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	z = vl::string_convert<vl::scalar>( attrZ->value() );
 	w = vl::string_convert<vl::scalar>( attrW->value() );
 	
-	return vl::quaternion( w, x, y, z );
+	return vl::quaternion( x, y, z, w );
 }
 
 vl::colour

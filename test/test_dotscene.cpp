@@ -18,6 +18,7 @@
 
 #include "dotscene_loader.hpp"
 #include "base/exceptions.hpp"
+#include "base/string_utils.hpp"
 
 // vl::cl objects
 //#include "eq_graph/eq_scene_manager.hpp"
@@ -35,15 +36,6 @@ struct DotsceneFixture
 	DotsceneFixture( void )
 		: sm( new mock::SceneManager )
 	{
-		/*
-		// Set factories
-		sm->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-					new mock::SceneNodeFactory ) );
-		sm->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new mock::CameraFactory ) );
-		sm->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new mock::EntityFactory ) );
-		*/
 		scene = doc.allocate_node(rapidxml::node_element, "scene" );
 		doc.append_node( scene );
 		rapidxml::xml_attribute<> *attr
@@ -62,6 +54,51 @@ struct DotsceneFixture
 		// Print to string so we can use SettingsSerializer for the data
 		BOOST_TEST_MESSAGE( xml_data );
 		loader.parseDotScene( xml_data, sm );
+	}
+
+	rapidxml::xml_node<> *createPosition( vl::vector const &pos )
+	{
+		rapidxml::xml_node<> *xml_pos
+			= doc.allocate_node(rapidxml::node_element, "position");
+		char *x = doc.allocate_string( vl::string_convert<>(pos.x()).c_str() );
+		rapidxml::xml_attribute<> *att
+			= doc.allocate_attribute( "x", x );
+		xml_pos->append_attribute(att);
+		char *y = doc.allocate_string( vl::string_convert<>(pos.y()).c_str() );
+		att = doc.allocate_attribute( "y", y );
+		xml_pos->append_attribute(att);
+		char *z = doc.allocate_string( vl::string_convert<>(pos.z()).c_str() );
+		att = doc.allocate_attribute( "z", z );
+		xml_pos->append_attribute(att);
+
+		return xml_pos;
+	}
+
+	rapidxml::xml_node<> *createRotation( vl::quaternion const &rot )
+	{
+		rapidxml::xml_node<> *xml_rot
+			= doc.allocate_node(rapidxml::node_element, "rotation");
+		char *w = doc.allocate_string( vl::string_convert<>(rot.w()).c_str() );
+		rapidxml::xml_attribute<> *att
+			= doc.allocate_attribute( "w", w );
+		xml_rot->append_attribute(att);
+		char *x = doc.allocate_string( vl::string_convert<>(rot.x()).c_str() );
+		att = doc.allocate_attribute( "x", x);
+		xml_rot->append_attribute(att);
+		char *y = doc.allocate_string( vl::string_convert<>(rot.y()).c_str() );
+		att = doc.allocate_attribute( "y", y);
+		xml_rot->append_attribute(att);
+		char *z = doc.allocate_string( vl::string_convert<>(rot.z()).c_str() );
+		att = doc.allocate_attribute( "z", z );
+		xml_rot->append_attribute(att);
+
+		return xml_rot;
+	}
+
+	// TODO add
+	rapidxml::xml_node<> *createScale( vl::vector const &scale )
+	{
+		return 0;
 	}
 	
 	// Generated data for the xml parser
@@ -143,7 +180,7 @@ BOOST_AUTO_TEST_CASE( test_viewport )
 	
 }
 
-BOOST_AUTO_TEST_CASE( test_camera )
+BOOST_AUTO_TEST_CASE( test_env_camera )
 {
 	mock::SceneNodePtr root( new mock::SceneNode );
 	mock::SceneNodePtr camNode( new mock::SceneNode );
@@ -169,27 +206,15 @@ BOOST_AUTO_TEST_CASE( test_camera )
 	node->append_attribute(attrb);
 
 	// Add position
-	node = doc.allocate_node(rapidxml::node_element, "position");
+	vl::vector cam_pos(1, 2, -1);
+	node = createPosition( cam_pos );
 	camera->append_node( node );
-	attrb = doc.allocate_attribute("x", "1");
-	node->append_attribute(attrb);
-	attrb = doc.allocate_attribute("y", "2");
-	node->append_attribute(attrb);
-	attrb = doc.allocate_attribute("z", "-1");
-	node->append_attribute(attrb);
-	
+
 	// Add rotation
-	node = doc.allocate_node(rapidxml::node_element, "rotation");
+	vl::quaternion cam_rot(0, 1, 0, 0);
+	node = createRotation( cam_rot );
 	camera->append_node( node );
-	attrb = doc.allocate_attribute("qw", "0");
-	node->append_attribute(attrb);
-	attrb = doc.allocate_attribute("qx", "1");
-	node->append_attribute(attrb);
-	attrb = doc.allocate_attribute("qy", "0");
-	node->append_attribute(attrb);
-	attrb = doc.allocate_attribute("qz", "0");
-	node->append_attribute(attrb);
-		
+
 	// Loader should create camera, create cameraNode as a child of roots
 	// and it should attach the camera to cameraNode.
 	MOCK_EXPECT( sm, createCamera ).once().with("camera").returns( cam );
@@ -203,11 +228,11 @@ BOOST_AUTO_TEST_CASE( test_camera )
 	
 	// Test position
 	MOCK_EXPECT( camNode, setPosition ).once()
-		.with( vl::vector(1, 2, -1), vl::graph::SceneNode::TS_PARENT );
+		.with( cam_pos, vl::graph::SceneNode::TS_PARENT );
 	
 	// Test orientation
 	MOCK_EXPECT( camNode, setOrientation ).once()
-		.with( vl::quaternion(0, 1, 0, 0), vl::graph::SceneNode::TS_LOCAL );
+		.with( cam_rot, vl::graph::SceneNode::TS_LOCAL );
 
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
@@ -336,31 +361,17 @@ struct SceneNodeFixture : public DotsceneFixture
 		node->append_attribute(attrb);
 
 		// Position element
-		pos = vl::vector(-1, 1, 0);
-		position = doc.allocate_node(rapidxml::node_element, "position");
-		node->append_node(position);
-		attrb = doc.allocate_attribute("x", "-1");
-		position->append_attribute(attrb);
-		attrb = doc.allocate_attribute("y", "1");
-		position->append_attribute(attrb);
-		attrb = doc.allocate_attribute("z", "0");
-		position->append_attribute(attrb);
+		rock_pos = vl::vector(-1, 1, 0);
+		rock_xml_pos = createPosition(rock_pos);
+		node->append_node(rock_xml_pos);
 
 		// Rotation element
-		quat = vl::quaternion(0, 1, 0, 0);
-		rotation = doc.allocate_node(rapidxml::node_element, "rotation");
-		node->append_node(rotation);
-		attrb = doc.allocate_attribute("x", "1");
-		rotation->append_attribute(attrb);
-		attrb = doc.allocate_attribute("y", "0");
-		rotation->append_attribute(attrb);
-		attrb = doc.allocate_attribute("z", "0");
-		rotation->append_attribute(attrb);
-		attrb = doc.allocate_attribute("w", "0");
-		rotation->append_attribute(attrb);
+		rock_rot = vl::quaternion(0, 1, 0, 0);
+		rock_xml_rot = createRotation(rock_rot);
+		node->append_node(rock_xml_rot);
 
 		// Scale element
-		scl = vl::vector(0.2, 0.1, 0.3);
+		rock_scl = vl::vector(0.2, 0.1, 0.3);
 		scale = doc.allocate_node(rapidxml::node_element, "scale");
 		node->append_node(scale);
 		attrb = doc.allocate_attribute("x", ".2");
@@ -377,11 +388,11 @@ struct SceneNodeFixture : public DotsceneFixture
 		MOCK_EXPECT( root, createChild ).once().with( "rock" ).returns( rock );
 
 		MOCK_EXPECT( rock, setPosition ).once()
-			.with( pos, vl::graph::SceneNode::TS_PARENT );
+			.with( rock_pos, vl::graph::SceneNode::TS_PARENT );
 		MOCK_EXPECT( rock, setOrientation ).once()
-			.with( quat, vl::graph::SceneNode::TS_LOCAL );
+			.with( rock_rot, vl::graph::SceneNode::TS_LOCAL );
 		MOCK_EXPECT( rock, setScale ).once()
-			.with( scl );
+			.with( rock_scl );
 	}
 
 	~SceneNodeFixture( void )
@@ -390,12 +401,12 @@ struct SceneNodeFixture : public DotsceneFixture
 
 	rapidxml::xml_node<> *nodes;
 	rapidxml::xml_node<> *node;
-	rapidxml::xml_node<> *position;
-	rapidxml::xml_node<> *rotation;
+	rapidxml::xml_node<> *rock_xml_pos;
+	rapidxml::xml_node<> *rock_xml_rot;
 	rapidxml::xml_node<> *scale;
-	vl::vector pos;
-	vl::vector scl;
-	vl::quaternion quat;
+	vl::vector rock_pos;
+	vl::vector rock_scl;
+	vl::quaternion rock_rot;
 	mock::SceneNodePtr root;
 	mock::SceneNodePtr rock;
 	
@@ -495,6 +506,45 @@ BOOST_AUTO_TEST_CASE( test_node_hierarchy )
 // TODO add two cameras to the rock node and process them
 BOOST_AUTO_TEST_CASE( test_camera )
 {
+	mock::CameraPtr camera1( new mock::Camera );
+	mock::CameraPtr camera2( new mock::Camera );
+	mock::SceneNodePtr cam1_node( new mock::SceneNode );
+	mock::SceneNodePtr cam2_node( new mock::SceneNode );
+
+	// First camera
+	rapidxml::xml_node<> *xml_cam
+		= doc.allocate_node(rapidxml::node_element, "camera");
+	node->append_node( xml_cam );
+	rapidxml::xml_attribute<> *attrb = doc.allocate_attribute("name", "camera1");
+	xml_cam->append_attribute(attrb);
+
+	MOCK_EXPECT( sm, createCamera ).once().with("camera1").returns(camera1);
+	MOCK_EXPECT( rock, createChild ).once().with("camera1Node").returns(cam1_node);
+	MOCK_EXPECT( cam1_node, attachObject ).once().with(camera1);
+	
+	vl::vector pos(1, 5, 4);
+	rapidxml::xml_node<> *xml_pos = createPosition( pos );
+	xml_cam->append_node(xml_pos);
+
+	vl::quaternion rot(0, 0, 1, 0 );
+	rapidxml::xml_node<> *xml_rot = createRotation( rot );
+	xml_cam->append_node(xml_rot);
+
+	MOCK_EXPECT( cam1_node, setPosition )
+		.once().with( pos, vl::graph::SceneNode::TS_PARENT );
+	MOCK_EXPECT( cam1_node, setOrientation )
+		.once().with( rot, vl::graph::SceneNode::TS_LOCAL );
+	
+	// Second camera
+//	xml_cam = doc.allocate_node(rapidxml::node_element, "camera");
+//	node->append_node( xml_cam );
+//	attrb = doc.allocate_attribute("name", "camera2");
+//	xml_cam->append_attribute(attrb);
+
+//	MOCK_EXPECT( sm, createCamera ).once().with("camera2").returns(camera2);
+//	MOCK_EXPECT( rock, createChild ).once().with("camera2Node").returns(cam2_node);
+//	MOCK_EXPECT( cam2_node, attachObject ).once().with(camera2);
+
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
 
@@ -541,15 +591,9 @@ struct LightFixture : public SceneNodeFixture
 		MOCK_EXPECT(light, setVisible).once().with( true );
 		
 		// Create position
-		rapidxml::xml_node<> *xml_pos
-			= doc.allocate_node(rapidxml::node_element, "position");
+		vl::vector light_pos( -1, 0, 1 );
+		rapidxml::xml_node<> *xml_pos = createPosition( light_pos );
 		xml_light->append_node( xml_pos );
-		attrb = doc.allocate_attribute("x", "-1");
-		xml_pos->append_attribute(attrb);
-		attrb = doc.allocate_attribute("y", "0");
-		xml_pos->append_attribute(attrb);
-		attrb = doc.allocate_attribute("z", "1");
-		xml_pos->append_attribute(attrb);
 
 		std::string nodeName = name+"Node";
 		mock::SceneNodePtr light_node( new mock::SceneNode );
@@ -559,7 +603,7 @@ struct LightFixture : public SceneNodeFixture
 			.returns( light_node);
 		MOCK_EXPECT( light_node, attachObject ).once().with( light );
 		MOCK_EXPECT(light_node, setPosition).once()
-			.with( vl::vector(-1, 0, 1), vl::graph::SceneNode::TS_PARENT );
+			.with( light_pos, vl::graph::SceneNode::TS_PARENT );
 			
 		// Create direction
 		rapidxml::xml_node<> *xml_rot

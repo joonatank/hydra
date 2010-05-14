@@ -35,6 +35,7 @@ MOCK_BASE_CLASS( Camera, vl::graph::Camera )
 	MOCK_METHOD( setProjectionMatrix, 1 )
 	MOCK_METHOD( setFarClipDistance, 1 )
 	MOCK_METHOD( setNearClipDistance, 1 )
+	MOCK_METHOD( setPosition, 1 )
 };
 
 MOCK_BASE_CLASS( Entity, vl::graph::Entity )
