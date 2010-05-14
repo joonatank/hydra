@@ -37,6 +37,8 @@ namespace ogre
 
 			virtual void setProjectionMatrix( vl::matrix const &m );
 
+			virtual void setViewMatrix( vl::matrix const &m );
+
 			virtual void setFarClipDistance( vl::scalar const &dist );
 
 			virtual void setNearClipDistance( vl::scalar const &dist );

@@ -243,6 +243,7 @@ BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
 	BOOST_REQUIRE( config );
 
-	for( size_t i = 0; i < 1000; i++ )
+	//for( size_t i = 0; i < 1000; i++ )
+	while( true )
 	{ mainloop(); }
 }

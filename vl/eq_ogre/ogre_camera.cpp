@@ -39,6 +39,16 @@ vl::ogre::Camera::setProjectionMatrix( vl::matrix const &m )
 	}
 }
 
+void 
+vl::ogre::Camera::setViewMatrix( vl::matrix const &m )
+{
+	if( _ogre_camera )
+	{
+		_ogre_camera->setCustomViewMatrix( true,
+			vl::math::convert(m) );
+	}
+}
+
 void
 vl::ogre::Camera::setFarClipDistance( vl::scalar const &dist )
 {

@@ -35,6 +35,9 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 
 #include <eq/eq.h>
 
+#include <limits>
+#include <iostream>
+
 // eqOgre project includes
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_ogre/ogre_scene_manager.hpp"
@@ -82,6 +85,7 @@ void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 	g_trackerData = t;
 
 	/*
+	
  	printf("handle_tracker\tSensor %d is now at (%g,%g,%g)\n", 
 		t.sensor, t.pos[0], t.pos[1], t.pos[2]);
   	
@@ -156,7 +160,14 @@ public :
 		vl::graph::ViewportRefPtr view = win->addViewport( cam );
 		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 		feet = root->createChild( "Feet" );
-		feet->lookAt( vl::vector(0,0,3) );
+		//feet->lookAt( vl::vector(0,0,3) );
+		Ogre::SceneNode *og_feet
+			= boost::static_pointer_cast<vl::ogre::SceneNode>( feet )->getNative();
+		std::cerr << "Feet position = " << og_feet->getPosition() << std::endl;
+		std::cerr << "Feet orientation = " << og_feet->getOrientation() << std::endl;
+		std::cerr << "Feet pitch = " << og_feet->getOrientation().getPitch() << std::endl;
+		std::cerr << "Feet roll = " << og_feet->getOrientation().getRoll() << std::endl;
+		std::cerr << "Feet yaw = " << og_feet->getOrientation().getYaw() << std::endl;
 		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
 
 		// Create robot Entity
@@ -165,7 +176,7 @@ public :
 				man->createEntity( "robot", "robot.mesh" ) );
 		ent->load();
 		robot = root->createChild();
-		robot->setPosition( vl::vector(0, 0, 3) );
+		robot->setPosition( vl::vector(0, 1, -0.5) );
 		robot->scale( 1./100 );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
 		setNearFar( 0.1, 100.0 );
@@ -182,10 +193,33 @@ public :
 	{
 		try {
 		eq::Channel::frameDraw( frameID );
-	  
-		Ogre::Quaternion q( g_trackerData.quat[1], g_trackerData.quat[2], g_trackerData.quat[3], g_trackerData.quat[4]);
-		q.normalise();
-		Ogre::Vector3 v3( g_trackerData.pos[0], g_trackerData.pos[1], g_trackerData.pos[2]);
+		
+		double avg = 0;
+		for( size_t i = 0; i < 4; ++i )
+		{
+			avg += g_trackerData.quat[i];
+		}
+
+		Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;;
+		Ogre::Vector3 v3 = Ogre::Vector3::ZERO;;
+		std::cout << "avarage = " << avg << std::endl;
+		// Quaternion should be about unit length, it's invalid if it's something else
+		if( abs(avg) > 0.5 && abs(avg) < 1.5 )
+		{
+			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
+				g_trackerData.quat[1], g_trackerData.quat[2] );
+			q.normalise();
+		}
+		
+		v3 = Ogre::Vector3( g_trackerData.pos[0], g_trackerData.pos[1], 
+				g_trackerData.pos[2] );
+		
+		//Ogre::SceneNode *og_robot
+		//	= boost::static_pointer_cast<vl::ogre::SceneNode>( robot )->getNative();
+		//std::cerr << "Robot position = " << og_robot->getPosition() << std::endl;
+		//std::cerr << "Robot orientation = " << og_robot->getOrientation() << std::endl;
+
+		//std::cerr << "Quat = " << q << std::endl;
 		//feet->setPosition( vl::math::convert(v3) );
 
 		//vl::quaternion quat = vl::math::convert(q);
@@ -194,28 +228,38 @@ public :
 		
 		// Note: real applications would use one tracking device per observer
 				
-		Ogre::Matrix4 oq ( q );
-		//= Ogre::Matrix4::IDENTITY; //
+		//Ogre::Matrix4 oq = Ogre::Matrix4::IDENTITY; //
 		//oq.setTrans( v3 );
 		//Ogre::Vector3 v(0., 1, 0.);
-		oq.setTrans( v3 );
+	//	oq.setTrans( v3 );
 
-	    const eq::ObserverVector& observers = getConfig()->getObservers();
-	    for( eq::ObserverVector::const_iterator i = observers.begin();
-			i != observers.end(); ++i )
+		Ogre::Camera *og_cam = static_cast<Ogre::Camera *>(
+			(boost::static_pointer_cast<vl::ogre::Camera>(cam)->getNative() ) );
+//		og_cam->setPosition( v3 );
+	    //const eq::ObserverVector& observers = getConfig()->getObservers();
+	    //for( eq::ObserverVector::const_iterator i = observers.begin();
+		//	i != observers.end(); ++i )
 	    {   
-			std::cerr << "Head Matrix : " << std::endl
-				<< (*i)->getHeadMatrix() << std::endl;
+			
+			//std::cerr << "Head Matrix : " << std::endl
+			//	<< (*i)->getHeadMatrix() << std::endl;
+			/*
 			std::cerr << "Tracker matrix : " << std::endl 
 				<< vl::math::convert(oq) << std::endl;
+			*/
 		
-			(*i)->setHeadMatrix( vl::math::convert(oq) );
+			//(*i)->setHeadMatrix( vl::math::convert(oq) );
 		}
 		
-
 		eq::Frustumf frust = getFrustum();
 		//std::cout << "Frustrum = " << frust.compute_matrix() << std::endl;
 		cam->setProjectionMatrix( frust.compute_matrix() );
+		
+		// This one works like a charm
+		// At least without the quaternion.
+		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( v3, q );
+//		std::cerr << "View matrix = " << std::endl << view << std::endl;
+		cam->setViewMatrix( vl::math::convert( view ) );
 		win->update();
 		}
 		catch( vl::exception const &e )
@@ -318,7 +362,7 @@ BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 	// Set up the tracker callback handler
     tkr->register_change_handler(NULL, handle_tracker);
 
-    for ( int i = 0; i < 2000; i++ )
+    for ( ; ;)
 	{
 	  	tkr->mainloop();
 	  	mainloop(); 

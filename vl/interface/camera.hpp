@@ -40,6 +40,8 @@ namespace graph
 
 			virtual void setProjectionMatrix( vl::matrix const &m ) = 0;
 
+			virtual void setViewMatrix( vl::matrix const &m ) = 0;
+
 			virtual void setFarClipDistance( vl::scalar const &dist ) = 0;
 
 			virtual void setNearClipDistance( vl::scalar const &dist ) = 0;

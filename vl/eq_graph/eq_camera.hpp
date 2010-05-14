@@ -33,14 +33,13 @@ namespace cl
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );
 			
-			virtual void setProjectionMatrix( vmml::mat4d const &m )
-			{}
+			virtual void setProjectionMatrix( vmml::mat4d const &m ) {}
 
-			virtual void setFarClipDistance( vl::scalar const &dist )
-			{}
+			virtual void setViewMatrix( vl::matrix const &m ) {}
 
-			virtual void setNearClipDistance( vl::scalar const &dist )
-			{}
+			virtual void setFarClipDistance( vl::scalar const &dist ) {}
+
+			virtual void setNearClipDistance( vl::scalar const &dist ) {}
 
 		protected :
 			vl::graph::SceneManagerWeakPtr _manager;
