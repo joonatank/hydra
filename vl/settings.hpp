@@ -2,7 +2,11 @@
  *	2010-05
  *
  *	Settings for the scene.
- *	Has settings for both ogre, sceneloader and equalizer.
+ *	Has settings for
+ *	Ogre3D : resources and plugins
+ *	equalizer : config file
+ *	sceneloader : scenes to load
+ *	tracking : config file
  */
 #ifndef VL_SETTINGS_HPP
 #define VL_SETTINGS_HPP
@@ -32,13 +36,7 @@ class Settings
 			{
 				path = str;
 			}
-/*
-			// Implicit casting
-			operator fs::path() const
-			{
-				return path;
-			}
-*/
+
 			fs::path getPath( void ) const
 			{
 				return path;
@@ -53,13 +51,7 @@ class Settings
 			Resources( std::string const &fil = std::string(), Settings::Root *r = 0 )
 				: file(fil), root(r)
 			{}
-/*
-			// Implicit casting
-			operator fs::path() const
-			{
-				return (fs::path)(*root) / file;
-			}
-*/
+
 			fs::path getPath( void ) const
 			{
 				if( root )
@@ -107,6 +99,25 @@ class Settings
 			Root *root;
 		};
 
+		struct Tracking
+		{
+			Tracking( std::string const &fil, Settings::Root *r )
+				: file(fil), root(r)
+			{
+			}
+
+			fs::path getPath( void ) const
+			{
+				if( root )
+				{ return root->getPath() / file; }
+				else
+				{ return file; }
+			}
+			
+			std::string file;
+			Settings::Root *root;
+		};
+		
 		struct Scene
 		{
 			Scene( std::string const &fil = std::string(),
@@ -165,6 +176,16 @@ class Settings
 		void addResources( Settings::Resources const &resource );
 
 		void addScene( Settings::Scene const &scene );
+
+		std::vector<Settings::Tracking> const &getTracking( void )
+		{
+			return _tracking;
+		}
+
+		void addTracking( Settings::Tracking const &track )
+		{
+			_tracking.push_back( track );
+		}
 		
 		friend class SettingsSerializer;
 		friend class SettingsDeserializer;
@@ -205,6 +226,7 @@ class Settings
 			_resources.clear();
 			_eq_args = vl::Args();
 		}
+		
 	private :
 
 		void updateArgs( void );
@@ -218,6 +240,7 @@ class Settings
 		std::vector<Settings::Scene> _scenes;
 		Settings::Plugins _plugins;
 		std::vector<Settings::Resources> _resources;
+		std::vector<Settings::Tracking> _tracking;
 		vl::Args _eq_args;
 
 };	// class Settings
@@ -253,30 +276,12 @@ class SettingsSerializer
 
 		void processScene( rapidxml::xml_node<>* XMLNode );
 
+		void processTracking( rapidxml::xml_node<>* XMLNode );
+
 		std::string getAttrib( rapidxml::xml_node<>* XMLNode,
 				std::string const &attrib, std::string const &defaul_value );
 
-		Settings::Root *getRootAttrib( rapidxml::xml_node<>* XMLNode )
-		{
-			rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute( "root" );
-			if( attrib )
-			{
-				std::string root_name = attrib->value();
-				if( root_name.empty() )
-				{ return 0; }
-				
-				Settings::Root *root = _settings->findRoot( root_name );
-
-				// Because there is not two layered processing, e.g. we don't
-				// first read the xml file for all the elements and then
-				// map names to pointers all not found names are errors.
-				if( !root )
-				{ throw vl::invalid_xml( "vl::SettingsSerailizer::processResources" ); }
-
-				return root;
-			}
-			return 0;
-		}
+		Settings::Root *getRootAttrib( rapidxml::xml_node<>* XMLNode );
 
 		// Read data from FileString _xml_data.
 		void readData( );

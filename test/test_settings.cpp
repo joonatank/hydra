@@ -70,6 +70,77 @@ struct SettingsFixture
 			&& settings.getOgreResourcePaths().empty()
 			&& settings.getScenes().empty() );
 	}
+
+	rapidxml::xml_node<> *createRoot( std::string const &name,
+									  std::string const &path )
+	{
+		char *c_path = doc.allocate_string( path.c_str() );
+		char *c_name = doc.allocate_string( name.c_str() );
+		
+		rapidxml::xml_node<> *root
+			= doc.allocate_node(rapidxml::node_element, "root" );
+		rapidxml::xml_node<> *node
+			= doc.allocate_node(rapidxml::node_element, "path", c_path );
+		root->append_node(node);
+
+		rapidxml::xml_attribute<> *attr = doc.allocate_attribute( "name", c_name );
+		root->append_attribute( attr );
+		
+		return root;
+	}
+
+	rapidxml::xml_node<> *createTracking( std::string const &name,
+										  std::string const &file,
+										  std::string const &root_name = std::string() )
+	{
+		char *c_name = doc.allocate_string( name.c_str() );
+		char *c_file = doc.allocate_string( file.c_str() );
+		char *c_root_name = doc.allocate_string( root_name.c_str() );
+		
+		rapidxml::xml_node<> *tracking
+			= doc.allocate_node(rapidxml::node_element, "tracking" );
+
+		rapidxml::xml_node<> *node
+			= doc.allocate_node(rapidxml::node_element, "file", c_file );
+		tracking->append_node( node );
+		
+		rapidxml::xml_attribute<> *attr
+			= doc.allocate_attribute( "root", c_root_name );
+		tracking->append_attribute( attr );
+		
+		attr = doc.allocate_attribute( "name", c_name );
+		
+		return tracking;
+	}
+	
+	rapidxml::xml_node<> *createScene( std::string const &name,
+									   std::string const &file,
+									   std::string const &type = std::string(),
+									   std::string const &attach = std::string() )
+	{
+		char *c_name = doc.allocate_string( name.c_str() );
+		char *c_file = doc.allocate_string( file.c_str() );
+		char *c_type = doc.allocate_string( type.c_str() );
+		char *c_attach = doc.allocate_string( attach.c_str() );
+
+		rapidxml::xml_node<> *scene
+			= doc.allocate_node(rapidxml::node_element, "scene" );
+		rapidxml::xml_attribute<> *attr
+			= doc.allocate_attribute( "name", c_name );
+		scene->append_attribute(attr);
+			
+		rapidxml::xml_node<> *node
+			= doc.allocate_node(rapidxml::node_element, "file", c_file );
+		scene->append_node( node );
+
+		node = doc.allocate_node(rapidxml::node_element, "type", c_type );
+		scene->append_node( node );
+
+		node = doc.allocate_node(rapidxml::node_element, "attach", c_attach );
+		scene->append_node( node );
+
+		return scene;
+	}
 	
 	std::string data;
 	vl::Settings settings;
@@ -92,14 +163,19 @@ BOOST_AUTO_TEST_CASE( test_config )
 }
 
 BOOST_AUTO_TEST_CASE( test_root_elem )
-{	
-	// First root node
-	rapidxml::xml_node<> *root = doc.allocate_node(rapidxml::node_element, "root" );
+{
+	std::string root_name("data");
+	std::string root_path("local/work");
+
+	// root node
+	rapidxml::xml_node<> *root
+		= doc.allocate_node(rapidxml::node_element, "root");
 	config->append_node( root );
 
 	// Invalid root, missing path element
 	rapidxml::xml_attribute<> *name = doc.allocate_attribute("name", "data");
 	root->append_attribute(name);
+
 	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
 	BOOST_CHECK( checkEmpty() );
 	
@@ -107,6 +183,7 @@ BOOST_AUTO_TEST_CASE( test_root_elem )
 	root->remove_attribute( name );
 	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", "local/work" );
 	root->append_node(path);
+
 	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
 	BOOST_CHECK( checkEmpty() );
 
@@ -118,8 +195,8 @@ BOOST_AUTO_TEST_CASE( test_root_elem )
 	for( size_t i = 0; i < settings.nRoots(); ++i )
 	{
 		vl::Settings::Root const &root = settings.getRoot(0);
-		BOOST_CHECK_EQUAL( root.name, "data" );
-		BOOST_CHECK_EQUAL( root.path.file_string(), "local/work" );
+		BOOST_CHECK_EQUAL( root.name, root_name );
+		BOOST_CHECK_EQUAL( root.path.file_string(), root_path );
 	}
 }
 
@@ -294,64 +371,129 @@ BOOST_AUTO_TEST_CASE( eqc_elem )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( multiple_roots )
+BOOST_AUTO_TEST_CASE( tracking_elem )
 {
-	// First root node
-	rapidxml::xml_node<> *root1 = doc.allocate_node(rapidxml::node_element, "root" );
-	config->append_node( root1 );
-	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", "local/work" );
-	root1->append_node(path);
-	
-	// Second root node
-	rapidxml::xml_node<> *root2 = doc.allocate_node(rapidxml::node_element, "root" );
-	config->append_node( root2 );
-	path = doc.allocate_node(rapidxml::node_element, "path", "local/home" );
-	root2->append_node(path);
+	std::string tracking_file( "tracking.xml" );
 
-	// Invalid name references they should be unique
-	rapidxml::xml_attribute<> *name1 = doc.allocate_attribute("name", "data");
-	root1->append_attribute( name1 );
-	rapidxml::xml_attribute<> *name2 = doc.allocate_attribute("name", "data");
-	root2->append_attribute( name2 );
+	rapidxml::xml_node<> *tracking = createTracking( "tracking", tracking_file );
+	config->append_node( tracking );
+
+	BOOST_CHECK_NO_THROW( readXML() );
+	
+	BOOST_CHECK_EQUAL( settings.getTracking().size(), 1u );
+	if( settings.getTracking().size() > 0 )
+	{
+		BOOST_CHECK_EQUAL( settings.getTracking().at(0).getPath(), tracking_file );
+	}
+}
+
+BOOST_AUTO_TEST_CASE( multiple_trackings )
+{
+	std::string tracking_file1( "tracking.xml" );
+	std::string tracking_file2( "tracking2.xml" );
+	
+	rapidxml::xml_node<> *tracking
+		= createTracking( " track1", tracking_file1 );
+	rapidxml::xml_node<> *tracking2
+		= createTracking( " track2", tracking_file2 );
+
+	config->append_node( tracking );
+	config->append_node( tracking2 );
+	
+	BOOST_CHECK_NO_THROW( readXML() );
+
+	BOOST_CHECK_EQUAL( settings.getTracking().size(), 2u );
+	if( settings.getTracking().size() > 1 )
+	{
+		BOOST_CHECK_EQUAL( settings.getTracking().at(0).getPath(), tracking_file1 );
+		BOOST_CHECK_EQUAL( settings.getTracking().at(1).getPath(), tracking_file2 );
+	}
+}
+
+BOOST_AUTO_TEST_CASE( tracking_with_root )
+{
+	std::string track_file1( "tracking.xml" );
+	std::string track_file2( "tracking2.xml" );
+	std::string track_name1( "track1" );
+	std::string track_name2( "track2" );
+	std::string root_name( "data" );
+
+	rapidxml::xml_node<> *root = createRoot( root_name, "local/work" );
+	config->append_node(root);
+
+	rapidxml::xml_node<> *tracking
+		= createTracking( track_name2, track_file1, root_name );
+	rapidxml::xml_node<> *tracking2
+		= createTracking( track_name2, track_file2, root_name );
+
+	config->append_node( tracking );
+	config->append_node( tracking2 );
+}
+
+BOOST_AUTO_TEST_CASE( multiple_roots_invalid )
+{
+	std::string root_name("data");
+	
+	// First root node
+	rapidxml::xml_node<> *root = createRoot( root_name, "local/work" );
+	config->append_node( root );
+
+	// Second root node, invalid same name as the first
+	root = createRoot( root_name, "local/usr" );
+	config->append_node( root );
 
 	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
 	BOOST_CHECK( checkEmpty() );
+}
 
-	name2->value( "media" );
+BOOST_AUTO_TEST_CASE( multiple_roots )
+{
+	const size_t N_ROOTS = 4;
+	std::vector<std::string> names(N_ROOTS);
+	names.at(0) = "data";
+	names.at(1) = "media";
+	names.at(2) = "media2";
+	names.at(3) = "something";
+	
+	std::vector<std::string> paths(N_ROOTS);
+	paths.at(0) = "local/work";
+	paths.at(1) = "local/usr";
+	paths.at(2) = "local/home";
+	paths.at(3) = "/something/somewhere/null";
+
+	for( size_t i = 0; i < N_ROOTS; ++i )
+	{
+		rapidxml::xml_node<> *xml_root = createRoot( names.at(i), paths.at(i) );
+		config->append_node( xml_root );
+	}
+
 	BOOST_CHECK_NO_THROW( readXML() );
 
-	BOOST_CHECK_EQUAL( settings.nRoots(), 2u );
-	for( size_t i = 0; i < settings.nRoots(); ++i )
-	{
-		vl::Settings::Root const &root = settings.getRoot(i);
-		if( i == 0 )
-		{
-			BOOST_CHECK_EQUAL( root.name, "data" );
-			BOOST_CHECK_EQUAL( root.path.file_string(), "local/work" );
-		}
-		else if( i == 1 )
-		{
-			BOOST_CHECK_EQUAL( root.name, "media" );
-			BOOST_CHECK_EQUAL( root.path.file_string(), "local/home" );
-		}
+	BOOST_CHECK_EQUAL( settings.nRoots(), N_ROOTS );
 
-		BOOST_TEST_MESSAGE( "root " << i << " path = " << root.path );
+	// Find all the root elements and check them
+	for( size_t i = 0; i < N_ROOTS; ++i )
+	{
+		vl::Settings::Root const *root;
+		root = settings.findRoot( names.at(i) );
+		BOOST_REQUIRE_NE( root, (vl::Settings::Root *)0 );
+		BOOST_CHECK_EQUAL( root->path.file_string(), paths.at(i) );
 	}
 }
 
 BOOST_AUTO_TEST_CASE( multiple_resources )
 {
-	rapidxml::xml_node<> *resources1
+	rapidxml::xml_node<> *xml_resources1
 		= doc.allocate_node(rapidxml::node_element, "resources" );
-	config->append_node( resources1 );
+	config->append_node( xml_resources1 );
 
-	rapidxml::xml_node<> *resources2
+	rapidxml::xml_node<> *xml_resources2
 		= doc.allocate_node(rapidxml::node_element, "resources" );
-	config->append_node( resources2 );
+	config->append_node( xml_resources2 );
 
 	rapidxml::xml_node<> *file
 		= doc.allocate_node(rapidxml::node_element, "file", "resources.cfg" );
-	resources1->append_node(file);
+	xml_resources1->append_node(file);
 	
 	// Test invalid resource xml, one of the resources without file element
 	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
@@ -359,7 +501,7 @@ BOOST_AUTO_TEST_CASE( multiple_resources )
 
 	// Valid resource xml, both resources have file element
 	file = doc.allocate_node(rapidxml::node_element, "file", "resources2.cfg" );
-	resources2->append_node(file);
+	xml_resources2->append_node(file);
 	
 	BOOST_CHECK_NO_THROW( readXML() );
 	BOOST_CHECK_EQUAL( settings.getOgreResourcePaths().size(), 2u );
@@ -372,50 +514,81 @@ BOOST_AUTO_TEST_CASE( multiple_resources )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( multiple_scenes )
+BOOST_AUTO_TEST_CASE( multiple_scenes_invalid )
 {
-	rapidxml::xml_node<> *scene1
-		= doc.allocate_node(rapidxml::node_element, "scene" );
-	rapidxml::xml_node<> *scene2
-		= doc.allocate_node(rapidxml::node_element, "scene" );
-	rapidxml::xml_node<> *scene3
-		= doc.allocate_node(rapidxml::node_element, "scene" );
-	config->append_node( scene1 );
-	config->append_node( scene2 );
-	config->append_node( scene3 );
-
 	// First two scenes are valid, contains file element
+	// First valid scene element
+	rapidxml::xml_node<> *scene
+		= doc.allocate_node(rapidxml::node_element, "scene" );
+	config->append_node( scene );
 	rapidxml::xml_node<> *file
 		= doc.allocate_node(rapidxml::node_element, "file", "T7.scene" );
-	scene1->append_node( file );
+	scene->append_node( file );
+
+	// Second valid scene element
+	scene = doc.allocate_node(rapidxml::node_element, "scene" );
+	config->append_node( scene );
 	file = doc.allocate_node(rapidxml::node_element, "file", "ruukki.scene" );
-	scene2->append_node( file );
+	scene->append_node( file );
+
+	// Invalid scene element, without file element
+	rapidxml::xml_node<> *scene3
+		= doc.allocate_node(rapidxml::node_element, "scene" );
+	config->append_node( scene3 );
 
 	// Third scene is invalid, without file element
 	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
 	BOOST_CHECK( checkEmpty() );
+}
 
-	// All scenes are valid, containing only file elements
-	file = doc.allocate_node(rapidxml::node_element, "file", "test.scene" );
-	scene3->append_node( file );
+BOOST_AUTO_TEST_CASE( multiple_scenes_valid )
+{
+	const size_t N_SCENES = 4;
+	std::vector<std::string> scene_names(N_SCENES);
+	scene_names.at(0) = "T7";
+	scene_names.at(1) = "ruukki";
+	scene_names.at(3) = "test";
+	
+	std::vector<std::string> scene_files(N_SCENES);
+	scene_files.at(0) = "T7.scene";
+	scene_files.at(1) = "ruukki.scene";
+	scene_files.at(2) = "test.scene";
+	scene_files.at(3) = "test.scene";
+	
+	std::vector<std::string> scene_attachs(N_SCENES);
+	scene_attachs.at(0) = "cave";
+	scene_attachs.at(1) = "env";
+	
+	std::vector<std::string> scene_types(N_SCENES);
+	scene_types.at(2) = "release";
+	scene_types.at(3) = "release";
+
+	for( size_t i = 0; i < scene_names.size(); ++i )
+	{
+		std::string const &name = scene_names.at(i);
+		std::string const &file = scene_files.at(i);
+		std::string const &type = scene_types.at(i);
+		std::string const &attach = scene_attachs.at(i);
+
+		rapidxml::xml_node<> *xml_scene
+			= createScene( name, file, type, attach );
+
+		config->append_node( xml_scene );
+	}
 	
 	BOOST_CHECK_NO_THROW( readXML() );
-	BOOST_CHECK_EQUAL( settings.getScenes().size(), 3u );
+	BOOST_CHECK_EQUAL( settings.getScenes().size(), N_SCENES );
+
 	for( size_t i = 0; i < settings.getScenes().size(); ++i )
 	{
+		BOOST_REQUIRE( i < N_SCENES );
+		
 		vl::Settings::Scene const &scn = settings.getScenes().at(i);
-		if( i == 0 )
-		{ BOOST_CHECK_EQUAL( scn.file, "T7.scene" ); }
-		else if( i == 1 )
-		{ BOOST_CHECK_EQUAL( scn.file, "ruukki.scene" ); }
-		else if( i == 2 )
-		{ BOOST_CHECK_EQUAL( scn.file, "test.scene" ); }
-		BOOST_CHECK( scn.name.empty() );
-		BOOST_CHECK( scn.type.empty() );
-		BOOST_CHECK( scn.attach_node.empty() );
+		BOOST_CHECK_EQUAL( scn.file, scene_files.at(i) );
+		BOOST_CHECK_EQUAL( scn.name, scene_names.at(i) );
+		BOOST_CHECK_EQUAL( scn.type, scene_types.at(i) );
+		BOOST_CHECK_EQUAL( scn.attach_node, scene_attachs.at(i) );
 	}
-	settings = vl::Settings();
-	BOOST_CHECK_EQUAL( settings.getScenes().size(), 0u );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -510,7 +683,7 @@ struct CompleteXMLFixture : public SettingsFixture
 };
 
 BOOST_FIXTURE_TEST_SUITE( IntegrationTests, CompleteXMLFixture )
-// TODO write
+
 // Real world use case. We have two roots, two resource files, three scenes,
 // one plugins file, one eqc. Everything except scenes need root reference.
 BOOST_AUTO_TEST_CASE( root_references )
@@ -635,7 +808,9 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 	fs::remove( filename );
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()
+
 
 BOOST_AUTO_TEST_CASE( missing_read_file )
 {

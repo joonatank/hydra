@@ -154,6 +154,13 @@ vl::SettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	xml_elem = xml_root->first_node("eqc");
 	if( xml_elem )
 	{ processEqc( xml_elem ); }
+
+	xml_elem = xml_root->first_node("tracking");
+	while( xml_elem )
+	{
+		processTracking( xml_elem );
+		xml_elem = xml_elem->next_sibling("tracking");
+	}
 }
 
 void
@@ -291,6 +298,26 @@ vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node )
 	{ processScene( pElement ); }
 }
 
+void
+vl::SettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
+{
+	vl::Settings::Root *root = getRootAttrib(xml_node);
+	std::string file;
+	
+	rapidxml::xml_node<> *pElement = xml_node->first_node( "file" );
+	if( pElement )
+	{ file = pElement->value(); }
+
+	// File element is a must
+	if( file.empty() )
+	{
+		_settings->clear();
+		throw vl::invalid_xml( "vl::SettingsSerailizer::processScene" );
+	}
+
+	_settings->addTracking( vl::Settings::Tracking( file, root ) );
+}
+
 std::string
 vl::SettingsSerializer::getAttrib(rapidxml::xml_node<>* xml_node,
 		        const std::string &attrib, const std::string &default_value )
@@ -301,3 +328,25 @@ vl::SettingsSerializer::getAttrib(rapidxml::xml_node<>* xml_node,
     { return default_value; }
 }
 
+vl::Settings::Root *
+vl::SettingsSerializer::getRootAttrib( rapidxml::xml_node<>* XMLNode )
+{
+	rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute( "root" );
+	if( attrib )
+	{
+		std::string root_name = attrib->value();
+		if( root_name.empty() )
+		{ return 0; }
+
+		Settings::Root *root = _settings->findRoot( root_name );
+
+		// Because there is not two layered processing, e.g. we don't
+		// first read the xml file for all the elements and then
+		// map names to pointers all not found names are errors.
+		if( !root )
+		{ throw vl::invalid_xml( "vl::SettingsSerailizer::processResources" ); }
+
+		return root;
+	}
+	return 0;
+}

@@ -536,14 +536,14 @@ BOOST_AUTO_TEST_CASE( test_camera )
 		.once().with( rot, vl::graph::SceneNode::TS_LOCAL );
 	
 	// Second camera
-//	xml_cam = doc.allocate_node(rapidxml::node_element, "camera");
-//	node->append_node( xml_cam );
-//	attrb = doc.allocate_attribute("name", "camera2");
-//	xml_cam->append_attribute(attrb);
+	xml_cam = doc.allocate_node(rapidxml::node_element, "camera");
+	node->append_node( xml_cam );
+	attrb = doc.allocate_attribute("name", "camera2");
+	xml_cam->append_attribute(attrb);
 
-//	MOCK_EXPECT( sm, createCamera ).once().with("camera2").returns(camera2);
-//	MOCK_EXPECT( rock, createChild ).once().with("camera2Node").returns(cam2_node);
-//	MOCK_EXPECT( cam2_node, attachObject ).once().with(camera2);
+	MOCK_EXPECT( sm, createCamera ).once().with("camera2").returns(camera2);
+	MOCK_EXPECT( rock, createChild ).once().with("camera2Node").returns(cam2_node);
+	MOCK_EXPECT( cam2_node, attachObject ).once().with(camera2);
 
 	BOOST_CHECK_NO_THROW( loadXML() );
 }
