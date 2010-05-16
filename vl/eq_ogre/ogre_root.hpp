@@ -37,7 +37,7 @@ namespace ogre
 	class Root : public vl::cl::Root
 	{
 		public :
-			Root( void );
+			Root( vl::SettingsRefPtr settings );
 
 			virtual ~Root( void );
 			
@@ -56,7 +56,7 @@ namespace ogre
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
-			virtual void setupResources( vl::Settings const &set );
+			virtual void setupResources( void );
 
 			virtual void loadResources(void);
 

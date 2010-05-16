@@ -96,44 +96,44 @@ BOOST_AUTO_TEST_CASE( factory_test )
 	// add one movable object factory
 	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact ) );
 	std::vector<std::string> names = man->movableObjectFactories();
-	BOOST_CHECK_EQUAL( names.size(), 1 );
+	BOOST_CHECK_EQUAL( names.size(), 1u );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Entity" ) !=
 			names.end() );
 	// Try to add non existing movable object factory
 	BOOST_CHECK_THROW( man->addMovableObjectFactory(
 				vl::graph::MovableObjectFactoryPtr() ), vl::null_pointer );
-	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1u );
 	// add the factory we already added again
 	BOOST_CHECK_THROW( man->addMovableObjectFactory( obj_fact ), vl::exception );
-	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1u );
 	// add another factory with a different type
 	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact3 ) );
 	names = man->movableObjectFactories();
-	BOOST_CHECK_EQUAL( names.size(), 2 );
+	BOOST_CHECK_EQUAL( names.size(), 2u );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Light" ) !=
 			names.end() );
 	// add another factory with the same type without overwrite
 	BOOST_CHECK_THROW( man->addMovableObjectFactory( obj_fact2 ), vl::exception );
-	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 2 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 2u );
 	// add another factory with the same type with overwrite
 	BOOST_CHECK_NO_THROW( man->addMovableObjectFactory( obj_fact2, true ) );
 	names = man->movableObjectFactories();
-	BOOST_CHECK_EQUAL( names.size(), 2 );
+	BOOST_CHECK_EQUAL( names.size(), 2u );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Entity" ) !=
 			names.end() );
 
 	// test factory removals
 	BOOST_CHECK_NO_THROW( man->removeMovableObjectFactory( obj_fact2 ) );
 	names = man->movableObjectFactories();
-	BOOST_CHECK_EQUAL( names.size(), 1 );
+	BOOST_CHECK_EQUAL( names.size(), 1u );
 	BOOST_CHECK( std::find( names.begin(), names.end(), "Light" ) !=
 			names.end() );
 	//  trying to remove not existing factory
 	BOOST_CHECK_THROW( man->removeMovableObjectFactory( obj_fact ), vl::exception );
-	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 1u );
 	// remove by name
 	BOOST_CHECK_NO_THROW( man->removeMovableObjectFactory( "Light" ) );
-	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 0 );
+	BOOST_CHECK_EQUAL( man->movableObjectFactories().size(), 0u );
 }
 
 BOOST_AUTO_TEST_CASE( node_test )

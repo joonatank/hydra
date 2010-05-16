@@ -24,7 +24,8 @@ namespace cl
 	class Light : public graph::Light
 	{
 		public :
-			Light( std::string const &name, vl::NamedValuePairList const &params )
+			Light( std::string const &name,
+				   vl::NamedValuePairList const &params )
 				: _name(name)
 			{}
 

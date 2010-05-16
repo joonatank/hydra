@@ -2,23 +2,25 @@
 
 #include <OGRE/OgreConfigFile.h>
 
-vl::ogre::Root::Root( void )
-	: vl::cl::Root(), _ogre_root(0), _primary(false)
+vl::ogre::Root::Root( vl::SettingsRefPtr settings )
+	: vl::cl::Root( settings ), _ogre_root(0), _primary(false)
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
-		std::string plugins;
+		/*
 #if defined _DEBUG
 		plugins = "plugins_d.cfg";
 #else
 		plugins = "plugins.cfg";
 #endif
 		std::string plugin_path = _base_dir + std::string("/data/") + plugins;
-		_ogre_root = new Ogre::Root( plugin_path , "" );
+		*/
+		std::string plugins = settings->getOgrePluginsPath().file_string();
+		_ogre_root = new Ogre::Root( plugins, "" );
 		_primary = true;
 
-		std::string msg( "plugin path = " + plugin_path );
+		std::string msg( "plugin path = " + plugins );
 		Ogre::LogManager::getSingleton().logMessage( msg );
 	}
 }
@@ -57,12 +59,12 @@ vl::ogre::Root::init( void )
 
 /// Method which will define the source of resources (other than current folder)
 void
-vl::ogre::Root::setupResources( vl::Settings const &set )
+vl::ogre::Root::setupResources( void )
 {
 	std::string msg( "setupResources" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::vector<fs::path> resources = set.getOgreResourcePaths();
+	std::vector<fs::path> resources = _settings->getOgreResourcePaths();
 	for( size_t i = 0; i < resources.size(); ++i )
 	{
 		setupResource( resources.at(i).file_string() );

@@ -6,9 +6,10 @@
 
 #include "base/filesystem.hpp"
 
-vl::cl::Root::Root( void )
-	: _scene_managers()
+vl::cl::Root::Root( vl::SettingsRefPtr settings )
+	: _scene_managers(), _settings(settings)
 {
+	/*
 	// TODO CMake should set variable VL_SOURCE_DIR when configuring
 	// TODO should also be able to use VL_INSTALL_DIR for later use with installer
 	char *dir = ::getenv( "VL_DIR" );
@@ -36,6 +37,7 @@ vl::cl::Root::Root( void )
 		path.remove_filename();
 		_base_dir = path.file_string();
 	}
+	*/
 }
 
 vl::graph::SceneManagerRefPtr

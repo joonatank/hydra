@@ -13,7 +13,8 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot()
+		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot(),
+		  _settings( new vl::Settings )
 	{}
 
 	virtual bool configInit( const uint32_t initID )
@@ -21,7 +22,8 @@ public :
 		if( !eq::Window::configInit( initID ) )
 		{ return false; }
 
-		root.reset( new vl::ogre::Root );
+		_settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
+		root.reset( new vl::ogre::Root( _settings ) );
 		// Initialise ogre
 		root->createRenderSystem();
 
@@ -102,6 +104,8 @@ public :
 	vl::graph::SceneManagerRefPtr man;
 	vl::graph::SceneNodeRefPtr feet;
 	vl::graph::SceneNodeRefPtr robot;
+
+	vl::SettingsRefPtr _settings;
 };
 
 class Channel : public eq::Channel

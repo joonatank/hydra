@@ -6,6 +6,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreMatrix4.h>
+#include <OGRE/OgreColourValue.h>
 
 namespace vl
 {
@@ -60,6 +61,30 @@ namespace math
 		return Ogre::Quaternion( q.w(), q.x(), q.y(), q.z() );
 	}
 
+	// Colour conversions
+	inline
+	Ogre::ColourValue convert( vl::colour const &col )
+	{
+		return Ogre::ColourValue( col.r(), col.g(), col.b(), col.a() );
+	}
+
+	inline
+	vl::colour convert( Ogre::ColourValue const &col )
+	{
+		return vl::colour( col.r, col.g, col.b, col.a );
+	}
+
+	inline
+	vl::angle convert( Ogre::Radian const &rad )
+	{
+		return rad.valueRadians();
+	}
+
+	inline
+	Ogre::Radian convert( vl::angle const &rad )
+	{
+		return Ogre::Radian(rad);
+	}
 }	// namespace math
 
 }	// namespace vl

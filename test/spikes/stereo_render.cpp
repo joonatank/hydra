@@ -34,14 +34,14 @@ public :
 		: eq::Config( parent )
 	{}
 
-	void setSettings( vl::Settings const &set )
+	void setSettings( vl::SettingsRefPtr set )
 	{ _settings = set; }
 
-	vl::Settings const &getSettings( void ) const
+	vl::SettingsRefPtr getSettings( void )
 	{ return _settings; }
 
 protected :
-	vl::Settings _settings;
+	vl::SettingsRefPtr _settings;
 };
 
 class Channel : public eq::Channel
@@ -60,7 +60,9 @@ public :
 		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
 		// Initialise ogre
-		ogre_root.reset( new vl::ogre::Root() );
+		::Config *conf = static_cast< ::Config *>( getConfig() );
+		vl::SettingsRefPtr settings = conf->getSettings();
+		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
 		
@@ -90,10 +92,8 @@ public :
 		ogre_root->init();
 
 		// Setup resources
-		::Config *conf = static_cast< ::Config *>( getConfig() );
-		vl::Settings const &set = conf->getSettings();
-		BOOST_REQUIRE( set.getOgreResourcePaths().size() > 0 );
-		(boost::static_pointer_cast<vl::ogre::Root>(ogre_root))->setupResources( set );
+		ogre_root->setupResources();
+		ogre_root->loadResources();
 
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
@@ -121,7 +121,7 @@ public :
 		BOOST_REQUIRE( root );
 		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load(man);
+		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 300) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
@@ -132,7 +132,6 @@ public :
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
-		std::cout << "frameStart " << frameNumber << std::endl;
 		eq::Channel::frameStart( frameID, frameNumber );
 	}
 
@@ -207,39 +206,42 @@ struct RenderFixture
 	// Init code for this test
 	RenderFixture( void )
 		: error( false ), frameNumber(0), config(0),
-		  log_file( "render_test.log" )
+		  log_file( "render_test.log" ), settings( new vl::Settings )
 	{
-		std::string filename( "test_conf.xml" );
-		vl::SettingsSerializer ser(&settings);
-		BOOST_CHECK_NO_THROW( ser.readFile(filename) );
+		try {
+			std::string filename( "test_conf.xml" );
+			BOOST_REQUIRE( fs::exists(filename) );
+			vl::SettingsSerializer ser(settings);
+			ser.readFile(filename);
 
-		settings.setExePath( "stereo_render" );
-		vl::Args &args = settings.getEqArgs();
-		/*
-		args.add("stereo_render");
-		args.add("--eq-config" );
-		args.add("1-window.eqc");
-		*/
+			settings->setExePath( "stereo_render" );
+			vl::Args &args = settings->getEqArgs();
 
-		std::cout << args << std::endl;
+			std::cout << args << std::endl;
 
-		char **argv = args.getData();
+			char **argv = args.getData();
 
-		std::cout << args << std::endl;
+			std::cout << args << std::endl;
 
-		// Redirect logging
-		//eq::base::Log::setOutput( log_file );
+			// Redirect logging
+			//eq::base::Log::setOutput( log_file );
 
-		// 1. Equalizer initialization
-		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
-		
-		// 2. get a configuration
-		config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
-		BOOST_REQUIRE( config );
-		config->setSettings( settings );
+			// 1. Equalizer initialization
+			BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
 
-		// 3. init config
-		BOOST_REQUIRE( config->init(0));
+			// 2. get a configuration
+			config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
+			BOOST_REQUIRE( config );
+			config->setSettings( settings );
+
+			// 3. init config
+			BOOST_REQUIRE( config->init(0));
+		}
+		catch( vl::exception &e )
+		{
+			std::cerr << "exception : " << e.what << " in " << e.where
+				<< std::endl;
+		}
 	}
 
 	// Controlled mainloop function so the test can run the loop
@@ -270,13 +272,13 @@ struct RenderFixture
 	::Config *config;
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
-	vl::Settings settings;
+	vl::SettingsRefPtr settings;
 };
 
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
 	BOOST_REQUIRE( config );
 
-	for( size_t i = 0; i < 10000; i++ )
+	for( size_t i = 0; i < 1000; i++ )
 	{ mainloop(); }
 }

@@ -16,6 +16,7 @@
 #include "base/args.hpp"
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
+#include "base/typedefs.hpp"
 
 namespace vl
 {
@@ -29,18 +30,13 @@ class Settings
 			Root( std::string const &nam = std::string(),
 				  std::string const &p = std::string() )
 				: name( nam ), path( p )
-			{
-			}
+			{}
 
 			void setPath( fs::path const &str )
-			{
-				path = str;
-			}
+			{ path = str; }
 
 			fs::path getPath( void ) const
-			{
-				return path;
-			}
+			{ return path; }
 			
 			std::string name;
 			fs::path path;
@@ -135,98 +131,64 @@ class Settings
 
 		Settings( void );
 
-		~Settings( void );
+		virtual ~Settings( void );
 
-		fs::path const &getFilePath( void ) const
+		virtual void setFilePath( std::string const &path )
+		{ _file_path = path; }
+
+		virtual fs::path const &getFilePath( void ) const
 		{ return _file_path; }
 
-		fs::path getEqConfigPath( void ) const
+		virtual fs::path getEqConfigPath( void ) const
 		{ return _eq_config.getPath(); }
 
-		fs::path getOgrePluginsPath( void ) const
+		virtual fs::path getOgrePluginsPath( void ) const
 		{ return _plugins.getPath(); }
 		
-		std::vector<fs::path> getOgreResourcePaths( void ) const
-		{
-			std::vector<fs::path> tmp;
-			for( size_t i = 0; i < _resources.size(); ++i )
-			{
-				Settings::Resources const &resource = _resources.at(i);
-				tmp.push_back( resource.getPath() );
-			}
-			return tmp;
-		}
+		virtual std::vector<fs::path> getOgreResourcePaths( void ) const;
 
-		std::vector<Settings::Scene> const &getScenes( void ) const
+		virtual std::vector<Settings::Scene> const &getScenes( void ) const
 		{ return _scenes; }
 
-		vl::Args &getEqArgs( void )
+		virtual vl::Args &getEqArgs( void )
 		{ return _eq_args; }
 
-		vl::Args const &getEqArgs( void ) const
+		virtual vl::Args const &getEqArgs( void ) const
 		{ return _eq_args; }
 
-		void setExePath( std::string const &path );
+		virtual void setExePath( std::string const &path );
 
 		// Supports both absolute and relative paths (root directory)
-		void setEqConfig( Settings::Eqc const &eqc );
+		virtual void setEqConfig( Settings::Eqc const &eqc );
 
-		void addPlugins( Settings::Plugins const &plugins );
+		virtual void addPlugins( Settings::Plugins const &plugins );
 
-		void addResources( Settings::Resources const &resource );
+		virtual void addResources( Settings::Resources const &resource );
 
-		void addScene( Settings::Scene const &scene );
+		virtual void addScene( Settings::Scene const &scene );
 
-		std::vector<Settings::Tracking> const &getTracking( void )
-		{
-			return _tracking;
-		}
+		virtual std::vector<Settings::Tracking> const &getTracking( void )
+		{ return _tracking; }
 
-		void addTracking( Settings::Tracking const &track )
-		{
-			_tracking.push_back( track );
-		}
-		
-		friend class SettingsSerializer;
-		friend class SettingsDeserializer;
+		virtual void addTracking( Settings::Tracking const &track )
+		{ _tracking.push_back( track ); }
 
-		Root *findRoot( std::string const &name )
-		{
-			for( size_t i = 0; i < _roots.size(); ++i )
-			{
-				if( _roots.at(i).name == name )
-				{
-					return &(_roots.at(i));
-				}
-			}
+		virtual Root *findRoot( std::string const &name );
 
-			return 0;
-		}
-		
-		void addRoot( Root const &root )
+		virtual void addRoot( Root const &root )
 		{ _roots.push_back(root); }
 
-		Root &getRoot( size_t index )
+		virtual Root &getRoot( size_t index )
 		{ return _roots.at(index); }
 
-		Root const &getRoot( size_t index ) const
+		virtual Root const &getRoot( size_t index ) const
 		{ return _roots.at(index); }
 
-		size_t nRoots( void ) const
+		virtual size_t nRoots( void ) const
 		{ return _roots.size(); }
 
-		void clear( void )
-		{
-			_roots.clear();
-			_exe_path.clear();
-			_file_path.clear();
-			_eq_config = Eqc();
-			_scenes.clear();
-			_plugins = Plugins();
-			_resources.clear();
-			_eq_args = vl::Args();
-		}
-		
+		virtual void clear( void );
+
 	private :
 
 		void updateArgs( void );
@@ -248,7 +210,7 @@ class Settings
 class SettingsSerializer
 {
 	public :
-		SettingsSerializer( Settings *settings );
+		SettingsSerializer( SettingsRefPtr settings );
  
 		~SettingsSerializer( void );
 
@@ -286,7 +248,7 @@ class SettingsSerializer
 		// Read data from FileString _xml_data.
 		void readData( );
 
-		Settings *_settings;
+		vl::SettingsRefPtr _settings;
 
 		// file content needed for rapidxml
 		vl::FileString *_xml_data;

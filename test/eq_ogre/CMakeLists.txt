@@ -12,7 +12,7 @@ set( LIBS
 	eqOgre )
 
 target_link_libraries( test_ogre_root ${LIBS} )
-add_test( ogre_scene_root ${PROJECT_BINARY_DIR}/test_ogre_root )
+add_test( ogre_root ${PROJECT_BINARY_DIR}/test_ogre_root )
 
 target_link_libraries( test_ogre_scene_node ${LIBS} )
 add_test( ogre_scene_node ${PROJECT_BINARY_DIR}/test_ogre_scene_node )

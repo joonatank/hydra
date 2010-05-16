@@ -15,21 +15,16 @@ class Config : public eq::Config
 public :
 	Config( eq::base::RefPtr< eq::Server > parent )
 		: eq::Config( parent )
-	{
-	}
+	{}
 
-	void setSettings( vl::Settings const &set )
-	{
-		_settings = set;
-	}
+	void setSettings( vl::SettingsRefPtr set )
+	{ _settings = set; }
 
-	vl::Settings const &getSettings( void ) const
-	{
-		return _settings;
-	}
+	vl::SettingsRefPtr getSettings( void ) const
+	{ return _settings; }
 
 protected :
-	vl::Settings _settings;
+	vl::SettingsRefPtr _settings;
 };
 
 class RenderWindow : public eq::Window
@@ -47,9 +42,9 @@ public :
 		{ return false; }
 
 		::Config *config = static_cast< ::Config * >( getConfig() );
-		vl::Settings const &settings = config->getSettings();
+		vl::SettingsRefPtr settings = config->getSettings();
 
-		root.reset( new vl::ogre::Root );
+		root.reset( new vl::ogre::Root( settings ) );
 		// Initialise ogre
 		root->createRenderSystem();
 
@@ -64,7 +59,7 @@ public :
 				root->createWindow( "win", 800, 600, params ) );
 
 		// Resource registration
-		root->setupResources( settings );
+		root->setupResources( );
 		root->loadResources();
 
 		man = root->createSceneManager("SceneManager");
@@ -77,7 +72,7 @@ public :
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
 
-		std::vector<vl::Settings::Scene> const &scenes = settings.getScenes();
+		std::vector<vl::Settings::Scene> const &scenes = settings->getScenes();
 		if( scenes.empty() )
 		{ return false; }
 		
@@ -224,23 +219,14 @@ public:
 
 int main( const int argc, char** argv )
 {
-	/*
-	std::cout << "arguments = ";
-	for(int i = 0; i < argc; i++ )
-	{
-		std::cout << argv[i] << " ";
-	}
-	std::cout << std::endl;
-	*/
-
-	vl::Settings settings;
+	vl::SettingsRefPtr settings;
 
 	// Read settings
 	if( argc > 1 )
 	{
 		// settings xml
 		std::string filename( argv[1] );
-		vl::SettingsSerializer ser(&settings);
+		vl::SettingsSerializer ser(settings);
 		ser.readFile(filename);
 	}
 	else
@@ -248,8 +234,8 @@ int main( const int argc, char** argv )
 		std::cerr << "No settings xml provided." << std::endl;
 		return -1;
 	}
-	settings.setExePath( argv[0] );
-	vl::Args &arg = settings.getEqArgs();
+	settings->setExePath( argv[0] );
+	vl::Args &arg = settings->getEqArgs();
 
     // 1. Equalizer initialization
     ::NodeFactory nodeFactory;

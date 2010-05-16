@@ -11,6 +11,18 @@
 
 namespace vl
 {
+	// Forward declarations
+	class Settings;
+
+	struct null_deleter
+	{
+		void operator()(void const *) const
+		{
+		}
+	};
+
+	typedef boost::shared_ptr<Settings> SettingsRefPtr;
+	
 	typedef std::map<std::string, std::string> NamedValuePairList;
 
 	// TODO define angle class

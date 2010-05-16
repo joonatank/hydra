@@ -48,6 +48,46 @@ vl::Settings::addScene( Settings::Scene const &scene )
 	_scenes.push_back( scene );
 }
 
+std::vector<fs::path>
+vl::Settings::getOgreResourcePaths( void ) const
+{
+	std::vector<fs::path> tmp;
+	for( size_t i = 0; i < _resources.size(); ++i )
+	{
+		Settings::Resources const &resource = _resources.at(i);
+		tmp.push_back( resource.getPath() );
+	}
+	return tmp;
+}
+
+vl::Settings::Root *
+vl::Settings::findRoot( std::string const &name )
+{
+	for( size_t i = 0; i < _roots.size(); ++i )
+	{
+		if( _roots.at(i).name == name )
+		{
+			return &(_roots.at(i));
+		}
+	}
+
+	return 0;
+}
+
+void
+vl::Settings::clear( void )
+{
+	_roots.clear();
+	_exe_path.clear();
+	_file_path.clear();
+	_eq_config = Eqc();
+	_scenes.clear();
+	_plugins = Plugins();
+	_resources.clear();
+	_eq_args = vl::Args();
+}
+
+
 // --------- Settings Private --------
 void
 vl::Settings::updateArgs( void )
@@ -66,7 +106,7 @@ vl::Settings::updateArgs( void )
 }
 
 // --- SettingsSerializer ---
-vl::SettingsSerializer::SettingsSerializer( Settings *settings )
+vl::SettingsSerializer::SettingsSerializer( vl::SettingsRefPtr settings )
 	: _settings(settings), _xml_data(0)
 {
 }
@@ -84,7 +124,7 @@ vl::SettingsSerializer::readFile( std::string const &file_path )
 	
 	// Set the file path for the last file loaded, so settings can be saved
 	// back to that file.
-	_settings->_file_path = file_path;
+	_settings->setFilePath( file_path );
 
 	// Open in binary mode, so we don't mess up the file
 	std::ifstream stream( file_path.c_str(), std::ios::binary );

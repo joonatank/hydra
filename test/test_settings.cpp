@@ -12,6 +12,13 @@
 
 #include <iostream>
 
+// TODO test creation of settings
+// TODO test copying of settings
+BOOST_AUTO_TEST_CASE( constructors )
+{
+
+}
+
 // Invalid xml file, without config element
 BOOST_AUTO_TEST_CASE( invalid_xml )
 {
@@ -26,7 +33,8 @@ BOOST_AUTO_TEST_CASE( invalid_xml )
 	root->append_node(path);
 
 	vl::Settings settings;
-	vl::SettingsSerializer ser(&settings);
+	vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
+	vl::SettingsSerializer ser( settings_ptr );
 
 	// Create the test data
 	std::string data;
@@ -41,7 +49,8 @@ struct SettingsFixture
 	SettingsFixture( void )
 		: settings(), ser(0), doc(), config(0)
 	{
-		ser = new vl::SettingsSerializer(&settings);
+		vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
+		ser = new vl::SettingsSerializer( settings_ptr );
 		
 		config = doc.allocate_node(rapidxml::node_element, "config" );
 		doc.append_node(config);
@@ -49,6 +58,7 @@ struct SettingsFixture
 
 	~SettingsFixture( void )
 	{
+		delete ser;
 	}
 
 	void readXML( void )
@@ -816,7 +826,9 @@ BOOST_AUTO_TEST_CASE( missing_read_file )
 {
 	std::string missing_filename( "conf.xml" );
 	vl::Settings settings;
-	vl::SettingsSerializer ser(&settings);
+	vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
+	vl::SettingsSerializer ser( settings_ptr );
+	
 	BOOST_REQUIRE( !fs::exists( missing_filename ) );
 	BOOST_CHECK_THROW( ser.readFile( missing_filename ), vl::missing_file );
 }

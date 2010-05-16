@@ -10,8 +10,36 @@
 #include "interface/camera.hpp"
 #include "interface/scene_manager.hpp"
 
+#include "settings.hpp"
+
 namespace mock
 {
+
+MOCK_BASE_CLASS( Settings, vl::Settings )
+{
+	MOCK_METHOD( getFilePath, 0 )
+	MOCK_METHOD( getEqConfigPath, 0 )
+	MOCK_METHOD( getOgrePluginsPath, 0 )
+	MOCK_METHOD( getOgreResourcePaths, 0 )
+	MOCK_METHOD( getScenes, 0 )
+	MOCK_NON_CONST_METHOD_EXT( getEqArgs, 0, vl::Args &( void ), getEqArgs )
+	MOCK_CONST_METHOD_EXT( getEqArgs, 0, vl::Args const &( void ), getEqArgsConst )
+	MOCK_METHOD( setExePath, 1 )
+	MOCK_METHOD( setEqConfig, 1 )
+	MOCK_METHOD( addPlugins, 1 )
+	MOCK_METHOD( addResources, 1 )
+	MOCK_METHOD( addScene, 1 );
+	MOCK_METHOD( getTracking, 0 )
+	MOCK_METHOD( addTracking, 1);
+	MOCK_METHOD( findRoot, 1 );
+	MOCK_METHOD( addRoot, 1 );
+	MOCK_NON_CONST_METHOD_EXT( getRoot, 1, vl::Settings::Root &( size_t index ), getRoot )
+	MOCK_CONST_METHOD_EXT( getRoot, 1, vl::Settings::Root const &( size_t index ), getRootConst )
+	MOCK_METHOD( nRoots, 0);
+	MOCK_METHOD( clear, 0 );
+};
+
+typedef boost::shared_ptr<Settings> SettingsPtr;
 
 MOCK_BASE_CLASS( NodeFactory, vl::graph::SceneNodeFactory )
 {

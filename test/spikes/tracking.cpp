@@ -99,7 +99,9 @@ public :
 		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
 		// Initialise ogre
-		ogre_root.reset( new vl::ogre::Root() );
+		vl::SettingsRefPtr settings( new vl::Settings() );
+		settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
+		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
 		
@@ -152,7 +154,7 @@ public :
 		BOOST_REQUIRE( root );
 		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load(man);
+		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 300) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );

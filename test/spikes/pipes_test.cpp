@@ -105,7 +105,7 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root( new vl::ogre::Root ), win(), cam(), man(), feet(),
+		: eq::Window( parent ), root( new vl::ogre::Root( vl::Settings() ) ), win(), cam(), man(), feet(),
 		robot()
 	{
 	//	boost::mutex::scoped_lock lock(test_mutex);

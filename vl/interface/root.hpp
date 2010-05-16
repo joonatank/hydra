@@ -17,6 +17,7 @@
 #define VL_GRAPH_ROOT_HPP
 
 #include "base/typedefs.hpp"
+#include "settings.hpp"
 
 namespace vl
 {
@@ -47,6 +48,10 @@ namespace graph
 					std::string const &name ) = 0;
 
 			virtual void destroySceneManager( std::string const &name ) = 0;
+
+			virtual void setupResources( void ) = 0;
+
+			virtual void loadResources(void) = 0;
 
 	};	// class Root
 

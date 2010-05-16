@@ -8,7 +8,7 @@ vl::ogre::Camera::setManager( vl::graph::SceneManagerRefPtr man )
 	vl::cl::Camera::setManager( man );
 
 	boost::shared_ptr<SceneManager> og_man = 
-		boost::static_pointer_cast<vl::ogre::SceneManager>( man );
+		boost::dynamic_pointer_cast<vl::ogre::SceneManager>( man );
 	if( !og_man )
 	{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
 

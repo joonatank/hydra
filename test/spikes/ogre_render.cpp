@@ -14,11 +14,14 @@
 struct OgreFixture
 {
 	OgreFixture( void )
-		: ogre_root( new vl::ogre::Root ), win(), robot(), ent()
+		: ogre_root(), win(), robot(), ent()
 	{
+		vl::SettingsRefPtr settings( new vl::Settings() );
+		settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
+		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		win = ogre_root->createWindow( "Win", 800, 600 );
-		//ogre_root->init();
+		ogre_root->init();
 
 		vl::graph::SceneManagerRefPtr man = ogre_root->createSceneManager("Manager");
 		
@@ -41,7 +44,7 @@ struct OgreFixture
 				man->createEntity("robot", "robot.mesh") );
 		BOOST_REQUIRE( ent );
 		
-		BOOST_CHECK_NO_THROW( ent->load(man) );
+		BOOST_CHECK_NO_THROW( ent->load() );
 		robot = boost::dynamic_pointer_cast<vl::ogre::SceneNode>
 			( man->getRootNode()->createChild( "RobotNode" ) );
 		BOOST_REQUIRE( robot );
@@ -70,7 +73,6 @@ struct OgreFixture
 	boost::shared_ptr<vl::ogre::SceneNode> robot;
 	boost::shared_ptr<vl::ogre::SceneNode> feet;
 	boost::shared_ptr<vl::ogre::Entity> ent;
-		
 };
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
