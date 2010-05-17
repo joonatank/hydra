@@ -207,12 +207,15 @@ struct RenderFixture
 	RenderFixture( void )
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" ), settings( new vl::Settings )
+	{}
+
+	void init( fs::path const &conf )
 	{
 		try {
-			std::string filename( "test_conf.xml" );
-			BOOST_REQUIRE( fs::exists(filename) );
+			//std::string filename( "test_conf.xml" );
+			BOOST_REQUIRE( fs::exists(conf) );
 			vl::SettingsSerializer ser(settings);
-			ser.readFile(filename);
+			ser.readFile( conf.file_string() );
 
 			settings->setExePath( "stereo_render" );
 			vl::Args &args = settings->getEqArgs();
@@ -275,8 +278,16 @@ struct RenderFixture
 	vl::SettingsRefPtr settings;
 };
 
+namespace test = boost::unit_test::framework;
+
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
+	fs::path cmd( test::master_test_suite().argv[0] );
+	fs::path conf_dir = cmd.parent_path();
+	fs::path conf = conf_dir / "test_conf.xml";
+	BOOST_REQUIRE( fs::exists( conf ) );
+	init( conf );
+	
 	BOOST_REQUIRE( config );
 
 	for( size_t i = 0; i < 1000; i++ )

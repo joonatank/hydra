@@ -12,13 +12,16 @@
 	<root name="media">
 		<path>${VL_MEDIA_PATH}</path>
 	</root>
-
+	<root name="build_data">
+		<path>${VL_BUILD_CONF_DIR}</path>
+	</root>
+	
 	<!-- Ogre plugins file, only one of these is supported,
 	root is a reference to the directory containing this file.
 	No root need to be present but then the file is assumed to be in the
 	directory where the program is started in.
 	-->
-	<plugins root="data" >
+	<plugins root="build_data" >
 		<file>plugins.cfg</file>
 	</plugins>
 

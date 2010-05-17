@@ -99,6 +99,7 @@ public :
 		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
 		// Initialise ogre
+		// TODO add setting of plugins file path from main
 		vl::SettingsRefPtr settings( new vl::Settings() );
 		settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
 		ogre_root.reset( new vl::ogre::Root( settings ) );

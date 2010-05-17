@@ -219,70 +219,89 @@ public:
 
 int main( const int argc, char** argv )
 {
-	vl::SettingsRefPtr settings;
-
-	// Read settings
-	if( argc > 1 )
-	{
-		// settings xml
-		std::string filename( argv[1] );
+	try {
+		// Lets find in which directory the test_conf.xml is
+		fs::path cmd( argv[0] );
+		fs::path conf_dir = cmd.parent_path();
+		fs::path conf = conf_dir / "test_conf.xml";
+		if( !fs::exists( conf ) )
+		{
+			std::cerr << "No test_conf.xml file found." << std::endl;
+			return -1;
+		}
+		vl::SettingsRefPtr settings;
 		vl::SettingsSerializer ser(settings);
-		ser.readFile(filename);
+		ser.readFile( conf.file_string() );
+
+		/*
+		// Read settings
+		if( argc > 1 )
+		{
+			// settings xml
+			std::string filename( argv[1] );
+			vl::SettingsSerializer ser(settings);
+			ser.readFile(filename);
+		}
+		else
+		{
+			std::cerr << "No settings xml provided." << std::endl;
+			return -1;
+		}
+		*/
+		settings->setExePath( argv[0] );
+		vl::Args &arg = settings->getEqArgs();
+
+		// 1. Equalizer initialization
+		::NodeFactory nodeFactory;
+		if( !eq::init( arg.size(), arg.getData(), &nodeFactory ))
+		{
+			EQERROR << "Equalizer init failed" << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		// 2. get a configuration
+		bool        error  = false;
+		::Config* config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
+		if( config )
+		{
+			config->setSettings( settings );
+			// 3. init config
+			if( config->init( 0 ))
+			{
+				// 4. run main loop
+				uint32_t spin = 0;
+				while( config->isRunning( ))
+				{
+					config->startFrame( ++spin );
+					config->finishFrame();
+				}
+
+				// 5. exit config
+				config->exit();
+			}
+			else
+			{
+				EQERROR << "Config initialization failed: "
+						<< config->getErrorMessage() << std::endl;
+				error = true;
+			}
+
+			// 6. release config
+			eq::releaseConfig( config );
+		}
+		else
+		{
+			EQERROR << "Cannot get config" << std::endl;
+			error = true;
+		}
+
+		// 7. exit
+		eq::exit();
+		return error ? EXIT_FAILURE : EXIT_SUCCESS;
 	}
-	else
+	catch( vl::exception &e )
 	{
-		std::cerr << "No settings xml provided." << std::endl;
-		return -1;
+		std::cerr << "Exception : "<<  e.what << " in " << e.where << std::endl;
 	}
-	settings->setExePath( argv[0] );
-	vl::Args &arg = settings->getEqArgs();
-
-    // 1. Equalizer initialization
-    ::NodeFactory nodeFactory;
-    if( !eq::init( arg.size(), arg.getData(), &nodeFactory ))
-    {
-        EQERROR << "Equalizer init failed" << std::endl;
-        return EXIT_FAILURE;
-    }
-    
-    // 2. get a configuration
-    bool        error  = false;
-    ::Config* config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
-    if( config )
-    {
-		config->setSettings( settings );
-        // 3. init config
-        if( config->init( 0 ))
-        {
-            // 4. run main loop
-            uint32_t spin = 0;
-            while( config->isRunning( ))
-            {
-                config->startFrame( ++spin );
-                config->finishFrame();
-            }
-        
-            // 5. exit config
-            config->exit();
-        }
-        else
-        {
-            EQERROR << "Config initialization failed: " 
-                    << config->getErrorMessage() << std::endl;
-            error = true;
-        }
-
-        // 6. release config
-        eq::releaseConfig( config );
-    }
-    else
-    {
-        EQERROR << "Cannot get config" << std::endl;
-        error = true;
-    }
-
-    // 7. exit
-    eq::exit();
-    return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 

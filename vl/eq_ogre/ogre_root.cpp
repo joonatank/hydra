@@ -8,14 +8,6 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
-		/*
-#if defined _DEBUG
-		plugins = "plugins_d.cfg";
-#else
-		plugins = "plugins.cfg";
-#endif
-		std::string plugin_path = _base_dir + std::string("/data/") + plugins;
-		*/
 		std::string plugins = settings->getOgrePluginsPath().file_string();
 		_ogre_root = new Ogre::Root( plugins, "" );
 		_primary = true;

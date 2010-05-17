@@ -22,6 +22,7 @@ public :
 		if( !eq::Window::configInit( initID ) )
 		{ return false; }
 
+		// TODO the plugins file should be passed to settings based on argv
 		_settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
 		root.reset( new vl::ogre::Root( _settings ) );
 		// Initialise ogre

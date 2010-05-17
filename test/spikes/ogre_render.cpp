@@ -15,13 +15,25 @@ struct OgreFixture
 {
 	OgreFixture( void )
 		: ogre_root(), win(), robot(), ent()
+	{}
+
+	void init( fs::path const &conf )
 	{
+		// Get settings from file
 		vl::SettingsRefPtr settings( new vl::Settings() );
-		settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
+		BOOST_REQUIRE( fs::exists(conf) );
+		vl::SettingsSerializer ser(settings);
+		ser.readFile( conf.file_string() );
+
+		// Init ogre
 		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		win = ogre_root->createWindow( "Win", 800, 600 );
 		ogre_root->init();
+
+		// Load resources
+		ogre_root->setupResources();
+		ogre_root->loadResources();
 
 		vl::graph::SceneManagerRefPtr man = ogre_root->createSceneManager("Manager");
 		
@@ -75,8 +87,17 @@ struct OgreFixture
 	boost::shared_ptr<vl::ogre::Entity> ent;
 };
 
+namespace test = boost::unit_test::framework;
+
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 {
+	// Lets find in which directory the plugins.cfg is
+	fs::path cmd( test::master_test_suite().argv[0] );
+	fs::path conf_dir = cmd.parent_path();
+	fs::path conf = conf_dir / "test_conf.xml";
+	BOOST_REQUIRE( fs::exists( conf ) );
+	init( conf );
+
 	BOOST_CHECK_EQUAL( robot->getNative()->numAttachedObjects(), 1 );
 	BOOST_CHECK_EQUAL( feet->getNative()->numAttachedObjects(), 1 );
 	BOOST_CHECK( feet->getNative()->isInSceneGraph() );

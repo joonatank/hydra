@@ -10,6 +10,8 @@
 
 #include "../eq_graph/mocks.hpp"
 
+namespace test = boost::unit_test::framework;
+
 BOOST_AUTO_TEST_CASE( constructor_test )
 {
 	// Test we can create multiple roots with single application
@@ -26,9 +28,15 @@ BOOST_AUTO_TEST_CASE( constructor_test )
 
 BOOST_AUTO_TEST_CASE( init )
 {
+	// Lets find in which directory the plugins.cfg is
+	fs::path cmd( test::master_test_suite().argv[0] );
+	fs::path plugin_dir = cmd.parent_path();
+	fs::path plugins = plugin_dir / "plugins.cfg";
+	BOOST_REQUIRE( fs::exists( plugins ) );
+	
 	vl::graph::Root *root = 0;
 	mock::SettingsPtr settings( new mock::Settings );
-	MOCK_EXPECT( settings, getOgrePluginsPath ).once().returns("plugins.cfg");
+	MOCK_EXPECT( settings, getOgrePluginsPath ).once().returns(plugins);
 
 	BOOST_CHECK_NO_THROW( root = new vl::ogre::Root(settings) );
 
