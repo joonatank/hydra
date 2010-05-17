@@ -11,6 +11,8 @@ vl::ogre::Entity::setManager(vl::graph::SceneManagerRefPtr man)
 		boost::dynamic_pointer_cast<vl::ogre::SceneManager>( man );
 	if( !og_man )
 	{ throw vl::null_pointer( "vl::ogre::Entity::Entity" ); }
+
+	load();
 }
 
 void
@@ -28,8 +30,8 @@ vl::ogre::Entity::load( void )
 	for( ; iter != _params.end(); ++iter )
 	{
 		parm[iter->first] = iter->second;
-		std::cout << "first = " <<  iter->first << " : second = "
-			<< iter->second << std::endl;
+//		std::cout << "first = " <<  iter->first << " : second = "
+//			<< iter->second << std::endl;
 	}
 	
 	if( !ogre_sm->getNative() )

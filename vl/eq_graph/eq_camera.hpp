@@ -36,6 +36,8 @@ namespace cl
 				_manager = man;
 			}
 
+			virtual std::string const &getTypename( void ) const;
+			
 			virtual void setProjectionMatrix( vmml::mat4d const &m )
 			{}
 

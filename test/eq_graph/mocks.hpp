@@ -54,11 +54,13 @@ MOCK_BASE_CLASS( ObjectFactory, vl::graph::MovableObjectFactory )
 
 MOCK_BASE_CLASS( MovableObject, vl::graph::MovableObject )
 {
+	MOCK_METHOD( getTypename, 0 )
 	MOCK_METHOD( setManager, 1 )
 };
 
 MOCK_BASE_CLASS( Camera, vl::graph::Camera )
 {
+	MOCK_METHOD( getTypename, 0 )
 	MOCK_METHOD( setManager, 1 )
 	MOCK_METHOD( setProjectionMatrix, 1 )
 	MOCK_METHOD( setFarClipDistance, 1 )
@@ -68,6 +70,7 @@ MOCK_BASE_CLASS( Camera, vl::graph::Camera )
 
 MOCK_BASE_CLASS( Entity, vl::graph::Entity )
 {
+	MOCK_METHOD( getTypename, 0 )
 	MOCK_METHOD( setManager, 1 )
 	MOCK_METHOD( setMaterialName, 1 )
 	MOCK_METHOD( load, 0 )
@@ -76,6 +79,7 @@ MOCK_BASE_CLASS( Entity, vl::graph::Entity )
 
 MOCK_BASE_CLASS( Light, vl::graph::Light )
 {
+	MOCK_METHOD( getTypename, 0 )
 	MOCK_METHOD( setManager, 1 )
 	MOCK_METHOD( setDirection, 1 )
 	MOCK_METHOD( setSpotlightRange, 3 )

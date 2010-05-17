@@ -104,10 +104,10 @@ vl::ogre::Light::setVisible(bool visible)
 }
 
 // ---------- LightFactory ----------
-const std::string vl::cl::LightFactory::TYPENAME("Light");
+const std::string vl::ogre::LightFactory::TYPENAME("Light");
 
 vl::graph::MovableObjectRefPtr
-vl::cl::LightFactory::create( std::string const &name,
+vl::ogre::LightFactory::create( std::string const &name,
 		vl::NamedValuePairList const &params )
 {
 	vl::graph::MovableObjectRefPtr obj( new Light( name, params ) );

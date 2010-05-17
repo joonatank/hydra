@@ -16,6 +16,8 @@ namespace graph
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man ) = 0;
 
+			virtual std::string const &getTypename( void ) const = 0;
+
 	};	// class MovableObject
 
 	class MovableObjectFactory

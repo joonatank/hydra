@@ -26,6 +26,9 @@ namespace ogre
 			
 			virtual ~Light( void ) {}
 
+			virtual Ogre::MovableObject *getNative( void )
+			{ return _ogre_light; }
+
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );
 
 			virtual void setDirection( vl::vector const &dir );

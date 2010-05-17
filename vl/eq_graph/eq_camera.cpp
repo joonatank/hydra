@@ -1,5 +1,10 @@
 #include "eq_camera.hpp"
 
+// ---------- Camera -----------
+std::string const&
+vl::cl::Camera::getTypename(void ) const
+{ return CameraFactory::TYPENAME; }
+
 // ---------- CameraFactory ----------
 vl::graph::MovableObjectRefPtr
 vl::cl::CameraFactory::create( std::string const &name,

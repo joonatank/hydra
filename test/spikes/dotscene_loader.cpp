@@ -5,7 +5,7 @@
 #include "eq_ogre/ogre_scene_manager.hpp"
 #include "eq_ogre/ogre_entity.hpp"
 #include "eq_ogre/ogre_camera.hpp"
-//#include "eq_ogre/ogre_light.hpp"
+#include "eq_ogre/ogre_light.hpp"
 #include "settings.hpp"
 
 #include "dotscene_loader.hpp"
@@ -71,6 +71,8 @@ public :
 					new vl::ogre::CameraFactory ) );
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
+				man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::LightFactory ) );
 
 		std::vector<vl::Settings::Scene> const &scenes = settings->getScenes();
 		if( scenes.empty() )
@@ -81,8 +83,11 @@ public :
 //		std::string scene_path = root->getDataDir() + "testScene.xml";
 
 		DotSceneLoader loader;
-		loader.parseDotScene( scenes.at(0).file, man );
-
+		loader.parseDotScene( scenes.at(0).file,
+							  Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+							  man );
+		std::cout << "Scene loaded" << std::endl;
+		
 		// Loop through all cameras and grab their name and set their debug representation
 //		Ogre::SceneManager::CameraIterator cameras = mSceneMgr->getCameraIterator();
 //		while (cameras.hasMoreElements())
@@ -91,10 +96,15 @@ public :
 //			mCamNames.push_back(camera->getName());
 //		}
 		// Grab the first available camera, for now
-		vl::graph::CameraRefPtr cam = man->getCamera("");
+		std::cout << "Getting camera" << std::endl;
+		cam = man->getCamera("");
 		if( !cam )
-		{ cam = man->createCamera("Cam"); }
-		win->addViewport( cam );
+		{
+			std::cout << "Creating camera" << std::endl;
+			cam = man->createCamera("Cam");
+		}
+		//std::cout << "Creating viewport" << std::endl;
+		//win->addViewport( cam );
 
 		/*
 		Ogre::String cameraName = mCamNames[0];
@@ -174,16 +184,19 @@ public :
 		if( !eq::Channel::configInit( initID ) )
 		{ return false; }
 
+		std::cerr << "Get ogre window from RenderWindow" << std::endl;
 		win = window->getRenderWindow();
 		EQASSERT( win );
 
+		std::cerr << "Get camera from RenderWindow" << std::endl;
 		camera = window->getCamera();
 		EQASSERT( camera );
 
+		std::cerr << "Creating viewport" << std::endl;
 		viewport = win->addViewport( camera );
 		viewport->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
 
-		setNearFar( 100.0, 100.0e3 );
+		setNearFar( 0.1, 100.0 );
 
 		return true;
 	}
@@ -229,25 +242,10 @@ int main( const int argc, char** argv )
 			std::cerr << "No test_conf.xml file found." << std::endl;
 			return -1;
 		}
-		vl::SettingsRefPtr settings;
+		vl::SettingsRefPtr settings( new vl::Settings );
 		vl::SettingsSerializer ser(settings);
 		ser.readFile( conf.file_string() );
 
-		/*
-		// Read settings
-		if( argc > 1 )
-		{
-			// settings xml
-			std::string filename( argv[1] );
-			vl::SettingsSerializer ser(settings);
-			ser.readFile(filename);
-		}
-		else
-		{
-			std::cerr << "No settings xml provided." << std::endl;
-			return -1;
-		}
-		*/
 		settings->setExePath( argv[0] );
 		vl::Args &arg = settings->getEqArgs();
 

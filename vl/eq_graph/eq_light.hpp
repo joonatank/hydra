@@ -34,7 +34,9 @@ namespace cl
 			virtual void setManager( vl::graph::SceneManagerRefPtr man )
 			{ _manager = man; }
 
-			virtual void setDirection( vl::vector const &dir ) {}
+			virtual std::string const &getTypename( void ) const;
+			
+			virtual void setDirection( vl::vector const &dir );
 			
 			virtual void setSpotlightRange( vl::angle const inner,
 					vl::angle const outer,
@@ -46,13 +48,13 @@ namespace cl
 
 			virtual void setType( TYPE type );
 
-			virtual void setVisible( bool visible ) {}
+			virtual void setVisible( bool visible );
 
-			virtual void setCastShadows( bool shadows ) {}
+			virtual void setCastShadows( bool shadows );
 
-			virtual void setDiffuseColour( vl::colour col ) {}
+			virtual void setDiffuseColour( vl::colour col );
 
-			virtual void setSpecularColour( vl::colour col ) {}
+			virtual void setSpecularColour( vl::colour col );
 
 		protected :
 			vl::graph::SceneManagerRefPtr _manager;

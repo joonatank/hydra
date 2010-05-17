@@ -107,11 +107,13 @@ vl::ogre::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::cl::SceneNode::attachObject( object );
 
+	char const *where = "vl::ogre::SceneNode::attachObject";
+	
 	boost::shared_ptr<vl::ogre::MovableObject> og_mov
 		= boost::dynamic_pointer_cast<MovableObject>(object);
 	if( !og_mov )
 	{
-		throw vl::exception( "vl::ogre::SceneNode::attachObject",
+		throw vl::exception( where,
 				"no movable object" );
 	}
 
@@ -119,7 +121,11 @@ vl::ogre::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 	if( ogre_object )
 	{ this->getNative()->attachObject( ogre_object ); }
 	else
-	{ throw vl::null_pointer("vl::ogre::SceneNode::attachObject"); }
+	{
+		std::string what("No ogre movable object of type : ");
+		what.append( object->getTypename() );
+		throw vl::exception(where, what.c_str());
+	}
 }
 
 void

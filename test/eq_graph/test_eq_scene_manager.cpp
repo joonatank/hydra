@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( constructor_test )
 
 BOOST_FIXTURE_TEST_SUITE( ObjectTests, SceneManFixture )
 
-BOOST_AUTO_TEST_CASE( movable_object_test )
+BOOST_AUTO_TEST_CASE( entity_test )
 {
 	// Add Entity factory
 	mock::ObjectFactoryPtr obj_fac( new mock::ObjectFactory );
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( movable_object_test )
 
 	vl::NamedValuePairList params;
 	params["mesh"] = "ent.mesh";
-	mock::MovableObjectPtr obj( new mock::MovableObject );
+	mock::EntityPtr obj( new mock::Entity );
 	MOCK_EXPECT( obj_fac, create ).once().with( "ent", params ).returns( obj );
 	MOCK_EXPECT( obj, setManager ).once().with( man );
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( camera_test )
 	MOCK_EXPECT( obj_fac, typeName ).at_least(1).returns( "Camera" );
 	man->addMovableObjectFactory( obj_fac );
 
-	mock::MovableObjectPtr obj( new mock::MovableObject );
+	mock::CameraPtr obj( new mock::Camera );
 	MOCK_EXPECT( obj_fac, create ).once().with( "cam", vl::NamedValuePairList() )
 		.returns( obj );
 	MOCK_EXPECT( obj, setManager ).once().with( man );
