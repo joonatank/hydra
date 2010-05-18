@@ -220,20 +220,14 @@ struct RenderFixture
 			settings->setExePath( "stereo_render" );
 			vl::Args &args = settings->getEqArgs();
 
-			std::cout << args << std::endl;
-
-			char **argv = args.getData();
-
-			std::cout << args << std::endl;
-
 			// Redirect logging
 			//eq::base::Log::setOutput( log_file );
 
 			// 1. Equalizer initialization
-			BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
+			BOOST_REQUIRE(  eq::init( args.size(), args.getData(), &nodeFactory ) );
 
 			// 2. get a configuration
-			config = static_cast< ::Config * >( eq::getConfig( argc, argv ) );
+			config = (::Config *)( eq::getConfig( args.size(), args.getData() ) );
 			BOOST_REQUIRE( config );
 			config->setSettings( settings );
 

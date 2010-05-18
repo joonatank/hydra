@@ -1,11 +1,7 @@
-//#include "graph/root.hpp"
-
 #include "config.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ),
-	  //_client_fifo(0),
-	  _node_fifo(0)
+	: eq::Config ( parent )
 {}
 
 eqOgre::Config::~Config()
@@ -177,7 +173,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 	return true;
 }
 
-/*
+/*	TODO key events are not supported at the moment
 bool
 eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 {

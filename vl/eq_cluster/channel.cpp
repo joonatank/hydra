@@ -1,42 +1,29 @@
 
 #include "channel.hpp"
 
-//#include "initData.h"
-#include "config.hpp"
-#include "pipe.hpp"
-//#include "root.hpp"
-//#include "view.hpp"
-#include "window.hpp"
-//#include "vertexBufferState.hpp"
-
-/*
-// light parameters
-static GLfloat lightPosition[] = {0.0f, 0.0f, 1.0f, 0.0f};
-static GLfloat lightAmbient[]  = {0.1f, 0.1f, 0.1f, 1.0f};
-static GLfloat lightDiffuse[]  = {0.8f, 0.8f, 0.8f, 1.0f};
-static GLfloat lightSpecular[] = {0.8f, 0.8f, 0.8f, 1.0f};
-
-// material properties
-static GLfloat materialAmbient[]  = {0.2f, 0.2f, 0.2f, 1.0f};
-static GLfloat materialDiffuse[]  = {0.8f, 0.8f, 0.8f, 1.0f};
-static GLfloat materialSpecular[] = {0.5f, 0.5f, 0.5f, 1.0f};
-static GLint  materialShininess   = 64;
-*/
-
-#ifndef M_SQRT3_2
-#  define M_SQRT3_2  0.86603f  /* sqrt(3)/2 */
-#endif
-
 #include "window.hpp"
 
-#include "channel.hpp"
+#include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent ) 
 	: eq::Channel( parent )
-//	  _root(0),
-//	  _ogre_viewport(0),
-//	  _camera(0)
+{}
+
+eqOgre::Channel::~Channel( void )
 {
+
+}
+
+void
+eqOgre::Channel::setCamera(vl::graph::CameraRefPtr cam)
+{
+
+}
+
+void
+eqOgre::Channel::setViewport(vl::graph::ViewportRefPtr view)
+{
+
 }
 
 /*
@@ -95,50 +82,38 @@ eqOgre::Channel::frameClear( const uint32_t /*frameID */)
 //	{ _ogre_viewport->clear(); }
 }
 
+/** Override frameDraw to call Viewport::update
+ *
+ *  Original does applyBuffer, applyViewport, applyFrustum, applyHeadTransform
+ */
 void
 eqOgre::Channel::frameDraw( const uint32_t /*frameID */)
 {
-	// Set the Ogre Camera frusrum to same as equalizer
-	eqOgre::Window* pWin = (eqOgre::Window *)getWindow();
+	// applyBuffer
 
-	eq::Frustumf frust = getFrustum();
-	pWin->setFrustum( frust.compute_matrix() );
+	// applyViewport
 
-	/*
-	static bool inited = false;
-
-	if( !inited )
-	{
-		EQINFO << "eq frust matrix = " << frust.compute_matrix() << std::endl;
-		EQINFO << "eq near clip = " << frust.near_plane() << std::endl;
-		EQINFO << "eq far clip = " << frust.far_plane() << std::endl;
-		inited = true;
-	}
-	*/
-
-
-	// TODO this should update Ogre::Viewport from equalizer Viewport
+	// applyFrustum
+	// Lets set it here straight to the camera
+//	applyFrustum();
 	
-	// TODO this should call Ogre::Viewport::render
-	// All rendering should be done from here.
+	// applyHeadTransform
+	// Equalizer method which handles the tracker head
+	applyHeadTransform();
+
+	// Draw the viewport
+
 }
 
-void
-eqOgre::Channel::frameReadback( const uint32_t frameID )
-{
-    eq::Channel::frameReadback( frameID );
-}
-
+/* Override the applyFrustum to set Camera Frustum
 void
 eqOgre::Channel::applyFrustum() const
 {
-	// Empty function because we are setting the Frustum from frameDraw
-//	eq::Channel::applyFrustum();
-}
+	// Set the Camera frusrum
+//	eqOgre::Window* pWin = (eqOgre::Window *)getWindow();
 
-void
-eqOgre::Channel::frameViewFinish( const uint32_t frameID )
-{
-	eq::Channel::frameViewFinish( frameID );
+	eq::Frustumf frust = getFrustum();
+	// Apply the frustum to Ogre::Camera
+//	pWin->setFrustum( frust.compute_matrix() );
 }
-
+*/
