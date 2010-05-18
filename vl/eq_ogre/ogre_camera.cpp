@@ -10,12 +10,20 @@ vl::ogre::Camera::setManager( vl::graph::SceneManagerRefPtr man )
 	boost::shared_ptr<SceneManager> og_man = 
 		boost::dynamic_pointer_cast<vl::ogre::SceneManager>( man );
 	if( !og_man )
-	{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
+	{
+		// TODO replace with cast failed
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+		//throw vl::null_pointer( "vl::ogre::Camera::Camera" );
+	}
 
 	_ogre_camera = og_man->getNative()->createCamera( _name );
 
 	if( !_ogre_camera)
-	{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
+	{
+		// TODO replace with no native object
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer( "vl::ogre::Camera::Camera" );
+	}
 }
 
 void

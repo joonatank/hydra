@@ -80,7 +80,8 @@ DotSceneLoader::parseDotScene(
 		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
 		//	TODO add logging
 		//Ogre::LogManager::getSingleton().logMessage( message );
-		throw vl::invalid_xml( "vl::DotSceneLoader::parseDotScene" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}
 
 	if( !_attach_node )
@@ -1182,7 +1183,10 @@ DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	{ attrW = XMLNode->first_attribute( "w" ); }
 
 	if( !attrX || !attrY || !attrZ || !attrW )
-	{ throw vl::invalid_xml("vl::DotSceneLoader::parseQuaternion" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
+	}
 
 	x = vl::string_convert<vl::scalar>( attrX->value() );
 	y = vl::string_convert<vl::scalar>( attrY->value() );

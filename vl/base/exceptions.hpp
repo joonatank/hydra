@@ -1,98 +1,139 @@
 #ifndef VL_EXCEPTIONS_HPP
 #define VL_EXCEPTIONS_HPP
 
+#include <boost/exception/all.hpp>
+
+#include "math/math.hpp"
+
 namespace vl
 {
-	class exception
-	{
-		public :
-			exception(const char *wha, const char *wher)
-				: what(wha), where(wher)
-			{}
+	/// Generic description, mostly development place holder
+	typedef boost::error_info<struct tag_desc, std::string> desc;
+	/// Name of the object
+	typedef boost::error_info<struct tag_name, std::string> name;
+	/// Quaternion used
+	typedef boost::error_info<struct tag_quaternion, vl::quaternion> quat;
+	/// File name used
+	typedef boost::error_info<struct tag_file, std::string> file_name;
+	
+	struct exception : virtual std::exception, virtual boost::exception {};
 
-			const char *what;
-			const char *where;
+	/// Dynamic cast failed when it was necessary
+	struct cast_error : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "dynamic cast failed";
+		}
 	};
 
+	/// ------------------ Function Parameter errors ---------------
+	
+	/// Null pointer provided
 	struct null_pointer : public exception
 	{
-		null_pointer( const char *wher )
-			: exception( "null_pointer", wher )
-		{}
+		virtual const char* what() const throw()
+		{
+			return "null pointer parameter";
+		}
 	};
 
+	/// Empty parameter provided to a function where that parameter is required
+	struct empty_param : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "empty parameter provided to a function";
+		}
+	};
+
+	/// ------------------ Object errors --------------------
+	struct no_native : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "native object missing";
+		}
+	};
+
+	/// Object of that name already exists, can not create duplicate
+	struct duplicate : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "object with that name exists";
+		}
+	};
+
+	// TODO no idea what purpose this exception has
+	struct no_object : public exception {};
+
+
+	/// Math and transformation errors, mostly useful for debug builds
+	/// And should be replaced in release builds.
+
+	/// Rotation quaternion contains scale element
+	struct scale_quaternion : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "quaternion provided for rotation contains scaling";
+		}
+	};
+
+	/// Scale value provided is zero
+	struct zero_scale : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "scaling with zero element is not valid";
+		}
+	};
+
+	
+	/// ------------- Array based container errors --------------
+	
+	/// Fifo buffer is full
+	struct fifo_full : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "fifo buffer is full"; }
+	};
+
+	/// Trying to index an array out of bounds
 	struct bad_index : public exception
 	{
-		bad_index( const char *wher )
-			: exception( "bad_index", wher )
-		{}
+		virtual const char* what() const throw()
+		{ return "array index out of bounds"; }
 	};
 
-	class empty_param : public exception
+	
+	/// --------- File errors -------------
+
+	/// Generic file error
+	struct file_error : public exception {};
+
+	/// File missing
+	struct missing_file : public file_error
 	{
-		public :
-			empty_param( const char *wher )
-				: exception( "empty_param", wher )
-			{}
-
+		virtual const char* what() const throw()
+		{ return "file missing"; }
 	};
 
-	class no_object : public exception
+	/// ---------- File parsing errors --------------
+	
+	/// the file is correctly formated but the content is not valid
+	struct parsing_error : public exception
 	{
-		public :
-			no_object( const char *wher )
-				: exception( "no_object", wher )
-			{}
-
+		virtual const char* what() const throw()
+		{ return "parsing error"; }
 	};
+	
+	struct invalid_settings  : public parsing_error {};
+	
+	struct invalid_dotscene : public parsing_error {};
+	struct invalid_tracking : public parsing_error {};
 
-	class scale_quaternion : public exception
-	{
-		public :
-			scale_quaternion( const char *wher )
-				: exception( "scale quaternion", wher )
-			{}
-	};
-
-	class zero_scale : public exception
-	{
-		public :
-			zero_scale( const char *wher )
-				: exception( "zero scale", wher )
-			{}
-	};
-
-	class duplicate : public exception
-	{
-		public :
-			duplicate( const char *wher )
-				: exception( "duplicate", wher )
-			{}
-	};
-
-	class fifo_full : public exception
-	{
-		public :
-			fifo_full( const char *wher )
-				: exception( "fifo_full", wher )
-			{}
-	};
-
-	class missing_file : public exception
-	{
-		public :
-			missing_file( const char *wher )
-				: exception( "missing_file", wher )
-			{}
-	};
-
-	class invalid_xml  : public exception
-	{
-		public :
-			invalid_xml( const char *wher )
-				: exception( "invalid xml", wher )
-			{}
-	};
 }	// namespace vl
 
 #endif

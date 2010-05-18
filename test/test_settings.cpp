@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( invalid_xml )
 	rapidxml::print(std::back_inserter(data), doc, 0);
 
 	// Parse
-	BOOST_CHECK_THROW( ser.readData( data ), vl::invalid_xml );
+	BOOST_CHECK_THROW( ser.readData( data ), vl::invalid_settings );
 }
 
 struct SettingsFixture
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE( test_root_elem )
 	rapidxml::xml_attribute<> *name = doc.allocate_attribute("name", "data");
 	root->append_attribute(name);
 
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 	
 	// Invalid root, missing name attribute
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( test_root_elem )
 	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", "local/work" );
 	root->append_node(path);
 
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	// Valid root, name attribute and path element
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE( test_plugins_elem )
 	rapidxml::xml_attribute<> *attr = doc.allocate_attribute("root", "data");
 	plugins->append_attribute( attr );
 	
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	// Test working plugins xml
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE( test_resources_elem )
 	config->append_node( resources );
 
 	// Test invalid resource xml, without file element
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 	
 	// Test invalid resource xml, with empty file element
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE( test_resources_elem )
 		= doc.allocate_node(rapidxml::node_element, "file", "" );
 	resources->append_node(invalid_file);
 
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 	
 	resources->remove_node( invalid_file );
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE( test_resources_elem )
 	// Test invalid resource xml, with reference to root that does not exist
 	rapidxml::xml_attribute<> *attr = doc.allocate_attribute("root", "data");
 	resources->append_attribute( attr );
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	resources->remove_attribute( attr );
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE( test_scene_elem )
 	config->append_node( scene );
 
 	// Test invalid scene, without file element
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	// Test valid scene, with file element
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE( eqc_elem )
 	config->append_node( eqc );
 
 	// Test invalid eqc, without file element
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	rapidxml::xml_node<> *file
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE( multiple_roots_invalid )
 	root = createRoot( root_name, "local/usr" );
 	config->append_node( root );
 
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 }
 
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE( multiple_resources )
 	xml_resources1->append_node(file);
 	
 	// Test invalid resource xml, one of the resources without file element
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 
 	// Valid resource xml, both resources have file element
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE( multiple_scenes_invalid )
 	config->append_node( scene3 );
 
 	// Third scene is invalid, without file element
-	BOOST_CHECK_THROW( readXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
 	BOOST_CHECK( checkEmpty() );
 }
 

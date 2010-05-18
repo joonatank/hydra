@@ -139,8 +139,7 @@ public :
 		}
 		catch( vl::exception const &e )
 		{
-			std::cerr << "Exception : " << e.what << " in " << e.where
-				<<std::endl;
+			std::cerr << "Exception : " << e.what() << std::endl;
 		}
 		
 		return true;
@@ -299,7 +298,8 @@ int main( const int argc, char** argv )
 	}
 	catch( vl::exception &e )
 	{
-		std::cerr << "Exception : "<<  e.what << " in " << e.where << std::endl;
+		std::cerr << "Exception : "<<   boost::diagnostic_information<>(e)
+			<< std::endl;
 	}
 }
 

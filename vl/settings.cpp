@@ -120,7 +120,10 @@ void
 vl::SettingsSerializer::readFile( std::string const &file_path )
 {
 	if( !fs::exists( file_path ) )
-	{ throw vl::missing_file( "vl::SettingsSerializer::readFile" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::missing_file() << vl::file_name(file_path) );
+//		throw vl::missing_file( "vl::SettingsSerializer::readFile" );
+	}
 	
 	// Set the file path for the last file loaded, so settings can be saved
 	// back to that file.
@@ -165,7 +168,11 @@ vl::SettingsSerializer::readData( )
 
 	xmlRoot = xmlDoc.first_node("config");
 	if( !xmlRoot )
-	{ throw vl::invalid_xml( "vl::SettingsSerailizer::readData" ); }
+	{
+		// TODO add description why it's invalid
+		char const *err = "config xml node is missing";
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(err) );
+	}
 
 	processConfig( xmlRoot );
 }
@@ -219,14 +226,18 @@ vl::SettingsSerializer::processRoot( rapidxml::xml_node<>* xml_node )
 	if( name.empty() || path.empty() )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerializer::processRoot" );
+		// TODO add description
+		char const *err = "root has to contain both name and a path";
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(err) );
 	}
 
 	// Name should be unique
 	if( _settings->findRoot( name ) )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerializer::processRoot" );
+		// TODO add description
+		char const *err = "root name not unique";
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(err) );
 	}
 	
 	Settings::Root root( name, path );
@@ -254,7 +265,8 @@ vl::SettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 	if( file.empty() )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerailizer::processPlugins" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
 	}
 	
 	Settings::Plugins plugins( file, root );
@@ -274,7 +286,8 @@ vl::SettingsSerializer::processResources( rapidxml::xml_node<>* xml_node )
 	if( file.empty() )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerailizer::processResources" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
 	}
 	
 	Settings::Resources resource( file, root );
@@ -296,7 +309,11 @@ vl::SettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
 	{ file = pElement->value(); }
 
 	if( file.empty() )
-	{ throw vl::invalid_xml( "vl::SettingsSerializer::processEqc" ); }
+	{
+		_settings->clear();
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
+	}
 	
 	Settings::Eqc eqc( file, root );
 	_settings->setEqConfig( eqc );
@@ -318,7 +335,8 @@ vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node )
 	if( file.empty() )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerailizer::processScene" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
 	}
 
 	pElement = xml_node->first_node( "attach" );
@@ -352,7 +370,8 @@ vl::SettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 	if( file.empty() )
 	{
 		_settings->clear();
-		throw vl::invalid_xml( "vl::SettingsSerailizer::processScene" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
 	}
 
 	_settings->addTracking( vl::Settings::Tracking( file, root ) );
@@ -384,7 +403,10 @@ vl::SettingsSerializer::getRootAttrib( rapidxml::xml_node<>* XMLNode )
 		// first read the xml file for all the elements and then
 		// map names to pointers all not found names are errors.
 		if( !root )
-		{ throw vl::invalid_xml( "vl::SettingsSerailizer::processResources" ); }
+		{
+			// TODO add description
+			BOOST_THROW_EXCEPTION( vl::invalid_settings() );
+		}
 
 		return root;
 	}

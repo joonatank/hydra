@@ -13,7 +13,10 @@ vl::ogre::SceneManager::SceneManager( std::string const &name )
 	: vl::cl::SceneManager(name), _ogre_sm( new Ogre::DefaultSceneManager( name ) )
 {
 	if( !_ogre_sm )
-	{ throw vl::null_pointer("vl::ogre::SceneManager::SceneManager"); }
+	{
+		//throw vl::null_pointer("vl::ogre::SceneManager::SceneManager");
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
 }
 
 vl::ogre::SceneManager::~SceneManager( void )

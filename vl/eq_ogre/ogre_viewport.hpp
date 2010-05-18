@@ -27,7 +27,10 @@ namespace ogre
 				: _ogre_viewport( view )
 			{
 				if( !_ogre_viewport )
-				{ throw vl::null_pointer( "vl::ogre::Camera::Camera" ); }
+				{
+					//const char *where = "vl::ogre::Camera::Camera";
+					BOOST_THROW_EXCEPTION( vl::null_pointer() );
+				}
 			}
 
 			virtual ~Viewport( void )

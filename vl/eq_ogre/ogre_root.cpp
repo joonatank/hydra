@@ -37,8 +37,12 @@ vl::ogre::Root::createRenderSystem( void )
 	Ogre::RenderSystem *rast
 		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
 	if( !rast )
-	{ throw vl::exception( "No OpenGL rendering system plugin found",
-			"vl::ogre::Root::createRenderSystem" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::exception() );
+	//	throw vl::exception( "No OpenGL rendering system plugin found",
+	//		"vl::ogre::Root::createRenderSystem" );
+	}
 	else
 	{ _ogre_root->setRenderSystem( rast ); }
 }

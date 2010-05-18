@@ -22,12 +22,20 @@ vl::ogre::Light::setManager(vl::graph::SceneManagerRefPtr man)
 	boost::shared_ptr<vl::ogre::SceneManager> og_man =
 		boost::dynamic_pointer_cast<vl::ogre::SceneManager>( man );
 	if( !og_man )
-	{ throw vl::null_pointer( "vl::ogre::Light::Light" ); }
+	{
+		// TODO replace with cast failed
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer( "vl::ogre::Light::Light" );
+	}
 
 	_ogre_light = og_man->getNative()->createLight( _name );
 
 	if( !_ogre_light )
-	{ throw vl::null_pointer( "vl::ogre::Light::Light" ); }
+	{
+		// TODO replace with no native object
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer( "vl::ogre::Light::Light" );
+	}
 }
 
 void

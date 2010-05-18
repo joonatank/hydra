@@ -55,7 +55,9 @@ void
 vl::Args::insert( size_t index, char const *str )
 {
 	if( index >= _argc )
-	{ throw vl::bad_index("vl::Args::insert"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::bad_index() );
+	}
 
 	if( _argc == _size )
 	{ grow(); }
@@ -74,7 +76,9 @@ char *
 vl::Args::at( size_t index )
 {
 	if( index >= _argc )
-	{ throw vl::bad_index("vl::Args::at"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::bad_index() );
+	}
 
 	return _argv[index];
 }
@@ -83,7 +87,9 @@ char const *
 vl::Args::at( size_t index ) const
 {
 	if( index >= _argc )
-	{ throw vl::bad_index("vl::Args::at"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::bad_index() );
+	}
 
 	return _argv[index];
 }

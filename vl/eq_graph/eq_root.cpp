@@ -44,7 +44,10 @@ vl::graph::SceneManagerRefPtr
 vl::cl::Root::getSceneManager( std::string const &name )
 {
 	if( name.empty() )
-	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::empty_param() );
+	//	throw vl::empty_param("vl::cl::Root::getSceneManager");
+	}
 
 	std::vector<vl::graph::SceneManagerRefPtr>::iterator iter
 		= _scene_managers.begin();
@@ -61,7 +64,10 @@ vl::graph::SceneManagerRefPtr
 vl::cl::Root::createSceneManager( std::string const &name )
 {
 	if( name.empty() )
-	{ throw vl::empty_param("vl::cl::Root::createSceneManager"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::empty_param() );
+		//throw vl::empty_param("vl::cl::Root::createSceneManager");
+	}
 
 	vl::graph::SceneManagerRefPtr man = _createSceneManager( name );
 	_scene_managers.push_back( man );
@@ -73,7 +79,10 @@ void
 vl::cl::Root::destroySceneManager( std::string const &name )
 {
 	if( name.empty() )
-	{ throw vl::empty_param("vl::cl::Root::getSceneManager"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::empty_param() );
+	//	throw vl::empty_param("vl::cl::Root::getSceneManager");
+	}
 
 	std::vector<vl::graph::SceneManagerRefPtr>::iterator iter;
 	for( iter = _scene_managers.begin(); iter != _scene_managers.end(); ++iter )
@@ -85,7 +94,8 @@ vl::cl::Root::destroySceneManager( std::string const &name )
 		}
 	}
 
-	throw vl::no_object("vl::cl::Root::getSceneManager");
+	BOOST_THROW_EXCEPTION( vl::no_object() );
+//	throw vl::no_object("vl::cl::Root::getSceneManager");
 }
 
 void

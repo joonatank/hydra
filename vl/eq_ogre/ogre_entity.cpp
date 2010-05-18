@@ -10,7 +10,11 @@ vl::ogre::Entity::setManager(vl::graph::SceneManagerRefPtr man)
 	boost::shared_ptr<SceneManager> og_man =
 		boost::dynamic_pointer_cast<vl::ogre::SceneManager>( man );
 	if( !og_man )
-	{ throw vl::null_pointer( "vl::ogre::Entity::Entity" ); }
+	{
+		// TODO replace with cast failed
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+//		throw vl::null_pointer( "vl::ogre::Entity::Entity" );
+	}
 
 	load();
 }
@@ -22,7 +26,11 @@ vl::ogre::Entity::load( void )
 		= boost::dynamic_pointer_cast<SceneManager>( _manager.lock() );
 
 	if( !ogre_sm )
-	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+	{
+		// TODO replace with cast failed
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer("vl::ogre::Entity::load");
+	}
 
 	// TODO this can be used for all MovableObjects not just meshes
 	Ogre::NameValuePairList parm;
@@ -35,13 +43,21 @@ vl::ogre::Entity::load( void )
 	}
 	
 	if( !ogre_sm->getNative() )
-	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+	{
+		// TODO replace with no native object
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+//		throw vl::null_pointer("vl::ogre::Entity::load");
+	}
 	
 	_ogre_entity = (Ogre::Entity *)( ogre_sm->getNative()->createMovableObject(
 				getName(), "Entity", &parm) );
 
 	if( !_ogre_entity )
-	{ throw vl::null_pointer("vl::ogre::Entity::load"); }
+	{
+		// TODO replace with no native object
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+//		throw vl::null_pointer("vl::ogre::Entity::load");
+	}
 }
 
 void

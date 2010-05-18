@@ -12,7 +12,10 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 	: _name( name ), _root(), _ambient_colour(0., 0., 0., 0. )
 {
 	if( _name.empty() )
-	{ throw vl::empty_param("vl::cl::SceneManager::SceneManager"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::empty_param() );
+	//	throw vl::empty_param("vl::cl::SceneManager::SceneManager");
+	}
 }
 
 vl::cl::SceneManager::~SceneManager( void )
@@ -37,10 +40,13 @@ vl::cl::SceneManager::getRootNode( void )
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::createNode( std::string const &name )
 {
-	const char *where = "vl::cl::SceneManager::createNode";
+//	const char *where = "vl::cl::SceneManager::createNode";
 
 	if( !_scene_node_factory )
-	{ throw vl::exception( "No SceneNodeFactory", where ); }
+	{
+		// TODO add info what object is missing
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
 
 	vl::graph::SceneNodeRefPtr node =
 		_scene_node_factory->create( shared_from_this(), name );
@@ -144,15 +150,19 @@ void
 vl::cl::SceneManager::setSceneNodeFactory(
 		vl::graph::SceneNodeFactoryPtr factory )
 {
-	const char *where = "vl::cl::SceneManager::setSceneNodeFactory";
 	if( !factory )
-	{ throw vl::null_pointer( where ); }
+	{
+		// TODO add info on what object is missing
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
 
 	if( _root )
 	{
 		const char *err
-			="Trying to change Scene Node Factory when Scene Graph Exists";
-		throw vl::exception( err, where );
+			= "Trying to change Scene Node Factory when Scene Graph Exists";
+		//throw vl::exception( err, where );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err) );
 	}
 	_scene_node_factory = factory;
 }
@@ -162,7 +172,9 @@ vl::cl::SceneManager::addMovableObjectFactory(
 		vl::graph::MovableObjectFactoryPtr factory, bool overwrite )
 {
 	if( !factory )
-	{ throw vl::null_pointer( "vl::cl::SceneManager::addMovableObjectFactory" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
 
 	std::map<std::string, vl::graph::MovableObjectFactoryPtr>::iterator iter;
 	iter = _movable_factories.find( factory->typeName() );
@@ -173,8 +185,8 @@ vl::cl::SceneManager::addMovableObjectFactory(
 		{ iter->second = factory; }
 		else
 		{
-			throw vl::exception( "Factory overwrite not requested.", 
-					"vl::cl::SceneManager::addMovableObjectFactory" );
+			const char *err = "Factory overwrite not requested.";
+			BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err) );
 		}
 	}
 	else
@@ -189,7 +201,9 @@ vl::cl::SceneManager::removeMovableObjectFactory(
 		vl::graph::MovableObjectFactoryPtr factory )
 {
 	if( !factory )
-	{ throw vl::null_pointer( "vl::cl::SceneManager::removeMovableObjectFactory" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
 
 	removeMovableObjectFactory( factory->typeName() );
 }
@@ -205,8 +219,10 @@ vl::cl::SceneManager::removeMovableObjectFactory( std::string const &typeName )
 	}
 	else
 	{
-		throw vl::exception( "No such factory",
-					"vl::cl::SceneManager::addMovableObjectFactory" );
+		std::string err("factory name = " + typeName);
+		BOOST_THROW_EXCEPTION( vl::no_object() << vl::desc(err) );
+//		throw vl::exception( "No such factory",
+//					"vl::cl::SceneManager::addMovableObjectFactory" );
 	}
 }
 

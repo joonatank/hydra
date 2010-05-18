@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE( valid_scene )
 		= scene->first_attribute( "formatVersion" );
 	scene->remove_attribute( attr );
 
-	BOOST_CHECK_THROW( loadXML(), vl::invalid_xml );
+	BOOST_CHECK_THROW( loadXML(), vl::invalid_dotscene );
 
 	// Valid scene xml
 	MOCK_EXPECT( sm, getRootNode ).once().returns( root );

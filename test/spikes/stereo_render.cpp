@@ -242,7 +242,7 @@ struct RenderFixture
 		}
 		catch( vl::exception &e )
 		{
-			std::cerr << "exception : " << e.what << " in " << e.where
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
 				<< std::endl;
 		}
 	}
