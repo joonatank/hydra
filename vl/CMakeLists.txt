@@ -29,6 +29,9 @@ set( SOURCES
 	base/args.cpp
 	settings.cpp
 	settings.hpp
+	tracker.hpp
+	vrpn_tracker.cpp
+	vrpn_tracker.hpp
 	base/exceptions.hpp
 	)
 
