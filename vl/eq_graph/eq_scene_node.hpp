@@ -229,12 +229,12 @@ namespace cl
 
 	};	// class SceneNode
 
-	class DefaultSceneNodeFactory : public vl::graph::SceneNodeFactory
+	class SceneNodeFactory : public vl::graph::SceneNodeFactory
 	{
 		public :
-			DefaultSceneNodeFactory( void ) {}
+			SceneNodeFactory( void ) {}
 
-			virtual ~DefaultSceneNodeFactory( void ) {}
+			virtual ~SceneNodeFactory( void ) {}
 
 			virtual vl::graph::SceneNodeRefPtr create(
 					vl::graph::SceneManagerRefPtr manager, std::string const &name )

@@ -1,9 +1,13 @@
 #include "eq_camera.hpp"
 
-// 
+// ---------- Camera -----------
 vl::cl::Camera::Camera( std::string name, vl::NamedValuePairList const &params )
 		: _name( name ), _manager()
 {}
+
+std::string const&
+vl::cl::Camera::getTypename(void ) const
+{ return CameraFactory::TYPENAME; }
 
 void 
 vl::cl::Camera::setManager( vl::graph::SceneManagerRefPtr man )
@@ -22,7 +26,6 @@ vl::graph::MovableObjectRefPtr
 vl::cl::CameraFactory::create( std::string const &name,
 		vl::NamedValuePairList const &params )
 {
-	std::cerr << "vl::cl::CameraFactory::create" << std::endl;
 	vl::graph::MovableObjectRefPtr obj( new vl::cl::Camera( name, params) );
 	return obj;
 }

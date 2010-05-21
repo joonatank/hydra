@@ -17,7 +17,11 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 	  _name( name )
 {
 	if( !creator )
-	{ throw vl::null_pointer("SceneNode::SceneNode"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+//		throw vl::null_pointer("SceneNode::SceneNode");
+	}
 
 	// TODO add random name generator
 	if( _name.empty() )
@@ -59,7 +63,11 @@ vl::cl::SceneNode::rotate( vl::quaternion const &q,
 		TransformSpace relativeTo )
 {
 	if( !vl::equal( q.abs(), 1.0 ) )
-	{ throw vl::scale_quaternion("SceneNode::rotate"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::scale_quaternion() );
+	//	throw vl::scale_quaternion("SceneNode::rotate");
+	}
 
 	if( !vl::equal(q, vl::quaternion::IDENTITY) )
 	{
@@ -73,7 +81,11 @@ vl::cl::SceneNode::setOrientation( vl::quaternion const &q,
 		TransformSpace relativeTo )
 {
 	if( !vl::equal( q.abs(), 1.0 ) )
-	{ throw vl::scale_quaternion("SceneNode::setOrientation"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::scale_quaternion() );
+//		throw vl::scale_quaternion("SceneNode::setOrientation");
+	}
 
 	if( !vl::equal(q, _rotation) )
 	{
@@ -86,7 +98,11 @@ void
 vl::cl::SceneNode::scale( vl::vector const &s )
 {
 	if( vl::equal(s, vl::vector::ZERO) )
-	{ throw vl::zero_scale("scene_node::scale"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::zero_scale() );
+//		throw vl::zero_scale("scene_node::scale");
+	}
 
 	if( !vl::equal(s, vl::vector( 1, 1, 1 )) )
 	{
@@ -99,7 +115,11 @@ void
 vl::cl::SceneNode::scale( vl::scalar const s )
 {
 	if( vl::equal(s, 0.0) )
-	{ throw vl::zero_scale("scene_node::scale"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::zero_scale() );
+	//	throw vl::zero_scale("scene_node::scale");
+	}
 
 	if( !vl::equal(s, 1.0) )
 	{
@@ -112,7 +132,11 @@ void
 vl::cl::SceneNode::setScale( vl::vector const &s )
 {
 	if( vl::equal(s, vl::vector::ZERO) )
-	{ throw vl::zero_scale("scene_node::scale"); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::zero_scale() );	
+	//	throw vl::zero_scale("scene_node::scale");
+	}
 
 	if( !vl::equal(s, _scale) )
 	{
@@ -128,7 +152,11 @@ vl::cl::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 	for( ; iter != _attached.end(); ++iter )
 	{
 		if( *iter == object )
-		{ throw vl::duplicate( "vl::cl::SceneNode::attachObject" ); }
+		{
+			// TODO add description
+			BOOST_THROW_EXCEPTION( vl::duplicate() );
+//			throw vl::duplicate( "vl::cl::SceneNode::attachObject" );
+		}
 	}
 
 	_attached.push_back( object );
@@ -173,7 +201,11 @@ void
 vl::cl::SceneNode::setParent( vl::graph::SceneNodeRefPtr parent )
 {
 	if( parent == shared_from_this() )
-	{ throw vl::duplicate( "vl::cl::SceneNode::setParent" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	//	throw vl::duplicate( "vl::cl::SceneNode::setParent" );
+	}
 
 	//if( !parent )
 	//{ throw vl::null_pointer( "vl::cl::SceneNode::setParent" ); }
@@ -205,15 +237,27 @@ void
 vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 {
 	if( !child )
-	{ throw vl::null_pointer( "vl::cl::SceneNode::addChild" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer( "vl::cl::SceneNode::addChild" );
+	}
 
 	// Can not add this as child
 	if( shared_from_this() == child )
-	{ throw vl::duplicate( "vl::cl::SceneNode::addChild" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	//	throw vl::duplicate( "vl::cl::SceneNode::addChild" );
+	}
 
 	// We already have this as a child
 	if( std::find( _childs.begin(), _childs.end(), child ) != _childs.end() )
-	{ throw vl::duplicate( "vl::cl::SceneNode::addChild" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	//	throw vl::duplicate( "vl::cl::SceneNode::addChild" );
+	}
 
 	// Parent has been already set, break the recursion
 	if( child->getParent() == shared_from_this() )
@@ -247,10 +291,18 @@ void
 vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 {
 	if( shared_from_this() == child )
-	{ throw vl::duplicate( "vl::cl::SceneNode::removeChild" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	//	throw vl::duplicate( "vl::cl::SceneNode::removeChild" );
+	}
 
 	if( !child )
-	{ throw vl::null_pointer( "vl::cl::SceneNode::removeChild" ); }
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	//	throw vl::null_pointer( "vl::cl::SceneNode::removeChild" );
+	}
 
 	// New parent is already set so called from setParent, break the recursion.
 	if( child->getParent() != shared_from_this() )
@@ -264,7 +316,11 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 		}
 		// Throw as we assume that such child exists
 		else
-		{ throw vl::no_object( "vl::cl::SceneNode::removeChild" ); }
+		{
+			// TODO add description
+			BOOST_THROW_EXCEPTION( vl::no_object() );
+		//	throw vl::no_object( "vl::cl::SceneNode::removeChild" );
+		}
 	}
 	// Called from user space
 	else

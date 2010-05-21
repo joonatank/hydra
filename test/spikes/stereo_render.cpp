@@ -27,6 +27,22 @@
 // Test includes
 #include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
+class Config : public eq::Config
+{
+public :
+	Config( eq::base::RefPtr< eq::Server > parent )
+		: eq::Config( parent )
+	{}
+
+	void setSettings( vl::SettingsRefPtr set )
+	{ _settings = set; }
+
+	vl::SettingsRefPtr getSettings( void )
+	{ return _settings; }
+
+protected :
+	vl::SettingsRefPtr _settings;
+};
 
 class Channel : public eq::Channel
 {
@@ -44,7 +60,9 @@ public :
 		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
 		// Initialise ogre
-		ogre_root.reset( new vl::ogre::Root() );
+		::Config *conf = static_cast< ::Config *>( getConfig() );
+		vl::SettingsRefPtr settings = conf->getSettings();
+		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		vl::NamedValuePairList params;
 		
@@ -72,6 +90,10 @@ public :
 		}
 		
 		ogre_root->init();
+
+		// Setup resources
+		ogre_root->setupResources();
+		ogre_root->loadResources();
 
 		// Create Scene Manager
 		man = ogre_root->createSceneManager("SceneManager");
@@ -110,7 +132,6 @@ public :
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
 	{
-		std::cout << "frameStart " << frameNumber << std::endl;
 		eq::Channel::frameStart( frameID, frameNumber );
 	}
 
@@ -173,6 +194,9 @@ class NodeFactory : public eq::NodeFactory
 public :
 	virtual Channel *createChannel( eq::Window *parent )
 	{ return new ::Channel( parent ); }
+
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new ::Config( parent ); }
 };
 
 eq::NodeFactory *g_nodeFactory = new ::NodeFactory;
@@ -182,29 +206,39 @@ struct RenderFixture
 	// Init code for this test
 	RenderFixture( void )
 		: error( false ), frameNumber(0), config(0),
-		  log_file( "render_test.log" )
+		  log_file( "render_test.log" ), settings( new vl::Settings )
+	{}
+
+	void init( fs::path const &conf )
 	{
-		vl::Args args;
-		args.add("stereo_render");
-		args.add("--eq-config" );
-		args.add("1-window.eqc");
+		try {
+			//std::string filename( "test_conf.xml" );
+			BOOST_REQUIRE( fs::exists(conf) );
+			vl::SettingsSerializer ser(settings);
+			ser.readFile( conf.file_string() );
 
-		char **argv = args.getData();
+			settings->setExePath( "stereo_render" );
+			vl::Args &args = settings->getEqArgs();
 
-		std::cout << args << std::endl;
+			// Redirect logging
+			//eq::base::Log::setOutput( log_file );
 
-		// Redirect logging
-		//eq::base::Log::setOutput( log_file );
+			// 1. Equalizer initialization
+			BOOST_REQUIRE(  eq::init( args.size(), args.getData(), &nodeFactory ) );
 
-		// 1. Equalizer initialization
-		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
-		
-		// 2. get a configuration
-		config = eq::getConfig( argc, argv );
-		BOOST_REQUIRE( config );
+			// 2. get a configuration
+			config = (::Config *)( eq::getConfig( args.size(), args.getData() ) );
+			BOOST_REQUIRE( config );
+			config->setSettings( settings );
 
-		// 3. init config
-		BOOST_REQUIRE( config->init(0));
+			// 3. init config
+			BOOST_REQUIRE( config->init(0));
+		}
+		catch( vl::exception &e )
+		{
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
+		}
 	}
 
 	// Controlled mainloop function so the test can run the loop
@@ -232,18 +266,25 @@ struct RenderFixture
 
 	bool error;
 	uint32_t frameNumber;
-	eq::Config *config;
+	::Config *config;
 	NodeFactory nodeFactory;
 	std::ofstream log_file;
+	vl::SettingsRefPtr settings;
 };
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
+namespace test = boost::unit_test::framework;
 
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
+	fs::path cmd( test::master_test_suite().argv[0] );
+	fs::path conf_dir = cmd.parent_path();
+	fs::path conf = conf_dir / "test_conf.xml";
+	BOOST_REQUIRE( fs::exists( conf ) );
+	init( conf );
+	
 	BOOST_REQUIRE( config );
 
-	//for( size_t i = 0; i < 1000; i++ )
-	while( true )
+	for( size_t i = 0; i < 1000; i++ )
 	{ mainloop(); }
 }

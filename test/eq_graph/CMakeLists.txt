@@ -16,6 +16,8 @@ add_executable( test_eq_root
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_node
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_scene_manager
 	${vl_SOURCE_DIR}/vl/eq_graph/eq_root
+	${vl_SOURCE_DIR}/vl/settings
+	${vl_SOURCE_DIR}/vl/base/args
 	)
 
 set( LIBS ${Boost_LIBRARIES} ${EQ_LIBRARIES} )

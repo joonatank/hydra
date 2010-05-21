@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!-- Action mapping
+For the moment used for mapping controller events to move camera.
+Can be extended to map any events (for example tracker or udp) to any
+events in the engine for example python scripts.
+-->
+<action_map>
+	<!-- Actions are mapped using syntax 
+	<object type> e.g. global, observer, camera 
+	<action> e.g. single named or not named action
+	<command> on engine side and any parameters to pass to that command
+	<event> that invokes the command
+	<params> fixed params
+	-->
+	<object_type>
+		<type>global</type>
+		<action>
+			<!-- Quit the application -->
+			<command>quit</command>
+			<event>KEY_ESC</event>
+		</action>
+	</object_type>
+
+	<object_type>
+		<type>observer</type>
+		<action>
+			<!-- Set stereo on/off -->
+			<command>
+				<name>eye_separate</name>
+				<param unit="m" type="float">
+					<name>eye_distance</name>
+				</param>
+			</command>
+			<!-- value 0 = stereo off, value > 0 eye separation in units
+			value < 0 flip the current setting from 0 to
+			last valid eye separation value.
+			-->
+			<event> 
+				<name>KEY_O</name>
+				<param name="eye_distance">-1</param>
+			</event>
+		</action>
+	</object_type>
+
+	<object_type>
+		<type>camera</type>
+		<!-- Only active camera is moved -->
+		<special>active</special>
+		<action>
+			<command>
+				<name>translate</name>
+				<param unit="m" type="vector3">
+					<name>pos</name>
+					<!-- The vector is scaled with speed (using the units).
+					Then if the length of the vector is greater than speed
+					it's normalized to speed. -->
+					<speed unit="m/s">1</speed>
+					<!-- For example translate with vec(1,1,0) with speed 10m/s
+					before normalizing vec(10, 10, 0)
+					with length of 40 -> so we scale with 1/4
+					after normalizing vec(sqrt(10)/sqrt(4), sqrt(10)/sqrt(4), 0)
+					or vec( sqrt(5/2), sqrt(5/2), 0 ) m/s
+
+					If we have 60 fps then every frame the object is moved by
+					vec(sqrt(1/180), sqrt(1/180), 0) m ~= vec(7.5, 7.5, 0) cm.
+					-->
+				</param>
+				<param type="string">
+					<!-- What space, WORLD, LOCAL or PARENT are we? -->
+					<name>space</name>
+				</param>
+
+			</command>
+
+			<!-- Move on the zy plane -->
+			<!-- Values for axises x, y, z if value does not exist it's
+			assumed to be zero. Use wildcard * for value based on the input
+			device, for example analog joysticks. -->
+			<event x="1">KEY_D</event>
+			<event x="-1">KEY_A</event>
+			<event x="*">JOY_X</event>
+
+			<!-- Move on the xy plane -->
+			<event z="-1">KEY_W</event>
+			<event z="1">KEY_S</event>
+			<event z="*">JOY_Y</event>
+
+			<!-- Move on the xz plane -->
+			<event y="1">PG_UP</event>
+			<event y="-1">PG_DOWN</event>
+		</action>
+
+		<action>
+			<command>rotate</command>
+			<param type="quaternion">
+				<speed unit="deg/s">1</speed>
+			</param>
+
+		</action>
+
+	</object_type>
+</action_map>
+

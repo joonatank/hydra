@@ -7,10 +7,13 @@
 
 #include "eq_graph/eq_root.hpp"
 #include "base/exceptions.hpp"
+#include "mocks.hpp"
 
 BOOST_AUTO_TEST_CASE( scene_manager )
 {
-	vl::graph::RootRefPtr root( new vl::cl::Root() );
+	mock::SettingsPtr settings( new mock::Settings() );
+	
+	vl::graph::RootRefPtr root( new vl::cl::Root( settings ) );
 	// Test scene manager creation
 	vl::graph::SceneManagerRefPtr man = root->createSceneManager( "Man" );
 	BOOST_CHECK( man );

@@ -2,23 +2,17 @@
 
 #include <OGRE/OgreConfigFile.h>
 
-vl::ogre::Root::Root( void )
-	: vl::cl::Root(), _ogre_root(0), _primary(false)
+vl::ogre::Root::Root( vl::SettingsRefPtr settings )
+	: vl::cl::Root( settings ), _ogre_root(0), _primary(false)
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
-		std::string plugins;
-#if defined _DEBUG
-		plugins = "plugins_d.cfg";
-#else
-		plugins = "plugins.cfg";
-#endif
-		std::string plugin_path = _base_dir + std::string("/data/") + plugins;
-		_ogre_root = new Ogre::Root( plugin_path , "" );
+		std::string plugins = settings->getOgrePluginsPath().file_string();
+		_ogre_root = new Ogre::Root( plugins, "" );
 		_primary = true;
 
-		std::string msg( "plugin path = " + plugin_path );
+		std::string msg( "plugin path = " + plugins );
 		Ogre::LogManager::getSingleton().logMessage( msg );
 	}
 }
@@ -43,8 +37,9 @@ vl::ogre::Root::createRenderSystem( void )
 	Ogre::RenderSystem *rast
 		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
 	if( !rast )
-	{ throw vl::exception( "No OpenGL rendering system plugin found",
-			"vl::ogre::Root::createRenderSystem" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("No OpenGL rendering system plugin found") );
+	}
 	else
 	{ _ogre_root->setRenderSystem( rast ); }
 }
@@ -53,29 +48,39 @@ void
 vl::ogre::Root::init( void )
 {
 	_ogre_root->initialise( false );
-
-	setupResources();
-	loadResources();
 }
 
 /// Method which will define the source of resources (other than current folder)
 void
-vl::ogre::Root::setupResources(void)
+vl::ogre::Root::setupResources( void )
 {
-	std::string resource_path( _base_dir + std::string("/data/") );
-	std::string resource_file( resource_path );
-#if( OGRE_DEBUG_MODE == 1 )
-	resource_file += "resources_d.cfg";
-#else
-	resource_file += "resources.cfg";
-#endif
+	std::string msg( "setupResources" );
+	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::string msg( "Using resource file = " + resource_file );
+	std::vector<fs::path> resources = _settings->getOgreResourcePaths();
+	for( size_t i = 0; i < resources.size(); ++i )
+	{
+		setupResource( resources.at(i).file_string() );
+	}
+}
+
+void
+vl::ogre::Root::loadResources(void)
+{
+	// Initialise, parse scripts etc
+	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+}
+
+void
+vl::ogre::Root::setupResource( fs::path const &file )
+{
+	std::string msg( "Using resource file = ");
+	msg += file.file_string();
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
 	// Load resource paths from config file
 	Ogre::ConfigFile cf;
-	cf.load( resource_file );
+	cf.load( file.file_string() );
 
 	// Go through all sections & settings in the file
 	Ogre::ConfigFile::SectionIterator seci = cf.getSectionIterator();
@@ -98,17 +103,11 @@ vl::ogre::Root::setupResources(void)
 				std::string(macBundlePath() + "/" + archName), typeName, secName);
 #else
 			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-					resource_path + archName, typeName, secName);
+					file.parent_path().file_string() + "/" + archName,
+					typeName, secName);
 #endif
 		}
 	}
-}
-
-void
-vl::ogre::Root::loadResources(void)
-{
-	// Initialise, parse scripts etc
-	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
 vl::graph::RenderWindowRefPtr

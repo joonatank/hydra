@@ -31,11 +31,18 @@ namespace ogre
 			
 			virtual ~Entity( void ) {}
 
+			virtual void setManager( vl::graph::SceneManagerRefPtr man );
+
 			virtual Ogre::MovableObject *getNative( void );
+			
 			
 			// Function to really do the loading of the mesh
 			// Only usefull on Nodes
 			virtual void load( void );
+
+			virtual void setCastShadows( bool castShadows);
+
+			virtual void setMaterialName( std::string const &materialFile);
 
 		protected :
 			Ogre::Entity *_ogre_entity;

@@ -2,7 +2,11 @@
  *	2010-05
  *
  *	Settings for the scene.
- *	Has settings for both ogre, sceneloader and equalizer.
+ *	Has settings for
+ *	Ogre3D : resources and plugins
+ *	equalizer : config file
+ *	sceneloader : scenes to load
+ *	tracking : config file
  */
 #ifndef VL_SETTINGS_HPP
 #define VL_SETTINGS_HPP
@@ -12,6 +16,7 @@
 #include "base/args.hpp"
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
+#include "base/typedefs.hpp"
 
 namespace vl
 {
@@ -19,58 +24,185 @@ namespace vl
 class Settings
 {
 	public :
+		// Settings root path
+		struct Root
+		{
+			Root( std::string const &nam = std::string(),
+				  std::string const &p = std::string() )
+				: name( nam ), path( p )
+			{}
+
+			void setPath( fs::path const &str )
+			{ path = str; }
+
+			fs::path getPath( void ) const
+			{ return path; }
+			
+			std::string name;
+			fs::path path;
+		};
+
+		struct Resources
+		{
+			Resources( std::string const &fil = std::string(), Settings::Root *r = 0 )
+				: file(fil), root(r)
+			{}
+
+			fs::path getPath( void ) const
+			{
+				if( root )
+				{ return root->getPath() / file; }
+				else
+				{ return file; }
+			}
+			
+			std::string file;
+			Root *root;
+		};
+
+		struct Plugins
+		{
+			Plugins( std::string const &fil = std::string(), Settings::Root *r = 0 )
+				: file(fil), root(r)
+			{}
+
+			fs::path getPath( void ) const
+			{
+				if( root )
+				{ return root->getPath() / file; }
+				else
+				{ return file; }
+			}
+			std::string file;
+			Root *root;
+		};
+
+		struct Eqc
+		{
+			Eqc( std::string const &fil = std::string(), Root *r = 0 )
+				: file(fil), root(r)
+			{}
+
+			fs::path getPath( void ) const
+			{
+				if( root )
+				{ return root->getPath() / file; }
+				else
+				{ return file; }
+			}
+			
+			std::string file;
+			Root *root;
+		};
+
+		struct Tracking
+		{
+			Tracking( std::string const &fil, Settings::Root *r )
+				: file(fil), root(r)
+			{
+			}
+
+			fs::path getPath( void ) const
+			{
+				if( root )
+				{ return root->getPath() / file; }
+				else
+				{ return file; }
+			}
+			
+			std::string file;
+			Settings::Root *root;
+		};
+		
+		struct Scene
+		{
+			Scene( std::string const &fil = std::string(),
+				   std::string const &n = std::string(),
+				   std::string const &attach = std::string(),
+				   std::string typ = std::string() )
+				: file(fil), name(n), attach_node(attach), type(typ)
+			{}
+
+			std::string file;
+			std::string name;
+			std::string attach_node;
+			std::string type;
+		};
+
 		Settings( void );
 
-		~Settings( void );
+		virtual ~Settings( void );
 
-		fs::path const &getRootPath( void ) const
-		{ return _root_path; }
+		virtual void setFilePath( std::string const &path )
+		{ _file_path = path; }
 
-		fs::path const &getFilePath( void ) const
+		virtual fs::path const &getFilePath( void ) const
 		{ return _file_path; }
 
-		fs::path const &getEqConfigPath( void ) const
-		{ return _eq_config; }
+		virtual fs::path getEqConfigPath( void ) const
+		{ return _eq_config.getPath(); }
 
-		fs::path const &getOgrePluginsPath( void ) const
-		{ return _plugin_file; }
+		virtual fs::path getOgrePluginsPath( void ) const
+		{ return _plugins.getPath(); }
 		
-		fs::path const &getOgreResourcePath( void ) const
-		{ return _resource_file; }
+		virtual std::vector<fs::path> getOgreResourcePaths( void ) const;
 
-		fs::path const &getScenePath( void ) const
-		{ return _scene_file; }
+		virtual std::vector<Settings::Scene> const &getScenes( void ) const
+		{ return _scenes; }
 
-		vl::Args const &getEqArgs( void ) const
+		virtual vl::Args &getEqArgs( void )
 		{ return _eq_args; }
 
-		void setExePath( std::string const &path );
+		virtual vl::Args const &getEqArgs( void ) const
+		{ return _eq_args; }
 
-		// TODO we need both fs::path, std::string path and relative to root path
-		// Supports both absolute and relative paths (current directory)
-		void setRootPath( std::string const &path )
-		{ _root_path = path; }
+		virtual void setExePath( std::string const &path );
 
 		// Supports both absolute and relative paths (root directory)
-		void setEqConfigPath( std::string const &path );
+		virtual void setEqConfig( Settings::Eqc const &eqc );
 
-		void setOgrePluginsPath( std::string const &path );
+		virtual void addPlugins( Settings::Plugins const &plugins );
 
-		void setOgreResourcePath( std::string const &path );
+		virtual void addResources( Settings::Resources const &resource );
 
-		void setScenePath( std::string const &path );
+		virtual void addScene( Settings::Scene const &scene );
 
-		friend class SettingsSerializer;
-		friend class SettingsDeserializer;
+		virtual std::vector<Settings::Tracking> const &getTracking( void )
+		{ return _tracking; }
+
+		virtual void addTracking( Settings::Tracking const &track )
+		{ _tracking.push_back( track ); }
+
+		virtual Root *findRoot( std::string const &name );
+
+		virtual void addRoot( Root const &root )
+		{ _roots.push_back(root); }
+
+		virtual Root &getRoot( size_t index )
+		{ return _roots.at(index); }
+
+		virtual Root const &getRoot( size_t index ) const
+		{ return _roots.at(index); }
+
+		virtual size_t nRoots( void ) const
+		{ return _roots.size(); }
+
+		virtual void clear( void );
 
 	private :
+
+		void updateArgs( void );
+
+		// All the paths
+		std::vector<Settings::Root> _roots;
 		fs::path _exe_path;
-		fs::path _root_path;
 		fs::path _file_path;
-		fs::path _eq_config;
-		fs::path _scene_file;
-		fs::path _plugin_file;
-		fs::path _resource_file;
+		Eqc _eq_config;
+		
+		std::vector<Settings::Scene> _scenes;
+		Settings::Plugins _plugins;
+		std::vector<Settings::Resources> _resources;
+		std::vector<Settings::Tracking> _tracking;
 		vl::Args _eq_args;
 
 };	// class Settings
@@ -78,16 +210,25 @@ class Settings
 class SettingsSerializer
 {
 	public :
-		SettingsSerializer( Settings *settings );
+		SettingsSerializer( SettingsRefPtr settings );
  
 		~SettingsSerializer( void );
 
+		// Read data from a file path.
 		void readFile( std::string const &file_path );
 
+		// Read data from string buffer. Buffer is not modified.
+		void readData( std::string const &xml_data );
+
+		// Read data from char buffer. Will modify the buffer.
+		// And the xml_data will be freed after it's used.
+		// xml_data should be valid NULL terminated string.
+		void readData( char *xml_data );
+		
 	protected :
 		void processConfig( rapidxml::xml_node<>* XMLNode );
 
-		void processPath( rapidxml::xml_node<>* XMLNode );
+		void processRoot( rapidxml::xml_node<>* XMLNode );
 
 		void processPlugins( rapidxml::xml_node<>* XMLNode );
 
@@ -97,26 +238,20 @@ class SettingsSerializer
 
 		void processScene( rapidxml::xml_node<>* XMLNode );
 
+		void processTracking( rapidxml::xml_node<>* XMLNode );
+
 		std::string getAttrib( rapidxml::xml_node<>* XMLNode,
 				std::string const &attrib, std::string const &defaul_value );
 
-		Settings *_settings;
+		Settings::Root *getRootAttrib( rapidxml::xml_node<>* XMLNode );
+
+		// Read data from FileString _xml_data.
+		void readData( );
+
+		vl::SettingsRefPtr _settings;
 
 		// file content needed for rapidxml
-		char *xml_data;
-};
-
-class SettingsDeserializer
-{
-	public :
-		SettingsDeserializer( Settings *settings );
-
-		~SettingsDeserializer( void );
-
-		void writeFile( std::string const &file_path );
-
-	protected :
-
+		vl::FileString *_xml_data;
 };
 
 }	// namespace vl

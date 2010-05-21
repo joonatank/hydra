@@ -24,13 +24,16 @@
 
 namespace vl
 {
-
+	enum FOG_MODE
+	{
+		FOG_NONE,
+		FOG_LINEAR,
+		FOG_EXP,
+		FOG_EXP2
+	};
+	
 namespace graph
 {
-	//class MovableObjectRefPtr;
-	//class CameraRefPtr;
-	//class EntityRefPtr;
-
 	// Abstract class for managing the scene,
 	class SceneManager
 	{
@@ -60,6 +63,10 @@ namespace graph
 			virtual void setAmbientLight( vl::colour const &col ) = 0;
 
 			virtual vl::colour const &getAmbientLight( void ) const = 0;
+
+			virtual void setFog( vl::FOG_MODE mode, vl::colour const &colourDiffuse,
+								 vl::scalar expDensity, vl::scalar linearStart,
+								 vl::scalar linearEnd ) = 0;
 
 			// Create an entity, not attached to scene graph.
 			virtual EntityRefPtr createEntity(

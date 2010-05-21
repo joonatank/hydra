@@ -9,6 +9,10 @@ void
 vl::cl::Entity::setManager( vl::graph::SceneManagerRefPtr man )
 { _manager = man; }
 
+std::string const &
+vl::cl::Entity::getTypename(void ) const
+{ return EntityFactory::TYPENAME; }
+
 void
 vl::cl::Entity::serialize( eq::net::DataOStream& os,
 		const uint64_t dirtyBits )

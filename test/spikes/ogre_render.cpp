@@ -16,13 +16,27 @@
 struct OgreFixture
 {
 	OgreFixture( void )
-		: ogre_root( new vl::ogre::Root ), win(), robot(), ent()
+		: ogre_root(), win(), robot(), ent()
+	{}
+
+	void init( fs::path const &conf )
 	{
 		try {
+		// Get settings from file
+		vl::SettingsRefPtr settings( new vl::Settings() );
+		BOOST_REQUIRE( fs::exists(conf) );
+		vl::SettingsSerializer ser(settings);
+		ser.readFile( conf.file_string() );
+
+		// Init ogre
+		ogre_root.reset( new vl::ogre::Root( settings ) );
 		ogre_root->createRenderSystem();
 		win = ogre_root->createWindow( "Win", 800, 600 );
-		//ogre_root->init();
+		ogre_root->init();
 		BOOST_TEST_MESSAGE( "window created" );
+		// Load resources
+		ogre_root->setupResources();
+		ogre_root->loadResources();
 
 		boost::shared_ptr<vl::ogre::SceneManager> man 
 			= boost::dynamic_pointer_cast<vl::ogre::SceneManager>(
@@ -65,7 +79,7 @@ struct OgreFixture
 		BOOST_REQUIRE( ent );
 		BOOST_TEST_MESSAGE( "entity created" );
 
-		ent->load();
+		BOOST_CHECK_NO_THROW( ent->load() );
 		robot = boost::dynamic_pointer_cast<vl::ogre::SceneNode>
 			( man->getRootNode()->createChild( "RobotNode" ) );
 		BOOST_REQUIRE( robot );
@@ -100,13 +114,20 @@ struct OgreFixture
 	boost::shared_ptr<vl::ogre::SceneNode> robot;
 	boost::shared_ptr<vl::ogre::SceneNode> feet;
 	boost::shared_ptr<vl::ogre::Entity> ent;
-		
 };
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
+namespace test = boost::unit_test::framework;
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 {
+	// Lets find in which directory the plugins.cfg is
+	fs::path cmd( test::master_test_suite().argv[0] );
+	fs::path conf_dir = cmd.parent_path();
+	fs::path conf = conf_dir / "test_conf.xml";
+	BOOST_REQUIRE( fs::exists( conf ) );
+	init( conf );
+
 	BOOST_CHECK_EQUAL( robot->getNative()->numAttachedObjects(), 1 );
 	BOOST_CHECK_EQUAL( feet->getNative()->numAttachedObjects(), 1 );
 	BOOST_CHECK( feet->getNative()->isInSceneGraph() );

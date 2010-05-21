@@ -12,16 +12,13 @@
 	<root name="media">
 		<path>${VL_MEDIA_PATH}</path>
 	</root>
-	<root name="build_data">
-		<path>${VL_BUILD_CONF_DIR}</path>
-	</root>
-	
+
 	<!-- Ogre plugins file, only one of these is supported,
 	root is a reference to the directory containing this file.
 	No root need to be present but then the file is assumed to be in the
 	directory where the program is started in.
 	-->
-	<plugins root="build_data" >
+	<plugins root="data" >
 		<file>plugins.cfg</file>
 	</plugins>
 
@@ -49,8 +46,23 @@
 	Type can be debug, release or all. If it's empty all is assumed.
 		Mode the program is running can be control at start or at run time.
 	-->
-	<scene name="T7">
+	<scene name="T7"> 
 		<file>T7.scene</file>
+	</scene>
+	<scene name="test">
+		<file>test.scene</file>
+		<attach>cave</attach>
+	</scene>
+	<!-- Load debug lighting schema -->
+	<scene name="work_lighting" >
+		<type>debug</type>
+		<file>work_lighting.scene</file>
+		<attach></attach>
+	</scene>
+	<!-- Load release lighting schema -->
+	<scene name="lighting" >
+		<type>release</type>
+		<file>lighting.scene<file>
 	</scene>
 
 </config>

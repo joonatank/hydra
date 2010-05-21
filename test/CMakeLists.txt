@@ -4,19 +4,28 @@ cmake_minimum_required(VERSION 2.6)
 
 include_directories( util )
 
-subdirs( util math eq_graph spikes eq_ogre synchronization dotscene_loader
-	vl_dotscene_loader )
-#subdirs( util math eq_graph spikes eq_ogre synchronization
-#	vl_dotscene_loader )
+subdirs(util
+		math
+		eq_graph
+		spikes
+		eq_ogre
+		synchronization
+		dotscene_loader
+		eq_cluster
+		)
 
 set( LIBS ${Boost_LIBRARIES} eqOgre )
 
-set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
-configure_file( ${vl_SOURCE_DIR}/data/test_conf.xml
-	${PROJECT_BINARY_DIR}/test_conf.xml )
-configure_file( ${vl_SOURCE_DIR}/data/inv_conf.xml
-	${PROJECT_BINARY_DIR}/inv_conf.xml )
-
+add_executable( test_filestring test_filestring.cpp )
 add_executable( test_settings test_settings.cpp )
+add_executable( test_dotscene test_dotscene.cpp )
+add_executable( test_exceptions test_exceptions.cpp )
+
+target_link_libraries( test_filestring ${LIBS} )
 target_link_libraries( test_settings ${LIBS} )
+target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
+target_link_libraries( test_exceptions ${LIBS} )
+
+add_test( filestring ${PROJECT_BINARY_DIR}/test_filestring )
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
+add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )

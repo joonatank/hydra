@@ -36,8 +36,7 @@ namespace ogre
 			{
 				if( !_ogre_window )
 				{
-					throw vl::null_pointer(
-							"vl::ogre::RenderWindow::RenderWindow" );
+					BOOST_THROW_EXCEPTION( vl::null_pointer() );
 				}
 			}
 
@@ -63,7 +62,9 @@ namespace ogre
 				boost::shared_ptr<Camera> c
 					= boost::dynamic_pointer_cast<Camera>( cam );
 				if( !c )
-				{ throw vl::null_pointer( "vl::ogre::RenderWindow::addViewport" ); }
+				{
+					BOOST_THROW_EXCEPTION( vl::cast_error() );
+				}
 
 				Ogre::Viewport *ogre_view = _ogre_window->addViewport(
 							(Ogre::Camera *)c->getNative() );

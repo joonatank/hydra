@@ -35,6 +35,8 @@ namespace cl
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );
 
+			virtual std::string const &getTypename( void ) const;
+			
 			virtual std::string const &getName( void )
 			{ return _name; }
 

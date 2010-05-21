@@ -30,7 +30,7 @@ namespace cl
 	class Root : public eq::Object, public vl::graph::Root
 	{
 		public :
-			Root( void );
+			Root( vl::SettingsRefPtr settings );
 
 			virtual ~Root( void )
 			{}
@@ -58,8 +58,12 @@ namespace cl
 
 			virtual void destroySceneManager( std::string const &name );
 
-			virtual std::string getDataDir( void )
-			{ return _base_dir + "/data/"; }
+//			virtual std::string getDataDir( void )
+//			{ return _base_dir + "/data/"; }
+
+			virtual void setupResources( void ) {}
+
+			virtual void loadResources(void) {}
 
 			// Equalizer overrides
 	
@@ -99,9 +103,10 @@ namespace cl
 
 			std::vector<vl::graph::SceneManagerRefPtr> _scene_managers;
 
+			vl::SettingsRefPtr _settings;
 			// Data directory, contains config files for Ogre, equalizer and
 			// our own.
-			std::string _base_dir;
+			//std::string _base_dir;
 
 	};	// class Root
 

@@ -11,7 +11,9 @@ vl::ogre::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 	boost::shared_ptr<SceneManager> man
 		= boost::dynamic_pointer_cast<SceneManager>( creator );
 	if( !man )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::translate" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::cast_error() );
+	}
 
 	if( name == "Root" )
 	{ _ogre_node = man->getNative()->getRootSceneNode(); }
@@ -32,7 +34,9 @@ vl::ogre::SceneNode::translate( vl::vector const &v,
 {
 	vl::cl::SceneNode::translate(v, relativeTo);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::translate" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->translate( vl::math::convert( v ) );
 }
 
@@ -42,7 +46,9 @@ vl::ogre::SceneNode::setPosition( vl::vector const &v,
 {
 	vl::cl::SceneNode::setPosition(v, relativeTo);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::setPosition" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->setPosition( vl::math::convert( v ) );
 }
 
@@ -52,7 +58,9 @@ vl::ogre::SceneNode::rotate( vl::quaternion const &q,
 {
 	vl::cl::SceneNode::rotate(q, relativeTo);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::rotate" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->rotate( vl::math::convert(q), Ogre::Node::TS_WORLD );
 }
 
@@ -62,7 +70,9 @@ vl::ogre::SceneNode::setOrientation( vl::quaternion const &q,
 {
 	vl::cl::SceneNode::setOrientation(q, relativeTo);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::setOrientation" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->setOrientation( vl::math::convert(q) );
 }
 
@@ -71,7 +81,9 @@ vl::ogre::SceneNode::lookAt( vl::vector const &v )
 {
 	vl::cl::SceneNode::lookAt(v);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::lookAt" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->lookAt( vl::math::convert(v), Ogre::Node::TS_WORLD );
 }
 void
@@ -79,7 +91,9 @@ vl::ogre::SceneNode::scale( vl::vector const &s )
 {
 	vl::cl::SceneNode::scale(s);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::scale" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->scale( vl::math::convert(s) );
 }
 
@@ -88,7 +102,9 @@ vl::ogre::SceneNode::scale( vl::scalar const s )
 {
 	vl::cl::SceneNode::scale(s);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::scale" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->scale( s, s, s );
 }
 
@@ -97,7 +113,9 @@ vl::ogre::SceneNode::setScale( vl::vector const &s )
 {
 	vl::cl::SceneNode::setScale(s);
 	if( !_ogre_node )
-	{ throw vl::null_pointer( "vl::ogre::SceneNode::setScale" ); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 	_ogre_node->setScale( vl::math::convert(s) );
 }
 
@@ -106,19 +124,24 @@ vl::ogre::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 {
 	vl::cl::SceneNode::attachObject( object );
 
+	
 	boost::shared_ptr<vl::ogre::MovableObject> og_mov
 		= boost::dynamic_pointer_cast<MovableObject>(object);
 	if( !og_mov )
 	{
-		throw vl::exception( "vl::ogre::SceneNode::attachObject",
-				"no movable object" );
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::cast_error() );
 	}
 
 	Ogre::MovableObject *ogre_object = og_mov->getNative();
 	if( ogre_object )
 	{ this->getNative()->attachObject( ogre_object ); }
 	else
-	{ throw vl::null_pointer("vl::ogre::SceneNode::attachObject"); }
+	{
+		std::string what("No ogre movable object of type : ");
+		what.append( object->getTypename() );
+		BOOST_THROW_EXCEPTION( vl::no_native() << vl::desc(what) );
+	}
 }
 
 void
@@ -130,15 +153,16 @@ vl::ogre::SceneNode::detachObject( vl::graph::MovableObjectRefPtr object )
 		= boost::dynamic_pointer_cast<MovableObject>(object);
 	if( !og_mov )
 	{
-		throw vl::exception( "vl::ogre::SceneNode::attachObject",
-				"no movable object" );
+		BOOST_THROW_EXCEPTION( vl::cast_error() );
 	}
 
 	Ogre::MovableObject *ogre_object = og_mov->getNative();
 	if( ogre_object )
 	{ this->getNative()->detachObject( ogre_object ); }
 	else
-	{ throw vl::null_pointer("vl::ogre::SceneNode::detachObject"); }
+	{
+		BOOST_THROW_EXCEPTION( vl::no_native() );
+	}
 }
 
 void
@@ -150,10 +174,10 @@ vl::ogre::SceneNode::childAdded( vl::graph::SceneNodeRefPtr child )
 		= boost::dynamic_pointer_cast<SceneNode>( child );
 	if( !og_child )
 	{
-		throw vl::exception( "vl::ogre::SceneNode::attachObject",
-				"no scene node" );
+		BOOST_THROW_EXCEPTION( vl::cast_error() );
 	}
 
+	// TODO add checking of the natives
 	this->getNative()->addChild( og_child->getNative() );
 }
 
@@ -166,10 +190,10 @@ vl::ogre::SceneNode::childRemoved( vl::graph::SceneNodeRefPtr child )
 		= boost::dynamic_pointer_cast<SceneNode>( child );
 	if( !og_child )
 	{
-		throw vl::exception( "vl::ogre::SceneNode::attachObject",
-				"no movable object" );
+		BOOST_THROW_EXCEPTION( vl::cast_error() );
 	}
 
+	// TODO add checking of the natives
 	this->getNative()->removeChild( og_child->getNative() );
 }
 

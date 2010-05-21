@@ -32,6 +32,8 @@ namespace graph
 
 			virtual ~Light( void ) {}
 
+			virtual void setDirection( vl::vector const &dir ) = 0;
+			
 			virtual void setSpotlightRange(vl::angle const inner,
 					vl::angle const outer,
 					vl::scalar const falloff) = 0;

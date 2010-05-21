@@ -28,6 +28,7 @@
 
 #include "ogre_render_window.hpp"
 #include "base/typedefs.hpp"
+#include "settings.hpp"
 
 namespace vl
 {
@@ -36,7 +37,7 @@ namespace ogre
 	class Root : public vl::cl::Root
 	{
 		public :
-			Root( void );
+			Root( vl::SettingsRefPtr settings );
 
 			virtual ~Root( void );
 			
@@ -55,11 +56,13 @@ namespace ogre
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
 
-			virtual void setupResources(void);
+			virtual void setupResources( void );
 
 			virtual void loadResources(void);
 
 		protected :
+			virtual void setupResource( fs::path const &file );
+
 			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
 					std::string const &name )
 			{

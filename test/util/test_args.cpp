@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE( insert_arg )
 {
 	args.insert( 0, "gaah");
 
-	BOOST_REQUIRE_EQUAL( args.size(), 4 );
+	BOOST_REQUIRE_EQUAL( args.size(), 4u );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[0], "gaah" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[1], "test" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[2], "doh" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[3], "\0" ) );
 
 	args.insert( 1, "huh" );
-	BOOST_REQUIRE_EQUAL( args.size(), 5 );
+	BOOST_REQUIRE_EQUAL( args.size(), 5u );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[0], "gaah" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[1], "huh" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[2], "test" ) );
@@ -89,14 +89,14 @@ BOOST_AUTO_TEST_CASE( insert_arg )
 
 BOOST_AUTO_TEST_CASE( clear )
 {
-	BOOST_CHECK_EQUAL( args.size(), 3 );
+	BOOST_CHECK_EQUAL( args.size(), 3u );
 	args.clear();
-	BOOST_REQUIRE_EQUAL( args.size(), 1 );
+	BOOST_REQUIRE_EQUAL( args.size(), 1u );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[0], "\0" ) );
 
 	args.add( "doh" );
 	args.add( "test" );
-	BOOST_REQUIRE_EQUAL( args.size(), 3 );
+	BOOST_REQUIRE_EQUAL( args.size(), 3u );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[0], "doh" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[1], "test" ) );
 	BOOST_CHECK_EQUAL( 0, ::strcmp( args[2], "\0" ) );

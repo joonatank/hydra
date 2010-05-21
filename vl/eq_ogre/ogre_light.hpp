@@ -1,46 +1,41 @@
 /*	Joonatan Kuosa
- *	2010-04
- *
- *	Light is a class of MovableObjects
- *
- *  This class handles Equalizer implementation of a Light.
- *  So it's data is distributed.
+ *	2010-05
  */
 
-#ifndef VL_CL_LIGHT_HPP
-#define VL_CL_LIGHT_HPP
+#ifndef VL_OGRE_LIGHT_HPP
+#define VL_OGRE_LIGHT_HPP
 
-#include "interface/light.hpp"
+#include "ogre_movable_object.hpp"
 
-#include <string>
+#include "eq_graph/eq_light.hpp"
 
-#include "math/math.hpp"
+#include <OGRE/OgreLight.h>
 
 namespace vl
 {
 
-namespace cl
+namespace ogre
 {
-	class Light : public graph::Light
+	class Light : public cl::Light, public ogre::MovableObject
 	{
 		public :
 			Light( std::string const &name,
 				   vl::NamedValuePairList const &params )
-				: _name(name)
+				: cl::Light( name, params )
 			{}
-
+			
 			virtual ~Light( void ) {}
 
-			virtual void setManager( vl::graph::SceneManagerRefPtr man )
-			{ _manager = man; }
+			virtual Ogre::MovableObject *getNative( void )
+			{ return _ogre_light; }
 
-			virtual std::string const &getTypename( void ) const;
-			
+			virtual void setManager( vl::graph::SceneManagerRefPtr man );
+
 			virtual void setDirection( vl::vector const &dir );
-			
-			virtual void setSpotlightRange( vl::angle const inner,
+
+			virtual void setSpotlightRange(vl::angle const inner,
 					vl::angle const outer,
-					vl::scalar const falloff );
+					vl::scalar const falloff);
 
 			virtual void setAttenuation( vl::scalar const range,
 					vl::scalar const constant,
@@ -57,9 +52,8 @@ namespace cl
 			virtual void setSpecularColour( vl::colour col );
 
 		protected :
-			vl::graph::SceneManagerRefPtr _manager;
-			std::string _name;
-
+			Ogre::Light *_ogre_light;
+			
 	};	// class Light
 
 	class LightFactory : public vl::graph::MovableObjectFactory
@@ -71,7 +65,7 @@ namespace cl
 
 			virtual vl::graph::MovableObjectRefPtr create( std::string const &name,
 					vl::NamedValuePairList const &params );
-			
+
 			virtual std::string const &typeName( void )
 			{ return TYPENAME; }
 
@@ -79,10 +73,9 @@ namespace cl
 
 	};	// class LightFactory
 
-}	// namespace cl
+}	// namespace ogre
 
 }	// namespace vl
 
 #endif
-
 
