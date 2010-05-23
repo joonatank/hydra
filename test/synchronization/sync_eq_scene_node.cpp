@@ -19,7 +19,6 @@ namespace vl
 	using namespace graph;
 }
 
-
 // Test variables we transmit over the synchronization
 vl::vector const TRANS_VEC[3] =
 {
@@ -222,8 +221,8 @@ struct SceneNodeSyncFixture : public vl::EqSyncFixture
 	vl::cl::SceneNodeRefPtr node;
 };
 
-vl::SyncFixture *::EqFixture::sync_fixture = new SceneNodeSyncFixture(true);
-vl::SyncFixture *::Node::sync_fixture = new SceneNodeSyncFixture(false);
+vl::SyncFixture *::EqFixture::sync_fixture = new ::SceneNodeSyncFixture(true);
+vl::SyncFixture *::Node::sync_fixture = new ::SceneNodeSyncFixture(false);
 
 BOOST_FIXTURE_TEST_CASE( sync_test, EqFixture )
 {
@@ -231,5 +230,7 @@ BOOST_FIXTURE_TEST_CASE( sync_test, EqFixture )
 	{
 		mainloop();
 	}
+	delete ::EqFixture::sync_fixture;
+	delete ::Node::sync_fixture;
 }
 

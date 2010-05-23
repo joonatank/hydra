@@ -3,6 +3,7 @@
 #include "ogre_scene_manager.hpp"
 #include "ogre_camera.hpp"
 #include "ogre_entity.hpp"
+#include "base/exceptions.hpp"
 
 vl::ogre::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 		std::string const &name )

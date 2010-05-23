@@ -106,10 +106,10 @@ BOOST_AUTO_TEST_CASE( child_test )
 	BOOST_CHECK_NO_THROW( parent->addChild( n1 ) );
 	BOOST_REQUIRE_EQUAL( ogre_parent->numChildren(), 1 );
 	// Check that we have correct childs
-	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n1->getName() );
+	BOOST_REQUIRE_EQUAL( ogre_parent->getChild(0)->getName(), n1->getName() );
 	BOOST_CHECK_NO_THROW( parent->addChild( n2 ) );
-	BOOST_CHECK_EQUAL( ogre_parent->numChildren(), 2 );
-	BOOST_CHECK_EQUAL( ogre_parent->getChild(1)->getName(), n2->getName() );
+	BOOST_REQUIRE_EQUAL( ogre_parent->numChildren(), 2 );
+	BOOST_CHECK_EQUAL( ogre_parent->getChild(0)->getName(), n2->getName() );
 }
 
 BOOST_AUTO_TEST_CASE( attachement_test )

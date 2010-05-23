@@ -1,5 +1,11 @@
+
+// Interface include
 #include "ogre_root.hpp"
 
+// library includes
+#include "base/exceptions.hpp"
+
+// Ogre includes
 #include <OGRE/OgreConfigFile.h>
 
 vl::ogre::Root::Root( vl::SettingsRefPtr settings )

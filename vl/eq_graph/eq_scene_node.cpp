@@ -1,10 +1,11 @@
 #include "eq_scene_node.hpp"
 
-#include "eq_scene_manager.hpp"
-
 #include <eq/net/session.h>
 
-// SceneNode
+// library includes
+#include "base/exceptions.hpp"
+#include "eq_scene_manager.hpp"
+
 vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 		std::string const &name )
 	: _manager(creator),
@@ -20,7 +21,6 @@ vl::cl::SceneNode::SceneNode( vl::graph::SceneManagerRefPtr creator,
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
-//		throw vl::null_pointer("SceneNode::SceneNode");
 	}
 
 	// TODO add random name generator
@@ -66,7 +66,6 @@ vl::cl::SceneNode::rotate( vl::quaternion const &q,
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::scale_quaternion() );
-	//	throw vl::scale_quaternion("SceneNode::rotate");
 	}
 
 	if( !vl::equal(q, vl::quaternion::IDENTITY) )
@@ -84,7 +83,6 @@ vl::cl::SceneNode::setOrientation( vl::quaternion const &q,
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::scale_quaternion() );
-//		throw vl::scale_quaternion("SceneNode::setOrientation");
 	}
 
 	if( !vl::equal(q, _rotation) )
@@ -101,7 +99,6 @@ vl::cl::SceneNode::scale( vl::vector const &s )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::zero_scale() );
-//		throw vl::zero_scale("scene_node::scale");
 	}
 
 	if( !vl::equal(s, vl::vector( 1, 1, 1 )) )
@@ -118,7 +115,6 @@ vl::cl::SceneNode::scale( vl::scalar const s )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::zero_scale() );
-	//	throw vl::zero_scale("scene_node::scale");
 	}
 
 	if( !vl::equal(s, 1.0) )
@@ -134,8 +130,7 @@ vl::cl::SceneNode::setScale( vl::vector const &s )
 	if( vl::equal(s, vl::vector::ZERO) )
 	{
 		// TODO add description
-		BOOST_THROW_EXCEPTION( vl::zero_scale() );	
-	//	throw vl::zero_scale("scene_node::scale");
+		BOOST_THROW_EXCEPTION( vl::zero_scale() );
 	}
 
 	if( !vl::equal(s, _scale) )
@@ -155,7 +150,6 @@ vl::cl::SceneNode::attachObject( vl::graph::MovableObjectRefPtr object )
 		{
 			// TODO add description
 			BOOST_THROW_EXCEPTION( vl::duplicate() );
-//			throw vl::duplicate( "vl::cl::SceneNode::attachObject" );
 		}
 	}
 
@@ -240,7 +234,6 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
-	//	throw vl::null_pointer( "vl::cl::SceneNode::addChild" );
 	}
 
 	// Can not add this as child
@@ -248,7 +241,6 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::duplicate() );
-	//	throw vl::duplicate( "vl::cl::SceneNode::addChild" );
 	}
 
 	// We already have this as a child
@@ -256,7 +248,6 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::duplicate() );
-	//	throw vl::duplicate( "vl::cl::SceneNode::addChild" );
 	}
 
 	// Parent has been already set, break the recursion
@@ -269,9 +260,6 @@ vl::cl::SceneNode::addChild( vl::graph::SceneNodeRefPtr child )
 	{
 		child->setParent( shared_from_this() );
 	}
-
-//	_addChild( child );
-//	((SceneNode *)child->get())->_setParent( this );
 }
 
 vl::graph::SceneNodeRefPtr
@@ -294,14 +282,12 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::duplicate() );
-	//	throw vl::duplicate( "vl::cl::SceneNode::removeChild" );
 	}
 
 	if( !child )
 	{
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
-	//	throw vl::null_pointer( "vl::cl::SceneNode::removeChild" );
 	}
 
 	// New parent is already set so called from setParent, break the recursion.
@@ -319,7 +305,6 @@ vl::cl::SceneNode::removeChild( vl::graph::SceneNodeRefPtr child )
 		{
 			// TODO add description
 			BOOST_THROW_EXCEPTION( vl::no_object() );
-		//	throw vl::no_object( "vl::cl::SceneNode::removeChild" );
 		}
 	}
 	// Called from user space
@@ -451,46 +436,6 @@ vl::cl::SceneNode::childRemoved( vl::graph::SceneNodeRefPtr child )
 {
 
 }
-
-/*
-void
-vl::cl::SceneNode::_addChild( vl::graph::SceneNode *child )
-{
-	vl::graph::ChildContainer::iterator iter = _childs.begin();
-	for( ; iter != _childs.end(); ++iter )
-	{
-		if( *iter == child )
-		{ throw vl::duplicate("vl::cl::SceneNode::_addChild"); }
-	}
-
-	_childs.push_back( child );
-}
-
-void
-vl::cl::SceneNode::_setParent( vl::graph::SceneNode *parent )
-{
-	if( _parent )
-	{ ((SceneNode *)_parent)->_removeChild( this ); }
-
-	_parent = parent;
-}
-
-void
-vl::cl::SceneNode::_removeChild( vl::graph::SceneNode *child )
-{
-	vl::graph::ChildContainer::iterator iter = _childs.begin();
-	for( ; iter != _childs.end(); ++iter )
-	{
-		if( *iter == child )
-		{
-			_childs.erase( iter );
-			return;
-		}
-	}
-
-	throw vl::exception("Child not found", "vl::cl::SceneNode::_removeChild" );
-}
-*/
 
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneNode::_findChild( std::string const &name ) const

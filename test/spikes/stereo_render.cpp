@@ -13,8 +13,6 @@
 
 #include <eq/eq.h>
 
-#include <boost/test/unit_test.hpp>
-
 // eqOgre project includes
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_ogre/ogre_scene_manager.hpp"
@@ -23,10 +21,14 @@
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
 #include "base/args.hpp"
+#include "base/exceptions.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
+
 class Config : public eq::Config
 {
 public :
@@ -121,7 +123,7 @@ public :
 		BOOST_REQUIRE( root );
 		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
 				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load();
+//		ent->load();
 		robot = root->createChild();
 		robot->setPosition( vl::vector(0, 0, 300) );
 		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
@@ -271,9 +273,6 @@ struct RenderFixture
 	std::ofstream log_file;
 	vl::SettingsRefPtr settings;
 };
-
-BOOST_GLOBAL_FIXTURE( InitFixture )
-namespace test = boost::unit_test::framework;
 
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {

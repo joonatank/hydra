@@ -1,6 +1,8 @@
+
 #include "ogre_entity.hpp"
 
 #include "ogre_scene_manager.hpp"
+#include "base/exceptions.hpp"
 
 vl::ogre::Entity::Entity( std::string const &name, vl::NamedValuePairList const &params )
 	: vl::cl::Entity(name, params), _ogre_entity(0)
@@ -64,16 +66,20 @@ void
 vl::ogre::Entity::setCastShadows(bool castShadows)
 {
 	vl::cl::Entity::setCastShadows(castShadows);
-	if( _ogre_entity )
-	{ _ogre_entity->setCastShadows(castShadows); }
+
+	assert( _ogre_entity );
+
+	_ogre_entity->setCastShadows(castShadows);
 }
 
 void
 vl::ogre::Entity::setMaterialName(const std::string& materialFile)
 {
 	vl::cl::Entity::setMaterialName(materialFile);
-	if( _ogre_entity )
-	{ _ogre_entity->setMaterialName(materialFile); }
+
+	assert( _ogre_entity );
+	
+	_ogre_entity->setMaterialName(materialFile);
 }
 
 // ---------- EntityFactory ----------

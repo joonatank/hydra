@@ -1,8 +1,13 @@
+
+// interface
 #include "eq_camera.hpp"
+
+// library includes
+#include "base/exceptions.hpp"
 
 // ---------- Camera -----------
 vl::cl::Camera::Camera( std::string name, vl::NamedValuePairList const &params )
-		: _name( name ), _manager()
+		: _manager(), _name( name )
 {}
 
 std::string const&
@@ -15,7 +20,7 @@ vl::cl::Camera::setManager( vl::graph::SceneManagerRefPtr man )
 	std::cerr << "vl::cl::Cmaera::setManager." << std::endl;
 	if( !man )
 	{
-		throw vl::null_pointer( "vl::cl::Camera::setManager" );
+		throw vl::null_pointer();
 	}
 
 	_manager = man;

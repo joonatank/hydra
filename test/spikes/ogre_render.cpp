@@ -10,8 +10,16 @@
 #include "eq_ogre/ogre_scene_manager.hpp"
 #include "eq_ogre/ogre_scene_node.hpp"
 #include "eq_ogre/ogre_entity.hpp"
+#include "base/exceptions.hpp"
 
+// Test helpers
 #include "../fixtures.hpp"
+
+#include <eq/base/sleep.h>
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
+
+namespace test = boost::unit_test::framework;
 
 struct OgreFixture
 {
@@ -95,7 +103,8 @@ struct OgreFixture
 		}
 		catch (vl::exception const &e)
 		{
-			std::cerr << "Exception : " << e.what << " in " << e.where << std::endl;
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
 		}
 	}
 
@@ -115,9 +124,6 @@ struct OgreFixture
 	boost::shared_ptr<vl::ogre::SceneNode> feet;
 	boost::shared_ptr<vl::ogre::Entity> ent;
 };
-
-BOOST_GLOBAL_FIXTURE( InitFixture )
-namespace test = boost::unit_test::framework;
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 {

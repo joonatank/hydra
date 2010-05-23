@@ -1,4 +1,5 @@
-/*	Joonatan Kuosa
+
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	SceneGraph element: has transformation, can have parent, children and own
@@ -12,16 +13,16 @@
 #ifndef VL_GRAPH_SCENE_NODE_HPP
 #define VL_GRAPH_SCENE_NODE_HPP
 
-#include "math/math.hpp"
+//#include <vector>
 
-#include <vector>
-
-#include <memory>	// for std::auto_ptr
-#include <boost/shared_ptr.hpp>		// for ref counted ptrs
+//#include <memory>	// for std::auto_ptr
+//#include <boost/shared_ptr.hpp>		// for ref counted ptrs
 
 #include <stdint.h>
 
 #include "base/typedefs.hpp"
+
+#include "math/math.hpp"
 
 namespace vl
 {
@@ -33,6 +34,7 @@ namespace graph
 	//class MovableObjectRefPtr;
 	//class SceneNode;
 
+	/*
 	class ChildAddedFunctor
 	{
 	public :
@@ -42,6 +44,7 @@ namespace graph
 
 		virtual void operator()( std::string const &name ) = 0;
 	};
+	*/
 
 	// Abstract scene node interface.
 	// SceneNode is a basic element in scene graph and it is the only element

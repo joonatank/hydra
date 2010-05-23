@@ -7,6 +7,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "eq_graph/eq_scene_manager.hpp"
+#include "base/exceptions.hpp"
 
 #include "mocks.hpp"
 

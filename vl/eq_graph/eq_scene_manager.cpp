@@ -1,10 +1,15 @@
- #include "eq_scene_manager.hpp"
 
+// interface
+#include "eq_scene_manager.hpp"
+
+// library includes
+#include "base/exceptions.hpp"
 #include "interface/movable_object.hpp"
 #include "interface/entity.hpp"
 #include "eq_scene_node.hpp"
 #include "eq_light.hpp"
 
+// Equalizer includes
 #include <eq/net/session.h>
 
 // SceneManager
@@ -14,7 +19,6 @@ vl::cl::SceneManager::SceneManager( std::string const &name )
 	if( _name.empty() )
 	{
 		BOOST_THROW_EXCEPTION( vl::empty_param() );
-	//	throw vl::empty_param("vl::cl::SceneManager::SceneManager");
 	}
 }
 
@@ -41,8 +45,6 @@ vl::cl::SceneManager::getRootNode( void )
 vl::graph::SceneNodeRefPtr
 vl::cl::SceneManager::createNode( std::string const &name )
 {
-//	const char *where = "vl::cl::SceneManager::createNode";
-
 	if( !_scene_node_factory )
 	{
 		// TODO add info what object is missing
@@ -118,7 +120,8 @@ vl::cl::SceneManager::createMovableObject(
 		{ 
 			// TODO add better description, include the object type and so on
 			//  and fix the exception type
-			BOOST_THROW_EXCEPTION( vl::exception << vl::desc("can not create movable object") );
+			std::string err("can not create movable object");
+			BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err) );
 		}
 	}
 

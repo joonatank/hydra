@@ -1,9 +1,13 @@
 #include "eq_root.hpp"
 
+// Equalizer
 #include <eq/net/session.h>
 
-#include <cstdlib>
 
+//#include <cstdlib>
+
+// library includes
+#include "base/exceptions.hpp"
 #include "base/filesystem.hpp"
 
 vl::cl::Root::Root( vl::SettingsRefPtr settings )

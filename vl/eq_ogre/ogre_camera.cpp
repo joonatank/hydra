@@ -1,10 +1,17 @@
 #include "ogre_camera.hpp"
 
+// library includes
+#include "base/exceptions.hpp"
 #include "ogre_scene_manager.hpp"
+#include "math/conversion.hpp"
 
 vl::ogre::Camera::Camera( std::string name, vl::NamedValuePairList const &params )
 	: vl::cl::Camera( name, params ), _ogre_camera(0)
 {}
+
+vl::ogre::Camera::~Camera(void )
+{
+}
 
 void
 vl::ogre::Camera::setManager( vl::graph::SceneManagerRefPtr man )

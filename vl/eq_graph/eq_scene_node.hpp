@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	SceneGraph element: has transformation, can have parent, children and own
@@ -13,53 +13,27 @@
 #define VL_EQ_GRAPH_SCENE_NODE_HPP
 
 #include <eq/client/object.h>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "interface/scene_node.hpp"
 #include "interface/entity.hpp"
 #include "interface/movable_object.hpp"
 
-#include "eq_movable_object.hpp"
-#include "base/exceptions.hpp"
-
+//#include "eq_movable_object.hpp"
+//#include "base/exceptions.hpp"
 #include "math/math.hpp"
-
-#include <boost/enable_shared_from_this.hpp>
-
-//#include "eq_cluster/distrib_container.hpp"
 
 namespace vl
 {
 
 namespace cl
 {
-	// Forward declarations
-	class SceneManager;
-	class SceneNode;
-
-	// Handle addition to syncronization stack functor
-	class ChildAddedFunctor : public vl::graph::ChildAddedFunctor
-	{
-	public :
-		ChildAddedFunctor( vl::graph::SceneNode *owner )
-			: _owner( owner )
-		{}
-
-		virtual ~ChildAddedFunctor( void ) {}
-
-		virtual void operator()( vl::graph::SceneNode *me )
-		{
-		}
-
-	protected :
-		// The new owner
-		vl::graph::SceneNode *_owner;
-	};
-
-	// SceneNode is a basic element in scene graph and it is the only element
-	// that can be other than leafs of the tree
-	// (MovableObjects can be only be leafs).
-	// It manages the attributes of the whole branch, like transformation
-	// (combined, but nodes transformation is always applied).
+	/** SceneNode is a basic element in scene graph and it is the only element
+	 *  that can be other than leafs of the tree
+	 *  (MovableObjects can be only be leafs).
+	 *  It manages the attributes of the whole branch, like transformation
+	 *  (combined, but nodes transformation is always applied).
+	 */
 	class SceneNode : public eq::Object, public vl::graph::SceneNode,
 					  public boost::enable_shared_from_this<SceneNode>
 	{
@@ -119,7 +93,7 @@ namespace cl
 			virtual vl::graph::SceneNodeRefPtr createChild(
 					std::string const &name = std::string() );
 
-			/* Set the parent SceneNode,
+			/** Set the parent SceneNode,
 			 * Parent can be NULL pointer which will destroy this SceneNode if
 			 * no other parent is set before the this ref ptr goes out of scope.
 			 *
@@ -244,11 +218,14 @@ namespace cl
 
 	};	// class DefaultSceneNodeFactory
 
-// Finding
-template< typename T >
-boost::shared_ptr<T> find( vl::graph::SceneNodeRefPtr node, std::string const &name, std::string const &typeName );
+	/** Tree traversal finding
+	 * Preconditions :
+	 * Postconditions :
+	 */
+	template< typename T >
+	boost::shared_ptr<T> find( vl::graph::SceneNodeRefPtr node, std::string const &name, std::string const &typeName );
 
-}	// namespace eq
+}	// namespace cl
 
 }	// namespace vl
 

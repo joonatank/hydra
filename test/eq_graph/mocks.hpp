@@ -62,6 +62,7 @@ MOCK_BASE_CLASS( Camera, vl::graph::Camera )
 {
 	MOCK_METHOD( getTypename, 0 )
 	MOCK_METHOD( setManager, 1 )
+	MOCK_METHOD( setViewMatrix, 1 )
 	MOCK_METHOD( setProjectionMatrix, 1 )
 	MOCK_METHOD( setFarClipDistance, 1 )
 	MOCK_METHOD( setNearClipDistance, 1 )

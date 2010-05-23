@@ -35,7 +35,7 @@ namespace cl
 			virtual ~Root( void )
 			{}
 			
-			// Some initialization methods
+			/// Initialization methods
 			// Engine specific mostly, so they need to be overriden
 			virtual void createRenderSystem( void ) {}
 
@@ -57,9 +57,6 @@ namespace cl
 					std::string const &name );
 
 			virtual void destroySceneManager( std::string const &name );
-
-//			virtual std::string getDataDir( void )
-//			{ return _base_dir + "/data/"; }
 
 			virtual void setupResources( void ) {}
 

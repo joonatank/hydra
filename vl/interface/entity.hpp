@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	Entity is a class of MovableObjects, has a mesh which atm is represented by
@@ -24,8 +24,8 @@ namespace graph
 		public :
 			virtual ~Entity( void ) {}
 
-			// Function to really do the loading of the mesh
-			// Only usefull on Nodes
+			/// Function to really do the loading of the mesh
+			/// Only usefull on Nodes
 			virtual void load( void ) = 0;
 
 			virtual void setCastShadows( bool castShadows) = 0;

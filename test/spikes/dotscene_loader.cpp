@@ -7,8 +7,11 @@
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_light.hpp"
 #include "settings.hpp"
+#include "base/exceptions.hpp"
 
 #include "dotscene_loader.hpp"
+
+#include "../fixtures.hpp"
 
 class Config : public eq::Config
 {
@@ -154,7 +157,8 @@ public :
 		}
 		catch( vl::exception const &e )
 		{
-			std::cerr << "Exception : " << e.what() << std::endl;
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
 		}
 		
 		return true;
@@ -246,12 +250,8 @@ public:
 
 int main( const int argc, char** argv )
 {
-#ifdef VL_WIN32 && _DEBUG
-
-	_CrtSetDbgFlag( 0 );
-	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
-#endif
-
+	InitFixture();
+	
 	try {
 		// Lets find in which directory the test_conf.xml is
 		fs::path cmd( argv[0] );

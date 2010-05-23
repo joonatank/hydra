@@ -12,13 +12,15 @@
 #ifndef VL_OGRE_CAMERA_HPP
 #define VL_OGRE_CAMERA_HPP
 
+// Base interface
 #include "eq_graph/eq_camera.hpp"
-
 #include "ogre_movable_object.hpp"
 
-#include <OGRE/OgreCamera.h>
+// Necessary types
+#include "math/math.hpp"
 
-#include "math/conversion.hpp"
+// Ogre includes
+#include <OGRE/OgreCamera.h>
 
 namespace vl
 {
@@ -29,7 +31,7 @@ namespace ogre
 		public :
 			Camera( std::string name, vl::NamedValuePairList const &params );
 			
-			virtual ~Camera( void ) {}
+			virtual ~Camera( void );
 
 			virtual void setManager( vl::graph::SceneManagerRefPtr man );
 			

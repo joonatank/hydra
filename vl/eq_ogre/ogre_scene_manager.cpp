@@ -1,8 +1,9 @@
+
 #include "eq_ogre/ogre_scene_manager.hpp"
 
 #include "eq_ogre/ogre_scene_node.hpp"
-
 #include "eq_ogre/ogre_entity.hpp"
+#include "base/exceptions.hpp"
 
 #include <eq/net/session.h>
 

@@ -1,9 +1,12 @@
 #ifndef EQ_TEST_FIXTURE_HPP
 #define EQ_TEST_FIXTURE_HPP
 
+// Equalizer
 #include <eq/eq.h>
-
+// Log file
 #include <fstream>
+// require and check macros
+#include <boost/test/unit_test.hpp>
 
 const int argc = 4;
 extern char *argv[argc];

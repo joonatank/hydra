@@ -9,7 +9,9 @@ namespace vl
 {
 struct SyncFixture
 {
-	virtual ~SyncFixture( void ) {}
+	virtual ~SyncFixture( void )
+	{
+	}
 
 	virtual void init( eq::Config *conf ) = 0;
 	
@@ -28,6 +30,20 @@ struct EqSyncFixture : public vl::SyncFixture
 		  config(0),
 		  runner()
 	{}
+
+	~EqSyncFixture( void )
+	{
+		/*
+		if( master )
+		{
+			config->deregisterObject( object );
+		}
+		else
+		{
+			config->unmapObject( object );
+		}
+		*/
+	}
 
 	virtual void init( eq::Config *conf ) 
 	{ config = conf; }

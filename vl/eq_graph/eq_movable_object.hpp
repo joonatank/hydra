@@ -20,12 +20,11 @@ namespace cl
 			MovableObject( std::string const &name,
 					vl::NamedValuePairList const &params )
 				: eq::Object(), _params(params)
-			{
-			}
+			{}
 
 			// Equalizer overrides
 			
-			/* Object::serialize() */
+			/** Object::serialize() */
 			virtual void serialize( eq::net::DataOStream& os,
 									const uint64_t dirtyBits )
 			{
@@ -35,7 +34,7 @@ namespace cl
 				}
 			}
 
-			/* Object::deserialize() */
+			/** Object::deserialize() */
 			virtual void deserialize( eq::net::DataIStream& is,
 									  const uint64_t dirtyBits )
 			{
@@ -63,7 +62,7 @@ namespace cl
 
 	};	// class MovableObject
 
-}	// namespace graph
+}	// namespace cl
 
 }	// namespace vl
 #endif

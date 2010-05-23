@@ -110,7 +110,8 @@ struct EqFixture
 	{
 		// All registered objects need to be deregistered before exiting the
 		// config, otherwise equalizer crashes...
-
+		delete sync_fixture;
+		
 		// 5. exit config
 		if( config )
 		{ BOOST_CHECK( config->exit() ); }

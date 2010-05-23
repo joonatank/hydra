@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-04
  *
  * 	class Args
@@ -14,8 +14,6 @@
 
 #include <ostream>
 #include <cstring>
-
-#include "base/exceptions.hpp"
 
 namespace vl
 {

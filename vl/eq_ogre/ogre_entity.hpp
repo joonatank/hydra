@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	Entity is a class of MovableObjects, has a mesh which atm is represented by

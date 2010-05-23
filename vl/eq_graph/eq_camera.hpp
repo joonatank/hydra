@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	Container class for engine specific camera.
@@ -12,13 +12,11 @@
 #ifndef VL_EQ_GRAPH_CAMERA_HPP
 #define VL_EQ_GRAPH_CAMERA_HPP
 
-#include "interface/camera.hpp"
-
-#include "base/exceptions.hpp"
-
 #include <string>
-
 #include <eq/client/object.h>
+
+// Base interface
+#include "interface/camera.hpp"
 
 namespace vl
 {

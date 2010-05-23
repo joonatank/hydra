@@ -1,4 +1,5 @@
-/*	Joonatan Kuosa
+
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	Container class for engine specific camera.
@@ -9,11 +10,14 @@
  *	These Viewports are only used for interface to engine specific
  *	viewports and are not user accessible.
  */
+
 #ifndef VL_OGRE_VIEWPORT_HPP
 #define VL_OGRE_VIEWPORT_HPP
 
+// Base interface
 #include "interface/viewport.hpp"
 
+// Ogre includes
 #include <OGRE/OgreViewport.h>
 
 namespace vl
@@ -23,68 +27,35 @@ namespace ogre
 	class Viewport : public vl::graph::Viewport
 	{
 		public :
-			Viewport( Ogre::Viewport *view )
-				: _ogre_viewport( view )
-			{
-				if( !_ogre_viewport )
-				{
-					//const char *where = "vl::ogre::Camera::Camera";
-					BOOST_THROW_EXCEPTION( vl::null_pointer() );
-				}
-			}
+			Viewport( Ogre::Viewport *view );
 
-			virtual ~Viewport( void )
-			{}
+			virtual ~Viewport( void );
 
-			virtual Ogre::Viewport *getNative( void )
-			{ return _ogre_viewport; }
+			virtual Ogre::Viewport *getNative( void );
 
-			// Rendering methods
-			virtual void update( void ) 
-			{
-				_ogre_viewport->update();
-			}
+			/// Rendering methods
+			virtual void update( void );
 
-			virtual void clear( void )
-			{
-				_ogre_viewport->clear();
-			}
+			/// Clear the viewport to background colour
+			virtual void clear( void );
 
-			virtual vl::graph::RenderWindowRefPtr getTarget( void )
-			{
-			//	return _ogre_viewport->getTarget();
-				return vl::graph::RenderWindowRefPtr();
-			}
+			// TODO not implemented
+			virtual vl::graph::RenderWindowRefPtr getTarget( void );
 
-			virtual vl::graph::CameraRefPtr getCamera( void )
-			{
-			//	return _ogre_viewport->getCamera();
-				return vl::graph::CameraRefPtr();
-			}
+			// TODO not implemented
+			virtual vl::graph::CameraRefPtr getCamera( void );
 
-			virtual void setCamera( vl::graph::CameraRefPtr cam )
-			{
-			//	_ogre_viewport->setCamera(cam);
-			}
+			// TODO not implemented
+			virtual void setCamera( vl::graph::CameraRefPtr cam );
 
-			virtual int getZOrder( void )
-			{
-				return _ogre_viewport->getZOrder();
-			}
+			virtual int getZOrder( void );
 
-			virtual void setBackgroundColour( vl::colour const &colour )
-			{
-				if( _ogre_viewport )
-				{
-					Ogre::ColourValue c( colour.r(), colour.g(), colour.b(),
-							colour.a() );
-					_ogre_viewport->setBackgroundColour(c);
-				}
-			}
+			/// Set the viewport background colour used for subsequent calls
+			/// to clear.
+			virtual void setBackgroundColour( vl::colour const &colour );
 
 		protected :
 			Ogre::Viewport *_ogre_viewport;
-
 	};
 
 }	// namespace graph

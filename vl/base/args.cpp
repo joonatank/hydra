@@ -1,4 +1,7 @@
+
 #include "args.hpp"
+
+#include "base/exceptions.hpp"
 
 vl::Args::Args( void )
 	: _argv(0), _argc(1), _size(1)

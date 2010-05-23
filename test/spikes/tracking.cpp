@@ -34,7 +34,7 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include <time.h>
 
 #include <eq/eq.h>
-
+#include <eq/base/sleep.h>
 #include <limits>
 #include <iostream>
 
@@ -47,6 +47,7 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include "eq_ogre/ogre_render_window.hpp"
 #include "math/conversion.hpp"
 #include "base/args.hpp"
+#include "base/exceptions.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
@@ -180,8 +181,8 @@ public :
 		m.setTrans(-v3);
 
 		// Note: real applications would use one tracking device per observer
-	    const eq::ObserverVector& observers = getConfig()->getObservers();
-	    for( eq::ObserverVector::const_iterator i = observers.begin();
+	    const eq::Observers& observers = getConfig()->getObservers();
+	    for( eq::Observers::const_iterator i = observers.begin();
 			i != observers.end(); ++i )
 	    {   
 			
@@ -201,7 +202,8 @@ public :
 		}
 		catch( vl::exception const &e )
 		{
-			std::cerr << "Exception : " << e.what << " in " << e.where << std::endl;
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
 		}
 	}
 
@@ -230,12 +232,6 @@ struct RenderFixture
 		: error( false ), frameNumber(0), config(0),
 		  log_file( "render_test.log" )
 	{
-#ifdef VL_WIN32 && _DEBUG
-
-	_CrtSetDbgFlag( 0 );
-	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_WNDW );
-#endif
-
 		vl::Args args;
 		args.add("stereo_render");
 		args.add("--eq-config" );

@@ -13,6 +13,10 @@ set( SOURCES
 	eq_ogre/ogre_camera.hpp
 	eq_ogre/ogre_light.hpp
 	eq_ogre/ogre_light.cpp
+	eq_ogre/ogre_render_window.cpp
+	eq_ogre/ogre_render_window.hpp
+	eq_ogre/ogre_viewport.cpp
+	eq_ogre/ogre_viewport.hpp
 	eq_graph/eq_root.cpp
 	eq_graph/eq_root.hpp
 	eq_graph/eq_scene_node.cpp

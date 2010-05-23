@@ -18,7 +18,11 @@
 #ifndef VL_GRAPH_WINDOW_HPP
 #define VL_GRAPH_WINDOW_HPP
 
+// vl::graph types
 #include "base/typedefs.hpp"
+
+// Necessary for uint16_t
+#include <stdint.h>
 
 namespace vl
 {

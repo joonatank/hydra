@@ -1,6 +1,15 @@
 project( "synchronization_test" CXX )
 
-add_executable( sync_eq_scene_node sync_eq_scene_node.cpp )
+set( HEADERS
+	sync_fixture.hpp
+	equalizer_fixture.hpp
+	threaded_test_runner.hpp
+	)
+
+add_executable( sync_eq_scene_node
+	sync_eq_scene_node.cpp
+	${HEADERS}
+	)
 
 set( LIBS
 	${Boost_LIBRARIES}

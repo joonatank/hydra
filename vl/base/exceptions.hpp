@@ -36,13 +36,8 @@ namespace vl
 		{
 			return "null pointer parameter";
 		}
-
-	struct bad_cast : public exception
-	{
-		bad_cast( const char *wher )
-			: exception( "bad_cast", wher )
 	};
-
+	
 	/// Empty parameter provided to a function where that parameter is required
 	struct empty_param : public exception
 	{

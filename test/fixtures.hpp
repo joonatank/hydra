@@ -1,6 +1,10 @@
 #ifndef VL_TEST_FIXTURES_HPP
 #define VL_TEST_FIXTURES_HPP
 
+#include <boost/test/unit_test.hpp>
+
+namespace test = boost::unit_test::framework;
+
 struct InitFixture
 {
 	InitFixture( void )
