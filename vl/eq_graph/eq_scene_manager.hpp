@@ -145,6 +145,8 @@ namespace cl
 			std::string _name;
 
 			vl::graph::SceneNodeRefPtr _root;
+			
+			std::vector<vl::graph::CameraWeakPtr> _cameras;
 
 			vl::graph::SceneNodeFactoryPtr _scene_node_factory;
 			std::map<std::string, vl::graph::MovableObjectFactoryPtr>

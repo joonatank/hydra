@@ -195,6 +195,9 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 		_attach_node->setOrientation(parseQuaternion(pElement));
 //		_attach_node->setInitialState();
 	}
+	pElement = XMLNode->first_node("rotation");
+	if( pElement )
+	{ _attach_node->setOrientation(parseQuaternion(pElement)); }
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
@@ -504,7 +507,7 @@ DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	{ light->setType(vl::graph::Light::LT_POINT); }
 	else if(sValue == "directional")
 	{ light->setType(vl::graph::Light::LT_DIRECTIONAL); }
-	else if(sValue == "spot")
+	else if(sValue == "spot" )// || sValue == "spotLight" )
 	{ light->setType(vl::graph::Light::LT_SPOTLIGHT); }
 	else if(sValue == "radPoint")
 	{ light->setType(vl::graph::Light::LT_POINT); }
@@ -538,13 +541,15 @@ DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{ light->setSpecularColour(parseColour(pElement)); }
 
-	if(sValue != "directional")
+	if(sValue == "spot" )//|| sValue == "spotLight" )
 	{
 		// Process lightRange (?)
 		pElement = XMLNode->first_node("lightRange");
 		if(pElement)
 		{ processLightRange(pElement, light); }
-
+	}
+	if( sValue != "direction" )
+	{
 		// Process lightAttenuation (?)
 		pElement = XMLNode->first_node("lightAttenuation");
 		if(pElement)
@@ -599,6 +604,9 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{ cam_node->setOrientation( parseQuaternion(pElement) ); }
 
+	pElement = XMLNode->first_node("quaternion");
+	if(pElement)
+	{ cam_node->setOrientation( parseQuaternion(pElement) ); }
 /*
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
@@ -662,7 +670,10 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
 	{ node->setOrientation(parseQuaternion(pElement)); }
-	
+	pElement = XMLNode->first_node("quaternion");
+	if( pElement )
+	{ node->setOrientation(parseQuaternion(pElement)); }
+
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
@@ -895,6 +906,7 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	catch(Ogre::Exception &/*e*/)
 	{
 		std::string msg("[DotSceneLoader] Error loading an entity!");
+		std::cerr << msg << std::endl;
 		//	TODO add logging
 		//Ogre::LogManager::getSingleton().logMessage(msg);
 	}

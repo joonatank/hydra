@@ -1,7 +1,11 @@
 project( "spikes" CXX )
 
 # Config file for spikes
-set( VL_BUILD_CONF_DIR ${vl_BINARY_DIR} )
+if( WIN32 )
+	set( VL_BUILD_CONF_DIR ${PROJECT_BINARY_DIR}/Debug )
+elseif( UNIX )
+	set( VL_BUILD_CONF_DIR ${PROJECT_BINARY_DIR} )
+endif()
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
 set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
 configure_file( ${vl_SOURCE_DIR}/data/test_conf.xml
@@ -12,10 +16,10 @@ configure_file( ${vl_SOURCE_DIR}/data/test_conf.xml
 if( WIN32 )
 	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_REL} )
 	configure_file( ${vl_SOURCE_DIR}/data/plugins.cfg
-		${vl_BINARY_DIR}/plugins.cfg )
+		${PROJECT_BINARY_DIR}/Release/plugins.cfg )
 	set( PLUGINS_DIR_DBG ${OGRE_PLUGIN_DIR_DBG} )
 	configure_file( ${vl_SOURCE_DIR}/data/plugins_d.cfg
-		${vl_BINARY_DIR}/plugins_d.cfg )
+		${PROJECT_BINARY_DIR}/Debug/plugins.cfg )
 elseif( UNIX )
 	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_TMP} )
 	configure_file( ${vl_SOURCE_DIR}/data/plugins.cfg
@@ -66,6 +70,8 @@ add_executable( dotscene_loader
 	${HEADERS}
 	)
 
+message( "Opengl libs = ${OpenGL_LIBRARIES}" )
+
 set( LIBS
 	${OpenGL_LIBRARIES}
 	${OGRE_LIBRARIES}
@@ -78,4 +84,4 @@ target_link_libraries( ogre_render ${LIBS} )
 target_link_libraries( stereo_render ${LIBS} )
 target_link_libraries( node_test ${LIBS} )
 target_link_libraries( tracking ${LIBS} vrpn )
-target_link_libraries( dotscene_loader ${LIBS} )
+target_link_libraries( dotscene_loader ${LIBS} vrpn )

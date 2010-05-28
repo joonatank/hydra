@@ -94,7 +94,10 @@ vl::cl::SceneManager::createCamera( std::string const &name )
 {
 	vl::graph::MovableObjectRefPtr obj = createMovableObject( "Camera", name );
 	std::cerr << "createCamera : " << std::endl;
-	return boost::static_pointer_cast<vl::graph::Camera>( obj );
+	vl::graph::CameraRefPtr cam =
+		boost::static_pointer_cast<vl::graph::Camera>( obj );
+	_cameras.push_back(cam);
+	return cam;
 }
 
 vl::graph::MovableObjectRefPtr
@@ -117,7 +120,7 @@ vl::cl::SceneManager::createMovableObject(
 			std::cerr << "Manager setted to movable object." << std::endl;
 		}
 		else
-		{ 
+		{
 			// TODO add better description, include the object type and so on
 			//  and fix the exception type
 			std::string err("can not create movable object");
@@ -158,6 +161,25 @@ vl::cl::SceneManager::getLight( std::string const &name )
 vl::graph::CameraRefPtr
 vl::cl::SceneManager::getCamera( std::string const &name )
 {
+	if( name.empty() && !_cameras.empty() )
+	{
+		return _cameras.at(0).lock();
+	}
+	else
+	{
+		// Find suitable camera
+		// camera->getName not supported atm
+		/*
+		for( size_t i = 0; i < _cameras.size(); ++i )
+		{
+			vl::graph::CameraRefPtr cam = _cameras.at(i).lock();
+			if( cam->getName() == name )
+			{
+				return cam;
+			}
+		}
+		*/
+	}
 	return vl::graph::CameraRefPtr();
 }
 

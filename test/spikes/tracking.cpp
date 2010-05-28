@@ -82,73 +82,85 @@ public :
 
 	virtual bool configInit( const uint32_t initID )
 	{
-		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
-
-		// Initialise ogre
-		// TODO add setting of plugins file path from main
-		vl::SettingsRefPtr settings( new vl::Settings() );
-		settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
-		ogre_root.reset( new vl::ogre::Root( settings ) );
-		ogre_root->createRenderSystem();
-		vl::NamedValuePairList params;
-		
-#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-		eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
-		std::stringstream ss( std::stringstream::in | std::stringstream::out );
-		ss << os_win->getWGLWindowHandle();
-		params["externalWindowHandle"] = ss.str();
-		ss.str("");
-		params["externalGLControl"] = std::string("True");
-		ss << os_win->getWGLContext();
-		params["externalGLContext"] = ss.str();
-#else
-		params["currentGLContext"] = std::string("True");
-#endif
-		
 		try {
+			BOOST_REQUIRE( eq::Channel::configInit( initID ) );
+
+			// Initialise ogre
+			// TODO add setting of plugins file path from main
+			vl::SettingsRefPtr settings( new vl::Settings() );
+			vl::SettingsSerializer ser( settings );
+			ser.readFile( "test_conf.xml" );
+
+			ogre_root.reset( new vl::ogre::Root( settings ) );
+			ogre_root->createRenderSystem();
+			vl::NamedValuePairList params;
+			
+#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+			eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
+			std::stringstream ss( std::stringstream::in | std::stringstream::out );
+			ss << os_win->getWGLWindowHandle();
+			params["externalWindowHandle"] = ss.str();
+			ss.str("");
+			params["externalGLControl"] = std::string("True");
+			ss << os_win->getWGLContext();
+			params["externalGLContext"] = ss.str();
+#else
+			params["currentGLContext"] = std::string("True");
+#endif
 			win = ogre_root->createWindow( "Win", 800, 600, params );
+
+			ogre_root->init();
+			// Setup resources
+			ogre_root->setupResources();
+			ogre_root->loadResources();
+
+			// Create Scene Manager
+			man = ogre_root->createSceneManager("SceneManager");
+			BOOST_REQUIRE( man );
+
+			// Set factories
+			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+						new vl::ogre::SceneNodeFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::EntityFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::CameraFactory ) );
+			
+			// Create camera and viewport
+			vl::graph::SceneNodeRefPtr root;
+			BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
+			BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
+			vl::graph::ViewportRefPtr view = win->addViewport( cam );
+			view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
+			feet = root->createChild( "Feet" );
+			BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+
+			// Create robot Entity
+			std::cerr << "Creating Ogre Entity" << std::endl;
+			BOOST_REQUIRE( root );
+			boost::shared_ptr<vl::ogre::Entity> ent
+				= boost::dynamic_pointer_cast<vl::ogre::Entity>(
+					man->createEntity( "robot", "robot.mesh" ) );
+			std::cerr << "Ogre Entity created" << std::endl;
+	//		ent->load();
+			robot = root->createChild();
+	//		robot->setOrientation( vl::quaternion( 0, 0.707, 0, 0.707 ) );
+			robot->setPosition( vl::vector(0, 1, -0.7) );
+			robot->scale( 1./100 );
+			BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
+			std::cerr << "Ogre Entity attached" << std::endl;
+			setNearFar( 0.1, 100.0 );
+		}
+		catch( vl::exception const &e )
+		{
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
 		}
 		catch( Ogre::Exception const &e)
 		{
-			std::cout << "Exception when creating window: " << e.what() 
+			std::cerr << "Exception when creating window: " << e.what() 
 				<< std::endl;
-			throw;
 		}
-		
-		ogre_root->init();
-
-		// Create Scene Manager
-		man = ogre_root->createSceneManager("SceneManager");
-		BOOST_REQUIRE( man );
-
-		// Set factories
-		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-					new vl::ogre::SceneNodeFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::EntityFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::CameraFactory ) );
-		
-		// Create camera and viewport
-		vl::graph::SceneNodeRefPtr root;
-		BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
-		BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
-		vl::graph::ViewportRefPtr view = win->addViewport( cam );
-		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
-		feet = root->createChild( "Feet" );
-		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
-
-		// Create robot Entity
-		BOOST_REQUIRE( root );
-		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
-				man->createEntity( "robot", "robot.mesh" ) );
-		ent->load();
-		robot = root->createChild();
-		robot->setPosition( vl::vector(0, 0, -0.5) );
-		robot->scale( 1./100 );
-		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
-		setNearFar( 0.1, 100.0 );
-
 		return true;
 	}
 
@@ -160,45 +172,92 @@ public :
 	virtual void frameDraw( const uint32_t frameID )
 	{
 		try {
-		eq::Channel::frameDraw( frameID );
+			/*	Old
+			eq::Channel::frameDraw( frameID );
 
-		Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
-		Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
+			Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
+			Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
 
-		// Quaternion should be about unit length, it's invalid if it's something else
-		q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
-				g_trackerData.quat[1], g_trackerData.quat[2] );
-		std::cout << "quaternion length = " << q.Norm() << std::endl;
-		if( q.Norm() < 0.5 )
-		{ q = Ogre::Quaternion::IDENTITY; }
-		else
-		{ q.normalise(); }
-		
-		v3 = Ogre::Vector3( g_trackerData.pos[0], g_trackerData.pos[1], 
-				g_trackerData.pos[2] );
-
-		Ogre::Matrix4 m(q); 
-		m.setTrans(-v3);
-
-		// Note: real applications would use one tracking device per observer
-	    const eq::Observers& observers = getConfig()->getObservers();
-	    for( eq::Observers::const_iterator i = observers.begin();
-			i != observers.end(); ++i )
-	    {   
+			// Quaternion should be about unit length, it's invalid if it's something else
+			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
+					g_trackerData.quat[1], g_trackerData.quat[2] );
+			//std::cout << "quaternion length = " << q.Norm() << std::endl;
+			if( q.Norm() < 0.5 )
+			{ q = Ogre::Quaternion::IDENTITY; }
+			else
+			{ q.normalise(); }
 			
-			//std::cerr << "Head Matrix : " << std::endl
-			//	<< (*i)->getHeadMatrix() << std::endl;
+			v3 = Ogre::Vector3( -g_trackerData.pos[0], -g_trackerData.pos[1], 
+					g_trackerData.pos[2] );
+
+			Ogre::Matrix4 m(q); 
+			m.setTrans(v3);
+
+			// Note: real applications would use one tracking device per observer
+		    const eq::Observers& observers = getConfig()->getObservers();
+		    for( eq::Observers::const_iterator i = observers.begin();
+				i != observers.end(); ++i )
+		    {
+				//std::cerr << "Head Matrix : " << std::endl
+				//	<< (*i)->getHeadMatrix() << std::endl;
+			
+				// When head matrix is set equalizer automatically applies it to the
+				// GL Modelview matrix as first transformation
+				(*i)->setHeadMatrix( vl::math::convert(m) );
+			}
+
+			eq::Frustumf frust = getFrustum();
+
+			cam->setProjectionMatrix( frust.compute_matrix() );
 		
-			// When head matrix is set equalizer automatically applies it to the
-			// GL Modelview matrix as first transformation
-			(*i)->setHeadMatrix( vl::math::convert(m) );
-		}
+			win->update();
+			*/
 
-		eq::Frustumf frust = getFrustum();
+			// New test code
+			// Head tracking support
+			Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
+			Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
 
-		cam->setProjectionMatrix( frust.compute_matrix() );
-	
-		win->update();
+			// Quaternion should be about unit length, it's invalid if it's something else
+
+			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
+					g_trackerData.quat[1], g_trackerData.quat[2] );
+			//std::cout << "quaternion length = " << q.Norm() << std::endl;
+			if( q.Norm() < 0.5 )
+			{ q = Ogre::Quaternion::IDENTITY; }
+			else
+			{ q.normalise(); }
+		
+			v3 = Ogre::Vector3( g_trackerData.pos[0], g_trackerData.pos[1], 
+					-g_trackerData.pos[2] );
+	//		v3 =  Ogre::Vector3(0, 1, 0);
+
+			Ogre::Matrix4 m(q); 
+			m.setTrans(v3);
+
+			// Note: real applications would use one tracking device per observer
+		    const eq::Observers& observers = getConfig()->getObservers();
+		    for( eq::Observers::const_iterator i = observers.begin();
+				i != observers.end(); ++i )
+		    {
+				// When head matrix is set equalizer automatically applies it to the
+				// GL Modelview matrix as first transformation
+				(*i)->setHeadMatrix( vl::math::convert(m) );
+			}
+
+			// From equalizer channel::frameDraw
+			EQ_GL_CALL( applyBuffer( ));
+		    EQ_GL_CALL( applyViewport( ));
+		    
+
+			if( cam && win )
+			{
+				eq::Frustumf frust = getFrustum();
+				cam->setProjectionMatrix( frust.compute_matrix() );
+				Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( v3,  Ogre::Quaternion::IDENTITY ); //Ogre::Quaternion(0,0, 1, 0) );
+				cam->setViewMatrix( vl::math::convert( view ) );
+				win->update();
+			}
 		}
 		catch( vl::exception const &e )
 		{
