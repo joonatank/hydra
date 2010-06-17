@@ -62,7 +62,9 @@ public :
 					new vl::ogre::SceneNodeFactory ) );
 		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
 					new vl::ogre::EntityFactory ) );
-
+		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+					new vl::ogre::CameraFactory ) );
+		
 		EQASSERT( cam = man->createCamera("Cam") );
 		EQASSERT( man->getRootNode() );
 

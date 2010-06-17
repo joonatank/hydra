@@ -19,7 +19,7 @@
 // VRPN tracking
 vrpn_TRACKERCB g_trackerData;
 
-void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	g_trackerData = t;
 }
