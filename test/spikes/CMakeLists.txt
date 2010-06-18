@@ -3,7 +3,7 @@ project( "spikes" CXX )
 # Config file for spikes
 if( WIN32 )
 	set( VL_BUILD_CONF_DIR ${PROJECT_BINARY_DIR}/Debug )
-elseif( )
+else( )
 	set( VL_BUILD_CONF_DIR ${PROJECT_BINARY_DIR} )
 endif()
 

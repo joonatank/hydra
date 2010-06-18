@@ -8,77 +8,110 @@
 #include "eq_ogre/ogre_entity.hpp"
 #include "eq_ogre/ogre_camera.hpp"
 #include "eq_ogre/ogre_render_window.hpp"
+#include "base/exceptions.hpp"
+
+#include "../fixtures.hpp"
+
+class Config : public eq::Config
+{
+public :
+	Config( eq::base::RefPtr< eq::Server > parent )
+		: eq::Config( parent )
+	{}
+
+	void setSettings( vl::SettingsRefPtr set )
+	{ _settings = set; }
+
+	vl::SettingsRefPtr getSettings( void ) const
+	{ return _settings; }
+
+protected :
+	vl::SettingsRefPtr _settings;
+};
 
 class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
 		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot(),
-		  _settings( new vl::Settings )
+		  _settings( )
 	{}
 
 	virtual bool configInit( const uint32_t initID )
 	{
-		if( !eq::Window::configInit( initID ) )
-		{ return false; }
+		try
+		{
+			if( !eq::Window::configInit( initID ) )
+			{ return false; }
 
-		// TODO the plugins file should be passed to settings based on argv
-		_settings->addPlugins( vl::Settings::Plugins("plugins.cfg") );
-		root.reset( new vl::ogre::Root( _settings ) );
-		// Initialise ogre
-		root->createRenderSystem();
+			::Config *config = (::Config *)getConfig();
+			_settings = config->getSettings();
+			EQASSERT( _settings );
 
-		vl::NamedValuePairList params;
+			root.reset( new vl::ogre::Root( _settings ) );
+			
+			// Initialise ogre
+			root->createRenderSystem();
+
+			vl::NamedValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-		eq::WGLWindow *os_win = (eq::WGLWindow *)(getOSWindow());
-		std::stringstream ss( std::stringstream::in | std::stringstream::out );
-		ss << os_win->getWGLWindowHandle();
-		params["externalWindowHandle"] = ss.str();
-		ss.str("");
-		params["externalGLControl"] = std::string("True");
-		ss << os_win->getWGLContext();
-		params["externalGLContext"] = ss.str();
+			eq::WGLWindow *os_win = (eq::WGLWindow *)(getOSWindow());
+			std::stringstream ss( std::stringstream::in | std::stringstream::out );
+			ss << os_win->getWGLWindowHandle();
+			params["externalWindowHandle"] = ss.str();
+			ss.str("");
+			params["externalGLControl"] = std::string("True");
+			ss << os_win->getWGLContext();
+			params["externalGLContext"] = ss.str();
 #else
-		params["currentGLContext"] = std::string("True");
+			params["currentGLContext"] = std::string("True");
 #endif
-		
-		try {
+
 			win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
 					root->createWindow( "Win", 800, 600, params ) );
+
+			root->init();
+
+			// Setup resources
+			root->setupResources();
+			root->loadResources();
+			
+			EQASSERT( man = root->createSceneManager("SceneManager") );
+			// Set factories
+			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+						new vl::ogre::SceneNodeFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::EntityFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::CameraFactory ) );
+			
+			EQASSERT( cam = man->createCamera("Cam") );
+			EQASSERT( man->getRootNode() );
+
+			feet = man->getRootNode()->createChild("feet");
+			feet->attachObject( cam );
+			feet->lookAt( vl::vector(0,0,300) );
+
+			vl::graph::EntityRefPtr ent;
+			ent = man->createEntity("robot", "robot.mesh");
+			EQASSERT( ent );
+
+			robot = man->getRootNode()->createChild("robot");
+			robot->setPosition( vl::vector(0, 0, 300) );
+			robot->attachObject( ent );
 		}
 		catch( Ogre::Exception const &e)
 		{
+			// TODO this needs a message box
 			std::cout << "Exception when creating window: " << e.what() 
 				<< std::endl;
 			throw;
 		}
-		EQASSERT( win );
-
-		root->init();
-
-		EQASSERT( man = root->createSceneManager("SceneManager") );
-		// Set factories
-		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-					new vl::ogre::SceneNodeFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::EntityFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::CameraFactory ) );
-		
-		EQASSERT( cam = man->createCamera("Cam") );
-		EQASSERT( man->getRootNode() );
-
-		feet = man->getRootNode()->createChild("feet");
-		feet->attachObject( cam );
-		feet->lookAt( vl::vector(0,0,300) );
-
-		vl::graph::EntityRefPtr ent;
-		ent = man->createEntity("robot", "robot.mesh");
-		EQASSERT( ent );
-		ent->load();
-		robot = man->getRootNode()->createChild("robot");
-		robot->setPosition( vl::vector(0, 0, 300) );
-		robot->attachObject( ent );
+		catch( vl::exception &e )
+		{
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
+				<< std::endl;
+		}
 		
 		return true;
 	}
@@ -159,8 +192,11 @@ public:
 	virtual eq::Window *createWindow( eq::Pipe *parent )
 	{ return new ::RenderWindow( parent ); }
 
-	virtual Channel *createChannel( eq::Window *parent )
+	virtual eq::Channel *createChannel( eq::Window *parent )
 	{ return new ::Channel( parent ); }
+	
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new ::Config( parent ); }
 };
 
 int main( const int argc, char** argv )
@@ -172,7 +208,14 @@ int main( const int argc, char** argv )
 	}
 	std::cout << std::endl;
 
-    // 1. Equalizer initialization
+	vl::SettingsRefPtr settings = getSettings(argv[0]);
+	if( !settings )
+	{
+		std::cerr << "No test_conf.xml file found." << std::endl;
+		return -1;
+	}
+
+	// 1. Equalizer initialization
     ::NodeFactory nodeFactory;
     if( !eq::init( argc, argv, &nodeFactory ))
     {
@@ -181,8 +224,10 @@ int main( const int argc, char** argv )
     }
     
     // 2. get a configuration
-    bool        error  = false;
-    eq::Config* config = eq::getConfig( argc, argv );
+    bool error = false;
+    ::Config *config = (::Config *)eq::getConfig( argc, argv );
+	config->setSettings( settings );
+
     if( config )
     {
         // 3. init config

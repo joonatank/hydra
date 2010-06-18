@@ -308,20 +308,13 @@ int main( const int argc, char** argv )
 		// Set up the tracker callback handler
     	tkr->register_change_handler(NULL, handle_tracker);
 
-		// Lets find in which directory the test_conf.xml is
-		fs::path cmd( argv[0] );
-		fs::path conf_dir = cmd.parent_path();
-		fs::path conf = conf_dir / "test_conf.xml";
-		if( !fs::exists( conf ) )
+		vl::SettingsRefPtr settings = getSettings(argv[0]);
+		if( !settings )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;
 			return -1;
 		}
-		vl::SettingsRefPtr settings( new vl::Settings );
-		vl::SettingsSerializer ser(settings);
-		ser.readFile( conf.file_string() );
 
-		settings->setExePath( argv[0] );
 		vl::Args &arg = settings->getEqArgs();
 
 		// 1. Equalizer initialization

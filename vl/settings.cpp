@@ -221,9 +221,10 @@ vl::SettingsSerializer::processRoot( rapidxml::xml_node<>* xml_node )
 	rapidxml::xml_node<> *pElement= xml_node->first_node("path");
 	if( pElement )
 	{ path = pElement->value(); }
+	// Path can be empty or not present where the current directory is assumed.
 
-	// Both name and path should be present
-	if( name.empty() || path.empty() )
+	// Name should not be empty
+	if( name.empty() )
 	{
 		_settings->clear();
 		// TODO add description

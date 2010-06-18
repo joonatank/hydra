@@ -59,30 +59,71 @@ public :
 
 	virtual bool configInit( const uint32_t initID )
 	{
-		BOOST_REQUIRE( eq::Channel::configInit( initID ) );
+		try 
+		{
+			BOOST_REQUIRE( eq::Channel::configInit( initID ) );
 
-		// Initialise ogre
-		::Config *conf = static_cast< ::Config *>( getConfig() );
-		vl::SettingsRefPtr settings = conf->getSettings();
-		ogre_root.reset( new vl::ogre::Root( settings ) );
-		ogre_root->createRenderSystem();
-		vl::NamedValuePairList params;
-		
+			// Initialise ogre
+			::Config *conf = static_cast< ::Config *>( getConfig() );
+			vl::SettingsRefPtr settings = conf->getSettings();
+			ogre_root.reset( new vl::ogre::Root( settings ) );
+			ogre_root->createRenderSystem();
+			vl::NamedValuePairList params;
+			
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-		eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
-		std::stringstream ss( std::stringstream::in | std::stringstream::out );
-		ss << os_win->getWGLWindowHandle();
-		params["externalWindowHandle"] = ss.str();
-		ss.str("");
-		params["externalGLControl"] = std::string("True");
-		ss << os_win->getWGLContext();
-		params["externalGLContext"] = ss.str();
+			eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());
+			std::stringstream ss( std::stringstream::in | std::stringstream::out );
+			ss << os_win->getWGLWindowHandle();
+			params["externalWindowHandle"] = ss.str();
+			ss.str("");
+			params["externalGLControl"] = std::string("True");
+			ss << os_win->getWGLContext();
+			params["externalGLContext"] = ss.str();
 #else
-		params["currentGLContext"] = std::string("True");
+			params["currentGLContext"] = std::string("True");
 #endif
-		
-		try {
+
 			win = ogre_root->createWindow( "Win", 800, 600, params );
+			
+			ogre_root->init();
+
+			// Setup resources
+			ogre_root->setupResources();
+			ogre_root->loadResources();
+
+			// Create Scene Manager
+			man = ogre_root->createSceneManager("SceneManager");
+			BOOST_REQUIRE( man );
+
+			// Set factories
+			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
+						new vl::ogre::SceneNodeFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::CameraFactory ) );
+			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
+						new vl::ogre::EntityFactory ) );
+
+			// Create camera and viewport
+			vl::graph::SceneNodeRefPtr root;
+			BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
+			BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
+			vl::graph::ViewportRefPtr view = win->addViewport( cam );
+			view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
+			feet = root->createChild( "Feet" );
+			feet->lookAt( vl::vector(0,0,300) );
+			BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+
+			// Create robot Entity
+			BOOST_REQUIRE( root );
+			boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
+					man->createEntity( "robot", "robot.mesh" ) );
+
+			robot = root->createChild();
+			robot->setPosition( vl::vector(0, 0, 300) );
+			BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
+			setNearFar( 100.0, 100.0e3 );
+
+			return true;
 		}
 		catch( Ogre::Exception const &e)
 		{
@@ -90,46 +131,6 @@ public :
 				<< std::endl;
 			throw;
 		}
-		
-		ogre_root->init();
-
-		// Setup resources
-		ogre_root->setupResources();
-		ogre_root->loadResources();
-
-		// Create Scene Manager
-		man = ogre_root->createSceneManager("SceneManager");
-		BOOST_REQUIRE( man );
-
-		// Set factories
-		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-					new vl::ogre::SceneNodeFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::CameraFactory ) );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::EntityFactory ) );
-		
-		// Create camera and viewport
-		vl::graph::SceneNodeRefPtr root;
-		BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
-		BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
-		vl::graph::ViewportRefPtr view = win->addViewport( cam );
-		view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
-		feet = root->createChild( "Feet" );
-		feet->lookAt( vl::vector(0,0,300) );
-		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
-
-		// Create robot Entity
-		BOOST_REQUIRE( root );
-		boost::shared_ptr<vl::ogre::Entity> ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
-				man->createEntity( "robot", "robot.mesh" ) );
-//		ent->load();
-		robot = root->createChild();
-		robot->setPosition( vl::vector(0, 0, 300) );
-		BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
-		setNearFar( 100.0, 100.0e3 );
-
-		return true;
 	}
 
 	virtual void frameStart( const uint32_t frameID, const uint32_t frameNumber )
@@ -234,7 +235,7 @@ struct RenderFixture
 			config->setSettings( settings );
 
 			// 3. init config
-			BOOST_REQUIRE( config->init(0));
+			BOOST_REQUIRE( config->init(0) );
 		}
 		catch( vl::exception &e )
 		{
