@@ -73,8 +73,7 @@ class Channel : public eq::Channel
 {
 public :
 	Channel( eq::Window *parent )
-		: eq::Channel(parent), state(0), ogre_root(), win(),
-		man(), feet(), robot()
+		: eq::Channel(parent), _root(), _window(0), _sm(0)
 	{} 
 
 	virtual ~Channel( void )
@@ -91,8 +90,8 @@ public :
 			vl::SettingsSerializer ser( settings );
 			ser.readFile( "test_conf.xml" );
 
-			ogre_root.reset( new vl::ogre::Root( settings ) );
-			ogre_root->createRenderSystem();
+			_root.reset( new vl::ogre::Root( settings ) );
+			_root->createRenderSystem();
 			vl::NamedValuePairList params;
 			
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -107,46 +106,34 @@ public :
 #else
 			params["currentGLContext"] = std::string("True");
 #endif
-			win = ogre_root->createWindow( "Win", 800, 600, params );
+			_window = _root->createWindow( "Win", 800, 600, params );
 
-			ogre_root->init();
+			_root->init();
 			// Setup resources
-			ogre_root->setupResources();
-			ogre_root->loadResources();
+			_root->setupResources();
+			_root->loadResources();
 
 			// Create Scene Manager
-			man = ogre_root->createSceneManager("SceneManager");
-			BOOST_REQUIRE( man );
+			_sm = _root->createSceneManager("SceneManager");
+			BOOST_REQUIRE( _sm );
 
-			// Set factories
-			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-						new vl::ogre::SceneNodeFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::EntityFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::CameraFactory ) );
-			
 			// Create camera and viewport
-			vl::graph::SceneNodeRefPtr root;
-			BOOST_REQUIRE_NO_THROW( root = man->getRootNode() );
-			BOOST_REQUIRE( cam = man->createCamera( "Cam" ) );
-			vl::graph::ViewportRefPtr view = win->addViewport( cam );
-			view->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
-			feet = root->createChild( "Feet" );
-			BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+			BOOST_REQUIRE( _camera = _sm->createCamera( "Cam" ) );
+			Ogre::Viewport *view = _window->addViewport( _camera );
+			view->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+			Ogre::SceneNode *feet = _sm->createSceneNode("Feet");
+			_sm->getRootSceneNode()->addChild(feet);
+			BOOST_CHECK_NO_THROW( feet->attachObject( _camera ) );
 
 			// Create robot Entity
 			std::cerr << "Creating Ogre Entity" << std::endl;
-			BOOST_REQUIRE( root );
-			boost::shared_ptr<vl::ogre::Entity> ent
-				= boost::dynamic_pointer_cast<vl::ogre::Entity>(
-					man->createEntity( "robot", "robot.mesh" ) );
+			Ogre::Entity *ent = _sm->createEntity( "robot", "robot.mesh" );
 			std::cerr << "Ogre Entity created" << std::endl;
-	//		ent->load();
-			robot = root->createChild();
-	//		robot->setOrientation( vl::quaternion( 0, 0.707, 0, 0.707 ) );
-			robot->setPosition( vl::vector(0, 1, -0.7) );
-			robot->scale( 1./100 );
+			
+			Ogre::SceneNode *robot = _sm->createSceneNode("robotNode" );
+			_sm->getRootSceneNode()->addChild(robot);
+			robot->setPosition( Ogre::Vector3(0, 0, -0.7) );
+			robot->scale( 1./100, 1./100, 1./100 );
 			BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
 			std::cerr << "Ogre Entity attached" << std::endl;
 			setNearFar( 0.1, 100.0 );
@@ -222,7 +209,7 @@ public :
 
 			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
 					g_trackerData.quat[1], g_trackerData.quat[2] );
-			//std::cout << "quaternion length = " << q.Norm() << std::endl;
+
 			if( q.Norm() < 0.5 )
 			{ q = Ogre::Quaternion::IDENTITY; }
 			else
@@ -230,7 +217,6 @@ public :
 		
 			v3 = Ogre::Vector3( g_trackerData.pos[0], g_trackerData.pos[1], 
 					-g_trackerData.pos[2] );
-	//		v3 =  Ogre::Vector3(0, 1, 0);
 
 			Ogre::Matrix4 m(q); 
 			m.setTrans(v3);
@@ -249,14 +235,13 @@ public :
 			EQ_GL_CALL( applyBuffer( ));
 		    EQ_GL_CALL( applyViewport( ));
 		    
-
-			if( cam && win )
+			if( _camera && _window )
 			{
 				eq::Frustumf frust = getFrustum();
-				cam->setProjectionMatrix( frust.compute_matrix() );
-				Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( v3,  Ogre::Quaternion::IDENTITY ); //Ogre::Quaternion(0,0, 1, 0) );
-				cam->setViewMatrix( vl::math::convert( view ) );
-				win->update();
+				_camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
+				Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( v3,  Ogre::Quaternion::IDENTITY );
+				_camera->setCustomViewMatrix( true, view );
+				_window->update();
 			}
 		}
 		catch( vl::exception const &e )
@@ -266,13 +251,10 @@ public :
 		}
 	}
 
-	int state;
-	vl::graph::RootRefPtr ogre_root;
-	vl::graph::RenderWindowRefPtr win;
-	vl::graph::CameraRefPtr cam;
-	vl::graph::SceneManagerRefPtr man;
-	vl::graph::SceneNodeRefPtr feet;
-	vl::graph::SceneNodeRefPtr robot;
+	boost::shared_ptr<vl::ogre::Root> _root;
+	Ogre::RenderWindow *_window;
+	Ogre::Camera *_camera;
+	Ogre::SceneManager *_sm;
 };
 
 class NodeFactory : public eq::NodeFactory

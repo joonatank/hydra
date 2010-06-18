@@ -24,82 +24,57 @@ namespace test = boost::unit_test::framework;
 struct OgreFixture
 {
 	OgreFixture( void )
-		: ogre_root(), win(), robot(), ent()
+		: ogre_root(), _window(0), _robot(0), _feet(0), _entity(0)
 	{}
 
 	void init( fs::path const &conf )
 	{
 		try {
-		// Get settings from file
-		vl::SettingsRefPtr settings( new vl::Settings() );
-		BOOST_REQUIRE( fs::exists(conf) );
-		vl::SettingsSerializer ser(settings);
-		ser.readFile( conf.file_string() );
+			// Get settings from file
+			vl::SettingsRefPtr settings( new vl::Settings() );
+			BOOST_REQUIRE( fs::exists(conf) );
+			vl::SettingsSerializer ser(settings);
+			ser.readFile( conf.file_string() );
 
-		// Init ogre
-		ogre_root.reset( new vl::ogre::Root( settings ) );
-		ogre_root->createRenderSystem();
-		win = ogre_root->createWindow( "Win", 800, 600 );
-		ogre_root->init();
-		BOOST_TEST_MESSAGE( "window created" );
-		// Load resources
-		ogre_root->setupResources();
-		ogre_root->loadResources();
+			// Init ogre
+			ogre_root.reset( new vl::ogre::Root( settings ) );
+			ogre_root->createRenderSystem();
+			_window = ogre_root->createWindow( "Win", 800, 600 );
+			ogre_root->init();
+			BOOST_TEST_MESSAGE( "window created" );
 
-		boost::shared_ptr<vl::ogre::SceneManager> man 
-			= boost::dynamic_pointer_cast<vl::ogre::SceneManager>(
-				ogre_root->createSceneManager("Manager") );
-		BOOST_REQUIRE( man );
-		BOOST_TEST_MESSAGE( "manager created" );
-		man->getNative();
+			// Load resources
+			ogre_root->setupResources();
+			ogre_root->loadResources();
 
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::EntityFactory ) );
-		BOOST_TEST_MESSAGE( "entity factory added" );
-		man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-					new vl::ogre::CameraFactory ) );
-		BOOST_TEST_MESSAGE( "camera factory added" );
-		man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-					new vl::ogre::SceneNodeFactory ) );
-		BOOST_TEST_MESSAGE( "scenenode factory added" );
+			Ogre::SceneManager *sm = ogre_root->createSceneManager("Manager");
+			BOOST_REQUIRE( sm );
+			BOOST_TEST_MESSAGE( "manager created" );
+			
+			Ogre::Camera *cam = sm->createCamera( "Cam" );
+			BOOST_REQUIRE( cam );
+			BOOST_TEST_MESSAGE( "camera created" );
+			
+			cam->setNearClipDistance(0.1);
 
-		vl::graph::CameraRefPtr cam;
-	
-		cam = man->createCamera( "Cam" );
-		BOOST_REQUIRE( cam );
-		BOOST_TEST_MESSAGE( "camera created" );
-		
-		boost::shared_ptr<vl::ogre::Camera> og_cam
-			= boost::dynamic_pointer_cast<vl::ogre::Camera>(cam);
-		BOOST_REQUIRE( og_cam );
-		BOOST_TEST_MESSAGE( "camera is correct type" );
+			BOOST_REQUIRE( _window );
+			_window->addViewport( cam )->setBackgroundColour(
+					Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+			BOOST_TEST_MESSAGE( "viewport created" );
 
-		BOOST_REQUIRE( og_cam->getNative() );
- 		((Ogre::Camera *)og_cam->getNative())->setNearClipDistance(0.1);
+			_entity = sm->createEntity("robot", "robot.mesh");
+			BOOST_REQUIRE( _entity );
+			BOOST_TEST_MESSAGE( "entity created" );
 
-		win->addViewport( cam )->setBackgroundColour(
-				vl::colour(1.0, 0.0, 0.0, 0.0) );
-		BOOST_REQUIRE( win );
-		BOOST_TEST_MESSAGE( "viewport created" );
+			_robot = sm->getRootSceneNode()->createChildSceneNode( "RobotNode" );
+			BOOST_REQUIRE( _robot );
+			_robot->setPosition( Ogre::Vector3(0, 0, -300) );
+			BOOST_CHECK_NO_THROW( _robot->attachObject( _entity ) );
+			BOOST_TEST_MESSAGE( "scenenode created" );
 
-		ent = boost::dynamic_pointer_cast<vl::ogre::Entity>(
-				man->createEntity("robot", "robot.mesh") );
-		BOOST_REQUIRE( ent );
-		BOOST_TEST_MESSAGE( "entity created" );
-
-		BOOST_CHECK_NO_THROW( ent->load() );
-		robot = boost::dynamic_pointer_cast<vl::ogre::SceneNode>
-			( man->getRootNode()->createChild( "RobotNode" ) );
-		BOOST_REQUIRE( robot );
-		robot->setPosition( vl::vector(0, 0, 300) );
-		BOOST_CHECK_NO_THROW( robot->attachObject(ent) );
-		BOOST_TEST_MESSAGE( "scenenode created" );
-
-		feet = boost::dynamic_pointer_cast<vl::ogre::SceneNode>(
-				man->getRootNode()->createChild( "feet" ) );
-		BOOST_REQUIRE( feet );
-		feet->lookAt( vl::vector(0,0,300) );
-		BOOST_CHECK_NO_THROW( feet->attachObject( cam ) );
+			_feet = sm->getRootSceneNode()->createChildSceneNode("feet");
+			BOOST_REQUIRE( _feet );
+			BOOST_CHECK_NO_THROW( _feet->attachObject( cam ) );
 		}
 		catch (vl::exception const &e)
 		{
@@ -110,8 +85,8 @@ struct OgreFixture
 
 	void mainloop( void )
 	{
-		win->update();
-		win->swapBuffers();
+		_window->update(false);
+		_window->swapBuffers();
 	}
 
 	~OgreFixture( void )
@@ -119,10 +94,10 @@ struct OgreFixture
 	}
 
 	boost::shared_ptr<vl::ogre::Root> ogre_root;
-	vl::graph::RenderWindowRefPtr win;
-	boost::shared_ptr<vl::ogre::SceneNode> robot;
-	boost::shared_ptr<vl::ogre::SceneNode> feet;
-	boost::shared_ptr<vl::ogre::Entity> ent;
+	Ogre::RenderWindow *_window;
+	Ogre::SceneNode *_robot;
+	Ogre::SceneNode *_feet;
+	Ogre::Entity *_entity;
 };
 
 BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
@@ -134,11 +109,11 @@ BOOST_FIXTURE_TEST_CASE( render_test, OgreFixture )
 	BOOST_REQUIRE( fs::exists( conf ) );
 	init( conf );
 
-	BOOST_CHECK_EQUAL( robot->getNative()->numAttachedObjects(), 1 );
-	BOOST_CHECK_EQUAL( feet->getNative()->numAttachedObjects(), 1 );
-	BOOST_CHECK( feet->getNative()->isInSceneGraph() );
-	BOOST_CHECK( robot->getNative()->isInSceneGraph() );
-	BOOST_CHECK( ent->getNative()->isInScene() );
+	BOOST_CHECK_EQUAL( _robot->numAttachedObjects(), 1 );
+	BOOST_CHECK_EQUAL( _feet->numAttachedObjects(), 1 );
+	BOOST_CHECK( _feet->isInSceneGraph() );
+	BOOST_CHECK( _robot->isInSceneGraph() );
+	BOOST_CHECK( _entity->isInScene() );
 
 	for( size_t i = 0; i < 4000; i++ )
 	{ 

@@ -9,7 +9,7 @@
 #include <OGRE/OgreConfigFile.h>
 
 vl::ogre::Root::Root( vl::SettingsRefPtr settings )
-	: vl::cl::Root( settings ), _ogre_root(0), _primary(false)
+	: _ogre_root(0), _primary(false), _settings( settings )
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
@@ -116,12 +116,15 @@ vl::ogre::Root::setupResource( fs::path const &file )
 	}
 }
 
-vl::graph::RenderWindowRefPtr
+Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, vl::NamedValuePairList const &params )
 {
 	if( !_ogre_root )
-	{ return vl::graph::RenderWindowRefPtr(); }
+	{ 
+		//return vl::graph::RenderWindowRefPtr(); 
+		return 0;
+	}
 
 	static int n_windows = 0;
 			
@@ -141,7 +144,19 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 	if( !_ogre_root->isInitialised() )
 	{ init(); }
 
-	vl::graph::RenderWindowRefPtr win( new vl::ogre::RenderWindow( og_win ) );
-	return win;
+//	vl::graph::RenderWindowRefPtr win( new vl::ogre::RenderWindow( og_win ) );
+	return og_win;
 }
 
+Ogre::SceneManager *
+vl::ogre::Root::createSceneManager(std::string const &name )
+{
+	EQASSERT( _ogre_root );
+
+	Ogre::SceneManager *og_man 
+		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
+//	EQASSERT( og_man );
+//	vl::graph::SceneManagerRefPtr man( 
+//		new vl::ogre::SceneManager( og_man, name ) );
+	return og_man;
+}

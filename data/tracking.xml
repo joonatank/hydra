@@ -19,10 +19,10 @@ if no sensor is provided it's assumed to mean the first sensor.
 			default values.
 			-->
 			<permute>
-				<vector x=0 y=1 z=2 />
+				<vector x="0" y="1" z="2" />
 			</permute>
 			<sign>
-				<vector x=1 y=1 z=1 />
+				<vector x="1" y="1" z="1" />
 			</sign>
 			<scale>
 				<vector>
@@ -46,11 +46,11 @@ if no sensor is provided it's assumed to mean the first sensor.
 		<!-- Mevea Toro T7 tracker has multiple sensors which are mapped to
 			 SceneNodes. -->
 		<tracker name="Mevea">
-			<sensor num=0>
+			<sensor num="0">
 				<!-- Map sensor to a SceneNode in the scene using specific name -->
 				<map type="SceneNode" name="eturunko" />
 			</sensor>
-			<sensor num=1>
+			<sensor num="1">
 				<map type="SceneNode" name="takarunko" />
 				<!-- Multiple mapping is allowed -->
 				<map type="SceneNode" name="keskirunko" />

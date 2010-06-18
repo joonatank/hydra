@@ -45,7 +45,7 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot()
+		: eq::Window( parent ), _root(), _window(0), _camera(0), _sm(0)
 	{}
 
 	virtual bool configInit( const uint32_t initID )
@@ -58,9 +58,9 @@ public :
 			::Config *config = static_cast< ::Config * >( getConfig() );
 			vl::SettingsRefPtr settings = config->getSettings();
 
-			root.reset( new vl::ogre::Root( settings ) );
+			_root.reset( new vl::ogre::Root( settings ) );
 			// Initialise ogre
-			root->createRenderSystem();
+			_root->createRenderSystem();
 
 			vl::NamedValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -75,24 +75,13 @@ public :
 #else
 			params["currentGLContext"] = std::string("True");
 #endif
-			win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
-				root->createWindow( "win", 800, 600, params ) );
+			_window = _root->createWindow( "win", 800, 600, params );
 
 			// Resource registration
-			root->setupResources( );
-			root->loadResources();
+			_root->setupResources( );
+			_root->loadResources();
 
-			man = root->createSceneManager("SceneManager");
-
-			// Set factories
-			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-						new vl::ogre::SceneNodeFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::CameraFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::EntityFactory ) );
-					man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::LightFactory ) );
+			_sm = _root->createSceneManager("SceneManager");
 
 			std::vector<vl::Settings::Scene> const &scenes = settings->getScenes();
 			if( scenes.empty() )
@@ -102,30 +91,33 @@ public :
 			// TODO implement
 	//		std::string scene_path = root->getDataDir() + "testScene.xml";
 
-			vl::graph::SceneNodeRefPtr fake = man->getRootNode()->createChild("fake");
-			fake->rotate( vl::quaternion( 0, 0, 1, 0 ) );
-			//fake->setPosition( vl::vector(-1.2, 3.2, 5.6 ) );
 			DotSceneLoader loader;
 			loader.parseDotScene( scenes.at(0).file,
 								  Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-								  man, fake );
+								  _sm );
 			std::cout << "Scene loaded" << std::endl;
 			
 			// Loop through all cameras and grab their name and set their debug representation
-	//		Ogre::SceneManager::CameraIterator cameras = mSceneMgr->getCameraIterator();
-	//		while (cameras.hasMoreElements())
-	//		{
-	//			Ogre::Camera* camera = cameras.getNext();
-	//			mCamNames.push_back(camera->getName());
-	//		}
+			Ogre::SceneManager::CameraIterator cameras = _sm->getCameraIterator();
+			
+/*			Multiple cameras not supported at this moment
+			std::vector<std::string> camNames;
+			while( cameras.hasMoreElements() )
+			{
+				Ogre::Camera* camera = cameras.getNext();
+				mCamNames.push_back( camera->getName() );
+			}
+*/
 			// Grab the first available camera, for now
-			std::cout << "fake orientation = " << fake->getOrientation() << std::endl;
-			std::cout << "Getting camera" << std::endl;
-			cam = man->getCamera("");
-			if( !cam )
+			if( cameras.hasMoreElements() )
+			{
+				std::cout << "Camera found from the scene." << std::endl;
+				_camera = cameras.getNext();
+			}
+			else
 			{
 				std::cout << "Creating camera" << std::endl;
-				cam = man->createCamera("Cam");
+				_camera = sm->createCamera("Cam");
 				//man->getRootNode()->addChild()-
 			}
 
@@ -162,35 +154,33 @@ public :
 	
 	virtual void swapBuffers( void )
 	{
-		eq::Window::swapBuffers();
-		if( win )
-		{ win->swapBuffers(); }
+		//eq::Window::swapBuffers();
+		if( _window )
+		{ _window->swapBuffers(); }
 	}
 
 	boost::shared_ptr<vl::graph::RenderWindow> getRenderWindow( void )
 	{
-		return win;
+		return _window;
 	}
 
 	vl::graph::CameraRefPtr getCamera( void )
 	{
-		return cam;
+		return _camera;
 	}
 
-	boost::shared_ptr<vl::ogre::Root> root;
-	boost::shared_ptr<vl::ogre::RenderWindow> win;
-	vl::graph::CameraRefPtr cam;
+	boost::shared_ptr<vl::ogre::Root> _root;
+	Ogre::RenderWindow *_window;
+	Ogre::Camera *_camera;
 
-	vl::graph::SceneManagerRefPtr man;
-	vl::graph::SceneNodeRefPtr feet;
-	vl::graph::SceneNodeRefPtr robot;
+	Ogre::SceneManager *_sm;
 };
 
 class Channel : public eq::Channel
 {
 public :
 	Channel( eq::Window *parent )
-		: eq::Channel(parent), window((::RenderWindow *)parent)
+		: eq::Channel(parent), _parent((::RenderWindow *)parent)
 	{}
 
 	virtual bool configInit( const uint32_t initID )
@@ -199,16 +189,16 @@ public :
 		{ return false; }
 
 		std::cerr << "Get ogre window from RenderWindow" << std::endl;
-		win = window->getRenderWindow();
-		EQASSERT( win );
+		_window = _parent->getRenderWindow();
+		EQASSERT( _window );
 
 		std::cerr << "Get camera from RenderWindow" << std::endl;
-		camera = window->getCamera();
-		EQASSERT( camera );
+		_camera = _parent->getCamera();
+		EQASSERT( _camera );
 
 		std::cerr << "Creating viewport" << std::endl;
-		viewport = win->addViewport( camera );
-		viewport->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
+		_viewport = _window->addViewport( _camera );
+		_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
 
 		setNearFar( 0.1, 100.0 );
 
@@ -258,30 +248,21 @@ public :
 	    
 	    EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
 	    EQ_GL_CALL( glLoadIdentity() );
-//	    EQ_GL_CALL( applyFrustum() );
 
-//	    EQ_GL_CALL( glMatrixMode(GL_MODELVIEW) );
-//	    EQ_GL_CALL( glLoadIdentity() );
-		// TODO these calls affect nothing
-//		EQ_GL_CALL( glTranslatef( 0, -3.2, -4.6 ) );
-//	    EQ_GL_CALL( applyHeadTransform() );
-
-//		std::cout << "Head matrix = " << m << std::endl;
-		if( camera && win )
+		if( _camera && _window )
 		{
 			eq::Frustumf frust = getFrustum();
-//			std::cout << "Frustum = " << frust << std::endl;
-			camera->setProjectionMatrix( frust.compute_matrix() );
+			_camera->setCustomProjectionMatrix( frust.compute_matrix() );
 			Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( Ogre::Vector3(1.2, -2.5, 5) - v3, Ogre::Quaternion(0, 0, 0, 1) );
-			camera->setViewMatrix( vl::math::convert( view ) );
-			viewport->update();
+			_camera->setCustomViewMatrix( view );
+			_viewport->update( false );
 		}
 	}
 
-	boost::shared_ptr<vl::graph::Camera> camera;
-	boost::shared_ptr<vl::graph::Viewport> viewport;
-	boost::shared_ptr<vl::graph::RenderWindow> win;
-	::RenderWindow *window;
+	Ogre::Camera *_camera;
+	Ogre::Viewport *_viewport;
+	Ogre::RenderWindow *_window;
+	::RenderWindow *_parent;
 };
 
 class NodeFactory : public eq::NodeFactory

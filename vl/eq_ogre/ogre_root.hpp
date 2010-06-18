@@ -34,7 +34,7 @@ namespace vl
 {
 namespace ogre 
 {
-	class Root : public vl::cl::Root
+	class Root //: public vl::cl::Root
 	{
 		public :
 			Root( vl::SettingsRefPtr settings );
@@ -50,11 +50,14 @@ namespace ogre
 
 			virtual void init( void );
 
-			virtual vl::graph::RenderWindowRefPtr createWindow(
+			virtual Ogre::RenderWindow *createWindow(
 					std::string const &name, unsigned int width,
 					unsigned int height,
 					vl::NamedValuePairList const &params
 						= vl::NamedValuePairList() );
+
+			virtual Ogre::SceneManager *createSceneManager(
+					std::string const &name );
 
 			virtual void setupResources( void );
 
@@ -63,23 +66,12 @@ namespace ogre
 		protected :
 			virtual void setupResource( fs::path const &file );
 
-			virtual vl::graph::SceneManagerRefPtr _createSceneManager(
-					std::string const &name )
-			{
-				EQASSERT( _ogre_root );
-
-				Ogre::SceneManager *og_man 
-					= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
-				EQASSERT( og_man );
-				vl::graph::SceneManagerRefPtr man( 
-					new vl::ogre::SceneManager( og_man, name ) );
-				return man;
-			}
-
 			Ogre::Root *_ogre_root;
 			
 			// Wether we own the Ogre::Root instance
 			bool _primary;
+			
+			vl::SettingsRefPtr _settings;
 
 	};	// class Root
 
