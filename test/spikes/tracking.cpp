@@ -206,8 +206,8 @@ public :
 			Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
 
 			// Quaternion should be about unit length, it's invalid if it's something else
-
-			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
+			// TODO the quaternion is incorrect, test it
+			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[0], 
 					g_trackerData.quat[1], g_trackerData.quat[2] );
 
 			if( q.Norm() < 0.5 )

@@ -11,6 +11,9 @@
 #include "math/math.hpp"
 #include "base/filesystem.hpp"
 
+#include <OgreSceneNode.h>
+#include <OgreSceneManager.h>
+
 class nodeProperty
 {
 public:
@@ -40,14 +43,14 @@ public:
 	// Load dotscene file using Ogre resource system
 	void parseDotScene( std::string const &sceneName,
 			std::string const &groupName,
-			vl::graph::SceneManagerRefPtr sceneMgr,
-			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr(),
+			Ogre::SceneManager *sceneMgr,
+			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	// Parse dotscene which is already loaded to scene_data
 	void parseDotScene( std::string const &scene_data,
-			vl::graph::SceneManagerRefPtr sceneMgr,
-			vl::graph::SceneNodeRefPtr attachNode = vl::graph::SceneNodeRefPtr(),
+			Ogre::SceneManager *sceneMgr,
+			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	std::string getProperty(const std::string &ndNm, const std::string &prop);
@@ -66,29 +69,29 @@ protected:
 	void processTerrainPage( rapidxml::xml_node<>* XMLNode );
 	void processBlendmaps( rapidxml::xml_node<>* XMLNode );
 	void processUserDataReference( rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent = vl::graph::SceneNodeRefPtr() );
+			Ogre::SceneNode *parent = 0 );
 	void processUserDataReference( rapidxml::xml_node<>* XMLNode,
-			vl::graph::EntityRefPtr entity );
+			Ogre::Entity *entity );
 	void processOctree( rapidxml::xml_node<>* XMLNode );
 	void processLight( rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent = vl::graph::SceneNodeRefPtr() );
+			Ogre::SceneNode *parent = 0 );
 	void processCamera( rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent  = vl::graph::SceneNodeRefPtr() );
+			Ogre::SceneNode *parent  = 0 );
 
 	void processNode(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent = vl::graph::SceneNodeRefPtr() );
+			Ogre::SceneNode *parent = 0 );
 	void processLookTarget(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 	void processTrackTarget(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 	void processEntity(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 	void processParticleSystem(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 	void processBillboardSet(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 	void processPlane(rapidxml::xml_node<>* XMLNode,
-			vl::graph::SceneNodeRefPtr parent);
+			Ogre::SceneNode *parent);
 
 	void processFog( rapidxml::xml_node<>* XMLNode );
 	void processSkyBox( rapidxml::xml_node<>* XMLNode );
@@ -97,9 +100,9 @@ protected:
 	void processClipping( rapidxml::xml_node<>* XMLNode );
 
 	void processLightRange(rapidxml::xml_node<>* XMLNode,
-			vl::graph::LightRefPtr light );
+			Ogre::Light *light );
 	void processLightAttenuation( rapidxml::xml_node<>* XMLNode,
-			vl::graph::LightRefPtr light );
+			Ogre::Light *light );
 
 	std::string getAttrib(rapidxml::xml_node<>* XMLNode,
 			const std::string &parameter,
@@ -111,14 +114,14 @@ protected:
 	bool getAttribBool(rapidxml::xml_node<>* XMLNode,
 			const std::string &parameter, bool defaultValue = false);
 
-	vl::vector parseVector3(rapidxml::xml_node<>* XMLNode);
-	vl::quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
-	vl::colour parseColour(rapidxml::xml_node<>* XMLNode);
+	Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
+	Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
+	Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
 	
 	// Scene Manager for the scene file
-	vl::graph::SceneManagerRefPtr _scene_mgr;
+	Ogre::SceneManager *_scene_mgr;
 	// Parent SceneNode for the scene file
-	vl::graph::SceneNodeRefPtr _attach_node;
+	Ogre::SceneNode *_attach_node;
 
 	// Ogre Resource group Name
 	std::string _sGroupName;
@@ -131,7 +134,7 @@ protected:
 //	Ogre::Vector3 mTerrainPosition;
 
 	// Eh what the 
-//	vl::vector mLightDirection;
+//	Ogre::Vector3 mLightDirection;
 };
 
 #endif // DOT_SCENELOADER_H

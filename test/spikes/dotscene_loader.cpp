@@ -117,7 +117,7 @@ public :
 			else
 			{
 				std::cout << "Creating camera" << std::endl;
-				_camera = sm->createCamera("Cam");
+				_camera = _sm->createCamera("Cam");
 				//man->getRootNode()->addChild()-
 			}
 
@@ -159,12 +159,12 @@ public :
 		{ _window->swapBuffers(); }
 	}
 
-	boost::shared_ptr<vl::graph::RenderWindow> getRenderWindow( void )
+	Ogre::RenderWindow *getRenderWindow( void )
 	{
 		return _window;
 	}
 
-	vl::graph::CameraRefPtr getCamera( void )
+	Ogre::Camera *getCamera( void )
 	{
 		return _camera;
 	}
@@ -213,7 +213,8 @@ public :
 
 		// Quaternion should be about unit length, it's invalid if it's something else
 
-		q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
+		// TODO the quaternion is incorrect, test it
+		q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[0], 
 				g_trackerData.quat[1], g_trackerData.quat[2] );
 		//std::cout << "quaternion length = " << q.Norm() << std::endl;
 		if( q.Norm() < 0.5 )
@@ -223,13 +224,10 @@ public :
 	
 		v3 = Ogre::Vector3( -g_trackerData.pos[0], g_trackerData.pos[1], 
 				g_trackerData.pos[2] );
-		//v3 =  Ogre::Vector3(0, 1.5, 0);
 
 		Ogre::Matrix4 m(q); 
 		m.setTrans(v3);
 
-//		glMatrixMode( GL_MODELVIEW );
-		//glTranslatef( 0, -3.2, -4.6 );
 		// Note: real applications would use one tracking device per observer
 	    const eq::Observers& observers = getConfig()->getObservers();
 	    for( eq::Observers::const_iterator i = observers.begin();
@@ -239,8 +237,6 @@ public :
 			// GL Modelview matrix as first transformation
 			(*i)->setHeadMatrix( vl::math::convert(m) );
 		}
-
-//		camera->setPosition( vl::math::convert( v3 ) );
 
 		// From equalizer channel::frameDraw
 		EQ_GL_CALL( applyBuffer( ));
@@ -252,10 +248,11 @@ public :
 		if( _camera && _window )
 		{
 			eq::Frustumf frust = getFrustum();
-			_camera->setCustomProjectionMatrix( frust.compute_matrix() );
-			Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( Ogre::Vector3(1.2, -2.5, 5) - v3, Ogre::Quaternion(0, 0, 0, 1) );
-			_camera->setCustomViewMatrix( view );
-			_viewport->update( false );
+			_camera->setCustomProjectionMatrix( true,
+					vl::math::convert( frust.compute_matrix() ) );
+			Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( -_camera->getPosition() - v3, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
+			_camera->setCustomViewMatrix( true, view );
+			_viewport->update();
 		}
 	}
 

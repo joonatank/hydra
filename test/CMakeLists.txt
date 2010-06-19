@@ -18,12 +18,12 @@ set( LIBS ${Boost_LIBRARIES} eqOgre )
 
 add_executable( test_filestring test_filestring.cpp )
 add_executable( test_settings test_settings.cpp )
-add_executable( test_dotscene test_dotscene.cpp )
+#add_executable( test_dotscene test_dotscene.cpp )
 add_executable( test_exceptions test_exceptions.cpp )
 
 target_link_libraries( test_filestring ${LIBS} )
 target_link_libraries( test_settings ${LIBS} )
-target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
+#target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
 target_link_libraries( test_exceptions ${LIBS} )
 
 add_test( filestring ${PROJECT_BINARY_DIR}/test_filestring )
