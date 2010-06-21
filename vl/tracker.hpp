@@ -26,6 +26,11 @@ public :
 
 };	// class Tracker
 
+class TrackerSerializer
+{
+	void read( char *xml_data );
+};
+
 }	// namespace vl
 
 #endif
