@@ -23,6 +23,8 @@
 namespace vl
 {
 
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
+
 struct SensorData
 {
 	SensorData( Ogre::Vector3 const &pos, Ogre::Quaternion const &rot )
@@ -41,20 +43,32 @@ struct SensorData
 class vrpnTracker : public vl::Tracker
 {
 public :
-	vrpnTracker( std::string const &hostname = std::string(), unsigned int port = 0);
+	vrpnTracker( std::string const &trackerName, std::string const &hostname, unsigned int port = 0);
 
-	Ogre::Vector3 const &getPosition( size_t sensor );
-	Ogre::Quaternion const &getOrientation( size_t sensor );
+	Ogre::Vector3 const &getPosition( size_t sensor ) const;
+	Ogre::Quaternion const &getOrientation( size_t sensor ) const;
 
-	// TODO we should only set either observer or camera
+	// Map the SceneNode position and orientation to the tracker values
+	// Will overwrite any existing values
 	void map( Ogre::SceneNode *node );
 
+	// Map the observer position and orientation to the tracker values
+	// Will overwrite any existing values
+	// To map this to Ogre::Camera just retrieve the head matrix
 	void map( eq::Observer *observer );
+
+	// Called once in an iteration from main application
+	void mainloop( void );
+
+	// Callback function
+	void update( SensorData const &data );
 
 protected :
 	std::vector<SensorData> _data;
+	
+	vrpnTracker *_tracker;
 
-};	// class Tracker
+};	// class vrpnTracker
 
 }	// namespace vl
 
