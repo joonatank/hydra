@@ -12,6 +12,33 @@
 
 #include "../fixtures.hpp"
 
+class InitData : public eq::net::Object
+{
+public :
+	std::string const &getSettingsPath( void ) const
+	{
+		return settings_path;
+	}
+
+	void setSettingsPath( std::string const &path )
+	{
+		settings_path = path;
+	}
+		
+protected :
+	virtual void getInstanceData( eq::net::DataOStream& os )
+	{
+		os << settings_path;
+	}
+	
+	virtual void applyInstanceData( eq::net::DataIStream& is )
+	{
+		is >> settings_path;
+	}
+
+	std::string settings_path;
+};
+
 class Config : public eq::Config
 {
 public :
@@ -19,24 +46,65 @@ public :
 		: eq::Config( parent )
 	{}
 
+	virtual bool init( void )
+	{
+		registerObject( &_initData );
+		
+		return eq::Config::init( _initData.getID() );
+	}
+	
+	virtual bool exit( void )
+	{ 
+		const bool ret = eq::Config::exit();
+		deregisterObject( &_initData );
+		return ret;
+	}
+	
 	void setSettings( vl::SettingsRefPtr set )
-	{ _settings = set; }
+	{
+		EQINFO << "settings setted" << std::endl;
+		_initData.setSettingsPath( set->getFilePath().file_string() );
+		_settings = set; 
+	}
 
 	vl::SettingsRefPtr getSettings( void ) const
-	{ return _settings; }
+	{
+		EQINFO << "settings retrieved" << std::endl;
+		return _settings;
+	}
+	
+	// TODO serialize settings
+	void mapData( uint32_t initDataID )
+	{
+		if( _initData.getID() == EQ_ID_INVALID )
+		{
+			EQCHECK( mapObject( &_initData, initDataID ));
+			unmapObject( &_initData ); // data was retrieved, unmap immediately
+			_settings = ::getSettings( _initData.getSettingsPath().c_str() );
+		}
+		else  // appNode, _initData is registered already
+		{
+			EQASSERT( _initData.getID() == initDataID );
+		}
+	}
 
 protected :
 	vl::SettingsRefPtr _settings;
+	::InitData _initData;
 };
 
 class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), root(), win(), cam(), man(), feet(), robot(),
-		  _settings( )
+		: eq::Window( parent ), _root(), _ogre_win(0), _camera(0), _settings()
 	{}
 
+	~RenderWindow( void )
+	{
+		// TODO delete the ogre root
+	}
+	
 	virtual bool configInit( const uint32_t initID )
 	{
 		try
@@ -45,13 +113,16 @@ public :
 			{ return false; }
 
 			::Config *config = (::Config *)getConfig();
+			// Map config data so we have valid settings
+			config->mapData(initID);
+
 			_settings = config->getSettings();
 			EQASSERT( _settings );
 
-			root.reset( new vl::ogre::Root( _settings ) );
+			_root.reset( new vl::ogre::Root( _settings ) );
 			
 			// Initialise ogre
-			root->createRenderSystem();
+			_root->createRenderSystem();
 
 			vl::NamedValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -67,37 +138,27 @@ public :
 			params["currentGLContext"] = std::string("True");
 #endif
 
-			win = boost::dynamic_pointer_cast<vl::ogre::RenderWindow>(
-					root->createWindow( "Win", 800, 600, params ) );
+			_ogre_win = _root->createWindow( "Win", 800, 600, params );
 
-			root->init();
+			_root->init();
 
 			// Setup resources
-			root->setupResources();
-			root->loadResources();
+			_root->setupResources();
+			_root->loadResources();
 			
-			EQASSERT( man = root->createSceneManager("SceneManager") );
-			// Set factories
-			man->setSceneNodeFactory( vl::graph::SceneNodeFactoryPtr(
-						new vl::ogre::SceneNodeFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::EntityFactory ) );
-			man->addMovableObjectFactory( vl::graph::MovableObjectFactoryPtr(
-						new vl::ogre::CameraFactory ) );
-			
-			EQASSERT( cam = man->createCamera("Cam") );
-			EQASSERT( man->getRootNode() );
+			Ogre::SceneManager *sm = _root->createSceneManager("SceneManager");
+			EQASSERT( sm );
 
-			feet = man->getRootNode()->createChild("feet");
-			feet->attachObject( cam );
-			feet->lookAt( vl::vector(0,0,300) );
+			EQASSERT( _camera = sm->createCamera("Cam") );
 
-			vl::graph::EntityRefPtr ent;
-			ent = man->createEntity("robot", "robot.mesh");
+			Ogre::SceneNode *feet = sm->getRootSceneNode()->createChildSceneNode("feet");
+			feet->attachObject( _camera );
+
+			Ogre::Entity *ent = sm->createEntity("robot", "robot.mesh");
 			EQASSERT( ent );
 
-			robot = man->getRootNode()->createChild("robot");
-			robot->setPosition( vl::vector(0, 0, 300) );
+			Ogre::SceneNode *robot = sm->getRootSceneNode()->createChildSceneNode("robotNode");
+			robot->setPosition( Ogre::Vector3(0, 0, -300) );
 			robot->attachObject( ent );
 		}
 		catch( Ogre::Exception const &e)
@@ -118,28 +179,23 @@ public :
 	
 	virtual void swapBuffers( void )
 	{
-		eq::Window::swapBuffers();
-		if( win )
-		{ win->swapBuffers(); }
+		if( _ogre_win )
+		{ _ogre_win->swapBuffers(); }
 	}
 
-	boost::shared_ptr<vl::graph::RenderWindow> getRenderWindow( void )
+	Ogre::RenderWindow *getRenderWindow( void )
 	{
-		return win;
+		return _ogre_win;
 	}
 
-	vl::graph::CameraRefPtr getCamera( void )
+	Ogre::Camera *getCamera( void )
 	{
-		return cam;
+		return _camera;
 	}
 
-	boost::shared_ptr<vl::ogre::Root> root;
-	boost::shared_ptr<vl::ogre::RenderWindow> win;
-	vl::graph::CameraRefPtr cam;
-
-	vl::graph::SceneManagerRefPtr man;
-	vl::graph::SceneNodeRefPtr feet;
-	vl::graph::SceneNodeRefPtr robot;
+	boost::shared_ptr<vl::ogre::Root> _root;
+	Ogre::RenderWindow *_ogre_win;
+	Ogre::Camera *_camera;
 
 	vl::SettingsRefPtr _settings;
 };
@@ -148,7 +204,7 @@ class Channel : public eq::Channel
 {
 public :
 	Channel( eq::Window *parent )
-		: eq::Channel(parent), window((::RenderWindow *)parent)
+		: eq::Channel(parent) //_window((::RenderWindow *)parent)
 	{}
 
 	virtual bool configInit( const uint32_t initID )
@@ -156,14 +212,15 @@ public :
 		if( !eq::Channel::configInit( initID ) )
 		{ return false; }
 
-		win = window->getRenderWindow();
-		EQASSERT( win );
+		::RenderWindow *window = (::RenderWindow *)getWindow();
+		_ogre_win = window->getRenderWindow();
+		EQASSERT( _ogre_win );
 
-		camera = window->getCamera();
-		EQASSERT( camera );
+		_camera = window->getCamera();
+		EQASSERT( _camera );
 
-		viewport = win->addViewport( camera );
-		viewport->setBackgroundColour( vl::colour(1.0, 0.0, 0.0, 0.0) );
+		_viewport = _ogre_win->addViewport( _camera );
+		_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
 
 		setNearFar( 100.0, 100.0e3 );
 
@@ -172,18 +229,18 @@ public :
 
 	virtual void frameDraw( const uint32_t frameID )
 	{
-		if( camera && win )
+		if( _camera && _ogre_win )
 		{
 			eq::Frustumf frust = getFrustum();
-			camera->setProjectionMatrix( frust.compute_matrix() );
-			viewport->update();
+			Ogre::Matrix4 proj_mat = vl::math::convert( frust.compute_matrix() );
+			_camera->setCustomProjectionMatrix( true, proj_mat );
+			_viewport->update();
 		}
 	}
 
-	boost::shared_ptr<vl::graph::Camera> camera;
-	boost::shared_ptr<vl::graph::Viewport> viewport;
-	boost::shared_ptr<vl::graph::RenderWindow> win;
-	::RenderWindow *window;
+	Ogre::Camera *_camera;
+	Ogre::Viewport *_viewport;
+	Ogre::RenderWindow *_ogre_win;
 };
 
 class NodeFactory : public eq::NodeFactory
@@ -201,17 +258,20 @@ public:
 
 int main( const int argc, char** argv )
 {
-	std::cout << "arguments = ";
+	EQINFO << "arguments = ";
 	for(int i = 0; i < argc; i++ )
 	{
-		std::cout << argv[i] << " ";
+		EQINFO << argv[i] << " ";
 	}
-	std::cout << std::endl;
+	EQINFO << std::endl;
 
 	vl::SettingsRefPtr settings = getSettings(argv[0]);
+	EQINFO << "settings file arg = " << argv[0] << std::endl;
+	EQINFO << "settings file = " << settings->getFilePath() << std::endl;
+	
 	if( !settings )
 	{
-		std::cerr << "No test_conf.xml file found." << std::endl;
+		EQERROR << "No test_conf.xml file found." << std::endl;
 		return -1;
 	}
 
@@ -231,11 +291,11 @@ int main( const int argc, char** argv )
     if( config )
     {
         // 3. init config
-        if( config->init( 0 ))
+        if( config->init())
         {
             // 4. run main loop
             uint32_t spin = 0;
-            while( config->isRunning( ))
+            while( config->isRunning() )
             {
                 config->startFrame( ++spin );
                 config->finishFrame();

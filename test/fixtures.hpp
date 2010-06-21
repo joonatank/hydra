@@ -24,7 +24,7 @@ struct InitFixture
 	{}
 };
 
-vl::SettingsRefPtr getSettings( char *exe_path )
+vl::SettingsRefPtr getSettings( char const *exe_path )
 {
 	fs::path cmd( exe_path );
 

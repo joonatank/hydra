@@ -56,10 +56,10 @@ add_executable( stereo_render
 	${HEADERS}
 	)
 
-#add_executable( node_test 
-#	node_test.cpp 
-#	${HEADERS}
-#	)
+add_executable( node_test 
+	node_test.cpp 
+	${HEADERS}
+	)
 
 add_executable( tracking 
 	tracking.cpp 
@@ -81,6 +81,6 @@ set( LIBS
 
 target_link_libraries( ogre_render ${LIBS} )
 target_link_libraries( stereo_render ${LIBS} )
-#target_link_libraries( node_test ${LIBS} )
+target_link_libraries( node_test ${LIBS} )
 target_link_libraries( tracking ${LIBS} vrpn )
 target_link_libraries( dotscene_loader ${LIBS} vrpn )
