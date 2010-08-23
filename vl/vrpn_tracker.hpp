@@ -18,7 +18,7 @@
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
-#include <eq/client/observer.h>
+//#include <eq/client/observer.h>
 
 namespace vl
 {
@@ -55,7 +55,7 @@ public :
 	// Map the observer position and orientation to the tracker values
 	// Will overwrite any existing values
 	// To map this to Ogre::Camera just retrieve the head matrix
-	void map( eq::Observer *observer );
+//	void map( eq::Observer *observer );
 
 	// Called once in an iteration from main application
 	void mainloop( void );

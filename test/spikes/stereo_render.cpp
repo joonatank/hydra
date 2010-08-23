@@ -13,13 +13,13 @@
 
 #include <eq/eq.h>
 
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreEntity.h>
+
 // eqOgre project includes
 #include "eq_ogre/ogre_root.hpp"
-#include "eq_ogre/ogre_scene_manager.hpp"
-#include "eq_ogre/ogre_scene_node.hpp"
-#include "eq_ogre/ogre_entity.hpp"
-#include "eq_ogre/ogre_camera.hpp"
-#include "eq_ogre/ogre_render_window.hpp"
 #include "base/args.hpp"
 #include "base/exceptions.hpp"
 

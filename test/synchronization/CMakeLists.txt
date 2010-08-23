@@ -16,7 +16,6 @@ set( LIBS
 	${OpenGL_LIBRARIES}
 	${OGRE_LIBRARIES}
 	${EQ_LIBRARIES}
-	eqOgre
 	)
 
 target_link_libraries( sync_eq_scene_node ${LIBS} )

@@ -29,54 +29,56 @@ endif()
 
 SET( HEADERS
 	../fixtures.hpp 
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_scene_manager.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_scene_node.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_camera.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_entity.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_viewport.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_render_window.hpp
 	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_root.hpp
-	${eqOgre_SOURCE_DIR}/eq_graph/eq_scene_manager.hpp
-	${eqOgre_SOURCE_DIR}/eq_graph/eq_scene_node.hpp
-	${eqOgre_SOURCE_DIR}/eq_graph/eq_root.hpp
-	${eqOgre_SOURCE_DIR}/eq_graph/eq_entity.hpp
-	${eqOgre_SOURCE_DIR}/eq_graph/eq_camera.hpp
 	${eqOgre_SOURCE_DIR}/base/args.hpp
 	${eqOgre_SOURCE_DIR}/base/exceptions.hpp
 	${eqOgre_SOURCE_DIR}/math/conversion.hpp
+	${eqOgre_SOURCE_DIR}/settings.hpp
+	${eqOgre_SOURCE_DIR}/dotscene_loader.hpp
+	)
+
+set( SOURCES 
+	${eqOgre_SOURCE_DIR}/settings.cpp
+	${eqOgre_SOURCE_DIR}/base/args.cpp
+	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_root.cpp
+	${eqOgre_SOURCE_DIR}/dotscene_loader.cpp
 	)
 
 add_executable( ogre_render 
-	ogre_render.cpp 
+	ogre_render.cpp
+	${SOURCES}
 	${HEADERS}
 	)
 
 add_executable( stereo_render 
-	stereo_render.cpp 
+	stereo_render.cpp
+	${SOURCES}
 	${HEADERS}
 	)
 
 add_executable( node_test 
-	node_test.cpp 
+	node_test.cpp
+	${SOURCES}
 	${HEADERS}
 	)
 
 add_executable( tracking 
-	tracking.cpp 
+	tracking.cpp
+	${SOURCES}
 	${HEADERS}
 	)
 
 add_executable( dotscene_loader 
-	dotscene_loader.cpp 
+	dotscene_loader.cpp
+	${SOURCES}
 	${HEADERS}
 	)
 
 set( LIBS
-	${OpenGL_LIBRARIES}
+	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
 	${Boost_LIBRARIES}
 	${EQ_LIBRARIES}
-	eqOgre
 	)
 
 target_link_libraries( ogre_render ${LIBS} )

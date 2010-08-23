@@ -37,22 +37,15 @@ elseif( UNIX )
 	set(CMAKE_MODULE_PATH "/usr/local/lib/OGRE/cmake")
 endif( WIN32 )
 
-find_package(OpenGL)
-find_package(OGRE)
+find_package(OpenGL REQUIRED)
+find_package(OGRE REQUIRED)
+
+message( "OpenGL libs = ${OPENGL_LIBRARIES}" )
 
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-if( WIN32 )
-	set( BOOST_INCLUDEDIR "C:/libs/boost/include/boost-1_42/"
-		CACHE PATH "Boost include dir" )
-elseif( UNIX )
-	set( BOOST_INCLUDEDIR "/usr/include/boost-1_42/boost"
-		CACHE PATH "Boost include dir" )
-endif( WIN32 )
-
-
-find_package(Boost 1.42.0 COMPONENTS unit_test_framework thread filesystem REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework thread filesystem REQUIRED)
 # TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
 if( WIN32 )
@@ -61,29 +54,11 @@ elseif( UNIX )
 	set( EQ_LIBRARIES eq )
 endif( WIN32 )
 
-# Physics, Bullet for now
-# TODO should be a plugin
-set( BULLET_LIBRARIES BulletCollision BulletDynamics )
-
-if( WIN32 )
-	set( BULLET_LIB_DIR "" CACHE PATH "Bullet library path" )
-	set( BULLET_INCLUDE_DIR "" CACHE PATH "Bullet include path" )
-endif()
-
 if( WIN32 )
 	set( VRPN_INCLUDE_DIR "" CACHE PATH "VRPN include path" )
 	set( VRPN_LIB_DIR "" CACHE PATH "VRPN lib path" )
 endif()
 	
-# Audio, cAudio for now
-# TODO should be a plugin
-set( CAUDIO_LIBRARIES cAudio )
-
-if( WIN32 )
-	set( CAUDIO_LIB_DIR "" CACHE PATH "cAudio library path" )
-	set( CAUDIO_INCLUDE_DIR "" CACHE PATH "cAudio include path" )
-endif()
-
 
 include_directories( 
  	${OpenGL_INCLUDE_DIR}
@@ -93,13 +68,10 @@ include_directories(
 	${EQ_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
-	${BULLET_INCLUDE_DIR}
-	${CAUDIO_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	)
 
-link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${BULLET_LIB_DIR}
-	${CAUDIO_LIB_DIR} ${VRPN_LIB_DIR} )
+link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${VRPN_LIB_DIR} )
 
 link_directories( ${vl_BINARY_DIR}/vl )
 
@@ -107,6 +79,6 @@ link_directories( ${vl_BINARY_DIR}/vl )
 include_directories(vl)
 
 # Tests should be in different CMake file
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+#add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 

@@ -62,7 +62,11 @@
 	<!-- Load release lighting schema -->
 	<scene name="lighting" >
 		<type>release</type>
-		<file>lighting.scene<file>
+		<file>lighting.scene</file>
 	</scene>
+
+	<tracking>
+		<file>tracking.xml</file>
+	</tracking>
 
 </config>

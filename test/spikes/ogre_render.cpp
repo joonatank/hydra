@@ -6,16 +6,17 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreEntity.h>
+
+#include <eq/base/sleep.h>
+
 #include "eq_ogre/ogre_root.hpp"
-#include "eq_ogre/ogre_scene_manager.hpp"
-#include "eq_ogre/ogre_scene_node.hpp"
-#include "eq_ogre/ogre_entity.hpp"
 #include "base/exceptions.hpp"
 
 // Test helpers
 #include "../fixtures.hpp"
-
-#include <eq/base/sleep.h>
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
 

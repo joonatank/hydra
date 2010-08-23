@@ -1,5 +1,5 @@
 
-#include <eq/eq.h>
+#include <eq/client/channel.h>
 #include <stdlib.h>
 
 #include "eq_ogre/ogre_root.hpp"

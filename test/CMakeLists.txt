@@ -6,27 +6,48 @@ include_directories( util )
 
 subdirs(util
 		math
-		eq_graph
+#		eq_graph
 		spikes
 #		eq_ogre
-		synchronization
+#		synchronization
 		dotscene_loader
 		eq_cluster
 		)
 
-set( LIBS ${Boost_LIBRARIES} eqOgre )
+add_executable( test_filestring
+				test_filestring.cpp
+				${eqOgre_SOURCE_DIR}/base/filesystem.hpp
+				)
 
-add_executable( test_filestring test_filestring.cpp )
-add_executable( test_settings test_settings.cpp )
+add_executable( test_settings 
+				test_settings.cpp 
+				${eqOgre_SOURCE_DIR}/settings.hpp
+				${eqOgre_SOURCE_DIR}/settings.cpp
+				${eqOgre_SOURCE_DIR}/base/args.cpp
+				${eqOgre_SOURCE_DIR}/base/args.hpp
+				)
+
 #add_executable( test_dotscene test_dotscene.cpp )
-add_executable( test_exceptions test_exceptions.cpp )
-add_executable( test_tracking test_tracking.cpp )
+
+add_executable( test_exceptions
+				test_exceptions.cpp
+				${eqOgre_SOURCE_DIR}/base/exceptions.hpp
+				)
+
+add_executable( test_tracking
+				test_tracking.cpp
+				${eqOgre_SOURCE_DIR}/tracker.hpp
+				${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
+				${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
+				)
+
+set( LIBS ${Boost_LIBRARIES} )
 
 target_link_libraries( test_filestring ${LIBS} )
 target_link_libraries( test_settings ${LIBS} )
 #target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
 target_link_libraries( test_exceptions ${LIBS} )
-target_link_libraries( test_tracking ${LIBS} vrpn )
+target_link_libraries( test_tracking ${LIBS} ${OGRE_LIBRARIES} vrpn )
 
 add_test( filestring ${PROJECT_BINARY_DIR}/test_filestring )
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )

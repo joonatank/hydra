@@ -32,7 +32,7 @@ add_executable( test_config
 	)
 
 set( LIBS
-	${OpenGL_LIBRARIES}
+	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
 	${Boost_LIBRARIES}
 	${EQ_LIBRARIES}

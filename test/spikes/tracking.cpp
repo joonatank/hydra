@@ -1,25 +1,9 @@
 #ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
 #endif
-#define BOOST_TEST_MODULE ogre_root
+#define BOOST_TEST_MODULE tracking
 
 #include <boost/test/unit_test.hpp>
-
-/*
-My first vrpn client - vrpnHelloWorld
-If you want to transform a CAMERA, VIEWPOINT or HMD, instead of an displayed object,
-you need to invert the transform, since
-vrpn returns the transform sensor to tracker/base/emitter transform.
-
-// NOTE: a vrpn tracker must call user callbacks with tracker data (pos and
-//       ori info) which represent the transformation xfSourceFromSensor.
-//       This means that the pos info is the position of the origin of
-//       the sensor coord sys in the source coord sys space, and the
-//       quat represents the orientation of the sensor relative to the
-//       source space (ie, its value rotates the source's axes so that
-//       they coincide with the sensor's)
-*/
-
 
 #ifdef VL_WIN32
 #include <WinSock2.h>
@@ -38,13 +22,13 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include <limits>
 #include <iostream>
 
+#include <OGRE/OgreEntity.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreSceneManager.h>
+
 // eqOgre project includes
 #include "eq_ogre/ogre_root.hpp"
-#include "eq_ogre/ogre_scene_manager.hpp"
-#include "eq_ogre/ogre_scene_node.hpp"
-#include "eq_ogre/ogre_entity.hpp"
-#include "eq_ogre/ogre_camera.hpp"
-#include "eq_ogre/ogre_render_window.hpp"
+
 #include "math/conversion.hpp"
 #include "base/args.hpp"
 #include "base/exceptions.hpp"
@@ -54,13 +38,9 @@ vrpn returns the transform sensor to tracker/base/emitter transform.
 #include "../fixtures.hpp"
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
+
 /*****************************************************************************
- *
-
    Callback handler
-
- *
-
  *****************************************************************************/
 vrpn_TRACKERCB g_trackerData;
 

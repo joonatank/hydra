@@ -596,10 +596,12 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{
 		vl::scalar nearDist = getAttribReal(pElement, "near");
-		camera->setNearClipDistance(nearDist);
+		if( nearDist > 0 )
+		{ camera->setNearClipDistance(nearDist); }
 
 		vl::scalar farDist =  getAttribReal(pElement, "far");
-		camera->setFarClipDistance(farDist);
+		if( farDist > 0 && farDist > nearDist )
+		{ camera->setFarClipDistance(farDist); }
 	}
 
 	// Process position (?)

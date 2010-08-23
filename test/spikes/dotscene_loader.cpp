@@ -1,20 +1,21 @@
 
 #include <eq/eq.h>
 
+#include <vrpn_Tracker.h>
+#include <eq/base/sleep.h>
+
+#include <OGRE/OgreEntity.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreSceneManager.h>
+
 #include "eq_ogre/ogre_root.hpp"
-#include "eq_ogre/ogre_scene_manager.hpp"
-#include "eq_ogre/ogre_entity.hpp"
-#include "eq_ogre/ogre_camera.hpp"
-#include "eq_ogre/ogre_light.hpp"
+
 #include "settings.hpp"
 #include "base/exceptions.hpp"
 
 #include "dotscene_loader.hpp"
 
 #include "../fixtures.hpp"
-
-#include <vrpn_Tracker.h>
-#include <eq/base/sleep.h>
 
 // VRPN tracking
 vrpn_TRACKERCB g_trackerData;
@@ -154,9 +155,9 @@ public :
 	
 	virtual void swapBuffers( void )
 	{
-		//eq::Window::swapBuffers();
-		if( _window )
-		{ _window->swapBuffers(); }
+		eq::Window::swapBuffers();
+	//	if( _window )
+	//	{ _window->swapBuffers(); }
 	}
 
 	Ogre::RenderWindow *getRenderWindow( void )
@@ -245,15 +246,15 @@ public :
 	    EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
 	    EQ_GL_CALL( glLoadIdentity() );
 
-		if( _camera && _window )
-		{
-			eq::Frustumf frust = getFrustum();
-			_camera->setCustomProjectionMatrix( true,
-					vl::math::convert( frust.compute_matrix() ) );
-			Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( -_camera->getPosition() - v3, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
-			_camera->setCustomViewMatrix( true, view );
-			_viewport->update();
-		}
+		EQASSERT( _camera )
+		EQASSERT( _window )
+		
+		eq::Frustumf frust = getFrustum();
+		_camera->setCustomProjectionMatrix( true,
+				vl::math::convert( frust.compute_matrix() ) );
+		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( -_camera->getPosition() - v3, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
+		_camera->setCustomViewMatrix( true, view );
+		_viewport->update();
 	}
 
 	Ogre::Camera *_camera;
