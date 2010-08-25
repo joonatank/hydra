@@ -4,11 +4,6 @@
 
 #include "base/string_utils.hpp"
 #include "base/exceptions.hpp"
-#include "interface/scene_node.hpp"
-#include "interface/scene_manager.hpp"
-#include "interface/entity.hpp"
-#include "interface/light.hpp"
-#include "interface/camera.hpp"
 
 /* For now we are using Ogre::LogManager and Ogre::ResourceGroupManager
  * Because we don't have our own logging or resource system in place.
@@ -80,7 +75,7 @@ DotSceneLoader::parseDotScene(
 	{
 		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
 		//	TODO add logging
-		//Ogre::LogManager::getSingleton().logMessage( message );
+		Ogre::LogManager::getSingleton().logMessage( message );
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}
@@ -88,7 +83,7 @@ DotSceneLoader::parseDotScene(
 	if( !_attach_node )
 	{ _attach_node = _scene_mgr->getRootSceneNode(); }
 
-	// Process the scene
+	// Process the scene	
 	processScene(XMLRoot);
 }
 
@@ -119,15 +114,21 @@ DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 			+ std::string(XMLRoot->first_attribute("author")->value());
 	}
 
-//	TODO add logging
-//	Ogre::LogManager::getSingleton().logMessage(message);
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process environment (?)
-	pElement = XMLRoot->first_node("environment");
-	if(pElement)
-	{ processEnvironment(pElement); }
+	try {
+		pElement = XMLRoot->first_node("environment");
+		if(pElement)
+		{ processEnvironment(pElement); }
+	}
+	catch( Ogre::Exception const &e )
+	{
+		std::string message = "Ogre Exception : " + std::string(e.what());
+		Ogre::LogManager::getSingleton().logMessage(message);
+	}
 
 	// Process nodes (?)
 	pElement = XMLRoot->first_node("nodes");
@@ -186,7 +187,7 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	if(pElement)
 	{
 		_attach_node->setPosition(parseVector3(pElement));
-//		_attach_node->setInitialState();
+		_attach_node->setInitialState();
 	}
 
 	// Process rotation (?)
@@ -194,18 +195,20 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	if(pElement)
 	{
 		_attach_node->setOrientation(parseQuaternion(pElement));
-//		_attach_node->setInitialState();
+		_attach_node->setInitialState();
 	}
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
-	{ _attach_node->setOrientation(parseQuaternion(pElement)); }
+	{ 
+		_attach_node->setOrientation(parseQuaternion(pElement)); 
+	}
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
 	{
 		_attach_node->setScale(parseVector3(pElement));
-//		_attach_node->setInitialState();
+		_attach_node->setInitialState();
 	}
 }
 
@@ -680,6 +683,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
 	{ node->setOrientation(parseQuaternion(pElement)); }
+
 	pElement = XMLNode->first_node("quaternion");
 	if( pElement )
 	{ node->setOrientation(parseQuaternion(pElement)); }
@@ -727,9 +731,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("light");
 	}
 
-	/*	Process camera (*)
-	 *	TODO not supported yet
-	 */
+	/*	Process camera (*) */
 	pElement = XMLNode->first_node("camera");
 	while(pElement)
 	{
@@ -1032,34 +1034,30 @@ DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 void
 DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 {
-/*	TODO implement SkyBox
 	// Process attributes
-	std::string material = getAttrib(XMLNode, "material", "BaseWhite");
+	// material attribute is required, all others are optional and have defaults
+	std::string material = XMLNode->first_attribute("material")->value();
 	vl::scalar distance = getAttribReal(XMLNode, "distance", 5000);
 	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
-	bool active = getAttribBool(XMLNode, "active", false);
-	if(!active)
-		return;
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process rotation (?)
 	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
-	if(pElement)
-		rotation = parseQuaternion(pElement);
+	if( pElement )
+	{ rotation = parseQuaternion(pElement); }
 
 	// Setup the sky box
-	scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation, _sGroupName);
-*/
+	_scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation, _sGroupName);
 }
 
 /// Not implemented
 void
 DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 {
-/*	TODO implement SkyDome
 	// Process attributes
+	// material attribute is required, all others are optional and have defaults
 	std::string material = XMLNode->first_attribute("material")->value();
 	vl::scalar curvature = getAttribReal(XMLNode, "curvature", 10);
 	vl::scalar tiling = getAttribReal(XMLNode, "tiling", 8);
@@ -1072,19 +1070,21 @@ DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
-		rotation = parseQuaternion(pElement);
+	{ rotation = parseQuaternion(pElement); }
 
 	// Setup the sky dome
-	scene_mgr->setSkyDome( true, material, curvature, tiling,
+	_scene_mgr->setSkyDome( true, material, curvature, tiling,
 			distance, drawFirst, rotation, 16, 16, -1, _sGroupName );
-*/
+
+	std::string message = "Skydome Created with material " + material;
+	Ogre::LogManager::getSingleton().logMessage( message );
 }
 
 /// Not implemented
 void
 DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 {
-/*	TODO implement SkyPlane
+//	TODO implement SkyPlane
 	// Process attributes
 	std::string material = getAttrib(XMLNode, "material");
 	vl::scalar planeX = getAttribReal(XMLNode, "planeX", 0);
@@ -1098,11 +1098,10 @@ DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 
 	// Setup the sky plane
 	Ogre::Plane plane;
-	plane.normal = Ogre::Vector33(planeX, planeY, planeZ);
+	plane.normal = Ogre::Vector3(planeX, planeY, planeZ);
 	plane.d = planeD;
-	scene_mgr->setSkyPlane( true, plane, material, scale, tiling,
+	_scene_mgr->setSkyPlane( true, plane, material, scale, tiling,
 			drawFirst, bow, 1, 1, _sGroupName );
-*/
 }
 
 /// Not implemented
@@ -1223,7 +1222,7 @@ DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	z = vl::string_convert<vl::scalar>( attrZ->value() );
 	w = vl::string_convert<vl::scalar>( attrW->value() );
 	
-	return Ogre::Quaternion( x, y, z, w );
+	return Ogre::Quaternion( w, x, y, z );
 }
 
 Ogre::ColourValue

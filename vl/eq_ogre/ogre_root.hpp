@@ -53,8 +53,8 @@ namespace ogre
 			virtual Ogre::RenderWindow *createWindow(
 					std::string const &name, unsigned int width,
 					unsigned int height,
-					vl::NamedValuePairList const &params
-						= vl::NamedValuePairList() );
+					Ogre::NameValuePairList const &params
+						= Ogre::NameValuePairList() );
 
 			virtual Ogre::SceneManager *createSceneManager(
 					std::string const &name );

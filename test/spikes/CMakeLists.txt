@@ -68,6 +68,12 @@ add_executable( tracking
 	${HEADERS}
 	)
 
+add_executable( dotscene_loader_tracking
+	dotscene_loader_tracking.cpp
+	${SOURCES}
+	${HEADERS}
+	)
+
 add_executable( dotscene_loader 
 	dotscene_loader.cpp
 	${SOURCES}
@@ -85,4 +91,5 @@ target_link_libraries( ogre_render ${LIBS} )
 target_link_libraries( stereo_render ${LIBS} )
 target_link_libraries( node_test ${LIBS} )
 target_link_libraries( tracking ${LIBS} vrpn )
-target_link_libraries( dotscene_loader ${LIBS} vrpn )
+target_link_libraries( dotscene_loader_tracking ${LIBS} vrpn )
+target_link_libraries( dotscene_loader ${LIBS} )

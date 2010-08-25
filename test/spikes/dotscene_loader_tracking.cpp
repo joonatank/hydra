@@ -1,6 +1,7 @@
 
 #include <eq/eq.h>
 
+#include <vrpn_Tracker.h>
 #include <eq/base/sleep.h>
 
 #include <OGRE/OgreEntity.h>
@@ -15,6 +16,14 @@
 #include "dotscene_loader.hpp"
 
 #include "../fixtures.hpp"
+
+// VRPN tracking
+vrpn_TRACKERCB g_trackerData;
+
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
+{
+	g_trackerData = t;
+}
 
 class Config : public eq::Config
 {
@@ -79,21 +88,29 @@ public :
 			if( scenes.empty() )
 			{ return false; }
 			
-			// TODO support for multiple scene files
 			std::string message = "Load scene = " + scenes.at(0).file;
 			Ogre::LogManager::getSingleton().logMessage( message );
+			// TODO implement
+	//		std::string scene_path = root->getDataDir() + "testScene.xml";
 
 			DotSceneLoader loader;
 			loader.parseDotScene( scenes.at(0).file,
 								  Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 								  _sm );
-			
 			message = "Scene loaded";
 			Ogre::LogManager::getSingleton().logMessage( message );
 			
 			// Loop through all cameras and grab their name and set their debug representation
 			Ogre::SceneManager::CameraIterator cameras = _sm->getCameraIterator();
 			
+/*			Multiple cameras not supported at this moment
+			std::vector<std::string> camNames;
+			while( cameras.hasMoreElements() )
+			{
+				Ogre::Camera* camera = cameras.getNext();
+				mCamNames.push_back( camera->getName() );
+			}
+*/
 			// Grab the first available camera, for now
 			if( cameras.hasMoreElements() )
 			{
@@ -106,20 +123,35 @@ public :
 				message = "Creating camera";
 				Ogre::LogManager::getSingleton().logMessage( message );
 				_camera = _sm->createCamera("Cam");
+				//man->getRootNode()->addChild()-
 			}
+
+			/*
+			Ogre::String cameraName = mCamNames[0];
+			try
+			{
+				mActiveCamera = mSceneMgr->getCamera(cameraName);
+				mWindow->getViewport(0)->setCamera(mActiveCamera);
+				mCameraMan->setCamera(mActiveCamera);
+				mSceneMgr->getEntity(mActiveCamera->getName() + Ogre::String("_debug"))->setVisible(false);
+			}
+			catch (Ogre::Exception& e)
+			{
+				Ogre::LogManager::getSingleton().logMessage("SampleApp::createScene : setting the active camera to (\"" +
+	            cameraName + ") failed: " + e.getFullDescription());
+			}
+			*/
 		}
 		catch( vl::exception const &e )
 		{
-			std::cerr << "VL exception : " <<  boost::diagnostic_information<>(e)
+			std::cerr << "exception : " <<  boost::diagnostic_information<>(e)
 				<< std::endl;
 		}
 		catch( Ogre::Exception const &e)
 		{
-			std::cerr << "Ogre Exception: " << e.what() << std::endl;
-		}
-		catch( std::exception const &e )
-		{
-			std::cerr << "STD Exception: " << e.what() << std::endl;
+			std::cerr << "Exception when creating window: " << e.what() 
+				<< std::endl;
+			throw;
 		}
 
 		return true;
@@ -128,6 +160,8 @@ public :
 	virtual void swapBuffers( void )
 	{
 		eq::Window::swapBuffers();
+	//	if( _window )
+	//	{ _window->swapBuffers(); }
 	}
 
 	Ogre::RenderWindow *getRenderWindow( void )
@@ -179,9 +213,24 @@ public :
 	virtual void frameDraw( const uint32_t frameID )
 	{
 		// Head tracking support
-		Ogre::Vector3 v3 = Ogre::Vector3( 0, 1.5, 0 );
+		Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
+		Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
 
-		Ogre::Matrix4 m = Ogre::Matrix4::IDENTITY;
+		// Quaternion should be about unit length, it's invalid if it's something else
+
+		// TODO the quaternion is incorrect, test it
+		q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[0], 
+				g_trackerData.quat[1], g_trackerData.quat[2] );
+		//std::cout << "quaternion length = " << q.Norm() << std::endl;
+		if( q.Norm() < 0.5 )
+		{ q = Ogre::Quaternion::IDENTITY; }
+		else
+		{ q.normalise(); }
+	
+		v3 = Ogre::Vector3( -g_trackerData.pos[0], g_trackerData.pos[1], 
+				g_trackerData.pos[2] );
+
+		Ogre::Matrix4 m(q); 
 		m.setTrans(v3);
 
 		// Note: real applications would use one tracking device per observer
@@ -203,14 +252,11 @@ public :
 
 		EQASSERT( _camera )
 		EQASSERT( _window )
-
+		
 		eq::Frustumf frust = getFrustum();
 		_camera->setCustomProjectionMatrix( true,
 				vl::math::convert( frust.compute_matrix() ) );
-
-		// TODO add support for cameras with parent
-		// Ogre::Camera::getPosition returns position relative to the parent
-		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( _camera->getPosition() + v3, _camera->getOrientation() );
+		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix( -_camera->getPosition() - v3, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
 		_camera->setCustomViewMatrix( true, view );
 		_viewport->update();
 	}
@@ -239,6 +285,12 @@ int main( const int argc, char** argv )
 	InitFixture();
 	
 	try {
+    	// Open the tracker
+    	vrpn_Tracker_Remote *tkr = new vrpn_Tracker_Remote("glasses@130.230.58.16");
+	
+		// Set up the tracker callback handler
+    	tkr->register_change_handler(NULL, handle_tracker);
+
 		vl::SettingsRefPtr settings = getSettings(argv[0]);
 		if( !settings )
 		{
@@ -248,10 +300,6 @@ int main( const int argc, char** argv )
 
 		vl::Args &arg = settings->getEqArgs();
 
-		// Redirect logging to file
-		std::ofstream log_file( "render_test.log" );
-		eq::base::Log::setOutput( log_file );
-		
 		// 1. Equalizer initialization
 		::NodeFactory nodeFactory;
 		if( !eq::init( arg.size(), arg.getData(), &nodeFactory ))
@@ -273,6 +321,7 @@ int main( const int argc, char** argv )
 				uint32_t spin = 0;
 				while( config->isRunning( ))
 				{
+					tkr->mainloop();
 					config->startFrame( ++spin );
 					config->finishFrame();
 					eq::base::sleep(1);

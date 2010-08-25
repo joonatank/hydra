@@ -68,7 +68,7 @@ public :
 			vl::SettingsRefPtr settings = conf->getSettings();
 			_root.reset( new vl::ogre::Root( settings ) );
 			_root->createRenderSystem();
-			vl::NamedValuePairList params;
+			Ogre::NameValuePairList params;
 			
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 			eq::WGLWindow *os_win = (eq::WGLWindow *)(getWindow()->getOSWindow());

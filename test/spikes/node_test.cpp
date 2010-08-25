@@ -124,7 +124,7 @@ public :
 			// Initialise ogre
 			_root->createRenderSystem();
 
-			vl::NamedValuePairList params;
+			Ogre::NameValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 			eq::WGLWindow *os_win = (eq::WGLWindow *)(getOSWindow());
 			std::stringstream ss( std::stringstream::in | std::stringstream::out );

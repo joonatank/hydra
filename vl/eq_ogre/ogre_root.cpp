@@ -14,8 +14,12 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
+		Ogre::LogManager *log_man = new Ogre::LogManager();
+		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( "ogre.log", true, false );
+		log->setTimeStampEnabled( true );
+		EQASSERT( log_man->getDefaultLog() == log );
 		std::string plugins = settings->getOgrePluginsPath().file_string();
-		_ogre_root = new Ogre::Root( plugins, "" );
+		_ogre_root = new Ogre::Root( plugins, "", "" );
 		_primary = true;
 
 		std::string msg( "plugin path = " + plugins );
@@ -118,25 +122,17 @@ vl::ogre::Root::setupResource( fs::path const &file )
 
 Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
-		unsigned int height, vl::NamedValuePairList const &params )
+		unsigned int height, Ogre::NameValuePairList const &params )
 {
 	if( !_ogre_root )
-	{ 
-		//return vl::graph::RenderWindowRefPtr(); 
-		return 0;
-	}
+	{ return 0; }
 
 	static int n_windows = 0;
-			
-	Ogre::NameValuePairList misc;
-	vl::NamedValuePairList::const_iterator iter = params.begin();
-	for( ; iter != params.end(); ++iter )
-	{ misc[iter->first] = iter->second; }
 
 	std::stringstream ss( std::stringstream::in | std::stringstream::out );
 	ss << name << "-" << n_windows;
 	Ogre::RenderWindow *og_win =
-		_ogre_root->createRenderWindow( ss.str(), width, height, false, &misc );
+		_ogre_root->createRenderWindow( ss.str(), width, height, false, &params );
 	++n_windows;
 
 	// Initialise the rendering system and load resources automatically when
@@ -144,7 +140,6 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 	if( !_ogre_root->isInitialised() )
 	{ init(); }
 
-//	vl::graph::RenderWindowRefPtr win( new vl::ogre::RenderWindow( og_win ) );
 	return og_win;
 }
 
@@ -155,8 +150,6 @@ vl::ogre::Root::createSceneManager(std::string const &name )
 
 	Ogre::SceneManager *og_man 
 		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
-//	EQASSERT( og_man );
-//	vl::graph::SceneManagerRefPtr man( 
-//		new vl::ogre::SceneManager( og_man, name ) );
+
 	return og_man;
 }
