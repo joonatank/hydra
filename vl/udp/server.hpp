@@ -4,7 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "handler.hpp"
+#include "command.hpp"
 
 namespace boost
 {
@@ -26,12 +26,11 @@ public:
 
 	void mainloop( void );
 
-	/// Adds a new handler to the handler stack
-	/// Will not check if the packet ids are same so the first handler added
-	/// for that id will get called.
-	void setHandler( boost::shared_ptr<udp::Handler> hand );
+	void addCommand( vl::udp::CommandRefPtr cmd );
 
 private :
+	void handle( std::vector<double> msg );
+
 	/// Copying is forbidden
 	// Something funcky with the io_service or socket, so we can not forbid copy
 //	Server(const Server& other) {}
@@ -44,7 +43,7 @@ private :
 	/// Supports multiple handlers
 	/// If you want multiple handlers all packets have to have an unique ID
 	/// Else first handler should be the only one and should have packet ID = -1
-	boost::shared_ptr<udp::Handler> _handler;
+	std::vector< vl::udp::CommandRefPtr > _commands;
 };
 
 }	// namespace udp

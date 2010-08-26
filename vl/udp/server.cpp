@@ -10,7 +10,6 @@ vl::udp::Server::Server(  uint16_t const port  )
 
 vl::udp::Server::~Server()
 {
-
 }
 
 void
@@ -25,26 +24,52 @@ vl::udp::Server::mainloop( void )
 	if (error && error != boost::asio::error::message_size)
 	{ throw boost::system::system_error(error); }
 
-	// Print the message gotten from client
-	std::cout << "Received message from " << remote_endpoint
-		<< " with " << n << " bytes." << std::endl;
-
 	// Remove extra space from the message
 	recv_buf.resize( n/sizeof(double) );
-	
-	if( !_handler )
-	{
-		return;
-	}
-	
-	// Handler code
-	_handler->handle(recv_buf);
 
-	// TODO handle packets with IDs
+	handle( recv_buf );
 }
 
-void
-vl::udp::Server::setHandler(boost::shared_ptr<udp::Handler> hand)
+void vl::udp::Server::addCommand(vl::udp::CommandRefPtr cmd)
 {
-	_handler = hand;
+	_commands.push_back(cmd);
+}
+
+
+// Private
+void
+vl::udp::Server::handle(std::vector< double > msg)
+{
+	// TODO handle packets with IDs
+	// Handler code
+	int msg_pos = 0;
+	for( size_t i = 0; i < _commands.size(); ++i )
+	{
+		boost::shared_ptr<udp::Command> cmd = _commands.at(i);
+
+		// Message is too short
+		// TODO should throw
+		if( msg.size() - msg_pos < cmd->getSize() )
+		{
+			std::cerr << "Packet size is too small for the next command" << std::endl;
+			break;
+		}
+
+		// Assign the new values
+		for( size_t j = 0; j < cmd->getSize(); ++j )
+		{
+			cmd->at(i) = msg.at(i+j);
+			msg_pos++;
+		}
+
+		// execute the command
+		(*cmd)();
+	}
+
+	if( msg_pos != msg.size() )
+	{
+		// TODO should throw
+		std::cerr << (msg.size()-msg_pos)*sizeof(double)
+			<< " unhandled bytes in the message." << std::endl;
+	}
 }

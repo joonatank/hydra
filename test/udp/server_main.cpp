@@ -5,7 +5,6 @@
 #include <time.h>
 
 #include "udp/server.hpp"
-#include "udp/print_handler.hpp"
 #include "udp/print_command.hpp"
 
 uint16_t const PORT = 2244;
@@ -18,15 +17,12 @@ int main(int argc, char **argv)
 	{
 		vl::udp::Server server( PORT );
 
-		// Create handler with two Vectors and one Quaternion
-		boost::shared_ptr<vl::udp::Handler> handler( new vl::udp::PrintHandler );
-		vl::udp::Packet packet;
 		boost::shared_ptr<vl::udp::Command> cmd( new vl::udp::PrintCommand("setPosition", "feet" ) );
-		packet.addCommand( cmd );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::PrintCommand("setPosition", "feet" ) );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::PrintCommand("setQuaternion", "feet" ) );
-		handler->setPacket( packet );
-		server.setHandler( handler );
+		server.addCommand( cmd );
 
 		for (;;)
 		{

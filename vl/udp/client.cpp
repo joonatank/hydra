@@ -24,12 +24,4 @@ vl::udp::Client::send(std::vector<double> const & msg)
 	{ return; }
 
 	size_t n = socket.send_to(boost::asio::buffer(msg), receiver_endpoint);
-	
-	std::cout << "Sending message : message size (bytes) = " << n << std::endl
-		<< "message = ";
-	for( size_t i = 0; i < msg.size(); ++i )
-	{
-		std::cout << msg.at(i) << " ";
-	}
-	std::cout << std::endl;
 }

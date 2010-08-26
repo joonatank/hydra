@@ -30,12 +30,6 @@ int main(int argc, char **argv)
 
 			std::cout << "Message sent" << std::endl;
 		}
-		//boost::array<char, 128> recv_buf;
-
-		//size_t len = socket.receive_from(
-		//	boost::asio::buffer(recv_buf), sender_endpoint);
-
-		//std::cout.write(recv_buf.data(), len);
 	}
 	catch (std::exception& e)
 	{

@@ -11,7 +11,6 @@
 
 #include "udp/server.hpp"
 #include "udp/client.hpp"
-#include "udp/print_handler.hpp"
 #include "udp/print_command.hpp"
 
 char const *HOST = "localhost";
@@ -26,17 +25,12 @@ int main(int argc, char **argv)
 
 		vl::udp::Server server( PORT );
 
-		// Create handler with two Vectors and one Quaternion
-		boost::shared_ptr<vl::udp::Handler> handler( new vl::udp::PrintHandler );
-		vl::udp::Packet packet;
 		boost::shared_ptr<vl::udp::Command> cmd( new vl::udp::PrintCommand("setPosition", "feet" ) );
-		packet.addCommand( cmd );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::PrintCommand("setPosition", "feet" ) );
-		packet.addCommand( cmd );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::PrintCommand("setQuaternion", "feet" ) );
-		packet.addCommand( cmd );
-		handler->setPacket( packet );
-		server.setHandler( handler );
+		server.addCommand( cmd );
 
 		std::cout << "Starting UDP client" << std::endl;
 

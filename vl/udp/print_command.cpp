@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "base/print.hpp"
+
 vl::udp::PrintCommand::PrintCommand( std::string const &typ, std::string const &obj )
 	: _object(obj)
 {
@@ -47,12 +49,7 @@ vl::udp::PrintCommand::operator()( void )
 	}
 
 	std::cout << "Command " << cmd_str << " on object = " << _object
-		<< " : with value = ";
-	for( size_t i = 0; i < _data.size(); ++i )
-	{
-		std::cout << _data.at(i) << " ";
-	}
-	std::cout << std::endl;
+		<< " : with value = " << _data;
 }
 
 uint16_t

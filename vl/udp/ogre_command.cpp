@@ -1,4 +1,4 @@
-#include "ogre_handler.hpp"
+#include "ogre_command.hpp"
 
 vl::udp::OgreCommand::OgreCommand ( const std::string& typ, Ogre::SceneNode* node ) 
 	: _node(node)
@@ -24,21 +24,4 @@ vl::udp::OgreCommand::getSize ( void ) const
 	{ return 4; }
 	
 	return 0;
-}
-
-vl::udp::OgreHandler::OgreHandler(int packet_id)
-	: Handler(packet_id)
-{
-
-}
-
-vl::udp::OgreHandler::~OgreHandler(void )
-{
-
-}
-
-void
-vl::udp::OgreHandler::handle(std::vector< double > msg)
-{
-
 }

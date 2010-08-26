@@ -10,9 +10,8 @@
 #include <time.h>
 
 #include "udp/server.hpp"
-#include "udp/handler.hpp"
 #include "udp/client.hpp"
-#include "udp/ogre_handler.hpp"
+#include "udp/ogre_command.hpp"
 
 char const *HOST = "localhost";
 char const *PORT_STR = "2244";
@@ -26,16 +25,13 @@ int main(int argc, char **argv)
 
 		vl::udp::Server server( PORT );
 
-		// Create handler with two Vectors and one Quaternion
-		boost::shared_ptr<vl::udp::Handler> handler( new vl::udp::OgreHandler );
-		vl::udp::Packet packet;
 		// TODO correct pointers to SceneNodes here
 		boost::shared_ptr<vl::udp::Command> cmd( new vl::udp::OgreCommand("setPosition", 0 ) );
-		packet.addCommand( cmd );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::OgreCommand("setPosition", 0 ) );
+		server.addCommand( cmd );
 		cmd.reset( new vl::udp::OgreCommand("setQuaternion", 0 ) );
-		handler->setPacket( packet );
-		server.setHandler( handler );
+		server.addCommand( cmd );
 
 		std::cout << "Starting UDP client" << std::endl;
 

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <cstring>
 
+#include <boost/shared_ptr.hpp>
+
 namespace vl
 {
 	
@@ -35,6 +37,8 @@ public :
 	virtual double const &at( size_t ) const = 0;
 
 };	// class Command
+
+typedef boost::shared_ptr<Command> CommandRefPtr;
 
 }	// namespace udp
 

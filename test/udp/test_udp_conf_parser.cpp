@@ -6,21 +6,15 @@
 
 #include "base/rapidxml_print.hpp"
 
-#include "udp/udp_conf.hpp"
-
-struct null_deleter
-{
-    void operator()(void const *) const
-    {
-    }
-};
+#include "udp/server_config.hpp"
+#include "base/typedefs.hpp"
 
 struct ConfFixture
 {
 	ConfFixture( void )
 	{
-		boost::shared_ptr<vl::udp::UdpConf> conf_ptr( &conf, null_deleter() );
-		ser.reset( new vl::udp::UdpConfSerializer( conf_ptr ) );
+		vl::udp::ServerConfigRefPtr conf_ptr( &conf, vl::null_deleter() );
+		ser.reset( new vl::udp::ServerConfigSerializer( conf_ptr ) );
 		
 		server = doc.allocate_node(rapidxml::node_element, "server" );
 		doc.append_node(server);
@@ -49,8 +43,8 @@ struct ConfFixture
 	}
 
 
-	vl::udp::UdpConf conf;
-	boost::shared_ptr<vl::udp::UdpConfSerializer> ser;
+	vl::udp::ServerConfig conf;
+	boost::shared_ptr<vl::udp::ServerConfigSerializer> ser;
 
 	// String containing the whole xml file, used as an input for the parser
 	std::string xml_data;

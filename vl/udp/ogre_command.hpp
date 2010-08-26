@@ -1,7 +1,7 @@
-#ifndef OGREHANDLER_HPP
-#define OGREHANDLER_HPP
+#ifndef VL_UDP_OGRE_COMMAND_HPP
+#define VL_UDP_OGRE_COMMAND_HPP
 
-#include "handler.hpp"
+#include "command.hpp"
 #include <OGRE/OgreSceneNode.h>
 
 namespace vl
@@ -35,20 +35,11 @@ private :
 	Ogre::SceneNode *_node;
 	std::vector<double> _data;
 	CMD_TYPE _type;
-};
 
-class OgreHandler : public udp::Handler
-{
-public:
-	OgreHandler( int packet_id = -1 );
-
-	virtual ~OgreHandler();
-
-	virtual void handle( std::vector<double> msg );
-};
+};	// class OgreCommand
 
 }	// namespace udp
 
 }	// namespace vl
 
-#endif // OGREHANDLER_HPP
+#endif // VL_UDP_OGRE_COMMAND_HPP
