@@ -1,0 +1,20 @@
+<server type="udp">
+	<port>2244</port>
+
+	<!-- Only one type of packets allowed -->
+	<packet id="-1">
+		<vector type="double" unit="mm">
+			<map>arm1</map>
+		</vector>
+		<vector type="double" unit="mm">
+			<map>arm2</map>
+		</vector>
+		<angle_axis type="double" unit="deg">
+			<map>joint1</map>
+		</angle_axis>
+		<quaternion type="double">
+			<map>joint2</map>
+		</quaternion>
+	</packet>
+
+</server>

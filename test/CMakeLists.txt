@@ -12,6 +12,7 @@ subdirs(util
 #		synchronization
 		dotscene_loader
 		eq_cluster
+		udp
 		)
 
 add_executable( test_filestring

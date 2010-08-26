@@ -48,11 +48,11 @@ set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS unit_test_framework thread filesystem REQUIRED)
 # TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
-if( WIN32 )
+#if( WIN32 )
 	set( EQ_LIBRARIES Equalizer )
-elseif( UNIX )
-	set( EQ_LIBRARIES eq )
-endif( WIN32 )
+#elseif( UNIX )
+#	set( EQ_LIBRARIES eq )
+#endif( WIN32 )
 
 if( WIN32 )
 	set( VRPN_INCLUDE_DIR "" CACHE PATH "VRPN include path" )

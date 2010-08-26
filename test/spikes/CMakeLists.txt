@@ -74,8 +74,8 @@ add_executable( dotscene_loader_tracking
 	${HEADERS}
 	)
 
-add_executable( dotscene_loader 
-	dotscene_loader.cpp
+add_executable( dotscene_loader_demo
+	dotscene_loader_demo.cpp
 	${SOURCES}
 	${HEADERS}
 	)
@@ -92,4 +92,4 @@ target_link_libraries( stereo_render ${LIBS} )
 target_link_libraries( node_test ${LIBS} )
 target_link_libraries( tracking ${LIBS} vrpn )
 target_link_libraries( dotscene_loader_tracking ${LIBS} vrpn )
-target_link_libraries( dotscene_loader ${LIBS} )
+target_link_libraries( dotscene_loader_demo ${LIBS} )
