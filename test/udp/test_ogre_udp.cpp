@@ -12,6 +12,7 @@
 #include "udp/server.hpp"
 #include "udp/client.hpp"
 #include "udp/ogre_command.hpp"
+#include <base/sleep.hpp>
 
 char const *HOST = "localhost";
 char const *PORT_STR = "2244";
@@ -53,11 +54,7 @@ int main(int argc, char **argv)
 
 			std::cout << "Message sent" << std::endl;
 
-			// Sleep
-			timespec tv;
-			tv.tv_sec = 0;
-			tv.tv_nsec = 1e3;
-			::nanosleep( &tv, 0 );
+			vl::usleep(1);
 
 			server.mainloop();
 		}

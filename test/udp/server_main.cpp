@@ -6,6 +6,7 @@
 
 #include "udp/server.hpp"
 #include "udp/print_command.hpp"
+#include <base/sleep.hpp>
 
 uint16_t const PORT = 2244;
 
@@ -28,11 +29,7 @@ int main(int argc, char **argv)
 		{
 			server.mainloop();
 
-			// Sleep
-			timespec tv;
-			tv.tv_sec = 0;
-			tv.tv_nsec = 1e3;
-			::nanosleep( &tv, 0 );
+			vl::usleep(1);
 		}
 	}
 	catch (std::exception& e)

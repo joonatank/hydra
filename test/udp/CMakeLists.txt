@@ -21,8 +21,7 @@ add_executable( test_ogre_udp
 	${eqOgre_SOURCE_DIR}/udp/client.cpp
 	${eqOgre_SOURCE_DIR}/udp/server.cpp
 	${eqOgre_SOURCE_DIR}/udp/ogre_command.cpp
-	
-	ogre_udp.cpp )
+	test_ogre_udp.cpp )
 
 add_executable( test_udp_conf_parser
 	${eqOgre_SOURCE_DIR}/udp/server_config.cpp
