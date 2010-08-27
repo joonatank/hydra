@@ -1,6 +1,6 @@
 #include "server.hpp"
 
-#include <iostream>
+#include "base/exceptions.hpp"
 
 vl::udp::Server::Server(  uint16_t const port  )
 	: socket(io_service, boost::udp::endpoint(boost::udp::v4(), port))
@@ -48,17 +48,22 @@ vl::udp::Server::handle(std::vector< double > msg)
 		boost::shared_ptr<udp::Command> cmd = _commands.at(i);
 
 		// Message is too short
-		// TODO should throw
 		if( msg.size() - msg_pos < cmd->getSize() )
 		{
-			std::cerr << "Packet size is too small for the next command" << std::endl;
-			break;
+			// Calculate the number of bytes needed for the next command
+			size_t missing_bytes = cmd->getSize() - (msg.size() - msg_pos);
+			// Add the number of bytes needed for all the remaining commands
+			for( size_t j = i+i; j < _commands.size(); ++j )
+			{
+				missing_bytes =+ sizeof(double) * _commands.at(j)->getSize();
+			}
+			BOOST_THROW_EXCEPTION( vl::short_message() << vl::bytes(missing_bytes) );
 		}
 
 		// Assign the new values
 		for( size_t j = 0; j < cmd->getSize(); ++j )
 		{
-			cmd->at(i) = msg.at(i+j);
+			cmd->at(j) = msg.at(msg_pos);
 			msg_pos++;
 		}
 
@@ -68,8 +73,7 @@ vl::udp::Server::handle(std::vector< double > msg)
 
 	if( msg_pos != msg.size() )
 	{
-		// TODO should throw
-		std::cerr << (msg.size()-msg_pos)*sizeof(double)
-			<< " unhandled bytes in the message." << std::endl;
+		size_t extra_bytes = (msg.size()-msg_pos)*sizeof(double);
+		BOOST_THROW_EXCEPTION( vl::long_message() << vl::bytes(extra_bytes) );
 	}
 }

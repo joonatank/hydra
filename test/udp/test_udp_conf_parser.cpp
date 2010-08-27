@@ -1,4 +1,6 @@
+#ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
+#endif
 
 #define BOOST_TEST_MODULE udp_conf_parser
 

@@ -9,7 +9,13 @@ if( UNIX )
 endif( UNIX )
 
 if( WIN32 )
-	add_definitions( -DVL_WIN32 -DNOMINMAX )
+	add_definitions( -DVL_WIN32		# Custom value used throughout the VL project
+					 -DNOMINMAX		# Don't pollute the global namespace
+					 -DNTDDI_WINXP
+					 -DNOCOMM
+					 -DNOGDI
+					 -DNOSOUND
+					 )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
 endif( WIN32 )

@@ -15,6 +15,9 @@ namespace vl
 	typedef boost::error_info<struct tag_quaternion, vl::quaternion> quat;
 	/// File name used
 	typedef boost::error_info<struct tag_file, std::string> file_name;
+
+	// UDP number of bytes
+	typedef boost::error_info<struct tag_bytes, size_t> bytes;
 	
 	struct exception : virtual std::exception, virtual boost::exception {};
 
@@ -134,6 +137,19 @@ namespace vl
 	struct invalid_dotscene : public parsing_error {};
 	struct invalid_tracking : public parsing_error {};
 
+	/// 
+	/// ---------- UDP errors --------------	
+	struct short_message : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Received message is shorter than expected."; }
+	};
+	
+	struct long_message : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Received message constains extra bytes."; }
+	};
 }	// namespace vl
 
 #endif
