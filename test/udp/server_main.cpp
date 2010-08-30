@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		{
 			server.mainloop();
 
-			vl::usleep(1);
+			vl::msleep(1);
 		}
 	}
 	catch (std::exception& e)

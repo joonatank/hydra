@@ -1,12 +1,14 @@
 #include "client.hpp"
 
-#include <iostream>
+#include <sstream>
 
-vl::udp::Client::Client( char const *hostname, char const *port )
+vl::udp::Client::Client( char const *hostname, uint16_t port )
 	: io_service(), socket( io_service ), receiver_endpoint()
 {
+	std::stringstream ss;
+	ss << port;
 	boost::udp::resolver resolver(io_service);
-	boost::udp::resolver::query query( boost::udp::v4(), hostname, port );
+	boost::udp::resolver::query query( boost::udp::v4(), hostname, ss.str().c_str() );
 	receiver_endpoint = *resolver.resolve(query);
 
 	socket.open( boost::udp::v4() );

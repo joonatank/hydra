@@ -81,6 +81,43 @@ link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${VRPN_LIB_DIR} )
 
 link_directories( ${vl_BINARY_DIR}/vl )
 
+MACRO( copy_config )
+# Config file for spikes
+message( "Copying config file for project = ${PROJECT_NAME}"  )
+
+set( DATA_DIR ${vl_SOURCE_DIR}/data )
+
+set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
+
+if( WIN32 )
+	configure_file( ${DATA_DIR}/test_conf.xml
+		${PROJECT_BINARY_DIR}/Release/test_conf.xml )
+	configure_file( ${DATA_DIR}/test_conf.xml
+		${PROJECT_BINARY_DIR}/Debug/test_conf.xml )
+else()
+	configure_file( ${DATA_DIR}/test_conf.xml
+		${PROJECT_BINARY_DIR}/test_conf.xml )
+endif()
+
+
+# Plugins file
+# Copyed to the vl root dir so that the plugins path are correct
+if( WIN32 )
+	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_REL} )
+	configure_file( ${DATA_DIR}/plugins.cfg
+		${PROJECT_BINARY_DIR}/Release/plugins.cfg )
+	set( PLUGINS_DIR_DBG ${OGRE_PLUGIN_DIR_DBG} )
+	configure_file( ${DATA_DIR}/plugins_d.cfg
+		${PROJECT_BINARY_DIR}/Debug/plugins.cfg )
+else( )
+	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_TMP} )
+	configure_file( ${DATA_DIR}/plugins.cfg
+		${PROJECT_BINARY_DIR}/plugins.cfg )
+endif()
+
+ENDMACRO()
+
 # include rendering engine, eq ogre directories
 include_directories(vl)
 

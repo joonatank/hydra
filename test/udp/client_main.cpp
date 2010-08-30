@@ -3,7 +3,7 @@
 #include "udp/client.hpp"
 
 char const *HOST = "localhost";
-char const *PORT = "2244";
+uint16_t const PORT = 2244;
 
 int main(int argc, char **argv)
 {

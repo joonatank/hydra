@@ -3,6 +3,8 @@
 
 #include <boost/asio.hpp>
 
+#include <stdint.h>
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -17,7 +19,7 @@ namespace udp
 class Client
 {
 public:
-	Client( char const *hostname, char const *port );
+	Client( char const *hostname, uint16_t port );
 
 	virtual ~Client();
 

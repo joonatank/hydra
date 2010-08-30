@@ -23,9 +23,8 @@
 #include "base/print.hpp"
 #include "base/exceptions.hpp"
 
-char const *HOST = "localhost";
-char const *PORT_STR = "2244";
-uint16_t const PORT = 2244;
+// Test includes
+#include "udp_fixtures.hpp"
 
 // Tolerance used in floating point comparison in percents 
 double const TOLERANCE = 1e-3;
@@ -136,68 +135,6 @@ public :
 	vl::udp::CMD_TYPE _type;
 	double tmp;
 };
-
-struct TestUdpFixture
-{
-public :
-	TestUdpFixture( void )
-		: server( PORT ), client( HOST, PORT_STR ),
-		  msg_pos(3), msg_rot_quat(4), msg_rot_aa(4)
-	{
-		BOOST_TEST_MESSAGE( "Starting UDP server on port " << PORT );
-
-		BOOST_TEST_MESSAGE( "Starting UDP client" );
-
-		BOOST_TEST_MESSAGE( "Client connecting to host : " << HOST << " "
-			<< "using port = " << PORT_STR );
-
-		// Initialize some test vectors
-		for( size_t i = 0; i < msg_pos.size(); ++i )
-		{
-			msg_pos.at(i) = (double)(i) + 0.02*i;
-		}
-
-		for( size_t i = 0; i < msg_rot_quat.size(); ++i )
-		{
-			msg_rot_quat.at(i) = 3*(double)(i+1) + 0.005*i;
-		}
-
-		
-		for( size_t i = 0; i < msg_rot_aa.size(); ++i )
-		{
-			msg_rot_aa.at(i) = -2*(double)(i+1) + 0.04*i;
-		}
-	}
-
-	~TestUdpFixture( void )
-	{
-	}
-
-	void send( std::vector<double> msg )
-	{
-		client.send( msg );
-
-		vl::usleep( 1 );
-
-		server.mainloop();
-	}
-
-	vl::udp::Server server;
-	vl::udp::Client client;
-
-	// Test data vectors
-	std::vector<double> msg_pos;
-	std::vector<double> msg_rot_quat;
-	std::vector<double> msg_rot_aa;
-};
-
-void add_vec( std::vector<double> &sink, std::vector<double> const &source )
-{
-	for( size_t i = 0; i < source.size(); ++i )
-	{
-		sink.push_back( source.at(i) );
-	}
-}
 
 BOOST_FIXTURE_TEST_SUITE( TestUDP, TestUdpFixture )
 
