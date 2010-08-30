@@ -1,15 +1,19 @@
 
-#include <eq/client/channel.h>
+#include <eq/eq.h>
 #include <stdlib.h>
 
-#include "eq_ogre/ogre_root.hpp"
-#include "eq_ogre/ogre_scene_manager.hpp"
-#include "eq_ogre/ogre_scene_node.hpp"
-#include "eq_ogre/ogre_entity.hpp"
-#include "eq_ogre/ogre_camera.hpp"
-#include "eq_ogre/ogre_render_window.hpp"
-#include "base/exceptions.hpp"
+// Ogre includes
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreEntity.h>
 
+// eqOgre includes
+#include "eq_ogre/ogre_root.hpp"
+#include "base/exceptions.hpp"
+#include "math/conversion.hpp"
+
+// Test case includes
 #include "../fixtures.hpp"
 
 class InitData : public eq::net::Object

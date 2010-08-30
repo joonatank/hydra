@@ -5,7 +5,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "eq_graph/eq_root.hpp"
 #include "base/exceptions.hpp"
 #include "base/args.hpp"
 

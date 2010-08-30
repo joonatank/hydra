@@ -18,15 +18,12 @@
 
 #include <eq/client/object.h>
 
-#include "ogre_scene_manager.hpp"
-
-#include "eq_graph/eq_root.hpp"
-
 #include <OGRE/OgreRoot.h>
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreRenderWindow.h>
 
 #include <boost/thread.hpp>
 
-#include "ogre_render_window.hpp"
 #include "base/typedefs.hpp"
 #include "settings.hpp"
 
@@ -34,7 +31,7 @@ namespace vl
 {
 namespace ogre 
 {
-	class Root //: public vl::cl::Root
+	class Root
 	{
 		public :
 			Root( vl::SettingsRefPtr settings );

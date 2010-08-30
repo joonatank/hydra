@@ -30,12 +30,12 @@ if(WIN32)
 endif(WIN32)
 
 if( WIN32 )
-add_executable( sceneloader WIN32 ${SRCS} ${SampleLoadApp_res} )
+add_executable( ogre_sceneloader WIN32 ${SRCS} ${SampleLoadApp_res} )
 else( WIN32 )
-add_executable( sceneloader ${SRCS} )
+add_executable( ogre_sceneloader ${SRCS} )
 endif( WIN32 )
 
-target_link_libraries( sceneloader
+target_link_libraries( ogre_sceneloader
 	${OpenGL_LIBRARIES}
 	${OGRE_LIBRARIES}
 	${OIS_LIBRARIES}

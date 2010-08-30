@@ -22,6 +22,7 @@
 #include "eq_ogre/ogre_root.hpp"
 #include "base/args.hpp"
 #include "base/exceptions.hpp"
+#include "math/conversion.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"

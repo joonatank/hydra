@@ -12,7 +12,7 @@
 
 #include "settings.hpp"
 #include "base/exceptions.hpp"
-
+#include "math/conversion.hpp"
 #include "dotscene_loader.hpp"
 
 #include "../fixtures.hpp"

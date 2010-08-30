@@ -21,37 +21,37 @@ set( SOURCES
 	${eqOgre_SOURCE_DIR}/dotscene_loader.cpp
 	)
 
-add_executable( ogre_render 
+add_executable( spike_ogre_render 
 	ogre_render.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
-add_executable( stereo_render 
+add_executable( spike_stereo_render 
 	stereo_render.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
-add_executable( node_test 
+add_executable( spike_node_test 
 	node_test.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
-add_executable( tracking 
+add_executable( spike_tracking 
 	tracking.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
-add_executable( dotscene_loader_tracking
+add_executable( spike_dotscene_tracking
 	dotscene_loader_tracking.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
-add_executable( dotscene_loader_demo
+add_executable( spike_dotscene
 	dotscene_loader_demo.cpp
 	${SOURCES}
 	${HEADERS}
@@ -64,9 +64,9 @@ set( LIBS
 	${EQ_LIBRARIES}
 	)
 
-target_link_libraries( ogre_render ${LIBS} )
-target_link_libraries( stereo_render ${LIBS} )
-target_link_libraries( node_test ${LIBS} )
-target_link_libraries( tracking ${LIBS} vrpn )
-target_link_libraries( dotscene_loader_tracking ${LIBS} vrpn )
-target_link_libraries( dotscene_loader_demo ${LIBS} )
+target_link_libraries( spike_ogre_render ${LIBS} )
+target_link_libraries( spike_stereo_render ${LIBS} )
+target_link_libraries( spike_node_test ${LIBS} )
+target_link_libraries( spike_tracking ${LIBS} vrpn )
+target_link_libraries( spike_dotscene_tracking ${LIBS} vrpn )
+target_link_libraries( spike_dotscene ${LIBS} )

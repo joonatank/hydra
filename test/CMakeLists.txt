@@ -6,10 +6,7 @@ include_directories( util )
 
 subdirs(util
 		math
-#		eq_graph
 		spikes
-#		eq_ogre
-#		synchronization
 		dotscene_loader
 		eq_cluster
 		udp
