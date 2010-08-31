@@ -16,6 +16,7 @@
 #include "dotscene_loader.hpp"
 
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
 // VRPN tracking
 vrpn_TRACKERCB g_trackerData;

@@ -37,6 +37,8 @@ add_executable( test_tracking
 				${eqOgre_SOURCE_DIR}/tracker.hpp
 				${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
 				${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
+				debug.hpp
+				tracking_fixture.hpp
 				)
 
 set( LIBS ${Boost_LIBRARIES} )

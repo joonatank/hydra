@@ -2,7 +2,7 @@
 #ifdef VL_UNIX
 #define BOOST_TEST_DYN_LINK
 #endif
-#define BOOST_TEST_MODULE settings
+#define BOOST_TEST_MODULE tracking
 
 #include <boost/test/unit_test.hpp>
 
@@ -10,33 +10,61 @@
 #include "base/filesystem.hpp"
 #include "base/exceptions.hpp"
 #include "base/rapidxml_print.hpp"
+#include "base/sleep.hpp"
 
-#include <iostream>
+//#include <iostream>
 
-BOOST_AUTO_TEST_CASE( constructor )
-{
-	
-}
+// Test includes
+#include "debug.hpp"
+#include "tracking_fixture.hpp"
 
-// TODO this needs an embedded vrpn tracker server to be effective test
+double const TOLERANCE = 1e-3;
+
+const char *TRACKER_NAME = "glasses@localhost";
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
+
+BOOST_FIXTURE_TEST_SUITE( TrackingUnitTests, TrackerServerFixture )
+
+// TODO needs different values for the sensors
+// TODO needs multiple sensors
 BOOST_AUTO_TEST_CASE( retrieve_data )
 {
-	
+	vl::vrpnTracker tracker( TRACKER_NAME );
+	tracker.init();
+	for( size_t i = 0; i < 10; ++i )
+	{
+		mainloop();
+		tracker.mainloop();
+		vl::msleep(1);
+	}
+	BOOST_REQUIRE_EQUAL( tracker.getNSensors(), 1 );
+
+	Ogre::Vector3 const &pos = tracker.getPosition(0);
+	Ogre::Vector3 pos_ref( 0, 1.5, 0 );
+	for( size_t i = 0; i < 3; ++i )
+	{
+		BOOST_CHECK_CLOSE( pos_ref[i], pos[i], TOLERANCE );
+	}
+
+	Ogre::Quaternion const &quat = tracker.getOrientation(0);
+	Ogre::Quaternion quat_ref( 0.707, 0, 0, 0.707 );
+	for( size_t i = 0; i < 4; ++i )
+	{
+		BOOST_CHECK_CLOSE( quat_ref[i], quat[i], TOLERANCE );
+	}
 }
 
 // Test mapping to Ogre SceneNode
 BOOST_AUTO_TEST_CASE( node_mapping )
 {
-	
+	// TODO
 }
 
-// TODO test mapping to Equalizer Observer, hard to do without initing equalizer
-// Might try to use mock observer and just check head matrix settings
-BOOST_AUTO_TEST_CASE( observer_mapping )
-{
-	
-}
+BOOST_AUTO_TEST_SUITE_END()
 
+
+/*
 struct TrackingXMLFixture
 {
 	TrackingXMLFixture( void )
@@ -70,6 +98,7 @@ struct TrackingXMLFixture
 	}
 };
 
+
 BOOST_FIXTURE_TEST_SUITE( xmlTests, TrackingXMLFixture )
 
 BOOST_AUTO_TEST_CASE( read )
@@ -78,3 +107,5 @@ BOOST_AUTO_TEST_CASE( read )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+*/

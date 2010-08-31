@@ -5,20 +5,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#ifdef VL_WIN32
-#include <WinSock2.h>
-#include <Windows.h>
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
-#include <vrpn_Tracker.h>
 
-#include <time.h>
+//#include <time.h>
 
 #include <eq/eq.h>
-#include <eq/base/sleep.h>
 #include <limits>
 #include <iostream>
 
@@ -32,29 +25,23 @@
 #include "math/conversion.hpp"
 #include "base/args.hpp"
 #include "base/exceptions.hpp"
+#include "vrpn_tracker.hpp"
+#include "base/sleep.hpp"
 
 // Test includes
 #include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
-BOOST_GLOBAL_FIXTURE( InitFixture )
-
-/*****************************************************************************
-   Callback handler
- *****************************************************************************/
-vrpn_TRACKERCB g_trackerData;
-
-void    VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
-{
-	g_trackerData = t;
-}
+//char const *TRACKER_NAME = "glasses@130.230.58.16";
+char const *TRACKER_NAME = "glasses@localhost";
 
 class Channel : public eq::Channel
 {
 public :
 	Channel( eq::Window *parent )
-		: eq::Channel(parent), _root(), _window(0), _sm(0)
-	{} 
+		: eq::Channel(parent), _root(), _window(0), _sm(0), _tracker(0)
+	{}
 
 	virtual ~Channel( void )
 	{}
@@ -117,6 +104,11 @@ public :
 			BOOST_CHECK_NO_THROW( robot->attachObject( ent ) );
 			std::cerr << "Ogre Entity attached" << std::endl;
 			setNearFar( 0.1, 100.0 );
+
+			// Create tracker
+			_tracker = new vl::vrpnTracker( TRACKER_NAME );
+			BOOST_REQUIRE( _tracker );
+			_tracker->init();
 		}
 		catch( vl::exception const &e )
 		{
@@ -139,65 +131,17 @@ public :
 	virtual void frameDraw( const uint32_t frameID )
 	{
 		try {
-			/*	Old
-			eq::Channel::frameDraw( frameID );
-
-			Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
-			Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
-
-			// Quaternion should be about unit length, it's invalid if it's something else
-			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[1], 
-					g_trackerData.quat[1], g_trackerData.quat[2] );
-			//std::cout << "quaternion length = " << q.Norm() << std::endl;
-			if( q.Norm() < 0.5 )
-			{ q = Ogre::Quaternion::IDENTITY; }
-			else
-			{ q.normalise(); }
+			BOOST_REQUIRE( _tracker );
 			
-			v3 = Ogre::Vector3( -g_trackerData.pos[0], -g_trackerData.pos[1], 
-					g_trackerData.pos[2] );
-
-			Ogre::Matrix4 m(q); 
-			m.setTrans(v3);
-
-			// Note: real applications would use one tracking device per observer
-		    const eq::Observers& observers = getConfig()->getObservers();
-		    for( eq::Observers::const_iterator i = observers.begin();
-				i != observers.end(); ++i )
-		    {
-				//std::cerr << "Head Matrix : " << std::endl
-				//	<< (*i)->getHeadMatrix() << std::endl;
-			
-				// When head matrix is set equalizer automatically applies it to the
-				// GL Modelview matrix as first transformation
-				(*i)->setHeadMatrix( vl::math::convert(m) );
+			_tracker->mainloop();
+			Ogre::Quaternion q;
+			Ogre::Vector3 v3;
+			if( _tracker->getNSensors() > 0 )
+			{
+				v3 = _tracker->getPosition( 0 );
+				q = _tracker->getOrientation( 0 );
 			}
-
-			eq::Frustumf frust = getFrustum();
-
-			cam->setProjectionMatrix( frust.compute_matrix() );
-		
-			win->update();
-			*/
-
-			// New test code
-			// Head tracking support
-			Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
-			Ogre::Vector3 v3 = Ogre::Vector3::ZERO;
-
-			// Quaternion should be about unit length, it's invalid if it's something else
-			// TODO the quaternion is incorrect, test it
-			q = Ogre::Quaternion( g_trackerData.quat[3], g_trackerData.quat[0], 
-					g_trackerData.quat[1], g_trackerData.quat[2] );
-
-			if( q.Norm() < 0.5 )
-			{ q = Ogre::Quaternion::IDENTITY; }
-			else
-			{ q.normalise(); }
-		
-			v3 = Ogre::Vector3( g_trackerData.pos[0], g_trackerData.pos[1], 
-					-g_trackerData.pos[2] );
-
+			
 			Ogre::Matrix4 m(q); 
 			m.setTrans(v3);
 
@@ -235,6 +179,8 @@ public :
 	Ogre::RenderWindow *_window;
 	Ogre::Camera *_camera;
 	Ogre::SceneManager *_sm;
+
+	vl::vrpnTracker *_tracker;
 };
 
 class NodeFactory : public eq::NodeFactory
@@ -306,25 +252,17 @@ struct RenderFixture
 	std::ofstream log_file;
 };
 
+BOOST_GLOBAL_FIXTURE( InitFixture )
+
 BOOST_FIXTURE_TEST_CASE( render_test, RenderFixture )
 {
 	BOOST_REQUIRE( config );
 
-    // Open the tracker
-    vrpn_Tracker_Remote *tkr = new vrpn_Tracker_Remote("glasses@130.230.58.16");
-	
-	// Set up the tracker callback handler
-    tkr->register_change_handler(NULL, handle_tracker);
-
     for ( ; ;)
 	{
-	  	tkr->mainloop();
-	  	mainloop(); 
+	  	mainloop();
 
 	  	// Sleep
-		eq::base::sleep(1);
+		vl::msleep(1);
 	}
-
-	delete tkr;
 }
-

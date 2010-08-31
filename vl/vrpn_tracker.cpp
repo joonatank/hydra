@@ -1,45 +1,80 @@
 
 #include "vrpn_tracker.hpp"
 
-vl::vrpnTracker::vrpnTracker(const std::string& trackerName, const std::string& hostname, unsigned int port)
-{
+#include "base/exceptions.hpp"
 
+std::ostream &operator<<( std::ostream &os, vrpn_TRACKERCB t )
+{
+	os << "Sensor = " << t.sensor << " : position = (";
+	for( size_t i = 0; i < 3; ++i )
+	{ os << t.pos[i] << ", "; }
+	os << ")" << " : quaternion (";
+	for( size_t i = 0; i < 4; ++i )
+	{ os << t.quat[i] << ", "; }
+
+	return os;
+}
+
+std::ostream & vl::operator<<( std::ostream &os, vl::SensorData const &d )
+{
+	os << "Position = " << d.position << " : Orientation = " << d.quaternion;
+
+	return os;
+}
+
+void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
+{
+	vl::vrpnTracker *tracker = (vl::vrpnTracker *)userdata;
+	//std::cout << "Callback called : " << t << std::endl;
+	tracker->update(t);
+}
+
+vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
+{
+	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
+	if( !_tracker )
+	{ throw vl::exception(); }
+}
+
+vl::vrpnTracker::~vrpnTracker( void )
+{
+	delete _tracker;
 }
 
 Ogre::Quaternion const &
 vl::vrpnTracker::getOrientation(size_t sensor) const
 {
-	return Ogre::Quaternion::IDENTITY;
+	return _data.at(sensor).quaternion;
 }
 
 Ogre::Vector3 const &
 vl::vrpnTracker::getPosition(size_t sensor) const
 {
-	return Ogre::Vector3::ZERO;
+	return _data.at(sensor).position;
 }
 
 void 
 vl::vrpnTracker::mainloop(void )
 {
+	if( !_tracker )
+	{ throw vl::exception(); }
 
+	_tracker->mainloop();
 }
 
 void 
 vl::vrpnTracker::map(Ogre::SceneNode* node)
 {
-
+	// TODO
 }
 
-/*
 void 
-vl::vrpnTracker::map(eq::Observer* observer)
+vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 {
+	if( _data.size() <= t.sensor )
+	{
+		_data.resize( t.sensor+1 ); 
+	}
 
-}
-*/
-
-void 
-vl::vrpnTracker::update(const vl::SensorData& data)
-{
-
+	_data.at(t.sensor) = vl::SensorData( t.pos, t.quat );
 }

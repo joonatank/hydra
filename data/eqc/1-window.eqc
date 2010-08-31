@@ -19,7 +19,7 @@ server
                 window
                 {
                     name "window"
-                    viewport [ 0 0 800 600 ]
+                    viewport [ 0 0 1600 1200]
 		#			attributes { hint_stereo ON }
                     channel
                     { name "channel" }

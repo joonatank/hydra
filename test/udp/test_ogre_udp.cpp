@@ -24,6 +24,7 @@
 // Test includes
 #include "udp_fixtures.hpp"
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
 double const TOLERANCE = 1e-3;
 

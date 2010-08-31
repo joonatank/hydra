@@ -27,6 +27,7 @@
 // Test includes
 #include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
 

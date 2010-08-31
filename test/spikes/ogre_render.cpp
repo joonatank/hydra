@@ -12,6 +12,7 @@
 
 // Test helpers
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
 

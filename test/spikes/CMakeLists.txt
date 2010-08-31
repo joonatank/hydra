@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 2.6)
 copy_config()
 
 SET( HEADERS
-	../fixtures.hpp 
+	../fixtures.hpp
+	../debug.hpp
 	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_root.hpp
 	${eqOgre_SOURCE_DIR}/base/args.hpp
 	${eqOgre_SOURCE_DIR}/base/exceptions.hpp
@@ -43,6 +44,9 @@ add_executable( spike_tracking
 	tracking.cpp
 	${SOURCES}
 	${HEADERS}
+	${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
+	${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
+	${eqOgre_SOURCE_DIR}/tracker.hpp
 	)
 
 add_executable( spike_dotscene_tracking
@@ -55,6 +59,11 @@ add_executable( spike_dotscene
 	dotscene_loader_demo.cpp
 	${SOURCES}
 	${HEADERS}
+	)
+
+add_executable( fake_tracking_server
+	fake_tracking_server.cpp
+	../tracking_fixture.hpp
 	)
 
 set( LIBS
@@ -70,3 +79,4 @@ target_link_libraries( spike_node_test ${LIBS} )
 target_link_libraries( spike_tracking ${LIBS} vrpn )
 target_link_libraries( spike_dotscene_tracking ${LIBS} vrpn )
 target_link_libraries( spike_dotscene ${LIBS} )
+target_link_libraries( fake_tracking_server vrpn )

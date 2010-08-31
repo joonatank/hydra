@@ -15,6 +15,7 @@
 #include "dotscene_loader.hpp"
 
 #include "../fixtures.hpp"
+#include "../debug.hpp"
 
 class Config : public eq::Config
 {
