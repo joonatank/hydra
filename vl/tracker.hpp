@@ -43,6 +43,10 @@ public :
 
 	virtual void mainloop( void ) = 0;
 
+	// Sensor values used when not connected to a tracker
+	virtual void setPosition( size_t sensor, Ogre::Vector3 const &pos ) = 0;
+	virtual void setOrientation( size_t sensor, Ogre::Quaternion const &quat ) = 0;
+
 };	// class Tracker
 
 class TrackerSerializer

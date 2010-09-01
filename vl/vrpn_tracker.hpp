@@ -74,11 +74,20 @@ public :
 	// Called once in an iteration from main application
 	virtual void mainloop( void );
 
+	/// Sensor values used when not connected to a tracker
+	/// Uses different sensor data stack, so if connection is lost for long it can be
+	/// defaulted to these values.
+	/// For now supports default values if no vrpn connection is found
+	/// TODO we need to check if we have lost a connection and reset the sensor data then
+	virtual void setPosition( size_t sensor, Ogre::Vector3 const &pos );
+	virtual void setOrientation( size_t sensor, Ogre::Quaternion const &quat );
+
 protected :
 	// Callback function
 	void update( vrpn_TRACKERCB const t );
 
 	std::vector<vrpnSensorData> _data;
+	std::vector<vrpnSensorData> _default_values;
 	
 	vrpn_Tracker_Remote *_tracker;
 

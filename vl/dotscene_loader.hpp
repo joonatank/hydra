@@ -7,12 +7,10 @@
 
 // Own includes
 #include "base/rapidxml.hpp"
-#include "base/typedefs.hpp"
-#include "math/math.hpp"
 #include "base/filesystem.hpp"
 
-#include <OgreSceneNode.h>
-#include <OgreSceneManager.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreSceneManager.h>
 
 class nodeProperty
 {
@@ -108,8 +106,8 @@ protected:
 			const std::string &parameter,
 			const std::string &defaultValue = "");
 
-	vl::scalar getAttribReal(rapidxml::xml_node<>* XMLNode,
-			const std::string &parameter, vl::scalar defaultValue = 0);
+	Ogre::Real getAttribReal(rapidxml::xml_node<>* XMLNode,
+			const std::string &parameter, Ogre::Real defaultValue = 0);
 
 	bool getAttribBool(rapidxml::xml_node<>* XMLNode,
 			const std::string &parameter, bool defaultValue = false);

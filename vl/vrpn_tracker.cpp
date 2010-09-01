@@ -67,6 +67,28 @@ vl::vrpnTracker::map(Ogre::SceneNode* node)
 }
 
 void 
+vl::vrpnTracker::setPosition( size_t sensor, Ogre::Vector3 const &pos )
+{
+	// Grow the data array
+	if( _data.size() < sensor+1 )
+	{ _data.resize( sensor+1 ); }
+
+	_data.at(sensor).position = pos;
+
+	// Save the reference for later
+	if( _default_values.size() < sensor +1 )
+	{ _default_values.resize(sensor+1); }
+
+	_default_values.at(sensor).position = pos;
+}
+
+void 
+vl::vrpnTracker::setOrientation( size_t sensor, Ogre::Quaternion const &quat )
+{
+}
+
+// Protected
+void
 vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 {
 	if( _data.size() <= t.sensor )

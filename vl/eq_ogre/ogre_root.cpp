@@ -17,7 +17,7 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 		Ogre::LogManager *log_man = new Ogre::LogManager();
 		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( "ogre.log", true, false );
 		log->setTimeStampEnabled( true );
-		EQASSERT( log_man->getDefaultLog() == log );
+
 		std::string plugins = settings->getOgrePluginsPath().file_string();
 		_ogre_root = new Ogre::Root( plugins, "", "" );
 		_primary = true;
@@ -41,7 +41,10 @@ vl::ogre::Root::createRenderSystem( void )
 	if( !_primary )
 	{ return; }
 
-	EQASSERT( _ogre_root );
+	if( !_ogre_root )
+	{
+		BOOST_THROW_EXCEPTION( vl::exception() );
+	}
 
 	// We only support OpenGL rasterizer
 	Ogre::RenderSystem *rast
@@ -146,7 +149,10 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 Ogre::SceneManager *
 vl::ogre::Root::createSceneManager(std::string const &name )
 {
-	EQASSERT( _ogre_root );
+	if( !_ogre_root )
+	{
+		BOOST_THROW_EXCEPTION( vl::exception() );
+	}
 
 	Ogre::SceneManager *og_man 
 		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );

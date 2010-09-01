@@ -16,13 +16,9 @@
 #ifndef VL_OGRE_ROOT_HPP
 #define VL_OGRE_ROOT_HPP
 
-#include <eq/client/object.h>
-
 #include <OGRE/OgreRoot.h>
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreRenderWindow.h>
-
-#include <boost/thread.hpp>
 
 #include "base/typedefs.hpp"
 #include "settings.hpp"

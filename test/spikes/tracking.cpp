@@ -29,7 +29,6 @@
 #include "base/sleep.hpp"
 
 // Test includes
-#include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
 #include "../debug.hpp"
 
@@ -204,18 +203,16 @@ struct RenderFixture
 		args.add("--eq-config" );
 		args.add("1-window.eqc");
 
-		char **argv = args.getData();
-
-		std::cout << args << std::endl;
+		//std::cout << args << std::endl;
 
 		// Redirect logging
 		//eq::base::Log::setOutput( log_file );
 
 		// 1. Equalizer initialization
-		BOOST_REQUIRE(  eq::init( argc, argv, &nodeFactory ) );
+		BOOST_REQUIRE(  eq::init( args.size(), args.getData(), &nodeFactory ) );
 		
 		// 2. get a configuration
-		config = eq::getConfig( argc, argv );
+		config = eq::getConfig( args.size(), args.getData() );
 		BOOST_REQUIRE( config );
 
 		// 3. init config

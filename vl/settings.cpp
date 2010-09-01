@@ -7,6 +7,8 @@
 #include <fstream>
 
 vl::Settings::Settings( void )
+	: _tracker_default_pos( Ogre::Vector3::ZERO ),
+	  _tracker_default_orient( Ogre::Quaternion::IDENTITY )
 {
 }
 

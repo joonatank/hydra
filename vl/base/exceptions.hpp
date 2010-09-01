@@ -3,7 +3,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include "math/math.hpp"
+#include <OGRE/OgreQuaternion.h>
 
 namespace vl
 {
@@ -12,7 +12,7 @@ namespace vl
 	/// Name of the object
 	typedef boost::error_info<struct tag_name, std::string> name;
 	/// Quaternion used
-	typedef boost::error_info<struct tag_quaternion, vl::quaternion> quat;
+	typedef boost::error_info<struct tag_quaternion, Ogre::Quaternion> quat;
 	/// File name used
 	typedef boost::error_info<struct tag_file, std::string> file_name;
 

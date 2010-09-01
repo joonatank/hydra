@@ -12,8 +12,6 @@
 #include "settings.hpp"
 #include "eq_ogre/ogre_root.hpp"
 
-#include <boost/test/unit_test.hpp>
-
 namespace test = boost::unit_test::framework;
 
 struct OgreFixture

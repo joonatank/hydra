@@ -13,13 +13,13 @@ namespace eqOgre
 		Config( eq::base::RefPtr< eq::Server > parent );
 
 		/** @sa eq::Config::init. */
-		virtual bool init( uint32_t initID );
+//		virtual bool init( const uint32_t initID );
 
 		/** @sa eq::Config::exit. */
-		virtual bool exit (void);
+//		virtual bool exit (void);
 
         /** @sa eq::Config::handleEvent */
-		virtual bool handleEvent( const eq::ConfigEvent* event );
+//		virtual bool handleEvent( const eq::ConfigEvent* event );
 
 		void setSettings( vl::SettingsRefPtr set )
 		{ _settings = set; }

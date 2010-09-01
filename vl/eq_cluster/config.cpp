@@ -7,6 +7,7 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 eqOgre::Config::~Config()
 {}
 
+/*
 bool
 eqOgre::Config::init( uint32_t initID )
 {
@@ -15,7 +16,9 @@ eqOgre::Config::init( uint32_t initID )
 
     return true;
 }
+*/
 
+/*
 bool
 eqOgre::Config::exit (void)
 {
@@ -23,7 +26,9 @@ eqOgre::Config::exit (void)
 
     return ret;
 }
+*/
 
+/*
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
@@ -31,46 +36,16 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
     {
         case eq::Event::KEY_PRESS:
 		{
-			/*
             if( _handleKeyEvent( event->data.keyPress ))
             { _redraw = true; }
-			*/
 		}
         break;
 
         case eq::Event::POINTER_BUTTON_PRESS:
-        {
-			/*
-            const uint32_t viewID = event->data.context.view.id;
-            _frameData.setCurrentViewID( viewID );
-            if( viewID == EQ_ID_INVALID )
-            {
-                _currentCanvas = 0;
-                return true;
-            }
-            
-            const eq::View* view = findView( viewID );
-            const eq::Layout* layout = view->getLayout();
-            const eq::CanvasVector& canvases = getCanvases();
-            for( eq::CanvasVector::const_iterator i = canvases.begin();
-                 i != canvases.end(); ++i )
-            {
-                eq::Canvas* canvas = *i;
-                const eq::Layout* canvasLayout = canvas->getActiveLayout();
-
-                if( canvasLayout == layout )
-                {
-                    _currentCanvas = canvas;
-                    return true;
-                }
-            }
-			*/
-        }
-		break;
+			break;
 
         case eq::Event::POINTER_BUTTON_RELEASE:
         {
-			/*
             const eq::PointerEvent& releaseEvent = 
                 event->data.pointerButtonRelease;
             if( releaseEvent.buttons == eq::PTR_BUTTON_NONE)
@@ -89,13 +64,11 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
                     return true;
                 }
             }
-			*/
         }
 		break;
 
         case eq::Event::POINTER_MOTION:
 		{
-			/*
             if( event->data.pointerMotion.buttons == eq::PTR_BUTTON_NONE )
                 return true;
 
@@ -126,36 +99,6 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
                                        0.f );
                 _redraw = true;
             }
-			*/
-		}
-		break;
-
-        case eq::Event::MAGELLAN_AXIS:
-		{
-			/*
-            _spinX = 0;
-            _spinY = 0;
-            _advance = 0;
-            _frameData.spinModel(  0.0001f * event->data.magellan.zRotation,
-                                  -0.0001f * event->data.magellan.xRotation,
-                                  -0.0001f * event->data.magellan.yRotation );
-            _frameData.moveCamera(  0.0001f * event->data.magellan.xAxis,
-                                   -0.0001f * event->data.magellan.zAxis,
-                                    0.0001f * event->data.magellan.yAxis );
-            _redraw = true;
-            return true;
-			*/
-		}
-		break;
-
-        case eq::Event::MAGELLAN_BUTTON:
-		{
-			/*
-            if( event->data.magellan.button == eq::PTR_BUTTON1 )
-                _frameData.toggleColorMode();
-
-            _redraw = true;
-			*/
 		}
 		break;
 
@@ -163,8 +106,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
         case eq::Event::WINDOW_RESIZE:
         case eq::Event::WINDOW_CLOSE:
         case eq::Event::VIEW_RESIZE:
-//            _redraw = true;
-		break;
+			break;
 
         default:
             break;
@@ -172,6 +114,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 
 	return true;
 }
+*/
 
 /*	TODO key events are not supported at the moment
 bool

@@ -18,6 +18,9 @@
 #include "base/filesystem.hpp"
 #include "base/typedefs.hpp"
 
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
+
 namespace vl
 {
 
@@ -189,6 +192,35 @@ class Settings
 
 		virtual void clear( void );
 
+		bool trackerOn( void )
+		{ return _tracker_address.size() != 0 ; }
+
+		std::string const &getTrackerAddress( void )
+		{ return _tracker_address; }
+
+		void setTrackerAddress( std::string const &add )
+		{ _tracker_address = add; }
+
+		Ogre::Vector3 const &getTrackerDefaultPosition( void )
+		{
+			return _tracker_default_pos;
+		}
+		
+		void setTrackerDefaultPosition( Ogre::Vector3 const &v )
+		{
+			_tracker_default_pos = v;
+		}
+
+		Ogre::Quaternion const &getTrackerDefaultOrientation( void )
+		{
+			return _tracker_default_orient;
+		}
+		
+		void setTrackerDefaultOrientation( Ogre::Quaternion const &q )
+		{
+			_tracker_default_orient = q;
+		}
+
 	private :
 
 		void updateArgs( void );
@@ -204,6 +236,10 @@ class Settings
 		std::vector<Settings::Resources> _resources;
 		std::vector<Settings::Tracking> _tracking;
 		vl::Args _eq_args;
+
+		std::string _tracker_address;
+		Ogre::Vector3 _tracker_default_pos;
+		Ogre::Quaternion _tracker_default_orient;
 
 };	// class Settings
 

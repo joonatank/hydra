@@ -25,7 +25,6 @@
 #include "math/conversion.hpp"
 
 // Test includes
-#include "eq_test_fixture.hpp"
 #include "../fixtures.hpp"
 #include "../debug.hpp"
 
