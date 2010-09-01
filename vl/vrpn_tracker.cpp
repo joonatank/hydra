@@ -32,8 +32,6 @@ void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
 {
 	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
-	if( !_tracker )
-	{ throw vl::exception(); }
 }
 
 vl::vrpnTracker::~vrpnTracker( void )
@@ -76,5 +74,5 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		_data.resize( t.sensor+1 ); 
 	}
 
-	_data.at(t.sensor) = vl::SensorData( t.pos, t.quat );
+	_data.at(t.sensor) = vl::vrpnSensorData( t.pos, t.quat );
 }

@@ -21,30 +21,24 @@
 #include <string>
 #include <cstring>
 
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
-//#include <eq/client/observer.h>
-
 #include <iostream>
 
 namespace vl
 {
 	void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
 
-struct SensorData
+struct vrpnSensorData : public SensorData
 {
-	SensorData( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO, 
+	vrpnSensorData( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO, 
 				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
-		: position( pos ), quaternion( rot )
+		: SensorData( pos, rot )
 	{}
 
-	SensorData( vrpn_float64 const *pos, vrpn_float64 const *quat )
-		: position( pos[0], pos[1], -pos[2] ),
-		  quaternion( quat[3], quat[0], quat[1], quat[2] )
+	// TODO remove hard-coded permutation and flipping
+	vrpnSensorData( vrpn_float64 const *pos, vrpn_float64 const *quat )
+		: SensorData( Ogre::Vector3( pos[0], pos[1], -pos[2] ), 
+					  Ogre::Quaternion( quat[3], quat[0], quat[1], quat[2] ) )
 	{}
-
-	Ogre::Vector3 position;
-	Ogre::Quaternion quaternion;
 };
 
 std::ostream &operator<<( std::ostream &os, SensorData const &d );
@@ -55,18 +49,18 @@ public :
 	// Construct a tracker from vrpn type of tracker name tracker@hostname:port
 	vrpnTracker( std::string const &trackerName );
 
-	~vrpnTracker( void );
+	virtual ~vrpnTracker( void );
 
-	void init( void )
+	virtual void init( void )
 	{
 		_tracker->register_change_handler(this, vl::handle_tracker);
 	}
 
-	size_t getNSensors( void )
+	virtual size_t getNSensors( void ) const
 	{ return _data.size(); }
 
-	Ogre::Vector3 const &getPosition( size_t sensor ) const;
-	Ogre::Quaternion const &getOrientation( size_t sensor ) const;
+	virtual Ogre::Vector3 const &getPosition( size_t sensor ) const;
+	virtual Ogre::Quaternion const &getOrientation( size_t sensor ) const;
 
 	// Map the SceneNode position and orientation to the tracker values
 	// Will overwrite any existing values
@@ -78,13 +72,13 @@ public :
 //	void map( eq::Observer *observer );
 
 	// Called once in an iteration from main application
-	void mainloop( void );
+	virtual void mainloop( void );
 
 protected :
 	// Callback function
 	void update( vrpn_TRACKERCB const t );
 
-	std::vector<SensorData> _data;
+	std::vector<vrpnSensorData> _data;
 	
 	vrpn_Tracker_Remote *_tracker;
 

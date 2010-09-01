@@ -51,12 +51,17 @@ add_executable( spike_tracking
 
 add_executable( spike_dotscene_tracking
 	dotscene_loader_tracking.cpp
+	${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
+	${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
 	${SOURCES}
 	${HEADERS}
 	)
 
 add_executable( spike_dotscene
 	dotscene_loader_demo.cpp
+	${eqOgre_SOURCE_DIR}/fake_tracker.hpp
+	${eqOgre_SOURCE_DIR}/tracker.hpp
+	${eqOgre_SOURCE_DIR}/fake_tracker.cpp
 	${SOURCES}
 	${HEADERS}
 	)

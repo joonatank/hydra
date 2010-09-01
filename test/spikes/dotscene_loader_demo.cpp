@@ -13,6 +13,7 @@
 #include "base/exceptions.hpp"
 #include "math/conversion.hpp"
 #include "dotscene_loader.hpp"
+#include "fake_tracker.hpp"
 
 #include "../fixtures.hpp"
 #include "../debug.hpp"

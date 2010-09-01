@@ -13,19 +13,35 @@
 #ifndef VL_TRACKER_HPP
 #define VL_TRACKER_HPP
 
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
+
 namespace vl
 {
 
-class TrackerCallback
+struct SensorData
 {
-public :
+	SensorData( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO, 
+				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
+		: position( pos ), quaternion( rot )
+	{}
 
+	Ogre::Vector3 position;
+	Ogre::Quaternion quaternion;
 };
 
 class Tracker
 {
 public :
-	
+	virtual void init( void ) = 0;
+
+	virtual size_t getNSensors( void ) const = 0;
+
+	virtual Ogre::Vector3 const &getPosition( size_t sensor ) const = 0;
+
+	virtual Ogre::Quaternion const &getOrientation( size_t sensor ) const = 0;
+
+	virtual void mainloop( void ) = 0;
 
 };	// class Tracker
 
