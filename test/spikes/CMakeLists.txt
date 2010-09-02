@@ -50,20 +50,6 @@ add_executable( spike_tracking
 	${eqOgre_SOURCE_DIR}/tracker.hpp
 	)
 
-add_executable( spike_dotscene_tracking
-	dotscene_loader_tracking.cpp
-	dotscene_helpers.hpp
-	${eqOgre_SOURCE_DIR}/tracker.hpp
-	${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
-	${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
-	${eqOgre_SOURCE_DIR}/fake_tracker.hpp
-	${eqOgre_SOURCE_DIR}/fake_tracker.cpp
-	${eqOgre_SOURCE_DIR}/eq_cluster/config.cpp
-	${eqOgre_SOURCE_DIR}/eq_cluster/config.hpp
-	${SOURCES}
-	${HEADERS}
-	)
-
 add_executable( spike_dotscene
 	dotscene_loader_demo.cpp
 	dotscene_helpers.hpp
@@ -94,6 +80,5 @@ target_link_libraries( spike_ogre_render ${LIBS} )
 target_link_libraries( spike_stereo_render ${LIBS} )
 target_link_libraries( spike_node_test ${LIBS} )
 target_link_libraries( spike_tracking ${LIBS} vrpn )
-target_link_libraries( spike_dotscene_tracking ${LIBS} vrpn )
 target_link_libraries( spike_dotscene ${LIBS} vrpn )
 target_link_libraries( fake_tracking_server vrpn )

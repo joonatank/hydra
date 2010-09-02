@@ -19,8 +19,6 @@ int main( const int argc, char** argv )
 			return -1;
 		}
 
-		settings->setTrackerDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
-
 		::NodeFactory nodeFactory;
 
 		error = !fix.init( settings, &nodeFactory, argc, argv );

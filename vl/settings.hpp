@@ -281,6 +281,12 @@ class SettingsSerializer
 
 		Settings::Root *getRootAttrib( rapidxml::xml_node<>* XMLNode );
 
+		Ogre::Vector3 parseVector3( rapidxml::xml_node<>* XMLNode, 
+			Ogre::Vector3 const &default_value = Ogre::Vector3::ZERO );
+
+		Ogre::Quaternion parseQuaternion( rapidxml::xml_node<>* XMLNode, 
+			Ogre::Quaternion const &default_value = Ogre::Quaternion::IDENTITY );
+
 		// Read data from FileString _xml_data.
 		void readData( );
 

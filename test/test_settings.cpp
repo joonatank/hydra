@@ -12,6 +12,8 @@
 
 #include <iostream>
 
+#include <OGRE/OgreStringConverter.h>
+
 // TODO test creation of settings
 // TODO test copying of settings
 BOOST_AUTO_TEST_CASE( constructors )
@@ -98,27 +100,77 @@ struct SettingsFixture
 		
 		return root;
 	}
-
-	rapidxml::xml_node<> *createTracking( std::string const &name,
-										  std::string const &file,
-										  std::string const &root_name = std::string() )
+	
+	rapidxml::xml_node<> *createVector3( Ogre::Vector3 const &v )
 	{
-		char *c_name = doc.allocate_string( name.c_str() );
-		char *c_file = doc.allocate_string( file.c_str() );
-		char *c_root_name = doc.allocate_string( root_name.c_str() );
+		rapidxml::xml_node<> *node
+			= doc.allocate_node(rapidxml::node_element, "vector" );
+
+		char *c_x = doc.allocate_string( Ogre::StringConverter::toString( v.x ).c_str() );
+		char *c_y = doc.allocate_string( Ogre::StringConverter::toString( v.y ).c_str() );
+		char *c_z = doc.allocate_string( Ogre::StringConverter::toString( v.z ).c_str() );
+
+		node->append_attribute( doc.allocate_attribute( "x", c_x ) );
+		node->append_attribute( doc.allocate_attribute( "y", c_y ) );
+		node->append_attribute( doc.allocate_attribute( "z", c_z ) );
+
+		return node;
+	}
+
+	rapidxml::xml_node<> *createQuaternion( Ogre::Quaternion const &q )
+	{
+		rapidxml::xml_node<> *node
+			= doc.allocate_node(rapidxml::node_element, "quaternion" );
 		
+		char *c_qw = doc.allocate_string( Ogre::StringConverter::toString( q.w ).c_str() );
+		char *c_qx = doc.allocate_string( Ogre::StringConverter::toString( q.x ).c_str() );
+		char *c_qy = doc.allocate_string( Ogre::StringConverter::toString( q.y ).c_str() );
+		char *c_qz = doc.allocate_string( (Ogre::StringConverter::toString( q.z )).c_str() );
+
+		node->append_attribute( doc.allocate_attribute( "w", c_qw ) );
+		node->append_attribute( doc.allocate_attribute( "x", c_qx ) );
+		node->append_attribute( doc.allocate_attribute( "y", c_qy ) );
+		node->append_attribute( doc.allocate_attribute( "z", c_qz ) );
+
+		return node;
+	}
+
+	rapidxml::xml_node<> *createTracking( std::string const &tracker_name,
+										  bool on = false,
+										  Ogre::Vector3 pos = Ogre::Vector3::ZERO,
+										  Ogre::Quaternion orient = Ogre::Quaternion::IDENTITY
+										  )
+	{
+		char *c_tracker = doc.allocate_string( tracker_name.c_str() );
+//		char *c_pos = doc.allocate_string( Ogre::StringConverter::toString( pos ).c_str() );
+//		char *c_orient = doc.allocate_string( Ogre::StringConverter::toString( orient ).c_str() );
+		
+		char *val_on;
+		if( on )
+		{ val_on = doc.allocate_string( "true" ); }
+		else
+		{ val_on = doc.allocate_string( "false" ); }
+
 		rapidxml::xml_node<> *tracking
 			= doc.allocate_node(rapidxml::node_element, "tracking" );
 
 		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "file", c_file );
+			= doc.allocate_node(rapidxml::node_element, "tracker_name", c_tracker );
 		tracking->append_node( node );
 		
 		rapidxml::xml_attribute<> *attr
-			= doc.allocate_attribute( "root", c_root_name );
+			= doc.allocate_attribute( "on", val_on );
 		tracking->append_attribute( attr );
 		
-		attr = doc.allocate_attribute( "name", c_name );
+		// Add vector elem
+		node = doc.allocate_node(rapidxml::node_element, "default_position" );
+		tracking->append_node( node );
+		node->append_node( createVector3( pos ) );
+
+		// Add quaternion elem
+		node = doc.allocate_node(rapidxml::node_element, "default_orientation" );
+		tracking->append_node( node );
+		node->append_node( createQuaternion( orient ) );
 		
 		return tracking;
 	}
@@ -381,63 +433,60 @@ BOOST_AUTO_TEST_CASE( eqc_elem )
 	}
 }
 
-BOOST_AUTO_TEST_CASE( tracking_elem )
+BOOST_AUTO_TEST_CASE( tracker_off )
 {
-	std::string tracking_file( "tracking.xml" );
+	std::string tracker_name( "glasses@localhost:3883" );
 
-	rapidxml::xml_node<> *tracking = createTracking( "tracking", tracking_file );
+	rapidxml::xml_node<> *tracking = createTracking( tracker_name );
 	config->append_node( tracking );
 
 	BOOST_CHECK_NO_THROW( readXML() );
 	
-	BOOST_CHECK_EQUAL( settings.getTracking().size(), 1u );
-	if( settings.getTracking().size() > 0 )
-	{
-		BOOST_CHECK_EQUAL( settings.getTracking().at(0).getPath(), tracking_file );
-	}
+	BOOST_CHECK( !settings.trackerOn() );
 }
 
-BOOST_AUTO_TEST_CASE( multiple_trackings )
+BOOST_AUTO_TEST_CASE( tracker_on_default )
 {
-	std::string tracking_file1( "tracking.xml" );
-	std::string tracking_file2( "tracking2.xml" );
-	
-	rapidxml::xml_node<> *tracking
-		= createTracking( " track1", tracking_file1 );
-	rapidxml::xml_node<> *tracking2
-		= createTracking( " track2", tracking_file2 );
+	std::string tracker_name( "glasses@localhost:3883" );
 
+	rapidxml::xml_node<> *tracking = createTracking( tracker_name, true );
 	config->append_node( tracking );
-	config->append_node( tracking2 );
-	
+
 	BOOST_CHECK_NO_THROW( readXML() );
-
-	BOOST_CHECK_EQUAL( settings.getTracking().size(), 2u );
-	if( settings.getTracking().size() > 1 )
-	{
-		BOOST_CHECK_EQUAL( settings.getTracking().at(0).getPath(), tracking_file1 );
-		BOOST_CHECK_EQUAL( settings.getTracking().at(1).getPath(), tracking_file2 );
-	}
+	
+	BOOST_CHECK( settings.trackerOn() );
+	BOOST_CHECK_EQUAL( settings.getTrackerAddress(), tracker_name );
+	BOOST_CHECK_EQUAL( settings.getTrackerDefaultPosition(), Ogre::Vector3::ZERO );
+	BOOST_CHECK_EQUAL( settings.getTrackerDefaultOrientation(), Ogre::Quaternion::IDENTITY );
 }
 
-BOOST_AUTO_TEST_CASE( tracking_with_root )
+BOOST_AUTO_TEST_CASE( tracker_on_extra )
 {
-	std::string track_file1( "tracking.xml" );
-	std::string track_file2( "tracking2.xml" );
-	std::string track_name1( "track1" );
-	std::string track_name2( "track2" );
-	std::string root_name( "data" );
+	std::string tracker_name( "glasses@localhost:3883" );
+	const double TOLERANCE = 1e-3;
 
-	rapidxml::xml_node<> *root = createRoot( root_name, "local/work" );
-	config->append_node(root);
+	Ogre::Vector3 pos( 1, 1.5, 10 );
+	Ogre::Vector3 u( 1, 1, 1 );
+	u.normalise();
+	Ogre::Quaternion orient( Ogre::Radian( Ogre::Degree(33) ), u );
 
-	rapidxml::xml_node<> *tracking
-		= createTracking( track_name2, track_file1, root_name );
-	rapidxml::xml_node<> *tracking2
-		= createTracking( track_name2, track_file2, root_name );
-
+	rapidxml::xml_node<> *tracking = createTracking( tracker_name, true, pos, orient );
 	config->append_node( tracking );
-	config->append_node( tracking2 );
+
+	BOOST_MESSAGE( doc );
+	BOOST_CHECK_NO_THROW( readXML() );
+	
+	BOOST_CHECK( settings.trackerOn() );
+	BOOST_CHECK_EQUAL( settings.getTrackerAddress(), tracker_name );
+	for( size_t i = 0; i < 3; ++i )
+	{
+		BOOST_CHECK_CLOSE( settings.getTrackerDefaultPosition()[i], pos[i], TOLERANCE );
+	}
+
+	for( size_t i = 0; i < 4; ++i )
+	{
+		BOOST_CHECK_CLOSE( settings.getTrackerDefaultOrientation()[i], orient[i], TOLERANCE );
+	}
 }
 
 BOOST_AUTO_TEST_CASE( multiple_roots_invalid )

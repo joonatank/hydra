@@ -53,4 +53,24 @@
 		<file>T7.scene</file>
 	</scene>
 
+	<!-- Tracking config support
+	Only single tracker is supported for now and it's automatically mapped
+	to the observers head.
+	Also using on="false" it uses the default_position for the head.
+
+	TODO support for multiple trackers
+	TODO clean the default parameters
+	TODO add mapping to SceneNodes by name
+	TODO add coordinate system reconfiguration and scaling
+	-->
+	<tracking on="true">
+		<tracker_name>glasses@localhost</tracker_name>
+		<default_position>
+			<vector x="0" y="1.0" z="0" />
+		</default_position>
+		<default_orientation>
+			<quaternion w="1" x="0" y="0" z="0" />
+		</default_orientation>
+	</tracking>
+
 </config>

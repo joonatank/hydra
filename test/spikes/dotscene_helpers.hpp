@@ -89,7 +89,6 @@ public :
 
 	void createTracker( void )
 	{
-		// TODO add tracker creation
 		if( _settings->trackerOn() )
 		{
 			_tracker = new vl::vrpnTracker( _settings->getTrackerAddress() );

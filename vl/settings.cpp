@@ -2,6 +2,7 @@
 
 #include "base/filesystem.hpp"
 #include "base/exceptions.hpp"
+#include "base/string_utils.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -362,22 +363,36 @@ vl::SettingsSerializer::processScene( rapidxml::xml_node<>* xml_node )
 void
 vl::SettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 {
-	vl::Settings::Root *root = getRootAttrib(xml_node);
-	std::string file;
-	
-	rapidxml::xml_node<> *pElement = xml_node->first_node( "file" );
-	if( pElement )
-	{ file = pElement->value(); }
+	std::string tracker_name;
+	rapidxml::xml_node<> *pElement;
 
-	// File element is a must
-	if( file.empty() )
+	// We only set the address if the tracking support is on
+	if(  getAttrib( xml_node, "on", "false" ) != "false" )
 	{
-		_settings->clear();
-		// TODO add description
-		BOOST_THROW_EXCEPTION( vl::invalid_settings() );
+		pElement = xml_node->first_node( "tracker_name" );
+		if( pElement )
+		{ _settings->setTrackerAddress( pElement->value() ); }
+	}
+	else
+	{
+		_settings->setTrackerAddress("");
 	}
 
-	_settings->addTracking( vl::Settings::Tracking( file, root ) );
+	pElement = xml_node->first_node( "default_position" );
+	if( pElement )
+	{
+		pElement = pElement->first_node( "vector" );
+		if( pElement )
+		{ _settings->setTrackerDefaultPosition( parseVector3( pElement ) ); }
+	}
+
+	pElement = xml_node->first_node( "default_orientation" );
+	if( pElement )
+	{
+		pElement = pElement->first_node( "quaternion" );
+		if( pElement )
+		{ _settings->setTrackerDefaultOrientation( parseQuaternion( pElement ) ); }
+	}
 }
 
 std::string
@@ -414,4 +429,60 @@ vl::SettingsSerializer::getRootAttrib( rapidxml::xml_node<>* XMLNode )
 		return root;
 	}
 	return 0;
+}
+
+Ogre::Vector3 
+vl::SettingsSerializer::parseVector3( rapidxml::xml_node<>* XMLNode, Ogre::Vector3 const &default_value )
+{
+	rapidxml::xml_attribute<> *att_x = XMLNode->first_attribute("x");
+	rapidxml::xml_attribute<> *att_y = XMLNode->first_attribute("y");
+	rapidxml::xml_attribute<> *att_z = XMLNode->first_attribute("z");
+
+	if( att_x && att_y && att_z )
+	{
+		return Ogre::Vector3(
+			vl::string_convert<Ogre::Real>(att_x->value()),
+			vl::string_convert<Ogre::Real>(att_y->value()),
+			vl::string_convert<Ogre::Real>(att_z->value())
+			);
+	}
+	return default_value;
+}
+
+Ogre::Quaternion 
+vl::SettingsSerializer::parseQuaternion( rapidxml::xml_node<>* XMLNode, Ogre::Quaternion const &default_value )
+{
+	Ogre::Real x, y, z, w;
+
+	// TODO add axisX, axisY, axisZ
+	// TODO add angleX, angleY, angleZ
+
+	// Default attribute names
+	rapidxml::xml_attribute<> *attrX = XMLNode->first_attribute("qx");
+	rapidxml::xml_attribute<> *attrY = XMLNode->first_attribute("qy");
+	rapidxml::xml_attribute<> *attrZ = XMLNode->first_attribute("qz");
+	rapidxml::xml_attribute<> *attrW = XMLNode->first_attribute("qw");
+
+	// Alternative attribute names
+	if( !attrX )
+	{ attrX = XMLNode->first_attribute( "x" ); }
+	if( !attrY )
+	{ attrY = XMLNode->first_attribute( "y" ); }
+	if( !attrZ )
+	{ attrZ = XMLNode->first_attribute( "z" ); }
+	if( !attrW )
+	{ attrW = XMLNode->first_attribute( "w" ); }
+
+	if( !attrX || !attrY || !attrZ || !attrW )
+	{
+		// TODO add description
+		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
+	}
+
+	x = vl::string_convert<Ogre::Real>( attrX->value() );
+	y = vl::string_convert<Ogre::Real>( attrY->value() );
+	z = vl::string_convert<Ogre::Real>( attrZ->value() );
+	w = vl::string_convert<Ogre::Real>( attrW->value() );
+	
+	return Ogre::Quaternion( w, x, y, z );
 }
