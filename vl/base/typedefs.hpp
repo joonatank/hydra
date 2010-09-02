@@ -13,6 +13,7 @@ namespace vl
 {
 	// Forward declarations
 	class Settings;
+	class Tracker;
 
 	struct null_deleter
 	{
@@ -22,12 +23,14 @@ namespace vl
 	};
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
+	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 	
 	typedef std::map<std::string, std::string> NamedValuePairList;
 
 	// TODO define angle class
 	typedef double angle;
 
+	/*
 	// Graph typedefs
 namespace graph
 {
@@ -79,14 +82,16 @@ namespace cl
 	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
 
 }
-
+*/
 namespace ogre
 {
 	class SceneNode;
 	class SceneManager;
+	class Root;
 
 	typedef boost::shared_ptr<SceneNode> SceneNodeRefPtr;
 	typedef boost::shared_ptr<SceneManager> SceneManagerRefPtr;
+	typedef boost::shared_ptr<Root> RootRefPtr;
 
 }
 

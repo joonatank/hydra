@@ -21,7 +21,7 @@ int main( const int argc, char** argv )
 
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( settings, &nodeFactory, argc, argv );
+		error = !fix.init( settings, &nodeFactory );//, argc, argv );
 	
 		if( !error )
 		{

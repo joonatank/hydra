@@ -9,10 +9,12 @@
 #include "base/args.hpp"
 #include "base/filesystem.hpp"
 
-namespace test = boost::unit_test::framework;
+#include "eq_cluster/config.hpp"
 
-// Global node factory, needs to be created in the test file
-extern eq::NodeFactory *g_nodeFactory;
+// Test includes
+#include "../fixtures.hpp"
+
+namespace test = boost::unit_test::framework;
 
 void initArgs(vl::Args *args, fs::path const &exe_path, std::string const &conf_name )
 {
@@ -30,27 +32,47 @@ struct EqOgreFixture
 {
 	// Init code for this test
 	EqOgreFixture( void )
-		: error( false ), frameNumber(0), config(0)
+		: error( false ), frameNumber(0), config(0), log_file( "render_test.log" )
 	{
 		BOOST_TEST_MESSAGE( "EqOgreFixture::EqOgreFixture" );
 	}
 
-	void init( vl::Args &args )
+	void init( vl::Args &args, eq::NodeFactory *fact )
 	{
 		// Redirect logging
-		//eq::base::Log::setOutput( log_file );
+		eq::base::Log::setOutput( log_file );
 
 		// 1. Equalizer initialization
-		BOOST_REQUIRE(  eq::init( args.size(), args.getData(), g_nodeFactory ) );
+		BOOST_REQUIRE(  eq::init( args.size(), args.getData(), fact ) );
 
 		// 2. get a configuration
 		config = eq::getConfig( args.size(), args.getData() );
 		BOOST_REQUIRE( config );
 
 		// 3. init config
-		BOOST_REQUIRE( config->init(0));
+		BOOST_REQUIRE( config->init(0) );
 	}
+	
+	void init( vl::SettingsRefPtr settings, eq::NodeFactory *fact )
+	{
+		// Redirect logging
+		//eq::base::Log::setOutput( log_file );
+		vl::Args &args = settings->getEqArgs();
 
+		// 1. Equalizer initialization
+		BOOST_REQUIRE(  eq::init( args.size(), args.getData(), fact ) );
+
+		// 2. get a configuration
+		config = eq::getConfig( args.size(), args.getData() );
+		BOOST_REQUIRE( config );
+
+		eqOgre::Config *vl_config = dynamic_cast<eqOgre::Config *>(config);
+		BOOST_REQUIRE( vl_config );
+		vl_config->setSettings( settings );
+
+		// 3. init config
+		BOOST_REQUIRE( config->init(0) );
+	}
 	// Controlled mainloop function so the test can run the loop
 	void mainloop( void )
 	{
@@ -74,6 +96,7 @@ struct EqOgreFixture
 		BOOST_CHECK( eq::exit() );
 	}
 
+	std::ofstream log_file;
 	bool error;
 	uint32_t frameNumber;
 	eq::Config *config;

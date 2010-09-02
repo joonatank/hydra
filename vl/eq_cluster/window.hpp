@@ -3,6 +3,9 @@
 
 #include <eq/client/window.h>
 
+#include "eq_ogre/ogre_root.hpp"
+#include "tracker.hpp"
+
 namespace eqOgre
 {
 	class Camera;
@@ -21,16 +24,39 @@ namespace eqOgre
 
 		virtual ~Window( void );
 		
+		Ogre::RenderWindow *getRenderWindow( void )
+		{ return _ogre_window; }
+
+		Ogre::Camera *getCamera( void )
+		{ return _camera; }
+
+		vl::TrackerRefPtr getTracker( void )
+		{ return _tracker; }
+
 	protected :
+		void createOgreRoot( void );
+		void createOgreWindow( void );
+		void createTracker( void );
+		bool createScene( void );
 
 		// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );
+
+		/* Old and useless
 		virtual bool configInitGL( const uint32_t initID );
         virtual bool configExitGL( void );
         virtual void frameStart( const uint32_t frameID,
                                  const uint32_t frameNumber );
         virtual void swapBuffers( void );
+		*/
 
+		vl::ogre::RootRefPtr _root;
+		Ogre::RenderWindow *_ogre_window;
+		Ogre::Camera *_camera;
+		Ogre::SceneManager *_sm;
+
+		vl::SettingsRefPtr _settings;
+		vl::TrackerRefPtr _tracker;
     };	// class Window
 
 }	// namespace eqOgre

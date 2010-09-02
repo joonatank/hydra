@@ -12,14 +12,15 @@
 
 #define BOOST_TEST_MODULE test_config
 
-#include <eq/eq.h>
-
 #include <boost/test/unit_test.hpp>
+
+#include <eq/eq.h>
 
 // Tested class
 #include "eq_cluster/config.hpp"
 
 // Helpers
+#include "../debug.hpp"
 #include "eqogre_fixture.hpp"
 
 class NodeFactory : public eq::NodeFactory
@@ -29,7 +30,9 @@ public :
 	{ return new eqOgre::Config( parent ); }
 };
 
-eq::NodeFactory *g_nodeFactory = new ::NodeFactory;
+::NodeFactory factory;
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_SUITE( EqualizerTest, EqOgreFixture )
 
@@ -44,7 +47,7 @@ BOOST_AUTO_TEST_CASE( constructor )
 
 	BOOST_TEST_MESSAGE( "args = " << args );
 
-	BOOST_CHECK_NO_THROW( init( args ) );
+	BOOST_CHECK_NO_THROW( init( args,  &factory ) );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

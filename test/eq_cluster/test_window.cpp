@@ -19,7 +19,11 @@
 // Tested class
 #include "eq_cluster/window.hpp"
 
+// Required project classes
+#include "eq_cluster/config.hpp"
+
 // Helpers
+#include "../debug.hpp"
 #include "eqogre_fixture.hpp"
 
 class NodeFactory : public eq::NodeFactory
@@ -27,13 +31,20 @@ class NodeFactory : public eq::NodeFactory
 public :
 	virtual eq::Window *createWindow( eq::Pipe *parent )
 	{ return new eqOgre::Window( parent ); }
+
+	// We require eqOgre::Config to have set/get Settings functions
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new eqOgre::Config( parent ); }
 };
 
-eq::NodeFactory *g_nodeFactory = new ::NodeFactory;
+::NodeFactory factory;
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_SUITE( EqualizerTest, EqOgreFixture )
 
-BOOST_AUTO_TEST_CASE( constructor )
+// This should throw as we don't have settings we don't have Ogre plugins or resources either
+BOOST_AUTO_TEST_CASE( initialization_args )
 {
 	fs::path cmd( test::master_test_suite().argv[0] );
 
@@ -44,11 +55,57 @@ BOOST_AUTO_TEST_CASE( constructor )
 
 	BOOST_TEST_MESSAGE( "args = " << args );
 
-	BOOST_CHECK_NO_THROW( init( args ) );
+	// TODO missing specific exception
+	BOOST_CHECK_THROW( init( args, &factory ), vl::exception );
+}
+
+// This should work nicely and we should get correct pointers
+// Even though there is no scene
+// TODO add configuration copying
+BOOST_AUTO_TEST_CASE( initialization_settings )
+{
+//	std::string conf_name("1-window.eqc");
+
+	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0] );
+
+	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );
+
+	BOOST_CHECK_NO_THROW( init( settings, &factory ) );
 
 	eq::Window *eq_win = config->getNodes().at(0)->getPipes().at(0)->getWindows().at(0);
 	eqOgre::Window *win = dynamic_cast<eqOgre::Window *>(eq_win);
 	BOOST_CHECK( win );
+
+	// Check that tracker is avail
+	BOOST_CHECK( win->getTracker() );
+
+	// Check that camera is avail
+	BOOST_CHECK( win->getCamera() );
+
+	// Check that Ogre::RenderWindow is avail
+	BOOST_CHECK( win->getRenderWindow() );
+}
+
+// TODO test scene loading
+
+BOOST_AUTO_TEST_CASE( rendering )
+{
+	fs::path cmd( test::master_test_suite().argv[0] );
+
+	vl::Args args;
+	std::string conf_name("1-window.eqc");
+
+	initArgs(&args, cmd, conf_name);
+
+	BOOST_TEST_MESSAGE( "args = " << args );
+
+	BOOST_CHECK_NO_THROW( init( args, &factory ) );
+
+	eq::Window *eq_win = config->getNodes().at(0)->getPipes().at(0)->getWindows().at(0);
+	eqOgre::Window *win = dynamic_cast<eqOgre::Window *>(eq_win);
+	BOOST_CHECK( win );
+
+	mainloop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -20,6 +20,10 @@ add_executable( test_window
 	eqogre_fixture.hpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/window.cpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/window.hpp
+	${vl_SOURCE_DIR}/vl/eq_cluster/config.hpp
+	${vl_SOURCE_DIR}/vl/eq_cluster/config.cpp
+	${vl_SOURCE_DIR}/vl/settings.cpp
+	${vl_SOURCE_DIR}/vl/settings.hpp
 	${vl_SOURCE_DIR}/vl/base/args.cpp
 	)
 	
@@ -28,6 +32,8 @@ add_executable( test_config
 	eqogre_fixture.hpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/config.cpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/config.hpp
+	${vl_SOURCE_DIR}/vl/settings.hpp
+	${vl_SOURCE_DIR}/vl/settings.cpp
 	${vl_SOURCE_DIR}/vl/base/args.cpp
 	)
 

@@ -27,12 +27,11 @@ class RenderWindow : public eq::Window
 {
 public :
 	RenderWindow( eq::Pipe *parent )
-		: eq::Window( parent ), _root(), _ogre_window(0), _camera(0), _sm(0), _tracker(0)
+		: eq::Window( parent ), _root(), _ogre_window(0), _camera(0), _sm(0), _tracker()
 	{}
 
 	~RenderWindow( void )
 	{
-		delete _tracker;
 	}
 
 	virtual bool configInit( const uint32_t initID )
@@ -57,10 +56,12 @@ public :
 		return true;
 	}
 	
+	/*
 	virtual void swapBuffers( void )
 	{
 		eq::Window::swapBuffers();
 	}
+	*/
 
 	void createOgreRoot( void )
 	{
@@ -91,11 +92,11 @@ public :
 	{
 		if( _settings->trackerOn() )
 		{
-			_tracker = new vl::vrpnTracker( _settings->getTrackerAddress() );
+			_tracker.reset( new vl::vrpnTracker( _settings->getTrackerAddress() ) );
 		}
 		else
 		{	
-			_tracker = new vl::FakeTracker( );
+			_tracker.reset( new vl::FakeTracker( ) );
 		}
 		
 		_tracker->setOrientation( 0, _settings->getTrackerDefaultOrientation() );
@@ -152,18 +153,18 @@ public :
 		return _camera;
 	}
 
-	vl::Tracker *getTracker( void )
+	vl::TrackerRefPtr getTracker( void )
 	{
 		return _tracker;
 	}
 
-	boost::shared_ptr<vl::ogre::Root> _root;
+	vl::ogre::RootRefPtr _root;
 	Ogre::RenderWindow *_ogre_window;
 	Ogre::Camera *_camera;
 	Ogre::SceneManager *_sm;
 
 	vl::SettingsRefPtr _settings;
-	vl::Tracker *_tracker;
+	vl::TrackerRefPtr _tracker;
 };	// class RenderWindow
 
 // This class is different in dotscene without trackign and with tracking
@@ -173,7 +174,7 @@ class Channel : public eq::Channel
 public :
 	Channel( eq::Window *parent )
 		: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
-		  _head_pos( Ogre::Vector3::ZERO ), _head_orient( Ogre::Quaternion::IDENTITY ), _tracker(0)
+		  _head_pos( Ogre::Vector3::ZERO ), _head_orient( Ogre::Quaternion::IDENTITY ), _tracker()
 	{}
 
 	virtual bool configInit( const uint32_t initID )
@@ -263,7 +264,7 @@ public :
 	Ogre::Vector3 _head_pos;
 	Ogre::Quaternion _head_orient;
 
-	vl::Tracker *_tracker;
+	vl::TrackerRefPtr _tracker;
 };
 
 // This class is/should be the same in dotscene without trackign and with tracking
@@ -292,7 +293,7 @@ struct DotSceneFixture
 		{ exit(); }
 	}
 
-	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *nodeFactory, int argc, char** argv )
+	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *nodeFactory )//, int argc, char** argv )
 	{
 		InitFixture();
 		if( !settings )
@@ -313,7 +314,7 @@ struct DotSceneFixture
 		}
 
 		// 2. get a configuration
-		config = static_cast< eqOgre::Config * >( eq::getConfig( argc, argv ) );
+		config = static_cast< eqOgre::Config * >( eq::getConfig( arg.size(), arg.getData() ) );
 		if( config )
 		{
 			config->setSettings( settings );
