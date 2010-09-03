@@ -12,6 +12,8 @@ add_executable( test_channel
 	eqogre_fixture.hpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/channel.cpp
 	${vl_SOURCE_DIR}/vl/eq_cluster/channel.hpp
+	${vl_SOURCE_DIR}/vl/settings.cpp
+	${vl_SOURCE_DIR}/vl/settings.hpp
 	${vl_SOURCE_DIR}/vl/base/args.cpp
 	)
 	

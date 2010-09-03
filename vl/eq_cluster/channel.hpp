@@ -19,10 +19,6 @@ namespace eqOgre
 
         virtual ~Channel (void);
 
-		virtual void setCamera( vl::graph::CameraRefPtr cam );
-
-		virtual void setViewport( vl::graph::ViewportRefPtr view );
-		
     protected:
         virtual bool configInit( const uint32_t initID );
         virtual void frameClear( const uint32_t frameID );

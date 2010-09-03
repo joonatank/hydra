@@ -14,18 +14,6 @@ eqOgre::Channel::~Channel( void )
 
 }
 
-void
-eqOgre::Channel::setCamera(vl::graph::CameraRefPtr cam)
-{
-
-}
-
-void
-eqOgre::Channel::setViewport(vl::graph::ViewportRefPtr view)
-{
-
-}
-
 /*
 void
 eqOgre::Channel::setCamera( eqOgre::Camera *cam )
