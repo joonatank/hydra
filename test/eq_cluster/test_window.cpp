@@ -43,6 +43,7 @@ BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_SUITE( EqualizerTest, EqOgreFixture )
 
+
 // This should throw as we don't have settings we don't have Ogre plugins or resources either
 BOOST_AUTO_TEST_CASE( initialization_args )
 {
@@ -55,8 +56,15 @@ BOOST_AUTO_TEST_CASE( initialization_args )
 
 	BOOST_TEST_MESSAGE( "args = " << args );
 
-	// TODO missing specific exception
-	BOOST_CHECK_THROW( init( args, &factory ), vl::exception );
+	// Equalizer will not propagate the error message to config->init()
+	// But the window is not created if Settings is missing
+	BOOST_CHECK( init( args, &factory ) );
+
+	BOOST_REQUIRE( config->getNodes().size() > 0 );
+	eq::Node *node = config->getNodes().at(0);
+	BOOST_REQUIRE( node->getPipes().size() > 0 );
+	eq::Pipe *pipe = node->getPipes().at(0);
+	BOOST_CHECK_EQUAL( pipe->getWindows().size(), 0 );
 }
 
 // This should work nicely and we should get correct pointers
@@ -67,6 +75,7 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 //	std::string conf_name("1-window.eqc");
 
 	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0] );
+	BOOST_REQUIRE( settings );
 
 	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );
 
@@ -87,7 +96,14 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 }
 
 // TODO test scene loading
+/*
+BOOST_AUTO_TEST_CASE( scene_loading )
+{
 
+}
+*/
+
+/*
 BOOST_AUTO_TEST_CASE( rendering )
 {
 	fs::path cmd( test::master_test_suite().argv[0] );
@@ -107,5 +123,5 @@ BOOST_AUTO_TEST_CASE( rendering )
 
 	mainloop();
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

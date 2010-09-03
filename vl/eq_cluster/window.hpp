@@ -33,6 +33,9 @@ namespace eqOgre
 		vl::TrackerRefPtr getTracker( void )
 		{ return _tracker; }
 
+		Ogre::SceneManager *getSceneManager( void )
+		{ return _sm; }
+
 	protected :
 		void createOgreRoot( void );
 		void createOgreWindow( void );
@@ -41,14 +44,6 @@ namespace eqOgre
 
 		// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );
-
-		/* Old and useless
-		virtual bool configInitGL( const uint32_t initID );
-        virtual bool configExitGL( void );
-        virtual void frameStart( const uint32_t frameID,
-                                 const uint32_t frameNumber );
-        virtual void swapBuffers( void );
-		*/
 
 		vl::ogre::RootRefPtr _root;
 		Ogre::RenderWindow *_ogre_window;

@@ -59,6 +59,8 @@ add_executable( spike_dotscene
 	${eqOgre_SOURCE_DIR}/fake_tracker.cpp
 	${eqOgre_SOURCE_DIR}/eq_cluster/config.cpp
 	${eqOgre_SOURCE_DIR}/eq_cluster/config.hpp
+	${eqOgre_SOURCE_DIR}/eq_cluster/window.cpp
+	${eqOgre_SOURCE_DIR}/eq_cluster/window.hpp
 	${SOURCES}
 	${HEADERS}
 	)
