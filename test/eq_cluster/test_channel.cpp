@@ -24,30 +24,40 @@
 
 // Helpers
 #include "eqogre_fixture.hpp"
+#include "../debug.hpp"
 
 class NodeFactory : public eq::NodeFactory
 {
 public :
 	virtual eq::Channel *createChannel( eq::Window *parent )
 	{ return new eqOgre::Channel( parent ); }
+
+	virtual eq::Window *createWindow( eq::Pipe *parent )
+	{ return new eqOgre::Window( parent ); }
+
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new eqOgre::Config( parent ); }
 };
 
 ::NodeFactory factory;
+
+BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_SUITE( EqualizerTest, EqOgreFixture )
 
 BOOST_AUTO_TEST_CASE( constructor )
 {
-	fs::path cmd( test::master_test_suite().argv[0] );
+	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0] );
+	BOOST_REQUIRE( settings );
 
-	vl::Args args;
-	std::string conf_name("1-window.eqc");
+	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );
 
-	initArgs(&args, cmd, conf_name);
+	BOOST_CHECK_NO_THROW( init( settings, &factory ) );
 
-	BOOST_TEST_MESSAGE( "args = " << args );
-
-	BOOST_CHECK_NO_THROW( init( args, &factory ) );
+	eq::Channel *eq_channel = config->getNodes().at(0)->getPipes().at(0)->getWindows().at(0)->getChannels().at(0);
+	BOOST_REQUIRE( eq_channel );
+	eqOgre::Channel *channel = dynamic_cast<eqOgre::Channel *>(eq_channel);
+	BOOST_CHECK( channel );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

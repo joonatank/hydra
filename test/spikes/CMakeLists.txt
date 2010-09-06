@@ -61,6 +61,8 @@ add_executable( spike_dotscene
 	${eqOgre_SOURCE_DIR}/eq_cluster/config.hpp
 	${eqOgre_SOURCE_DIR}/eq_cluster/window.cpp
 	${eqOgre_SOURCE_DIR}/eq_cluster/window.hpp
+	${eqOgre_SOURCE_DIR}/eq_cluster/channel.cpp
+	${eqOgre_SOURCE_DIR}/eq_cluster/channel.hpp
 	${SOURCES}
 	${HEADERS}
 	)
