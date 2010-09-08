@@ -32,13 +32,13 @@ public:
 	{ return new eqOgre::Config( parent ); }
 };
 
-struct DotSceneFixture
+struct ListeningClientFixture
 {
-	DotSceneFixture( void )
+	ListeningClientFixture( void )
 		: log_file( "render_test.log" ), config(0)
 	{}
 
-	~DotSceneFixture( void )
+	~ListeningClientFixture( void )
 	{
 		if( config )
 		{ exit(); }
@@ -64,8 +64,30 @@ struct DotSceneFixture
 			return false;
 		}
 
+		// 4. initialization of local client node
+		eq::base::RefPtr< eq::Client > client = new eq::Client( );
+		if( !client->initLocal( arg.size(), arg.getData() ) )
+		{
+			EQERROR << "Can't init client" << std::endl;
+			eq::exit();
+			return EXIT_FAILURE;
+		}
+
+		// 1. connect to server
+		eq::ServerPtr server = new eq::Server;
+		if( !client->connectServer( server ))
+		{
+			EQERROR << "Can't open server" << std::endl;
+			return false;
+		}
+
+		// 2. choose config
+		eq::ConfigParams configParams;
+		config = static_cast< eqOgre::Config*>(server->chooseConfig( configParams ));
+    
 		// 2. get a configuration
-		config = static_cast< eqOgre::Config * >( eq::getConfig( arg.size(), arg.getData() ) );
+		//config = static_cast< eqOgre::Config * >( eq::getConfig( arg.size(), arg.getData() ) );
+		
 		if( config )
 		{
 			config->setSettings( settings );
@@ -80,6 +102,7 @@ struct DotSceneFixture
 		else
 		{
 			EQERROR << "Cannot get config" << std::endl;
+			client->disconnectServer( server );
 			return false;
 		}
 
@@ -124,7 +147,7 @@ int main( const int argc, char** argv )
 	bool error = false;
 	try
 	{
-		DotSceneFixture fix;
+		ListeningClientFixture fix;
 
 		vl::SettingsRefPtr settings = getSettings(argv[0]);
 		if( !settings )

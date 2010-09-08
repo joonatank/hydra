@@ -121,7 +121,6 @@ ENDMACRO()
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
-# Tests should be in different CMake file
-#add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 

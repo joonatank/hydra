@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 2.6)
 include_directories( util )
 
 subdirs(util
-		math
 		spikes
 		dotscene_loader
 		eq_cluster
