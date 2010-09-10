@@ -19,16 +19,24 @@ bool
 eqOgre::Window::configInit( const uint32_t initID )
 {
 	if( !eq::Window::configInit( initID ))
-	{ return false; }
-	//	BOOST_THROW_EXCEPTION( vl::exception() );
+	{
+		EQERROR << "eq::Window::configInit failed" << std::endl;
+		return false; 
+	}
 
 	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
 	if( !config )
-	{ return false; }
+	{
+		EQERROR << "config is not type eqOgre::Config" << std::endl;
+		return false; 
+	}
 
 	_settings = config->getSettings();
 	if( !_settings )
-	{ return false; }
+	{
+		EQERROR << "Config has no settings!" << std::endl;
+		return false;
+	}
 	
 	createOgreRoot();
 	createOgreWindow();

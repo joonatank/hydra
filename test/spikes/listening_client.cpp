@@ -13,10 +13,123 @@
 #include "eq_cluster/channel.hpp"
 #include "fake_tracker.hpp"
 #include "vrpn_tracker.hpp"
+#include "base/helpers.hpp"
 
 // Crashes channel.h for sure
 // Seems like including vmmlib/vector.h or quaternion.h will crash channel (vmmlib/frustum.h)
 #include "math/conversion.hpp"
+
+class Client : public eq::Client
+{
+public :
+	Client( vl::SettingsRefPtr settings )
+		: _settings( settings ), _config(0)
+	{}
+
+	virtual bool initLocal (const int argc, char **argv)
+	{
+		return eq::Client::initLocal( argc, argv );
+	}
+
+	bool init( void )
+	{
+//		std::cerr << "Client::init" << std::endl;
+
+		// 1. connect to server
+		_server = new eq::Server;
+//		std::cerr << "Client::init - server created" << std::endl;
+		if( !connectServer( _server ))
+		{
+			EQERROR << "Can't open server" << std::endl;
+			return false;
+		}
+//		std::cerr << "Client::init - connected to server" << std::endl;
+
+		// 2. choose config
+		eq::ConfigParams configParams;
+		_config = static_cast<eqOgre::Config*>(_server->chooseConfig( configParams ));
+
+		if( !_config )
+		{
+			EQERROR << "No matching config on server" << std::endl;
+			disconnectServer( _server );
+			return false;
+		}
+//		std::cerr << "Client::init - config selected" << std::endl;
+
+		// 3. init config
+		_config->setSettings( _settings );
+
+		if( !_config->init(0) )
+		{
+			EQERROR << "Config initialization failed: " 
+					<< _config->getErrorMessage() << std::endl;
+			_server->releaseConfig( _config );
+			disconnectServer( _server );
+			return false;
+		}
+//		std::cerr << "Client::init - config inited" << std::endl;
+
+		return true;
+	}
+
+	bool mainloop( uint32_t frame )
+	{
+//		std::cerr << "Client::mainloop" << std::endl;
+
+		// 4. run main loop
+		if( _config->isRunning() )
+		{
+			_config->startFrame( frame );
+			_config->finishFrame();
+			return true;
+		}
+		else
+		{ return false; }
+	}
+
+	bool exit( void )
+	{
+//		std::cerr << "Client::exit" << std::endl;
+
+		_config->exit();
+		_server->releaseConfig( _config );
+		
+		if( !disconnectServer( _server ))
+			EQERROR << "Client::disconnectServer failed" << std::endl;
+
+		_server = 0;
+
+		return true;
+	}
+
+	virtual bool clientLoop( void )
+	{
+//		std::cerr << "Client::clientLoop" << std::endl;
+
+//		if( isLocal() )
+//			std::cerr << "In Client : Client is local " << std::endl;
+//		else
+//			std::cerr << "In Client : Client is not local" << std::endl;
+
+		if( !isLocal() ) // execute only one config run
+			return eq::Client::clientLoop();
+
+		// else execute client loops 'forever'
+		while( true ) // TODO: implement SIGHUP handler to exit?
+		{
+			if( !eq::Client::clientLoop( ))
+				return false;
+			EQINFO << "One configuration run successfully executed" << std::endl;
+		}
+		
+		return true;
+	}
+
+	vl::SettingsRefPtr _settings;
+	eqOgre::Config *_config;
+	eq::ServerPtr _server;
+};
 
 // This class is/should be the same in dotscene without trackign and with tracking
 class NodeFactory : public eq::NodeFactory
@@ -35,17 +148,23 @@ public:
 struct ListeningClientFixture
 {
 	ListeningClientFixture( void )
-		: log_file( "render_test.log" ), config(0)
-	{}
+	{
+		uint32_t pid = vl::getPid();
+		std::stringstream ss;
+		ss << pid;
+		std::string name = "render_test-" + ss.str() + ".log";
+		log_file = std::ofstream( name );
+	}
 
 	~ListeningClientFixture( void )
 	{
-		if( config )
-		{ exit(); }
+		exit();
 	}
 
 	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *nodeFactory )
 	{
+//		std::cerr << "ListeningClientFixture::init" << std::endl;
+
 		InitFixture();
 		if( !settings )
 		{
@@ -58,51 +177,23 @@ struct ListeningClientFixture
 		eq::base::Log::setOutput( log_file );
 		
 		// 1. Equalizer initialization
-		if( !eq::init( arg.size(), arg.getData(), nodeFactory ))
+		if( !eq::init( arg.size(), arg.getData(), nodeFactory ) )
 		{
 			EQERROR << "Equalizer init failed" << std::endl;
 			return false;
 		}
 
-		// 4. initialization of local client node
-		eq::base::RefPtr< eq::Client > client = new eq::Client( );
+		// 2. initialization of local client node
+		client = new ::Client( settings );
 		if( !client->initLocal( arg.size(), arg.getData() ) )
 		{
-			EQERROR << "Can't init client" << std::endl;
-			eq::exit();
-			return EXIT_FAILURE;
-		}
-
-		// 1. connect to server
-		eq::ServerPtr server = new eq::Server;
-		if( !client->connectServer( server ))
-		{
-			EQERROR << "Can't open server" << std::endl;
+			EQERROR << "client->initLocal failed" << std::endl;
 			return false;
 		}
 
-		// 2. choose config
-		eq::ConfigParams configParams;
-		config = static_cast< eqOgre::Config*>(server->chooseConfig( configParams ));
-    
-		// 2. get a configuration
-		//config = static_cast< eqOgre::Config * >( eq::getConfig( arg.size(), arg.getData() ) );
-		
-		if( config )
+		if( !client->init() )
 		{
-			config->setSettings( settings );
-			// 3. init config
-			if( !config->init(0) )
-			{
-				EQERROR << "Config initialization failed: "
-						<< config->getErrorMessage() << std::endl;
-				return false;
-			}
-		}
-		else
-		{
-			EQERROR << "Cannot get config" << std::endl;
-			client->disconnectServer( server );
+			EQERROR << "client->init failed" << std::endl;
 			return false;
 		}
 
@@ -111,34 +202,23 @@ struct ListeningClientFixture
 
 	bool mainloop( const uint32_t frame )
 	{
-		// 4. run main loop
-		if( config->isRunning() )
-		{
-			config->startFrame( frame );
-			config->finishFrame();
-			return true;
-		}
-		else
-		{ return false; }
+//		std::cerr << "ListeningClientFixture::mainloop" << std::endl;
+		return client->mainloop( frame );
 	}
 
 	void exit( void )
 	{
-		// 5. exit config
-		config->exit();
+		client->exit();
+		client->exitLocal();
 
-		// 6. release config
-		eq::releaseConfig( config );
-
-		config = 0;
+		client = 0;
 		
-		// 7. exit
 		eq::exit();
 	}
 
 	std::ofstream log_file;
 
-	eqOgre::Config *config;
+	eq::base::RefPtr< ::Client > client;
 };
 
 // This function is the same in dotscene without trackign and with tracking
@@ -156,9 +236,17 @@ int main( const int argc, char** argv )
 			return -1;
 		}
 
+		// Add the command line arguments
+		for( int i = 1; i < argc; ++i )
+		{
+			settings->getEqArgs().add( argv[i] );
+		}
+
+		std::cerr << "Args = " << settings->getEqArgs() << std::endl;
+
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( settings, &nodeFactory );//, argc, argv );
+		error = !fix.init( settings, &nodeFactory );
 	
 		if( !error )
 		{

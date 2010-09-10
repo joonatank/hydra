@@ -43,7 +43,7 @@ public :
 
 	char const *at( size_t index ) const;
 
-	size_t size( void ) const
+	size_t &size( void )
 	{ return _argc; }
 
 	bool empty( void ) const

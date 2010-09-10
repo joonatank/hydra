@@ -24,6 +24,7 @@ set( HEADERS
 	vrpn_tracker.hpp
 	settings.hpp
 
+	base/helpers.hpp
 	base/args.hpp
 	base/exceptions.hpp
 	base/filesystem.hpp
