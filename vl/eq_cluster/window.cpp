@@ -28,7 +28,7 @@ eqOgre::Window::configInit( const uint32_t initID )
 	if( !config )
 	{
 		EQERROR << "config is not type eqOgre::Config" << std::endl;
-		return false; 
+		return false;
 	}
 
 	_settings = config->getSettings();
