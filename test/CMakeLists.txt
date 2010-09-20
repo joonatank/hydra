@@ -11,13 +11,9 @@ subdirs(util
 		udp
 		)
 
-add_executable( test_filestring
-				test_filestring.cpp
-				${eqOgre_SOURCE_DIR}/base/filesystem.hpp
-				)
-
 add_executable( test_settings 
-				test_settings.cpp 
+				test_settings.cpp
+				fixtures.hpp
 				${eqOgre_SOURCE_DIR}/settings.hpp
 				${eqOgre_SOURCE_DIR}/settings.cpp
 				${eqOgre_SOURCE_DIR}/base/args.cpp
@@ -42,12 +38,10 @@ add_executable( test_tracking
 
 set( LIBS ${Boost_LIBRARIES} )
 
-target_link_libraries( test_filestring ${LIBS} )
 target_link_libraries( test_settings ${LIBS} ${OGRE_LIBRARIES} )
 #target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
 target_link_libraries( test_exceptions ${LIBS} )
 target_link_libraries( test_tracking ${LIBS} ${OGRE_LIBRARIES} vrpn )
 
-add_test( filestring ${PROJECT_BINARY_DIR}/test_filestring )
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )

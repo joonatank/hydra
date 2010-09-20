@@ -67,8 +67,8 @@ public :
 	void setSettings( vl::SettingsRefPtr set )
 	{
 		EQINFO << "settings setted" << std::endl;
-		_initData.setSettingsPath( set->getFilePath().file_string() );
-		_settings = set; 
+		_initData.setSettingsPath( set->getFilePath() );
+		_settings = set;
 	}
 
 	vl::SettingsRefPtr getSettings( void ) const

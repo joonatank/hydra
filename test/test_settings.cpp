@@ -5,14 +5,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "settings.hpp"
-#include "base/filesystem.hpp"
-#include "base/exceptions.hpp"
-#include "base/rapidxml_print.hpp"
-
 #include <iostream>
 
 #include <OGRE/OgreStringConverter.h>
+
+#include "settings.hpp"
+#include "base/filesystem.hpp"
+#include "base/exceptions.hpp"
+
+#include "fixtures.hpp"
 
 // TODO test creation of settings
 // TODO test copying of settings
@@ -46,171 +47,6 @@ BOOST_AUTO_TEST_CASE( invalid_xml )
 	BOOST_CHECK_THROW( ser.readData( data ), vl::invalid_settings );
 }
 
-struct SettingsFixture
-{
-	SettingsFixture( void )
-		: settings(), ser(0), doc(), config(0)
-	{
-		vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
-		ser = new vl::SettingsSerializer( settings_ptr );
-		
-		config = doc.allocate_node(rapidxml::node_element, "config" );
-		doc.append_node(config);
-	}
-
-	~SettingsFixture( void )
-	{
-		delete ser;
-	}
-
-	void readXML( void )
-	{
-		data.clear();
-		rapidxml::print(std::back_inserter(data), doc, 0);
-		// Print to string so we can use SettingsSerializer for the data
-		BOOST_TEST_MESSAGE( data );
-		ser->readData( data );
-	}
-
-	bool checkEmpty( void )
-	{
-		
-		return ( settings.nRoots() == 0
-			&& settings.getEqConfigPath().empty()
-			&& settings.getFilePath().empty()
-			&& settings.getOgrePluginsPath().empty()
-			&& settings.getOgreResourcePaths().empty()
-			&& settings.getScenes().empty() );
-	}
-
-	rapidxml::xml_node<> *createRoot( std::string const &name,
-									  std::string const &path )
-	{
-		char *c_path = doc.allocate_string( path.c_str() );
-		char *c_name = doc.allocate_string( name.c_str() );
-		
-		rapidxml::xml_node<> *root
-			= doc.allocate_node(rapidxml::node_element, "root" );
-		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "path", c_path );
-		root->append_node(node);
-
-		rapidxml::xml_attribute<> *attr = doc.allocate_attribute( "name", c_name );
-		root->append_attribute( attr );
-		
-		return root;
-	}
-	
-	rapidxml::xml_node<> *createVector3( Ogre::Vector3 const &v )
-	{
-		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "vector" );
-
-		char *c_x = doc.allocate_string( Ogre::StringConverter::toString( v.x ).c_str() );
-		char *c_y = doc.allocate_string( Ogre::StringConverter::toString( v.y ).c_str() );
-		char *c_z = doc.allocate_string( Ogre::StringConverter::toString( v.z ).c_str() );
-
-		node->append_attribute( doc.allocate_attribute( "x", c_x ) );
-		node->append_attribute( doc.allocate_attribute( "y", c_y ) );
-		node->append_attribute( doc.allocate_attribute( "z", c_z ) );
-
-		return node;
-	}
-
-	rapidxml::xml_node<> *createQuaternion( Ogre::Quaternion const &q )
-	{
-		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "quaternion" );
-		
-		char *c_qw = doc.allocate_string( Ogre::StringConverter::toString( q.w ).c_str() );
-		char *c_qx = doc.allocate_string( Ogre::StringConverter::toString( q.x ).c_str() );
-		char *c_qy = doc.allocate_string( Ogre::StringConverter::toString( q.y ).c_str() );
-		char *c_qz = doc.allocate_string( (Ogre::StringConverter::toString( q.z )).c_str() );
-
-		node->append_attribute( doc.allocate_attribute( "w", c_qw ) );
-		node->append_attribute( doc.allocate_attribute( "x", c_qx ) );
-		node->append_attribute( doc.allocate_attribute( "y", c_qy ) );
-		node->append_attribute( doc.allocate_attribute( "z", c_qz ) );
-
-		return node;
-	}
-
-	rapidxml::xml_node<> *createTracking( std::string const &tracker_name,
-										  bool on = false,
-										  Ogre::Vector3 pos = Ogre::Vector3::ZERO,
-										  Ogre::Quaternion orient = Ogre::Quaternion::IDENTITY
-										  )
-	{
-		char *c_tracker = doc.allocate_string( tracker_name.c_str() );
-//		char *c_pos = doc.allocate_string( Ogre::StringConverter::toString( pos ).c_str() );
-//		char *c_orient = doc.allocate_string( Ogre::StringConverter::toString( orient ).c_str() );
-		
-		char *val_on;
-		if( on )
-		{ val_on = doc.allocate_string( "true" ); }
-		else
-		{ val_on = doc.allocate_string( "false" ); }
-
-		rapidxml::xml_node<> *tracking
-			= doc.allocate_node(rapidxml::node_element, "tracking" );
-
-		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "tracker_name", c_tracker );
-		tracking->append_node( node );
-		
-		rapidxml::xml_attribute<> *attr
-			= doc.allocate_attribute( "on", val_on );
-		tracking->append_attribute( attr );
-		
-		// Add vector elem
-		node = doc.allocate_node(rapidxml::node_element, "default_position" );
-		tracking->append_node( node );
-		node->append_node( createVector3( pos ) );
-
-		// Add quaternion elem
-		node = doc.allocate_node(rapidxml::node_element, "default_orientation" );
-		tracking->append_node( node );
-		node->append_node( createQuaternion( orient ) );
-		
-		return tracking;
-	}
-	
-	rapidxml::xml_node<> *createScene( std::string const &name,
-									   std::string const &file,
-									   std::string const &type = std::string(),
-									   std::string const &attach = std::string() )
-	{
-		char *c_name = doc.allocate_string( name.c_str() );
-		char *c_file = doc.allocate_string( file.c_str() );
-		char *c_type = doc.allocate_string( type.c_str() );
-		char *c_attach = doc.allocate_string( attach.c_str() );
-
-		rapidxml::xml_node<> *scene
-			= doc.allocate_node(rapidxml::node_element, "scene" );
-		rapidxml::xml_attribute<> *attr
-			= doc.allocate_attribute( "name", c_name );
-		scene->append_attribute(attr);
-			
-		rapidxml::xml_node<> *node
-			= doc.allocate_node(rapidxml::node_element, "file", c_file );
-		scene->append_node( node );
-
-		node = doc.allocate_node(rapidxml::node_element, "type", c_type );
-		scene->append_node( node );
-
-		node = doc.allocate_node(rapidxml::node_element, "attach", c_attach );
-		scene->append_node( node );
-
-		return scene;
-	}
-	
-	std::string data;
-	vl::Settings settings;
-	vl::SettingsSerializer* ser;
-	rapidxml::xml_document<> doc;
-	rapidxml::xml_node<> *config;
-};
-
 // TODO files are unreliable we should generate the xml file here
 // bit by bit and check that each individual element is processed correctly
 // We can then save these files and read them from disk if necessary.
@@ -224,41 +60,63 @@ BOOST_AUTO_TEST_CASE( test_config )
 	BOOST_CHECK_NO_THROW( ser->readData( data ) );
 }
 
-BOOST_AUTO_TEST_CASE( test_root_elem )
+BOOST_AUTO_TEST_CASE( root_elem_missing_path )
 {
 	std::string root_name("data");
-	std::string root_path("local/work");
 
 	// root node
 	rapidxml::xml_node<> *root
 		= doc.allocate_node(rapidxml::node_element, "root");
 	config->append_node( root );
 
-	// Invalid root, missing path element
+	// Valid root, missing path element
 	rapidxml::xml_attribute<> *name = doc.allocate_attribute("name", "data");
 	root->append_attribute(name);
 
-	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
-	BOOST_CHECK( checkEmpty() );
-	
-	// Invalid root, missing name attribute
-	root->remove_attribute( name );
-	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", "local/work" );
-	root->append_node(path);
-
-	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
-	BOOST_CHECK( checkEmpty() );
-
-	// Valid root, name attribute and path element
-	root->append_attribute( name );
 	BOOST_CHECK_NO_THROW( readXML() );
 	
 	BOOST_CHECK_EQUAL( settings.nRoots(), 1u );
 	for( size_t i = 0; i < settings.nRoots(); ++i )
 	{
-		vl::Settings::Root const &root = settings.getRoot(0);
+		vl::Settings::Root const &root = settings.getRoot(i);
 		BOOST_CHECK_EQUAL( root.name, root_name );
-		BOOST_CHECK_EQUAL( root.path.file_string(), root_path );
+		BOOST_CHECK_EQUAL( root.path, "" );
+	}
+}
+
+BOOST_AUTO_TEST_CASE( root_elem_missing_name )
+{
+	std::string root_name("data");
+	std::string root_path("local/work");
+	
+	rapidxml::xml_node<> *root
+		= doc.allocate_node(rapidxml::node_element, "root");
+
+	// Invalid root, missing name attribute
+	config->append_node( root );
+	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", root_path.c_str() );
+	root->append_node(path);
+
+	BOOST_CHECK_THROW( readXML(), vl::invalid_settings );
+	BOOST_CHECK( checkEmpty() );
+}
+
+BOOST_AUTO_TEST_CASE( root_elem )
+{
+	std::string root_name("data");
+	std::string root_path("local/work");
+
+	// Valid root, name attribute and path element
+	config->append_node( createRoot( root_name, root_path ) );
+
+	BOOST_CHECK_NO_THROW( readXML() );
+	
+	BOOST_CHECK_EQUAL( settings.nRoots(), 1u );
+	for( size_t i = 0; i < settings.nRoots(); ++i )
+	{
+		vl::Settings::Root const &root = settings.getRoot(i);
+		BOOST_CHECK_EQUAL( root.name, root_name );
+		BOOST_CHECK_EQUAL( root.path, root_path );
 	}
 }
 
@@ -284,7 +142,7 @@ BOOST_AUTO_TEST_CASE( test_plugins_elem )
 	
 	BOOST_CHECK_NO_THROW( readXML() );
 	BOOST_CHECK_EQUAL( settings.nRoots(), 0u );
-	BOOST_CHECK_EQUAL( settings.getOgrePluginsPath().file_string(),
+	BOOST_CHECK_EQUAL( settings.getOgrePluginsPath(),
 					   "plugins.cfg" );
 }
 
@@ -326,7 +184,7 @@ BOOST_AUTO_TEST_CASE( test_resources_elem )
 	BOOST_CHECK_EQUAL( settings.getOgreResourcePaths().size(), 1u );
 	if( settings.getOgreResourcePaths().size() > 0 )
 	{
-		BOOST_CHECK_EQUAL( settings.getOgreResourcePaths().at(0).file_string(),
+		BOOST_CHECK_EQUAL( settings.getOgreResourcePaths().at(0),
 					   "resources.cfg" );
 	}
 }
@@ -536,7 +394,7 @@ BOOST_AUTO_TEST_CASE( multiple_roots )
 		vl::Settings::Root const *root;
 		root = settings.findRoot( names.at(i) );
 		BOOST_REQUIRE_NE( root, (vl::Settings::Root *)0 );
-		BOOST_CHECK_EQUAL( root->path.file_string(), paths.at(i) );
+		BOOST_CHECK_EQUAL( root->path, paths.at(i) );
 	}
 }
 
@@ -755,8 +613,9 @@ BOOST_AUTO_TEST_CASE( root_references )
 	{
 		// TODO add checking of the roots
 	}
-	fs::path data_path( "local/work" );
-	fs::path media_path( "local/home" );
+
+	std::string data_path( "local/work" );
+	std::string media_path( "local/home" );
 
 	BOOST_CHECK_EQUAL( settings.getOgreResourcePaths().size(), 2u );
 	if( settings.getOgreResourcePaths().size() == 2 )
@@ -765,10 +624,10 @@ BOOST_AUTO_TEST_CASE( root_references )
 	}
 
 	BOOST_CHECK_EQUAL( settings.getEqConfigPath(),
-					   data_path / fs::path("1-window.eqc") );
+					   data_path + "/" + std::string("1-window.eqc") );
 
 	BOOST_CHECK_EQUAL( settings.getOgrePluginsPath(),
-					   media_path / fs::path("plugins.cfg") );
+					   media_path + "/" + std::string("plugins.cfg") );
 
 	BOOST_CHECK_EQUAL( settings.getScenes().size(), 3u );
 	if( settings.getScenes().size() == 3 )
@@ -805,7 +664,7 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 		}
 	}
 
-	fs::path path = settings.getEqConfigPath();
+	std::string path = settings.getEqConfigPath();
 	BOOST_CHECK_EQUAL( path, "local/work/1-window.eqc" );
 
 	std::vector<vl::Settings::Scene> const &scenes = settings.getScenes();
@@ -828,11 +687,11 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 		}
 	}
 	
-	std::vector<fs::path> resource_paths = settings.getOgreResourcePaths();
+	std::vector<std::string> resource_paths = settings.getOgreResourcePaths();
 	BOOST_CHECK_EQUAL( resource_paths.size(), 2u );
 	for( size_t i = 0; i < resource_paths.size(); ++i )
 	{
-		fs::path const &res_path = resource_paths.at(i);
+		std::string const &res_path = resource_paths.at(i);
 		if( i == 0 )
 		{
 			BOOST_CHECK_EQUAL( res_path, "local/work/resources.cfg" );
@@ -861,10 +720,9 @@ BOOST_AUTO_TEST_CASE( read_from_file )
 		BOOST_CHECK_EQUAL( std::string(arg.at(0)), "test_settings" );
 		BOOST_CHECK_EQUAL( std::string(arg.at(1)), "--eq-config" );
 		path = arg.at(2);
-		BOOST_CHECK_EQUAL( path.filename(), "1-window.eqc" );
 	}
 	
-	fs::remove( filename );
+	fs::remove( fs::path(filename) );
 }
 
 

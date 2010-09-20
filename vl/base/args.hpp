@@ -43,6 +43,9 @@ public :
 
 	char const *at( size_t index ) const;
 
+	size_t const &size( void ) const
+	{ return _argc; }
+
 	size_t &size( void )
 	{ return _argc; }
 

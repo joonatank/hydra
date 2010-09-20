@@ -51,10 +51,10 @@ vl::Settings::addScene( Settings::Scene const &scene )
 	_scenes.push_back( scene );
 }
 
-std::vector<fs::path>
+std::vector<std::string>
 vl::Settings::getOgreResourcePaths( void ) const
 {
-	std::vector<fs::path> tmp;
+	std::vector<std::string> tmp;
 	for( size_t i = 0; i < _resources.size(); ++i )
 	{
 		Settings::Resources const &resource = _resources.at(i);
@@ -98,13 +98,13 @@ vl::Settings::updateArgs( void )
 	// Update args
 	_eq_args.clear();
 	if( !_exe_path.empty() )
-	{ _eq_args.add( _exe_path.string().c_str() ); }
+	{ _eq_args.add( _exe_path.c_str() ); }
 
-	fs::path path = _eq_config.getPath();
+	std::string path = _eq_config.getPath();
 	if( !path.empty() )
 	{
 		_eq_args.add( "--eq-config" );
-		_eq_args.add( path.string().c_str() );
+		_eq_args.add( path.c_str() );
 	}
 }
 
@@ -125,7 +125,6 @@ vl::SettingsSerializer::readFile( std::string const &file_path )
 	if( !fs::exists( file_path ) )
 	{
 		BOOST_THROW_EXCEPTION( vl::missing_file() << vl::file_name(file_path) );
-//		throw vl::missing_file( "vl::SettingsSerializer::readFile" );
 	}
 	
 	// Set the file path for the last file loaded, so settings can be saved
@@ -135,10 +134,17 @@ vl::SettingsSerializer::readFile( std::string const &file_path )
 	// Open in binary mode, so we don't mess up the file
 	std::ifstream stream( file_path.c_str(), std::ios::binary );
 
-	// Read the stream using FileStream class
-	delete _xml_data;
-	_xml_data = new vl::FileString( );
-	_xml_data->readStream( stream );
+	// Read the stream completely to _xml_data
+	stream.seekg( 0, std::ios::end );
+	size_t length = stream.tellg();
+	length -= 1;
+	stream.seekg( 0, std::ios::beg );
+
+	delete [] _xml_data;
+	_xml_data = new char[length+1];
+	stream.read( _xml_data, length );
+	stream.close();
+	_xml_data[length] = '\0';
 
 	// Pass the data to dataReader.
 	readData();
@@ -147,19 +153,24 @@ vl::SettingsSerializer::readFile( std::string const &file_path )
 void
 vl::SettingsSerializer::readData( std::string const &xml_data )
 {
-	delete _xml_data;
-	_xml_data = new vl::FileString( xml_data );
-	readData();
+	readData( xml_data.c_str() );
 }
 
 void
-vl::SettingsSerializer::readData( char *xml_data )
+vl::SettingsSerializer::readData( char const *xml_data )
 {
-	delete _xml_data;
-	_xml_data = new vl::FileString( xml_data );
-	readData();
+	delete [] _xml_data;
+	size_t length = ::strlen( xml_data );
+	// Only proceed if the there is some data
+	if( length > 0 )
+	{
+		_xml_data = new char[length+1];
+		::memcpy( _xml_data, xml_data, length+1 );
+		readData();
+	}
 }
 
+/// Protected
 void
 vl::SettingsSerializer::readData( )
 {
@@ -167,7 +178,7 @@ vl::SettingsSerializer::readData( )
 	rapidxml::xml_node<> *xmlRoot;
 	
 	assert( _xml_data );
-	xmlDoc.parse<0>( _xml_data->data );
+	xmlDoc.parse<0>( _xml_data );
 
 	xmlRoot = xmlDoc.first_node("config");
 	if( !xmlRoot )
@@ -221,10 +232,10 @@ vl::SettingsSerializer::processRoot( rapidxml::xml_node<>* xml_node )
 	if( attrib )
 	{ name = attrib->value(); }
 
+	// Path can be empty or not present where the current directory is assumed.
 	rapidxml::xml_node<> *pElement= xml_node->first_node("path");
 	if( pElement )
 	{ path = pElement->value(); }
-	// Path can be empty or not present where the current directory is assumed.
 
 	// Name should not be empty
 	if( name.empty() )

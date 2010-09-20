@@ -59,6 +59,7 @@ inline fs::path find_parent_dir( std::string const &name, fs::path const &path )
 	return tmp;
 }
 
+/*
 // Data structure to hold file in memory
 // can be used for other strings also, but is mainly useful
 // for holding char string and making sure that it's destroyed.
@@ -113,8 +114,9 @@ struct FileString
 
 	char *data;
 	size_t length;
-
+	
 private :
+*/
 	/** Disallow copy
 	 * This struct is used for reading and manipulating files in memory
 	 * copy would probably be a modified version of the file and not what the
@@ -123,10 +125,11 @@ private :
 	 * If necessary please provide an alternative class with const data or 
 	 * another class which this class can be copyed from.
 	 **/
+/*
 	FileString( FileString const &);
 	FileString &operator=( FileString const &);
 };
-
+*/
 }
 
 #endif

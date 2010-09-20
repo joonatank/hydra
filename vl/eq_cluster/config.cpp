@@ -7,6 +7,26 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 eqOgre::Config::~Config()
 {}
 
+void 
+eqOgre::Config::mapData( uint32_t const initDataID )
+{
+	if( _init_data.getID() == EQ_ID_INVALID )
+	{
+		EQCHECK( mapObject( &_init_data, initDataID ));
+        unmapObject( &_init_data ); // data was retrieved, unmap immediately
+	}
+    else  // appNode, _initData is registered already
+    {
+        EQASSERT( _init_data.getID() == initDataID )
+	}
+}
+
+void
+eqOgre::Config::unmapData( void )
+{
+	// Nothing to do as init data is only mapped once and then unmapped
+}
+
 /*
 bool
 eqOgre::Config::init( uint32_t initID )

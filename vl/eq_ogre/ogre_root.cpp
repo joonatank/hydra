@@ -18,7 +18,7 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( "ogre.log", true, false );
 		log->setTimeStampEnabled( true );
 
-		std::string plugins = settings->getOgrePluginsPath().file_string();
+		std::string plugins = settings->getOgrePluginsPath();
 		_ogre_root = new Ogre::Root( plugins, "", "" );
 		_primary = true;
 
@@ -70,10 +70,10 @@ vl::ogre::Root::setupResources( void )
 	std::string msg( "setupResources" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::vector<fs::path> resources = _settings->getOgreResourcePaths();
+	std::vector<std::string> resources = _settings->getOgreResourcePaths();
 	for( size_t i = 0; i < resources.size(); ++i )
 	{
-		setupResource( resources.at(i).file_string() );
+		setupResource( resources.at(i) );
 	}
 }
 

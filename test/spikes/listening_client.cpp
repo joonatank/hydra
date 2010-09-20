@@ -19,11 +19,13 @@
 // Seems like including vmmlib/vector.h or quaternion.h will crash channel (vmmlib/frustum.h)
 #include "math/conversion.hpp"
 
+#include "eq_cluster/init_data.hpp"
+
 class Client : public eq::Client
 {
 public :
-	Client( vl::SettingsRefPtr settings )
-		: _settings( settings ), _config(0)
+	Client( eqOgre::InitData const &data )
+		: _init_data( data ), _config(0)
 	{}
 
 	virtual bool initLocal (const int argc, char **argv)
@@ -58,7 +60,7 @@ public :
 //		std::cerr << "Client::init - config selected" << std::endl;
 
 		// 3. init config
-		_config->setSettings( _settings );
+		_config->setInitData( _init_data );
 
 		if( !_config->init(0) )
 		{
@@ -126,7 +128,7 @@ public :
 		return true;
 	}
 
-	vl::SettingsRefPtr _settings;
+	eqOgre::InitData _init_data;
 	eqOgre::Config *_config;
 	eq::ServerPtr _server;
 };
@@ -161,16 +163,20 @@ struct ListeningClientFixture
 		exit();
 	}
 
-	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *nodeFactory )
+	bool init( std::string const &xml_data, eq::NodeFactory *nodeFactory )
 	{
 //		std::cerr << "ListeningClientFixture::init" << std::endl;
 
 		InitFixture();
-		if( !settings )
+		if( xml_data.empty() )
 		{
 			std::cerr << "No settings provided";
 			return false;
 		}
+
+		eqOgre::InitData initData;
+		initData.setXMLdata( xml_data );
+		vl::SettingsRefPtr settings = initData.getSettings();
 
 		vl::Args &arg = settings->getEqArgs();
 		
@@ -184,7 +190,7 @@ struct ListeningClientFixture
 		}
 
 		// 2. initialization of local client node
-		client = new ::Client( settings );
+		client = new ::Client( initData );
 		if( !client->initLocal( arg.size(), arg.getData() ) )
 		{
 			EQERROR << "client->initLocal failed" << std::endl;
@@ -230,7 +236,9 @@ int main( const int argc, char** argv )
 		ListeningClientFixture fix;
 
 		vl::SettingsRefPtr settings = getSettings(argv[0]);
-		if( !settings )
+		std::string xml_data = getSettingsXML(argv[0]);
+
+		if( !settings || xml_data.empty() )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;
 			return -1;
@@ -246,7 +254,7 @@ int main( const int argc, char** argv )
 
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( settings, &nodeFactory );
+		error = !fix.init( xml_data, &nodeFactory );
 	
 		if( !error )
 		{

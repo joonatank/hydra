@@ -35,14 +35,14 @@ class Settings
 				: name( nam ), path( p )
 			{}
 
-			void setPath( fs::path const &str )
+			void setPath( std::string const &str )
 			{ path = str; }
 
-			fs::path getPath( void ) const
+			std::string getPath( void ) const
 			{ return path; }
 			
 			std::string name;
-			fs::path path;
+			std::string path;
 		};
 
 		struct Resources
@@ -51,10 +51,10 @@ class Settings
 				: file(fil), root(r)
 			{}
 
-			fs::path getPath( void ) const
+			std::string getPath( void ) const
 			{
 				if( root )
-				{ return root->getPath() / file; }
+				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
 			}
@@ -69,10 +69,10 @@ class Settings
 				: file(fil), root(r)
 			{}
 
-			fs::path getPath( void ) const
+			std::string getPath( void ) const
 			{
 				if( root )
-				{ return root->getPath() / file; }
+				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
 			}
@@ -86,10 +86,10 @@ class Settings
 				: file(fil), root(r)
 			{}
 
-			fs::path getPath( void ) const
+			std::string getPath( void ) const
 			{
 				if( root )
-				{ return root->getPath() / file; }
+				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
 			}
@@ -105,10 +105,10 @@ class Settings
 			{
 			}
 
-			fs::path getPath( void ) const
+			std::string getPath( void ) const
 			{
 				if( root )
-				{ return root->getPath() / file; }
+				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
 			}
@@ -139,16 +139,16 @@ class Settings
 		virtual void setFilePath( std::string const &path )
 		{ _file_path = path; }
 
-		virtual fs::path const &getFilePath( void ) const
+		virtual std::string const &getFilePath( void ) const
 		{ return _file_path; }
 
-		virtual fs::path getEqConfigPath( void ) const
+		virtual std::string getEqConfigPath( void ) const
 		{ return _eq_config.getPath(); }
 
-		virtual fs::path getOgrePluginsPath( void ) const
+		virtual std::string getOgrePluginsPath( void ) const
 		{ return _plugins.getPath(); }
 		
-		virtual std::vector<fs::path> getOgreResourcePaths( void ) const;
+		virtual std::vector<std::string> getOgreResourcePaths( void ) const;
 
 		virtual std::vector<Settings::Scene> const &getScenes( void ) const
 		{ return _scenes; }
@@ -227,8 +227,8 @@ class Settings
 
 		// All the paths
 		std::vector<Settings::Root> _roots;
-		fs::path _exe_path;
-		fs::path _file_path;
+		std::string _exe_path;
+		std::string _file_path;
 		Eqc _eq_config;
 		
 		std::vector<Settings::Scene> _scenes;
@@ -256,10 +256,9 @@ class SettingsSerializer
 		// Read data from string buffer. Buffer is not modified.
 		void readData( std::string const &xml_data );
 
-		// Read data from char buffer. Will modify the buffer.
-		// And the xml_data will be freed after it's used.
+		// Read data from char buffer.
 		// xml_data should be valid NULL terminated string.
-		void readData( char *xml_data );
+		void readData( char const *xml_data );
 		
 	protected :
 		void processConfig( rapidxml::xml_node<>* XMLNode );
@@ -293,7 +292,7 @@ class SettingsSerializer
 		vl::SettingsRefPtr _settings;
 
 		// file content needed for rapidxml
-		vl::FileString *_xml_data;
+		char *_xml_data;
 };
 
 }	// namespace vl

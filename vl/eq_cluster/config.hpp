@@ -3,6 +3,7 @@
 
 #include <eq/eq.h>
 
+#include "init_data.hpp"
 #include "settings.hpp"
 
 namespace eqOgre
@@ -21,17 +22,29 @@ namespace eqOgre
         /** @sa eq::Config::handleEvent */
 //		virtual bool handleEvent( const eq::ConfigEvent* event );
 
+		void setInitData( InitData const &data )
+		{ _init_data = data; }
+
+		InitData const &getInitData( void )
+		{ return _init_data; }
+
+		void mapData( uint32_t const initDataID );
+
+		void unmapData( void );
+		
+			
 		void setSettings( vl::SettingsRefPtr set )
 		{ _settings = set; }
 
 		vl::SettingsRefPtr getSettings( void )
-		{ return _settings; }
+		{ return _init_data.getSettings(); }
 
 	protected :
 		virtual ~Config (void);
 
 		vl::SettingsRefPtr _settings;
 
+		InitData _init_data;
     };	// class Config
 
 }	// namespace eqOgre
