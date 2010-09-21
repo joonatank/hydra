@@ -23,8 +23,9 @@
 
 // Test includes
 #include "udp_fixtures.hpp"
-#include "../fixtures.hpp"
 #include "../debug.hpp"
+#include "../ogre_fixtures.hpp"
+#include "../test_helpers.hpp"
 
 double const TOLERANCE = 1e-3;
 
@@ -70,11 +71,8 @@ BOOST_FIXTURE_TEST_SUITE( TestOgreUDP, OgreUDPFixture )
 
 BOOST_AUTO_TEST_CASE( sending )
 {	
-	// Lets find in where the config is
-	// TODO copy the config file
-	fs::path conf = find_conf_path();
-	BOOST_REQUIRE( fs::exists( conf ) );
-	init( conf );
+	vl::SettingsRefPtr settings = ::getSettings( test::master_test_suite().argv[0], "test_udp_ogre" );
+	init( settings );
 
 	// Some initial checking
 	BOOST_REQUIRE( _robot->isInSceneGraph() );

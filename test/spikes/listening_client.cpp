@@ -1,6 +1,6 @@
 #include "base/sleep.hpp"
 
-#include "../fixtures.hpp"
+#include "../test_helpers.hpp"
 #include "../debug.hpp"
 #include <eq/client/channel.h>
 
@@ -21,6 +21,8 @@
 
 #include "eq_cluster/init_data.hpp"
 
+std::string const PROJECT_NAME( "listening_client" );
+
 class Client : public eq::Client
 {
 public :
@@ -35,17 +37,14 @@ public :
 
 	bool init( void )
 	{
-//		std::cerr << "Client::init" << std::endl;
-
 		// 1. connect to server
 		_server = new eq::Server;
-//		std::cerr << "Client::init - server created" << std::endl;
+
 		if( !connectServer( _server ))
 		{
 			EQERROR << "Can't open server" << std::endl;
 			return false;
 		}
-//		std::cerr << "Client::init - connected to server" << std::endl;
 
 		// 2. choose config
 		eq::ConfigParams configParams;
@@ -57,7 +56,6 @@ public :
 			disconnectServer( _server );
 			return false;
 		}
-//		std::cerr << "Client::init - config selected" << std::endl;
 
 		// 3. init config
 		_config->setInitData( _init_data );
@@ -70,16 +68,12 @@ public :
 			disconnectServer( _server );
 			return false;
 		}
-//		std::cerr << "Client::init - config inited" << std::endl;
 
 		return true;
 	}
 
 	bool mainloop( uint32_t frame )
 	{
-//		std::cerr << "Client::mainloop" << std::endl;
-
-		// 4. run main loop
 		if( _config->isRunning() )
 		{
 			_config->startFrame( frame );
@@ -92,8 +86,6 @@ public :
 
 	bool exit( void )
 	{
-//		std::cerr << "Client::exit" << std::endl;
-
 		_config->exit();
 		_server->releaseConfig( _config );
 		
@@ -107,15 +99,8 @@ public :
 
 	virtual bool clientLoop( void )
 	{
-//		std::cerr << "Client::clientLoop" << std::endl;
-
-//		if( isLocal() )
-//			std::cerr << "In Client : Client is local " << std::endl;
-//		else
-//			std::cerr << "In Client : Client is not local" << std::endl;
-
 		if( !isLocal() ) // execute only one config run
-			return eq::Client::clientLoop();
+		{ return eq::Client::clientLoop(); }
 
 		// else execute client loops 'forever'
 		while( true ) // TODO: implement SIGHUP handler to exit?
@@ -133,7 +118,6 @@ public :
 	eq::ServerPtr _server;
 };
 
-// This class is/should be the same in dotscene without trackign and with tracking
 class NodeFactory : public eq::NodeFactory
 {
 public:
@@ -151,11 +135,6 @@ struct ListeningClientFixture
 {
 	ListeningClientFixture( void )
 	{
-		uint32_t pid = vl::getPid();
-		std::stringstream ss;
-		ss << pid;
-		std::string name = "render_test-" + ss.str() + ".log";
-		log_file = std::ofstream( name );
 	}
 
 	~ListeningClientFixture( void )
@@ -163,25 +142,26 @@ struct ListeningClientFixture
 		exit();
 	}
 
-	bool init( std::string const &xml_data, eq::NodeFactory *nodeFactory )
+	bool init( eqOgre::InitData &initData, eq::NodeFactory *nodeFactory )
 	{
-//		std::cerr << "ListeningClientFixture::init" << std::endl;
-
 		InitFixture();
-		if( xml_data.empty() )
-		{
-			std::cerr << "No settings provided";
-			return false;
-		}
 
-		eqOgre::InitData initData;
-		initData.setXMLdata( xml_data );
 		vl::SettingsRefPtr settings = initData.getSettings();
+
+		// Create eq log file
+		uint32_t pid = vl::getPid();
+		std::stringstream ss;
+		if( !settings->getLogDir().empty() )
+		{ ss << settings->getLogDir() << "/"; }
+
+		ss << PROJECT_NAME << "_eq_" << pid << ".log";
+		log_file = std::ofstream( ss.str() );
+
+		eq::base::Log::setOutput( log_file );
 
 		vl::Args &arg = settings->getEqArgs();
 		
-		eq::base::Log::setOutput( log_file );
-		
+		std::cerr << "Args = " << settings->getEqArgs() << std::endl;
 		// 1. Equalizer initialization
 		if( !eq::init( arg.size(), arg.getData(), nodeFactory ) )
 		{
@@ -208,7 +188,6 @@ struct ListeningClientFixture
 
 	bool mainloop( const uint32_t frame )
 	{
-//		std::cerr << "ListeningClientFixture::mainloop" << std::endl;
 		return client->mainloop( frame );
 	}
 
@@ -235,10 +214,10 @@ int main( const int argc, char** argv )
 	{
 		ListeningClientFixture fix;
 
-		vl::SettingsRefPtr settings = getSettings(argv[0]);
-		std::string xml_data = getSettingsXML(argv[0]);
+		eqOgre::InitData init_data = getInitData( argv[0], PROJECT_NAME );
 
-		if( !settings || xml_data.empty() )
+		vl::SettingsRefPtr settings = init_data.getSettings();
+		if( !settings )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;
 			return -1;
@@ -247,14 +226,12 @@ int main( const int argc, char** argv )
 		// Add the command line arguments
 		for( int i = 1; i < argc; ++i )
 		{
-			settings->getEqArgs().add( argv[i] );
+			settings->getEqArgs().add(argv[i] );
 		}
-
-		std::cerr << "Args = " << settings->getEqArgs() << std::endl;
 
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( xml_data, &nodeFactory );
+		error = !fix.init( init_data, &nodeFactory );
 	
 		if( !error )
 		{

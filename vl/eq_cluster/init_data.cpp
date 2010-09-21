@@ -5,7 +5,7 @@
 #include "init_data.hpp"
 
 eqOgre::InitData::InitData( void )
-	: _xml_data(0), _length(0)
+	: _xml_data(0)
 {
 }
 
@@ -15,10 +15,11 @@ eqOgre::InitData::~InitData( void )
 }
 
 eqOgre::InitData::InitData( eqOgre::InitData const &a )
-	: _xml_data(0), _length(0)
+	: _xml_data(0)
 {
 	setXMLdata( a._xml_data );
 	_settings = a._settings;
+	_name = a._name;
 }
 
 eqOgre::InitData &
@@ -27,6 +28,7 @@ eqOgre::InitData::operator=( eqOgre::InitData const &a )
 
 	setXMLdata( a._xml_data );
 	_settings = a._settings;
+	_name = a._name;
 
 	return *this;
 }
@@ -48,13 +50,12 @@ eqOgre::InitData::setXMLdata( char const *data )
 {
 	delete [] _xml_data;
 	_xml_data = 0;
-	_length = 0;
 	// Copy the data if there is some
 	if( data )
 	{
-		_length = ::strlen( data );
-		_xml_data = new char[_length+1];
-		::memcpy( _xml_data, data, _length+1 );
+		size_t length = ::strlen( data );
+		_xml_data = new char[length+1];
+		::memcpy( _xml_data, data, length+1 );
 	}
 }
 
@@ -63,7 +64,7 @@ eqOgre::InitData::getSettings( void )
 {
 	if( !_settings && _xml_data )
 	{
-		_settings.reset( new vl::Settings );
+		_settings.reset( new vl::Settings( _name ) );
 		vl::SettingsSerializer ser( _settings );
 		ser.readData( _xml_data );
 	}

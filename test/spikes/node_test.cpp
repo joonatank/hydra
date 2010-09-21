@@ -14,7 +14,7 @@
 #include "math/conversion.hpp"
 
 // Test case includes
-#include "../fixtures.hpp"
+#include "../test_helpers.hpp"
 
 class InitData : public eq::net::Object
 {
@@ -84,7 +84,7 @@ public :
 		{
 			EQCHECK( mapObject( &_initData, initDataID ));
 			unmapObject( &_initData ); // data was retrieved, unmap immediately
-			_settings = ::getSettings( _initData.getSettingsPath().c_str() );
+			_settings = ::getSettings( _initData.getSettingsPath().c_str(), "node_test" );
 		}
 		else  // appNode, _initData is registered already
 		{
@@ -269,7 +269,7 @@ int main( const int argc, char** argv )
 	}
 	EQINFO << std::endl;
 
-	vl::SettingsRefPtr settings = getSettings(argv[0]);
+	vl::SettingsRefPtr settings = getSettings(argv[0], "node_test" );
 	EQINFO << "settings file arg = " << argv[0] << std::endl;
 	EQINFO << "settings file = " << settings->getFilePath() << std::endl;
 	

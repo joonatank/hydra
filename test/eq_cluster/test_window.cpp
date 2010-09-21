@@ -24,6 +24,7 @@
 
 // Helpers
 #include "../debug.hpp"
+#include "../test_helpers.hpp"
 #include "eqogre_fixture.hpp"
 
 class NodeFactory : public eq::NodeFactory
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 {
 //	std::string conf_name("1-window.eqc");
 
-	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0] );
+	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0], "test_window" );
 	BOOST_REQUIRE( settings );
 
 	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );

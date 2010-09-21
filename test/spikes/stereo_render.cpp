@@ -23,12 +23,15 @@
 #include "base/args.hpp"
 #include "base/exceptions.hpp"
 #include "math/conversion.hpp"
+#include "base/helpers.hpp"
 
 // Test includes
-#include "../fixtures.hpp"
+#include "../test_helpers.hpp"
 #include "../debug.hpp"
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
+
+std::string const PROJECT_NAME( "stereo_render" );
 
 class Config : public eq::Config
 {
@@ -201,8 +204,17 @@ struct RenderFixture
 	// Init code for this test
 	RenderFixture( void )
 		: error( false ), frameNumber(0), config(0),
-		  log_file( "render_test.log" ), settings( new vl::Settings )
-	{}
+		  settings( new vl::Settings( PROJECT_NAME ) )
+	{
+		// Create eq log file
+		uint32_t pid = vl::getPid();
+		std::stringstream ss;
+		ss << PROJECT_NAME << "_eq_" << pid << ".log";
+		log_file = std::ofstream( ss.str() );
+
+		// Redirect logging
+		eq::base::Log::setOutput( log_file );
+	}
 
 	void init( fs::path const &conf )
 	{
@@ -214,9 +226,6 @@ struct RenderFixture
 
 			settings->setExePath( "stereo_render" );
 			vl::Args &args = settings->getEqArgs();
-
-			// Redirect logging
-			//eq::base::Log::setOutput( log_file );
 
 			// 1. Equalizer initialization
 			BOOST_REQUIRE(  eq::init( args.size(), args.getData(), &nodeFactory ) );

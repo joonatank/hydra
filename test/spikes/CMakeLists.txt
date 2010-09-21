@@ -4,39 +4,39 @@ cmake_minimum_required(VERSION 2.6)
 
 copy_config()
 
+set( HEADERS
+	../test_helpers.hpp
+	../debug.hpp
+	)
+
 add_executable( spike_ogre_render 
 	ogre_render.cpp
-	../fixtures.hpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( spike_stereo_render 
 	stereo_render.cpp
-	../fixtures.hpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( spike_node_test 
 	node_test.cpp
-	../fixtures.hpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( spike_tracking 
 	tracking.cpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( spike_dotscene
 	dotscene_loader_demo.cpp
-	../fixtures.hpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( spike_listening_client
 	listening_client.cpp
-	../fixtures.hpp
-	../debug.hpp
+	${HEADERS}
 	)
 
 add_executable( fake_tracking_server

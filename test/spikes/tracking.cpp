@@ -27,11 +27,13 @@
 #include "base/exceptions.hpp"
 #include "vrpn_tracker.hpp"
 #include "base/sleep.hpp"
+#include "base/helpers.hpp"
 
 // Test includes
-#include "../fixtures.hpp"
+#include "../test_helpers.hpp"
 #include "../debug.hpp"
 
+std::string const PROJECT_NAME( "tracking" );
 //char const *TRACKER_NAME = "glasses@130.230.58.16";
 char const *TRACKER_NAME = "glasses@localhost";
 
@@ -52,7 +54,7 @@ public :
 
 			// Initialise ogre
 			// TODO add setting of plugins file path from main
-			vl::SettingsRefPtr settings( new vl::Settings() );
+			vl::SettingsRefPtr settings( new vl::Settings( PROJECT_NAME ) );
 			vl::SettingsSerializer ser( settings );
 			ser.readFile( "test_conf.xml" );
 
@@ -195,18 +197,21 @@ struct RenderFixture
 {
 	// Init code for this test
 	RenderFixture( void )
-		: error( false ), frameNumber(0), config(0),
-		  log_file( "render_test.log" )
+		: error( false ), frameNumber(0), config(0)
 	{
+		// Create eq log file
+		uint32_t pid = vl::getPid();
+		std::stringstream ss;
+		ss << PROJECT_NAME << "_eq_" << pid << ".log";
+		log_file = std::ofstream( ss.str() );
+
+		// Redirect logging
+		eq::base::Log::setOutput( log_file );
+
 		vl::Args args;
 		args.add("stereo_render");
 		args.add("--eq-config" );
 		args.add("1-window.eqc");
-
-		//std::cout << args << std::endl;
-
-		// Redirect logging
-		//eq::base::Log::setOutput( log_file );
 
 		// 1. Equalizer initialization
 		BOOST_REQUIRE(  eq::init( args.size(), args.getData(), &nodeFactory ) );

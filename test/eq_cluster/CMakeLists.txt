@@ -26,7 +26,7 @@ add_executable( test_config
 
 add_executable( test_init_data
 	test_init_data.cpp
-	../fixtures.hpp
+	../settings_fixtures.hpp
 	)
 
 set( LIBS

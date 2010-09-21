@@ -1,6 +1,6 @@
 #include "base/sleep.hpp"
 
-#include "../fixtures.hpp"
+#include "../test_helpers.hpp"
 #include "../debug.hpp"
 #include <eq/client/channel.h>
 
@@ -13,10 +13,13 @@
 #include "eq_cluster/channel.hpp"
 #include "fake_tracker.hpp"
 #include "vrpn_tracker.hpp"
+#include "base/helpers.hpp"
 
 // Crashes channel.h for sure
 // Seems like including vmmlib/vector.h or quaternion.h will crash channel (vmmlib/frustum.h)
 #include "math/conversion.hpp"
+
+std::string const PROJECT_NAME( "dotscene_loader" );
 
 // This class is/should be the same in dotscene without trackign and with tracking
 class NodeFactory : public eq::NodeFactory
@@ -35,8 +38,9 @@ public:
 struct DotSceneFixture
 {
 	DotSceneFixture( void )
-		: log_file( "render_test.log" ), config(0)
-	{}
+		: config(0)
+	{
+	}
 
 	~DotSceneFixture( void )
 	{
@@ -53,9 +57,19 @@ struct DotSceneFixture
 			return false;
 		}
 
-		vl::Args &arg = settings->getEqArgs();
-		
+		// Create eq log file
+		uint32_t pid = vl::getPid();
+		std::stringstream ss;
+		if( !settings->getLogDir().empty() )
+		{ ss << settings->getLogDir() << "/"; }
+
+		ss << PROJECT_NAME << "_eq_" << pid << ".log";
+		log_file = std::ofstream( ss.str() );
+
+		// Redirect logging
 		eq::base::Log::setOutput( log_file );
+
+		vl::Args &arg = settings->getEqArgs();
 		
 		// 1. Equalizer initialization
 		if( !eq::init( arg.size(), arg.getData(), nodeFactory ))
@@ -126,7 +140,8 @@ int main( const int argc, char** argv )
 	{
 		DotSceneFixture fix;
 
-		vl::SettingsRefPtr settings = getSettings(argv[0]);
+		// TODO move to using InitData
+		vl::SettingsRefPtr settings = getSettings(argv[0], "dotscene_loader");
 		if( !settings )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;
@@ -135,7 +150,7 @@ int main( const int argc, char** argv )
 
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( settings, &nodeFactory );//, argc, argv );
+		error = !fix.init( settings, &nodeFactory );
 	
 		if( !error )
 		{

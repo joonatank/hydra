@@ -13,7 +13,7 @@
 #include "base/filesystem.hpp"
 #include "base/exceptions.hpp"
 
-#include "fixtures.hpp"
+#include "settings_fixtures.hpp"
 
 // TODO test creation of settings
 // TODO test copying of settings
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( invalid_xml )
 	rapidxml::xml_node<> *path = doc.allocate_node(rapidxml::node_element, "path", "local/work" );
 	root->append_node(path);
 
-	vl::Settings settings;
+	vl::Settings settings( PROJECT );
 	vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
 	vl::SettingsSerializer ser( settings_ptr );
 
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE( test_scene_elem )
 		BOOST_CHECK( scn.type.empty() );
 		BOOST_CHECK( scn.attach_node.empty() );
 	}
-	settings = vl::Settings();
+	settings = vl::Settings( PROJECT );
 	BOOST_CHECK_EQUAL( settings.getScenes().size(), 0u );
 	
 	// Test valid scene, with file element and name attribute
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE( test_scene_elem )
 		BOOST_CHECK( scn.type.empty() );
 		BOOST_CHECK( scn.attach_node.empty() );
 	}
-	settings = vl::Settings();
+	settings = vl::Settings( PROJECT );
 	
 	// Test valid scene with file and type elements and name attribute
 	rapidxml::xml_node<> *type
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( test_scene_elem )
 		BOOST_CHECK_EQUAL( scn.type, "release" );
 		BOOST_CHECK( scn.attach_node.empty() );
 	}
-	settings = vl::Settings();
+	settings = vl::Settings( PROJECT );
 
 	// Test valid scene with file, type and attach elements and name attribute
 	rapidxml::xml_node<> *attach
@@ -732,7 +732,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_CASE( missing_read_file )
 {
 	std::string missing_filename( "conf.xml" );
-	vl::Settings settings;
+	vl::Settings settings( PROJECT );
 	vl::SettingsRefPtr settings_ptr( &settings, vl::null_deleter() );
 	vl::SettingsSerializer ser( settings_ptr );
 	

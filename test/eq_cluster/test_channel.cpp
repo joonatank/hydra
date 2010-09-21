@@ -25,6 +25,7 @@
 // Helpers
 #include "eqogre_fixture.hpp"
 #include "../debug.hpp"
+#include "../test_helpers.hpp"
 
 class NodeFactory : public eq::NodeFactory
 {
@@ -47,7 +48,7 @@ BOOST_FIXTURE_TEST_SUITE( EqualizerTest, EqOgreFixture )
 
 BOOST_AUTO_TEST_CASE( constructor )
 {
-	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0] );
+	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0], "test_channel" );
 	BOOST_REQUIRE( settings );
 
 	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );

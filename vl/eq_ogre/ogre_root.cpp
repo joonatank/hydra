@@ -8,6 +8,8 @@
 // Ogre includes
 #include <OGRE/OgreConfigFile.h>
 
+#include "base/helpers.hpp"
+
 vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 	: _ogre_root(0), _primary(false), _settings( settings )
 {
@@ -15,9 +17,21 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 	if( !_ogre_root )
 	{
 		Ogre::LogManager *log_man = new Ogre::LogManager();
-		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( "ogre.log", true, false );
-		log->setTimeStampEnabled( true );
 
+		// Get the log file path
+		std::stringstream log_file_name_stream;
+		if( !settings->getLogDir().empty() )
+		{
+			log_file_name_stream << settings->getLogDir() << "/";
+		}
+		log_file_name_stream << settings->getName() << "_ogre_" << vl::getPid() << ".log";
+
+		// Create the log
+		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( log_file_name_stream.str(), true, false );
+		log->setTimeStampEnabled( true );
+		log->logMessage( std::string("Log file path = ") + log_file_name_stream.str() );
+
+		// Find plugins file
 		std::string plugins = settings->getOgrePluginsPath();
 		_ogre_root = new Ogre::Root( plugins, "", "" );
 		_primary = true;

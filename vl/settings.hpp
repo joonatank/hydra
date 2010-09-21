@@ -53,7 +53,7 @@ class Settings
 
 			std::string getPath( void ) const
 			{
-				if( root )
+				if( root && !root->getPath().empty() )
 				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
@@ -71,7 +71,7 @@ class Settings
 
 			std::string getPath( void ) const
 			{
-				if( root )
+				if( root && !root->getPath().empty() )
 				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
@@ -88,7 +88,7 @@ class Settings
 
 			std::string getPath( void ) const
 			{
-				if( root )
+				if( root && !root->getPath().empty() )
 				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
@@ -107,7 +107,7 @@ class Settings
 
 			std::string getPath( void ) const
 			{
-				if( root )
+				if( root && !root->getPath().empty() )
 				{ return root->getPath() + "/" + file; }
 				else
 				{ return file; }
@@ -132,14 +132,26 @@ class Settings
 			std::string type;
 		};
 
-		Settings( void );
+		Settings( std::string const &name );
 
-		virtual ~Settings( void );
+		~Settings( void );
 
-		virtual void setFilePath( std::string const &path )
+		void setName( std::string const &name )
+		{ _name = name; }
+
+		std::string const &getName( void )
+		{ return _name; }
+
+		void setLogDir( std::string const &dir )
+		{ _log_dir = dir; }
+		
+		std::string const &getLogDir( void )
+		{ return _log_dir; }
+
+		void setFilePath( std::string const &path )
 		{ _file_path = path; }
 
-		virtual std::string const &getFilePath( void ) const
+		std::string const &getFilePath( void ) const
 		{ return _file_path; }
 
 		virtual std::string getEqConfigPath( void ) const
@@ -224,6 +236,12 @@ class Settings
 	private :
 
 		void updateArgs( void );
+
+		// Project name
+		std::string _name;
+
+		// Log directory
+		std::string _log_dir;
 
 		// All the paths
 		std::vector<Settings::Root> _roots;

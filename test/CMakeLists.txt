@@ -13,7 +13,7 @@ subdirs(util
 
 add_executable( test_settings 
 				test_settings.cpp
-				fixtures.hpp
+				settings_fixtures.hpp
 				${eqOgre_SOURCE_DIR}/settings.hpp
 				${eqOgre_SOURCE_DIR}/settings.cpp
 				${eqOgre_SOURCE_DIR}/base/args.cpp

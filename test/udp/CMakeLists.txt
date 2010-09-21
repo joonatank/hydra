@@ -28,19 +28,9 @@ add_executable( test_udp
 	)
 
 add_executable( test_ogre_udp
-	${eqOgre_SOURCE_DIR}/udp/client.cpp
-	${eqOgre_SOURCE_DIR}/udp/server.cpp
-	${eqOgre_SOURCE_DIR}/udp/ogre_command.cpp
-	${eqOgre_SOURCE_DIR}/udp/client.hpp
-	${eqOgre_SOURCE_DIR}/udp/server.hpp
-	${eqOgre_SOURCE_DIR}/udp/ogre_command.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_root.hpp
-	${eqOgre_SOURCE_DIR}/eq_ogre/ogre_root.cpp
-	${eqOgre_SOURCE_DIR}/settings.hpp
-	${eqOgre_SOURCE_DIR}/settings.cpp
-	${eqOgre_SOURCE_DIR}/base/args.cpp
-	${eqOgre_SOURCE_DIR}/base/args.hpp
 	udp_fixtures.hpp
+	../test_helpers.hpp
+	../ogre_fixtures.hpp
 	test_ogre_udp.cpp
 	)
 
@@ -62,5 +52,6 @@ target_link_libraries( test_ogre_udp
 	${OGRE_LIBRARIES}
 	${OPENGL_LIBRARIES} 
 	Equalizer
+	eqOgre
 	)
 

@@ -8,7 +8,7 @@
 #include "eq_cluster/init_data.hpp"
 
 #include "../debug.hpp"
-#include "../fixtures.hpp"
+#include "../settings_fixtures.hpp"
 
 BOOST_GLOBAL_FIXTURE( InitFixture )
 

@@ -11,9 +11,6 @@
 
 #include "eq_cluster/config.hpp"
 
-// Test includes
-#include "../fixtures.hpp"
-
 namespace test = boost::unit_test::framework;
 
 void initArgs(vl::Args *args, fs::path const &exe_path, std::string const &conf_name )
