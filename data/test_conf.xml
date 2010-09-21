@@ -50,7 +50,7 @@
 		Mode the program is running can be control at start or at run time.
 	-->
 	<scene name="T7">
-		<file>T7.scene</file>
+		<file>ogre.scene</file>
 	</scene>
 
 	<!-- Tracking config support

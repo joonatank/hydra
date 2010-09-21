@@ -1,6 +1,6 @@
 syntax: glob
 *~
-build
+build*
 ogre_demos
 *.bak
 *.swp

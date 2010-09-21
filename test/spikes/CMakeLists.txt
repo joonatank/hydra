@@ -9,31 +9,6 @@ set( HEADERS
 	../debug.hpp
 	)
 
-add_executable( spike_ogre_render 
-	ogre_render.cpp
-	${HEADERS}
-	)
-
-add_executable( spike_stereo_render 
-	stereo_render.cpp
-	${HEADERS}
-	)
-
-add_executable( spike_node_test 
-	node_test.cpp
-	${HEADERS}
-	)
-
-add_executable( spike_tracking 
-	tracking.cpp
-	${HEADERS}
-	)
-
-add_executable( spike_dotscene
-	dotscene_loader_demo.cpp
-	${HEADERS}
-	)
-
 add_executable( spike_listening_client
 	listening_client.cpp
 	${HEADERS}
@@ -54,10 +29,5 @@ set( LIBS
 	eqOgre
 	)
 
-target_link_libraries( spike_ogre_render ${LIBS} )
-target_link_libraries( spike_stereo_render ${LIBS} )
-target_link_libraries( spike_node_test ${LIBS} )
-target_link_libraries( spike_tracking ${LIBS} )
 target_link_libraries( spike_listening_client ${LIBS} )
-target_link_libraries( spike_dotscene ${LIBS} )
 target_link_libraries( fake_tracking_server vrpn )
