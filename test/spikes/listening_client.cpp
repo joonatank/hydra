@@ -8,6 +8,7 @@
 #include "settings.hpp"
 #include "dotscene_loader.hpp"
 #include "base/exceptions.hpp"
+#include "eq_cluster/client.hpp"
 #include "eq_cluster/config.hpp"
 #include "eq_cluster/window.hpp"
 #include "eq_cluster/channel.hpp"
@@ -22,101 +23,6 @@
 #include "eq_cluster/init_data.hpp"
 
 std::string const PROJECT_NAME( "listening_client" );
-
-class Client : public eq::Client
-{
-public :
-	Client( eqOgre::InitData const &data )
-		: _init_data( data ), _config(0)
-	{}
-
-	virtual bool initLocal (const int argc, char **argv)
-	{
-		return eq::Client::initLocal( argc, argv );
-	}
-
-	bool init( void )
-	{
-		// 1. connect to server
-		_server = new eq::Server;
-
-		if( !connectServer( _server ))
-		{
-			EQERROR << "Can't open server" << std::endl;
-			return false;
-		}
-
-		// 2. choose config
-		eq::ConfigParams configParams;
-		_config = static_cast<eqOgre::Config*>(_server->chooseConfig( configParams ));
-
-		if( !_config )
-		{
-			EQERROR << "No matching config on server" << std::endl;
-			disconnectServer( _server );
-			return false;
-		}
-
-		// 3. init config
-		_config->setInitData( _init_data );
-
-		if( !_config->init(0) )
-		{
-			EQERROR << "Config initialization failed: " 
-					<< _config->getErrorMessage() << std::endl;
-			_server->releaseConfig( _config );
-			disconnectServer( _server );
-			return false;
-		}
-
-		return true;
-	}
-
-	bool mainloop( uint32_t frame )
-	{
-		if( _config->isRunning() )
-		{
-			_config->startFrame( frame );
-			_config->finishFrame();
-			return true;
-		}
-		else
-		{ return false; }
-	}
-
-	bool exit( void )
-	{
-		_config->exit();
-		_server->releaseConfig( _config );
-		
-		if( !disconnectServer( _server ))
-			EQERROR << "Client::disconnectServer failed" << std::endl;
-
-		_server = 0;
-
-		return true;
-	}
-
-	virtual bool clientLoop( void )
-	{
-		if( !isLocal() ) // execute only one config run
-		{ return eq::Client::clientLoop(); }
-
-		// else execute client loops 'forever'
-		while( true ) // TODO: implement SIGHUP handler to exit?
-		{
-			if( !eq::Client::clientLoop( ))
-				return false;
-			EQINFO << "One configuration run successfully executed" << std::endl;
-		}
-		
-		return true;
-	}
-
-	eqOgre::InitData _init_data;
-	eqOgre::Config *_config;
-	eq::ServerPtr _server;
-};
 
 class NodeFactory : public eq::NodeFactory
 {
@@ -133,14 +39,10 @@ public:
 
 struct ListeningClientFixture
 {
-	ListeningClientFixture( void )
-	{
-	}
+	ListeningClientFixture( void ) {}
 
 	~ListeningClientFixture( void )
-	{
-		exit();
-	}
+	{ exit(); }
 
 	bool init( eqOgre::InitData &initData, eq::NodeFactory *nodeFactory )
 	{
@@ -170,14 +72,14 @@ struct ListeningClientFixture
 		}
 
 		// 2. initialization of local client node
-		client = new ::Client( initData );
+		client = new eqOgre::Client( initData );
 		if( !client->initLocal( arg.size(), arg.getData() ) )
 		{
 			EQERROR << "client->initLocal failed" << std::endl;
 			return false;
 		}
 
-		if( !client->init() )
+		if( !client->initialise() )
 		{
 			EQERROR << "client->init failed" << std::endl;
 			return false;
@@ -203,7 +105,7 @@ struct ListeningClientFixture
 
 	std::ofstream log_file;
 
-	eq::base::RefPtr< ::Client > client;
+	eq::base::RefPtr< eqOgre::Client > client;
 };
 
 // This function is the same in dotscene without trackign and with tracking

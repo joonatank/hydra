@@ -17,7 +17,8 @@ enum CMD_TYPE
 	CMD_NONE,
 	CMD_POS,		// Set position, uses vector
 	CMD_ROT_QUAT,	// Set rotation with quaternion
-	CMD_ROT_AA		// Set rotation with angle_axis
+	CMD_ROT_AA,		// Set rotation with angle_axis
+	CMD_ROT_ANGLE	// Set rotation with angle (axis has to be preset)
 };
 
 class Command

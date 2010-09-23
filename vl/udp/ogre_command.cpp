@@ -15,9 +15,14 @@ vl::udp::OgreCommand::OgreCommand ( const std::string& typ, Ogre::SceneNode* nod
 		_type = CMD_ROT_QUAT;
 		_data.resize(4);
 	}
-	else if( str == "setangle" )
+	else if( str == "setangleaxis" )
 	{
 		_type = CMD_ROT_AA;
+		_data.resize(4);
+	}
+	else if( str == "setangle" )
+	{
+		_type = CMD_ROT_ANGLE;
 		_data.resize(4);
 	}
 }
