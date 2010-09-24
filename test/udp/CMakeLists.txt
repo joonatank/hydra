@@ -47,11 +47,5 @@ target_link_libraries( test_udp ${Boost_LIBRARIES} )
 
 target_link_libraries( test_udp_conf_parser ${Boost_LIBRARIES} )
 
-target_link_libraries( test_ogre_udp
-	${Boost_LIBRARIES}
-	${OGRE_LIBRARIES}
-	${OPENGL_LIBRARIES} 
-	Equalizer
-	eqOgre
-	)
+target_link_libraries( test_ogre_udp ${LIBS} )
 

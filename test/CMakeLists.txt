@@ -36,12 +36,12 @@ add_executable( test_tracking
 				tracking_fixture.hpp
 				)
 
-set( LIBS ${Boost_LIBRARIES} )
+#set( LIBS ${Boost_LIBRARIES} )
 
-target_link_libraries( test_settings ${LIBS} ${OGRE_LIBRARIES} )
+target_link_libraries( test_settings ${LIBS} )
 #target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
 target_link_libraries( test_exceptions ${LIBS} )
-target_link_libraries( test_tracking ${LIBS} ${OGRE_LIBRARIES} vrpn )
+target_link_libraries( test_tracking ${LIBS} )
 
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )

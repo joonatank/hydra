@@ -57,7 +57,7 @@ struct ListeningClientFixture
 		{ ss << settings->getLogDir() << "/"; }
 
 		ss << PROJECT_NAME << "_eq_" << pid << ".log";
-		log_file = std::ofstream( ss.str() );
+		log_file.open( ss.str().c_str() );
 
 		eq::base::Log::setOutput( log_file );
 

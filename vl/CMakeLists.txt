@@ -58,3 +58,4 @@ set( HEADERS
 
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 
+target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )

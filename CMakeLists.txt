@@ -1,4 +1,4 @@
-project("vl" CXX)
+project("vl" CXX C)
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -25,62 +25,104 @@ if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
 	add_definitions( -DDEBUG )
 endif()
 
-if( WIN32 )
-	set( EQUALIZER "c:/libs/equalizer" )
-	set( TURTLE "C:/jotu/libs/turtle/src/libraries" )
-elseif( UNIX )
-	set( EQUALIZER "/usr/local" )
-	set( TURTLE "/usr/local/" )
-endif( WIN32 )
+######## Find Equalizer ########
+# We should expose these parameters for the user even in Linux
+# We should use find_file and file_lib functions to find the files first though
+find_library( EQUALIZER_LIBRARY
+	NAMES Equalizer
+	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
+	)
 
-set(EQ_INCLUDE_DIR ${EQUALIZER}/include CACHE PATH "Equalizer include dir")
-set(EQ_LIB_DIR ${EQUALIZER}/lib CACHE PATH "Equalizer library dir")
-set(TURTLE_INCLUDE_DIR ${TURTLE} CACHE PATH "Turtle include dir")
+# TODO this needs to be tested in Windows
+# The path is really $ENV{EQUALIZER_HOME}/include/eq/eq.h
+find_path( EQUALIZER_INCLUDE_DIR
+	NAMES eq/eq.h
+	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
+	)
 
-if( WIN32 )
-	set(CMAKE_MODULE_PATH "$ENV{OGRE_HOME}/CMake")
-elseif( UNIX )
-	set(CMAKE_MODULE_PATH "/usr/local/lib/OGRE/cmake")
-endif( WIN32 )
+######### Find Turtle ########
+# We should expose these parameters for the user even in Linux
+# We should use find_file and file_lib functions to find the files first though
 
+find_path( TURTLE_INCLUDE_DIR
+	NAMES turtle/mock.hpp
+	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
+	)
+
+
+###### Find VRPN ########
+# TODO
+# We should use enviroment variables for detecting VRPN dir
+# Also remove separate lib and include dir variables using one and using find_lib
+# function should be enough.
+# TODO
+# VRPN should not be required but if it's not available vrpn_Tracker should not be
+# included and build into the eqOgre library
+# Also requirement for pthread would drop if VRPN was not available
+
+find_package( Threads REQUIRED )
+
+find_library( VRPN_LIBRARY
+	NAMES vrpn
+	)
+
+# Include dir
+find_path( VPRN_INCLUDE_DIR
+	NAMES vrpn_Tracker.h
+	)
+
+######### Find OGRE ##########
+# We should use find_file to find the Ogre cmake helpers
+# TODO this needs a bit more work
+find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
+	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake )
+
+set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
+
+# TODO should expose Ogre and OpenGL packages to the user
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
-message( "OpenGL libs = ${OPENGL_LIBRARIES}" )
+####### Find Boost ########
+# TODO
+# Add selectable components
+# Unit tests are only necessary for the test modules (not for lib or spikes)
 
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
 find_package(Boost COMPONENTS unit_test_framework thread filesystem REQUIRED)
-# TODO add error checking and expose Boost_ROOT to user if it's not env variable
 
-#if( WIN32 )
-	set( EQ_LIBRARIES Equalizer )
-#elseif( UNIX )
-#	set( EQ_LIBRARIES eq )
-#endif( WIN32 )
 
-if( WIN32 )
-	set( VRPN_INCLUDE_DIR "" CACHE PATH "VRPN include path" )
-	set( VRPN_LIB_DIR "" CACHE PATH "VRPN lib path" )
-endif()
-	
-
+######### Add include and link directories ###########
 include_directories( 
  	${OpenGL_INCLUDE_DIR}
- 	${OGRE_INCLUDE_DIRS}
- 	${OIS_INCLUDE_DIRS}
-	${BOOST_INCLUDE}
-	${EQ_INCLUDE_DIR}
+ 	${OGRE_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
+	${EQUALIZER_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
-	${VRPN_INCLUDE_DIR}
+	${VPRN_INCLUDE_DIR}
 	)
 
-link_directories( ${Boost_LIBRARY_DIRS} ${EQ_LIB_DIR} ${VRPN_LIB_DIR} )
+# Libraries that eqOgre library depends on
+# TODO boost test is not necessary for the library
+set( EQOGRE_DEB_LIBS
+	${OPENGL_LIBRARIES}
+	${OGRE_LIBRARIES}
+	${Boost_LIBRARIES}
+	${EQUALIZER_LIBRARY}
+	${VRPN_LIBRARY}
+	)
+
+# Libraries used to build project binaries
+set( LIBS eqOgre )
+
+#link_directories( ${EQ_LIB_DIR} )
 
 link_directories( ${vl_BINARY_DIR}/vl )
 
+############ Config Copy MACRO ##############
+# TODO macro should be moved to separate file
 MACRO( copy_config )
 # Config file for spikes
 message( "Copying config file for project = ${PROJECT_NAME}"  )

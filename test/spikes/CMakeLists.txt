@@ -25,15 +25,7 @@ add_executable( fake_tracking_server
 	../debug.hpp
 	)
 
-set( LIBS
-	${OPENGL_LIBRARIES}
-	${OGRE_LIBRARIES}
-	${Boost_LIBRARIES}
-	${EQ_LIBRARIES}
-	vrpn
-	eqOgre
-	)
-
 target_link_libraries( spike_listening_client ${LIBS} )
 target_link_libraries( spike_udp_renderer ${LIBS} )
-target_link_libraries( fake_tracking_server vrpn )
+target_link_libraries( fake_tracking_server ${vrpn_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} )
+

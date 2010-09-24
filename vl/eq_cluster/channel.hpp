@@ -38,15 +38,14 @@ protected:
 
 
 //  virtual void applyFrustum( void ) const;
-	
-Ogre::Camera *_camera;
-Ogre::Viewport *_viewport;
-Ogre::RenderWindow *_ogre_window;
+	Ogre::RenderWindow *_ogre_window;
+	Ogre::Viewport *_viewport;
+	Ogre::Camera *_camera;
 
-Ogre::Vector3 _head_pos;
-Ogre::Quaternion _head_orient;
+	Ogre::Vector3 _head_pos;
+	Ogre::Quaternion _head_orient;
 
-vl::TrackerRefPtr _tracker;
+	vl::TrackerRefPtr _tracker;
 
 };
 
