@@ -6,6 +6,11 @@ eqOgre::Client::Client( eqOgre::InitData const &data )
 	: _config(0), _init_data( data )
 {} 
 
+eqOgre::Client::~Client(void )
+{
+	exit();
+}
+
 bool
 eqOgre::Client::initLocal( int argc, char **argv )
 {
@@ -15,6 +20,7 @@ eqOgre::Client::initLocal( int argc, char **argv )
 bool 
 eqOgre::Client::initialise( void )
 {
+	std::cout << "creating server" << std::endl;
 	// 1. connect to server
 	_server = new eq::Server;
 
@@ -40,7 +46,7 @@ eqOgre::Client::initialise( void )
 
 	if( !_config->init(0) )
 	{
-		EQERROR << "Config initialization failed: " 
+		EQERROR << "Config initialization failed: "
 				<< _config->getErrorMessage() << std::endl;
 		_server->releaseConfig( _config );
 		disconnectServer( _server );
@@ -64,21 +70,27 @@ eqOgre::Client::mainloop( uint32_t frame )
 	{ return false; }
 }
 
-bool 
+// -------------------- Protected ---------------------
+void
 eqOgre::Client::exit( void )
 {
-	_config->exit();
-	_server->releaseConfig( _config );
-		
-	if( !disconnectServer( _server ))
-		EQERROR << "Client::disconnectServer failed" << std::endl;
-
-	_server = 0;
-
-	return true;
+	if( _config )
+	{
+		_config->exit();
+		if( _server.isValid() )
+		{
+			_server->releaseConfig( _config );
+		}
+		_config = 0;
+	}
+	if( _server.isValid() )
+	{
+		if( !disconnectServer( _server ))
+			EQERROR << "Client::disconnectServer failed" << std::endl;
+		_server = 0;
+	}
 }
 
-// -------------------- Protected ---------------------
 bool 
 eqOgre::Client::clientLoop( void )
 {

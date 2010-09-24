@@ -24,6 +24,7 @@ namespace vl
 	typedef vmml::vec3d vector;
 	typedef double scalar;
 	typedef vmml::vector<4,double> colour;
+	typedef double angle;
 
 	const scalar epsilon = 1e-6;
 	

@@ -15,7 +15,7 @@ namespace eqOgre
     public:
 		//Client( const InitData& initData );
 		Client( eqOgre::InitData const &data );
-        virtual ~Client (void) {}
+        virtual ~Client (void);
 
 		// Create ogre::root corresponding to this client
 		virtual bool initLocal( int argc, char **argv );
@@ -25,9 +25,10 @@ namespace eqOgre
 		// Some helper methods
 		virtual bool initialise( void );
 
-		virtual bool exit( void );
-
 	protected:
+		
+		virtual void exit( void );
+
 		// eq overriden, loop invariant
         virtual bool clientLoop (void);
 		

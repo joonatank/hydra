@@ -101,11 +101,10 @@ struct EqOgreFixture
 		BOOST_CHECK( eq::exit() );
 	}
 
-	std::ofstream log_file;
 	bool _inited;
 	uint32_t frameNumber;
 	eq::Config *config;
-	//std::ofstream log_file;
+	std::ofstream log_file;
 };
 
 #endif
