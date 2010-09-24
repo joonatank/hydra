@@ -42,16 +42,15 @@ vl::udp::Server::handle(std::vector< double > msg)
 {
 	// TODO handle packets with IDs
 	// Handler code
-	int msg_pos = 0;
 	for( size_t i = 0; i < _commands.size(); ++i )
 	{
 		boost::shared_ptr<udp::Command> cmd = _commands.at(i);
 
 		// Message is too short
-		if( msg.size() - msg_pos < cmd->getSize() )
+		if( msg.size() < cmd->getSize() )
 		{
 			// Calculate the number of bytes needed for the next command
-			size_t missing_bytes = cmd->getSize() - (msg.size() - msg_pos);
+			size_t missing_bytes = cmd->getSize() - msg.size();
 			// Add the number of bytes needed for all the remaining commands
 			for( size_t j = i+i; j < _commands.size(); ++j )
 			{
@@ -61,19 +60,15 @@ vl::udp::Server::handle(std::vector< double > msg)
 		}
 
 		// Assign the new values
-		for( size_t j = 0; j < cmd->getSize(); ++j )
-		{
-			cmd->at(j) = msg.at(msg_pos);
-			msg_pos++;
-		}
+		(*cmd)<<msg;
 
 		// execute the command
 		(*cmd)();
 	}
 
-	if( msg_pos != msg.size() )
+	if( msg.size() != 0u )
 	{
-		size_t extra_bytes = (msg.size()-msg_pos)*sizeof(double);
+		size_t extra_bytes = msg.size()*sizeof(double);
 		BOOST_THROW_EXCEPTION( vl::long_message() << vl::bytes(extra_bytes) );
 	}
 }

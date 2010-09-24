@@ -45,7 +45,7 @@ public :
 	{
 	}
 
-	void send( std::vector<double> msg )
+	void sendMsg( std::vector<double> msg )
 	{
 		client.send( msg );
 

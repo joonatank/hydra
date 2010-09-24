@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( initialization_args )
 	eq::Node *node = config->getNodes().at(0);
 	BOOST_REQUIRE( node->getPipes().size() > 0 );
 	eq::Pipe *pipe = node->getPipes().at(0);
-	BOOST_CHECK_EQUAL( pipe->getWindows().size(), 0 );
+	BOOST_CHECK_EQUAL( pipe->getWindows().size(), 0u );
 }
 
 // This should work nicely and we should get correct pointers

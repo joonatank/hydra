@@ -52,7 +52,7 @@ vl::udp::PrintCommand::operator()( void )
 		<< " : with value = " << _data;
 }
 
-uint16_t
+size_t
 vl::udp::PrintCommand::getSize(void ) const
 {
 	if( _type == CMD_POS )

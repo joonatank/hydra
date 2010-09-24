@@ -21,7 +21,7 @@ public :
 
 	virtual void operator()( void );
 
-	virtual uint16_t getSize( void ) const;
+	virtual size_t getSize( void ) const;
 
 	virtual CMD_TYPE getType( void ) const
 	{ return _type; }
@@ -30,6 +30,8 @@ public :
 
 	virtual double const &at( size_t i ) const;
 
+	virtual std::vector<double> &operator<<( std::vector<double> &vec )
+	{ return vec; }
 private :
 	std::string _object;
 

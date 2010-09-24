@@ -92,11 +92,11 @@ BOOST_AUTO_TEST_CASE( sending )
 	check_quat( _feet, q );
 
 	// Set commands
-	boost::shared_ptr<vl::udp::Command> cmd( new vl::udp::OgreCommand("setPosition", _robot ) );
+	boost::shared_ptr<vl::udp::Command> cmd( vl::udp::OgreCommand::create("setPosition", _robot ) );
 	server.addCommand( cmd );
-	cmd.reset( new vl::udp::OgreCommand("setQuaternion", _robot ) );
+	cmd.reset( vl::udp::OgreCommand::create("setQuaternion", _robot ) );
 	server.addCommand( cmd );
-	cmd.reset( new vl::udp::OgreCommand("setAngle", _feet ) );
+	cmd.reset( vl::udp::OgreCommand::create("setAngleAxis", _feet ) );
 	server.addCommand( cmd );
 
 	// Send the message
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( sending )
 	add_vec( msg, msg_rot_quat );
 	add_vec( msg, msg_rot_aa );
 
-	BOOST_CHECK_NO_THROW( send( msg ) );
+	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
 
 	check_pos( _robot, msg_pos );
 	check_quat( _robot, msg_rot_quat );

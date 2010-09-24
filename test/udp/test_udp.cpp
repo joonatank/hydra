@@ -38,15 +38,15 @@ public :
 	{
 		if( _type == vl::udp::CMD_POS )
 		{
-			BOOST_REQUIRE_EQUAL( _check_values.size(), 3 );
+			BOOST_REQUIRE_EQUAL( _check_values.size(), 3u );
 		}
 		else if( _type == vl::udp::CMD_ROT_QUAT )
 		{
-			BOOST_REQUIRE_EQUAL( _check_values.size(), 4 );
+			BOOST_REQUIRE_EQUAL( _check_values.size(), 4u );
 		}
 		else if( _type == vl::udp::CMD_ROT_AA )
 		{
-			BOOST_REQUIRE_EQUAL( _check_values.size(), 4 );
+			BOOST_REQUIRE_EQUAL( _check_values.size(), 4u );
 		}
 		else
 		{
@@ -67,7 +67,7 @@ public :
 
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.
-	virtual uint16_t getSize( void ) const
+	virtual size_t getSize( void ) const
 	{
 		return _data.size();
 	}
@@ -87,6 +87,9 @@ public :
 		return _data.at(i);
 	}
 
+	virtual std::vector<double> &operator<<( std::vector<double> &vec )
+	{ return vec; }
+	
 	vl::udp::CMD_TYPE _type;
 	std::vector<double> _data;
 	std::vector<double> _check_values;
@@ -105,7 +108,7 @@ public :
 	{
 	}
 
-	virtual uint16_t getSize( void ) const
+	virtual size_t getSize( void ) const
 	{
 		if( _type == vl::udp::CMD_POS )
 		{ return 3; }
@@ -132,6 +135,9 @@ public :
 		return tmp;
 	}
 
+	virtual std::vector<double> &operator<<( std::vector<double> &vec )
+	{ return vec; }
+	
 	vl::udp::CMD_TYPE _type;
 	double tmp;
 };
@@ -152,7 +158,7 @@ BOOST_AUTO_TEST_CASE( sending )
 	add_vec( msg, msg_rot_quat );
 	add_vec( msg, msg_rot_aa );
 
-	BOOST_CHECK_NO_THROW( send( msg ) );
+	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
 }
 
 // Test throwing when too short packet is sent from client
@@ -166,7 +172,7 @@ BOOST_AUTO_TEST_CASE( too_short_packet )
 	msg.resize( msg.size()-1 );
 
 	// TODO we should check that the number of bytes missing is correct
-	BOOST_CHECK_THROW( send( msg ), vl::short_message );
+	BOOST_CHECK_THROW( sendMsg( msg ), vl::short_message );
 }
 
 // Test throwing when too long packet is sent from client
@@ -180,7 +186,7 @@ BOOST_AUTO_TEST_CASE( too_long_packet )
 	msg.resize( msg.size()+1 );
 
 	// TODO we should check that the number of bytes too many is correct
-	BOOST_CHECK_THROW( send( msg ), vl::long_message );
+	BOOST_CHECK_THROW( sendMsg( msg ), vl::long_message );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

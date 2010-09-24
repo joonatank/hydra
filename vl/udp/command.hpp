@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cstring>
+#include <vector>
 
 #include <boost/shared_ptr.hpp>
 
@@ -29,7 +30,7 @@ public :
 
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.
-	virtual uint16_t getSize( void ) const = 0;
+	virtual size_t getSize( void ) const = 0;
 
 	virtual CMD_TYPE getType( void ) const = 0;
 
@@ -37,6 +38,7 @@ public :
 
 	virtual double const &at( size_t ) const = 0;
 
+	virtual std::vector<double> &operator<<( std::vector<double> &vec ) = 0;
 };	// class Command
 
 typedef boost::shared_ptr<Command> CommandRefPtr;
