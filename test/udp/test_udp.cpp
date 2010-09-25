@@ -77,18 +77,24 @@ public :
 		return _type;
 	}
 
-	virtual double &at( size_t i )
-	{
-		return _data.at(i);
-	}
-
-	virtual double const &at( size_t i ) const
-	{
-		return _data.at(i);
-	}
-
 	virtual std::vector<double> &operator<<( std::vector<double> &vec )
-	{ return vec; }
+	{
+		for( size_t i = 0; i < _data.size(); ++i )
+		{
+			_data.at(i) = vec.at(i);
+		}
+
+		vec.erase( vec.begin(), vec.begin()+_data.size() );
+
+		return vec;
+	}
+
+	virtual std::ostream &operator<<( std::ostream &os ) const
+	{
+		os << "AssertCommand : values = " << _data << " : check values = "
+			<< _check_values << std::endl;
+		return os;
+	}
 	
 	vl::udp::CMD_TYPE _type;
 	std::vector<double> _data;
@@ -125,18 +131,16 @@ public :
 		return _type;
 	}
 
-	virtual double &at( size_t i )
-	{
-		return tmp;
-	}
-
-	virtual double const &at( size_t i ) const
-	{
-		return tmp;
-	}
-
 	virtual std::vector<double> &operator<<( std::vector<double> &vec )
-	{ return vec; }
+	{
+		vec.erase( vec.begin(), vec.begin()+getSize() );
+		return vec;
+	}
+
+	virtual std::ostream &operator<<( std::ostream &os ) const
+	{
+		return os;
+	}
 	
 	vl::udp::CMD_TYPE _type;
 	double tmp;

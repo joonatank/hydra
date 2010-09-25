@@ -3,6 +3,8 @@
 
 #include "command.hpp"
 #include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
 #include <base/typedefs.hpp>
 
 namespace vl
@@ -15,12 +17,8 @@ class OgreCommand : public vl::udp::Command
 {
 public :
 	OgreCommand( Ogre::SceneNode *node );
-	
-	virtual double &at( size_t i )
-	{ return _data.at(i); }
 
-	virtual double const &at( size_t i ) const
-	{ return _data.at(i); }
+	virtual ~OgreCommand( void ) {}
 
 	static OgreCommand *create( std::string const &cmd_name, Ogre::SceneNode *node );
 
@@ -28,14 +26,15 @@ public :
 	
 protected :
 	Ogre::SceneNode *_node;
-	std::vector<double> _data;
-
+	
 };	// class OgreCommand
 
 class SetPosition : public OgreCommand
 {
 public :
 	SetPosition( Ogre::SceneNode *node );
+
+    virtual ~SetPosition( void ) {}
 	
 	/// Execute the command
 	virtual void operator()( void );
@@ -49,15 +48,53 @@ public :
 	{ return CMD_POS; }
 
 	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+
+	virtual std::ostream &operator<<( std::ostream &os ) const;
+	
+	Ogre::Vector3 &getPosition( void )
+	{ return _pos; }
+
+	Ogre::Vector3 const &getPosition( void ) const
+	{ return _pos; }
+
+	void const setPosition( Ogre::Vector3 const &pos )
+	{ _pos = pos; }
+	
+protected :
+	Ogre::Vector3 _pos;
 };
 
-class SetQuaternion : public OgreCommand
+class SetOrientation : public OgreCommand
 {
 public :
-	SetQuaternion( Ogre::SceneNode *node );
+	SetOrientation( Ogre::SceneNode *node );
+
+	virtual ~SetOrientation( void ) {}
 	
 	/// Execute the command
 	virtual void operator()( void );
+
+	virtual std::ostream &operator<<( std::ostream &os ) const;
+
+	Ogre::Quaternion &getQuaternion( void )
+	{ return _quat; }
+
+	Ogre::Quaternion const &getQuaternion( void ) const
+	{ return _quat; }
+
+	void setQuaternion( Ogre::Quaternion const &rot )
+	{ _quat = rot; }
+	
+protected :
+	Ogre::Quaternion _quat;
+};
+
+class SetQuaternion : public SetOrientation
+{
+public :
+	SetQuaternion( Ogre::SceneNode *node );
+
+    virtual ~SetQuaternion( void ) {}
 
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.
@@ -70,13 +107,12 @@ public :
 	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 };
 
-class SetAngle : public OgreCommand
+class SetAngle : public SetOrientation
 {
 public :
 	SetAngle( Ogre::SceneNode *node );
-	
-	/// Execute the command
-	virtual void operator()( void );
+
+    virtual ~SetAngle( void ) {}
 
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.
@@ -89,13 +125,12 @@ public :
 	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 };
 
-class SetAngleAxis : public OgreCommand
+class SetAngleAxis : public SetOrientation
 {
 public :
 	SetAngleAxis( Ogre::SceneNode *node );
-	
-	/// Execute the command
-	virtual void operator()( void );
+
+    virtual ~SetAngleAxis( void ) {}
 
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.

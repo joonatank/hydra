@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <vector>
+#include <iostream>
 
 #include <boost/shared_ptr.hpp>
 
@@ -34,11 +35,15 @@ public :
 
 	virtual CMD_TYPE getType( void ) const = 0;
 
-	virtual double &at( size_t ) = 0;
-
-	virtual double const &at( size_t ) const = 0;
-
+	/// Deserialization function
+	/// syntax : cmd << vector
+	/// Removes the read elements from the vector
+	/// Throws if the input vector contains to few elements
 	virtual std::vector<double> &operator<<( std::vector<double> &vec ) = 0;
+
+	/// Print function, bit problematic
+	/// you have to use syntax cmd.operator<<(std::cout) << std::endl
+	virtual std::ostream &operator<<( std::ostream &os ) const = 0;
 };	// class Command
 
 typedef boost::shared_ptr<Command> CommandRefPtr;

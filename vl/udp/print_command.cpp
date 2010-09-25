@@ -34,22 +34,7 @@ vl::udp::PrintCommand::~PrintCommand( void )
 void
 vl::udp::PrintCommand::operator()( void )
 {
-	std::string cmd_str;
-	if( _type == CMD_POS )
-	{
-		cmd_str = "set position";
-	}
-	else if( _type == CMD_ROT_QUAT )
-	{
-		cmd_str = "quaternion rotation";
-	}
-	if( _type == CMD_ROT_AA )
-	{
-		cmd_str = "angle-axis rotation";
-	}
-
-	std::cout << "Command " << cmd_str << " on object = " << _object
-		<< " : with value = " << _data;
+	this->operator<<(std::cout) << std::endl;
 }
 
 size_t
@@ -66,10 +51,38 @@ vl::udp::PrintCommand::getSize(void ) const
 	{ return 0; }
 }
 
-double &
-vl::udp::PrintCommand::at( size_t i )
-{ return _data.at(i); }
+std::vector< double > &
+vl::udp::PrintCommand::operator<<(std::vector< double >& vec)
+{
+	for( size_t i = 0; i < _data.size(); ++i )
+	{
+		_data.at(i) = vec.at(i);
+	}
 
-double const &
-vl::udp::PrintCommand::at( size_t i ) const
-{ return _data.at(i); }
+	vec.erase( vec.begin(), vec.begin()+_data.size() );
+	
+	return vec;
+}
+
+std::ostream &
+vl::udp::PrintCommand::operator<<(std::ostream& os) const
+{
+	std::string cmd_str;
+	if( _type == CMD_POS )
+	{
+		cmd_str = "set position";
+	}
+	else if( _type == CMD_ROT_QUAT )
+	{
+		cmd_str = "quaternion rotation";
+	}
+	if( _type == CMD_ROT_AA )
+	{
+		cmd_str = "angle-axis rotation";
+	}
+
+	os << "PrintCommand " << cmd_str << " on object = " << _object
+		<< " : with value = " << _data;
+
+	return os;
+}

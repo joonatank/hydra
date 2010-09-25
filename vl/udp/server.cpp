@@ -60,8 +60,9 @@ vl::udp::Server::handle(std::vector< double > msg)
 		}
 
 		// Assign the new values
-		(*cmd)<<msg;
-
+		//vl::udp::Command &com = *cmd;
+		(*cmd) << msg;
+		
 		// execute the command
 		(*cmd)();
 	}

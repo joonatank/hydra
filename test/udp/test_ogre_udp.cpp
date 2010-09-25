@@ -94,9 +94,12 @@ BOOST_AUTO_TEST_CASE( sending )
 	// Set commands
 	boost::shared_ptr<vl::udp::Command> cmd( vl::udp::OgreCommand::create("setPosition", _robot ) );
 	server.addCommand( cmd );
+	cmd->operator<<(std::cerr) << std::endl;
 	cmd.reset( vl::udp::OgreCommand::create("setQuaternion", _robot ) );
+	cmd->operator<<(std::cerr) << std::endl;
 	server.addCommand( cmd );
 	cmd.reset( vl::udp::OgreCommand::create("setAngleAxis", _feet ) );
+	cmd->operator<<(std::cerr) << std::endl;
 	server.addCommand( cmd );
 
 	// Send the message

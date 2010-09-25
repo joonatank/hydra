@@ -26,15 +26,14 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return _type; }
 
-	virtual double &at( size_t i );
+	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 
-	virtual double const &at( size_t i ) const;
+	virtual std::ostream &operator<<( std::ostream &os ) const;
 
-	virtual std::vector<double> &operator<<( std::vector<double> &vec )
-	{ return vec; }
 private :
+	
 	std::string _object;
-
+	
 	std::vector<double> _data;
 
 	CMD_TYPE _type;
