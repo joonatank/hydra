@@ -28,7 +28,7 @@ public :
 
 	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 
-	virtual std::ostream &operator<<( std::ostream &os ) const;
+	virtual void print( std::ostream &os ) const;
 
 private :
 	

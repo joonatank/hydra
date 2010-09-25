@@ -41,12 +41,20 @@ public :
 	/// Throws if the input vector contains to few elements
 	virtual std::vector<double> &operator<<( std::vector<double> &vec ) = 0;
 
-	/// Print function, bit problematic
-	/// you have to use syntax cmd.operator<<(std::cout) << std::endl
-	virtual std::ostream &operator<<( std::ostream &os ) const = 0;
+	/// Real print function
+	/// Called from operator<<( std::ostream &, Command const & ) to get virtual
+	/// serialization to ostreams working correctly with nice syntax.
+	virtual void print( std::ostream &os ) const = 0;
 };	// class Command
 
 typedef boost::shared_ptr<Command> CommandRefPtr;
+
+inline
+std::ostream & operator<<( std::ostream &os, Command const &cmd )
+{
+	cmd.print( os );
+	return os;
+}
 
 }	// namespace udp
 

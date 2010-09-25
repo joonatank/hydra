@@ -47,6 +47,7 @@ vl::udp::Server::handle(std::vector< double > msg)
 		boost::shared_ptr<udp::Command> cmd = _commands.at(i);
 
 		// Message is too short
+		/*
 		if( msg.size() < cmd->getSize() )
 		{
 			// Calculate the number of bytes needed for the next command
@@ -58,6 +59,7 @@ vl::udp::Server::handle(std::vector< double > msg)
 			}
 			BOOST_THROW_EXCEPTION( vl::short_message() << vl::bytes(missing_bytes) );
 		}
+		*/
 
 		// Assign the new values
 		//vl::udp::Command &com = *cmd;

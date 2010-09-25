@@ -34,7 +34,8 @@ vl::udp::PrintCommand::~PrintCommand( void )
 void
 vl::udp::PrintCommand::operator()( void )
 {
-	this->operator<<(std::cout) << std::endl;
+//	this->operator<<(std::cout) << std::endl;
+	std::cout << *this << std::endl;
 }
 
 size_t
@@ -64,8 +65,8 @@ vl::udp::PrintCommand::operator<<(std::vector< double >& vec)
 	return vec;
 }
 
-std::ostream &
-vl::udp::PrintCommand::operator<<(std::ostream& os) const
+void
+vl::udp::PrintCommand::print( std::ostream& os ) const
 {
 	std::string cmd_str;
 	if( _type == CMD_POS )
@@ -82,7 +83,7 @@ vl::udp::PrintCommand::operator<<(std::ostream& os) const
 	}
 
 	os << "PrintCommand " << cmd_str << " on object = " << _object
-		<< " : with value = " << _data;
-
-	return os;
+		<< " : with value = ";
+	// Something funky with the operator<< for vectors we need to use this obscure syntax
+	::operator<<(os, _data);
 }

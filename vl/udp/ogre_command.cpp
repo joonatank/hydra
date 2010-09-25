@@ -59,6 +59,19 @@ vl::udp::OgreCommand::OgreCommand ( Ogre::SceneNode* node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 }
 
+void
+vl::udp::OgreCommand::check(size_t size, std::vector< double >& vec)
+{
+	if( vec.size() < size )
+	{ BOOST_THROW_EXCEPTION( vl::short_message() ); }
+}
+
+void
+vl::udp::OgreCommand::remove(size_t size, std::vector< double >& vec)
+{
+	vec.erase( vec.begin(), vec.begin()+size );
+}
+
 /// SetPosition Command ///
 vl::udp::SetPosition::SetPosition(Ogre::SceneNode* node)
 	: OgreCommand(node), _pos( Ogre::Vector3::ZERO )
@@ -70,25 +83,18 @@ vl::udp::SetPosition::operator() ( void )
 	_node->setPosition(_pos);
 }
 
-std::vector<double> &
-vl::udp::SetPosition::operator<<( std::vector<double> &vec )
+void vl::udp::SetPosition::copy(size_t size, std::vector< double >& vec)
 {
-	size_t const size = 3;
-	//	TODO add checking if the vector has enough elements
 	for( size_t i = 0; i < size; ++i )
 	{
 		_pos[i] = vec.at(i);
 	}
-	
-	vec.erase( vec.begin(), vec.begin()+size );
-	return vec;
 }
 
-std::ostream &
-vl::udp::SetPosition::operator<<(std::ostream& os) const
+void
+vl::udp::SetPosition::print(std::ostream& os) const
 {
 	os << "SetPosition Command with value = " << _pos;
-	return os;
 }
 
 
@@ -103,11 +109,58 @@ vl::udp::SetOrientation::operator()(void )
 	_node->setOrientation(_quat);
 }
 
-std::ostream &
-vl::udp::SetOrientation::operator<<( std::ostream &os ) const
+Ogre::Radian
+vl::udp::SetOrientation::getAngle( void ) const
+{
+	Ogre::Radian angle;
+	Ogre::Vector3 v;
+	_quat.ToAngleAxis(angle, v);
+	return angle;
+}
+
+void
+vl::udp::SetOrientation::setAngle( const Ogre::Radian& angle )
+{
+	Ogre::Radian a;
+	Ogre::Vector3 axis;
+	_quat.ToAngleAxis(a, axis);
+	_quat.FromAngleAxis(angle, axis);
+}
+
+Ogre::Vector3
+vl::udp::SetOrientation::getAxis( void ) const
+{
+	Ogre::Radian a;
+	Ogre::Vector3 axis;
+	_quat.ToAngleAxis(a, axis);
+	return axis;
+}
+
+void
+vl::udp::SetOrientation::setAxis( const Ogre::Vector3& axis )
+{
+	Ogre::Radian angle;
+	Ogre::Vector3 v;
+	_quat.ToAngleAxis(angle, v);
+	_quat.FromAngleAxis(angle, axis);
+}
+
+void
+vl::udp::SetOrientation::getAngleAxis( Ogre::Radian& angle, Ogre::Vector3& axis ) const
+{
+	_quat.ToAngleAxis(angle, axis);
+}
+
+void
+vl::udp::SetOrientation::setAngleAxis( const Ogre::Radian& angle, const Ogre::Vector3& axis )
+{
+	_quat.FromAngleAxis(angle, axis);
+}
+
+void
+vl::udp::SetOrientation::print( std::ostream &os ) const
 {
 	os << "SetOrientation Command with value = " << _quat;
-	return os;
 }
 
 /// SetQuaternion Command ///
@@ -115,16 +168,12 @@ vl::udp::SetQuaternion::SetQuaternion(Ogre::SceneNode* node)
 	: SetOrientation(node)
 {}
 
-std::vector<double> &
-vl::udp::SetQuaternion::operator<<( std::vector<double> &vec )
+void vl::udp::SetQuaternion::copy(size_t size, std::vector< double >& vec)
 {
-	size_t const size = 4;
 	for( size_t i = 0; i < size; ++i )
 	{
 		getQuaternion()[i] = vec.at(i);
 	}
-	vec.erase( vec.begin(), vec.begin()+size );
-	return vec;
 }
 
 
@@ -133,22 +182,10 @@ vl::udp::SetAngle::SetAngle(Ogre::SceneNode* node)
 	: SetOrientation(node)
 {}
 
-std::vector<double> &
-vl::udp::SetAngle::operator<<( std::vector<double> &vec )
+void vl::udp::SetAngle::copy(size_t size, std::vector< double >& vec)
 {
-	Ogre::Radian angle;
-	Ogre::Vector3 axis;
-	_quat.ToAngleAxis(angle, axis);
-
-	//	TODO add checking if the vector has enough elements
-	
 	// New angle
-	angle = vec.at(0);
-	vec.erase( vec.begin() );
-
-	_quat.FromAngleAxis(angle, axis);
-
-	return vec;
+	setAngle( Ogre::Radian( vec.at(0) ) );
 }
 
 /// SetAngleAxis Command ///
@@ -156,24 +193,15 @@ vl::udp::SetAngleAxis::SetAngleAxis(Ogre::SceneNode* node)
 	: SetOrientation(node)
 {}
 
-std::vector<double> &
-vl::udp::SetAngleAxis::operator<<( std::vector<double> &vec )
+void
+vl::udp::SetAngleAxis::copy(size_t size, std::vector< double >& vec)
 {
-	Ogre::Radian angle;
+	// New Axis
 	Ogre::Vector3 axis;
-
-	size_t const size = 3;
-	//	TODO add checking if the vector has enough elements
-	// New angle
-	angle = vec.at(0);
-	for( size_t i = 0; i < size; ++i )
+	for( size_t i = 0; i < size-1; ++i )
 	{
 		axis[i] = vec.at(i+1);
 	}
-	
-	vec.erase( vec.begin(), vec.begin()+size+1 );
 
-	_quat.FromAngleAxis(angle, axis);
-
-	return vec;
+	setAngleAxis( Ogre::Radian( vec.at(0) ), axis );
 }

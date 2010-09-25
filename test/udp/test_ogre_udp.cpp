@@ -69,6 +69,9 @@ BOOST_GLOBAL_FIXTURE( InitFixture )
 
 BOOST_FIXTURE_TEST_SUITE( TestOgreUDP, OgreUDPFixture )
 
+// TODO this should be broken to 4 different test cases one for each different
+// type of command
+// TODO we should add test for too short and too long packets
 BOOST_AUTO_TEST_CASE( sending )
 {	
 	vl::SettingsRefPtr settings = ::getSettings( test::master_test_suite().argv[0], "test_udp_ogre" );
@@ -94,12 +97,12 @@ BOOST_AUTO_TEST_CASE( sending )
 	// Set commands
 	boost::shared_ptr<vl::udp::Command> cmd( vl::udp::OgreCommand::create("setPosition", _robot ) );
 	server.addCommand( cmd );
-	cmd->operator<<(std::cerr) << std::endl;
+	std::cerr << *cmd << std::endl;
 	cmd.reset( vl::udp::OgreCommand::create("setQuaternion", _robot ) );
-	cmd->operator<<(std::cerr) << std::endl;
+	std::cerr << *cmd << std::endl;
 	server.addCommand( cmd );
 	cmd.reset( vl::udp::OgreCommand::create("setAngleAxis", _feet ) );
-	cmd->operator<<(std::cerr) << std::endl;
+	std::cerr << *cmd << std::endl;
 	server.addCommand( cmd );
 
 	// Send the message

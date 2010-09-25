@@ -7,6 +7,9 @@
 #include <OGRE/OgreQuaternion.h>
 #include <base/typedefs.hpp>
 
+#include <cstring>
+#include <vector>
+
 namespace vl
 {
 	
@@ -23,8 +26,26 @@ public :
 	static OgreCommand *create( std::string const &cmd_name, Ogre::SceneNode *node );
 
 	static OgreCommand *create( CMD_TYPE cmd_type, Ogre::SceneNode *node );
+
+	std::vector<double> &operator<<( std::vector<double> &vec )
+	{
+		check( getSize(), vec );
+		copy( getSize(), vec );
+		remove( getSize(), vec );
+		return vec;
+	}
 	
 protected :
+	/// Abstract methods called from operator<< (deserialization
+	/// Checks that there is enough data for deserialization
+	virtual void check( size_t size, std::vector<double> &vec );
+
+	/// Deserializises the data
+	virtual void copy( size_t size, std::vector<double> &vec ) = 0;
+
+	/// Removes extra elements from the vector
+	virtual void remove( size_t size, std::vector<double> &vec );
+
 	Ogre::SceneNode *_node;
 	
 };	// class OgreCommand
@@ -47,9 +68,9 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_POS; }
 
-	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 
-	virtual std::ostream &operator<<( std::ostream &os ) const;
+	virtual void print( std::ostream &os ) const;
 	
 	Ogre::Vector3 &getPosition( void )
 	{ return _pos; }
@@ -61,6 +82,8 @@ public :
 	{ _pos = pos; }
 	
 protected :
+	virtual void copy( size_t size, std::vector<double> &vec );
+
 	Ogre::Vector3 _pos;
 };
 
@@ -74,8 +97,9 @@ public :
 	/// Execute the command
 	virtual void operator()( void );
 
-	virtual std::ostream &operator<<( std::ostream &os ) const;
+	virtual void print( std::ostream &os ) const;
 
+	/// Basic getter setters
 	Ogre::Quaternion &getQuaternion( void )
 	{ return _quat; }
 
@@ -84,7 +108,17 @@ public :
 
 	void setQuaternion( Ogre::Quaternion const &rot )
 	{ _quat = rot; }
-	
+
+	/// Complex getter setters
+	Ogre::Radian getAngle( void ) const;
+	void setAngle( Ogre::Radian const &angle );
+
+	Ogre::Vector3 getAxis( void ) const;
+	void setAxis( Ogre::Vector3 const &axis );
+
+	void getAngleAxis( Ogre::Radian &angle, Ogre::Vector3 &axis ) const;
+	void setAngleAxis( Ogre::Radian const &angle, Ogre::Vector3 const &axis );
+
 protected :
 	Ogre::Quaternion _quat;
 };
@@ -104,7 +138,9 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_QUAT; }
 
-	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+protected :
+	virtual void copy( size_t size, std::vector<double> &vec );
 };
 
 class SetAngle : public SetOrientation
@@ -117,12 +153,15 @@ public :
 	/// Returns the number of elements in the array for this command
 	/// All elements are type double for now.
 	virtual size_t getSize( void ) const
-	{ return 4; }
+	{ return 1; }
 	
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_ANGLE; }
 
-	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+protected :
+	virtual void copy( size_t size, std::vector<double> &vec );
+
 };
 
 class SetAngleAxis : public SetOrientation
@@ -140,7 +179,10 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_AA; }
 
-	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+protected :
+	virtual void copy( size_t size, std::vector<double> &vec );
+
 };
 
 }	// namespace udp

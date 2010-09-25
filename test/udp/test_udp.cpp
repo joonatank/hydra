@@ -89,11 +89,10 @@ public :
 		return vec;
 	}
 
-	virtual std::ostream &operator<<( std::ostream &os ) const
+	virtual void print( std::ostream &os ) const
 	{
 		os << "AssertCommand : values = " << _data << " : check values = "
 			<< _check_values << std::endl;
-		return os;
 	}
 	
 	vl::udp::CMD_TYPE _type;
@@ -137,9 +136,8 @@ public :
 		return vec;
 	}
 
-	virtual std::ostream &operator<<( std::ostream &os ) const
+	virtual void print( std::ostream &os ) const
 	{
-		return os;
 	}
 	
 	vl::udp::CMD_TYPE _type;
@@ -166,6 +164,9 @@ BOOST_AUTO_TEST_CASE( sending )
 }
 
 // Test throwing when too short packet is sent from client
+/* Removed from the udp::Server, individual Commands will throw if the data
+ * passed to them is too short
+ * TODO Needs to be tested in test_ogre_udp
 BOOST_AUTO_TEST_CASE( too_short_packet )
 {
 	boost::shared_ptr<vl::udp::Command> cmd( new EmptyCommand( vl::udp::CMD_POS, msg_pos ) );
@@ -178,6 +179,7 @@ BOOST_AUTO_TEST_CASE( too_short_packet )
 	// TODO we should check that the number of bytes missing is correct
 	BOOST_CHECK_THROW( sendMsg( msg ), vl::short_message );
 }
+*/
 
 // Test throwing when too long packet is sent from client
 BOOST_AUTO_TEST_CASE( too_long_packet )
