@@ -1,7 +1,11 @@
+
+#include <boost/test/unit_test.hpp>
+
 #include <vector>
 
 #include "udp/client.hpp"
 #include "udp/server.hpp"
+#include "base/sleep.hpp"
 
 // Some hard coded variables
 char const *HOST = "localhost";

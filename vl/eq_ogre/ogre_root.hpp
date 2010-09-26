@@ -61,6 +61,8 @@ namespace ogre
 
 			Ogre::Root *_ogre_root;
 			
+			Ogre::LogManager *_log_manager;
+			
 			// Wether we own the Ogre::Root instance
 			bool _primary;
 			

@@ -3,7 +3,7 @@
 #include "base/exceptions.hpp"
 
 /// Factory method
-vl::udp::OgreCommand *
+vl::udp::CommandRefPtr
 vl::udp::OgreCommand::create( std::string const &cmd_name, Ogre::SceneNode *node )
 {
 	std::string str(cmd_name);
@@ -26,29 +26,29 @@ vl::udp::OgreCommand::create( std::string const &cmd_name, Ogre::SceneNode *node
 	}
 	else
 	{
-		return 0;
+		return CommandRefPtr();
 	}
 }
 
-vl::udp::OgreCommand *
+vl::udp::CommandRefPtr
 vl::udp::OgreCommand::create( CMD_TYPE cmd_type, Ogre::SceneNode *node )
 {
 	switch( cmd_type )
 	{
 		case CMD_POS :
-			return new SetPosition( node );
+			return CommandRefPtr( new SetPosition( node ) );
 			
 		case CMD_ROT_QUAT :
-			return new SetQuaternion( node );
+			return CommandRefPtr( new SetQuaternion( node ) );
 			
 		case CMD_ROT_AA :
-			return new SetAngleAxis( node );
+			return CommandRefPtr( new SetAngleAxis( node ) );
 			
 		case CMD_ROT_ANGLE :
-			return new SetAngle( node );
+			return CommandRefPtr( new SetAngle( node ) );
 
 		default :
-			return 0;
+			return CommandRefPtr();
 	}
 }
 

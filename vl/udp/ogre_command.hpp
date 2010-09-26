@@ -23,9 +23,9 @@ public :
 
 	virtual ~OgreCommand( void ) {}
 
-	static OgreCommand *create( std::string const &cmd_name, Ogre::SceneNode *node );
+	static CommandRefPtr create( std::string const &cmd_name, Ogre::SceneNode *node );
 
-	static OgreCommand *create( CMD_TYPE cmd_type, Ogre::SceneNode *node );
+	static CommandRefPtr create( CMD_TYPE cmd_type, Ogre::SceneNode *node );
 
 	std::vector<double> &operator<<( std::vector<double> &vec )
 	{

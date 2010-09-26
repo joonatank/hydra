@@ -11,12 +11,12 @@
 #include "base/helpers.hpp"
 
 vl::ogre::Root::Root( vl::SettingsRefPtr settings )
-	: _ogre_root(0), _primary(false), _settings( settings )
+	: _ogre_root(0), _log_manager(0), _primary(false), _settings( settings )
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
-		Ogre::LogManager *log_man = new Ogre::LogManager();
+		_log_manager = new Ogre::LogManager();
 
 		// Get the log file path
 		std::stringstream log_file_name_stream;
@@ -47,6 +47,7 @@ vl::ogre::Root::~Root( void )
 	// Roots pointing to same ogre singleton.
 	if( _primary )
 	{ delete _ogre_root; }
+	delete _log_manager;
 }
 
 void
