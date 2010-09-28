@@ -109,15 +109,8 @@ public :
 	void setQuaternion( Ogre::Quaternion const &rot )
 	{ _quat = rot; }
 
-	/// Complex getter setters
-	Ogre::Radian getAngle( void ) const;
-	void setAngle( Ogre::Radian const &angle );
-
-	Ogre::Vector3 getAxis( void ) const;
-	void setAxis( Ogre::Vector3 const &axis );
-
-	void getAngleAxis( Ogre::Radian &angle, Ogre::Vector3 &axis ) const;
-	void setAngleAxis( Ogre::Radian const &angle, Ogre::Vector3 const &axis );
+	virtual void getAngleAxis( Ogre::Radian &angle, Ogre::Vector3 &axis ) const;
+	virtual void setAngleAxis( Ogre::Radian const &angle, Ogre::Vector3 const &axis );
 
 protected :
 	Ogre::Quaternion _quat;
@@ -138,7 +131,6 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_QUAT; }
 
-//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 protected :
 	virtual void copy( size_t size, std::vector<double> &vec );
 };
@@ -158,10 +150,23 @@ public :
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_ANGLE; }
 
-//	virtual std::vector<double> &operator<<( std::vector<double> &vec );
+	virtual void operator()( void );
+
+	/// Complex getter setters
+	Ogre::Radian getAngle( void ) const;
+	void setAngle( Ogre::Radian const &angle );
+
+	Ogre::Vector3 getAxis( void ) const;
+	void setAxis( Ogre::Vector3 const &axis );
+
+	virtual void getAngleAxis( Ogre::Radian &angle, Ogre::Vector3 &axis ) const;
+	virtual void setAngleAxis( Ogre::Radian const &angle, Ogre::Vector3 const &axis );
+
 protected :
 	virtual void copy( size_t size, std::vector<double> &vec );
 
+	Ogre::Vector3 _axis;
+	Ogre::Radian _angle;
 };
 
 class SetAngleAxis : public SetOrientation

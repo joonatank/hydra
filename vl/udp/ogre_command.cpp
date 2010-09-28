@@ -109,42 +109,6 @@ vl::udp::SetOrientation::operator()(void )
 	_node->setOrientation(_quat);
 }
 
-Ogre::Radian
-vl::udp::SetOrientation::getAngle( void ) const
-{
-	Ogre::Radian angle;
-	Ogre::Vector3 v;
-	_quat.ToAngleAxis(angle, v);
-	return angle;
-}
-
-void
-vl::udp::SetOrientation::setAngle( const Ogre::Radian& angle )
-{
-	Ogre::Radian a;
-	Ogre::Vector3 axis;
-	_quat.ToAngleAxis(a, axis);
-	_quat.FromAngleAxis(angle, axis);
-}
-
-Ogre::Vector3
-vl::udp::SetOrientation::getAxis( void ) const
-{
-	Ogre::Radian a;
-	Ogre::Vector3 axis;
-	_quat.ToAngleAxis(a, axis);
-	return axis;
-}
-
-void
-vl::udp::SetOrientation::setAxis( const Ogre::Vector3& axis )
-{
-	Ogre::Radian angle;
-	Ogre::Vector3 v;
-	_quat.ToAngleAxis(angle, v);
-	_quat.FromAngleAxis(angle, axis);
-}
-
 void
 vl::udp::SetOrientation::getAngleAxis( Ogre::Radian& angle, Ogre::Vector3& axis ) const
 {
@@ -154,7 +118,7 @@ vl::udp::SetOrientation::getAngleAxis( Ogre::Radian& angle, Ogre::Vector3& axis 
 void
 vl::udp::SetOrientation::setAngleAxis( const Ogre::Radian& angle, const Ogre::Vector3& axis )
 {
-	_quat.FromAngleAxis(angle, axis);
+	_quat.FromAngleAxis( angle, axis );
 }
 
 void
@@ -179,8 +143,51 @@ void vl::udp::SetQuaternion::copy(size_t size, std::vector< double >& vec)
 
 /// SetAngle Command ///
 vl::udp::SetAngle::SetAngle(Ogre::SceneNode* node)
-	: SetOrientation(node)
+	: SetOrientation(node), _axis( Ogre::Vector3::ZERO ), _angle(0)
 {}
+
+void
+vl::udp::SetAngle::operator()(void )
+{
+	_quat.FromAngleAxis( _angle, _axis );
+	_node->setOrientation( _quat );
+}
+
+Ogre::Radian
+vl::udp::SetAngle::getAngle( void ) const
+{
+	return _angle;
+}
+
+void
+vl::udp::SetAngle::setAngle( const Ogre::Radian& angle )
+{ _angle = angle; }
+
+Ogre::Vector3
+vl::udp::SetAngle::getAxis( void ) const
+{
+	return _axis;
+}
+
+void
+vl::udp::SetAngle::setAxis( const Ogre::Vector3& axis )
+{
+	_axis = axis;
+}
+
+void
+vl::udp::SetAngle::getAngleAxis( Ogre::Radian& angle, Ogre::Vector3& axis ) const
+{
+	angle = _angle;
+	axis = _axis;
+}
+
+void
+vl::udp::SetAngle::setAngleAxis( const Ogre::Radian& angle, const Ogre::Vector3& axis )
+{
+	_angle = angle;
+	_axis = axis;
+}
 
 void vl::udp::SetAngle::copy(size_t size, std::vector< double >& vec)
 {
