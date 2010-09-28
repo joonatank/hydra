@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <OGRE/OgreStringConverter.h>
+#include <OgreStringConverter.h>
 
 #include "settings.hpp"
 #include "base/filesystem.hpp"

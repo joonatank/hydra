@@ -16,9 +16,9 @@
 #ifndef VL_OGRE_ROOT_HPP
 #define VL_OGRE_ROOT_HPP
 
-#include <OGRE/OgreRoot.h>
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreRenderWindow.h>
+#include <OgreRoot.h>
+#include <OgreSceneManager.h>
+#include <OgreRenderWindow.h>
 
 #include "base/typedefs.hpp"
 #include "settings.hpp"

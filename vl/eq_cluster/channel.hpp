@@ -5,10 +5,10 @@
 #include <eq/client/channel.h>
 #include <eq/client/types.h>
 
-#include <OGRE/OgreCamera.h>
-#include <OGRE/OgreCamera.h>
-#include <OGRE/OgreViewport.h>
-#include <OGRE/OgreRenderWindow.h>
+#include <OgreCamera.h>
+#include <OgreCamera.h>
+#include <OgreViewport.h>
+#include <OgreRenderWindow.h>
 
 #include "tracker.hpp"
 #include "base/typedefs.hpp"

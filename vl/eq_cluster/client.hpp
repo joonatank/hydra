@@ -18,7 +18,7 @@ namespace eqOgre
         virtual ~Client (void);
 
 		// Create ogre::root corresponding to this client
-		virtual bool initLocal( int argc, char **argv );
+		virtual bool initLocal( int const argc, char **argv );
 
 		virtual bool mainloop( uint32_t frame );
 

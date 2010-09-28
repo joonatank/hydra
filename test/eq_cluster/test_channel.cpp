@@ -15,7 +15,7 @@
 #include <eq/eq.h>
 
 #include <boost/test/unit_test.hpp>
-#include <turtle/mock.hpp>
+//#include <turtle/mock.hpp>
 
 #include "eq_cluster/window.hpp"
 

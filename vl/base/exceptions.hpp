@@ -3,7 +3,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include <OGRE/OgreQuaternion.h>
+#include <OgreQuaternion.h>
 
 namespace vl
 {

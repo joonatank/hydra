@@ -6,7 +6,7 @@
 #include "base/exceptions.hpp"
 #include "settings.hpp"
 
-#include <OGRE/OgreStringConverter.h>
+#include <OgreStringConverter.h>
 
 std::string const PROJECT( "test_settings" );
 

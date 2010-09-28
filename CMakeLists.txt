@@ -91,7 +91,7 @@ find_package(OGRE REQUIRED)
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS unit_test_framework thread filesystem REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 
 ######### Add include and link directories ###########
@@ -115,11 +115,12 @@ set( EQOGRE_DEB_LIBS
 	)
 
 # Libraries used to build project binaries
-set( LIBS eqOgre )
+set( LIBS eqOgre ${EQOGRE_DEB_LIBS} )
 
-#link_directories( ${EQ_LIB_DIR} )
-
-link_directories( ${vl_BINARY_DIR}/vl )
+# Add Boost library dir because Equalizer uses relative paths to boost libs
+# Linking to Equalizer will fail without it.
+link_directories( ${vl_BINARY_DIR}/vl 
+	${Boost_LIBRARY_DIRS} )
 
 ############ Config Copy MACRO ##############
 # TODO macro should be moved to separate file

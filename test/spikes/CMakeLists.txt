@@ -27,5 +27,5 @@ add_executable( fake_tracking_server
 
 target_link_libraries( spike_listening_client ${LIBS} )
 target_link_libraries( spike_udp_renderer ${LIBS} )
-target_link_libraries( fake_tracking_server ${vrpn_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries( fake_tracking_server ${LIBS} )
 

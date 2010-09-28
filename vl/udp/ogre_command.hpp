@@ -2,9 +2,9 @@
 #define VL_UDP_OGRE_COMMAND_HPP
 
 #include "command.hpp"
-#include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
+#include <OgreSceneNode.h>
+#include <OgreVector3.h>
+#include <OgreQuaternion.h>
 #include <base/typedefs.hpp>
 
 #include <cstring>

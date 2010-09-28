@@ -6,7 +6,7 @@
 #include "base/exceptions.hpp"
 
 // Ogre includes
-#include <OGRE/OgreConfigFile.h>
+#include <OgreConfigFile.h>
 
 #include "base/helpers.hpp"
 

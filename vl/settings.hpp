@@ -18,8 +18,8 @@
 #include "base/filesystem.hpp"
 #include "base/typedefs.hpp"
 
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
+#include <OgreVector3.h>
+#include <OgreQuaternion.h>
 
 namespace vl
 {

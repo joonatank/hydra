@@ -1,9 +1,9 @@
 #ifndef VL_TEST_OGRE_FIXURES_HPP
 #define VL_TEST_OGRE_FIXURES_HPP
 
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreEntity.h>
+#include <OgreSceneManager.h>
+#include <OgreSceneNode.h>
+#include <OgreEntity.h>
 
 #include "settings.hpp"
 #include "base/exceptions.hpp"

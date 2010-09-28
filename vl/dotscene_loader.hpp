@@ -9,8 +9,8 @@
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
 
-#include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreSceneManager.h>
+#include <OgreSceneNode.h>
+#include <OgreSceneManager.h>
 
 class nodeProperty
 {

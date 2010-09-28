@@ -10,10 +10,10 @@
  * TODO should be removed as soon as possible.
  */
 
-#include <OGRE/OgreLogManager.h>
-#include <OGRE/OgreException.h>
-#include <OGRE/OgreResourceManager.h>
-#include <OGRE/OgreEntity.h>
+#include <OgreLogManager.h>
+#include <OgreException.h>
+#include <OgreResourceManager.h>
+#include <OgreEntity.h>
 
 DotSceneLoader::DotSceneLoader()
 	: _xml_data(0)
