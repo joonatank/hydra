@@ -5,7 +5,7 @@
 #include "init_data.hpp"
 
 eqOgre::InitData::InitData( void )
-	: _xml_data(0)
+	: _xml_data(0), _frame_data_id(EQ_ID_INVALID)
 {
 }
 
@@ -25,7 +25,6 @@ eqOgre::InitData::InitData( eqOgre::InitData const &a )
 eqOgre::InitData &
 eqOgre::InitData::operator=( eqOgre::InitData const &a )
 {
-
 	setXMLdata( a._xml_data );
 	_settings = a._settings;
 	_name = a._name;
@@ -37,12 +36,6 @@ void
 eqOgre::InitData::setXMLdata( std::string const &data )
 {
 	setXMLdata( data.c_str() );
-	/*
-	delete [] _xml_data;
-	_length = xml_data.size();
-	_xml_data = new char[_length];
-	::memcpy( _xml_data, xml_data.c_str(), _length );
-	*/
 }
 
 void 
@@ -76,7 +69,10 @@ eqOgre::InitData::getSettings( void )
 void 
 eqOgre::InitData::getInstanceData( eq::net::DataOStream& os )
 {
-	std::cout << "InitData::getInstanceData" << std::endl;
+	// Serialize name
+	os << _name;
+
+	// Serialize settings XML
 	uint32_t length = ::strlen(_xml_data)+1;
 	os << length;
 	
@@ -84,12 +80,18 @@ eqOgre::InitData::getInstanceData( eq::net::DataOStream& os )
 	{
 		os << _xml_data[i];
 	}
+
+	// Serialize frame data ID
+	os << _frame_data_id;
 }
 
 void 
 eqOgre::InitData::applyInstanceData( eq::net::DataIStream& is )
 {
-	std::cout << "InitData::applyInstanceData" << std::endl;
+	// Deserialize name
+	is >> _name;
+
+	// Deserialize settings XML
 	uint32_t length;
 	is >> length;
 	
@@ -99,4 +101,7 @@ eqOgre::InitData::applyInstanceData( eq::net::DataIStream& is )
 	{
 		is >> _xml_data[i];
 	}
+
+	// Deserialize frame data ID
+	is >> _frame_data_id;
 }

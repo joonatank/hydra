@@ -35,12 +35,20 @@ public :
 
 	vl::SettingsRefPtr getSettings( void );
 
+	uint32_t getFrameDataID( void ) const
+	{ return _frame_data_id; }
+
+	void setFrameDataID( uint32_t const id )
+	{ _frame_data_id = id; }
+
 protected:
     virtual void getInstanceData( eq::net::DataOStream& os );
     virtual void applyInstanceData( eq::net::DataIStream& is );
 
 private :
 	std::string _name;
+
+	uint32_t _frame_data_id;
 
 	char *_xml_data;
 

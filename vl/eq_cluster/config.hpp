@@ -3,6 +3,7 @@
 
 #include <eq/eq.h>
 
+#include "frame_data.hpp"
 #include "init_data.hpp"
 #include "settings.hpp"
 
@@ -21,6 +22,8 @@ namespace eqOgre
 
         /** @sa eq::Config::handleEvent */
 //		virtual bool handleEvent( const eq::ConfigEvent* event );
+
+		virtual uint32_t startFrame (const uint32_t frameID);
 
 		void setInitData( InitData const &data )
 		{ _init_data = data; }
@@ -44,6 +47,7 @@ namespace eqOgre
 		vl::SettingsRefPtr _settings;
 
 		InitData _init_data;
+		FrameData _frame_data;
     };	// class Config
 
 }	// namespace eqOgre

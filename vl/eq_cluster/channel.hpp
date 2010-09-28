@@ -12,6 +12,7 @@
 
 #include "tracker.hpp"
 #include "base/typedefs.hpp"
+#include "frame_data.hpp"
 
 namespace eqOgre
 {
@@ -36,12 +37,17 @@ protected:
 	void setOgreFrustum( void );
 	void setHeadMatrix( void );
 
+	void updateDistribData( void );
 
 //  virtual void applyFrustum( void ) const;
 	Ogre::RenderWindow *_ogre_window;
 	Ogre::Viewport *_viewport;
 	Ogre::Camera *_camera;
 
+	// distribution related
+	FrameData _frame_data;
+
+	// Tracker stuff
 	Ogre::Vector3 _head_pos;
 	Ogre::Quaternion _head_orient;
 

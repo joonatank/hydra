@@ -31,6 +31,9 @@ bool
 eqOgre::Config::init( uint32_t const )
 {
 	// Register data
+	registerObject( &_frame_data );
+
+	_init_data.setFrameDataID( _frame_data.getID() );
 	registerObject( &_init_data );
     
 	if( !eq::Config::init( _init_data.getID() ) )
@@ -39,15 +42,19 @@ eqOgre::Config::init( uint32_t const )
     return true;
 }
 
-/*
-bool
-eqOgre::Config::exit (void)
+uint32_t 
+eqOgre::Config::startFrame (const uint32_t frameID)
 {
-    const bool ret = eq::Config::exit();
+	_frame_data.setCameraPosition( Ogre::Vector3( 0, 1, 0 ) );
 
-    return ret;
+	uint32_t version;
+	if( _frame_data.isDirty() )
+	{ version = _frame_data.commit(); }
+	else
+	{ version = _frame_data.getVersion(); }
+
+	return eq::Config::startFrame( version );
 }
-*/
 
 /*
 bool

@@ -2,6 +2,7 @@
 #include "channel.hpp"
 
 #include "window.hpp"
+#include "config.hpp"
 
 #include "math/conversion.hpp"
 #include "base/exceptions.hpp"
@@ -13,7 +14,6 @@ eqOgre::Channel::Channel( eq::Window *parent )
 
 eqOgre::Channel::~Channel( void )
 {
-
 }
 
 bool
@@ -37,6 +37,17 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	// TODO this needs to be configurable
 	setNearFar( 0.1, 100.0 );
 
+	// Get framedata
+	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
+	if( !config )
+	{
+		EQERROR << "config is not type eqOgre::Config" << std::endl;
+		return false;
+	}
+	
+	EQASSERT( config->getInitData().getFrameDataID() != EQ_ID_INVALID );
+	config->mapObject( &_frame_data, config->getInitData().getFrameDataID() );
+	
 	_tracker = ((eqOgre::Window *)getWindow())->getTracker();
 	EQASSERT( _tracker );
 
@@ -59,8 +70,12 @@ eqOgre::Channel::frameClear( const uint32_t )
  *  Original does applyBuffer, applyViewport, applyFrustum, applyHeadTransform
  */
 void
-eqOgre::Channel::frameDraw( const uint32_t /*frameID */)
+eqOgre::Channel::frameDraw( const uint32_t frameID )
 {
+	// Distribution
+	_frame_data.sync( frameID );
+	updateDistribData();
+
 	setHeadMatrix();
 
 	// From equalizer channel::frameDraw
@@ -127,4 +142,10 @@ eqOgre::Channel::setHeadMatrix( void )
 		// GL Modelview matrix as first transformation
 		(*i)->setHeadMatrix( vl::math::convert(m) );
 	}
+}
+
+void 
+eqOgre::Channel::updateDistribData( void )
+{
+	_camera->setPosition( _frame_data.getCameraPosition() );
 }
