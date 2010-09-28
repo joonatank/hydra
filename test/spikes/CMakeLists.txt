@@ -11,11 +11,13 @@ set( HEADERS
 
 add_executable( spike_listening_client
 	listening_client.cpp
+	client_fixtures.hpp
 	${HEADERS}
 	)
 
 add_executable( spike_udp_renderer
 	udp_renderer.cpp
+	client_fixtures.hpp
 	${HEADERS}
 	)
 

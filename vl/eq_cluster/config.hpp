@@ -14,7 +14,7 @@ namespace eqOgre
 		Config( eq::base::RefPtr< eq::Server > parent );
 
 		/** @sa eq::Config::init. */
-//		virtual bool init( const uint32_t initID );
+		virtual bool init( uint32_t const initID );
 
 		/** @sa eq::Config::exit. */
 //		virtual bool exit (void);
@@ -32,7 +32,6 @@ namespace eqOgre
 
 		void unmapData( void );
 		
-			
 		void setSettings( vl::SettingsRefPtr set )
 		{ _settings = set; }
 

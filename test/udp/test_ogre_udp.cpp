@@ -195,7 +195,6 @@ BOOST_AUTO_TEST_CASE( send_quaternion )
 
 	// Check results
 	Ogre::Quaternion const & q = node->getOrientation();
-
 	BOOST_CHECK( Ogre::equal(q, getQuaternion(msg.begin()), EPSILON ) );
 }
 
@@ -287,9 +286,16 @@ BOOST_AUTO_TEST_CASE( send_all_messages )
 
 	// TODO add all the commands
 	addCommand( vl::udp::OgreCommand::create("setPosition", node ) );
+	addCommand( vl::udp::OgreCommand::create("setQuaternion", node ) );
 
-	std::vector<double> msg;
-	add_vec( msg, msg_pos );
+	std::vector<double> msg(msg_pos);
+	add_vec( msg, msg_rot_quat );
+	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
+
+	Ogre::Quaternion const & q = node->getOrientation();
+	Ogre::Vector3 const &v = node->getPosition();
+	BOOST_CHECK( Ogre::equal(v, getVector(msg_pos.begin()), EPSILON) );
+	BOOST_CHECK( Ogre::equal(q, getQuaternion(msg_rot_quat.begin()), EPSILON ) );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -30,7 +30,9 @@ eqOgre::Window::configInit( const uint32_t initID )
 		EQERROR << "config is not type eqOgre::Config" << std::endl;
 		return false;
 	}
-
+	
+	// Get the cluster version of data
+	config->mapData( initID );
 	_settings = config->getSettings();
 	if( !_settings )
 	{

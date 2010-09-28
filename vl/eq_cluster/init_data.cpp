@@ -76,7 +76,8 @@ eqOgre::InitData::getSettings( void )
 void 
 eqOgre::InitData::getInstanceData( eq::net::DataOStream& os )
 {
-	uint32_t length = ::strlen(_xml_data);
+	std::cout << "InitData::getInstanceData" << std::endl;
+	uint32_t length = ::strlen(_xml_data)+1;
 	os << length;
 	
 	for( uint32_t i = 0; i < length; ++i )
@@ -88,6 +89,7 @@ eqOgre::InitData::getInstanceData( eq::net::DataOStream& os )
 void 
 eqOgre::InitData::applyInstanceData( eq::net::DataIStream& is )
 {
+	std::cout << "InitData::applyInstanceData" << std::endl;
 	uint32_t length;
 	is >> length;
 	

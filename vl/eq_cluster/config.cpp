@@ -27,16 +27,17 @@ eqOgre::Config::unmapData( void )
 	// Nothing to do as init data is only mapped once and then unmapped
 }
 
-/*
 bool
-eqOgre::Config::init( uint32_t initID )
+eqOgre::Config::init( uint32_t const )
 {
-    if( !eq::Config::init( initID ) )
+	// Register data
+	registerObject( &_init_data );
+    
+	if( !eq::Config::init( _init_data.getID() ) )
     { return false; }
 
     return true;
 }
-*/
 
 /*
 bool

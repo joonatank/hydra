@@ -59,10 +59,16 @@ int main( const int argc, char** argv )
 	catch( Ogre::Exception const &e)
 	{
 		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		error = true;
 	}
 	catch( std::exception const &e )
 	{
 		std::cerr << "STD Exception: " << e.what() << std::endl;
+		error = true;
+	}
+	catch( ... )
+	{
+		error = true;
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
