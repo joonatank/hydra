@@ -22,12 +22,15 @@
 #include "eq_ogre/ogre_root.hpp"
 #include "base/exceptions.hpp"
 
+#include "math/ogre_math.hpp"
+
 // Test includes
 #include "udp_fixtures.hpp"
 #include "../debug.hpp"
 #include "../test_helpers.hpp"
 
 double const TOLERANCE = 1e-3;
+double const EPSILON = 1e-4;
 
 // Fixture that can create multiple scene nodes without anything else
 struct OgreDummyFixture
@@ -80,55 +83,23 @@ struct OgreDummyFixture
 
 struct OgreUDPFixture : public TestUdpFixture, public OgreDummyFixture
 {
-	void check_quat( Ogre::SceneNode *node, std::vector<double> vec )
+	Ogre::Quaternion getQuaternion( std::vector<double>::const_iterator iter )
 	{
-		Ogre::Quaternion const & q = node->getOrientation();
-		for( size_t i = 0; i < 4; ++i )
-		{
-			BOOST_CHECK_CLOSE( q[i],  vec.at(i), TOLERANCE );
-		}
+		return Ogre::Quaternion( *(iter), *(iter+1), *(iter+2), *(iter+3) );
 	}
 
-	// Check angle-axis rotation
-	void check_angle_axis( Ogre::SceneNode *node, std::vector<double> vec )
+	Ogre::Vector3 getVector( std::vector<double>::const_iterator iter )
 	{
-		Ogre::Radian angle;
-		Ogre::Vector3 axis;
-		node->getOrientation().ToAngleAxis(angle, axis);
-		
-		BOOST_CHECK_CLOSE( angle.valueRadians(), vec.at(0), TOLERANCE );
-		
-		for( size_t i = 0; i < 3; ++i )
-		{
-			BOOST_CHECK_CLOSE( axis[i],  vec.at(i+1), TOLERANCE );
-		}
+		return Ogre::Vector3( *iter, *(iter+1), *(iter+2) );
 	}
 
-	void check_angle( Ogre::SceneNode *node, Ogre::Vector3 const &axis, double angle )
+	Ogre::Quaternion quaternionFromAngleAxis( std::vector<double>::const_iterator iter )
 	{
-		Ogre::Radian og_angle;
-		Ogre::Vector3 og_axis;
-		node->getOrientation().ToAngleAxis(og_angle, og_axis);
-
-		BOOST_CHECK_CLOSE( og_angle.valueRadians(), angle, TOLERANCE );
-		for( size_t i = 0; i < 3; ++i )
-		{
-			BOOST_CHECK_CLOSE( axis[i], og_axis[i], TOLERANCE );
-		}
+		return Ogre::Quaternion( Ogre::Radian(*iter), getVector( iter+1 ) );
 	}
 	
-	void check_pos( Ogre::SceneNode *node, std::vector<double> vec )
-	{
-		Ogre::Vector3 const &v = node->getPosition();
-		for( size_t i = 0; i < 3; ++i )
-		{
-			BOOST_CHECK_CLOSE( v[i],  vec.at(i), TOLERANCE );
-		}
-	}
-
 	void addCommand( vl::udp::CommandRefPtr cmd )
 	{
-//		std::cerr << *cmd << std::endl;
 		server.addCommand( cmd );
 	}
 };
@@ -200,7 +171,9 @@ BOOST_AUTO_TEST_CASE( send_position )
 
 	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
 
-	check_pos( node, msg_pos );
+	// Check the result
+	Ogre::Vector3 const &v = node->getPosition();
+	BOOST_CHECK( Ogre::equal(v, getVector(msg.begin()), EPSILON) );
 }
 
 BOOST_AUTO_TEST_CASE( send_quaternion )
@@ -218,8 +191,11 @@ BOOST_AUTO_TEST_CASE( send_quaternion )
 	std::vector<double> msg;
 	add_vec( msg, msg_rot_quat );
 	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
-	
-	check_quat( node, msg_rot_quat );
+
+	// Check results
+	Ogre::Quaternion const & q = node->getOrientation();
+
+	BOOST_CHECK( Ogre::equal(q, getQuaternion(msg.begin()), EPSILON ) );
 }
 
 BOOST_AUTO_TEST_CASE( send_angle_axis )
@@ -239,7 +215,10 @@ BOOST_AUTO_TEST_CASE( send_angle_axis )
 	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
 	
 	// Check the results
-	check_angle_axis( node, msg_rot_aa );
+	// Using Quaternions so that the rotations are as accurate as possible
+	// though it does not quarantie that they are the same even if they are equal
+	// but they are more likely to be compared to angle-axis representation.
+	BOOST_CHECK( Ogre::equal(node->getOrientation(), quaternionFromAngleAxis(msg.begin()), EPSILON) );
 }
 
 BOOST_AUTO_TEST_CASE( send_angle )
@@ -264,8 +243,11 @@ BOOST_AUTO_TEST_CASE( send_angle )
 	msg.push_back( angle );
 	BOOST_CHECK_NO_THROW( sendMsg( msg ) );
 
-	// Check the results
-	check_angle( node, axis, angle );
+	// Check the results using Quaternions
+	// DO NOT check for angle-axises as the rotations can be equal without the
+	// axises or angles beign equal.
+	Ogre::Quaternion q( Ogre::Radian(angle), axis );
+	BOOST_CHECK( Ogre::equal(node->getOrientation(), q, EPSILON) );
 }
 
 BOOST_AUTO_TEST_CASE( error_short_message )
@@ -287,7 +269,9 @@ BOOST_AUTO_TEST_CASE( error_short_message )
 	BOOST_CHECK_THROW( sendMsg( msg ), vl::short_message );
 
 	// Check that we are in the initial state
-	check_pos( node, std::vector<double>(3) );
+	Ogre::Vector3 const &v = node->getPosition();
+
+	BOOST_CHECK( Ogre::equal(v, Ogre::Vector3::ZERO, EPSILON) );
 }
 
 BOOST_AUTO_TEST_CASE( send_all_messages )
