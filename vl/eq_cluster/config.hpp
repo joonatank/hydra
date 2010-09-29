@@ -21,7 +21,7 @@ namespace eqOgre
 //		virtual bool exit (void);
 
         /** @sa eq::Config::handleEvent */
-//		virtual bool handleEvent( const eq::ConfigEvent* event );
+		virtual bool handleEvent( const eq::ConfigEvent* event );
 
 		virtual uint32_t startFrame (const uint32_t frameID);
 
@@ -43,6 +43,8 @@ namespace eqOgre
 
 	protected :
 		virtual ~Config (void);
+
+		bool _handleKeyEvent( const eq::KeyEvent& event );
 
 		vl::SettingsRefPtr _settings;
 

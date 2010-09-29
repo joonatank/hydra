@@ -45,8 +45,6 @@ eqOgre::Config::init( uint32_t const )
 uint32_t 
 eqOgre::Config::startFrame (const uint32_t frameID)
 {
-	_frame_data.setCameraPosition( Ogre::Vector3( 0, 1, 6 ) );
-
 	uint32_t version;
 	if( _frame_data.isDirty() )
 	{ version = _frame_data.commit(); }
@@ -56,7 +54,6 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	return eq::Config::startFrame( version );
 }
 
-/*
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
@@ -64,8 +61,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
     {
         case eq::Event::KEY_PRESS:
 		{
-            if( _handleKeyEvent( event->data.keyPress ))
-            { _redraw = true; }
+            _handleKeyEvent( event->data.keyPress );
 		}
         break;
 
@@ -73,7 +69,9 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 			break;
 
         case eq::Event::POINTER_BUTTON_RELEASE:
-        {
+        /*
+		{
+		
             const eq::PointerEvent& releaseEvent = 
                 event->data.pointerButtonRelease;
             if( releaseEvent.buttons == eq::PTR_BUTTON_NONE)
@@ -93,9 +91,11 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
                 }
             }
         }
+		*/
 		break;
 
         case eq::Event::POINTER_MOTION:
+		/*
 		{
             if( event->data.pointerMotion.buttons == eq::PTR_BUTTON_NONE )
                 return true;
@@ -128,6 +128,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
                 _redraw = true;
             }
 		}
+		*/
 		break;
 
         case eq::Event::WINDOW_EXPOSE:
@@ -142,64 +143,128 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 
 	return true;
 }
-*/
 
-/*	TODO key events are not supported at the moment
 bool
 eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 {
+	Ogre::Vector3 cam_pos = _frame_data.getCameraPosition();
+	Ogre::Vector3 ogre_pos = _frame_data.getOgrePosition();
+	Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
+
+	Ogre::Real scale = 0.1;
+	// TODO add modifiers e.g. KC_ALT, KC_SHIFT
+	// TODO add KC_ESC to exit
     switch( event.key )
     {
+		// Move Camera
+		// front
+		case 'w':
+        case 'W':
+			cam_pos += scale*(-Ogre::Vector3::UNIT_Z);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		// back
+		case 's':
+		case 'S':
+			cam_pos += scale*(Ogre::Vector3::UNIT_Z);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		// left
+		case 'a':
+		case 'A':
+			cam_pos += scale*(-Ogre::Vector3::UNIT_X);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		// right
+		case 'd':
+		case 'D':
+			cam_pos += scale*(Ogre::Vector3::UNIT_X);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		case eq::KC_PAGE_UP :
+			cam_pos += scale*(Ogre::Vector3::UNIT_Y);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		case eq::KC_PAGE_DOWN :
+			cam_pos += scale*(-Ogre::Vector3::UNIT_Y);
+			_frame_data.setCameraPosition( cam_pos );
+			return true;
+
+		// Rotate Ogre
+		// front
+		case eq::KC_UP :
+			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Z );
+			_frame_data.setOgreRotation( ogre_rot );
+			return true;
+
+		// back
+		case eq::KC_DOWN :
+			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Z );
+			_frame_data.setOgreRotation( ogre_rot );
+			return true;
+
+		// left
+		case eq::KC_LEFT :
+			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Y );
+			_frame_data.setOgreRotation( ogre_rot );
+			return true;
+
+		// right
+		case eq::KC_RIGHT :
+			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Y );
+			_frame_data.setOgreRotation( ogre_rot );
+			return true;
+
+		// Some old stuff
         case 'p':
         case 'P':
-            //_frameData.togglePilotMode();
             return true;
         case ' ':
+			/*
             _spinX   = 0;
             _spinY   = 0;
             _advance = 0;
             _frameData.reset();
             _setHeadMatrix( eq::Matrix4f::IDENTITY );
+			*/
             return true;
 
         case 'i':
         case 'I':
+			/*
             _frameData.setCameraPosition( 0.f, 0.f, 0.f );
             _spinX   = 0;
             _spinY   = 0;
             _advance = 0;
+			*/
             return true;
 
         case 'o':
         case 'O':
-            _frameData.toggleOrtho();
-            return true;
-
-        case 's':
-        case 'S':
-            _frameData.toggleStatistics();
+            //_frameData.toggleOrtho();
             return true;
             
         case 'f':
-        case 'F':
-            _freeze = !_freeze;
-            freezeLoadBalancing( _freeze );
+        case 'F':	
+            //_freeze = !_freeze;
+            //freezeLoadBalancing( _freeze );
             return true;
 
         case eq::KC_F1:
         case 'h':
         case 'H':
-            _frameData.toggleHelp();
-            return true;
-
-        case 'd':
-        case 'D':
-            _frameData.toggleColorMode();
+            //_frameData.toggleHelp();
             return true;
 
         case 'c':
         case 'C':
         {
+			/*
             const eq::CanvasVector& canvases = getCanvases();
             if( canvases.empty( ))
                 return true;
@@ -222,12 +287,14 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
                 _currentCanvas = canvases.front();
             else
                 _currentCanvas = *i;
+			*/
             return true;
         }
 
         case 'v':
         case 'V':
         {
+			/*
             const eq::CanvasVector& canvases = getCanvases();
             if( !_currentCanvas && !canvases.empty( ))
                 _currentCanvas = canvases.front();
@@ -258,12 +325,14 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
                 _frameData.setCurrentViewID( EQ_ID_INVALID );
             else
                 _frameData.setCurrentViewID( (*i)->getID( ));
+			*/
             return true;
         }
 
         case 'm':
         case 'M':
         {
+			/*
             if( _modelDist.empty( )) // no models
                 return true;
 
@@ -299,12 +368,14 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
                 _setMessage( "Model " + eq::base::getFilename( model->getName())
                              + " active" );
             }
+			*/
             return true;
         }
 
         case 'l':
         case 'L':
         {
+			/*
             if( !_currentCanvas )
                 return true;
 
@@ -335,20 +406,12 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
             
             stream << " active";
             _setMessage( stream.str( ));
+			*/
             return true;
         }
 
-        case 'w':
-        case 'W':
-            _frameData.toggleWireframe();
-            return true;
-
-        case 'r':
-        case 'R':
-            _frameData.toggleRenderMode();
-            return true;
-
         // Head Tracking Emulation
+		/*
         case eq::KC_UP:
         {
             eq::Matrix4f headMatrix = _getHeadMatrix();
@@ -433,9 +496,8 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
             _setHeadMatrix( headMatrix );
             return true;
         }
-
+		*/
         default:
             return false;
     }
 }
-*/

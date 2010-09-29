@@ -46,6 +46,11 @@ protected:
 
 	// distribution related
 	FrameData _frame_data;
+	Ogre::Vector3 _camera_initial_position;
+	Ogre::Quaternion _camera_initial_orientation;
+	Ogre::SceneNode *_ogre_node;
+	Ogre::Vector3 _ogre_initial_position;
+	Ogre::Quaternion _ogre_initial_orientation;
 
 	// Tracker stuff
 	Ogre::Vector3 _head_pos;

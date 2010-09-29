@@ -8,7 +8,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent ) 
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0), _ogre_node(0),
 	  _head_pos( Ogre::Vector3::ZERO ), _head_orient( Ogre::Quaternion::IDENTITY ), _tracker()
 {}
 
@@ -23,12 +23,29 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	{ return false; }
 
 	std::cerr << "Get ogre window from RenderWindow" << std::endl;
-	_ogre_window = ((eqOgre::Window *)getWindow())->getRenderWindow();
+	eqOgre::Window *window = ((eqOgre::Window *)getWindow());
+	_ogre_window = window->getRenderWindow();
 	EQASSERT( _ogre_window );
 
 	std::cerr << "Get camera from RenderWindow" << std::endl;
 	_camera = ((eqOgre::Window *)getWindow())->getCamera();
 	EQASSERT( _camera );
+	_camera_initial_position = _camera->getPosition();
+	_camera_initial_orientation = _camera->getOrientation();
+
+	// Get the ogre node
+	EQASSERT( window->getSceneManager() );
+	_ogre_node = window->getSceneManager()->getSceneNode( "ogre" );
+	if( _ogre_node )
+	{
+		_ogre_initial_position = _ogre_node->getPosition(); 
+		_ogre_initial_orientation = _ogre_node->getOrientation();
+	}
+	else
+	{
+		_ogre_initial_position = Ogre::Vector3::ZERO;
+		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
+	}
 
 	std::cerr << "Creating viewport" << std::endl;
 	_viewport = _ogre_window->addViewport( _camera );
@@ -147,5 +164,12 @@ eqOgre::Channel::setHeadMatrix( void )
 void 
 eqOgre::Channel::updateDistribData( void )
 {
-	_camera->setPosition( _frame_data.getCameraPosition() );
+	_camera->setPosition( _frame_data.getCameraPosition()+_camera_initial_position );
+	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
+
+	if( _ogre_node )
+	{
+		_ogre_node->setPosition( _frame_data.getOgrePosition()+_ogre_initial_position );
+		_ogre_node->setOrientation( _frame_data.getOgreRotation()*_ogre_initial_orientation );
+	}
 }
