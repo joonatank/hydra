@@ -35,9 +35,10 @@ eqOgre::Channel::configInit( const uint32_t initID )
 
 	// Get the ogre node
 	EQASSERT( window->getSceneManager() );
-	_ogre_node = window->getSceneManager()->getSceneNode( "ogre" );
-	if( _ogre_node )
+	
+	if( window->getSceneManager()->hasSceneNode("ogre") )
 	{
+		_ogre_node = window->getSceneManager()->getSceneNode( "ogre" );
 		_ogre_initial_position = _ogre_node->getPosition(); 
 		_ogre_initial_orientation = _ogre_node->getOrientation();
 	}
