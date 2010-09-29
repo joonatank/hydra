@@ -26,7 +26,7 @@ public :
 
 	void setCameraPosition( Ogre::Vector3 const &v )
 	{ 
-		setDirty( eq::fabric::Serializable::DIRTY_CUSTOM );
+		setDirty( DIRTY_CAMERA );
 		_camera_pos = v; 
 	}
 	
@@ -37,7 +37,7 @@ public :
 
 	void setCameraRotation( Ogre::Quaternion const &q )
 	{
-		setDirty( eq::fabric::Serializable::DIRTY_CUSTOM  );
+		setDirty( DIRTY_CAMERA );
 		_camera_rotation = q; 
 	}
 
@@ -47,7 +47,7 @@ public :
 
 	void setOgrePosition( Ogre::Vector3 const &v )
 	{
-		setDirty( eq::fabric::Serializable::DIRTY_CUSTOM  );
+		setDirty( DIRTY_OGRE );
 		_ogre_pos = v; 
 	}
 
@@ -56,13 +56,19 @@ public :
 
 	void setOgreRotation( Ogre::Quaternion const &q )
 	{
-		setDirty( eq::fabric::Serializable::DIRTY_CUSTOM  );
+		setDirty( DIRTY_OGRE );
 		_ogre_rotation = q; 
 	}
 
+	enum DirtyBits
+	{
+		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
+		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 1
+	};
+
 protected :
-	virtual void getInstanceData( eq::net::DataOStream& os );
-    virtual void applyInstanceData( eq::net::DataIStream& is );
+	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
+    virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
 private :
 	// Camera parameters

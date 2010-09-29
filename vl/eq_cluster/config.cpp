@@ -45,7 +45,7 @@ eqOgre::Config::init( uint32_t const )
 uint32_t 
 eqOgre::Config::startFrame (const uint32_t frameID)
 {
-	_frame_data.setCameraPosition( Ogre::Vector3( 0, 1, 0 ) );
+	_frame_data.setCameraPosition( Ogre::Vector3( 0, 1, 6 ) );
 
 	uint32_t version;
 	if( _frame_data.isDirty() )

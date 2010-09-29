@@ -3,33 +3,47 @@
 
 // ------ Protected --------
 void 
-eqOgre::FrameData::getInstanceData( eq::net::DataOStream& os )
+eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
 {
-	// Serialize camera position
-	os << _camera_pos;
+	eq::fabric::Serializable::serialize( os, dirtyBits );
 
-	// Serialize camera orientation
-	os << _camera_rotation;
+	if( dirtyBits & DIRTY_CAMERA ) 
+	{
+		// Serialize camera position
+		operator<<( _camera_pos, os );
+		// Serialize camera orientation
+		operator<<( _camera_rotation, os );
+	}
 
-	// Serialize ogre position
-	os << _ogre_pos;
-
-	// Serialize ogre orientation
-	os << _ogre_rotation;
+	if( dirtyBits & DIRTY_OGRE )
+	{
+		// Serialize ogre position
+		operator<<( _ogre_pos, os );
+		// Serialize ogre orientation
+		operator<<( _ogre_rotation, os );
+	}
 }
 
 void 
-eqOgre::FrameData::applyInstanceData( eq::net::DataIStream& is )
+eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
 {
-	// Serialize camera position
-	is >> _camera_pos;
+	eq::fabric::Serializable::deserialize( is, dirtyBits );
 
-	// Serialize camera orientation
-	is >> _camera_rotation;
+	if( dirtyBits & DIRTY_CAMERA )
+	{
+		// Serialize camera position
+		operator>>( _camera_pos, is );
 
-	// Serialize ogre position
-	is >> _ogre_pos;
+		// Serialize camera orientation
+		operator>>( _camera_rotation, is );
+	}
 
-	// Serialize ogre orientation
-	is >> _ogre_rotation;
+	if( dirtyBits & DIRTY_OGRE )
+	{
+		// Serialize ogre position
+		operator>>( _ogre_pos, is );
+
+		// Serialize ogre orientation
+		operator>>( _ogre_rotation, is );
+	}
 }

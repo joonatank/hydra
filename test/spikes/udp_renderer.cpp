@@ -17,6 +17,13 @@
 std::string const PROJECT_NAME( "udp_renderer" );
 uint16_t const PORT = 2244;
 
+/** The message is of form
+  * Angle joint1
+  * Angle joint2
+  * Angle joint3
+  * Position amr1
+  * Position arm2
+  */
 int main(int argc, char **argv)
 {
 	bool error = false;
