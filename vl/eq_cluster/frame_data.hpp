@@ -16,7 +16,8 @@ class FrameData : public eq::fabric::Serializable
 public :
 	FrameData( void )
 		: _camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
-		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY )
+		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY ),
+		  _scene_version( 0 )
 	{}
 
 	~FrameData( void ) {}
@@ -60,10 +61,23 @@ public :
 		_ogre_rotation = q; 
 	}
 
+	// TODO boolean value does not work that well
+	void updateSceneVersion( void )
+	{ 
+		setDirty( DIRTY_RELOAD );
+		_scene_version++;
+	}
+
+	uint32_t getSceneVersion( void ) const
+	{
+		return _scene_version;
+	}
+	
 	enum DirtyBits
 	{
 		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 1
+		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_RELOAD = eq::fabric::Serializable::DIRTY_CUSTOM << 2
 	};
 
 protected :
@@ -78,6 +92,9 @@ private :
 	// Ogre SceneNode parameters
 	Ogre::Vector3 _ogre_pos;
 	Ogre::Quaternion _ogre_rotation;
+
+	// Reload the scene
+	uint32_t _scene_version;
 
 };	// class FrameData
 

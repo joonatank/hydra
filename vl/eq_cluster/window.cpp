@@ -48,7 +48,9 @@ eqOgre::Window::configInit( const uint32_t initID )
 	_root->setupResources( );
 	_root->loadResources();
 
-	if( !createScene() )
+	_sm = _root->createSceneManager("SceneManager");
+
+	if( !loadScene() )
 	{ return false; }
 
 	return true;
@@ -99,14 +101,16 @@ eqOgre::Window::createTracker( void )
 }
 
 bool
-eqOgre::Window::createScene( void )
+eqOgre::Window::loadScene( void )
 {
-	_sm = _root->createSceneManager("SceneManager");
-
 	std::vector<vl::Settings::Scene> const &scenes = _settings->getScenes();
 	if( scenes.empty() )
 	{ return false; }
-			
+		
+	// Clean up old scenes
+	_sm->clearScene();
+	_sm->destroyAllCameras();
+
 	// TODO support for multiple scene files
 	std::string message = "Load scene = " + scenes.at(0).file;
 	Ogre::LogManager::getSingleton().logMessage( message );

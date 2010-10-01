@@ -141,6 +141,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
             break;
     }
 
+	eq::Config::handleEvent( event );
 	return true;
 }
 
@@ -152,6 +153,11 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 	Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
 
 	Ogre::Real scale = 0.1;
+
+	// Used for toggle events
+	static clock_t last_time = 0;
+	clock_t time = ::clock();
+
 	// TODO add modifiers e.g. KC_ALT, KC_SHIFT
 	// TODO add KC_ESC to exit
     switch( event.key )
@@ -218,6 +224,18 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 		case eq::KC_RIGHT :
 			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Y );
 			_frame_data.setOgreRotation( ogre_rot );
+			return true;
+
+		case 'r':
+		case 'R':
+			// Reload the scene
+
+			// We need to wait five secs
+			if( ( last_time - time )/CLOCKS_PER_SEC < 5 )
+			{
+				_frame_data.updateSceneVersion();
+				last_time = time;
+			}
 			return true;
 
 		// Some old stuff

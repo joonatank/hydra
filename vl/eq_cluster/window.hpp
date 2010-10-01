@@ -36,11 +36,12 @@ namespace eqOgre
 		Ogre::SceneManager *getSceneManager( void )
 		{ return _sm; }
 
+		bool loadScene( void );
+
 	protected :
 		void createOgreRoot( void );
 		void createOgreWindow( void );
 		void createTracker( void );
-		bool createScene( void );
 
 		// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );

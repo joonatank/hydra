@@ -28,29 +28,11 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	EQASSERT( _ogre_window );
 
 	std::cerr << "Get camera from RenderWindow" << std::endl;
-	_camera = ((eqOgre::Window *)getWindow())->getCamera();
-	EQASSERT( _camera );
-	_camera_initial_position = _camera->getPosition();
-	_camera_initial_orientation = _camera->getOrientation();
+	_camera = window->getCamera();
 
-	// Get the ogre node
-	EQASSERT( window->getSceneManager() );
-	
-	if( window->getSceneManager()->hasSceneNode("ogre") )
-	{
-		_ogre_node = window->getSceneManager()->getSceneNode( "ogre" );
-		_ogre_initial_position = _ogre_node->getPosition(); 
-		_ogre_initial_orientation = _ogre_node->getOrientation();
-	}
-	else
-	{
-		_ogre_initial_position = Ogre::Vector3::ZERO;
-		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
-	}
+	getInitialPositions();
 
-	std::cerr << "Creating viewport" << std::endl;
-	_viewport = _ogre_window->addViewport( _camera );
-	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	createViewport();
 
 	// TODO this needs to be configurable
 	setNearFar( 0.1, 100.0 );
@@ -165,12 +147,61 @@ eqOgre::Channel::setHeadMatrix( void )
 void 
 eqOgre::Channel::updateDistribData( void )
 {
-	_camera->setPosition( _frame_data.getCameraPosition()+_camera_initial_position );
+	static uint32_t scene_version = 0;
+	// TODO add scene reloading
+	if( _frame_data.getSceneVersion() > scene_version )
+	{
+		std::cerr << "Should reload the scene now" << std::endl;
+		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
+		win->loadScene();
+		_camera = win->getCamera();
+		createViewport();
+		getInitialPositions();
+		scene_version = _frame_data.getSceneVersion();
+	}
+
+
+	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
 	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
 
 	if( _ogre_node )
 	{
 		_ogre_node->setPosition( _frame_data.getOgrePosition()+_ogre_initial_position );
 		_ogre_node->setOrientation( _frame_data.getOgreRotation()*_ogre_initial_orientation );
+	}
+}
+
+void 
+eqOgre::Channel::createViewport( void )
+{
+	// Supports only one Viewport
+	_ogre_window->removeAllViewports();
+	std::cerr << "Creating viewport" << std::endl;
+	_viewport = _ogre_window->addViewport( _camera );
+	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+}
+
+void 
+eqOgre::Channel::getInitialPositions( void )
+{
+	eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
+	Ogre::SceneManager *sm = win->getSceneManager();
+	EQASSERT( _camera );
+	EQASSERT( sm );
+
+	_camera_initial_position = _camera->getPosition();
+	_camera_initial_orientation = _camera->getOrientation();
+
+	// Get the ogre node
+	if( sm->hasSceneNode("ogre") )
+	{
+		_ogre_node = sm->getSceneNode( "ogre" );
+		_ogre_initial_position = _ogre_node->getPosition(); 
+		_ogre_initial_orientation = _ogre_node->getOrientation();
+	}
+	else
+	{
+		_ogre_initial_position = Ogre::Vector3::ZERO;
+		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
 	}
 }

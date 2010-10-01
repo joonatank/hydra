@@ -22,6 +22,11 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 		// Serialize ogre orientation
 		operator<<( _ogre_rotation, os );
 	}
+
+	if( dirtyBits & DIRTY_RELOAD )
+	{
+		os << _scene_version;
+	}
 }
 
 void 
@@ -45,5 +50,10 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 
 		// Serialize ogre orientation
 		operator>>( _ogre_rotation, is );
+	}
+
+	if( dirtyBits & DIRTY_RELOAD )
+	{
+		is >> _scene_version;
 	}
 }

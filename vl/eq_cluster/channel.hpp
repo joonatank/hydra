@@ -39,6 +39,10 @@ protected:
 
 	void updateDistribData( void );
 
+	void createViewport( void );
+
+	void getInitialPositions( void );
+
 //  virtual void applyFrustum( void ) const;
 	Ogre::RenderWindow *_ogre_window;
 	Ogre::Viewport *_viewport;
