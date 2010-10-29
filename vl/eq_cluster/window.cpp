@@ -6,6 +6,22 @@
 #include "fake_tracker.hpp"
 #include "dotscene_loader.hpp"
 
+// System window specific includes
+#include <eq/client/systemWindow.h>
+#include <eq/client/windowSystem.h>
+
+#ifdef GLX
+#include "eq_cluster/glxWindow.hpp"
+#endif
+
+#ifdef AGL
+#include "eq_cluster/aglWindow.hpp"
+#endif
+
+#ifdef WGL
+#include "eq_cluster/wglWindow.hpp"
+#endif
+
 eqOgre::Window::Window(eq::Pipe *parent)
 	: eq::Window( parent ), _ogre_window(0), _camera(0), _sm(0)
 {}
@@ -53,6 +69,53 @@ eqOgre::Window::configInit( const uint32_t initID )
 	if( !loadScene() )
 	{ return false; }
 
+	return true;
+}
+
+bool
+eqOgre::Window::configInitSystemWindow(const uint32_t initID)
+{
+	const eq::Pipe* pipe = getPipe();
+	eq::SystemWindow* systemWindow = 0;
+
+	switch( pipe->getWindowSystem( ))
+	{
+#ifdef GLX
+		case eq::WINDOW_SYSTEM_GLX:
+		EQINFO << "Using GLXWindow" << std::endl;
+			systemWindow = new eqOgre::GLXWindow( this );
+		break;
+#endif
+
+#ifdef AGL
+		case eq::WINDOW_SYSTEM_AGL:
+		EQINFO << "Using AGLWindow" << std::endl;
+		systemWindow = new eqOgre::AGLWindow( this );
+		break;
+#endif
+
+#ifdef WGL
+		case eq::WINDOW_SYSTEM_WGL:
+		EQINFO << "Using WGLWindow" << std::endl;
+		systemWindow = new eqOgre::WGLWindow( this );
+		break;
+#endif
+
+	default:
+		EQERROR << "Window system " << pipe->getWindowSystem()
+		<< " not implemented or supported" << std::endl;
+		return false;
+	}
+
+	EQASSERT( systemWindow );
+	if( !systemWindow->configInit( ))
+	{
+		EQWARN << "System Window initialization failed: " << getErrorMessage() << std::endl;
+		delete systemWindow;
+		return false;
+	}
+
+	setSystemWindow( systemWindow );
 	return true;
 }
 

@@ -30,7 +30,7 @@ namespace eqOgre
 		virtual void exit( void );
 
 		// eq overriden, loop invariant
-        virtual bool clientLoop (void);
+        virtual void clientLoop (void);
 		
 		eq::ServerPtr _server;
 		eqOgre::Config *_config;

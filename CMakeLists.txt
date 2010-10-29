@@ -25,6 +25,9 @@ if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
 	add_definitions( -DDEBUG )
 endif()
 
+# Add our local scripts to CMake path
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/CMake )
+
 ######## Find Equalizer ########
 # We should expose these parameters for the user even in Linux
 # We should use find_file and file_lib functions to find the files first though
@@ -83,6 +86,13 @@ set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
+# Not necessary at the moment
+# TODO test on a system that does not have OIS
+FIND_PACKAGE(OIS QUIET )
+
+# TODO test on a system that does not have CEGUI
+FIND_PACKAGE( CEGUI QUIET )
+
 ####### Find Boost ########
 # TODO
 # Add selectable components
@@ -91,11 +101,11 @@ find_package(OGRE REQUIRED)
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
 
 ######### Add include and link directories ###########
-include_directories( 
+include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
@@ -112,6 +122,7 @@ set( EQOGRE_DEB_LIBS
 	${Boost_LIBRARIES}
 	${EQUALIZER_LIBRARY}
 	${VRPN_LIBRARY}
+	${OIS_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

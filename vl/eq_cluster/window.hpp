@@ -45,6 +45,7 @@ namespace eqOgre
 
 		// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );
+		virtual bool configInitSystemWindow( const uint32_t initID );
 
 		vl::ogre::RootRefPtr _root;
 		Ogre::RenderWindow *_ogre_window;

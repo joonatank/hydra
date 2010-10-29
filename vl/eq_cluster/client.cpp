@@ -91,19 +91,17 @@ eqOgre::Client::exit( void )
 	}
 }
 
-bool 
+void 
 eqOgre::Client::clientLoop( void )
 {
 	if( !isLocal() ) // execute only one config run
-	{ return eq::Client::clientLoop(); }
+	{ eq::Client::clientLoop(); }
 
 	// else execute client loops 'forever'
 	while( true ) // TODO: implement SIGHUP handler to exit?
 	{
-		if( !eq::Client::clientLoop( ))
-			return false;
+//		if( !eq::Client::clientLoop( ))
+//			return false;
 		EQINFO << "One configuration run successfully executed" << std::endl;
 	}
-	
-	return true;
 }

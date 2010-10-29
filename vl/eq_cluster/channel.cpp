@@ -148,7 +148,6 @@ void
 eqOgre::Channel::updateDistribData( void )
 {
 	static uint32_t scene_version = 0;
-	// TODO add scene reloading
 	if( _frame_data.getSceneVersion() > scene_version )
 	{
 		std::cerr << "Should reload the scene now" << std::endl;

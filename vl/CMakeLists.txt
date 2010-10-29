@@ -26,7 +26,6 @@ set( HEADERS
 	fake_tracker.hpp
 	vrpn_tracker.hpp
 	settings.hpp
-
 	base/helpers.hpp
 	base/args.hpp
 	base/exceptions.hpp
@@ -37,19 +36,18 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
-	
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/window.hpp
 	eq_cluster/init_data.hpp
 	eq_cluster/frame_data.hpp
 	eq_cluster/client.hpp
-
+	eq_cluster/glxWindow.hpp
+	eq_cluster/aglWindow.hpp
+	eq_cluster/wglWindow.hpp
 	eq_ogre/ogre_root.hpp
-
 	math/conversion.hpp
 	math/math.hpp
-
 	udp/client.hpp
 	udp/server.hpp
 	udp/server_config.hpp

@@ -57,16 +57,22 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
+	Ogre::Quaternion camera_rot = _frame_data.getCameraRotation();
+	Ogre::Quaternion qx;
+	Ogre::Quaternion qy;
+	Ogre::Real scale = 0.01;
+	
+	bool redraw = false;
     switch( event->data.type )
     {
         case eq::Event::KEY_PRESS:
 		{
-            _handleKeyEvent( event->data.keyPress );
+            redraw = _handleKeyEvent( event->data.keyPress );
 		}
         break;
 
         case eq::Event::POINTER_BUTTON_PRESS:
-			break;
+		break;
 
         case eq::Event::POINTER_BUTTON_RELEASE:
         /*
@@ -95,40 +101,12 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 		break;
 
         case eq::Event::POINTER_MOTION:
-		/*
-		{
-            if( event->data.pointerMotion.buttons == eq::PTR_BUTTON_NONE )
-                return true;
-
-            if( event->data.pointerMotion.buttons == eq::PTR_BUTTON1 )
-            {
-                _spinX = 0;
-                _spinY = 0;
-
-                if( _frameData.usePilotMode())
-                    _frameData.spinCamera(-0.005f*event->data.pointerMotion.dy,
-                                          -0.005f*event->data.pointerMotion.dx);
-                else
-                    _frameData.spinModel( -0.005f*event->data.pointerMotion.dy,
-                                          -0.005f*event->data.pointerMotion.dx);
-
-                _redraw = true;
-            }
-            else if( event->data.pointerMotion.buttons == eq::PTR_BUTTON2 )
-            {
-                _advance = -event->data.pointerMotion.dy;
-                _frameData.moveCamera( 0.f, 0.f, .005f * _advance );
-                _redraw = true;
-            }
-            else if( event->data.pointerMotion.buttons == eq::PTR_BUTTON3 )
-            {
-                _frameData.moveCamera(  .0005f * event->data.pointerMotion.dx,
-                                       -.0005f * event->data.pointerMotion.dy,
-                                       0.f );
-                _redraw = true;
-            }
-		}
-		*/
+			qy = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dx ), Ogre::Vector3::UNIT_Y );
+			//qx = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dy ), Ogre::Vector3::UNIT_X );
+			qx = Ogre::Quaternion::IDENTITY;
+			camera_rot = camera_rot * qx * qy;
+			_frame_data.setCameraRotation( camera_rot );
+			
 		break;
 
         case eq::Event::WINDOW_EXPOSE:
@@ -141,8 +119,9 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
             break;
     }
 
-	eq::Config::handleEvent( event );
-	return true;
+	redraw |= eq::Config::handleEvent( event );
+
+	return redraw;
 }
 
 bool
@@ -158,8 +137,6 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 	static clock_t last_time = 0;
 	clock_t time = ::clock();
 
-	// TODO add modifiers e.g. KC_ALT, KC_SHIFT
-	// TODO add KC_ESC to exit
     switch( event.key )
     {
 		// Move Camera
