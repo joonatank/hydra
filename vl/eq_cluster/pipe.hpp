@@ -1,24 +1,8 @@
 
-#ifndef EQ_OGRE_PIPE_H
-#define EQ_OGRE_PIPE_H
+#ifndef EQOGRE_PIPE_HPP
+#define EQOGRE_PIPE_HPP
 
 #include <eq/eq.h>
-
-#include "base/fifo_buffer.hpp"
-//#include "command.hpp"
-#include "base/message.hpp"
-
-#include "eq_graph/eq_root.hpp"
-
-/*
-namespace vl
-{
-	namespace graph
-	{
-		class Root;
-	}
-}
-*/
 
 namespace eqOgre
 {
@@ -50,8 +34,7 @@ namespace eqOgre
     public:
         Pipe( eq::Node *parent );
 
-		vl::cl::Root *getRoot( void )
-		{ return _root; }
+		virtual eq::MessagePump *createMessagePump() { return 0; }
 
     protected:
         virtual ~Pipe ();
@@ -61,18 +44,7 @@ namespace eqOgre
         virtual void frameStart( const uint32_t frameID, 
                                  const uint32_t frameNumber );
 
-		/*
-		void initOgre( void );
-
-		void createScene( void );
-		*/
-
-		void _processCommands( void );
-
-		vl::base::fifo_buffer<vl::base::Message *> *_read_node_fifo;
-		//eqOgre::fifo_buffer<Command *> *_read_client_fifo;
-
-		vl::cl::Root *_root;
+		virtual bool configInitSystemPipe( const uint32_t );
 
     };	// class Pipe
 

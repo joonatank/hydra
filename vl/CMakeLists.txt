@@ -9,6 +9,7 @@ set( SOURCES
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
+	eq_cluster/pipe.cpp
 	eq_cluster/init_data.cpp
 	eq_cluster/frame_data.cpp
 	eq_cluster/client.cpp
@@ -42,6 +43,8 @@ set( HEADERS
 	eq_cluster/init_data.hpp
 	eq_cluster/frame_data.hpp
 	eq_cluster/client.hpp
+	eq_cluster/pipe.hpp
+	eq_cluster/glxPipe.hpp
 	eq_cluster/glxWindow.hpp
 	eq_cluster/aglWindow.hpp
 	eq_cluster/wglWindow.hpp

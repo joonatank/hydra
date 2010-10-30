@@ -63,7 +63,7 @@
 	TODO add mapping to SceneNodes by name
 	TODO add coordinate system reconfiguration and scaling
 	-->
-	<tracking on="true">
+	<tracking on="false">
 		<tracker_name>glasses@localhost</tracker_name>
 		<default_position>
 			<vector x="0" y="1.5" z="0" />

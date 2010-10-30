@@ -6,10 +6,15 @@
 #include "eq_ogre/ogre_root.hpp"
 #include "tracker.hpp"
 
+#include <OIS/OISEvents.h>
+#include <OIS/OISInputManager.h>
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
+//#include <OGRE/OgreFrameListener.h>
+//#include <OGRE/OgreWindowEventUtilities.h>
+
 namespace eqOgre
 {
-	class Camera;
-
     /**
      * A window represent an OpenGL drawable and context
      *
@@ -17,7 +22,8 @@ namespace eqOgre
      * initialization and holds a state object for GL object creation. It
      * initializes the OpenGL state and draws the statistics overlay.
      */
-    class Window : public eq::Window
+    class Window : public eq::Window, //Ogre::FrameListener, Ogre::WindowEventListener,
+						  OIS::KeyListener, OIS::MouseListener
     {
     public:
 		Window( eq::Pipe *parent );
@@ -38,13 +44,35 @@ namespace eqOgre
 
 		bool loadScene( void );
 
+		/// OIS overrides
+
+		bool keyPressed(const OIS::KeyEvent &key);
+		bool keyReleased(const OIS::KeyEvent &key);
+
+		bool mouseMoved(const OIS::MouseEvent &evt);
+		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+
+		
 	protected :
+		void checkX11Events( void );
+		
 		void createOgreRoot( void );
 		void createOgreWindow( void );
 		void createTracker( void );
 
-		// Equalizer overrides
+		/// Create the OIS input handling
+		void createInputHandling( void );
+
+
+		
+		/// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );
+
+		virtual void frameFinish( const uint32_t frameID, const uint32_t frameNumber );
+
+		/// Override system window creation because we
+		/// use OIS for input handling
 		virtual bool configInitSystemWindow( const uint32_t initID );
 
 		vl::ogre::RootRefPtr _root;
@@ -54,6 +82,12 @@ namespace eqOgre
 
 		vl::SettingsRefPtr _settings;
 		vl::TrackerRefPtr _tracker;
+
+		// OIS variables
+		OIS::InputManager *_input_manager;
+		OIS::Keyboard *_keyboard;
+		OIS::Mouse *_mouse;
+		
     };	// class Window
 
 }	// namespace eqOgre
