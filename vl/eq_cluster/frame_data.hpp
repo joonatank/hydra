@@ -5,8 +5,10 @@
 #include <eq/net/dataIStream.h>
 #include <eq/net/dataOStream.h>
 
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
+
+#include "scene_node.hpp"
 
 namespace eqOgre
 {
@@ -16,7 +18,8 @@ class FrameData : public eq::fabric::Serializable
 public :
 	FrameData( void )
 		: _camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
-		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY ),
+//		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY ),
+		  _ogre( "ogre" ),
 		  _scene_version( 0 )
 	{}
 
@@ -42,7 +45,20 @@ public :
 		_camera_rotation = q; 
 	}
 
+	// Init Ogre Node
+	bool findOgreNode( Ogre::SceneManager *man )
+	{
+		return _ogre.findNode(man);
+	}
+
+	SceneNode &getOgreNode( void )
+	{ return _ogre; }
+
+	SceneNode const &getOgreNode( void ) const
+	{ return _ogre; }
+
 	// Set Ogre parameters
+/*
 	Ogre::Vector3 const &getOgrePosition( void ) const
 	{ return _ogre_pos; }
 
@@ -60,8 +76,17 @@ public :
 		setDirty( DIRTY_OGRE );
 		_ogre_rotation = q; 
 	}
+*/
+	void setOgreID( uint64_t id )
+	{
+		_ogre_id = id;
+	}
 
-	// TODO boolean value does not work that well
+	uint64_t getOgreID( void ) const
+	{
+		return _ogre_id;
+	}
+	
 	void updateSceneVersion( void )
 	{ 
 		setDirty( DIRTY_RELOAD );
@@ -72,7 +97,7 @@ public :
 	{
 		return _scene_version;
 	}
-	
+
 	enum DirtyBits
 	{
 		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
@@ -89,44 +114,14 @@ private :
 	Ogre::Vector3 _camera_pos;
 	Ogre::Quaternion _camera_rotation;
 
-	// Ogre SceneNode parameters
-	Ogre::Vector3 _ogre_pos;
-	Ogre::Quaternion _ogre_rotation;
+	// Test scene node called Ogre
+	SceneNode _ogre;
+	uint64_t _ogre_id;
 
 	// Reload the scene
 	uint32_t _scene_version;
 
 };	// class FrameData
-
-inline
-eq::net::DataOStream &operator<<( Ogre::Vector3 const &v, eq::net::DataOStream &os )
-{
-	os << v[0] << v[1] << v[2];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Vector3 &v, eq::net::DataIStream &is )
-{
-	is >> v[0] >> v[1] >> v[2];
-	return is;
-}
-
-inline
-eq::net::DataOStream &operator<<( Ogre::Quaternion const &q, eq::net::DataOStream &os )
-{
-	os << q[0] << q[1] << q[2] << q[3];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Quaternion &q, eq::net::DataIStream &is )
-{
-	is >> q[0] >> q[1] >> q[2] >> q[3];
-	return is;
-}
 
 }	// namespace eqOgre
 

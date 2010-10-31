@@ -12,6 +12,7 @@ set( SOURCES
 	eq_cluster/pipe.cpp
 	eq_cluster/init_data.cpp
 	eq_cluster/frame_data.cpp
+	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
 	udp/client.cpp
@@ -42,6 +43,7 @@ set( HEADERS
 	eq_cluster/window.hpp
 	eq_cluster/init_data.hpp
 	eq_cluster/frame_data.hpp
+	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
 	eq_cluster/pipe.hpp
 	eq_cluster/glxPipe.hpp

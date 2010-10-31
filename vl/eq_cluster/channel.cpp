@@ -47,7 +47,21 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	
 	EQASSERT( config->getInitData().getFrameDataID() != EQ_ID_INVALID );
 	config->mapObject( &_frame_data, config->getInitData().getFrameDataID() );
+
+	// Map Ogre Node
+	// TODO this should be inside FrameData
+	EQASSERT( _frame_data.getOgreID() != EQ_ID_INVALID );
+	config->mapObject( &(_frame_data.getOgreNode()), _frame_data.getOgreID() );
 	
+	// We need to find the node from scene graph
+	EQASSERT( !_frame_data.getOgreNode().getName().empty() )
+	Ogre::SceneManager *sm = window->getSceneManager();
+	EQASSERT( sm );
+	if( _frame_data.findOgreNode( sm ) )
+		std::cerr << "Ogre Node found in the SceneGraph" << std::endl;
+	else
+		std::cerr << "Ogre Node NOT found in the SceneGraph" << std::endl;
+
 	_tracker = ((eqOgre::Window *)getWindow())->getTracker();
 	EQASSERT( _tracker );
 
@@ -73,7 +87,8 @@ void
 eqOgre::Channel::frameDraw( const uint32_t frameID )
 {
 	// Distribution
-	_frame_data.sync( frameID );
+	_frame_data.sync( );
+	_frame_data.getOgreNode().sync();
 	updateDistribData();
 
 	setHeadMatrix();
@@ -163,11 +178,13 @@ eqOgre::Channel::updateDistribData( void )
 	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
 	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
 
+	/*
 	if( _ogre_node )
 	{
 		_ogre_node->setPosition( _frame_data.getOgrePosition()+_ogre_initial_position );
 		_ogre_node->setOrientation( _frame_data.getOgreRotation()*_ogre_initial_orientation );
 	}
+	*/
 }
 
 void 
@@ -192,6 +209,7 @@ eqOgre::Channel::getInitialPositions( void )
 	_camera_initial_orientation = _camera->getOrientation();
 
 	// Get the ogre node
+	/*
 	if( sm->hasSceneNode("ogre") )
 	{
 		_ogre_node = sm->getSceneNode( "ogre" );
@@ -203,4 +221,5 @@ eqOgre::Channel::getInitialPositions( void )
 		_ogre_initial_position = Ogre::Vector3::ZERO;
 		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
 	}
+	*/
 }

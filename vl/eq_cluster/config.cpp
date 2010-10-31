@@ -33,7 +33,10 @@ eqOgre::Config::unmapData( void )
 bool
 eqOgre::Config::init( uint32_t const )
 {
-	// Register data
+	/// Register data
+	// TODO the OgreNode registration should be inside FrameData
+	registerObject( &(_frame_data.getOgreNode()) );
+	_frame_data.setOgreID( _frame_data.getOgreNode().getID() );
 	registerObject( &_frame_data );
 
 	_init_data.setFrameDataID( _frame_data.getID() );
@@ -82,14 +85,16 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	}
 	if( _ogre_rot_dir != Ogre::Quaternion::IDENTITY )
 	{
-		Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
+		SceneNode &ogre = _frame_data.getOgreNode();
+		Ogre::Quaternion ogre_rot = ogre.getOrientation(); //_frame_data.getOgreRotation();
 
 		// This one is funny :)
 		//Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed, ogre_rot, _ogre_rot_dir);
 		// This one is correct
 		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, ogre_rot, ogre_rot*_ogre_rot_dir);
-		
-		_frame_data.setOgreRotation( q );
+
+		ogre.setOrientation( q );
+//		_frame_data.setOgreRotation( q );
 	}
 
 	uint32_t version;
@@ -97,7 +102,12 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	{ version = _frame_data.commit(); }
 	else
 	{ version = _frame_data.getVersion(); }
-
+	// TODO this should be inside FrameData
+	if( _frame_data.getOgreNode().isDirty() )
+	{
+		_frame_data.getOgreNode().commit();
+	}
+	
 	return eq::Config::startFrame( version );
 }
 
@@ -162,7 +172,7 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 			{
 				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
 				// TODO should quit cleanly
-				abort();
+				stopRunning();
 			}
 			return true;
 		case OIS::KC_SPACE :

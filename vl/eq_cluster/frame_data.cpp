@@ -17,10 +17,11 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 
 	if( dirtyBits & DIRTY_OGRE )
 	{
+		os << _ogre_id;
 		// Serialize ogre position
-		operator<<( _ogre_pos, os );
+//		operator<<( _ogre_pos, os );
 		// Serialize ogre orientation
-		operator<<( _ogre_rotation, os );
+//		operator<<( _ogre_rotation, os );
 	}
 
 	if( dirtyBits & DIRTY_RELOAD )
@@ -45,11 +46,7 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 
 	if( dirtyBits & DIRTY_OGRE )
 	{
-		// Serialize ogre position
-		operator>>( _ogre_pos, is );
-
-		// Serialize ogre orientation
-		operator>>( _ogre_rotation, is );
+		is >> _ogre_id;
 	}
 
 	if( dirtyBits & DIRTY_RELOAD )
