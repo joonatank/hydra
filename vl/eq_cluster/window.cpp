@@ -7,6 +7,7 @@
 #include "dotscene_loader.hpp"
 
 #include <OGRE/OgreWindowEventUtilities.h>
+#include <OGRE/OgreLogManager.h>
 
 // System window specific includes
 #include <eq/client/systemWindow.h>
@@ -23,6 +24,28 @@
 #ifdef WGL
 #include "eq_cluster/wglWindow.hpp"
 #endif
+
+namespace {
+	
+void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
+{
+	// Copy abs
+	sink.pointer.x = src.state.X.abs;
+	sink.pointer.y = src.state.Y.abs;
+
+	// Copy rel
+	sink.pointer.dx = src.state.X.rel;
+	sink.pointer.dy = src.state.Y.rel;
+
+	// Copy wheel
+	sink.pointer.yAxis = src.state.Z.rel;
+
+	// Copy buttons
+	// TODO make a binary copy (casting int to uint will change the bits)
+	sink.pointer.buttons = src.state.buttons;
+}
+
+}
 
 /// Public
 eqOgre::Window::Window(eq::Pipe *parent)
@@ -78,7 +101,7 @@ eqOgre::Window::loadScene( void )
 
 
 
-/// Public Callbacks
+/// Public OIS Callbacks
 
 bool
 eqOgre::Window::keyPressed(const OIS::KeyEvent& key)
@@ -104,17 +127,13 @@ eqOgre::Window::keyReleased(const OIS::KeyEvent& key)
 	return true;
 }
 
-// TODO all mouse events should have correct state information in them
-// at the moment only changed information is copied.
 bool
 eqOgre::Window::mouseMoved(const OIS::MouseEvent& evt)
 {
 	eq::ConfigEvent event;
 	event.data.type = eq::Event::POINTER_MOTION;
 
-	event.data.pointerMotion.x = evt.state.X.abs;
-	event.data.pointerMotion.y = evt.state.Y.abs;
-//	std::cerr << "Sending key event of size " << sizeof(event) << std::endl;
+	copyMouse( event.data, evt );
 
 	getConfig()->sendEvent(event);
 
@@ -127,10 +146,11 @@ eqOgre::Window::mousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 	eq::ConfigEvent event;
 	event.data.type = eq::Event::POINTER_BUTTON_PRESS;
 
-	// TODO make a binary copy (casting int to uint will change the bits)
-	event.data.pointerMotion.buttons = evt.state.buttons;
+	copyMouse( event.data, evt );
 	event.data.pointerMotion.button = id;
-	
+
+	getConfig()->sendEvent(event);
+
 	return true;
 }
 
@@ -140,9 +160,10 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 	eq::ConfigEvent event;
 	event.data.type = eq::Event::POINTER_BUTTON_RELEASE;
 
-	// TODO make a binary copy (casting int to uint will change the bits)
-	event.data.pointerMotion.buttons = evt.state.buttons;
+	copyMouse( event.data, evt );
 	event.data.pointerMotion.button = id;
+
+	getConfig()->sendEvent(event);
 
 	return true;
 }
@@ -154,43 +175,53 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 bool
 eqOgre::Window::configInit( const uint32_t initID )
 {
-	if( !eq::Window::configInit( initID ))
-	{
-		EQERROR << "eq::Window::configInit failed" << std::endl;
-		return false; 
-	}
+	try {
+		if( !eq::Window::configInit( initID ))
+		{
+			EQERROR << "eq::Window::configInit failed" << std::endl;
+			return false;
+		}
 
-	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-	if( !config )
+		eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
+		if( !config )
+		{
+			EQERROR << "config is not type eqOgre::Config" << std::endl;
+			return false;
+		}
+
+		// Get the cluster version of data
+		config->mapData( initID );
+		_settings = config->getSettings();
+		if( !_settings )
+		{
+			EQERROR << "Config has no settings!" << std::endl;
+			return false;
+		}
+
+		createOgreRoot();
+		createOgreWindow();
+		createInputHandling();
+		createTracker();
+
+		// Resource registration
+		_root->setupResources( );
+		_root->loadResources();
+
+		_sm = _root->createSceneManager("SceneManager");
+
+		if( !loadScene() )
+		{ return false; }
+		
+		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
+		log << "eqOgre::Window::configInit done.\n";
+	}
+	catch( ... )
 	{
-		EQERROR << "config is not type eqOgre::Config" << std::endl;
+		// TODO this should really print the exception
+		EQERROR << "Exception thrown." << std::endl;
 		return false;
 	}
-	
-	// Get the cluster version of data
-	config->mapData( initID );
-	_settings = config->getSettings();
-	if( !_settings )
-	{
-		EQERROR << "Config has no settings!" << std::endl;
-		return false;
-	}
-	
-	createOgreRoot();
-	createOgreWindow();
-	createInputHandling();
-	createTracker();
-	
-	// Resource registration
-	_root->setupResources( );
-	_root->loadResources();
 
-	_sm = _root->createSceneManager("SceneManager");
-
-	if( !loadScene() )
-	{ return false; }
-
-	std::cerr << "eqOgre::Window::configInit done" << std::endl;
 	return true;
 }
 
@@ -255,9 +286,9 @@ eqOgre::Window::configInitSystemWindow(const uint32_t initID)
 void
 eqOgre::Window::createInputHandling( void )
 {
-	std::cerr << "Creating OIS Input system" << std::endl;
+	Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
+	log << "Creating OIS Input system.\n";
 
-	void *win_handle = 0;
 	std::ostringstream ss;
 #if defined OIS_WIN32_PLATFORM
 	eq::WGLWindow *os_win = dynamic_cast<eq::WGLWindow *>( getSystemWindow() );
@@ -278,61 +309,64 @@ eqOgre::Window::createInputHandling( void )
 	}
 	else
 	{
-		Display *xDisp = os_win->getXDisplay();
-		XID xWin = os_win->getXDrawable();
-		std::cerr << "XDisplay = " << xDisp
-			<< " : XDrawable = " << std::hex << xWin
-			<< std::endl;
-
-		ss << xWin;
-		win_handle = (void *)(xWin);
+		ss << os_win->getXDrawable();
 	}
 #endif
 
 	OIS::ParamList pl;
-	std::cerr << "Window handle dec = " << std::dec << (size_t)win_handle << " = " << ss.str() << std::endl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
 
-	std::cerr << "Creating input manager." << std::endl;
+
+	log << "Creating input manager.\n";
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 	EQASSERT( _input_manager );
 
-	// Print debugging information
-	// TODO debug information should go to Ogre Log file
-    unsigned int v = _input_manager->getVersionNumber();
-    std::cout << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
-        << "\nRelease Name: " << _input_manager->getVersionName()
-        << "\nManager: " << _input_manager->inputSystemName()
-        << "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
-        << "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
-        << "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick);
+	printInputInformation(log);
 
-    // List all devices
-	// TODO should go to Ogre Log file
-	OIS::DeviceList list = _input_manager->listFreeDevices();
-	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
-	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
-	std::cout << std::endl;
-
-
-	std::cerr << "Creating keyboard." << std::endl;
+	log << "Creating keyboard.\n";
 	_keyboard = static_cast<OIS::Keyboard*>(_input_manager->createInputObject(OIS::OISKeyboard, true));
 	EQASSERT( _keyboard );
 	_keyboard->setEventCallback(this);
-	
-	std::cerr << "Creating mouse." << std::endl;
+
+	log << "Creating mouse.\n";
+//	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
 	EQASSERT( _mouse );
 
 	_mouse ->getMouseState().height = getPixelViewport().h;
 	_mouse ->getMouseState().width	= getPixelViewport().w;
-	std::cerr << "Mouse state : width = " << std::dec << getPixelViewport().w
-		<< " : height = " << std::dec << getPixelViewport().h << "." << std::endl;
 
 	_mouse->setEventCallback(this);
 
-	std::cerr << "Input system created." << std::endl;
+	log << "Input System created.\n";
+}
 
+Ogre::Log::Stream &
+eqOgre::Window::printInputInformation( Ogre::Log::Stream &os )
+{
+	// Print debugging information
+	// TODO debug information should go to Ogre Log file
+	unsigned int v = _input_manager->getVersionNumber();
+	os << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
+		<< "\nRelease Name: " << _input_manager->getVersionName()
+		<< "\nManager: " << _input_manager->inputSystemName()
+		<< "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
+		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
+		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick) << '\n';
+
+	// List all devices
+	// TODO should go to Ogre Log file
+	OIS::DeviceList list = _input_manager->listFreeDevices();
+	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
+	{ os << "\n\tDevice: " << " Vendor: " << i->second; }
+	os << '\n';
+
+	return os;
+}
+
+void
+eqOgre::Window::createWindowListener(void )
+{
 	/*	TODO should be added so that we get window events
 	std::cerr << "Adding frame listener." << std::endl;
 	Ogre::WindowEventUtilities::addWindowEventListener(_ogre_window, this);

@@ -48,6 +48,50 @@ eqOgre::Config::init( uint32_t const )
 uint32_t 
 eqOgre::Config::startFrame (const uint32_t frameID)
 {
+	// TODO test if the speed calculations work really using high and low fps
+	static clock_t last_time = 0;
+	clock_t time = ::clock();
+
+	// Secs since last frame
+	double t = ((double)( time - last_time ))/CLOCKS_PER_SEC;
+	last_time = time;
+	
+	// angular speed in radians/s : 60 deg/s
+	Ogre::Real rot_speed = 60*M_PI/180.0;
+
+	// Speed in m/s
+	Ogre::Real speed = 1;
+
+	// Update the frame data if the Ogre or Camera is moving
+	if( _camera_move_dir != Ogre::Vector3::ZERO )
+	{
+		Ogre::Vector3 cam_pos = _frame_data.getCameraPosition();
+		cam_pos += speed*t*_camera_move_dir.normalisedCopy();
+		_frame_data.setCameraPosition( cam_pos );
+	}
+	if( _camera_rot_dir != Ogre::Quaternion::IDENTITY )
+	{
+		Ogre::Quaternion cam_rot = _frame_data.getCameraRotation();
+
+		// TODO camera rotation is relative to the original position
+		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, cam_rot, cam_rot*_camera_rot_dir);
+
+		_frame_data.setCameraRotation( q );
+
+		_camera_rot_dir = Ogre::Quaternion::IDENTITY;
+	}
+	if( _ogre_rot_dir != Ogre::Quaternion::IDENTITY )
+	{
+		Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
+
+		// This one is funny :)
+		//Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed, ogre_rot, _ogre_rot_dir);
+		// This one is correct
+		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, ogre_rot, ogre_rot*_ogre_rot_dir);
+		
+		_frame_data.setOgreRotation( q );
+	}
+
 	uint32_t version;
 	if( _frame_data.isDirty() )
 	{ version = _frame_data.commit(); }
@@ -64,167 +108,120 @@ char const *CB_INFO_TEXT = "Config : OIS event received : ";
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-	Ogre::Quaternion camera_rot = _frame_data.getCameraRotation();
-	Ogre::Quaternion qx;
-	Ogre::Quaternion qy;
-	Ogre::Real scale = 0.01;
-
-	OIS::KeyCode key;
 	bool redraw = false;
 	switch( event->data.type )
 	{
 		case eq::Event::KEY_PRESS :
-			key = (OIS::KeyCode )(event->data.key.key);
-			if(  key == OIS::KC_ESCAPE || key == OIS::KC_Q )
+
+			redraw = _handleKeyPressEvent(event->data.keyPress);
+			break;
+
+		case eq::Event::KEY_RELEASE :
+			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
+			
+			break;
+
+		case eq::Event::POINTER_BUTTON_PRESS:
+			redraw = _handleMousePressEvent(event->data.pointerButtonPress);
+			break;
+
+		case eq::Event::POINTER_BUTTON_RELEASE:
+			redraw = _handleMouseReleaseEvent(event->data.pointerButtonRelease);
+			break;
+			
+		case eq::Event::POINTER_MOTION:
+			redraw = _handleMouseMotionEvent(event->data.pointerMotion);
+			break;
+
+		case eq::Event::WINDOW_CLOSE :
+		case eq::Event::WINDOW_HIDE :
+		case eq::Event::WINDOW_EXPOSE :
+		case eq::Event::WINDOW_RESIZE :
+		case eq::Event::WINDOW_SHOW :
+			break;
+
+		default :
+			break;
+	}
+
+	return redraw;
+}
+
+bool
+eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
+{
+	// Used for toggle events
+	static clock_t last_time = 0;
+	clock_t time = ::clock();
+
+	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+    switch( key )
+    {
+		case OIS::KC_ESCAPE :
+		case OIS::KC_Q :
 			{
 				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
 				// TODO should quit cleanly
 				abort();
 			}
-			else if( key == OIS::KC_W )
-			{
-				std::cerr << CB_INFO_TEXT << "W pressed. " << std::endl;
-			}
-			else if( key == OIS::KC_SPACE )
-			{
-				std::cerr << CB_INFO_TEXT << "Space pressed. " << std::endl;
-			}
-			else
-			{
-				std::cerr << CB_INFO_TEXT << "Key = " << key << " pressed." << std::endl;
-			}
-			redraw = true;
+			return true;
+		case OIS::KC_SPACE :
 			break;
 
-		case eq::Event::KEY_RELEASE :
-			key = (OIS::KeyCode )(event->data.key.key);
-			if( key == OIS::KC_ESCAPE || key == OIS::KC_Q )
-			{
-			}
-			else if( key == OIS::KC_W )
-			{
-				std::cerr << CB_INFO_TEXT << "W released. " << std::endl;
-			}
-			else if( key== OIS::KC_SPACE )
-			{
-				std::cerr << CB_INFO_TEXT << "Space released." << std::endl;
-			}
-			else
-			{
-				std::cerr << CB_INFO_TEXT << "Key = " << key << " released." << std::endl;
-			}
-
-			redraw = true;
-			break;
-
-		case eq::Event::POINTER_BUTTON_PRESS:
-//			std::cerr << "Config received mouse button press event. Button = "
-//				<< event->data.pointer.button << std::endl;
-			break;
-
-		case eq::Event::POINTER_BUTTON_RELEASE:
-//			std::cerr << "Config received mouse button release event. Button = "
-//				<< event->data.pointer.button << std::endl;
-			break;
-		case eq::Event::POINTER_MOTION:
-//			std::cerr << "Config received mouse motion event. Coords = "
-//				<< event->data.pointer.x << " " << event->data.pointer.y << std::endl;
-/*	TODO needs dx and dy added to pointer motion event
-			qy = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dx ), Ogre::Vector3::UNIT_Y );
-			//qx = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dy ), Ogre::Vector3::UNIT_X );
-			qx = Ogre::Quaternion::IDENTITY;
-			camera_rot = camera_rot * qx * qy;
-			_frame_data.setCameraRotation( camera_rot );
-*/
-			break;
-	}
-	return redraw;
-}
-
-bool
-eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
-{
-	Ogre::Vector3 cam_pos = _frame_data.getCameraPosition();
-	Ogre::Vector3 ogre_pos = _frame_data.getOgrePosition();
-	Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
-
-	Ogre::Real scale = 0.1;
-
-	// Used for toggle events
-	static clock_t last_time = 0;
-	clock_t time = ::clock();
-
-    switch( event.key )
-    {
 		// Move Camera
 		// front
-		case 'w':
-        case 'W':
-			cam_pos += scale*(-Ogre::Vector3::UNIT_Z);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_W :
+			_camera_move_dir += -Ogre::Vector3::UNIT_Z;
 			return true;
 
 		// back
-		case 's':
-		case 'S':
-			cam_pos += scale*(Ogre::Vector3::UNIT_Z);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_S :
+			_camera_move_dir += Ogre::Vector3::UNIT_Z;
 			return true;
 
 		// left
-		case 'a':
-		case 'A':
-			cam_pos += scale*(-Ogre::Vector3::UNIT_X);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_A :
+			_camera_move_dir += -Ogre::Vector3::UNIT_X;
 			return true;
 
 		// right
-		case 'd':
-		case 'D':
-			cam_pos += scale*(Ogre::Vector3::UNIT_X);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_D :
+			_camera_move_dir += Ogre::Vector3::UNIT_X;
 			return true;
 
-		case eq::KC_PAGE_UP :
-			cam_pos += scale*(Ogre::Vector3::UNIT_Y);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_PGUP :
+			_camera_move_dir += Ogre::Vector3::UNIT_Y;
 			return true;
 
-		case eq::KC_PAGE_DOWN :
-			cam_pos += scale*(-Ogre::Vector3::UNIT_Y);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_PGDOWN :
+			_camera_move_dir += -Ogre::Vector3::UNIT_Y;
 			return true;
 
 		// Rotate Ogre
 		// front
-		case eq::KC_UP :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Z );
-			_frame_data.setOgreRotation( ogre_rot );
+		case OIS::KC_UP :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Z );
 			return true;
 
 		// back
-		case eq::KC_DOWN :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Z );
-			_frame_data.setOgreRotation( ogre_rot );
+		case OIS::KC_DOWN :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Z );
 			return true;
 
 		// left
-		case eq::KC_LEFT :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Y );
-			_frame_data.setOgreRotation( ogre_rot );
+		case OIS::KC_LEFT :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
 			return true;
 
 		// right
-		case eq::KC_RIGHT :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Y );
-			_frame_data.setOgreRotation( ogre_rot );
+		case OIS::KC_RIGHT :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
 			return true;
 
-		case 'r':
-		case 'R':
+		case OIS::KC_R :
 			// Reload the scene
 
-			// We need to wait five secs
+			// We need to wait at least five secs before issuing the command again
 			if( ( last_time - time )/CLOCKS_PER_SEC < 5 )
 			{
 				_frame_data.updateSceneVersion();
@@ -232,14 +229,11 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 			}
 			return true;
 
-        case eq::KC_F1:
-        case 'h':
-        case 'H':
+        case OIS::KC_F1:
             //_frameData.toggleHelp();
             return true;
 
-        case 'l':
-        case 'L':
+        case OIS::KC_L :
         {
 			/*
             if( !_currentCanvas )
@@ -279,4 +273,110 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
         default:
             return false;
     }
+
+    return false;
 }
+
+bool
+eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
+{
+	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+    switch( key )
+    {
+		case OIS::KC_SPACE :
+			break;
+
+		// Move Camera
+		// front
+		case OIS::KC_W :
+			_camera_move_dir -= -Ogre::Vector3::UNIT_Z;
+			return true;
+
+		// back
+		case OIS::KC_S :
+			_camera_move_dir -= Ogre::Vector3::UNIT_Z;
+			return true;
+
+		// left
+		case OIS::KC_A :
+			_camera_move_dir -= -Ogre::Vector3::UNIT_X;
+			return true;
+
+		// right
+		case OIS::KC_D :
+			_camera_move_dir -= Ogre::Vector3::UNIT_X;
+			return true;
+
+		case OIS::KC_PGUP :
+			_camera_move_dir -= Ogre::Vector3::UNIT_Y;
+			return true;
+
+		case OIS::KC_PGDOWN :
+			_camera_move_dir -= -Ogre::Vector3::UNIT_Y;
+			return true;
+
+		// Rotate Ogre
+		// front
+		case OIS::KC_UP :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Z );
+			return true;
+
+		// back
+		case OIS::KC_DOWN :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Z );
+			return true;
+
+		// left
+		case OIS::KC_LEFT :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
+			return true;
+
+		// right
+		case OIS::KC_RIGHT :
+			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
+			return true;
+
+		default :
+			return false;
+	}
+
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMousePressEvent(const eq::PointerEvent& event)
+{
+//			std::cerr << "Config received mouse button press event. Button = "
+//				<< event->data.pointer.button << std::endl;
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
+{
+//			std::cerr << "Config received mouse button release event. Button = "
+//				<< event->data.pointer.button << std::endl;
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMouseMotionEvent(const eq::PointerEvent& event)
+{
+	Ogre::Quaternion qy = Ogre::Quaternion::IDENTITY;
+	if( event.dx < 0 )
+		qy = Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
+	else
+	{
+		qy = Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
+	}
+	_camera_rot_dir = qy;
+
+	return true;
+}
+
+bool
+eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
+{
+	return false;
+}
+

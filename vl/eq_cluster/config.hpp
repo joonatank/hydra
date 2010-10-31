@@ -7,6 +7,9 @@
 #include "init_data.hpp"
 #include "settings.hpp"
 
+#include <OGRE/OgreQuaternion.h>
+#include <OGRE/OgreVector3.h>
+
 namespace eqOgre
 {
     class Config : public eq::Config
@@ -44,12 +47,23 @@ namespace eqOgre
 	protected :
 		virtual ~Config (void);
 
-		bool _handleKeyEvent( const eq::KeyEvent& event );
+		bool _handleKeyPressEvent( const eq::KeyEvent& event );
+		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
+		bool _handleMousePressEvent( const eq::PointerEvent& event );
+		bool _handleMouseReleaseEvent( const eq::PointerEvent& event );
+		bool _handleMouseMotionEvent( const eq::PointerEvent& event );
+		// TODO replace the MagellanEvent with a real JoystickEvent
+		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
 		vl::SettingsRefPtr _settings;
 
 		InitData _init_data;
 		FrameData _frame_data;
+
+		// Some test variables for input events
+		Ogre::Vector3 _camera_move_dir;
+		Ogre::Quaternion _camera_rot_dir;
+		Ogre::Quaternion _ogre_rot_dir;
     };	// class Config
 
 }	// namespace eqOgre

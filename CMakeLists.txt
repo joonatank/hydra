@@ -86,9 +86,7 @@ set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
-# Not necessary at the moment
-# TODO test on a system that does not have OIS
-FIND_PACKAGE(OIS QUIET )
+FIND_PACKAGE(OIS REQUIRED )
 
 # TODO test on a system that does not have CEGUI
 FIND_PACKAGE( CEGUI QUIET )

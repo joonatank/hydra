@@ -10,6 +10,7 @@
 #include <OIS/OISInputManager.h>
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
+#include <OGRE/OgreLog.h>
 //#include <OGRE/OgreFrameListener.h>
 //#include <OGRE/OgreWindowEventUtilities.h>
 
@@ -64,6 +65,9 @@ namespace eqOgre
 		// TODO add joystick support
 		void createInputHandling( void );
 
+		Ogre::Log::Stream &printInputInformation( Ogre::Log::Stream &os );
+		
+		void createWindowListener( void );
 
 		
 		/// Equalizer overrides
