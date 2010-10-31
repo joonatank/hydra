@@ -60,6 +60,8 @@ namespace eqOgre
 		void createTracker( void );
 
 		/// Create the OIS input handling
+		/// For now supports mouse and keyboard
+		// TODO add joystick support
 		void createInputHandling( void );
 
 

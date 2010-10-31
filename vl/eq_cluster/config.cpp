@@ -1,5 +1,8 @@
 #include "config.hpp"
 
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
 {}
@@ -54,6 +57,10 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	return eq::Config::startFrame( version );
 }
 
+char const *CB_INFO_TEXT = "Config : OIS event received : ";
+
+// TODO the event handling should be separated to multiple functions
+// handleKeyPress, handleKeyRelease, handlePointerMotion etc.
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
@@ -61,66 +68,76 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 	Ogre::Quaternion qx;
 	Ogre::Quaternion qy;
 	Ogre::Real scale = 0.01;
-	
+
+	OIS::KeyCode key;
 	bool redraw = false;
-    switch( event->data.type )
-    {
-        case eq::Event::KEY_PRESS:
-		{
-            redraw = _handleKeyEvent( event->data.keyPress );
-		}
-        break;
+	switch( event->data.type )
+	{
+		case eq::Event::KEY_PRESS :
+			key = (OIS::KeyCode )(event->data.key.key);
+			if(  key == OIS::KC_ESCAPE || key == OIS::KC_Q )
+			{
+				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
+				// TODO should quit cleanly
+				abort();
+			}
+			else if( key == OIS::KC_W )
+			{
+				std::cerr << CB_INFO_TEXT << "W pressed. " << std::endl;
+			}
+			else if( key == OIS::KC_SPACE )
+			{
+				std::cerr << CB_INFO_TEXT << "Space pressed. " << std::endl;
+			}
+			else
+			{
+				std::cerr << CB_INFO_TEXT << "Key = " << key << " pressed." << std::endl;
+			}
+			redraw = true;
+			break;
 
-        case eq::Event::POINTER_BUTTON_PRESS:
-		break;
+		case eq::Event::KEY_RELEASE :
+			key = (OIS::KeyCode )(event->data.key.key);
+			if( key == OIS::KC_ESCAPE || key == OIS::KC_Q )
+			{
+			}
+			else if( key == OIS::KC_W )
+			{
+				std::cerr << CB_INFO_TEXT << "W released. " << std::endl;
+			}
+			else if( key== OIS::KC_SPACE )
+			{
+				std::cerr << CB_INFO_TEXT << "Space released." << std::endl;
+			}
+			else
+			{
+				std::cerr << CB_INFO_TEXT << "Key = " << key << " released." << std::endl;
+			}
 
-        case eq::Event::POINTER_BUTTON_RELEASE:
-        /*
-		{
-		
-            const eq::PointerEvent& releaseEvent = 
-                event->data.pointerButtonRelease;
-            if( releaseEvent.buttons == eq::PTR_BUTTON_NONE)
-            {
-                if( releaseEvent.button == eq::PTR_BUTTON1 )
-                {
-                    _spinX = releaseEvent.dy;
-                    _spinY = releaseEvent.dx;
-                    _redraw = true;
-                    return true;
-                }
-                if( releaseEvent.button == eq::PTR_BUTTON2 )
-                {
-                    _advance = -releaseEvent.dy;
-                    _redraw = true;
-                    return true;
-                }
-            }
-        }
-		*/
-		break;
+			redraw = true;
+			break;
 
-        case eq::Event::POINTER_MOTION:
+		case eq::Event::POINTER_BUTTON_PRESS:
+//			std::cerr << "Config received mouse button press event. Button = "
+//				<< event->data.pointer.button << std::endl;
+			break;
+
+		case eq::Event::POINTER_BUTTON_RELEASE:
+//			std::cerr << "Config received mouse button release event. Button = "
+//				<< event->data.pointer.button << std::endl;
+			break;
+		case eq::Event::POINTER_MOTION:
+//			std::cerr << "Config received mouse motion event. Coords = "
+//				<< event->data.pointer.x << " " << event->data.pointer.y << std::endl;
+/*	TODO needs dx and dy added to pointer motion event
 			qy = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dx ), Ogre::Vector3::UNIT_Y );
 			//qx = Ogre::Quaternion( Ogre::Radian( scale * event->data.pointerMotion.dy ), Ogre::Vector3::UNIT_X );
 			qx = Ogre::Quaternion::IDENTITY;
 			camera_rot = camera_rot * qx * qy;
 			_frame_data.setCameraRotation( camera_rot );
-			
-		break;
-
-        case eq::Event::WINDOW_EXPOSE:
-        case eq::Event::WINDOW_RESIZE:
-        case eq::Event::WINDOW_CLOSE:
-        case eq::Event::VIEW_RESIZE:
+*/
 			break;
-
-        default:
-            break;
-    }
-
-	redraw |= eq::Config::handleEvent( event );
-
+	}
 	return redraw;
 }
 
@@ -215,157 +232,11 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 			}
 			return true;
 
-		// Some old stuff
-        case 'p':
-        case 'P':
-            return true;
-        case ' ':
-			/*
-            _spinX   = 0;
-            _spinY   = 0;
-            _advance = 0;
-            _frameData.reset();
-            _setHeadMatrix( eq::Matrix4f::IDENTITY );
-			*/
-            return true;
-
-        case 'i':
-        case 'I':
-			/*
-            _frameData.setCameraPosition( 0.f, 0.f, 0.f );
-            _spinX   = 0;
-            _spinY   = 0;
-            _advance = 0;
-			*/
-            return true;
-
-        case 'o':
-        case 'O':
-            //_frameData.toggleOrtho();
-            return true;
-            
-        case 'f':
-        case 'F':	
-            //_freeze = !_freeze;
-            //freezeLoadBalancing( _freeze );
-            return true;
-
         case eq::KC_F1:
         case 'h':
         case 'H':
             //_frameData.toggleHelp();
             return true;
-
-        case 'c':
-        case 'C':
-        {
-			/*
-            const eq::CanvasVector& canvases = getCanvases();
-            if( canvases.empty( ))
-                return true;
-
-            _frameData.setCurrentViewID( EQ_ID_INVALID );
-
-            if( !_currentCanvas )
-            {
-                _currentCanvas = canvases.front();
-                return true;
-            }
-
-            eq::CanvasVector::const_iterator i = std::find( canvases.begin(),
-                                                            canvases.end(), 
-                                                            _currentCanvas );
-            EQASSERT( i != canvases.end( ));
-
-            ++i;
-            if( i == canvases.end( ))
-                _currentCanvas = canvases.front();
-            else
-                _currentCanvas = *i;
-			*/
-            return true;
-        }
-
-        case 'v':
-        case 'V':
-        {
-			/*
-            const eq::CanvasVector& canvases = getCanvases();
-            if( !_currentCanvas && !canvases.empty( ))
-                _currentCanvas = canvases.front();
-
-            if( !_currentCanvas )
-                return true;
-
-            const eq::Layout* layout = _currentCanvas->getActiveLayout();
-            if( !layout )
-                return true;
-
-            const eq::View* current = findView( _frameData.getCurrentViewID( ));
-            const eq::ViewVector& views = layout->getViews();
-            EQASSERT( !views.empty( ))
-
-            if( !current )
-            {
-                _frameData.setCurrentViewID( views.front()->getID( ));
-                return true;
-            }
-
-            eq::ViewVector::const_iterator i = std::find( views.begin(),
-                                                          views.end(), current);
-            EQASSERT( i != views.end( ));
-
-            ++i;
-            if( i == views.end( ))
-                _frameData.setCurrentViewID( EQ_ID_INVALID );
-            else
-                _frameData.setCurrentViewID( (*i)->getID( ));
-			*/
-            return true;
-        }
-
-        case 'm':
-        case 'M':
-        {
-			/*
-            if( _modelDist.empty( )) // no models
-                return true;
-
-            // current model
-            const uint32_t viewID = _frameData.getCurrentViewID();
-            View* view = static_cast< View* >( findView( viewID ));
-            const uint32_t currentID = view ? 
-                view->getModelID() : _frameData.getModelID();
-
-            // next model
-            ModelDistVector::const_iterator i;
-            for( i = _modelDist.begin(); i != _modelDist.end(); ++i )
-            {
-                if( (*i)->getID() != currentID )
-                    continue;
-                
-                ++i;
-                break;
-            }
-            if( i == _modelDist.end( ))
-                i = _modelDist.begin(); // wrap around
-            
-            // set identifier on view or frame data (default model)
-            const uint32_t modelID = (*i)->getID();
-            if( view )
-                view->setModelID( modelID );
-            else
-                _frameData.setModelID( modelID );
-            
-            if( view )
-            {
-                const Model* model = getModel( modelID );
-                _setMessage( "Model " + eq::base::getFilename( model->getName())
-                             + " active" );
-            }
-			*/
-            return true;
-        }
 
         case 'l':
         case 'L':
@@ -405,93 +276,6 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
             return true;
         }
 
-        // Head Tracking Emulation
-		/*
-        case eq::KC_UP:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.y() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_DOWN:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.y() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_RIGHT:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.x() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_LEFT:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.x() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_PAGE_DOWN:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.z() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_PAGE_UP:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.z() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '.':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_x( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ',':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_x( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ';':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_y( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '\'':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_y( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '[':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_z( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ']':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_z( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-		*/
         default:
             return false;
     }

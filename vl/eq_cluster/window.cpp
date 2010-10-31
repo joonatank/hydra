@@ -79,71 +79,71 @@ eqOgre::Window::loadScene( void )
 
 
 /// Public Callbacks
-char const *CB_INFO_TEXT = "OIS callback : ";
 
 bool
 eqOgre::Window::keyPressed(const OIS::KeyEvent& key)
 {
-	if( key.key == OIS::KC_ESCAPE || key.key == OIS::KC_Q )
-	{
-		std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Should quit now. " << std::endl;
-	}
-	else if( key.key == OIS::KC_W )
-	{
-		std::cerr << CB_INFO_TEXT << "W pressed. " << std::endl;
-	}
-	else if( key.key == OIS::KC_SPACE )
-	{
-		std::cerr << CB_INFO_TEXT << "Space pressed. " << std::endl;
-	}
-	else
-	{
-		std::cerr << CB_INFO_TEXT << "Key = " << key.key << " pressed." << std::endl;
-	}
+	eq::ConfigEvent event;
+	event.data.type = eq::Event::KEY_PRESS;
+	event.data.key.key = key.key;
+	
+	getConfig()->sendEvent(event);
+
 	return true;
 }
 
 bool
 eqOgre::Window::keyReleased(const OIS::KeyEvent& key)
 {
-	if( key.key == OIS::KC_ESCAPE || key.key == OIS::KC_Q )
-	{
-		std::cerr << CB_INFO_TEXT << "Escape or Q released. Should quit now. " << std::endl;
-		abort();
-	}
-	else if( key.key == OIS::KC_W )
-	{
-		std::cerr << CB_INFO_TEXT << "W released. " << std::endl;
-	}
-	else if( key.key == OIS::KC_SPACE )
-	{
-		std::cerr << CB_INFO_TEXT << "Space released." << std::endl;
-	}
-	else
-	{
-		std::cerr << CB_INFO_TEXT << "Key = " << key.key << " released." << std::endl;
-	}
+	eq::ConfigEvent event;
+	event.data.type = eq::Event::KEY_RELEASE;
+	event.data.key.key = key.key;
+
+	getConfig()->sendEvent(event);
+
 	return true;
 }
 
+// TODO all mouse events should have correct state information in them
+// at the moment only changed information is copied.
 bool
 eqOgre::Window::mouseMoved(const OIS::MouseEvent& evt)
 {
-	std::cerr << "OIS MouseMoved : Mouse = " << std::endl;
+	eq::ConfigEvent event;
+	event.data.type = eq::Event::POINTER_MOTION;
+
+	event.data.pointerMotion.x = evt.state.X.abs;
+	event.data.pointerMotion.y = evt.state.Y.abs;
+//	std::cerr << "Sending key event of size " << sizeof(event) << std::endl;
+
+	getConfig()->sendEvent(event);
+
 	return true;
 }
 
 bool
 eqOgre::Window::mousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 {
-	std::cerr << "OIS MousePressed " << std::endl;
+	eq::ConfigEvent event;
+	event.data.type = eq::Event::POINTER_BUTTON_PRESS;
+
+	// TODO make a binary copy (casting int to uint will change the bits)
+	event.data.pointerMotion.buttons = evt.state.buttons;
+	event.data.pointerMotion.button = id;
+	
 	return true;
 }
 
 bool
 eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 {
-	std::cerr << "OIS MouseReleased " << std::endl;
+	eq::ConfigEvent event;
+	event.data.type = eq::Event::POINTER_BUTTON_RELEASE;
+
+	// TODO make a binary copy (casting int to uint will change the bits)
+	event.data.pointerMotion.buttons = evt.state.buttons;
+	event.data.pointerMotion.button = id;
+
 	return true;
 }
 
@@ -283,20 +283,6 @@ eqOgre::Window::createInputHandling( void )
 		std::cerr << "XDisplay = " << xDisp
 			<< " : XDrawable = " << std::hex << xWin
 			<< std::endl;
-/*
-		// Don't receive events in equalizer display
-		if( XSelectInput(xDisp, xWin, NoEventMask) == BadWindow )
-		{
-			std::cerr << "Couldn't set the Equalizer display not to receive events."
-				<< std::endl;
-			EQASSERT( false );
-		}
-		else
-		{
-			std::cerr << "The Equalizer display will NOT receive events."
-				<< std::endl;
-		}
-		*/
 
 		ss << xWin;
 		win_handle = (void *)(xWin);
@@ -304,36 +290,15 @@ eqOgre::Window::createInputHandling( void )
 #endif
 
 	OIS::ParamList pl;
-//	EQASSERT( win_handle );
-//	ss << win_handle;
 	std::cerr << "Window handle dec = " << std::dec << (size_t)win_handle << " = " << ss.str() << std::endl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
 
-	// Non exclusive input, taken from Ogre Wiki - Using OIS
-	// Necessary and Working for Linux
-	// TODO test if necessary and working for Windows
-	// TODO no support for MAC
-
-/*
-#if defined OIS_WIN32_PLATFORM
-	pl.insert(std::make_pair(std::string("w32_mouse"), std::string("DISCL_FOREGROUND" )));
-	pl.insert(std::make_pair(std::string("w32_mouse"), std::string("DISCL_NONEXCLUSIVE")));
-	pl.insert(std::make_pair(std::string("w32_keyboard"), std::string("DISCL_FOREGROUND")));
-	pl.insert(std::make_pair(std::string("w32_keyboard"), std::string("DISCL_NONEXCLUSIVE")));
-#elif defined OIS_LINUX_PLATFORM
-	pl.insert(std::make_pair(std::string("x11_mouse_grab"), std::string("false")));
-	pl.insert(std::make_pair(std::string("x11_mouse_hide"), std::string("false")));
-	pl.insert(std::make_pair(std::string("x11_keyboard_grab"), std::string("false")));
-	pl.insert(std::make_pair(std::string("XAutoRepeatOn"), std::string("true")));
-#endif
-*/
-
 	std::cerr << "Creating input manager." << std::endl;
-//	_input_manager = OIS::InputManager::createInputSystem( (size_t)(win_handle) );
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 	EQASSERT( _input_manager );
 
-	//Print debugging information
+	// Print debugging information
+	// TODO debug information should go to Ogre Log file
     unsigned int v = _input_manager->getVersionNumber();
     std::cout << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
         << "\nRelease Name: " << _input_manager->getVersionName()
@@ -342,7 +307,8 @@ eqOgre::Window::createInputHandling( void )
         << "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
         << "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick);
 
-    //List all devices
+    // List all devices
+	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
@@ -366,7 +332,8 @@ eqOgre::Window::createInputHandling( void )
 	_mouse->setEventCallback(this);
 
 	std::cerr << "Input system created." << std::endl;
-/*
+
+	/*	TODO should be added so that we get window events
 	std::cerr << "Adding frame listener." << std::endl;
 	Ogre::WindowEventUtilities::addWindowEventListener(_ogre_window, this);
 
