@@ -35,10 +35,10 @@ public :
 	/// After this deserialization will transform the Ogre SceneNode
 	bool findNode( Ogre::SceneManager *man );
 
-	Ogre::Vector3 const &getOgrePosition( void ) const
+	Ogre::Vector3 const &getPosition( void ) const
 	{ return _position; }
 
-	void setOgrePosition( Ogre::Vector3 const &v )
+	void setPosition( Ogre::Vector3 const &v )
 	{
 		setDirty( DIRTY_POSITION );
 		_position = v;

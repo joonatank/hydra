@@ -72,25 +72,28 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	// Update the frame data if the Ogre or Camera is moving
 	if( _camera_move_dir != Ogre::Vector3::ZERO )
 	{
-		Ogre::Vector3 cam_pos = _frame_data.getCameraPosition();
+		SceneNode &camera = _frame_data.getCameraNode();
+		Ogre::Vector3 cam_pos = camera.getPosition();
 		cam_pos += speed*t*_camera_move_dir.normalisedCopy();
-		_frame_data.setCameraPosition( cam_pos );
+		camera.setPosition( cam_pos );
 	}
 	if( _camera_rot_dir != Ogre::Quaternion::IDENTITY )
 	{
-		Ogre::Quaternion cam_rot = _frame_data.getCameraRotation();
+		SceneNode &camera = _frame_data.getCameraNode();
+		Ogre::Quaternion cam_rot = camera.getOrientation();
 
 		// TODO camera rotation is relative to the original position
 		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, cam_rot, cam_rot*_camera_rot_dir);
 
-		_frame_data.setCameraRotation( q );
+		camera.setOrientation( q );
 
 		_camera_rot_dir = Ogre::Quaternion::IDENTITY;
 	}
 	if( _ogre_rot_dir != Ogre::Quaternion::IDENTITY )
 	{
+		// TODO this function makes the ogre sometimes continue the rotation
 		SceneNode &ogre = _frame_data.getOgreNode();
-		Ogre::Quaternion ogre_rot = ogre.getOrientation(); //_frame_data.getOgreRotation();
+		Ogre::Quaternion ogre_rot = ogre.getOrientation();
 
 		// This one is funny :)
 		//Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed, ogre_rot, _ogre_rot_dir);
@@ -98,7 +101,6 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, ogre_rot, ogre_rot*_ogre_rot_dir);
 
 		ogre.setOrientation( q );
-//		_frame_data.setOgreRotation( q );
 	}
 
 	uint32_t version = _frame_data.commitAll();

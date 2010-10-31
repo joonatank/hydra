@@ -7,6 +7,9 @@ uint32_t eqOgre::FrameData::commitAll(void )
 	if( _ogre.isDirty() )
 	{ _ogre.commit(); }
 
+	if( _camera.isDirty() )
+	{ _camera.commit(); }
+
 	if( isDirty() )
 	{ return commit(); }
 	else
@@ -17,12 +20,14 @@ void
 eqOgre::FrameData::syncAll(void )
 {
 	_ogre.sync();
+	_camera.sync();
 	sync();
 }
 
 void
 eqOgre::FrameData::registerData(eq::Config* config)
 {
+	// Register Ogre
 	// Lets make sure we don't register the objects more than once
 	if( EQ_ID_INVALID != _ogre_id && EQ_ID_INVALID != _ogre.getID() )
 	{
@@ -38,6 +43,24 @@ eqOgre::FrameData::registerData(eq::Config* config)
 	}
 	_ogre_id = _ogre.getID();
 
+
+	// Register Camera
+	if( EQ_ID_INVALID != _camera_id && EQ_ID_INVALID != _camera.getID() )
+	{
+		std::cerr << "Ogre already registered" << std::endl;
+		EQASSERT( false );
+	}
+	config->registerObject( &_camera );
+	// The object has to be correctly registered
+	if( EQ_ID_INVALID == _camera.getID() )
+	{
+		std::cerr << "Ogre was not registered" << std::endl;
+		EQASSERT( false );
+	}
+	_camera_id = _camera.getID();
+
+
+	// Register FrameData
 	if( EQ_ID_INVALID != getID() )
 	{
 		std::cerr << "FrameData already registered" << std::endl;
@@ -56,8 +79,11 @@ eqOgre::FrameData::deregisterData(eq::Config* config)
 {
 	if( EQ_ID_INVALID != _ogre.getID() )
 	{ config->deregisterObject( &_ogre ); }
-
 	_ogre_id = EQ_ID_INVALID;
+
+	if( EQ_ID_INVALID != _camera.getID() )
+	{ config->deregisterObject( &_camera ); }
+	_camera_id = EQ_ID_INVALID;
 
 	if( EQ_ID_INVALID != getID() )
 	{ config->deregisterObject( this ); }
@@ -79,12 +105,20 @@ eqOgre::FrameData::mapData(eq::Config* config, uint32_t id)
 		EQASSERT( false );
 	}
 	config->mapObject(&_ogre, _ogre_id);
+
+	if( EQ_ID_INVALID == _camera_id )
+	{
+		std::cerr << "Trying to map Camera to invalid ID" << std::endl;
+		EQASSERT( false );
+	}
+	config->mapObject(&_camera, _camera_id);
 }
 
 void
 eqOgre::FrameData::unmapData(eq::Config* config)
 {
 	config->unmapObject( &_ogre );
+	config->unmapObject( &_camera );
 	config->unmapObject( this );
 }
 
@@ -97,10 +131,7 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 
 	if( dirtyBits & DIRTY_CAMERA ) 
 	{
-		// Serialize camera position
-		operator<<( _camera_pos, os );
-		// Serialize camera orientation
-		operator<<( _camera_rotation, os );
+		os << _camera_id;
 	}
 
 	if( dirtyBits & DIRTY_OGRE )
@@ -121,11 +152,7 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 
 	if( dirtyBits & DIRTY_CAMERA )
 	{
-		// Serialize camera position
-		operator>>( _camera_pos, is );
-
-		// Serialize camera orientation
-		operator>>( _camera_rotation, is );
+		is >> _camera_id;
 	}
 
 	if( dirtyBits & DIRTY_OGRE )

@@ -18,38 +18,39 @@ class FrameData : public eq::fabric::Serializable
 {
 public :
 	FrameData( void )
-		: _camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
+		: //_camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
 		  _ogre( "ogre" ),
 		  _ogre_id( EQ_ID_INVALID ),
+		  _camera( "CameraNode" ),
+		  _camera_id( EQ_ID_INVALID ),
 		  _scene_version( 0 )
 	{}
 
 	~FrameData( void ) {}
 
-	Ogre::Vector3 const &getCameraPosition( void ) const
-	{ return _camera_pos; }
-
-	void setCameraPosition( Ogre::Vector3 const &v )
-	{ 
-		setDirty( DIRTY_CAMERA );
-		_camera_pos = v; 
-	}
-	
-	Ogre::Quaternion const &getCameraRotation( void ) const
+	bool findNodes( Ogre::SceneManager *man )
 	{
-		return _camera_rotation; 
+		bool retval = true;
+		retval |= _camera.findNode( man );
+		retval |= _ogre.findNode( man );
+		
+		return retval;
 	}
 
-	void setCameraRotation( Ogre::Quaternion const &q )
+	SceneNode &getCameraNode( void )
+	{ return _camera; }
+
+	SceneNode const &getCameraNode( void ) const
+	{ return _camera; }
+
+	void setCameraID( uint32_t id )
 	{
-		setDirty( DIRTY_CAMERA );
-		_camera_rotation = q; 
+		_camera_id = id;
 	}
 
-	// Init Ogre Node
-	bool findOgreNode( Ogre::SceneManager *man )
+	uint32_t getCameraID( void ) const
 	{
-		return _ogre.findNode(man);
+		return _camera_id;
 	}
 
 	SceneNode &getOgreNode( void )
@@ -58,12 +59,12 @@ public :
 	SceneNode const &getOgreNode( void ) const
 	{ return _ogre; }
 
-	void setOgreID( uint64_t id )
+	void setOgreID( uint32_t id )
 	{
 		_ogre_id = id;
 	}
 
-	uint64_t getOgreID( void ) const
+	uint32_t getOgreID( void ) const
 	{
 		return _ogre_id;
 	}
@@ -103,14 +104,20 @@ protected :
     virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
 private :
-	// Camera parameters
-	Ogre::Vector3 _camera_pos;
-	Ogre::Quaternion _camera_rotation;
-
+	// TODO these should be moved to a vector and there should be methods to
+	// add more elements
+	// TODO Also it's necessary to
+	// refactor the sync, commit, register, deregister, map, unmap functions
+	// TODO dynamically adding more nodes
+	
 	// Test scene node called Ogre
 	SceneNode _ogre;
-	uint64_t _ogre_id;
+	uint32_t _ogre_id;
 
+	// Test camera node
+	SceneNode _camera;
+	uint32_t _camera_id;
+	
 	// Reload the scene
 	uint32_t _scene_version;
 

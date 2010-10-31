@@ -8,8 +8,10 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent ) 
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0), _ogre_node(0),
-	  _head_pos( Ogre::Vector3::ZERO ), _head_orient( Ogre::Quaternion::IDENTITY ), _tracker()
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
+	  _head_pos( Ogre::Vector3::ZERO ),
+	  _head_orient( Ogre::Quaternion::IDENTITY ),
+	  _tracker()
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -30,11 +32,9 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	std::cerr << "Get camera from RenderWindow" << std::endl;
 	_camera = window->getCamera();
 
-	getInitialPositions();
-
 	createViewport();
 
-	// TODO this needs to be configurable
+	// TODO this should be configurable from DotScene
 	setNearFar( 0.1, 100.0 );
 
 	// Get framedata
@@ -51,12 +51,13 @@ eqOgre::Channel::configInit( const uint32_t initID )
 
 	// We need to find the node from scene graph
 	EQASSERT( !_frame_data.getOgreNode().getName().empty() )
+	EQASSERT( !_frame_data.getCameraNode().getName().empty() )
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERT( sm );
-	if( _frame_data.findOgreNode( sm ) )
-		std::cerr << "Ogre Node found in the SceneGraph" << std::endl;
+	if( _frame_data.findNodes( sm ) )
+		std::cerr << "Ogre Node and Camera Node found in the SceneGraph" << std::endl;
 	else
-		std::cerr << "Ogre Node NOT found in the SceneGraph" << std::endl;
+		std::cerr << "Ogre Node or Camera Node was NOT found in the SceneGraph" << std::endl;
 
 	_tracker = ((eqOgre::Window *)getWindow())->getTracker();
 	EQASSERT( _tracker );
@@ -110,19 +111,6 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 
 	_viewport->update();
 }
-
-/* Override the applyFrustum to set Camera Frustum
-void
-eqOgre::Channel::applyFrustum() const
-{
-	// Set the Camera frusrum
-//	eqOgre::Window* pWin = (eqOgre::Window *)getWindow();
-
-	eq::Frustumf frust = getFrustum();
-	// Apply the frustum to Ogre::Camera
-//	pWin->setFrustum( frust.compute_matrix() );
-}
-*/
 
 void 
 eqOgre::Channel::setOgreFrustum( void )
@@ -180,14 +168,10 @@ eqOgre::Channel::updateDistribData( void )
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
-		getInitialPositions();
-		_frame_data.findOgreNode( win->getSceneManager() );
+		_frame_data.findNodes( win->getSceneManager() );
 		
 		scene_version = _frame_data.getSceneVersion();
 	}
-
-	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
-	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
 }
 
 void 
@@ -197,17 +181,6 @@ eqOgre::Channel::createViewport( void )
 	_ogre_window->removeAllViewports();
 	std::cerr << "Creating viewport" << std::endl;
 	_viewport = _ogre_window->addViewport( _camera );
+	// TODO this should be configurable from DotScene
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-}
-
-void 
-eqOgre::Channel::getInitialPositions( void )
-{
-	eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
-	Ogre::SceneManager *sm = win->getSceneManager();
-	EQASSERT( _camera );
-	EQASSERT( sm );
-
-	_camera_initial_position = _camera->getPosition();
-	_camera_initial_orientation = _camera->getOrientation();
 }
