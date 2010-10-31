@@ -44,15 +44,11 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		EQERROR << "config is not type eqOgre::Config" << std::endl;
 		return false;
 	}
-	
-	EQASSERT( config->getInitData().getFrameDataID() != EQ_ID_INVALID );
-	config->mapObject( &_frame_data, config->getInitData().getFrameDataID() );
 
-	// Map Ogre Node
-	// TODO this should be inside FrameData
-	EQASSERT( _frame_data.getOgreID() != EQ_ID_INVALID );
-	config->mapObject( &(_frame_data.getOgreNode()), _frame_data.getOgreID() );
-	
+	uint32_t frame_id = config->getInitData().getFrameDataID();
+	EQASSERT( frame_id != EQ_ID_INVALID );
+	_frame_data.mapData( config, frame_id );
+
 	// We need to find the node from scene graph
 	EQASSERT( !_frame_data.getOgreNode().getName().empty() )
 	Ogre::SceneManager *sm = window->getSceneManager();
@@ -67,6 +63,14 @@ eqOgre::Channel::configInit( const uint32_t initID )
 
 	return true;
 }
+
+bool
+eqOgre::Channel::configExit()
+{
+	_frame_data.unmapData( getConfig() );
+	return eq::Channel::configExit();
+}
+
 
 /*
 void
@@ -87,8 +91,7 @@ void
 eqOgre::Channel::frameDraw( const uint32_t frameID )
 {
 	// Distribution
-	_frame_data.sync( );
-	_frame_data.getOgreNode().sync();
+	_frame_data.syncAll();
 	updateDistribData();
 
 	setHeadMatrix();
@@ -126,9 +129,13 @@ eqOgre::Channel::setOgreFrustum( void )
 {
 	eq::Frustumf frust = getFrustum();
 	_camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
-	// TODO add support for cameras with parent
-	// Ogre::Camera::getPosition returns position relative to the parent
-	Ogre::Matrix4 viewMat = Ogre::Math::makeViewMatrix( _camera->getPosition() + _head_pos, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
+
+	// FIXME camera view matrix points always towards the front screen
+	// frustum is correctly relative to the side screens but the view matrix is
+	// always the same for all walls.
+	Ogre::Vector3 cam_pos( _camera->getRealPosition() + _head_pos );
+	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
+	Ogre::Matrix4 viewMat = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
 	_camera->setCustomViewMatrix( true, viewMat );
 }
 
@@ -165,26 +172,22 @@ eqOgre::Channel::updateDistribData( void )
 	static uint32_t scene_version = 0;
 	if( _frame_data.getSceneVersion() > scene_version )
 	{
+		// This will reload the scene but all transformations remain
+		// As this will not reset the SceneNode structures that control the
+		// transformations of objects.
 		std::cerr << "Should reload the scene now" << std::endl;
 		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
 		getInitialPositions();
+		_frame_data.findOgreNode( win->getSceneManager() );
+		
 		scene_version = _frame_data.getSceneVersion();
 	}
 
-
 	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
 	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
-
-	/*
-	if( _ogre_node )
-	{
-		_ogre_node->setPosition( _frame_data.getOgrePosition()+_ogre_initial_position );
-		_ogre_node->setOrientation( _frame_data.getOgreRotation()*_ogre_initial_orientation );
-	}
-	*/
 }
 
 void 
@@ -207,19 +210,4 @@ eqOgre::Channel::getInitialPositions( void )
 
 	_camera_initial_position = _camera->getPosition();
 	_camera_initial_orientation = _camera->getOrientation();
-
-	// Get the ogre node
-	/*
-	if( sm->hasSceneNode("ogre") )
-	{
-		_ogre_node = sm->getSceneNode( "ogre" );
-		_ogre_initial_position = _ogre_node->getPosition(); 
-		_ogre_initial_orientation = _ogre_node->getOrientation();
-	}
-	else
-	{
-		_ogre_initial_position = Ogre::Vector3::ZERO;
-		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
-	}
-	*/
 }

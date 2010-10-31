@@ -30,6 +30,7 @@ public:
 protected:
 	// Equalizer overrides
     virtual bool configInit( const uint32_t initID );
+	virtual bool configExit();
     //virtual void frameClear( const uint32_t frameID );
     virtual void frameDraw( const uint32_t frameID );
 

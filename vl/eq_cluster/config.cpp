@@ -24,20 +24,24 @@ eqOgre::Config::mapData( uint32_t const initDataID )
 	}
 }
 
+// TODO should this be deregister or unmap?
+// If it's deregister rename the function and call it from AppNode
+// If it's unmap it should be called from Channel not from AppNode
+// The unmap is moved to Channel and FrameData
+/*
 void
 eqOgre::Config::unmapData( void )
 {
-	// Nothing to do as init data is only mapped once and then unmapped
+//	std::cerr << "Config::unmapData" << std::endl;
+//	_frame_data.deregisterData(this);
 }
+*/
 
 bool
 eqOgre::Config::init( uint32_t const )
 {
 	/// Register data
-	// TODO the OgreNode registration should be inside FrameData
-	registerObject( &(_frame_data.getOgreNode()) );
-	_frame_data.setOgreID( _frame_data.getOgreNode().getID() );
-	registerObject( &_frame_data );
+	_frame_data.registerData(this);
 
 	_init_data.setFrameDataID( _frame_data.getID() );
 	registerObject( &_init_data );
@@ -97,17 +101,8 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 //		_frame_data.setOgreRotation( q );
 	}
 
-	uint32_t version;
-	if( _frame_data.isDirty() )
-	{ version = _frame_data.commit(); }
-	else
-	{ version = _frame_data.getVersion(); }
-	// TODO this should be inside FrameData
-	if( _frame_data.getOgreNode().isDirty() )
-	{
-		_frame_data.getOgreNode().commit();
-	}
-	
+	uint32_t version = _frame_data.commitAll();
+
 	return eq::Config::startFrame( version );
 }
 

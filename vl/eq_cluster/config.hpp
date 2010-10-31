@@ -36,7 +36,7 @@ namespace eqOgre
 
 		void mapData( uint32_t const initDataID );
 
-		void unmapData( void );
+//		void unmapData( void );
 		
 		void setSettings( vl::SettingsRefPtr set )
 		{ _settings = set; }

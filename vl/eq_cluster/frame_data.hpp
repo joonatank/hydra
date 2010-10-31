@@ -2,6 +2,7 @@
 #define EQOGRE_FRAME_DATA_HPP
 
 #include <eq/fabric/serializable.h>
+#include <eq/client/config.h>
 #include <eq/net/dataIStream.h>
 #include <eq/net/dataOStream.h>
 
@@ -18,8 +19,8 @@ class FrameData : public eq::fabric::Serializable
 public :
 	FrameData( void )
 		: _camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
-//		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY ),
 		  _ogre( "ogre" ),
+		  _ogre_id( EQ_ID_INVALID ),
 		  _scene_version( 0 )
 	{}
 
@@ -57,26 +58,6 @@ public :
 	SceneNode const &getOgreNode( void ) const
 	{ return _ogre; }
 
-	// Set Ogre parameters
-/*
-	Ogre::Vector3 const &getOgrePosition( void ) const
-	{ return _ogre_pos; }
-
-	void setOgrePosition( Ogre::Vector3 const &v )
-	{
-		setDirty( DIRTY_OGRE );
-		_ogre_pos = v; 
-	}
-
-	Ogre::Quaternion const &getOgreRotation( void ) const
-	{ return _ogre_rotation; }
-
-	void setOgreRotation( Ogre::Quaternion const &q )
-	{
-		setDirty( DIRTY_OGRE );
-		_ogre_rotation = q; 
-	}
-*/
 	void setOgreID( uint64_t id )
 	{
 		_ogre_id = id;
@@ -98,6 +79,18 @@ public :
 		return _scene_version;
 	}
 
+	uint32_t commitAll( void );
+
+	void syncAll( void );
+
+	void registerData( eq::Config *config );
+
+	void deregisterData( eq::Config *config );
+
+	void mapData( eq::Config *config, uint32_t id );
+
+	void unmapData( eq::Config *config );
+	
 	enum DirtyBits
 	{
 		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
