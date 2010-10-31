@@ -55,8 +55,6 @@ namespace eqOgre
 
 		
 	protected :
-		void checkX11Events( void );
-		
 		void createOgreRoot( void );
 		void createOgreWindow( void );
 		void createTracker( void );

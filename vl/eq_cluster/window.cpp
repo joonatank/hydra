@@ -24,118 +24,6 @@
 #include "eq_cluster/wglWindow.hpp"
 #endif
 
-
-// A test function
-void eqOgre::Window::checkX11Events(void )
-{
-	Display *xDisp = 0;
-	eq::GLXWindow *os_win = dynamic_cast<eq::GLXWindow *>( getSystemWindow() );
-	if( !os_win )
-	{
-		EQERROR << "Couldn't get GLX system window" << std::endl;
-		return;
-	}
-	else
-	{
-		xDisp = os_win->getXDisplay();
-	}
-
-//	std::cerr << "Checking X events." << std::endl;
-	XEvent event;
-    //Poll x11 for events (keyboard and mouse events are caught here)
-    while( XPending(xDisp) > 0 )
-    {
-        XNextEvent(xDisp, &event);
-
-		//Handle Resize events
-        if( event.type == ConfigureNotify )
-        {
-            if( _mouse )
-            {
-                const OIS::MouseState &ms = _mouse->getMouseState();
-                ms.width = event.xconfigure.width;
-                ms.height = event.xconfigure.height;
-            }
-        }
-        else if( event.type == KeyPress )
-		{
-			if( XLookupKeysym( &event.xkey, 0 ) == XK_space )
-			{
-				std::cout << "X : Space pressed. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_Escape )
-			{
-				std::cout << "X : Escape pressed. Should shutdown. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_q )
-			{
-				std::cout << "X : Q pressed. Should shutdown. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_w )
-			{
-				std::cout << "X : W pressed." << std::endl;
-			}
-			else
-				std::cout << "Key Pressed : key = " << event.xkey.keycode << std::endl;
-		}
-        else if( event.type == KeyRelease )
-		{
-			if( XLookupKeysym( &event.xkey, 0 ) == XK_space )
-			{
-				std::cout << "X : Space released. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_Escape )
-			{
-				std::cout << "X : Escape released. Should shutdown. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_q )
-			{
-				std::cout << "X : Q released. Should shutdown. " << std::endl;
-			}
-			else if( XLookupKeysym( &event.xkey, 0 ) == XK_w )
-			{
-				std::cout << "X : W released." << std::endl;
-			}
-			else
-				std::cout << "X : Key Released : key = " << event.xkey.keycode << std::endl;
-		}
-        else if( event.type == ButtonPress )
-		{
-			std::cout << "X : Mouse button pressed : button = " << event.xbutton.button << std::endl;
-		}
-		else if( event.type == ButtonRelease )
-		{
-			std::cout << "X : Mouse button released : button = " << event.xbutton.button << std::endl;
-		}
-		else if( event.type == FocusIn )
-		{
-			std::cout << "Mouse focus IN." << std::endl;
-		}
-		else if( event.type == FocusOut )
-		{
-			std::cout << "Mouse focus OUT." << std::endl;
-		}
-		else if( event.type == MotionNotify )
-		{
-		}
-		else if( event.type == EnterNotify )
-		{
-			std::cout << "Entered." << std::endl;
-		}
-		else if( event.type == LeaveNotify )
-		{
-			std::cout << "Left." << std::endl;
-		}
-		
-        else if( event.type == DestroyNotify )
-        {
-            std::cout << "Exiting...\n";
-        }
-        else
-            std::cout << "\nUnknown X Event: " << event.type << std::endl;
-    }
-}
-
 /// Public
 eqOgre::Window::Window(eq::Pipe *parent)
 	: eq::Window( parent ), _ogre_window(0), _camera(0), _sm(0),
@@ -309,27 +197,9 @@ eqOgre::Window::configInit( const uint32_t initID )
 void
 eqOgre::Window::frameFinish(const uint32_t frameID, const uint32_t frameNumber)
 {
-//	std::cerr << "eqOgre::Window::frameFinish" << std::endl;
-
-	// This gets called every frame though nothing happens
-
 	EQASSERT( _keyboard && _mouse );
-//		EQINFO << "Capturing input events from keyboard and mouse." << std::endl;
 	_keyboard->capture();
-	// Seems to be buffered
-	if( !_keyboard->buffered() )
-	{
-		std::cerr << "Keyboard is NOT buffered" << std::endl;
-	}
-	// Does not react in anyway what so ever
-	if( _keyboard->isKeyDown( OIS::KC_ESCAPE ) )
-	{
-		std::cerr << "ESC down" << std::endl;
-	}
-
 	_mouse->capture();
-
-	checkX11Events();
 
 	eq::Window::frameFinish(frameID, frameNumber);
 }
