@@ -5,13 +5,12 @@
 
 #include "frame_data.hpp"
 #include "settings.hpp"
-
-#include <OGRE/OgreQuaternion.h>
-#include <OGRE/OgreVector3.h>
 #include "eq_settings.hpp"
+#include "transform_event.hpp"
 
 namespace eqOgre
 {
+
     class Config : public eq::Config
     {
     public:
@@ -70,9 +69,12 @@ namespace eqOgre
 		FrameData _frame_data;
 
 		// Some test variables for input events
-		Ogre::Vector3 _camera_move_dir;
-		Ogre::Quaternion _camera_rot_dir;
-		Ogre::Quaternion _ogre_rot_dir;
+		// TODO should be moved to a vector
+		// TODO should add dynamical addition
+		// TODO should expose an interface to outsiders
+		TransformationEvent _camera_trans;
+		TransformationEvent _ogre_trans;
+
     };	// class Config
 
 }	// namespace eqOgre

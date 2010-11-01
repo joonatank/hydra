@@ -74,54 +74,45 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 		}
 	}
 
-	// Process Events
-	// TODO test if the speed calculations work really using high and low fps
-	static clock_t last_time = 0;
-	clock_t time = ::clock();
-
-	// Secs since last frame
-	double t = ((double)( time - last_time ))/CLOCKS_PER_SEC;
-	last_time = time;
-	
-	// angular speed in radians/s : 60 deg/s
-	Ogre::Real rot_speed = 60*M_PI/180.0;
-
-	// Speed in m/s
-	Ogre::Real speed = 1;
-
-	// Update the frame data if the Ogre or Camera is moving
-	if( _camera_move_dir != Ogre::Vector3::ZERO )
+	// Init the transformation structures
+	// TODO should be moved to Config::init or equivalent
+	if( !_camera_trans.getSceneNode() )
 	{
-		SceneNode &camera = _frame_data.getCameraNode();
-		Ogre::Vector3 cam_pos = camera.getPosition();
-		cam_pos += speed*t*_camera_move_dir.normalisedCopy();
-		camera.setPosition( cam_pos );
+		_camera_trans.setSceneNode( &_frame_data.getCameraNode() );
+		if( !_camera_trans.getSceneNode() )
+		{
+			std::cerr << "No CameraNode found!" << std::endl;
+			EQASSERT(false);
+		}
+
+		_camera_trans.setTransXKeys( OIS::KC_D, OIS::KC_A );
+		_camera_trans.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
+		_camera_trans.setTransZKeys( OIS::KC_S, OIS::KC_W );
+
+		// TODO camera needs yaw and pitch, but our current system does not allow
+		// for yaw (forbidden in Channel) and they need to be in separate Nodes.
+		_camera_trans.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
 	}
-	if( _camera_rot_dir != Ogre::Quaternion::IDENTITY )
+
+	if( !_ogre_trans.getSceneNode() )
 	{
-		SceneNode &camera = _frame_data.getCameraNode();
-		Ogre::Quaternion cam_rot = camera.getOrientation();
+		_ogre_trans.setSceneNode( &_frame_data.getOgreNode() );
+		if( !_ogre_trans.getSceneNode() )
+		{
+			std::cerr << "No OgreNode found!" << std::endl;
+			EQASSERT(false);
+		}
 
-		// TODO camera rotation is relative to the original position
-		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, cam_rot, cam_rot*_camera_rot_dir);
-
-		camera.setOrientation( q );
-
-		_camera_rot_dir = Ogre::Quaternion::IDENTITY;
+		// TODO break the Ogre Node to two SceneNodes and rotate each individually
+		// to get a cleaner looking rotation (axises don't keep changing).
+		_ogre_trans.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
+		_ogre_trans.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
 	}
-	if( _ogre_rot_dir != Ogre::Quaternion::IDENTITY )
-	{
-		// TODO this function makes the ogre sometimes continue the rotation
-		SceneNode &ogre = _frame_data.getOgreNode();
-		Ogre::Quaternion ogre_rot = ogre.getOrientation();
 
-		// This one is funny :)
-		//Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed, ogre_rot, _ogre_rot_dir);
-		// This one is correct
-		Ogre::Quaternion q = Ogre::Quaternion::nlerp( rot_speed*t, ogre_rot, ogre_rot*_ogre_rot_dir);
 
-		ogre.setOrientation( q );
-	}
+	// Really Move the objects
+	_camera_trans();
+	_ogre_trans();
 
 	uint32_t version = _frame_data.commitAll();
 
@@ -205,6 +196,8 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 	clock_t time = ::clock();
 
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+	_camera_trans.keyPressed(key);
+	_ogre_trans.keyPressed(key);
     switch( key )
     {
 		case OIS::KC_ESCAPE :
@@ -217,56 +210,6 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 			return true;
 		case OIS::KC_SPACE :
 			break;
-
-		// Move Camera
-		// front
-		case OIS::KC_W :
-			_camera_move_dir += -Ogre::Vector3::UNIT_Z;
-			return true;
-
-		// back
-		case OIS::KC_S :
-			_camera_move_dir += Ogre::Vector3::UNIT_Z;
-			return true;
-
-		// left
-		case OIS::KC_A :
-			_camera_move_dir += -Ogre::Vector3::UNIT_X;
-			return true;
-
-		// right
-		case OIS::KC_D :
-			_camera_move_dir += Ogre::Vector3::UNIT_X;
-			return true;
-
-		case OIS::KC_PGUP :
-			_camera_move_dir += Ogre::Vector3::UNIT_Y;
-			return true;
-
-		case OIS::KC_PGDOWN :
-			_camera_move_dir += -Ogre::Vector3::UNIT_Y;
-			return true;
-
-		// Rotate Ogre
-		// front
-		case OIS::KC_UP :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Z );
-			return true;
-
-		// back
-		case OIS::KC_DOWN :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Z );
-			return true;
-
-		// left
-		case OIS::KC_LEFT :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
-			return true;
-
-		// right
-		case OIS::KC_RIGHT :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
-			return true;
 
 		case OIS::KC_R :
 			// Reload the scene
@@ -331,61 +274,12 @@ bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+	_camera_trans.keyReleased(key);
+	_ogre_trans.keyReleased(key);
     switch( key )
     {
 		case OIS::KC_SPACE :
 			break;
-
-		// Move Camera
-		// front
-		case OIS::KC_W :
-			_camera_move_dir -= -Ogre::Vector3::UNIT_Z;
-			return true;
-
-		// back
-		case OIS::KC_S :
-			_camera_move_dir -= Ogre::Vector3::UNIT_Z;
-			return true;
-
-		// left
-		case OIS::KC_A :
-			_camera_move_dir -= -Ogre::Vector3::UNIT_X;
-			return true;
-
-		// right
-		case OIS::KC_D :
-			_camera_move_dir -= Ogre::Vector3::UNIT_X;
-			return true;
-
-		case OIS::KC_PGUP :
-			_camera_move_dir -= Ogre::Vector3::UNIT_Y;
-			return true;
-
-		case OIS::KC_PGDOWN :
-			_camera_move_dir -= -Ogre::Vector3::UNIT_Y;
-			return true;
-
-		// Rotate Ogre
-		// front
-		case OIS::KC_UP :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Z );
-			return true;
-
-		// back
-		case OIS::KC_DOWN :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Z );
-			return true;
-
-		// left
-		case OIS::KC_LEFT :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
-			return true;
-
-		// right
-		case OIS::KC_RIGHT :
-			_ogre_rot_dir = _ogre_rot_dir * Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
-			return true;
-
 		default :
 			return false;
 	}
@@ -412,15 +306,6 @@ eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
 bool
 eqOgre::Config::_handleMouseMotionEvent(const eq::PointerEvent& event)
 {
-	Ogre::Quaternion qy = Ogre::Quaternion::IDENTITY;
-	if( event.dx < 0 )
-		qy = Ogre::Quaternion( Ogre::Radian( Ogre::Degree(90) ), Ogre::Vector3::UNIT_Y );
-	else
-	{
-		qy = Ogre::Quaternion( Ogre::Radian( Ogre::Degree(-90) ), Ogre::Vector3::UNIT_Y );
-	}
-	_camera_rot_dir = qy;
-
 	return true;
 }
 
