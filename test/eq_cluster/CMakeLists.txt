@@ -17,13 +17,8 @@ add_executable( test_config
 	eqogre_fixture.hpp
 	)
 
-add_executable( test_init_data
-	test_init_data.cpp
-	../settings_fixtures.hpp
-	)
-
 target_link_libraries( test_channel ${LIBS} )
 target_link_libraries( test_window ${LIBS} )
 target_link_libraries( test_config ${LIBS} )
-target_link_libraries( test_init_data ${LIBS} )
+
 

@@ -22,8 +22,9 @@ namespace eqOgre
      * initialization and holds a state object for GL object creation. It
      * initializes the OpenGL state and draws the statistics overlay.
      */
-    class Window : public eq::Window, //Ogre::FrameListener, Ogre::WindowEventListener,
-						  OIS::KeyListener, OIS::MouseListener
+    class Window : public eq::Window,
+				   //public Ogre::FrameListener, public Ogre::WindowEventListener,
+				   public OIS::KeyListener, public OIS::MouseListener
     {
     public:
 		Window( eq::Pipe *parent );

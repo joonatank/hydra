@@ -1,9 +1,10 @@
 #include "client.hpp"
 
 #include "eq_cluster/config.hpp"
+#include "eq_cluster/eq_settings.hpp"
 
-eqOgre::Client::Client( eqOgre::InitData const &data )
-	: _config(0), _init_data( data )
+eqOgre::Client::Client( eqOgre::SettingsRefPtr settings )
+	: _config(0), _settings(settings)
 {} 
 
 eqOgre::Client::~Client(void )
@@ -42,7 +43,7 @@ eqOgre::Client::initialise( void )
 	}
 
 	// 3. init config
-	_config->setInitData( _init_data );
+	_config->setSettings( _settings );
 
 	if( !_config->init(0) )
 	{

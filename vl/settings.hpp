@@ -100,7 +100,7 @@ class Settings
 
 		struct Tracking
 		{
-			Tracking( std::string const &fil, Settings::Root *r )
+			Tracking( std::string const &fil = std::string(), Settings::Root *r = 0)
 				: file(fil), root(r)
 			{
 			}
@@ -134,13 +134,13 @@ class Settings
 
 		Settings( std::string const &name );
 
-		~Settings( void );
+		virtual ~Settings( void );
 
 		void setName( std::string const &name )
-		{ _name = name; }
+		{ _project_name = name; }
 
 		std::string const &getName( void )
-		{ return _name; }
+		{ return _project_name; }
 
 		void setLogDir( std::string const &dir )
 		{ _log_dir = dir; }
@@ -233,12 +233,12 @@ class Settings
 			_tracker_default_orient = q;
 		}
 
-	private :
+	protected :
 
 		void updateArgs( void );
 
 		// Project name
-		std::string _name;
+		std::string _project_name;
 
 		// Log directory
 		std::string _log_dir;

@@ -42,7 +42,7 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		return false;
 	}
 
-	uint32_t frame_id = config->getInitData().getFrameDataID();
+	uint32_t frame_id = config->getSettings()->getFrameDataID();
 	EQASSERT( frame_id != EQ_ID_INVALID );
 	_frame_data.mapData( config, frame_id );
 

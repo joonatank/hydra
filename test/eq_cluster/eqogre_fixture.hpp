@@ -10,7 +10,6 @@
 #include "base/filesystem.hpp"
 
 #include "eq_cluster/config.hpp"
-#include "eq_cluster/init_data.hpp"
 
 namespace test = boost::unit_test::framework;
 
@@ -43,7 +42,7 @@ struct EqOgreFixture
 		return( config->init(0) );
 	}
 
-	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *fact )
+	bool init( eqOgre::SettingsRefPtr settings, eq::NodeFactory *fact )
 	{
 		vl::Args &args = settings->getEqArgs();
 
@@ -51,9 +50,7 @@ struct EqOgreFixture
 
 		eqOgre::Config *vl_config = dynamic_cast<eqOgre::Config *>(config);
 		BOOST_REQUIRE( vl_config );
-		eqOgre::InitData data;
-		data.setSettings( settings );
-		vl_config->setInitData( data );
+		vl_config->setSettings( settings );
 
 		// 3. init config
 		return config->init(0);

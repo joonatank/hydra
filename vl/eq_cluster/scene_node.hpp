@@ -8,6 +8,8 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
+#include "serialize_helpers.hpp"
+
 namespace eqOgre
 {
 	
@@ -80,35 +82,6 @@ private :
 
 };	// class SceneNode
 
-inline
-eq::net::DataOStream &operator<<( Ogre::Vector3 const &v, eq::net::DataOStream &os )
-{
-	os << v[0] << v[1] << v[2];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Vector3 &v, eq::net::DataIStream &is )
-{
-	is >> v[0] >> v[1] >> v[2];
-	return is;
-}
-
-inline
-eq::net::DataOStream &operator<<( Ogre::Quaternion const &q, eq::net::DataOStream &os )
-{
-	os << q[0] << q[1] << q[2] << q[3];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Quaternion &q, eq::net::DataIStream &is )
-{
-	is >> q[0] >> q[1] >> q[2] >> q[3];
-	return is;
-}
 
 }	// namespace eqOgre
 

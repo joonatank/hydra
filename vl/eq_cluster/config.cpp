@@ -16,14 +16,15 @@ eqOgre::Config::~Config()
 void 
 eqOgre::Config::mapData( uint32_t const initDataID )
 {
-	if( _init_data.getID() == EQ_ID_INVALID )
+	EQASSERT( _settings );
+	if( _settings->getID() == EQ_ID_INVALID )
 	{
-		EQCHECK( mapObject( &_init_data, initDataID ));
-        unmapObject( &_init_data ); // data was retrieved, unmap immediately
+		EQCHECK( mapObject( _settings.get(), initDataID ));
+        unmapObject( _settings.get() ); // data was retrieved, unmap immediately
 	}
     else  // appNode, _initData is registered already
     {
-        EQASSERT( _init_data.getID() == initDataID )
+        EQASSERT( _settings->getID() == initDataID )
 	}
 }
 
@@ -47,10 +48,10 @@ eqOgre::Config::init( uint32_t const )
 	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
 	_frame_data.registerData(this);
 
-	_init_data.setFrameDataID( _frame_data.getID() );
-	registerObject( &_init_data );
+	_settings->setFrameDataID( _frame_data.getID() );
+	registerObject( _settings.get() );
     
-	if( !eq::Config::init( _init_data.getID() ) )
+	if( !eq::Config::init( _settings->getID() ) )
 	{ return false; }
 
 	return true;
@@ -61,6 +62,8 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 {
 	// Process Tracking
 	// TODO add selectable sensor
+	// TODO should be moved to Client where it belongs here it's called
+	// by all the Nodes
 	if( _tracker )
 	{
 		_tracker->mainloop();
@@ -70,11 +73,6 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 			_frame_data.setHeadOrientation( _tracker->getOrientation( 0 ) );
 		}
 	}
-	else
-	{
-		std::cerr << "No tracker in Config::startFrame" << std::endl;
-	}
-
 
 	// Process Events
 	// TODO test if the speed calculations work really using high and low fps

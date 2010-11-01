@@ -9,6 +9,13 @@
 #include <boost/weak_ptr.hpp>
 #include <memory>
 
+namespace eqOgre
+{
+	class Settings;
+	
+	typedef boost::shared_ptr<Settings> SettingsRefPtr;
+}
+
 namespace vl
 {
 	// Forward declarations

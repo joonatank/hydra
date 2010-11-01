@@ -189,7 +189,7 @@ eqOgre::Window::configInit( const uint32_t initID )
 
 		// Get the cluster version of data
 		config->mapData( initID );
-		_settings = config->getInitData().getSettings();
+		_settings = config->getSettings();
 		if( !_settings )
 		{
 			std::cerr << "Config has no settings!" << std::endl;

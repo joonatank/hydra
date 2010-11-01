@@ -10,7 +10,7 @@ set( SOURCES
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/pipe.cpp
-	eq_cluster/init_data.cpp
+	eq_cluster/eq_settings.cpp
 	eq_cluster/frame_data.cpp
 	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
@@ -41,7 +41,7 @@ set( HEADERS
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/window.hpp
-	eq_cluster/init_data.hpp
+	eq_cluster/eq_settings.hpp
 	eq_cluster/frame_data.hpp
 	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp

@@ -4,11 +4,11 @@
 #include <eq/eq.h>
 
 #include "frame_data.hpp"
-#include "init_data.hpp"
 #include "settings.hpp"
 
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreVector3.h>
+#include "eq_settings.hpp"
 
 namespace eqOgre
 {
@@ -28,25 +28,28 @@ namespace eqOgre
 
 		virtual uint32_t startFrame (const uint32_t frameID);
 
-		void setInitData( InitData const &data )
-		{
-			_init_data = data;
-			if( _init_data.getSettings() )
-			{ _createTracker( _init_data.getSettings() ); }
-		}
-
-		// TODO fix constness
-		InitData &getInitData( void )
-		{ return _init_data; }
-
-		InitData const &getInitData( void ) const
-		{ return _init_data; }
-		
 		void mapData( uint32_t const initDataID );
 
-		vl::SettingsRefPtr getSettings( void )
-		{ return _init_data.getSettings(); }
+		/// These are mostly called from other eqOgre classes
+		/// which need the settings to be distributed so it does not make sense
+		/// to return the base class at this point.
+		eqOgre::SettingsRefPtr getSettings( void )
+		{ return _settings; }
 
+		eqOgre::SettingsRefPtr const getSettings( void ) const
+		{ return _settings; }
+
+		// TODO this could be done with vl::SettingsRefPtr or vl::Settings
+		// if we have a valid copy constructor
+		void setSettings( eqOgre::SettingsRefPtr settings )
+		{
+			if( settings )
+			{
+				_settings = settings;
+				_createTracker(_settings);
+			}
+		}
+		
 	protected :
 		virtual ~Config (void);
 
@@ -62,7 +65,8 @@ namespace eqOgre
 
 		vl::TrackerRefPtr _tracker;
 
-		InitData _init_data;
+		eqOgre::SettingsRefPtr _settings;
+
 		FrameData _frame_data;
 
 		// Some test variables for input events
