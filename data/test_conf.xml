@@ -27,7 +27,7 @@
 
 	<!-- Equalizer VR configuration, only one of these is supported -->
 	<eqc root="data" >
-		<file>eqc/1-window_tracking.eqc</file>
+		<file>eqc/1-window.eqc</file>
 	</eqc>
 
 	<!-- Ogre resource file, multiple of these can be present -->

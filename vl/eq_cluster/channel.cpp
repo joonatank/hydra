@@ -112,18 +112,26 @@ eqOgre::Channel::setOgreFrustum( void )
 	eq::Frustumf frust = getFrustum();
 	_camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
 
-	// FIXME camera view matrix points always towards the front screen
-	// frustum is correctly relative to the side screens but the view matrix is
-	// always the same for all walls.
-	Ogre::Vector3 cam_pos( _camera->getRealPosition() + _frame_data.getHeadPosition() );
+	Ogre::Matrix4 headMatrix = vl::math::convert( getHeadTransform() );
+	Ogre::Vector3 cam_pos( _camera->getRealPosition() );//+ _frame_data.getHeadPosition() );
+	// TODO Using the camera rotation is useful for Workstations, but it looks
+	// really weird on VR systems. So it's ignored for now.
+	// TODO Add a config value to control around which axises rotations
+	// from camera are applied and which are not.
+	// Y-axis should be fine for VR systems, X and Z are not.
 	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
-	Ogre::Matrix4 viewMat = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
-	_camera->setCustomViewMatrix( true, viewMat );
+	cam_rot = Ogre::Quaternion::IDENTITY;
+	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
+	// The multiplication order is correct (the problem is obvious if it's not)
+	_camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
 }
 
 void
 eqOgre::Channel::setHeadMatrix( void )
 {
+	// TODO this should be moved to config or Client as the Observers are
+	// available there also and we don't need the head data here anymore.
+	// As the observers update the RenderContext for each Channel.
 	Ogre::Matrix4 m( _frame_data.getHeadOrientation() );
 	m.setTrans( _frame_data.getHeadPosition() );
 

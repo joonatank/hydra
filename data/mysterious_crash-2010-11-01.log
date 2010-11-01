@@ -1,0 +1,182 @@
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/init.cpp:49 0 Equalizer v0.9.1 initializing
+22451 140224129775616 //home/jotu/devel/equalizer/lib/base/init.cpp:41 0 Log level INFO topics 0
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:51 1 New Node @0x6fc580 11b4d646b1a53cc3:c04b91f598a45a12
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/client.cpp:60 1 New client at 0x6fc580
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/client.cpp:212 1 Launching 11b4d646b1a53cc3:c04b91f598a45a12
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/socketConnection.cpp:602 2 Bound to port 47658
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/socketConnection.cpp:636 2 Listening on leviathan[0.0.0.0]:47658 (TCPIP#102400#leviathan##47658#default#)
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:254 2 0x6fc580 listening.
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:51 2 New Node @0x6fe980 7244c607bfdabb15:7c298f2467b61d12
+22451 140223997187856 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 2 Thread eq::net::Node::ReceiverThread successfully initialized
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/server.ipp:38 2 New eq::fabric::Server<eq::Client, eq::Server, eq::Config, eq::NodeFactory>
+22451 140223997187856 //home/jotu/devel/equalizer/lib/net/node.cpp:877 2 Entered receiver thread of eqOgre::Client
+22451 140224129775616 //home/jotu/devel/equalizer/lib/fabric/client.cpp:62 2 Connecting to TCPIP#0#localhost##5242#default#
+22451 140223988795152 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 2 Thread eq::net::Node::CommandThread successfully initialized
+22451 140223988795152 //home/jotu/devel/equalizer/lib/net/node.cpp:1181 3 Entered command thread of eqOgre::Client
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/socketConnection.cpp:123 3 Could not connect to 'localhost:5242': Connection refused (111)
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:51 12 New Node @0x7f886c00a2b0 bc96d6e8b5ff043d:d10e953ef2d4c8a5
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/server.ipp:38 12 New eq::fabric::Server<eq::net::Node, eq::server::Server, eq::server::Config, eq::server::NodeFactory>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/session.cpp:54 0 New Session @0x7f886c00b6d0
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/config.ipp:61 0 New eq::fabric::Config<eq::server::Server, eq::server::Config, eq::server::Observer, eq::server::Layout, eq::server::Canvas, eq::server::Node, eq::server::ConfigVisitor>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/node.ipp:46 0 New eq::fabric::Node<eq::server::Config, eq::server::Node, eq::server::Pipe, eq::fabric::ElementVisitor<eq::server::Node, eq::fabric::ElementVisitor<eq::server::Pipe, eq::fabric::ElementVisitor<eq::server::Window, eq::fabric::LeafVisitor<eq::server::Channel> > > > >
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/pipe.ipp:53 0 New eq::fabric::Pipe<eq::server::Node, eq::server::Pipe, eq::server::Window, eq::fabric::ElementVisitor<eq::server::Pipe, eq::fabric::ElementVisitor<eq::server::Window, eq::fabric::LeafVisitor<eq::server::Channel> > > >
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/window.ipp:65 1 New eq::fabric::Window<eq::server::Pipe, eq::server::Window, eq::server::Channel>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/channel.ipp:48 1 New eq::fabric::Channel<eq::server::Window, eq::server::Channel>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/channel.ipp:70 1 Delete eq::server::Channel
+22451 140224129775616 //home/jotu/devel/equalizer/server/compound.cpp:80 1 New root compound @0x7f886c00d6b0
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/socketConnection.cpp:602 1 Bound to port 60548
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/socketConnection.cpp:636 1 Listening on leviathan[0.0.0.0]:60548 (TCPIP#102400#leviathan##60548#default#)
+22451 140223895824144 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 2 Thread eq::net::Node::CommandThread successfully initialized
+22451 140223895824144 //home/jotu/devel/equalizer/lib/net/node.cpp:1181 2 Entered command thread of eq::server::Server
+22451 140223904216848 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 2 Thread eq::net::Node::ReceiverThread successfully initialized
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:254 2 0x7f886c00a2b0 listening.
+22451 140223904216848 //home/jotu/devel/equalizer/lib/net/node.cpp:877 2 Entered receiver thread of eq::server::Server
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/layout.ipp:41 2 New eq::fabric::Layout<eq::server::Config, eq::server::Layout, eq::server::View>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/view.ipp:44 2 New eq::fabric::View<eq::server::Layout, eq::server::View, eq::server::Observer>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/canvas.ipp:41 2 New eq::fabric::Canvas<eq::server::Config, eq::server::Canvas, eq::server::Segment, eq::server::Layout>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/segment.ipp:41 2 New eq::fabric::Segment<eq::server::Canvas, eq::server::Segment, eq::server::Channel>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/channel.ipp:64 3 New eq::fabric::Channel<eq::server::Window, eq::server::Channel>
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/channel.ipp:70 3 Delete eq::server::Channel
+22451 140224129775616 //home/jotu/devel/equalizer/server/../lib/fabric/observer.ipp:37 3 New eq::fabric::Observer<eq::server::Config, eq::server::Observer>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/pairConnection.cpp:44 3 New PairConnection Sibling @0x7f886c00f080
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/pairConnection.cpp:34 3 New PairConnection @0x7f886c00efe0
+22451 140223887431440 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 3 Thread (anonymous namespace)::ServerThread successfully initialized
+22451 140223904216848 //home/jotu/devel/equalizer/lib/net/node.cpp:51 3 New Node @0x700cb0 9a9c61a816d87cd7:a20add045777a522
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:756 4 RP<node bc96d6e8b5ff043d:d10e953ef2d4c8a5 connected, TCPIP#102400#leviathan##60548#default#>22451 140224129775616 //home/jotu/devel/equalizer/lib/net/node.cpp:756 4  connected to node 11b4d646b1a53cc3:c04b91f598a45a12 listening, TCPIP#102400#leviathan##47658#default#
+22451 140223887431440 //home/jotu/devel/equalizer/server/server.cpp:166 3 Running server: 
+    #Equalizer 1 ascii
+    
+    global
+    {
+        EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER                 ON
+    }
+    server 
+    {
+        connection
+        {
+            type          TCPIP
+            hostname      "leviathan"
+            port          60548
+            filename      "default"
+            bandwidth     102400
+        }
+        config 
+        {
+            name    "/home/jotu/work/eqOgre-new/data/eqc/1-window.eqc"
+            
+            attributes
+            {
+                eye_base     0.05
+                robustness   1
+            }
+            appNode
+            {
+                pipe
+                {
+                    
+                    window
+                    {
+                        name     "window"
+                        viewport [ 0 0 0 0 ]
+                        viewport [ 0 0 1600 1200 ]
+                        channel
+                        {
+                            name     "channel"
+                            viewport [ 0 0 1600 1200 ]
+                            viewport [ 0 0 1 1 ]
+                        }
+                    }
+                }
+            }
+            observer
+            {
+            }
+            layout
+            {
+                view
+                {
+                    observer ""
+                    wall
+                    {
+                        bottom_left  [      -1.33       0.34       1.33 ]
+                        bottom_right [      -1.33       0.34      -1.33 ]
+                        top_left     [      -1.33       2.44       1.33 ]
+                    }
+                    
+                }
+            }
+            canvas
+            {
+                layout   ""
+                segment
+                {
+                    channel  "channel"
+                }
+            }
+            compound
+            {
+                channel  ( canvas 0 segment 0 layout   0 view 0 )
+                wall
+                {
+                    bottom_left  [      -1.33       0.34       1.33 ]
+                    bottom_right [      -1.33       0.34      -1.33 ]
+                    top_left     [      -1.33       2.44       1.33 ]
+                }
+                
+            }
+        }
+    }
+22451 140223904216848 //home/jotu/devel/equalizer/lib/net/node.cpp:523 5 master session, id be9670268e56c88d:7f44c2840788f681, served by node bc96d6e8b5ff043d:d10e953ef2d4c8a5 listening, TCPIP#102400#leviathan##60548#default#, mapped on node bc96d6e8b5ff043d:d10e953ef2d4c8a5 listening, TCPIP#102400#leviathan##60548#default#
+22451 140223887431440 //home/jotu/devel/equalizer/server/server.cpp:289 6 Handle choose config packet dt 129 cmd 23 req 2 renderer /home/jotu/work/eqOgre-new/build/test/spikes#./spike_listening_client
+22451 140224129775616 //home/jotu/devel/equalizer/lib/net/session.cpp:54 7 New Session @0x7f886c018460
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/config.ipp:61 7 New eq::fabric::Config<eq::Server, eq::Config, eq::Observer, eq::Layout, eq::Canvas, eq::Node, eq::fabric::ConfigVisitor<eq::Config, eq::fabric::LeafVisitor<eq::Observer>, eq::fabric::ElementVisitor<eq::Layout, eq::fabric::LeafVisitor<eq::View> >, eq::fabric::ElementVisitor<eq::Canvas, eq::fabric::LeafVisitor<eq::Segment> >, eq::fabric::ElementVisitor<eq::Node, eq::fabric::ElementVisitor<eq::Pipe, eq::fabric::ElementVisitor<eq::Window, eq::fabric::LeafVisitor<eq::Channel> > > > > >
+22451 140223997187856 //home/jotu/devel/equalizer/lib/net/node.cpp:523 0 client session, id be9670268e56c88d:7f44c2840788f681, served by node bc96d6e8b5ff043d:d10e953ef2d4c8a5 connected, TCPIP#102400#leviathan##60548#default#, mapped on node 11b4d646b1a53cc3:c04b91f598a45a12 listening, TCPIP#102400#leviathan##47658#default#
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/observer.ipp:37 1 New eq::fabric::Observer<eq::Config, eq::Observer>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/layout.ipp:41 1 New eq::fabric::Layout<eq::Config, eq::Layout, eq::View>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/view.ipp:44 2 New eq::fabric::View<eq::Layout, eq::View, eq::Observer>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/canvas.ipp:41 2 New eq::fabric::Canvas<eq::Config, eq::Canvas, eq::Segment, eq::Layout>
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/segment.ipp:41 3 New eq::fabric::Segment<eq::Canvas, eq::Segment, eq::Channel>
+22451 140224129775616 //home/jotu/work/eqOgre-new/vl/eq_cluster/config.cpp:141 3 Creating Fake Tracker.
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/node.ipp:46 5 New eq::fabric::Node<eq::Config, eq::Node, eq::Pipe, eq::fabric::ElementVisitor<eq::Node, eq::fabric::ElementVisitor<eq::Pipe, eq::fabric::ElementVisitor<eq::Window, eq::fabric::LeafVisitor<eq::Channel> > > > >
+22451 140223879038736 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 6 Thread eq::Node::TransmitThread successfully initialized
+22451 140224129775616 //home/jotu/devel/equalizer/lib/client/../fabric/pipe.ipp:53 6 New eq::fabric::Pipe<eq::Node, eq::Pipe, eq::Window, eq::fabric::ElementVisitor<eq::Pipe, eq::fabric::ElementVisitor<eq::Window, eq::fabric::LeafVisitor<eq::Channel> > > >
+22451 140223870646032 //home/jotu/devel/equalizer/lib/base/thread.cpp:111 6 Thread eq::Pipe::PipeThread successfully initialized
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/pipe.cpp:234 6 Entered pipe thread
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/pipe.cpp:17 6 eqOgre::Pipe::configInit
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/pipe.cpp:39 6 eqOgre::Pipe::configInitSystemPipe
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/pipe.cpp:47 6 Using GLXPipe
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/../fabric/pipe.ipp:376 9  pvp update: [ 0 0 1920 1200 ]
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/../fabric/pipe.ipp:363 9 Pipe pvp set: [ 0 0 1920 1200 ]
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/glXPipe.cpp:74 9 Opened X display 0x70f320, device 4294967295
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/pipe.cpp:181 9 Set up pipe message pump for glX
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/../fabric/window.ipp:65 9 New eq::fabric::Window<eq::Pipe, eq::Window, eq::Channel>
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/window.cpp:247 9 Using GLXWindow
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/glXWindow.cpp:223 15 Using visual 0x27
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/glxWindow.hpp:74 29 Created X11 drawable 27262979
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/glWindow.cpp:167 314 Window drawable config: GL3.3|rgb8|acc64|DB
+22451 140223870646032 //home/jotu/work/eqOgre-new/vl/eq_cluster/window.cpp:390 418 Creating Ogre RenderWindow.
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/../fabric/channel.ipp:48 1200 New eq::fabric::Channel<eq::Window, eq::Channel>
+22451 140223870646032 //home/jotu/devel/equalizer/lib/client/../fabric/channel.ipp:70 1200 Delete eqOgre::Channel
+22451 140223887431440 //home/jotu/devel/equalizer/server/../lib/fabric/pipe.ipp:376 1202  pvp update: [ 0 0 1920 1200 ]
+22451 140223887431440 //home/jotu/devel/equalizer/server/../lib/fabric/pipe.ipp:363 1202 Pipe pvp set: [ 0 0 1920 1200 ]
+22451 140223887431440 //home/jotu/devel/equalizer/server/config.cpp:931 1202 Config init successful: 
+22451 140223887431440 //home/jotu/devel/equalizer/server/channel.cpp:379 1211 Assert: getNativeContext().view == context.view [id 4294967293 v1 != id 7 v2 channel] abort called from: 
+    /usr/local/lib64/libEqualizer.so(_ZN2eq4base5abortEv+0x4a) [0x7f8877468c3e]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server7Channel19_setupRenderContextEjRNS_6fabric13RenderContextE+0x1af) [0x7f8870383eb5]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server7Channel6updateEjj+0x21f) [0x7f88703840e5]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Window10updateDrawEjj+0x2aa) [0x7f887042df20]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server4Pipe6updateEjj+0x2bc) [0x7f8870414ca0]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server4Node6updateEjj+0x363) [0x7f8870406563]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Config11_startFrameEj+0x314) [0x7f88703ad0d0]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Config14_cmdStartFrameERNS_3net7CommandE+0xaa) [0x7f88703adff0]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq3net11CommandFuncINS0_10DispatcherEEclERNS0_7CommandE+0x70) [0x7f887756f67a]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq3net10Dispatcher13invokeCommandERNS0_7CommandE+0x145) [0x7f887756f0f7]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq3net7Session13invokeCommandERNS0_7CommandE+0x13b) [0x7f88775e2eed]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq3net4Node13invokeCommandERNS0_7CommandE+0x38c) [0x7f8877592504]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Server13invokeCommandERNS_3net7CommandE+0x4e) [0x7f887042054e]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Server14handleCommandsEv+0x50) [0x7f88704205a0]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(_ZN2eq6server6Server3runEv+0x24) [0x7f88704201d2]
+    /home/jotu/devel/equalizer/build/server/libEqualizerServer.so(+0x1afe2d) [0x7f8870426e2d]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq4base6Thread9_runChildEv+0x2de) [0x7f887747ca34]
+    /usr/local/lib64/libEqualizer.so(_ZN2eq4base6Thread8runChildEPv+0x20) [0x7f887747c74e]
+    //usr/lib64/opengl/nvidia/lib/libGL.so.1(+0x999a3) [0x7f887905e9a3]

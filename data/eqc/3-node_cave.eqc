@@ -1,0 +1,104 @@
+#Equalizer 1.0 ascii
+
+# 'Hello, World!' config: one window rendering from the application process.
+global
+{
+	EQ_CONFIG_FATTR_EYE_BASE		0.025
+	EQ_WINDOW_IATTR_HINT_STEREO		AUTO	
+	EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER	ON
+	EQ_COMPOUND_IATTR_STEREO_MODE		QUAD
+}
+
+server
+{
+#	connection
+#	{
+#		type TCPIP 
+#		TCPIP_port 4242
+#	}
+
+	config
+	{
+		appNode
+		{
+			pipe
+			{
+				window
+				{
+					viewport [ -1024 0 1024 768 ]
+					attributes { hint_stereo ON }
+                    
+					channel { name "channel-left" }
+				}
+			}
+		}
+		node
+		{
+			connection { TCPIP_port 4242 hostname "130.230.58.16" }
+			pipe
+			{
+				window
+				{
+					viewport [ 0 0 1024 768 ]
+					attributes { hint_stereo ON }
+					
+					channel { name "channel-front" }
+				}
+			}
+		}
+		node
+		{
+			connection { TCPIP_port 4243 hostname "130.230.58.16" }
+			pipe
+			{
+				window
+				{
+					viewport [ 1024 0 1024 768 ]
+					attributes { hint_stereo ON }
+					
+					channel { name "channel-right" }
+				}
+			}
+		}
+
+		compound
+		{
+			compound
+			{
+				eye [ LEFT RIGHT ]
+				channel "channel-left"
+				wall
+				{
+					bottom_left  [ -1.33 .34 1.33 ]
+					bottom_right [ -1.33 .34 -1.33 ]
+					top_left     [ -1.33  2.44 1.33 ]
+				}
+				swapbarrier {}
+			}
+			compound
+			{
+				eye [ LEFT RIGHT ]
+				channel "channel-front"
+				wall
+				{
+					bottom_left  [ -1.33 .34 -1.33 ]
+					bottom_right [  1.33 .34 -1.33 ]
+					top_left     [ -1.33  2.44 -1.33 ]
+				}
+				swapbarrier {}
+			}
+			compound
+			{
+				eye [ LEFT RIGHT ]
+				channel "channel-right"
+				wall
+				{
+					bottom_left  [ 1.33 .34 -1.33 ]
+					bottom_right [ 1.33 .34 1.33 ]
+					top_left     [ 1.33 2.44 -1.33 ]
+				}
+				swapbarrier {}
+			}
+		}	# Compound
+	}	# Config
+}	# Server
