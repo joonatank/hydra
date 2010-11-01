@@ -53,13 +53,6 @@ protected:
 	// distribution related
 	FrameData _frame_data;
 
-	// Tracker stuff
-	// TODO move to Config and FrameData
-	Ogre::Vector3 _head_pos;
-	Ogre::Quaternion _head_orient;
-
-	vl::TrackerRefPtr _tracker;
-
 };
 
 }

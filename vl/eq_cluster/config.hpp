@@ -29,17 +29,20 @@ namespace eqOgre
 		virtual uint32_t startFrame (const uint32_t frameID);
 
 		void setInitData( InitData const &data )
-		{ _init_data = data; }
+		{
+			_init_data = data;
+			if( _init_data.getSettings() )
+			{ _createTracker( _init_data.getSettings() ); }
+		}
 
-		InitData const &getInitData( void )
+		// TODO fix constness
+		InitData &getInitData( void )
 		{ return _init_data; }
 
-		void mapData( uint32_t const initDataID );
-
-//		void unmapData( void );
+		InitData const &getInitData( void ) const
+		{ return _init_data; }
 		
-		void setSettings( vl::SettingsRefPtr set )
-		{ _settings = set; }
+		void mapData( uint32_t const initDataID );
 
 		vl::SettingsRefPtr getSettings( void )
 		{ return _init_data.getSettings(); }
@@ -47,6 +50,8 @@ namespace eqOgre
 	protected :
 		virtual ~Config (void);
 
+		void _createTracker( vl::SettingsRefPtr settings );
+		
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
 		bool _handleMousePressEvent( const eq::PointerEvent& event );
@@ -55,7 +60,7 @@ namespace eqOgre
 		// TODO replace the MagellanEvent with a real JoystickEvent
 		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
-		vl::SettingsRefPtr _settings;
+		vl::TrackerRefPtr _tracker;
 
 		InitData _init_data;
 		FrameData _frame_data;

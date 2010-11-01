@@ -10,6 +10,9 @@
 namespace eqOgre
 {
 
+// TODO this is problematic class and it should be replaced by distributed
+// version of Settings class
+// Just extend the current one
 class InitData : public eq::net::Object
 {
 public :
@@ -33,6 +36,14 @@ public :
 	size_t size( void ) const
 	{ return ::strlen(_xml_data); }
 
+	// TODO this is temporary function should be removed
+	void setSettings( vl::SettingsRefPtr set )
+	{
+		_settings = set;
+	}
+
+	// TODO fix the constness of this function
+	// Non const stuff should be moved to applyInstanceData
 	vl::SettingsRefPtr getSettings( void );
 
 	uint32_t getFrameDataID( void ) const

@@ -8,10 +8,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent ) 
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
-	  _head_pos( Ogre::Vector3::ZERO ),
-	  _head_orient( Ogre::Quaternion::IDENTITY ),
-	  _tracker()
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -59,9 +56,6 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	else
 		std::cerr << "Ogre Node or Camera Node was NOT found in the SceneGraph" << std::endl;
 
-	_tracker = ((eqOgre::Window *)getWindow())->getTracker();
-	EQASSERT( _tracker );
-
 	return true;
 }
 
@@ -106,7 +100,7 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 
 	EQASSERT( _camera )
 	EQASSERT( _ogre_window )
-		
+
 	setOgreFrustum();
 
 	_viewport->update();
@@ -121,7 +115,7 @@ eqOgre::Channel::setOgreFrustum( void )
 	// FIXME camera view matrix points always towards the front screen
 	// frustum is correctly relative to the side screens but the view matrix is
 	// always the same for all walls.
-	Ogre::Vector3 cam_pos( _camera->getRealPosition() + _head_pos );
+	Ogre::Vector3 cam_pos( _camera->getRealPosition() + _frame_data.getHeadPosition() );
 	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
 	Ogre::Matrix4 viewMat = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
 	_camera->setCustomViewMatrix( true, viewMat );
@@ -130,18 +124,8 @@ eqOgre::Channel::setOgreFrustum( void )
 void
 eqOgre::Channel::setHeadMatrix( void )
 {
-	// Head tracking support
-	EQASSERT( _tracker );
-			
-	_tracker->mainloop();
-	if( _tracker->getNSensors() > 0 )	
-	{
-		_head_pos = _tracker->getPosition( 0 );
-		_head_orient = _tracker->getOrientation( 0 );
-	}
-
-	Ogre::Matrix4 m( _head_orient ); 
-	m.setTrans( _head_pos );
+	Ogre::Matrix4 m( _frame_data.getHeadOrientation() );
+	m.setTrans( _frame_data.getHeadPosition() );
 
 	// Note: real applications would use one tracking device per observer
 	const eq::Observers& observers = getConfig()->getObservers();

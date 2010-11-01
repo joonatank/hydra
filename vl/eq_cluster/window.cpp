@@ -2,8 +2,6 @@
 
 #include "base/exceptions.hpp"
 #include "eq_cluster/config.hpp"
-#include "vrpn_tracker.hpp"
-#include "fake_tracker.hpp"
 #include "dotscene_loader.hpp"
 
 #include <OGRE/OgreWindowEventUtilities.h>
@@ -191,17 +189,17 @@ eqOgre::Window::configInit( const uint32_t initID )
 
 		// Get the cluster version of data
 		config->mapData( initID );
-		_settings = config->getSettings();
+		_settings = config->getInitData().getSettings();
 		if( !_settings )
 		{
-			EQERROR << "Config has no settings!" << std::endl;
+			std::cerr << "Config has no settings!" << std::endl;
+			//EQERROR << "Config has no settings!" << std::endl;
 			return false;
 		}
 
 		createOgreRoot();
 		createOgreWindow();
 		createInputHandling();
-		createTracker();
 
 		// Resource registration
 		_root->setupResources( );
@@ -406,23 +404,3 @@ eqOgre::Window::createOgreWindow( void )
 #endif
 	_ogre_window = _root->createWindow( "win", 800, 600, params );
 }
-
-void 
-eqOgre::Window::createTracker( void )
-{
-	if( _settings->trackerOn() )
-	{
-		EQINFO << "Creating VRPN Tracker." << std::endl;
-		_tracker.reset( new vl::vrpnTracker( _settings->getTrackerAddress() ) );
-	}
-	else
-	{
-		EQINFO << "Creating Fake Tracker." << std::endl;
-		_tracker.reset( new vl::FakeTracker( ) );
-	}
-		
-	_tracker->setOrientation( 0, _settings->getTrackerDefaultOrientation() );
-	_tracker->setPosition( 0, _settings->getTrackerDefaultPosition() );
-	_tracker->init();
-}
-

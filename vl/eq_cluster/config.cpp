@@ -1,5 +1,8 @@
 #include "config.hpp"
 
+#include "vrpn_tracker.hpp"
+#include "fake_tracker.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -41,20 +44,39 @@ bool
 eqOgre::Config::init( uint32_t const )
 {
 	/// Register data
+	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
 	_frame_data.registerData(this);
 
 	_init_data.setFrameDataID( _frame_data.getID() );
 	registerObject( &_init_data );
     
 	if( !eq::Config::init( _init_data.getID() ) )
-    { return false; }
+	{ return false; }
 
-    return true;
+	return true;
 }
 
 uint32_t 
 eqOgre::Config::startFrame (const uint32_t frameID)
 {
+	// Process Tracking
+	// TODO add selectable sensor
+	if( _tracker )
+	{
+		_tracker->mainloop();
+		if( _tracker->getNSensors() > 0 )
+		{
+			_frame_data.setHeadPosition( _tracker->getPosition( 0 ) );
+			_frame_data.setHeadOrientation( _tracker->getOrientation( 0 ) );
+		}
+	}
+	else
+	{
+		std::cerr << "No tracker in Config::startFrame" << std::endl;
+	}
+
+
+	// Process Events
 	// TODO test if the speed calculations work really using high and low fps
 	static clock_t last_time = 0;
 	clock_t time = ::clock();
@@ -108,6 +130,29 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	return eq::Config::startFrame( version );
 }
 
+void
+eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
+{
+	if( settings->trackerOn() )
+	{
+		EQINFO << "Creating VRPN Tracker." << std::endl;
+		_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
+	}
+	else
+	{
+		EQINFO << "Creating Fake Tracker." << std::endl;
+		_tracker.reset( new vl::FakeTracker( ) );
+	}
+
+	_tracker->setOrientation( 0, settings->getTrackerDefaultOrientation() );
+	_tracker->setPosition( 0, settings->getTrackerDefaultPosition() );
+	_tracker->init();
+}
+
+
+
+
+/// Event Handling
 char const *CB_INFO_TEXT = "Config : OIS event received : ";
 
 // TODO the event handling should be separated to multiple functions

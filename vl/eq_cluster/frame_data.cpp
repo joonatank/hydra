@@ -129,6 +129,11 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
 
+	if( dirtyBits & DIRY_HEAD )
+	{
+		os << _head_pos << _head_orient;
+	}
+
 	if( dirtyBits & DIRTY_CAMERA ) 
 	{
 		os << _camera_id;
@@ -139,9 +144,13 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 		os << _ogre_id;
 	}
 
-	if( dirtyBits & DIRTY_RELOAD )
+	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		os << _scene_version;
+	}
+
+	if( dirtyBits & DIRTY_RESET_SCENE )
+	{
 	}
 }
 
@@ -149,6 +158,11 @@ void
 eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
+
+	if( dirtyBits & DIRY_HEAD )
+	{
+		is >> _head_pos >> _head_orient;
+	}
 
 	if( dirtyBits & DIRTY_CAMERA )
 	{
@@ -160,8 +174,12 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 		is >> _ogre_id;
 	}
 
-	if( dirtyBits & DIRTY_RELOAD )
+	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		is >> _scene_version;
+	}
+
+	if( dirtyBits & DIRTY_RESET_SCENE )
+	{
 	}
 }

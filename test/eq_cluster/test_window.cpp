@@ -86,9 +86,6 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 	eqOgre::Window *win = dynamic_cast<eqOgre::Window *>(eq_win);
 	BOOST_CHECK( win );
 
-	// Check that tracker is avail
-	BOOST_CHECK( win->getTracker() );
-
 	// Check that camera is avail
 	BOOST_CHECK( win->getCamera() );
 

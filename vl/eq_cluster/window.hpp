@@ -4,7 +4,6 @@
 #include <eq/client/window.h>
 
 #include "eq_ogre/ogre_root.hpp"
-#include "tracker.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -37,9 +36,6 @@ namespace eqOgre
 		Ogre::Camera *getCamera( void )
 		{ return _camera; }
 
-		vl::TrackerRefPtr getTracker( void )
-		{ return _tracker; }
-
 		Ogre::SceneManager *getSceneManager( void )
 		{ return _sm; }
 
@@ -58,7 +54,6 @@ namespace eqOgre
 	protected :
 		void createOgreRoot( void );
 		void createOgreWindow( void );
-		void createTracker( void );
 
 		/// Create the OIS input handling
 		/// For now supports mouse and keyboard
@@ -85,7 +80,6 @@ namespace eqOgre
 		Ogre::SceneManager *_sm;
 
 		vl::SettingsRefPtr _settings;
-		vl::TrackerRefPtr _tracker;
 
 		// OIS variables
 		OIS::InputManager *_input_manager;
