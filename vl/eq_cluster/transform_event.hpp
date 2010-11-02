@@ -199,21 +199,29 @@ protected :
 	Ogre::Vector3 _rotation_axises;
 };
 
+
+inline bool operator==( TransformationEvent::KeyPair const &a, TransformationEvent::KeyPair const &b )
+{
+	return( a.neg_key == b.neg_key && a.pos_key == b.pos_key );
+}
+
+inline bool operator==( TransformationEvent::KeyPairVec const &a, TransformationEvent::KeyPairVec const &b )
+{
+	return( a.x == b.x && a.y == b.y && a.z == b.z );
+}
+
 /// Chech that the prototypes are equal but does not test the state information.
 /// Assumption is that the state information is only useful in the context
 /// where it has been setted.
 // FIXME this is not completed
 inline bool operator==( TransformationEvent const &a, TransformationEvent const &b )
 {
-	if( a._node == b._node
+	return( a._node == b._node
 		&& a._speed == b._speed
 		&& a._angular_speed == b._angular_speed
-//		&& a._move_keys == b._move_keys
-//		&& a._rot_keys == b._rot_keys
-		)
-		return true;
-
-	return false;
+		&& a._move_keys == b._move_keys
+		&& a._rot_keys == b._rot_keys
+		);
 }
 
 }	// namespace eqOgre

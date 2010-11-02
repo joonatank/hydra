@@ -40,38 +40,13 @@ namespace eqOgre
 
 		// TODO this could be done with vl::SettingsRefPtr or vl::Settings
 		// if we have a valid copy constructor
-		void setSettings( eqOgre::SettingsRefPtr settings )
-		{
-			if( settings )
-			{
-				_settings = settings;
-				_createTracker(_settings);
-			}
-		}
-/*
-		bool addEvent( TransformationEvent const &event )
-		{
-			_events.push_back(event);
-			return true;
-		}
+		void setSettings( eqOgre::SettingsRefPtr settings );
+
+		bool addEvent( TransformationEvent const &event );
 
 		// TODO add pop event
-		bool removeEvent( TransformationEvent const &event )
-		{
-			// TODO test the operator== in TransformationEvent
-			std::vector<TransformationEvent>::iterator iter;
-			for( iter = _events.begin(); iter != _events.end(); ++iter )
-			{
-				if( *iter == event )
-				{
-					_events.erase(iter);
-					return true;
-				}
-			}
+		bool removeEvent( TransformationEvent const &event );
 
-			return false;
-		}
-*/
 		void addSceneNode( SceneNode *node )
 		{
 			_frame_data.addSceneNode( node );
@@ -98,13 +73,9 @@ namespace eqOgre
 
 		FrameData _frame_data;
 
-		// Some test variables for input events
-		// TODO should be moved to a vector
-		// TODO should add dynamical addition
 		// TODO should expose an interface to outsiders
-//		std::vector<TransformationEvent> _events;
-		TransformationEvent _camera_trans;
-		TransformationEvent _ogre_trans;
+		std::vector<TransformationEvent> _events;
+		TransformationEvent ogre_event;
 
     };	// class Config
 

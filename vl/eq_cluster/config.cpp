@@ -60,6 +60,37 @@ eqOgre::Config::init( uint32_t const )
 	return true;
 }
 
+void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
+{
+	if( settings )
+	{
+		_settings = settings;
+		_createTracker(_settings);
+	}
+}
+
+bool eqOgre::Config::addEvent(const eqOgre::TransformationEvent& event)
+{
+	_events.push_back(event);
+	return true;
+}
+
+bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
+{
+	// TODO test the operator== in TransformationEvent
+	std::vector<TransformationEvent>::iterator iter;
+	for( iter = _events.begin(); iter != _events.end(); ++iter )
+	{
+		if( *iter == event )
+		{
+			_events.erase(iter);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 uint32_t 
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
@@ -81,47 +112,46 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 	// Init the transformation structures
 	// TODO should be moved to Config::init or equivalent
-	if( !_camera_trans.getSceneNode() )
+	static bool inited = false;
+
+	if( !inited )
 	{
+		// Camera Events
 		SceneNode *node = new SceneNode( "CameraNode" );
 		addSceneNode( node );
-		_camera_trans.setSceneNode( node );
-		if( !_camera_trans.getSceneNode() )
-		{
-			std::cerr << "No CameraNode found!" << std::endl;
-			EQASSERT(false);
-		}
 
-		_camera_trans.setTransXKeys( OIS::KC_D, OIS::KC_A );
-		_camera_trans.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
-		_camera_trans.setTransZKeys( OIS::KC_S, OIS::KC_W );
+		TransformationEvent event( node );
+
+		event.setTransXKeys( OIS::KC_D, OIS::KC_A );
+		event.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
+		event.setTransZKeys( OIS::KC_S, OIS::KC_W );
 
 		// TODO camera needs yaw and pitch, but our current system does not allow
 		// for yaw (forbidden in Channel) and they need to be in separate Nodes.
-		_camera_trans.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
-	}
+		event.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
 
-	if( !_ogre_trans.getSceneNode() )
-	{
+		addEvent(event);
+
+		// Ogre Event
+		// Starts at disabled state
 		std::cerr << "Creating Ogre SceneNode" << std::endl;
-		SceneNode *node = new SceneNode( "ogre" );
+		node = new SceneNode( "ogre" );
 		addSceneNode( node );
-		_ogre_trans.setSceneNode( node );
-		if( !_ogre_trans.getSceneNode() )
-		{
-			std::cerr << "No OgreNode found!" << std::endl;
-			EQASSERT(false);
-		}
+		ogre_event = TransformationEvent( node );
 
 		// TODO break the Ogre Node to two SceneNodes and rotate each individually
 		// to get a cleaner looking rotation (axises don't keep changing).
-		_ogre_trans.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
-		_ogre_trans.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
+		ogre_event.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
+		ogre_event.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
+
+		inited = true;
 	}
 
 	// Really Move the objects
-	_camera_trans();
-	_ogre_trans();
+	for( size_t i = 0; i < _events.size(); ++i )
+	{
+		_events.at(i)();
+	}
 
 	uint32_t version = _frame_data.commitAll();
 //	std::cout << "FrameData version = " << version << std::endl;
@@ -215,11 +245,15 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
 	// Used for toggle events
 	static clock_t last_time = 0;
+	static bool ogre_event_on = false;
 	clock_t time = ::clock();
 
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	_camera_trans.keyPressed(key);
-	_ogre_trans.keyPressed(key);
+	for( size_t i = 0; i < _events.size(); ++i )
+	{
+		_events.at(i).keyPressed(key);
+	}
+
     switch( key )
     {
 		case OIS::KC_ESCAPE :
@@ -230,8 +264,19 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 				stopRunning();
 			}
 			return true;
+
 		case OIS::KC_SPACE :
-			break;
+			if( ogre_event_on )
+			{
+				removeEvent(ogre_event);
+				ogre_event_on = false;
+			}
+			else
+			{
+				addEvent(ogre_event);
+				ogre_event_on = true;
+			}
+			return true;
 
 		case OIS::KC_R :
 			// Reload the scene
@@ -296,14 +341,9 @@ bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	_camera_trans.keyReleased(key);
-	_ogre_trans.keyReleased(key);
-    switch( key )
-    {
-		case OIS::KC_SPACE :
-			break;
-		default :
-			return false;
+	for( size_t i = 0; i < _events.size(); ++i )
+	{
+		_events.at(i).keyReleased(key);
 	}
 
 	return false;
