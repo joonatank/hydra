@@ -6,7 +6,7 @@
 
 // Library includes
 #include "udp/server.hpp"
-#include "udp/print_command.hpp"
+#include "udp/ogre_command.hpp"
 #include "base/sleep.hpp"
 #include "base/exceptions.hpp"
 
@@ -24,30 +24,79 @@ uint16_t const PORT = 2244;
   * Position amr1
   * Position arm2
   */
+
+class Channel : public eqOgre::Channel
+{
+public :
+	Channel(eq::Window *parent)
+		: eqOgre::Channel( parent ), server( PORT )
+	{
+		std::cout << "Starting UDP server on port " << PORT << std::endl;
+		
+		// TODO new message should be of form 3 x angle with predefined axis
+		// and 3 x position
+		// Find the ogre nodes
+		std::vector< std::pair<std::string, Ogre::SceneNode *> > nodes;
+		nodes.push_back( std::make_pair( "base", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "arm1", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "arm2", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "arm3", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "base_piston", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "base_rod", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "arm_piston", (Ogre::SceneNode *)0 ) );
+		nodes.push_back( std::make_pair( "arm_rod", (Ogre::SceneNode *)0 ) );
+
+		for( size_t i = 0; i < nodes.size(); ++i )
+		{
+			eqOgre::Window *win = (eqOgre::Window *)(getWindow());
+			Ogre::SceneManager *sm = win->getSceneManager();
+			std::string const &name = nodes.at(i).first;
+			if( sm->hasSceneNode( name ) )
+			{
+				Ogre::SceneNode *node = sm->getSceneNode( name );
+				nodes.at(i).second = node;
+				// Add command to the server
+				vl::udp::CommandRefPtr cmd = vl::udp::OgreCommand::create("setPosition", node );
+				server.addCommand( cmd );
+				cmd = vl::udp::OgreCommand::create("setAngleAxis", node );
+				server.addCommand( cmd );
+			}
+			else
+			{
+				std::cerr << "Couldn't get SceneNode " << name << std::endl;
+				throw vl::exception();
+			}
+		}
+	}
+
+	void frameDraw( const uint32_t frameID )
+	{
+		// Update UDP data
+		try{
+			server.mainloop();
+		}
+		catch( vl::long_message &e )
+		{ std::cerr << "Exception : " << e.what() << std::endl; }
+
+		// Draw the scene
+		eqOgre::Channel::frameDraw( frameID );
+	}
+
+	vl::udp::Server server;
+};
+
+class NodeFactoryUDP : public ::NodeFactory
+{
+public :
+	virtual eq::Channel *createChannel( eq::Window *parent )
+	{ return new ::Channel( parent ); }
+};
+
 int main(int argc, char **argv)
 {
 	bool error = false;
 	try
 	{
-		std::cout << "Starting UDP server on port " << PORT << std::endl;
-		vl::udp::Server server( PORT );
-
-		// TODO new message should be of form 3 x angle with predefined axis
-		// and 3 x position
-		boost::shared_ptr<vl::udp::Command> cmd( new vl::udp::PrintCommand("setPosition", "feet" ) );
-		server.addCommand( cmd );
-		cmd.reset( new vl::udp::PrintCommand("setPosition", "feet" ) );
-		server.addCommand( cmd );
-		cmd.reset( new vl::udp::PrintCommand("setQuaternion", "feet" ) );
-		server.addCommand( cmd );
-
-		for (;;)
-		{
-			server.mainloop();
-
-			vl::msleep(1);
-		}
-
 		ListeningClientFixture fix;
 
 		eqOgre::InitData init_data = ::getInitData( argv[0], PROJECT_NAME );
@@ -65,7 +114,7 @@ int main(int argc, char **argv)
 			settings->getEqArgs().add(argv[i] );
 		}
 
-		::NodeFactory nodeFactory;
+		::NodeFactoryUDP nodeFactory;
 
 		error = !fix.init( init_data, &nodeFactory );
 

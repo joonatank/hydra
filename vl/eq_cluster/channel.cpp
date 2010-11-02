@@ -160,7 +160,6 @@ eqOgre::Channel::updateDistribData( void )
 		scene_version = _frame_data.getSceneVersion();
 	}
 
-
 	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
 	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
 

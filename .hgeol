@@ -1,0 +1,33 @@
+[patterns]
+# Code
+**.py = native
+**.txt = native
+**.cpp = native
+**.hpp = native
+**.h = native
+**.rc = native
+
+# HG
+.hgignore = native
+.hgeol = native
+
+# Documentation
+**.lyx = native
+**.fig = native
+
+# Resources
+**.eqc = native
+**.xml = native
+**.material = native
+**.particle = native
+**.program = native
+**.glsl = native
+**.bat = native
+**.cfg = native
+
+**.jpg = BIN
+**.ico = BIN
+**.mesh = BIN
+**.skeleton = BIN
+**.zip = BIN
+**.png = BIN
