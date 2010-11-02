@@ -16,7 +16,7 @@ namespace eqOgre
 class SceneNode : public eq::fabric::Serializable
 {
 public :
-	SceneNode( std::string const &name );
+	SceneNode( std::string const &name = std::string() );
 
 	~SceneNode( void )
 	{}

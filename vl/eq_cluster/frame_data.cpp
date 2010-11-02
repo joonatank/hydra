@@ -2,13 +2,48 @@
 #include "frame_data.hpp"
 
 /// Public
-uint32_t eqOgre::FrameData::commitAll(void )
+bool eqOgre::FrameData::findNodes(Ogre::SceneManager* man)
 {
-	if( _ogre.isDirty() )
-	{ _ogre.commit(); }
+	bool retval = true;
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		retval |= _scene_nodes.at(i).node->findNode(man);
+	}
+	return retval;
+}
 
-	if( _camera.isDirty() )
-	{ _camera.commit(); }
+
+void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
+{
+	setDirty( DIRTY_NODES );
+	_scene_nodes.push_back( SceneNodeIDPair(node) );
+}
+
+eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(const std::string& name)
+{
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		if( node->getName() == name )
+		{ return node; }
+	}
+
+	return 0;
+}
+
+eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(size_t i)
+{
+	return _scene_nodes.at(i).node;
+}
+
+uint32_t eqOgre::FrameData::commitAll( void )
+{
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		if( node->isDirty() )
+		{ node->commit(); }
+	}
 
 	if( isDirty() )
 	{ return commit(); }
@@ -17,48 +52,60 @@ uint32_t eqOgre::FrameData::commitAll(void )
 }
 
 void
-eqOgre::FrameData::syncAll(void )
+eqOgre::FrameData::syncAll( void )
 {
-	_ogre.sync();
-	_camera.sync();
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		uint32_t id = _scene_nodes.at(i).id;
+		if( !node )
+		{
+			std::cerr << "eqOgre::FrameData::syncAll new SceneNode" << std::endl;
+			_scene_nodes.at(i).node = new SceneNode;
+			node = _scene_nodes.at(i).node;
+			// TODO add mapping here
+			// also needs registration to be added to addSceneNode
+			// TODO needs to be tested by adding objects at runtime
+			getSession()->mapObject( node, _scene_nodes.at(i).id );
+		}
+		else if( node->getID() == EQ_ID_INVALID )
+		{
+			std::cerr << "eqOgre::FrameData::syncAll SceneNode ID invalid" << std::endl;
+			EQASSERT( false );
+		}
+		else if( node->getID() != id )
+		{
+			std::cerr << "eqOgre::FrameData::syncAll SceneNode ID not same as distrib ID" << std::endl;
+			EQASSERT( false );
+		}
+		else
+			node->sync();
+	}
+
 	sync();
 }
 
 void
 eqOgre::FrameData::registerData(eq::Config* config)
 {
-	// Register Ogre
-	// Lets make sure we don't register the objects more than once
-	if( EQ_ID_INVALID != _ogre_id && EQ_ID_INVALID != _ogre.getID() )
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		std::cerr << "Ogre already registered" << std::endl;
-		EQASSERT( false );
+		SceneNode *node = _scene_nodes.at(i).node;
+		// Lets make sure we don't register the objects more than once
+		if( EQ_ID_INVALID != _scene_nodes.at(i).id && EQ_ID_INVALID != node->getID() )
+		{
+			std::cerr << "Node already registered" << std::endl;
+			EQASSERT( false );
+		}
+		config->registerObject( node);
+		// The object has to be correctly registered
+		if( EQ_ID_INVALID == node->getID() )
+		{
+			std::cerr << "Node was not registered" << std::endl;
+			EQASSERT( false );
+		}
+		_scene_nodes.at(i).id = node->getID();
 	}
-	config->registerObject( &_ogre );
-	// The object has to be correctly registered
-	if( EQ_ID_INVALID == _ogre.getID() )
-	{
-		std::cerr << "Ogre was not registered" << std::endl;
-		EQASSERT( false );
-	}
-	_ogre_id = _ogre.getID();
-
-
-	// Register Camera
-	if( EQ_ID_INVALID != _camera_id && EQ_ID_INVALID != _camera.getID() )
-	{
-		std::cerr << "Ogre already registered" << std::endl;
-		EQASSERT( false );
-	}
-	config->registerObject( &_camera );
-	// The object has to be correctly registered
-	if( EQ_ID_INVALID == _camera.getID() )
-	{
-		std::cerr << "Ogre was not registered" << std::endl;
-		EQASSERT( false );
-	}
-	_camera_id = _camera.getID();
-
 
 	// Register FrameData
 	if( EQ_ID_INVALID != getID() )
@@ -77,13 +124,13 @@ eqOgre::FrameData::registerData(eq::Config* config)
 void
 eqOgre::FrameData::deregisterData(eq::Config* config)
 {
-	if( EQ_ID_INVALID != _ogre.getID() )
-	{ config->deregisterObject( &_ogre ); }
-	_ogre_id = EQ_ID_INVALID;
-
-	if( EQ_ID_INVALID != _camera.getID() )
-	{ config->deregisterObject( &_camera ); }
-	_camera_id = EQ_ID_INVALID;
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		if( EQ_ID_INVALID != node->getID() )
+		{ config->deregisterObject( node ); }
+		_scene_nodes.at(i).id = EQ_ID_INVALID;
+	}
 
 	if( EQ_ID_INVALID != getID() )
 	{ config->deregisterObject( this ); }
@@ -92,6 +139,7 @@ eqOgre::FrameData::deregisterData(eq::Config* config)
 void
 eqOgre::FrameData::mapData(eq::Config* config, uint32_t id)
 {
+	// We need to map this object first so that we have valid _scene_nodes vector
 	if( EQ_ID_INVALID == id )
 	{
 		std::cerr << "Trying to map to invalid ID" << std::endl;
@@ -99,26 +147,34 @@ eqOgre::FrameData::mapData(eq::Config* config, uint32_t id)
 	}
 	config->mapObject(this, id);
 
-	if( EQ_ID_INVALID == _ogre_id )
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		std::cerr << "Trying to map Ogre to invalid ID" << std::endl;
-		EQASSERT( false );
+		SceneNode *node = _scene_nodes.at(i).node;
+		if( !node )
+		{
+			// TODO refactor this and sync version to separate function
+			_scene_nodes.at(i).node = new SceneNode;
+			node = _scene_nodes.at(i).node;
+		}
+		
+		if( EQ_ID_INVALID == _scene_nodes.at(i).id )
+		{
+			std::cerr << "Trying to map Ogre to invalid ID" << std::endl;
+			EQASSERT( false );
+		}
+		config->mapObject( node, _scene_nodes.at(i).id );
 	}
-	config->mapObject(&_ogre, _ogre_id);
-
-	if( EQ_ID_INVALID == _camera_id )
-	{
-		std::cerr << "Trying to map Camera to invalid ID" << std::endl;
-		EQASSERT( false );
-	}
-	config->mapObject(&_camera, _camera_id);
 }
 
 void
 eqOgre::FrameData::unmapData(eq::Config* config)
 {
-	config->unmapObject( &_ogre );
-	config->unmapObject( &_camera );
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		config->unmapObject( node );
+	}
+
 	config->unmapObject( this );
 }
 
@@ -134,14 +190,14 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 		os << _head_pos << _head_orient;
 	}
 
-	if( dirtyBits & DIRTY_CAMERA ) 
-	{
-		os << _camera_id;
-	}
 
-	if( dirtyBits & DIRTY_OGRE )
+	if( dirtyBits & DIRTY_NODES )
 	{
-		os << _ogre_id;
+		os << _scene_nodes.size();
+		for( size_t i = 0; i < _scene_nodes.size(); ++i )
+		{
+			os << _scene_nodes.at(i).id;
+		}
 	}
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
@@ -164,14 +220,23 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 		is >> _head_pos >> _head_orient;
 	}
 
-	if( dirtyBits & DIRTY_CAMERA )
+	if( dirtyBits & DIRTY_NODES )
 	{
-		is >> _camera_id;
-	}
-
-	if( dirtyBits & DIRTY_OGRE )
-	{
-		is >> _ogre_id;
+		// TODO this does not work dynamically, we need to track changes in the
+		// vector and do mapping for those objects we want changes at runtime.
+		size_t size;
+		is >> size;
+		// TODO this will leak memory
+		_scene_nodes.resize(size);
+		for( size_t i = 0; i < _scene_nodes.size(); ++i )
+		{
+			is >> _scene_nodes.at(i).id;
+			if( _scene_nodes.at(i).id == EQ_ID_INVALID )
+			{
+				std::cerr << "SceneNode ID invalid when deserializing!" << std::endl;
+				EQASSERT( false );
+			}
+		}
 	}
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )

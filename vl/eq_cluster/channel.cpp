@@ -47,14 +47,14 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	_frame_data.mapData( config, frame_id );
 
 	// We need to find the node from scene graph
-	EQASSERT( !_frame_data.getOgreNode().getName().empty() )
-	EQASSERT( !_frame_data.getCameraNode().getName().empty() )
+	std::cerr << "FrameData has " << _frame_data.getNSceneNodes()
+		<< " SceneNodes." << std::endl;
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERT( sm );
 	if( _frame_data.findNodes( sm ) )
-		std::cerr << "Ogre Node and Camera Node found in the SceneGraph" << std::endl;
+		std::cerr << "SceneNodes found in the SceneGraph" << std::endl;
 	else
-		std::cerr << "Ogre Node or Camera Node was NOT found in the SceneGraph" << std::endl;
+		std::cerr << "SceneNodes were NOT found in the SceneGraph" << std::endl;
 
 	return true;
 }

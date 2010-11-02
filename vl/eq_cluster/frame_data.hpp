@@ -17,17 +17,24 @@ namespace eqOgre
 class FrameData : public eq::fabric::Serializable
 {
 public :
+	struct SceneNodeIDPair
+	{
+		SceneNodeIDPair( SceneNode *nnode = 0, uint32_t nid = EQ_ID_INVALID )
+			: node(nnode), id(nid)
+		{}
+
+		SceneNode *node;
+		uint32_t id;
+	};
+	
 	FrameData( void )
-		: //_camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
-		  _ogre( "ogre" ),
-		  _ogre_id( EQ_ID_INVALID ),
-		  _camera( "CameraNode" ),
-		  _camera_id( EQ_ID_INVALID ),
-		  _scene_version( 0 )
+		: _scene_version( 0 )
 	{}
 
 	~FrameData( void ) {}
 
+	/// Tracking related
+	/// Will be removed soon
 	void setHeadPosition( Ogre::Vector3 const &pos )
 	{
 		setDirty( DIRY_HEAD );
@@ -49,48 +56,21 @@ public :
 	{
 		return _head_orient;
 	}
-	
-	bool findNodes( Ogre::SceneManager *man )
-	{
-		bool retval = true;
-		retval |= _camera.findNode( man );
-		retval |= _ogre.findNode( man );
-		
-		return retval;
-	}
 
-	SceneNode &getCameraNode( void )
-	{ return _camera; }
+	bool findNodes( Ogre::SceneManager *man );
 
-	SceneNode const &getCameraNode( void ) const
-	{ return _camera; }
+	/// New dynamic SceneNode interface
+	void addSceneNode( SceneNode * node );
 
-	void setCameraID( uint32_t id )
-	{
-		_camera_id = id;
-	}
+	SceneNode *getSceneNode( std::string const &name );
 
-	uint32_t getCameraID( void ) const
-	{
-		return _camera_id;
-	}
+	SceneNode *getSceneNode( size_t i );
 
-	SceneNode &getOgreNode( void )
-	{ return _ogre; }
+	size_t getNSceneNodes( void ) const
+	{ return _scene_nodes.size(); }
 
-	SceneNode const &getOgreNode( void ) const
-	{ return _ogre; }
+	// TODO add SceneNode removal
 
-	void setOgreID( uint32_t id )
-	{
-		_ogre_id = id;
-	}
-
-	uint32_t getOgreID( void ) const
-	{
-		return _ogre_id;
-	}
-	
 	void updateSceneVersion( void )
 	{ 
 		setDirty( DIRTY_RELOAD_SCENE );
@@ -117,8 +97,8 @@ public :
 	enum DirtyBits
 	{
 		DIRY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
-		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
+		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+//		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
 		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 4,
 		// TODO the reset scene is not implemented at the moment
 		// It should reset all distributed SceneNodes
@@ -131,19 +111,10 @@ protected :
     virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
 private :
-	// TODO these should be moved to a vector and there should be methods to
-	// add more elements
 	// TODO Also it's necessary to
 	// refactor the sync, commit, register, deregister, map, unmap functions
 	// TODO dynamically adding more nodes
-
-	// Test scene node called Ogre
-	SceneNode _ogre;
-	uint32_t _ogre_id;
-
-	// Test camera node
-	SceneNode _camera;
-	uint32_t _camera_id;
+	std::vector< SceneNodeIDPair > _scene_nodes;
 
 	Ogre::Vector3 _head_pos;
 	Ogre::Quaternion _head_orient;

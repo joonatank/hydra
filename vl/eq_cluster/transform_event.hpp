@@ -75,14 +75,18 @@ public :
 		}
 	};
 
-	TransformationEvent( SceneNode *node = 0 )
-		: _node(node), _last_time( ::clock() ), _speed(1),
-		  _angular_speed( Ogre::Degree(60) ),
-		  _move_keys(), _rot_keys(),
-		  _move_dir( Ogre::Vector3::ZERO ),
-		  _rotation_axises( Ogre::Vector3::ZERO )
-	{}
+	/// Constructor
+	TransformationEvent( SceneNode *node = 0 );
 
+	/// Copy constructor
+	/// Copies the prototype but does not copy any state information
+	/// assumption is that the state information is only useful in the context
+	/// where it has been setted.
+	TransformationEvent( TransformationEvent const &a );
+
+	TransformationEvent &operator=( TransformationEvent const &a );
+
+	/// Destructor
 	virtual ~TransformationEvent( void )
 	{}
 
@@ -97,77 +101,15 @@ public :
 
 	/// Execute operator
 	/// Transforms the SceneNode if it's in moving state
-	void operator()( void )
-	{
-		clock_t time = ::clock();
-		// Secs since last frame
-		double t = ((double)( time - _last_time ))/CLOCKS_PER_SEC;
-
-		// Check that we have an object and we are moving
-		// TODO should check the Vector3 with a delta zero
-		if( _node && _move_dir != Ogre::Vector3::ZERO )
-		{
-			Ogre::Vector3 pos = _node->getPosition();
-			pos += _speed*t*_move_dir.normalisedCopy();
-			_node->setPosition( pos );
-		}
-
-		if( _node && _rotation_axises != Ogre::Vector3::ZERO )
-		{
-			Ogre::Quaternion orient = _node->getOrientation();
-			// TODO check if the axis is zero
-			Ogre::Quaternion qx( _angular_speed*t, _rotation_axises );
-//			Ogre::Quaternion qy( _angular_speed*t, _rotation_axises.y );
-//			Ogre::Quaternion qz( _angular_speed*t, _rotation_axises.z );
-			_node->setOrientation( qx*orient );
-		}
-
-		_last_time = time;
-	}
+	void operator()( void );
 
 	/// Called from event handling
 	/// If the key is mapped to this TransformationEvent the state of the
 	/// event is changed.
 	/// Returns true if processed
-	bool keyPressed( OIS::KeyCode key )
-	{
-		bool retval = false;
-		Ogre::Vector3 vec = _move_keys.findKey(key);
-		if( vec != Ogre::Vector3::ZERO )
-		{
-			_move_dir += vec;
-			retval = true;
-		}
+	bool keyPressed( OIS::KeyCode key );
 
-		vec = _rot_keys.findKey(key);
-		if( vec != Ogre::Vector3::ZERO )
-		{
-			_rotation_axises += vec;
-			retval = true;
-		}
-
-		return retval;
-	}
-
-	bool keyReleased( OIS::KeyCode key )
-	{
-		bool retval = false;
-		Ogre::Vector3 vec = _move_keys.findKey(key);
-		if( vec != Ogre::Vector3::ZERO )
-		{
-			_move_dir -= vec;
-			retval = true;
-		}
-		
-		vec = _rot_keys.findKey(key);
-		if( vec != Ogre::Vector3::ZERO )
-		{
-			_rotation_axises -= vec;
-			retval = true;
-		}
-
-		return retval;
-	}
+	bool keyReleased( OIS::KeyCode key );
 
 	/// Parameters
 	void setSpeed( double speed )
@@ -224,6 +166,8 @@ public :
 	void setRotZKeys( KeyPair key_pair )
 	{ _rot_keys.z = key_pair; }
 
+	friend bool operator==( TransformationEvent const &a, TransformationEvent const &b );
+
 protected :
 	/// Core
 	// Node which this Event moves
@@ -254,6 +198,23 @@ protected :
 
 	Ogre::Vector3 _rotation_axises;
 };
+
+/// Chech that the prototypes are equal but does not test the state information.
+/// Assumption is that the state information is only useful in the context
+/// where it has been setted.
+// FIXME this is not completed
+inline bool operator==( TransformationEvent const &a, TransformationEvent const &b )
+{
+	if( a._node == b._node
+		&& a._speed == b._speed
+		&& a._angular_speed == b._angular_speed
+//		&& a._move_keys == b._move_keys
+//		&& a._rot_keys == b._rot_keys
+		)
+		return true;
+
+	return false;
+}
 
 }	// namespace eqOgre
 

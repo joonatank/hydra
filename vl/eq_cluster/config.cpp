@@ -46,6 +46,15 @@ eqOgre::Config::init( uint32_t const )
 {
 	/// Register data
 	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
+
+	// TODO here we need to create the SceneNodes so that they are registered
+	// TODO memory deallocation will be problematic
+	// TODO add ownership rules (FrameData should own all SceneNodes)
+	SceneNode *node = new SceneNode( "CameraNode" );
+	addSceneNode( node );
+	node = new SceneNode( "ogre" );
+	addSceneNode( node );
+
 	_frame_data.registerData(this);
 
 	_settings->setFrameDataID( _frame_data.getID() );
@@ -58,7 +67,7 @@ eqOgre::Config::init( uint32_t const )
 }
 
 uint32_t 
-eqOgre::Config::startFrame (const uint32_t frameID)
+eqOgre::Config::startFrame( const uint32_t frameID )
 {
 	// Process Tracking
 	// TODO add selectable sensor
@@ -78,7 +87,7 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 	// TODO should be moved to Config::init or equivalent
 	if( !_camera_trans.getSceneNode() )
 	{
-		_camera_trans.setSceneNode( &_frame_data.getCameraNode() );
+		_camera_trans.setSceneNode( _frame_data.getSceneNode("CameraNode") );
 		if( !_camera_trans.getSceneNode() )
 		{
 			std::cerr << "No CameraNode found!" << std::endl;
@@ -96,7 +105,7 @@ eqOgre::Config::startFrame (const uint32_t frameID)
 
 	if( !_ogre_trans.getSceneNode() )
 	{
-		_ogre_trans.setSceneNode( &_frame_data.getOgreNode() );
+		_ogre_trans.setSceneNode( _frame_data.getSceneNode("ogre") );
 		if( !_ogre_trans.getSceneNode() )
 		{
 			std::cerr << "No OgreNode found!" << std::endl;

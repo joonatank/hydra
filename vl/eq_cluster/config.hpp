@@ -48,7 +48,36 @@ namespace eqOgre
 				_createTracker(_settings);
 			}
 		}
-		
+/*
+		bool addEvent( TransformationEvent const &event )
+		{
+			_events.push_back(event);
+			return true;
+		}
+
+		// TODO add pop event
+		bool removeEvent( TransformationEvent const &event )
+		{
+			// TODO test the operator== in TransformationEvent
+			std::vector<TransformationEvent>::iterator iter;
+			for( iter = _events.begin(); iter != _events.end(); ++iter )
+			{
+				if( *iter == event )
+				{
+					_events.erase(iter);
+					return true;
+				}
+			}
+
+			return false;
+		}
+*/
+		void addSceneNode( SceneNode *node )
+		{
+			_frame_data.addSceneNode( node );
+		}
+
+		// TODO add remove SceneNode
 	protected :
 		virtual ~Config (void);
 
@@ -72,6 +101,7 @@ namespace eqOgre
 		// TODO should be moved to a vector
 		// TODO should add dynamical addition
 		// TODO should expose an interface to outsiders
+//		std::vector<TransformationEvent> _events;
 		TransformationEvent _camera_trans;
 		TransformationEvent _ogre_trans;
 
