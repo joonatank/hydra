@@ -2,21 +2,45 @@
 #include "frame_data.hpp"
 
 /// Public
-bool eqOgre::FrameData::findNodes(Ogre::SceneManager* man)
+eqOgre::FrameData::FrameData( void )
+	: Serializable(), _scene_version( 0 ), _config(0), _ogre_sm(0)
+{}
+
+eqOgre::FrameData::~FrameData(void )
 {
-	bool retval = true;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		retval |= _scene_nodes.at(i).node->findNode(man);
+		delete _scene_nodes.at(i).node;
 	}
-	return retval;
+	_scene_nodes.clear();
 }
 
+void eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
+{
+	if( !man )
+	{ return; }
+
+	_ogre_sm = man;
+
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		EQASSERT( node );
+		node->findNode(man);
+	}
+}
 
 void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 {
 	setDirty( DIRTY_NODES );
 	_scene_nodes.push_back( SceneNodeIDPair(node) );
+
+	if( _scene_nodes.back().id == EQ_ID_INVALID )
+	{
+		if( _config )
+		{ _registerObject( _scene_nodes.back() ); }
+		std::cerr << "Object Registered" << std::endl;
+	}
 }
 
 eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(const std::string& name)
@@ -41,14 +65,12 @@ uint32_t eqOgre::FrameData::commitAll( void )
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
-		if( node->isDirty() )
-		{ node->commit(); }
+		node->commit();
 	}
 
-	if( isDirty() )
-	{ return commit(); }
-	else
-	{ return getVersion(); }
+//	std::cout << "FrameData dirty mask = " << std::hex << getDirty()
+//		<< std::dec << std::endl;
+	return commit();
 }
 
 void
@@ -88,31 +110,26 @@ eqOgre::FrameData::syncAll( void )
 void
 eqOgre::FrameData::registerData(eq::Config* config)
 {
+	std::cerr << "eqOgre::FrameData::registerData" << std::endl;
+	EQASSERT( config );
+
+	// Config is valid, lets save it so we can register child objects
+	_config = config;
+	std::cerr << "Registering " << _scene_nodes.size() << " SceneNodes." << std::endl;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		SceneNode *node = _scene_nodes.at(i).node;
-		// Lets make sure we don't register the objects more than once
-		if( EQ_ID_INVALID != _scene_nodes.at(i).id && EQ_ID_INVALID != node->getID() )
-		{
-			std::cerr << "Node already registered" << std::endl;
-			EQASSERT( false );
-		}
-		config->registerObject( node);
-		// The object has to be correctly registered
-		if( EQ_ID_INVALID == node->getID() )
-		{
-			std::cerr << "Node was not registered" << std::endl;
-			EQASSERT( false );
-		}
-		_scene_nodes.at(i).id = node->getID();
+		_registerObject( _scene_nodes.at(i) );
 	}
 
 	// Register FrameData
+	// NOTE This will Serialize the FrameData, so the childs should be already
+	// registered!
 	if( EQ_ID_INVALID != getID() )
 	{
 		std::cerr << "FrameData already registered" << std::endl;
 		EQASSERT( false );
 	}
+
 	config->registerObject( this );
 	if( EQ_ID_INVALID == getID() )
 	{
@@ -142,28 +159,10 @@ eqOgre::FrameData::mapData(eq::Config* config, uint32_t id)
 	// We need to map this object first so that we have valid _scene_nodes vector
 	if( EQ_ID_INVALID == id )
 	{
-		std::cerr << "Trying to map to invalid ID" << std::endl;
+		std::cerr << "Trying to map FrameData invalid ID" << std::endl;
 		EQASSERT( false );
 	}
 	config->mapObject(this, id);
-
-	for( size_t i = 0; i < _scene_nodes.size(); ++i )
-	{
-		SceneNode *node = _scene_nodes.at(i).node;
-		if( !node )
-		{
-			// TODO refactor this and sync version to separate function
-			_scene_nodes.at(i).node = new SceneNode;
-			node = _scene_nodes.at(i).node;
-		}
-		
-		if( EQ_ID_INVALID == _scene_nodes.at(i).id )
-		{
-			std::cerr << "Trying to map Ogre to invalid ID" << std::endl;
-			EQASSERT( false );
-		}
-		config->mapObject( node, _scene_nodes.at(i).id );
-	}
 }
 
 void
@@ -180,33 +179,51 @@ eqOgre::FrameData::unmapData(eq::Config* config)
 
 
 // ------ Protected --------
+// NOTE No registering can be done in the serialize method, it's called from
+// different thread.
+// FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
+// has been commited, why?
 void 
 eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
 
+//	std::cerr << "eqOgre::FrameData::serialize mask = " << std::hex << dirtyBits
+//		<< std::dec << std::endl;
+
 	if( dirtyBits & DIRY_HEAD )
 	{
+//		std::cerr << "this = " << this << " : Serializing Head." << std::endl;
 		os << _head_pos << _head_orient;
 	}
 
 
 	if( dirtyBits & DIRTY_NODES )
 	{
+//		std::cerr << "this = " << this << " : Serializing " << _scene_nodes.size() << " SceneNodes." << std::endl;
 		os << _scene_nodes.size();
 		for( size_t i = 0; i < _scene_nodes.size(); ++i )
 		{
+
+			if( _scene_nodes.at(i).id == EQ_ID_INVALID )
+			{
+				std::cerr << "SceneNode " << _scene_nodes.at(i).node->getName()
+					<< " has invalid id." << std::endl;
+				EQASSERT( false );
+			}
 			os << _scene_nodes.at(i).id;
 		}
 	}
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
+//		std::cerr << "this = " << this << " : Serializing Reload Scene." << std::endl;
 		os << _scene_version;
 	}
 
 	if( dirtyBits & DIRTY_RESET_SCENE )
 	{
+//		std::cerr << "this = " << this << " : Serializing Reset Scene." << std::endl;
 	}
 }
 
@@ -217,6 +234,7 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 
 	if( dirtyBits & DIRY_HEAD )
 	{
+//		std::cerr << "Deserialize : head "<< std::endl;
 		is >> _head_pos >> _head_orient;
 	}
 
@@ -228,23 +246,102 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 		is >> size;
 		// TODO this will leak memory
 		_scene_nodes.resize(size);
+//		std::cerr << "Deserialize : " << size << " SceneNodes." << std::endl;
 		for( size_t i = 0; i < _scene_nodes.size(); ++i )
 		{
+			SceneNode *node = _scene_nodes.at(i).node;
+			// FIXME this does not handle changes in the IDs it will merily ignore
+			// them
 			is >> _scene_nodes.at(i).id;
-			if( _scene_nodes.at(i).id == EQ_ID_INVALID )
+			// Check for new SceneNodes
+			if( !node || (node->getID() == EQ_ID_INVALID) )
 			{
-				std::cerr << "SceneNode ID invalid when deserializing!" << std::endl;
-				EQASSERT( false );
+				if( _scene_nodes.at(i).id == EQ_ID_INVALID )
+				{
+					std::cerr << "SceneNode ID invalid when deserializing!" << std::endl;
+					//EQASSERT( false );
+				}
+				else
+				{
+					std::cerr << "SceneNode ID valid : mapping object." << std::endl;
+					_mapObject( _scene_nodes.at(i) );
+				}
 			}
 		}
 	}
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
+//		std::cerr << "Deserialize : reload scene "<< std::endl;
 		is >> _scene_version;
 	}
 
 	if( dirtyBits & DIRTY_RESET_SCENE )
 	{
+//		std::cerr << "Deserialize : reset scene "<< std::endl;
 	}
+}
+
+void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
+{
+	std::cerr << "eqOgre::FrameData::_mapObject" << std::endl;
+
+	if( !getSession() )
+	{
+		std::cerr << "No session." << std::endl;
+		EQASSERT( false );
+	}
+
+	if( !node.node )
+	{
+		// TODO refactor this and sync version to separate function
+		node.node = new SceneNode;
+	}
+	if( EQ_ID_INVALID != node.node->getID() )
+	{
+		std::cerr << "Node ID is valid! Mapping will fail." << std::endl;
+	}
+	
+	if( EQ_ID_INVALID == node.id )
+	{
+		std::cerr << "Trying to map object to invalid ID" << std::endl;
+		EQASSERT( false );
+	}
+
+	getSession()->mapObject( node.node, node.id );
+
+	// TODO find the Ogre Nodes
+	if( _ogre_sm )
+	{ node.node->findNode( _ogre_sm ); }
+}
+
+void eqOgre::FrameData::_registerObject(eqOgre::FrameData::SceneNodeIDPair& node)
+{
+	std::cerr << "Registering Object : " << node.node->getName() << std::endl;
+
+	if( !_config )
+	{
+		std::cerr << "No Config when registering object." << std::endl;
+		EQASSERT( false );
+	}
+
+	// Lets make sure we don't register the objects more than once
+	if( EQ_ID_INVALID != node.id && EQ_ID_INVALID != node.node->getID() )
+	{
+		std::cerr << "Node already registered" << std::endl;
+		EQASSERT( false );
+	}
+
+	std::cerr << "config->registerObject" << std::endl;
+	// FIXME this crashes
+	_config->registerObject( node.node);
+	std::cerr << "config->registerObject done" << std::endl;
+	// The object has to be correctly registered
+	if( EQ_ID_INVALID == node.node->getID() )
+	{
+		std::cerr << "Node was not registered" << std::endl;
+		EQASSERT( false );
+	}
+
+	node.id = node.node->getID();
 }

@@ -27,11 +27,9 @@ public :
 		uint32_t id;
 	};
 	
-	FrameData( void )
-		: _scene_version( 0 )
-	{}
+	FrameData( void );
 
-	~FrameData( void ) {}
+	virtual ~FrameData( void );
 
 	/// Tracking related
 	/// Will be removed soon
@@ -57,9 +55,11 @@ public :
 		return _head_orient;
 	}
 
-	bool findNodes( Ogre::SceneManager *man );
+	void setSceneManager( Ogre::SceneManager *man );
 
-	/// New dynamic SceneNode interface
+	/// Add a SceneNode to the distributed stack
+	/// FrameData owns all SceneNodes added using this method and will destroy
+	/// them when necessary.
 	void addSceneNode( SceneNode * node );
 
 	SceneNode *getSceneNode( std::string const &name );
@@ -96,24 +96,24 @@ public :
 	
 	enum DirtyBits
 	{
-		DIRY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
-//		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
-		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 4,
+		DIRY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
+		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
 		// TODO the reset scene is not implemented at the moment
 		// It should reset all distributed SceneNodes
-		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 5,
-		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 6
+		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 4
 	};
 
 protected :
 	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
-    virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
+	virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
+
+	void _mapObject( SceneNodeIDPair &node );
+
+	void _registerObject( SceneNodeIDPair &node );
 
 private :
-	// TODO Also it's necessary to
-	// refactor the sync, commit, register, deregister, map, unmap functions
-	// TODO dynamically adding more nodes
 	std::vector< SceneNodeIDPair > _scene_nodes;
 
 	Ogre::Vector3 _head_pos;
@@ -122,6 +122,14 @@ private :
 	// Reload the scene
 	uint32_t _scene_version;
 
+	// Session where we are, this should be zero for slave nodes and non zero
+	// for the master node.
+	eq::Config *_config;
+
+	// SceneManager used for creating mapping between eqOgre::SceneNode and
+	// Ogre::SceneNode
+	// Only valid on slaves and only needed when the SceneNode is mapped
+	Ogre::SceneManager *_ogre_sm;
 };	// class FrameData
 
 }	// namespace eqOgre

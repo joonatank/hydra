@@ -272,7 +272,7 @@ eqOgre::Window::configInitSystemWindow(const uint32_t initID)
 	EQASSERT( systemWindow );
 	if( !systemWindow->configInit( ))
 	{
-		EQWARN << "System Window initialization failed: " << getErrorMessage() << std::endl;
+		EQWARN << "System Window initialization failed: " << std::endl;
 		delete systemWindow;
 		return false;
 	}

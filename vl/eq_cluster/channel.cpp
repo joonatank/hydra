@@ -51,11 +51,13 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		<< " SceneNodes." << std::endl;
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERT( sm );
+	_frame_data.setSceneManager( sm );
+/*
 	if( _frame_data.findNodes( sm ) )
 		std::cerr << "SceneNodes found in the SceneGraph" << std::endl;
 	else
 		std::cerr << "SceneNodes were NOT found in the SceneGraph" << std::endl;
-
+*/
 	return true;
 }
 
@@ -163,7 +165,7 @@ eqOgre::Channel::updateDistribData( void )
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
-		_frame_data.findNodes( win->getSceneManager() );
+		_frame_data.setSceneManager( win->getSceneManager() );
 		
 		scene_version = _frame_data.getSceneVersion();
 	}

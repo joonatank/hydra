@@ -47,8 +47,9 @@ eqOgre::Client::initialise( void )
 
 	if( !_config->init(0) )
 	{
-		EQERROR << "Config initialization failed: "
-				<< _config->getErrorMessage() << std::endl;
+        EQASSERT( _config->getError() != eq::ERROR_NONE );
+        EQERROR << "System pipe context initialization failed: "
+                << _config->getError() << std::endl;
 		_server->releaseConfig( _config );
 		disconnectServer( _server );
 		return false;
