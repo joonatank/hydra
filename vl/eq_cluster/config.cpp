@@ -3,6 +3,8 @@
 #include "vrpn_tracker.hpp"
 #include "fake_tracker.hpp"
 
+#include "math/conversion.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -71,8 +73,9 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		_tracker->mainloop();
 		if( _tracker->getNSensors() > 0 )
 		{
-			_frame_data.setHeadPosition( _tracker->getPosition( 0 ) );
-			_frame_data.setHeadOrientation( _tracker->getOrientation( 0 ) );
+			Ogre::Matrix4 head( _tracker->getOrientation(0) );
+			head.setTrans( _tracker->getPosition(0) );
+			_setHeadMatrix(head);
 		}
 	}
 
@@ -116,7 +119,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		_ogre_trans.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
 	}
 
-
 	// Really Move the objects
 	_camera_trans();
 	_ogre_trans();
@@ -146,7 +148,19 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 	_tracker->init();
 }
 
-
+void
+eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
+{
+	// Note: real applications would use one tracking device per observer
+	const eq::Observers& observers = getObservers();
+	for( eq::Observers::const_iterator i = observers.begin();
+		i != observers.end(); ++i )
+	{
+		// When head matrix is set equalizer automatically applies it to the
+		// GL Modelview matrix as first transformation
+		(*i)->setHeadMatrix( vl::math::convert(m) );
+	}
+}
 
 
 /// Event Handling

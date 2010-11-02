@@ -191,13 +191,6 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 //	std::cerr << "eqOgre::FrameData::serialize mask = " << std::hex << dirtyBits
 //		<< std::dec << std::endl;
 
-	if( dirtyBits & DIRY_HEAD )
-	{
-//		std::cerr << "this = " << this << " : Serializing Head." << std::endl;
-		os << _head_pos << _head_orient;
-	}
-
-
 	if( dirtyBits & DIRTY_NODES )
 	{
 //		std::cerr << "this = " << this << " : Serializing " << _scene_nodes.size() << " SceneNodes." << std::endl;
@@ -231,12 +224,6 @@ void
 eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
-
-	if( dirtyBits & DIRY_HEAD )
-	{
-//		std::cerr << "Deserialize : head "<< std::endl;
-		is >> _head_pos >> _head_orient;
-	}
 
 	if( dirtyBits & DIRTY_NODES )
 	{

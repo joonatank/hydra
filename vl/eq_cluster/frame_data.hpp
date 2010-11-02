@@ -31,30 +31,6 @@ public :
 
 	virtual ~FrameData( void );
 
-	/// Tracking related
-	/// Will be removed soon
-	void setHeadPosition( Ogre::Vector3 const &pos )
-	{
-		setDirty( DIRY_HEAD );
-		_head_pos = pos;
-	}
-
-	Ogre::Vector3 const &getHeadPosition( void ) const
-	{
-		return _head_pos;
-	}
-
-	void setHeadOrientation( Ogre::Quaternion const &quat )
-	{
-		setDirty( DIRY_HEAD );
-		_head_orient = quat;
-	}
-
-	Ogre::Quaternion const &getHeadOrientation( void ) const
-	{
-		return _head_orient;
-	}
-
 	void setSceneManager( Ogre::SceneManager *man );
 
 	/// Add a SceneNode to the distributed stack
@@ -96,13 +72,12 @@ public :
 	
 	enum DirtyBits
 	{
-		DIRY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
+		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
 		// TODO the reset scene is not implemented at the moment
 		// It should reset all distributed SceneNodes
-		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
-		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 4
+		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 3
 	};
 
 protected :
@@ -115,9 +90,6 @@ protected :
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
-
-	Ogre::Vector3 _head_pos;
-	Ogre::Quaternion _head_orient;
 	
 	// Reload the scene
 	uint32_t _scene_version;

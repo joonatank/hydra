@@ -82,6 +82,7 @@ namespace eqOgre
 		virtual ~Config (void);
 
 		void _createTracker( vl::SettingsRefPtr settings );
+		void _setHeadMatrix( Ogre::Matrix4 const &m );
 		
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );

@@ -52,12 +52,7 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERT( sm );
 	_frame_data.setSceneManager( sm );
-/*
-	if( _frame_data.findNodes( sm ) )
-		std::cerr << "SceneNodes found in the SceneGraph" << std::endl;
-	else
-		std::cerr << "SceneNodes were NOT found in the SceneGraph" << std::endl;
-*/
+
 	return true;
 }
 
@@ -90,8 +85,6 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 	// Distribution
 	_frame_data.syncAll();
 	updateDistribData();
-
-	setHeadMatrix();
 
 	// From equalizer channel::frameDraw
 	EQ_GL_CALL( applyBuffer( ));
@@ -129,26 +122,6 @@ eqOgre::Channel::setOgreFrustum( void )
 	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
 	// The multiplication order is correct (the problem is obvious if it's not)
 	_camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
-}
-
-void
-eqOgre::Channel::setHeadMatrix( void )
-{
-	// TODO this should be moved to config or Client as the Observers are
-	// available there also and we don't need the head data here anymore.
-	// As the observers update the RenderContext for each Channel.
-	Ogre::Matrix4 m( _frame_data.getHeadOrientation() );
-	m.setTrans( _frame_data.getHeadPosition() );
-
-	// Note: real applications would use one tracking device per observer
-	const eq::Observers& observers = getConfig()->getObservers();
-	for( eq::Observers::const_iterator i = observers.begin();
-		i != observers.end(); ++i )
-	{
-		// When head matrix is set equalizer automatically applies it to the
-		// GL Modelview matrix as first transformation
-		(*i)->setHeadMatrix( vl::math::convert(m) );
-	}
 }
 
 void 
