@@ -2,11 +2,14 @@
 #define EQOGRE_FRAME_DATA_HPP
 
 #include <eq/fabric/serializable.h>
+#include <eq/client/config.h>
 #include <eq/net/dataIStream.h>
 #include <eq/net/dataOStream.h>
 
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
+
+#include "scene_node.hpp"
 
 namespace eqOgre
 {
@@ -14,57 +17,63 @@ namespace eqOgre
 class FrameData : public eq::fabric::Serializable
 {
 public :
+	struct SceneNodeIDPair
+	{
+		SceneNodeIDPair( SceneNode *nnode = 0, uint32_t nid = EQ_ID_INVALID )
+			: node(nnode), id(nid)
+		{}
+
+		SceneNode *node;
+		uint32_t id;
+	};
+	
 	FrameData( void )
-		: _camera_pos( Ogre::Vector3::ZERO ), _camera_rotation( Ogre::Quaternion::IDENTITY ),
-		  _ogre_pos( Ogre::Vector3::ZERO ), _ogre_rotation( Ogre::Quaternion::IDENTITY ),
-		  _scene_version( 0 )
+		: _scene_version( 0 )
 	{}
 
 	~FrameData( void ) {}
 
-	Ogre::Vector3 const &getCameraPosition( void ) const
-	{ return _camera_pos; }
-
-	void setCameraPosition( Ogre::Vector3 const &v )
-	{ 
-		setDirty( DIRTY_CAMERA );
-		_camera_pos = v; 
-	}
-	
-	Ogre::Quaternion const &getCameraRotation( void ) const
+	/// Tracking related
+	/// Will be removed soon
+	void setHeadPosition( Ogre::Vector3 const &pos )
 	{
-		return _camera_rotation; 
+		setDirty( DIRY_HEAD );
+		_head_pos = pos;
 	}
 
-	void setCameraRotation( Ogre::Quaternion const &q )
+	Ogre::Vector3 const &getHeadPosition( void ) const
 	{
-		setDirty( DIRTY_CAMERA );
-		_camera_rotation = q; 
+		return _head_pos;
 	}
 
-	// Set Ogre parameters
-	Ogre::Vector3 const &getOgrePosition( void ) const
-	{ return _ogre_pos; }
-
-	void setOgrePosition( Ogre::Vector3 const &v )
+	void setHeadOrientation( Ogre::Quaternion const &quat )
 	{
-		setDirty( DIRTY_OGRE );
-		_ogre_pos = v; 
+		setDirty( DIRY_HEAD );
+		_head_orient = quat;
 	}
 
-	Ogre::Quaternion const &getOgreRotation( void ) const
-	{ return _ogre_rotation; }
-
-	void setOgreRotation( Ogre::Quaternion const &q )
+	Ogre::Quaternion const &getHeadOrientation( void ) const
 	{
-		setDirty( DIRTY_OGRE );
-		_ogre_rotation = q; 
+		return _head_orient;
 	}
 
-	// TODO boolean value does not work that well
+	bool findNodes( Ogre::SceneManager *man );
+
+	/// New dynamic SceneNode interface
+	void addSceneNode( SceneNode * node );
+
+	SceneNode *getSceneNode( std::string const &name );
+
+	SceneNode *getSceneNode( size_t i );
+
+	size_t getNSceneNodes( void ) const
+	{ return _scene_nodes.size(); }
+
+	// TODO add SceneNode removal
+
 	void updateSceneVersion( void )
 	{ 
-		setDirty( DIRTY_RELOAD );
+		setDirty( DIRTY_RELOAD_SCENE );
 		_scene_version++;
 	}
 
@@ -72,12 +81,29 @@ public :
 	{
 		return _scene_version;
 	}
+
+	uint32_t commitAll( void );
+
+	void syncAll( void );
+
+	void registerData( eq::Config *config );
+
+	void deregisterData( eq::Config *config );
+
+	void mapData( eq::Config *config, uint32_t id );
+
+	void unmapData( eq::Config *config );
 	
 	enum DirtyBits
 	{
-		DIRTY_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_RELOAD = eq::fabric::Serializable::DIRTY_CUSTOM << 2
+		DIRY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+//		DIRTY_OGRE = eq::fabric::Serializable::DIRTY_CUSTOM << 3,
+		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 4,
+		// TODO the reset scene is not implemented at the moment
+		// It should reset all distributed SceneNodes
+		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 5,
+		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 6
 	};
 
 protected :
@@ -85,48 +111,18 @@ protected :
     virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
 private :
-	// Camera parameters
-	Ogre::Vector3 _camera_pos;
-	Ogre::Quaternion _camera_rotation;
+	// TODO Also it's necessary to
+	// refactor the sync, commit, register, deregister, map, unmap functions
+	// TODO dynamically adding more nodes
+	std::vector< SceneNodeIDPair > _scene_nodes;
 
-	// Ogre SceneNode parameters
-	Ogre::Vector3 _ogre_pos;
-	Ogre::Quaternion _ogre_rotation;
-
+	Ogre::Vector3 _head_pos;
+	Ogre::Quaternion _head_orient;
+	
 	// Reload the scene
 	uint32_t _scene_version;
 
 };	// class FrameData
-
-inline
-eq::net::DataOStream &operator<<( Ogre::Vector3 const &v, eq::net::DataOStream &os )
-{
-	os << v[0] << v[1] << v[2];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Vector3 &v, eq::net::DataIStream &is )
-{
-	is >> v[0] >> v[1] >> v[2];
-	return is;
-}
-
-inline
-eq::net::DataOStream &operator<<( Ogre::Quaternion const &q, eq::net::DataOStream &os )
-{
-	os << q[0] << q[1] << q[2] << q[3];
-	return os;
-}
-
-
-inline
-eq::net::DataIStream &operator>>( Ogre::Quaternion &q, eq::net::DataIStream &is )
-{
-	is >> q[0] >> q[1] >> q[2] >> q[3];
-	return is;
-}
 
 }	// namespace eqOgre
 

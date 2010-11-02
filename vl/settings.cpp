@@ -8,7 +8,7 @@
 #include <fstream>
 
 vl::Settings::Settings( std::string const &name )
-	: _name( name ),
+	: _project_name( name ),
 	  _tracker_default_pos( Ogre::Vector3::ZERO ),
 	  _tracker_default_orient( Ogre::Quaternion::IDENTITY )
 {

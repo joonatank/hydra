@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 {
 //	std::string conf_name("1-window.eqc");
 
-	vl::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0], "test_window" );
+	eqOgre::SettingsRefPtr settings = getSettings( test::master_test_suite().argv[0], "test_window" );
 	BOOST_REQUIRE( settings );
 
 	BOOST_TEST_MESSAGE( "args = " << settings->getEqArgs() );
@@ -85,9 +85,6 @@ BOOST_AUTO_TEST_CASE( initialization_settings )
 	eq::Window *eq_win = config->getNodes().at(0)->getPipes().at(0)->getWindows().at(0);
 	eqOgre::Window *win = dynamic_cast<eqOgre::Window *>(eq_win);
 	BOOST_CHECK( win );
-
-	// Check that tracker is avail
-	BOOST_CHECK( win->getTracker() );
 
 	// Check that camera is avail
 	BOOST_CHECK( win->getCamera() );

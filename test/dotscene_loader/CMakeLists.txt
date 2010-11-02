@@ -1,14 +1,5 @@
 project( "scene_loader" CXX )
 
-FIND_PACKAGE(OIS REQUIRED)
-
-IF(NOT OIS_FOUND)
-    MESSAGE(SEND_ERROR "Failed to find OIS.")
-ENDIF(NOT OIS_FOUND)
-
-#message( "OIS include = ${OIS_INCLUDE_DIRS} " )
-#message( "OIS libs = ${OIS_LIBRARIES} " )
-
 SET( SRCS
 	BaseApplication.cpp
 	SampleApp.cpp
@@ -20,10 +11,6 @@ SET( SRCS
 
 include_directories( SYSTEM ${OIS_INCLUDE_DIRS}
 	)
-#${OGRE_INCLUDE_DIRS}
-#	${OGRE_Terrain_INCLUDE_DIR}
-#	${Boost_INCLUDE_DIR}
-#	${OGRE_SAMPLES_INCLUDEPATH}
 
 if(WIN32)
 	file(GLOB SampleLoadApp_res ./res/*.rc)

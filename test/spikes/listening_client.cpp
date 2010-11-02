@@ -22,9 +22,7 @@ int main( const int argc, char** argv )
 	{
 		ListeningClientFixture fix;
 
-		eqOgre::InitData init_data = getInitData( argv[0], PROJECT_NAME );
-
-		vl::SettingsRefPtr settings = init_data.getSettings();
+		eqOgre::SettingsRefPtr settings = getSettings( argv[0], PROJECT_NAME );
 		if( !settings )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;
@@ -39,7 +37,7 @@ int main( const int argc, char** argv )
 
 		::NodeFactory nodeFactory;
 
-		error = !fix.init( init_data, &nodeFactory );
+		error = !fix.init( settings, &nodeFactory );
 	
 		if( !error )
 		{

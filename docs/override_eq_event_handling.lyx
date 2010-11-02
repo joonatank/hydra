@@ -1,0 +1,110 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Overriding Equalizer Event handling
+\end_layout
+
+\begin_layout Standard
+Override the Equalizer event handling with OIS event handling.
+ OIS creates it's own X Displays for getting the events.
+\end_layout
+
+\begin_layout Section
+Problem: Remove the event handling system
+\end_layout
+
+\begin_layout Standard
+Solution:
+\end_layout
+
+\begin_layout Standard
+Override All System Pipe and System Window initEventHandling and exitEventHandli
+ng functions (six of them all together) also override the eq::Pipe::createMessag
+ePump function
+\end_layout
+
+\begin_layout Standard
+Remember to override all the functions, for example overriding initEventHandling
+ in Pipe and NOT in Window will cause the application to segfault when System
+ Window is created.
+\end_layout
+
+\begin_layout Section
+Problem: Only KeyReceive events are received by OIS::Keyboard
+\end_layout
+
+\begin_layout Standard
+Solution:
+\end_layout
+
+\begin_layout Standard
+XSelectInput(xDisp, xWin, NoEventMask) for Equalizer created window and
+ display.
+\end_layout
+
+\begin_layout Section
+Problem: No Mouse events are received by OIS::Mouse
+\end_layout
+
+\begin_layout Standard
+Somehow the separate display in eq::GLXPipe is getting all MousePressEvents
+ even though the event mask is cleared later.
+ This caused the OIS::Mouse not to receive any events unless the MousePressEvent
+ was removed from the Event Mask.
+\end_layout
+
+\begin_layout Standard
+Solution:
+\end_layout
+
+\begin_layout Standard
+Override eq::GLXWindow::configInitGLXWindow to create a window without MousePres
+sEventMask (also removed all Mouse and Keyboard events).
+\end_layout
+
+\begin_layout Standard
+This solution seems to fix the KeyReceived problem also.
+\end_layout
+
+\end_body
+\end_document

@@ -8,8 +8,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent ) 
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0), _ogre_node(0),
-	  _head_pos( Ogre::Vector3::ZERO ), _head_orient( Ogre::Quaternion::IDENTITY ), _tracker()
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -30,11 +29,9 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	std::cerr << "Get camera from RenderWindow" << std::endl;
 	_camera = window->getCamera();
 
-	getInitialPositions();
-
 	createViewport();
 
-	// TODO this needs to be configurable
+	// TODO this should be configurable from DotScene
 	setNearFar( 0.1, 100.0 );
 
 	// Get framedata
@@ -44,15 +41,31 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		EQERROR << "config is not type eqOgre::Config" << std::endl;
 		return false;
 	}
-	
-	EQASSERT( config->getInitData().getFrameDataID() != EQ_ID_INVALID );
-	config->mapObject( &_frame_data, config->getInitData().getFrameDataID() );
-	
-	_tracker = ((eqOgre::Window *)getWindow())->getTracker();
-	EQASSERT( _tracker );
+
+	uint32_t frame_id = config->getSettings()->getFrameDataID();
+	EQASSERT( frame_id != EQ_ID_INVALID );
+	_frame_data.mapData( config, frame_id );
+
+	// We need to find the node from scene graph
+	std::cerr << "FrameData has " << _frame_data.getNSceneNodes()
+		<< " SceneNodes." << std::endl;
+	Ogre::SceneManager *sm = window->getSceneManager();
+	EQASSERT( sm );
+	if( _frame_data.findNodes( sm ) )
+		std::cerr << "SceneNodes found in the SceneGraph" << std::endl;
+	else
+		std::cerr << "SceneNodes were NOT found in the SceneGraph" << std::endl;
 
 	return true;
 }
+
+bool
+eqOgre::Channel::configExit()
+{
+	_frame_data.unmapData( getConfig() );
+	return eq::Channel::configExit();
+}
+
 
 /*
 void
@@ -73,7 +86,7 @@ void
 eqOgre::Channel::frameDraw( const uint32_t frameID )
 {
 	// Distribution
-	_frame_data.sync( frameID );
+	_frame_data.syncAll();
 	updateDistribData();
 
 	setHeadMatrix();
@@ -87,51 +100,43 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 
 	EQASSERT( _camera )
 	EQASSERT( _ogre_window )
-		
+
 	setOgreFrustum();
 
 	_viewport->update();
 }
-
-/* Override the applyFrustum to set Camera Frustum
-void
-eqOgre::Channel::applyFrustum() const
-{
-	// Set the Camera frusrum
-//	eqOgre::Window* pWin = (eqOgre::Window *)getWindow();
-
-	eq::Frustumf frust = getFrustum();
-	// Apply the frustum to Ogre::Camera
-//	pWin->setFrustum( frust.compute_matrix() );
-}
-*/
 
 void 
 eqOgre::Channel::setOgreFrustum( void )
 {
 	eq::Frustumf frust = getFrustum();
 	_camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
-	// TODO add support for cameras with parent
-	// Ogre::Camera::getPosition returns position relative to the parent
-	Ogre::Matrix4 viewMat = Ogre::Math::makeViewMatrix( _camera->getPosition() + _head_pos, _camera->getOrientation() ); //Ogre::Quaternion::IDENTITY );
-	_camera->setCustomViewMatrix( true, viewMat );
+
+	Ogre::Matrix4 headMatrix = vl::math::convert( getHeadTransform() );
+	Ogre::Vector3 cam_pos( _camera->getRealPosition() );//+ _frame_data.getHeadPosition() );
+	// TODO Using the camera rotation is useful for Workstations, but it looks
+	// really weird on VR systems. So it's ignored for now.
+	// TODO Add a config value to control around which axises rotations
+	// from camera are applied and which are not.
+	// Y-axis should be fine for VR systems, X and Z are not.
+	// FIXME
+	// Y-axis is working fine other than that getPitch always returns the shortest
+	// path so we can rotate the camera a bit but it returns back after that.
+	Ogre::Quaternion cam_rot( _camera->getRealOrientation().getPitch(), Ogre::Vector3::UNIT_Y );
+//	cam_rot = //Ogre::Quaternion::IDENTITY;
+	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
+	// The multiplication order is correct (the problem is obvious if it's not)
+	_camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
 }
 
 void
 eqOgre::Channel::setHeadMatrix( void )
 {
-	// Head tracking support
-	EQASSERT( _tracker );
-			
-	_tracker->mainloop();
-	if( _tracker->getNSensors() > 0 )	
-	{
-		_head_pos = _tracker->getPosition( 0 );
-		_head_orient = _tracker->getOrientation( 0 );
-	}
-
-	Ogre::Matrix4 m( _head_orient ); 
-	m.setTrans( _head_pos );
+	// TODO this should be moved to config or Client as the Observers are
+	// available there also and we don't need the head data here anymore.
+	// As the observers update the RenderContext for each Channel.
+	Ogre::Matrix4 m( _frame_data.getHeadOrientation() );
+	m.setTrans( _frame_data.getHeadPosition() );
 
 	// Note: real applications would use one tracking device per observer
 	const eq::Observers& observers = getConfig()->getObservers();
@@ -148,25 +153,19 @@ void
 eqOgre::Channel::updateDistribData( void )
 {
 	static uint32_t scene_version = 0;
-	// TODO add scene reloading
 	if( _frame_data.getSceneVersion() > scene_version )
 	{
+		// This will reload the scene but all transformations remain
+		// As this will not reset the SceneNode structures that control the
+		// transformations of objects.
 		std::cerr << "Should reload the scene now" << std::endl;
 		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
-		getInitialPositions();
+		_frame_data.findNodes( win->getSceneManager() );
+		
 		scene_version = _frame_data.getSceneVersion();
-	}
-
-	_camera->setPosition( _camera->getOrientation()*_frame_data.getCameraPosition()+_camera_initial_position );
-	_camera->setOrientation( _frame_data.getCameraRotation()*_camera_initial_orientation );
-
-	if( _ogre_node )
-	{
-		_ogre_node->setPosition( _frame_data.getOgrePosition()+_ogre_initial_position );
-		_ogre_node->setOrientation( _frame_data.getOgreRotation()*_ogre_initial_orientation );
 	}
 }
 
@@ -177,30 +176,6 @@ eqOgre::Channel::createViewport( void )
 	_ogre_window->removeAllViewports();
 	std::cerr << "Creating viewport" << std::endl;
 	_viewport = _ogre_window->addViewport( _camera );
+	// TODO this should be configurable from DotScene
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-}
-
-void 
-eqOgre::Channel::getInitialPositions( void )
-{
-	eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
-	Ogre::SceneManager *sm = win->getSceneManager();
-	EQASSERT( _camera );
-	EQASSERT( sm );
-
-	_camera_initial_position = _camera->getPosition();
-	_camera_initial_orientation = _camera->getOrientation();
-
-	// Get the ogre node
-	if( sm->hasSceneNode("ogre") )
-	{
-		_ogre_node = sm->getSceneNode( "ogre" );
-		_ogre_initial_position = _ogre_node->getPosition(); 
-		_ogre_initial_orientation = _ogre_node->getOrientation();
-	}
-	else
-	{
-		_ogre_initial_position = Ogre::Vector3::ZERO;
-		_ogre_initial_orientation = Ogre::Quaternion::IDENTITY;
-	}
 }

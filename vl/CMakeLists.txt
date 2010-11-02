@@ -9,8 +9,11 @@ set( SOURCES
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
-	eq_cluster/init_data.cpp
+	eq_cluster/pipe.cpp
+	eq_cluster/transform_event.cpp
+	eq_cluster/eq_settings.cpp
 	eq_cluster/frame_data.cpp
+	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
 	udp/client.cpp
@@ -26,7 +29,6 @@ set( HEADERS
 	fake_tracker.hpp
 	vrpn_tracker.hpp
 	settings.hpp
-
 	base/helpers.hpp
 	base/args.hpp
 	base/exceptions.hpp
@@ -37,19 +39,22 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
-	
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/window.hpp
-	eq_cluster/init_data.hpp
+	eq_cluster/transform_event.hpp
+	eq_cluster/eq_settings.hpp
 	eq_cluster/frame_data.hpp
+	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
-
+	eq_cluster/pipe.hpp
+	eq_cluster/glxPipe.hpp
+	eq_cluster/glxWindow.hpp
+	eq_cluster/aglWindow.hpp
+	eq_cluster/wglWindow.hpp
 	eq_ogre/ogre_root.hpp
-
 	math/conversion.hpp
 	math/math.hpp
-
 	udp/client.hpp
 	udp/server.hpp
 	udp/server_config.hpp

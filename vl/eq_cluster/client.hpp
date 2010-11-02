@@ -4,7 +4,7 @@
 // Equalizer
 #include <eq/eq.h>
 
-#include "init_data.hpp"
+#include "base/typedefs.hpp"
 
 namespace eqOgre
 {
@@ -13,8 +13,8 @@ namespace eqOgre
     class Client : public eq::Client
     {
     public:
-		//Client( const InitData& initData );
-		Client( eqOgre::InitData const &data );
+		Client( eqOgre::SettingsRefPtr settings );
+
         virtual ~Client (void);
 
 		// Create ogre::root corresponding to this client
@@ -30,11 +30,11 @@ namespace eqOgre
 		virtual void exit( void );
 
 		// eq overriden, loop invariant
-        virtual bool clientLoop (void);
+        virtual void clientLoop (void);
 		
 		eq::ServerPtr _server;
 		eqOgre::Config *_config;
-		eqOgre::InitData _init_data;
+		eqOgre::SettingsRefPtr _settings;
 
     };	// class Client
 

@@ -6,7 +6,7 @@
 #include "eq_cluster/config.hpp"
 #include "eq_cluster/window.hpp"
 #include "eq_cluster/channel.hpp"
-#include "eq_cluster/init_data.hpp"
+#include "eq_cluster/pipe.hpp"
 #include "base/helpers.hpp"
 #include "eq_ogre/ogre_root.hpp"
 #include "settings.hpp"
@@ -18,14 +18,17 @@
 class NodeFactory : public eq::NodeFactory
 {
 public:
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new eqOgre::Config( parent ); }
+
+	virtual eq::Pipe *createPipe( eq::Node* parent )
+	{ return new eqOgre::Pipe( parent ); }
+
 	virtual eq::Window *createWindow( eq::Pipe *parent )
 	{ return new eqOgre::Window( parent ); }
 
 	virtual eq::Channel *createChannel( eq::Window *parent )
 	{ return new eqOgre::Channel( parent ); }
-
-	virtual eq::Config *createConfig( eq::ServerPtr parent )
-	{ return new eqOgre::Config( parent ); }
 };
 
 struct ListeningClientFixture
@@ -35,21 +38,20 @@ struct ListeningClientFixture
 	~ListeningClientFixture( void )
 	{ exit(); }
 
-	bool init( eqOgre::InitData &initData,
+	bool init( eqOgre::SettingsRefPtr settings,
 			   eq::NodeFactory *nodeFactory )
-			   //std::string const &project_name )
 	{
 		InitFixture();
 
-		vl::SettingsRefPtr settings = initData.getSettings();
-
 		// Create eq log file
+		// TODO this should be cleaned and moved to somewhere else
 		uint32_t pid = vl::getPid();
 		std::stringstream ss;
 		if( !settings->getLogDir().empty() )
 		{ ss << settings->getLogDir() << "/"; }
 
-		ss << initData.getName() << "_eq_" << pid << ".log";
+		// FIXME using the project name and not the executable name
+		ss << settings->getName() << "_eq_" << pid << ".log";
 		log_file.open( ss.str().c_str() );
 
 		eq::base::Log::setOutput( log_file );
@@ -65,7 +67,7 @@ struct ListeningClientFixture
 		}
 
 		// 2. initialization of local client node
-		client = new eqOgre::Client( initData );
+		client = new eqOgre::Client( settings );
 		if( !client->initLocal( arg.size(), arg.getData() ) )
 		{
 			EQERROR << "client->initLocal failed" << std::endl;

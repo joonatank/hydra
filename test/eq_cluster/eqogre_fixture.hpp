@@ -41,8 +41,8 @@ struct EqOgreFixture
 		// 3. init config
 		return( config->init(0) );
 	}
-	
-	bool init( vl::SettingsRefPtr settings, eq::NodeFactory *fact )
+
+	bool init( eqOgre::SettingsRefPtr settings, eq::NodeFactory *fact )
 	{
 		vl::Args &args = settings->getEqArgs();
 

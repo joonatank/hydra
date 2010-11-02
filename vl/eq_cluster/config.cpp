@@ -1,5 +1,11 @@
 #include "config.hpp"
 
+#include "vrpn_tracker.hpp"
+#include "fake_tracker.hpp"
+
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
 {}
@@ -10,227 +16,214 @@ eqOgre::Config::~Config()
 void 
 eqOgre::Config::mapData( uint32_t const initDataID )
 {
-	if( _init_data.getID() == EQ_ID_INVALID )
+	EQASSERT( _settings );
+	if( _settings->getID() == EQ_ID_INVALID )
 	{
-		EQCHECK( mapObject( &_init_data, initDataID ));
-        unmapObject( &_init_data ); // data was retrieved, unmap immediately
+		EQCHECK( mapObject( _settings.get(), initDataID ));
+        unmapObject( _settings.get() ); // data was retrieved, unmap immediately
 	}
     else  // appNode, _initData is registered already
     {
-        EQASSERT( _init_data.getID() == initDataID )
+        EQASSERT( _settings->getID() == initDataID )
 	}
 }
 
+// TODO should this be deregister or unmap?
+// If it's deregister rename the function and call it from AppNode
+// If it's unmap it should be called from Channel not from AppNode
+// The unmap is moved to Channel and FrameData
+/*
 void
 eqOgre::Config::unmapData( void )
 {
-	// Nothing to do as init data is only mapped once and then unmapped
+//	std::cerr << "Config::unmapData" << std::endl;
+//	_frame_data.deregisterData(this);
 }
+*/
 
 bool
 eqOgre::Config::init( uint32_t const )
 {
-	// Register data
-	registerObject( &_frame_data );
+	/// Register data
+	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
 
-	_init_data.setFrameDataID( _frame_data.getID() );
-	registerObject( &_init_data );
+	// TODO here we need to create the SceneNodes so that they are registered
+	// TODO memory deallocation will be problematic
+	// TODO add ownership rules (FrameData should own all SceneNodes)
+	SceneNode *node = new SceneNode( "CameraNode" );
+	addSceneNode( node );
+	node = new SceneNode( "ogre" );
+	addSceneNode( node );
+
+	_frame_data.registerData(this);
+
+	_settings->setFrameDataID( _frame_data.getID() );
+	registerObject( _settings.get() );
     
-	if( !eq::Config::init( _init_data.getID() ) )
-    { return false; }
+	if( !eq::Config::init( _settings->getID() ) )
+	{ return false; }
 
-    return true;
+	return true;
 }
 
 uint32_t 
-eqOgre::Config::startFrame (const uint32_t frameID)
+eqOgre::Config::startFrame( const uint32_t frameID )
 {
-	uint32_t version;
-	if( _frame_data.isDirty() )
-	{ version = _frame_data.commit(); }
-	else
-	{ version = _frame_data.getVersion(); }
+	// Process Tracking
+	// TODO add selectable sensor
+	// TODO should be moved to Client where it belongs here it's called
+	// by all the Nodes
+	if( _tracker )
+	{
+		_tracker->mainloop();
+		if( _tracker->getNSensors() > 0 )
+		{
+			_frame_data.setHeadPosition( _tracker->getPosition( 0 ) );
+			_frame_data.setHeadOrientation( _tracker->getOrientation( 0 ) );
+		}
+	}
+
+	// Init the transformation structures
+	// TODO should be moved to Config::init or equivalent
+	if( !_camera_trans.getSceneNode() )
+	{
+		_camera_trans.setSceneNode( _frame_data.getSceneNode("CameraNode") );
+		if( !_camera_trans.getSceneNode() )
+		{
+			std::cerr << "No CameraNode found!" << std::endl;
+			EQASSERT(false);
+		}
+
+		_camera_trans.setTransXKeys( OIS::KC_D, OIS::KC_A );
+		_camera_trans.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
+		_camera_trans.setTransZKeys( OIS::KC_S, OIS::KC_W );
+
+		// TODO camera needs yaw and pitch, but our current system does not allow
+		// for yaw (forbidden in Channel) and they need to be in separate Nodes.
+		_camera_trans.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
+	}
+
+	if( !_ogre_trans.getSceneNode() )
+	{
+		_ogre_trans.setSceneNode( _frame_data.getSceneNode("ogre") );
+		if( !_ogre_trans.getSceneNode() )
+		{
+			std::cerr << "No OgreNode found!" << std::endl;
+			EQASSERT(false);
+		}
+
+		// TODO break the Ogre Node to two SceneNodes and rotate each individually
+		// to get a cleaner looking rotation (axises don't keep changing).
+		_ogre_trans.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
+		_ogre_trans.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
+	}
+
+
+	// Really Move the objects
+	_camera_trans();
+	_ogre_trans();
+
+	uint32_t version = _frame_data.commitAll();
 
 	return eq::Config::startFrame( version );
 }
 
+void
+eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
+{
+	if( settings->trackerOn() )
+	{
+		EQINFO << "Creating VRPN Tracker." << std::endl;
+		_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
+	}
+	else
+	{
+		EQINFO << "Creating Fake Tracker." << std::endl;
+		_tracker.reset( new vl::FakeTracker( ) );
+	}
+
+	_tracker->setOrientation( 0, settings->getTrackerDefaultOrientation() );
+	_tracker->setPosition( 0, settings->getTrackerDefaultPosition() );
+	_tracker->init();
+}
+
+
+
+
+/// Event Handling
+char const *CB_INFO_TEXT = "Config : OIS event received : ";
+
+// TODO the event handling should be separated to multiple functions
+// handleKeyPress, handleKeyRelease, handlePointerMotion etc.
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-    switch( event->data.type )
-    {
-        case eq::Event::KEY_PRESS:
-		{
-            _handleKeyEvent( event->data.keyPress );
-		}
-        break;
+	bool redraw = false;
+	switch( event->data.type )
+	{
+		case eq::Event::KEY_PRESS :
 
-        case eq::Event::POINTER_BUTTON_PRESS:
+			redraw = _handleKeyPressEvent(event->data.keyPress);
 			break;
 
-        case eq::Event::POINTER_BUTTON_RELEASE:
-        /*
-		{
-		
-            const eq::PointerEvent& releaseEvent = 
-                event->data.pointerButtonRelease;
-            if( releaseEvent.buttons == eq::PTR_BUTTON_NONE)
-            {
-                if( releaseEvent.button == eq::PTR_BUTTON1 )
-                {
-                    _spinX = releaseEvent.dy;
-                    _spinY = releaseEvent.dx;
-                    _redraw = true;
-                    return true;
-                }
-                if( releaseEvent.button == eq::PTR_BUTTON2 )
-                {
-                    _advance = -releaseEvent.dy;
-                    _redraw = true;
-                    return true;
-                }
-            }
-        }
-		*/
-		break;
-
-        case eq::Event::POINTER_MOTION:
-		/*
-		{
-            if( event->data.pointerMotion.buttons == eq::PTR_BUTTON_NONE )
-                return true;
-
-            if( event->data.pointerMotion.buttons == eq::PTR_BUTTON1 )
-            {
-                _spinX = 0;
-                _spinY = 0;
-
-                if( _frameData.usePilotMode())
-                    _frameData.spinCamera(-0.005f*event->data.pointerMotion.dy,
-                                          -0.005f*event->data.pointerMotion.dx);
-                else
-                    _frameData.spinModel( -0.005f*event->data.pointerMotion.dy,
-                                          -0.005f*event->data.pointerMotion.dx);
-
-                _redraw = true;
-            }
-            else if( event->data.pointerMotion.buttons == eq::PTR_BUTTON2 )
-            {
-                _advance = -event->data.pointerMotion.dy;
-                _frameData.moveCamera( 0.f, 0.f, .005f * _advance );
-                _redraw = true;
-            }
-            else if( event->data.pointerMotion.buttons == eq::PTR_BUTTON3 )
-            {
-                _frameData.moveCamera(  .0005f * event->data.pointerMotion.dx,
-                                       -.0005f * event->data.pointerMotion.dy,
-                                       0.f );
-                _redraw = true;
-            }
-		}
-		*/
-		break;
-
-        case eq::Event::WINDOW_EXPOSE:
-        case eq::Event::WINDOW_RESIZE:
-        case eq::Event::WINDOW_CLOSE:
-        case eq::Event::VIEW_RESIZE:
+		case eq::Event::KEY_RELEASE :
+			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
+			
 			break;
 
-        default:
-            break;
-    }
+		case eq::Event::POINTER_BUTTON_PRESS:
+			redraw = _handleMousePressEvent(event->data.pointerButtonPress);
+			break;
 
-	eq::Config::handleEvent( event );
-	return true;
+		case eq::Event::POINTER_BUTTON_RELEASE:
+			redraw = _handleMouseReleaseEvent(event->data.pointerButtonRelease);
+			break;
+			
+		case eq::Event::POINTER_MOTION:
+			redraw = _handleMouseMotionEvent(event->data.pointerMotion);
+			break;
+
+		case eq::Event::WINDOW_CLOSE :
+		case eq::Event::WINDOW_HIDE :
+		case eq::Event::WINDOW_EXPOSE :
+		case eq::Event::WINDOW_RESIZE :
+		case eq::Event::WINDOW_SHOW :
+			break;
+
+		default :
+			break;
+	}
+
+	return redraw;
 }
 
 bool
-eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
+eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	Ogre::Vector3 cam_pos = _frame_data.getCameraPosition();
-	Ogre::Vector3 ogre_pos = _frame_data.getOgrePosition();
-	Ogre::Quaternion ogre_rot = _frame_data.getOgreRotation();
-
-	Ogre::Real scale = 0.1;
-
 	// Used for toggle events
 	static clock_t last_time = 0;
 	clock_t time = ::clock();
 
-	// TODO add modifiers e.g. KC_ALT, KC_SHIFT
-	// TODO add KC_ESC to exit
-    switch( event.key )
+	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+	_camera_trans.keyPressed(key);
+	_ogre_trans.keyPressed(key);
+    switch( key )
     {
-		// Move Camera
-		// front
-		case 'w':
-        case 'W':
-			cam_pos += scale*(-Ogre::Vector3::UNIT_Z);
-			_frame_data.setCameraPosition( cam_pos );
+		case OIS::KC_ESCAPE :
+		case OIS::KC_Q :
+			{
+				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
+				// TODO should quit cleanly
+				stopRunning();
+			}
 			return true;
+		case OIS::KC_SPACE :
+			break;
 
-		// back
-		case 's':
-		case 'S':
-			cam_pos += scale*(Ogre::Vector3::UNIT_Z);
-			_frame_data.setCameraPosition( cam_pos );
-			return true;
-
-		// left
-		case 'a':
-		case 'A':
-			cam_pos += scale*(-Ogre::Vector3::UNIT_X);
-			_frame_data.setCameraPosition( cam_pos );
-			return true;
-
-		// right
-		case 'd':
-		case 'D':
-			cam_pos += scale*(Ogre::Vector3::UNIT_X);
-			_frame_data.setCameraPosition( cam_pos );
-			return true;
-
-		case eq::KC_PAGE_UP :
-			cam_pos += scale*(Ogre::Vector3::UNIT_Y);
-			_frame_data.setCameraPosition( cam_pos );
-			return true;
-
-		case eq::KC_PAGE_DOWN :
-			cam_pos += scale*(-Ogre::Vector3::UNIT_Y);
-			_frame_data.setCameraPosition( cam_pos );
-			return true;
-
-		// Rotate Ogre
-		// front
-		case eq::KC_UP :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Z );
-			_frame_data.setOgreRotation( ogre_rot );
-			return true;
-
-		// back
-		case eq::KC_DOWN :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Z );
-			_frame_data.setOgreRotation( ogre_rot );
-			return true;
-
-		// left
-		case eq::KC_LEFT :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( scale), Ogre::Vector3::UNIT_Y );
-			_frame_data.setOgreRotation( ogre_rot );
-			return true;
-
-		// right
-		case eq::KC_RIGHT :
-			ogre_rot = ogre_rot * Ogre::Quaternion( Ogre::Radian( -scale), Ogre::Vector3::UNIT_Y );
-			_frame_data.setOgreRotation( ogre_rot );
-			return true;
-
-		case 'r':
-		case 'R':
+		case OIS::KC_R :
 			// Reload the scene
 
-			// We need to wait five secs
+			// We need to wait at least five secs before issuing the command again
 			if( ( last_time - time )/CLOCKS_PER_SEC < 5 )
 			{
 				_frame_data.updateSceneVersion();
@@ -238,160 +231,11 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
 			}
 			return true;
 
-		// Some old stuff
-        case 'p':
-        case 'P':
-            return true;
-        case ' ':
-			/*
-            _spinX   = 0;
-            _spinY   = 0;
-            _advance = 0;
-            _frameData.reset();
-            _setHeadMatrix( eq::Matrix4f::IDENTITY );
-			*/
-            return true;
-
-        case 'i':
-        case 'I':
-			/*
-            _frameData.setCameraPosition( 0.f, 0.f, 0.f );
-            _spinX   = 0;
-            _spinY   = 0;
-            _advance = 0;
-			*/
-            return true;
-
-        case 'o':
-        case 'O':
-            //_frameData.toggleOrtho();
-            return true;
-            
-        case 'f':
-        case 'F':	
-            //_freeze = !_freeze;
-            //freezeLoadBalancing( _freeze );
-            return true;
-
-        case eq::KC_F1:
-        case 'h':
-        case 'H':
+        case OIS::KC_F1:
             //_frameData.toggleHelp();
             return true;
 
-        case 'c':
-        case 'C':
-        {
-			/*
-            const eq::CanvasVector& canvases = getCanvases();
-            if( canvases.empty( ))
-                return true;
-
-            _frameData.setCurrentViewID( EQ_ID_INVALID );
-
-            if( !_currentCanvas )
-            {
-                _currentCanvas = canvases.front();
-                return true;
-            }
-
-            eq::CanvasVector::const_iterator i = std::find( canvases.begin(),
-                                                            canvases.end(), 
-                                                            _currentCanvas );
-            EQASSERT( i != canvases.end( ));
-
-            ++i;
-            if( i == canvases.end( ))
-                _currentCanvas = canvases.front();
-            else
-                _currentCanvas = *i;
-			*/
-            return true;
-        }
-
-        case 'v':
-        case 'V':
-        {
-			/*
-            const eq::CanvasVector& canvases = getCanvases();
-            if( !_currentCanvas && !canvases.empty( ))
-                _currentCanvas = canvases.front();
-
-            if( !_currentCanvas )
-                return true;
-
-            const eq::Layout* layout = _currentCanvas->getActiveLayout();
-            if( !layout )
-                return true;
-
-            const eq::View* current = findView( _frameData.getCurrentViewID( ));
-            const eq::ViewVector& views = layout->getViews();
-            EQASSERT( !views.empty( ))
-
-            if( !current )
-            {
-                _frameData.setCurrentViewID( views.front()->getID( ));
-                return true;
-            }
-
-            eq::ViewVector::const_iterator i = std::find( views.begin(),
-                                                          views.end(), current);
-            EQASSERT( i != views.end( ));
-
-            ++i;
-            if( i == views.end( ))
-                _frameData.setCurrentViewID( EQ_ID_INVALID );
-            else
-                _frameData.setCurrentViewID( (*i)->getID( ));
-			*/
-            return true;
-        }
-
-        case 'm':
-        case 'M':
-        {
-			/*
-            if( _modelDist.empty( )) // no models
-                return true;
-
-            // current model
-            const uint32_t viewID = _frameData.getCurrentViewID();
-            View* view = static_cast< View* >( findView( viewID ));
-            const uint32_t currentID = view ? 
-                view->getModelID() : _frameData.getModelID();
-
-            // next model
-            ModelDistVector::const_iterator i;
-            for( i = _modelDist.begin(); i != _modelDist.end(); ++i )
-            {
-                if( (*i)->getID() != currentID )
-                    continue;
-                
-                ++i;
-                break;
-            }
-            if( i == _modelDist.end( ))
-                i = _modelDist.begin(); // wrap around
-            
-            // set identifier on view or frame data (default model)
-            const uint32_t modelID = (*i)->getID();
-            if( view )
-                view->setModelID( modelID );
-            else
-                _frameData.setModelID( modelID );
-            
-            if( view )
-            {
-                const Model* model = getModel( modelID );
-                _setMessage( "Model " + eq::base::getFilename( model->getName())
-                             + " active" );
-            }
-			*/
-            return true;
-        }
-
-        case 'l':
-        case 'L':
+        case OIS::KC_L :
         {
 			/*
             if( !_currentCanvas )
@@ -428,94 +272,55 @@ eqOgre::Config::_handleKeyEvent( const eq::KeyEvent& event )
             return true;
         }
 
-        // Head Tracking Emulation
-		/*
-        case eq::KC_UP:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.y() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_DOWN:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.y() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_RIGHT:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.x() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_LEFT:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.x() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_PAGE_DOWN:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.z() += 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case eq::KC_PAGE_UP:
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.z() -= 0.1f;
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '.':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_x( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ',':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_x( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ';':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_y( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '\'':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_y( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case '[':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_z( -.1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-        case ']':
-        {
-            eq::Matrix4f headMatrix = _getHeadMatrix();
-            headMatrix.pre_rotate_z( .1f );
-            _setHeadMatrix( headMatrix );
-            return true;
-        }
-		*/
         default:
             return false;
     }
+
+    return false;
 }
+
+bool
+eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
+{
+	OIS::KeyCode key = (OIS::KeyCode )(event.key);
+	_camera_trans.keyReleased(key);
+	_ogre_trans.keyReleased(key);
+    switch( key )
+    {
+		case OIS::KC_SPACE :
+			break;
+		default :
+			return false;
+	}
+
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMousePressEvent(const eq::PointerEvent& event)
+{
+//			std::cerr << "Config received mouse button press event. Button = "
+//				<< event->data.pointer.button << std::endl;
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
+{
+//			std::cerr << "Config received mouse button release event. Button = "
+//				<< event->data.pointer.button << std::endl;
+	return false;
+}
+
+bool
+eqOgre::Config::_handleMouseMotionEvent(const eq::PointerEvent& event)
+{
+	return true;
+}
+
+bool
+eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
+{
+	return false;
+}
+

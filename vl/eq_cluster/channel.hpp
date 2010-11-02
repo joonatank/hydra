@@ -28,9 +28,13 @@ public:
     virtual ~Channel (void);
 
 protected:
-	// Equalizer overrides
+	/// Equalizer overrides
     virtual bool configInit( const uint32_t initID );
+	virtual bool configExit();
     //virtual void frameClear( const uint32_t frameID );
+
+	/// Overrides all the equalizer frame draw methods
+	/// Creating custom frustum and applying head matrix
     virtual void frameDraw( const uint32_t frameID );
 
 	// Some task methods
@@ -41,26 +45,13 @@ protected:
 
 	void createViewport( void );
 
-	void getInitialPositions( void );
-
-//  virtual void applyFrustum( void ) const;
+	/// Ogre variables
 	Ogre::RenderWindow *_ogre_window;
 	Ogre::Viewport *_viewport;
 	Ogre::Camera *_camera;
 
 	// distribution related
 	FrameData _frame_data;
-	Ogre::Vector3 _camera_initial_position;
-	Ogre::Quaternion _camera_initial_orientation;
-	Ogre::SceneNode *_ogre_node;
-	Ogre::Vector3 _ogre_initial_position;
-	Ogre::Quaternion _ogre_initial_orientation;
-
-	// Tracker stuff
-	Ogre::Vector3 _head_pos;
-	Ogre::Quaternion _head_orient;
-
-	vl::TrackerRefPtr _tracker;
 
 };
 
