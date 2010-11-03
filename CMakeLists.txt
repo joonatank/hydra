@@ -1,6 +1,6 @@
 project("vl" CXX C)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 enable_testing()
 
@@ -91,6 +91,12 @@ FIND_PACKAGE(OIS REQUIRED )
 # TODO test on a system that does not have CEGUI
 FIND_PACKAGE( CEGUI QUIET )
 
+if( ${CEGUI_FOUND} )
+	message( "CEGUI found : ${CEGUI_LIBRARY} " )
+elseif()
+	message( "CEGUI not found, will not build a GUI" )
+endif()
+
 ####### Find Boost ########
 # TODO
 # Add selectable components
@@ -99,32 +105,44 @@ FIND_PACKAGE( CEGUI QUIET )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
+find_package(Boost COMPONENTS python REQUIRED )
 
+find_package(PythonLibs REQUIRED )
+
+find_package(PythonInterp REQUIRED )
+
+message( "Boost Libraries = ${Boost_PYTHON_LIBRARIES}" )
+
+message( "Python = ${PYTHON_EXECUTABLE}" )
+
+message( "Python libraries = ${PYTHON_LIBRARIES}" )
+
+include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
-	${Boost_INCLUDE_DIR}
 	${EQUALIZER_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
 	${VPRN_INCLUDE_DIR}
+	${PYTHON_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
 	)
 
 # Libraries that eqOgre library depends on
-# TODO boost test is not necessary for the library
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
-	${Boost_LIBRARIES}
 	${EQUALIZER_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARIES}
+	${PYTHON_LIBRARIES}
+	${Boost_PYTHON_LIBRARIES}
 	)
 
 # Libraries used to build project binaries
-set( LIBS eqOgre ${EQOGRE_DEB_LIBS} )
+set( LIBS eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.

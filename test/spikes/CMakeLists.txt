@@ -1,6 +1,6 @@
 project( "spikes" CXX )
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 copy_config()
 
@@ -27,7 +27,12 @@ add_executable( fake_tracking_server
 	../debug.hpp
 	)
 
-target_link_libraries( spike_listening_client ${LIBS} )
-target_link_libraries( spike_udp_renderer ${LIBS} )
-target_link_libraries( fake_tracking_server ${LIBS} )
+# Compile the python embedding example
 
+add_executable( python_embedded python_embedded.cpp )
+
+target_link_libraries( python_embedded ${Boost_PYTHON_LIBRARIES} ${PYTHON_LIBRARIES} )
+
+target_link_libraries( spike_listening_client ${LIBS} ${Boost_PYTHON_LIBRARIES} ${PYTHON_LIBRARIES}  )
+target_link_libraries( spike_udp_renderer ${LIBS} )
+target_link_libraries( fake_tracking_server ${VRPN_LIBRARY} )

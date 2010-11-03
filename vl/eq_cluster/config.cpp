@@ -5,6 +5,8 @@
 
 #include "math/conversion.hpp"
 
+#include "config_python.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -77,7 +79,6 @@ bool eqOgre::Config::addEvent(const eqOgre::TransformationEvent& event)
 
 bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
 {
-	// TODO test the operator== in TransformationEvent
 	std::vector<TransformationEvent>::iterator iter;
 	for( iter = _events.begin(); iter != _events.end(); ++iter )
 	{
@@ -116,6 +117,44 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 	if( !inited )
 	{
+		// Run init python script
+		Py_Initialize();
+
+		// Add the module to the python interpreter
+		// NOTE the name parameter does not rename the module
+		// No idea why it's there
+		if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
+			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+                 "builtin modules");
+		
+		// TODO some test code, remove when ready
+		const std::string scriptFile("script.py");
+		try {
+			_runPythonScript( scriptFile );
+		}
+		// Some error handling so that we can continue the application
+		// Will print error in std::cerr
+		catch( ... )
+		{
+			std::cerr << "Exception occured in python script." << std::endl;
+
+		}
+		if (PyErr_Occurred())
+		{
+			PyErr_Print();
+		}
+//		if( python::handle_exception(boost::bind(_runPythonScript, scriptFile)) )
+/*
+			if (PyErr_Occurred())
+		{
+			PyErr_Print();
+		}
+		else
+		{
+			std::cerr << "A C++ exception was thrown  for which "
+				<< "there was no exception translator registered." << std::endl;
+		}
+		*/
 		// Camera Events
 		SceneNode *node = new SceneNode( "CameraNode" );
 		addSceneNode( node );
@@ -192,6 +231,42 @@ eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
 	}
 }
 
+void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
+{
+	// Retrieve the main module
+	python::object main = python::import("__main__");
+
+	// Retrieve the main module's namespace
+	python::object global(main.attr("__dict__"));
+
+	ConfigWrapper c_wrapper(this);
+	//python::handle<> h_wrapper(&c_wrapper);
+
+	// Import eqOgre module
+    python::handle<> ignored(( PyRun_String("import eqOgre_python          \n"
+                                    "print 'eqOgre imported'       \n",
+                                    Py_file_input,
+                                    global.ptr(),
+                                    global.ptr() ) ));
+//	python::object wrapper( python::ptr<>( &c_wrapper ) );
+	// TODO Test code
+/*
+	global["ConfigWrapper"] = 	python::class_<ConfigWrapper>("ConfigWrapper", python::no_init)
+		.def("addEvent", &ConfigWrapper::addEvent)
+		.def("addSceneNode", &ConfigWrapper::addSceneNode)
+		.def("test_print", &ConfigWrapper::test_print)
+		;
+*/
+	global["config"] = python::ptr<>( &c_wrapper );
+//	if( !wrapper.ptr() )
+	{
+//		std::cerr << "Python ConfigWrapper is not valid object." << std::endl;
+	}
+
+	std::cout << "running file " << scriptFile << "..." << std::endl;
+	// Run a python script in an empty environment.
+	python::object result = python::exec_file(scriptFile.c_str(), global, global);
+}
 
 /// Event Handling
 char const *CB_INFO_TEXT = "Config : OIS event received : ";

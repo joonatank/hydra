@@ -41,6 +41,7 @@ set( HEADERS
 	base/typedefs.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
+	eq_cluster/config_python.hpp
 	eq_cluster/window.hpp
 	eq_cluster/transform_event.hpp
 	eq_cluster/eq_settings.hpp
@@ -62,6 +63,9 @@ set( HEADERS
 	udp/ogre_command.hpp
 	udp/print_command.hpp
 	)
+
+set( PYTHON_SRC )
+set( PYTHON_HEADERS )
 
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 

@@ -1,8 +1,16 @@
 project("tests" CXX)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
-include_directories( util )
+find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
+
+message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
+
+include_directories( util ${Boost_INCLUDE_DIR} )
+
+link_libraries( ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARIES}
+	)
 
 subdirs(util
 		spikes
@@ -38,10 +46,10 @@ add_executable( test_tracking
 
 #set( LIBS ${Boost_LIBRARIES} )
 
-target_link_libraries( test_settings ${LIBS} )
+target_link_libraries( test_settings ${OGRE_LIBRARIES} )
 #target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
-target_link_libraries( test_exceptions ${LIBS} )
-target_link_libraries( test_tracking ${LIBS} )
+target_link_libraries( test_exceptions )
+target_link_libraries( test_tracking ${OGRE_LIBRARIES} ${VRPN_LIBRARY} )
 
 add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )

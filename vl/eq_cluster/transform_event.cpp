@@ -25,9 +25,10 @@ eqOgre::TransformationEvent::operator=(const eqOgre::TransformationEvent& a)
 	_move_keys = a._move_keys;
 	_rot_keys = a._rot_keys;
 
-	// TODO Should these be copied, they are temporary variables in a way
-//	_move_dir = a._move_dir;
-//	_rotation_axises = a._rotation_axises;
+	// Temporary variables need to be set to default values (zero)
+	_move_dir =  Ogre::Vector3::ZERO;
+	_rotation_axises = Ogre::Vector3::ZERO;
+
 	return *this;
 }
 

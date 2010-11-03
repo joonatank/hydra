@@ -1,6 +1,6 @@
 project("udp_test" CXX)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 copy_config()
 
@@ -39,13 +39,13 @@ add_executable( test_udp_conf_parser
 	${eqOgre_SOURCE_DIR}/udp/server_config.hpp
 	test_udp_conf_parser.cpp )
 
-target_link_libraries( test_udp_server ${Boost_LIBRARIES} )
+target_link_libraries( test_udp_server )
 
-target_link_libraries( test_udp_client ${Boost_LIBRARIES} )
+target_link_libraries( test_udp_client )
 
-target_link_libraries( test_udp ${Boost_LIBRARIES} )
+target_link_libraries( test_udp )
 
-target_link_libraries( test_udp_conf_parser ${Boost_LIBRARIES} )
+target_link_libraries( test_udp_conf_parser )
 
 target_link_libraries( test_ogre_udp ${LIBS} )
 

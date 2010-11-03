@@ -53,12 +53,23 @@ namespace eqOgre
 		}
 
 		// TODO add remove SceneNode
+
+
+		// Python test function
+		void test_print( void )
+		{
+			std::cerr << "In eqOgre::Config::test_print" << std::endl;
+		}
+
+
 	protected :
 		virtual ~Config (void);
 
 		void _createTracker( vl::SettingsRefPtr settings );
 		void _setHeadMatrix( Ogre::Matrix4 const &m );
-		
+
+		void _runPythonScript( std::string const &scriptFile );
+
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
 		bool _handleMousePressEvent( const eq::PointerEvent& event );
