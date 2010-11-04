@@ -225,9 +225,6 @@ eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
 
 void eqOgre::Config::_initPython(void )
 {
-	// TODO needs to be moved to member variable, static is bit unsafe
-	static ConfigWrapper c_wrapper(this);
-
 	Py_Initialize();
 
 	// Add the module to the python interpreter
@@ -244,17 +241,14 @@ void eqOgre::Config::_initPython(void )
 	_global = main.attr("__dict__");
 
 	// Import eqOgre module
-	// TODO needs to be moved to python initialisation function
-	// so that this function can be called multiple times using the same
-	// or different script files.
     python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
                                     "print 'eqOgre imported'       \n",
                                     Py_file_input,
                                     _global.ptr(),
                                     _global.ptr() ) ));
 
-	// TODO needs to be moved to initialisation function
-	_global["config"] = python::ptr<>( &c_wrapper );
+	// Add a global manager i.e. this
+	_global["config"] = python::ptr<>( this );
 }
 
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)

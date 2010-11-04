@@ -9,96 +9,6 @@
 
 namespace python = boost::python;
 
-class ConfigWrapper
-{
-public :
-	ConfigWrapper( eqOgre::Config *config )
-		: _config(config)
-	{}
-
-	bool addEvent( eqOgre::TransformationEvent const &event )
-	{
-		std::cout << "C++ : config = " << _config << " : ConfigWrapper::addEvent" << std::endl
-			<< " event = " << event << std::endl;
-
-		if( !_config )
-		{
-			std::cerr << "No config in ConfigWrapper" << std::endl;
-			return false;
-		}
-
-		/*	
-		 *	TODO SceneNode is not added by this method
-		 */
-		return _config->addEvent(event);
-	}
-
-
-	bool removeEvent( eqOgre::TransformationEvent const &event )
-	{
-		std::cout << "C++ : config = " << _config << " : ConfigWrapper::removeEvent" << std::endl;
-
-
-		if( !_config )
-		{
-			std::cerr << "No config in ConfigWrapper" << std::endl;
-			return false;
-		}
-
-		return _config->removeEvent(event);
-	}
-
-	void addSceneNode( eqOgre::SceneNode *node )
-	{
-		std::cout << "C++ : config = " << _config  << " : ConfigWrapper::addSceneNode"
-			<< " node = " << *node << std::endl;
-
-		if( !_config )
-		{
-			std::cerr << "No config in ConfigWrapper" << std::endl;
-		}
-
-		//	TODO this will crash if the SceneNode is created in python
-		_config->addSceneNode(node);
-	}
-
-	void test_print( void )
-	{
-		std::cout << "C++ : config = " << _config << " : ConfigWrapper::test_print" << std::endl;
-	}
-private :
-	eqOgre::Config *_config;
-};
-
-class Test
-{
-public :
-	Test( void )
-		: _str("else")
-	{}
-		
-	void test( void )
-	{
-		std::cout << "C++ Test::test" << std::endl;
-	}
-
-	std::string getString( void )
-	{ return _str; }
-
-	std::string const &getData( void )
-	{ return _str; }
-
-	std::string &getRef( void )
-	{ return _str; }
-
-	std::string _str;
-};
-
-void test_print( void )
-{
-	std::cout << "C++ test_print" << std::endl;
-}
-
 BOOST_PYTHON_MODULE(eqOgre_python)
 {
 	using namespace eqOgre;
@@ -156,10 +66,12 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<Ogre::Radian>("Radian")
 	;
 
-	python::class_<ConfigWrapper>("Config", python::no_init)
-		.def("addEvent", &ConfigWrapper::addEvent)
-		.def("addSceneNode", &ConfigWrapper::addSceneNode)
-		.def("test_print", &ConfigWrapper::test_print)
+	python::class_<Config, boost::noncopyable>("Config", python::no_init)
+		.def("addEvent", &Config::addEvent)
+		.def("removeEvent", &Config::removeEvent)
+		.def("hasEvent", &Config::hasEvent)
+		.def("addSceneNode", &Config::addSceneNode)
+		.def("removeSceneNode", &Config::removeSceneNode)
 	;
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
@@ -170,6 +82,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )
 	;
 
+	// TODO are these of any use?
 	python::class_<eqOgre::TransformationEvent::KeyPair>("KeyPair", python::init<OIS::KeyCode, OIS::KeyCode>() )
 	;
 
@@ -221,12 +134,6 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		++i;
 	}
 
-	python::class_<Test>("Test")
-		.def("test", &Test::test )
-		.def("getString", &Test::getString )
-		.def("getData", &Test::getData, python::return_value_policy<python::reference_existing_object>() )
-		.def("getRef", &Test::getRef, python::return_value_policy<python::reference_existing_object>() )
-	;
 }
 
 #endif
