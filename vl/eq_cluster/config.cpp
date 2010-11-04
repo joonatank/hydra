@@ -117,19 +117,17 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 	if( !inited )
 	{
-		// Run init python script
-		Py_Initialize();
-
-		// Add the module to the python interpreter
-		// NOTE the name parameter does not rename the module
-		// No idea why it's there
-		if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
-			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
-                 "builtin modules");
-		
-		// TODO some test code, remove when ready
-		const std::string scriptFile("script.py");
 		try {
+			// Init the embedded python
+			_initPython();
+
+			// TODO the script file should not be hard-coded
+			// they should be in Settings
+			// like Settings::getInitScripts
+			// and Settings::getFrameScripts
+			const std::string scriptFile("script.py");
+
+			// Run init python script
 			_runPythonScript( scriptFile );
 		}
 		// Some error handling so that we can continue the application
@@ -143,47 +141,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		{
 			PyErr_Print();
 		}
-//		if( python::handle_exception(boost::bind(_runPythonScript, scriptFile)) )
-/*
-			if (PyErr_Occurred())
-		{
-			PyErr_Print();
-		}
-		else
-		{
-			std::cerr << "A C++ exception was thrown  for which "
-				<< "there was no exception translator registered." << std::endl;
-		}
-		*/
-		// Camera Events
-		SceneNode *node = SceneNode::create( "CameraNode" );
-		addSceneNode( node );
-
-		TransformationEvent event( node );
-
-		event.setTransXKeys( OIS::KC_D, OIS::KC_A );
-		event.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
-		event.setTransZKeys( OIS::KC_S, OIS::KC_W );
-
-		// TODO camera needs yaw and pitch, but our current system does not allow
-		// for yaw (forbidden in Channel) and they need to be in separate Nodes.
-		event.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
-
-		addEvent(event);
-
-		// Ogre Event
-		// Starts at disabled state
-		// NOTE Moved to python script for testing
-//		std::cerr << "Creating Ogre SceneNode" << std::endl;
-//		node = new SceneNode( "ogre" );
-//		addSceneNode( node );
-//		ogre_event = TransformationEvent( node );
-
-		// TODO break the Ogre Node to two SceneNodes and rotate each individually
-		// to get a cleaner looking rotation (axises don't keep changing).
-//		ogre_event.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
-//		ogre_event.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
-
 		inited = true;
 	}
 
@@ -232,17 +189,25 @@ eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
 	}
 }
 
-void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
+void eqOgre::Config::_initPython(void )
 {
+	// TODO needs to be moved to member variable, static is bit unsafe
+	static ConfigWrapper c_wrapper(this);
+
+	Py_Initialize();
+
+	// Add the module to the python interpreter
+	// NOTE the name parameter does not rename the module
+	// No idea why it's there
+	if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
+		throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+				"builtin modules");
+
 	// Retrieve the main module
 	python::object main = python::import("__main__");
 
 	// Retrieve the main module's namespace
-	python::object global(main.attr("__dict__"));
-
-	// TODO needs to be moved to member variable so that it's alive as long
-	// as the python interpreter
-	ConfigWrapper c_wrapper(this);
+	_global = main.attr("__dict__");
 
 	// Import eqOgre module
 	// TODO needs to be moved to python initialisation function
@@ -251,15 +216,18 @@ void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
     python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
                                     "print 'eqOgre imported'       \n",
                                     Py_file_input,
-                                    global.ptr(),
-                                    global.ptr() ) ));
+                                    _global.ptr(),
+                                    _global.ptr() ) ));
 
 	// TODO needs to be moved to initialisation function
-	global["config"] = python::ptr<>( &c_wrapper );
+	_global["config"] = python::ptr<>( &c_wrapper );
+}
 
+void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
+{
 	std::cout << "running file " << scriptFile << "..." << std::endl;
 	// Run a python script in an empty environment.
-	python::object result = python::exec_file(scriptFile.c_str(), global, global);
+	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);
 }
 
 /// Event Handling

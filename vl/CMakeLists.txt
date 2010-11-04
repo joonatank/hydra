@@ -42,6 +42,7 @@ set( HEADERS
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/config_python.hpp
+	eq_cluster/python.hpp
 	eq_cluster/window.hpp
 	eq_cluster/transform_event.hpp
 	eq_cluster/eq_settings.hpp

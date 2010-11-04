@@ -8,6 +8,9 @@
 #include "eq_settings.hpp"
 #include "transform_event.hpp"
 
+// python
+#include "python.hpp"
+
 namespace eqOgre
 {
 
@@ -59,6 +62,7 @@ namespace eqOgre
 		void _createTracker( vl::SettingsRefPtr settings );
 		void _setHeadMatrix( Ogre::Matrix4 const &m );
 
+		void _initPython( void );
 		void _runPythonScript( std::string const &scriptFile );
 
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
@@ -79,6 +83,8 @@ namespace eqOgre
 		std::vector<TransformationEvent> _events;
 		TransformationEvent ogre_event;
 
+		// Python related
+		python::object _global;
     };	// class Config
 
 }	// namespace eqOgre
