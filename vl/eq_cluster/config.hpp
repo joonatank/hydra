@@ -49,12 +49,11 @@ namespace eqOgre
 
 		bool removeEvent( TransformationEvent const &event );
 
-		void addSceneNode( SceneNode *node )
-		{
-			_frame_data.addSceneNode( node );
-		}
+		bool hasEvent( TransformationEvent const &event );
 
-		// TODO add remove SceneNode
+		void addSceneNode( SceneNode *node );
+
+		void removeSceneNode( SceneNode *node );
 
 	protected :
 		virtual ~Config (void);
@@ -81,7 +80,9 @@ namespace eqOgre
 
 		// TODO should expose an interface to outsiders
 		std::vector<TransformationEvent> _events;
-		TransformationEvent ogre_event;
+		// TODO this is empty, because the event is created in python
+		// it needs to be found from _events vector
+		TransformationEvent _ogre_event;
 
 		// Python related
 		python::object _global;

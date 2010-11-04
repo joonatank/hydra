@@ -92,6 +92,26 @@ bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
 	return false;
 }
 
+// TODO implemente
+bool eqOgre::Config::hasEvent(const eqOgre::TransformationEvent& event)
+{
+	std::cerr << "eqOgre::Config::hasEvent" << " : NOT IMPLEMENTED" << std::endl;
+	return false;
+}
+
+
+void eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
+{
+	_frame_data.addSceneNode( node );
+}
+
+// TODO implemente
+void eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
+{
+	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
+}
+
+
 uint32_t 
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
@@ -125,10 +145,24 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			// they should be in Settings
 			// like Settings::getInitScripts
 			// and Settings::getFrameScripts
-			const std::string scriptFile("script.py");
+			const std::string initScript("script.py");
 
 			// Run init python script
-			_runPythonScript( scriptFile );
+			_runPythonScript( initScript);
+
+			// Find ogre event so we can toggle it on/off
+			for( size_t i = 0; i < _events.size(); ++i )
+			{
+				SceneNodePtr node = _events.at(i).getSceneNode();
+				if( node )
+				{
+					if( node->getName() == "ogre" )
+					{
+						_ogre_event = _events.at(i);
+						break;
+					}
+				}
+			}
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -282,7 +316,7 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
 	// Used for toggle events
 	static clock_t last_time = 0;
-	static bool ogre_event_on = false;
+	static bool ogre_event_on = true;
 	clock_t time = ::clock();
 
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
@@ -303,14 +337,16 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 			return true;
 
 		case OIS::KC_SPACE :
+			// TODO should be moved to new class ToggleEvent
+			// TODO could be implemented with hasEvent -> removeEvent/addEvent
 			if( ogre_event_on )
 			{
-				removeEvent(ogre_event);
+				removeEvent(_ogre_event);
 				ogre_event_on = false;
 			}
 			else
 			{
-				addEvent(ogre_event);
+				addEvent(_ogre_event);
 				ogre_event_on = true;
 			}
 			return true;

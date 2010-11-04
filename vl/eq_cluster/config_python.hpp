@@ -3,6 +3,7 @@
 
 #include "config.hpp"
 #include "scene_node.hpp"
+#include "keycode.hpp"
 
 #include <boost/python.hpp>
 
@@ -100,6 +101,8 @@ void test_print( void )
 
 BOOST_PYTHON_MODULE(eqOgre_python)
 {
+	using namespace eqOgre;
+
 	// NOTE renaming classes works fine
 	// TODO registering objects is not working when using modules
 	// or I don't know how to register the modules first
@@ -204,31 +207,19 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.def("setRotZKeys", rz2)
 	;
 
-	python::enum_<OIS::KeyCode>("KC")
-		.value("UNASSIGNED", OIS::KC_UNASSIGNED)
-		.value("ESCAPE", OIS::KC_ESCAPE)
-		.value("SPACE", OIS::KC_SPACE)
-		.value("NUMPAD1", OIS::KC_NUMPAD1)
-		.value("NUMPAD2", OIS::KC_NUMPAD2)
-		.value("NUMPAD3", OIS::KC_NUMPAD3)
-		.value("NUMPAD4", OIS::KC_NUMPAD4)
-		.value("NUMPAD5", OIS::KC_NUMPAD5)
-		.value("NUMPAD6", OIS::KC_NUMPAD6)
-		.value("NUMPAD7", OIS::KC_NUMPAD7)
-		.value("NUMPAD8", OIS::KC_NUMPAD8)
-		.value("NUMPAD9", OIS::KC_NUMPAD9)
-		.value("NUMPAD0", OIS::KC_NUMPAD0)
-		.value("D", OIS::KC_D)
-		.value("A", OIS::KC_A)
-		.value("PGUP", OIS::KC_PGUP)
-		.value("PGDOWN", OIS::KC_PGDOWN)
-		.value("S", OIS::KC_S)
-		.value("W", OIS::KC_W)
-		.value("LEFT", OIS::KC_LEFT)
-		.value("RIGHT", OIS::KC_RIGHT)
-		.value("UP", OIS::KC_UP)
-		.value("DOWN", OIS::KC_DOWN)
-	;
+	python::enum_<OIS::KeyCode> python_keycode = python::enum_<OIS::KeyCode>("KC");
+	int i = 0;
+	while( i < OIS::KC_MEDIASELECT )
+	{
+		OIS::KeyCode code = (OIS::KeyCode)(i);
+		std::string keyName = getKeyName( code );
+		if( !keyName.empty() )
+		{
+			python_keycode.value( keyName.c_str(), code );
+		}
+
+		++i;
+	}
 
 	python::class_<Test>("Test")
 		.def("test", &Test::test )

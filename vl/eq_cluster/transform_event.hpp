@@ -2,11 +2,10 @@
 #define EQ_OGRE_TRANSFORM_EVENT_HPP
 
 #include "scene_node.hpp"
+#include "keycode.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
-
-#include <OIS/OISKeyboard.h>
 
 namespace eqOgre
 {
@@ -228,7 +227,8 @@ inline bool operator==( TransformationEvent const &a, TransformationEvent const 
 inline std::ostream & operator<<( std::ostream &os , TransformationEvent::KeyPair const &a )
 {
 	// TODO would be nice if the keys would be converted to human readable form
-	os << "KeyPair : neg = " << a.neg_key << " pos = " << a.pos_key;
+	os << "KeyPair : neg = " << getKeyName(a.neg_key) << " pos = "
+		<< getKeyName(a.pos_key);
 	return os;
 }
 
