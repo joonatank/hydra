@@ -1,6 +1,12 @@
 
 #include "scene_node.hpp"
 
+eqOgre::SceneNodePtr
+eqOgre::SceneNode::create(const std::string& name)
+{
+	return new SceneNode(name);
+}
+
 /// Public
 eqOgre::SceneNode::SceneNode(const std::string& name)
 	: Serializable(),

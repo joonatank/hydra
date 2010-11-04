@@ -44,7 +44,6 @@ namespace eqOgre
 
 		bool addEvent( TransformationEvent const &event );
 
-		// TODO add pop event
 		bool removeEvent( TransformationEvent const &event );
 
 		void addSceneNode( SceneNode *node )
@@ -53,14 +52,6 @@ namespace eqOgre
 		}
 
 		// TODO add remove SceneNode
-
-
-		// Python test function
-		void test_print( void )
-		{
-			std::cerr << "In eqOgre::Config::test_print" << std::endl;
-		}
-
 
 	protected :
 		virtual ~Config (void);

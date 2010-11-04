@@ -83,7 +83,7 @@ eqOgre::FrameData::syncAll( void )
 		if( !node )
 		{
 			std::cerr << "eqOgre::FrameData::syncAll new SceneNode" << std::endl;
-			_scene_nodes.at(i).node = new SceneNode;
+			_scene_nodes.at(i).node = SceneNode::create();
 			node = _scene_nodes.at(i).node;
 			// TODO add mapping here
 			// also needs registration to be added to addSceneNode
@@ -282,7 +282,7 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 	if( !node.node )
 	{
 		// TODO refactor this and sync version to separate function
-		node.node = new SceneNode;
+		node.node = SceneNode::create();
 	}
 	if( EQ_ID_INVALID != node.node->getID() )
 	{

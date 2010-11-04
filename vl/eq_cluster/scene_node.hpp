@@ -12,14 +12,17 @@
 
 namespace eqOgre
 {
-	
+class SceneNode;
+typedef SceneNode * SceneNodePtr;
+
 class SceneNode : public eq::fabric::Serializable
 {
 public :
-	SceneNode( std::string const &name = std::string() );
-
 	~SceneNode( void )
 	{}
+
+	// TODO this should really be ref counted
+	static SceneNodePtr create( std::string const &name = std::string() );
 
 	std::string const &getName( void ) const
 	{
@@ -63,6 +66,8 @@ public :
 	};
 
 protected :
+	SceneNode( std::string const &name = std::string() );
+		
 	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
     virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
@@ -82,6 +87,14 @@ private :
 
 };	// class SceneNode
 
+inline std::ostream & operator<<(  std::ostream &os, SceneNode const &a )
+{
+	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
+		<< " with position " << a.getPosition()
+		<< " and orientation " << a.getOrientation();
+
+	return os;
+}
 
 }	// namespace eqOgre
 

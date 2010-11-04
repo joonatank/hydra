@@ -156,7 +156,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		}
 		*/
 		// Camera Events
-		SceneNode *node = new SceneNode( "CameraNode" );
+		SceneNode *node = SceneNode::create( "CameraNode" );
 		addSceneNode( node );
 
 		TransformationEvent event( node );
@@ -173,15 +173,16 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 		// Ogre Event
 		// Starts at disabled state
-		std::cerr << "Creating Ogre SceneNode" << std::endl;
-		node = new SceneNode( "ogre" );
-		addSceneNode( node );
-		ogre_event = TransformationEvent( node );
+		// NOTE Moved to python script for testing
+//		std::cerr << "Creating Ogre SceneNode" << std::endl;
+//		node = new SceneNode( "ogre" );
+//		addSceneNode( node );
+//		ogre_event = TransformationEvent( node );
 
 		// TODO break the Ogre Node to two SceneNodes and rotate each individually
 		// to get a cleaner looking rotation (axises don't keep changing).
-		ogre_event.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
-		ogre_event.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
+//		ogre_event.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
+//		ogre_event.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
 
 		inited = true;
 	}
@@ -239,29 +240,22 @@ void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 	// Retrieve the main module's namespace
 	python::object global(main.attr("__dict__"));
 
+	// TODO needs to be moved to member variable so that it's alive as long
+	// as the python interpreter
 	ConfigWrapper c_wrapper(this);
-	//python::handle<> h_wrapper(&c_wrapper);
 
 	// Import eqOgre module
-    python::handle<> ignored(( PyRun_String("import eqOgre_python          \n"
+	// TODO needs to be moved to python initialisation function
+	// so that this function can be called multiple times using the same
+	// or different script files.
+    python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
                                     "print 'eqOgre imported'       \n",
                                     Py_file_input,
                                     global.ptr(),
                                     global.ptr() ) ));
-//	python::object wrapper( python::ptr<>( &c_wrapper ) );
-	// TODO Test code
-/*
-	global["ConfigWrapper"] = 	python::class_<ConfigWrapper>("ConfigWrapper", python::no_init)
-		.def("addEvent", &ConfigWrapper::addEvent)
-		.def("addSceneNode", &ConfigWrapper::addSceneNode)
-		.def("test_print", &ConfigWrapper::test_print)
-		;
-*/
+
+	// TODO needs to be moved to initialisation function
 	global["config"] = python::ptr<>( &c_wrapper );
-//	if( !wrapper.ptr() )
-	{
-//		std::cerr << "Python ConfigWrapper is not valid object." << std::endl;
-	}
 
 	std::cout << "running file " << scriptFile << "..." << std::endl;
 	// Run a python script in an empty environment.

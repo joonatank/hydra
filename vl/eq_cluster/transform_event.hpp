@@ -167,6 +167,7 @@ public :
 	{ _rot_keys.z = key_pair; }
 
 	friend bool operator==( TransformationEvent const &a, TransformationEvent const &b );
+	friend std::ostream & operator<<( std::ostream &os, TransformationEvent const &a );
 
 protected :
 	/// Core
@@ -222,6 +223,36 @@ inline bool operator==( TransformationEvent const &a, TransformationEvent const 
 		&& a._move_keys == b._move_keys
 		&& a._rot_keys == b._rot_keys
 		);
+}
+
+inline std::ostream & operator<<( std::ostream &os , TransformationEvent::KeyPair const &a )
+{
+	// TODO would be nice if the keys would be converted to human readable form
+	os << "KeyPair : neg = " << a.neg_key << " pos = " << a.pos_key;
+	return os;
+}
+
+inline std::ostream & operator<<(  std::ostream &os, TransformationEvent::KeyPairVec const &a )
+{
+	os << "x = " << a.x << " y = " << a.y << " z = " << a.z;
+	return os;
+}
+
+inline std::ostream & operator<<(  std::ostream &os, TransformationEvent const &a )
+{
+	std::string del("     ");
+
+	if( a.getSceneNode() )
+		os << "TransformationEvent for node = " << a.getSceneNode()->getName();
+	else
+		os << "TransformationEvent without node";
+	os << std::endl
+		<< del << "speed = " << a.getSpeed()
+		<< " m/s : " << " angular speed = " << a.getAngularSpeed() << std::endl
+		<< del << "move keys = " << a._move_keys << std::endl
+		<< del << "rot keys = " << a._rot_keys;
+
+	return os;
 }
 
 }	// namespace eqOgre
