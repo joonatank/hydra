@@ -9,6 +9,7 @@
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
+#include "frame_data_events.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
@@ -73,18 +74,18 @@ void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 
 bool eqOgre::Config::addEvent(const eqOgre::TransformationEvent& event)
 {
-	_events.push_back(event);
+	_trans_events.push_back(event);
 	return true;
 }
 
 bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
 {
 	std::vector<TransformationEvent>::iterator iter;
-	for( iter = _events.begin(); iter != _events.end(); ++iter )
+	for( iter = _trans_events.begin(); iter != _trans_events.end(); ++iter )
 	{
 		if( *iter == event )
 		{
-			_events.erase(iter);
+			_trans_events.erase(iter);
 			return true;
 		}
 	}
@@ -151,18 +152,31 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			_runPythonScript( initScript);
 
 			// Find ogre event so we can toggle it on/off
-			for( size_t i = 0; i < _events.size(); ++i )
+			// TODO add an Operation to remove TransformationEvents
+			for( size_t i = 0; i < _trans_events.size(); ++i )
 			{
-				SceneNodePtr node = _events.at(i).getSceneNode();
+				SceneNodePtr node = _trans_events.at(i).getSceneNode();
 				if( node )
 				{
 					if( node->getName() == "ogre" )
 					{
-						_ogre_event = _events.at(i);
+						_ogre_event = _trans_events.at(i);
 						break;
 					}
 				}
 			}
+
+			// TODO add an Operation to quit
+			
+			// Add a trigger event to reset the Scene
+			Trigger *trig = new KeyTrigger( OIS::KC_R, false );
+			Operation *oper = new ReloadScene( &_frame_data, 5 );
+			Event *event = new Event;
+			event->addTrigger(trig);
+			event->setOperation(oper);
+			_events.push_back( event );
+			std::cerr << "Created ReloadScene Event : currently we have "
+				<< _events.size() << " events." << std::endl;
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -179,9 +193,9 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	}
 
 	// Really Move the objects
-	for( size_t i = 0; i < _events.size(); ++i )
+	for( size_t i = 0; i < _trans_events.size(); ++i )
 	{
-		_events.at(i)();
+		_trans_events.at(i)();
 	}
 
 	uint32_t version = _frame_data.commitAll();
@@ -309,14 +323,20 @@ bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
 	// Used for toggle events
-	static clock_t last_time = 0;
 	static bool ogre_event_on = true;
-	clock_t time = ::clock();
 
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	for( size_t i = 0; i < _events.size(); ++i )
+	for( std::vector<TransformationEvent>::iterator iter = _trans_events.begin();
+		iter != _trans_events.end(); ++iter )
 	{
-		_events.at(i).keyPressed(key);
+		iter->keyPressed(key);
+	}
+
+	for( std::vector<Event *>::iterator iter = _events.begin();
+		iter != _events.end(); ++iter )
+	{
+		KeyTrigger trig(key, false);
+		(*iter)->processTrigger(&trig);
 	}
 
     switch( key )
@@ -345,58 +365,6 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 			}
 			return true;
 
-		case OIS::KC_R :
-			// Reload the scene
-
-			// We need to wait at least five secs before issuing the command again
-			if( ( last_time - time )/CLOCKS_PER_SEC < 5 )
-			{
-				_frame_data.updateSceneVersion();
-				last_time = time;
-			}
-			return true;
-
-        case OIS::KC_F1:
-            //_frameData.toggleHelp();
-            return true;
-
-        case OIS::KC_L :
-        {
-			/*
-            if( !_currentCanvas )
-                return true;
-
-            _frameData.setCurrentViewID( EQ_ID_INVALID );
-
-            uint32_t index = _currentCanvas->getActiveLayoutIndex() + 1;
-            const eq::LayoutVector& layouts = _currentCanvas->getLayouts();
-            EQASSERT( !layouts.empty( ))
-
-            if( index >= layouts.size( ))
-                index = 0;
-
-            _currentCanvas->useLayout( index );
-            
-            const eq::Layout* layout = _currentCanvas->getLayouts()[index];
-            std::ostringstream stream;
-            stream << "Layout ";
-            if( layout )
-            {
-                const std::string& name = layout->getName();
-                if( name.empty( ))
-                    stream << index;
-                else
-                    stream << name;
-            }
-            else
-                stream << "NONE";
-            
-            stream << " active";
-            _setMessage( stream.str( ));
-			*/
-            return true;
-        }
-
         default:
             return false;
     }
@@ -408,9 +376,17 @@ bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	for( size_t i = 0; i < _events.size(); ++i )
+	for( std::vector<TransformationEvent>::iterator iter = _trans_events.begin();
+		iter != _trans_events.end(); ++iter )
 	{
-		_events.at(i).keyReleased(key);
+		iter->keyReleased(key);
+	}
+
+	for( std::vector<Event *>::iterator iter = _events.begin();
+		iter != _events.end(); ++iter )
+	{
+		KeyTrigger trig(key, true);
+		(*iter)->processTrigger(&trig);
 	}
 
 	return false;

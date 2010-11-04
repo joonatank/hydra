@@ -133,13 +133,14 @@ eqOgre::Channel::updateDistribData( void )
 		// This will reload the scene but all transformations remain
 		// As this will not reset the SceneNode structures that control the
 		// transformations of objects.
-		std::cerr << "Should reload the scene now" << std::endl;
+		std::cerr << "Reloading the scene now" << std::endl;
 		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
 		_frame_data.setSceneManager( win->getSceneManager() );
-		
+		std::cerr << "Scene reloaded." << std::endl;
+
 		scene_version = _frame_data.getSceneVersion();
 	}
 }

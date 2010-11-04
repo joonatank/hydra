@@ -7,6 +7,7 @@
 #include "settings.hpp"
 #include "eq_settings.hpp"
 #include "transform_event.hpp"
+#include "event.hpp"
 
 // python
 #include "python.hpp"
@@ -78,10 +79,10 @@ namespace eqOgre
 
 		FrameData _frame_data;
 
-		// TODO should expose an interface to outsiders
-		std::vector<TransformationEvent> _events;
-		// TODO this is empty, because the event is created in python
-		// it needs to be found from _events vector
+		// NOTE we need to use Event pointer because Events can be inherited
+		std::vector<Event *> _events;
+		std::vector<TransformationEvent> _trans_events;
+		// Ogre Rotation event, used to toggle the event on/off
 		TransformationEvent _ogre_event;
 
 		// Python related
