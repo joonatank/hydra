@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <typeinfo>
+#include <iostream>
 
 #include "keycode.hpp"
 
@@ -59,6 +60,64 @@ class Operation
 {
 public :
 	virtual void operator()( void ) = 0;
+};
+
+class ToggleOperation : public Operation
+{
+public :
+	ToggleOperation( void )
+		: _inited(false)
+	{
+		// No virtual methods can be called from Constructor
+	}
+
+	/// Toggle Operations need the operation to be divided into two distinct ones
+	/// This function handles the state management
+	/// And calls the overridable toggleOn and toggleOff functions
+	void operator()( void )
+	{
+		if( !_inited )
+		{ _construct(); }
+
+		_toggle = init();
+		if( _toggle )
+		{
+			toggleOff();
+			_toggle = false;
+		}
+		else
+		{
+			toggleOn();
+			_toggle = true;
+		}
+	}
+
+private :
+	/// The virtual functions are purposefully private so that they can not be
+	/// called outside this class.
+
+	/// Deferred constuction
+	/// This is called automatically when the class is used for the first time
+	/// Allows the calls to abstract methods
+	void _construct( void )
+	{
+		_toggle = init();
+	}
+	
+	/// You need override this to provide the toggle starting value
+	virtual bool init( void ) = 0;
+
+	/// The real function called when the Operation changes to toggled state
+	virtual void toggleOn( void ) = 0;
+
+	/// The real function caleed when the Operation changes from toggled state
+	virtual void toggleOff( void ) = 0;
+
+	/// Toggle value, should not be exposed to inherited classes
+	bool _toggle;
+
+	/// Deferred construction so that we can call virtual methods
+	bool _inited;
 };
 
 // Some test operations

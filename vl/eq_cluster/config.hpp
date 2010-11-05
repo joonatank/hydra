@@ -6,6 +6,7 @@
 #include "frame_data.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
+#include "base/exceptions.hpp"
 #include "transform_event.hpp"
 #include "event.hpp"
 
@@ -82,12 +83,42 @@ namespace eqOgre
 		// NOTE we need to use Event pointer because Events can be inherited
 		std::vector<Event *> _events;
 		std::vector<TransformationEvent> _trans_events;
-		// Ogre Rotation event, used to toggle the event on/off
-		TransformationEvent _ogre_event;
 
 		// Python related
 		python::object _global;
     };	// class Config
+
+// ConfigEvents
+class ToggleTransformEvent : public ToggleOperation
+{
+public :
+	ToggleTransformEvent( Config *conf, TransformationEvent const &transform )
+		: _config(conf), _transform(transform)
+	{
+		if( !_config )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	}
+
+private :
+	/// Override the ToggleOperation virtual methods
+	virtual bool init( void )
+	{
+		return _config->hasEvent( _transform );
+	}
+
+	virtual void toggleOn( void )
+	{
+		_config->addEvent( _transform );
+	}
+
+	virtual void toggleOff( void )
+	{
+		_config->removeEvent( _transform );
+	}
+	
+	Config *_config;
+	TransformationEvent _transform;
+};
 
 }	// namespace eqOgre
 

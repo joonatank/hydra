@@ -3,6 +3,7 @@
 
 #include "event.hpp"
 #include "frame_data.hpp"
+#include <base/exceptions.hpp>
 
 namespace eqOgre
 {
@@ -14,14 +15,13 @@ public :
 	ReloadScene( FrameData *data, double timeLimit )
 		: _frame_data(data), _last_time( ::clock() ), _time_limit(timeLimit)
 	{
+		if( !_frame_data )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 	}
 
 	virtual void operator()( void )
 	{
-		// TODO should throw
-		if( !_frame_data )
-		{ return; }
-
+		// TODO the clock needs to be moved to the Trigger
 		clock_t time = ::clock();
 		std::cerr << "ReloadScene::operator()" << std::endl;
 

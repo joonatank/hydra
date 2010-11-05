@@ -93,10 +93,15 @@ bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
 	return false;
 }
 
-// TODO implemente
 bool eqOgre::Config::hasEvent(const eqOgre::TransformationEvent& event)
 {
-	std::cerr << "eqOgre::Config::hasEvent" << " : NOT IMPLEMENTED" << std::endl;
+	std::cerr << "eqOgre::Config::hasEvent" << std::endl;
+	std::vector<TransformationEvent>::iterator iter;
+	for( iter = _trans_events.begin(); iter != _trans_events.end(); ++iter )
+	{
+		if( event == *iter )
+		{ return true; }
+	}
 	return false;
 }
 
@@ -106,7 +111,7 @@ void eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
 	_frame_data.addSceneNode( node );
 }
 
-// TODO implemente
+// TODO implement
 void eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
 {
 	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
@@ -119,8 +124,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
 	// Process Tracking
 	// TODO add selectable sensor
-	// TODO should be moved to Client where it belongs here it's called
-	// by all the Nodes
 	if( _tracker )
 	{
 		_tracker->mainloop();
@@ -152,7 +155,9 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			_runPythonScript( initScript);
 
 			// Find ogre event so we can toggle it on/off
-			// TODO add an Operation to remove TransformationEvents
+			// TODO add function to find Events
+			// Ogre Rotation event, used to toggle the event on/off
+			TransformationEvent ogre_event;
 			for( size_t i = 0; i < _trans_events.size(); ++i )
 			{
 				SceneNodePtr node = _trans_events.at(i).getSceneNode();
@@ -160,23 +165,31 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 				{
 					if( node->getName() == "ogre" )
 					{
-						_ogre_event = _trans_events.at(i);
+						ogre_event = _trans_events.at(i);
 						break;
 					}
 				}
 			}
 
+			Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
+			Operation *oper = new ToggleTransformEvent( this, ogre_event );
+			Event *event = new Event;
+			event->addTrigger(trig);
+			event->setOperation(oper);
+			_events.push_back( event );
+
 			// TODO add an Operation to quit
 			
 			// Add a trigger event to reset the Scene
-			Trigger *trig = new KeyTrigger( OIS::KC_R, false );
-			Operation *oper = new ReloadScene( &_frame_data, 5 );
-			Event *event = new Event;
+			trig = new KeyTrigger( OIS::KC_R, false );
+			oper = new ReloadScene( &_frame_data, 5 );
+			event = new Event;
 			event->addTrigger(trig);
 			event->setOperation(oper);
 			_events.push_back( event );
 			std::cerr << "Created ReloadScene Event : currently we have "
 				<< _events.size() << " events." << std::endl;
+
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -322,9 +335,6 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	// Used for toggle events
-	static bool ogre_event_on = true;
-
 	OIS::KeyCode key = (OIS::KeyCode )(event.key);
 	for( std::vector<TransformationEvent>::iterator iter = _trans_events.begin();
 		iter != _trans_events.end(); ++iter )
@@ -347,21 +357,6 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
 				// TODO should quit cleanly
 				stopRunning();
-			}
-			return true;
-
-		case OIS::KC_SPACE :
-			// TODO should be moved to new class ToggleEvent
-			// TODO could be implemented with hasEvent -> removeEvent/addEvent
-			if( ogre_event_on )
-			{
-				removeEvent(_ogre_event);
-				ogre_event_on = false;
-			}
-			else
-			{
-				addEvent(_ogre_event);
-				ogre_event_on = true;
 			}
 			return true;
 
