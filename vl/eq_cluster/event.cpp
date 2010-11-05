@@ -17,8 +17,10 @@ eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other)
 }
 
 /// Event Public
-eqOgre::Event::Event(eqOgre::Operation* oper, eqOgre::Trigger* trig)
-	: _operation(oper)
+eqOgre::Event::Event( eqOgre::Operation* oper,
+					  eqOgre::Trigger* trig,
+					  double time_limit )
+	: _operation(oper), _last_time( ::clock() ), _time_limit(time_limit)
 {
 	if( trig )
 	{ _triggers.push_back(trig); }
@@ -27,9 +29,18 @@ eqOgre::Event::Event(eqOgre::Operation* oper, eqOgre::Trigger* trig)
 bool
 eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 {
+	// TODO the clock needs to be moved to the Event
+	clock_t time = ::clock();
+
 	if( _findTrigger(trig) != _triggers.end() )
 	{
-		(*_operation)();
+		// We need to wait _time_limit secs before issuing the command again
+		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
+		{
+			(*_operation)();
+			_last_time = time;
+		}
+
 		return true;
 	}
 

@@ -187,8 +187,9 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 			// Add a trigger event to reset the Scene
 			trig = new KeyTrigger( OIS::KC_R, false );
-			oper = new ReloadScene( &_frame_data, 5 );
-			event = new Event( oper, trig );
+			oper = new ReloadScene( &_frame_data );
+			double time_limit = 5; // In seconds
+			event = new Event( oper, trig, time_limit );
 			_events.push_back( event );
 			std::cerr << "Created ReloadScene Event : currently we have "
 				<< _events.size() << " events." << std::endl;

@@ -68,7 +68,7 @@ public :
 class Event
 {
 public :
-	Event( Operation *oper = 0, Trigger *trig = 0 );
+	Event( Operation *oper = 0, Trigger *trig = 0, double time_limit = 0 );
 
 	virtual ~Event( void ) {}
 	// Goes through the triggers in this event and if the trigger passed here
@@ -88,6 +88,9 @@ protected :
 	
 	std::vector< Trigger *> _triggers;
 	Operation *_operation;
+
+	::clock_t _last_time;
+	double _time_limit;
 
 };	// class Event
 
