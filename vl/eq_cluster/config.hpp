@@ -88,37 +88,72 @@ namespace eqOgre
 		python::object _global;
     };	// class Config
 
+
+
 // ConfigEvents
-class ToggleTransformEvent : public ToggleOperation
+class ConfigOperation : public Operation
 {
 public :
-	ToggleTransformEvent( Config *conf, TransformationEvent const &transform )
-		: _config(conf), _transform(transform)
+	ConfigOperation( Config *config )
+		: _config( config )
 	{
 		if( !_config )
 		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 	}
 
-private :
-	/// Override the ToggleOperation virtual methods
-	virtual bool init( void )
-	{
-		return _config->hasEvent( _transform );
-	}
+protected :
+	Config *_config;
 
-	virtual void toggleOn( void )
+};	// class ConfigOperation
+
+class AddTransformEvent : public ConfigOperation
+{
+public :
+	AddTransformEvent( Config *conf, TransformationEvent const &transform )
+		: ConfigOperation(conf), _transform(transform)
+	{}
+
+	virtual void operator()( void )
 	{
 		_config->addEvent( _transform );
 	}
 
-	virtual void toggleOff( void )
+private :
+	TransformationEvent _transform;
+
+};
+
+class RemoveTransformEvent : public ConfigOperation
+{
+public :
+	RemoveTransformEvent( Config *conf, TransformationEvent const &transform )
+		: ConfigOperation(conf), _transform(transform)
+	{}
+
+	virtual void operator()( void )
 	{
 		_config->removeEvent( _transform );
 	}
-	
-	Config *_config;
+
+private :
+
 	TransformationEvent _transform;
 };
+
+class QuitOperation : public ConfigOperation
+{
+public :
+	QuitOperation( Config *config )
+		: ConfigOperation(config)
+	{}
+
+	virtual void operator()( void )
+	{
+		_config->stopRunning();
+	}
+
+};	// class QuitOperation
+
 
 }	// namespace eqOgre
 

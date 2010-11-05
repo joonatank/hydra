@@ -10,6 +10,7 @@ set( SOURCES
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/pipe.cpp
+	eq_cluster/event.cpp
 	eq_cluster/transform_event.cpp
 	eq_cluster/eq_settings.cpp
 	eq_cluster/frame_data.cpp

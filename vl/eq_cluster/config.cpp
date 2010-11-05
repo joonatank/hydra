@@ -172,20 +172,23 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			}
 
 			Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
-			Operation *oper = new ToggleTransformEvent( this, ogre_event );
-			Event *event = new Event;
-			event->addTrigger(trig);
-			event->setOperation(oper);
+			Operation *add_oper = new AddTransformEvent( this, ogre_event );
+			Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
+			Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
 			_events.push_back( event );
 
-			// TODO add an Operation to quit
-			
+			// Add a trigger event to Quit the Application
+			trig = new KeyTrigger( OIS::KC_Q, false );
+			Operation *oper = new QuitOperation( this );
+			event = new Event( oper, trig );
+			trig = new KeyTrigger( OIS::KC_ESCAPE, false );
+			event->addTrigger(trig);
+			_events.push_back( event );
+
 			// Add a trigger event to reset the Scene
 			trig = new KeyTrigger( OIS::KC_R, false );
 			oper = new ReloadScene( &_frame_data, 5 );
-			event = new Event;
-			event->addTrigger(trig);
-			event->setOperation(oper);
+			event = new Event( oper, trig );
 			_events.push_back( event );
 			std::cerr << "Created ReloadScene Event : currently we have "
 				<< _events.size() << " events." << std::endl;
@@ -288,11 +291,10 @@ void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 /// Event Handling
 char const *CB_INFO_TEXT = "Config : OIS event received : ";
 
-// TODO the event handling should be separated to multiple functions
-// handleKeyPress, handleKeyRelease, handlePointerMotion etc.
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
+	
 	bool redraw = false;
 	switch( event->data.type )
 	{
@@ -348,21 +350,6 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 		KeyTrigger trig(key, false);
 		(*iter)->processTrigger(&trig);
 	}
-
-    switch( key )
-    {
-		case OIS::KC_ESCAPE :
-		case OIS::KC_Q :
-			{
-				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
-				// TODO should quit cleanly
-				stopRunning();
-			}
-			return true;
-
-        default:
-            return false;
-    }
 
     return false;
 }
