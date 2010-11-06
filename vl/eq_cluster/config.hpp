@@ -12,6 +12,7 @@
 
 // python
 #include "python.hpp"
+#include "event_manager.hpp"
 
 namespace eqOgre
 {
@@ -84,9 +85,12 @@ namespace eqOgre
 		std::vector<Event *> _events;
 		std::vector<TransformationEvent> _trans_events;
 
+		EventManager *_event_manager;
+
 		// Python related
 		python::object _global;
-    };	// class Config
+
+	};	// class Config
 
 
 
@@ -94,66 +98,126 @@ namespace eqOgre
 class ConfigOperation : public Operation
 {
 public :
-	ConfigOperation( Config *config )
-		: _config( config )
-	{
-		if( !_config )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-	}
+	ConfigOperation( void )
+		: _config(0)
+	{}
+
+	void setConfig( Config *conf )
+	{ _config = conf; }
+
+	Config *getConfig( void )
+	{ return _config; }
 
 protected :
 	Config *_config;
 
 };	// class ConfigOperation
 
-class AddTransformEvent : public ConfigOperation
+class EventManagerOperation : public Operation
 {
 public :
-	AddTransformEvent( Config *conf, TransformationEvent const &transform )
-		: ConfigOperation(conf), _transform(transform)
+	EventManagerOperation( void )
+		: _event_man(0)
+	{}
+	
+	void setManager( EventManager *event_man )
+	{ _event_man = event_man; }
+
+	EventManager *getManager( void )
+	{ return _event_man; }
+
+protected :
+	EventManager *_event_man;
+};
+
+class AddTransformOperation : public EventManagerOperation
+{
+public :
+	// FIXME setting parameters when using factory
+	AddTransformOperation( void )
+		: _transform(0)
 	{}
 
-	virtual void operator()( void )
+	void setTransformEvent( TransformationEvent *transform )
+	{ _transform = transform; }
+
+	TransformationEvent *getTransformEvent( void )
+	{ return _transform; }
+
+	virtual void execute( void )
 	{
-		_config->addEvent( _transform );
+		if( !_event_man )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		// FIXME this needs to access EventHandler not config
+//		_config->addEvent( _transform );
 	}
 
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+
 private :
-	TransformationEvent _transform;
+	TransformationEvent *_transform;
 
 };
 
-class RemoveTransformEvent : public ConfigOperation
+
+class RemoveTransformOperation : public EventManagerOperation
 {
 public :
-	RemoveTransformEvent( Config *conf, TransformationEvent const &transform )
-		: ConfigOperation(conf), _transform(transform)
+	// FIXME setting parameters when using factory
+	RemoveTransformOperation( void )
+		: _transform(0)
 	{}
 
-	virtual void operator()( void )
+	void setTransformEvent( TransformationEvent *transform )
+	{ _transform = transform; }
+
+	TransformationEvent *getTransformEvent( void )
+	{ return _transform; }
+	
+
+	virtual void execute( void )
 	{
-		_config->removeEvent( _transform );
+		if( !_event_man )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		// FIXME this needs to access EventHandler not config
+//		_config->removeEvent( _transform );
 	}
 
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
 private :
 
-	TransformationEvent _transform;
+	TransformationEvent *_transform;
 };
 
 class QuitOperation : public ConfigOperation
 {
 public :
-	QuitOperation( Config *config )
-		: ConfigOperation(config)
+	// FIXME setting parameters when using factory
+	QuitOperation( void )
 	{}
 
-	virtual void operator()( void )
+	virtual void execute( void )
 	{
+		if( !_config )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
 		_config->stopRunning();
 	}
 
-};	// class QuitOperation
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
 
+	static const std::string TYPENAME;
+
+};	// class QuitOperation
 
 }	// namespace eqOgre
 

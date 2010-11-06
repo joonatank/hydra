@@ -11,17 +11,30 @@ namespace eqOgre
 class ReloadScene : public Operation
 {
 public :
-	ReloadScene( FrameData *data )
-		: _frame_data(data)
+	ReloadScene( void )
+	{
+	}
+
+	void setFrameData( FrameData *data )
+	{
+		_frame_data = data;
+	}
+
+	FrameData *getFrameData( void )
+	{ return _frame_data; }
+
+	virtual void execute( void )
 	{
 		if( !_frame_data )
 		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-	}
 
-	virtual void operator()( void )
-	{
 		_frame_data->updateSceneVersion();
 	}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
 
 private :
 	FrameData *_frame_data;

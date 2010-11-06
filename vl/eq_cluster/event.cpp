@@ -1,13 +1,15 @@
 
 #include "event.hpp"
 
+#include "base/exceptions.hpp"
+
 /// KeyTrigger Public
-eqOgre::KeyTrigger::KeyTrigger(OIS::KeyCode key, bool released)
-	: _key(key), _released(released)
+eqOgre::KeyTrigger::KeyTrigger( void )
+	: _key( OIS::KC_UNASSIGNED ), _released(false)
 {}
 
 bool
-eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other)
+eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other) const
 {
 	KeyTrigger const &key_other = static_cast<KeyTrigger const &>( other );
 	if( key_other._key == _key && key_other._released == _released )
@@ -15,6 +17,10 @@ eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other)
 
 	return false;
 }
+
+std::string const eqOgre::KeyTrigger::TYPENAME = "KeyTrigger";
+
+std::string const eqOgre::FrameTrigger::TYPENAME = "FrameTrigger";
 
 /// Event Public
 eqOgre::Event::Event( eqOgre::Operation* oper,
@@ -29,6 +35,12 @@ eqOgre::Event::Event( eqOgre::Operation* oper,
 bool
 eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 {
+	if( !_operation )
+	{
+		std::cerr << "No operation" << std::endl;
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
+	
 	// TODO the clock needs to be moved to the Event
 	clock_t time = ::clock();
 
@@ -37,7 +49,7 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 		// We need to wait _time_limit secs before issuing the command again
 		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
 		{
-			(*_operation)();
+			_operation->execute();
 			_last_time = time;
 		}
 
@@ -75,6 +87,9 @@ eqOgre::Event::addTrigger(eqOgre::Trigger* trig)
 void
 eqOgre::Event::setOperation(eqOgre::Operation* oper)
 { _operation = oper; }
+
+std::string const eqOgre::BasicEvent::TYPENAME = "BasicEvent";
+
 
 /// Event protected
 std::vector< eqOgre::Trigger * >::iterator
@@ -115,17 +130,19 @@ eqOgre::ToggleEvent::processTrigger(eqOgre::Trigger* trig)
 	return false;
 }
 
+std::string const eqOgre::ToggleEvent::TYPENAME = "ToggleEvent";
+
 /// ToggleEvent private
 void
 eqOgre::ToggleEvent::toggleOn(void )
 {
 	if( _toggleOn )
-		(*_toggleOn)();
+		_toggleOn->execute();
 }
 
 void
 eqOgre::ToggleEvent::toggleOff(void )
 {
 	if( _toggleOff )
-		(*_toggleOff)();
+		_toggleOff->execute();
 }

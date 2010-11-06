@@ -1,13 +1,28 @@
 
 #include "transform_event.hpp"
 
+std::string const eqOgre::TransformOperation::TYPENAME = "TransformOperation";
+
+std::string const eqOgre::SetTransformationOperation::TYPENAME = "SetTransformationOperation";
+
+std::string const eqOgre::MoveOperation::TYPENAME = "MoveOperation";
+
 eqOgre::TransformationEvent::TransformationEvent(eqOgre::SceneNode* node)
 	: _node(node), _last_time( ::clock() ), _speed(1),
 		_angular_speed( Ogre::Degree(60) ),
-		_move_keys(), _rot_keys(),
-		_move_dir( Ogre::Vector3::ZERO ),
-		_rotation_axises( Ogre::Vector3::ZERO )
-{}
+		_operation( new MoveOperation(node) )
+//		_move_keys(), _rot_keys(),
+//		_move_dir( Ogre::Vector3::ZERO ),
+//		_rotation_axises( Ogre::Vector3::ZERO )
+{
+//	if( !_node )
+//	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_trans_triggers.resize(3);;
+	_rot_triggers.resize(3);;
+}
+
+std::string const eqOgre::TransformationEvent::TYPENAME = "TransformationEvent";
 
 eqOgre::TransformationEvent::TransformationEvent(const eqOgre::TransformationEvent& a)
 {
@@ -18,6 +33,7 @@ eqOgre::TransformationEvent::TransformationEvent(const eqOgre::TransformationEve
 eqOgre::TransformationEvent &
 eqOgre::TransformationEvent::operator=(const eqOgre::TransformationEvent& a)
 {
+	/*
 	_node = a._node;
 	_last_time = a._last_time;
 	_speed = a._speed;
@@ -28,35 +44,98 @@ eqOgre::TransformationEvent::operator=(const eqOgre::TransformationEvent& a)
 	// Temporary variables need to be set to default values (zero)
 	_move_dir =  Ogre::Vector3::ZERO;
 	_rotation_axises = Ogre::Vector3::ZERO;
+	*/
 
 	return *this;
 }
 
-void eqOgre::TransformationEvent::operator()(void )
+void
+eqOgre::TransformationEvent::operator()(void )
 {
 	clock_t time = ::clock();
 	// Secs since last frame
 	double t = ((double)( time - _last_time ))/CLOCKS_PER_SEC;
 
-	// Check that we have an object and we are moving
-	// TODO should check the Vector3 with a delta zero
-	if( _node && _move_dir != Ogre::Vector3::ZERO )
-	{
-		Ogre::Vector3 pos = _node->getPosition();
-		pos += _speed*t*_move_dir.normalisedCopy();
-		_node->setPosition( pos );
-	}
-
-	if( _node && _rotation_axises != Ogre::Vector3::ZERO )
-	{
-		Ogre::Quaternion orient = _node->getOrientation();
-		Ogre::Quaternion qx( _angular_speed*t, _rotation_axises );
-		_node->setOrientation( qx*orient );
-	}
+	_operation->execute( t );
 
 	_last_time = time;
 }
 
+bool
+eqOgre::TransformationEvent::processTrigger(eqOgre::Trigger* trig)
+{
+	if( _trans_triggers.at(0)._trig1 == trig )
+	{
+		_operation->addMove( Ogre::Vector3::UNIT_X );
+		return true;
+	}
+	else if( _trans_triggers.at(0)._trig2 == trig )
+	{
+		_operation->addMove( -Ogre::Vector3::UNIT_X );
+		return true;
+	}
+	else if( _trans_triggers.at(1)._trig1 == trig )
+	{
+		_operation->addMove( Ogre::Vector3::UNIT_Y );
+		return true;
+	}
+	else if( _trans_triggers.at(1)._trig1 == trig )
+	{
+		_operation->addMove( -Ogre::Vector3::UNIT_Y );
+		return true;
+	}
+	else if( _trans_triggers.at(2)._trig1 == trig )
+	{
+		_operation->addMove( Ogre::Vector3::UNIT_Z );
+		return true;
+	}
+	else if( _trans_triggers.at(2)._trig1 == trig )
+	{
+		_operation->addMove( -Ogre::Vector3::UNIT_Z );
+		return true;
+	}
+
+	else if( _rot_triggers.at(0)._trig1 == trig )
+	{
+		_operation->addRotation( Ogre::Vector3::UNIT_X );
+		return true;
+	}
+	else if( _rot_triggers.at(0)._trig2 == trig )
+	{
+		_operation->addRotation( -Ogre::Vector3::UNIT_X );
+		return true;
+	}
+	else if( _rot_triggers.at(1)._trig1 == trig )
+	{
+		_operation->addRotation( Ogre::Vector3::UNIT_Y );
+		return true;
+	}
+	else if( _rot_triggers.at(1)._trig2 == trig )
+	{
+		_operation->addRotation( -Ogre::Vector3::UNIT_Y );
+		return true;
+	}
+	else if( _rot_triggers.at(2)._trig1 == trig )
+	{
+		_operation->addRotation( Ogre::Vector3::UNIT_Z );
+		return true;
+	}
+	else if( _rot_triggers.at(2)._trig2 == trig )
+	{
+		_operation->addRotation( -Ogre::Vector3::UNIT_Z );
+		return true;
+	}
+
+	else if( FrameTrigger() == *trig )
+	{
+		(*this)();
+		return true;
+	}
+
+	return false;
+}
+
+/*
 bool eqOgre::TransformationEvent::keyPressed(OIS::KeyCode key)
 {
 	bool retval = false;
@@ -96,4 +175,4 @@ bool eqOgre::TransformationEvent::keyReleased(OIS::KeyCode key)
 
 	return retval;
 }
-
+*/

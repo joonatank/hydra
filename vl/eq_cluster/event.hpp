@@ -26,41 +26,70 @@ namespace eqOgre
 class Trigger
 {
 public :
-	bool operator==( Trigger const &other )
+	bool operator==( Trigger const &other ) const
 	{
 		return ((typeid(*this) == typeid(other)) && isEqual(other));
 	}
 
-	virtual bool isEqual( Trigger const &other ) = 0;
+	virtual bool isEqual( Trigger const &other ) const = 0;
 
+	virtual std::string const &getTypeName( void ) const = 0;
 };
 
 class KeyTrigger : public Trigger
 {
 public :
-	KeyTrigger( OIS::KeyCode key, bool released );
+	KeyTrigger( void );
 
-	virtual bool isEqual( Trigger const &other );
+	void setKey( OIS::KeyCode key )
+	{ _key = key; }
+	
+	void setReleased( bool released )
+	{ _released = released; }
 
+	virtual bool isEqual( Trigger const &other ) const;
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
 
 private :
 	OIS::KeyCode _key;
 	bool _released;
 };
 
-class Operation
+/// Trigger that is triggered when a frame is rendered
+class FrameTrigger : public Trigger
 {
 public :
-	virtual void operator()( void ) = 0;
+	virtual bool isEqual( Trigger const &other ) const
+	{
+		return true;
+	}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
 };
 
 
+class Operation
+{
+public :
+	virtual void execute( void ) = 0;
+//	virtual void operator()( void ) = 0;
+
+	virtual std::string const &getTypeName( void ) const = 0;
+};
 
 // Some test operations
 // NOTE Don't try to use function pointers
 // Just create a separate operation for all classes
 
 /**	Base class for all Events
+	Abstract interface
 	Event has multiple Triggers
 	But only one Operation
 	All Triggers trigger the same operation
@@ -83,6 +112,14 @@ public :
 
 	void setOperation( Operation *oper );
 
+	void setTimeLimit( double time_limit )
+	{ _time_limit = time_limit; }
+
+	double getTimeLimit( void ) const
+	{ return _time_limit; }
+
+	virtual std::string const &getTypeName( void ) const = 0;
+
 protected :
 	std::vector<Trigger *>::iterator _findTrigger( Trigger *trig );
 	
@@ -94,11 +131,26 @@ protected :
 
 };	// class Event
 
+/// Basic Event implementation used for Trigger Events
+class BasicEvent : public Event
+{
+public :
+	BasicEvent( Operation *oper = 0, Trigger *trig = 0, double time_limit = 0 )
+		: Event( oper, trig, time_limit )
+	{}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+	
+	static const std::string TYPENAME;
+};
 
 class ToggleEvent : public Event
 {
 public :
-	ToggleEvent( bool toggle_state,
+	// TODO this needs functions to set all parameters
+	// Constuctor needs to cleaned as the factory can not set the parameters
+	ToggleEvent( bool toggle_state = false,
 				 Operation *toggleOn = 0,
 				 Operation *toggleOff = 0,
 				 Trigger *trig = 0 );
@@ -107,6 +159,11 @@ public :
 	/// This function handles the state management
 	/// And calls the overridable toggleOn and toggleOff functions
 	virtual bool processTrigger( Trigger *trig );
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
 
 private :
 

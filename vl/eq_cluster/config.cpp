@@ -12,7 +12,7 @@
 #include "frame_data_events.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent )
+	: eq::Config ( parent ), _event_manager( new EventManager )
 {}
 
 eqOgre::Config::~Config()
@@ -72,6 +72,7 @@ void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 	}
 }
 
+/*
 bool eqOgre::Config::addEvent(const eqOgre::TransformationEvent& event)
 {
 	_trans_events.push_back(event);
@@ -104,7 +105,7 @@ bool eqOgre::Config::hasEvent(const eqOgre::TransformationEvent& event)
 	}
 	return false;
 }
-
+*/
 
 void eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
 {
@@ -157,6 +158,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			// Find ogre event so we can toggle it on/off
 			// TODO add function to find Events
 			// Ogre Rotation event, used to toggle the event on/off
+			/*	FIXME new design
 			TransformationEvent ogre_event;
 			for( size_t i = 0; i < _trans_events.size(); ++i )
 			{
@@ -176,24 +178,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
 			Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
 			_events.push_back( event );
-
-			// Add a trigger event to Quit the Application
-			trig = new KeyTrigger( OIS::KC_Q, false );
-			Operation *oper = new QuitOperation( this );
-			event = new Event( oper, trig );
-			trig = new KeyTrigger( OIS::KC_ESCAPE, false );
-			event->addTrigger(trig);
-			_events.push_back( event );
-
-			// Add a trigger event to reset the Scene
-			trig = new KeyTrigger( OIS::KC_R, false );
-			oper = new ReloadScene( &_frame_data );
-			double time_limit = 5; // In seconds
-			event = new Event( oper, trig, time_limit );
-			_events.push_back( event );
-			std::cerr << "Created ReloadScene Event : currently we have "
-				<< _events.size() << " events." << std::endl;
-
+			*/
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -206,15 +191,50 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		{
 			PyErr_Print();
 		}
+
+		// Add a trigger event to Quit the Application
+		QuitOperation *quit
+			= (QuitOperation *)( _event_manager->createOperation( "QuitOperation" ) );
+		quit->setConfig(this);
+		Event *event = _event_manager->createEvent( "BasicEvent" );
+		event->setOperation(quit);
+		// Add triggers
+		KeyTrigger *trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		trig->setKey( OIS::KC_Q );
+		event->addTrigger(trig);
+		trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		trig->setKey( OIS::KC_ESCAPE );
+		event->addTrigger(trig);
+		_event_manager->addEvent( event );
+
+		// Add a trigger event to reset the Scene
+		trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		trig->setKey( OIS::KC_R );
+		ReloadScene *oper = (ReloadScene *)( _event_manager->createOperation( "ReloadScene" ) );
+		oper->setFrameData( &_frame_data );
+		double time_limit = 5; // In seconds
+		event = _event_manager->createEvent( "BasicEvent" );
+		event->addTrigger(trig);
+		event->setOperation(oper);
+		event->setTimeLimit(time_limit);
+		_event_manager->addEvent( event );
+
+		// TODO add printing of the Events from EventManager
+
 		inited = true;
 	}
 
+// TODO add FrameTrigger passing
+	FrameTrigger frame_trig;
+	_event_manager->processEvents( &frame_trig );
+
+/*	TODO fix using the new Event system
 	// Really Move the objects
 	for( size_t i = 0; i < _trans_events.size(); ++i )
 	{
 		_trans_events.at(i)();
 	}
-
+*/
 	uint32_t version = _frame_data.commitAll();
 //	std::cout << "FrameData version = " << version << std::endl;
 
@@ -280,6 +300,7 @@ void eqOgre::Config::_initPython(void )
 
 	// Add a global manager i.e. this
 	_global["config"] = python::ptr<>( this );
+	_global["event_manager"] = python::ptr<>( _event_manager );
 }
 
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
@@ -338,19 +359,10 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	for( std::vector<TransformationEvent>::iterator iter = _trans_events.begin();
-		iter != _trans_events.end(); ++iter )
-	{
-		iter->keyPressed(key);
-	}
-
-	for( std::vector<Event *>::iterator iter = _events.begin();
-		iter != _events.end(); ++iter )
-	{
-		KeyTrigger trig(key, false);
-		(*iter)->processTrigger(&trig);
-	}
+	KeyTrigger trig;
+	trig.setKey( (OIS::KeyCode )(event.key) );
+	trig.setReleased(false);
+	_event_manager->processEvents( &trig );
 
     return false;
 }
@@ -358,19 +370,10 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
-	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	for( std::vector<TransformationEvent>::iterator iter = _trans_events.begin();
-		iter != _trans_events.end(); ++iter )
-	{
-		iter->keyReleased(key);
-	}
-
-	for( std::vector<Event *>::iterator iter = _events.begin();
-		iter != _events.end(); ++iter )
-	{
-		KeyTrigger trig(key, true);
-		(*iter)->processTrigger(&trig);
-	}
+	KeyTrigger trig;
+	trig.setKey( (OIS::KeyCode )(event.key) );
+	trig.setReleased(true);
+	_event_manager->processEvents( &trig );
 
 	return false;
 }
@@ -402,4 +405,8 @@ eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
 {
 	return false;
 }
+
+const std::string eqOgre::AddTransformOperation::TYPENAME = "AddTransformOperation";
+const std::string eqOgre::RemoveTransformOperation::TYPENAME = "RemoveTransformOperation";
+const std::string eqOgre::QuitOperation::TYPENAME = "QuitOperation";
 
