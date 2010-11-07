@@ -58,6 +58,9 @@ namespace eqOgre
 
 		void removeSceneNode( SceneNode *node );
 
+		void updateSceneVersion( void )
+		{ _frame_data.updateSceneVersion(); }
+
 	protected :
 		virtual ~Config (void);
 
@@ -108,10 +111,63 @@ public :
 	Config *getConfig( void )
 	{ return _config; }
 
+	virtual std::ostream & print( std::ostream & os ) const
+	{
+		Operation::print(os) << " config = " << _config << std::endl;
+		return os;
+	}
+
 protected :
 	Config *_config;
 
 };	// class ConfigOperation
+
+
+class QuitOperation : public ConfigOperation
+{
+public :
+	// FIXME setting parameters when using factory
+	QuitOperation( void )
+	{}
+
+	virtual void execute( void )
+	{
+		if( !_config )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		_config->stopRunning();
+	}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+
+};	// class QuitOperation
+
+
+class ReloadScene : public ConfigOperation
+{
+public :
+	ReloadScene( void )
+	{}
+
+	virtual void execute( void )
+	{
+		if( !_config )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		_config->updateSceneVersion();
+	}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+
+
 
 class EventManagerOperation : public Operation
 {
@@ -125,6 +181,12 @@ public :
 
 	EventManager *getManager( void )
 	{ return _event_man; }
+
+	virtual std::ostream & print( std::ostream & os ) const
+	{
+		Operation::print(os) << " event manager = " << _event_man << std::endl;
+		return os;
+	}
 
 protected :
 	EventManager *_event_man;
@@ -196,28 +258,6 @@ private :
 
 	TransformationEvent *_transform;
 };
-
-class QuitOperation : public ConfigOperation
-{
-public :
-	// FIXME setting parameters when using factory
-	QuitOperation( void )
-	{}
-
-	virtual void execute( void )
-	{
-		if( !_config )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_config->stopRunning();
-	}
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-
-};	// class QuitOperation
 
 }	// namespace eqOgre
 

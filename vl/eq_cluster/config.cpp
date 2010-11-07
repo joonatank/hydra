@@ -9,7 +9,6 @@
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
-#include "frame_data_events.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent ), _event_manager( new EventManager )
@@ -192,39 +191,29 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			PyErr_Print();
 		}
 
+		std::cout << "Events created in python : " << std::endl
+			<< *_event_manager << std::endl;
+
 		// Add a trigger event to Quit the Application
 		QuitOperation *quit
 			= (QuitOperation *)( _event_manager->createOperation( "QuitOperation" ) );
 		quit->setConfig(this);
-		Event *event = _event_manager->createEvent( "BasicEvent" );
+		Event *event = _event_manager->createEvent( "Event" );
 		event->setOperation(quit);
-		// Add triggers
+		// Add trigger
 		KeyTrigger *trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		trig->setKey( OIS::KC_Q );
-		event->addTrigger(trig);
-		trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
 		trig->setKey( OIS::KC_ESCAPE );
 		event->addTrigger(trig);
 		_event_manager->addEvent( event );
 
-		// Add a trigger event to reset the Scene
-		trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		trig->setKey( OIS::KC_R );
-		ReloadScene *oper = (ReloadScene *)( _event_manager->createOperation( "ReloadScene" ) );
-		oper->setFrameData( &_frame_data );
-		double time_limit = 5; // In seconds
-		event = _event_manager->createEvent( "BasicEvent" );
-		event->addTrigger(trig);
-		event->setOperation(oper);
-		event->setTimeLimit(time_limit);
-		_event_manager->addEvent( event );
-
-		// TODO add printing of the Events from EventManager
+		std::cout << "Events created in python and c++ : " << std::endl
+			<< *_event_manager << std::endl;
 
 		inited = true;
 	}
 
-// TODO add FrameTrigger passing
+	// ProcessEvents does not store the pointer anywhere
+	// so it's safe to allocate to the stack
 	FrameTrigger frame_trig;
 	_event_manager->processEvents( &frame_trig );
 
@@ -298,7 +287,7 @@ void eqOgre::Config::_initPython(void )
                                     _global.ptr(),
                                     _global.ptr() ) ));
 
-	// Add a global manager i.e. this
+	// Add a global managers i.e. this and EventManager
 	_global["config"] = python::ptr<>( this );
 	_global["event_manager"] = python::ptr<>( _event_manager );
 }
@@ -406,7 +395,8 @@ eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
 	return false;
 }
 
+const std::string eqOgre::QuitOperation::TYPENAME = "QuitOperation";
+const std::string eqOgre::ReloadScene::TYPENAME = "ReloadScene";
+
 const std::string eqOgre::AddTransformOperation::TYPENAME = "AddTransformOperation";
 const std::string eqOgre::RemoveTransformOperation::TYPENAME = "RemoveTransformOperation";
-const std::string eqOgre::QuitOperation::TYPENAME = "QuitOperation";
-

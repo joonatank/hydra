@@ -28,6 +28,8 @@ eqOgre::Event::Event( eqOgre::Operation* oper,
 					  double time_limit )
 	: _operation(oper), _last_time( ::clock() ), _time_limit(time_limit)
 {
+	std::cerr << "Event created" << std::endl;
+
 	if( trig )
 	{ _triggers.push_back(trig); }
 }
@@ -40,12 +42,14 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 		std::cerr << "No operation" << std::endl;
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
 	}
-	
-	// TODO the clock needs to be moved to the Event
+
 	clock_t time = ::clock();
 
 	if( _findTrigger(trig) != _triggers.end() )
 	{
+		std::cerr << "Trigger found : trigger = " << trig
+			<< " : operation = " << _operation << "." << std::endl;
+
 		// We need to wait _time_limit secs before issuing the command again
 		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
 		{
@@ -78,6 +82,7 @@ eqOgre::Event::addTrigger(eqOgre::Trigger* trig)
 	// Only add Trigger once
 	if( _findTrigger(trig) == _triggers.end() )
 	{
+		std::cerr << "Trigger added : trigger = " << trig << std::endl;
 		_triggers.push_back( trig );
 		return true;
 	}
@@ -87,6 +92,23 @@ eqOgre::Event::addTrigger(eqOgre::Trigger* trig)
 void
 eqOgre::Event::setOperation(eqOgre::Operation* oper)
 { _operation = oper; }
+
+std::ostream &
+eqOgre::Event::print(std::ostream& os) const
+{
+	// TODO add identifier
+	os << "Event : type = " << getTypeName() << " " << std::endl;
+	os << "Operation = " << *_operation;// << std::endl;
+	os << _triggers.size() << " Triggers : they are = " << std::endl;
+	for( size_t i = 0; i < _triggers.size(); ++i )
+	{
+		os << *(_triggers.at(i)) << std::endl;
+	}
+	os << "Time limit = " << _time_limit << std::endl;
+
+	return os;
+}
+
 
 std::string const eqOgre::BasicEvent::TYPENAME = "BasicEvent";
 

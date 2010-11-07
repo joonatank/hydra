@@ -21,8 +21,11 @@
 
 namespace eqOgre
 {
+// TODO add str conversions to python
+// TODO add event to print all the events (do this in python)
 
-// Base class for all Triggers
+
+/// Base class for all Triggers
 class Trigger
 {
 public :
@@ -34,7 +37,18 @@ public :
 	virtual bool isEqual( Trigger const &other ) const = 0;
 
 	virtual std::string const &getTypeName( void ) const = 0;
+
+	virtual std::ostream & print( std::ostream & os ) const
+	{
+		os << "Trigger : " << getTypeName() << std::endl;
+		return os;
+	}
 };
+
+inline std::ostream &operator<<( std::ostream &os, eqOgre::Trigger const &t )
+{
+	return t.print( os );
+}
 
 class KeyTrigger : public Trigger
 {
@@ -43,9 +57,15 @@ public :
 
 	void setKey( OIS::KeyCode key )
 	{ _key = key; }
+
+	OIS::KeyCode getKey( void ) const
+	{ return _key; }
 	
 	void setReleased( bool released )
 	{ _released = released; }
+
+	bool getReleased( void ) const
+	{ return _released;}
 
 	virtual bool isEqual( Trigger const &other ) const;
 
@@ -53,6 +73,23 @@ public :
 	{ return TYPENAME; }
 
 	static const std::string TYPENAME;
+
+	virtual std::ostream & print( std::ostream & os ) const
+	{
+		Trigger::print(os);
+		os << " KeyCode = " << getKeyName(_key) << " : released = ";
+		if( _released == true )
+			os << "true";
+		else
+			os << "false";
+
+		return os;
+	}
+
+	void printToCout( void )
+	{
+		print( std::cout ) << std::endl;
+	}
 
 private :
 	OIS::KeyCode _key;
@@ -79,14 +116,21 @@ class Operation
 {
 public :
 	virtual void execute( void ) = 0;
-//	virtual void operator()( void ) = 0;
 
 	virtual std::string const &getTypeName( void ) const = 0;
+
+	virtual std::ostream & print( std::ostream & os ) const
+	{
+		os << "Operation of type = " << getTypeName() << std::endl;
+		return os;
+	}
+
 };
 
-// Some test operations
-// NOTE Don't try to use function pointers
-// Just create a separate operation for all classes
+inline std::ostream &operator<<( std::ostream &os, eqOgre::Operation const &o )
+{
+	return o.print(os);
+}
 
 /**	Base class for all Events
 	Abstract interface
@@ -112,6 +156,9 @@ public :
 
 	void setOperation( Operation *oper );
 
+	Operation *getOperation( void )
+	{ return _operation; }
+	
 	void setTimeLimit( double time_limit )
 	{ _time_limit = time_limit; }
 
@@ -119,6 +166,8 @@ public :
 	{ return _time_limit; }
 
 	virtual std::string const &getTypeName( void ) const = 0;
+
+	virtual std::ostream & print( std::ostream & os ) const;
 
 protected :
 	std::vector<Trigger *>::iterator _findTrigger( Trigger *trig );
@@ -130,6 +179,11 @@ protected :
 	double _time_limit;
 
 };	// class Event
+
+inline std::ostream &operator<<( std::ostream &os, eqOgre::Event const &e )
+{
+	return e.print(os);
+}
 
 /// Basic Event implementation used for Trigger Events
 class BasicEvent : public Event
@@ -162,6 +216,8 @@ public :
 
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
+
+	// TODO override the Event::print
 
 	static const std::string TYPENAME;
 

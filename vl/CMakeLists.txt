@@ -13,7 +13,6 @@ set( SOURCES
 	eq_cluster/event.cpp
 	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
-	eq_cluster/frame_data_events.cpp
 	eq_cluster/eq_settings.cpp
 	eq_cluster/frame_data.cpp
 	eq_cluster/scene_node.cpp
@@ -50,7 +49,6 @@ set( HEADERS
 	eq_cluster/python.hpp
 	eq_cluster/window.hpp
 	eq_cluster/transform_event.hpp
-	eq_cluster/frame_data_events.hpp
 	eq_cluster/eq_settings.hpp
 	eq_cluster/frame_data.hpp
 	eq_cluster/scene_node.hpp

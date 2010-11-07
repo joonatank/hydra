@@ -25,7 +25,52 @@ def addCameraEvent() :
 	if not config.addEvent(event) :
 		print 'Python : could not add camera event'
 
-print 'In python init script'
-addOgreEvent()
-addCameraEvent()
+def addQuitEvent() :
+	print 'Creating Quit Event'
+	action = event_manager.createOperation( 'QuitOperation' )
+	print 'Python Action type = ' + action.type
+	action.config = config 
+	#trigger = event_manager.createTrigger( 'KeyTrigger' )
+	trigger = event_manager.createKeyTrigger( )
+	# FIXME this segfaults
+	print 'Python Trigger type = ' + trigger.type
+	#print trigger.type
+	#print getKeyName( KC.W )
+	trigger.key = KC.Q
+	# Example of using released key instead of pressed (which is default)
+	trigger.released = True
 
+	# Create the Event
+	event = event_manager.createEvent( 'Event' )
+	event.operation = action
+	event.addTrigger( trigger )
+	if not event_manager.addEvent( event ) :
+		print 'Python : Event could not be added to EventManager'
+
+def addReloadEvent() :
+	print 'Creating Reload Scene Event'
+	action = event_manager.createOperation( 'ReloadScene' )
+	print 'Python Action type = ' + action.type
+	action.config = config 
+	trigger = event_manager.createTrigger( 'KeyTrigger' )
+	#trigger = event_manager.createKeyTrigger( )
+	# FIXME this segfaults
+	print 'Python Trigger type = ' + trigger.type
+	trigger.key = KC.R
+	# Example of using released key instead of pressed (which is default)
+	trigger.released = True
+
+	# Create the Event
+	event = event_manager.createEvent( 'Event' )
+	event.operation = action
+	event.addTrigger( trigger )
+	if not event_manager.addEvent( event ) :
+		print 'Python : Event could not be added to EventManager'
+
+# TODO create PrintOperation in python and register it into Event Manager
+
+print 'In python init script'
+#addOgreEvent()
+#addCameraEvent()
+addQuitEvent()
+addReloadEvent()

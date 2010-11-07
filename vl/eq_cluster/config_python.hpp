@@ -5,7 +5,6 @@
 #include "scene_node.hpp"
 #include "keycode.hpp"
 #include "event_manager.hpp"
-#include "frame_data_events.hpp"
 
 #include <boost/python.hpp>
 
@@ -21,6 +20,7 @@ struct TriggerWrapper : eqOgre::Trigger, python::wrapper<eqOgre::Trigger>
 		return this->get_override("isEqual")();
 	}
 };
+
 
 struct EventWrapper : eqOgre::Event, python::wrapper<eqOgre::Event>
 {
@@ -47,7 +47,14 @@ struct OperationWrapper : eqOgre::Operation, python::wrapper<eqOgre::Operation>
 	{
 		this->get_override("execute")();
 	}
+
 };
+
+inline std::ostream &operator<<( std::ostream &os, OperationWrapper const &o )
+{
+	o.print(os);
+	return os;
+}
 
 namespace python = boost::python;
 
@@ -56,10 +63,8 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	using namespace eqOgre;
 
 	// NOTE renaming classes works fine
-	// TODO registering objects is not working when using modules
-	// or I don't know how to register the modules first
-	// init the interpreter and then start calling functions one by one
 	// TODO check for overloads and default arguments, they need some extra work
+
 	python::class_<Ogre::Vector3>("Vector3", python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
 		.def_readwrite("x", &Ogre::Vector3::x)
 		.def_readwrite("y", &Ogre::Vector3::y)
@@ -117,53 +122,85 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
 		.def("createOperation", &EventManager::createOperation, python::return_value_policy<python::reference_existing_object>() )
 		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("createKeyTrigger", &EventManager::createKeyTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("addEvent", &EventManager::addEvent)
 		.def("removeEvent", &EventManager::removeEvent)
 		.def("hasEvent", &EventManager::hasEvent)
+//		.def(python::str(python::self))
 	;
 
-	//	TODO this causes problems about virtual getTypeName method
+	// FIXME abstract wrappers
+	// NOTE Abstract wrappers seem to be needed for inheriting from these classes
+	// in python
+	// Problem : how to expose these and get the hierarchy correct for c++ classes?
+	// should we expose both the wrappers and abstract classes
+	// should we declate the wrappers as bases for inherited c++ classes here
+	// should we just expose the wrapper for python inheritance and use the c++
+	// classes and bases otherwise?
 	python::class_<TriggerWrapper, boost::noncopyable>("Trigger", python::no_init )
 		.def(python::self == python::self )
-		.def("getTypeName", python::pure_virtual(&Trigger::getTypeName), python::return_value_policy<python::copy_const_reference>() )
+		// FIXME declaring getTypeName as virtual does not work
+		// (might be because it's a property not a function)
+		.add_property("type", python::make_function( &KeyTrigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("isEqual", python::pure_virtual(&Trigger::isEqual) )
+//		.def(python::str(python::self))
 	;
 
-/*	TODO this causes problems about static variables */
-	python::class_<OperationWrapper, boost::noncopyable>("Operation", python::no_init )
-		.def("getTypeName", python::pure_virtual(&Operation::getTypeName), python::return_value_policy<python::copy_const_reference>() )
-		.def("getTypeName", python::pure_virtual(&Operation::execute) )
+	python::class_<KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
+		.def(python::self == python::self )
+		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
+		.add_property("released", &KeyTrigger::getReleased, &KeyTrigger::setReleased )
 	;
+
+
+	python::class_<OperationWrapper, boost::noncopyable>("Operation", python::no_init )
+		// FIXME pure virtual getTypeName
+		.add_property("type", python::make_function( &Operation::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		.def("execute", python::pure_virtual(&Operation::execute) )
+		// FIXME this does not work
+//		.def(python::str(python::self))
+	;
+
 
 	python::class_<EventWrapper, boost::noncopyable>("Event", python::no_init )
+		.add_property("type", python::make_function( &Operation::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("processTrigger", &Event::processTrigger)
-//		.def_readonly("TYPNAME", &BasicEvent::TYPENAME ).staticmethod()
 		.def("removeTrigger", &Event::removeTrigger)
 		.def("addTrigger", &Event::addTrigger)
-		.def("setOperation", &Event::setOperation)
-		.def("setTimeLimit", &Event::setTimeLimit)
-		.def("getTimeLimit", &Event::getTimeLimit)
-		.def("getTypeName", python::pure_virtual(&Trigger::getTypeName), python::return_value_policy<python::copy_const_reference>() )
+		.add_property("operation", python::make_function( &Event::getOperation, python::return_value_policy< python::reference_existing_object>() ), &Event::setOperation)
+		.add_property("time_limit", &Event::getTimeLimit, &Event::setTimeLimit)
+		// FIXME this does not work
+//		.def(python::str(python::self))
 	;
-
-	python::class_<AddTransformOperation, boost::noncopyable>("AddTransformOperation", python::no_init )
-	;
-
-	python::class_<RemoveTransformOperation, boost::noncopyable>("RemoveTransformOperation", python::no_init )
-	;
-
-
-	python::class_<QuitOperation, boost::noncopyable>("QuitOperation", python::no_init )
-		.def("getTypeName", &QuitOperation::getTypeName, python::return_value_policy<python::copy_const_reference>() )
-		.def("getTypeName", &QuitOperation::setConfig )
-	;
-
 
 	python::class_<ToggleEvent, boost::noncopyable>("ToggleEvent", python::no_init )
 	;
 
-	python::class_<ReloadScene, boost::noncopyable>("ReloadScene", python::no_init )
+
+	/// Config Operations
+
+	python::class_<ConfigOperation, boost::noncopyable, python::bases<Operation> >("ConfigOperation", python::no_init )
+		.add_property("config", python::make_function( &QuitOperation::getConfig, python::return_value_policy< python::reference_existing_object>() ), &QuitOperation::setConfig )
 	;
+
+	python::class_<QuitOperation, boost::noncopyable, python::bases<ConfigOperation> >("QuitOperation", python::no_init )
+	;
+
+	python::class_<ReloadScene, boost::noncopyable, python::bases<ConfigOperation> >("ReloadScene", python::no_init )
+	;
+
+	/// EventManager Operations
+	python::class_<EventManagerOperation, boost::noncopyable, python::bases<Operation> >("EventManagerOperation", python::no_init )
+		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
+	;
+	
+	python::class_<AddTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("AddTransformOperation", python::no_init )
+	;
+
+	python::class_<RemoveTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("RemoveTransformOperation", python::no_init )
+	;
+
+
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
 		// TODO the factory method should return ref counted ptr
@@ -184,6 +221,10 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.def("setRotZKeys", &eqOgre::TransformationEvent::setRotZtrigger )
 	;
 
+	python::def( "getKeyName", getKeyName );
+
+	python::def( "getPythonKeyName", getPythonKeyName );
+	
 	python::enum_<OIS::KeyCode> python_keycode = python::enum_<OIS::KeyCode>("KC");
 	int i = 0;
 	while( i < OIS::KC_MEDIASELECT )

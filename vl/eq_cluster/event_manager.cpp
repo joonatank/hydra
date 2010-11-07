@@ -3,14 +3,13 @@
 
 #include "transform_event.hpp"
 #include "config.hpp"
-#include "frame_data_events.hpp"
 
 #include "base/exceptions.hpp"
 
 eqOgre::Event *
 eqOgre::EventManager::createEvent(const std::string& type)
 {
-	if( type == "BasicEvent"  )
+	if( type == "Event"  )
 	{
 		return new BasicEvent();
 	}
@@ -74,10 +73,17 @@ eqOgre::EventManager::createTrigger(const std::string& type)
 		);
 }
 
+eqOgre::KeyTrigger *eqOgre::EventManager::createKeyTrigger(void )
+{
+	return new KeyTrigger();
+}
+
 bool
 eqOgre::EventManager::addEvent(eqOgre::Event *event)
 {
 	_events.push_back(event);
+	std::cerr << "Event = " << event << " added. " << _events.size()
+		<< " size." << std::endl;
 	return true;
 }
 
@@ -121,4 +127,14 @@ eqOgre::EventManager::processEvents( Trigger *trig )
 		(*iter)->processTrigger(trig);
 	}
 	
+}
+
+void eqOgre::EventManager::printEvents(std::ostream& os) const
+{
+	os << " Events, " << _events.size() << " of them." << std::endl << std::endl;
+	std::vector<Event *>::const_iterator iter;
+	for( iter = _events.begin(); iter != _events.end(); ++iter )
+	{
+		os << *(*iter) << std::endl;
+	}
 }
