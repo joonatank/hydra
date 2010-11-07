@@ -1,41 +1,69 @@
 # TODO these should be fixed, the interface has changed considerably
 # FIXME the EventManager does not support these yet
-def addOgreEvent() :
-	print 'Creating Ogre SceneNode'
-	node = SceneNode.create("ogre")
-	config.addSceneNode(node)
-	event = TransformationEvent(node)
+def addRotationEvent(node) :
+	# TODO should print the node name
+	print 'Creating Rotation event on node = '
+	event = event_manager.createEvent( 'TransformationEvent' )
+	event.scene_node = node
 	# TODO should have different nodes for yaw and pitch so that the Ogre would
 	# rotate around global axes
-	event.setRotYKeys( KC.NUMPAD6, KC.NUMPAD4 )
-	event.setRotZKeys( KC.NUMPAD8 , KC.NUMPAD5 )
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.NUMPAD6
+	trigger_neg.key = KC.NUMPAD4
+	event.setRotYtrigger( trigger_pos, trigger_neg )
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.NUMPAD8
+	trigger_neg.key = KC.NUMPAD5
+	event.setRotZtrigger( trigger_pos, trigger_neg )
 	print 'Adding ogre transformation event to event stack'
-	if not config.addEvent(event) :
+	if not event_manager.addEvent(event) :
 		print 'Python : could not add ogre event'
 
 # TODO these should be fixed, the interface has changed considerably
 # FIXME the EventManager does not support these yet
-def addCameraEvent() :
-	print 'Creating Camera SceneNode'
-	node = SceneNode.create("CameraNode")
-	config.addSceneNode(node)
-	event = TransformationEvent(node)
-	event.setTransXKeys( KC.D, KC.A )
-	event.setTransYKeys( KC.PGUP, KC.PGDOWN )
-	event.setTransZKeys( KC.S, KC.W )
+def addTranslationEvent(node) :
+	# TODO should print the node name
+	print 'Creating Translation event on node = '
+	event = event_manager.createEvent( 'TransformationEvent' )
+	event.scene_node = node
+	# TODO this is bit verbose and repeated often move it to python function
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.D
+	trigger_neg.key = KC.A
+	event.setTransXtrigger( trigger_pos, trigger_neg )
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.PGUP
+	trigger_neg.key = KC.PGDOWN
+	event.setTransYtrigger( trigger_pos, trigger_neg )
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.S
+	trigger_neg.key = KC.W
+	event.setTransZtrigger( trigger_pos, trigger_neg )
+
 	# TODO yaw missing, but the Application does not allow yaw for cameras because
 	# it looks funny in multi wall systems
-	event.setRotYKeys( KC.RIGHT, KC.LEFT )
-	if not config.addEvent(event) :
-		print 'Python : could not add camera event'
+	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
+	trigger_pos.key = KC.RIGHT
+	trigger_neg.key = KC.LEFT
+	event.setRotYtrigger( trigger_pos, trigger_neg )
 
-def addHideEvent() :
-	print 'Creating Ogre SceneNode'
-	ogre = SceneNode.create("ogre")
-	config.addSceneNode(ogre)
+#	event.setTransXKeys( KC.D, KC.A )
+#	event.setTransYKeys( KC.PGUP, KC.PGDOWN )
+#	event.setTransZKeys( KC.S, KC.W )
+#	event.setRotYKeys( KC.RIGHT, KC.LEFT )
+	if not event_manager.addEvent(event) :
+		print 'Python : could not add event'
+
+def addHideEvent(node) :
 	print 'Creating Hide Event'
 	action = event_manager.createOperation( 'HideOperation' )
-	action.scene_node = ogre
+	action.scene_node = node 
 	trigger = event_manager.createTrigger( 'KeyTrigger' )
 	trigger.key = KC.H
 
@@ -89,8 +117,18 @@ def addReloadEvent() :
 # TODO create PrintOperation in python and register it into Event Manager
 
 print 'In python init script'
-#addOgreEvent()
-#addCameraEvent()
+print 'Adding config events'
 addQuitEvent()
 addReloadEvent()
-addHideEvent()
+
+print 'Creating Ogre SceneNode'
+ogre = SceneNode.create("ogre")
+config.addSceneNode(ogre)
+addHideEvent(ogre)
+addRotationEvent(ogre)
+
+print 'Creating Camera SceneNode'
+camera = SceneNode.create("CameraNode")
+config.addSceneNode(camera)
+addTranslationEvent(camera)
+

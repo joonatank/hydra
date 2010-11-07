@@ -39,7 +39,9 @@ eqOgre::TransformationEvent::TransformationEvent( void )
 	  _operation( new MoveOperation )
 {}
 
-std::string const eqOgre::TransformationEvent::TYPENAME = "TransformationEvent";
+std::string const &
+eqOgre::TransformationEvent::getTypeName(void ) const
+{ return TransformationEventFactory::TYPENAME; }
 
 eqOgre::TransformationEvent::TransformationEvent(const eqOgre::TransformationEvent& a)
 {
@@ -109,44 +111,4 @@ eqOgre::TransformationEvent::processTrigger(eqOgre::Trigger* trig)
 	return retval;
 }
 
-/*
-bool eqOgre::TransformationEvent::keyPressed(OIS::KeyCode key)
-{
-	bool retval = false;
-	Ogre::Vector3 vec = _move_keys.findKey(key);
-	if( vec != Ogre::Vector3::ZERO )
-	{
-		_move_dir += vec;
-		retval = true;
-	}
-
-	vec = _rot_keys.findKey(key);
-	if( vec != Ogre::Vector3::ZERO )
-	{
-		_rotation_axises += vec;
-		retval = true;
-	}
-
-	return retval;
-}
-
-bool eqOgre::TransformationEvent::keyReleased(OIS::KeyCode key)
-{
-	bool retval = false;
-	Ogre::Vector3 vec = _move_keys.findKey(key);
-	if( vec != Ogre::Vector3::ZERO )
-	{
-		_move_dir -= vec;
-		retval = true;
-	}
-
-	vec = _rot_keys.findKey(key);
-	if( vec != Ogre::Vector3::ZERO )
-	{
-		_rotation_axises -= vec;
-		retval = true;
-	}
-
-	return retval;
-}
-*/
+std::string const eqOgre::TransformationEventFactory::TYPENAME = "TransformationEvent";

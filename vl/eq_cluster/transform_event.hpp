@@ -234,10 +234,7 @@ public :
 	virtual ~TransformationEvent( void )
 	{}
 
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
+	virtual std::string const &getTypeName( void ) const;
 
 	void setSceneNode( SceneNode *node )
 	{ _operation->setSceneNode(node);; }
@@ -245,8 +242,9 @@ public :
 	SceneNode *getSceneNode( void )
 	{ return _operation->getSceneNode(); }
 
-	SceneNode const *getSceneNode( void ) const
-	{ return _operation->getSceneNode(); }
+	// TODO if we need this one, we need to provide overloads to python
+//	SceneNode const *getSceneNode( void ) const
+//	{ return _operation->getSceneNode(); }
 
 	/// Called from event handling
 	/// If the trigger is mapped to this TransformationEvent the state of the
@@ -333,6 +331,18 @@ protected :
 	TriggerPairVector _rot_triggers;
 
 };	// class TransformationEvent
+
+class TransformationEventFactory : public EventFactory
+{
+public :
+	virtual Event *create( void )
+	{ return new TransformationEvent; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
 
 /*	TODO fix these operators for TriggerPair
 inline bool operator==( TransformationEvent::KeyPair const &a, TransformationEvent::KeyPair const &b )

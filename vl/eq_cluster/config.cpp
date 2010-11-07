@@ -18,7 +18,7 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	// Add events
 	_event_manager->addEventFactory( new BasicEventFactory );
 	_event_manager->addEventFactory( new ToggleEventFactory );
-	// TODO add Transform Event Factory
+	_event_manager->addEventFactory( new TransformationEventFactory );
 	// Add triggers
 	_event_manager->addTriggerFactory( new KeyTriggerFactory );
 	_event_manager->addTriggerFactory( new KeyPressedTriggerFactory );
@@ -93,15 +93,26 @@ void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 	}
 }
 
-void eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
+// TODO this should be moved to private
+void
+eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
 {
 	_frame_data.addSceneNode( node );
 }
 
 // TODO implement
-void eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
+// TODO this should be moved to private
+void
+eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
 {
 	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
+}
+
+// TODO implement
+eqOgre::SceneNode *
+eqOgre::Config::getSceneNode(const std::string& name)
+{
+	return 0;
 }
 
 
@@ -178,9 +189,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			PyErr_Print();
 		}
 
-//		std::cout << "Events created in python : " << std::endl
-//			<< *_event_manager << std::endl;
-
 		// Add a trigger event to Quit the Application
 		QuitOperation *quit
 			= (QuitOperation *)( _event_manager->createOperation( "QuitOperation" ) );
@@ -196,26 +204,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		// Create Camera SceneNode
 		SceneNodePtr node = SceneNode::create("CameraNode");
 		addSceneNode(node);
-
-		// Add TransformationEvent
-		TransformationEvent *trans = new TransformationEvent;
-		trans->setSceneNode( node );
-		// Add forward movement
-		KeyTrigger *neg_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		KeyTrigger *pos_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		neg_key->setKey( OIS::KC_W );
-		pos_key->setKey( OIS::KC_S );
-		trans->setTransZtrigger( pos_key, neg_key );
-		// Add sideway movement
-		neg_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		pos_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		neg_key->setKey( OIS::KC_A );
-		pos_key->setKey( OIS::KC_D );
-		trans->setTransXtrigger( pos_key, neg_key );
-
-		_event_manager->addEvent( trans );
-//		std::cout << "Events created in python and c++ : " << std::endl
-//			<< *_event_manager << std::endl;
 
 		_initAudio();
 		inited = true;

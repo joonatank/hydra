@@ -221,15 +221,16 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.add_property("visibility", &SceneNode::getVisibility, &eqOgre::SceneNode::setVisibility )
 	;
 
-	python::class_<eqOgre::TransformationEvent, boost::noncopyable>("TransformationEvent", python::no_init )
+	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )
+		.add_property("scene_node", python::make_function( &TransformationEvent::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationEvent::setSceneNode )
 		.add_property("speed", &eqOgre::TransformationEvent::getSpeed, &eqOgre::TransformationEvent::setSpeed )
-		.add_property("name", python::make_function( &eqOgre::TransformationEvent::getAngularSpeed, python::return_internal_reference<>() ), &eqOgre::TransformationEvent::setAngularSpeed )
-		.def("setTransXKeys", &eqOgre::TransformationEvent::setTransXtrigger )
-		.def("setTransYKeys", &eqOgre::TransformationEvent::setTransYtrigger )
-		.def("setTransZKeys", &eqOgre::TransformationEvent::setTransZtrigger )
-		.def("setRotXKeys", &eqOgre::TransformationEvent::setRotXtrigger )
-		.def("setRotYKeys", &eqOgre::TransformationEvent::setRotYtrigger )
-		.def("setRotZKeys", &eqOgre::TransformationEvent::setRotZtrigger )
+		.add_property("angular_speed", python::make_function( &eqOgre::TransformationEvent::getAngularSpeed, python::return_internal_reference<>() ), &eqOgre::TransformationEvent::setAngularSpeed )
+		.def("setTransXtrigger", &eqOgre::TransformationEvent::setTransXtrigger )
+		.def("setTransYtrigger", &eqOgre::TransformationEvent::setTransYtrigger )
+		.def("setTransZtrigger", &eqOgre::TransformationEvent::setTransZtrigger )
+		.def("setRotXtrigger", &eqOgre::TransformationEvent::setRotXtrigger )
+		.def("setRotYtrigger", &eqOgre::TransformationEvent::setRotYtrigger )
+		.def("setRotZtrigger", &eqOgre::TransformationEvent::setRotZtrigger )
 	;
 
 	python::def( "getKeyName", getKeyName );
