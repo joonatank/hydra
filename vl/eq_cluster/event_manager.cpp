@@ -194,16 +194,18 @@ eqOgre::EventManager::hasEvent(eqOgre::Event *event)
 	return false;
 }
 
-void
+bool
 eqOgre::EventManager::processEvents( Trigger *trig )
 {
+	bool retval = false;
 //	std::cout << "eqOgre::EventManager::processEvents" << std::endl;
 	std::vector<Event *>::iterator iter;
 	for( iter = _events.begin(); iter != _events.end(); ++iter )
 	{
-		(*iter)->processTrigger(trig);
+		retval |= (*iter)->processTrigger(trig);
 	}
-	
+
+	return retval;
 }
 
 void eqOgre::EventManager::printEvents(std::ostream& os) const

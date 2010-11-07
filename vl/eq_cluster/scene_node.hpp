@@ -9,6 +9,8 @@
 #include <OGRE/OgreSceneManager.h>
 
 #include "serialize_helpers.hpp"
+#include "event.hpp"
+#include "base/exceptions.hpp"
 
 namespace eqOgre
 {
@@ -57,12 +59,22 @@ public :
 		setDirty( DIRTY_ORIENTATION );
 		_orientation = q;
 	}
-	
+
+	bool getVisibility( void ) const
+	{ return _visible; }
+
+	void setVisibility( bool visible )
+	{
+		setDirty( DIRTY_VISIBILITY );
+		_visible = visible;
+	}
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
 		DIRTY_POSITION = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_ORIENTATION = eq::fabric::Serializable::DIRTY_CUSTOM << 2
+		DIRTY_ORIENTATION = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+		DIRTY_VISIBILITY = eq::fabric::Serializable::DIRTY_CUSTOM << 3
 	};
 
 protected :
@@ -82,6 +94,8 @@ private :
 	// Can be removed when the master reads the dotscene file also.
 	Ogre::Vector3 _initial_position;
 	Ogre::Quaternion _initial_orientation;
+
+	bool _visible;
 	
 	Ogre::SceneNode *_ogre_node;
 
@@ -95,6 +109,49 @@ inline std::ostream & operator<<(  std::ostream &os, SceneNode const &a )
 
 	return os;
 }
+
+class HideOperation : public Operation
+{
+public :
+	HideOperation( void )
+		: _node(0)
+	{}
+
+	void setSceneNode( SceneNodePtr node )
+	{ _node = node; }
+
+	SceneNodePtr getSceneNode( void )
+	{ return _node; }
+
+	virtual void execute( void )
+	{
+		if( !_node )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		_node->setVisibility( false );
+	}
+
+	virtual std::string const &getTypeName( void ) const;
+
+protected :
+	SceneNodePtr _node;
+};
+
+class HideOperationFactory : public OperationFactory
+{
+public :
+	virtual Operation *create( void )
+	{ return new HideOperation; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+inline std::string const &
+HideOperation::getTypeName( void ) const
+{ return HideOperationFactory::TYPENAME; }
 
 }	// namespace eqOgre
 

@@ -63,7 +63,6 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 {
 	using namespace eqOgre;
 
-	// NOTE renaming classes works fine
 	// TODO check for overloads and default arguments, they need some extra work
 
 	python::class_<Ogre::Vector3>("Vector3", python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
@@ -129,7 +128,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 //		.def(python::str(python::self))
 	;
 
-	// FIXME abstract wrappers
+	// TODO try the Abstract classes out by overriding them in python
 	// NOTE Abstract wrappers seem to be needed for inheriting from these classes
 	// in python
 	// Problem : how to expose these and get the hierarchy correct for c++ classes?
@@ -200,6 +199,11 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<RemoveTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("RemoveTransformOperation", python::no_init )
 	;
 
+	/// SceneNode Operations
+	python::class_<HideOperation, boost::noncopyable, python::bases<Operation> >("HideOperation", python::no_init )
+		.add_property("scene_node", python::make_function( &HideOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideOperation::setSceneNode )
+	;
+	
 
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
@@ -208,6 +212,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.add_property("name", python::make_function( &eqOgre::SceneNode::getName, python::return_internal_reference<>() ), &eqOgre::SceneNode::setName )
 		.add_property("position", python::make_function( &eqOgre::SceneNode::getPosition, python::return_internal_reference<>() ), &eqOgre::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )
+		.add_property("visibility", &SceneNode::getVisibility, &eqOgre::SceneNode::setVisibility )
 	;
 
 	python::class_<eqOgre::TransformationEvent, boost::noncopyable>("TransformationEvent", python::no_init )

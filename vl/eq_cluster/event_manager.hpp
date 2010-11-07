@@ -43,7 +43,7 @@ public :
 
 	bool hasEvent( Event *event );
 
-	void processEvents( Trigger *trig );
+	bool processEvents( Trigger *trig );
 
 	Event *findEvent( std::string const &name );
 

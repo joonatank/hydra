@@ -26,6 +26,7 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addOperationFactory( new ReloadSceneFactory );
 	_event_manager->addOperationFactory( new AddTransformOperationFactory );
 	_event_manager->addOperationFactory( new RemoveTransformOperationFactory );
+	_event_manager->addOperationFactory( new HideOperationFactory );
 	// TODO add transformation operations
 	
 }
@@ -86,41 +87,6 @@ void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 		_createTracker(_settings);
 	}
 }
-
-/*
-bool eqOgre::Config::addEvent(const eqOgre::TransformationEvent& event)
-{
-	_trans_events.push_back(event);
-	return true;
-}
-
-bool eqOgre::Config::removeEvent(const eqOgre::TransformationEvent& event)
-{
-	std::vector<TransformationEvent>::iterator iter;
-	for( iter = _trans_events.begin(); iter != _trans_events.end(); ++iter )
-	{
-		if( *iter == event )
-		{
-			_trans_events.erase(iter);
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool eqOgre::Config::hasEvent(const eqOgre::TransformationEvent& event)
-{
-	std::cerr << "eqOgre::Config::hasEvent" << std::endl;
-	std::vector<TransformationEvent>::iterator iter;
-	for( iter = _trans_events.begin(); iter != _trans_events.end(); ++iter )
-	{
-		if( event == *iter )
-		{ return true; }
-	}
-	return false;
-}
-*/
 
 void eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
 {
@@ -207,8 +173,8 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			PyErr_Print();
 		}
 
-		std::cout << "Events created in python : " << std::endl
-			<< *_event_manager << std::endl;
+//		std::cout << "Events created in python : " << std::endl
+//			<< *_event_manager << std::endl;
 
 		// Add a trigger event to Quit the Application
 		QuitOperation *quit
@@ -222,8 +188,8 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		event->addTrigger(trig);
 		_event_manager->addEvent( event );
 
-		std::cout << "Events created in python and c++ : " << std::endl
-			<< *_event_manager << std::endl;
+//		std::cout << "Events created in python and c++ : " << std::endl
+//			<< *_event_manager << std::endl;
 
 		inited = true;
 	}
@@ -367,9 +333,7 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 	KeyTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
 	trig.setReleased(false);
-	_event_manager->processEvents( &trig );
-
-    return false;
+	return _event_manager->processEvents( &trig );
 }
 
 bool
@@ -378,9 +342,7 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 	KeyTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
 	trig.setReleased(true);
-	_event_manager->processEvents( &trig );
-
-	return false;
+	return _event_manager->processEvents( &trig );
 }
 
 bool

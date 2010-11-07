@@ -31,7 +31,7 @@ public :
 
 	virtual ~FrameData( void );
 
-	void setSceneManager( Ogre::SceneManager *man );
+	bool setSceneManager( Ogre::SceneManager *man );
 
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy

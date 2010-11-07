@@ -15,19 +15,27 @@ eqOgre::FrameData::~FrameData(void )
 	_scene_nodes.clear();
 }
 
-void eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
+bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 {
 	if( !man )
-	{ return; }
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	_ogre_sm = man;
 
+	bool retval = true;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
 		EQASSERT( node );
-		node->findNode(man);
+		if( !node->findNode(man) )
+		{
+			std::cerr << "No Ogre SceneNode with name " << node->getName()
+				<< " found in the SceneGraph." << std::endl;
+			retval = false;
+		}
 	}
+
+	return retval;
 }
 
 void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
@@ -43,7 +51,8 @@ void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 	}
 }
 
-eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(const std::string& name)
+eqOgre::SceneNode *
+eqOgre::FrameData::getSceneNode(const std::string& name)
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -55,7 +64,8 @@ eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(const std::string& name)
 	return 0;
 }
 
-eqOgre::SceneNode* eqOgre::FrameData::getSceneNode(size_t i)
+eqOgre::SceneNode *
+eqOgre::FrameData::getSceneNode(size_t i)
 {
 	return _scene_nodes.at(i).node;
 }
@@ -297,9 +307,15 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 
 	getSession()->mapObject( node.node, node.id );
 
-	// TODO find the Ogre Nodes
+	// Find ogre nodes
 	if( _ogre_sm )
-	{ node.node->findNode( _ogre_sm ); }
+	{
+		if( !node.node->findNode( _ogre_sm ) )
+		{
+			std::cerr << "No Ogre SceneNode with name " << node.node->getName()
+				<< " found in the SceneGraph." << std::endl;
+		}
+	}
 }
 
 void eqOgre::FrameData::_registerObject(eqOgre::FrameData::SceneNodeIDPair& node)

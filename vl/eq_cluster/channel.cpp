@@ -51,7 +51,11 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		<< " SceneNodes." << std::endl;
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERT( sm );
-	_frame_data.setSceneManager( sm );
+	if( !_frame_data.setSceneManager( sm ) )
+	{
+		std::cerr << "Some SceneNodes were not found. Will exit now!" << std::endl;
+		EQASSERT( false );
+	}
 
 	return true;
 }

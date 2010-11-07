@@ -25,13 +25,29 @@ def addCameraEvent() :
 	if not config.addEvent(event) :
 		print 'Python : could not add camera event'
 
+def addHideEvent() :
+	print 'Creating Ogre SceneNode'
+	ogre = SceneNode.create("ogre")
+	config.addSceneNode(ogre)
+	print 'Creating Hide Event'
+	action = event_manager.createOperation( 'HideOperation' )
+	action.scene_node = ogre
+	trigger = event_manager.createTrigger( 'KeyTrigger' )
+	trigger.key = KC.H
+
+	event = event_manager.createEvent( 'Event' )
+	event.operation = action
+	event.addTrigger( trigger )
+	if not event_manager.addEvent( event ) :
+		print 'Python : Event could not be added to EventManager'
+
+
 def addQuitEvent() :
 	print 'Creating Quit Event'
 	action = event_manager.createOperation( 'QuitOperation' )
 	print 'Python Action type = ' + action.type
 	action.config = config 
-	#trigger = event_manager.createTrigger( 'KeyTrigger' )
-	trigger = event_manager.createKeyTrigger( )
+	trigger = event_manager.createTrigger( 'KeyTrigger' )
 	# FIXME this segfaults
 	print 'Python Trigger type = ' + trigger.type
 	#print trigger.type
@@ -53,7 +69,6 @@ def addReloadEvent() :
 	print 'Python Action type = ' + action.type
 	action.config = config 
 	trigger = event_manager.createTrigger( 'KeyTrigger' )
-	#trigger = event_manager.createKeyTrigger( )
 	# FIXME this segfaults
 	print 'Python Trigger type = ' + trigger.type
 	trigger.key = KC.R
@@ -63,6 +78,8 @@ def addReloadEvent() :
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
 	event.operation = action
+	# Setting a time limit how often this Event can happen
+	event.time_limit = 5
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
@@ -74,3 +91,4 @@ print 'In python init script'
 #addCameraEvent()
 addQuitEvent()
 addReloadEvent()
+addHideEvent()
