@@ -18,15 +18,27 @@ eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other) const
 	return false;
 }
 
-std::string const eqOgre::KeyTrigger::TYPENAME = "KeyTrigger";
+std::string const &
+eqOgre::KeyTrigger::getTypeName(void ) const
+{ return eqOgre::KeyTriggerFactory::TYPENAME; }
 
-std::string const eqOgre::FrameTrigger::TYPENAME = "FrameTrigger";
+std::string const eqOgre::KeyTriggerFactory::TYPENAME = "KeyTrigger";
+
+std::string const &
+eqOgre::FrameTrigger::getTypeName(void ) const
+{ return eqOgre::FrameTriggerFactory::TYPENAME; }
+
+std::string const eqOgre::FrameTriggerFactory::TYPENAME = "FrameTrigger";
 
 /// Event Public
+// FIXME after creating the program the Event can not be used before waiting for time limit s
+// because ::clock is zero when the program is created so we need to wait for
+// time_limit seconds before using the event
+// NOTE not a really high priority but still annoying
 eqOgre::Event::Event( eqOgre::Operation* oper,
 					  eqOgre::Trigger* trig,
 					  double time_limit )
-	: _operation(oper), _last_time( ::clock() ), _time_limit(time_limit)
+	: _operation(oper), _last_time( 0 ), _time_limit(time_limit)
 {
 	std::cerr << "Event created" << std::endl;
 
@@ -109,8 +121,12 @@ eqOgre::Event::print(std::ostream& os) const
 	return os;
 }
 
+std::string const &
+eqOgre::BasicEvent::getTypeName(void ) const
+{ return eqOgre::BasicEventFactory::TYPENAME; }
 
-std::string const eqOgre::BasicEvent::TYPENAME = "BasicEvent";
+
+std::string const eqOgre::BasicEventFactory::TYPENAME = "Event";
 
 
 /// Event protected
@@ -152,7 +168,12 @@ eqOgre::ToggleEvent::processTrigger(eqOgre::Trigger* trig)
 	return false;
 }
 
-std::string const eqOgre::ToggleEvent::TYPENAME = "ToggleEvent";
+std::string const &
+eqOgre::ToggleEvent::getTypeName(void ) const
+{ return eqOgre::ToggleEventFactory::TYPENAME; }
+
+
+std::string const eqOgre::ToggleEventFactory::TYPENAME = "ToggleEvent";
 
 /// ToggleEvent private
 void

@@ -74,19 +74,30 @@ namespace vl
 		}
 	};
 
+	/// Event object creation using Factories
+
 	/// No registered factory for the object name
+	/// Use details factory_name for the type of Factory and
+	/// object_type_name for the type of object the factory is creating
 	struct no_factory : public exception
 	{
-		// TODO add information about the object type
 		virtual const char* what() const throw()
 		{
 			return "No factory for the requested object found!";
 		}
 	};
 
-	// TODO no idea what purpose this exception has
-//	struct no_object : public exception {};
-
+	/// The Object typeName of the objects this factory will create is already
+	/// registered.
+	/// Use details factory_name for the type of Factory and
+	/// object_type_name for the type of object the factory is creating
+	struct duplicate_factory : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Factory with that object typeName already exists!";
+		}
+	};
 
 	/// Math and transformation errors, mostly useful for debug builds
 	/// And should be replaced in release builds.

@@ -9,6 +9,13 @@
 eqOgre::Event *
 eqOgre::EventManager::createEvent(const std::string& type)
 {
+	std::vector<EventFactory *>::iterator iter;
+	for( iter = _event_factories.begin(); iter != _event_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == type )
+		{ return (*iter)->create(); }
+	}
+	/*
 	if( type == "Event"  )
 	{
 		return new BasicEvent();
@@ -21,7 +28,7 @@ eqOgre::EventManager::createEvent(const std::string& type)
 	{
 		return new TransformationEvent();
 	}
-
+*/
 	BOOST_THROW_EXCEPTION( vl::no_factory()
 		<< vl::factory_name("Event factory")
 		<< vl::object_type_name(type)
@@ -32,6 +39,13 @@ eqOgre::EventManager::createEvent(const std::string& type)
 eqOgre::Operation *
 eqOgre::EventManager::createOperation(const std::string& type)
 {
+	std::vector<OperationFactory *>::iterator iter;
+	for( iter = _operation_factories.begin(); iter != _operation_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == type )
+		{ return (*iter)->create(); }
+	}
+	/*	TODO these factories need to be created and added to the manager
 	if( type == AddTransformOperation::TYPENAME )
 	{
 		return new AddTransformOperation();
@@ -48,7 +62,7 @@ eqOgre::EventManager::createOperation(const std::string& type)
 	{
 		return new ReloadScene();
 	}
-
+	*/
 	BOOST_THROW_EXCEPTION( vl::no_factory()
 		<< vl::factory_name("Operation factory")
 		<< vl::object_type_name(type)
@@ -58,6 +72,14 @@ eqOgre::EventManager::createOperation(const std::string& type)
 eqOgre::Trigger *
 eqOgre::EventManager::createTrigger(const std::string& type)
 {
+	std::vector<TriggerFactory *>::iterator iter;
+	for( iter = _trigger_factories.begin(); iter != _trigger_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == type )
+		{ return (*iter)->create(); }
+	}
+
+	/*
 	if( type == "KeyTrigger" )
 	{
 		return new KeyTrigger();
@@ -66,17 +88,72 @@ eqOgre::EventManager::createTrigger(const std::string& type)
 	{
 		return new FrameTrigger();
 	}
-
+	*/
 	BOOST_THROW_EXCEPTION( vl::no_factory()
 		<< vl::factory_name("Trigger factory")
 		<< vl::object_type_name(type)
 		);
 }
 
-eqOgre::KeyTrigger *eqOgre::EventManager::createKeyTrigger(void )
+void
+eqOgre::EventManager::addEventFactory(eqOgre::EventFactory* fact)
 {
-	return new KeyTrigger();
+	std::vector<EventFactory *>::iterator iter;
+	for( iter = _event_factories.begin(); iter != _event_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == fact->getTypeName() )
+		{
+			BOOST_THROW_EXCEPTION( vl::duplicate_factory()
+				<< vl::factory_name("Event factory")
+				<< vl::object_type_name( fact->getTypeName() )
+				);
+		}
+	}
+
+	_event_factories.push_back( fact );
 }
+
+void
+eqOgre::EventManager::addOperationFactory(eqOgre::OperationFactory* fact)
+{
+	std::vector<OperationFactory *>::iterator iter;
+	for( iter = _operation_factories.begin(); iter != _operation_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == fact->getTypeName() )
+		{
+			BOOST_THROW_EXCEPTION( vl::duplicate_factory()
+				<< vl::factory_name("Operation factory")
+				<< vl::object_type_name( fact->getTypeName() )
+				);
+		}
+	}
+
+	_operation_factories.push_back( fact );
+}
+
+void
+eqOgre::EventManager::addTriggerFactory(eqOgre::TriggerFactory* fact)
+{
+	std::vector<TriggerFactory *>::iterator iter;
+	for( iter = _trigger_factories.begin(); iter != _trigger_factories.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == fact->getTypeName() )
+		{
+			BOOST_THROW_EXCEPTION( vl::duplicate_factory()
+				<< vl::factory_name("Trigger factory")
+				<< vl::object_type_name( fact->getTypeName() )
+				);
+		}
+	}
+
+	_trigger_factories.push_back( fact );
+}
+
+// TODO not implemented
+eqOgre::Event *
+eqOgre::EventManager::findEvent( const std::string &name )
+{ return 0; }
+
 
 bool
 eqOgre::EventManager::addEvent(eqOgre::Event *event)

@@ -5,6 +5,7 @@
 #include "scene_node.hpp"
 #include "keycode.hpp"
 #include "event_manager.hpp"
+#include "config_events.hpp"
 
 #include <boost/python.hpp>
 
@@ -122,7 +123,6 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
 		.def("createOperation", &EventManager::createOperation, python::return_value_policy<python::reference_existing_object>() )
 		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("createKeyTrigger", &EventManager::createKeyTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("addEvent", &EventManager::addEvent)
 		.def("removeEvent", &EventManager::removeEvent)
 		.def("hasEvent", &EventManager::hasEvent)

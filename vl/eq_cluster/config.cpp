@@ -6,13 +6,29 @@
 #include "math/conversion.hpp"
 
 #include "config_python.hpp"
+#include "config_events.hpp"
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent ), _event_manager( new EventManager )
-{}
+{
+	// Add events
+	_event_manager->addEventFactory( new BasicEventFactory );
+	_event_manager->addEventFactory( new ToggleEventFactory );
+	// TODO add Transform Event Factory
+	// Add triggers
+	_event_manager->addTriggerFactory( new KeyTriggerFactory );
+	_event_manager->addTriggerFactory( new FrameTriggerFactory );
+	// Add operations
+	_event_manager->addOperationFactory( new QuitOperationFactory );
+	_event_manager->addOperationFactory( new ReloadSceneFactory );
+	_event_manager->addOperationFactory( new AddTransformOperationFactory );
+	_event_manager->addOperationFactory( new RemoveTransformOperationFactory );
+	// TODO add transformation operations
+	
+}
 
 eqOgre::Config::~Config()
 {}
@@ -394,9 +410,3 @@ eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
 {
 	return false;
 }
-
-const std::string eqOgre::QuitOperation::TYPENAME = "QuitOperation";
-const std::string eqOgre::ReloadScene::TYPENAME = "ReloadScene";
-
-const std::string eqOgre::AddTransformOperation::TYPENAME = "AddTransformOperation";
-const std::string eqOgre::RemoveTransformOperation::TYPENAME = "RemoveTransformOperation";

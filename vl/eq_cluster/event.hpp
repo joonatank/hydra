@@ -26,6 +26,7 @@ namespace eqOgre
 
 
 /// Base class for all Triggers
+/// Abstract
 class Trigger
 {
 public :
@@ -46,9 +47,16 @@ public :
 };
 
 inline std::ostream &operator<<( std::ostream &os, eqOgre::Trigger const &t )
+{ return t.print( os ); }
+
+
+/// Trigger Factory class for creating new Triggers
+class TriggerFactory
 {
-	return t.print( os );
-}
+public :
+	virtual Trigger *create( void ) = 0;
+	virtual std::string const &getTypeName( void ) const = 0;
+};
 
 class KeyTrigger : public Trigger
 {
@@ -69,8 +77,7 @@ public :
 
 	virtual bool isEqual( Trigger const &other ) const;
 
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
+	virtual std::string const &getTypeName( void ) const;
 
 	static const std::string TYPENAME;
 
@@ -86,15 +93,26 @@ public :
 		return os;
 	}
 
-	void printToCout( void )
-	{
-		print( std::cout ) << std::endl;
-	}
-
 private :
 	OIS::KeyCode _key;
 	bool _released;
 };
+
+
+class KeyTriggerFactory : public TriggerFactory
+{
+public :
+	virtual Trigger *create( void )
+	{ return new KeyTrigger; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+
+
 
 /// Trigger that is triggered when a frame is rendered
 class FrameTrigger : public Trigger
@@ -105,11 +123,22 @@ public :
 		return true;
 	}
 
+	virtual std::string const &getTypeName( void ) const;
+
+};
+
+class FrameTriggerFactory : public TriggerFactory
+{
+public :
+	virtual Trigger *create( void )
+	{ return new KeyTrigger; }
+
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
 
 	static const std::string TYPENAME;
 };
+
 
 
 class Operation
@@ -128,9 +157,16 @@ public :
 };
 
 inline std::ostream &operator<<( std::ostream &os, eqOgre::Operation const &o )
+{ return o.print(os); }
+
+
+/// Trigger Factory class for creating new Triggers
+class OperationFactory
 {
-	return o.print(os);
-}
+public :
+	virtual Operation *create( void ) = 0;
+	virtual std::string const &getTypeName( void ) const = 0;
+};
 
 /**	Base class for all Events
 	Abstract interface
@@ -185,6 +221,15 @@ inline std::ostream &operator<<( std::ostream &os, eqOgre::Event const &e )
 	return e.print(os);
 }
 
+/// Trigger Factory class for creating new Triggers
+class EventFactory
+{
+public :
+	virtual Event *create( void ) = 0;
+	virtual std::string const &getTypeName( void ) const = 0;
+};
+
+
 /// Basic Event implementation used for Trigger Events
 class BasicEvent : public Event
 {
@@ -193,11 +238,23 @@ public :
 		: Event( oper, trig, time_limit )
 	{}
 
+	virtual std::string const &getTypeName( void ) const;
+
+};
+
+class BasicEventFactory : public EventFactory
+{
+public :
+	virtual Event *create( void )
+	{ return new BasicEvent; }
+
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
-	
+
 	static const std::string TYPENAME;
 };
+
+
 
 class ToggleEvent : public Event
 {
@@ -214,12 +271,9 @@ public :
 	/// And calls the overridable toggleOn and toggleOff functions
 	virtual bool processTrigger( Trigger *trig );
 
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
+	virtual std::string const &getTypeName( void ) const;
 
 	// TODO override the Event::print
-
-	static const std::string TYPENAME;
 
 private :
 
@@ -236,6 +290,20 @@ private :
 	Operation *_toggleOff;
 
 };	// ToggleEvent
+
+class ToggleEventFactory : public EventFactory
+{
+public :
+	virtual Event *create( void )
+	{ return new ToggleEvent; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+
 
 /**	EventHandler
 	Has multiple Events
