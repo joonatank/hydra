@@ -3,6 +3,9 @@
 
 #include <eq/eq.h>
 
+// Audio
+#include <cAudio/cAudio.h>
+
 #include "frame_data.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
@@ -64,9 +67,15 @@ namespace eqOgre
 	protected :
 		virtual ~Config (void);
 
+		/// Audio
+		void _initAudio( void );
+		void _exitAudio( void );
+
+		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
 		void _setHeadMatrix( Ogre::Matrix4 const &m );
 
+		/// Python
 		void _initPython( void );
 		void _runPythonScript( std::string const &scriptFile );
 
@@ -93,6 +102,9 @@ namespace eqOgre
 		// Python related
 		python::object _global;
 
+		// Audio objects
+		 cAudio::IAudioManager *_audio_manager;
+		 cAudio::IAudioSource *_background_sound;
 	};	// class Config
 
 

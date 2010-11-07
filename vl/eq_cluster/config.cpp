@@ -12,7 +12,8 @@
 #include <OIS/OISMouse.h>
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ), _event_manager( new EventManager )
+	: eq::Config ( parent ), _event_manager( new EventManager ),
+	  _audio_manager(0), _background_sound(0)
 {
 	// Add events
 	_event_manager->addEventFactory( new BasicEventFactory );
@@ -32,7 +33,9 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 }
 
 eqOgre::Config::~Config()
-{}
+{
+	_exitAudio();
+}
 
 void 
 eqOgre::Config::mapData( uint32_t const initDataID )
@@ -191,6 +194,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 //		std::cout << "Events created in python and c++ : " << std::endl
 //			<< *_event_manager << std::endl;
 
+		_initAudio();
 		inited = true;
 	}
 
@@ -210,6 +214,34 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 //	std::cout << "FrameData version = " << version << std::endl;
 
 	return eq::Config::startFrame( version );
+}
+
+void
+eqOgre::Config::_initAudio(void )
+{
+	//Create an Audio Manager
+	_audio_manager = cAudio::createAudioManager(true);
+
+	//Create an audio source and load a sound from a file
+	_background_sound = _audio_manager->create("music","The_Dummy_Song.ogg",true);
+
+	if(_background_sound)
+	{
+		//Play our source in 2D once.
+		_background_sound->play2d(false);
+	}
+}
+
+
+void
+eqOgre::Config::_exitAudio(void )
+{
+	//Shutdown cAudio
+	if( _audio_manager )
+	{
+		_audio_manager->shutDown();
+		cAudio::destroyAudioManager(_audio_manager);
+	}
 }
 
 void

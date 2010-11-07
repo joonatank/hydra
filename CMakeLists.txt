@@ -78,7 +78,8 @@ find_path( VPRN_INCLUDE_DIR
 # We should use find_file to find the Ogre cmake helpers
 # TODO this needs a bit more work
 find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
-	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake )
+	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
+	)
 
 set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 
@@ -96,6 +97,22 @@ if( ${CEGUI_FOUND} )
 elseif()
 	message( "CEGUI not found, will not build a GUI" )
 endif()
+
+
+####### Find cAudio
+# TODO we have no support for mp3 for now convert all sounds to ogg
+find_library( CAUDIO_LIBRARY
+	NAMES cAudio.2.1.0
+	PATHS /usr/lib/cAudio2.1.0;/usr/local/lib/cAudio2.1.0;$ENV{cAudio_HOME}
+	)
+
+# Include dir
+find_path( CAUDIO_INCLUDE_DIR
+	NAMES cAudio/cAudio.h
+	)
+
+message( "cAudio library = ${CAUDIO_LIBRARY}" )
+message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
 
 ####### Find Boost ########
 # TODO
@@ -128,6 +145,7 @@ include_directories( SYSTEM
 	${VPRN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
+	${CAUDIO_INCLUDE_DIR}
 	)
 
 # Libraries that eqOgre library depends on
@@ -139,6 +157,7 @@ set( EQOGRE_DEB_LIBS
 	${OIS_LIBRARIES}
 	${PYTHON_LIBRARIES}
 	${Boost_PYTHON_LIBRARIES}
+	${CAUDIO_LIBRARY}
 	)
 
 # Libraries used to build project binaries
