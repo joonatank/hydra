@@ -148,9 +148,15 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
 		.def(python::self == python::self )
 		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
-		.add_property("released", &KeyTrigger::getReleased, &KeyTrigger::setReleased )
+//		.add_property("released", &KeyTrigger::getReleased, &KeyTrigger::setReleased )
 	;
 
+	python::class_<KeyPressedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyPressedTrigger", python::no_init )
+	;
+
+	python::class_<KeyReleasedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyReleasedTrigger", python::no_init )
+	;
+	
 
 	python::class_<OperationWrapper, boost::noncopyable>("Operation", python::no_init )
 		// FIXME pure virtual getTypeName

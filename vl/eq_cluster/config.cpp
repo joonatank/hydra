@@ -21,6 +21,8 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	// TODO add Transform Event Factory
 	// Add triggers
 	_event_manager->addTriggerFactory( new KeyTriggerFactory );
+	_event_manager->addTriggerFactory( new KeyPressedTriggerFactory );
+	_event_manager->addTriggerFactory( new KeyReleasedTriggerFactory );
 	_event_manager->addTriggerFactory( new FrameTriggerFactory );
 	// Add operations
 	_event_manager->addOperationFactory( new QuitOperationFactory );
@@ -191,6 +193,27 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		event->addTrigger(trig);
 		_event_manager->addEvent( event );
 
+		// Create Camera SceneNode
+		SceneNodePtr node = SceneNode::create("CameraNode");
+		addSceneNode(node);
+
+		// Add TransformationEvent
+		TransformationEvent *trans = new TransformationEvent;
+		trans->setSceneNode( node );
+		// Add forward movement
+		KeyTrigger *neg_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		KeyTrigger *pos_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		neg_key->setKey( OIS::KC_W );
+		pos_key->setKey( OIS::KC_S );
+		trans->setTransZtrigger( pos_key, neg_key );
+		// Add sideway movement
+		neg_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		pos_key = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		neg_key->setKey( OIS::KC_A );
+		pos_key->setKey( OIS::KC_D );
+		trans->setTransXtrigger( pos_key, neg_key );
+
+		_event_manager->addEvent( trans );
 //		std::cout << "Events created in python and c++ : " << std::endl
 //			<< *_event_manager << std::endl;
 
@@ -203,13 +226,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	FrameTrigger frame_trig;
 	_event_manager->processEvents( &frame_trig );
 
-/*	TODO fix using the new Event system
-	// Really Move the objects
-	for( size_t i = 0; i < _trans_events.size(); ++i )
-	{
-		_trans_events.at(i)();
-	}
-*/
 	uint32_t version = _frame_data.commitAll();
 //	std::cout << "FrameData version = " << version << std::endl;
 
@@ -362,18 +378,16 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	KeyTrigger trig;
+	KeyPressedTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
-	trig.setReleased(false);
 	return _event_manager->processEvents( &trig );
 }
 
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
-	KeyTrigger trig;
+	KeyReleasedTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
-	trig.setReleased(true);
 	return _event_manager->processEvents( &trig );
 }
 

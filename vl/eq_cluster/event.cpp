@@ -5,24 +5,76 @@
 
 /// KeyTrigger Public
 eqOgre::KeyTrigger::KeyTrigger( void )
-	: _key( OIS::KC_UNASSIGNED ), _released(false)
+	: _key( OIS::KC_UNASSIGNED )
 {}
 
 bool
 eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other) const
 {
 	KeyTrigger const &key_other = static_cast<KeyTrigger const &>( other );
-	if( key_other._key == _key && key_other._released == _released )
+	if( key_other._key == _key )
 	{ return true; }
 
 	return false;
 }
+
+bool
+eqOgre::KeyTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+{
+	KeyTrigger const *a = dynamic_cast<KeyTrigger const *>( other );
+	if( a )
+	{ return isEqual(*a); }
+	else
+	{ return false; }
+}
+
+std::ostream &
+eqOgre::KeyTrigger::print(std::ostream& os) const
+{
+	Trigger::print(os);
+	os << " KeyCode = " << getKeyName(_key) << " : released = ";
+
+	return os;
+}
+
 
 std::string const &
 eqOgre::KeyTrigger::getTypeName(void ) const
 { return eqOgre::KeyTriggerFactory::TYPENAME; }
 
 std::string const eqOgre::KeyTriggerFactory::TYPENAME = "KeyTrigger";
+
+bool
+eqOgre::KeyPressedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+{
+	KeyPressedTrigger const *a = dynamic_cast<KeyPressedTrigger const *>( other );
+	if( a )
+	{ return isEqual(*a); }
+	else
+	{ return false; }
+}
+
+std::string const &
+eqOgre::KeyPressedTrigger::getTypeName(void ) const
+{ return eqOgre::KeyPressedTriggerFactory::TYPENAME; }
+
+std::string const eqOgre::KeyPressedTriggerFactory::TYPENAME = "KeyPressedTrigger";
+
+bool
+eqOgre::KeyReleasedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+{
+	KeyReleasedTrigger const *a = dynamic_cast<KeyReleasedTrigger const *>( other );
+	if( a )
+	{ return isEqual(*a); }
+	else
+	{ return false; }
+}
+
+std::string const &
+eqOgre::KeyReleasedTrigger::getTypeName(void ) const
+{ return eqOgre::KeyReleasedTriggerFactory::TYPENAME; }
+
+std::string const eqOgre::KeyReleasedTriggerFactory::TYPENAME = "KeyReleasedTrigger";
 
 std::string const &
 eqOgre::FrameTrigger::getTypeName(void ) const
@@ -57,7 +109,14 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 
 	clock_t time = ::clock();
 
-	if( _findTrigger(trig) != _triggers.end() )
+	std::vector<Trigger *>::iterator iter = _triggers.begin();
+	for( ; iter != _triggers.end(); ++iter )
+	{
+		if( (*iter)->isSimilar(trig) )
+		{ break; }
+	}
+	
+	if( iter != _triggers.end() )
 	{
 		std::cerr << "Trigger found : trigger = " << trig
 			<< " : operation = " << _operation << "." << std::endl;

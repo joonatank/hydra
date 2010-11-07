@@ -5,22 +5,39 @@ std::string const eqOgre::TransformOperation::TYPENAME = "TransformOperation";
 
 std::string const eqOgre::SetTransformationOperation::TYPENAME = "SetTransformationOperation";
 
+eqOgre::MoveOperation::MoveOperation( void )
+	: _node(0), _speed(1), _angular_speed( Ogre::Degree(60) ),
+		_move_dir(Ogre::Vector3::ZERO), _rot_dir(Ogre::Vector3::ZERO)
+{}
+
+void
+eqOgre::MoveOperation::execute(double time)
+{
+	if( !_node )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	// Check that we are moving
+	if( !_move_dir.isZeroLength())
+	{
+		Ogre::Vector3 pos = _node->getPosition();
+		pos += _speed*time*_move_dir.normalisedCopy();
+		_node->setPosition( pos );
+	}
+
+	if( !_rot_dir.isZeroLength() )
+	{
+		Ogre::Quaternion orient = _node->getOrientation();
+		Ogre::Quaternion qx( _angular_speed*time, _rot_dir );
+		_node->setOrientation( qx*orient );
+	}
+}
+
 std::string const eqOgre::MoveOperation::TYPENAME = "MoveOperation";
 
-eqOgre::TransformationEvent::TransformationEvent(eqOgre::SceneNode* node)
-	: _node(node), _last_time( ::clock() ), _speed(1),
-		_angular_speed( Ogre::Degree(60) ),
-		_operation( new MoveOperation(node) )
-//		_move_keys(), _rot_keys(),
-//		_move_dir( Ogre::Vector3::ZERO ),
-//		_rotation_axises( Ogre::Vector3::ZERO )
-{
-//	if( !_node )
-//	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_trans_triggers.resize(3);;
-	_rot_triggers.resize(3);;
-}
+eqOgre::TransformationEvent::TransformationEvent( void )
+	: _last_time( ::clock() ),
+	  _operation( new MoveOperation )
+{}
 
 std::string const eqOgre::TransformationEvent::TYPENAME = "TransformationEvent";
 
@@ -33,106 +50,63 @@ eqOgre::TransformationEvent::TransformationEvent(const eqOgre::TransformationEve
 eqOgre::TransformationEvent &
 eqOgre::TransformationEvent::operator=(const eqOgre::TransformationEvent& a)
 {
-	/*
-	_node = a._node;
-	_last_time = a._last_time;
-	_speed = a._speed;
-	_angular_speed = a._angular_speed;
-	_move_keys = a._move_keys;
-	_rot_keys = a._rot_keys;
-
-	// Temporary variables need to be set to default values (zero)
-	_move_dir =  Ogre::Vector3::ZERO;
-	_rotation_axises = Ogre::Vector3::ZERO;
-	*/
-
+	// TODO copying is disallowed for now
 	return *this;
 }
 
-void
-eqOgre::TransformationEvent::operator()(void )
+// FIXME
+std::ostream &
+eqOgre::operator<<(std::ostream& os, const eqOgre::TransformationEvent& a)
 {
-	clock_t time = ::clock();
-	// Secs since last frame
-	double t = ((double)( time - _last_time ))/CLOCKS_PER_SEC;
+/*
+	std::string del("     ");
 
-	_operation->execute( t );
-
-	_last_time = time;
+	if( a.getSceneNode() )
+		os << "TransformationEvent for node = " << a.getSceneNode()->getName();
+	else
+		os << "TransformationEvent without node";
+	os << std::endl
+		<< del << "speed = " << a.getSpeed()
+		<< " m/s : " << " angular speed = " << a.getAngularSpeed() << std::endl;
+//		<< del << "move keys = " << a._move_keys << std::endl
+//		<< del << "rot keys = " << a._rot_keys;
+*/
+	return os;
 }
+
 
 bool
 eqOgre::TransformationEvent::processTrigger(eqOgre::Trigger* trig)
 {
-	if( _trans_triggers.at(0)._trig1 == trig )
+	bool retval = false;
+	Ogre::Vector3 v = _trans_triggers.findTrigger(trig);
+	if( !v.isZeroLength() )
 	{
-		_operation->addMove( Ogre::Vector3::UNIT_X );
-		return true;
-	}
-	else if( _trans_triggers.at(0)._trig2 == trig )
-	{
-		_operation->addMove( -Ogre::Vector3::UNIT_X );
-		return true;
-	}
-	else if( _trans_triggers.at(1)._trig1 == trig )
-	{
-		_operation->addMove( Ogre::Vector3::UNIT_Y );
-		return true;
-	}
-	else if( _trans_triggers.at(1)._trig1 == trig )
-	{
-		_operation->addMove( -Ogre::Vector3::UNIT_Y );
-		return true;
-	}
-	else if( _trans_triggers.at(2)._trig1 == trig )
-	{
-		_operation->addMove( Ogre::Vector3::UNIT_Z );
-		return true;
-	}
-	else if( _trans_triggers.at(2)._trig1 == trig )
-	{
-		_operation->addMove( -Ogre::Vector3::UNIT_Z );
-		return true;
+		_operation->addMove( v );
+		retval = true;
 	}
 
-	else if( _rot_triggers.at(0)._trig1 == trig )
+	v = _rot_triggers.findTrigger(trig);
+	if( !v.isZeroLength() )
 	{
-		_operation->addRotation( Ogre::Vector3::UNIT_X );
-		return true;
-	}
-	else if( _rot_triggers.at(0)._trig2 == trig )
-	{
-		_operation->addRotation( -Ogre::Vector3::UNIT_X );
-		return true;
-	}
-	else if( _rot_triggers.at(1)._trig1 == trig )
-	{
-		_operation->addRotation( Ogre::Vector3::UNIT_Y );
-		return true;
-	}
-	else if( _rot_triggers.at(1)._trig2 == trig )
-	{
-		_operation->addRotation( -Ogre::Vector3::UNIT_Y );
-		return true;
-	}
-	else if( _rot_triggers.at(2)._trig1 == trig )
-	{
-		_operation->addRotation( Ogre::Vector3::UNIT_Z );
-		return true;
-	}
-	else if( _rot_triggers.at(2)._trig2 == trig )
-	{
-		_operation->addRotation( -Ogre::Vector3::UNIT_Z );
-		return true;
+		_operation->addRotation( v );
+		retval = true;
 	}
 
-	else if( FrameTrigger() == *trig )
+	if( FrameTrigger().isSimilar(trig) )
 	{
-		(*this)();
-		return true;
+		// TODO the delta time should be provided by the FrameTrigger
+		clock_t time = ::clock();
+		// Secs since last frame
+		double t = ((double)( time - _last_time ))/CLOCKS_PER_SEC;
+
+		_operation->execute( t );
+
+		_last_time = time;
+		retval = true;
 	}
 
-	return false;
+	return retval;
 }
 
 /*

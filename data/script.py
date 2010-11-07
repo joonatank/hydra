@@ -1,3 +1,5 @@
+# TODO these should be fixed, the interface has changed considerably
+# FIXME the EventManager does not support these yet
 def addOgreEvent() :
 	print 'Creating Ogre SceneNode'
 	node = SceneNode.create("ogre")
@@ -11,6 +13,8 @@ def addOgreEvent() :
 	if not config.addEvent(event) :
 		print 'Python : could not add ogre event'
 
+# TODO these should be fixed, the interface has changed considerably
+# FIXME the EventManager does not support these yet
 def addCameraEvent() :
 	print 'Creating Camera SceneNode'
 	node = SceneNode.create("CameraNode")
@@ -47,14 +51,12 @@ def addQuitEvent() :
 	action = event_manager.createOperation( 'QuitOperation' )
 	print 'Python Action type = ' + action.type
 	action.config = config 
-	trigger = event_manager.createTrigger( 'KeyTrigger' )
-	# FIXME this segfaults
+	# Example of using pressed or released key instead of both (the default)
+	# you need to create either KeyReleasedTrigger or KeyPressedTrigger
+	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
 	print 'Python Trigger type = ' + trigger.type
-	#print trigger.type
-	#print getKeyName( KC.W )
 	trigger.key = KC.Q
-	# Example of using released key instead of pressed (which is default)
-	trigger.released = True
+	# KeyTrigger will respond to both
 
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
