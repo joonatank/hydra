@@ -18,12 +18,13 @@ if( WIN32 )
 					 )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
+	# Set unix debug flag
+	if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+		add_definitions( -DDEBUG )
+	endif()
 endif( WIN32 )
 
-# Set unix debug flag
-if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-	add_definitions( -DDEBUG )
-endif()
+
 
 # Add our local scripts to CMake path
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/CMake )
@@ -210,6 +211,10 @@ ENDMACRO()
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
+# TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+# TODO should be configurable
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
+# TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 

@@ -5,12 +5,16 @@ cmake_minimum_required(VERSION 2.8)
 find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
 message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
+message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
+message( "VRPN libraries = ${VRPN_LIBRARY}" )
 
 include_directories( util ${Boost_INCLUDE_DIR} )
 
-link_libraries( ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES}
-	${Boost_FILESYSTEM_LIBRARIES}
-	)
+set( FS_LIB ${Boost_FILESYSTEM_LIBRARIES} )
+set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
+
+# TODO add link variable so not all programs will link to these
+link_libraries( ${FS_LIB} ${TEST_LIB} )
 
 subdirs(util
 		spikes
@@ -28,13 +32,25 @@ add_executable( test_settings
 				${eqOgre_SOURCE_DIR}/base/args.hpp
 				)
 
-#add_executable( test_dotscene test_dotscene.cpp )
+target_link_libraries( test_settings ${OGRE_LIBRARIES} ${TEST_LIB} ${FS_LIB} )
+add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 
+# FIXME dotscene testing
+#add_executable( test_dotscene test_dotscene.cpp )
+#target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
+#add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )
+
+# Test exceptions
 add_executable( test_exceptions
 				test_exceptions.cpp
 				${eqOgre_SOURCE_DIR}/base/exceptions.hpp
 				)
 
+# Is this needed
+target_link_libraries( test_exceptions ${TEST_LIB} )
+
+
+# Test tracking
 add_executable( test_tracking
 				test_tracking.cpp
 				${eqOgre_SOURCE_DIR}/tracker.hpp
@@ -44,12 +60,50 @@ add_executable( test_tracking
 				tracking_fixture.hpp
 				)
 
-#set( LIBS ${Boost_LIBRARIES} )
+# TODO do we really need all these libs
+target_link_libraries( test_tracking
+	${OGRE_LIBRARIES}
+	${VRPN_LIBRARY}
+	${TEST_LIB}
+	${FS_LIB}
+	${CMAKE_THREAD_LIBS_INIT}
+	)
 
-target_link_libraries( test_settings ${OGRE_LIBRARIES} )
-#target_link_libraries( test_dotscene ${LIBS} ${OGRE_LIBRARIES} )
-target_link_libraries( test_exceptions )
-target_link_libraries( test_tracking ${OGRE_LIBRARIES} ${VRPN_LIBRARY} )
 
-add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
-add_test( dotscene ${PROJECT_BINARY_DIR}/test_dotscene )
+
+# Test env settings
+add_executable( test_env_settings
+    test_env_settings.cpp
+    ${eqOgre_SOURCE_DIR}/base/envsettings.cpp
+    ${eqOgre_SOURCE_DIR}/base/envsettings.hpp
+    )
+
+target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
+
+add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
+
+
+# Test project settings
+# FIXME these use old interface
+##add_executable( test_project_settings
+##        test_project_settings.cpp
+##        ${vl_SOURCE_DIR}/base/projsettings.cpp
+##        ${vl_SOURCE_DIR}/base/projsettings.h
+##        )
+
+##target_link_libraries( test_project_settings ${Boost_LIBRARIES} )
+
+##add_test( project_settings ${PROJECT_BINARY_DIR}/test_project_settings )
+
+
+
+
+
+
+# Test program for launching
+# TODO either fix QT linking or remove the prog
+#add_executable( test_prog
+#        test_prog.cpp
+#        )
+
+#target_link_libraries( test_prog ${Boost_LIBRARIES} ${QT_LIBRARIES}  )

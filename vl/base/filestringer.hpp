@@ -1,11 +1,14 @@
-#ifndef FILESTRINGER_H
-#define FILESTRINGER_H
+#ifndef VL_FILESTRINGER_HPP
+#define VL_FILESTRINGER_HPP
 
 #include <iostream>
 #include <fstream>
 
 #include "rapidxml.hpp"
 
+namespace vl
+{
+	
 inline std::string readFileToString( std::string const &filePath )
 {
     // Open in binary mode, so we don't mess up the file
@@ -35,4 +38,6 @@ inline bool writeFileFromString( std::string const &filePath, std::string const 
     return true;
 }
 
-#endif // FILESTRINGER_H
+}
+
+#endif // VL_FILESTRINGER_HPP
