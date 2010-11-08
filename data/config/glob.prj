@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<!--
+CRITICAL: tag project_config needs to be present
+
+Default name is "Global"
+
+May be launchable
+-->
+<project_config name="Global">
+
+	<scenes>
+		<!--
+		N scenes can be present
+
+		To save no scenes need to be present.
+
+		CRITICAL: To launch at least one scene needs to be present
+			OR there needs to be a global scene
+			AND all scenes in use need to exist in resources
+
+		Default name is filename without .scene and
+			IF name already exists "_" chars will be appended untill name is unique.
+
+		CRITICAL: Every neame must be unique
+
+		Default attach point is global coordinate system
+
+		When defining attach point both scene and point need to be present
+
+		GUI: Changing scene name changes attachto scene fields accordingly NOT vice versa
+		GUI: attach point set possibly read from scene file and offered as a dropdown, tree or dyn. search
+
+		CRITICAL: attachto scene needs to exist in the project_config
+			OR global_config
+			AND attachto point needs to exist in the given scene
+
+		Scene files will be searched from resource paths (see below)
+
+		Scene can be attached to only one point.
+		-->
+		<scene name="Tunneli" use="true">
+			<file>tunneli.scene</file>
+		</scene>
+
+		<scene name="T7" use="true">
+			<file>T7.scene</file>
+			<attachto scene="Tunneli" point="origo_T7lle"/>
+		</scene>
+	</scenes>
+
+	<!-- Resources will reside in [path to this file]/resources -->
+
+	<action_maps>
+		<!--
+		N action map files can be present
+
+		Later in list defined maps override AND extend earlier set
+		-->
+		<file use="false">debug/ruukkimappi1.xml</file>
+		<file use="true">ruukkimappi2.xml</file>
+		<file use="true">koe/lisamappi.xml</file>
+	</action_maps>
+
+<!--No cases in gllobal settings-->
+
+</project_config>

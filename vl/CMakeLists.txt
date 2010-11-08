@@ -6,6 +6,8 @@ set( SOURCES
 	vrpn_tracker.cpp
 	settings.cpp
 	base/args.cpp
+	base/envsettings.cpp
+	base/projsettings.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
@@ -34,6 +36,9 @@ set( HEADERS
 	settings.hpp
 	base/helpers.hpp
 	base/args.hpp
+	base/envsettings.hpp
+	base/projsettings.hpp
+	base/filestringer.hpp
 	base/exceptions.hpp
 	base/filesystem.hpp
 	base/print.hpp
