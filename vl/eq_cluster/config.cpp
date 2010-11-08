@@ -30,6 +30,8 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addOperationFactory( new AddTransformOperationFactory );
 	_event_manager->addOperationFactory( new RemoveTransformOperationFactory );
 	_event_manager->addOperationFactory( new HideOperationFactory );
+	_event_manager->addOperationFactory( new ShowOperationFactory );
+	_event_manager->addOperationFactory( new ToggleMusicFactory );
 	// TODO add transformation operations
 	
 }
@@ -115,6 +117,21 @@ eqOgre::Config::getSceneNode(const std::string& name)
 	return 0;
 }
 
+void
+eqOgre::Config::toggleBackgroundSound()
+{
+	if( !_background_sound )
+	{
+		std::cerr << "Config::toggleBackgroundSound DOES NOT EXIST" << std::endl;
+		return;
+	}
+
+	if( _background_sound->isPlaying() )
+	{ _background_sound->pause(); }
+	else
+	{ _background_sound->play2d(false); }
+}
+
 
 uint32_t 
 eqOgre::Config::startFrame( const uint32_t frameID )
@@ -152,30 +169,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 			// Run init python script
 			_runPythonScript( initScript);
 
-			// Find ogre event so we can toggle it on/off
-			// TODO add function to find Events
-			// Ogre Rotation event, used to toggle the event on/off
-			/*	FIXME new design
-			TransformationEvent ogre_event;
-			for( size_t i = 0; i < _trans_events.size(); ++i )
-			{
-				SceneNodePtr node = _trans_events.at(i).getSceneNode();
-				if( node )
-				{
-					if( node->getName() == "ogre" )
-					{
-						ogre_event = _trans_events.at(i);
-						break;
-					}
-				}
-			}
-
-			Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
-			Operation *add_oper = new AddTransformEvent( this, ogre_event );
-			Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
-			Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
-			_events.push_back( event );
-			*/
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -188,6 +181,31 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		{
 			PyErr_Print();
 		}
+		
+		// Find ogre event so we can toggle it on/off
+		// TODO add function to find Events
+		// Ogre Rotation event, used to toggle the event on/off
+		/*	FIXME new design
+		TransformationEvent ogre_event;
+		for( size_t i = 0; i < _trans_events.size(); ++i )
+		{
+			SceneNodePtr node = _trans_events.at(i).getSceneNode();
+			if( node )
+			{
+				if( node->getName() == "ogre" )
+				{
+					ogre_event = _trans_events.at(i);
+					break;
+				}
+			}
+		}
+
+		Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
+		Operation *add_oper = new AddTransformEvent( this, ogre_event );
+		Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
+		Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
+		_events.push_back( event );
+		*/
 
 		// Add a trigger event to Quit the Application
 		QuitOperation *quit
@@ -200,10 +218,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		trig->setKey( OIS::KC_ESCAPE );
 		event->addTrigger(trig);
 		_event_manager->addEvent( event );
-
-		// Create Camera SceneNode
-		SceneNodePtr node = SceneNode::create("CameraNode");
-		addSceneNode(node);
 
 		_initAudio();
 		inited = true;
@@ -228,12 +242,6 @@ eqOgre::Config::_initAudio(void )
 
 	//Create an audio source and load a sound from a file
 	_background_sound = _audio_manager->create("music","The_Dummy_Song.ogg",true);
-
-	if(_background_sound)
-	{
-		//Play our source in 2D once.
-		_background_sound->play2d(false);
-	}
 }
 
 

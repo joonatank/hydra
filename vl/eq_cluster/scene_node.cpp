@@ -109,3 +109,5 @@ eqOgre::SceneNode::deserialize(eq::net::DataIStream& is, const uint64_t dirtyBit
 }
 
 const std::string eqOgre::HideOperationFactory::TYPENAME = "HideOperation";
+
+const std::string eqOgre::ShowOperationFactory::TYPENAME = "ShowOperation";

@@ -67,6 +67,8 @@ namespace eqOgre
 		void updateSceneVersion( void )
 		{ _frame_data.updateSceneVersion(); }
 
+		void toggleBackgroundSound( void );
+
 	protected :
 		virtual ~Config (void);
 

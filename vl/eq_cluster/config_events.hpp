@@ -102,6 +102,45 @@ inline std::string const &
 ReloadScene::getTypeName( void ) const
 { return ReloadSceneFactory::TYPENAME; }
 
+
+class ToggleMusic : public ConfigOperation
+{
+public :
+	virtual void execute( void )
+	{
+		if( !_config )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		_config->toggleBackgroundSound();
+	}
+
+	virtual std::string const &getTypeName( void ) const;
+
+};
+
+class ToggleMusicFactory : public OperationFactory
+{
+public :
+	virtual Operation *create( void )
+	{ return new ToggleMusic; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+inline std::string const &
+ToggleMusic::getTypeName( void ) const
+{ return ToggleMusicFactory::TYPENAME; }
+
+
+
+
+
+
+
+
 class EventManagerOperation : public Operation
 {
 public :

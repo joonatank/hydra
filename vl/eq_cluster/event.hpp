@@ -242,7 +242,7 @@ public :
 class Event
 {
 public :
-	Event( Operation *oper = 0, Trigger *trig = 0, double time_limit = 0 );
+	Event( void );
 
 	virtual ~Event( void ) {}
 	// Goes through the triggers in this event and if the trigger passed here
@@ -299,8 +299,7 @@ public :
 class BasicEvent : public Event
 {
 public :
-	BasicEvent( Operation *oper = 0, Trigger *trig = 0, double time_limit = 0 )
-		: Event( oper, trig, time_limit )
+	BasicEvent( void )
 	{}
 
 	virtual std::string const &getTypeName( void ) const;
@@ -326,10 +325,25 @@ class ToggleEvent : public Event
 public :
 	// TODO this needs functions to set all parameters
 	// Constuctor needs to cleaned as the factory can not set the parameters
-	ToggleEvent( bool toggle_state = false,
-				 Operation *toggleOn = 0,
-				 Operation *toggleOff = 0,
-				 Trigger *trig = 0 );
+	ToggleEvent( void );
+
+	void setToggleOn( Operation *toggleOn )
+	{ _toggleOn = toggleOn; }
+
+	Operation *getToggleOn( void )
+	{ return _toggleOn; }
+
+	void setToggleOff( Operation *toggleOff )
+	{ _toggleOff = toggleOff; }
+
+	Operation *getToggleOff( void )
+	{ return _toggleOff; }
+
+	void setToggleState( bool state )
+	{ _state = state; }
+
+	bool getToggleState( void )
+	{ return _state; }
 
 	/// Toggle Operations need the operation to be divided into two distinct ones
 	/// This function handles the state management
@@ -341,6 +355,10 @@ public :
 	// TODO override the Event::print
 
 private :
+	// Forbid some parent methods
+	void setOperation( Operation *oper ) {}
+
+	Operation *getOperation( void ) { return 0; }
 
 	/// The real function called when the Operation changes to toggled state
 	void toggleOn( void );
@@ -349,7 +367,7 @@ private :
 	void toggleOff( void );
 
 	/// Toggle value, should not be exposed to inherited classes
-	bool _toggle;
+	bool _state;
 
 	Operation *_toggleOn;
 	Operation *_toggleOff;

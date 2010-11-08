@@ -153,6 +153,51 @@ inline std::string const &
 HideOperation::getTypeName( void ) const
 { return HideOperationFactory::TYPENAME; }
 
+
+class ShowOperation : public Operation
+{
+public :
+	ShowOperation( void )
+		: _node(0)
+	{}
+
+	void setSceneNode( SceneNodePtr node )
+	{ _node = node; }
+
+	SceneNodePtr getSceneNode( void )
+	{ return _node; }
+
+	virtual void execute( void )
+	{
+		if( !_node )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+		_node->setVisibility( true );
+	}
+
+	virtual std::string const &getTypeName( void ) const;
+
+protected :
+	SceneNodePtr _node;
+};
+
+class ShowOperationFactory : public OperationFactory
+{
+public :
+	virtual Operation *create( void )
+	{ return new ShowOperation; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
+
+inline std::string const &
+ShowOperation::getTypeName( void ) const
+{ return ShowOperationFactory::TYPENAME; }
+
+
 }	// namespace eqOgre
 
 #endif // EQ_OGRE_SCENE_NODE_HPP

@@ -53,22 +53,27 @@ def addTranslationEvent(node) :
 	trigger_neg.key = KC.LEFT
 	event.setRotYtrigger( trigger_pos, trigger_neg )
 
-#	event.setTransXKeys( KC.D, KC.A )
-#	event.setTransYKeys( KC.PGUP, KC.PGDOWN )
-#	event.setTransZKeys( KC.S, KC.W )
-#	event.setRotYKeys( KC.RIGHT, KC.LEFT )
 	if not event_manager.addEvent(event) :
 		print 'Python : could not add event'
 
 def addHideEvent(node) :
 	print 'Creating Hide Event'
-	action = event_manager.createOperation( 'HideOperation' )
-	action.scene_node = node 
-	trigger = event_manager.createTrigger( 'KeyTrigger' )
+	hide = event_manager.createOperation( 'HideOperation' )
+	hide.scene_node = node 
+	show = event_manager.createOperation( 'ShowOperation' )
+	show.scene_node = node 
+	# This works to solve the problem
+	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
+	#trigger = event_manager.createTrigger( 'KeyTrigger' )
 	trigger.key = KC.H
 
-	event = event_manager.createEvent( 'Event' )
-	event.operation = action
+	event = event_manager.createEvent( 'ToggleEvent' )
+	event.toggle_off_action= show 
+	event.toggle_on_action= hide 
+	event.toggle_state = False
+	# Works fine provide an example
+	#event.time_limit = 2	# Secs
+
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
@@ -103,7 +108,8 @@ def addReloadEvent() :
 	print 'Python Trigger type = ' + trigger.type
 	trigger.key = KC.R
 	# Example of using released key instead of pressed (which is default)
-	trigger.released = True
+	# These are moved to different class now
+	#trigger.released = True
 
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
@@ -114,12 +120,27 @@ def addReloadEvent() :
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
 
+def addToggleMusicEvent() :
+	print 'Creating Toggle Music Event'
+	action = event_manager.createOperation( 'ToggleMusic' )
+	action.config = config 
+	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
+	trigger.key = KC.M
+
+	# Create the Event
+	event = event_manager.createEvent( 'Event' )
+	event.operation = action
+	event.addTrigger( trigger )
+	if not event_manager.addEvent( event ) :
+		print 'Python : Event could not be added to EventManager'
+	
 # TODO create PrintOperation in python and register it into Event Manager
 
 print 'In python init script'
 print 'Adding config events'
 addQuitEvent()
 addReloadEvent()
+addToggleMusicEvent()
 
 print 'Creating Ogre SceneNode'
 ogre = SceneNode.create("ogre")

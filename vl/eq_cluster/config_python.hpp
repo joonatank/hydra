@@ -178,7 +178,10 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 //		.def(python::str(python::self))
 	;
 
-	python::class_<ToggleEvent, boost::noncopyable>("ToggleEvent", python::no_init )
+	python::class_<ToggleEvent, boost::noncopyable, python::bases<Event> >("ToggleEvent", python::no_init )
+		.add_property("toggle_off_action", python::make_function( &ToggleEvent::getToggleOff, python::return_value_policy< python::reference_existing_object>() ), &ToggleEvent::setToggleOff )
+		.add_property("toggle_on_action", python::make_function( &ToggleEvent::getToggleOn, python::return_value_policy< python::reference_existing_object>() ), &ToggleEvent::setToggleOn )
+		.add_property("toggle_state", &ToggleEvent::getToggleState, &ToggleEvent::setToggleState )
 	;
 
 
@@ -194,6 +197,9 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<ReloadScene, boost::noncopyable, python::bases<ConfigOperation> >("ReloadScene", python::no_init )
 	;
 
+	python::class_<ToggleMusic, boost::noncopyable, python::bases<ConfigOperation> >("ToggleMusic", python::no_init )
+	;
+	
 	/// EventManager Operations
 	python::class_<EventManagerOperation, boost::noncopyable, python::bases<Operation> >("EventManagerOperation", python::no_init )
 		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
@@ -210,7 +216,10 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 		.add_property("scene_node", python::make_function( &HideOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideOperation::setSceneNode )
 	;
 	
-
+	python::class_<ShowOperation, boost::noncopyable, python::bases<Operation> >("ShowOperation", python::no_init )
+		.add_property("scene_node", python::make_function( &ShowOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowOperation::setSceneNode )
+	;
+	
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
 		// TODO the factory method should return ref counted ptr

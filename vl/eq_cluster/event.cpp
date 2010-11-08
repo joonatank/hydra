@@ -87,16 +87,9 @@ std::string const eqOgre::FrameTriggerFactory::TYPENAME = "FrameTrigger";
 // because ::clock is zero when the program is created so we need to wait for
 // time_limit seconds before using the event
 // NOTE not a really high priority but still annoying
-eqOgre::Event::Event( eqOgre::Operation* oper,
-					  eqOgre::Trigger* trig,
-					  double time_limit )
-	: _operation(oper), _last_time( 0 ), _time_limit(time_limit)
-{
-	std::cerr << "Event created" << std::endl;
-
-	if( trig )
-	{ _triggers.push_back(trig); }
-}
+eqOgre::Event::Event( void )
+	: _operation(0), _last_time(0), _time_limit(0)
+{}
 
 bool
 eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
@@ -118,8 +111,8 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 	
 	if( iter != _triggers.end() )
 	{
-		std::cerr << "Trigger found : trigger = " << trig
-			<< " : operation = " << _operation << "." << std::endl;
+//		std::cerr << "Trigger found : trigger = " << trig
+//			<< " : operation = " << _operation << "." << std::endl;
 
 		// We need to wait _time_limit secs before issuing the command again
 		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
@@ -203,24 +196,36 @@ eqOgre::Event::_findTrigger(eqOgre::Trigger* trig)
 }
 
 /// ToggleEvent public
-eqOgre::ToggleEvent::ToggleEvent(bool toggle_state, eqOgre::Operation* toggleOn, eqOgre::Operation* toggleOff, eqOgre::Trigger* trig)
-	: eqOgre::Event( 0, trig ), _toggle(toggle_state), _toggleOn(toggleOn), _toggleOff(toggleOff)
+eqOgre::ToggleEvent::ToggleEvent( void )
+	: eqOgre::Event(), _state(false), _toggleOn(0), _toggleOff(0)
 {}
 
 bool
 eqOgre::ToggleEvent::processTrigger(eqOgre::Trigger* trig)
 {
-	if( _findTrigger(trig) != _triggers.end() )
+	std::vector<Trigger *>::iterator iter = _triggers.begin();
+	for( ; iter != _triggers.end(); ++iter )
 	{
-		if( _toggle )
+		if( (*iter)->isSimilar(trig) )
+		{ break; }
+	}
+
+	clock_t time = ::clock();
+	if( iter != _triggers.end() )
+	{
+		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
 		{
-			toggleOff();
-			_toggle = false;
-		}
-		else
-		{
-			toggleOn();
-			_toggle = true;
+			if( _state )
+			{
+				toggleOff();
+				_state = false;
+			}
+			else
+			{
+				toggleOn();
+				_state = true;
+			}
+			_last_time = time;
 		}
 		return true;
 	}
