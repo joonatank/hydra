@@ -67,11 +67,18 @@ find_package( Threads REQUIRED )
 
 find_library( VRPN_LIBRARY
 	NAMES vrpn
+	PATHS $ENV{VPRN_HOME}/lib $ENV{VPRN_ROOT}/lib $ENV{VPRN_ROOT}/lib $ENV{VPRN_HOME}/lib
 	)
+
+# Way to test if the platform is 64 bit or 32 bit
+# Useful for creating different enviroment variables for 32-bit and 64-bit
+# platforms
+# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 # Include dir
 find_path( VPRN_INCLUDE_DIR
 	NAMES vrpn_Tracker.h
+	PATHS $ENV{VPRN_HOME}/include $ENV{VPRN_ROOT}/include $ENV{VPRN_ROOT}/include $ENV{VPRN_HOME}/include
 	)
 
 ######### Find OGRE ##########
@@ -106,6 +113,7 @@ find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
+	${OGRE_INCLUDE_DIR}/..
 	${Boost_INCLUDE_DIR}
 	${EQUALIZER_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
