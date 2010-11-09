@@ -16,7 +16,13 @@ namespace vl
 	/// File name used
 	typedef boost::error_info<struct tag_file, std::string> file_name;
 
-	// UDP number of bytes
+	/// Name of the Factory used for object creation
+	typedef boost::error_info<struct tag_file, std::string> factory_name;
+
+	/// requested object type name
+	typedef boost::error_info<struct tag_file, std::string> object_type_name;
+	
+	/// UDP number of bytes
 	typedef boost::error_info<struct tag_bytes, size_t> bytes;
 	
 	struct exception : virtual std::exception, virtual boost::exception {};
@@ -68,9 +74,30 @@ namespace vl
 		}
 	};
 
-	// TODO no idea what purpose this exception has
-	struct no_object : public exception {};
+	/// Event object creation using Factories
 
+	/// No registered factory for the object name
+	/// Use details factory_name for the type of Factory and
+	/// object_type_name for the type of object the factory is creating
+	struct no_factory : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "No factory for the requested object found!";
+		}
+	};
+
+	/// The Object typeName of the objects this factory will create is already
+	/// registered.
+	/// Use details factory_name for the type of Factory and
+	/// object_type_name for the type of object the factory is creating
+	struct duplicate_factory : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Factory with that object typeName already exists!";
+		}
+	};
 
 	/// Math and transformation errors, mostly useful for debug builds
 	/// And should be replaced in release builds.

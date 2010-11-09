@@ -2,94 +2,124 @@
 #define EQ_OGRE_TRANSFORM_EVENT_HPP
 
 #include "scene_node.hpp"
+#include "keycode.hpp"
+#include "base/exceptions.hpp"
+#include "event.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-#include <OIS/OISKeyboard.h>
-
 namespace eqOgre
 {
 
-/// Simple Event class that does transformation based on key events
-/// Keeps track of the state of the object (moving, stopped)
-/// Transforms a SceneNode provided
-/// All parameters that need units are in SI units (e.g. speed is m/s)
-class TransformationEvent
+/// Set a new transformation to a SceneNode
+// TODO this is not used anywhere so no idea if it's working or not
+// TODO not real Operation, missing Factory class
+class SetTransformationOperation : public Operation
 {
 public :
-	struct KeyPair
-	{
-		// TODO does not  check if the keys are equal
-		KeyPair( OIS::KeyCode npos_key = OIS::KC_UNASSIGNED,
-					OIS::KeyCode nneg_key = OIS::KC_UNASSIGNED )
-			: pos_key(npos_key), neg_key(nneg_key)
-		{}
-
-		int findKey( OIS::KeyCode const key ) const
-		{
-			if( key == OIS::KC_UNASSIGNED )
-			{ return 0; }
-
-			if( key == pos_key )
-			{ return 1; }
-
-			if( key == neg_key )
-			{ return -1; }
-
-			return 0;
-		}
-
-		OIS::KeyCode pos_key;
-		OIS::KeyCode neg_key;
-	};
-
-	struct KeyPairVec
-	{
-		KeyPairVec( KeyPair nx = KeyPair(),
-					KeyPair ny = KeyPair(),
-					KeyPair nz = KeyPair() )
-			: x(nx), y(ny), z(nz)
-		{}
-
-		KeyPair x;
-		KeyPair y;
-		KeyPair z;
-
-		/// Find the key event in the structure
-		/// returns a Vector of -1, 0, 1 based on wether it was found and if
-		/// it was a positive or negative control key.
-		/// Return value can be used as movement direction vector,
-		/// or a delta to such a vector.
-		Ogre::Vector3 findKey( OIS::KeyCode const key )
-		{
-			Ogre::Vector3 vec = Ogre::Vector3::ZERO;
-			if( x.findKey(key) != 0 )
-			{ vec.x = x.findKey(key); }
-			if( y.findKey(key) != 0 )
-			{ vec.y = y.findKey(key); }
-			if( z.findKey(key) != 0 )
-			{ vec.z = z.findKey(key); }
-
-			return vec;
-		}
-	};
-
-	/// Constructor
-	TransformationEvent( SceneNode *node = 0 );
-
-	/// Copy constructor
-	/// Copies the prototype but does not copy any state information
-	/// assumption is that the state information is only useful in the context
-	/// where it has been setted.
-	TransformationEvent( TransformationEvent const &a );
-
-	TransformationEvent &operator=( TransformationEvent const &a );
-
-	/// Destructor
-	virtual ~TransformationEvent( void )
+	SetTransformationOperation( eqOgre::SceneNode *node,
+								Ogre::Quaternion const &q = Ogre::Quaternion::IDENTITY,
+								Ogre::Vector3 const &v = Ogre::Vector3::ZERO )
+		: _node(node), _orientation(q), _position(v)
 	{}
 
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	// TODO should be moved to Factory
+	static const std::string TYPENAME;
+
+	void setOrientation( Ogre::Quaternion const &q )
+	{
+		_orientation = q;
+	}
+
+	void setPosition( Ogre::Vector3 const &v )
+	{
+		_position = v;
+	}
+
+	virtual void operator()( void )
+	{
+		_node->setOrientation(_orientation);
+		_node->setPosition(_position);
+	}
+
+protected :
+	SceneNode *_node;
+
+	Ogre::Quaternion _orientation;
+	Ogre::Vector3 _position;
+};
+
+/// Modify existing transformation in a SceneNode
+// TODO this is not used anywhere so no idea if it's working or not
+// TODO not real Operation, missing Factory class
+class TransformOperation : public Operation
+{
+public :
+	TransformOperation( eqOgre::SceneNode *node,
+						Ogre::Quaternion const &q = Ogre::Quaternion::IDENTITY,
+						Ogre::Vector3 const &v = Ogre::Vector3::ZERO )
+		: _node(node), _rotation(q), _translation(v)
+	{
+		if( _node )
+		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	}
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	// TODO should be moved to Factory
+	static const std::string TYPENAME;
+
+	void rotate( Ogre::Quaternion const &q )
+	{
+		_rotation = _rotation * q;
+	}
+
+	void translate( Ogre::Vector3 const &v )
+	{
+		_translation += v;
+	}
+
+	virtual void operator()( void )
+	{
+		_node->setOrientation( _node->getOrientation()*_rotation );
+		_node->setPosition( _node->getPosition()+_translation );
+
+		_translation = Ogre::Vector3::ZERO;
+		_rotation = Ogre::Quaternion::IDENTITY;
+	}
+
+protected :
+	SceneNode *_node;
+	
+	Ogre::Quaternion _rotation;
+	Ogre::Vector3 _translation;
+};
+
+// TODO this is not really an Operation,
+// no execute(void) function
+// No Factory class
+class MoveOperation : public Operation
+{
+public :
+	MoveOperation( void );
+
+	// TODO this should be divided to two different functions
+	// one for setting delta time
+	// and other for executing the Operation as with other Operation classes
+	virtual void execute( double time );
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	// TODO should be moved to Factory
+    static const std::string TYPENAME;
+
+	/// Parameters
 	void setSceneNode( SceneNode *node )
 	{ _node = node; }
 
@@ -99,19 +129,6 @@ public :
 	SceneNode const *getSceneNode( void ) const
 	{ return _node; }
 
-	/// Execute operator
-	/// Transforms the SceneNode if it's in moving state
-	void operator()( void );
-
-	/// Called from event handling
-	/// If the key is mapped to this TransformationEvent the state of the
-	/// event is changed.
-	/// Returns true if processed
-	bool keyPressed( OIS::KeyCode key );
-
-	bool keyReleased( OIS::KeyCode key );
-
-	/// Parameters
 	void setSpeed( double speed )
 	{ _speed = speed; }
 
@@ -125,50 +142,178 @@ public :
 	Ogre::Radian const &getAngularSpeed( void ) const
 	{ return _angular_speed; }
 
+	void addMove( Ogre::Vector3 const &v )
+	{ _move_dir += v; }
 
-	/// Translation keys
-	void setTransXKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setTransXKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setTransXKeys( KeyPair key_pair )
-	{ _move_keys.x = key_pair; }
-
-	void setTransYKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setTransYKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setTransYKeys( KeyPair key_pair )
-	{ _move_keys.y = key_pair; }
-
-	void setTransZKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setTransZKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setTransZKeys( KeyPair key_pair )
-	{ _move_keys.z = key_pair; }
-
-
-
-	/// Rotation Keys
-	void setRotXKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setRotXKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setRotXKeys( KeyPair key_pair )
-	{ _rot_keys.x = key_pair; }
-
-	void setRotYKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setRotYKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setRotYKeys( KeyPair key_pair )
-	{ _rot_keys.y = key_pair; }
-
-	void setRotZKeys( OIS::KeyCode pos_key, OIS::KeyCode neg_key )
-	{ setRotZKeys( KeyPair(pos_key, neg_key) ); }
-
-	void setRotZKeys( KeyPair key_pair )
-	{ _rot_keys.z = key_pair; }
-
-	friend bool operator==( TransformationEvent const &a, TransformationEvent const &b );
+	void addRotation( Ogre::Vector3 const &v )
+	{ _rot_dir += v; }
 
 protected :
+	SceneNode *_node;
+
+	/// Parameters
+	/// Movement speed
+	double _speed;
+
+	/// Rotation speed
+	Ogre::Radian _angular_speed;
+
+	// Current heading
+	Ogre::Vector3 _move_dir;
+	Ogre::Vector3 _rot_dir;
+
+private :
+	virtual void execute( void ) {}
+};
+
+/// Simple Event class that does transformation based on key events
+/// Keeps track of the state of the object (moving, stopped)
+/// Transforms a SceneNode provided
+/// All parameters that need units are in SI units (e.g. speed is m/s)
+class TransformationEvent : public Event
+{
+public :
+
+	class TriggerPair
+	{
+	public :
+		TriggerPair( Trigger *trig1 = 0, Trigger *trig2 = 0 )
+			: _trig_pos(trig1), _trig_neg(trig2)
+		{}
+
+		double findTrigger( Trigger const *trig ) const
+		{
+			if( !trig )
+			{ return 0; }
+
+			if( _trig_pos  && _trig_pos->isSimilar(trig) )
+			{ return trig->value(); }
+
+			if( _trig_neg  && _trig_neg->isSimilar(trig) )
+			{ return -trig->value(); }
+
+			return 0;
+		}
+
+		Trigger * _trig_pos;
+		Trigger * _trig_neg;
+	};
+
+	struct TriggerPairVector
+	{
+		TriggerPairVector( TriggerPair nx = TriggerPair(),
+						   TriggerPair ny = TriggerPair(),
+						   TriggerPair nz = TriggerPair() )
+			: x(nx), y(ny), z(nz)
+		{}
+
+		TriggerPair x;
+		TriggerPair y;
+		TriggerPair z;
+
+		/// Find the key event in the structure
+		/// returns a Vector of -1, 0, 1 based on wether it was found and if
+		/// it was a positive or negative control key.
+		/// Return value can be used as movement direction vector,
+		/// or a delta to such a vector.
+		Ogre::Vector3 findTrigger( Trigger const *trig )
+		{
+			Ogre::Vector3 vec;
+			vec.x = x.findTrigger(trig);
+			vec.y = y.findTrigger(trig);
+			vec.z = z.findTrigger(trig);
+
+			return vec;
+		}
+	};
+
+	/// Constructor
+	TransformationEvent( void );
+
+	/// Destructor
+	virtual ~TransformationEvent( void )
+	{}
+
+	virtual std::string const &getTypeName( void ) const;
+
+	void setSceneNode( SceneNode *node )
+	{ _operation->setSceneNode(node);; }
+
+	SceneNode *getSceneNode( void )
+	{ return _operation->getSceneNode(); }
+
+	// TODO if we need this one, we need to provide overloads to python
+//	SceneNode const *getSceneNode( void ) const
+//	{ return _operation->getSceneNode(); }
+
+	/// Called from event handling
+	/// If the trigger is mapped to this TransformationEvent the state of the
+	/// event is changed.
+	/// Returns true if processed
+	bool processTrigger(Trigger* trig);
+
+	/// Parameters
+	void setSpeed( double speed )
+	{ _operation->setSpeed(speed); }
+
+	double getSpeed( void ) const
+	{ return _operation->getSpeed(); }
+
+	/// Set the angular speed of the object in radians per second
+	void setAngularSpeed( Ogre::Radian const &speed )
+	{ _operation->setAngularSpeed(speed); }
+
+	Ogre::Radian const &getAngularSpeed( void ) const
+	{ return _operation->getAngularSpeed(); }
+
+
+	/// These triggers will change the movement direction of the object
+	/// they will not really move the object
+	/// Translation Triggers
+	void setTransXtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_trans_triggers.x = TriggerPair( trig_pos, trig_neg );
+	}
+
+	void setTransYtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_trans_triggers.y = TriggerPair( trig_pos, trig_neg );
+	}
+
+	void setTransZtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_trans_triggers.z = TriggerPair( trig_pos, trig_neg );
+	}
+
+
+
+	/// Rotation Triggers
+	void setRotXtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_rot_triggers.x = TriggerPair( trig_pos, trig_neg );
+	}
+
+	void setRotYtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_rot_triggers.y = TriggerPair( trig_pos, trig_neg );
+	}
+
+	void setRotZtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	{
+		_rot_triggers.z = TriggerPair( trig_pos, trig_neg );
+	}
+
+	friend std::ostream & operator<<( std::ostream &os, TransformationEvent const &a );
+
+protected :
+	/// Copy constructor
+	/// Copies the prototype but does not copy any state information
+	/// assumption is that the state information is only useful in the context
+	/// where it has been setted.
+	TransformationEvent( TransformationEvent const &a );
+
+	TransformationEvent &operator=( TransformationEvent const &a );
+
 	/// Core
 	// Node which this Event moves
 	SceneNode *_node;
@@ -176,45 +321,59 @@ protected :
 	// When last executed so that the movement has constant speed
 	::clock_t _last_time;
 
+	/// Move operation owned by this class
+	// TODO should be made to use the Operation schematics and created by the
+	// EventManager
+	MoveOperation *_operation;
 
-	/// Parameters
-	// Movement speed
-	double _speed;
+	/// Triggers used for translation and rotation
+	TriggerPairVector _trans_triggers;
+	TriggerPairVector _rot_triggers;
 
-	// Rotation speed
-	Ogre::Radian _angular_speed;
+};	// class TransformationEvent
 
-	/// Mappings
-	// Mapped keys to movent along axises
-	KeyPairVec _move_keys;
+class TransformationEventFactory : public EventFactory
+{
+public :
+	virtual Event *create( void )
+	{ return new TransformationEvent; }
 
-	// Mapped keys to rotate around axises
-	KeyPairVec _rot_keys;
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
 
-	// Direction where we are moving, is not unit length
-	// For key events there is three possible values for each axis
-	// -1, 0, 1
-	Ogre::Vector3 _move_dir;
-
-	Ogre::Vector3 _rotation_axises;
+	static const std::string TYPENAME;
 };
 
-/// Chech that the prototypes are equal but does not test the state information.
-/// Assumption is that the state information is only useful in the context
-/// where it has been setted.
-// FIXME this is not completed
-inline bool operator==( TransformationEvent const &a, TransformationEvent const &b )
+/*	TODO fix these operators for TriggerPair
+inline bool operator==( TransformationEvent::KeyPair const &a, TransformationEvent::KeyPair const &b )
 {
-	if( a._node == b._node
-		&& a._speed == b._speed
-		&& a._angular_speed == b._angular_speed
-//		&& a._move_keys == b._move_keys
-//		&& a._rot_keys == b._rot_keys
-		)
-		return true;
-
-	return false;
+	return( a.neg_key == b.neg_key && a.pos_key == b.pos_key );
 }
+
+inline bool operator==( TransformationEvent::KeyPairVec const &a, TransformationEvent::KeyPairVec const &b )
+{
+	return( a.x == b.x && a.y == b.y && a.z == b.z );
+}
+*/
+
+/*
+inline std::ostream & operator<<( std::ostream &os , TransformationEvent::KeyPair const &a )
+{
+	// TODO would be nice if the keys would be converted to human readable form
+	os << "KeyPair : neg = " << getKeyName(a.neg_key) << " pos = "
+		<< getKeyName(a.pos_key);
+
+	return os;
+}
+*/
+
+/*
+inline std::ostream & operator<<(  std::ostream &os, TransformationEvent::KeyPairVec const &a )
+{
+	os << "x = " << a.x << " y = " << a.y << " z = " << a.z;
+	return os;
+}
+*/
 
 }	// namespace eqOgre
 

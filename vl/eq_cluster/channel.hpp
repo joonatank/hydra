@@ -39,7 +39,6 @@ protected:
 
 	// Some task methods
 	void setOgreFrustum( void );
-	void setHeadMatrix( void );
 
 	void updateDistribData( void );
 

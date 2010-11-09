@@ -6,11 +6,16 @@ set( SOURCES
 	vrpn_tracker.cpp
 	settings.cpp
 	base/args.cpp
+	base/envsettings.cpp
+	base/projsettings.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/pipe.cpp
+	eq_cluster/event.cpp
+	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
+	eq_cluster/config_events.cpp
 	eq_cluster/eq_settings.cpp
 	eq_cluster/frame_data.cpp
 	eq_cluster/scene_node.cpp
@@ -31,6 +36,9 @@ set( HEADERS
 	settings.hpp
 	base/helpers.hpp
 	base/args.hpp
+	base/envsettings.hpp
+	base/projsettings.hpp
+	base/filestringer.hpp
 	base/exceptions.hpp
 	base/filesystem.hpp
 	base/print.hpp
@@ -39,10 +47,15 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
+	eq_cluster/event_manager.hpp
+	eq_cluster/event.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
+	eq_cluster/config_python.hpp
+	eq_cluster/python.hpp
 	eq_cluster/window.hpp
 	eq_cluster/transform_event.hpp
+	eq_cluster/config_events.hpp
 	eq_cluster/eq_settings.hpp
 	eq_cluster/frame_data.hpp
 	eq_cluster/scene_node.hpp
@@ -62,6 +75,9 @@ set( HEADERS
 	udp/ogre_command.hpp
 	udp/print_command.hpp
 	)
+
+set( PYTHON_SRC )
+set( PYTHON_HEADERS )
 
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 

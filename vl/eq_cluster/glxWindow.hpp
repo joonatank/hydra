@@ -34,7 +34,7 @@ public :
 	{
 		if( !getXDisplay() )
 		{
-			_window->setErrorMessage( "Pipe has no X11 display connection" );
+			setError( eq::ERROR_GLXWINDOW_NO_DISPLAY );
 			return false;
 		}
 
@@ -82,13 +82,13 @@ private :
 
 		if( !visualInfo )
 		{
-			_window->setErrorMessage( "No visual info given" );
+			setError( eq::ERROR_SYSTEMWINDOW_NO_PIXELFORMAT );
 			return 0;
 		}
 
 		if( !getXDisplay() )
 		{
-			_window->setErrorMessage( "Pipe has no X11 display connection" );
+			setError( eq::ERROR_GLXWINDOW_NO_DISPLAY );
 			return 0;
 		}
 
@@ -117,7 +117,7 @@ private :
 
 		if ( !drawable )
 		{
-			_window->setErrorMessage( "Could not create window" );
+			setError( eq::ERROR_GLXWINDOW_CREATEWINDOW_FAILED );
 			return 0;
 		}
 

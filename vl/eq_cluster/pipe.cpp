@@ -64,17 +64,16 @@ eqOgre::Pipe::configInitSystemPipe( const uint32_t )
 #endif
 
         default:
-            EQERROR << "Unknown window system: " << getWindowSystem() << std::endl;
-            setErrorMessage( "Unknown window system" );
+			setError( eq::ERROR_WINDOWSYSTEM_UNKNOWN );
             return false;
     }
 
     EQASSERT( systemPipe );
     if( !systemPipe->configInit( ))
     {
-        setErrorMessage( "System Pipe initialization failed: " +
-            systemPipe->getErrorMessage( ));
-        EQERROR << getErrorMessage() << std::endl;
+        EQASSERT( getError() != eq::ERROR_NONE );
+        EQERROR << "System pipe context initialization failed: "
+                << getError() << std::endl;
         delete systemPipe;
         return false;
     }

@@ -3,6 +3,7 @@
 #  CEGUI_LIBRARY, the library to link against
 #  CEGUI_FOUND, if false, do not try to link to CEGUI
 #  CEGUI_INCLUDE_DIRS, where to find headers.
+# TODO add CEGUI_VERSION support
    
 IF(CEGUI_LIBRARY AND CEGUI_INCLUDE_DIRS)
 	# in cache already

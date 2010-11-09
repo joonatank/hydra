@@ -3,15 +3,43 @@
 #include "vrpn_tracker.hpp"
 #include "fake_tracker.hpp"
 
+#include "math/conversion.hpp"
+
+#include "config_python.hpp"
+#include "config_events.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent )
-{}
+	: eq::Config ( parent ), _event_manager( new EventManager ),
+	  _audio_manager(0), _background_sound(0)
+{
+	// Add events
+	_event_manager->addEventFactory( new BasicEventFactory );
+	_event_manager->addEventFactory( new ToggleEventFactory );
+	_event_manager->addEventFactory( new TransformationEventFactory );
+	// Add triggers
+	_event_manager->addTriggerFactory( new KeyTriggerFactory );
+	_event_manager->addTriggerFactory( new KeyPressedTriggerFactory );
+	_event_manager->addTriggerFactory( new KeyReleasedTriggerFactory );
+	_event_manager->addTriggerFactory( new FrameTriggerFactory );
+	// Add operations
+	_event_manager->addOperationFactory( new QuitOperationFactory );
+	_event_manager->addOperationFactory( new ReloadSceneFactory );
+	_event_manager->addOperationFactory( new AddTransformOperationFactory );
+	_event_manager->addOperationFactory( new RemoveTransformOperationFactory );
+	_event_manager->addOperationFactory( new HideOperationFactory );
+	_event_manager->addOperationFactory( new ShowOperationFactory );
+	_event_manager->addOperationFactory( new ToggleMusicFactory );
+	// TODO add transformation operations
+	
+}
 
 eqOgre::Config::~Config()
-{}
+{
+	_exitAudio();
+}
 
 void 
 eqOgre::Config::mapData( uint32_t const initDataID )
@@ -47,14 +75,6 @@ eqOgre::Config::init( uint32_t const )
 	/// Register data
 	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
 
-	// TODO here we need to create the SceneNodes so that they are registered
-	// TODO memory deallocation will be problematic
-	// TODO add ownership rules (FrameData should own all SceneNodes)
-	SceneNode *node = new SceneNode( "CameraNode" );
-	addSceneNode( node );
-	node = new SceneNode( "ogre" );
-	addSceneNode( node );
-
 	_frame_data.registerData(this);
 
 	_settings->setFrameDataID( _frame_data.getID() );
@@ -66,66 +86,174 @@ eqOgre::Config::init( uint32_t const )
 	return true;
 }
 
+void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
+{
+	if( settings )
+	{
+		_settings = settings;
+		_createTracker(_settings);
+	}
+}
+
+// TODO this should be moved to private
+void
+eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
+{
+	_frame_data.addSceneNode( node );
+}
+
+// TODO implement
+// TODO this should be moved to private
+void
+eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
+{
+	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
+}
+
+// TODO implement
+eqOgre::SceneNode *
+eqOgre::Config::getSceneNode(const std::string& name)
+{
+	return 0;
+}
+
+void
+eqOgre::Config::toggleBackgroundSound()
+{
+	if( !_background_sound )
+	{
+		std::cerr << "Config::toggleBackgroundSound DOES NOT EXIST" << std::endl;
+		return;
+	}
+
+	if( _background_sound->isPlaying() )
+	{ _background_sound->pause(); }
+	else
+	{ _background_sound->play2d(false); }
+}
+
+
 uint32_t 
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
+	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
 	// Process Tracking
 	// TODO add selectable sensor
-	// TODO should be moved to Client where it belongs here it's called
-	// by all the Nodes
 	if( _tracker )
 	{
 		_tracker->mainloop();
 		if( _tracker->getNSensors() > 0 )
 		{
-			_frame_data.setHeadPosition( _tracker->getPosition( 0 ) );
-			_frame_data.setHeadOrientation( _tracker->getOrientation( 0 ) );
+			Ogre::Matrix4 head( _tracker->getOrientation(0) );
+			head.setTrans( _tracker->getPosition(0) );
+			_setHeadMatrix(head);
 		}
 	}
 
 	// Init the transformation structures
 	// TODO should be moved to Config::init or equivalent
-	if( !_camera_trans.getSceneNode() )
+	static bool inited = false;
+
+	if( !inited )
 	{
-		_camera_trans.setSceneNode( _frame_data.getSceneNode("CameraNode") );
-		if( !_camera_trans.getSceneNode() )
+		try {
+			// Init the embedded python
+			_initPython();
+
+			// TODO the script file should not be hard-coded
+			// they should be in Settings
+			// like Settings::getInitScripts
+			// and Settings::getFrameScripts
+			const std::string initScript("script.py");
+
+			// Run init python script
+			_runPythonScript( initScript);
+
+		}
+		// Some error handling so that we can continue the application
+		// Will print error in std::cerr
+		catch( ... )
 		{
-			std::cerr << "No CameraNode found!" << std::endl;
-			EQASSERT(false);
+			std::cerr << "Exception occured in python script." << std::endl;
+
+		}
+		if (PyErr_Occurred())
+		{
+			PyErr_Print();
+		}
+		
+		// Find ogre event so we can toggle it on/off
+		// TODO add function to find Events
+		// Ogre Rotation event, used to toggle the event on/off
+		/*	FIXME new design
+		TransformationEvent ogre_event;
+		for( size_t i = 0; i < _trans_events.size(); ++i )
+		{
+			SceneNodePtr node = _trans_events.at(i).getSceneNode();
+			if( node )
+			{
+				if( node->getName() == "ogre" )
+				{
+					ogre_event = _trans_events.at(i);
+					break;
+				}
+			}
 		}
 
-		_camera_trans.setTransXKeys( OIS::KC_D, OIS::KC_A );
-		_camera_trans.setTransYKeys( OIS::KC_PGUP, OIS::KC_PGDOWN );
-		_camera_trans.setTransZKeys( OIS::KC_S, OIS::KC_W );
+		Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
+		Operation *add_oper = new AddTransformEvent( this, ogre_event );
+		Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
+		Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
+		_events.push_back( event );
+		*/
 
-		// TODO camera needs yaw and pitch, but our current system does not allow
-		// for yaw (forbidden in Channel) and they need to be in separate Nodes.
-		_camera_trans.setRotYKeys( OIS::KC_RIGHT, OIS::KC_LEFT );
+		// Add a trigger event to Quit the Application
+		QuitOperation *quit
+			= (QuitOperation *)( _event_manager->createOperation( "QuitOperation" ) );
+		quit->setConfig(this);
+		Event *event = _event_manager->createEvent( "Event" );
+		event->setOperation(quit);
+		// Add trigger
+		KeyTrigger *trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		trig->setKey( OIS::KC_ESCAPE );
+		event->addTrigger(trig);
+		_event_manager->addEvent( event );
+
+		_initAudio();
+		inited = true;
 	}
 
-	if( !_ogre_trans.getSceneNode() )
-	{
-		_ogre_trans.setSceneNode( _frame_data.getSceneNode("ogre") );
-		if( !_ogre_trans.getSceneNode() )
-		{
-			std::cerr << "No OgreNode found!" << std::endl;
-			EQASSERT(false);
-		}
-
-		// TODO break the Ogre Node to two SceneNodes and rotate each individually
-		// to get a cleaner looking rotation (axises don't keep changing).
-		_ogre_trans.setRotYKeys( OIS::KC_NUMPAD6, OIS::KC_NUMPAD4 );
-		_ogre_trans.setRotZKeys( OIS::KC_NUMPAD8 , OIS::KC_NUMPAD5 );
-	}
-
-
-	// Really Move the objects
-	_camera_trans();
-	_ogre_trans();
+	// ProcessEvents does not store the pointer anywhere
+	// so it's safe to allocate to the stack
+	FrameTrigger frame_trig;
+	_event_manager->processEvents( &frame_trig );
 
 	uint32_t version = _frame_data.commitAll();
+//	std::cout << "FrameData version = " << version << std::endl;
 
 	return eq::Config::startFrame( version );
+}
+
+void
+eqOgre::Config::_initAudio(void )
+{
+	//Create an Audio Manager
+	_audio_manager = cAudio::createAudioManager(true);
+
+	//Create an audio source and load a sound from a file
+	_background_sound = _audio_manager->create("music","The_Dummy_Song.ogg",true);
+}
+
+
+void
+eqOgre::Config::_exitAudio(void )
+{
+	//Shutdown cAudio
+	if( _audio_manager )
+	{
+		_audio_manager->shutDown();
+		cAudio::destroyAudioManager(_audio_manager);
+	}
 }
 
 void
@@ -147,17 +275,63 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 	_tracker->init();
 }
 
+void
+eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
+{
+	// Note: real applications would use one tracking device per observer
+	const eq::Observers& observers = getObservers();
+	for( eq::Observers::const_iterator i = observers.begin();
+		i != observers.end(); ++i )
+	{
+		// When head matrix is set equalizer automatically applies it to the
+		// GL Modelview matrix as first transformation
+		(*i)->setHeadMatrix( vl::math::convert(m) );
+	}
+}
 
+void eqOgre::Config::_initPython(void )
+{
+	Py_Initialize();
 
+	// Add the module to the python interpreter
+	// NOTE the name parameter does not rename the module
+	// No idea why it's there
+	if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
+		throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+				"builtin modules");
+
+	// Retrieve the main module
+	python::object main = python::import("__main__");
+
+	// Retrieve the main module's namespace
+	_global = main.attr("__dict__");
+
+	// Import eqOgre module
+    python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
+                                    "print 'eqOgre imported'       \n",
+                                    Py_file_input,
+                                    _global.ptr(),
+                                    _global.ptr() ) ));
+
+	// Add a global managers i.e. this and EventManager
+	_global["config"] = python::ptr<>( this );
+	_global["event_manager"] = python::ptr<>( _event_manager );
+}
+
+void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
+{
+	std::cout << "running file " << scriptFile << "..." << std::endl;
+	// Run a python script in an empty environment.
+	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);
+}
 
 /// Event Handling
 char const *CB_INFO_TEXT = "Config : OIS event received : ";
 
-// TODO the event handling should be separated to multiple functions
-// handleKeyPress, handleKeyRelease, handlePointerMotion etc.
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
+	
 	bool redraw = false;
 	switch( event->data.type )
 	{
@@ -200,100 +374,17 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	// Used for toggle events
-	static clock_t last_time = 0;
-	clock_t time = ::clock();
-
-	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	_camera_trans.keyPressed(key);
-	_ogre_trans.keyPressed(key);
-    switch( key )
-    {
-		case OIS::KC_ESCAPE :
-		case OIS::KC_Q :
-			{
-				std::cerr << CB_INFO_TEXT << "Escape or Q pressed. Will quit now. " << std::endl;
-				// TODO should quit cleanly
-				stopRunning();
-			}
-			return true;
-		case OIS::KC_SPACE :
-			break;
-
-		case OIS::KC_R :
-			// Reload the scene
-
-			// We need to wait at least five secs before issuing the command again
-			if( ( last_time - time )/CLOCKS_PER_SEC < 5 )
-			{
-				_frame_data.updateSceneVersion();
-				last_time = time;
-			}
-			return true;
-
-        case OIS::KC_F1:
-            //_frameData.toggleHelp();
-            return true;
-
-        case OIS::KC_L :
-        {
-			/*
-            if( !_currentCanvas )
-                return true;
-
-            _frameData.setCurrentViewID( EQ_ID_INVALID );
-
-            uint32_t index = _currentCanvas->getActiveLayoutIndex() + 1;
-            const eq::LayoutVector& layouts = _currentCanvas->getLayouts();
-            EQASSERT( !layouts.empty( ))
-
-            if( index >= layouts.size( ))
-                index = 0;
-
-            _currentCanvas->useLayout( index );
-            
-            const eq::Layout* layout = _currentCanvas->getLayouts()[index];
-            std::ostringstream stream;
-            stream << "Layout ";
-            if( layout )
-            {
-                const std::string& name = layout->getName();
-                if( name.empty( ))
-                    stream << index;
-                else
-                    stream << name;
-            }
-            else
-                stream << "NONE";
-            
-            stream << " active";
-            _setMessage( stream.str( ));
-			*/
-            return true;
-        }
-
-        default:
-            return false;
-    }
-
-    return false;
+	KeyPressedTrigger trig;
+	trig.setKey( (OIS::KeyCode )(event.key) );
+	return _event_manager->processEvents( &trig );
 }
 
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
-	OIS::KeyCode key = (OIS::KeyCode )(event.key);
-	_camera_trans.keyReleased(key);
-	_ogre_trans.keyReleased(key);
-    switch( key )
-    {
-		case OIS::KC_SPACE :
-			break;
-		default :
-			return false;
-	}
-
-	return false;
+	KeyReleasedTrigger trig;
+	trig.setKey( (OIS::KeyCode )(event.key) );
+	return _event_manager->processEvents( &trig );
 }
 
 bool
@@ -323,4 +414,3 @@ eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
 {
 	return false;
 }
-

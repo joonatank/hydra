@@ -3,10 +3,19 @@
 
 #include <eq/eq.h>
 
+// Audio
+#include <cAudio/cAudio.h>
+
 #include "frame_data.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
+#include "base/exceptions.hpp"
 #include "transform_event.hpp"
+#include "event.hpp"
+
+// python
+#include "python.hpp"
+#include "event_manager.hpp"
 
 namespace eqOgre
 {
@@ -40,49 +49,41 @@ namespace eqOgre
 
 		// TODO this could be done with vl::SettingsRefPtr or vl::Settings
 		// if we have a valid copy constructor
-		void setSettings( eqOgre::SettingsRefPtr settings )
-		{
-			if( settings )
-			{
-				_settings = settings;
-				_createTracker(_settings);
-			}
-		}
-/*
-		bool addEvent( TransformationEvent const &event )
-		{
-			_events.push_back(event);
-			return true;
-		}
+		void setSettings( eqOgre::SettingsRefPtr settings );
 
-		// TODO add pop event
-		bool removeEvent( TransformationEvent const &event )
-		{
-			// TODO test the operator== in TransformationEvent
-			std::vector<TransformationEvent>::iterator iter;
-			for( iter = _events.begin(); iter != _events.end(); ++iter )
-			{
-				if( *iter == event )
-				{
-					_events.erase(iter);
-					return true;
-				}
-			}
+		void addSceneNode( SceneNode *node );
 
-			return false;
-		}
-*/
-		void addSceneNode( SceneNode *node )
-		{
-			_frame_data.addSceneNode( node );
-		}
+		void removeSceneNode( SceneNode *node );
 
-		// TODO add remove SceneNode
+		// TODO add getSceneNode
+		// Should for now return existing SceneNode from frameData if there is one
+		// and create a new one and add it if not.
+		// Later this should retrieve one from the whole SceneGraph
+		// NOTE this should be used instead of SceneNode::create and addSceneNode
+		// otherwise we would be creating multiple SceneNodes with the same name
+		// and would mess up the Ogre SceneGraph when they are applied
+		SceneNode *getSceneNode( std::string const &name );
+		
+		void updateSceneVersion( void )
+		{ _frame_data.updateSceneVersion(); }
+
+		void toggleBackgroundSound( void );
+
 	protected :
 		virtual ~Config (void);
 
+		/// Audio
+		void _initAudio( void );
+		void _exitAudio( void );
+
+		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
-		
+		void _setHeadMatrix( Ogre::Matrix4 const &m );
+
+		/// Python
+		void _initPython( void );
+		void _runPythonScript( std::string const &scriptFile );
+
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
 		bool _handleMousePressEvent( const eq::PointerEvent& event );
@@ -97,15 +98,20 @@ namespace eqOgre
 
 		FrameData _frame_data;
 
-		// Some test variables for input events
-		// TODO should be moved to a vector
-		// TODO should add dynamical addition
-		// TODO should expose an interface to outsiders
-//		std::vector<TransformationEvent> _events;
-		TransformationEvent _camera_trans;
-		TransformationEvent _ogre_trans;
+		// NOTE we need to use Event pointer because Events can be inherited
+		std::vector<Event *> _events;
+		std::vector<TransformationEvent> _trans_events;
 
-    };	// class Config
+		EventManager *_event_manager;
+
+		// Python related
+		python::object _global;
+
+		// Audio objects
+		 cAudio::IAudioManager *_audio_manager;
+		 cAudio::IAudioSource *_background_sound;
+	};	// class Config
+
 
 }	// namespace eqOgre
 

@@ -1,6 +1,6 @@
 project("vl" CXX C)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 enable_testing()
 
@@ -18,12 +18,13 @@ if( WIN32 )
 					 )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
+	# Set unix debug flag
+	if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+		add_definitions( -DDEBUG )
+	endif()
 endif( WIN32 )
 
-# Set unix debug flag
-if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-	add_definitions( -DDEBUG )
-endif()
+
 
 # Add our local scripts to CMake path
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/CMake )
@@ -78,7 +79,8 @@ find_path( VPRN_INCLUDE_DIR
 # We should use find_file to find the Ogre cmake helpers
 # TODO this needs a bit more work
 find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
-	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake )
+	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
+	)
 
 set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 
@@ -91,6 +93,28 @@ FIND_PACKAGE(OIS REQUIRED )
 # TODO test on a system that does not have CEGUI
 FIND_PACKAGE( CEGUI QUIET )
 
+if( ${CEGUI_FOUND} )
+	message( "CEGUI found : ${CEGUI_LIBRARY} " )
+elseif()
+	message( "CEGUI not found, will not build a GUI" )
+endif()
+
+
+####### Find cAudio
+# TODO we have no support for mp3 for now convert all sounds to ogg
+find_library( CAUDIO_LIBRARY
+	NAMES cAudio.2.1.0
+	PATHS /usr/lib/cAudio2.1.0;/usr/local/lib/cAudio2.1.0;$ENV{cAudio_HOME}
+	)
+
+# Include dir
+find_path( CAUDIO_INCLUDE_DIR
+	NAMES cAudio/cAudio.h
+	)
+
+message( "cAudio library = ${CAUDIO_LIBRARY}" )
+message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
+
 ####### Find Boost ########
 # TODO
 # Add selectable components
@@ -99,32 +123,46 @@ FIND_PACKAGE( CEGUI QUIET )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
+find_package(Boost COMPONENTS python REQUIRED )
 
+find_package(PythonLibs REQUIRED )
+
+find_package(PythonInterp REQUIRED )
+
+message( "Boost Libraries = ${Boost_PYTHON_LIBRARIES}" )
+
+message( "Python = ${PYTHON_EXECUTABLE}" )
+
+message( "Python libraries = ${PYTHON_LIBRARIES}" )
+
+include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
-	${Boost_INCLUDE_DIR}
 	${EQUALIZER_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
 	${VPRN_INCLUDE_DIR}
+	${PYTHON_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
+	${CAUDIO_INCLUDE_DIR}
 	)
 
 # Libraries that eqOgre library depends on
-# TODO boost test is not necessary for the library
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
-	${Boost_LIBRARIES}
 	${EQUALIZER_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARIES}
+	${PYTHON_LIBRARIES}
+	${Boost_PYTHON_LIBRARIES}
+	${CAUDIO_LIBRARY}
 	)
 
 # Libraries used to build project binaries
-set( LIBS eqOgre ${EQOGRE_DEB_LIBS} )
+set( LIBS eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.
@@ -173,6 +211,10 @@ ENDMACRO()
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
+# TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+# TODO should be configurable
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
+# TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 

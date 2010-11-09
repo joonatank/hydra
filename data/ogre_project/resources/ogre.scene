@@ -1,0 +1,55 @@
+<scene formatVersion="1.0.0">
+<environment>
+    <colourAmbient r="0.3" g="0.3" b="0.3"/>
+    <colourBackground r="0.056563" g="0.220815" b="0.400000"/>
+    <!-- <skyBox distance="5000" material="" /> -->
+    <skyDome material="CloudySky" distance="50" />
+    
+    <!-- <clipping near="0.1" far="10000" /> -->
+
+</environment>  
+
+<nodes>
+    <node name="ogre">
+	<position x="0.000000" y="0.000000" z="0.000000"/>
+	<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+	<scale x="1.000000" y="1.000000" z="1.000000"/>
+	<entity name="Ogre" meshFile="ogre.mesh"/>
+    </node>
+	<node name="CameraNode">
+		<position x="0." y="2.50000" z="5.607098"/>
+		<!-- <quaternion x="0.0" y="0.000000" z="0.000000" w="1.0"/> -->
+		<quaternion x="-0.173648" y="0.000000" z="0.000000" w="0.984808"/>
+		<camera name="Omakamera" fov="37.849289" projectionType="perspective">
+			<clipping near="0.1" far="100" />
+		</camera>
+	</node>
+    <node name="Spotlight1">
+      <position x="-2.244730" y="4.778790" z="0.625154"/>
+      <quaternion x="-0.707107" y="0.000000" z="0.000000" w="0.707107"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <light name="Spotlight1_m" type="spot" castShadows="true">
+        <normal x="0.0" y="0.0" z="-1.0"/>
+        <colourDiffuse r="1.0" g="1.0" b="1.0"/>
+        <colourSpecular r="0.0" g="0.0" b="0.0"/>
+        <lightRange inner="100" outer="100" falloff="1.0"/>
+        <lightAttenuation range="40.000000" constant="1.000000" linear="0.2" quadratic="0.000000"/>
+      </light>
+    </node>
+    <node name="Ambient_light_main">
+      <position x="7.336482" y="4.332459" z="-2.931557"/>
+      <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <light name="Ambient_light_m" type="point">
+        <colourDiffuse r="1.0" g="1.0" b="1.0"/>
+        <colourSpecular r="0.0" g="0.0" b="0.0"/>
+        <lightAttenuation range="500.0" constant="1.000000" linear="0.010000" quadratic="0.000000"/>
+      </light>
+    </node>
+  </nodes>
+  <externals>
+	<item type="material">
+		<file name="T7.material"/>
+	</item>
+  </externals>
+</scene>

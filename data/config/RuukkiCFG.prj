@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+
+<!--
+CRITICAL: tag project_config needs to be present
+
+Default name is "NewProject"
+
+Project may be launchable
+-->
+<project_config name="RuukkiCFG">
+
+	<scenes>
+		<!--
+		N scenes can be present
+		
+		To save no scenes need to be present.
+
+		CRITICAL: To launch at least one scene needs to be present
+			OR there needs to be a global scene
+			AND all scenes in use need to exist in resources
+			
+		Default name is filename without .scene and
+			IF name already exists "_" chars will be appended untill name is unique.
+
+		CRITICAL: Every neame must be unique
+
+		Default attach point is global coordinate system
+
+		When defining attach point both scene and point need to be present
+
+		GUI: Changing scene name changes attachto scene fields accordingly NOT vice versa
+		GUI: attach point set possibly read from scene file and offered as a dropdown, tree or dyn. search
+		
+		CRITICAL: attachto scene needs to exist in the project_config
+			OR global_config
+			AND attachto point needs to exist in the given scene
+
+		Scene files will be searched from resource paths (see below)
+
+		Scene can be attached to only one point.
+		-->
+		<scene name="Tunneli" use="true">
+			<file>tunneli.scene</file>
+		</scene>
+		
+		<scene name="T7" use="true">
+			<file>T7.scene</file>
+			<attachto scene="Tunneli" point="origo_T7lle"/>
+		</scene>
+	</scenes>
+
+	<!-- Resources will reside in [path to this file]/resources
+	TAI [file to global]/resources -->
+
+	<action_maps>
+		<!--
+		N action map files can be present
+
+		Later in list defined maps override AND extend earlier set
+		-->
+		<file use="false">debug/ruukkimappi1.map</file>
+		<file use="true">ruukkimappi2.map</file>
+		<file use="true">koe/lisamappi.map</file>
+	</action_maps>
+	
+	<scripts>
+		<file use="true">kaasukuppi.py</file>
+		<file use="false">hyppykeppi.py</file>
+	</scripts>
+
+	<!--
+	Cases are ment to offer possibility for minor changes
+	for example to hold test and debug settings. Case is launchable. 
+	-->
+	<cases>
+		<!--
+		N cases can be present, none needed
+
+		Case neames need to be unique
+		-->
+		<case name="Kakka">
+			<!--
+			This stuff overrides AND appends default case defined above
+
+			Only scenes and action maps can be defined
+			-->
+			<scenes>
+				<scene name="yalo" use="true">
+					<file>work_light.scene</file>
+				</scene>
+			</scenes>
+			<action_maps>
+				<file use="true">ruukkimappi2.map</file>
+				<file use="true">lisamappi.map</file>
+			</action_maps>
+			<scripts>
+				<file use="true">skudaskripti.py</file>
+				<file use="true">hyppynappi.py</file>
+			</scripts>
+		</case>
+	</cases>
+
+</project_config>
