@@ -19,21 +19,22 @@ link_libraries( ${FS_LIB} ${TEST_LIB} )
 subdirs(util
 		spikes
 		dotscene_loader
-		eq_cluster
+#		eq_cluster
 		udp
 		)
 
-add_executable( test_settings 
-				test_settings.cpp
-				settings_fixtures.hpp
-				${eqOgre_SOURCE_DIR}/settings.hpp
-				${eqOgre_SOURCE_DIR}/settings.cpp
-				${eqOgre_SOURCE_DIR}/base/args.cpp
-				${eqOgre_SOURCE_DIR}/base/args.hpp
-				)
+# NOTE For now removed as we move to using EnvSettings and ProjectSettings
+#add_executable( test_settings 
+#				test_settings.cpp
+#				settings_fixtures.hpp
+#				${eqOgre_SOURCE_DIR}/settings.hpp
+#				${eqOgre_SOURCE_DIR}/settings.cpp
+#				${eqOgre_SOURCE_DIR}/base/args.cpp
+#				${eqOgre_SOURCE_DIR}/base/args.hpp
+#				)
 
-target_link_libraries( test_settings ${OGRE_LIBRARIES} ${TEST_LIB} ${FS_LIB} )
-add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
+#target_link_libraries( test_settings ${OGRE_LIBRARIES} ${TEST_LIB} ${FS_LIB} )
+#add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 
 # FIXME dotscene testing
 #add_executable( test_dotscene test_dotscene.cpp )

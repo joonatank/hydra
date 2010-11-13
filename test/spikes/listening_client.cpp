@@ -22,18 +22,11 @@ int main( const int argc, char** argv )
 	{
 		ListeningClientFixture fix;
 
-		eqOgre::SettingsRefPtr settings = getSettings( argv[0], PROJECT_NAME );
+		eqOgre::SettingsRefPtr settings = ::getSettings( argc, argv );
 		if( !settings )
-		{
-			std::cerr << "No test_conf.xml file found." << std::endl;
-			return -1;
-		}
+		{ return -1; }
 
-		// Add the command line arguments
-		for( int i = 1; i < argc; ++i )
-		{
-			settings->getEqArgs().add(argv[i] );
-		}
+		settings->setLogDir( "logs" );
 
 		::NodeFactory nodeFactory;
 

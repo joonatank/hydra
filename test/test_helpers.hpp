@@ -3,57 +3,70 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
+
 #include "eq_cluster/eq_settings.hpp"
+#include "base/filestringer.hpp"
+#include "arguments.hpp"
+
 
 namespace test = boost::unit_test::framework;
 
-std::string getConfigPath( char const *exe_path )
+// TODO this should be moved to lib
+eqOgre::SettingsRefPtr getSettings( int argc, char **argv )
 {
-	fs::path cmd( exe_path );
+	// Process command line arguments
+	vl::Arguments arguments( argc, argv );
 
-	// Lets find in which directory the test_conf.xml is
-	fs::path conf_dir = cmd.parent_path();
-	fs::path conf = conf_dir / "test_conf.xml";
+	std::cout << "environment path = " << arguments.env_path << std::endl;
+	std::cout << "project path = " << arguments.proj_path << std::endl;
+	std::cout << "case name = " << arguments.case_name << std::endl;
 
-	return conf.file_string();
-}
+	// TODO serializer project and environment settings based on the files
+	// TODO add case support
 
-std::string getSettingsXML( char const *exe_path )
-{
-	std::string conf_file = getConfigPath( exe_path );
-	if( !fs::exists( conf_file.c_str() ) )
+	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+	vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
+
+	// Read the config files to strings
+	std::string env_data, proj_data;
+	if( fs::exists( arguments.env_path ) )
+	{ env_data = vl::readFileToString( arguments.env_path ); }
+	else
 	{
-		return std::string();
+		std::cerr << "No environment file : "
+			<< arguments.env_path << std::endl;
+		return eqOgre::SettingsRefPtr();
+	}
+	if( fs::exists( arguments.proj_path ) )
+	{ proj_data = vl::readFileToString( arguments.proj_path ); }
+	else
+	{
+		std::cerr << "No project file : " << arguments.proj_path << std::endl;
+		return eqOgre::SettingsRefPtr();
 	}
 
-	// Read file
-	std::ifstream stream( conf_file.c_str(), std::ios::binary );
+	// TODO check that the files are correct and we have good settings
+	vl::EnvSettingsSerializer env_ser( env );
+	env_ser.readString(env_data);
+	env->setFile( arguments.env_path );
+
+	vl::ProjSettingsSerializer proj_ser( proj );
+	proj_ser.readString(proj_data);
+	proj->setFile( arguments.proj_path );
+
+	eqOgre::SettingsRefPtr settings( new eqOgre::Settings( env, proj ) );
+
+	// Add the command line arguments
+	// TODO this should only add Equalizer arguments
+	// or we could implement our own switches and supply the equalizer
+	// arguments here based on our own switches.
+	settings->setExePath( argv[0] );
+	for( int i = 1; i < argc; ++i )
+	{
+		settings->getEqArgs().add(argv[i] );
+	}
 	
-	std::stringstream oss;
-	oss << stream.rdbuf();
-
-	return oss.str();
-}
-
-/// Get Settings Structure from exe path and project name
-/// Returns NULL if no config found
-eqOgre::SettingsRefPtr getSettings( char const *exe_path, std::string const &project_name )
-{
-	std::string xml_data = getSettingsXML( exe_path );
-	// If no config provided return NULL
-	if( xml_data.empty() )
-	{ return eqOgre::SettingsRefPtr(); }
-
-	eqOgre::SettingsRefPtr settings( new eqOgre::Settings( project_name ) );
-
-	// Read data
-	vl::SettingsSerializer ser(settings);
-	ser.readData( xml_data );
-
-	// Set additional settings
-	settings->setExePath( exe_path );
-	settings->setLogDir( "logs" );
-
 	return settings;
 }
 

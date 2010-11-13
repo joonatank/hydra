@@ -57,25 +57,61 @@ eqOgre::Window::~Window(void )
 bool
 eqOgre::Window::loadScene( void )
 {
-	std::vector<vl::Settings::Scene> const &scenes = _settings->getScenes();
-	if( scenes.empty() )
-	{ return false; }
+	std::stringstream ss;
+
+	// TODO this launches only the project case
+	// TODO add support for other cases
+	// TODO this should be divided to case load scenes function and loadScene function
+	vl::ProjSettingsRefPtr proj = _settings->getProjectSettings();
+	EQASSERT( proj );
+
+	// Get the case
+	vl::ProjSettings::Case const *cas = proj->getCasePtr();
+
+	// The case has to be valid or the ProjectSettings are invalid
+	EQASSERT( cas )
+
+	ss << "Loading Scenes for Project : " << cas->getName();
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	ss.str("");
+
+	// If we don't have Scenes there is no point loading them
+	if( cas->getNscenes() == 0 )
+	{
+		ss << "Project does not have any scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		return false;
+	}
+	else
+	{
+		ss << "Project has " << cas->getNscenes() << " scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	}
 
 	// Clean up old scenes
+	// TODO this should be a loader not a destroyer, move to another function
 	_sm->clearScene();
 	_sm->destroyAllCameras();
 
 	// TODO support for multiple scene files
-	std::string message = "Load scene = " + scenes.at(0).file;
-	Ogre::LogManager::getSingleton().logMessage( message );
+	for( size_t i = 0; i < cas->getNscenes(); ++i )
+	{
+		std::string const &scene_file = cas->getScenePtr(i)->getFile();
+		std::string message = "Loading scene : " + scene_file;
+		Ogre::LogManager::getSingleton().logMessage( message );
 
-	DotSceneLoader loader;
-	loader.parseDotScene( scenes.at(0).file,
-						  Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-						  _sm );
+		DotSceneLoader loader;
+		loader.parseDotScene( scene_file,
+							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+							_sm );
 
-	message = "Scene loaded";
-	Ogre::LogManager::getSingleton().logMessage( message );
+		message = "Scene loaded";
+		Ogre::LogManager::getSingleton().logMessage( message );
+	}
+
+
+	/// Get the camera
+	// TODO move to separate function
 
 	// Loop through all cameras and grab their name and set their debug representation
 	Ogre::SceneManager::CameraIterator cameras = _sm->getCameraIterator();
@@ -83,15 +119,17 @@ eqOgre::Window::loadScene( void )
 	// Grab the first available camera, for now
 	if( cameras.hasMoreElements() )
 	{
-		message = "Camera found from the scene.";
-		Ogre::LogManager::getSingleton().logMessage( message );
 		_camera = cameras.getNext();
+		ss.str("");
+		ss << "Using Camera " <<  _camera->getName() << " found from the scene.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	}
 	else
 	{
-		message = "Creating camera";
-		Ogre::LogManager::getSingleton().logMessage( message );
 		_camera = _sm->createCamera("Cam");
+		ss.str("");
+		ss << "No camera in the scene. Using created camera " << _camera->getName();
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	}
 
 	return true;
@@ -173,6 +211,7 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 bool
 eqOgre::Window::configInit( const uint32_t initID )
 {
+	std::cerr << "eqOgre::Window::configInit" << std::endl;
 	try {
 		if( !eq::Window::configInit( initID ))
 		{
@@ -213,10 +252,27 @@ eqOgre::Window::configInit( const uint32_t initID )
 		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
 		log << "eqOgre::Window::configInit done.\n";
 	}
+	catch( vl::exception &e )
+	{
+		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+			<< std::endl;
+		return true;
+	}
+	catch( Ogre::Exception const &e)
+	{
+		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		return true;
+	}
+	catch( std::exception const &e )
+	{
+		std::cerr << "STD Exception: " << e.what() << std::endl;
+		return true;
+	}
 	catch( ... )
 	{
 		// TODO this should really print the exception
-		EQERROR << "Exception thrown." << std::endl;
+		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
+		std::cerr << err_msg << std::endl;
 		return false;
 	}
 

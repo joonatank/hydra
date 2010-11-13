@@ -3,24 +3,28 @@
 
 #include "serialize_helpers.hpp"
 
-eqOgre::Settings::Settings( std::string const &name  )
-	: vl::Settings(name),
+eqOgre::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj )
+	: vl::Settings( env, proj ),
 	  _frame_data_id(EQ_ID_INVALID)
 {}
 
 void eqOgre::Settings::getInstanceData(eq::net::DataOStream& os)
 {
-	os << _frame_data_id << _project_name << _log_dir;
+	os << _frame_data_id << _log_dir;
 
+	// TODO this should serialize used plugins
+	// TODO this should serialize ProjectSettings
+	// 	which needs eqOgre::ProjectSettings to be created
+	/*
 	os << _roots.size();
 	for( size_t i = 0; i < _roots.size(); ++i )
 	{
 		os << _roots.at(i).name << _roots.at(i).path;
 	}
-
+*/
 	// Not necessary as these are only needed when launched
 //	os << _exe_path << _file_path << _eq_config.file;
-
+/*
 	os << _scenes.size();
 	for( size_t i = 0; i < _scenes.size(); ++i )
 	{
@@ -41,19 +45,20 @@ void eqOgre::Settings::getInstanceData(eq::net::DataOStream& os)
 	{
 		os << _tracking.at(i).getPath();
 	}
-
+*/
 	// No need to distribute eq args as they are only needed when launched
 
 	// TODO
 	// These probably don't need to be distributed also as the AppNode should
 	// handle tracking
-	os << _tracker_address << _tracker_default_pos << _tracker_default_orient;
+//	os << _tracker_address << _tracker_default_pos << _tracker_default_orient;
 }
 
 void eqOgre::Settings::applyInstanceData(eq::net::DataIStream& is)
 {
-	is >> _frame_data_id >> _project_name >> _log_dir;
+	is >> _frame_data_id >> _log_dir;
 
+/*
 	size_t size;
 	is >> size;
 	_roots.resize(size);
@@ -88,11 +93,11 @@ void eqOgre::Settings::applyInstanceData(eq::net::DataIStream& is)
 	{
 		is >> _tracking.at(i).file;
 	}
-
+*/
 	// No need to distribute eq args as they are only needed when launched
 
 	// TODO
 	// These probably don't need to be distributed also as the AppNode should
 	// handle tracking
-	is >> _tracker_address >> _tracker_default_pos >> _tracker_default_orient;
+//	is >> _tracker_address >> _tracker_default_pos >> _tracker_default_orient;
 }

@@ -6,7 +6,8 @@
 #include "base/exceptions.hpp"
 
 // Ogre includes
-#include <OgreConfigFile.h>
+#include <OGRE/OgreResourceManager.h>
+#include <OGRE/OgreLogManager.h>
 
 #include "base/helpers.hpp"
 
@@ -24,20 +25,16 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 		{
 			log_file_name_stream << settings->getLogDir() << "/";
 		}
-		log_file_name_stream << settings->getName() << "_ogre_" << vl::getPid() << ".log";
+		// TODO add project name to log file
+		log_file_name_stream << "project_name" << "_ogre_" << vl::getPid() << ".log";
 
 		// Create the log
 		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( log_file_name_stream.str(), true, false );
 		log->setTimeStampEnabled( true );
 		log->logMessage( std::string("Log file path = ") + log_file_name_stream.str() );
 
-		// Find plugins file
-		std::string plugins = settings->getOgrePluginsPath();
-		_ogre_root = new Ogre::Root( plugins, "", "" );
+		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;
-
-		std::string msg( "plugin path = " + plugins );
-		Ogre::LogManager::getSingleton().logMessage( msg );
 	}
 }
 
@@ -53,20 +50,25 @@ vl::ogre::Root::~Root( void )
 void
 vl::ogre::Root::createRenderSystem( void )
 {
+	std::string str( "vl::ogre::Root::createRenderSystem" );
+	Ogre::LogManager::getSingleton().logMessage( str );
+
 	if( !_primary )
 	{ return; }
 
 	if( !_ogre_root )
-	{
-		BOOST_THROW_EXCEPTION( vl::exception() );
-	}
+	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+
+	_loadPlugins();
+
 
 	// We only support OpenGL rasterizer
 	Ogre::RenderSystem *rast
 		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
 	if( !rast )
 	{
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("No OpenGL rendering system plugin found") );
+		std::string err_desc( "No OpenGL rendering system plugin found" );
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err_desc) );
 	}
 	else
 	{ _ogre_root->setRenderSystem( rast ); }
@@ -85,11 +87,28 @@ vl::ogre::Root::setupResources( void )
 	std::string msg( "setupResources" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::vector<std::string> resources = _settings->getOgreResourcePaths();
-	for( size_t i = 0; i < resources.size(); ++i )
+	//std::vector<std::string> resources = _settings->getOgreResourcePaths();
+	std::stringstream ss;
+	fs::path proj_file = fs::path( _settings->getProjectSettings()->getFile() );
+	ss << "project file = " << proj_file.file_string();
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	ss.str("");
+
+	fs::path resource_dir = proj_file.parent_path() / "resources";
+	ss << "resource dir = " << resource_dir.file_string();
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	ss.str("");
+
+	// Throw a generic exception here for now
+	if( !fs::exists( resource_dir ) )
 	{
-		setupResource( resources.at(i) );
+		BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( resource_dir.file_string() ) );
 	}
+
+	// Add the root resource dir
+	_setupResource( resource_dir.file_string(), "FileSystem" );
+	// Add all child resources
+	_iterateResourceDir( resource_dir );
 }
 
 void
@@ -99,49 +118,74 @@ vl::ogre::Root::loadResources(void)
 	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
+/// Private
+
 void
-vl::ogre::Root::setupResource( fs::path const &file )
+vl::ogre::Root::_loadPlugins(void )
 {
-	std::string msg( "Using resource file = ");
-	msg += file.file_string();
+	std::string msg( "_loadPlugins" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	// Load resource paths from config file
-	Ogre::ConfigFile cf;
-	cf.load( file.file_string() );
+	// TODO add support for plugins in the EnvSettings
+	// FIXME should find the RenderSystem_GL plugin, both in Windows and Linux
+	// Both : {Environment file dir}/plugins, current dir
+	// Windows : ${PATH}, ${PATH}/OGRE
+	// Linux : /usr/lib, /usr/local/lib, /usr/lib/OGRE, /usr/local/lib/OGRE
+	_ogre_root->loadPlugin( "/usr/local/lib/OGRE/RenderSystem_GL.so" );
+}
 
-	// Go through all sections & settings in the file
-	Ogre::ConfigFile::SectionIterator seci = cf.getSectionIterator();
-
-	std::string secName, typeName, archName;
-	while (seci.hasMoreElements())
+void
+vl::ogre::Root::_iterateResourceDir( fs::path const &file )
+{
+	// Iterate the resource directory
+	fs::directory_iterator end_itr; // default construction yields past-the-end
+	for ( fs::directory_iterator itr( file ); itr != end_itr; ++itr )
 	{
-		secName = seci.peekNextKey();
-		Ogre::ConfigFile::SettingsMultiMap *settings = seci.getNext();
-		Ogre::ConfigFile::SettingsMultiMap::iterator i;
-		for (i = settings->begin(); i != settings->end(); ++i)
+		std::string ext = itr->path().extension();
+		std::transform( ext.begin(), ext.end(), ext.begin(), ::tolower );
+		if ( fs::is_directory(itr->status()) )
 		{
-			typeName = i->first;
-			archName = i->second;
-#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
-			// OS X does not set the working directory relative to the app,
-			// In order to make things portable on OS X we need to provide
-			// the loading with it's own bundle path location
-			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-				std::string(macBundlePath() + "/" + archName), typeName, secName);
-#else
-			Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-					file.parent_path().file_string() + "/" + archName,
-					typeName, secName);
-#endif
+			// TODO this needs a recursion
+			 
+			_setupResource( itr->path().file_string(), "FileSystem" );
+			_iterateResourceDir( itr->path() );
+		}
+		else if( ext == ".zip" )
+		{
+			_setupResource( itr->path().file_string(), "Zip" );
+		}
+		else
+		{
 		}
 	}
+}
+
+void
+vl::ogre::Root::_setupResource( std::string const &file, std::string const &typeName)
+{
+	std::string msg = "Adding resource = " + file
+		+ " of type "+ typeName;
+	Ogre::LogManager::getSingleton().logMessage( msg );
+
+#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+	// OS X does not set the working directory relative to the app,
+	// In order to make things portable on OS X we need to provide
+	// the loading with it's own bundle path location
+	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
+		std::string(macBundlePath() + "/" + file), typeName );
+#else
+	Ogre::ResourceGroupManager::getSingleton()
+		.addResourceLocation( file, typeName );
+#endif
 }
 
 Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, Ogre::NameValuePairList const &params )
 {
+	std::string str( "vl::ogre::Root::creatingWindow" );
+	Ogre::LogManager::getSingleton().logMessage( str );
+
 	if( !_ogre_root )
 	{ return 0; }
 

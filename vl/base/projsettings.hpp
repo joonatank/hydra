@@ -154,6 +154,7 @@ public :
 
 
 	///// FILE /////////////////////////////////////////////////////
+	/// The project file loaded from the disk using Serializer
 	std::string const &getFile( void ) const { return _file; }
 	void setFile( std::string const &f ) { _file = f; _changed = true; }
 
@@ -167,6 +168,7 @@ public :
 
 
 	///// PROJECT GETTERS /////////////////////////////////////////////////
+	/// The Case that defines the Project
 	Case* getCasePtr() { return _projCase; }
 
 

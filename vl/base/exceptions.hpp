@@ -3,7 +3,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include <OgreQuaternion.h>
+#include <OGRE/OgreQuaternion.h>
 
 namespace vl
 {
@@ -25,7 +25,13 @@ namespace vl
 	/// UDP number of bytes
 	typedef boost::error_info<struct tag_bytes, size_t> bytes;
 	
-	struct exception : virtual std::exception, virtual boost::exception {};
+	struct exception : virtual std::exception, virtual boost::exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "vl::exception";
+		}
+	};
 
 	/// Dynamic cast failed when it was necessary
 	struct cast_error : public exception
@@ -150,6 +156,13 @@ namespace vl
 		{ return "file missing"; }
 	};
 
+	/// Directory missing
+	struct missing_dir : public file_error
+	{
+		virtual const char* what() const throw()
+		{ return "Directory missing"; }
+	};
+	
 	/// ---------- File parsing errors --------------
 	
 	/// the file is correctly formated but the content is not valid

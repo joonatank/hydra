@@ -11,7 +11,7 @@ namespace eqOgre
 class Settings : public vl::Settings, public eq::net::Object
 {
 public :
-	Settings( std::string const &name  );
+	Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj );
 
 	virtual ~Settings( void )
 	{}

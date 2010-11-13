@@ -51,7 +51,7 @@ struct ListeningClientFixture
 		{ ss << settings->getLogDir() << "/"; }
 
 		// FIXME using the project name and not the executable name
-		ss << settings->getName() << "_eq_" << pid << ".log";
+		ss << settings->getProjectName() << "_eq_" << pid << ".log";
 		log_file.open( ss.str().c_str() );
 
 		eq::base::Log::setOutput( log_file );

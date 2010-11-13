@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
 		ListeningClientFixture fix;
 
-		eqOgre::SettingsRefPtr settings = getSettings( argv[0], PROJECT_NAME );
+		eqOgre::SettingsRefPtr settings = ::getSettings( argc, argv );
 		if( !settings )
 		{
 			std::cerr << "No test_conf.xml file found." << std::endl;

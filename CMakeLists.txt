@@ -123,7 +123,7 @@ message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS python REQUIRED )
+find_package(Boost COMPONENTS python system REQUIRED )
 
 find_package(PythonLibs REQUIRED )
 

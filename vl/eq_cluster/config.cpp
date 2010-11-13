@@ -32,8 +32,6 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addOperationFactory( new HideOperationFactory );
 	_event_manager->addOperationFactory( new ShowOperationFactory );
 	_event_manager->addOperationFactory( new ToggleMusicFactory );
-	// TODO add transformation operations
-	
 }
 
 eqOgre::Config::~Config()
@@ -78,11 +76,14 @@ eqOgre::Config::init( uint32_t const )
 	_frame_data.registerData(this);
 
 	_settings->setFrameDataID( _frame_data.getID() );
+	std::cerr << "Registering Settings" << std::endl;
 	registerObject( _settings.get() );
-    
+	std::cerr << "Settings registered" << std::endl;
+
 	if( !eq::Config::init( _settings->getID() ) )
 	{ return false; }
 
+	std::cerr << "Config::init DONE" << std::endl;
 	return true;
 }
 
@@ -259,10 +260,12 @@ eqOgre::Config::_exitAudio(void )
 void
 eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 {
-	if( settings->trackerOn() )
+	// FIXME no tracking config for now
+//	if( settings->trackerOn() )
+	if( false )
 	{
 		EQINFO << "Creating VRPN Tracker." << std::endl;
-		_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
+		//_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
 	}
 	else
 	{
@@ -270,8 +273,10 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 		_tracker.reset( new vl::FakeTracker( ) );
 	}
 
-	_tracker->setOrientation( 0, settings->getTrackerDefaultOrientation() );
-	_tracker->setPosition( 0, settings->getTrackerDefaultPosition() );
+	Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);// = settings->getTrackerDefaultOrientation()
+	Ogre::Vector3 v(0, 1.5, 0 ); //= settings->getTrackerDefaultPosition();
+	_tracker->setOrientation( 0,q );
+	_tracker->setPosition( 0, v );
 	_tracker->init();
 }
 
@@ -390,16 +395,16 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 bool
 eqOgre::Config::_handleMousePressEvent(const eq::PointerEvent& event)
 {
-//			std::cerr << "Config received mouse button press event. Button = "
-//				<< event->data.pointer.button << std::endl;
+//	std::cerr << "Config received mouse button press event. Button = "
+//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 
 bool
 eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
 {
-//			std::cerr << "Config received mouse button release event. Button = "
-//				<< event->data.pointer.button << std::endl;
+//	std::cerr << "Config received mouse button release event. Button = "
+//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 

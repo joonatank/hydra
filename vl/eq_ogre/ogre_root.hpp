@@ -16,9 +16,9 @@
 #ifndef VL_OGRE_ROOT_HPP
 #define VL_OGRE_ROOT_HPP
 
-#include <OgreRoot.h>
-#include <OgreSceneManager.h>
-#include <OgreRenderWindow.h>
+#include <OGRE/OgreRoot.h>
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreRenderWindow.h>
 
 #include "base/typedefs.hpp"
 #include "settings.hpp"
@@ -57,8 +57,12 @@ namespace ogre
 			virtual void loadResources(void);
 
 		protected :
-			virtual void setupResource( fs::path const &file );
+			void _loadPlugins( void );
 
+			void _iterateResourceDir( fs::path const &file );
+
+			void _setupResource( std::string const &file, std::string const &typeName );
+			
 			Ogre::Root *_ogre_root;
 			
 			Ogre::LogManager *_log_manager;

@@ -61,4 +61,4 @@ add_executable( qtlauncher
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 # TODO does this need boost?
-target_link_libraries( qtlauncher ${QT_LIBRARIES} )
+target_link_libraries( qtlauncher ${QT_LIBRARIES} ${Boost_SYSTEM_LIBRARIES} )
