@@ -1,10 +1,9 @@
 
-
 #include "base/sleep.hpp"
 
 #include "../tracking_fixture.hpp"
 
-int main (unsigned argc, char *argv[])
+int main (int argc, char **argv)
 {
 	TrackerServerFixture fixture;
 	

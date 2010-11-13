@@ -6,3 +6,4 @@ ogre_demos
 *.bak
 *.swp
 *.kdev4
+.kdev_include_paths

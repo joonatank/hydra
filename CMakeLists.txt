@@ -123,7 +123,7 @@ message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS python system REQUIRED )
+find_package(Boost COMPONENTS python system filesystem REQUIRED )
 
 find_package(PythonLibs REQUIRED )
 
@@ -158,6 +158,8 @@ set( EQOGRE_DEB_LIBS
 	${OIS_LIBRARIES}
 	${PYTHON_LIBRARIES}
 	${Boost_PYTHON_LIBRARIES}
+	${Boost_SYSTEM_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARIES}
 	${CAUDIO_LIBRARY}
 	)
 

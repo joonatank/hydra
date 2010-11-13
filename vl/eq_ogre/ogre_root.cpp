@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
 
 // Interface include
 #include "ogre_root.hpp"
@@ -9,10 +13,14 @@
 #include <OGRE/OgreResourceManager.h>
 #include <OGRE/OgreLogManager.h>
 
-#include "base/helpers.hpp"
+#include "base/system_util.hpp"
+#include "base/filesystem.hpp"
 
 vl::ogre::Root::Root( vl::SettingsRefPtr settings )
-	: _ogre_root(0), _log_manager(0), _primary(false), _settings( settings )
+	: _ogre_root(0),
+	  _log_manager(0),
+	  _primary(false),
+	  _settings( settings )
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
@@ -40,11 +48,13 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 
 vl::ogre::Root::~Root( void )
 {
-	// FIXME this can not destroy ogre root if we have multiple
-	// Roots pointing to same ogre singleton.
+	// root and log manager point to same ogre singletons.
+	// destroy them only on the primary
 	if( _primary )
-	{ delete _ogre_root; }
-	delete _log_manager;
+	{
+		delete _ogre_root;
+		delete _log_manager;
+	}
 }
 
 void
@@ -127,11 +137,10 @@ vl::ogre::Root::_loadPlugins(void )
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
 	// TODO add support for plugins in the EnvSettings
-	// FIXME should find the RenderSystem_GL plugin, both in Windows and Linux
-	// Both : {Environment file dir}/plugins, current dir
-	// Windows : ${PATH}, ${PATH}/OGRE
-	// Linux : /usr/lib, /usr/local/lib, /usr/lib/OGRE, /usr/local/lib/OGRE
-	_ogre_root->loadPlugin( "/usr/local/lib/OGRE/RenderSystem_GL.so" );
+
+	std::string plugin_path = vl::findPlugin("RenderSystem_GL");
+	if( !plugin_path.empty() )
+		_ogre_root->loadPlugin( plugin_path );
 }
 
 void
@@ -167,16 +176,8 @@ vl::ogre::Root::_setupResource( std::string const &file, std::string const &type
 		+ " of type "+ typeName;
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-#if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
-	// OS X does not set the working directory relative to the app,
-	// In order to make things portable on OS X we need to provide
-	// the loading with it's own bundle path location
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		std::string(macBundlePath() + "/" + file), typeName );
-#else
 	Ogre::ResourceGroupManager::getSingleton()
 		.addResourceLocation( file, typeName );
-#endif
 }
 
 Ogre::RenderWindow *

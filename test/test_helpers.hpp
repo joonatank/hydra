@@ -1,3 +1,8 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
+
 #ifndef VL_TEST_HELPERS_HPP
 #define VL_TEST_HELPERS_HPP
 
@@ -6,7 +11,7 @@
 #include <iostream>
 
 #include "eq_cluster/eq_settings.hpp"
-#include "base/filestringer.hpp"
+#include "base/filesystem.hpp"
 #include "arguments.hpp"
 
 
@@ -22,9 +27,7 @@ eqOgre::SettingsRefPtr getSettings( int argc, char **argv )
 	std::cout << "project path = " << arguments.proj_path << std::endl;
 	std::cout << "case name = " << arguments.case_name << std::endl;
 
-	// TODO serializer project and environment settings based on the files
 	// TODO add case support
-
 	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 	vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
 

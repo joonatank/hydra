@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa
  *	2010-02
  *
  *	Class for managing the application, this is basicly a Singleton
@@ -11,7 +11,7 @@
  *	This class should not depend on any external library.
  *	All conversions to external libraries should be done in separate class
  *	either through inheritance or aggregation.
- */
+ **/
 
 #ifndef VL_OGRE_ROOT_HPP
 #define VL_OGRE_ROOT_HPP

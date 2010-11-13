@@ -1,7 +1,10 @@
 #ifndef VL_BASE_HELPERS_HPP
 #define VL_BASE_HELPERS_HPP
 
+/// C headers
+// Necessary for getpid()
 #include <stdint.h>
+
 
 namespace vl
 {

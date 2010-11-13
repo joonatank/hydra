@@ -32,6 +32,10 @@ add_executable( test_arguments
 	${eqOgre_SOURCE_DIR}/arguments.hpp
 	)
 
+add_executable( test_env
+	test_env.cpp
+	)
+
 # Compile the python embedding example
 
 add_executable( python_embedded python_embedded.cpp )

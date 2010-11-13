@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ * 
+ */
 
 #include "eq_settings.hpp"
 
