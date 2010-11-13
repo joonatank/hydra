@@ -21,23 +21,6 @@
 // Test helpers
 #include "../debug.hpp"
 
-// TODO should be moved to eqOgre lib
-class NodeFactory : public eq::NodeFactory
-{
-public:
-	virtual eq::Config *createConfig( eq::ServerPtr parent )
-	{ return new eqOgre::Config( parent ); }
-
-	virtual eq::Pipe *createPipe( eq::Node* parent )
-	{ return new eqOgre::Pipe( parent ); }
-
-	virtual eq::Window *createWindow( eq::Pipe *parent )
-	{ return new eqOgre::Window( parent ); }
-
-	virtual eq::Channel *createChannel( eq::Window *parent )
-	{ return new eqOgre::Channel( parent ); }
-};
-
 struct ListeningClientFixture
 {
 	ListeningClientFixture( void ) {}
@@ -49,15 +32,26 @@ struct ListeningClientFixture
 			   eq::NodeFactory *nodeFactory )
 	{
 		InitFixture();
+		std::string where( "ListeningClientFixture::init" );
+
+		if( !settings )
+		{
+			std::cerr << where << " : settings are invalid." << std::endl;
+			return false;
+		}
+		if( !nodeFactory )
+		{
+			std::cerr << where << " : nodeFactory is invalid." << std::endl;
+			return false;
+		}
 
 		// Create eq log file
-		// TODO this should be cleaned and moved to somewhere else
+		// TODO this should be cleaned and moved to eqOgre::Client
 		uint32_t pid = vl::getPid();
 		std::stringstream ss;
 		if( !settings->getLogDir().empty() )
 		{ ss << settings->getLogDir() << "/"; }
 
-		// FIXME using the project name and not the executable name
 		ss << settings->getProjectName() << "_eq_" << pid << ".log";
 		log_file.open( ss.str().c_str() );
 

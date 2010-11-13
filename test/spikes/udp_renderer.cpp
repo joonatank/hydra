@@ -1,18 +1,21 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
+
 // Standard headers
 #include <iostream>
-
-// UNIX headers
-#include <time.h>
 
 // Library includes
 #include "udp/server.hpp"
 #include "udp/print_command.hpp"
 #include "base/sleep.hpp"
 #include "base/exceptions.hpp"
+#include "eq_cluster/eq_settings.hpp"
+#include "eq_cluster/nodeFactory.hpp"
 
 // Test includes
 #include "client_fixtures.hpp"
-#include "../test_helpers.hpp"
 
 std::string const PROJECT_NAME( "udp_renderer" );
 uint16_t const PORT = 2244;
@@ -41,6 +44,7 @@ int main(int argc, char **argv)
 		cmd.reset( new vl::udp::PrintCommand("setQuaternion", "feet" ) );
 		server.addCommand( cmd );
 
+		// NOTE this code is completely broken, DONT TOUCH
 		for (;;)
 		{
 			server.mainloop();
@@ -50,21 +54,8 @@ int main(int argc, char **argv)
 
 		ListeningClientFixture fix;
 
-		eqOgre::SettingsRefPtr settings = ::getSettings( argc, argv );
-		if( !settings )
-		{
-			std::cerr << "No test_conf.xml file found." << std::endl;
-			return -1;
-		}
-
-		// Add the command line arguments
-		for( int i = 1; i < argc; ++i )
-		{
-			settings->getEqArgs().add(argv[i] );
-		}
-
-		::NodeFactory nodeFactory;
-
+		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
+		eqOgre::NodeFactory nodeFactory;
 		error = !fix.init( settings, &nodeFactory );
 
 		if( !error )
@@ -85,10 +76,12 @@ int main(int argc, char **argv)
 	catch( Ogre::Exception const &e)
 	{
 		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		error = true;
 	}
 	catch( std::exception const &e )
 	{
 		std::cerr << "STD Exception: " << e.what() << std::endl;
+		error = true;
 	}
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;

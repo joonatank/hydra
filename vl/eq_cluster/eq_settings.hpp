@@ -1,3 +1,10 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ *	Global function to create the settings from command-line arguments
+ *
+ *	Distributed settings structure
+ */
 #ifndef EQ_OGRE_SETTINGS_HPP
 #define EQ_OGRE_SETTINGS_HPP
 
@@ -7,7 +14,9 @@
 
 namespace eqOgre
 {
-	
+
+eqOgre::SettingsRefPtr getSettings( int argc, char **argv );
+
 class Settings : public vl::Settings, public eq::net::Object
 {
 public :

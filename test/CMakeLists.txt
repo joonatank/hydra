@@ -21,6 +21,7 @@ subdirs(util
 		dotscene_loader
 #		eq_cluster
 		udp
+		misc
 		)
 
 # NOTE For now removed as we move to using EnvSettings and ProjectSettings

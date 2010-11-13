@@ -1,16 +1,14 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
 
-#include "dotscene_loader.hpp"
 #include "base/exceptions.hpp"
 #include "base/sleep.hpp"
-#include "fake_tracker.hpp"
-#include "vrpn_tracker.hpp"
-
-// Crashes channel.h for sure
-// Seems like including vmmlib/vector.h or quaternion.h will crash channel (vmmlib/frustum.h)
-#include "math/conversion.hpp"
+#include "eq_cluster/eq_settings.hpp"
+#include "eq_cluster/nodeFactory.hpp"
 
 // Test helpers
-#include "../test_helpers.hpp"
 #include "client_fixtures.hpp"
 
 std::string const PROJECT_NAME( "listening_client" );
@@ -22,16 +20,14 @@ int main( const int argc, char** argv )
 	{
 		ListeningClientFixture fix;
 
-		eqOgre::SettingsRefPtr settings = ::getSettings( argc, argv );
+		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 		if( !settings )
 		{ return -1; }
 
 		settings->setLogDir( "logs" );
-
-		::NodeFactory nodeFactory;
+		eqOgre::NodeFactory nodeFactory;
 
 		error = !fix.init( settings, &nodeFactory );
-	
 		if( !error )
 		{
 			uint32_t frame = 0;
