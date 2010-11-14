@@ -112,6 +112,10 @@ public :
 		void setName( std::string const &name )             { _name = name; _changed = true; }
 		std::string const &getName() const                  { return _name; }
 
+		// TODO fix the constness of the methods,
+		// Getter methods are const if they either return by value or return
+		// const reference/pointer.
+		// TODO Provide both getters const and non-const
 		Scene* addScene( std::string const &name );
 		void rmScene( std::string const &name );
 		Scene* getScenePtr( std::string const &sceneName );

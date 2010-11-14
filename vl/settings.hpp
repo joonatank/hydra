@@ -69,17 +69,17 @@ class Settings
 		/// Returns the name of the project
 		std::string getProjectName( void ) const;
 
-		/// Returns the path to Equalizer log file relative to the exe
+		/// Get the path to Equalizer log file relative to the exe
 		/// Returns a filename which is in the log dir and has the project and pid
 		/// If no project name is set will substitute unamed for project name
 		std::string getEqLogFilePath( void ) const;
 
-		/// Returns the path to Ogre log file relative to the exe
+		/// Get the path to Ogre log file relative to the exe
 		/// Returns a filename which is in the log dir and has the project and pid
 		/// If no project name is set will substitute unamed for project name
 		std::string getOgreLogFilePath( void ) const;
 
-		/// Returns the path to log file relative to the exe
+		/// Get the path to log file relative to the exe
 		/// Parameters: identifier can be used to distinquish libraries
 		/// 			prefix can be used to add a prefix like debug to the file
 		/// Returns a filename which is in the log dir and has the project and pid
@@ -88,10 +88,35 @@ class Settings
 									std::string const &prefix = std::string() )
 									const;
 
-		
-	protected :
+		/// Combines the Project and the Case scenes to one vector
+		/// Only scenes that are in use are added
+		///
+		/// Scene information needed to pass from this class
+		/// Name, File (to load), attach scene and attach point
+		///
+		/// Returns a vector of the used scene pointers
+		/// Scenes returned are owned by ProjectSettings, ownership is not passed
+		std::vector<ProjSettings::Scene const *> getScenes( void ) const;
 
-		void updateArgs( void );
+		/// Combines the Project and the Case script to one vector
+		/// Only scripts that are in use are added
+		///
+		/// Script information needed to pass from this class
+		/// Script file, absolute path
+		/// Returns a vector of script file paths, absolute
+		std::vector<std::string> getScripts( void ) const;
+
+		std::string getProjectDir( void ) const;
+
+		std::string getEnvironementDir( void ) const;
+
+	protected :
+		void _addScripts( std::vector<std::string> &vec, vl::ProjSettings::Case const *cas ) const;
+
+		void _addScenes( std::vector<ProjSettings::Scene const *> &vec,
+						vl::ProjSettings::Case const *cas ) const;
+		
+		void _updateArgs( void );
 
 		// Log directory
 		std::string _log_dir;
@@ -105,6 +130,9 @@ class Settings
 		
 		// Project specific settings
 		ProjSettingsRefPtr _proj;
+
+		// Name of the current case or empty if doesn't have a case
+		std::string _case;
 
 };	// class Settings
 

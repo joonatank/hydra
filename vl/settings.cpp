@@ -25,7 +25,7 @@ vl::Settings::setExePath( std::string const &path )
 {
 	_exe_path = path;
 
-	updateArgs();
+	_updateArgs();
 }
 
 std::string
@@ -76,10 +76,97 @@ vl::Settings::getLogFilePath(const std::string &identifier,
 	return ss.str();
 }
 
+std::vector< vl::ProjSettings::Scene const * >
+vl::Settings::getScenes( void ) const
+{
+	std::vector<ProjSettings::Scene const *> vec;
 
-// --------- Settings Private --------
+	_addScenes( vec, _proj->getCasePtr() );
+	if( !_case.empty() )
+	{
+		_addScenes( vec, _proj->getCasePtr(_case) );
+	}
+
+	return vec;
+}
+
+std::vector< std::string >
+vl::Settings::getScripts( void ) const
+{
+	std::vector<std::string> vec;
+
+	_addScripts( vec, _proj->getCasePtr() );
+
+	if( !_case.empty() )
+	{
+		_addScripts( vec, _proj->getCasePtr(_case) );
+	}
+
+	return vec;
+}
+
+std::string
+vl::Settings::getProjectDir( void ) const
+{
+	if( !_proj )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	fs::path projFile( _proj->getFile() );
+	fs::path projDir = projFile.parent_path();
+	if( !fs::exists( projDir ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.file_string() ) ); }
+
+	return projDir.file_string();
+}
+
+std::string
+vl::Settings::getEnvironementDir( void ) const
+{
+	if( !_env )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	fs::path envFile( _env->getFile() );
+	fs::path envDir = envFile.parent_path();
+	if( !fs::exists( envDir ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.file_string() ) ); }
+
+	return envDir.file_string();
+}
+
+
+// --------- Settings Protected --------
 void
-vl::Settings::updateArgs( void )
+vl::Settings::_addScripts( std::vector< std::string > &vec,
+						  ProjSettings::Case const *cas) const
+{
+	// TODO should return absolute paths
+	std::string projDir( getProjectDir() );
+	for( size_t i = 0; i < cas->getNscripts(); ++i )
+	{
+		vl::ProjSettings::Script *script = cas->getScriptPtr(i);
+		if( script->getUse() )
+		{
+			std::string scriptPath = projDir + "/scripts/" + script->getFile();
+			vec.push_back( scriptPath );
+		}
+	}
+}
+
+
+void
+vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene const *> &vec,
+						 ProjSettings::Case const *cas ) const
+{
+	for( size_t i = 0; i < cas->getNscenes(); ++i )
+	{
+		if( cas->getScenePtr(i)->getUse() )
+		{ vec.push_back( cas->getScenePtr(i) ); }
+	}
+}
+
+
+void
+vl::Settings::_updateArgs( void )
 {
 	// Update args
 	_eq_args.clear();

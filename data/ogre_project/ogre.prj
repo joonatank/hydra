@@ -45,8 +45,10 @@ Project may be launchable
 		
 	</scenes>
 
-	<!-- Resources will reside in [path to this file]/resources
-	TAI [file to global]/resources -->
+	<!--
+	Resources will reside in [path to this file]/resources
+	or [file to global]/resources
+	-->
 
 	<action_maps>
 		<!--
@@ -57,6 +59,13 @@ Project may be launchable
 	</action_maps>
 	
 	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">script.py</file>
 	</scripts>
 
 </project_config>

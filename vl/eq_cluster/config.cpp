@@ -39,7 +39,7 @@ eqOgre::Config::~Config()
 	_exitAudio();
 }
 
-void 
+void
 eqOgre::Config::mapData( uint32_t const initDataID )
 {
 	EQASSERT( _settings );
@@ -134,7 +134,7 @@ eqOgre::Config::toggleBackgroundSound()
 }
 
 
-uint32_t 
+uint32_t
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
 	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
@@ -155,21 +155,29 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	// TODO should be moved to Config::init or equivalent
 	static bool inited = false;
 
+	std::stringstream ss;
+
 	if( !inited )
 	{
 		try {
 			// Init the embedded python
 			_initPython();
 
-			// TODO the script file should not be hard-coded
-			// they should be in Settings
-			// like Settings::getInitScripts
-			// and Settings::getFrameScripts
-			const std::string initScript("script.py");
+			std::vector<std::string> scripts = _settings->getScripts();
 
-			// Run init python script
-			_runPythonScript( initScript);
+			ss.str("");
+			ss << "Running " << scripts.size() << " python scripts.";
+			Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
+			for( size_t i = 0; i < scripts.size(); ++i )
+			{
+				ss.str("");
+				ss << "Running python script = " << scripts.at(i);
+				Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+				// Run init python scripts
+				_runPythonScript( scripts.at(i) );
+			}
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -182,7 +190,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		{
 			PyErr_Print();
 		}
-		
+
 		// Find ogre event so we can toggle it on/off
 		// TODO add function to find Events
 		// Ogre Rotation event, used to toggle the event on/off
@@ -325,8 +333,11 @@ void eqOgre::Config::_initPython(void )
 
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 {
-	std::cout << "running file " << scriptFile << "..." << std::endl;
-	// Run a python script in an empty environment.
+	std::stringstream ss;
+	ss << "Running python script file " << scriptFile << ".";
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+	// Run a python script.
 	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);
 }
 
@@ -336,7 +347,7 @@ char const *CB_INFO_TEXT = "Config : OIS event received : ";
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-	
+
 	bool redraw = false;
 	switch( event->data.type )
 	{
@@ -347,7 +358,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 
 		case eq::Event::KEY_RELEASE :
 			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
-			
+
 			break;
 
 		case eq::Event::POINTER_BUTTON_PRESS:
@@ -357,7 +368,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 		case eq::Event::POINTER_BUTTON_RELEASE:
 			redraw = _handleMouseReleaseEvent(event->data.pointerButtonRelease);
 			break;
-			
+
 		case eq::Event::POINTER_MOTION:
 			redraw = _handleMouseMotionEvent(event->data.pointerMotion);
 			break;

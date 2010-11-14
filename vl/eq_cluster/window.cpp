@@ -24,7 +24,7 @@
 #endif
 
 namespace {
-	
+
 void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
 {
 	// Copy abs
@@ -59,24 +59,17 @@ eqOgre::Window::loadScene( void )
 {
 	std::stringstream ss;
 
-	// TODO this launches only the project case
-	// TODO add support for other cases
 	// TODO this should be divided to case load scenes function and loadScene function
-	vl::ProjSettingsRefPtr proj = _settings->getProjectSettings();
-	EQASSERT( proj );
 
-	// Get the case
-	vl::ProjSettings::Case const *cas = proj->getCasePtr();
+	// Get scenes
+	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
 
-	// The case has to be valid or the ProjectSettings are invalid
-	EQASSERT( cas )
-
-	ss << "Loading Scenes for Project : " << cas->getName();
+	ss << "Loading Scenes for Project : " << _settings->getProjectName();
 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	ss.str("");
 
 	// If we don't have Scenes there is no point loading them
-	if( cas->getNscenes() == 0 )
+	if( !scenes.size() )
 	{
 		ss << "Project does not have any scene files.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
@@ -84,7 +77,7 @@ eqOgre::Window::loadScene( void )
 	}
 	else
 	{
-		ss << "Project has " << cas->getNscenes() << " scene files.";
+		ss << "Project has " << scenes.size() << " scene files.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	}
 
@@ -93,14 +86,19 @@ eqOgre::Window::loadScene( void )
 	_sm->clearScene();
 	_sm->destroyAllCameras();
 
-	// TODO support for multiple scene files
-	for( size_t i = 0; i < cas->getNscenes(); ++i )
+	// TODO support for multiple scene files should be tested
+	// TODO support for case needs to be tested
+	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string const &scene_file = cas->getScenePtr(i)->getFile();
+		std::string const &scene_file = scenes.at(i)->getFile();
+
+		ss.str("");
 		std::string message = "Loading scene : " + scene_file;
 		Ogre::LogManager::getSingleton().logMessage( message );
 
 		DotSceneLoader loader;
+		// TODO pass attach node based on the scene
+		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 		loader.parseDotScene( scene_file,
 							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 							_sm );
@@ -145,7 +143,7 @@ eqOgre::Window::keyPressed(const OIS::KeyEvent& key)
 	eq::ConfigEvent event;
 	event.data.type = eq::Event::KEY_PRESS;
 	event.data.key.key = key.key;
-	
+
 	getConfig()->sendEvent(event);
 
 	return true;
@@ -248,7 +246,7 @@ eqOgre::Window::configInit( const uint32_t initID )
 
 		if( !loadScene() )
 		{ return false; }
-		
+
 		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
 		log << "eqOgre::Window::configInit done.\n";
 	}
@@ -432,7 +430,7 @@ eqOgre::Window::createWindowListener(void )
 	*/
 }
 
-void 
+void
 eqOgre::Window::createOgreRoot( void )
 {
 	_root.reset( new vl::ogre::Root( _settings ) );
@@ -440,11 +438,11 @@ eqOgre::Window::createOgreRoot( void )
 	_root->createRenderSystem();
 }
 
-void 
+void
 eqOgre::Window::createOgreWindow( void )
 {
 	EQINFO << "Creating Ogre RenderWindow." << std::endl;
-	
+
 	Ogre::NameValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	eq::WGLWindow *os_win = (eq::WGLWindow *)( getSystemWindow() );

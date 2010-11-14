@@ -155,7 +155,6 @@ MACRO( copy_extras )
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
 
 file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg DESTINATION ${PROJECT_BINARY_DIR}/ )
-file( COPY ${VL_DATA_PATH}/script.py DESTINATION ${PROJECT_BINARY_DIR}/ )
 
 ENDMACRO()
 

@@ -1,3 +1,9 @@
+#-------------------------------------------------------------------
+# This file is part of the CMake build system for eqOgre
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#-------------------------------------------------------------------
 
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
 install( DIRECTORY ${VL_DATA_PATH}/ogre_project DESTINATION ./ )
@@ -30,5 +36,4 @@ endif()
 
 install( FILES
 	${VL_DATA_PATH}/The_Dummy_Song.ogg
-	${VL_DATA_PATH}/script.py
 	DESTINATION ./ )
