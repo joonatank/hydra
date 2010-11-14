@@ -27,32 +27,10 @@ endif( WIN32 )
 
 
 # Add our local scripts to CMake path
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/CMake )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
 
 ######## Find Equalizer ########
-# We should expose these parameters for the user even in Linux
-# We should use find_file and file_lib functions to find the files first though
-find_library( EQUALIZER_LIBRARY
-	NAMES Equalizer
-	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
-	)
-
-# TODO this needs to be tested in Windows
-# The path is really $ENV{EQUALIZER_HOME}/include/eq/eq.h
-find_path( EQUALIZER_INCLUDE_DIR
-	NAMES eq/eq.h
-	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
-	)
-
-######### Find Turtle ########
-# We should expose these parameters for the user even in Linux
-# We should use find_file and file_lib functions to find the files first though
-
-find_path( TURTLE_INCLUDE_DIR
-	NAMES turtle/mock.hpp
-	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
-	)
-
+find_package( Equalizer REQUIRED )
 
 ###### Find VRPN ########
 # TODO
@@ -64,16 +42,9 @@ find_path( TURTLE_INCLUDE_DIR
 # included and build into the eqOgre library
 # Also requirement for pthread would drop if VRPN was not available
 
-find_package( Threads REQUIRED )
+find_package( VRPN REQUIRED )
 
-find_library( VRPN_LIBRARY
-	NAMES vrpn
-	)
 
-# Include dir
-find_path( VPRN_INCLUDE_DIR
-	NAMES vrpn_Tracker.h
-	)
 
 ######### Find OGRE ##########
 # We should use find_file to find the Ogre cmake helpers
@@ -90,30 +61,13 @@ find_package(OGRE REQUIRED)
 
 find_package(OIS REQUIRED )
 
-# TODO test on a system that does not have CEGUI
 find_package( CEGUI QUIET )
 
-if( ${CEGUI_FOUND} )
-	message( "CEGUI found : ${CEGUI_LIBRARY} " )
-elseif()
-	message( "CEGUI not found, will not build a GUI" )
-endif()
 
 
 ####### Find cAudio
-# TODO we have no support for mp3 for now convert all sounds to ogg
-find_library( CAUDIO_LIBRARY
-	NAMES cAudio.2.1.0
-	PATHS /usr/lib/cAudio2.1.0;/usr/local/lib/cAudio2.1.0;$ENV{cAudio_HOME}
-	)
+find_package( CAUDIO REQUIRED )
 
-# Include dir
-find_path( CAUDIO_INCLUDE_DIR
-	NAMES cAudio/cAudio.h
-	)
-
-message( "cAudio library = ${CAUDIO_LIBRARY}" )
-message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
 
 ####### Find Boost ########
 # TODO
@@ -141,8 +95,7 @@ include_directories( ${PYTHON_INCLUDE_DIRS} )
 include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
-	${EQUALIZER_INCLUDE_DIR}
-	${TURTLE_INCLUDE_DIR}
+	${Equalizer_INCLUDE_DIRS}
 	${VPRN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
@@ -153,7 +106,7 @@ include_directories( SYSTEM
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
-	${EQUALIZER_LIBRARY}
+	${Equalizer_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARIES}
 	${PYTHON_LIBRARIES}
