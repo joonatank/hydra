@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 2.8)
 find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
 message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
-message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
-message( "VRPN libraries = ${VRPN_LIBRARY}" )
 
 include_directories( util ${Boost_INCLUDE_DIR} )
 
@@ -17,7 +15,7 @@ set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 link_libraries( ${FS_LIB} ${TEST_LIB} )
 
 subdirs(util
-		spikes
+#		spikes
 		dotscene_loader
 #		eq_cluster
 		udp

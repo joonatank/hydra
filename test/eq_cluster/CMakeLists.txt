@@ -1,6 +1,11 @@
 project("eq_cluster_test" CXX)
 
-copy_config()
+# TODO this should use same Settings stucture as the rest of them i.e. it needs
+# Either a start script or a config file,
+# Start scripts are bit difficult for automated testing
+# So a config file would be better
+# Need to add boost::program_options first though
+#copy_config()
 
 add_executable( test_channel
 	test_channel.cpp

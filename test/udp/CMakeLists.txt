@@ -2,7 +2,8 @@ project("udp_test" CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
-copy_config()
+# TODO fix this
+#copy_config()
 
 add_executable( test_udp_server
 	${eqOgre_SOURCE_DIR}/udp/print_command.cpp

@@ -1,6 +1,7 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-11
  *
+ *	TODO move to demos after new version from Windows is synced
  */
 
 // Standard headers

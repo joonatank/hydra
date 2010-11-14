@@ -171,44 +171,40 @@ set( LIBS eqOgre )
 link_directories( ${vl_BINARY_DIR}/vl 
 	${Boost_LIBRARY_DIRS} )
 
-############ Config Copy MACRO ##############
-# TODO macro should be moved to separate file
-MACRO( copy_config )
-# Config file for spikes
-message( "Copying config file for project = ${PROJECT_NAME}"  )
+## Copy start script macro ##
+MACRO( copy_start_script program_name )
+message( "Copying start scripts for project = ${PROJECT_NAME} : exe name = ${program_name}" )
 
-set( DATA_DIR ${vl_SOURCE_DIR}/data )
-
+set( PROGRAM_NAME ${program_name} )
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
-set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
 
 if( WIN32 )
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/Release/test_conf.xml )
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/Debug/test_conf.xml )
+	configure_file( ${VL_DATA_PATH}/start.bat
+		${PROJECT_BINARY_DIR}/start.bat )
 else()
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/test_conf.xml )
+	configure_file( ${VL_DATA_PATH}/start.sh
+		${PROJECT_BINARY_DIR}/start.sh )
 endif()
 
-
-# Plugins file
-# Copyed to the vl root dir so that the plugins path are correct
-if( WIN32 )
-	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_REL} )
-	configure_file( ${DATA_DIR}/plugins.cfg
-		${PROJECT_BINARY_DIR}/Release/plugins.cfg )
-	set( PLUGINS_DIR_DBG ${OGRE_PLUGIN_DIR_DBG} )
-	configure_file( ${DATA_DIR}/plugins_d.cfg
-		${PROJECT_BINARY_DIR}/Debug/plugins.cfg )
-else( )
-	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_TMP} )
-	configure_file( ${DATA_DIR}/plugins.cfg
-		${PROJECT_BINARY_DIR}/plugins.cfg )
-endif()
+# Create log directory
+file( MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/logs )
 
 ENDMACRO()
+
+
+###### Copy Extra files MACRO #######
+# TODO this can be removed when ProjectSettings scripts are in use
+# and when we load audio files using Ogre resource system
+MACRO( copy_extras )
+
+set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+
+file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg DESTINATION ${PROJECT_BINARY_DIR}/ )
+file( COPY ${VL_DATA_PATH}/script.py DESTINATION ${PROJECT_BINARY_DIR}/ )
+
+ENDMACRO()
+
+
 
 # include rendering engine, eq ogre directories
 include_directories(vl)
@@ -219,4 +215,6 @@ add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
+# TODO should be configurable
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
 
