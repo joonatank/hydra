@@ -79,3 +79,7 @@ set( HEADERS
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 
 target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )
+
+#install
+# TODO this is here for test only the filestructure is not preserved by this
+#install( FILES ${HEADERS} DESTINATION include )

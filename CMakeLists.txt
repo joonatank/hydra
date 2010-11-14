@@ -1,8 +1,13 @@
+#-------------------------------------------------------------------
+# This file is part of the CMake build system for eqOgre
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#-------------------------------------------------------------------
+
 project("vl" CXX C)
 
 cmake_minimum_required(VERSION 2.8)
-
-enable_testing()
 
 if( UNIX )
 	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
@@ -129,18 +134,15 @@ MACRO( copy_start_script program_name )
 message( "Copying start scripts for project = ${PROJECT_NAME} : exe name = ${program_name}" )
 
 set( PROGRAM_NAME ${program_name} )
-set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
 
 if( WIN32 )
-	configure_file( ${VL_DATA_PATH}/start.bat
+	configure_file( ${DEMO_DATA_PATH}/start.bat
 		${PROJECT_BINARY_DIR}/start.bat )
 else()
-	configure_file( ${VL_DATA_PATH}/start.sh
+	configure_file( ${DEMO_DATA_PATH}/start.sh
 		${PROJECT_BINARY_DIR}/start.sh )
 endif()
-
-# Create log directory
-file( MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/logs )
 
 ENDMACRO()
 
@@ -162,12 +164,26 @@ ENDMACRO()
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
+set( EQOGRE_BUILD_QTLAUNCHER TRUE CACHE BOOL
+	"Build the GUI used for editing settings and launching." )
+set( EQOGRE_BUILD_TESTS FALSE CACHE BOOL "Build the unit tests." )
+set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
+
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
-# TODO should be configurable
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
-# TODO should be configurable
+
+if( ${EQOGRE_BUILD_QTLAUNCHER} )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
+endif()
+
+if( ${EQOGRE_BUILD_TESTS} )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
-# TODO should be configurable
+endif()
+
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
 
+include( Packaging )
+
+include( InstallResources )
+
+include( InstallDependencies )
