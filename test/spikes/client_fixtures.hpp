@@ -45,17 +45,13 @@ struct ListeningClientFixture
 			return false;
 		}
 
-		// Create eq log file
-		// TODO this should be cleaned and moved to eqOgre::Client
-		uint32_t pid = vl::getPid();
-		std::stringstream ss;
-		if( !settings->getLogDir().empty() )
-		{ ss << settings->getLogDir() << "/"; }
-
-		ss << settings->getProjectName() << "_eq_" << pid << ".log";
-		log_file.open( ss.str().c_str() );
-
+		// TODO test if this can work with relative path
+		// Oh right it doesn't for autolaunched clients.
+		// NOTE the log file needs to be set before any calls to Equalizer methods
+		log_file.open( settings->getEqLogFilePath().c_str() );
 		eq::base::Log::setOutput( log_file );
+		std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
+			<< std::endl;
 
 		vl::Args &arg = settings->getEqArgs();
 

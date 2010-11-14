@@ -1,11 +1,16 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
+
+// Declaration
 #include "settings.hpp"
 
-#include "base/filesystem.hpp"
+// Necessary for exceptions
 #include "base/exceptions.hpp"
-#include "base/string_utils.hpp"
 
-#include <iostream>
-#include <fstream>
+// Necessary for getPid (used for log file names)
+#include "base/system_util.hpp"
 
 vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj )
 	: _env(env),
@@ -23,14 +28,52 @@ vl::Settings::setExePath( std::string const &path )
 	updateArgs();
 }
 
-void
-vl::Settings::clear( void )
+std::string
+vl::Settings::getProjectName(void ) const
 {
-	_log_dir.clear();
-	_exe_path.clear();
-	_eq_args = vl::Args();
-	_env.reset();
-	_proj.reset();
+	if( _proj )
+	{ return _proj->getCasePtr()->getName(); }
+	else
+	{ return std::string(); }
+}
+
+std::string
+vl::Settings::getEqLogFilePath(void ) const
+{
+	return getLogFilePath("eq");
+}
+
+std::string
+vl::Settings::getOgreLogFilePath(void ) const
+{
+	return getLogFilePath("ogre");
+}
+
+std::string
+vl::Settings::getLogFilePath(const std::string &identifier,
+							 const std::string &prefix) const
+{
+	uint32_t pid = vl::getPid();
+	std::stringstream ss;
+	if( !getLogDir().empty() )
+	{ ss << getLogDir() << "/"; }
+
+	if( getProjectName().empty() )
+	{ ss << "unamed"; }
+	else
+	{ ss << getProjectName(); }
+
+	if( !identifier.empty() )
+	{ ss << '_' << identifier; }
+
+	ss << '_' << pid;
+
+	if( !prefix.empty() )
+	{ ss << '_' << prefix; }
+
+	ss << ".log";
+
+	return ss.str();
 }
 
 

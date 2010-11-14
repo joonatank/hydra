@@ -27,19 +27,12 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 	{
 		_log_manager = new Ogre::LogManager();
 
-		// Get the log file path
-		std::stringstream log_file_name_stream;
-		if( !settings->getLogDir().empty() )
-		{
-			log_file_name_stream << settings->getLogDir() << "/";
-		}
-		// TODO add project name to log file
-		log_file_name_stream << "project_name" << "_ogre_" << vl::getPid() << ".log";
-
 		// Create the log
-		Ogre::Log *log = Ogre::LogManager::getSingleton().createLog( log_file_name_stream.str(), true, false );
+		std::string log_file = settings->getOgreLogFilePath();
+		Ogre::Log *log = Ogre::LogManager::getSingleton()
+			.createLog( log_file, true, false );
 		log->setTimeStampEnabled( true );
-		log->logMessage( std::string("Log file path = ") + log_file_name_stream.str() );
+		std::cout << "Ogre log file path = " << log_file << std::endl;
 
 		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;

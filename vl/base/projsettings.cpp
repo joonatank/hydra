@@ -2,7 +2,8 @@
  *	2010-10
  *
  *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
- * 2010-11
+ *	2010-11
+ *	Removed printing to standard out from all methods
  */
 
 /// Declaration
@@ -23,7 +24,7 @@
 vl::ProjSettings::Scene *
 vl::ProjSettings::Case::addScene( std::string const &name )
 {
-    std::cout << "ProjSettings Case addScene: name " << name << std::endl;
+//	std::cout << "ProjSettings Case addScene: name " << name << std::endl;
 
     vl::ProjSettings::Scene* scene = new ProjSettings::Scene( name );
     _scenes.push_back( scene );
@@ -34,7 +35,7 @@ vl::ProjSettings::Case::addScene( std::string const &name )
 void
 vl::ProjSettings::Case::rmScene( std::string const &name )
 {
-    std::cout << "ProjSettings Case rmScene: name " << name << std::endl;
+//	std::cout << "ProjSettings Case rmScene: name " << name << std::endl;
 
     vl::ProjSettings::Scene* scene = getScenePtr(name);
     for( unsigned int i = 0; i < _scenes.size(); i++ )
@@ -51,7 +52,7 @@ vl::ProjSettings::Case::rmScene( std::string const &name )
 vl::ProjSettings::Scene *
 vl::ProjSettings::Case::getScenePtr( std::string const &sceneName )
 {
-    std::cout << "ProjSettings Case getScenePtr: name " << sceneName << std::endl;
+//	std::cout << "ProjSettings Case getScenePtr: name " << sceneName << std::endl;
 
     for( unsigned int i = 0; i < _scenes.size(); i++ )
     {
@@ -83,7 +84,7 @@ vl::ProjSettings::Case::getScenePtr( unsigned int i ) const
 vl::ProjSettings::ActionMap *
 vl::ProjSettings::Case::addMap( std::string const &name )
 {
-    std::cout << "ProjSettings Case addMap: name " << name << std::endl;
+//	std::cout << "ProjSettings Case addMap: name " << name << std::endl;
 
     ProjSettings::ActionMap* map = new ProjSettings::ActionMap( name );
     _actionMaps.push_back( map );
@@ -94,7 +95,7 @@ vl::ProjSettings::Case::addMap( std::string const &name )
 void
 vl::ProjSettings::Case::rmMap( std::string const &name )
 {
-    std::cout << "ProjSettings Case rmMap: name " << name << std::endl;
+//	std::cout << "ProjSettings Case rmMap: name " << name << std::endl;
 
     ProjSettings::ActionMap* map = getMapPtr(name);
     for( unsigned int i = 0; i < _actionMaps.size(); i++ )
@@ -111,7 +112,7 @@ vl::ProjSettings::Case::rmMap( std::string const &name )
 vl::ProjSettings::ActionMap *
 vl::ProjSettings::Case::getMapPtr( std::string const &mapName )
 {
-    std::cout << "ProjSettings Case getMapPtr: mapName " << mapName << std::endl;
+//	std::cout << "ProjSettings Case getMapPtr: mapName " << mapName << std::endl;
 
     for( unsigned int i = 0; i < _actionMaps.size(); i++ )
     {
@@ -126,7 +127,7 @@ vl::ProjSettings::Case::getMapPtr( std::string const &mapName )
 vl::ProjSettings::ActionMap *
 vl::ProjSettings::Case::getMapPtr( unsigned int i ) const
 {
-    std::cout << "ProjSettings Case getMapPtr:" << std::endl;
+//	std::cout << "ProjSettings Case getMapPtr:" << std::endl;
 
     if( i < _actionMaps.size() )
     {
@@ -145,7 +146,7 @@ vl::ProjSettings::Case::getMapPtr( unsigned int i ) const
 vl::ProjSettings::Script *
 vl::ProjSettings::Case::addScript( std::string const &name )
 {
-    std::cout << "ProjSettings Case addScript: name " << name << std::endl;
+//	std::cout << "ProjSettings Case addScript: name " << name << std::endl;
 
     ProjSettings::Script* script = new ProjSettings::Script( name );
     _scripts.push_back( script );
@@ -156,7 +157,7 @@ vl::ProjSettings::Case::addScript( std::string const &name )
 void
 vl::ProjSettings::Case::rmScript( std::string const &name )
 {
-    std::cout << "ProjSettings Case rmScript: name " << name << std::endl;
+//	std::cout << "ProjSettings Case rmScript: name " << name << std::endl;
 
     ProjSettings::Script* script = getScriptPtr(name);
     for( unsigned int i = 0; i < _scripts.size(); i++ )
@@ -173,7 +174,7 @@ vl::ProjSettings::Case::rmScript( std::string const &name )
 vl::ProjSettings::Script *
 vl::ProjSettings::Case::getScriptPtr( std::string const &name )
 {
-    std::cout << "ProjSettings Case getScriptPtr: name " << name << std::endl;
+//	std::cout << "ProjSettings Case getScriptPtr: name " << name << std::endl;
 
     for( unsigned int i = 0; i < _scripts.size(); i++ )
     {
@@ -188,7 +189,7 @@ vl::ProjSettings::Case::getScriptPtr( std::string const &name )
 vl::ProjSettings::Script *
 vl::ProjSettings::Case::getScriptPtr( unsigned int i ) const
 {
-    std::cout << "ProjSettings Case getScriptPtr " << std::endl;
+//	std::cout << "ProjSettings Case getScriptPtr " << std::endl;
 
     if( i < _scripts.size() )
     {
@@ -196,7 +197,8 @@ vl::ProjSettings::Case::getScriptPtr( unsigned int i ) const
     }
     else
     {
-        std::cerr << "Trying to get script pointer from case " << _name << "with invalid index!" << std::endl;
+        std::cerr << "Trying to get script pointer from case "
+			<< _name << "with invalid index!" << std::endl;
         return 0;
     }
 }
@@ -206,7 +208,7 @@ vl::ProjSettings::Case::getScriptPtr( unsigned int i ) const
 bool
 vl::ProjSettings::Case::getChanged()
 {
-    std::cout << "ProjSettings Case getChanged: case name " << _name << std::endl;
+//	std::cout << "ProjSettings Case getChanged: case name " << _name << std::endl;
 
     if( _changed )
     {
@@ -239,7 +241,7 @@ vl::ProjSettings::Case::getChanged()
 void
 vl::ProjSettings::Case::clearChanged()
 {
-    std::cout << "ProjSettings Case clearChanged: case name " << _name << std::endl;
+//	std::cout << "ProjSettings Case clearChanged: case name " << _name << std::endl;
 
     _changed = false;
     for( unsigned int i = 0; i < _actionMaps.size(); i++ )
@@ -259,19 +261,21 @@ vl::ProjSettings::Case::clearChanged()
 vl::ProjSettings::ProjSettings( std::string const &file ) :
         _file( file ), _changed(false)
 {
-    std::cout << "ProjSettings constructor: file name " << file << std::endl;
-    _projCase = new ProjSettings::Case("");
+//	std::cout << "ProjSettings constructor: file name " << file << std::endl;
+	_projCase = new ProjSettings::Case("");
 }
 
 vl::ProjSettings::~ProjSettings( void )
 {
-    std::cout << "ProjSettings destructor: project name " << _projCase->getName() << std::endl;
+//	std::cout << "ProjSettings destructor: project name "
+//		<< _projCase->getName() << std::endl;
 }
 
 void
 vl::ProjSettings::clear( void )
 {
-    std::cout << "ProjSettings clear: project name " << _projCase->getName() << std::endl;
+//	std::cout << "ProjSettings clear: project name "
+//		<< _projCase->getName() << std::endl;
 
     _file.clear();
     _cases.clear();
@@ -283,7 +287,8 @@ vl::ProjSettings::clear( void )
 bool
 vl::ProjSettings::getChanged( void )
 {
-    std::cout << "ProjSettings getChanged: project name " << _projCase->getName() << std::endl;
+//	std::cout << "ProjSettings getChanged: project name "
+//		<< _projCase->getName() << std::endl;
 
     if( _changed )
     {
@@ -302,7 +307,7 @@ vl::ProjSettings::getChanged( void )
 void
 vl::ProjSettings::clearChanged()
 {
-    std::cout << "ProjSettings clearChanged: project name " << _projCase->getName() << std::endl;
+//    std::cout << "ProjSettings clearChanged: project name " << _projCase->getName() << std::endl;
 
     _changed = false;
     for( unsigned int i = 0; i < _cases.size(); i++ )
@@ -316,7 +321,7 @@ vl::ProjSettings::clearChanged()
 vl::ProjSettings::Case *
 vl::ProjSettings::addCase( std::string const &caseName  )
 {
-    std::cout << "ProjSettings addCase: " << " : case name " << caseName <<  std::endl;
+//    std::cout << "ProjSettings addCase: " << " : case name " << caseName <<  std::endl;
 
     ProjSettings::Case* newCase = new ProjSettings::Case( caseName );
     _cases.push_back( newCase );
@@ -327,7 +332,8 @@ vl::ProjSettings::addCase( std::string const &caseName  )
 void
 vl::ProjSettings::rmCase( std::string const &caseName )
 {
-    std::cout << "ProjSettings rmCase: project name " << _projCase->getName() << " : case name " << caseName <<  std::endl;
+//	std::cout << "ProjSettings rmCase: project name "
+//		<< _projCase->getName() << " : case name " << caseName <<  std::endl;
 
     vl::ProjSettings::Case *rmCase = getCasePtr( caseName );
     for( unsigned int i = 0; i < _cases.size(); i++ )
@@ -344,7 +350,8 @@ vl::ProjSettings::rmCase( std::string const &caseName )
 vl::ProjSettings::Case *
 vl::ProjSettings::getCasePtr( std::string const &caseName )
 {
-    std::cout << "ProjSettings getCasePtr: project name " << _projCase->getName() << " : case name " << caseName <<  std::endl;
+//	std::cout << "ProjSettings getCasePtr: project name "
+//		<< _projCase->getName() << " : case name " << caseName <<  std::endl;
 
     if( caseName == _projCase->getName() )
     {
@@ -397,21 +404,21 @@ vl::ProjSettings::getCasePtr( unsigned int i ) const
 vl::ProjSettingsSerializer::ProjSettingsSerializer( vl::ProjSettingsRefPtr projSettingsPtr )
     : _projSettings(projSettingsPtr), _xml_data(0)
 {
-    std::cout << "ProjSettingsSerializer constructor" << std::endl;
+//	std::cout << "ProjSettingsSerializer constructor" << std::endl;
 }
 
 
 vl::ProjSettingsSerializer::~ProjSettingsSerializer( void )
 {
-    std::cout << "ProjSettingsSerializer destructor" << std::endl;
+//	std::cout << "ProjSettingsSerializer destructor" << std::endl;
 
-    delete [] _xml_data;
+	delete [] _xml_data;
 }
 
 bool
 vl::ProjSettingsSerializer::readString( std::string const &str )
 {
-    std::cout << "ProjSettingsSerializer readString" << std::endl;
+//	std::cout << "ProjSettingsSerializer readString" << std::endl;
 
     delete[] _xml_data;
     size_t length = str.length() + 1;
@@ -424,7 +431,7 @@ vl::ProjSettingsSerializer::readString( std::string const &str )
 bool
 vl::ProjSettingsSerializer::readXML()
 {
-    std::cout << "ProjSettingsSerializer readXML" << std::endl;
+//	std::cout << "ProjSettingsSerializer readXML" << std::endl;
 
     rapidxml::xml_document<> xmlDoc;
     xmlDoc.parse<0>( _xml_data );
@@ -443,7 +450,7 @@ vl::ProjSettingsSerializer::readXML()
 void
 vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 {
-    std::cout << "ProjSettingsSerializer readConfig" << std::endl;
+//	std::cout << "ProjSettingsSerializer readConfig" << std::endl;
 
     rapidxml::xml_attribute<>* attrib = xml_root->first_attribute("name");
     if( !attrib )
@@ -454,12 +461,10 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
     else
     {
         std::string nameFromFile = attrib->value();
-        std::cerr << "koe" << std::endl;
 
         _projSettings->getCasePtr()->setName(nameFromFile);
     }
 
-    std::cerr << "koe" << std::endl;
     ProjSettings::Case* projectCase = _projSettings->getCasePtr();
 
     rapidxml::xml_node<>* xml_elem;
@@ -492,7 +497,7 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 void
 vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer readScenes: case " << c->getName() << std::endl;
+//	std::cout << "ProjSettingsSerializer readScenes: case " << c->getName() << std::endl;
 
     rapidxml::xml_node<> *scene_element = xml_node->first_node("scene");
 
@@ -512,7 +517,7 @@ vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::Proj
 void
 vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer readScene: case " << c->getName() << std::endl;
+//	std::cout << "ProjSettingsSerializer readScene: case " << c->getName() << std::endl;
 
     std::string name;
     // Name
@@ -581,7 +586,7 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 void
 vl::ProjSettingsSerializer::readActionMaps( rapidxml::xml_node<>* xml_node, ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer readActionMaps: case " << c->getName() << std::endl;
+//	std::cout << "ProjSettingsSerializer readActionMaps: case " << c->getName() << std::endl;
 
     rapidxml::xml_node<> *map_element = xml_node->first_node("file");
 
@@ -623,7 +628,7 @@ vl::ProjSettingsSerializer::readActionMaps( rapidxml::xml_node<>* xml_node, Proj
 void
 vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer readScripts: case " << c->getName() << std::endl;
+//	std::cout << "ProjSettingsSerializer readScripts: case " << c->getName() << std::endl;
 
     rapidxml::xml_node<> *script_element = xml_node->first_node("file");
 
@@ -665,7 +670,7 @@ vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSet
 void
 vl::ProjSettingsSerializer::readCases( rapidxml::xml_node<>* xml_node )
 {
-    std::cout << "ProjSettingsSerializer readCases" << std::endl;
+//	std::cout << "ProjSettingsSerializer readCases" << std::endl;
 
     rapidxml::xml_node<> *case_element = xml_node->first_node("case");
     if( !case_element )
@@ -680,7 +685,7 @@ vl::ProjSettingsSerializer::readCases( rapidxml::xml_node<>* xml_node )
 void
 vl::ProjSettingsSerializer::readCase( rapidxml::xml_node<>* xml_node )
 {
-    std::cout << "ProjSettingsSerializer readCasee" << std::endl;
+//	std::cout << "ProjSettingsSerializer readCasee" << std::endl;
 
     std::string name;
     // Name
@@ -725,7 +730,7 @@ vl::ProjSettingsSerializer::readCase( rapidxml::xml_node<>* xml_node )
 void
 vl::ProjSettingsSerializer::writeString( std::string &str )
 {
-    std::cout << "ProjSettingsSerializer writeString" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeString" << std::endl;
 
     rapidxml::xml_node<> *xmlRoot = _doc.allocate_node(rapidxml::node_element, "project_config" );
     char *c_name = _doc.allocate_string( _projSettings->getCasePtr()->getName().c_str() );
@@ -742,7 +747,7 @@ vl::ProjSettingsSerializer::writeString( std::string &str )
 void
 vl::ProjSettingsSerializer::writeConfig( rapidxml::xml_node<> *xml_node )
 {
-    std::cout << "ProjSettingsSerializer writeConfig" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeConfig" << std::endl;
 
     writeScenes( xml_node, _projSettings->getCasePtr() );
     writeMaps( xml_node, _projSettings->getCasePtr() );
@@ -764,7 +769,7 @@ vl::ProjSettingsSerializer::bool2char( bool b ) const
 void
 vl::ProjSettingsSerializer::writeScenes( rapidxml::xml_node<> *xml_node, vl::ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer writeScenes" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeScenes" << std::endl;
 
     rapidxml::xml_node<> *scenes_node = _doc.allocate_node(rapidxml::node_element, "scenes" );
     for( unsigned int i = 0; i < c->getNscenes(); i++ )
@@ -803,7 +808,7 @@ vl::ProjSettingsSerializer::writeScenes( rapidxml::xml_node<> *xml_node, vl::Pro
 void
 vl::ProjSettingsSerializer::writeMaps( rapidxml::xml_node<> *xml_node, vl::ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer writeMaps" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeMaps" << std::endl;
 
     rapidxml::xml_node<> *maps_node = _doc.allocate_node(rapidxml::node_element, "action_maps" );
     for( unsigned int i = 0; i < c->getNmaps(); i++ )
@@ -826,7 +831,7 @@ vl::ProjSettingsSerializer::writeMaps( rapidxml::xml_node<> *xml_node, vl::ProjS
 void
 vl::ProjSettingsSerializer::writeScripts( rapidxml::xml_node<> *xml_node, vl::ProjSettings::Case* c )
 {
-    std::cout << "ProjSettingsSerializer writeScripts" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeScripts" << std::endl;
 
     rapidxml::xml_node<> *scripts_node = _doc.allocate_node(rapidxml::node_element, "scripts" );
     for( unsigned int i = 0; i < c->getNscripts(); i++ )
@@ -849,7 +854,7 @@ vl::ProjSettingsSerializer::writeScripts( rapidxml::xml_node<> *xml_node, vl::Pr
 void
 vl::ProjSettingsSerializer::writeCases( rapidxml::xml_node<> *xml_node )
 {
-    std::cout << "ProjSettingsSerializer writeCases" << std::endl;
+//	std::cout << "ProjSettingsSerializer writeCases" << std::endl;
 
     rapidxml::xml_node<> *cases_node = _doc.allocate_node(rapidxml::node_element, "cases" );
     for( unsigned int i = 0; i < _projSettings->getNcases(); i++ )

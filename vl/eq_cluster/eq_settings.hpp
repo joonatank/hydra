@@ -11,6 +11,7 @@
 #include <eq/net/object.h>
 
 #include "../settings.hpp"
+#include "base/typedefs.hpp"
 
 namespace eqOgre
 {
