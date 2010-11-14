@@ -97,7 +97,7 @@ message( "Python libraries = ${PYTHON_LIBRARIES}" )
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 ######### Add include and link directories ###########
-include_directories( SYSTEM 
+include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
 	${Equalizer_INCLUDE_DIRS}
@@ -126,22 +126,52 @@ set( LIBS eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.
-link_directories( ${vl_BINARY_DIR}/vl 
+link_directories( ${vl_BINARY_DIR}/vl
 	${Boost_LIBRARY_DIRS} )
 
 ## Copy start script macro ##
 MACRO( copy_start_script program_name )
 message( "Copying start scripts for project = ${PROJECT_NAME} : exe name = ${program_name}" )
 
+# Copy the single Node start script
 set( PROGRAM_NAME ${program_name} )
 set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
 
 if( WIN32 )
-	configure_file( ${DEMO_DATA_PATH}/start.bat
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
 		${PROJECT_BINARY_DIR}/start.bat )
 else()
-	configure_file( ${DEMO_DATA_PATH}/start.sh
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
 		${PROJECT_BINARY_DIR}/start.sh )
+endif()
+
+# Copy the multi node listening start script
+
+# TODO this needs to be automatically configured to match the host name of this computer
+site_name( HOSTNAME )
+set( HOSTNAME_TO_LISTEN ${HOSTNAME} )
+message( "Hostname to listen = ${HOSTNAME_TO_LISTEN}" )
+
+set( LISTENING_PORT 4242 )
+
+if( WIN32 )
+	# TODO these should be configured automatically
+	# TODO not tested in Windows
+	set( EQUALIZER_SERVER_BIN "c:\libs\equalizer\bin\eqServer.exe" )
+	# TODO the config should be in the repository
+	#set( EQUALIZER_CONFIG "c:\libs\equalizer\2-node.layout.eqc" )
+	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
+		${PROJECT_BINARY_DIR}/start_multi_node.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
+		${PROJECT_BINARY_DIR}/kill_nodes.bat )
+else()
+	set( EQUALIZER_SERVER_BIN "eqServer" )
+	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.sh.in
+		${PROJECT_BINARY_DIR}/start_multi_node.sh )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.sh.in
+		${PROJECT_BINARY_DIR}/kill_nodes.sh )
 endif()
 
 ENDMACRO()

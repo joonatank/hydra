@@ -1,0 +1,6 @@
+# This script will kill Equalizer server and
+# all eq clients by the name PROGRAM_NAME
+# TODO should be tested
+
+tskill ${EQUALIZER_SERVER_BIN}
+tskill ${PROGRAM_NAME}

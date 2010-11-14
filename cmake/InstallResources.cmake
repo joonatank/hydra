@@ -19,11 +19,12 @@ set( TEMP_DATA_DIR ${vl_BINARY_DIR}/temp_data )
 # Because CMake runs all commands here automatically when the file is included
 # We need to create a temp dir for the config files.
 # When make install is run the files are copied from temp_dir to install dir
+# TODO add installing multi_node and kill scripts
 if( WIN32 )
-	configure_file( ${VL_DATA_PATH}/start.bat
+	configure_file( ${VL_DATA_PATH}/shell_scripts/start.bat.in
 		${TEMP_DATA_DIR}/start.bat )
 else()
-	configure_file( ${VL_DATA_PATH}/start.sh
+	configure_file( ${VL_DATA_PATH}/shell_scripts/start.sh.in
 		${TEMP_DATA_DIR}/start.sh )
 endif()
 

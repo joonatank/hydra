@@ -268,7 +268,6 @@ eqOgre::Window::configInit( const uint32_t initID )
 	}
 	catch( ... )
 	{
-		// TODO this should really print the exception
 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
 		std::cerr << err_msg << std::endl;
 		return false;
