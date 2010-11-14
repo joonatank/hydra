@@ -4,6 +4,11 @@ cmake_minimum_required(VERSION 2.8)
 
 FIND_PACKAGE(Qt4 REQUIRED)
 
+find_package(Boost COMPONENTS system filesystem REQUIRED )
+include_directories( SYSTEM
+	${Boost_INCLUDE_DIRS}
+	)
+
 include_directories( )
 include( ${QT_USE_FILE} )
 

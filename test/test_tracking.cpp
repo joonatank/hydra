@@ -12,8 +12,6 @@
 #include "base/rapidxml_print.hpp"
 #include "base/sleep.hpp"
 
-//#include <iostream>
-
 // Test includes
 #include "debug.hpp"
 #include "tracking_fixture.hpp"

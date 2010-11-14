@@ -88,10 +88,10 @@ set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
-FIND_PACKAGE(OIS REQUIRED )
+find_package(OIS REQUIRED )
 
 # TODO test on a system that does not have CEGUI
-FIND_PACKAGE( CEGUI QUIET )
+find_package( CEGUI QUIET )
 
 if( ${CEGUI_FOUND} )
 	message( "CEGUI found : ${CEGUI_LIBRARY} " )

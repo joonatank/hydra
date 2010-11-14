@@ -6,17 +6,29 @@ find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
 message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
 
-include_directories( util ${Boost_INCLUDE_DIR} )
-
 set( FS_LIB ${Boost_FILESYSTEM_LIBRARIES} )
 set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
+
+######### Find Turtle ########
+# We should expose these parameters for the user even in Linux
+# We should use find_file and file_lib functions to find the files first though
+
+find_path( TURTLE_INCLUDE_DIR
+	NAMES turtle/mock.hpp
+	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
+	)
 
 # TODO add link variable so not all programs will link to these
 link_libraries( ${FS_LIB} ${TEST_LIB} )
 
+include_directories( util )
+include_directories( SYSTEM
+	${TURTLE_INCLUDE_DIR}
+	${Boost_INCLUDE_DIR} 
+	)
+
 subdirs(util
 #		spikes
-		dotscene_loader
 #		eq_cluster
 		udp
 		misc
@@ -53,20 +65,13 @@ target_link_libraries( test_exceptions ${TEST_LIB} )
 # Test tracking
 add_executable( test_tracking
 				test_tracking.cpp
-				${eqOgre_SOURCE_DIR}/tracker.hpp
-				${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
-				${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
 				debug.hpp
 				tracking_fixture.hpp
 				)
 
-# TODO do we really need all these libs
 target_link_libraries( test_tracking
-	${OGRE_LIBRARIES}
-	${VRPN_LIBRARY}
+	eqOgre
 	${TEST_LIB}
-	${FS_LIB}
-	${CMAKE_THREAD_LIBS_INIT}
 	)
 
 
