@@ -4,11 +4,13 @@ cmake_minimum_required(VERSION 2.8)
 
 FIND_PACKAGE(Qt4 REQUIRED)
 
-include_directories( )
+set( QT_USE_QTMAIN true )
+set( QT_USE_QTCORE true )
+set( QT_USE_QTGUI true )
+
 include( ${QT_USE_FILE} )
 
 ADD_DEFINITIONS(${QT_DEFINITIONS})
-
 
 set( SOURCES
 	${eqOgre_SOURCE_DIR}/base/envsettings.cpp

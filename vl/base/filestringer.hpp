@@ -2,9 +2,8 @@
 #define VL_FILESTRINGER_HPP
 
 #include <iostream>
+#include <string>
 #include <fstream>
-
-#include "rapidxml.hpp"
 
 namespace vl
 {

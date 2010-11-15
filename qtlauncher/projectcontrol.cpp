@@ -82,14 +82,14 @@ void ProjControl::createProj()
     std::cout << "ProjControl createProj " << std::endl;
 
 
-    ProjPage::ProjPage* _projPage = new ProjPage( _projSet, _base, _treeParent, QString::fromStdString(_projSet->getCasePtr()->getName()) );
+    ProjPage* projPage = new ProjPage( _projSet, _base, _treeParent, QString::fromStdString(_projSet->getCasePtr()->getName()) );
 
-    connect(_projPage, SIGNAL(launch_clicked(QString const &)), this, SLOT(launch_clicked(QString const &)));
+    connect( projPage, SIGNAL(launch_clicked(QString const &)), this, SLOT(launch_clicked(QString const &)));
 
     //_projPage->setName(QString::fromStdString(_projSet->getName()));
 
-    _currTreeItem = _projPage->getTreeItem();
-    _treeItem = _projPage->getTreeItem();
+    _currTreeItem = projPage->getTreeItem();
+    _treeItem = projPage->getTreeItem();
 
     //addScenesAndMaps( QString::fromStdString(_projSet->getName()), _projPage );
 
@@ -98,8 +98,8 @@ void ProjControl::createProj()
         addCase( QString::fromStdString(_projSet->getCasePtr(i)->getName() ) );
     }
     _projSet->clearChanged();
-    _currPage = _projPage;
-    _pages.append(_projPage);
+    _currPage = projPage;
+    _pages.append(projPage);
 
 }
 
@@ -151,7 +151,7 @@ void ProjControl::addCase( QString const &name )
 {
     std::cout << "ProjControl addCase: case name " << name.toStdString() << std::endl;
 
-    ProjPage::ProjPage* page = new ProjPage::ProjPage( _projSet, _base, _treeItem, name );
+    ProjPage* page = new ProjPage( _projSet, _base, _treeItem, name );
 
     connect(page, SIGNAL(launch_clicked(QString const &)), this, SLOT(launch_clicked(QString const &)));
 

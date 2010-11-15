@@ -141,6 +141,7 @@ include_directories( ${PYTHON_INCLUDE_DIRS} )
 include_directories( SYSTEM 
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
+ 	${OGRE_INCLUDE_DIR}/..
 	${EQUALIZER_INCLUDE_DIR}
 	${TURTLE_INCLUDE_DIR}
 	${VPRN_INCLUDE_DIR}
@@ -214,7 +215,7 @@ include_directories(vl)
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 # TODO should be configurable
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
+#add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 
