@@ -111,11 +111,10 @@ eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
 	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
 }
 
-// TODO implement
 eqOgre::SceneNode *
 eqOgre::Config::getSceneNode(const std::string& name)
 {
-	return 0;
+	return _frame_data.getSceneNode(name);
 }
 
 void

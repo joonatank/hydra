@@ -33,18 +33,18 @@ link_libraries( ${FS_LIB} ${TEST_LIB} )
 include_directories( util )
 include_directories( SYSTEM
 	${TURTLE_INCLUDE_DIR}
-	${Boost_INCLUDE_DIR} 
+	${Boost_INCLUDE_DIR}
 	)
 
 subdirs(util
-#		spikes
+		spikes
 #		eq_cluster
 		udp
 		misc
 		)
 
 # NOTE For now removed as we move to using EnvSettings and ProjectSettings
-#add_executable( test_settings 
+#add_executable( test_settings
 #				test_settings.cpp
 #				settings_fixtures.hpp
 #				${eqOgre_SOURCE_DIR}/settings.hpp
