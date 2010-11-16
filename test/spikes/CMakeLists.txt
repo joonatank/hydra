@@ -30,6 +30,7 @@ target_link_libraries( spike_bullet_test ${BULLET_LIBRARIES} )
 
 add_executable( spike_bullet
 	bullet_spike.cpp
+	physics_events.cpp
 	)
 
 target_link_libraries( spike_bullet ${BULLET_LIBRARIES} ${LIBS} )

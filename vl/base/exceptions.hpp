@@ -21,10 +21,10 @@ namespace vl
 
 	/// requested object type name
 	typedef boost::error_info<struct tag_file, std::string> object_type_name;
-	
+
 	/// UDP number of bytes
 	typedef boost::error_info<struct tag_bytes, size_t> bytes;
-	
+
 	struct exception : virtual std::exception, virtual boost::exception
 	{
 		virtual const char* what() const throw()
@@ -43,7 +43,7 @@ namespace vl
 	};
 
 	/// ------------------ Function Parameter errors ---------------
-	
+
 	/// Null pointer provided
 	struct null_pointer : public exception
 	{
@@ -52,7 +52,7 @@ namespace vl
 			return "null pointer parameter";
 		}
 	};
-	
+
 	/// Empty parameter provided to a function where that parameter is required
 	struct empty_param : public exception
 	{
@@ -126,9 +126,9 @@ namespace vl
 		}
 	};
 
-	
+
 	/// ------------- Array based container errors --------------
-	
+
 	/// Fifo buffer is full
 	struct fifo_full : public exception
 	{
@@ -143,7 +143,7 @@ namespace vl
 		{ return "array index out of bounds"; }
 	};
 
-	
+
 	/// --------- File errors -------------
 
 	/// Generic file error
@@ -162,34 +162,42 @@ namespace vl
 		virtual const char* what() const throw()
 		{ return "Directory missing"; }
 	};
-	
+
 	/// ---------- File parsing errors --------------
-	
+
 	/// the file is correctly formated but the content is not valid
 	struct parsing_error : public exception
 	{
 		virtual const char* what() const throw()
 		{ return "parsing error"; }
 	};
-	
+
 	struct invalid_settings  : public parsing_error {};
-	
+
 	struct invalid_dotscene : public parsing_error {};
 	struct invalid_tracking : public parsing_error {};
 
-	/// 
-	/// ---------- UDP errors --------------	
+	///
+	/// ---------- UDP errors --------------
 	struct short_message : public exception
 	{
 		virtual const char* what() const throw()
 		{ return "Received message is shorter than expected."; }
 	};
-	
+
 	struct long_message : public exception
 	{
 		virtual const char* what() const throw()
 		{ return "Received message constains extra bytes."; }
 	};
+
+	/// ----------- Development throws ----------
+	struct not_implemented : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Not implemented! Shouldn't be here."; }
+	};
+
 }	// namespace vl
 
 #endif

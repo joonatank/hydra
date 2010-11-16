@@ -17,65 +17,22 @@
 
 #include "eq_cluster/config.hpp"
 
+// Physics headers
+#include "physics_world.hpp"
+#include "physics_events.hpp"
 
 #include <bullet/btBulletDynamicsCommon.h>
 
-// TODO override config to provide bullet support
 namespace physics
 {
-
-class MotionState : public btMotionState {
-public:
-	MotionState(const btTransform &initialpos, eqOgre::SceneNode *node = 0)
-	{
-		mVisibleobj = node;
-		mPos1 = initialpos;
-	}
-
-	virtual ~MotionState()
-	{}
-
-	void setNode(eqOgre::SceneNode *node)
-	{
-		mVisibleobj = node;
-	}
-
-	virtual void getWorldTransform(btTransform &worldTrans) const
-	{
-		worldTrans = mPos1;
-	}
-
-	virtual void setWorldTransform(const btTransform &worldTrans)
-	{
-		if( !mVisibleobj)
-			return; // silently return before we set a node
-		btQuaternion rot = worldTrans.getRotation();
-		Ogre::Quaternion ogre_rot( rot.w(), rot.x(), rot.y(), rot.z() );
-		mVisibleobj->setOrientation( ogre_rot );
-		btVector3 pos = worldTrans.getOrigin();
-		Ogre::Vector3 ogre_vec( pos.x(), pos.y(), pos.z() );
-		mVisibleobj->setPosition( ogre_vec );
-	}
-
-protected:
-	eqOgre::SceneNode *mVisibleobj;
-	btTransform mPos1;
-};
 
 class Config : public eqOgre::Config
 {
 public :
 	Config( eq::base::RefPtr< eq::Server > parent )
 		: eqOgre::Config( parent ),
-		  _dynamicsWorld(0),
-		  _solver(0),
-		  _dispatcher(0),
-		  _broadphase(0),
-		  _collision_config(0),
 		  _groundShape(0),
 		  _fallShape(0),
-		  _groundBody(0),
-		  _fallBody(0),
 		  _groundMotionState(0),
 		  _fallMotionState(0)
 	{}
@@ -83,6 +40,8 @@ public :
 	virtual bool init( uint32_t const initID )
 	{
 		bool ret = eqOgre::Config::init(initID);
+
+		_event_manager->addOperationFactory( new vl::physics::ApplyForceFactory );
 
 		initPhysics();
 		return ret;
@@ -104,14 +63,16 @@ public :
 		// So we can set the MotionState objects
 		if( !physics_inited )
 		{
-			std::cerr << "Initing physics" << std::endl;
-
-
-			eqOgre::SceneNode *camera = getSceneNode("cameraNode");
+			eqOgre::SceneNode *camera = getSceneNode("CameraNode");
 			if( camera )
 			{
-				// TODO these don't seem to work
-				camera->setPosition( camera->getPosition() + Ogre::Vector3(0, 0, -20) );
+				std::cerr << "CameraNode found. Setting new position." << std::endl;
+				// Move the camera a bit so we can see the ogre clearly
+				camera->setPosition( camera->getPosition() + Ogre::Vector3(0, 0, 20) );
+			}
+			else
+			{
+				std::cerr << "CameraNode NOT found." << std::endl;
 			}
 			eqOgre::SceneNode *ogre = getSceneNode("ogre");
 			if( !ogre )
@@ -121,108 +82,84 @@ public :
 			}
 			else
 			{
-				_groundMotionState = new MotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,-1,0)));
-				btRigidBody::btRigidBodyConstructionInfo
-						groundRigidBodyCI(0,_groundMotionState,_groundShape,btVector3(0,0,0));
-				_groundBody = new btRigidBody(groundRigidBodyCI);
-				_dynamicsWorld->addRigidBody(_groundBody);
+				_groundShape = new btStaticPlaneShape( btVector3(0,1,0), btScalar(1.0) );
+				_fallShape = new btSphereShape(1);
+
+				_groundMotionState = new vl::physics::MotionState( Ogre::Vector3(0, -1, 0), Ogre::Quaternion::IDENTITY );
+				// TODO replace btRigidBody with out own rigid body class
+				btRigidBody *groundBody = new btRigidBody(0, _groundMotionState, _groundShape);
+				_world->addRigidBody(groundBody);
 
 				std::cerr << "Ground RigidBody created and added." << std::endl;
 
-
-				Ogre::Vector3 v(0, 50, 0); //= ogre->getPosition();
+				Ogre::Vector3 v(0, 20, 0);
 				Ogre::Quaternion const &q = ogre->getOrientation();
-				btTransform transform( btQuaternion(q.x, q.y, q.z, q.w), btVector3(v.x, v.y, v.z ) );
-				_fallMotionState = new MotionState( transform, ogre );//btTransform(btQuaternion(0,0,0,1),btVector3(0,50,0)));
+				_fallMotionState = new vl::physics::MotionState( v, q, ogre );
+
+				// TODO we should have basic RigidBody class which owns the
+				// MotionState and Shape. Easier to manage and for now we are not
+				// sharing them anyway.
+				// This class can also easily be exposed to python
 				btScalar mass = 1;
-				btVector3 fallInertia(0,0,0);
-				_fallShape->calculateLocalInertia(mass,fallInertia);
-				btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass,_fallMotionState,_fallShape,fallInertia);
-				_fallBody = new btRigidBody(fallRigidBodyCI);
-				_dynamicsWorld->addRigidBody(_fallBody);
+				btRigidBody *fallBody = new btRigidBody(mass, _fallMotionState, _fallShape );
+
+				// Every object that is controlled by the user should have
+				// DISABLE_DEACTIVATION set
+				// Because activation only happens when other bodies are come near
+				// NOTE might work also by using body->activate() before moving it
+				fallBody->setActivationState(DISABLE_DEACTIVATION);
+				_world->addRigidBody(fallBody);
 
 				std::cerr << "Fall RigidBody created and added." << std::endl;
 
 				physics_inited = true;
+
+				// Create a physics test Event
+				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_event_manager->createOperation("ApplyForce");
+				EQASSERT( action );
+				eqOgre::KeyPressedTrigger *trig = (eqOgre::KeyPressedTrigger *)_event_manager->createTrigger("KeyPressedTrigger");
+				EQASSERT( trig );
+				eqOgre::Event *event = _event_manager->createEvent("Event");
+				EQASSERT( event );
+
+				trig->setKey(OIS::KC_F);
+				action->setRigidBody( fallBody );
+				action->setForce( btVector3(0, 1500, 0) );
+				event->setOperation(action);
+				event->addTrigger(trig);
+				_event_manager->addEvent(event);
 			}
 		}
 
-		stepPhysics( );
+		_world->step();
 
 		return ret;
 	}
 
 	void initPhysics( void )
 	{
-		std::cerr << "starting bullet test." << std::endl;
-
-		_broadphase = new btDbvtBroadphase();
-		std::cerr << "Broadphase created." << std::endl;
-
-
-		_collision_config = new btDefaultCollisionConfiguration();
-		std::cerr << "CollisionConfiguration created." << std::endl;
-
-		_dispatcher = new btCollisionDispatcher(_collision_config);
-		std::cerr << "Dispatcher " << (void *)_dispatcher << " created. size = "
-			<< sizeof(btCollisionDispatcher) << std::endl;
-
-		_solver = new btSequentialImpulseConstraintSolver;
-
-		std::cerr << "Solver " << (void *)_solver << " created. size = "
-			<< sizeof(btSequentialImpulseConstraintSolver) << std::endl;
-
-		std::cerr << "Trying to create the world." << std::endl;
-		_dynamicsWorld = new btDiscreteDynamicsWorld(_dispatcher,_broadphase,_solver,_collision_config);
-		std::cerr << "World created." << std::endl;
-
-		_dynamicsWorld->setGravity(btVector3(0,-10,0));
-		std::cerr << "Gravity set." << std::endl;
-
-		_groundShape = new btStaticPlaneShape(btVector3(0,1,0), btScalar(1.0));
-
-		_fallShape = new btSphereShape(1);
-
-		std::cerr << "Ground and fall shapes created." << std::endl;
-	}
-
-	void stepPhysics( void )
-	{
-		_dynamicsWorld->stepSimulation(1/60.f,10);
-
-//		btTransform trans;
-//		fallRigidBody->getMotionState()->getWorldTransform(trans);
-
-//		std::cout << "sphere height: " << trans.getOrigin().getY() << std::endl;
+		_world = new vl::physics::World;
 	}
 
 	void destroyPhysics( void )
 	{
-		delete _dynamicsWorld;
-		delete _solver;
-		delete _dispatcher;
-		delete _broadphase;
-		delete _collision_config;
+		// World
+		delete _world;
 
+		// Bodies
+		// TODO the memory management of these should be in RigidBody
 		delete _groundShape;
 		delete _fallShape;
-		delete _groundBody;
-		delete _fallBody;
 		delete _groundMotionState;
 		delete _fallMotionState;
 	}
 
-	btDiscreteDynamicsWorld *_dynamicsWorld;
-	btSequentialImpulseConstraintSolver *_solver;
-	btCollisionDispatcher *_dispatcher;
-	btBroadphaseInterface *_broadphase;
-	btCollisionConfiguration *_collision_config;
-
+	vl::physics::World *_world;
 	// Collision opbejcts
 	btCollisionShape *_groundShape;
 	btCollisionShape *_fallShape;
-	btRigidBody *_groundBody;
-	btRigidBody *_fallBody;
+//	btRigidBody *_groundBody;
+//	btRigidBody *_fallBody;
 	btMotionState *_groundMotionState;
 	btMotionState *_fallMotionState;
 };
