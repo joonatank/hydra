@@ -1,24 +1,32 @@
 <?xml version="1.0"?>
 
 <!--
+Designed by Joonas Reunamo <joonas.reunamo@tut.fi>
+2010-10
+
+Project config. Has project specific information, i.e. scense to load,
+scripts to execute and action maps used.
+-->
+
+<!--
 CRITICAL: tag project_config needs to be present
 
 Default name is "NewProject"
 
 Project may be launchable
 -->
-<project_config name="RuukkiCFG">
+<project_config name="project_template">
 
 	<scenes>
 		<!--
 		N scenes can be present
-		
+
 		To save no scenes need to be present.
 
 		CRITICAL: To launch at least one scene needs to be present
 			OR there needs to be a global scene
 			AND all scenes in use need to exist in resources
-			
+
 		Default name is filename without .scene and
 			IF name already exists "_" chars will be appended untill name is unique.
 
@@ -30,7 +38,7 @@ Project may be launchable
 
 		GUI: Changing scene name changes attachto scene fields accordingly NOT vice versa
 		GUI: attach point set possibly read from scene file and offered as a dropdown, tree or dyn. search
-		
+
 		CRITICAL: attachto scene needs to exist in the project_config
 			OR global_config
 			AND attachto point needs to exist in the given scene
@@ -39,13 +47,13 @@ Project may be launchable
 
 		Scene can be attached to only one point.
 		-->
-		<scene name="Tunneli" use="true">
-			<file>tunneli.scene</file>
+		<scene name="Scene1" use="true">
+			<file>scene1.scene</file>
 		</scene>
-		
-		<scene name="T7" use="true">
-			<file>T7.scene</file>
-			<attachto scene="Tunneli" point="origo_T7lle"/>
+
+		<scene name="Scene2" use="true">
+			<file>scene2.scene</file>
+			<attachto scene="Scene1" point="origin"/>
 		</scene>
 	</scenes>
 
@@ -58,19 +66,25 @@ Project may be launchable
 
 		Later in list defined maps override AND extend earlier set
 		-->
-		<file use="false">debug/ruukkimappi1.map</file>
-		<file use="true">ruukkimappi2.map</file>
-		<file use="true">koe/lisamappi.map</file>
+		<file use="false">debug/map.map</file>
+		<file use="true">release_map.map</file>
+		<file use="true">test_map2.map</file>
 	</action_maps>
-	
+
 	<scripts>
-		<file use="true">kaasukuppi.py</file>
-		<file use="false">hyppykeppi.py</file>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">scrip1.py</file>
+		<file use="false">script2.py</file>
 	</scripts>
 
 	<!--
 	Cases are ment to offer possibility for minor changes
-	for example to hold test and debug settings. Case is launchable. 
+	for example to hold test and debug settings. Case is launchable.
 	-->
 	<cases>
 		<!--
@@ -78,24 +92,25 @@ Project may be launchable
 
 		Case neames need to be unique
 		-->
-		<case name="Kakka">
+		<case name="WorkCase">
 			<!--
 			This stuff overrides AND appends default case defined above
 
 			Only scenes and action maps can be defined
 			-->
 			<scenes>
-				<scene name="yalo" use="true">
+				<scene name="lights" use="true">
 					<file>work_light.scene</file>
 				</scene>
 			</scenes>
 			<action_maps>
-				<file use="true">ruukkimappi2.map</file>
-				<file use="true">lisamappi.map</file>
+				<file use="true">work_map.map</file>
+				<file use="true">extras.map</file>
 			</action_maps>
 			<scripts>
-				<file use="true">skudaskripti.py</file>
-				<file use="true">hyppynappi.py</file>
+
+				<file use="true">work_script.py</file>
+				<file use="true">extras.py</file>
 			</scripts>
 		</case>
 	</cases>

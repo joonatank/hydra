@@ -1,3 +1,9 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
+
+
 #ifndef VL_TEST_CLIENT_FIXTURES_HPP
 #define VL_TEST_CLIENT_FIXTURES_HPP
 
@@ -7,29 +13,13 @@
 #include "eq_cluster/window.hpp"
 #include "eq_cluster/channel.hpp"
 #include "eq_cluster/pipe.hpp"
-#include "base/helpers.hpp"
+#include "base/system_util.hpp"
 #include "eq_ogre/ogre_root.hpp"
 #include "settings.hpp"
 
 
 // Test helpers
 #include "../debug.hpp"
-
-class NodeFactory : public eq::NodeFactory
-{
-public:
-	virtual eq::Config *createConfig( eq::ServerPtr parent )
-	{ return new eqOgre::Config( parent ); }
-
-	virtual eq::Pipe *createPipe( eq::Node* parent )
-	{ return new eqOgre::Pipe( parent ); }
-
-	virtual eq::Window *createWindow( eq::Pipe *parent )
-	{ return new eqOgre::Window( parent ); }
-
-	virtual eq::Channel *createChannel( eq::Window *parent )
-	{ return new eqOgre::Channel( parent ); }
-};
 
 struct ListeningClientFixture
 {
@@ -42,19 +32,26 @@ struct ListeningClientFixture
 			   eq::NodeFactory *nodeFactory )
 	{
 		InitFixture();
+		std::string where( "ListeningClientFixture::init" );
 
-		// Create eq log file
-		// TODO this should be cleaned and moved to somewhere else
-		uint32_t pid = vl::getPid();
-		std::stringstream ss;
-		if( !settings->getLogDir().empty() )
-		{ ss << settings->getLogDir() << "/"; }
+		if( !settings )
+		{
+			std::cerr << where << " : settings are invalid." << std::endl;
+			return false;
+		}
+		if( !nodeFactory )
+		{
+			std::cerr << where << " : nodeFactory is invalid." << std::endl;
+			return false;
+		}
 
-		// FIXME using the project name and not the executable name
-		ss << settings->getName() << "_eq_" << pid << ".log";
-		log_file.open( ss.str().c_str() );
-
+		// TODO test if this can work with relative path
+		// Oh right it doesn't for autolaunched clients.
+		// NOTE the log file needs to be set before any calls to Equalizer methods
+		log_file.open( settings->getEqLogFilePath().c_str() );
 		eq::base::Log::setOutput( log_file );
+		std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
+			<< std::endl;
 
 		vl::Args &arg = settings->getEqArgs();
 

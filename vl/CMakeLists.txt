@@ -6,6 +6,7 @@ set( SOURCES
 	vrpn_tracker.cpp
 	settings.cpp
 	base/args.cpp
+	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
 	eq_cluster/channel.cpp
@@ -34,11 +35,10 @@ set( HEADERS
 	fake_tracker.hpp
 	vrpn_tracker.hpp
 	settings.hpp
-	base/helpers.hpp
+	base/system_util.hpp
 	base/args.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp
-	base/filestringer.hpp
 	base/exceptions.hpp
 	base/filesystem.hpp
 	base/print.hpp
@@ -76,9 +76,10 @@ set( HEADERS
 	udp/print_command.hpp
 	)
 
-set( PYTHON_SRC )
-set( PYTHON_HEADERS )
-
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 
 target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )
+
+#install
+# TODO this is here for test only the filestructure is not preserved by this
+#install( FILES ${HEADERS} DESTINATION include )

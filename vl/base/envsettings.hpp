@@ -14,6 +14,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "filesystem.hpp"
 #include "rapidxml.hpp"
 
 namespace vl
@@ -33,6 +34,13 @@ public :
 	void clear( void );
 
 
+	/// File path
+	std::string const &getFile( void ) const
+	{ return _file_path; }
+
+	void setFile( std::string const &file )
+	{ _file_path = file; }
+	
 	///// EQC /////////////////////////////////////////////////////
 	/// get the equalizer config file
 	std::string const &getEqc( void ) const
@@ -42,6 +50,27 @@ public :
 	void setEqc( std::string const &e )
 	{ _eqc = e; }
 
+	/// Get the absoulute path to eqc file
+	std::string getEqcFullPath( void ) const
+	{
+		if( getEqc().empty() )
+		{ return std::string(); }
+
+		fs::path env_path = getFile();
+		fs::path env_dir = env_path.parent_path();
+		fs::path path =  env_dir / "eqc" / getEqc();
+
+		return path.file_string();
+	}
+
+	std::string getPluginsDirFullPath( void ) const
+	{
+		fs::path env_path = getFile();
+		fs::path env_dir = env_path.parent_path();
+		fs::path path =  env_dir / "plugins";
+
+		return path.file_string();
+	}
 
 	///// PLUGINS /////////////////////////////////////////////////
 	/// get vector containing plugin names and which are active
@@ -72,6 +101,8 @@ public :
 	void removeTracking( std::string const &track );
 
 private :
+
+	std::string _file_path;
 
 	std::string _eqc;
 

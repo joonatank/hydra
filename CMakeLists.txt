@@ -1,8 +1,13 @@
+#-------------------------------------------------------------------
+# This file is part of the CMake build system for eqOgre
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#-------------------------------------------------------------------
+
 project("vl" CXX C)
 
 cmake_minimum_required(VERSION 2.8)
-
-enable_testing()
 
 if( UNIX )
 	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
@@ -27,32 +32,10 @@ endif( WIN32 )
 
 
 # Add our local scripts to CMake path
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/CMake )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
 
 ######## Find Equalizer ########
-# We should expose these parameters for the user even in Linux
-# We should use find_file and file_lib functions to find the files first though
-find_library( EQUALIZER_LIBRARY
-	NAMES Equalizer
-	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
-	)
-
-# TODO this needs to be tested in Windows
-# The path is really $ENV{EQUALIZER_HOME}/include/eq/eq.h
-find_path( EQUALIZER_INCLUDE_DIR
-	NAMES eq/eq.h
-	PATHS $ENV{EQUALIZER_HOME} $ENV{EQUALIZER_ROOT} $ENV{EQ_ROOT} $ENV{EQ_HOME}
-	)
-
-######### Find Turtle ########
-# We should expose these parameters for the user even in Linux
-# We should use find_file and file_lib functions to find the files first though
-
-find_path( TURTLE_INCLUDE_DIR
-	NAMES turtle/mock.hpp
-	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
-	)
-
+find_package( Equalizer REQUIRED )
 
 ###### Find VRPN ########
 # TODO
@@ -64,16 +47,9 @@ find_path( TURTLE_INCLUDE_DIR
 # included and build into the eqOgre library
 # Also requirement for pthread would drop if VRPN was not available
 
-find_package( Threads REQUIRED )
+find_package( VRPN REQUIRED )
 
-find_library( VRPN_LIBRARY
-	NAMES vrpn
-	)
 
-# Include dir
-find_path( VPRN_INCLUDE_DIR
-	NAMES vrpn_Tracker.h
-	)
 
 ######### Find OGRE ##########
 # We should use find_file to find the Ogre cmake helpers
@@ -88,10 +64,9 @@ set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
-FIND_PACKAGE(OIS REQUIRED )
+find_package(OIS REQUIRED )
 
-# TODO test on a system that does not have CEGUI
-FIND_PACKAGE( CEGUI QUIET )
+find_package( CEGUI QUIET )
 
 if( ${CEGUI_FOUND} )
 	message( "CEGUI found : ${CEGUI_LIBRARY} " )
@@ -101,16 +76,7 @@ endif()
 
 
 ####### Find cAudio
-# TODO we have no support for mp3 for now convert all sounds to ogg
-find_library( CAUDIO_LIBRARY
-	NAMES cAudio.2.1.0
-	PATHS /usr/lib/cAudio2.1.0;/usr/local/lib/cAudio2.1.0;$ENV{cAudio_HOME}
-	)
-
-# Include dir
-find_path( CAUDIO_INCLUDE_DIR
-	NAMES cAudio/cAudio.h
-	)
+find_package( CAUDIO REQUIRED )
 
 message( "cAudio library = ${CAUDIO_LIBRARY}" )
 message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
@@ -123,7 +89,7 @@ message( "cAudio include dir = ${CAUDIO_INCLUDE_DIR}" )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS python REQUIRED )
+find_package(Boost COMPONENTS python system filesystem REQUIRED )
 
 find_package(PythonLibs REQUIRED )
 
@@ -138,12 +104,11 @@ message( "Python libraries = ${PYTHON_LIBRARIES}" )
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 ######### Add include and link directories ###########
-include_directories( SYSTEM 
+include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}/..
 	${EQUALIZER_INCLUDE_DIR}
-	${TURTLE_INCLUDE_DIR}
 	${VPRN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
@@ -154,11 +119,13 @@ include_directories( SYSTEM
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${OGRE_LIBRARIES}
-	${EQUALIZER_LIBRARY}
+	${Equalizer_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARIES}
 	${PYTHON_LIBRARIES}
 	${Boost_PYTHON_LIBRARIES}
+	${Boost_SYSTEM_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARIES}
 	${CAUDIO_LIBRARY}
 	)
 
@@ -167,55 +134,109 @@ set( LIBS eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.
-link_directories( ${vl_BINARY_DIR}/vl 
+link_directories( ${vl_BINARY_DIR}/vl
 	${Boost_LIBRARY_DIRS} )
 
-############ Config Copy MACRO ##############
-# TODO macro should be moved to separate file
-MACRO( copy_config )
-# Config file for spikes
-message( "Copying config file for project = ${PROJECT_NAME}"  )
+## Copy start script macro ##
+MACRO( copy_start_script program_name )
+message( "Copying start scripts for project = ${PROJECT_NAME} : exe name = ${program_name}" )
 
-set( DATA_DIR ${vl_SOURCE_DIR}/data )
-
-set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
-set( VL_MEDIA_PATH ${vl_SOURCE_DIR}/../eqOgre-media )
+# Copy the single Node start script
+set( PROGRAM_NAME ${program_name} )
+set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
 
 if( WIN32 )
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/Release/test_conf.xml )
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/Debug/test_conf.xml )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
+		${PROJECT_BINARY_DIR}/start.bat )
 else()
-	configure_file( ${DATA_DIR}/test_conf.xml
-		${PROJECT_BINARY_DIR}/test_conf.xml )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
+		${PROJECT_BINARY_DIR}/start.sh )
 endif()
 
+# Copy the multi node listening start script
 
-# Plugins file
-# Copyed to the vl root dir so that the plugins path are correct
+# TODO this needs to be automatically configured to match the host name of this computer
+site_name( HOSTNAME )
+set( HOSTNAME_TO_LISTEN ${HOSTNAME} )
+message( "Hostname to listen = ${HOSTNAME_TO_LISTEN}" )
+
+set( LISTENING_PORT 4242 )
+
 if( WIN32 )
-	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_REL} )
-	configure_file( ${DATA_DIR}/plugins.cfg
-		${PROJECT_BINARY_DIR}/Release/plugins.cfg )
-	set( PLUGINS_DIR_DBG ${OGRE_PLUGIN_DIR_DBG} )
-	configure_file( ${DATA_DIR}/plugins_d.cfg
-		${PROJECT_BINARY_DIR}/Debug/plugins.cfg )
-else( )
-	set( PLUGINS_DIR_REL ${OGRE_PLUGIN_DIR_TMP} )
-	configure_file( ${DATA_DIR}/plugins.cfg
-		${PROJECT_BINARY_DIR}/plugins.cfg )
+	# TODO these should be configured automatically
+	# TODO not tested in Windows
+	set( EQUALIZER_SERVER_BIN "c:/libs/equalizer/bin/eqServer.exe" )
+	# TODO the config should be in the repository
+	#set( EQUALIZER_CONFIG "c:\libs\equalizer\2-node.layout.eqc" )
+	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
+	# Copy Release
+	# TODO this really needs some automation/MACRO
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
+		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
+	# Copy RelWithDebugInfo
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
+		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
+else()
+	set( EQUALIZER_SERVER_BIN "eqServer" )
+	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.sh.in
+		${PROJECT_BINARY_DIR}/start_multi_node.sh )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.sh.in
+		${PROJECT_BINARY_DIR}/kill_nodes.sh )
 endif()
 
 ENDMACRO()
 
+
+###### Copy Extra files MACRO #######
+# TODO this can be removed when ProjectSettings scripts are in use
+# and when we load audio files using Ogre resource system
+MACRO( copy_extras )
+
+set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
+
+	if( WIN32 )
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/Release )
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/RelWithDebInfo )
+	else()
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/ )
+	endif()
+
+ENDMACRO()
+
+
+
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
+set( EQOGRE_BUILD_QTLAUNCHER TRUE CACHE BOOL
+	"Build the GUI used for editing settings and launching." )
+set( EQOGRE_BUILD_TESTS FALSE CACHE BOOL "Build the unit tests." )
+set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
+
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
-# TODO should be configurable
-#add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
-# TODO should be configurable
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 
+if( ${EQOGRE_BUILD_QTLAUNCHER} )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
+endif()
+
+if( ${EQOGRE_BUILD_TESTS} )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
+endif()
+
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
+
+include( Packaging )
+
+include( InstallResources )
+
+# TODO this doesn't work yet
+#include( InstallDependencies )

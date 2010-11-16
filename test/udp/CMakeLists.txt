@@ -2,7 +2,8 @@ project("udp_test" CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
-copy_config()
+# TODO fix this
+#copy_config()
 
 add_executable( test_udp_server
 	${eqOgre_SOURCE_DIR}/udp/print_command.cpp
@@ -27,12 +28,13 @@ add_executable( test_udp
 	test_udp.cpp 
 	)
 
-add_executable( test_ogre_udp
-	udp_fixtures.hpp
-	../test_helpers.hpp
-	../ogre_fixtures.hpp
-	test_ogre_udp.cpp
-	)
+# TODO fix this
+# add_executable( test_ogre_udp
+# 	udp_fixtures.hpp
+# 	../test_helpers.hpp
+# 	../ogre_fixtures.hpp
+# 	test_ogre_udp.cpp
+# 	)
 
 add_executable( test_udp_conf_parser
 	${eqOgre_SOURCE_DIR}/udp/server_config.cpp
@@ -47,5 +49,5 @@ target_link_libraries( test_udp )
 
 target_link_libraries( test_udp_conf_parser )
 
-target_link_libraries( test_ogre_udp ${LIBS} )
+# target_link_libraries( test_ogre_udp ${LIBS} )
 

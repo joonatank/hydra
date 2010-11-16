@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-int main( int argc, char const **argv )
+int main( int argc, char **argv )
 {
 	vl::Arguments arg( argc, argv );
 	std::cout << "environment path = " << arg.env_path << std::endl;

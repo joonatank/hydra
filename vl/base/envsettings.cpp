@@ -10,7 +10,7 @@
 #include "envsettings.hpp"
 
 
-#include "filestringer.hpp"
+#include "filesystem.hpp"
 #include "exceptions.hpp"
 
 #include <iostream>
@@ -25,12 +25,10 @@ vl::EnvSettings::~EnvSettings( void )
 void
 vl::EnvSettings::clear( void )
 {
+	_eqc.clear();
 
-    _eqc.clear();
-
-    _plugins.clear();
-    _tracking.clear();
-
+	_plugins.clear();
+	_tracking.clear();
 }
 
 bool
@@ -136,48 +134,48 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 void
 vl::EnvSettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 {
-        rapidxml::xml_node<> *pElement = xml_node->first_node("plugin");
+	rapidxml::xml_node<> *pElement = xml_node->first_node("plugin");
 
-        if( !pElement )
-        {
-            std::cerr << "Plugins list missing from env_config node." << std::endl;
-            return;
-        }
+	if( !pElement )
+	{
+		std::cerr << "Plugins list missing from env_config node." << std::endl;
+		return;
+	}
 
-        std::pair<std::string, bool> plugin;
-        std::string useStr;
-        std::string name;
-        bool use;
-        rapidxml::xml_attribute<> *attrib;
-        
-        while( pElement )
-        {
-            attrib = pElement->first_attribute("use");
-            if( !attrib )
-            {
-                std::cerr << "Missing use attrib. Defaulting to false." << std::endl;
-                useStr = "false";
-            }
-            else
-            {
-                useStr = attrib->value();
-            }
+	std::pair<std::string, bool> plugin;
+	std::string useStr;
+	std::string name;
+	bool use;
+	rapidxml::xml_attribute<> *attrib;
 
-            if( useStr == "true" )
-            { use = true; }
-            else if( useStr == "false" )
-            { use = false; }
-            else
-            {
-                std::cerr << "One plugin has errenous use attribute. Defaulting to false." << std::endl;
-                use = false;
-            }
-            name = pElement->value();
-            plugin = std::make_pair( name, use );
-            _envSettings->addPlugin(plugin);
+	while( pElement )
+	{
+		attrib = pElement->first_attribute("use");
+		if( !attrib )
+		{
+			std::cerr << "Missing use attrib. Defaulting to false." << std::endl;
+			useStr = "false";
+		}
+		else
+		{
+			useStr = attrib->value();
+		}
 
-            pElement = pElement->next_sibling("plugin");
-        }
+		if( useStr == "true" )
+		{ use = true; }
+		else if( useStr == "false" )
+		{ use = false; }
+		else
+		{
+			std::cerr << "One plugin has errenous use attribute. Defaulting to false." << std::endl;
+			use = false;
+		}
+		name = pElement->value();
+		plugin = std::make_pair( name, use );
+		_envSettings->addPlugin(plugin);
+
+		pElement = pElement->next_sibling("plugin");
+	}
 }
 
 void

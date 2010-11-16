@@ -1,17 +1,27 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ *	Global function to create the settings from command-line arguments
+ *
+ *	Distributed settings structure
+ */
 #ifndef EQ_OGRE_SETTINGS_HPP
 #define EQ_OGRE_SETTINGS_HPP
 
 #include <eq/net/object.h>
 
 #include "../settings.hpp"
+#include "base/typedefs.hpp"
 
 namespace eqOgre
 {
-	
+
+eqOgre::SettingsRefPtr getSettings( int argc, char **argv );
+
 class Settings : public vl::Settings, public eq::net::Object
 {
 public :
-	Settings( std::string const &name  );
+	Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj );
 
 	virtual ~Settings( void )
 	{}

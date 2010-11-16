@@ -4,7 +4,6 @@
 #include <eq/client/nodeFactory.h>
 
 #include "config.hpp"
-#include "node.hpp"
 #include "pipe.hpp"
 #include "channel.hpp"
 #include "window.hpp"
@@ -16,9 +15,6 @@ class NodeFactory : public eq::NodeFactory
 	public:
 		virtual eq::Config *createConfig( eq::ServerPtr parent )
 		{ return new eqOgre::Config( parent ); }
-
-		virtual eq::Node *createNode( eq::Config* parent )  
-		{ return new eqOgre::Node( parent ); }
 
 		virtual eq::Pipe *createPipe( eq::Node* parent )
 		{ return new eqOgre::Pipe( parent ); }

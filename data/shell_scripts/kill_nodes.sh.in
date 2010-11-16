@@ -1,0 +1,6 @@
+#!/bin/bash
+# This script will kill Equalizer server and
+# all eq clients by the name PROGRAM_NAME
+# TODO add support for signal -9 if it's taking too long
+
+kill pidof ${EQUALIZER_SERVER_BIN} ${PROGRAM_NAME}

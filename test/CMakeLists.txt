@@ -1,39 +1,60 @@
+#-------------------------------------------------------------------
+# This file is part of the CMake build system for eqOgre
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#-------------------------------------------------------------------
+
 project("tests" CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
+enable_testing()
+
 find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
 message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
-message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
-message( "VRPN libraries = ${VRPN_LIBRARY}" )
-
-include_directories( util ${Boost_INCLUDE_DIR} )
 
 set( FS_LIB ${Boost_FILESYSTEM_LIBRARIES} )
 set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 
+######### Find Turtle ########
+# We should expose these parameters for the user even in Linux
+# We should use find_file and file_lib functions to find the files first though
+
+find_path( TURTLE_INCLUDE_DIR
+	NAMES turtle/mock.hpp
+	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
+	)
+
 # TODO add link variable so not all programs will link to these
 link_libraries( ${FS_LIB} ${TEST_LIB} )
 
+include_directories( util )
+include_directories( SYSTEM
+	${TURTLE_INCLUDE_DIR}
+	${Boost_INCLUDE_DIR} 
+	)
+
 subdirs(util
-		spikes
-		dotscene_loader
-		eq_cluster
+#		spikes
+#		eq_cluster
 		udp
+		misc
 		)
 
-add_executable( test_settings 
-				test_settings.cpp
-				settings_fixtures.hpp
-				${eqOgre_SOURCE_DIR}/settings.hpp
-				${eqOgre_SOURCE_DIR}/settings.cpp
-				${eqOgre_SOURCE_DIR}/base/args.cpp
-				${eqOgre_SOURCE_DIR}/base/args.hpp
-				)
+# NOTE For now removed as we move to using EnvSettings and ProjectSettings
+#add_executable( test_settings 
+#				test_settings.cpp
+#				settings_fixtures.hpp
+#				${eqOgre_SOURCE_DIR}/settings.hpp
+#				${eqOgre_SOURCE_DIR}/settings.cpp
+#				${eqOgre_SOURCE_DIR}/base/args.cpp
+#				${eqOgre_SOURCE_DIR}/base/args.hpp
+#				)
 
-target_link_libraries( test_settings ${OGRE_LIBRARIES} ${TEST_LIB} ${FS_LIB} )
-add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
+#target_link_libraries( test_settings ${OGRE_LIBRARIES} ${TEST_LIB} ${FS_LIB} )
+#add_test( settings ${PROJECT_BINARY_DIR}/test_settings )
 
 # FIXME dotscene testing
 #add_executable( test_dotscene test_dotscene.cpp )
@@ -53,20 +74,13 @@ target_link_libraries( test_exceptions ${TEST_LIB} )
 # Test tracking
 add_executable( test_tracking
 				test_tracking.cpp
-				${eqOgre_SOURCE_DIR}/tracker.hpp
-				${eqOgre_SOURCE_DIR}/vrpn_tracker.hpp
-				${eqOgre_SOURCE_DIR}/vrpn_tracker.cpp
 				debug.hpp
 				tracking_fixture.hpp
 				)
 
-# TODO do we really need all these libs
 target_link_libraries( test_tracking
-	${OGRE_LIBRARIES}
-	${VRPN_LIBRARY}
+	eqOgre
 	${TEST_LIB}
-	${FS_LIB}
-	${CMAKE_THREAD_LIBS_INIT}
 	)
 
 

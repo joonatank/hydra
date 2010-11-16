@@ -24,7 +24,7 @@
 #endif
 
 namespace {
-	
+
 void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
 {
 	// Copy abs
@@ -57,25 +57,59 @@ eqOgre::Window::~Window(void )
 bool
 eqOgre::Window::loadScene( void )
 {
-	std::vector<vl::Settings::Scene> const &scenes = _settings->getScenes();
-	if( scenes.empty() )
-	{ return false; }
+	std::stringstream ss;
+
+	// TODO this should be divided to case load scenes function and loadScene function
+
+	// Get scenes
+	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
+
+	ss << "Loading Scenes for Project : " << _settings->getProjectName();
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	ss.str("");
+
+	// If we don't have Scenes there is no point loading them
+	if( !scenes.size() )
+	{
+		ss << "Project does not have any scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		return false;
+	}
+	else
+	{
+		ss << "Project has " << scenes.size() << " scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	}
 
 	// Clean up old scenes
+	// TODO this should be a loader not a destroyer, move to another function
 	_sm->clearScene();
 	_sm->destroyAllCameras();
 
-	// TODO support for multiple scene files
-	std::string message = "Load scene = " + scenes.at(0).file;
-	Ogre::LogManager::getSingleton().logMessage( message );
+	// TODO support for multiple scene files should be tested
+	// TODO support for case needs to be tested
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		std::string const &scene_file = scenes.at(i)->getFile();
 
-	DotSceneLoader loader;
-	loader.parseDotScene( scenes.at(0).file,
-						  Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-						  _sm );
+		ss.str("");
+		std::string message = "Loading scene : " + scene_file;
+		Ogre::LogManager::getSingleton().logMessage( message );
 
-	message = "Scene loaded";
-	Ogre::LogManager::getSingleton().logMessage( message );
+		DotSceneLoader loader;
+		// TODO pass attach node based on the scene
+		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+		loader.parseDotScene( scene_file,
+							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+							_sm );
+
+		message = "Scene loaded";
+		Ogre::LogManager::getSingleton().logMessage( message );
+	}
+
+
+	/// Get the camera
+	// TODO move to separate function
 
 	// Loop through all cameras and grab their name and set their debug representation
 	Ogre::SceneManager::CameraIterator cameras = _sm->getCameraIterator();
@@ -83,15 +117,17 @@ eqOgre::Window::loadScene( void )
 	// Grab the first available camera, for now
 	if( cameras.hasMoreElements() )
 	{
-		message = "Camera found from the scene.";
-		Ogre::LogManager::getSingleton().logMessage( message );
 		_camera = cameras.getNext();
+		ss.str("");
+		ss << "Using Camera " <<  _camera->getName() << " found from the scene.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	}
 	else
 	{
-		message = "Creating camera";
-		Ogre::LogManager::getSingleton().logMessage( message );
 		_camera = _sm->createCamera("Cam");
+		ss.str("");
+		ss << "No camera in the scene. Using created camera " << _camera->getName();
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	}
 
 	return true;
@@ -107,7 +143,7 @@ eqOgre::Window::keyPressed(const OIS::KeyEvent& key)
 	eq::ConfigEvent event;
 	event.data.type = eq::Event::KEY_PRESS;
 	event.data.key.key = key.key;
-	
+
 	getConfig()->sendEvent(event);
 
 	return true;
@@ -173,7 +209,7 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 bool
 eqOgre::Window::configInit( const uint32_t initID )
 {
-	std::cerr << "eqOgre::Window::init" << std::endl;
+	std::cerr << "eqOgre::Window::configInit" << std::endl;
 	try {
 		if( !eq::Window::configInit( initID ))
 		{
@@ -210,14 +246,30 @@ eqOgre::Window::configInit( const uint32_t initID )
 
 		if( !loadScene() )
 		{ return false; }
-		
+
 		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
 		log << "eqOgre::Window::configInit done.\n";
 	}
+	catch( vl::exception &e )
+	{
+		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+			<< std::endl;
+		return true;
+	}
+	catch( Ogre::Exception const &e)
+	{
+		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		return true;
+	}
+	catch( std::exception const &e )
+	{
+		std::cerr << "STD Exception: " << e.what() << std::endl;
+		return true;
+	}
 	catch( ... )
 	{
-		// TODO this should really print the exception
-		EQERROR << "Exception thrown." << std::endl;
+		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
+		std::cerr << err_msg << std::endl;
 		return false;
 	}
 
@@ -382,7 +434,7 @@ eqOgre::Window::createWindowListener(void )
 	*/
 }
 
-void 
+void
 eqOgre::Window::createOgreRoot( void )
 {
 	_root.reset( new vl::ogre::Root( _settings ) );
@@ -390,11 +442,11 @@ eqOgre::Window::createOgreRoot( void )
 	_root->createRenderSystem();
 }
 
-void 
+void
 eqOgre::Window::createOgreWindow( void )
 {
 	EQINFO << "Creating Ogre RenderWindow." << std::endl;
-	
+
 	Ogre::NameValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 	eq::WGLWindow *os_win = (eq::WGLWindow *)( getSystemWindow() );

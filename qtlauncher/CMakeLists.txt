@@ -7,6 +7,10 @@ FIND_PACKAGE(Qt4 REQUIRED)
 set( QT_USE_QTMAIN true )
 set( QT_USE_QTCORE true )
 set( QT_USE_QTGUI true )
+find_package(Boost COMPONENTS system filesystem REQUIRED )
+include_directories( SYSTEM
+	${Boost_INCLUDE_DIRS}
+	)
 
 include( ${QT_USE_FILE} )
 
@@ -15,6 +19,7 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 set( SOURCES
 	${eqOgre_SOURCE_DIR}/base/envsettings.cpp
 	${eqOgre_SOURCE_DIR}/base/projsettings.cpp
+	${eqOgre_SOURCE_DIR}/base/filesystem.cpp
 	mainwindow.cpp
 	envcontrol.cpp
 	projectcontrol.cpp
@@ -25,8 +30,9 @@ set( SOURCES
 set( VL_HEADERS
 	${eqOgre_SOURCE_DIR}/base/envsettings.hpp
 	${eqOgre_SOURCE_DIR}/base/projsettings.hpp
+	${eqOgre_SOURCE_DIR}/base/filesystem.hpp
+	${eqOgre_SOURCE_DIR}/base/string_utils.hpp
 	${eqOgre_SOURCE_DIR}/base/exceptions.hpp
-	${eqOgre_SOURCE_DIR}/base/filestringer.hpp
 	${eqOgre_SOURCE_DIR}/base/rapidxml.hpp
 	${eqOgre_SOURCE_DIR}/base/rapidxml_print.hpp
 	)
@@ -62,5 +68,8 @@ add_executable( qtlauncher
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
-# TODO does this need boost?
-target_link_libraries( qtlauncher ${QT_LIBRARIES} )
+target_link_libraries( qtlauncher
+	${QT_LIBRARIES}
+	${Boost_SYSTEM_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARIES}
+	)

@@ -10,7 +10,7 @@ namespace vl
 
 struct Arguments
 {
-	Arguments( int argc, char const **argv )
+	Arguments( int const argc, char **argv )
 	{
 		// First is program name
 		// We need at least two arguments

@@ -32,8 +32,6 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addOperationFactory( new HideOperationFactory );
 	_event_manager->addOperationFactory( new ShowOperationFactory );
 	_event_manager->addOperationFactory( new ToggleMusicFactory );
-	// TODO add transformation operations
-	
 }
 
 eqOgre::Config::~Config()
@@ -41,7 +39,7 @@ eqOgre::Config::~Config()
 	_exitAudio();
 }
 
-void 
+void
 eqOgre::Config::mapData( uint32_t const initDataID )
 {
 	EQASSERT( _settings );
@@ -78,11 +76,14 @@ eqOgre::Config::init( uint32_t const )
 	_frame_data.registerData(this);
 
 	_settings->setFrameDataID( _frame_data.getID() );
+	std::cerr << "Registering Settings" << std::endl;
 	registerObject( _settings.get() );
-    
+	std::cerr << "Settings registered" << std::endl;
+
 	if( !eq::Config::init( _settings->getID() ) )
 	{ return false; }
 
+	std::cerr << "Config::init DONE" << std::endl;
 	return true;
 }
 
@@ -133,7 +134,7 @@ eqOgre::Config::toggleBackgroundSound()
 }
 
 
-uint32_t 
+uint32_t
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
 	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
@@ -154,21 +155,29 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	// TODO should be moved to Config::init or equivalent
 	static bool inited = false;
 
+	std::stringstream ss;
+
 	if( !inited )
 	{
 		try {
 			// Init the embedded python
 			_initPython();
 
-			// TODO the script file should not be hard-coded
-			// they should be in Settings
-			// like Settings::getInitScripts
-			// and Settings::getFrameScripts
-			const std::string initScript("script.py");
+			std::vector<std::string> scripts = _settings->getScripts();
 
-			// Run init python script
-			_runPythonScript( initScript);
+			ss.str("");
+			ss << "Running " << scripts.size() << " python scripts.";
+			Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
+			for( size_t i = 0; i < scripts.size(); ++i )
+			{
+				ss.str("");
+				ss << "Running python script = " << scripts.at(i);
+				Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+				// Run init python scripts
+				_runPythonScript( scripts.at(i) );
+			}
 		}
 		// Some error handling so that we can continue the application
 		// Will print error in std::cerr
@@ -181,7 +190,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		{
 			PyErr_Print();
 		}
-		
+
 		// Find ogre event so we can toggle it on/off
 		// TODO add function to find Events
 		// Ogre Rotation event, used to toggle the event on/off
@@ -259,10 +268,12 @@ eqOgre::Config::_exitAudio(void )
 void
 eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 {
-	if( settings->trackerOn() )
+	// FIXME no tracking config for now
+//	if( settings->trackerOn() )
+	if( false )
 	{
 		EQINFO << "Creating VRPN Tracker." << std::endl;
-		_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
+		//_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
 	}
 	else
 	{
@@ -270,8 +281,10 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 		_tracker.reset( new vl::FakeTracker( ) );
 	}
 
-	_tracker->setOrientation( 0, settings->getTrackerDefaultOrientation() );
-	_tracker->setPosition( 0, settings->getTrackerDefaultPosition() );
+	Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);// = settings->getTrackerDefaultOrientation()
+	Ogre::Vector3 v(0, 1.5, 0 ); //= settings->getTrackerDefaultPosition();
+	_tracker->setOrientation( 0,q );
+	_tracker->setPosition( 0, v );
 	_tracker->init();
 }
 
@@ -320,8 +333,11 @@ void eqOgre::Config::_initPython(void )
 
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 {
-	std::cout << "running file " << scriptFile << "..." << std::endl;
-	// Run a python script in an empty environment.
+	std::stringstream ss;
+	ss << "Running python script file " << scriptFile << ".";
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+	// Run a python script.
 	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);
 }
 
@@ -331,7 +347,7 @@ char const *CB_INFO_TEXT = "Config : OIS event received : ";
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-	
+
 	bool redraw = false;
 	switch( event->data.type )
 	{
@@ -342,7 +358,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 
 		case eq::Event::KEY_RELEASE :
 			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
-			
+
 			break;
 
 		case eq::Event::POINTER_BUTTON_PRESS:
@@ -352,7 +368,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 		case eq::Event::POINTER_BUTTON_RELEASE:
 			redraw = _handleMouseReleaseEvent(event->data.pointerButtonRelease);
 			break;
-			
+
 		case eq::Event::POINTER_MOTION:
 			redraw = _handleMouseMotionEvent(event->data.pointerMotion);
 			break;
@@ -390,16 +406,16 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 bool
 eqOgre::Config::_handleMousePressEvent(const eq::PointerEvent& event)
 {
-//			std::cerr << "Config received mouse button press event. Button = "
-//				<< event->data.pointer.button << std::endl;
+//	std::cerr << "Config received mouse button press event. Button = "
+//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 
 bool
 eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
 {
-//			std::cerr << "Config received mouse button release event. Button = "
-//				<< event->data.pointer.button << std::endl;
+//	std::cerr << "Config received mouse button release event. Button = "
+//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 

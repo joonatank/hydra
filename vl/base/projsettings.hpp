@@ -112,6 +112,10 @@ public :
 		void setName( std::string const &name )             { _name = name; _changed = true; }
 		std::string const &getName() const                  { return _name; }
 
+		// TODO fix the constness of the methods,
+		// Getter methods are const if they either return by value or return
+		// const reference/pointer.
+		// TODO Provide both getters const and non-const
 		Scene* addScene( std::string const &name );
 		void rmScene( std::string const &name );
 		Scene* getScenePtr( std::string const &sceneName );
@@ -154,6 +158,7 @@ public :
 
 
 	///// FILE /////////////////////////////////////////////////////
+	/// The project file loaded from the disk using Serializer
 	std::string const &getFile( void ) const { return _file; }
 	void setFile( std::string const &f ) { _file = f; _changed = true; }
 
@@ -167,6 +172,7 @@ public :
 
 
 	///// PROJECT GETTERS /////////////////////////////////////////////////
+	/// The Case that defines the Project
 	Case* getCasePtr() { return _projCase; }
 
 

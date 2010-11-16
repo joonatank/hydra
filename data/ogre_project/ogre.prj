@@ -1,62 +1,28 @@
 <?xml version="1.0"?>
 
 <!--
-CRITICAL: tag project_config needs to be present
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2010-11
 
-Default name is "NewProject"
-
-Project may be launchable
+Ogre test project used for testing and demonstrating eqOgre
 -->
 <project_config name="ogre">
 
 	<scenes>
-		<!--
-		N scenes can be present
-		
-		To save no scenes need to be present.
-
-		CRITICAL: To launch at least one scene needs to be present
-			OR there needs to be a global scene
-			AND all scenes in use need to exist in resources
-			
-		Default name is filename without .scene and
-			IF name already exists "_" chars will be appended untill name is unique.
-
-		CRITICAL: Every neame must be unique
-
-		Default attach point is global coordinate system
-
-		When defining attach point both scene and point need to be present
-
-		GUI: Changing scene name changes attachto scene fields accordingly NOT vice versa
-		GUI: attach point set possibly read from scene file and offered as a dropdown, tree or dyn. search
-		
-		CRITICAL: attachto scene needs to exist in the project_config
-			OR global_config
-			AND attachto point needs to exist in the given scene
-
-		Scene files will be searched from resource paths (see below)
-
-		Scene can be attached to only one point.
-		-->
 		<scene name="ogre" use="true">
 			<file>ogre.scene</file>
 		</scene>
-		
+
 	</scenes>
 
-	<!-- Resources will reside in [path to this file]/resources
-	TAI [file to global]/resources -->
-
-	<action_maps>
-		<!--
-		N action map files can be present
-
-		Later in list defined maps override AND extend earlier set
-		-->
-	</action_maps>
-	
 	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">script.py</file>
 	</scripts>
 
 </project_config>

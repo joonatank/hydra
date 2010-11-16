@@ -1,7 +1,7 @@
-# TODO these should be fixed, the interface has changed considerably
-# FIXME the EventManager does not support these yet
+# -*- coding: utf-8 -*-
+
 def addRotationEvent(node) :
-	# TODO should print the node name
+	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Rotation event on node = '
 	event = event_manager.createEvent( 'TransformationEvent' )
 	event.scene_node = node
@@ -21,10 +21,8 @@ def addRotationEvent(node) :
 	if not event_manager.addEvent(event) :
 		print 'Python : could not add ogre event'
 
-# TODO these should be fixed, the interface has changed considerably
-# FIXME the EventManager does not support these yet
 def addTranslationEvent(node) :
-	# TODO should print the node name
+	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Translation event on node = '
 	event = event_manager.createEvent( 'TransformationEvent' )
 	event.scene_node = node

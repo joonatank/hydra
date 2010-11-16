@@ -1,6 +1,14 @@
 <?xml version="1.0"?>
 
 <!--
+Designed by Joonas Reunamo <joonas.reunamo@tut.fi>
+2010-10
+
+Global config. Similar to project config but this file is included to all
+projects.
+-->
+
+<!--
 CRITICAL: tag project_config needs to be present
 
 Default name is "Global"
@@ -28,8 +36,10 @@ May be launchable
 
 		When defining attach point both scene and point need to be present
 
-		GUI: Changing scene name changes attachto scene fields accordingly NOT vice versa
-		GUI: attach point set possibly read from scene file and offered as a dropdown, tree or dyn. search
+		GUI: Changing scene name changes attachto scene fields accordingly
+			NOT vice versa
+		GUI: attach point set possibly read from scene file and offered as
+			a dropdown, tree or dyn. search
 
 		CRITICAL: attachto scene needs to exist in the project_config
 			OR global_config
@@ -57,9 +67,9 @@ May be launchable
 
 		Later in list defined maps override AND extend earlier set
 		-->
-		<file use="false">debug/ruukkimappi1.xml</file>
-		<file use="true">ruukkimappi2.xml</file>
-		<file use="true">koe/lisamappi.xml</file>
+		<file use="false">debug/test_map.map</file>
+		<file use="true">test_map2.map</file>
+		<file use="true">release_map.map</file>
 	</action_maps>
 
 <!--No cases in gllobal settings-->

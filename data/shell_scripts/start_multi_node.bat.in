@@ -1,0 +1,6 @@
+REM this needs to be tested
+REM TODO this needs a for loop to create multiple listening clients
+
+start ${EQUALIZER_SERVER_BIN} ${EQUALIZER_CONFIG}
+start ${PROGRAM_NAME} --eq-client --eq-listen ${HOSTNAME_TO_LISTEN}:${LISTENING_PORT}
+start ${PROGRAM_NAME}

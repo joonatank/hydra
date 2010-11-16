@@ -13,8 +13,8 @@
 #ifndef VL_TRACKER_HPP
 #define VL_TRACKER_HPP
 
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
 
 namespace vl
 {
