@@ -114,8 +114,8 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 	python::class_<Config, boost::noncopyable>("Config", python::no_init)
-		.def("addSceneNode", &Config::addSceneNode)
-		.def("removeSceneNode", &Config::removeSceneNode)
+		.def("removeSceneNode", &Config::removeSceneNode )
+		.def("getSceneNode", &Config::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
 	;
 
 	python::class_<EventManager, boost::noncopyable>("EventManager", python::no_init)
@@ -156,7 +156,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 
 	python::class_<KeyReleasedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyReleasedTrigger", python::no_init )
 	;
-	
+
 
 	python::class_<OperationWrapper, boost::noncopyable>("Operation", python::no_init )
 		// FIXME pure virtual getTypeName
@@ -199,12 +199,12 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 
 	python::class_<ToggleMusic, boost::noncopyable, python::bases<ConfigOperation> >("ToggleMusic", python::no_init )
 	;
-	
+
 	/// EventManager Operations
 	python::class_<EventManagerOperation, boost::noncopyable, python::bases<Operation> >("EventManagerOperation", python::no_init )
 		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
 	;
-	
+
 	python::class_<AddTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("AddTransformOperation", python::no_init )
 	;
 
@@ -215,11 +215,11 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<HideOperation, boost::noncopyable, python::bases<Operation> >("HideOperation", python::no_init )
 		.add_property("scene_node", python::make_function( &HideOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideOperation::setSceneNode )
 	;
-	
+
 	python::class_<ShowOperation, boost::noncopyable, python::bases<Operation> >("ShowOperation", python::no_init )
 		.add_property("scene_node", python::make_function( &ShowOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowOperation::setSceneNode )
 	;
-	
+
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
 		// TODO the factory method should return ref counted ptr
@@ -245,7 +245,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::def( "getKeyName", getKeyName );
 
 	python::def( "getPythonKeyName", getPythonKeyName );
-	
+
 	python::enum_<OIS::KeyCode> python_keycode = python::enum_<OIS::KeyCode>("KC");
 	int i = 0;
 	while( i < OIS::KC_MEDIASELECT )

@@ -8,6 +8,8 @@
 #include "config_python.hpp"
 #include "config_events.hpp"
 
+#include "dotscene_loader.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -87,7 +89,8 @@ eqOgre::Config::init( uint32_t const )
 	return true;
 }
 
-void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
+void
+eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 {
 	if( settings )
 	{
@@ -96,17 +99,17 @@ void eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 	}
 }
 
-// TODO this should be moved to private
-void
-eqOgre::Config::addSceneNode(eqOgre::SceneNode* node)
+eqOgre::SceneNodePtr
+eqOgre::Config::createSceneNode(const std::string& name)
 {
-	_frame_data.addSceneNode( node );
+	SceneNodePtr node = SceneNode::create( name );
+	_addSceneNode( node );
+	return node;
 }
 
 // TODO implement
-// TODO this should be moved to private
 void
-eqOgre::Config::removeSceneNode(eqOgre::SceneNode* node)
+eqOgre::Config::removeSceneNode(eqOgre::SceneNodePtr node)
 {
 	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
 }
@@ -158,6 +161,8 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 	if( !inited )
 	{
+		_loadScenes();
+
 		try {
 			// Init the embedded python
 			_initPython();
@@ -242,6 +247,32 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	return eq::Config::startFrame( version );
 }
 
+
+
+
+
+
+/// ------------ Private -------------
+
+void
+eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
+{
+	// Implement checking
+	// TODO should be in the frame data, as it can neither store multiple
+	// SceneNodes with same names
+	for( size_t i = 0; i < _frame_data.getNSceneNodes(); ++i )
+	{
+		SceneNodePtr ptr = _frame_data.getSceneNode(i);
+		if( ptr == node || ptr->getName() == node->getName() )
+		{
+			// TODO is this the right exception?
+			BOOST_THROW_EXCEPTION( vl::duplicate() );
+		}
+	}
+
+	_frame_data.addSceneNode( node );
+}
+
 void
 eqOgre::Config::_initAudio(void )
 {
@@ -301,7 +332,58 @@ eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
 	}
 }
 
-void eqOgre::Config::_initPython(void )
+void
+eqOgre::Config::_loadScenes(void )
+{
+	std::stringstream ss;
+
+	// Get scenes
+	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
+
+	ss << "Loading Scenes for Project : " << _settings->getProjectName();
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	ss.str("");
+
+	// If we don't have Scenes there is no point loading them
+	if( !scenes.size() )
+	{
+		ss << "Project does not have any scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		return;
+	}
+	else
+	{
+		ss << "Project has " << scenes.size() << " scene files.";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	}
+
+	// Clean up old scenes
+	// TODO this should be implemented
+
+	// TODO support for multiple scene files should be tested
+	// TODO support for case needs to be tested
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		std::string const &scene_file = scenes.at(i)->getFile();
+
+		ss.str("");
+		std::string message = "Loading scene : " + scene_file;
+		Ogre::LogManager::getSingleton().logMessage( message );
+
+		vl::DotSceneLoader loader;
+		// TODO pass attach node based on the scene
+		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+		loader.parseDotScene( scene_file,
+							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+							this );
+
+		message = "Scene loaded";
+		Ogre::LogManager::getSingleton().logMessage( message );
+	}
+}
+
+void
+eqOgre::Config::_initPython(void )
 {
 	Py_Initialize();
 

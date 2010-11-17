@@ -1,5 +1,10 @@
-#ifndef VL_DOT_SCENELOADER_H
-#define VL_DOT_SCENELOADER_H
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
+
+#ifndef EQOGRE_DOT_SCENELOADER_HPP
+#define EQOGRE_DOT_SCENELOADER_HPP
 
 // Standard library includes
 #include <vector>
@@ -41,14 +46,19 @@ public:
 	DotSceneLoader();
 	virtual ~DotSceneLoader();
 
-	// Load dotscene file using Ogre resource system
+	/// Load dotscene file using Ogre resource system
+	/// Parameters : sceneName is the name of the scene file in Ogre Resource system
+	///				 groupName is the name of the Ogre resource group
+	///				 attachNode is the parent node for this DotScene scene
+	///				 sPrependNode is a string which is added to the name of every node
 	void parseDotScene( std::string const &sceneName,
 			std::string const &groupName,
 			Ogre::SceneManager *sceneMgr,
 			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
-	// Parse dotscene which is already loaded to scene_data
+	/// Parse dotscene which is already loaded to scene_data
+	/// Parameters : scene_data is complete xml file loaded into a string
 	void parseDotScene( std::string const &scene_data,
 			Ogre::SceneManager *sceneMgr,
 			Ogre::SceneNode *attachNode = 0,
@@ -105,20 +115,6 @@ protected:
 	void processLightAttenuation( rapidxml::xml_node<>* XMLNode,
 			Ogre::Light *light );
 
-	std::string getAttrib(rapidxml::xml_node<>* XMLNode,
-			const std::string &parameter,
-			const std::string &defaultValue = "");
-
-	Ogre::Real getAttribReal(rapidxml::xml_node<>* XMLNode,
-			const std::string &parameter, Ogre::Real defaultValue = 0);
-
-	bool getAttribBool(rapidxml::xml_node<>* XMLNode,
-			const std::string &parameter, bool defaultValue = false);
-
-	Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
-	Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
-	Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
-
 	// Scene Manager for the scene file
 	Ogre::SceneManager *_scene_mgr;
 	// Parent SceneNode for the scene file
@@ -138,4 +134,4 @@ protected:
 
 }	// namespace eqOgre
 
-#endif // DOT_SCENELOADER_H
+#endif // EQOGRE_DOT_SCENELOADER_HPP

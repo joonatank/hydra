@@ -51,7 +51,7 @@ namespace eqOgre
 		// if we have a valid copy constructor
 		void setSettings( eqOgre::SettingsRefPtr settings );
 
-		void addSceneNode( SceneNode *node );
+		SceneNodePtr createSceneNode( std::string const &name );
 
 		void removeSceneNode( SceneNode *node );
 
@@ -63,7 +63,7 @@ namespace eqOgre
 		// otherwise we would be creating multiple SceneNodes with the same name
 		// and would mess up the Ogre SceneGraph when they are applied
 		SceneNode *getSceneNode( std::string const &name );
-		
+
 		void updateSceneVersion( void )
 		{ _frame_data.updateSceneVersion(); }
 
@@ -72,6 +72,8 @@ namespace eqOgre
 	protected :
 		virtual ~Config (void);
 
+		void _addSceneNode( SceneNode *node );
+
 		/// Audio
 		void _initAudio( void );
 		void _exitAudio( void );
@@ -79,6 +81,9 @@ namespace eqOgre
 		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
 		void _setHeadMatrix( Ogre::Matrix4 const &m );
+
+		/// Scene
+		void _loadScenes( void );
 
 		/// Python
 		void _initPython( void );

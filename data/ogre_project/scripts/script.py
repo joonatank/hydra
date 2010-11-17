@@ -57,17 +57,17 @@ def addTranslationEvent(node) :
 def addHideEvent(node) :
 	print 'Creating Hide Event'
 	hide = event_manager.createOperation( 'HideOperation' )
-	hide.scene_node = node 
+	hide.scene_node = node
 	show = event_manager.createOperation( 'ShowOperation' )
-	show.scene_node = node 
+	show.scene_node = node
 	# This works to solve the problem
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
 	#trigger = event_manager.createTrigger( 'KeyTrigger' )
 	trigger.key = KC.H
 
 	event = event_manager.createEvent( 'ToggleEvent' )
-	event.toggle_off_action= show 
-	event.toggle_on_action= hide 
+	event.toggle_off_action= show
+	event.toggle_on_action= hide
 	event.toggle_state = False
 	# Works fine provide an example
 	#event.time_limit = 2	# Secs
@@ -81,7 +81,7 @@ def addQuitEvent() :
 	print 'Creating Quit Event'
 	action = event_manager.createOperation( 'QuitOperation' )
 	print 'Python Action type = ' + action.type
-	action.config = config 
+	action.config = config
 	# Example of using pressed or released key instead of both (the default)
 	# you need to create either KeyReleasedTrigger or KeyPressedTrigger
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
@@ -100,7 +100,7 @@ def addReloadEvent() :
 	print 'Creating Reload Scene Event'
 	action = event_manager.createOperation( 'ReloadScene' )
 	print 'Python Action type = ' + action.type
-	action.config = config 
+	action.config = config
 	trigger = event_manager.createTrigger( 'KeyTrigger' )
 	# FIXME this segfaults
 	print 'Python Trigger type = ' + trigger.type
@@ -121,7 +121,7 @@ def addReloadEvent() :
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
 	action = event_manager.createOperation( 'ToggleMusic' )
-	action.config = config 
+	action.config = config
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
 	trigger.key = KC.M
 
@@ -131,7 +131,7 @@ def addToggleMusicEvent() :
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
-	
+
 # TODO create PrintOperation in python and register it into Event Manager
 
 print 'In python init script'
@@ -140,14 +140,15 @@ addQuitEvent()
 addReloadEvent()
 addToggleMusicEvent()
 
-print 'Creating Ogre SceneNode'
-ogre = SceneNode.create("ogre")
-config.addSceneNode(ogre)
+print 'Getting Ogre SceneNode'
+# config.getSceneNode gets a reference to already created SceneNode
+# For now it's not possible to create SceneNodes from python
+# So use this function to get a SceneNode created from .scene file.
+ogre = config.getSceneNode("ogre")
 addHideEvent(ogre)
 addRotationEvent(ogre)
 
-print 'Creating Camera SceneNode'
-camera = SceneNode.create("CameraNode")
-config.addSceneNode(camera)
+print 'Getting Camera SceneNode'
+camera = config.getSceneNode("CameraNode")
 addTranslationEvent(camera)
 

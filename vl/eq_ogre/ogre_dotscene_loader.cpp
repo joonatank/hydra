@@ -4,13 +4,11 @@
 
 #include "base/string_utils.hpp"
 #include "base/exceptions.hpp"
+#include "ogre_xml_helpers.hpp"
 
-/* For now we are using Ogre::LogManager and Ogre::ResourceGroupManager
- * Because we don't have our own logging or resource system in place.
- * TODO should be removed as soon as possible.
- */
-
+// Necessary for logggin
 #include <OGRE/OgreLogManager.h>
+
 #include <OGRE/OgreException.h>
 #include <OGRE/OgreResourceManager.h>
 #include <OGRE/OgreEntity.h>
@@ -63,15 +61,13 @@ eqOgre::DotSceneLoader::parseDotScene(
 	_xml_data = new char[scene_data.length()+1];
 	::strcpy( _xml_data, scene_data.c_str() );
 
-//	std::ifstream fs( scenePath.c_str(), std::ios::binary );
-//	_xml_data.readStream( fs );
 	XMLDoc.parse<0>( _xml_data );
 
 	// Grab the scene node
 	XMLRoot = XMLDoc.first_node("scene");
 
 	// Validate the File
-	if( getAttrib(XMLRoot, "formatVersion", "") == "")
+	if( vl::getAttrib(XMLRoot, "formatVersion", "") == "")
 	{
 		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
 		//	TODO add logging
@@ -91,7 +87,7 @@ void
 eqOgre::DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 {
 	// Process the scene parameters
-	std::string version = getAttrib(XMLRoot, "formatVersion", "unknown");
+	std::string version = vl::getAttrib(XMLRoot, "formatVersion", "unknown");
 
 	std::string message = "[DotSceneLoader] Parsing dotScene file with version " + version;
 	if(XMLRoot->first_attribute("ID"))
@@ -183,11 +179,16 @@ eqOgre::DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 		pElement = pElement->next_sibling("node");
 	}
 
+	// NOTE these are weird why do we want to reset the attach node?
+	// Shouldn't we create another Node as the child of _attach_node
+	// and modify that one instead?
+	// Also why these are after processNode ?
+
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
 	{
-		_attach_node->setPosition(parseVector3(pElement));
+		_attach_node->setPosition(vl::parseVector3(pElement));
 		_attach_node->setInitialState();
 	}
 
@@ -195,20 +196,20 @@ eqOgre::DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
 	{
-		_attach_node->setOrientation(parseQuaternion(pElement));
+		_attach_node->setOrientation(vl::parseQuaternion(pElement));
 		_attach_node->setInitialState();
 	}
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
 	{
-		_attach_node->setOrientation(parseQuaternion(pElement));
+		_attach_node->setOrientation(vl::parseQuaternion(pElement));
 	}
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
 	{
-		_attach_node->setScale(parseVector3(pElement));
+		_attach_node->setScale(vl::parseVector3(pElement));
 		_attach_node->setInitialState();
 	}
 }
@@ -257,7 +258,7 @@ eqOgre::DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 	// Process colourAmbient (?)
 	pElement = XMLNode->first_node("colourAmbient");
 	if( pElement )
-	{ _scene_mgr->setAmbientLight( parseColour(pElement) ); }
+	{ _scene_mgr->setAmbientLight( vl::parseColour(pElement) ); }
 
 	// Process colourBackground (?)
 	//! @todo Set the background colour of all viewports (RenderWindow has to be provided then)
@@ -502,8 +503,8 @@ eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	{ parent = _attach_node; }
 
 	// Process attributes
-	std::string name = getAttrib(XMLNode, "name");
-	std::string id = getAttrib(XMLNode, "id");
+	std::string name = vl::getAttrib(XMLNode, "name");
+	std::string id = vl::getAttrib(XMLNode, "id");
 
 	// Create the light
 	Ogre::Light *light = _scene_mgr->createLight(name);
@@ -515,7 +516,7 @@ eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 //		= parent->createChild( node_name );
 //	light_node->attachObject(light);
 
-	std::string sValue = getAttrib(XMLNode, "type");
+	std::string sValue = vl::getAttrib(XMLNode, "type");
 	if(sValue == "point")
 	{ light->setType( Ogre::Light::LT_POINT ); }
 	else if(sValue == "directional")
@@ -525,34 +526,34 @@ eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	else if(sValue == "radPoint")
 	{ light->setType( Ogre::Light::LT_POINT ); }
 
-	light->setVisible(getAttribBool(XMLNode, "visible", true));
-	light->setCastShadows(getAttribBool(XMLNode, "castShadows", true));
+	light->setVisible(vl::getAttribBool(XMLNode, "visible", true));
+	light->setCastShadows(vl::getAttribBool(XMLNode, "castShadows", true));
 
 	rapidxml::xml_node<>* pElement;
 
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-	{ light->setPosition(parseVector3(pElement)); }
+	{ light->setPosition(vl::parseVector3(pElement)); }
 
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
 	if(pElement)
-	{ light->setDirection(parseVector3(pElement)); }
+	{ light->setDirection(vl::parseVector3(pElement)); }
 
 	pElement = XMLNode->first_node("directionVector");
 	if(pElement)
-	{ light->setDirection(parseVector3(pElement)); }
+	{ light->setDirection(vl::parseVector3(pElement)); }
 
 	// Process colourDiffuse (?)
 	pElement = XMLNode->first_node("colourDiffuse");
 	if(pElement)
-	{ light->setDiffuseColour(parseColour(pElement)); }
+	{ light->setDiffuseColour(vl::parseColour(pElement)); }
 
 	// Process colourSpecular (?)
 	pElement = XMLNode->first_node("colourSpecular");
 	if(pElement)
-	{ light->setSpecularColour(parseColour(pElement)); }
+	{ light->setSpecularColour(vl::parseColour(pElement)); }
 
 	if(sValue == "spot" )//|| sValue == "spotLight" )
 	{
@@ -584,8 +585,8 @@ eqOgre::DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	{ parent = _attach_node; }
 
 	// Process attributes
-	std::string name = getAttrib(XMLNode, "name");
-	std::string id = getAttrib(XMLNode, "id");
+	std::string name = vl::getAttrib(XMLNode, "name");
+	std::string id = vl::getAttrib(XMLNode, "id");
 
 	std::string node_name = name + std::string("Node");
 	// Create the camera
@@ -601,11 +602,11 @@ eqOgre::DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("clipping");
 	if(pElement)
 	{
-		Ogre::Real nearDist = getAttribReal(pElement, "near");
+		Ogre::Real nearDist = vl::getAttribReal(pElement, "near");
 		if( nearDist > 0 )
 		{ camera->setNearClipDistance(nearDist); }
 
-		Ogre::Real farDist =  getAttribReal(pElement, "far");
+		Ogre::Real farDist =  vl::getAttribReal(pElement, "far");
 		if( farDist > 0 && farDist > nearDist )
 		{ camera->setFarClipDistance(farDist); }
 	}
@@ -613,16 +614,16 @@ eqOgre::DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if(pElement)
-	{ camera->setPosition( parseVector3(pElement) ); }
+	{ camera->setPosition( vl::parseVector3(pElement) ); }
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
-	{ camera->setOrientation( parseQuaternion(pElement) ); }
+	{ camera->setOrientation( vl::parseQuaternion(pElement) ); }
 
 	pElement = XMLNode->first_node("quaternion");
 	if(pElement)
-	{ camera->setOrientation( parseQuaternion(pElement) ); }
+	{ camera->setOrientation( vl::parseQuaternion(pElement) ); }
 /*
 	// Process normal (?)
 	pElement = XMLNode->first_node("normal");
@@ -665,7 +666,7 @@ eqOgre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	{ parent = _attach_node; }
 
 	// Construct the node's name
-	std::string name = _sPrependNode + getAttrib(XMLNode, "name");
+	std::string name = _sPrependNode + vl::getAttrib(XMLNode, "name");
 
 	// Create the scene node
 	Ogre::SceneNode *node = parent->createChildSceneNode(name);
@@ -680,21 +681,21 @@ eqOgre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	// Process position (?)
 	pElement = XMLNode->first_node("position");
 	if( pElement )
-	{ node->setPosition(parseVector3(pElement)); }
+	{ node->setPosition(vl::parseVector3(pElement)); }
 
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
-	{ node->setOrientation(parseQuaternion(pElement)); }
+	{ node->setOrientation(vl::parseQuaternion(pElement)); }
 
 	pElement = XMLNode->first_node("quaternion");
 	if( pElement )
-	{ node->setOrientation(parseQuaternion(pElement)); }
+	{ node->setOrientation(vl::parseQuaternion(pElement)); }
 
 	// Process scale (?)
 	pElement = XMLNode->first_node("scale");
 	if(pElement)
-	{ node->setScale(parseVector3(pElement)); }
+	{ node->setScale(vl::parseVector3(pElement)); }
 
 	/*	Process lookTarget (?)
 	 *	TODO not supported yet
@@ -883,12 +884,12 @@ eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	{ parent = _attach_node; }
 
 	// Process attributes
-	std::string name = getAttrib(XMLNode, "name");
-	std::string id = getAttrib(XMLNode, "id");
-	std::string meshFile = getAttrib(XMLNode, "meshFile");
-	std::string materialFile = getAttrib(XMLNode, "materialFile");
-	bool isStatic = getAttribBool(XMLNode, "static", false);;
-	bool castShadows = getAttribBool(XMLNode, "castShadows", true);
+	std::string name = vl::getAttrib(XMLNode, "name");
+	std::string id = vl::getAttrib(XMLNode, "id");
+	std::string meshFile = vl::getAttrib(XMLNode, "meshFile");
+	std::string materialFile = vl::getAttrib(XMLNode, "materialFile");
+	bool isStatic = vl::getAttribBool(XMLNode, "static", false);;
+	bool castShadows = vl::getAttribBool(XMLNode, "castShadows", true);
 
 	// TEMP: Maintain a list of static and dynamic objects
 	if(isStatic)
@@ -1006,12 +1007,12 @@ void
 eqOgre::DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 {
 	// Process attributes
-	Ogre::Real expDensity = getAttribReal(XMLNode, "density", 0.001);
-	Ogre::Real linearStart = getAttribReal(XMLNode, "start", 0.0);
-	Ogre::Real linearEnd = getAttribReal(XMLNode, "end", 1.0);
+	Ogre::Real expDensity = vl::getAttribReal(XMLNode, "density", 0.001);
+	Ogre::Real linearStart = vl::getAttribReal(XMLNode, "start", 0.0);
+	Ogre::Real linearEnd = vl::getAttribReal(XMLNode, "end", 1.0);
 
 	Ogre::FogMode mode = Ogre::FOG_NONE;
-	std::string sMode = getAttrib(XMLNode, "mode");
+	std::string sMode = vl::getAttrib(XMLNode, "mode");
 	if(sMode == "none")
 	{ mode = Ogre::FOG_NONE; }
 	else if(sMode == "exp")
@@ -1027,7 +1028,7 @@ eqOgre::DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 	Ogre::ColourValue colourDiffuse = Ogre::ColourValue(1.0, 1.0, 1.0, 1.0);
 	pElement = XMLNode->first_node("colour");
 	if(pElement)
-	{ colourDiffuse = parseColour(pElement); }
+	{ colourDiffuse = vl::parseColour(pElement); }
 
 	// Setup the fog
 	_scene_mgr->setFog(mode, colourDiffuse, expDensity, linearStart, linearEnd);
@@ -1040,8 +1041,8 @@ eqOgre::DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 	// Process attributes
 	// material attribute is required, all others are optional and have defaults
 	std::string material = XMLNode->first_attribute("material")->value();
-	Ogre::Real distance = getAttribReal(XMLNode, "distance", 5000);
-	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
+	Ogre::Real distance = vl::getAttribReal(XMLNode, "distance", 5000);
+	bool drawFirst = vl::getAttribBool(XMLNode, "drawFirst", true);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -1049,7 +1050,7 @@ eqOgre::DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
-	{ rotation = parseQuaternion(pElement); }
+	{ rotation = vl::parseQuaternion(pElement); }
 
 	// Setup the sky box
 	_scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation, _sGroupName);
@@ -1062,10 +1063,10 @@ eqOgre::DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 	// Process attributes
 	// material attribute is required, all others are optional and have defaults
 	std::string material = XMLNode->first_attribute("material")->value();
-	Ogre::Real curvature = getAttribReal(XMLNode, "curvature", 10);
-	Ogre::Real tiling = getAttribReal(XMLNode, "tiling", 8);
-	Ogre::Real distance = getAttribReal(XMLNode, "distance", 4000);
-	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
+	Ogre::Real curvature = vl::getAttribReal(XMLNode, "curvature", 10);
+	Ogre::Real tiling = vl::getAttribReal(XMLNode, "tiling", 8);
+	Ogre::Real distance = vl::getAttribReal(XMLNode, "distance", 4000);
+	bool drawFirst = vl::getAttribBool(XMLNode, "drawFirst", true);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -1073,7 +1074,7 @@ eqOgre::DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
 	pElement = XMLNode->first_node("rotation");
 	if(pElement)
-	{ rotation = parseQuaternion(pElement); }
+	{ rotation = vl::parseQuaternion(pElement); }
 
 	// Setup the sky dome
 	_scene_mgr->setSkyDome( true, material, curvature, tiling,
@@ -1089,15 +1090,15 @@ eqOgre::DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 {
 //	TODO implement SkyPlane
 	// Process attributes
-	std::string material = getAttrib(XMLNode, "material");
-	Ogre::Real planeX = getAttribReal(XMLNode, "planeX", 0);
-	Ogre::Real planeY = getAttribReal(XMLNode, "planeY", -1);
-	Ogre::Real planeZ = getAttribReal(XMLNode, "planeX", 0);
-	Ogre::Real planeD = getAttribReal(XMLNode, "planeD", 5000);
-	Ogre::Real scale = getAttribReal(XMLNode, "scale", 1000);
-	Ogre::Real bow = getAttribReal(XMLNode, "bow", 0);
-	Ogre::Real tiling = getAttribReal(XMLNode, "tiling", 10);
-	bool drawFirst = getAttribBool(XMLNode, "drawFirst", true);
+	std::string material = vl::getAttrib(XMLNode, "material");
+	Ogre::Real planeX = vl::getAttribReal(XMLNode, "planeX", 0);
+	Ogre::Real planeY = vl::getAttribReal(XMLNode, "planeY", -1);
+	Ogre::Real planeZ = vl::getAttribReal(XMLNode, "planeX", 0);
+	Ogre::Real planeD = vl::getAttribReal(XMLNode, "planeD", 5000);
+	Ogre::Real scale = vl::getAttribReal(XMLNode, "scale", 1000);
+	Ogre::Real bow = vl::getAttribReal(XMLNode, "bow", 0);
+	Ogre::Real tiling = vl::getAttribReal(XMLNode, "tiling", 10);
+	bool drawFirst = vl::getAttribBool(XMLNode, "drawFirst", true);
 
 	// Setup the sky plane
 	Ogre::Plane plane;
@@ -1122,9 +1123,9 @@ void
 eqOgre::DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *light)
 {
 	// Process attributes
-	Ogre::Real inner = getAttribReal(XMLNode, "inner");
-	Ogre::Real outer = getAttribReal(XMLNode, "outer");
-	Ogre::Real falloff = getAttribReal(XMLNode, "falloff", 1.0);
+	Ogre::Real inner = vl::getAttribReal(XMLNode, "inner");
+	Ogre::Real outer = vl::getAttribReal(XMLNode, "outer");
+	Ogre::Real falloff = vl::getAttribReal(XMLNode, "falloff", 1.0);
 
 	// Setup the light range
 	light->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
@@ -1135,112 +1136,13 @@ eqOgre::DotSceneLoader::processLightAttenuation(rapidxml::xml_node<>* XMLNode,
 		Ogre::Light *light)
 {
 	// Process attributes
-	Ogre::Real range = getAttribReal(XMLNode, "range");
-	Ogre::Real constant = getAttribReal(XMLNode, "constant");
-	Ogre::Real linear = getAttribReal(XMLNode, "linear");
-	Ogre::Real quadratic = getAttribReal(XMLNode, "quadratic");
+	Ogre::Real range = vl::getAttribReal(XMLNode, "range");
+	Ogre::Real constant = vl::getAttribReal(XMLNode, "constant");
+	Ogre::Real linear = vl::getAttribReal(XMLNode, "linear");
+	Ogre::Real quadratic = vl::getAttribReal(XMLNode, "quadratic");
 
 	// Setup the light attenuation
 	light->setAttenuation(range, constant, linear, quadratic);
-}
-
-std::string
-eqOgre::DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
-		const std::string &attrib, const std::string &defaultValue )
-{
-	if(XMLNode->first_attribute(attrib.c_str()))
-	{ return XMLNode->first_attribute(attrib.c_str())->value(); }
-	else
-	{ return defaultValue; }
-}
-
-Ogre::Real
-eqOgre::DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
-		const std::string &attrib, Ogre::Real defaultValue )
-{
-	if(XMLNode->first_attribute(attrib.c_str()))
-	{
-		return vl::string_convert<Ogre::Real>(
-				XMLNode->first_attribute(attrib.c_str())->value() );
-	}
-	else
-	{ return defaultValue; }
-}
-
-bool
-eqOgre::DotSceneLoader::getAttribBool( rapidxml::xml_node<>* XMLNode,
-		const std::string &attrib, bool defaultValue )
-{
-	if( !XMLNode->first_attribute(attrib.c_str()) )
-	{ return defaultValue; }
-
-	if( std::string(XMLNode->first_attribute(attrib.c_str())->value()) == "true" )
-	{ return true; }
-
-	return false;
-}
-
-Ogre::Vector3
-eqOgre::DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
-{
-	return Ogre::Vector3(
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("x")->value()),
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("y")->value()),
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("z")->value())
-	);
-}
-
-Ogre::Quaternion
-eqOgre::DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
-{
-	Ogre::Real x, y, z, w;
-
-	// TODO add axisX, axisY, axisZ
-	// TODO add angleX, angleY, angleZ
-
-	// Default attribute names
-	rapidxml::xml_attribute<> *attrX = XMLNode->first_attribute("qx");
-	rapidxml::xml_attribute<> *attrY = XMLNode->first_attribute("qy");
-	rapidxml::xml_attribute<> *attrZ = XMLNode->first_attribute("qz");
-	rapidxml::xml_attribute<> *attrW = XMLNode->first_attribute("qw");
-
-	// Alternative attribute names
-	if( !attrX )
-	{ attrX = XMLNode->first_attribute( "x" ); }
-	if( !attrY )
-	{ attrY = XMLNode->first_attribute( "y" ); }
-	if( !attrZ )
-	{ attrZ = XMLNode->first_attribute( "z" ); }
-	if( !attrW )
-	{ attrW = XMLNode->first_attribute( "w" ); }
-
-	if( !attrX || !attrY || !attrZ || !attrW )
-	{
-		// TODO add description
-		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
-	}
-
-	x = vl::string_convert<Ogre::Real>( attrX->value() );
-	y = vl::string_convert<Ogre::Real>( attrY->value() );
-	z = vl::string_convert<Ogre::Real>( attrZ->value() );
-	w = vl::string_convert<Ogre::Real>( attrW->value() );
-
-	return Ogre::Quaternion( w, x, y, z );
-}
-
-Ogre::ColourValue
-eqOgre::DotSceneLoader::parseColour(rapidxml::xml_node<>* XMLNode)
-{
-	Ogre::Real r, g, b, a;
-	r = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("r")->value() );
-	g = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("g")->value() );
-	b = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("b")->value() );
-	if(  XMLNode->first_attribute("a") != NULL )
-	{ a = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("a")->value() ); }
-	else
-	{ a = 1; }
-
-	return Ogre::ColourValue(r, g, b, a);
 }
 
 std::string
