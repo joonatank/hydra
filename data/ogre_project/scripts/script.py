@@ -134,6 +134,33 @@ def addToggleMusicEvent() :
 
 # TODO create PrintOperation in python and register it into Event Manager
 
+# Change camera toggle
+# Use one Key in this case b to change between two active cameras
+# Requirement : Camera names must be correct for this to work
+#
+# If the camera name is incorrect the action will not change the camera
+# An error message is printed to std::cerr and the program continues normally
+def addToggleActiveCamera() :
+	print 'Creating Toggle Activate Camera'
+	action_on = event_manager.createOperation( 'ActivateCamera' )
+	action_on.config = config
+	action_on.camera = "OutsideCamera"
+	action_off = event_manager.createOperation( 'ActivateCamera' )
+	action_off.config = config
+	action_off.camera = "Omakamera"
+	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
+	trigger.key = KC.B
+
+	# Create the Event
+	event = event_manager.createEvent( 'ToggleEvent' )
+	event.toggle_on_action = action_on
+	event.toggle_off_action = action_off
+	event.toggle_state = False
+	event.addTrigger( trigger )
+	if not event_manager.addEvent( event ) :
+		print 'Python : Event could not be added to EventManager'
+
+
 print 'In python init script'
 print 'Adding config events'
 addQuitEvent()
@@ -152,3 +179,4 @@ print 'Getting Camera SceneNode'
 camera = config.getSceneNode("CameraNode")
 addTranslationEvent(camera)
 
+addToggleActiveCamera()

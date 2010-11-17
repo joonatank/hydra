@@ -38,7 +38,8 @@ bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 	return retval;
 }
 
-void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
+void
+eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 {
 	setDirty( DIRTY_NODES );
 	_scene_nodes.push_back( SceneNodeIDPair(node) );
@@ -51,8 +52,27 @@ void eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 	}
 }
 
-eqOgre::SceneNode *
+bool
+eqOgre::FrameData::hasSceneNode(const std::string& name) const
+{
+	return( getSceneNode(name) );
+}
+
+eqOgre::SceneNodePtr
 eqOgre::FrameData::getSceneNode(const std::string& name)
+{
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i).node;
+		if( node->getName() == name )
+		{ return node; }
+	}
+
+	return 0;
+}
+
+const eqOgre::SceneNodePtr
+eqOgre::FrameData::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -70,6 +90,13 @@ eqOgre::FrameData::getSceneNode(size_t i)
 	return _scene_nodes.at(i).node;
 }
 
+const eqOgre::SceneNodePtr
+eqOgre::FrameData::getSceneNode(size_t i) const
+{
+	return _scene_nodes.at(i).node;
+}
+
+
 uint32_t eqOgre::FrameData::commitAll( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
@@ -78,8 +105,6 @@ uint32_t eqOgre::FrameData::commitAll( void )
 		node->commit();
 	}
 
-//	std::cout << "FrameData dirty mask = " << std::hex << getDirty()
-//		<< std::dec << std::endl;
 	return commit();
 }
 
@@ -193,7 +218,7 @@ eqOgre::FrameData::unmapData(eq::Config* config)
 // different thread.
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
-void 
+void
 eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
@@ -203,7 +228,6 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 
 	if( dirtyBits & DIRTY_NODES )
 	{
-//		std::cerr << "this = " << this << " : Serializing " << _scene_nodes.size() << " SceneNodes." << std::endl;
 		os << _scene_nodes.size();
 		for( size_t i = 0; i < _scene_nodes.size(); ++i )
 		{
@@ -220,17 +244,16 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
-//		std::cerr << "this = " << this << " : Serializing Reload Scene." << std::endl;
 		os << _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_RESET_SCENE )
+	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{
-//		std::cerr << "this = " << this << " : Serializing Reset Scene." << std::endl;
+		os << _camera_name;
 	}
 }
 
-void 
+void
 eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
@@ -247,8 +270,8 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 		for( size_t i = 0; i < _scene_nodes.size(); ++i )
 		{
 			SceneNode *node = _scene_nodes.at(i).node;
-			// FIXME this does not handle changes in the IDs it will merily ignore
-			// them
+			// FIXME this does not handle changes in the IDs it will merily
+			// ignore them
 			is >> _scene_nodes.at(i).id;
 			// Check for new SceneNodes
 			if( !node || (node->getID() == EQ_ID_INVALID) )
@@ -256,7 +279,6 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 				if( _scene_nodes.at(i).id == EQ_ID_INVALID )
 				{
 					std::cerr << "SceneNode ID invalid when deserializing!" << std::endl;
-					//EQASSERT( false );
 				}
 				else
 				{
@@ -269,13 +291,12 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
-//		std::cerr << "Deserialize : reload scene "<< std::endl;
 		is >> _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_RESET_SCENE )
+	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{
-//		std::cerr << "Deserialize : reset scene "<< std::endl;
+		is >> _camera_name;
 	}
 }
 
@@ -298,7 +319,7 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 	{
 		std::cerr << "Node ID is valid! Mapping will fail." << std::endl;
 	}
-	
+
 	if( EQ_ID_INVALID == node.id )
 	{
 		std::cerr << "Trying to map object to invalid ID" << std::endl;

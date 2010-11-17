@@ -28,6 +28,7 @@ public :
 	DotSceneLoader();
 
 	virtual ~DotSceneLoader();
+
 	/// Load dotscene file using Ogre resource system
 	/// Parameters : sceneName is the name of the scene file in Ogre Resource system
 	///				 groupName is the name of the Ogre resource group

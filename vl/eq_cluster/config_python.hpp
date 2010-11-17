@@ -116,6 +116,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<Config, boost::noncopyable>("Config", python::no_init)
 		.def("removeSceneNode", &Config::removeSceneNode )
 		.def("getSceneNode", &Config::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.def("setActiveCamera", &Config::setActiveCamera)
 	;
 
 	python::class_<EventManager, boost::noncopyable>("EventManager", python::no_init)
@@ -198,6 +199,10 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 	python::class_<ToggleMusic, boost::noncopyable, python::bases<ConfigOperation> >("ToggleMusic", python::no_init )
+	;
+
+	python::class_<ActivateCamera, boost::noncopyable, python::bases<ConfigOperation> >("ActivateCamera", python::no_init )
+		.add_property("camera", python::make_function( &ActivateCamera::getCamera, python::return_value_policy<python::copy_const_reference>() ), &ActivateCamera::setCamera )
 	;
 
 	/// EventManager Operations

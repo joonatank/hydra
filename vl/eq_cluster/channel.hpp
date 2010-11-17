@@ -49,6 +49,8 @@ protected:
 	Ogre::Viewport *_viewport;
 	Ogre::Camera *_camera;
 
+	std::string _active_camera_name;
+
 	// distribution related
 	FrameData _frame_data;
 

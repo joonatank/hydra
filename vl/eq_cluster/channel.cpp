@@ -7,7 +7,7 @@
 #include "math/conversion.hpp"
 #include "base/exceptions.hpp"
 
-eqOgre::Channel::Channel( eq::Window *parent ) 
+eqOgre::Channel::Channel( eq::Window *parent )
 	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0)
 {}
 
@@ -28,6 +28,8 @@ eqOgre::Channel::configInit( const uint32_t initID )
 
 	std::cerr << "Get camera from RenderWindow" << std::endl;
 	_camera = window->getCamera();
+	if( _camera )
+	{ _active_camera_name = _camera->getName(); }
 
 	createViewport();
 
@@ -93,7 +95,7 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 	// From equalizer channel::frameDraw
 	EQ_GL_CALL( applyBuffer( ));
 	EQ_GL_CALL( applyViewport( ));
-	    
+
 	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
 	EQ_GL_CALL( glLoadIdentity() );
 
@@ -105,7 +107,7 @@ eqOgre::Channel::frameDraw( const uint32_t frameID )
 	_viewport->update();
 }
 
-void 
+void
 eqOgre::Channel::setOgreFrustum( void )
 {
 	eq::Frustumf frust = getFrustum();
@@ -128,7 +130,7 @@ eqOgre::Channel::setOgreFrustum( void )
 	_camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
 }
 
-void 
+void
 eqOgre::Channel::updateDistribData( void )
 {
 	static uint32_t scene_version = 0;
@@ -147,9 +149,28 @@ eqOgre::Channel::updateDistribData( void )
 
 		scene_version = _frame_data.getSceneVersion();
 	}
+
+	// Get active camera and change the rendering camera if there is a change
+	std::string const &cam_name = _frame_data.getActiveCamera();
+	if( !cam_name.empty() && cam_name != _active_camera_name )
+	{
+		_active_camera_name = cam_name;
+		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
+		Ogre::SceneManager *sm = win->getSceneManager();
+		if( sm->hasCamera( cam_name ) )
+		{
+			_camera = sm->getCamera( _active_camera_name );
+			_viewport->setCamera( _camera );
+		}
+		else
+		{
+			std::cerr << "eqOgre::Channel : New camera name set, but NO camera found"
+				<< std::endl;
+		}
+	}
 }
 
-void 
+void
 eqOgre::Channel::createViewport( void )
 {
 	// Supports only one Viewport

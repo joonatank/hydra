@@ -55,17 +55,15 @@ namespace eqOgre
 
 		void removeSceneNode( SceneNode *node );
 
-		// TODO add getSceneNode
-		// Should for now return existing SceneNode from frameData if there is one
-		// and create a new one and add it if not.
-		// Later this should retrieve one from the whole SceneGraph
-		// NOTE this should be used instead of SceneNode::create and addSceneNode
-		// otherwise we would be creating multiple SceneNodes with the same name
-		// and would mess up the Ogre SceneGraph when they are applied
 		SceneNode *getSceneNode( std::string const &name );
 
 		void updateSceneVersion( void )
 		{ _frame_data.updateSceneVersion(); }
+
+		void resetScene( void );
+
+		void setActiveCamera( std::string const &name )
+		{ _frame_data.setActiveCamera( name ); }
 
 		void toggleBackgroundSound( void );
 

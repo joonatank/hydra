@@ -6,7 +6,7 @@
 
 namespace eqOgre
 {
-	
+
 // ConfigEvents
 class ConfigOperation : public Operation
 {
@@ -21,11 +21,7 @@ public :
 	Config *getConfig( void )
 	{ return _config; }
 
-	virtual std::ostream & print( std::ostream & os ) const
-	{
-		Operation::print(os) << " config = " << _config << std::endl;
-		return os;
-	}
+	virtual std::ostream & print( std::ostream & os ) const;
 
 protected :
 	Config *_config;
@@ -36,17 +32,7 @@ protected :
 class QuitOperation : public ConfigOperation
 {
 public :
-	// FIXME setting parameters when using factory
-	QuitOperation( void )
-	{}
-
-	virtual void execute( void )
-	{
-		if( !_config )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_config->stopRunning();
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -64,23 +50,42 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-QuitOperation::getTypeName( void ) const
-{ return QuitOperationFactory::TYPENAME; }
+class ActivateCamera : public ConfigOperation
+{
+public :
+	void setCamera( std::string const &name )
+	{ _camera_name = name; }
+
+	std::string const &getCamera( void ) const
+	{ return _camera_name; }
+
+	virtual void execute( void );
+
+	virtual std::string const &getTypeName( void ) const;
+
+protected :
+	std::string _camera_name;
+
+};	// ActivateCamera
+
+class ActivateCameraFactory : public OperationFactory
+{
+public :
+	virtual Operation *create( void )
+	{ return new ActivateCamera; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+
+};	// ActivateCameraFactory
+
 
 class ReloadScene : public ConfigOperation
 {
 public :
-	ReloadScene( void )
-	{}
-
-	virtual void execute( void )
-	{
-		if( !_config )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_config->updateSceneVersion();
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -98,21 +103,11 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-ReloadScene::getTypeName( void ) const
-{ return ReloadSceneFactory::TYPENAME; }
-
 
 class ToggleMusic : public ConfigOperation
 {
 public :
-	virtual void execute( void )
-	{
-		if( !_config )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_config->toggleBackgroundSound();
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -129,11 +124,6 @@ public :
 
 	static const std::string TYPENAME;
 };
-
-inline std::string const &
-ToggleMusic::getTypeName( void ) const
-{ return ToggleMusicFactory::TYPENAME; }
-
 
 
 
@@ -164,10 +154,11 @@ protected :
 	EventManager *_event_man;
 };
 
+
+
 class AddTransformOperation : public EventManagerOperation
 {
 public :
-	// FIXME setting parameters when using factory
 	AddTransformOperation( void )
 		: _transform(0)
 	{}
@@ -178,13 +169,7 @@ public :
 	TransformationEvent *getTransformEvent( void )
 	{ return _transform; }
 
-	virtual void execute( void )
-	{
-		if( !_event_man )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_event_man->addEvent( _transform );
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -205,9 +190,7 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-AddTransformOperation::getTypeName( void ) const
-{ return AddTransformOperationFactory::TYPENAME; }
+
 
 class RemoveTransformOperation : public EventManagerOperation
 {
@@ -223,13 +206,7 @@ public :
 	{ return _transform; }
 
 
-	virtual void execute( void )
-	{
-		if( !_event_man )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_event_man->removeEvent( _transform );
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -250,9 +227,6 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-RemoveTransformOperation::getTypeName( void ) const
-{ return RemoveTransformOperationFactory::TYPENAME; }
 
 }	// namespace eqOgre
 

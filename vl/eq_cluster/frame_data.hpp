@@ -26,7 +26,7 @@ public :
 		SceneNode *node;
 		uint32_t id;
 	};
-	
+
 	FrameData( void );
 
 	virtual ~FrameData( void );
@@ -38,9 +38,15 @@ public :
 	/// them when necessary.
 	void addSceneNode( SceneNode * node );
 
-	SceneNode *getSceneNode( std::string const &name );
+	bool hasSceneNode( std::string const &name ) const;
 
-	SceneNode *getSceneNode( size_t i );
+	SceneNodePtr getSceneNode( std::string const &name );
+
+	const SceneNodePtr getSceneNode( std::string const &name ) const;
+
+	SceneNodePtr getSceneNode( size_t i );
+
+	const SceneNodePtr getSceneNode( size_t i ) const;
 
 	size_t getNSceneNodes( void ) const
 	{ return _scene_nodes.size(); }
@@ -48,15 +54,26 @@ public :
 	// TODO add SceneNode removal
 
 	void updateSceneVersion( void )
-	{ 
+	{
 		setDirty( DIRTY_RELOAD_SCENE );
 		_scene_version++;
 	}
 
 	uint32_t getSceneVersion( void ) const
+	{ return _scene_version; }
+
+	void setActiveCamera( std::string const &name )
 	{
-		return _scene_version;
+		if( _camera_name == name )
+		{ return; }
+
+		setDirty( DIRTY_ACTIVE_CAMERA );
+		_camera_name = name;
+		// TODO add serialization and really setting the camera
 	}
+
+	std::string const &getActiveCamera( void ) const
+	{ return _camera_name; }
 
 	uint32_t commitAll( void );
 
@@ -69,14 +86,12 @@ public :
 	void mapData( eq::Config *config, uint32_t id );
 
 	void unmapData( eq::Config *config );
-	
+
 	enum DirtyBits
 	{
 		DIRTY_NODES = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
 		DIRTY_RELOAD_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		// TODO the reset scene is not implemented at the moment
-		// It should reset all distributed SceneNodes
-		DIRTY_RESET_SCENE = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
 		DIRTY_CUSTOM = eq::fabric::Serializable::DIRTY_CUSTOM << 3
 	};
 
@@ -90,9 +105,12 @@ protected :
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
-	
+
 	// Reload the scene
 	uint32_t _scene_version;
+
+	// Active camera name
+	std::string _camera_name;
 
 	// Session where we are, this should be zero for slave nodes and non zero
 	// for the master node.

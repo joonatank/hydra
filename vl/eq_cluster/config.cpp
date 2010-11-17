@@ -34,6 +34,7 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addOperationFactory( new HideOperationFactory );
 	_event_manager->addOperationFactory( new ShowOperationFactory );
 	_event_manager->addOperationFactory( new ToggleMusicFactory );
+	_event_manager->addOperationFactory( new ActivateCameraFactory );
 }
 
 eqOgre::Config::~Config()
@@ -118,6 +119,13 @@ eqOgre::SceneNode *
 eqOgre::Config::getSceneNode(const std::string& name)
 {
 	return _frame_data.getSceneNode(name);
+}
+
+// TODO implement
+void
+eqOgre::Config::resetScene(void )
+{
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
 void
