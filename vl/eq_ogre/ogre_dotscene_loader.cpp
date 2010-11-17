@@ -1,4 +1,4 @@
-#include "dotscene_loader.hpp"
+#include "ogre_dotscene_loader.hpp"
 
 #include <sstream>
 
@@ -10,22 +10,22 @@
  * TODO should be removed as soon as possible.
  */
 
-#include <OgreLogManager.h>
-#include <OgreException.h>
-#include <OgreResourceManager.h>
-#include <OgreEntity.h>
+#include <OGRE/OgreLogManager.h>
+#include <OGRE/OgreException.h>
+#include <OGRE/OgreResourceManager.h>
+#include <OGRE/OgreEntity.h>
 
-DotSceneLoader::DotSceneLoader()
+eqOgre::DotSceneLoader::DotSceneLoader()
 	: _xml_data(0)
 {
 }
 
-DotSceneLoader::~DotSceneLoader()
+eqOgre::DotSceneLoader::~DotSceneLoader()
 {
 	delete [] _xml_data;
 }
 void
-DotSceneLoader::parseDotScene(
+eqOgre::DotSceneLoader::parseDotScene(
 		std::string const &sceneName,
 		std::string const &groupName,
 		Ogre::SceneManager *sceneMgr,
@@ -37,12 +37,12 @@ DotSceneLoader::parseDotScene(
 
 	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
 		.openResource( sceneName, groupName );
-		
+
 	parseDotScene( stream->getAsString(), sceneMgr, attachNode, sPrependNode );
 }
 
 void
-DotSceneLoader::parseDotScene(
+eqOgre::DotSceneLoader::parseDotScene(
 		std::string const &scene_data,
 		Ogre::SceneManager *sceneMgr,
 		Ogre::SceneNode *attachNode,
@@ -62,7 +62,7 @@ DotSceneLoader::parseDotScene(
 	delete [] _xml_data;
 	_xml_data = new char[scene_data.length()+1];
 	::strcpy( _xml_data, scene_data.c_str() );
-	
+
 //	std::ifstream fs( scenePath.c_str(), std::ios::binary );
 //	_xml_data.readStream( fs );
 	XMLDoc.parse<0>( _xml_data );
@@ -83,12 +83,12 @@ DotSceneLoader::parseDotScene(
 	if( !_attach_node )
 	{ _attach_node = _scene_mgr->getRootSceneNode(); }
 
-	// Process the scene	
+	// Process the scene
 	processScene(XMLRoot);
 }
 
 void
-DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
+eqOgre::DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 {
 	// Process the scene parameters
 	std::string version = getAttrib(XMLRoot, "formatVersion", "unknown");
@@ -146,14 +146,14 @@ DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	if(pElement)
 	{ processUserDataReference(pElement); }
 	*/
-	
+
 	// Process octree (?)
 	/*
 	pElement = XMLRoot->first_node("octree");
 	if(pElement)
 	{ processOctree(pElement); }
 	*/
-	
+
 	// Process light (?)
 	pElement = XMLRoot->first_node("light");
 	if(pElement)
@@ -170,7 +170,8 @@ DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	{ processTerrain(pElement); }
 }
 
-void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
+void
+eqOgre::DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 {
 	rapidxml::xml_node<>* pElement;
 
@@ -199,8 +200,8 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	}
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
-	{ 
-		_attach_node->setOrientation(parseQuaternion(pElement)); 
+	{
+		_attach_node->setOrientation(parseQuaternion(pElement));
 	}
 
 	// Process scale (?)
@@ -212,12 +213,14 @@ void DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 	}
 }
 
-void DotSceneLoader::processExternals(rapidxml::xml_node<>* XMLNode)
+void
+eqOgre::DotSceneLoader::processExternals(rapidxml::xml_node<>* XMLNode)
 {
 	//! @todo Implement this
 }
 
-void DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
+void
+eqOgre::DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 {
 	rapidxml::xml_node<>* pElement;
 
@@ -270,7 +273,7 @@ void DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 {
 	/*	Terrain not yet Implemented
 	Ogre::Real worldSize = getAttribReal(XMLNode, "worldSize");
@@ -337,7 +340,7 @@ DotSceneLoader::processTerrain(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 {
 	/*
 	std::string name = getAttrib(XMLNode, "name");
@@ -418,7 +421,7 @@ DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 			}
 			pElement = pElement->next_sibling("layers");
 		}
-		
+
 		mTerrainGroup->defineTerrain(pageX, pageY, &imp);
 	}
 	*/
@@ -426,7 +429,7 @@ DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
 {
 	/* TODO implement Terrain
 	int pageX = std::stringConverter::parseInt(
@@ -477,7 +480,7 @@ DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processUserDataReference(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processUserDataReference(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	//! @todo Implement this
@@ -485,13 +488,13 @@ DotSceneLoader::processUserDataReference(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processOctree(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processOctree(rapidxml::xml_node<>* XMLNode)
 {
 	//! @todo Implement this
 }
 
 void
-DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	// If no parent is provided we use Root node
@@ -573,7 +576,7 @@ DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 }
 
 void
-DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	// If no parent is provided we use Root node
@@ -654,7 +657,7 @@ DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 }
 
 void
-DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	// If no parent is provided we use Root node
@@ -678,7 +681,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	pElement = XMLNode->first_node("position");
 	if( pElement )
 	{ node->setPosition(parseVector3(pElement)); }
-	
+
 	// Process rotation (?)
 	pElement = XMLNode->first_node("rotation");
 	if( pElement )
@@ -722,7 +725,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		processEntity(pElement, node);
 		pElement = pElement->next_sibling("entity");
 	}
-	
+
 	/*	Process light (*) */
 	pElement = XMLNode->first_node("light");
 	while(pElement)
@@ -768,8 +771,8 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("plane");
 	}
 	*/
-	
-	/*	Process userDataReference 
+
+	/*	Process userDataReference
 	 *	TODO not supported yet
 	pElement = XMLNode->first_node("userDataReference");
 	if( pElement )
@@ -779,7 +782,7 @@ DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	//! @todo Is this correct? Cause I don't have a clue actually
@@ -833,7 +836,7 @@ DotSceneLoader::processLookTarget(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, Ogre::SceneNode *parent)
+eqOgre::DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, Ogre::SceneNode *parent)
 {
 	/*	TODO this needs SceneNode::autoTracking
 	 *
@@ -869,7 +872,7 @@ DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, Ogre::SceneNod
 }
 
 void
-DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	// TODO this needs SceneNode::attachObject,
@@ -913,7 +916,7 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 		entity = _scene_mgr->createEntity(name, meshFile);
 		entity->setCastShadows(castShadows);
 		parent->attachObject(entity);
-		
+
 		if( !materialFile.empty() )
 		{ entity->setMaterialName(materialFile); }
 	}
@@ -933,7 +936,7 @@ DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processParticleSystem(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processParticleSystem(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	/*	TODO this needs ParticleSystems
@@ -959,7 +962,7 @@ DotSceneLoader::processParticleSystem(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processBillboardSet(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processBillboardSet(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 	//! @todo Implement this
@@ -967,7 +970,7 @@ DotSceneLoader::processBillboardSet(rapidxml::xml_node<>* XMLNode,
 
 /// Not implemented
 void
-DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
 /*	TODO implement plane
@@ -1000,7 +1003,7 @@ DotSceneLoader::processPlane(rapidxml::xml_node<>* XMLNode,
 }
 
 void
-DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 {
 	// Process attributes
 	Ogre::Real expDensity = getAttribReal(XMLNode, "density", 0.001);
@@ -1032,7 +1035,7 @@ DotSceneLoader::processFog(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 {
 	// Process attributes
 	// material attribute is required, all others are optional and have defaults
@@ -1054,7 +1057,7 @@ DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 {
 	// Process attributes
 	// material attribute is required, all others are optional and have defaults
@@ -1082,7 +1085,7 @@ DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 {
 //	TODO implement SkyPlane
 	// Process attributes
@@ -1106,7 +1109,7 @@ DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 
 /// Not implemented
 void
-DotSceneLoader::processClipping(rapidxml::xml_node<>* /*XMLNode */)
+eqOgre::DotSceneLoader::processClipping(rapidxml::xml_node<>* /*XMLNode */)
 {
 	//! @todo Implement this
 
@@ -1116,7 +1119,7 @@ DotSceneLoader::processClipping(rapidxml::xml_node<>* /*XMLNode */)
 }
 
 void
-DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *light)
+eqOgre::DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *light)
 {
 	// Process attributes
 	Ogre::Real inner = getAttribReal(XMLNode, "inner");
@@ -1128,7 +1131,7 @@ DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::Light *li
 }
 
 void
-DotSceneLoader::processLightAttenuation(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processLightAttenuation(rapidxml::xml_node<>* XMLNode,
 		Ogre::Light *light)
 {
 	// Process attributes
@@ -1142,7 +1145,7 @@ DotSceneLoader::processLightAttenuation(rapidxml::xml_node<>* XMLNode,
 }
 
 std::string
-DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
 		const std::string &attrib, const std::string &defaultValue )
 {
 	if(XMLNode->first_attribute(attrib.c_str()))
@@ -1152,7 +1155,7 @@ DotSceneLoader::getAttrib(rapidxml::xml_node<>* XMLNode,
 }
 
 Ogre::Real
-DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
 		const std::string &attrib, Ogre::Real defaultValue )
 {
 	if(XMLNode->first_attribute(attrib.c_str()))
@@ -1165,7 +1168,7 @@ DotSceneLoader::getAttribReal( rapidxml::xml_node<>* XMLNode,
 }
 
 bool
-DotSceneLoader::getAttribBool( rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::getAttribBool( rapidxml::xml_node<>* XMLNode,
 		const std::string &attrib, bool defaultValue )
 {
 	if( !XMLNode->first_attribute(attrib.c_str()) )
@@ -1178,7 +1181,7 @@ DotSceneLoader::getAttribBool( rapidxml::xml_node<>* XMLNode,
 }
 
 Ogre::Vector3
-DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
 {
 	return Ogre::Vector3(
 		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("x")->value()),
@@ -1188,7 +1191,7 @@ DotSceneLoader::parseVector3(rapidxml::xml_node<>* XMLNode)
 }
 
 Ogre::Quaternion
-DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 {
 	Ogre::Real x, y, z, w;
 
@@ -1221,12 +1224,12 @@ DotSceneLoader::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	y = vl::string_convert<Ogre::Real>( attrY->value() );
 	z = vl::string_convert<Ogre::Real>( attrZ->value() );
 	w = vl::string_convert<Ogre::Real>( attrW->value() );
-	
+
 	return Ogre::Quaternion( w, x, y, z );
 }
 
 Ogre::ColourValue
-DotSceneLoader::parseColour(rapidxml::xml_node<>* XMLNode)
+eqOgre::DotSceneLoader::parseColour(rapidxml::xml_node<>* XMLNode)
 {
 	Ogre::Real r, g, b, a;
 	r = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("r")->value() );
@@ -1241,7 +1244,7 @@ DotSceneLoader::parseColour(rapidxml::xml_node<>* XMLNode)
 }
 
 std::string
-DotSceneLoader::getProperty(const std::string &ndNm,
+eqOgre::DotSceneLoader::getProperty(const std::string &ndNm,
 		const std::string &prop)
 {
 	for ( unsigned int i = 0 ; i < nodeProperties.size(); i++ )
@@ -1257,7 +1260,7 @@ DotSceneLoader::getProperty(const std::string &ndNm,
 
 /// Not implemented
 void
-DotSceneLoader::processUserDataReference( rapidxml::xml_node<>* XMLNode,
+eqOgre::DotSceneLoader::processUserDataReference( rapidxml::xml_node<>* XMLNode,
 		Ogre::Entity *pEntity )
 {
 /*

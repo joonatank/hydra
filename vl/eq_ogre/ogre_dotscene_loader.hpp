@@ -9,8 +9,11 @@
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
 
-#include <OgreSceneNode.h>
-#include <OgreSceneManager.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreSceneManager.h>
+
+namespace eqOgre
+{
 
 class nodeProperty
 {
@@ -115,7 +118,7 @@ protected:
 	Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
 	Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
 	Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
-	
+
 	// Scene Manager for the scene file
 	Ogre::SceneManager *_scene_mgr;
 	// Parent SceneNode for the scene file
@@ -131,8 +134,8 @@ protected:
 //	Ogre::TerrainGroup* mTerrainGroup;
 //	Ogre::Vector3 mTerrainPosition;
 
-	// Eh what the 
-//	Ogre::Vector3 mLightDirection;
-};
+};	// class DotSceneLoader
+
+}	// namespace eqOgre
 
 #endif // DOT_SCENELOADER_H

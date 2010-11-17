@@ -1,7 +1,7 @@
 project( "eqOgre" CXX )
 
 set( SOURCES
-	dotscene_loader.cpp
+	eq_ogre/ogre_dotscene_loader.cpp
 	fake_tracker.cpp
 	vrpn_tracker.cpp
 	settings.cpp
@@ -31,7 +31,7 @@ set( SOURCES
 
 set( HEADERS
 	tracker.hpp
-	dotscene_loader.hpp
+	eq_ogre/ogre_dotscene_loader.hpp
 	fake_tracker.hpp
 	vrpn_tracker.hpp
 	settings.hpp

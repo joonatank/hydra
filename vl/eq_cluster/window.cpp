@@ -2,7 +2,7 @@
 
 #include "base/exceptions.hpp"
 #include "eq_cluster/config.hpp"
-#include "dotscene_loader.hpp"
+#include "eq_ogre/ogre_dotscene_loader.hpp"
 
 #include <OGRE/OgreWindowEventUtilities.h>
 #include <OGRE/OgreLogManager.h>
@@ -96,7 +96,7 @@ eqOgre::Window::loadScene( void )
 		std::string message = "Loading scene : " + scene_file;
 		Ogre::LogManager::getSingleton().logMessage( message );
 
-		DotSceneLoader loader;
+		eqOgre::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 		loader.parseDotScene( scene_file,
