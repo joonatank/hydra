@@ -109,7 +109,7 @@ include_directories( SYSTEM
  	${OGRE_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}/..
 	${EQUALIZER_INCLUDE_DIR}
-	${VPRN_INCLUDE_DIR}
+	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${CAUDIO_INCLUDE_DIR}
@@ -147,7 +147,9 @@ set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
 
 if( WIN32 )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-		${PROJECT_BINARY_DIR}/start.bat )
+		${PROJECT_BINARY_DIR}/Release/start.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/start.bat )
 else()
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
 		${PROJECT_BINARY_DIR}/start.sh )
@@ -174,10 +176,10 @@ if( WIN32 )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
 		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
-		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
+		${PROJECT_BINARY_DIR}/Release/kill_nodes.bat )
 	# Copy RelWithDebugInfo
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_multi_node.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
 		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
 else()

@@ -20,13 +20,14 @@ vl::findPlugin( std::string const &plugin )
 #ifdef VL_WIN32
 	std::string const postfix(".dll");
 	char const delimiter(';');
-	std::string paths = ::getenv( "PATH" );
+	std::string paths = std::string(::getenv( "PATH" )) + ';' + std::string(".\\");
 #else
 	std::string const postfix(".so");
 	char const delimiter(':');
-	std::string paths = "/usr/lib:/usr/local/lib";
+	std::string paths = "/usr/lib:/usr/local/lib:./";
 #endif
 //	std::stringstream ss;
+	std::cout << "Finding Plugins : paths = " << paths << std::endl;
 
 	std::vector<std::string> vec;
 	vl::break_string_down( vec, paths, delimiter );

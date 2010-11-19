@@ -89,7 +89,7 @@ public :
 	vl::udp::Server server;
 };
 
-class NodeFactoryUDP : public ::NodeFactory
+class NodeFactoryUDP : public eqOgre::NodeFactory
 {
 public :
 	virtual eq::Channel *createChannel( eq::Window *parent )
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 		ListeningClientFixture fix;
 
 		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
-		eqOgre::NodeFactory nodeFactory;
+
 		::NodeFactoryUDP nodeFactory;
 		error = !fix.init( settings, &nodeFactory );
 
