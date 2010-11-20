@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+
+<!--
+Servers configurations :
+Supports : multiple servers of same and different types
+		   hostname and port configuration
+		   trigger configuration for event handling system
+
+At the moment only custom UDP proto server is supported
+TODO add VRPN server support
+
+Trigger configuration :
+Each Trigger node will create a trigger based on the node attributes.
+Each trigger will send a message to the application event system
+when it receives new data.
+
+Errors :
+critical errors invalidate this configuration, so it can not be used
+they can either be delt in the application level by aborting or printing an error
+message and continuing the execution, no data from invalid configuration can be
+used in either case.
+
+-->
+
+<!--
+Servers Node
+
+Critical : servers node needs to be present.
+-->
+<servers>
+	<!--
+	Server configuration
+
+	Attributes :
+	Host : hostname either a dns name or ip address
+	Port : server
+
+	Critical : type attribute must be present and it must be UDP
+			   port can be either necessary or not, depending of the proto
+	-->
+	<server type="UDP" >
+		<!--
+		Custom UDP proto, specifications are really scetchy at this time
+		supports setting port.
+
+		This proto supports only data input,
+		we might later add an output proto also.
+		-->
+
+		<!-- Port does not default to any value for the UDP -->
+		<port 4002/>
+
+		<!--
+		UDP is sent in as packets
+		Packet node descripes how the packet is deserialized
+
+		Critical : Packet node is necessary
+				   id attribute is necessary
+				   Only supported id at the moment is -1 (no id)
+		-->
+		<packet id="-1">
+
+			<!--
+			Transformation node, data is position and orientation
+
+			valid attributes:
+			position :
+			what type of data structure is used to represent position data.
+			valid values : vector
+
+			orientation :
+			what type of data structure is used to represent orientation data
+			valid values : quaternion, angle-axis
+
+			num :
+			The sequential position of this transform in the packet.
+			The transforms are sorted to the order based on the num and
+			the deserialization will discard all the missing transforms.
+			Discarded transforms in the received packet might be logged into
+			the log though.
+
+
+			Critical : num must be present and have an integer value
+					   same num in multiple transform nodes
+					   position attribute must be present and have a valid value
+					   orientation attribute must be present and have a valid value
+			-->
+			<transform num="0" position="vector" orientation="angle-axis">
+				<!--
+				Trigger is a event trigger invoked in the application when a new
+				message is received. Data in the message is passed to the trigger.
+
+				Only single trigger is supported at the moment.
+
+				type : needs to be present, values supported : "UDP" only
+				name : needs to be present, values supported : arbitary string
+
+				type is the trigger type created for this event for now the type
+				must match the server type.
+				name is the name of the trigger so that triggers can be matched to
+				objects.
+
+				Good convention if the data is received from a simulator is to
+				match the name of the trigger to the name of the object or
+				scene/object.
+				This is not necessary but it's easier for the one who writes the
+				mapping of triggers to objects.
+
+				Critical : Multiple triggers is an error.
+						   type must be present and it must be UDP
+						   name must be present
+
+				-->
+				<trigger type="UDP" name="crane/boom1">
+			</transform>
+
+			<transform num="1" position="vector" orientation="angle-axis">
+				<trigger type="UDP" name="crane/boom2">
+			</transform>
+
+	</server>
+</servers>
+

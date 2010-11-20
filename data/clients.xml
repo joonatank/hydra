@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<!--
+Clients configurations :
+Supports : multiple clients of same and different types
+		   hostname and port configuration
+		   trigger configuration for event handling system
+
+At the moment only VRPN tracking client is supported
+
+Trigger configuration :
+Each Trigger node will create a trigger based on the node attributes.
+Each trigger will send a message to the application event system
+when it receives new data.
+
+Errors :
+critical errors invalidate this configuration, so it can not be used
+they can either be delt in the application level by aborting or printing an error
+message and continuing the execution, no data from invalid configuration can be
+used in either case.
+
+-->
+
+<!--
+Clients Node
+
+Critical : clients node needs to be present.
+-->
+<clients>
+	<!--
+	Client configuration
+
+	Attributes :
+	Host : hostname either a dns name or ip address
+	Port : server
+
+	Critical :
+	type attribute must be present and it must be VRPN
+
+	Critical : host is necessary
+			   port is necessary
+
+	-->
+
+	<!-- Port defaults to 3883, vrpn default -->
+	<client type="VRPN" host="kosu-vr6.me.tut.fi" port="3888">
+		<!--
+		tracker : Tracker name, used by VRPN
+
+		Critical : if server type is VRPN at least one tracker node must be
+				   present
+		-->
+		<tracker name="glasses">
+			<!--
+			Sensor marks a vector quaternion pair
+			There can exists an arbitary number of sensors, if the packet received
+			has more or less bytes than there is sensors it's considered an
+			error.
+			Either the application will print an error message or it will exit.
+
+			Default value : does not have one.
+
+			attributes :
+			num : necessary attribute for the sequential number of the sensor
+
+			Critical : attribute num is missing from sensor
+					   at least one sensor node needs to be present
+
+			-->
+			<sensor num="0">
+				<!--
+				Trigger is a event trigger invoked in the application when a new
+				message is received. Data in the message is passed to the trigger.
+
+				Only single trigger is supported at the moment.
+
+				Critical : Multiple triggers is an error.
+						   type not present
+						   name not present
+
+				type : needs to be present, values supported : "VRPN" only
+				name : needs to be present, values supported : arbitary string
+
+				type is the trigger type created for this event for now the type
+				must match the server type.
+				name is the name of the trigger so that triggers can be matched to
+				objects.
+
+				Good convention if the data is received from a simulator is to
+				match the name of the trigger to the name of the object or
+				scene/object.
+				This is not necessary but it's easier for the one who writes the
+				mapping of triggers to objects.
+				-->
+				<trigger type="VRPN" name="glasses">
+				<default>
+					<position x="0" y"1.5" z="0"/>
+					<orientation x="0" y="0" z="0" w="1"/>
+				</default>
+			</sensor>
+			<!--
+			NOTE Modifying the transformation is not implemented at the moment
+			because the obvious way (using separate vectors for control) is
+			too complex and confusing to the user, you can never be sure what is
+			the order of the transformation and what parameters modify what values.
+
+			The configuration interface needs to be well defined and easy to
+			understand and verify.
+			For example matrix multiplication is well defined though not easy
+			or intuitive. Using a hierarchical transform node type of thing
+			might be easier to use, or some predefined matrices for most likely
+			use cases.
+			-->
+		</tracker>
+
+	</client>
+
+	<client type="VRPN" host="kosu-vr6.me.tut.fi" port="3885" >
+		<!--
+		Mevea Toro T7 tracker has multiple sensors which have triggers.
+		-->
+		<tracker name="Mevea">
+			<sensor num="0">
+				<trigger type="VRPN" name="eturunko">
+			</sensor>
+			<sensor num="1">
+				<trigger type="VRPN" name="takarunko">
+			</sensor>
+			<sensor num="2">
+				<trigger type="VRPN" name="keskirunko">
+			</sensor>
+		</tracker>
+	</client>
+</clients>
