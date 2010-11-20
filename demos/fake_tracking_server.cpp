@@ -8,10 +8,13 @@
 #include "base/sleep.hpp"
 #include "vrpn_Tracker.h"
 
+#include <iostream>
+
 int main (int argc, char **argv)
 {
-	vrpn_Connection *connection = vrpn_create_server_connection( ":3883" );
+	vrpn_Connection *connection = vrpn_create_server_connection( "localhost" );
 	vrpn_Tracker_Server *tracker = new vrpn_Tracker_Server("glasses", connection );
+
 	if( tracker == NULL)
 	{
 		fprintf(stderr,"Can not create NULL tracker.");
@@ -31,15 +34,16 @@ int main (int argc, char **argv)
 	// Loop forever calling the mainloop()s for all devices and the connection
 	while (1)
 	{
+		const int msecs = 8;
 		struct timeval t;
 		t.tv_sec = 0;
-		t.tv_usec = 1e3;
+		t.tv_usec = msecs*1e3;
 
 		// Send and receive all messages
 		tracker->report_pose( 0, t, pos, quat );
 		tracker->mainloop();
-
-		vl::msleep(1);
+		connection->mainloop();
+		vl::msleep(msecs);
 	}
 
 	delete tracker;

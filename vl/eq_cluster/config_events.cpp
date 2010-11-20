@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa
+ *	2010-11 initial implementation
+ *
+ */
 
 #include "config_events.hpp"
 
@@ -9,6 +13,24 @@ eqOgre::ConfigOperation::print(std::ostream& os) const
 	Operation::print(os) << " config = " << _config << std::endl;
 	return os;
 }
+
+/// --------- HeadTrackerAction -----------
+void
+eqOgre::HeadTrackerAction::execute(const vl::SensorData& data)
+{
+	if( !_config )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	Ogre::Matrix4 m( data.quaternion );
+	m.setTrans(data.position);
+	_config->setHeadMatrix(m);
+}
+
+std::string const &
+eqOgre::HeadTrackerAction::getTypeName( void ) const
+{ return HeadTrackerActionFactory::TYPENAME; }
+
+const std::string eqOgre::HeadTrackerActionFactory::TYPENAME = "HeadTrackerAction";
 
 /// -------- QuitAction ------------
 

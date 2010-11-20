@@ -72,16 +72,16 @@ target_link_libraries( test_exceptions ${TEST_LIB} )
 
 
 # Test tracking
-add_executable( test_tracking
-				test_tracking.cpp
-				debug.hpp
-				tracking_fixture.hpp
-				)
+#add_executable( test_tracking
+#				test_tracking.cpp
+#				debug.hpp
+#				tracking_fixture.hpp
+#				)
 
-target_link_libraries( test_tracking
-	eqOgre
-	${TEST_LIB}
-	)
+# target_link_libraries( test_tracking
+# 	eqOgre
+# 	${TEST_LIB}
+# 	)
 
 
 

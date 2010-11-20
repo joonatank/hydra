@@ -1,8 +1,12 @@
-
+/**	Joonatan Kuosa
+ *	2010-11 major update to new event handling system
+ *
+ */
 #include "vrpn_tracker.hpp"
 
 #include "base/exceptions.hpp"
 
+/// -------------- Globals -------------
 std::ostream &operator<<( std::ostream &os, vrpn_TRACKERCB t )
 {
 	os << "Sensor = " << t.sensor << " : position = (";
@@ -29,9 +33,33 @@ void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 	tracker->update(t);
 }
 
+
+/// ----------- vrpnTracker ------------
+
+/// ----------- Public ----------------
 vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
+	: _tracker(0)
 {
+	std::cout << "Creating vrpn tracker : " << trackerName << std::endl;
 	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
+}
+
+vl::vrpnTracker::vrpnTracker(const std::string& hostname,
+							 const std::string& tracker,
+							 uint16_t port)
+	: _tracker(0)
+{
+	std::stringstream ss;
+	ss << tracker << "@" << hostname;
+
+	// Add port if it's not default value
+	if( port != 0 )
+	{ ss << ":" << port; }
+
+	// Debug printing, should go to log file
+	std::cout << "Creating vrpn tracker : " << ss.str() << std::endl;
+
+	_tracker = new vrpn_Tracker_Remote( ss.str().c_str() );
 }
 
 vl::vrpnTracker::~vrpnTracker( void )
@@ -39,62 +67,32 @@ vl::vrpnTracker::~vrpnTracker( void )
 	delete _tracker;
 }
 
-Ogre::Quaternion const &
-vl::vrpnTracker::getOrientation(size_t sensor) const
+void vl::vrpnTracker::init(void )
 {
-	return _data.at(sensor).quaternion;
+	_tracker->register_change_handler(this, vl::handle_tracker);
 }
 
-Ogre::Vector3 const &
-vl::vrpnTracker::getPosition(size_t sensor) const
-{
-	return _data.at(sensor).position;
-}
-
-void 
+void
 vl::vrpnTracker::mainloop(void )
 {
 	if( !_tracker )
-	{ throw vl::exception(); }
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	_tracker->mainloop();
 }
 
-void 
-vl::vrpnTracker::map(Ogre::SceneNode* node)
-{
-	// TODO
-}
 
-void 
-vl::vrpnTracker::setPosition( size_t sensor, Ogre::Vector3 const &pos )
-{
-	// Grow the data array
-	if( _data.size() < sensor+1 )
-	{ _data.resize( sensor+1 ); }
-
-	_data.at(sensor).position = pos;
-
-	// Save the reference for later
-	if( _default_values.size() < sensor +1 )
-	{ _default_values.resize(sensor+1); }
-
-	_default_values.at(sensor).position = pos;
-}
-
-void 
-vl::vrpnTracker::setOrientation( size_t sensor, Ogre::Quaternion const &quat )
-{
-}
-
-// Protected
+/// -------- Protected -------------
 void
 vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 {
-	if( _data.size() <= t.sensor )
+	// Only update sensors that the user has created and added
+	if( _sensors.size() > t.sensor )
 	{
-		_data.resize( t.sensor+1 ); 
+		SensorRefPtr sensor = _sensors.at(t.sensor);
+		// Check that we have a sensor object
+		// Only sensors that are in use have an object
+		if( sensor )
+		{ sensor->update( vl::vrpnSensorData( t.pos, t.quat ) ); }
 	}
-
-	_data.at(t.sensor) = vl::vrpnSensorData( t.pos, t.quat );
 }

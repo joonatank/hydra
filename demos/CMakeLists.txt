@@ -20,7 +20,9 @@ add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	)
 
-target_link_libraries( fake_tracking_server ${VRPN_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries( fake_tracking_server
+	${VRPN_LIBRARY}
+	${CMAKE_THREAD_LIBS_INIT} )
 
 
 add_executable( spike_listening_client

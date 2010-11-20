@@ -2,7 +2,7 @@ project( "eqOgre" CXX )
 
 set( SOURCES
 	eq_ogre/ogre_dotscene_loader.cpp
-	fake_tracker.cpp
+	tracker.cpp
 	vrpn_tracker.cpp
 	settings.cpp
 	ogre_xml_helpers.cpp

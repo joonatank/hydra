@@ -1,8 +1,14 @@
+/**	Joonatan Kuosa
+ *	2010-11 initial implementation
+ *
+ */
+
 #ifndef EQ_OGRE_CONFIG_EVENTS_HPP
 #define EQ_OGRE_CONFIG_EVENTS_HPP
 
 #include "event.hpp"
 #include "config.hpp"
+#include "tracker.hpp"
 
 namespace eqOgre
 {
@@ -27,6 +33,43 @@ protected :
 	Config *_config;
 
 };	// class ConfigOperation
+
+/// Sets the Head matrix in eqOgre::Config
+class HeadTrackerAction : public vl::TrackerAction
+{
+public :
+	HeadTrackerAction( void )
+		: _config(0)
+	{}
+
+	void setConfig( Config *conf )
+	{ _config = conf; }
+
+	Config *getConfig( void )
+	{ return _config; }
+
+	/// Callback function for TrackerTrigger
+	/// Called when new data is received from the tracker
+	/// Sets the head matrix in Config
+	virtual void execute( vl::SensorData const &data );
+
+	virtual std::string const &getTypeName( void ) const;
+
+protected :
+	Config *_config;
+};
+
+class HeadTrackerActionFactory
+{
+public :
+	virtual Operation *create( void )
+	{ return new HeadTrackerAction; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
 
 
 class QuitOperation : public ConfigOperation

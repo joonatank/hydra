@@ -1,3 +1,8 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-10
+ *
+ */
+
 #include "config.hpp"
 
 #include "vrpn_tracker.hpp"
@@ -148,17 +153,13 @@ uint32_t
 eqOgre::Config::startFrame( const uint32_t frameID )
 {
 	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
+
 	// Process Tracking
-	// TODO add selectable sensor
+	// If we have a tracker object update it, the update will handle all the
+	// callbacks and appropriate updates (head matrix and scene nodes).
 	if( _tracker )
 	{
 		_tracker->mainloop();
-		if( _tracker->getNSensors() > 0 )
-		{
-			Ogre::Matrix4 head( _tracker->getOrientation(0) );
-			head.setTrans( _tracker->getPosition(0) );
-			_setHeadMatrix(head);
-		}
 	}
 
 	// Init the transformation structures
@@ -256,6 +257,20 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 }
 
 
+void
+eqOgre::Config::setHeadMatrix( Ogre::Matrix4 const &m )
+{
+	// Note: real applications would use one tracking device per observer
+	const eq::Observers& observers = getObservers();
+	for( eq::Observers::const_iterator i = observers.begin();
+		i != observers.end(); ++i )
+	{
+		// When head matrix is set equalizer automatically applies it to the
+		// GL Modelview matrix as first transformation
+		(*i)->setHeadMatrix( vl::math::convert(m) );
+	}
+}
+
 
 
 
@@ -307,10 +322,14 @@ void
 eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 {
 	// FIXME no tracking config for now
+	// TODO this should read the configs (which can be found in EnvSettings)
+	// and create all the trackers based upon those.
 //	if( settings->trackerOn() )
+	/// Creating tracker
 	if( false )
 	{
 		EQINFO << "Creating VRPN Tracker." << std::endl;
+		_tracker.reset( new vl::vrpnTracker( "glasses@localhost" ) );
 		//_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
 	}
 	else
@@ -319,25 +338,28 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 		_tracker.reset( new vl::FakeTracker( ) );
 	}
 
+	/// Set default values for sensor
+	// TODO move to config startFrame init
 	Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);// = settings->getTrackerDefaultOrientation()
-	Ogre::Vector3 v(0, 1.5, 0 ); //= settings->getTrackerDefaultPosition();
-	_tracker->setOrientation( 0,q );
-	_tracker->setPosition( 0, v );
-	_tracker->init();
-}
+	Ogre::Vector3 v(0, 0, 0 ); //= settings->getTrackerDefaultPosition();
+	/// Create sensor
+	vl::SensorRefPtr sensor( new vl::Sensor( v,q ) );
+	_tracker->setSensor(0, sensor);
 
-void
-eqOgre::Config::_setHeadMatrix( Ogre::Matrix4 const &m )
-{
-	// Note: real applications would use one tracking device per observer
-	const eq::Observers& observers = getObservers();
-	for( eq::Observers::const_iterator i = observers.begin();
-		i != observers.end(); ++i )
-	{
-		// When head matrix is set equalizer automatically applies it to the
-		// GL Modelview matrix as first transformation
-		(*i)->setHeadMatrix( vl::math::convert(m) );
-	}
+	/// Create Action
+	eqOgre::HeadTrackerAction *action = new eqOgre::HeadTrackerAction;
+	action->setConfig(this);
+
+	/// Create Trigger
+	// TODO should be moved to using event manager
+	vl::TrackerTrigger *trigger = new vl::TrackerTrigger;
+	trigger->setName( "head" );
+	trigger->setAction( action );
+
+	sensor->setTrigger(trigger);
+
+	/// Start the tracker
+	_tracker->init();
 }
 
 void

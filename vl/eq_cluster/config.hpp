@@ -1,3 +1,8 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-10
+ *
+ */
+
 #ifndef EQ_OGRE_CONFIG_H
 #define EQ_OGRE_CONFIG_H
 
@@ -67,6 +72,12 @@ namespace eqOgre
 
 		void toggleBackgroundSound( void );
 
+		// TODO should take a transform as a parameter not a matrix
+		// Matrices are problematic if you want to decompose them
+		// Transform with quaternion and vector is lot easier to use and it's
+		// easier to pass around than quaternion and vector pair.
+		void setHeadMatrix( Ogre::Matrix4 const &m );
+
 	protected :
 		virtual ~Config (void);
 
@@ -78,7 +89,6 @@ namespace eqOgre
 
 		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
-		void _setHeadMatrix( Ogre::Matrix4 const &m );
 
 		/// Scene
 		void _loadScenes( void );
