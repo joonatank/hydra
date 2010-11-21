@@ -117,7 +117,8 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<Config, boost::noncopyable>("Config", python::no_init)
 		.def("removeSceneNode", &Config::removeSceneNode )
 		.def("getSceneNode", &Config::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
-		.def("setActiveCamera", &Config::setActiveCamera)
+		.def("setActiveCamera", &Config::setActiveCamera )
+		.def("getTrackerTrigger", &Config::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
 	;
 
 	python::class_<EventManager, boost::noncopyable>("EventManager", python::no_init)
@@ -169,10 +170,26 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	// TODO needs a wrapper
 	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
 		.def("execute", python::pure_virtual(&BasicAction::execute) )
-		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+//		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		// FIXME this does not work
 //		.def(python::str(python::self))
 	;
+
+	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
+	;
+
+	python::class_<eqOgre::SetTransformation, boost::noncopyable, python::bases<vl::TransformAction> >("SetTransformation", python::no_init )
+		.add_property("scene_node", python::make_function( &eqOgre::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &eqOgre::SetTransformation::setSceneNode )
+//		.def("execute", python::pure_virtual(&BasicAction::execute) )
+//		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		// FIXME this does not work
+//		.def(python::str(python::self))
+	;
+
+	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::Trigger> >("TrackerTrigger", python::no_init )
+		.add_property("action", python::make_function( &TrackerTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TrackerTrigger::setAction)
+	;
+
 
 	python::class_<EventWrapper, boost::noncopyable>("Event", python::no_init )
 		.add_property("type", python::make_function( &Event::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )

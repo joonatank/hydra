@@ -17,6 +17,7 @@
 #include "base/exceptions.hpp"
 #include "transform_event.hpp"
 #include "event.hpp"
+#include "tracker.hpp"
 
 // python
 #include "python.hpp"
@@ -62,6 +63,8 @@ namespace eqOgre
 
 		SceneNode *getSceneNode( std::string const &name );
 
+		vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
+
 		void updateSceneVersion( void )
 		{ _frame_data.updateSceneVersion(); }
 
@@ -105,7 +108,9 @@ namespace eqOgre
 		// TODO replace the MagellanEvent with a real JoystickEvent
 		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
-		vl::TrackerRefPtr _tracker;
+		/// Tracking
+		std::vector<vl::TrackerRefPtr> _trackers;
+		std::vector<vl::TrackerTrigger *> _tracker_triggers;
 
 		eqOgre::SettingsRefPtr _settings;
 

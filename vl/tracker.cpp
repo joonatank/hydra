@@ -12,21 +12,11 @@
 
 #include "tracker.hpp"
 
-/*
-void vl::NodeTrackerAction::execute(const vl::Transform& data)
-{
-
-}
-
-
-std::string const &
-vl::NodeTrackerAction::getTypeName(void ) const
-{ return NodeTrackerActionFactory::TYPENAME; }
-
-const std::string vl::NodeTrackerActionFactory::TYPENAME = "NodeTrackerAction";
-*/
-
 /// ----------- TrackerTrigger ------------
+vl::TrackerTrigger::TrackerTrigger( void )
+	: _action(0)
+{}
+
 void
 vl::TrackerTrigger::update(const vl::Transform& data)
 {

@@ -31,7 +31,8 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addTriggerFactory( new vl::KeyPressedTriggerFactory );
 	_event_manager->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
 	_event_manager->addTriggerFactory( new vl::FrameTriggerFactory );
-	// Add operations
+	_event_manager->addTriggerFactory( new vl::TrackerTriggerFactory );
+	// Add actions
 	_event_manager->addActionFactory( new eqOgre::QuitOperationFactory );
 	_event_manager->addActionFactory( new eqOgre::ReloadSceneFactory );
 	_event_manager->addActionFactory( new eqOgre::AddTransformOperationFactory );
@@ -40,6 +41,8 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	_event_manager->addActionFactory( new eqOgre::ShowActionFactory );
 	_event_manager->addActionFactory( new eqOgre::ToggleMusicFactory );
 	_event_manager->addActionFactory( new eqOgre::ActivateCameraFactory );
+	_event_manager->addActionFactory( new eqOgre::SetTransformationFactory );
+	_event_manager->addActionFactory( new eqOgre::HeadTrackerActionFactory );
 }
 
 eqOgre::Config::~Config()
@@ -101,7 +104,6 @@ eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
 	if( settings )
 	{
 		_settings = settings;
-		_createTracker(_settings);
 	}
 }
 
@@ -125,6 +127,22 @@ eqOgre::Config::getSceneNode(const std::string& name)
 {
 	return _frame_data.getSceneNode(name);
 }
+
+vl::TrackerTrigger *
+eqOgre::Config::getTrackerTrigger(const std::string& name)
+{
+	std::vector<vl::TrackerTrigger *>::iterator iter;
+	for( iter = _tracker_triggers.begin(); iter != _tracker_triggers.end(); ++iter )
+	{
+		if( (*iter)->getName() == name )
+		{
+			return( *iter );
+		}
+	}
+
+	return 0;
+}
+
 
 // TODO implement
 void
@@ -154,14 +172,6 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 {
 	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
 
-	// Process Tracking
-	// If we have a tracker object update it, the update will handle all the
-	// callbacks and appropriate updates (head matrix and scene nodes).
-	if( _tracker )
-	{
-		_tracker->mainloop();
-	}
-
 	// Init the transformation structures
 	// TODO should be moved to Config::init or equivalent
 	static bool inited = false;
@@ -171,6 +181,8 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	if( !inited )
 	{
 		_loadScenes();
+		// Create Tracker needs the SceneNodes for mapping
+		_createTracker(_settings);
 
 		try {
 			// Init the embedded python
@@ -243,6 +255,15 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 		_initAudio();
 		inited = true;
+	}
+
+	// Process Tracking
+	// If we have a tracker object update it, the update will handle all the
+	// callbacks and appropriate updates (head matrix and scene nodes).
+	for( std::vector<vl::TrackerRefPtr>::iterator iter = _trackers.begin();
+		 iter != _trackers.end(); ++iter )
+	{
+		(*iter)->mainloop();
 	}
 
 	// ProcessEvents does not store the pointer anywhere
@@ -319,47 +340,76 @@ eqOgre::Config::_exitAudio(void )
 }
 
 void
-eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
+eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	// FIXME no tracking config for now
 	// TODO this should read the configs (which can be found in EnvSettings)
 	// and create all the trackers based upon those.
-//	if( settings->trackerOn() )
+
 	/// Creating tracker
+	vl::TrackerRefPtr tracker;
 	if( true )
 	{
 		EQINFO << "Creating VRPN Tracker." << std::endl;
-		_tracker.reset( new vl::vrpnTracker( "localhost", "glasses" ) );
-		//_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
+		tracker.reset( new vl::vrpnTracker( "localhost", "glasses" ) );
 	}
 	else
 	{
 		EQINFO << "Creating Fake Tracker." << std::endl;
-		_tracker.reset( new vl::FakeTracker( ) );
+		tracker.reset( new vl::FakeTracker( ) );
 	}
 
-	/// Set default values for sensor
-	// TODO move to config startFrame init
-	Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);// = settings->getTrackerDefaultOrientation()
-	Ogre::Vector3 v(0, 1.5, 0 ); //= settings->getTrackerDefaultPosition();
-	/// Create sensor
-	vl::SensorRefPtr sensor( new vl::Sensor( v,q ) );
-	_tracker->setSensor(0, sensor);
+	{
+		/// Set default values for sensor
+		// TODO move to config startFrame init
+		Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);
+		Ogre::Vector3 v(0, 1.5, 0 );
+		/// Create sensor
+		vl::SensorRefPtr sensor( new vl::Sensor( v,q ) );
+		tracker->setSensor(0, sensor);
 
-	/// Create Action
-	eqOgre::HeadTrackerAction *action = new eqOgre::HeadTrackerAction;
-	action->setConfig(this);
+		/// Create Trigger
+		vl::TrackerTrigger *trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
+		trigger->setName( "headTrigger" );
 
-	/// Create Trigger
-	// TODO should be moved to using event manager
-	vl::TrackerTrigger *trigger = new vl::TrackerTrigger;
-	trigger->setName( "head" );
-	trigger->setAction( action );
+		/// Create Action
+		// TODO should be moved to python
+		eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_event_manager->createAction("HeadTrackerAction");
+		action->setConfig(this);
+		trigger->setAction( action );
 
-	sensor->setTrigger(trigger);
+		sensor->setTrigger(trigger);
+		_tracker_triggers.push_back(trigger);
+	}
 
-	/// Start the tracker
-	_tracker->init();
+
+	/// Start the tracker head tracker
+	tracker->init();
+	_trackers.push_back( tracker );
+
+	/// Mevea test tracker
+	// TODO this should be optional
+	tracker.reset( new vl::vrpnTracker( "localhost", "Mevea" ) );
+	// Create 20 sensors
+	for( size_t i = 0; i < 20; ++i )
+	{
+		/// Create sensor
+		vl::SensorRefPtr sensor( new vl::Sensor );
+		tracker->setSensor(i, sensor);
+
+		std::stringstream name;
+		name << "cube" << i;
+
+		/// Create Trigger
+		vl::TrackerTrigger *trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
+		name << "Trigger";
+		trigger->setName( name.str() );
+		sensor->setTrigger(trigger);
+		_tracker_triggers.push_back(trigger);
+	}
+
+	tracker->init();
+	_trackers.push_back( tracker );
 }
 
 void

@@ -59,7 +59,7 @@ protected :
 	Config *_config;
 };
 
-class HeadTrackerActionFactory
+class HeadTrackerActionFactory : public vl::ActionFactory
 {
 public :
 	virtual vl::ActionPtr create( void )

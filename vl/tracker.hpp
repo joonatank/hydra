@@ -26,6 +26,7 @@ namespace vl
 class TrackerTrigger : public vl::Trigger
 {
 public :
+	TrackerTrigger( void );
 
 	/// --------- Overrides from eqOgre::Trigger ------------
 	/// This class is not a specialization of anything always returns false
@@ -57,6 +58,9 @@ public :
 
 	/// Action to execute when updated
 	void setAction( TransformActionPtr action );
+
+	TransformActionPtr getAction( void )
+	{ return _action; }
 
 	/// Callback function
 	void update( Transform const &data );

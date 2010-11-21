@@ -26,19 +26,21 @@ void getMeveaData( size_t sensor, vrpn_float64 *pos, vrpn_float64 *quat )
 {
 	// TODO this should have different positions for different sensors
 	int i = 0, j = 0, k = 0;
-	// 5 minor elements, we start from -4,4 coordinate and go to 4,4
+	// 5 minor elements, we start from -4,y coordinate and go to 4,y
 	i = ( sensor%5 - 2)*2;
-	// 4 major elements, we start from -4,4 coordinate and go to -4,4
-	j = ( sensor/5 - 2)*(-2);
+	// 4 major elements, we start from x,0 coordinate and go to x,8
+	j = ( sensor/5 )*2;
 
 	pos[0] = i;
 	pos[1] = j;
 	pos[2] = 0;
 
-	quat[0] = 0;
-	quat[1] = 0;
-	quat[2] = 0.707;
-	quat[3] = 0.707;
+	// 45 degs * sensor/sensors around y
+	double angle = ( double(sensor)/20 )* M_PI/4;
+	quat[0] = 0; // = 0;
+	quat[1] = ::sin(angle/2);
+	quat[2] = 0; //0.707;
+	quat[3] = ::cos(angle/2); //0.707;
 }
 
 int main (int argc, char **argv)
