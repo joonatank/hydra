@@ -22,10 +22,17 @@ void getHeadData( vrpn_float64 *pos, vrpn_float64 *quat )
 	quat[3] = 0.707;
 }
 
-void getMeveaData( vrpn_float64 *pos, vrpn_float64 *quat )
+void getMeveaData( size_t sensor, vrpn_float64 *pos, vrpn_float64 *quat )
 {
-	pos[0] = 0;
-	pos[1] = 1.5;
+	// TODO this should have different positions for different sensors
+	int i = 0, j = 0, k = 0;
+	// 5 minor elements, we start from -4,4 coordinate and go to 4,4
+	i = ( sensor%5 - 2)*2;
+	// 4 major elements, we start from -4,4 coordinate and go to -4,4
+	j = ( sensor/5 - 2)*(-2);
+
+	pos[0] = i;
+	pos[1] = j;
 	pos[2] = 0;
 
 	quat[0] = 0;
@@ -61,7 +68,7 @@ int main (int argc, char **argv)
 		tracker->report_pose( 0, t, pos, quat );
 		for( size_t i = 0; i < 20; ++i )
 		{
-			getMeveaData(pos, quat);
+			getMeveaData(i, pos, quat);
 			mevea->report_pose( i, t, pos, quat );
 		}
 

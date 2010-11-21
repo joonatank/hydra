@@ -13,7 +13,14 @@ message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
 message( "VRPN libraries = ${VRPN_LIBRARY}" )
 
 # Copy configs
-copy_start_script( spike_listening_client )
+copy_start_script( spike_listening_client
+	ogre_project/ogre.prj
+	"ogre" )
+
+copy_start_script( spike_listening_client
+	tracking_test_project/tracking.prj
+	tracking )
+
 copy_extras()
 
 add_executable( fake_tracking_server

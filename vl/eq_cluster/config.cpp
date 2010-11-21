@@ -326,10 +326,10 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 	// and create all the trackers based upon those.
 //	if( settings->trackerOn() )
 	/// Creating tracker
-	if( false )
+	if( true )
 	{
 		EQINFO << "Creating VRPN Tracker." << std::endl;
-		_tracker.reset( new vl::vrpnTracker( "glasses@localhost" ) );
+		_tracker.reset( new vl::vrpnTracker( "localhost", "glasses" ) );
 		//_tracker.reset( new vl::vrpnTracker( settings->getTrackerAddress() ) );
 	}
 	else

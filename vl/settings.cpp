@@ -126,14 +126,12 @@ std::vector< std::string > vl::Settings::getResourcePaths(void ) const
 	if( _global )
 	{
 		std::string dir = getGlobalDir() + dir_name;
-		std::cout << "Testing resource dir = " << dir << std::endl;
 		if( fs::exists( dir ) )
 		{ vec.push_back( dir ); }
 	}
 	if( _proj )
 	{
 		std::string dir = getProjectDir() + dir_name;
-		std::cout << "Testing resource dir = " << dir << std::endl;
 		if( fs::exists( dir ) )
 		{ vec.push_back( dir ); }
 	}

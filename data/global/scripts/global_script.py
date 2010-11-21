@@ -137,3 +137,8 @@ def addHideEvent(node) :
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
 
+# Add some global events that are useful no matter what the scene/project is
+print 'Adding config events'
+addQuitEvent()
+addReloadEvent()
+addToggleMusicEvent()

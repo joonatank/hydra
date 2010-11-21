@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2010-11
+
+Tracking test project used for testing and demonstrating tracking configurations
+-->
+<project_config name="tracking">
+
+	<scenes>
+		<scene name="tracking" use="true">
+			<file>tracking.scene</file>
+		</scene>
+
+	</scenes>
+
+	<scripts>
+		<file use="true">tracking_script.py</file>
+	</scripts>
+
+</project_config>

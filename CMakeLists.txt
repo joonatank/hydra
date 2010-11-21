@@ -130,19 +130,21 @@ link_directories( ${vl_BINARY_DIR}/vl
 	${Boost_LIBRARY_DIRS} )
 
 ## Copy start script macro ##
-MACRO( copy_start_script program_name )
-message( "Copying start scripts for project = ${PROJECT_NAME} : exe name = ${program_name}" )
+MACRO( copy_start_script program_name project_path start_suffix )
+message( "Copying start scripts for project = ${PROJECT_NAME}
+	: exe name = ${program_name}" )
 
 # Copy the single Node start script
 set( PROGRAM_NAME ${program_name} )
 set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
+set( PROJ_PATH_RELATIVE ${project_path} )
 
 if( WIN32 )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-		${PROJECT_BINARY_DIR}/start.bat )
+		${PROJECT_BINARY_DIR}/start_${start_suffix}.bat )
 else()
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
-		${PROJECT_BINARY_DIR}/start.sh )
+		${PROJECT_BINARY_DIR}/start_${start_suffix}.sh )
 endif()
 
 # Copy the multi node listening start script

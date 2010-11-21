@@ -1,0 +1,170 @@
+<scene formatVersion="1.0.0">
+<environment>
+    <colourAmbient r="0.3" g="0.3" b="0.3"/>
+    <colourBackground r="0.056563" g="0.220815" b="0.400000"/>
+    <!-- <skyBox distance="5000" material="" /> -->
+    <skyDome material="CloudySky" distance="50" />
+
+    <!-- <clipping near="0.1" far="10000" /> -->
+
+</environment>
+
+<nodes>
+	<node name="cube0">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube0" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube1">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube1" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube2">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube2" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube3">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube3" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube4">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube4" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube5">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube5" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube6">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube6" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube7">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube7" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube8">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="1.000000" y="1.000000" z="1.000000"/>
+		<entity name="cube8" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube9">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube9" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube10">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube10" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube11">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube11" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube12">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube12" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube13">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube13" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube14">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube14" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube15">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube15" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube16">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube16" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube17">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube17" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube18">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube18" meshFile="cube.mesh"/>
+    </node>
+	<node name="cube19">
+		<position x="0.000000" y="0.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.010000" y="0.010000" z="0.010000"/>
+		<entity name="cube19" meshFile="cube.mesh"/>
+    </node>
+	<node name="CameraNode">
+		<position x="0." y="2.50000" z="5.607098"/>
+		<quaternion x="0.0" y="0.000000" z="0.000000" w="1.0"/>
+		<camera name="Omakamera" fov="37.849289" projectionType="perspective">
+			<clipping near="0.1" far="100" />
+		</camera>
+	</node>
+	<node name="OutsideCameraNode">
+		<position x="0." y="2.50000" z="20"/>
+		<quaternion x="0.0" y="0.000000" z="0.000000" w="1.0"/>
+		<camera name="OutsideCamera" fov="37.849289" projectionType="perspective">
+			<clipping near="0.1" far="100" />
+		</camera>
+	</node>
+    <node name="Spotlight1">
+      <position x="-2.244730" y="4.778790" z="0.625154"/>
+      <quaternion x="-0.707107" y="0.000000" z="0.000000" w="0.707107"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <light name="Spotlight1_m" type="spot" castShadows="true">
+        <normal x="0.0" y="0.0" z="-1.0"/>
+        <colourDiffuse r="1.0" g="1.0" b="1.0"/>
+        <colourSpecular r="0.0" g="0.0" b="0.0"/>
+        <lightRange inner="100" outer="100" falloff="1.0"/>
+        <lightAttenuation range="40.000000" constant="1.000000" linear="0.2" quadratic="0.000000"/>
+      </light>
+    </node>
+    <node name="Ambient_light_main">
+      <position x="7.336482" y="4.332459" z="-2.931557"/>
+      <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <light name="Ambient_light_m" type="point">
+        <colourDiffuse r="1.0" g="1.0" b="1.0"/>
+        <colourSpecular r="0.0" g="0.0" b="0.0"/>
+        <lightAttenuation range="500.0" constant="1.000000" linear="0.010000" quadratic="0.000000"/>
+      </light>
+    </node>
+  </nodes>
+</scene>
