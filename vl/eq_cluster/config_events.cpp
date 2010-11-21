@@ -10,13 +10,13 @@
 std::ostream &
 eqOgre::ConfigOperation::print(std::ostream& os) const
 {
-	Operation::print(os) << " config = " << _config << std::endl;
+	os << *this << " config = " << _config << std::endl;
 	return os;
 }
 
 /// --------- HeadTrackerAction -----------
 void
-eqOgre::HeadTrackerAction::execute(const vl::SensorData& data)
+eqOgre::HeadTrackerAction::execute( vl::Transform const &data )
 {
 	if( !_config )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }

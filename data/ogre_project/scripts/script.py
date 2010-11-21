@@ -56,9 +56,9 @@ def addTranslationEvent(node) :
 
 def addHideEvent(node) :
 	print 'Creating Hide Event'
-	hide = event_manager.createOperation( 'HideOperation' )
+	hide = event_manager.createAction( 'Hide' )
 	hide.scene_node = node
-	show = event_manager.createOperation( 'ShowOperation' )
+	show = event_manager.createAction( 'Show' )
 	show.scene_node = node
 	# This works to solve the problem
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
@@ -79,7 +79,7 @@ def addHideEvent(node) :
 
 def addQuitEvent() :
 	print 'Creating Quit Event'
-	action = event_manager.createOperation( 'QuitOperation' )
+	action = event_manager.createAction( 'QuitOperation' )
 	print 'Python Action type = ' + action.type
 	action.config = config
 	# Example of using pressed or released key instead of both (the default)
@@ -91,14 +91,14 @@ def addQuitEvent() :
 
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
-	event.operation = action
+	event.action = action
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
 
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
-	action = event_manager.createOperation( 'ReloadScene' )
+	action = event_manager.createAction( 'ReloadScene' )
 	print 'Python Action type = ' + action.type
 	action.config = config
 	trigger = event_manager.createTrigger( 'KeyTrigger' )
@@ -111,7 +111,7 @@ def addReloadEvent() :
 
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
-	event.operation = action
+	event.action = action
 	# Setting a time limit how often this Event can happen
 	event.time_limit = 5
 	event.addTrigger( trigger )
@@ -120,14 +120,14 @@ def addReloadEvent() :
 
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
-	action = event_manager.createOperation( 'ToggleMusic' )
+	action = event_manager.createAction( 'ToggleMusic' )
 	action.config = config
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
 	trigger.key = KC.M
 
 	# Create the Event
 	event = event_manager.createEvent( 'Event' )
-	event.operation = action
+	event.action = action
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
@@ -142,10 +142,10 @@ def addToggleMusicEvent() :
 # An error message is printed to std::cerr and the program continues normally
 def addToggleActiveCamera() :
 	print 'Creating Toggle Activate Camera'
-	action_on = event_manager.createOperation( 'ActivateCamera' )
+	action_on = event_manager.createAction( 'ActivateCamera' )
 	action_on.config = config
 	action_on.camera = "OutsideCamera"
-	action_off = event_manager.createOperation( 'ActivateCamera' )
+	action_off = event_manager.createAction( 'ActivateCamera' )
 	action_off.config = config
 	action_off.camera = "Omakamera"
 	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )

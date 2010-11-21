@@ -1,17 +1,21 @@
-/* Joonatan Kuosa
- * 2010-11
+/**	Joonatan Kuosa
+ *	2010-11
  *
- * Event Handling is divided to Triggers, Events and Operations
- * Triggers are processed in Config which passes all expired triggers
- * to all Events which in turn will invoke correct Operation
+ *	Event Handling is divided to Triggers, Events and Actions
+ *	Triggers are processed in Config which passes all expired triggers
+ *	to all Events which in turn will invoke correct Actions
  *
- * Triggers can be added to an Event using appropriate methods
- * (depends on the Event)
- * Same for Operations
+ *	Triggers can be added to an Event using appropriate methods
+ *	(depends on the Event)
+ *	Same for Actions
  */
 
-#ifndef EQ_OGRE_EVENT_HPP
-#define EQ_OGRE_EVENT_HPP
+#ifndef VL_EVENT_HPP
+#define VL_EVENT_HPP
+
+// TODO these should be replaced
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
 
 #include <vector>
 #include <typeinfo>
@@ -19,7 +23,7 @@
 
 #include "keycode.hpp"
 
-namespace eqOgre
+namespace vl
 {
 // TODO add str conversions to python
 // TODO add event to print all the events (do this in python)
@@ -60,7 +64,7 @@ public :
 	}
 };
 
-inline std::ostream &operator<<( std::ostream &os, eqOgre::Trigger const &t )
+inline std::ostream &operator<<( std::ostream &os, vl::Trigger const &t )
 { return t.print( os ); }
 
 
@@ -82,7 +86,7 @@ public :
 
 	OIS::KeyCode getKey( void ) const
 	{ return _key; }
-	
+
 	virtual double value( void ) const
 	{ return 1; }
 
@@ -117,7 +121,7 @@ public :
 class KeyPressedTrigger : public KeyTrigger
 {
 	virtual std::string const &getTypeName( void ) const;
-	
+
 	/// Pressed always returns 1 (positive)
 	virtual double value( void ) const
 	{ return 1; }
@@ -206,11 +210,33 @@ public :
 
 
 
-class Operation
+struct Transform
+{
+	Transform( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
+				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
+		: position( pos ), quaternion( rot )
+	{}
+
+	Ogre::Vector3 position;
+	Ogre::Quaternion quaternion;
+};
+
+inline std::ostream &operator<<( std::ostream &os, Transform const &d )
+{
+	os << "Position = " << d.position << " : Orientation = " << d.quaternion;
+
+	return os;
+}
+
+
+/// Actions
+
+/// Action is divided into different Action types depending on the input parameters for execute
+/// Simple ones with no parameters
+/// and more complex like transformation operations which need the Transformation
+class Action
 {
 public :
-	virtual void execute( void ) = 0;
-
 	virtual std::string const &getTypeName( void ) const = 0;
 
 	virtual std::ostream & print( std::ostream & os ) const
@@ -221,24 +247,53 @@ public :
 
 };
 
-inline std::ostream &operator<<( std::ostream &os, eqOgre::Operation const &o )
-{ return o.print(os); }
+typedef Action * ActionPtr;
 
+inline std::ostream &operator<<( std::ostream &os, vl::Action const &a )
+{ return a.print(os); }
 
-/// Trigger Factory class for creating new Triggers
-class OperationFactory
+/// Action Factory class for creating new Actions
+class ActionFactory
 {
 public :
-	virtual Operation *create( void ) = 0;
+	virtual ActionPtr create( void ) = 0;
 	virtual std::string const &getTypeName( void ) const = 0;
 };
+
+/// The most basic action, takes no parameters
+class BasicAction : public Action
+{
+public :
+	virtual void execute( void ) = 0;
+};
+
+typedef BasicAction * BasicActionPtr;
+
+/// Callback Action class designed for Trackers
+/// Could be expanded for use with anything that sets the object transformation
+// For now the Tracker Triggers are the test case
+class TransformAction : public Action
+{
+public :
+	/// Callback function for TrackerTrigger
+	/// Called when new data is received from the tracker
+	virtual void execute( Transform const &data ) = 0;
+
+};
+
+typedef TransformAction * TransformActionPtr;
+
+
+
 
 /**	Base class for all Events
 	Abstract interface
 	Event has multiple Triggers
-	But only one Operation
+	But only one Action
 	All Triggers trigger the same operation
 	*/
+// TODO methods not common to all events should be moved to respective
+// classes
 class Event
 {
 public :
@@ -255,11 +310,11 @@ public :
 
 	bool addTrigger( Trigger *trig );
 
-	void setOperation( Operation *oper );
+	void setAction( BasicActionPtr action );
 
-	Operation *getOperation( void )
-	{ return _operation; }
-	
+	BasicActionPtr getAction( void )
+	{ return _action; }
+
 	void setTimeLimit( double time_limit )
 	{ _time_limit = time_limit; }
 
@@ -272,16 +327,16 @@ public :
 
 protected :
 	std::vector<Trigger *>::iterator _findTrigger( Trigger *trig );
-	
+
 	std::vector< Trigger *> _triggers;
-	Operation *_operation;
+	BasicActionPtr _action;
 
 	::clock_t _last_time;
 	double _time_limit;
 
 };	// class Event
 
-inline std::ostream &operator<<( std::ostream &os, eqOgre::Event const &e )
+inline std::ostream &operator<<( std::ostream &os, vl::Event const &e )
 {
 	return e.print(os);
 }
@@ -327,16 +382,16 @@ public :
 	// Constuctor needs to cleaned as the factory can not set the parameters
 	ToggleEvent( void );
 
-	void setToggleOn( Operation *toggleOn )
+	void setToggleOn( BasicActionPtr toggleOn )
 	{ _toggleOn = toggleOn; }
 
-	Operation *getToggleOn( void )
+	BasicActionPtr getToggleOn( void )
 	{ return _toggleOn; }
 
-	void setToggleOff( Operation *toggleOff )
+	void setToggleOff( BasicActionPtr toggleOff )
 	{ _toggleOff = toggleOff; }
 
-	Operation *getToggleOff( void )
+	BasicActionPtr getToggleOff( void )
 	{ return _toggleOff; }
 
 	void setToggleState( bool state )
@@ -356,9 +411,9 @@ public :
 
 private :
 	// Forbid some parent methods
-	void setOperation( Operation *oper ) {}
+	void setAction( BasicActionPtr action ) {}
 
-	Operation *getOperation( void ) { return 0; }
+	BasicActionPtr getAction( void ) { return 0; }
 
 	/// The real function called when the Operation changes to toggled state
 	void toggleOn( void );
@@ -369,8 +424,8 @@ private :
 	/// Toggle value, should not be exposed to inherited classes
 	bool _state;
 
-	Operation *_toggleOn;
-	Operation *_toggleOff;
+	BasicActionPtr _toggleOn;
+	BasicActionPtr _toggleOff;
 
 };	// ToggleEvent
 
@@ -386,12 +441,6 @@ public :
 	static const std::string TYPENAME;
 };
 
+}	// namespace vl
 
-
-/**	EventHandler
-	Has multiple Events
-	*/
-
-}	// namespace eqOgre
-
-#endif // EQ_OGRE_EVENT_HPP
+#endif // VL_EVENT_HPP

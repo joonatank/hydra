@@ -1,15 +1,18 @@
-
+/**	Joonatan Kuosa
+ *	2010-11
+ *
+ */
 #include "event.hpp"
 
 #include "base/exceptions.hpp"
 
 /// KeyTrigger Public
-eqOgre::KeyTrigger::KeyTrigger( void )
+vl::KeyTrigger::KeyTrigger( void )
 	: _key( OIS::KC_UNASSIGNED )
 {}
 
 bool
-eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other) const
+vl::KeyTrigger::isEqual(const vl::Trigger& other) const
 {
 	KeyTrigger const &key_other = static_cast<KeyTrigger const &>( other );
 	if( key_other._key == _key )
@@ -19,7 +22,7 @@ eqOgre::KeyTrigger::isEqual(const eqOgre::Trigger& other) const
 }
 
 bool
-eqOgre::KeyTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+vl::KeyTrigger::isSpecialisation(const vl::Trigger* other) const
 {
 	KeyTrigger const *a = dynamic_cast<KeyTrigger const *>( other );
 	if( a )
@@ -29,23 +32,23 @@ eqOgre::KeyTrigger::isSpecialisation(const eqOgre::Trigger* other) const
 }
 
 std::ostream &
-eqOgre::KeyTrigger::print(std::ostream& os) const
+vl::KeyTrigger::print(std::ostream& os) const
 {
 	Trigger::print(os);
-	os << " KeyCode = " << getKeyName(_key) << " : released = ";
+	os << " KeyCode = " << vl::getKeyName(_key) << " : released = ";
 
 	return os;
 }
 
 
 std::string const &
-eqOgre::KeyTrigger::getTypeName(void ) const
-{ return eqOgre::KeyTriggerFactory::TYPENAME; }
+vl::KeyTrigger::getTypeName(void ) const
+{ return vl::KeyTriggerFactory::TYPENAME; }
 
-std::string const eqOgre::KeyTriggerFactory::TYPENAME = "KeyTrigger";
+std::string const vl::KeyTriggerFactory::TYPENAME = "KeyTrigger";
 
 bool
-eqOgre::KeyPressedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+vl::KeyPressedTrigger::isSpecialisation(const vl::Trigger* other) const
 {
 	KeyPressedTrigger const *a = dynamic_cast<KeyPressedTrigger const *>( other );
 	if( a )
@@ -55,13 +58,13 @@ eqOgre::KeyPressedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
 }
 
 std::string const &
-eqOgre::KeyPressedTrigger::getTypeName(void ) const
-{ return eqOgre::KeyPressedTriggerFactory::TYPENAME; }
+vl::KeyPressedTrigger::getTypeName(void ) const
+{ return vl::KeyPressedTriggerFactory::TYPENAME; }
 
-std::string const eqOgre::KeyPressedTriggerFactory::TYPENAME = "KeyPressedTrigger";
+std::string const vl::KeyPressedTriggerFactory::TYPENAME = "KeyPressedTrigger";
 
 bool
-eqOgre::KeyReleasedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
+vl::KeyReleasedTrigger::isSpecialisation(const vl::Trigger* other) const
 {
 	KeyReleasedTrigger const *a = dynamic_cast<KeyReleasedTrigger const *>( other );
 	if( a )
@@ -71,30 +74,30 @@ eqOgre::KeyReleasedTrigger::isSpecialisation(const eqOgre::Trigger* other) const
 }
 
 std::string const &
-eqOgre::KeyReleasedTrigger::getTypeName(void ) const
-{ return eqOgre::KeyReleasedTriggerFactory::TYPENAME; }
+vl::KeyReleasedTrigger::getTypeName(void ) const
+{ return vl::KeyReleasedTriggerFactory::TYPENAME; }
 
-std::string const eqOgre::KeyReleasedTriggerFactory::TYPENAME = "KeyReleasedTrigger";
+std::string const vl::KeyReleasedTriggerFactory::TYPENAME = "KeyReleasedTrigger";
 
 std::string const &
-eqOgre::FrameTrigger::getTypeName(void ) const
-{ return eqOgre::FrameTriggerFactory::TYPENAME; }
+vl::FrameTrigger::getTypeName(void ) const
+{ return vl::FrameTriggerFactory::TYPENAME; }
 
-std::string const eqOgre::FrameTriggerFactory::TYPENAME = "FrameTrigger";
+std::string const vl::FrameTriggerFactory::TYPENAME = "FrameTrigger";
 
 /// Event Public
 // FIXME after creating the program the Event can not be used before waiting for time limit s
 // because ::clock is zero when the program is created so we need to wait for
 // time_limit seconds before using the event
 // NOTE not a really high priority but still annoying
-eqOgre::Event::Event( void )
-	: _operation(0), _last_time(0), _time_limit(0)
+vl::Event::Event( void )
+	: _action(0), _last_time(0), _time_limit(0)
 {}
 
 bool
-eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
+vl::Event::processTrigger(vl::Trigger* trig)
 {
-	if( !_operation )
+	if( !_action )
 	{
 		std::cerr << "No operation" << std::endl;
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
@@ -108,7 +111,7 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 		if( (*iter)->isSimilar(trig) )
 		{ break; }
 	}
-	
+
 	if( iter != _triggers.end() )
 	{
 //		std::cerr << "Trigger found : trigger = " << trig
@@ -117,7 +120,7 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 		// We need to wait _time_limit secs before issuing the command again
 		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
 		{
-			_operation->execute();
+			_action->execute();
 			_last_time = time;
 		}
 
@@ -128,7 +131,7 @@ eqOgre::Event::processTrigger(eqOgre::Trigger* trig)
 }
 
 bool
-eqOgre::Event::removeTrigger(eqOgre::Trigger* trig)
+vl::Event::removeTrigger(vl::Trigger* trig)
 {
 	std::vector<Trigger *>::iterator iter = _findTrigger( trig );
 	if( iter != _triggers.end() )
@@ -141,7 +144,7 @@ eqOgre::Event::removeTrigger(eqOgre::Trigger* trig)
 }
 
 bool
-eqOgre::Event::addTrigger(eqOgre::Trigger* trig)
+vl::Event::addTrigger(vl::Trigger* trig)
 {
 	// Only add Trigger once
 	if( _findTrigger(trig) == _triggers.end() )
@@ -154,15 +157,15 @@ eqOgre::Event::addTrigger(eqOgre::Trigger* trig)
 	return false;
 }
 void
-eqOgre::Event::setOperation(eqOgre::Operation* oper)
-{ _operation = oper; }
+vl::Event::setAction(vl::BasicActionPtr action)
+{ _action = action; }
 
 std::ostream &
-eqOgre::Event::print(std::ostream& os) const
+vl::Event::print(std::ostream& os) const
 {
 	// TODO add identifier
 	os << "Event : type = " << getTypeName() << " " << std::endl;
-	os << "Operation = " << *_operation;// << std::endl;
+	os << "Operation = " << *_action;
 	os << _triggers.size() << " Triggers : they are = " << std::endl;
 	for( size_t i = 0; i < _triggers.size(); ++i )
 	{
@@ -174,16 +177,16 @@ eqOgre::Event::print(std::ostream& os) const
 }
 
 std::string const &
-eqOgre::BasicEvent::getTypeName(void ) const
-{ return eqOgre::BasicEventFactory::TYPENAME; }
+vl::BasicEvent::getTypeName(void ) const
+{ return vl::BasicEventFactory::TYPENAME; }
 
 
-std::string const eqOgre::BasicEventFactory::TYPENAME = "Event";
+std::string const vl::BasicEventFactory::TYPENAME = "Event";
 
 
 /// Event protected
-std::vector< eqOgre::Trigger * >::iterator
-eqOgre::Event::_findTrigger(eqOgre::Trigger* trig)
+std::vector< vl::Trigger * >::iterator
+vl::Event::_findTrigger(vl::Trigger* trig)
 {
 	std::vector<Trigger *>::iterator iter = _triggers.begin();
 	for( ; iter != _triggers.end(); ++iter )
@@ -196,12 +199,12 @@ eqOgre::Event::_findTrigger(eqOgre::Trigger* trig)
 }
 
 /// ToggleEvent public
-eqOgre::ToggleEvent::ToggleEvent( void )
-	: eqOgre::Event(), _state(false), _toggleOn(0), _toggleOff(0)
+vl::ToggleEvent::ToggleEvent( void )
+	: vl::Event(), _state(false), _toggleOn(0), _toggleOff(0)
 {}
 
 bool
-eqOgre::ToggleEvent::processTrigger(eqOgre::Trigger* trig)
+vl::ToggleEvent::processTrigger(vl::Trigger* trig)
 {
 	std::vector<Trigger *>::iterator iter = _triggers.begin();
 	for( ; iter != _triggers.end(); ++iter )
@@ -233,22 +236,22 @@ eqOgre::ToggleEvent::processTrigger(eqOgre::Trigger* trig)
 }
 
 std::string const &
-eqOgre::ToggleEvent::getTypeName(void ) const
-{ return eqOgre::ToggleEventFactory::TYPENAME; }
+vl::ToggleEvent::getTypeName(void ) const
+{ return vl::ToggleEventFactory::TYPENAME; }
 
 
-std::string const eqOgre::ToggleEventFactory::TYPENAME = "ToggleEvent";
+std::string const vl::ToggleEventFactory::TYPENAME = "ToggleEvent";
 
 /// ToggleEvent private
 void
-eqOgre::ToggleEvent::toggleOn(void )
+vl::ToggleEvent::toggleOn(void )
 {
 	if( _toggleOn )
 		_toggleOn->execute();
 }
 
 void
-eqOgre::ToggleEvent::toggleOff(void )
+vl::ToggleEvent::toggleOff(void )
 {
 	if( _toggleOff )
 		_toggleOff->execute();

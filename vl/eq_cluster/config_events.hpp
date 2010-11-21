@@ -14,7 +14,7 @@ namespace eqOgre
 {
 
 // ConfigEvents
-class ConfigOperation : public Operation
+class ConfigOperation : public vl::BasicAction
 {
 public :
 	ConfigOperation( void )
@@ -35,7 +35,7 @@ protected :
 };	// class ConfigOperation
 
 /// Sets the Head matrix in eqOgre::Config
-class HeadTrackerAction : public vl::TrackerAction
+class HeadTrackerAction : public vl::TransformAction
 {
 public :
 	HeadTrackerAction( void )
@@ -51,7 +51,7 @@ public :
 	/// Callback function for TrackerTrigger
 	/// Called when new data is received from the tracker
 	/// Sets the head matrix in Config
-	virtual void execute( vl::SensorData const &data );
+	virtual void execute( vl::Transform const &data );
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -62,7 +62,7 @@ protected :
 class HeadTrackerActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new HeadTrackerAction; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -81,10 +81,10 @@ public :
 
 };	// class QuitOperation
 
-class QuitOperationFactory : public OperationFactory
+class QuitOperationFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new QuitOperation; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -111,10 +111,10 @@ protected :
 
 };	// ActivateCamera
 
-class ActivateCameraFactory : public OperationFactory
+class ActivateCameraFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new ActivateCamera; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -134,10 +134,10 @@ public :
 
 };
 
-class ReloadSceneFactory : public OperationFactory
+class ReloadSceneFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new ReloadScene; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -156,10 +156,10 @@ public :
 
 };
 
-class ToggleMusicFactory : public OperationFactory
+class ToggleMusicFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new ToggleMusic; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -174,27 +174,27 @@ public :
 
 
 
-class EventManagerOperation : public Operation
+class EventManagerOperation : public vl::BasicAction
 {
 public :
 	EventManagerOperation( void )
 		: _event_man(0)
 	{}
 
-	void setManager( EventManager *event_man )
+	void setManager( vl::EventManager *event_man )
 	{ _event_man = event_man; }
 
-	EventManager *getManager( void )
+	vl::EventManager *getManager( void )
 	{ return _event_man; }
 
 	virtual std::ostream & print( std::ostream & os ) const
 	{
-		Operation::print(os) << " event manager = " << _event_man << std::endl;
+		os << *this << " event manager = " << _event_man << std::endl;
 		return os;
 	}
 
 protected :
-	EventManager *_event_man;
+	vl::EventManager *_event_man;
 };
 
 
@@ -221,10 +221,10 @@ private :
 
 };
 
-class AddTransformOperationFactory : public OperationFactory
+class AddTransformOperationFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new AddTransformOperation; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -258,10 +258,10 @@ private :
 
 };
 
-class RemoveTransformOperationFactory : public OperationFactory
+class RemoveTransformOperationFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new RemoveTransformOperation; }
 
 	virtual std::string const &getTypeName( void ) const

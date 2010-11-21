@@ -4,7 +4,7 @@
 #include <string>
 #include <OIS/OISKeyboard.h>
 
-namespace eqOgre
+namespace vl
 {
 
 inline std::string getKeyName( OIS::KeyCode key )

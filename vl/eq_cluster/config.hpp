@@ -112,10 +112,10 @@ namespace eqOgre
 		FrameData _frame_data;
 
 		// NOTE we need to use Event pointer because Events can be inherited
-		std::vector<Event *> _events;
+		std::vector<vl::Event *> _events;
 		std::vector<TransformationEvent> _trans_events;
 
-		EventManager *_event_manager;
+		vl::EventManager *_event_manager;
 
 		// Python related
 		python::object _global;

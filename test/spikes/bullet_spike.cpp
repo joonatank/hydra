@@ -41,7 +41,7 @@ public :
 	{
 		bool ret = eqOgre::Config::init(initID);
 
-		_event_manager->addOperationFactory( new vl::physics::ApplyForceFactory );
+		_event_manager->addActionFactory( new vl::physics::ApplyForceFactory );
 
 		initPhysics();
 		return ret;
@@ -115,17 +115,14 @@ public :
 				physics_inited = true;
 
 				// Create a physics test Event
-				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_event_manager->createOperation("ApplyForce");
-				EQASSERT( action );
-				eqOgre::KeyPressedTrigger *trig = (eqOgre::KeyPressedTrigger *)_event_manager->createTrigger("KeyPressedTrigger");
-				EQASSERT( trig );
-				eqOgre::Event *event = _event_manager->createEvent("Event");
-				EQASSERT( event );
+				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_event_manager->createAction("ApplyForce");
+				vl::KeyPressedTrigger *trig = (vl::KeyPressedTrigger *)_event_manager->createTrigger("KeyPressedTrigger");
+				vl::Event *event = _event_manager->createEvent("Event");
 
 				trig->setKey(OIS::KC_F);
 				action->setRigidBody( fallBody );
-				action->setForce( btVector3(0, 1500, 0) );
-				event->setOperation(action);
+				action->setForce( btVector3(0, 500, 0) );
+				event->setAction(action);
 				event->addTrigger(trig);
 				_event_manager->addEvent(event);
 			}
@@ -158,8 +155,6 @@ public :
 	// Collision opbejcts
 	btCollisionShape *_groundShape;
 	btCollisionShape *_fallShape;
-//	btRigidBody *_groundBody;
-//	btRigidBody *_fallBody;
 	btMotionState *_groundMotionState;
 	btMotionState *_fallMotionState;
 };

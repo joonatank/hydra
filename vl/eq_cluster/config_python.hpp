@@ -9,7 +9,7 @@
 
 #include <boost/python.hpp>
 
-struct TriggerWrapper : eqOgre::Trigger, python::wrapper<eqOgre::Trigger>
+struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 {
     std::string const &getTypeName( void ) const
     {
@@ -23,9 +23,9 @@ struct TriggerWrapper : eqOgre::Trigger, python::wrapper<eqOgre::Trigger>
 };
 
 
-struct EventWrapper : eqOgre::Event, python::wrapper<eqOgre::Event>
+struct EventWrapper : vl::Event, python::wrapper<vl::Event>
 {
-	bool processTrigger( eqOgre::Trigger *trig )
+	bool processTrigger( vl::Trigger *trig )
 	{
 		return this->get_override("processTrigger")();
 	}
@@ -37,7 +37,7 @@ struct EventWrapper : eqOgre::Event, python::wrapper<eqOgre::Event>
 
 };
 
-struct OperationWrapper : eqOgre::Operation, python::wrapper<eqOgre::Operation>
+struct ActionWrapper : vl::Action, python::wrapper<vl::Action>
 {
     std::string const &getTypeName( void ) const
     {
@@ -51,7 +51,7 @@ struct OperationWrapper : eqOgre::Operation, python::wrapper<eqOgre::Operation>
 
 };
 
-inline std::ostream &operator<<( std::ostream &os, OperationWrapper const &o )
+inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 {
 	o.print(os);
 	return os;
@@ -61,6 +61,7 @@ namespace python = boost::python;
 
 BOOST_PYTHON_MODULE(eqOgre_python)
 {
+	using namespace vl;
 	using namespace eqOgre;
 
 	// TODO check for overloads and default arguments, they need some extra work
@@ -121,7 +122,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 
 	python::class_<EventManager, boost::noncopyable>("EventManager", python::no_init)
 		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
-		.def("createOperation", &EventManager::createOperation, python::return_value_policy<python::reference_existing_object>() )
+		.def("createAction", &EventManager::createAction, python::return_value_policy<python::reference_existing_object>() )
 		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("addEvent", &EventManager::addEvent)
 		.def("removeEvent", &EventManager::removeEvent)
@@ -159,21 +160,26 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 
-	python::class_<OperationWrapper, boost::noncopyable>("Operation", python::no_init )
-		// FIXME pure virtual getTypeName
-		.add_property("type", python::make_function( &Operation::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
-		.def("execute", python::pure_virtual(&Operation::execute) )
+	python::class_<ActionWrapper, boost::noncopyable>("Action", python::no_init )
+		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		// FIXME this does not work
 //		.def(python::str(python::self))
 	;
 
+	// TODO needs a wrapper
+	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
+		.def("execute", python::pure_virtual(&BasicAction::execute) )
+		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		// FIXME this does not work
+//		.def(python::str(python::self))
+	;
 
 	python::class_<EventWrapper, boost::noncopyable>("Event", python::no_init )
-		.add_property("type", python::make_function( &Operation::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		.add_property("type", python::make_function( &Event::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("processTrigger", &Event::processTrigger)
 		.def("removeTrigger", &Event::removeTrigger)
 		.def("addTrigger", &Event::addTrigger)
-		.add_property("operation", python::make_function( &Event::getOperation, python::return_value_policy< python::reference_existing_object>() ), &Event::setOperation)
+		.add_property("action", python::make_function( &Event::getAction, python::return_value_policy< python::reference_existing_object>() ), &Event::setAction)
 		.add_property("time_limit", &Event::getTimeLimit, &Event::setTimeLimit)
 		// FIXME this does not work
 //		.def(python::str(python::self))
@@ -188,7 +194,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 
 	/// Config Operations
 
-	python::class_<ConfigOperation, boost::noncopyable, python::bases<Operation> >("ConfigOperation", python::no_init )
+	python::class_<ConfigOperation, boost::noncopyable, python::bases<BasicAction> >("ConfigOperation", python::no_init )
 		.add_property("config", python::make_function( &QuitOperation::getConfig, python::return_value_policy< python::reference_existing_object>() ), &QuitOperation::setConfig )
 	;
 
@@ -206,7 +212,7 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 	/// EventManager Operations
-	python::class_<EventManagerOperation, boost::noncopyable, python::bases<Operation> >("EventManagerOperation", python::no_init )
+	python::class_<EventManagerOperation, boost::noncopyable, python::bases<BasicAction> >("EventManagerOperation", python::no_init )
 		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
 	;
 
@@ -217,18 +223,17 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 	/// SceneNode Operations
-	python::class_<HideOperation, boost::noncopyable, python::bases<Operation> >("HideOperation", python::no_init )
-		.add_property("scene_node", python::make_function( &HideOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideOperation::setSceneNode )
+	// TODO expose the Base class
+	python::class_<HideAction, boost::noncopyable, python::bases<BasicAction> >("HideAction", python::no_init )
+		.add_property("scene_node", python::make_function( &HideAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideAction::setSceneNode )
 	;
 
-	python::class_<ShowOperation, boost::noncopyable, python::bases<Operation> >("ShowOperation", python::no_init )
-		.add_property("scene_node", python::make_function( &ShowOperation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowOperation::setSceneNode )
+	python::class_<ShowAction, boost::noncopyable, python::bases<BasicAction> >("ShowAction", python::no_init )
+		.add_property("scene_node", python::make_function( &ShowAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowAction::setSceneNode )
 	;
 
 
 	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
-		// TODO the factory method should return ref counted ptr
-		.def("create", &eqOgre::SceneNode::create,  python::return_value_policy<python::reference_existing_object>() ).staticmethod("create")
 		.add_property("name", python::make_function( &eqOgre::SceneNode::getName, python::return_internal_reference<>() ), &eqOgre::SceneNode::setName )
 		.add_property("position", python::make_function( &eqOgre::SceneNode::getPosition, python::return_internal_reference<>() ), &eqOgre::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )

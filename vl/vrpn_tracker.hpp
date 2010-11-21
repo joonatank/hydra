@@ -28,23 +28,20 @@
 
 namespace vl
 {
-	void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
 
-struct vrpnSensorData : public SensorData
+
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
+
+/// Creates an Transformation from vrpn data
+/// transformation is stored in same maner as in Ogre as oposed to vrpn quaternion
+/// starts with w.
+inline vl::Transform
+createTransform( vrpn_float64 const *pos, vrpn_float64 const *quat )
 {
-	vrpnSensorData( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
-				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
-		: SensorData( pos, rot )
-	{}
-
-	// TODO remove hard-coded permutation and flipping
-	vrpnSensorData( vrpn_float64 const *pos, vrpn_float64 const *quat )
-		: SensorData( Ogre::Vector3( pos[0], pos[1], -pos[2] ),
-					  Ogre::Quaternion( quat[3], quat[0], quat[1], quat[2] ) )
-	{}
-};
-
-std::ostream &operator<<( std::ostream &os, SensorData const &d );
+	// TODO remove hard-coded flipping of the z axis
+	return Transform( Ogre::Vector3( pos[0], pos[1], -pos[2] ),
+					Ogre::Quaternion( quat[3], quat[0], quat[1], quat[2] ) );
+}
 
 
 class vrpnTracker : public vl::Tracker
@@ -67,6 +64,7 @@ public :
 protected :
 	// Callback function
 	/// Updates only sensors that are in use
+
 	void update( vrpn_TRACKERCB const t );
 
 	vrpn_Tracker_Remote *_tracker;

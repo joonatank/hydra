@@ -108,6 +108,48 @@ eqOgre::SceneNode::deserialize(eq::net::DataIStream& is, const uint64_t dirtyBit
 	}
 }
 
-const std::string eqOgre::HideOperationFactory::TYPENAME = "HideOperation";
 
-const std::string eqOgre::ShowOperationFactory::TYPENAME = "ShowOperation";
+/// --------- Actions ----------
+void eqOgre::HideAction::execute(void )
+{
+	if( !_node )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_node->setVisibility( false );
+}
+
+std::string const &
+eqOgre::HideAction::getTypeName( void ) const
+{ return eqOgre::HideActionFactory::TYPENAME; }
+
+const std::string eqOgre::HideActionFactory::TYPENAME = "Hide";
+
+void eqOgre::ShowAction::execute(void )
+{
+	if( !_node )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_node->setVisibility( true );
+}
+
+std::string const &
+eqOgre::ShowAction::getTypeName( void ) const
+{ return eqOgre::ShowActionFactory::TYPENAME; }
+
+const std::string eqOgre::ShowActionFactory::TYPENAME = "Show";
+
+
+void eqOgre::SetTransformation::execute(const vl::Transform& trans)
+{
+	if( !_node )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_node->setPosition( trans.position );
+	_node->setOrientation( trans.quaternion );
+}
+
+std::string const &
+eqOgre::SetTransformation::getTypeName( void ) const
+{ return SetTransformationFactory::TYPENAME; }
+
+const std::string eqOgre::SetTransformationFactory::TYPENAME = "SetTransformation";

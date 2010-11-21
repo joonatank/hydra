@@ -14,8 +14,6 @@
 #ifndef VL_TRACKER_HPP
 #define VL_TRACKER_HPP
 
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
 
 #include "eq_cluster/event.hpp"
 #include "eq_cluster/scene_node.hpp"
@@ -23,78 +21,9 @@
 namespace vl
 {
 
-struct SensorData
-{
-	SensorData( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
-				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
-		: position( pos ), quaternion( rot )
-	{}
 
-	Ogre::Vector3 position;
-	Ogre::Quaternion quaternion;
-};
-
-/// Callback Action class designed for Trackers
-/// Could be expanded for use with anything that sets the object transformation
-// For now the Tracker Triggers are the test case
-class TrackerAction : public eqOgre::Operation
-{
-public :
-	/// Callback function for TrackerTrigger
-	/// Called when new data is received from the tracker
-	virtual void execute( SensorData const &data ) = 0;
-
-private :
-	// Forbid execute as this action is used with callbacks which take parameters
-	virtual void execute( void ) {}
-
-};
-
-typedef TrackerAction * TrackerActionPtr;
-
-
-/// Move a scene node callback
-// TODO should be moved to SceneNode events
-class NodeTrackerAction : public vl::TrackerAction
-{
-public :
-	void setSceneNode( eqOgre::SceneNode *node )
-	{ _node = node; }
-
-	eqOgre::SceneNode *getSceneNode( void )
-	{ return _node; }
-
-	/// Callback function for TrackerTrigger
-	/// Called when new data is received from the tracker
-	virtual void execute( SensorData const &data );
-
-	virtual std::string const &getTypeName( void ) const;
-
-private :
-	// Forbid execute as this action is used with callbacks which take parameters
-	virtual void execute( void ) {}
-
-	eqOgre::SceneNode *_node;
-};
-
-
-/// TrackerAction Factory class for creating new Actions
-class NodeTrackerActionFactory
-{
-public :
-	virtual eqOgre::Operation *create( void )
-	{ return new NodeTrackerAction; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-};
-
-
-/// This is not an abstract class because for all the trackers we have the
-/// Same kind of Trigger so they can use the same one.
-class TrackerTrigger : public eqOgre::Trigger
+/// Trigger class that has a callback to an Action (new event handling design).
+class TrackerTrigger : public vl::Trigger
 {
 public :
 
@@ -109,7 +38,7 @@ public :
 
 	/// Two triggers are equal if they have the same name
 	/// Actions they execute don't matter.
-	virtual bool isEqual( eqOgre::Trigger const &other ) const
+	virtual bool isEqual( vl::Trigger const &other ) const
 	{
 		TrackerTrigger const &a = (TrackerTrigger const &)other;
 		return( a._name == _name );
@@ -127,22 +56,22 @@ public :
 	{ return _name; }
 
 	/// Action to execute when updated
-	void setAction( TrackerActionPtr action );
+	void setAction( TransformActionPtr action );
 
 	/// Callback function
-	void update( SensorData const &data );
+	void update( Transform const &data );
 
 protected :
 	std::string _name;
 
-	TrackerActionPtr _action;
+	TransformActionPtr _action;
 
 };
 
-class TrackerTriggerFactory : public eqOgre::TriggerFactory
+class TrackerTriggerFactory : public vl::TriggerFactory
 {
 public :
-	virtual eqOgre::Trigger *create( void )
+	virtual vl::Trigger *create( void )
 	{ return new TrackerTrigger; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -173,12 +102,12 @@ public :
 	virtual vl::TrackerTrigger *getTrigger( void );
 
 	/// Callback function for updating the Sensor data
-	virtual void update( SensorData const &data );
+	virtual void update( Transform const &data );
 
 protected :
 	vl::TrackerTrigger *_trigger;
 
-	SensorData _default_value;
+	Transform _default_value;
 
 };
 

@@ -12,98 +12,10 @@
 namespace eqOgre
 {
 
-/// Set a new transformation to a SceneNode
-// TODO this is not used anywhere so no idea if it's working or not
-// TODO not real Operation, missing Factory class
-class SetTransformationOperation : public Operation
-{
-public :
-	SetTransformationOperation( eqOgre::SceneNode *node,
-								Ogre::Quaternion const &q = Ogre::Quaternion::IDENTITY,
-								Ogre::Vector3 const &v = Ogre::Vector3::ZERO )
-		: _node(node), _orientation(q), _position(v)
-	{}
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	// TODO should be moved to Factory
-	static const std::string TYPENAME;
-
-	void setOrientation( Ogre::Quaternion const &q )
-	{
-		_orientation = q;
-	}
-
-	void setPosition( Ogre::Vector3 const &v )
-	{
-		_position = v;
-	}
-
-	virtual void operator()( void )
-	{
-		_node->setOrientation(_orientation);
-		_node->setPosition(_position);
-	}
-
-protected :
-	SceneNode *_node;
-
-	Ogre::Quaternion _orientation;
-	Ogre::Vector3 _position;
-};
-
-/// Modify existing transformation in a SceneNode
-// TODO this is not used anywhere so no idea if it's working or not
-// TODO not real Operation, missing Factory class
-class TransformOperation : public Operation
-{
-public :
-	TransformOperation( eqOgre::SceneNode *node,
-						Ogre::Quaternion const &q = Ogre::Quaternion::IDENTITY,
-						Ogre::Vector3 const &v = Ogre::Vector3::ZERO )
-		: _node(node), _rotation(q), _translation(v)
-	{
-		if( _node )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-	}
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	// TODO should be moved to Factory
-	static const std::string TYPENAME;
-
-	void rotate( Ogre::Quaternion const &q )
-	{
-		_rotation = _rotation * q;
-	}
-
-	void translate( Ogre::Vector3 const &v )
-	{
-		_translation += v;
-	}
-
-	virtual void operator()( void )
-	{
-		_node->setOrientation( _node->getOrientation()*_rotation );
-		_node->setPosition( _node->getPosition()+_translation );
-
-		_translation = Ogre::Vector3::ZERO;
-		_rotation = Ogre::Quaternion::IDENTITY;
-	}
-
-protected :
-	SceneNode *_node;
-	
-	Ogre::Quaternion _rotation;
-	Ogre::Vector3 _translation;
-};
-
 // TODO this is not really an Operation,
 // no execute(void) function
 // No Factory class
-class MoveOperation : public Operation
+class MoveOperation : public vl::Action
 {
 public :
 	MoveOperation( void );
@@ -162,26 +74,24 @@ protected :
 	Ogre::Vector3 _move_dir;
 	Ogre::Vector3 _rot_dir;
 
-private :
-	virtual void execute( void ) {}
 };
 
 /// Simple Event class that does transformation based on key events
 /// Keeps track of the state of the object (moving, stopped)
 /// Transforms a SceneNode provided
 /// All parameters that need units are in SI units (e.g. speed is m/s)
-class TransformationEvent : public Event
+class TransformationEvent : public vl::Event
 {
 public :
 
 	class TriggerPair
 	{
 	public :
-		TriggerPair( Trigger *trig1 = 0, Trigger *trig2 = 0 )
+		TriggerPair( vl::Trigger *trig1 = 0, vl::Trigger *trig2 = 0 )
 			: _trig_pos(trig1), _trig_neg(trig2)
 		{}
 
-		double findTrigger( Trigger const *trig ) const
+		double findTrigger( vl::Trigger const *trig ) const
 		{
 			if( !trig )
 			{ return 0; }
@@ -195,8 +105,8 @@ public :
 			return 0;
 		}
 
-		Trigger * _trig_pos;
-		Trigger * _trig_neg;
+		vl::Trigger * _trig_pos;
+		vl::Trigger * _trig_neg;
 	};
 
 	struct TriggerPairVector
@@ -216,7 +126,7 @@ public :
 		/// it was a positive or negative control key.
 		/// Return value can be used as movement direction vector,
 		/// or a delta to such a vector.
-		Ogre::Vector3 findTrigger( Trigger const *trig )
+		Ogre::Vector3 findTrigger( vl::Trigger const *trig )
 		{
 			Ogre::Vector3 vec;
 			vec.x = x.findTrigger(trig);
@@ -250,7 +160,7 @@ public :
 	/// If the trigger is mapped to this TransformationEvent the state of the
 	/// event is changed.
 	/// Returns true if processed
-	bool processTrigger(Trigger* trig);
+	bool processTrigger(vl::Trigger* trig);
 
 	/// Parameters
 	void setSpeed( double speed )
@@ -270,17 +180,17 @@ public :
 	/// These triggers will change the movement direction of the object
 	/// they will not really move the object
 	/// Translation Triggers
-	void setTransXtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setTransXtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_trans_triggers.x = TriggerPair( trig_pos, trig_neg );
 	}
 
-	void setTransYtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setTransYtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_trans_triggers.y = TriggerPair( trig_pos, trig_neg );
 	}
 
-	void setTransZtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setTransZtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_trans_triggers.z = TriggerPair( trig_pos, trig_neg );
 	}
@@ -288,17 +198,17 @@ public :
 
 
 	/// Rotation Triggers
-	void setRotXtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setRotXtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_rot_triggers.x = TriggerPair( trig_pos, trig_neg );
 	}
 
-	void setRotYtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setRotYtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_rot_triggers.y = TriggerPair( trig_pos, trig_neg );
 	}
 
-	void setRotZtrigger( Trigger *trig_pos, Trigger *trig_neg )
+	void setRotZtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
 	{
 		_rot_triggers.z = TriggerPair( trig_pos, trig_neg );
 	}
@@ -332,10 +242,10 @@ protected :
 
 };	// class TransformationEvent
 
-class TransformationEventFactory : public EventFactory
+class TransformationEventFactory : public vl::EventFactory
 {
 public :
-	virtual Event *create( void )
+	virtual vl::Event *create( void )
 	{ return new TransformationEvent; }
 
 	virtual std::string const &getTypeName( void ) const
@@ -343,37 +253,6 @@ public :
 
 	static const std::string TYPENAME;
 };
-
-/*	TODO fix these operators for TriggerPair
-inline bool operator==( TransformationEvent::KeyPair const &a, TransformationEvent::KeyPair const &b )
-{
-	return( a.neg_key == b.neg_key && a.pos_key == b.pos_key );
-}
-
-inline bool operator==( TransformationEvent::KeyPairVec const &a, TransformationEvent::KeyPairVec const &b )
-{
-	return( a.x == b.x && a.y == b.y && a.z == b.z );
-}
-*/
-
-/*
-inline std::ostream & operator<<( std::ostream &os , TransformationEvent::KeyPair const &a )
-{
-	// TODO would be nice if the keys would be converted to human readable form
-	os << "KeyPair : neg = " << getKeyName(a.neg_key) << " pos = "
-		<< getKeyName(a.pos_key);
-
-	return os;
-}
-*/
-
-/*
-inline std::ostream & operator<<(  std::ostream &os, TransformationEvent::KeyPairVec const &a )
-{
-	os << "x = " << a.x << " y = " << a.y << " z = " << a.z;
-	return os;
-}
-*/
 
 }	// namespace eqOgre
 

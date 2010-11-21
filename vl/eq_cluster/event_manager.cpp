@@ -6,8 +6,8 @@
 
 #include "base/exceptions.hpp"
 
-eqOgre::Event *
-eqOgre::EventManager::createEvent(const std::string& type)
+vl::Event *
+vl::EventManager::createEvent(const std::string& type)
 {
 	std::vector<EventFactory *>::iterator iter;
 	for( iter = _event_factories.begin(); iter != _event_factories.end(); ++iter )
@@ -15,62 +15,27 @@ eqOgre::EventManager::createEvent(const std::string& type)
 		if( (*iter)->getTypeName() == type )
 		{ return (*iter)->create(); }
 	}
-	/*
-	if( type == "Event"  )
-	{
-		return new BasicEvent();
-	}
-	else if( type == "ToggleEvent" )
-	{
-		return new ToggleEvent();
-	}
-	else if( type == "TransformationEvent" )
-	{
-		return new TransformationEvent();
-	}
-*/
+
 	BOOST_THROW_EXCEPTION( vl::no_factory()
-		<< vl::factory_name("Event factory")
-		<< vl::object_type_name(type)
-		);
+		<< vl::factory_name("Event factory") << vl::object_type_name(type) );
 }
 
-// TODO these should not be hard coded
-eqOgre::Operation *
-eqOgre::EventManager::createOperation(const std::string& type)
+vl::ActionPtr
+vl::EventManager::createAction(const std::string& type)
 {
-	std::vector<OperationFactory *>::iterator iter;
-	for( iter = _operation_factories.begin(); iter != _operation_factories.end(); ++iter )
+	std::vector<ActionFactory *>::iterator iter;
+	for( iter = _action_factories.begin(); iter != _action_factories.end(); ++iter )
 	{
 		if( (*iter)->getTypeName() == type )
 		{ return (*iter)->create(); }
 	}
-	/*	TODO these factories need to be created and added to the manager
-	if( type == AddTransformOperation::TYPENAME )
-	{
-		return new AddTransformOperation();
-	}
-	else if( type == RemoveTransformOperation::TYPENAME )
-	{
-		return new RemoveTransformOperation();
-	}
-	else if( type == QuitOperation::TYPENAME )
-	{
-		return new QuitOperation();
-	}
-	else if( type == ReloadScene::TYPENAME )
-	{
-		return new ReloadScene();
-	}
-	*/
+
 	BOOST_THROW_EXCEPTION( vl::no_factory()
-		<< vl::factory_name("Operation factory")
-		<< vl::object_type_name(type)
-		);
+		<< vl::factory_name("Operation factory") << vl::object_type_name(type) );
 }
 
-eqOgre::Trigger *
-eqOgre::EventManager::createTrigger(const std::string& type)
+vl::Trigger *
+vl::EventManager::createTrigger(const std::string& type)
 {
 	std::vector<TriggerFactory *>::iterator iter;
 	for( iter = _trigger_factories.begin(); iter != _trigger_factories.end(); ++iter )
@@ -79,24 +44,12 @@ eqOgre::EventManager::createTrigger(const std::string& type)
 		{ return (*iter)->create(); }
 	}
 
-	/*
-	if( type == "KeyTrigger" )
-	{
-		return new KeyTrigger();
-	}
-	else if( type == "FrameTrigger" )
-	{
-		return new FrameTrigger();
-	}
-	*/
 	BOOST_THROW_EXCEPTION( vl::no_factory()
-		<< vl::factory_name("Trigger factory")
-		<< vl::object_type_name(type)
-		);
+		<< vl::factory_name("Trigger factory") << vl::object_type_name(type) );
 }
 
 void
-eqOgre::EventManager::addEventFactory(eqOgre::EventFactory* fact)
+vl::EventManager::addEventFactory(vl::EventFactory* fact)
 {
 	std::vector<EventFactory *>::iterator iter;
 	for( iter = _event_factories.begin(); iter != _event_factories.end(); ++iter )
@@ -114,10 +67,10 @@ eqOgre::EventManager::addEventFactory(eqOgre::EventFactory* fact)
 }
 
 void
-eqOgre::EventManager::addOperationFactory(eqOgre::OperationFactory* fact)
+vl::EventManager::addActionFactory(vl::ActionFactory* fact)
 {
-	std::vector<OperationFactory *>::iterator iter;
-	for( iter = _operation_factories.begin(); iter != _operation_factories.end(); ++iter )
+	std::vector<ActionFactory *>::iterator iter;
+	for( iter = _action_factories.begin(); iter != _action_factories.end(); ++iter )
 	{
 		if( (*iter)->getTypeName() == fact->getTypeName() )
 		{
@@ -128,11 +81,11 @@ eqOgre::EventManager::addOperationFactory(eqOgre::OperationFactory* fact)
 		}
 	}
 
-	_operation_factories.push_back( fact );
+	_action_factories.push_back( fact );
 }
 
 void
-eqOgre::EventManager::addTriggerFactory(eqOgre::TriggerFactory* fact)
+vl::EventManager::addTriggerFactory(vl::TriggerFactory* fact)
 {
 	std::vector<TriggerFactory *>::iterator iter;
 	for( iter = _trigger_factories.begin(); iter != _trigger_factories.end(); ++iter )
@@ -150,13 +103,13 @@ eqOgre::EventManager::addTriggerFactory(eqOgre::TriggerFactory* fact)
 }
 
 // TODO not implemented
-eqOgre::Event *
-eqOgre::EventManager::findEvent( const std::string &name )
+vl::Event *
+vl::EventManager::findEvent( const std::string &name )
 { return 0; }
 
 
 bool
-eqOgre::EventManager::addEvent(eqOgre::Event *event)
+vl::EventManager::addEvent(vl::Event *event)
 {
 	_events.push_back(event);
 	std::cerr << "Event = " << event << " added. " << _events.size()
@@ -165,7 +118,7 @@ eqOgre::EventManager::addEvent(eqOgre::Event *event)
 }
 
 bool
-eqOgre::EventManager::removeEvent(eqOgre::Event *event)
+vl::EventManager::removeEvent(vl::Event *event)
 {
 	std::vector<Event *>::iterator iter;
 	for( iter = _events.begin(); iter != _events.end(); ++iter )
@@ -181,7 +134,7 @@ eqOgre::EventManager::removeEvent(eqOgre::Event *event)
 }
 
 bool
-eqOgre::EventManager::hasEvent(eqOgre::Event *event)
+vl::EventManager::hasEvent(vl::Event *event)
 {
 //	std::cerr << "eqOgre::EventManager::hasEvent" << std::endl;
 	std::vector<Event *>::iterator iter;
@@ -195,7 +148,7 @@ eqOgre::EventManager::hasEvent(eqOgre::Event *event)
 }
 
 bool
-eqOgre::EventManager::processEvents( Trigger *trig )
+vl::EventManager::processEvents( vl::Trigger *trig )
 {
 	bool retval = false;
 //	std::cout << "eqOgre::EventManager::processEvents" << std::endl;
@@ -208,7 +161,8 @@ eqOgre::EventManager::processEvents( Trigger *trig )
 	return retval;
 }
 
-void eqOgre::EventManager::printEvents(std::ostream& os) const
+void
+vl::EventManager::printEvents(std::ostream& os) const
 {
 	os << " Events, " << _events.size() << " of them." << std::endl << std::endl;
 	std::vector<Event *>::const_iterator iter;

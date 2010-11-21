@@ -30,7 +30,7 @@ public :
 	{
 		return _name;
 	}
-	
+
 	void setName( std::string const &name )
 	{
 		setDirty( DIRTY_NAME );
@@ -79,13 +79,13 @@ public :
 
 protected :
 	SceneNode( std::string const &name = std::string() );
-		
+
 	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
-    virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
+	virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
 private :
 	std::string _name;
-	
+
 	Ogre::Vector3 _position;
 	Ogre::Quaternion _orientation;
 
@@ -96,7 +96,7 @@ private :
 	Ogre::Quaternion _initial_orientation;
 
 	bool _visible;
-	
+
 	Ogre::SceneNode *_ogre_node;
 
 };	// class SceneNode
@@ -110,10 +110,17 @@ inline std::ostream & operator<<(  std::ostream &os, SceneNode const &a )
 	return os;
 }
 
-class HideOperation : public Operation
+
+
+/// ---------------------- SceneNode Actions -------------------------
+
+/// Concrete class used to store and act as an interface for Actions needing
+/// SceneNode access
+/// Is not an action because doesn't do anything.
+class SceneNodeActionBase
 {
 public :
-	HideOperation( void )
+	SceneNodeActionBase( void )
 		: _node(0)
 	{}
 
@@ -123,25 +130,26 @@ public :
 	SceneNodePtr getSceneNode( void )
 	{ return _node; }
 
-	virtual void execute( void )
-	{
-		if( !_node )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_node->setVisibility( false );
-	}
-
-	virtual std::string const &getTypeName( void ) const;
-
 protected :
 	SceneNodePtr _node;
 };
 
-class HideOperationFactory : public OperationFactory
+
+
+class HideAction : public SceneNodeActionBase, public  vl::BasicAction
 {
 public :
-	virtual Operation *create( void )
-	{ return new HideOperation; }
+	virtual void execute( void );
+
+	virtual std::string const &getTypeName( void ) const;
+
+};
+
+class HideActionFactory : public vl::ActionFactory
+{
+public :
+	virtual vl::Action *create( void )
+	{ return new HideAction; }
 
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
@@ -149,43 +157,22 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-HideOperation::getTypeName( void ) const
-{ return HideOperationFactory::TYPENAME; }
 
 
-class ShowOperation : public Operation
+class ShowAction : public SceneNodeActionBase, public  vl::BasicAction
 {
 public :
-	ShowOperation( void )
-		: _node(0)
-	{}
-
-	void setSceneNode( SceneNodePtr node )
-	{ _node = node; }
-
-	SceneNodePtr getSceneNode( void )
-	{ return _node; }
-
-	virtual void execute( void )
-	{
-		if( !_node )
-		{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-		_node->setVisibility( true );
-	}
+	virtual void execute( void );
 
 	virtual std::string const &getTypeName( void ) const;
 
-protected :
-	SceneNodePtr _node;
 };
 
-class ShowOperationFactory : public OperationFactory
+class ShowActionFactory : public vl::ActionFactory
 {
 public :
-	virtual Operation *create( void )
-	{ return new ShowOperation; }
+	virtual vl::Action *create( void )
+	{ return new ShowAction; }
 
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
@@ -193,9 +180,28 @@ public :
 	static const std::string TYPENAME;
 };
 
-inline std::string const &
-ShowOperation::getTypeName( void ) const
-{ return ShowOperationFactory::TYPENAME; }
+
+
+/// Set a new transformation to a SceneNode
+class SetTransformation : public SceneNodeActionBase, public vl::TransformAction
+{
+public :
+	virtual std::string const &getTypeName( void ) const;
+
+	virtual void execute( vl::Transform const &trans );
+};
+
+class SetTransformationFactory : public vl::ActionFactory
+{
+public :
+	virtual vl::Action *create( void )
+	{ return new SetTransformation; }
+
+	virtual std::string const &getTypeName( void ) const
+	{ return TYPENAME; }
+
+	static const std::string TYPENAME;
+};
 
 
 }	// namespace eqOgre

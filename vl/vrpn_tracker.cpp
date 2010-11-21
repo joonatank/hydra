@@ -19,13 +19,6 @@ std::ostream &operator<<( std::ostream &os, vrpn_TRACKERCB t )
 	return os;
 }
 
-std::ostream & vl::operator<<( std::ostream &os, vl::SensorData const &d )
-{
-	os << "Position = " << d.position << " : Orientation = " << d.quaternion;
-
-	return os;
-}
-
 void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	vl::vrpnTracker *tracker = (vl::vrpnTracker *)userdata;
@@ -93,6 +86,6 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		// Check that we have a sensor object
 		// Only sensors that are in use have an object
 		if( sensor )
-		{ sensor->update( vl::vrpnSensorData( t.pos, t.quat ) ); }
+		{ sensor->update( vl::createTransform( t.pos, t.quat ) ); }
 	}
 }

@@ -1,10 +1,6 @@
 
 #include "transform_event.hpp"
 
-std::string const eqOgre::TransformOperation::TYPENAME = "TransformOperation";
-
-std::string const eqOgre::SetTransformationOperation::TYPENAME = "SetTransformationOperation";
-
 eqOgre::MoveOperation::MoveOperation( void )
 	: _node(0), _speed(1), _angular_speed( Ogre::Degree(60) ),
 		_move_dir(Ogre::Vector3::ZERO), _rot_dir(Ogre::Vector3::ZERO)
@@ -78,7 +74,7 @@ eqOgre::operator<<(std::ostream& os, const eqOgre::TransformationEvent& a)
 
 
 bool
-eqOgre::TransformationEvent::processTrigger(eqOgre::Trigger* trig)
+eqOgre::TransformationEvent::processTrigger(vl::Trigger* trig)
 {
 	bool retval = false;
 	Ogre::Vector3 v = _trans_triggers.findTrigger(trig);
@@ -95,7 +91,7 @@ eqOgre::TransformationEvent::processTrigger(eqOgre::Trigger* trig)
 		retval = true;
 	}
 
-	if( FrameTrigger().isSimilar(trig) )
+	if( vl::FrameTrigger().isSimilar(trig) )
 	{
 		// TODO the delta time should be provided by the FrameTrigger
 		clock_t time = ::clock();

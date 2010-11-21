@@ -12,13 +12,10 @@
 
 #include "tracker.hpp"
 
-void vl::NodeTrackerAction::execute(const vl::SensorData& data)
+/*
+void vl::NodeTrackerAction::execute(const vl::Transform& data)
 {
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_node->setPosition( data.position );
-	_node->setOrientation( data.quaternion );
 }
 
 
@@ -27,10 +24,11 @@ vl::NodeTrackerAction::getTypeName(void ) const
 { return NodeTrackerActionFactory::TYPENAME; }
 
 const std::string vl::NodeTrackerActionFactory::TYPENAME = "NodeTrackerAction";
-
+*/
 
 /// ----------- TrackerTrigger ------------
-void vl::TrackerTrigger::update(const vl::SensorData& data)
+void
+vl::TrackerTrigger::update(const vl::Transform& data)
 {
 	if( _action )
 	{
@@ -38,7 +36,8 @@ void vl::TrackerTrigger::update(const vl::SensorData& data)
 	}
 }
 
-void vl::TrackerTrigger::setAction(vl::TrackerActionPtr action)
+void
+vl::TrackerTrigger::setAction(vl::TransformActionPtr action)
 {
 	if( _action != action )
 	{
@@ -94,7 +93,7 @@ vl::Sensor::setTrigger( vl::TrackerTrigger* trigger )
 	update( _default_value );
 }
 
-void vl::Sensor::update(const vl::SensorData& data)
+void vl::Sensor::update(const vl::Transform& data)
 {
 	if( _trigger )
 	{

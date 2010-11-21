@@ -20,10 +20,10 @@ namespace vl
 namespace physics
 {
 
-class PhysicsOperation : public eqOgre::Operation
+class PhysicsAction : public vl::BasicAction
 {
 public :
-	PhysicsOperation( void )
+	PhysicsAction( void )
 		: _body(0)
 	{}
 
@@ -37,7 +37,7 @@ protected :
 	btRigidBody *_body;
 };
 
-class ApplyForce : public PhysicsOperation
+class ApplyForce : public PhysicsAction
 {
 public :
 	ApplyForce( void )
@@ -59,10 +59,10 @@ protected :
 
 };
 
-class ApplyForceFactory : public eqOgre::OperationFactory
+class ApplyForceFactory : public vl::ActionFactory
 {
 public :
-	virtual eqOgre::Operation *create( void )
+	virtual vl::ActionPtr create( void )
 	{ return new ApplyForce; }
 
 	virtual std::string const &getTypeName( void ) const

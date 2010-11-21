@@ -19,27 +19,27 @@
 #include <OIS/OISMouse.h>
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ), _event_manager( new EventManager ),
+	: eq::Config ( parent ), _event_manager( new vl::EventManager ),
 	  _audio_manager(0), _background_sound(0)
 {
 	// Add events
-	_event_manager->addEventFactory( new BasicEventFactory );
-	_event_manager->addEventFactory( new ToggleEventFactory );
-	_event_manager->addEventFactory( new TransformationEventFactory );
+	_event_manager->addEventFactory( new vl::BasicEventFactory );
+	_event_manager->addEventFactory( new vl::ToggleEventFactory );
+	_event_manager->addEventFactory( new eqOgre::TransformationEventFactory );
 	// Add triggers
-	_event_manager->addTriggerFactory( new KeyTriggerFactory );
-	_event_manager->addTriggerFactory( new KeyPressedTriggerFactory );
-	_event_manager->addTriggerFactory( new KeyReleasedTriggerFactory );
-	_event_manager->addTriggerFactory( new FrameTriggerFactory );
+	_event_manager->addTriggerFactory( new vl::KeyTriggerFactory );
+	_event_manager->addTriggerFactory( new vl::KeyPressedTriggerFactory );
+	_event_manager->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
+	_event_manager->addTriggerFactory( new vl::FrameTriggerFactory );
 	// Add operations
-	_event_manager->addOperationFactory( new QuitOperationFactory );
-	_event_manager->addOperationFactory( new ReloadSceneFactory );
-	_event_manager->addOperationFactory( new AddTransformOperationFactory );
-	_event_manager->addOperationFactory( new RemoveTransformOperationFactory );
-	_event_manager->addOperationFactory( new HideOperationFactory );
-	_event_manager->addOperationFactory( new ShowOperationFactory );
-	_event_manager->addOperationFactory( new ToggleMusicFactory );
-	_event_manager->addOperationFactory( new ActivateCameraFactory );
+	_event_manager->addActionFactory( new eqOgre::QuitOperationFactory );
+	_event_manager->addActionFactory( new eqOgre::ReloadSceneFactory );
+	_event_manager->addActionFactory( new eqOgre::AddTransformOperationFactory );
+	_event_manager->addActionFactory( new eqOgre::RemoveTransformOperationFactory );
+	_event_manager->addActionFactory( new eqOgre::HideActionFactory );
+	_event_manager->addActionFactory( new eqOgre::ShowActionFactory );
+	_event_manager->addActionFactory( new eqOgre::ToggleMusicFactory );
+	_event_manager->addActionFactory( new eqOgre::ActivateCameraFactory );
 }
 
 eqOgre::Config::~Config()
@@ -231,12 +231,12 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 		// Add a trigger event to Quit the Application
 		QuitOperation *quit
-			= (QuitOperation *)( _event_manager->createOperation( "QuitOperation" ) );
+			= (QuitOperation *)( _event_manager->createAction( "QuitOperation" ) );
 		quit->setConfig(this);
-		Event *event = _event_manager->createEvent( "Event" );
-		event->setOperation(quit);
+		vl::Event *event = _event_manager->createEvent( "Event" );
+		event->setAction(quit);
 		// Add trigger
-		KeyTrigger *trig = (KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+		vl::KeyTrigger *trig = (vl::KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
 		trig->setKey( OIS::KC_ESCAPE );
 		event->addTrigger(trig);
 		_event_manager->addEvent( event );
@@ -247,7 +247,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 	// ProcessEvents does not store the pointer anywhere
 	// so it's safe to allocate to the stack
-	FrameTrigger frame_trig;
+	vl::FrameTrigger frame_trig;
 	_event_manager->processEvents( &frame_trig );
 
 	uint32_t version = _frame_data.commitAll();
@@ -341,7 +341,7 @@ eqOgre::Config::_createTracker(  vl::SettingsRefPtr settings )
 	/// Set default values for sensor
 	// TODO move to config startFrame init
 	Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);// = settings->getTrackerDefaultOrientation()
-	Ogre::Vector3 v(0, 0, 0 ); //= settings->getTrackerDefaultPosition();
+	Ogre::Vector3 v(0, 1.5, 0 ); //= settings->getTrackerDefaultPosition();
 	/// Create sensor
 	vl::SensorRefPtr sensor( new vl::Sensor( v,q ) );
 	_tracker->setSensor(0, sensor);
@@ -501,7 +501,7 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	KeyPressedTrigger trig;
+	vl::KeyPressedTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
 	return _event_manager->processEvents( &trig );
 }
@@ -509,7 +509,7 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
-	KeyReleasedTrigger trig;
+	vl::KeyReleasedTrigger trig;
 	trig.setKey( (OIS::KeyCode )(event.key) );
 	return _event_manager->processEvents( &trig );
 }
