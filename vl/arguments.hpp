@@ -48,6 +48,10 @@ struct Arguments
 		{
 			proj_path = str2;
 		}
+		else if( isGlobal(str1) )
+		{
+			global_path = str2;
+		}
 		else if( isCase(str1) )
 		{
 			case_name = str2;
@@ -68,11 +72,15 @@ struct Arguments
 	bool isProj( char const *str ) const
 	{ return( ::strcmp( str, "-p" ) == 0 ); }
 
+	bool isGlobal( char const *str ) const
+	{ return( ::strcmp( str, "-g" ) == 0 ); }
+
 	bool isCase( char const *str ) const
 	{ return( ::strcmp( str, "-n" ) == 0 ); }
 
 	std::string env_path;
 	std::string proj_path;
+	std::string global_path;
 	std::string case_name;
 
 };	// class Arguments

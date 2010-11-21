@@ -1,6 +1,6 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-11
- *	
+ *
  */
 
 // Declaration
@@ -23,40 +23,65 @@ eqOgre::getSettings( int argc, char **argv )
 
 	std::cout << "environment path = " << arguments.env_path << std::endl;
 	std::cout << "project path = " << arguments.proj_path << std::endl;
+	std::cout << "global path = " << arguments.global_path << std::endl;
 	std::cout << "case name = " << arguments.case_name << std::endl;
 
 	// TODO add case support
 	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 	vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
+	vl::ProjSettingsRefPtr global;
 
-	// Read the config files to strings
-	std::string env_data, proj_data;
+	/// Read the Environment config
 	if( fs::exists( arguments.env_path ) )
-	{ env_data = vl::readFileToString( arguments.env_path ); }
+	{
+		std::string env_data;
+		env_data = vl::readFileToString( arguments.env_path );
+		// TODO check that the files are correct and we have good settings
+		vl::EnvSettingsSerializer env_ser( env );
+		env_ser.readString(env_data);
+		env->setFile( arguments.env_path );
+	}
 	else
 	{
-		std::cerr << "No environment file : "
-			<< arguments.env_path << std::endl;
+		std::cerr << "No environment file : " << arguments.env_path << std::endl;
+		// Mandatory so we return here
 		return eqOgre::SettingsRefPtr();
 	}
+
+	/// Read the Project Config
 	if( fs::exists( arguments.proj_path ) )
-	{ proj_data = vl::readFileToString( arguments.proj_path ); }
+	{
+		std::string proj_data;
+		proj_data = vl::readFileToString( arguments.proj_path );
+		vl::ProjSettingsSerializer proj_ser( proj );
+		proj_ser.readString(proj_data);
+		proj->setFile( arguments.proj_path );
+	}
 	else
 	{
 		std::cerr << "No project file : " << arguments.proj_path << std::endl;
+		// Mandatory so we return here
 		return eqOgre::SettingsRefPtr();
 	}
 
-	// TODO check that the files are correct and we have good settings
-	vl::EnvSettingsSerializer env_ser( env );
-	env_ser.readString(env_data);
-	env->setFile( arguments.env_path );
+	/// Read the global config
+	if( fs::exists( arguments.global_path ) )
+	{
+		global.reset( new vl::ProjSettings );
+		std::string global_data;
+		global_data = vl::readFileToString( arguments.global_path );
+		vl::ProjSettingsSerializer glob_ser( global );
+		glob_ser.readString(global_data);
+		global->setFile( arguments.global_path );
+	}
+	else
+	{
+		std::cerr << "No global config file : " << arguments.global_path << std::endl;
+		// Optional so we continue
+	}
 
-	vl::ProjSettingsSerializer proj_ser( proj );
-	proj_ser.readString(proj_data);
-	proj->setFile( arguments.proj_path );
 
-	eqOgre::SettingsRefPtr settings( new eqOgre::Settings( env, proj ) );
+	eqOgre::SettingsRefPtr settings( new eqOgre::Settings( env, proj, global ) );
 
 	// Add the command line arguments
 	// TODO this should only add Equalizer arguments
@@ -73,8 +98,9 @@ eqOgre::getSettings( int argc, char **argv )
 
 
 /// eqOgre::Settings
-eqOgre::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj )
-	: vl::Settings( env, proj ),
+eqOgre::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
+							vl::ProjSettingsRefPtr global )
+	: vl::Settings( env, proj, global ),
 	  _frame_data_id(EQ_ID_INVALID)
 {}
 
@@ -101,7 +127,7 @@ void eqOgre::Settings::getInstanceData(eq::net::DataOStream& os)
 		os << _scenes.at(i).file << _scenes.at(i).name
 			<< _scenes.at(i).attach_node << _scenes.at(i).type;
 	}
-	
+
 	os << _plugins.getPath();
 
 	os << _resources.size();

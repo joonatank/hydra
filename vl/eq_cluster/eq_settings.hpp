@@ -21,7 +21,8 @@ eqOgre::SettingsRefPtr getSettings( int argc, char **argv );
 class Settings : public vl::Settings, public eq::net::Object
 {
 public :
-	Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj );
+	Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
+			  vl::ProjSettingsRefPtr global = vl::ProjSettingsRefPtr() );
 
 	virtual ~Settings( void )
 	{}

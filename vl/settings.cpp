@@ -12,8 +12,10 @@
 // Necessary for getPid (used for log file names)
 #include "base/system_util.hpp"
 
-vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj )
+vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
+						vl::ProjSettingsRefPtr global )
 	: _env(env),
+	  _global(global),
 	  _proj(proj)
 {}
 
@@ -81,7 +83,13 @@ vl::Settings::getScenes( void ) const
 {
 	std::vector<ProjSettings::Scene const *> vec;
 
+	if( _global )
+	{
+		_addScenes( vec, _global->getCasePtr() );
+	}
+
 	_addScenes( vec, _proj->getCasePtr() );
+
 	if( !_case.empty() )
 	{
 		_addScenes( vec, _proj->getCasePtr(_case) );
@@ -95,14 +103,56 @@ vl::Settings::getScripts( void ) const
 {
 	std::vector<std::string> vec;
 
-	_addScripts( vec, _proj->getCasePtr() );
+	if( _global )
+	{
+		_addScripts( vec, getGlobalDir(), _global->getCasePtr() );
+	}
+
+	_addScripts( vec, getProjectDir(), _proj->getCasePtr() );
 
 	if( !_case.empty() )
 	{
-		_addScripts( vec, _proj->getCasePtr(_case) );
+		_addScripts( vec, getProjectDir(), _proj->getCasePtr(_case) );
 	}
 
 	return vec;
+}
+
+std::vector< std::string > vl::Settings::getResourcePaths(void ) const
+{
+	std::string dir_name = "/resources";
+
+	std::vector<std::string> vec;
+	if( _global )
+	{
+		std::string dir = getGlobalDir() + dir_name;
+		std::cout << "Testing resource dir = " << dir << std::endl;
+		if( fs::exists( dir ) )
+		{ vec.push_back( dir ); }
+	}
+	if( _proj )
+	{
+		std::string dir = getProjectDir() + dir_name;
+		std::cout << "Testing resource dir = " << dir << std::endl;
+		if( fs::exists( dir ) )
+		{ vec.push_back( dir ); }
+	}
+
+	return vec;
+}
+
+
+std::string vl::Settings::getGlobalDir(void ) const
+{
+	if( !_global )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	fs::path globFile( _global->getFile() );
+	fs::path globDir = globFile.parent_path();
+	if( !fs::exists( globDir ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( globDir.file_string() ) ); }
+
+	return globDir.file_string();
 }
 
 std::string
@@ -137,10 +187,9 @@ vl::Settings::getEnvironementDir( void ) const
 // --------- Settings Protected --------
 void
 vl::Settings::_addScripts( std::vector< std::string > &vec,
-						  ProjSettings::Case const *cas) const
+						   std::string const &projDir,
+						   ProjSettings::Case const *cas) const
 {
-	// TODO should return absolute paths
-	std::string projDir( getProjectDir() );
 	for( size_t i = 0; i < cas->getNscripts(); ++i )
 	{
 		vl::ProjSettings::Script *script = cas->getScriptPtr(i);

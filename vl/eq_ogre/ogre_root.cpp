@@ -90,28 +90,31 @@ vl::ogre::Root::setupResources( void )
 	std::string msg( "setupResources" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	//std::vector<std::string> resources = _settings->getOgreResourcePaths();
-	std::stringstream ss;
-	fs::path proj_file = fs::path( _settings->getProjectSettings()->getFile() );
-	ss << "project file = " << proj_file.file_string();
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-	ss.str("");
-
-	fs::path resource_dir = proj_file.parent_path() / "resources";
-	ss << "resource dir = " << resource_dir.file_string();
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-	ss.str("");
-
-	// Throw a generic exception here for now
-	if( !fs::exists( resource_dir ) )
+	std::vector<std::string> resource_paths =  _settings->getResourcePaths();
+	if( resource_paths.empty() )
 	{
-		BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( resource_dir.file_string() ) );
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "No Resource Paths.") );
 	}
 
-	// Add the root resource dir
-	_setupResource( resource_dir.file_string(), "FileSystem" );
-	// Add all child resources
-	_iterateResourceDir( resource_dir );
+	for( std::vector<std::string>::iterator iter = resource_paths.begin();
+		iter != resource_paths.end(); ++iter )
+	{
+		std::stringstream ss;
+		ss << "Adding resource dir : " << *iter;
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+		// This should never happen as the resource paths settings provides
+		// should be valid.
+		if( !fs::exists( *iter ) )
+		{
+			BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( *iter ) );
+		}
+
+		// Add the root resource dir
+		_setupResource( *iter, "FileSystem" );
+		// Add all child resources
+		_iterateResourceDir( *iter );
+	}
 }
 
 void
@@ -148,7 +151,7 @@ vl::ogre::Root::_iterateResourceDir( fs::path const &file )
 		if ( fs::is_directory(itr->status()) )
 		{
 			// TODO this needs a recursion
-			 
+
 			_setupResource( itr->path().file_string(), "FileSystem" );
 			_iterateResourceDir( itr->path() );
 		}
@@ -207,7 +210,7 @@ vl::ogre::Root::createSceneManager(std::string const &name )
 		BOOST_THROW_EXCEPTION( vl::exception() );
 	}
 
-	Ogre::SceneManager *og_man 
+	Ogre::SceneManager *og_man
 		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
 
 	return og_man;

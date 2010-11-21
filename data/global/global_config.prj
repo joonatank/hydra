@@ -1,0 +1,6 @@
+
+<project_config name="Global">
+	<scripts>
+		<file use="true">global_script.py</file>
+	</scripts>
+</project_config>

@@ -28,7 +28,8 @@ namespace vl
 class Settings
 {
 	public :
-		Settings( EnvSettingsRefPtr env, ProjSettingsRefPtr proj );
+		Settings( EnvSettingsRefPtr env, ProjSettingsRefPtr proj,
+				  ProjSettingsRefPtr global = ProjSettingsRefPtr() );
 
 		virtual ~Settings( void );
 
@@ -53,6 +54,13 @@ class Settings
 
 		/// Set the exe path i.e. the command used to start the program
 		void setExePath( std::string const &path );
+
+		ProjSettingsRefPtr getGlobalSettings( void )
+		{ return _global; }
+
+		void setGlobalSettings( ProjSettingsRefPtr proj )
+		{ _global = proj; }
+
 
 		ProjSettingsRefPtr getProjectSettings( void )
 		{ return _proj; }
@@ -88,7 +96,7 @@ class Settings
 									std::string const &prefix = std::string() )
 									const;
 
-		/// Combines the Project and the Case scenes to one vector
+		/// Combines Global, the Project and the Case scenes to one vector
 		/// Only scenes that are in use are added
 		///
 		/// Scene information needed to pass from this class
@@ -98,7 +106,7 @@ class Settings
 		/// Scenes returned are owned by ProjectSettings, ownership is not passed
 		std::vector<ProjSettings::Scene const *> getScenes( void ) const;
 
-		/// Combines the Project and the Case script to one vector
+		/// Combines Global, the Project and the Case scripts to one vector
 		/// Only scripts that are in use are added
 		///
 		/// Script information needed to pass from this class
@@ -106,16 +114,21 @@ class Settings
 		/// Returns a vector of script file paths, absolute
 		std::vector<std::string> getScripts( void ) const;
 
+		std::vector<std::string> getResourcePaths( void ) const;
+
+		std::string getGlobalDir( void ) const;
+
 		std::string getProjectDir( void ) const;
 
 		std::string getEnvironementDir( void ) const;
 
 	protected :
-		void _addScripts( std::vector<std::string> &vec, vl::ProjSettings::Case const *cas ) const;
+		void _addScripts( std::vector<std::string> &vec, std::string const &projDir,
+						  vl::ProjSettings::Case const *cas ) const;
 
 		void _addScenes( std::vector<ProjSettings::Scene const *> &vec,
 						vl::ProjSettings::Case const *cas ) const;
-		
+
 		void _updateArgs( void );
 
 		// Log directory
@@ -127,7 +140,10 @@ class Settings
 
 		// Environment specific settings
 		EnvSettingsRefPtr _env;
-		
+
+		// Global project settings
+		ProjSettingsRefPtr _global;
+
 		// Project specific settings
 		ProjSettingsRefPtr _proj;
 
