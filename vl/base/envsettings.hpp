@@ -2,7 +2,7 @@
  *	2010-10
  *
  *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
- * 2010-11
+ *	2010-11
  */
 
 #ifndef ENVSETTINGS_H
@@ -40,7 +40,7 @@ public :
 
 	void setFile( std::string const &file )
 	{ _file_path = file; }
-	
+
 	///// EQC /////////////////////////////////////////////////////
 	/// get the equalizer config file
 	std::string const &getEqc( void ) const
