@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+
+<clients>
+	<client type="VRPN" host="localhost" >
+		<tracker name="glasses">
+			<sensor num="0">
+				<trigger type="VRPN" name="glassesTrigger" />
+				<default>
+					<position x="0" y="1.5" z="0"/>
+					<orientation x="0" y="0" z="0" w="1"/>
+				</default>
+			</sensor>
+		</tracker>
+
+		<tracker name="Mevea">
+			<sensor num="0">
+				<trigger type="VRPN" name="cube0Trigger" />
+			</sensor>
+			<sensor num="1">
+				<trigger type="VRPN" name="cube1Trigger" />
+			</sensor>
+			<sensor num="2">
+				<trigger type="VRPN" name="cube2Trigger" />
+			</sensor>
+			<sensor num="3">
+				<trigger type="VRPN" name="cube3Trigger" />
+			</sensor>
+			<sensor num="4">
+				<trigger type="VRPN" name="cube4Trigger" />
+			</sensor>
+			<sensor num="5">
+				<trigger type="VRPN" name="cube5Trigger" />
+			</sensor>
+			<sensor num="6">
+				<trigger type="VRPN" name="cube6Trigger" />
+			</sensor>
+			<sensor num="7">
+				<trigger type="VRPN" name="cube7Trigger" />
+			</sensor>
+			<sensor num="8">
+				<trigger type="VRPN" name="cube8Trigger" />
+			</sensor>
+			<sensor num="9">
+				<trigger type="VRPN" name="cube9Trigger" />
+			</sensor>
+			<sensor num="10">
+				<trigger type="VRPN" name="cube10Trigger" />
+			</sensor>
+			<sensor num="11">
+				<trigger type="VRPN" name="cube11Trigger" />
+			</sensor>
+			<sensor num="12">
+				<trigger type="VRPN" name="cube12Trigger" />
+			</sensor>
+			<sensor num="13">
+				<trigger type="VRPN" name="cube13Trigger" />
+			</sensor>
+			<sensor num="14">
+				<trigger type="VRPN" name="cube14Trigger" />
+			</sensor>
+			<sensor num="15">
+				<trigger type="VRPN" name="cube15Trigger" />
+			</sensor>
+			<sensor num="16">
+				<trigger type="VRPN" name="cube16Trigger" />
+			</sensor>
+			<sensor num="17">
+				<trigger type="VRPN" name="cube17Trigger" />
+			</sensor>
+			<sensor num="18">
+				<trigger type="VRPN" name="cube18Trigger" />
+			</sensor>
+			<sensor num="19">
+				<trigger type="VRPN" name="cube19Trigger" />
+			</sensor>
+		</tracker>
+
+	</client>
+
+</clients>

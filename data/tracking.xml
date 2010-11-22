@@ -42,7 +42,8 @@ Critical : clients node needs to be present.
 	-->
 
 	<!-- Port defaults to 3883, vrpn default -->
-	<client type="VRPN" host="kosu-vr6.me.tut.fi" port="3888">
+	<!-- <client use="true" type="VRPN" host="kosu-vr6.me.tut.fi" port="3888"> -->
+	<client use="true" type="VRPN" host="localhost" port="3883" >
 		<!--
 		tracker : Tracker name, used by VRPN
 
@@ -91,9 +92,9 @@ Critical : clients node needs to be present.
 				This is not necessary but it's easier for the one who writes the
 				mapping of triggers to objects.
 				-->
-				<trigger type="VRPN" name="glasses">
+				<trigger type="VRPN" name="glassesTrigger" />
 				<default>
-					<position x="0" y"1.5" z="0"/>
+					<position x="0" y="1.5" z="0"/>
 					<orientation x="0" y="0" z="0" w="1"/>
 				</default>
 			</sensor>
@@ -112,22 +113,22 @@ Critical : clients node needs to be present.
 			-->
 		</tracker>
 
-	</client>
-
-	<client type="VRPN" host="kosu-vr6.me.tut.fi" port="3885" >
+	<!-- <client type="VRPN" host="kosu-vr6.me.tut.fi" port="3885" > -->
 		<!--
 		Mevea Toro T7 tracker has multiple sensors which have triggers.
 		-->
 		<tracker name="Mevea">
 			<sensor num="0">
-				<trigger type="VRPN" name="eturunko">
+				<trigger type="VRPN" name="cube0Trigger" />
 			</sensor>
 			<sensor num="1">
-				<trigger type="VRPN" name="takarunko">
+				<trigger type="VRPN" name="cube1Trigger" />
 			</sensor>
 			<sensor num="2">
-				<trigger type="VRPN" name="keskirunko">
+				<trigger type="VRPN" name="cube2Trigger" />
 			</sensor>
 		</tracker>
+
 	</client>
+
 </clients>

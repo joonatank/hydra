@@ -15,6 +15,8 @@
 
 #include "dotscene_loader.hpp"
 
+#include "tracker_serializer.hpp"
+
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -131,12 +133,16 @@ eqOgre::Config::getSceneNode(const std::string& name)
 vl::TrackerTrigger *
 eqOgre::Config::getTrackerTrigger(const std::string& name)
 {
-	std::vector<vl::TrackerTrigger *>::iterator iter;
-	for( iter = _tracker_triggers.begin(); iter != _tracker_triggers.end(); ++iter )
+	std::cerr << "Trying to find TrackerTrigger " << name << std::endl;
+	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
 	{
-		if( (*iter)->getName() == name )
+		vl::TrackerRefPtr tracker = _clients->getTracker(i);
+		for( size_t j = 0; j < tracker->getNSensors(); ++j )
 		{
-			return( *iter );
+			vl::SensorRefPtr sensor = tracker->getSensor(j);
+			if( sensor && sensor->getTrigger() &&
+				sensor->getTrigger()->getName() == name )
+			{ return( sensor->getTrigger() ); }
 		}
 	}
 
@@ -146,7 +152,7 @@ eqOgre::Config::getTrackerTrigger(const std::string& name)
 
 // TODO implement
 void
-eqOgre::Config::resetScene(void )
+eqOgre::Config::resetScene( void )
 {
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
@@ -260,10 +266,9 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	// Process Tracking
 	// If we have a tracker object update it, the update will handle all the
 	// callbacks and appropriate updates (head matrix and scene nodes).
-	for( std::vector<vl::TrackerRefPtr>::iterator iter = _trackers.begin();
-		 iter != _trackers.end(); ++iter )
+	for( size_t i = 0; i <  _clients->getNTrackers(); ++i )
 	{
-		(*iter)->mainloop();
+		_clients->getTracker(i)->mainloop();
 	}
 
 	// ProcessEvents does not store the pointer anywhere
@@ -342,74 +347,42 @@ eqOgre::Config::_exitAudio(void )
 void
 eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
-	// FIXME no tracking config for now
-	// TODO this should read the configs (which can be found in EnvSettings)
-	// and create all the trackers based upon those.
-
-	/// Creating tracker
-	vl::TrackerRefPtr tracker;
-	if( true )
+	_clients.reset( new vl::Clients );
+	std::vector<std::string> tracking_paths = settings->getTrackingPaths();
+	std::cout << "Processing " << tracking_paths.size() << " tracking files."
+		<< std::endl;
+	std::vector<std::string>::iterator iter;
+	for( iter = tracking_paths.begin(); iter != tracking_paths.end(); ++iter )
 	{
-		EQINFO << "Creating VRPN Tracker." << std::endl;
-		tracker.reset( new vl::vrpnTracker( "localhost", "glasses" ) );
-	}
-	else
-	{
-		EQINFO << "Creating Fake Tracker." << std::endl;
-		tracker.reset( new vl::FakeTracker( ) );
-	}
+		// Read a file
+		std::string xml_data;
+		std::cerr << "Reading file : " << *iter << std::endl;
+		vl::readFileToString( xml_data, *iter );
+		if( xml_data.empty() )
+		{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
-	{
-		/// Set default values for sensor
-		// TODO move to config startFrame init
-		Ogre::Quaternion q(Ogre::Quaternion::IDENTITY);
-		Ogre::Vector3 v(0, 1.5, 0 );
-		/// Create sensor
-		vl::SensorRefPtr sensor( new vl::Sensor( v,q ) );
-		tracker->setSensor(0, sensor);
-
-		/// Create Trigger
-		vl::TrackerTrigger *trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
-		trigger->setName( "headTrigger" );
-
-		/// Create Action
-		// TODO should be moved to python
-		eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_event_manager->createAction("HeadTrackerAction");
-		action->setConfig(this);
-		trigger->setAction( action );
-
-		sensor->setTrigger(trigger);
-		_tracker_triggers.push_back(trigger);
+		vl::TrackerSerializer ser( _clients );
+		if( !ser.readString(xml_data) )
+		{
+			std::cerr << "Error in Tracker XML reader." << std::endl;
+		}
 	}
 
-
-	/// Start the tracker head tracker
-	tracker->init();
-	_trackers.push_back( tracker );
-
-	/// Mevea test tracker
-	// TODO this should be optional
-	tracker.reset( new vl::vrpnTracker( "localhost", "Mevea" ) );
-	// Create 20 sensors
-	for( size_t i = 0; i < 20; ++i )
+	// Start the trackers
+	std::cerr << "Starting " << _clients->getNTrackers() << " trackers." << std::endl;
+	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
 	{
-		/// Create sensor
-		vl::SensorRefPtr sensor( new vl::Sensor );
-		tracker->setSensor(i, sensor);
-
-		std::stringstream name;
-		name << "cube" << i;
-
-		/// Create Trigger
-		vl::TrackerTrigger *trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
-		name << "Trigger";
-		trigger->setName( name.str() );
-		sensor->setTrigger(trigger);
-		_tracker_triggers.push_back(trigger);
+		_clients->getTracker(i)->init();
 	}
 
-	tracker->init();
-	_trackers.push_back( tracker );
+	vl::TrackerTrigger *head_trigger = getTrackerTrigger( "glassesTrigger" );
+	if( !head_trigger )
+	{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "glasses trigger not found" ) ); }
+
+	/// Create Action
+	eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_event_manager->createAction("HeadTrackerAction");
+	action->setConfig(this);
+	head_trigger->setAction( action );
 }
 
 void

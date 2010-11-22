@@ -19,7 +19,7 @@ vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
 {
 	if(XMLNode->first_attribute(attrib.c_str()))
 	{
-		return vl::string_convert<Ogre::Real>(
+		return vl::from_string<Ogre::Real>(
 				XMLNode->first_attribute(attrib.c_str())->value() );
 	}
 	else
@@ -43,9 +43,9 @@ Ogre::Vector3
 vl::parseVector3(rapidxml::xml_node<>* XMLNode)
 {
 	return Ogre::Vector3(
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("x")->value()),
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("y")->value()),
-		vl::string_convert<Ogre::Real>(XMLNode->first_attribute("z")->value())
+		vl::from_string<Ogre::Real>(XMLNode->first_attribute("x")->value()),
+		vl::from_string<Ogre::Real>(XMLNode->first_attribute("y")->value()),
+		vl::from_string<Ogre::Real>(XMLNode->first_attribute("z")->value())
 	);
 }
 
@@ -78,10 +78,10 @@ vl::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}
 
-	x = vl::string_convert<Ogre::Real>( attrX->value() );
-	y = vl::string_convert<Ogre::Real>( attrY->value() );
-	z = vl::string_convert<Ogre::Real>( attrZ->value() );
-	w = vl::string_convert<Ogre::Real>( attrW->value() );
+	x = vl::from_string<Ogre::Real>( attrX->value() );
+	y = vl::from_string<Ogre::Real>( attrY->value() );
+	z = vl::from_string<Ogre::Real>( attrZ->value() );
+	w = vl::from_string<Ogre::Real>( attrW->value() );
 
 	return Ogre::Quaternion( w, x, y, z );
 }
@@ -90,11 +90,11 @@ Ogre::ColourValue
 vl::parseColour(rapidxml::xml_node<>* XMLNode)
 {
 	Ogre::Real r, g, b, a;
-	r = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("r")->value() );
-	g = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("g")->value() );
-	b = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("b")->value() );
+	r = vl::from_string<Ogre::Real>( XMLNode->first_attribute("r")->value() );
+	g = vl::from_string<Ogre::Real>( XMLNode->first_attribute("g")->value() );
+	b = vl::from_string<Ogre::Real>( XMLNode->first_attribute("b")->value() );
 	if(  XMLNode->first_attribute("a") != NULL )
-	{ a = vl::string_convert<Ogre::Real>( XMLNode->first_attribute("a")->value() ); }
+	{ a = vl::from_string<Ogre::Real>( XMLNode->first_attribute("a")->value() ); }
 	else
 	{ a = 1; }
 

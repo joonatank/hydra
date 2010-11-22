@@ -21,5 +21,7 @@ for i in range(0, 20) :
 	cube = config.getSceneNode( name )
 	action = event_manager.createAction( 'SetTransformation' )
 	action.scene_node = cube
+	# TODO there is no checking here
+	# Add checking that the object exists
 	trigger = config.getTrackerTrigger( name + 'Trigger' )
 	trigger.action = action

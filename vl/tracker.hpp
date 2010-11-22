@@ -133,6 +133,9 @@ public :
 
 	virtual SensorRefPtr getSensor( size_t i );
 
+	size_t getNSensors( void ) const
+	{ return _sensors.size(); }
+
 protected :
 	std::vector<SensorRefPtr> _sensors;
 

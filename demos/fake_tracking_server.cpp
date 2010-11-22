@@ -10,10 +10,11 @@
 
 #include <iostream>
 
-void getHeadData( vrpn_float64 *pos, vrpn_float64 *quat )
+void getHeadData( double time, vrpn_float64 *pos, vrpn_float64 *quat )
 {
+	double s = ::sin( time );
 	pos[0] = 0;
-	pos[1] = 1.5;
+	pos[1] = 1.5+0.25*s;
 	pos[2] = 0;
 
 	quat[0] = 0;
@@ -58,6 +59,8 @@ int main (int argc, char **argv)
 	// Loop forever calling the mainloop()s for all devices and the connection
 	while (1)
 	{
+		clock_t time = ::clock();
+
 		const int msecs = 8;
 		struct timeval t;
 		t.tv_sec = 0;
@@ -66,7 +69,7 @@ int main (int argc, char **argv)
 		vrpn_float64 pos[3];
 		vrpn_float64 quat[4];
 
-		getHeadData(pos, quat);
+		getHeadData(time, pos, quat);
 		tracker->report_pose( 0, t, pos, quat );
 		for( size_t i = 0; i < 20; ++i )
 		{

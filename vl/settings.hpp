@@ -96,6 +96,9 @@ class Settings
 									std::string const &prefix = std::string() )
 									const;
 
+		std::vector<std::string> getTrackingPaths( void ) const;
+
+
 		/// Combines Global, the Project and the Case scenes to one vector
 		/// Only scenes that are in use are added
 		///

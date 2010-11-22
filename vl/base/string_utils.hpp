@@ -49,10 +49,10 @@ namespace vl
 		str.insert( str.begin(), begin, path_iter );
 		broken_path.push_back( str );
 	}
-	
+
 	template<typename T>
 	inline
-	std::string string_convert( T const &t )
+	std::string to_string( T const &t )
 	{
 		std::stringstream ss(std::stringstream::in | std::stringstream::out );
 		ss << t;
@@ -61,7 +61,7 @@ namespace vl
 
 	template<typename T>
 	inline
-	T string_convert( std::string const &str )
+	T from_string( std::string const &str )
 	{
 		std::stringstream ss(std::stringstream::in | std::stringstream::out );
 		ss << str;

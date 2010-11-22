@@ -22,6 +22,7 @@
 // python
 #include "python.hpp"
 #include "event_manager.hpp"
+#include <tracker_serializer.hpp>
 
 namespace eqOgre
 {
@@ -109,8 +110,7 @@ namespace eqOgre
 		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
 		/// Tracking
-		std::vector<vl::TrackerRefPtr> _trackers;
-		std::vector<vl::TrackerTrigger *> _tracker_triggers;
+		vl::ClientsRefPtr _clients;
 
 		eqOgre::SettingsRefPtr _settings;
 

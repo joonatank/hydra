@@ -78,6 +78,25 @@ vl::Settings::getLogFilePath(const std::string &identifier,
 	return ss.str();
 }
 
+std::vector< std::string >
+vl::Settings::getTrackingPaths(void ) const
+{
+	std::string dir( getEnvironementDir() + "/tracking/" );
+	std::vector<std::string> vec;
+	if( _env )
+	{
+		for( size_t i = 0; i < _env->getTracking().size(); ++i )
+		{
+			std::string path = dir + _env->getTracking().at(i);
+			if( fs::exists( path ) )
+			{ vec.push_back( path ); }
+		}
+	}
+
+	return vec;
+}
+
+
 std::vector< vl::ProjSettings::Scene const * >
 vl::Settings::getScenes( void ) const
 {
