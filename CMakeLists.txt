@@ -50,6 +50,11 @@ find_package( Equalizer REQUIRED )
 find_package( VRPN REQUIRED )
 
 
+# Way to test if the platform is 64 bit or 32 bit
+# Useful for creating different enviroment variables for 32-bit and 64-bit
+# platforms
+# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+
 
 ######### Find OGRE ##########
 # We should use find_file to find the Ogre cmake helpers
@@ -100,6 +105,7 @@ include_directories( ${PYTHON_INCLUDE_DIRS} )
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
+	${OGRE_INCLUDE_DIR}/..
 	${Equalizer_INCLUDE_DIRS}
 	${VPRN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
