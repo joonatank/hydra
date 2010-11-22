@@ -20,6 +20,7 @@
 #include <vector>
 #include <typeinfo>
 #include <iostream>
+#include <ctime>
 
 #include "keycode.hpp"
 

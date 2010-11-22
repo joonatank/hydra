@@ -32,7 +32,9 @@ struct BaseWrap : Base, python::wrapper<Base>
     // http://boost.org/libs/python/doc/tutorial/doc/html/python/exposing.html#python.class_virtual_functions
     return python::call<std::string>(this->get_override("hello").ptr());
 #else
-    return this->get_override("hello")();
+	  // FIXME this doesn't work with VS2010
+//    return this->get_override("hello")();
+	  return "hello";
 #endif
   }
 };

@@ -5,12 +5,12 @@ cmake_minimum_required(VERSION 2.8)
 
 # TODO this should be moved to demos
 # TODO should be updated from windows
-#add_executable( spike_udp_renderer
-#	udp_renderer.cpp
-#	client_fixtures.hpp
-#	)
+add_executable( spike_udp_renderer
+	udp_renderer.cpp
+	client_fixtures.hpp
+	)
 
-#target_link_libraries( spike_udp_renderer ${LIBS} )
+target_link_libraries( spike_udp_renderer ${LIBS} )
 
 find_package( Bullet REQUIRED )
 

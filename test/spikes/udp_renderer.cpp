@@ -17,7 +17,6 @@
 
 // Test includes
 #include "client_fixtures.hpp"
-#include "../test_helpers.hpp"
 
 std::string const PROJECT_NAME( "udp_renderer" );
 uint16_t const PORT = 2244;
@@ -37,7 +36,7 @@ public :
 		: eqOgre::Channel( parent ), server( PORT )
 	{
 		std::cout << "Starting UDP server on port " << PORT << std::endl;
-		
+
 		// TODO new message should be of form 3 x angle with predefined axis
 		// and 3 x position
 		// Find the ogre nodes
@@ -90,7 +89,7 @@ public :
 	vl::udp::Server server;
 };
 
-class NodeFactoryUDP : public ::NodeFactory
+class NodeFactoryUDP : public eqOgre::NodeFactory
 {
 public :
 	virtual eq::Channel *createChannel( eq::Window *parent )
@@ -105,7 +104,7 @@ int main(int argc, char **argv)
 		ListeningClientFixture fix;
 
 		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
-		eqOgre::NodeFactory nodeFactory;
+
 		::NodeFactoryUDP nodeFactory;
 		error = !fix.init( settings, &nodeFactory );
 

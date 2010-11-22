@@ -73,6 +73,11 @@ find_package(OIS REQUIRED )
 
 find_package( CEGUI QUIET )
 
+if( ${CEGUI_FOUND} )
+	message( "CEGUI found : ${CEGUI_LIBRARY} " )
+elseif()
+	message( "CEGUI not found, will not build a GUI" )
+endif()
 
 
 ####### Find cAudio
@@ -106,8 +111,8 @@ include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
 	${OGRE_INCLUDE_DIR}/..
-	${Equalizer_INCLUDE_DIRS}
-	${VPRN_INCLUDE_DIR}
+	${EQUALIZER_INCLUDE_DIR}
+	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${CAUDIO_INCLUDE_DIR}
@@ -147,7 +152,9 @@ set( PROJ_PATH_RELATIVE ${project_path} )
 
 if( WIN32 )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-		${PROJECT_BINARY_DIR}/start_${start_suffix}.bat )
+		${PROJECT_BINARY_DIR}/Release/start_${start_suffix}.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_${start_suffix}.bat )
 else()
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
 		${PROJECT_BINARY_DIR}/start_${start_suffix}.sh )
@@ -165,14 +172,21 @@ set( LISTENING_PORT 4242 )
 if( WIN32 )
 	# TODO these should be configured automatically
 	# TODO not tested in Windows
-	set( EQUALIZER_SERVER_BIN "c:\libs\equalizer\bin\eqServer.exe" )
+	set( EQUALIZER_SERVER_BIN "c:/libs/equalizer/bin/eqServer.exe" )
 	# TODO the config should be in the repository
 	#set( EQUALIZER_CONFIG "c:\libs\equalizer\2-node.layout.eqc" )
 	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
+	# Copy Release
+	# TODO this really needs some automation/MACRO
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/start_multi_node.bat )
+		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
-		${PROJECT_BINARY_DIR}/kill_nodes.bat )
+		${PROJECT_BINARY_DIR}/Release/kill_nodes.bat )
+	# Copy RelWithDebugInfo
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_multi_node.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
 else()
 	set( EQUALIZER_SERVER_BIN "eqServer" )
 	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
@@ -192,7 +206,15 @@ MACRO( copy_extras )
 
 set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
 
-file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg DESTINATION ${PROJECT_BINARY_DIR}/ )
+	if( WIN32 )
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/Release )
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/RelWithDebInfo )
+	else()
+		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
+			DESTINATION ${PROJECT_BINARY_DIR}/ )
+	endif()
 
 ENDMACRO()
 
@@ -223,4 +245,5 @@ include( Packaging )
 
 include( InstallResources )
 
-include( InstallDependencies )
+# TODO this doesn't work yet
+#include( InstallDependencies )

@@ -1,0 +1,30 @@
+Joonatan Kuosa
+2010-03-20
+
+NOTES
+Using multiple Pipes
+ - we can not create the Windows in the Node, which would have
+ exclusive access to RenderingSystem and Ogre::Root.
+	 -> Eather Ogre or Equalizer freezes if we call makeCurrent and create
+	 Ogre RenderWindow.
+ - Options:
+ 	- Create windows in eq::Windows, we need to use Mutexes for the
+	Ogre::Root and RenderingSystem.
+		-> seems to work perfectly.
+		-> need to create an object and see if we can render also.
+		-> problems :
+			- Ogre::SceneManager serializes rendering calling Ogre::Root
+				-> Try to create one sceneManager, multiple Windows and cameras
+				and render serialy for now.
+			- Something funny with DepthBuffer creation.
+ 	- Or write Ogre specific OSWindow to Equalizer e.g. OgreWindow
+		-> This has some nice properties like beign not so much a hack.
+		There should be ok support in Equalizer to replace OSWindow.
+		We can use Ogres window creation to create Windows specified in 
+		equalizer config. No need to use less used features of ogre like
+		useCurrentContext.
+
+Multiple Nodes
+- Workaround for problems with Multiple Pipes.
+- Need to add Ogre stuff to node_test.cpp so we can test it.
+- Needs almost immediately fully working versioning.

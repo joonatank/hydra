@@ -48,8 +48,8 @@ private:
     QTreeWidgetItem* _treeItem;
     QString _file;
     QDir _path; //path to find project action maps and project resources
-    QList<ProjPage::ProjPage*> _pages;
-    ProjPage::ProjPage* _currPage;
+    QList<ProjPage*> _pages;
+    ProjPage* _currPage;
     QTreeWidgetItem* _currTreeItem;
     QTreeWidgetItem* _treeParent;
     QWidget* _base;
@@ -57,7 +57,7 @@ private:
 //    ProjSettings::Case const & getCase(QString const &name);
 
     void createProj();
-    void addScenesAndMaps( QString const &pageName, ProjPage::ProjPage* page );
+    void addScenesAndMaps( QString const &pageName, ProjPage* page );
     void addCase( QString const &name );
 
 

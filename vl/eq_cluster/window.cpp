@@ -273,6 +273,7 @@ eqOgre::Window::configInit( const uint32_t initID )
 		return false;
 	}
 
+	std::cerr << "eqOgre::Window::init : done" << std::endl;
 	return true;
 }
 
@@ -349,7 +350,9 @@ eqOgre::Window::createInputHandling( void )
 	}
 	else
 	{
-		ss << os_win->getWGLWindowHandle();
+		// It's mandatory to cast HWND to size_t for OIS, otherwise OIS will crash
+		ss << (size_t)(os_win->getWGLWindowHandle());
+		std::cerr << "Got window handle for OIS" << std::endl;
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
@@ -366,11 +369,13 @@ eqOgre::Window::createInputHandling( void )
 
 	OIS::ParamList pl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
-
+	
+	std::cerr << "Creating OIS Input Manager" << std::endl;
 
 	log << "Creating input manager.\n";
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 	EQASSERT( _input_manager );
+	std::cerr << "OIS Input Manager created" << std::endl;
 
 	printInputInformation(log);
 

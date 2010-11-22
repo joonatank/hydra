@@ -5,6 +5,9 @@
 // Necessary for getpid()
 #include <stdint.h>
 
+#ifdef VL_WIN32
+#include <Windows.h>
+#endif
 
 namespace vl
 {

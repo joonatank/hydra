@@ -1,0 +1,35 @@
+Joonatan Kuosa
+2010-02-26
+
+TODO:
+Unit tests should be converted to use boost::test library.
+And if necessary turtle mock library.
+Tests should be dived in to unit, integration tests and functional.
+	-> unit tests only depend on one class (maybe some simple or stable others).
+	-> integration tests depend on multiple classes, but are complete.
+	-> functional tests are for benchmarking and testing specific features.
+
+Missing tests should be writen for all classes.
+	-> Start on graph classes, specifically eq_graph
+		-> these tests should not test serialize and deserialize as equalizer
+		is not initialized
+		-> use mock objects if necessary
+	-> proceed to ogre_graph classes
+		-> use of mocks is more than advised here.
+	-> test eq_cluster classes one by one, I think we can not really
+	use mocks here so unit testing fixtures are going to take huge time
+	to initialize the equalizer library...
+		-> possibility to try to initialize only partial equalizer,
+		using .eqc files we can remove Pipes, Channels, Windows etc.
+		-> otherwise we should just override one class at a time and let
+		the default equalizer implementation be there.
+		This will add significant running time for the tests though.
+	-> unit tests on eq_graph objects specifically serialize
+	and deserialize
+		-> needs equalizer to be initialized that's why eq_cluster testing
+		has to be done at least to some degree before this.
+
+Test for fifo_buffer is not really a unit test it's more functional test.
+	-> There should also be unit test for it.
+	-> The functional test only runs on Linux
+	(depends on system clock, atomics, pthreads, signals).

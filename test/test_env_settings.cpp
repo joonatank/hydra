@@ -7,7 +7,7 @@
 
 #include "base/envsettings.hpp"
 #include "base/exceptions.hpp"
-#include "rapidxml_print.hpp"
+#include "base/rapidxml_print.hpp"
 
 #include <boost/filesystem.hpp>
 #include <iostream>
