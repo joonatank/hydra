@@ -85,16 +85,10 @@ vl::udp::SetPosition::operator() ( void )
 
 void vl::udp::SetPosition::copy(size_t size, std::vector< double >& vec)
 {
-	// FIXME bit experimenting
-	_pos[0] = vec.at(2);
+	_pos[0] = vec.at(0);
 	_pos[1] = vec.at(1);
-	_pos[2] = -vec.at(0);
-	/*
-	for( size_t i = 0; i < size; ++i )
-	{
-		_pos[i] = vec.at(i);
-	}
-	*/
+	_pos[2] = vec.at(2);
+
 }
 
 void
@@ -211,14 +205,9 @@ vl::udp::SetAngleAxis::copy(size_t size, std::vector< double >& vec)
 {
 	// New Axis
 	Ogre::Vector3 axis;
-	axis[0] = vec.at(2);
+	axis[0] = vec.at(0);
 	axis[1] = vec.at(1);
-	axis[2] = vec.at(0);
-	/*
-	for( size_t i = 0; i < size-1; ++i )
-	{
-		axis[i] = vec.at(i);
-	}
-	*/
+	axis[2] = vec.at(2);
+
 	setAngleAxis( Ogre::Radian( vec.at(3) ), axis );
 }

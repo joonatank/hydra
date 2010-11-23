@@ -5,6 +5,12 @@
  *	Used for testing.
  */
 
+
+// For MSV compilers to get M_PI
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+
 #include "base/sleep.hpp"
 #include "vrpn_Tracker.h"
 
@@ -14,7 +20,8 @@ void getHeadData( double time, vrpn_float64 *pos, vrpn_float64 *quat )
 {
 	double s = ::sin( time );
 	pos[0] = 0;
-	pos[1] = 1.5+0.25*s;
+	pos[1] = 1.5;
+	//pos[1] = 1.5+0.25*s;
 	pos[2] = 0;
 
 	quat[0] = 0;
