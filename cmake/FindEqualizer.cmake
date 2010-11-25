@@ -2,15 +2,15 @@
 # This module defines
 #  Equalizer_LIBRARY, the library to link against
 #  Equalizer_FOUND, if false, do not try to link to Equalizer
-#  Equalizer_INCLUDE_DIRS, where to find headers.
+#  Equalizer_INCLUDE_DIR, where to find headers.
 
-IF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIRS)
+IF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 	# in cache already
 	SET(Equalizer_FIND_QUIETLY TRUE)
-ENDIF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIRS)
+ENDIF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 
 
-FIND_PATH(Equalizer_INCLUDE_DIRS
+FIND_PATH(Equalizer_INCLUDE_DIR
 	eq/eq.h
 	PATHS
 	$ENV{Equalizer_DIR}/include
@@ -38,13 +38,13 @@ FIND_LIBRARY(Equalizer_LIBRARY
 	/usr/freeware/lib64
 )
    
-IF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIRS)
+IF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 	SET(Equalizer_FOUND "YES")
 	IF(NOT Equalizer_FIND_QUIETLY)
 		MESSAGE(STATUS "Found Equalizer: ${Equalizer_LIBRARY}")
 	ENDIF(NOT Equalizer_FIND_QUIETLY)
-ELSE(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIRS)
+ELSE(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 	IF(NOT Equalizer_FIND_QUIETLY)
 		MESSAGE(STATUS "Warning: Unable to find Equalizer!")
 	ENDIF(NOT Equalizer_FIND_QUIETLY)
-ENDIF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIRS)
+ENDIF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)

@@ -16,7 +16,8 @@ public :
 	virtual ~WGLWindow( void ) {}
 
 	/// These need to be empty for us to use our own OIS event handling
-	/// Remember also that the same functions in WGLPipe need to be empty
+	/// There is not equivalent functions in wglPipe so we don't need to
+	/// override those (unlike in GLXWindow/GLXPipe).
 	virtual void initEventHandler( void )
 	{ return; }
 

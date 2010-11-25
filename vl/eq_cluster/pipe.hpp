@@ -34,17 +34,31 @@ namespace eqOgre
     public:
         Pipe( eq::Node *parent );
 
-		virtual eq::MessagePump *createMessagePump() { return 0; }
+		// NOTE this causes the a freeze in Windows.
+		// TODO Solve the message pumping problem
+		// Can we use the Equalizer message pump?
+		// Or do we have to create one to do Windows message pumping?
+
+		// Equalizer MessagePump seems to work on Windows
+		// TODO test on Linux
+//		virtual eq::MessagePump *createMessagePump() { return 0; }
 
     protected:
+		/*	These are completely useless
         virtual ~Pipe ();
 
         virtual bool configInit( const uint32_t initID );
         virtual bool configExit();
         virtual void frameStart( const uint32_t frameID, 
                                  const uint32_t frameNumber );
+		*/
 
-		virtual bool configInitSystemPipe( const uint32_t );
+		// This seems not to be needed
+		// At least on Windows
+		// On Linux the newer Equalizer version should have removed 
+		// the event handling from eq::GLXPipe and it's in eq::GLXWindow
+		// similar to Windows'.
+//		virtual bool configInitSystemPipe( const uint32_t );
 
     };	// class Pipe
 

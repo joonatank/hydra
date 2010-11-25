@@ -1,38 +1,20 @@
 
 #include "pipe.hpp"
 
+/*	Only Linux needs the custom pipe for event handling
+ *	This should have been corrected in recent Equalizer version
+ *	Needs to be tested before removing
+#ifdef GLX
 #include "glxPipe.hpp"
+#endif
+*/
 
 eqOgre::Pipe::Pipe( eq::Node *parent )
 	: eq::Pipe( parent )
 {}
 
-eqOgre::Pipe::~Pipe()
-{
-}
 
-bool
-eqOgre::Pipe::configInit( const uint32_t initID )
-{
-	EQINFO << "eqOgre::Pipe::configInit" << std::endl;
-	if( !eq::Pipe::configInit( initID ))
-	{ return false; }
-
-	return true;
-}
-
-bool
-eqOgre::Pipe::configExit()
-{
-	return eq::Pipe::configExit();
-}
-
-void
-eqOgre::Pipe::frameStart( const uint32_t frameID, const uint32_t frameNumber )
-{
-	eq::Pipe::frameStart( frameID, frameNumber );
-}
-
+/*
 bool
 eqOgre::Pipe::configInitSystemPipe( const uint32_t )
 {
@@ -81,3 +63,4 @@ eqOgre::Pipe::configInitSystemPipe( const uint32_t )
     setSystemPipe( systemPipe );
     return true;
 }
+*/
