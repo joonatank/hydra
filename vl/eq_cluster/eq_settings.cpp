@@ -14,83 +14,214 @@
 #include "arguments.hpp"
 #include "base/filesystem.hpp"
 
+#include <boost/program_options.hpp>
+#include <settings.hpp>
+
+namespace po = boost::program_options;
+
 /// Global functions
-eqOgre::SettingsRefPtr
+vl::SettingsRefPtr
 eqOgre::getSettings( int argc, char **argv )
 {
 	// Process command line arguments
-	vl::Arguments arguments( argc, argv );
+//	vl::Arguments arguments( argc, argv );
 
-	std::cout << "environment path = " << arguments.env_path << std::endl;
-	std::cout << "project path = " << arguments.proj_path << std::endl;
-	std::cout << "global path = " << arguments.global_path << std::endl;
-	std::cout << "case name = " << arguments.case_name << std::endl;
+	po::options_description desc("Allowed options");
+	desc.add_options()
+		("help,h", "produce a help message")
+		("verbose,v", "produce lots of output to std::cout")
+		("environment,e", po::value< std::string >(), "environment file")
+		("project,p", po::value< std::string >(), "project file")
+		("global,g", po::value< std::string >(), "global file")
+		("case,c", po::value< std::string >(), "case name")
+		("eq-client", "start a listening client")
+		("eq-listen", po::value< std::string >(), "whom to listen, hostname:port")
+	;
+	// TODO add support for setting the log directory
+	// TODO add support for verbose
+	// TODO the verbose should support different log levels,
+	// ERROR, INFO, TRACE at least
+	// TODO also the verbose should control the Equalizer log level
+
+	// Parse command line
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+
+	bool verbose = false;
+	// Print help
+	if( vm.count("help") )
+	{
+		std::cout << "Help : " << desc << "\n";
+		return vl::SettingsRefPtr();
+	}
+	// Verbose
+	if( vm.count("verbose") )
+	{
+		verbose = true;
+	}
+
+	bool eq_client = false;
+	std::string eq_listen;
+
+	// Process eq-options
+	if( vm.count("eq-client") )
+	{
+		eq_client = true;
+	}
+	if( vm.count("eq-listen") )
+	{
+		eq_listen = vm["eq-listen"].as<std::string>();
+	}
+
+	if( eq_client && eq_listen.empty() )
+	{
+		std::cerr << "Requested to be a client but does not have an address to "
+			<< "listen to." << std::endl;
+		return vl::SettingsRefPtr();
+	}
+
+	// Process eqOgre options
+	std::string proj_path;
+	std::string global_path;
+	std::string env_path;
+	std::string case_name;
+
+	if (vm.count("environment"))
+	{
+		env_path = vm["environment"].as<std::string>();
+		std::cout << "Environment path was set to : " << env_path << std::endl;
+	} else {
+		std::cout << "Environment was not set." << std::endl;
+	}
+	if (vm.count("project"))
+	{
+		proj_path = vm["project"].as<std::string>();
+		std::cout << "Project path was set to : " << proj_path << std::endl;
+	} else {
+		std::cout << "Project was not set." << std::endl;
+	}
+	if (vm.count("global"))
+	{
+		global_path = vm["global"].as<std::string>();
+		std::cout << "Global path was set to : " << global_path << std::endl;
+	} else {
+		std::cout << "Global was not set." << std::endl;
+	}
+	if (vm.count("case"))
+	{
+		case_name = vm["case"].as<std::string>();
+		std::cout << "Case was set to : " << case_name << std::endl;
+	} else {
+		std::cout << "Case was not set." << std::endl;
+	}
+
+	// We need to be either listening or have both environment config
+	// and project config (this might be changed later)
+	bool valid_env = (!env_path.empty() && fs::exists( env_path ) );
+	bool valid_proj = (!proj_path.empty() && fs::exists( proj_path ) );
+	if( !eq_client && !valid_env && !valid_proj )
+	{
+		std::cerr << "Either start in listening mode using --eq-client or "
+			<< std::endl << " provide valid environment config file and "
+			"project config file." << std::endl;
+		return vl::SettingsRefPtr();
+	}
+
+	/// Get the log dir we use
+	// Create the logging directory if it doesn't exist
+	// TODO this should create it to the exe path, not current directory
+	std::string log_base("logs");
+	std::string log_dir(log_base);
+
+	// File already exists but it's not a directory
+	size_t index = 0;
+	while( fs::exists(log_dir) && !fs::is_directory( log_dir ) )
+	{
+		std::cerr << "File : " << log_dir << " already exists and it's not "
+			<< "a directory. Trying another dir." << std::endl;
+		++index;
+		std::stringstream ss;
+		// TODO should add zeros so we have three numbers
+		ss << log_base << index;
+		log_dir = ss.str();
+	}
+
+	// File doesn't exist (checked earlier)
+	if( !fs::exists( log_dir ) )
+	{
+		fs::create_directory( log_dir );
+	}
+
+	// Otherwise the file exists and it's a directory
+	std::cout << "Using log dir: " << log_dir << std::endl;
+
+	vl::SettingsRefPtr settings;
 
 	// TODO add case support
 	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 	vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
 	vl::ProjSettingsRefPtr global;
 
-	/// Read the Environment config
-	if( fs::exists( arguments.env_path ) )
+	/// This point both env_path and project_path are either valid or we
+	/// are running in listening mode
+	// First check the listening mode
+	// TODO we need to return the eq_argc and eq_argv somehow
+	// Should contain program_path, eq-client, eq-listen
+	// or program_path, eq-config
+	// We might save it to the Settings for now, but using char ** and int
+	// not the Arg structure
+	if( eq_client )
 	{
-		std::string env_data;
-		env_data = vl::readFileToString( arguments.env_path );
-		// TODO check that the files are correct and we have good settings
-		vl::EnvSettingsSerializer env_ser( env );
-		env_ser.readString(env_data);
-		env->setFile( arguments.env_path );
+		settings.reset( new vl::Settings(env, proj, global) );
+
+		// Add the command line arguments
+		settings->setExePath( argv[0] );
+		if( eq_client )
+		{
+			settings->getEqArgs().add("--eq-client");
+			settings->getEqArgs().add("--eq-listen");
+			settings->getEqArgs().add( eq_listen.c_str() );
+		}
+		settings->setLogDir( log_dir );
 	}
 	else
 	{
-		std::cerr << "No environment file : " << arguments.env_path << std::endl;
-		// Mandatory so we return here
-		return eqOgre::SettingsRefPtr();
-	}
+		/// Read the Environment config
+		if( fs::exists( env_path ) )
+		{
+			std::string env_data;
+			env_data = vl::readFileToString( env_path );
+			// TODO check that the files are correct and we have good settings
+			vl::EnvSettingsSerializer env_ser( env );
+			env_ser.readString(env_data);
+			env->setFile( env_path );
+		}
 
-	/// Read the Project Config
-	if( fs::exists( arguments.proj_path ) )
-	{
-		std::string proj_data;
-		proj_data = vl::readFileToString( arguments.proj_path );
-		vl::ProjSettingsSerializer proj_ser( proj );
-		proj_ser.readString(proj_data);
-		proj->setFile( arguments.proj_path );
-	}
-	else
-	{
-		std::cerr << "No project file : " << arguments.proj_path << std::endl;
-		// Mandatory so we return here
-		return eqOgre::SettingsRefPtr();
-	}
+		/// Read the Project Config
+		if( fs::exists( proj_path ) )
+		{
+			std::string proj_data;
+			proj_data = vl::readFileToString( proj_path );
+			vl::ProjSettingsSerializer proj_ser( proj );
+			proj_ser.readString(proj_data);
+			proj->setFile( proj_path );
+		}
 
-	/// Read the global config
-	if( fs::exists( arguments.global_path ) )
-	{
-		global.reset( new vl::ProjSettings );
-		std::string global_data;
-		global_data = vl::readFileToString( arguments.global_path );
-		vl::ProjSettingsSerializer glob_ser( global );
-		glob_ser.readString(global_data);
-		global->setFile( arguments.global_path );
-	}
-	else
-	{
-		std::cerr << "No global config file : " << arguments.global_path << std::endl;
-		// Optional so we continue
-	}
+		/// Read the global config
+		if( fs::exists( global_path ) )
+		{
+			global.reset( new vl::ProjSettings );
+			std::string global_data;
+			global_data = vl::readFileToString( global_path );
+			vl::ProjSettingsSerializer glob_ser( global );
+			glob_ser.readString(global_data);
+			global->setFile( global_path );
+		}
 
-
-	eqOgre::SettingsRefPtr settings( new eqOgre::Settings( env, proj, global ) );
-
-	// Add the command line arguments
-	// TODO this should only add Equalizer arguments
-	// or we could implement our own switches and supply the equalizer
-	// arguments here based on our own switches.
-	settings->setExePath( argv[0] );
-	for( int i = 1; i < argc; ++i )
-	{
-		settings->getEqArgs().add(argv[i] );
+		settings.reset( new vl::Settings( env, proj, global ) );
+		settings->setExePath( argv[0] );
+		settings->setLogDir( log_dir );
 	}
 
 	return settings;
@@ -98,102 +229,82 @@ eqOgre::getSettings( int argc, char **argv )
 
 
 /// eqOgre::Settings
-eqOgre::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
-							vl::ProjSettingsRefPtr global )
-	: vl::Settings( env, proj, global ),
-	  _frame_data_id(EQ_ID_INVALID)
-{}
-
-void eqOgre::Settings::getInstanceData(eq::net::DataOStream& os)
+eqOgre::DistributedSettings::DistributedSettings( void )
+	 : _frame_data_id(EQ_ID_INVALID)
 {
-	os << _frame_data_id << _log_dir;
-
-	// TODO this should serialize used plugins
-	// TODO this should serialize ProjectSettings
-	// 	which needs eqOgre::ProjectSettings to be created
-	/*
-	os << _roots.size();
-	for( size_t i = 0; i < _roots.size(); ++i )
-	{
-		os << _roots.at(i).name << _roots.at(i).path;
-	}
-*/
-	// Not necessary as these are only needed when launched
-//	os << _exe_path << _file_path << _eq_config.file;
-/*
-	os << _scenes.size();
-	for( size_t i = 0; i < _scenes.size(); ++i )
-	{
-		os << _scenes.at(i).file << _scenes.at(i).name
-			<< _scenes.at(i).attach_node << _scenes.at(i).type;
-	}
-
-	os << _plugins.getPath();
-
-	os << _resources.size();
-	for( size_t i = 0; i < _resources.size(); ++i )
-	{
-		os << _resources.at(i).getPath();
-	}
-
-	os << _tracking.size();
-	for( size_t i = 0; i < _tracking.size(); ++i )
-	{
-		os << _tracking.at(i).getPath();
-	}
-*/
-	// No need to distribute eq args as they are only needed when launched
-
-	// TODO
-	// These probably don't need to be distributed also as the AppNode should
-	// handle tracking
-//	os << _tracker_address << _tracker_default_pos << _tracker_default_orient;
 }
 
-void eqOgre::Settings::applyInstanceData(eq::net::DataIStream& is)
+void
+eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 {
-	is >> _frame_data_id >> _log_dir;
+	// Copy name
+	_project_name = settings->getProjectName();
 
-/*
-	size_t size;
-	is >> size;
-	_roots.resize(size);
-	for( size_t i = 0; i < _roots.size(); ++i )
+	// Copy log paths
+	_ogre_log_file = settings->getOgreLogFilePath();
+
+	// Copy resource paths
+	_resources.clear();
+	std::vector<std::string> const &resources = settings->getResourcePaths();
+	for( size_t i = 0; i < resources.size(); ++i )
 	{
-		is >> _roots.at(i).name >> _roots.at(i).path;
+		_resources.push_back( resources.at(i) );
 	}
 
-	// Not necessary as these are only needed when launched
-//	is >> _exe_path >> _file_path >> _eq_config.file;
-
-	is >> size;
-	_scenes.resize(size);
-	for( size_t i = 0; i < _scenes.size(); ++i )
+	// Copy scenes
+	// TODO this should really copy the Scene data not a filename
+	_scenes.clear();
+	std::vector<vl::ProjSettings::Scene const *>const &scenes = settings->getScenes();
+	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		is >> _scenes.at(i).file >> _scenes.at(i).name
-			>> _scenes.at(i).attach_node >> _scenes.at(i).type;
+		// TODO this copies attributes that are not really useful like use and changed
+		_scenes.push_back( *scenes.at(i) );
 	}
+}
 
-	is >> _plugins.file;
+void
+eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
+{
+	os << _project_name << _frame_data_id << _ogre_log_file;
 
-	is >> size;
-	_resources.resize(size);
-	for( size_t i = 0; i < _resources.size(); ++i )
-	{
-		is >> _resources.at(i).file;
-	}
+	// Serialize resources
+	os << _resources;
 
-	is >> size;
-	_tracking.resize(size);
-	for( size_t i = 0; i < _tracking.size(); ++i )
-	{
-		is >> _tracking.at(i).file;
-	}
-*/
-	// No need to distribute eq args as they are only needed when launched
+	// Serialize scenes
+	os << _scenes;
 
-	// TODO
-	// These probably don't need to be distributed also as the AppNode should
-	// handle tracking
-//	is >> _tracker_address >> _tracker_default_pos >> _tracker_default_orient;
+	// TODO this should serialize used plugins
+}
+
+void
+eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
+{
+	is >> _project_name >> _frame_data_id >> _ogre_log_file;
+
+	// Serialize resources
+	is >> _resources;
+
+	// Serialize scenes
+	is >> _scenes;
+}
+
+eq::net::DataOStream &
+eqOgre::operator<<(vl::ProjSettings::Scene const &s, eq::net::DataOStream& os)
+{
+	os << s.getName() << s.getFile() << s.getAttachtoScene() << s.getAttachtoPoint();
+
+	return os;
+}
+
+eq::net::DataIStream &
+eqOgre::operator>>(vl::ProjSettings::Scene &s, eq::net::DataIStream& is)
+{
+	std::string name, file, at_scene, at_point;
+	is >> name >> file >> at_scene >> at_point;
+	s.setName(name);
+	s.setFile(file);
+	s.setAttachtoScene(at_scene);
+	s.setAttachtoPoint(at_point);
+
+	return is;
 }

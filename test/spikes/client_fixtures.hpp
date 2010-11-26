@@ -28,7 +28,7 @@ struct ListeningClientFixture
 	~ListeningClientFixture( void )
 	{ exit(); }
 
-	bool init( eqOgre::SettingsRefPtr settings,
+	bool init( vl::SettingsRefPtr settings,
 			   eq::NodeFactory *nodeFactory )
 	{
 		InitFixture();

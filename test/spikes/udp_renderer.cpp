@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	{
 		ListeningClientFixture fix;
 
-		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
+		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 
 		::NodeFactoryUDP nodeFactory;
 		error = !fix.init( settings, &nodeFactory );

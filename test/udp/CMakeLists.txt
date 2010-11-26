@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------
+# Joonatan Kuosa
+# 2010-11
+#
+# This file is part of the CMake build system for eqOgre
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#
+#-------------------------------------------------------------------
+
 project("udp_test" CXX)
 
 cmake_minimum_required(VERSION 2.8)
@@ -25,7 +36,7 @@ add_executable( test_udp
 	${eqOgre_SOURCE_DIR}/udp/server.hpp
 	${eqOgre_SOURCE_DIR}/base/exceptions.hpp
 	udp_fixtures.hpp
-	test_udp.cpp 
+	test_udp.cpp
 	)
 
 # TODO fix this

@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-09
+ */
+
 #include "client.hpp"
 
 #include <sstream>

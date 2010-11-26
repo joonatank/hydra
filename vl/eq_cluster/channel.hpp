@@ -13,6 +13,7 @@
 #include "tracker.hpp"
 #include "base/typedefs.hpp"
 #include "frame_data.hpp"
+#include "eq_cluster/eq_settings.hpp"
 
 namespace eqOgre
 {
@@ -26,6 +27,8 @@ public:
     Channel( eq::Window *parent );
 
     virtual ~Channel (void);
+
+	DistributedSettings const &getSettings( void ) const;
 
 protected:
 	/// Equalizer overrides

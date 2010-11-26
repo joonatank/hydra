@@ -1,8 +1,12 @@
 #-------------------------------------------------------------------
+# Joonatan Kuosa
+# 2010-11
+#
 # This file is part of the CMake build system for eqOgre
 #
 # The contents of this file are placed in the public domain. Feel
 # free to make use of it in any way you like.
+#
 #-------------------------------------------------------------------
 
 project( "demos" CXX )
@@ -13,11 +17,11 @@ message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
 message( "VRPN libraries = ${VRPN_LIBRARY}" )
 
 # Copy configs
-copy_start_script( spike_listening_client
+copy_start_script( renderer
 	ogre_project/ogre.prj
 	"ogre" )
 
-copy_start_script( spike_listening_client
+copy_start_script( renderer
 	tracking_test_project/tracking.prj
 	tracking )
 
@@ -32,11 +36,11 @@ target_link_libraries( fake_tracking_server
 	${CMAKE_THREAD_LIBS_INIT} )
 
 
-add_executable( spike_listening_client
+add_executable( renderer
 	listening_client.cpp
 	)
 
-target_link_libraries( spike_listening_client ${LIBS} )
+target_link_libraries( renderer ${eqOgre_LIBRARY} )
 
 # install
-install( TARGETS spike_listening_client fake_tracking_server DESTINATION ./ )
+install( TARGETS renderer fake_tracking_server DESTINATION ./ )

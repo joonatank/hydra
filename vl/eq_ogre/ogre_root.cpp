@@ -16,11 +16,10 @@
 #include "base/system_util.hpp"
 #include "base/filesystem.hpp"
 
-vl::ogre::Root::Root( vl::SettingsRefPtr settings )
+vl::ogre::Root::Root( eqOgre::DistributedSettings const &settings )
 	: _ogre_root(0),
 	  _log_manager(0),
-	  _primary(false),
-	  _settings( settings )
+	  _primary(false)
 {
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
@@ -28,7 +27,7 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 		_log_manager = new Ogre::LogManager();
 
 		// Create the log
-		std::string log_file = settings->getOgreLogFilePath();
+		std::string log_file = settings.getOgreLogFilePath();
 		Ogre::Log *log = Ogre::LogManager::getSingleton()
 			.createLog( log_file, true, false );
 		log->setTimeStampEnabled( true );
@@ -36,6 +35,9 @@ vl::ogre::Root::Root( vl::SettingsRefPtr settings )
 
 		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;
+
+		// Copy resource paths
+		_resources = settings.getResources();
 	}
 }
 
@@ -90,14 +92,13 @@ vl::ogre::Root::setupResources( void )
 	std::string msg( "setupResources" );
 	Ogre::LogManager::getSingleton().logMessage( msg );
 
-	std::vector<std::string> resource_paths =  _settings->getResourcePaths();
-	if( resource_paths.empty() )
+	if( _resources.empty() )
 	{
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "No Resource Paths.") );
 	}
 
-	for( std::vector<std::string>::iterator iter = resource_paths.begin();
-		iter != resource_paths.end(); ++iter )
+	for( std::vector<std::string>::iterator iter = _resources.begin();
+		iter != _resources.end(); ++iter )
 	{
 		std::stringstream ss;
 		ss << "Adding resource dir : " << *iter;

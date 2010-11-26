@@ -13,7 +13,7 @@ namespace eqOgre
     class Client : public eq::Client
     {
     public:
-		Client( eqOgre::SettingsRefPtr settings );
+		Client( vl::SettingsRefPtr settings );
 
         virtual ~Client (void);
 
@@ -26,15 +26,15 @@ namespace eqOgre
 		virtual bool initialise( void );
 
 	protected:
-		
+
 		virtual void exit( void );
 
-		// eq overriden, loop invariant
-        virtual void clientLoop (void);
-		
+		// eq override
+		virtual void clientLoop (void);
+
 		eq::ServerPtr _server;
 		eqOgre::Config *_config;
-		eqOgre::SettingsRefPtr _settings;
+		vl::SettingsRefPtr _settings;
 
     };	// class Client
 

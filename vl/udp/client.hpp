@@ -1,5 +1,9 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-09
+ */
+
+#ifndef VL_UDP_CLIENT_HPP
+#define VL_UDP_CLIENT_HPP
 
 #include <boost/asio.hpp>
 
@@ -12,7 +16,7 @@ namespace boost
 
 namespace vl
 {
-	
+
 namespace udp
 {
 
@@ -45,4 +49,4 @@ private :
 
 }	// namespace vl
 
-#endif // CLIENT_HPP
+#endif // VL_UDP_CLIENT_HPP

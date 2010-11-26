@@ -180,28 +180,10 @@ int main( const int argc, char** argv )
 	bool error = false;
 	try
 	{
-		eqOgre::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
+		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 		if( !settings )
 		{ return -1; }
 
-		// Create the logging directory if it doesn't exist
-		// TODO this should create it to the exe path, not current directory
-		std::string log_dir("logs");
-		if( !fs::exists( log_dir ) )
-		{
-			fs::create_directory( log_dir );
-		}
-
-		// File already exists but it's not a directory
-		if( !fs::is_directory( log_dir ) )
-		{
-			// TODO is there a cleaner way to handle this like changing the name
-			std::cerr << "File : " << log_dir << " already exists and it's not "
-				<< "a directory. Don't know what to do. Exiting" << std::endl;
-			return -1;
-		}
-
-		settings->setLogDir( log_dir );
 		physics::NodeFactory nodeFactory;
 
 		// TODO test if this can work with relative path

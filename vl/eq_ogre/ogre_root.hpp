@@ -21,19 +21,21 @@
 #include <OGRE/OgreRenderWindow.h>
 
 #include "base/typedefs.hpp"
-#include "settings.hpp"
+#include "base/filesystem.hpp"
+
+#include "eq_cluster/eq_settings.hpp"
 
 namespace vl
 {
-namespace ogre 
+namespace ogre
 {
 	class Root
 	{
 		public :
-			Root( vl::SettingsRefPtr settings );
+			Root( eqOgre::DistributedSettings const &settings );
 
 			virtual ~Root( void );
-			
+
 			// Hack to provide native access, we should really never
 			// need this for the Root object.
 			Ogre::Root *getNative( void )
@@ -62,19 +64,19 @@ namespace ogre
 			void _iterateResourceDir( fs::path const &file );
 
 			void _setupResource( std::string const &file, std::string const &typeName );
-			
+
 			Ogre::Root *_ogre_root;
-			
+
 			Ogre::LogManager *_log_manager;
-			
+
 			// Wether we own the Ogre::Root instance
 			bool _primary;
-			
-			vl::SettingsRefPtr _settings;
+
+			std::vector<std::string> _resources;
 
 	};	// class Root
 
-}	// namespace ogre 
+}	// namespace ogre
 
 }	// namespace vl
 

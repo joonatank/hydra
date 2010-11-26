@@ -55,15 +55,16 @@ eqOgre::Config::~Config()
 void
 eqOgre::Config::mapData( uint32_t const initDataID )
 {
-	EQASSERT( _settings );
-	if( _settings->getID() == EQ_ID_INVALID )
+	std::cerr << "Mapping data." << std::endl;
+
+	if( _distrib_settings.getID() == EQ_ID_INVALID )
 	{
-		EQCHECK( mapObject( _settings.get(), initDataID ));
-        unmapObject( _settings.get() ); // data was retrieved, unmap immediately
+		EQCHECK( mapObject( &_distrib_settings, initDataID ));
+        unmapObject( &_distrib_settings ); // data was retrieved, unmap immediately
 	}
     else  // appNode, _initData is registered already
     {
-        EQASSERT( _settings->getID() == initDataID )
+        EQASSERT( _distrib_settings.getID() == initDataID )
 	}
 }
 
@@ -88,12 +89,12 @@ eqOgre::Config::init( uint32_t const )
 
 	_frame_data.registerData(this);
 
-	_settings->setFrameDataID( _frame_data.getID() );
+	_distrib_settings.setFrameDataID( _frame_data.getID() );
 	std::cerr << "Registering Settings" << std::endl;
-	registerObject( _settings.get() );
+	registerObject( &_distrib_settings );
 	std::cerr << "Settings registered" << std::endl;
 
-	if( !eq::Config::init( _settings->getID() ) )
+	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
 
 	std::cerr << "Config::init DONE" << std::endl;
@@ -101,11 +102,12 @@ eqOgre::Config::init( uint32_t const )
 }
 
 void
-eqOgre::Config::setSettings(eqOgre::SettingsRefPtr settings)
+eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 {
 	if( settings )
 	{
 		_settings = settings;
+		_distrib_settings.copySettings(_settings);
 	}
 }
 

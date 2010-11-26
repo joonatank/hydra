@@ -1,8 +1,12 @@
 #-------------------------------------------------------------------
+# Joonatan Kuosa
+# 2010-11
+#
 # This file is part of the CMake build system for eqOgre
 #
 # The contents of this file are placed in the public domain. Feel
 # free to make use of it in any way you like.
+#
 #-------------------------------------------------------------------
 
 project("vl" CXX C)
@@ -92,7 +96,7 @@ find_package( CAUDIO REQUIRED )
 set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS python system filesystem REQUIRED )
+find_package(Boost COMPONENTS python system filesystem program_options REQUIRED )
 
 find_package(PythonLibs REQUIRED )
 
@@ -129,11 +133,12 @@ set( EQOGRE_DEB_LIBS
 	${Boost_PYTHON_LIBRARIES}
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
+	${Boost_PROGRAM_OPTIONS_LIBRARIES}
 	${CAUDIO_LIBRARY}
 	)
 
 # Libraries used to build project binaries
-set( LIBS eqOgre )
+set( eqOgre_LIBRARY eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.
@@ -178,20 +183,20 @@ if( WIN32 )
 	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
 	# Copy Release
 	# TODO this really needs some automation/MACRO
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/Release/start_multi_node.bat )
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_.bat.in
+		${PROJECT_BINARY_DIR}/Release/start_multi_${start_suffix}.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
 		${PROJECT_BINARY_DIR}/Release/kill_nodes.bat )
 	# Copy RelWithDebugInfo
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_multi_node.bat )
+		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_multi_${start_suffix}.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
 		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
 else()
 	set( EQUALIZER_SERVER_BIN "eqServer" )
 	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.sh.in
-		${PROJECT_BINARY_DIR}/start_multi_node.sh )
+		${PROJECT_BINARY_DIR}/start_multi_${start_suffix}.sh )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.sh.in
 		${PROJECT_BINARY_DIR}/kill_nodes.sh )
 endif()

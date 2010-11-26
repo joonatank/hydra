@@ -62,9 +62,9 @@ eqOgre::Window::loadScene( void )
 	// TODO this should be divided to case load scenes function and loadScene function
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
+	std::vector<vl::ProjSettings::Scene> const &scenes = getSettings().getScenes();
 
-	ss << "Loading Scenes for Project : " << _settings->getProjectName();
+	ss << "Loading Scenes for Project : " << getSettings().getProjectName();
 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	ss.str("");
 
@@ -90,7 +90,7 @@ eqOgre::Window::loadScene( void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string const &scene_file = scenes.at(i)->getFile();
+		std::string const &scene_file = scenes.at(i).getFile();
 
 		ss.str("");
 		std::string message = "Loading scene : " + scene_file;
@@ -202,6 +202,12 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 	return true;
 }
 
+eqOgre::DistributedSettings const &
+eqOgre::Window::getSettings( void ) const
+{
+	return ( static_cast<Config const *>( getConfig() ) )->getSettings();
+}
+
 
 
 /// Protected
@@ -226,13 +232,6 @@ eqOgre::Window::configInit( const uint32_t initID )
 
 		// Get the cluster version of data
 		config->mapData( initID );
-		_settings = config->getSettings();
-		if( !_settings )
-		{
-			std::cerr << "Config has no settings!" << std::endl;
-			//EQERROR << "Config has no settings!" << std::endl;
-			return false;
-		}
 
 		createOgreRoot();
 		createOgreWindow();
@@ -369,7 +368,7 @@ eqOgre::Window::createInputHandling( void )
 
 	OIS::ParamList pl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
-	
+
 	std::cerr << "Creating OIS Input Manager" << std::endl;
 
 	log << "Creating input manager.\n";
@@ -437,7 +436,7 @@ eqOgre::Window::createWindowListener(void )
 void
 eqOgre::Window::createOgreRoot( void )
 {
-	_root.reset( new vl::ogre::Root( _settings ) );
+	_root.reset( new vl::ogre::Root( getSettings() ) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }

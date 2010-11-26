@@ -3,9 +3,9 @@
 #include "eq_cluster/config.hpp"
 #include "eq_cluster/eq_settings.hpp"
 
-eqOgre::Client::Client( eqOgre::SettingsRefPtr settings )
+eqOgre::Client::Client( vl::SettingsRefPtr settings )
 	: _config(0), _settings(settings)
-{} 
+{}
 
 eqOgre::Client::~Client(void )
 {
@@ -18,7 +18,7 @@ eqOgre::Client::initLocal( int argc, char **argv )
 	return eq::Client::initLocal( argc, argv );
 }
 
-bool 
+bool
 eqOgre::Client::initialise( void )
 {
 	std::cout << "creating server" << std::endl;
@@ -59,7 +59,7 @@ eqOgre::Client::initialise( void )
 
 }	// initialise
 
-bool 
+bool
 eqOgre::Client::mainloop( uint32_t frame )
 {
 	if( _config->isRunning() )
@@ -93,7 +93,7 @@ eqOgre::Client::exit( void )
 	}
 }
 
-void 
+void
 eqOgre::Client::clientLoop( void )
 {
 	if( !isLocal() ) // execute only one config run
@@ -102,8 +102,7 @@ eqOgre::Client::clientLoop( void )
 	// else execute client loops 'forever'
 	while( true ) // TODO: implement SIGHUP handler to exit?
 	{
-//		if( !eq::Client::clientLoop( ))
-//			return false;
+		eq::Client::clientLoop();
 		EQINFO << "One configuration run successfully executed" << std::endl;
 	}
 }

@@ -45,18 +45,12 @@ namespace eqOgre
 
 		void mapData( uint32_t const initDataID );
 
-		/// These are mostly called from other eqOgre classes
-		/// which need the settings to be distributed so it does not make sense
-		/// to return the base class at this point.
-		eqOgre::SettingsRefPtr getSettings( void )
-		{ return _settings; }
+		// TODO get and set Settings is maybe a bit confusing when they
+		// get and set different types of variables
+		eqOgre::DistributedSettings const &getSettings( void ) const
+		{ return _distrib_settings; }
 
-		eqOgre::SettingsRefPtr const getSettings( void ) const
-		{ return _settings; }
-
-		// TODO this could be done with vl::SettingsRefPtr or vl::Settings
-		// if we have a valid copy constructor
-		void setSettings( eqOgre::SettingsRefPtr settings );
+		void setSettings( vl::SettingsRefPtr settings );
 
 		SceneNodePtr createSceneNode( std::string const &name );
 
@@ -112,8 +106,10 @@ namespace eqOgre
 		/// Tracking
 		vl::ClientsRefPtr _clients;
 
-		eqOgre::SettingsRefPtr _settings;
+		vl::SettingsRefPtr _settings;
 
+		/// Distributed
+		DistributedSettings _distrib_settings;
 		FrameData _frame_data;
 
 		// NOTE we need to use Event pointer because Events can be inherited

@@ -4,6 +4,7 @@
 #include <eq/client/window.h>
 
 #include "eq_ogre/ogre_root.hpp"
+#include "eq_settings.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -30,7 +31,7 @@ namespace eqOgre
 		Window( eq::Pipe *parent );
 
 		virtual ~Window( void );
-		
+
 		Ogre::RenderWindow *getRenderWindow( void )
 		{ return _ogre_window; }
 
@@ -51,7 +52,8 @@ namespace eqOgre
 		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
-		
+		DistributedSettings const &getSettings( void ) const;
+
 	protected :
 		void createOgreRoot( void );
 		void createOgreWindow( void );
@@ -62,10 +64,10 @@ namespace eqOgre
 		void createInputHandling( void );
 
 		Ogre::Log::Stream &printInputInformation( Ogre::Log::Stream &os );
-		
+
 		void createWindowListener( void );
 
-		
+
 		/// Equalizer overrides
 		virtual bool configInit( const uint32_t initID );
 
@@ -80,13 +82,11 @@ namespace eqOgre
 		Ogre::Camera *_camera;
 		Ogre::SceneManager *_sm;
 
-		vl::SettingsRefPtr _settings;
-
 		// OIS variables
 		OIS::InputManager *_input_manager;
 		OIS::Keyboard *_keyboard;
 		OIS::Mouse *_mouse;
-		
+
     };	// class Window
 
 }	// namespace eqOgre
