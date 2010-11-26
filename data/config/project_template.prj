@@ -4,7 +4,7 @@
 Designed by Joonas Reunamo <joonas.reunamo@tut.fi>
 2010-10
 
-Project config. Has project specific information, i.e. scense to load,
+Project config. Has project specific information, i.e. scenes to load,
 scripts to execute and action maps used.
 -->
 
@@ -57,8 +57,10 @@ Project may be launchable
 		</scene>
 	</scenes>
 
-	<!-- Resources will reside in [path to this file]/resources
-	TAI [file to global]/resources -->
+	<!--
+	Resources will reside in [path to this file]/resources
+	or [file to global]/resources
+	-->
 
 	<action_maps>
 		<!--

@@ -12,19 +12,22 @@ server
                 window
                 {
                     viewport [ 0.1 0.25 0.4 0.4 ]
-                    
+
                     channel { name "channel1" }
                 }
             }
         }
         node
         {
+			# TODO this file should be copied using CMake and the hostname
+			# and port should be configured automatically
+			connection { TCPIP_port 4242 hostname "leviathan" }
             pipe
             {
                 window
                 {
                     viewport [ 0.5 0.25 0.4 0.4 ]
-                    
+
                     channel { name "channel2" }
                 }
             }
@@ -90,20 +93,20 @@ server
         }
 
         compound
-        { 
+        {
             channel ( segment 0 view 0 )
         }
         compound
-        { 
+        {
             channel ( segment 1 view 0 )
         }
         compound
-        { 
+        {
             channel ( segment 0 layout "half1" view 0 )
         }
         compound
-        { 
+        {
             channel ( segment 1 layout "half2" view 0 )
         }
-    }    
+    }
 }

@@ -42,8 +42,7 @@ Critical : clients node needs to be present.
 	-->
 
 	<!-- Port defaults to 3883, vrpn default -->
-	<!-- <client use="true" type="VRPN" host="kosu-vr6.me.tut.fi" port="3888"> -->
-	<client use="true" type="VRPN" host="localhost" port="3883" >
+	<client use="true" type="VRPN" host="kosu-vr6.me.tut.fi" port="3888">
 		<!--
 		tracker : Tracker name, used by VRPN
 
@@ -112,8 +111,9 @@ Critical : clients node needs to be present.
 			use cases.
 			-->
 		</tracker>
+	</client>
 
-	<!-- <client type="VRPN" host="kosu-vr6.me.tut.fi" port="3885" > -->
+	<client type="VRPN" host="kosu-vr6.me.tut.fi" port="3885" >
 		<!--
 		Mevea Toro T7 tracker has multiple sensors which have triggers.
 		-->

@@ -2,5 +2,6 @@
 # This script will kill Equalizer server and
 # all eq clients by the name PROGRAM_NAME
 # TODO add support for signal -9 if it's taking too long
+# FIXME this script doesn't work, pidof does not get the pid
 
 kill pidof ${EQUALIZER_SERVER_BIN} ${PROGRAM_NAME}

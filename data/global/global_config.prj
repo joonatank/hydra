@@ -1,4 +1,12 @@
+<?xml version="1.0"?>
 
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2010-11
+
+Global config, used to have the demo resources available to all demos
+and to have global script.
+-->
 <project_config name="Global">
 	<scripts>
 		<file use="true">global_script.py</file>
