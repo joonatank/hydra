@@ -228,7 +228,7 @@ eqOgre::getSettings( int argc, char **argv )
 }
 
 
-/// eqOgre::Settings
+/// eqOgre::DistributedSettings
 eqOgre::DistributedSettings::DistributedSettings( void )
 	 : _frame_data_id(EQ_ID_INVALID)
 {
@@ -241,7 +241,7 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	_project_name = settings->getProjectName();
 
 	// Copy log paths
-	_ogre_log_file = settings->getOgreLogFilePath();
+	_log_dir = settings->getLogDir();
 
 	// Copy resource paths
 	_resources.clear();
@@ -258,20 +258,33 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
 		// TODO this copies attributes that are not really useful like use and changed
-		_scenes.push_back( *scenes.at(i) );
+		_scenes.push_back( *(scenes.at(i)) );
 	}
 }
 
+std::string
+eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
+{
+	return vl::createLogFilePath( _project_name, "ogre", "", _log_dir );
+}
+
+
+/// -------------------- Protected ---------------------
 void
 eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 {
-	os << _project_name << _frame_data_id << _ogre_log_file;
+	os << _project_name << _frame_data_id << _log_dir;
 
 	// Serialize resources
 	os << _resources;
 
 	// Serialize scenes
-	os << _scenes;
+	std::cerr << "Serializing " << _scenes.size() << " scenes." << std::endl;
+	os << _scenes.size();
+	for( size_t i = 0; i < _scenes.size(); ++i )
+	{
+		operator<<( _scenes.at(i), os );
+	}
 
 	// TODO this should serialize used plugins
 }
@@ -279,18 +292,31 @@ eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 void
 eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 {
-	is >> _project_name >> _frame_data_id >> _ogre_log_file;
+	is >> _project_name >> _frame_data_id >> _log_dir;
 
 	// Serialize resources
 	is >> _resources;
 
 	// Serialize scenes
-	is >> _scenes;
+	//is >> _scenes;
+	size_t size = 0;
+	is >> size;
+	_scenes.resize(size);
+	std::cerr << "Deserializing " << _scenes.size() << " scenes." << std::endl;
+	for( size_t i = 0; i < _scenes.size(); ++i )
+	{
+		operator>>( _scenes.at(i), is );
+	}
 }
 
 eq::net::DataOStream &
 eqOgre::operator<<(vl::ProjSettings::Scene const &s, eq::net::DataOStream& os)
 {
+	std::cerr << "scene name = " << s.getName()
+		<< " : scene file = " << s.getFile()
+		<< " : scene attach to scene = " << s.getAttachtoScene()
+		<< " : scene attach to point = " << s.getAttachtoPoint() << std::endl;
+
 	os << s.getName() << s.getFile() << s.getAttachtoScene() << s.getAttachtoPoint();
 
 	return os;
@@ -301,6 +327,11 @@ eqOgre::operator>>(vl::ProjSettings::Scene &s, eq::net::DataIStream& is)
 {
 	std::string name, file, at_scene, at_point;
 	is >> name >> file >> at_scene >> at_point;
+		std::cerr << "scene name = " << name
+			<< " : scene file = " << file
+			<< " : scene attach to scene = " << at_scene
+			<< " : scene attach to point = " << at_point << std::endl;
+
 	s.setName(name);
 	s.setFile(file);
 	s.setAttachtoScene(at_scene);

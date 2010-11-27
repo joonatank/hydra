@@ -16,9 +16,9 @@ eqOgre::Channel::~Channel( void )
 }
 
 eqOgre::DistributedSettings const &
-eqOgre::Channel::getSettings(void ) const
+eqOgre::Channel::getSettings( void ) const
 {
-	return ( static_cast<Config const *>( getConfig() ) )->getSettings();
+	return( ( static_cast<Config const *>( getConfig() ) )->getSettings() );
 }
 
 bool
@@ -28,7 +28,7 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	{ return false; }
 
 	std::cerr << "Get ogre window from RenderWindow" << std::endl;
-	eqOgre::Window *window = ((eqOgre::Window *)getWindow());
+	eqOgre::Window *window = dynamic_cast<eqOgre::Window *>(getWindow());
 	_ogre_window = window->getRenderWindow();
 	EQASSERT( _ogre_window );
 
@@ -62,9 +62,10 @@ eqOgre::Channel::configInit( const uint32_t initID )
 	if( !_frame_data.setSceneManager( sm ) )
 	{
 		std::cerr << "Some SceneNodes were not found. Will exit now!" << std::endl;
-		EQASSERT( false );
+		return false;
 	}
 
+	std::cerr << "Channel::ConfigInit done" << std::endl;
 	return true;
 }
 
@@ -94,6 +95,7 @@ eqOgre::Channel::frameClear( const uint32_t )
 void
 eqOgre::Channel::frameDraw( const uint32_t frameID )
 {
+	std::cerr << "Channel::frameDraw" << std::endl;
 	// Distribution
 	_frame_data.syncAll();
 	updateDistribData();

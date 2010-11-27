@@ -66,6 +66,7 @@ eqOgre::Window::loadScene( void )
 
 	ss << "Loading Scenes for Project : " << getSettings().getProjectName();
 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	std::cerr << ss.str() << std::endl;
 	ss.str("");
 
 	// If we don't have Scenes there is no point loading them
@@ -73,12 +74,14 @@ eqOgre::Window::loadScene( void )
 	{
 		ss << "Project does not have any scene files.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 		return false;
 	}
 	else
 	{
 		ss << "Project has " << scenes.size() << " scene files.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 	}
 
 	// Clean up old scenes
@@ -90,11 +93,14 @@ eqOgre::Window::loadScene( void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
+		std::cerr << "Getting scene file path." << std::endl;
 		std::string const &scene_file = scenes.at(i).getFile();
+		std::cerr << "Got scene file path." << std::endl;
 
 		ss.str("");
-		std::string message = "Loading scene : " + scene_file;
-		Ogre::LogManager::getSingleton().logMessage( message );
+		ss << "Loading scene : " << scene_file;
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 
 		eqOgre::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -103,8 +109,10 @@ eqOgre::Window::loadScene( void )
 							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 							_sm );
 
-		message = "Scene loaded";
-		Ogre::LogManager::getSingleton().logMessage( message );
+		ss.str("");
+		ss << "Scene loaded";
+		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 	}
 
 
@@ -121,6 +129,7 @@ eqOgre::Window::loadScene( void )
 		ss.str("");
 		ss << "Using Camera " <<  _camera->getName() << " found from the scene.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 	}
 	else
 	{
@@ -128,6 +137,7 @@ eqOgre::Window::loadScene( void )
 		ss.str("");
 		ss << "No camera in the scene. Using created camera " << _camera->getName();
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		std::cerr << ss.str() << std::endl;
 	}
 
 	return true;
@@ -238,13 +248,18 @@ eqOgre::Window::configInit( const uint32_t initID )
 		createInputHandling();
 
 		// Resource registration
+		std::cerr << "setup resources" << std::endl;
 		_root->setupResources( );
+		std::cerr << "load resources" << std::endl;
 		_root->loadResources();
+		std::cerr << "resources loaded" << std::endl;
 
 		_sm = _root->createSceneManager("SceneManager");
+		std::cerr << "SceneManager created" << std::endl;
 
 		if( !loadScene() )
 		{ return false; }
+		std::cerr << "SceneLoaded" << std::endl;
 
 		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
 		log << "eqOgre::Window::configInit done.\n";
@@ -253,17 +268,17 @@ eqOgre::Window::configInit( const uint32_t initID )
 	{
 		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
 			<< std::endl;
-		return true;
+		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
 		std::cerr << "Ogre Exception: " << e.what() << std::endl;
-		return true;
+		return false;
 	}
 	catch( std::exception const &e )
 	{
 		std::cerr << "STD Exception: " << e.what() << std::endl;
-		return true;
+		return false;
 	}
 	catch( ... )
 	{

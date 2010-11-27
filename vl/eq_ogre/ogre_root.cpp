@@ -162,6 +162,7 @@ vl::ogre::Root::_iterateResourceDir( fs::path const &file )
 		}
 		else
 		{
+			// Purposefully empty
 		}
 	}
 }

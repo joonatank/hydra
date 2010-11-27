@@ -25,6 +25,13 @@
 namespace vl
 {
 
+
+std::string
+createLogFilePath( const std::string &project_name,
+					   const std::string &identifier,
+					   const std::string &prefix = std::string(),
+					   const std::string &log_dir = std::string() );
+
 class Settings
 {
 	public :

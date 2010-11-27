@@ -51,8 +51,7 @@ public :
 	{ return _scenes; }
 
 	/// Logging
-	std::string const &getOgreLogFilePath( void ) const
-	{ return _ogre_log_file; }
+	std::string getOgreLogFilePath( void ) const;
 
 	std::string const &getProjectName( void ) const
 	{ return _project_name; }
@@ -61,7 +60,7 @@ protected :
 	virtual void getInstanceData( eq::net::DataOStream& os );
 	virtual void applyInstanceData( eq::net::DataIStream& is );
 
-	std::string _ogre_log_file;
+	std::string _log_dir;
 
 	// Resource paths used
 	std::vector<std::string> _resources;
@@ -82,7 +81,6 @@ operator<<(vl::ProjSettings::Scene const &s, eq::net::DataOStream& os);
 
 eq::net::DataIStream &
 operator>>(vl::ProjSettings::Scene &s, eq::net::DataIStream& is);
-
 
 }	// namespace eqOgre
 

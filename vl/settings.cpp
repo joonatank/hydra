@@ -12,6 +12,39 @@
 // Necessary for getPid (used for log file names)
 #include "base/system_util.hpp"
 
+
+std::string
+vl::createLogFilePath( const std::string &project_name,
+					   const std::string &identifier,
+					   const std::string &prefix,
+					   const std::string &log_dir )
+{
+	uint32_t pid = vl::getPid();
+	std::stringstream ss;
+
+	if( !log_dir.empty() )
+	{ ss << log_dir << "/"; }
+
+	if( project_name.empty() )
+	{ ss << "unamed"; }
+	else
+	{ ss << project_name; }
+
+	if( !identifier.empty() )
+	{ ss << '_' << identifier; }
+
+	ss << '_' << pid;
+
+	if( !prefix.empty() )
+	{ ss << '_' << prefix; }
+
+	ss << ".log";
+
+	return ss.str();
+}
+
+
+
 vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
 						vl::ProjSettingsRefPtr global )
 	: _env(env),
@@ -55,27 +88,7 @@ std::string
 vl::Settings::getLogFilePath(const std::string &identifier,
 							 const std::string &prefix) const
 {
-	uint32_t pid = vl::getPid();
-	std::stringstream ss;
-	if( !getLogDir().empty() )
-	{ ss << getLogDir() << "/"; }
-
-	if( getProjectName().empty() )
-	{ ss << "unamed"; }
-	else
-	{ ss << getProjectName(); }
-
-	if( !identifier.empty() )
-	{ ss << '_' << identifier; }
-
-	ss << '_' << pid;
-
-	if( !prefix.empty() )
-	{ ss << '_' << prefix; }
-
-	ss << ".log";
-
-	return ss.str();
+	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir() );
 }
 
 std::vector< std::string >
