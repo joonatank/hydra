@@ -36,9 +36,9 @@ namespace eqOgre
 		virtual bool init( eq::uint128_t const &initID );
 
 		/** @sa eq::Config::exit. */
-//		virtual bool exit (void);
+		virtual bool exit (void);
 
-        /** @sa eq::Config::handleEvent */
+		/** @sa eq::Config::handleEvent */
 		virtual bool handleEvent( const eq::ConfigEvent* event );
 
 		virtual uint32_t startFrame( eq::uint128_t const &frameID );

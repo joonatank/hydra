@@ -86,7 +86,7 @@ public :
 
 	void mapData( eq::Config *config, eq::base::UUID const &id );
 
-	void unmapData( eq::Config *config );
+	void unmapData( void );
 
 	enum DirtyBits
 	{

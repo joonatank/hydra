@@ -45,11 +45,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	// Get framedata
 	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-	if( !config )
-	{
-		EQERROR << "config is not type eqOgre::Config" << std::endl;
-		return false;
-	}
+	EQASSERTINFO( config, "config is not type eqOgre::Config" )
 
 	eq::base::UUID const &frame_id = getSettings().getFrameDataID();
 	EQASSERT( frame_id != eq::base::UUID::ZERO );
@@ -70,8 +66,14 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 bool
 eqOgre::Channel::configExit()
 {
-	_frame_data.unmapData( getConfig() );
-	return eq::Channel::configExit();
+	// Cleanup childs first
+	bool retval = eq::Channel::configExit();
+
+	// Unmap data
+	EQINFO << "Unmapping FrameData." << std::endl;
+	_frame_data.unmapData( );
+
+	return retval;
 }
 
 

@@ -66,7 +66,9 @@ int main( const int argc, char** argv )
 		}
 		if( !error )
 		{
-			client->run();
+			error = !client->run();
+			if( error )
+			{ std::cerr << "Client run returned an error." << std::endl; }
 		}
 	}
 	catch( vl::exception &e )
@@ -93,5 +95,11 @@ int main( const int argc, char** argv )
 	// Exit
 	client = 0;
 	eq::exit();
+
+	if( error )
+	{ std::cerr << "Application exited with an error." << std::endl; }
+	else
+	{ std::cerr << "Application exited fine." << std::endl; }
+
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }

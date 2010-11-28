@@ -288,6 +288,9 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 
 bool eqOgre::Window::configExit(void )
 {
+	// Cleanup children first
+	bool retval = eq::Window::configExit();
+
 	// Should clean out OIS and Ogre
 	EQINFO << "Cleaning out OIS" << std::endl;
 	if( _input_manager )
@@ -303,6 +306,10 @@ bool eqOgre::Window::configExit(void )
 		_root.reset();
 	}
 
+	EQINFO << "Unmapping Settings." << std::endl;
+	getConfig()->unmapObject( &_settings );
+
+	return retval;
 }
 
 void

@@ -164,10 +164,12 @@ eqOgre::FrameData::registerData(eq::Config* config)
 void
 eqOgre::FrameData::deregisterData(eq::Config* config)
 {
+	EQASSERT( config );
+
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
-		if( node->isAttached() )
+		if( node && node->isAttached() )
 		{ config->deregisterObject( node ); }
 
 		_scene_nodes.at(i).id = eq::base::UUID::ZERO;
@@ -190,15 +192,18 @@ eqOgre::FrameData::mapData(eq::Config* config, eq::base::UUID const &id)
 }
 
 void
-eqOgre::FrameData::unmapData(eq::Config* config)
+eqOgre::FrameData::unmapData( void )
 {
+	EQASSERT( getSession() );
+
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
-		config->unmapObject( node );
+		if( node && node->isAttached() )
+		{ getSession()->unmapObject( node ); }
 	}
 
-	config->unmapObject( this );
+	getSession()->unmapObject( this );
 }
 
 

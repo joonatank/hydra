@@ -15,14 +15,14 @@ eqOgre::Client::~Client(void )
 {}
 
 
-int eqOgre::Client::run(void )
+bool eqOgre::Client::run(void )
 {
 	// 1. connect to server
 	eq::ServerPtr server = new eq::Server;
 	if( !connectServer( server ))
 	{
 		EQERROR << "Can't open server" << std::endl;
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// 2. choose config
@@ -33,7 +33,7 @@ int eqOgre::Client::run(void )
 	{
 		EQERROR << "No matching config on server" << std::endl;
 		disconnectServer( server );
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	// 3. init config
@@ -47,7 +47,7 @@ int eqOgre::Client::run(void )
 	{
 		server->releaseConfig( config );
 		disconnectServer( server );
-		return EXIT_FAILURE;
+		return false;
 	}
 
     // 4. run main loop
@@ -63,15 +63,18 @@ int eqOgre::Client::run(void )
 		vl::msleep(1);
     }
 
+	std::cerr << "Exiting the config." << std::endl;
 	// 5. exit config
 	config->exit();
 
+	std::cerr << "Releasing config." << std::endl;
 	// 6. cleanup and exit
 	server->releaseConfig( config );
+	std::cerr << "Disconnecting from Server" << std::endl;
 	if( !disconnectServer( server ))
 		EQERROR << "Client::disconnectServer failed" << std::endl;
 
 	server = 0;
 
-	return EXIT_SUCCESS;
+	return true;
 }

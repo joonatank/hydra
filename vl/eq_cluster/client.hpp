@@ -17,7 +17,7 @@ namespace eqOgre
 
         virtual ~Client (void);
 
-		int run( void );
+		bool run( void );
 
 	protected:
 
