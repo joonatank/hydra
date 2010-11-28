@@ -3,7 +3,7 @@
 
 /// Public
 eqOgre::FrameData::FrameData( void )
-	: Serializable(), _scene_version( 0 ), _config(0), _ogre_sm(0)
+	: Serializable(), _scene_version( 0 ), _ogre_sm(0)
 {}
 
 eqOgre::FrameData::~FrameData(void )
@@ -47,13 +47,14 @@ eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 
 	if( !_scene_nodes.back().node->isAttached() )
 	{
-		if( _config )
+		if( getSession() )
 		{
-			_registerObject( _scene_nodes.back() );
-			EQINFO << "Object Registered" << std::endl;
+			_registerObject( getSession(), _scene_nodes.back() );
+			EQINFO << "SceneNode : " << _scene_nodes.back().node->getName()
+				<< " registered." << std::endl;
 		}
 		else
-		{ EQERROR << "No config : not registering new object." << std::endl; }
+		{ EQERROR << "Not in a session : not registering new object." << std::endl; }
 	}
 }
 
@@ -101,6 +102,15 @@ eqOgre::FrameData::getSceneNode(size_t i) const
 	return _scene_nodes.at(i).node;
 }
 
+void
+eqOgre::FrameData::setActiveCamera( std::string const &name )
+{
+	if( _camera_name == name )
+	{ return; }
+
+	setDirty( DIRTY_ACTIVE_CAMERA );
+	_camera_name = name;
+}
 
 eq::uint128_t eqOgre::FrameData::commitAll( void )
 {
@@ -141,54 +151,51 @@ eqOgre::FrameData::syncAll( void )
 }
 
 void
-eqOgre::FrameData::registerData(eq::Config* config)
+eqOgre::FrameData::registerData( eq::net::Session *session )
 {
 	EQINFO << "eqOgre::FrameData::registerData" << std::endl;
-	EQASSERT( config );
+	EQASSERT( session );
 
-	// Config is valid, lets save it so we can register child objects added
-	// later
-	_config = config;
-
+	// SceneNodes need to be registered first for them to have correct ids
+	// when FrameData is registered
 	EQINFO << "Registering " << _scene_nodes.size() << " SceneNodes." << std::endl;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		_registerObject( _scene_nodes.at(i) );
+		_registerObject( session, _scene_nodes.at(i) );
 	}
 
 	// Register FrameData
 	if( !this->isAttached() )
-	{ config->registerObject( this ); }
+	{ session->registerObject( this ); }
 }
 
 void
-eqOgre::FrameData::deregisterData(eq::Config* config)
+eqOgre::FrameData::deregisterData( void )
 {
-	EQASSERT( config );
+	EQASSERT( getSession() );
 
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
 		if( node && node->isAttached() )
-		{ config->deregisterObject( node ); }
+		{ getSession()->deregisterObject( node ); }
 
 		_scene_nodes.at(i).id = eq::base::UUID::ZERO;
 		// TODO this might need to destroy the SceneNode
 	}
 
-	if( this->isAttached() )
-	{ config->deregisterObject( this ); }
+	getSession()->deregisterObject( this );
 }
 
 void
-eqOgre::FrameData::mapData(eq::Config* config, eq::base::UUID const &id)
+eqOgre::FrameData::mapData( eq::net::Session *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
 	EQASSERTINFO( eq::base::UUID::ZERO != id, "Trying to map FrameData invalid ID" )
-	EQASSERTINFO( config, "mapping is only possible if we have a config" )
+	EQASSERTINFO( session, "mapping is only possible if we have a config" )
 
 	EQASSERTINFO( !this->isAttached(), "FrameData already mapped" )
-	config->mapObject(this, id);
+	session->mapObject(this, id);
 }
 
 void
@@ -323,17 +330,19 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 	}
 }
 
-void eqOgre::FrameData::_registerObject(eqOgre::FrameData::SceneNodeIDPair& node)
+void
+eqOgre::FrameData::_registerObject( eq::net::Session *session,
+									eqOgre::FrameData::SceneNodeIDPair& node )
 {
 	EQINFO << "Registering Object : " << node.node->getName() << std::endl;
 
-	EQASSERTINFO( _config, "No Config when registering object."  );
+	EQASSERTINFO( session, "No Config when registering object."  );
 
 	EQASSERTINFO( node.node, "No Node object to register. What you trying to pull." );
 	// Lets make sure we don't register the objects more than once
 	EQASSERTINFO( !node.node->isAttached(), "Node already registered" )
 
-	_config->registerObject( node.node);
+	session->registerObject( node.node);
 
 	// The object has to be correctly registered
 	EQASSERTINFO( node.node->isAttached(), "Node was not registered" );

@@ -73,14 +73,15 @@ eqOgre::Config::init( eq::uint128_t const & )
 	return true;
 }
 
-bool eqOgre::Config::exit(void )
+bool
+eqOgre::Config::exit( void )
 {
 	// First let the children clean up
 	bool retval = eq::Config::exit();
 
 	EQINFO << "Deregistering distributed data." << std::endl;
 	// Deregister data
-	_frame_data.deregisterData( this );
+	_frame_data.deregisterData();
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
 	deregisterObject( &_distrib_settings );
 

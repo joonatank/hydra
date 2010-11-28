@@ -63,15 +63,7 @@ public :
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
-	void setActiveCamera( std::string const &name )
-	{
-		if( _camera_name == name )
-		{ return; }
-
-		setDirty( DIRTY_ACTIVE_CAMERA );
-		_camera_name = name;
-		// TODO add serialization and really setting the camera
-	}
+	void setActiveCamera( std::string const &name );
 
 	std::string const &getActiveCamera( void ) const
 	{ return _camera_name; }
@@ -80,11 +72,11 @@ public :
 
 	void syncAll( void );
 
-	void registerData( eq::Config *config );
+	void registerData( eq::net::Session *session );
 
-	void deregisterData( eq::Config *config );
+	void deregisterData( void );
 
-	void mapData( eq::Config *config, eq::base::UUID const &id );
+	void mapData( eq::net::Session *session, eq::base::UUID const &id );
 
 	void unmapData( void );
 
@@ -102,7 +94,7 @@ protected :
 
 	void _mapObject( SceneNodeIDPair &node );
 
-	void _registerObject( SceneNodeIDPair &node );
+	void _registerObject( eq::net::Session *session, SceneNodeIDPair &node );
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
@@ -112,10 +104,6 @@ private :
 
 	// Active camera name
 	std::string _camera_name;
-
-	// Session where we are, this should be zero for slave nodes and non zero
-	// for the master node.
-	eq::Config *_config;
 
 	// SceneManager used for creating mapping between eqOgre::SceneNode and
 	// Ogre::SceneNode
