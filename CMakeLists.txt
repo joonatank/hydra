@@ -42,15 +42,6 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
 find_package( Equalizer REQUIRED )
 
 ###### Find VRPN ########
-# TODO
-# We should use enviroment variables for detecting VRPN dir
-# Also remove separate lib and include dir variables using one and using find_lib
-# function should be enough.
-# TODO
-# VRPN should not be required but if it's not available vrpn_Tracker should not be
-# included and build into the eqOgre library
-# Also requirement for pthread would drop if VRPN was not available
-
 find_package( VRPN REQUIRED )
 
 
@@ -91,12 +82,10 @@ find_package( CAUDIO REQUIRED )
 ####### Find Boost ########
 # TODO
 # Add selectable components
-# Unit tests are only necessary for the test modules (not for lib or spikes)
 
-set(Boost_USE_STATIC_LIBS   ON)
 set(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost COMPONENTS python system filesystem program_options REQUIRED )
+find_package(Boost COMPONENTS python REQUIRED )
 
 find_package(PythonLibs REQUIRED )
 
@@ -110,12 +99,16 @@ message( "Python libraries = ${PYTHON_LIBRARIES}" )
 
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
+set(Boost_USE_STATIC_LIBS   ON)
+
+find_package(Boost COMPONENTS system filesystem program_options REQUIRED )
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${OGRE_INCLUDE_DIR}
 	${OGRE_INCLUDE_DIR}/..
-	${EQUALIZER_INCLUDE_DIR}
+	${Equalizer_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}

@@ -15,7 +15,6 @@ set( SOURCES
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
-# 	eq_cluster/pipe.cpp
 	eq_cluster/event.cpp
 	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
@@ -66,10 +65,6 @@ set( HEADERS
 	eq_cluster/frame_data.hpp
 	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
-# 	eq_cluster/pipe.hpp
-	eq_cluster/glxWindow.hpp
-	eq_cluster/aglWindow.hpp
-	eq_cluster/wglWindow.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp
@@ -80,6 +75,24 @@ set( HEADERS
 	udp/ogre_command.hpp
 	udp/print_command.hpp
 	)
+
+# This purposefully adds the glx window support for APPLE and CYGWIN also
+if( UNIX )
+	list( APPEND HEADERS
+		eq_cluster/glxWindow.hpp
+		)
+	list( APPEND SOURCES
+		eq_cluster/glxWindow.cpp
+		)
+elseif( APPLE )
+	list( APPEND HEADERS
+		eq_cluster/aglWindow.hpp
+		)
+elseif( WIN32 )
+	list( APPEND HEADERS
+		eq_cluster/wglWindow.hpp
+		)
+endif()
 
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 
