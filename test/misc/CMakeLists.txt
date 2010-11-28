@@ -21,11 +21,6 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIRS}
 	)
 
-add_executable( test_arguments
-	test_arguments.cpp
-	${eqOgre_SOURCE_DIR}/arguments.hpp
-	)
-
 add_executable( test_env
 	test_env.cpp
 	)

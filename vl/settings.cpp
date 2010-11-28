@@ -49,11 +49,24 @@ vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
 						vl::ProjSettingsRefPtr global )
 	: _env(env),
 	  _global(global),
-	  _proj(proj)
+	  _proj(proj),
+	  _verbose(false)
 {}
 
 vl::Settings::~Settings( void )
 {}
+
+std::string
+vl::Settings::getLogDir(vl::Settings::PATH_TYPE const type ) const
+{
+	if( type == PATH_REL )
+	{ return _log_dir; }
+	else
+	{
+		fs::path path = fs::complete( _log_dir );
+		return path.file_string();
+	}
+}
 
 void
 vl::Settings::setExePath( std::string const &path )
@@ -73,22 +86,23 @@ vl::Settings::getProjectName(void ) const
 }
 
 std::string
-vl::Settings::getEqLogFilePath(void ) const
+vl::Settings::getEqLogFilePath( PATH_TYPE const type ) const
 {
-	return getLogFilePath("eq");
+	return getLogFilePath( "eq", "", type );
 }
 
 std::string
-vl::Settings::getOgreLogFilePath(void ) const
+vl::Settings::getOgreLogFilePath( PATH_TYPE const type  ) const
 {
-	return getLogFilePath("ogre");
+	return getLogFilePath( "ogre", "", type );
 }
 
 std::string
-vl::Settings::getLogFilePath(const std::string &identifier,
-							 const std::string &prefix) const
+vl::Settings::getLogFilePath( const std::string &identifier,
+							  const std::string &prefix,
+							  PATH_TYPE const type ) const
 {
-	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir() );
+	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir(type) );
 }
 
 std::vector< std::string >

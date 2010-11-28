@@ -18,31 +18,29 @@
 
 int main( const int argc, char** argv )
 {
-
-	std::ofstream log_file;
+	std::ofstream *log_file = 0;
 
 	eq::base::RefPtr< eqOgre::Client > client;
 
 	bool error = false;
 	try
 	{
-		// This seems to work with two nodes
 		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 		if( !settings )
 		{ return -1; }
 
 		eqOgre::NodeFactory nodeFactory;
-/*
-		// TODO test if this can work with relative path
-		// Oh right it doesn't for autolaunched clients.
-		// NOTE the log file needs to be set before any calls to Equalizer methods
-		log_file.open( settings->getEqLogFilePath().c_str() );
-		eq::base::Log::setOutput( log_file );
-		std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
-			<< std::endl;
-*/
 
-		// This seems to work with two nodes
+		if( !settings->getVerbose() )
+		{
+			// NOTE uses absolute paths
+			// NOTE the log file needs to be set before any calls to Equalizer methods
+			log_file = new std::ofstream( settings->getEqLogFilePath().c_str() );
+			eq::base::Log::setOutput( *log_file );
+			std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
+				<< std::endl;
+		}
+
 		vl::Args &arg = settings->getEqArgs();
 
 		std::cout << "Equalizer arguments = " << settings->getEqArgs() << std::endl;
@@ -64,6 +62,7 @@ int main( const int argc, char** argv )
 			EQERROR << "client->initLocal failed" << std::endl;
 			error = true;
 		}
+
 		if( !error )
 		{
 			error = !client->run();
@@ -95,6 +94,13 @@ int main( const int argc, char** argv )
 	// Exit
 	client = 0;
 	eq::exit();
+
+	if( log_file )
+	{
+		log_file->close();
+		delete log_file;
+		log_file = 0;
+	}
 
 	if( error )
 	{ std::cerr << "Application exited with an error." << std::endl; }

@@ -12,7 +12,6 @@
 #include "eq_cluster/config.hpp"
 #include "eq_cluster/window.hpp"
 #include "eq_cluster/channel.hpp"
-#include "eq_cluster/pipe.hpp"
 #include "base/system_util.hpp"
 #include "eq_ogre/ogre_root.hpp"
 #include "settings.hpp"
@@ -31,58 +30,71 @@ struct ListeningClientFixture
 	bool init( vl::SettingsRefPtr settings,
 			   eq::NodeFactory *nodeFactory )
 	{
-		InitFixture();
-		std::string where( "ListeningClientFixture::init" );
+		try {
 
-		if( !settings )
+			InitFixture();
+			std::string where( "ListeningClientFixture::init" );
+
+			if( !settings )
+			{
+				std::cerr << where << " : settings are invalid." << std::endl;
+				return false;
+			}
+			if( !nodeFactory )
+			{
+				std::cerr << where << " : nodeFactory is invalid." << std::endl;
+				return false;
+			}
+
+			// TODO test if this can work with relative path
+			// Oh right it doesn't for autolaunched clients.
+			// NOTE the log file needs to be set before any calls to Equalizer methods
+			log_file.open( settings->getEqLogFilePath().c_str() );
+			eq::base::Log::setOutput( log_file );
+			std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
+				<< std::endl;
+
+			vl::Args &arg = settings->getEqArgs();
+
+			std::cout << "Args = " << settings->getEqArgs() << std::endl;
+			// 1. Equalizer initialization
+			if( !eq::init( arg.size(), arg.getData(), nodeFactory ) )
+			{
+				EQERROR << "Equalizer init failed" << std::endl;
+				return false;
+			}
+
+			// 2. initialization of local client node
+			client = new eqOgre::Client( settings );
+			if( !client->initLocal( arg.size(), arg.getData() ) )
+			{
+				EQERROR << "client->initLocal failed" << std::endl;
+				return false;
+			}
+		}
+		catch( vl::exception &e )
 		{
-			std::cerr << where << " : settings are invalid." << std::endl;
+			std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+				<< std::endl;
 			return false;
 		}
-		if( !nodeFactory )
+		catch( Ogre::Exception const &e)
 		{
-			std::cerr << where << " : nodeFactory is invalid." << std::endl;
+			std::cerr << "Ogre Exception: " << e.what() << std::endl;
 			return false;
 		}
-
-		// TODO test if this can work with relative path
-		// Oh right it doesn't for autolaunched clients.
-		// NOTE the log file needs to be set before any calls to Equalizer methods
-		log_file.open( settings->getEqLogFilePath().c_str() );
-		eq::base::Log::setOutput( log_file );
-		std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
-			<< std::endl;
-
-		vl::Args &arg = settings->getEqArgs();
-
-		std::cout << "Args = " << settings->getEqArgs() << std::endl;
-		// 1. Equalizer initialization
-		if( !eq::init( arg.size(), arg.getData(), nodeFactory ) )
+		catch( std::exception const &e )
 		{
-			EQERROR << "Equalizer init failed" << std::endl;
-			return false;
-		}
-
-		// 2. initialization of local client node
-		client = new eqOgre::Client( settings );
-		if( !client->initLocal( arg.size(), arg.getData() ) )
-		{
-			EQERROR << "client->initLocal failed" << std::endl;
-			return false;
-		}
-
-		if( !client->initialise() )
-		{
-			EQERROR << "client->init failed" << std::endl;
+			std::cerr << "STD Exception: " << e.what() << std::endl;
 			return false;
 		}
 
 		return true;
 	}
 
-	bool mainloop( const uint32_t frame )
+	bool run()
 	{
-		return client->mainloop( frame );
+		return client->run();
 	}
 
 	void exit( void )

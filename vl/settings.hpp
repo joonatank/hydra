@@ -35,10 +35,30 @@ createLogFilePath( const std::string &project_name,
 class Settings
 {
 	public :
+		enum PATH_TYPE
+		{
+			PATH_ABS,
+			PATH_REL
+		};
+
 		Settings( EnvSettingsRefPtr env, ProjSettingsRefPtr proj,
 				  ProjSettingsRefPtr global = ProjSettingsRefPtr() );
 
 		virtual ~Settings( void );
+
+		/// Set wether or not suppress output to std::cerr
+		/// If set to true the application will print to std::cerr
+		/// instead of or in addition to printing to log file
+		void setVerbose( bool verbose )
+		{ _verbose = verbose; }
+
+		/// Wether we are outputing to std::cerr
+		/// If true will print to std::cerr, if false will not
+		///
+		/// Does not define anything about log files, the application might
+		/// print to log files even when set true or it might not
+		bool getVerbose( void ) const
+		{ return _verbose; }
 
 		/// Set the directory logs are stored
 		/// Path is assumed to be relative, though absolute might work it's
@@ -47,11 +67,9 @@ class Settings
 		{ _log_dir = dir; }
 
 		/// Get the directory logs are stored.
-		/// Path is relative to the current directory
-		// TODO all relative paths are bit problematic... they should return
-		// absolute paths based on the paths that are relative to the exe
-		std::string const &getLogDir( void ) const
-		{ return _log_dir; }
+		/// Relative and absolute can be chosen using type parameter
+		/// Defaults to returning absolute path
+		std::string getLogDir( PATH_TYPE const type = PATH_ABS ) const;
 
 		vl::Args &getEqArgs( void )
 		{ return _eq_args; }
@@ -84,15 +102,26 @@ class Settings
 		/// Returns the name of the project
 		std::string getProjectName( void ) const;
 
-		/// Get the path to Equalizer log file relative to the exe
-		/// Returns a filename which is in the log dir and has the project and pid
-		/// If no project name is set will substitute unamed for project name
-		std::string getEqLogFilePath( void ) const;
+		/**	Get the path to Equalizer log file
+		 *	Returns a filename which is in the log dir and has the project and pid
+		 *	If no project name is set will substitute unamed for project name
+		 *
+		 *	Use type parameter to chose if the path returned is
+		 *	relative to the exe or an absolute path
+		 *	Defaults to returning an absolute path
+		 */
+		std::string getEqLogFilePath( PATH_TYPE const type = PATH_ABS ) const;
 
-		/// Get the path to Ogre log file relative to the exe
-		/// Returns a filename which is in the log dir and has the project and pid
-		/// If no project name is set will substitute unamed for project name
-		std::string getOgreLogFilePath( void ) const;
+
+		/**	Get the path to Ogre log file
+		 *	Returns a filename which is in the log dir and has the project and pid
+		 *	If no project name is set will substitute unamed for project name
+		 *
+		 *	Use type parameter to chose if the path returned is
+		 *	relative to the exe or an absolute path
+		 *	Defaults to returning an absolute path
+		 */
+		std::string getOgreLogFilePath( PATH_TYPE const type = PATH_ABS ) const;
 
 		/// Get the path to log file relative to the exe
 		/// Parameters: identifier can be used to distinquish libraries
@@ -100,7 +129,8 @@ class Settings
 		/// Returns a filename which is in the log dir and has the project and pid
 		/// If no project name is set will substitute unamed for project name
 		std::string getLogFilePath( std::string const &identifier,
-									std::string const &prefix = std::string() )
+									std::string const &prefix = std::string(),
+									PATH_TYPE const type = PATH_ABS )
 									const;
 
 		std::vector<std::string> getTrackingPaths( void ) const;
@@ -159,6 +189,8 @@ class Settings
 
 		// Name of the current case or empty if doesn't have a case
 		std::string _case;
+
+		bool _verbose;
 
 };	// class Settings
 

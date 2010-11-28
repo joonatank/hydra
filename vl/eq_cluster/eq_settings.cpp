@@ -10,12 +10,11 @@
 #include <eq/net/dataIStream.h>
 #include <eq/net/dataOStream.h>
 
-// Necessary for vl::Arguments
-#include "arguments.hpp"
 #include "base/filesystem.hpp"
+#include "settings.hpp"
 
+// Used for command line option parsing
 #include <boost/program_options.hpp>
-#include <settings.hpp>
 
 namespace po = boost::program_options;
 
@@ -24,12 +23,10 @@ vl::SettingsRefPtr
 eqOgre::getSettings( int argc, char **argv )
 {
 	// Process command line arguments
-//	vl::Arguments arguments( argc, argv );
-
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "produce a help message")
-		("verbose,v", "produce lots of output to std::cout")
+		("verbose,v", "print the Equalizer output into std::cerr instead of log file")
 		("environment,e", po::value< std::string >(), "environment file")
 		("project,p", po::value< std::string >(), "project file")
 		("global,g", po::value< std::string >(), "global file")
@@ -38,10 +35,8 @@ eqOgre::getSettings( int argc, char **argv )
 		("eq-listen", po::value< std::string >(), "whom to listen, hostname:port")
 	;
 	// TODO add support for setting the log directory
-	// TODO add support for verbose
-	// TODO the verbose should support different log levels,
-	// ERROR, INFO, TRACE at least
-	// TODO also the verbose should control the Equalizer log level
+	// TODO add control for the log level at least ERROR, INFO, TRACE
+	// TODO add support for the case
 
 	// Parse command line
 	po::variables_map vm;
@@ -224,6 +219,7 @@ eqOgre::getSettings( int argc, char **argv )
 		settings->setLogDir( log_dir );
 	}
 
+	settings->setVerbose(verbose);
 	return settings;
 }
 

@@ -1,11 +1,10 @@
 #!/bin/bash
-# TODO this needs to be tested, listening client probably does not work on Linux
-# TODO this needs a for loop to create multiple listening clients
-# TODO sending tasks to background makes it difficult to stop them
-# TODO add kill script
+# TODO sending tasks to background makes it difficult to stop them and we miss
+# the output...
 
 ${EQUALIZER_SERVER_BIN} ${EQUALIZER_CONFIG} &
 ./${PROGRAM_NAME} --eq-client --eq-listen ${HOSTNAME_TO_LISTEN}:${LISTENING_PORT} &
 ./${PROGRAM_NAME} -e ${DEMO_DATA_PATH}/env.env\
 	-p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE}\
-	-g ${DEMO_DATA_PATH}/global/global_config.prj
+	-g ${DEMO_DATA_PATH}/global/global_config.prj\
+	$@

@@ -99,40 +99,18 @@ public :
 int main(int argc, char **argv)
 {
 	bool error = false;
-	try
-	{
-		ListeningClientFixture fix;
+	ListeningClientFixture fix;
 
-		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
+	vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 
-		::NodeFactoryUDP nodeFactory;
-		error = !fix.init( settings, &nodeFactory );
+	::NodeFactoryUDP nodeFactory;
+	error = !fix.init( settings, &nodeFactory );
 
-		if( !error )
-		{
-			uint32_t frame = 0;
-			while( fix.mainloop(++frame) )
-			{
-				vl::msleep(1);
-			}
-		}
-	}
-	catch( vl::exception &e )
+	if( !error )
 	{
-		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
-			<< std::endl;
-		error = true;
+		fix.run();
 	}
-	catch( Ogre::Exception const &e)
-	{
-		std::cerr << "Ogre Exception: " << e.what() << std::endl;
-		error = true;
-	}
-	catch( std::exception const &e )
-	{
-		std::cerr << "STD Exception: " << e.what() << std::endl;
-		error = true;
-	}
+
 
 	return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
