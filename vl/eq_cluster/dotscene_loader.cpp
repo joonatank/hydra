@@ -5,10 +5,7 @@
 
 #include "dotscene_loader.hpp"
 
-// Necessary for logggin
-#include <OGRE/OgreLogManager.h>
 
-#include <OGRE/OgreException.h>
 #include <OGRE/OgreResourceManager.h>
 
 #include "base/string_utils.hpp"
@@ -67,7 +64,6 @@ vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 	{
 		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
 		//	TODO add logging
-		Ogre::LogManager::getSingleton().logMessage( message );
 		// TODO add description
 		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}

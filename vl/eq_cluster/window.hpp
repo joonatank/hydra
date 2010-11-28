@@ -69,18 +69,25 @@ namespace eqOgre
 
 
 		/// Equalizer overrides
-		virtual bool configInit( const uint32_t initID );
+		virtual bool configInit( const eq::uint128_t& initID );
 
-		virtual void frameFinish( const uint32_t frameID, const uint32_t frameNumber );
+		virtual bool configExit( void );
+
+		virtual void frameFinish( const eq::uint128_t& frameID,
+								  const uint32_t frameNumber );
 
 		/// Override system window creation because we
 		/// use OIS for input handling
-		virtual bool configInitSystemWindow( const uint32_t initID );
+		virtual bool configInitSystemWindow( const eq::uint128_t &initID );
+
+		/// Distributed data
+		eqOgre::DistributedSettings _settings;
 
 		vl::ogre::RootRefPtr _root;
 		Ogre::RenderWindow *_ogre_window;
 		Ogre::Camera *_camera;
 		Ogre::SceneManager *_sm;
+
 
 		// OIS variables
 		OIS::InputManager *_input_manager;

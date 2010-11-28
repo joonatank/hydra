@@ -52,52 +52,24 @@ eqOgre::Config::~Config()
 	_exitAudio();
 }
 
-void
-eqOgre::Config::mapData( uint32_t const initDataID )
-{
-	std::cerr << "Mapping data." << std::endl;
-
-	if( _distrib_settings.getID() == EQ_ID_INVALID )
-	{
-		EQCHECK( mapObject( &_distrib_settings, initDataID ));
-        unmapObject( &_distrib_settings ); // data was retrieved, unmap immediately
-	}
-    else  // appNode, _initData is registered already
-    {
-        EQASSERT( _distrib_settings.getID() == initDataID )
-	}
-}
-
-// TODO should this be deregister or unmap?
-// If it's deregister rename the function and call it from AppNode
-// If it's unmap it should be called from Channel not from AppNode
-// The unmap is moved to Channel and FrameData
-/*
-void
-eqOgre::Config::unmapData( void )
-{
-//	std::cerr << "Config::unmapData" << std::endl;
-//	_frame_data.deregisterData(this);
-}
-*/
-
 bool
-eqOgre::Config::init( uint32_t const )
+eqOgre::Config::init( eq::uint128_t const & )
 {
 	/// Register data
-	std::cerr << "eqOgre::Config::init : registering data" << std::endl;
+	EQINFO << "eqOgre::Config::init : registering data" << std::endl;
 
 	_frame_data.registerData(this);
 
 	_distrib_settings.setFrameDataID( _frame_data.getID() );
-	std::cerr << "Registering Settings" << std::endl;
+	EQINFO << "Registering Settings" << std::endl;
 	registerObject( &_distrib_settings );
-	std::cerr << "Settings registered" << std::endl;
+	EQINFO << "Settings registered" << std::endl;
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
 
-	std::cerr << "Config::init DONE" << std::endl;
+	EQINFO << "Config::init DONE" << std::endl;
+
 	return true;
 }
 
@@ -123,7 +95,7 @@ eqOgre::Config::createSceneNode(const std::string& name)
 void
 eqOgre::Config::removeSceneNode(eqOgre::SceneNodePtr node)
 {
-	std::cerr << "eqOgre::Config::removeSceneNode" << " : NOT IMPLEMENTED" << std::endl;
+	EQASSERTINFO( false, "NOT IMPLEMENTED" );
 }
 
 eqOgre::SceneNode *
@@ -156,7 +128,7 @@ eqOgre::Config::getTrackerTrigger(const std::string& name)
 void
 eqOgre::Config::resetScene( void )
 {
-	BOOST_THROW_EXCEPTION( vl::not_implemented() );
+	EQASSERTINFO( false, "NOT IMPLEMENTED" );
 }
 
 void
@@ -164,7 +136,7 @@ eqOgre::Config::toggleBackgroundSound()
 {
 	if( !_background_sound )
 	{
-		std::cerr << "Config::toggleBackgroundSound DOES NOT EXIST" << std::endl;
+		EQERROR << "NO background sound to toggle." << std::endl;
 		return;
 	}
 
@@ -176,15 +148,11 @@ eqOgre::Config::toggleBackgroundSound()
 
 
 uint32_t
-eqOgre::Config::startFrame( const uint32_t frameID )
+eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
-	//std::cerr << "eqOgre::Config::startFrame" << std::endl;
-
 	// Init the transformation structures
 	// TODO should be moved to Config::init or equivalent
 	static bool inited = false;
-
-	std::stringstream ss;
 
 	if( !inited )
 	{
@@ -198,25 +166,20 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 
 			std::vector<std::string> scripts = _settings->getScripts();
 
-			ss.str("");
-			ss << "Running " << scripts.size() << " python scripts.";
-			Ogre::LogManager::getSingleton().logMessage( ss.str() );
+			EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
 
 			for( size_t i = 0; i < scripts.size(); ++i )
 			{
-				ss.str("");
-				ss << "Running python script = " << scripts.at(i);
-				Ogre::LogManager::getSingleton().logMessage( ss.str() );
+				EQINFO << "Running python script = " << scripts.at(i) << std::endl;
 
 				// Run init python scripts
 				_runPythonScript( scripts.at(i) );
 			}
 		}
 		// Some error handling so that we can continue the application
-		// Will print error in std::cerr
 		catch( ... )
 		{
-			std::cerr << "Exception occured in python script." << std::endl;
+			std::cout << "Exception occured in python script." << std::endl;
 
 		}
 		if (PyErr_Occurred())
@@ -262,6 +225,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 		_event_manager->addEvent( event );
 
 		_initAudio();
+
 		inited = true;
 	}
 
@@ -278,8 +242,7 @@ eqOgre::Config::startFrame( const uint32_t frameID )
 	vl::FrameTrigger frame_trig;
 	_event_manager->processEvents( &frame_trig );
 
-	uint32_t version = _frame_data.commitAll();
-//	std::cout << "FrameData version = " << version << std::endl;
+	eq::uint128_t version = _frame_data.commitAll();
 
 	return eq::Config::startFrame( version );
 }
@@ -351,9 +314,11 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	_clients.reset( new vl::Clients );
 	std::vector<std::string> tracking_paths = settings->getTrackingPaths();
-	std::cout << "Processing " << tracking_paths.size() << " tracking files."
+
+	EQINFO << "Processing " << tracking_paths.size() << " tracking files."
 		<< std::endl;
-	std::vector<std::string>::iterator iter;
+
+		std::vector<std::string>::iterator iter;
 	for( iter = tracking_paths.begin(); iter != tracking_paths.end(); ++iter )
 	{
 		// Read a file
@@ -371,7 +336,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	}
 
 	// Start the trackers
-	std::cerr << "Starting " << _clients->getNTrackers() << " trackers." << std::endl;
+	EQINFO << "Starting " << _clients->getNTrackers() << " trackers." << std::endl;
 	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
 	{
 		_clients->getTracker(i)->init();
@@ -387,29 +352,27 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	head_trigger->setAction( action );
 }
 
+// TODO this depends on the Ogre::ResourceGroupManager
+// So we can not use it if the Ogre Root is not created or is created later
 void
 eqOgre::Config::_loadScenes(void )
 {
-	std::stringstream ss;
-
 	// Get scenes
 	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
 
-	ss << "Loading Scenes for Project : " << _settings->getProjectName();
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-	ss.str("");
+	EQINFO << "Loading Scenes for Project : " << _settings->getProjectName()
+		<< std::endl;
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
 	{
-		ss << "Project does not have any scene files.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		EQINFO << "Project does not have any scene files." << std::endl;
 		return;
 	}
 	else
 	{
-		ss << "Project has " << scenes.size() << " scene files.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+		EQINFO << "Project has " << scenes.size() << " scene files."
+			<< std::endl;
 	}
 
 	// Clean up old scenes
@@ -421,9 +384,7 @@ eqOgre::Config::_loadScenes(void )
 	{
 		std::string const &scene_file = scenes.at(i)->getFile();
 
-		ss.str("");
-		std::string message = "Loading scene : " + scene_file;
-		Ogre::LogManager::getSingleton().logMessage( message );
+		EQINFO << "Loading scene : " << scene_file << std::endl;
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -432,8 +393,7 @@ eqOgre::Config::_loadScenes(void )
 							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
 							this );
 
-		message = "Scene loaded";
-		Ogre::LogManager::getSingleton().logMessage( message );
+		EQINFO << "Scene loaded" << std::endl;
 	}
 }
 
@@ -469,9 +429,7 @@ eqOgre::Config::_initPython(void )
 
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 {
-	std::stringstream ss;
-	ss << "Running python script file " << scriptFile << ".";
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	EQINFO << "Running python script file " << scriptFile << "." << std::endl;
 
 	// Run a python script.
 	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);

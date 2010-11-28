@@ -17,20 +17,14 @@ namespace eqOgre
 
         virtual ~Client (void);
 
-		// Create ogre::root corresponding to this client
-		virtual bool initLocal( int const argc, char **argv );
-
-		virtual bool mainloop( uint32_t frame );
-
-		// Some helper methods
-		virtual bool initialise( void );
+		int run( void );
 
 	protected:
 
-		virtual void exit( void );
-
-		// eq override
-		virtual void clientLoop (void);
+		/// Equalizer overrides
+		// Needs to be overriden if we want that the listening client stays
+		// running forever and not quit when the application quits.
+//		virtual void clientLoop (void);
 
 		eq::ServerPtr _server;
 		eqOgre::Config *_config;

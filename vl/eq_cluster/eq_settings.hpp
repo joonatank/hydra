@@ -35,10 +35,10 @@ public :
 	virtual ~DistributedSettings( void )
 	{}
 
-	uint32_t getFrameDataID( void ) const
+	eq::base::UUID const &getFrameDataID( void ) const
 	{ return _frame_data_id; }
 
-	void setFrameDataID( uint32_t const id )
+	void setFrameDataID( eq::base::UUID const &id )
 	{ _frame_data_id = id; }
 
 	/// Used by master to copy the necessary data for synchronization
@@ -70,7 +70,7 @@ protected :
 
 	std::string _project_name;
 
-	uint32_t _frame_data_id;
+	eq::base::UUID _frame_data_id;
 };
 
 /// Serialize scenes

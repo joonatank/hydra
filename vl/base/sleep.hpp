@@ -14,7 +14,7 @@
 namespace vl
 {
 
-void msleep( uint32_t milliseconds )
+inline void msleep( uint32_t milliseconds )
 {
 #ifdef VL_WIN32
 	::Sleep(milliseconds);

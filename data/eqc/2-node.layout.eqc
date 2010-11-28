@@ -11,7 +11,7 @@ server
             {
                 window
                 {
-                    viewport [ 0.1 0.25 0.4 0.4 ]
+                    viewport [ 0.1 0.1 0.4 0.8 ]
 
                     channel { name "channel1" }
                 }
@@ -26,7 +26,7 @@ server
             {
                 window
                 {
-                    viewport [ 0.5 0.25 0.4 0.4 ]
+                    viewport [ 0.5 0.1 0.4 0.8 ]
 
                     channel { name "channel2" }
                 }
@@ -47,9 +47,9 @@ server
                 viewport [ 0 0 .5 1 ]
                 wall
                 {
-                    bottom_left  [ -.32 -.40 -.75 ]
-                    bottom_right [  .32 -.40 -.75 ]
-                    top_left     [ -.32  .40 -.75 ]
+				bottom_left  [ 0 .34 -1.33 ]
+				bottom_right [ 1.33 .34 -1.33 ]
+				top_left     [ 0 2.44 -1.33 ]
                 }
             }
         }
@@ -61,9 +61,9 @@ server
                 viewport [ .5 0 .5 1 ]
                 wall
                 {
-                    bottom_left  [ -.32 -.40 -.75 ]
-                    bottom_right [  .32 -.40 -.75 ]
-                    top_left     [ -.32  .40 -.75 ]
+				bottom_left  [ 0 .34 -1.33 ]
+				bottom_right [ 1.33 .34 -1.33 ]
+				top_left     [ 0 2.44 -1.33 ]
                 }
             }
         }
@@ -75,9 +75,9 @@ server
             layout "half2"
             wall
             {
-                bottom_left  [ -.32 -.20 -.75 ]
-                bottom_right [  .32 -.20 -.75 ]
-                top_left     [ -.32  .20 -.75 ]
+  				bottom_left  [ -1.33 .34 -1.33 ]
+				bottom_right [  1.33 .34 -1.33 ]
+				top_left     [ -1.33  2.44 -1.33 ]
             }
 
             segment

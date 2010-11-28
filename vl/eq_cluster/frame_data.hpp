@@ -19,12 +19,13 @@ class FrameData : public eq::fabric::Serializable
 public :
 	struct SceneNodeIDPair
 	{
-		SceneNodeIDPair( SceneNode *nnode = 0, uint32_t nid = EQ_ID_INVALID )
+		SceneNodeIDPair( SceneNode *nnode = 0,
+						 eq::base::UUID const &nid = eq::base::UUID::ZERO )
 			: node(nnode), id(nid)
 		{}
 
 		SceneNode *node;
-		uint32_t id;
+		eq::base::UUID id;
 	};
 
 	FrameData( void );
@@ -75,7 +76,7 @@ public :
 	std::string const &getActiveCamera( void ) const
 	{ return _camera_name; }
 
-	uint32_t commitAll( void );
+	eq::uint128_t commitAll( void );
 
 	void syncAll( void );
 
@@ -83,7 +84,7 @@ public :
 
 	void deregisterData( eq::Config *config );
 
-	void mapData( eq::Config *config, uint32_t id );
+	void mapData( eq::Config *config, eq::base::UUID const &id );
 
 	void unmapData( eq::Config *config );
 

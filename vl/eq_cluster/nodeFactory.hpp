@@ -4,26 +4,23 @@
 #include <eq/client/nodeFactory.h>
 
 #include "config.hpp"
-#include "pipe.hpp"
 #include "channel.hpp"
 #include "window.hpp"
 
-namespace eqOgre {
+namespace eqOgre
+{
 
 class NodeFactory : public eq::NodeFactory
 {
-	public:
-		virtual eq::Config *createConfig( eq::ServerPtr parent )
-		{ return new eqOgre::Config( parent ); }
+public:
+	virtual eq::Config *createConfig( eq::ServerPtr parent )
+	{ return new eqOgre::Config( parent ); }
 
-		virtual eq::Pipe *createPipe( eq::Node* parent )
-		{ return new eqOgre::Pipe( parent ); }
+	virtual eq::Window* createWindow( eq::Pipe* parent )
+	{ return new eqOgre::Window( parent ); }
 
-		virtual eq::Window* createWindow( eq::Pipe* parent )
-		{ return new eqOgre::Window( parent ); }
-
-		virtual eq::Channel *createChannel( eq::Window* parent )
-		{ return new eqOgre::Channel( parent ); }
+	virtual eq::Channel *createChannel( eq::Window* parent )
+	{ return new eqOgre::Channel( parent ); }
 
 };
 

@@ -18,21 +18,22 @@ eqOgre::Channel::~Channel( void )
 eqOgre::DistributedSettings const &
 eqOgre::Channel::getSettings( void ) const
 {
-	return( ( static_cast<Config const *>( getConfig() ) )->getSettings() );
+	eqOgre::Window const *win = dynamic_cast<eqOgre::Window const *>( getWindow() );
+	EQASSERT( win );
+	return win->getSettings();
 }
 
 bool
-eqOgre::Channel::configInit( const uint32_t initID )
+eqOgre::Channel::configInit( const eq::uint128_t &initID )
 {
 	if( !eq::Channel::configInit( initID ) )
 	{ return false; }
 
-	std::cerr << "Get ogre window from RenderWindow" << std::endl;
+	EQINFO << "Get ogre window from RenderWindow" << std::endl;
 	eqOgre::Window *window = dynamic_cast<eqOgre::Window *>(getWindow());
 	_ogre_window = window->getRenderWindow();
 	EQASSERT( _ogre_window );
 
-	std::cerr << "Get camera from RenderWindow" << std::endl;
 	_camera = window->getCamera();
 	if( _camera )
 	{ _active_camera_name = _camera->getName(); }
@@ -50,22 +51,19 @@ eqOgre::Channel::configInit( const uint32_t initID )
 		return false;
 	}
 
-	uint32_t frame_id = getSettings().getFrameDataID();
-	EQASSERT( frame_id != EQ_ID_INVALID );
+	eq::base::UUID const &frame_id = getSettings().getFrameDataID();
+	EQASSERT( frame_id != eq::base::UUID::ZERO );
 	_frame_data.mapData( config, frame_id );
 
 	// We need to find the node from scene graph
-	std::cerr << "FrameData has " << _frame_data.getNSceneNodes()
+	EQINFO << "FrameData has " << _frame_data.getNSceneNodes()
 		<< " SceneNodes." << std::endl;
-	Ogre::SceneManager *sm = window->getSceneManager();
-	EQASSERT( sm );
-	if( !_frame_data.setSceneManager( sm ) )
-	{
-		std::cerr << "Some SceneNodes were not found. Will exit now!" << std::endl;
-		return false;
-	}
 
-	std::cerr << "Channel::ConfigInit done" << std::endl;
+	Ogre::SceneManager *sm = window->getSceneManager();
+	EQASSERTINFO( sm, "Window has no Ogre SceneManager" );
+	EQASSERTINFO( _frame_data.setSceneManager( sm ), "Some SceneNodes were not found." )
+
+	EQINFO << "Channel::ConfigInit done" << std::endl;
 	return true;
 }
 
@@ -93,9 +91,8 @@ eqOgre::Channel::frameClear( const uint32_t )
  *  Original does applyBuffer, applyViewport, applyFrustum, applyHeadTransform
  */
 void
-eqOgre::Channel::frameDraw( const uint32_t frameID )
+eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
-	std::cerr << "Channel::frameDraw" << std::endl;
 	// Distribution
 	_frame_data.syncAll();
 	updateDistribData();
@@ -147,13 +144,13 @@ eqOgre::Channel::updateDistribData( void )
 		// This will reload the scene but all transformations remain
 		// As this will not reset the SceneNode structures that control the
 		// transformations of objects.
-		std::cerr << "Reloading the scene now" << std::endl;
+		EQINFO << "Reloading the Ogre scene now" << std::endl;
 		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 		win->loadScene();
 		_camera = win->getCamera();
 		createViewport();
 		_frame_data.setSceneManager( win->getSceneManager() );
-		std::cerr << "Scene reloaded." << std::endl;
+		EQINFO << "Ogre Scene reloaded." << std::endl;
 
 		scene_version = _frame_data.getSceneVersion();
 	}
@@ -172,7 +169,7 @@ eqOgre::Channel::updateDistribData( void )
 		}
 		else
 		{
-			std::cerr << "eqOgre::Channel : New camera name set, but NO camera found"
+			EQERROR << "eqOgre::Channel : New camera name set, but NO camera found"
 				<< std::endl;
 		}
 	}
@@ -183,7 +180,7 @@ eqOgre::Channel::createViewport( void )
 {
 	// Supports only one Viewport
 	_ogre_window->removeAllViewports();
-	std::cerr << "Creating viewport" << std::endl;
+	EQINFO << "Creating viewport" << std::endl;
 	_viewport = _ogre_window->addViewport( _camera );
 	// TODO this should be configurable from DotScene
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );

@@ -5,10 +5,10 @@
 #include <eq/client/channel.h>
 #include <eq/client/types.h>
 
-#include <OgreCamera.h>
-#include <OgreCamera.h>
-#include <OgreViewport.h>
-#include <OgreRenderWindow.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreCamera.h>
+#include <OGRE/OgreViewport.h>
+#include <OGRE/OgreRenderWindow.h>
 
 #include "tracker.hpp"
 #include "base/typedefs.hpp"
@@ -32,13 +32,13 @@ public:
 
 protected:
 	/// Equalizer overrides
-    virtual bool configInit( const uint32_t initID );
+    virtual bool configInit( const eq::uint128_t &initID );
 	virtual bool configExit();
     //virtual void frameClear( const uint32_t frameID );
 
 	/// Overrides all the equalizer frame draw methods
 	/// Creating custom frustum and applying head matrix
-    virtual void frameDraw( const uint32_t frameID );
+    virtual void frameDraw( const eq::uint128_t &frameID );
 
 	// Some task methods
 	void setOgreFrustum( void );

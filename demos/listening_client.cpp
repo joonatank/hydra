@@ -8,8 +8,7 @@
 
 // Necessary for vl::exceptions
 #include "base/exceptions.hpp"
-// Necessary for vl::msleep
-#include "base/sleep.hpp"
+
 // Necessary for settings
 #include "eq_cluster/eq_settings.hpp"
 // Necessary for creating equalizer nodes
@@ -27,12 +26,13 @@ int main( const int argc, char** argv )
 	bool error = false;
 	try
 	{
+		// This seems to work with two nodes
 		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
 		if( !settings )
 		{ return -1; }
 
 		eqOgre::NodeFactory nodeFactory;
-
+/*
 		// TODO test if this can work with relative path
 		// Oh right it doesn't for autolaunched clients.
 		// NOTE the log file needs to be set before any calls to Equalizer methods
@@ -40,12 +40,18 @@ int main( const int argc, char** argv )
 		eq::base::Log::setOutput( log_file );
 		std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
 			<< std::endl;
+*/
 
+		// This seems to work with two nodes
 		vl::Args &arg = settings->getEqArgs();
 
-		std::cout << "Args = " << settings->getEqArgs() << std::endl;
+		std::cout << "Equalizer arguments = " << settings->getEqArgs() << std::endl;
+
+		int eq_argc = arg.size();
+		char **eq_argv = arg.getData();
+
 		// 1. Equalizer initialization
-		if( !eq::init( arg.size(), arg.getData(), &nodeFactory ) )
+		if( !eq::init( eq_argc, eq_argv, &nodeFactory ) )
 		{
 			EQERROR << "Equalizer init failed" << std::endl;
 			error = true;
@@ -53,24 +59,14 @@ int main( const int argc, char** argv )
 
 		// 2. initialization of local client node
 		client = new eqOgre::Client( settings );
-		if( !client->initLocal( arg.size(), arg.getData() ) )
+		if( !client->initLocal( eq_argc, eq_argv ) )
 		{
 			EQERROR << "client->initLocal failed" << std::endl;
 			error = true;
 		}
-
-		if( !client->initialise() )
-		{
-			EQERROR << "client->init failed" << std::endl;
-			error = true;
-		}
 		if( !error )
 		{
-			uint32_t frame = 0;
-			while( client->mainloop(++frame) )
-			{
-				vl::msleep(1);
-			}
+			client->run();
 		}
 	}
 	catch( vl::exception &e )

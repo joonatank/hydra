@@ -33,7 +33,7 @@ namespace eqOgre
 		Config( eq::base::RefPtr< eq::Server > parent );
 
 		/** @sa eq::Config::init. */
-		virtual bool init( uint32_t const initID );
+		virtual bool init( eq::uint128_t const &initID );
 
 		/** @sa eq::Config::exit. */
 //		virtual bool exit (void);
@@ -41,14 +41,7 @@ namespace eqOgre
         /** @sa eq::Config::handleEvent */
 		virtual bool handleEvent( const eq::ConfigEvent* event );
 
-		virtual uint32_t startFrame (const uint32_t frameID);
-
-		void mapData( uint32_t const initDataID );
-
-		// TODO get and set Settings is maybe a bit confusing when they
-		// get and set different types of variables
-		eqOgre::DistributedSettings const &getSettings( void ) const
-		{ return _distrib_settings; }
+		virtual uint32_t startFrame( eq::uint128_t const &frameID );
 
 		void setSettings( vl::SettingsRefPtr settings );
 
@@ -124,6 +117,7 @@ namespace eqOgre
 		// Audio objects
 		 cAudio::IAudioManager *_audio_manager;
 		 cAudio::IAudioSource *_background_sound;
+
 	};	// class Config
 
 

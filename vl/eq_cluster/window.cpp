@@ -215,7 +215,7 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 eqOgre::DistributedSettings const &
 eqOgre::Window::getSettings( void ) const
 {
-	return ( static_cast<Config const *>( getConfig() ) )->getSettings();
+	return _settings;
 }
 
 
@@ -223,7 +223,7 @@ eqOgre::Window::getSettings( void ) const
 /// Protected
 // ConfigInit can not throw, it must return false on error. CONFIRMED
 bool
-eqOgre::Window::configInit( const uint32_t initID )
+eqOgre::Window::configInit( const eq::uint128_t& initID )
 {
 	std::cerr << "eqOgre::Window::configInit" << std::endl;
 	try {
@@ -241,58 +241,72 @@ eqOgre::Window::configInit( const uint32_t initID )
 		}
 
 		// Get the cluster version of data
-		config->mapData( initID );
+		config->mapObject( &_settings, initID );
 
 		createOgreRoot();
 		createOgreWindow();
 		createInputHandling();
 
 		// Resource registration
-		std::cerr << "setup resources" << std::endl;
 		_root->setupResources( );
-		std::cerr << "load resources" << std::endl;
 		_root->loadResources();
-		std::cerr << "resources loaded" << std::endl;
 
 		_sm = _root->createSceneManager("SceneManager");
-		std::cerr << "SceneManager created" << std::endl;
 
 		if( !loadScene() )
 		{ return false; }
-		std::cerr << "SceneLoaded" << std::endl;
 
 		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
 		log << "eqOgre::Window::configInit done.\n";
 	}
 	catch( vl::exception &e )
 	{
-		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+		EQERROR << "VL Exception : "<<   boost::diagnostic_information<>(e)
 			<< std::endl;
 		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
-		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		EQERROR << "Ogre Exception: " << e.what() << std::endl;
 		return false;
 	}
 	catch( std::exception const &e )
 	{
-		std::cerr << "STD Exception: " << e.what() << std::endl;
+		EQERROR << "STD Exception: " << e.what() << std::endl;
 		return false;
 	}
 	catch( ... )
 	{
 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		std::cerr << err_msg << std::endl;
+		EQERROR << err_msg << std::endl;
 		return false;
 	}
 
-	std::cerr << "eqOgre::Window::init : done" << std::endl;
+	EQINFO << "eqOgre::Window::init : done" << std::endl;
 	return true;
 }
 
+bool eqOgre::Window::configExit(void )
+{
+	// Should clean out OIS and Ogre
+	EQINFO << "Cleaning out OIS" << std::endl;
+	if( _input_manager )
+	{
+		EQINFO << "Destroy OIS input manager." << std::endl;
+        OIS::InputManager::destroyInputSystem(_input_manager);
+		_input_manager = 0;
+	}
+
+	EQINFO << "Cleaning out OGRE" << std::endl;
+	if( _root )
+	{
+		_root.reset();
+	}
+
+}
+
 void
-eqOgre::Window::frameFinish(const uint32_t frameID, const uint32_t frameNumber)
+eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
 {
 	EQASSERT( _keyboard && _mouse );
 	_keyboard->capture();
@@ -301,9 +315,8 @@ eqOgre::Window::frameFinish(const uint32_t frameID, const uint32_t frameNumber)
 	eq::Window::frameFinish(frameID, frameNumber);
 }
 
-
 bool
-eqOgre::Window::configInitSystemWindow(const uint32_t initID)
+eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 {
 	const eq::Pipe* pipe = getPipe();
 	eq::SystemWindow* systemWindow = 0;
@@ -312,21 +325,21 @@ eqOgre::Window::configInitSystemWindow(const uint32_t initID)
 	{
 #ifdef GLX
 		case eq::WINDOW_SYSTEM_GLX:
-		EQINFO << "Using GLXWindow" << std::endl;
+		EQINFO << "Using eqOgre::GLXWindow" << std::endl;
 			systemWindow = new eqOgre::GLXWindow( this );
 		break;
 #endif
 
 #ifdef AGL
 		case eq::WINDOW_SYSTEM_AGL:
-		EQINFO << "Using AGLWindow" << std::endl;
+		EQINFO << "Using eqOgre::AGLWindow" << std::endl;
 		systemWindow = new eqOgre::AGLWindow( this );
 		break;
 #endif
 
 #ifdef WGL
 		case eq::WINDOW_SYSTEM_WGL:
-		EQINFO << "Using WGLWindow" << std::endl;
+		EQINFO << "Using eqOgre::WGLWindow" << std::endl;
 		systemWindow = new eqOgre::WGLWindow( this );
 		break;
 #endif
@@ -348,6 +361,7 @@ eqOgre::Window::configInitSystemWindow(const uint32_t initID)
 	setSystemWindow( systemWindow );
 	return true;
 }
+
 
 void
 eqOgre::Window::createInputHandling( void )
@@ -384,12 +398,12 @@ eqOgre::Window::createInputHandling( void )
 	OIS::ParamList pl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
 
-	std::cerr << "Creating OIS Input Manager" << std::endl;
+	EQINFO << "Creating OIS Input Manager" << std::endl;
 
 	log << "Creating input manager.\n";
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 	EQASSERT( _input_manager );
-	std::cerr << "OIS Input Manager created" << std::endl;
+	EQINFO << "OIS Input Manager created" << std::endl;
 
 	printInputInformation(log);
 
@@ -399,7 +413,6 @@ eqOgre::Window::createInputHandling( void )
 	_keyboard->setEventCallback(this);
 
 	log << "Creating mouse.\n";
-//	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
 	EQASSERT( _mouse );
 
