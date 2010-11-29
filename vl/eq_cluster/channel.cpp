@@ -128,9 +128,7 @@ eqOgre::Channel::setOgreFrustum( void )
 	// from camera are applied and which are not.
 	// Y-axis should be fine for VR systems, X and Z are not.
 	// FIXME
-	// Y-axis is working fine other than that getPitch always returns the shortest
-	// path so we can rotate the camera a bit but it returns back after that.
-	Ogre::Quaternion cam_rot( _camera->getRealOrientation().getPitch(), Ogre::Vector3::UNIT_Y );
+	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
 //	cam_rot = //Ogre::Quaternion::IDENTITY;
 	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
 	// The multiplication order is correct (the problem is obvious if it's not)

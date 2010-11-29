@@ -15,8 +15,10 @@ eqOgre::MoveOperation::execute(double time)
 	// Check that we are moving
 	if( !_move_dir.isZeroLength())
 	{
+		// Transform the moving direction to object coordinates
+		Ogre::Vector3 move = _node->getOrientation() * _move_dir.normalisedCopy();
 		Ogre::Vector3 pos = _node->getPosition();
-		pos += _speed*time*_move_dir.normalisedCopy();
+		pos += _speed*time*move;
 		_node->setPosition( pos );
 	}
 
