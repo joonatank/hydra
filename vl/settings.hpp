@@ -19,8 +19,8 @@
 // Necessary for getEqArgs
 #include "base/args.hpp"
 
+// Necessary for ProjSettings::Scene
 #include "base/projsettings.hpp"
-#include "base/envsettings.hpp"
 
 namespace vl
 {

@@ -12,6 +12,7 @@
 // Necessary for getPid (used for log file names)
 #include "base/system_util.hpp"
 
+#include "base/envsettings.hpp"
 
 std::string
 vl::createLogFilePath( const std::string &project_name,

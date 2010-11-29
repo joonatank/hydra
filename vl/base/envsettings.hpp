@@ -3,6 +3,9 @@
  *
  *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-11
+ *
+ *	2010-11-29 Added camera rotations to env file
+ *	moved ref ptr definition to typedefs.hpp
  */
 
 #ifndef ENVSETTINGS_H
@@ -12,10 +15,11 @@
 #include <vector>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <stdint.h>
 
 #include "filesystem.hpp"
 #include "rapidxml.hpp"
+#include "typedefs.hpp"
 
 namespace vl
 {
@@ -100,6 +104,14 @@ public :
 	/// Remove a tracking file from the stack
 	void removeTracking( std::string const &track );
 
+	/// Returns a flags of around which axes the camera rotations are allowed
+	/// Fist bit is the x axis, second y axis, third z axis
+	uint32_t getCameraRotationAllowed( void ) const
+	{ return _camera_rotations_allowed; }
+
+	void setCameraRotationAllowed( uint32_t const flags )
+	{ _camera_rotations_allowed = flags; }
+
 private :
 
 	std::string _file_path;
@@ -109,9 +121,9 @@ private :
 	std::vector<std::pair<std::string, bool> > _plugins;
 	std::vector<std::string> _tracking;
 
-};	// class EnvSettings
+	uint32_t _camera_rotations_allowed;
 
-typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
+};	// class EnvSettings
 
 
 
@@ -142,6 +154,7 @@ protected :
 
 	void processTracking( rapidxml::xml_node<>* XMLNode );
 
+	void processCameraRotations( rapidxml::xml_node<>* XMLNode );
 
 	EnvSettingsRefPtr _envSettings;
 
@@ -149,8 +162,6 @@ protected :
 	char *_xml_data;
 
 };	// class EnvSettingsSerializer
-
-typedef boost::shared_ptr< EnvSettingsSerializer > EnvSettingsSerializerRefPtr;
 
 }	// namespace vl
 

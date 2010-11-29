@@ -8,10 +8,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent )
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
-	  _enable_orient_x(false),
-	  _enable_orient_y(true),
-	  _enable_orient_z(false)
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -135,22 +132,25 @@ eqOgre::Channel::setOgreFrustum( void )
 	// Get modified camera orientation
 	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
 	Ogre::Quaternion cam_orient;
-	if( !_enable_orient_x || !_enable_orient_y || !_enable_orient_z )
+	uint32_t cam_rot_flags = getSettings().getCameraRotationAllowed();
+	if( cam_rot_flags == (1 | 1<<1 | 1<<2 ) )
+	{
+		cam_orient = cam_rot;
+	}
+	else
 	{
 		Ogre::Radian x, y, z;
 		vl::getEulerAngles( cam_rot, x, y, z );
 		Ogre::Quaternion q_x, q_y, q_z;
-		if( !_enable_orient_x )
+		if( !(cam_rot_flags & 1) )
 			x = Ogre::Radian(0);
-		if( !_enable_orient_y )
+		if( !(cam_rot_flags & (1<<1) ) )
 			y = Ogre::Radian(0);
-		if( !_enable_orient_z )
+		if( !(cam_rot_flags & (1<<2) ) )
 			z = Ogre::Radian(0);
 
 		vl::fromEulerAngles( cam_orient, x, y, z );
 	}
-	else
-	{ cam_orient = cam_rot; }
 
 	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_orient );
 	// The multiplication order is correct (the problem is obvious if it's not)

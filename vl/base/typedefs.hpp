@@ -14,6 +14,8 @@ namespace vl
 	// Forward declarations
 	class Settings;
 	class Tracker;
+	class EnvSettings;
+	class ProjSettings;
 
 	struct null_deleter
 	{
@@ -23,9 +25,12 @@ namespace vl
 	};
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
+	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
+	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 
 	typedef std::map<std::string, std::string> NamedValuePairList;
+
 
 	// TODO define angle class
 	typedef double angle;

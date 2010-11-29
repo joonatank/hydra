@@ -16,6 +16,7 @@
 #include "dotscene_loader.hpp"
 
 #include "tracker_serializer.hpp"
+#include "base/filesystem.hpp"
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>

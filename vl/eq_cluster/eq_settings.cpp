@@ -12,6 +12,7 @@
 
 #include "base/filesystem.hpp"
 #include "settings.hpp"
+#include "base/envsettings.hpp"
 
 // Used for command line option parsing
 #include <boost/program_options.hpp>
@@ -235,7 +236,8 @@ eqOgre::SceneData::SceneData( vl::ProjSettings::Scene const &scene )
 
 /// eqOgre::DistributedSettings
 eqOgre::DistributedSettings::DistributedSettings( void )
-	 : _frame_data_id(eq::base::UUID::ZERO)
+	 : _frame_data_id(eq::base::UUID::ZERO),
+	   _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
 {}
 
 void
@@ -257,7 +259,6 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	}
 
 	// Copy scenes
-	// TODO this should really copy the Scene data not a filename
 	_scenes.clear();
 	std::vector<vl::ProjSettings::Scene> const &scenes = settings->getScenes();
 	for( std::vector<vl::ProjSettings::Scene>::const_iterator scene_iter = scenes.begin();
@@ -265,6 +266,10 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	{
 		_scenes.push_back( SceneData(*scene_iter) );
 	}
+
+	// Copy camera rotations flags
+	_camera_rotations_allowed = settings->getEnvironmentSettings()
+		->getCameraRotationAllowed();
 }
 
 std::string
@@ -291,6 +296,8 @@ eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 		operator<<( _scenes.at(i), os );
 	}
 
+	// Serialize the camera allowed rotations
+	os << _camera_rotations_allowed;
 	// TODO this should serialize used plugins
 }
 
@@ -312,6 +319,8 @@ eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 	{
 		operator>>( _scenes.at(i), is );
 	}
+
+	is >> _camera_rotations_allowed;
 }
 
 eq::net::DataOStream &

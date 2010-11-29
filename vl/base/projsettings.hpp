@@ -13,9 +13,8 @@
 #include <string>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
 #include "rapidxml.hpp"
+#include "typedefs.hpp"
 
 namespace vl
 {
@@ -186,10 +185,6 @@ protected :
 
 };	// class ProjSettings
 
-typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
-
-
-
 
 
 
@@ -258,8 +253,6 @@ protected :
 	rapidxml::xml_document<> _doc;
 
 };	// class ProjSettingsSerializer
-
-typedef boost::shared_ptr< ProjSettingsSerializer > ProjSettingsSerializerRefPtr;
 
 }	// namespace vl
 

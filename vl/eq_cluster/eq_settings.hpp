@@ -68,6 +68,11 @@ public :
 	std::string const &getProjectName( void ) const
 	{ return _project_name; }
 
+	/// Returns a flags of around which axes the camera rotations are allowed
+	/// Fist bit is the x axis, second y axis, third z axis
+	uint32_t getCameraRotationAllowed() const
+	{ return _camera_rotations_allowed; }
+
 protected :
 	virtual void getInstanceData( eq::net::DataOStream& os );
 	virtual void applyInstanceData( eq::net::DataIStream& is );
@@ -83,6 +88,8 @@ protected :
 	std::string _project_name;
 
 	eq::base::UUID _frame_data_id;
+
+	uint32_t _camera_rotations_allowed;
 };
 
 /// Serialize scenes

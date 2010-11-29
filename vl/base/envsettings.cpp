@@ -17,6 +17,7 @@
 
 
 vl::EnvSettings::EnvSettings( void )
+	: _camera_rotations_allowed(0)
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -29,6 +30,8 @@ vl::EnvSettings::clear( void )
 
 	_plugins.clear();
 	_tracking.clear();
+
+	_camera_rotations_allowed = 0;
 }
 
 bool
@@ -128,6 +131,10 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
     xml_elem = xml_root->first_node("tracking");
     if( xml_elem )
     { processTracking( xml_elem ); }
+
+    xml_elem = xml_root->first_node("camera_rotations");
+	if( xml_elem )
+	{ processCameraRotations( xml_elem ); }
 }
 
 
@@ -213,3 +220,26 @@ vl::EnvSettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
     }
 }
 
+void
+vl::EnvSettingsSerializer::processCameraRotations( rapidxml::xml_node< char >* xml_node )
+{
+	uint32_t flags = 0;
+	std::string const F("false");
+
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("x");
+	// Defautls to true
+	if( !attrib || std::string(attrib->value()) != F )
+	{ flags |= 1; }
+
+	attrib = xml_node->first_attribute("y");
+	// Defautls to true
+	if( !attrib || std::string(attrib->value()) != F )
+	{ flags |= 1<<1; }
+
+	attrib = xml_node->first_attribute("z");
+	// Defautls to true
+	if( !attrib || std::string(attrib->value()) != F )
+	{ flags |= 1<<2; }
+
+	_envSettings->setCameraRotationAllowed(flags);
+}
