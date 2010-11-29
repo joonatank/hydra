@@ -73,7 +73,7 @@ public :
 		}
 	}
 
-	void frameDraw( const uint32_t frameID )
+	virtual void frameDraw( const eq::uint128_t &frameID )
 	{
 		// Update UDP data
 		try{

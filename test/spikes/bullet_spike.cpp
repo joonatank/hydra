@@ -37,7 +37,7 @@ public :
 		  _fallMotionState(0)
 	{}
 
-	virtual bool init( uint32_t const initID )
+	virtual bool init( eq::uint128_t const &initID )
 	{
 		bool ret = eqOgre::Config::init(initID);
 
@@ -49,12 +49,13 @@ public :
 
 	virtual bool exit (void)
 	{
+		bool retval = eqOgre::Config::exit();
 		destroyPhysics();
 
-		return eqOgre::Config::exit();
+		return retval;
 	}
 
-	virtual uint32_t startFrame (const uint32_t frameID)
+	virtual uint32_t startFrame( eq::uint128_t const &frameID )
 	{
 		static bool physics_inited = false;
 		uint32_t ret = eqOgre::Config::startFrame(frameID);
