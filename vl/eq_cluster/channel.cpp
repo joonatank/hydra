@@ -12,8 +12,7 @@ eqOgre::Channel::Channel( eq::Window *parent )
 {}
 
 eqOgre::Channel::~Channel( void )
-{
-}
+{}
 
 eqOgre::DistributedSettings const &
 eqOgre::Channel::getSettings( void ) const

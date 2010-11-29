@@ -20,7 +20,8 @@
 #include <vector>
 #include <typeinfo>
 #include <iostream>
-#include <ctime>
+
+#include <eq/base/clock.h>
 
 #include "keycode.hpp"
 
@@ -316,11 +317,15 @@ public :
 	BasicActionPtr getAction( void )
 	{ return _action; }
 
+	/// Set the time limit between the same actions beign triggered
+	/// parameter time_limit in seconds
 	void setTimeLimit( double time_limit )
-	{ _time_limit = time_limit; }
+	{ _time_limit = time_limit*1000; }
 
+	/// Get the time limit between actions beign triggered
+	/// returns the time limit in seconds
 	double getTimeLimit( void ) const
-	{ return _time_limit; }
+	{ return _time_limit/1000; }
 
 	virtual std::string const &getTypeName( void ) const = 0;
 
@@ -332,7 +337,10 @@ protected :
 	std::vector< Trigger *> _triggers;
 	BasicActionPtr _action;
 
-	::clock_t _last_time;
+
+	eq::base::Clock _clock;
+
+	// Time limit in milliseconds, easier to compare to clock output
 	double _time_limit;
 
 };	// class Event

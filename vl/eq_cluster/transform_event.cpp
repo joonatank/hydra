@@ -33,8 +33,7 @@ eqOgre::MoveOperation::execute(double time)
 std::string const eqOgre::MoveOperation::TYPENAME = "MoveOperation";
 
 eqOgre::TransformationEvent::TransformationEvent( void )
-	: _last_time( ::clock() ),
-	  _operation( new MoveOperation )
+	: _operation( new MoveOperation )
 {}
 
 std::string const &
@@ -96,13 +95,12 @@ eqOgre::TransformationEvent::processTrigger(vl::Trigger* trig)
 	if( vl::FrameTrigger().isSimilar(trig) )
 	{
 		// TODO the delta time should be provided by the FrameTrigger
-		clock_t time = ::clock();
-		// Secs since last frame
-		double t = ((double)( time - _last_time ))/CLOCKS_PER_SEC;
+		// Because this is going to go nuts if we miss a couple of FrameTriggers
+		double t = _clock.getTimed()/1000;
 
 		_operation->execute( t );
 
-		_last_time = time;
+		_clock.reset();
 		retval = true;
 	}
 

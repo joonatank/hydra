@@ -9,6 +9,8 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
+#include <eq/base/clock.h>
+
 namespace eqOgre
 {
 
@@ -229,7 +231,7 @@ protected :
 	SceneNode *_node;
 
 	// When last executed so that the movement has constant speed
-	::clock_t _last_time;
+	eq::base::Clock _clock;
 
 	/// Move operation owned by this class
 	// TODO should be made to use the Operation schematics and created by the

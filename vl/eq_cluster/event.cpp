@@ -91,8 +91,12 @@ std::string const vl::FrameTriggerFactory::TYPENAME = "FrameTrigger";
 // time_limit seconds before using the event
 // NOTE not a really high priority but still annoying
 vl::Event::Event( void )
-	: _action(0), _last_time(0), _time_limit(0)
-{}
+	: _action(0), _time_limit(0)
+{
+	// Reset the clock to something big, so that the first time action will
+	// be executed no matter the time limit
+	_clock.set(uint64_t(1e10) );
+}
 
 bool
 vl::Event::processTrigger(vl::Trigger* trig)
@@ -103,8 +107,6 @@ vl::Event::processTrigger(vl::Trigger* trig)
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
 	}
 
-	clock_t time = ::clock();
-
 	std::vector<Trigger *>::iterator iter = _triggers.begin();
 	for( ; iter != _triggers.end(); ++iter )
 	{
@@ -114,14 +116,11 @@ vl::Event::processTrigger(vl::Trigger* trig)
 
 	if( iter != _triggers.end() )
 	{
-//		std::cerr << "Trigger found : trigger = " << trig
-//			<< " : operation = " << _operation << "." << std::endl;
-
 		// We need to wait _time_limit secs before issuing the command again
-		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
+		if( _clock.getTimed() > _time_limit )
 		{
 			_action->execute();
-			_last_time = time;
+			_clock.reset();
 		}
 
 		return true;
@@ -213,10 +212,9 @@ vl::ToggleEvent::processTrigger(vl::Trigger* trig)
 		{ break; }
 	}
 
-	clock_t time = ::clock();
 	if( iter != _triggers.end() )
 	{
-		if( ( (double)(time - _last_time) )/CLOCKS_PER_SEC > _time_limit )
+		if( _clock.getTimed() > _time_limit )
 		{
 			if( _state )
 			{
@@ -228,7 +226,7 @@ vl::ToggleEvent::processTrigger(vl::Trigger* trig)
 				toggleOn();
 				_state = true;
 			}
-			_last_time = time;
+			_clock.reset();
 		}
 		return true;
 	}

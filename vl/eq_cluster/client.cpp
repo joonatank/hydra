@@ -50,17 +50,43 @@ bool eqOgre::Client::run(void )
 		return false;
 	}
 
+	// Used to measure the time for rendering
+	eq::base::Clock clock;
+	// Used to measure one frame time
+	eq::base::Clock frame_clock;
+	// Time used for rendering the frames
+	// (well not excatly as there is lots of other stuff in there also)
+	// but this does not have the sleeping time
+	float rendering_time = 0;
+
     // 4. run main loop
 	uint32_t frame = 0;
+	clock.reset();
 	while( config->isRunning() )
     {
+		frame_clock.reset();
+
 		config->startFrame(++frame);
 		config->finishFrame();
 
-		// Sleep a bit
-		// TODO this should sleep enough to get a 60 fps but not more
-		// FIXME this is really slow on Linux
-		vl::msleep(1);
+		rendering_time += frame_clock.getTimed();
+		// Sleep enough to get a 60 fps but no more
+		// TODO the fps should be configurable
+		vl::msleep( 16.66-frame_clock.getTimed() );
+
+		// Print info every two hundred frame
+		if( (frame % 200) == 0 )
+		{
+			// TODO the logging should probably go to stats file and optionally
+			// to the console
+			// TODO also there should be possibility to reset the clock
+			// for massive parts in a scene for example
+			std::cout << "Avarage fps = " << frame/(clock.getTimed()/1000)
+				<< ". took " << rendering_time/frame
+				<< " ms in avarage for rendering one frame."
+				<< " Took " << clock.getTimed() << "ms to render "
+				<< frame << " frames." << std::endl;
+		}
     }
 
 	std::cerr << "Exiting the config." << std::endl;

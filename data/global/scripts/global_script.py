@@ -4,6 +4,11 @@ def addTranslationEvent(node) :
 	print 'Creating Translation event on node = '
 	event = event_manager.createEvent( 'TransformationEvent' )
 	event.scene_node = node
+	# Set the movement speed to ten m/s
+	event.speed = 10
+	# Set the rotation speed to 30 degs/s
+	# FIXME this does not work
+	#event.angular_speed = 30
 	# TODO this is bit verbose and repeated often move it to python function
 	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
 	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
@@ -130,8 +135,7 @@ def addHideEvent(node) :
 	event.toggle_off_action= show
 	event.toggle_on_action= hide
 	event.toggle_state = False
-	# Works fine provide an example
-	#event.time_limit = 2	# Secs
+	event.time_limit = 2	# Secs
 
 	event.addTrigger( trigger )
 	if not event_manager.addEvent( event ) :
