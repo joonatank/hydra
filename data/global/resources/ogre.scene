@@ -18,7 +18,6 @@
     </node>
 	<node name="CameraNode">
 		<position x="0." y="0.5" z="5.607098"/>
-		<!-- <quaternion x="0.0" y="0.000000" z="0.000000" w="1.0"/> -->
 		<camera name="Omakamera" fov="37.849289" projectionType="perspective">
 			<clipping near="0.1" far="100" />
 		</camera>

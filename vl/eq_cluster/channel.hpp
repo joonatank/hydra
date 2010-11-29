@@ -57,6 +57,10 @@ protected:
 	// distribution related
 	FrameData _frame_data;
 
+	bool _enable_orient_x;
+	bool _enable_orient_y;
+	bool _enable_orient_z;
+
 };
 
 }

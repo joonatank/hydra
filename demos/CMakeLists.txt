@@ -42,5 +42,12 @@ add_executable( renderer
 
 target_link_libraries( renderer ${eqOgre_LIBRARY} )
 
+add_executable( angles_to_quaternion
+	angles_to_quaternion.cpp
+	)
+
+target_link_libraries( angles_to_quaternion ${OGRE_LIBRARIES} )
+
+
 # install
 install( TARGETS renderer fake_tracking_server DESTINATION ./ )

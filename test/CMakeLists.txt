@@ -74,6 +74,13 @@ add_executable( test_exceptions
 # Is this needed
 target_link_libraries( test_exceptions ${TEST_LIB} )
 
+# Test euler angles
+add_executable( test_euler_angles
+				test_euler_angles.cpp
+				${eqOgre_SOURCE_DIR}/math/math.hpp
+				)
+
+target_link_libraries( test_euler_angles ${OGRE_LIBRARIES} ${TEST_LIB} )
 
 # Test tracking
 #add_executable( test_tracking

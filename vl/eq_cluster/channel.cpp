@@ -8,7 +8,10 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent )
-	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0)
+	: eq::Channel(parent), _ogre_window(0), _viewport(0), _camera(0),
+	  _enable_orient_x(false),
+	  _enable_orient_y(true),
+	  _enable_orient_z(false)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -121,16 +124,35 @@ eqOgre::Channel::setOgreFrustum( void )
 	_camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
 
 	Ogre::Matrix4 headMatrix = vl::math::convert( getHeadTransform() );
-	Ogre::Vector3 cam_pos( _camera->getRealPosition() );//+ _frame_data.getHeadPosition() );
-	// TODO Using the camera rotation is useful for Workstations, but it looks
-	// really weird on VR systems. So it's ignored for now.
+	Ogre::Vector3 cam_pos( _camera->getRealPosition() );
+
 	// TODO Add a config value to control around which axises rotations
 	// from camera are applied and which are not.
 	// Y-axis should be fine for VR systems, X and Z are not.
-	// FIXME
+	// NOTE if these rotations are disabled when moving the camera node
+	// the moving direction is different than the direction the camera is facing
+
+	// Get modified camera orientation
 	Ogre::Quaternion cam_rot( _camera->getRealOrientation() );
-//	cam_rot = //Ogre::Quaternion::IDENTITY;
-	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_rot );
+	Ogre::Quaternion cam_orient;
+	if( !_enable_orient_x || !_enable_orient_y || !_enable_orient_z )
+	{
+		Ogre::Radian x, y, z;
+		vl::getEulerAngles( cam_rot, x, y, z );
+		Ogre::Quaternion q_x, q_y, q_z;
+		if( !_enable_orient_x )
+			x = Ogre::Radian(0);
+		if( !_enable_orient_y )
+			y = Ogre::Radian(0);
+		if( !_enable_orient_z )
+			z = Ogre::Radian(0);
+
+		vl::fromEulerAngles( cam_orient, x, y, z );
+	}
+	else
+	{ cam_orient = cam_rot; }
+
+	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_orient );
 	// The multiplication order is correct (the problem is obvious if it's not)
 	_camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
 }
