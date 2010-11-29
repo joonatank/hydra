@@ -20,6 +20,8 @@ vl::TrackerTrigger::TrackerTrigger( void )
 void
 vl::TrackerTrigger::update(const vl::Transform& data)
 {
+	// Copy the data for futher reference
+	_value = data;
 	if( _action )
 	{
 		_action->execute(data);
@@ -33,6 +35,7 @@ vl::TrackerTrigger::setAction(vl::TransformActionPtr action)
 	{
 		_action = action;
 		// TODO this should update but we don't have the data anymore
+		update(_value);
 	}
 }
 
@@ -45,6 +48,10 @@ const std::string vl::TrackerTriggerFactory::TYPENAME = "TrackerTrigger";
 
 
 /// ------------ Sensor ---------------
+
+vl::Sensor::Sensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)
+	: _trigger(0), _default_value( default_pos, default_quat )
+{}
 
 void
 vl::Sensor::setDefaultPosition( Ogre::Vector3 const &pos )

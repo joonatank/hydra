@@ -130,7 +130,7 @@ eqOgre::Config::getSceneNode(const std::string& name)
 vl::TrackerTrigger *
 eqOgre::Config::getTrackerTrigger(const std::string& name)
 {
-	std::cerr << "Trying to find TrackerTrigger " << name << std::endl;
+	EQINFO << "Trying to find TrackerTrigger " << name << std::endl;
 	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
 	{
 		vl::TrackerRefPtr tracker = _clients->getTracker(i);
@@ -143,6 +143,7 @@ eqOgre::Config::getTrackerTrigger(const std::string& name)
 		}
 	}
 
+	EQINFO << "TrackerTrigger " << name << " not found." << std::endl;
 	return 0;
 }
 
@@ -360,16 +361,34 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		_clients->getTracker(i)->init();
 	}
 
-	// TODO this should create a fake tracker with the glassesTrigger if not
-	// found
-	vl::TrackerTrigger *head_trigger = getTrackerTrigger( "glassesTrigger" );
-	if( !head_trigger )
-	{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "glasses trigger not found" ) ); }
-
-	/// Create Action
+	// Create Action
 	eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_event_manager->createAction("HeadTrackerAction");
 	action->setConfig(this);
-	head_trigger->setAction( action );
+
+	// This will get the head sensor if there is one
+	// If not it will create a FakeTracker instead
+	vl::TrackerTrigger *head_trigger = getTrackerTrigger( "glassesTrigger" );
+	if( head_trigger )
+	{
+		head_trigger->setAction( action );
+	}
+	else
+	{
+		EQINFO << "Creating a fake head tracker" << std::endl;
+		vl::TrackerRefPtr tracker( new vl::FakeTracker );
+		vl::SensorRefPtr sensor( new vl::Sensor );
+		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
+
+		// Create the trigger
+		head_trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
+		head_trigger->setName("glassesTrigger");
+		head_trigger->setAction( action );
+		sensor->setTrigger( head_trigger );
+
+		// Add the tracker
+		tracker->setSensor( 0, sensor );
+		_clients->addTracker(tracker);
+	}
 }
 
 void

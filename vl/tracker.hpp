@@ -70,6 +70,7 @@ protected :
 
 	TransformActionPtr _action;
 
+	Transform _value;
 };
 
 class TrackerTriggerFactory : public vl::TriggerFactory
@@ -89,9 +90,7 @@ class Sensor
 {
 public :
 	Sensor( Ogre::Vector3 const &default_pos = Ogre::Vector3::ZERO,
-			Ogre::Quaternion const &default_quat = Ogre::Quaternion::IDENTITY )
-		: _default_value( default_pos, default_quat )
-	{}
+			Ogre::Quaternion const &default_quat = Ogre::Quaternion::IDENTITY );
 
 	/// Sensor values used when not connected to a tracker
 	/// Uses different sensor data stack, so if connection is lost for long it can be
