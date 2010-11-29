@@ -51,7 +51,9 @@ vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
 	  _global(global),
 	  _proj(proj),
 	  _verbose(false)
-{}
+{
+	_initScenes();
+}
 
 vl::Settings::~Settings( void )
 {}
@@ -124,24 +126,10 @@ vl::Settings::getTrackingPaths(void ) const
 }
 
 
-std::vector< vl::ProjSettings::Scene const * >
+std::vector< vl::ProjSettings::Scene> const &
 vl::Settings::getScenes( void ) const
 {
-	std::vector<ProjSettings::Scene const *> vec;
-
-	if( _global )
-	{
-		_addScenes( vec, _global->getCasePtr() );
-	}
-
-	_addScenes( vec, _proj->getCasePtr() );
-
-	if( !_case.empty() )
-	{
-		_addScenes( vec, _proj->getCasePtr(_case) );
-	}
-
-	return vec;
+	return _scenes;
 }
 
 std::vector< std::string >
@@ -150,16 +138,13 @@ vl::Settings::getScripts( void ) const
 	std::vector<std::string> vec;
 
 	if( _global )
-	{
-		_addScripts( vec, getGlobalDir(), _global->getCasePtr() );
-	}
+	{ _addScripts( vec, getGlobalDir(), _global->getCasePtr() ); }
 
-	_addScripts( vec, getProjectDir(), _proj->getCasePtr() );
+	if( _proj )
+	{ _addScripts( vec, getProjectDir(), _proj->getCasePtr() ); }
 
-	if( !_case.empty() )
-	{
-		_addScripts( vec, getProjectDir(), _proj->getCasePtr(_case) );
-	}
+	if( _proj && !_case.empty() )
+	{ _addScripts( vec, getProjectDir(), _proj->getCasePtr(_case) ); }
 
 	return vec;
 }
@@ -188,6 +173,7 @@ std::vector< std::string > vl::Settings::getResourcePaths(void ) const
 
 std::string vl::Settings::getGlobalDir(void ) const
 {
+	// This shouldn't be called from slave node
 	if( !_global )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
@@ -202,6 +188,7 @@ std::string vl::Settings::getGlobalDir(void ) const
 std::string
 vl::Settings::getProjectDir( void ) const
 {
+	// This shouldn't be called from slave node
 	if( !_proj )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
@@ -216,6 +203,7 @@ vl::Settings::getProjectDir( void ) const
 std::string
 vl::Settings::getEnvironementDir( void ) const
 {
+	// This shouldn't be called from slave node
 	if( !_env )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
@@ -247,13 +235,42 @@ vl::Settings::_addScripts( std::vector< std::string > &vec,
 
 
 void
-vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene const *> &vec,
+vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene> &vec,
 						 ProjSettings::Case const *cas ) const
 {
+	std::vector<std::string> const &resources = getResourcePaths();
+
 	for( size_t i = 0; i < cas->getNscenes(); ++i )
 	{
 		if( cas->getScenePtr(i)->getUse() )
-		{ vec.push_back( cas->getScenePtr(i) ); }
+		{
+			ProjSettings::Scene const &scene = *(cas->getScenePtr(i));
+
+			// find the real path of the scene file
+			std::string scene_file_name = scene.getFile();
+			std::string full_path;
+			bool found = false;
+			std::vector<std::string>::const_iterator iter;
+			for( iter = resources.begin(); iter != resources.end(); ++iter )
+			{
+				if( vl::find_file( *iter, scene_file_name, full_path ) )
+				{
+					found = true;
+					break;
+				}
+			}
+			if( found )
+			{
+				// copy the scene file info
+				vec.push_back( scene );
+				vec.back().setFile( full_path );
+			}
+			else
+			{
+				std::cerr << "Real path of the scene " << scene_file_name
+					<< " was not found in any of the resources." << std::endl;
+			}
+		}
 	}
 }
 
@@ -266,13 +283,26 @@ vl::Settings::_updateArgs( void )
 	if( !_exe_path.empty() )
 	{ _eq_args.add( _exe_path.c_str() ); }
 
-	// TODO is this necessary?
-	if( !_env )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	if( !_env->getEqcFullPath().empty() )
+	// Only add eqc config in master node,
+	// if _env is missing we can assume that this is a slave node
+	if( _env && !_env->getEqcFullPath().empty() )
 	{
 		_eq_args.add( "--eq-config" );
 		_eq_args.add( _env->getEqcFullPath().c_str() );
 	}
+}
+
+void vl::Settings::_initScenes(void )
+{
+	_scenes.clear();
+
+	/// Initialise the scenes structure with absolute paths
+	if( _global )
+	{ _addScenes( _scenes, _global->getCasePtr() ); }
+
+	if( _proj )
+	{ _addScenes( _scenes, _proj->getCasePtr() ); }
+
+	if( _proj && !_case.empty() )
+	{ _addScenes( _scenes, _proj->getCasePtr(_case) ); }
 }

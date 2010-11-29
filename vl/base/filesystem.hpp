@@ -32,13 +32,23 @@ namespace vl
 // TODO test on Windows
 std::string findPlugin( std::string const &plugin );
 
+/**	Find file
+ *	recursively goes through the dir_path provided
+ *
+ *	Returns true if filename is found from dir_path
+ *	Returns false if dir_path does not exist, is not directory or filename not found
+ *	If returns true path_found is set to the path found
+ */
+bool
+find_file( std::string const &dir_path, std::string const &filename, std::string &path_found );
+
 /// Read the file in filePath and return that file in string
 std::string
 readFileToString( std::string const &filePath );
 
 /// Append file in filePath to the output string
 void
-readFileToString( std::string &output, std::string const &filePath );
+readFileToString( std::string const &filePath, std::string &output );
 
 bool
 writeFileFromString( std::string const &filePath, std::string const &content );

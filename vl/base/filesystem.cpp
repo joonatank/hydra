@@ -60,16 +60,37 @@ vl::findPlugin( std::string const &plugin )
 	return path;
 }
 
+bool
+vl::find_file( const std::string &dir_path,
+			   const std::string &filename,
+			   std::string &path_found )
+{
+	if( !fs::exists( dir_path ) || !fs::is_directory( dir_path ) )
+	{ return false; }
+
+	fs::recursive_directory_iterator end_iter;
+	for( fs::recursive_directory_iterator iter(dir_path); iter != end_iter; ++iter )
+	{
+		if( iter->path().filename() == filename )
+		{
+			path_found = iter->path().file_string();
+			return true;
+		}
+	}
+
+	return false;
+}
+
 std::string
 vl::readFileToString(const std::string& filePath)
 {
 	std::string tmp;
-	readFileToString( tmp, filePath );
+	readFileToString( filePath, tmp );
 	return tmp;
 }
 
 void
-vl::readFileToString(std::string& output, const std::string& filePath)
+vl::readFileToString( const std::string& filePath, std::string& output )
 {
 	// Open in binary mode, so we don't mess up the file
 	std::ifstream ifs( filePath.c_str(), std::ios::binary );

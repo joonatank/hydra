@@ -62,26 +62,27 @@ eqOgre::Window::loadScene( void )
 	// TODO this should be divided to case load scenes function and loadScene function
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene> const &scenes = getSettings().getScenes();
+	std::vector<eqOgre::SceneData> const &scenes = getSettings().getScenes();
 
-	ss << "Loading Scenes for Project : " << getSettings().getProjectName();
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-	std::cerr << ss.str() << std::endl;
-	ss.str("");
+	EQINFO << "Loading Scenes for Project : " << getSettings().getProjectName()
+		<< std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+// 	std::cerr << ss.str() << std::endl;
+// 	ss.str("");
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
 	{
-		ss << "Project does not have any scene files.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
+		EQINFO << "Project does not have any scene files." << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+// 		std::cerr << ss.str() << std::endl;
 		return false;
 	}
 	else
 	{
-		ss << "Project has " << scenes.size() << " scene files.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
+		EQINFO << "Project has " << scenes.size() << " scene files." << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+// 		std::cerr << ss.str() << std::endl;
 	}
 
 	// Clean up old scenes
@@ -93,24 +94,24 @@ eqOgre::Window::loadScene( void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::cerr << "Getting scene file path." << std::endl;
-		std::string const &scene_file = scenes.at(i).getFile();
-		std::cerr << "Got scene file path." << std::endl;
+//		std::cerr << "Getting scene file path." << std::endl;
+//		std::string const &scene_file = scenes.at(i).getFile();
+// 		std::cerr << "Got scene file path." << std::endl;
 
-		ss.str("");
-		ss << "Loading scene : " << scene_file;
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
+		std::string const &name = scenes.at(i).name;
+		std::string const &xml_data = scenes.at(i).file_data;
+// 		ss.str("");
+		EQINFO << "Loading scene " << name << "." << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
+// 		std::cerr << ss.str() << std::endl;
 
 		eqOgre::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scene_file,
-							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-							_sm );
+		loader.parseDotScene( xml_data, _sm );
 
-		ss.str("");
-		ss << "Scene loaded";
+// 		ss.str("");
+		EQINFO << "Scene " << name << " loaded.";
 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
 		std::cerr << ss.str() << std::endl;
 	}

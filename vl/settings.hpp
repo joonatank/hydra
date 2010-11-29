@@ -32,6 +32,7 @@ createLogFilePath( const std::string &project_name,
 					   const std::string &prefix = std::string(),
 					   const std::string &log_dir = std::string() );
 
+
 class Settings
 {
 	public :
@@ -41,7 +42,18 @@ class Settings
 			PATH_REL
 		};
 
-		Settings( EnvSettingsRefPtr env, ProjSettingsRefPtr proj,
+		/**	Constructor
+		 *	Pass the environment and project settings as parameters.
+		 *
+		 *	Parameters :
+		 *		valid env and proj need to be present for master node settings
+		 *		global is obtional for master node
+		 *
+		 *	Default constructor is provided for slave nodes
+		 *	Same behaviour would result also with omiting either env or proj.
+		 */
+		Settings( EnvSettingsRefPtr env = EnvSettingsRefPtr(),
+				  ProjSettingsRefPtr proj = ProjSettingsRefPtr(),
 				  ProjSettingsRefPtr global = ProjSettingsRefPtr() );
 
 		virtual ~Settings( void );
@@ -139,12 +151,14 @@ class Settings
 		/// Combines Global, the Project and the Case scenes to one vector
 		/// Only scenes that are in use are added
 		///
-		/// Scene information needed to pass from this class
-		/// Name, File (to load), attach scene and attach point
+		/// Scene information structure is guarantied to contain
+		/// - Scene name
+		/// - absolute filepath to the scene file
+		/// - name of the scene this scene should be attached to
+		/// - name of the SceneNode to whom this scene should be attached
 		///
-		/// Returns a vector of the used scene pointers
-		/// Scenes returned are owned by ProjectSettings, ownership is not passed
-		std::vector<ProjSettings::Scene const *> getScenes( void ) const;
+		/// Returns a vector of Scene info structures.
+		std::vector<ProjSettings::Scene> const &getScenes( void ) const;
 
 		/// Combines Global, the Project and the Case scripts to one vector
 		/// Only scripts that are in use are added
@@ -166,10 +180,12 @@ class Settings
 		void _addScripts( std::vector<std::string> &vec, std::string const &projDir,
 						  vl::ProjSettings::Case const *cas ) const;
 
-		void _addScenes( std::vector<ProjSettings::Scene const *> &vec,
+		void _addScenes( std::vector<ProjSettings::Scene> &vec,
 						vl::ProjSettings::Case const *cas ) const;
 
 		void _updateArgs( void );
+
+		void _initScenes( void );
 
 		// Log directory
 		std::string _log_dir;
@@ -186,6 +202,9 @@ class Settings
 
 		// Project specific settings
 		ProjSettingsRefPtr _proj;
+
+		// SceneFiles, contains absolute path to the file
+		std::vector<ProjSettings::Scene> _scenes;
 
 		// Name of the current case or empty if doesn't have a case
 		std::string _case;

@@ -55,6 +55,13 @@ eqOgre::Config::~Config()
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
+	EQINFO << "Loading Scenes." << std::endl;
+	_loadScenes();
+
+	EQINFO << "Creating Trackers." << std::endl;
+	// Create Tracker needs the SceneNodes for mapping
+	_createTracker(_settings);
+
 	/// Register data
 	EQINFO << "eqOgre::Config::init : registering data" << std::endl;
 
@@ -172,9 +179,7 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 
 	if( !inited )
 	{
-		_loadScenes();
-		// Create Tracker needs the SceneNodes for mapping
-		_createTracker(_settings);
+
 
 		try {
 			// Init the embedded python
@@ -334,21 +339,18 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	EQINFO << "Processing " << tracking_paths.size() << " tracking files."
 		<< std::endl;
 
-		std::vector<std::string>::iterator iter;
-	for( iter = tracking_paths.begin(); iter != tracking_paths.end(); ++iter )
+	for( std::vector<std::string>::const_iterator iter = tracking_paths.begin();
+		 iter != tracking_paths.end(); ++iter )
 	{
 		// Read a file
 		std::string xml_data;
-		std::cerr << "Reading file : " << *iter << std::endl;
-		vl::readFileToString( xml_data, *iter );
+		EQINFO << "Reading file : " << *iter << std::endl;
+		vl::readFileToString( *iter, xml_data );
 		if( xml_data.empty() )
 		{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
 		vl::TrackerSerializer ser( _clients );
-		if( !ser.readString(xml_data) )
-		{
-			std::cerr << "Error in Tracker XML reader." << std::endl;
-		}
+		EQASSERTINFO( ser.readString(xml_data), "Error in Tracker XML reader." );
 	}
 
 	// Start the trackers
@@ -358,6 +360,8 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		_clients->getTracker(i)->init();
 	}
 
+	// TODO this should create a fake tracker with the glassesTrigger if not
+	// found
 	vl::TrackerTrigger *head_trigger = getTrackerTrigger( "glassesTrigger" );
 	if( !head_trigger )
 	{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "glasses trigger not found" ) ); }
@@ -368,16 +372,14 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	head_trigger->setAction( action );
 }
 
-// TODO this depends on the Ogre::ResourceGroupManager
-// So we can not use it if the Ogre Root is not created or is created later
 void
 eqOgre::Config::_loadScenes(void )
 {
-	// Get scenes
-	std::vector<vl::ProjSettings::Scene const *> scenes = _settings->getScenes();
-
 	EQINFO << "Loading Scenes for Project : " << _settings->getProjectName()
 		<< std::endl;
+
+	// Get scenes
+	std::vector<eqOgre::SceneData> const &scenes = _distrib_settings.getScenes();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
@@ -398,16 +400,15 @@ eqOgre::Config::_loadScenes(void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string const &scene_file = scenes.at(i)->getFile();
+		std::string const &scene_name = scenes.at(i).name;
+		std::string const &xml_data = scenes.at(i).file_data;
 
-		EQINFO << "Loading scene : " << scene_file << std::endl;
+		EQINFO << "Loading scene " << scene_name << "." << std::endl;
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scene_file,
-							Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-							this );
+		loader.parseDotScene( xml_data, this );
 
 		EQINFO << "Scene loaded" << std::endl;
 	}

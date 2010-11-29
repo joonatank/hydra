@@ -29,20 +29,12 @@ public :
 
 	virtual ~DotSceneLoader();
 
-	/// Load dotscene file using Ogre resource system
-	/// Parameters : sceneName is the name of the scene file in Ogre Resource system
-	///				 groupName is the name of the Ogre resource group
-	///				 attachNode is the parent node for this DotScene scene
-	///				 sPrependNode is a string which is added to the name of every node
-	void parseDotScene( std::string const &sceneName,
-			std::string const &groupName,
-			eqOgre::Config *config,
-			eqOgre::SceneNode *attachNode = 0,
-			std::string const &sPrependNode = std::string() );
-
-
-	/// Parse dotscene which is already loaded to scene_data
-	/// Parameters : scene_data is complete xml file loaded into a string
+	/**	Parse dotscene which is already loaded to scene_data
+	 *	Parameters : scene_data is complete xml file loaded into a string
+	 *				 attachNode is the parent node for this DotScene scene
+	 *				 sPrependNode is a string which is added to the beging of the
+	 *				 name of every node
+	 */
 	void parseDotScene( std::string const &scene_data,
 			eqOgre::Config *config,
 			eqOgre::SceneNode *attachNode = 0,
@@ -55,7 +47,6 @@ private :
 
 	void processNode(rapidxml::xml_node<>* XMLNode,
 			eqOgre::SceneNode *parent = 0 );
-
 
 	char *_xml_data;
 

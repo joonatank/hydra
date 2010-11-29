@@ -153,22 +153,13 @@ eqOgre::getSettings( int argc, char **argv )
 
 	vl::SettingsRefPtr settings;
 
-	// TODO add case support
-	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
-	vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
-	vl::ProjSettingsRefPtr global;
 
 	/// This point both env_path and project_path are either valid or we
 	/// are running in listening mode
 	// First check the listening mode
-	// TODO we need to return the eq_argc and eq_argv somehow
-	// Should contain program_path, eq-client, eq-listen
-	// or program_path, eq-config
-	// We might save it to the Settings for now, but using char ** and int
-	// not the Arg structure
 	if( eq_client )
 	{
-		settings.reset( new vl::Settings(env, proj, global) );
+		settings.reset( new vl::Settings() );
 
 		// Add the command line arguments
 		settings->setExePath( argv[0] );
@@ -182,6 +173,11 @@ eqOgre::getSettings( int argc, char **argv )
 	}
 	else
 	{
+		// TODO add case support
+		vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+		vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
+		vl::ProjSettingsRefPtr global;
+
 		/// Read the Environment config
 		if( fs::exists( env_path ) )
 		{
@@ -224,11 +220,23 @@ eqOgre::getSettings( int argc, char **argv )
 }
 
 
+eqOgre::SceneData::SceneData(void )
+	: name(), file_data(), attachto_scene(), attachto_point()
+{}
+
+
+eqOgre::SceneData::SceneData( vl::ProjSettings::Scene const &scene )
+	: name( scene.getName() ),
+	  attachto_scene( scene.getAttachtoScene() ),
+	  attachto_point( scene.getAttachtoPoint() )
+{
+	vl::readFileToString( scene.getFile(), file_data );
+}
+
 /// eqOgre::DistributedSettings
 eqOgre::DistributedSettings::DistributedSettings( void )
-	 : _frame_data_id(EQ_ID_INVALID)
-{
-}
+	 : _frame_data_id(eq::base::UUID::ZERO)
+{}
 
 void
 eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
@@ -242,19 +250,20 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	// Copy resource paths
 	_resources.clear();
 	std::vector<std::string> const &resources = settings->getResourcePaths();
-	for( size_t i = 0; i < resources.size(); ++i )
+	for( std::vector<std::string>::const_iterator iter = resources.begin();
+		 iter != resources.end(); ++iter )
 	{
-		_resources.push_back( resources.at(i) );
+		_resources.push_back( *iter );
 	}
 
 	// Copy scenes
 	// TODO this should really copy the Scene data not a filename
 	_scenes.clear();
-	std::vector<vl::ProjSettings::Scene const *>const &scenes = settings->getScenes();
-	for( size_t i = 0; i < scenes.size(); ++i )
+	std::vector<vl::ProjSettings::Scene> const &scenes = settings->getScenes();
+	for( std::vector<vl::ProjSettings::Scene>::const_iterator scene_iter = scenes.begin();
+		 scene_iter != scenes.end(); ++scene_iter )
 	{
-		// TODO this copies attributes that are not really useful like use and changed
-		_scenes.push_back( *(scenes.at(i)) );
+		_scenes.push_back( SceneData(*scene_iter) );
 	}
 }
 
@@ -275,7 +284,7 @@ eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 	os << _resources;
 
 	// Serialize scenes
-	std::cerr << "Serializing " << _scenes.size() << " scenes." << std::endl;
+	EQINFO << "Serializing " << _scenes.size() << " scenes." << std::endl;
 	os << _scenes.size();
 	for( size_t i = 0; i < _scenes.size(); ++i )
 	{
@@ -298,7 +307,7 @@ eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 	size_t size = 0;
 	is >> size;
 	_scenes.resize(size);
-	std::cerr << "Deserializing " << _scenes.size() << " scenes." << std::endl;
+	EQINFO << "Deserializing " << _scenes.size() << " scenes." << std::endl;
 	for( size_t i = 0; i < _scenes.size(); ++i )
 	{
 		operator>>( _scenes.at(i), is );
@@ -306,32 +315,19 @@ eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 }
 
 eq::net::DataOStream &
-eqOgre::operator<<(vl::ProjSettings::Scene const &s, eq::net::DataOStream& os)
+eqOgre::operator<<( eqOgre::SceneData const &scene, eq::net::DataOStream& os )
 {
-	std::cerr << "scene name = " << s.getName()
-		<< " : scene file = " << s.getFile()
-		<< " : scene attach to scene = " << s.getAttachtoScene()
-		<< " : scene attach to point = " << s.getAttachtoPoint() << std::endl;
-
-	os << s.getName() << s.getFile() << s.getAttachtoScene() << s.getAttachtoPoint();
+	os << scene.name << scene.file_data << scene.attachto_scene
+		<< scene.attachto_point;
 
 	return os;
 }
 
 eq::net::DataIStream &
-eqOgre::operator>>(vl::ProjSettings::Scene &s, eq::net::DataIStream& is)
+eqOgre::operator>>( eqOgre::SceneData &scene, eq::net::DataIStream& is )
 {
-	std::string name, file, at_scene, at_point;
-	is >> name >> file >> at_scene >> at_point;
-		std::cerr << "scene name = " << name
-			<< " : scene file = " << file
-			<< " : scene attach to scene = " << at_scene
-			<< " : scene attach to point = " << at_point << std::endl;
-
-	s.setName(name);
-	s.setFile(file);
-	s.setAttachtoScene(at_scene);
-	s.setAttachtoPoint(at_point);
+	is >> scene.name >> scene.file_data >> scene.attachto_scene
+		>> scene.attachto_point;
 
 	return is;
 }

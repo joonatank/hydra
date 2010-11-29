@@ -21,6 +21,18 @@ namespace eqOgre
 
 vl::SettingsRefPtr getSettings( int argc, char **argv );
 
+/// Contains the data of the scene file with additional loading parameters
+struct SceneData
+{
+	SceneData( void );
+	SceneData( vl::ProjSettings::Scene const &scene );
+
+	std::string name;
+	std::string file_data;
+	std::string attachto_scene;
+	std::string attachto_point;
+};
+
 /// The settings for the current project that needs to be distributed
 /// Minimal version of vl::Settings that does not contain information on the
 /// links between project and scenes.
@@ -47,7 +59,7 @@ public :
 	std::vector<std::string> const &getResources( void ) const
 	{ return _resources; }
 
-	std::vector<vl::ProjSettings::Scene> const &getScenes( void ) const
+	std::vector<SceneData> const &getScenes( void ) const
 	{ return _scenes; }
 
 	/// Logging
@@ -66,7 +78,7 @@ protected :
 	std::vector<std::string> _resources;
 
 	// Scenes to load
-	std::vector<vl::ProjSettings::Scene>  _scenes;
+	std::vector<SceneData>  _scenes;
 
 	std::string _project_name;
 
@@ -77,10 +89,10 @@ protected :
 // TODO this should use a custom SceneStructure that contains the whole xml file
 // not the filename. And which doesn't contain useless use and changed attributes.
 eq::net::DataOStream &
-operator<<(vl::ProjSettings::Scene const &s, eq::net::DataOStream& os);
+operator<<( eqOgre::SceneData const &s, eq::net::DataOStream& os );
 
 eq::net::DataIStream &
-operator>>(vl::ProjSettings::Scene &s, eq::net::DataIStream& is);
+operator>>( eqOgre::SceneData &s, eq::net::DataIStream& is );
 
 }	// namespace eqOgre
 

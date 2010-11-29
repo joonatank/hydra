@@ -22,22 +22,23 @@ eqOgre::DotSceneLoader::~DotSceneLoader()
 {
 	delete [] _xml_data;
 }
-void
-eqOgre::DotSceneLoader::parseDotScene(
-		std::string const &sceneName,
-		std::string const &groupName,
-		Ogre::SceneManager *sceneMgr,
-		Ogre::SceneNode *attachNode,
-		std::string const &sPrependNode )
-{
-	// set up shared object values
-	_sGroupName = groupName;
 
-	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-		.openResource( sceneName, groupName );
-
-	parseDotScene( stream->getAsString(), sceneMgr, attachNode, sPrependNode );
-}
+// void
+// eqOgre::DotSceneLoader::parseDotScene(
+// 		std::string const &sceneName,
+// 		std::string const &groupName,
+// 		Ogre::SceneManager *sceneMgr,
+// 		Ogre::SceneNode *attachNode,
+// 		std::string const &sPrependNode )
+// {
+// 	// set up shared object values
+// 	_sGroupName = groupName;
+//
+// 	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
+// 		.openResource( sceneName, groupName );
+//
+// 	parseDotScene( stream->getAsString(), sceneMgr, attachNode, sPrependNode );
+// }
 
 void
 eqOgre::DotSceneLoader::parseDotScene(
@@ -913,7 +914,6 @@ eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	Ogre::Entity *entity;
 	try
 	{
-		//Ogre::MeshManager::getSingleton().load(meshFile, _sGroupName);
 		entity = _scene_mgr->createEntity(name, meshFile);
 		entity->setCastShadows(castShadows);
 		parent->attachObject(entity);
@@ -924,9 +924,7 @@ eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 	catch(Ogre::Exception &/*e*/)
 	{
 		std::string msg("[DotSceneLoader] Error loading an entity!");
-		std::cerr << msg << std::endl;
-		//	TODO add logging
-		//Ogre::LogManager::getSingleton().logMessage(msg);
+		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
 	// Process userDataReference (?)
@@ -1053,7 +1051,7 @@ eqOgre::DotSceneLoader::processSkyBox(rapidxml::xml_node<>* XMLNode)
 	{ rotation = vl::parseQuaternion(pElement); }
 
 	// Setup the sky box
-	_scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation, _sGroupName);
+	_scene_mgr->setSkyBox(true, material, distance, drawFirst, rotation );
 }
 
 /// Not implemented
@@ -1078,7 +1076,7 @@ eqOgre::DotSceneLoader::processSkyDome(rapidxml::xml_node<>* XMLNode)
 
 	// Setup the sky dome
 	_scene_mgr->setSkyDome( true, material, curvature, tiling,
-			distance, drawFirst, rotation, 16, 16, -1, _sGroupName );
+			distance, drawFirst, rotation, 16, 16, -1 );
 
 	std::string message = "Skydome Created with material " + material;
 	Ogre::LogManager::getSingleton().logMessage( message );
@@ -1105,7 +1103,7 @@ eqOgre::DotSceneLoader::processSkyPlane(rapidxml::xml_node<>* XMLNode)
 	plane.normal = Ogre::Vector3(planeX, planeY, planeZ);
 	plane.d = planeD;
 	_scene_mgr->setSkyPlane( true, plane, material, scale, tiling,
-			drawFirst, bow, 1, 1, _sGroupName );
+			drawFirst, bow, 1, 1 );
 }
 
 /// Not implemented

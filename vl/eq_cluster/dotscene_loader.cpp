@@ -6,34 +6,16 @@
 #include "dotscene_loader.hpp"
 
 
-#include <OGRE/OgreResourceManager.h>
-
 #include "base/string_utils.hpp"
 #include "ogre_xml_helpers.hpp"
 
 vl::DotSceneLoader::DotSceneLoader()
 	: _xml_data(0)
-{
-
-}
+{}
 
 vl::DotSceneLoader::~DotSceneLoader()
 {
 	delete [] _xml_data;
-}
-
-
-void
-vl::DotSceneLoader::parseDotScene( 	const std::string& sceneName,
-									const std::string& groupName,
-									eqOgre::Config *config,
-									eqOgre::SceneNode* attachNode,
-									const std::string& sPrependNode )
-{
-	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-		.openResource( sceneName, groupName );
-
-	parseDotScene( stream->getAsString(), config, attachNode, sPrependNode );
 }
 
 void

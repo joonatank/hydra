@@ -51,11 +51,12 @@ public:
 	///				 groupName is the name of the Ogre resource group
 	///				 attachNode is the parent node for this DotScene scene
 	///				 sPrependNode is a string which is added to the name of every node
-	void parseDotScene( std::string const &sceneName,
-			std::string const &groupName,
-			Ogre::SceneManager *sceneMgr,
-			Ogre::SceneNode *attachNode = 0,
-			std::string const &sPrependNode = std::string() );
+	// TODO this should be removed as we don't use the Ogre::ResourceManager anymore
+// 	void parseDotScene( std::string const &sceneName,
+// 			std::string const &groupName,
+// 			Ogre::SceneManager *sceneMgr,
+// 			Ogre::SceneNode *attachNode = 0,
+// 			std::string const &sPrependNode = std::string() );
 
 	/// Parse dotscene which is already loaded to scene_data
 	/// Parameters : scene_data is complete xml file loaded into a string
@@ -121,7 +122,7 @@ protected:
 	Ogre::SceneNode *_attach_node;
 
 	// Ogre Resource group Name
-	std::string _sGroupName;
+// 	std::string _sGroupName;
 
 	std::string _sPrependNode;
 
