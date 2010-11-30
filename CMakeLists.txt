@@ -197,27 +197,6 @@ endif()
 ENDMACRO()
 
 
-###### Copy Extra files MACRO #######
-# TODO this can be removed when ProjectSettings scripts are in use
-# and when we load audio files using Ogre resource system
-MACRO( copy_extras )
-
-set( VL_DATA_PATH ${vl_SOURCE_DIR}/data )
-
-	if( WIN32 )
-		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
-			DESTINATION ${PROJECT_BINARY_DIR}/Release )
-		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
-			DESTINATION ${PROJECT_BINARY_DIR}/RelWithDebInfo )
-	else()
-		file( COPY ${VL_DATA_PATH}/The_Dummy_Song.ogg
-			DESTINATION ${PROJECT_BINARY_DIR}/ )
-	endif()
-
-ENDMACRO()
-
-
-
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
