@@ -17,7 +17,7 @@
 
 
 vl::EnvSettings::EnvSettings( void )
-	: _camera_rotations_allowed(0)
+	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -32,6 +32,40 @@ vl::EnvSettings::clear( void )
 	_tracking.clear();
 
 	_camera_rotations_allowed = 0;
+}
+
+std::string vl::EnvSettings::getEqcFullPath( void ) const
+{
+	if( getEqc().empty() )
+	{ return std::string(); }
+
+	fs::path env_path = getFile();
+	fs::path env_dir = env_path.parent_path();
+	fs::path path =  env_dir / "eqc" / getEqc();
+
+	return path.file_string();
+}
+
+std::string vl::EnvSettings::getPluginsDirFullPath( void ) const
+{
+	fs::path env_path = getFile();
+	fs::path env_dir = env_path.parent_path();
+	fs::path path =  env_dir / "plugins";
+
+	return path.file_string();
+}
+
+void
+vl::EnvSettings::addPlugin(const std::pair< std::string, bool >& plugin)
+{
+	std::vector< std::pair<std::string, bool> >::iterator iter;
+	for( iter = _plugins.begin(); iter != _plugins.end(); ++iter )
+	{
+		if( iter->first == plugin.first )
+		{ return; }
+	}
+
+	_plugins.push_back( plugin );
 }
 
 bool
@@ -57,17 +91,38 @@ vl::EnvSettings::pluginOnOff(const std::string &pluginName, bool newState)
 	return true;
 }
 
-void
-vl::EnvSettings::removeTracking(const std::string& track)
+void vl::EnvSettings::addTracking(const vl::EnvSettings::Tracking& track)
 {
-	std::vector<std::string>::iterator iter;
+	// Check that we don't add the same file twice
+	std::vector<Tracking>::iterator iter;
 	for( iter = _tracking.begin(); iter != _tracking.end(); ++iter )
 	{
-		if( *iter == track )
+		if( iter->file == track.file )
+		{ return; }
+	}
+
+	// Not a duplicate
+	_tracking.push_back(track);
+}
+
+void
+vl::EnvSettings::removeTracking( std::string const &track )
+{
+	removeTracking( Tracking(track) );
+}
+
+void
+vl::EnvSettings::removeTracking( Tracking const &track )
+{
+	std::vector<Tracking>::iterator iter;
+	for( iter = _tracking.begin(); iter != _tracking.end(); ++iter )
+	{
+		if( iter->file == track.file )
 		{
 			_tracking.erase( iter );
 			// TODO this should return here if we assume that no file can exist
 			// more than ones.
+			return;
 		}
 	}
 }
@@ -208,16 +263,20 @@ vl::EnvSettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
 void
 vl::EnvSettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 {
-    rapidxml::xml_node<> *pElement = xml_node->first_node("file");
+	rapidxml::xml_node<> *pElement = xml_node->first_node("file");
 
-    if( !pElement )
-    { return; }
+	while( pElement )
+	{
+		bool use = true;
+		rapidxml::xml_attribute<> *attrib = pElement->first_attribute("use");
+		if( attrib && std::string( attrib->value() ) == "false" )
+		{
+			use = false;
+		}
 
-    while( pElement )
-    {
-        _envSettings->addTracking( pElement->value() );
-        pElement = pElement->next_sibling("file");
-    }
+		_envSettings->addTracking( EnvSettings::Tracking(pElement->value(), use) );
+		pElement = pElement->next_sibling("file");
+	}
 }
 
 void

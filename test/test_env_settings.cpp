@@ -76,7 +76,7 @@ struct SettingsFixture
         }
 
         bool checkEmpty( void )
-        {           
+        {
                 return _settings->getPlugins().empty()
                         && _settings->getEqc().empty()
                         && _settings->getTracking().empty();
@@ -289,16 +289,16 @@ BOOST_AUTO_TEST_CASE( tracking_and_remove_test )
     BOOST_CHECK( readXML() );
 
     // Does getTracking and serializer work correctly?
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(0), "/first/track" );
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(1), "/second/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "/first/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(1).file, "/second/track" );
 
     // rm
     _settings->removeTracking("no_match");
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(0), "/first/track" );
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(1), "/second/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "/first/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(1).file, "/second/track" );
     _settings->removeTracking("/first/track");
     BOOST_CHECK_EQUAL( _settings->getTracking().size(), 1u );
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(0), "/second/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "/second/track" );
 }
 
 BOOST_AUTO_TEST_CASE( tracking_add_test )
@@ -306,10 +306,10 @@ BOOST_AUTO_TEST_CASE( tracking_add_test )
     // is xml valid?
     BOOST_CHECK( readXML() );
 
-    _settings->addTracking("new_track");
+    _settings->addTracking( EnvSettings::Tracking("new_track") );
 
     // Does getTracking and serializer work correctly?
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(0), "new_track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "new_track" );
 }
 
 BOOST_AUTO_TEST_CASE( complete_test )
@@ -330,8 +330,8 @@ BOOST_AUTO_TEST_CASE( complete_test )
     BOOST_CHECK_EQUAL( _settings->getEqc(), "/eqc/path" );
 
     // Does getTracking and serializer work correctly?
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(0), "/1/track" );
-    BOOST_CHECK_EQUAL( _settings->getTracking().at(1), "/2/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "/1/track" );
+    BOOST_CHECK_EQUAL( _settings->getTracking().at(1).file, "/2/track" );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

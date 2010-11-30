@@ -28,6 +28,17 @@ class EnvSettings
 {
 
 public :
+
+	struct Tracking
+	{
+		Tracking( std::string const &file_name, bool u = "true" )
+			: file(file_name), use(u)
+		{}
+
+		std::string file;
+		bool use;
+	};
+
 	/// Constructor
 	EnvSettings( void );
 
@@ -55,36 +66,19 @@ public :
 	{ _eqc = e; }
 
 	/// Get the absoulute path to eqc file
-	std::string getEqcFullPath( void ) const
-	{
-		if( getEqc().empty() )
-		{ return std::string(); }
+	std::string getEqcFullPath( void ) const;
 
-		fs::path env_path = getFile();
-		fs::path env_dir = env_path.parent_path();
-		fs::path path =  env_dir / "eqc" / getEqc();
-
-		return path.file_string();
-	}
-
-	std::string getPluginsDirFullPath( void ) const
-	{
-		fs::path env_path = getFile();
-		fs::path env_dir = env_path.parent_path();
-		fs::path path =  env_dir / "plugins";
-
-		return path.file_string();
-	}
+	std::string getPluginsDirFullPath( void ) const;
 
 	///// PLUGINS /////////////////////////////////////////////////
 	/// get vector containing plugin names and which are active
 	std::vector<std::pair<std::string, bool> > const &getPlugins( void ) const
 	{ return _plugins; }
 
-	/// add a plugin by name and boolean wether it's in use or not
-	// TODO should really check that the same plugin is not added twice
-	void addPlugin( std::pair<std::string, bool> const &plugin )
-	{ _plugins.push_back(plugin); }
+	/// Add a plugin by name and boolean wether it's in use or not
+	/// Checks that the same plugin is not added twice, NOP if the plugin is
+	/// already in the plugins stack.
+	void addPlugin( std::pair<std::string, bool> const &plugin );
 
 	/// set the plugin named pluginName use to on or off
 	/// returns true if plugin found
@@ -93,16 +87,18 @@ public :
 
 	///// TRACKING /////////////////////////////////////////////////
 	/// Returns a vector of tracking files
-	std::vector<std::string> const &getTracking( void ) const
+	std::vector<Tracking> const &getTracking( void ) const
 	{ return _tracking; }
 
 	/// Adds a tracking file to the tracking file stack
-	// TODO this should really check that we don't add the same file twice
-	void addTracking( std::string const &track )
-	{ _tracking.push_back( track ); }
+	/// Checks that the same file tracking file is not added twice, NOP if the
+	/// tracking file is already in the stack.
+	void addTracking( Tracking const &track );
 
 	/// Remove a tracking file from the stack
 	void removeTracking( std::string const &track );
+
+	void removeTracking( Tracking const &track );
 
 	/// Returns a flags of around which axes the camera rotations are allowed
 	/// Fist bit is the x axis, second y axis, third z axis
@@ -119,7 +115,7 @@ private :
 	std::string _eqc;
 
 	std::vector<std::pair<std::string, bool> > _plugins;
-	std::vector<std::string> _tracking;
+	std::vector<Tracking> _tracking;
 
 	uint32_t _camera_rotations_allowed;
 

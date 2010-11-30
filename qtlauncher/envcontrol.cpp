@@ -179,7 +179,7 @@ void EnvControl::updateTrackingTable(QDir dir)
     QList<QString> listOfActive;
     for( unsigned int i = 0; i < _envSet->getTracking().size(); i++ )
     {
-        listOfActive << QString::fromStdString(_envSet->getTracking().at(i));
+        listOfActive << QString::fromStdString( _envSet->getTracking().at(i).file );
     }
 
     // Making list from all items from the folder

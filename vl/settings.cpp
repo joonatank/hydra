@@ -110,19 +110,38 @@ std::vector< std::string >
 vl::Settings::getTrackingPaths(void ) const
 {
 	std::string dir( getEnvironementDir() + "/tracking/" );
+	std::vector<std::string> const &tracking_files = getTrackingFiles();
 	std::vector<std::string> vec;
-	if( _env )
+	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
+		 iter != tracking_files.end(); ++iter )
 	{
-		for( size_t i = 0; i < _env->getTracking().size(); ++i )
-		{
-			std::string path = dir + _env->getTracking().at(i);
-			if( fs::exists( path ) )
-			{ vec.push_back( path ); }
-		}
+		std::string path = dir + *iter;
+		if( fs::exists( path ) )
+		{ vec.push_back( path ); }
 	}
 
 	return vec;
 }
+
+
+std::vector< std::string >
+vl::Settings::getTrackingFiles(void ) const
+{
+	std::vector<std::string> vec;
+
+	if( !_env )
+	{ return vec; }
+
+	for( size_t i = 0; i < _env->getTracking().size(); ++i )
+	{
+		EnvSettings::Tracking const &track = _env->getTracking().at(i);
+		if( track.use )
+		{ vec.push_back(track.file); }
+	}
+
+	return vec;
+}
+
 
 
 std::vector< vl::ProjSettings::Scene>
