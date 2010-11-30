@@ -3,6 +3,13 @@
 #include <eq/client/error.h>
 #include <eq/fabric/iAttribute.h>
 
+namespace
+{
+static Bool WaitForNotify( Display*, XEvent *e, char *arg )
+{ return (e->type == MapNotify) && (e->xmap.window == (::Window)arg); }
+}
+
+
 bool
 eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
 {
