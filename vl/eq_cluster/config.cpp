@@ -49,29 +49,54 @@ eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 }
 
 eqOgre::Config::~Config()
-{
-	_exitAudio();
-}
+{}
 
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
-	EQINFO << "Loading Scenes." << std::endl;
 	_loadScenes();
 
-	EQINFO << "Creating Trackers." << std::endl;
 	// Create Tracker needs the SceneNodes for mapping
 	_createTracker(_settings);
 
+	_initAudio();
+
+	try {
+		// Init the embedded python
+		_initPython();
+
+		std::vector<std::string> scripts = _settings->getScripts();
+
+		EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
+
+		for( size_t i = 0; i < scripts.size(); ++i )
+		{
+			// Run init python scripts
+			_runPythonScript( scripts.at(i) );
+		}
+	}
+	// Some error handling so that we can continue the application
+	catch( ... )
+	{
+		std::cout << "Exception occured in python script." << std::endl;
+
+	}
+	if (PyErr_Occurred())
+	{
+		PyErr_Print();
+	}
+
+	_createQuitEvent();
+	_createTransformToggle();
+
 	/// Register data
-	EQINFO << "eqOgre::Config::init : registering data" << std::endl;
+	EQINFO << "Registering data." << std::endl;
 
 	_frame_data.registerData(this);
 
 	_distrib_settings.setFrameDataID( _frame_data.getID() );
 	EQINFO << "Registering Settings" << std::endl;
 	registerObject( &_distrib_settings );
-	EQINFO << "Settings registered" << std::endl;
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
@@ -92,6 +117,8 @@ eqOgre::Config::exit( void )
 	_frame_data.deregisterData();
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
 	deregisterObject( &_distrib_settings );
+
+	_exitAudio();
 
 	EQINFO << "Config exited." << std::endl;
 	return retval;
@@ -176,79 +203,6 @@ eqOgre::Config::toggleBackgroundSound()
 uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
-	// Init the transformation structures
-	// TODO should be moved to Config::init or equivalent
-	static bool inited = false;
-
-	if( !inited )
-	{
-		try {
-			// Init the embedded python
-			_initPython();
-
-			std::vector<std::string> scripts = _settings->getScripts();
-
-			EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
-
-			for( size_t i = 0; i < scripts.size(); ++i )
-			{
-				// Run init python scripts
-				_runPythonScript( scripts.at(i) );
-			}
-		}
-		// Some error handling so that we can continue the application
-		catch( ... )
-		{
-			std::cout << "Exception occured in python script." << std::endl;
-
-		}
-		if (PyErr_Occurred())
-		{
-			PyErr_Print();
-		}
-
-		// Find ogre event so we can toggle it on/off
-		// TODO add function to find Events
-		// Ogre Rotation event, used to toggle the event on/off
-		/*	FIXME new design
-		TransformationEvent ogre_event;
-		for( size_t i = 0; i < _trans_events.size(); ++i )
-		{
-			SceneNodePtr node = _trans_events.at(i).getSceneNode();
-			if( node )
-			{
-				if( node->getName() == "ogre" )
-				{
-					ogre_event = _trans_events.at(i);
-					break;
-				}
-			}
-		}
-
-		Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
-		Operation *add_oper = new AddTransformEvent( this, ogre_event );
-		Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
-		Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
-		_events.push_back( event );
-		*/
-
-		// Add a trigger event to Quit the Application
-		QuitOperation *quit
-			= (QuitOperation *)( _event_manager->createAction( "QuitOperation" ) );
-		quit->setConfig(this);
-		vl::Event *event = _event_manager->createEvent( "Event" );
-		event->setAction(quit);
-		// Add trigger
-		vl::KeyTrigger *trig = (vl::KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-		trig->setKey( OIS::KC_ESCAPE );
-		event->addTrigger(trig);
-		_event_manager->addEvent( event );
-
-		_initAudio();
-
-		inited = true;
-	}
-
 	// Process Tracking
 	// If we have a tracker object update it, the update will handle all the
 	// callbacks and appropriate updates (head matrix and scene nodes).
@@ -328,6 +282,8 @@ eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 void
 eqOgre::Config::_initAudio(void )
 {
+	EQINFO << "Init audio." << std::endl;
+
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
 
@@ -341,6 +297,8 @@ eqOgre::Config::_initAudio(void )
 void
 eqOgre::Config::_exitAudio(void )
 {
+	EQINFO << "Exit audio." << std::endl;
+
 	//Shutdown cAudio
 	if( _audio_manager )
 	{
@@ -352,6 +310,8 @@ eqOgre::Config::_exitAudio(void )
 void
 eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
+	EQINFO << "Creating Trackers." << std::endl;
+
 	_clients.reset( new vl::Clients );
 	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
@@ -457,6 +417,8 @@ eqOgre::Config::_loadScenes(void )
 void
 eqOgre::Config::_initPython(void )
 {
+	EQINFO << "Initing python context." << std::endl;
+
 	Py_Initialize();
 
 	// Add the module to the python interpreter
@@ -494,6 +456,56 @@ void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 	// Run a python script.
 	python::object result = python::exec_file(script_path.c_str(), _global, _global);
 }
+
+void
+eqOgre::Config::_createQuitEvent(void )
+{
+	EQINFO << "Creating QuitEvent" << std::endl;
+
+	// Add a trigger event to Quit the Application
+	QuitOperation *quit
+		= (QuitOperation *)( _event_manager->createAction( "QuitOperation" ) );
+	quit->setConfig(this);
+	vl::Event *event = _event_manager->createEvent( "Event" );
+	event->setAction(quit);
+	// Add trigger
+	vl::KeyTrigger *trig = (vl::KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
+	trig->setKey( OIS::KC_ESCAPE );
+	event->addTrigger(trig);
+	_event_manager->addEvent( event );
+}
+
+void
+eqOgre::Config::_createTransformToggle(void )
+{
+	EQINFO << "Creating TransformToggle " << " Not in use atm." << std::endl;
+
+	// Find ogre event so we can toggle it on/off
+	// TODO add function to find Events
+	// Ogre Rotation event, used to toggle the event on/off
+	/*	FIXME new design
+	TransformationEvent ogre_event;
+	for( size_t i = 0; i < _trans_events.size(); ++i )
+	{
+		SceneNodePtr node = _trans_events.at(i).getSceneNode();
+		if( node )
+		{
+			if( node->getName() == "ogre" )
+			{
+				ogre_event = _trans_events.at(i);
+				break;
+			}
+		}
+	}
+
+	Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
+	Operation *add_oper = new AddTransformEvent( this, ogre_event );
+	Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
+	Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
+	_events.push_back( event );
+	*/
+}
+
 
 /// Event Handling
 char const *CB_INFO_TEXT = "Config : OIS event received : ";

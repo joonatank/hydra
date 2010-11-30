@@ -91,6 +91,10 @@ namespace eqOgre
 		void _initPython( void );
 		void _runPythonScript( std::string const &scriptFile );
 
+		/// Events
+		void _createQuitEvent( void );
+		void _createTransformToggle( void );
+
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
 		bool _handleMousePressEvent( const eq::PointerEvent& event );
