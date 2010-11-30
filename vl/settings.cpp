@@ -107,24 +107,6 @@ vl::Settings::getLogFilePath( const std::string &identifier,
 }
 
 std::vector< std::string >
-vl::Settings::getTrackingPaths(void ) const
-{
-	std::string dir( getEnvironementDir() + "/tracking/" );
-	std::vector<std::string> const &tracking_files = getTrackingFiles();
-	std::vector<std::string> vec;
-	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
-		 iter != tracking_files.end(); ++iter )
-	{
-		std::string path = dir + *iter;
-		if( fs::exists( path ) )
-		{ vec.push_back( path ); }
-	}
-
-	return vec;
-}
-
-
-std::vector< std::string >
 vl::Settings::getTrackingFiles(void ) const
 {
 	std::vector<std::string> vec;

@@ -145,8 +145,9 @@ class Settings
 									PATH_TYPE const type = PATH_ABS )
 									const;
 
-		std::vector<std::string> getTrackingPaths( void ) const;
-
+		/// Get the tracking files
+		/// Returns a vector of the names of the tracking files
+		/// Only tracking files that are in use are returned
 		std::vector<std::string> getTrackingFiles( void ) const;
 
 		/// Combines Global, the Project and the Case scenes to one vector

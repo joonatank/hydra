@@ -353,20 +353,18 @@ void
 eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	_clients.reset( new vl::Clients );
-	std::vector<std::string> tracking_paths = settings->getTrackingPaths();
+	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
-	EQINFO << "Processing " << tracking_paths.size() << " tracking files."
+	EQINFO << "Processing " << tracking_files.size() << " tracking files."
 		<< std::endl;
 
-	for( std::vector<std::string>::const_iterator iter = tracking_paths.begin();
-		 iter != tracking_paths.end(); ++iter )
+	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
+		 iter != tracking_files.end(); ++iter )
 	{
 		// Read a file
 		std::string xml_data;
-		EQINFO << "Reading file : " << *iter << std::endl;
-		vl::readFileToString( *iter, xml_data );
-		if( xml_data.empty() )
-		{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+		EQINFO << "Reading tracking file : " << *iter << std::endl;
+		EQASSERT( _resource_manager.loadResource( *iter, xml_data ) );
 
 		vl::TrackerSerializer ser( _clients );
 		EQASSERTINFO( ser.readString(xml_data), "Error in Tracker XML reader." );
