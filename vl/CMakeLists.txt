@@ -12,6 +12,7 @@ set( SOURCES
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	eq_cluster/eq_resource.cpp
 	eq_cluster/dotscene_loader.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
@@ -53,6 +54,7 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
+	eq_cluster/eq_resource.hpp
 	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp
 	eq_cluster/event.hpp

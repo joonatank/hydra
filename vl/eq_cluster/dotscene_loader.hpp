@@ -18,6 +18,7 @@
 
 #include "scene_node.hpp"
 #include "config.hpp"
+#include "resource_manager.hpp"
 
 namespace vl
 {
@@ -40,15 +41,20 @@ public :
 			eqOgre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
+	void parseDotScene( vl::Resource &scene_data,
+			eqOgre::Config *config,
+			eqOgre::SceneNode *attachNode = 0,
+			std::string const &sPrependNode = std::string() );
+
 private :
+	void _parse( char *xml_data );
+
 	void processScene( rapidxml::xml_node<>* XMLRoot );
 
 	void processNodes( rapidxml::xml_node<>* XMLNode );
 
 	void processNode(rapidxml::xml_node<>* XMLNode,
 			eqOgre::SceneNode *parent = 0 );
-
-	char *_xml_data;
 
 	eqOgre::Config *_config;
 

@@ -3,6 +3,8 @@
 
 #include "base/filesystem.hpp"
 
+#include <fstream>
+
 vl::ResourceManager::ResourceManager( void )
 {}
 
@@ -42,6 +44,35 @@ vl::ResourceManager::loadResource( const std::string& name, std::string& data )
 	{
 		// Load the resource
 		vl::readFileToString( file_path, data );
+
+		return true;
+	}
+
+	return false;
+}
+
+#include <iostream>
+
+bool
+vl::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
+{
+	std::string file_path;
+
+	if( findResource(name, file_path) )
+	{
+		// Load the resource
+
+		// Open in binary mode, so we don't mess up the file
+		// open it from the end so that we get the size with tellg
+		std::ifstream ifs( file_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
+		size_t size = ifs.tellg();
+		char *mem = new char[size+1];
+		ifs.seekg( 0, std::ios::beg );
+		ifs.read( mem, size );
+		ifs.close();
+
+		std::cerr << "Read " << size << " bytes from file" << std::endl;
+		data.setRawMemory( mem, size+1 );
 
 		return true;
 	}

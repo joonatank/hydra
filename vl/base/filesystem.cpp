@@ -93,7 +93,7 @@ void
 vl::readFileToString( const std::string& filePath, std::string& output )
 {
 	// Open in binary mode, so we don't mess up the file
-	std::ifstream ifs( filePath.c_str(), std::ios::binary );
+	std::ifstream ifs( filePath.c_str(),  std::ios::in | std::ios::binary );
 
 	output.insert( output.end(), (std::istreambuf_iterator<char>(ifs)),
 					   std::istreambuf_iterator<char>() );

@@ -8,30 +8,57 @@
 /// ---------- Public ----------
 
 vl::TrackerSerializer::TrackerSerializer(vl::ClientsRefPtr clients)
-	: _clients( clients ), _xml_data(0)
+	: _clients( clients )
 {
 	if( !_clients )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 }
 
-bool
-vl::TrackerSerializer::readString(const std::string& data)
-{
-    delete[] _xml_data;
-    size_t length = data.length() + 1;
-    _xml_data = new char[length];
-    ::memcpy(_xml_data, data.c_str(), length);
+vl::TrackerSerializer::~TrackerSerializer(void )
+{}
 
-    return readXML();
+bool
+vl::TrackerSerializer::parseTrackers( const std::string& data )
+{
+	size_t length = data.length() + 1;
+	char *xml_data = new char[length];
+	::memcpy( xml_data, data.c_str(), length);
+
+	bool retval = readXML( xml_data );
+	delete [] xml_data;
+	return retval;
+}
+
+bool
+vl::TrackerSerializer::parseTrackers( vl::Resource &tracking_data )
+{
+	// Get the ownership of the Resource data
+	vl::MemoryBlock mem = tracking_data.release();
+	size_t size = mem.size;
+	char *xml_data = mem.mem;
+
+	// We replace the EOF with Null Terminator for text files
+	xml_data[size-1] = '\0';
+
+	if( ::strlen( xml_data ) != size-1 )
+	{
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
+	}
+
+	bool retval = readXML( xml_data );
+
+	delete [] xml_data;
+
+	return retval;
 }
 
 
 /// ---------- Private ------------
 bool
-vl::TrackerSerializer::readXML( void )
+vl::TrackerSerializer::readXML( char *xml_data )
 {
 	rapidxml::xml_document<> xmlDoc;
-	xmlDoc.parse<0>( _xml_data );
+	xmlDoc.parse<0>( xml_data );
 
 	rapidxml::xml_node<> *xmlRoot = xmlDoc.first_node("clients");
 	if( !xmlRoot )
@@ -40,6 +67,7 @@ vl::TrackerSerializer::readXML( void )
 	}
 
 	processClients( xmlRoot );
+
 	return true;
 }
 

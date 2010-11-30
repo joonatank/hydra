@@ -14,6 +14,8 @@
 #include "base/rapidxml.hpp"
 #include "base/typedefs.hpp"
 
+#include "resource_manager.hpp"
+
 namespace vl
 {
 
@@ -60,16 +62,16 @@ public :
 	/// Pass a pointer to the configuration where the data is deserialized
 	TrackerSerializer( ClientsRefPtr trackers );
 
-	~TrackerSerializer( void )
-	{
-		delete [] _xml_data;
-	}
+	~TrackerSerializer( void );
 
 	/// Read the xml data from a string
-	bool readString( std::string const &data );
+	bool parseTrackers( std::string const &data );
+
+	/// Read the xml data from a memory resource
+	bool parseTrackers( vl::Resource &tracking_data );
 
 private :
-	bool readXML( void );
+	bool readXML( char *xml_data );
 
 	/// Process the root node, the clients node
 	void processClients( rapidxml::xml_node<>* XMLRoot );
@@ -90,9 +92,6 @@ private :
 
 	/// Config where the xml data is deserialized into
 	ClientsRefPtr _clients;
-
-	/// Data
-	char *_xml_data;
 
 };	// class TrackerSerializer
 

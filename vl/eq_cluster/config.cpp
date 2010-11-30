@@ -21,6 +21,8 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
+#include "eq_resource.hpp"
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent ), _event_manager( new vl::EventManager ),
 	  _audio_manager(0), _background_sound(0)
@@ -322,12 +324,15 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		 iter != tracking_files.end(); ++iter )
 	{
 		// Read a file
-		std::string xml_data;
+		// TODO this should be moved to distrib resources
+		// and we should get here a copy of the resource
+		eqOgre::Resource resource;
+
 		EQINFO << "Reading tracking file : " << *iter << std::endl;
-		EQASSERT( _resource_manager.loadResource( *iter, xml_data ) );
+		EQASSERT( _resource_manager.loadResource( *iter, resource ) );
 
 		vl::TrackerSerializer ser( _clients );
-		EQASSERTINFO( ser.readString(xml_data), "Error in Tracker XML reader." );
+		EQASSERTINFO( ser.parseTrackers(resource), "Error in Tracker XML reader." );
 	}
 
 	// Start the trackers
@@ -374,7 +379,7 @@ eqOgre::Config::_loadScenes(void )
 		<< std::endl;
 
 	// Get scenes
-	std::vector<eqOgre::SceneData> const &scenes = _distrib_settings.getScenes();
+	std::vector<vl::ProjSettings::Scene> const &scenes = _settings->getScenes();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
@@ -395,20 +400,22 @@ eqOgre::Config::_loadScenes(void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string const &scene_name = scenes.at(i).name;
-		//std::string const &xml_data = scenes.at(i).file_data;
-		std::string xml_data;
+		std::string const &scene_name = scenes.at(i).getName();
 
-		std::string scene_file_name( scene_name + ".scene" );
+		// TODO this should be moved to distrib resources
+		// and we should get here a copy of the resource
+		eqOgre::Resource resource;
+
+		std::string scene_file_name = scenes.at(i).getFile();
 		EQINFO << "Loading scene " << scene_name << " with file = "
 			<< scene_file_name << std::endl;
 
-		EQASSERT( _resource_manager.loadResource( scene_file_name, xml_data ) );
+		EQASSERT( _resource_manager.loadResource( scene_file_name, resource ) );
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( xml_data, this );
+		loader.parseDotScene( resource, this );
 
 		EQINFO << "Scene loaded" << std::endl;
 	}
