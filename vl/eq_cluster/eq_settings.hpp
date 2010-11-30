@@ -16,6 +16,9 @@
 // Needed for RefPtrs
 #include "base/typedefs.hpp"
 
+// Needed for loading the scene files
+#include "resource_manager.hpp"
+
 namespace eqOgre
 {
 
@@ -25,7 +28,8 @@ vl::SettingsRefPtr getSettings( int argc, char **argv );
 struct SceneData
 {
 	SceneData( void );
-	SceneData( vl::ProjSettings::Scene const &scene );
+	SceneData( vl::ProjSettings::Scene const &scene,
+			   std::string const &scene_file_data );
 
 	std::string name;
 	std::string file_data;
@@ -54,7 +58,7 @@ public :
 	{ _frame_data_id = id; }
 
 	/// Used by master to copy the necessary data for synchronization
-	void copySettings( vl::SettingsRefPtr settings );
+	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
 
 	std::vector<std::string> const &getResources( void ) const
 	{ return _resources; }

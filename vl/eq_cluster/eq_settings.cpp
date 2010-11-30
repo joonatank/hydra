@@ -221,17 +221,19 @@ eqOgre::getSettings( int argc, char **argv )
 }
 
 
-eqOgre::SceneData::SceneData(void )
+eqOgre::SceneData::SceneData( void )
 	: name(), file_data(), attachto_scene(), attachto_point()
 {}
 
 
-eqOgre::SceneData::SceneData( vl::ProjSettings::Scene const &scene )
+eqOgre::SceneData::SceneData( vl::ProjSettings::Scene const &scene,
+							  std::string const &scene_file_data )
 	: name( scene.getName() ),
+	  file_data(scene_file_data),
 	  attachto_scene( scene.getAttachtoScene() ),
 	  attachto_point( scene.getAttachtoPoint() )
 {
-	vl::readFileToString( scene.getFile(), file_data );
+//	vl::readFileToString( scene.getFile(), file_data );
 }
 
 /// eqOgre::DistributedSettings
@@ -241,7 +243,8 @@ eqOgre::DistributedSettings::DistributedSettings( void )
 {}
 
 void
-eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
+eqOgre::DistributedSettings::copySettings( vl::SettingsRefPtr settings,
+										   vl::ResourceManager *resource_man )
 {
 	// Copy name
 	_project_name = settings->getProjectName();
@@ -264,7 +267,9 @@ eqOgre::DistributedSettings::copySettings(vl::SettingsRefPtr settings)
 	for( std::vector<vl::ProjSettings::Scene>::const_iterator scene_iter = scenes.begin();
 		 scene_iter != scenes.end(); ++scene_iter )
 	{
-		_scenes.push_back( SceneData(*scene_iter) );
+		std::string scene_data;
+		EQASSERT( resource_man->loadResource( scene_iter->getFile(), scene_data ) );
+		_scenes.push_back( SceneData( *scene_iter, scene_data ) );
 	}
 
 	// Copy camera rotations flags

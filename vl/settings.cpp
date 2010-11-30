@@ -52,9 +52,7 @@ vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
 	  _global(global),
 	  _proj(proj),
 	  _verbose(false)
-{
-	_initScenes();
-}
+{}
 
 vl::Settings::~Settings( void )
 {}
@@ -127,10 +125,21 @@ vl::Settings::getTrackingPaths(void ) const
 }
 
 
-std::vector< vl::ProjSettings::Scene> const &
+std::vector< vl::ProjSettings::Scene>
 vl::Settings::getScenes( void ) const
 {
-	return _scenes;
+	std::vector<ProjSettings::Scene> scenes;
+
+	if( _global )
+	{ _addScenes( scenes, _global->getCasePtr() ); }
+
+	if( _proj )
+	{ _addScenes( scenes, _proj->getCasePtr() ); }
+
+	if( _proj && !_case.empty() )
+	{ _addScenes( scenes, _proj->getCasePtr(_case) ); }
+
+	return scenes;
 }
 
 std::vector< std::string >
@@ -139,13 +148,13 @@ vl::Settings::getScripts( void ) const
 	std::vector<std::string> vec;
 
 	if( _global )
-	{ _addScripts( vec, getGlobalDir(), _global->getCasePtr() ); }
+	{ _addScripts( vec, _global->getCasePtr() ); }
 
 	if( _proj )
-	{ _addScripts( vec, getProjectDir(), _proj->getCasePtr() ); }
+	{ _addScripts( vec, _proj->getCasePtr() ); }
 
 	if( _proj && !_case.empty() )
-	{ _addScripts( vec, getProjectDir(), _proj->getCasePtr(_case) ); }
+	{ _addScripts( vec, _proj->getCasePtr(_case) ); }
 
 	return vec;
 }
@@ -170,7 +179,6 @@ std::vector< std::string > vl::Settings::getResourcePaths(void ) const
 
 	return vec;
 }
-
 
 std::string vl::Settings::getGlobalDir(void ) const
 {
@@ -220,16 +228,14 @@ vl::Settings::getEnvironementDir( void ) const
 // --------- Settings Protected --------
 void
 vl::Settings::_addScripts( std::vector< std::string > &vec,
-						   std::string const &projDir,
-						   ProjSettings::Case const *cas) const
+						   ProjSettings::Case const *cas ) const
 {
 	for( size_t i = 0; i < cas->getNscripts(); ++i )
 	{
-		vl::ProjSettings::Script *script = cas->getScriptPtr(i);
+		vl::ProjSettings::Script const *script = cas->getScriptPtr(i);
 		if( script->getUse() )
 		{
-			std::string scriptPath = projDir + "/scripts/" + script->getFile();
-			vec.push_back( scriptPath );
+			vec.push_back( script->getFile() );
 		}
 	}
 }
@@ -239,38 +245,12 @@ void
 vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene> &vec,
 						 ProjSettings::Case const *cas ) const
 {
-	std::vector<std::string> const &resources = getResourcePaths();
-
 	for( size_t i = 0; i < cas->getNscenes(); ++i )
 	{
-		if( cas->getScenePtr(i)->getUse() )
+		ProjSettings::Scene const &scene = *(cas->getScenePtr(i));
+		if( scene.getUse() )
 		{
-			ProjSettings::Scene const &scene = *(cas->getScenePtr(i));
-
-			// find the real path of the scene file
-			std::string scene_file_name = scene.getFile();
-			std::string full_path;
-			bool found = false;
-			std::vector<std::string>::const_iterator iter;
-			for( iter = resources.begin(); iter != resources.end(); ++iter )
-			{
-				if( vl::find_file( *iter, scene_file_name, full_path ) )
-				{
-					found = true;
-					break;
-				}
-			}
-			if( found )
-			{
-				// copy the scene file info
-				vec.push_back( scene );
-				vec.back().setFile( full_path );
-			}
-			else
-			{
-				std::cerr << "Real path of the scene " << scene_file_name
-					<< " was not found in any of the resources." << std::endl;
-			}
+			vec.push_back( scene );
 		}
 	}
 }
@@ -291,19 +271,4 @@ vl::Settings::_updateArgs( void )
 		_eq_args.add( "--eq-config" );
 		_eq_args.add( _env->getEqcFullPath().c_str() );
 	}
-}
-
-void vl::Settings::_initScenes(void )
-{
-	_scenes.clear();
-
-	/// Initialise the scenes structure with absolute paths
-	if( _global )
-	{ _addScenes( _scenes, _global->getCasePtr() ); }
-
-	if( _proj )
-	{ _addScenes( _scenes, _proj->getCasePtr() ); }
-
-	if( _proj && !_case.empty() )
-	{ _addScenes( _scenes, _proj->getCasePtr(_case) ); }
 }

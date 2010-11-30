@@ -147,25 +147,24 @@ class Settings
 
 		std::vector<std::string> getTrackingPaths( void ) const;
 
-
 		/// Combines Global, the Project and the Case scenes to one vector
 		/// Only scenes that are in use are added
 		///
 		/// Scene information structure is guarantied to contain
 		/// - Scene name
-		/// - absolute filepath to the scene file
+		/// - scene file name
 		/// - name of the scene this scene should be attached to
 		/// - name of the SceneNode to whom this scene should be attached
 		///
 		/// Returns a vector of Scene info structures.
-		std::vector<ProjSettings::Scene> const &getScenes( void ) const;
+		std::vector<ProjSettings::Scene> getScenes( void ) const;
 
 		/// Combines Global, the Project and the Case scripts to one vector
 		/// Only scripts that are in use are added
 		///
 		/// Script information needed to pass from this class
 		/// Script file, absolute path
-		/// Returns a vector of script file paths, absolute
+		/// Returns a vector of script names
 		std::vector<std::string> getScripts( void ) const;
 
 		std::vector<std::string> getResourcePaths( void ) const;
@@ -177,15 +176,13 @@ class Settings
 		std::string getEnvironementDir( void ) const;
 
 	protected :
-		void _addScripts( std::vector<std::string> &vec, std::string const &projDir,
+		void _addScripts( std::vector<std::string> &vec,
 						  vl::ProjSettings::Case const *cas ) const;
 
 		void _addScenes( std::vector<ProjSettings::Scene> &vec,
 						vl::ProjSettings::Case const *cas ) const;
 
 		void _updateArgs( void );
-
-		void _initScenes( void );
 
 		// Log directory
 		std::string _log_dir;
@@ -202,9 +199,6 @@ class Settings
 
 		// Project specific settings
 		ProjSettingsRefPtr _proj;
-
-		// SceneFiles, contains absolute path to the file
-		std::vector<ProjSettings::Scene> _scenes;
 
 		// Name of the current case or empty if doesn't have a case
 		std::string _case;

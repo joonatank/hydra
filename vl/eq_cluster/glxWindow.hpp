@@ -6,13 +6,6 @@
 namespace eqOgre
 {
 
-
-namespace
-{
-static Bool WaitForNotify( Display*, XEvent *e, char *arg )
-{ return (e->type == MapNotify) && (e->xmap.window == (::Window)arg); }
-}
-
 class GLXWindow : public eq::GLXWindow
 {
 public :

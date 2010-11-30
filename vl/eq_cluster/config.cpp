@@ -103,7 +103,8 @@ eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 	if( settings )
 	{
 		_settings = settings;
-		_distrib_settings.copySettings(_settings);
+		_createResourceManager();
+		_distrib_settings.copySettings(_settings, &_resource_manager);
 	}
 }
 
@@ -181,8 +182,6 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 
 	if( !inited )
 	{
-
-
 		try {
 			// Init the embedded python
 			_initPython();
@@ -193,8 +192,6 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 
 			for( size_t i = 0; i < scripts.size(); ++i )
 			{
-				EQINFO << "Running python script = " << scripts.at(i) << std::endl;
-
 				// Run init python scripts
 				_runPythonScript( scripts.at(i) );
 			}
@@ -290,6 +287,24 @@ eqOgre::Config::setHeadMatrix( Ogre::Matrix4 const &m )
 
 
 /// ------------ Private -------------
+void
+eqOgre::Config::_createResourceManager(void )
+{
+	EQINFO << "Creating Resource Manager" << std::endl;
+
+	EQINFO << "Adding project directories to resources. "
+		<< "Only project directory and global directory is added." << std::endl;
+
+	EQASSERT( _resource_manager.addResourcePath( _settings->getProjectDir() ) );
+	EQASSERT( _resource_manager.addResourcePath( _settings->getGlobalDir() ) );
+
+	// TODO add case directory
+
+	// Add environment directory, used for tracking configurations
+	EQINFO << "Adding environment directory to the resources." << std::endl;
+	EQASSERT( _resource_manager.addResourcePath( _settings->getEnvironementDir() ) );
+}
+
 
 void
 eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
@@ -317,7 +332,9 @@ eqOgre::Config::_initAudio(void )
 	_audio_manager = cAudio::createAudioManager(true);
 
 	//Create an audio source and load a sound from a file
-	_background_sound = _audio_manager->create("music","The_Dummy_Song.ogg",true);
+	std::string file_path;
+	EQASSERT( _resource_manager.findResource( "The_Dummy_Song.ogg", file_path ) );
+	_background_sound = _audio_manager->create("The_Dummy_Song", file_path.c_str() ,true);
 }
 
 
@@ -421,9 +438,14 @@ eqOgre::Config::_loadScenes(void )
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
 		std::string const &scene_name = scenes.at(i).name;
-		std::string const &xml_data = scenes.at(i).file_data;
+		//std::string const &xml_data = scenes.at(i).file_data;
+		std::string xml_data;
 
-		EQINFO << "Loading scene " << scene_name << "." << std::endl;
+		std::string scene_file_name( scene_name + ".scene" );
+		EQINFO << "Loading scene " << scene_name << " with file = "
+			<< scene_file_name << std::endl;
+
+		EQASSERT( _resource_manager.loadResource( scene_file_name, xml_data ) );
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -467,9 +489,12 @@ eqOgre::Config::_initPython(void )
 void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 {
 	EQINFO << "Running python script file " << scriptFile << "." << std::endl;
+	std::string script_path;
+
+	EQASSERT( _resource_manager.findResource( scriptFile, script_path ) );
 
 	// Run a python script.
-	python::object result = python::exec_file(scriptFile.c_str(), _global, _global);
+	python::object result = python::exec_file(script_path.c_str(), _global, _global);
 }
 
 /// Event Handling
