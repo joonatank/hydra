@@ -40,31 +40,52 @@ public :
 	std::vector<Resource> getSceneResources( void ) const;
 
 	/// Add a resource to the list of will be loaded resources
+	/// TODO not implemented
 	virtual void addResource( std::string const &name );
 
+	/// TODO not implemented
 	virtual void removeResource( std::string const &name );
 
 	/**	Loads all resources to memory
 	 *	If resource is loaded and it's a type supposed to be distributed
 	 *	then adds it to the distributed stack
 	 *
-	 *	Return value : true if all resources were loaded, false otherwise
+	 *	TODO not implemented
 	 */
-	virtual bool loadAllResources( void );
+	virtual void loadAllResources( void );
 
+	/**	Find the resource with name from the search paths
+	 *	If the resource is found the full path to it is stored in path
+	 *
+	 *	Returns : true if resource was found, false otherwise
+	 *
+	 *	Throws : nothing
+	 */
 	virtual bool findResource( std::string const &name, std::string &path ) const;
 
 	/**	Loads a resource to the provided reference
 	 *	If resource is loaded and it's a type supposed to be distributed
 	 *	then adds it to the distributed stack
 	 *
-	 *	Return value : true if resource was loaded, false otherwise
+	 *	Throws vl::resource_not_found if the resource by the name was not found
 	 */
-	virtual bool loadResource( std::string const &name, vl::Resource &data );
+	virtual void loadResource( std::string const &name, vl::Resource &data );
 
-	/// Manage resource paths
-	virtual bool addResourcePath( std::string const &resource_dir, bool recursive = true );
+	/**	Add a resource path to the resource search paths
+	 *	Parameters : resource_dir needs to be a valid filesystem directory
+	 *				 recursive true if you want all the subdirectories added too
+	 *
+	 *	Throws if the resource_dir does not exist or is not a directory
+	 */
+	virtual void addResourcePath( std::string const &resource_dir, bool recursive = true );
 
+	/**	Get the current resource search paths
+	 *
+	 *	Returns always the current search paths, if there is none will return
+	 *	an empty vector.
+	 *
+	 *	Can not fail.
+	 */
 	virtual std::vector<std::string> const &getResourcePaths( void ) const;
 
 

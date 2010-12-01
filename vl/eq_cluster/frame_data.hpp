@@ -72,7 +72,7 @@ public :
 
 	void syncAll( void );
 
-	void registerData( eq::net::Session *session );
+	bool registerData( eq::net::Session *session );
 
 	void deregisterData( void );
 
@@ -94,7 +94,7 @@ protected :
 
 	void _mapObject( SceneNodeIDPair &node );
 
-	void _registerObject( eq::net::Session *session, SceneNodeIDPair &node );
+	bool _registerObject( eq::net::Session *session, SceneNodeIDPair &node );
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;

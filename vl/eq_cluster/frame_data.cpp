@@ -17,9 +17,8 @@ eqOgre::FrameData::~FrameData(void )
 
 bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 {
-	// TODO throwing is really dangerous
-	EQASSERT( man )
-//	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	if( !man )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	_ogre_sm = man;
 
@@ -150,23 +149,28 @@ eqOgre::FrameData::syncAll( void )
 	sync();
 }
 
-void
+bool
 eqOgre::FrameData::registerData( eq::net::Session *session )
 {
 	EQINFO << "eqOgre::FrameData::registerData" << std::endl;
 	EQASSERT( session );
 
+	bool retval = true;
 	// SceneNodes need to be registered first for them to have correct ids
 	// when FrameData is registered
 	EQINFO << "Registering " << _scene_nodes.size() << " SceneNodes." << std::endl;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		_registerObject( session, _scene_nodes.at(i) );
+		retval = retval && _registerObject( session, _scene_nodes.at(i) );
 	}
 
 	// Register FrameData
 	if( !this->isAttached() )
-	{ session->registerObject( this ); }
+	{
+		retval = retval && session->registerObject( this );
+	}
+
+	return retval;
 }
 
 void
@@ -330,7 +334,7 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 	}
 }
 
-void
+bool
 eqOgre::FrameData::_registerObject( eq::net::Session *session,
 									eqOgre::FrameData::SceneNodeIDPair& node )
 {
@@ -342,10 +346,12 @@ eqOgre::FrameData::_registerObject( eq::net::Session *session,
 	// Lets make sure we don't register the objects more than once
 	EQASSERTINFO( !node.node->isAttached(), "Node already registered" )
 
-	session->registerObject( node.node);
+	bool retval = session->registerObject( node.node);
 
 	// The object has to be correctly registered
 	EQASSERTINFO( node.node->isAttached(), "Node was not registered" );
 
 	node.id = node.node->getID();
+
+	return retval;
 }

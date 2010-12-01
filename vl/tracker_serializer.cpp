@@ -17,7 +17,7 @@ vl::TrackerSerializer::TrackerSerializer(vl::ClientsRefPtr clients)
 vl::TrackerSerializer::~TrackerSerializer(void )
 {}
 
-bool
+void
 vl::TrackerSerializer::parseTrackers( const std::string& data )
 {
 	size_t length = data.length() + 1;
@@ -25,11 +25,14 @@ vl::TrackerSerializer::parseTrackers( const std::string& data )
 	::memcpy( xml_data, data.c_str(), length);
 
 	bool retval = readXML( xml_data );
+
 	delete [] xml_data;
-	return retval;
+
+	if( retval )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }
 }
 
-bool
+void
 vl::TrackerSerializer::parseTrackers( vl::Resource &tracking_data )
 {
 	// Get the ownership of the Resource data
@@ -42,6 +45,7 @@ vl::TrackerSerializer::parseTrackers( vl::Resource &tracking_data )
 
 	if( ::strlen( xml_data ) != size-1 )
 	{
+		delete [] xml_data;
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
 	}
 
@@ -49,7 +53,8 @@ vl::TrackerSerializer::parseTrackers( vl::Resource &tracking_data )
 
 	delete [] xml_data;
 
-	return retval;
+	if( retval )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }
 }
 
 

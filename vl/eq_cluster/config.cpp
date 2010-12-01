@@ -94,14 +94,18 @@ eqOgre::Config::init( eq::uint128_t const & )
 	/// Register data
 	EQINFO << "Registering data." << std::endl;
 
-	_frame_data.registerData(this);
-	EQASSERT( registerObject( &_resource_manager ) );
+	if( !_frame_data.registerData(this) )
+	{ return false; }
+
+	if( !registerObject( &_resource_manager ) )
+	{ return false; }
 
 	_distrib_settings.setFrameDataID( _frame_data.getID() );
 	_distrib_settings.setResourceManagerID( _resource_manager.getID() );
 
 	EQINFO << "Registering Settings" << std::endl;
-	EQASSERT( registerObject( &_distrib_settings ) );
+	if( !registerObject( &_distrib_settings ) )
+	{ return false; }
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
@@ -156,7 +160,7 @@ eqOgre::Config::createSceneNode(const std::string& name)
 void
 eqOgre::Config::removeSceneNode(eqOgre::SceneNodePtr node)
 {
-	EQASSERTINFO( false, "NOT IMPLEMENTED" );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
 eqOgre::SceneNode *
@@ -190,7 +194,7 @@ eqOgre::Config::getTrackerTrigger(const std::string& name)
 void
 eqOgre::Config::resetScene( void )
 {
-	EQASSERTINFO( false, "NOT IMPLEMENTED" );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
 void
@@ -258,14 +262,14 @@ eqOgre::Config::_createResourceManager(void )
 	EQINFO << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
 
-	EQASSERT( _resource_manager.addResourcePath( _settings->getProjectDir() ) );
-	EQASSERT( _resource_manager.addResourcePath( _settings->getGlobalDir() ) );
+	_resource_manager.addResourcePath( _settings->getProjectDir() );
+	_resource_manager.addResourcePath( _settings->getGlobalDir() );
 
 	// TODO add case directory
 
 	// Add environment directory, used for tracking configurations
 	EQINFO << "Adding environment directory to the resources." << std::endl;
-	EQASSERT( _resource_manager.addResourcePath( _settings->getEnvironementDir() ) );
+	_resource_manager.addResourcePath( _settings->getEnvironementDir() );
 }
 
 
@@ -298,8 +302,14 @@ eqOgre::Config::_initAudio(void )
 
 	//Create an audio source and load a sound from a file
 	std::string file_path;
-	EQASSERT( _resource_manager.findResource( "The_Dummy_Song.ogg", file_path ) );
-	_background_sound = _audio_manager->create("The_Dummy_Song", file_path.c_str() ,true);
+	if( _resource_manager.findResource( "The_Dummy_Song.ogg", file_path ) )
+	{
+		_background_sound = _audio_manager->create("The_Dummy_Song", file_path.c_str() ,true);
+	}
+	else
+	{
+		EQERROR << "Couldn't find The_Dummy_Song.ogg from resources." << std::endl;
+	}
 }
 
 
@@ -338,7 +348,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		eqOgre::Resource resource = _resource_manager.copyResource( *iter );
 
 		vl::TrackerSerializer ser( _clients );
-		EQASSERTINFO( ser.parseTrackers(resource), "Error in Tracker XML reader." );
+		ser.parseTrackers(resource);
 	}
 
 	// Start the trackers
@@ -411,7 +421,7 @@ eqOgre::Config::_loadScenes(void )
 		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
 		eqOgre::Resource resource;
-		EQASSERT( _resource_manager.loadResource( scenes.at(i).getFile(), resource ) );
+		_resource_manager.loadResource( scenes.at(i).getFile(), resource );
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -459,10 +469,15 @@ void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
 	EQINFO << "Running python script file " << scriptFile << "." << std::endl;
 	std::string script_path;
 
-	EQASSERT( _resource_manager.findResource( scriptFile, script_path ) );
-
-	// Run a python script.
-	python::object result = python::exec_file(script_path.c_str(), _global, _global);
+	if( _resource_manager.findResource( scriptFile, script_path ) )
+	{
+		// Run a python script.
+		python::object result = python::exec_file(script_path.c_str(), _global, _global);
+	}
+	else
+	{
+		EQERROR << "Couldn't find " << scriptFile << " from resources." << std::endl;
+	}
 }
 
 void

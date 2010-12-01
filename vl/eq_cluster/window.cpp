@@ -217,8 +217,11 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 		}
 
 		// Get the cluster version of data
-		EQASSERT( config->mapObject( &_settings, initID ) );
-		EQASSERT( config->mapObject( &_resource_manager, _settings.getResourceManagerID() ) );
+		if( !config->mapObject( &_settings, initID ) )
+		{ return false; }
+
+		if( !config->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
+		{ return false; }
 
 		createOgreRoot();
 		createOgreWindow();
@@ -232,9 +235,6 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 
 		if( !loadScene() )
 		{ return false; }
-
-		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
-		log << "eqOgre::Window::configInit done.\n";
 	}
 	catch( vl::exception &e )
 	{
@@ -295,9 +295,15 @@ bool eqOgre::Window::configExit(void )
 void
 eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
 {
-	EQASSERT( _keyboard && _mouse );
-	_keyboard->capture();
-	_mouse->capture();
+	if( _keyboard && _mouse )
+	{
+		_keyboard->capture();
+		_mouse->capture();
+	}
+	else
+	{
+		EQERROR << "Mouse or keyboard does not exists! No input handling." << std::endl;
+	}
 
 	eq::Window::frameFinish(frameID, frameNumber);
 }
@@ -387,28 +393,22 @@ eqOgre::Window::createInputHandling( void )
 
 	EQINFO << "Creating OIS Input Manager" << std::endl;
 
-	log << "Creating input manager.\n";
 	_input_manager = OIS::InputManager::createInputSystem( pl );
-	EQASSERT( _input_manager );
 	EQINFO << "OIS Input Manager created" << std::endl;
 
 	printInputInformation(log);
 
-	log << "Creating keyboard.\n";
 	_keyboard = static_cast<OIS::Keyboard*>(_input_manager->createInputObject(OIS::OISKeyboard, true));
-	EQASSERT( _keyboard );
 	_keyboard->setEventCallback(this);
 
-	log << "Creating mouse.\n";
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
-	EQASSERT( _mouse );
 
 	_mouse ->getMouseState().height = getPixelViewport().h;
 	_mouse ->getMouseState().width	= getPixelViewport().w;
 
 	_mouse->setEventCallback(this);
 
-	log << "Input System created.\n";
+	EQINFO << "Input system created." << std::endl;
 }
 
 Ogre::Log::Stream &

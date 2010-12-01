@@ -31,7 +31,8 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	EQINFO << "Get ogre window from RenderWindow" << std::endl;
 	eqOgre::Window *window = dynamic_cast<eqOgre::Window *>(getWindow());
 	_ogre_window = window->getRenderWindow();
-	EQASSERT( _ogre_window );
+	if( !_ogre_window )
+	{ return false; }
 
 	_camera = window->getCamera();
 	if( _camera )
@@ -44,7 +45,11 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	// Get framedata
 	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-	EQASSERTINFO( config, "config is not type eqOgre::Config" )
+	if( !config )
+	{
+		EQERROR << "Config is not type eqOgre::Config" << std::endl;
+		return false;
+	}
 
 	eq::base::UUID const &frame_id = getSettings().getFrameDataID();
 	EQASSERT( frame_id != eq::base::UUID::ZERO );
@@ -56,7 +61,10 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERTINFO( sm, "Window has no Ogre SceneManager" );
-	EQASSERTINFO( _frame_data.setSceneManager( sm ), "Some SceneNodes were not found." )
+	if( !_frame_data.setSceneManager( sm ) )
+	{
+		EQERROR << "Some SceneNodes were not found." << std::endl;
+	}
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
 	return true;

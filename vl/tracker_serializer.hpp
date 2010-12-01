@@ -65,10 +65,10 @@ public :
 	~TrackerSerializer( void );
 
 	/// Read the xml data from a string
-	bool parseTrackers( std::string const &data );
+	void parseTrackers( std::string const &data );
 
 	/// Read the xml data from a memory resource
-	bool parseTrackers( vl::Resource &tracking_data );
+	void parseTrackers( vl::Resource &tracking_data );
 
 private :
 	bool readXML( char *xml_data );

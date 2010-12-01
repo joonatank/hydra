@@ -15,6 +15,8 @@ namespace vl
 	typedef boost::error_info<struct tag_quaternion, Ogre::Quaternion> quat;
 	/// File name used
 	typedef boost::error_info<struct tag_file, std::string> file_name;
+	/// Resource name
+	typedef boost::error_info<struct tag_file, std::string> resource_name;
 
 	/// Name of the Factory used for object creation
 	typedef boost::error_info<struct tag_file, std::string> factory_name;
@@ -189,6 +191,13 @@ namespace vl
 	{
 		virtual const char* what() const throw()
 		{ return "Received message constains extra bytes."; }
+	};
+
+	/// ----------- Resource errors -------------
+	struct missing_resource : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Resource not found."; }
 	};
 
 	/// ----------- Development throws ----------

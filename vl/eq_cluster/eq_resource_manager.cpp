@@ -11,6 +11,9 @@
 // Needed for resource file loading
 #include <fstream>
 
+// Necessary for exceptions
+#include "base/exceptions.hpp"
+
 #include <eq/net/dataIStream.h>
 #include <eq/net/dataOStream.h>
 
@@ -31,7 +34,7 @@ eqOgre::ResourceManager::copyResource(const std::string& name) const
 		{ return *iter; }
 	}
 
-	EQASSERTINFO( false, "Resource not found" );
+	BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) );
 }
 
 
@@ -53,7 +56,7 @@ eqOgre::ResourceManager::getSceneResources( void ) const
 void
 eqOgre::ResourceManager::addResource(const std::string& name)
 {
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 //	_waiting_for_loading.push_back(name);
 }
 
@@ -61,13 +64,13 @@ void
 eqOgre::ResourceManager::removeResource(const std::string& name)
 {
 	// Not a priority
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
-bool
+void
 eqOgre::ResourceManager::loadAllResources( void )
 {
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 	/*
 	bool retval = true;
 	size_t offset = _resources.size();
@@ -81,45 +84,40 @@ eqOgre::ResourceManager::loadAllResources( void )
 
 	return retval;
 	*/
-	return false;
 }
 
 
-bool
+void
 eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
 {
 	// Find the resource from already loaded stack
 	if( _findResource( name, data ) )
-	{ return true; }
+	{ return; }
 
 	std::string file_path;
 
-	if( findResource(name, file_path) )
-	{
-		// Load the resource
+	if( !findResource(name, file_path) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
 
-		// Open in binary mode, so we don't mess up the file
-		// open it from the end so that we get the size with tellg
-		std::ifstream ifs( file_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
-		size_t size = ifs.tellg();
-		char *mem = new char[size+1];
-		ifs.seekg( 0, std::ios::beg );
-		ifs.read( mem, size );
-		ifs.close();
+	// Load the resource
 
-		data.setRawMemory( mem, size+1 );
-		data.setName( name );
+	// Open in binary mode, so we don't mess up the file
+	// open it from the end so that we get the size with tellg
+	std::ifstream ifs( file_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
+	size_t size = ifs.tellg();
+	char *mem = new char[size+1];
+	ifs.seekg( 0, std::ios::beg );
+	ifs.read( mem, size );
+	ifs.close();
 
-		// Data loaded add to distribution stack
-		// TODO this should check the type, so that we only add necessary ones
-		// to the distribution stack.
-		// TODO this can add the file multiple times to the stack
-		_resources.push_back( eqOgre::Resource(data) );
+	data.setRawMemory( mem, size+1 );
+	data.setName( name );
 
-		return true;
-	}
-
-	return false;
+	// Data loaded add to distribution stack
+	// TODO this should check the type, so that we only add necessary ones
+	// to the distribution stack.
+	// TODO this can add the file multiple times to the stack
+	_resources.push_back( eqOgre::Resource(data) );
 }
 
 bool
@@ -141,12 +139,12 @@ eqOgre::ResourceManager::findResource(const std::string& name, std::string& path
 	return false;
 }
 
-bool
+void
 eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool recursive )
 {
 	fs::path dir(resource_dir);
 	if( !fs::exists(dir) || !fs::is_directory(dir) )
-	{ return false; }
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( resource_dir ) ); }
 
 	_search_paths.push_back(resource_dir);
 	if( recursive )
@@ -161,8 +159,6 @@ eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool 
 			}
 		}
 	}
-
-	return true;
 }
 
 

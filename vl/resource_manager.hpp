@@ -90,10 +90,10 @@ public :
 
 	virtual bool findResource( std::string const &name, std::string &path ) const = 0;
 
-	virtual bool loadResource( std::string const &name, vl::Resource &data ) = 0;
+	virtual void loadResource( std::string const &name, vl::Resource &data ) = 0;
 
 	/// Resource path management
-	virtual bool addResourcePath( std::string const &resource_dir, bool recursive = true ) = 0;
+	virtual void addResourcePath( std::string const &resource_dir, bool recursive = true ) = 0;
 
 	virtual std::vector<std::string> const &getResourcePaths( void ) const = 0;
 
