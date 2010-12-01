@@ -95,10 +95,13 @@ eqOgre::Config::init( eq::uint128_t const & )
 	EQINFO << "Registering data." << std::endl;
 
 	_frame_data.registerData(this);
+	EQASSERT( registerObject( &_resource_manager ) );
 
 	_distrib_settings.setFrameDataID( _frame_data.getID() );
+	_distrib_settings.setResourceManagerID( _resource_manager.getID() );
+
 	EQINFO << "Registering Settings" << std::endl;
-	registerObject( &_distrib_settings );
+	EQASSERT( registerObject( &_distrib_settings ) );
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
@@ -115,9 +118,13 @@ eqOgre::Config::exit( void )
 	bool retval = eq::Config::exit();
 
 	EQINFO << "Deregistering distributed data." << std::endl;
-	// Deregister data
+
 	_frame_data.deregisterData();
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
+
+	deregisterObject( &_resource_manager );
+	_distrib_settings.setResourceManagerID( eq::base::UUID::ZERO );
+
 	deregisterObject( &_distrib_settings );
 
 	_exitAudio();
@@ -259,6 +266,22 @@ eqOgre::Config::_createResourceManager(void )
 	// Add environment directory, used for tracking configurations
 	EQINFO << "Adding environment directory to the resources." << std::endl;
 	EQASSERT( _resource_manager.addResourcePath( _settings->getEnvironementDir() ) );
+
+	// Add all scene resources
+	std::vector<vl::ProjSettings::Scene> const &scenes = _settings->getScenes();
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		_resource_manager.addResource( scenes.at(i).getFile() );
+	}
+
+	// Add all tracking resources
+	std::vector<std::string> tracking_files = _settings->getTrackingFiles();
+	for( size_t i = 0; i < tracking_files.size(); ++i )
+	{
+		_resource_manager.addResource( tracking_files.at(i) );
+	}
+
+	_resource_manager.loadAllResources();
 }
 
 
@@ -324,12 +347,11 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		 iter != tracking_files.end(); ++iter )
 	{
 		// Read a file
+		EQINFO << "Copy tracking resource : " << *iter << std::endl;
+
 		// TODO this should be moved to distrib resources
 		// and we should get here a copy of the resource
-		eqOgre::Resource resource;
-
-		EQINFO << "Reading tracking file : " << *iter << std::endl;
-		EQASSERT( _resource_manager.loadResource( *iter, resource ) );
+		eqOgre::Resource resource = _resource_manager.copyResource( *iter );
 
 		vl::TrackerSerializer ser( _clients );
 		EQASSERTINFO( ser.parseTrackers(resource), "Error in Tracker XML reader." );
@@ -379,7 +401,7 @@ eqOgre::Config::_loadScenes(void )
 		<< std::endl;
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene> const &scenes = _settings->getScenes();
+	std::vector<eqOgre::Resource> scenes = _resource_manager.getSceneResources();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
@@ -400,24 +422,16 @@ eqOgre::Config::_loadScenes(void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string const &scene_name = scenes.at(i).getName();
+		std::string scene_file_name = scenes.at(i).getName();
 
-		// TODO this should be moved to distrib resources
-		// and we should get here a copy of the resource
-		eqOgre::Resource resource;
-
-		std::string scene_file_name = scenes.at(i).getFile();
-		EQINFO << "Loading scene " << scene_name << " with file = "
-			<< scene_file_name << std::endl;
-
-		EQASSERT( _resource_manager.loadResource( scene_file_name, resource ) );
+		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( resource, this );
+		loader.parseDotScene( scenes.at(i), this );
 
-		EQINFO << "Scene loaded" << std::endl;
+		EQINFO << "Scene " << scene_file_name << " loaded." << std::endl;
 	}
 }
 

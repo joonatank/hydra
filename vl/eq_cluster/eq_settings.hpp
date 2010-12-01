@@ -24,19 +24,6 @@ namespace eqOgre
 
 vl::SettingsRefPtr getSettings( int argc, char **argv );
 
-/// Contains the data of the scene file with additional loading parameters
-struct SceneData
-{
-	SceneData( void );
-	SceneData( vl::ProjSettings::Scene const &scene,
-			   std::string const &scene_file_data );
-
-	std::string name;
-	std::string file_data;
-	std::string attachto_scene;
-	std::string attachto_point;
-};
-
 /// The settings for the current project that needs to be distributed
 /// Minimal version of vl::Settings that does not contain information on the
 /// links between project and scenes.
@@ -57,14 +44,17 @@ public :
 	void setFrameDataID( eq::base::UUID const &id )
 	{ _frame_data_id = id; }
 
+	eq::base::UUID const &getResourceManagerID( void ) const
+	{ return _resource_man_id; }
+
+	void setResourceManagerID( eq::base::UUID const &id )
+	{ _resource_man_id = id; }
+
 	/// Used by master to copy the necessary data for synchronization
 	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
 
 	std::vector<std::string> const &getResources( void ) const
 	{ return _resources; }
-
-	std::vector<SceneData> const &getScenes( void ) const
-	{ return _scenes; }
 
 	/// Logging
 	std::string getOgreLogFilePath( void ) const;
@@ -86,24 +76,14 @@ protected :
 	// Resource paths used
 	std::vector<std::string> _resources;
 
-	// Scenes to load
-	std::vector<SceneData>  _scenes;
-
 	std::string _project_name;
 
 	eq::base::UUID _frame_data_id;
 
+	eq::base::UUID _resource_man_id;
+
 	uint32_t _camera_rotations_allowed;
 };
-
-/// Serialize scenes
-// TODO this should use a custom SceneStructure that contains the whole xml file
-// not the filename. And which doesn't contain useless use and changed attributes.
-eq::net::DataOStream &
-operator<<( eqOgre::SceneData const &s, eq::net::DataOStream& os );
-
-eq::net::DataIStream &
-operator>>( eqOgre::SceneData &s, eq::net::DataIStream& is );
 
 }	// namespace eqOgre
 

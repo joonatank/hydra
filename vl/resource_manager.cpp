@@ -71,8 +71,8 @@ vl::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
 		ifs.read( mem, size );
 		ifs.close();
 
-		std::cerr << "Read " << size << " bytes from file" << std::endl;
 		data.setRawMemory( mem, size+1 );
+		data.setName( name );
 
 		return true;
 	}

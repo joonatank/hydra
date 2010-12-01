@@ -22,8 +22,8 @@
 // python
 #include "python.hpp"
 #include "event_manager.hpp"
-#include <tracker_serializer.hpp>
-#include <resource_manager.hpp>
+#include "tracker_serializer.hpp"
+#include "eq_resource.hpp"
 
 namespace eqOgre
 {
@@ -125,7 +125,7 @@ namespace eqOgre
 		 cAudio::IAudioManager *_audio_manager;
 		 cAudio::IAudioSource *_background_sound;
 
-		 vl::ResourceManager _resource_manager;
+		 eqOgre::ResourceManager _resource_manager;
 	};	// class Config
 
 

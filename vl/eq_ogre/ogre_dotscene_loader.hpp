@@ -14,6 +14,8 @@
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
 
+#include "eq_cluster/eq_resource.hpp"
+
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
@@ -43,8 +45,8 @@ public:
 class DotSceneLoader
 {
 public:
-	DotSceneLoader();
-	virtual ~DotSceneLoader();
+	DotSceneLoader( void );
+	virtual ~DotSceneLoader( void );
 
 	/// Load dotscene file using Ogre resource system
 	/// Parameters : sceneName is the name of the scene file in Ogre Resource system
@@ -65,6 +67,11 @@ public:
 			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
+	void parseDotScene( vl::Resource &scene_data,
+			Ogre::SceneManager *sceneMgr,
+			Ogre::SceneNode *attachNode = 0,
+			std::string const &sPrependNode = std::string() );
+
 	std::string getProperty(const std::string &ndNm, const std::string &prop);
 
 	std::vector<nodeProperty> nodeProperties;
@@ -72,6 +79,8 @@ public:
 	std::vector<std::string> dynamicObjects;
 
 protected:
+	void _parse( char *xml_data );
+
 	void processScene( rapidxml::xml_node<>* XMLRoot );
 
 	void processNodes( rapidxml::xml_node<>* XMLNode );
@@ -121,12 +130,8 @@ protected:
 	// Parent SceneNode for the scene file
 	Ogre::SceneNode *_attach_node;
 
-	// Ogre Resource group Name
-// 	std::string _sGroupName;
-
 	std::string _sPrependNode;
 
-	char *_xml_data;
 	// No terrain support for now
 //	Ogre::TerrainGroup* mTerrainGroup;
 //	Ogre::Vector3 mTerrainPosition;

@@ -13,15 +13,11 @@
 #include <OGRE/OgreResourceManager.h>
 #include <OGRE/OgreEntity.h>
 
-eqOgre::DotSceneLoader::DotSceneLoader()
-	: _xml_data(0)
-{
-}
+eqOgre::DotSceneLoader::DotSceneLoader( void )
+{}
 
-eqOgre::DotSceneLoader::~DotSceneLoader()
-{
-	delete [] _xml_data;
-}
+eqOgre::DotSceneLoader::~DotSceneLoader( void )
+{}
 
 // void
 // eqOgre::DotSceneLoader::parseDotScene(
@@ -54,15 +50,56 @@ eqOgre::DotSceneLoader::parseDotScene(
 	staticObjects.clear();
 	dynamicObjects.clear();
 
+	char *xml_data = new char[scene_data.length()+1];
+	::strcpy( xml_data, scene_data.c_str() );
+
+	_parse( xml_data );
+
+	delete [] xml_data;
+}
+
+void
+eqOgre::DotSceneLoader::parseDotScene( vl::Resource& scene_data,
+									   Ogre::SceneManager* sceneMgr,
+									   Ogre::SceneNode* attachNode,
+									   const std::string& sPrependNode )
+{
+	// set up shared object values
+	_scene_mgr = sceneMgr;
+	_attach_node = attachNode;
+	_sPrependNode = sPrependNode;
+	staticObjects.clear();
+	dynamicObjects.clear();
+
+	// Get the ownership of the Resource data
+	vl::MemoryBlock mem = scene_data.release();
+
+	size_t size = mem.size;
+
+	// Pass the ownership of the memory to this
+	char *xml_data = mem.mem;
+
+	// We replace the EOF with Null Terminator for text files
+	xml_data[size-1] = '\0';
+
+	if( ::strlen( xml_data ) != size-1 )
+	{
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
+	}
+
+	_parse( xml_data );
+
+	delete [] xml_data;
+}
+
+void
+eqOgre::DotSceneLoader::_parse(char* xml_data)
+{
 	rapidxml::xml_document<> XMLDoc;    // character type defaults to char
 
 	rapidxml::xml_node<>* XMLRoot;
 
-	delete [] _xml_data;
-	_xml_data = new char[scene_data.length()+1];
-	::strcpy( _xml_data, scene_data.c_str() );
-
-	XMLDoc.parse<0>( _xml_data );
+	XMLDoc.parse<0>( xml_data );
 
 	// Grab the scene node
 	XMLRoot = XMLDoc.first_node("scene");

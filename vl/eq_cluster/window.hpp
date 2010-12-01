@@ -11,6 +11,7 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 #include <OGRE/OgreLog.h>
+#include "eq_resource.hpp"
 //#include <OGRE/OgreFrameListener.h>
 //#include <OGRE/OgreWindowEventUtilities.h>
 
@@ -82,6 +83,7 @@ namespace eqOgre
 
 		/// Distributed data
 		eqOgre::DistributedSettings _settings;
+		eqOgre::ResourceManager _resource_manager;
 
 		vl::ogre::RootRefPtr _root;
 		Ogre::RenderWindow *_ogre_window;

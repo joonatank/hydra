@@ -221,24 +221,12 @@ eqOgre::getSettings( int argc, char **argv )
 }
 
 
-eqOgre::SceneData::SceneData( void )
-	: name(), file_data(), attachto_scene(), attachto_point()
-{}
 
 
-eqOgre::SceneData::SceneData( vl::ProjSettings::Scene const &scene,
-							  std::string const &scene_file_data )
-	: name( scene.getName() ),
-	  file_data(scene_file_data),
-	  attachto_scene( scene.getAttachtoScene() ),
-	  attachto_point( scene.getAttachtoPoint() )
-{
-//	vl::readFileToString( scene.getFile(), file_data );
-}
-
-/// eqOgre::DistributedSettings
+/// --------------- eqOgre::DistributedSettings -----------------------
 eqOgre::DistributedSettings::DistributedSettings( void )
 	 : _frame_data_id(eq::base::UUID::ZERO),
+	   _resource_man_id(eq::base::UUID::ZERO),
 	   _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
 {}
 
@@ -261,17 +249,6 @@ eqOgre::DistributedSettings::copySettings( vl::SettingsRefPtr settings,
 		_resources.push_back( *iter );
 	}
 
-	// Copy scenes
-	_scenes.clear();
-	std::vector<vl::ProjSettings::Scene> const &scenes = settings->getScenes();
-	for( std::vector<vl::ProjSettings::Scene>::const_iterator scene_iter = scenes.begin();
-		 scene_iter != scenes.end(); ++scene_iter )
-	{
-		std::string scene_data;
-		EQASSERT( resource_man->loadResource( scene_iter->getFile(), scene_data ) );
-		_scenes.push_back( SceneData( *scene_iter, scene_data ) );
-	}
-
 	// Copy camera rotations flags
 	_camera_rotations_allowed = settings->getEnvironmentSettings()
 		->getCameraRotationAllowed();
@@ -288,18 +265,10 @@ eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
 void
 eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 {
-	os << _project_name << _frame_data_id << _log_dir;
+	os << _project_name << _frame_data_id << _resource_man_id << _log_dir;
 
 	// Serialize resources
 	os << _resources;
-
-	// Serialize scenes
-	EQINFO << "Serializing " << _scenes.size() << " scenes." << std::endl;
-	os << _scenes.size();
-	for( size_t i = 0; i < _scenes.size(); ++i )
-	{
-		operator<<( _scenes.at(i), os );
-	}
 
 	// Serialize the camera allowed rotations
 	os << _camera_rotations_allowed;
@@ -309,39 +278,10 @@ eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 void
 eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 {
-	is >> _project_name >> _frame_data_id >> _log_dir;
+	is >> _project_name >> _frame_data_id >> _resource_man_id >> _log_dir;
 
 	// Serialize resources
 	is >> _resources;
 
-	// Serialize scenes
-	//is >> _scenes;
-	size_t size = 0;
-	is >> size;
-	_scenes.resize(size);
-	EQINFO << "Deserializing " << _scenes.size() << " scenes." << std::endl;
-	for( size_t i = 0; i < _scenes.size(); ++i )
-	{
-		operator>>( _scenes.at(i), is );
-	}
-
 	is >> _camera_rotations_allowed;
-}
-
-eq::net::DataOStream &
-eqOgre::operator<<( eqOgre::SceneData const &scene, eq::net::DataOStream& os )
-{
-	os << scene.name << scene.file_data << scene.attachto_scene
-		<< scene.attachto_point;
-
-	return os;
-}
-
-eq::net::DataIStream &
-eqOgre::operator>>( eqOgre::SceneData &scene, eq::net::DataIStream& is )
-{
-	is >> scene.name >> scene.file_data >> scene.attachto_scene
-		>> scene.attachto_point;
-
-	return is;
 }

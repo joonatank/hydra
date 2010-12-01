@@ -63,9 +63,14 @@ struct MemoryBlock
 class Resource
 {
 public :
+	virtual std::string const &getName( void ) const = 0;
+	virtual void setName( std::string const &name ) = 0;
+
 	/// Pass the ownership of a raw memory block to this resource
 	virtual void setRawMemory( MemoryBlock const &block ) = 0;
 	virtual void setRawMemory( char *mem, size_t size ) = 0;
+
+	virtual vl::MemoryBlock const &getRawMemory( void ) const = 0;
 
 	/// Get the ownership of the memory hold by the Resource
 	/// After this the Resource has no memory block stored anymore
@@ -86,13 +91,15 @@ public :
 	std::vector<std::string> const &getResourcePaths( void )
 	{ return _paths; }
 
+	// TODO these should be retired as soon as the new Distributed ResourceManager
+	// is working for slaves also.
 	bool loadResource( std::string const &name, std::string &data );
 
 	bool loadResource( std::string const &name, vl::Resource &data );
 
 	bool findResource( std::string const &name, std::string &path );
 
-private :
+protected :
 	std::vector<std::string> _paths;
 
 

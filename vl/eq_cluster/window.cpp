@@ -57,32 +57,22 @@ eqOgre::Window::~Window(void )
 bool
 eqOgre::Window::loadScene( void )
 {
-	std::stringstream ss;
-
 	// TODO this should be divided to case load scenes function and loadScene function
 
 	// Get scenes
-	std::vector<eqOgre::SceneData> const &scenes = getSettings().getScenes();
-
+	std::vector<eqOgre::Resource> scenes = _resource_manager.getSceneResources();
 	EQINFO << "Loading Scenes for Project : " << getSettings().getProjectName()
 		<< std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-// 	std::cerr << ss.str() << std::endl;
-// 	ss.str("");
 
 	// If we don't have Scenes there is no point loading them
-	if( !scenes.size() )
+	if( scenes.empty() )
 	{
 		EQINFO << "Project does not have any scene files." << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-// 		std::cerr << ss.str() << std::endl;
 		return false;
 	}
 	else
 	{
 		EQINFO << "Project has " << scenes.size() << " scene files." << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-// 		std::cerr << ss.str() << std::endl;
 	}
 
 	// Clean up old scenes
@@ -94,28 +84,17 @@ eqOgre::Window::loadScene( void )
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-//		std::cerr << "Getting scene file path." << std::endl;
-//		std::string const &scene_file = scenes.at(i).getFile();
-// 		std::cerr << "Got scene file path." << std::endl;
+		std::string const &name = scenes.at(i).getName();
 
-		std::string const &name = scenes.at(i).name;
-		std::string const &xml_data = scenes.at(i).file_data;
-// 		ss.str("");
 		EQINFO << "Loading scene " << name << "." << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-// 		std::cerr << ss.str() << std::endl;
 
 		eqOgre::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( xml_data, _sm );
+		loader.parseDotScene( scenes.at(i), _sm );
 
-// 		ss.str("");
 		EQINFO << "Scene " << name << " loaded.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
 	}
-
 
 	/// Get the camera
 	// TODO move to separate function
@@ -127,18 +106,14 @@ eqOgre::Window::loadScene( void )
 	if( cameras.hasMoreElements() )
 	{
 		_camera = cameras.getNext();
-		ss.str("");
-		ss << "Using Camera " <<  _camera->getName() << " found from the scene.";
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
+		EQINFO << "Using Camera " <<  _camera->getName()
+			<< " found from the scene." << std::endl;
 	}
 	else
 	{
 		_camera = _sm->createCamera("Cam");
-		ss.str("");
-		ss << "No camera in the scene. Using created camera " << _camera->getName();
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-		std::cerr << ss.str() << std::endl;
+		EQINFO << "No camera in the scene. Using created camera "
+			<< _camera->getName() << std::endl;
 	}
 
 	return true;
@@ -242,7 +217,8 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 		}
 
 		// Get the cluster version of data
-		config->mapObject( &_settings, initID );
+		EQASSERT( config->mapObject( &_settings, initID ) );
+		EQASSERT( config->mapObject( &_resource_manager, _settings.getResourceManagerID() ) );
 
 		createOgreRoot();
 		createOgreWindow();
@@ -309,6 +285,9 @@ bool eqOgre::Window::configExit(void )
 
 	EQINFO << "Unmapping Settings." << std::endl;
 	getConfig()->unmapObject( &_settings );
+
+	EQINFO << "Unmapping ResourceManager" << std::endl;
+	getConfig()->unmapObject( &_resource_manager );
 
 	return retval;
 }
