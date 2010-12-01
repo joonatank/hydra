@@ -266,22 +266,6 @@ eqOgre::Config::_createResourceManager(void )
 	// Add environment directory, used for tracking configurations
 	EQINFO << "Adding environment directory to the resources." << std::endl;
 	EQASSERT( _resource_manager.addResourcePath( _settings->getEnvironementDir() ) );
-
-	// Add all scene resources
-	std::vector<vl::ProjSettings::Scene> const &scenes = _settings->getScenes();
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		_resource_manager.addResource( scenes.at(i).getFile() );
-	}
-
-	// Add all tracking resources
-	std::vector<std::string> tracking_files = _settings->getTrackingFiles();
-	for( size_t i = 0; i < tracking_files.size(); ++i )
-	{
-		_resource_manager.addResource( tracking_files.at(i) );
-	}
-
-	_resource_manager.loadAllResources();
 }
 
 
@@ -401,7 +385,7 @@ eqOgre::Config::_loadScenes(void )
 		<< std::endl;
 
 	// Get scenes
-	std::vector<eqOgre::Resource> scenes = _resource_manager.getSceneResources();
+	std::vector<vl::ProjSettings::Scene> scenes = _settings->getScenes();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
@@ -426,10 +410,13 @@ eqOgre::Config::_loadScenes(void )
 
 		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
+		eqOgre::Resource resource;
+		EQASSERT( _resource_manager.loadResource( scenes.at(i).getFile(), resource ) );
+
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scenes.at(i), this );
+		loader.parseDotScene( resource, this );
 
 		EQINFO << "Scene " << scene_file_name << " loaded." << std::endl;
 	}

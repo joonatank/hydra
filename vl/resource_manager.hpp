@@ -77,31 +77,25 @@ public :
 	/// Return value : valid memory block
 	virtual MemoryBlock release( void ) = 0;
 
+	virtual void copy( Resource const &other ) = 0;
 };
 
 class ResourceManager
 {
 public :
-	ResourceManager( void );
 
-	virtual ~ResourceManager( void );
+	virtual void addResource( std::string const &name ) = 0;
 
-	bool addResourcePath( std::string const &resource_dir, bool recursive = true );
+	virtual void removeResource( std::string const &name ) = 0;
 
-	std::vector<std::string> const &getResourcePaths( void )
-	{ return _paths; }
+	virtual bool findResource( std::string const &name, std::string &path ) const = 0;
 
-	// TODO these should be retired as soon as the new Distributed ResourceManager
-	// is working for slaves also.
-	bool loadResource( std::string const &name, std::string &data );
+	virtual bool loadResource( std::string const &name, vl::Resource &data ) = 0;
 
-	bool loadResource( std::string const &name, vl::Resource &data );
+	/// Resource path management
+	virtual bool addResourcePath( std::string const &resource_dir, bool recursive = true ) = 0;
 
-	bool findResource( std::string const &name, std::string &path );
-
-protected :
-	std::vector<std::string> _paths;
-
+	virtual std::vector<std::string> const &getResourcePaths( void ) const = 0;
 
 };	// class ResourceManager
 

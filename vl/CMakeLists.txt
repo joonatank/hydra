@@ -7,11 +7,11 @@ set( SOURCES
 	tracker_serializer.cpp
 	settings.cpp
 	ogre_xml_helpers.cpp
-	resource_manager.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	eq_cluster/eq_resource_manager.cpp
 	eq_cluster/eq_resource.cpp
 	eq_cluster/dotscene_loader.cpp
 	eq_cluster/channel.cpp
@@ -41,7 +41,6 @@ set( HEADERS
 	vrpn_tracker.hpp
 	settings.hpp
 	ogre_xml_helpers.hpp
-	resource_manager.hpp
 	base/system_util.hpp
 	base/args.hpp
 	base/envsettings.hpp
@@ -54,6 +53,7 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
+	eq_cluster/eq_resource_manager.cpp
 	eq_cluster/eq_resource.hpp
 	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp

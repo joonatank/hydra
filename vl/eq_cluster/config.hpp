@@ -23,7 +23,7 @@
 #include "python.hpp"
 #include "event_manager.hpp"
 #include "tracker_serializer.hpp"
-#include "eq_resource.hpp"
+#include "eq_resource_manager.hpp"
 
 namespace eqOgre
 {

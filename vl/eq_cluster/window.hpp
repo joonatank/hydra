@@ -11,7 +11,7 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 #include <OGRE/OgreLog.h>
-#include "eq_resource.hpp"
+#include "eq_resource_manager.hpp"
 //#include <OGRE/OgreFrameListener.h>
 //#include <OGRE/OgreWindowEventUtilities.h>
 
