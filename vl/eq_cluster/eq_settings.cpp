@@ -240,15 +240,6 @@ eqOgre::DistributedSettings::copySettings( vl::SettingsRefPtr settings,
 	// Copy log paths
 	_log_dir = settings->getLogDir();
 
-	// Copy resource paths
-	_resources.clear();
-	std::vector<std::string> const &resources = settings->getResourcePaths();
-	for( std::vector<std::string>::const_iterator iter = resources.begin();
-		 iter != resources.end(); ++iter )
-	{
-		_resources.push_back( *iter );
-	}
-
 	// Copy camera rotations flags
 	_camera_rotations_allowed = settings->getEnvironmentSettings()
 		->getCameraRotationAllowed();
@@ -265,23 +256,15 @@ eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
 void
 eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 {
-	os << _project_name << _frame_data_id << _resource_man_id << _log_dir;
+	os << _project_name << _frame_data_id << _resource_man_id << _log_dir
+		<< _camera_rotations_allowed;
 
-	// Serialize resources
-	os << _resources;
-
-	// Serialize the camera allowed rotations
-	os << _camera_rotations_allowed;
 	// TODO this should serialize used plugins
 }
 
 void
 eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
 {
-	is >> _project_name >> _frame_data_id >> _resource_man_id >> _log_dir;
-
-	// Serialize resources
-	is >> _resources;
-
-	is >> _camera_rotations_allowed;
+	is >> _project_name >> _frame_data_id >> _resource_man_id >> _log_dir
+		>> _camera_rotations_allowed;
 }

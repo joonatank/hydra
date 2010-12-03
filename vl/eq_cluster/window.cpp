@@ -234,6 +234,11 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 		createInputHandling();
 
 		// Resource registration
+		std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
+		for( size_t i = 0; i < resources.size(); ++i )
+		{
+			_root->addResource( resources.at(i) );
+		}
 		_root->setupResources( );
 		_root->loadResources();
 
@@ -457,7 +462,7 @@ eqOgre::Window::createOgreRoot( void )
 {
 	EQINFO << "Creating Ogre Root" << std::endl;
 
-	_root.reset( new vl::ogre::Root( getSettings() ) );
+	_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }

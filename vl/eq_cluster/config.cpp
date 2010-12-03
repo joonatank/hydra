@@ -304,8 +304,9 @@ eqOgre::Config::_createResourceManager(void )
 	// TODO add case directory
 
 	// Add environment directory, used for tracking configurations
-	EQINFO << "Adding environment directory to the resources." << std::endl;
-	_resource_manager.addResourcePath( _settings->getEnvironementDir() );
+	EQINFO << "Adding ${environment}/tracking to the resources paths." << std::endl;
+	std::string tracking_dir( _settings->getEnvironementDir() + "/tracking" );
+	_resource_manager.addResourcePath( tracking_dir );
 }
 
 
