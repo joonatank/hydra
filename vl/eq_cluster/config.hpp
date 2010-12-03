@@ -8,9 +8,6 @@
 
 #include <eq/eq.h>
 
-// Audio
-#include <cAudio/cAudio.h>
-
 #include "frame_data.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
@@ -72,18 +69,13 @@ namespace eqOgre
 
 		void executePythonScript( vl::TextResource const &script );
 
-		void createBackgroundSound( std::string const &name );
+		void setResourceManager( eqOgre::ResourceManager *man )
+		{ _resource_manager = man; }
 
 	protected :
 		virtual ~Config (void);
 
-		void _createResourceManager( void );
-
 		void _addSceneNode( SceneNode *node );
-
-		/// Audio
-		void _initAudio( void );
-		void _exitAudio( void );
 
 		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
@@ -124,11 +116,7 @@ namespace eqOgre
 		// Python related
 		python::object _global;
 
-		// Audio objects
-		 cAudio::IAudioManager *_audio_manager;
-		 cAudio::IAudioSource *_background_sound;
-
-		 eqOgre::ResourceManager _resource_manager;
+		 eqOgre::ResourceManager *_resource_manager;
 	};	// class Config
 
 

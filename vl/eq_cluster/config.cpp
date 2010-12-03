@@ -23,9 +23,11 @@
 
 #include "resource.hpp"
 
+// TODO this is for testing the audio moving to Client
+#include "client.hpp"
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ), _event_manager( new vl::EventManager ),
-	  _audio_manager(0), _background_sound(0)
+	: eq::Config ( parent ), _event_manager( new vl::EventManager ), _resource_manager(0)
 {
 	// Add events
 	_event_manager->addEventFactory( new vl::BasicEventFactory );
@@ -61,11 +63,6 @@ eqOgre::Config::init( eq::uint128_t const & )
 	// Create Tracker needs the SceneNodes for mapping
 	_createTracker(_settings);
 
-	_initAudio();
-
-	std::string song_name("The_Dummy_Song.ogg");
-	createBackgroundSound(song_name);
-
 	// Init the embedded python
 	_initPython();
 
@@ -77,25 +74,23 @@ eqOgre::Config::init( eq::uint128_t const & )
 	{
 		// Run init python scripts
 		vl::TextResource script_resource;
-		_resource_manager.loadResource( scripts.at(i), script_resource );
+		_resource_manager->loadResource( scripts.at(i), script_resource );
 		executePythonScript( script_resource );
 	}
-
 
 	_createQuitEvent();
 	_createTransformToggle();
 
-	/// Register data
 	EQINFO << "Registering data." << std::endl;
 
 	if( !_frame_data.registerData(this) )
 	{ return false; }
 
-	if( !registerObject( &_resource_manager ) )
+	if( !registerObject( _resource_manager ) )
 	{ return false; }
 
 	_distrib_settings.setFrameDataID( _frame_data.getID() );
-	_distrib_settings.setResourceManagerID( _resource_manager.getID() );
+	_distrib_settings.setResourceManagerID( _resource_manager->getID() );
 
 	EQINFO << "Registering Settings" << std::endl;
 	if( !registerObject( &_distrib_settings ) )
@@ -120,12 +115,10 @@ eqOgre::Config::exit( void )
 	_frame_data.deregisterData();
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
 
-	deregisterObject( &_resource_manager );
+	deregisterObject( _resource_manager );
 	_distrib_settings.setResourceManagerID( eq::base::UUID::ZERO );
 
 	deregisterObject( &_distrib_settings );
-
-	_exitAudio();
 
 	EQINFO << "Config exited." << std::endl;
 	return retval;
@@ -137,8 +130,7 @@ eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 	if( settings )
 	{
 		_settings = settings;
-		_createResourceManager();
-		_distrib_settings.copySettings(_settings, &_resource_manager);
+		_distrib_settings.copySettings(_settings, _resource_manager);
 	}
 }
 
@@ -191,19 +183,16 @@ eqOgre::Config::resetScene( void )
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
+
 void
 eqOgre::Config::toggleBackgroundSound()
 {
-	if( !_background_sound )
+	eqOgre::Client *client = dynamic_cast<eqOgre::Client *> ( getClient().get() );
+	EQASSERT( client )
+	if( client )
 	{
-		EQERROR << "NO background sound to toggle." << std::endl;
-		return;
+		client->toggleBackgroundSound();
 	}
-
-	if( _background_sound->isPlaying() )
-	{ _background_sound->pause(); }
-	else
-	{ _background_sound->play2d(false); }
 }
 
 
@@ -269,46 +258,8 @@ eqOgre::Config::executePythonScript( vl::TextResource const &script )
 	}
 }
 
-void
-eqOgre::Config::createBackgroundSound( std::string const &song_name )
-{
-	//Create an audio source and load a sound from a file
-	std::string file_path;
-	if( _resource_manager.findResource( song_name, file_path ) )
-	{
-		vl::Resource resource;
-		_resource_manager.loadOggResource( song_name, resource );
-		_background_sound = _audio_manager
-			->createFromMemory("The_Dummy_Song", resource.get(), resource.size(), "ogg" );
-	}
-	else
-	{
-		EQERROR << "Couldn't find The_Dummy_Song.ogg from resources." << std::endl;
-	}
-}
-
-
 
 /// ------------ Private -------------
-void
-eqOgre::Config::_createResourceManager(void )
-{
-	EQINFO << "Creating Resource Manager" << std::endl;
-
-	EQINFO << "Adding project directories to resources. "
-		<< "Only project directory and global directory is added." << std::endl;
-
-	_resource_manager.addResourcePath( _settings->getProjectDir() );
-	_resource_manager.addResourcePath( _settings->getGlobalDir() );
-
-	// TODO add case directory
-
-	// Add environment directory, used for tracking configurations
-	EQINFO << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	std::string tracking_dir( _settings->getEnvironementDir() + "/tracking" );
-	_resource_manager.addResourcePath( tracking_dir );
-}
-
 
 void
 eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
@@ -330,28 +281,6 @@ eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 }
 
 void
-eqOgre::Config::_initAudio( void )
-{
-	EQINFO << "Init audio." << std::endl;
-
-	//Create an Audio Manager
-	_audio_manager = cAudio::createAudioManager(true);
-}
-
-void
-eqOgre::Config::_exitAudio(void )
-{
-	EQINFO << "Exit audio." << std::endl;
-
-	//Shutdown cAudio
-	if( _audio_manager )
-	{
-		_audio_manager->shutDown();
-		cAudio::destroyAudioManager(_audio_manager);
-	}
-}
-
-void
 eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	EQINFO << "Creating Trackers." << std::endl;
@@ -369,7 +298,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		EQINFO << "Copy tracking resource : " << *iter << std::endl;
 
 		vl::TextResource resource;
-		_resource_manager.loadResource( *iter, resource );
+		_resource_manager->loadResource( *iter, resource );
 
 		vl::TrackerSerializer ser( _clients );
 		ser.parseTrackers(resource);
@@ -445,7 +374,7 @@ eqOgre::Config::_loadScenes(void )
 		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
 		vl::TextResource resource;
-		_resource_manager.loadResource( scenes.at(i).getFile(), resource );
+		_resource_manager->loadResource( scenes.at(i).getFile(), resource );
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -551,8 +480,6 @@ eqOgre::Config::_createTransformToggle(void )
 
 
 /// Event Handling
-char const *CB_INFO_TEXT = "Config : OIS event received : ";
-
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
