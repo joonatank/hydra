@@ -79,6 +79,15 @@ eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &da
 		vl::TextResource &scene_res = dynamic_cast<vl::TextResource &>( data );
 		loadSceneResource( name, scene_res );
 	}
+	else if( file.extension() == ".ogg" )
+	{
+		loadOggResource( name, data );
+	}
+	else if( file.extension() == ".py" )
+	{
+		vl::TextResource &python_res = dynamic_cast<vl::TextResource &>( data );
+		loadPythonResource( name, python_res );
+	}
 	else
 	{
 		EQINFO << "Loading Generic Resource " << name << std::endl;
@@ -87,8 +96,7 @@ eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &da
 		if( !findResource(name, file_path) )
 		{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
 
-		_loadResource( file_path, data );
-		data.setName( name );
+		_loadResource( name, file_path, data );
 	}
 }
 
@@ -97,23 +105,52 @@ eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextReso
 {
 	EQINFO << "Loading Scene Resource " << name << std::endl;
 
+	std::string extension(".scene");
+	std::string scene_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+
 	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
 
-	fs::path file_name(name);
-
-	// TODO should be tested
-	if( fs::path(name).extension() != ".scene" )
-	{
-		file_name = name + ".scene";
-	}
-
-	if( !findResource(name, file_path) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
-
-	_loadResource( file_path, data );
-	data.setName( name );
+	_loadResource( scene_name, file_path, data );
 	_scenes.push_back( vl::TextResource(data) );
 }
+
+void
+eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
+{
+	EQINFO << "Loading Python Resource " << name << std::endl;
+
+	std::string extension(".py");
+	std::string script_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+
+	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
+
+	_loadResource( script_name, file_path, data );
+	_python_scripts.push_back( vl::TextResource(data) );
+}
+
+void
+eqOgre::ResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
+{
+	EQINFO << "Loading Ogg Resource " << name << std::endl;
+
+	std::string extension(".ogg");
+	std::string ogg_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+
+	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
+
+	_loadResource( ogg_name, file_path, data );
+	_ogg_sounds.push_back( vl::Resource(data) );
+}
+
 
 
 bool
@@ -189,7 +226,9 @@ eqOgre::ResourceManager::_findLoadedResource( const std::string& res_name,
 }
 
 void
-eqOgre::ResourceManager::_loadResource( const std::string &path, vl::Resource &data ) const
+eqOgre::ResourceManager::_loadResource( std::string const &name,
+										std::string const &path,
+										vl::Resource &data ) const
 {
 	EQASSERT( fs::exists(path) );
 	// Load the resource
@@ -205,7 +244,31 @@ eqOgre::ResourceManager::_loadResource( const std::string &path, vl::Resource &d
 	ifs.close();
 
 	data.set( mem, size+1 );
+
+	// Set the resource name
+	data.setName( name );
 }
+
+std::string
+eqOgre::ResourceManager::_getFileName( std::string const &name,
+									   std::string const &extension )
+{
+	if( fs::path(name).extension() == extension )
+	{ return name; }
+	else
+	{ return name+extension; }
+}
+
+std::string
+eqOgre::ResourceManager::_stripExtension( std::string const &name,
+										  std::string const &extension )
+{
+	if( fs::path(name).extension() == extension )
+	{ return fs::path(name).stem(); }
+	else
+	{ return name; }
+}
+
 
 
 void

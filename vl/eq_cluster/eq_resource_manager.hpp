@@ -64,6 +64,10 @@ public :
 
 	virtual void loadSceneResource( std::string const &name, vl::TextResource &data );
 
+	virtual void loadPythonResource( std::string const &name, vl::TextResource &data );
+
+	virtual void loadOggResource( std::string const &name, vl::Resource &data );
+
 	/**	Add a resource path to the resource search paths
 	 *	Parameters : resource_dir needs to be a valid filesystem directory
 	 *				 recursive true if you want all the subdirectories added too
@@ -91,16 +95,22 @@ protected :
 	bool _findLoadedResource( std::string const &res_name, vl::Resource &resource ) const;
 
 	/// Really load the resource
-	void _loadResource( std::string const &path, vl::Resource &resource ) const;
+	void _loadResource( std::string const &name,
+						std::string const &path,
+						vl::Resource &resource ) const;
+
+	/// Helper functions for manipulating resource files
+	std::string _getFileName( std::string const &name, std::string const &extension );
+	std::string _stripExtension( std::string const &name, std::string const &extension );
 
 	virtual void getInstanceData( eq::net::DataOStream& os );
 	virtual void applyInstanceData( eq::net::DataIStream& is );
 
-// 	std::vector<vl::Resource> _resources;
-
 	std::vector<vl::TextResource> _scenes;
 
-// 	std::vector<std::string> _waiting_for_loading;
+	std::vector<vl::TextResource> _python_scripts;
+
+	std::vector<vl::Resource> _ogg_sounds;
 
 	std::vector<std::string> _search_paths;
 

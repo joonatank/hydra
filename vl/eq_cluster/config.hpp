@@ -70,6 +70,10 @@ namespace eqOgre
 		// easier to pass around than quaternion and vector pair.
 		void setHeadMatrix( Ogre::Matrix4 const &m );
 
+		void executePythonScript( vl::TextResource const &script );
+
+		void createBackgroundSound( std::string const &name );
+
 	protected :
 		virtual ~Config (void);
 
@@ -89,7 +93,6 @@ namespace eqOgre
 
 		/// Python
 		void _initPython( void );
-		void _runPythonScript( std::string const &scriptFile );
 
 		/// Events
 		void _createQuitEvent( void );

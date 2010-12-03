@@ -60,6 +60,9 @@ public :
 	char *get( void )
 	{ return (char *)&_memory[0]; }
 
+	char const *get( void ) const
+	{ return (char *)&_memory[0]; }
+
 	/// for file input
 	void insert( iterator pos, std::istreambuf_iterator<char> first, std::istreambuf_iterator<char> last )
 	{ _memory.insert( pos, first, last ); }

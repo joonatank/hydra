@@ -63,30 +63,24 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	_initAudio();
 
-	try {
-		// Init the embedded python
-		_initPython();
+	std::string song_name("The_Dummy_Song.ogg");
+	createBackgroundSound(song_name);
 
-		std::vector<std::string> scripts = _settings->getScripts();
+	// Init the embedded python
+	_initPython();
 
-		EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
+	std::vector<std::string> scripts = _settings->getScripts();
 
-		for( size_t i = 0; i < scripts.size(); ++i )
-		{
-			// Run init python scripts
-			_runPythonScript( scripts.at(i) );
-		}
-	}
-	// Some error handling so that we can continue the application
-	catch( ... )
+	EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
+
+	for( size_t i = 0; i < scripts.size(); ++i )
 	{
-		std::cout << "Exception occured in python script." << std::endl;
+		// Run init python scripts
+		vl::TextResource script_resource;
+		_resource_manager.loadResource( scripts.at(i), script_resource );
+		executePythonScript( script_resource );
+	}
 
-	}
-	if (PyErr_Occurred())
-	{
-		PyErr_Print();
-	}
 
 	_createQuitEvent();
 	_createTransformToggle();
@@ -249,7 +243,49 @@ eqOgre::Config::setHeadMatrix( Ogre::Matrix4 const &m )
 	}
 }
 
+void
+eqOgre::Config::executePythonScript( vl::TextResource const &script )
+{
+	EQINFO << "Running python script file " << script.getName() << "." << std::endl;
 
+	EQASSERT( script.get() );
+	if( !script.get() )
+	{ return; }
+
+	try
+	{
+		// Run a python script.
+		python::object result = python::exec(script.get(), _global, _global);
+	}
+	// Some error handling so that we can continue the application
+	catch( ... )
+	{
+		std::cout << "Exception occured in python script: " << script.getName()
+			<< std::endl;
+	}
+	if (PyErr_Occurred())
+	{
+		PyErr_Print();
+	}
+}
+
+void
+eqOgre::Config::createBackgroundSound( std::string const &song_name )
+{
+	//Create an audio source and load a sound from a file
+	std::string file_path;
+	if( _resource_manager.findResource( song_name, file_path ) )
+	{
+		vl::Resource resource;
+		_resource_manager.loadOggResource( song_name, resource );
+		_background_sound = _audio_manager
+			->createFromMemory("The_Dummy_Song", resource.get(), resource.size(), "ogg" );
+	}
+	else
+	{
+		EQERROR << "Couldn't find The_Dummy_Song.ogg from resources." << std::endl;
+	}
+}
 
 
 
@@ -293,25 +329,13 @@ eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 }
 
 void
-eqOgre::Config::_initAudio(void )
+eqOgre::Config::_initAudio( void )
 {
 	EQINFO << "Init audio." << std::endl;
 
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
-
-	//Create an audio source and load a sound from a file
-	std::string file_path;
-	if( _resource_manager.findResource( "The_Dummy_Song.ogg", file_path ) )
-	{
-		_background_sound = _audio_manager->create("The_Dummy_Song", file_path.c_str() ,true);
-	}
-	else
-	{
-		EQERROR << "Couldn't find The_Dummy_Song.ogg from resources." << std::endl;
-	}
 }
-
 
 void
 eqOgre::Config::_exitAudio(void )
@@ -436,46 +460,42 @@ eqOgre::Config::_initPython(void )
 {
 	EQINFO << "Initing python context." << std::endl;
 
-	Py_Initialize();
+	try {
+		Py_Initialize();
 
-	// Add the module to the python interpreter
-	// NOTE the name parameter does not rename the module
-	// No idea why it's there
-	if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
-		throw std::runtime_error("Failed to add eqOgre to the interpreter's "
-				"builtin modules");
+		// Add the module to the python interpreter
+		// NOTE the name parameter does not rename the module
+		// No idea why it's there
+		if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
+			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+					"builtin modules");
 
-	// Retrieve the main module
-	python::object main = python::import("__main__");
+		// Retrieve the main module
+		python::object main = python::import("__main__");
 
-	// Retrieve the main module's namespace
-	_global = main.attr("__dict__");
+		// Retrieve the main module's namespace
+		_global = main.attr("__dict__");
 
-	// Import eqOgre module
-    python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
-                                    "print 'eqOgre imported'       \n",
-                                    Py_file_input,
-                                    _global.ptr(),
-                                    _global.ptr() ) ));
+		// Import eqOgre module
+		python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
+										"print 'eqOgre imported'       \n",
+										Py_file_input,
+										_global.ptr(),
+										_global.ptr() ) ));
 
-	// Add a global managers i.e. this and EventManager
-	_global["config"] = python::ptr<>( this );
-	_global["event_manager"] = python::ptr<>( _event_manager );
-}
-
-void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
-{
-	EQINFO << "Running python script file " << scriptFile << "." << std::endl;
-	std::string script_path;
-
-	if( _resource_manager.findResource( scriptFile, script_path ) )
-	{
-		// Run a python script.
-		python::object result = python::exec_file(script_path.c_str(), _global, _global);
+		// Add a global managers i.e. this and EventManager
+		_global["config"] = python::ptr<>( this );
+		_global["event_manager"] = python::ptr<>( _event_manager );
 	}
-	else
+	// Some error handling so that we can continue the application
+	catch( ... )
 	{
-		EQERROR << "Couldn't find " << scriptFile << " from resources." << std::endl;
+		std::cout << "Exception occured when initing python context." << std::endl;
+
+	}
+	if (PyErr_Occurred())
+	{
+		PyErr_Print();
 	}
 }
 
