@@ -21,7 +21,7 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
-#include "eq_resource.hpp"
+#include "resource.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent ), _event_manager( new vl::EventManager ),
@@ -276,7 +276,7 @@ eqOgre::Config::_createResourceManager(void )
 void
 eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 {
-	// Implement checking
+	// Check that no two nodes have the same name
 	// TODO should be in the frame data, as it can neither store multiple
 	// SceneNodes with same names
 	for( size_t i = 0; i < _frame_data.getNSceneNodes(); ++i )
@@ -343,9 +343,8 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		// Read a file
 		EQINFO << "Copy tracking resource : " << *iter << std::endl;
 
-		// TODO this should be moved to distrib resources
-		// and we should get here a copy of the resource
-		eqOgre::Resource resource = _resource_manager.copyResource( *iter );
+		vl::TextResource resource;
+		_resource_manager.loadResource( *iter, resource );
 
 		vl::TrackerSerializer ser( _clients );
 		ser.parseTrackers(resource);
@@ -420,7 +419,7 @@ eqOgre::Config::_loadScenes(void )
 
 		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
-		eqOgre::Resource resource;
+		vl::TextResource resource;
 		_resource_manager.loadResource( scenes.at(i).getFile(), resource );
 
 		vl::DotSceneLoader loader;

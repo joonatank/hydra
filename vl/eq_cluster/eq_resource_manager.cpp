@@ -24,32 +24,10 @@ eqOgre::ResourceManager::ResourceManager( void )
 eqOgre::ResourceManager::~ResourceManager( void )
 {}
 
-eqOgre::Resource
-eqOgre::ResourceManager::copyResource(const std::string& name) const
-{
-	for( std::vector<Resource>::const_iterator iter = _resources.begin();
-		 iter != _resources.end(); ++iter )
-	{
-		if( iter->getName() == name )
-		{ return *iter; }
-	}
-
-	BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) );
-}
-
-
-std::vector< eqOgre::Resource >
+std::vector< vl::TextResource > const &
 eqOgre::ResourceManager::getSceneResources( void ) const
 {
-	std::vector<eqOgre::Resource> vec;
-	for( size_t i = 0; i < _resources.size(); ++i )
-	{
-		if( std::string::npos != _resources.at(i).getName().rfind(".scene") )
-		{
-			vec.push_back( _resources.at(i) );
-		}
-	}
-	return vec;
+	return _scenes;
 }
 
 
@@ -91,34 +69,52 @@ void
 eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
 {
 	// Find the resource from already loaded stack
-	if( _findResource( name, data ) )
+	if( _findLoadedResource( name, data ) )
 	{ return; }
 
+	// TODO this should call the respective load functions for every file type
+	fs::path file( name );
+	if( file.extension() == ".scene" )
+	{
+		vl::TextResource &scene_res = dynamic_cast<vl::TextResource &>( data );
+		loadSceneResource( name, scene_res );
+	}
+	else
+	{
+		EQINFO << "Loading Generic Resource " << name << std::endl;
+		// Generic resources are not added to any stack
+		std::string file_path;
+		if( !findResource(name, file_path) )
+		{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
+
+		_loadResource( file_path, data );
+		data.setName( name );
+	}
+}
+
+void
+eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
+{
+	EQINFO << "Loading Scene Resource " << name << std::endl;
+
 	std::string file_path;
+
+	fs::path file_name(name);
+
+	// TODO should be tested
+	if( fs::path(name).extension() != ".scene" )
+	{
+		file_name = name + ".scene";
+	}
 
 	if( !findResource(name, file_path) )
 	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
 
-	// Load the resource
-
-	// Open in binary mode, so we don't mess up the file
-	// open it from the end so that we get the size with tellg
-	std::ifstream ifs( file_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
-	size_t size = ifs.tellg();
-	char *mem = new char[size+1];
-	ifs.seekg( 0, std::ios::beg );
-	ifs.read( mem, size );
-	ifs.close();
-
-	data.setRawMemory( mem, size+1 );
+	_loadResource( file_path, data );
 	data.setName( name );
-
-	// Data loaded add to distribution stack
-	// TODO this should check the type, so that we only add necessary ones
-	// to the distribution stack.
-	// TODO this can add the file multiple times to the stack
-	_resources.push_back( eqOgre::Resource(data) );
+	_scenes.push_back( vl::TextResource(data) );
 }
+
 
 bool
 eqOgre::ResourceManager::findResource(const std::string& name, std::string& path) const
@@ -171,19 +167,44 @@ eqOgre::ResourceManager::getResourcePaths( void ) const
 
 /// ------ Protected ------
 bool
-eqOgre::ResourceManager::_findResource( const std::string& res_name, vl::Resource& resource ) const
+eqOgre::ResourceManager::_findLoadedResource( const std::string& res_name,
+											  vl::Resource &resource ) const
 {
-	for( std::vector<Resource>::const_iterator iter = _resources.begin();
-		 iter != _resources.end(); ++iter )
+	// TODO this should support other resource containers based on extension
+	// e.g. python scripts, ogg files, scenes
+	if( fs::path(res_name).extension() == ".scene" )
 	{
-		if( iter->getName() == res_name )
+		for( std::vector<vl::TextResource>::const_iterator iter = _scenes.begin();
+			iter != _scenes.end(); ++iter )
 		{
-			resource.copy(*iter);
-			return true;
+			if( iter->getName() == res_name )
+			{
+				resource = *iter;
+				return true;
+			}
 		}
 	}
 
 	return false;
+}
+
+void
+eqOgre::ResourceManager::_loadResource( const std::string &path, vl::Resource &data ) const
+{
+	EQASSERT( fs::exists(path) );
+	// Load the resource
+
+	// Open in binary mode, so we don't mess up the file
+	// open it from the end so that we get the size with tellg
+	// TODO move the copy to use iterator insert
+	std::ifstream ifs( path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
+	size_t size = ifs.tellg();
+	char *mem = new char[size+1];
+	ifs.seekg( 0, std::ios::beg );
+	ifs.read( mem, size );
+	ifs.close();
+
+	data.set( mem, size+1 );
 }
 
 
@@ -194,10 +215,10 @@ eqOgre::ResourceManager::getInstanceData(eq::net::DataOStream& os)
 	os << _search_paths;
 
 	// Serialize all loaded resources
-	os << _resources.size();
-	for( size_t i = 0; i < _resources.size(); ++i )
+	os << _scenes.size();
+	for( size_t i = 0; i < _scenes.size(); ++i )
 	{
-		operator<<( _resources.at(i), os );
+		operator<<( _scenes.at(i), os );
 	}
 }
 
@@ -211,10 +232,10 @@ eqOgre::ResourceManager::applyInstanceData(eq::net::DataIStream& is)
 	// Deserialize all loaded resources
 	size_t size;
 	is >> size;
-	_resources.resize(size);
+	_scenes.resize(size);
 	for( size_t i = 0; i < size; ++i )
 	{
-		operator>>( _resources.at(i), is );
+		operator>>( _scenes.at(i), is );
 	}
 }
 
@@ -222,32 +243,33 @@ eqOgre::ResourceManager::applyInstanceData(eq::net::DataIStream& is)
 
 /// ---------- Global -----------
 eq::net::DataOStream &
-eqOgre::operator<<(eqOgre::Resource& res, eq::net::DataOStream& os)
+eqOgre::operator<<(vl::Resource& res, eq::net::DataOStream& os)
 {
 	os << res.getName();
-	os << res.getRawMemory().size;
-	for( size_t i = 0; i < res.getRawMemory().size; ++i )
+
+	os << res.size();
+	for( size_t i = 0; i < res.size(); ++i )
 	{
-		os << res.getRawMemory().mem[i];
+		os << res.get()[i];
 	}
 
 	return os;
 }
 
 eq::net::DataIStream &
-eqOgre::operator>>(eqOgre::Resource& res, eq::net::DataIStream& is)
+eqOgre::operator>>(vl::Resource& res, eq::net::DataIStream& is)
 {
 	std::string name;
 	size_t size;
 	is >> name >> size;
 
-	char *mem = new char[size];
+	res.setName(name);
+
+	res.resize(size);
 	for( size_t i = 0; i < size; ++i )
 	{
-		is >> mem[i];
+		is >> res[i];
 	}
-	res.setName(name);
-	res.setRawMemory(mem, size);
 
 	return is;
 }

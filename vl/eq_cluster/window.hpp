@@ -64,7 +64,7 @@ namespace eqOgre
 		// TODO add joystick support
 		void createInputHandling( void );
 
-		Ogre::Log::Stream &printInputInformation( Ogre::Log::Stream &os );
+		void printInputInformation( void );
 
 		void createWindowListener( void );
 

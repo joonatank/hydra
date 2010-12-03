@@ -17,41 +17,13 @@ vl::TrackerSerializer::TrackerSerializer(vl::ClientsRefPtr clients)
 vl::TrackerSerializer::~TrackerSerializer(void )
 {}
 
-void
-vl::TrackerSerializer::parseTrackers( const std::string& data )
-{
-	size_t length = data.length() + 1;
-	char *xml_data = new char[length];
-	::memcpy( xml_data, data.c_str(), length);
-
-	bool retval = readXML( xml_data );
-
-	delete [] xml_data;
-
-	if( retval )
-	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }
-}
 
 void
-vl::TrackerSerializer::parseTrackers( vl::Resource &tracking_data )
+vl::TrackerSerializer::parseTrackers( vl::TextResource &tracking_data )
 {
-	// Get the ownership of the Resource data
-	vl::MemoryBlock mem = tracking_data.release();
-	size_t size = mem.size;
-	char *xml_data = mem.mem;
-
-	// We replace the EOF with Null Terminator for text files
-	xml_data[size-1] = '\0';
-
-	if( ::strlen( xml_data ) != size-1 )
-	{
-		delete [] xml_data;
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
-	}
+	char *xml_data = tracking_data.get();
 
 	bool retval = readXML( xml_data );
-
-	delete [] xml_data;
 
 	if( retval )
 	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }

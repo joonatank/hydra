@@ -7,12 +7,12 @@ set( SOURCES
 	tracker_serializer.cpp
 	settings.cpp
 	ogre_xml_helpers.cpp
+	resource.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
 	eq_cluster/eq_resource_manager.cpp
-	eq_cluster/eq_resource.cpp
 	eq_cluster/dotscene_loader.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
@@ -53,8 +53,9 @@ set( HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/typedefs.hpp
-	eq_cluster/eq_resource_manager.cpp
-	eq_cluster/eq_resource.hpp
+	resource.hpp
+	resource_manager.hpp
+	eq_cluster/eq_resource_manager.hpp
 	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp
 	eq_cluster/event.hpp

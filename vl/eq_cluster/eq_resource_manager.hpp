@@ -15,8 +15,6 @@
 // Base class
 #include "resource_manager.hpp"
 
-#include "eq_resource.hpp"
-
 namespace eqOgre
 {
 
@@ -27,17 +25,10 @@ public :
 
 	virtual ~ResourceManager(void );
 
-	/// Returns a modifiedle copy of the resource
-	// TODO might be better to return references and have them copied in the
-	// application code?
-	// Problems with references are that if you use them to copy the object
-	// if it's a base class reference you slice the data when copying.
-	Resource copyResource( std::string const &name ) const;
-
 	// TODO this should be removed as soon as we have a decent system
 	// Settings should distribute the used scene files and this sould distribute
 	// the content of those files
-	std::vector<Resource> getSceneResources( void ) const;
+	std::vector<vl::TextResource> const &getSceneResources( void ) const;
 
 	/// Add a resource to the list of will be loaded resources
 	/// TODO not implemented
@@ -71,6 +62,8 @@ public :
 	 */
 	virtual void loadResource( std::string const &name, vl::Resource &data );
 
+	virtual void loadSceneResource( std::string const &name, vl::TextResource &data );
+
 	/**	Add a resource path to the resource search paths
 	 *	Parameters : resource_dir needs to be a valid filesystem directory
 	 *				 recursive true if you want all the subdirectories added too
@@ -95,25 +88,30 @@ public :
 protected :
 
 	/// Find and copy the resource from the stack
-	bool _findResource( std::string const &res_name, vl::Resource &resource ) const;
+	bool _findLoadedResource( std::string const &res_name, vl::Resource &resource ) const;
+
+	/// Really load the resource
+	void _loadResource( std::string const &path, vl::Resource &resource ) const;
 
 	virtual void getInstanceData( eq::net::DataOStream& os );
 	virtual void applyInstanceData( eq::net::DataIStream& is );
 
-	std::vector<Resource> _resources;
+// 	std::vector<vl::Resource> _resources;
 
-	std::vector<std::string> _waiting_for_loading;
+	std::vector<vl::TextResource> _scenes;
+
+// 	std::vector<std::string> _waiting_for_loading;
 
 	std::vector<std::string> _search_paths;
 
 };	// class ResourceManager
 
 eq::net::DataOStream &
-operator<<( Resource &res, eq::net::DataOStream& os );
+operator<<( vl::Resource &res, eq::net::DataOStream& os );
 
 
 eq::net::DataIStream &
-operator>>( Resource &res, eq::net::DataIStream& is );
+operator>>( vl::Resource &res, eq::net::DataIStream& is );
 
 }	// namespace eqOgre
 

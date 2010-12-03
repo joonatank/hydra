@@ -14,7 +14,7 @@
 #include "base/rapidxml.hpp"
 #include "base/filesystem.hpp"
 
-#include "eq_cluster/eq_resource.hpp"
+#include "resource.hpp"
 
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
@@ -48,26 +48,17 @@ public:
 	DotSceneLoader( void );
 	virtual ~DotSceneLoader( void );
 
-	/// Load dotscene file using Ogre resource system
-	/// Parameters : sceneName is the name of the scene file in Ogre Resource system
-	///				 groupName is the name of the Ogre resource group
-	///				 attachNode is the parent node for this DotScene scene
-	///				 sPrependNode is a string which is added to the name of every node
-	// TODO this should be removed as we don't use the Ogre::ResourceManager anymore
-// 	void parseDotScene( std::string const &sceneName,
-// 			std::string const &groupName,
-// 			Ogre::SceneManager *sceneMgr,
-// 			Ogre::SceneNode *attachNode = 0,
-// 			std::string const &sPrependNode = std::string() );
-
-	/// Parse dotscene which is already loaded to scene_data
-	/// Parameters : scene_data is complete xml file loaded into a string
-	void parseDotScene( std::string const &scene_data,
-			Ogre::SceneManager *sceneMgr,
-			Ogre::SceneNode *attachNode = 0,
-			std::string const &sPrependNode = std::string() );
-
-	void parseDotScene( vl::Resource &scene_data,
+	/**	Load dotscene file using Ogre resource system
+	 *	Parameters : sceneName is the name of the scene file in Ogre Resource system
+	 *				 groupName is the name of the Ogre resource group
+	 *				 attachNode is the parent node for this DotScene scene
+	 *				 sPrependNode is a string which is added to the name of every node
+	 *
+	 *	Throws if there is an error.
+	 *	If the passed scene_data has not been loaded.
+	 *	If the passed scene_data is not a valid DotScene scene.
+	 */
+	void parseDotScene( vl::TextResource &scene_data,
 			Ogre::SceneManager *sceneMgr,
 			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
