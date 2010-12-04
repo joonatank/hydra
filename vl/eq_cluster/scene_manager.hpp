@@ -14,7 +14,7 @@
 namespace eqOgre
 {
 
-class FrameData : public eq::fabric::Serializable
+class SceneManager : public eq::fabric::Serializable
 {
 public :
 	struct SceneNodeIDPair
@@ -28,9 +28,9 @@ public :
 		eq::base::UUID id;
 	};
 
-	FrameData( void );
+	SceneManager( void );
 
-	virtual ~FrameData( void );
+	virtual ~SceneManager( void );
 
 	bool setSceneManager( Ogre::SceneManager *man );
 
@@ -109,6 +109,7 @@ private :
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
+
 };	// class FrameData
 
 }	// namespace eqOgre

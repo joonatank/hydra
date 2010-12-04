@@ -23,7 +23,7 @@ set( SOURCES
 	eq_cluster/transform_event.cpp
 	eq_cluster/config_events.cpp
 	eq_cluster/eq_settings.cpp
-	eq_cluster/frame_data.cpp
+	eq_cluster/scene_manager.cpp
 	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
@@ -69,7 +69,7 @@ set( HEADERS
 	eq_cluster/transform_event.hpp
 	eq_cluster/config_events.hpp
 	eq_cluster/eq_settings.hpp
-	eq_cluster/frame_data.hpp
+	eq_cluster/scene_manager.hpp
 	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
 	eq_ogre/ogre_root.hpp

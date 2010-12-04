@@ -1,12 +1,12 @@
 
-#include "frame_data.hpp"
+#include "scene_manager.hpp"
 
 /// Public
-eqOgre::FrameData::FrameData( void )
+eqOgre::SceneManager::SceneManager( void )
 	: Serializable(), _scene_version( 0 ), _ogre_sm(0)
 {}
 
-eqOgre::FrameData::~FrameData(void )
+eqOgre::SceneManager::~SceneManager(void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -15,7 +15,7 @@ eqOgre::FrameData::~FrameData(void )
 	_scene_nodes.clear();
 }
 
-bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
+bool eqOgre::SceneManager::setSceneManager(Ogre::SceneManager* man)
 {
 	if( !man )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -39,7 +39,7 @@ bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 }
 
 void
-eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
+eqOgre::SceneManager::addSceneNode(eqOgre::SceneNode* node)
 {
 	setDirty( DIRTY_NODES );
 	_scene_nodes.push_back( SceneNodeIDPair(node) );
@@ -58,13 +58,13 @@ eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
 }
 
 bool
-eqOgre::FrameData::hasSceneNode(const std::string& name) const
+eqOgre::SceneManager::hasSceneNode(const std::string& name) const
 {
 	return( getSceneNode(name) );
 }
 
 eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(const std::string& name)
+eqOgre::SceneManager::getSceneNode(const std::string& name)
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -77,7 +77,7 @@ eqOgre::FrameData::getSceneNode(const std::string& name)
 }
 
 const eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(const std::string& name) const
+eqOgre::SceneManager::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -90,19 +90,19 @@ eqOgre::FrameData::getSceneNode(const std::string& name) const
 }
 
 eqOgre::SceneNode *
-eqOgre::FrameData::getSceneNode(size_t i)
+eqOgre::SceneManager::getSceneNode(size_t i)
 {
 	return _scene_nodes.at(i).node;
 }
 
 const eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(size_t i) const
+eqOgre::SceneManager::getSceneNode(size_t i) const
 {
 	return _scene_nodes.at(i).node;
 }
 
 void
-eqOgre::FrameData::setActiveCamera( std::string const &name )
+eqOgre::SceneManager::setActiveCamera( std::string const &name )
 {
 	if( _camera_name == name )
 	{ return; }
@@ -111,7 +111,8 @@ eqOgre::FrameData::setActiveCamera( std::string const &name )
 	_camera_name = name;
 }
 
-eq::uint128_t eqOgre::FrameData::commitAll( void )
+eq::uint128_t
+eqOgre::SceneManager::commitAll( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -123,7 +124,7 @@ eq::uint128_t eqOgre::FrameData::commitAll( void )
 }
 
 void
-eqOgre::FrameData::syncAll( void )
+eqOgre::SceneManager::syncAll( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -150,7 +151,7 @@ eqOgre::FrameData::syncAll( void )
 }
 
 bool
-eqOgre::FrameData::registerData( eq::net::Session *session )
+eqOgre::SceneManager::registerData( eq::net::Session *session )
 {
 	EQINFO << "eqOgre::FrameData::registerData" << std::endl;
 	EQASSERT( session );
@@ -174,7 +175,7 @@ eqOgre::FrameData::registerData( eq::net::Session *session )
 }
 
 void
-eqOgre::FrameData::deregisterData( void )
+eqOgre::SceneManager::deregisterData( void )
 {
 	EQASSERT( getSession() );
 
@@ -192,7 +193,7 @@ eqOgre::FrameData::deregisterData( void )
 }
 
 void
-eqOgre::FrameData::mapData( eq::net::Session *session, eq::base::UUID const &id )
+eqOgre::SceneManager::mapData( eq::net::Session *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
 	EQASSERTINFO( eq::base::UUID::ZERO != id, "Trying to map FrameData invalid ID" )
@@ -203,7 +204,7 @@ eqOgre::FrameData::mapData( eq::net::Session *session, eq::base::UUID const &id 
 }
 
 void
-eqOgre::FrameData::unmapData( void )
+eqOgre::SceneManager::unmapData( void )
 {
 	EQASSERT( getSession() );
 
@@ -224,7 +225,7 @@ eqOgre::FrameData::unmapData( void )
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
 void
-eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
+eqOgre::SceneManager::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
 
@@ -255,7 +256,7 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 }
 
 void
-eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
+eqOgre::SceneManager::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
 
@@ -305,7 +306,8 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 	}
 }
 
-void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
+void
+eqOgre::SceneManager::_mapObject( eqOgre::SceneManager::SceneNodeIDPair& node )
 {
 	EQINFO  << "eqOgre::FrameData::_mapObject" << std::endl;
 
@@ -335,8 +337,8 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 }
 
 bool
-eqOgre::FrameData::_registerObject( eq::net::Session *session,
-									eqOgre::FrameData::SceneNodeIDPair& node )
+eqOgre::SceneManager::_registerObject( eq::net::Session *session,
+									eqOgre::SceneManager::SceneNodeIDPair& node )
 {
 	EQINFO << "Registering Object : " << node.node->getName() << std::endl;
 

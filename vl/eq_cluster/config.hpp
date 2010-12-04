@@ -8,7 +8,7 @@
 
 #include <eq/eq.h>
 
-#include "frame_data.hpp"
+#include "scene_manager.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
 #include "base/exceptions.hpp"
@@ -100,7 +100,7 @@ namespace eqOgre
 
 		/// Distributed
 		DistributedSettings _distrib_settings;
-		FrameData _frame_data;
+		SceneManager _frame_data;
 
 		// NOTE we need to use Event pointer because Events can be inherited
 		std::vector<vl::Event *> _events;

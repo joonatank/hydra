@@ -12,7 +12,7 @@
 
 #include "tracker.hpp"
 #include "base/typedefs.hpp"
-#include "frame_data.hpp"
+#include "scene_manager.hpp"
 #include "eq_cluster/eq_settings.hpp"
 
 namespace eqOgre
@@ -55,7 +55,7 @@ protected:
 	std::string _active_camera_name;
 
 	// distribution related
-	FrameData _frame_data;
+	SceneManager _frame_data;
 
 };
 
