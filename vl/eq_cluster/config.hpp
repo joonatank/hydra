@@ -67,8 +67,6 @@ namespace eqOgre
 		// easier to pass around than quaternion and vector pair.
 		void setHeadMatrix( Ogre::Matrix4 const &m );
 
-		void executePythonScript( vl::TextResource const &script );
-
 		void setResourceManager( eqOgre::ResourceManager *man )
 		{ _resource_manager = man; }
 
@@ -82,9 +80,6 @@ namespace eqOgre
 
 		/// Scene
 		void _loadScenes( void );
-
-		/// Python
-		void _initPython( void );
 
 		/// Events
 		void _createQuitEvent( void );
@@ -113,10 +108,10 @@ namespace eqOgre
 
 		vl::EventManager *_event_manager;
 
-		// Python related
-		python::object _global;
+		eqOgre::ResourceManager *_resource_manager;
 
-		 eqOgre::ResourceManager *_resource_manager;
+		eqOgre::PythonContext *_python;
+
 	};	// class Config
 
 

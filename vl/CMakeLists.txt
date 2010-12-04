@@ -12,6 +12,7 @@ set( SOURCES
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	eq_cluster/python.cpp
 	eq_cluster/eq_resource_manager.cpp
 	eq_cluster/dotscene_loader.cpp
 	eq_cluster/channel.cpp
@@ -55,6 +56,7 @@ set( HEADERS
 	base/typedefs.hpp
 	resource.hpp
 	resource_manager.hpp
+	eq_cluster/python.hpp
 	eq_cluster/eq_resource_manager.hpp
 	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp
