@@ -29,8 +29,6 @@
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
-// 	_event_manager( new vl::EventManager ),
-// 	  _resource_manager(0), _python(0)
 {}
 
 eqOgre::Config::~Config()
@@ -39,8 +37,6 @@ eqOgre::Config::~Config()
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
-//	_python = new PythonContext(this, _event_manager);
-
 	_loadScenes();
 
 	// Create Tracker needs the SceneNodes for mapping
@@ -59,7 +55,6 @@ eqOgre::Config::init( eq::uint128_t const & )
 	}
 
 	_createQuitEvent();
-	_createTransformToggle();
 
 	EQINFO << "Registering data." << std::endl;
 
@@ -68,7 +63,8 @@ eqOgre::Config::init( eq::uint128_t const & )
 	if( !_game_manager->getSceneManager()->registerData(this) )
 	{ return false; }
 
-	eqOgre::ResourceManager *res_man = static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
+	eqOgre::ResourceManager *res_man
+		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
 	if( !registerObject( res_man ) )
 	{ return false; }
 
@@ -128,44 +124,11 @@ eqOgre::Config::createSceneNode(const std::string& name)
 	return node;
 }
 
-// // TODO implement
-// void
-// eqOgre::Config::removeSceneNode(eqOgre::SceneNodePtr node)
-// {
-// 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
-// }
-
 eqOgre::SceneNode *
 eqOgre::Config::getSceneNode(const std::string& name)
 {
 	return _game_manager->getSceneManager()->getSceneNode(name);
 }
-
-// vl::TrackerTrigger *
-// eqOgre::Config::getTrackerTrigger(const std::string& name)
-// {
-//
-// }
-
-
-// TODO implement
-// void
-// eqOgre::Config::resetScene( void )
-// {
-// 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
-// }
-
-
-// void
-// eqOgre::Config::toggleBackgroundSound()
-// {
-// 	eqOgre::Client *client = dynamic_cast<eqOgre::Client *> ( getClient().get() );
-// 	EQASSERT( client )
-// 	if( client )
-// 	{
-// 		client->toggleBackgroundSound();
-// 	}
-// }
 
 void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 {
@@ -344,38 +307,6 @@ eqOgre::Config::_createQuitEvent(void )
 	event->addTrigger(trig);
 	_game_manager->getEventManager()->addEvent( event );
 }
-
-void
-eqOgre::Config::_createTransformToggle(void )
-{
-	EQINFO << "Creating TransformToggle " << " Not in use atm." << std::endl;
-
-	// Find ogre event so we can toggle it on/off
-	// TODO add function to find Events
-	// Ogre Rotation event, used to toggle the event on/off
-	/*	FIXME new design
-	TransformationEvent ogre_event;
-	for( size_t i = 0; i < _trans_events.size(); ++i )
-	{
-		SceneNodePtr node = _trans_events.at(i).getSceneNode();
-		if( node )
-		{
-			if( node->getName() == "ogre" )
-			{
-				ogre_event = _trans_events.at(i);
-				break;
-			}
-		}
-	}
-
-	Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
-	Operation *add_oper = new AddTransformEvent( this, ogre_event );
-	Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
-	Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
-	_events.push_back( event );
-	*/
-}
-
 
 /// Event Handling
 bool

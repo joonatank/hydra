@@ -21,10 +21,6 @@ namespace eqOgre
 
 		bool run( void );
 
-// 		void toggleBackgroundSound( void );
-
-
-
 	protected:
 
 		bool _init( eq::Config *config );
@@ -34,10 +30,6 @@ namespace eqOgre
 
 		/// Resources
 		void _createResourceManager( void );
-
-		/// Audio
-//		void _initAudio( void );
-// 		void _exitAudio( void );
 
 		// Clocks
 		eq::base::Clock _clock;

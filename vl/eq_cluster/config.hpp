@@ -49,27 +49,6 @@ namespace eqOgre
 
 		SceneNode *getSceneNode( std::string const &name );
 
-// 		vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
-
-// 		void updateSceneVersion( void )
-// 		{ _frame_data.updateSceneVersion(); }
-
-// 		void resetScene( void );
-
-// 		void setActiveCamera( std::string const &name )
-// 		{ _frame_data.setActiveCamera( name ); }
-
-// 		void toggleBackgroundSound( void );
-
-		// TODO should take a transform as a parameter not a matrix
-		// Matrices are problematic if you want to decompose them
-		// Transform with quaternion and vector is lot easier to use and it's
-		// easier to pass around than quaternion and vector pair.
-// 		void setHeadMatrix( Ogre::Matrix4 const &m );
-
-// 		void setResourceManager( eqOgre::ResourceManager *man )
-// 		{ _resource_manager = man; }
-
 		void setGameManager( vl::GameManagerPtr man );
 
 	protected :
@@ -85,7 +64,6 @@ namespace eqOgre
 
 		/// Events
 		void _createQuitEvent( void );
-		void _createTransformToggle( void );
 
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
@@ -99,7 +77,6 @@ namespace eqOgre
 
 		/// Distributed
 		DistributedSettings _distrib_settings;
-// 		SceneManager _frame_data;
 
 		// NOTE we need to use Event pointer because Events can be inherited
 		std::vector<vl::Event *> _events;
