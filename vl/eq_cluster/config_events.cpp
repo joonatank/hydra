@@ -5,25 +5,28 @@
 
 #include "config_events.hpp"
 
+#include "game_manager.hpp"
+#include "player.hpp"
+
 /// -------- ConfigAction ------------
 
-std::ostream &
-eqOgre::ConfigOperation::print(std::ostream& os) const
-{
-	os << *this << " config = " << _config << std::endl;
-	return os;
-}
+// std::ostream &
+// eqOgre::ConfigOperation::print(std::ostream& os) const
+// {
+// 	os << *this << " config = " << _config << std::endl;
+// 	return os;
+// }
 
 /// --------- HeadTrackerAction -----------
 void
 eqOgre::HeadTrackerAction::execute( vl::Transform const &data )
 {
-	if( !_config )
+	if( !_player )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	Ogre::Matrix4 m( data.quaternion );
 	m.setTrans(data.position);
-	_config->setHeadMatrix(m);
+	_player->setHeadMatrix(m);
 }
 
 std::string const &
@@ -35,29 +38,29 @@ const std::string eqOgre::HeadTrackerActionFactory::TYPENAME = "HeadTrackerActio
 /// -------- QuitAction ------------
 
 void
-eqOgre::QuitOperation::execute( void )
+eqOgre::QuitAction::execute( void )
 {
-	if( !_config )
+	if( !_game )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_config->stopRunning();
+	_game->quit();
 }
 
 std::string const &
-eqOgre::QuitOperation::getTypeName( void ) const
-{ return eqOgre::QuitOperationFactory::TYPENAME; }
+eqOgre::QuitAction::getTypeName( void ) const
+{ return eqOgre::QuitActionFactory::TYPENAME; }
 
-const std::string eqOgre::QuitOperationFactory::TYPENAME = "QuitOperation";
+const std::string eqOgre::QuitActionFactory::TYPENAME = "QuitAction";
 
 
 /// -------- ReloadScene ------------
 void
 eqOgre::ReloadScene::execute( void )
 {
-	if( !_config )
+	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_config->updateSceneVersion();
+	data->reloadScene();
 }
 
 std::string const &
@@ -71,10 +74,10 @@ const std::string eqOgre::ReloadSceneFactory::TYPENAME = "ReloadScene";
 void
 eqOgre::ToggleMusic::execute(void )
 {
-	if( !_config )
+	if( !_game )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_config->toggleBackgroundSound();
+	_game->toggleBackgroundSound();
 }
 
 std::string const &
@@ -91,10 +94,10 @@ const std::string eqOgre::ToggleMusicFactory::TYPENAME = "ToggleMusic";
 void
 eqOgre::ActivateCamera::execute( void )
 {
-	if( !_config )
+	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_config->setActiveCamera( _camera_name );
+ 	data->setActiveCamera( _camera_name );
 }
 
 std::string const &

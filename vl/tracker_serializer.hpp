@@ -68,7 +68,7 @@ public :
 	void parseTrackers( vl::TextResource &tracking_data );
 
 private :
-	bool readXML( char *xml_data );
+	void readXML( char *xml_data );
 
 	/// Process the root node, the clients node
 	void processClients( rapidxml::xml_node<>* XMLRoot );

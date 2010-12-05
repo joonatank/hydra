@@ -23,15 +23,12 @@ vl::TrackerSerializer::parseTrackers( vl::TextResource &tracking_data )
 {
 	char *xml_data = tracking_data.get();
 
-	bool retval = readXML( xml_data );
-
-	if( retval )
-	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }
+	readXML( xml_data );
 }
 
 
 /// ---------- Private ------------
-bool
+void
 vl::TrackerSerializer::readXML( char *xml_data )
 {
 	rapidxml::xml_document<> xmlDoc;
@@ -39,13 +36,9 @@ vl::TrackerSerializer::readXML( char *xml_data )
 
 	rapidxml::xml_node<> *xmlRoot = xmlDoc.first_node("clients");
 	if( !xmlRoot )
-	{
-		return false;
-	}
+	{ BOOST_THROW_EXCEPTION( vl::invalid_tracking() ); }
 
 	processClients( xmlRoot );
-
-	return true;
 }
 
 void

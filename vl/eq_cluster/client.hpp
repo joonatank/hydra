@@ -8,9 +8,6 @@
 
 #include "eq_resource_manager.hpp"
 
-// Audio
-#include <cAudio/cAudio.h>
-
 namespace eqOgre
 {
 	class Config;
@@ -24,9 +21,9 @@ namespace eqOgre
 
 		bool run( void );
 
-		void toggleBackgroundSound( void );
+// 		void toggleBackgroundSound( void );
 
-		void createBackgroundSound( std::string const &name );
+
 
 	protected:
 
@@ -39,8 +36,8 @@ namespace eqOgre
 		void _createResourceManager( void );
 
 		/// Audio
-		void _initAudio( void );
-		void _exitAudio( void );
+//		void _initAudio( void );
+// 		void _exitAudio( void );
 
 		// Clocks
 		eq::base::Clock _clock;
@@ -53,16 +50,10 @@ namespace eqOgre
 
 		vl::SettingsRefPtr _settings;
 
-		eqOgre::ResourceManager *_resource_manager;
-
-		// Audio objects
-		 cAudio::IAudioManager *_audio_manager;
-		 cAudio::IAudioSource *_background_sound;
+		vl::GameManagerPtr _game_manager;
 
 		eq::ServerPtr _server;
 		eqOgre::Config *_config;
-
-
 
 		/// Equalizer overrides
 		// Needs to be overriden if we want that the listening client stays

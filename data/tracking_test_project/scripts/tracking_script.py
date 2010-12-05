@@ -4,13 +4,16 @@
 def mapTrackers():
 	for i in range(0, 20) :
 		name = 'cube' + str(i)
-		cube = config.getSceneNode( name )
-		action = event_manager.createAction( 'SetTransformation' )
+		cube = game.scene.getSceneNode( name )
+		action = game.event_manager.createAction( 'SetTransformation' )
 		action.scene_node = cube
 		# TODO there is no checking here
 		# Add checking that the object exists
-		trigger = config.getTrackerTrigger( name + 'Trigger' )
-		trigger.action = action
+		if( game.hasTrackerTrigger( name + 'Trigger' ) ) :
+			trigger = game.getTrackerTrigger( name + 'Trigger' )
+			trigger.action = action
+		else :
+			print 'Tracker trigger ' + name + 'Trigger' ' not found in Game.'
 
 # Most of the functions are in the global config now, script global_script
 # Easy to define commonly used functions in there
@@ -20,7 +23,7 @@ def mapTrackers():
 # Other than that order of script processing is not guaranteed.
 
 print 'Getting Camera SceneNode'
-camera = config.getSceneNode("CameraNode")
+camera = game.scene.getSceneNode("CameraNode")
 addTranslationEvent(camera)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names

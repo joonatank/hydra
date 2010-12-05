@@ -6,8 +6,10 @@
 #include "keycode.hpp"
 #include "event_manager.hpp"
 #include "config_events.hpp"
+#include "game_manager.hpp"
 
 #include <boost/python.hpp>
+#include <player.hpp>
 
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 {
@@ -59,7 +61,7 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 
 namespace python = boost::python;
 
-BOOST_PYTHON_MODULE(eqOgre_python)
+BOOST_PYTHON_MODULE(eqOgre)
 {
 	using namespace vl;
 	using namespace eqOgre;
@@ -114,14 +116,47 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	python::class_<Ogre::Radian>("Radian")
 	;
 
-	python::class_<Config, boost::noncopyable>("Config", python::no_init)
-		.def("removeSceneNode", &Config::removeSceneNode )
-		.def("getSceneNode", &Config::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
-		.def("setActiveCamera", &Config::setActiveCamera )
-		.def("getTrackerTrigger", &Config::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
+		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
+		//.def("getSceneManager", &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() )
+//		.def("setActiveCamera", &vl::GameManager::setActiveCamera )
+		.def("getTrackerTrigger", &vl::GameManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasTrackerTrigger", &vl::GameManager::hasTrackerTrigger )
 	;
 
-	python::class_<EventManager, boost::noncopyable>("EventManager", python::no_init)
+	// TODO add setHeadMatrix function to python
+	python::class_<vl::Player, boost::noncopyable>("Player", python::no_init)
+		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_internal_reference<>() ), &Player::setActiveCamera )
+	;
+
+
+	// Overloads for the getSceneNode
+	// TODO const versions didn't go straight with the same return value policy
+	SceneNodePtr (SceneManager::*getsn1)( std::string const & ) = &SceneManager::getSceneNode;
+	const SceneNodePtr (SceneManager::*getsn2)( std::string const & ) const = &SceneManager::getSceneNode;
+	SceneNodePtr (SceneManager::*getsn3)( size_t ) = &SceneManager::getSceneNode;
+	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
+
+	python::class_<eqOgre::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
+		// TODO add remove and add SceneNodes
+//		.def("removeSceneNode", &SceneManager::removeSceneNode )
+		.def("hasSceneNode", &SceneManager::hasSceneNode )
+		.def("getSceneNode", getsn1, python::return_value_policy<python::reference_existing_object>() )
+		.def("getSceneNode", getsn3, python::return_value_policy<python::reference_existing_object>() )
+		.def("reloadScene", &SceneManager::reloadScene)
+	;
+
+
+	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
+		.add_property("name", python::make_function( &eqOgre::SceneNode::getName, python::return_internal_reference<>() ), &eqOgre::SceneNode::setName )
+		.add_property("position", python::make_function( &eqOgre::SceneNode::getPosition, python::return_internal_reference<>() ), &eqOgre::SceneNode::setPosition )
+		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )
+		.add_property("visibility", &SceneNode::getVisibility, &eqOgre::SceneNode::setVisibility )
+	;
+
+	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
 		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
 		.def("createAction", &EventManager::createAction, python::return_value_policy<python::reference_existing_object>() )
 		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
@@ -209,24 +244,33 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 	;
 
 
-	/// Config Operations
-
-	python::class_<ConfigOperation, boost::noncopyable, python::bases<BasicAction> >("ConfigOperation", python::no_init )
-		.add_property("config", python::make_function( &QuitOperation::getConfig, python::return_value_policy< python::reference_existing_object>() ), &QuitOperation::setConfig )
+	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
+		.add_property("game", python::make_function( &GameAction::getGame, python::return_value_policy< python::reference_existing_object>() ), &GameAction::setGame )
 	;
 
-	python::class_<QuitOperation, boost::noncopyable, python::bases<ConfigOperation> >("QuitOperation", python::no_init )
+	python::class_<QuitAction, boost::noncopyable, python::bases<GameAction> >("QuitAction", python::no_init )
 	;
 
-	python::class_<ReloadScene, boost::noncopyable, python::bases<ConfigOperation> >("ReloadScene", python::no_init )
+	python::class_<ToggleMusic, boost::noncopyable, python::bases<GameAction> >("ToggleMusic", python::no_init )
 	;
 
-	python::class_<ToggleMusic, boost::noncopyable, python::bases<ConfigOperation> >("ToggleMusic", python::no_init )
+
+	python::class_<SceneManagerAction, boost::noncopyable, python::bases<BasicAction> >("SceneAction", python::no_init )
+		.def_readwrite("scene", &SceneManagerAction::data )
 	;
 
-	python::class_<ActivateCamera, boost::noncopyable, python::bases<ConfigOperation> >("ActivateCamera", python::no_init )
+	python::class_<ReloadScene, boost::noncopyable, python::bases<SceneManagerAction> >("ReloadScene", python::no_init )
+	;
+
+
+	python::class_<PlayerAction, boost::noncopyable, python::bases<BasicAction> >("PlayerAction", python::no_init )
+		.def_readwrite("player", &PlayerAction::data )
+	;
+
+	python::class_<ActivateCamera, boost::noncopyable, python::bases<PlayerAction> >("ActivateCamera", python::no_init )
 		.add_property("camera", python::make_function( &ActivateCamera::getCamera, python::return_value_policy<python::copy_const_reference>() ), &ActivateCamera::setCamera )
 	;
+
 
 	/// EventManager Operations
 	python::class_<EventManagerOperation, boost::noncopyable, python::bases<BasicAction> >("EventManagerOperation", python::no_init )
@@ -247,14 +291,6 @@ BOOST_PYTHON_MODULE(eqOgre_python)
 
 	python::class_<ShowAction, boost::noncopyable, python::bases<BasicAction> >("ShowAction", python::no_init )
 		.add_property("scene_node", python::make_function( &ShowAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowAction::setSceneNode )
-	;
-
-
-	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
-		.add_property("name", python::make_function( &eqOgre::SceneNode::getName, python::return_internal_reference<>() ), &eqOgre::SceneNode::setName )
-		.add_property("position", python::make_function( &eqOgre::SceneNode::getPosition, python::return_internal_reference<>() ), &eqOgre::SceneNode::setPosition )
-		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )
-		.add_property("visibility", &SceneNode::getVisibility, &eqOgre::SceneNode::setVisibility )
 	;
 
 	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )

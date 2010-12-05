@@ -37,7 +37,7 @@ public :
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy
 	/// them when necessary.
-	void addSceneNode( SceneNode * node );
+	void addSceneNode( SceneNodePtr node );
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -54,11 +54,7 @@ public :
 
 	// TODO add SceneNode removal
 
-	void updateSceneVersion( void )
-	{
-		setDirty( DIRTY_RELOAD_SCENE );
-		_scene_version++;
-	}
+	void reloadScene( void );
 
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }

@@ -101,6 +101,13 @@ eqOgre::SceneManager::getSceneNode(size_t i) const
 	return _scene_nodes.at(i).node;
 }
 
+void eqOgre::SceneManager::reloadScene(void )
+{
+	std::cerr << "Should reload the scene now." << std::endl;
+	setDirty( DIRTY_RELOAD_SCENE );
+	_scene_version++;
+}
+
 void
 eqOgre::SceneManager::setActiveCamera( std::string const &name )
 {

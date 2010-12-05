@@ -10,43 +10,49 @@
 #include "config.hpp"
 #include "tracker.hpp"
 
+#include "base/typedefs.hpp"
+
 namespace eqOgre
 {
 
-// ConfigEvents
-class ConfigOperation : public vl::BasicAction
+template< typename T >
+class ActionBase : public vl::BasicAction
 {
 public :
-	ConfigOperation( void )
-		: _config(0)
+	ActionBase( void )
+		: data(0)
 	{}
 
-	void setConfig( Config *conf )
-	{ _config = conf; }
+// 	void setData( T *data )
+// 	{ _data = data; }
+//
+// 	Config *getConfig( void )
+// 	{ return _config; }
 
-	Config *getConfig( void )
-	{ return _config; }
+// 	virtual std::ostream & print( std::ostream & os ) const;
 
-	virtual std::ostream & print( std::ostream & os ) const;
-
-protected :
-	Config *_config;
+// protected :
+	T *data;
 
 };	// class ConfigOperation
 
+typedef ActionBase<vl::Player> PlayerAction;
+
 /// Sets the Head matrix in eqOgre::Config
+// TODO this should use the same PlayerAction base
+// Problem is that it inherits from BasicAction and this inherits from TransformAction
 class HeadTrackerAction : public vl::TransformAction
 {
 public :
 	HeadTrackerAction( void )
-		: _config(0)
+		: _player(0)
 	{}
 
-	void setConfig( Config *conf )
-	{ _config = conf; }
+	void setPlayer( vl::PlayerPtr player )
+	{ _player = player; }
 
-	Config *getConfig( void )
-	{ return _config; }
+	vl::PlayerPtr getPlayer( void )
+	{ return _player; }
 
 	/// Callback function for TrackerTrigger
 	/// Called when new data is received from the tracker
@@ -56,7 +62,7 @@ public :
 	virtual std::string const &getTypeName( void ) const;
 
 protected :
-	Config *_config;
+	vl::PlayerPtr _player;
 };
 
 class HeadTrackerActionFactory : public vl::ActionFactory
@@ -71,8 +77,24 @@ public :
 	static const std::string TYPENAME;
 };
 
+class GameAction : public vl::BasicAction
+{
+public :
+	GameAction( void )
+		: _game(0)
+	{}
 
-class QuitOperation : public ConfigOperation
+	void setGame( vl::GameManagerPtr game )
+	{ _game = game; }
+
+	vl::GameManagerPtr getGame( void )
+	{ return _game; }
+
+protected :
+	vl::GameManagerPtr _game;
+};
+
+class QuitAction : public GameAction
 {
 public :
 	virtual void execute( void );
@@ -81,11 +103,11 @@ public :
 
 };	// class QuitOperation
 
-class QuitOperationFactory : public vl::ActionFactory
+class QuitActionFactory : public vl::ActionFactory
 {
 public :
 	virtual vl::ActionPtr create( void )
-	{ return new QuitOperation; }
+	{ return new QuitAction; }
 
 	virtual std::string const &getTypeName( void ) const
 	{ return TYPENAME; }
@@ -93,7 +115,7 @@ public :
 	static const std::string TYPENAME;
 };
 
-class ActivateCamera : public ConfigOperation
+class ActivateCamera : public PlayerAction
 {
 public :
 	void setCamera( std::string const &name )
@@ -125,7 +147,9 @@ public :
 };	// ActivateCameraFactory
 
 
-class ReloadScene : public ConfigOperation
+typedef ActionBase<SceneManager> SceneManagerAction;
+
+class ReloadScene : public SceneManagerAction
 {
 public :
 	virtual void execute( void );
@@ -147,7 +171,7 @@ public :
 };
 
 
-class ToggleMusic : public ConfigOperation
+class ToggleMusic : public GameAction
 {
 public :
 	virtual void execute( void );

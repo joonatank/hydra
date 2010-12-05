@@ -23,6 +23,8 @@
 
 #include <bullet/btBulletDynamicsCommon.h>
 
+#include "game_manager.hpp"
+
 namespace physics
 {
 
@@ -41,7 +43,7 @@ public :
 	{
 		bool ret = eqOgre::Config::init(initID);
 
-		_event_manager->addActionFactory( new vl::physics::ApplyForceFactory );
+		_game_manager->getEventManager()->addActionFactory( new vl::physics::ApplyForceFactory );
 
 		initPhysics();
 		return ret;
@@ -116,16 +118,16 @@ public :
 				physics_inited = true;
 
 				// Create a physics test Event
-				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_event_manager->createAction("ApplyForce");
-				vl::KeyPressedTrigger *trig = (vl::KeyPressedTrigger *)_event_manager->createTrigger("KeyPressedTrigger");
-				vl::Event *event = _event_manager->createEvent("Event");
+				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_game_manager->getEventManager()->createAction("ApplyForce");
+				vl::KeyPressedTrigger *trig = (vl::KeyPressedTrigger *)_game_manager->getEventManager()->createTrigger("KeyPressedTrigger");
+				vl::Event *event = _game_manager->getEventManager()->createEvent("Event");
 
 				trig->setKey(OIS::KC_F);
 				action->setRigidBody( fallBody );
 				action->setForce( btVector3(0, 500, 0) );
 				event->setAction(action);
 				event->addTrigger(trig);
-				_event_manager->addEvent(event);
+				_game_manager->getEventManager()->addEvent(event);
 			}
 		}
 

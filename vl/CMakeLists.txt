@@ -8,6 +8,8 @@ set( SOURCES
 	settings.cpp
 	ogre_xml_helpers.cpp
 	resource.cpp
+	game_manager.cpp
+	player.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
@@ -42,6 +44,8 @@ set( HEADERS
 	vrpn_tracker.hpp
 	settings.hpp
 	ogre_xml_helpers.hpp
+	game_manager.hpp
+	player.hpp
 	base/system_util.hpp
 	base/args.hpp
 	base/envsettings.hpp

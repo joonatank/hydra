@@ -31,6 +31,12 @@ public :
 
 	virtual void loadResource( std::string const &name, vl::Resource &data ) = 0;
 
+	virtual void loadSceneResource( std::string const &name, vl::TextResource &data ) = 0;
+
+	virtual void loadPythonResource( std::string const &name, vl::TextResource &data ) = 0;
+
+	virtual void loadOggResource( std::string const &name, vl::Resource &data ) = 0;
+
 	/// Resource path management
 	virtual void addResourcePath( std::string const &resource_dir, bool recursive = true ) = 0;
 

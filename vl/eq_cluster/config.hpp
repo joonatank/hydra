@@ -49,26 +49,28 @@ namespace eqOgre
 
 		SceneNode *getSceneNode( std::string const &name );
 
-		vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
+// 		vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
 
-		void updateSceneVersion( void )
-		{ _frame_data.updateSceneVersion(); }
+// 		void updateSceneVersion( void )
+// 		{ _frame_data.updateSceneVersion(); }
 
-		void resetScene( void );
+// 		void resetScene( void );
 
-		void setActiveCamera( std::string const &name )
-		{ _frame_data.setActiveCamera( name ); }
+// 		void setActiveCamera( std::string const &name )
+// 		{ _frame_data.setActiveCamera( name ); }
 
-		void toggleBackgroundSound( void );
+// 		void toggleBackgroundSound( void );
 
 		// TODO should take a transform as a parameter not a matrix
 		// Matrices are problematic if you want to decompose them
 		// Transform with quaternion and vector is lot easier to use and it's
 		// easier to pass around than quaternion and vector pair.
-		void setHeadMatrix( Ogre::Matrix4 const &m );
+// 		void setHeadMatrix( Ogre::Matrix4 const &m );
 
-		void setResourceManager( eqOgre::ResourceManager *man )
-		{ _resource_manager = man; }
+// 		void setResourceManager( eqOgre::ResourceManager *man )
+// 		{ _resource_manager = man; }
+
+		void setGameManager( vl::GameManagerPtr man );
 
 	protected :
 		virtual ~Config (void);
@@ -93,24 +95,17 @@ namespace eqOgre
 		// TODO replace the MagellanEvent with a real JoystickEvent
 		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
-		/// Tracking
-		vl::ClientsRefPtr _clients;
-
 		vl::SettingsRefPtr _settings;
 
 		/// Distributed
 		DistributedSettings _distrib_settings;
-		SceneManager _frame_data;
+// 		SceneManager _frame_data;
 
 		// NOTE we need to use Event pointer because Events can be inherited
 		std::vector<vl::Event *> _events;
 		std::vector<TransformationEvent> _trans_events;
 
-		vl::EventManager *_event_manager;
-
-		eqOgre::ResourceManager *_resource_manager;
-
-		eqOgre::PythonContext *_python;
+		vl::GameManagerPtr _game_manager;
 
 	};	// class Config
 

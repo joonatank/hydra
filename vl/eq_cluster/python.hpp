@@ -24,7 +24,7 @@ namespace python = boost::python;
 
 namespace vl
 {
-	class EventManager;
+	class GameManager;
 }
 
 namespace eqOgre
@@ -35,7 +35,7 @@ class Config;
 class PythonContext
 {
 public :
-	PythonContext( eqOgre::Config *config, vl::EventManager *event_man );
+	PythonContext( vl::GameManager *game );
 
 	~PythonContext( void );
 

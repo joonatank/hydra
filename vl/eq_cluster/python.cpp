@@ -1,14 +1,13 @@
 
 #include "python.hpp"
 
-#include "config.hpp"
+// #include "config.hpp"
 
 #include "config_python.hpp"
 
-#include "event_manager.hpp"
+#include "game_manager.hpp"
 
-eqOgre::PythonContext::PythonContext( eqOgre::Config *config,
-									  vl::EventManager *event_man )
+eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 {
 	EQINFO << "Initing python context." << std::endl;
 
@@ -18,7 +17,7 @@ eqOgre::PythonContext::PythonContext( eqOgre::Config *config,
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
+		if (PyImport_AppendInittab("eqOgre", initeqOgre) == -1)
 			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
 					"builtin modules");
 
@@ -29,15 +28,17 @@ eqOgre::PythonContext::PythonContext( eqOgre::Config *config,
 		_global = main.attr("__dict__");
 
 		// Import eqOgre module
-		python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
+		python::handle<> ignored(( PyRun_String("from eqOgre import *\n"
 										"print 'eqOgre imported'       \n",
 										Py_file_input,
 										_global.ptr(),
 										_global.ptr() ) ));
 
 		// Add a global managers i.e. this and EventManager
-		_global["config"] = python::ptr<>( config );
-		_global["event_manager"] = python::ptr<>( event_man );
+		_global["game"] = python::ptr<>( game_man );
+		// FIXME we can not use game manager here,
+		// also we need a ref ptr support in python
+//		_global["event_manager"] = python::ptr<>( game_man->getEventManager() );
 	}
 	// Some error handling so that we can continue the application
 	catch( ... )
@@ -51,6 +52,9 @@ eqOgre::PythonContext::PythonContext( eqOgre::Config *config,
 	}
 }
 
+eqOgre::PythonContext::~PythonContext(void )
+{
+}
 
 
 void
