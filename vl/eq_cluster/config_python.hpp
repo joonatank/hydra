@@ -327,24 +327,22 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
-	python::class_<TransformationAction, boost::noncopyable, python::bases<BasicAction> >("TransformationAction", python::no_init )
-		.add_property("scene_node", python::make_function( &TransformationAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationAction::setSceneNode)
-		.add_property("speed", &TransformationAction::getSpeed, &TransformationAction::setSpeed )
-		.add_property("angular_speed", python::make_function( &TransformationAction::getAngularSpeed, python::return_internal_reference<>() ), &TransformationAction::setAngularSpeed )
-		.def("create",&TransformationAction::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<MoveAction, boost::noncopyable, python::bases<BasicAction> >("MoveAction", python::no_init )
+		.add_property("scene_node", python::make_function( &MoveAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &MoveAction::setSceneNode)
+		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
+		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
+		.def("create",&MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
 
-	python::class_<TransformationActionPosProxy, boost::noncopyable, python::bases<VectorAction> >("TransformationActionPosProxy", python::no_init )
-		.add_property("action", python::make_function( &TransformationActionPosProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformationActionPosProxy::setAction )
-		.def("create",&TransformationActionPosProxy::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<TransformationActionRotProxy, boost::noncopyable, python::bases<VectorAction> >("TransformationActionRotProxy", python::no_init )
-		.add_property("action", python::make_function( &TransformationActionRotProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformationActionRotProxy::setAction )
-		.def("create",&TransformationActionRotProxy::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<MoveActionProxy, boost::noncopyable, python::bases<VectorAction> >("MoveActionProxy", python::no_init )
+		.add_property("action", python::make_function( &MoveActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &MoveActionProxy::setAction )
+		.def("enableRotation", &MoveActionProxy::enableRotation )
+		.def("disableRotation", &MoveActionProxy::disableRotation )
+		.def("enableTranslation", &MoveActionProxy::enableTranslation )
+		.def("disableTranslation", &MoveActionProxy::disableTranslation )
+		.def("create",&MoveActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

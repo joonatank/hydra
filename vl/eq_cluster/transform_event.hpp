@@ -256,10 +256,10 @@ namespace vl
 {
 
 // TODO should be a transformation action
-class TransformationAction : public BasicAction
+class MoveAction : public BasicAction
 {
 public :
-	TransformationAction( void )
+	MoveAction( void )
 		: _node(0), _move_dir(Ogre::Vector3::ZERO),
 		  _rot_dir(Ogre::Vector3::ZERO),
 		  _speed(1), _angular_speed( Ogre::Degree(60) )
@@ -313,11 +313,11 @@ public :
 	{ _rot_dir = rot_dir; }
 
 
-	static TransformationAction *create( void )
-	{ return new TransformationAction; }
+	static MoveAction *create( void )
+	{ return new MoveAction; }
 
 	std::string getTypeName( void ) const
-	{ return "TransformationAction"; }
+	{ return "MoveAction"; }
 
 private :
 	eqOgre::SceneNode *_node;
@@ -332,69 +332,54 @@ private :
 	eq::base::Clock _clock;
 };
 
-class TransformationActionPosProxy : public VectorAction
+class MoveActionProxy : public VectorAction
 {
 public :
-	TransformationActionPosProxy( void )
-		: _action(0), _value( Ogre::Vector3::ZERO )
+	MoveActionProxy( void )
+		: _action(0), _rotation(false), _translation( false ),
+		  _value( Ogre::Vector3::ZERO )
 	{}
 
 	virtual void execute( Ogre::Vector3 const &data )
 	{
 		_value = _value+data;
 
-		if( _action )
-		{ _action->setMoveDir(_value); }
+		if( _action && _translation )
+		{_action->setMoveDir(_value); }
+
+		if( _action && _rotation )
+		{_action->setRotDir(_value); }
 	}
 
-	void setAction( TransformationAction *action )
+	void enableRotation( void )
+	{ _rotation = true; }
+
+	void disableRotation( void )
+	{ _rotation = false; }
+
+	void enableTranslation( void )
+	{ _translation = true; }
+
+	void disableTranslation( void )
+	{ _translation = false; }
+
+	void setAction( MoveAction *action )
 	{ _action = action; }
 
-	TransformationAction *getAction( void )
+	MoveAction *getAction( void )
 	{ return _action; }
 
-	static TransformationActionPosProxy *create( void )
-	{ return new TransformationActionPosProxy; }
+	static MoveActionProxy *create( void )
+	{ return new MoveActionProxy; }
 
 	std::string getTypeName( void ) const
-	{ return "TransformationActionPosProxy"; }
+	{ return "MoveActionProxy"; }
 
 private :
-	TransformationAction *_action;
+	MoveAction *_action;
 
-	Ogre::Vector3 _value;
-
-};
-
-class TransformationActionRotProxy : public VectorAction
-{
-public :
-	TransformationActionRotProxy( void )
-		: _action(0), _value( Ogre::Vector3::ZERO )
-	{}
-
-	virtual void execute( Ogre::Vector3 const &data )
-	{
-		_value = _value+data;
-
-		if( _action )
-		{ _action->setRotDir(_value); }
-	}
-
-	void setAction( TransformationAction *action )
-	{ _action = action; }
-
-	TransformationAction *getAction( void )
-	{ return _action; }
-
-	static TransformationActionRotProxy *create( void )
-	{ return new TransformationActionRotProxy; }
-
-	std::string getTypeName( void ) const
-	{ return "TransformationActionRotProxy"; }
-
-private :
-	TransformationAction *_action;
+	bool _rotation;
+	bool _translation;
 
 	Ogre::Vector3 _value;
 

@@ -42,7 +42,8 @@ def addTranslationEvent(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Translation event on node = '
 	#event = game.event_manager.createEvent( 'TransformationEvent' )
-	trans_action_proxy = TransformationActionPosProxy.create()
+	trans_action_proxy = MoveActionProxy.create()
+	trans_action_proxy.enableTranslation()
 
 	addTransKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A )
 
@@ -50,7 +51,8 @@ def addTranslationEvent(node) :
 
 	addTransKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN )
 
-	rot_action_proxy = TransformationActionRotProxy.create()
+	rot_action_proxy = MoveActionProxy.create()
+	rot_action_proxy.enableRotation()
 	addTransKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.LEFT, KC.RIGHT )
 
 	#float_action = VectorActionMap.create()
@@ -63,7 +65,7 @@ def addTranslationEvent(node) :
 	#setVectorActionFromKey( float_action, KC.S )
 	#float_action.action = trans_action_proxy
 
-	trans_action = TransformationAction.create()
+	trans_action = MoveAction.create()
 	trans_action_proxy.action = trans_action
 	rot_action_proxy.action = trans_action
 	trans_action.scene_node = node
