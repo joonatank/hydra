@@ -154,10 +154,6 @@ public :
 	SceneNode *getSceneNode( void )
 	{ return _operation->getSceneNode(); }
 
-	// TODO if we need this one, we need to provide overloads to python
-//	SceneNode const *getSceneNode( void ) const
-//	{ return _operation->getSceneNode(); }
-
 	/// Called from event handling
 	/// If the trigger is mapped to this TransformationEvent the state of the
 	/// event is changed.
@@ -255,5 +251,155 @@ public :
 };
 
 }	// namespace eqOgre
+
+namespace vl
+{
+
+// TODO should be a transformation action
+class TransformationAction : public BasicAction
+{
+public :
+	TransformationAction( void )
+		: _node(0), _move_dir(Ogre::Vector3::ZERO),
+		  _rot_dir(Ogre::Vector3::ZERO),
+		  _speed(1), _angular_speed( Ogre::Degree(60) )
+	{}
+
+	virtual void execute( void )
+	{
+		double time = _clock.getTimed()/1000;
+		// TODO add speed support
+		// TODO add rotation support
+		if( _node && !_move_dir.isZeroLength() )
+		{
+			Ogre::Vector3 v = _node->getOrientation() *  _move_dir.normalisedCopy();
+			_node->setPosition( _node->getPosition()+ v*time*_speed );
+		}
+
+		if( _node && !_rot_dir.isZeroLength() )
+		{
+			Ogre::Quaternion orient = _node->getOrientation();
+			Ogre::Quaternion qx( _angular_speed*time, _rot_dir );
+			_node->setOrientation( qx*orient );
+		}
+		_clock.reset();
+	}
+
+	/// Parameters
+	void setSpeed( double speed )
+	{ _speed = speed; }
+
+	double getSpeed( void ) const
+	{ return _speed; }
+
+	/// Set the angular speed of the object in radians per second
+	void setAngularSpeed( Ogre::Radian const &speed )
+	{ _angular_speed = speed; }
+
+	Ogre::Radian const &getAngularSpeed( void ) const
+	{ return _angular_speed; }
+
+
+	void setSceneNode( eqOgre::SceneNode *node )
+	{ _node = node; }
+
+	eqOgre::SceneNode *getSceneNode( void )
+	{ return _node; }
+
+	void setMoveDir( Ogre::Vector3 const &mov_dir )
+	{ _move_dir = mov_dir; }
+
+	void setRotDir( Ogre::Vector3 const &rot_dir )
+	{ _rot_dir = rot_dir; }
+
+
+	static TransformationAction *create( void )
+	{ return new TransformationAction; }
+
+	std::string getTypeName( void ) const
+	{ return "TransformationAction"; }
+
+private :
+	eqOgre::SceneNode *_node;
+
+	Ogre::Vector3 _move_dir;
+
+	Ogre::Vector3 _rot_dir;
+
+	double _speed;
+	Ogre::Radian _angular_speed;
+
+	eq::base::Clock _clock;
+};
+
+class TransformationActionPosProxy : public VectorAction
+{
+public :
+	TransformationActionPosProxy( void )
+		: _action(0), _value( Ogre::Vector3::ZERO )
+	{}
+
+	virtual void execute( Ogre::Vector3 const &data )
+	{
+		_value = _value+data;
+
+		if( _action )
+		{ _action->setMoveDir(_value); }
+	}
+
+	void setAction( TransformationAction *action )
+	{ _action = action; }
+
+	TransformationAction *getAction( void )
+	{ return _action; }
+
+	static TransformationActionPosProxy *create( void )
+	{ return new TransformationActionPosProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "TransformationActionPosProxy"; }
+
+private :
+	TransformationAction *_action;
+
+	Ogre::Vector3 _value;
+
+};
+
+class TransformationActionRotProxy : public VectorAction
+{
+public :
+	TransformationActionRotProxy( void )
+		: _action(0), _value( Ogre::Vector3::ZERO )
+	{}
+
+	virtual void execute( Ogre::Vector3 const &data )
+	{
+		_value = _value+data;
+
+		if( _action )
+		{ _action->setRotDir(_value); }
+	}
+
+	void setAction( TransformationAction *action )
+	{ _action = action; }
+
+	TransformationAction *getAction( void )
+	{ return _action; }
+
+	static TransformationActionRotProxy *create( void )
+	{ return new TransformationActionRotProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "TransformationActionRotProxy"; }
+
+private :
+	TransformationAction *_action;
+
+	Ogre::Vector3 _value;
+
+};
+
+};
 
 #endif // EQ_OGRE_TRANSFORM_EVENT_HPP

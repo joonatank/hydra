@@ -232,7 +232,9 @@ public :
 };
 
 /// Trigger that is triggered when a frame is rendered
-class FrameTrigger : public Trigger
+// TODO should be a float trigger, so that the frame time can be passed
+// the actions this executes
+class FrameTrigger : public BasicActionTrigger
 {
 public :
 	FrameTrigger( void )

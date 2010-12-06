@@ -60,6 +60,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("length", &Ogre::Vector3::length)
 		.def("normalise", &Ogre::Vector3::normalise)
 		// Operators
+		.def(-python::self )
 		.def(python::self + python::self )
 		.def(python::self - python::self )
 		.def(python::self * python::self )
@@ -154,6 +155,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("getKeyReleasedTrigger", &vl::EventManager::getKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger )
+		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, python::return_value_policy<python::reference_existing_object>() )
 //		.def(python::str(python::self))
 	;
 
@@ -174,11 +176,21 @@ BOOST_PYTHON_MODULE(eqOgre)
 //		.def(python::str(python::self))
 	;
 
-	python::class_<KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
-		.def(python::self == python::self )
+	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
+		.add_property("action", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &BasicActionTrigger::setAction )
+	;
+
+	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
+		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
+	;
+
+	python::class_<FrameTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("FrameTrigger", python::no_init )
+	;
+
+	python::class_<KeyTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("KeyTrigger", python::no_init )
+// 		.def(python::self == python::self )
 		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
-		.add_property("action", python::make_function( &KeyTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &KeyTrigger::setAction)
-//		.add_property("released", &KeyTrigger::getReleased, &KeyTrigger::setReleased )
+// 		.add_property("action", python::make_function( &KeyTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &KeyTrigger::setAction)
 	;
 
 	python::class_<KeyPressedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyPressedTrigger", python::no_init )
@@ -234,8 +246,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 //		.def(python::str(python::self))
 	;
 
-	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::Trigger> >("TrackerTrigger", python::no_init )
-		.add_property("action", python::make_function( &TrackerTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TrackerTrigger::setAction)
+	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::TransformActionTrigger> >("TrackerTrigger", python::no_init )
+// 		.add_property("action", python::make_function( &TrackerTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TrackerTrigger::setAction)
 	;
 
 
@@ -279,7 +291,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
-	/// SceneNode Operations
+	/// SceneNode Actions
 	// TODO expose the Base class
 	python::class_<HideAction, boost::noncopyable, python::bases<BasicAction> >("HideAction", python::no_init )
 		.add_property("scene_node", python::make_function( &HideAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideAction::setSceneNode )
@@ -293,6 +305,48 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
+
+	/// TransformationAction stuff
+	python::class_<FloatAction, boost::noncopyable, python::bases<Action> >("FloatAction", python::no_init )
+	;
+
+	python::class_<VectorAction, boost::noncopyable, python::bases<Action> >("VectorAction", python::no_init )
+	;
+
+	python::class_<FloatActionMap, boost::noncopyable, python::bases<BasicAction> >("FloatActionMap", python::no_init )
+		.def_readwrite("value", &FloatActionMap::value )
+		.add_property("action", python::make_function( &FloatActionMap::getAction, python::return_value_policy< python::reference_existing_object>() ), &FloatActionMap::setAction)
+		.def("create",&FloatActionMap::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<VectorActionMap, boost::noncopyable, python::bases<FloatAction> >("VectorActionMap", python::no_init )
+		.def_readwrite("axis", &VectorActionMap::axis )
+		.add_property("action", python::make_function( &VectorActionMap::getAction, python::return_value_policy< python::reference_existing_object>() ), &VectorActionMap::setAction)
+		.def("create",&VectorActionMap::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<TransformationAction, boost::noncopyable, python::bases<BasicAction> >("TransformationAction", python::no_init )
+		.add_property("scene_node", python::make_function( &TransformationAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationAction::setSceneNode)
+		.add_property("speed", &TransformationAction::getSpeed, &TransformationAction::setSpeed )
+		.add_property("angular_speed", python::make_function( &TransformationAction::getAngularSpeed, python::return_internal_reference<>() ), &TransformationAction::setAngularSpeed )
+		.def("create",&TransformationAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+
+	python::class_<TransformationActionPosProxy, boost::noncopyable, python::bases<VectorAction> >("TransformationActionPosProxy", python::no_init )
+		.add_property("action", python::make_function( &TransformationActionPosProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformationActionPosProxy::setAction )
+		.def("create",&TransformationActionPosProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<TransformationActionRotProxy, boost::noncopyable, python::bases<VectorAction> >("TransformationActionRotProxy", python::no_init )
+		.add_property("action", python::make_function( &TransformationActionRotProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformationActionRotProxy::setAction )
+		.def("create",&TransformationActionRotProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
 
 	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )
 		.add_property("scene_node", python::make_function( &TransformationEvent::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationEvent::setSceneNode )

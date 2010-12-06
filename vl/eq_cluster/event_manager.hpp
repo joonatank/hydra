@@ -82,6 +82,14 @@ public :
 
 	bool hasKeyReleasedTrigger( OIS::KeyCode kc  );
 
+	vl::FrameTrigger *getFrameTrigger( void )
+	{
+		if( !_frame_trigger )
+		{ _frame_trigger = new vl::FrameTrigger; }
+
+		return _frame_trigger;
+	}
+
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 
@@ -98,6 +106,7 @@ private :
 	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
 	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
 
+	vl::FrameTrigger *_frame_trigger;
 };	// class EventManager
 
 inline std::ostream &operator<<( std::ostream &os, EventManager const &man )

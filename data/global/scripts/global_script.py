@@ -1,43 +1,108 @@
 # -*- coding: utf-8 -*-
 
+def setVectorActionFromKey( vector_action, kc ) :
+	key_action = FloatActionMap.create()
+	key_action.action = vector_action
+	key_action.value = 1
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
+	trigger.action = key_action
+
+	key_action = FloatActionMap.create()
+	key_action.action = vector_action
+	key_action.value = -1
+	trigger = game.event_manager.createKeyReleasedTrigger( kc )
+	trigger.action = key_action
+
+
+
+def addTransKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg ) :
+	float_action = VectorActionMap.create()
+	float_action.axis = axis
+	setVectorActionFromKey( float_action, kc_pos )
+	float_action.action = trans_action
+
+	float_action = VectorActionMap.create()
+	float_action.axis = -axis
+	setVectorActionFromKey( float_action, kc_neg )
+	float_action.action = trans_action
+
+#def addRotKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg ) :
+	#float_action = VectorActionMap.create()
+	#float_action.axis = axis
+	#setVectorActionFromKey( float_action, kc_pos )
+	#float_action.action = trans_action
+
+	#float_action = VectorActionMap.create()
+	#float_action.axis = -axis
+	#setVectorActionFromKey( float_action, kc_neg )
+	#float_action.action = trans_action
+
 # TODO using the old interface
 def addTranslationEvent(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Translation event on node = '
-	event = game.event_manager.createEvent( 'TransformationEvent' )
-	event.scene_node = node
+	#event = game.event_manager.createEvent( 'TransformationEvent' )
+	trans_action_proxy = TransformationActionPosProxy.create()
+
+	addTransKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A )
+
+	addTransKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.S, KC.W )
+
+	addTransKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN )
+
+	rot_action_proxy = TransformationActionRotProxy.create()
+	addTransKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.LEFT, KC.RIGHT )
+
+	#float_action = VectorActionMap.create()
+	#float_action.axis = -v
+	#setVectorActionFromKey( float_action, KC.W )
+	#float_action.action = trans_action_proxy
+
+	#float_action = VectorActionMap.create()
+	#float_action.axis = v
+	#setVectorActionFromKey( float_action, KC.S )
+	#float_action.action = trans_action_proxy
+
+	trans_action = TransformationAction.create()
+	trans_action_proxy.action = trans_action
+	rot_action_proxy.action = trans_action
+	trans_action.scene_node = node
+	trans_action.speed = 5.0
+	# TODO add rotation speed
+	trigger = game.event_manager.getFrameTrigger()
+	trigger.action = trans_action
 	# Set the movement speed to ten m/s
-	event.speed = 10
+	#event.speed = 10
 	# Set the rotation speed to 30 degs/s
 	# FIXME this does not work
 	#event.angular_speed = 30
 	# TODO this is bit verbose and repeated often move it to python function
-	trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.D
-	trigger_neg.key = KC.A
-	event.setTransXtrigger( trigger_pos, trigger_neg )
-	trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.PGUP
-	trigger_neg.key = KC.PGDOWN
-	event.setTransYtrigger( trigger_pos, trigger_neg )
-	trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.S
-	trigger_neg.key = KC.W
-	event.setTransZtrigger( trigger_pos, trigger_neg )
+	#trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_pos.key = KC.D
+	#trigger_neg.key = KC.A
+	#event.setTransXtrigger( trigger_pos, trigger_neg )
+	#trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_pos.key = KC.PGUP
+	#trigger_neg.key = KC.PGDOWN
+	#event.setTransYtrigger( trigger_pos, trigger_neg )
+	#trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_pos.key = KC.S
+	#trigger_neg.key = KC.W
+	#event.setTransZtrigger( trigger_pos, trigger_neg )
 
 	# TODO yaw missing, but the Application does not allow yaw for cameras because
 	# it looks funny in multi wall systems
-	trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.LEFT
-	trigger_neg.key = KC.RIGHT
-	event.setRotYtrigger( trigger_pos, trigger_neg )
+	#trigger_pos = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_neg = game.event_manager.createTrigger( 'KeyTrigger' )
+	#trigger_pos.key = KC.LEFT
+	#trigger_neg.key = KC.RIGHT
+	#event.setRotYtrigger( trigger_pos, trigger_neg )
 
-	if not game.event_manager.addEvent(event) :
-		print 'Python : could not add event'
+	#if not game.event_manager.addEvent(event) :
+		#print 'Python : could not add event'
 
 
 

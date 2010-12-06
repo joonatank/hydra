@@ -179,6 +179,22 @@ private :
 	double _time_limit;
 };
 
+class FloatAction : public Action
+{
+public :
+	virtual void execute( double const &data ) = 0;
+};
+
+typedef FloatAction *FloatActionPtr;
+
+class VectorAction : public Action
+{
+public :
+	virtual void execute( Ogre::Vector3 const &data ) = 0;
+};
+
+typedef VectorAction *VectorActionPtr;
+
 /// Callback Action class designed for Trackers
 /// Could be expanded for use with anything that sets the object transformation
 // For now the Tracker Triggers are the test case
@@ -192,6 +208,71 @@ public :
 };
 
 typedef TransformAction * TransformActionPtr;
+
+/// Convert a BasicAction to a FloatAction with a specific value
+class FloatActionMap : public BasicAction
+{
+public :
+	FloatActionMap( void )
+		: value(0)
+	{}
+
+	void execute( void )
+	{
+		if( _action )
+		{ _action->execute(value); }
+	}
+
+	void setAction( FloatActionPtr action )
+	{ _action = action; }
+
+	FloatActionPtr getAction( void )
+	{ return _action; }
+
+	static FloatActionMap *create( void )
+	{ return new FloatActionMap; }
+
+	std::string getTypeName( void ) const
+	{ return "FloatActionMap"; }
+
+	double value;
+
+private :
+	FloatActionPtr _action;
+};
+
+/// Convert a FloatAction to a VectorAction with a specific value
+class VectorActionMap : public FloatAction
+{
+public :
+	VectorActionMap( void )
+		: axis( Ogre::Vector3::ZERO )
+	{}
+
+	void execute( double const &data )
+	{
+		if( _action )
+		{ _action->execute( data*axis ); }
+	}
+
+	void setAction( VectorActionPtr action )
+	{ _action = action; }
+
+	VectorActionPtr getAction( void )
+	{ return _action; }
+
+	static VectorActionMap *create( void )
+	{ return new VectorActionMap; }
+
+	std::string getTypeName( void ) const
+	{ return "VectorActionMap"; }
+
+	Ogre::Vector3 axis;
+
+private :
+	VectorActionPtr _action;
+};
+
 
 }	// namespace vl
 

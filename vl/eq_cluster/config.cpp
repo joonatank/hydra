@@ -144,8 +144,12 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
 	// ProcessEvents does not store the pointer anywhere
 	// so it's safe to allocate to the stack
+	// OLD event interface
 	vl::FrameTrigger frame_trig;
 	_game_manager->getEventManager()->processEvents( &frame_trig );
+
+	// New event interface
+	_game_manager->getEventManager()->getFrameTrigger()->update();
 
 	if( !_game_manager->step() )
 	{ stopRunning(); }
