@@ -18,12 +18,14 @@
 #include "eq_cluster/event.hpp"
 #include "eq_cluster/scene_node.hpp"
 
+#include "base/typedefs.hpp"
+
 namespace vl
 {
 
 
 /// Trigger class that has a callback to an Action (new event handling design).
-class TrackerTrigger : public vl::Trigger
+class TrackerTrigger : public vl::TransformActionTrigger
 {
 public :
 	TrackerTrigger( void );
@@ -56,21 +58,9 @@ public :
 	virtual std::string getName( void ) const
 	{ return _name; }
 
-	/// Action to execute when updated
-	void setAction( TransformActionPtr action );
-
-	TransformActionPtr getAction( void )
-	{ return _action; }
-
-	/// Callback function
-	void update( Transform const &data );
-
 protected :
 	std::string _name;
 
-	TransformActionPtr _action;
-
-	Transform _value;
 };
 
 class TrackerTriggerFactory : public vl::TriggerFactory
@@ -140,6 +130,31 @@ protected :
 
 };	// class Tracker
 
+
+class Clients
+{
+public :
+	Clients( vl::EventManagerPtr event_manager )
+		: _event_manager(event_manager )
+	{}
+
+	void addTracker( TrackerRefPtr tracker )
+	{ _trackers.push_back( tracker ); }
+
+	TrackerRefPtr getTracker( size_t index )
+	{ return _trackers.at(index); }
+
+	size_t getNTrackers( void ) const
+	{ return _trackers.size(); }
+
+	vl::EventManagerPtr getEventManager( void )
+	{ return _event_manager; }
+
+protected :
+	std::vector<TrackerRefPtr> _trackers;
+
+	vl::EventManagerPtr _event_manager;
+};
 
 }	// namespace vl
 

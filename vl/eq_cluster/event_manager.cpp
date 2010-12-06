@@ -143,15 +143,104 @@ vl::EventManager::printEvents(std::ostream& os) const
 vl::TrackerTrigger *
 vl::EventManager::createTrackerTrigger( std::string const &name )
 {
-	// TODO this should check that no two triggers are equal
-	vl::TrackerTrigger *trigger = new vl::TrackerTrigger;
-	trigger->setName( name );
-	_tracker_triggers.push_back( trigger );
+	vl::TrackerTrigger *trigger = _findTrackerTrigger( name );
+	if( !trigger )
+	{
+		trigger = new vl::TrackerTrigger;
+		trigger->setName( name );
+		_tracker_triggers.push_back( trigger );
+	}
+
 	return trigger;
 }
 
 vl::TrackerTrigger *
 vl::EventManager::getTrackerTrigger(const std::string& name)
+{
+	vl::TrackerTrigger *trigger = _findTrackerTrigger( name );
+	if( trigger )
+	{ return trigger; }
+
+	BOOST_THROW_EXCEPTION( vl::null_pointer() );
+}
+
+bool
+vl::EventManager::hasTrackerTrigger(const std::string& name)
+{
+	if( _findTrackerTrigger( name ) )
+	{ return true; }
+
+	return false;
+}
+
+vl::KeyPressedTrigger *
+vl::EventManager::createKeyPressedTrigger(OIS::KeyCode kc)
+{
+	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc);
+	if( !trigger )
+	{
+		trigger = new vl::KeyPressedTrigger;
+		trigger->setKey(kc);
+		_key_pressed_triggers.push_back(trigger);
+	}
+
+	return trigger;
+}
+
+vl::KeyPressedTrigger *
+vl::EventManager::getKeyPressedTrigger(OIS::KeyCode kc)
+{
+	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc);
+	if( trigger )
+	{ return trigger; }
+
+	BOOST_THROW_EXCEPTION( vl::null_pointer() );
+}
+
+bool
+vl::EventManager::hasKeyPressedTrigger(OIS::KeyCode kc)
+{
+	return _findKeyPressedTrigger(kc);
+}
+
+
+
+
+vl::KeyReleasedTrigger *
+vl::EventManager::createKeyReleasedTrigger(OIS::KeyCode kc)
+{
+	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc);
+	if( !trigger )
+	{
+		trigger = new vl::KeyReleasedTrigger;
+		trigger->setKey(kc);
+		_key_released_triggers.push_back(trigger);
+	}
+
+	return trigger;
+}
+
+vl::KeyReleasedTrigger *
+vl::EventManager::getKeyReleasedTrigger(OIS::KeyCode kc)
+{
+	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc);
+	if( trigger )
+	{ return trigger; }
+
+	BOOST_THROW_EXCEPTION( vl::null_pointer() );
+}
+
+bool
+vl::EventManager::hasKeyReleasedTrigger(OIS::KeyCode kc)
+{
+	return _findKeyReleasedTrigger(kc);
+}
+
+
+
+/// ----------- Protected -------------
+vl::TrackerTrigger *
+vl::EventManager::_findTrackerTrigger(const std::string& name)
 {
 	for( size_t i = 0; i < _tracker_triggers.size(); ++i )
 	{
@@ -163,15 +252,29 @@ vl::EventManager::getTrackerTrigger(const std::string& name)
 	return 0;
 }
 
-bool
-vl::EventManager::hasTrackerTrigger(const std::string& name)
+vl::KeyPressedTrigger *
+vl::EventManager::_findKeyPressedTrigger(OIS::KeyCode kc)
 {
-	for( size_t i = 0; i < _tracker_triggers.size(); ++i )
+	for( size_t i = 0; i < _key_pressed_triggers.size(); ++i )
 	{
-		vl::TrackerTrigger *trigger = _tracker_triggers.at(i);
-		if( trigger->getName() == name )
-		{ return true; }
+		vl::KeyPressedTrigger *trigger = _key_pressed_triggers.at(i);
+		if( trigger->getKey() == kc )
+		{ return trigger; }
 	}
 
-	return false;
+	return 0;
+}
+
+
+vl::KeyReleasedTrigger *
+vl::EventManager::_findKeyReleasedTrigger(OIS::KeyCode kc)
+{
+	for( size_t i = 0; i < _key_released_triggers.size(); ++i )
+	{
+		vl::KeyReleasedTrigger *trigger = _key_released_triggers.at(i);
+		if( trigger->getKey() == kc )
+		{ return trigger; }
+	}
+
+	return 0;
 }

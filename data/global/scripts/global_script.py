@@ -37,24 +37,15 @@ def addTranslationEvent(node) :
 	if not game.event_manager.addEvent(event) :
 		print 'Python : could not add event'
 
+# Fine using the new event interface
 def addQuitEvent() :
 	print 'Creating Quit Event'
-	action = QuitAction.create() #game.event_manager.createAction( 'QuitAction' )
-	#print 'Python Action type = ' + action.type
+	action = QuitAction.create()
 	action.game = game
-	# Example of using pressed or released key instead of both (the default)
-	# you need to create either KeyReleasedTrigger or KeyPressedTrigger
-	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
-	print 'Python Trigger type = ' + trigger.type
-	trigger.key = KC.Q
-	# KeyTrigger will respond to both
 
-	# Create the Event
-	event = game.event_manager.createEvent( 'Event' )
-	event.action = action
-	event.addTrigger( trigger )
-	if not game.event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	trigger = game.event_manager.createKeyPressedTrigger( KC.Q )
+	print 'Python Trigger type = ' + trigger.type
+	trigger.action = action
 
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
@@ -78,19 +69,13 @@ def addReloadEvent() :
 	if not game.event_manager.addEvent( event ) :
 		print 'Python : Event could not be added to EventManager'
 
+# Fine using the new event interface
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
-	action = ToggleMusic.create() #game.event_manager.createAction( 'ToggleMusic' )
+	action = ToggleMusic.create()
 	action.game = game
-	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
-	trigger.key = KC.M
-
-	# Create the Event
-	event = game.event_manager.createEvent( 'Event' )
-	event.action = action
-	event.addTrigger( trigger )
-	if not game.event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	trigger = game.event_manager.createKeyPressedTrigger( KC.M )
+	trigger.action = action
 
 # TODO create PrintOperation in python and register it into Event Manager
 
@@ -122,9 +107,9 @@ def addToggleActiveCamera( camera1, camera2 ) :
 
 def addHideEvent(node) :
 	print 'Creating Hide Event'
-	hide = HideAction.create() # game.event_manager.createAction( 'Hide' )
+	hide = HideAction.create()
 	hide.scene_node = node
-	show = ShowAction.create() #game.event_manager.createAction( 'Show' )
+	show = ShowAction.create()
 	show.scene_node = node
 	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
 	trigger.key = KC.H

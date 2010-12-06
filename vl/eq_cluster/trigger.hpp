@@ -68,7 +68,76 @@ public :
 	virtual std::string const &getTypeName( void ) const = 0;
 };
 
-class KeyTrigger : public Trigger
+class BasicActionTrigger : public vl::Trigger
+{
+public :
+	BasicActionTrigger( void )
+		: _action(0)
+	{}
+
+	/// Action to execute when updated
+	// TODO there should be a stack of actions not just one of them
+	virtual void setAction( BasicActionPtr action )
+	{
+		_action = action;
+	}
+
+	virtual BasicActionPtr getAction( void )
+	{
+		return _action;
+	}
+
+	/// Callback function
+	virtual void update( void )
+	{
+		if( _action )
+		{ _action->execute(); }
+	}
+
+private :
+	BasicActionPtr _action;
+};
+
+class TransformActionTrigger : public vl::Trigger
+{
+public :
+	TransformActionTrigger( void )
+		: _action(0)
+	{}
+
+	/// Action to execute when updated
+	// TODO there should be a stack of actions not just one of them
+	void setAction( TransformActionPtr action )
+	{
+		if( _action != action )
+		{
+			_action = action;
+
+			update(_value);
+		}
+	}
+
+	TransformActionPtr getAction( void )
+	{ return _action; }
+
+	/// Callback function
+	void update( Transform const &data )
+	{
+		// Copy the data for futher reference
+		_value = data;
+		if( _action )
+		{
+			_action->execute(data);
+		}
+	}
+
+protected :
+	TransformActionPtr _action;
+
+	Transform _value;
+};
+
+class KeyTrigger : public BasicActionTrigger
 {
 public :
 	KeyTrigger( void );
@@ -93,20 +162,8 @@ public :
 	virtual std::string getName( void ) const
 	{ return vl::getKeyName( _key ); }
 
-	/// Action to execute when updated
-	virtual void setAction( BasicActionPtr action )
-	{ _action = action; }
-
-	virtual BasicActionPtr getAction( void )
-	{ return _action; }
-
-	/// Callback function
-	virtual void update( void )
-	{ _action->execute(); }
-
 private :
 	OIS::KeyCode _key;
-	BasicActionPtr _action;
 };
 
 

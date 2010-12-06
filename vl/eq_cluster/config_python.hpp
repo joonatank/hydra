@@ -163,6 +163,12 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("hasEvent", &EventManager::hasEvent)
 		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
+		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("createKeyPressedTrigger", &vl::EventManager::createKeyPressedTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasKeyPressedTrigger", &vl::EventManager::hasKeyPressedTrigger )
+		.def("getKeyReleasedTrigger", &vl::EventManager::getKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger )
 //		.def(python::str(python::self))
 	;
 
@@ -178,7 +184,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def(python::self == python::self )
 		// FIXME declaring getTypeName as virtual does not work
 		// (might be because it's a property not a function)
-		.add_property("type", python::make_function( &KeyTrigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		.add_property("type", python::make_function( &Trigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("isEqual", python::pure_virtual(&Trigger::isEqual) )
 //		.def(python::str(python::self))
 	;
@@ -186,6 +192,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 	python::class_<KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
 		.def(python::self == python::self )
 		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
+		.add_property("action", python::make_function( &KeyTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &KeyTrigger::setAction)
 //		.add_property("released", &KeyTrigger::getReleased, &KeyTrigger::setReleased )
 	;
 

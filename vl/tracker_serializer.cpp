@@ -1,9 +1,15 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-10
+ */
 
 #include "tracker_serializer.hpp"
 
 #include "base/string_utils.hpp"
 #include "vrpn_tracker.hpp"
 #include "ogre_xml_helpers.hpp"
+
+#include "eq_cluster/event_manager.hpp"
+
 
 /// ---------- Public ----------
 

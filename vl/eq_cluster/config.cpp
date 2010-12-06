@@ -356,16 +356,34 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
+	OIS::KeyCode kc( (OIS::KeyCode )(event.key) );
+
+	// Check if the there is a trigger for this event
+	if( _game_manager->getEventManager()->hasKeyPressedTrigger( kc ) )
+	{
+		_game_manager->getEventManager()->getKeyPressedTrigger( kc )->update();
+	}
+
+	// Old handling system
 	vl::KeyPressedTrigger trig;
-	trig.setKey( (OIS::KeyCode )(event.key) );
+	trig.setKey(kc);
 	return _game_manager->getEventManager()->processEvents( &trig );
 }
 
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
+	OIS::KeyCode kc = (OIS::KeyCode )(event.key);
+
+	// Check if the there is a trigger for this event
+	if( _game_manager->getEventManager()->hasKeyReleasedTrigger( kc ) )
+	{
+		_game_manager->getEventManager()->getKeyReleasedTrigger( kc )->update();
+	}
+
+	// Old event handling
 	vl::KeyReleasedTrigger trig;
-	trig.setKey( (OIS::KeyCode )(event.key) );
+	trig.setKey( kc );
 	return _game_manager->getEventManager()->processEvents( &trig );
 }
 

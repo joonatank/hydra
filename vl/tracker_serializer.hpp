@@ -13,40 +13,10 @@
 #include "tracker.hpp"
 #include "base/rapidxml.hpp"
 #include "base/typedefs.hpp"
-
-#include "resource_manager.hpp"
-
-#include "eq_cluster/event_manager.hpp"
+#include "resource.hpp"
 
 namespace vl
 {
-
-class Clients
-{
-public :
-	Clients( vl::EventManagerPtr event_manager )
-		: _event_manager(event_manager )
-	{}
-
-	void addTracker( TrackerRefPtr tracker )
-	{ _trackers.push_back( tracker ); }
-
-	TrackerRefPtr getTracker( size_t index )
-	{ return _trackers.at(index); }
-
-	size_t getNTrackers( void ) const
-	{ return _trackers.size(); }
-
-	vl::EventManagerPtr getEventManager( void )
-	{ return _event_manager; }
-
-protected :
-	std::vector<TrackerRefPtr> _trackers;
-
-	vl::EventManagerPtr _event_manager;
-};
-
-typedef boost::shared_ptr<Clients> ClientsRefPtr;
 
 class TrackerSerializer
 {

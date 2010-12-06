@@ -18,10 +18,8 @@
 
 void getHeadData( double time, vrpn_float64 *pos, vrpn_float64 *quat )
 {
-	double s = ::sin( time );
 	pos[0] = 0;
 	pos[1] = 1.5;
-	//pos[1] = 1.5+0.25*s;
 	pos[2] = 0;
 
 	quat[0] = 0;
@@ -32,8 +30,7 @@ void getHeadData( double time, vrpn_float64 *pos, vrpn_float64 *quat )
 
 void getMeveaData( size_t sensor, vrpn_float64 *pos, vrpn_float64 *quat )
 {
-	// TODO this should have different positions for different sensors
-	int i = 0, j = 0, k = 0;
+	int i = 0, j = 0;
 	// 5 minor elements, we start from -4,y coordinate and go to 4,y
 	i = ( sensor%5 - 2)*2;
 	// 4 major elements, we start from x,0 coordinate and go to x,8

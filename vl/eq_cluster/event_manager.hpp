@@ -50,19 +50,54 @@ public :
 	void printEvents( std::ostream &os ) const;
 
 	/// Tracker Triggers
+
+	/// Create a tracker trigger, this will never fail
+	/// If a tracker trigger with the same name exists it will return that one
+	/// If not then a new one is created
+	/// Returns : pointer to created tracker trigger
 	vl::TrackerTrigger *createTrackerTrigger( std::string const &name );
 
+	/// Get a tracker trigger by name
+	///
+	/// Returns : valid pointer to a tracker trigger
+	///
+	/// Throws on errors
+	/// Errors : no such tracker trigger exists
 	vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
 
+	/// If a tracker trigger by the name exists
+	///
+	/// Returns true if there is one, false otherwise
 	bool hasTrackerTrigger( std::string const &name );
 
+	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc );
+
+	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc );
+
+	bool hasKeyPressedTrigger( OIS::KeyCode kc  );
+
+	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc );
+
+	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc );
+
+	bool hasKeyReleasedTrigger( OIS::KeyCode kc  );
+
 private :
+	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
+
+	vl::KeyPressedTrigger *_findKeyPressedTrigger( OIS::KeyCode kc );
+
+	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc );
+
 	std::vector<Event *> _events;
 
 	std::vector<TriggerFactory *> _trigger_factories;
 	std::vector<EventFactory *> _event_factories;
 
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
+	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
+	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
+
 };	// class EventManager
 
 inline std::ostream &operator<<( std::ostream &os, EventManager const &man )

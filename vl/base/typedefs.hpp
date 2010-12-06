@@ -30,6 +30,7 @@ namespace vl
 	class GameManager;
 	class EventManager;
 	class ResourceManager;
+	class Clients;
 
 	struct null_deleter
 	{
@@ -42,6 +43,7 @@ namespace vl
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
 	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
+	typedef boost::shared_ptr<Clients> ClientsRefPtr;
 
 	typedef Player * PlayerPtr;
 	typedef GameManager * GameManagerPtr;
