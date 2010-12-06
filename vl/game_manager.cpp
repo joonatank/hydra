@@ -26,6 +26,7 @@ vl::GameManager::GameManager( void )
 	  _event_man( new vl::EventManager ),
 	  _scene_manager( new eqOgre::SceneManager ),
 	  _player(0),
+	  _trackers( new vl::Clients( _event_man ) ),
 	  _audio_manager(0),
 	  _background_sound(0),
 	  _quit( false )
@@ -86,44 +87,6 @@ eqOgre::SceneManagerPtr vl::GameManager::getSceneManager( void )
 	return _scene_manager;
 }
 
-vl::TrackerTrigger *
-vl::GameManager::getTrackerTrigger(const std::string& name)
-{
-	EQINFO << "Trying to find TrackerTrigger " << name << std::endl;
-
-	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
-	{
-		vl::TrackerRefPtr tracker = _trackers->getTracker(i);
-		for( size_t j = 0; j < tracker->getNSensors(); ++j )
-		{
-			vl::SensorRefPtr sensor = tracker->getSensor(j);
-			if( sensor && sensor->getTrigger() &&
-				sensor->getTrigger()->getName() == name )
-			{ return( sensor->getTrigger() ); }
-		}
-	}
-
-	EQINFO << "TrackerTrigger " << name << " not found." << std::endl;
-	return 0;
-}
-
-bool
-vl::GameManager::hasTrackerTrigger(const std::string& name)
-{
-	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
-	{
-		vl::TrackerRefPtr tracker = _trackers->getTracker(i);
-		for( size_t j = 0; j < tracker->getNSensors(); ++j )
-		{
-			vl::SensorRefPtr sensor = tracker->getSensor(j);
-			if( sensor && sensor->getTrigger() &&
-				sensor->getTrigger()->getName() == name )
-			{ return true; }
-		}
-	}
-	return false;
-}
-
 vl::PlayerPtr
 vl::GameManager::createPlayer(eq::Observer* observer)
 {
@@ -167,6 +130,7 @@ vl::GameManager::step(void )
 
 	return !_quit;
 }
+
 
 void
 vl::GameManager::createBackgroundSound( std::string const &song_name )

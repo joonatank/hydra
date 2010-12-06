@@ -182,7 +182,9 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	EQINFO << "Creating Trackers." << std::endl;
 
-	vl::ClientsRefPtr clients( new vl::Clients );
+	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
+	EQASSERT( clients );
+
 	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
 	EQINFO << "Processing " << tracking_files.size() << " tracking files."
@@ -208,9 +210,6 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		clients->getTracker(i)->init();
 	}
 
-	// set the trackers to GameManager
-	_game_manager->setTrackerClients( clients );
-
 	// Create Action
 	eqOgre::HeadTrackerAction *action = eqOgre::HeadTrackerAction::create();
 	EQASSERT( _game_manager->getPlayer() );
@@ -218,9 +217,12 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 
 	// This will get the head sensor if there is one
 	// If not it will create a FakeTracker instead
-	vl::TrackerTrigger *head_trigger = _game_manager->getTrackerTrigger( "glassesTrigger" );
-	if( head_trigger )
+	std::string const head_trig_name("glassesTrigger");
+	vl::EventManager *event_man = _game_manager->getEventManager();
+
+	if( event_man->hasTrackerTrigger(head_trig_name) )
 	{
+		vl::TrackerTrigger *head_trigger = event_man->getTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 	}
 	else
@@ -232,8 +234,8 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 
 		// Create the trigger
 		EQINFO << "Creating a fake head tracker trigger" << std::endl;
-		head_trigger = (vl::TrackerTrigger *)_game_manager->getEventManager()->createTrigger("TrackerTrigger");
-		head_trigger->setName("glassesTrigger");
+		vl::TrackerTrigger *head_trigger
+			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 		sensor->setTrigger( head_trigger );
 

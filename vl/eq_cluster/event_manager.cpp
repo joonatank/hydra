@@ -139,3 +139,39 @@ vl::EventManager::printEvents(std::ostream& os) const
 		os << *(*iter) << std::endl;
 	}
 }
+
+vl::TrackerTrigger *
+vl::EventManager::createTrackerTrigger( std::string const &name )
+{
+	// TODO this should check that no two triggers are equal
+	vl::TrackerTrigger *trigger = new vl::TrackerTrigger;
+	trigger->setName( name );
+	_tracker_triggers.push_back( trigger );
+	return trigger;
+}
+
+vl::TrackerTrigger *
+vl::EventManager::getTrackerTrigger(const std::string& name)
+{
+	for( size_t i = 0; i < _tracker_triggers.size(); ++i )
+	{
+		vl::TrackerTrigger *trigger = _tracker_triggers.at(i);
+		if( trigger->getName() == name )
+		{ return trigger; }
+	}
+
+	return 0;
+}
+
+bool
+vl::EventManager::hasTrackerTrigger(const std::string& name)
+{
+	for( size_t i = 0; i < _tracker_triggers.size(); ++i )
+	{
+		vl::TrackerTrigger *trigger = _tracker_triggers.at(i);
+		if( trigger->getName() == name )
+		{ return true; }
+	}
+
+	return false;
+}

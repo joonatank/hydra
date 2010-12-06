@@ -9,8 +9,8 @@ def mapTrackers():
 		action.scene_node = cube
 		# TODO there is no checking here
 		# Add checking that the object exists
-		if( game.hasTrackerTrigger( name + 'Trigger' ) ) :
-			trigger = game.getTrackerTrigger( name + 'Trigger' )
+		if( game.event_manager.hasTrackerTrigger( name + 'Trigger' ) ) :
+			trigger = game.event_manager.getTrackerTrigger( name + 'Trigger' )
 			trigger.action = action
 		else :
 			print 'Tracker trigger ' + name + 'Trigger' ' not found in Game.'

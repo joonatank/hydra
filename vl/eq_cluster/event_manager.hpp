@@ -1,9 +1,11 @@
 #ifndef EQ_OGRE_EVENT_MANAGER_HPP
 #define EQ_OGRE_EVENT_MANAGER_HPP
 
+#include <vector>
+
 #include "event.hpp"
 
-#include <vector>
+#include "tracker.hpp"
 
 namespace vl
 {
@@ -47,12 +49,20 @@ public :
 
 	void printEvents( std::ostream &os ) const;
 
+	/// Tracker Triggers
+	vl::TrackerTrigger *createTrackerTrigger( std::string const &name );
+
+	vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
+
+	bool hasTrackerTrigger( std::string const &name );
+
 private :
 	std::vector<Event *> _events;
 
 	std::vector<TriggerFactory *> _trigger_factories;
 	std::vector<EventFactory *> _event_factories;
 
+	std::vector<vl::TrackerTrigger *> _tracker_triggers;
 };	// class EventManager
 
 inline std::ostream &operator<<( std::ostream &os, EventManager const &man )

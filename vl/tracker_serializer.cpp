@@ -161,8 +161,7 @@ vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
 	std::cerr << "Creating Trigger " << name << std::endl;
-	vl::TrackerTrigger *trigger = new vl::TrackerTrigger;
-	trigger->setName(name);
+	vl::TrackerTrigger *trigger = _clients->getEventManager()->createTrackerTrigger(name);
 	sensor->setTrigger(trigger);
 }
 

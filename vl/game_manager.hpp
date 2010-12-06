@@ -55,10 +55,6 @@ public :
 
 	eqOgre::SceneManagerPtr getSceneManager( void );
 
-	vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
-
-	bool hasTrackerTrigger( std::string const &name );
-
 	PlayerPtr createPlayer( eq::Observer *observer );
 
 	void toggleBackgroundSound( void );
@@ -67,8 +63,8 @@ public :
 
 	bool step( void );
 
-	void setTrackerClients( vl::ClientsRefPtr trackers )
-	{ _trackers = trackers; }
+	vl::ClientsRefPtr getTrackerClients( void )
+	{ return _trackers; }
 
 	void createBackgroundSound( std::string const &name );
 

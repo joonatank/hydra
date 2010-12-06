@@ -122,8 +122,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		//.def("getSceneManager", &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() )
 //		.def("setActiveCamera", &vl::GameManager::setActiveCamera )
-		.def("getTrackerTrigger", &vl::GameManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasTrackerTrigger", &vl::GameManager::hasTrackerTrigger )
 	;
 
 	// TODO add setHeadMatrix function to python
@@ -163,6 +161,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("addEvent", &EventManager::addEvent)
 		.def("removeEvent", &EventManager::removeEvent)
 		.def("hasEvent", &EventManager::hasEvent)
+		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
 //		.def(python::str(python::self))
 	;
 
