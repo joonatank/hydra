@@ -136,7 +136,7 @@ protected :
 
 
 
-class HideAction : public SceneNodeActionBase, public  vl::BasicAction
+class HideAction : public SceneNodeActionBase, public vl::BasicAction
 {
 public :
 	virtual void execute( void );

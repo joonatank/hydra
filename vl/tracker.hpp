@@ -53,7 +53,7 @@ public :
 	void setName( std::string const &name )
 	{ _name = name; }
 
-	std::string const &getName( void ) const
+	virtual std::string getName( void ) const
 	{ return _name; }
 
 	/// Action to execute when updated

@@ -34,7 +34,7 @@ vl::TrackerTrigger::setAction(vl::TransformActionPtr action)
 	if( _action != action )
 	{
 		_action = action;
-		// TODO this should update but we don't have the data anymore
+
 		update(_value);
 	}
 }
