@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+# TODO using the old interface
 def addTranslationEvent(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Translation event on node = '
@@ -47,27 +49,25 @@ def addQuitEvent() :
 	print 'Python Trigger type = ' + trigger.type
 	trigger.action = action
 
+
+# Fine using the new event interface
+# TODO time limits are not supported atm, we need a timer proxy for it
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
-	action = ReloadScene.create() #game.event_manager.createAction( 'ReloadScene' )
+	# Create the action
+	action = ReloadScene.create()
 	print 'Python Action type = ' + action.type
 	action.scene = game.scene
-	trigger = game.event_manager.createTrigger( 'KeyTrigger' )
-	# FIXME this segfaults
-	print 'Python Trigger type = ' + trigger.type
-	trigger.key = KC.R
-	# Example of using released key instead of pressed (which is default)
-	# These are moved to different class now
-	#trigger.released = True
 
-	# Create the Event
-	event = game.event_manager.createEvent( 'Event' )
-	event.action = action
-	# Setting a time limit how often this Event can happen
-	event.time_limit = 5
-	event.addTrigger( trigger )
-	if not game.event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	# Create the trigger
+	trigger = game.event_manager.createKeyPressedTrigger( KC.R )
+	print 'Python Trigger type = ' + trigger.type
+	trigger.action = action
+
+	# TODO time limits are not supported atm
+	#event.time_limit = 5
+
+
 
 # Fine using the new event interface
 def addToggleMusicEvent() :
@@ -85,44 +85,46 @@ def addToggleMusicEvent() :
 #
 # If the camera name is incorrect the action will not change the camera
 # An error message is printed to std::cerr and the program continues normally
+# Fine using the new event interface
 def addToggleActiveCamera( camera1, camera2 ) :
 	print 'Creating Toggle Activate Camera'
 	action_on = ActivateCamera.create()
 	action_on.player = game.player
 	action_on.camera = camera1
+
 	action_off = ActivateCamera.create()
 	action_off.player = game.player
 	action_off.camera = camera2
-	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
-	trigger.key = KC.B
 
-	# Create the Event
-	event = game.event_manager.createEvent( 'ToggleEvent' )
-	event.toggle_on_action = action_on
-	event.toggle_off_action = action_off
-	event.toggle_state = False
-	event.addTrigger( trigger )
-	if not game.event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	trigger = game.event_manager.createKeyPressedTrigger( KC.B )
 
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = action_on
+	toggle.action_off = action_off
+
+	trigger.action = toggle
+
+
+# Fine using the new event interface
+# TODO time limits are not supported atm, we need a timer proxy for it
 def addHideEvent(node) :
 	print 'Creating Hide Event'
 	hide = HideAction.create()
 	hide.scene_node = node
 	show = ShowAction.create()
 	show.scene_node = node
-	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
-	trigger.key = KC.H
+	trigger = game.event_manager.createKeyPressedTrigger( KC.H )
+	#trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
+	#trigger.key = KC.H
 
-	event = game.event_manager.createEvent( 'ToggleEvent' )
-	event.toggle_off_action= show
-	event.toggle_on_action= hide
-	event.toggle_state = False
-	event.time_limit = 2	# Secs
+	# Create a proxy that handles the toggling between two different actions
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = hide
+	toggle.action_off = show
 
-	event.addTrigger( trigger )
-	if not game.event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	trigger.action = toggle
+	#event.time_limit = 2	# Secs
+
 
 # Add some global events that are useful no matter what the scene/project is
 print 'Adding game events'

@@ -66,6 +66,59 @@ public :
 
 typedef BasicAction * BasicActionPtr;
 
+
+/// Action proxy with two states: on and off
+/// Depending on the current state executes different a action
+///
+/// This class is not ment to be inherited from it's a simple proxy class
+/// If you need a similar one create a new one
+class ToggleActionProxy : public BasicAction
+{
+public :
+	ToggleActionProxy( void )
+		: _action_on(0), _action_off(0), _state(false)
+	{}
+
+	void setActionOn( BasicActionPtr action )
+	{ _action_on = action; }
+
+	BasicActionPtr getActionOn( void )
+	{ return _action_on; }
+
+	void setActionOff( BasicActionPtr action )
+	{ _action_off = action; }
+
+	BasicActionPtr getActionOff( void )
+	{ return _action_off; }
+
+	void execute( void )
+	{
+		// It's not a real problem if we only have one action but the toggle
+		// will not work correctly till we have the other one
+		if( _state && _action_off )
+		{
+			_action_off->execute();
+			_state = !_state;
+		}
+		else if( !_state && _action_on )
+		{
+			_action_on->execute();
+			_state = !_state;
+		}
+	}
+
+	static ToggleActionProxy *create( void )
+	{ return new ToggleActionProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "ToggleActionProxy"; }
+
+private :
+	BasicActionPtr _action_on;
+	BasicActionPtr _action_off;
+	bool _state;
+};
+
 /// Callback Action class designed for Trackers
 /// Could be expanded for use with anything that sets the object transformation
 // For now the Tracker Triggers are the test case
