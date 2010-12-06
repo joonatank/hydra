@@ -9,7 +9,7 @@
 #define VL_PHYSICS_EVENTS_HPP
 
 // Base classes for event handling
-#include "eq_cluster/event.hpp"
+#include "eq_cluster/action.hpp"
 
 // For now we use bullet objects
 #include <bullet/btBulletDynamicsCommon.h>

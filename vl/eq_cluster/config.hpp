@@ -8,19 +8,14 @@
 
 #include <eq/eq.h>
 
-#include "scene_manager.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
 #include "base/exceptions.hpp"
-#include "transform_event.hpp"
-#include "event.hpp"
-#include "tracker.hpp"
+// Necessary for the SceneNode functions
+// TODO should be removed as soon as they work directly on the current scene
+#include "scene_manager.hpp"
 
-// python
-#include "python.hpp"
-#include "event_manager.hpp"
-#include "tracker_serializer.hpp"
-#include "eq_resource_manager.hpp"
+#include "base/typedefs.hpp"
 
 namespace eqOgre
 {
@@ -47,7 +42,7 @@ namespace eqOgre
 
 		void removeSceneNode( SceneNode *node );
 
-		SceneNode *getSceneNode( std::string const &name );
+		SceneNodePtr getSceneNode( std::string const &name );
 
 		void setGameManager( vl::GameManagerPtr man );
 
@@ -77,10 +72,6 @@ namespace eqOgre
 
 		/// Distributed
 		DistributedSettings _distrib_settings;
-
-		// NOTE we need to use Event pointer because Events can be inherited
-		std::vector<vl::Event *> _events;
-		std::vector<TransformationEvent> _trans_events;
 
 		vl::GameManagerPtr _game_manager;
 

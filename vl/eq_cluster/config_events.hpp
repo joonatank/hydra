@@ -6,9 +6,9 @@
 #ifndef EQ_OGRE_CONFIG_EVENTS_HPP
 #define EQ_OGRE_CONFIG_EVENTS_HPP
 
-#include "event.hpp"
 #include "config.hpp"
 #include "tracker.hpp"
+#include "action.hpp"
 
 #include "base/typedefs.hpp"
 

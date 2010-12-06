@@ -17,6 +17,8 @@
 
 #include "eq_cluster/config.hpp"
 
+#include "eq_cluster/event_manager.hpp"
+
 // Physics headers
 #include "physics_world.hpp"
 #include "physics_events.hpp"
@@ -117,15 +119,12 @@ public :
 
 				// Create a physics test Event
 				vl::physics::ApplyForce *action = vl::physics::ApplyForce::create();
-				vl::KeyPressedTrigger *trig = (vl::KeyPressedTrigger *)_game_manager->getEventManager()->createTrigger("KeyPressedTrigger");
-				vl::Event *event = _game_manager->getEventManager()->createEvent("Event");
+				vl::KeyPressedTrigger *trig = _game_manager->getEventManager()
+					->createKeyPressedTrigger( OIS::KC_F );
 
-				trig->setKey(OIS::KC_F);
 				action->setRigidBody( fallBody );
 				action->setForce( btVector3(0, 500, 0) );
-				event->setAction(action);
-				event->addTrigger(trig);
-				_game_manager->getEventManager()->addEvent(event);
+				trig->addAction( action );
 			}
 		}
 

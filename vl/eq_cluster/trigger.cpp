@@ -1,30 +1,63 @@
 
 #include "trigger.hpp"
 
+
+/// BasicActionTrigger
+
+void
+vl::BasicActionTrigger::addAction(vl::BasicActionPtr action)
+{
+	// TODO should check that no two actions are the same
+	if( action )
+	{
+		_actions.push_back( action );
+	}
+}
+
+vl::BasicActionPtr vl::BasicActionTrigger::getAction(size_t i)
+{ return _actions.at(i); }
+
+void vl::BasicActionTrigger::update(void )
+{
+	for( size_t i = 0; i < _actions.size(); ++i )
+	{
+		_actions.at(i)->execute();
+	}
+}
+
+/// ------------- TransformActionTrigger -----------------
+vl::TransformActionTrigger::TransformActionTrigger( void )
+	: _action(0)
+{}
+
+void vl::TransformActionTrigger::setAction(vl::TransformActionPtr action)
+{
+	if( _action != action )
+	{
+		_action = action;
+
+		update(_value);
+	}
+}
+
+void
+vl::TransformActionTrigger::update(const vl::Transform& data)
+{
+	// Copy the data for futher reference
+	_value = data;
+	if( _action )
+	{
+		_action->execute(data);
+	}
+}
+
+
+
+
 /// KeyTrigger Public
 vl::KeyTrigger::KeyTrigger( void )
 	: _key( OIS::KC_UNASSIGNED )
 {}
-
-bool
-vl::KeyTrigger::isEqual(const vl::Trigger& other) const
-{
-	KeyTrigger const &key_other = static_cast<KeyTrigger const &>( other );
-	if( key_other._key == _key )
-	{ return true; }
-
-	return false;
-}
-
-bool
-vl::KeyTrigger::isSpecialisation(const vl::Trigger* other) const
-{
-	KeyTrigger const *a = dynamic_cast<KeyTrigger const *>( other );
-	if( a )
-	{ return isEqual(*a); }
-	else
-	{ return false; }
-}
 
 std::ostream &
 vl::KeyTrigger::print(std::ostream& os) const
@@ -42,31 +75,11 @@ vl::KeyTrigger::getTypeName(void ) const
 
 std::string const vl::KeyTriggerFactory::TYPENAME = "KeyTrigger";
 
-bool
-vl::KeyPressedTrigger::isSpecialisation(const vl::Trigger* other) const
-{
-	KeyPressedTrigger const *a = dynamic_cast<KeyPressedTrigger const *>( other );
-	if( a )
-	{ return isEqual(*a); }
-	else
-	{ return false; }
-}
-
 std::string const &
 vl::KeyPressedTrigger::getTypeName(void ) const
 { return vl::KeyPressedTriggerFactory::TYPENAME; }
 
 std::string const vl::KeyPressedTriggerFactory::TYPENAME = "KeyPressedTrigger";
-
-bool
-vl::KeyReleasedTrigger::isSpecialisation(const vl::Trigger* other) const
-{
-	KeyReleasedTrigger const *a = dynamic_cast<KeyReleasedTrigger const *>( other );
-	if( a )
-	{ return isEqual(*a); }
-	else
-	{ return false; }
-}
 
 std::string const &
 vl::KeyReleasedTrigger::getTypeName(void ) const

@@ -23,27 +23,6 @@ namespace vl
 class Trigger
 {
 public :
-	bool operator==( Trigger const &other ) const
-	{
-		return ((typeid(*this) == typeid(other)) && isEqual(other));
-	}
-
-	/// Returns wether Triggers are similar enough
-	/// Specifics depend on the derived class and how they handle this
-	/// but basicly this returns true if the this is a specialisation of other
-	/// or they are equal.
-	bool isSimilar( Trigger const *other ) const
-	{
-		return (*this == *other || isSpecialisation( other ) );
-	}
-
-	/// Returns true if is a specialisation of other
-	virtual bool isSpecialisation( Trigger const *other ) const = 0;
-
-	virtual double value( void ) const = 0;
-
-	virtual bool isEqual( Trigger const &other ) const = 0;
-
 	virtual std::string const &getTypeName( void ) const = 0;
 
 	virtual std::string getName( void ) const = 0;
@@ -68,39 +47,28 @@ public :
 	virtual std::string const &getTypeName( void ) const = 0;
 };
 
+
+// TODO these two should be moved to a template
+// They both have the same functions and a container
+// the only difference is the update function, which can be implemented in
+// a derived class
+// Also there is going to be at least one more of these trigger classes
+// for floating point updates
 class BasicActionTrigger : public vl::Trigger
 {
 public :
-	BasicActionTrigger( void )
-	{}
+	BasicActionTrigger( void ) {}
 
 	/// Action to execute when updated
-	// TODO there should be a stack of actions not just one of them
-	void addAction( BasicActionPtr action )
-	{
-		// TODO should check that no two actions are the same
-		if( action )
-		{
-			_actions.push_back( action );
-		}
-	}
+	void addAction( BasicActionPtr action );
 
-	BasicActionPtr getAction( size_t i )
-	{
-		return _actions.at(i);
-	}
+	BasicActionPtr getAction( size_t i );
 
 	size_t getNActions( void ) const
 	{ return _actions.size(); }
 
 	/// Callback function
-	void update( void )
-	{
-		for( size_t i = 0; i < _actions.size(); ++i )
-		{
-			_actions.at(i)->execute();
-		}
-	}
+	void update( void );
 
 private :
 	std::vector<BasicActionPtr> _actions;
@@ -109,35 +77,17 @@ private :
 class TransformActionTrigger : public vl::Trigger
 {
 public :
-	TransformActionTrigger( void )
-		: _action(0)
-	{}
+	TransformActionTrigger( void );
 
 	/// Action to execute when updated
 	// TODO there should be a stack of actions not just one of them
-	void setAction( TransformActionPtr action )
-	{
-		if( _action != action )
-		{
-			_action = action;
-
-			update(_value);
-		}
-	}
+	void setAction( TransformActionPtr action );
 
 	TransformActionPtr getAction( void )
 	{ return _action; }
 
 	/// Callback function
-	void update( Transform const &data )
-	{
-		// Copy the data for futher reference
-		_value = data;
-		if( _action )
-		{
-			_action->execute(data);
-		}
-	}
+	void update( Transform const &data );
 
 protected :
 	TransformActionPtr _action;
@@ -150,18 +100,13 @@ class KeyTrigger : public BasicActionTrigger
 public :
 	KeyTrigger( void );
 
+	// TODO these should not be in the public interface
+	// They should be only accessible when created by the EventManager
 	void setKey( OIS::KeyCode key )
 	{ _key = key; }
 
 	OIS::KeyCode getKey( void ) const
 	{ return _key; }
-
-	virtual double value( void ) const
-	{ return 1; }
-
-	virtual bool isSpecialisation( Trigger const *other ) const;
-
-	virtual bool isEqual( Trigger const &other ) const;
 
 	virtual std::string const &getTypeName( void ) const;
 
@@ -193,12 +138,6 @@ public :
 class KeyPressedTrigger : public KeyTrigger
 {
 	virtual std::string const &getTypeName( void ) const;
-
-	/// Pressed always returns 1 (positive)
-	virtual double value( void ) const
-	{ return 1; }
-
-	virtual bool isSpecialisation( Trigger const *other ) const;
 };
 
 class KeyPressedTriggerFactory : public TriggerFactory
@@ -218,13 +157,6 @@ public :
 class KeyReleasedTrigger : public KeyTrigger
 {
 	virtual std::string const &getTypeName( void ) const;
-
-	/// Released always returns -1 (negative)
-	virtual double value( void ) const
-	{ return -1; }
-
-	virtual bool isSpecialisation( Trigger const *other ) const;
-
 };
 
 class KeyReleasedTriggerFactory : public TriggerFactory
@@ -249,11 +181,6 @@ public :
 		: _delta_time(0)
 	{}
 
-	virtual bool isEqual( Trigger const &other ) const
-	{
-		return true;
-	}
-
 	virtual std::string const &getTypeName( void ) const;
 
 	void setDeltaTime( double delta_time )
@@ -261,9 +188,6 @@ public :
 
 	virtual double value( void ) const
 	{ return _delta_time; }
-
-	virtual bool isSpecialisation( Trigger const *other ) const
-	{ return false; }
 
 	virtual std::string getName( void ) const
 	{ return "FrameTrigger"; }

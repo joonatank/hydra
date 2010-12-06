@@ -16,6 +16,7 @@
 
 #include "tracker_serializer.hpp"
 #include "base/filesystem.hpp"
+#include "eq_resource_manager.hpp"
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
@@ -26,6 +27,8 @@
 #include "client.hpp"
 
 #include "game_manager.hpp"
+#include "python.hpp"
+#include "event_manager.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
@@ -142,12 +145,6 @@ void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
-	// ProcessEvents does not store the pointer anywhere
-	// so it's safe to allocate to the stack
-	// OLD event interface
-	vl::FrameTrigger frame_trig;
-	_game_manager->getEventManager()->processEvents( &frame_trig );
-
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
 
@@ -364,12 +361,7 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 		_game_manager->getEventManager()->getKeyPressedTrigger( kc )->update();
 	}
 
-	// Old handling system
-	// TODO these should be removed as soon as the TransformationEvent has been
-	// removed
-	vl::KeyPressedTrigger trig;
-	trig.setKey(kc);
-	return _game_manager->getEventManager()->processEvents( &trig );
+	return true;
 }
 
 bool
@@ -383,12 +375,7 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 		_game_manager->getEventManager()->getKeyReleasedTrigger( kc )->update();
 	}
 
-	// Old event handling
-	// TODO these should be removed as soon as the TransformationEvent has been
-	// removed
-	vl::KeyReleasedTrigger trig;
-	trig.setKey( kc );
-	return _game_manager->getEventManager()->processEvents( &trig );
+	return true;
 }
 
 bool

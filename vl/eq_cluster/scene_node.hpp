@@ -9,7 +9,7 @@
 #include <OGRE/OgreSceneManager.h>
 
 #include "serialize_helpers.hpp"
-#include "event.hpp"
+#include "action.hpp"
 #include "base/exceptions.hpp"
 
 namespace eqOgre

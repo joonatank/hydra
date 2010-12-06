@@ -32,11 +32,12 @@ vl::GameManager::GameManager( void )
 	  _quit( false )
 {
 	// Add triggers
-	_event_man->addTriggerFactory( new vl::KeyTriggerFactory );
-	_event_man->addTriggerFactory( new vl::KeyPressedTriggerFactory );
-	_event_man->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
-	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
-	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
+	// FIXME it's broken in the EventManager
+// 	_event_man->addTriggerFactory( new vl::KeyTriggerFactory );
+// 	_event_man->addTriggerFactory( new vl::KeyPressedTriggerFactory );
+// 	_event_man->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
+// 	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
+// 	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
 
 	_python = new eqOgre::PythonContext( this );
 

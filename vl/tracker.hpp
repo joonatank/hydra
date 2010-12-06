@@ -15,8 +15,9 @@
 #define VL_TRACKER_HPP
 
 
-#include "eq_cluster/event.hpp"
+// #include "eq_cluster/event.hpp"
 #include "eq_cluster/scene_node.hpp"
+#include "eq_cluster/trigger.hpp"
 
 #include "base/typedefs.hpp"
 

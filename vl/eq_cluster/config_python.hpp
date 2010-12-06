@@ -7,9 +7,12 @@
 #include "event_manager.hpp"
 #include "config_events.hpp"
 #include "game_manager.hpp"
+#include "eq_cluster/transform_event.hpp"
+#include "trigger.hpp"
 
-#include <boost/python.hpp>
-#include <player.hpp>
+#include "python.hpp"
+// #include <boost/python.hpp>
+#include "player.hpp"
 
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 {
@@ -17,11 +20,6 @@ struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
     {
 		return this->get_override("getTypeName")();
     }
-
-    bool isEqual( Trigger const &other )
-    {
-		return this->get_override("isEqual")();
-	}
 };
 
 struct ActionWrapper : vl::Action, python::wrapper<vl::Action>
@@ -44,7 +42,7 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 	return os;
 }
 
-namespace python = boost::python;
+// namespace python = boost::python;
 
 BOOST_PYTHON_MODULE(eqOgre)
 {
@@ -99,6 +97,12 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def(python::self != python::self )
 		;
 
+
+	// TODO these should be implemented
+	// Needs at least conversions from one to the other and constructors
+	python::class_<Ogre::Degree>("Degree")
+	;
+
 	python::class_<Ogre::Radian>("Radian")
 	;
 
@@ -106,8 +110,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
-		//.def("getSceneManager", &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() )
-//		.def("setActiveCamera", &vl::GameManager::setActiveCamera )
 	;
 
 	// TODO add setHeadMatrix function to python
@@ -141,12 +143,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
-		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
-// 		.def("createAction", &EventManager::createAction, python::return_value_policy<python::reference_existing_object>() )
-		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("addEvent", &EventManager::addEvent)
-		.def("removeEvent", &EventManager::removeEvent)
-		.def("hasEvent", &EventManager::hasEvent)
 		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
 		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger, python::return_value_policy<python::reference_existing_object>() )
@@ -168,11 +164,9 @@ BOOST_PYTHON_MODULE(eqOgre)
 	// should we just expose the wrapper for python inheritance and use the c++
 	// classes and bases otherwise?
 	python::class_<TriggerWrapper, boost::noncopyable>("Trigger", python::no_init )
-		.def(python::self == python::self )
 		// FIXME declaring getTypeName as virtual does not work
 		// (might be because it's a property not a function)
 		.add_property("type", python::make_function( &Trigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
-		.def("isEqual", python::pure_virtual(&Trigger::isEqual) )
 		.def("getName", &Trigger::getName )
 //		.def(python::str(python::self))
 	;
@@ -181,7 +175,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("getAction", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
 		.def("addAction", &BasicActionTrigger::addAction )
 		.def("getNActions", &BasicActionTrigger::getNActions )
-// 		.add_property("action", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &BasicActionTrigger::setAction )
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
@@ -192,9 +185,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 	python::class_<KeyTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("KeyTrigger", python::no_init )
-// 		.def(python::self == python::self )
 		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
-// 		.add_property("action", python::make_function( &KeyTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &KeyTrigger::setAction)
 	;
 
 	python::class_<KeyPressedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyPressedTrigger", python::no_init )
@@ -205,7 +196,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 
 	python::class_<ActionWrapper, boost::noncopyable>("Action", python::no_init )
-// 		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.add_property("type", &Action::getTypeName )
 // 		FIXME this does not work
 // 		.def(python::str(python::self))
@@ -213,11 +203,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 	// TODO needs a wrapper
 	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
-// 		.def("execute", python::pure_virtual(&BasicAction::execute) )
-
-// 		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
-		// FIXME this does not work
-//		.def(python::str(python::self))
 	;
 
 	python::class_<ToggleActionProxy, boost::noncopyable, python::bases<BasicAction> >("ToggleActionProxy", python::no_init )
@@ -245,23 +230,14 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("create",&SetTransformation::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 //		.def("execute", python::pure_virtual(&BasicAction::execute) )
-//		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
-		// FIXME this does not work
-//		.def(python::str(python::self))
 	;
 
 	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::TransformActionTrigger> >("TrackerTrigger", python::no_init )
-// 		.add_property("action", python::make_function( &TrackerTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TrackerTrigger::setAction)
 	;
 
-
-	// TODO can be removed when the TransformationEvent has been removed
-	python::class_<Event, boost::noncopyable>("Event", python::no_init )
-	;
 
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
 		.def_readwrite("game", &GameAction::data )
-// 		.add_property("game", python::make_function( &GameAction::getGame, python::return_value_policy< python::reference_existing_object>() ), &GameAction::setGame )
 	;
 
 	python::class_<QuitAction, boost::noncopyable, python::bases<GameAction> >("QuitAction", python::no_init )
@@ -348,18 +324,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("disableTranslation", &MoveActionProxy::disableTranslation )
 		.def("create",&MoveActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
-	;
-
-	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )
-		.add_property("scene_node", python::make_function( &TransformationEvent::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationEvent::setSceneNode )
-		.add_property("speed", &eqOgre::TransformationEvent::getSpeed, &eqOgre::TransformationEvent::setSpeed )
-		.add_property("angular_speed", python::make_function( &eqOgre::TransformationEvent::getAngularSpeed, python::return_internal_reference<>() ), &eqOgre::TransformationEvent::setAngularSpeed )
-		.def("setTransXtrigger", &eqOgre::TransformationEvent::setTransXtrigger )
-		.def("setTransYtrigger", &eqOgre::TransformationEvent::setTransYtrigger )
-		.def("setTransZtrigger", &eqOgre::TransformationEvent::setTransZtrigger )
-		.def("setRotXtrigger", &eqOgre::TransformationEvent::setRotXtrigger )
-		.def("setRotYtrigger", &eqOgre::TransformationEvent::setRotYtrigger )
-		.def("setRotZtrigger", &eqOgre::TransformationEvent::setRotZtrigger )
 	;
 
 	python::def( "getKeyName", getKeyName );
