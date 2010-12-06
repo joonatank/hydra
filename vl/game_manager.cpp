@@ -32,8 +32,6 @@ vl::GameManager::GameManager( void )
 	  _quit( false )
 {
 	// Add events
-	_event_man->addEventFactory( new vl::BasicEventFactory );
-	_event_man->addEventFactory( new vl::ToggleEventFactory );
 	_event_man->addEventFactory( new eqOgre::TransformationEventFactory );
 	// Add triggers
 	_event_man->addTriggerFactory( new vl::KeyTriggerFactory );

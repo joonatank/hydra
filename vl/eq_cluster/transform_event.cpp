@@ -40,40 +40,6 @@ std::string const &
 eqOgre::TransformationEvent::getTypeName(void ) const
 { return TransformationEventFactory::TYPENAME; }
 
-eqOgre::TransformationEvent::TransformationEvent(const eqOgre::TransformationEvent& a)
-{
-	*this = a;
-}
-
-
-eqOgre::TransformationEvent &
-eqOgre::TransformationEvent::operator=(const eqOgre::TransformationEvent& a)
-{
-	// TODO copying is disallowed for now
-	return *this;
-}
-
-// FIXME
-std::ostream &
-eqOgre::operator<<(std::ostream& os, const eqOgre::TransformationEvent& a)
-{
-/*
-	std::string del("     ");
-
-	if( a.getSceneNode() )
-		os << "TransformationEvent for node = " << a.getSceneNode()->getName();
-	else
-		os << "TransformationEvent without node";
-	os << std::endl
-		<< del << "speed = " << a.getSpeed()
-		<< " m/s : " << " angular speed = " << a.getAngularSpeed() << std::endl;
-//		<< del << "move keys = " << a._move_keys << std::endl
-//		<< del << "rot keys = " << a._rot_keys;
-*/
-	return os;
-}
-
-
 bool
 eqOgre::TransformationEvent::processTrigger(vl::Trigger* trig)
 {

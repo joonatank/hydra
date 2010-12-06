@@ -215,8 +215,6 @@ public :
 		_rot_triggers.z = TriggerPair( trig_pos, trig_neg );
 	}
 
-	friend std::ostream & operator<<( std::ostream &os, TransformationEvent const &a );
-
 protected :
 	/// Copy constructor
 	/// Copies the prototype but does not copy any state information

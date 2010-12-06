@@ -21,6 +21,7 @@ set( SOURCES
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/event.cpp
+	eq_cluster/trigger.cpp
 	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
 	eq_cluster/config_events.cpp
@@ -65,6 +66,8 @@ set( HEADERS
 	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp
 	eq_cluster/event.hpp
+	eq_cluster/trigger.hpp
+	eq_cluster/action.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/config_python.hpp

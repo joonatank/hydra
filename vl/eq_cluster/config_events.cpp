@@ -63,23 +63,3 @@ eqOgre::ActivateCamera::execute( void )
 
  	data->setActiveCamera( _camera_name );
 }
-
-/// -------- AddTransformOperation ------------
-void
-eqOgre::AddTransformOperation::execute( void )
-{
-	if( !_event_man )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_event_man->addEvent( _transform );
-}
-
-/// -------- RemoveTransformOperation ------------
-void
-eqOgre::RemoveTransformOperation::execute(void )
-{
-	if( !_event_man )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_event_man->removeEvent( _transform );
-}

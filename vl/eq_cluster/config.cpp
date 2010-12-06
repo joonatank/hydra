@@ -300,13 +300,9 @@ eqOgre::Config::_createQuitEvent(void )
 	EQASSERT( _game_manager );
 	QuitAction *quit = QuitAction::create();
 	quit->data = _game_manager;
-	vl::Event *event = _game_manager->getEventManager()->createEvent( "Event" );
-	event->setAction(quit);
 	// Add trigger
-	vl::KeyTrigger *trig = (vl::KeyTrigger *)( _game_manager->getEventManager()->createTrigger( "KeyTrigger" ) );
-	trig->setKey( OIS::KC_ESCAPE );
-	event->addTrigger(trig);
-	_game_manager->getEventManager()->addEvent( event );
+	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE );
+	trig->setAction(quit);
 }
 
 /// Event Handling
@@ -365,6 +361,8 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 	}
 
 	// Old handling system
+	// TODO these should be removed as soon as the TransformationEvent has been
+	// removed
 	vl::KeyPressedTrigger trig;
 	trig.setKey(kc);
 	return _game_manager->getEventManager()->processEvents( &trig );
@@ -382,6 +380,8 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 	}
 
 	// Old event handling
+	// TODO these should be removed as soon as the TransformationEvent has been
+	// removed
 	vl::KeyReleasedTrigger trig;
 	trig.setKey( kc );
 	return _game_manager->getEventManager()->processEvents( &trig );

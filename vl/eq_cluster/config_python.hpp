@@ -24,21 +24,6 @@ struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 	}
 };
 
-
-struct EventWrapper : vl::Event, python::wrapper<vl::Event>
-{
-	bool processTrigger( vl::Trigger *trig )
-	{
-		return this->get_override("processTrigger")();
-	}
-
-	std::string const &getTypeName( void ) const
-	{
-		return this->get_override("getTypeName")();
-	}
-
-};
-
 struct ActionWrapper : vl::Action, python::wrapper<vl::Action>
 {
     std::string getTypeName( void ) const
@@ -206,14 +191,15 @@ BOOST_PYTHON_MODULE(eqOgre)
 	python::class_<ActionWrapper, boost::noncopyable>("Action", python::no_init )
 // 		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.add_property("type", &Action::getTypeName )
-		// FIXME this does not work
-//		.def(python::str(python::self))
+// 		FIXME this does not work
+// 		.def(python::str(python::self))
 	;
 
 	// TODO needs a wrapper
 	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
-		.def("execute", python::pure_virtual(&BasicAction::execute) )
-//		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+// 		.def("execute", python::pure_virtual(&BasicAction::execute) )
+
+// 		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		// FIXME this does not work
 //		.def(python::str(python::self))
 	;
@@ -224,6 +210,16 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("create",&ToggleActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
+
+
+	python::class_<TimerActionProxy, boost::noncopyable, python::bases<BasicAction> >("TimerActionProxy", python::no_init )
+		.add_property("action", python::make_function( &TimerActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TimerActionProxy::setAction )
+		.add_property("time_limit", &TimerActionProxy::getTimeLimit, &TimerActionProxy::setTimeLimit )
+		.def("create",&TimerActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+
 
 	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
 	;
@@ -243,23 +239,9 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 
-	python::class_<EventWrapper, boost::noncopyable>("Event", python::no_init )
-		.add_property("type", python::make_function( &Event::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
-		.def("processTrigger", &Event::processTrigger)
-		.def("removeTrigger", &Event::removeTrigger)
-		.def("addTrigger", &Event::addTrigger)
-		.add_property("action", python::make_function( &Event::getAction, python::return_value_policy< python::reference_existing_object>() ), &Event::setAction)
-		.add_property("time_limit", &Event::getTimeLimit, &Event::setTimeLimit)
-		// FIXME this does not work
-//		.def(python::str(python::self))
+	// TODO can be removed when the TransformationEvent has been removed
+	python::class_<Event, boost::noncopyable>("Event", python::no_init )
 	;
-
-	python::class_<ToggleEvent, boost::noncopyable, python::bases<Event> >("ToggleEvent", python::no_init )
-		.add_property("toggle_off_action", python::make_function( &ToggleEvent::getToggleOff, python::return_value_policy< python::reference_existing_object>() ), &ToggleEvent::setToggleOff )
-		.add_property("toggle_on_action", python::make_function( &ToggleEvent::getToggleOn, python::return_value_policy< python::reference_existing_object>() ), &ToggleEvent::setToggleOn )
-		.add_property("toggle_state", &ToggleEvent::getToggleState, &ToggleEvent::setToggleState )
-	;
-
 
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
 		.def_readwrite("game", &GameAction::data )
@@ -297,18 +279,6 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
-
-	/// EventManager Operations
-// 	python::class_<EventManagerOperation, boost::noncopyable, python::bases<BasicAction> >("EventManagerOperation", python::no_init )
-// 		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
-// 	;
-
-// 	python::class_<AddTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("AddTransformOperation", python::no_init )
-// 	;
-//
-// 	python::class_<RemoveTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("RemoveTransformOperation", python::no_init )
-// 	;
-
 	/// SceneNode Operations
 	// TODO expose the Base class
 	python::class_<HideAction, boost::noncopyable, python::bases<BasicAction> >("HideAction", python::no_init )
@@ -322,6 +292,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def("create",&ShowAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
+
 
 	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )
 		.add_property("scene_node", python::make_function( &TransformationEvent::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &TransformationEvent::setSceneNode )

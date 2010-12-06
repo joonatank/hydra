@@ -39,10 +39,13 @@ def addTranslationEvent(node) :
 	if not game.event_manager.addEvent(event) :
 		print 'Python : could not add event'
 
+
+
 # Fine using the new event interface
 def addQuitEvent() :
 	print 'Creating Quit Event'
 	action = QuitAction.create()
+	print 'Python Action type = ' + action.type
 	action.game = game
 
 	trigger = game.event_manager.createKeyPressedTrigger( KC.Q )
@@ -51,7 +54,6 @@ def addQuitEvent() :
 
 
 # Fine using the new event interface
-# TODO time limits are not supported atm, we need a timer proxy for it
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
 	# Create the action
@@ -59,13 +61,16 @@ def addReloadEvent() :
 	print 'Python Action type = ' + action.type
 	action.scene = game.scene
 
+	# Create the Time limit
+	proxy = TimerActionProxy.create()
+	print 'Python Proxy type = ' + proxy.type
+	proxy.action = action
+	proxy.time_limit = 5 # Seconds
+
 	# Create the trigger
 	trigger = game.event_manager.createKeyPressedTrigger( KC.R )
 	print 'Python Trigger type = ' + trigger.type
-	trigger.action = action
-
-	# TODO time limits are not supported atm
-	#event.time_limit = 5
+	trigger.action = proxy
 
 
 
@@ -73,6 +78,7 @@ def addReloadEvent() :
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
 	action = ToggleMusic.create()
+	print 'Python Action type = ' + action.type
 	action.game = game
 	trigger = game.event_manager.createKeyPressedTrigger( KC.M )
 	trigger.action = action
@@ -106,7 +112,6 @@ def addToggleActiveCamera( camera1, camera2 ) :
 
 
 # Fine using the new event interface
-# TODO time limits are not supported atm, we need a timer proxy for it
 def addHideEvent(node) :
 	print 'Creating Hide Event'
 	hide = HideAction.create()
@@ -122,8 +127,15 @@ def addHideEvent(node) :
 	toggle.action_on = hide
 	toggle.action_off = show
 
-	trigger.action = toggle
-	#event.time_limit = 2	# Secs
+	# Create a proxy for slowing down the toggling
+	# NOTE This can be done the otherway around also i.e. create two timer
+	# proxys and assign them to the toggle proxy
+	# This allows individual control on the wait time from one state to another
+	proxy = TimerActionProxy.create()
+	proxy.action = toggle
+	proxy.time_limit = 2 # Seconds
+
+	trigger.action = proxy
 
 
 # Add some global events that are useful no matter what the scene/project is

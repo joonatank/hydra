@@ -10,6 +10,8 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
+#include <eq/base/clock.h>
+
 namespace vl
 {
 
@@ -117,6 +119,64 @@ private :
 	BasicActionPtr _action_on;
 	BasicActionPtr _action_off;
 	bool _state;
+};
+
+
+/// Action proxy with a timer and time limit
+/// Depending on wether the enough time has passed since last activation
+/// executes an action or is a NOP
+///
+/// This class is not ment to be inherited from it's a simple proxy class
+/// If you need a similar one create a new one
+class TimerActionProxy : public BasicAction
+{
+public :
+	TimerActionProxy( void )
+		: _action(0), _time_limit(0)
+	{
+		// Reset the clock to something big, so that the first time action will
+		// be executed no matter the time limit
+		_clock.set(uint64_t(1e10) );
+	}
+
+	void setAction( BasicActionPtr action )
+	{ _action = action; }
+
+	BasicActionPtr getAction( void )
+	{ return _action; }
+
+	/// Set the time limit between the same actions beign triggered
+	/// parameter time_limit in seconds
+	void setTimeLimit( double time_limit )
+	{ _time_limit = time_limit*1000; }
+
+	/// Get the time limit between actions beign triggered
+	/// returns the time limit in seconds
+	double getTimeLimit( void ) const
+	{ return _time_limit/1000; }
+
+	void execute( void )
+	{
+		if( _action && _clock.getTimed() > _time_limit )
+		{
+			_action->execute();
+			_clock.reset();
+		}
+	}
+
+	static TimerActionProxy *create( void )
+	{ return new TimerActionProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "TimerActionProxy"; }
+
+private :
+	BasicActionPtr _action;
+
+	eq::base::Clock _clock;
+
+	// Time limit in milliseconds, easier to compare to clock output
+	double _time_limit;
 };
 
 /// Callback Action class designed for Trackers
