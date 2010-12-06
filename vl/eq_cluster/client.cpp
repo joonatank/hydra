@@ -113,6 +113,9 @@ eqOgre::Client::_exit(void )
 
 void eqOgre::Client::_render( uint32_t frame )
 {
+	// target fps
+	const double FPS = 60;
+
 	_frame_clock.reset();
 
 	_config->startFrame(frame);
@@ -121,7 +124,7 @@ void eqOgre::Client::_render( uint32_t frame )
 	_rendering_time += _frame_clock.getTimed();
 	// Sleep enough to get a 60 fps but no more
 	// TODO the fps should be configurable
-	vl::msleep( 16.66-_frame_clock.getTimed() );
+	vl::msleep( 1000.0/FPS -_frame_clock.getTimed() );
 
 	// Print info every two hundred frame
 	if( (frame % 200) == 0 )
@@ -130,11 +133,13 @@ void eqOgre::Client::_render( uint32_t frame )
 		// to the console
 		// TODO also there should be possibility to reset the clock
 		// for massive parts in a scene for example
-		std::cout << "Avarage fps = " << frame/(_clock.getTimed()/1000)
-			<< ". took " << _rendering_time/frame
-			<< " ms in avarage for rendering one frame."
-			<< " Took " << _clock.getTimed() << "ms to render "
-			<< frame << " frames." << std::endl;
+		std::cout << "Avarage fps = " << 200.0/(_clock.getTimed()/1000)
+			<< ". took " << _rendering_time/200
+			<< " ms in avarage for rendering one frame." << std::endl;
+
+		// Reset the stats
+		_rendering_time = 0;
+		_clock.reset();
 	}
 }
 
