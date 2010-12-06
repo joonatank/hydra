@@ -27,7 +27,7 @@ public :
 	// and other for executing the Operation as with other Operation classes
 	virtual void execute( double time );
 
-	virtual std::string const &getTypeName( void ) const
+	virtual std::string getTypeName( void ) const
 	{ return TYPENAME; }
 
 	// TODO should be moved to Factory

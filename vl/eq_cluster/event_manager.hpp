@@ -15,8 +15,6 @@ public :
 
 	Trigger *createTrigger( std::string const &type );
 
-	ActionPtr createAction( std::string const &type );
-
 	// TODO naming of these function
 	// should they be registerOperationType or addOperationFactory or some
 	// combination of the two themes
@@ -24,14 +22,14 @@ public :
 	// copy function to them (which returns a new allocated ptr) or we need to
 	// get python to create objects with long life time
 	// probably the later
+	// NOTE the factories can infact be copied because they don't contain
+	// any data, so they can be assigned to each other with ease
 
 	/// Parameter : Pointer to the factory which user wants to add
 	/// 	The factory is expected to be alive till the factory is removed
 	/// If a factory with that object typeName is not found the factory
 	/// is added to the list of factories.
 	/// If a factory with the same object typeName is found this will throw
-	void addActionFactory( ActionFactory *fact );
-
 	void addEventFactory( EventFactory *fact );
 
 	void addTriggerFactory( TriggerFactory *fact );
@@ -53,7 +51,6 @@ private :
 	std::vector<Event *> _events;
 
 	std::vector<TriggerFactory *> _trigger_factories;
-	std::vector<ActionFactory *> _action_factories;
 	std::vector<EventFactory *> _event_factories;
 
 };	// class EventManager

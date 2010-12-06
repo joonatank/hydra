@@ -5,7 +5,7 @@ def mapTrackers():
 	for i in range(0, 20) :
 		name = 'cube' + str(i)
 		cube = game.scene.getSceneNode( name )
-		action = game.event_manager.createAction( 'SetTransformation' )
+		action = SetTransformation.create() #game.event_manager.createAction( '' )
 		action.scene_node = cube
 		# TODO there is no checking here
 		# Add checking that the object exists

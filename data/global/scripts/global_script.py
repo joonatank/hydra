@@ -39,8 +39,8 @@ def addTranslationEvent(node) :
 
 def addQuitEvent() :
 	print 'Creating Quit Event'
-	action = game.event_manager.createAction( 'QuitAction' )
-	print 'Python Action type = ' + action.type
+	action = QuitAction.create() #game.event_manager.createAction( 'QuitAction' )
+	#print 'Python Action type = ' + action.type
 	action.game = game
 	# Example of using pressed or released key instead of both (the default)
 	# you need to create either KeyReleasedTrigger or KeyPressedTrigger
@@ -58,7 +58,7 @@ def addQuitEvent() :
 
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
-	action = game.event_manager.createAction( 'ReloadScene' )
+	action = ReloadScene.create() #game.event_manager.createAction( 'ReloadScene' )
 	print 'Python Action type = ' + action.type
 	action.scene = game.scene
 	trigger = game.event_manager.createTrigger( 'KeyTrigger' )
@@ -80,7 +80,7 @@ def addReloadEvent() :
 
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
-	action = game.event_manager.createAction( 'ToggleMusic' )
+	action = ToggleMusic.create() #game.event_manager.createAction( 'ToggleMusic' )
 	action.game = game
 	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
 	trigger.key = KC.M
@@ -102,10 +102,10 @@ def addToggleMusicEvent() :
 # An error message is printed to std::cerr and the program continues normally
 def addToggleActiveCamera( camera1, camera2 ) :
 	print 'Creating Toggle Activate Camera'
-	action_on = game.event_manager.createAction( 'ActivateCamera' )
+	action_on = ActivateCamera.create()
 	action_on.player = game.player
 	action_on.camera = camera1
-	action_off = game.event_manager.createAction( 'ActivateCamera' )
+	action_off = ActivateCamera.create()
 	action_off.player = game.player
 	action_off.camera = camera2
 	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
@@ -122,9 +122,9 @@ def addToggleActiveCamera( camera1, camera2 ) :
 
 def addHideEvent(node) :
 	print 'Creating Hide Event'
-	hide = game.event_manager.createAction( 'Hide' )
+	hide = HideAction.create() # game.event_manager.createAction( 'Hide' )
 	hide.scene_node = node
-	show = game.event_manager.createAction( 'Show' )
+	show = ShowAction.create() #game.event_manager.createAction( 'Show' )
 	show.scene_node = node
 	trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
 	trigger.key = KC.H

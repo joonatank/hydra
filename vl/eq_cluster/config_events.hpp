@@ -23,20 +23,12 @@ public :
 		: data(0)
 	{}
 
-// 	void setData( T *data )
-// 	{ _data = data; }
-//
-// 	Config *getConfig( void )
-// 	{ return _config; }
-
-// 	virtual std::ostream & print( std::ostream & os ) const;
-
-// protected :
 	T *data;
 
 };	// class ConfigOperation
 
 typedef ActionBase<vl::Player> PlayerAction;
+typedef ActionBase<vl::GameManager> GameAction;
 
 /// Sets the Head matrix in eqOgre::Config
 // TODO this should use the same PlayerAction base
@@ -59,61 +51,30 @@ public :
 	/// Sets the head matrix in Config
 	virtual void execute( vl::Transform const &data );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "HeadTrackerAction"; }
+
+	static HeadTrackerAction *create( void )
+	{ return new HeadTrackerAction; }
 
 protected :
 	vl::PlayerPtr _player;
 };
 
-class HeadTrackerActionFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new HeadTrackerAction; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-};
-
-class GameAction : public vl::BasicAction
-{
-public :
-	GameAction( void )
-		: _game(0)
-	{}
-
-	void setGame( vl::GameManagerPtr game )
-	{ _game = game; }
-
-	vl::GameManagerPtr getGame( void )
-	{ return _game; }
-
-protected :
-	vl::GameManagerPtr _game;
-};
 
 class QuitAction : public GameAction
 {
 public :
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	static QuitAction *create( void )
+	{ return new QuitAction; }
+
+	virtual std::string getTypeName( void ) const
+	{ return "QuitAction"; }
 
 };	// class QuitOperation
 
-class QuitActionFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new QuitAction; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-};
 
 class ActivateCamera : public PlayerAction
 {
@@ -126,25 +87,16 @@ public :
 
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ActivateCamera"; }
+
+	static ActivateCamera *create( void )
+	{ return new ActivateCamera; }
 
 protected :
 	std::string _camera_name;
 
 };	// ActivateCamera
-
-class ActivateCameraFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new ActivateCamera; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-
-};	// ActivateCameraFactory
 
 
 typedef ActionBase<SceneManager> SceneManagerAction;
@@ -154,20 +106,12 @@ class ReloadScene : public SceneManagerAction
 public :
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ReloadScene"; }
 
-};
-
-class ReloadSceneFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
+	static ReloadScene *create( void )
 	{ return new ReloadScene; }
 
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
 
@@ -176,23 +120,13 @@ class ToggleMusic : public GameAction
 public :
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ToggleMusic"; }
 
-};
-
-class ToggleMusicFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
+	static ToggleMusic *create( void )
 	{ return new ToggleMusic; }
 
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
-
-
 
 
 
@@ -238,25 +172,16 @@ public :
 
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "AddTransformOperation"; }
+
+	static AddTransformOperation *create( void )
+	{ return new AddTransformOperation; }
 
 private :
 	TransformationEvent *_transform;
 
 };
-
-class AddTransformOperationFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new AddTransformOperation; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-};
-
 
 
 class RemoveTransformOperation : public EventManagerOperation
@@ -275,23 +200,15 @@ public :
 
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "RemoveTransformOperation"; }
+
+	static RemoveTransformOperation *create( void )
+	{ return new RemoveTransformOperation; }
 
 private :
 	TransformationEvent *_transform;
 
-};
-
-class RemoveTransformOperationFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new RemoveTransformOperation; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
 

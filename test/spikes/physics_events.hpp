@@ -52,23 +52,15 @@ public :
 
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ApplyForce"; }
+
+	static ApplyForce *create( void )
+	{ return new ApplyForce; }
 
 protected :
 	btVector3 _force;
 
-};
-
-class ApplyForceFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new ApplyForce; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
 }	// namespace physics

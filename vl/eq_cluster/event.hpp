@@ -239,7 +239,7 @@ inline std::ostream &operator<<( std::ostream &os, Transform const &d )
 class Action
 {
 public :
-	virtual std::string const &getTypeName( void ) const = 0;
+	virtual std::string getTypeName( void ) const = 0;
 
 	virtual std::ostream & print( std::ostream & os ) const
 	{
@@ -254,13 +254,6 @@ typedef Action * ActionPtr;
 inline std::ostream &operator<<( std::ostream &os, vl::Action const &a )
 { return a.print(os); }
 
-/// Action Factory class for creating new Actions
-class ActionFactory
-{
-public :
-	virtual ActionPtr create( void ) = 0;
-	virtual std::string const &getTypeName( void ) const = 0;
-};
 
 /// The most basic action, takes no parameters
 class BasicAction : public Action

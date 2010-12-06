@@ -41,7 +41,7 @@ struct EventWrapper : vl::Event, python::wrapper<vl::Event>
 
 struct ActionWrapper : vl::Action, python::wrapper<vl::Action>
 {
-    std::string const &getTypeName( void ) const
+    std::string getTypeName( void ) const
     {
 		return this->get_override("getTypeName")();
     }
@@ -158,7 +158,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
 		.def("createEvent", &EventManager::createEvent, python::return_value_policy<python::reference_existing_object>() )
-		.def("createAction", &EventManager::createAction, python::return_value_policy<python::reference_existing_object>() )
+// 		.def("createAction", &EventManager::createAction, python::return_value_policy<python::reference_existing_object>() )
 		.def("createTrigger", &EventManager::createTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("addEvent", &EventManager::addEvent)
 		.def("removeEvent", &EventManager::removeEvent)
@@ -197,7 +197,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 
 	python::class_<ActionWrapper, boost::noncopyable>("Action", python::no_init )
-		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+// 		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		.add_property("type", &Action::getTypeName )
 		// FIXME this does not work
 //		.def(python::str(python::self))
 	;
@@ -215,6 +216,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 	python::class_<eqOgre::SetTransformation, boost::noncopyable, python::bases<vl::TransformAction> >("SetTransformation", python::no_init )
 		.add_property("scene_node", python::make_function( &eqOgre::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &eqOgre::SetTransformation::setSceneNode )
+		.def("create",&SetTransformation::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 //		.def("execute", python::pure_virtual(&BasicAction::execute) )
 //		.add_property("type", python::make_function( &Action::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		// FIXME this does not work
@@ -245,13 +248,18 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
-		.add_property("game", python::make_function( &GameAction::getGame, python::return_value_policy< python::reference_existing_object>() ), &GameAction::setGame )
+		.def_readwrite("game", &GameAction::data )
+// 		.add_property("game", python::make_function( &GameAction::getGame, python::return_value_policy< python::reference_existing_object>() ), &GameAction::setGame )
 	;
 
 	python::class_<QuitAction, boost::noncopyable, python::bases<GameAction> >("QuitAction", python::no_init )
+		.def("create",&QuitAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 	python::class_<ToggleMusic, boost::noncopyable, python::bases<GameAction> >("ToggleMusic", python::no_init )
+		.def("create",&ToggleMusic::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 
@@ -260,6 +268,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 	python::class_<ReloadScene, boost::noncopyable, python::bases<SceneManagerAction> >("ReloadScene", python::no_init )
+		.def("create",&ReloadScene::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 
@@ -269,28 +279,34 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 	python::class_<ActivateCamera, boost::noncopyable, python::bases<PlayerAction> >("ActivateCamera", python::no_init )
 		.add_property("camera", python::make_function( &ActivateCamera::getCamera, python::return_value_policy<python::copy_const_reference>() ), &ActivateCamera::setCamera )
+		.def("create",&ActivateCamera::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 
 	/// EventManager Operations
-	python::class_<EventManagerOperation, boost::noncopyable, python::bases<BasicAction> >("EventManagerOperation", python::no_init )
-		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
-	;
+// 	python::class_<EventManagerOperation, boost::noncopyable, python::bases<BasicAction> >("EventManagerOperation", python::no_init )
+// 		.add_property("event_manager", python::make_function( &EventManagerOperation::getManager, python::return_value_policy< python::reference_existing_object>() ), &EventManagerOperation::setManager )
+// 	;
 
-	python::class_<AddTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("AddTransformOperation", python::no_init )
-	;
-
-	python::class_<RemoveTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("RemoveTransformOperation", python::no_init )
-	;
+// 	python::class_<AddTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("AddTransformOperation", python::no_init )
+// 	;
+//
+// 	python::class_<RemoveTransformOperation, boost::noncopyable, python::bases<EventManagerOperation> >("RemoveTransformOperation", python::no_init )
+// 	;
 
 	/// SceneNode Operations
 	// TODO expose the Base class
 	python::class_<HideAction, boost::noncopyable, python::bases<BasicAction> >("HideAction", python::no_init )
 		.add_property("scene_node", python::make_function( &HideAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &HideAction::setSceneNode )
+		.def("create",&HideAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 	python::class_<ShowAction, boost::noncopyable, python::bases<BasicAction> >("ShowAction", python::no_init )
 		.add_property("scene_node", python::make_function( &ShowAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &ShowAction::setSceneNode )
+		.def("create",&ShowAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 	python::class_<TransformationEvent, boost::noncopyable, python::bases<Event> >("TransformationEvent", python::no_init )

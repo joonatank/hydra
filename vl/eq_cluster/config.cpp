@@ -212,7 +212,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	_game_manager->setTrackerClients( clients );
 
 	// Create Action
-	eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_game_manager->getEventManager()->createAction("HeadTrackerAction");
+	eqOgre::HeadTrackerAction *action = eqOgre::HeadTrackerAction::create();
 	EQASSERT( _game_manager->getPlayer() );
 	action->setPlayer( _game_manager->getPlayer() );
 
@@ -296,9 +296,8 @@ eqOgre::Config::_createQuitEvent(void )
 
 	// Add a trigger event to Quit the Application
 	EQASSERT( _game_manager );
-	QuitAction *quit
-		= (QuitAction *)( _game_manager->getEventManager()->createAction( "QuitAction" ) );
-	quit->setGame( _game_manager );
+	QuitAction *quit = QuitAction::create();
+	quit->data = _game_manager;
 	vl::Event *event = _game_manager->getEventManager()->createEvent( "Event" );
 	event->setAction(quit);
 	// Add trigger

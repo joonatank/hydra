@@ -20,20 +20,6 @@ vl::EventManager::createEvent(const std::string& type)
 		<< vl::factory_name("Event factory") << vl::object_type_name(type) );
 }
 
-vl::ActionPtr
-vl::EventManager::createAction(const std::string& type)
-{
-	std::vector<ActionFactory *>::iterator iter;
-	for( iter = _action_factories.begin(); iter != _action_factories.end(); ++iter )
-	{
-		if( (*iter)->getTypeName() == type )
-		{ return (*iter)->create(); }
-	}
-
-	BOOST_THROW_EXCEPTION( vl::no_factory()
-		<< vl::factory_name("Operation factory") << vl::object_type_name(type) );
-}
-
 vl::Trigger *
 vl::EventManager::createTrigger(const std::string& type)
 {
@@ -64,24 +50,6 @@ vl::EventManager::addEventFactory(vl::EventFactory* fact)
 	}
 
 	_event_factories.push_back( fact );
-}
-
-void
-vl::EventManager::addActionFactory(vl::ActionFactory* fact)
-{
-	std::vector<ActionFactory *>::iterator iter;
-	for( iter = _action_factories.begin(); iter != _action_factories.end(); ++iter )
-	{
-		if( (*iter)->getTypeName() == fact->getTypeName() )
-		{
-			BOOST_THROW_EXCEPTION( vl::duplicate_factory()
-				<< vl::factory_name("Operation factory")
-				<< vl::object_type_name( fact->getTypeName() )
-				);
-		}
-	}
-
-	_action_factories.push_back( fact );
 }
 
 void

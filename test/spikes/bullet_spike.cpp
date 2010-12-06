@@ -43,8 +43,6 @@ public :
 	{
 		bool ret = eqOgre::Config::init(initID);
 
-		_game_manager->getEventManager()->addActionFactory( new vl::physics::ApplyForceFactory );
-
 		initPhysics();
 		return ret;
 	}
@@ -118,7 +116,7 @@ public :
 				physics_inited = true;
 
 				// Create a physics test Event
-				vl::physics::ApplyForce *action = (vl::physics::ApplyForce *)_game_manager->getEventManager()->createAction("ApplyForce");
+				vl::physics::ApplyForce *action = vl::physics::ApplyForce::create();
 				vl::KeyPressedTrigger *trig = (vl::KeyPressedTrigger *)_game_manager->getEventManager()->createTrigger("KeyPressedTrigger");
 				vl::Event *event = _game_manager->getEventManager()->createEvent("Event");
 

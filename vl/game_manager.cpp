@@ -40,20 +40,7 @@ vl::GameManager::GameManager( void )
 	_event_man->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
 	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
 	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
-	// Add actions
-	_event_man->addActionFactory( new eqOgre::QuitActionFactory );
-	_event_man->addActionFactory( new eqOgre::ReloadSceneFactory );
-	_event_man->addActionFactory( new eqOgre::AddTransformOperationFactory );
-	_event_man->addActionFactory( new eqOgre::RemoveTransformOperationFactory );
-	_event_man->addActionFactory( new eqOgre::HideActionFactory );
-	_event_man->addActionFactory( new eqOgre::ShowActionFactory );
-	_event_man->addActionFactory( new eqOgre::ToggleMusicFactory );
-	_event_man->addActionFactory( new eqOgre::ActivateCameraFactory );
-	_event_man->addActionFactory( new eqOgre::SetTransformationFactory );
-	_event_man->addActionFactory( new eqOgre::HeadTrackerActionFactory );
 
-	// TODO this probably does not work, if the PythonContext tries to use
-	// this pointer passed onto it.
 	_python = new eqOgre::PythonContext( this );
 
 	EQINFO << "Init audio." << std::endl;
