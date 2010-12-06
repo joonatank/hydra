@@ -72,30 +72,38 @@ class BasicActionTrigger : public vl::Trigger
 {
 public :
 	BasicActionTrigger( void )
-		: _action(0)
 	{}
 
 	/// Action to execute when updated
 	// TODO there should be a stack of actions not just one of them
-	virtual void setAction( BasicActionPtr action )
+	void addAction( BasicActionPtr action )
 	{
-		_action = action;
+		// TODO should check that no two actions are the same
+		if( action )
+		{
+			_actions.push_back( action );
+		}
 	}
 
-	virtual BasicActionPtr getAction( void )
+	BasicActionPtr getAction( size_t i )
 	{
-		return _action;
+		return _actions.at(i);
 	}
+
+	size_t getNActions( void ) const
+	{ return _actions.size(); }
 
 	/// Callback function
-	virtual void update( void )
+	void update( void )
 	{
-		if( _action )
-		{ _action->execute(); }
+		for( size_t i = 0; i < _actions.size(); ++i )
+		{
+			_actions.at(i)->execute();
+		}
 	}
 
 private :
-	BasicActionPtr _action;
+	std::vector<BasicActionPtr> _actions;
 };
 
 class TransformActionTrigger : public vl::Trigger

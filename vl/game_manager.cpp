@@ -31,8 +31,6 @@ vl::GameManager::GameManager( void )
 	  _background_sound(0),
 	  _quit( false )
 {
-	// Add events
-	_event_man->addEventFactory( new eqOgre::TransformationEventFactory );
 	// Add triggers
 	_event_man->addTriggerFactory( new vl::KeyTriggerFactory );
 	_event_man->addTriggerFactory( new vl::KeyPressedTriggerFactory );

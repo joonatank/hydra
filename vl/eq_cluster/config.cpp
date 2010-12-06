@@ -306,7 +306,7 @@ eqOgre::Config::_createQuitEvent(void )
 	quit->data = _game_manager;
 	// Add trigger
 	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE );
-	trig->setAction(quit);
+	trig->addAction(quit);
 }
 
 /// Event Handling

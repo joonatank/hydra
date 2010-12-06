@@ -173,11 +173,15 @@ BOOST_PYTHON_MODULE(eqOgre)
 		// (might be because it's a property not a function)
 		.add_property("type", python::make_function( &Trigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("isEqual", python::pure_virtual(&Trigger::isEqual) )
+		.def("getName", &Trigger::getName )
 //		.def(python::str(python::self))
 	;
 
 	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
-		.add_property("action", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &BasicActionTrigger::setAction )
+		.def("getAction", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
+		.def("addAction", &BasicActionTrigger::addAction )
+		.def("getNActions", &BasicActionTrigger::getNActions )
+// 		.add_property("action", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &BasicActionTrigger::setAction )
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )

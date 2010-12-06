@@ -5,10 +5,8 @@ def mapTrackers():
 	for i in range(0, 20) :
 		name = 'cube' + str(i)
 		cube = game.scene.getSceneNode( name )
-		action = SetTransformation.create() #game.event_manager.createAction( '' )
+		action = SetTransformation.create()
 		action.scene_node = cube
-		# TODO there is no checking here
-		# Add checking that the object exists
 		if( game.event_manager.hasTrackerTrigger( name + 'Trigger' ) ) :
 			trigger = game.event_manager.getTrackerTrigger( name + 'Trigger' )
 			trigger.action = action
@@ -24,7 +22,7 @@ def mapTrackers():
 
 print 'Getting Camera SceneNode'
 camera = game.scene.getSceneNode("CameraNode")
-addTranslationEvent(camera)
+createCameraMovements(camera)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
 # first one is the camera not active at the moment, second one is active at the moment
