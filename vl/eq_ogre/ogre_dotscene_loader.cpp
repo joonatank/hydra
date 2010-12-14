@@ -865,9 +865,6 @@ void
 eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
-	// TODO this needs SceneNode::attachObject,
-	// Entity::setCastShadows, Entity::setMaterialName
-
 	// If no parent is provided we use Root node
 	if( !parent )
 	{ parent = _attach_node; }
@@ -1114,7 +1111,7 @@ eqOgre::DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::L
 	Ogre::Real falloff = vl::getAttribReal(XMLNode, "falloff", 1.0);
 
 	// Setup the light range
-	light->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
+	light->setSpotlightRange(Ogre::Radian(inner), Ogre::Radian(outer), falloff);
 }
 
 void
