@@ -84,16 +84,34 @@ eqOgre::Channel::configExit()
 }
 
 
-/*
+// NOTE overload with empty function
+// seems like we don't need these, Ogre Viewport will clear it self
+// before rendering if we don't instruct it to do otherwise
 void
-eqOgre::Channel::frameClear( const uint32_t )
+eqOgre::Channel::frameClear( const eq::uint128_t & )
 {
 //	TODO channel should do all rendering tasks
 //	it should use Ogre::Viewport to do so.
 //	if( _camera && _ogre_viewport )
 //	{ _ogre_viewport->clear(); }
 }
-*/
+
+// NOTE overload with empty function
+// Seems like we don't need these for now. As we don't use offscreen rendering.
+void
+eqOgre::Channel::frameAssemble( const eq::uint128_t & )
+{
+// 	eq::Channel::frameAssemble(frameID);
+}
+
+// NOTE overload with empty function
+// Seems like we don't need these for now. As we don't use offscreen rendering.
+void
+eqOgre::Channel::frameReadback( const eq::uint128_t & )
+{
+// 	eq::Channel::frameReadback(frameID);
+}
+
 
 /** Override frameDraw to call Viewport::update
  *
@@ -107,11 +125,13 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 	updateDistribData();
 
 	// From equalizer channel::frameDraw
-	EQ_GL_CALL( applyBuffer( ));
-	EQ_GL_CALL( applyViewport( ));
+	// NOTE seems like we don't need these, Ogre should handle them anyway
+	// TODO have to be tested on multiple walls and with head tracking though.
+//	EQ_GL_CALL( applyBuffer( ));
+//	EQ_GL_CALL( applyViewport( ));
 
-	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
-	EQ_GL_CALL( glLoadIdentity() );
+// 	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
+// 	EQ_GL_CALL( glLoadIdentity() );
 
 	EQASSERT( _camera )
 	EQASSERT( _ogre_window )
@@ -213,4 +233,5 @@ eqOgre::Channel::createViewport( void )
 	_viewport = _ogre_window->addViewport( _camera );
 	// TODO this should be configurable from DotScene
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	_viewport->setAutoUpdated(false);
 }

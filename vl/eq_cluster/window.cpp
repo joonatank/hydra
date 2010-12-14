@@ -306,6 +306,8 @@ bool eqOgre::Window::configExit(void )
 void
 eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
 {
+	eq::Window::frameFinish(frameID, frameNumber);
+
 	if( _keyboard && _mouse )
 	{
 		_keyboard->capture();
@@ -315,8 +317,6 @@ eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNu
 	{
 		EQERROR << "Mouse or keyboard does not exists! No input handling." << std::endl;
 	}
-
-	eq::Window::frameFinish(frameID, frameNumber);
 }
 
 bool
