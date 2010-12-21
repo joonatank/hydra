@@ -40,6 +40,10 @@ protected:
 	/// Creating custom frustum and applying head matrix
     virtual void frameDraw( const eq::uint128_t &frameID );
 
+	virtual void frameFinish( const eq::uint128_t &frameID, uint32_t const frameNumber  );
+
+	virtual void frameViewFinish( const eq::uint128_t &frameID );
+
 	// Some task methods
 	void setOgreFrustum( void );
 

@@ -79,11 +79,11 @@ namespace vl
 		double sqy = q.y*q.y;
 		double sqz = q.z*q.z;
 		// heading
-		y = ::atan2(2*q.y*q.w-2*q.x*q.z , 1 - 2*sqy - 2*sqz);
+		y = ::atan2( double(2*q.y*q.w-2*q.x*q.z), double(1 - 2*sqy - 2*sqz) );
 		// attitude
-		z = ::asin(2*test);
+		z = ::asin( double(2*test) );
 		// bank
-		x = ::atan2(2*q.x*q.w-2*q.y*q.z , 1 - 2*sqx - 2*sqz);
+		x = ::atan2( double(2*q.x*q.w-2*q.y*q.z ), double( 1 - 2*sqx - 2*sqz) );
 	}
 
 	inline

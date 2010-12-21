@@ -67,7 +67,17 @@ bool eqOgre::Client::run(void )
 		frame_clock.reset();
 
 		config->startFrame(++frame);
+		if( config->getError( ))
+            EQWARN << "Error during frame start: " << config->getError()
+                   << std::endl;
 		config->finishFrame();
+
+        while( hasCommands() ) // execute non-critical pending commands
+        {
+            processCommand();
+        }
+		
+		config->handleEvents(); // process all pending events
 
 		rendering_time += frame_clock.getTimed();
 		// Sleep enough to get a 60 fps but no more

@@ -26,20 +26,24 @@ FIND_PATH(Equalizer_INCLUDE_DIR
 	PATH_SUFFIXES
 )
 
-FIND_LIBRARY(Equalizer_LIBRARY
-	NAMES Equalizer
-	PATHS
-	$ENV{Equalizer_DIR}/lib
-	/usr/local/lib
-	/usr/lib
-	/usr/local/X11R6/lib
-	/usr/X11R6/lib
-	/sw/lib
-	/opt/local/lib
-	/opt/csw/lib
-	/opt/lib
-	/usr/freeware/lib64
-)
+set( Equalizer_NAMES_RELEASE Equalizer )
+FIND_LIBRARY(Equalizer_LIBRARY_RELEASE
+	NAMES ${Equalizer_NAMES_RELEASE}
+	PATHS $ENV{Equalizer_DIR}/lib /usr/lib /usr/local/lib
+	)
+
+set( Equalizer_NAMES_DEBUG Equalizer )
+FIND_LIBRARY(Equalizer_LIBRARY_DEBUG
+	NAMES ${Equalizer_NAMES_DEBUG}
+	PATHS $ENV{Equalizer_DIR}/lib /usr/lib /usr/local/lib
+	)
+if( Equalizer_LIBRARY_DEBUG AND NOT Equalizer_LIBRARY_RELEASE )
+	set( Equalizer_LIBRARY_RELEASE ${Equalizer_LIBRARY_DEBUG} )
+endif()
+
+set( Equalizer_LIBRARY optimized ${Equalizer_LIBRARY_RELEASE}
+	debug ${Equalizer_LIBRARY_DEBUG} )
+
 
 IF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 	SET(Equalizer_FOUND "YES")
@@ -51,3 +55,4 @@ ELSE(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
 		MESSAGE(STATUS "Warning: Unable to find Equalizer!")
 	ENDIF(NOT Equalizer_FIND_QUIETLY)
 ENDIF(Equalizer_LIBRARY AND Equalizer_INCLUDE_DIR)
+

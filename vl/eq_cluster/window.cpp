@@ -202,13 +202,14 @@ bool
 eqOgre::Window::configInit( const eq::uint128_t& initID )
 {
 	std::cerr << "eqOgre::Window::configInit" << std::endl;
-	try {
-		if( !eq::Window::configInit( initID ))
-		{
-			EQERROR << "eq::Window::configInit failed" << std::endl;
-			return false;
-		}
+	
+	if( !eq::Window::configInit( initID ))
+	{
+		EQERROR << "eq::Window::configInit failed" << std::endl;
+		return false;
+	}
 
+	try {
 		eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
 		if( !config )
 		{
@@ -295,11 +296,16 @@ bool eqOgre::Window::configExit(void )
 void
 eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
 {
+	std::cerr << "eqOgre::Window::frameFinish" << std::endl;
+
+	eq::Window::frameFinish(frameID, frameNumber);
+
 	EQASSERT( _keyboard && _mouse );
+//	std::cerr << "Capturin keyboard and mouse" << std::endl;
 	_keyboard->capture();
 	_mouse->capture();
 
-	eq::Window::frameFinish(frameID, frameNumber);
+	std::cerr << "eqOgre::Window::frameFinish done" << std::endl;
 }
 
 bool
@@ -348,7 +354,6 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 	setSystemWindow( systemWindow );
 	return true;
 }
-
 
 void
 eqOgre::Window::createInputHandling( void )

@@ -37,7 +37,7 @@ public :
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy
 	/// them when necessary.
-	void addSceneNode( SceneNode * node );
+	void addSceneNode( SceneNode * node, eq::Config *session );
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -70,15 +70,15 @@ public :
 
 	eq::uint128_t commitAll( void );
 
-	void syncAll( void );
+	void syncAll( eq::Config *session );
 
-	void registerData( eq::net::Session *session );
+	void registerData( eq::Config *session );
 
-	void deregisterData( void );
+	void deregisterData( eq::Config *session );
 
-	void mapData( eq::net::Session *session, eq::base::UUID const &id );
+	void mapData( eq::Config *session, eq::base::UUID const &id );
 
-	void unmapData( void );
+	void unmapData( eq::Config *session );
 
 	enum DirtyBits
 	{
@@ -92,9 +92,9 @@ protected :
 	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
 	virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
 
-	void _mapObject( SceneNodeIDPair &node );
+	void _mapObject( eq::Config *session, SceneNodeIDPair &node );
 
-	void _registerObject( eq::net::Session *session, SceneNodeIDPair &node );
+	void _registerObject( eq::Config *session, SceneNodeIDPair &node );
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;

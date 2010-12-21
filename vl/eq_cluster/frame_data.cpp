@@ -27,12 +27,14 @@ bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
-		EQASSERT( node );
-		if( !node->findNode(man) )
+		if( node )
 		{
-			EQERROR << "No Ogre SceneNode with name " << node->getName()
-				<< " found in the SceneGraph." << std::endl;
-			retval = false;
+			if( !node->findNode(man) )
+			{
+				EQERROR << "No Ogre SceneNode with name " << node->getName()
+					<< " found in the SceneGraph." << std::endl;
+				retval = false;
+			}
 		}
 	}
 
@@ -40,16 +42,16 @@ bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 }
 
 void
-eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node)
+eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node, eq::Config *session )
 {
 	setDirty( DIRTY_NODES );
 	_scene_nodes.push_back( SceneNodeIDPair(node) );
 
 	if( !_scene_nodes.back().node->isAttached() )
 	{
-		if( getSession() )
+		if( !session )
 		{
-			_registerObject( getSession(), _scene_nodes.back() );
+			_registerObject( session, _scene_nodes.back() );
 			EQINFO << "SceneNode : " << _scene_nodes.back().node->getName()
 				<< " registered." << std::endl;
 		}
@@ -119,12 +121,11 @@ eq::uint128_t eqOgre::FrameData::commitAll( void )
 		SceneNode *node = _scene_nodes.at(i).node;
 		node->commit();
 	}
-
 	return commit();
 }
 
 void
-eqOgre::FrameData::syncAll( void )
+eqOgre::FrameData::syncAll( eq::Config *session )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -137,7 +138,7 @@ eqOgre::FrameData::syncAll( void )
 			EQINFO << "eqOgre::FrameData::syncAll new SceneNode" << std::endl;
 			_scene_nodes.at(i).node = SceneNode::create();
 			node = _scene_nodes.at(i).node;
-			getSession()->mapObject( node, id );
+			session->mapObject( node, id );
 		}
 
 		EQASSERTINFO( node->isAttached(), "SceneNode is not attached." );
@@ -151,7 +152,7 @@ eqOgre::FrameData::syncAll( void )
 }
 
 void
-eqOgre::FrameData::registerData( eq::net::Session *session )
+eqOgre::FrameData::registerData( eq::Config *session )
 {
 	EQINFO << "eqOgre::FrameData::registerData" << std::endl;
 	EQASSERT( session );
@@ -170,25 +171,25 @@ eqOgre::FrameData::registerData( eq::net::Session *session )
 }
 
 void
-eqOgre::FrameData::deregisterData( void )
+eqOgre::FrameData::deregisterData( eq::Config *session )
 {
-	EQASSERT( getSession() );
+	EQASSERT( session );
 
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
 		if( node && node->isAttached() )
-		{ getSession()->deregisterObject( node ); }
+		{ session->deregisterObject( node ); }
 
 		_scene_nodes.at(i).id = eq::base::UUID::ZERO;
 		// TODO this might need to destroy the SceneNode
 	}
 
-	getSession()->deregisterObject( this );
+	session->deregisterObject( this );
 }
 
 void
-eqOgre::FrameData::mapData( eq::net::Session *session, eq::base::UUID const &id )
+eqOgre::FrameData::mapData( eq::Config *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
 	EQASSERTINFO( eq::base::UUID::ZERO != id, "Trying to map FrameData invalid ID" )
@@ -199,18 +200,18 @@ eqOgre::FrameData::mapData( eq::net::Session *session, eq::base::UUID const &id 
 }
 
 void
-eqOgre::FrameData::unmapData( void )
+eqOgre::FrameData::unmapData( eq::Config *session )
 {
-	EQASSERT( getSession() );
+	EQASSERT( session );
 
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
 		SceneNode *node = _scene_nodes.at(i).node;
 		if( node && node->isAttached() )
-		{ getSession()->unmapObject( node ); }
+		{ session->unmapObject( node ); }
 	}
 
-	getSession()->unmapObject( this );
+	session->unmapObject( this );
 }
 
 
@@ -283,8 +284,8 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 				}
 				else
 				{
-					EQINFO << "SceneNode ID valid : mapping object." << std::endl;
-					_mapObject( _scene_nodes.at(i) );
+					EQERROR << "SceneNode ID valid : should map the object." << std::endl;
+					//_mapObject( _scene_nodes.at(i) );
 				}
 			}
 		}
@@ -301,11 +302,11 @@ eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBi
 	}
 }
 
-void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
+void eqOgre::FrameData::_mapObject( eq::Config *session, eqOgre::FrameData::SceneNodeIDPair& node )
 {
 	EQINFO  << "eqOgre::FrameData::_mapObject" << std::endl;
 
-	EQASSERT( getSession() );
+	EQASSERT( session );
 
 	if( !node.node )
 	{
@@ -317,7 +318,7 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 
 	EQASSERTINFO( eq::base::UUID::ZERO != node.id, "Trying to map object to invalid ID" );
 
-	getSession()->mapObject( node.node, node.id );
+	session->mapObject( node.node, node.id );
 
 	// Find ogre nodes
 	if( _ogre_sm )
@@ -331,7 +332,7 @@ void eqOgre::FrameData::_mapObject(eqOgre::FrameData::SceneNodeIDPair& node)
 }
 
 void
-eqOgre::FrameData::_registerObject( eq::net::Session *session,
+eqOgre::FrameData::_registerObject( eq::Config *session,
 									eqOgre::FrameData::SceneNodeIDPair& node )
 {
 	EQINFO << "Registering Object : " << node.node->getName() << std::endl;

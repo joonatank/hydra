@@ -24,6 +24,7 @@ if( WIN32 )
 					 -DNOCOMM
 					 -DNOGDI
 					 -DNOSOUND
+					 -DEQ_RELEASE_ASSERT
 					 )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
@@ -76,6 +77,16 @@ endif()
 
 
 ####### Find cAudio
+# Dependencies for cAudio
+find_package( Ogg REQUIRED )
+
+message( "Ogg library = ${Ogg_LIBRARY}" )
+
+find_package( Vorbis REQUIRED )
+message( "Vorbis library = ${Vorbis_LIBRARY}" )
+
+find_package( OPENAL REQUIRED )
+
 find_package( CAUDIO REQUIRED )
 
 
@@ -113,6 +124,9 @@ include_directories( SYSTEM
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${CAUDIO_INCLUDE_DIR}
+	${OGG_INCLUDE_DIR}
+	${VORBIS_INCLUDE_DIR}
+	${OPENAL_INCLUDE_DIR}
 	)
 
 # Libraries that eqOgre library depends on
@@ -128,6 +142,10 @@ set( EQOGRE_DEB_LIBS
 	${Boost_FILESYSTEM_LIBRARIES}
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
 	${CAUDIO_LIBRARY}
+	${Ogg_LIBRARY}
+	${Vorbis_LIBRARY}
+	${Vorbis_FILE_LIBRARY}
+	${OPENAL_LIBRARY}
 	)
 
 # Libraries used to build project binaries
@@ -176,7 +194,7 @@ if( WIN32 )
 	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
 	# Copy Release
 	# TODO this really needs some automation/MACRO
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_.bat.in
+	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
 		${PROJECT_BINARY_DIR}/Release/start_multi_${start_suffix}.bat )
 	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
 		${PROJECT_BINARY_DIR}/Release/kill_nodes.bat )

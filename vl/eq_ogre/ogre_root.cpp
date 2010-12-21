@@ -135,7 +135,16 @@ vl::ogre::Root::_loadPlugins(void )
 
 	// TODO add support for plugins in the EnvSettings
 
-	std::string plugin_path = vl::findPlugin("RenderSystem_GL");
+	
+// Check if this is a debug version, only Windows uses debug versions of the libraries
+// So we need to load the debug versions of the Ogre plugins only on Windows.
+#if defined(_WIN32) && defined(_DEBUG)
+	std::string gl_plugin_name( "RenderSystem_GL_d" );
+#else
+	std::string gl_plugin_name( "RenderSystem_GL" );
+#endif
+
+	std::string plugin_path = vl::findPlugin( gl_plugin_name );
 	if( !plugin_path.empty() )
 		_ogre_root->loadPlugin( plugin_path );
 }

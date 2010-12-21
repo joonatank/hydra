@@ -20,14 +20,14 @@ void getHeadData( double time, vrpn_float64 *pos, vrpn_float64 *quat )
 {
 	double s = ::sin( time );
 	pos[0] = 0;
-	pos[1] = 1.5;
+	pos[1] = 1.7;
 	//pos[1] = 1.5+0.25*s;
 	pos[2] = 0;
 
 	quat[0] = 0;
 	quat[1] = 0;
-	quat[2] = 0.707;
-	quat[3] = 0.707;
+	quat[2] = 0;//0.707;
+	quat[3] = 1;//0.707;
 }
 
 void getMeveaData( size_t sensor, vrpn_float64 *pos, vrpn_float64 *quat )
@@ -53,13 +53,15 @@ void getMeveaData( size_t sensor, vrpn_float64 *pos, vrpn_float64 *quat )
 
 int main (int argc, char **argv)
 {
-	vrpn_Connection *connection = vrpn_create_server_connection( "localhost" );
+	vrpn_Connection *connection = vrpn_create_server_connection( 3883 );
 	vrpn_Tracker_Server *tracker = new vrpn_Tracker_Server("glasses", connection );
 	vrpn_Tracker_Server *mevea = new vrpn_Tracker_Server("Mevea", connection, 20 );
 
+	std::cout << "Starting tracking server: " << "glasses@localhost" << std::endl;
 	if( tracker == NULL || mevea == NULL )
+	if( !tracker )
 	{
-		fprintf(stderr,"Can not create NULL tracker.");
+		fprintf(stderr,"Can not create glasses.");
 		return -1;
 	}
 
@@ -86,11 +88,12 @@ int main (int argc, char **argv)
 
 		// Send and receive all messages
 		tracker->mainloop();
-		mevea->mainloop();
+		//mevea->mainloop();
 		connection->mainloop();
 		vl::msleep(msecs);
 	}
 
 	delete tracker;
+	delete mevea;
 	connection->removeReference();
 }
