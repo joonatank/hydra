@@ -13,6 +13,9 @@
 
 #include <co/dataIStream.h>
 #include <co/dataOStream.h>
+// Necessary for exceptions
+#include "base/exceptions.hpp"
+
 
 /// ------------ ResourceManager --------------
 eqOgre::ResourceManager::ResourceManager( void )
@@ -21,39 +24,17 @@ eqOgre::ResourceManager::ResourceManager( void )
 eqOgre::ResourceManager::~ResourceManager( void )
 {}
 
-eqOgre::Resource
-eqOgre::ResourceManager::copyResource(const std::string& name) const
-{
-	for( std::vector<Resource>::const_iterator iter = _resources.begin();
-		 iter != _resources.end(); ++iter )
-	{
-		if( iter->getName() == name )
-		{ return *iter; }
-	}
-
-	EQASSERTINFO( false, "Resource not found" );
-}
-
-
-std::vector< eqOgre::Resource >
+std::vector< vl::TextResource > const &
 eqOgre::ResourceManager::getSceneResources( void ) const
 {
-	std::vector<eqOgre::Resource> vec;
-	for( size_t i = 0; i < _resources.size(); ++i )
-	{
-		if( std::string::npos != _resources.at(i).getName().rfind(".scene") )
-		{
-			vec.push_back( _resources.at(i) );
-		}
-	}
-	return vec;
+	return _scenes;
 }
 
 
 void
 eqOgre::ResourceManager::addResource(const std::string& name)
 {
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 //	_waiting_for_loading.push_back(name);
 }
 
@@ -61,13 +42,13 @@ void
 eqOgre::ResourceManager::removeResource(const std::string& name)
 {
 	// Not a priority
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
-bool
+void
 eqOgre::ResourceManager::loadAllResources( void )
 {
-	EQASSERTINFO( false, "NOT implemented yet." );
+	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 	/*
 	bool retval = true;
 	size_t offset = _resources.size();
@@ -81,46 +62,96 @@ eqOgre::ResourceManager::loadAllResources( void )
 
 	return retval;
 	*/
-	return false;
 }
 
 
-bool
+void
 eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
 {
 	// Find the resource from already loaded stack
-	if( _findResource( name, data ) )
-	{ return true; }
+	if( _findLoadedResource( name, data ) )
+	{ return; }
+
+	// TODO this should call the respective load functions for every file type
+	fs::path file( name );
+	if( file.extension() == ".scene" )
+	{
+		vl::TextResource &scene_res = dynamic_cast<vl::TextResource &>( data );
+		loadSceneResource( name, scene_res );
+	}
+	else if( file.extension() == ".ogg" )
+	{
+		loadOggResource( name, data );
+	}
+	else if( file.extension() == ".py" )
+	{
+		vl::TextResource &python_res = dynamic_cast<vl::TextResource &>( data );
+		loadPythonResource( name, python_res );
+	}
+	else
+	{
+		EQINFO << "Loading Generic Resource " << name << std::endl;
+		// Generic resources are not added to any stack
+		std::string file_path;
+		if( !findResource(name, file_path) )
+		{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
+
+		_loadResource( name, file_path, data );
+	}
+}
+
+void
+eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
+{
+	EQINFO << "Loading Scene Resource " << name << std::endl;
+
+	std::string extension(".scene");
+	std::string scene_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
 
 	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
 
-	if( findResource(name, file_path) )
-	{
-		// Load the resource
-
-		// Open in binary mode, so we don't mess up the file
-		// open it from the end so that we get the size with tellg
-		std::ifstream ifs( file_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
-		size_t size = ifs.tellg();
-		char *mem = new char[size+1];
-		ifs.seekg( 0, std::ios::beg );
-		ifs.read( mem, size );
-		ifs.close();
-
-		data.setRawMemory( mem, size+1 );
-		data.setName( name );
-
-		// Data loaded add to distribution stack
-		// TODO this should check the type, so that we only add necessary ones
-		// to the distribution stack.
-		// TODO this can add the file multiple times to the stack
-		_resources.push_back( eqOgre::Resource(data) );
-
-		return true;
-	}
-
-	return false;
+	_loadResource( scene_name, file_path, data );
+	_scenes.push_back( vl::TextResource(data) );
 }
+
+void
+eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
+{
+	EQINFO << "Loading Python Resource " << name << std::endl;
+
+	std::string extension(".py");
+	std::string script_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+
+	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
+
+	_loadResource( script_name, file_path, data );
+	_python_scripts.push_back( vl::TextResource(data) );
+}
+
+void
+eqOgre::ResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
+{
+	EQINFO << "Loading Ogg Resource " << name << std::endl;
+
+	std::string extension(".ogg");
+	std::string ogg_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+
+	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
+
+	_loadResource( ogg_name, file_path, data );
+	_ogg_sounds.push_back( vl::Resource(data) );
+}
+
+
 
 bool
 eqOgre::ResourceManager::findResource(const std::string& name, std::string& path) const
@@ -141,12 +172,12 @@ eqOgre::ResourceManager::findResource(const std::string& name, std::string& path
 	return false;
 }
 
-bool
+void
 eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool recursive )
 {
 	fs::path dir(resource_dir);
 	if( !fs::exists(dir) || !fs::is_directory(dir) )
-	{ return false; }
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( resource_dir ) ); }
 
 	_search_paths.push_back(resource_dir);
 	if( recursive )
@@ -161,8 +192,6 @@ eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool 
 			}
 		}
 	}
-
-	return true;
 }
 
 
@@ -175,20 +204,71 @@ eqOgre::ResourceManager::getResourcePaths( void ) const
 
 /// ------ Protected ------
 bool
-eqOgre::ResourceManager::_findResource( const std::string& res_name, vl::Resource& resource ) const
+eqOgre::ResourceManager::_findLoadedResource( const std::string& res_name,
+											  vl::Resource &resource ) const
 {
-	for( std::vector<Resource>::const_iterator iter = _resources.begin();
-		 iter != _resources.end(); ++iter )
+	// TODO this should support other resource containers based on extension
+	// e.g. python scripts, ogg files, scenes
+	if( fs::path(res_name).extension() == ".scene" )
 	{
-		if( iter->getName() == res_name )
+		for( std::vector<vl::TextResource>::const_iterator iter = _scenes.begin();
+			iter != _scenes.end(); ++iter )
 		{
-			resource.copy(*iter);
-			return true;
+			if( iter->getName() == res_name )
+			{
+				resource = *iter;
+				return true;
+			}
 		}
 	}
 
 	return false;
 }
+
+void
+eqOgre::ResourceManager::_loadResource( std::string const &name,
+										std::string const &path,
+										vl::Resource &data ) const
+{
+	EQASSERT( fs::exists(path) );
+	// Load the resource
+
+	// Open in binary mode, so we don't mess up the file
+	// open it from the end so that we get the size with tellg
+	// TODO move the copy to use iterator insert
+	std::ifstream ifs( path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
+	size_t size = ifs.tellg();
+	char *mem = new char[size+1];
+	ifs.seekg( 0, std::ios::beg );
+	ifs.read( mem, size );
+	ifs.close();
+
+	data.set( mem, size+1 );
+
+	// Set the resource name
+	data.setName( name );
+}
+
+std::string
+eqOgre::ResourceManager::_getFileName( std::string const &name,
+									   std::string const &extension )
+{
+	if( fs::path(name).extension() == extension )
+	{ return name; }
+	else
+	{ return name+extension; }
+}
+
+std::string
+eqOgre::ResourceManager::_stripExtension( std::string const &name,
+										  std::string const &extension )
+{
+	if( fs::path(name).extension() == extension )
+	{ return fs::path(name).stem(); }
+	else
+	{ return name; }
+}
+
 
 
 void
@@ -198,10 +278,10 @@ eqOgre::ResourceManager::getInstanceData( co::DataOStream& os )
 	os << _search_paths;
 
 	// Serialize all loaded resources
-	os << _resources.size();
-	for( size_t i = 0; i < _resources.size(); ++i )
+	os << _scenes.size();
+	for( size_t i = 0; i < _scenes.size(); ++i )
 	{
-		operator<<( _resources.at(i), os );
+		operator<<( _scenes.at(i), os );
 	}
 }
 
@@ -215,10 +295,10 @@ eqOgre::ResourceManager::applyInstanceData( co::DataIStream& is )
 	// Deserialize all loaded resources
 	size_t size;
 	is >> size;
-	_resources.resize(size);
+	_scenes.resize(size);
 	for( size_t i = 0; i < size; ++i )
 	{
-		operator>>( _resources.at(i), is );
+		operator>>( _scenes.at(i), is );
 	}
 }
 
@@ -226,32 +306,33 @@ eqOgre::ResourceManager::applyInstanceData( co::DataIStream& is )
 
 /// ---------- Global -----------
 co::DataOStream &
-eqOgre::operator<<(eqOgre::Resource& res, co::DataOStream& os)
+eqOgre::operator<<(vl::Resource& res, co::DataOStream& os)
 {
 	os << res.getName();
-	os << res.getRawMemory().size;
-	for( size_t i = 0; i < res.getRawMemory().size; ++i )
+
+	os << res.size();
+	for( size_t i = 0; i < res.size(); ++i )
 	{
-		os << res.getRawMemory().mem[i];
+		os << res.get()[i];
 	}
 
 	return os;
 }
 
 co::DataIStream &
-eqOgre::operator>>(eqOgre::Resource& res, co::DataIStream& is)
+eqOgre::operator>>(vl::Resource& res, co::DataIStream& is)
 {
 	std::string name;
 	size_t size;
 	is >> name >> size;
 
-	char *mem = new char[size];
+	res.setName(name);
+
+	res.resize(size);
 	for( size_t i = 0; i < size; ++i )
 	{
-		is >> mem[i];
+		is >> res[i];
 	}
-	res.setName(name);
-	res.setRawMemory(mem, size);
 
 	return is;
 }

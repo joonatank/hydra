@@ -31,7 +31,8 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	EQINFO << "Get ogre window from RenderWindow" << std::endl;
 	eqOgre::Window *window = dynamic_cast<eqOgre::Window *>(getWindow());
 	_ogre_window = window->getRenderWindow();
-	EQASSERT( _ogre_window );
+	if( !_ogre_window )
+	{ return false; }
 
 	_camera = window->getCamera();
 	if( _camera )
@@ -44,7 +45,11 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	// Get framedata
 	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-	EQASSERTINFO( config, "config is not type eqOgre::Config" )
+	if( !config )
+	{
+		EQERROR << "Config is not type eqOgre::Config" << std::endl;
+		return false;
+	}
 
 	eq::base::UUID const &frame_id = getSettings().getFrameDataID();
 	EQASSERT( frame_id != eq::base::UUID::ZERO );
@@ -56,7 +61,10 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	Ogre::SceneManager *sm = window->getSceneManager();
 	EQASSERTINFO( sm, "Window has no Ogre SceneManager" );
-	EQASSERTINFO( _frame_data.setSceneManager( sm ), "Some SceneNodes were not found." )
+	if( !_frame_data.setSceneManager( sm ) )
+	{
+		EQERROR << "Some SceneNodes were not found." << std::endl;
+	}
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
 	return true;
@@ -76,16 +84,34 @@ eqOgre::Channel::configExit()
 }
 
 
-/*
+// NOTE overload with empty function
+// seems like we don't need these, Ogre Viewport will clear it self
+// before rendering if we don't instruct it to do otherwise
 void
-eqOgre::Channel::frameClear( const uint32_t )
+eqOgre::Channel::frameClear( const eq::uint128_t & )
 {
 //	TODO channel should do all rendering tasks
 //	it should use Ogre::Viewport to do so.
 //	if( _camera && _ogre_viewport )
 //	{ _ogre_viewport->clear(); }
 }
-*/
+
+// NOTE overload with empty function
+// Seems like we don't need these for now. As we don't use offscreen rendering.
+void
+eqOgre::Channel::frameAssemble( const eq::uint128_t & )
+{
+// 	eq::Channel::frameAssemble(frameID);
+}
+
+// NOTE overload with empty function
+// Seems like we don't need these for now. As we don't use offscreen rendering.
+void
+eqOgre::Channel::frameReadback( const eq::uint128_t & )
+{
+// 	eq::Channel::frameReadback(frameID);
+}
+
 
 /** Override frameDraw to call Viewport::update
  *
@@ -99,11 +125,13 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 	updateDistribData();
 
 	// From equalizer channel::frameDraw
-	EQ_GL_CALL( applyBuffer( ));
-	EQ_GL_CALL( applyViewport( ));
+	// NOTE seems like we don't need these, Ogre should handle them anyway
+	// TODO have to be tested on multiple walls and with head tracking though.
+//	EQ_GL_CALL( applyBuffer( ));
+//	EQ_GL_CALL( applyViewport( ));
 
-	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
-	EQ_GL_CALL( glLoadIdentity() );
+// 	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
+// 	EQ_GL_CALL( glLoadIdentity() );
 
 	EQASSERT( _camera )
 	EQASSERT( _ogre_window )
@@ -205,4 +233,5 @@ eqOgre::Channel::createViewport( void )
 	_viewport = _ogre_window->addViewport( _camera );
 	// TODO this should be configurable from DotScene
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	_viewport->setAutoUpdated(false);
 }

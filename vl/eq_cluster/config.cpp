@@ -10,45 +10,29 @@
 
 #include "math/conversion.hpp"
 
-#include "config_python.hpp"
 #include "config_events.hpp"
 
 #include "dotscene_loader.hpp"
 
 #include "tracker_serializer.hpp"
 #include "base/filesystem.hpp"
+#include "eq_resource_manager.hpp"
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
-#include "eq_resource.hpp"
+#include "resource.hpp"
+
+// TODO this is for testing the audio moving to Client
+#include "client.hpp"
+
+#include "game_manager.hpp"
+#include "python.hpp"
+#include "event_manager.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ), _event_manager( new vl::EventManager ),
-	  _audio_manager(0), _background_sound(0)
-{
-	// Add events
-	_event_manager->addEventFactory( new vl::BasicEventFactory );
-	_event_manager->addEventFactory( new vl::ToggleEventFactory );
-	_event_manager->addEventFactory( new eqOgre::TransformationEventFactory );
-	// Add triggers
-	_event_manager->addTriggerFactory( new vl::KeyTriggerFactory );
-	_event_manager->addTriggerFactory( new vl::KeyPressedTriggerFactory );
-	_event_manager->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
-	_event_manager->addTriggerFactory( new vl::FrameTriggerFactory );
-	_event_manager->addTriggerFactory( new vl::TrackerTriggerFactory );
-	// Add actions
-	_event_manager->addActionFactory( new eqOgre::QuitOperationFactory );
-	_event_manager->addActionFactory( new eqOgre::ReloadSceneFactory );
-	_event_manager->addActionFactory( new eqOgre::AddTransformOperationFactory );
-	_event_manager->addActionFactory( new eqOgre::RemoveTransformOperationFactory );
-	_event_manager->addActionFactory( new eqOgre::HideActionFactory );
-	_event_manager->addActionFactory( new eqOgre::ShowActionFactory );
-	_event_manager->addActionFactory( new eqOgre::ToggleMusicFactory );
-	_event_manager->addActionFactory( new eqOgre::ActivateCameraFactory );
-	_event_manager->addActionFactory( new eqOgre::SetTransformationFactory );
-	_event_manager->addActionFactory( new eqOgre::HeadTrackerActionFactory );
-}
+	: eq::Config ( parent )
+{}
 
 eqOgre::Config::~Config()
 {}
@@ -61,47 +45,38 @@ eqOgre::Config::init( eq::uint128_t const & )
 	// Create Tracker needs the SceneNodes for mapping
 	_createTracker(_settings);
 
-	_initAudio();
+	std::vector<std::string> scripts = _settings->getScripts();
 
-	try {
-		// Init the embedded python
-		_initPython();
+	EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
 
-		std::vector<std::string> scripts = _settings->getScripts();
-
-		EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
-
-		for( size_t i = 0; i < scripts.size(); ++i )
-		{
-			// Run init python scripts
-			_runPythonScript( scripts.at(i) );
-		}
-	}
-	// Some error handling so that we can continue the application
-	catch( ... )
+	for( size_t i = 0; i < scripts.size(); ++i )
 	{
-		std::cout << "Exception occured in python script." << std::endl;
-
-	}
-	if (PyErr_Occurred())
-	{
-		PyErr_Print();
+		// Run init python scripts
+		vl::TextResource script_resource;
+		_game_manager->getReourceManager()->loadResource( scripts.at(i), script_resource );
+		_game_manager->getPython()->executePythonScript( script_resource );
 	}
 
 	_createQuitEvent();
-	_createTransformToggle();
 
-	/// Register data
 	EQINFO << "Registering data." << std::endl;
 
-	_frame_data.registerData(this);
-	EQASSERT( registerObject( &_resource_manager ) );
+	EQASSERT( _game_manager->getSceneManager() );
 
-	_distrib_settings.setFrameDataID( _frame_data.getID() );
-	_distrib_settings.setResourceManagerID( _resource_manager.getID() );
+	if( !_game_manager->getSceneManager()->registerData(this) )
+	{ return false; }
+
+	eqOgre::ResourceManager *res_man
+		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
+	if( !registerObject( res_man ) )
+	{ return false; }
+
+	_distrib_settings.setFrameDataID( _game_manager->getSceneManager()->getID() );
+	_distrib_settings.setResourceManagerID( res_man->getID() );
 
 	EQINFO << "Registering Settings" << std::endl;
-	EQASSERT( registerObject( &_distrib_settings ) );
+	if( !registerObject( &_distrib_settings ) )
+	{ return false; }
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
@@ -117,17 +92,17 @@ eqOgre::Config::exit( void )
 	// First let the children clean up
 	bool retval = eq::Config::exit();
 
-	EQINFO << "Deregistering distrthisibuted data." << std::endl;
+	EQINFO << "Deregistering distributed data." << std::endl;
 
-	_frame_data.deregisterData( this );
+	_game_manager->getSceneManager()->deregisterData( this );
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
 
-	deregisterObject( &_resource_manager );
+	eqOgre::ResourceManager *res_man =
+		static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
+	deregisterObject( res_man );
 	_distrib_settings.setResourceManagerID( eq::base::UUID::ZERO );
 
 	deregisterObject( &_distrib_settings );
-
-	_exitAudio();
 
 	EQINFO << "Config exited." << std::endl;
 	return retval;
@@ -136,12 +111,12 @@ eqOgre::Config::exit( void )
 void
 eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 {
-	if( settings )
-	{
-		_settings = settings;
-		_createResourceManager();
-		_distrib_settings.copySettings(_settings, &_resource_manager);
-	}
+	EQASSERT( settings );
+	EQASSERT( _game_manager );
+
+	_settings = settings;
+	// TODO fix the interface
+	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
 }
 
 eqOgre::SceneNodePtr
@@ -152,80 +127,32 @@ eqOgre::Config::createSceneNode(const std::string& name)
 	return node;
 }
 
-// TODO implement
-void
-eqOgre::Config::removeSceneNode(eqOgre::SceneNodePtr node)
-{
-	EQASSERTINFO( false, "NOT IMPLEMENTED" );
-}
-
 eqOgre::SceneNode *
 eqOgre::Config::getSceneNode(const std::string& name)
 {
-	return _frame_data.getSceneNode(name);
+	return _game_manager->getSceneManager()->getSceneNode(name);
 }
 
-vl::TrackerTrigger *
-eqOgre::Config::getTrackerTrigger(const std::string& name)
+void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 {
-	EQINFO << "Trying to find TrackerTrigger " << name << std::endl;
-	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
-	{
-		vl::TrackerRefPtr tracker = _clients->getTracker(i);
-		for( size_t j = 0; j < tracker->getNSensors(); ++j )
-		{
-			vl::SensorRefPtr sensor = tracker->getSensor(j);
-			if( sensor && sensor->getTrigger() &&
-				sensor->getTrigger()->getName() == name )
-			{ return( sensor->getTrigger() ); }
-		}
-	}
-
-	EQINFO << "TrackerTrigger " << name << " not found." << std::endl;
-	return 0;
-}
-
-
-// TODO implement
-void
-eqOgre::Config::resetScene( void )
-{
-	EQASSERTINFO( false, "NOT IMPLEMENTED" );
-}
-
-void
-eqOgre::Config::toggleBackgroundSound()
-{
-	if( !_background_sound )
-	{
-		EQERROR << "NO background sound to toggle." << std::endl;
-		return;
-	}
-
-	if( _background_sound->isPlaying() )
-	{ _background_sound->pause(); }
-	else
-	{ _background_sound->play2d(false); }
+	EQASSERT( man );
+	_game_manager = man;
+	vl::PlayerPtr player = _game_manager->createPlayer( getObservers().at(0) );
+	EQASSERT( player );
 }
 
 
 uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
-	// Process Tracking
-	// If we have a tracker object update it, the update will handle all the
-	// callbacks and appropriate updates (head matrix and scene nodes).
-	for( size_t i = 0; i <  _clients->getNTrackers(); ++i )
-	{
-		_clients->getTracker(i)->mainloop();
-	}
+	// New event interface
+	// This crashes the program
+	_game_manager->getEventManager()->getFrameTrigger()->update();
 
-	// ProcessEvents does not store the pointer anywhere
-	// so it's safe to allocate to the stack
-	vl::FrameTrigger frame_trig;
-	_event_manager->processEvents( &frame_trig );
+	if( !_game_manager->step() )
+	{ stopRunning(); }
 
-	eq::uint128_t version = _frame_data.commitAll();
+	eq::uint128_t version = _game_manager->getSceneManager()->commitAll();
 
 	uint32_t retval = eq::Config::startFrame( version );
 
@@ -233,53 +160,17 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 }
 
 
-void
-eqOgre::Config::setHeadMatrix( Ogre::Matrix4 const &m )
-{
-	// Note: real applications would use one tracking device per observer
-	const eq::Observers& observers = getObservers();
-	for( eq::Observers::const_iterator i = observers.begin();
-		i != observers.end(); ++i )
-	{
-		// When head matrix is set equalizer automatically applies it to the
-		// GL Modelview matrix as first transformation
-		(*i)->setHeadMatrix( vl::math::convert(m) );
-	}
-}
-
-
-
-
-
 /// ------------ Private -------------
-void
-eqOgre::Config::_createResourceManager(void )
-{
-	EQINFO << "Creating Resource Manager" << std::endl;
-
-	EQINFO << "Adding project directories to resources. "
-		<< "Only project directory and global directory is added." << std::endl;
-
-	EQASSERT( _resource_manager.addResourcePath( _settings->getProjectDir() ) );
-	EQASSERT( _resource_manager.addResourcePath( _settings->getGlobalDir() ) );
-
-	// TODO add case directory
-
-	// Add environment directory, used for tracking configurations
-	EQINFO << "Adding environment directory to the resources." << std::endl;
-	EQASSERT( _resource_manager.addResourcePath( _settings->getEnvironementDir() ) );
-}
-
 
 void
 eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 {
-	// Implement checking
+	// Check that no two nodes have the same name
 	// TODO should be in the frame data, as it can neither store multiple
 	// SceneNodes with same names
-	for( size_t i = 0; i < _frame_data.getNSceneNodes(); ++i )
+	for( size_t i = 0; i < _game_manager->getSceneManager()->getNSceneNodes(); ++i )
 	{
-		SceneNodePtr ptr = _frame_data.getSceneNode(i);
+		SceneNodePtr ptr = _game_manager->getSceneManager()->getSceneNode(i);
 		if( ptr == node || ptr->getName() == node->getName() )
 		{
 			// TODO is this the right exception?
@@ -287,35 +178,7 @@ eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 		}
 	}
 
-	_frame_data.addSceneNode( node, this );
-}
-
-void
-eqOgre::Config::_initAudio(void )
-{
-	EQINFO << "Init audio." << std::endl;
-
-	//Create an Audio Manager
-	_audio_manager = cAudio::createAudioManager(true);
-
-	//Create an audio source and load a sound from a file
-	std::string file_path;
-	EQASSERT( _resource_manager.findResource( "The_Dummy_Song.ogg", file_path ) );
-	_background_sound = _audio_manager->create("The_Dummy_Song", file_path.c_str() ,true);
-}
-
-
-void
-eqOgre::Config::_exitAudio(void )
-{
-	EQINFO << "Exit audio." << std::endl;
-
-	//Shutdown cAudio
-	if( _audio_manager )
-	{
-		_audio_manager->shutDown();
-		cAudio::destroyAudioManager(_audio_manager);
-	}
+	_game_manager->getSceneManager()->addSceneNode( node, this );
 }
 
 void
@@ -323,7 +186,9 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
 	EQINFO << "Creating Trackers." << std::endl;
 
-	_clients.reset( new vl::Clients );
+	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
+	EQASSERT( clients );
+
 	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
 	EQINFO << "Processing " << tracking_files.size() << " tracking files."
@@ -335,30 +200,33 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		// Read a file
 		EQINFO << "Copy tracking resource : " << *iter << std::endl;
 
-		// TODO this should be moved to distrib resources
-		// and we should get here a copy of the resource
-		eqOgre::Resource resource = _resource_manager.copyResource( *iter );
+		vl::TextResource resource;
+		_game_manager->getReourceManager()->loadResource( *iter, resource );
 
-		vl::TrackerSerializer ser( _clients );
-		EQASSERTINFO( ser.parseTrackers(resource), "Error in Tracker XML reader." );
+		vl::TrackerSerializer ser( clients );
+		ser.parseTrackers(resource);
 	}
 
 	// Start the trackers
-	EQINFO << "Starting " << _clients->getNTrackers() << " trackers." << std::endl;
-	for( size_t i = 0; i < _clients->getNTrackers(); ++i )
+	EQINFO << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
+	for( size_t i = 0; i < clients->getNTrackers(); ++i )
 	{
-		_clients->getTracker(i)->init();
+		clients->getTracker(i)->init();
 	}
 
 	// Create Action
-	eqOgre::HeadTrackerAction *action = (eqOgre::HeadTrackerAction *)_event_manager->createAction("HeadTrackerAction");
-	action->setConfig(this);
+	eqOgre::HeadTrackerAction *action = eqOgre::HeadTrackerAction::create();
+	EQASSERT( _game_manager->getPlayer() );
+	action->setPlayer( _game_manager->getPlayer() );
 
 	// This will get the head sensor if there is one
 	// If not it will create a FakeTracker instead
-	vl::TrackerTrigger *head_trigger = getTrackerTrigger( "glassesTrigger" );
-	if( head_trigger )
+	std::string const head_trig_name("glassesTrigger");
+	vl::EventManager *event_man = _game_manager->getEventManager();
+
+	if( event_man->hasTrackerTrigger(head_trig_name) )
 	{
+		vl::TrackerTrigger *head_trigger = event_man->getTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 	}
 	else
@@ -369,15 +237,18 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
 
 		// Create the trigger
-		head_trigger = (vl::TrackerTrigger *)_event_manager->createTrigger("TrackerTrigger");
-		head_trigger->setName("glassesTrigger");
+		EQINFO << "Creating a fake head tracker trigger" << std::endl;
+		vl::TrackerTrigger *head_trigger
+			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 		sensor->setTrigger( head_trigger );
 
+		EQINFO << "Adding a fake head tracker" << std::endl;
 		// Add the tracker
 		tracker->setSensor( 0, sensor );
-		_clients->addTracker(tracker);
+		clients->addTracker(tracker);
 	}
+	EQINFO << "Trackers created." << std::endl;
 }
 
 void
@@ -412,8 +283,8 @@ eqOgre::Config::_loadScenes(void )
 
 		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
 
-		eqOgre::Resource resource;
-		EQASSERT( _resource_manager.loadResource( scenes.at(i).getFile(), resource ) );
+		vl::TextResource resource;
+		_game_manager->getReourceManager()->loadResource( scenes.at(i).getFile(), resource );
 
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
@@ -425,101 +296,20 @@ eqOgre::Config::_loadScenes(void )
 }
 
 void
-eqOgre::Config::_initPython(void )
-{
-	EQINFO << "Initing python context." << std::endl;
-
-	Py_Initialize();
-
-	// Add the module to the python interpreter
-	// NOTE the name parameter does not rename the module
-	// No idea why it's there
-	if (PyImport_AppendInittab("eqOgre_python", initeqOgre_python) == -1)
-		throw std::runtime_error("Failed to add eqOgre to the interpreter's "
-				"builtin modules");
-
-	// Retrieve the main module
-	python::object main = python::import("__main__");
-
-	// Retrieve the main module's namespace
-	_global = main.attr("__dict__");
-
-	// Import eqOgre module
-    python::handle<> ignored(( PyRun_String("from eqOgre_python import *\n"
-                                    "print 'eqOgre imported'       \n",
-                                    Py_file_input,
-                                    _global.ptr(),
-                                    _global.ptr() ) ));
-
-	// Add a global managers i.e. this and EventManager
-	_global["config"] = python::ptr<>( this );
-	_global["event_manager"] = python::ptr<>( _event_manager );
-}
-
-void eqOgre::Config::_runPythonScript(const std::string& scriptFile)
-{
-	EQINFO << "Running python script file " << scriptFile << "." << std::endl;
-	std::string script_path;
-
-	EQASSERT( _resource_manager.findResource( scriptFile, script_path ) );
-
-	// Run a python script.
-	python::object result = python::exec_file(script_path.c_str(), _global, _global);
-}
-
-void
 eqOgre::Config::_createQuitEvent(void )
 {
 	EQINFO << "Creating QuitEvent" << std::endl;
 
 	// Add a trigger event to Quit the Application
-	QuitOperation *quit
-		= (QuitOperation *)( _event_manager->createAction( "QuitOperation" ) );
-	quit->setConfig(this);
-	vl::Event *event = _event_manager->createEvent( "Event" );
-	event->setAction(quit);
+	EQASSERT( _game_manager );
+	QuitAction *quit = QuitAction::create();
+	quit->data = _game_manager;
 	// Add trigger
-	vl::KeyTrigger *trig = (vl::KeyTrigger *)( _event_manager->createTrigger( "KeyTrigger" ) );
-	trig->setKey( OIS::KC_ESCAPE );
-	event->addTrigger(trig);
-	_event_manager->addEvent( event );
+	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE );
+	trig->addAction(quit);
 }
-
-void
-eqOgre::Config::_createTransformToggle(void )
-{
-	EQINFO << "Creating TransformToggle " << " Not in use atm." << std::endl;
-
-	// Find ogre event so we can toggle it on/off
-	// TODO add function to find Events
-	// Ogre Rotation event, used to toggle the event on/off
-	/*	FIXME new design
-	TransformationEvent ogre_event;
-	for( size_t i = 0; i < _trans_events.size(); ++i )
-	{
-		SceneNodePtr node = _trans_events.at(i).getSceneNode();
-		if( node )
-		{
-			if( node->getName() == "ogre" )
-			{
-				ogre_event = _trans_events.at(i);
-				break;
-			}
-		}
-	}
-
-	Trigger *trig = new KeyTrigger( OIS::KC_SPACE, false );
-	Operation *add_oper = new AddTransformEvent( this, ogre_event );
-	Operation *rem_oper = new RemoveTransformEvent( this, ogre_event );
-	Event *event = new ToggleEvent( hasEvent(ogre_event), add_oper, rem_oper, trig );
-	_events.push_back( event );
-	*/
-}
-
 
 /// Event Handling
-char const *CB_INFO_TEXT = "Config : OIS event received : ";
-
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
@@ -567,17 +357,29 @@ eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 bool
 eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 {
-	vl::KeyPressedTrigger trig;
-	trig.setKey( (OIS::KeyCode )(event.key) );
-	return _event_manager->processEvents( &trig );
+	OIS::KeyCode kc( (OIS::KeyCode )(event.key) );
+
+	// Check if the there is a trigger for this event
+	if( _game_manager->getEventManager()->hasKeyPressedTrigger( kc ) )
+	{
+		_game_manager->getEventManager()->getKeyPressedTrigger( kc )->update();
+	}
+
+	return true;
 }
 
 bool
 eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 {
-	vl::KeyReleasedTrigger trig;
-	trig.setKey( (OIS::KeyCode )(event.key) );
-	return _event_manager->processEvents( &trig );
+	OIS::KeyCode kc = (OIS::KeyCode )(event.key);
+
+	// Check if the there is a trigger for this event
+	if( _game_manager->getEventManager()->hasKeyReleasedTrigger( kc ) )
+	{
+		_game_manager->getEventManager()->getKeyReleasedTrigger( kc )->update();
+	}
+
+	return true;
 }
 
 bool

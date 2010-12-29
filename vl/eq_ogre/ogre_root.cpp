@@ -16,7 +16,7 @@
 #include "base/system_util.hpp"
 #include "base/filesystem.hpp"
 
-vl::ogre::Root::Root( eqOgre::DistributedSettings const &settings )
+vl::ogre::Root::Root( std::string const &log_file_path )
 	: _ogre_root(0),
 	  _log_manager(0),
 	  _primary(false)
@@ -27,17 +27,13 @@ vl::ogre::Root::Root( eqOgre::DistributedSettings const &settings )
 		_log_manager = new Ogre::LogManager();
 
 		// Create the log
-		std::string log_file = settings.getOgreLogFilePath();
 		Ogre::Log *log = Ogre::LogManager::getSingleton()
-			.createLog( log_file, true, false );
+			.createLog( log_file_path, true, false );
 		log->setTimeStampEnabled( true );
-		std::cout << "Ogre log file path = " << log_file << std::endl;
+		std::cout << "Ogre log file path = " << log_file_path << std::endl;
 
 		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;
-
-		// Copy resource paths
-		_resources = settings.getResources();
 	}
 }
 
@@ -85,6 +81,12 @@ vl::ogre::Root::init( void )
 	_ogre_root->initialise( false );
 }
 
+void
+vl::ogre::Root::addResource(const std::string& resource_path)
+{
+	_resources.push_back( resource_path );
+}
+
 /// Method which will define the source of resources (other than current folder)
 void
 vl::ogre::Root::setupResources( void )
@@ -100,21 +102,23 @@ vl::ogre::Root::setupResources( void )
 	for( std::vector<std::string>::iterator iter = _resources.begin();
 		iter != _resources.end(); ++iter )
 	{
-		std::stringstream ss;
-		ss << "Adding resource dir : " << *iter;
-		Ogre::LogManager::getSingleton().logMessage( ss.str() );
-
 		// This should never happen as the resource paths settings provides
 		// should be valid.
-		if( !fs::exists( *iter ) )
+		if( !fs::exists( *iter ) || !fs::is_directory( *iter ) )
 		{
 			BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( *iter ) );
 		}
 
+		fs::directory_iterator endIter;
+		for( fs::directory_iterator dirIter( *iter ); dirIter != endIter; ++dirIter )
+		{
+			if( dirIter->path().extension() == ".zip" )
+			{
+				_setupResource( dirIter->path().file_string(), "Zip" );
+			}
+		}
 		// Add the root resource dir
 		_setupResource( *iter, "FileSystem" );
-		// Add all child resources
-		_iterateResourceDir( *iter );
 	}
 }
 
@@ -150,41 +154,9 @@ vl::ogre::Root::_loadPlugins(void )
 }
 
 void
-vl::ogre::Root::_iterateResourceDir( fs::path const &file )
-{
-	// Iterate the resource directory
-	fs::directory_iterator end_itr; // default construction yields past-the-end
-	for ( fs::directory_iterator itr( file ); itr != end_itr; ++itr )
-	{
-		std::string ext = itr->path().extension();
-		std::transform( ext.begin(), ext.end(), ext.begin(), ::tolower );
-		if ( fs::is_directory(itr->status()) )
-		{
-			// TODO this needs a recursion
-
-			_setupResource( itr->path().file_string(), "FileSystem" );
-			_iterateResourceDir( itr->path() );
-		}
-		else if( ext == ".zip" )
-		{
-			_setupResource( itr->path().file_string(), "Zip" );
-		}
-		else
-		{
-			// Purposefully empty
-		}
-	}
-}
-
-void
 vl::ogre::Root::_setupResource( std::string const &file, std::string const &typeName)
 {
-	std::string msg = "Adding resource = " + file
-		+ " of type "+ typeName;
-	Ogre::LogManager::getSingleton().logMessage( msg );
-
-	Ogre::ResourceGroupManager::getSingleton()
-		.addResourceLocation( file, typeName );
+	Ogre::ResourceGroupManager::getSingleton().addResourceLocation( file, typeName );
 }
 
 Ogre::RenderWindow *

@@ -1,12 +1,12 @@
 
-#include "frame_data.hpp"
+#include "scene_manager.hpp"
 
 /// Public
-eqOgre::FrameData::FrameData( void )
+eqOgre::SceneManager::SceneManager( void )
 	: Serializable(), _scene_version( 0 ), _ogre_sm(0)
 {}
 
-eqOgre::FrameData::~FrameData(void )
+eqOgre::SceneManager::~SceneManager(void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -15,11 +15,10 @@ eqOgre::FrameData::~FrameData(void )
 	_scene_nodes.clear();
 }
 
-bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
+bool eqOgre::SceneManager::setSceneManager(Ogre::SceneManager* man)
 {
-	// TODO throwing is really dangerous
-	EQASSERT( man )
-//	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	if( !man )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	_ogre_sm = man;
 
@@ -42,7 +41,7 @@ bool eqOgre::FrameData::setSceneManager(Ogre::SceneManager* man)
 }
 
 void
-eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node, eq::Config *session )
+eqOgre::SceneManager::addSceneNode( eqOgre::SceneNode* node, eq::Config *session )
 {
 	setDirty( DIRTY_NODES );
 	_scene_nodes.push_back( SceneNodeIDPair(node) );
@@ -61,13 +60,13 @@ eqOgre::FrameData::addSceneNode(eqOgre::SceneNode* node, eq::Config *session )
 }
 
 bool
-eqOgre::FrameData::hasSceneNode(const std::string& name) const
+eqOgre::SceneManager::hasSceneNode(const std::string& name) const
 {
 	return( getSceneNode(name) );
 }
 
 eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(const std::string& name)
+eqOgre::SceneManager::getSceneNode(const std::string& name)
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -80,7 +79,7 @@ eqOgre::FrameData::getSceneNode(const std::string& name)
 }
 
 const eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(const std::string& name) const
+eqOgre::SceneManager::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -93,19 +92,26 @@ eqOgre::FrameData::getSceneNode(const std::string& name) const
 }
 
 eqOgre::SceneNode *
-eqOgre::FrameData::getSceneNode(size_t i)
+eqOgre::SceneManager::getSceneNode(size_t i)
 {
 	return _scene_nodes.at(i).node;
 }
 
 const eqOgre::SceneNodePtr
-eqOgre::FrameData::getSceneNode(size_t i) const
+eqOgre::SceneManager::getSceneNode(size_t i) const
 {
 	return _scene_nodes.at(i).node;
 }
 
+void eqOgre::SceneManager::reloadScene(void )
+{
+	std::cerr << "Should reload the scene now." << std::endl;
+	setDirty( DIRTY_RELOAD_SCENE );
+	_scene_version++;
+}
+
 void
-eqOgre::FrameData::setActiveCamera( std::string const &name )
+eqOgre::SceneManager::setActiveCamera( std::string const &name )
 {
 	if( _camera_name == name )
 	{ return; }
@@ -114,7 +120,8 @@ eqOgre::FrameData::setActiveCamera( std::string const &name )
 	_camera_name = name;
 }
 
-eq::uint128_t eqOgre::FrameData::commitAll( void )
+eq::uint128_t
+eqOgre::SceneManager::commitAll( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -125,7 +132,7 @@ eq::uint128_t eqOgre::FrameData::commitAll( void )
 }
 
 void
-eqOgre::FrameData::syncAll( eq::Config *session )
+eqOgre::SceneManager::syncAll( eq::Config *session )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -151,27 +158,32 @@ eqOgre::FrameData::syncAll( eq::Config *session )
 	sync();
 }
 
-void
-eqOgre::FrameData::registerData( eq::Config *session )
+bool
+eqOgre::SceneManager::registerData( eq::Config *session )
 {
 	EQINFO << "eqOgre::FrameData::registerData" << std::endl;
 	EQASSERT( session );
 
+	bool retval = true;
 	// SceneNodes need to be registered first for them to have correct ids
 	// when FrameData is registered
 	EQINFO << "Registering " << _scene_nodes.size() << " SceneNodes." << std::endl;
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		_registerObject( session, _scene_nodes.at(i) );
+		retval = retval && _registerObject( session, _scene_nodes.at(i) );
 	}
 
 	// Register FrameData
 	if( !this->isAttached() )
-	{ session->registerObject( this ); }
+	{
+		retval = retval && session->registerObject( this );
+	}
+
+	return retval;
 }
 
 void
-eqOgre::FrameData::deregisterData( eq::Config *session )
+eqOgre::SceneManager::deregisterData( eq::Config *session )
 {
 	EQASSERT( session );
 
@@ -189,7 +201,7 @@ eqOgre::FrameData::deregisterData( eq::Config *session )
 }
 
 void
-eqOgre::FrameData::mapData( eq::Config *session, eq::base::UUID const &id )
+eqOgre::SceneManager::mapData( eq::Config *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
 	EQASSERTINFO( eq::base::UUID::ZERO != id, "Trying to map FrameData invalid ID" )
@@ -200,7 +212,7 @@ eqOgre::FrameData::mapData( eq::Config *session, eq::base::UUID const &id )
 }
 
 void
-eqOgre::FrameData::unmapData( eq::Config *session )
+eqOgre::SceneManager::unmapData( eq::Config *session )
 {
 	EQASSERT( session );
 
@@ -221,7 +233,7 @@ eqOgre::FrameData::unmapData( eq::Config *session )
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
 void
-eqOgre::FrameData::serialize( co::DataOStream &os, const uint64_t dirtyBits )
+eqOgre::SceneManager::serialize(  co::DataOStream &os, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
 
@@ -252,7 +264,7 @@ eqOgre::FrameData::serialize( co::DataOStream &os, const uint64_t dirtyBits )
 }
 
 void
-eqOgre::FrameData::deserialize( co::DataIStream &is, const uint64_t dirtyBits )
+eqOgre::SceneManager::deserialize( co::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
 
@@ -302,7 +314,8 @@ eqOgre::FrameData::deserialize( co::DataIStream &is, const uint64_t dirtyBits )
 	}
 }
 
-void eqOgre::FrameData::_mapObject( eq::Config *session, eqOgre::FrameData::SceneNodeIDPair& node )
+void
+eqOgre::SceneManager::_mapObject( eq::Config *session, eqOgre::SceneManager::SceneNodeIDPair& node )
 {
 	EQINFO  << "eqOgre::FrameData::_mapObject" << std::endl;
 
@@ -331,9 +344,9 @@ void eqOgre::FrameData::_mapObject( eq::Config *session, eqOgre::FrameData::Scen
 	}
 }
 
-void
-eqOgre::FrameData::_registerObject( eq::Config *session,
-									eqOgre::FrameData::SceneNodeIDPair& node )
+bool
+eqOgre::SceneManager::_registerObject( eq::Config *session,
+									eqOgre::SceneManager::SceneNodeIDPair& node )
 {
 	EQINFO << "Registering Object : " << node.node->getName() << std::endl;
 
@@ -343,10 +356,12 @@ eqOgre::FrameData::_registerObject( eq::Config *session,
 	// Lets make sure we don't register the objects more than once
 	EQASSERTINFO( !node.node->isAttached(), "Node already registered" )
 
-	session->registerObject( node.node);
+	bool retval = session->registerObject( node.node);
 
 	// The object has to be correctly registered
 	EQASSERTINFO( node.node->isAttached(), "Node was not registered" );
 
 	node.id = node.node->getID();
+
+	return retval;
 }

@@ -60,7 +60,7 @@ eqOgre::Window::loadScene( void )
 	// TODO this should be divided to case load scenes function and loadScene function
 
 	// Get scenes
-	std::vector<eqOgre::Resource> scenes = _resource_manager.getSceneResources();
+	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
 	EQINFO << "Loading Scenes for Project : " << getSettings().getProjectName()
 		<< std::endl;
 
@@ -201,7 +201,7 @@ eqOgre::Window::getSettings( void ) const
 bool
 eqOgre::Window::configInit( const eq::uint128_t& initID )
 {
-	std::cerr << "eqOgre::Window::configInit" << std::endl;
+	EQINFO << "eqOgre::Window::configInit" << std::endl;
 	
 	if( !eq::Window::configInit( initID ))
 	{
@@ -210,22 +210,34 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 	}
 
 	try {
-		eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-		if( !config )
-		{
-			EQERROR << "config is not type eqOgre::Config" << std::endl;
-			return false;
-		}
+		EQASSERT( dynamic_cast< eqOgre::Config * >( getConfig() ) );
+
+		EQINFO << "Mapping data." << std::endl;
 
 		// Get the cluster version of data
-		EQASSERT( config->mapObject( &_settings, initID ) );
-		EQASSERT( config->mapObject( &_resource_manager, _settings.getResourceManagerID() ) );
+		if( !getConfig()->mapObject( &_settings, initID ) )
+		{
+			EQERROR << "Couldn't map Settings." << std::endl;
+			return false;
+		}
+		EQINFO << "Mapping ResourceManager" << std::endl;
+		if( !getConfig()->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
+		{
+			EQERROR << "Couldn't map ResourceManager." << std::endl;
+			return false;
+		}
+		EQINFO << "Data mapped." << std::endl;
 
 		createOgreRoot();
 		createOgreWindow();
 		createInputHandling();
 
 		// Resource registration
+		std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
+		for( size_t i = 0; i < resources.size(); ++i )
+		{
+			_root->addResource( resources.at(i) );
+		}
 		_root->setupResources( );
 		_root->loadResources();
 
@@ -233,9 +245,6 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 
 		if( !loadScene() )
 		{ return false; }
-
-		Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
-		log << "eqOgre::Window::configInit done.\n";
 	}
 	catch( vl::exception &e )
 	{
@@ -298,9 +307,15 @@ eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNu
 {
 	eq::Window::frameFinish(frameID, frameNumber);
 
-	EQASSERT( _keyboard && _mouse );
-	_keyboard->capture();
-	_mouse->capture();
+	if( _keyboard && _mouse )
+	{
+		_keyboard->capture();
+		_mouse->capture();
+	}
+	else
+	{
+		EQERROR << "Mouse or keyboard does not exists! No input handling." << std::endl;
+	}
 }
 
 bool
@@ -353,8 +368,7 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 void
 eqOgre::Window::createInputHandling( void )
 {
-	Ogre::Log::Stream log = Ogre::LogManager::getSingleton().getDefaultLog()->stream();
-	log << "Creating OIS Input system.\n";
+	EQINFO << "Creating OIS Input system." << std::endl;
 
 	std::ostringstream ss;
 #if defined OIS_WIN32_PLATFORM
@@ -367,7 +381,7 @@ eqOgre::Window::createInputHandling( void )
 	{
 		// It's mandatory to cast HWND to size_t for OIS, otherwise OIS will crash
 		ss << (size_t)(os_win->getWGLWindowHandle());
-		std::cerr << "Got window handle for OIS" << std::endl;
+		EQINFO << "Got window handle for OIS : " << ss.str() << std::endl;
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
@@ -387,51 +401,44 @@ eqOgre::Window::createInputHandling( void )
 
 	EQINFO << "Creating OIS Input Manager" << std::endl;
 
-	log << "Creating input manager.\n";
 	_input_manager = OIS::InputManager::createInputSystem( pl );
-	EQASSERT( _input_manager );
 	EQINFO << "OIS Input Manager created" << std::endl;
 
-	printInputInformation(log);
+	printInputInformation();
 
-	log << "Creating keyboard.\n";
 	_keyboard = static_cast<OIS::Keyboard*>(_input_manager->createInputObject(OIS::OISKeyboard, true));
-	EQASSERT( _keyboard );
 	_keyboard->setEventCallback(this);
 
-	log << "Creating mouse.\n";
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
-	EQASSERT( _mouse );
 
 	_mouse ->getMouseState().height = getPixelViewport().h;
 	_mouse ->getMouseState().width	= getPixelViewport().w;
 
 	_mouse->setEventCallback(this);
 
-	log << "Input System created.\n";
+	EQINFO << "Input system created." << std::endl;
 }
 
-Ogre::Log::Stream &
-eqOgre::Window::printInputInformation( Ogre::Log::Stream &os )
+void
+eqOgre::Window::printInputInformation( void )
 {
 	// Print debugging information
 	// TODO debug information should go to Ogre Log file
 	unsigned int v = _input_manager->getVersionNumber();
-	os << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
+	EQINFO << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
 		<< "\nRelease Name: " << _input_manager->getVersionName()
 		<< "\nManager: " << _input_manager->inputSystemName()
 		<< "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
-		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick) << '\n';
+		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
+		<< std::endl;
 
 	// List all devices
 	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
-	{ os << "\n\tDevice: " << " Vendor: " << i->second; }
-	os << '\n';
-
-	return os;
+	{ EQINFO << "\n\tDevice: " << " Vendor: " << i->second; }
+	EQINFO << std::endl;
 }
 
 void
@@ -451,7 +458,9 @@ eqOgre::Window::createWindowListener(void )
 void
 eqOgre::Window::createOgreRoot( void )
 {
-	_root.reset( new vl::ogre::Root( getSettings() ) );
+	EQINFO << "Creating Ogre Root" << std::endl;
+
+	_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }

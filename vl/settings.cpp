@@ -160,27 +160,6 @@ vl::Settings::getScripts( void ) const
 	return vec;
 }
 
-std::vector< std::string > vl::Settings::getResourcePaths(void ) const
-{
-	std::string dir_name = "/resources";
-
-	std::vector<std::string> vec;
-	if( _global )
-	{
-		std::string dir = getGlobalDir() + dir_name;
-		if( fs::exists( dir ) )
-		{ vec.push_back( dir ); }
-	}
-	if( _proj )
-	{
-		std::string dir = getProjectDir() + dir_name;
-		if( fs::exists( dir ) )
-		{ vec.push_back( dir ); }
-	}
-
-	return vec;
-}
-
 std::string vl::Settings::getGlobalDir(void ) const
 {
 	// This shouldn't be called from slave node

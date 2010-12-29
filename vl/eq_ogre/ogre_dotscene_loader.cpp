@@ -19,47 +19,8 @@ eqOgre::DotSceneLoader::DotSceneLoader( void )
 eqOgre::DotSceneLoader::~DotSceneLoader( void )
 {}
 
-// void
-// eqOgre::DotSceneLoader::parseDotScene(
-// 		std::string const &sceneName,
-// 		std::string const &groupName,
-// 		Ogre::SceneManager *sceneMgr,
-// 		Ogre::SceneNode *attachNode,
-// 		std::string const &sPrependNode )
-// {
-// 	// set up shared object values
-// 	_sGroupName = groupName;
-//
-// 	Ogre::DataStreamPtr stream = Ogre::ResourceGroupManager::getSingleton()
-// 		.openResource( sceneName, groupName );
-//
-// 	parseDotScene( stream->getAsString(), sceneMgr, attachNode, sPrependNode );
-// }
-
 void
-eqOgre::DotSceneLoader::parseDotScene(
-		std::string const &scene_data,
-		Ogre::SceneManager *sceneMgr,
-		Ogre::SceneNode *attachNode,
-		std::string const &sPrependNode )
-{
-	// set up shared object values
-	_scene_mgr = sceneMgr;
-	_attach_node = attachNode;
-	_sPrependNode = sPrependNode;
-	staticObjects.clear();
-	dynamicObjects.clear();
-
-	char *xml_data = new char[scene_data.length()+1];
-	::strcpy( xml_data, scene_data.c_str() );
-
-	_parse( xml_data );
-
-	delete [] xml_data;
-}
-
-void
-eqOgre::DotSceneLoader::parseDotScene( vl::Resource& scene_data,
+eqOgre::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 									   Ogre::SceneManager* sceneMgr,
 									   Ogre::SceneNode* attachNode,
 									   const std::string& sPrependNode )
@@ -71,25 +32,15 @@ eqOgre::DotSceneLoader::parseDotScene( vl::Resource& scene_data,
 	staticObjects.clear();
 	dynamicObjects.clear();
 
-	// Get the ownership of the Resource data
-	vl::MemoryBlock mem = scene_data.release();
-
-	size_t size = mem.size;
-
 	// Pass the ownership of the memory to this
-	char *xml_data = mem.mem;
+	char *xml_data = scene_data.get();
 
-	// We replace the EOF with Null Terminator for text files
-	xml_data[size-1] = '\0';
-
-	if( ::strlen( xml_data ) != size-1 )
+	if( !xml_data || ::strlen( xml_data ) != scene_data.size()-1 )
 	{
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
 	}
 
 	_parse( xml_data );
-
-	delete [] xml_data;
 }
 
 void
@@ -914,9 +865,6 @@ void
 eqOgre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 		Ogre::SceneNode *parent)
 {
-	// TODO this needs SceneNode::attachObject,
-	// Entity::setCastShadows, Entity::setMaterialName
-
 	// If no parent is provided we use Root node
 	if( !parent )
 	{ parent = _attach_node; }
@@ -1163,7 +1111,7 @@ eqOgre::DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::L
 	Ogre::Real falloff = vl::getAttribReal(XMLNode, "falloff", 1.0);
 
 	// Setup the light range
-	light->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
+	light->setSpotlightRange(Ogre::Radian(inner), Ogre::Radian(outer), falloff);
 }
 
 void

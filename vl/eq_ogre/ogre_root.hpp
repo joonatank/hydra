@@ -32,7 +32,7 @@ namespace ogre
 	class Root
 	{
 		public :
-			Root( eqOgre::DistributedSettings const &settings );
+			Root( std::string const &log_file_path );
 
 			virtual ~Root( void );
 
@@ -54,14 +54,14 @@ namespace ogre
 			virtual Ogre::SceneManager *createSceneManager(
 					std::string const &name );
 
+			virtual void addResource( std::string const &resource_path );
+
 			virtual void setupResources( void );
 
 			virtual void loadResources(void);
 
 		protected :
 			void _loadPlugins( void );
-
-			void _iterateResourceDir( fs::path const &file );
 
 			void _setupResource( std::string const &file, std::string const &typeName );
 

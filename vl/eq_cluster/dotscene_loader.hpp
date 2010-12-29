@@ -41,7 +41,7 @@ public :
 			eqOgre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
-	void parseDotScene( vl::Resource &scene_data,
+	void parseDotScene( vl::TextResource &scene_data,
 			eqOgre::Config *config,
 			eqOgre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );

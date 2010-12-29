@@ -1,96 +1,105 @@
 # -*- coding: utf-8 -*-
-def addTranslationEvent(node) :
+
+def setVectorActionFromKey( vector_action, kc ):
+	key_action = FloatActionMap.create()
+	key_action.action = vector_action
+	key_action.value = 1
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
+	trigger.addAction( key_action )
+
+	key_action = FloatActionMap.create()
+	key_action.action = vector_action
+	key_action.value = -1
+	trigger = game.event_manager.createKeyReleasedTrigger( kc )
+	trigger.addAction( key_action )
+
+
+
+def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg ) :
+	float_action = VectorActionMap.create()
+	float_action.axis = axis
+	setVectorActionFromKey( float_action, kc_pos )
+	float_action.action = trans_action
+
+	float_action = VectorActionMap.create()
+	float_action.axis = -axis
+	setVectorActionFromKey( float_action, kc_neg )
+	float_action.action = trans_action
+
+
+# Fine using the new event interface
+def createCameraMovements(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
 	print 'Creating Translation event on node = '
-	event = event_manager.createEvent( 'TransformationEvent' )
-	event.scene_node = node
-	# Set the movement speed to ten m/s
-	event.speed = 10
-	# Set the rotation speed to 30 degs/s
-	# FIXME this does not work
-	#event.angular_speed = 30
-	# TODO this is bit verbose and repeated often move it to python function
-	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.D
-	trigger_neg.key = KC.A
-	event.setTransXtrigger( trigger_pos, trigger_neg )
-	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.PGUP
-	trigger_neg.key = KC.PGDOWN
-	event.setTransYtrigger( trigger_pos, trigger_neg )
-	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.S
-	trigger_neg.key = KC.W
-	event.setTransZtrigger( trigger_pos, trigger_neg )
 
-	# TODO yaw missing, but the Application does not allow yaw for cameras because
-	# it looks funny in multi wall systems
-	trigger_pos = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_neg = event_manager.createTrigger( 'KeyTrigger' )
-	trigger_pos.key = KC.RIGHT
-	trigger_neg.key = KC.LEFT
-	event.setRotYtrigger( trigger_pos, trigger_neg )
+	# Create the translation action using a proxy
+	trans_action_proxy = MoveActionProxy.create()
+	trans_action_proxy.enableTranslation()
+	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.S, KC.W )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN )
 
-	if not event_manager.addEvent(event) :
-		print 'Python : could not add event'
+	# Create the rotation action using a proxy
+	rot_action_proxy = MoveActionProxy.create()
+	rot_action_proxy.enableRotation()
+	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.LEFT, KC.RIGHT )
 
+	# Create the real action
+	trans_action = MoveAction.create()
+	trans_action.scene_node = node
+	trans_action.speed = 5
+	# Add the real action to the proxies
+	trans_action_proxy.action = trans_action
+	rot_action_proxy.action = trans_action
+	# TODO add rotation speed
+	# Create a FrameTrigger and add the action to that
+	trigger = game.event_manager.getFrameTrigger()
+	trigger.addAction( trans_action )
+
+
+
+# Fine using the new event interface
 def addQuitEvent() :
 	print 'Creating Quit Event'
-	action = event_manager.createAction( 'QuitOperation' )
+	action = QuitAction.create()
 	print 'Python Action type = ' + action.type
-	action.config = config
-	# Example of using pressed or released key instead of both (the default)
-	# you need to create either KeyReleasedTrigger or KeyPressedTrigger
-	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
+	action.game = game
+
+	trigger = game.event_manager.createKeyPressedTrigger( KC.Q )
 	print 'Python Trigger type = ' + trigger.type
-	trigger.key = KC.Q
-	# KeyTrigger will respond to both
+	trigger.addAction( action )
 
-	# Create the Event
-	event = event_manager.createEvent( 'Event' )
-	event.action = action
-	event.addTrigger( trigger )
-	if not event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
 
+# Fine using the new event interface
 def addReloadEvent() :
 	print 'Creating Reload Scene Event'
-	action = event_manager.createAction( 'ReloadScene' )
+	# Create the action
+	action = ReloadScene.create()
 	print 'Python Action type = ' + action.type
-	action.config = config
-	trigger = event_manager.createTrigger( 'KeyTrigger' )
-	# FIXME this segfaults
+	action.scene = game.scene
+
+	# Create the Time limit
+	proxy = TimerActionProxy.create()
+	print 'Python Proxy type = ' + proxy.type
+	proxy.action = action
+	proxy.time_limit = 5 # Seconds
+
+	# Create the trigger
+	trigger = game.event_manager.createKeyPressedTrigger( KC.R )
 	print 'Python Trigger type = ' + trigger.type
-	trigger.key = KC.R
-	# Example of using released key instead of pressed (which is default)
-	# These are moved to different class now
-	#trigger.released = True
+	trigger.addAction( proxy )
 
-	# Create the Event
-	event = event_manager.createEvent( 'Event' )
-	event.action = action
-	# Setting a time limit how often this Event can happen
-	event.time_limit = 5
-	event.addTrigger( trigger )
-	if not event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
 
+
+# Fine using the new event interface
 def addToggleMusicEvent() :
 	print 'Creating Toggle Music Event'
-	action = event_manager.createAction( 'ToggleMusic' )
-	action.config = config
-	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
-	trigger.key = KC.M
+	action = ToggleMusic.create()
+	print 'Python Action type = ' + action.type
+	action.game = game
+	trigger = game.event_manager.createKeyPressedTrigger( KC.M )
+	trigger.addAction( action )
 
-	# Create the Event
-	event = event_manager.createEvent( 'Event' )
-	event.action = action
-	event.addTrigger( trigger )
-	if not event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
 
 # TODO create PrintOperation in python and register it into Event Manager
 
@@ -100,49 +109,55 @@ def addToggleMusicEvent() :
 #
 # If the camera name is incorrect the action will not change the camera
 # An error message is printed to std::cerr and the program continues normally
+# Fine using the new event interface
 def addToggleActiveCamera( camera1, camera2 ) :
 	print 'Creating Toggle Activate Camera'
-	action_on = event_manager.createAction( 'ActivateCamera' )
-	action_on.config = config
+	action_on = ActivateCamera.create()
+	action_on.player = game.player
 	action_on.camera = camera1
-	action_off = event_manager.createAction( 'ActivateCamera' )
-	action_off.config = config
+
+	action_off = ActivateCamera.create()
+	action_off.player = game.player
 	action_off.camera = camera2
-	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
-	trigger.key = KC.B
 
-	# Create the Event
-	event = event_manager.createEvent( 'ToggleEvent' )
-	event.toggle_on_action = action_on
-	event.toggle_off_action = action_off
-	event.toggle_state = False
-	event.addTrigger( trigger )
-	if not event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	trigger = game.event_manager.createKeyPressedTrigger( KC.B )
 
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = action_on
+	toggle.action_off = action_off
+
+	trigger.addAction( toggle )
+
+
+# Fine using the new event interface
 def addHideEvent(node) :
 	print 'Creating Hide Event'
-	hide = event_manager.createAction( 'Hide' )
+	hide = HideAction.create()
 	hide.scene_node = node
-	show = event_manager.createAction( 'Show' )
+	show = ShowAction.create()
 	show.scene_node = node
-	# This works to solve the problem
-	trigger = event_manager.createTrigger( 'KeyReleasedTrigger' )
-	#trigger = event_manager.createTrigger( 'KeyTrigger' )
-	trigger.key = KC.H
+	trigger = game.event_manager.createKeyPressedTrigger( KC.H )
+	#trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
+	#trigger.key = KC.H
 
-	event = event_manager.createEvent( 'ToggleEvent' )
-	event.toggle_off_action= show
-	event.toggle_on_action= hide
-	event.toggle_state = False
-	event.time_limit = 2	# Secs
+	# Create a proxy that handles the toggling between two different actions
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = hide
+	toggle.action_off = show
 
-	event.addTrigger( trigger )
-	if not event_manager.addEvent( event ) :
-		print 'Python : Event could not be added to EventManager'
+	# Create a proxy for slowing down the toggling
+	# NOTE This can be done the otherway around also i.e. create two timer
+	# proxys and assign them to the toggle proxy
+	# This allows individual control on the wait time from one state to another
+	proxy = TimerActionProxy.create()
+	proxy.action = toggle
+	proxy.time_limit = 2 # Seconds
+
+	trigger.addAction( proxy )
+
 
 # Add some global events that are useful no matter what the scene/project is
-print 'Adding config events'
+print 'Adding game events'
 addQuitEvent()
 addReloadEvent()
 addToggleMusicEvent()

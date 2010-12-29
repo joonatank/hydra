@@ -9,7 +9,7 @@
 #include <OGRE/OgreSceneManager.h>
 
 #include "serialize_helpers.hpp"
-#include "event.hpp"
+#include "action.hpp"
 #include "base/exceptions.hpp"
 
 namespace eqOgre
@@ -136,27 +136,17 @@ protected :
 
 
 
-class HideAction : public SceneNodeActionBase, public  vl::BasicAction
+class HideAction : public SceneNodeActionBase, public vl::BasicAction
 {
 public :
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "HideAction"; }
 
-};
-
-class HideActionFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::Action *create( void )
+	static HideAction *create( void )
 	{ return new HideAction; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
-
 
 
 class ShowAction : public SceneNodeActionBase, public  vl::BasicAction
@@ -164,43 +154,25 @@ class ShowAction : public SceneNodeActionBase, public  vl::BasicAction
 public :
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ShowAction"; }
 
-};
-
-class ShowActionFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::Action *create( void )
+	static ShowAction *create( void )
 	{ return new ShowAction; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
-
 
 
 /// Set a new transformation to a SceneNode
 class SetTransformation : public SceneNodeActionBase, public vl::TransformAction
 {
 public :
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "SetTransformation"; }
 
 	virtual void execute( vl::Transform const &trans );
-};
 
-class SetTransformationFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::Action *create( void )
+	static SetTransformation *create( void )
 	{ return new SetTransformation; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
 

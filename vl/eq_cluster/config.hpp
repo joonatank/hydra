@@ -8,22 +8,14 @@
 
 #include <eq/eq.h>
 
-// Audio
-#include <cAudio/cAudio.h>
-
-#include "frame_data.hpp"
 #include "settings.hpp"
 #include "eq_settings.hpp"
 #include "base/exceptions.hpp"
-#include "transform_event.hpp"
-#include "event.hpp"
-#include "tracker.hpp"
+// Necessary for the SceneNode functions
+// TODO should be removed as soon as they work directly on the current scene
+#include "scene_manager.hpp"
 
-// python
-#include "python.hpp"
-#include "event_manager.hpp"
-#include "tracker_serializer.hpp"
-#include "eq_resource_manager.hpp"
+#include "base/typedefs.hpp"
 
 namespace eqOgre
 {
@@ -50,36 +42,14 @@ namespace eqOgre
 
 		void removeSceneNode( SceneNode *node );
 
-		SceneNode *getSceneNode( std::string const &name );
+		SceneNodePtr getSceneNode( std::string const &name );
 
-		vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
-
-		void updateSceneVersion( void )
-		{ _frame_data.updateSceneVersion(); }
-
-		void resetScene( void );
-
-		void setActiveCamera( std::string const &name )
-		{ _frame_data.setActiveCamera( name ); }
-
-		void toggleBackgroundSound( void );
-
-		// TODO should take a transform as a parameter not a matrix
-		// Matrices are problematic if you want to decompose them
-		// Transform with quaternion and vector is lot easier to use and it's
-		// easier to pass around than quaternion and vector pair.
-		void setHeadMatrix( Ogre::Matrix4 const &m );
+		void setGameManager( vl::GameManagerPtr man );
 
 	protected :
 		virtual ~Config (void);
 
-		void _createResourceManager( void );
-
 		void _addSceneNode( SceneNode *node );
-
-		/// Audio
-		void _initAudio( void );
-		void _exitAudio( void );
 
 		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );
@@ -87,13 +57,8 @@ namespace eqOgre
 		/// Scene
 		void _loadScenes( void );
 
-		/// Python
-		void _initPython( void );
-		void _runPythonScript( std::string const &scriptFile );
-
 		/// Events
 		void _createQuitEvent( void );
-		void _createTransformToggle( void );
 
 		bool _handleKeyPressEvent( const eq::KeyEvent& event );
 		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
@@ -103,29 +68,13 @@ namespace eqOgre
 		// TODO replace the MagellanEvent with a real JoystickEvent
 		bool _handleJoystickEvent( const eq::MagellanEvent& event );
 
-		/// Tracking
-		vl::ClientsRefPtr _clients;
-
 		vl::SettingsRefPtr _settings;
 
 		/// Distributed
 		DistributedSettings _distrib_settings;
-		FrameData _frame_data;
 
-		// NOTE we need to use Event pointer because Events can be inherited
-		std::vector<vl::Event *> _events;
-		std::vector<TransformationEvent> _trans_events;
+		vl::GameManagerPtr _game_manager;
 
-		vl::EventManager *_event_manager;
-
-		// Python related
-		python::object _global;
-
-		// Audio objects
-		 cAudio::IAudioManager *_audio_manager;
-		 cAudio::IAudioSource *_background_sound;
-
-		 eqOgre::ResourceManager _resource_manager;
 	};	// class Config
 
 

@@ -13,29 +13,10 @@
 #include "tracker.hpp"
 #include "base/rapidxml.hpp"
 #include "base/typedefs.hpp"
-
-#include "resource_manager.hpp"
+#include "resource.hpp"
 
 namespace vl
 {
-
-class Clients
-{
-public :
-	void addTracker( TrackerRefPtr tracker )
-	{ _trackers.push_back( tracker ); }
-
-	TrackerRefPtr getTracker( size_t index )
-	{ return _trackers.at(index); }
-
-	size_t getNTrackers( void ) const
-	{ return _trackers.size(); }
-
-protected :
-	std::vector<TrackerRefPtr> _trackers;
-};
-
-typedef boost::shared_ptr<Clients> ClientsRefPtr;
 
 class TrackerSerializer
 {
@@ -64,14 +45,11 @@ public :
 
 	~TrackerSerializer( void );
 
-	/// Read the xml data from a string
-	bool parseTrackers( std::string const &data );
-
 	/// Read the xml data from a memory resource
-	bool parseTrackers( vl::Resource &tracking_data );
+	void parseTrackers( vl::TextResource &tracking_data );
 
 private :
-	bool readXML( char *xml_data );
+	void readXML( char *xml_data );
 
 	/// Process the root node, the clients node
 	void processClients( rapidxml::xml_node<>* XMLRoot );

@@ -34,7 +34,7 @@ vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 
 
 void
-vl::DotSceneLoader::parseDotScene( vl::Resource &scene_data,
+vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 								   eqOgre::Config* config,
 								   eqOgre::SceneNode* attachNode,
 								   const std::string& sPrependNode )
@@ -43,25 +43,15 @@ vl::DotSceneLoader::parseDotScene( vl::Resource &scene_data,
 	_config = config;
 	_sPrependNode = sPrependNode;
 
-	// Get the ownership of the Resource data
-	vl::MemoryBlock mem = scene_data.release();
-
-	size_t size = mem.size;
-
 	// Pass the ownership of the memory to this
-	char *xml_data = mem.mem;
+	char *xml_data = scene_data.get();
 
-	// We replace the EOF with Null Terminator for text files
-	xml_data[size-1] = '\0';
-
-	if( ::strlen( xml_data ) != size-1 )
+	if( !xml_data || ::strlen( xml_data ) != scene_data.size()-1 )
 	{
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("TextResource has invalid XML file") );
 	}
 
 	_parse( xml_data );
-
-	delete [] xml_data;
 }
 
 void

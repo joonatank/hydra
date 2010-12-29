@@ -15,8 +15,6 @@
 // Base class
 #include "resource_manager.hpp"
 
-#include "eq_resource.hpp"
-
 namespace eqOgre
 {
 
@@ -27,44 +25,64 @@ public :
 
 	virtual ~ResourceManager(void );
 
-	/// Returns a modifiedle copy of the resource
-	// TODO might be better to return references and have them copied in the
-	// application code?
-	// Problems with references are that if you use them to copy the object
-	// if it's a base class reference you slice the data when copying.
-	Resource copyResource( std::string const &name ) const;
-
 	// TODO this should be removed as soon as we have a decent system
 	// Settings should distribute the used scene files and this sould distribute
 	// the content of those files
-	std::vector<Resource> getSceneResources( void ) const;
+	std::vector<vl::TextResource> const &getSceneResources( void ) const;
 
 	/// Add a resource to the list of will be loaded resources
+	/// TODO not implemented
 	virtual void addResource( std::string const &name );
 
+	/// TODO not implemented
 	virtual void removeResource( std::string const &name );
 
 	/**	Loads all resources to memory
 	 *	If resource is loaded and it's a type supposed to be distributed
 	 *	then adds it to the distributed stack
 	 *
-	 *	Return value : true if all resources were loaded, false otherwise
+	 *	TODO not implemented
 	 */
-	virtual bool loadAllResources( void );
+	virtual void loadAllResources( void );
 
+	/**	Find the resource with name from the search paths
+	 *	If the resource is found the full path to it is stored in path
+	 *
+	 *	Returns : true if resource was found, false otherwise
+	 *
+	 *	Throws : nothing
+	 */
 	virtual bool findResource( std::string const &name, std::string &path ) const;
 
 	/**	Loads a resource to the provided reference
 	 *	If resource is loaded and it's a type supposed to be distributed
 	 *	then adds it to the distributed stack
 	 *
-	 *	Return value : true if resource was loaded, false otherwise
+	 *	Throws vl::resource_not_found if the resource by the name was not found
 	 */
-	virtual bool loadResource( std::string const &name, vl::Resource &data );
+	virtual void loadResource( std::string const &name, vl::Resource &data );
 
-	/// Manage resource paths
-	virtual bool addResourcePath( std::string const &resource_dir, bool recursive = true );
+	virtual void loadSceneResource( std::string const &name, vl::TextResource &data );
 
+	virtual void loadPythonResource( std::string const &name, vl::TextResource &data );
+
+	virtual void loadOggResource( std::string const &name, vl::Resource &data );
+
+	/**	Add a resource path to the resource search paths
+	 *	Parameters : resource_dir needs to be a valid filesystem directory
+	 *				 recursive true if you want all the subdirectories added too
+	 *
+	 *	Throws if the resource_dir does not exist or is not a directory
+	 */
+	virtual void addResourcePath( std::string const &resource_dir, bool recursive = true );
+
+	/**	Get the current resource search paths
+	 *
+	 *	Returns always the current search paths, if there is none will return
+	 *	an empty vector.
+	 *
+	 *	Can not fail.
+	 */
 	virtual std::vector<std::string> const &getResourcePaths( void ) const;
 
 
@@ -74,25 +92,36 @@ public :
 protected :
 
 	/// Find and copy the resource from the stack
-	bool _findResource( std::string const &res_name, vl::Resource &resource ) const;
+	bool _findLoadedResource( std::string const &res_name, vl::Resource &resource ) const;
+
+	/// Really load the resource
+	void _loadResource( std::string const &name,
+						std::string const &path,
+						vl::Resource &resource ) const;
+
+	/// Helper functions for manipulating resource files
+	std::string _getFileName( std::string const &name, std::string const &extension );
+	std::string _stripExtension( std::string const &name, std::string const &extension );
 
 	virtual void getInstanceData( co::DataOStream& os );
 	virtual void applyInstanceData( co::DataIStream& is );
 
-	std::vector<Resource> _resources;
+	std::vector<vl::TextResource> _scenes;
 
-	std::vector<std::string> _waiting_for_loading;
+	std::vector<vl::TextResource> _python_scripts;
+
+	std::vector<vl::Resource> _ogg_sounds;
 
 	std::vector<std::string> _search_paths;
 
 };	// class ResourceManager
 
 co::DataOStream &
-operator<<( Resource &res, co::DataOStream& os );
+operator<<( vl::Resource &res, co::DataOStream& os );
 
 
 co::DataIStream &
-operator>>( Resource &res, co::DataIStream& is );
+operator>>( vl::Resource &res, co::DataIStream& is );
 
 }	// namespace eqOgre
 

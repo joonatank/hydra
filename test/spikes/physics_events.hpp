@@ -9,7 +9,7 @@
 #define VL_PHYSICS_EVENTS_HPP
 
 // Base classes for event handling
-#include "eq_cluster/event.hpp"
+#include "eq_cluster/action.hpp"
 
 // For now we use bullet objects
 #include <bullet/btBulletDynamicsCommon.h>
@@ -52,23 +52,15 @@ public :
 
 	virtual void execute( void );
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "ApplyForce"; }
+
+	static ApplyForce *create( void )
+	{ return new ApplyForce; }
 
 protected :
 	btVector3 _force;
 
-};
-
-class ApplyForceFactory : public vl::ActionFactory
-{
-public :
-	virtual vl::ActionPtr create( void )
-	{ return new ApplyForce; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
 }	// namespace physics

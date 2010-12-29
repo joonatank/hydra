@@ -9,6 +9,16 @@
 #include <boost/weak_ptr.hpp>
 #include <memory>
 
+namespace eqOgre
+{
+	class PythonContext;
+	class SceneManager;
+
+	typedef PythonContext * PythonContextPtr;
+	typedef SceneManager * SceneManagerPtr;
+
+}	// namespace eqOgre
+
 namespace vl
 {
 	// Forward declarations
@@ -16,6 +26,11 @@ namespace vl
 	class Tracker;
 	class EnvSettings;
 	class ProjSettings;
+	class Player;
+	class GameManager;
+	class EventManager;
+	class ResourceManager;
+	class Clients;
 
 	struct null_deleter
 	{
@@ -28,9 +43,14 @@ namespace vl
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
 	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
+	typedef boost::shared_ptr<Clients> ClientsRefPtr;
+
+	typedef Player * PlayerPtr;
+	typedef GameManager * GameManagerPtr;
+	typedef EventManager * EventManagerPtr;
+	typedef ResourceManager * ResourceManagerPtr;
 
 	typedef std::map<std::string, std::string> NamedValuePairList;
-
 
 	// TODO define angle class
 	typedef double angle;

@@ -14,7 +14,7 @@
 namespace eqOgre
 {
 
-class FrameData : public eq::fabric::Serializable
+class SceneManager : public eq::fabric::Serializable
 {
 public :
 	struct SceneNodeIDPair
@@ -28,16 +28,16 @@ public :
 		eq::base::UUID id;
 	};
 
-	FrameData( void );
+	SceneManager( void );
 
-	virtual ~FrameData( void );
+	virtual ~SceneManager( void );
 
 	bool setSceneManager( Ogre::SceneManager *man );
 
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy
 	/// them when necessary.
-	void addSceneNode( SceneNode * node, eq::Config *session );
+	void addSceneNode( SceneNodePtr node, eq::Config *session );
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -54,11 +54,7 @@ public :
 
 	// TODO add SceneNode removal
 
-	void updateSceneVersion( void )
-	{
-		setDirty( DIRTY_RELOAD_SCENE );
-		_scene_version++;
-	}
+	void reloadScene( void );
 
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
@@ -72,7 +68,7 @@ public :
 
 	void syncAll( eq::Config *session );
 
-	void registerData( eq::Config *session );
+	bool registerData( eq::Config *session );
 
 	void deregisterData( eq::Config *session );
 
@@ -94,7 +90,7 @@ protected :
 
 	void _mapObject( eq::Config *session, SceneNodeIDPair &node );
 
-	void _registerObject( eq::Config *session, SceneNodeIDPair &node );
+	bool _registerObject( eq::Config *session, SceneNodeIDPair &node );
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
@@ -109,6 +105,7 @@ private :
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
+
 };	// class FrameData
 
 }	// namespace eqOgre

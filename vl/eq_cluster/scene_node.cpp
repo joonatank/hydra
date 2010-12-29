@@ -118,12 +118,6 @@ void eqOgre::HideAction::execute(void )
 	_node->setVisibility( false );
 }
 
-std::string const &
-eqOgre::HideAction::getTypeName( void ) const
-{ return eqOgre::HideActionFactory::TYPENAME; }
-
-const std::string eqOgre::HideActionFactory::TYPENAME = "Hide";
-
 void eqOgre::ShowAction::execute(void )
 {
 	if( !_node )
@@ -131,13 +125,6 @@ void eqOgre::ShowAction::execute(void )
 
 	_node->setVisibility( true );
 }
-
-std::string const &
-eqOgre::ShowAction::getTypeName( void ) const
-{ return eqOgre::ShowActionFactory::TYPENAME; }
-
-const std::string eqOgre::ShowActionFactory::TYPENAME = "Show";
-
 
 void eqOgre::SetTransformation::execute(const vl::Transform& trans)
 {
@@ -148,8 +135,3 @@ void eqOgre::SetTransformation::execute(const vl::Transform& trans)
 	_node->setOrientation( trans.quaternion );
 }
 
-std::string const &
-eqOgre::SetTransformation::getTypeName( void ) const
-{ return SetTransformationFactory::TYPENAME; }
-
-const std::string eqOgre::SetTransformationFactory::TYPENAME = "SetTransformation";

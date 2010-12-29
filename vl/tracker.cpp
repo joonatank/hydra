@@ -14,30 +14,7 @@
 
 /// ----------- TrackerTrigger ------------
 vl::TrackerTrigger::TrackerTrigger( void )
-	: _action(0)
 {}
-
-void
-vl::TrackerTrigger::update(const vl::Transform& data)
-{
-	// Copy the data for futher reference
-	_value = data;
-	if( _action )
-	{
-		_action->execute(data);
-	}
-}
-
-void
-vl::TrackerTrigger::setAction(vl::TransformActionPtr action)
-{
-	if( _action != action )
-	{
-		_action = action;
-		// TODO this should update but we don't have the data anymore
-		update(_value);
-	}
-}
 
 std::string const &
 vl::TrackerTrigger::getTypeName(void ) const

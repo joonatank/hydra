@@ -12,7 +12,7 @@
 
 #include "tracker.hpp"
 #include "base/typedefs.hpp"
-#include "frame_data.hpp"
+#include "scene_manager.hpp"
 #include "eq_cluster/eq_settings.hpp"
 
 namespace eqOgre
@@ -34,7 +34,10 @@ protected:
 	/// Equalizer overrides
 	virtual bool configInit( const eq::uint128_t &initID );
 	virtual bool configExit();
-//	virtual void frameClear( const uint32_t frameID );
+
+	virtual void frameClear( const eq::uint128_t& frameID );
+	virtual void frameAssemble( const eq::uint128_t &frameID );
+	virtual void frameReadback( const eq::uint128_t &frameID );
 
 	/// Overrides all the equalizer frame draw methods
 	/// Creating custom frustum and applying head matrix
@@ -59,7 +62,7 @@ protected:
 	std::string _active_camera_name;
 
 	// distribution related
-	FrameData _frame_data;
+	SceneManager _frame_data;
 };
 
 }

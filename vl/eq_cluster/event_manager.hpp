@@ -1,9 +1,16 @@
-#ifndef EQ_OGRE_EVENT_MANAGER_HPP
-#define EQ_OGRE_EVENT_MANAGER_HPP
-
-#include "event.hpp"
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *
+ *	EventManager used to create and retrieve Triggers
+ */
+#ifndef VL_EVENT_MANAGER_HPP
+#define VL_EVENT_MANAGER_HPP
 
 #include <vector>
+
+#include "trigger.hpp"
+
+#include "tracker.hpp"
 
 namespace vl
 {
@@ -11,62 +18,82 @@ namespace vl
 class EventManager
 {
 public :
-	Event *createEvent( std::string const &type );
+	EventManager( void );
 
+	~EventManager( void );
+
+	// FIXME for now the trigger factory interface is broken
+	// use the hard coded functions for creating different types of triggers.
 	Trigger *createTrigger( std::string const &type );
-
-	ActionPtr createAction( std::string const &type );
-
-	// TODO naming of these function
-	// should they be registerOperationType or addOperationFactory or some
-	// combination of the two themes
-	// TODO factories can not be copied, either we need to provide
-	// copy function to them (which returns a new allocated ptr) or we need to
-	// get python to create objects with long life time
-	// probably the later
 
 	/// Parameter : Pointer to the factory which user wants to add
 	/// 	The factory is expected to be alive till the factory is removed
 	/// If a factory with that object typeName is not found the factory
 	/// is added to the list of factories.
 	/// If a factory with the same object typeName is found this will throw
-	void addActionFactory( ActionFactory *fact );
 
-	void addEventFactory( EventFactory *fact );
-
+	// FIXME for now the trigger factory interface is broken
+	// use the hard coded functions for creating different types of triggers.
 	void addTriggerFactory( TriggerFactory *fact );
 
-	// Manipulate the event stack
-	bool addEvent( Event *event );
+	/// Tracker Triggers
+	/// Create a tracker trigger, this will never fail
+	/// If a tracker trigger with the same name exists it will return that one
+	/// If not then a new one is created
+	/// Returns : pointer to created tracker trigger
+	vl::TrackerTrigger *createTrackerTrigger( std::string const &name );
 
-	bool removeEvent( Event *event );
+	/// Get a tracker trigger by name
+	///
+	/// Returns : valid pointer to a tracker trigger
+	///
+	/// Throws on errors
+	/// Errors : no such tracker trigger exists
+	vl::TrackerTrigger *getTrackerTrigger( std::string const &name );
 
-	bool hasEvent( Event *event );
+	/// If a tracker trigger by the name exists
+	///
+	/// Returns true if there is one, false otherwise
+	bool hasTrackerTrigger( std::string const &name );
 
-	bool processEvents( Trigger *trig );
+	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc );
 
-	Event *findEvent( std::string const &name );
+	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc );
 
-	void printEvents( std::ostream &os ) const;
+	bool hasKeyPressedTrigger( OIS::KeyCode kc  );
+
+	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc );
+
+	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc );
+
+	bool hasKeyReleasedTrigger( OIS::KeyCode kc  );
+
+	vl::FrameTrigger *getFrameTrigger( void );
 
 private :
-	std::vector<Event *> _events;
+	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 
+	vl::KeyPressedTrigger *_findKeyPressedTrigger( OIS::KeyCode kc );
+
+	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc );
+
+	// Data
 	std::vector<TriggerFactory *> _trigger_factories;
-	std::vector<ActionFactory *> _action_factories;
-	std::vector<EventFactory *> _event_factories;
+	std::vector<vl::TrackerTrigger *> _tracker_triggers;
+	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
+	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
+
+	vl::FrameTrigger *_frame_trigger;
 
 };	// class EventManager
 
 inline std::ostream &operator<<( std::ostream &os, EventManager const &man )
 {
 	os << "Event Manager " << std::endl;
-	man.printEvents(os);
 	return os;
 }
 
 }	// namespace eqOgre
 
+#endif	// VL_EVENT_MANAGER_HPP
 
-
-#endif	// EQ_OGRE_EVENT_MANAGER_HPP

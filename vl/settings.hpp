@@ -170,8 +170,6 @@ class Settings
 		/// Returns a vector of script names
 		std::vector<std::string> getScripts( void ) const;
 
-		std::vector<std::string> getResourcePaths( void ) const;
-
 		std::string getGlobalDir( void ) const;
 
 		std::string getProjectDir( void ) const;

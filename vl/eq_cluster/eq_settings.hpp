@@ -53,9 +53,6 @@ public :
 	/// Used by master to copy the necessary data for synchronization
 	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
 
-	std::vector<std::string> const &getResources( void ) const
-	{ return _resources; }
-
 	/// Logging
 	std::string getOgreLogFilePath( void ) const;
 
@@ -72,9 +69,6 @@ protected :
 	virtual void applyInstanceData( co::DataIStream& is );
 
 	std::string _log_dir;
-
-	// Resource paths used
-	std::vector<std::string> _resources;
 
 	std::string _project_name;
 

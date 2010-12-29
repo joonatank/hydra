@@ -1,48 +1,34 @@
-#ifndef EQ_OGRE_TRANSFORM_EVENT_HPP
-#define EQ_OGRE_TRANSFORM_EVENT_HPP
+#ifndef VL_TRANSFORM_EVENT_HPP
+#define VL_TRANSFORM_EVENT_HPP
 
 #include "scene_node.hpp"
 #include "keycode.hpp"
 #include "base/exceptions.hpp"
-#include "event.hpp"
+#include "action.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
 #include <co/base/clock.h>
 
-namespace eqOgre
+namespace vl
 {
 
-// TODO this is not really an Operation,
-// no execute(void) function
-// No Factory class
-class MoveOperation : public vl::Action
+
+/// Simple Action class that does transformation based on key events
+/// Keeps track of the state of the object (moving, stopped)
+/// Transforms a SceneNode provided
+/// All parameters that need units are in SI units (e.g. speed is m/s)
+class MoveAction : public BasicAction
 {
 public :
-	MoveOperation( void );
+	MoveAction( void );
 
-	// TODO this should be divided to two different functions
-	// one for setting delta time
-	// and other for executing the Operation as with other Operation classes
-	virtual void execute( double time );
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	// TODO should be moved to Factory
-    static const std::string TYPENAME;
+	// TODO this should be executed with a double parameter (delta time) from
+	// FrameTrigger
+	virtual void execute( void );
 
 	/// Parameters
-	void setSceneNode( SceneNode *node )
-	{ _node = node; }
-
-	SceneNode *getSceneNode( void )
-	{ return _node; }
-
-	SceneNode const *getSceneNode( void ) const
-	{ return _node; }
-
 	void setSpeed( double speed )
 	{ _speed = speed; }
 
@@ -56,206 +42,92 @@ public :
 	Ogre::Radian const &getAngularSpeed( void ) const
 	{ return _angular_speed; }
 
-	void addMove( Ogre::Vector3 const &v )
-	{ _move_dir += v; }
 
-	void addRotation( Ogre::Vector3 const &v )
-	{ _rot_dir += v; }
+	void setSceneNode( eqOgre::SceneNode *node )
+	{ _node = node; }
 
-protected :
-	SceneNode *_node;
+	eqOgre::SceneNode *getSceneNode( void )
+	{ return _node; }
 
-	/// Parameters
-	/// Movement speed
-	double _speed;
+	void setMoveDir( Ogre::Vector3 const &mov_dir )
+	{ _move_dir = mov_dir; }
 
-	/// Rotation speed
-	Ogre::Radian _angular_speed;
+	void setRotDir( Ogre::Vector3 const &rot_dir )
+	{ _rot_dir = rot_dir; }
 
-	// Current heading
+
+	static MoveAction *create( void )
+	{ return new MoveAction; }
+
+	std::string getTypeName( void ) const
+	{ return "MoveAction"; }
+
+private :
+	eqOgre::SceneNode *_node;
+
 	Ogre::Vector3 _move_dir;
+
 	Ogre::Vector3 _rot_dir;
 
+	double _speed;
+	Ogre::Radian _angular_speed;
+
+	eq::base::Clock _clock;
 };
 
-/// Simple Event class that does transformation based on key events
-/// Keeps track of the state of the object (moving, stopped)
-/// Transforms a SceneNode provided
-/// All parameters that need units are in SI units (e.g. speed is m/s)
-class TransformationEvent : public vl::Event
+class MoveActionProxy : public VectorAction
 {
 public :
-
-	class TriggerPair
-	{
-	public :
-		TriggerPair( vl::Trigger *trig1 = 0, vl::Trigger *trig2 = 0 )
-			: _trig_pos(trig1), _trig_neg(trig2)
-		{}
-
-		double findTrigger( vl::Trigger const *trig ) const
-		{
-			if( !trig )
-			{ return 0; }
-
-			if( _trig_pos  && _trig_pos->isSimilar(trig) )
-			{ return trig->value(); }
-
-			if( _trig_neg  && _trig_neg->isSimilar(trig) )
-			{ return -trig->value(); }
-
-			return 0;
-		}
-
-		vl::Trigger * _trig_pos;
-		vl::Trigger * _trig_neg;
-	};
-
-	struct TriggerPairVector
-	{
-		TriggerPairVector( TriggerPair nx = TriggerPair(),
-						   TriggerPair ny = TriggerPair(),
-						   TriggerPair nz = TriggerPair() )
-			: x(nx), y(ny), z(nz)
-		{}
-
-		TriggerPair x;
-		TriggerPair y;
-		TriggerPair z;
-
-		/// Find the key event in the structure
-		/// returns a Vector of -1, 0, 1 based on wether it was found and if
-		/// it was a positive or negative control key.
-		/// Return value can be used as movement direction vector,
-		/// or a delta to such a vector.
-		Ogre::Vector3 findTrigger( vl::Trigger const *trig )
-		{
-			Ogre::Vector3 vec;
-			vec.x = x.findTrigger(trig);
-			vec.y = y.findTrigger(trig);
-			vec.z = z.findTrigger(trig);
-
-			return vec;
-		}
-	};
-
-	/// Constructor
-	TransformationEvent( void );
-
-	/// Destructor
-	virtual ~TransformationEvent( void )
+	MoveActionProxy( void )
+		: _action(0), _rotation(false), _translation( false ),
+		  _value( Ogre::Vector3::ZERO )
 	{}
 
-	virtual std::string const &getTypeName( void ) const;
-
-	void setSceneNode( SceneNode *node )
-	{ _operation->setSceneNode(node);; }
-
-	SceneNode *getSceneNode( void )
-	{ return _operation->getSceneNode(); }
-
-	// TODO if we need this one, we need to provide overloads to python
-//	SceneNode const *getSceneNode( void ) const
-//	{ return _operation->getSceneNode(); }
-
-	/// Called from event handling
-	/// If the trigger is mapped to this TransformationEvent the state of the
-	/// event is changed.
-	/// Returns true if processed
-	bool processTrigger(vl::Trigger* trig);
-
-	/// Parameters
-	void setSpeed( double speed )
-	{ _operation->setSpeed(speed); }
-
-	double getSpeed( void ) const
-	{ return _operation->getSpeed(); }
-
-	/// Set the angular speed of the object in radians per second
-	void setAngularSpeed( Ogre::Radian const &speed )
-	{ _operation->setAngularSpeed(speed); }
-
-	Ogre::Radian const &getAngularSpeed( void ) const
-	{ return _operation->getAngularSpeed(); }
-
-
-	/// These triggers will change the movement direction of the object
-	/// they will not really move the object
-	/// Translation Triggers
-	void setTransXtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
+	virtual void execute( Ogre::Vector3 const &data )
 	{
-		_trans_triggers.x = TriggerPair( trig_pos, trig_neg );
+		_value = _value+data;
+
+		if( _action && _translation )
+		{_action->setMoveDir(_value); }
+
+		if( _action && _rotation )
+		{_action->setRotDir(_value); }
 	}
 
-	void setTransYtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
-	{
-		_trans_triggers.y = TriggerPair( trig_pos, trig_neg );
-	}
+	void enableRotation( void )
+	{ _rotation = true; }
 
-	void setTransZtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
-	{
-		_trans_triggers.z = TriggerPair( trig_pos, trig_neg );
-	}
+	void disableRotation( void )
+	{ _rotation = false; }
 
+	void enableTranslation( void )
+	{ _translation = true; }
 
+	void disableTranslation( void )
+	{ _translation = false; }
 
-	/// Rotation Triggers
-	void setRotXtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
-	{
-		_rot_triggers.x = TriggerPair( trig_pos, trig_neg );
-	}
+	void setAction( MoveAction *action )
+	{ _action = action; }
 
-	void setRotYtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
-	{
-		_rot_triggers.y = TriggerPair( trig_pos, trig_neg );
-	}
+	MoveAction *getAction( void )
+	{ return _action; }
 
-	void setRotZtrigger( vl::Trigger *trig_pos, vl::Trigger *trig_neg )
-	{
-		_rot_triggers.z = TriggerPair( trig_pos, trig_neg );
-	}
+	static MoveActionProxy *create( void )
+	{ return new MoveActionProxy; }
 
-	friend std::ostream & operator<<( std::ostream &os, TransformationEvent const &a );
+	std::string getTypeName( void ) const
+	{ return "MoveActionProxy"; }
 
-protected :
-	/// Copy constructor
-	/// Copies the prototype but does not copy any state information
-	/// assumption is that the state information is only useful in the context
-	/// where it has been setted.
-	TransformationEvent( TransformationEvent const &a );
+private :
+	MoveAction *_action;
 
-	TransformationEvent &operator=( TransformationEvent const &a );
+	bool _rotation;
+	bool _translation;
 
-	/// Core
-	// Node which this Event moves
-	SceneNode *_node;
+	Ogre::Vector3 _value;
 
-	// When last executed so that the movement has constant speed
-	eq::base::Clock _clock;
-
-	/// Move operation owned by this class
-	// TODO should be made to use the Operation schematics and created by the
-	// EventManager
-	MoveOperation *_operation;
-
-	/// Triggers used for translation and rotation
-	TriggerPairVector _trans_triggers;
-	TriggerPairVector _rot_triggers;
-
-};	// class TransformationEvent
-
-class TransformationEventFactory : public vl::EventFactory
-{
-public :
-	virtual vl::Event *create( void )
-	{ return new TransformationEvent; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
 };
 
-}	// namespace eqOgre
+};
 
-#endif // EQ_OGRE_TRANSFORM_EVENT_HPP
+#endif // VL_TRANSFORM_EVENT_HPP
