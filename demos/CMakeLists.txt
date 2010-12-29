@@ -11,10 +11,7 @@
 
 project( "demos" CXX )
 
-cmake_minimum_required(VERSION 2.8)
-
-message( "Thread libraries = ${CMAKE_THREAD_LIBS_INIT}" )
-message( "VRPN libraries = ${VRPN_LIBRARY}" )
+cmake_minimum_required(VERSION 2.6)
 
 # Copy configs
 copy_start_script( renderer
@@ -31,7 +28,8 @@ add_executable( fake_tracking_server
 
 target_link_libraries( fake_tracking_server
 	${VRPN_LIBRARY}
-	${CMAKE_THREAD_LIBS_INIT} )
+	${CMAKE_THREAD_LIBS_INIT}
+	)
 
 
 add_executable( renderer
@@ -44,7 +42,7 @@ add_executable( angles_to_quaternion
 	angles_to_quaternion.cpp
 	)
 
-target_link_libraries( angles_to_quaternion ${OGRE_LIBRARIES} )
+target_link_libraries( angles_to_quaternion ${Ogre_LIBRARY} )
 
 
 # install

@@ -1,17 +1,28 @@
 # - Locate CEGUI library
+# Joonatan Kuosa <joonatan.kuosa@tut.fi>
+# 2010-12
+# This file is part of eqOgre build system.
+# This file is in public domain, feel free to use it as you see fit
+#
 # This module defines
-#  CEGUI_LIBRARY, the library to link against
+#  CEGUI_INCLUDE_DIR, where to find headers.
+#  CEGUI_LIBRARY, the library to link against, both optimized and debug
+#  CEGUI_LIBRARY_RELEASE, the library to link against, optimized
+#  CEGUI_LIBRARY_DEBUG, the library to link against, debug
 #  CEGUI_FOUND, if false, do not try to link to CEGUI
-#  CEGUI_INCLUDE_DIRS, where to find headers.
 # TODO add CEGUI_VERSION support
+# TODO add optimized and release versions
+# TODO should be tested on Windows
+# TODO before testing the CEGUI lib should be built on windows
+# TODO this needs the addition of CMake build system for CEGUI
    
-IF(CEGUI_LIBRARY AND CEGUI_INCLUDE_DIRS)
+if( CEGUI_LIBRARY AND CEGUI_INCLUDE_DIR )
 	# in cache already
-	SET(CEGUI_FIND_QUIETLY TRUE)
-ENDIF(CEGUI_LIBRARY AND CEGUI_INCLUDE_DIRS)
+	set( CEGUI_FIND_QUIETLY TRUE )
+endif( CEGUI_LIBRARY AND CEGUI_INCLUDE_DIR )
 
 
-FIND_PATH(CEGUI_INCLUDE_DIRS
+find_path(CEGUI_INCLUDE_DIR
 	CEGUI
 	PATHS
 	$ENV{CEGUI_DIR}/include
@@ -21,10 +32,10 @@ FIND_PATH(CEGUI_INCLUDE_DIRS
 	/opt/local/include
 	/opt/csw/include
 	/opt/include
-	PATH_SUFFIXES cegui CEGUI
+	#PATH_SUFFIXES cegui CEGUI
 )
 
-FIND_LIBRARY(CEGUI_LIBRARY
+find_library(CEGUI_LIBRARY
 	NAMES CEGUIBase
 	PATHS
 	$ENV{CEGUI_DIR}/lib

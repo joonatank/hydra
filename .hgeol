@@ -6,6 +6,7 @@
 **.hpp = native
 **.h = native
 **.rc = native
+**.cmake = native
 
 # HG
 .hgignore = native

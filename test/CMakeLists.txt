@@ -11,7 +11,7 @@
 
 project("tests" CXX)
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 enable_testing()
 
@@ -80,7 +80,7 @@ add_executable( test_euler_angles
 				${eqOgre_SOURCE_DIR}/math/math.hpp
 				)
 
-target_link_libraries( test_euler_angles ${OGRE_LIBRARIES} ${TEST_LIB} )
+target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${TEST_LIB} )
 
 # Test tracking
 #add_executable( test_tracking

@@ -55,11 +55,11 @@ find_package( VRPN REQUIRED )
 ######### Find OGRE ##########
 # We should use find_file to find the Ogre cmake helpers
 # TODO this needs a bit more work
-find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
-	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
-	)
+#find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
+#	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
+#	)
 
-set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
+#set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
 
 # TODO should expose Ogre and OpenGL packages to the user
 find_package(OpenGL REQUIRED)
@@ -87,7 +87,7 @@ message( "Vorbis library = ${Vorbis_LIBRARY}" )
 
 find_package( OPENAL REQUIRED )
 
-find_package( CAUDIO REQUIRED )
+find_package( cAudio REQUIRED )
 
 
 ####### Find Boost ########
@@ -117,13 +117,12 @@ find_package(Boost COMPONENTS system filesystem program_options REQUIRED )
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
- 	${OGRE_INCLUDE_DIR}
-	${OGRE_INCLUDE_DIR}/..
+ 	${Ogre_INCLUDE_DIR}
 	${Equalizer_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
-	${CAUDIO_INCLUDE_DIR}
+	${cAudio_INCLUDE_DIR}
 	${OGG_INCLUDE_DIR}
 	${VORBIS_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
@@ -132,16 +131,16 @@ include_directories( SYSTEM
 # Libraries that eqOgre library depends on
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
-	${OGRE_LIBRARIES}
+	${Ogre_LIBRARY}
 	${Equalizer_LIBRARY}
 	${VRPN_LIBRARY}
-	${OIS_LIBRARIES}
+	${OIS_LIBRARY}
 	${PYTHON_LIBRARIES}
 	${Boost_PYTHON_LIBRARIES}
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${CAUDIO_LIBRARY}
+	${cAudio_LIBRARY}
 	${Ogg_LIBRARY}
 	${Vorbis_LIBRARY}
 	${Vorbis_FILE_LIBRARY}

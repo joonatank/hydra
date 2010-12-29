@@ -1,13 +1,26 @@
+# Joonatan Kuosa <joonatan.kuosa@tut.fi>
+# 2010-12
+# This file is part of eqOgre build system.
+# This file is in public domain, feel free to use it as you see fit
+#
 # - Locate VRPN library
+#
 # This module defines
-#  VRPN_LIBRARY, the library to link against
+#  VRPN_INCLUDE_DIR - where to find headers.
 #  VRPN_FOUND, if false, do not try to link to VRPN
-#  VRPN_INCLUDE_DIRS, where to find headers.
+#  VRPN_LIBRARY - VRPN client library vrpn, both debug and optimized versions
+#  VRPN_LIBRARY_RELEASE - VRPN client library vrpn, optimized version
+#  VRPN_LIBRARY_DEBUG - VRPN client library vrpn, debug version
 
-IF(VRPN_LIBRARY AND VRPN_INCLUDE_DIRS)
+#  VRPN_SERVER_FOUND, if false, do not try to link to VRPN server
+#  VRPN_SERVER_LIBRARY - VRPN server library vrpnserver, both debug and optimized versions
+#  VRPN_SERVER_LIBRARY_RELEASE - VRPN client library vrpn, optimized version
+#  VRPN_SERVER_LIBRARY_DEBUG - VRPN client library vrpn, debug version
+
+IF( VRPN_INCLUDE_DIR )
 	# in cache already
-	SET(VRPN_FIND_QUIETLY TRUE)
-ENDIF(VRPN_LIBRARY AND VRPN_INCLUDE_DIRS)
+	set(VRPN_FIND_QUIETLY TRUE)
+ENDIF( VRPN_INCLUDE_DIR )
 
 # VRPN depends on threads
 find_package( Threads REQUIRED )
@@ -22,28 +35,46 @@ FIND_PATH(VRPN_INCLUDE_DIR
 	$ENV{VRPN_DIR}/include
 	/usr/local/include
 	/usr/include
-	/sw/include
-	/opt/local/include
-	/opt/csw/include
-	/opt/include
 	PATH_SUFFIXES
-)
+	)
 
-FIND_LIBRARY(VRPN_LIBRARY
-	NAMES vrpn
-	PATHS
+# Common library search paths, for both Windows and Linux
+set( LIB_SEARCH_PATHS 
 	$ENV{VRPN_DIR}/lib
-	/usr/local/lib
 	/usr/lib
-	/usr/local/X11R6/lib
-	/usr/X11R6/lib
-	/sw/lib
-	/opt/local/lib
-	/opt/csw/lib
-	/opt/lib
-	/usr/freeware/lib64
-)
-   
+	/usr/local/lib
+	${VRPN_INCLUDE_DIR}/../lib
+	)
+
+message( "VRPN Lib search paths = ${LIB_SEARCH_PATHS}" )
+# Find the client library, release
+FIND_LIBRARY(VRPN_LIBRARY_RELEASE
+	NAMES vrpn libvrpn
+	PATHS
+	${LIB_SEARCH_PATHS}
+	${VRPN_INCLUDE_DIR}/../lib/Release
+	)
+ 
+
+FIND_LIBRARY(VRPN_LIBRARY_DEBUG
+	NAMES vrpn_d vrpn libvrpn libvrpn_d
+	PATHS
+	${LIB_SEARCH_PATHS}
+	${VRPN_INCLUDE_DIR}/../lib/Debug
+	)
+
+if( VRPN_LIBRARY_DEBUG AND NOT VRPN_LIBRARY_RELEASE )
+	set( VRPN_LIBRARY_RELEASE ${VRPN_LIBRARY_DEBUG} )
+endif()
+
+if( VRPN_LIBRARY_DEBUG AND VRPN_LIBRARY_RELEASE )
+	set( VRPN_LIBRARY debug ${VRPN_LIBRARY_DEBUG}
+		optimized ${VRPN_LIBRARY_RELEASE}
+		CACHE FILEPATH "VRPN Client library" FORCE)
+else()
+	#set( VRPN_LIBRARY CACHE FILEPATH "VRPN Client library" FORCE)
+endif()
+
 IF(VRPN_LIBRARY AND VRPN_INCLUDE_DIR)
 	SET(VRPN_FOUND "YES")
 #	SET(VRPN_INCLUDE_DIR "${VRPN_INCLUDE_DIR};${VRPN_INCLUDE_DIR}/cAudio")
@@ -57,3 +88,61 @@ ELSE(VRPN_LIBRARY AND VRPN_INCLUDE_DIR)
 		MESSAGE(STATUS "Warning: Unable to find VRPN!")
 	ENDIF(NOT VRPN_FIND_QUIETLY)
 ENDIF(VRPN_LIBRARY AND VRPN_INCLUDE_DIR)
+
+if( VRPN_FOUND OR VRPN_FIND_QUIETLY )
+	mark_as_advanced(
+		VRPN_INCLUDE_DIR
+		VRPN_LIBRARY
+		VRPN_LIBRARY_RELEASE
+		VRPN_LIBRARY_DEBUG
+		)
+endif()
+
+# Find the server library
+FIND_LIBRARY(VRPN_SERVER_LIBRARY_RELEASE
+	NAMES vrpnserver
+	PATHS
+	${LIB_SEARCH_PATHS}
+	${VRPN_INCLUDE_DIR}/../lib/Release
+	)
+
+FIND_LIBRARY(VRPN_SERVER_LIBRARY_DEBUG
+	NAMES vrpnserver_d vrpnserver
+	PATHS
+	${LIB_SEARCH_PATHS}
+	${VRPN_INCLUDE_DIR}/../lib/Debug
+	)
+
+if( VRPN_SERVER_LIBRARY_DEBUG AND NOT VRPN_SERVER_LIBRARY_RELEASE )
+	set( VRPN_SERVER_LIBRARY_RELEASE ${VRPN_SERVER_LIBRARY_DEBUG} )
+endif()
+
+if( VRPN_SERVER_LIBRARY_DEBUG AND VRPN_SERVER_LIBRARY_RELEASE )
+	set( VRPN_SERVER_LIBRARY debug ${VRPN_SERVER_LIBRARY_DEBUG}
+		optimized ${VRPN_SERVER_LIBRARY_RELEASE}
+		CACHE FILEPATH "VRPN Client library" FORCE)
+else()
+	#set( VRPN_SERVER_LIBRARY CACHE FILEPATH "VRPN Client library" FORCE)
+endif()
+
+
+IF(VRPN_SERVER_LIBRARY AND VRPN_INCLUDE_DIR)
+	SET(VRPN_SERVER_FOUND "YES")
+	IF(NOT VRPN_FIND_QUIETLY)
+		MESSAGE(STATUS "Found VRPN Server: ${VRPN_SERVER_LIBRARY}")
+	ENDIF(NOT VRPN_FIND_QUIETLY)
+	# TODO this should link the ${VRPN_LIBRARY} to the threads lib
+ELSE(VRPN_SERVER_LIBRARY AND VRPN_INCLUDE_DIR)
+	IF(NOT VRPN_FIND_QUIETLY)
+		MESSAGE(STATUS "Warning: Unable to find VRPN Server!")
+	ENDIF(NOT VRPN_FIND_QUIETLY)
+ENDIF(VRPN_SERVER_LIBRARY AND VRPN_INCLUDE_DIR)
+
+if( VRPN_FOUND OR VRPN_FIND_QUIETLY )
+	mark_as_advanced(
+		VRPN_SERVER_LIBRARY
+		VRPN_SERVER_LIBRARY_RELEASE
+		VRPN_SERVER_LIBRARY_DEBUG
+		)
+endif()
+

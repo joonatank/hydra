@@ -1,44 +1,21 @@
-# Copyright (c) 2009, Whispersoft s.r.l.
-# All rights reserved.
+# Joonatan Kuosa <joonatan.kuosa@tut.fi>
+# 2010-12
+# This file is part of eqOgre build system.
+# This file is in public domain, feel free to use it as you see fi
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-# * Neither the name of Whispersoft s.r.l. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
 # Finds Ogg library
 #
-#  Ogg_INCLUDE_DIR - where to find ogg.h, etc.
-#  Ogg_LIBRARIES   - List of libraries when using Ogg.
-#  Ogg_FOUND       - True if Ogg found.
+#  Ogg_INCLUDE_DIR	- where to find ogg.h
+#  Ogg_LIBRARY		- Ogg library both debug and optimized versions.
+#  Ogg_LIBRARY_RELEASE	- Ogg library, optimized version.
+#  Ogg_LIBRARY_DEBUG	- Ogg library, debug version.
+#  Ogg_FOUND		- True if Ogg found.
 #
 
-if (Ogg_INCLUDE_DIR)
+if( Ogg_INCLUDE_DIR AND Ogg_LIBRARY )
 	# Already in cache, be silent
 	set(Ogg_FIND_QUIETLY TRUE)
-endif (Ogg_INCLUDE_DIR)
+endif( Ogg_INCLUDE_DIR AND Ogg_LIBRARY )
 
 find_path(Ogg_INCLUDE_DIR ogg/ogg.h
 	$ENV{Ogg_HOME}/include
@@ -47,52 +24,69 @@ find_path(Ogg_INCLUDE_DIR ogg/ogg.h
 	/usr/include
 	)
 
-set( Ogg_NAMES_RELEASE ogg ogg_static )
+# Common library search paths for both debug and release versions
+set( LIBRARY_SEARCH_PATHS 
+	/usr/lib
+	/usr/local/lib
+	/opt/local/lib
+	$ENV{Ogg_HOME}/lib
+	$ENV{Ogg_HOME}
+	${Ogg_INCLUDE_DIR}/../lib
+	)
 
+set( Ogg_NAMES_RELEASE ogg libogg libogg_static )
 find_library(Ogg_LIBRARY_RELEASE
 	NAMES ${Ogg_NAMES_RELEASE}
-	PATHS /usr/lib /usr/local/lib /opt/local/lib $ENV{Ogg_HOME}/lib
-	$ENV{Ogg_HOME}
+	PATHS
+	${LIBRARY_SEARCH_PATHS}
+	${Ogg_INCLUDE_DIR}/../lib/release
 	)
 
-set( Ogg_NAMES_DEBUG ogg_d ogg_static_d )
-
+set( Ogg_NAMES_DEBUG ogg_d libogg_d libogg_static_d )
 find_library(Ogg_LIBRARY_DEBUG
 	NAMES ${Ogg_NAMES_DEBUG}
-	PATHS /usr/lib /usr/local/lib /opt/local/lib $ENV{Ogg_HOME}/lib
-	$ENV{Ogg_HOME}
+	PATHS 
+	${LIBRARY_SEARCH_PATHS}
+	${Ogg_INCLUDE_DIR}/../lib/debug
 	)
+
 if( Ogg_LIBRARY_DEBUG AND NOT Ogg_LIBRARY_RELEASE )
 	set( Ogg_LIBRARY_RELEASE ${Ogg_LIBRARY_DEBUG} )
 endif()
-set( Ogg_LIBRARY debug ${Ogg_LIBRARY_DEBUG}
-		optimized ${Ogg_LIBRARY_RELEASE} )
 
-if (Ogg_INCLUDE_DIR AND Ogg_LIBRARY)
+if( Ogg_LIBRARY_DEBUG AND Ogg_LIBRARY_RELEASE )
+	set( Ogg_LIBRARY debug ${Ogg_LIBRARY_DEBUG}
+		optimized ${Ogg_LIBRARY_RELEASE} 
+		CACHE FILEPATH "Ogg library" FORCE )
+else()
+	#	set( Ogg_LIBRARY CACHE FILEPATH "Ogg library" FORCE )
+endif()
+
+if( Ogg_INCLUDE_DIR AND Ogg_LIBRARY )
 	set(Ogg_FOUND TRUE)
-	set( Ogg_LIBRARIES ${Ogg_LIBRARY} )
-else (Ogg_INCLUDE_DIR AND Ogg_LIBRARY)
+else( Ogg_INCLUDE_DIR AND Ogg_LIBRARY )
 	set(Ogg_FOUND FALSE)
-	set(Ogg_LIBRARIES)
-endif (Ogg_INCLUDE_DIR AND Ogg_LIBRARY)
+endif( Ogg_INCLUDE_DIR AND Ogg_LIBRARY )
 
-if (Ogg_FOUND)
+if( Ogg_FOUND )
 	if (NOT Ogg_FIND_QUIETLY)
 		message(STATUS "Found Ogg: ${Ogg_LIBRARY}")
 	endif (NOT Ogg_FIND_QUIETLY)
-else (Ogg_FOUND)
+else( Ogg_FOUND )
 	if (Ogg_FIND_REQUIRED)
-		message(STATUS "Looked for Ogg libraries named ${Ogg_NAMES}.")
+		message(STATUS "Looked for Ogg libraries named ${Ogg_NAMES_RELEASE} and ${Ogg_NAMES_DEBUG}.")
 		message(STATUS "Include file detected: [${Ogg_INCLUDE_DIR}].")
 		message(STATUS "Lib file detected: [${Ogg_LIBRARY}].")
-		message(FATAL_ERROR "=========> Could NOT find Ogg library")
+		#message(FATAL_ERROR "=========> Could NOT find Ogg library")
 	endif (Ogg_FIND_REQUIRED)
-endif (Ogg_FOUND)
+endif( Ogg_FOUND )
 
-mark_as_advanced(
-	Ogg_LIBRARY
-	Ogg_LIBRARY_RELEASE
-	Ogg_LIBRARY_DEBUG
-	Ogg_INCLUDE_DIR
-	)
+if( Ogg_FOUND OR Ogg_FIND_QUIETLY )
+	mark_as_advanced(
+		Ogg_LIBRARY
+		Ogg_LIBRARY_RELEASE
+		Ogg_LIBRARY_DEBUG
+		Ogg_INCLUDE_DIR
+		)
+endif()
 
