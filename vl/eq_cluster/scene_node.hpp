@@ -80,8 +80,8 @@ public :
 protected :
 	SceneNode( std::string const &name = std::string() );
 
-	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
-	virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
+	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
+	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
 
 private :
 	std::string _name;

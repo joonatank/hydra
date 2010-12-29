@@ -7,8 +7,8 @@
 #include "eq_settings.hpp"
 
 // Necessary for serializing
-#include <eq/net/dataIStream.h>
-#include <eq/net/dataOStream.h>
+#include <co/dataIStream.h>
+#include <co/dataOStream.h>
 
 #include "base/filesystem.hpp"
 #include "settings.hpp"
@@ -263,7 +263,7 @@ eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
 
 /// -------------------- Protected ---------------------
 void
-eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
+eqOgre::DistributedSettings::getInstanceData( co::DataOStream& os )
 {
 	os << _project_name << _frame_data_id << _resource_man_id << _log_dir;
 
@@ -276,7 +276,7 @@ eqOgre::DistributedSettings::getInstanceData(eq::net::DataOStream& os)
 }
 
 void
-eqOgre::DistributedSettings::applyInstanceData(eq::net::DataIStream& is)
+eqOgre::DistributedSettings::applyInstanceData( co::DataIStream& is )
 {
 	is >> _project_name >> _frame_data_id >> _resource_man_id >> _log_dir;
 

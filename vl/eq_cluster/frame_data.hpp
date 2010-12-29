@@ -3,8 +3,8 @@
 
 #include <eq/fabric/serializable.h>
 #include <eq/client/config.h>
-#include <eq/net/dataIStream.h>
-#include <eq/net/dataOStream.h>
+#include <co/dataIStream.h>
+#include <co/dataOStream.h>
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -89,8 +89,8 @@ public :
 	};
 
 protected :
-	virtual void serialize( eq::net::DataOStream &os, const uint64_t dirtyBits );
-	virtual void deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits );
+	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
+	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
 
 	void _mapObject( eq::Config *session, SceneNodeIDPair &node );
 

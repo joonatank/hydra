@@ -9,7 +9,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-#include <eq/base/clock.h>
+#include <co/base/clock.h>
 
 namespace eqOgre
 {

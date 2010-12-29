@@ -8,7 +8,7 @@
 #ifndef EQ_OGRE_SETTINGS_HPP
 #define EQ_OGRE_SETTINGS_HPP
 
-#include <eq/net/object.h>
+#include <co/object.h>
 
 // Needed for ProjSettings::Scene
 #include "base/projsettings.hpp"
@@ -30,7 +30,7 @@ vl::SettingsRefPtr getSettings( int argc, char **argv );
 /// Contains only data needed by the slaves e.g. contains list of scenes
 /// but contains no scripts.
 /// Also contains runtime parameters that are not in vl::Settings.
-class DistributedSettings : public eq::net::Object
+class DistributedSettings : public co::Object
 {
 public :
 	DistributedSettings( void );
@@ -68,8 +68,8 @@ public :
 	{ return _camera_rotations_allowed; }
 
 protected :
-	virtual void getInstanceData( eq::net::DataOStream& os );
-	virtual void applyInstanceData( eq::net::DataIStream& is );
+	virtual void getInstanceData( co::DataOStream& os );
+	virtual void applyInstanceData( co::DataIStream& is );
 
 	std::string _log_dir;
 

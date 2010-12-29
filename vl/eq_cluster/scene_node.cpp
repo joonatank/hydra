@@ -45,7 +45,7 @@ bool eqOgre::SceneNode::findNode(Ogre::SceneManager* man)
 // Does no transformation on the Ogre Node as the master copy should be in
 // AppNode which does not have Ogre SceneGraph
 void
-eqOgre::SceneNode::serialize(eq::net::DataOStream& os, const uint64_t dirtyBits)
+eqOgre::SceneNode::serialize( co::DataOStream& os, const uint64_t dirtyBits )
 {
     eq::fabric::Serializable::serialize(os, dirtyBits);
 
@@ -72,7 +72,7 @@ eqOgre::SceneNode::serialize(eq::net::DataOStream& os, const uint64_t dirtyBits)
 }
 
 void
-eqOgre::SceneNode::deserialize(eq::net::DataIStream& is, const uint64_t dirtyBits)
+eqOgre::SceneNode::deserialize( co::DataIStream& is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize(is, dirtyBits);
 

@@ -221,7 +221,7 @@ eqOgre::FrameData::unmapData( eq::Config *session )
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
 void
-eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits )
+eqOgre::FrameData::serialize( co::DataOStream &os, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::serialize( os, dirtyBits );
 
@@ -252,7 +252,7 @@ eqOgre::FrameData::serialize( eq::net::DataOStream &os, const uint64_t dirtyBits
 }
 
 void
-eqOgre::FrameData::deserialize( eq::net::DataIStream &is, const uint64_t dirtyBits )
+eqOgre::FrameData::deserialize( co::DataIStream &is, const uint64_t dirtyBits )
 {
 	eq::fabric::Serializable::deserialize( is, dirtyBits );
 

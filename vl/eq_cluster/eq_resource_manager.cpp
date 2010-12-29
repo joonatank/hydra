@@ -11,8 +11,8 @@
 // Needed for resource file loading
 #include <fstream>
 
-#include <eq/net/dataIStream.h>
-#include <eq/net/dataOStream.h>
+#include <co/dataIStream.h>
+#include <co/dataOStream.h>
 
 /// ------------ ResourceManager --------------
 eqOgre::ResourceManager::ResourceManager( void )
@@ -192,7 +192,7 @@ eqOgre::ResourceManager::_findResource( const std::string& res_name, vl::Resourc
 
 
 void
-eqOgre::ResourceManager::getInstanceData(eq::net::DataOStream& os)
+eqOgre::ResourceManager::getInstanceData( co::DataOStream& os )
 {
 	// Serialize resource paths, used by Ogre
 	os << _search_paths;
@@ -207,7 +207,7 @@ eqOgre::ResourceManager::getInstanceData(eq::net::DataOStream& os)
 
 
 void
-eqOgre::ResourceManager::applyInstanceData(eq::net::DataIStream& is)
+eqOgre::ResourceManager::applyInstanceData( co::DataIStream& is )
 {
 	// Deserialize resource paths, used by Ogre
 	is >> _search_paths;
@@ -225,8 +225,8 @@ eqOgre::ResourceManager::applyInstanceData(eq::net::DataIStream& is)
 
 
 /// ---------- Global -----------
-eq::net::DataOStream &
-eqOgre::operator<<(eqOgre::Resource& res, eq::net::DataOStream& os)
+co::DataOStream &
+eqOgre::operator<<(eqOgre::Resource& res, co::DataOStream& os)
 {
 	os << res.getName();
 	os << res.getRawMemory().size;
@@ -238,8 +238,8 @@ eqOgre::operator<<(eqOgre::Resource& res, eq::net::DataOStream& os)
 	return os;
 }
 
-eq::net::DataIStream &
-eqOgre::operator>>(eqOgre::Resource& res, eq::net::DataIStream& is)
+co::DataIStream &
+eqOgre::operator>>(eqOgre::Resource& res, co::DataIStream& is)
 {
 	std::string name;
 	size_t size;

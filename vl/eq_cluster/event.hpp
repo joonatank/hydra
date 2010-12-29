@@ -21,7 +21,7 @@
 #include <typeinfo>
 #include <iostream>
 
-#include <eq/base/clock.h>
+#include <co/base/clock.h>
 
 #include "keycode.hpp"
 

@@ -3,10 +3,10 @@
 
 #include "math/math.hpp"
 
-#include <OgreVector3.h>
-#include <OgreQuaternion.h>
-#include <OgreMatrix4.h>
-#include <OgreColourValue.h>
+#include <OGRE/OgreVector3.h>
+#include <OGRE/OgreQuaternion.h>
+#include <OGRE/OgreMatrix4.h>
+#include <OGRE/OgreColourValue.h>
 
 namespace vl
 {

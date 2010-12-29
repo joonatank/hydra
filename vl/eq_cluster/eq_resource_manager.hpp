@@ -10,7 +10,7 @@
 #ifndef EQOGRE_RESOURCE_MANAGER_HPP
 #define EQOGRE_RESOURCE_MANAGER_HPP
 
-#include <eq/net/object.h>
+#include <co/object.h>
 
 // Base class
 #include "resource_manager.hpp"
@@ -20,7 +20,7 @@
 namespace eqOgre
 {
 
-class ResourceManager : public vl::ResourceManager, public eq::net::Object
+class ResourceManager : public vl::ResourceManager, public co::Object
 {
 public :
 	ResourceManager( void );
@@ -76,8 +76,8 @@ protected :
 	/// Find and copy the resource from the stack
 	bool _findResource( std::string const &res_name, vl::Resource &resource ) const;
 
-	virtual void getInstanceData( eq::net::DataOStream& os );
-	virtual void applyInstanceData( eq::net::DataIStream& is );
+	virtual void getInstanceData( co::DataOStream& os );
+	virtual void applyInstanceData( co::DataIStream& is );
 
 	std::vector<Resource> _resources;
 
@@ -87,12 +87,12 @@ protected :
 
 };	// class ResourceManager
 
-eq::net::DataOStream &
-operator<<( Resource &res, eq::net::DataOStream& os );
+co::DataOStream &
+operator<<( Resource &res, co::DataOStream& os );
 
 
-eq::net::DataIStream &
-operator>>( Resource &res, eq::net::DataIStream& is );
+co::DataIStream &
+operator>>( Resource &res, co::DataIStream& is );
 
 }	// namespace eqOgre
 
