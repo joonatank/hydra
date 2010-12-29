@@ -19,8 +19,8 @@ namespace eqOgre
 {
 
 /**
-    * The rendering entity, updating a part of a Window.
-    */
+ * The rendering entity, updating a part of a Window.
+ */
 class Channel : public eq::Channel
 {
 public:
@@ -32,17 +32,17 @@ public:
 
 protected:
 	/// Equalizer overrides
-    virtual bool configInit( const eq::uint128_t &initID );
+	virtual bool configInit( const eq::uint128_t &initID );
 	virtual bool configExit();
-    //virtual void frameClear( const uint32_t frameID );
+//	virtual void frameClear( const uint32_t frameID );
 
 	/// Overrides all the equalizer frame draw methods
 	/// Creating custom frustum and applying head matrix
-    virtual void frameDraw( const eq::uint128_t &frameID );
+	virtual void frameDraw( const eq::uint128_t &frameID );
 
-	virtual void frameFinish( const eq::uint128_t &frameID, uint32_t const frameNumber  );
+//	virtual void frameFinish( const eq::uint128_t &frameID, uint32_t const frameNumber  );
 
-	virtual void frameViewFinish( const eq::uint128_t &frameID );
+//	virtual void frameViewFinish( const eq::uint128_t &frameID );
 
 	// Some task methods
 	void setOgreFrustum( void );
@@ -60,7 +60,6 @@ protected:
 
 	// distribution related
 	FrameData _frame_data;
-
 };
 
 }

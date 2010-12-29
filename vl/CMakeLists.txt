@@ -69,6 +69,7 @@ set( HEADERS
 	eq_cluster/frame_data.hpp
 	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
+	eq_cluster/nodeFactory.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp

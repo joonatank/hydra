@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
 #ifndef EQ_OGRE_PYTHON_HPP
 #define EQ_OGRE_PYTHON_HPP
 

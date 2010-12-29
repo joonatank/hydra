@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *
+ */
 #include "client.hpp"
 
 #include "eq_cluster/config.hpp"
@@ -68,21 +72,27 @@ bool eqOgre::Client::run(void )
 
 		config->startFrame(++frame);
 		if( config->getError( ))
-            EQWARN << "Error during frame start: " << config->getError()
-                   << std::endl;
+		{
+			EQWARN << "Error during frame start: " << config->getError() << std::endl;
+		}
 		config->finishFrame();
 
         while( hasCommands() ) // execute non-critical pending commands
         {
             processCommand();
         }
-		
-		config->handleEvents(); // process all pending events
 
+		config->handleEvents(); // process all pending events
+	
 		rendering_time += frame_clock.getTimed();
+		double sleep_time = 16.66-frame_clock.getTimed();
 		// Sleep enough to get a 60 fps but no more
+		// NOTE Of course because the converting to uint makes the time really huge
+		// Of course the next question is why the time is negative without rendering data
+		// i.e. why it would take more than 16.66ms for rendering a frame without data
 		// TODO the fps should be configurable
-		vl::msleep( 16.66-frame_clock.getTimed() );
+		if( sleep_time > 0 )
+		{ vl::msleep( (uint32_t)sleep_time ); }
 
 		// Print info every two hundred frame
 		if( (frame % 200) == 0 )

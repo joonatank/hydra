@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ *
+ */
 #ifndef VL_BASE_PRINT_HPP
 #define VL_BASE_PRINT_HPP
 

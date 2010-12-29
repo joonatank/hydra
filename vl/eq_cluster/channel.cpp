@@ -94,8 +94,6 @@ eqOgre::Channel::frameClear( const uint32_t )
 void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
-	std::cerr << "eqOgre::Channel::frameDraw" << std::endl;
-
 	// Distribution
 	_frame_data.syncAll( getConfig() );
 	updateDistribData();
@@ -113,24 +111,7 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 	setOgreFrustum();
 
 	_viewport->update();
-	
-	std::cerr << "eqOgre::Channel::frameDraw done" << std::endl;
 }
-
-void 
-eqOgre::Channel::frameFinish( const eq::uint128_t &frameID, uint32_t const frameNumber )
-{
-	eq::Channel::frameFinish( frameID, frameNumber );
-	std::cerr << "eqOgre::Channel::frameFinish" << std::endl;
-}
-
-void 
-eqOgre::Channel::frameViewFinish( const eq::uint128_t &frameID )
-{
-	eq::Channel::frameViewFinish( frameID );
-	std::cerr << "eqOgre::Channel::frameViewFinish" << std::endl;
-}
-
 
 void
 eqOgre::Channel::setOgreFrustum( void )

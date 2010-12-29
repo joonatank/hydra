@@ -296,16 +296,11 @@ bool eqOgre::Window::configExit(void )
 void
 eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
 {
-	std::cerr << "eqOgre::Window::frameFinish" << std::endl;
-
 	eq::Window::frameFinish(frameID, frameNumber);
 
 	EQASSERT( _keyboard && _mouse );
-//	std::cerr << "Capturin keyboard and mouse" << std::endl;
 	_keyboard->capture();
 	_mouse->capture();
-
-	std::cerr << "eqOgre::Window::frameFinish done" << std::endl;
 }
 
 bool
@@ -339,7 +334,7 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 
 	default:
 		EQERROR << "Window system " << pipe->getWindowSystem()
-		<< " not implemented or supported" << std::endl;
+			<< " not implemented or supported" << std::endl;
 		return false;
 	}
 

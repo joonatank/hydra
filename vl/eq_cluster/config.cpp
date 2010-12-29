@@ -212,9 +212,6 @@ eqOgre::Config::toggleBackgroundSound()
 uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
-	
-	std::cerr << "eqOgre::Config::startFrame" << std::endl;
-	
 	// Process Tracking
 	// If we have a tracker object update it, the update will handle all the
 	// callbacks and appropriate updates (head matrix and scene nodes).
@@ -229,10 +226,8 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 	_event_manager->processEvents( &frame_trig );
 
 	eq::uint128_t version = _frame_data.commitAll();
-	std::cerr << "FrameData version = " << version << std::endl;
 
-	uint32_t retval = eq::Config::startFrame( 0 );
-	std::cerr << "eqOgre::Config::startFrame done" << std::endl;	
+	uint32_t retval = eq::Config::startFrame( version );
 
 	return retval;
 }
@@ -528,18 +523,16 @@ char const *CB_INFO_TEXT = "Config : OIS event received : ";
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-	std::cerr << "Received event" << std::endl;
-
 	bool redraw = false;
 	switch( event->data.type )
 	{
 		case eq::Event::KEY_PRESS :
 
-//			redraw = _handleKeyPressEvent(event->data.keyPress);
+			redraw = _handleKeyPressEvent(event->data.keyPress);
 			break;
 
 		case eq::Event::KEY_RELEASE :
-//			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
+			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
 
 			break;
 

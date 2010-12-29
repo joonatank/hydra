@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *
+ */
 #ifndef EQ_OGRE_CLIENT_HPP
 #define EQ_OGRE_CLIENT_HPP
 

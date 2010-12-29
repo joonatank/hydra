@@ -1,4 +1,4 @@
-/*	Joonatan Kuosa
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-03
  *
  *	Base class for some math helper functions and typedefs for the math
