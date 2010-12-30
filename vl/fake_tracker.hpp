@@ -28,8 +28,8 @@ public :
 	// Empty function
 	void mainloop( void ) {}
 
-};
+};	// class FakeTracker
 
-}
+}	// namespace vl
 
 #endif

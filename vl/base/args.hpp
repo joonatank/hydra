@@ -1,4 +1,4 @@
-/**	Joonatan Kuosa
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-04
  *
  * 	class Args
@@ -65,9 +65,11 @@ private :
 	char **_argv;
 	size_t _argc;
 	size_t _size;
-};
+
+};	// class Args
 
 	std::ostream &operator<<( std::ostream &os, Args const &arg );
+
 }	// namespace vl
 
 inline std::ostream &
@@ -79,4 +81,4 @@ vl::operator<<( std::ostream &os, vl::Args const &arg )
 	return os;
 }
 
-#endif
+#endif	// VL_FAKE_ARGS_HPP

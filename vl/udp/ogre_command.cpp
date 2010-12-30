@@ -1,6 +1,14 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-09
+ */
+
+// Interface
 #include "ogre_command.hpp"
 
 #include "base/exceptions.hpp"
+
+// Necessary for vl::scalar
+#include "math/math.hpp"
 
 /// Factory method
 vl::udp::CommandRefPtr
@@ -85,9 +93,9 @@ vl::udp::SetPosition::operator() ( void )
 
 void vl::udp::SetPosition::copy(size_t size, std::vector< double >& vec)
 {
-	_pos[0] = vec.at(0);
-	_pos[1] = vec.at(1);
-	_pos[2] = vec.at(2);
+	_pos[0] = scalar(vec.at(0));
+	_pos[1] = scalar(vec.at(1));
+	_pos[2] = scalar(vec.at(2));
 
 }
 
@@ -136,7 +144,7 @@ void vl::udp::SetQuaternion::copy(size_t size, std::vector< double >& vec)
 {
 	for( size_t i = 0; i < size; ++i )
 	{
-		getQuaternion()[i] = vec.at(i);
+		getQuaternion()[i] = scalar(vec.at(i));
 	}
 }
 
@@ -192,7 +200,7 @@ vl::udp::SetAngle::setAngleAxis( const Ogre::Radian& angle, const Ogre::Vector3&
 void vl::udp::SetAngle::copy(size_t size, std::vector< double >& vec)
 {
 	// New angle
-	setAngle( Ogre::Radian( vec.at(0) ) );
+	setAngle( Ogre::Radian( scalar(vec.at(0)) ) );
 }
 
 /// SetAngleAxis Command ///
@@ -205,9 +213,9 @@ vl::udp::SetAngleAxis::copy(size_t size, std::vector< double >& vec)
 {
 	// New Axis
 	Ogre::Vector3 axis;
-	axis[0] = vec.at(0);
-	axis[1] = vec.at(1);
-	axis[2] = vec.at(2);
+	axis[0] = scalar(vec.at(0));
+	axis[1] = scalar(vec.at(1));
+	axis[2] = scalar(vec.at(2));
 
-	setAngleAxis( Ogre::Radian( vec.at(3) ), axis );
+	setAngleAxis( Ogre::Radian( scalar(vec.at(3)) ), axis );
 }

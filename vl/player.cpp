@@ -1,4 +1,6 @@
-
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ */
 #include "player.hpp"
 
 #include "math/conversion.hpp"

@@ -15,11 +15,13 @@
 #define VL_TRACKER_HPP
 
 
-// #include "eq_cluster/event.hpp"
 #include "eq_cluster/scene_node.hpp"
 #include "eq_cluster/trigger.hpp"
 
 #include "base/typedefs.hpp"
+
+// Necessary for vl::scalar and vl::Transform
+#include "math/math.hpp"
 
 namespace vl
 {
@@ -96,12 +98,12 @@ public :
 	virtual vl::TrackerTrigger *getTrigger( void );
 
 	/// Callback function for updating the Sensor data
-	virtual void update( Transform const &data );
+	virtual void update( vl::Transform const &data );
 
 protected :
 	vl::TrackerTrigger *_trigger;
 
-	Transform _default_value;
+	vl::Transform _default_value;
 
 };
 

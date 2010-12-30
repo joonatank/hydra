@@ -1,3 +1,6 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ */
 
 #include "game_manager.hpp"
 

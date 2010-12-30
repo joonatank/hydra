@@ -29,7 +29,6 @@
 namespace vl
 {
 
-
 void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
 
 /// Creates an Transformation from vrpn data
@@ -39,8 +38,9 @@ inline vl::Transform
 createTransform( vrpn_float64 const *pos, vrpn_float64 const *quat )
 {
 	// TODO remove hard-coded flipping of the z axis
-	return Transform( Ogre::Vector3( pos[0], pos[1], -pos[2] ),
-					Ogre::Quaternion( quat[3], quat[0], quat[1], quat[2] ) );
+	// After it's removed this can use the conversion functions in math/convert.hpp
+	return Transform( Ogre::Vector3( scalar(pos[0]), scalar(pos[1]), scalar(-pos[2]) ),
+					Ogre::Quaternion( scalar(quat[3]), scalar(quat[0]), scalar(quat[1]), scalar(quat[2]) ) );
 }
 
 

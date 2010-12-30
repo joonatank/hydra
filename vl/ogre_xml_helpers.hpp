@@ -3,8 +3,6 @@
  *
  *	Helper functions for parsing XML files
  *	Depends on Ogre Math
- *
- *
  */
 
 #include <OGRE/OgreVector3.h>
@@ -32,4 +30,4 @@ Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
 Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
 Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
 
-}
+}	// namespace vl

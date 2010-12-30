@@ -1,3 +1,8 @@
+/**	Joonatan Kuosa
+ *	2010-02
+ *
+ *	Exceptions used by eqOgre.
+ */
 #ifndef VL_EXCEPTIONS_HPP
 #define VL_EXCEPTIONS_HPP
 
@@ -209,4 +214,4 @@ namespace vl
 
 }	// namespace vl
 
-#endif
+#endif	// VL_EXCEPTIONS_HPP

@@ -1,4 +1,7 @@
-
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-04
+ */
+// Interface
 #include "args.hpp"
 
 #include "base/exceptions.hpp"

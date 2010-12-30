@@ -20,11 +20,12 @@ endif( UNIX )
 if( WIN32 )
 	add_definitions( -DVL_WIN32		# Custom value used throughout the VL project
 					 -DNOMINMAX		# Don't pollute the global namespace
-					 -DNTDDI_WINXP
+					 -D_WIN32_WINNT=0x0501	# Windows XP target
 					 -DNOCOMM
 					 -DNOGDI
 					 -DNOSOUND
-					 -DEQ_RELEASE_ASSERT
+					 #-DEQ_RELEASE_ASSERT
+					 # Should not need release asserts anymore
 					 )
 elseif( UNIX )
 	add_definitions( -DVL_UNIX -DLinux )
@@ -53,20 +54,13 @@ find_package( VRPN REQUIRED )
 
 
 ######### Find OGRE ##########
-# We should use find_file to find the Ogre cmake helpers
-# TODO this needs a bit more work
-#find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
-#	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
-#	)
-
-#set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
-
-# TODO should expose Ogre and OpenGL packages to the user
 find_package(OpenGL REQUIRED)
 find_package(OGRE REQUIRED)
 
+######### Find OIS ###########
 find_package(OIS REQUIRED )
 
+######### Find CEGUI #########
 find_package( CEGUI QUIET )
 
 if( ${CEGUI_FOUND} )

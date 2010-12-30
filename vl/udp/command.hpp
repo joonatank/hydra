@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-09
+ */
+
 #ifndef VL_UDP_COMMAND_HPP
 #define VL_UDP_COMMAND_HPP
 

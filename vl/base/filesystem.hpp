@@ -29,7 +29,6 @@ namespace vl
  *	Windows : ${PATH}, ${PATH}/OGRE
  *	Linux : /usr/lib, /usr/local/lib, /usr/lib/OGRE, /usr/local/lib/OGRE
  **/
-// TODO test on Windows
 std::string findPlugin( std::string const &plugin );
 
 /**	Find file
