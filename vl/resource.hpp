@@ -79,6 +79,10 @@ protected :
 
 };	// class Resource
 
+/**	TextResource
+ *	Stores a text into memory. 
+ *	The resource has UNIX line-endings and is NULL ended.
+ */
 class TextResource : public Resource
 {
 public :
@@ -86,11 +90,14 @@ public :
 
 	virtual void set( std::vector<char> const &mem );
 
-	/// Implicit conversion to base class, as we have the same data
-	operator Resource()
+	/// Implicit conversion to the base class, as we have the same data
+	operator Resource() const
 	{
 		return Resource( _name, _memory );
 	}
+
+	// TODO add conversion to const char *
+	// TODO add conversion to std::string
 };
 
 }	// namespace vl
