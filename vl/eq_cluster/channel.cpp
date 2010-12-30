@@ -17,9 +17,8 @@ eqOgre::Channel::~Channel( void )
 eqOgre::DistributedSettings const &
 eqOgre::Channel::getSettings( void ) const
 {
-	eqOgre::Window const *win = dynamic_cast<eqOgre::Window const *>( getWindow() );
-	EQASSERT( win );
-	return win->getSettings();
+	EQASSERT( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
+	return static_cast<eqOgre::Window const *>( getWindow() )->getSettings();
 }
 
 bool
@@ -67,6 +66,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	}
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
+
 	return true;
 }
 
@@ -78,7 +78,7 @@ eqOgre::Channel::configExit()
 
 	// Unmap data
 	EQINFO << "Unmapping FrameData." << std::endl;
-	_frame_data.unmapData( getConfig() );
+	_frame_data.unmapData();
 
 	return retval;
 }
@@ -106,7 +106,7 @@ void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
 	// Distribution
-	_frame_data.syncAll( getConfig() );
+	_frame_data.syncAll();
 	updateDistribData();
 
 	// From equalizer channel::frameDraw

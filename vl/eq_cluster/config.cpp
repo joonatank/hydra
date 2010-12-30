@@ -94,7 +94,7 @@ eqOgre::Config::exit( void )
 
 	EQINFO << "Deregistering distributed data." << std::endl;
 
-	_game_manager->getSceneManager()->deregisterData( this );
+	_game_manager->getSceneManager()->deregisterData();
 	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
 
 	eqOgre::ResourceManager *res_man =
@@ -178,7 +178,7 @@ eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
 		}
 	}
 
-	_game_manager->getSceneManager()->addSceneNode( node, this );
+	_game_manager->getSceneManager()->addSceneNode( node );
 }
 
 void
