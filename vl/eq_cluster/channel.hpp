@@ -35,9 +35,7 @@ protected:
 	virtual bool configInit( const eq::uint128_t &initID );
 	virtual bool configExit();
 
-	virtual void frameClear( const eq::uint128_t& frameID );
-	virtual void frameAssemble( const eq::uint128_t &frameID );
-	virtual void frameReadback( const eq::uint128_t &frameID );
+//	virtual void frameClear( const eq::uint128_t& frameID );
 
 	/// Overrides all the equalizer frame draw methods
 	/// Creating custom frustum and applying head matrix

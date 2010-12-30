@@ -26,29 +26,11 @@
 namespace vl
 {
 
-
 /// Trigger class that has a callback to an Action (new event handling design).
 class TrackerTrigger : public vl::TransformActionTrigger
 {
 public :
 	TrackerTrigger( void );
-
-	/// --------- Overrides from eqOgre::Trigger ------------
-	/// This class is not a specialization of anything always returns false
-	virtual bool isSpecialisation( Trigger const *other ) const
-	{ return false; }
-
-	// NOTE problematic to say the least... we return 0 for now
-	virtual double value( void ) const
-	{ return 0; }
-
-	/// Two triggers are equal if they have the same name
-	/// Actions they execute don't matter.
-	virtual bool isEqual( vl::Trigger const &other ) const
-	{
-		TrackerTrigger const &a = (TrackerTrigger const &)other;
-		return( a._name == _name );
-	}
 
 	virtual std::string const &getTypeName( void ) const;
 

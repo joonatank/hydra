@@ -87,31 +87,16 @@ eqOgre::Channel::configExit()
 // NOTE overload with empty function
 // seems like we don't need these, Ogre Viewport will clear it self
 // before rendering if we don't instruct it to do otherwise
+/*
 void
 eqOgre::Channel::frameClear( const eq::uint128_t & )
 {
 //	TODO channel should do all rendering tasks
 //	it should use Ogre::Viewport to do so.
-//	if( _camera && _ogre_viewport )
-//	{ _ogre_viewport->clear(); }
+	if( _camera && _ogre_viewport )
+	{ _ogre_viewport->clear(); }
 }
-
-// NOTE overload with empty function
-// Seems like we don't need these for now. As we don't use offscreen rendering.
-void
-eqOgre::Channel::frameAssemble( const eq::uint128_t & )
-{
-// 	eq::Channel::frameAssemble(frameID);
-}
-
-// NOTE overload with empty function
-// Seems like we don't need these for now. As we don't use offscreen rendering.
-void
-eqOgre::Channel::frameReadback( const eq::uint128_t & )
-{
-// 	eq::Channel::frameReadback(frameID);
-}
-
+*/
 
 /** Override frameDraw to call Viewport::update
  *
