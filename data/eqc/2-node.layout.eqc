@@ -1,12 +1,13 @@
 #Equalizer 1.0 ascii
 
-# 'Hello, World!' config: one window rendering from the application process.
 server
 {
+	connection { TCPIP_port 4242 hostname "127.0.0.1" }
     config
     {
         appNode
         {
+		connection { hostname "127.0.0.1" }
             pipe
             {
                 window
@@ -21,7 +22,7 @@ server
         {
 			# TODO this file should be copied using CMake and the hostname
 			# and port should be configured automatically
-			connection { TCPIP_port 4242 hostname "leviathan" }
+			connection { TCPIP_port 4243 hostname "127.0.0.1" }
             pipe
             {
                 window

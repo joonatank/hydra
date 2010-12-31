@@ -51,6 +51,7 @@ eqOgre::Client::run(void )
 	if( !_init( config ) )
 	{ return false; }
 
+	EQASSERT( _config );
 	_clock.reset();
 	_rendering_time = 0;
 	// 4. run main loop
@@ -64,10 +65,6 @@ eqOgre::Client::run(void )
 
 	return true;
 }
-
-
-
-
 
 bool
 eqOgre::Client::_init( eq::Config *config )
@@ -84,10 +81,14 @@ eqOgre::Client::_init( eq::Config *config )
 
 	if( !_config->init(0) )
 	{
-		_server->releaseConfig( config );
+		EQWARN << "Error during initialization: " << config->getError()
+			<< std::endl;
+		_server->releaseConfig( _config );
 		disconnectServer( _server );
 		return false;
 	}
+	if( _config->getError() )
+	{ EQWARN << "Error during initialization: " << config->getError() << std::endl; }
 
 	std::string song_name("The_Dummy_Song.ogg");
 	_game_manager->createBackgroundSound(song_name);
@@ -120,8 +121,10 @@ eqOgre::Client::_render( uint32_t const frame )
 
 	_frame_clock.reset();
 
-	_config->startFrame(frame);
+	_config->startFrame(frame);	
 	_config->finishFrame();
+	if( _config->getError() )
+	{ EQWARN << "Error during frame start: " << _config->getError() << std::endl; }
 
 	_rendering_time += _frame_clock.getTimed();
 	// Sleep enough to get a 60 fps but no more
