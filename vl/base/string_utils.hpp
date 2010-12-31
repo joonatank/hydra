@@ -50,6 +50,17 @@ namespace vl
 		broken_path.push_back( str );
 	}
 
+	inline
+	void replace_line_endings( std::string &str )
+	{
+		size_t index = str.find( "\r\n" ); 
+		while( index != std::string::npos )
+		{
+			str.erase(index,1);
+			index = str.find( "\r\n" );
+		}
+	}
+
 	template<typename T>
 	inline
 	std::string to_string( T const &t )
@@ -73,3 +84,4 @@ namespace vl
 }	// namespace vl
 
 #endif
+

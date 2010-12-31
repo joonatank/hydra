@@ -8,8 +8,8 @@
  *	moved ref ptr definition to typedefs.hpp
  */
 
-#ifndef ENVSETTINGS_H
-#define ENVSETTINGS_H
+#ifndef VL_ENVSETTINGS_HPP
+#define VL_ENVSETTINGS_HPP
 
 #include <string>
 #include <vector>
@@ -26,9 +26,7 @@ namespace vl
 
 class EnvSettings
 {
-
 public :
-
 	struct Tracking
 	{
 		Tracking( std::string const &file_name, bool u = "true" )
@@ -161,4 +159,4 @@ protected :
 
 }	// namespace vl
 
-#endif // ENVSETTINGS_H
+#endif // VL_ENVSETTINGS_HPP

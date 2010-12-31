@@ -42,7 +42,7 @@ namespace eqOgre
 		// Time used for rendering the frames
 		// (well not excatly as there is lots of other stuff in there also)
 		// but this does not have the sleeping time
-		float _rendering_time;
+		double _rendering_time;
 
 		vl::SettingsRefPtr _settings;
 

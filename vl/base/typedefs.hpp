@@ -1,3 +1,7 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ */
+
 #ifndef VL_TYPEDEFS_HPP
 #define VL_TYPEDEFS_HPP
 
@@ -52,17 +56,14 @@ namespace vl
 
 	typedef std::map<std::string, std::string> NamedValuePairList;
 
-	// TODO define angle class
-	typedef double angle;
-
 namespace ogre
 {
 	class Root;
 
 	typedef boost::shared_ptr<Root> RootRefPtr;
 
-}
+}	// namespace ogre
 
 }	// namespace vl
 
-#endif
+#endif	// VL_TYPEDEFS_HPP

@@ -37,7 +37,7 @@ public :
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy
 	/// them when necessary.
-	void addSceneNode( SceneNodePtr node, eq::Config *session );
+	void addSceneNode( SceneNodePtr node );
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -66,15 +66,15 @@ public :
 
 	eq::uint128_t commitAll( void );
 
-	void syncAll( eq::Config *session );
+	void syncAll( void );
 
 	bool registerData( eq::Config *session );
 
-	void deregisterData( eq::Config *session );
+	void deregisterData( void );
 
 	void mapData( eq::Config *session, eq::base::UUID const &id );
 
-	void unmapData( eq::Config *session );
+	void unmapData( void );
 
 	enum DirtyBits
 	{
@@ -88,9 +88,9 @@ protected :
 	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
 	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
 
-	void _mapObject( eq::Config *session, SceneNodeIDPair &node );
+	void _mapObject( SceneNodeIDPair &node );
 
-	bool _registerObject( eq::Config *session, SceneNodeIDPair &node );
+	bool _registerObject( SceneNodeIDPair &node );
 
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
@@ -105,6 +105,8 @@ private :
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
+
+	eq::Config *_config;
 
 };	// class FrameData
 

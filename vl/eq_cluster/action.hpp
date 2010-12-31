@@ -12,28 +12,11 @@
 
 #include <co/base/clock.h>
 
+// Necessary for vl::scalar
+#include "math/math.hpp"
+
 namespace vl
 {
-
-
-struct Transform
-{
-	Transform( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
-				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
-		: position( pos ), quaternion( rot )
-	{}
-
-	Ogre::Vector3 position;
-	Ogre::Quaternion quaternion;
-};
-
-inline std::ostream &operator<<( std::ostream &os, Transform const &d )
-{
-	os << "Position = " << d.position << " : Orientation = " << d.quaternion;
-
-	return os;
-}
-
 
 /// Actions
 
@@ -119,7 +102,8 @@ private :
 	BasicActionPtr _action_on;
 	BasicActionPtr _action_off;
 	bool _state;
-};
+
+};	// class ToggleActionProxy
 
 
 /// Action proxy with a timer and time limit
@@ -182,7 +166,7 @@ private :
 class FloatAction : public Action
 {
 public :
-	virtual void execute( double const &data ) = 0;
+	virtual void execute( vl::scalar const &data ) = 0;
 };
 
 typedef FloatAction *FloatActionPtr;
@@ -235,7 +219,7 @@ public :
 	std::string getTypeName( void ) const
 	{ return "FloatActionMap"; }
 
-	double value;
+	vl::scalar value;
 
 private :
 	FloatActionPtr _action;
@@ -249,7 +233,7 @@ public :
 		: axis( Ogre::Vector3::ZERO )
 	{}
 
-	void execute( double const &data )
+	void execute( vl::scalar const &data )
 	{
 		if( _action )
 		{ _action->execute( data*axis ); }

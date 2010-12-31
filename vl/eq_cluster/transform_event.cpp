@@ -1,4 +1,9 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *
+ */
 
+// Interface header
 #include "transform_event.hpp"
 
 vl::MoveAction::MoveAction( void )
@@ -7,7 +12,7 @@ vl::MoveAction::MoveAction( void )
 		_speed(1), _angular_speed( Ogre::Degree(60) )
 {}
 
-void vl::MoveAction::execute(void )
+void vl::MoveAction::execute( void )
 {
 	double time = _clock.getTimed()/1000;
 

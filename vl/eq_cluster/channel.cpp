@@ -17,9 +17,8 @@ eqOgre::Channel::~Channel( void )
 eqOgre::DistributedSettings const &
 eqOgre::Channel::getSettings( void ) const
 {
-	eqOgre::Window const *win = dynamic_cast<eqOgre::Window const *>( getWindow() );
-	EQASSERT( win );
-	return win->getSettings();
+	EQASSERT( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
+	return static_cast<eqOgre::Window const *>( getWindow() )->getSettings();
 }
 
 bool
@@ -67,6 +66,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	}
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
+
 	return true;
 }
 
@@ -78,7 +78,7 @@ eqOgre::Channel::configExit()
 
 	// Unmap data
 	EQINFO << "Unmapping FrameData." << std::endl;
-	_frame_data.unmapData( getConfig() );
+	_frame_data.unmapData();
 
 	return retval;
 }
@@ -87,31 +87,16 @@ eqOgre::Channel::configExit()
 // NOTE overload with empty function
 // seems like we don't need these, Ogre Viewport will clear it self
 // before rendering if we don't instruct it to do otherwise
+/*
 void
 eqOgre::Channel::frameClear( const eq::uint128_t & )
 {
 //	TODO channel should do all rendering tasks
 //	it should use Ogre::Viewport to do so.
-//	if( _camera && _ogre_viewport )
-//	{ _ogre_viewport->clear(); }
+	if( _camera && _ogre_viewport )
+	{ _ogre_viewport->clear(); }
 }
-
-// NOTE overload with empty function
-// Seems like we don't need these for now. As we don't use offscreen rendering.
-void
-eqOgre::Channel::frameAssemble( const eq::uint128_t & )
-{
-// 	eq::Channel::frameAssemble(frameID);
-}
-
-// NOTE overload with empty function
-// Seems like we don't need these for now. As we don't use offscreen rendering.
-void
-eqOgre::Channel::frameReadback( const eq::uint128_t & )
-{
-// 	eq::Channel::frameReadback(frameID);
-}
-
+*/
 
 /** Override frameDraw to call Viewport::update
  *
@@ -121,7 +106,7 @@ void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
 	// Distribution
-	_frame_data.syncAll( getConfig() );
+	_frame_data.syncAll();
 	updateDistribData();
 
 	// From equalizer channel::frameDraw

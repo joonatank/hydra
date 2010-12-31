@@ -1,4 +1,6 @@
-
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-11
+ */
 // Header for this file
 #include "filesystem.hpp"
 

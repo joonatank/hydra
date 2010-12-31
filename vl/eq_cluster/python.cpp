@@ -1,7 +1,9 @@
-
+/**	Joonatan Kuosa
+ *	2010-12
+ *
+ *	Python
+ */
 #include "python.hpp"
-
-// #include "config.hpp"
 
 #include "config_python.hpp"
 
@@ -56,7 +58,6 @@ eqOgre::PythonContext::~PythonContext(void )
 {
 }
 
-
 void
 eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
 {
@@ -66,7 +67,6 @@ eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
 	if( !script.get() )
 	{ return; }
 
-	std::cerr << "Python script = " << std::endl << script.get() << std::endl;
 	try
 	{
 		// Run a python script.

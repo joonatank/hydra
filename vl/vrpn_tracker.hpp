@@ -18,6 +18,8 @@
 
 #include "tracker.hpp"
 
+#include "math/conversion.hpp"
+
 #include <vrpn_Tracker.h>
 
 #include <string>
@@ -29,7 +31,6 @@
 namespace vl
 {
 
-
 void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
 
 /// Creates an Transformation from vrpn data
@@ -38,9 +39,7 @@ void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t);
 inline vl::Transform
 createTransform( vrpn_float64 const *pos, vrpn_float64 const *quat )
 {
-	// TODO remove hard-coded flipping of the z axis
-	return Transform( Ogre::Vector3( pos[0], pos[1], -pos[2] ),
-					Ogre::Quaternion( quat[3], quat[0], quat[1], quat[2] ) );
+	return Transform( vl::math::convert_vec(pos), vl::math::convert_quat(quat) );
 }
 
 
@@ -64,7 +63,6 @@ public :
 protected :
 	// Callback function
 	/// Updates only sensors that are in use
-
 	void update( vrpn_TRACKERCB const t );
 
 	vrpn_Tracker_Remote *_tracker;

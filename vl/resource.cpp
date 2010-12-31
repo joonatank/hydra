@@ -1,6 +1,7 @@
 /**	Joonatan Kuosa
  *	2010-12
  */
+
 // Interface
 #include "resource.hpp"
 
@@ -8,9 +9,12 @@
 #include <cstring>
 // Necessary for EQASSERT
 #include <co/base/debug.h>
+// Necessary for replacing line endings
+#include "base/string_utils.hpp"
 
 /// ------------------ Resource -----------------------
-void vl::Resource::set( char const *mem, size_t size )
+void 
+vl::Resource::set( char const *mem, size_t size )
 {
 	EQASSERT( (size == 0 && mem == 0) || size > 0 );
 	_memory.resize(size);
@@ -19,26 +23,28 @@ void vl::Resource::set( char const *mem, size_t size )
 	{ ::memcpy( &(_memory[0]), mem, size ); }
 }
 
-void vl::Resource::set( std::vector<char> const &mem )
+void 
+vl::Resource::set( std::vector<char> const &mem )
 {
 	_memory = mem;
 }
 
 /// ------------------ TextResource -----------------------
-void vl::TextResource::set( char const *mem, size_t size )
+void 
+vl::TextResource::set( char const *mem, size_t size )
 {
-	vl::Resource::set(mem, size);
-
-	// Convert the ending to NULL terminator
-	if( size > 0 )
-	{ _memory[size-1] = '\0'; }
+	if( mem )
+	{
+		std::string str(mem, size-1);
+		vl::replace_line_endings(str);
+		vl::Resource::set( str.c_str(), str.size()+1 );
+	}
 }
 
-void vl::TextResource::set( std::vector<char> const &mem )
+void 
+vl::TextResource::set( std::vector<char> const &mem )
 {
-	vl::Resource::set(mem);
-
-	// Convert the ending to NULL terminator
-	if( _memory.size() > 0 )
-	{ _memory[_memory.size()-1] = '\0'; }
+	std::string str( mem[0], mem.size()-1 );
+	vl::replace_line_endings(str);
+	vl::Resource::set( str.c_str(), str.size()+1 );
 }
