@@ -5,6 +5,10 @@
  *	2010-11
  *	Added possibility to inherit from this class,
  *	used by distributed project settings to share the project data with slaves.
+ *
+ *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *	Added non-const retrieval methods for QtLauncher.
  */
 
 #ifndef VL_PROJSETTINGS_HPP
@@ -41,10 +45,10 @@ public :
 
 		std::string const &getFile() const
 		{ return _file; }
-		
+
 		bool getChanged( void ) const
 		{ return _changed; }
-		
+
 		void clearChanged( void )
 		{ _changed = false; }
 
@@ -75,10 +79,10 @@ public :
 
 		std::string const &getFile( void ) const
 		{ return _file; }
-		
+
 		bool getChanged( void ) const
 		{ return _changed; }
-		
+
 		void clearChanged( void )
 		{ _changed = false; }
 
@@ -104,28 +108,28 @@ public :
 
 		void setName( std::string const &name )
 		{ _name = name; _changed = true; }
-		
+
 		std::string const &getName( void ) const
 		{ return _name; }
-		
+
 		void sceneOnOff( bool newState )
 		{ _use = newState; _changed = true; }
-		
+
 		bool getUse( void ) const
 		{ return _use; }
-		
+
 		void setFile( std::string const &file )
 		{ _file = file; _changed = true; }
-		
+
 		std::string const &getFile( void ) const
 		{ return _file; }
-		
+
 		void setAttachtoScene( std::string const &scene )
 		{ _attachto_scene = scene; _changed = true; }
-		
+
 		std::string const &getAttachtoScene( void ) const
 		{ return _attachto_scene; }
-		
+
 		void setAttachtoPoint( std::string const &point )
 		{ _attachto_point = point; _changed = true; }
 
@@ -160,7 +164,7 @@ public :
 
 		void setName( std::string const &name )
     	{ _name = name; _changed = true; }
-		
+
 		std::string const &getName( void ) const
 		{ return _name; }
 
@@ -177,12 +181,14 @@ public :
 		ActionMap *addMap( std::string const &file );
 		void rmMap( std::string const &name );
 		ActionMap const *getMapPtr( std::string const &mapName ) const;
+		ActionMap *getMapPtr( std::string const &mapName );
 		ActionMap const *getMapPtr( size_t i ) const;
 		size_t getNmaps() const { return _actionMaps.size(); }
 
 		Script *addScript( std::string const &file );
 		void rmScript( std::string const &name );
 		Script const *getScriptPtr( std::string const &name ) const;
+		Script *getScriptPtr( std::string const &name );
 		Script const *getScriptPtr( size_t i ) const;
 		size_t getNscripts() const { return _scripts.size(); }
 
@@ -220,6 +226,7 @@ public :
 	Case *addCase( std::string const &caseName  );
 	void rmCase( std::string const &caseName );
 	Case const *getCasePtr( std::string const &caseName ) const;
+	Case *getCasePtr( std::string const &caseName );
 	Case const *getCasePtr( size_t i ) const;
 	size_t getNcases( void ) const { return _cases.size(); }
 
