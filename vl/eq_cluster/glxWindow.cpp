@@ -19,7 +19,7 @@ eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
 		return false;
 	}
 
-	eq::PixelViewport pvp = _window->getPixelViewport();
+	eq::PixelViewport pvp = getWindow()->getPixelViewport();
 	if( getIAttribute( eq::Window::IATTR_HINT_FULLSCREEN ) == eq::fabric::ON )
 	{
 		const int screen = DefaultScreen( getXDisplay() );
@@ -29,7 +29,7 @@ eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
 		pvp.x = 0;
 		pvp.y = 0;
 
-		_window->setPixelViewport( pvp );
+		getWindow()->setPixelViewport( pvp );
 	}
 
 	XID drawable = _createWindow( visualInfo, pvp );

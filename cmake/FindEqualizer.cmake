@@ -58,14 +58,18 @@ FIND_LIBRARY(Equalizer_LIBRARY_DEBUG
 	${Equalizer_INCLUDE_DIR}/../lib/debug
 	)
 
-if( Equalizer_LIBRARY_DEBUG AND NOT Equalizer_LIBRARY_RELEASE )
-	set( Equalizer_LIBRARY_RELEASE ${Equalizer_LIBRARY_DEBUG} )
-endif()
+# if( Equalizer_LIBRARY_DEBUG AND NOT Equalizer_LIBRARY_RELEASE )
+# 	set( Equalizer_LIBRARY_RELEASE ${Equalizer_LIBRARY_DEBUG} )
+# endif()
 
 if( Equalizer_LIBRARY_DEBUG AND Equalizer_LIBRARY_RELEASE )
 	set( Equalizer_LIBRARY optimized ${Equalizer_LIBRARY_RELEASE}
 		debug ${Equalizer_LIBRARY_DEBUG}
 		CACHE FILEPATH "Equalizer library" FORCE )
+elseif( Equalizer_LIBRARY_RELEASE )
+	set( Equalizer_LIBRARY ${Equalizer_LIBRARY_RELEASE} CACHE FILEPATH "Equalizer library" FORCE )
+elseif( Equalizer_LIBRARY_DEBUG )
+	set( Equalizer_LIBRARY ${Equalizer_LIBRARY_DEBUG} CACHE FILEPATH "Equalizer library" FORCE )
 else()
 	#	set( Equalizer_LIBRARY CACHE FILEPATH "Equalizer library" FORCE )
 endif()

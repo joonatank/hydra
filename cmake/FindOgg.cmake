@@ -25,7 +25,7 @@ find_path(Ogg_INCLUDE_DIR ogg/ogg.h
 	)
 
 # Common library search paths for both debug and release versions
-set( LIBRARY_SEARCH_PATHS 
+set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
@@ -45,19 +45,23 @@ find_library(Ogg_LIBRARY_RELEASE
 set( Ogg_NAMES_DEBUG ogg_d libogg_d libogg_static_d )
 find_library(Ogg_LIBRARY_DEBUG
 	NAMES ${Ogg_NAMES_DEBUG}
-	PATHS 
+	PATHS
 	${LIBRARY_SEARCH_PATHS}
 	${Ogg_INCLUDE_DIR}/../lib/debug
 	)
 
-if( Ogg_LIBRARY_DEBUG AND NOT Ogg_LIBRARY_RELEASE )
-	set( Ogg_LIBRARY_RELEASE ${Ogg_LIBRARY_DEBUG} )
-endif()
+# if( Ogg_LIBRARY_DEBUG AND NOT Ogg_LIBRARY_RELEASE )
+# 	set( Ogg_LIBRARY_RELEASE ${Ogg_LIBRARY_DEBUG} )
+# endif()
 
 if( Ogg_LIBRARY_DEBUG AND Ogg_LIBRARY_RELEASE )
 	set( Ogg_LIBRARY debug ${Ogg_LIBRARY_DEBUG}
-		optimized ${Ogg_LIBRARY_RELEASE} 
+		optimized ${Ogg_LIBRARY_RELEASE}
 		CACHE FILEPATH "Ogg library" FORCE )
+elseif( Ogg_LIBRARY_RELEASE )
+	set( Ogg_LIBRARY ${Ogg_LIBRARY_RELEASE} CACHE FILEPATH "Ogg library" FORCE )
+elseif( Ogg_LIBRARY_DEBUG )
+	set( Ogg_LIBRARY ${Ogg_LIBRARY_DEBUG} CACHE FILEPATH "Ogg library" FORCE )
 else()
 	#	set( Ogg_LIBRARY CACHE FILEPATH "Ogg library" FORCE )
 endif()

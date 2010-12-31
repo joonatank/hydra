@@ -25,7 +25,7 @@ find_path(OIS_INCLUDE_DIR ogg/ogg.h
 	)
 
 # Common library search paths for both debug and release versions
-set( LIBRARY_SEARCH_PATHS 
+set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
@@ -45,19 +45,23 @@ find_library(OIS_LIBRARY_RELEASE
 set( OIS_NAMES_DEBUG OIS_d libOIS_d )
 find_library(OIS_LIBRARY_DEBUG
 	NAMES ${OIS_NAMES_DEBUG}
-	PATHS 
+	PATHS
 	${LIBRARY_SEARCH_PATHS}
 	${OIS_INCLUDE_DIR}/../lib/debug
 	)
 
-if( OIS_LIBRARY_DEBUG AND NOT OIS_LIBRARY_RELEASE )
-	set( OIS_LIBRARY_RELEASE ${OIS_LIBRARY_DEBUG} )
-endif()
+# if( OIS_LIBRARY_DEBUG AND NOT OIS_LIBRARY_RELEASE )
+# 	set( OIS_LIBRARY_RELEASE ${OIS_LIBRARY_DEBUG} )
+# endif()
 
 if( OIS_LIBRARY_DEBUG AND OIS_LIBRARY_RELEASE )
 	set( OIS_LIBRARY debug ${OIS_LIBRARY_DEBUG}
-		optimized ${OIS_LIBRARY_RELEASE} 
+		optimized ${OIS_LIBRARY_RELEASE}
 		CACHE FILEPATH "OIS library" FORCE )
+elseif( OIS_LIBRARY_RELEASE )
+	set( OIS_LIBRARY ${OIS_LIBRARY_RELEASE} CACHE FILEPATH "OIS library" FORCE )
+elseif( OIS_LIBRARY_DEBUG )
+	set( OIS_LIBRARY ${OIS_LIBRARY_DEBUG} CACHE FILEPATH "OIS library" FORCE )
 else()
 	#set( OIS_LIBRARY CACHE FILEPATH "OIS library" FORCE )
 endif()

@@ -54,16 +54,8 @@ find_package( VRPN REQUIRED )
 
 ######### Find OGRE ##########
 # We should use find_file to find the Ogre cmake helpers
-# TODO this needs a bit more work
-#find_path( OGRE_CMAKE_DIR "FindOGRE.cmake"
-#	HINTS /usr/lib/OGRE/cmake/;/usr/local/lib/OGRE/cmake/;$ENV{OGRE_HOME}/CMake
-#	)
-
-#set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${OGRE_CMAKE_DIR}" )
-
-# TODO should expose Ogre and OpenGL packages to the user
 find_package(OpenGL REQUIRED)
-find_package(OGRE REQUIRED)
+find_package(Ogre REQUIRED)
 
 find_package(OIS REQUIRED )
 
@@ -79,13 +71,8 @@ endif()
 ####### Find cAudio
 # Dependencies for cAudio
 find_package( Ogg REQUIRED )
-
-message( "Ogg library = ${Ogg_LIBRARY}" )
-
 find_package( Vorbis REQUIRED )
-message( "Vorbis library = ${Vorbis_LIBRARY}" )
-
-find_package( OPENAL REQUIRED )
+find_package( OpenAL REQUIRED )
 
 find_package( cAudio REQUIRED )
 
@@ -101,12 +88,6 @@ find_package(Boost COMPONENTS python REQUIRED )
 find_package(PythonLibs REQUIRED )
 
 find_package(PythonInterp REQUIRED )
-
-message( "Boost Libraries = ${Boost_PYTHON_LIBRARIES}" )
-
-message( "Python = ${PYTHON_EXECUTABLE}" )
-
-message( "Python libraries = ${PYTHON_LIBRARIES}" )
 
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
