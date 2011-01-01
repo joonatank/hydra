@@ -50,9 +50,13 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 		return false;
 	}
 
-	eq::base::UUID const &frame_id = getSettings().getFrameDataID();
+	eq::base::UUID const &frame_id = getSettings().getSceneManagerID();
 	EQASSERT( frame_id != eq::base::UUID::ZERO );
 	_frame_data.mapData( config, frame_id );
+
+	eq::base::UUID const &player_id = getSettings().getPlayerID();
+	EQASSERT( player_id != eq::base::UUID::ZERO );
+	getConfig()->mapObject( &_player, player_id );
 
 	// We need to find the node from scene graph
 	EQINFO << "FrameData has " << _frame_data.getNSceneNodes()
@@ -77,8 +81,11 @@ eqOgre::Channel::configExit()
 	bool retval = eq::Channel::configExit();
 
 	// Unmap data
-	EQINFO << "Unmapping FrameData." << std::endl;
+	EQINFO << "Unmapping SceneManager." << std::endl;
 	_frame_data.unmapData();
+
+	EQINFO << "Unmapping Player." << std::endl;
+	getConfig()->unmapObject( &_player );
 
 	return retval;
 }
@@ -106,7 +113,6 @@ void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
 	// Distribution
-	_frame_data.syncAll();
 	updateDistribData();
 
 	// From equalizer channel::frameDraw
@@ -172,6 +178,8 @@ eqOgre::Channel::setOgreFrustum( void )
 void
 eqOgre::Channel::updateDistribData( void )
 {
+	// Update SceneManager
+	_frame_data.syncAll();
 	static uint32_t scene_version = 0;
 	if( _frame_data.getSceneVersion() > scene_version )
 	{
@@ -189,8 +197,10 @@ eqOgre::Channel::updateDistribData( void )
 		scene_version = _frame_data.getSceneVersion();
 	}
 
+	// Update player
+	_player.sync();
 	// Get active camera and change the rendering camera if there is a change
-	std::string const &cam_name = _frame_data.getActiveCamera();
+	std::string const &cam_name = _player.getActiveCamera();
 	if( !cam_name.empty() && cam_name != _active_camera_name )
 	{
 		_active_camera_name = cam_name;

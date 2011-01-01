@@ -20,14 +20,20 @@
 #include <OGRE/OgreMatrix4.h>
 
 #include <eq/client/observer.h>
+#include <eq/fabric/serializable.h>
+
+// TODO should be moved to eq_cluster because this depends on the Equalizer
 
 namespace vl
 {
 
-class Player
+class Player : public eq::fabric::Serializable
 {
 public :
-	Player( eq::Observer *observer );
+	/// Constructor
+	/// Parameters : observer on Master this should be valid
+	///				 on slaves this should be zero
+	Player( eq::Observer *observer = 0 );
 
 	virtual ~Player( void );
 
@@ -36,6 +42,16 @@ public :
 	std::string const &getActiveCamera( void ) const;
 
 	void setHeadMatrix( Ogre::Matrix4 const &m );
+
+	enum DirtyBits
+	{
+		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
+		DIRTY_CAMERA_ENABLE_ROT = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+	};
+
+protected :
+	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
+	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
 
 private :
 	/// Non copyable

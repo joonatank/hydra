@@ -10,10 +10,11 @@
 #include <OGRE/OgreViewport.h>
 #include <OGRE/OgreRenderWindow.h>
 
-#include "tracker.hpp"
+// #include "tracker.hpp"
 #include "base/typedefs.hpp"
 #include "scene_manager.hpp"
 #include "eq_cluster/eq_settings.hpp"
+#include "player.hpp"
 
 namespace eqOgre
 {
@@ -61,6 +62,7 @@ protected:
 
 	// distribution related
 	SceneManager _frame_data;
+	vl::Player _player;
 };
 
 }

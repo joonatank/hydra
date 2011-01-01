@@ -20,16 +20,15 @@ typedef SceneNode * SceneNodePtr;
 class SceneNode : public eq::fabric::Serializable
 {
 public :
-	~SceneNode( void )
-	{}
+	virtual ~SceneNode( void ) {}
 
 	// TODO this should really be ref counted
+	/// SceneNode has a protected Constructor so this method is the only way
+	/// to create one.
 	static SceneNodePtr create( std::string const &name = std::string() );
 
 	std::string const &getName( void ) const
-	{
-		return _name;
-	}
+	{ return _name; }
 
 	void setName( std::string const &name )
 	{
