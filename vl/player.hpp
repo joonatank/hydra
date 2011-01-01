@@ -43,10 +43,15 @@ public :
 
 	void setHeadMatrix( Ogre::Matrix4 const &m );
 
+	void takeScreenshot( void );
+
+	uint32_t getScreenshotVersion( void ) const
+	{ return _screenshot_version; }
+
 	enum DirtyBits
 	{
 		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_CAMERA_ENABLE_ROT = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_SCREENSHOT = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
 	};
 
 protected :
@@ -61,6 +66,8 @@ private :
 	std::string _active_camera;
 
 	eq::Observer *_observer;
+
+	uint32_t _screenshot_version;
 
 };	// class Player
 

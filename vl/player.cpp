@@ -7,7 +7,7 @@
 
 // TODO we should pass the active camera to this, so it's not arbitary
 vl::Player::Player( eq::Observer *observer )
-	: _observer(observer)
+	: _observer(observer), _screenshot_version(0)
 {}
 
 vl::Player::~Player( void )
@@ -38,6 +38,13 @@ vl::Player::setHeadMatrix( Ogre::Matrix4 const &m )
 	_observer->setHeadMatrix( vl::math::convert(m) );
 }
 
+void vl::Player::takeScreenshot(void )
+{
+	std::cerr << "Should take a screenshot now." << std::endl;
+	setDirty( DIRTY_SCREENSHOT );
+	_screenshot_version++;
+}
+
 
 /// ------------------------------- Protected ----------------------------------
 void
@@ -46,13 +53,10 @@ vl::Player::serialize(co::DataOStream& os, const uint64_t dirtyBits)
 	eq::fabric::Serializable::serialize(os, dirtyBits);
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{
-		os << _active_camera;
-	}
-	if( dirtyBits & DIRTY_CAMERA_ENABLE_ROT )
-	{
-		// TODO add camera enable rotation here
-	}
+	{ os << _active_camera; }
+
+	if( dirtyBits & DIRTY_SCREENSHOT )
+	{ os << _screenshot_version; }
 }
 
 void
@@ -61,10 +65,8 @@ vl::Player::deserialize(co::DataIStream& is, const uint64_t dirtyBits)
 	eq::fabric::Serializable::deserialize(is, dirtyBits);
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{
-		is >> _active_camera;
-	}
-	if( dirtyBits & DIRTY_CAMERA_ENABLE_ROT )
-	{
-	}
+	{ is >> _active_camera; }
+
+	if( dirtyBits & DIRTY_SCREENSHOT )
+	{ is >> _screenshot_version; }
 }
