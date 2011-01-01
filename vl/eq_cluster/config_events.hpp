@@ -98,6 +98,18 @@ protected :
 
 };	// ActivateCamera
 
+class ScreenshotAction : public PlayerAction
+{
+public :
+	virtual void execute( void );
+
+	virtual std::string getTypeName( void ) const
+	{ return "ScreenshotAction"; }
+
+	static ScreenshotAction *create( void )
+	{ return new ScreenshotAction; }
+
+};	// ScreenshotAction
 
 typedef ActionBase<SceneManager> SceneManagerAction;
 

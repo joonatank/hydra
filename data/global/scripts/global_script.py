@@ -59,19 +59,19 @@ def createCameraMovements(node) :
 
 
 # Fine using the new event interface
-def addQuitEvent() :
+def addQuitEvent( kc ) :
 	print 'Creating Quit Event'
 	action = QuitAction.create()
 	print 'Python Action type = ' + action.type
 	action.game = game
 
-	trigger = game.event_manager.createKeyPressedTrigger( KC.Q )
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	print 'Python Trigger type = ' + trigger.type
 	trigger.addAction( action )
 
 
 # Fine using the new event interface
-def addReloadEvent() :
+def addReloadEvent( kc ) :
 	print 'Creating Reload Scene Event'
 	# Create the action
 	action = ReloadScene.create()
@@ -85,19 +85,28 @@ def addReloadEvent() :
 	proxy.time_limit = 5 # Seconds
 
 	# Create the trigger
-	trigger = game.event_manager.createKeyPressedTrigger( KC.R )
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	print 'Python Trigger type = ' + trigger.type
 	trigger.addAction( proxy )
 
 
 
 # Fine using the new event interface
-def addToggleMusicEvent() :
+def addToggleMusicEvent( kc ) :
 	print 'Creating Toggle Music Event'
 	action = ToggleMusic.create()
 	print 'Python Action type = ' + action.type
 	action.game = game
-	trigger = game.event_manager.createKeyPressedTrigger( KC.M )
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
+	trigger.addAction( action )
+
+
+def addScreenshotAction( kc ) :
+	# TODO add printing the kc
+	print 'Adding screenshot action to KC_F10'
+	action = ScreenshotAction.create()
+	action.player = game.player
+	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	trigger.addAction( action )
 
 
@@ -137,8 +146,6 @@ def addHideEvent(node) :
 	show = ShowAction.create()
 	show.scene_node = node
 	trigger = game.event_manager.createKeyPressedTrigger( KC.H )
-	#trigger = game.event_manager.createTrigger( 'KeyReleasedTrigger' )
-	#trigger.key = KC.H
 
 	# Create a proxy that handles the toggling between two different actions
 	toggle = ToggleActionProxy.create()
@@ -158,6 +165,7 @@ def addHideEvent(node) :
 
 # Add some global events that are useful no matter what the scene/project is
 print 'Adding game events'
-addQuitEvent()
-addReloadEvent()
-addToggleMusicEvent()
+addQuitEvent(KC.Q)
+addReloadEvent(KC.R)
+addToggleMusicEvent(KC.M)
+addScreenshotAction(KC.F10)

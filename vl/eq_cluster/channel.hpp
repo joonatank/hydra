@@ -14,7 +14,6 @@
 #include "base/typedefs.hpp"
 #include "scene_manager.hpp"
 #include "eq_cluster/eq_settings.hpp"
-#include "player.hpp"
 
 namespace eqOgre
 {
@@ -30,6 +29,8 @@ public:
     virtual ~Channel (void);
 
 	DistributedSettings const &getSettings( void ) const;
+
+	void setCamera( Ogre::Camera *cam );
 
 protected:
 	/// Equalizer overrides
@@ -51,18 +52,18 @@ protected:
 
 	void updateDistribData( void );
 
-	void createViewport( void );
+	// TODO this should be public function and the Window should update
+	// The channels viewport when necessary. Like when the Camera is changed.
+	// TODO should be moved to Window and only have setViewport as a public
+	// function
+	void createViewport( Ogre::Camera *cam );
 
 	/// Ogre variables
 	Ogre::RenderWindow *_ogre_window;
 	Ogre::Viewport *_viewport;
-	Ogre::Camera *_camera;
-
-	std::string _active_camera_name;
 
 	// distribution related
 	SceneManager _frame_data;
-	vl::Player _player;
 };
 
 }

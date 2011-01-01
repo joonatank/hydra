@@ -38,9 +38,9 @@ vl::Player::setHeadMatrix( Ogre::Matrix4 const &m )
 	_observer->setHeadMatrix( vl::math::convert(m) );
 }
 
-void vl::Player::takeScreenshot(void )
+void
+vl::Player::takeScreenshot(void )
 {
-	std::cerr << "Should take a screenshot now." << std::endl;
 	setDirty( DIRTY_SCREENSHOT );
 	_screenshot_version++;
 }

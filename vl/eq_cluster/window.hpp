@@ -5,6 +5,7 @@
 
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_settings.hpp"
+#include "player.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -56,6 +57,8 @@ namespace eqOgre
 		DistributedSettings const &getSettings( void ) const;
 
 	protected :
+		bool _mapData( const eq::uint128_t& settingsID );
+
 		void createOgreRoot( void );
 		void createOgreWindow( void );
 
@@ -68,11 +71,15 @@ namespace eqOgre
 
 		void createWindowListener( void );
 
+		void updateDistribData( void );
 
 		/// Equalizer overrides
 		virtual bool configInit( const eq::uint128_t& initID );
 
 		virtual bool configExit( void );
+
+		virtual void frameStart( const eq::uint128_t& frameID,
+								 const uint32_t frameNumber );
 
 		virtual void frameFinish( const eq::uint128_t& frameID,
 								  const uint32_t frameNumber );
@@ -84,7 +91,11 @@ namespace eqOgre
 		/// Distributed data
 		eqOgre::DistributedSettings _settings;
 		eqOgre::ResourceManager _resource_manager;
+		vl::Player _player;
+		std::string _active_camera_name;
+		uint32_t _screenshot_num;
 
+		// Ogre
 		vl::ogre::RootRefPtr _root;
 		Ogre::RenderWindow *_ogre_window;
 		Ogre::Camera *_camera;

@@ -23,6 +23,8 @@
 #include "eq_cluster/wglWindow.hpp"
 #endif
 
+#include "channel.hpp"
+
 namespace {
 
 void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
@@ -47,7 +49,7 @@ void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
 
 /// Public
 eqOgre::Window::Window(eq::Pipe *parent)
-	: eq::Window( parent ), _ogre_window(0), _camera(0), _sm(0),
+	: eq::Window( parent ), _screenshot_num(0), _ogre_window(0), _camera(0), _sm(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
 {}
 
@@ -115,6 +117,7 @@ eqOgre::Window::loadScene( void )
 		EQINFO << "No camera in the scene. Using created camera "
 			<< _camera->getName() << std::endl;
 	}
+	_active_camera_name = _camera->getName();
 
 	return true;
 }
@@ -197,37 +200,49 @@ eqOgre::Window::getSettings( void ) const
 
 
 /// Protected
+bool
+eqOgre::Window::_mapData( const eq::uint128_t& settingsID )
+{
+	EQINFO << "Mapping data." << std::endl;
+
+	// Get the cluster version of data
+	if( !getConfig()->mapObject( &_settings, settingsID ) )
+	{
+		EQERROR << "Couldn't map the Settings." << std::endl;
+		return false;
+	}
+	EQINFO << "Mapping ResourceManager" << std::endl;
+	if( !getConfig()->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
+	{
+		EQERROR << "Couldn't map the ResourceManager." << std::endl;
+		return false;
+	}
+
+	EQASSERT( _settings.getPlayerID() != eq::base::UUID::ZERO );
+	if( getConfig()->mapObject( &_player, _settings.getPlayerID() ) )
+	{
+		EQERROR << "Couldn't map the Player." << std::endl;
+		return false;
+	}
+
+	EQINFO << "Data mapped." << std::endl;
+}
+
 // ConfigInit can not throw, it must return false on error. CONFIRMED
 bool
 eqOgre::Window::configInit( const eq::uint128_t& initID )
 {
 	EQINFO << "eqOgre::Window::configInit" << std::endl;
-	
+
 	if( !eq::Window::configInit( initID ))
 	{
 		EQERROR << "eq::Window::configInit failed" << std::endl;
 		return false;
 	}
 
+	_mapData( initID );
+
 	try {
-		EQASSERT( dynamic_cast< eqOgre::Config * >( getConfig() ) );
-
-		EQINFO << "Mapping data." << std::endl;
-
-		// Get the cluster version of data
-		if( !getConfig()->mapObject( &_settings, initID ) )
-		{
-			EQERROR << "Couldn't map Settings." << std::endl;
-			return false;
-		}
-		EQINFO << "Mapping ResourceManager" << std::endl;
-		if( !getConfig()->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
-		{
-			EQERROR << "Couldn't map ResourceManager." << std::endl;
-			return false;
-		}
-		EQINFO << "Data mapped." << std::endl;
-
 		createOgreRoot();
 		createOgreWindow();
 		createInputHandling();
@@ -288,10 +303,7 @@ bool eqOgre::Window::configExit(void )
 	}
 
 	EQINFO << "Cleaning out OGRE" << std::endl;
-	if( _root )
-	{
-		_root.reset();
-	}
+	_root.reset();
 
 	EQINFO << "Unmapping Settings." << std::endl;
 	getConfig()->unmapObject( &_settings );
@@ -299,7 +311,18 @@ bool eqOgre::Window::configExit(void )
 	EQINFO << "Unmapping ResourceManager" << std::endl;
 	getConfig()->unmapObject( &_resource_manager );
 
+	EQINFO << "Unmapping Player." << std::endl;
+	getConfig()->unmapObject( &_player );
+
 	return retval;
+}
+
+void
+eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
+{
+	updateDistribData();
+
+	eq::Window::frameStart(frameID, frameNumber);
 }
 
 void
@@ -314,7 +337,8 @@ eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNu
 	}
 	else
 	{
-		EQERROR << "Mouse or keyboard does not exists! No input handling." << std::endl;
+		EQERROR << "Mouse or keyboard does not exists! No input handling."
+			<< std::endl;
 	}
 }
 
@@ -484,4 +508,49 @@ eqOgre::Window::createOgreWindow( void )
 	params["currentGLContext"] = std::string("True");
 #endif
 	_ogre_window = _root->createWindow( "win", 800, 600, params );
+}
+
+void
+eqOgre::Window::updateDistribData( void )
+{
+	// Update player
+	_player.sync();
+	// Get active camera and change the rendering camera if there is a change
+	std::string const &cam_name = _player.getActiveCamera();
+	if( !cam_name.empty() && cam_name != _active_camera_name )
+	{
+		_active_camera_name = cam_name;
+		Ogre::SceneManager *sm = getSceneManager();
+		if( sm->hasCamera( cam_name ) )
+		{
+			_camera = sm->getCamera( _active_camera_name );
+			Channels chanlist = getChannels();
+			for( size_t i = 0; i < chanlist.size(); ++i )
+			{
+				eqOgre::Channel *channel =
+					static_cast<eqOgre::Channel *>( chanlist.at(i) );
+				channel->setCamera( _camera );
+			}
+		}
+		else
+		{
+			EQERROR << "eqOgre::Window : New camera name set, but NO camera found"
+				<< std::endl;
+		}
+	}
+
+	// Take a screenshot
+	if( _player.getScreenshotVersion() > _screenshot_num )
+	{
+		// TODO should write the screenshot to the project directory not
+		// to current directory
+		// Add the screenshot dir to DistributedSettings
+		// TODO the format of the screenshot name should be
+		// screenshot_{project_name}-{year}-{month}-{day}-{time}-{window_name}.png
+		std::string prefix( "screenshot_" );
+		std::string suffix = "-" + getName()+".png";
+		_ogre_window->writeContentsToTimestampedFile(prefix, suffix);
+
+		_screenshot_num = _player.getScreenshotVersion();
+	}
 }
