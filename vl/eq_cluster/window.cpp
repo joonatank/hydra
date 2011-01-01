@@ -1,3 +1,9 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ *
+ *
+ */
+
 #include "window.hpp"
 
 #include "base/exceptions.hpp"
@@ -24,6 +30,7 @@
 #endif
 
 #include "channel.hpp"
+#include "pipe.hpp"
 
 namespace {
 
@@ -49,79 +56,12 @@ void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
 
 /// Public
 eqOgre::Window::Window(eq::Pipe *parent)
-	: eq::Window( parent ), _screenshot_num(0), _ogre_window(0), _camera(0), _sm(0),
+	: eq::Window( parent ), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
 {}
 
 eqOgre::Window::~Window(void )
 {}
-
-bool
-eqOgre::Window::loadScene( void )
-{
-	// TODO this should be divided to case load scenes function and loadScene function
-
-	// Get scenes
-	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
-	EQINFO << "Loading Scenes for Project : " << getSettings().getProjectName()
-		<< std::endl;
-
-	// If we don't have Scenes there is no point loading them
-	if( scenes.empty() )
-	{
-		EQINFO << "Project does not have any scene files." << std::endl;
-		return false;
-	}
-	else
-	{
-		EQINFO << "Project has " << scenes.size() << " scene files." << std::endl;
-	}
-
-	// Clean up old scenes
-	// TODO this should be a loader not a destroyer, move to another function
-	_sm->clearScene();
-	_sm->destroyAllCameras();
-
-	// TODO support for multiple scene files should be tested
-	// TODO support for case needs to be tested
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		std::string const &name = scenes.at(i).getName();
-
-		EQINFO << "Loading scene " << name << "." << std::endl;
-
-		eqOgre::DotSceneLoader loader;
-		// TODO pass attach node based on the scene
-		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scenes.at(i), _sm );
-
-		EQINFO << "Scene " << name << " loaded.";
-	}
-
-	/// Get the camera
-	// TODO move to separate function
-
-	// Loop through all cameras and grab their name and set their debug representation
-	Ogre::SceneManager::CameraIterator cameras = _sm->getCameraIterator();
-
-	// Grab the first available camera, for now
-	if( cameras.hasMoreElements() )
-	{
-		_camera = cameras.getNext();
-		EQINFO << "Using Camera " <<  _camera->getName()
-			<< " found from the scene." << std::endl;
-	}
-	else
-	{
-		_camera = _sm->createCamera("Cam");
-		EQINFO << "No camera in the scene. Using created camera "
-			<< _camera->getName() << std::endl;
-	}
-	_active_camera_name = _camera->getName();
-
-	return true;
-}
-
 
 
 /// Public OIS Callbacks
@@ -194,39 +134,60 @@ eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
 eqOgre::DistributedSettings const &
 eqOgre::Window::getSettings( void ) const
 {
-	return _settings;
+	EQASSERT( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
+	return static_cast<eqOgre::Pipe const *>(getPipe())->getSettings();
 }
 
+vl::ogre::RootRefPtr
+eqOgre::Window::getOgreRoot( void )
+{
+	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	return static_cast<eqOgre::Pipe *>(getPipe())->getRoot();
+}
+
+void
+eqOgre::Window::setCamera(Ogre::Camera* camera)
+{
+	Channels const &chanlist = getChannels();
+	for( size_t i = 0; i < chanlist.size(); ++i )
+	{
+		EQASSERT( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+		eqOgre::Channel *channel =
+			static_cast<eqOgre::Channel *>( chanlist.at(i) );
+		channel->setCamera( camera );
+	}
+}
+
+Ogre::Camera *
+eqOgre::Window::getCamera( void )
+{
+	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	return static_cast<eqOgre::Pipe *>(getPipe())->getCamera();
+}
+
+Ogre::SceneManager *
+eqOgre::Window::getSceneManager(void )
+{
+	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	return static_cast<eqOgre::Pipe *>(getPipe())->getSceneManager();
+}
+
+void
+eqOgre::Window::takeScreenshot( const std::string& prefix,
+								const std::string& suffix )
+{
+	std::string real_suffix;
+	if( getName().empty() )
+	{ real_suffix = suffix; }
+	else
+	{ real_suffix = "-" + getName()+ suffix; }
+
+	_ogre_window->writeContentsToTimestampedFile(prefix, real_suffix);
+}
 
 
 /// Protected
-bool
-eqOgre::Window::_mapData( const eq::uint128_t& settingsID )
-{
-	EQINFO << "Mapping data." << std::endl;
 
-	// Get the cluster version of data
-	if( !getConfig()->mapObject( &_settings, settingsID ) )
-	{
-		EQERROR << "Couldn't map the Settings." << std::endl;
-		return false;
-	}
-	EQINFO << "Mapping ResourceManager" << std::endl;
-	if( !getConfig()->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
-	{
-		EQERROR << "Couldn't map the ResourceManager." << std::endl;
-		return false;
-	}
-
-	EQASSERT( _settings.getPlayerID() != eq::base::UUID::ZERO );
-	if( getConfig()->mapObject( &_player, _settings.getPlayerID() ) )
-	{
-		EQERROR << "Couldn't map the Player." << std::endl;
-		return false;
-	}
-
-	EQINFO << "Data mapped." << std::endl;
-}
 
 // ConfigInit can not throw, it must return false on error. CONFIRMED
 bool
@@ -240,26 +201,9 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 		return false;
 	}
 
-	_mapData( initID );
-
 	try {
-		createOgreRoot();
 		createOgreWindow();
 		createInputHandling();
-
-		// Resource registration
-		std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
-		for( size_t i = 0; i < resources.size(); ++i )
-		{
-			_root->addResource( resources.at(i) );
-		}
-		_root->setupResources( );
-		_root->loadResources();
-
-		_sm = _root->createSceneManager("SceneManager");
-
-		if( !loadScene() )
-		{ return false; }
 	}
 	catch( vl::exception &e )
 	{
@@ -302,25 +246,43 @@ bool eqOgre::Window::configExit(void )
 		_input_manager = 0;
 	}
 
-	EQINFO << "Cleaning out OGRE" << std::endl;
-	_root.reset();
-
-	EQINFO << "Unmapping Settings." << std::endl;
-	getConfig()->unmapObject( &_settings );
-
-	EQINFO << "Unmapping ResourceManager" << std::endl;
-	getConfig()->unmapObject( &_resource_manager );
-
-	EQINFO << "Unmapping Player." << std::endl;
-	getConfig()->unmapObject( &_player );
-
 	return retval;
 }
 
 void
 eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
 {
-	updateDistribData();
+	// We need to set the Viewport here because the Camera doesn't exists in
+	// configInit
+	static bool inited = false;
+	if( !inited )
+	{
+		EQINFO << "Create a Ogre Viewport for each Channel" << std::endl;
+
+		Channels chanlist = getChannels();
+		for( size_t i = 0; i < chanlist.size(); ++i )
+		{
+			EQASSERT( _ogre_window && getCamera() );
+			Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
+			EQASSERT( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+			eqOgre::Channel *channel =
+				static_cast<eqOgre::Channel *>( chanlist.at(i) );
+
+			// Set some parameters to the viewport
+			// TODO this should be configurable from DotScene
+			viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+			viewport->setAutoUpdated(false);
+
+			// Cleanup old viewport
+			if( channel->getViewport() )
+			{ _ogre_window->removeViewport( channel->getViewport()->getZOrder() ); }
+
+			// Set the new viewport
+			channel->setViewport( viewport );
+		}
+
+		inited = true;
+	}
 
 	eq::Window::frameStart(frameID, frameNumber);
 }
@@ -466,30 +428,6 @@ eqOgre::Window::printInputInformation( void )
 }
 
 void
-eqOgre::Window::createWindowListener(void )
-{
-	/*	TODO should be added so that we get window events
-	std::cerr << "Adding frame listener." << std::endl;
-	Ogre::WindowEventUtilities::addWindowEventListener(_ogre_window, this);
-
-	Ogre::Root *root = _root->getNative();
-	root->addFrameListener( this );
-
-	std::cerr << "Frame listener added." << std::endl;
-	*/
-}
-
-void
-eqOgre::Window::createOgreRoot( void )
-{
-	EQINFO << "Creating Ogre Root" << std::endl;
-
-	_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
-	// Initialise ogre
-	_root->createRenderSystem();
-}
-
-void
 eqOgre::Window::createOgreWindow( void )
 {
 	EQINFO << "Creating Ogre RenderWindow." << std::endl;
@@ -507,50 +445,5 @@ eqOgre::Window::createOgreWindow( void )
 #else
 	params["currentGLContext"] = std::string("True");
 #endif
-	_ogre_window = _root->createWindow( "win", 800, 600, params );
-}
-
-void
-eqOgre::Window::updateDistribData( void )
-{
-	// Update player
-	_player.sync();
-	// Get active camera and change the rendering camera if there is a change
-	std::string const &cam_name = _player.getActiveCamera();
-	if( !cam_name.empty() && cam_name != _active_camera_name )
-	{
-		_active_camera_name = cam_name;
-		Ogre::SceneManager *sm = getSceneManager();
-		if( sm->hasCamera( cam_name ) )
-		{
-			_camera = sm->getCamera( _active_camera_name );
-			Channels chanlist = getChannels();
-			for( size_t i = 0; i < chanlist.size(); ++i )
-			{
-				eqOgre::Channel *channel =
-					static_cast<eqOgre::Channel *>( chanlist.at(i) );
-				channel->setCamera( _camera );
-			}
-		}
-		else
-		{
-			EQERROR << "eqOgre::Window : New camera name set, but NO camera found"
-				<< std::endl;
-		}
-	}
-
-	// Take a screenshot
-	if( _player.getScreenshotVersion() > _screenshot_num )
-	{
-		// TODO should write the screenshot to the project directory not
-		// to current directory
-		// Add the screenshot dir to DistributedSettings
-		// TODO the format of the screenshot name should be
-		// screenshot_{project_name}-{year}-{month}-{day}-{time}-{window_name}.png
-		std::string prefix( "screenshot_" );
-		std::string suffix = "-" + getName()+".png";
-		_ogre_window->writeContentsToTimestampedFile(prefix, suffix);
-
-		_screenshot_num = _player.getScreenshotVersion();
-	}
+	_ogre_window = getOgreRoot()->createWindow( "win", 800, 600, params );
 }

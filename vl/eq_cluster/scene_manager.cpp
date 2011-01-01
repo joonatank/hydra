@@ -196,7 +196,7 @@ eqOgre::SceneManager::deregisterData( void )
 	_config->deregisterObject( this );
 }
 
-void
+bool
 eqOgre::SceneManager::mapData( eq::Config *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
@@ -206,7 +206,7 @@ eqOgre::SceneManager::mapData( eq::Config *session, eq::base::UUID const &id )
 	_config = session;
 
 	EQASSERTINFO( !this->isAttached(), "FrameData already mapped" )
-	_config->mapObject(this, id);
+	return _config->mapObject(this, id);
 }
 
 void

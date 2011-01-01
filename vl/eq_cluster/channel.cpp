@@ -1,3 +1,8 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ *
+ *
+ */
 
 #include "channel.hpp"
 
@@ -8,7 +13,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent )
-	: eq::Channel(parent), _ogre_window(0), _viewport(0)
+	: eq::Channel(parent), _viewport(0)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -28,47 +33,20 @@ eqOgre::Channel::setCamera( Ogre::Camera *cam )
 	{ _viewport->setCamera(cam); }
 }
 
+void
+eqOgre::Channel::setViewport(Ogre::Viewport* viewport)
+{
+	_viewport = viewport;
+}
+
 bool
 eqOgre::Channel::configInit( const eq::uint128_t &initID )
 {
 	if( !eq::Channel::configInit( initID ) )
 	{ return false; }
 
-	EQINFO << "Get ogre window from RenderWindow" << std::endl;
-	eqOgre::Window *window = dynamic_cast<eqOgre::Window *>(getWindow());
-	_ogre_window = window->getRenderWindow();
-	if( !_ogre_window )
-	{ return false; }
-
-	Ogre::Camera *camera = window->getCamera();
-
-	createViewport( camera );
-
 	// TODO this should be configurable from DotScene
 	setNearFar( 0.1, 100.0 );
-
-	// Get framedata
-	eqOgre::Config *config = dynamic_cast< eqOgre::Config * >( getConfig() );
-	if( !config )
-	{
-		EQERROR << "Config is not type eqOgre::Config" << std::endl;
-		return false;
-	}
-
-	eq::base::UUID const &frame_id = getSettings().getSceneManagerID();
-	EQASSERT( frame_id != eq::base::UUID::ZERO );
-	_frame_data.mapData( config, frame_id );
-
-	// We need to find the node from scene graph
-	EQINFO << "FrameData has " << _frame_data.getNSceneNodes()
-		<< " SceneNodes." << std::endl;
-
-	Ogre::SceneManager *sm = window->getSceneManager();
-	EQASSERTINFO( sm, "Window has no Ogre SceneManager" );
-	if( !_frame_data.setSceneManager( sm ) )
-	{
-		EQERROR << "Some SceneNodes were not found." << std::endl;
-	}
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
 
@@ -80,10 +58,6 @@ eqOgre::Channel::configExit()
 {
 	// Cleanup childs first
 	bool retval = eq::Channel::configExit();
-
-	// Unmap data
-	EQINFO << "Unmapping SceneManager." << std::endl;
-	_frame_data.unmapData();
 
 	return retval;
 }
@@ -110,9 +84,6 @@ eqOgre::Channel::frameClear( const eq::uint128_t & )
 void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
-	// Distribution
-	updateDistribData();
-
 	// From equalizer channel::frameDraw
 	// NOTE seems like we don't need these, Ogre should handle them anyway
 	// TODO have to be tested on multiple walls and with head tracking though.
@@ -122,18 +93,20 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 // 	EQ_GL_CALL( glMatrixMode( GL_PROJECTION ) );
 // 	EQ_GL_CALL( glLoadIdentity() );
 
-	EQASSERT( _viewport )
-
-	setOgreFrustum();
+	EQASSERT( _viewport );
+	Ogre::Camera *camera = _viewport->getCamera();
+	EQASSERT( camera );
+	setOgreFrustum( camera );
 
 	_viewport->update();
 }
 
 void
-eqOgre::Channel::setOgreFrustum( void )
+eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 {
+	EQASSERT( camera );
 	eq::Frustumf frust = getFrustum();
-	Ogre::Camera *camera = _viewport->getCamera();
+
 	camera->setCustomProjectionMatrix( true, vl::math::convert( frust.compute_matrix() ) );
 
 	Ogre::Matrix4 headMatrix = vl::math::convert( getHeadTransform() );
@@ -171,42 +144,4 @@ eqOgre::Channel::setOgreFrustum( void )
 	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos, cam_orient );
 	// The multiplication order is correct (the problem is obvious if it's not)
 	camera->setCustomViewMatrix( true, headMatrix*camViewMatrix );
-}
-
-void
-eqOgre::Channel::updateDistribData( void )
-{
-	// Update SceneManager
-	// TODO should be moved to Window or even better to Pipe
-	_frame_data.syncAll();
-	static uint32_t scene_version = 0;
-	if( _frame_data.getSceneVersion() > scene_version )
-	{
-		// This will reload the scene but all transformations remain
-		// As this will not reset the SceneNode structures that control the
-		// transformations of objects.
-		EQINFO << "Reloading the Ogre scene now" << std::endl;
-		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
-		win->loadScene();
-		Ogre::Camera *camera = win->getCamera();
-		createViewport( camera );
-		_frame_data.setSceneManager( win->getSceneManager() );
-		EQINFO << "Ogre Scene reloaded." << std::endl;
-
-		scene_version = _frame_data.getSceneVersion();
-	}
-}
-
-void
-eqOgre::Channel::createViewport( Ogre::Camera *cam )
-{
-	EQINFO << "Creating viewport" << std::endl;
-	EQASSERT( cam );
-	// Supports only one Viewport
-	_ogre_window->removeAllViewports();
-
-	_viewport = _ogre_window->addViewport( cam );
-	// TODO this should be configurable from DotScene
-	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-	_viewport->setAutoUpdated(false);
 }

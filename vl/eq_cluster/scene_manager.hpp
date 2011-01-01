@@ -67,7 +67,7 @@ public :
 
 	void deregisterData( void );
 
-	void mapData( eq::Config *session, eq::base::UUID const &id );
+	bool mapData( eq::Config *session, eq::base::UUID const &id );
 
 	void unmapData( void );
 
