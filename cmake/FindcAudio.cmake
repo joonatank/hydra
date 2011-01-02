@@ -56,14 +56,18 @@ FIND_LIBRARY( cAudio_LIBRARY_DEBUG
 	${cAudio_INCLUDE_DIR}/../lib/debug
 	)
 
-if( cAudio_LIBRARY_DEBUG AND NOT cAudio_LIBRARY_RELEASE )
-	set( cAudio_LIBRARY_RELEASE ${cAudio_LIBRARY_DEBUG} )
-endif()
+# if( cAudio_LIBRARY_DEBUG AND NOT cAudio_LIBRARY_RELEASE )
+# 	set( cAudio_LIBRARY_RELEASE ${cAudio_LIBRARY_DEBUG} )
+# endif()
 
 if( cAudio_LIBRARY_DEBUG AND cAudio_LIBRARY_RELEASE )
 	set( cAudio_LIBRARY debug ${cAudio_LIBRARY_DEBUG}
 		optimized ${cAudio_LIBRARY_RELEASE}
 		CACHE FILEPATH "cAudio library" FORCE )
+elseif( cAudio_LIBRARY_RELEASE )
+	set( cAudio_LIBRARY ${cAudio_LIBRARY_RELEASE} CACHE FILEPATH "cAudio library" FORCE )
+elseif( cAudio_LIBRARY_DEBUG )
+	set( cAudio_LIBRARY ${cAudio_LIBRARY_DEBUG} CACHE FILEPATH "cAudio library" FORCE )
 else()
 	#	set( cAudio_LIBRARY CACHE FILEPATH "cAudio library" FORCE )
 endif()
@@ -88,7 +92,7 @@ endif( cAudio_FOUND )
 
 # Mark the variables advanced if we can assume that the user does not need them
 if( cAudio_FOUND OR cAudio_FIND_QUIETLY )
-	mark_as_advanced( 
+	mark_as_advanced(
 		cAudio_INCLUDE_DIR
 		cAudio_LIBRARY
 		cAudio_LIBRARY_RELEASE

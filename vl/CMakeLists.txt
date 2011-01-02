@@ -20,6 +20,7 @@ set( SOURCES
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
+	eq_cluster/pipe.cpp
 	eq_cluster/trigger.cpp
 	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
@@ -71,6 +72,7 @@ set( HEADERS
 	eq_cluster/config_python.hpp
 	eq_cluster/python.hpp
 	eq_cluster/window.hpp
+	eq_cluster/pipe.hpp
 	eq_cluster/transform_event.hpp
 	eq_cluster/config_events.hpp
 	eq_cluster/eq_settings.hpp

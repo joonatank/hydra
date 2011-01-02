@@ -27,7 +27,7 @@ find_path(Vorbis_INCLUDE_DIR vorbis/vorbisenc.h
 	/usr/include
 	)
 
-set( LIBRARY_SEARCH_PATHS 
+set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
@@ -51,14 +51,18 @@ find_library(Vorbis_LIBRARY_DEBUG
 	${Vorbis_INCLUDE_DIR}/../lib/debug
 	)
 
-if( Vorbis_LIBRARY_DEBUG AND NOT Vorbis_LIBRARY_RELEASE )
-	set( Vorbis_LIBRARY_RELEASE ${Vorbis_LIBRARY_DEBUG} )
-endif()
+# if( Vorbis_LIBRARY_DEBUG AND NOT Vorbis_LIBRARY_RELEASE )
+# 	set( Vorbis_LIBRARY_RELEASE ${Vorbis_LIBRARY_DEBUG} )
+# endif()
 
 if( Vorbis_LIBRARY_DEBUG AND Vorbis_LIBRARY_RELEASE )
 	set( Vorbis_LIBRARY debug ${Vorbis_LIBRARY_DEBUG}
 		optimized ${Vorbis_LIBRARY_RELEASE}
 		CACHE FILEPATH "Vorbis library" FORCE )
+elseif( Vorbis_LIBRARY_RELEASE )
+	set( Vorbis_LIBRARY ${Vorbis_LIBRARY_RELEASE} CACHE FILEPATH "Vorbis library" FORCE )
+elseif( Vorbis_LIBRARY_DEBUG )
+	set( Vorbis_LIBRARY ${Vorbis_LIBRARY_DEBUG} CACHE FILEPATH "Vorbis library" FORCE )
 else()
 	#	set( Vorbis_LIBRARY CACHE FILEPATH "Vorbis library" FORCE )
 endif()
@@ -82,13 +86,15 @@ find_library(Vorbis_FILE_LIBRARY_DEBUG
 	${Vorbis_INCLUDE_DIR}/../lib/debug
 	)
 
-if( Vorbis_FILE_LIBRARY_DEBUG AND NOT Vorbis_FILE_LIBRARY_RELEASE )
-	set( Vorbis_FILE_LIBRARY_RELEASE ${Vorbis_FILE_LIBRARY_DEBUG} )
-endif()
-
 if( Vorbis_FILE_LIBRARY_DEBUG AND Vorbis_FILE_LIBRARY_RELEASE )
 	set( Vorbis_FILE_LIBRARY debug ${Vorbis_FILE_LIBRARY_DEBUG}
 		optimized ${Vorbis_FILE_LIBRARY_RELEASE}
+		CACHE FILEPATH "Vorbis file library" FORCE )
+elseif( Vorbis_FILE_LIBRARY_DEBUG )
+	set( Vorbis_FILE_LIBRARY ${Vorbis_FILE_LIBRARY_DEBUG}
+		CACHE FILEPATH "Vorbis file library" FORCE )
+elseif( Vorbis_FILE_LIBRARY_RELEASE )
+	set( Vorbis_FILE_LIBRARY ${Vorbis_FILE_LIBRARY_RELEASE}
 		CACHE FILEPATH "Vorbis file library" FORCE )
 else()
 	#set( Vorbis_FILE_LIBRARY CACHE FILEPATH "Vorbis file library" FORCE )

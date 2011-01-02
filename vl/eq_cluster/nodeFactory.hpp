@@ -12,6 +12,7 @@
 #include "config.hpp"
 #include "channel.hpp"
 #include "window.hpp"
+#include "pipe.hpp"
 
 namespace eqOgre
 {
@@ -22,10 +23,13 @@ public:
 	virtual eq::Config *createConfig( eq::ServerPtr parent )
 	{ return new eqOgre::Config( parent ); }
 
-	virtual eq::Window* createWindow( eq::Pipe* parent )
+	virtual eq::Pipe *createPipe( eq::Node *parent )
+	{ return new eqOgre::Pipe( parent ); }
+
+	virtual eq::Window *createWindow( eq::Pipe *parent )
 	{ return new eqOgre::Window( parent ); }
 
-	virtual eq::Channel *createChannel( eq::Window* parent )
+	virtual eq::Channel *createChannel( eq::Window *parent )
 	{ return new eqOgre::Channel( parent ); }
 
 };

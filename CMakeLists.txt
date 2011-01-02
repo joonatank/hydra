@@ -55,7 +55,7 @@ find_package( VRPN REQUIRED )
 
 ######### Find OGRE ##########
 find_package(OpenGL REQUIRED)
-find_package(OGRE REQUIRED)
+find_package(Ogre REQUIRED)
 
 ######### Find OIS ###########
 find_package(OIS REQUIRED )
@@ -73,13 +73,8 @@ endif()
 ####### Find cAudio
 # Dependencies for cAudio
 find_package( Ogg REQUIRED )
-
-message( "Ogg library = ${Ogg_LIBRARY}" )
-
 find_package( Vorbis REQUIRED )
-message( "Vorbis library = ${Vorbis_LIBRARY}" )
-
-find_package( OPENAL REQUIRED )
+find_package( OpenAL REQUIRED )
 
 find_package( cAudio REQUIRED )
 
@@ -96,12 +91,6 @@ find_package(Boost COMPONENTS python REQUIRED )
 find_package(PythonLibs REQUIRED )
 
 find_package(PythonInterp REQUIRED )
-
-message( "Boost Libraries = ${Boost_PYTHON_LIBRARIES}" )
-
-message( "Python = ${PYTHON_EXECUTABLE}" )
-
-message( "Python libraries = ${PYTHON_LIBRARIES}" )
 
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 

@@ -19,7 +19,6 @@ def addOgreRotations(node) :
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.addAction( trans_action )
 
-
 # Most of the functions are in the global config now, script global_script
 # Easy to define commonly used functions in there
 # Here we can use those functions and pass the scene related objects to them

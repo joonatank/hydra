@@ -88,7 +88,7 @@ eqOgre::SceneManagerPtr vl::GameManager::getSceneManager( void )
 }
 
 vl::PlayerPtr
-vl::GameManager::createPlayer(eq::Observer* observer)
+vl::GameManager::createPlayer( eq::Observer* observer )
 {
 	EQASSERT( observer );
 	EQASSERT( !_player );

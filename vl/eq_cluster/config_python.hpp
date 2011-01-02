@@ -271,6 +271,11 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
+	python::class_<ScreenshotAction, boost::noncopyable, python::bases<PlayerAction> >("ScreenshotAction", python::no_init )
+		.def("create",&ScreenshotAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
 	/// SceneNode Actions
 	// TODO expose the Base class
 	python::class_<HideAction, boost::noncopyable, python::bases<BasicAction> >("HideAction", python::no_init )

@@ -26,9 +26,14 @@
 // TODO this is for testing the audio moving to Client
 #include "client.hpp"
 
+// Necessary for retrieving other managers
 #include "game_manager.hpp"
+// HUH?
 #include "python.hpp"
+// Necessary for retrieving registered triggers, KeyTrigger and FrameTrigger.
 #include "event_manager.hpp"
+// Necessary for registering Player
+#include "player.hpp"
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
@@ -40,6 +45,11 @@ eqOgre::Config::~Config()
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
+	// Create the player necessary for Trackers
+	// Will be registered later
+	// TODO support for multiple observers?
+	vl::PlayerPtr player = _game_manager->createPlayer( getObservers().at(0) );
+
 	_loadScenes();
 
 	// Create Tracker needs the SceneNodes for mapping
@@ -71,8 +81,14 @@ eqOgre::Config::init( eq::uint128_t const & )
 	if( !registerObject( res_man ) )
 	{ return false; }
 
-	_distrib_settings.setFrameDataID( _game_manager->getSceneManager()->getID() );
+	EQASSERT( player );
+	// Registering Player in init
+	if( !registerObject( player ) )
+	{ return false; }
+
+	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
 	_distrib_settings.setResourceManagerID( res_man->getID() );
+	_distrib_settings.setPlayerID( player->getID() );
 
 	EQINFO << "Registering Settings" << std::endl;
 	if( !registerObject( &_distrib_settings ) )
@@ -80,7 +96,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
-	
+
 	EQINFO << "Config::init DONE" << std::endl;
 
 	return true;
@@ -95,12 +111,15 @@ eqOgre::Config::exit( void )
 	EQINFO << "Deregistering distributed data." << std::endl;
 
 	_game_manager->getSceneManager()->deregisterData();
-	_distrib_settings.setFrameDataID( eq::base::UUID::ZERO );
+	_distrib_settings.setSceneManagerID( eq::base::UUID::ZERO );
 
 	eqOgre::ResourceManager *res_man =
 		static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
 	deregisterObject( res_man );
 	_distrib_settings.setResourceManagerID( eq::base::UUID::ZERO );
+
+	deregisterObject( _game_manager->getPlayer() );
+	_distrib_settings.setPlayerID( eq::base::UUID::ZERO );
 
 	deregisterObject( &_distrib_settings );
 
@@ -115,7 +134,6 @@ eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 	EQASSERT( _game_manager );
 
 	_settings = settings;
-	// TODO fix the interface
 	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
 }
 
@@ -137,8 +155,6 @@ void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 {
 	EQASSERT( man );
 	_game_manager = man;
-	vl::PlayerPtr player = _game_manager->createPlayer( getObservers().at(0) );
-	EQASSERT( player );
 }
 
 
@@ -146,11 +162,12 @@ uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
 	// New event interface
-	// This crashes the program
 	_game_manager->getEventManager()->getFrameTrigger()->update();
 
 	if( !_game_manager->step() )
 	{ stopRunning(); }
+
+	_game_manager->getPlayer()->commit();
 
 	eq::uint128_t version = _game_manager->getSceneManager()->commitAll();
 

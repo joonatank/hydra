@@ -80,6 +80,7 @@ add_executable( test_euler_angles
 				${eqOgre_SOURCE_DIR}/math/math.hpp
 				)
 
+message( "Ogre library = ${Ogre_LIBRARY}" )
 target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${TEST_LIB} )
 
 # Test tracking

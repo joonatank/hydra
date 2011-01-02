@@ -38,17 +38,23 @@ public :
 	virtual ~DistributedSettings( void )
 	{}
 
-	eq::base::UUID const &getFrameDataID( void ) const
-	{ return _frame_data_id; }
+	eq::base::UUID const &getSceneManagerID( void ) const
+	{ return _scene_manager_id; }
 
-	void setFrameDataID( eq::base::UUID const &id )
-	{ _frame_data_id = id; }
+	void setSceneManagerID( eq::base::UUID const &id )
+	{ _scene_manager_id = id; }
 
 	eq::base::UUID const &getResourceManagerID( void ) const
 	{ return _resource_man_id; }
 
 	void setResourceManagerID( eq::base::UUID const &id )
 	{ _resource_man_id = id; }
+
+	eq::base::UUID const &getPlayerID( void ) const
+	{ return _player_id; }
+
+	void setPlayerID( eq::base::UUID const &id )
+	{ _player_id = id; }
 
 	/// Used by master to copy the necessary data for synchronization
 	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
@@ -72,9 +78,9 @@ protected :
 
 	std::string _project_name;
 
-	eq::base::UUID _frame_data_id;
-
+	eq::base::UUID _scene_manager_id;
 	eq::base::UUID _resource_man_id;
+	eq::base::UUID _player_id;
 
 	uint32_t _camera_rotations_allowed;
 };

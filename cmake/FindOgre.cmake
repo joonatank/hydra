@@ -18,7 +18,7 @@ if( Ogre_INCLUDE_DIR AND Ogre_LIBRARY )
 	set(Ogre_FIND_QUIETLY TRUE)
 endif( Ogre_INCLUDE_DIR AND Ogre_LIBRARY )
 
-find_path(Ogre_INCLUDE_DIR Ogre/Ogre.h
+find_path(Ogre_INCLUDE_DIR OGRE/Ogre.h
 	$ENV{Ogre_HOME}/include
 	/opt/local/include
 	/usr/local/include
@@ -26,7 +26,7 @@ find_path(Ogre_INCLUDE_DIR Ogre/Ogre.h
 	)
 
 # Common library search paths for both debug and release versions
-set( LIBRARY_SEARCH_PATHS 
+set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
@@ -46,19 +46,21 @@ find_library(Ogre_LIBRARY_RELEASE
 set( Ogre_NAMES_DEBUG OgreMain_d libOgreMain_d )
 find_library(Ogre_LIBRARY_DEBUG
 	NAMES ${Ogre_NAMES_DEBUG}
-	PATHS 
+	PATHS
 	${LIBRARY_SEARCH_PATHS}
 	${Ogre_INCLUDE_DIR}/../lib/debug
 	)
 
-if( Ogre_LIBRARY_DEBUG AND NOT Ogre_LIBRARY_RELEASE )
-	set( Ogre_LIBRARY_RELEASE ${Ogre_LIBRARY_DEBUG} )
-endif()
-
 if( Ogre_LIBRARY_DEBUG AND Ogre_LIBRARY_RELEASE )
 	set( Ogre_LIBRARY debug ${Ogre_LIBRARY_DEBUG}
-		optimized ${Ogre_LIBRARY_RELEASE} 
+		optimized ${Ogre_LIBRARY_RELEASE}
 		CACHE FILEPATH "Ogre Main library" FORCE )
+# Workaround for Linux lacking debug builds, also allows us to only build the
+# release version if we want
+elseif( Ogre_LIBRARY_RELEASE )
+	set( Ogre_LIBRARY ${Ogre_LIBRARY_RELEASE} CACHE FILEPATH "Ogre Main library" FORCE )
+elseif( Ogre_LIBRARY_DEBUG )
+	set( Ogre_LIBRARY ${Ogre_LIBRARY_DEBUG} CACHE FILEPATH "Ogre Main library" FORCE )
 endif()
 
 if( Ogre_INCLUDE_DIR AND Ogre_LIBRARY )

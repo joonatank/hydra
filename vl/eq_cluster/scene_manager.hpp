@@ -59,11 +59,6 @@ public :
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
-	void setActiveCamera( std::string const &name );
-
-	std::string const &getActiveCamera( void ) const
-	{ return _camera_name; }
-
 	eq::uint128_t commitAll( void );
 
 	void syncAll( void );
@@ -72,7 +67,7 @@ public :
 
 	void deregisterData( void );
 
-	void mapData( eq::Config *session, eq::base::UUID const &id );
+	bool mapData( eq::Config *session, eq::base::UUID const &id );
 
 	void unmapData( void );
 
@@ -97,9 +92,6 @@ private :
 
 	// Reload the scene
 	uint32_t _scene_version;
-
-	// Active camera name
-	std::string _camera_name;
 
 	// SceneManager used for creating mapping between eqOgre::SceneNode and
 	// Ogre::SceneNode

@@ -1,3 +1,12 @@
+
+/**	Joonas Reunamo <joonas.reunamo@tut.fi>
+ *	2010-10
+ *
+ *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2010-12
+ *
+ */
+
 #ifndef PROJ_PAGE_H
 #define PROJ_PAGE_H
 
@@ -15,7 +24,7 @@
 
 
 namespace Ui {
-    class ProjPage;
+	class ProjPage;
 }
 
 

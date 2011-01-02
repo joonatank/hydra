@@ -225,8 +225,9 @@ eqOgre::getSettings( int argc, char **argv )
 
 /// --------------- eqOgre::DistributedSettings -----------------------
 eqOgre::DistributedSettings::DistributedSettings( void )
-	 : _frame_data_id(eq::base::UUID::ZERO),
+	 : _scene_manager_id(eq::base::UUID::ZERO),
 	   _resource_man_id(eq::base::UUID::ZERO),
+	   _player_id( eq::base::UUID::ZERO ),
 	   _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
 {}
 
@@ -256,7 +257,8 @@ eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
 void
 eqOgre::DistributedSettings::getInstanceData( co::DataOStream& os )
 {
-	os << _project_name << _frame_data_id << _resource_man_id << _log_dir
+	os << _project_name << _scene_manager_id << _resource_man_id
+		<< _player_id << _log_dir
 		<< _camera_rotations_allowed;
 
 	// TODO this should serialize used plugins
@@ -265,6 +267,7 @@ eqOgre::DistributedSettings::getInstanceData( co::DataOStream& os )
 void
 eqOgre::DistributedSettings::applyInstanceData( co::DataIStream& is )
 {
-	is >> _project_name >> _frame_data_id >> _resource_man_id >> _log_dir
+	is >> _project_name >> _scene_manager_id >> _resource_man_id
+		>> _player_id >> _log_dir
 		>> _camera_rotations_allowed;
 }

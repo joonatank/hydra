@@ -5,16 +5,13 @@
 
 #include "math/conversion.hpp"
 
+// TODO we should pass the active camera to this, so it's not arbitary
 vl::Player::Player( eq::Observer *observer )
-	: _observer(observer)
-{
-
-}
+	: _observer(observer), _screenshot_version(0)
+{}
 
 vl::Player::~Player( void )
-{
-
-}
+{}
 
 std::string const &
 vl::Player::getActiveCamera( void ) const
@@ -23,10 +20,13 @@ vl::Player::getActiveCamera( void ) const
 }
 
 void
-vl::Player::setActiveCamera(const std::string& name)
+vl::Player::setActiveCamera( std::string const &name )
 {
-	_active_camera = name;
-	std::cerr << "This should change the camera" << std::endl;
+	if( _active_camera != name )
+	{
+		_active_camera = name;
+		setDirty( DIRTY_ACTIVE_CAMERA );
+	}
 }
 
 void
@@ -36,4 +36,37 @@ vl::Player::setHeadMatrix( Ogre::Matrix4 const &m )
 	// When head matrix is set equalizer automatically applies it to the
 	// GL Modelview matrix as first transformation
 	_observer->setHeadMatrix( vl::math::convert(m) );
+}
+
+void
+vl::Player::takeScreenshot(void )
+{
+	setDirty( DIRTY_SCREENSHOT );
+	_screenshot_version++;
+}
+
+
+/// ------------------------------- Protected ----------------------------------
+void
+vl::Player::serialize(co::DataOStream& os, const uint64_t dirtyBits)
+{
+	eq::fabric::Serializable::serialize(os, dirtyBits);
+
+	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
+	{ os << _active_camera; }
+
+	if( dirtyBits & DIRTY_SCREENSHOT )
+	{ os << _screenshot_version; }
+}
+
+void
+vl::Player::deserialize(co::DataIStream& is, const uint64_t dirtyBits)
+{
+	eq::fabric::Serializable::deserialize(is, dirtyBits);
+
+	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
+	{ is >> _active_camera; }
+
+	if( dirtyBits & DIRTY_SCREENSHOT )
+	{ is >> _screenshot_version; }
 }

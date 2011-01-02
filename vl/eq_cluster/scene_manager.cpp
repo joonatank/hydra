@@ -15,7 +15,7 @@ eqOgre::SceneManager::~SceneManager( void )
 	_scene_nodes.clear();
 }
 
-bool 
+bool
 eqOgre::SceneManager::setSceneManager( Ogre::SceneManager *man )
 {
 	if( !man )
@@ -111,16 +111,6 @@ void eqOgre::SceneManager::reloadScene(void )
 	_scene_version++;
 }
 
-void
-eqOgre::SceneManager::setActiveCamera( std::string const &name )
-{
-	if( _camera_name == name )
-	{ return; }
-
-	setDirty( DIRTY_ACTIVE_CAMERA );
-	_camera_name = name;
-}
-
 eq::uint128_t
 eqOgre::SceneManager::commitAll( void )
 {
@@ -206,7 +196,7 @@ eqOgre::SceneManager::deregisterData( void )
 	_config->deregisterObject( this );
 }
 
-void
+bool
 eqOgre::SceneManager::mapData( eq::Config *session, eq::base::UUID const &id )
 {
 	// We need to map this object first so that we have valid _scene_nodes vector
@@ -216,7 +206,7 @@ eqOgre::SceneManager::mapData( eq::Config *session, eq::base::UUID const &id )
 	_config = session;
 
 	EQASSERTINFO( !this->isAttached(), "FrameData already mapped" )
-	_config->mapObject(this, id);
+	return _config->mapObject(this, id);
 }
 
 void
@@ -263,11 +253,6 @@ eqOgre::SceneManager::serialize(  co::DataOStream &os, const uint64_t dirtyBits 
 	{
 		os << _scene_version;
 	}
-
-	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{
-		os << _camera_name;
-	}
 }
 
 void
@@ -313,11 +298,6 @@ eqOgre::SceneManager::deserialize( co::DataIStream &is, const uint64_t dirtyBits
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		is >> _scene_version;
-	}
-
-	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{
-		is >> _camera_name;
 	}
 }
 

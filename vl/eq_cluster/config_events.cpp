@@ -63,3 +63,13 @@ eqOgre::ActivateCamera::execute( void )
 
  	data->setActiveCamera( _camera_name );
 }
+
+/// -------- ScreenshotAction ------------
+void
+eqOgre::ScreenshotAction::execute( void )
+{
+	if( !data )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+ 	data->takeScreenshot();
+}
