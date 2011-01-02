@@ -89,6 +89,7 @@ find_package( cAudio REQUIRED )
 # Add selectable components
 
 set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_LIBS   OFF)
 
 find_package(Boost COMPONENTS python REQUIRED )
 

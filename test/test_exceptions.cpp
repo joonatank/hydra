@@ -29,3 +29,4 @@ BOOST_AUTO_TEST_CASE( exceptions )
 			<< boost::diagnostic_information<>(e) << std::endl;
 	}
 }
+

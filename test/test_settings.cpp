@@ -739,3 +739,4 @@ BOOST_AUTO_TEST_CASE( missing_read_file )
 	BOOST_REQUIRE( !fs::exists( missing_filename ) );
 	BOOST_CHECK_THROW( ser.readFile( missing_filename ), vl::missing_file );
 }
+

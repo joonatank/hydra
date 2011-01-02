@@ -196,3 +196,4 @@ BOOST_AUTO_TEST_CASE( too_long_packet )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+

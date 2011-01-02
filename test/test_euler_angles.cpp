@@ -94,3 +94,4 @@ BOOST_AUTO_TEST_CASE( convert_compined_quaternion )
 			BOOST_CHECK_CLOSE( rad_z, z.valueRadians(), tolerance );
 	}
 }
+

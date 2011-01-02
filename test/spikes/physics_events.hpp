@@ -68,3 +68,4 @@ protected :
 }	// namespace vl
 
 #endif // VL_PHYSICS_EVENTS_HPP
+
