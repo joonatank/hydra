@@ -14,11 +14,11 @@ project( "demos" CXX )
 cmake_minimum_required(VERSION 2.6)
 
 # Copy configs
-copy_start_script( renderer
+copy_start_scripts( renderer
 	ogre_project/ogre.prj
 	"ogre" )
 
-copy_start_script( renderer
+copy_start_scripts( renderer
 	tracking_test_project/tracking.prj
 	tracking )
 

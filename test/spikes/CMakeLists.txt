@@ -41,4 +41,4 @@ add_executable( spike_bullet
 
 target_link_libraries( spike_bullet ${BULLET_LIBRARIES} ${eqOgre_LIBRARY} )
 
-copy_start_script( spike_bullet ogre_project/ogre.prj physics )
+copy_start_scripts( spike_bullet ogre_project/ogre.prj physics )

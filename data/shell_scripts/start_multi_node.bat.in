@@ -1,6 +1,14 @@
-REM this needs to be tested
-REM TODO this needs a for loop to create multiple listening clients
+REM Add necessary dlls to path
+Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR}\Equalizer\bin\${BUILD_TYPE};${LIB_DIR}\OGRE\bin\${BUILD_TYPE}
 
+REM Start equalizer server, might move this to another script
 start ${EQUALIZER_SERVER_BIN} ${EQUALIZER_CONFIG}
+REM Start listening client
 start ${PROGRAM_NAME} --eq-client --eq-listen ${HOSTNAME_TO_LISTEN}:${LISTENING_PORT}
-start ${PROGRAM_NAME} -e ${DEMO_DATA_PATH}/env.env -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} -g ${DEMO_DATA_PATH}/global/global_config.prj
+REM Start the master
+start ${PROGRAM_NAME} ^
+ -e ${DEMO_DATA_PATH}/env.env ^
+ -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} ^
+ -g ${DEMO_DATA_PATH}/global/global_config.prj ^
+ %*
+

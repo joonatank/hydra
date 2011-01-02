@@ -16,6 +16,12 @@
 **.lyx = native
 **.fig = native
 
+# shell scripts
+**.sh.in = native
+**.bat.in = native
+**.bat = native
+**.sh = native
+
 # Resources
 **.eqc = native
 **.xml = native

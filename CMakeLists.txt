@@ -35,6 +35,9 @@ elseif( UNIX )
 	endif()
 endif( WIN32 )
 
+IF(CMAKE_CONFIGURATION_TYPES)
+   SET(CMAKE_CONFIGURATION_TYPES Debug Release)
+ENDIF(CMAKE_CONFIGURATION_TYPES)
 
 
 # Add our local scripts to CMake path
@@ -136,66 +139,10 @@ set( eqOgre_LIBRARY eqOgre )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.
-link_directories( ${vl_BINARY_DIR}/vl
-	${Boost_LIBRARY_DIRS} )
+link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 
-## Copy start script macro ##
-MACRO( copy_start_script program_name project_path start_suffix )
-message( "Copying start scripts for project = ${PROJECT_NAME}
-	: exe name = ${program_name}" )
 
-# Copy the single Node start script
-set( PROGRAM_NAME ${program_name} )
-set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
-set( PROJ_PATH_RELATIVE ${project_path} )
-
-if( WIN32 )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-		${PROJECT_BINARY_DIR}/Release/start_${start_suffix}.bat )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_${start_suffix}.bat )
-else()
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
-		${PROJECT_BINARY_DIR}/start_${start_suffix}.sh )
-endif()
-
-# Copy the multi node listening start script
-
-# TODO this needs to be automatically configured to match the host name of this computer
-site_name( HOSTNAME )
-set( HOSTNAME_TO_LISTEN ${HOSTNAME} )
-message( "Hostname to listen = ${HOSTNAME_TO_LISTEN}" )
-
-set( LISTENING_PORT 4242 )
-
-if( WIN32 )
-	# TODO these should be configured automatically
-	# TODO not tested in Windows
-	set( EQUALIZER_SERVER_BIN "c:/libs/equalizer/bin/eqServer.exe" )
-	# TODO the config should be in the repository
-	#set( EQUALIZER_CONFIG "c:\libs\equalizer\2-node.layout.eqc" )
-	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
-	# Copy Release
-	# TODO this really needs some automation/MACRO
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/Release/start_multi_${start_suffix}.bat )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
-		${PROJECT_BINARY_DIR}/Release/kill_nodes.bat )
-	# Copy RelWithDebugInfo
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.bat.in
-		${PROJECT_BINARY_DIR}/RelWithDebInfo/start_multi_${start_suffix}.bat )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.bat.in
-		${PROJECT_BINARY_DIR}/RelWithDebInfo/kill_nodes.bat )
-else()
-	set( EQUALIZER_SERVER_BIN "eqServer" )
-	set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start_multi_node.sh.in
-		${PROJECT_BINARY_DIR}/start_multi_${start_suffix}.sh )
-	configure_file( ${DEMO_DATA_PATH}/shell_scripts/kill_nodes.sh.in
-		${PROJECT_BINARY_DIR}/kill_nodes.sh )
-endif()
-
-ENDMACRO()
+include( CopyScripts )
 
 
 # include rendering engine, eq ogre directories
