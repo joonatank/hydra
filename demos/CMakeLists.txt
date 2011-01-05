@@ -29,6 +29,7 @@ add_executable( fake_tracking_server
 target_link_libraries( fake_tracking_server
 	${VRPN_LIBRARY}
 	${CMAKE_THREAD_LIBS_INIT}
+	${Ogre_LIBRARY}
 	)
 
 

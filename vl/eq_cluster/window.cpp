@@ -138,6 +138,13 @@ eqOgre::Window::getSettings( void ) const
 	return static_cast<eqOgre::Pipe const *>(getPipe())->getSettings();
 }
 
+vl::Player const &
+eqOgre::Window::getPlayer( void ) const
+{
+	EQASSERT( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
+	return static_cast<eqOgre::Pipe const *>(getPipe())->getPlayer();
+}
+
 vl::ogre::RootRefPtr
 eqOgre::Window::getOgreRoot( void )
 {

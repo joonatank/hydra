@@ -6,10 +6,13 @@
  *	Contains current active camera
  *	Contains current camera target
  *	Contains all the possible cameras player can use and their targets
- *	Set the head matrix for tracking
+ *	Contains the head matrix and distributes it to Channels.
  *
  *	Non copyable as there should only be one of these at the moment
  *
+ *	2011-01 Updated:
+ *	Removed Equalizer observer.
+ *	We are using our own code for setting the head matrix player only distributes.
  */
 
 #ifndef VL_PLAYER_HPP
@@ -19,7 +22,6 @@
 
 #include <OGRE/OgreMatrix4.h>
 
-#include <eq/client/observer.h>
 #include <eq/fabric/serializable.h>
 
 // TODO should be moved to eq_cluster because this depends on the Equalizer
@@ -31,15 +33,16 @@ class Player : public eq::fabric::Serializable
 {
 public :
 	/// Constructor
-	/// Parameters : observer on Master this should be valid
-	///				 on slaves this should be zero
-	Player( eq::Observer *observer = 0 );
+	Player( void );
 
 	virtual ~Player( void );
 
 	void setActiveCamera( std::string const &name );
 
 	std::string const &getActiveCamera( void ) const;
+
+	Ogre::Matrix4 const &getHeadMatrix( void ) const
+	{ return _head_matrix; }
 
 	void setHeadMatrix( Ogre::Matrix4 const &m );
 
@@ -50,8 +53,9 @@ public :
 
 	enum DirtyBits
 	{
-		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_SCREENSHOT = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
+		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
+		DIRTY_SCREENSHOT = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
 	};
 
 protected :
@@ -65,7 +69,7 @@ private :
 
 	std::string _active_camera;
 
-	eq::Observer *_observer;
+	Ogre::Matrix4 _head_matrix;
 
 	uint32_t _screenshot_version;
 

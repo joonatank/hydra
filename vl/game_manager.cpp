@@ -92,7 +92,7 @@ vl::GameManager::createPlayer( eq::Observer* observer )
 {
 	EQASSERT( observer );
 	EQASSERT( !_player );
-	_player = new Player( observer );
+	_player = new Player();
 	return _player;
 }
 

@@ -1,7 +1,6 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2011-01
- *
- *
+ *	
  */
 
 #ifndef EQ_OGRE_CHANNEL_HPP
@@ -31,6 +30,8 @@ public:
 
 	DistributedSettings const &getSettings( void ) const;
 
+	vl::Player const &getPlayer( void ) const;
+	
 	void setCamera( Ogre::Camera *cam );
 
 	void setViewport( Ogre::Viewport *viewport );
@@ -49,13 +50,18 @@ protected:
 	/// Creating custom frustum and applying head matrix
 	virtual void frameDraw( const eq::uint128_t &frameID );
 
+	virtual void applyHeadTransform() const {}
+
+	virtual void applyFrustum() const {}
+
 //	virtual void frameFinish( const eq::uint128_t &frameID, uint32_t const frameNumber  );
 
 //	virtual void frameViewFinish( const eq::uint128_t &frameID );
 
 	// Some task methods
 	void setOgreFrustum( Ogre::Camera *camera );
-
+	void setOgreView( Ogre::Camera *camera );
+	
 	/// Ogre variables
 	Ogre::Viewport *_viewport;
 

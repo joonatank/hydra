@@ -18,6 +18,7 @@
 // Necessary for Math types
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreVector3.h>
+#include <OGRE/OgreMatrix4.h>
 
 // Necessary for printing
 #include <iostream>
@@ -34,6 +35,39 @@ namespace vl
 		if( a-epsilon < b && a+epsilon > b )
 		{ return true; }
 		return false;
+	}
+
+	inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2 )
+	{
+		for( size_t i = 0; i < 3; ++i )
+		{
+			if( !equal( v1[i], v2[i] ) )
+			{ return false; }
+		}
+		return true;
+	}
+
+	inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2 )
+	{
+		for( size_t i = 0; i < 4; ++i )
+		{
+			if( !equal( q1[i], q2[i] ) )
+			{ return false; }
+		}
+		return true;
+	}
+
+	inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
+	{
+		for( size_t i = 0; i < 4; ++i )
+		{
+			for( size_t j = 0; j < 4; ++j )
+			{
+				if( !equal( m1[i][j], m2[i][j] ) )
+				{ return false; }
+			}
+		}
+		return true;
 	}
 
 	struct Transform

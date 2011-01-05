@@ -10,6 +10,7 @@
 #include <eq/client/window.h>
 
 #include "eq_settings.hpp"
+#include "player.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -48,6 +49,8 @@ namespace eqOgre
 		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
 		DistributedSettings const &getSettings( void ) const;
+
+		vl::Player const &getPlayer( void ) const;
 
 		vl::ogre::RootRefPtr getOgreRoot( void );
 

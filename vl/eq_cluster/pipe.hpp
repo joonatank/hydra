@@ -36,6 +36,9 @@ public :
 	Ogre::Camera *getCamera( void )
 	{ return _camera; }
 
+	vl::Player const &getPlayer( void ) const
+	{ return _player; }
+
 protected :
 	/// Equalizer overrides
 
