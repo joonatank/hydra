@@ -22,9 +22,14 @@
 **.bat = native
 **.sh = native
 
+# Our configs
+**.xml = native
+**.env = native
+**.prj = native
+**.trc = native
+
 # Resources
 **.eqc = native
-**.xml = native
 **.material = native
 **.particle = native
 **.program = native

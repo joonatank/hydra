@@ -7,6 +7,7 @@
 
 #include <co/base/log.h>
 
+#include "window.hpp"
 
 eqOgre::WGLWindow::WGLWindow( eq::Window* parent )
     : WGLWindowIF( parent )
@@ -334,38 +335,33 @@ HWND
 eqOgre::WGLWindow::_createWGLWindow( int pixelFormat, const eq::PixelViewport& pvp  )
 {
 	EQINFO << "eqOgre::WGLWindow::_createWGLWindow" << std::endl;
-    // window class
-    const std::string& name = getWindow()->getName();
+	// window class
+	const std::string& name = getWindow()->getName();
 
-    std::ostringstream className;
-    className << (name.empty() ? std::string("Equalizer") : name) 
-              << (void*)this;
-    const std::string& classStr = className.str();
+	std::ostringstream className;
+	className << (name.empty() ? std::string("Equalizer") : name) 
+				<< (void*)this;
+	const std::string& classStr = className.str();
                                   
-    HINSTANCE instance = GetModuleHandle( 0 );
-    WNDCLASS  wc = { 0 };
-    wc.style         = CS_OWNDC;
-    wc.lpfnWndProc   = DefWindowProc;    
-    wc.hInstance     = instance; 
-    wc.hIcon         = LoadIcon( 0, IDI_WINLOGO );
-    wc.hCursor       = LoadCursor( 0, IDC_ARROW );
-    wc.lpszClassName = classStr.c_str();       
+	HINSTANCE instance = GetModuleHandle( 0 );
+	WNDCLASS  wc = { 0 };
+	wc.style         = CS_OWNDC;
+	wc.lpfnWndProc   = DefWindowProc;    
+	wc.hInstance     = instance; 
+	wc.hIcon         = LoadIcon( 0, IDI_WINLOGO );
+	wc.hCursor       = LoadCursor( 0, IDC_ARROW );
+	wc.lpszClassName = classStr.c_str();       
 
-    if( !RegisterClass( &wc ))
-    {
-        setError( eq::ERROR_WGLWINDOW_REGISTERCLASS_FAILED );
-        EQWARN << getError() << ": " << eq::base::sysError << std::endl;
-        return false;
-    }
+	if( !RegisterClass( &wc ))
+	{
+		setError( eq::ERROR_WGLWINDOW_REGISTERCLASS_FAILED );
+		EQWARN << getError() << ": " << eq::base::sysError << std::endl;
+		return false;
+	}
 
-    // window
-    DWORD windowStyleEx = WS_EX_APPWINDOW;
-    //DWORD windowStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW | WS_POPUP;
-
-	/*
-    if( getIAttribute( Window::IATTR_HINT_DECORATION ) == OFF )
-        windowStyle = WS_POPUP;
-	*/
+	// window
+	DWORD windowStyleEx = WS_EX_APPWINDOW;
+	DWORD windowStyle = WS_POPUP;
 	/*
     if( getIAttribute( Window::IATTR_HINT_FULLSCREEN ) == ON )
     {
@@ -386,20 +382,33 @@ eqOgre::WGLWindow::_createWGLWindow( int pixelFormat, const eq::PixelViewport& p
     }
 	*/
 
-    // adjust window size (adds border pixels)
-	// TODO change to using our window size and position definition
-    RECT rect;
-    rect.left   = pvp.x;
-    rect.top    = pvp.y;
-    rect.right  = pvp.x + pvp.w;
-    rect.bottom = pvp.y + pvp.h;
- //   AdjustWindowRectEx( &rect, windowStyle, FALSE, windowStyleEx );
+	EQASSERT( dynamic_cast<eqOgre::Window *>( getWindow() ) );
+	eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 
+	vl::EnvSettings::Window win_def;
+	if( win->getSettings().getNWindows() > 1 && !name.empty() )
+	{
+		EQINFO << "Using window named = " << name << std::endl;
+		win_def = win->getSettings().findWindow( name );
+	}
+	
+	// Grap the first window
+	if( win_def.empty() )
+	{
+		EQINFO << "Using first window definition" << std::endl;
+		win_def = win->getSettings().getWindow(0); 
+	}
+
+	std::string window_name( name );
+	if( window_name.empty() )
+	{ window_name = "eqOgre"; }
+	 
     HWND hWnd = CreateWindowEx( windowStyleEx,
                                 wc.lpszClassName, 
-                                name.empty() ? "Equalizer" : name.c_str(),
-                                WS_POPUP, rect.left, rect.top, 
-                                rect.right - rect.left, rect.bottom - rect.top,
+                                window_name.c_str(),
+                                windowStyle, 
+								win_def.x, win_def.y, 
+                                win_def.w, win_def.h,
                                 0, 0, // parent, menu
                                 instance, 0 );
     if( !hWnd )

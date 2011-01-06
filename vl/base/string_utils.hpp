@@ -2,6 +2,9 @@
  *	2010-04
  *
  *	Basic utilities for strings. Mostly used by the parsers.
+ *
+ *	Update 2011-01
+ *	Added to_lower and to_upper. Change case of the whole string.
  */
 #ifndef VL_STRING_UTILS_HPP
 #define VL_STRING_UTILS_HPP
@@ -79,6 +82,24 @@ namespace vl
 		T tmp;
 		ss >> tmp;
 		return tmp;
+	}
+
+	inline
+	void to_lower( std::string &str )
+	{
+		for( size_t i = 0; i < str.length(); ++i )
+		{
+			str.at(i) = ::tolower(str.at(i));
+		}
+	}
+
+	inline
+	void to_upper( std::string &str )
+	{
+		for( size_t i = 0; i < str.length(); ++i )
+		{
+			str.at(i) = ::toupper(str.at(i));
+		}
 	}
 
 }	// namespace vl

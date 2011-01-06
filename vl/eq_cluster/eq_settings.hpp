@@ -12,6 +12,8 @@
 
 // Needed for ProjSettings::Scene
 #include "base/projsettings.hpp"
+// Needed for EnvSettings::Wall and EnvSettings::Window
+#include "base/envsettings.hpp"
 
 // Needed for RefPtrs
 #include "base/typedefs.hpp"
@@ -57,6 +59,7 @@ public :
 	{ _player_id = id; }
 
 	/// Used by master to copy the necessary data for synchronization
+	// TODO Why is the resource man passed here?
 	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
 
 	/// Logging
@@ -69,6 +72,22 @@ public :
 	/// Fist bit is the x axis, second y axis, third z axis
 	uint32_t getCameraRotationAllowed() const
 	{ return _camera_rotations_allowed; }
+
+	vl::EnvSettings::Window findWindow( std::string const &name ) const;
+
+	vl::EnvSettings::Window const &getWindow( size_t i ) const
+	{ return _windows.at(i); }
+
+	size_t getNWindows( void ) const
+	{ return _windows.size(); }
+
+	vl::EnvSettings::Wall findWall( std::string const &channel_name ) const;
+	
+	vl::EnvSettings::Wall const &getWall( size_t i ) const
+	{ return _walls.at(i); }
+
+	size_t getNWalls( void ) const
+	{ return _walls.size(); }
 
 protected :
 	virtual void getInstanceData( co::DataOStream& os );
@@ -83,8 +102,43 @@ protected :
 	eq::base::UUID _player_id;
 
 	uint32_t _camera_rotations_allowed;
+
+	std::vector<vl::EnvSettings::Wall> _walls;
+
+	std::vector<vl::EnvSettings::Window> _windows;
+
+	vl::EnvSettings::CFG _stereo;
+
+	double _ipd;
 };
 
+// Necessary to overload the Window serialization because the Equalizer default
+// i.e. memcpy somehow fails and crashes the application on destruction
+co::DataOStream &
+operator<<(  vl::EnvSettings::Window const &win, co::DataOStream &os );
+
+co::DataIStream &
+operator>>( vl::EnvSettings::Window &win, co::DataIStream &is );
+
+co::DataOStream &
+operator<<( std::vector<vl::EnvSettings::Window> const &win, co::DataOStream &os );
+
+co::DataIStream &
+operator>>( std::vector<vl::EnvSettings::Window> &win, co::DataIStream &is );
+
+// Necessary to overload the Wall serialization because the Equalizer default
+// i.e. memcpy somehow fails and crashes the application on destruction
+co::DataOStream &
+operator<<(  vl::EnvSettings::Wall const &wall, co::DataOStream &os );
+
+co::DataIStream &
+operator>>( vl::EnvSettings::Wall &wall, co::DataIStream &is );
+
+co::DataOStream &
+operator<<( std::vector<vl::EnvSettings::Wall> const &walls, co::DataOStream &os );
+
+co::DataIStream &
+operator>>( std::vector<vl::EnvSettings::Wall> &walls, co::DataIStream &is );
 }	// namespace eqOgre
 
 #endif //EQ_OGRE_SETTINGS_HPP

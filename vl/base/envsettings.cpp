@@ -12,6 +12,7 @@
 
 #include "filesystem.hpp"
 #include "exceptions.hpp"
+#include "string_utils.hpp"
 
 #include <iostream>
 
@@ -127,6 +128,50 @@ vl::EnvSettings::removeTracking( Tracking const &track )
 	}
 }
 
+void 
+vl::EnvSettings::addWall( vl::EnvSettings::Wall const &wall )
+{
+	// Check that there is not already a wall with the same channel_name
+	std::vector<Wall>::iterator iter;
+	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
+	{
+		if( iter->channel_name == wall.channel_name )
+		{
+			std::string desc("Trying to add multiple walls to same channel.");
+			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) ); 
+		}
+	}
+
+	_walls.push_back(wall);
+}
+
+vl::EnvSettings::Wall const &
+vl::EnvSettings::getWall( size_t i ) const
+{
+	return _walls.at(i);
+}
+
+void 
+vl::EnvSettings::addWindow( vl::EnvSettings::Window const &window )
+{
+	// Check that there is not already a Window with the same name
+	std::vector<Window>::iterator iter;
+	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
+	{
+		if( iter->name == window.name )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() ); }
+	}
+
+	_windows.push_back(window);
+}
+
+vl::EnvSettings::Window const &
+vl::EnvSettings::getWindow( size_t i ) const
+{
+	return _windows.at(i);
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////
 ////////////////////// --- EnvSettingsSerializer --- //////////////////
@@ -173,23 +218,39 @@ vl::EnvSettingsSerializer::readXML()
 void
 vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 {
-    rapidxml::xml_node<>* xml_elem;
+	rapidxml::xml_node<>* xml_elem;
 
-    xml_elem = xml_root->first_node("plugins");
-    if( xml_elem )
-    { processPlugins( xml_elem ); }
+	xml_elem = xml_root->first_node("plugins");
+	if( xml_elem )
+	{ processPlugins( xml_elem ); }
 
-    xml_elem = xml_root->first_node("eqc");
-    if( xml_elem )
-    { processEqc( xml_elem ); }
+	xml_elem = xml_root->first_node("eqc");
+	if( xml_elem )
+	{ processEqc( xml_elem ); }
 
-    xml_elem = xml_root->first_node("tracking");
-    if( xml_elem )
-    { processTracking( xml_elem ); }
+	xml_elem = xml_root->first_node("tracking");
+	if( xml_elem )
+	{ processTracking( xml_elem ); }
 
-    xml_elem = xml_root->first_node("camera_rotations");
+	xml_elem = xml_root->first_node("camera_rotations");
 	if( xml_elem )
 	{ processCameraRotations( xml_elem ); }
+
+	xml_elem = xml_root->first_node("walls");
+	if( xml_elem )
+	{ processWalls( xml_elem ); }
+
+	xml_elem = xml_root->first_node("windows");
+	if( xml_elem )
+	{ processWindows( xml_elem ); }
+
+	xml_elem = xml_root->first_node("stereo");
+	if( xml_elem )
+	{ processStereo( xml_elem ); }
+
+	xml_elem = xml_root->first_node("ipd");
+	if( xml_elem )
+	{ processIPD( xml_elem ); }
 }
 
 
@@ -280,7 +341,7 @@ vl::EnvSettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 }
 
 void
-vl::EnvSettingsSerializer::processCameraRotations( rapidxml::xml_node< char >* xml_node )
+vl::EnvSettingsSerializer::processCameraRotations( rapidxml::xml_node<>* xml_node )
 {
 	uint32_t flags = 0;
 	std::string const F("false");
@@ -301,4 +362,179 @@ vl::EnvSettingsSerializer::processCameraRotations( rapidxml::xml_node< char >* x
 	{ flags |= 1<<2; }
 
 	_envSettings->setCameraRotationAllowed(flags);
+}
+
+void 
+vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
+{
+	rapidxml::xml_node<> *pWall = xml_node->first_node("wall");
+
+	while( pWall )
+	{
+		std::string name("default-wall");
+
+		rapidxml::xml_attribute<> *attrib = pWall->first_attribute("name");
+		if( attrib )
+		{ name = attrib->value(); }
+
+		// Process channel
+		rapidxml::xml_node<> *pElement = pWall->first_node("channel");
+		if( !pElement )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no channel") ); }
+		attrib = pElement->first_attribute("name");
+		if( !attrib || ::strlen( attrib->value() ) == 0 )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no channel name") ); }
+		std::string channel = attrib->value();
+
+		// Process bottom_left
+		pElement = pWall->first_node("bottom_left");
+		if( !pElement )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no bottom_left") ); }
+		std::vector<double> bottom_left = getVector( pElement );
+		std::cout << "parsed bottom_left = " << bottom_left.at(0) << ',' << bottom_left.at(1) 
+			<< ',' << bottom_left.at(2) << std::endl;
+
+		// Process bottom_right
+		pElement = pWall->first_node("bottom_right");
+		if( !pElement )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no bottom_right") ); }
+		std::vector<double> bottom_right = getVector( pElement );
+		std::cout << "parsed bottom_right = " << bottom_right.at(0) << ',' << bottom_right.at(1) 
+			<< ',' << bottom_right.at(2) << std::endl;
+
+		// Process top_left
+		pElement = pWall->first_node("top_left");
+		if( !pElement )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no top_left") ); }
+		std::vector<double> top_left = getVector( pElement );
+		std::cout << "parsed top_left = " << top_left.at(0) << ',' << top_left.at(1) 
+			<< ',' << top_left.at(2) << std::endl;
+
+		// Add the wall
+		EnvSettings::Wall wall( name, channel, bottom_left, bottom_right, top_left );
+		_envSettings->addWall( wall );
+
+		pWall = pWall->next_sibling("wall");
+	}
+
+	if( xml_node->next_sibling("walls") )
+	{
+		std::string desc( "Only one walls token is supported" );
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
+}
+
+void 
+vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<>* xml_node )
+{
+	rapidxml::xml_node<> *pWindow = xml_node->first_node("window");
+
+	while( pWindow )
+	{
+		rapidxml::xml_attribute<> *attrib = pWindow->first_attribute("name");
+		if( !attrib )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no name") ); }
+		std::string name = attrib->value();
+
+		// Process w, h, x, y
+		attrib = pWindow->first_attribute("w");
+		if( !attrib )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no w") ); }
+		int w = vl::from_string<int>( attrib->value() );
+
+		attrib = pWindow->first_attribute("h");
+		if( !attrib )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no h") ); }
+		int h = vl::from_string<int>( attrib->value() );
+
+		attrib = pWindow->first_attribute("x");
+		if( !attrib )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no x") ); }
+		int x = vl::from_string<int>( attrib->value() );
+
+		attrib = pWindow->first_attribute("y");
+		if( !attrib )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
+		int y = vl::from_string<int>( attrib->value() );
+
+		// Add the wall
+		EnvSettings::Window window( name, w, h, x, y );
+		_envSettings->addWindow( window );
+
+		pWindow = pWindow->next_sibling("window");
+	}
+
+	if( xml_node->next_sibling("windows") )
+	{
+		std::string desc( "Only one windows token is supported" );
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
+}
+
+void 
+vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
+{
+	EnvSettings::CFG cfg_val = EnvSettings::ON;
+	std::string stereo = xml_node->value();
+	vl::to_lower(stereo);
+	if( stereo == "on" )
+	{}
+	else if( stereo == "off" )
+	{
+		cfg_val = EnvSettings::OFF;
+	}
+	else if( stereo == "required" )
+	{
+		cfg_val = EnvSettings::REQUIRED;
+	}
+
+	_envSettings->setStereo( cfg_val );
+
+	if( xml_node->next_sibling("stereo") )
+	{
+		std::string desc( "Only one stereo token is supported" );
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
+}
+
+void 
+vl::EnvSettingsSerializer::processIPD( rapidxml::xml_node<>* xml_node )
+{
+	double ipd = vl::from_string<double>(xml_node->value());
+	if( ipd < 0 )
+	{ 
+		std::string desc( "IPD can not be less than zero." );
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
+
+	_envSettings->setIPD( ipd);
+
+	if( xml_node->next_sibling("stereo") )
+	{
+		std::string desc( "Only one IPD token is supported" );
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
+}
+
+std::vector<double> 
+vl::EnvSettingsSerializer::getVector( rapidxml::xml_node<>* xml_node )
+{
+	std::vector<double> tmp(3);
+
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("x");
+	if( !attrib || ::strlen( attrib->value() ) == 0 )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("x in vector") ); }
+	tmp.at(0) = vl::from_string<double>( attrib->value() );
+
+	attrib = xml_node->first_attribute("y");
+	if( !attrib || ::strlen( attrib->value() ) == 0 )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("y in vector") ); }
+	tmp.at(1) = vl::from_string<double>( attrib->value() );
+
+	attrib = xml_node->first_attribute("z");
+	if( !attrib || ::strlen( attrib->value() ) == 0 )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("z in vector") ); }
+	tmp.at(2) = vl::from_string<double>( attrib->value() );
+
+	return tmp;
 }

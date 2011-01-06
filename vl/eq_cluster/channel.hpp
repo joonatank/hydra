@@ -14,6 +14,7 @@
 #include <OGRE/OgreViewport.h>
 
 #include "eq_cluster/eq_settings.hpp"
+#include "base/envsettings.hpp"
 
 namespace eqOgre
 {
@@ -65,6 +66,7 @@ protected:
 	/// Ogre variables
 	Ogre::Viewport *_viewport;
 
+	vl::EnvSettings::Wall _wall;
 };	// class Channel
 
 }	// namespace eqOgre

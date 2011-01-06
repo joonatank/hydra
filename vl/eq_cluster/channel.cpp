@@ -58,8 +58,26 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	if( !eq::Channel::configInit( initID ) )
 	{ return false; }
 
-	// TODO this should be configurable from DotScene
-	setNearFar( 0.1, 100.0 );
+	EQASSERT( getSettings().getNWalls() > 0);
+	EQINFO << "Settings has " << getSettings().getNWalls() << " wall configs." 
+		<< std::endl;
+
+	// If the channel has a name we try to find matching wall
+	if( !getName().empty() )
+	{
+		EQINFO << "Finding Wall for channel : " << getName() << std::endl;
+		_wall = getSettings().findWall( getName() );
+	}
+	
+	// Get the first wall definition if no named one was found
+	if( _wall.empty() )
+	{
+		_wall = getSettings().getWall(0);
+	}
+	
+	EQASSERT( !_wall.empty() );
+
+	EQINFO << "Using wall : " << _wall.name <<std::endl; 
 
 	EQINFO << "Channel::ConfigInit done" << std::endl;
 
@@ -110,6 +128,7 @@ void
 eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 {
 	EQASSERT( camera );
+	EQASSERT( !_wall.empty() );
 
 	/* Projection matrix i.e. frustum
 	 * | E	0	A	0 |
@@ -132,11 +151,17 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
 
 	// TODO read wall configuration from environment config
-	Ogre::Real wall_right = 1.33; // bottom right [  1.33 .34 -1.33 ]
-	Ogre::Real wall_left = -1.33; // bottom left [ -1.33 .34 -1.33 ]
-	Ogre::Real wall_top = 2.34;	 // top_left     [ -1.33  2.44 -1.33 ]
-	Ogre::Real wall_bottom = 0.34;
-	Ogre::Real wall_front = -1.33;
+	// TODO should take the transformed wall which has camera looking
+	// directly at it
+	Ogre::Real wall_right = _wall.bottom_right.at(0); //1.33; // bottom right [  1.33 .34 -1.33 ]
+	Ogre::Real wall_left = _wall.bottom_left.at(0); //-1.33; // bottom left [ -1.33 .34 -1.33 ]
+	Ogre::Real wall_top = _wall.top_left.at(1); //2.34;	 // top_left     [ -1.33  2.44 -1.33 ]
+	Ogre::Real wall_bottom = _wall.bottom_right.at(1); //0.34;
+	Ogre::Real wall_front = _wall.bottom_right.at(2); //-1.33;
+
+	std::cout << "wall_right = " << wall_right << " : wall_left = " << wall_left
+		<< " : wall_top = " << wall_top << " : wall_bottom = " << wall_bottom
+		<< " : wall_front = " << wall_front << std::endl;
 
 	Ogre::Real head_x = headMat.getTrans().x;
 	Ogre::Real head_y = headMat.getTrans().y;
