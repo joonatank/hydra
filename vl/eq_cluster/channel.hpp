@@ -60,13 +60,17 @@ protected:
 //	virtual void frameViewFinish( const eq::uint128_t &frameID );
 
 	// Some task methods
-	void setOgreFrustum( Ogre::Camera *camera );
-	void setOgreView( Ogre::Camera *camera );
+	// The eye is not a reference because it's going to get modified
+	void setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
+	void setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
 	
 	/// Ogre variables
 	Ogre::Viewport *_viewport;
 
 	vl::EnvSettings::Wall _wall;
+
+	bool _stereo;
+
 };	// class Channel
 
 }	// namespace eqOgre

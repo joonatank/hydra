@@ -9,6 +9,8 @@
  *	Wall definition in Environment configuration file, mapped to eq chanel by name.
  *	Frustum is created correctly now for different projection walls.
  *	Frustum is not moved anymore to z direction with head tracker.
+ *	Added stereo rendering code. Tested without quad-buffer, seems to work.
+ *	TODO test with quad-buffer stereo.
  *
  */
 
@@ -21,7 +23,7 @@
 #include "base/exceptions.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent )
-	: eq::Channel(parent), _viewport(0)
+	: eq::Channel(parent), _viewport(0), _stereo(false)
 {}
 
 eqOgre::Channel::~Channel( void )
@@ -82,6 +84,21 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 
 	EQINFO << "Using wall : " << _wall.name <<std::endl; 
 
+	std::cout << "Checking for stereo." << std::endl;
+	GLboolean stereo;
+	glGetBooleanv( GL_STEREO, &stereo );
+	_stereo = stereo;
+	if( _stereo )
+	{
+		std::cout << "Stereo supported" << std::endl;
+	}
+	else
+	{
+		std::cout << "No stereo support." << std::endl;
+	}
+
+	std::cout << "IPD = " << getSettings().getIPD() << std::endl;
+
 	EQINFO << "Channel::ConfigInit done" << std::endl;
 
 	return true;
@@ -121,14 +138,36 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 	EQASSERT( _viewport );
 	Ogre::Camera *camera = _viewport->getCamera();
 	EQASSERT( camera );
-	setOgreFrustum( camera );
-	setOgreView( camera );
 
-	_viewport->update();
+	// TODO test the real stereo rendering code
+	if( _stereo )
+	{
+		double ipd = getSettings().getIPD();
+
+		//draw into back left buffer
+		glDrawBuffer(GL_BACK_LEFT);                    
+		Ogre::Vector3 eye(-ipd/2, 0, 0);
+		setOgreFrustum( camera, eye );
+		setOgreView( camera, eye );
+		_viewport->update();
+		
+		//draw into back right buffer
+		glDrawBuffer(GL_BACK_RIGHT);                             
+		eye = Ogre::Vector3(ipd/2, 0, 0);
+		setOgreFrustum( camera, eye );
+		setOgreView( camera, eye );
+		_viewport->update();
+	}
+	else
+	{
+		setOgreFrustum( camera );
+		setOgreView( camera );
+		_viewport->update();
+	}
 }
 
 void
-eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
+eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	EQASSERT( camera );
 	EQASSERT( !_wall.empty() );
@@ -175,9 +214,12 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 	Ogre::Real wall_bottom = bottom_right.y;
 	Ogre::Real wall_front = bottom_right.z;
 
-	Ogre::Real head_x = headTrans.x;
-	Ogre::Real head_y = headTrans.y;
-	Ogre::Real head_z = headTrans.z;
+	// eye is relative to the head, and has the same orientation
+	// eye orientation should modify the frustum when rotated around y and z
+	// but should stay constant when rotated around x.
+	// Tested it works that way.
+	Ogre::Quaternion headQuat = headMat.extractQuaternion();
+	eye = headQuat*eye + headTrans;
 
 	// The coordinates right, left, top, bottom
 	// represent a view frustum with coordinates (left, bottom, -near)
@@ -191,13 +233,10 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 	// TODO have a look at what it is supposed to be.
 	//Ogre::Real scale = (wall_front+head_z)/(-c_near);
 	Ogre::Real scale = (wall_front)/(-c_near);
-	Ogre::Real right = (wall_right - head_x)/scale;
-	Ogre::Real left = (wall_left - head_x)/scale;
-	Ogre::Real top = (wall_top - head_y)/scale;
-	Ogre::Real bottom = (wall_bottom - head_y)/scale;
-
-	// TODO add support for stereo left and right eye
-	// TODO add support for rotating the eyes based on head tracker rotation
+	Ogre::Real right = (wall_right - eye.x)/scale;
+	Ogre::Real left = (wall_left - eye.x)/scale;
+	Ogre::Real top = (wall_top - eye.y)/scale;
+	Ogre::Real bottom = (wall_bottom - eye.y)/scale;
 
 	// Near and far clipping should not be modified because
 	// Increasing the near clip would clip the objects near the user.
@@ -234,7 +273,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 }
 
 void
-eqOgre::Channel::setOgreView( Ogre::Camera *camera )
+eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	EQASSERT( camera );
 
@@ -266,6 +305,10 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera )
 	}
 
 	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
+	// NOTE This is not HMD discard the rotation part
+	// This doesn't seem to have any affect. 
+	// Though it's more realistic if it's there.
+	eye = headMat.extractQuaternion()*eye + headMat.getTrans();
 	Ogre::Vector3 cam_pos( camera->getRealPosition() );
 
 	// TODO wall transformation should transform the camera
@@ -274,9 +317,9 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera )
 	// and take it's transformation take the rotational part and apply it to
 	// the camera orientation before creating the view matrix
 
-	// NOTE This is not HMD discard the rotation part
-	Ogre::Vector3 head_pos = headMat.getTrans();
-	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos+head_pos, cam_orient );
+	
+	//Ogre::Vector3 head_pos = headMat.getTrans();
+	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos+eye, cam_orient );
 
 	camera->setCustomViewMatrix( true, camViewMatrix );
 }

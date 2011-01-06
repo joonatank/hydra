@@ -89,6 +89,12 @@ public :
 	size_t getNWalls( void ) const
 	{ return _walls.size(); }
 
+	double getIPD( void ) const
+	{ return _ipd; }
+
+	vl::EnvSettings::CFG getStereo( void ) const
+	{ return _stereo; }
+
 protected :
 	virtual void getInstanceData( co::DataOStream& os );
 	virtual void applyInstanceData( co::DataIStream& is );
