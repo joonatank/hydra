@@ -107,6 +107,9 @@ elseif( WIN32 )
 	list( APPEND HEADERS
 		eq_cluster/wglWindow.hpp
 		)
+	list( APPEND SOURCES
+		eq_cluster/wglWindow.cpp
+		)
 endif()
 
 add_library( eqOgre ${SOURCES} ${HEADERS} )

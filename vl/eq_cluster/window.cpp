@@ -322,7 +322,7 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 #ifdef GLX
 		case eq::WINDOW_SYSTEM_GLX:
 		EQINFO << "Using eqOgre::GLXWindow" << std::endl;
-			systemWindow = new eqOgre::GLXWindow( this );
+		systemWindow = new eqOgre::GLXWindow( this );
 		break;
 #endif
 
@@ -365,7 +365,8 @@ eqOgre::Window::createInputHandling( void )
 
 	std::ostringstream ss;
 #if defined OIS_WIN32_PLATFORM
-	eq::WGLWindow *os_win = dynamic_cast<eq::WGLWindow *>( getSystemWindow() );
+	EQASSERT( dynamic_cast<eq::WGLWindowIF *>( getSystemWindow() ) );
+	eq::WGLWindowIF *os_win = static_cast<eq::WGLWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{
 		EQERROR << "Couldn't get WGL system window" << std::endl;
@@ -378,7 +379,8 @@ eqOgre::Window::createInputHandling( void )
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
-	eq::GLXWindow *os_win = dynamic_cast<eq::GLXWindow *>( getSystemWindow() );
+	EQASSERT( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() );
+	eq::GLXWindowIF *os_win = static_cast<eq::GLXWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{
 		EQERROR << "Couldn't get GLX system window" << std::endl;

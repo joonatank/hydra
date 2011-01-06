@@ -22,7 +22,6 @@ if( WIN32 )
 					 -DNOMINMAX		# Don't pollute the global namespace
 					 -D_WIN32_WINNT=0x0501	# Windows XP target
 					 -DNOCOMM
-					 -DNOGDI
 					 -DNOSOUND
 					 #-DEQ_RELEASE_ASSERT
 					 # Should not need release asserts anymore
