@@ -2,10 +2,13 @@
  *	2011-01
  *
  *	2011-01 Updated : 
- *	Removed the use of Equalizer Wall, currently hard-coded wall definition.
+ *	Removed the use of Equalizer Wall.
  *	Removed the use of Equalizer headTracker position.
  *	Using our own distributed player object for head position.
  *	Added custom projection and view matrix creation.
+ *	Wall definition in Environment configuration file, mapped to eq chanel by name.
+ *	Frustum is created correctly now for different projection walls.
+ *	Frustum is not moved anymore to z direction with head tracker.
  *
  */
 
@@ -150,22 +153,31 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 
 	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
 
-	// TODO read wall configuration from environment config
-	// TODO should take the transformed wall which has camera looking
-	// directly at it
-	Ogre::Real wall_right = _wall.bottom_right.at(0); //1.33; // bottom right [  1.33 .34 -1.33 ]
-	Ogre::Real wall_left = _wall.bottom_left.at(0); //-1.33; // bottom left [ -1.33 .34 -1.33 ]
-	Ogre::Real wall_top = _wall.top_left.at(1); //2.34;	 // top_left     [ -1.33  2.44 -1.33 ]
-	Ogre::Real wall_bottom = _wall.bottom_right.at(1); //0.34;
-	Ogre::Real wall_front = _wall.bottom_right.at(2); //-1.33;
+	Ogre::Vector3 bottom_right( _wall.bottom_right.at(0), _wall.bottom_right.at(1), _wall.bottom_right.at(2) );
+	Ogre::Vector3 bottom_left( _wall.bottom_left.at(0), _wall.bottom_left.at(1), _wall.bottom_left.at(2) );
+	Ogre::Vector3 top_left( _wall.top_left.at(0), _wall.top_left.at(1), _wall.top_left.at(2) );
 
-	std::cout << "wall_right = " << wall_right << " : wall_left = " << wall_left
-		<< " : wall_top = " << wall_top << " : wall_bottom = " << wall_bottom
-		<< " : wall_front = " << wall_front << std::endl;
+	Ogre::Plane plane(bottom_right, bottom_left, top_left);
 
-	Ogre::Real head_x = headMat.getTrans().x;
-	Ogre::Real head_y = headMat.getTrans().y;
-	Ogre::Real head_z = headMat.getTrans().z;
+	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
+	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
+	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
+	Ogre::Vector3 headTrans = wallRot*headMat.getTrans();
+
+	bottom_right = wallRot*bottom_right;
+	bottom_left = wallRot*bottom_left;
+	top_left = wallRot*top_left;
+
+	// Calculate the frustum
+	Ogre::Real wall_right = bottom_right.x;
+	Ogre::Real wall_left = bottom_left.x;
+	Ogre::Real wall_top = top_left.y;
+	Ogre::Real wall_bottom = bottom_right.y;
+	Ogre::Real wall_front = bottom_right.z;
+
+	Ogre::Real head_x = headTrans.x;
+	Ogre::Real head_y = headTrans.y;
+	Ogre::Real head_z = headTrans.z;
 
 	// The coordinates right, left, top, bottom
 	// represent a view frustum with coordinates (left, bottom, -near)
@@ -174,13 +186,18 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera )
 	// obtain the correct scale
 	// If scale is negative it rotates 180 deg around z, 
 	// i.e. flips to the other side of the wall
-	Ogre::Real scale = (wall_front+head_z)/(-c_near);
+	// Scale can not include the head_z because the frustum gets screwed up if
+	// it does. Might need to scale it a bit before using it or something.
+	// TODO have a look at what it is supposed to be.
+	//Ogre::Real scale = (wall_front+head_z)/(-c_near);
+	Ogre::Real scale = (wall_front)/(-c_near);
 	Ogre::Real right = (wall_right - head_x)/scale;
 	Ogre::Real left = (wall_left - head_x)/scale;
 	Ogre::Real top = (wall_top - head_y)/scale;
 	Ogre::Real bottom = (wall_bottom - head_y)/scale;
 
 	// TODO add support for stereo left and right eye
+	// TODO add support for rotating the eyes based on head tracker rotation
 
 	// Near and far clipping should not be modified because
 	// Increasing the near clip would clip the objects near the user.
@@ -257,7 +274,7 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera )
 	// and take it's transformation take the rotational part and apply it to
 	// the camera orientation before creating the view matrix
 
-	// This is not HMD discard the rotation part
+	// NOTE This is not HMD discard the rotation part
 	Ogre::Vector3 head_pos = headMat.getTrans();
 	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos+head_pos, cam_orient );
 

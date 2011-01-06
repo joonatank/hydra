@@ -151,7 +151,10 @@ public :
 			++_last_index;
 			if( _last_index == _output.size() )
 			{ _last_index--; break; }
-			
+		
+			std::cout << "Increasing value : next value = " 
+				<< _output.at(_last_index).second << std::endl;
+
 			start = _output.at(_last_index).first;
 			// Interpolate
 			/* TODO implement
