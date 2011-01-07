@@ -1,32 +1,20 @@
 #Equalizer 1.0 ascii
 
-# 'Hello, World!' config: one window rendering from the application process.
-global
-{
-	EQ_CONFIG_FATTR_EYE_BASE		0.025
-	EQ_WINDOW_IATTR_HINT_STEREO		AUTO	
-	EQ_WINDOW_IATTR_HINT_DOUBLEBUFFER	ON
-	EQ_COMPOUND_IATTR_STEREO_MODE		QUAD
-}
-
 server
 {
-#	connection
-#	{
-#		type TCPIP 
-#		TCPIP_port 4242
-#	}
+	connection { TCPIP_port 4242 hostname "127.0.0.1" }
 
 	config
 	{
 		appNode
 		{
+			connection { hostname "127.0.0.1" }
 			pipe
 			{
 				window
 				{
+					name "window-left"
 					viewport [ -1024 0 1024 768 ]
-					attributes { hint_stereo ON }
                     
 					channel { name "channel-left" }
 				}
@@ -34,13 +22,13 @@ server
 		}
 		node
 		{
-			connection { TCPIP_port 4242 hostname "130.230.58.16" }
+			connection { TCPIP_port 4243 hostname "127.0.0.1" }
 			pipe
 			{
 				window
 				{
+					name "window-front"
 					viewport [ 0 0 1024 768 ]
-					attributes { hint_stereo ON }
 					
 					channel { name "channel-front" }
 				}
@@ -48,13 +36,13 @@ server
 		}
 		node
 		{
-			connection { TCPIP_port 4243 hostname "130.230.58.16" }
+			connection { TCPIP_port 4244 hostname "127.0.0.1" }
 			pipe
 			{
 				window
 				{
+					name "window-right"
 					viewport [ 1024 0 1024 768 ]
-					attributes { hint_stereo ON }
 					
 					channel { name "channel-right" }
 				}
@@ -65,7 +53,6 @@ server
 		{
 			compound
 			{
-				eye [ LEFT RIGHT ]
 				channel "channel-left"
 				wall
 				{
@@ -77,7 +64,6 @@ server
 			}
 			compound
 			{
-				eye [ LEFT RIGHT ]
 				channel "channel-front"
 				wall
 				{
@@ -89,7 +75,6 @@ server
 			}
 			compound
 			{
-				eye [ LEFT RIGHT ]
 				channel "channel-right"
 				wall
 				{

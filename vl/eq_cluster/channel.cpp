@@ -9,9 +9,10 @@
  *	Wall definition in Environment configuration file, mapped to eq chanel by name.
  *	Frustum is created correctly now for different projection walls.
  *	Frustum is not moved anymore to z direction with head tracker.
- *	Added stereo rendering code. Tested without quad-buffer, seems to work.
- *	TODO test with quad-buffer stereo.
- *
+ *	Added stereo rendering code. Tested with quad-buffer.
+ *	Added rotation of the view matrix based on projection plane.
+ *	Fixed scaling the frustum based on head tracker. 
+		Would create non-continiuty on front and side walls otherwise.
  */
 
 #include "channel.hpp"
@@ -70,7 +71,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	// If the channel has a name we try to find matching wall
 	if( !getName().empty() )
 	{
-		EQINFO << "Finding Wall for channel : " << getName() << std::endl;
+		std::cout << "Finding Wall for channel : " << getName() << std::endl;
 		_wall = getSettings().findWall( getName() );
 	}
 	
@@ -78,6 +79,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	if( _wall.empty() )
 	{
 		_wall = getSettings().getWall(0);
+		std::cout << "No wall found : using the default " << _wall.name << std::endl;
 	}
 	
 	EQASSERT( !_wall.empty() );
@@ -192,12 +194,15 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 
 	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
 
+	// Create the plane for transforming the head
+	// TODO this is same code for both view and frustum combine them
 	Ogre::Vector3 bottom_right( _wall.bottom_right.at(0), _wall.bottom_right.at(1), _wall.bottom_right.at(2) );
 	Ogre::Vector3 bottom_left( _wall.bottom_left.at(0), _wall.bottom_left.at(1), _wall.bottom_left.at(2) );
 	Ogre::Vector3 top_left( _wall.top_left.at(0), _wall.top_left.at(1), _wall.top_left.at(2) );
 
 	Ogre::Plane plane(bottom_right, bottom_left, top_left);
 
+	// Transform the head
 	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
 	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
@@ -224,17 +229,25 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// The coordinates right, left, top, bottom
 	// represent a view frustum with coordinates (left, bottom, -near)
 	// and (right, top, -near)
+	//
 	// So the wall and head needs to be scaled by the z-coordinate to
 	// obtain the correct scale
 	// If scale is negative it rotates 180 deg around z, 
 	// i.e. flips to the other side of the wall
-	// Scale can not include the head_z because the frustum gets screwed up if
-	// it does. Might need to scale it a bit before using it or something.
-	// TODO have a look at what it is supposed to be.
-	//Ogre::Real scale = (wall_front+head_z)/(-c_near);
-	Ogre::Real scale = (wall_front)/(-c_near);
-	Ogre::Real right = (wall_right - eye.x)/scale;
-	Ogre::Real left = (wall_left - eye.x)/scale;
+	//
+	// Scale can has to have the head front-axis because there will be 
+	// non-continuity between the front and side walls if we don't.
+	//
+	// This comes because the front axis for every wall is different so for
+	// front wall z-axis is the left walls x-axis.
+	// Without the scale those axes will differ relative to each other.
+	Ogre::Real scale = (wall_front+eye.z)/(-c_near);
+	// The eye.x should be positive.
+	Ogre::Real right = (wall_right + eye.x)/scale;
+	Ogre::Real left = (wall_left + eye.x)/scale;
+	// The eye.y has to be negative otherwise would happen something like
+	// top = (2.34 + 1.5)/scale and bottom = (0.34 + 1.5)/scale
+	// and they should be top positive and bottom negative (about the same size)
 	Ogre::Real top = (wall_top - eye.y)/scale;
 	Ogre::Real bottom = (wall_bottom - eye.y)/scale;
 
@@ -305,21 +318,37 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 	}
 
 	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
+
+	// Create the plane for transforming the head
+	// Head doesn't need to be transformed for the view matrix
+	// Using the plane to create a correct orientation for the view
+	Ogre::Vector3 bottom_right( _wall.bottom_right.at(0), _wall.bottom_right.at(1), _wall.bottom_right.at(2) );
+	Ogre::Vector3 bottom_left( _wall.bottom_left.at(0), _wall.bottom_left.at(1), _wall.bottom_left.at(2) );
+	Ogre::Vector3 top_left( _wall.top_left.at(0), _wall.top_left.at(1), _wall.top_left.at(2) );
+
+	Ogre::Plane plane(bottom_right, bottom_left, top_left);
+
+	// Transform the head
+	// Should this be here? or should we only rotate the view matrix the correct angle
+	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
+	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
+	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
+	// Doesn't seem to do anything, should check wether it should or not
+//	Ogre::Vector3 headTrans = wallRot*headMat.getTrans();
+	Ogre::Vector3 headTrans = headMat.getTrans();
+
 	// NOTE This is not HMD discard the rotation part
-	// This doesn't seem to have any affect. 
+	// Rotating the eye doesn't seem to have any affect.
 	// Though it's more realistic if it's there.
-	eye = headMat.extractQuaternion()*eye + headMat.getTrans();
+	eye = headMat.extractQuaternion()*eye + headTrans;
 	Ogre::Vector3 cam_pos( camera->getRealPosition() );
 
-	// TODO wall transformation should transform the camera
-	// e.g. left wall should rotate the camera by 90 deg to left
-	// we need to calculate the middle coordinate for the wall/plane
-	// and take it's transformation take the rotational part and apply it to
-	// the camera orientation before creating the view matrix
-
-	
-	//Ogre::Vector3 head_pos = headMat.getTrans();
-	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos+eye, cam_orient );
+	// Combine eye and camera positions
+	// Combine camera and wall orientation to get the projection on correct wall
+	// Seems like the wallRotation needs to be inverse for this one, otherwise
+	// left and right wall are switched.
+	Ogre::Quaternion eye_orientation = wallRot.Inverse()*cam_orient;
+	Ogre::Matrix4 camViewMatrix = Ogre::Math::makeViewMatrix( cam_pos+eye, eye_orientation );
 
 	camera->setCustomViewMatrix( true, camViewMatrix );
 }
