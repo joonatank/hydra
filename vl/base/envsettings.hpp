@@ -79,9 +79,10 @@ public :
 		Window( std::string const &nam, int width, int height, int px, int py )
 			: name(nam), w(width), h(height), x(px), y(py)
 		{
-			if( h < 0 || w < 0 || x < 0 || y < 0 )
+			if( h < 0 || w < 0 )
 			{
-				BOOST_THROW_EXCEPTION( vl::invalid_settings() );
+				std::string desc("Width or height of a Window can not be negative");
+				BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 			}
 		}
 		
