@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<clients>
+	<client type="VRPN" host="localhost" >
+		<tracker name="glasses">
+			<sensor num="0">
+				<trigger type="VRPN" name="glassesTrigger" />
+				<default>
+					<position x="0" y="1.5" z="0"/>
+					<orientation x="0" y="0" z="0" w="1"/>
+				</default>
+			</sensor>
+		</tracker>
+	</client>
+</clients>
