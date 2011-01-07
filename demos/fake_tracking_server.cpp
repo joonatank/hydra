@@ -71,7 +71,7 @@ public :
 			std::cerr << "Output::Output file not opened." << std::endl;
 			return;
 		}
-		
+
 		while( input.good() )
 		{
 			std::string line;
@@ -87,7 +87,7 @@ public :
 
 		std::string::size_type pos = 0;
 		std::string::size_type end_pos = line.find_first_of('\t', pos);
-		
+
 		std::stringstream t( line.substr(pos, end_pos) );
 		double time = 0;
 		t >> time;
@@ -97,10 +97,10 @@ public :
 		{
 			return;
 		}
-		
+
 		pos = end_pos+1;
 		end_pos = line.find_first_of('\t', pos);
-		
+
 		std::stringstream v(line.substr(pos, end_pos));
 		double x = 0, y = 0, z = 0;
 		char ch;
@@ -116,7 +116,7 @@ public :
 
 		pos = end_pos+1;
 		end_pos = line.find_first_of('\t', pos);
-		
+
 		std::stringstream q(line.substr(pos, end_pos));
 		double w = 0;
 		q >> w >> ch >> x >> ch >> y >> ch >> z;
@@ -125,7 +125,7 @@ public :
 		std::cerr << "Quaternion parsed : quat = " << quat << std::endl;
 		if( end_pos != std::string::npos )
 		{
-			std::cerr << "Something fishy going on here, found another tabulator." 
+			std::cerr << "Something fishy going on here, found another tabulator."
 				<< std::endl;
 		}
 		_output.push_back( std::make_pair(time, vl::Transform( vec, quat ) ) );
@@ -136,7 +136,7 @@ public :
 		std::cerr << "Output : " << std::endl;
 		for( size_t i = 0; i < _output.size(); ++i )
 		{
-			std::cerr << "time = " << _output.at(i).first << " value " 
+			std::cerr << "time = " << _output.at(i).first << " value "
 				<< _output.at(i).second << std::endl;
 		}
 	}
@@ -144,15 +144,15 @@ public :
 	vl::Transform const &getOutput( double ms )
 	{
 		double t = ms/1000;
-		double start = _output.at(_last_index).first; 
+		double start = _output.at(_last_index).first;
 		while( t > start )
 		{
 			// TODO this should interpolate
 			++_last_index;
 			if( _last_index == _output.size() )
 			{ _last_index--; break; }
-		
-			std::cout << "Increasing value : next value = " 
+
+			std::cout << "Increasing value : next value = "
 				<< _output.at(_last_index).second << std::endl;
 
 			start = _output.at(_last_index).first;
@@ -161,7 +161,7 @@ public :
 			double stop = _output.at(_last_index).first;
 			if( t < stop )
 			{
-				double progress = (stop - start)/(t - start); 
+				double progress = (stop - start)/(t - start);
 			}
 			*/
 		}
@@ -179,7 +179,7 @@ class TrackerServer
 public :
 	// TODO address is not yet supported
 	TrackerServer( void )
-		: _port( 3883 ), _address( "localhost" ), _name("glasses"), 
+		: _port( 3883 ), _address( "localhost" ), _name("glasses"),
 		_output(0), _connection(0), _tracker(0)
 	{}
 
@@ -211,23 +211,23 @@ public :
 				  options(desc).positional(p).run(), vm);
 		po::notify(vm);
 
-		if( vm.count("help") ) 
+		if( vm.count("help") )
 		{
 			std::cout << desc << std::endl;
 			return false;
 		}
 
-		if( vm.count("port") ) 
+		if( vm.count("port") )
 		{
 			_port = vm["port"].as<unsigned int>();
 			std::cout << "Port was set to " << _port << "." << std::endl;
 		}
-		if( vm.count("address") ) 
+		if( vm.count("address") )
 		{
 			_address = vm["address"].as<std::string>();
 			std::cout << "Address was set to " << _address << "." << std::endl;
 		}
-		if( vm.count("input-file") ) 
+		if( vm.count("input-file") )
 		{
 			_input_file = vm["input-file"].as<std::string>();
 			std::cout << "Input file was set to " << _input_file << "." << std::endl;
@@ -237,7 +237,7 @@ public :
 				return false;
 			}
 		}
-		if( vm.count("name") ) 
+		if( vm.count("name") )
 		{
 			_name = vm["name"].as<std::string>();
 			std::cout << "Name was set to "	<< _name << "." << std::endl;
@@ -260,7 +260,7 @@ public :
 		// Set the output parameters
 		if( !_input_file.empty() )
 		{
-			std::ifstream ifs( _input_file );
+			std::ifstream ifs( _input_file.c_str() );
 			_output = new Output( ifs );
 		}
 		else
@@ -289,13 +289,13 @@ public :
 		quat[Q_X] = trans.quaternion.x;
 		quat[Q_Y] = trans.quaternion.y;
 		quat[Q_Z] = trans.quaternion.z;
-		
+
 		//		getHeadData(time, pos, quat);
 		_tracker->report_pose( 0, t, pos, quat );
 
 		_tracker->mainloop();
 		_connection->mainloop();
-		
+
 		vl::msleep(msecs);
 		_time += double(msecs);
 	}

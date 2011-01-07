@@ -379,7 +379,7 @@ eqOgre::Window::createInputHandling( void )
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
-	EQASSERT( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() );
+	EQASSERT( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
 	eq::GLXWindowIF *os_win = static_cast<eq::GLXWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{

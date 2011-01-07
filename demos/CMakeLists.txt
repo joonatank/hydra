@@ -30,6 +30,9 @@ target_link_libraries( fake_tracking_server
 	${VRPN_LIBRARY}
 	${CMAKE_THREAD_LIBS_INIT}
 	${Ogre_LIBRARY}
+	${Boost_PROGRAM_OPTIONS_LIBRARIES}
+	${Boost_SYSTEM_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARIES}
 	)
 
 
