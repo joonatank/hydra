@@ -9,15 +9,22 @@
 #
 #-------------------------------------------------------------------
 
+# TODO should move to using QUIET package searching
+# and add checking only after all packages are searched
+
 project("vl" CXX C)
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 if( UNIX )
-	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
-endif( UNIX )
-
-if( WIN32 )
+	add_definitions( -Wall )
+	add_definitions( -DVL_UNIX -DLinux )
+	# Set unix debug flag
+	#if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+	#	add_definitions( -DDEBUG )
+	#endif()
+	#	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
+elseif( WIN32 )
 	add_definitions( -DVL_WIN32		# Custom value used throughout the VL project
 					 -DNOMINMAX		# Don't pollute the global namespace
 					 -D_WIN32_WINNT=0x0501	# Windows XP target
@@ -26,13 +33,7 @@ if( WIN32 )
 					 #-DEQ_RELEASE_ASSERT
 					 # Should not need release asserts anymore
 					 )
-elseif( UNIX )
-	add_definitions( -DVL_UNIX -DLinux )
-	# Set unix debug flag
-	if( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-		add_definitions( -DDEBUG )
-	endif()
-endif( WIN32 )
+endif( UNIX )
 
 if(CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_CONFIGURATION_TYPES Debug Release)
@@ -65,10 +66,10 @@ find_package(OIS REQUIRED )
 ######### Find CEGUI #########
 find_package( CEGUI QUIET )
 
-if( ${CEGUI_FOUND} )
-	message( "CEGUI found : ${CEGUI_LIBRARY} " )
+if( CEGUI_FOUND )
+	message( STATUS "CEGUI found : ${CEGUI_LIBRARY} " )
 elseif()
-	message( "CEGUI not found, will not build a GUI" )
+	message( STATUS "CEGUI not found, will not build a GUI" )
 endif()
 
 
@@ -98,7 +99,7 @@ include_directories( ${PYTHON_INCLUDE_DIRS} )
 
 set(Boost_USE_STATIC_LIBS   ON)
 
-find_package(Boost COMPONENTS system filesystem program_options REQUIRED )
+find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM
@@ -155,19 +156,20 @@ set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 
-if( ${EQOGRE_BUILD_QTLAUNCHER} )
+if( EQOGRE_BUILD_QTLAUNCHER )
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
 endif()
 
-if( ${EQOGRE_BUILD_TESTS} )
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
+if( EQOGRE_BUILD_TESTS )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
 
 include( Packaging )
 
-include( InstallResources )
+# TODO this doesn't work yet
+#include( InstallResources )
 
 # TODO this doesn't work yet
 #include( InstallDependencies )

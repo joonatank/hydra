@@ -17,8 +17,6 @@ enable_testing()
 
 find_package(Boost COMPONENTS unit_test_framework filesystem REQUIRED)
 
-message( "Boost libraries = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES};${Boost_FILESYSTEM_LIBRARIES}" )
-
 set( FS_LIB ${Boost_FILESYSTEM_LIBRARIES} )
 set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 
@@ -80,7 +78,6 @@ add_executable( test_euler_angles
 				${eqOgre_SOURCE_DIR}/math/math.hpp
 				)
 
-message( "Ogre library = ${Ogre_LIBRARY}" )
 target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${TEST_LIB} )
 
 # Test tracking

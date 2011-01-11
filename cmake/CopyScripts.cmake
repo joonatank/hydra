@@ -17,7 +17,6 @@ if( CMAKE_CONFIGURATION_TYPES )
 	foreach( e ${CMAKE_CONFIGURATION_TYPES} )
 		set( output ${PROJECT_BINARY_DIR}/${e}/${script_file} )
 		set( BUILD_TYPE ${e} )
-		message( "Copying script from ${input_script} to ${output}" )
 		configure_file( ${input_script} ${output} )
 	endforeach()
 else()
@@ -30,8 +29,9 @@ ENDMACRO()
 
 ## Copy all start scripts macro ##
 MACRO( copy_start_scripts program_name project_path start_suffix )
-message( "Copying start scripts for project = ${PROJECT_NAME}
-	: exe name = ${program_name}" )
+
+message( STATUS "Copying start scripts for project = ${PROJECT_NAME}"
+	" : exe name = ${program_name}" )
 
 # Copy the single Node start script
 set( PROGRAM_NAME ${program_name} )
@@ -51,25 +51,11 @@ endif()
 # correctly there also.
 
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
-#set( script_name start )
-#set( output_name start_${start_suffix} )
 copy_shell_script( ${script_path} start start_${start_suffix} )
-
-#if( NOT CMAKE_CONFIGURATION_TYPES )
-#	configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.sh.in
-#		${PROJECT_BINARY_DIR}/start_${start_suffix}.sh )
-#else()
-#	foreach( e ${CMAKE_CONFIGURATION_TYPES} )
-#		set( output ${PROJECT_BINARY_DIR}/${e}/start_${start_suffix}.bat )
-#configure_file( ${DEMO_DATA_PATH}/shell_scripts/start.bat.in
-			#			${output} )
-			#	endforeach()
-			#endif()
 
 # Copy the multi node listening start script
 
 set( HOSTNAME_TO_LISTEN 127.0.0.1 )
-message( "Hostname to listen = ${HOSTNAME_TO_LISTEN}" )
 
 set( LISTENING_PORT 4243 )
 set( EQUALIZER_SERVER_BIN "eqServer" )
@@ -79,7 +65,6 @@ set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
 set( script_name start_multi_node )
 set( output_name start_multi_${start_suffix} )
-#copy_shell_script( ${script_path} ${script_name} ${output_name} )
 copy_shell_script( ${script_path} start_multi_node start_multi_${start_suffix} )
 
 ENDMACRO()
