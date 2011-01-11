@@ -90,12 +90,11 @@ public :
 	/** Join the WGL_NV_swap_group. @version 1.0 */
 	// Need to be overriden because pure virtual
 	virtual void joinNVSwapBarrier( const uint32_t group,
-									const uint32_t barrier )
-	{}
+									const uint32_t barrier );
 
 
 	/** Unbind a WGL_NV_swap_barrier. @version 1.0 */ 
-//	void leaveNVSwapBarrier();
+	void leaveNVSwapBarrier();
 
 	/// Event handling
 	/** Process the given event. @version 1.0 */
@@ -129,6 +128,12 @@ private :
 	/** Use ChoosePixelFormat */
 	int _chooseWGLPixelFormat( HDC pfDC );
 
+	WGLEWContext *WGLWindow::wglewGetContext();
+
+	eq::WGLPipe *WGLWindow::getWGLPipe();
+	
+	void _initSwapSync();
+	
 	HWND             _wglWindow;
 	HPBUFFERARB      _wglPBuffer;
 	HGLRC            _wglContext;

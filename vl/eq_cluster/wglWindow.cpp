@@ -58,7 +58,6 @@ eqOgre::WGLWindow::setWGLWindowHandle( HWND handle )
 
 	if( !handle )
 	{
-	//	setWGLDC( 0, WGL_DC_NONE );
 		_wglDC = 0;
 		_wglWindow = 0;
 		EQINFO << "Setting a Zero window handle." << std::endl;
@@ -204,11 +203,11 @@ eqOgre::WGLWindow::configInit()
 
 	_wglContext = context;
 	makeCurrent();
-//	initGLEW();
+	initGLEW();
 
 
-//    if( getIAttribute( Window::IATTR_HINT_SWAPSYNC ) != AUTO )
-//        _initSwapSync();
+	if( getIAttribute( Window::IATTR_HINT_SWAPSYNC ) != eq::AUTO )
+	{ _initSwapSync(); }
 //    if( getIAttribute( Window::IATTR_HINT_DRAWABLE ) == FBO )
 //        return configInitFBO();
 
@@ -218,6 +217,7 @@ eqOgre::WGLWindow::configInit()
 bool 
 eqOgre::WGLWindow::configInitWGLDrawable( int pixelFormat )
 {
+	EQINFO << "Trying to create a WGL Drawable. We only support Windows." << std::endl;
 	/*
     switch( getIAttribute( Window::IATTR_HINT_DRAWABLE ))
     {
@@ -481,7 +481,7 @@ bool WGLWindow::initWGLAffinityDC()
 }
 */
 
-/*
+
 void 
 eqOgre::WGLWindow::_initSwapSync()
 {
@@ -489,20 +489,20 @@ eqOgre::WGLWindow::_initSwapSync()
     {
         // set vsync on/off
         const GLint vsync =
-            ( getIAttribute( Window::IATTR_HINT_SWAPSYNC )==OFF ) ? 0 : 1;
+            ( getIAttribute( Window::IATTR_HINT_SWAPSYNC ) == eq::OFF ) ? 0 : 1;
         wglSwapIntervalEXT( vsync );
     }
     else
         EQWARN << "WGLEW_EXT_swap_control not supported, ignoring window "
                << "swapsync hint" << std::endl;
 }   
-*/
+
 
 void 
 eqOgre::WGLWindow::configExit( )
 {
 	EQINFO << "eqOgre::WGLWindow::configExit" << std::endl;
-	//leaveNVSwapBarrier();
+	leaveNVSwapBarrier();
 	//configExitFBO();
 	//exitGLEW();
     
@@ -576,10 +576,11 @@ eqOgre::WGLWindow::chooseWGLPixelFormat( )
     HDC screenDC = GetDC( 0 );
 //    HDC pfDC = _wglAffinityDC ? _wglAffinityDC : screenDC;
 
-//	int pixelFormat = (WGLEW_ARB_pixel_format) ? 
-//		_chooseWGLPixelFormatARB( pfDC ) :_chooseWGLPixelFormat( pfDC );
-	
-	int pixelFormat = _chooseWGLPixelFormat( screenDC );
+	int pixelFormat = 0;
+	if( WGLEW_ARB_pixel_format )
+	{ pixelFormat = _chooseWGLPixelFormatARB( screenDC ); }
+	else
+	{ pixelFormat = _chooseWGLPixelFormat( screenDC ); }
 
 	ReleaseDC( 0, screenDC );
 
@@ -671,179 +672,178 @@ eqOgre::WGLWindow::_chooseWGLPixelFormat( HDC pfDC )
     return pf;
 }
 
-/* We don't have wglew support atm
+// We don't have wglew support atm
+// Adding the support now
 int 
 eqOgre::WGLWindow::_chooseWGLPixelFormatARB( HDC pfDC )
 {
 	EQINFO << "eqOgre::WGLWindow::_chooseWGLPixelFormatARB" << std::endl;
 
-    EQASSERT( WGLEW_ARB_pixel_format );
+	EQASSERT( WGLEW_ARB_pixel_format );
 
-    std::vector< int > attributes;
-    attributes.push_back( WGL_SUPPORT_OPENGL_ARB );
-    attributes.push_back( 1 );
-    attributes.push_back( WGL_ACCELERATION_ARB );
-    attributes.push_back( WGL_FULL_ACCELERATION_ARB );
+	std::vector< int > attributes;
+	attributes.push_back( WGL_SUPPORT_OPENGL_ARB );
+	attributes.push_back( 1 );
+	attributes.push_back( WGL_ACCELERATION_ARB );
+	attributes.push_back( WGL_FULL_ACCELERATION_ARB );
 
-    const int colorSize = getIAttribute( Window::IATTR_PLANES_COLOR );
+	const int colorSize = getIAttribute( Window::IATTR_PLANES_COLOR );
 
-    if( colorSize > 0 || colorSize == AUTO ||
-        getIAttribute( Window::IATTR_HINT_DRAWABLE ) == FBO )
-    {
-        const int colorBits = colorSize>0 ? colorSize : 8;
-        attributes.push_back( WGL_RED_BITS_ARB );
-        attributes.push_back( colorBits );
-        attributes.push_back( WGL_GREEN_BITS_ARB );
-        attributes.push_back( colorBits );
-        attributes.push_back( WGL_BLUE_BITS_ARB );
-        attributes.push_back( colorBits );
-    }
-    else if ( colorSize == RGBA16F || colorSize == RGBA32F )
-    {
-        if ( !WGLEW_ARB_pixel_format_float )
-        {
-            setError( ERROR_WGLWINDOW_ARB_FLOAT_FB_REQUIRED );
-            return 0;
-        }
+	if( colorSize > 0 || colorSize == eq::AUTO ||
+		getIAttribute( Window::IATTR_HINT_DRAWABLE ) == eq::FBO )
+	{
+		const int colorBits = colorSize>0 ? colorSize : 8;
+		attributes.push_back( WGL_RED_BITS_ARB );
+		attributes.push_back( colorBits );
+		attributes.push_back( WGL_GREEN_BITS_ARB );
+		attributes.push_back( colorBits );
+		attributes.push_back( WGL_BLUE_BITS_ARB );
+		attributes.push_back( colorBits );
+	}
+	else if ( colorSize == eq::RGBA16F || colorSize == eq::RGBA32F )
+	{
+		if ( !WGLEW_ARB_pixel_format_float )
+		{
+			setError( eq::ERROR_WGLWINDOW_ARB_FLOAT_FB_REQUIRED );
+			return 0;
+		}
 
-        const int colorBits = (colorSize == RGBA16F) ? 16 :  32;
-        attributes.push_back( WGL_PIXEL_TYPE_ARB );
-        attributes.push_back( WGL_TYPE_RGBA_FLOAT_ARB );
-        attributes.push_back( WGL_COLOR_BITS_ARB );
-        attributes.push_back( colorBits * 4);
-    }
+		const int colorBits = (colorSize == eq::RGBA16F) ? 16 :  32;
+		attributes.push_back( WGL_PIXEL_TYPE_ARB );
+		attributes.push_back( WGL_TYPE_RGBA_FLOAT_ARB );
+		attributes.push_back( WGL_COLOR_BITS_ARB );
+		attributes.push_back( colorBits * 4);
+	}
 
-    const int alphaSize = getIAttribute( Window::IATTR_PLANES_ALPHA );
-    if( alphaSize > 0 || alphaSize == AUTO )
-    {
-        attributes.push_back( WGL_ALPHA_BITS_ARB );
-        attributes.push_back( alphaSize>0 ? alphaSize : 8 );
-    }
+	const int alphaSize = getIAttribute( Window::IATTR_PLANES_ALPHA );
+	if( alphaSize > 0 || alphaSize == eq::AUTO )
+	{
+		attributes.push_back( WGL_ALPHA_BITS_ARB );
+		attributes.push_back( alphaSize>0 ? alphaSize : 8 );
+	}
 
-    const int depthSize = getIAttribute( Window::IATTR_PLANES_DEPTH );
-    if( depthSize > 0  || depthSize == AUTO )
-    {
-        attributes.push_back( WGL_DEPTH_BITS_ARB );
-        attributes.push_back( depthSize>0 ? depthSize : 24 );
-    }
+	const int depthSize = getIAttribute( Window::IATTR_PLANES_DEPTH );
+	if( depthSize > 0  || depthSize == eq::AUTO )
+	{
+		attributes.push_back( WGL_DEPTH_BITS_ARB );
+		attributes.push_back( depthSize>0 ? depthSize : 24 );
+	}
 
-    const int stencilSize = getIAttribute( Window::IATTR_PLANES_STENCIL );
-    if( stencilSize >0 || stencilSize == AUTO )
-    {
-        attributes.push_back( WGL_STENCIL_BITS_ARB );
-        attributes.push_back( stencilSize>0 ? stencilSize : 1 );
-    }
+	const int stencilSize = getIAttribute( Window::IATTR_PLANES_STENCIL );
+	if( stencilSize >0 || stencilSize == eq::AUTO )
+	{
+		attributes.push_back( WGL_STENCIL_BITS_ARB );
+		attributes.push_back( stencilSize>0 ? stencilSize : 1 );
+	}
 
-    const int accumSize  = getIAttribute( Window::IATTR_PLANES_ACCUM );
-    const int accumAlpha = getIAttribute( Window::IATTR_PLANES_ACCUM_ALPHA );
-    if( accumSize >= 0 )
-    {
-        attributes.push_back( WGL_ACCUM_RED_BITS_ARB );
-        attributes.push_back( accumSize );
-        attributes.push_back( WGL_ACCUM_GREEN_BITS_ARB );
-        attributes.push_back( accumSize );
-        attributes.push_back( WGL_ACCUM_BLUE_BITS_ARB );
-        attributes.push_back( accumSize );
-        attributes.push_back( WGL_ACCUM_ALPHA_BITS_ARB );
-        attributes.push_back( accumAlpha >= 0 ? accumAlpha : accumSize );
-    }
-    else if( accumAlpha >= 0 )
-    {
-        attributes.push_back( WGL_ACCUM_ALPHA_BITS_ARB );
-        attributes.push_back( accumAlpha );
-    }
+	const int accumSize  = getIAttribute( Window::IATTR_PLANES_ACCUM );
+	const int accumAlpha = getIAttribute( Window::IATTR_PLANES_ACCUM_ALPHA );
+	if( accumSize >= 0 )
+	{
+		attributes.push_back( WGL_ACCUM_RED_BITS_ARB );
+		attributes.push_back( accumSize );
+		attributes.push_back( WGL_ACCUM_GREEN_BITS_ARB );
+		attributes.push_back( accumSize );
+		attributes.push_back( WGL_ACCUM_BLUE_BITS_ARB );
+		attributes.push_back( accumSize );
+		attributes.push_back( WGL_ACCUM_ALPHA_BITS_ARB );
+		attributes.push_back( accumAlpha >= 0 ? accumAlpha : accumSize );
+	}
+	else if( accumAlpha >= 0 )
+	{
+		attributes.push_back( WGL_ACCUM_ALPHA_BITS_ARB );
+		attributes.push_back( accumAlpha );
+	}
 
-    const int samplesSize = getIAttribute( Window::IATTR_PLANES_SAMPLES );
-    if( samplesSize >= 0 )
-    {
-        if( WGLEW_ARB_multisample )
-        {
-            attributes.push_back( WGL_SAMPLE_BUFFERS_ARB );
-            attributes.push_back( 1 );
-            attributes.push_back( WGL_SAMPLES_ARB );
-            attributes.push_back( samplesSize );
-        }
-        else
-            EQWARN << "WGLEW_ARB_multisample not supported, ignoring samples "
-                   << "attribute" << std::endl;
-    }
+	const int samplesSize = getIAttribute( Window::IATTR_PLANES_SAMPLES );
+	if( samplesSize >= 0 )
+	{
+		if( WGLEW_ARB_multisample )
+		{
+			attributes.push_back( WGL_SAMPLE_BUFFERS_ARB );
+			attributes.push_back( 1 );
+			attributes.push_back( WGL_SAMPLES_ARB );
+			attributes.push_back( samplesSize );
+		}
+		else
+			EQWARN << "WGLEW_ARB_multisample not supported, ignoring samples "
+					<< "attribute" << std::endl;
+	}
 
-    if( getIAttribute( Window::IATTR_HINT_STEREO ) == ON ||
-        ( getIAttribute( Window::IATTR_HINT_STEREO )   == AUTO && 
-        getIAttribute( Window::IATTR_HINT_DRAWABLE ) == WINDOW ))
-    {
-        attributes.push_back( WGL_STEREO_ARB );
-        attributes.push_back( 1 );
-    }
+	if( getIAttribute( Window::IATTR_HINT_STEREO ) == eq::ON ||
+		( getIAttribute( Window::IATTR_HINT_STEREO )   == eq::AUTO && 
+		getIAttribute( Window::IATTR_HINT_DRAWABLE ) == eq::WINDOW ))
+	{
+		attributes.push_back( WGL_STEREO_ARB );
+		attributes.push_back( 1 );
+	}
 
-    if( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == ON ||
-        ( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == AUTO && 
-        getIAttribute( Window::IATTR_HINT_DRAWABLE )     == WINDOW ))
-    {
-        attributes.push_back( WGL_DOUBLE_BUFFER_ARB );
-        attributes.push_back( 1 );
-    }
+	if( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == eq::ON ||
+		( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == eq::AUTO && 
+		getIAttribute( Window::IATTR_HINT_DRAWABLE )     == eq::WINDOW ))
+	{
+		attributes.push_back( WGL_DOUBLE_BUFFER_ARB );
+		attributes.push_back( 1 );
+	}
 
-    if( getIAttribute( Window::IATTR_HINT_DRAWABLE ) == PBUFFER &&
-        WGLEW_ARB_pbuffer )
-    {
-        attributes.push_back( WGL_DRAW_TO_PBUFFER_ARB );
-        attributes.push_back( 1 );
-    }
-    else
-    {
-        attributes.push_back( WGL_DRAW_TO_WINDOW_ARB );
-        attributes.push_back( 1 );
-    }
+	if( getIAttribute( Window::IATTR_HINT_DRAWABLE ) == eq::PBUFFER &&
+		WGLEW_ARB_pbuffer )
+	{
+		attributes.push_back( WGL_DRAW_TO_PBUFFER_ARB );
+		attributes.push_back( 1 );
+	}
+	else
+	{
+		attributes.push_back( WGL_DRAW_TO_WINDOW_ARB );
+		attributes.push_back( 1 );
+	}
 
-    attributes.push_back( 0 );
+	attributes.push_back( 0 );
 
-    // build back off list, least important attribute last
-    std::vector<int> backoffAttributes;
-    if( getIAttribute( Window::IATTR_HINT_DRAWABLE ) == WINDOW )
-    {
-        if( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == AUTO )
-            backoffAttributes.push_back( WGL_DOUBLE_BUFFER_ARB );
+	// build back off list, least important attribute last
+	std::vector<int> backoffAttributes;
+	if( getIAttribute( Window::IATTR_HINT_DRAWABLE ) == eq::WINDOW )
+	{
+		if( getIAttribute( Window::IATTR_HINT_DOUBLEBUFFER ) == eq::AUTO )
+		{ backoffAttributes.push_back( WGL_DOUBLE_BUFFER_ARB ); }
+		
 
-        if( getIAttribute( Window::IATTR_HINT_STEREO ) == AUTO )
-            backoffAttributes.push_back( WGL_STEREO_ARB );
-    }
+		if( getIAttribute( Window::IATTR_HINT_STEREO ) == eq::AUTO )
+		{ backoffAttributes.push_back( WGL_STEREO_ARB ); }
+	}
 
-    if( stencilSize == AUTO )
-        backoffAttributes.push_back( WGL_STENCIL_BITS_ARB );
+	if( stencilSize == eq::AUTO )
+	{ backoffAttributes.push_back( WGL_STENCIL_BITS_ARB ); }
 
-    while( true )
-    {
-        int pixelFormat = 0;
-        UINT nFormats = 0;
-        if( !wglChoosePixelFormatARB( pfDC, &attributes[0], 0, 1,
-            &pixelFormat, &nFormats ))
-        {
-            setError( ERROR_WGLWINDOW_CHOOSE_PF_ARB_FAILED);
-            EQWARN << getError() << ": " << base::sysError << std::endl;
-            return 0;
-        }
+	while( true )
+	{
+		int pixelFormat = 0;
+		UINT nFormats = 0;
+		if( !wglChoosePixelFormatARB( pfDC, &attributes[0], 0, 1,
+			&pixelFormat, &nFormats ))
+		{
+			setError( eq::ERROR_WGLWINDOW_CHOOSE_PF_ARB_FAILED);
+			EQWARN << getError() << ": " << eq::base::sysError << std::endl;
+			return 0;
+		}
 
-        if( (pixelFormat && nFormats > 0) ||  // found one or
-            backoffAttributes.empty( ))       // nothing else to try
-        {
-            return pixelFormat;
-        }
+		if( (pixelFormat && nFormats > 0) ||  // found one or
+			backoffAttributes.empty( ))       // nothing else to try
+		{ return pixelFormat; }
 
-        // Gradually remove back off attributes
-        const int attribute = backoffAttributes.back();
-        backoffAttributes.pop_back();
+		// Gradually remove back off attributes
+		const int attribute = backoffAttributes.back();
+		backoffAttributes.pop_back();
 
-        std::vector<GLint>::iterator iter = find( attributes.begin(), 
-            attributes.end(), attribute );
-        EQASSERT( iter != attributes.end( ));
+		std::vector<GLint>::iterator iter = find( attributes.begin(), 
+			attributes.end(), attribute );
+		EQASSERT( iter != attributes.end( ));
 
-        attributes.erase( iter, iter+2 ); // remove two items (attr, value)
-    }
+		attributes.erase( iter, iter+2 ); // remove two items (attr, value)
+	}
 
-    return 0;
+	return 0;
 }
-*/
 
 HGLRC 
 eqOgre::WGLWindow::createWGLContext()
@@ -890,8 +890,6 @@ eqOgre::WGLWindow::destroyWGLContext( HGLRC context )
 }
 
 
-// TODO is this necessary?
-
 bool 
 eqOgre::WGLWindow::processEvent( const eq::WGLWindowEvent& event )
 {
@@ -908,87 +906,81 @@ eqOgre::WGLWindow::processEvent( const eq::WGLWindowEvent& event )
     return SystemWindow::processEvent( event );
 }
 
-/*
-void WGLWindow::joinNVSwapBarrier( const uint32_t group, const uint32_t barrier)
+
+void 
+eqOgre::WGLWindow::joinNVSwapBarrier( const uint32_t group, const uint32_t barrier)
 {
-	
-    if( group == 0 && barrier == 0 )
-        return;
+	if( group == 0 && barrier == 0 )
+	{ return; }
 
-    if( !WGLEW_NV_swap_group )
-    {
-        EQWARN << "NV Swap group extension not supported" << endl;
-        return;
-    }
+	if( !WGLEW_NV_swap_group )
+	{
+		EQWARN << "NV Swap group extension not supported" << std::endl;
+		return;
+	}
 
-    const HDC dc = _wglAffinityDC ? _wglAffinityDC : _wglDC;
+	uint32_t maxBarrier = 0;
+	uint32_t maxGroup = 0;
+	wglQueryMaxSwapGroupsNV( _wglDC, &maxGroup, &maxBarrier );
 
-    uint32_t maxBarrier = 0;
-    uint32_t maxGroup = 0;
-    wglQueryMaxSwapGroupsNV( dc, &maxGroup, &maxBarrier );
+	if( group > maxGroup )
+	{
+		EQWARN << "Failed to initialize WGL_NV_swap_group: requested group "
+				<< group << " greater than maxGroups (" << maxGroup << ")"
+				<< std::endl;
+		return;
+	}
 
-    if( group > maxGroup )
-    {
-        EQWARN << "Failed to initialize WGL_NV_swap_group: requested group "
-               << group << " greater than maxGroups (" << maxGroup << ")"
-               << std::endl;
-        return;
-    }
+	if( barrier > maxBarrier )
+	{
+		EQWARN << "Failed to initialize WGL_NV_swap_group: requested barrier "
+				<< barrier << "greater than maxBarriers (" << maxBarrier << ")"
+				<< std::endl;
+		return;
+	}
 
-    if( barrier > maxBarrier )
-    {
-        EQWARN << "Failed to initialize WGL_NV_swap_group: requested barrier "
-               << barrier << "greater than maxBarriers (" << maxBarrier << ")"
-               << std::endl;
-        return;
-    }
+	if( !wglJoinSwapGroupNV( _wglDC, group ))
+	{
+		EQWARN << "Failed to join swap group " << group << std::endl;
+		return;
+	}
+	_wglNVSwapGroup = group;
 
-    if( !wglJoinSwapGroupNV( dc, group ))
-    {
-        EQWARN << "Failed to join swap group " << group << std::endl;
-        return;
-    }
-    _wglNVSwapGroup = group;
+	if( !wglBindSwapBarrierNV( group, barrier ))
+	{
+		EQWARN << "Failed to bind swap barrier " << barrier << std::endl;
+		return;
+	}
 
-    if( !wglBindSwapBarrierNV( group, barrier ))
-    {
-        EQWARN << "Failed to bind swap barrier " << barrier << std::endl;
-        return;
-    }
-    
-    EQINFO << "Joined swap group " << group << " and barrier " << barrier
-           << std::endl;
-}
-*/
-
-/*
-void WGLWindow::leaveNVSwapBarrier()
-{
-    if( _wglNVSwapGroup == 0 )
-        return;
-
-    const HDC dc = _wglAffinityDC ? _wglAffinityDC : _wglDC;
-
-    wglBindSwapBarrierNV( _wglNVSwapGroup, 0 );
-    wglJoinSwapGroupNV( dc, 0 );
-
-    _wglNVSwapGroup = 0;
-}
-*/
-
-/*
-WGLEWContext* WGLWindow::wglewGetContext()
-{
-    return getWGLPipe()->wglewGetContext();
+	EQINFO << "Joined swap group " << group << " and barrier " << barrier
+			<< std::endl;
 }
 
-WGLPipe* WGLWindow::getWGLPipe()
+void 
+eqOgre::WGLWindow::leaveNVSwapBarrier()
 {
-    Pipe* pipe = getPipe();
-    EQASSERT( pipe );
-    EQASSERT( pipe->getSystemPipe( ));
-    EQASSERT( dynamic_cast< WGLPipe* >( pipe->getSystemPipe( )));
+	if( _wglNVSwapGroup == 0 )
+	{ return; }
 
-    return static_cast< WGLPipe* >( pipe->getSystemPipe( ) );
+	wglBindSwapBarrierNV( _wglNVSwapGroup, 0 );
+	wglJoinSwapGroupNV( _wglDC, 0 );
+
+	_wglNVSwapGroup = 0;
 }
-*/
+
+WGLEWContext *
+eqOgre::WGLWindow::wglewGetContext()
+{
+	return getWGLPipe()->wglewGetContext();
+}
+
+eq::WGLPipe *
+eqOgre::WGLWindow::getWGLPipe()
+{
+	eq::Pipe* pipe = getPipe();
+	EQASSERT( pipe );
+	EQASSERT( pipe->getSystemPipe() );
+	EQASSERT( dynamic_cast< eq::WGLPipe* >( pipe->getSystemPipe() ) );
+
+	return static_cast<eq::WGLPipe *>( pipe->getSystemPipe() );
+}
