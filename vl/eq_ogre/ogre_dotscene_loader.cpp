@@ -510,7 +510,9 @@ eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	{ light->setType( Ogre::Light::LT_POINT ); }
 	else if(sValue == "directional")
 	{ light->setType( Ogre::Light::LT_DIRECTIONAL ); }
-	else if(sValue == "spot" )// || sValue == "spotLight" )
+	// The correct value from specification is spotLight
+	// but OgreMax uses spot so we allow
+	else if(sValue == "spot" || sValue == "spotLight" )
 	{ light->setType( Ogre::Light::LT_SPOTLIGHT ); }
 	else if(sValue == "radPoint")
 	{ light->setType( Ogre::Light::LT_POINT ); }
