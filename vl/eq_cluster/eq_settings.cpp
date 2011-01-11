@@ -322,8 +322,6 @@ eqOgre::DistributedSettings::applyInstanceData( co::DataIStream& is )
 co::DataOStream &
 eqOgre::operator<<( vl::EnvSettings::Window const &win, co::DataOStream &os )
 {
-	std::cout << "eqOgre::operator<<( vl::EnvSettings::Window const &win, co::DataOStream &os )"
-		<< std::endl;
 	os << win.name << win.w << win.h << win.x << win.y;
 
 	return os;
@@ -332,8 +330,6 @@ eqOgre::operator<<( vl::EnvSettings::Window const &win, co::DataOStream &os )
 co::DataIStream &
 eqOgre::operator>>( vl::EnvSettings::Window &win, co::DataIStream &is )
 {
-	std::cout << "eqOgre::operator<<( vl::EnvSettings::Window &win, co::DataIStream &is )"
-		<< std::endl;
 	is >> win.name >> win.w >> win.h >> win.x >> win.y;
 	
 	return is;
@@ -342,8 +338,6 @@ eqOgre::operator>>( vl::EnvSettings::Window &win, co::DataIStream &is )
 co::DataOStream &
 eqOgre::operator<<( std::vector<vl::EnvSettings::Window> const &wins, co::DataOStream &os )
 {
-	std::cout << "eqOgre::operator<<( std::vector<vl::EnvSettings::Window> const &win, co::DataOStream &os )"
-		<< std::endl;
 	os << wins.size();
 	for( size_t i = 0; i < wins.size(); ++i )
 	{ eqOgre::operator<<( wins.at(i), os ); }
@@ -354,8 +348,6 @@ eqOgre::operator<<( std::vector<vl::EnvSettings::Window> const &wins, co::DataOS
 co::DataIStream &
 eqOgre::operator>>( std::vector<vl::EnvSettings::Window> &wins, co::DataIStream &is )
 {
-	std::cout << "eqOgre::operator>>( std::vector<vl::EnvSettings::Window> &win, co::DataIStream &is )"
-		<< std::endl;
 	size_t size;
 	is >> size;
 	wins.resize(size);
@@ -370,8 +362,6 @@ eqOgre::operator>>( std::vector<vl::EnvSettings::Window> &wins, co::DataIStream 
 co::DataOStream &
 eqOgre::operator<<( vl::EnvSettings::Wall const &wall, co::DataOStream &os )
 {
-	std::cout << "eqOgre::operator<<( vl::EnvSettings::Wall const &wall, co::DataOStream &os )"
-		<< std::endl;
 	os << wall.name << wall.channel_name << wall.bottom_left 
 		<< wall.bottom_right << wall.top_left;
 
@@ -381,8 +371,6 @@ eqOgre::operator<<( vl::EnvSettings::Wall const &wall, co::DataOStream &os )
 co::DataIStream &
 eqOgre::operator>>( vl::EnvSettings::Wall &wall, co::DataIStream &is )
 {
-	std::cout << "eqOgre::operator<<( vl::EnvSettings::Window &win, co::DataIStream &is )"
-		<< std::endl;
 	is >> wall.name >> wall.channel_name >> wall.bottom_left 
 		>> wall.bottom_right >> wall.top_left;
 	
@@ -392,8 +380,6 @@ eqOgre::operator>>( vl::EnvSettings::Wall &wall, co::DataIStream &is )
 co::DataOStream &
 eqOgre::operator<<( std::vector<vl::EnvSettings::Wall> const &walls, co::DataOStream &os )
 {
-	std::cout << "eqOgre::operator<<( std::vector<vl::EnvSettings::Wall> const &walls, co::DataOStream &os )"
-		<< std::endl;
 	os << walls.size();
 	for( size_t i = 0; i < walls.size(); ++i )
 	{ eqOgre::operator<<( walls.at(i), os ); }
@@ -404,8 +390,6 @@ eqOgre::operator<<( std::vector<vl::EnvSettings::Wall> const &walls, co::DataOSt
 co::DataIStream &
 eqOgre::operator>>( std::vector<vl::EnvSettings::Wall> &walls, co::DataIStream &is )
 {
-	std::cout << "eqOgre::operator>>( std::vector<vl::EnvSettings::Wall> &walls, co::DataIStream &is )"
-		<< std::endl;
 	size_t size;
 	is >> size;
 	walls.resize(size);
