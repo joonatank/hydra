@@ -241,15 +241,21 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// This comes because the front axis for every wall is different so for
 	// front wall z-axis is the left walls x-axis.
 	// Without the scale those axes will differ relative to each other.
-	Ogre::Real scale = (wall_front+eye.z)/(-c_near);
+	//Ogre::Real scale = (wall_front+eye.z)/(-c_near);
+	Ogre::Real scale = (wall_front)/(-c_near);
 	// The eye.x should be positive.
-	Ogre::Real right = (wall_right + eye.x)/scale;
-	Ogre::Real left = (wall_left + eye.x)/scale;
+	//Ogre::Real right = (wall_right + eye.x)/scale;
+	//Ogre::Real left = (wall_left + eye.x)/scale;
+	Ogre::Real right = (wall_right)/scale;
+	Ogre::Real left = (wall_left)/scale;
 	// The eye.y has to be negative otherwise would happen something like
 	// top = (2.34 + 1.5)/scale and bottom = (0.34 + 1.5)/scale
 	// and they should be top positive and bottom negative (about the same size)
-	Ogre::Real top = (wall_top - eye.y)/scale;
-	Ogre::Real bottom = (wall_bottom - eye.y)/scale;
+//	Ogre::Real top = (wall_top - eye.y)/scale;
+//	Ogre::Real bottom = (wall_bottom - eye.y)/scale;
+	Ogre::Real wall_half = (wall_top - wall_bottom)/2;
+	Ogre::Real top = (wall_top - wall_half)/scale;
+	Ogre::Real bottom = (wall_bottom - wall_half)/scale;
 
 	// Near and far clipping should not be modified because
 	// Increasing the near clip would clip the objects near the user.
@@ -340,7 +346,7 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// NOTE This is not HMD discard the rotation part
 	// Rotating the eye doesn't seem to have any affect.
 	// Though it's more realistic if it's there.
-	eye = headMat.extractQuaternion()*eye + headTrans;
+	eye = headMat.extractQuaternion()*eye + cam_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
 	Ogre::Vector3 cam_pos( camera->getRealPosition() );
 
 	// Combine eye and camera positions
