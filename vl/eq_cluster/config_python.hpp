@@ -46,6 +46,12 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 }
 */
 
+/// Overloads need to be outside the module definition
+/// Physics world member overloads
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
+
 BOOST_PYTHON_MODULE(eqOgre)
 {
 	using namespace vl;
@@ -53,7 +59,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 	// TODO check for overloads and default arguments, they need some extra work
 
-	python::class_<Ogre::Vector3>("Vector3", python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
+	python::class_<Ogre::Vector3>("Vector3", python::init<>() )
+		.def( python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
 		.def_readwrite("x", &Ogre::Vector3::x)
 		.def_readwrite("y", &Ogre::Vector3::y)
 		.def_readwrite("z", &Ogre::Vector3::z)
@@ -80,7 +87,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def(python::self != python::self )
 		;
 
-	python::class_<Ogre::Quaternion>("Quaternion", python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>() )
+	python::class_<Ogre::Quaternion>("Quaternion", python::init<>() )
+		.def( python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>() )
 		.def_readwrite("x", &Ogre::Quaternion::x)
 		.def_readwrite("y", &Ogre::Quaternion::y)
 		.def_readwrite("z", &Ogre::Quaternion::z)
@@ -97,6 +105,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.def(python::self * Ogre::Real() )
 		.def(python::self == python::self )
 		.def(python::self != python::self )
+		.def_readonly("IDENTITY", &Ogre::Quaternion::IDENTITY)
 		;
 
 
@@ -108,7 +117,13 @@ BOOST_PYTHON_MODULE(eqOgre)
 	python::class_<Ogre::Radian>("Radian")
 	;
 
-	// TODO add enable physics
+	/// Transformation
+	python::class_<vl::Transform>("Transform", python::init< python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
+		.def_readwrite( "position", &vl::Transform::position )
+		.def_readwrite( "quaternion", &vl::Transform::quaternion )
+	;
+
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -341,37 +356,70 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 	/// Physics
+	python::class_<btCollisionShape, boost::noncopyable >("btCollisionShape", python::no_init )
+	;
+
+	python::class_<btStaticPlaneShape, boost::noncopyable, python::bases<btCollisionShape> >("btStaticPlaneShape", python::no_init )
+	;
+
+	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
+	;
+
 	python::class_<btRigidBody, boost::noncopyable >("btRigidBody", python::no_init )
 	;
 
+	// TODO add scene node setting
+	python::class_<vl::physics::MotionState, boost::noncopyable >("MotionState", python::no_init )
+	;
+
 	python::class_<vl::physics::World, boost::noncopyable >("PhysicsWorld", python::no_init )
-		.def("createRigidBody",&vl::physics::World::createRigidBody, python::return_value_policy<python::reference_existing_object>() )
-		.def("addRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
-		.def("getRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
-		.def("removeRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
+		.def("createRigidBody", &vl::physics::World::createRigidBody,
+			 createRigidBody_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("addRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("getRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("removeRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("createMotionState", &vl::physics::World::createMotionState,
+			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("createPlaneShape", &vl::physics::World::createPlaneShape,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("createSphereShape", &vl::physics::World::createSphereShape,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 	;
 
 	/// Physics Actions
 	python::class_<vl::physics::MoveAction, boost::noncopyable, python::bases<TransformationAction> >("PhysicsMoveAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ), &vl::physics::MoveAction::setForce )
-		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ), &vl::physics::MoveAction::setTorque )
-		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::MoveAction::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ),
+					  &vl::physics::MoveAction::setForce )
+		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ),
+					  &vl::physics::MoveAction::setTorque )
+		.def("create",&vl::physics::MoveAction::create,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
 	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<BasicAction> >("ApplyForce", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ), &vl::physics::MoveAction::setForce )
-		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::ApplyForce::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_internal_reference<>() ),
+					  &vl::physics::ApplyForce::setForce )
+		.def("create",&vl::physics::ApplyForce::create,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
 	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<BasicAction> >("ApplyTorque", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
-		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ), &vl::physics::MoveAction::setTorque )
-		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::ApplyTorque::setRigidBody )
+		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_internal_reference<>() ),
+					  &vl::physics::ApplyTorque::setTorque )
+		.def("create",&vl::physics::ApplyTorque::create,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 	python::def( "getKeyName", getKeyName );

@@ -11,7 +11,7 @@
 
 project( "spikes" CXX )
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 
 add_executable( spike_udp_renderer
@@ -21,16 +21,3 @@ add_executable( spike_udp_renderer
 
 target_link_libraries( spike_udp_renderer ${eqOgre_LIBRARY} )
 
-add_executable( spike_bullet_test
-	bullet_test.cpp
-	)
-
-target_link_libraries( spike_bullet_test ${BULLET_LIBRARIES} )
-
-add_executable( spike_bullet
-	bullet_spike.cpp
-	)
-
-target_link_libraries( spike_bullet ${eqOgre_LIBRARY} )
-
-copy_start_scripts( spike_bullet ogre_project/ogre.prj physics )

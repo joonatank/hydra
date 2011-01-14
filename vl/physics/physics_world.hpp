@@ -51,7 +51,6 @@ public :
 	void addRigidBody( std::string const name, btRigidBody *body,
 					   bool user_driven = false );
 
-	// TODO implement
 	btRigidBody *getRigidBody( std::string const &name );
 
 	// TODO implement
@@ -59,14 +58,6 @@ public :
 	// should it just destroy the body altogether
 	btRigidBody *removeRigidBody( std::string const &name );
 
-	// TODO implement
-// 	void removeRigidBody( btRigidBody *body)
-// 	{
-// 		BOOST_THROW_EXCEPTION( vl::not_implemented() );
-// 	}
-
-
-	// TODO implement
 	bool hasRigidBody( std::string const &name );
 
 	MotionState *createMotionState( vl::Transform const &trans, eqOgre::SceneNode *node = 0 );
@@ -74,8 +65,6 @@ public :
 	void destroyMotionState( MotionState *state );
 
 	btStaticPlaneShape *createPlaneShape( Ogre::Vector3 const &normal, vl::scalar constant );
-
-// 	btCollisionShape *createMeshShape(  );
 
 	btSphereShape *createSphereShape( vl::scalar radius );
 

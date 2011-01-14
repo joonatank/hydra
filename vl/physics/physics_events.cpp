@@ -9,14 +9,22 @@
 
 #include "base/exceptions.hpp"
 
-void vl::physics::ApplyForce::execute(void )
+void
+vl::physics::ApplyForce::execute( void )
 {
-	_body->applyForce( btVector3(_force.x, _force.y, _force.z), btVector3(0,0,0) );
+	if( !_body )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_body->applyCentralForce( btVector3(_force.x, _force.y, _force.z) );
 }
 
 
-void vl::physics::ApplyTorque::execute(void )
+void
+vl::physics::ApplyTorque::execute( void )
 {
+	if( !_body )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
 	_body->applyTorque( btVector3(_torque.x, _torque.y, _torque.z) );
 }
 

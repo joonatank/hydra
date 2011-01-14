@@ -19,6 +19,10 @@ copy_start_scripts( renderer
 	"ogre" )
 
 copy_start_scripts( renderer
+	ogre_physics_project/ogre.prj
+	"physics" )
+
+copy_start_scripts( renderer
 	tracking_test_project/tracking.prj
 	tracking )
 

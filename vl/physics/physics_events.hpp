@@ -24,24 +24,6 @@ namespace vl
 namespace physics
 {
 
-// TODO should be replaced by the use of the template
-class PhysicsAction : public vl::BasicAction
-{
-public :
-	PhysicsAction( void )
-		: _body(0)
-	{}
-
-	void setRigidBody( btRigidBody *body )
-	{ _body = body; }
-
-	btRigidBody *getRigidBody( void )
-	{ return _body; }
-
-protected :
-	btRigidBody *_body;
-};
-
 class ApplyForce : public vl::BasicAction
 {
 public :
@@ -52,7 +34,7 @@ public :
 	void setForce( Ogre::Vector3 const &vec )
 	{ _force = vec; }
 
-	Ogre::Vector3 const &getForce( void )
+	Ogre::Vector3 const &getForce( void ) const
 	{ return _force; }
 
 	virtual void execute( void );
@@ -82,7 +64,7 @@ public :
 		: _body(0), _torque(0,0,0)
 	{}
 
-	Ogre::Vector3 const &getTorque( void )
+	Ogre::Vector3 const &getTorque( void ) const
 	{ return _torque; }
 
 	void setTorque( Ogre::Vector3 const &vec )
