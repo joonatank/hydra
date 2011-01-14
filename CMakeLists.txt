@@ -103,6 +103,8 @@ endif()
 
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 
+find_package( Bullet REQUIRED )
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -115,6 +117,11 @@ include_directories( SYSTEM
 	${OGG_INCLUDE_DIR}
 	${VORBIS_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
+	)
+
+include_directories(
+	${BULLET_INCLUDE_DIRS}
+	${BULLET_INCLUDE_DIRS}/bullet
 	)
 
 # Libraries that eqOgre library depends on
@@ -134,6 +141,7 @@ set( EQOGRE_DEB_LIBS
 	${Vorbis_LIBRARY}
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
+	${BULLET_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

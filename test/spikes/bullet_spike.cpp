@@ -20,8 +20,8 @@
 #include "eq_cluster/event_manager.hpp"
 
 // Physics headers
-#include "physics_world.hpp"
-#include "physics_events.hpp"
+#include "physics/physics_events.hpp"
+#include "physics/physics_world.hpp"
 
 #include <bullet/btBulletDynamicsCommon.h>
 
@@ -66,17 +66,6 @@ public :
 		// So we can set the MotionState objects
 		if( !physics_inited )
 		{
-			eqOgre::SceneNode *camera = getSceneNode("CameraNode");
-			if( camera )
-			{
-				std::cerr << "CameraNode found. Setting new position." << std::endl;
-				// Move the camera a bit so we can see the ogre clearly
-				camera->setPosition( camera->getPosition() + Ogre::Vector3(0, 0, 20) );
-			}
-			else
-			{
-				std::cerr << "CameraNode NOT found." << std::endl;
-			}
 			eqOgre::SceneNode *ogre = getSceneNode("ogre");
 			if( !ogre )
 			{
@@ -85,45 +74,40 @@ public :
 			}
 			else
 			{
-				_groundShape = new btStaticPlaneShape( btVector3(0,1,0), btScalar(1.0) );
-				_fallShape = new btSphereShape(1);
+				// TODO move to using the World to create the shapes
+				_groundShape = _world->createPlaneShape( Ogre::Vector3(0,1,0), 1.0 );
+				_fallShape = _world->createSphereShape(1);
 
-				_groundMotionState = new vl::physics::MotionState( Ogre::Vector3(0, -1, 0), Ogre::Quaternion::IDENTITY );
-				// TODO replace btRigidBody with out own rigid body class
-				btRigidBody *groundBody = new btRigidBody(0, _groundMotionState, _groundShape);
-				_world->addRigidBody(groundBody);
+				vl::Transform trans( Ogre::Vector3(0, -1, 0), Ogre::Quaternion::IDENTITY );
+				_groundMotionState = _world->createMotionState( trans );
+				_world->createRigidBody("ground", 0, _groundMotionState, _groundShape);
 
 				std::cerr << "Ground RigidBody created and added." << std::endl;
 
 				Ogre::Vector3 v(0, 20, 0);
 				Ogre::Quaternion const &q = ogre->getOrientation();
-				_fallMotionState = new vl::physics::MotionState( v, q, ogre );
+				trans = vl::Transform( v, q );
+				_fallMotionState = _world->createMotionState( trans, ogre );
 
 				// TODO we should have basic RigidBody class which owns the
 				// MotionState and Shape. Easier to manage and for now we are not
 				// sharing them anyway.
 				// This class can also easily be exposed to python
-				btScalar mass = 1;
-				btRigidBody *fallBody = new btRigidBody(mass, _fallMotionState, _fallShape );
-
-				// Every object that is controlled by the user should have
-				// DISABLE_DEACTIVATION set
-				// Because activation only happens when other bodies are come near
-				// NOTE might work also by using body->activate() before moving it
-				fallBody->setActivationState(DISABLE_DEACTIVATION);
-				_world->addRigidBody(fallBody);
+				vl::scalar mass = 1;
+				btRigidBody *fallBody = _world->createRigidBody("ogre", mass, _fallMotionState, _fallShape );
 
 				std::cerr << "Fall RigidBody created and added." << std::endl;
 
 				physics_inited = true;
 
 				// Create a physics test Event
+				// TODO move to python
 				vl::physics::ApplyForce *action = vl::physics::ApplyForce::create();
 				vl::KeyPressedTrigger *trig = _game_manager->getEventManager()
 					->createKeyPressedTrigger( OIS::KC_F );
 
 				action->setRigidBody( fallBody );
-				action->setForce( btVector3(0, 500, 0) );
+				action->setForce( Ogre::Vector3(0, 500, 0) );
 				trig->addAction( action );
 			}
 		}
@@ -140,23 +124,22 @@ public :
 
 	void destroyPhysics( void )
 	{
+		// Bodies
+		_world->destroyMotionState( _groundMotionState );
+		_world->destroyMotionState( _fallMotionState );
+		_world->destroyShape(_fallShape);
+		_world->destroyShape(_groundShape);
+
 		// World
 		delete _world;
-
-		// Bodies
-		// TODO the memory management of these should be in RigidBody
-		delete _groundShape;
-		delete _fallShape;
-		delete _groundMotionState;
-		delete _fallMotionState;
 	}
 
 	vl::physics::World *_world;
 	// Collision opbejcts
 	btCollisionShape *_groundShape;
 	btCollisionShape *_fallShape;
-	btMotionState *_groundMotionState;
-	btMotionState *_fallMotionState;
+	vl::physics::MotionState *_groundMotionState;
+	vl::physics::MotionState *_fallMotionState;
 };
 
 class NodeFactory : public eqOgre::NodeFactory

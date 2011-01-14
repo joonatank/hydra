@@ -13,6 +13,8 @@
 #include "python.hpp"
 // #include <boost/python.hpp>
 #include "player.hpp"
+#include <physics/physics_events.hpp>
+#include <physics/physics_world.hpp>
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -106,10 +108,13 @@ BOOST_PYTHON_MODULE(eqOgre)
 	python::class_<Ogre::Radian>("Radian")
 	;
 
+	// TODO add enable physics
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property( "physics_world", python::make_function( &vl::GameManager::getPhysicsWorld, python::return_value_policy<python::reference_existing_object>() ) )
+		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 	;
 
 	// TODO add setHeadMatrix function to python
@@ -229,13 +234,13 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.add_property("scene_node", python::make_function( &eqOgre::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &eqOgre::SetTransformation::setSceneNode )
 		.def("create",&SetTransformation::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
-//		.def("execute", python::pure_virtual(&BasicAction::execute) )
 	;
 
 	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::TransformActionTrigger> >("TrackerTrigger", python::no_init )
 	;
 
 
+	/// Game Actions
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
 		.def_readwrite("game", &GameAction::data )
 	;
@@ -251,6 +256,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 
+	/// SceneManager Actions
 	python::class_<SceneManagerAction, boost::noncopyable, python::bases<BasicAction> >("SceneAction", python::no_init )
 		.def_readwrite("scene", &SceneManagerAction::data )
 	;
@@ -312,7 +318,10 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
-	python::class_<MoveAction, boost::noncopyable, python::bases<BasicAction> >("MoveAction", python::no_init )
+	python::class_<TransformationAction, boost::noncopyable, python::bases<BasicAction> >("TransformationAction", python::no_init )
+	;
+
+	python::class_<MoveAction, boost::noncopyable, python::bases<TransformationAction> >("MoveAction", python::no_init )
 		.add_property("scene_node", python::make_function( &MoveAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &MoveAction::setSceneNode)
 		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
 		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
@@ -331,6 +340,40 @@ BOOST_PYTHON_MODULE(eqOgre)
 		.staticmethod("create")
 	;
 
+	/// Physics
+	python::class_<btRigidBody, boost::noncopyable >("btRigidBody", python::no_init )
+	;
+
+	python::class_<vl::physics::World, boost::noncopyable >("PhysicsWorld", python::no_init )
+		.def("createRigidBody",&vl::physics::World::createRigidBody, python::return_value_policy<python::reference_existing_object>() )
+		.def("addRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
+		.def("getRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
+		.def("removeRigidBody",&vl::physics::World::addRigidBody, python::return_value_policy<python::reference_existing_object>() )
+		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+	;
+
+	/// Physics Actions
+	python::class_<vl::physics::MoveAction, boost::noncopyable, python::bases<TransformationAction> >("PhysicsMoveAction", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ), &vl::physics::MoveAction::setForce )
+		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ), &vl::physics::MoveAction::setTorque )
+		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<BasicAction> >("ApplyForce", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ), &vl::physics::MoveAction::setForce )
+		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<BasicAction> >("ApplyTorque", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ), &vl::physics::MoveAction::setRigidBody )
+		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ), &vl::physics::MoveAction::setTorque )
+		.def("create",&vl::physics::MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
 	python::def( "getKeyName", getKeyName );
 
 	python::def( "getPythonKeyName", getPythonKeyName );

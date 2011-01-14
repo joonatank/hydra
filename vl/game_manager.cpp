@@ -23,6 +23,9 @@
 #include "eq_cluster/transform_event.hpp"
 #include "eq_cluster/config_events.hpp"
 
+// Physics
+#include "physics/physics_world.hpp"
+
 vl::GameManager::GameManager( void )
 	: _python(0),
 	  _resource_man( new eqOgre::ResourceManager ),
@@ -32,7 +35,8 @@ vl::GameManager::GameManager( void )
 	  _trackers( new vl::Clients( _event_man ) ),
 	  _audio_manager(0),
 	  _background_sound(0),
-	  _quit( false )
+	  _quit( false ),
+	  _physics_world(0)
 {
 	// Add triggers
 	// FIXME it's broken in the EventManager
@@ -42,12 +46,16 @@ vl::GameManager::GameManager( void )
 // 	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
 // 	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
 
+	// TODO there should be delayd creation of the manager because this is taking
+	// multiple seconds
 	_python = new eqOgre::PythonContext( this );
 
 	EQINFO << "Init audio." << std::endl;
 
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
+
+	// Not Create the physics world because the user needs to enable it.
 }
 
 vl::GameManager::~GameManager(void )
@@ -150,5 +158,24 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	else
 	{
 		EQERROR << "Couldn't find " << song_name << " from resources." << std::endl;
+	}
+}
+
+vl::physics::World *
+vl::GameManager::getPhysicsWorld( void )
+{
+	return _physics_world;
+}
+
+void
+vl::GameManager::enablePhysics( bool enable )
+{
+	if( enable )
+	{
+		// Create the physics if they don't exist
+		if( _physics_world == 0 )
+		{
+			_physics_world = new physics::World();
+		}
 	}
 }

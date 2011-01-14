@@ -35,6 +35,8 @@ set( SOURCES
 	udp/server_config.cpp
 	udp/ogre_command.cpp
 	udp/print_command.cpp
+	physics/physics_events.cpp
+	physics/physics_world.cpp
 	)
 
 set( HEADERS
@@ -89,6 +91,9 @@ set( HEADERS
 	udp/command.hpp
 	udp/ogre_command.hpp
 	udp/print_command.hpp
+	physics/motion_state.hpp
+	physics/physics_events.hpp
+	physics/physics_world.hpp
 	)
 
 # This purposefully adds the glx window support for APPLE and CYGWIN also
