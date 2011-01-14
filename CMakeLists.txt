@@ -97,7 +97,9 @@ find_package(PythonInterp REQUIRED )
 
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 
-set(Boost_USE_STATIC_LIBS   ON)
+if( WIN32 )
+	set(Boost_USE_STATIC_LIBS   ON)
+endif()
 
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 
