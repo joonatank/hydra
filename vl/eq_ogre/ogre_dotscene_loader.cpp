@@ -702,7 +702,9 @@ eqOgre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	{ processTrackTarget(pElement, node); }
 	*/
 
-	/*	Process node (*) */
+	/*	Process node (*) 
+	Needs to be here because the node can have children
+	*/
 	pElement = XMLNode->first_node("node");
 	while(pElement)
 	{

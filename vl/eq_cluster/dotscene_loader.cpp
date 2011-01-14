@@ -104,7 +104,6 @@ vl::DotSceneLoader::processNodes(rapidxml::xml_node<  >* XMLNode)
 		processNode(pElement);
 		pElement = pElement->next_sibling("node");
 	}
-
 }
 
 void
@@ -133,4 +132,14 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, eqOgre::SceneNo
 	pElement = XMLNode->first_node("quaternion");
 	if( pElement )
 	{ node->setOrientation(vl::parseQuaternion(pElement)); }
+
+	/*	Process node (*) 
+	Needs to be here because the node can have children
+	*/
+	pElement = XMLNode->first_node("node");
+	while(pElement)
+	{
+		processNode(pElement, node);
+		pElement = pElement->next_sibling("node");
+	}
 }
