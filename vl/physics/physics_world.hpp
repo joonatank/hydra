@@ -45,7 +45,8 @@ public :
 	void setGravity( Ogre::Vector3 const &gravity );
 
 	btRigidBody *createRigidBody( std::string const &name, vl::scalar mass,
-								  MotionState *state, btCollisionShape *shape );
+								  MotionState *state, btCollisionShape *shape,
+								  bool user_driven = false );
 
 	void addRigidBody( std::string const name, btRigidBody *body,
 					   bool user_driven = false );

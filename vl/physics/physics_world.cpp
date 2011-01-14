@@ -53,10 +53,10 @@ vl::physics::World::setGravity(const Ogre::Vector3& gravity)
 btRigidBody *
 vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 									 vl::physics::MotionState *state,
-									 btCollisionShape *shape )
+									 btCollisionShape *shape, bool user_driven )
 {
 	btRigidBody *body = new btRigidBody(mass, state, shape );
-	addRigidBody( name, body );
+	addRigidBody( name, body, user_driven );
 	return body;
 }
 

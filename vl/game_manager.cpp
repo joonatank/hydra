@@ -68,6 +68,10 @@ vl::GameManager::~GameManager(void )
 		_audio_manager->shutDown();
 		cAudio::destroyAudioManager(_audio_manager);
 	}
+
+	// TODO add destruction
+
+	delete _physics_world;
 }
 
 eqOgre::PythonContextPtr vl::GameManager::getPython(void )
@@ -134,6 +138,11 @@ vl::GameManager::step(void )
 	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
 	{
 		_trackers->getTracker(i)->mainloop();
+	}
+
+	if( _physics_world )
+	{
+		_physics_world->step();
 	}
 
 	return !_quit;

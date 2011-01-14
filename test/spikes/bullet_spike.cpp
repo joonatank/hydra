@@ -46,6 +46,53 @@ public :
 		bool ret = eqOgre::Config::init(initID);
 
 		initPhysics();
+
+		eqOgre::SceneNode *ogre = getSceneNode("ogre");
+		if( !ogre )
+		{
+			std::cerr << "No SceneNode with the name ogre found!."
+				<< " Not initing physics." << std::endl;
+		}
+		else
+		{
+			vl::physics::World *world = _game_manager->getPhysicsWorld();
+			EQASSERT( world );
+
+			// TODO move to python
+			_groundShape = world->createPlaneShape( Ogre::Vector3(0,1,0), 1.0 );
+			_fallShape = world->createSphereShape(1);
+
+			vl::Transform trans( Ogre::Vector3(0, -1, 0), Ogre::Quaternion::IDENTITY );
+			_groundMotionState = world->createMotionState( trans );
+			world->createRigidBody("ground", 0, _groundMotionState, _groundShape);
+
+			std::cerr << "Ground RigidBody created and added." << std::endl;
+
+			Ogre::Vector3 v(0, 20, 0);
+			Ogre::Quaternion const &q = ogre->getOrientation();
+			trans = vl::Transform( v, q );
+			_fallMotionState = world->createMotionState( trans, ogre );
+
+			// TODO we should have basic RigidBody class which owns the
+			// MotionState and Shape. Easier to manage and for now we are not
+			// sharing them anyway.
+			// This class can also easily be exposed to python
+			vl::scalar mass = 1;
+			btRigidBody *fallBody = world->createRigidBody("ogre", mass, _fallMotionState, _fallShape, true );
+
+			std::cerr << "Fall RigidBody created and added." << std::endl;
+
+			// Create a physics test Event
+			// TODO move to python
+			vl::physics::ApplyForce *action = vl::physics::ApplyForce::create();
+			vl::KeyPressedTrigger *trig = _game_manager->getEventManager()
+				->createKeyPressedTrigger( OIS::KC_F );
+
+			action->setRigidBody( fallBody );
+			action->setForce( Ogre::Vector3(0, 500, 0) );
+			trig->addAction( action );
+		}
+
 		return ret;
 	}
 
@@ -59,82 +106,29 @@ public :
 
 	virtual uint32_t startFrame( eq::uint128_t const &frameID )
 	{
-		static bool physics_inited = false;
+// 		static bool physics_inited = false;
 		uint32_t ret = eqOgre::Config::startFrame(frameID);
 
-		// This should have been inited here and the SceneNodes should have been created
-		// So we can set the MotionState objects
-		if( !physics_inited )
-		{
-			eqOgre::SceneNode *ogre = getSceneNode("ogre");
-			if( !ogre )
-			{
-				std::cerr << "No SceneNode with the name ogre found!."
-					<< " Not initing physics." << std::endl;
-			}
-			else
-			{
-				// TODO move to using the World to create the shapes
-				_groundShape = _world->createPlaneShape( Ogre::Vector3(0,1,0), 1.0 );
-				_fallShape = _world->createSphereShape(1);
 
-				vl::Transform trans( Ogre::Vector3(0, -1, 0), Ogre::Quaternion::IDENTITY );
-				_groundMotionState = _world->createMotionState( trans );
-				_world->createRigidBody("ground", 0, _groundMotionState, _groundShape);
-
-				std::cerr << "Ground RigidBody created and added." << std::endl;
-
-				Ogre::Vector3 v(0, 20, 0);
-				Ogre::Quaternion const &q = ogre->getOrientation();
-				trans = vl::Transform( v, q );
-				_fallMotionState = _world->createMotionState( trans, ogre );
-
-				// TODO we should have basic RigidBody class which owns the
-				// MotionState and Shape. Easier to manage and for now we are not
-				// sharing them anyway.
-				// This class can also easily be exposed to python
-				vl::scalar mass = 1;
-				btRigidBody *fallBody = _world->createRigidBody("ogre", mass, _fallMotionState, _fallShape );
-
-				std::cerr << "Fall RigidBody created and added." << std::endl;
-
-				physics_inited = true;
-
-				// Create a physics test Event
-				// TODO move to python
-				vl::physics::ApplyForce *action = vl::physics::ApplyForce::create();
-				vl::KeyPressedTrigger *trig = _game_manager->getEventManager()
-					->createKeyPressedTrigger( OIS::KC_F );
-
-				action->setRigidBody( fallBody );
-				action->setForce( Ogre::Vector3(0, 500, 0) );
-				trig->addAction( action );
-			}
-		}
-
-		_world->step();
 
 		return ret;
 	}
 
 	void initPhysics( void )
 	{
-		_world = new vl::physics::World;
+		_game_manager->enablePhysics( true );
 	}
 
 	void destroyPhysics( void )
 	{
+		vl::physics::World *world = _game_manager->getPhysicsWorld();
 		// Bodies
-		_world->destroyMotionState( _groundMotionState );
-		_world->destroyMotionState( _fallMotionState );
-		_world->destroyShape(_fallShape);
-		_world->destroyShape(_groundShape);
-
-		// World
-		delete _world;
+		world->destroyMotionState( _groundMotionState );
+		world->destroyMotionState( _fallMotionState );
+		world->destroyShape(_fallShape);
+		world->destroyShape(_groundShape);
 	}
 
-	vl::physics::World *_world;
 	// Collision opbejcts
 	btCollisionShape *_groundShape;
 	btCollisionShape *_fallShape;
