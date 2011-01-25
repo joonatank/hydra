@@ -95,6 +95,10 @@ typedef boost::shared_ptr<Sensor> SensorRefPtr;
 class Tracker
 {
 public :
+	Tracker( void );
+
+	virtual ~Tracker( void ) {}
+
 	virtual void init( void ) = 0;
 
 	virtual void mainloop( void ) = 0;
@@ -110,8 +114,16 @@ public :
 	size_t getNSensors( void ) const
 	{ return _sensors.size(); }
 
+	void setTransformation( Ogre::Matrix4 const &trans )
+	{ _transform = trans; }
+
+	Ogre::Matrix4 const &getTransformation( void )
+	{ return _transform; }
+
 protected :
 	std::vector<SensorRefPtr> _sensors;
+
+	Ogre::Matrix4 _transform;
 
 };	// class Tracker
 

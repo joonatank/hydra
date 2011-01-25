@@ -77,6 +77,10 @@ void vl::Sensor::update(const vl::Transform& data)
 
 
 /// --------- Tracker --------------
+vl::Tracker::Tracker( void )
+	: _transform( Ogre::Matrix4::IDENTITY )
+{}
+
 void
 vl::Tracker::setSensor(size_t i, vl::SensorRefPtr sensor)
 {

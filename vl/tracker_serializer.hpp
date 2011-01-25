@@ -60,6 +60,8 @@ private :
 	/// Process a tracker node
 	void processTracker( rapidxml::xml_node<>* XMLNode, Connection const &connection );
 
+	void processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans );
+
 	/// Process a sensor node
 	void processSensor( rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker );
 

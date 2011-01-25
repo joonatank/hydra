@@ -77,15 +77,43 @@ namespace vl
 			: position( pos ), quaternion( rot )
 		{}
 
+		vl::Transform &operator*=( Ogre::Matrix4 const &m )
+		{
+			Ogre::Matrix4 m2( quaternion );
+			m2.setTrans( position );
+			Ogre::Matrix4 res = m2  * m;
+			position = res.getTrans();
+			quaternion = res.extractQuaternion();
+			return *this;
+		}
+
 		Ogre::Vector3 position;
 		Ogre::Quaternion quaternion;
 	};
 
-	inline std::ostream &operator<<( std::ostream &os, Transform const &d )
+	inline std::ostream &
+	operator<<( std::ostream &os, Transform const &d )
 	{
 		os << "Position = " << d.position << " : Orientation = " << d.quaternion;
 
 		return os;
+	}
+
+	inline vl::Transform 
+	operator*( vl::Transform const &t, Ogre::Matrix4 const &m )
+	{
+		vl::Transform temp(t);
+		temp *= m;
+		return temp;
+	}
+
+	inline vl::Transform 
+	operator*( Ogre::Matrix4 const &m, vl::Transform const &t )
+	{
+		Ogre::Matrix4 m2( t.quaternion );
+		m2.setTrans( t.position );
+		Ogre::Matrix4 res = m * m2;
+		return vl::Transform( res.getTrans(), res.extractQuaternion() );
 	}
 
 	inline

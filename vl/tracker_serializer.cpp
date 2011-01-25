@@ -119,13 +119,60 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 
 	TrackerRefPtr tracker( new vrpnTracker( connection.hostname, name, connection.port ) );
 	_clients->addTracker(tracker);
+	
+	rapidxml::xml_node<> *elem = XMLNode->first_node("transformation");
+	if( elem )
+	{
+		Ogre::Matrix4 trans = Ogre::Matrix4::IDENTITY;
+		processTransformation( elem, trans );
+		tracker->setTransformation( trans );
+	}
 
 	std::cerr << "Finding sensors" << std::endl;
-	rapidxml::xml_node<> *elem = XMLNode->first_node("sensor");
+	elem = XMLNode->first_node("sensor");
 	while( elem )
 	{
 		processSensor( elem, tracker );
 		elem = elem->next_sibling("sensor");
+	}
+}
+
+void 
+vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans )
+{
+	Ogre::Matrix4 m = Ogre::Matrix4::IDENTITY;
+
+	rapidxml::xml_node<> *elem = XMLNode->first_node("sign");
+	if( elem )
+	{
+		Ogre::Vector3 v = parseVector3( elem );
+		m.setScale(v);
+	}
+
+	Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
+	elem = XMLNode->first_node("vector");
+	if( elem )
+	{
+		q = parseQuaternion( elem );
+	}
+
+	Ogre::Vector3 v = Ogre::Vector3::ZERO;
+	elem = XMLNode->first_node("quaternion");
+	if( elem )
+	{
+		v = parseVector3( elem );
+	}
+
+	Ogre::Matrix4 m2(q);
+	m2.setTrans(v);
+
+	// Update the original matrix
+	trans = trans * m * m2;
+	std::cerr << "Transformation updated Ogre::Matrix = " << trans << std::endl;
+	elem = XMLNode->first_node("transformation");
+	if( elem )
+	{
+		processTransformation( elem, trans );
 	}
 }
 

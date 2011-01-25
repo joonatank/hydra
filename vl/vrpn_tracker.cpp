@@ -74,7 +74,6 @@ vl::vrpnTracker::mainloop(void )
 	_tracker->mainloop();
 }
 
-
 /// -------- Protected -------------
 void
 vl::vrpnTracker::update( vrpn_TRACKERCB const t )
@@ -86,6 +85,11 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		// Check that we have a sensor object
 		// Only sensors that are in use have an object
 		if( sensor )
-		{ sensor->update( vl::createTransform( t.pos, t.quat ) ); }
+		{ 
+			vl::Transform trans = vl::createTransform( t.pos, t.quat );
+			//std::cerr << "updating sensor transform = " << _transform << std::endl;
+			trans *= _transform;
+			sensor->update( trans );
+		}
 	}
 }

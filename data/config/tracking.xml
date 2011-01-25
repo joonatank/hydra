@@ -51,6 +51,33 @@ Critical : clients node needs to be present.
 		-->
 		<tracker name="glasses">
 			<!--
+			Transformation
+
+			Transforms the input from all the sensors from one coordinate system to another
+			Transformations can be done sequentially by nesting them
+			Every transformation node creates a separate transformation
+			matrix.
+			Transformation matrices are multiplied in inverse order
+			they appear so that the parent is always multiplied last
+			and the last child is always multiplied first to the input.
+			Multiple non-nested transformations are not supported
+			as the order of multiplication can not be determined.
+
+			nodes: transformation, vector, quaternion, axis
+			transformation creates another transformation matrix to be multiplied
+			before any of the previous ones
+			sign flip an axis (used for transform from left to right)
+			vector sets the translation of the transformation matrix
+			quaternion sets the rotation of the transformation matrix
+			-->
+			<transformation>
+				<sign x="1" y="1" z="-1"/>
+				<transformation>
+					<quaternion w="0.7071" x="0.7071" y="0" z="0"/>
+				</transformation>
+			</transformation>
+
+			<!--
 			Sensor marks a vector quaternion pair
 			There can exists an arbitary number of sensors, if the packet received
 			has more or less bytes than there is sensors it's considered an
