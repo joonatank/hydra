@@ -65,6 +65,24 @@ eqOgre::DotSceneLoader::_parse(char* xml_data)
 		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}
 
+	// OgreMax exports angles in Radians by default so if the scene file is 
+	// created with Maya we assume Radians
+	// Blender how ever uses Degrees by default so we will assume Degrees otherwise
+	std::string app( vl::getAttrib(XMLRoot, "application", "") );
+	vl::to_lower( app );
+	// Mind you we might process multiple scene files some made with Maya and
+	// some with Blender so this setting needs to be changed for each file.
+	if( app == "maya" )
+	{
+		std::cout << "Processing Maya scene file." << std::endl;
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_RADIAN ); 
+	}
+	else
+	{
+		std::cout << "Processing Blender scene file." << std::endl;
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_DEGREE ); 
+	}
+
 	if( !_attach_node )
 	{ _attach_node = _scene_mgr->getRootSceneNode(); }
 
@@ -546,14 +564,16 @@ eqOgre::DotSceneLoader::processLight(rapidxml::xml_node<>* XMLNode,
 	if(pElement)
 	{ light->setSpecularColour(vl::parseColour(pElement)); }
 
-	if(sValue == "spot" )//|| sValue == "spotLight" )
+	// TODO is this necessary if we want to change between light types
+	// it would be useful to have the parameters set anyway
+	if( light->getType() == Ogre::Light::LT_SPOTLIGHT )
 	{
 		// Process lightRange (?)
 		pElement = XMLNode->first_node("lightRange");
 		if(pElement)
 		{ processLightRange(pElement, light); }
 	}
-	if( sValue != "direction" )
+	if( light->getType() != Ogre::Light::LT_DIRECTIONAL )
 	{
 		// Process lightAttenuation (?)
 		pElement = XMLNode->first_node("lightAttenuation");
@@ -583,21 +603,27 @@ eqOgre::DotSceneLoader::processCamera(rapidxml::xml_node<>* XMLNode,
 	// Create the camera
 	Ogre::Camera *camera = _scene_mgr->createCamera( name );
 	parent->attachObject( camera );
-//	Ogre::SceneNode *cam_node
-//		= parent->createChildSceneNode( node_name );
-//	cam_node->attachObject( camera );
 
-	rapidxml::xml_node<>* pElement;
+	rapidxml::xml_node<> *pElement;
 
 	// Process clipping (?)
 	pElement = XMLNode->first_node("clipping");
 	if(pElement)
 	{
+		// Support both standard attribute name nearPlaneDist and
+		// non-standard near used by OgreMax
 		Ogre::Real nearDist = vl::getAttribReal(pElement, "near");
+		if( nearDist == 0 )
+		{ nearDist = vl::getAttribReal(pElement, "nearPlaneDist"); }
+
 		if( nearDist > 0 )
 		{ camera->setNearClipDistance(nearDist); }
 
+		// Support both standard and non-standard attribute names
 		Ogre::Real farDist =  vl::getAttribReal(pElement, "far");
+		if( farDist == 0 )
+		{ farDist = vl::getAttribReal(pElement, "farPlaneDist"); }
+
 		if( farDist > 0 && farDist > nearDist )
 		{ camera->setFarClipDistance(farDist); }
 	}
@@ -1115,7 +1141,7 @@ eqOgre::DotSceneLoader::processLightRange(rapidxml::xml_node<>* XMLNode, Ogre::L
 	Ogre::Real falloff = vl::getAttribReal(XMLNode, "falloff", 1.0);
 
 	// Setup the light range
-	light->setSpotlightRange(Ogre::Radian(inner), Ogre::Radian(outer), falloff);
+	light->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
 }
 
 void
