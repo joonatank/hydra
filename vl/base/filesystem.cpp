@@ -13,6 +13,8 @@
 // Necessary for break_string_down
 #include "string_utils.hpp"
 
+// Necessary for logging
+#include <OGRE/OgreLogManager.h>
 
 std::string
 vl::findPlugin( std::string const &plugin )
@@ -28,8 +30,8 @@ vl::findPlugin( std::string const &plugin )
 	char const delimiter(':');
 	std::string paths = "/usr/lib:/usr/local/lib:./";
 #endif
-//	std::stringstream ss;
-	std::cout << "Finding Plugins : paths = " << paths << std::endl;
+	std::string message = "Finding Plugins : paths = " + paths;
+	Ogre::LogManager::getSingleton().logMessage( message );
 
 	std::vector<std::string> vec;
 	vl::break_string_down( vec, paths, delimiter );
@@ -44,21 +46,22 @@ vl::findPlugin( std::string const &plugin )
 		path = *iter + '/' + prefix + plugin + postfix;
 
 		if( fs::exists( path ) )
-		{
-			// Plugin found
-			std::cout << "Plugin found : " << path << std::endl;
-			break;
-		}
+		{ break; }
 
 		path = *iter + '/' + "OGRE" + '/' + prefix + plugin + postfix;
 
 		if( fs::exists( path ) )
-		{
-			break;
-		}
+		{ break; }
 		path.clear();
 	}
 
+	if( !path.empty() )
+	{
+		// Plugin found
+		message = "Plugin found : " + path;
+		Ogre::LogManager::getSingleton().logMessage( message );
+	}
+	
 	return path;
 }
 

@@ -22,6 +22,7 @@
 
 #include "math/conversion.hpp"
 #include "base/exceptions.hpp"
+#include "base/string_utils.hpp"
 
 eqOgre::Channel::Channel( eq::Window *parent )
 	: eq::Channel(parent), _viewport(0), _stereo(false)
@@ -65,13 +66,16 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	{ return false; }
 
 	EQASSERT( getSettings().getNWalls() > 0);
-	EQINFO << "Settings has " << getSettings().getNWalls() << " wall configs." 
-		<< std::endl;
+	
+	std::string message = "Settings has " 
+		+ vl::to_string( getSettings().getNWalls() ) + " wall configs.";
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	// If the channel has a name we try to find matching wall
 	if( !getName().empty() )
 	{
-		std::cout << "Finding Wall for channel : " << getName() << std::endl;
+		message = "Finding Wall for channel : " + getName();
+		Ogre::LogManager::getSingleton().logMessage(message);
 		_wall = getSettings().findWall( getName() );
 	}
 	
@@ -79,29 +83,31 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	if( _wall.empty() )
 	{
 		_wall = getSettings().getWall(0);
-		std::cout << "No wall found : using the default " << _wall.name << std::endl;
+		message = "No wall found : using the default " + _wall.name;
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 	
 	EQASSERT( !_wall.empty() );
 
-	EQINFO << "Using wall : " << _wall.name <<std::endl; 
-
-	std::cout << "Checking for stereo." << std::endl;
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
 	_stereo = stereo;
 	if( _stereo )
 	{
-		std::cout << "Stereo supported" << std::endl;
+		message = "Stereo supported";
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 	else
 	{
-		std::cout << "No stereo support." << std::endl;
+		message = "No stereo support.";
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 
-	std::cout << "IPD = " << getSettings().getIPD() << std::endl;
+	message = "IPD (Inter pupilar distance) = " + vl::to_string( getSettings().getIPD() );
+	Ogre::LogManager::getSingleton().logMessage(message);
 
-	EQINFO << "Channel::ConfigInit done" << std::endl;
+	message = "Channel::ConfigInit done";
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	return true;
 }

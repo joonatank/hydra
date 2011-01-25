@@ -11,7 +11,10 @@
 
 eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 {
-	EQINFO << "Initing python context." << std::endl;
+	// TODO Ogre LogManager not initialised yet
+	std::string message = "Initing python context.";
+	std::cout << message << std::endl;
+	//Ogre::LogManager::getSingleton().logMessage( message );
 
 	try {
 		Py_Initialize();
@@ -38,15 +41,14 @@ eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 
 		// Add a global managers i.e. this and EventManager
 		_global["game"] = python::ptr<>( game_man );
-		// FIXME we can not use game manager here,
-		// also we need a ref ptr support in python
-//		_global["event_manager"] = python::ptr<>( game_man->getEventManager() );
 	}
 	// Some error handling so that we can continue the application
 	catch( ... )
 	{
-		std::cout << "Exception occured when initing python context." << std::endl;
-
+		// TODO Ogre LogManager not initialised yet
+		message = "Exception occured when initing python context.";
+		std::cerr << message << std::endl;
+		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 	}
 	if (PyErr_Occurred())
 	{
@@ -61,7 +63,10 @@ eqOgre::PythonContext::~PythonContext(void )
 void
 eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
 {
-	EQINFO << "Running python script file " << script.getName() << "." << std::endl;
+	// TODO Ogre LogManager not initialised yet
+	std::string message = "Running python script file " + script.getName() + ".";
+	std::cout << message << std::endl;
+	//Ogre::LogManager::getSingleton().logMessage( message );
 
 	EQASSERT( script.get() );
 	if( !script.get() )
@@ -75,8 +80,11 @@ eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
 	// Some error handling so that we can continue the application
 	catch( ... )
 	{
-		std::cout << "Exception occured in python script: " << script.getName()
-			<< std::endl;
+		// TODO these should be moved to ingame console and log file
+		// TODO Ogre LogManager not initialised yet
+		message = "Exception occured in python script: " + script.getName();
+		std::cerr << message << std::endl;
+		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 	}
 	if( PyErr_Occurred() )
 	{

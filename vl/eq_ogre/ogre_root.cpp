@@ -189,9 +189,7 @@ Ogre::SceneManager *
 vl::ogre::Root::createSceneManager(std::string const &name )
 {
 	if( !_ogre_root )
-	{
-		BOOST_THROW_EXCEPTION( vl::exception() );
-	}
+	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
 	Ogre::SceneManager *og_man
 		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );

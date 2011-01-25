@@ -391,24 +391,18 @@ vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 		if( !pElement )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no bottom_left") ); }
 		std::vector<double> bottom_left = getVector( pElement );
-		std::cout << "parsed bottom_left = " << bottom_left.at(0) << ',' << bottom_left.at(1) 
-			<< ',' << bottom_left.at(2) << std::endl;
 
 		// Process bottom_right
 		pElement = pWall->first_node("bottom_right");
 		if( !pElement )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no bottom_right") ); }
 		std::vector<double> bottom_right = getVector( pElement );
-		std::cout << "parsed bottom_right = " << bottom_right.at(0) << ',' << bottom_right.at(1) 
-			<< ',' << bottom_right.at(2) << std::endl;
 
 		// Process top_left
 		pElement = pWall->first_node("top_left");
 		if( !pElement )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no top_left") ); }
 		std::vector<double> top_left = getVector( pElement );
-		std::cout << "parsed top_left = " << top_left.at(0) << ',' << top_left.at(1) 
-			<< ',' << top_left.at(2) << std::endl;
 
 		// Add the wall
 		EnvSettings::Wall wall( name, channel, bottom_left, bottom_right, top_left );

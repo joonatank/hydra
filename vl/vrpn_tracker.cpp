@@ -22,7 +22,6 @@ std::ostream &operator<<( std::ostream &os, vrpn_TRACKERCB t )
 void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	vl::vrpnTracker *tracker = (vl::vrpnTracker *)userdata;
-	//std::cout << "Callback called : " << t << std::endl;
 	tracker->update(t);
 }
 
@@ -33,6 +32,8 @@ void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
 	: _tracker(0)
 {
+	// TODO should use Ogre LogManager
+	// Needs to be created in Config
 	std::cout << "Creating vrpn tracker : " << trackerName << std::endl;
 	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
 }
@@ -49,7 +50,8 @@ vl::vrpnTracker::vrpnTracker(const std::string& hostname,
 	if( port != 0 )
 	{ ss << ":" << port; }
 
-	// Debug printing, should go to log file
+	// TODO should use Ogre LogManager
+	// Needs to be created in Config
 	std::cout << "Creating vrpn tracker : " << ss.str() << std::endl;
 
 	_tracker = new vrpn_Tracker_Remote( ss.str().c_str() );

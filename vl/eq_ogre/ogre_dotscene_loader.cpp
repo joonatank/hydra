@@ -74,12 +74,14 @@ eqOgre::DotSceneLoader::_parse(char* xml_data)
 	// some with Blender so this setting needs to be changed for each file.
 	if( app == "maya" )
 	{
-		std::cout << "Processing Maya scene file." << std::endl;
+		std::string message = "Processing Maya scene file.";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		Ogre::Math::setAngleUnit( Ogre::Math::AU_RADIAN ); 
 	}
 	else
 	{
-		std::cout << "Processing Blender scene file." << std::endl;
+		std::string message("Processing Blender scene file.");
+		Ogre::LogManager::getSingleton().logMessage(message);
 		Ogre::Math::setAngleUnit( Ogre::Math::AU_DEGREE ); 
 	}
 

@@ -200,11 +200,14 @@ eqOgre::Window::takeScreenshot( const std::string& prefix,
 bool
 eqOgre::Window::configInit( const eq::uint128_t& initID )
 {
-	EQINFO << "eqOgre::Window::configInit" << std::endl;
+	std::string message = "eqOgre::Window::configInit";
+	Ogre::LogManager::getSingleton().logMessage(message);
 
-	if( !eq::Window::configInit( initID ))
+	if( !eq::Window::configInit( initID ) )
 	{
-		EQERROR << "eq::Window::configInit failed" << std::endl;
+		// TODO add error status flag
+		message = "eq::Window::configInit failed";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 
@@ -214,28 +217,35 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 	}
 	catch( vl::exception &e )
 	{
-		EQERROR << "VL Exception : "<<   boost::diagnostic_information<>(e)
-			<< std::endl;
+		// TODO add error status flag
+		message = "VL Exception : " + boost::diagnostic_information<>(e);
+		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
-		EQERROR << "Ogre Exception: " << e.what() << std::endl;
+		// TODO add error status flag
+		message = std::string("Ogre Exception: ") + e.what();
+		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( std::exception const &e )
 	{
-		EQERROR << "STD Exception: " << e.what() << std::endl;
+		// TODO add error status flag
+		message = std::string("STD Exception: ") + e.what();
+		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( ... )
 	{
-		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		EQERROR << err_msg << std::endl;
+		// TODO add error status flag
+		message = "eqOgre::Window::configInit : Exception thrown.";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 
-	EQINFO << "eqOgre::Window::init : done" << std::endl;
+	message = "eqOgre::Window::init : done";
+	Ogre::LogManager::getSingleton().logMessage(message);
 	return true;
 }
 
@@ -245,10 +255,12 @@ bool eqOgre::Window::configExit(void )
 	bool retval = eq::Window::configExit();
 
 	// Should clean out OIS and Ogre
-	EQINFO << "Cleaning out OIS" << std::endl;
+	std::string message = "Cleaning out OIS";
+	Ogre::LogManager::getSingleton().logMessage(message);
 	if( _input_manager )
 	{
-		EQINFO << "Destroy OIS input manager." << std::endl;
+		message = "Destroy OIS input manager.";
+		Ogre::LogManager::getSingleton().logMessage(message);
         OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
@@ -264,7 +276,8 @@ eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNum
 	static bool inited = false;
 	if( !inited )
 	{
-		EQINFO << "Create a Ogre Viewport for each Channel" << std::endl;
+		std::string message = "Create a Ogre Viewport for each Channel";
+		Ogre::LogManager::getSingleton().logMessage(message);
 
 		Channels chanlist = getChannels();
 		for( size_t i = 0; i < chanlist.size(); ++i )
@@ -306,8 +319,8 @@ eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNu
 	}
 	else
 	{
-		EQERROR << "Mouse or keyboard does not exists! No input handling."
-			<< std::endl;
+		std::string message("Mouse or keyboard does not exists! No input handling.");
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 }
 
@@ -317,39 +330,43 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 	const eq::Pipe* pipe = getPipe();
 	eq::SystemWindow* systemWindow = 0;
 
+	std::string message;
 	switch( pipe->getWindowSystem( ))
 	{
 #ifdef GLX
 		case eq::WINDOW_SYSTEM_GLX:
-		EQINFO << "Using eqOgre::GLXWindow" << std::endl;
+		message = "Using eqOgre::GLXWindow";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		systemWindow = new eqOgre::GLXWindow( this );
 		break;
 #endif
 
 #ifdef AGL
 		case eq::WINDOW_SYSTEM_AGL:
-		EQINFO << "Using eqOgre::AGLWindow" << std::endl;
+		message = "Using eqOgre::AGLWindow";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		systemWindow = new eqOgre::AGLWindow( this );
 		break;
 #endif
 
 #ifdef WGL
 		case eq::WINDOW_SYSTEM_WGL:
-		EQINFO << "Using eqOgre::WGLWindow" << std::endl;
-		systemWindow = new eqOgre::WGLWindow( this );
+			message = "Using eqOgre::WGLWindow";
+			Ogre::LogManager::getSingleton().logMessage(message);
+			systemWindow = new eqOgre::WGLWindow( this );
 		break;
 #endif
-
-	default:
-		EQERROR << "Window system " << pipe->getWindowSystem()
-			<< " not implemented or supported" << std::endl;
-		return false;
+		default:
+			message = "Window system not implemented or supported";
+			Ogre::LogManager::getSingleton().logMessage(message);
+			return false;
 	}
 
 	EQASSERT( systemWindow );
-	if( !systemWindow->configInit( ))
+	if( !systemWindow->configInit() )
 	{
-		EQWARN << "System Window initialization failed: " << std::endl;
+		message = "System Window initialization failed: ";
+		Ogre::LogManager::getSingleton().logMessage(message);
 		delete systemWindow;
 		return false;
 	}
@@ -361,7 +378,8 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 void
 eqOgre::Window::createInputHandling( void )
 {
-	EQINFO << "Creating OIS Input system." << std::endl;
+	std::string message( "Creating OIS Input system." );
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	std::ostringstream ss;
 #if defined OIS_WIN32_PLATFORM
@@ -369,13 +387,17 @@ eqOgre::Window::createInputHandling( void )
 	eq::WGLWindowIF *os_win = static_cast<eq::WGLWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{
-		EQERROR << "Couldn't get WGL system window" << std::endl;
+		// TODO add error status
+		message = "Couldn't get WGL system window";
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 	else
 	{
 		// It's mandatory to cast HWND to size_t for OIS, otherwise OIS will crash
 		ss << (size_t)(os_win->getWGLWindowHandle());
-		EQINFO << "Got window handle for OIS : " << ss.str() << std::endl;
+		// Info
+		message = "Got window handle for OIS : " + ss.str();
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
@@ -383,7 +405,9 @@ eqOgre::Window::createInputHandling( void )
 	eq::GLXWindowIF *os_win = static_cast<eq::GLXWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{
-		EQERROR << "Couldn't get GLX system window" << std::endl;
+		// TODO add error status
+		message = "Couldn't get GLX system window";
+		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 	else
 	{
@@ -394,10 +418,13 @@ eqOgre::Window::createInputHandling( void )
 	OIS::ParamList pl;
 	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
 
-	EQINFO << "Creating OIS Input Manager" << std::endl;
+	// Info
+	message = "Creating OIS Input Manager";
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	_input_manager = OIS::InputManager::createInputSystem( pl );
-	EQINFO << "OIS Input Manager created" << std::endl;
+	message = "OIS Input Manager created";
+	Ogre::LogManager::getSingleton().logMessage(message);
 
 	printInputInformation();
 
@@ -411,7 +438,9 @@ eqOgre::Window::createInputHandling( void )
 
 	_mouse->setEventCallback(this);
 
-	EQINFO << "Input system created." << std::endl;
+	// Info
+	message = "Input system created.";
+	Ogre::LogManager::getSingleton().logMessage(message);
 }
 
 void
@@ -420,26 +449,32 @@ eqOgre::Window::printInputInformation( void )
 	// Print debugging information
 	// TODO debug information should go to Ogre Log file
 	unsigned int v = _input_manager->getVersionNumber();
-	EQINFO << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
+	std::stringstream ss;
+	ss << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
 		<< "\nRelease Name: " << _input_manager->getVersionName()
 		<< "\nManager: " << _input_manager->inputSystemName()
 		<< "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
-		<< std::endl;
+		<< '\n';
 
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+
+	ss.str("");
 	// List all devices
 	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
-	{ EQINFO << "\n\tDevice: " << " Vendor: " << i->second; }
-	EQINFO << std::endl;
+	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
+	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 }
 
 void
 eqOgre::Window::createOgreWindow( void )
 {
-	EQINFO << "Creating Ogre RenderWindow." << std::endl;
+	// Info
+	std::string message = "Creating Ogre RenderWindow.";
+	Ogre::LogManager::getSingleton().logMessage( message );
 
 	Ogre::NameValuePairList params;
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32

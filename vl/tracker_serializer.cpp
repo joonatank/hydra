@@ -68,8 +68,6 @@ vl::TrackerSerializer::processClient(rapidxml::xml_node< char >* XMLNode)
 	if( attrib )
 	{ use = vl::from_string<bool>( std::string( attrib->value() ) ); }
 
-	std::cerr << "use attrib done" << std::endl;
-
 	std::string type;
 	attrib = XMLNode->first_attribute("type");
 	// must have a type attribute
@@ -152,28 +150,21 @@ vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogr
 	Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
 	elem = XMLNode->first_node("vector");
 	if( elem )
-	{
-		q = parseQuaternion( elem );
-	}
+	{ q = parseQuaternion( elem ); }
 
 	Ogre::Vector3 v = Ogre::Vector3::ZERO;
 	elem = XMLNode->first_node("quaternion");
 	if( elem )
-	{
-		v = parseVector3( elem );
-	}
+	{ v = parseVector3( elem ); }
 
 	Ogre::Matrix4 m2(q);
 	m2.setTrans(v);
 
 	// Update the original matrix
 	trans = trans * m * m2;
-	std::cerr << "Transformation updated Ogre::Matrix = " << trans << std::endl;
 	elem = XMLNode->first_node("transformation");
 	if( elem )
-	{
-		processTransformation( elem, trans );
-	}
+	{ processTransformation( elem, trans ); }
 }
 
 void
@@ -213,6 +204,8 @@ vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
+	// TODO should use Ogre LogManager
+	// Needs to be created in Config
 	std::cerr << "Creating Trigger " << name << std::endl;
 	vl::TrackerTrigger *trigger = _clients->getEventManager()->createTrackerTrigger(name);
 	sensor->setTrigger(trigger);

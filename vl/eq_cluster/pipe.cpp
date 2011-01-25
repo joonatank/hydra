@@ -15,6 +15,7 @@
 // Necessary for loading dotscene
 #include "eq_ogre/ogre_dotscene_loader.hpp"
 #include "window.hpp"
+#include "base/string_utils.hpp"
 
 /// ------------------------- Public -------------------------------------------
 eqOgre::Pipe::Pipe( eq::Node* parent )
@@ -37,20 +38,29 @@ eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 {
 	if( !eq::Pipe::configInit(initID) )
 	{
-		EQERROR << "eq::Pipe::configInit failed" << std::endl;
+		// Error
+		// TODO move to using Ogre Logging, the log manager needs to be created sooner
+		std::string message("eq::Pipe::configInit failed");
+		std::cerr << message << std::endl;
 		return false;
 	}
 
 	if( !_mapData( initID ) )
 	{
-		EQERROR << "eqOgre::Pipe::configInit : mapData failed" << std::endl;
+		// Error
+		// TODO move to using Ogre Logging, the log manager needs to be created sooner
+		std::string message("eqOgre::Pipe::configInit : mapData failed");
+		std::cerr << message << std::endl;
 		return false;
 	}
 
 
 	if( !_createOgre() )
 	{
-		EQERROR << "eqOgre::Pipe::configInit : createOgre failed" << std::endl;
+		// Error
+		// TODO move to using Ogre Logging, the log manager needs to be created sooner
+		std::string message("eqOgre::Pipe::configInit : createOgre failed");
+		std::cerr << message << std::endl;
 		return false;
 	}
 
@@ -63,7 +73,9 @@ eqOgre::Pipe::configExit()
 	bool retval = eq::Pipe::configExit();
 	_unmapData();
 
-	EQINFO << "Cleaning out OGRE" << std::endl;
+	// Info
+	std::string message("Cleaning out OGRE");
+	Ogre::LogManager::getSingleton().logMessage( message );
 	_root.reset();
 
 	return retval;
@@ -91,17 +103,22 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 
 		if( !_loadScene() )
 		{
-			EQERROR << "Problem loading the Scene" << std::endl;
+			// Error
+			std::string message("Problem loading the Scene");
+			Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 		}
 
 		// We need to find the node from scene graph
-		EQINFO << "SceneManager has " << _scene_manager.getNSceneNodes()
-			<< " SceneNodes." << std::endl;
+		std::string message = "SceneManager has " 
+			+ vl::to_string(_scene_manager.getNSceneNodes()) + " SceneNodes.";
+		Ogre::LogManager::getSingleton().logMessage( message );
 
 		EQASSERTINFO( _ogre_sm, "Window has no Ogre SceneManager" );
 		if( !_scene_manager.setSceneManager( _ogre_sm ) )
 		{
-			EQERROR << "Some SceneNodes were not found." << std::endl;
+			// Error
+			message = "Some SceneNodes were not found.";
+			Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 		}
 
 		inited = true;
@@ -118,7 +135,9 @@ bool
 eqOgre::Pipe::_createOgre( void )
 {
 	try {
-		EQINFO << "Creating Ogre Root" << std::endl;
+		// TODO needs LogManager creation before this
+//		std::string message("Creating Ogre Root");
+//		Ogre::LogManager::getSingleton().logMessage( message );
 
 		_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
 		// Initialise ogre
@@ -126,24 +145,29 @@ eqOgre::Pipe::_createOgre( void )
 	}
 	catch( vl::exception &e )
 	{
-		EQERROR << "VL Exception : "<<   boost::diagnostic_information<>(e)
-			<< std::endl;
+		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
+		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+
 		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
-		EQERROR << "Ogre Exception: " << e.what() << std::endl;
+		std::string message = std::string("Ogre Exception: ") + e.what();
+		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+
 		return false;
 	}
 	catch( std::exception const &e )
 	{
-		EQERROR << "STD Exception: " << e.what() << std::endl;
+		std::string message = std::string("STD Exception: ") + e.what();
+		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+
 		return false;
 	}
 	catch( ... )
 	{
 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		EQERROR << err_msg << std::endl;
+		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
 		return false;
 	}
 
@@ -157,18 +181,20 @@ eqOgre::Pipe::_loadScene( void )
 
 	// Get scenes
 	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
-	EQINFO << "Loading Scenes for Project : " << getSettings().getProjectName()
-		<< std::endl;
+	std::string message = "Loading Scenes for Project : " + getSettings().getProjectName();
+	Ogre::LogManager::getSingleton().logMessage( message );
 
 	// If we don't have Scenes there is no point loading them
 	if( scenes.empty() )
 	{
-		EQINFO << "Project does not have any scene files." << std::endl;
+		message = "Project does not have any scene files.";
+		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 		return false;
 	}
 	else
 	{
-		EQINFO << "Project has " << scenes.size() << " scene files." << std::endl;
+		message = "Project has " + vl::to_string(scenes.size()) + " scene files.";
+		Ogre::LogManager::getSingleton().logMessage( message );
 	}
 
 	// Clean up old scenes
@@ -182,14 +208,16 @@ eqOgre::Pipe::_loadScene( void )
 	{
 		std::string const &name = scenes.at(i).getName();
 
-		EQINFO << "Loading scene " << name << "." << std::endl;
+		message = "Loading scene " + name + ".";
+		Ogre::LogManager::getSingleton().logMessage( message );
 
 		eqOgre::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 		loader.parseDotScene( scenes.at(i), _ogre_sm );
 
-		EQINFO << "Scene " << name << " loaded.";
+		message = "Scene " + name + " loaded.";
+		Ogre::LogManager::getSingleton().logMessage( message );
 	}
 
 	/// Get the camera
@@ -202,14 +230,16 @@ eqOgre::Pipe::_loadScene( void )
 	if( cameras.hasMoreElements() )
 	{
 		_camera = cameras.getNext();
-		EQINFO << "Using Camera " <<  _camera->getName()
-			<< " found from the scene." << std::endl;
+		message = "Using Camera " + _camera->getName()
+			+ " found from the scene.";
+		Ogre::LogManager::getSingleton().logMessage( message );
 	}
 	else
 	{
 		_camera = _ogre_sm->createCamera("Cam");
-		EQINFO << "No camera in the scene. Using created camera "
-			<< _camera->getName() << std::endl;
+		message = "No camera in the scene. Using created camera "
+			+ _camera->getName();
+		Ogre::LogManager::getSingleton().logMessage( message );
 	}
 	_active_camera_name = _camera->getName();
 
@@ -221,6 +251,7 @@ eqOgre::Pipe::_loadScene( void )
 bool
 eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 {
+	// TODO move to using Ogre Logging, needs LogManager creation
 	EQINFO << "Mapping data." << std::endl;
 
 	// Get the cluster version of data
@@ -259,6 +290,7 @@ eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 void
 eqOgre::Pipe::_unmapData( void )
 {
+	// TODO move to using Ogre Logging, needs LogManager destruction later
 	EQINFO << "Unmapping Settings." << std::endl;
 	getConfig()->unmapObject( &_settings );
 
@@ -298,8 +330,8 @@ eqOgre::Pipe::_updateDistribData( void )
 		}
 		else
 		{
-			EQERROR << "eqOgre::Window : New camera name set, but NO camera found"
-				<< std::endl;
+			std::string message = "eqOgre::Window : New camera name set, but NO camera found";
+			Ogre::LogManager::getSingleton().logMessage( message );
 		}
 	}
 
