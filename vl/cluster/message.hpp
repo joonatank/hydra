@@ -13,6 +13,9 @@
 
 #include <iostream>
 
+#include "base/exceptions.hpp"
+#include "base/string_utils.hpp"
+
 namespace vl
 {
 
@@ -107,7 +110,11 @@ public :
 */
 		if( _size < sizeof(obj) )
 		{
-			std::cerr << "Not enough data to read from Message." << std::endl;
+			std::string str =
+				std::string("vl::Message::read - Not enough data to read from Message. There is")
+				+ vl::to_string(_size) + " bytes : needs "
+				+ vl::to_string(sizeof(obj)) + " bytes.";
+			BOOST_THROW_EXCEPTION( vl::short_message() << vl::desc(str) );
 			return;
 		}
 

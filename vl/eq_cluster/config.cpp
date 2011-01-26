@@ -209,41 +209,44 @@ eqOgre::Config::_updateServer( void )
 	// Handle received messages
 	_server->mainloop();
 
-	// Create SceneGraph updates
-	vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
-	std::vector<vl::Distributed *>::iterator iter;
-	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
-		++iter )
+	if( _server->oldClients() )
 	{
-		if( (*iter)->isDirty() )
+		// Create SceneGraph updates
+		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
+		std::vector<vl::Distributed *>::iterator iter;
+		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+			++iter )
 		{
-			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
-			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
-			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
-			msg.write( (*iter)->getID() );
-			(*iter)->pack(msg);
+			if( (*iter)->isDirty() )
+			{
+// 				std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
+				EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+// 				std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
+				msg.write( (*iter)->getID() );
+				(*iter)->pack(msg);
+			}
 		}
-	}
 
-	// Send SceneGraph to all listeners
-	if( msg.size() > 0 )
-	{
-		std::cout << "Sending updates to all clients." << std::endl;
-		_server->sendToAll( msg );
+		// Send SceneGraph to all listeners
+		if( msg.size() > 0 )
+		{
+// 			std::cout << "Sending updates to all clients." << std::endl;
+			_server->sendToAll( msg );
+		}
 	}
 
 	// New clients need the whole SceneGraph
 	if( _server->newClients() )
 	{
-		std::cout << "New clients sending the whole SceneGraph" << std::endl;
-		msg = vl::cluster::Message( vl::cluster::MSG_UPDATE );
+// 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
+		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
 		std::vector<vl::Distributed *>::iterator iter;
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )
 		{
 // 			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
 			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
-			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
+// 			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
 			msg.write( (*iter)->getID() );
 			(*iter)->pack( msg, vl::Distributed::DIRTY_ALL );
 		}

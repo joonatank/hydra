@@ -54,7 +54,7 @@ vl::cluster::Server::mainloop( void )
 void
 vl::cluster::Server::sendToAll( vl::cluster::Message const &msg )
 {
-	std::cout << "Sending message " << msg;
+// 	std::cout << "Sending message " << msg;
 
 // 	std::cout << "vl::cluster::Server::sendToAll" << std::endl;
 	std::vector<boost::udp::endpoint>::iterator iter;
@@ -71,7 +71,7 @@ void
 vl::cluster::Server::sendToNewClients( vl::cluster::Message const &msg )
 {
 // 	std::cout << "vl::cluster::Server::sendToNewClients" << std::endl;
-	std::cout << "Sending message " << msg;
+// 	std::cout << "Sending message " << msg;
 
 	std::vector<boost::udp::endpoint>::iterator iter;
 	for( iter = _new_clients.begin(); iter != _new_clients.end(); ++iter )

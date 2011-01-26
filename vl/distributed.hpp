@@ -28,7 +28,7 @@ public :
 	{ _dirtyBits |= bits; }
 
 	bool isDirty( void ) const
-	{ return(_dirtyBits == 0); }
+	{ return( _dirtyBits != DIRTY_NONE ); }
 
 	enum DirtyBits
 	{
@@ -37,23 +37,16 @@ public :
 		DIRTY_ALL = 0xFFFFFFFFFFFFFFFFull
 	};
 
+	/// Pack and unpack needs to be symmetric in every way otherwise
+	/// they will fail.
 	void pack( cluster::Message &msg )
-	{
-		if( isDirty() )
-		{ return; }
-
-		msg.write(_dirtyBits);
-		serialize( msg, getDirty() );
-		clearDirty();
-	}
+	{ pack( msg, _dirtyBits ); }
 
 	void pack( cluster::Message &msg, uint64_t const dirtyBits )
 	{
-		if( DIRTY_NONE == dirtyBits )
-		{ return; }
-
 		msg.write( dirtyBits );
 		serialize( msg, getDirty() );
+		clearDirty();
 	}
 
 	void unpack( cluster::Message &msg )
@@ -78,7 +71,7 @@ private :
 	virtual void deserialize( cluster::Message &msg, const uint64_t dirtyBits ) = 0;
 
 	void clearDirty( void )
-	{ _dirtyBits = 0; }
+	{ _dirtyBits = DIRTY_NONE; }
 
 	uint64_t _dirtyBits;
 	uint64_t _id;

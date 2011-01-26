@@ -286,11 +286,11 @@ eqOgre::Pipe::_syncData( void )
 				// only the most recent should be used.
 				while( msg->size() > 0 )
 				{
-					std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
-						<< "size = " << msg->size() << std::endl;
+// 					std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
+// 						<< "size = " << msg->size() << std::endl;
 					uint64_t id;
 					msg->read(id);
-					std::cout << "Object ID = " << id << std::endl;
+// 					std::cout << "Object ID = " << id << std::endl;
 // 					std::cout << "Mapped objects size = "
 // 						<< _mapped_objects.size() << std::endl;
 					vl::Distributed *obj = findMappedObject(id);

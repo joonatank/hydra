@@ -30,7 +30,10 @@ public:
 
 	void sendToNewClients( Message const &msg );
 
-	bool newClients( void )
+	bool oldClients( void ) const
+	{ return !_clients.empty(); }
+
+	bool newClients( void ) const
 	{ return !_new_clients.empty(); }
 
 private :
