@@ -36,6 +36,7 @@ vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
 	// Needs to be created in Config
 	std::cout << "Creating vrpn tracker : " << trackerName << std::endl;
 	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
+	_tracker->shutup = true;
 }
 
 vl::vrpnTracker::vrpnTracker(const std::string& hostname,
@@ -55,6 +56,7 @@ vl::vrpnTracker::vrpnTracker(const std::string& hostname,
 	std::cout << "Creating vrpn tracker : " << ss.str() << std::endl;
 
 	_tracker = new vrpn_Tracker_Remote( ss.str().c_str() );
+	_tracker->shutup = true;
 }
 
 vl::vrpnTracker::~vrpnTracker( void )
@@ -87,7 +89,7 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		// Check that we have a sensor object
 		// Only sensors that are in use have an object
 		if( sensor )
-		{ 
+		{
 			vl::Transform trans = vl::createTransform( t.pos, t.quat );
 			//std::cerr << "updating sensor transform = " << _transform << std::endl;
 			trans *= _transform;
