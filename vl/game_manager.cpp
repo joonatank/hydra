@@ -27,7 +27,7 @@ vl::GameManager::GameManager( void )
 	: _python(0),
 	  _resource_man( new eqOgre::ResourceManager ),
 	  _event_man( new vl::EventManager ),
-	  _scene_manager( new eqOgre::SceneManager ),
+	  _scene_manager(0),
 	  _player(0),
 	  _trackers( new vl::Clients( _event_man ) ),
 	  _audio_manager(0),
@@ -62,27 +62,40 @@ vl::GameManager::~GameManager(void )
 	}
 }
 
-eqOgre::PythonContextPtr vl::GameManager::getPython(void )
+void
+vl::GameManager::createSceneManager( vl::Session *session )
+{
+	EQASSERT( !_scene_manager );
+	_scene_manager = new eqOgre::SceneManager( session );
+}
+
+
+eqOgre::PythonContextPtr
+vl::GameManager::getPython(void )
 {
 	return _python;
 }
 
-vl::ResourceManagerPtr vl::GameManager::getReourceManager(void )
+vl::ResourceManagerPtr
+vl::GameManager::getReourceManager(void )
 {
 	return _resource_man;
 }
 
-vl::PlayerPtr vl::GameManager::getPlayer(void )
+vl::PlayerPtr
+vl::GameManager::getPlayer(void )
 {
 	return _player;
 }
 
-vl::EventManagerPtr vl::GameManager::getEventManager(void )
+vl::EventManagerPtr
+vl::GameManager::getEventManager(void )
 {
 	return _event_man;
 }
 
-eqOgre::SceneManagerPtr vl::GameManager::getSceneManager( void )
+eqOgre::SceneManagerPtr
+vl::GameManager::getSceneManager( void )
 {
 	return _scene_manager;
 }

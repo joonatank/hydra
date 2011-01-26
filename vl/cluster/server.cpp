@@ -8,8 +8,8 @@
 
 #include "message.hpp"
 
-vl::cluster::Server::Server(  uint16_t const port  )
-	: socket(io_service, boost::udp::endpoint(boost::udp::v4(), port))
+vl::cluster::Server::Server( uint16_t const port )
+	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 {
 }
 
@@ -23,7 +23,7 @@ vl::cluster::Server::mainloop( void )
 {
 // 	std::cout << "vl::cluster::Server::mainloop" << std::endl;
 
-	if( socket.available() != 0 )
+	if( _socket.available() != 0 )
 	{
 		std::cout << "vl::cluster::Server::mainloop has a message" << std::endl;
 		// TODO this really should handle all the messages
@@ -31,42 +31,72 @@ vl::cluster::Server::mainloop( void )
 		boost::udp::endpoint remote_endpoint;
 		boost::system::error_code error;
 
-		size_t n = socket.receive_from( boost::asio::buffer(recv_buf),
+		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
 			remote_endpoint, 0, error );
 
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
-		handle( recv_buf );
+		Message msg(recv_buf);
+		switch( msg.getType() )
+		{
+			case MSG_REG_UPDATES :
+				std::cout << "Client registering for updates" << std::endl;
+				_addClient( remote_endpoint );
+				break;
+			default :
+				std::cout << "Unhandeled message type." << std::endl;
+				break;
+		}
 	}
 }
 
 void
 vl::cluster::Server::sendToAll( vl::cluster::Message const &msg )
 {
+	std::cout << "Sending message " << msg;
+
 // 	std::cout << "vl::cluster::Server::sendToAll" << std::endl;
+	std::vector<boost::udp::endpoint>::iterator iter;
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{
+// 		std::cout << "Sending to client = " << *iter << std::endl;
+		std::vector<char> buf;
+		msg.dump(buf);
+		_socket.send_to( boost::asio::buffer(buf), *iter );
+	}
 }
 
-// Private
 void
-vl::cluster::Server::handle( std::vector<char> msg )
+vl::cluster::Server::sendToNewClients( vl::cluster::Message const &msg )
 {
-	std::cout << "vl::cluster::Server::handle" << std::endl;
-// 	// TODO handle packets with IDs
-// 	// Handler code
-// 	for( size_t i = 0; i < _commands.size(); ++i )
-// 	{
-// 		boost::shared_ptr<udp::Command> cmd = _commands.at(i);
-//
-// 		(*cmd) << msg;
-//
-// 		// execute the command
-// 		(*cmd)();
-// 	}
-//
-// 	if( msg.size() != 0u )
-// 	{
-// 		size_t extra_bytes = msg.size()*sizeof(double);
-// 		BOOST_THROW_EXCEPTION( vl::long_message() << vl::bytes(extra_bytes) );
-// 	}
+// 	std::cout << "vl::cluster::Server::sendToNewClients" << std::endl;
+	std::cout << "Sending message " << msg;
+
+	std::vector<boost::udp::endpoint>::iterator iter;
+	for( iter = _new_clients.begin(); iter != _new_clients.end(); ++iter )
+	{
+// 		std::cout << "Sending to client = " << *iter << std::endl;
+		std::vector<char> buf;
+		msg.dump(buf);
+		_socket.send_to( boost::asio::buffer(buf), *iter );
+		_clients.push_back( *iter );
+	}
+	_new_clients.clear();
+}
+
+/// ----------------------------- Private --------------------------------------
+void
+vl::cluster::Server::_addClient( boost::udp::endpoint const &endpoint )
+{
+	std::cout << "vl::cluster::Server::_addClient : endpoint " << endpoint << std::endl;
+	std::vector<boost::udp::endpoint>::iterator iter
+		= std::find( _clients.begin(), _clients.end(), endpoint );
+
+	if( iter == _clients.end() )
+	{
+		iter = std::find( _new_clients.begin(), _new_clients.end(), endpoint );
+		if( iter == _new_clients.end() )
+		{ _new_clients.push_back( endpoint ); }
+	}
 }

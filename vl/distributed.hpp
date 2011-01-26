@@ -39,9 +39,21 @@ public :
 
 	void pack( cluster::Message &msg )
 	{
+		if( isDirty() )
+		{ return; }
+
 		msg.write(_dirtyBits);
 		serialize( msg, getDirty() );
 		clearDirty();
+	}
+
+	void pack( cluster::Message &msg, uint64_t const dirtyBits )
+	{
+		if( DIRTY_NONE == dirtyBits )
+		{ return; }
+
+		msg.write( dirtyBits );
+		serialize( msg, getDirty() );
 	}
 
 	void unpack( cluster::Message &msg )

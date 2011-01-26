@@ -26,11 +26,17 @@ public:
 
 	void mainloop( void );
 
-	// TODO not implemented
 	void sendToAll( Message const &msg );
+
+	void sendToNewClients( Message const &msg );
+
+	bool newClients( void )
+	{ return !_new_clients.empty(); }
 
 private :
 	void handle( std::vector<char> msg );
+
+	void _addClient( boost::udp::endpoint const &endpoint );
 
 	/// Copying is forbidden
 	// Something funcky with the io_service or socket, so we can not forbid copy
@@ -38,11 +44,13 @@ private :
 //	virtual Server& operator=(const Server& other) {}
 //	virtual bool operator==(const Server& other) const {}
 
-	boost::asio::io_service io_service;
-	boost::udp::socket socket;
+	boost::asio::io_service _io_service;
+	boost::udp::socket _socket;
 
 	// TODO add a list of clients to whom updates are sent
+	std::vector<boost::udp::endpoint> _clients;
 
+	std::vector<boost::udp::endpoint> _new_clients;
 };	// class Server
 
 }	// namespace cluster

@@ -29,6 +29,7 @@
 
 // Audio
 #include <cAudio/cAudio.h>
+#include "session.hpp"
 
 namespace eqOgre
 {
@@ -44,6 +45,8 @@ public :
 	GameManager( void );
 
 	virtual ~GameManager( void );
+
+	void createSceneManager( vl::Session *session );
 
 	eqOgre::PythonContextPtr getPython( void );
 

@@ -11,6 +11,8 @@
 // Necessary for memcpy
 #include <cstring>
 
+#include <iostream>
+
 namespace vl
 {
 
@@ -19,8 +21,9 @@ namespace cluster
 
 enum MSG_TYPES
 {
-	REG_UPDATES,
-	UPDATE
+	MSG_UNDEFINED,
+	MSG_REG_UPDATES,
+	MSG_UPDATE
 };
 
 /// Description of an UDP message
@@ -30,34 +33,58 @@ enum MSG_TYPES
 class Message
 {
 public :
+	Message( std::vector<char> const &arr)
+		: _type(MSG_UNDEFINED), _size(0)
+	{
+		size_t pos = 0;
+		if( arr.size() >= pos + sizeof(_type) )
+		{
+			::memcpy( &_type, &arr[pos], sizeof(_type) );
+			pos += sizeof(_type);
+		}
+		else
+		{ return; }
+
+		if( arr.size() >= pos + sizeof(_size) )
+		{
+			::memcpy( &_size, &arr[pos], sizeof(_size) );
+			pos += sizeof(_size);
+		}
+		else
+		{ return; }
+
+		if( _size > 0 )
+		{
+			size_t size = _size;
+			if( arr.size() < pos + size )
+			{
+				std::cerr << "A message is partial!" << std::endl;
+				size = arr.size() - pos;
+			}
+
+			_data.resize(_size);
+			::memcpy( &_data[0], &arr[pos], size );
+		}
+	}
+
 	Message( MSG_TYPES type )
-		: _type(type)
+		: _type(type), _size(0)
 	{}
 
 	MSG_TYPES getType( void )
 	{ return _type; }
 
-	/// Read the whole message from a binary array, the array is modified
-	virtual void create( std::vector<char> &arr )
-	{
-		::memcpy( &_size, &arr[0], 2 );
-		arr.erase( arr.begin(), arr.begin()+1 );
-
-		_data.resize(_size);
-		for( uint16_t i = 0; i < _size; )
-		{
-			_data.at(i) = arr.at(i);
-		}
-		arr.erase( arr.begin(), arr.begin()+_size );
-	}
-
 	/// Dump the whole message to a binary array, the array is modified
-	virtual void dump( std::vector<char> &arr )
+	virtual void dump( std::vector<char> &arr ) const
 	{
-		arr.reserve( sizeof(_size)+sizeof(_data) );
-		::memcpy( &arr[0], &_size, sizeof(_size) );
-		::memcpy( &arr[sizeof(_size)], &_data[0], sizeof(_data) );
-		// TODO should this clear the Message or not?
+		arr.resize( sizeof(_type)+sizeof(_size)+_data.size() );
+		size_t pos = 0;
+		::memcpy( &arr[pos], &_type, sizeof(_type) );
+		pos += sizeof( _type );
+		::memcpy( &arr[pos], &_size, sizeof(_size) );
+		pos += sizeof(_size);
+		if( _data.size() > 0 )
+		{ ::memcpy( &arr[pos], &_data[0], _data.size() ); }
 	}
 
 	void clear( void )
@@ -70,16 +97,40 @@ public :
 	template<typename T>
 	void read( T &obj )
 	{
-		::memcpy( &obj, &_data[0], sizeof(T) );
-		_data.erase( _data.begin(), _data.begin()+sizeof(T) );
+/*
+		std::cout << "Message::read data size = " << _data.size() << " data = ";
+		for( size_t i = 0; i < _data.size(); ++i )
+		{
+			std::cout << (uint16_t)(_data.at(i));
+		}
+		std::cout << std::endl;
+*/
+		if( _size < sizeof(obj) )
+		{
+			std::cerr << "Not enough data to read from Message." << std::endl;
+			return;
+		}
+
+		::memcpy( &obj, &_data[0], sizeof(obj) );
+		_data.erase( _data.begin(), _data.begin()+sizeof(obj) );
+		_size -= sizeof(obj);
 	}
 
 	/// Write an arbitary object to the message data, this never writes the header or size
 	template<typename T>
 	void write( T const &obj )
 	{
-		_data.reserve( sizeof(T) );
-		::memcpy( &_data[_data.size()], &obj, sizeof(T) );
+// 		size_t size = _data.size();
+		_data.resize( _data.size() + sizeof(obj) );
+// 		std::cout << "Message::write : data size = " << _data.size();
+		::memcpy( &_data[_size], &obj, sizeof(obj) );
+// 		std::cout << " new size = " << _data.size() << " should have increased"
+// 			<< " by " << sizeof(obj) << " bytes." << std::endl;
+		_size += sizeof(obj);
+// 		std::cout << "Writen object = " << obj << " data = ";
+// 		for( size_t i = 0; i < _data.size(); ++i )
+// 		{ std::cout << (uint16_t)(_data.at(i)); }
+// 		std::cout << std::endl;
 	}
 
 	/// Size of the message in bytes
@@ -89,12 +140,26 @@ public :
 	uint16_t size( void )
 	{ return _size; }
 
+	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 private :
 	MSG_TYPES _type;
 	uint16_t _size;
 	std::vector<char> _data;
 
 };	// class Message
+
+
+inline
+std::ostream &operator<<( std::ostream &os, Message const &msg )
+{
+	os << "Message : type = " << msg._type << " : size = " << msg._size
+		<< " data = ";
+	for( size_t i = 0; i < msg._data.size(); ++i )
+	{ os << (uint16_t)( msg._data.at(i) ); }
+	os << std::endl;
+
+	return os;
+}
 
 }	// namespace cluster
 

@@ -1,3 +1,6 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ */
 
 #include "scene_node.hpp"
 
@@ -46,65 +49,60 @@ bool eqOgre::SceneNode::findNode(Ogre::SceneManager* man)
 void
 eqOgre::SceneNode::serialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
 {
-//     eq::fabric::Serializable::serialize(os, dirtyBits);
-//
-// 	if( dirtyBits & DIRTY_NAME )
-// 	{
-// 		os << _name;
-// 	}
-// 	// Serialize position
-// 	if( dirtyBits & DIRTY_POSITION )
-// 	{
-// 		operator<<( _position, os );
-// 	}
-// 	// Serialize orientation
-// 	if( dirtyBits & DIRTY_ORIENTATION )
-// 	{
-// 		operator<<( _orientation, os );
-// 	}
-//
-// 	if( dirtyBits & DIRTY_VISIBILITY )
-// 	{
-// 		os << _visible;
-// 	}
+	if( dirtyBits & DIRTY_NAME )
+	{
+		msg.write(_name);
+	}
+	// Serialize position
+	if( dirtyBits & DIRTY_POSITION )
+	{
+		msg.write(_position);
+	}
+	// Serialize orientation
+	if( dirtyBits & DIRTY_ORIENTATION )
+	{
+		msg.write(_orientation);
+	}
 
+	if( dirtyBits & DIRTY_VISIBILITY )
+	{
+		msg.write(_visible);
+	}
 }
 
 void
 eqOgre::SceneNode::deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
 {
-// 	eq::fabric::Serializable::deserialize(is, dirtyBits);
-//
-// 	// Deserialize name
-// 	if( dirtyBits & DIRTY_NAME )
-// 	{
-// 		is >> _name;
-// 	}
-// 	// Deserialize position
-// 	if( dirtyBits & DIRTY_POSITION )
-// 	{
-// 		operator>>( _position, is );
-//
-// 		// If we have a correct node we need to transform it
-// 		if( _ogre_node )
-// 		{ _ogre_node->setPosition(_position + _initial_position); }
-// 	}
-// 	// Deserialize orientation
-// 	if( dirtyBits & DIRTY_ORIENTATION )
-// 	{
-// 		operator>>( _orientation, is );
-//
-// 		// If we have a correct node we need to transform it
-// 		if( _ogre_node )
-// 		{ _ogre_node->setOrientation(_orientation * _initial_orientation); }
-// 	}
-//
-// 	if( dirtyBits & DIRTY_VISIBILITY )
-// 	{
-// 		is >> _visible;
-// 		if( _ogre_node )
-// 		{ _ogre_node->setVisible(_visible); }
-// 	}
+	// Deserialize name
+	if( dirtyBits & DIRTY_NAME )
+	{
+		msg.read(_name);
+	}
+	// Deserialize position
+	if( dirtyBits & DIRTY_POSITION )
+	{
+		msg.read(_position);
+
+		// If we have a correct node we need to transform it
+		if( _ogre_node )
+		{ _ogre_node->setPosition(_position + _initial_position); }
+	}
+	// Deserialize orientation
+	if( dirtyBits & DIRTY_ORIENTATION )
+	{
+		msg.read(_orientation);
+
+		// If we have a correct node we need to transform it
+		if( _ogre_node )
+		{ _ogre_node->setOrientation(_orientation * _initial_orientation); }
+	}
+
+	if( dirtyBits & DIRTY_VISIBILITY )
+	{
+		msg.read(_visible);
+		if( _ogre_node )
+		{ _ogre_node->setVisible(_visible); }
+	}
 }
 
 

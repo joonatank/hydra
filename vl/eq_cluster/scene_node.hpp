@@ -1,14 +1,15 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ */
+
 #ifndef EQ_OGRE_SCENE_NODE_HPP
 #define EQ_OGRE_SCENE_NODE_HPP
-
-// #include <eq/fabric/serializable.h>
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
-#include "serialize_helpers.hpp"
 #include "action.hpp"
 #include "base/exceptions.hpp"
 

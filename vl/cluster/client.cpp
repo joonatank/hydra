@@ -29,14 +29,12 @@ void
 vl::cluster::Client::mainloop( void )
 {
 // 	std::cout << "vl::cluster::Client::mainloop" << std::endl;
-	// TODO handle large messages
 	if( _socket.available() != 0 )
 	{
-		std::cout << "vl::cluster::Client::mainloop has a message" << std::endl;
+// 		std::cout << "vl::cluster::Client::mainloop has a message" << std::endl;
+		// TODO handle large messages
 		std::vector<char> recv_buf(512);
 		boost::system::error_code error;
-		if( _socket.available() == 0 )
-		{ return; }
 
 		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
 				_receiver_endpoint, 0, error );
@@ -44,36 +42,28 @@ vl::cluster::Client::mainloop( void )
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
-		handle( recv_buf );
+		// TODO some constraints for the number of messages
+		if( _messages.size() > 1024 )
+		{
+			std::cerr << "Message stack full, cleaning out the oldest." << std::endl;
+			while( _messages.size() > 1024 )
+			{ delete popMessage(); }
+		}
+
+		Message *msg = new Message( recv_buf );
+		_messages.push_back(msg);
 	}
 }
-
-// void
-// vl::cluster::Client::send(std::vector<double> const & msg)
-// {
-// 	if( msg.size() == 0 )
-// 	{ return; }
-//
-// 	size_t n = socket.send_to(boost::asio::buffer(msg), receiver_endpoint);
-// }
 
 void
 vl::cluster::Client::registerForUpdates( void )
 {
-// 	Message
-// 	_receiver_endpoint.send_to( boost::asio::buffer(msg)
+	std::cout << "vl::cluster::Client::registerForUpdates" << std::endl;
+	Message msg( MSG_REG_UPDATES );
+	std::vector<char> buf;
+	msg.dump(buf);
+	std::cout << "sending data" << std::endl;
+	_socket.send_to( boost::asio::buffer(buf), _receiver_endpoint );
 }
-
-// void
-// vl::cluster::Client::registerMessage( vl::cluster::Message const &message,
-// 									  vl::MessageCallback *callback )
-// {
-//
-// }
 
 /// ------------------------ Private -------------------------------------------
-void
-vl::cluster::Client::handle( std::vector< char >& datagram )
-{
-
-}

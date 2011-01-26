@@ -38,19 +38,29 @@
 uint16_t const SERVER_PORT = 4699;
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent ), _server(0), _last_id(0)
+	: eq::Config( parent ), _server(0)
 {}
 
-eqOgre::Config::~Config()
+eqOgre::Config::~Config( void )
 {}
 
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
+	_game_manager->createSceneManager( this );
+
 	_createServer();
 
 	EQASSERT( _server );
 	// TODO register the objects
+	eqOgre::SceneManager *sm = _game_manager->getSceneManager();
+	EQASSERT( sm );
+
+	// FIXME
+	// Register SceneManager
+	std::cout << "Registering SceneManager" << std::endl;
+	registerObjectC( sm );
+
 
 	// Create the player necessary for Trackers
 	// Will be registered later
@@ -77,17 +87,6 @@ eqOgre::Config::init( eq::uint128_t const & )
 	_createQuitEvent();
 
 	EQINFO << "Registering data." << std::endl;
-
-	eqOgre::SceneManager *sm = _game_manager->getSceneManager();
-	EQASSERT( sm );
-
-	// FIXME
-	// Register SceneManager
-	std::cout << "Registering SceneManager" << std::endl;
-	sm->registered( ++_last_id );
-	_registered_objects.push_back( sm );
-// 	if( !->registerData(this) )
-// 	{ return false; }
 
 	eqOgre::ResourceManager *res_man
 		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
@@ -123,7 +122,6 @@ eqOgre::Config::exit( void )
 
 	EQINFO << "Deregistering distributed data." << std::endl;
 
-	_game_manager->getSceneManager()->deregisterData();
 	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
 
 	eqOgre::ResourceManager *res_man =
@@ -192,13 +190,6 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 	return retval;
 }
 
-void
-eqOgre::Config::registerObjectC( vl::Distributed *object )
-{
-	_registered_objects.push_back( object );
-}
-
-
 /// ------------ Private -------------
 void
 eqOgre::Config::_createServer( void )
@@ -219,7 +210,7 @@ eqOgre::Config::_updateServer( void )
 	_server->mainloop();
 
 	// Create SceneGraph updates
-	vl::cluster::Message msg( vl::cluster::UPDATE );
+	vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
 	std::vector<vl::Distributed *>::iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 		++iter )
@@ -227,12 +218,39 @@ eqOgre::Config::_updateServer( void )
 		if( (*iter)->isDirty() )
 		{
 			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
+			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
+			msg.write( (*iter)->getID() );
 			(*iter)->pack(msg);
 		}
 	}
 
 	// Send SceneGraph to all listeners
-	_server->sendToAll( msg );
+	if( msg.size() > 0 )
+	{
+		std::cout << "Sending updates to all clients." << std::endl;
+		_server->sendToAll( msg );
+	}
+
+	// New clients need the whole SceneGraph
+	if( _server->newClients() )
+	{
+		std::cout << "New clients sending the whole SceneGraph" << std::endl;
+		msg = vl::cluster::Message( vl::cluster::MSG_UPDATE );
+		std::vector<vl::Distributed *>::iterator iter;
+		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+			++iter )
+		{
+// 			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
+			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
+			msg.write( (*iter)->getID() );
+			(*iter)->pack( msg, vl::Distributed::DIRTY_ALL );
+		}
+
+		// Send SceneGraph to all listeners
+		_server->sendToNewClients( msg );
+	}
 }
 
 void

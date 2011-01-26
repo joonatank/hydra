@@ -115,11 +115,11 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 
 		// We need to find the node from scene graph
 		std::string message = "SceneManager has "
-			+ vl::to_string(_scene_manager.getNSceneNodes()) + " SceneNodes.";
+			+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
 		Ogre::LogManager::getSingleton().logMessage( message );
 
 		EQASSERTINFO( _ogre_sm, "Window has no Ogre SceneManager" );
-		if( !_scene_manager.setSceneManager( _ogre_sm ) )
+		if( !_scene_manager->setSceneManager( _ogre_sm ) )
 		{
 			// Error
 			message = "Some SceneNodes were not found.";
@@ -261,6 +261,7 @@ eqOgre::Pipe::_createClient( void )
 
 	// FIXME these should be configured in config file
 	_client = new vl::cluster::Client( SERVER_NAME, SERVER_PORT );
+	_client->registerForUpdates();
 }
 
 void
@@ -273,15 +274,35 @@ eqOgre::Pipe::_syncData( void )
 	_client->mainloop();
 	while( _client->messages() )
 	{
-		std::cout << "eqOgre::Pipe::_syncData : Messages received" << std::endl;
+//		std::cout << "eqOgre::Pipe::_syncData : Messages received" << std::endl;
 		vl::cluster::Message *msg = _client->popMessage();
 		// TODO process the message
 		switch( msg->getType() )
 		{
-			case vl::cluster::UPDATE :
+			case vl::cluster::MSG_UPDATE :
 				// Read the IDs in the message and call pack on mapped objects
 				// based on thoses
-
+				// TODO multiple update messages in the same frame,
+				// only the most recent should be used.
+				while( msg->size() > 0 )
+				{
+					std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
+						<< "size = " << msg->size() << std::endl;
+					uint64_t id;
+					msg->read(id);
+					std::cout << "Object ID = " << id << std::endl;
+// 					std::cout << "Mapped objects size = "
+// 						<< _mapped_objects.size() << std::endl;
+					vl::Distributed *obj = findMappedObject(id);
+					if( obj )
+					{ obj->unpack(*msg); }
+					else
+					{
+						std::cerr << "No ID " << id << " found in mapped objects."
+							<< std::endl;
+					}
+				}
+				_scene_manager->finaliseSync();
 				break;
 
 			default :
@@ -321,13 +342,10 @@ eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 	}
 
 	uint64_t sm_id = _settings.getSceneManagerID();
+	std::cout << "Mapping SceneManager with id = " << sm_id << '.' << std::endl;
 	EQASSERT( sm_id != vl::ID_UNDEFINED );
-	// FIXME this should use our own client class which is local here
-// 	if( !_scene_manager.mapData( getConfig(), sm_id ) )
-// 	{
-// 		EQERROR << "Couldn't map the SceneManager." << std::endl;
-// 		return false;
-// 	}
+	_scene_manager = new eqOgre::SceneManager( this );
+	mapObjectC( _scene_manager, sm_id );
 
 	EQINFO << "Data mapped." << std::endl;
 

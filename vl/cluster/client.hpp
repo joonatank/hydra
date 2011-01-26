@@ -54,10 +54,6 @@ private :
 //	virtual Client& operator=(const Client& other) {}
 //	virtual bool operator==(const Client& other) const {}
 
-	/// Breaks a datagram down in to separate messages and processes them
-	/// according to the Message stack
-	void handle( std::vector<char> &datagram );
-
 	boost::asio::io_service _io_service;
 
 	boost::udp::socket _socket;

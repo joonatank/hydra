@@ -16,13 +16,14 @@
 #include "scene_manager.hpp"
 
 #include "base/typedefs.hpp"
-#include <cluster/server.hpp>
-#include <distributed.hpp>
+#include "cluster/server.hpp"
+#include "distributed.hpp"
+#include "session.hpp"
 
 namespace eqOgre
 {
 
-	class Config : public eq::Config
+	class Config : public eq::Config, vl::Session
 	{
 	public:
 		Config( eq::base::RefPtr< eq::Server > parent );
@@ -47,10 +48,6 @@ namespace eqOgre
 		SceneNodePtr getSceneNode( std::string const &name );
 
 		void setGameManager( vl::GameManagerPtr man );
-
-		/// Register object to our own synchronisation system
-		// TODO rename after removing Equalizer
-		void registerObjectC( vl::Distributed *object );
 
 	protected :
 		virtual ~Config (void);
@@ -86,9 +83,6 @@ namespace eqOgre
 		vl::GameManagerPtr _game_manager;
 
 		vl::cluster::Server *_server;
-
-		std::vector<vl::Distributed *> _registered_objects;
-		uint64_t _last_id;
 
 	};	// class Config
 

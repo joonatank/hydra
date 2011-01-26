@@ -16,11 +16,12 @@
 #include "scene_manager.hpp"
 
 #include "cluster/client.hpp"
+#include "session.hpp"
 
 namespace eqOgre
 {
 
-class Pipe : public eq::Pipe
+class Pipe : public eq::Pipe, vl::Session
 {
 public :
 	Pipe( eq::Node *parent );
@@ -72,7 +73,7 @@ protected :
 
 
 	/// Distributed data
-	eqOgre::SceneManager _scene_manager;
+	eqOgre::SceneManager *_scene_manager;
 	eqOgre::DistributedSettings _settings;
 	eqOgre::ResourceManager _resource_manager;
 	vl::Player _player;
@@ -80,7 +81,6 @@ protected :
 	uint32_t _screenshot_num;
 
 	vl::cluster::Client *_client;
-	std::vector<vl::Distributed *> _mapped_objects;
 
 };	// class Pipe
 

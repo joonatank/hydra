@@ -1,16 +1,16 @@
-#ifndef EQOGRE_FRAME_DATA_HPP
-#define EQOGRE_FRAME_DATA_HPP
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ */
 
-#include <eq/fabric/serializable.h>
-#include <eq/client/config.h>
-#include <co/dataIStream.h>
-#include <co/dataOStream.h>
+#ifndef EQ_OGRE_SCENE_MANAGER_HPP
+#define EQ_OGRE_SCENE_MANAGER_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
 #include "scene_node.hpp"
 #include "distributed.hpp"
+#include "session.hpp"
 
 namespace eqOgre
 {
@@ -23,15 +23,15 @@ public :
 	struct SceneNodeIDPair
 	{
 		SceneNodeIDPair( SceneNode *nnode = 0,
-						 eq::base::UUID const &nid = eq::base::UUID::ZERO )
+						 uint64_t nid = vl::ID_UNDEFINED )
 			: node(nnode), id(nid)
 		{}
 
 		SceneNode *node;
-		eq::base::UUID id;
+		uint64_t id;
 	};
 
-	SceneManager( void );
+	SceneManager( vl::Session *session );
 
 	virtual ~SceneManager( void );
 
@@ -62,25 +62,14 @@ public :
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
-// 	void commit( void );
-//
-// 	void sync( void );
-
-	bool registerData( eqOgre::Config *session );
-
-	void deregisterData( void );
-
-// 	bool mapData( eq::Config *session, uint64_t const id );
-
-// 	void unmapData( void );
-
 	enum DirtyBits
 	{
 		DIRTY_NODES = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 3
 	};
+
+	void finaliseSync( void );
 
 protected :
 	virtual void serialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
@@ -88,10 +77,9 @@ protected :
 
 	void _mapObject( SceneNodeIDPair &node );
 
-	bool _registerObject( SceneNodeIDPair &node );
-
 private :
 	std::vector< SceneNodeIDPair > _scene_nodes;
+	std::vector< SceneNodeIDPair > _new_scene_nodes;
 
 	// Reload the scene
 	uint32_t _scene_version;
@@ -101,10 +89,10 @@ private :
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
 
-	eqOgre::Config *_config;
+	vl::Session *_session;
 
 };	// class FrameData
 
 }	// namespace eqOgre
 
-#endif
+#endif	// EQ_OGRE_SCENE_MANAGER_HPP
