@@ -1,7 +1,7 @@
 #ifndef EQ_OGRE_SCENE_NODE_HPP
 #define EQ_OGRE_SCENE_NODE_HPP
 
-#include <eq/fabric/serializable.h>
+// #include <eq/fabric/serializable.h>
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -12,12 +12,15 @@
 #include "action.hpp"
 #include "base/exceptions.hpp"
 
+// Base class
+#include "distributed.hpp"
+
 namespace eqOgre
 {
 class SceneNode;
 typedef SceneNode * SceneNodePtr;
 
-class SceneNode : public eq::fabric::Serializable
+class SceneNode : public vl::Distributed
 {
 public :
 	virtual ~SceneNode( void ) {}
@@ -70,17 +73,17 @@ public :
 
 	enum DirtyBits
 	{
-		DIRTY_NAME = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_POSITION = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_ORIENTATION = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
-		DIRTY_VISIBILITY = eq::fabric::Serializable::DIRTY_CUSTOM << 3
+		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
+		DIRTY_POSITION = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_ORIENTATION = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 3
 	};
 
 protected :
 	SceneNode( std::string const &name = std::string() );
 
-	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
-	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
+	virtual void deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
 
 private :
 	std::string _name;

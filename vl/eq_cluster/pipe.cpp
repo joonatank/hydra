@@ -17,9 +17,12 @@
 #include "window.hpp"
 #include "base/string_utils.hpp"
 
+char const *SERVER_NAME = "localhost";
+uint16_t const SERVER_PORT = 4699;
+
 /// ------------------------- Public -------------------------------------------
 eqOgre::Pipe::Pipe( eq::Node* parent )
-	: eq::Pipe(parent), _ogre_sm(0), _camera(0), _screenshot_num(0)
+	: eq::Pipe(parent), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
 {}
 
 eqOgre::Pipe::~Pipe( void )
@@ -63,6 +66,8 @@ eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 		std::cerr << message << std::endl;
 		return false;
 	}
+
+	_createClient();
 
 	return true;
 }
@@ -109,7 +114,7 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 		}
 
 		// We need to find the node from scene graph
-		std::string message = "SceneManager has " 
+		std::string message = "SceneManager has "
 			+ vl::to_string(_scene_manager.getNSceneNodes()) + " SceneNodes.";
 		Ogre::LogManager::getSingleton().logMessage( message );
 
@@ -248,6 +253,47 @@ eqOgre::Pipe::_loadScene( void )
 
 
 /// Distribution helpers
+void
+eqOgre::Pipe::_createClient( void )
+{
+	std::cout << "eqOgre::Pipe::_createClient" << std::endl;
+	EQASSERT( !_client );
+
+	// FIXME these should be configured in config file
+	_client = new vl::cluster::Client( SERVER_NAME, SERVER_PORT );
+}
+
+void
+eqOgre::Pipe::_syncData( void )
+{
+// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
+
+	EQASSERT( _client );
+
+	_client->mainloop();
+	while( _client->messages() )
+	{
+		std::cout << "eqOgre::Pipe::_syncData : Messages received" << std::endl;
+		vl::cluster::Message *msg = _client->popMessage();
+		// TODO process the message
+		switch( msg->getType() )
+		{
+			case vl::cluster::UPDATE :
+				// Read the IDs in the message and call pack on mapped objects
+				// based on thoses
+
+				break;
+
+			default :
+				break;
+		}
+
+
+		delete msg;
+	}
+}
+
+
 bool
 eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 {
@@ -274,13 +320,14 @@ eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 		return false;
 	}
 
-	eq::base::UUID const &frame_id = _settings.getSceneManagerID();
-	EQASSERT( frame_id != eq::base::UUID::ZERO );
-	if( !_scene_manager.mapData( getConfig(), frame_id ) )
-	{
-		EQERROR << "Couldn't map the SceneManager." << std::endl;
-		return false;
-	}
+	uint64_t sm_id = _settings.getSceneManagerID();
+	EQASSERT( sm_id != vl::ID_UNDEFINED );
+	// FIXME this should use our own client class which is local here
+// 	if( !_scene_manager.mapData( getConfig(), sm_id ) )
+// 	{
+// 		EQERROR << "Couldn't map the SceneManager." << std::endl;
+// 		return false;
+// 	}
 
 	EQINFO << "Data mapped." << std::endl;
 
@@ -300,8 +347,8 @@ eqOgre::Pipe::_unmapData( void )
 	EQINFO << "Unmapping Player." << std::endl;
 	getConfig()->unmapObject( &_player );
 
-	EQINFO << "Unmapping SceneManager." << std::endl;
-	_scene_manager.unmapData();
+// 	EQINFO << "Unmapping SceneManager." << std::endl;
+// 	_scene_manager.unmapData();
 
 }
 
@@ -360,7 +407,10 @@ eqOgre::Pipe::_updateDistribData( void )
 	}
 
 	// Update SceneManager
-	_scene_manager.syncAll();
+	// FIXME this should use the custom Client object which should be connected
+	// to the Server
+	_syncData();
+// 	_scene_manager.syncAll();
 
 	// FIXME this is completely screwed up.
 	/*

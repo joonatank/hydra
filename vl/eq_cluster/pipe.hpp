@@ -15,6 +15,8 @@
 #include "eq_resource_manager.hpp"
 #include "scene_manager.hpp"
 
+#include "cluster/client.hpp"
+
 namespace eqOgre
 {
 
@@ -57,6 +59,8 @@ protected :
 	bool _loadScene( void );
 
 	/// Distribution helpers
+	void _createClient( void );
+	void _syncData( void );
 	bool _mapData( const eq::uint128_t& settingsID );
 	void _unmapData( void );
 	void _updateDistribData( void );
@@ -74,6 +78,9 @@ protected :
 	vl::Player _player;
 	std::string _active_camera_name;
 	uint32_t _screenshot_num;
+
+	vl::cluster::Client *_client;
+	std::vector<vl::Distributed *> _mapped_objects;
 
 };	// class Pipe
 

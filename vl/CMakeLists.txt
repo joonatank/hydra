@@ -30,6 +30,8 @@ set( SOURCES
 	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
+	cluster/server.cpp
+	cluster/client.cpp
 	udp/client.cpp
 	udp/server.cpp
 	udp/server_config.cpp
@@ -83,6 +85,10 @@ set( HEADERS
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp
+	cluster/server.hpp
+	cluster/client.hpp
+	cluster/message.hpp
+	distributed.hpp
 	udp/client.hpp
 	udp/server.hpp
 	udp/server_config.hpp

@@ -35,8 +35,10 @@
 // Necessary for registering Player
 #include "player.hpp"
 
+uint16_t const SERVER_PORT = 4699;
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config ( parent )
+	: eq::Config ( parent ), _server(0), _last_id(0)
 {}
 
 eqOgre::Config::~Config()
@@ -45,6 +47,11 @@ eqOgre::Config::~Config()
 bool
 eqOgre::Config::init( eq::uint128_t const & )
 {
+	_createServer();
+
+	EQASSERT( _server );
+	// TODO register the objects
+
 	// Create the player necessary for Trackers
 	// Will be registered later
 	// TODO support for multiple observers?
@@ -71,10 +78,16 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	EQINFO << "Registering data." << std::endl;
 
-	EQASSERT( _game_manager->getSceneManager() );
+	eqOgre::SceneManager *sm = _game_manager->getSceneManager();
+	EQASSERT( sm );
 
-	if( !_game_manager->getSceneManager()->registerData(this) )
-	{ return false; }
+	// FIXME
+	// Register SceneManager
+	std::cout << "Registering SceneManager" << std::endl;
+	sm->registered( ++_last_id );
+	_registered_objects.push_back( sm );
+// 	if( !->registerData(this) )
+// 	{ return false; }
 
 	eqOgre::ResourceManager *res_man
 		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
@@ -111,7 +124,7 @@ eqOgre::Config::exit( void )
 	EQINFO << "Deregistering distributed data." << std::endl;
 
 	_game_manager->getSceneManager()->deregisterData();
-	_distrib_settings.setSceneManagerID( eq::base::UUID::ZERO );
+	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
 
 	eqOgre::ResourceManager *res_man =
 		static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
@@ -169,15 +182,58 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 
 	_game_manager->getPlayer()->commit();
 
-	eq::uint128_t version = _game_manager->getSceneManager()->commitAll();
+	// TODO pack scene manager
+	_updateServer();
 
-	uint32_t retval = eq::Config::startFrame( version );
+//	eq::uint128_t version = _game_manager->getSceneManager()->commitAll();
+
+	uint32_t retval = eq::Config::startFrame( 0 );
 
 	return retval;
 }
 
+void
+eqOgre::Config::registerObjectC( vl::Distributed *object )
+{
+	_registered_objects.push_back( object );
+}
+
 
 /// ------------ Private -------------
+void
+eqOgre::Config::_createServer( void )
+{
+	std::cout << "eqOgre::Config::_createServer" << std::endl;
+
+	EQASSERT( !_server );
+
+	// TODO configurable server port
+	_server = new vl::cluster::Server( SERVER_PORT );
+}
+
+void
+eqOgre::Config::_updateServer( void )
+{
+// 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
+	// Handle received messages
+	_server->mainloop();
+
+	// Create SceneGraph updates
+	vl::cluster::Message msg( vl::cluster::UPDATE );
+	std::vector<vl::Distributed *>::iterator iter;
+	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+		++iter )
+	{
+		if( (*iter)->isDirty() )
+		{
+			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
+			(*iter)->pack(msg);
+		}
+	}
+
+	// Send SceneGraph to all listeners
+	_server->sendToAll( msg );
+}
 
 void
 eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)

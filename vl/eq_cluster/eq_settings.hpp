@@ -40,10 +40,10 @@ public :
 	virtual ~DistributedSettings( void )
 	{}
 
-	eq::base::UUID const &getSceneManagerID( void ) const
+	uint64_t const getSceneManagerID( void ) const
 	{ return _scene_manager_id; }
 
-	void setSceneManagerID( eq::base::UUID const &id )
+	void setSceneManagerID( uint64_t const id )
 	{ _scene_manager_id = id; }
 
 	eq::base::UUID const &getResourceManagerID( void ) const
@@ -82,7 +82,7 @@ public :
 	{ return _windows.size(); }
 
 	vl::EnvSettings::Wall findWall( std::string const &channel_name ) const;
-	
+
 	vl::EnvSettings::Wall const &getWall( size_t i ) const
 	{ return _walls.at(i); }
 
@@ -103,7 +103,7 @@ protected :
 
 	std::string _project_name;
 
-	eq::base::UUID _scene_manager_id;
+	uint64_t _scene_manager_id;
 	eq::base::UUID _resource_man_id;
 	eq::base::UUID _player_id;
 
