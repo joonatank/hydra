@@ -11,8 +11,6 @@
 // Needed for resource file loading
 #include <fstream>
 
-#include <co/dataIStream.h>
-#include <co/dataOStream.h>
 // Necessary for exceptions
 #include "base/exceptions.hpp"
 
@@ -90,7 +88,7 @@ eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &da
 	}
 	else
 	{
-		EQINFO << "Loading Generic Resource " << name << std::endl;
+		std::cout << "Loading Generic Resource " << name << std::endl;
 		// Generic resources are not added to any stack
 		std::string file_path;
 		if( !findResource(name, file_path) )
@@ -103,7 +101,7 @@ eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &da
 void
 eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
 {
-	EQINFO << "Loading Scene Resource " << name << std::endl;
+	std::cout << "Loading Scene Resource " << name << std::endl;
 
 	std::string extension(".scene");
 	std::string scene_name = _stripExtension(name, extension);
@@ -120,7 +118,7 @@ eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextReso
 void
 eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
 {
-	EQINFO << "Loading Python Resource " << name << std::endl;
+	std::cout << "Loading Python Resource " << name << std::endl;
 
 	std::string extension(".py");
 	std::string script_name = _stripExtension(name, extension);
@@ -137,7 +135,7 @@ eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextRes
 void
 eqOgre::ResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
 {
-	EQINFO << "Loading Ogg Resource " << name << std::endl;
+	std::cout << "Loading Ogg Resource " << name << std::endl;
 
 	std::string extension(".ogg");
 	std::string ogg_name = _stripExtension(name, extension);
@@ -179,16 +177,24 @@ eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool 
 	if( !fs::exists(dir) || !fs::is_directory(dir) )
 	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( resource_dir ) ); }
 
-	_search_paths.push_back(resource_dir);
+	// Never add path multiple times
+	std::vector<std::string>::const_iterator iter
+		= std::find( _search_paths.begin(), _search_paths.end(), resource_dir );
+	if( iter == _search_paths.end() )
+	{ _search_paths.push_back(resource_dir); }
+
 	if( recursive )
 	{
 		fs::recursive_directory_iterator end_iter;
-		for( fs::recursive_directory_iterator iter(dir);
-			 iter != end_iter; ++iter )
+		for( fs::recursive_directory_iterator dir_iter(dir);
+			 dir_iter != end_iter; ++dir_iter )
 		{
-			if( fs::is_directory( iter->path() ) )
+			fs::path path( dir_iter->path() );
+			if( fs::is_directory( path ) )
 			{
-				_search_paths.push_back( iter->path().file_string() );
+				iter = std::find( _search_paths.begin(), _search_paths.end(), path.file_string() );
+				if( iter == _search_paths.end() )
+				{ _search_paths.push_back( dir_iter->path().file_string() ); }
 			}
 		}
 	}
@@ -230,7 +236,7 @@ eqOgre::ResourceManager::_loadResource( std::string const &name,
 										std::string const &path,
 										vl::Resource &data ) const
 {
-	EQASSERT( fs::exists(path) );
+	assert( fs::exists(path) );
 	// Load the resource
 
 	// Open in binary mode, so we don't mess up the file
@@ -270,69 +276,28 @@ eqOgre::ResourceManager::_stripExtension( std::string const &name,
 }
 
 
-
+/// --------------------------- Protected --------------------------------------
 void
-eqOgre::ResourceManager::getInstanceData( co::DataOStream& os )
+eqOgre::ResourceManager::serialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
 {
 	// Serialize resource paths, used by Ogre
-	os << _search_paths;
+	if( dirtyBits & DIRTY_PATHS )
+	{ msg << _search_paths; }
 
 	// Serialize all loaded resources
-	os << _scenes.size();
-	for( size_t i = 0; i < _scenes.size(); ++i )
-	{
-		operator<<( _scenes.at(i), os );
-	}
+	if( dirtyBits & DIRTY_SCENES )
+	{ msg << _scenes; }
 }
 
 
 void
-eqOgre::ResourceManager::applyInstanceData( co::DataIStream& is )
+eqOgre::ResourceManager::deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
 {
 	// Deserialize resource paths, used by Ogre
-	is >> _search_paths;
+	if( dirtyBits & DIRTY_PATHS )
+	{ msg >> _search_paths; }
 
 	// Deserialize all loaded resources
-	size_t size;
-	is >> size;
-	_scenes.resize(size);
-	for( size_t i = 0; i < size; ++i )
-	{
-		operator>>( _scenes.at(i), is );
-	}
-}
-
-
-
-/// ---------- Global -----------
-co::DataOStream &
-eqOgre::operator<<(vl::Resource& res, co::DataOStream& os)
-{
-	os << res.getName();
-
-	os << res.size();
-	for( size_t i = 0; i < res.size(); ++i )
-	{
-		os << res.get()[i];
-	}
-
-	return os;
-}
-
-co::DataIStream &
-eqOgre::operator>>(vl::Resource& res, co::DataIStream& is)
-{
-	std::string name;
-	size_t size;
-	is >> name >> size;
-
-	res.setName(name);
-
-	res.resize(size);
-	for( size_t i = 0; i < size; ++i )
-	{
-		is >> res[i];
-	}
-
-	return is;
+	if( dirtyBits & DIRTY_SCENES )
+	{ msg >> _scenes; }
 }

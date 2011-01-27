@@ -89,11 +89,18 @@ eqOgre::Pipe::configExit()
 void
 eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
 {
-	// Init the Ogre resources and load a Scene
-	// These are here because the RenderWindow needs to be created before loading
-	// Meshes
+	static bool inited = false;
+
 	try {
-		static bool inited = false;
+		// TODO should update the Pipe data in init
+		// FIXME this updates the SceneManager and tries to find Ogre nodes
+		// but it doesn't have the SceneManager as it's created in the init
+		// next.
+		_updateDistribData();
+
+		// Init the Ogre resources and load a Scene
+		// These are here because the RenderWindow needs to be created before
+		// loading Meshes
 		if( !inited )
 		{
 			// Resource registration
@@ -129,8 +136,12 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 
 			inited = true;
 		}
-
-		_updateDistribData();
+	}
+	catch( vl::exception &e )
+	{
+		// TODO add error status flag
+		std::cout << "VL Exception : " + boost::diagnostic_information<>(e) << std::endl;
+		EQASSERT( false );
 	}
 	catch( ... )
 	{
@@ -337,11 +348,9 @@ eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 		return false;
 	}
 
-	if( !getConfig()->mapObject( &_resource_manager, _settings.getResourceManagerID() ) )
-	{
-		EQERROR << "Couldn't map the ResourceManager." << std::endl;
-		return false;
-	}
+	uint64_t id = _settings.getResourceManagerID();
+	EQASSERT( id != vl::ID_UNDEFINED );
+	mapObjectC( &_resource_manager, id );
 
 	EQASSERT( _settings.getPlayerID() != eq::base::UUID::ZERO );
 	if( !getConfig()->mapObject( &_player, _settings.getPlayerID() ) )
@@ -368,15 +377,8 @@ eqOgre::Pipe::_unmapData( void )
 	EQINFO << "Unmapping Settings." << std::endl;
 	getConfig()->unmapObject( &_settings );
 
-	EQINFO << "Unmapping ResourceManager" << std::endl;
-	getConfig()->unmapObject( &_resource_manager );
-
 	EQINFO << "Unmapping Player." << std::endl;
 	getConfig()->unmapObject( &_player );
-
-// 	EQINFO << "Unmapping SceneManager." << std::endl;
-// 	_scene_manager.unmapData();
-
 }
 
 void
@@ -434,10 +436,7 @@ eqOgre::Pipe::_updateDistribData( void )
 	}
 
 	// Update SceneManager
-	// FIXME this should use the custom Client object which should be connected
-	// to the Server
 	_syncData();
-// 	_scene_manager.syncAll();
 
 	// FIXME this is completely screwed up.
 	/*
@@ -458,5 +457,4 @@ eqOgre::Pipe::_updateDistribData( void )
 		scene_version = _frame_data.getSceneVersion();
 	}
 	*/
-
 }

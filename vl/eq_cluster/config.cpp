@@ -90,8 +90,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	eqOgre::ResourceManager *res_man
 		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
-	if( !registerObject( res_man ) )
-	{ return false; }
+	registerObjectC( res_man );
 
 	EQASSERT( player );
 	// Registering Player in init
@@ -126,8 +125,8 @@ eqOgre::Config::exit( void )
 
 	eqOgre::ResourceManager *res_man =
 		static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
-	deregisterObject( res_man );
-	_distrib_settings.setResourceManagerID( eq::base::UUID::ZERO );
+
+	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
 
 	deregisterObject( _game_manager->getPlayer() );
 	_distrib_settings.setPlayerID( eq::base::UUID::ZERO );

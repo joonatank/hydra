@@ -10,7 +10,7 @@
 #ifndef EQOGRE_RESOURCE_MANAGER_HPP
 #define EQOGRE_RESOURCE_MANAGER_HPP
 
-#include <co/object.h>
+#include "distributed.hpp"
 
 // Base class
 #include "resource_manager.hpp"
@@ -18,7 +18,7 @@
 namespace eqOgre
 {
 
-class ResourceManager : public vl::ResourceManager, public co::Object
+class ResourceManager : public vl::ResourceManager, public vl::Distributed
 {
 public :
 	ResourceManager( void );
@@ -85,9 +85,12 @@ public :
 	 */
 	virtual std::vector<std::string> const &getResourcePaths( void ) const;
 
-
-	// TODO add dirties
-
+	enum DirtyBits
+	{
+		DIRTY_PATHS = vl::Distributed::DIRTY_CUSTOM << 0,
+		DIRTY_SCENES = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 3
+	};
 
 protected :
 
@@ -103,8 +106,9 @@ protected :
 	std::string _getFileName( std::string const &name, std::string const &extension );
 	std::string _stripExtension( std::string const &name, std::string const &extension );
 
-	virtual void getInstanceData( co::DataOStream& os );
-	virtual void applyInstanceData( co::DataIStream& is );
+	/// Overload Distributed virtuals
+	virtual void serialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
+	virtual void deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
 
 	std::vector<vl::TextResource> _scenes;
 
@@ -116,13 +120,42 @@ protected :
 
 };	// class ResourceManager
 
-co::DataOStream &
-operator<<( vl::Resource &res, co::DataOStream& os );
-
-
-co::DataIStream &
-operator>>( vl::Resource &res, co::DataIStream& is );
-
 }	// namespace eqOgre
+
+namespace vl
+{
+
+namespace cluster
+{
+
+template<>
+inline
+vl::cluster::Message &operator<<( vl::cluster::Message &msg, vl::TextResource const &res )
+{
+// 	std::cout << "operator<< TextResource" << std::endl;
+	// TODO add name
+	msg << res.size();
+	msg.write( res.get(), res.size() );
+
+// 	std::cout << "operator<< TextResource done" << std::endl;
+	return msg;
+}
+
+template<>
+inline
+vl::cluster::Message &operator>>( vl::cluster::Message &msg, vl::TextResource &res )
+{
+// 	std::cout << "operator>> TextResource" << std::endl;
+	size_t size;
+	msg >> size;
+	res.resize(size);
+	msg.read( res.get(), size );
+
+	return msg;
+}
+
+}	// namespace cluster
+
+}	// namespace vl
 
 #endif // EQOGRE_RESOURCE_MANAGER_HPP

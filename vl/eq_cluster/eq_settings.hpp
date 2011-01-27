@@ -46,10 +46,10 @@ public :
 	void setSceneManagerID( uint64_t const id )
 	{ _scene_manager_id = id; }
 
-	eq::base::UUID const &getResourceManagerID( void ) const
+	uint64_t getResourceManagerID( void ) const
 	{ return _resource_man_id; }
 
-	void setResourceManagerID( eq::base::UUID const &id )
+	void setResourceManagerID( uint64_t id )
 	{ _resource_man_id = id; }
 
 	eq::base::UUID const &getPlayerID( void ) const
@@ -104,7 +104,7 @@ protected :
 	std::string _project_name;
 
 	uint64_t _scene_manager_id;
-	eq::base::UUID _resource_man_id;
+	uint64_t _resource_man_id;
 	eq::base::UUID _player_id;
 
 	uint32_t _camera_rotations_allowed;
