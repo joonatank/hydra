@@ -244,13 +244,13 @@ eqOgre::Config::_updateServer( void )
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )
 		{
-// 			std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
 			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
 // 			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
 			msg.write( (*iter)->getID() );
 			(*iter)->pack( msg, vl::Distributed::DIRTY_ALL );
 		}
 
+// 		std::cout << "Message = " << msg << std::endl;
 		// Send SceneGraph to all listeners
 		_server->sendToNewClients( msg );
 	}

@@ -45,13 +45,13 @@ public :
 	void pack( cluster::Message &msg, uint64_t const dirtyBits )
 	{
 		msg.write( dirtyBits );
-		serialize( msg, getDirty() );
+		serialize( msg, dirtyBits );
 		clearDirty();
 	}
 
 	void unpack( cluster::Message &msg )
 	{
-		msg.read(_dirtyBits);
+		msg.read( _dirtyBits );
 		deserialize(msg, getDirty() );
 		clearDirty();
 	}

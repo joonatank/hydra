@@ -32,6 +32,7 @@ set( SOURCES
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
 	cluster/client.cpp
+	cluster/message.cpp
 	udp/client.cpp
 	udp/server.cpp
 	udp/server_config.cpp

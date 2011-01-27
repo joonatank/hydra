@@ -36,109 +36,26 @@ enum MSG_TYPES
 class Message
 {
 public :
-	Message( std::vector<char> const &arr)
-		: _type(MSG_UNDEFINED), _size(0)
-	{
-		size_t pos = 0;
-		if( arr.size() >= pos + sizeof(_type) )
-		{
-			::memcpy( &_type, &arr[pos], sizeof(_type) );
-			pos += sizeof(_type);
-		}
-		else
-		{ return; }
+	Message( std::vector<char> const &arr);
 
-		if( arr.size() >= pos + sizeof(_size) )
-		{
-			::memcpy( &_size, &arr[pos], sizeof(_size) );
-			pos += sizeof(_size);
-		}
-		else
-		{ return; }
+	Message( MSG_TYPES type );
 
-		if( _size > 0 )
-		{
-			size_t size = _size;
-			if( arr.size() < pos + size )
-			{
-				std::cerr << "A message is partial!" << std::endl;
-				size = arr.size() - pos;
-			}
-
-			_data.resize(_size);
-			::memcpy( &_data[0], &arr[pos], size );
-		}
-	}
-
-	Message( MSG_TYPES type )
-		: _type(type), _size(0)
-	{}
 
 	MSG_TYPES getType( void )
 	{ return _type; }
 
 	/// Dump the whole message to a binary array, the array is modified
-	virtual void dump( std::vector<char> &arr ) const
-	{
-		arr.resize( sizeof(_type)+sizeof(_size)+_data.size() );
-		size_t pos = 0;
-		::memcpy( &arr[pos], &_type, sizeof(_type) );
-		pos += sizeof( _type );
-		::memcpy( &arr[pos], &_size, sizeof(_size) );
-		pos += sizeof(_size);
-		if( _data.size() > 0 )
-		{ ::memcpy( &arr[pos], &_data[0], _data.size() ); }
-	}
+	virtual void dump( std::vector<char> &arr ) const;
 
-	void clear( void )
-	{
-		_size = 0;
-		_data.clear();
-	}
+	void clear( void );
 
 	/// Read an arbitary type from message data, this never reads the header or size
 	template<typename T>
-	void read( T &obj )
-	{
-/*
-		std::cout << "Message::read data size = " << _data.size() << " data = ";
-		for( size_t i = 0; i < _data.size(); ++i )
-		{
-			std::cout << (uint16_t)(_data.at(i));
-		}
-		std::cout << std::endl;
-*/
-		if( _size < sizeof(obj) )
-		{
-			std::string str =
-				std::string("vl::Message::read - Not enough data to read from Message. There is")
-				+ vl::to_string(_size) + " bytes : needs "
-				+ vl::to_string(sizeof(obj)) + " bytes.";
-			BOOST_THROW_EXCEPTION( vl::short_message() << vl::desc(str) );
-			return;
-		}
-
-		::memcpy( &obj, &_data[0], sizeof(obj) );
-		_data.erase( _data.begin(), _data.begin()+sizeof(obj) );
-		_size -= sizeof(obj);
-	}
+	void read( T &obj );
 
 	/// Write an arbitary object to the message data, this never writes the header or size
 	template<typename T>
-	void write( T const &obj )
-	{
-// 		size_t size = _data.size();
-		_data.resize( _data.size() + sizeof(obj) );
-// 		std::cout << "Message::write : data size = " << _data.size();
-		::memcpy( &_data[_size], &obj, sizeof(obj) );
-// 		std::cout << " new size = " << _data.size() << " should have increased"
-// 			<< " by " << sizeof(obj) << " bytes." << std::endl;
-		_size += sizeof(obj);
-// 		std::cout << "Writen object = " << obj << " data = ";
-// 		for( size_t i = 0; i < _data.size(); ++i )
-// 		{ std::cout << (uint16_t)(_data.at(i)); }
-// 		std::cout << std::endl;
-	}
+	void write( T const &obj );
 
 	/// Size of the message in bytes
 	/// Contains the message, not the type of the message which precedes the message
@@ -148,6 +65,7 @@ public :
 	{ return _size; }
 
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
+
 private :
 	MSG_TYPES _type;
 	uint16_t _size;
@@ -155,17 +73,78 @@ private :
 
 };	// class Message
 
+std::ostream &operator<<( std::ostream &os, Message const &msg );
 
-inline
-std::ostream &operator<<( std::ostream &os, Message const &msg )
+
+template<typename T> inline
+void Message::read(T& obj)
 {
-	os << "Message : type = " << msg._type << " : size = " << msg._size
-		<< " data = ";
-	for( size_t i = 0; i < msg._data.size(); ++i )
-	{ os << (uint16_t)( msg._data.at(i) ); }
-	os << std::endl;
+/*
+	std::cout << "Message::read data size = " << _data.size() << " data = ";
+	for( size_t i = 0; i < _data.size(); ++i )
+	{
+		std::cout << (uint16_t)(_data.at(i));
+	}
+	std::cout << std::endl;
+*/
+	if( _size < sizeof(obj) )
+	{
+		std::string str =
+			std::string("vl::Message::read - Not enough data to read from Message. There is")
+			+ vl::to_string(_size) + " bytes : needs "
+			+ vl::to_string(sizeof(obj)) + " bytes.";
+		BOOST_THROW_EXCEPTION( vl::short_message() << vl::desc(str) );
+		return;
+	}
 
-	return os;
+	::memcpy( &obj, &_data[0], sizeof(obj) );
+	_data.erase( _data.begin(), _data.begin()+sizeof(obj) );
+	_size -= sizeof(obj);
+}
+
+template<typename T> inline
+void Message::write(const T& obj)
+{
+// 		size_t size = _data.size();
+	_data.resize( _data.size() + sizeof(obj) );
+// 		std::cout << "Message::write : data size = " << _data.size();
+	::memcpy( &_data[_size], &obj, sizeof(obj) );
+// 		std::cout << " new size = " << _data.size() << " should have increased"
+// 			<< " by " << sizeof(obj) << " bytes." << std::endl;
+	_size += sizeof(obj);
+// 		std::cout << "Writen object = " << obj << " data = ";
+// 		for( size_t i = 0; i < _data.size(); ++i )
+// 		{ std::cout << (uint16_t)(_data.at(i)); }
+// 		std::cout << std::endl;
+}
+
+template<> inline
+void Message::read( std::string &str )
+{
+// 	std::cout << "Message::read : Reading std::string." << std::endl;
+
+	size_t size;
+	::memcpy( &size, &_data[0], sizeof(size_t) );
+	str.resize(size);
+	for( size_t i = 0; i < size; ++i )
+	{
+		str.at(i) = _data[i+sizeof(size_t)];
+	}
+	_data.erase( _data.begin(), _data.begin()+size+sizeof(size_t) );
+	_size -= ( size + sizeof(size_t) );
+}
+
+template<> inline
+void Message::write( std::string const &str )
+{
+// 	std::cout << "Message::write : Writing std::string." << std::endl;
+
+	size_t size = str.size();
+	_data.resize( _data.size() + size + sizeof(size_t) );
+	::memcpy( &_data[_size], &size, sizeof(size_t) );
+	_size += sizeof(size_t);
+	::memcpy( &_data[_size], str.c_str(), size );
+	_size += size;
 }
 
 }	// namespace cluster

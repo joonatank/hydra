@@ -113,6 +113,8 @@ void eqOgre::SceneManager::reloadScene(void )
 void
 eqOgre::SceneManager::finaliseSync( void )
 {
+// 	std::cout << "eqOgre::SceneManager::finaliseSync" << std::endl;
+
 	// Map all nodes that are missing Ogre SceneNode
 	std::vector< std::vector<SceneNodeIDPair>::iterator > rem_cont;
 	if( _ogre_sm )
@@ -202,7 +204,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::Message &msg, const uint64_t dir
 			{
 				EQASSERT( _scene_nodes.at(i).id != vl::ID_UNDEFINED )
 
-				std::cout << "SceneNode ID valid : should map the object." << std::endl;
+// 				std::cout << "SceneNode ID valid : should map the object." << std::endl;
 				_mapObject( _scene_nodes.at(i) );
 			}
 		}

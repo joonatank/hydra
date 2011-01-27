@@ -92,44 +92,50 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 	// Init the Ogre resources and load a Scene
 	// These are here because the RenderWindow needs to be created before loading
 	// Meshes
-	static bool inited = false;
-	if( !inited )
-	{
-		// Resource registration
-		std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
-		for( size_t i = 0; i < resources.size(); ++i )
+	try {
+		static bool inited = false;
+		if( !inited )
 		{
-			_root->addResource( resources.at(i) );
+			// Resource registration
+			std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
+			for( size_t i = 0; i < resources.size(); ++i )
+			{
+				_root->addResource( resources.at(i) );
+			}
+			_root->setupResources( );
+			_root->loadResources();
+
+			_ogre_sm = _root->createSceneManager("SceneManager");
+
+			if( !_loadScene() )
+			{
+				// Error
+				std::string message("Problem loading the Scene");
+				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+			}
+
+			// We need to find the node from scene graph
+			std::string message = "SceneManager has "
+				+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
+			Ogre::LogManager::getSingleton().logMessage( message );
+
+			EQASSERTINFO( _ogre_sm, "Window has no Ogre SceneManager" );
+			if( !_scene_manager->setSceneManager( _ogre_sm ) )
+			{
+				// Error
+				message = "Some SceneNodes were not found.";
+				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+			}
+
+			inited = true;
 		}
-		_root->setupResources( );
-		_root->loadResources();
 
-		_ogre_sm = _root->createSceneManager("SceneManager");
-
-		if( !_loadScene() )
-		{
-			// Error
-			std::string message("Problem loading the Scene");
-			Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-		}
-
-		// We need to find the node from scene graph
-		std::string message = "SceneManager has "
-			+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-
-		EQASSERTINFO( _ogre_sm, "Window has no Ogre SceneManager" );
-		if( !_scene_manager->setSceneManager( _ogre_sm ) )
-		{
-			// Error
-			message = "Some SceneNodes were not found.";
-			Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-		}
-
-		inited = true;
+		_updateDistribData();
 	}
-
-	_updateDistribData();
+	catch( ... )
+	{
+		EQASSERT( false );
+	}
 
 	eq::Pipe::frameStart( frameID, frameNumber );
 }
@@ -284,6 +290,7 @@ eqOgre::Pipe::_syncData( void )
 				// based on thoses
 				// TODO multiple update messages in the same frame,
 				// only the most recent should be used.
+// 				std::cout << "Message = " << *msg << std::endl;
 				while( msg->size() > 0 )
 				{
 // 					std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
@@ -291,8 +298,6 @@ eqOgre::Pipe::_syncData( void )
 					uint64_t id;
 					msg->read(id);
 // 					std::cout << "Object ID = " << id << std::endl;
-// 					std::cout << "Mapped objects size = "
-// 						<< _mapped_objects.size() << std::endl;
 					vl::Distributed *obj = findMappedObject(id);
 					if( obj )
 					{ obj->unpack(*msg); }
@@ -302,10 +307,14 @@ eqOgre::Pipe::_syncData( void )
 							<< std::endl;
 					}
 				}
+// 				std::cout << "Message handled" << std::endl;
 				_scene_manager->finaliseSync();
+// 				std::cout << "Sync finalised." << std::endl;
 				break;
 
 			default :
+				std::cout << "Unhandled Message of type = " << msg->getType()
+					<< std::endl;
 				break;
 		}
 
