@@ -25,9 +25,8 @@ vl::cluster::Server::mainloop( void )
 
 	if( _socket.available() != 0 )
 	{
-		std::cout << "vl::cluster::Server::mainloop has a message" << std::endl;
-		// TODO this really should handle all the messages
-		std::vector<char> recv_buf(512);
+// 		std::cout << "vl::cluster::Server::mainloop has a message" << std::endl;
+		std::vector<char> recv_buf( _socket.available() );
 		boost::udp::endpoint remote_endpoint;
 		boost::system::error_code error;
 

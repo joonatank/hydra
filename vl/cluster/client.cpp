@@ -32,8 +32,7 @@ vl::cluster::Client::mainloop( void )
 	if( _socket.available() != 0 )
 	{
 // 		std::cout << "vl::cluster::Client::mainloop has a message" << std::endl;
-		// TODO handle large messages
-		std::vector<char> recv_buf(512);
+		std::vector<char> recv_buf( _socket.available() );
 		boost::system::error_code error;
 
 		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
@@ -42,7 +41,8 @@ vl::cluster::Client::mainloop( void )
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
-		// TODO some constraints for the number of messages
+		// Some constraints for the number of messages
+		// TODO this should be configurable and be reasonable low
 		if( _messages.size() > 1024 )
 		{
 			std::cerr << "Message stack full, cleaning out the oldest." << std::endl;
