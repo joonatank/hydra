@@ -116,7 +116,7 @@ eqOgre::SceneManager::finaliseSync( void )
 // 	std::cout << "eqOgre::SceneManager::finaliseSync" << std::endl;
 
 	// Map all nodes that are missing Ogre SceneNode
-	std::vector< std::vector<SceneNodeIDPair>::iterator > rem_cont;
+	std::vector< SceneNodeIDPair > remaining_nodes;
 	if( _ogre_sm )
 	{
 		std::vector<SceneNodeIDPair>::iterator iter;
@@ -126,20 +126,17 @@ eqOgre::SceneManager::finaliseSync( void )
 			{
 				std::cout << "NO Ogre node = " << iter->node->getName()
 					<< " found in the scene." << std::endl;
+				remaining_nodes.push_back(*iter);
 			}
 			else
 			{
 				std::cout << "Ogre node = " << iter->node->getName()
 					<< " found in the scene." << std::endl;
-				rem_cont.push_back(iter);
 			}
 		}
 	}
 
-	for( size_t i = 0; i < rem_cont.size(); ++i )
-	{
-		_new_scene_nodes.erase( rem_cont.at(i) );
-	}
+	_new_scene_nodes = remaining_nodes;
 
 	if( _new_scene_nodes.size() != 0 )
 	{

@@ -4,6 +4,8 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <stdint.h>
+
 namespace boost
 {
 	using boost::asio::ip::udp;
