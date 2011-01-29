@@ -13,6 +13,8 @@
  *	2011-01 Updated:
  *	Removed Equalizer observer.
  *	We are using our own code for setting the head matrix player only distributes.
+ *
+ *	Removed dependency to Equalizer.
  */
 
 #ifndef VL_PLAYER_HPP
@@ -22,14 +24,12 @@
 
 #include <OGRE/OgreMatrix4.h>
 
-#include <eq/fabric/serializable.h>
-
-// TODO should be moved to eq_cluster because this depends on the Equalizer
+#include "distributed.hpp"
 
 namespace vl
 {
 
-class Player : public eq::fabric::Serializable
+class Player : public vl::Distributed
 {
 public :
 	/// Constructor
@@ -53,14 +53,14 @@ public :
 
 	enum DirtyBits
 	{
-		DIRTY_HEAD = eq::fabric::Serializable::DIRTY_CUSTOM << 0,
-		DIRTY_ACTIVE_CAMERA = eq::fabric::Serializable::DIRTY_CUSTOM << 1,
-		DIRTY_SCREENSHOT = eq::fabric::Serializable::DIRTY_CUSTOM << 2,
+		DIRTY_HEAD = vl::Distributed::DIRTY_CUSTOM << 0,
+		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_SCREENSHOT = vl::Distributed::DIRTY_CUSTOM << 2,
 	};
 
 protected :
-	virtual void serialize( co::DataOStream &os, const uint64_t dirtyBits );
-	virtual void deserialize( co::DataIStream &is, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
 	/// Non copyable

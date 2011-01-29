@@ -19,6 +19,9 @@
 namespace vl
 {
 
+/// Message can hold 4Mbytes
+typedef uint32_t msg_size;
+
 namespace cluster
 {
 
@@ -30,16 +33,14 @@ enum MSG_TYPES
 };
 
 /// Description of an UDP message
-/// Has constant data put different methods which allows smoothly casting the
-/// message from one message type to another.
-/// TODO is this a wise design decission?
+/// UpdateMessage structure is
+/// [message type, data size, [N | object id, object size, object data]]
 class Message
 {
 public :
 	Message( std::vector<char> const &arr);
 
 	Message( MSG_TYPES type );
-
 
 	MSG_TYPES getType( void )
 	{ return _type; }
@@ -51,63 +52,179 @@ public :
 
 	/// Read an arbitary type from message data, this never reads the header or size
 	template<typename T>
-	void read( T &obj );
+	msg_size read( T &obj );
 
-	void read( char *mem, size_t size )
-	{
-		::memcpy( mem, &_data[0], size );
-		_size -= size;
-		_data.erase( _data.begin(), _data.begin()+size );
-	}
+	msg_size read( char *mem, msg_size size );
 
 	/// Write an arbitary object to the message data, this never writes the header or size
 	template<typename T>
-	void write( T const &obj );
+	msg_size write( T const &obj );
 
-	void write( char const *mem, size_t size )
-	{
-		_data.resize( _data.size()+size );
-		::memcpy( &_data[_size], mem, size );
-		_size += size;
-	}
+	msg_size write( char const *mem, msg_size size );
+
+	char &operator[]( size_t index )
+	{ return _data[index]; }
+
+	char const &operator[]( size_t index ) const
+	{ return _data[index]; }
 
 	/// Size of the message in bytes
 	/// Contains the message, not the type of the message which precedes the message
 	/// Maximum size is 8kbytes, which is more than one datagram can handle
 	/// For now larger messages are not supported
-	uint16_t size( void )
+	msg_size size( void )
 	{ return _size; }
 
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 
 private :
 	MSG_TYPES _type;
-	uint16_t _size;
+	msg_size _size;
 	std::vector<char> _data;
 
 };	// class Message
 
+class ByteData
+{
+public :
+	virtual void read( char *mem, msg_size size ) = 0;
+	virtual void write( char const *mem, msg_size size ) = 0;
+
+	virtual void open( void ) = 0;
+	virtual void close( void ) = 0;
+
+	virtual void copyToMessage( Message *msg ) = 0;
+	virtual void copyFromMessage( Message *msg ) = 0;
+
+};	// class ByteData
+
+// TODO break down to IStream and OStream
+/// This can be copied, copied stream contains the original object pointer
+/// So it acts as a proxy for the object
+class ByteStream
+{
+public :
+	ByteStream( ByteData *data )
+		: _data(data)
+	{ open(); }
+
+	~ByteStream( void )
+	{ close(); }
+
+	void setData( ByteData *data )
+	{
+		close();
+		_data = data;
+		open();
+	}
+
+	void open( void )
+	{
+		if( _data )
+		{ _data->open(); }
+	}
+
+	void close( void )
+	{
+		if( _data )
+		{ _data->close(); }
+	}
+
+	template<typename T>
+	void read( T &t )
+	{ read( t, sizeof(t) ); }
+
+	template<typename T>
+	void write( T const &t )
+	{ write( &t, sizeof(t) ); }
+
+	virtual void read( char *mem, msg_size size )
+	{
+		assert( _data );
+		_data->read(mem, size);
+	}
+
+	virtual void write( char const *mem, msg_size size )
+	{
+		assert( _data );
+		_data->write(mem, size);
+	}
+
+private :
+	ByteData *_data;
+
+};	// class ByteStream
+
+// TODO this should be constant when read
+// The ByteStream should use an iterator or an index to read this structure
+// without removing elements
+class ObjectData : public ByteData
+{
+public :
+	/// Invalid id is only valid for ObjectData that is read from message
+	// TODO define invalid ID
+	ObjectData( uint64_t id = 0);
+
+	uint64_t getId( void ) const
+	{ return _id; }
+
+	void setId( uint64_t id )
+	{ _id = id; }
+
+	virtual void read( char *mem, msg_size size );
+
+	virtual void write( char const *mem, msg_size size );
+
+	virtual void open( void ) {}
+
+	// Write the size of the object
+	// TODO is this necessary _data has the size anyway?
+	// No we can read/write the data using the _data array
+	virtual void close( void ) {}
+
+	virtual void copyToMessage( Message *msg );
+
+	/// Message can contain multiple objects
+	/// This function is used to separate different objects from each other
+	/// When this is called it closes the message for receiving the next object
+	/// And assumes that the next value writen is going to be the object id.
+	/// Practically this function writes the amount of bytes used for each object
+	/// as a next element to it's ID.
+	virtual void copyFromMessage( Message *msg );
+
+	ByteStream getStream( void )
+	{
+		return ByteStream( this );
+	}
+
+	friend std::ostream &operator<<( std::ostream &os, ObjectData const &data );
+
+private :
+	uint64_t _id;
+	std::vector<char> _data;
+
+};	// class ObjectData
+
+std::ostream &operator<<( std::ostream &os, ObjectData const &data );
+
 std::ostream &operator<<( std::ostream &os, Message const &msg );
 
-// TODO test if this can be overriden easily.
-// If not replace with multiple non-template methods so that the compiler
-// will catch errors if type is not supported.
 /// Specialize the template if you need to use more complicated serialization
 /// than straigth memory copy.
 /// Problematic because you need to specialise it in namespace vl::cluster
 /// and there will be no compiler error if you don't
 /// (or forget to include the header which defines the specialisation).
 template<typename T>
-Message &operator<<( Message &msg, T const &t )
+ByteStream &operator<<( ByteStream &msg, T const &t )
 {
-	msg.write(t);
+	msg.write( (char *)&t, (vl::msg_size)sizeof(t) );
 	return msg;
 }
 
 template<typename T>
-Message &operator<<( Message &msg, std::vector<T> const &v )
+ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 {
-	msg.write( v.size() );
+	msg << v.size();
 	for(size_t i = 0; i < v.size(); ++i )
 	{ msg << v.at(i); }
 
@@ -115,17 +232,17 @@ Message &operator<<( Message &msg, std::vector<T> const &v )
 }
 
 template<typename T>
-Message &operator>>( Message &msg, T &t )
+ByteStream &operator>>( ByteStream &msg, T &t )
 {
-	msg.read(t);
+	msg.read( (char *)&t, (vl::msg_size)sizeof(t) );
 	return msg;
 }
 
 template<typename T>
-Message &operator>>( Message &msg, std::vector<T> &v )
+ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 {
 	size_t size;
-	msg.read(size);
+	msg >> size;
 	v.resize( size );
 	for(size_t i = 0; i < v.size(); ++i )
 	{ msg >> v.at(i); }
@@ -135,52 +252,39 @@ Message &operator>>( Message &msg, std::vector<T> &v )
 
 
 template<typename T>
-void Message::read(T& obj)
+msg_size Message::read(T& obj)
 {
-/*
-	std::cout << "Message::read data size = " << _data.size() << " data = ";
-	for( size_t i = 0; i < _data.size(); ++i )
-	{
-		std::cout << (uint16_t)(_data.at(i));
-	}
-	std::cout << std::endl;
-*/
-	if( _size < sizeof(obj) )
+	msg_size size = sizeof(obj);
+	if( _size < size )
 	{
 		std::string str =
 			std::string("vl::Message::read - Not enough data to read from Message. There is")
 			+ vl::to_string(_size) + " bytes : needs "
 			+ vl::to_string(sizeof(obj)) + " bytes.";
 		BOOST_THROW_EXCEPTION( vl::short_message() << vl::desc(str) );
-		return;
 	}
 
-	::memcpy( &obj, &_data[0], sizeof(obj) );
-	_data.erase( _data.begin(), _data.begin()+sizeof(obj) );
-	_size -= sizeof(obj);
+	::memcpy( &obj, &_data[0], size );
+	_data.erase( _data.begin(), _data.begin()+size );
+	_size -= size;
+
+	return size;
 }
 
 template<typename T>
-void Message::write(const T& obj)
+msg_size Message::write(const T& obj)
 {
-// 		size_t size = _data.size();
-	_data.resize( _data.size() + sizeof(obj) );
-// 		std::cout << "Message::write : data size = " << _data.size();
-	::memcpy( &_data[_size], &obj, sizeof(obj) );
-// 		std::cout << " new size = " << _data.size() << " should have increased"
-// 			<< " by " << sizeof(obj) << " bytes." << std::endl;
-	_size += sizeof(obj);
-// 		std::cout << "Writen object = " << obj << " data = ";
-// 		for( size_t i = 0; i < _data.size(); ++i )
-// 		{ std::cout << (uint16_t)(_data.at(i)); }
-// 		std::cout << std::endl;
+	msg_size size = sizeof(obj);
+	_data.resize( _data.size() + size );
+	::memcpy( &_data[_size], &obj, size );
+	_size += size;
+
+	return size;
 }
 
 template<> inline
-void Message::read( std::string &str )
+msg_size Message::read( std::string &str )
 {
-// 	std::cout << "Message::read : Reading std::string" << std::endl;
-
 	size_t size;
 	::memcpy( &size, &_data[0], sizeof(size_t) );
 	str.resize(size);
@@ -191,24 +295,32 @@ void Message::read( std::string &str )
 	_data.erase( _data.begin(), _data.begin()+size+sizeof(size_t) );
 	_size -= ( size + sizeof(size_t) );
 
-// 	 std::cout << "string = " << str << std::endl;
+	return size+sizeof(size_t);
 }
 
 template<> inline
-void Message::write( std::string const &str )
+msg_size Message::write( std::string const &str )
 {
-// 	std::cout << "Message::write : Writing std::string = " << str << std::endl;
-
 	size_t size = str.size();
 	_data.resize( _data.size() + size + sizeof(size_t) );
 	::memcpy( &_data[_size], &size, sizeof(size_t) );
 	_size += sizeof(size_t);
 	::memcpy( &_data[_size], str.c_str(), size );
 	_size += size;
+
+	return size + sizeof(size_t);
 }
 
 }	// namespace cluster
 
 }	// namespace vl
+
+namespace std
+{
+
+/// Print byte data
+std::ostream &operator<<( std::ostream &os, vector<char> const &v );
+
+}
 
 #endif // VL_CLUSTER_MESSAGE_HPP

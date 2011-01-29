@@ -229,7 +229,7 @@ eqOgre::getSettings( int argc, char **argv )
 eqOgre::DistributedSettings::DistributedSettings( void )
 	 : _scene_manager_id( vl::ID_UNDEFINED ),
 	   _resource_man_id( vl::ID_UNDEFINED ),
-	   _player_id( eq::base::UUID::ZERO ),
+	   _player_id( vl::ID_UNDEFINED ),
 	   _camera_rotations_allowed( 1 | 1<<1 | 1<<2 ),
 	   _stereo( vl::EnvSettings::ON ),
 	   _ipd(0)

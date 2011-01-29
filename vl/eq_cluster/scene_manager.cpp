@@ -155,11 +155,11 @@ eqOgre::SceneManager::finaliseSync( void )
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
 void
-eqOgre::SceneManager::serialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NODES )
 	{
-		msg.write( _scene_nodes.size() );
+		msg << _scene_nodes.size();
 		for( size_t i = 0; i < _scene_nodes.size(); ++i )
 		{
 			uint64_t id = _scene_nodes.at(i).id;
@@ -167,25 +167,25 @@ eqOgre::SceneManager::serialize( vl::cluster::Message &msg, const uint64_t dirty
 			EQASSERTINFO( id != vl::ID_UNDEFINED, "SceneNode " << name
 					<< " has invalid id."  )
 
-			msg.write(_scene_nodes.at(i).id);
+			msg << _scene_nodes.at(i).id;
 		}
 	}
 
  	if( dirtyBits & DIRTY_RELOAD_SCENE )
  	{
- 		msg.write(_scene_version);
+ 		msg << _scene_version;
  	}
 }
 
 void
-eqOgre::SceneManager::deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NODES )
 	{
 		// TODO this does not work dynamically, we need to track changes in the
 		// vector and do mapping for those objects we want changes at runtime.
 		size_t size;
-		msg.read(size);
+		msg >> size;
 		// TODO this will leak memory
 		// Also if there is already registered SceneNodes this might crash the
 		// applicatation in exit.
@@ -198,7 +198,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::Message &msg, const uint64_t dir
 			// ignore them
 			// Basicly we don't want the IDs to be changed without recreating
 			// the scene node.
-			msg.read(_scene_nodes.at(i).id);
+			msg >> _scene_nodes.at(i).id;
 			// Check for new SceneNodes
 			if( !node ) //|| !node->isAttached() )
 			{
@@ -212,7 +212,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::Message &msg, const uint64_t dir
 
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
-		msg.read(_scene_version);
+		msg >> _scene_version;
 	}
 }
 

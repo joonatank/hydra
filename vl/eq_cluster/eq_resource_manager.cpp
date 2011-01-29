@@ -278,7 +278,7 @@ eqOgre::ResourceManager::_stripExtension( std::string const &name,
 
 /// --------------------------- Protected --------------------------------------
 void
-eqOgre::ResourceManager::serialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::ResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Serialize resource paths, used by Ogre
 	if( dirtyBits & DIRTY_PATHS )
@@ -291,7 +291,7 @@ eqOgre::ResourceManager::serialize( vl::cluster::Message &msg, const uint64_t di
 
 
 void
-eqOgre::ResourceManager::deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::ResourceManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Deserialize resource paths, used by Ogre
 	if( dirtyBits & DIRTY_PATHS )

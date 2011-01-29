@@ -52,10 +52,10 @@ public :
 	void setResourceManagerID( uint64_t id )
 	{ _resource_man_id = id; }
 
-	eq::base::UUID const &getPlayerID( void ) const
+	uint64_t const &getPlayerID( void ) const
 	{ return _player_id; }
 
-	void setPlayerID( eq::base::UUID const &id )
+	void setPlayerID( uint64_t const id )
 	{ _player_id = id; }
 
 	/// Used by master to copy the necessary data for synchronization
@@ -105,7 +105,7 @@ protected :
 
 	uint64_t _scene_manager_id;
 	uint64_t _resource_man_id;
-	eq::base::UUID _player_id;
+	uint64_t _player_id;
 
 	uint32_t _camera_rotations_allowed;
 

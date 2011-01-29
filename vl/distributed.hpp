@@ -39,19 +39,19 @@ public :
 
 	/// Pack and unpack needs to be symmetric in every way otherwise
 	/// they will fail.
-	void pack( cluster::Message &msg )
+	void pack( cluster::ByteStream &msg )
 	{ pack( msg, _dirtyBits ); }
 
-	void pack( cluster::Message &msg, uint64_t const dirtyBits )
+	void pack( cluster::ByteStream &msg, uint64_t const dirtyBits )
 	{
-		msg.write( dirtyBits );
+		msg << dirtyBits;
 		serialize( msg, dirtyBits );
 		clearDirty();
 	}
 
-	void unpack( cluster::Message &msg )
+	void unpack( cluster::ByteStream &msg )
 	{
-		msg.read( _dirtyBits );
+		msg >> _dirtyBits;
 		deserialize(msg, getDirty() );
 		clearDirty();
 	}
@@ -66,9 +66,9 @@ public :
 	}
 
 private :
-	virtual void serialize( cluster::Message &msg, const uint64_t dirtyBits ) = 0;
+	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
-	virtual void deserialize( cluster::Message &msg, const uint64_t dirtyBits ) = 0;
+	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
 	void clearDirty( void )
 	{ _dirtyBits = DIRTY_NONE; }

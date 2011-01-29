@@ -94,21 +94,22 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	EQASSERT( player );
 	// Registering Player in init
-	if( !registerObject( player ) )
-	{ return false; }
+	registerObjectC( player );
 
 	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
 	_distrib_settings.setResourceManagerID( res_man->getID() );
 	_distrib_settings.setPlayerID( player->getID() );
 
 	EQINFO << "Registering Settings" << std::endl;
-	if( !registerObject( &_distrib_settings ) )
-	{ return false; }
+	registerObject( &_distrib_settings );
+	EQASSERT( _distrib_settings.getID().isGenerated() );
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
 
 	EQINFO << "Config::init DONE" << std::endl;
+
+	_updateServer();
 
 	return true;
 }
@@ -122,16 +123,12 @@ eqOgre::Config::exit( void )
 	EQINFO << "Deregistering distributed data." << std::endl;
 
 	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
-
-	eqOgre::ResourceManager *res_man =
-		static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
-
 	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
+	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
 
-	deregisterObject( _game_manager->getPlayer() );
-	_distrib_settings.setPlayerID( eq::base::UUID::ZERO );
+// 	deregisterObject( &_distrib_settings );
 
-	deregisterObject( &_distrib_settings );
+	//	TODO add cleanup server
 
 	EQINFO << "Config exited." << std::endl;
 	return retval;
@@ -171,19 +168,17 @@ void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 uint32_t
 eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 {
+	/// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
 
 	if( !_game_manager->step() )
 	{ stopRunning(); }
 
-	_game_manager->getPlayer()->commit();
-
-	// TODO pack scene manager
+	/// Provide the updates to slaves
 	_updateServer();
 
-//	eq::uint128_t version = _game_manager->getSceneManager()->commitAll();
-
+	/// Start rendering the frame
 	uint32_t retval = eq::Config::startFrame( 0 );
 
 	return retval;
@@ -208,6 +203,8 @@ eqOgre::Config::_updateServer( void )
 	// Handle received messages
 	_server->mainloop();
 
+	// TODO the new and old clients functions should be combined to one
+	// function which is called multiple times
 	if( _server->oldClients() )
 	{
 		// Create SceneGraph updates
@@ -218,11 +215,13 @@ eqOgre::Config::_updateServer( void )
 		{
 			if( (*iter)->isDirty() )
 			{
-// 				std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
 				EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+// 				std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
 // 				std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
-				msg.write( (*iter)->getID() );
-				(*iter)->pack(msg);
+				vl::cluster::ObjectData data( (*iter)->getID() );
+				vl::cluster::ByteStream stream = data.getStream();
+				(*iter)->pack(stream);
+				data.copyToMessage(&msg);
 			}
 		}
 
@@ -244,9 +243,14 @@ eqOgre::Config::_updateServer( void )
 			++iter )
 		{
 			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+// 			vl::cluster::UpdateMessageSerializer ser(&msg);
 // 			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
-			msg.write( (*iter)->getID() );
-			(*iter)->pack( msg, vl::Distributed::DIRTY_ALL );
+// 			msg.write( (*iter)->getID() );
+// 			vl::cluster::ObjectStream stream = ser.openObject( (*iter)->getID() );
+			vl::cluster::ObjectData data( (*iter)->getID() );
+			vl::cluster::ByteStream stream = data.getStream();
+			(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
+			data.copyToMessage(&msg);
 		}
 
 // 		std::cout << "Message = " << msg << std::endl;

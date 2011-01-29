@@ -107,8 +107,8 @@ protected :
 	std::string _stripExtension( std::string const &name, std::string const &extension );
 
 	/// Overload Distributed virtuals
-	virtual void serialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
-	virtual void deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 	std::vector<vl::TextResource> _scenes;
 
@@ -130,7 +130,7 @@ namespace cluster
 
 template<>
 inline
-vl::cluster::Message &operator<<( vl::cluster::Message &msg, vl::TextResource const &res )
+vl::cluster::ByteStream &operator<<( vl::cluster::ByteStream &msg, vl::TextResource const &res )
 {
 // 	std::cout << "operator<< TextResource" << std::endl;
 	// TODO add name
@@ -143,7 +143,7 @@ vl::cluster::Message &operator<<( vl::cluster::Message &msg, vl::TextResource co
 
 template<>
 inline
-vl::cluster::Message &operator>>( vl::cluster::Message &msg, vl::TextResource &res )
+vl::cluster::ByteStream &operator>>( vl::cluster::ByteStream &msg, vl::TextResource &res )
 {
 // 	std::cout << "operator>> TextResource" << std::endl;
 	size_t size;

@@ -4,6 +4,8 @@
 
 #include "message.hpp"
 
+
+/// ---------------------------- Message ---------------------------------------
 vl::cluster::Message::Message( std::vector<char> const &arr )
 	: _type(vl::cluster::MSG_UNDEFINED), _size(0)
 {
@@ -62,12 +64,109 @@ vl::cluster::Message::clear( void )
 	_data.clear();
 }
 
-/*
-std::ostream &
-vl::cluster::operator<<(std::ostream& os, const vl::cluster::Message& msg)
+vl::msg_size
+vl::cluster::Message::read( char *mem, vl::msg_size size )
 {
+	::memcpy( mem, &_data[0], size );
+	_size -= size;
+	_data.erase( _data.begin(), _data.begin()+size );
 
-}*/
+	return size;
+}
+
+vl::msg_size
+vl::cluster::Message::write( char const *mem, vl::msg_size size )
+{
+	_data.resize( _data.size()+size );
+	::memcpy( &_data[_size], mem, size );
+	_size += size;
+
+	return size;
+}
+
+/// ----------------------------- ObjectData -----------------------------------
+vl::cluster::ObjectData::ObjectData( uint64_t id )
+	: _id(id)
+{}
+
+void
+vl::cluster::ObjectData::read( char *mem, vl::msg_size size )
+{
+	assert( mem );
+	if( 0 == size )
+	{ return; }
+
+// 	std::cout << "vl::cluster::ObjectData::read : _data.size() = "
+// 		<< _data.size() << " bytes : trying to read = " << size << " bytes."
+// 		<< std::endl;
+	assert( _data.size() >= size );
+
+	::memcpy( mem, &_data[0], size );
+	_data.erase( _data.begin(), _data.begin()+size );
+}
+
+void
+vl::cluster::ObjectData::write( char const *mem, vl::msg_size size )
+{
+	assert( mem );
+	if( 0 == size )
+	{ return; }
+
+	size_t pos = _data.size();
+	_data.resize( _data.size() + size );
+	::memcpy( &_data[pos], mem, size);
+}
+
+void
+vl::cluster::ObjectData::copyToMessage( vl::cluster::Message *msg )
+{
+	assert(msg);
+	// TODO define invalid ID
+	assert( _id != 0 );
+	msg->write(_id);
+
+	assert( _data.size() < msg_size(-1) );
+	msg_size size = _data.size();
+	msg->write(size);
+	msg->write( &_data[0], size );
+}
+
+void
+vl::cluster::ObjectData::copyFromMessage( vl::cluster::Message *msg )
+{
+// 	std::cout << "vl::cluster::ObjectData::copyFromMessage" << std::endl;
+	assert(msg);
+
+	// Skip the last object if not wholly read
+	// FIXME this should not remove those from the message but rather move
+	// the pointer used for the next stream
+	// The idea is that one instance of the Serializer handles the reading of
+	// the whole message but all the remaining bytes are stored.
+	// So that later another instance can read through all the remaining bytes.
+
+	msg->read(_id);
+
+	msg_size size;
+	// Check that there is more data than the size
+	assert( msg->size() > sizeof(size)-1 );
+	msg->read(size);
+	assert( msg->size() > size-1 );
+	_data.resize(size);
+
+	msg->read( &_data[0], size );
+}
+
+
+/// ------------------------------ Global --------------------------------------
+std::ostream &
+vl::cluster::operator<<(std::ostream& os, vl::cluster::ObjectData const &data)
+{
+	os << "Object id = " << data._id << " : size = " << data._data.size()
+		<< " : data = " << data._data << std::endl;
+
+	return os;
+}
+
 
 std::ostream &
 vl::cluster::operator<<( std::ostream &os, vl::cluster::Message const &msg )
@@ -77,6 +176,15 @@ vl::cluster::operator<<( std::ostream &os, vl::cluster::Message const &msg )
 	for( size_t i = 0; i < msg._data.size(); ++i )
 	{ os << (uint16_t)( msg._data.at(i) ); }
 	os << std::endl;
+
+	return os;
+}
+
+std::ostream &
+std::operator<<(std::ostream& os, std::vector< char > const &v)
+{
+	for( size_t i = 0; i < v.size(); ++i )
+	{ os << v[i]; }
 
 	return os;
 }

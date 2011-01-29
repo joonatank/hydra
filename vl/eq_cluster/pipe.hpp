@@ -59,11 +59,14 @@ protected :
 	bool _createOgre( void );
 	bool _loadScene( void );
 
-	/// Distribution helpers
+	/// message passing
 	void _createClient( void );
+	void _handleMessages( void );
+	void _handleMessage( vl::cluster::Message *msg );
+
+	/// Distribution helpers
 	void _syncData( void );
-	bool _mapData( const eq::uint128_t& settingsID );
-	void _unmapData( void );
+	void _mapData( eq::uint128_t const &settingsID);
 	void _updateDistribData( void );
 
 	/// Ogre data
@@ -81,6 +84,7 @@ protected :
 	uint32_t _screenshot_num;
 
 	vl::cluster::Client *_client;
+	std::vector<vl::cluster::ObjectData> _objects;
 
 };	// class Pipe
 

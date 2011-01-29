@@ -39,6 +39,8 @@ eqOgre::Pipe::getSettings( void ) const
 bool
 eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 {
+	_createClient();
+
 	if( !eq::Pipe::configInit(initID) )
 	{
 		// Error
@@ -48,15 +50,11 @@ eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 		return false;
 	}
 
-	if( !_mapData( initID ) )
-	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eqOgre::Pipe::configInit : mapData failed");
-		std::cerr << message << std::endl;
-		return false;
-	}
+	_mapData( initID );
 
+	_handleMessages();
+
+	_syncData();
 
 	if( !_createOgre() )
 	{
@@ -64,10 +62,8 @@ eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 		// TODO move to using Ogre Logging, the log manager needs to be created sooner
 		std::string message("eqOgre::Pipe::configInit : createOgre failed");
 		std::cerr << message << std::endl;
-		return false;
+		return( false );
 	}
-
-	_createClient();
 
 	return true;
 }
@@ -76,7 +72,6 @@ bool
 eqOgre::Pipe::configExit()
 {
 	bool retval = eq::Pipe::configExit();
-	_unmapData();
 
 	// Info
 	std::string message("Cleaning out OGRE");
@@ -90,6 +85,8 @@ void
 eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
 {
 	static bool inited = false;
+
+	_handleMessages();
 
 	try {
 		// TODO should update the Pipe data in init
@@ -158,8 +155,8 @@ eqOgre::Pipe::_createOgre( void )
 {
 	try {
 		// TODO needs LogManager creation before this
-//		std::string message("Creating Ogre Root");
-//		Ogre::LogManager::getSingleton().logMessage( message );
+		std::string message("Creating Ogre Root");
+		std::cout << message << std::endl;
 
 		_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
 		// Initialise ogre
@@ -274,7 +271,7 @@ void
 eqOgre::Pipe::_createClient( void )
 {
 	std::cout << "eqOgre::Pipe::_createClient" << std::endl;
-	EQASSERT( !_client );
+	assert( !_client );
 
 	// FIXME these should be configured in config file
 	_client = new vl::cluster::Client( SERVER_NAME, SERVER_PORT );
@@ -282,11 +279,9 @@ eqOgre::Pipe::_createClient( void )
 }
 
 void
-eqOgre::Pipe::_syncData( void )
+eqOgre::Pipe::_handleMessages( void )
 {
-// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
-
-	EQASSERT( _client );
+	assert( _client );
 
 	_client->mainloop();
 	while( _client->messages() )
@@ -294,70 +289,113 @@ eqOgre::Pipe::_syncData( void )
 //		std::cout << "eqOgre::Pipe::_syncData : Messages received" << std::endl;
 		vl::cluster::Message *msg = _client->popMessage();
 		// TODO process the message
-		switch( msg->getType() )
-		{
-			case vl::cluster::MSG_UPDATE :
-				// Read the IDs in the message and call pack on mapped objects
-				// based on thoses
-				// TODO multiple update messages in the same frame,
-				// only the most recent should be used.
-// 				std::cout << "Message = " << *msg << std::endl;
-				while( msg->size() > 0 )
-				{
-// 					std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
-// 						<< "size = " << msg->size() << std::endl;
-					uint64_t id;
-					msg->read(id);
-// 					std::cout << "Object ID = " << id << std::endl;
-					vl::Distributed *obj = findMappedObject(id);
-					if( obj )
-					{ obj->unpack(*msg); }
-					else
-					{
-						std::cerr << "No ID " << id << " found in mapped objects."
-							<< std::endl;
-					}
-				}
-// 				std::cout << "Message handled" << std::endl;
-				_scene_manager->finaliseSync();
-// 				std::cout << "Sync finalised." << std::endl;
-				break;
-
-			default :
-				std::cout << "Unhandled Message of type = " << msg->getType()
-					<< std::endl;
-				break;
-		}
-
-
+		_handleMessage(msg);
 		delete msg;
 	}
 }
 
+void
+eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
+{
+	assert(msg);
 
-bool
-eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
+// 	std::cout << "eqOgre::Pipe::_syncData : message = " << *msg
+// 		<< std::endl;
+
+	switch( msg->getType() )
+	{
+		case vl::cluster::MSG_UPDATE :
+		{
+			// TODO objects array should not be cleared but rather updated
+			// so that objects that are not updated stay in the array.
+			_objects.clear();
+			// Read the IDs in the message and call pack on mapped objects
+			// based on thoses
+			// TODO multiple update messages in the same frame,
+			// only the most recent should be used.
+// 				std::cout << "Message = " << *msg << std::endl;
+			while( msg->size() > 0 )
+			{
+// 				std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
+//	 				<< "size = " << msg->size() << std::endl;
+
+				vl::cluster::ObjectData data;
+				data.copyFromMessage(msg);
+				// Pushing back will create copies which is unnecessary
+				_objects.push_back(data);
+			}
+// 			std::cout << "Message handled" << std::endl;
+		}
+		break;
+
+		default :
+			std::cout << "Unhandled Message of type = " << msg->getType()
+				<< std::endl;
+			delete msg;
+			break;
+	}
+}
+
+void
+eqOgre::Pipe::_syncData( void )
+{
+// 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects "
+// 		<< std::endl;
+
+	std::vector<vl::cluster::ObjectData>::iterator iter;
+	// TODO remove the temporary array
+	// use a custom structure that does not create temporaries
+	// rather two phase system one to read the array and mark objects for delete
+	// and second that really clear those that are marked for delete
+	// similar system for reading data to the array
+	std::vector<vl::cluster::ObjectData> tmp;
+	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
+	{
+		vl::cluster::ByteStream stream = iter->getStream();
+		// TODO break this to two different parts
+		// one creating the ObjectDatas and saving them to array
+		// other one that processes this array and removes the elements found in mapped
+		vl::Distributed *obj = findMappedObject( iter->getId() );
+		if( obj )
+		{
+			obj->unpack(stream);
+		}
+		else
+		{
+			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
+				<< std::endl;
+			tmp.push_back( *iter );
+		}
+	}
+
+	_objects = tmp;
+
+	if( _scene_manager )
+	{ _scene_manager->finaliseSync(); }
+
+// 	std::cout << "Sync finalised." << std::endl;
+}
+
+void
+eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
 {
 	// TODO move to using Ogre Logging, needs LogManager creation
-	EQINFO << "Mapping data." << std::endl;
+	std::cout << "Mapping data." << std::endl;
 
 	// Get the cluster version of data
-	if( !getConfig()->mapObject( &_settings, settingsID ) )
-	{
-		EQERROR << "Couldn't map the Settings." << std::endl;
-		return false;
-	}
+	getConfig()->mapObject( &_settings, settingsID );
+	EQASSERTINFO( _settings.getID() != eq::UUID::ZERO, "Couldn't map the Settings." );
+
+	// TODO should be automatic when mapObjectC is called
+	// Also if we call it so many times it should not iterate through the whole
+	// message but rather already stored ID list
 
 	uint64_t id = _settings.getResourceManagerID();
 	EQASSERT( id != vl::ID_UNDEFINED );
 	mapObjectC( &_resource_manager, id );
 
-	EQASSERT( _settings.getPlayerID() != eq::base::UUID::ZERO );
-	if( !getConfig()->mapObject( &_player, _settings.getPlayerID() ) )
-	{
-		EQERROR << "Couldn't map the Player." << std::endl;
-		return false;
-	}
+	EQASSERT( _settings.getPlayerID() != vl::ID_UNDEFINED );
+	mapObjectC( &_player, _settings.getPlayerID() );
 
 	uint64_t sm_id = _settings.getSceneManagerID();
 	std::cout << "Mapping SceneManager with id = " << sm_id << '.' << std::endl;
@@ -366,26 +404,15 @@ eqOgre::Pipe::_mapData( const eq::uint128_t& settingsID )
 	mapObjectC( _scene_manager, sm_id );
 
 	EQINFO << "Data mapped." << std::endl;
-
-	return true;
-}
-
-void
-eqOgre::Pipe::_unmapData( void )
-{
-	// TODO move to using Ogre Logging, needs LogManager destruction later
-	EQINFO << "Unmapping Settings." << std::endl;
-	getConfig()->unmapObject( &_settings );
-
-	EQINFO << "Unmapping Player." << std::endl;
-	getConfig()->unmapObject( &_player );
 }
 
 void
 eqOgre::Pipe::_updateDistribData( void )
 {
+	// Custom sync code
+	_syncData();
+
 	// Update player
-	_player.sync();
 	// Get active camera and change the rendering camera if there is a change
 	std::string const &cam_name = _player.getActiveCamera();
 	if( !cam_name.empty() && cam_name != _active_camera_name )
@@ -407,7 +434,8 @@ eqOgre::Pipe::_updateDistribData( void )
 		else
 		{
 			std::string message = "eqOgre::Window : New camera name set, but NO camera found";
-			Ogre::LogManager::getSingleton().logMessage( message );
+			std::cout << message << std::endl;
+			//Ogre::LogManager::getSingleton().logMessage( message );
 		}
 	}
 
@@ -434,9 +462,6 @@ eqOgre::Pipe::_updateDistribData( void )
 
 		_screenshot_num = _player.getScreenshotVersion();
 	}
-
-	// Update SceneManager
-	_syncData();
 
 	// FIXME this is completely screwed up.
 	/*

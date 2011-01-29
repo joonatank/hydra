@@ -46,31 +46,27 @@ vl::Player::takeScreenshot( void )
 
 /// ------------------------------- Protected ----------------------------------
 void
-vl::Player::serialize(co::DataOStream& os, const uint64_t dirtyBits)
+vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	eq::fabric::Serializable::serialize(os, dirtyBits);
-
 	if( dirtyBits & DIRTY_HEAD )
-	{ os << _head_matrix; }
+	{ msg << _head_matrix; }
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{ os << _active_camera; }
+	{ msg << _active_camera; }
 
 	if( dirtyBits & DIRTY_SCREENSHOT )
-	{ os << _screenshot_version; }
+	{ msg << _screenshot_version; }
 }
 
 void
-vl::Player::deserialize(co::DataIStream& is, const uint64_t dirtyBits)
+vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	eq::fabric::Serializable::deserialize(is, dirtyBits);
-
 	if( dirtyBits & DIRTY_HEAD )
-	{ is >> _head_matrix; }
+	{ msg >> _head_matrix; }
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
-	{ is >> _active_camera; }
+	{ msg >> _active_camera; }
 
 	if( dirtyBits & DIRTY_SCREENSHOT )
-	{ is >> _screenshot_version; }
+	{ msg >> _screenshot_version; }
 }

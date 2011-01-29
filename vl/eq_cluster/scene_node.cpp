@@ -47,41 +47,41 @@ bool eqOgre::SceneNode::findNode(Ogre::SceneManager* man)
 // Does no transformation on the Ogre Node as the master copy should be in
 // AppNode which does not have Ogre SceneGraph
 void
-eqOgre::SceneNode::serialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NAME )
 	{
-		msg.write(_name);
+		msg << _name;
 	}
 	// Serialize position
 	if( dirtyBits & DIRTY_POSITION )
 	{
-		msg.write(_position);
+		msg << _position;
 	}
 	// Serialize orientation
 	if( dirtyBits & DIRTY_ORIENTATION )
 	{
-		msg.write(_orientation);
+		msg << _orientation;
 	}
 
 	if( dirtyBits & DIRTY_VISIBILITY )
 	{
-		msg.write(_visible);
+		msg << _visible;
 	}
 }
 
 void
-eqOgre::SceneNode::deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits )
+eqOgre::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Deserialize name
 	if( dirtyBits & DIRTY_NAME )
 	{
-		msg.read(_name);
+		msg >> _name;
 	}
 	// Deserialize position
 	if( dirtyBits & DIRTY_POSITION )
 	{
-		msg.read(_position);
+		msg >> _position;
 
 		// If we have a correct node we need to transform it
 		if( _ogre_node )
@@ -90,7 +90,7 @@ eqOgre::SceneNode::deserialize( vl::cluster::Message &msg, const uint64_t dirtyB
 	// Deserialize orientation
 	if( dirtyBits & DIRTY_ORIENTATION )
 	{
-		msg.read(_orientation);
+		msg >> _orientation;
 
 		// If we have a correct node we need to transform it
 		if( _ogre_node )
@@ -99,7 +99,7 @@ eqOgre::SceneNode::deserialize( vl::cluster::Message &msg, const uint64_t dirtyB
 
 	if( dirtyBits & DIRTY_VISIBILITY )
 	{
-		msg.read(_visible);
+		msg >> _visible;
 		if( _ogre_node )
 		{ _ogre_node->setVisible(_visible); }
 	}

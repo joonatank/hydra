@@ -83,8 +83,8 @@ public :
 protected :
 	SceneNode( std::string const &name = std::string() );
 
-	virtual void serialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
-	virtual void deserialize( vl::cluster::Message &msg, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
 	std::string _name;
