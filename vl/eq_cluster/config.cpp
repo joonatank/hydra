@@ -203,6 +203,8 @@ eqOgre::Config::_updateServer( void )
 	// Handle received messages
 	_server->mainloop();
 
+	_receiveEventMessages();
+
 	// TODO the new and old clients functions should be combined to one
 	// function which is called multiple times
 	if( _server->oldClients() )
@@ -407,55 +409,82 @@ eqOgre::Config::_createQuitEvent(void )
 }
 
 /// Event Handling
+void
+eqOgre::Config::_receiveEventMessages( void )
+{
+	while( _server->inputMessages() )
+	{
+		vl::cluster::Message *msg = _server->popInputMessage();
+		while( msg->size() )
+		{
+			vl::cluster::EventData data;
+			data.copyFromMessage(msg);
+			vl::cluster::ByteStream stream = data.getStream();
+			switch( data.getType() )
+			{
+				case vl::cluster::EVT_KEY_PRESSED :
+				{
+					OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+					stream >> evt;
+					_handleKeyPressEvent(evt);
+				}
+				break;
+
+				case vl::cluster::EVT_KEY_RELEASED :
+				{
+					OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+					stream >> evt;
+					_handleKeyReleaseEvent(evt);
+				}
+				break;
+
+				case vl::cluster::EVT_MOUSE_PRESSED :
+				{
+					OIS::MouseButtonID b_id;
+					OIS::MouseEvent evt( 0, OIS::MouseState() );
+					stream >> b_id >> evt;
+					_handleMousePressEvent(evt, b_id);
+				}
+				break;
+
+				case vl::cluster::EVT_MOUSE_RELEASED :
+				{
+					OIS::MouseButtonID b_id;
+					OIS::MouseEvent evt( 0, OIS::MouseState() );
+					stream >> b_id >> evt;
+					_handleMouseReleaseEvent(evt, b_id);
+				}
+				break;
+
+				case vl::cluster::EVT_MOUSE_MOVED :
+				{
+					OIS::MouseEvent evt( 0, OIS::MouseState() );
+					stream >> evt;
+					_handleMouseMotionEvent(evt);
+				}
+				break;
+
+				default :
+					std::cout << "eqOgre::Config::_receiveEventMessages : "
+						<< "Unhandleded message type." << std::endl;
+					break;
+			}
+		}
+		delete msg;
+	}
+}
+
+
 bool
 eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
 {
-	bool redraw = false;
-	switch( event->data.type )
-	{
-		case eq::Event::KEY_PRESS :
-
-			redraw = _handleKeyPressEvent(event->data.keyPress);
-			break;
-
-		case eq::Event::KEY_RELEASE :
-			redraw = _handleKeyReleaseEvent(event->data.keyRelease);
-
-			break;
-
-		case eq::Event::POINTER_BUTTON_PRESS:
-			redraw = _handleMousePressEvent(event->data.pointerButtonPress);
-			break;
-
-		case eq::Event::POINTER_BUTTON_RELEASE:
-			redraw = _handleMouseReleaseEvent(event->data.pointerButtonRelease);
-			break;
-
-		case eq::Event::POINTER_MOTION:
-			redraw = _handleMouseMotionEvent(event->data.pointerMotion);
-			break;
-
-		case eq::Event::WINDOW_CLOSE :
-		case eq::Event::WINDOW_HIDE :
-		case eq::Event::WINDOW_EXPOSE :
-		case eq::Event::WINDOW_RESIZE :
-		case eq::Event::WINDOW_SHOW :
-			break;
-
-		default :
-			break;
-	}
-
-	eq::Config::handleEvent( event );
-
 	return true;
 }
 
 bool
-eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
+eqOgre::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
-	OIS::KeyCode kc( (OIS::KeyCode )(event.key) );
-
+	OIS::KeyCode kc = event.key;
 	// Check if the there is a trigger for this event
 	if( _game_manager->getEventManager()->hasKeyPressedTrigger( kc ) )
 	{
@@ -466,10 +495,9 @@ eqOgre::Config::_handleKeyPressEvent( const eq::KeyEvent& event )
 }
 
 bool
-eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
+eqOgre::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 {
-	OIS::KeyCode kc = (OIS::KeyCode )(event.key);
-
+	OIS::KeyCode kc = event.key;
 	// Check if the there is a trigger for this event
 	if( _game_manager->getEventManager()->hasKeyReleasedTrigger( kc ) )
 	{
@@ -480,29 +508,19 @@ eqOgre::Config::_handleKeyReleaseEvent(const eq::KeyEvent& event)
 }
 
 bool
-eqOgre::Config::_handleMousePressEvent(const eq::PointerEvent& event)
+eqOgre::Config::_handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
-//	std::cerr << "Config received mouse button press event. Button = "
-//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 
 bool
-eqOgre::Config::_handleMouseReleaseEvent(const eq::PointerEvent& event)
+eqOgre::Config::_handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
-//	std::cerr << "Config received mouse button release event. Button = "
-//		<< event->data.pointer.button << std::endl;
 	return false;
 }
 
 bool
-eqOgre::Config::_handleMouseMotionEvent(const eq::PointerEvent& event)
+eqOgre::Config::_handleMouseMotionEvent( OIS::MouseEvent const &event )
 {
 	return true;
-}
-
-bool
-eqOgre::Config::_handleJoystickEvent(const eq::MagellanEvent& event)
-{
-	return false;
 }

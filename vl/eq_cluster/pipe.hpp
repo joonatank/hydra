@@ -42,6 +42,12 @@ public :
 	vl::Player const &getPlayer( void ) const
 	{ return _player; }
 
+	/// Send a message to the Master
+	/// Does not destroy the message so user is responsible for destroying it.
+	void sendMessageToMaster( vl::cluster::Message *msg );
+
+	void sendEvent( vl::cluster::EventData const &event );
+
 protected :
 	/// Equalizer overrides
 
@@ -69,6 +75,9 @@ protected :
 	void _mapData( eq::uint128_t const &settingsID);
 	void _updateDistribData( void );
 
+	/// Input events
+	void _sendEvents( void );
+
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;
@@ -85,6 +94,9 @@ protected :
 
 	vl::cluster::Client *_client;
 	std::vector<vl::cluster::ObjectData> _objects;
+
+	/// Input events to be sent
+	std::vector<vl::cluster::EventData> _events;
 
 };	// class Pipe
 

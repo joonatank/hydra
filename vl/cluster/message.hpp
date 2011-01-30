@@ -25,16 +25,59 @@ typedef uint32_t msg_size;
 namespace cluster
 {
 
+// TODO Add support for
+// requesting initial settings, project configuration resources
+// and responding to those requests
+// TODO add support for ACK messages
+/**	Message Structures
+ *
+ *	Reguest updates message
+ *	MSG_REG_UPDATES
+ *	[message type]
+ *
+ *	Update message
+ *	both MSG_INITIAL_STATE and MSG_UPDATE
+ *	[message type, data size, [N | object id, object size, object data]]
+ *	where one object is an versioned object (registered and can be mapped)
+ *
+ *	Input message
+ *	MSG_INPUT
+ *	[message type, data size, [N | input device type, input device id, event size, event data]]
+ *	input device type : which kind of device joystick, keyboard, mouse
+ *	input device id : every device has unique id
+ *	event is the description of the event
+ *
+ *	Draw message
+ *	MSG_DRAW
+ *	[message type]
+ *
+ *	Swap message
+ *	MSG_SWAP
+ *	[message type]
+ *
+ */
 enum MSG_TYPES
 {
-	MSG_UNDEFINED,
-	MSG_REG_UPDATES,
-	MSG_UPDATE
+	MSG_UNDEFINED,		// Not defined message type these should never be sent
+	MSG_REG_UPDATES,	// Reguest updates from the application
+	MSG_INITIAL_STATE,	// Send the initial SceneGraph
+	MSG_UPDATE,	// Send updated SceneGraph and other versioned objects
+	MSG_INPUT,	// Send data from input devices from pipes to application
+	MSG_DRAW,	// Draw the image into back buffer
+	MSG_SWAP	// Swap the Window buffer Not in use yet
+};
+
+enum EVENT_TYPES
+{
+	EVT_UNDEFINED,
+	EVT_KEY_PRESSED,
+	EVT_KEY_RELEASED,
+	EVT_MOUSE_PRESSED,
+	EVT_MOUSE_RELEASED,
+	EVT_MOUSE_MOVED,
 };
 
 /// Description of an UDP message
-/// UpdateMessage structure is
-/// [message type, data size, [N | object id, object size, object data]]
 class Message
 {
 public :
@@ -193,9 +236,7 @@ public :
 	virtual void copyFromMessage( Message *msg );
 
 	ByteStream getStream( void )
-	{
-		return ByteStream( this );
-	}
+	{ return ByteStream( this ); }
 
 	friend std::ostream &operator<<( std::ostream &os, ObjectData const &data );
 
@@ -206,6 +247,34 @@ private :
 };	// class ObjectData
 
 std::ostream &operator<<( std::ostream &os, ObjectData const &data );
+
+class EventData : public ByteData
+{
+public :
+	EventData( EVENT_TYPES event_type = EVT_UNDEFINED);
+
+	EVENT_TYPES getType( void ) const
+	{ return _type; }
+
+	void setType( EVENT_TYPES event_type )
+	{ _type = event_type; }
+
+	virtual void read( char *mem, msg_size size );
+	virtual void write( char const *mem, msg_size size );
+
+	virtual void open( void ) {}
+	virtual void close( void ) {}
+
+	virtual void copyToMessage( Message *msg );
+	virtual void copyFromMessage( Message *msg );
+
+	ByteStream getStream( void )
+	{ return ByteStream( this ); }
+
+private :
+	std::vector<char> _data;
+	EVENT_TYPES _type;
+};
 
 std::ostream &operator<<( std::ostream &os, Message const &msg );
 

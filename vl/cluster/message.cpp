@@ -156,6 +156,68 @@ vl::cluster::ObjectData::copyFromMessage( vl::cluster::Message *msg )
 	msg->read( &_data[0], size );
 }
 
+/// ----------------------------- EventData ------------------------------------
+vl::cluster::EventData::EventData( vl::cluster::EVENT_TYPES event_type )
+	: _type(event_type)
+{}
+
+void
+vl::cluster::EventData::read( char *mem, vl::msg_size size )
+{
+	assert( mem );
+	if( 0 == size )
+	{ return; }
+
+	assert( _data.size() >= size );
+
+	::memcpy( mem, &_data[0], size );
+	_data.erase( _data.begin(), _data.begin()+size );
+}
+
+void
+vl::cluster::EventData::write( char const *mem, vl::msg_size size )
+{
+	assert( mem );
+	if( 0 == size )
+	{ return; }
+
+	size_t pos = _data.size();
+	_data.resize( _data.size() + size );
+	::memcpy( &_data[pos], mem, size);
+}
+
+void
+vl::cluster::EventData::copyToMessage( vl::cluster::Message *msg )
+{
+	assert(msg);
+	// TODO define invalid ID
+	assert( _type != 0 );
+	msg->write(_type);
+
+	assert( _data.size() < msg_size(-1) );
+	msg_size size = _data.size();
+	msg->write(size);
+	msg->write( &_data[0], size );
+}
+
+void
+vl::cluster::EventData::copyFromMessage( vl::cluster::Message *msg )
+{
+	assert(msg);
+
+	msg->read(_type);
+
+	msg_size size;
+	// Check that there is more data than the size
+	assert( msg->size() > sizeof(size)-1 );
+	msg->read(size);
+	assert( msg->size() > size-1 );
+	_data.resize(size);
+
+	msg->read( &_data[0], size );
+}
+
+
 
 /// ------------------------------ Global --------------------------------------
 std::ostream &

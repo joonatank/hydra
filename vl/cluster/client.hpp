@@ -41,12 +41,9 @@ public:
 	bool messages() const
 	{ return !_messages.empty(); }
 
-	Message *popMessage( void )
-	{
-		Message *tmp = _messages.front();
-		_messages.erase( _messages.begin() );
-		return tmp;
-	}
+	Message *popMessage( void );
+
+	void sendMessage( Message *msg );
 
 private :
 	/// Copying is forbidden
@@ -58,7 +55,7 @@ private :
 
 	boost::udp::socket _socket;
 
-	boost::udp::endpoint _receiver_endpoint;
+	boost::udp::endpoint _master;
 
 	std::vector<Message *> _messages;
 

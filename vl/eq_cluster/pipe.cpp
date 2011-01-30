@@ -34,6 +34,19 @@ eqOgre::Pipe::getSettings( void ) const
 	return _settings;
 }
 
+void
+eqOgre::Pipe::sendMessageToMaster( vl::cluster::Message *msg )
+{
+	_client->sendMessage(msg);
+}
+
+void
+eqOgre::Pipe::sendEvent( vl::cluster::EventData const &event )
+{
+	// Add to event stack for sending them at once in one message to the Master
+	_events.push_back(event);
+}
+
 
 /// ------------------------ Protected -----------------------------------------
 bool
@@ -146,6 +159,8 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 	}
 
 	eq::Pipe::frameStart( frameID, frameNumber );
+
+	_sendEvents();
 }
 
 
@@ -299,9 +314,6 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 {
 	assert(msg);
 
-// 	std::cout << "eqOgre::Pipe::_syncData : message = " << *msg
-// 		<< std::endl;
-
 	switch( msg->getType() )
 	{
 		case vl::cluster::MSG_UPDATE :
@@ -339,9 +351,6 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 void
 eqOgre::Pipe::_syncData( void )
 {
-// 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects "
-// 		<< std::endl;
-
 	std::vector<vl::cluster::ObjectData>::iterator iter;
 	// TODO remove the temporary array
 	// use a custom structure that does not create temporaries
@@ -372,8 +381,6 @@ eqOgre::Pipe::_syncData( void )
 
 	if( _scene_manager )
 	{ _scene_manager->finaliseSync(); }
-
-// 	std::cout << "Sync finalised." << std::endl;
 }
 
 void
@@ -482,4 +489,21 @@ eqOgre::Pipe::_updateDistribData( void )
 		scene_version = _frame_data.getSceneVersion();
 	}
 	*/
+}
+
+void
+eqOgre::Pipe::_sendEvents( void )
+{
+	if( !_events.empty() )
+	{
+		vl::cluster::Message msg( vl::cluster::MSG_INPUT );
+		std::vector<vl::cluster::EventData>::iterator iter;
+		for( iter = _events.begin(); iter != _events.end(); ++iter )
+		{
+			iter->copyToMessage(&msg);
+		}
+		_events.clear();
+
+		sendMessageToMaster(&msg);
+	}
 }

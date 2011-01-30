@@ -4,6 +4,8 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "message.hpp"
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -14,8 +16,6 @@ namespace vl
 
 namespace cluster
 {
-
-class Message;
 
 class Server
 {
@@ -36,9 +36,12 @@ public:
 	bool newClients( void ) const
 	{ return !_new_clients.empty(); }
 
-private :
-	void handle( std::vector<char> msg );
+	bool inputMessages( void )
+	{ return !_input_msgs.empty(); }
 
+	Message *popInputMessage( void );
+
+private :
 	void _addClient( boost::udp::endpoint const &endpoint );
 
 	/// Copying is forbidden
@@ -54,6 +57,9 @@ private :
 	std::vector<boost::udp::endpoint> _clients;
 
 	std::vector<boost::udp::endpoint> _new_clients;
+
+	std::vector<Message *> _input_msgs;
+
 };	// class Server
 
 }	// namespace cluster

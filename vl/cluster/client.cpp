@@ -8,14 +8,16 @@
 
 #include <iostream>
 
+const size_t MSG_BUFFER_SIZE = 128;
+
 vl::cluster::Client::Client( char const *hostname, uint16_t port )
-	: _io_service(), _socket( _io_service ), _receiver_endpoint()
+	: _io_service(), _socket( _io_service ), _master()
 {
 	std::stringstream ss;
 	ss << port;
 	boost::udp::resolver resolver( _io_service );
 	boost::udp::resolver::query query( boost::udp::v4(), hostname, ss.str().c_str() );
-	_receiver_endpoint = *resolver.resolve(query);
+	_master = *resolver.resolve(query);
 
 	_socket.open( boost::udp::v4() );
 }
@@ -36,17 +38,17 @@ vl::cluster::Client::mainloop( void )
 		boost::system::error_code error;
 
 		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
-				_receiver_endpoint, 0, error );
+				_master, 0, error );
 
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
 		// Some constraints for the number of messages
 		// TODO this should be configurable and be reasonable low
-		if( _messages.size() > 1024 )
+		if( _messages.size() > MSG_BUFFER_SIZE )
 		{
 			std::cerr << "Message stack full, cleaning out the oldest." << std::endl;
-			while( _messages.size() > 1024 )
+			while( _messages.size() > MSG_BUFFER_SIZE )
 			{ delete popMessage(); }
 		}
 
@@ -62,8 +64,25 @@ vl::cluster::Client::registerForUpdates( void )
 	Message msg( MSG_REG_UPDATES );
 	std::vector<char> buf;
 	msg.dump(buf);
-	std::cout << "sending data" << std::endl;
-	_socket.send_to( boost::asio::buffer(buf), _receiver_endpoint );
+// 	std::cout << "sending data" << std::endl;
+	_socket.send_to( boost::asio::buffer(buf), _master);
+}
+
+vl::cluster::Message *
+vl::cluster::Client::popMessage( void )
+{
+	Message *tmp = _messages.front();
+	_messages.erase( _messages.begin() );
+	return tmp;
+}
+
+void
+vl::cluster::Client::sendMessage( vl::cluster::Message *msg )
+{
+	std::vector<char> buf;
+	msg->dump(buf);
+// 	std::cout << "sending data" << std::endl;
+	_socket.send_to( boost::asio::buffer(buf), _master );
 }
 
 /// ------------------------ Private -------------------------------------------

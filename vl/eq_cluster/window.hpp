@@ -39,15 +39,6 @@ namespace eqOgre
 		Ogre::RenderWindow *getRenderWindow( void )
 		{ return _ogre_window; }
 
-		/// OIS overrides
-
-		bool keyPressed(const OIS::KeyEvent &key);
-		bool keyReleased(const OIS::KeyEvent &key);
-
-		bool mouseMoved(const OIS::MouseEvent &evt);
-		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
-		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
-
 		DistributedSettings const &getSettings( void ) const;
 
 		vl::Player const &getPlayer( void ) const;
@@ -61,6 +52,14 @@ namespace eqOgre
 		Ogre::SceneManager *getSceneManager( void );
 
 		void takeScreenshot( std::string const &prefix, std::string const &suffix );
+
+		/// OIS overrides
+		bool keyPressed(const OIS::KeyEvent &key);
+		bool keyReleased(const OIS::KeyEvent &key);
+
+		bool mouseMoved(const OIS::MouseEvent &evt);
+		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
 	protected :
 		void createOgreWindow( void );
@@ -86,6 +85,8 @@ namespace eqOgre
 		/// Override system window creation because we
 		/// use OIS for input handling
 		virtual bool configInitSystemWindow( const eq::uint128_t &initID );
+
+		void _sendEvent( vl::cluster::EventData const &event );
 
 		// Ogre
 		Ogre::RenderWindow *_ogre_window;

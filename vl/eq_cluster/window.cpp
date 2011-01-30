@@ -32,29 +32,7 @@
 #include "channel.hpp"
 #include "pipe.hpp"
 
-namespace {
-
-void copyMouse( eq::Event &sink, OIS::MouseEvent const &src )
-{
-	// Copy abs
-	sink.pointer.x = src.state.X.abs;
-	sink.pointer.y = src.state.Y.abs;
-
-	// Copy rel
-	sink.pointer.dx = src.state.X.rel;
-	sink.pointer.dy = src.state.Y.rel;
-
-	// Copy wheel
-	sink.pointer.yAxis = src.state.Z.rel;
-
-	// Copy buttons
-	// TODO make a binary copy (casting int to uint will change the bits)
-	sink.pointer.buttons = src.state.buttons;
-}
-
-}
-
-/// Public
+/// ----------------------------- Public ---------------------------------------
 eqOgre::Window::Window(eq::Pipe *parent)
 	: eq::Window( parent ), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
@@ -62,74 +40,6 @@ eqOgre::Window::Window(eq::Pipe *parent)
 
 eqOgre::Window::~Window(void )
 {}
-
-
-/// Public OIS Callbacks
-
-bool
-eqOgre::Window::keyPressed(const OIS::KeyEvent& key)
-{
-	eq::ConfigEvent event;
-	event.data.type = eq::Event::KEY_PRESS;
-	event.data.key.key = key.key;
-
-	getConfig()->sendEvent(event);
-
-	return true;
-}
-
-bool
-eqOgre::Window::keyReleased(const OIS::KeyEvent& key)
-{
-	eq::ConfigEvent event;
-	event.data.type = eq::Event::KEY_RELEASE;
-	event.data.key.key = key.key;
-
-	getConfig()->sendEvent(event);
-
-	return true;
-}
-
-bool
-eqOgre::Window::mouseMoved(const OIS::MouseEvent& evt)
-{
-	eq::ConfigEvent event;
-	event.data.type = eq::Event::POINTER_MOTION;
-
-	copyMouse( event.data, evt );
-
-	getConfig()->sendEvent(event);
-
-	return true;
-}
-
-bool
-eqOgre::Window::mousePressed(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
-{
-	eq::ConfigEvent event;
-	event.data.type = eq::Event::POINTER_BUTTON_PRESS;
-
-	copyMouse( event.data, evt );
-	event.data.pointerMotion.button = id;
-
-	getConfig()->sendEvent(event);
-
-	return true;
-}
-
-bool
-eqOgre::Window::mouseReleased(const OIS::MouseEvent& evt, OIS::MouseButtonID id)
-{
-	eq::ConfigEvent event;
-	event.data.type = eq::Event::POINTER_BUTTON_RELEASE;
-
-	copyMouse( event.data, evt );
-	event.data.pointerMotion.button = id;
-
-	getConfig()->sendEvent(event);
-
-	return true;
-}
 
 eqOgre::DistributedSettings const &
 eqOgre::Window::getSettings( void ) const
@@ -192,10 +102,69 @@ eqOgre::Window::takeScreenshot( const std::string& prefix,
 	_ogre_window->writeContentsToTimestampedFile(prefix, real_suffix);
 }
 
+/// ------------------------ Public OIS Callbacks ------------------------------
+bool
+eqOgre::Window::keyPressed( OIS::KeyEvent const &key )
+{
+	vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << key;
+	_sendEvent( data );
 
-/// Protected
+	return true;
+}
+
+bool
+eqOgre::Window::keyReleased( OIS::KeyEvent const &key )
+{
+	vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << key;
+	_sendEvent( data );
+
+	return true;
+}
+
+bool
+eqOgre::Window::mouseMoved( OIS::MouseEvent const &evt )
+{
+	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << evt;
+	_sendEvent( data );
+
+	return true;
+}
+
+bool
+eqOgre::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
+{
+	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << id << evt;
+	_sendEvent( data );
+
+	return true;
+}
+
+bool
+eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
+{
+	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << id << evt;
+	_sendEvent( data );
+
+	return true;
+}
 
 
+/// -------------------------- Protected ---------------------------------------
 // ConfigInit can not throw, it must return false on error. CONFIRMED
 bool
 eqOgre::Window::configInit( const eq::uint128_t& initID )
@@ -373,6 +342,14 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 
 	setSystemWindow( systemWindow );
 	return true;
+}
+
+void
+eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
+{
+	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	eqOgre::Pipe *pipe = static_cast<eqOgre::Pipe *>( getPipe() );
+	pipe->sendEvent(event);
 }
 
 void

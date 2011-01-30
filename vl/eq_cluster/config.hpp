@@ -20,6 +20,10 @@
 #include "distributed.hpp"
 #include "session.hpp"
 
+#include <OIS/OISMouse.h>
+#include <OIS/OISKeyboard.h>
+
+
 namespace eqOgre
 {
 
@@ -67,13 +71,15 @@ namespace eqOgre
 		/// Events
 		void _createQuitEvent( void );
 
-		bool _handleKeyPressEvent( const eq::KeyEvent& event );
-		bool _handleKeyReleaseEvent( const eq::KeyEvent& event );
-		bool _handleMousePressEvent( const eq::PointerEvent& event );
-		bool _handleMouseReleaseEvent( const eq::PointerEvent& event );
-		bool _handleMouseMotionEvent( const eq::PointerEvent& event );
-		// TODO replace the MagellanEvent with a real JoystickEvent
-		bool _handleJoystickEvent( const eq::MagellanEvent& event );
+		void _receiveEventMessages( void );
+
+		/// Input Events
+		bool _handleKeyPressEvent( OIS::KeyEvent const &event );
+		bool _handleKeyReleaseEvent( OIS::KeyEvent const &event );
+		bool _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+		bool _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+		bool _handleMouseMotionEvent( OIS::MouseEvent const &event );
+		// TODO add joystick event
 
 		vl::SettingsRefPtr _settings;
 
