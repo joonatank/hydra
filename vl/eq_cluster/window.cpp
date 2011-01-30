@@ -21,10 +21,6 @@
 #include "eq_cluster/glxWindow.hpp"
 #endif
 
-#ifdef AGL
-#include "eq_cluster/aglWindow.hpp"
-#endif
-
 #ifdef WGL
 #include "eq_cluster/wglWindow.hpp"
 #endif
@@ -300,36 +296,11 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 	eq::SystemWindow* systemWindow = 0;
 
 	std::string message;
-	switch( pipe->getWindowSystem( ))
-	{
-#ifdef GLX
-		case eq::WINDOW_SYSTEM_GLX:
-		message = "Using eqOgre::GLXWindow";
-		Ogre::LogManager::getSingleton().logMessage(message);
-		systemWindow = new eqOgre::GLXWindow( this );
-		break;
+#if defined GLX
+	systemWindow = new eqOgre::GLXWindow( this );
+#elif defined WGL
+	systemWindow = new eqOgre::WGLWindow( this );
 #endif
-
-#ifdef AGL
-		case eq::WINDOW_SYSTEM_AGL:
-		message = "Using eqOgre::AGLWindow";
-		Ogre::LogManager::getSingleton().logMessage(message);
-		systemWindow = new eqOgre::AGLWindow( this );
-		break;
-#endif
-
-#ifdef WGL
-		case eq::WINDOW_SYSTEM_WGL:
-			message = "Using eqOgre::WGLWindow";
-			Ogre::LogManager::getSingleton().logMessage(message);
-			systemWindow = new eqOgre::WGLWindow( this );
-		break;
-#endif
-		default:
-			message = "Window system not implemented or supported";
-			Ogre::LogManager::getSingleton().logMessage(message);
-			return false;
-	}
 
 	EQASSERT( systemWindow );
 	if( !systemWindow->configInit() )

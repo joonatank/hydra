@@ -106,10 +106,6 @@ if( UNIX )
 	list( APPEND SOURCES
 		eq_cluster/glxWindow.cpp
 		)
-elseif( APPLE )
-	list( APPEND HEADERS
-		eq_cluster/aglWindow.hpp
-		)
 elseif( WIN32 )
 	list( APPEND HEADERS
 		eq_cluster/wglWindow.hpp
