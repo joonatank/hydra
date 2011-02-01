@@ -24,6 +24,8 @@
 #include "base/exceptions.hpp"
 #include "base/string_utils.hpp"
 
+#include <OGRE/OgreLogManager.h>
+
 eqOgre::Channel::Channel( eq::Window *parent )
 	: eq::Channel(parent), _viewport(0), _stereo(false)
 {}

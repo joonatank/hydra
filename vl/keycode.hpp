@@ -1,5 +1,10 @@
-#ifndef EQ_OGRE_KEYCODE_HPP
-#define EQ_OGRE_KEYCODE_HPP
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ *
+ */
+
+#ifndef VL_KEYCODE_HPP
+#define VL_KEYCODE_HPP
 
 #include <string>
 #include <OIS/OISKeyboard.h>
@@ -175,4 +180,4 @@ inline std::string getCppKeyName( OIS::KeyCode key )
 
 }
 
-#endif // EQ_OGRE_KEYCODE_HPP
+#endif // VL_KEYCODE_HPP

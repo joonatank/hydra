@@ -6,18 +6,21 @@
 #ifndef VL_UDP_OGRE_COMMAND_HPP
 #define VL_UDP_OGRE_COMMAND_HPP
 
-#include "command.hpp"
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
-#include <base/typedefs.hpp>
 
 #include <cstring>
 #include <vector>
 
+// Base class
+#include "command.hpp"
+
+#include "typedefs.hpp"
+
 namespace vl
 {
-	
+
 namespace udp
 {
 
@@ -39,7 +42,7 @@ public :
 		remove( getSize(), vec );
 		return vec;
 	}
-	
+
 protected :
 	/// Abstract methods called from operator<< (deserialization
 	/// Checks that there is enough data for deserialization
@@ -52,7 +55,7 @@ protected :
 	virtual void remove( size_t size, std::vector<double> &vec );
 
 	Ogre::SceneNode *_node;
-	
+
 };	// class OgreCommand
 
 class SetPosition : public OgreCommand
@@ -61,7 +64,7 @@ public :
 	SetPosition( Ogre::SceneNode *node );
 
     virtual ~SetPosition( void ) {}
-	
+
 	/// Execute the command
 	virtual void operator()( void );
 
@@ -76,7 +79,7 @@ public :
 //	virtual std::vector<double> &operator<<( std::vector<double> &vec );
 
 	virtual void print( std::ostream &os ) const;
-	
+
 	Ogre::Vector3 &getPosition( void )
 	{ return _pos; }
 
@@ -85,7 +88,7 @@ public :
 
 	void const setPosition( Ogre::Vector3 const &pos )
 	{ _pos = pos; }
-	
+
 protected :
 	virtual void copy( size_t size, std::vector<double> &vec );
 
@@ -98,7 +101,7 @@ public :
 	SetOrientation( Ogre::SceneNode *node );
 
 	virtual ~SetOrientation( void ) {}
-	
+
 	/// Execute the command
 	virtual void operator()( void );
 
@@ -132,7 +135,7 @@ public :
 	/// All elements are type double for now.
 	virtual size_t getSize( void ) const
 	{ return 4; }
-	
+
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_QUAT; }
 
@@ -151,7 +154,7 @@ public :
 	/// All elements are type double for now.
 	virtual size_t getSize( void ) const
 	{ return 1; }
-	
+
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_ANGLE; }
 
@@ -185,7 +188,7 @@ public :
 	/// All elements are type double for now.
 	virtual size_t getSize( void ) const
 	{ return 4; }
-	
+
 	virtual CMD_TYPE getType( void ) const
 	{ return CMD_ROT_AA; }
 

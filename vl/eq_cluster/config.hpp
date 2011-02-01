@@ -11,11 +11,8 @@
 #include "settings.hpp"
 #include "eq_settings.hpp"
 #include "base/exceptions.hpp"
-// Necessary for the SceneNode functions
-// TODO should be removed as soon as they work directly on the current scene
-#include "scene_manager.hpp"
 
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 #include "cluster/server.hpp"
 #include "distributed.hpp"
 #include "session.hpp"

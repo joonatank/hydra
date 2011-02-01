@@ -12,7 +12,7 @@
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_settings.hpp"
 #include "player.hpp"
-#include "eq_resource_manager.hpp"
+#include "distrib_resource_manager.hpp"
 #include "scene_manager.hpp"
 
 #include "cluster/client.hpp"
@@ -85,9 +85,9 @@ protected :
 
 
 	/// Distributed data
-	eqOgre::SceneManager *_scene_manager;
+	vl::SceneManagerPtr _scene_manager;
 	eqOgre::DistributedSettings _settings;
-	eqOgre::ResourceManager _resource_manager;
+	vl::DistribResourceManager _resource_manager;
 	vl::Player _player;
 	std::string _active_camera_name;
 	uint32_t _screenshot_num;

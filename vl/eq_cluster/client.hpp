@@ -8,9 +8,7 @@
 // Equalizer
 #include <eq/eq.h>
 
-#include "base/typedefs.hpp"
-
-#include "eq_resource_manager.hpp"
+#include "typedefs.hpp"
 
 namespace eqOgre
 {

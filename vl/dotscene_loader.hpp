@@ -11,13 +11,13 @@
 #ifndef VL_DOTSCENE_LOADER_HPP
 #define VL_DOTSCENE_LOADER_HPP
 
-
 #include <string>
 
+// Necessary for XML parsing
 #include "base/rapidxml.hpp"
 
-#include "eq_cluster/scene_node.hpp"
-#include "eq_cluster/scene_manager.hpp"
+#include "scene_node.hpp"
+#include "scene_manager.hpp"
 #include "resource_manager.hpp"
 
 namespace vl
@@ -37,13 +37,13 @@ public :
 	 *				 name of every node
 	 */
 	void parseDotScene( std::string const &scene_data,
-			eqOgre::SceneManager *scene,
-			eqOgre::SceneNode *attachNode = 0,
+			vl::SceneManager *scene,
+			vl::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	void parseDotScene( vl::TextResource &scene_data,
-			eqOgre::SceneManager *config,
-			eqOgre::SceneNode *attachNode = 0,
+			vl::SceneManager *config,
+			vl::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 private :
@@ -54,9 +54,9 @@ private :
 	void processNodes( rapidxml::xml_node<>* XMLNode );
 
 	void processNode(rapidxml::xml_node<>* XMLNode,
-			eqOgre::SceneNode *parent = 0 );
+			vl::SceneNode *parent = 0 );
 
-	eqOgre::SceneManager *_scene;
+	vl::SceneManager *_scene;
 
 	std::string _sPrependNode;
 

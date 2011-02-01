@@ -16,7 +16,7 @@
 
 #include "tracker_serializer.hpp"
 #include "base/filesystem.hpp"
-#include "eq_resource_manager.hpp"
+#include "distrib_resource_manager.hpp"
 
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
@@ -53,7 +53,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	assert( _server );
 	// TODO register the objects
-	eqOgre::SceneManager *sm = _game_manager->getSceneManager();
+	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
 	// FIXME
@@ -64,8 +64,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	// Create the player necessary for Trackers
 	// Will be registered later
-	// TODO support for multiple observers?
-	vl::PlayerPtr player = _game_manager->createPlayer( getObservers().at(0) );
+	vl::PlayerPtr player = _game_manager->createPlayer();
 
 	_loadScenes();
 
@@ -88,8 +87,8 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	std::cout << "Registering data." << std::endl;
 
-	eqOgre::ResourceManager *res_man
-		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
+	vl::DistribResourceManager *res_man
+		= static_cast<vl::DistribResourceManager *>( _game_manager->getReourceManager() );
 	registerObjectC( res_man );
 
 	assert( player );
@@ -287,7 +286,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	}
 
 	// Create Action
-	eqOgre::HeadTrackerAction *action = eqOgre::HeadTrackerAction::create();
+	vl::HeadTrackerAction *action = vl::HeadTrackerAction::create();
 	assert( _game_manager->getPlayer() );
 	action->setPlayer( _game_manager->getPlayer() );
 
@@ -374,7 +373,7 @@ eqOgre::Config::_createQuitEvent(void )
 
 	// Add a trigger event to Quit the Application
 	assert( _game_manager );
-	QuitAction *quit = QuitAction::create();
+	vl::QuitAction *quit = vl::QuitAction::create();
 	quit->data = _game_manager;
 	// Add trigger
 	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE );

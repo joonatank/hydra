@@ -2,8 +2,8 @@
  *	2011-01
  */
 
-#ifndef EQ_OGRE_SCENE_MANAGER_HPP
-#define EQ_OGRE_SCENE_MANAGER_HPP
+#ifndef VL_SCENE_MANAGER_HPP
+#define VL_SCENE_MANAGER_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -12,10 +12,8 @@
 #include "distributed.hpp"
 #include "session.hpp"
 
-namespace eqOgre
+namespace vl
 {
-
-class Config;
 
 class SceneManager : public vl::Distributed
 {
@@ -95,6 +93,6 @@ private :
 
 };	// class FrameData
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif	// EQ_OGRE_SCENE_MANAGER_HPP
+#endif	// VL_SCENE_MANAGER_HPP

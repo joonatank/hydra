@@ -17,8 +17,8 @@ vl::DotSceneLoader::~DotSceneLoader()
 
 void
 vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
-								   eqOgre::SceneManager *scene,
-								   eqOgre::SceneNode* attachNode,
+								   vl::SceneManager *scene,
+								   vl::SceneNode* attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
@@ -35,8 +35,8 @@ vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 
 void
 vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
-								   eqOgre::SceneManager *scene,
-								   eqOgre::SceneNode* attachNode,
+								   vl::SceneManager *scene,
+								   vl::SceneNode* attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
@@ -107,7 +107,7 @@ vl::DotSceneLoader::processNodes(rapidxml::xml_node<  >* XMLNode)
 }
 
 void
-vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, eqOgre::SceneNode* parent)
+vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, vl::SceneNode* parent)
 {
 	// Parents are not supported yet
 
@@ -115,7 +115,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, eqOgre::SceneNo
 	std::string name = _sPrependNode + vl::getAttrib(XMLNode, "name");
 
 	// Create the scene node
-	eqOgre::SceneNode *node = _scene->createSceneNode(name);
+	vl::SceneNode *node = _scene->createSceneNode(name);
 
 	rapidxml::xml_node<>* pElement;
 

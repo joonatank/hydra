@@ -12,22 +12,22 @@ set( SOURCES
 	player.cpp
 	dotscene_loader.cpp
 	actions_misc.cpp
+	actions_transform.cpp
+	scene_manager.cpp
+	scene_node.cpp
+	python.cpp
+	trigger.cpp
+	event_manager.cpp
+	distrib_resource_manager.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
-	eq_cluster/python.cpp
-	eq_cluster/eq_resource_manager.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/pipe.cpp
-	eq_cluster/trigger.cpp
-	eq_cluster/event_manager.cpp
-	eq_cluster/transform_event.cpp
 	eq_cluster/eq_settings.cpp
-	eq_cluster/scene_manager.cpp
-	eq_cluster/scene_node.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
@@ -61,26 +61,26 @@ set( HEADERS
 	base/rapidxml_print.hpp
 	base/sleep.hpp
 	base/string_utils.hpp
-	base/typedefs.hpp
+	typedefs.hpp
 	resource.hpp
 	resource_manager.hpp
 	dotscene_loader.hpp
 	action.hpp
 	actions_misc.hpp
-	eq_cluster/python.hpp
-	eq_cluster/eq_resource_manager.hpp
-	eq_cluster/event_manager.hpp
-	eq_cluster/trigger.hpp
+	actions_transform.hpp
+	scene_manager.hpp
+	scene_node.hpp
+	python_module.hpp
+	python.hpp
+	trigger.hpp
+	event_manager.hpp
+	keycode.hpp
+	distrib_resource_manager.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
-	eq_cluster/config_python.hpp
-	eq_cluster/python.hpp
 	eq_cluster/window.hpp
 	eq_cluster/pipe.hpp
-	eq_cluster/transform_event.hpp
 	eq_cluster/eq_settings.hpp
-	eq_cluster/scene_manager.hpp
-	eq_cluster/scene_node.hpp
 	eq_cluster/client.hpp
 	eq_cluster/nodeFactory.hpp
 	eq_ogre/ogre_root.hpp

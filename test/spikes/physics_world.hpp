@@ -18,6 +18,8 @@
 
 #include "base/exceptions.hpp"
 
+#include "scene_node.hpp"
+
 namespace vl
 {
 
@@ -32,7 +34,7 @@ class MotionState : public btMotionState
 public:
 	MotionState( Ogre::Vector3 const &pos,
 				 Ogre::Quaternion const &orient,
-				 eqOgre::SceneNode *node = 0)
+				 vl::SceneNodePtr node = 0)
 		: _visibleobj(node)
 	{
 		btQuaternion q(orient.x, orient.y, orient.z, orient.w);
@@ -43,7 +45,7 @@ public:
 	virtual ~MotionState()
 	{}
 
-	void setNode(eqOgre::SceneNode *node)
+	void setNode(vl::SceneNodePtr node)
 	{
 		_visibleobj = node;
 	}
@@ -69,7 +71,7 @@ public:
 	}
 
 protected:
-	eqOgre::SceneNode *_visibleobj;
+	vl::SceneNode *_visibleobj;
 	btTransform _trans;
 };
 

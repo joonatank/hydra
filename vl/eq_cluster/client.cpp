@@ -13,6 +13,8 @@
 
 #include "game_manager.hpp"
 
+#include "distrib_resource_manager.hpp"
+
 eqOgre::Client::Client( vl::SettingsRefPtr settings )
 	: _settings(settings),
 	  _game_manager(new vl::GameManager ),
@@ -113,7 +115,7 @@ eqOgre::Client::_exit(void )
 	_server = 0;
 }
 
-void 
+void
 eqOgre::Client::_render( uint32_t const frame )
 {
 	// target FPS
@@ -121,7 +123,7 @@ eqOgre::Client::_render( uint32_t const frame )
 
 	_frame_clock.reset();
 
-	_config->startFrame(frame);	
+	_config->startFrame(frame);
 	_config->finishFrame();
 	if( _config->getError() )
 	{ EQWARN << "Error during frame start: " << _config->getError() << std::endl; }
@@ -132,7 +134,7 @@ eqOgre::Client::_render( uint32_t const frame )
 	// Of course the next question is why the time is negative without rendering data
 	// i.e. why it would take more than 16.66ms for rendering a frame without data
 	// TODO the fps should be configurable
-	double sleep_time = 1000.0/FPS - _frame_clock.getTimed(); 
+	double sleep_time = 1000.0/FPS - _frame_clock.getTimed();
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
 

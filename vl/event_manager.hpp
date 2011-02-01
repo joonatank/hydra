@@ -87,7 +87,8 @@ private :
 
 };	// class EventManager
 
-inline std::ostream &operator<<( std::ostream &os, EventManager const &man )
+inline std::ostream &
+operator<<( std::ostream &os, EventManager const &man )
 {
 	os << "Event Manager " << std::endl;
 	return os;

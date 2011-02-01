@@ -17,7 +17,7 @@
 
 #include "eq_cluster/config.hpp"
 
-#include "eq_cluster/event_manager.hpp"
+#include "event_manager.hpp"
 
 // Physics headers
 #include "physics_world.hpp"
@@ -66,9 +66,9 @@ public :
 		// So we can set the MotionState objects
 		if( !physics_inited )
 		{
-			eqOgre::SceneManager *sm = _game_manager->getSceneManager();
+			vl::SceneManager *sm = _game_manager->getSceneManager();
 			assert(sm);
-			eqOgre::SceneNode *camera = sm->getSceneNode("CameraNode");
+			vl::SceneNode *camera = sm->getSceneNode("CameraNode");
 			if( camera )
 			{
 				std::cerr << "CameraNode found. Setting new position." << std::endl;
@@ -79,7 +79,8 @@ public :
 			{
 				std::cerr << "CameraNode NOT found." << std::endl;
 			}
-			eqOgre::SceneNode *ogre = sm->getSceneNode("ogre");
+
+			vl::SceneNode *ogre = sm->getSceneNode("ogre");
 			if( !ogre )
 			{
 				std::cerr << "No SceneNode with the name ogre found!."

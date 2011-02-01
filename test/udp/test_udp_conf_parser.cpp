@@ -9,7 +9,7 @@
 #include "base/rapidxml_print.hpp"
 
 #include "udp/server_config.hpp"
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 
 struct ConfFixture
 {
@@ -17,7 +17,7 @@ struct ConfFixture
 	{
 		vl::udp::ServerConfigRefPtr conf_ptr( &conf, vl::null_deleter() );
 		ser.reset( new vl::udp::ServerConfigSerializer( conf_ptr ) );
-		
+
 		server = doc.allocate_node(rapidxml::node_element, "server" );
 		doc.append_node(server);
 	}
@@ -28,7 +28,7 @@ struct ConfFixture
 		rapidxml::print(std::back_inserter(xml_data), doc, 0);
 		// Print to string so we can use SettingsSerializer for the data
 		BOOST_TEST_MESSAGE( xml_data );
-		
+
 		char *data = ::strdup( xml_data.c_str() );
 		ser->readData( data );
 	}
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( server )
 
 BOOST_AUTO_TEST_CASE( port )
 {
-	
+
 }
 
 BOOST_AUTO_TEST_CASE( packet )

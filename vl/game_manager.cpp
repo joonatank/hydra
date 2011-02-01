@@ -5,27 +5,23 @@
 #include "game_manager.hpp"
 
 // Python manager
-#include "eq_cluster/python.hpp"
+#include "python.hpp"
 
 // Event Manager
-#include "eq_cluster/event_manager.hpp"
+#include "event_manager.hpp"
 
 // Resource Manager concrete implementation
-#include "eq_cluster/eq_resource_manager.hpp"
+#include "distrib_resource_manager.hpp"
 
 // SceneManager
-#include "eq_cluster/scene_manager.hpp"
+#include "scene_manager.hpp"
 
 // Player
 #include "player.hpp"
 
-// Events
-#include "eq_cluster/transform_event.hpp"
-#include "actions_misc.hpp"
-
 vl::GameManager::GameManager( void )
 	: _python(0),
-	  _resource_man( new eqOgre::ResourceManager ),
+	  _resource_man( new vl::DistribResourceManager ),
 	  _event_man( new vl::EventManager ),
 	  _scene_manager(0),
 	  _player(0),
@@ -42,9 +38,9 @@ vl::GameManager::GameManager( void )
 // 	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
 // 	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
 
-	_python = new eqOgre::PythonContext( this );
+	_python = new vl::PythonContext( this );
 
-	EQINFO << "Init audio." << std::endl;
+	std::cout << "Init audio." << std::endl;
 
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
@@ -52,7 +48,7 @@ vl::GameManager::GameManager( void )
 
 vl::GameManager::~GameManager(void )
 {
-	EQINFO << "Exit audio." << std::endl;
+	std::cout << "Exit audio." << std::endl;
 
 	//Shutdown cAudio
 	if( _audio_manager )
@@ -65,12 +61,12 @@ vl::GameManager::~GameManager(void )
 void
 vl::GameManager::createSceneManager( vl::Session *session )
 {
-	EQASSERT( !_scene_manager );
-	_scene_manager = new eqOgre::SceneManager( session );
+	assert( !_scene_manager );
+	_scene_manager = new vl::SceneManager( session );
 }
 
 
-eqOgre::PythonContextPtr
+vl::PythonContextPtr
 vl::GameManager::getPython(void )
 {
 	return _python;
@@ -94,17 +90,16 @@ vl::GameManager::getEventManager(void )
 	return _event_man;
 }
 
-eqOgre::SceneManagerPtr
+vl::SceneManagerPtr
 vl::GameManager::getSceneManager( void )
 {
 	return _scene_manager;
 }
 
 vl::PlayerPtr
-vl::GameManager::createPlayer( eq::Observer* observer )
+vl::GameManager::createPlayer( void )
 {
-	EQASSERT( observer );
-	EQASSERT( !_player );
+	assert( !_player );
 	_player = new Player();
 	return _player;
 }
@@ -112,11 +107,9 @@ vl::GameManager::createPlayer( eq::Observer* observer )
 void
 vl::GameManager::toggleBackgroundSound( void )
 {
-	std::cerr << "This should play a sound." << std::endl;
-
 	if( !_background_sound )
 	{
-		EQERROR << "NO background sound to toggle." << std::endl;
+		std::cerr << "NO background sound to toggle." << std::endl;
 		return;
 	}
 
@@ -148,7 +141,7 @@ vl::GameManager::step(void )
 void
 vl::GameManager::createBackgroundSound( std::string const &song_name )
 {
-	EQASSERT( getReourceManager() );
+	assert( getReourceManager() );
 
 	//Create an audio source and load a sound from a file
 	std::string file_path;
@@ -162,6 +155,6 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	}
 	else
 	{
-		EQERROR << "Couldn't find " << song_name << " from resources." << std::endl;
+		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
 	}
 }

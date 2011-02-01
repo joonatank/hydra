@@ -19,7 +19,7 @@
 #ifndef VL_GAME_MANAGER_HPP
 #define VL_GAME_MANAGER_HPP
 
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 
 #include "tracker.hpp"
 #include <eq/client/observer.h>
@@ -30,11 +30,6 @@
 // Audio
 #include <cAudio/cAudio.h>
 #include "session.hpp"
-
-namespace eqOgre
-{
-	class PythonContext;
-}
 
 namespace vl
 {
@@ -48,7 +43,7 @@ public :
 
 	void createSceneManager( vl::Session *session );
 
-	eqOgre::PythonContextPtr getPython( void );
+	vl::PythonContextPtr getPython( void );
 
 	PlayerPtr getPlayer( void );
 
@@ -56,9 +51,9 @@ public :
 
 	EventManagerPtr getEventManager( void );
 
-	eqOgre::SceneManagerPtr getSceneManager( void );
+	vl::SceneManagerPtr getSceneManager( void );
 
-	PlayerPtr createPlayer( eq::Observer *observer );
+	PlayerPtr createPlayer( void );
 
 	void toggleBackgroundSound( void );
 
@@ -76,10 +71,10 @@ private :
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
 
-	eqOgre::PythonContextPtr _python;
-	ResourceManagerPtr _resource_man;
-	EventManagerPtr _event_man;
-	eqOgre::SceneManagerPtr _scene_manager;
+	vl::PythonContextPtr _python;
+	vl::ResourceManagerPtr _resource_man;
+	vl::EventManagerPtr _event_man;
+	vl::SceneManagerPtr _scene_manager;
 
 	PlayerPtr _player;
 

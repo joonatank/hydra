@@ -7,23 +7,23 @@
  *	they can be distributed to the slave nodes (rendering threads).
  */
 
-#ifndef EQOGRE_RESOURCE_MANAGER_HPP
-#define EQOGRE_RESOURCE_MANAGER_HPP
+#ifndef VL_DISTRIB_RESOURCE_MANAGER_HPP
+#define VL_DISTRIB_RESOURCE_MANAGER_HPP
 
 #include "distributed.hpp"
 
 // Base class
 #include "resource_manager.hpp"
 
-namespace eqOgre
+namespace vl
 {
 
-class ResourceManager : public vl::ResourceManager, public vl::Distributed
+class DistribResourceManager : public vl::ResourceManager, public vl::Distributed
 {
 public :
-	ResourceManager( void );
+	DistribResourceManager( void );
 
-	virtual ~ResourceManager(void );
+	virtual ~DistribResourceManager(void );
 
 	// TODO this should be removed as soon as we have a decent system
 	// Settings should distribute the used scene files and this sould distribute
@@ -118,12 +118,7 @@ protected :
 
 	std::vector<std::string> _search_paths;
 
-};	// class ResourceManager
-
-}	// namespace eqOgre
-
-namespace vl
-{
+};	// class DistribResourceManager
 
 namespace cluster
 {
@@ -158,4 +153,4 @@ vl::cluster::ByteStream &operator>>( vl::cluster::ByteStream &msg, vl::TextResou
 
 }	// namespace vl
 
-#endif // EQOGRE_RESOURCE_MANAGER_HPP
+#endif // VL_DISTRIB_RESOURCE_MANAGER_HPP

@@ -14,11 +14,9 @@
 #ifndef VL_TRACKER_HPP
 #define VL_TRACKER_HPP
 
+#include "trigger.hpp"
 
-#include "eq_cluster/scene_node.hpp"
-#include "eq_cluster/trigger.hpp"
-
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 
 // Necessary for vl::scalar and vl::Transform
 #include "math/math.hpp"

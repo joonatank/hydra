@@ -14,6 +14,7 @@
 #include "base/exceptions.hpp"
 // Necessary for loading dotscene
 #include "eq_ogre/ogre_dotscene_loader.hpp"
+
 #include "window.hpp"
 #include "base/string_utils.hpp"
 
@@ -420,7 +421,7 @@ eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
 	uint64_t sm_id = _settings.getSceneManagerID();
 	std::cout << "Mapping SceneManager with id = " << sm_id << '.' << std::endl;
 	assert( sm_id != vl::ID_UNDEFINED );
-	_scene_manager = new eqOgre::SceneManager( this );
+	_scene_manager = new vl::SceneManager( this );
 	mapObjectC( _scene_manager, sm_id );
 
 	std::cout << "Data mapped." << std::endl;

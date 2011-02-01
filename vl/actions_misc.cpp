@@ -5,13 +5,13 @@
 
 #include "actions_misc.hpp"
 
-#include "eq_cluster/scene_manager.hpp"
+#include "scene_manager.hpp"
 #include "game_manager.hpp"
 #include "player.hpp"
 
 /// --------- HeadTrackerAction -----------
 void
-eqOgre::HeadTrackerAction::execute( vl::Transform const &data )
+vl::HeadTrackerAction::execute( vl::Transform const &data )
 {
 	if( !_player )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -24,7 +24,7 @@ eqOgre::HeadTrackerAction::execute( vl::Transform const &data )
 /// -------- QuitAction ------------
 
 void
-eqOgre::QuitAction::execute( void )
+vl::QuitAction::execute( void )
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -35,7 +35,7 @@ eqOgre::QuitAction::execute( void )
 
 /// -------- ReloadScene ------------
 void
-eqOgre::ReloadScene::execute( void )
+vl::ReloadScene::execute( void )
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -46,7 +46,7 @@ eqOgre::ReloadScene::execute( void )
 
 /// -------- ToggleMusic ------------
 void
-eqOgre::ToggleMusic::execute(void )
+vl::ToggleMusic::execute(void )
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -57,7 +57,7 @@ eqOgre::ToggleMusic::execute(void )
 
 /// -------- ActivateCamera ------------
 void
-eqOgre::ActivateCamera::execute( void )
+vl::ActivateCamera::execute( void )
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -67,7 +67,7 @@ eqOgre::ActivateCamera::execute( void )
 
 /// -------- ScreenshotAction ------------
 void
-eqOgre::ScreenshotAction::execute( void )
+vl::ScreenshotAction::execute( void )
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }

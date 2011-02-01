@@ -4,7 +4,7 @@
  */
 
 // Declaration
-#include "eq_resource_manager.hpp"
+#include "distrib_resource_manager.hpp"
 
 // Needed for boots::filesystem::path
 #include "base/filesystem.hpp"
@@ -16,35 +16,35 @@
 
 
 /// ------------ ResourceManager --------------
-eqOgre::ResourceManager::ResourceManager( void )
+vl::DistribResourceManager::DistribResourceManager( void )
 {}
 
-eqOgre::ResourceManager::~ResourceManager( void )
+vl::DistribResourceManager::~DistribResourceManager( void )
 {}
 
 std::vector< vl::TextResource > const &
-eqOgre::ResourceManager::getSceneResources( void ) const
+vl::DistribResourceManager::getSceneResources( void ) const
 {
 	return _scenes;
 }
 
 
 void
-eqOgre::ResourceManager::addResource(const std::string& name)
+vl::DistribResourceManager::addResource(const std::string& name)
 {
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 //	_waiting_for_loading.push_back(name);
 }
 
 void
-eqOgre::ResourceManager::removeResource(const std::string& name)
+vl::DistribResourceManager::removeResource(const std::string& name)
 {
 	// Not a priority
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 }
 
 void
-eqOgre::ResourceManager::loadAllResources( void )
+vl::DistribResourceManager::loadAllResources( void )
 {
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
 	/*
@@ -64,7 +64,7 @@ eqOgre::ResourceManager::loadAllResources( void )
 
 
 void
-eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &data )
+vl::DistribResourceManager::loadResource( const std::string &name, vl::Resource &data )
 {
 	// Find the resource from already loaded stack
 	if( _findLoadedResource( name, data ) )
@@ -99,7 +99,7 @@ eqOgre::ResourceManager::loadResource( const std::string &name, vl::Resource &da
 }
 
 void
-eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
+vl::DistribResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
 {
 	std::cout << "Loading Scene Resource " << name << std::endl;
 
@@ -116,7 +116,7 @@ eqOgre::ResourceManager::loadSceneResource(const std::string& name, vl::TextReso
 }
 
 void
-eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
+vl::DistribResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
 {
 	std::cout << "Loading Python Resource " << name << std::endl;
 
@@ -133,7 +133,7 @@ eqOgre::ResourceManager::loadPythonResource(const std::string& name, vl::TextRes
 }
 
 void
-eqOgre::ResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
+vl::DistribResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
 {
 	std::cout << "Loading Ogg Resource " << name << std::endl;
 
@@ -152,7 +152,7 @@ eqOgre::ResourceManager::loadOggResource(const std::string& name, vl::Resource& 
 
 
 bool
-eqOgre::ResourceManager::findResource(const std::string& name, std::string& path) const
+vl::DistribResourceManager::findResource(const std::string& name, std::string& path) const
 {
 	for( std::vector<std::string>::const_iterator iter = _search_paths.begin();
 		 iter != _search_paths.end(); ++iter )
@@ -171,7 +171,7 @@ eqOgre::ResourceManager::findResource(const std::string& name, std::string& path
 }
 
 void
-eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool recursive )
+vl::DistribResourceManager::addResourcePath( std::string const &resource_dir, bool recursive )
 {
 	fs::path dir(resource_dir);
 	if( !fs::exists(dir) || !fs::is_directory(dir) )
@@ -202,7 +202,7 @@ eqOgre::ResourceManager::addResourcePath( std::string const &resource_dir, bool 
 
 
 std::vector< std::string > const &
-eqOgre::ResourceManager::getResourcePaths( void ) const
+vl::DistribResourceManager::getResourcePaths( void ) const
 {
 	return _search_paths;
 }
@@ -210,7 +210,7 @@ eqOgre::ResourceManager::getResourcePaths( void ) const
 
 /// ------ Protected ------
 bool
-eqOgre::ResourceManager::_findLoadedResource( const std::string& res_name,
+vl::DistribResourceManager::_findLoadedResource( const std::string& res_name,
 											  vl::Resource &resource ) const
 {
 	// TODO this should support other resource containers based on extension
@@ -232,7 +232,7 @@ eqOgre::ResourceManager::_findLoadedResource( const std::string& res_name,
 }
 
 void
-eqOgre::ResourceManager::_loadResource( std::string const &name,
+vl::DistribResourceManager::_loadResource( std::string const &name,
 										std::string const &path,
 										vl::Resource &data ) const
 {
@@ -256,7 +256,7 @@ eqOgre::ResourceManager::_loadResource( std::string const &name,
 }
 
 std::string
-eqOgre::ResourceManager::_getFileName( std::string const &name,
+vl::DistribResourceManager::_getFileName( std::string const &name,
 									   std::string const &extension )
 {
 	if( fs::path(name).extension() == extension )
@@ -266,7 +266,7 @@ eqOgre::ResourceManager::_getFileName( std::string const &name,
 }
 
 std::string
-eqOgre::ResourceManager::_stripExtension( std::string const &name,
+vl::DistribResourceManager::_stripExtension( std::string const &name,
 										  std::string const &extension )
 {
 	if( fs::path(name).extension() == extension )
@@ -278,7 +278,7 @@ eqOgre::ResourceManager::_stripExtension( std::string const &name,
 
 /// --------------------------- Protected --------------------------------------
 void
-eqOgre::ResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::DistribResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Serialize resource paths, used by Ogre
 	if( dirtyBits & DIRTY_PATHS )
@@ -291,7 +291,7 @@ eqOgre::ResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t
 
 
 void
-eqOgre::ResourceManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::DistribResourceManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Deserialize resource paths, used by Ogre
 	if( dirtyBits & DIRTY_PATHS )

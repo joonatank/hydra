@@ -1,18 +1,26 @@
-#ifndef EQ_OGRE_CONFIG_PYTHON_HPP
-#define EQ_OGRE_CONFIG_PYTHON_HPP
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ *
+ */
+#ifndef VL_PYTHON_MODULE_HPP
+#define VL_PYTHON_MODULE_HPP
 
-#include "config.hpp"
-#include "scene_node.hpp"
-#include "keycode.hpp"
-#include "event_manager.hpp"
-#include "actions_misc.hpp"
 #include "game_manager.hpp"
-#include "eq_cluster/transform_event.hpp"
+#include "scene_manager.hpp"
+#include "scene_node.hpp"
+#include "player.hpp"
+
+// Necessary for transforming OIS keycodes to python
+#include "keycode.hpp"
+
+// Event handling
+#include "event_manager.hpp"
+#include "actions_transform.hpp"
+#include "actions_misc.hpp"
 #include "trigger.hpp"
 
+// Python global
 #include "python.hpp"
-// #include <boost/python.hpp>
-#include "player.hpp"
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -44,11 +52,10 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 }
 */
 
+// TODO rename the module name
 BOOST_PYTHON_MODULE(eqOgre)
 {
 	using namespace vl;
-	using namespace eqOgre;
-
 	// TODO check for overloads and default arguments, they need some extra work
 
 	python::class_<Ogre::Vector3>("Vector3", python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
@@ -125,7 +132,7 @@ BOOST_PYTHON_MODULE(eqOgre)
 	SceneNodePtr (SceneManager::*getsn3)( size_t ) = &SceneManager::getSceneNode;
 	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
 
-	python::class_<eqOgre::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
+	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove and add SceneNodes
 //		.def("removeSceneNode", &SceneManager::removeSceneNode )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
@@ -135,11 +142,11 @@ BOOST_PYTHON_MODULE(eqOgre)
 	;
 
 
-	python::class_<eqOgre::SceneNode>("SceneNode", python::no_init)
-		.add_property("name", python::make_function( &eqOgre::SceneNode::getName, python::return_internal_reference<>() ), &eqOgre::SceneNode::setName )
-		.add_property("position", python::make_function( &eqOgre::SceneNode::getPosition, python::return_internal_reference<>() ), &eqOgre::SceneNode::setPosition )
-		.add_property("orientation", python::make_function( &eqOgre::SceneNode::getOrientation, python::return_internal_reference<>() ), &eqOgre::SceneNode::setOrientation )
-		.add_property("visibility", &SceneNode::getVisibility, &eqOgre::SceneNode::setVisibility )
+	python::class_<vl::SceneNode>("SceneNode", python::no_init)
+		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_internal_reference<>() ), &vl::SceneNode::setName )
+		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
+		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
+		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
 	;
 
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
@@ -225,8 +232,8 @@ BOOST_PYTHON_MODULE(eqOgre)
 	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
 	;
 
-	python::class_<eqOgre::SetTransformation, boost::noncopyable, python::bases<vl::TransformAction> >("SetTransformation", python::no_init )
-		.add_property("scene_node", python::make_function( &eqOgre::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &eqOgre::SetTransformation::setSceneNode )
+	python::class_<vl::SetTransformation, boost::noncopyable, python::bases<vl::TransformAction> >("SetTransformation", python::no_init )
+		.add_property("scene_node", python::make_function( &vl::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &vl::SetTransformation::setSceneNode )
 		.def("create",&SetTransformation::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 //		.def("execute", python::pure_virtual(&BasicAction::execute) )
@@ -351,4 +358,4 @@ BOOST_PYTHON_MODULE(eqOgre)
 
 }
 
-#endif
+#endif	// VL_PYTHON_MODULE_HPP

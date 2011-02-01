@@ -16,10 +16,7 @@
 #include "base/envsettings.hpp"
 
 // Needed for RefPtrs
-#include "base/typedefs.hpp"
-
-// Needed for loading the scene files
-#include "resource_manager.hpp"
+#include "typedefs.hpp"
 
 namespace eqOgre
 {
@@ -60,7 +57,7 @@ public :
 
 	/// Used by master to copy the necessary data for synchronization
 	// TODO Why is the resource man passed here?
-	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManager *resource_man );
+	void copySettings( vl::SettingsRefPtr settings, vl::ResourceManagerPtr resource_man );
 
 	/// Logging
 	std::string getOgreLogFilePath( void ) const;

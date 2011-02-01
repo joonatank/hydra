@@ -5,11 +5,11 @@
  */
 #include "python.hpp"
 
-#include "config_python.hpp"
+#include "python_module.hpp"
 
 #include "game_manager.hpp"
 
-eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
+vl::PythonContext::PythonContext( vl::GameManager *game_man )
 {
 	// TODO Ogre LogManager not initialised yet
 	std::string message = "Initing python context.";
@@ -56,12 +56,12 @@ eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 	}
 }
 
-eqOgre::PythonContext::~PythonContext(void )
+vl::PythonContext::~PythonContext( void )
 {
 }
 
 void
-eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
+vl::PythonContext::executePythonScript( vl::TextResource const &script )
 {
 	// TODO Ogre LogManager not initialised yet
 	std::string message = "Running python script file " + script.getName() + ".";

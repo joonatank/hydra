@@ -2,8 +2,8 @@
  *	2011-01
  */
 
-#ifndef EQ_OGRE_SCENE_NODE_HPP
-#define EQ_OGRE_SCENE_NODE_HPP
+#ifndef VL_SCENE_NODE_HPP
+#define VL_SCENE_NODE_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -12,14 +12,13 @@
 
 #include "action.hpp"
 #include "base/exceptions.hpp"
+#include "typedefs.hpp"
 
 // Base class
 #include "distributed.hpp"
 
-namespace eqOgre
+namespace vl
 {
-class SceneNode;
-typedef SceneNode * SceneNodePtr;
 
 class SceneNode : public vl::Distributed
 {
@@ -104,7 +103,8 @@ private :
 
 };	// class SceneNode
 
-inline std::ostream & operator<<(  std::ostream &os, SceneNode const &a )
+inline std::ostream &
+operator<<(  std::ostream &os, SceneNode const &a )
 {
 	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
 		<< " with position " << a.getPosition()
@@ -179,6 +179,6 @@ public :
 };
 
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif // EQ_OGRE_SCENE_NODE_HPP
+#endif // VL_SCENE_NODE_HPP

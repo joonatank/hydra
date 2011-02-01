@@ -13,29 +13,26 @@
  *	This receives data in TextResource format.
  */
 
-#ifndef EQ_OGRE_PYTHON_HPP
-#define EQ_OGRE_PYTHON_HPP
+#ifndef VL_PYTHON_HPP
+#define VL_PYTHON_HPP
 
 #include <boost/python.hpp>
 
 #include "resource.hpp"
 
+#include "typedefs.hpp"
+
 namespace python = boost::python;
 
 namespace vl
 {
-	class GameManager;
-}
 
-namespace eqOgre
-{
-
-class Config;
+// class Config;
 
 class PythonContext
 {
 public :
-	PythonContext( vl::GameManager *game );
+	PythonContext( vl::GameManagerPtr game );
 
 	~PythonContext( void );
 
@@ -52,4 +49,4 @@ private :
 
 }
 
-#endif // EQ_OGRE_PYTHON_HPP
+#endif // VL_PYTHON_HPP

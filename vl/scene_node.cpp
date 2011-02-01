@@ -4,14 +4,14 @@
 
 #include "scene_node.hpp"
 
-eqOgre::SceneNodePtr
-eqOgre::SceneNode::create(const std::string& name)
+vl::SceneNodePtr
+vl::SceneNode::create(const std::string& name)
 {
 	return new SceneNode(name);
 }
 
 /// Public
-eqOgre::SceneNode::SceneNode(const std::string& name)
+vl::SceneNode::SceneNode(const std::string& name)
 	: _name(name),
 	  _position( Ogre::Vector3::ZERO ),
 	  _orientation( Ogre::Quaternion::IDENTITY ),
@@ -21,7 +21,8 @@ eqOgre::SceneNode::SceneNode(const std::string& name)
 	  _ogre_node(0)
 {}
 
-bool eqOgre::SceneNode::findNode(Ogre::SceneManager* man)
+bool
+vl::SceneNode::findNode(Ogre::SceneManager* man)
 {
 	if( _ogre_node )
 	{ _ogre_node = 0; }
@@ -47,7 +48,7 @@ bool eqOgre::SceneNode::findNode(Ogre::SceneManager* man)
 // Does no transformation on the Ogre Node as the master copy should be in
 // AppNode which does not have Ogre SceneGraph
 void
-eqOgre::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NAME )
 	{
@@ -71,7 +72,7 @@ eqOgre::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirty
 }
 
 void
-eqOgre::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	// Deserialize name
 	if( dirtyBits & DIRTY_NAME )
@@ -107,7 +108,8 @@ eqOgre::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 
 
 /// --------- Actions ----------
-void eqOgre::HideAction::execute(void )
+void
+vl::HideAction::execute(void )
 {
 	if( !_node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -115,7 +117,8 @@ void eqOgre::HideAction::execute(void )
 	_node->setVisibility( false );
 }
 
-void eqOgre::ShowAction::execute(void )
+void
+vl::ShowAction::execute(void )
 {
 	if( !_node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -123,7 +126,8 @@ void eqOgre::ShowAction::execute(void )
 	_node->setVisibility( true );
 }
 
-void eqOgre::SetTransformation::execute(const vl::Transform& trans)
+void
+vl::SetTransformation::execute(const vl::Transform& trans)
 {
 	if( !_node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }

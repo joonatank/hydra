@@ -4,15 +4,15 @@
  *	2011-01 Dependencies to Equalizer removed and moved to more suitable place
  */
 
-#ifndef VL_CONFIG_EVENTS_HPP
-#define VL_CONFIG_EVENTS_HPP
+#ifndef VL_ACTIONS_MISC_HPP
+#define VL_ACTIONS_MISC_HPP
 
 #include "tracker.hpp"
 #include "action.hpp"
 
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 
-namespace eqOgre
+namespace vl
 {
 
 template< typename T >
@@ -27,8 +27,9 @@ public :
 
 };	// class ActionBase
 
-typedef ActionBase<vl::Player> PlayerAction;
-typedef ActionBase<vl::GameManager> GameAction;
+typedef ActionBase<Player> PlayerAction;
+typedef ActionBase<GameManager> GameAction;
+typedef ActionBase<SceneManager> SceneManagerAction;
 
 /// Sets the Head matrix in eqOgre::Config
 // TODO this should use the same PlayerAction base
@@ -111,8 +112,6 @@ public :
 
 };	// ScreenshotAction
 
-typedef ActionBase<SceneManager> SceneManagerAction;
-
 class ReloadScene : public SceneManagerAction
 {
 public :
@@ -141,6 +140,6 @@ public :
 };
 
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif	// VL_CONFIG_EVENTS_HPP
+#endif	// VL_ACTIONS_MISC_HPP

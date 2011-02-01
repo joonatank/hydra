@@ -20,10 +20,8 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreRenderWindow.h>
 
-#include "base/typedefs.hpp"
+#include "typedefs.hpp"
 #include "base/filesystem.hpp"
-
-#include "eq_cluster/eq_settings.hpp"
 
 namespace vl
 {

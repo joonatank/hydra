@@ -10,9 +10,13 @@
 #ifndef VL_TRACKER_SERIALIZER_HPP
 #define VL_TRACKER_SERIALIZER_HPP
 
+// Serializes trackers
 #include "tracker.hpp"
+
+// Necessary for XML parsing
 #include "base/rapidxml.hpp"
-#include "base/typedefs.hpp"
+
+#include "typedefs.hpp"
 #include "resource.hpp"
 
 namespace vl

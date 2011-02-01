@@ -4,14 +4,12 @@
 
 #include "scene_manager.hpp"
 
-// #include "eq_cluster/config.hpp"
-
 /// Public
-eqOgre::SceneManager::SceneManager( vl::Session *session )
+vl::SceneManager::SceneManager( vl::Session *session )
 	: _scene_version( 0 ), _ogre_sm(0), _session(session)
 {}
 
-eqOgre::SceneManager::~SceneManager( void )
+vl::SceneManager::~SceneManager( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{ delete _scene_nodes.at(i).node; }
@@ -20,7 +18,7 @@ eqOgre::SceneManager::~SceneManager( void )
 }
 
 bool
-eqOgre::SceneManager::setSceneManager( Ogre::SceneManager *man )
+vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 {
 	if( !man )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -45,8 +43,8 @@ eqOgre::SceneManager::setSceneManager( Ogre::SceneManager *man )
 	return retval;
 }
 
-eqOgre::SceneNodePtr
-eqOgre::SceneManager::createSceneNode( std::string const &name )
+vl::SceneNodePtr
+vl::SceneManager::createSceneNode( std::string const &name )
 {
 	// TODO check that no two SceneNodes have the same name
 	SceneNodePtr node = SceneNode::create( name );
@@ -55,7 +53,7 @@ eqOgre::SceneManager::createSceneNode( std::string const &name )
 }
 
 void
-eqOgre::SceneManager::addSceneNode( eqOgre::SceneNodePtr node )
+vl::SceneManager::addSceneNode( vl::SceneNodePtr node )
 {
 	assert(node);
 	// Check that no two nodes have the same name
@@ -80,13 +78,13 @@ eqOgre::SceneManager::addSceneNode( eqOgre::SceneNodePtr node )
 }
 
 bool
-eqOgre::SceneManager::hasSceneNode(const std::string& name) const
+vl::SceneManager::hasSceneNode(const std::string& name) const
 {
 	return( getSceneNode(name) );
 }
 
-eqOgre::SceneNodePtr
-eqOgre::SceneManager::getSceneNode(const std::string& name)
+vl::SceneNodePtr
+vl::SceneManager::getSceneNode(const std::string& name)
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -98,8 +96,8 @@ eqOgre::SceneManager::getSceneNode(const std::string& name)
 	return 0;
 }
 
-const eqOgre::SceneNodePtr
-eqOgre::SceneManager::getSceneNode(const std::string& name) const
+const vl::SceneNodePtr
+vl::SceneManager::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
@@ -111,19 +109,19 @@ eqOgre::SceneManager::getSceneNode(const std::string& name) const
 	return 0;
 }
 
-eqOgre::SceneNode *
-eqOgre::SceneManager::getSceneNode(size_t i)
+vl::SceneNode *
+vl::SceneManager::getSceneNode(size_t i)
 {
 	return _scene_nodes.at(i).node;
 }
 
-const eqOgre::SceneNodePtr
-eqOgre::SceneManager::getSceneNode(size_t i) const
+const vl::SceneNodePtr
+vl::SceneManager::getSceneNode(size_t i) const
 {
 	return _scene_nodes.at(i).node;
 }
 
-void eqOgre::SceneManager::reloadScene(void )
+void vl::SceneManager::reloadScene(void )
 {
 	std::cerr << "Should reload the scene now." << std::endl;
 	setDirty( DIRTY_RELOAD_SCENE );
@@ -131,9 +129,9 @@ void eqOgre::SceneManager::reloadScene(void )
 }
 
 void
-eqOgre::SceneManager::finaliseSync( void )
+vl::SceneManager::finaliseSync( void )
 {
-// 	std::cout << "eqOgre::SceneManager::finaliseSync" << std::endl;
+// 	std::cout << "vl::SceneManager::finaliseSync" << std::endl;
 
 	// Map all nodes that are missing Ogre SceneNode
 	std::vector< std::vector<SceneNodeIDPair>::iterator > rem_cont;
@@ -175,7 +173,7 @@ eqOgre::SceneManager::finaliseSync( void )
 // FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
 // has been commited, why?
 void
-eqOgre::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NODES )
 	{
@@ -197,7 +195,7 @@ eqOgre::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t di
 }
 
 void
-eqOgre::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_NODES )
 	{
@@ -236,7 +234,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t 
 }
 
 void
-eqOgre::SceneManager::_mapObject( eqOgre::SceneManager::SceneNodeIDPair& node )
+vl::SceneManager::_mapObject( vl::SceneManager::SceneNodeIDPair& node )
 {
 	assert( _session );
 

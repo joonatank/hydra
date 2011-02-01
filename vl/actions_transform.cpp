@@ -4,7 +4,7 @@
  */
 
 // Interface header
-#include "transform_event.hpp"
+#include "actions_transform.hpp"
 
 vl::MoveAction::MoveAction( void )
 	: _node(0), _move_dir(Ogre::Vector3::ZERO),

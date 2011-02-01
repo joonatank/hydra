@@ -4,9 +4,6 @@
  */
 #include "event_manager.hpp"
 
-#include "transform_event.hpp"
-#include "config.hpp"
-
 #include "base/exceptions.hpp"
 
 vl::EventManager::EventManager( void )

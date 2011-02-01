@@ -1,5 +1,11 @@
-#ifndef VL_TRANSFORM_EVENT_HPP
-#define VL_TRANSFORM_EVENT_HPP
+/**	Joonatan Kuosa
+ *	2010-12 initial implementation
+ *
+ *	2011-01 Removed equalizer dependencies
+ */
+
+#ifndef VL_ACTIONS_TRANSFORM_HPP
+#define VL_ACTIONS_TRANSFORM_HPP
 
 #include "scene_node.hpp"
 #include "keycode.hpp"
@@ -9,11 +15,11 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
+// TODO replace with boost::clock
 #include <co/base/clock.h>
 
 namespace vl
 {
-
 
 /// Simple Action class that does transformation based on key events
 /// Keeps track of the state of the object (moving, stopped)
@@ -43,10 +49,10 @@ public :
 	{ return _angular_speed; }
 
 
-	void setSceneNode( eqOgre::SceneNode *node )
+	void setSceneNode( vl::SceneNodePtr node )
 	{ _node = node; }
 
-	eqOgre::SceneNode *getSceneNode( void )
+	vl::SceneNodePtr getSceneNode( void )
 	{ return _node; }
 
 	void setMoveDir( Ogre::Vector3 const &mov_dir )
@@ -63,7 +69,7 @@ public :
 	{ return "MoveAction"; }
 
 private :
-	eqOgre::SceneNode *_node;
+	vl::SceneNodePtr _node;
 
 	Ogre::Vector3 _move_dir;
 
@@ -126,8 +132,8 @@ private :
 
 	Ogre::Vector3 _value;
 
-};
+};	// class MoveActionProxy
 
-};
+};	// namespace vl
 
-#endif // VL_TRANSFORM_EVENT_HPP
+#endif // VL_ACTIONS_TRANSFORM_HPP

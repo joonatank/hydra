@@ -19,6 +19,9 @@
 
 #include "distributed.hpp"
 
+// Needed for loading the scene files
+#include "resource_manager.hpp"
+
 namespace po = boost::program_options;
 
 /// Global functions

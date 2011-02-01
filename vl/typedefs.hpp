@@ -15,11 +15,6 @@
 
 namespace eqOgre
 {
-	class PythonContext;
-	class SceneManager;
-
-	typedef PythonContext * PythonContextPtr;
-	typedef SceneManager * SceneManagerPtr;
 
 }	// namespace eqOgre
 
@@ -35,13 +30,9 @@ namespace vl
 	class EventManager;
 	class ResourceManager;
 	class Clients;
-
-	struct null_deleter
-	{
-		void operator()(void const *) const
-		{
-		}
-	};
+	class SceneManager;
+	class SceneNode;
+	class PythonContext;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -53,8 +44,18 @@ namespace vl
 	typedef GameManager * GameManagerPtr;
 	typedef EventManager * EventManagerPtr;
 	typedef ResourceManager * ResourceManagerPtr;
+	typedef SceneManager * SceneManagerPtr;
+	typedef SceneNode * SceneNodePtr;
+	typedef PythonContext * PythonContextPtr;
 
 	typedef std::map<std::string, std::string> NamedValuePairList;
+
+	struct null_deleter
+	{
+		void operator()(void const *) const
+		{
+		}
+	};
 
 namespace ogre
 {

@@ -8,7 +8,7 @@
 #include "vrpn_tracker.hpp"
 #include "ogre_xml_helpers.hpp"
 
-#include "eq_cluster/event_manager.hpp"
+#include "event_manager.hpp"
 
 
 /// ---------- Public ----------
@@ -117,7 +117,7 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 
 	TrackerRefPtr tracker( new vrpnTracker( connection.hostname, name, connection.port ) );
 	_clients->addTracker(tracker);
-	
+
 	rapidxml::xml_node<> *elem = XMLNode->first_node("transformation");
 	if( elem )
 	{
@@ -135,7 +135,7 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 	}
 }
 
-void 
+void
 vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans )
 {
 	Ogre::Matrix4 m = Ogre::Matrix4::IDENTITY;
