@@ -40,8 +40,6 @@ include_directories( SYSTEM
 
 subdirs(util
 		spikes
-#		eq_cluster
-		udp
 		misc
 		)
 

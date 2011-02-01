@@ -150,9 +150,9 @@ include( CopyScripts )
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
-set( EQOGRE_BUILD_QTLAUNCHER TRUE CACHE BOOL
+set( EQOGRE_BUILD_QTLAUNCHER FALSE CACHE BOOL
 	"Build the GUI used for editing settings and launching." )
-set( EQOGRE_BUILD_TESTS FALSE CACHE BOOL "Build the unit tests." )
+set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 
 # TODO should be configurable

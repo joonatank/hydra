@@ -33,11 +33,6 @@ set( SOURCES
 	cluster/server.cpp
 	cluster/client.cpp
 	cluster/message.cpp
-	udp/client.cpp
-	udp/server.cpp
-	udp/server_config.cpp
-	udp/ogre_command.cpp
-	udp/print_command.cpp
 	)
 
 set( HEADERS
@@ -90,12 +85,6 @@ set( HEADERS
 	cluster/client.hpp
 	cluster/message.hpp
 	distributed.hpp
-	udp/client.hpp
-	udp/server.hpp
-	udp/server_config.hpp
-	udp/command.hpp
-	udp/ogre_command.hpp
-	udp/print_command.hpp
 	)
 
 # This purposefully adds the glx window support for APPLE and CYGWIN also

@@ -13,14 +13,6 @@ project( "spikes" CXX )
 
 cmake_minimum_required(VERSION 2.8)
 
-
-add_executable( spike_udp_renderer
-	udp_renderer.cpp
-	client_fixtures.hpp
-	)
-
-target_link_libraries( spike_udp_renderer ${eqOgre_LIBRARY} )
-
 find_package( Bullet REQUIRED )
 
 include_directories(
