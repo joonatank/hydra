@@ -57,6 +57,7 @@ namespace eqOgre
 
 		/// Scene
 		void _loadScenes( void );
+		void _hideCollisionBarries( void );
 
 		/// Events
 		void _createQuitEvent( void );

@@ -19,6 +19,9 @@
 #include "typedefs.hpp"
 #include "resource.hpp"
 
+// Necessary for uint16_t
+#include <stdint.h>
+
 namespace vl
 {
 

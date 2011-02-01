@@ -35,6 +35,8 @@
 // Necessary for registering Player
 #include "player.hpp"
 
+#include "base/string_utils.hpp"
+
 uint16_t const SERVER_PORT = 4699;
 
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
@@ -142,12 +144,6 @@ eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 	_settings = settings;
 	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
 }
-
-// eqOgre::SceneNode *
-// eqOgre::Config::getSceneNode(const std::string& name)
-// {
-// 	return _game_manager->getSceneManager()->getSceneNode(name);
-// }
 
 void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 {
@@ -363,6 +359,23 @@ eqOgre::Config::_loadScenes(void )
 		loader.parseDotScene( resource, _game_manager->getSceneManager() );
 
 		std::cout << "Scene " << scene_file_name << " loaded." << std::endl;
+	}
+
+	_hideCollisionBarries();
+}
+
+void 
+eqOgre::Config::_hideCollisionBarries( void )
+{
+	vl::SceneManager *sm = _game_manager->getSceneManager();
+	
+	for( size_t i = 0; i < sm->getNSceneNodes(); ++i )
+	{
+		vl::SceneNode *node = sm->getSceneNode(i);
+		std::string str( node->getName().substr(0, 3) );
+		vl::to_lower(str);
+		if(  str == "cb_" )
+		{ node->setVisibility(false); }
 	}
 }
 

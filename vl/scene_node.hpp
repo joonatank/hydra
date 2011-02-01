@@ -91,12 +91,6 @@ private :
 	Ogre::Vector3 _position;
 	Ogre::Quaternion _orientation;
 
-	// These are here for the time beign as the SceneGraph is only read on the
-	// slave instances. The master does not have correct initial positions.
-	// Can be removed when the master reads the dotscene file also.
-	Ogre::Vector3 _initial_position;
-	Ogre::Quaternion _initial_orientation;
-
 	bool _visible;
 
 	Ogre::SceneNode *_ogre_node;

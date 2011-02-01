@@ -119,13 +119,24 @@ eqOgre::getSettings( int argc, char **argv )
 
 	// We need to be either listening or have both environment config
 	// and project config (this might be changed later)
-	bool valid_env = (!env_path.empty() && fs::exists( env_path ) );
-	bool valid_proj = (!proj_path.empty() && fs::exists( proj_path ) );
-	if( !eq_client && !valid_env && !valid_proj )
+	bool valid_env = !env_path.empty() && fs::is_regular_file( env_path )
+		&& !fs::is_empty(env_path);
+	bool valid_proj = !proj_path.empty() && fs::is_regular_file( proj_path )
+		&& !fs::is_empty(proj_path);
+
+	// TODO add printing the file back to the user if file is not empty
+	if( !eq_client && !valid_env )
 	{
-		std::cerr << "Either start in listening mode using --eq-client or "
-			<< std::endl << " provide valid environment config file and "
-			"project config file." << std::endl;
+		std::cerr << "Not valid environment config and not in listening mode."
+			<< std::endl << "Either start listener using --eq-client or "
+			<< " provide valid environment config file" << std::endl;
+		return vl::SettingsRefPtr();
+	}
+	if( !eq_client && !valid_proj )
+	{
+		std::cerr << "Not valid environment config and not in listening mode."
+			<< std::endl << "Either start listener using --eq-client or "
+			<< " provide valid project config file." << std::endl;
 		return vl::SettingsRefPtr();
 	}
 
