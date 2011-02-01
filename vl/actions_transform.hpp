@@ -15,8 +15,9 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-// TODO replace with boost::clock
-#include <co/base/clock.h>
+// TODO replace with our own timer, so that we can get time in seconds
+// and milliseconds easily
+#include <OGRE/OgreTimer.h>
 
 namespace vl
 {
@@ -78,7 +79,7 @@ private :
 	double _speed;
 	Ogre::Radian _angular_speed;
 
-	eq::base::Clock _clock;
+	Ogre::Timer _clock;
 };
 
 class MoveActionProxy : public VectorAction

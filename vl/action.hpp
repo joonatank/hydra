@@ -10,8 +10,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-// TODO replace with boost::clock
-#include <co/base/clock.h>
+#include <OGRE/OgreTimer.h>
 
 // Necessary for vl::scalar
 #include "math/math.hpp"
@@ -119,9 +118,9 @@ public :
 	TimerActionProxy( void )
 		: _action(0), _time_limit(0)
 	{
+		// TODO
 		// Reset the clock to something big, so that the first time action will
 		// be executed no matter the time limit
-		_clock.set(uint64_t(1e10) );
 	}
 
 	void setAction( BasicActionPtr action )
@@ -142,7 +141,8 @@ public :
 
 	void execute( void )
 	{
-		if( _action && _clock.getTimed() > _time_limit )
+		double time = (double)(_clock.getMicroseconds())/1000;
+		if( _action && time > _time_limit )
 		{
 			_action->execute();
 			_clock.reset();
@@ -158,7 +158,7 @@ public :
 private :
 	BasicActionPtr _action;
 
-	eq::base::Clock _clock;
+	Ogre::Timer _clock;
 
 	// Time limit in milliseconds, easier to compare to clock output
 	double _time_limit;

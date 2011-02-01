@@ -12,10 +12,10 @@ vl::MoveAction::MoveAction( void )
 		_speed(1), _angular_speed( Ogre::Degree(60) )
 {}
 
-void vl::MoveAction::execute( void )
+void
+vl::MoveAction::execute( void )
 {
-	double time = _clock.getTimed()/1000;
-
+	double time = (double)(_clock.getMicroseconds())/1e6;
 	if( _node && !_move_dir.isZeroLength() )
 	{
 		Ogre::Vector3 v = _node->getOrientation() *  _move_dir.normalisedCopy();
@@ -28,5 +28,6 @@ void vl::MoveAction::execute( void )
 		Ogre::Quaternion qx( _angular_speed*time, _rot_dir );
 		_node->setOrientation( qx*orient );
 	}
+
 	_clock.reset();
 }
