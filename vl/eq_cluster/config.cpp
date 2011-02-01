@@ -35,6 +35,8 @@
 // Necessary for registering Player
 #include "player.hpp"
 
+#include "base/string_utils.hpp"
+
 eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
 	: eq::Config ( parent )
 {}
@@ -309,6 +311,23 @@ eqOgre::Config::_loadScenes(void )
 		loader.parseDotScene( resource, this );
 
 		EQINFO << "Scene " << scene_file_name << " loaded." << std::endl;
+	}
+
+	_hideCollisionBarries();
+}
+
+void 
+eqOgre::Config::_hideCollisionBarries( void )
+{
+	SceneManager *sm = _game_manager->getSceneManager();
+	
+	for( size_t i = 0; i < sm->getNSceneNodes(); ++i )
+	{
+		SceneNode *node = sm->getSceneNode(i);
+		std::string str( node->getName().substr(0, 3) );
+		vl::to_lower(str);
+		if(  str == "cb_" )
+		{ node->setVisibility(false); }
 	}
 }
 
