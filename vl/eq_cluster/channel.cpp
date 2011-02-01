@@ -1,7 +1,7 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2011-01
  *
- *	2011-01 Updated : 
+ *	2011-01 Updated :
  *	Removed the use of Equalizer Wall.
  *	Removed the use of Equalizer headTracker position.
  *	Using our own distributed player object for head position.
@@ -11,7 +11,7 @@
  *	Frustum is not moved anymore to z direction with head tracker.
  *	Added stereo rendering code. Tested with quad-buffer.
  *	Added rotation of the view matrix based on projection plane.
- *	Fixed scaling the frustum based on head tracker. 
+ *	Fixed scaling the frustum based on head tracker.
 		Would create non-continiuty on front and side walls otherwise.
  */
 
@@ -34,14 +34,14 @@ eqOgre::Channel::~Channel( void )
 eqOgre::DistributedSettings const &
 eqOgre::Channel::getSettings( void ) const
 {
-	EQASSERT( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
+	assert( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
 	return static_cast<eqOgre::Window const *>( getWindow() )->getSettings();
 }
 
 vl::Player const &
 eqOgre::Channel::getPlayer( void ) const
 {
-	EQASSERT( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
+	assert( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
 	return static_cast<eqOgre::Window const *>( getWindow() )->getPlayer();
 }
 
@@ -65,9 +65,9 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 	if( !eq::Channel::configInit( initID ) )
 	{ return false; }
 
-	EQASSERT( getSettings().getNWalls() > 0);
-	
-	std::string message = "Settings has " 
+	assert( getSettings().getNWalls() > 0);
+
+	std::string message = "Settings has "
 		+ vl::to_string( getSettings().getNWalls() ) + " wall configs.";
 	Ogre::LogManager::getSingleton().logMessage(message);
 
@@ -78,7 +78,7 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 		Ogre::LogManager::getSingleton().logMessage(message);
 		_wall = getSettings().findWall( getName() );
 	}
-	
+
 	// Get the first wall definition if no named one was found
 	if( _wall.empty() )
 	{
@@ -86,8 +86,8 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 		message = "No wall found : using the default " + _wall.name;
 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
-	
-	EQASSERT( !_wall.empty() );
+
+	assert( !_wall.empty() );
 
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
@@ -143,9 +143,9 @@ eqOgre::Channel::frameClear( const eq::uint128_t & )
 void
 eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 {
-	EQASSERT( _viewport );
+	assert( _viewport );
 	Ogre::Camera *camera = _viewport->getCamera();
-	EQASSERT( camera );
+	assert( camera );
 
 	// TODO test the real stereo rendering code
 	if( _stereo )
@@ -153,14 +153,14 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 		double ipd = getSettings().getIPD();
 
 		//draw into back left buffer
-		glDrawBuffer(GL_BACK_LEFT);                    
+		glDrawBuffer(GL_BACK_LEFT);
 		Ogre::Vector3 eye(-ipd/2, 0, 0);
 		setOgreFrustum( camera, eye );
 		setOgreView( camera, eye );
 		_viewport->update();
-		
+
 		//draw into back right buffer
-		glDrawBuffer(GL_BACK_RIGHT);                             
+		glDrawBuffer(GL_BACK_RIGHT);
 		eye = Ogre::Vector3(ipd/2, 0, 0);
 		setOgreFrustum( camera, eye );
 		setOgreView( camera, eye );
@@ -177,8 +177,8 @@ eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
 void
 eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
-	EQASSERT( camera );
-	EQASSERT( !_wall.empty() );
+	assert( camera );
+	assert( !_wall.empty() );
 
 	/* Projection matrix i.e. frustum
 	 * | E	0	A	0 |
@@ -186,7 +186,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	 * | 0	0	C	D |
 	 * | 0	0	-1	0 |
 	 *
-	 * where 
+	 * where
 	 * A = -(right + left)/(right - left)
 	 * B = -(top + bottom)/(top - bottom)
 	 * C = -(far + near )/(far - near )
@@ -194,7 +194,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	 * E = 2*near/(right - left)
 	 * F = 2*near/(top - bottom)
 	 */
-	
+
 	Ogre::Real c_near = camera->getNearClipDistance();
 	Ogre::Real c_far = camera->getFarClipDistance();
 
@@ -238,10 +238,10 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	//
 	// So the wall and head needs to be scaled by the z-coordinate to
 	// obtain the correct scale
-	// If scale is negative it rotates 180 deg around z, 
+	// If scale is negative it rotates 180 deg around z,
 	// i.e. flips to the other side of the wall
 	//
-	// Scale can has to have the head front-axis because there will be 
+	// Scale can has to have the head front-axis because there will be
 	// non-continuity between the front and side walls if we don't.
 	//
 	// This comes because the front axis for every wall is different so for
@@ -288,7 +288,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	projMat[2][1] = 0;
 	projMat[2][2] = C;
 	projMat[2][3] = D;
-	
+
 	projMat[3][0] = 0;
 	projMat[3][1] = 0;
 	projMat[3][2] = -1;
@@ -300,7 +300,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 void
 eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
-	EQASSERT( camera );
+	assert( camera );
 
 	// Get modified camera orientation
 	Ogre::Quaternion cam_rot( camera->getRealOrientation() );

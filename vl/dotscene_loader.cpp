@@ -17,12 +17,12 @@ vl::DotSceneLoader::~DotSceneLoader()
 
 void
 vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
-								   eqOgre::Config *config,
+								   eqOgre::SceneManager *scene,
 								   eqOgre::SceneNode* attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
-	_config = config;
+	_scene = scene;
 	_sPrependNode = sPrependNode;
 
 	char *xml_data = new char[scene_data.length()+1];
@@ -35,12 +35,12 @@ vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 
 void
 vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
-								   eqOgre::Config* config,
+								   eqOgre::SceneManager *scene,
 								   eqOgre::SceneNode* attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
-	_config = config;
+	_scene = scene;
 	_sPrependNode = sPrependNode;
 
 	// Pass the ownership of the memory to this
@@ -115,7 +115,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, eqOgre::SceneNo
 	std::string name = _sPrependNode + vl::getAttrib(XMLNode, "name");
 
 	// Create the scene node
-	eqOgre::SceneNode *node = _config->createSceneNode(name);
+	eqOgre::SceneNode *node = _scene->createSceneNode(name);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -133,7 +133,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, eqOgre::SceneNo
 	if( pElement )
 	{ node->setOrientation(vl::parseQuaternion(pElement)); }
 
-	/*	Process node (*) 
+	/*	Process node (*)
 	Needs to be here because the node can have children
 	*/
 	pElement = XMLNode->first_node("node");

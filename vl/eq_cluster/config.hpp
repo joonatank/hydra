@@ -39,17 +39,12 @@ namespace eqOgre
 		virtual bool exit (void);
 
 		/** @sa eq::Config::handleEvent */
-		virtual bool handleEvent( const eq::ConfigEvent* event );
+		virtual bool handleEvent( const eq::ConfigEvent* event )
+		{ return true; }
 
 		virtual uint32_t startFrame( eq::uint128_t const &frameID );
 
 		void setSettings( vl::SettingsRefPtr settings );
-
-		SceneNodePtr createSceneNode( std::string const &name );
-
-		void removeSceneNode( SceneNode *node );
-
-		SceneNodePtr getSceneNode( std::string const &name );
 
 		void setGameManager( vl::GameManagerPtr man );
 
@@ -59,8 +54,6 @@ namespace eqOgre
 		void _createServer( void );
 
 		void _updateServer( void );
-
-		void _addSceneNode( SceneNode *node );
 
 		/// Tracking
 		void _createTracker( vl::SettingsRefPtr settings );

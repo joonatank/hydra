@@ -40,21 +40,21 @@ eqOgre::Window::~Window(void )
 eqOgre::DistributedSettings const &
 eqOgre::Window::getSettings( void ) const
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
 	return static_cast<eqOgre::Pipe const *>(getPipe())->getSettings();
 }
 
 vl::Player const &
 eqOgre::Window::getPlayer( void ) const
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
 	return static_cast<eqOgre::Pipe const *>(getPipe())->getPlayer();
 }
 
 vl::ogre::RootRefPtr
 eqOgre::Window::getOgreRoot( void )
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
 	return static_cast<eqOgre::Pipe *>(getPipe())->getRoot();
 }
 
@@ -64,7 +64,7 @@ eqOgre::Window::setCamera(Ogre::Camera* camera)
 	Channels const &chanlist = getChannels();
 	for( size_t i = 0; i < chanlist.size(); ++i )
 	{
-		EQASSERT( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+		assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
 		eqOgre::Channel *channel =
 			static_cast<eqOgre::Channel *>( chanlist.at(i) );
 		channel->setCamera( camera );
@@ -74,14 +74,14 @@ eqOgre::Window::setCamera(Ogre::Camera* camera)
 Ogre::Camera *
 eqOgre::Window::getCamera( void )
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
 	return static_cast<eqOgre::Pipe *>(getPipe())->getCamera();
 }
 
 Ogre::SceneManager *
 eqOgre::Window::getSceneManager(void )
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
 	return static_cast<eqOgre::Pipe *>(getPipe())->getSceneManager();
 }
 
@@ -247,9 +247,9 @@ eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNum
 		Channels chanlist = getChannels();
 		for( size_t i = 0; i < chanlist.size(); ++i )
 		{
-			EQASSERT( _ogre_window && getCamera() );
+			assert( _ogre_window && getCamera() );
 			Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
-			EQASSERT( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+			assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
 			eqOgre::Channel *channel =
 				static_cast<eqOgre::Channel *>( chanlist.at(i) );
 
@@ -302,7 +302,7 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 	systemWindow = new eqOgre::WGLWindow( this );
 #endif
 
-	EQASSERT( systemWindow );
+	assert( systemWindow );
 	if( !systemWindow->configInit() )
 	{
 		message = "System Window initialization failed: ";
@@ -318,7 +318,7 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 void
 eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
 {
-	EQASSERT( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
 	eqOgre::Pipe *pipe = static_cast<eqOgre::Pipe *>( getPipe() );
 	pipe->sendEvent(event);
 }
@@ -331,7 +331,7 @@ eqOgre::Window::createInputHandling( void )
 
 	std::ostringstream ss;
 #if defined OIS_WIN32_PLATFORM
-	EQASSERT( dynamic_cast<eq::WGLWindowIF *>( getSystemWindow() ) );
+	assert( dynamic_cast<eq::WGLWindowIF *>( getSystemWindow() ) );
 	eq::WGLWindowIF *os_win = static_cast<eq::WGLWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{
@@ -349,7 +349,7 @@ eqOgre::Window::createInputHandling( void )
 	}
 #elif defined OIS_LINUX_PLATFORM
 	// TODO AGL support is missing
-	EQASSERT( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
+	assert( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
 	eq::GLXWindowIF *os_win = static_cast<eq::GLXWindowIF *>( getSystemWindow() );
 	if( !os_win )
 	{

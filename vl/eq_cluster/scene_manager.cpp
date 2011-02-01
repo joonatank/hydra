@@ -4,7 +4,7 @@
 
 #include "scene_manager.hpp"
 
-#include "eq_cluster/config.hpp"
+// #include "eq_cluster/config.hpp"
 
 /// Public
 eqOgre::SceneManager::SceneManager( vl::Session *session )
@@ -35,7 +35,7 @@ eqOgre::SceneManager::setSceneManager( Ogre::SceneManager *man )
 		{
 			if( !node->findNode(man) )
 			{
-				EQERROR << "No Ogre SceneNode with name " << node->getName()
+				std::cerr << "No Ogre SceneNode with name " << node->getName()
 					<< " found in the SceneGraph." << std::endl;
 				retval = false;
 			}
@@ -45,17 +45,37 @@ eqOgre::SceneManager::setSceneManager( Ogre::SceneManager *man )
 	return retval;
 }
 
-void
-eqOgre::SceneManager::addSceneNode( eqOgre::SceneNode *node )
+eqOgre::SceneNodePtr
+eqOgre::SceneManager::createSceneNode( std::string const &name )
 {
-	EQASSERT( _session )
+	// TODO check that no two SceneNodes have the same name
+	SceneNodePtr node = SceneNode::create( name );
+	addSceneNode( node );
+	return node;
+}
+
+void
+eqOgre::SceneManager::addSceneNode( eqOgre::SceneNodePtr node )
+{
+	assert(node);
+	// Check that no two nodes have the same name
+	for( size_t i = 0; i < getNSceneNodes(); ++i )
+	{
+		SceneNodePtr ptr = getSceneNode(i);
+		if( ptr == node || ptr->getName() == node->getName() )
+		{
+			// TODO is this the right exception?
+			BOOST_THROW_EXCEPTION( vl::duplicate() );
+		}
+	}
+	assert( _session );
 	setDirty( DIRTY_NODES );
 
 	_session->registerObjectC( node );
-	EQASSERT( node->getID() != vl::ID_UNDEFINED );
+	assert( node->getID() != vl::ID_UNDEFINED );
 	_scene_nodes.push_back( SceneNodeIDPair(node, node->getID()) );
 
-	EQINFO << "SceneNode : " << _scene_nodes.back().node->getName()
+	std::cout << "SceneNode : " << _scene_nodes.back().node->getName()
 		<< " registered." << std::endl;
 }
 
@@ -164,8 +184,7 @@ eqOgre::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t di
 		{
 			uint64_t id = _scene_nodes.at(i).id;
 			std::string name = _scene_nodes.at(i).node->getName();
-			EQASSERTINFO( id != vl::ID_UNDEFINED, "SceneNode " << name
-					<< " has invalid id."  )
+			assert( id != vl::ID_UNDEFINED );
 
 			msg << _scene_nodes.at(i).id;
 		}
@@ -202,7 +221,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t 
 			// Check for new SceneNodes
 			if( !node ) //|| !node->isAttached() )
 			{
-				EQASSERT( _scene_nodes.at(i).id != vl::ID_UNDEFINED )
+				assert( _scene_nodes.at(i).id != vl::ID_UNDEFINED );
 
 // 				std::cout << "SceneNode ID valid : should map the object." << std::endl;
 				_mapObject( _scene_nodes.at(i) );
@@ -219,7 +238,7 @@ eqOgre::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t 
 void
 eqOgre::SceneManager::_mapObject( eqOgre::SceneManager::SceneNodeIDPair& node )
 {
-	EQASSERT( _session );
+	assert( _session );
 
 	if( !node.node )
 	{
@@ -227,8 +246,8 @@ eqOgre::SceneManager::_mapObject( eqOgre::SceneManager::SceneNodeIDPair& node )
 		node.node = SceneNode::create();
 	}
 
-	EQASSERT( node.id != vl::ID_UNDEFINED );
-	EQASSERT( node.node->getID() == vl::ID_UNDEFINED );
+	assert( node.id != vl::ID_UNDEFINED );
+	assert( node.node->getID() == vl::ID_UNDEFINED );
 
 	_session->mapObjectC( node.node, node.id );
 

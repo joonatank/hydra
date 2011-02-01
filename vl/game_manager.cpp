@@ -21,7 +21,7 @@
 
 // Events
 #include "eq_cluster/transform_event.hpp"
-#include "eq_cluster/config_events.hpp"
+#include "actions_misc.hpp"
 
 vl::GameManager::GameManager( void )
 	: _python(0),

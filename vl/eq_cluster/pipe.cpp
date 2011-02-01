@@ -142,7 +142,7 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 				+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
 			Ogre::LogManager::getSingleton().logMessage( message );
 
-			EQASSERTINFO( _ogre_sm, "Window has no Ogre SceneManager" );
+			assert( _ogre_sm );
 			if( !_scene_manager->setSceneManager( _ogre_sm ) )
 			{
 				// Error
@@ -157,11 +157,11 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 	{
 		// TODO add error status flag
 		std::cout << "VL Exception : " + boost::diagnostic_information<>(e) << std::endl;
-		EQASSERT( false );
+		assert( false );
 	}
 	catch( ... )
 	{
-		EQASSERT( false );
+		assert( false );
 	}
 
 	eq::Pipe::frameStart( frameID, frameNumber );
@@ -404,26 +404,26 @@ eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
 
 	// Get the cluster version of data
 	getConfig()->mapObject( &_settings, settingsID );
-	EQASSERTINFO( _settings.getID() != eq::UUID::ZERO, "Couldn't map the Settings." );
+	assert( _settings.getID() != eq::UUID::ZERO);
 
 	// TODO should be automatic when mapObjectC is called
 	// Also if we call it so many times it should not iterate through the whole
 	// message but rather already stored ID list
 
 	uint64_t id = _settings.getResourceManagerID();
-	EQASSERT( id != vl::ID_UNDEFINED );
+	assert( id != vl::ID_UNDEFINED );
 	mapObjectC( &_resource_manager, id );
 
-	EQASSERT( _settings.getPlayerID() != vl::ID_UNDEFINED );
+	assert( _settings.getPlayerID() != vl::ID_UNDEFINED );
 	mapObjectC( &_player, _settings.getPlayerID() );
 
 	uint64_t sm_id = _settings.getSceneManagerID();
 	std::cout << "Mapping SceneManager with id = " << sm_id << '.' << std::endl;
-	EQASSERT( sm_id != vl::ID_UNDEFINED );
+	assert( sm_id != vl::ID_UNDEFINED );
 	_scene_manager = new eqOgre::SceneManager( this );
 	mapObjectC( _scene_manager, sm_id );
 
-	EQINFO << "Data mapped." << std::endl;
+	std::cout << "Data mapped." << std::endl;
 }
 
 void
@@ -447,7 +447,7 @@ eqOgre::Pipe::_updateDistribData( void )
 			Windows const &window_list = getWindows();
 			for( size_t i = 0; i < window_list.size(); ++i )
 			{
-				EQASSERT( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
+				assert( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
 				eqOgre::Window *window =
 					static_cast<eqOgre::Window *>( window_list.at(i) );
 				window->setCamera( _camera );
@@ -476,7 +476,7 @@ eqOgre::Pipe::_updateDistribData( void )
 		Windows const &window_list = getWindows();
 		for( size_t i = 0; i < window_list.size(); ++i )
 		{
-			EQASSERT( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
+			assert( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
 			eqOgre::Window *window =
 				static_cast<eqOgre::Window *>( window_list.at(i) );
 			window->takeScreenshot( prefix, suffix );
@@ -494,13 +494,13 @@ eqOgre::Pipe::_updateDistribData( void )
 		// This will reload the scene but all transformations remain
 		// As this will not reset the SceneNode structures that control the
 		// transformations of objects.
-		EQINFO << "Reloading the Ogre scene now" << std::endl;
+		std::cout << "Reloading the Ogre scene now" << std::endl;
 		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
 		win->loadScene();
 		Ogre::Camera *camera = win->getCamera();
 		createViewport( camera );
 		_frame_data.setSceneManager( win->getSceneManager() );
-		EQINFO << "Ogre Scene reloaded." << std::endl;
+		std::cout << "Ogre Scene reloaded." << std::endl;
 
 		scene_version = _frame_data.getSceneVersion();
 	}

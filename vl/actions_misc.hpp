@@ -1,12 +1,12 @@
 /**	Joonatan Kuosa
  *	2010-11 initial implementation
  *
+ *	2011-01 Dependencies to Equalizer removed and moved to more suitable place
  */
 
-#ifndef EQ_OGRE_CONFIG_EVENTS_HPP
-#define EQ_OGRE_CONFIG_EVENTS_HPP
+#ifndef VL_CONFIG_EVENTS_HPP
+#define VL_CONFIG_EVENTS_HPP
 
-#include "config.hpp"
 #include "tracker.hpp"
 #include "action.hpp"
 
@@ -25,7 +25,7 @@ public :
 
 	T *data;
 
-};	// class ConfigOperation
+};	// class ActionBase
 
 typedef ActionBase<vl::Player> PlayerAction;
 typedef ActionBase<vl::GameManager> GameAction;
@@ -143,4 +143,4 @@ public :
 
 }	// namespace eqOgre
 
-#endif	// EQ_OGRE_CONFIG_EVENTS_HPP
+#endif	// VL_CONFIG_EVENTS_HPP

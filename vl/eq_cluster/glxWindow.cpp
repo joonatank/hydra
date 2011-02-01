@@ -52,14 +52,14 @@ eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
 
 	setXDrawable( drawable );
 
-	EQINFO << "Created X11 drawable " << drawable << std::endl;
+	std::cout << "Created X11 drawable " << drawable << std::endl;
 	return true;
 }
 
 XID
 eqOgre::GLXWindow::_createWindow( XVisualInfo* visualInfo , const eq::PixelViewport& pvp )
 {
-	EQASSERT( getIAttribute( eq::Window::IATTR_HINT_DRAWABLE ) != eq::fabric::PBUFFER );
+	assert( getIAttribute( eq::Window::IATTR_HINT_DRAWABLE ) != eq::fabric::PBUFFER );
 
 	if( !visualInfo )
 	{

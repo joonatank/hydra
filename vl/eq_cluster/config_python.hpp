@@ -5,7 +5,7 @@
 #include "scene_node.hpp"
 #include "keycode.hpp"
 #include "event_manager.hpp"
-#include "config_events.hpp"
+#include "actions_misc.hpp"
 #include "game_manager.hpp"
 #include "eq_cluster/transform_event.hpp"
 #include "trigger.hpp"

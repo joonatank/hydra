@@ -10,13 +10,14 @@ set( SOURCES
 	resource.cpp
 	game_manager.cpp
 	player.cpp
+	dotscene_loader.cpp
+	actions_misc.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
 	eq_cluster/python.cpp
 	eq_cluster/eq_resource_manager.cpp
-	eq_cluster/dotscene_loader.cpp
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
@@ -24,7 +25,6 @@ set( SOURCES
 	eq_cluster/trigger.cpp
 	eq_cluster/event_manager.cpp
 	eq_cluster/transform_event.cpp
-	eq_cluster/config_events.cpp
 	eq_cluster/eq_settings.cpp
 	eq_cluster/scene_manager.cpp
 	eq_cluster/scene_node.cpp
@@ -64,12 +64,13 @@ set( HEADERS
 	base/typedefs.hpp
 	resource.hpp
 	resource_manager.hpp
+	dotscene_loader.hpp
+	action.hpp
+	actions_misc.hpp
 	eq_cluster/python.hpp
 	eq_cluster/eq_resource_manager.hpp
-	eq_cluster/dotscene_loader.hpp
 	eq_cluster/event_manager.hpp
 	eq_cluster/trigger.hpp
-	eq_cluster/action.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/config_python.hpp
@@ -77,7 +78,6 @@ set( HEADERS
 	eq_cluster/window.hpp
 	eq_cluster/pipe.hpp
 	eq_cluster/transform_event.hpp
-	eq_cluster/config_events.hpp
 	eq_cluster/eq_settings.hpp
 	eq_cluster/scene_manager.hpp
 	eq_cluster/scene_node.hpp

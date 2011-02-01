@@ -16,8 +16,8 @@
 
 #include "base/rapidxml.hpp"
 
-#include "scene_node.hpp"
-#include "config.hpp"
+#include "eq_cluster/scene_node.hpp"
+#include "eq_cluster/scene_manager.hpp"
 #include "resource_manager.hpp"
 
 namespace vl
@@ -37,12 +37,12 @@ public :
 	 *				 name of every node
 	 */
 	void parseDotScene( std::string const &scene_data,
-			eqOgre::Config *config,
+			eqOgre::SceneManager *scene,
 			eqOgre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	void parseDotScene( vl::TextResource &scene_data,
-			eqOgre::Config *config,
+			eqOgre::SceneManager *config,
 			eqOgre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
@@ -56,7 +56,7 @@ private :
 	void processNode(rapidxml::xml_node<>* XMLNode,
 			eqOgre::SceneNode *parent = 0 );
 
-	eqOgre::Config *_config;
+	eqOgre::SceneManager *_scene;
 
 	std::string _sPrependNode;
 
@@ -65,4 +65,4 @@ private :
 }	// namespace vl
 
 
-#endif
+#endif	// VL_DOTSCENE_LOADER_HPP

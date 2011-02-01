@@ -37,6 +37,8 @@ public :
 
 	bool setSceneManager( Ogre::SceneManager *man );
 
+	SceneNodePtr createSceneNode( std::string const &name );
+
 	/// Add a SceneNode to the distributed stack
 	/// FrameData owns all SceneNodes added using this method and will destroy
 	/// them when necessary.

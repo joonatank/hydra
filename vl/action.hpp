@@ -10,6 +10,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
+// TODO replace with boost::clock
 #include <co/base/clock.h>
 
 // Necessary for vl::scalar

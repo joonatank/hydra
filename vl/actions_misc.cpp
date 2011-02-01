@@ -3,8 +3,9 @@
  *
  */
 
-#include "config_events.hpp"
+#include "actions_misc.hpp"
 
+#include "eq_cluster/scene_manager.hpp"
 #include "game_manager.hpp"
 #include "player.hpp"
 

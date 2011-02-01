@@ -10,7 +10,7 @@
 
 #include "math/conversion.hpp"
 
-#include "config_events.hpp"
+#include "actions_misc.hpp"
 
 #include "dotscene_loader.hpp"
 
@@ -51,10 +51,10 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	_createServer();
 
-	EQASSERT( _server );
+	assert( _server );
 	// TODO register the objects
 	eqOgre::SceneManager *sm = _game_manager->getSceneManager();
-	EQASSERT( sm );
+	assert( sm );
 
 	// FIXME
 	// Register SceneManager
@@ -74,7 +74,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	std::vector<std::string> scripts = _settings->getScripts();
 
-	EQINFO << "Running " << scripts.size() << " python scripts." << std::endl;
+	std::cout << "Running " << scripts.size() << " python scripts." << std::endl;
 
 	for( size_t i = 0; i < scripts.size(); ++i )
 	{
@@ -86,13 +86,13 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	_createQuitEvent();
 
-	EQINFO << "Registering data." << std::endl;
+	std::cout << "Registering data." << std::endl;
 
 	eqOgre::ResourceManager *res_man
 		= static_cast<eqOgre::ResourceManager *>( _game_manager->getReourceManager() );
 	registerObjectC( res_man );
 
-	EQASSERT( player );
+	assert( player );
 	// Registering Player in init
 	registerObjectC( player );
 
@@ -100,14 +100,14 @@ eqOgre::Config::init( eq::uint128_t const & )
 	_distrib_settings.setResourceManagerID( res_man->getID() );
 	_distrib_settings.setPlayerID( player->getID() );
 
-	EQINFO << "Registering Settings" << std::endl;
+	std::cout << "Registering Settings" << std::endl;
 	registerObject( &_distrib_settings );
-	EQASSERT( _distrib_settings.getID().isGenerated() );
+	assert( _distrib_settings.getID().isGenerated() );
 
 	if( !eq::Config::init( _distrib_settings.getID() ) )
 	{ return false; }
 
-	EQINFO << "Config::init DONE" << std::endl;
+	std::cout << "Config::init DONE" << std::endl;
 
 	_updateServer();
 
@@ -120,47 +120,39 @@ eqOgre::Config::exit( void )
 	// First let the children clean up
 	bool retval = eq::Config::exit();
 
-	EQINFO << "Deregistering distributed data." << std::endl;
+	std::cout << "Deregistering distributed data." << std::endl;
 
 	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
 	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
 	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
 
-// 	deregisterObject( &_distrib_settings );
+	deregisterObject( &_distrib_settings );
 
 	//	TODO add cleanup server
 
-	EQINFO << "Config exited." << std::endl;
+	std::cout << "Config exited." << std::endl;
 	return retval;
 }
 
 void
 eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 {
-	EQASSERT( settings );
-	EQASSERT( _game_manager );
+	assert( settings );
+	assert( _game_manager );
 
 	_settings = settings;
 	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
 }
 
-eqOgre::SceneNodePtr
-eqOgre::Config::createSceneNode(const std::string& name)
-{
-	SceneNodePtr node = SceneNode::create( name );
-	_addSceneNode( node );
-	return node;
-}
-
-eqOgre::SceneNode *
-eqOgre::Config::getSceneNode(const std::string& name)
-{
-	return _game_manager->getSceneManager()->getSceneNode(name);
-}
+// eqOgre::SceneNode *
+// eqOgre::Config::getSceneNode(const std::string& name)
+// {
+// 	return _game_manager->getSceneManager()->getSceneNode(name);
+// }
 
 void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
 {
-	EQASSERT( man );
+	assert( man );
 	_game_manager = man;
 }
 
@@ -190,7 +182,7 @@ eqOgre::Config::_createServer( void )
 {
 	std::cout << "eqOgre::Config::_createServer" << std::endl;
 
-	EQASSERT( !_server );
+	assert( !_server );
 
 	// TODO configurable server port
 	_server = new vl::cluster::Server( SERVER_PORT );
@@ -217,7 +209,7 @@ eqOgre::Config::_updateServer( void )
 		{
 			if( (*iter)->isDirty() )
 			{
-				EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+				assert( (*iter)->getID() != vl::ID_UNDEFINED );
 // 				std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
 // 				std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
 				vl::cluster::ObjectData data( (*iter)->getID() );
@@ -244,7 +236,7 @@ eqOgre::Config::_updateServer( void )
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )
 		{
-			EQASSERT( (*iter)->getID() != vl::ID_UNDEFINED );
+			assert( (*iter)->getID() != vl::ID_UNDEFINED );
 // 			vl::cluster::UpdateMessageSerializer ser(&msg);
 // 			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
 // 			msg.write( (*iter)->getID() );
@@ -262,42 +254,23 @@ eqOgre::Config::_updateServer( void )
 }
 
 void
-eqOgre::Config::_addSceneNode(eqOgre::SceneNode* node)
-{
-	// Check that no two nodes have the same name
-	// TODO should be in the frame data, as it can neither store multiple
-	// SceneNodes with same names
-	for( size_t i = 0; i < _game_manager->getSceneManager()->getNSceneNodes(); ++i )
-	{
-		SceneNodePtr ptr = _game_manager->getSceneManager()->getSceneNode(i);
-		if( ptr == node || ptr->getName() == node->getName() )
-		{
-			// TODO is this the right exception?
-			BOOST_THROW_EXCEPTION( vl::duplicate() );
-		}
-	}
-
-	_game_manager->getSceneManager()->addSceneNode( node );
-}
-
-void
 eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 {
-	EQINFO << "Creating Trackers." << std::endl;
+	std::cout << "Creating Trackers." << std::endl;
 
 	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
-	EQASSERT( clients );
+	assert( clients );
 
 	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
-	EQINFO << "Processing " << tracking_files.size() << " tracking files."
+	std::cout << "Processing " << tracking_files.size() << " tracking files."
 		<< std::endl;
 
 	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
 		 iter != tracking_files.end(); ++iter )
 	{
 		// Read a file
-		EQINFO << "Copy tracking resource : " << *iter << std::endl;
+		std::cout << "Copy tracking resource : " << *iter << std::endl;
 
 		vl::TextResource resource;
 		_game_manager->getReourceManager()->loadResource( *iter, resource );
@@ -307,7 +280,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	}
 
 	// Start the trackers
-	EQINFO << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
+	std::cout << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
 	for( size_t i = 0; i < clients->getNTrackers(); ++i )
 	{
 		clients->getTracker(i)->init();
@@ -315,7 +288,7 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 
 	// Create Action
 	eqOgre::HeadTrackerAction *action = eqOgre::HeadTrackerAction::create();
-	EQASSERT( _game_manager->getPlayer() );
+	assert( _game_manager->getPlayer() );
 	action->setPlayer( _game_manager->getPlayer() );
 
 	// This will get the head sensor if there is one
@@ -330,30 +303,30 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 	}
 	else
 	{
-		EQINFO << "Creating a fake head tracker" << std::endl;
+		std::cout << "Creating a fake head tracker" << std::endl;
 		vl::TrackerRefPtr tracker( new vl::FakeTracker );
 		vl::SensorRefPtr sensor( new vl::Sensor );
 		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
 
 		// Create the trigger
-		EQINFO << "Creating a fake head tracker trigger" << std::endl;
+		std::cout << "Creating a fake head tracker trigger" << std::endl;
 		vl::TrackerTrigger *head_trigger
 			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 		sensor->setTrigger( head_trigger );
 
-		EQINFO << "Adding a fake head tracker" << std::endl;
+		std::cout << "Adding a fake head tracker" << std::endl;
 		// Add the tracker
 		tracker->setSensor( 0, sensor );
 		clients->addTracker(tracker);
 	}
-	EQINFO << "Trackers created." << std::endl;
+	std::cout << "Trackers created." << std::endl;
 }
 
 void
 eqOgre::Config::_loadScenes(void )
 {
-	EQINFO << "Loading Scenes for Project : " << _settings->getProjectName()
+	std::cout << "Loading Scenes for Project : " << _settings->getProjectName()
 		<< std::endl;
 
 	// Get scenes
@@ -362,12 +335,12 @@ eqOgre::Config::_loadScenes(void )
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
 	{
-		EQINFO << "Project does not have any scene files." << std::endl;
+		std::cout << "Project does not have any scene files." << std::endl;
 		return;
 	}
 	else
 	{
-		EQINFO << "Project has " << scenes.size() << " scene files."
+		std::cout << "Project has " << scenes.size() << " scene files."
 			<< std::endl;
 	}
 
@@ -380,7 +353,7 @@ eqOgre::Config::_loadScenes(void )
 	{
 		std::string scene_file_name = scenes.at(i).getName();
 
-		EQINFO << "Loading scene file = " << scene_file_name << std::endl;
+		std::cout << "Loading scene file = " << scene_file_name << std::endl;
 
 		vl::TextResource resource;
 		_game_manager->getReourceManager()->loadResource( scenes.at(i).getFile(), resource );
@@ -388,19 +361,19 @@ eqOgre::Config::_loadScenes(void )
 		vl::DotSceneLoader loader;
 		// TODO pass attach node based on the scene
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( resource, this );
+		loader.parseDotScene( resource, _game_manager->getSceneManager() );
 
-		EQINFO << "Scene " << scene_file_name << " loaded." << std::endl;
+		std::cout << "Scene " << scene_file_name << " loaded." << std::endl;
 	}
 }
 
 void
 eqOgre::Config::_createQuitEvent(void )
 {
-	EQINFO << "Creating QuitEvent" << std::endl;
+	std::cout << "Creating QuitEvent" << std::endl;
 
 	// Add a trigger event to Quit the Application
-	EQASSERT( _game_manager );
+	assert( _game_manager );
 	QuitAction *quit = QuitAction::create();
 	quit->data = _game_manager;
 	// Add trigger
@@ -472,13 +445,6 @@ eqOgre::Config::_receiveEventMessages( void )
 		}
 		delete msg;
 	}
-}
-
-
-bool
-eqOgre::Config::handleEvent( const eq::ConfigEvent* event )
-{
-	return true;
 }
 
 bool

@@ -66,7 +66,9 @@ public :
 		// So we can set the MotionState objects
 		if( !physics_inited )
 		{
-			eqOgre::SceneNode *camera = getSceneNode("CameraNode");
+			eqOgre::SceneManager *sm = _game_manager->getSceneManager();
+			assert(sm);
+			eqOgre::SceneNode *camera = sm->getSceneNode("CameraNode");
 			if( camera )
 			{
 				std::cerr << "CameraNode found. Setting new position." << std::endl;
@@ -77,7 +79,7 @@ public :
 			{
 				std::cerr << "CameraNode NOT found." << std::endl;
 			}
-			eqOgre::SceneNode *ogre = getSceneNode("ogre");
+			eqOgre::SceneNode *ogre = sm->getSceneNode("ogre");
 			if( !ogre )
 			{
 				std::cerr << "No SceneNode with the name ogre found!."
