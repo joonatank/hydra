@@ -113,16 +113,22 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 		// loading Meshes
 		if( !inited )
 		{
+			std::cout << "eqOgre::Pipe::frameStart : init" << std::endl;
+			std::cout << "Resources = ";
 			// Resource registration
 			std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
 			for( size_t i = 0; i < resources.size(); ++i )
 			{
+				std::cout << resources.at(i) << std::endl;
 				_root->addResource( resources.at(i) );
 			}
+			std::cout << "eqOgre::Pipe::frameStart : setup resources" << std::endl;
 			_root->setupResources( );
 			_root->loadResources();
 
 			_ogre_sm = _root->createSceneManager("SceneManager");
+
+			std::cout << "eqOgre::Pipe::frameStart : loading scene" << std::endl;
 
 			if( !_loadScene() )
 			{
@@ -301,7 +307,7 @@ eqOgre::Pipe::_handleMessages( void )
 	_client->mainloop();
 	while( _client->messages() )
 	{
-//		std::cout << "eqOgre::Pipe::_syncData : Messages received" << std::endl;
+// 		std::cout << "eqOgre::Pipe::_handleMessages : Messages received" << std::endl;
 		vl::cluster::Message *msg = _client->popMessage();
 		// TODO process the message
 		_handleMessage(msg);
@@ -325,7 +331,7 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 			// based on thoses
 			// TODO multiple update messages in the same frame,
 			// only the most recent should be used.
-// 				std::cout << "Message = " << *msg << std::endl;
+// 			std::cout << "Message = " << *msg << std::endl;
 			while( msg->size() > 0 )
 			{
 // 				std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
@@ -343,7 +349,6 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 		default :
 			std::cout << "Unhandled Message of type = " << msg->getType()
 				<< std::endl;
-			delete msg;
 			break;
 	}
 }
@@ -351,6 +356,9 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 void
 eqOgre::Pipe::_syncData( void )
 {
+// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
+// 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects."
+// 		<< std::endl;
 	std::vector<vl::cluster::ObjectData>::iterator iter;
 	// TODO remove the temporary array
 	// use a custom structure that does not create temporaries
@@ -367,6 +375,9 @@ eqOgre::Pipe::_syncData( void )
 		vl::Distributed *obj = findMappedObject( iter->getId() );
 		if( obj )
 		{
+// 			std::cout << "ID " << iter->getId() << " found in mapped objects."
+// 				<< " unpacking. " << std::endl;
+// 			std::cout << "object = " << *iter << std::endl;
 			obj->unpack(stream);
 		}
 		else
@@ -381,6 +392,8 @@ eqOgre::Pipe::_syncData( void )
 
 	if( _scene_manager )
 	{ _scene_manager->finaliseSync(); }
+
+// 	std::cout << "eqOgre::Pipe::_syncData : done" << std::endl;
 }
 
 void
@@ -416,6 +429,7 @@ eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
 void
 eqOgre::Pipe::_updateDistribData( void )
 {
+// 	std::cout << "eqOgre::Pipe::_updateDistribData" << std::endl;
 	// Custom sync code
 	_syncData();
 
@@ -425,6 +439,7 @@ eqOgre::Pipe::_updateDistribData( void )
 	if( !cam_name.empty() && cam_name != _active_camera_name )
 	{
 		_active_camera_name = cam_name;
+		assert( _ogre_sm );
 		if( _ogre_sm->hasCamera( cam_name ) )
 		{
 			// Tell the Windows to change cameras
@@ -470,6 +485,7 @@ eqOgre::Pipe::_updateDistribData( void )
 		_screenshot_num = _player.getScreenshotVersion();
 	}
 
+// 	std::cout << "eqOgre::Pipe::_updateDistribData : done" << std::endl;
 	// FIXME this is completely screwed up.
 	/*
 	static uint32_t scene_version = 0;

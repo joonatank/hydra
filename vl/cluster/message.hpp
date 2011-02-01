@@ -127,6 +127,8 @@ private :
 
 };	// class Message
 
+std::ostream &operator<<( std::ostream &os, Message const &msg );
+
 class ByteData
 {
 public :
@@ -175,11 +177,11 @@ public :
 
 	template<typename T>
 	void read( T &t )
-	{ read( t, sizeof(t) ); }
+	{ read( (char *)&t, (msg_size)sizeof(t) ); }
 
 	template<typename T>
 	void write( T const &t )
-	{ write( &t, sizeof(t) ); }
+	{ write( (char *)&t, (msg_size)sizeof(t) ); }
 
 	virtual void read( char *mem, msg_size size )
 	{
@@ -276,8 +278,6 @@ private :
 	EVENT_TYPES _type;
 };
 
-std::ostream &operator<<( std::ostream &os, Message const &msg );
-
 /// Specialize the template if you need to use more complicated serialization
 /// than straigth memory copy.
 /// Problematic because you need to specialise it in namespace vl::cluster
@@ -319,7 +319,35 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 	return msg;
 }
 
+// TODO  How about empty strings?
+// Not Tested but we write only size if the string is empty.
+template<> inline
+ByteStream &operator>>( ByteStream &msg, std::string &str )
+{
+	size_t size;
+	msg.read(size);
+	str.resize(size);
+	for( size_t i = 0; i < size; ++i )
+	{
+		char ch;
+		msg.read(ch);
+		str.at(i) = ch;
+	}
 
+	return msg;
+}
+
+template<> inline
+ByteStream &operator<<( ByteStream &msg, std::string const &str )
+{
+	msg.write( str.size() );
+	if( str.size() != 0 )
+	{ msg.write( str.c_str(), str.size() ); }
+
+	return msg;
+}
+
+// TODO are these necessary still, when using the ByteStream to write data?
 template<typename T>
 msg_size Message::read(T& obj)
 {
@@ -349,35 +377,6 @@ msg_size Message::write(const T& obj)
 	_size += size;
 
 	return size;
-}
-
-template<> inline
-msg_size Message::read( std::string &str )
-{
-	size_t size;
-	::memcpy( &size, &_data[0], sizeof(size_t) );
-	str.resize(size);
-	for( size_t i = 0; i < size; ++i )
-	{
-		str.at(i) = _data[i+sizeof(size_t)];
-	}
-	_data.erase( _data.begin(), _data.begin()+size+sizeof(size_t) );
-	_size -= ( size + sizeof(size_t) );
-
-	return size+sizeof(size_t);
-}
-
-template<> inline
-msg_size Message::write( std::string const &str )
-{
-	size_t size = str.size();
-	_data.resize( _data.size() + size + sizeof(size_t) );
-	::memcpy( &_data[_size], &size, sizeof(size_t) );
-	_size += sizeof(size_t);
-	::memcpy( &_data[_size], str.c_str(), size );
-	_size += size;
-
-	return size + sizeof(size_t);
 }
 
 }	// namespace cluster
