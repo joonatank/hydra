@@ -17,22 +17,30 @@
 
 #include "window.hpp"
 #include "base/string_utils.hpp"
+#include "base/sleep.hpp"
+
+#ifdef VL_WIN32
+#include "wglWindow.hpp"
+#else
+#include "glxWindow.hpp"
+#endif
 
 char const *SERVER_NAME = "localhost";
 uint16_t const SERVER_PORT = 4699;
 
 /// ------------------------- Public -------------------------------------------
-eqOgre::Pipe::Pipe( eq::Node* parent )
-	: eq::Pipe(parent), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
+// TODO should probably copy the env settings and not store the reference
+eqOgre::Pipe::Pipe( vl::EnvSettingsRefPtr env )
+	: _env(env), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
 {}
 
 eqOgre::Pipe::~Pipe( void )
 {}
 
-eqOgre::DistributedSettings const &
-eqOgre::Pipe::getSettings( void ) const
+vl::EnvSettingsRefPtr
+eqOgre::Pipe::getSettings( void )
 {
-	return _settings;
+	return _env;
 }
 
 void
@@ -48,21 +56,35 @@ eqOgre::Pipe::sendEvent( vl::cluster::EventData const &event )
 	_events.push_back(event);
 }
 
+void
+eqOgre::Pipe::operator()()
+{
+	std::cout << "eqOgre::Pipe::operator() : Thread entered." << std::endl;
+	configInit(0);
+
+	while( 1 )
+	{
+		// Handle messages
+
+		// Render
+
+		// Send messages
+
+		// Sleep
+		vl::msleep( 1 );
+	}
+}
+
 
 /// ------------------------ Protected -----------------------------------------
 bool
-eqOgre::Pipe::configInit(const eq::uint128_t& initID)
+eqOgre::Pipe::configInit( uint64_t initID )
 {
+	std::cout << "eqOgre::Pipe::configInit." << std::endl;
+
 	_createClient();
 
-	if( !eq::Pipe::configInit(initID) )
-	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eq::Pipe::configInit failed");
-		std::cerr << message << std::endl;
-		return false;
-	}
+	_createWindow();
 
 	_mapData( initID );
 
@@ -85,18 +107,19 @@ eqOgre::Pipe::configInit(const eq::uint128_t& initID)
 bool
 eqOgre::Pipe::configExit()
 {
-	bool retval = eq::Pipe::configExit();
+// 	bool retval = eq::Pipe::configExit();
 
 	// Info
 	std::string message("Cleaning out OGRE");
 	Ogre::LogManager::getSingleton().logMessage( message );
 	_root.reset();
 
-	return retval;
+	return true;
+// 	return retval;
 }
 
 void
-eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
+eqOgre::Pipe::frameStart( uint64_t frameID, const uint32_t frameNumber )
 {
 	static bool inited = false;
 
@@ -165,7 +188,7 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 		assert( false );
 	}
 
-	eq::Pipe::frameStart( frameID, frameNumber );
+// 	eq::Pipe::frameStart( frameID, frameNumber );
 
 	_sendEvents();
 }
@@ -175,12 +198,15 @@ eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumbe
 bool
 eqOgre::Pipe::_createOgre( void )
 {
+	std::cout << "eqOgre::Pipe::_createOgre" << std::endl;
 	try {
 		// TODO needs LogManager creation before this
 		std::string message("Creating Ogre Root");
 		std::cout << message << std::endl;
 
-		_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
+		// FIXME the log file path should be retrieved from EnvSettings
+		//_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
+		_root.reset( new vl::ogre::Root( "" ) );
 		// Initialise ogre
 		_root->createRenderSystem();
 	}
@@ -222,8 +248,9 @@ eqOgre::Pipe::_loadScene( void )
 
 	// Get scenes
 	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
-	std::string message = "Loading Scenes for Project : " + getSettings().getProjectName();
-	Ogre::LogManager::getSingleton().logMessage( message );
+// 	std::string message = "Loading Scenes for Project : " + getSettings().getProjectName();
+// 	Ogre::LogManager::getSingleton().logMessage( message );
+	std::string message;
 
 	// If we don't have Scenes there is no point loading them
 	if( scenes.empty() )
@@ -303,6 +330,8 @@ eqOgre::Pipe::_createClient( void )
 void
 eqOgre::Pipe::_handleMessages( void )
 {
+	std::cout << "eqOgre::Pipe::_handleMessages" << std::endl;
+
 	assert( _client );
 
 	_client->mainloop();
@@ -357,60 +386,64 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 void
 eqOgre::Pipe::_syncData( void )
 {
-// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
+	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
 // 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects."
 // 		<< std::endl;
-	std::vector<vl::cluster::ObjectData>::iterator iter;
-	// TODO remove the temporary array
-	// use a custom structure that does not create temporaries
-	// rather two phase system one to read the array and mark objects for delete
-	// and second that really clear those that are marked for delete
-	// similar system for reading data to the array
-	std::vector<vl::cluster::ObjectData> tmp;
-	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
-	{
-		vl::cluster::ByteStream stream = iter->getStream();
-		// TODO break this to two different parts
-		// one creating the ObjectDatas and saving them to array
-		// other one that processes this array and removes the elements found in mapped
-		vl::Distributed *obj = findMappedObject( iter->getId() );
-		if( obj )
-		{
-// 			std::cout << "ID " << iter->getId() << " found in mapped objects."
-// 				<< " unpacking. " << std::endl;
-// 			std::cout << "object = " << *iter << std::endl;
-			obj->unpack(stream);
-		}
-		else
-		{
-			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
-				<< std::endl;
-			tmp.push_back( *iter );
-		}
-	}
-
-	_objects = tmp;
-
-	if( _scene_manager )
-	{ _scene_manager->finaliseSync(); }
+// FIXME this needs mapping to work correctly
+// 	std::vector<vl::cluster::ObjectData>::iterator iter;
+// 	// TODO remove the temporary array
+// 	// use a custom structure that does not create temporaries
+// 	// rather two phase system one to read the array and mark objects for delete
+// 	// and second that really clear those that are marked for delete
+// 	// similar system for reading data to the array
+// 	std::vector<vl::cluster::ObjectData> tmp;
+// 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
+// 	{
+// 		vl::cluster::ByteStream stream = iter->getStream();
+// 		// TODO break this to two different parts
+// 		// one creating the ObjectDatas and saving them to array
+// 		// other one that processes this array and removes the elements found in mapped
+// 		vl::Distributed *obj = findMappedObject( iter->getId() );
+// 		if( obj )
+// 		{
+// // 			std::cout << "ID " << iter->getId() << " found in mapped objects."
+// // 				<< " unpacking. " << std::endl;
+// // 			std::cout << "object = " << *iter << std::endl;
+// 			obj->unpack(stream);
+// 		}
+// 		else
+// 		{
+// 			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
+// 				<< std::endl;
+// 			tmp.push_back( *iter );
+// 		}
+// 	}
+//
+// 	_objects = tmp;
+//
+// 	if( _scene_manager )
+// 	{ _scene_manager->finaliseSync(); }
 
 // 	std::cout << "eqOgre::Pipe::_syncData : done" << std::endl;
 }
 
 void
-eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
+eqOgre::Pipe::_mapData( uint64_t settingsID )
 {
 	// TODO move to using Ogre Logging, needs LogManager creation
 	std::cout << "Mapping data." << std::endl;
 
 	// Get the cluster version of data
-	getConfig()->mapObject( &_settings, settingsID );
-	assert( _settings.getID() != eq::UUID::ZERO);
+	// TODO the settings are not mapped now, they are sent using separate
+	// messages by a request from here
+// 	getConfig()->mapObject( &_settings, settingsID );
+// 	assert( _settings.getID() != eq::UUID::ZERO);
 
 	// TODO should be automatic when mapObjectC is called
 	// Also if we call it so many times it should not iterate through the whole
 	// message but rather already stored ID list
 
+	/*	FIXME Distributed Settings removed
 	uint64_t id = _settings.getResourceManagerID();
 	assert( id != vl::ID_UNDEFINED );
 	mapObjectC( &_resource_manager, id );
@@ -425,6 +458,7 @@ eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
 	mapObjectC( _scene_manager, sm_id );
 
 	std::cout << "Data mapped." << std::endl;
+	*/
 }
 
 void
@@ -439,6 +473,7 @@ eqOgre::Pipe::_updateDistribData( void )
 	std::string const &cam_name = _player.getActiveCamera();
 	if( !cam_name.empty() && cam_name != _active_camera_name )
 	{
+		/*	FIXME Window needs to be ported
 		_active_camera_name = cam_name;
 		assert( _ogre_sm );
 		if( _ogre_sm->hasCamera( cam_name ) )
@@ -460,6 +495,7 @@ eqOgre::Pipe::_updateDistribData( void )
 			std::cout << message << std::endl;
 			//Ogre::LogManager::getSingleton().logMessage( message );
 		}
+		*/
 	}
 
 	// Take a screenshot
@@ -474,6 +510,7 @@ eqOgre::Pipe::_updateDistribData( void )
 		std::string suffix = ".png";//
 
 		// Tell the Windows to take a screenshot
+		/*	FIXME Window needs to be ported
 		Windows const &window_list = getWindows();
 		for( size_t i = 0; i < window_list.size(); ++i )
 		{
@@ -482,6 +519,7 @@ eqOgre::Pipe::_updateDistribData( void )
 				static_cast<eqOgre::Window *>( window_list.at(i) );
 			window->takeScreenshot( prefix, suffix );
 		}
+		*/
 
 		_screenshot_num = _player.getScreenshotVersion();
 	}
@@ -523,4 +561,14 @@ eqOgre::Pipe::_sendEvents( void )
 
 		sendMessageToMaster(&msg);
 	}
+}
+
+void
+eqOgre::Pipe::_createWindow( void )
+{
+	std::cout << "eqOgre::Pipe::_createWindow : should create a window." << std::endl;
+	_system_window = new eqOgre::GLXWindow;
+	assert( _system_window );
+	_window = new eqOgre::Window( this );
+	assert( _window );
 }

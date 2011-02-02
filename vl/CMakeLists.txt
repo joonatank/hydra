@@ -19,6 +19,7 @@ set( SOURCES
 	trigger.cpp
 	event_manager.cpp
 	distrib_resource_manager.cpp
+	program_options.cpp
 	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
@@ -27,7 +28,7 @@ set( SOURCES
 	eq_cluster/config.cpp
 	eq_cluster/window.cpp
 	eq_cluster/pipe.cpp
-	eq_cluster/eq_settings.cpp
+# 	eq_cluster/eq_settings.cpp
 	eq_cluster/client.cpp
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
@@ -71,13 +72,15 @@ set( HEADERS
 	event_manager.hpp
 	keycode.hpp
 	distrib_resource_manager.hpp
+	program_options.hpp
+	eq_cluster/glWindow.hpp
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/window.hpp
 	eq_cluster/pipe.hpp
-	eq_cluster/eq_settings.hpp
+# 	eq_cluster/eq_settings.hpp
 	eq_cluster/client.hpp
-	eq_cluster/nodeFactory.hpp
+# 	eq_cluster/nodeFactory.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp

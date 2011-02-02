@@ -7,7 +7,7 @@
 #ifndef EQ_ORGE_PIPE_HPP
 #define EQ_ORGE_PIPE_HPP
 
-#include <eq/client/pipe.h>
+// #include <eq/client/pipe.h>
 
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_settings.hpp"
@@ -21,14 +21,17 @@
 namespace eqOgre
 {
 
-class Pipe : public eq::Pipe, vl::Session
+class GLWindow;
+class Window;
+
+class Pipe : public vl::Session
 {
 public :
-	Pipe( eq::Node *parent );
+	Pipe( vl::EnvSettingsRefPtr env );
 
 	virtual ~Pipe( void );
 
-	DistributedSettings const &getSettings( void ) const;
+	vl::EnvSettingsRefPtr getSettings( void );
 
 	vl::ogre::RootRefPtr getRoot( void )
 	{ return _root; }
@@ -48,17 +51,20 @@ public :
 
 	void sendEvent( vl::cluster::EventData const &event );
 
+	/// Boost thread operator
+	void operator()();
+
 protected :
 	/// Equalizer overrides
 
 	/// Override configInit to map the distributed data
-	virtual bool configInit( const eq::uint128_t& initID );
+	virtual bool configInit( uint64_t initID );
 
 	/// Override configExit to unmap the distributed data
 	virtual bool configExit();
 
 	/// Override frameStart to update the distributed data
-	virtual void frameStart( const eq::uint128_t& frameID,
+	virtual void frameStart( uint64_t frameID,
 							 const uint32_t frameNumber );
 
 	/// Ogre helpers
@@ -72,11 +78,15 @@ protected :
 
 	/// Distribution helpers
 	void _syncData( void );
-	void _mapData( eq::uint128_t const &settingsID);
+	void _mapData( uint64_t settingsID);
 	void _updateDistribData( void );
 
 	/// Input events
 	void _sendEvents( void );
+
+	void _createWindow( void );
+
+	vl::EnvSettingsRefPtr _env;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
@@ -86,7 +96,7 @@ protected :
 
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;
-	eqOgre::DistributedSettings _settings;
+// 	eqOgre::DistributedSettings _settings;
 	vl::DistribResourceManager _resource_manager;
 	vl::Player _player;
 	std::string _active_camera_name;
@@ -97,6 +107,9 @@ protected :
 
 	/// Input events to be sent
 	std::vector<vl::cluster::EventData> _events;
+
+	eqOgre::GLWindow *_system_window;
+	eqOgre::Window *_window;
 
 };	// class Pipe
 

@@ -16,9 +16,31 @@
 
 #include <iostream>
 
+/// ------------------------ vl::EnvSettings::Node -----------------------------
+void
+vl::EnvSettings::Node::addWindow( vl::EnvSettings::Window const &window )
+{
+	// Check that there is not already a Window with the same name
+	std::vector<Window>::iterator iter;
+	for( iter = windows.begin(); iter != windows.end(); ++iter )
+	{
+		if( iter->name == window.name )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() ); }
+	}
 
+	windows.push_back(window);
+}
+
+vl::EnvSettings::Window const &
+vl::EnvSettings::Node::getWindow( size_t i ) const
+{
+	return windows.at(i);
+}
+
+
+/// ------------------------------ vl::EnvSettings -----------------------------
 vl::EnvSettings::EnvSettings( void )
-	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
+	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 ), _slave(false)
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -27,7 +49,7 @@ vl::EnvSettings::~EnvSettings( void )
 void
 vl::EnvSettings::clear( void )
 {
-	_eqc.clear();
+// 	_eqc.clear();
 
 	_plugins.clear();
 	_tracking.clear();
@@ -35,19 +57,21 @@ vl::EnvSettings::clear( void )
 	_camera_rotations_allowed = 0;
 }
 
-std::string vl::EnvSettings::getEqcFullPath( void ) const
-{
-	if( getEqc().empty() )
-	{ return std::string(); }
+// std::string
+// vl::EnvSettings::getEqcFullPath( void ) const
+// {
+// 	if( getEqc().empty() )
+// 	{ return std::string(); }
+//
+// 	fs::path env_path = getFile();
+// 	fs::path env_dir = env_path.parent_path();
+// 	fs::path path =  env_dir / "eqc" / getEqc();
+//
+// 	return path.file_string();
+// }
 
-	fs::path env_path = getFile();
-	fs::path env_dir = env_path.parent_path();
-	fs::path path =  env_dir / "eqc" / getEqc();
-
-	return path.file_string();
-}
-
-std::string vl::EnvSettings::getPluginsDirFullPath( void ) const
+std::string
+vl::EnvSettings::getPluginsDirFullPath( void ) const
 {
 	fs::path env_path = getFile();
 	fs::path env_dir = env_path.parent_path();
@@ -92,7 +116,23 @@ vl::EnvSettings::pluginOnOff(const std::string &pluginName, bool newState)
 	return true;
 }
 
-void vl::EnvSettings::addTracking(const vl::EnvSettings::Tracking& track)
+std::vector< std::string >
+vl::EnvSettings::getTrackingFiles( void ) const
+{
+	std::vector<std::string> vec;
+
+	for( size_t i = 0; i < getTracking().size(); ++i )
+	{
+		EnvSettings::Tracking const &track = getTracking().at(i);
+		if( track.use )
+		{ vec.push_back(track.file); }
+	}
+
+	return vec;
+}
+
+void
+vl::EnvSettings::addTracking(const vl::EnvSettings::Tracking& track)
 {
 	// Check that we don't add the same file twice
 	std::vector<Tracking>::iterator iter;
@@ -128,7 +168,7 @@ vl::EnvSettings::removeTracking( Tracking const &track )
 	}
 }
 
-void 
+void
 vl::EnvSettings::addWall( vl::EnvSettings::Wall const &wall )
 {
 	// Check that there is not already a wall with the same channel_name
@@ -138,7 +178,7 @@ vl::EnvSettings::addWall( vl::EnvSettings::Wall const &wall )
 		if( iter->channel_name == wall.channel_name )
 		{
 			std::string desc("Trying to add multiple walls to same channel.");
-			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) ); 
+			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 		}
 	}
 
@@ -151,26 +191,34 @@ vl::EnvSettings::getWall( size_t i ) const
 	return _walls.at(i);
 }
 
-void 
-vl::EnvSettings::addWindow( vl::EnvSettings::Window const &window )
+std::string
+vl::EnvSettings::getLogDir( vl::PATH_TYPE const type ) const
 {
-	// Check that there is not already a Window with the same name
-	std::vector<Window>::iterator iter;
-	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
+	if( type == PATH_REL )
+	{ return _log_dir; }
+	else
 	{
-		if( iter->name == window.name )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() ); }
+		fs::path path = fs::complete( _log_dir );
+		return path.file_string();
 	}
-
-	_windows.push_back(window);
 }
 
-vl::EnvSettings::Window const &
-vl::EnvSettings::getWindow( size_t i ) const
+void
+vl::EnvSettings::setExePath( std::string const &path )
 {
-	return _windows.at(i);
+	_exe_path = path;
 }
 
+std::string
+vl::EnvSettings::getEnvironementDir( void ) const
+{
+	fs::path envFile( getFile() );
+	fs::path envDir = envFile.parent_path();
+	if( !fs::exists( envDir ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.file_string() ) ); }
+
+	return envDir.file_string();
+}
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -224,9 +272,9 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processPlugins( xml_elem ); }
 
-	xml_elem = xml_root->first_node("eqc");
-	if( xml_elem )
-	{ processEqc( xml_elem ); }
+// 	xml_elem = xml_root->first_node("eqc");
+// 	if( xml_elem )
+// 	{ processEqc( xml_elem ); }
 
 	xml_elem = xml_root->first_node("tracking");
 	if( xml_elem )
@@ -240,9 +288,23 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processWalls( xml_elem ); }
 
-	xml_elem = xml_root->first_node("windows");
+	xml_elem = xml_root->first_node("server");
 	if( xml_elem )
-	{ processWindows( xml_elem ); }
+	{ processServer( xml_elem ); }
+
+	xml_elem = xml_root->first_node("master");
+	if( xml_elem )
+	{ processNode( xml_elem, _envSettings->getMaster() ); }
+
+	xml_elem = xml_root->first_node("slave");
+	while( xml_elem )
+	{
+		EnvSettings::Node slave;
+		processNode( xml_elem, slave );
+		_envSettings->getSlaves().push_back(slave);
+
+		xml_elem = xml_elem->next_sibling("slave");
+	}
 
 	xml_elem = xml_root->first_node("stereo");
 	if( xml_elem )
@@ -301,24 +363,24 @@ vl::EnvSettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 	}
 }
 
-void
-vl::EnvSettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
-{
-    rapidxml::xml_node<> *pElement = xml_node->first_node("file");
-
-    if( !pElement )
-    { return; }
-
-    _envSettings->setEqc( pElement->value() );
-
-    // No more than one eqc
-    pElement = pElement->next_sibling("file");
-    if( pElement )
-    {
-        std::cerr << "More than one eqc file? Only first one taken." << std::endl;
-        return;
-    }
-}
+// void
+// vl::EnvSettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
+// {
+//     rapidxml::xml_node<> *pElement = xml_node->first_node("file");
+//
+//     if( !pElement )
+//     { return; }
+//
+//     _envSettings->setEqc( pElement->value() );
+//
+//     // No more than one eqc
+//     pElement = pElement->next_sibling("file");
+//     if( pElement )
+//     {
+//         std::cerr << "More than one eqc file? Only first one taken." << std::endl;
+//         return;
+//     }
+// }
 
 
 void
@@ -364,7 +426,7 @@ vl::EnvSettingsSerializer::processCameraRotations( rapidxml::xml_node<>* xml_nod
 	_envSettings->setCameraRotationAllowed(flags);
 }
 
-void 
+void
 vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 {
 	rapidxml::xml_node<> *pWall = xml_node->first_node("wall");
@@ -418,8 +480,42 @@ vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 	}
 }
 
-void 
-vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<>* xml_node )
+void
+vl::EnvSettingsSerializer::processServer( rapidxml::xml_node< char > *xml_node )
+{
+	std::string hostname;
+	uint16_t port;
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("hostname");
+	if( attrib )
+	{
+		hostname = attrib->value();
+	}
+
+	attrib = xml_node->first_attribute("port");
+	if( attrib )
+	{
+		port = vl::from_string<uint16_t>( attrib->value() );
+	}
+
+	_envSettings->setServer( EnvSettings::Server( port, hostname ) );
+}
+
+void
+vl::EnvSettingsSerializer::processNode( rapidxml::xml_node< char > *xml_node, vl::EnvSettings::Node& node )
+{
+	std::string name;
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("name");
+	if( attrib )
+	{ name = attrib->value(); }
+
+	node.name = name;
+	rapidxml::xml_node<> *xml_elem = xml_node->first_node("windows");
+	if( xml_elem )
+	{ processWindows( xml_elem, node ); }
+}
+
+void
+vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSettings::Node &node )
 {
 	rapidxml::xml_node<> *pWindow = xml_node->first_node("window");
 
@@ -451,9 +547,15 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<>* xml_node )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
 		int y = vl::from_string<int>( attrib->value() );
 
-		// Add the wall
-		EnvSettings::Window window( name, w, h, x, y );
-		_envSettings->addWindow( window );
+		// Find wall reference
+		std::string wall_name;
+		rapidxml::xml_node<> *wall_elem = pWindow->first_node("wall");
+		if( wall_elem )
+		{ wall_name = wall_elem->value(); }
+
+		// Add the window
+		EnvSettings::Window window( name, wall_name, w, h, x, y );
+		node.addWindow( window );
 
 		pWindow = pWindow->next_sibling("window");
 	}
@@ -465,7 +567,7 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<>* xml_node )
 	}
 }
 
-void 
+void
 vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
 	EnvSettings::CFG cfg_val = EnvSettings::ON;
@@ -491,12 +593,12 @@ vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 	}
 }
 
-void 
+void
 vl::EnvSettingsSerializer::processIPD( rapidxml::xml_node<>* xml_node )
 {
 	double ipd = vl::from_string<double>(xml_node->value());
 	if( ipd < 0 )
-	{ 
+	{
 		std::string desc( "IPD can not be less than zero." );
 		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 	}
@@ -510,7 +612,7 @@ vl::EnvSettingsSerializer::processIPD( rapidxml::xml_node<>* xml_node )
 	}
 }
 
-std::vector<double> 
+std::vector<double>
 vl::EnvSettingsSerializer::getVector( rapidxml::xml_node<>* xml_node )
 {
 	std::vector<double> tmp(3);

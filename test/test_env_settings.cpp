@@ -78,7 +78,7 @@ struct SettingsFixture
         bool checkEmpty( void )
         {
                 return _settings->getPlugins().empty()
-                        && _settings->getEqc().empty()
+//                         && _settings->getEqc().empty()
                         && _settings->getTracking().empty();
 
         }
@@ -244,35 +244,35 @@ BOOST_AUTO_TEST_CASE( plugins_bad_use_attribute )
     BOOST_CHECK_EQUAL( _settings->getPlugins().at(1).second, false );
 }
 
-BOOST_AUTO_TEST_CASE( eqc_test )
-{
-    // Eqc node
-    rapidxml::xml_node<> *eqc = createEqc("/test/path" );
-    _config->append_node( eqc );
+// BOOST_AUTO_TEST_CASE( eqc_test )
+// {
+//     // Eqc node
+//     rapidxml::xml_node<> *eqc = createEqc("/test/path" );
+//     _config->append_node( eqc );
+//
+//     // is xml valid?
+//     BOOST_CHECK( readXML() );
+//
+//     // Does getEqc and serializer work correctly?
+//     BOOST_CHECK_EQUAL( _settings->getEqc(), "/test/path" );
+// }
 
-    // is xml valid?
-    BOOST_CHECK( readXML() );
-
-    // Does getEqc and serializer work correctly?
-    BOOST_CHECK_EQUAL( _settings->getEqc(), "/test/path" );
-}
-
-BOOST_AUTO_TEST_CASE( eqc_test_multiple_files )
-{
-    // Eqc node
-    rapidxml::xml_node<> *eqc = createEqc("/test/path" );
-    rapidxml::xml_node<> *node = _doc.allocate_node(
-            rapidxml::node_element, "file", "extra/path" );
-    eqc->append_node( node );
-    _config->append_node( eqc );
-
-    // is xml valid?
-    BOOST_CHECK( readXML() );
-
-    // Does getEqc work and values stored correctly
-    // Only first eqc should be taken
-    BOOST_CHECK_EQUAL( _settings->getEqc(), "/test/path" );
-}
+// BOOST_AUTO_TEST_CASE( eqc_test_multiple_files )
+// {
+//     // Eqc node
+//     rapidxml::xml_node<> *eqc = createEqc("/test/path" );
+//     rapidxml::xml_node<> *node = _doc.allocate_node(
+//             rapidxml::node_element, "file", "extra/path" );
+//     eqc->append_node( node );
+//     _config->append_node( eqc );
+//
+//     // is xml valid?
+//     BOOST_CHECK( readXML() );
+//
+//     // Does getEqc work and values stored correctly
+//     // Only first eqc should be taken
+//     BOOST_CHECK_EQUAL( _settings->getEqc(), "/test/path" );
+// }
 
 BOOST_AUTO_TEST_CASE( tracking_and_remove_test )
 {
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE( complete_test )
     BOOST_CHECK_EQUAL( _settings->getPlugins().at(1).second, true );
 
     // Does getEqc and serializer work correctly?
-    BOOST_CHECK_EQUAL( _settings->getEqc(), "/eqc/path" );
+//     BOOST_CHECK_EQUAL( _settings->getEqc(), "/eqc/path" );
 
     // Does getTracking and serializer work correctly?
     BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "/1/track" );

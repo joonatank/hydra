@@ -14,84 +14,74 @@
 #include "game_manager.hpp"
 
 #include "distrib_resource_manager.hpp"
+#include "pipe.hpp"
 
-eqOgre::Client::Client( vl::SettingsRefPtr settings )
-	: _settings(settings),
+eqOgre::Client::Client( vl::EnvSettingsRefPtr env, vl::SettingsRefPtr settings )
+	: _env(env),
+	  _settings(settings),
 	  _game_manager(new vl::GameManager ),
-	  _config(0)
+	  _config(0),
+	  _pipe_thread(0),
+	   _pipe(0)
 {
-	EQASSERT( settings );
+	assert( env && settings );
 }
 
 eqOgre::Client::~Client(void )
-{}
+{
+	delete _pipe_thread;
+	delete _pipe;
+	delete _game_manager;
+}
 
 
 bool
-eqOgre::Client::run(void )
+eqOgre::Client::run( void )
 {
-	// 1. connect to server
-	_server = new eq::Server;
-	if( !connectServer( _server ))
+	std::cout << "eqOgre::Client::run" << std::endl;
+	// Put the pipe thread spinning on both master and slave
+	// TODO Might need to make a copy of _env
+	assert( !_pipe && !_pipe_thread );
+	_pipe = new eqOgre::Pipe(_env);
+	// TODO create a custom wrapper for Pipe
+	_pipe_thread = new boost::thread( boost::ref(*_pipe) );
+
+	if( _env->isMaster() )
 	{
-		EQERROR << "Can't open server" << std::endl;
-		return false;
+		assert( _config );
+		_clock.reset();
+		_rendering_time = 0;
+		// 4. run main loop
+		uint32_t frame = 0;
+		while( _config->isRunning() )
+		{
+			_render( ++frame );
+		}
+
+		_exit();
 	}
-
-	// 2. choose config
-	eq::ConfigParams configParams;
-	eq::Config* config = _server->chooseConfig( configParams );
-
-	if( !config )
-	{
-		EQERROR << "No matching config on server" << std::endl;
-		disconnectServer( _server );
-		return false;
-	}
-
-	// 3. init config
-	if( !_init( config ) )
-	{ return false; }
-
-	EQASSERT( _config );
-	_clock.reset();
-	_rendering_time = 0;
-	// 4. run main loop
-	uint32_t frame = 0;
-	while( _config->isRunning() )
-	{
-		_render( ++frame );
-	}
-
-	_exit();
 
 	return true;
 }
 
-bool
-eqOgre::Client::_init( eq::Config *config )
+void
+eqOgre::Client::init( void )
 {
-	EQASSERT( dynamic_cast<Config *>(config) );
-	_config = static_cast<Config *>(config);
-
-	/// Set parameters to the config
-	_config->setGameManager( _game_manager );
-	_createResourceManager();
-	_config->setSettings( _settings );
-
-	/// TODO Register data here
-
-	if( !_config->init(0) )
+	std::cout << "eqOgre::Client::init" << std::endl;
+	if( _env->isMaster() )
 	{
-		EQWARN << "Error during initialization: " << config->getError()
-			<< std::endl;
-		_server->releaseConfig( _config );
-		disconnectServer( _server );
-		return false;
+		_createResourceManager();
+		_init();
+		_config = new eqOgre::Config( _game_manager, _settings, _env );
+		_config->init(0);
 	}
-	if( _config->getError() )
-	{ EQWARN << "Error during initialization: " << config->getError() << std::endl; }
+}
 
+/// ------------------------------- Private ------------------------------------
+bool
+eqOgre::Client::_init( void )
+{
+	// TODO this should be done in python and only on the master
 	std::string song_name("The_Dummy_Song.ogg");
 	_game_manager->createBackgroundSound(song_name);
 
@@ -101,18 +91,13 @@ eqOgre::Client::_init( eq::Config *config )
 void
 eqOgre::Client::_exit(void )
 {
-	EQINFO << "Exiting the config." << std::endl;
-	// 5. exit config
-	_config->exit();
+	if( _config )
+	{ _config->exit(); }
 
-	EQINFO << "Releasing config." << std::endl;
-	// 6. cleanup and exit
-	_server->releaseConfig( _config );
-	EQINFO << "Disconnecting from Server" << std::endl;
-	if( !disconnectServer( _server ))
-	{ EQERROR << "Client::disconnectServer failed" << std::endl; }
-
-	_server = 0;
+	// Remove the pipe thread
+	// TODO this should exit the thread cleanly with join, by sending a message
+	// indicating an exit to the pipe thread from Config::exit
+	_pipe_thread->interrupt();
 }
 
 void
@@ -125,16 +110,17 @@ eqOgre::Client::_render( uint32_t const frame )
 
 	_config->startFrame(frame);
 	_config->finishFrame();
-	if( _config->getError() )
-	{ EQWARN << "Error during frame start: " << _config->getError() << std::endl; }
+// 	if( _config->getError() )
+// 	{ EQWARN << "Error during frame start: " << _config->getError() << std::endl; }
 
-	_rendering_time += _frame_clock.getTimed();
+	double time = double(_frame_clock.getMicroseconds())/1000;
+	_rendering_time += time;
 	// Sleep enough to get a 60 fps but no more
 	// NOTE Of course because the converting to uint makes the time really huge
 	// Of course the next question is why the time is negative without rendering data
 	// i.e. why it would take more than 16.66ms for rendering a frame without data
 	// TODO the fps should be configurable
-	double sleep_time = 1000.0/FPS - _frame_clock.getTimed();
+	double sleep_time = 1000.0/FPS - time;
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
 
@@ -145,7 +131,7 @@ eqOgre::Client::_render( uint32_t const frame )
 		// to the console
 		// TODO also there should be possibility to reset the clock
 		// for massive parts in a scene for example
-		std::cout << "Avarage fps = " << 200.0/(_clock.getTimed()/1000)
+		std::cout << "Avarage fps = " << 200.0/(double(_clock.getMicroseconds())/1e6)
 			<< ". took " << _rendering_time/200
 			<< " ms in avarage for rendering one frame." << std::endl;
 
@@ -158,9 +144,9 @@ eqOgre::Client::_render( uint32_t const frame )
 void
 eqOgre::Client::_createResourceManager(void )
 {
-	EQINFO << "Initialising Resource Manager" << std::endl;
+	std::cout << "Initialising Resource Manager" << std::endl;
 
-	EQINFO << "Adding project directories to resources. "
+	std::cout << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
 
 	_game_manager->getReourceManager()->addResourcePath( _settings->getProjectDir() );
@@ -169,7 +155,7 @@ eqOgre::Client::_createResourceManager(void )
 	// TODO add case directory
 
 	// Add environment directory, used for tracking configurations
-	EQINFO << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	std::string tracking_dir( _settings->getEnvironementDir() + "/tracking" );
+	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
+	std::string tracking_dir( _env->getEnvironementDir() + "/tracking" );
 	_game_manager->getReourceManager()->addResourcePath( tracking_dir );
 }

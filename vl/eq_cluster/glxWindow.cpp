@@ -1,7 +1,13 @@
 
+// Interface
 #include "glxWindow.hpp"
-#include <eq/client/error.h>
-#include <eq/fabric/iAttribute.h>
+
+// Necessary for getPid
+#include "base/system_util.hpp"
+
+#include <assert.h>
+#include <iostream>
+#include <sstream>
 
 namespace
 {
@@ -9,32 +15,24 @@ static Bool WaitForNotify( Display*, XEvent *e, char *arg )
 { return (e->type == MapNotify) && (e->xmap.window == (::Window)arg); }
 }
 
-
-bool
-eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
+eqOgre::GLXWindow::GLXWindow( void )
+	: _xdisp(0), _drawable(0)
 {
-	if( !getXDisplay() )
+	// TODO this should support the correct display name
+	_xdisp = XOpenDisplay(NULL);
+	if( NULL == _xdisp )
 	{
-		setError( eq::ERROR_GLXWINDOW_NO_DISPLAY );
-		return false;
+		// TODO this should throw
+		return;
 	}
 
-	eq::PixelViewport pvp = getWindow()->getPixelViewport();
-	if( getIAttribute( eq::Window::IATTR_HINT_FULLSCREEN ) == eq::fabric::ON )
-	{
-		const int screen = DefaultScreen( getXDisplay() );
-
-		pvp.h = DisplayHeight( getXDisplay(), screen );
-		pvp.w = DisplayWidth( getXDisplay(), screen );
-		pvp.x = 0;
-		pvp.y = 0;
-
-		getWindow()->setPixelViewport( pvp );
-	}
-
-	XID drawable = _createWindow( visualInfo, pvp );
+	// TODO the window position and size needs to be passed here
+	XID drawable = _createWindow( 0, 0, 1024, 768 );
 	if( !drawable )
-		return false;
+	{
+		// TODO this should throw
+		return;
+	}
 
 	// map and wait for MapNotify event
 	XMapWindow( getXDisplay(), drawable );
@@ -42,78 +40,66 @@ eqOgre::GLXWindow::configInitGLXWindow( XVisualInfo* visualInfo )
 	XEvent event;
 	XIfEvent( getXDisplay(), &event, WaitForNotify, (XPointer)(drawable) );
 
-	XMoveResizeWindow( getXDisplay(), drawable, pvp.x, pvp.y, pvp.w, pvp.h );
+ 	XMoveResizeWindow( getXDisplay(), drawable, 0, 0, 1024, 768 );
 	XFlush( getXDisplay() );
 
-	// Grab keyboard focus in fullscreen mode
-	if( getIAttribute( eq::Window::IATTR_HINT_FULLSCREEN ) == eq::fabric::ON )
-		XGrabKeyboard( getXDisplay(), drawable, True, GrabModeAsync, GrabModeAsync,
-					CurrentTime );
-
-	setXDrawable( drawable );
+	_drawable = drawable;
 
 	std::cout << "Created X11 drawable " << drawable << std::endl;
-	return true;
+}
+
+eqOgre::GLXWindow::~GLXWindow(void )
+{
+	// TODO cleanup
 }
 
 XID
-eqOgre::GLXWindow::_createWindow( XVisualInfo* visualInfo , const eq::PixelViewport& pvp )
+eqOgre::GLXWindow::_createWindow( int x, int y, unsigned int w, unsigned int h )
 {
-	assert( getIAttribute( eq::Window::IATTR_HINT_DRAWABLE ) != eq::fabric::PBUFFER );
-
-	if( !visualInfo )
-	{
-		setError( eq::ERROR_SYSTEMWINDOW_NO_PIXELFORMAT );
-		return 0;
-	}
-
-	if( !getXDisplay() )
-	{
-		setError( eq::ERROR_GLXWINDOW_NO_DISPLAY );
-		return 0;
-	}
+	assert( NULL != getXDisplay() );
 
 	const int            screen = DefaultScreen( getXDisplay() );
 	XID                  parent = RootWindow( getXDisplay(), screen );
 	XSetWindowAttributes wa;
-	wa.colormap          = XCreateColormap( getXDisplay(), parent, visualInfo->visual,
-											AllocNone );
+	wa.colormap          = DefaultColormap( getXDisplay(), screen );
 	wa.background_pixmap = None;
 	wa.border_pixel      = 0;
 	wa.event_mask        = StructureNotifyMask | VisibilityChangeMask |
 							ExposureMask;
+	// Remove all decorations
+	wa.override_redirect = True;;
 
-	if( getIAttribute( eq::Window::IATTR_HINT_DECORATION ) != eq::fabric::OFF )
-		wa.override_redirect = False;
-	else
-		wa.override_redirect = True;
+	unsigned long int variables = CWBackPixmap | CWBorderPixel |
+ 								CWEventMask | CWColormap | CWOverrideRedirect;
+	int depth = XDefaultDepth( getXDisplay(), screen );
 
+	// TODO remove borders
 	XID drawable = XCreateWindow( getXDisplay(), parent,
-								pvp.x, pvp.y, pvp.w, pvp.h,
-								0, visualInfo->depth, InputOutput,
-								visualInfo->visual,
-								CWBackPixmap | CWBorderPixel |
-								CWEventMask | CWColormap | CWOverrideRedirect,
+								x, y, w, h,
+								0, depth, InputOutput,
+								DefaultVisual( getXDisplay(), screen ),
+								variables,
 								&wa );
 
 	if ( !drawable )
 	{
-		setError( eq::ERROR_GLXWINDOW_CREATEWINDOW_FAILED );
+		// TODO this should throw
 		return 0;
 	}
 
 	std::stringstream windowTitle;
-	const std::string& name = getWindow()->getName();
+	// TODO correct name
+	std::string name; //getWindow()->getName();
 
 	if( name.empty( ))
 	{
-		windowTitle << "eqOgre";
+		windowTitle << "Hydra";
 #ifndef NDEBUG
-		windowTitle << " (" << getpid() << ")";
+		windowTitle << " (" << vl::getPid() << ")";
 #endif
 	}
 	else
-		windowTitle << name;
+	{ windowTitle << name; }
 
 	XStoreName( getXDisplay(), drawable, windowTitle.str().c_str( ));
 

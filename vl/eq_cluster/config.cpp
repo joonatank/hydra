@@ -37,16 +37,23 @@
 
 uint16_t const SERVER_PORT = 4699;
 
-eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config( parent ), _server(0)
-{}
+eqOgre::Config::Config( vl::GameManagerPtr man, vl::SettingsRefPtr settings, vl::EnvSettingsRefPtr env )
+	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
+{
+	std::cout << "eqOgre::Config::Config" << std::endl;
+	assert( _game_manager && _settings && _env );
+	assert( _env->isMaster() );
+// 	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
+}
 
 eqOgre::Config::~Config( void )
 {}
 
 bool
-eqOgre::Config::init( eq::uint128_t const & )
+eqOgre::Config::init( uint64_t const & )
 {
+	std::cout << "eqOgre::Config::init" << std::endl;
+
 	_game_manager->createSceneManager( this );
 
 	_createServer();
@@ -56,7 +63,6 @@ eqOgre::Config::init( eq::uint128_t const & )
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
-	// FIXME
 	// Register SceneManager
 	std::cout << "Registering SceneManager" << std::endl;
 	registerObjectC( sm );
@@ -69,7 +75,7 @@ eqOgre::Config::init( eq::uint128_t const & )
 	_loadScenes();
 
 	// Create Tracker needs the SceneNodes for mapping
-	_createTracker(_settings);
+	_createTracker( _env );
 
 	std::vector<std::string> scripts = _settings->getScripts();
 
@@ -95,16 +101,18 @@ eqOgre::Config::init( eq::uint128_t const & )
 	// Registering Player in init
 	registerObjectC( player );
 
-	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
-	_distrib_settings.setResourceManagerID( res_man->getID() );
-	_distrib_settings.setPlayerID( player->getID() );
+// 	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
+// 	_distrib_settings.setResourceManagerID( res_man->getID() );
+// 	_distrib_settings.setPlayerID( player->getID() );
 
 	std::cout << "Registering Settings" << std::endl;
-	registerObject( &_distrib_settings );
-	assert( _distrib_settings.getID().isGenerated() );
+	// TODO the Environment settings and Project settings needs to be distributed
+	// somehow.
+// 	registerObject( &_distrib_settings );
+// 	assert( _distrib_settings.getID().isGenerated() );
 
-	if( !eq::Config::init( _distrib_settings.getID() ) )
-	{ return false; }
+// 	if( !eq::Config::init( _distrib_settings.getID() ) )
+// 	{ return false; }
 
 	std::cout << "Config::init DONE" << std::endl;
 
@@ -116,32 +124,21 @@ eqOgre::Config::init( eq::uint128_t const & )
 bool
 eqOgre::Config::exit( void )
 {
-	// First let the children clean up
-	bool retval = eq::Config::exit();
-
+	std::cout << "eqOgre::Config::exit" << std::endl;
 	std::cout << "Deregistering distributed data." << std::endl;
 
-	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
-	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
-	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
+// 	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
+// 	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
+// 	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
 
-	deregisterObject( &_distrib_settings );
+// 	deregisterObject( &_distrib_settings );
 
 	//	TODO add cleanup server
 
 	std::cout << "Config exited." << std::endl;
-	return retval;
+	return true;
 }
 
-void
-eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
-{
-	assert( settings );
-	assert( _game_manager );
-
-	_settings = settings;
-	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
-}
 
 // eqOgre::SceneNode *
 // eqOgre::Config::getSceneNode(const std::string& name)
@@ -149,15 +146,9 @@ eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
 // 	return _game_manager->getSceneManager()->getSceneNode(name);
 // }
 
-void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
-{
-	assert( man );
-	_game_manager = man;
-}
-
 
 uint32_t
-eqOgre::Config::startFrame( eq::uint128_t const &frameID )
+eqOgre::Config::startFrame( uint64_t const &frameID )
 {
 	/// Process a time step in the game
 	// New event interface
@@ -170,9 +161,14 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 	_updateServer();
 
 	/// Start rendering the frame
-	uint32_t retval = eq::Config::startFrame( 0 );
+// 	uint32_t retval = eq::Config::startFrame( 0 );
 
-	return retval;
+	return true;
+}
+
+void
+eqOgre::Config::finishFrame( void )
+{
 }
 
 /// ------------ Private -------------
@@ -253,7 +249,7 @@ eqOgre::Config::_updateServer( void )
 }
 
 void
-eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
+eqOgre::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
 	std::cout << "Creating Trackers." << std::endl;
 

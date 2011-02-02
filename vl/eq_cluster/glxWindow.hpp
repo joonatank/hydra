@@ -1,37 +1,38 @@
+/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	2011-01
+ *
+ *
+ */
+
 #ifndef EQOGRE_GLXWINDOW_HPP
 #define EQOGRE_GLXWINDOW_HPP
 
-#include <eq/client/glXWindow.h>
+// Base class
+#include "glWindow.hpp"
+
+#include <X11/Xlib.h>
 
 namespace eqOgre
 {
 
-class GLXWindow : public eq::GLXWindow
+class GLXWindow : public GLWindow
 {
 public :
-	GLXWindow( eq::Window *parent )
-		: eq::GLXWindow(parent)
-	{}
+	GLXWindow( void );
 
-	virtual ~GLXWindow( void ) {}
+	virtual ~GLXWindow( void );
 
-	/// These need to be empty for us to use our own OIS event handling
-	virtual void initEventHandler()
-	{ return; }
+	XID getXID( void ) const
+	{ return _drawable; }
 
-	virtual void exitEventHandler()
-	{ return; }
-
-	/// We override window creation because we use the XDisplay created by OIS
-	/// for event handling and the OIS XDisplay does not get all Keyboard
-	/// events if we don't disable those in here.
-	/// Disabling event receiving after window creation seems not to work.
-	virtual bool configInitGLXWindow( XVisualInfo* visualInfo );
-
+	Display *getXDisplay( void )
+	{ return _xdisp; }
 
 private :
-	XID _createWindow( XVisualInfo* visualInfo , const eq::PixelViewport& pvp );
+	XID _createWindow( int x, int y, unsigned int w, unsigned int h );
 
+	Display *_xdisp;
+	XID _drawable;
 };
 
 }

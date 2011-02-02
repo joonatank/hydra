@@ -44,7 +44,7 @@ public :
 	struct Wall
 	{
 		Wall( std::string const &nam, std::string const &channel_nam,
-			  std::vector<double> b_left, std::vector<double> b_right, 
+			  std::vector<double> b_left, std::vector<double> b_right,
 			  std::vector<double> t_left )
 			: name(nam), channel_name(channel_nam), bottom_left(b_left),
 			  bottom_right(b_right), top_left(t_left)
@@ -56,8 +56,8 @@ public :
 
 		// Wether or not the Wall has been initialised
 		bool empty( void ) const
-		{ 
-			return( name.empty() && channel_name.empty() && bottom_left.empty() 
+		{
+			return( name.empty() && channel_name.empty() && bottom_left.empty()
 					&& bottom_right.empty() && top_left.empty() );
 		}
 
@@ -76,8 +76,10 @@ public :
 
 	struct Window
 	{
-		Window( std::string const &nam, int width, int height, int px, int py )
-			: name(nam), w(width), h(height), x(px), y(py)
+		Window( std::string const &nam, std::string const &wall_nam,
+				int width, int height, int px, int py )
+			: name(nam), wall_name(wall_nam),
+			  w(width), h(height), x(px), y(py)
 		{
 			if( h < 0 || w < 0 )
 			{
@@ -85,7 +87,7 @@ public :
 				BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 			}
 		}
-		
+
 		// Default constructor to allow vector resize
 		Window( void )
 			: w(0), h(0), x(0), y(0)
@@ -93,12 +95,17 @@ public :
 
 		// Wether or not the Window has been initialised
 		bool empty( void ) const
-		{ 
-			return( name.empty() && w == 0 && h == 0 && x == 0 && y == 0 );
+		{
+			return( name.empty() && wall_name.empty()
+				&& w == 0 && h == 0 && x == 0 && y == 0 );
 		}
 
 		// Name of the window
 		std::string name;
+
+		// Name of the wall used for this window
+		std::string wall_name;
+
 		// Width of the window
 		int w;
 		// Height of the window
@@ -109,6 +116,47 @@ public :
 		int y;
 
 	};	// struct Window
+
+	struct Node
+	{
+		Node( std::string const &nam )
+			: name(nam)
+		{}
+
+		// Default constructor to allow vector resize
+		Node( void )
+		{}
+
+		bool empty( void ) const
+		{ return name.empty() && windows.empty(); }
+
+		void addWindow( Window const &window );
+
+		Window const &getWindow( size_t i ) const;
+
+		size_t getNWindows( void ) const
+		{ return windows.size(); }
+
+		std::vector<Window> const &getWindows( void ) const
+		{ return windows; }
+
+		std::string name;
+		std::vector<Window> windows;
+	};
+
+	struct Server
+	{
+		Server( uint16_t por, std::string const hostnam )
+			: port(por), hostname(hostnam)
+		{}
+
+		// Default constructor
+		Server( void )
+		{}
+
+		uint16_t port;
+		std::string hostname;
+	};
 
 	/// Configurations tokens for boolean values
 	enum CFG
@@ -128,6 +176,18 @@ public :
 	void clear( void );
 
 
+	bool isSlave( void ) const
+	{ return _slave; }
+
+	bool isMaster( void ) const
+	{ return !_slave; }
+
+	void setSlave( void )
+	{ _slave = true; }
+
+	void setMaster( void )
+	{ _slave = false; }
+
 	/// File path
 	std::string const &getFile( void ) const
 	{ return _file_path; }
@@ -137,15 +197,15 @@ public :
 
 	///// EQC /////////////////////////////////////////////////////
 	/// get the equalizer config file
-	std::string const &getEqc( void ) const
-	{ return _eqc; }
-
-	/// set the equalizer config file
-	void setEqc( std::string const &e )
-	{ _eqc = e; }
+// 	std::string const &getEqc( void ) const
+// 	{ return _eqc; }
+//
+// 	/// set the equalizer config file
+// 	void setEqc( std::string const &e )
+// 	{ _eqc = e; }
 
 	/// Get the absoulute path to eqc file
-	std::string getEqcFullPath( void ) const;
+// 	std::string getEqcFullPath( void ) const;
 
 	std::string getPluginsDirFullPath( void ) const;
 
@@ -165,9 +225,13 @@ public :
 	bool pluginOnOff( std::string const &pluginName, bool newState );
 
 	///// TRACKING /////////////////////////////////////////////////
-	/// Returns a vector of tracking files
+	/// Returns a vector of tracking configs
 	std::vector<Tracking> const &getTracking( void ) const
 	{ return _tracking; }
+
+	/// Retuns a vector of tracking files
+	// TODO add checking that the files are valid
+	std::vector< std::string > getTrackingFiles(void ) const;
 
 	/// Adds a tracking file to the tracking file stack
 	/// Checks that the same file tracking file is not added twice, NOP if the
@@ -197,15 +261,23 @@ public :
 	std::vector<Wall> const &getWalls( void ) const
 	{ return _walls; }
 
-	void addWindow( Window const &window );
+	std::vector<Node> &getSlaves( void )
+	{ return _slaves; }
 
-	Window const &getWindow( size_t i ) const;
+	std::vector<Node> const &getSlaves( void ) const
+	{ return _slaves; }
 
-	size_t getNWindows( void ) const
-	{ return _windows.size(); }
+	Node &getMaster( void )
+	{ return _master; }
 
-	std::vector<Window> const &getWindows( void ) const
-	{ return _windows; }
+	Node const &getMaster( void ) const
+	{ return _master; }
+
+	Server const &getServer( void ) const
+	{ return _server; }
+
+	void setServer( Server const &server )
+	{ _server = server; }
 
 	void setStereo( CFG stereo )
 	{ _stereo = stereo; }
@@ -219,23 +291,66 @@ public :
 	double getIPD( void ) const
 	{ return _ipd; }
 
+	/// Set wether or not suppress output to std::cerr
+	/// If set to true the application will print to std::cerr
+	/// instead of or in addition to printing to log file
+	void setVerbose( bool verbose )
+	{ _verbose = verbose; }
+
+	/// Wether we are outputing to std::cerr
+	/// If true will print to std::cerr, if false will not
+	///
+	/// Does not define anything about log files, the application might
+	/// print to log files even when set true or it might not
+	bool getVerbose( void ) const
+	{ return _verbose; }
+
+	/// Set the directory logs are stored
+	/// Path is assumed to be relative, though absolute might work it's
+	/// not guaranteed.
+	void setLogDir( std::string const &dir )
+	{ _log_dir = dir; }
+
+	/// Get the directory logs are stored.
+	/// Relative and absolute can be chosen using type parameter
+	/// Defaults to returning absolute path
+	std::string getLogDir( vl::PATH_TYPE const type = vl::PATH_ABS ) const;
+
+	/// Set the exe path i.e. the command used to start the program
+	void setExePath( std::string const &path );
+
+	std::string getEnvironementDir( void ) const;
+
 private :
 
 	std::string _file_path;
 
-	std::string _eqc;
+// 	std::string _eqc;
 
 	std::vector<std::pair<std::string, bool> > _plugins;
 	std::vector<Tracking> _tracking;
 
 	uint32_t _camera_rotations_allowed;
 
+	Server _server;
+
+	Node _master;
+	std::vector<Node> _slaves;
+
 	std::vector<Wall> _walls;
-	std::vector<Window> _windows;
 
 	CFG _stereo;
 	// Inter pupilar distance
 	double _ipd;
+
+	// Is this structure for a slave or a master
+	bool _slave;
+
+	bool _verbose;
+
+	std::string _log_dir;
+
+	std::string _exe_path;
 
 };	// class EnvSettings
 
@@ -264,7 +379,7 @@ protected :
 
 	void processPlugins( rapidxml::xml_node<>* XMLNode );
 
-	void processEqc( rapidxml::xml_node<>* XMLNode );
+// 	void processEqc( rapidxml::xml_node<>* XMLNode );
 
 	void processTracking( rapidxml::xml_node<>* XMLNode );
 
@@ -272,7 +387,11 @@ protected :
 
 	void processWalls( rapidxml::xml_node<>* XMLNode );
 
-	void processWindows( rapidxml::xml_node<>* XMLNode );
+	void processServer( rapidxml::xml_node<>* XMLNode );
+
+	void processNode( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
+
+	void processWindows( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
 
 	void processStereo( rapidxml::xml_node<>* XMLNode );
 

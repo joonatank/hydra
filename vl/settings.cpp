@@ -14,68 +14,16 @@
 
 #include "base/envsettings.hpp"
 
-std::string
-vl::createLogFilePath( const std::string &project_name,
-					   const std::string &identifier,
-					   const std::string &prefix,
-					   const std::string &log_dir )
-{
-	uint32_t pid = vl::getPid();
-	std::stringstream ss;
 
-	if( !log_dir.empty() )
-	{ ss << log_dir << "/"; }
-
-	if( project_name.empty() )
-	{ ss << "unamed"; }
-	else
-	{ ss << project_name; }
-
-	if( !identifier.empty() )
-	{ ss << '_' << identifier; }
-
-	ss << '_' << pid;
-
-	if( !prefix.empty() )
-	{ ss << '_' << prefix; }
-
-	ss << ".log";
-
-	return ss.str();
-}
-
-
-
-vl::Settings::Settings( vl::EnvSettingsRefPtr env, vl::ProjSettingsRefPtr proj,
+vl::Settings::Settings( vl::ProjSettingsRefPtr proj,
 						vl::ProjSettingsRefPtr global )
-	: _env(env),
-	  _global(global),
-	  _proj(proj),
-	  _verbose(false)
+	: _global(global),
+	  _proj(proj)
+// 	  _verbose(false)
 {}
 
 vl::Settings::~Settings( void )
 {}
-
-std::string
-vl::Settings::getLogDir(vl::Settings::PATH_TYPE const type ) const
-{
-	if( type == PATH_REL )
-	{ return _log_dir; }
-	else
-	{
-		fs::path path = fs::complete( _log_dir );
-		return path.file_string();
-	}
-}
-
-void
-vl::Settings::setExePath( std::string const &path )
-{
-	_exe_path = path;
-
-	_updateArgs();
-}
 
 std::string
 vl::Settings::getProjectName(void ) const
@@ -86,44 +34,27 @@ vl::Settings::getProjectName(void ) const
 	{ return std::string(); }
 }
 
-std::string
-vl::Settings::getEqLogFilePath( PATH_TYPE const type ) const
-{
-	return getLogFilePath( "eq", "", type );
-}
+// std::string
+// vl::Settings::getEqLogFilePath( PATH_TYPE const type ) const
+// {
+// 	return getLogFilePath( "eq", "", type );
+// }
+//
+// std::string
+// vl::Settings::getOgreLogFilePath( PATH_TYPE const type  ) const
+// {
+// 	return getLogFilePath( "ogre", "", type );
+// }
 
-std::string
-vl::Settings::getOgreLogFilePath( PATH_TYPE const type  ) const
-{
-	return getLogFilePath( "ogre", "", type );
-}
-
-std::string
-vl::Settings::getLogFilePath( const std::string &identifier,
-							  const std::string &prefix,
-							  PATH_TYPE const type ) const
-{
-	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir(type) );
-}
-
-std::vector< std::string >
-vl::Settings::getTrackingFiles(void ) const
-{
-	std::vector<std::string> vec;
-
-	if( !_env )
-	{ return vec; }
-
-	for( size_t i = 0; i < _env->getTracking().size(); ++i )
-	{
-		EnvSettings::Tracking const &track = _env->getTracking().at(i);
-		if( track.use )
-		{ vec.push_back(track.file); }
-	}
-
-	return vec;
-}
-
+// std::string
+// vl::Settings::getLogFilePath( const std::string &identifier,
+// 							  const std::string &prefix,
+// 							  PATH_TYPE const type ) const
+// {
+// // TODO move this to the calling function, because this doesn't have both
+// // the log dir and the project name
+// // 	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir(type) );
+// }
 
 
 std::vector< vl::ProjSettings::Scene>
@@ -189,22 +120,6 @@ vl::Settings::getProjectDir( void ) const
 	return projDir.file_string();
 }
 
-std::string
-vl::Settings::getEnvironementDir( void ) const
-{
-	// This shouldn't be called from slave node
-	if( !_env )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	fs::path envFile( _env->getFile() );
-	fs::path envDir = envFile.parent_path();
-	if( !fs::exists( envDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.file_string() ) ); }
-
-	return envDir.file_string();
-}
-
-
 // --------- Settings Protected --------
 void
 vl::Settings::_addScripts( std::vector< std::string > &vec,
@@ -235,7 +150,7 @@ vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene> &vec,
 	}
 }
 
-
+/*
 void
 vl::Settings::_updateArgs( void )
 {
@@ -251,4 +166,4 @@ vl::Settings::_updateArgs( void )
 		_eq_args.add( "--eq-config" );
 		_eq_args.add( _env->getEqcFullPath().c_str() );
 	}
-}
+}*/

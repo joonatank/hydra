@@ -18,6 +18,18 @@ namespace fs = boost::filesystem;
 namespace vl
 {
 
+enum PATH_TYPE
+{
+	PATH_ABS,
+	PATH_REL
+};
+
+std::string
+createLogFilePath( const std::string &project_name,
+					   const std::string &identifier,
+					   const std::string &prefix = std::string(),
+					   const std::string &log_dir = std::string() );
+
 /**	Find a plugin from system path or environment path
  *	Input: plugin file name (without the extension .dll or .so)
 

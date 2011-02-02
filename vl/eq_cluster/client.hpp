@@ -5,27 +5,34 @@
 #ifndef EQ_OGRE_CLIENT_HPP
 #define EQ_OGRE_CLIENT_HPP
 
-// Equalizer
-#include <eq/eq.h>
+// Equalizer used for timers
+// TODO replace with ogre timer
+// #include <eq/eq.h>
+#include <OGRE/OgreTimer.h>
+
+#include <boost/thread.hpp>
 
 #include "typedefs.hpp"
 
 namespace eqOgre
 {
 	class Config;
+	class Pipe;
 
-    class Client : public eq::Client
+    class Client
     {
     public:
-		Client( vl::SettingsRefPtr settings );
+		Client( vl::EnvSettingsRefPtr env, vl::SettingsRefPtr settings );
 
         virtual ~Client (void);
 
 		bool run( void );
 
+		void init( void );
+
 	protected:
 
-		bool _init( eq::Config *config );
+		bool _init( void );
 		void _exit( void );
 
 		void _render( uint32_t const frame );
@@ -33,26 +40,26 @@ namespace eqOgre
 		/// Resources
 		void _createResourceManager( void );
 
+
+		vl::EnvSettingsRefPtr _env;
+		vl::SettingsRefPtr _settings;
+
+		vl::GameManagerPtr _game_manager;
+
 		// Clocks
-		eq::base::Clock _clock;
+		Ogre::Timer _clock;
 		// Used to measure one frame time
-		eq::base::Clock _frame_clock;
+		Ogre::Timer _frame_clock;
 		// Time used for rendering the frames
 		// (well not excatly as there is lots of other stuff in there also)
 		// but this does not have the sleeping time
 		double _rendering_time;
 
-		vl::SettingsRefPtr _settings;
-
-		vl::GameManagerPtr _game_manager;
-
-		eq::ServerPtr _server;
+// 		eq::ServerPtr _server;
 		eqOgre::Config *_config;
 
-		/// Equalizer overrides
-		// Needs to be overriden if we want that the listening client stays
-		// running forever and not quit when the application quits.
-//		virtual void clientLoop (void);
+		boost::thread *_pipe_thread;
+		eqOgre::Pipe *_pipe;
 
     };	// class Client
 

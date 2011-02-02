@@ -2,11 +2,16 @@
 #define VL_BASE_HELPERS_HPP
 
 /// C headers
-// Necessary for getpid()
+
+// Necessary for uint32_t
 #include <stdint.h>
 
 #ifdef VL_WIN32
+// Necessary for GetCurrentProcessId
 #include <Windows.h>
+#else
+// Necessary for getpid()
+#include <unistd.h>
 #endif
 
 namespace vl

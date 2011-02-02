@@ -13,24 +13,24 @@
 #include "base/string_utils.hpp"
 
 /// ------------------ Resource -----------------------
-void 
+void
 vl::Resource::set( char const *mem, size_t size )
 {
-	EQASSERT( (size == 0 && mem == 0) || size > 0 );
+	assert( (size == 0 && mem == 0) || size > 0 );
 	_memory.resize(size);
 
 	if( size > 0 )
 	{ ::memcpy( &(_memory[0]), mem, size ); }
 }
 
-void 
+void
 vl::Resource::set( std::vector<char> const &mem )
 {
 	_memory = mem;
 }
 
 /// ------------------ TextResource -----------------------
-void 
+void
 vl::TextResource::set( char const *mem, size_t size )
 {
 	if( mem )
@@ -41,7 +41,7 @@ vl::TextResource::set( char const *mem, size_t size )
 	}
 }
 
-void 
+void
 vl::TextResource::set( std::vector<char> const &mem )
 {
 	std::string str( mem[0], mem.size()-1 );

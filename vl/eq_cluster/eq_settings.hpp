@@ -18,10 +18,11 @@
 // Needed for RefPtrs
 #include "typedefs.hpp"
 
+// TODO seems like this changed to DistributedEnvSettings
 namespace eqOgre
 {
 
-vl::SettingsRefPtr getSettings( int argc, char **argv );
+// vl::SettingsRefPtr getSettings( int argc, char **argv );
 
 /// The settings for the current project that needs to be distributed
 /// Minimal version of vl::Settings that does not contain information on the
@@ -70,13 +71,13 @@ public :
 	uint32_t getCameraRotationAllowed() const
 	{ return _camera_rotations_allowed; }
 
-	vl::EnvSettings::Window findWindow( std::string const &name ) const;
+// 	vl::EnvSettings::Window findWindow( std::string const &name ) const;
 
-	vl::EnvSettings::Window const &getWindow( size_t i ) const
-	{ return _windows.at(i); }
+// 	vl::EnvSettings::Window const &getWindow( size_t i ) const
+// 	{ return _windows.at(i); }
 
-	size_t getNWindows( void ) const
-	{ return _windows.size(); }
+// 	size_t getNWindows( void ) const
+// 	{ return _windows.size(); }
 
 	vl::EnvSettings::Wall findWall( std::string const &channel_name ) const;
 
@@ -108,7 +109,7 @@ protected :
 
 	std::vector<vl::EnvSettings::Wall> _walls;
 
-	std::vector<vl::EnvSettings::Window> _windows;
+// 	std::vector<vl::EnvSettings::Window> _windows;
 
 	vl::EnvSettings::CFG _stereo;
 

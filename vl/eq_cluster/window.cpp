@@ -29,60 +29,58 @@
 #include "pipe.hpp"
 
 /// ----------------------------- Public ---------------------------------------
-eqOgre::Window::Window(eq::Pipe *parent)
-	: eq::Window( parent ), _ogre_window(0),
+eqOgre::Window::Window( eqOgre::Pipe *parent )
+	: _pipe( parent ), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
-{}
+{
+	assert( _pipe );
+}
 
 eqOgre::Window::~Window(void )
 {}
 
-eqOgre::DistributedSettings const &
-eqOgre::Window::getSettings( void ) const
-{
-	assert( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
-	return static_cast<eqOgre::Pipe const *>(getPipe())->getSettings();
-}
+// eqOgre::DistributedSettings const &
+// eqOgre::Window::getSettings( void ) const
+// {
+// 	return _pipe->getSettings();
+// }
 
 vl::Player const &
 eqOgre::Window::getPlayer( void ) const
 {
-	assert( dynamic_cast<eqOgre::Pipe const *>( getPipe() ) );
-	return static_cast<eqOgre::Pipe const *>(getPipe())->getPlayer();
+	return _pipe->getPlayer();
 }
 
 vl::ogre::RootRefPtr
 eqOgre::Window::getOgreRoot( void )
 {
-	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
-	return static_cast<eqOgre::Pipe *>(getPipe())->getRoot();
+	return _pipe->getRoot();
 }
 
 void
-eqOgre::Window::setCamera(Ogre::Camera* camera)
+eqOgre::Window::setCamera( Ogre::Camera *camera )
 {
-	Channels const &chanlist = getChannels();
-	for( size_t i = 0; i < chanlist.size(); ++i )
-	{
-		assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
-		eqOgre::Channel *channel =
-			static_cast<eqOgre::Channel *>( chanlist.at(i) );
-		channel->setCamera( camera );
-	}
+	// FIXME channels are not yet supported
+// 	Channels const &chanlist = getChannels();
+// 	for( size_t i = 0; i < chanlist.size(); ++i )
+// 	{
+// 		assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+// 		eqOgre::Channel *channel =
+// 			static_cast<eqOgre::Channel *>( chanlist.at(i) );
+// 		channel->setCamera( camera );
+// 	}
 }
 
 Ogre::Camera *
 eqOgre::Window::getCamera( void )
 {
-	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
-	return static_cast<eqOgre::Pipe *>(getPipe())->getCamera();
+	return _pipe->getCamera();
 }
 
 Ogre::SceneManager *
-eqOgre::Window::getSceneManager(void )
+eqOgre::Window::getSceneManager( void )
 {
-	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
-	return static_cast<eqOgre::Pipe *>(getPipe())->getSceneManager();
+	return _pipe->getSceneManager();
 }
 
 void
@@ -163,18 +161,18 @@ eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id
 /// -------------------------- Protected ---------------------------------------
 // ConfigInit can not throw, it must return false on error. CONFIRMED
 bool
-eqOgre::Window::configInit( const eq::uint128_t& initID )
+eqOgre::Window::configInit( uint64_t initID )
 {
 	std::string message = "eqOgre::Window::configInit";
 	Ogre::LogManager::getSingleton().logMessage(message);
 
-	if( !eq::Window::configInit( initID ) )
-	{
-		// TODO add error status flag
-		message = "eq::Window::configInit failed";
-		Ogre::LogManager::getSingleton().logMessage(message);
-		return false;
-	}
+// 	if( !eq::Window::configInit( initID ) )
+// 	{
+// 		// TODO add error status flag
+// 		message = "eq::Window::configInit failed";
+// 		Ogre::LogManager::getSingleton().logMessage(message);
+// 		return false;
+// 	}
 
 	try {
 		createOgreWindow();
@@ -217,7 +215,7 @@ eqOgre::Window::configInit( const eq::uint128_t& initID )
 bool eqOgre::Window::configExit(void )
 {
 	// Cleanup children first
-	bool retval = eq::Window::configExit();
+// 	bool retval = eq::Window::configExit();
 
 	// Should clean out OIS and Ogre
 	std::string message = "Cleaning out OIS";
@@ -230,11 +228,11 @@ bool eqOgre::Window::configExit(void )
 		_input_manager = 0;
 	}
 
-	return retval;
+	return true;
 }
 
 void
-eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
+eqOgre::Window::frameStart( uint64_t frameID, const uint32_t frameNumber )
 {
 	// We need to set the Viewport here because the Camera doesn't exists in
 	// configInit
@@ -244,38 +242,39 @@ eqOgre::Window::frameStart(const eq::uint128_t& frameID, const uint32_t frameNum
 		std::string message = "Create a Ogre Viewport for each Channel";
 		Ogre::LogManager::getSingleton().logMessage(message);
 
-		Channels chanlist = getChannels();
-		for( size_t i = 0; i < chanlist.size(); ++i )
-		{
-			assert( _ogre_window && getCamera() );
-			Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
-			assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
-			eqOgre::Channel *channel =
-				static_cast<eqOgre::Channel *>( chanlist.at(i) );
-
-			// Set some parameters to the viewport
-			// TODO this should be configurable from DotScene
-			viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-			viewport->setAutoUpdated(false);
-
-			// Cleanup old viewport
-			if( channel->getViewport() )
-			{ _ogre_window->removeViewport( channel->getViewport()->getZOrder() ); }
-
-			// Set the new viewport
-			channel->setViewport( viewport );
-		}
+		// FIXME Channels are not yet supported
+// 		Channels chanlist = getChannels();
+// 		for( size_t i = 0; i < chanlist.size(); ++i )
+// 		{
+// 			assert( _ogre_window && getCamera() );
+// 			Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
+// 			assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
+// 			eqOgre::Channel *channel =
+// 				static_cast<eqOgre::Channel *>( chanlist.at(i) );
+//
+// 			// Set some parameters to the viewport
+// 			// TODO this should be configurable from DotScene
+// 			viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+// 			viewport->setAutoUpdated(false);
+//
+// 			// Cleanup old viewport
+// 			if( channel->getViewport() )
+// 			{ _ogre_window->removeViewport( channel->getViewport()->getZOrder() ); }
+//
+// 			// Set the new viewport
+// 			channel->setViewport( viewport );
+// 		}
 
 		inited = true;
 	}
 
-	eq::Window::frameStart(frameID, frameNumber);
+// 	eq::Window::frameStart(frameID, frameNumber);
 }
 
 void
-eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNumber)
+eqOgre::Window::frameFinish( uint64_t frameID, const uint32_t frameNumber )
 {
-	eq::Window::frameFinish(frameID, frameNumber);
+// 	eq::Window::frameFinish(frameID, frameNumber);
 
 	if( _keyboard && _mouse )
 	{
@@ -289,15 +288,17 @@ eqOgre::Window::frameFinish(const eq::uint128_t &frameID, const uint32_t frameNu
 	}
 }
 
+// FIXME the Window creation does not work at the moment
 bool
-eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
+eqOgre::Window::configInitSystemWindow( uint64_t initID )
 {
-	const eq::Pipe* pipe = getPipe();
+// 	const eq::Pipe* pipe = getPipe();
 	eq::SystemWindow* systemWindow = 0;
 
 	std::string message;
 #if defined GLX
-	systemWindow = new eqOgre::GLXWindow( this );
+	// FIXME We need to overload GLXWindow completely
+// 	systemWindow = new eqOgre::GLXWindow( this );
 #elif defined WGL
 	systemWindow = new eqOgre::WGLWindow( this );
 #endif
@@ -311,18 +312,19 @@ eqOgre::Window::configInitSystemWindow(const eq::uint128_t &initID)
 		return false;
 	}
 
-	setSystemWindow( systemWindow );
+// 	setSystemWindow( systemWindow );
 	return true;
 }
 
 void
 eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
 {
-	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
-	eqOgre::Pipe *pipe = static_cast<eqOgre::Pipe *>( getPipe() );
-	pipe->sendEvent(event);
+// 	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
+// 	eqOgre::Pipe *pipe = static_cast<eqOgre::Pipe *>( getPipe() );
+	_pipe->sendEvent(event);
 }
 
+// FIXME the system windows are still murky
 void
 eqOgre::Window::createInputHandling( void )
 {
@@ -348,19 +350,19 @@ eqOgre::Window::createInputHandling( void )
 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 #elif defined OIS_LINUX_PLATFORM
-	// TODO AGL support is missing
-	assert( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
-	eq::GLXWindowIF *os_win = static_cast<eq::GLXWindowIF *>( getSystemWindow() );
-	if( !os_win )
-	{
-		// TODO add error status
-		message = "Couldn't get GLX system window";
-		Ogre::LogManager::getSingleton().logMessage(message);
-	}
-	else
-	{
-		ss << os_win->getXDrawable();
-	}
+	// FIXME
+// 	assert( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
+	GLWindow *os_win = getSystemWindow();
+// 	if( !os_win )
+// 	{
+// 		// TODO add error status
+// 		message = "Couldn't get GLX system window";
+// 		Ogre::LogManager::getSingleton().logMessage(message);
+// 	}
+// 	else
+// 	{
+// 		ss << os_win->getXDrawable();
+// 	}
 #endif
 
 	OIS::ParamList pl;
@@ -381,8 +383,9 @@ eqOgre::Window::createInputHandling( void )
 
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
 
-	_mouse ->getMouseState().height = getPixelViewport().h;
-	_mouse ->getMouseState().width	= getPixelViewport().w;
+	// FIXME the size of the window?
+// 	_mouse ->getMouseState().height = getPixelViewport().h;
+// 	_mouse ->getMouseState().width	= getPixelViewport().w;
 
 	_mouse->setEventCallback(this);
 
