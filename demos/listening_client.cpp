@@ -11,14 +11,16 @@
 
 // Necessary for settings
 #include "eq_cluster/eq_settings.hpp"
-// Necessary for creating equalizer nodes
-#include "eq_cluster/nodeFactory.hpp"
+
 // Necessary for equalizer client creation
 #include "eq_cluster/client.hpp"
 
 #include "program_options.hpp"
+#include "base/string_utils.hpp"
 
 #include "settings.hpp"
+
+#include <OGRE/OgreException.h>
 
 vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions options )
 {
@@ -125,10 +127,6 @@ vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions options )
 
 int main( const int argc, char** argv )
 {
-// 	std::ofstream *log_file = 0;
-
-// 	eq::base::RefPtr< eqOgre::Client > client;
-
 	bool error = false;
 	try
 	{
@@ -148,20 +146,6 @@ int main( const int argc, char** argv )
 			env = getSlaveSettings(options);
 		}
 
-// 		vl::Args &arg = settings->getEqArgs();
-
-// 		std::cout << "Equalizer arguments = " << settings->getEqArgs() << std::endl;
-
-// 		int eq_argc = arg.size();
-// 		char **eq_argv = arg.getData();
-
-		// 1. Equalizer initialization
-// 		if( !eq::init( eq_argc, eq_argv, &nodeFactory ) )
-// 		{
-// 			EQERROR << "Equalizer init failed" << std::endl;
-// 			error = true;
-// 		}
-
 		// 2. initialization of local client node
 		if( !env )
 		{ return -1; }
@@ -172,11 +156,6 @@ int main( const int argc, char** argv )
 		std::cout << "Creating client" << std::endl;
 		eqOgre::Client client( env, settings );
 		client.init();
-// 		if( !client->initLocal( eq_argc, eq_argv ) )
-// 		{
-// 			EQERROR << "client->initLocal failed" << std::endl;
-// 			error = true;
-// 		}
 
 		if( !error )
 		{
