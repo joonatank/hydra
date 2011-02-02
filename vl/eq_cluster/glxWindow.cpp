@@ -5,6 +5,8 @@
 // Necessary for getPid
 #include "base/system_util.hpp"
 
+#include "window.hpp"
+
 #include <assert.h>
 #include <iostream>
 #include <sstream>
@@ -15,8 +17,8 @@ static Bool WaitForNotify( Display*, XEvent *e, char *arg )
 { return (e->type == MapNotify) && (e->xmap.window == (::Window)arg); }
 }
 
-eqOgre::GLXWindow::GLXWindow( void )
-	: _xdisp(0), _drawable(0)
+eqOgre::GLXWindow::GLXWindow( eqOgre::Window *win )
+	: _window(win), _xdisp(0), _drawable(0), _glContext(0)
 {
 	// TODO this should support the correct display name
 	_xdisp = XOpenDisplay(NULL);
@@ -25,6 +27,9 @@ eqOgre::GLXWindow::GLXWindow( void )
 		// TODO this should throw
 		return;
 	}
+
+	XVisualInfo *visuInfo = _chooseVisual();
+	assert( visuInfo );
 
 	// TODO the window position and size needs to be passed here
 	XID drawable = _createWindow( 0, 0, 1024, 768 );
@@ -44,6 +49,8 @@ eqOgre::GLXWindow::GLXWindow( void )
 	XFlush( getXDisplay() );
 
 	_drawable = drawable;
+
+	_glContext = createGLXContext( visuInfo );
 
 	std::cout << "Created X11 drawable " << drawable << std::endl;
 }
@@ -108,4 +115,86 @@ eqOgre::GLXWindow::_createWindow( int x, int y, unsigned int w, unsigned int h )
 	XSetWMProtocols( getXDisplay(), drawable, &deleteAtom, 1 );
 
 	return drawable;
+}
+
+void
+eqOgre::GLXWindow::makeCurrent( void ) const
+{
+    assert( _xdisp );
+
+    glXMakeCurrent( _xdisp, _drawable, _glContext );
+//     GLXWindowIF::makeCurrent();
+    if( _glContext )
+    {
+        std::cerr << "OpenGL error After glXMakeCurrent" << std::endl;
+    }
+}
+
+GLXContext
+eqOgre::GLXWindow::createGLXContext( XVisualInfo *visuInfo )
+{
+	std::cout << "eqOgre::GLXWindow::createGLXContext" << std::endl;
+	assert( _xdisp && visuInfo );
+
+	GLXContext shareCtx = 0;
+//     const Window* shareWindow = getWindow()->getSharedContextWindow();
+//     const SystemWindow* sysWindow =
+//         shareWindow ? shareWindow->getSystemWindow() :0;
+//     if( sysWindow )
+//     {
+//         EQASSERT( dynamic_cast< const GLXWindowIF* >( sysWindow ));
+//         const GLXWindowIF* shareGLXWindow = static_cast< const GLXWindow* >(
+//                                                 sysWindow );
+//         shareCtx = shareGLXWindow->getGLXContext();
+//     }
+
+	GLXContext context = glXCreateContext( _xdisp, visuInfo, shareCtx, True );
+	if( !context )
+	{
+		std::cerr << "Failed creating GLX context." << std::endl;
+		// TODO should throw
+//         setError( ERROR_GLXWINDOW_CREATECONTEXT_FAILED );
+		return 0;
+	}
+
+	return context;
+}
+
+XVisualInfo *
+eqOgre::GLXWindow::_chooseVisual( void )
+{
+	assert( getXDisplay() );
+	const int screen = DefaultScreen( getXDisplay() );
+	XVisualInfo *info = 0;
+
+	if( !info )
+	{
+		std::cout << "Trying to choose Visual with Stereo." << std::endl;
+		int attribList[] = {
+			GLX_DOUBLEBUFFER,
+			GLX_STEREO,
+			None };
+
+		info = glXChooseVisual( getXDisplay(), screen, attribList );
+	}
+
+	if( !info )
+	{
+		std::cout << "Trying to choose Visual without Stereo." << std::endl;
+		int attribList[] = {
+			GLX_DOUBLEBUFFER,
+			None };
+
+		info = glXChooseVisual( getXDisplay(), screen, attribList );
+	}
+
+	if( !info )
+	{
+		std::cout << "Trying to choose Visual without Stereo and without Double buffering." << std::endl;
+		int attribList[] = { None };
+
+		info = glXChooseVisual( getXDisplay(), screen, attribList );
+	}
+
+	return info;
 }

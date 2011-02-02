@@ -7,8 +7,6 @@
 #ifndef EQ_ORGE_PIPE_HPP
 #define EQ_ORGE_PIPE_HPP
 
-// #include <eq/client/pipe.h>
-
 #include "eq_ogre/ogre_root.hpp"
 #include "eq_settings.hpp"
 #include "player.hpp"
@@ -27,7 +25,9 @@ class Window;
 class Pipe : public vl::Session
 {
 public :
-	Pipe( vl::EnvSettingsRefPtr env );
+	Pipe( std::string const &name,
+		  std::string const &server_address,
+		  uint16_t server_port );
 
 	virtual ~Pipe( void );
 
@@ -54,6 +54,9 @@ public :
 	/// Boost thread operator
 	void operator()();
 
+	std::string const &getName( void ) const
+	{ return _name; }
+
 protected :
 	/// Equalizer overrides
 
@@ -72,7 +75,7 @@ protected :
 	bool _loadScene( void );
 
 	/// message passing
-	void _createClient( void );
+	void _createClient( std::string const &server_address, uint16_t server_port );
 	void _handleMessages( void );
 	void _handleMessage( vl::cluster::Message *msg );
 
@@ -86,6 +89,9 @@ protected :
 
 	void _createWindow( void );
 
+	std::string _name;
+
+	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
 
 	/// Ogre data
@@ -96,7 +102,6 @@ protected :
 
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;
-// 	eqOgre::DistributedSettings _settings;
 	vl::DistribResourceManager _resource_manager;
 	vl::Player _player;
 	std::string _active_camera_name;
@@ -108,7 +113,6 @@ protected :
 	/// Input events to be sent
 	std::vector<vl::cluster::EventData> _events;
 
-	eqOgre::GLWindow *_system_window;
 	eqOgre::Window *_window;
 
 };	// class Pipe

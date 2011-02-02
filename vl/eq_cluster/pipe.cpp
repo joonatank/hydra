@@ -19,23 +19,20 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
-#ifdef VL_WIN32
-#include "wglWindow.hpp"
-#else
-#include "glxWindow.hpp"
-#endif
-
-char const *SERVER_NAME = "localhost";
-uint16_t const SERVER_PORT = 4699;
-
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
-eqOgre::Pipe::Pipe( vl::EnvSettingsRefPtr env )
-	: _env(env), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
-{}
+eqOgre::Pipe::Pipe( std::string const &name,
+					std::string const &server_address,
+					uint16_t server_port )
+	: _name(name), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
+{
+	_createClient( server_address, server_port );
+}
 
 eqOgre::Pipe::~Pipe( void )
-{}
+{
+	delete _client;
+}
 
 vl::EnvSettingsRefPtr
 eqOgre::Pipe::getSettings( void )
@@ -82,16 +79,6 @@ eqOgre::Pipe::configInit( uint64_t initID )
 {
 	std::cout << "eqOgre::Pipe::configInit." << std::endl;
 
-	_createClient();
-
-	_createWindow();
-
-	_mapData( initID );
-
-	_handleMessages();
-
-	_syncData();
-
 	if( !_createOgre() )
 	{
 		// Error
@@ -100,6 +87,14 @@ eqOgre::Pipe::configInit( uint64_t initID )
 		std::cerr << message << std::endl;
 		return( false );
 	}
+
+	_createWindow();
+
+	_mapData( initID );
+
+	_handleMessages();
+
+	_syncData();
 
 	return true;
 }
@@ -213,28 +208,32 @@ eqOgre::Pipe::_createOgre( void )
 	catch( vl::exception &e )
 	{
 		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+		std::cout << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 
 		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
 		std::string message = std::string("Ogre Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+		std::cout << message << std::endl;
+		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 
 		return false;
 	}
 	catch( std::exception const &e )
 	{
 		std::string message = std::string("STD Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+		std::cout << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 
 		return false;
 	}
 	catch( ... )
 	{
 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
+		std::cout << err_msg << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
 		return false;
 	}
 
@@ -317,13 +316,17 @@ eqOgre::Pipe::_loadScene( void )
 
 /// Distribution helpers
 void
-eqOgre::Pipe::_createClient( void )
+eqOgre::Pipe::_createClient( std::string const &server_address, uint16_t server_port )
 {
 	std::cout << "eqOgre::Pipe::_createClient" << std::endl;
 	assert( !_client );
 
 	// FIXME these should be configured in config file
-	_client = new vl::cluster::Client( SERVER_NAME, SERVER_PORT );
+	_client = new vl::cluster::Client( server_address.c_str(), server_port );
+
+	// TODO add requesting EnvSettings from Server
+
+	// TODO add
 	_client->registerForUpdates();
 }
 
@@ -567,8 +570,7 @@ void
 eqOgre::Pipe::_createWindow( void )
 {
 	std::cout << "eqOgre::Pipe::_createWindow : should create a window." << std::endl;
-	_system_window = new eqOgre::GLXWindow;
-	assert( _system_window );
+
 	_window = new eqOgre::Window( this );
 	assert( _window );
 }

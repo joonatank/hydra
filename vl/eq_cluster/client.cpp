@@ -40,9 +40,10 @@ eqOgre::Client::run( void )
 {
 	std::cout << "eqOgre::Client::run" << std::endl;
 	// Put the pipe thread spinning on both master and slave
-	// TODO Might need to make a copy of _env
 	assert( !_pipe && !_pipe_thread );
-	_pipe = new eqOgre::Pipe(_env);
+	_pipe = new eqOgre::Pipe( _env->getMaster().name,
+							  _env->getServer().hostname,
+							  _env->getServer().port );
 	// TODO create a custom wrapper for Pipe
 	_pipe_thread = new boost::thread( boost::ref(*_pipe) );
 

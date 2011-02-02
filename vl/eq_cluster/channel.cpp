@@ -49,7 +49,6 @@ eqOgre::Channel::getPlayer( void ) const
 	return _window->getPlayer();
 }
 
-
 void
 eqOgre::Channel::setCamera( Ogre::Camera *cam )
 {
@@ -66,9 +65,6 @@ eqOgre::Channel::setViewport(Ogre::Viewport* viewport)
 bool
 eqOgre::Channel::configInit( uint64_t initID )
 {
-// 	if( !eq::Channel::configInit( initID ) )
-// 	{ return false; }
-
 	// If the channel has a name we try to find matching wall
 	// FIXME using the new system we should have a complete slave configuration
 	// in the Pipe and this is not necessary the wall should be retrieved

@@ -12,13 +12,17 @@
 
 #include <X11/Xlib.h>
 
+#include <GL/glx.h>
+
 namespace eqOgre
 {
+
+class Window;
 
 class GLXWindow : public GLWindow
 {
 public :
-	GLXWindow( void );
+	GLXWindow( eqOgre::Window *win );
 
 	virtual ~GLXWindow( void );
 
@@ -28,12 +32,23 @@ public :
 	Display *getXDisplay( void )
 	{ return _xdisp; }
 
+	virtual void makeCurrent( void ) const;
+
 private :
 	XID _createWindow( int x, int y, unsigned int w, unsigned int h );
 
+	GLXContext createGLXContext( XVisualInfo *visuInfo );
+
+	// TODO add attributes
+	XVisualInfo *_chooseVisual( void );
+
+	eqOgre::Window *_window;
+
 	Display *_xdisp;
 	XID _drawable;
-};
+	GLXContext _glContext;
+
+};	// class GLXWindow
 
 }
 

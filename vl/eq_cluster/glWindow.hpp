@@ -17,6 +17,7 @@ public :
 
 	virtual ~GLWindow( void ) {}
 
+	virtual void makeCurrent( void ) const = 0;
 };
 
 }

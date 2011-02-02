@@ -13,18 +13,6 @@
 #include <OGRE/OgreWindowEventUtilities.h>
 #include <OGRE/OgreLogManager.h>
 
-// System window specific includes
-#include <eq/client/systemWindow.h>
-#include <eq/client/windowSystem.h>
-
-#ifdef GLX
-#include "eq_cluster/glxWindow.hpp"
-#endif
-
-#ifdef WGL
-#include "eq_cluster/wglWindow.hpp"
-#endif
-
 #include "channel.hpp"
 #include "pipe.hpp"
 
@@ -34,16 +22,17 @@ eqOgre::Window::Window( eqOgre::Pipe *parent )
 	_input_manager(0), _keyboard(0), _mouse(0)
 {
 	assert( _pipe );
+	configInit(0);
 }
 
 eqOgre::Window::~Window(void )
 {}
 
-// eqOgre::DistributedSettings const &
-// eqOgre::Window::getSettings( void ) const
-// {
-// 	return _pipe->getSettings();
-// }
+vl::EnvSettingsRefPtr
+eqOgre::Window::getSettings( void )
+{
+	return _pipe->getSettings();
+}
 
 vl::Player const &
 eqOgre::Window::getPlayer( void ) const
@@ -164,15 +153,8 @@ bool
 eqOgre::Window::configInit( uint64_t initID )
 {
 	std::string message = "eqOgre::Window::configInit";
-	Ogre::LogManager::getSingleton().logMessage(message);
-
-// 	if( !eq::Window::configInit( initID ) )
-// 	{
-// 		// TODO add error status flag
-// 		message = "eq::Window::configInit failed";
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-// 		return false;
-// 	}
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
 
 	try {
 		createOgreWindow();
@@ -182,37 +164,44 @@ eqOgre::Window::configInit( uint64_t initID )
 	{
 		// TODO add error status flag
 		message = "VL Exception : " + boost::diagnostic_information<>(e);
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( Ogre::Exception const &e)
 	{
 		// TODO add error status flag
 		message = std::string("Ogre Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( std::exception const &e )
 	{
 		// TODO add error status flag
 		message = std::string("STD Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 	catch( ... )
 	{
 		// TODO add error status flag
 		message = "eqOgre::Window::configInit : Exception thrown.";
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 		return false;
 	}
 
 	message = "eqOgre::Window::init : done";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cerr << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
+
 	return true;
 }
 
-bool eqOgre::Window::configExit(void )
+bool
+eqOgre::Window::configExit(void )
 {
 	// Cleanup children first
 // 	bool retval = eq::Window::configExit();
@@ -240,7 +229,8 @@ eqOgre::Window::frameStart( uint64_t frameID, const uint32_t frameNumber )
 	if( !inited )
 	{
 		std::string message = "Create a Ogre Viewport for each Channel";
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 
 		// FIXME Channels are not yet supported
 // 		Channels chanlist = getChannels();
@@ -284,97 +274,46 @@ eqOgre::Window::frameFinish( uint64_t frameID, const uint32_t frameNumber )
 	else
 	{
 		std::string message("Mouse or keyboard does not exists! No input handling.");
-		Ogre::LogManager::getSingleton().logMessage(message);
+		std::cerr << message << std::endl;
+// 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
-}
-
-// FIXME the Window creation does not work at the moment
-bool
-eqOgre::Window::configInitSystemWindow( uint64_t initID )
-{
-// 	const eq::Pipe* pipe = getPipe();
-	eq::SystemWindow* systemWindow = 0;
-
-	std::string message;
-#if defined GLX
-	// FIXME We need to overload GLXWindow completely
-// 	systemWindow = new eqOgre::GLXWindow( this );
-#elif defined WGL
-	systemWindow = new eqOgre::WGLWindow( this );
-#endif
-
-	assert( systemWindow );
-	if( !systemWindow->configInit() )
-	{
-		message = "System Window initialization failed: ";
-		Ogre::LogManager::getSingleton().logMessage(message);
-		delete systemWindow;
-		return false;
-	}
-
-// 	setSystemWindow( systemWindow );
-	return true;
 }
 
 void
 eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
 {
-// 	assert( dynamic_cast<eqOgre::Pipe *>( getPipe() ) );
-// 	eqOgre::Pipe *pipe = static_cast<eqOgre::Pipe *>( getPipe() );
 	_pipe->sendEvent(event);
 }
 
-// FIXME the system windows are still murky
 void
 eqOgre::Window::createInputHandling( void )
 {
 	std::string message( "Creating OIS Input system." );
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cerr << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
 
-	std::ostringstream ss;
-#if defined OIS_WIN32_PLATFORM
-	assert( dynamic_cast<eq::WGLWindowIF *>( getSystemWindow() ) );
-	eq::WGLWindowIF *os_win = static_cast<eq::WGLWindowIF *>( getSystemWindow() );
-	if( !os_win )
-	{
-		// TODO add error status
-		message = "Couldn't get WGL system window";
-		Ogre::LogManager::getSingleton().logMessage(message);
-	}
-	else
-	{
-		// It's mandatory to cast HWND to size_t for OIS, otherwise OIS will crash
-		ss << (size_t)(os_win->getWGLWindowHandle());
-		// Info
-		message = "Got window handle for OIS : " + ss.str();
-		Ogre::LogManager::getSingleton().logMessage(message);
-	}
-#elif defined OIS_LINUX_PLATFORM
-	// FIXME
-// 	assert( dynamic_cast<eq::GLXWindowIF *>( getSystemWindow() ) );
-	GLWindow *os_win = getSystemWindow();
-// 	if( !os_win )
-// 	{
-// 		// TODO add error status
-// 		message = "Couldn't get GLX system window";
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-// 	}
-// 	else
-// 	{
-// 		ss << os_win->getXDrawable();
-// 	}
-#endif
+	assert( _ogre_window );
+
+	std::ostringstream windowHndStr;
+	size_t windowHnd = 0;
+	_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
+	windowHndStr << windowHnd;
 
 	OIS::ParamList pl;
-	pl.insert(std::make_pair(std::string("WINDOW"), ss.str()));
+	pl.insert( std::make_pair(std::string("WINDOW"), windowHndStr.str()) );
+	// Some extra parameters to avoid getting stuck with the window
+	pl.insert( std::make_pair(std::string("x11_keyboard_grab"), std::string("false") ) );
+	pl.insert( std::make_pair(std::string("x11_mouse_grab"), std::string("false") ) );
 
 	// Info
 	message = "Creating OIS Input Manager";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
 
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 	message = "OIS Input Manager created";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
 
 	printInputInformation();
 
@@ -384,14 +323,15 @@ eqOgre::Window::createInputHandling( void )
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
 
 	// FIXME the size of the window?
-// 	_mouse ->getMouseState().height = getPixelViewport().h;
-// 	_mouse ->getMouseState().width	= getPixelViewport().w;
+	_mouse ->getMouseState().height = _ogre_window->getHeight();
+	_mouse ->getMouseState().width	= _ogre_window->getWidth();
 
 	_mouse->setEventCallback(this);
 
 	// Info
 	message = "Input system created.";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage(message);
 }
 
 void
@@ -408,8 +348,8 @@ eqOgre::Window::printInputInformation( void )
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
 		<< '\n';
-
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	std::cout << ss.str() << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
 	ss.str("");
 	// List all devices
@@ -417,7 +357,8 @@ eqOgre::Window::printInputInformation( void )
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
-	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	std::cout << ss.str() << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 }
 
 void
@@ -425,20 +366,16 @@ eqOgre::Window::createOgreWindow( void )
 {
 	// Info
 	std::string message = "Creating Ogre RenderWindow.";
-	Ogre::LogManager::getSingleton().logMessage( message );
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( message );
 
 	Ogre::NameValuePairList params;
-#if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-	eq::WGLWindow *os_win = (eq::WGLWindow *)( getSystemWindow() );
-	std::stringstream ss( std::stringstream::in | std::stringstream::out );
-	ss << os_win->getWGLWindowHandle();
-	params["externalWindowHandle"] = ss.str();
-	ss.str("");
-	params["externalGLControl"] = std::string("True");
-	ss << os_win->getWGLContext();
-	params["externalGLContext"] = ss.str();
-#else
-	params["currentGLContext"] = std::string("True");
-#endif
-	_ogre_window = getOgreRoot()->createWindow( "win", 800, 600, params );
+
+	// TODO test stereo
+	// If it doesn't work do some custom updates to the Ogre Library
+	// They are easy to merge using Mercurial
+	// And can be commited to our own Ogre fork.
+	// TODO add options for resolution and position
+	// TODO add options for name
+	_ogre_window = getOgreRoot()->createWindow( "Hydra", 800, 600, params );
 }

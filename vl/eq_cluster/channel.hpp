@@ -6,14 +6,9 @@
 #ifndef EQ_OGRE_CHANNEL_HPP
 #define EQ_OGRE_CHANNEL_HPP
 
-// #include <eq/eq.h>
-// #include <eq/client/channel.h>
-// #include <eq/client/types.h>
-
 #include <OGRE/OgreCamera.h>
 #include <OGRE/OgreViewport.h>
 
-#include "eq_cluster/eq_settings.hpp"
 #include "base/envsettings.hpp"
 
 namespace eqOgre

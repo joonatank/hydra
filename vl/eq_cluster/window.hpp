@@ -40,7 +40,7 @@ namespace eqOgre
 		Ogre::RenderWindow *getRenderWindow( void )
 		{ return _ogre_window; }
 
-// 		DistributedSettings const &getSettings( void ) const;
+		vl::EnvSettingsRefPtr getSettings( void );
 
 		vl::Player const &getPlayer( void ) const;
 
@@ -57,13 +57,6 @@ namespace eqOgre
 		{ return std::string(); }
 
 		void takeScreenshot( std::string const &prefix, std::string const &suffix );
-
-		// FIXME implement this and implement the GLWindow and it's descendants
-		GLWindow *getSystemWindow( void )
-		{ return 0; }
-
-		void setSystemWindow( GLWindow *win )
-		{ }
 
 		/// OIS overrides
 		bool keyPressed(const OIS::KeyEvent &key);
@@ -94,13 +87,10 @@ namespace eqOgre
 		virtual void frameFinish( uint64_t frameID,
 								  const uint32_t frameNumber );
 
-		/// Override system window creation because we
-		/// use OIS for input handling
-		virtual bool configInitSystemWindow( uint64_t initID );
-
 		void _sendEvent( vl::cluster::EventData const &event );
 
 		eqOgre::Pipe *_pipe;
+
 		// Ogre
 		Ogre::RenderWindow *_ogre_window;
 
