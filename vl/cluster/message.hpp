@@ -60,11 +60,13 @@ enum MSG_TYPES
 {
 	MSG_UNDEFINED,		// Not defined message type these should never be sent
 	MSG_REG_UPDATES,	// Reguest updates from the application
+	MSG_ENVIRONMENT,	// Send the Environment configuration
+	MSG_PROJECT,		// Send the project configuration
 	MSG_INITIAL_STATE,	// Send the initial SceneGraph
-	MSG_UPDATE,	// Send updated SceneGraph and other versioned objects
-	MSG_INPUT,	// Send data from input devices from pipes to application
-	MSG_DRAW,	// Draw the image into back buffer
-	MSG_SWAP	// Swap the Window buffer Not in use yet
+	MSG_UPDATE,			// Send updated SceneGraph and other versioned objects
+	MSG_INPUT,			// Send data from input devices from pipes to application
+	MSG_DRAW,			// Draw the image into back buffer
+	MSG_SWAP,			// Swap the Window buffer
 };
 
 enum EVENT_TYPES

@@ -58,14 +58,6 @@ public :
 	{ return _name; }
 
 protected :
-	/// Equalizer overrides
-
-	/// Override configInit to map the distributed data
-	virtual bool configInit( uint64_t initID );
-
-	/// Override configExit to unmap the distributed data
-	virtual bool configExit();
-
 	/// Override frameStart to update the distributed data
 	virtual void frameStart( uint64_t frameID,
 							 const uint32_t frameNumber );
@@ -93,6 +85,8 @@ protected :
 
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
+	/// ProjectSettings mapped from Master
+	std::vector<vl::ProjSettingsRefPtr> _projects;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;

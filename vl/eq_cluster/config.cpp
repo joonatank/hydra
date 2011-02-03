@@ -23,9 +23,6 @@
 
 #include "resource.hpp"
 
-// TODO this is for testing the audio moving to Client
-#include "client.hpp"
-
 // Necessary for retrieving other managers
 #include "game_manager.hpp"
 // HUH?
@@ -34,8 +31,7 @@
 #include "event_manager.hpp"
 // Necessary for registering Player
 #include "player.hpp"
-
-uint16_t const SERVER_PORT = 4699;
+#include <distrib_settings.hpp>
 
 eqOgre::Config::Config( vl::GameManagerPtr man, vl::SettingsRefPtr settings, vl::EnvSettingsRefPtr env )
 	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
@@ -43,7 +39,6 @@ eqOgre::Config::Config( vl::GameManagerPtr man, vl::SettingsRefPtr settings, vl:
 	std::cout << "eqOgre::Config::Config" << std::endl;
 	assert( _game_manager && _settings && _env );
 	assert( _env->isMaster() );
-// 	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
 }
 
 eqOgre::Config::~Config( void )
@@ -59,6 +54,13 @@ eqOgre::Config::init( uint64_t const & )
 	_createServer();
 
 	assert( _server );
+
+	// Send the Environment
+	_sendEnvironment();
+
+	// Send the project
+	_sendProject();
+
 	// TODO register the objects
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
@@ -179,8 +181,7 @@ eqOgre::Config::_createServer( void )
 
 	assert( !_server );
 
-	// TODO configurable server port
-	_server = new vl::cluster::Server( SERVER_PORT );
+	_server = new vl::cluster::Server( _env->getServer().port );
 }
 
 void
@@ -192,9 +193,6 @@ eqOgre::Config::_updateServer( void )
 
 	_receiveEventMessages();
 
-	// TODO the new and old clients functions should be combined to one
-	// function which is called multiple times
-	if( _server->oldClients() )
 	{
 		// Create SceneGraph updates
 		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
@@ -218,12 +216,12 @@ eqOgre::Config::_updateServer( void )
 		if( msg.size() > 0 )
 		{
 // 			std::cout << "Sending updates to all clients." << std::endl;
-			_server->sendToAll( msg );
+			_server->sendUpdate( msg );
 		}
 	}
 
 	// New clients need the whole SceneGraph
-	if( _server->newClients() )
+	if( _server->needsInit() )
 	{
 // 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
 		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
@@ -243,9 +241,29 @@ eqOgre::Config::_updateServer( void )
 		}
 
 // 		std::cout << "Message = " << msg << std::endl;
-		// Send SceneGraph to all listeners
-		_server->sendToNewClients( msg );
+		_server->sendInit( msg );
 	}
+}
+
+void
+eqOgre::Config::_sendEnvironment ( void )
+{
+	assert( _server );
+
+	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
+	vl::SettingsByteData data;
+	vl::cluster::ByteStream stream( &data );
+	stream << _env;
+
+	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT );
+	data.copyToMessage( &msg );
+	_server->sendEnvironment(msg);
+}
+
+void
+eqOgre::Config::_sendProject ( void )
+{
+	std::cout << "eqOgre::Config::_sendProject" << std::endl;
 }
 
 void

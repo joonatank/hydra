@@ -19,6 +19,7 @@ set( SOURCES
 	trigger.cpp
 	event_manager.cpp
 	distrib_resource_manager.cpp
+	distrib_settings.cpp
 	program_options.cpp
 	base/args.cpp
 	base/filesystem.cpp
@@ -71,6 +72,7 @@ set( HEADERS
 	event_manager.hpp
 	keycode.hpp
 	distrib_resource_manager.hpp
+	distrib_settings.hpp
 	program_options.hpp
 	eq_cluster/window.hpp
 	eq_cluster/channel.hpp

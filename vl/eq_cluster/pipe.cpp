@@ -18,6 +18,7 @@
 #include "window.hpp"
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
+#include <distrib_settings.hpp>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -31,6 +32,11 @@ eqOgre::Pipe::Pipe( std::string const &name,
 
 eqOgre::Pipe::~Pipe( void )
 {
+	// Info
+	std::string message("Cleaning out OGRE");
+	Ogre::LogManager::getSingleton().logMessage( message );
+	_root.reset();
+
 	delete _client;
 }
 
@@ -57,12 +63,43 @@ void
 eqOgre::Pipe::operator()()
 {
 	std::cout << "eqOgre::Pipe::operator() : Thread entered." << std::endl;
-	configInit(0);
+
+	if( !_createOgre() )
+	{
+		// Error
+		// TODO move to using Ogre Logging, the log manager needs to be created sooner
+		std::string message("eqOgre::Pipe::configInit : createOgre failed");
+		std::cerr << message << std::endl;
+		return;
+	}
+
+	// Here we should wait for the EnvSettings from master
+	// TODO we should have a wait for Message function
+	while( !_env )
+	{
+		_handleMessages();
+		vl::msleep(1);
+	}
+
+	// TODO get the window configuration from EnvironmentSettings
+	_createWindow();
+
+	// First we wait for the Project Settings from master
+	// Then We wait for the SceneGraph
+// 	_mapData( 0 );
+// 	while( _projects.empty() )
+// 	{
+// 		_handleMessages();
+// 		vl::msleep(1);
+// 	}
 
 	while( 1 )
 	{
 		// Handle messages
 
+		_handleMessages();
+
+		_syncData();
 		// Render
 
 		// Send messages
@@ -74,49 +111,6 @@ eqOgre::Pipe::operator()()
 
 
 /// ------------------------ Protected -----------------------------------------
-bool
-eqOgre::Pipe::configInit( uint64_t initID )
-{
-	std::cout << "eqOgre::Pipe::configInit." << std::endl;
-
-	if( !_createOgre() )
-	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eqOgre::Pipe::configInit : createOgre failed");
-		std::cerr << message << std::endl;
-		return( false );
-	}
-
-	// Here we should wait for the EnvSettings from master
-	_createWindow();
-
-	// The rest should go outside the init
-	// First we wait for the Project Settings from master
-	// Then We wait for the SceneGraph
-	_mapData( initID );
-
-	_handleMessages();
-
-	_syncData();
-
-	return true;
-}
-
-bool
-eqOgre::Pipe::configExit()
-{
-// 	bool retval = eq::Pipe::configExit();
-
-	// Info
-	std::string message("Cleaning out OGRE");
-	Ogre::LogManager::getSingleton().logMessage( message );
-	_root.reset();
-
-	return true;
-// 	return retval;
-}
-
 void
 eqOgre::Pipe::frameStart( uint64_t frameID, const uint32_t frameNumber )
 {
@@ -337,7 +331,7 @@ eqOgre::Pipe::_createClient( std::string const &server_address, uint16_t server_
 void
 eqOgre::Pipe::_handleMessages( void )
 {
-	std::cout << "eqOgre::Pipe::_handleMessages" << std::endl;
+// 	std::cout << "eqOgre::Pipe::_handleMessages" << std::endl;
 
 	assert( _client );
 
@@ -359,6 +353,51 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 
 	switch( msg->getType() )
 	{
+		// Environment configuration
+		case vl::cluster::MSG_ENVIRONMENT :
+		{
+			std::cout << "vl::cluster::MSG_ENVIRONMENT message" << std::endl;
+			assert( !_env );
+			_env.reset( new vl::EnvSettings );
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(msg);
+ 			vl::cluster::ByteStream stream(&data);
+			stream >> _env;
+			// Only single environment settings should be in the message
+			assert( 0 == msg->size() );
+		}
+		break;
+
+		// Project configuration
+		case vl::cluster::MSG_PROJECT :
+		{
+			std::cout << "vl::cluster::MSG_PROJECT message" << std::endl;
+			// This is problematic because the Project config should be
+			// updatable during the application run
+			// also it should contain all the project configurations
+			// so it's easy to retrieve the combined values
+// 			while( msg->size() > 0 )
+// 			{
+// 				vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
+// 				// TODO needs a ByteData object for Environment settings
+// 				vl::SettingsByteData data;
+// 				data.copyFromMessage(msg);
+// 				vl::cluster::ByteStream stream(&data);
+// 				stream >> proj;
+// 				_proj.push_back(
+// 			}
+		}
+		break;
+
+		// Scene graph initial state
+		case vl::cluster::MSG_INITIAL_STATE :
+		{
+			std::cout << "vl::cluster::MSG_INITIAL_STATE message" << std::endl;
+		}
+		break;
+
+		// Scene graph update after the initial message
 		case vl::cluster::MSG_UPDATE :
 		{
 			// TODO objects array should not be cleared but rather updated
@@ -383,6 +422,17 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 		}
 		break;
 
+		case vl::cluster::MSG_DRAW :
+		{
+		}
+		break;
+
+		case vl::cluster::MSG_SWAP :
+		{
+		}
+		break;
+
+
 		default :
 			std::cout << "Unhandled Message of type = " << msg->getType()
 				<< std::endl;
@@ -393,7 +443,7 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 void
 eqOgre::Pipe::_syncData( void )
 {
-	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
+// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
 // 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects."
 // 		<< std::endl;
 // FIXME this needs mapping to work correctly
@@ -438,7 +488,7 @@ void
 eqOgre::Pipe::_mapData( uint64_t settingsID )
 {
 	// TODO move to using Ogre Logging, needs LogManager creation
-	std::cout << "Mapping data." << std::endl;
+// 	std::cout << "eqOgre::Pipe::_mapData" << std::endl;
 
 	// Get the cluster version of data
 	// TODO the settings are not mapped now, they are sent using separate

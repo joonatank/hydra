@@ -13,6 +13,9 @@ const size_t MSG_BUFFER_SIZE = 128;
 vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	: _io_service(), _socket( _io_service ), _master()
 {
+	std::cout << "Connecting to host " << hostname << " at port " << port
+		<< "." << std::endl;
+
 	std::stringstream ss;
 	ss << port;
 	boost::udp::resolver resolver( _io_service );

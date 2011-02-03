@@ -49,8 +49,9 @@ namespace eqOgre
 		virtual ~Config (void);
 
 		void _createServer( void );
-
 		void _updateServer( void );
+		void _sendEnvironment( void );
+		void _sendProject( void );
 
 		/// Tracking
 		void _createTracker( vl::EnvSettingsRefPtr settings );
