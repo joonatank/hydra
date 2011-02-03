@@ -269,6 +269,8 @@ public :
 	std::vector<Node> const &getSlaves( void ) const
 	{ return _slaves; }
 
+	Node findSlave( std::string const &name ) const;
+
 	Node &getMaster( void )
 	{ return _master; }
 

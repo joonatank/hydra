@@ -27,6 +27,7 @@ eqOgre::Pipe::Pipe( std::string const &name,
 					uint16_t server_port )
 	: _name(name), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
 {
+	std::cout << "eqOgre::Pipe::Pipe : name = " << _name << std::endl;
 	_createClient( server_address, server_port );
 }
 
@@ -44,6 +45,29 @@ vl::EnvSettingsRefPtr
 eqOgre::Pipe::getSettings( void )
 {
 	return _env;
+}
+
+vl::EnvSettings::Node
+eqOgre::Pipe::getNodeConf( void )
+{
+	vl::EnvSettings::Node node;
+	if( getName() == _env->getMaster().name )
+	{ node = _env->getMaster(); }
+	else
+	{ node = _env->findSlave( getName() ); }
+
+	assert( !node.empty() );
+	return node;
+}
+
+vl::EnvSettings::Window
+eqOgre::Pipe::getWindowConf( std::string const &window_name )
+{
+	vl::EnvSettings::Node node = getNodeConf();
+	assert( node.getNWindows() > 0 );
+
+	// TODO add support for finding correct window by name
+	return node.getWindow(0);
 }
 
 void
@@ -102,10 +126,15 @@ eqOgre::Pipe::operator()()
 		_syncData();
 		// Render
 
+		// Process input events
+		assert( _window );
+		_window->capture();
+
 		// Send messages
+		_sendEvents();
 
 		// Sleep
-		vl::msleep( 1 );
+		vl::msleep(1);
 	}
 }
 
@@ -180,8 +209,6 @@ eqOgre::Pipe::frameStart( uint64_t frameID, const uint32_t frameNumber )
 	{
 		assert( false );
 	}
-
-// 	eq::Pipe::frameStart( frameID, frameNumber );
 
 	_sendEvents();
 }
@@ -322,9 +349,6 @@ eqOgre::Pipe::_createClient( std::string const &server_address, uint16_t server_
 	// FIXME these should be configured in config file
 	_client = new vl::cluster::Client( server_address.c_str(), server_port );
 
-	// TODO add requesting EnvSettings from Server
-
-	// TODO add
 	_client->registerForUpdates();
 }
 
@@ -373,20 +397,26 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 		case vl::cluster::MSG_PROJECT :
 		{
 			std::cout << "vl::cluster::MSG_PROJECT message" << std::endl;
-			// This is problematic because the Project config should be
+			// TODO
+			// Test using multiple projects e.g. project and global
+			// The vector serailization might not work correctly
+			// TODO
+			// Problematic because the Project config should be
 			// updatable during the application run
-			// also it should contain all the project configurations
-			// so it's easy to retrieve the combined values
-// 			while( msg->size() > 0 )
-// 			{
-// 				vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
-// 				// TODO needs a ByteData object for Environment settings
-// 				vl::SettingsByteData data;
-// 				data.copyFromMessage(msg);
-// 				vl::cluster::ByteStream stream(&data);
-// 				stream >> proj;
-// 				_proj.push_back(
-// 			}
+			// And this one will create them anew, so that we need to invalidate
+			// the scene and reload everything
+			// NOTE
+			// Combining the project configurations is not done automatically
+			// so they either need special structure or we need to iterate over
+			// all of them always.
+			vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(msg);
+			vl::cluster::ByteStream stream(&data);
+			_projects.clear();
+			stream >> _projects;
+// 			_projects.push_back( proj );
 		}
 		break;
 
@@ -608,6 +638,9 @@ eqOgre::Pipe::_sendEvents( void )
 {
 	if( !_events.empty() )
 	{
+// 		std::cout << "eqOgre::Pipe::_sendEvents : " << _events.size()
+// 			<< " events to send." << std::endl;
+
 		vl::cluster::Message msg( vl::cluster::MSG_INPUT );
 		std::vector<vl::cluster::EventData>::iterator iter;
 		for( iter = _events.begin(); iter != _events.end(); ++iter )
@@ -620,11 +653,14 @@ eqOgre::Pipe::_sendEvents( void )
 	}
 }
 
+// TODO add support for multiple windows
 void
 eqOgre::Pipe::_createWindow( void )
 {
-	std::cout << "eqOgre::Pipe::_createWindow : should create a window." << std::endl;
+	std::cout << "eqOgre::Pipe::_createWindow" << std::endl;
 
-	_window = new eqOgre::Window( this );
+	vl::EnvSettings::Node node = getNodeConf();
+	assert( node.getNWindows() > 0 );
+	_window = new eqOgre::Window( node.getWindow(0).name, this );
 	assert( _window );
 }

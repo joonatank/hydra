@@ -204,6 +204,20 @@ vl::EnvSettings::findWall( std::string const &channel_name ) const
 	return vl::EnvSettings::Wall();
 }
 
+vl::EnvSettings::Node
+vl::EnvSettings::findSlave( std::string const &name ) const
+{
+	std::vector<vl::EnvSettings::Node>::const_iterator iter;
+	for( iter = _slaves.begin(); iter != _slaves.end(); ++iter )
+	{
+		if( iter->name == name )
+		{ return *iter; }
+	}
+
+	return vl::EnvSettings::Node();
+}
+
+
 std::string
 vl::EnvSettings::getLogDir( vl::PATH_TYPE const type ) const
 {

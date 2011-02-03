@@ -139,7 +139,7 @@ vl::ogre::Root::_loadPlugins(void )
 
 	// TODO add support for plugins in the EnvSettings
 
-	
+
 // Check if this is a debug version, only Windows uses debug versions of the libraries
 // So we need to load the debug versions of the Ogre plugins only on Windows.
 #if defined(_WIN32) && defined(_DEBUG)
@@ -169,13 +169,8 @@ vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 	if( !_ogre_root )
 	{ return 0; }
 
-	static int n_windows = 0;
-
-	std::stringstream ss( std::stringstream::in | std::stringstream::out );
-	ss << name << "-" << n_windows;
 	Ogre::RenderWindow *og_win =
-		_ogre_root->createRenderWindow( ss.str(), width, height, false, &params );
-	++n_windows;
+		_ogre_root->createRenderWindow( name, width, height, false, &params );
 
 	// Initialise the rendering system and load resources automatically when
 	// first window is created.

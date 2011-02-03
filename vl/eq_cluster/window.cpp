@@ -17,12 +17,16 @@
 #include "pipe.hpp"
 
 /// ----------------------------- Public ---------------------------------------
-eqOgre::Window::Window( eqOgre::Pipe *parent )
-	: _pipe( parent ), _channel(0), _ogre_window(0),
+eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
+	: _name(name), _pipe( parent ), _channel(0), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
 {
 	assert( _pipe );
-	configInit(0);
+
+	createOgreWindow();
+	createInputHandling();
+	// FIXME this should pass the real name of the Channel
+	_channel = new eqOgre::Channel( "", this );
 }
 
 eqOgre::Window::~Window(void )
@@ -150,10 +154,7 @@ eqOgre::Window::configInit( uint64_t initID )
 // 	Ogre::LogManager::getSingleton().logMessage(message);
 
 // 	try {
-		createOgreWindow();
-		createInputHandling();
-		// FIXME this should pass the real name of the Channel
-		_channel = new eqOgre::Channel( "", this );
+
 		// TODO add Viewport and Camera
 // 	}
 // 	catch( vl::exception &e )
@@ -258,10 +259,8 @@ eqOgre::Window::frameStart( uint64_t frameID, const uint32_t frameNumber )
 }
 
 void
-eqOgre::Window::frameFinish( uint64_t frameID, const uint32_t frameNumber )
+eqOgre::Window::capture( void )
 {
-// 	eq::Window::frameFinish(frameID, frameNumber);
-
 	if( _keyboard && _mouse )
 	{
 		_keyboard->capture();
@@ -367,11 +366,15 @@ eqOgre::Window::createOgreWindow( void )
 
 	Ogre::NameValuePairList params;
 
+	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
+	assert( !winConf.empty() );
+
+	params["left"] = winConf.x;
+	params["top"] = winConf.y;
+
 	// TODO test stereo
 	// If it doesn't work do some custom updates to the Ogre Library
 	// They are easy to merge using Mercurial
 	// And can be commited to our own Ogre fork.
-	// TODO add options for resolution and position
-	// TODO add options for name
-	_ogre_window = getOgreRoot()->createWindow( "Hydra", 800, 600, params );
+	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 }

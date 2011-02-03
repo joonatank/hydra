@@ -312,7 +312,7 @@ ByteStream &operator>>( ByteStream &msg, T &t )
 template<typename T>
 ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 {
-	size_t size;
+	typename std::vector<T>::size_type size;
 	msg >> size;
 	v.resize( size );
 	for(size_t i = 0; i < v.size(); ++i )
@@ -326,14 +326,20 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 template<> inline
 ByteStream &operator>>( ByteStream &msg, std::string &str )
 {
-	size_t size;
+	std::string::size_type size;
 	msg.read(size);
-	str.resize(size);
-	for( size_t i = 0; i < size; ++i )
+	if( 0 == size )
+	{ str.clear(); }
+	else
 	{
-		char ch;
-		msg.read(ch);
-		str.at(i) = ch;
+		std::cout << "Trying to resize to = " << size << " elements." << std::endl;
+		str.resize(size);
+		for( size_t i = 0; i < size; ++i )
+		{
+			char ch;
+			msg.read(ch);
+			str.at(i) = ch;
+		}
 	}
 
 	return msg;

@@ -56,6 +56,26 @@ template<>
 ByteStream &operator>>( ByteStream &msg, vl::EnvSettingsRefPtr &env );
 
 template<>
+ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Node const &node );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Node &node );
+
+template<>
+ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Wall const &wall );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Wall &wall );
+
+template<>
+ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Window const &window );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Window &window );
+
+
+
+template<>
 ByteStream &operator<<( ByteStream &msg, vl::ProjSettingsRefPtr const &proj );
 
 template<>

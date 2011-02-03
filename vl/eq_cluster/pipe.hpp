@@ -33,6 +33,10 @@ public :
 
 	vl::EnvSettingsRefPtr getSettings( void );
 
+	vl::EnvSettings::Node getNodeConf( void );
+
+	vl::EnvSettings::Window getWindowConf( std::string const &window_name );
+
 	vl::ogre::RootRefPtr getRoot( void )
 	{ return _root; }
 

@@ -36,7 +36,7 @@ class Channel;
     class Window : public OIS::KeyListener, public OIS::MouseListener
     {
     public:
-		Window( eqOgre::Pipe *parent );
+		Window( std::string const &name, eqOgre::Pipe *parent );
 
 		virtual ~Window( void );
 
@@ -55,11 +55,13 @@ class Channel;
 
 		Ogre::SceneManager *getSceneManager( void );
 
-		// TODO implement a name for this window
-		std::string getName( void )
-		{ return std::string(); }
+		std::string const &getName( void ) const
+		{ return _name; }
 
 		void takeScreenshot( std::string const &prefix, std::string const &suffix );
+
+		/// Capture input events
+		virtual void capture( void );
 
 		/// OIS overrides
 		bool keyPressed(const OIS::KeyEvent &key);
@@ -87,10 +89,9 @@ class Channel;
 		virtual void frameStart( uint64_t frameID,
 								 const uint32_t frameNumber );
 
-		virtual void frameFinish( uint64_t frameID,
-								  const uint32_t frameNumber );
-
 		void _sendEvent( vl::cluster::EventData const &event );
+
+		std::string _name;
 
 		eqOgre::Pipe *_pipe;
 		// TODO multi channel support?
