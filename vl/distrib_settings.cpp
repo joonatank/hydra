@@ -11,18 +11,18 @@
 
 vl::SettingsByteData::SettingsByteData( void )
 {
-	std::cout << "vl::SettingsByteData::SettingsByteData" << std::endl;
+// 	std::cout << "vl::SettingsByteData::SettingsByteData" << std::endl;
 }
 
 vl::SettingsByteData::~SettingsByteData( void )
 {
-	std::cout << "vl::SettingsByteData::~SettingsByteData" << std::endl;
+// 	std::cout << "vl::SettingsByteData::~SettingsByteData" << std::endl;
 }
 
 void
 vl::SettingsByteData::read( char* mem, vl::msg_size size )
 {
-	std::cout << "vl::SettingsByteData::read" << std::endl;
+// 	std::cout << "vl::SettingsByteData::read" << std::endl;
 	assert( mem );
 	if( 0 == size )
 	{ return; }
@@ -36,7 +36,7 @@ vl::SettingsByteData::read( char* mem, vl::msg_size size )
 void
 vl::SettingsByteData::write( const char* mem, vl::msg_size size )
 {
-	std::cout << "vl::SettingsByteData::write" << std::endl;
+// 	std::cout << "vl::SettingsByteData::write" << std::endl;
 	assert( mem );
 	if( 0 == size )
 	{ return; }
@@ -49,7 +49,7 @@ vl::SettingsByteData::write( const char* mem, vl::msg_size size )
 void
 vl::SettingsByteData::copyToMessage( vl::cluster::Message* msg )
 {
-	std::cout << "vl::SettingsByteData::copyToMessage" << std::endl;
+// 	std::cout << "vl::SettingsByteData::copyToMessage" << std::endl;
 	assert(msg);
 
 	// TODO copy settings type
@@ -64,7 +64,7 @@ vl::SettingsByteData::copyToMessage( vl::cluster::Message* msg )
 void
 vl::SettingsByteData::copyFromMessage( vl::cluster::Message* msg )
 {
-	std::cout << "vl::SettingsByteData::copyFromMessage" << std::endl;
+// 	std::cout << "vl::SettingsByteData::copyFromMessage" << std::endl;
 	assert(msg);
 
 	// TODO copy settings type
@@ -83,7 +83,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr const &env )
 {
-	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
+// 	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	std::cout << "log dir = " << env->getLogDir() << std::endl;
 	msg << env->getCameraRotationAllowed() << env->getMaster() << env->getSlaves()
 		<< env->getWalls() << env->getStereo() << env->getIPD();// << env->getLogDir();
@@ -95,7 +95,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &env )
 {
-	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
+// 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	uint32_t rot_allowed(-1);
 	vl::EnvSettings::CFG stereo = vl::EnvSettings::OFF;
 	double ipd = 0;
@@ -178,6 +178,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr const &proj )
 {
 	std::cout << "vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
+
 	return msg;
 }
 

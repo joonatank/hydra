@@ -23,14 +23,25 @@ eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
 {
 	assert( _pipe );
 
-	createOgreWindow();
-	createInputHandling();
+	_createOgreWindow();
+	_createInputHandling();
 	// FIXME this should pass the real name of the Channel
 	_channel = new eqOgre::Channel( "", this );
 }
 
 eqOgre::Window::~Window(void )
-{}
+{
+	// Should clean out OIS and Ogre
+	std::string message = "Cleaning out OIS";
+	Ogre::LogManager::getSingleton().logMessage(message);
+	if( _input_manager )
+	{
+		message = "Destroy OIS input manager.";
+		Ogre::LogManager::getSingleton().logMessage(message);
+        OIS::InputManager::destroyInputSystem(_input_manager);
+		_input_manager = 0;
+	}
+}
 
 vl::EnvSettingsRefPtr
 eqOgre::Window::getSettings( void )
@@ -144,81 +155,8 @@ eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id
 }
 
 
-/// -------------------------- Protected ---------------------------------------
-// ConfigInit can not throw, it must return false on error. CONFIRMED
-bool
-eqOgre::Window::configInit( uint64_t initID )
-{
-	std::string message = "eqOgre::Window::configInit";
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
-
-// 	try {
-
-		// TODO add Viewport and Camera
-// 	}
-// 	catch( vl::exception &e )
-// 	{
-// 		// TODO add error status flag
-// 		message = "VL Exception : " + boost::diagnostic_information<>(e);
-// 		std::cerr << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage(message);
-// 		return false;
-// 	}
-// 	catch( Ogre::Exception const &e)
-// 	{
-// 		// TODO add error status flag
-// 		message = std::string("Ogre Exception: ") + e.what();
-// 		std::cerr << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage(message);
-// 		return false;
-// 	}
-// 	catch( std::exception const &e )
-// 	{
-// 		// TODO add error status flag
-// 		message = std::string("STD Exception: ") + e.what();
-// 		std::cerr << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage(message);
-// 		return false;
-// 	}
-// 	catch( ... )
-// 	{
-// 		// TODO add error status flag
-// 		message = "eqOgre::Window::configInit : Exception thrown.";
-// 		std::cerr << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage(message);
-// 		return false;
-// 	}
-
-	message = "eqOgre::Window::init : done";
-	std::cerr << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
-
-	return true;
-}
-
-bool
-eqOgre::Window::configExit(void )
-{
-	// Cleanup children first
-// 	bool retval = eq::Window::configExit();
-
-	// Should clean out OIS and Ogre
-	std::string message = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(message);
-	if( _input_manager )
-	{
-		message = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(message);
-        OIS::InputManager::destroyInputSystem(_input_manager);
-		_input_manager = 0;
-	}
-
-	return true;
-}
-
 void
-eqOgre::Window::frameStart( uint64_t frameID, const uint32_t frameNumber )
+eqOgre::Window::draw( void )
 {
 	// We need to set the Viewport here because the Camera doesn't exists in
 	// configInit
@@ -254,8 +192,6 @@ eqOgre::Window::frameStart( uint64_t frameID, const uint32_t frameNumber )
 
 		inited = true;
 	}
-
-// 	eq::Window::frameStart(frameID, frameNumber);
 }
 
 void
@@ -281,7 +217,7 @@ eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
 }
 
 void
-eqOgre::Window::createInputHandling( void )
+eqOgre::Window::_createInputHandling( void )
 {
 	std::string message( "Creating OIS Input system." );
 	std::cerr << message << std::endl;
@@ -297,6 +233,7 @@ eqOgre::Window::createInputHandling( void )
 	OIS::ParamList pl;
 	pl.insert( std::make_pair(std::string("WINDOW"), windowHndStr.str()) );
 	// Some extra parameters to avoid getting stuck with the window
+	// TODO These can probably be removed
 	pl.insert( std::make_pair(std::string("x11_keyboard_grab"), std::string("false") ) );
 	pl.insert( std::make_pair(std::string("x11_mouse_grab"), std::string("false") ) );
 
@@ -310,14 +247,13 @@ eqOgre::Window::createInputHandling( void )
 	std::cout << message << std::endl;
 // 	Ogre::LogManager::getSingleton().logMessage(message);
 
-	printInputInformation();
+	_printInputInformation();
 
 	_keyboard = static_cast<OIS::Keyboard*>(_input_manager->createInputObject(OIS::OISKeyboard, true));
 	_keyboard->setEventCallback(this);
 
 	_mouse = static_cast<OIS::Mouse*>(_input_manager->createInputObject(OIS::OISMouse, true));
 
-	// FIXME the size of the window?
 	_mouse ->getMouseState().height = _ogre_window->getHeight();
 	_mouse ->getMouseState().width	= _ogre_window->getWidth();
 
@@ -330,7 +266,7 @@ eqOgre::Window::createInputHandling( void )
 }
 
 void
-eqOgre::Window::printInputInformation( void )
+eqOgre::Window::_printInputInformation( void )
 {
 	// Print debugging information
 	// TODO debug information should go to Ogre Log file
@@ -357,7 +293,7 @@ eqOgre::Window::printInputInformation( void )
 }
 
 void
-eqOgre::Window::createOgreWindow( void )
+eqOgre::Window::_createOgreWindow( void )
 {
 	// Info
 	std::string message = "Creating Ogre RenderWindow.";
@@ -376,5 +312,7 @@ eqOgre::Window::createOgreWindow( void )
 	// If it doesn't work do some custom updates to the Ogre Library
 	// They are easy to merge using Mercurial
 	// And can be commited to our own Ogre fork.
+	// TODO test swap sync
+	// same as with stereo
 	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 }

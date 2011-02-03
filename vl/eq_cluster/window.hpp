@@ -72,22 +72,16 @@ class Channel;
 		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
 	protected :
-		void createOgreWindow( void );
+		void _createOgreWindow( void );
 
 		/// Create the OIS input handling
 		/// For now supports mouse and keyboard
 		// TODO add joystick support
-		void createInputHandling( void );
+		void _createInputHandling( void );
 
-		void printInputInformation( void );
+		void _printInputInformation( void );
 
-		/// Equalizer overrides
-		virtual bool configInit( uint64_t initID );
-
-		virtual bool configExit( void );
-
-		virtual void frameStart( uint64_t frameID,
-								 const uint32_t frameNumber );
+		virtual void draw( void );
 
 		void _sendEvent( vl::cluster::EventData const &event );
 
