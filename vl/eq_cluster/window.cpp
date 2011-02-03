@@ -18,7 +18,7 @@
 
 /// ----------------------------- Public ---------------------------------------
 eqOgre::Window::Window( eqOgre::Pipe *parent )
-	: _pipe( parent ), _ogre_window(0),
+	: _pipe( parent ), _channel(0), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
 {
 	assert( _pipe );
@@ -49,15 +49,8 @@ eqOgre::Window::getOgreRoot( void )
 void
 eqOgre::Window::setCamera( Ogre::Camera *camera )
 {
-	// FIXME channels are not yet supported
-// 	Channels const &chanlist = getChannels();
-// 	for( size_t i = 0; i < chanlist.size(); ++i )
-// 	{
-// 		assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
-// 		eqOgre::Channel *channel =
-// 			static_cast<eqOgre::Channel *>( chanlist.at(i) );
-// 		channel->setCamera( camera );
-// 	}
+	assert( _channel );
+	_channel->setCamera(camera);
 }
 
 Ogre::Camera *
@@ -156,42 +149,45 @@ eqOgre::Window::configInit( uint64_t initID )
 	std::cout << message << std::endl;
 // 	Ogre::LogManager::getSingleton().logMessage(message);
 
-	try {
+// 	try {
 		createOgreWindow();
 		createInputHandling();
-	}
-	catch( vl::exception &e )
-	{
-		// TODO add error status flag
-		message = "VL Exception : " + boost::diagnostic_information<>(e);
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-		return false;
-	}
-	catch( Ogre::Exception const &e)
-	{
-		// TODO add error status flag
-		message = std::string("Ogre Exception: ") + e.what();
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-		return false;
-	}
-	catch( std::exception const &e )
-	{
-		// TODO add error status flag
-		message = std::string("STD Exception: ") + e.what();
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-		return false;
-	}
-	catch( ... )
-	{
-		// TODO add error status flag
-		message = "eqOgre::Window::configInit : Exception thrown.";
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-		return false;
-	}
+		// FIXME this should pass the real name of the Channel
+		_channel = new eqOgre::Channel( "", this );
+		// TODO add Viewport and Camera
+// 	}
+// 	catch( vl::exception &e )
+// 	{
+// 		// TODO add error status flag
+// 		message = "VL Exception : " + boost::diagnostic_information<>(e);
+// 		std::cerr << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage(message);
+// 		return false;
+// 	}
+// 	catch( Ogre::Exception const &e)
+// 	{
+// 		// TODO add error status flag
+// 		message = std::string("Ogre Exception: ") + e.what();
+// 		std::cerr << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage(message);
+// 		return false;
+// 	}
+// 	catch( std::exception const &e )
+// 	{
+// 		// TODO add error status flag
+// 		message = std::string("STD Exception: ") + e.what();
+// 		std::cerr << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage(message);
+// 		return false;
+// 	}
+// 	catch( ... )
+// 	{
+// 		// TODO add error status flag
+// 		message = "eqOgre::Window::configInit : Exception thrown.";
+// 		std::cerr << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage(message);
+// 		return false;
+// 	}
 
 	message = "eqOgre::Window::init : done";
 	std::cerr << message << std::endl;

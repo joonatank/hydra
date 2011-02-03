@@ -261,6 +261,8 @@ public :
 	std::vector<Wall> const &getWalls( void ) const
 	{ return _walls; }
 
+	Wall findWall( std::string const &channel_name ) const;
+
 	std::vector<Node> &getSlaves( void )
 	{ return _slaves; }
 

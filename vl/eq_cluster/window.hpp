@@ -21,6 +21,9 @@
 
 namespace eqOgre
 {
+
+class Channel;
+
 	class GLWindow;
 	class Pipe;
     /**
@@ -90,6 +93,8 @@ namespace eqOgre
 		void _sendEvent( vl::cluster::EventData const &event );
 
 		eqOgre::Pipe *_pipe;
+		// TODO multi channel support?
+		eqOgre::Channel *_channel;
 
 		// Ogre
 		Ogre::RenderWindow *_ogre_window;

@@ -76,18 +76,18 @@ eqOgre::DistributedSettings::getOgreLogFilePath( void ) const
 // 	return vl::EnvSettings::Window();
 // }
 
-vl::EnvSettings::Wall
-eqOgre::DistributedSettings::findWall( std::string const &channel_name ) const
-{
-	std::vector<vl::EnvSettings::Wall>::const_iterator iter;
-	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
-	{
-		if( iter->channel_name == channel_name )
-		{ return *iter; }
-	}
-
-	return vl::EnvSettings::Wall();
-}
+// vl::EnvSettings::Wall
+// eqOgre::DistributedSettings::findWall( std::string const &channel_name ) const
+// {
+// 	std::vector<vl::EnvSettings::Wall>::const_iterator iter;
+// 	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
+// 	{
+// 		if( iter->channel_name == channel_name )
+// 		{ return *iter; }
+// 	}
+//
+// 	return vl::EnvSettings::Wall();
+// }
 
 
 

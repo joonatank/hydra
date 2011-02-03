@@ -191,6 +191,19 @@ vl::EnvSettings::getWall( size_t i ) const
 	return _walls.at(i);
 }
 
+vl::EnvSettings::Wall
+vl::EnvSettings::findWall( std::string const &channel_name ) const
+{
+	std::vector<vl::EnvSettings::Wall>::const_iterator iter;
+	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
+	{
+		if( iter->channel_name == channel_name )
+		{ return *iter; }
+	}
+
+	return vl::EnvSettings::Wall();
+}
+
 std::string
 vl::EnvSettings::getLogDir( vl::PATH_TYPE const type ) const
 {

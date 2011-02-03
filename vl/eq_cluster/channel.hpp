@@ -22,11 +22,9 @@ class Window;
 class Channel
 {
 public:
-    Channel( eqOgre::Window *parent );
+    Channel( std::string const &name, eqOgre::Window *parent );
 
     virtual ~Channel (void);
-
-// 	DistributedSettings const &getSettings( void ) const;
 
 	vl::Player const &getPlayer( void ) const;
 
@@ -40,19 +38,15 @@ public:
 	std::string getName( void ) const
 	{ return std::string(); }
 
-protected:
-	/// Equalizer overrides
-	virtual bool configInit( uint64_t initID );
-	virtual bool configExit();
+	virtual void draw( void );
 
-	/// Overrides all the equalizer frame draw methods
-	/// Creating custom frustum and applying head matrix
-	virtual void frameDraw( uint64_t frameID );
+protected:
+	virtual void init( vl::EnvSettingsRefPtr settings );
 
 	// Some task methods
 	// The eye is not a reference because it's going to get modified
-	void setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
-	void setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
+	void _setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
+	void _setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
 
 	eqOgre::Window *_window;
 

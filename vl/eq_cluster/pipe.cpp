@@ -88,8 +88,12 @@ eqOgre::Pipe::configInit( uint64_t initID )
 		return( false );
 	}
 
+	// Here we should wait for the EnvSettings from master
 	_createWindow();
 
+	// The rest should go outside the init
+	// First we wait for the Project Settings from master
+	// Then We wait for the SceneGraph
 	_mapData( initID );
 
 	_handleMessages();
@@ -194,7 +198,7 @@ bool
 eqOgre::Pipe::_createOgre( void )
 {
 	std::cout << "eqOgre::Pipe::_createOgre" << std::endl;
-	try {
+// 	try {
 		// TODO needs LogManager creation before this
 		std::string message("Creating Ogre Root");
 		std::cout << message << std::endl;
@@ -204,38 +208,38 @@ eqOgre::Pipe::_createOgre( void )
 		_root.reset( new vl::ogre::Root( "" ) );
 		// Initialise ogre
 		_root->createRenderSystem();
-	}
-	catch( vl::exception &e )
-	{
-		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
-		std::cout << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( Ogre::Exception const &e)
-	{
-		std::string message = std::string("Ogre Exception: ") + e.what();
-		std::cout << message << std::endl;
-		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( std::exception const &e )
-	{
-		std::string message = std::string("STD Exception: ") + e.what();
-		std::cout << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( ... )
-	{
-		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		std::cout << err_msg << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
-		return false;
-	}
+// 	}
+// 	catch( vl::exception &e )
+// 	{
+// 		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
+// 		std::cout << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+//
+// 		return false;
+// 	}
+// 	catch( Ogre::Exception const &e)
+// 	{
+// 		std::string message = std::string("Ogre Exception: ") + e.what();
+// 		std::cout << message << std::endl;
+// 		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+//
+// 		return false;
+// 	}
+// 	catch( std::exception const &e )
+// 	{
+// 		std::string message = std::string("STD Exception: ") + e.what();
+// 		std::cout << message << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+//
+// 		return false;
+// 	}
+// 	catch( ... )
+// 	{
+// 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
+// 		std::cout << err_msg << std::endl;
+// // 		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
+// 		return false;
+// 	}
 
 	return true;
 }

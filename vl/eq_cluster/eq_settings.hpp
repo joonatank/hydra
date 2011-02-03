@@ -68,8 +68,8 @@ public :
 
 	/// Returns a flags of around which axes the camera rotations are allowed
 	/// Fist bit is the x axis, second y axis, third z axis
-	uint32_t getCameraRotationAllowed() const
-	{ return _camera_rotations_allowed; }
+// 	uint32_t getCameraRotationAllowed() const
+// 	{ return _camera_rotations_allowed; }
 
 // 	vl::EnvSettings::Window findWindow( std::string const &name ) const;
 
@@ -79,19 +79,19 @@ public :
 // 	size_t getNWindows( void ) const
 // 	{ return _windows.size(); }
 
-	vl::EnvSettings::Wall findWall( std::string const &channel_name ) const;
+// 	vl::EnvSettings::Wall findWall( std::string const &channel_name ) const;
 
-	vl::EnvSettings::Wall const &getWall( size_t i ) const
-	{ return _walls.at(i); }
+// 	vl::EnvSettings::Wall const &getWall( size_t i ) const
+// 	{ return _walls.at(i); }
+//
+// 	size_t getNWalls( void ) const
+// 	{ return _walls.size(); }
+//
+// 	double getIPD( void ) const
+// 	{ return _ipd; }
 
-	size_t getNWalls( void ) const
-	{ return _walls.size(); }
-
-	double getIPD( void ) const
-	{ return _ipd; }
-
-	vl::EnvSettings::CFG getStereo( void ) const
-	{ return _stereo; }
+// 	vl::EnvSettings::CFG getStereo( void ) const
+// 	{ return _stereo; }
 
 protected :
 	virtual void getInstanceData( co::DataOStream& os );
