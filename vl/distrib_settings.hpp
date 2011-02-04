@@ -74,12 +74,23 @@ template<>
 ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Window &window );
 
 
+template<>
+ByteStream &operator<<( ByteStream &msg, vl::Settings const &settings);
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::ProjSettingsRefPtr const &proj );
+ByteStream &operator>>( ByteStream &msg, vl::Settings &settings );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::ProjSettingsRefPtr &proj );
+ByteStream &operator<<( ByteStream &msg, vl::ProjSettings const &proj );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::ProjSettings &proj );
+
+template<>
+ByteStream &operator<<( ByteStream &msg, vl::ProjSettings::Scene const &scene );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::ProjSettings::Scene &scene );
 
 }	// namespace cluster
 

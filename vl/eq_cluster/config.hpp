@@ -28,7 +28,7 @@ namespace eqOgre
 	{
 	public:
 		Config( vl::GameManagerPtr man,
-				vl::SettingsRefPtr settings,
+				vl::Settings const &settings,
 				vl::EnvSettingsRefPtr env );
 
 		virtual bool init( uint64_t const &initID );
@@ -74,7 +74,7 @@ namespace eqOgre
 
 		vl::GameManagerPtr _game_manager;
 
-		vl::SettingsRefPtr _settings;
+		vl::Settings _settings;
 
 		vl::EnvSettingsRefPtr _env;
 

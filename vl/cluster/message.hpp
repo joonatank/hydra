@@ -321,8 +321,6 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 	return msg;
 }
 
-// TODO  How about empty strings?
-// Not Tested but we write only size if the string is empty.
 template<> inline
 ByteStream &operator>>( ByteStream &msg, std::string &str )
 {

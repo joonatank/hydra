@@ -51,7 +51,14 @@ vl::cluster::Server::mainloop( void )
 				std::cout << "vl::cluster::MSG_REG_UPDATES message received."
 					<< std::endl;
 				_addClient( remote_endpoint );
-				_sendEnvironment(_env_msg);
+				if( !_env_msg.empty() )
+				{
+					_sendEnvironment(_env_msg);
+
+					// TODO this should be sent after ACK for MSG_ENVIRONMENT
+					if( !_proj_msg.empty() )
+					{ _sendProject(_proj_msg); }
+				}
 				delete msg;
 			}
 			break;

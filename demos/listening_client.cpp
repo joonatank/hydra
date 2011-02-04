@@ -50,45 +50,48 @@ vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions options )
 	return env;
 }
 
-vl::SettingsRefPtr getProjectSettings( vl::ProgramOptions options )
+vl::Settings getProjectSettings( vl::ProgramOptions options )
 {
 	if( options.slave() )
 	{
 		std::cerr << "Trying to get projects for a slave configuration."
 			<< std::endl;
-		return vl::SettingsRefPtr();
+		return vl::Settings();
 	}
 
-	vl::SettingsRefPtr settings;
-
-	vl::ProjSettingsRefPtr proj;
-	vl::ProjSettingsRefPtr global;
+	vl::Settings settings;
 
 	/// Read the Project Config
 	if( fs::is_regular( options.project_file ) )
 	{
 		std::cout << "Reading project file." << std::endl;
-		proj.reset( new vl::ProjSettings );
+		vl::ProjSettings proj;
+
 		std::string proj_data;
 		proj_data = vl::readFileToString( options.project_file );
-		vl::ProjSettingsSerializer proj_ser( proj );
+		vl::ProjSettingsRefPtr proj_ptr( &proj, vl::null_deleter() );
+		vl::ProjSettingsSerializer proj_ser( proj_ptr );
 		proj_ser.readString(proj_data);
-		proj->setFile( options.project_file );
+		proj.setFile( options.project_file );
+
+		settings.setProjectSettings(proj);
 	}
 
 	/// Read the global config
 	if( fs::is_regular( options.global_file ) )
 	{
+		vl::ProjSettings global;
 		std::cout << "Reading global file." << std::endl;
-		global.reset( new vl::ProjSettings );
+
 		std::string global_data;
 		global_data = vl::readFileToString( options.global_file );
-		vl::ProjSettingsSerializer glob_ser( global );
+		vl::ProjSettingsRefPtr glob_ptr( &global, vl::null_deleter() );
+		vl::ProjSettingsSerializer glob_ser( glob_ptr );
 		glob_ser.readString(global_data);
-		global->setFile( options.global_file );
-	}
+		global.setFile( options.global_file );
 
-	settings.reset( new vl::Settings( proj, global ) );
+		settings.addAuxilarySettings(global);
+	}
 
 	return settings;
 }
@@ -133,7 +136,7 @@ int main( const int argc, char** argv )
 		vl::ProgramOptions options;
 		options.parseOptions(argc, argv);
 		vl::EnvSettingsRefPtr env;
-		vl::SettingsRefPtr settings;
+		vl::Settings settings;
 		if( options.master() )
 		{
 			std::cout << "Requested master configuration." << std::endl;
@@ -150,7 +153,8 @@ int main( const int argc, char** argv )
 		if( !env )
 		{ return -1; }
 
-		if( env->isMaster() && !settings )
+		// TODO add checking for empty settings
+		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
 		std::cout << "Creating client" << std::endl;

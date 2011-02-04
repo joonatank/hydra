@@ -15,6 +15,7 @@
 
 #include "cluster/client.hpp"
 #include "session.hpp"
+#include "settings.hpp"
 
 namespace eqOgre
 {
@@ -61,10 +62,15 @@ public :
 	std::string const &getName( void ) const
 	{ return _name; }
 
+	typedef std::vector<vl::ProjSettingsRefPtr> ProjectList;
+
 protected :
 	/// Override frameStart to update the distributed data
 	virtual void frameStart( uint64_t frameID,
 							 const uint32_t frameNumber );
+
+	/// Reload the projects
+	void _reloadProjects( vl::Settings set );
 
 	/// Ogre helpers
 	bool _createOgre( void );
@@ -90,7 +96,7 @@ protected :
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
 	/// ProjectSettings mapped from Master
-	std::vector<vl::ProjSettingsRefPtr> _projects;
+	vl::Settings _settings;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;

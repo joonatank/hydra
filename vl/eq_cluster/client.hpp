@@ -22,7 +22,7 @@ namespace eqOgre
     class Client
     {
     public:
-		Client( vl::EnvSettingsRefPtr env, vl::SettingsRefPtr settings );
+		Client( vl::EnvSettingsRefPtr env, vl::Settings const &settings );
 
         virtual ~Client (void);
 
@@ -32,17 +32,16 @@ namespace eqOgre
 
 	protected:
 
-		bool _init( void );
 		void _exit( void );
 
 		void _render( uint32_t const frame );
 
 		/// Resources
-		void _createResourceManager( void );
+		void _createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env );
 
 
 		vl::EnvSettingsRefPtr _env;
-		vl::SettingsRefPtr _settings;
+// 		vl::SettingsRefPtr _settings;
 
 		vl::GameManagerPtr _game_manager;
 

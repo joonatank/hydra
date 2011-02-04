@@ -15,61 +15,48 @@
 #include "base/envsettings.hpp"
 
 
-vl::Settings::Settings( vl::ProjSettingsRefPtr proj,
-						vl::ProjSettingsRefPtr global )
-	: _global(global),
-	  _proj(proj)
-// 	  _verbose(false)
+vl::Settings::Settings( ProjSettings const &proj, ProjSettings const &global )
+	: _proj(proj)
+{
+	addAuxilarySettings(global);
+}
+
+vl::Settings::Settings( const vl::ProjSettings& proj )
+	: _proj(proj)
 {}
+
+vl::Settings::Settings( void )
+{}
+
 
 vl::Settings::~Settings( void )
 {}
 
-std::string
-vl::Settings::getProjectName(void ) const
+void
+vl::Settings::addAuxilarySettings ( vl::ProjSettings const &proj )
 {
-	if( _proj )
-	{ return _proj->getCasePtr()->getName(); }
-	else
-	{ return std::string(); }
+	// TODO should check that the same is not added twice
+	_aux_projs.push_back(proj);
 }
 
-// std::string
-// vl::Settings::getEqLogFilePath( PATH_TYPE const type ) const
-// {
-// 	return getLogFilePath( "eq", "", type );
-// }
-//
-// std::string
-// vl::Settings::getOgreLogFilePath( PATH_TYPE const type  ) const
-// {
-// 	return getLogFilePath( "ogre", "", type );
-// }
-
-// std::string
-// vl::Settings::getLogFilePath( const std::string &identifier,
-// 							  const std::string &prefix,
-// 							  PATH_TYPE const type ) const
-// {
-// // TODO move this to the calling function, because this doesn't have both
-// // the log dir and the project name
-// // 	return createLogFilePath( getProjectName(), identifier, prefix, getLogDir(type) );
-// }
-
+std::string
+vl::Settings::getProjectName( void ) const
+{
+	return _proj.getCase().getName();
+}
 
 std::vector< vl::ProjSettings::Scene>
 vl::Settings::getScenes( void ) const
 {
 	std::vector<ProjSettings::Scene> scenes;
 
-	if( _global )
-	{ _addScenes( scenes, _global->getCasePtr() ); }
+	for( size_t i = 0; i < _aux_projs.size(); ++i )
+	{ _addScenes( scenes, _aux_projs.at(i).getCase() ); }
 
-	if( _proj )
-	{ _addScenes( scenes, _proj->getCasePtr() ); }
+	_addScenes( scenes, _proj.getCase() );
 
-	if( _proj && !_case.empty() )
-	{ _addScenes( scenes, _proj->getCasePtr(_case) ); }
+	if( !_case.empty() )
+	{ _addScenes( scenes, _proj.getCase(_case) ); }
 
 	return scenes;
 }
@@ -79,40 +66,37 @@ vl::Settings::getScripts( void ) const
 {
 	std::vector<std::string> vec;
 
-	if( _global )
-	{ _addScripts( vec, _global->getCasePtr() ); }
+	for( size_t i = 0; i < _aux_projs.size(); ++i )
+	{ _addScripts( vec, _aux_projs.at(i).getCase() ); }
 
-	if( _proj )
-	{ _addScripts( vec, _proj->getCasePtr() ); }
+	_addScripts( vec, _proj.getCase() );
 
-	if( _proj && !_case.empty() )
-	{ _addScripts( vec, _proj->getCasePtr(_case) ); }
+	if( !_case.empty() )
+	{ _addScripts( vec, _proj.getCase(_case) ); }
 
 	return vec;
 }
 
-std::string vl::Settings::getGlobalDir(void ) const
+std::vector<std::string>
+vl::Settings::getAuxDirectories(void ) const
 {
-	// This shouldn't be called from slave node
-	if( !_global )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	std::vector<std::string> paths;
+	for( size_t i = 0; i < _aux_projs.size(); ++i )
+	{
+		fs::path file( _aux_projs.at(i).getFile() );
+		fs::path dir = file.parent_path();
+		if( !fs::exists( dir ) )
+		{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( dir.file_string() ) ); }
+		paths.push_back(dir.file_string());
+	}
 
-	fs::path globFile( _global->getFile() );
-	fs::path globDir = globFile.parent_path();
-	if( !fs::exists( globDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( globDir.file_string() ) ); }
-
-	return globDir.file_string();
+	return paths;
 }
 
 std::string
 vl::Settings::getProjectDir( void ) const
 {
-	// This shouldn't be called from slave node
-	if( !_proj )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	fs::path projFile( _proj->getFile() );
+	fs::path projFile( _proj.getFile() );
 	fs::path projDir = projFile.parent_path();
 	if( !fs::exists( projDir ) )
 	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.file_string() ) ); }
@@ -120,17 +104,24 @@ vl::Settings::getProjectDir( void ) const
 	return projDir.file_string();
 }
 
-// --------- Settings Protected --------
+bool
+vl::Settings::empty( void ) const
+{
+	return( _proj.empty() && _aux_projs.empty() );
+}
+
+
+/// -------------------- Settings Protected ------------------------------------
 void
 vl::Settings::_addScripts( std::vector< std::string > &vec,
-						   ProjSettings::Case const *cas ) const
+						   ProjSettings::Case const &cas ) const
 {
-	for( size_t i = 0; i < cas->getNscripts(); ++i )
+	for( size_t i = 0; i < cas.getNscripts(); ++i )
 	{
-		vl::ProjSettings::Script const *script = cas->getScriptPtr(i);
-		if( script->getUse() )
+		vl::ProjSettings::Script const &script = cas.getScript(i);
+		if( script.getUse() )
 		{
-			vec.push_back( script->getFile() );
+			vec.push_back( script.getFile() );
 		}
 	}
 }
@@ -138,32 +129,14 @@ vl::Settings::_addScripts( std::vector< std::string > &vec,
 
 void
 vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene> &vec,
-						 ProjSettings::Case const *cas ) const
+						 ProjSettings::Case const &cas ) const
 {
-	for( size_t i = 0; i < cas->getNscenes(); ++i )
+	for( size_t i = 0; i < cas.getNscenes(); ++i )
 	{
-		ProjSettings::Scene const &scene = *(cas->getScenePtr(i));
+		ProjSettings::Scene const &scene = cas.getScene(i);
 		if( scene.getUse() )
 		{
 			vec.push_back( scene );
 		}
 	}
 }
-
-/*
-void
-vl::Settings::_updateArgs( void )
-{
-	// Update args
-	_eq_args.clear();
-	if( !_exe_path.empty() )
-	{ _eq_args.add( _exe_path.c_str() ); }
-
-	// Only add eqc config in master node,
-	// if _env is missing we can assume that this is a slave node
-	if( _env && !_env->getEqcFullPath().empty() )
-	{
-		_eq_args.add( "--eq-config" );
-		_eq_args.add( _env->getEqcFullPath().c_str() );
-	}
-}*/

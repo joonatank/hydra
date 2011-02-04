@@ -23,7 +23,7 @@
 #include <string>
 
 // Necessary for getEqArgs
-#include "base/args.hpp"
+// #include "base/args.hpp"
 
 // Necessary for ProjSettings::Scene
 #include "base/projsettings.hpp"
@@ -44,29 +44,34 @@ class Settings
 		 *	Default constructor is provided for slave nodes
 		 *	Same behaviour would result also with omiting either env or proj.
 		 */
-		Settings( ProjSettingsRefPtr proj = ProjSettingsRefPtr(),
-				  ProjSettingsRefPtr global = ProjSettingsRefPtr() );
+		Settings( ProjSettings const &proj, ProjSettings const &global );
+
+		Settings( ProjSettings const &proj );
+
+		Settings( void );
 
 		virtual ~Settings( void );
 
-		ProjSettingsRefPtr getGlobalSettings( void )
-		{ return _global; }
-
-		void setGlobalSettings( ProjSettingsRefPtr proj )
-		{ _global = proj; }
-
-
-		ProjSettingsRefPtr getProjectSettings( void )
+		ProjSettings const &getProjectSettings( void ) const
 		{ return _proj; }
 
-		void setProjectSettings( ProjSettingsRefPtr proj )
+		void setProjectSettings( ProjSettings const &proj )
 		{ _proj = proj; }
-/*
-		EnvSettingsRefPtr getEnvironmentSettings( void )
-		{ return _env; }
 
-		void setProjectSettings( EnvSettingsRefPtr env )
-		{ _env = env; }*/
+		/// This supports multiple Project settings using the auxilary function
+		/// multiple settings can be added and they are automatically used
+		/// when retrieving resource paths, scripts or scenes.
+		void addAuxilarySettings( ProjSettings const &proj );
+
+		std::vector<ProjSettings> const &getAuxilarySettings( void ) const
+		{ return _aux_projs; }
+
+// 		ProjSettingsRefPtr getGlobalSettings( void )
+// 		{ return _global; }
+//
+// 		void setGlobalSettings( ProjSettingsRefPtr proj )
+// 		{ _global = proj; }
+
 
 		/// Returns the name of the project
 		std::string getProjectName( void ) const;
@@ -127,41 +132,27 @@ class Settings
 		/// Returns a vector of script names
 		std::vector<std::string> getScripts( void ) const;
 
-		std::string getGlobalDir( void ) const;
+		std::vector<std::string> getAuxDirectories( void ) const;
 
 		std::string getProjectDir( void ) const;
 
-// 		std::string getEnvironementDir( void ) const;
+		bool empty( void ) const;
 
 	protected :
 		void _addScripts( std::vector<std::string> &vec,
-						  vl::ProjSettings::Case const *cas ) const;
+						  vl::ProjSettings::Case const &cas ) const;
 
 		void _addScenes( std::vector<ProjSettings::Scene> &vec,
-						vl::ProjSettings::Case const *cas ) const;
-
-// 		void _updateArgs( void );
-
-		// Log directory
-// 		std::string _log_dir;
-
-		// All the paths
-// 		std::string _exe_path;
-// 		vl::Args _eq_args;
-
-		// Environment specific settings
-// 		EnvSettingsRefPtr _env;
-
-		// Global project settings
-		ProjSettingsRefPtr _global;
+						vl::ProjSettings::Case const &cas ) const;
 
 		// Project specific settings
-		ProjSettingsRefPtr _proj;
+		ProjSettings _proj;
+
+		// Global project settings
+		std::vector<ProjSettings> _aux_projs;
 
 		// Name of the current case or empty if doesn't have a case
 		std::string _case;
-
-// 		bool _verbose;
 
 };	// class Settings
 

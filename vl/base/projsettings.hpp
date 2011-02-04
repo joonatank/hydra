@@ -9,6 +9,10 @@
  *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-12
  *	Added non-const retrieval methods for QtLauncher.
+ *
+ *	2011-02
+ *	Replaced pointers with references
+ *	Removed ActionMaps
  */
 
 #ifndef VL_PROJSETTINGS_HPP
@@ -26,40 +30,6 @@ namespace vl
 class ProjSettings
 {
 public :
-	struct ActionMap
-	{
-		ActionMap( std::string const &f = "",
-					bool u = true,
-					bool c = false )
-			: _use(u), _file(f), _changed(c)
-		{}
-
-		void mapOnOff( bool newState )
-		{ _use = newState; _changed = true; }
-
-		bool getUse() const
-		{ return _use; }
-
-		void setFile( std::string const &fileName )
-		{ _file = fileName; _changed = true; }
-
-		std::string const &getFile() const
-		{ return _file; }
-
-		bool getChanged( void ) const
-		{ return _changed; }
-
-		void clearChanged( void )
-		{ _changed = false; }
-
-	private :
-		bool _use;
-		std::string _file;
-		bool _changed;
-
-	};	// class ActionMap
-
-
 	struct Script
 	{
 		Script( std::string const &f = "",
@@ -112,7 +82,7 @@ public :
 		std::string const &getName( void ) const
 		{ return _name; }
 
-		void sceneOnOff( bool newState )
+		void setUse( bool newState )
 		{ _use = newState; _changed = true; }
 
 		bool getUse( void ) const
@@ -156,10 +126,9 @@ public :
 	struct Case
 	{
 		Case( std::string const &n = "",
-				std::vector<Scene*> const &s = std::vector<Scene*>(),
-				std::vector<ActionMap*> const &a = std::vector<ActionMap*>(),
+				std::vector<Scene> const &s = std::vector<Scene>(),
 				bool c = false )
-			: _name(n), _scenes(s), _actionMaps(a), _changed(c)
+			: _name(n), _scenes(s), _changed(c)
 		{}
 
 		void setName( std::string const &name )
@@ -168,38 +137,30 @@ public :
 		std::string const &getName( void ) const
 		{ return _name; }
 
-		// TODO fix the constness of the methods,
-		// Getter methods are const if they either return by value or return
-		// const reference/pointer.
-		// TODO Provide both getters const and non-const
-		Scene *addScene( std::string const &name );
+		Scene &addScene( std::string const &name );
+		void addScene( Scene const &scene );
 		void rmScene( std::string const &name );
-		Scene const *getScenePtr( std::string const &sceneName ) const;
-		Scene const *getScenePtr( size_t i ) const;
+		Scene const &getScene( std::string const &sceneName ) const;
+		Scene const &getScene( size_t i ) const;
 		size_t getNscenes() const { return _scenes.size(); }
 
-		ActionMap *addMap( std::string const &file );
-		void rmMap( std::string const &name );
-		ActionMap const *getMapPtr( std::string const &mapName ) const;
-		ActionMap *getMapPtr( std::string const &mapName );
-		ActionMap const *getMapPtr( size_t i ) const;
-		size_t getNmaps() const { return _actionMaps.size(); }
-
-		Script *addScript( std::string const &file );
+		Script &addScript( std::string const &file );
 		void rmScript( std::string const &name );
-		Script const *getScriptPtr( std::string const &name ) const;
-		Script *getScriptPtr( std::string const &name );
-		Script const *getScriptPtr( size_t i ) const;
+		Script const &getScript( std::string const &name ) const;
+		Script &getScript( std::string const &name );
+		Script const &getScript( size_t i ) const;
 		size_t getNscripts() const { return _scripts.size(); }
 
 		bool getChanged( void ) const;
 		void clearChanged( void );
 
+		bool empty( void ) const
+		{ return( _name.empty() && _scenes.empty() && _scripts.empty() ); }
+
 	private :
 		std::string _name;
-		std::vector<Scene*> _scenes;
-		std::vector<ActionMap*> _actionMaps;
-		std::vector<Script*> _scripts;
+		std::vector<Scene> _scenes;
+		std::vector<Script> _scripts;
 		bool _changed;
 
 	};	// class Case
@@ -223,23 +184,30 @@ public :
 
 
 	///// CASES /////////////////////////////////////////////////
-	Case *addCase( std::string const &caseName  );
+	Case &addCase( std::string const &caseName  );
 	void rmCase( std::string const &caseName );
-	Case const *getCasePtr( std::string const &caseName ) const;
-	Case *getCasePtr( std::string const &caseName );
-	Case const *getCasePtr( size_t i ) const;
-	size_t getNcases( void ) const { return _cases.size(); }
+	Case const &getCase( std::string const &caseName ) const;
+	Case &getCase( std::string const &caseName );
+	Case const &getCase( size_t i ) const;
+
+	size_t getNcases( void ) const
+	{ return _cases.size(); }
 
 
 	///// PROJECT GETTERS /////////////////////////////////////////////////
 	/// The Case that defines the Project
-	Case const *getCasePtr( void ) const { return _projCase; }
-	Case *getCasePtr( void ) { return _projCase; }
+	Case const &getCase( void ) const
+	{ return _projCase; }
+
+	Case &getCase( void )
+	{ return _projCase; }
+
+	bool empty( void ) const;
 
 protected :
 	std::string _file;
-	Case* _projCase;
-	std::vector<Case*> _cases;
+	Case _projCase;
+	std::vector<Case> _cases;
 	bool _changed;
 
 };	// class ProjSettings
@@ -271,13 +239,11 @@ protected :
 
 	void readConfig( rapidxml::xml_node<>* XMLNode );
 
-	void readScenes( rapidxml::xml_node<>* XMLNode, ProjSettings::Case* c );
+	void readScenes( rapidxml::xml_node<>* XMLNode, ProjSettings::Case &c );
 
-	void readScene( rapidxml::xml_node<>* XMLNode, ProjSettings::Case* c );
+	void readScene( rapidxml::xml_node<>* XMLNode, ProjSettings::Case &c );
 
-	void readActionMaps( rapidxml::xml_node<>* XMLNode, ProjSettings::Case* c );
-
-	void readScripts( rapidxml::xml_node<>* XMLNode, ProjSettings::Case* c );
+	void readScripts( rapidxml::xml_node<>* XMLNode, ProjSettings::Case &c );
 
 	void readCases( rapidxml::xml_node<>* XMLNode );
 
@@ -287,11 +253,9 @@ protected :
 	//write
 	void writeConfig( rapidxml::xml_node<> *xml_node );
 
-	void writeScenes( rapidxml::xml_node<> *xml_node, ProjSettings::Case const *cas );
+	void writeScenes( rapidxml::xml_node<> *xml_node, ProjSettings::Case const &cas );
 
-	void writeMaps( rapidxml::xml_node<> *xml_node, ProjSettings::Case const *cas );
-
-	void writeScripts( rapidxml::xml_node<> *xml_node, ProjSettings::Case const *cas );
+	void writeScripts( rapidxml::xml_node<> *xml_node, ProjSettings::Case const &cas );
 
 	void writeCases( rapidxml::xml_node<> *xml_node );
 

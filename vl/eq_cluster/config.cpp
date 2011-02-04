@@ -33,11 +33,12 @@
 #include "player.hpp"
 #include <distrib_settings.hpp>
 
-eqOgre::Config::Config( vl::GameManagerPtr man, vl::SettingsRefPtr settings, vl::EnvSettingsRefPtr env )
+eqOgre::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
 {
 	std::cout << "eqOgre::Config::Config" << std::endl;
-	assert( _game_manager && _settings && _env );
+	assert( _game_manager && _env );
+	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
 }
 
@@ -79,7 +80,7 @@ eqOgre::Config::init( uint64_t const & )
 	// Create Tracker needs the SceneNodes for mapping
 	_createTracker( _env );
 
-	std::vector<std::string> scripts = _settings->getScripts();
+	std::vector<std::string> scripts = _settings.getScripts();
 
 	std::cout << "Running " << scripts.size() << " python scripts." << std::endl;
 
@@ -248,9 +249,9 @@ eqOgre::Config::_updateServer( void )
 void
 eqOgre::Config::_sendEnvironment ( void )
 {
+	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
 	assert( _server );
 
-	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
 	vl::SettingsByteData data;
 	vl::cluster::ByteStream stream( &data );
 	stream << _env;
@@ -264,6 +265,15 @@ void
 eqOgre::Config::_sendProject ( void )
 {
 	std::cout << "eqOgre::Config::_sendProject" << std::endl;
+	assert( _server );
+
+	vl::SettingsByteData data;
+	vl::cluster::ByteStream stream( &data );
+	stream << _settings;
+
+	vl::cluster::Message msg( vl::cluster::MSG_PROJECT );
+	data.copyToMessage( &msg );
+	_server->sendProject(msg);
 }
 
 void
@@ -339,11 +349,11 @@ eqOgre::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 void
 eqOgre::Config::_loadScenes(void )
 {
-	std::cout << "Loading Scenes for Project : " << _settings->getProjectName()
+	std::cout << "Loading Scenes for Project : " << _settings.getProjectName()
 		<< std::endl;
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene> scenes = _settings->getScenes();
+	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )

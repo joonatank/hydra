@@ -16,15 +16,27 @@
 #include "distrib_resource_manager.hpp"
 #include "pipe.hpp"
 
-eqOgre::Client::Client( vl::EnvSettingsRefPtr env, vl::SettingsRefPtr settings )
+eqOgre::Client::Client( vl::EnvSettingsRefPtr env, vl::Settings const &settings )
 	: _env(env),
-	  _settings(settings),
-	  _game_manager(new vl::GameManager ),
+// 	  _settings(settings),
 	  _config(0),
 	  _pipe_thread(0),
 	   _pipe(0)
 {
-	assert( env && settings );
+// 	assert( env && settings );
+	std::cout << "eqOgre::Client::init" << std::endl;
+	if( env->isMaster() )
+	{
+		_game_manager = new vl::GameManager;
+		_createResourceManager( settings, env );
+
+		// TODO this should be done in python and only on the master
+		std::string song_name("The_Dummy_Song.ogg");
+		_game_manager->createBackgroundSound(song_name);
+
+		_config = new eqOgre::Config( _game_manager, settings, env );
+		_config->init(0);
+	}
 }
 
 eqOgre::Client::~Client(void )
@@ -68,27 +80,10 @@ eqOgre::Client::run( void )
 void
 eqOgre::Client::init( void )
 {
-	std::cout << "eqOgre::Client::init" << std::endl;
-	if( _env->isMaster() )
-	{
-		_createResourceManager();
-		_init();
-		_config = new eqOgre::Config( _game_manager, _settings, _env );
-		_config->init(0);
-	}
+
 }
 
 /// ------------------------------- Private ------------------------------------
-bool
-eqOgre::Client::_init( void )
-{
-	// TODO this should be done in python and only on the master
-	std::string song_name("The_Dummy_Song.ogg");
-	_game_manager->createBackgroundSound(song_name);
-
-	return true;
-}
-
 void
 eqOgre::Client::_exit(void )
 {
@@ -143,20 +138,22 @@ eqOgre::Client::_render( uint32_t const frame )
 }
 
 void
-eqOgre::Client::_createResourceManager(void )
+eqOgre::Client::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
 {
 	std::cout << "Initialising Resource Manager" << std::endl;
 
 	std::cout << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
 
-	_game_manager->getReourceManager()->addResourcePath( _settings->getProjectDir() );
-	_game_manager->getReourceManager()->addResourcePath( _settings->getGlobalDir() );
+	std::vector<std::string> paths = settings.getAuxDirectories();
+	paths.push_back(settings.getProjectDir());
+	for( size_t i = 0; i < paths.size(); ++i )
+	{ _game_manager->getReourceManager()->addResourcePath( paths.at(i) ); }
 
 	// TODO add case directory
 
 	// Add environment directory, used for tracking configurations
 	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	std::string tracking_dir( _env->getEnvironementDir() + "/tracking" );
+	std::string tracking_dir( env->getEnvironementDir() + "/tracking" );
 	_game_manager->getReourceManager()->addResourcePath( tracking_dir );
 }

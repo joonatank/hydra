@@ -18,7 +18,7 @@
 #include "window.hpp"
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
-#include <distrib_settings.hpp>
+#include "distrib_settings.hpp"
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -214,53 +214,40 @@ eqOgre::Pipe::frameStart( uint64_t frameID, const uint32_t frameNumber )
 }
 
 
+void
+eqOgre::Pipe::_reloadProjects( vl::Settings set )
+{
+	_settings = set;
+	std::cout << "Should reload project "
+		<< _settings.getProjectName() << ".";
+
+	std::vector<vl::ProjSettings::Scene> scenes;
+	scenes = _settings.getScenes();
+
+	std::cout << "With scenes " << std::endl;
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		std::cout << scenes.at(i).getName() << " file " << scenes.at(i).getFile() << std::endl;
+	}
+	std::cout << std::endl;
+
+}
+
 /// Ogre helpers
 bool
 eqOgre::Pipe::_createOgre( void )
 {
 	std::cout << "eqOgre::Pipe::_createOgre" << std::endl;
-// 	try {
-		// TODO needs LogManager creation before this
-		std::string message("Creating Ogre Root");
-		std::cout << message << std::endl;
 
-		// FIXME the log file path should be retrieved from EnvSettings
-		//_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
-		_root.reset( new vl::ogre::Root( "" ) );
-		// Initialise ogre
-		_root->createRenderSystem();
-// 	}
-// 	catch( vl::exception &e )
-// 	{
-// 		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
-// 		std::cout << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-//
-// 		return false;
-// 	}
-// 	catch( Ogre::Exception const &e)
-// 	{
-// 		std::string message = std::string("Ogre Exception: ") + e.what();
-// 		std::cout << message << std::endl;
-// 		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-//
-// 		return false;
-// 	}
-// 	catch( std::exception const &e )
-// 	{
-// 		std::string message = std::string("STD Exception: ") + e.what();
-// 		std::cout << message << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-//
-// 		return false;
-// 	}
-// 	catch( ... )
-// 	{
-// 		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-// 		std::cout << err_msg << std::endl;
-// // 		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
-// 		return false;
-// 	}
+	// TODO needs LogManager creation before this
+	std::string message("Creating Ogre Root");
+	std::cout << message << std::endl;
+
+	// FIXME the log file path should be retrieved from EnvSettings
+	//_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
+	_root.reset( new vl::ogre::Root( "" ) );
+	// Initialise ogre
+	_root->createRenderSystem();
 
 	return true;
 }
@@ -291,8 +278,9 @@ eqOgre::Pipe::_loadScene( void )
 
 	// Clean up old scenes
 	// TODO this should be a loader not a destroyer, move to another function
-	_ogre_sm->clearScene();
-	_ogre_sm->destroyAllCameras();
+	// If necessary use an unloader for this
+// 	_ogre_sm->clearScene();
+// 	_ogre_sm->destroyAllCameras();
 
 	// TODO support for multiple scene files should be tested
 	// TODO support for case needs to be tested
@@ -409,14 +397,13 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 			// Combining the project configurations is not done automatically
 			// so they either need special structure or we need to iterate over
 			// all of them always.
-			vl::ProjSettingsRefPtr proj( new vl::ProjSettings );
 			// TODO needs a ByteData object for Environment settings
 			vl::SettingsByteData data;
 			data.copyFromMessage(msg);
 			vl::cluster::ByteStream stream(&data);
-			_projects.clear();
-			stream >> _projects;
-// 			_projects.push_back( proj );
+			vl::Settings projects;
+			stream >> projects;
+			_reloadProjects(projects);
 		}
 		break;
 

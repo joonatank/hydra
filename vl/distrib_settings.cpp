@@ -8,6 +8,7 @@
 #include "distrib_settings.hpp"
 
 #include <iostream>
+#include "settings.hpp"
 
 vl::SettingsByteData::SettingsByteData( void )
 {
@@ -171,21 +172,95 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& 
 
 
 
-
-
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr const &proj )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::Settings& settings )
 {
-	std::cout << "vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
+	msg << settings.getProjectSettings() << settings.getAuxilarySettings();
 
 	return msg;
 }
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr &proj )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::Settings& settings )
+{
+	vl::ProjSettings proj;
+	msg >> proj;
+	settings.setProjectSettings(proj);
+	size_t size;
+	msg >> size;
+	for( size_t i = 0; i < size; ++i )
+	{
+		vl::ProjSettings aux;
+		msg >> aux;
+		settings.addAuxilarySettings(aux);
+	}
+
+	return msg;
+}
+
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
+{
+	std::cout << "vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
+
+	vl::ProjSettings::Case const &cas = proj.getCase();
+	msg << cas.getName() << cas.getNscenes();
+	for( size_t i = 0; i < cas.getNscenes(); ++i )
+	{
+		msg << cas.getScene(i);
+	}
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 {
 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
+
+	std::string name;
+	size_t size;
+	msg >> name >> size;
+
+	vl::ProjSettings::Case &cas = proj.getCase();
+	cas.setName(name);
+	assert( cas.getNscenes() == 0 );
+
+	for( size_t i = 0; i < size; ++i )
+	{
+		vl::ProjSettings::Scene scene;
+		msg >> scene;
+		cas.addScene(scene);
+	}
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::ProjSettings::Scene &scene )
+{
+	msg << scene.getName() << scene.getUse() << scene.getFile();
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings::Scene &scene )
+{
+	std::string name;
+	std::string file;
+	bool use;
+	msg >> name >> use >> file;
+	scene.setName(name);
+	scene.setUse(use);
+	scene.setFile(file);
+
 	return msg;
 }

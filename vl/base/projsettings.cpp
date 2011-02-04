@@ -31,193 +31,114 @@
 #include <iostream>
 
 ////////// CASE SCENE /////////////////////////////////////////////////////////
-vl::ProjSettings::Scene *
+vl::ProjSettings::Scene &
 vl::ProjSettings::Case::addScene( std::string const &name )
 {
-	vl::ProjSettings::Scene* scene = new ProjSettings::Scene( name );
-	_scenes.push_back( scene );
+	_scenes.push_back( vl::ProjSettings::Scene( name ) );
 	_changed = true;
-	return scene;
+	return _scenes.back();
+}
+
+void
+vl::ProjSettings::Case::addScene( const vl::ProjSettings::Scene& scene )
+{
+	_scenes.push_back( ProjSettings::Scene( scene ) );
+	_changed = true;
 }
 
 void
 vl::ProjSettings::Case::rmScene( std::string const &name )
 {
-	vl::ProjSettings::Scene const *scene = getScenePtr(name);
+// 	vl::ProjSettings::Scene const &scene = getScene(name);
 	for( size_t i = 0; i < _scenes.size(); i++ )
 	{
-		if( _scenes.at(i)->getName() == name )
+		if( _scenes.at(i).getName() == name )
 		{
 			_scenes.erase( _scenes.begin() + i );
 		}
 	}
-	delete scene;
+
 	_changed = true;
 }
 
-vl::ProjSettings::Scene const *
-vl::ProjSettings::Case::getScenePtr( std::string const &sceneName ) const
+vl::ProjSettings::Scene const &
+vl::ProjSettings::Case::getScene( std::string const &sceneName ) const
 {
 	for( size_t i = 0; i < _scenes.size(); i++ )
 	{
-		if( _scenes.at(i)->getName() == sceneName )
+		if( _scenes.at(i).getName() == sceneName )
 		{
 			return _scenes.at(i);
 		}
 	}
-	return 0;
+
+	return vl::ProjSettings::Scene();
 }
 
-vl::ProjSettings::Scene const *
-vl::ProjSettings::Case::getScenePtr( size_t i ) const
+vl::ProjSettings::Scene const &
+vl::ProjSettings::Case::getScene( size_t i ) const
 {
-	if( i < _scenes.size() )
-	{
-		return _scenes.at(i);
-	}
-	else
-	{
-		std::cerr << "Trying to get scene pointer from case " << _name
-			<< "with invalid index!" << std::endl;
-		return 0;
-	}
+	return _scenes.at(i);
 }
-
-
-////////// CASE ACTION MAP /////////////////////////////////////////////////////
-vl::ProjSettings::ActionMap *
-vl::ProjSettings::Case::addMap( std::string const &name )
-{
-	ProjSettings::ActionMap* map = new ProjSettings::ActionMap( name );
-	_actionMaps.push_back( map );
-	_changed = true;
-	return map;
-}
-
-void
-vl::ProjSettings::Case::rmMap( std::string const &name )
-{
-	ProjSettings::ActionMap const *map = getMapPtr(name);
-	for( unsigned int i = 0; i < _actionMaps.size(); i++ )
-	{
-		if( _actionMaps.at(i)->getFile() == name )
-		{
-			_actionMaps.erase( _actionMaps.begin() + i );
-		}
-	}
-	delete map;
-	_changed = true;
-}
-
-vl::ProjSettings::ActionMap const *
-vl::ProjSettings::Case::getMapPtr( std::string const &mapName ) const
-{
-	for( unsigned int i = 0; i < _actionMaps.size(); i++ )
-	{
-		if( _actionMaps.at(i)->getFile() == mapName )
-		{
-			return _actionMaps.at(i);
-		}
-	}
-	return 0;
-}
-
-vl::ProjSettings::ActionMap *
-vl::ProjSettings::Case::getMapPtr( std::string const &mapName )
-{
-	for( unsigned int i = 0; i < _actionMaps.size(); i++ )
-	{
-		if( _actionMaps.at(i)->getFile() == mapName )
-		{
-			return _actionMaps.at(i);
-		}
-	}
-	return 0;
-}
-
-
-vl::ProjSettings::ActionMap const *
-vl::ProjSettings::Case::getMapPtr( size_t i ) const
-{
-	if( i < _actionMaps.size() )
-	{
-		return _actionMaps.at(i);
-	}
-	else
-	{
-		std::cerr << "Trying to get action map pointer from case " << _name
-			<< "with invalid index!" << std::endl;
-		return 0;
-	}
-}
-
 
 ////////// CASE SCRIPTS ///////////////////////////////////////////////////////////////
 
-vl::ProjSettings::Script *
+vl::ProjSettings::Script &
 vl::ProjSettings::Case::addScript( std::string const &name )
 {
-	ProjSettings::Script* script = new ProjSettings::Script( name );
-	_scripts.push_back( script );
+	_scripts.push_back( ProjSettings::Script( name ) );
 	_changed = true;
-	return script;
+	return _scripts.back();
 }
 
 void
 vl::ProjSettings::Case::rmScript( std::string const &name )
 {
-	ProjSettings::Script const* script = getScriptPtr(name);
+// 	ProjSettings::Script const &script = getScript(name);
 	for( unsigned int i = 0; i < _scripts.size(); i++ )
 	{
-		if( _scripts.at(i)->getFile() == name )
+		if( _scripts.at(i).getFile() == name )
 		{
 			_scripts.erase( _scripts.begin() + i );
 		}
 	}
-	delete script;
+
 	_changed = true;
 }
 
-vl::ProjSettings::Script const *
-vl::ProjSettings::Case::getScriptPtr( std::string const &name ) const
+vl::ProjSettings::Script const &
+vl::ProjSettings::Case::getScript( std::string const &name ) const
 {
 	for( unsigned int i = 0; i < _scripts.size(); i++ )
 	{
-		if( _scripts.at(i)->getFile() == name )
+		if( _scripts.at(i).getFile() == name )
 		{
 			return _scripts.at(i);
 		}
 	}
-	return 0;
+
+	return vl::ProjSettings::Script();
 }
 
-vl::ProjSettings::Script *
-vl::ProjSettings::Case::getScriptPtr( std::string const &name )
+vl::ProjSettings::Script &
+vl::ProjSettings::Case::getScript( std::string const &name )
 {
 	for( unsigned int i = 0; i < _scripts.size(); i++ )
 	{
-		if( _scripts.at(i)->getFile() == name )
+		if( _scripts.at(i).getFile() == name )
 		{
 			return _scripts.at(i);
 		}
 	}
-	return 0;
+
+	// TODO should throw
 }
 
 
-vl::ProjSettings::Script const *
-vl::ProjSettings::Case::getScriptPtr( size_t i ) const
+vl::ProjSettings::Script const &
+vl::ProjSettings::Case::getScript( size_t i ) const
 {
-	if( i < _scripts.size() )
-	{
-		return _scripts.at(i);
-	}
-	else
-	{
-		std::cerr << "Trying to get script pointer from case "
-			<< _name << "with invalid index!" << std::endl;
-		return 0;
-	}
+	return _scripts.at(i);
 }
 
 
@@ -227,19 +148,15 @@ vl::ProjSettings::Case::getChanged( void ) const
 {
 	if( _changed )
 	{ return true; }
-	for( unsigned int i = 0; i < _actionMaps.size(); i++ )
-	{
-		if( _actionMaps.at(i)->getChanged() == true )
-		{ return true; }
-	}
+
 	for( unsigned int i = 0; i < _scripts.size(); i++ )
 	{
-		if( _scripts.at(i)->getChanged() == true )
+		if( _scripts.at(i).getChanged() == true )
 		{ return true; }
 	}
 	for( unsigned int i = 0; i < _scenes.size(); i++ )
 	{
-		if( _scenes.at(i)->getChanged() == true )
+		if( _scenes.at(i).getChanged() == true )
 		{ return true; }
 	}
 
@@ -250,33 +167,23 @@ void
 vl::ProjSettings::Case::clearChanged( void )
 {
 	_changed = false;
-	for( unsigned int i = 0; i < _actionMaps.size(); i++ )
-	{
-		_actionMaps.at(i)->clearChanged();
-	}
+
 	for( unsigned int i = 0; i < _scripts.size(); i++ )
 	{
-		_scripts.at(i)->clearChanged();
+		_scripts.at(i).clearChanged();
 	}
 	for( unsigned int i = 0; i < _scenes.size(); i++ )
 	{
-		_scenes.at(i)->clearChanged();
+		_scenes.at(i).clearChanged();
 	}
 }
 
 vl::ProjSettings::ProjSettings( std::string const &file ) :
-        _file( file ), _projCase( new ProjSettings::Case("") ), _changed(false)
+        _file( file ), _projCase( "" ), _changed(false)
 {}
 
 vl::ProjSettings::~ProjSettings( void )
-{
-	delete _projCase;
-	for( std::vector<Case *>::iterator iter = _cases.begin();
-		iter != _cases.end(); ++iter )
-	{
-		delete *iter;
-	}
-}
+{}
 
 void
 vl::ProjSettings::clear( void )
@@ -297,7 +204,7 @@ vl::ProjSettings::getChanged( void ) const
 	}
 	for( unsigned int i = 0; i < _cases.size(); i++ )
 	{
-		if( _cases.at(i)->getChanged() == true )
+		if( _cases.at(i).getChanged() == true )
 		{
 			return true;
 		}
@@ -312,82 +219,77 @@ vl::ProjSettings::clearChanged( void )
 	_changed = false;
 	for( unsigned int i = 0; i < _cases.size(); i++ )
 	{
-		_cases.at(i)->clearChanged();
+		_cases.at(i).clearChanged();
 	}
 }
 
 
 ///// CASES /////////////////////////////////////////////////
-vl::ProjSettings::Case *
+vl::ProjSettings::Case &
 vl::ProjSettings::addCase( std::string const &caseName  )
 {
-	ProjSettings::Case* newCase = new ProjSettings::Case( caseName );
-	_cases.push_back( newCase );
+	_cases.push_back( ProjSettings::Case( caseName ) );
 	_changed = true;
-	return newCase;
+	return _cases.back();
 }
 
 void
 vl::ProjSettings::rmCase( std::string const &caseName )
 {
-	vl::ProjSettings::Case const *rmCase = getCasePtr( caseName );
+// 	vl::ProjSettings::Case const &rmCase = getCase( caseName );
 	for( unsigned int i = 0; i < _cases.size(); i++ )
 	{
-		if( _cases.at(i)->getName() == caseName )
+		if( _cases.at(i).getName() == caseName )
 		{
 			_cases.erase( _cases.begin() + i );
 		}
 	}
-	delete rmCase;
+
 	_changed = true;
 }
 
-vl::ProjSettings::Case const *
-vl::ProjSettings::getCasePtr( std::string const &caseName ) const
+vl::ProjSettings::Case const &
+vl::ProjSettings::getCase( std::string const &caseName ) const
 {
-	if( caseName == _projCase->getName() )
+	if( caseName == _projCase.getName() )
 	{ return _projCase; }
 
 	for( unsigned int i = 0; i < _cases.size(); i++ )
 	{
-		if( _cases.at(i)->getName() == caseName )
+		if( _cases.at(i).getName() == caseName )
 		{ return _cases.at(i); }
 	}
 
-	return 0;
+	return vl::ProjSettings::Case();
 }
 
-vl::ProjSettings::Case *
-vl::ProjSettings::getCasePtr( std::string const &caseName )
+vl::ProjSettings::Case &
+vl::ProjSettings::getCase( std::string const &caseName )
 {
-	if( caseName == _projCase->getName() )
+	if( caseName == _projCase.getName() )
 	{ return _projCase; }
 
 	for( unsigned int i = 0; i < _cases.size(); i++ )
 	{
-		if( _cases.at(i)->getName() == caseName )
+		if( _cases.at(i).getName() == caseName )
 		{ return _cases.at(i); }
 	}
 
-	return 0;
+	// TODO should throw
 }
 
 
-vl::ProjSettings::Case const *
-vl::ProjSettings::getCasePtr( size_t i ) const
+vl::ProjSettings::Case const &
+vl::ProjSettings::getCase( size_t i ) const
 {
-	if( i < _cases.size() )
-	{
-		return _cases.at(i);
-	}
-	else
-	{
-		std::cerr << "Trying to get case pointer from project "
-			<< _projCase->getName() << "with invalid index!" << std::endl;
-		return 0;
-	}
+	return _cases.at(i);
 }
 
+bool
+vl::ProjSettings::empty ( void ) const
+{
+	return( _projCase.empty() && _cases.empty() );
+}
 
 
 
@@ -449,16 +351,16 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 	if( !attrib )
 	{
 		std::cerr << "Missing project name. Default is used" << std::endl;
-		_projSettings->getCasePtr()->setName("Default");
+		_projSettings->getCase().setName("Default");
 	}
 	else
 	{
 		std::string nameFromFile = attrib->value();
 
-		_projSettings->getCasePtr()->setName(nameFromFile);
+		_projSettings->getCase().setName(nameFromFile);
 	}
 
-	ProjSettings::Case* projectCase = _projSettings->getCasePtr();
+	ProjSettings::Case &projectCase = _projSettings->getCase();
 
 	rapidxml::xml_node<>* xml_elem;
 
@@ -466,12 +368,6 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{
 		readScenes( xml_elem, projectCase );
-	}
-
-	xml_elem = xml_root->first_node("action_maps");
-	if( xml_elem )
-	{
-		readActionMaps( xml_elem, projectCase );
 	}
 
 	xml_elem = xml_root->first_node("scripts");
@@ -488,13 +384,13 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 }
 
 void
-vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case* c )
+vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case &c )
 {
 	rapidxml::xml_node<> *scene_element = xml_node->first_node("scene");
 
 	if( !scene_element )
 	{
-		std::cerr << "No scenes in the case " << c->getName()
+		std::cerr << "No scenes in the case " << c.getName()
 			<<  ". Strange?" << std::endl;
 		return;
 	}
@@ -507,14 +403,14 @@ vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::Proj
 }
 
 void
-vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case* c )
+vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjSettings::Case &c )
 {
 	std::string name;
 	// Name
 	rapidxml::xml_attribute<>* name_attrib = xml_node->first_attribute("name");
 	if( !name_attrib )
 	{
-		std::cerr << "Name of scene in case " << c->getName()
+		std::cerr << "Name of scene in case " << c.getName()
 			<< " missing" << std::endl;
 		name = "Default";
 	}
@@ -523,27 +419,27 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 		name = name_attrib->value();
 	}
 
-	ProjSettings::Scene* s = c->addScene(name);
+	ProjSettings::Scene &s = c.addScene(name);
 
 	// Use
 	rapidxml::xml_attribute<>* use_attrib = xml_node->first_attribute("use");
 	if( !use_attrib )
 	{
-		s->sceneOnOff( true );
-		std::cerr << "Defaultin use of scene " << s->getName()
+		s.setUse( true );
+		std::cerr << "Defaultin use of scene " << s.getName()
 			<< " to false." << std::endl;
 	}
 	else
 	{
 		std::string useStr = use_attrib->value();
 		if( useStr == "true" )
-		{ s->sceneOnOff( true ); }
+		{ s.setUse( true ); }
 		else if( useStr == "false" )
-		{ s->sceneOnOff( false ); }
+		{ s.setUse( false ); }
 		else
 		{
-			s->sceneOnOff( false );
-			std::cerr << "Errenous use attribute of scene " << s->getName()
+			s.setUse( false );
+			std::cerr << "Errenous use attribute of scene " << s.getName()
 				<< ". Defaulting to false." << std::endl;
 		}
 	}
@@ -552,11 +448,11 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 	rapidxml::xml_node<>* file_node = xml_node->first_node("file");
 	if( !file_node )
 	{
-		std::cerr << "Scene " << s->getName() << " is missing path!" << std::endl;
+		std::cerr << "Scene " << s.getName() << " is missing path!" << std::endl;
 	}
 	else
 	{
-		s->setFile( file_node->value() );
+		s.setFile( file_node->value() );
 	}
 
 	// Attach to
@@ -567,59 +463,17 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 		rapidxml::xml_attribute<>* point_attrib = attachto_node->first_attribute("point");
 		if( scene_attrib )
 		{
-			s->setAttachtoScene( scene_attrib->value() );
+			s.setAttachtoScene( scene_attrib->value() );
 		}
 		if( point_attrib )
 		{
-			s->setAttachtoPoint( point_attrib->value() );
+			s.setAttachtoPoint( point_attrib->value() );
 		}
 	}
 }
 
 void
-vl::ProjSettingsSerializer::readActionMaps( rapidxml::xml_node<>* xml_node, ProjSettings::Case* c )
-{
-	rapidxml::xml_node<> *map_element = xml_node->first_node("file");
-
-	if( !map_element )
-	{ return; }
-
-	while( map_element )
-	{
-		ProjSettings::ActionMap* a = c->addMap( map_element->value() );
-
-		// Use
-		rapidxml::xml_attribute<>* use_attrib = map_element->first_attribute("use");
-		if( !use_attrib )
-		{
-			std::cerr << "Defaultin use of action map " << a->getFile()
-				<< " to false." << std::endl;
-		}
-		else
-		{
-			std::string useStr = use_attrib->value();
-			if( useStr == "true" )
-			{
-				a->mapOnOff( true );
-			}
-			else if( useStr == "false" )
-			{
-				a->mapOnOff( false );
-			}
-			else
-			{
-				a->mapOnOff( false );
-				std::cerr << "Errenous use attribute of action map "
-					<< a->getFile() << ". Defaulting to false." << std::endl;
-			}
-		}
-
-		map_element = map_element->next_sibling("file");
-	}
-}
-
-void
-vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSettings::Case* c )
+vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSettings::Case &c )
 {
 	rapidxml::xml_node<> *script_element = xml_node->first_node("file");
 
@@ -628,13 +482,13 @@ vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSet
 
 	while( script_element )
 	{
-		ProjSettings::Script* a = c->addScript( script_element->value() );
+		ProjSettings::Script &a = c.addScript( script_element->value() );
 
 		// Use
 		rapidxml::xml_attribute<>* use_attrib = script_element->first_attribute("use");
 		if( !use_attrib )
 		{
-			std::cerr << "Defaultin use of script " << a->getFile()
+			std::cerr << "Defaultin use of script " << a.getFile()
 				<< " to false." << std::endl;
 		}
 		else
@@ -642,17 +496,17 @@ vl::ProjSettingsSerializer::readScripts( rapidxml::xml_node<>* xml_node, ProjSet
 			std::string useStr = use_attrib->value();
 			if( useStr == "true" )
 			{
-				a->scriptOnOff( true );
+				a.scriptOnOff( true );
 			}
 			else if( useStr == "false" )
 			{
-				a->scriptOnOff( false );
+				a.scriptOnOff( false );
 			}
 			else
 			{
-				a->scriptOnOff( false );
+				a.scriptOnOff( false );
 				std::cerr << "Errenous use attribute of script "
-					<< a->getFile() << ". Defaulting to false." << std::endl;
+					<< a.getFile() << ". Defaulting to false." << std::endl;
 			}
 		}
 
@@ -684,20 +538,13 @@ vl::ProjSettingsSerializer::readCase( rapidxml::xml_node<>* xml_node )
 	else
 	{ name = name_attrib->value(); }
 
-	ProjSettings::Case* newCase = _projSettings->addCase( name );
+	ProjSettings::Case &newCase = _projSettings->addCase( name );
 
 	// Scenes
 	rapidxml::xml_node<> *scenes_element = xml_node->first_node("scenes");
 	if( scenes_element )
 	{
 		readScenes( scenes_element, newCase );
-	}
-
-	// Action maps
-	rapidxml::xml_node<> *map_element = xml_node->first_node("action_maps");
-	if( map_element )
-	{
-		readActionMaps( map_element, newCase );
 	}
 
 	// Scripts
@@ -720,7 +567,7 @@ void
 vl::ProjSettingsSerializer::writeString( std::string &str )
 {
 	rapidxml::xml_node<> *xmlRoot = _doc.allocate_node(rapidxml::node_element, "project_config" );
-	char *c_name = _doc.allocate_string( _projSettings->getCasePtr()->getName().c_str() );
+	char *c_name = _doc.allocate_string( _projSettings->getCase().getName().c_str() );
 	rapidxml::xml_attribute<> *attrib = _doc.allocate_attribute( "name", c_name );
 	xmlRoot->append_attribute( attrib );
 
@@ -734,9 +581,8 @@ vl::ProjSettingsSerializer::writeString( std::string &str )
 void
 vl::ProjSettingsSerializer::writeConfig( rapidxml::xml_node<> *xml_node )
 {
-	writeScenes( xml_node, _projSettings->getCasePtr() );
-	writeMaps( xml_node, _projSettings->getCasePtr() );
-	writeScripts( xml_node, _projSettings->getCasePtr() );
+	writeScenes( xml_node, _projSettings->getCase() );
+	writeScripts( xml_node, _projSettings->getCase() );
 	writeCases( xml_node );
 }
 
@@ -750,17 +596,17 @@ vl::ProjSettingsSerializer::bool2char( bool b ) const
 
 void
 vl::ProjSettingsSerializer::writeScenes( rapidxml::xml_node<> *xml_node,
-										 vl::ProjSettings::Case const *cas )
+										 vl::ProjSettings::Case const &cas )
 {
 	rapidxml::xml_node<> *scenes_node = _doc.allocate_node(rapidxml::node_element, "scenes" );
-	for( size_t i = 0; i < cas->getNscenes(); i++ )
+	for( size_t i = 0; i < cas.getNscenes(); i++ )
 	{
-		ProjSettings::Scene const *sc = cas->getScenePtr(i);
-		char *c_name = _doc.allocate_string( sc->getName().c_str() );
-		char *c_use = _doc.allocate_string( bool2char(sc->getUse()) );
-		char *c_file = _doc.allocate_string( sc->getFile().c_str() );
-		char *c_attachto_scene = _doc.allocate_string( sc->getAttachtoScene().c_str() );
-		char *c_attachto_point = _doc.allocate_string( sc->getAttachtoPoint().c_str() );
+		ProjSettings::Scene const &sc = cas.getScene(i);
+		char *c_name = _doc.allocate_string( sc.getName().c_str() );
+		char *c_use = _doc.allocate_string( bool2char(sc.getUse()) );
+		char *c_file = _doc.allocate_string( sc.getFile().c_str() );
+		char *c_attachto_scene = _doc.allocate_string( sc.getAttachtoScene().c_str() );
+		char *c_attachto_point = _doc.allocate_string( sc.getAttachtoPoint().c_str() );
 
 		rapidxml::xml_node<> *scene
 				=  _doc.allocate_node(rapidxml::node_element, "scene" );
@@ -787,37 +633,15 @@ vl::ProjSettingsSerializer::writeScenes( rapidxml::xml_node<> *xml_node,
 }
 
 void
-vl::ProjSettingsSerializer::writeMaps( rapidxml::xml_node<> *xml_node,
-									   vl::ProjSettings::Case const *cas )
-{
-	rapidxml::xml_node<> *maps_node = _doc.allocate_node(rapidxml::node_element, "action_maps" );
-	for( size_t i = 0; i < cas->getNmaps(); i++ )
-	{
-		ProjSettings::ActionMap const *map = cas->getMapPtr(i);
-		char *fileC = _doc.allocate_string( map->getFile().c_str() );
-		char *use = _doc.allocate_string( bool2char(map->getUse()) );
-
-		rapidxml::xml_node<> *file
-					=  _doc.allocate_node(rapidxml::node_element, "file", fileC );
-		rapidxml::xml_attribute<> *attrib
-				= _doc.allocate_attribute( "use", use );
-		file->append_attribute(attrib);
-
-		maps_node->append_node(file);
-	}
-	xml_node->append_node(maps_node);
-}
-
-void
 vl::ProjSettingsSerializer::writeScripts( rapidxml::xml_node<> *xml_node,
-										  vl::ProjSettings::Case const *cas )
+										  vl::ProjSettings::Case const &cas )
 {
 	rapidxml::xml_node<> *scripts_node = _doc.allocate_node(rapidxml::node_element, "scripts" );
-	for( size_t i = 0; i < cas->getNscripts(); i++ )
+	for( size_t i = 0; i < cas.getNscripts(); i++ )
 	{
-		ProjSettings::Script const *script = cas->getScriptPtr(i);
-		char *fileC = _doc.allocate_string( script->getFile().c_str() );
-		char *use = _doc.allocate_string( bool2char(script->getUse()) );
+		ProjSettings::Script const &script = cas.getScript(i);
+		char *fileC = _doc.allocate_string( script.getFile().c_str() );
+		char *use = _doc.allocate_string( bool2char(script.getUse()) );
 
 		rapidxml::xml_node<> *file
 					=  _doc.allocate_node(rapidxml::node_element, "file", fileC );
@@ -837,8 +661,8 @@ vl::ProjSettingsSerializer::writeCases( rapidxml::xml_node<> *xml_node )
 	rapidxml::xml_node<> *cases_node = _doc.allocate_node(rapidxml::node_element, "cases" );
 	for( size_t i = 0; i < _projSettings->getNcases(); i++ )
 	{
-		ProjSettings::Case const *cas = _projSettings->getCasePtr(i);
-		char *nameC = _doc.allocate_string( cas->getName().c_str() );
+		ProjSettings::Case const &cas = _projSettings->getCase(i);
+		char *nameC = _doc.allocate_string( cas.getName().c_str() );
 
 		rapidxml::xml_node<> *case_node
 				=  _doc.allocate_node(rapidxml::node_element, "case" );
@@ -847,7 +671,6 @@ vl::ProjSettingsSerializer::writeCases( rapidxml::xml_node<> *xml_node )
 		case_node->append_attribute(attrib);
 
 		writeScenes( case_node, cas );
-		writeMaps( case_node, cas );
 		writeScripts( case_node, cas );
 
 		cases_node->append_node(case_node);
