@@ -258,6 +258,9 @@ public :
 	size_t getNWalls( void ) const
 	{ return _walls.size(); }
 
+	std::vector<Wall> &getWalls( void )
+	{ return _walls; }
+
 	std::vector<Wall> const &getWalls( void ) const
 	{ return _walls; }
 

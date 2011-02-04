@@ -42,23 +42,26 @@ public:
 
 };
 
+/**	@class DotSceneLoader
+ *	@brief Loads an dotscene file to the Ogre SceneManager
+ */
 class DotSceneLoader
 {
 public:
 	DotSceneLoader( void );
 	virtual ~DotSceneLoader( void );
 
-	/**	Load dotscene file using Ogre resource system
-	 *	Parameters : sceneName is the name of the scene file in Ogre Resource system
-	 *				 groupName is the name of the Ogre resource group
-	 *				 attachNode is the parent node for this DotScene scene
-	 *				 sPrependNode is a string which is added to the name of every node
+	/** @brief Load dotscene file using Ogre resource system
+	 @Param scene_name is the name of the scene file in Ogre Resource system
+	 @param groupName is the name of the Ogre resource group
+	 @param attachNode is the parent node for this DotScene scene
+	 @param sPrependNode is a string which is added to the name of every node
 	 *
 	 *	Throws if there is an error.
-	 *	If the passed scene_data has not been loaded.
-	 *	If the passed scene_data is not a valid DotScene scene.
+	 *	If the passed scene_name is not found in Ogre Resource System
+	 *	If the passed scene_name does not contain a valid dotscene file.
 	 */
-	void parseDotScene( vl::TextResource &scene_data,
+	void parseDotScene( std::string const &scene_name,
 			Ogre::SceneManager *sceneMgr,
 			Ogre::SceneNode *attachNode = 0,
 			std::string const &sPrependNode = std::string() );

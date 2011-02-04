@@ -293,19 +293,19 @@ ByteStream &operator<<( ByteStream &msg, T const &t )
 }
 
 template<typename T>
+ByteStream &operator>>( ByteStream &msg, T &t )
+{
+	msg.read( (char *)&t, (vl::msg_size)sizeof(t) );
+	return msg;
+}
+
+template<typename T>
 ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 {
 	msg << v.size();
 	for(size_t i = 0; i < v.size(); ++i )
 	{ msg << v.at(i); }
 
-	return msg;
-}
-
-template<typename T>
-ByteStream &operator>>( ByteStream &msg, T &t )
-{
-	msg.read( (char *)&t, (vl::msg_size)sizeof(t) );
 	return msg;
 }
 
@@ -322,6 +322,16 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 }
 
 template<> inline
+ByteStream &operator<<( ByteStream &msg, std::string const &str )
+{
+	msg.write( str.size() );
+	if( str.size() != 0 )
+	{ msg.write( str.c_str(), str.size() ); }
+
+	return msg;
+}
+
+template<> inline
 ByteStream &operator>>( ByteStream &msg, std::string &str )
 {
 	std::string::size_type size;
@@ -330,7 +340,6 @@ ByteStream &operator>>( ByteStream &msg, std::string &str )
 	{ str.clear(); }
 	else
 	{
-		std::cout << "Trying to resize to = " << size << " elements." << std::endl;
 		str.resize(size);
 		for( size_t i = 0; i < size; ++i )
 		{
@@ -343,15 +352,6 @@ ByteStream &operator>>( ByteStream &msg, std::string &str )
 	return msg;
 }
 
-template<> inline
-ByteStream &operator<<( ByteStream &msg, std::string const &str )
-{
-	msg.write( str.size() );
-	if( str.size() != 0 )
-	{ msg.write( str.c_str(), str.size() ); }
-
-	return msg;
-}
 
 // TODO are these necessary still, when using the ByteStream to write data?
 template<typename T>

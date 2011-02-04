@@ -46,6 +46,7 @@ vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions options )
 
 	env->setLogDir( options.log_dir );
 	env->setExePath( options.exe_path );
+	env->setVerbose( options.verbose );
 
 	return env;
 }

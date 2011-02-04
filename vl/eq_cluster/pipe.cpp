@@ -88,15 +88,6 @@ eqOgre::Pipe::operator()()
 {
 	std::cout << "eqOgre::Pipe::operator() : Thread entered." << std::endl;
 
-	if( !_createOgre() )
-	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eqOgre::Pipe::configInit : createOgre failed");
-		std::cerr << message << std::endl;
-		return;
-	}
-
 	// Here we should wait for the EnvSettings from master
 	// TODO we should have a wait for Message function
 	while( !_env )
@@ -105,17 +96,9 @@ eqOgre::Pipe::operator()()
 		vl::msleep(1);
 	}
 
-	// TODO get the window configuration from EnvironmentSettings
-	_createWindow();
+	_createOgre();
 
-	// First we wait for the Project Settings from master
-	// Then We wait for the SceneGraph
-// 	_mapData( 0 );
-// 	while( _projects.empty() )
-// 	{
-// 		_handleMessages();
-// 		vl::msleep(1);
-// 	}
+	_createWindow();
 
 	while( 1 )
 	{
@@ -140,165 +123,118 @@ eqOgre::Pipe::operator()()
 
 
 /// ------------------------ Protected -----------------------------------------
+// Not used
 void
 eqOgre::Pipe::frameStart( uint64_t frameID, const uint32_t frameNumber )
 {
-	static bool inited = false;
+	// TODO should update the Pipe data in init
+	// FIXME this updates the SceneManager and tries to find Ogre nodes
+	// but it doesn't have the SceneManager as it's created in the init
+	// next.
+	_updateDistribData();
 
-	_handleMessages();
+	// Init the Ogre resources and load a Scene
+	// These are here because the RenderWindow needs to be created before
+	// loading Meshes
+	{
+		// We need to find the node from scene graph
+		std::string message = "SceneManager has "
+			+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
+		Ogre::LogManager::getSingleton().logMessage( message );
 
-	try {
-		// TODO should update the Pipe data in init
-		// FIXME this updates the SceneManager and tries to find Ogre nodes
-		// but it doesn't have the SceneManager as it's created in the init
-		// next.
-		_updateDistribData();
-
-		// Init the Ogre resources and load a Scene
-		// These are here because the RenderWindow needs to be created before
-		// loading Meshes
-		if( !inited )
+		assert( _ogre_sm );
+		if( !_scene_manager->setSceneManager( _ogre_sm ) )
 		{
-			std::cout << "eqOgre::Pipe::frameStart : init" << std::endl;
-			std::cout << "Resources = ";
-			// Resource registration
-			std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
-			for( size_t i = 0; i < resources.size(); ++i )
-			{
-				std::cout << resources.at(i) << std::endl;
-				_root->addResource( resources.at(i) );
-			}
-			std::cout << "eqOgre::Pipe::frameStart : setup resources" << std::endl;
-			_root->setupResources( );
-			_root->loadResources();
-
-			_ogre_sm = _root->createSceneManager("SceneManager");
-
-			std::cout << "eqOgre::Pipe::frameStart : loading scene" << std::endl;
-
-			if( !_loadScene() )
-			{
-				// Error
-				std::string message("Problem loading the Scene");
-				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-			}
-
-			// We need to find the node from scene graph
-			std::string message = "SceneManager has "
-				+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
-			Ogre::LogManager::getSingleton().logMessage( message );
-
-			assert( _ogre_sm );
-			if( !_scene_manager->setSceneManager( _ogre_sm ) )
-			{
-				// Error
-				message = "Some SceneNodes were not found.";
-				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-			}
-
-			inited = true;
+			// Error
+			message = "Some SceneNodes were not found.";
+			Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
 		}
 	}
-	catch( vl::exception &e )
-	{
-		// TODO add error status flag
-		std::cout << "VL Exception : " + boost::diagnostic_information<>(e) << std::endl;
-		assert( false );
-	}
-	catch( ... )
-	{
-		assert( false );
-	}
-
-	_sendEvents();
 }
 
 
 void
 eqOgre::Pipe::_reloadProjects( vl::Settings set )
 {
+	// TODO this should unload old projects
+
 	_settings = set;
-	std::cout << "Should reload project "
-		<< _settings.getProjectName() << ".";
 
-	std::vector<vl::ProjSettings::Scene> scenes;
-	scenes = _settings.getScenes();
+	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
 
-	std::cout << "With scenes " << std::endl;
+	// Add resources
+	_root->addResource( _settings.getProjectDir() );
+	for( size_t i = 0; i < _settings.getAuxDirectories().size(); ++i )
+	{
+		_root->addResource( _settings.getAuxDirectories().at(i) );
+	}
+
+	std::cout << "Setting up the resources." << std::endl;
+	_root->setupResources();
+	_root->loadResources();
+
+	_ogre_sm = _root->createSceneManager("SceneManager");
+
+	std::cout << "eqOgre::Pipe::frameStart : loading scene" << std::endl;
+
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::cout << scenes.at(i).getName() << " file " << scenes.at(i).getFile() << std::endl;
+		_loadScene( scenes.at(i) );
 	}
-	std::cout << std::endl;
 
+	_setCamera();
 }
 
 /// Ogre helpers
-bool
+void
 eqOgre::Pipe::_createOgre( void )
 {
 	std::cout << "eqOgre::Pipe::_createOgre" << std::endl;
+	assert( _env );
 
 	// TODO needs LogManager creation before this
 	std::string message("Creating Ogre Root");
 	std::cout << message << std::endl;
 
 	// FIXME the log file path should be retrieved from EnvSettings
+	// FIXME the verbose parameter needs to be passed to Root
 	//_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
-	_root.reset( new vl::ogre::Root( "" ) );
+	// TODO the project name should be used instead of the hydra for all
+	// problem is that the project name is not known at this point
+	// so we should use a tmp file and then move it.
+	std::string log_file = vl::createLogFilePath( "hydra", "ogre", "", _env->getLogDir() );
+	_root.reset( new vl::ogre::Root( log_file, _env->getVerbose() ) );
 	// Initialise ogre
 	_root->createRenderSystem();
-
-	return true;
 }
 
-bool
-eqOgre::Pipe::_loadScene( void )
+void
+eqOgre::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
 {
-	// TODO this should be divided to case load scenes function and loadScene function
+	std::cout << "eqOgre::Pipe::_loadScene" << std::endl;
+	assert( _ogre_sm );
 
-	// Get scenes
-	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
-// 	std::string message = "Loading Scenes for Project : " + getSettings().getProjectName();
-// 	Ogre::LogManager::getSingleton().logMessage( message );
 	std::string message;
 
-	// If we don't have Scenes there is no point loading them
-	if( scenes.empty() )
-	{
-		message = "Project does not have any scene files.";
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-		return false;
-	}
-	else
-	{
-		message = "Project has " + vl::to_string(scenes.size()) + " scene files.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
+	std::string const &name = scene.getName();
 
-	// Clean up old scenes
-	// TODO this should be a loader not a destroyer, move to another function
-	// If necessary use an unloader for this
-// 	_ogre_sm->clearScene();
-// 	_ogre_sm->destroyAllCameras();
+	message = "Loading scene " + name + " file = " + scene.getFile();
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( message );
 
-	// TODO support for multiple scene files should be tested
-	// TODO support for case needs to be tested
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		std::string const &name = scenes.at(i).getName();
+	eqOgre::DotSceneLoader loader;
+	// TODO pass attach node based on the scene
+	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+	loader.parseDotScene( scene.getFile(), _ogre_sm );
 
-		message = "Loading scene " + name + ".";
-		Ogre::LogManager::getSingleton().logMessage( message );
+	message = "Scene " + name + " loaded.";
+	Ogre::LogManager::getSingleton().logMessage( message );
+}
 
-		eqOgre::DotSceneLoader loader;
-		// TODO pass attach node based on the scene
-		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scenes.at(i), _ogre_sm );
-
-		message = "Scene " + name + " loaded.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
+void
+eqOgre::Pipe::_setCamera ( void )
+{
+	assert( _ogre_sm );
 
 	/// Get the camera
 	// TODO move to separate function
@@ -306,24 +242,41 @@ eqOgre::Pipe::_loadScene( void )
 	// Loop through all cameras and grab their name and set their debug representation
 	Ogre::SceneManager::CameraIterator cameras = _ogre_sm->getCameraIterator();
 
-	// Grab the first available camera, for now
-	if( cameras.hasMoreElements() )
+	if( !_active_camera_name.empty() )
 	{
-		_camera = cameras.getNext();
-		message = "Using Camera " + _camera->getName()
-			+ " found from the scene.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
-	else
-	{
-		_camera = _ogre_sm->createCamera("Cam");
-		message = "No camera in the scene. Using created camera "
-			+ _camera->getName();
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
-	_active_camera_name = _camera->getName();
+		if( _camera && _camera->getName() == _active_camera_name )
+		{ return; }
 
-	return true;
+		if( _ogre_sm->hasCamera(_active_camera_name) )
+		{
+			_camera = _ogre_sm->getCamera(_active_camera_name);
+		}
+	}
+
+	if( !_camera )
+	{
+		std::string message;
+		// Grab the first available camera, for now
+		if( cameras.hasMoreElements() )
+		{
+			_camera = cameras.getNext();
+			message = "Using Camera " + _camera->getName() + " found from the scene.";
+			Ogre::LogManager::getSingleton().logMessage( message );
+		}
+		else
+		{
+			// TODO this should use a default camera created earlier that exists always
+			_camera = _ogre_sm->createCamera("Cam");
+			message = "No camera in the scene. Using created camera "
+				+ _camera->getName();
+			Ogre::LogManager::getSingleton().logMessage( message );
+		}
+		_active_camera_name = _camera->getName();
+	}
+
+	assert( _camera && _active_camera_name == _camera->getName() );
+
+	std::cout << "Camera " << _active_camera_name << " set." << std::endl;
 }
 
 

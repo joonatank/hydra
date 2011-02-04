@@ -80,7 +80,7 @@ protected :
 };	// class Resource
 
 /**	TextResource
- *	Stores a text into memory. 
+ *	Stores a text into memory.
  *	The resource has UNIX line-endings and is NULL ended.
  */
 class TextResource : public Resource
@@ -99,6 +99,9 @@ public :
 	// TODO add conversion to const char *
 	// TODO add conversion to std::string
 };
+
+void
+loadResource( vl::Resource &res, std::string const &path );
 
 }	// namespace vl
 

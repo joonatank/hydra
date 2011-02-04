@@ -73,8 +73,9 @@ protected :
 	void _reloadProjects( vl::Settings set );
 
 	/// Ogre helpers
-	bool _createOgre( void );
-	bool _loadScene( void );
+	void _createOgre( void );
+	void _loadScene( vl::ProjSettings::Scene const &scene );
+	void _setCamera( void );
 
 	/// message passing
 	void _createClient( std::string const &server_address, uint16_t server_port );

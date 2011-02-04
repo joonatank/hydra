@@ -30,7 +30,7 @@ namespace ogre
 	class Root
 	{
 		public :
-			Root( std::string const &log_file_path );
+			Root( std::string const &log_file_path, bool verbose );
 
 			virtual ~Root( void );
 
@@ -60,6 +60,8 @@ namespace ogre
 
 		protected :
 			void _loadPlugins( void );
+
+			void _setupResourceDir( std::string const &dir );
 
 			void _setupResource( std::string const &file, std::string const &typeName );
 

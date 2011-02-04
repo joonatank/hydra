@@ -85,9 +85,9 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr const &env )
 {
 // 	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
-	std::cout << "log dir = " << env->getLogDir() << std::endl;
-	msg << env->getCameraRotationAllowed() << env->getMaster() << env->getSlaves()
-		<< env->getWalls() << env->getStereo() << env->getIPD();// << env->getLogDir();
+	msg << env->getVerbose() << env->getCameraRotationAllowed()
+		<< env->getMaster() << env->getSlaves()
+		<< env->getWalls() << env->getStereo()<< env->getIPD() << env->getLogDir();
 
 	return msg;
 }
@@ -101,12 +101,15 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &en
 	vl::EnvSettings::CFG stereo = vl::EnvSettings::OFF;
 	double ipd = 0;
 	std::string log_dir;
-	msg >> rot_allowed >> env->getMaster() >> env->getSlaves() >> env->getWalls()
-		>> stereo >> ipd;// >> log_dir;
+	bool verbose;
+	msg >> verbose >> rot_allowed >> env->getMaster()
+		>> env->getSlaves() >> env->getWalls()
+		>> stereo >> ipd >> log_dir;
 	env->setCameraRotationAllowed( rot_allowed );
 	env->setStereo(stereo);
 	env->setIPD(ipd);
 	env->setLogDir(log_dir);
+	env->setVerbose(verbose);
 
 	return msg;
 }
@@ -207,6 +210,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &p
 {
 	std::cout << "vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
 
+	msg << proj.getFile();
 	vl::ProjSettings::Case const &cas = proj.getCase();
 	msg << cas.getName() << cas.getNscenes();
 	for( size_t i = 0; i < cas.getNscenes(); ++i )
@@ -223,10 +227,12 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 {
 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
 
+	std::string file;
 	std::string name;
 	size_t size;
-	msg >> name >> size;
+	msg >> file >> name >> size;
 
+	proj.setFile(file);
 	vl::ProjSettings::Case &cas = proj.getCase();
 	cas.setName(name);
 	assert( cas.getNscenes() == 0 );
