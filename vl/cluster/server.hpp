@@ -24,6 +24,7 @@ namespace cluster
 /// TODO state change should be done only after client ACKs
 enum CLIENT_STATE
 {
+	CS_UNDEFINED,
 	CS_REQ,		// Client has requested updates
 	CS_ENV,		// Environment settings have been sent
 	CS_PROJ,	// Project settings have been sent
@@ -40,7 +41,11 @@ public:
 
 	~Server();
 
-	void mainloop( void );
+	void receiveMessages( void );
+
+	/// Synchronious method that blocks till all the clients have done
+	/// update, draw and swap
+	void render( void );
 
 	/// Store the Environment message for further use
 	// TODO change to use dynamically allocated memory so that the message
@@ -56,12 +61,6 @@ public:
 
 	/// Send an SceneGraph update
 	void sendUpdate( Message const &msg );
-
-	/// Send a draw message
-	void sendDraw( Message const &msg );
-
-	/// Send a swap message
-	void sendSwap( Message const &msg );
 
 	/// Returns true if some client needs an Initial SceneGraph
 	bool needsInit( void ) const;
@@ -91,6 +90,15 @@ private :
 	void _sendSwap( boost::udp::endpoint const &endpoint );
 
 	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
+
+	/// Returns when all the clients are ready for an update message
+	void _waitUpdate( void );
+
+	/// Returns when all the clients are ready for an draw message
+	void _waitDraw( void );
+
+	/// Returns when all the clients are ready for an swap message
+	void _waitSwap( void );
 
 	/// Copying is forbidden
 	// Something funcky with the io_service or socket, so we can not forbid copy

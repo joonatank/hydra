@@ -107,7 +107,6 @@ eqOgre::Pipe::operator()()
 		_handleMessages();
 
 		_syncData();
-		// Render
 
 		// Process input events
 		assert( _window );

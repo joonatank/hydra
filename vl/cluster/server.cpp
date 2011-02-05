@@ -20,16 +20,9 @@ vl::cluster::Server::~Server()
 {
 }
 
-// TODO
-// The mainloop is at best problematic for the rendering loop
-// because we should wait for the ACKs from rendering threads between
-// update, draw and swap and immediately send the next message when all clients
-// have responded.
 void
-vl::cluster::Server::mainloop( void )
+vl::cluster::Server::receiveMessages( void )
 {
-// 	std::cout << "vl::cluster::Server::mainloop" << std::endl;
-
 	// TODO
 	// We should check that multiple clients work correctly
 	// At the moment we use single socket for all clients
@@ -94,6 +87,32 @@ vl::cluster::Server::mainloop( void )
 	}
 }
 
+// TODO
+// The mainloop is at best problematic for the rendering loop
+// because we should wait for the ACKs from rendering threads between
+// update, draw and swap and immediately send the next message when all clients
+// have responded.
+void
+vl::cluster::Server::render( void )
+{
+// 	std::cout << "vl::cluster::Server::render" << std::endl;
+	_waitUpdate();
+	// Send update message to all
+// 	std::cout << "vl::cluster::Server::render : sending update" << std::endl;
+	ClientList::iterator iter;
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{ _sendUpdate(iter->first); }
+// 	std::cout << "vl::cluster::Server::render : wait draw" << std::endl;
+	_waitDraw();
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{ _sendDraw(iter->first); }
+// 	std::cout << "vl::cluster::Server::render : wait swap" << std::endl;
+	_waitSwap();
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{ _sendSwap(iter->first); }
+// 	std::cout << "vl::cluster::Server::render : done" << std::endl;
+}
+
 void
 vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 {
@@ -133,31 +152,20 @@ vl::cluster::Server::sendInit( vl::cluster::Message const &msg )
 	msg.dump(_msg_init);
 }
 
-void
-vl::cluster::Server::sendDraw( const vl::cluster::Message& msg )
-{
-	std::cout << "vl::cluster::Server::sendDraw" << std::endl;
-}
-
-void
-vl::cluster::Server::sendSwap( const vl::cluster::Message& msg )
-{
-	std::cout << "vl::cluster::Server::sendSwap" << std::endl;
-}
-
 bool
 vl::cluster::Server::needsInit( void ) const
 {
-	ClientList::const_iterator iter;
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{
-		if( iter->second == CS_PROJ )
-		{
-			return true;
-		}
-	}
-
-	return false;
+	return true;
+// 	ClientList::const_iterator iter;
+// 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+// 	{
+// 		if( iter->second == CS_PROJ )
+// 		{
+// 			return true;
+// 		}
+// 	}
+//
+// 	return false;
 }
 
 vl::cluster::Message *
@@ -185,7 +193,7 @@ vl::cluster::Server::_addClient( boost::udp::endpoint const &endpoint )
 		}
 	}
 
-	_clients.push_back( std::make_pair( endpoint, CS_REQ ) );
+	_clients.push_back( std::make_pair( endpoint, CS_UNDEFINED ) );
 }
 
 void
@@ -194,11 +202,11 @@ vl::cluster::Server::_sendEnvironment ( const std::vector< char >& msg )
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->second == CS_REQ )
+		if( iter->second == CS_UNDEFINED )
 		{
 	// 		std::cout << "Sending to client = " << *iter << std::endl;
 			_socket.send_to( boost::asio::buffer(msg), iter->first );
-			iter->second = CS_ENV;
+			iter->second = CS_REQ;
 		}
 	}
 }
@@ -260,33 +268,31 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 			{
 				case vl::cluster::MSG_ENVIRONMENT :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_ENVIRONMENT" << std::endl;
-					assert( iter->second == CS_ENV );
+					std::cout << "vl::cluster::Server::_handleAck : MSG_ENVIRONMENT" << std::endl;
+					assert( iter->second == CS_REQ );
 					// Send the Project message
 					_sendProject( iter->first );
 					// Change the state of the client
-					iter->second = CS_PROJ;
+					iter->second = CS_ENV;
 				}
 				break;
 
 				case vl::cluster::MSG_PROJECT :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_PROJECT" << std::endl;
-					assert( iter->second == CS_PROJ );
-					// TODO Send the initial state message
+					std::cout << "vl::cluster::Server::_handleAck : MSG_PROJECT" << std::endl;
+					assert( iter->second == CS_ENV );
 					_sendInit(iter->first);
 					// change the state
-					iter->second = CS_INIT;
+					iter->second = CS_PROJ;
 				}
 				break;
 
 				case vl::cluster::MSG_INITIAL_STATE :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_INITIAL_STATE" << std::endl;
-					assert( iter->second == CS_INIT );
-					_sendUpdate(iter->first);
+					std::cout << "vl::cluster::Server::_handleAck : MSG_INITIAL_STATE" << std::endl;
+					assert( iter->second == CS_PROJ );
 					// change the state
-					iter->second = CS_UPDATE;
+					iter->second = CS_INIT;
 				}
 				break;
 
@@ -295,38 +301,38 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				case vl::cluster::MSG_UPDATE :
 				{
 // 					std::cout << "vl::cluster::Server::_handleAck : MSG_UPDATE" << std::endl;
-					assert( iter->second == CS_UPDATE );
+					assert( iter->second == CS_INIT || iter->second == CS_SWAP );
 					// TODO the rendering loop should be driven from the
 					// application loop or at least be configurable from there
 					// so the server either needs configuration parameters
 					// for example the sleep time or states that are changed
 					// from the application loop
-					_sendDraw(iter->first);
+// 					_sendDraw(iter->first);
 					// change the state
-					iter->second = CS_DRAW;
+					iter->second = CS_UPDATE;
 				}
 				break;
 
 				case vl::cluster::MSG_DRAW :
 				{
 // 					std::cout << "vl::cluster::Server::_handleAck : MSG_DRAW" << std::endl;
-					assert( iter->second == CS_DRAW );
+					assert( iter->second == CS_UPDATE );
 					// TODO all the clients in the rendering loop needs to be
 					// on the same state at this point so that they swap the same
 					// time
-					_sendSwap(iter->first);
+// 					_sendSwap(iter->first);
 					// change the state
-					iter->second = CS_SWAP;
+					iter->second = CS_DRAW;
 				}
 				break;
 
 				case vl::cluster::MSG_SWAP :
 				{
 // 					std::cout << "vl::cluster::Server::_handleAck : MSG_SWAP" << std::endl;
-					assert( iter->second == CS_SWAP );
-					_sendUpdate(iter->first);
+					assert( iter->second == CS_DRAW );
+// 					_sendUpdate(iter->first);
 					// change the state
-					iter->second = CS_UPDATE;
+					iter->second = CS_SWAP;
 				}
 				break;
 
@@ -334,5 +340,68 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 					assert(false);
 			};
 		}
+	}
+}
+
+void
+vl::cluster::Server::_waitUpdate( void )
+{
+	bool ready_for_update = false;
+	while( !ready_for_update )
+	{
+// 		std::cout << "vl::cluster::Server::_waitUpdate" << std::endl;
+		receiveMessages();
+
+		ready_for_update = true;
+		ClientList::iterator iter;
+		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+		{
+			if( iter->second == CS_SWAP || iter->second == CS_INIT )
+			{}
+			else
+			{
+				ready_for_update = false;
+				break;
+			}
+		}
+		// TODO should wait only for a while and then resent the last message
+	}
+}
+
+void
+vl::cluster::Server::_waitDraw( void )
+{
+	bool ready_for_draw = false;
+	while( !ready_for_draw )
+	{
+		receiveMessages();
+
+		ready_for_draw = true;
+		ClientList::iterator iter;
+		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+		{
+			if( iter->second != CS_UPDATE )
+			{ ready_for_draw = false; }
+		}
+		// TODO should wait only for a while and then resent the last message
+	}
+}
+
+void
+vl::cluster::Server::_waitSwap( void )
+{
+	bool ready_for_swap = false;
+	while( !ready_for_swap )
+	{
+		receiveMessages();
+
+		ready_for_swap = true;
+		ClientList::iterator iter;
+		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+		{
+			if( iter->second != CS_DRAW )
+			{ ready_for_swap = false; }
+		}
+		// TODO should wait only for a while and then resent the last message
 	}
 }

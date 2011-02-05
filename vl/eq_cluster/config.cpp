@@ -123,6 +123,7 @@ eqOgre::Config::exit( void )
 uint32_t
 eqOgre::Config::startFrame( uint64_t const &frameID )
 {
+// 	std::cout << "eqOgre::Config::startFrame" << std::endl;
 	/// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
@@ -132,6 +133,9 @@ eqOgre::Config::startFrame( uint64_t const &frameID )
 
 	/// Provide the updates to slaves
 	_updateServer();
+
+	/// Render the scene
+	_server->render();
 
 	return true;
 }
@@ -157,7 +161,7 @@ eqOgre::Config::_updateServer( void )
 {
 // 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
 	// Handle received messages
-	_server->mainloop();
+	_server->receiveMessages();
 
 	_receiveEventMessages();
 
