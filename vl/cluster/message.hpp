@@ -72,7 +72,9 @@ enum MSG_TYPES
 	MSG_INITIAL_STATE,	// Send the initial SceneGraph
 	MSG_UPDATE,			// Send updated SceneGraph and other versioned objects
 	MSG_INPUT,			// Send data from input devices from pipes to application
+	MSG_READY_DRAW,		// Sent from Rendering thread when it's ready to draw
 	MSG_DRAW,			// Draw the image into back buffer
+	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
 	MSG_SWAP,			// Swap the Window buffer
 };
 

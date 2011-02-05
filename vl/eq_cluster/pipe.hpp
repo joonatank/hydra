@@ -87,6 +87,12 @@ protected :
 	void _mapData( uint64_t settingsID);
 	void _updateDistribData( void );
 
+	/// Rendering helpers
+	/// Will render all the windows
+	void _draw( void );
+	/// Will swap all the windows
+	void _swap( void );
+
 	/// Input events
 	void _sendEvents( void );
 

@@ -275,6 +275,7 @@ eqOgre::Pipe::_setCamera ( void )
 	}
 
 	assert( _camera && _active_camera_name == _camera->getName() );
+	_window->setCamera(_camera);
 
 	std::cout << "Camera " << _active_camera_name << " set." << std::endl;
 }
@@ -401,12 +402,14 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 		case vl::cluster::MSG_DRAW :
 		{
 			_client->sendAck( vl::cluster::MSG_DRAW );
+			_draw();
 		}
 		break;
 
 		case vl::cluster::MSG_SWAP :
 		{
 			_client->sendAck( vl::cluster::MSG_SWAP );
+			_swap();
 		}
 		break;
 
@@ -579,6 +582,20 @@ eqOgre::Pipe::_updateDistribData( void )
 		scene_version = _frame_data.getSceneVersion();
 	}
 	*/
+}
+
+void
+eqOgre::Pipe::_draw( void )
+{
+	// TODO support for multiple windows
+	_window->draw();
+}
+
+void
+eqOgre::Pipe::_swap( void )
+{
+	// TODO support for multiple windows
+	_window->swap();
 }
 
 void

@@ -65,7 +65,6 @@ eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
 	// FIXME using the new system we should have a complete slave configuration
 	// in the Pipe and this is not necessary the wall should be retrieved
 	// from the Pipe
-	/*
 	assert( settings );
 	assert( settings->getNWalls() > 0);
 
@@ -106,7 +105,6 @@ eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
 
 	message = "IPD (Inter pupilar distance) = " + vl::to_string( settings->getIPD() );
 	Ogre::LogManager::getSingleton().logMessage(message);
-	*/
 }
 
 void

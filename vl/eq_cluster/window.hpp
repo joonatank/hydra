@@ -71,6 +71,10 @@ class Channel;
 		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
+		virtual void draw( void );
+
+		virtual void swap( void );
+
 	protected :
 		void _createOgreWindow( void );
 
@@ -80,8 +84,6 @@ class Channel;
 		void _createInputHandling( void );
 
 		void _printInputInformation( void );
-
-		virtual void draw( void );
 
 		void _sendEvent( vl::cluster::EventData const &event );
 

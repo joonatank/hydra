@@ -69,8 +69,6 @@ vl::cluster::Server::mainloop( void )
 
 			case vl::cluster::MSG_ACK :
 			{
-				std::cout << "vl::cluster::Server::mainloop : MSG_ACK message received."
-					<< std::endl;
 				vl::cluster::MSG_TYPES type;
 				msg->read(type);
 				_handleAck(remote_endpoint, type);

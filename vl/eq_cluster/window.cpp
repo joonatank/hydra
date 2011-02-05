@@ -27,6 +27,18 @@ eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
 	_createInputHandling();
 	// FIXME this should pass the real name of the Channel
 	_channel = new eqOgre::Channel( "", this );
+
+	// Init channel
+	// TODO this is idiotic here
+	if( getCamera() )
+	{ _channel->setCamera( getCamera() ); }
+
+	Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
+	// Set some parameters to the viewport
+	// TODO this should be configurable
+	viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	viewport->setAutoUpdated(false);
+	_channel->setViewport(viewport);
 }
 
 eqOgre::Window::~Window(void )
@@ -158,41 +170,16 @@ eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id
 void
 eqOgre::Window::draw( void )
 {
-	// We need to set the Viewport here because the Camera doesn't exists in
-	// configInit
-	static bool inited = false;
-	if( !inited )
-	{
-		std::string message = "Create a Ogre Viewport for each Channel";
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
-
-		// FIXME Channels are not yet supported
-// 		Channels chanlist = getChannels();
-// 		for( size_t i = 0; i < chanlist.size(); ++i )
-// 		{
-// 			assert( _ogre_window && getCamera() );
-// 			Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
-// 			assert( dynamic_cast<eqOgre::Channel *>( chanlist.at(i) ) );
-// 			eqOgre::Channel *channel =
-// 				static_cast<eqOgre::Channel *>( chanlist.at(i) );
-//
-// 			// Set some parameters to the viewport
-// 			// TODO this should be configurable from DotScene
-// 			viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-// 			viewport->setAutoUpdated(false);
-//
-// 			// Cleanup old viewport
-// 			if( channel->getViewport() )
-// 			{ _ogre_window->removeViewport( channel->getViewport()->getZOrder() ); }
-//
-// 			// Set the new viewport
-// 			channel->setViewport( viewport );
-// 		}
-
-		inited = true;
-	}
+	// TODO support for multiple channels
+	_channel->draw();
 }
+
+void
+eqOgre::Window::swap( void )
+{
+	_ogre_window->swapBuffers();
+}
+
 
 void
 eqOgre::Window::capture( void )
