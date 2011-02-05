@@ -63,6 +63,11 @@ eqOgre::Config::init( uint64_t const & )
 	_sendProject();
 
 	// TODO register the objects
+	// There needs to be a certain order in which they are registered
+	// so that they can be unpacked correctly in the rendering thread
+	// or we need an update structure that we can set the ids into.
+	// or we can use object types in the message so that they can be dynamically
+	// created in the rendering threads.
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
@@ -94,30 +99,9 @@ eqOgre::Config::init( uint64_t const & )
 
 	_createQuitEvent();
 
-	std::cout << "Registering data." << std::endl;
-
-	vl::DistribResourceManager *res_man
-		= static_cast<vl::DistribResourceManager *>( _game_manager->getReourceManager() );
-	registerObjectC( res_man );
-
 	assert( player );
 	// Registering Player in init
 	registerObjectC( player );
-
-// 	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
-// 	_distrib_settings.setResourceManagerID( res_man->getID() );
-// 	_distrib_settings.setPlayerID( player->getID() );
-
-	std::cout << "Registering Settings" << std::endl;
-	// TODO the Environment settings and Project settings needs to be distributed
-	// somehow.
-// 	registerObject( &_distrib_settings );
-// 	assert( _distrib_settings.getID().isGenerated() );
-
-// 	if( !eq::Config::init( _distrib_settings.getID() ) )
-// 	{ return false; }
-
-	std::cout << "Config::init DONE" << std::endl;
 
 	_updateServer();
 
@@ -130,25 +114,11 @@ eqOgre::Config::exit( void )
 	std::cout << "eqOgre::Config::exit" << std::endl;
 	std::cout << "Deregistering distributed data." << std::endl;
 
-// 	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
-// 	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
-// 	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
-
-// 	deregisterObject( &_distrib_settings );
-
 	//	TODO add cleanup server
 
 	std::cout << "Config exited." << std::endl;
 	return true;
 }
-
-
-// eqOgre::SceneNode *
-// eqOgre::Config::getSceneNode(const std::string& name)
-// {
-// 	return _game_manager->getSceneManager()->getSceneNode(name);
-// }
-
 
 uint32_t
 eqOgre::Config::startFrame( uint64_t const &frameID )
@@ -162,9 +132,6 @@ eqOgre::Config::startFrame( uint64_t const &frameID )
 
 	/// Provide the updates to slaves
 	_updateServer();
-
-	/// Start rendering the frame
-// 	uint32_t retval = eq::Config::startFrame( 0 );
 
 	return true;
 }
@@ -225,7 +192,7 @@ eqOgre::Config::_updateServer( void )
 	if( _server->needsInit() )
 	{
 // 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
-		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
+		vl::cluster::Message msg( vl::cluster::MSG_INITIAL_STATE );
 		std::vector<vl::Distributed *>::iterator iter;
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )

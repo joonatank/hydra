@@ -45,6 +45,8 @@ public:
 
 	void sendMessage( Message *msg );
 
+	void sendAck( vl::cluster::MSG_TYPES );
+
 private :
 	/// Copying is forbidden
 //	Client(const Client& other) {}

@@ -321,7 +321,7 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 		// Environment configuration
 		case vl::cluster::MSG_ENVIRONMENT :
 		{
-			std::cout << "vl::cluster::MSG_ENVIRONMENT message" << std::endl;
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
 			assert( !_env );
 			_env.reset( new vl::EnvSettings );
 			// TODO needs a ByteData object for Environment settings
@@ -331,13 +331,14 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 			stream >> _env;
 			// Only single environment settings should be in the message
 			assert( 0 == msg->size() );
+			_client->sendAck( vl::cluster::MSG_ENVIRONMENT );
 		}
 		break;
 
 		// Project configuration
 		case vl::cluster::MSG_PROJECT :
 		{
-			std::cout << "vl::cluster::MSG_PROJECT message" << std::endl;
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
 			// TODO
 			// Test using multiple projects e.g. project and global
 			// The vector serailization might not work correctly
@@ -357,13 +358,17 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 			vl::Settings projects;
 			stream >> projects;
 			_reloadProjects(projects);
+			// TODO should the ACK be first so that the server has the
+			// information fast
+			_client->sendAck( vl::cluster::MSG_PROJECT );
 		}
 		break;
 
 		// Scene graph initial state
 		case vl::cluster::MSG_INITIAL_STATE :
 		{
-			std::cout << "vl::cluster::MSG_INITIAL_STATE message" << std::endl;
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_INITIAL_STATE message" << std::endl;
+			_client->sendAck( vl::cluster::MSG_INITIAL_STATE );
 		}
 		break;
 
@@ -388,17 +393,20 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 				// Pushing back will create copies which is unnecessary
 				_objects.push_back(data);
 			}
+			_client->sendAck( vl::cluster::MSG_UPDATE );
 // 			std::cout << "Message handled" << std::endl;
 		}
 		break;
 
 		case vl::cluster::MSG_DRAW :
 		{
+			_client->sendAck( vl::cluster::MSG_DRAW );
 		}
 		break;
 
 		case vl::cluster::MSG_SWAP :
 		{
+			_client->sendAck( vl::cluster::MSG_SWAP );
 		}
 		break;
 

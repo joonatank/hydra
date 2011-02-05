@@ -31,34 +31,41 @@ namespace cluster
 // TODO add support for ACK messages
 /**	Message Structures
  *
+ *	Acknowledge a message received
+ *	MSG_ACK
+ *	[MSG_ACK, message type, id]
+ *	message type is the type of message the client is acknowledging
+ *	id is the id of the message, this is optional and not used at the moment
+ *
  *	Reguest updates message
  *	MSG_REG_UPDATES
- *	[message type]
+ *	[MSG_REG_UPDATES]
  *
  *	Update message
  *	both MSG_INITIAL_STATE and MSG_UPDATE
- *	[message type, data size, [N | object id, object size, object data]]
+ *	[MSG_INITIAL_STATE, data size, [N | object id, object size, object data]]
  *	where one object is an versioned object (registered and can be mapped)
  *
  *	Input message
  *	MSG_INPUT
- *	[message type, data size, [N | input device type, input device id, event size, event data]]
+ *	[MSG_INPUT, data size, [N | input device type, input device id, event size, event data]]
  *	input device type : which kind of device joystick, keyboard, mouse
  *	input device id : every device has unique id
  *	event is the description of the event
  *
  *	Draw message
  *	MSG_DRAW
- *	[message type]
+ *	[MSG_DRAW]
  *
  *	Swap message
  *	MSG_SWAP
- *	[message type]
+ *	[MSG_SWAP]
  *
  */
 enum MSG_TYPES
 {
 	MSG_UNDEFINED,		// Not defined message type these should never be sent
+	MSG_ACK,			// Acknowledgement message
 	MSG_REG_UPDATES,	// Reguest updates from the application
 	MSG_ENVIRONMENT,	// Send the Environment configuration
 	MSG_PROJECT,		// Send the project configuration

@@ -76,9 +76,21 @@ public:
 private :
 	void _addClient( boost::udp::endpoint const &endpoint );
 
-	void _sendProject( std::vector<char> const &msg );
+	void _sendProject( boost::udp::endpoint const &endpoint );
 
 	void _sendEnvironment( std::vector<char> const &msg );
+
+	void _sendEnvironment( boost::udp::endpoint const &endpoint );
+
+	void _sendInit( boost::udp::endpoint const &endpoint );
+
+	void _sendUpdate( boost::udp::endpoint const &endpoint );
+
+	void _sendDraw( boost::udp::endpoint const &endpoint );
+
+	void _sendSwap( boost::udp::endpoint const &endpoint );
+
+	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
 
 	/// Copying is forbidden
 	// Something funcky with the io_service or socket, so we can not forbid copy
@@ -98,6 +110,10 @@ private :
 	std::vector<char> _env_msg;
 	/// Project message, the latest one set
 	std::vector<char> _proj_msg;
+	/// Init message, the latest one set
+	std::vector<char> _msg_init;
+	/// Last update message? Might need a whole vector of these
+	std::vector<char> _msg_update;
 
 };	// class Server
 
