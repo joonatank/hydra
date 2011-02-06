@@ -291,14 +291,17 @@ eqOgre::Window::_createOgreWindow( void )
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 	assert( !winConf.empty() );
 
-	params["left"] = winConf.x;
-	params["top"] = winConf.y;
+	std::cout << "window left = " << winConf.x << " window top = " << winConf.y
+		<< std::endl;
 
-	// TODO test stereo
+	params["left"] = vl::to_string( winConf.x );
+	params["top"] = vl::to_string( winConf.y );
+
+	// TODO add stereo
 	// If it doesn't work do some custom updates to the Ogre Library
 	// They are easy to merge using Mercurial
 	// And can be commited to our own Ogre fork.
-	// TODO test swap sync
+	// TODO add swap sync
 	// same as with stereo
 	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 }
