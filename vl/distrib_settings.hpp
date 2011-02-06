@@ -67,6 +67,12 @@ ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Window const &window )
 template<>
 ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Window &window );
 
+template<>
+ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Channel const &chan );
+
+template<>
+ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Channel &chan );
+
 
 template<>
 ByteStream &operator<<( ByteStream &msg, vl::Settings const &settings);

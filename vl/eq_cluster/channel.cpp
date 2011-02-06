@@ -27,9 +27,10 @@
 #include <OGRE/OgreLogManager.h>
 
 #include <GL/gl.h>
+#include "pipe.hpp"
 
-eqOgre::Channel::Channel( std::string const &name, eqOgre::Window *parent )
-	: _window(parent), _viewport(0), _stereo(false)
+eqOgre::Channel::Channel( vl::EnvSettings::Channel chanConf, eqOgre::Window *parent )
+	: _window(parent), _viewport(0), _stereo(false), _channel_conf(chanConf)
 {
 	assert( _window );
 	init( _window->getSettings() );
@@ -76,7 +77,7 @@ eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
 	{
 		message = "Finding Wall for channel : " + getName();
 		Ogre::LogManager::getSingleton().logMessage(message);
-		_wall = settings->findWall( getName() );
+		_wall = settings->findWall( _channel_conf.wall_name );
 	}
 
 	// Get the first wall definition if no named one was found

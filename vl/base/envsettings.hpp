@@ -62,10 +62,9 @@ public :
 
 	struct Wall
 	{
-		Wall( std::string const &nam, std::string const &channel_nam,
-			  std::vector<double> b_left, std::vector<double> b_right,
-			  std::vector<double> t_left )
-			: name(nam), channel_name(channel_nam), bottom_left(b_left),
+		Wall( std::string const &nam, std::vector<double> b_left,
+			  std::vector<double> b_right, std::vector<double> t_left )
+			: name(nam), bottom_left(b_left),
 			  bottom_right(b_right), top_left(t_left)
 		{}
 
@@ -76,14 +75,13 @@ public :
 		// Wether or not the Wall has been initialised
 		bool empty( void ) const
 		{
-			return( name.empty() && channel_name.empty() && bottom_left.empty()
+			return( name.empty() && bottom_left.empty()
 					&& bottom_right.empty() && top_left.empty() );
 		}
 
 		// Name of the wall
 		std::string name;
-		// Name of the channel which this wall is mapped to
-		std::string channel_name;
+
 		// Bottom left coordinates for this wall
 		std::vector<double> bottom_left;
 		// Bottom right coordinates for this wall
@@ -93,11 +91,31 @@ public :
 
 	};	// struct Wall
 
+	struct Channel
+	{
+		Channel( std::string const &nam, std::string const &wall )
+			: name(nam), wall_name(wall)
+		{}
+
+		/// Default constructor for vector resizes
+		Channel( void )
+		{}
+
+		bool empty( void ) const
+		{ return( name.empty() && wall_name.empty() ); }
+
+		std::string name;
+
+		// Name of the wall used for this window
+		std::string wall_name;
+
+	};	// struct Channel
+
 	struct Window
 	{
-		Window( std::string const &nam, std::string const &wall_nam,
+		Window( std::string const &nam, Channel const &chan,
 				int width, int height, int px, int py )
-			: name(nam), wall_name(wall_nam),
+			: name(nam), channel(chan),
 			  w(width), h(height), x(px), y(py)
 		{
 			if( h < 0 || w < 0 )
@@ -115,15 +133,14 @@ public :
 		// Wether or not the Window has been initialised
 		bool empty( void ) const
 		{
-			return( name.empty() && wall_name.empty()
+			return( name.empty() && channel.empty()
 				&& w == 0 && h == 0 && x == 0 && y == 0 );
 		}
 
 		// Name of the window
 		std::string name;
 
-		// Name of the wall used for this window
-		std::string wall_name;
+		Channel channel;
 
 		// Width of the window
 		int w;
@@ -303,7 +320,7 @@ public :
 	std::vector<Wall> const &getWalls( void ) const
 	{ return _walls; }
 
-	Wall findWall( std::string const &channel_name ) const;
+	Wall findWall( std::string const &wall_name ) const;
 
 	std::vector<Node> &getSlaves( void )
 	{ return _slaves; }
@@ -470,8 +487,6 @@ protected :
 
 	void processPlugins( rapidxml::xml_node<>* XMLNode );
 
-// 	void processEqc( rapidxml::xml_node<>* XMLNode );
-
 	void processTracking( rapidxml::xml_node<>* XMLNode );
 
 	void processCameraRotations( rapidxml::xml_node<>* XMLNode );
@@ -483,6 +498,8 @@ protected :
 	void processNode( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
 
 	void processWindows( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
+
+	void processChannel( rapidxml::xml_node<>* XMLNode, EnvSettings::Window &window );
 
 	void processStereo( rapidxml::xml_node<>* XMLNode );
 

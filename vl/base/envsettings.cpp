@@ -156,9 +156,9 @@ vl::EnvSettings::addWall( vl::EnvSettings::Wall const &wall )
 	std::vector<Wall>::iterator iter;
 	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
 	{
-		if( iter->channel_name == wall.channel_name )
+		if( iter->name == wall.name )
 		{
-			std::string desc("Trying to add multiple walls to same channel.");
+			std::string desc("Trying to add wall with already existing name.");
 			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 		}
 	}
@@ -173,12 +173,12 @@ vl::EnvSettings::getWall( size_t i ) const
 }
 
 vl::EnvSettings::Wall
-vl::EnvSettings::findWall( std::string const &channel_name ) const
+vl::EnvSettings::findWall( std::string const &wall_name ) const
 {
 	std::vector<vl::EnvSettings::Wall>::const_iterator iter;
 	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
 	{
-		if( iter->channel_name == channel_name )
+		if( iter->name == wall_name )
 		{ return *iter; }
 	}
 
@@ -422,18 +422,11 @@ vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 		rapidxml::xml_attribute<> *attrib = pWall->first_attribute("name");
 		if( attrib )
 		{ name = attrib->value(); }
-
-		// Process channel
-		rapidxml::xml_node<> *pElement = pWall->first_node("channel");
-		if( !pElement )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no channel") ); }
-		attrib = pElement->first_attribute("name");
-		if( !attrib || ::strlen( attrib->value() ) == 0 )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no channel name") ); }
-		std::string channel = attrib->value();
+		else
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("wall has no name") ); }
 
 		// Process bottom_left
-		pElement = pWall->first_node("bottom_left");
+		rapidxml::xml_node<> *pElement = pWall->first_node("bottom_left");
 		if( !pElement )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no bottom_left") ); }
 		std::vector<double> bottom_left = getVector( pElement );
@@ -451,7 +444,7 @@ vl::EnvSettingsSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 		std::vector<double> top_left = getVector( pElement );
 
 		// Add the wall
-		EnvSettings::Wall wall( name, channel, bottom_left, bottom_right, top_left );
+		EnvSettings::Wall wall( name, bottom_left, bottom_right, top_left );
 		_envSettings->addWall( wall );
 
 		pWall = pWall->next_sibling("wall");
@@ -531,14 +524,11 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
 		int y = vl::from_string<int>( attrib->value() );
 
-		// Find wall reference
-		std::string wall_name;
-		rapidxml::xml_node<> *wall_elem = pWindow->first_node("wall");
-		if( wall_elem )
-		{ wall_name = wall_elem->value(); }
+		EnvSettings::Window window( name, EnvSettings::Channel(), w, h, x, y );
+		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
+		processChannel(channel_elem, window);
 
 		// Add the window
-		EnvSettings::Window window( name, wall_name, w, h, x, y );
 		node.addWindow( window );
 
 		pWindow = pWindow->next_sibling("window");
@@ -549,6 +539,30 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		std::string desc( "Only one windows token is supported" );
 		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 	}
+}
+
+void
+vl::EnvSettingsSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
+										   vl::EnvSettings::Window& window )
+{
+	assert( xml_node );
+
+	std::string channel_name;
+	std::string wall_name;
+
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("name");
+	if( attrib )
+	{ channel_name = attrib->value(); }
+	else
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no name") ); }
+
+	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
+	if( wall_elem )
+	{ wall_name = wall_elem->value(); }
+	else
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
+
+	window.channel = EnvSettings::Channel( channel_name, wall_name );
 }
 
 void

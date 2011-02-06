@@ -23,10 +23,12 @@ eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
 	assert( _pipe );
 	std::cout << "eqOgre::Window::Window : " << getName() << std::endl;
 
-	_createOgreWindow();
+	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
+
+	_createOgreWindow( winConf );
 	_createInputHandling();
-	// FIXME this should pass the real name of the Channel
-	_channel = new eqOgre::Channel( "", this );
+
+	_channel = new eqOgre::Channel( winConf.channel, this );
 
 	// Init channel
 	// TODO this is idiotic here
@@ -280,7 +282,7 @@ eqOgre::Window::_printInputInformation( void )
 }
 
 void
-eqOgre::Window::_createOgreWindow( void )
+eqOgre::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 {
 	// Info
 	std::string message = "Creating Ogre RenderWindow.";
@@ -289,7 +291,6 @@ eqOgre::Window::_createOgreWindow( void )
 
 	Ogre::NameValuePairList params;
 
-	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 	assert( !winConf.empty() );
 
 	std::cout << "Window config " << winConf.name

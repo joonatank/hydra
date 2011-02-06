@@ -137,7 +137,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Wall& wall )
 {
-	msg << wall.name << wall.channel_name << wall.bottom_left << wall.bottom_right
+	msg << wall.name << wall.bottom_left << wall.bottom_right
 		<< wall.top_left;
 
 	return msg;
@@ -147,7 +147,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Wall& wall )
 {
-	msg >> wall.name >> wall.channel_name >> wall.bottom_left >> wall.bottom_right
+	msg >> wall.name >> wall.bottom_left >> wall.bottom_right
 		>> wall.top_left;
 
 	return msg;
@@ -158,7 +158,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Window& window )
 {
-	msg << window.name << window.wall_name << window.x << window.y << window.h
+	msg << window.name << window.channel << window.x << window.y << window.h
 		<< window.w;
 
 	return msg;
@@ -168,8 +168,26 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& window )
 {
-	msg >> window.name >> window.wall_name >> window.x >> window.y >> window.h
+	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
 		>> window.w;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettings::Channel const &chan )
+{
+	msg << chan.name << chan.wall_name;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Channel &chan )
+{
+	msg >> chan.name >> chan.wall_name;
 
 	return msg;
 }

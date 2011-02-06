@@ -10,6 +10,9 @@
 #include "player.hpp"
 #include "typedefs.hpp"
 
+// Necessary for Window config
+#include "base/envsettings.hpp"
+
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
 #include <OIS/OISKeyboard.h>
@@ -29,12 +32,16 @@ class Pipe;
 class Window : public OIS::KeyListener, public OIS::MouseListener
 {
 public:
+	/// @TODO change name to window config
 	Window( std::string const &name, eqOgre::Pipe *parent );
 
 	virtual ~Window( void );
 
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
+
+	eqOgre::Pipe *getPipe( void )
+	{ return _pipe; }
 
 	vl::EnvSettingsRefPtr getSettings( void );
 
@@ -71,7 +78,7 @@ public:
 	virtual void swap( void );
 
 protected :
-	void _createOgreWindow( void );
+	void _createOgreWindow( vl::EnvSettings::Window const &winConf );
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard

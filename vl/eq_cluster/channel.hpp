@@ -24,7 +24,7 @@ class Window;
 class Channel
 {
 public:
-    Channel( std::string const &name, eqOgre::Window *parent );
+    Channel( vl::EnvSettings::Channel chanConf, eqOgre::Window *parent );
 
     virtual ~Channel (void);
 
@@ -38,7 +38,7 @@ public:
 	{ return _viewport; }
 
 	std::string getName( void ) const
-	{ return std::string(); }
+	{ return _channel_conf.name; }
 
 	virtual void draw( void );
 
@@ -58,6 +58,8 @@ protected:
 	vl::EnvSettings::Wall _wall;
 
 	bool _stereo;
+
+	vl::EnvSettings::Channel _channel_conf;
 
 };	// class Channel
 
