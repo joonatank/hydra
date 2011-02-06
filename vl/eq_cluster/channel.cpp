@@ -12,7 +12,7 @@
  *	Added stereo rendering code. Tested with quad-buffer.
  *	Added rotation of the view matrix based on projection plane.
  *	Fixed scaling the frustum based on head tracker.
-		Would create non-continiuty on front and side walls otherwise.
+ *		Would create non-continiuty on front and side walls otherwise.
  */
 
 #include "channel.hpp"
@@ -26,27 +26,24 @@
 
 #include <OGRE/OgreLogManager.h>
 
-eqOgre::Channel::Channel( eq::Window *parent )
-	: eq::Channel(parent), _viewport(0), _stereo(false)
-{}
+#include <GL/gl.h>
+#include "pipe.hpp"
+
+eqOgre::Channel::Channel( vl::EnvSettings::Channel chanConf, eqOgre::Window *parent )
+	: _window(parent), _viewport(0), _stereo(false), _channel_conf(chanConf)
+{
+	assert( _window );
+	init( _window->getSettings() );
+}
 
 eqOgre::Channel::~Channel( void )
 {}
 
-eqOgre::DistributedSettings const &
-eqOgre::Channel::getSettings( void ) const
-{
-	assert( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
-	return static_cast<eqOgre::Window const *>( getWindow() )->getSettings();
-}
-
 vl::Player const &
 eqOgre::Channel::getPlayer( void ) const
 {
-	assert( dynamic_cast<eqOgre::Window const *>( getWindow() ) );
-	return static_cast<eqOgre::Window const *>( getWindow() )->getPlayer();
+	return _window->getPlayer();
 }
-
 
 void
 eqOgre::Channel::setCamera( Ogre::Camera *cam )
@@ -61,30 +58,32 @@ eqOgre::Channel::setViewport(Ogre::Viewport* viewport)
 	_viewport = viewport;
 }
 
-bool
-eqOgre::Channel::configInit( const eq::uint128_t &initID )
+void
+eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
 {
-	if( !eq::Channel::configInit( initID ) )
-	{ return false; }
-
-	assert( getSettings().getNWalls() > 0);
+	std::cout << "eqOgre::Channel::init" << std::endl;
+	// If the channel has a name we try to find matching wall
+	// FIXME using the new system we should have a complete slave configuration
+	// in the Pipe and this is not necessary the wall should be retrieved
+	// from the Pipe
+	assert( settings );
+	assert( settings->getNWalls() > 0);
 
 	std::string message = "Settings has "
-		+ vl::to_string( getSettings().getNWalls() ) + " wall configs.";
+		+ vl::to_string( settings->getNWalls() ) + " wall configs.";
 	Ogre::LogManager::getSingleton().logMessage(message);
 
-	// If the channel has a name we try to find matching wall
 	if( !getName().empty() )
 	{
 		message = "Finding Wall for channel : " + getName();
 		Ogre::LogManager::getSingleton().logMessage(message);
-		_wall = getSettings().findWall( getName() );
+		_wall = settings->findWall( _channel_conf.wall_name );
 	}
 
 	// Get the first wall definition if no named one was found
 	if( _wall.empty() )
 	{
-		_wall = getSettings().getWall(0);
+		_wall = settings->getWall(0);
 		message = "No wall found : using the default " + _wall.name;
 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
@@ -105,79 +104,46 @@ eqOgre::Channel::configInit( const eq::uint128_t &initID )
 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 
-	message = "IPD (Inter pupilar distance) = " + vl::to_string( getSettings().getIPD() );
+	message = "IPD (Inter pupilar distance) = " + vl::to_string( settings->getIPD() );
 	Ogre::LogManager::getSingleton().logMessage(message);
-
-	message = "Channel::ConfigInit done";
-	Ogre::LogManager::getSingleton().logMessage(message);
-
-	return true;
 }
 
-bool
-eqOgre::Channel::configExit()
-{
-	// Cleanup childs first
-	bool retval = eq::Channel::configExit();
-
-	return retval;
-}
-
-
-// NOTE overload with empty function
-// seems like we don't need these, Ogre Viewport will clear it self
-// before rendering if we don't instruct it to do otherwise
-/*
 void
-eqOgre::Channel::frameClear( const eq::uint128_t & )
-{
-//	TODO channel should do all rendering tasks
-//	it should use Ogre::Viewport to do so.
-	if( _camera && _ogre_viewport )
-	{ _ogre_viewport->clear(); }
-}
-*/
-
-/** Override frameDraw to call Viewport::update
- *
- *  Original does applyBuffer, applyViewport, applyFrustum, applyHeadTransform
- */
-void
-eqOgre::Channel::frameDraw( const eq::uint128_t &frameID )
+eqOgre::Channel::draw( void )
 {
 	assert( _viewport );
 	Ogre::Camera *camera = _viewport->getCamera();
 	assert( camera );
 
-	// TODO test the real stereo rendering code
 	if( _stereo )
 	{
-		double ipd = getSettings().getIPD();
+		// FIXME
+		double ipd = 0;// getSettings().getIPD();
 
 		//draw into back left buffer
 		glDrawBuffer(GL_BACK_LEFT);
 		Ogre::Vector3 eye(-ipd/2, 0, 0);
-		setOgreFrustum( camera, eye );
-		setOgreView( camera, eye );
+		_setOgreFrustum( camera, eye );
+		_setOgreView( camera, eye );
 		_viewport->update();
 
 		//draw into back right buffer
 		glDrawBuffer(GL_BACK_RIGHT);
 		eye = Ogre::Vector3(ipd/2, 0, 0);
-		setOgreFrustum( camera, eye );
-		setOgreView( camera, eye );
+		_setOgreFrustum( camera, eye );
+		_setOgreView( camera, eye );
 		_viewport->update();
 	}
 	else
 	{
-		setOgreFrustum( camera );
-		setOgreView( camera );
+		_setOgreFrustum( camera );
+		_setOgreView( camera );
 		_viewport->update();
 	}
 }
 
 void
-eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
+eqOgre::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	assert( camera );
 	assert( !_wall.empty() );
@@ -300,7 +266,7 @@ eqOgre::Channel::setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 }
 
 void
-eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
+eqOgre::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	assert( camera );
 
@@ -311,7 +277,8 @@ eqOgre::Channel::setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// Y-axis should be fine for VR systems, X and Z are not.
 	// NOTE if these rotations are disabled when moving the camera node
 	// the moving direction is different than the direction the camera is facing
-	uint32_t cam_rot_flags = getSettings().getCameraRotationAllowed();
+	// FIXME
+	uint32_t cam_rot_flags(-1);// = getSettings().getCameraRotationAllowed();
 	if( cam_rot_flags == (1 | 1<<1 | 1<<2 ) )
 	{
 		cam_orient = cam_rot;

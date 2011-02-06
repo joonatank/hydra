@@ -30,7 +30,6 @@ elseif( WIN32 )
 					 -D_WIN32_WINNT=0x0501	# Windows XP target
 					 -DNOCOMM
 					 -DNOSOUND
-					 #-DEQ_RELEASE_ASSERT
 					 # Should not need release asserts anymore
 					 )
 endif( UNIX )
@@ -42,9 +41,6 @@ endif(CMAKE_CONFIGURATION_TYPES)
 
 # Add our local scripts to CMake path
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
-
-######## Find Equalizer ########
-find_package( Equalizer REQUIRED )
 
 ###### Find VRPN ########
 find_package( VRPN REQUIRED )
@@ -107,7 +103,6 @@ find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${Ogre_INCLUDE_DIR}
-	${Equalizer_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
@@ -121,7 +116,6 @@ include_directories( SYSTEM
 set( EQOGRE_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${Ogre_LIBRARY}
-	${Equalizer_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARY}
 	${PYTHON_LIBRARIES}

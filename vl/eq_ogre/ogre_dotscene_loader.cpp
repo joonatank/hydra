@@ -20,7 +20,7 @@ eqOgre::DotSceneLoader::~DotSceneLoader( void )
 {}
 
 void
-eqOgre::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
+eqOgre::DotSceneLoader::parseDotScene( std::string const &scene_name,
 									   Ogre::SceneManager* sceneMgr,
 									   Ogre::SceneNode* attachNode,
 									   const std::string& sPrependNode )
@@ -32,15 +32,18 @@ eqOgre::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 	staticObjects.clear();
 	dynamicObjects.clear();
 
-	// Pass the ownership of the memory to this
-	char *xml_data = scene_data.get();
+	// TODO replace asserts with throws
+	Ogre::ResourceGroupManager &man = Ogre::ResourceGroupManager::getSingleton();
+	assert( man.resourceExistsInAnyGroup(scene_name) );
+	char *xml_data = ::strdup( man.openResource(scene_name).get()->getAsString().c_str() );
+	assert( xml_data );
 
-	if( !xml_data || ::strlen( xml_data ) != scene_data.size()-1 )
-	{
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("MemoryBlock has invalid XML file") );
-	}
+	// Pass the ownership of the memory to this
+// 	= scene_data.get();
 
 	_parse( xml_data );
+
+	::free( xml_data );
 }
 
 void
@@ -65,7 +68,7 @@ eqOgre::DotSceneLoader::_parse(char* xml_data)
 		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
 	}
 
-	// OgreMax exports angles in Radians by default so if the scene file is 
+	// OgreMax exports angles in Radians by default so if the scene file is
 	// created with Maya we assume Radians
 	// Blender how ever uses Degrees by default so we will assume Degrees otherwise
 	std::string app( vl::getAttrib(XMLRoot, "application", "") );
@@ -76,13 +79,13 @@ eqOgre::DotSceneLoader::_parse(char* xml_data)
 	{
 		std::string message = "Processing Maya scene file.";
 		Ogre::LogManager::getSingleton().logMessage(message);
-		Ogre::Math::setAngleUnit( Ogre::Math::AU_RADIAN ); 
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_RADIAN );
 	}
 	else
 	{
 		std::string message("Processing Blender scene file.");
 		Ogre::LogManager::getSingleton().logMessage(message);
-		Ogre::Math::setAngleUnit( Ogre::Math::AU_DEGREE ); 
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_DEGREE );
 	}
 
 	if( !_attach_node )
@@ -730,7 +733,7 @@ eqOgre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 	{ processTrackTarget(pElement, node); }
 	*/
 
-	/*	Process node (*) 
+	/*	Process node (*)
 	Needs to be here because the node can have children
 	*/
 	pElement = XMLNode->first_node("node");

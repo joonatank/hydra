@@ -17,6 +17,23 @@ namespace vl
 namespace cluster
 {
 
+/// The state the client is in the update and rendering pipe
+/// Used to determine what message is next send to that client
+/// Moving from one to the next state is done when server sends the message
+/// for the current state.
+/// TODO state change should be done only after client ACKs
+enum CLIENT_STATE
+{
+	CS_UNDEFINED,
+	CS_REQ,		// Client has requested updates
+	CS_ENV,		// Environment settings have been sent
+	CS_PROJ,	// Project settings have been sent
+	CS_INIT,	// Initial SceneGraph has been sent
+	CS_UPDATE,	// Rendering loop : Update has been sent
+	CS_DRAW,	// Rendering loop : Draw has been sent
+	CS_SWAP,	// Rendering loop : Swap has been sent
+};
+
 class Server
 {
 public:
@@ -24,25 +41,64 @@ public:
 
 	~Server();
 
-	void mainloop( void );
+	void receiveMessages( void );
 
-	void sendToAll( Message const &msg );
+	/// Synchronious method that blocks till all the clients have done
+	/// update, draw and swap
+	void render( void );
 
-	void sendToNewClients( Message const &msg );
+	/// Store the Environment message for further use
+	// TODO change to use dynamically allocated memory so that the message
+	// can be stored without copiying
+	void sendEnvironment( Message const &msg );
 
-	bool oldClients( void ) const
-	{ return !_clients.empty(); }
+	/// Store the project message for further use
+	// Can be updated by a another call and will be sent again to all clients
+	void sendProject( Message const &msg );
 
-	bool newClients( void ) const
-	{ return !_new_clients.empty(); }
+	/// Send an Initial SceneGraph
+	void sendInit( Message const &msg );
+
+	/// Send an SceneGraph update
+	void sendUpdate( Message const &msg );
+
+	/// Returns true if some client needs an Initial SceneGraph
+	bool needsInit( void ) const;
 
 	bool inputMessages( void )
 	{ return !_input_msgs.empty(); }
 
 	Message *popInputMessage( void );
 
+	typedef std::vector< std::pair<boost::udp::endpoint, CLIENT_STATE> > ClientList;
+
 private :
 	void _addClient( boost::udp::endpoint const &endpoint );
+
+	void _sendProject( boost::udp::endpoint const &endpoint );
+
+	void _sendEnvironment( std::vector<char> const &msg );
+
+	void _sendEnvironment( boost::udp::endpoint const &endpoint );
+
+	void _sendInit( boost::udp::endpoint const &endpoint );
+
+	void _sendUpdate( boost::udp::endpoint const &endpoint );
+
+	void _sendDraw( boost::udp::endpoint const &endpoint );
+
+	void _sendSwap( boost::udp::endpoint const &endpoint );
+
+	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
+
+	/// Returns when all the clients are ready for an update message
+	void _waitUpdate( void );
+
+	/// Returns when all the clients are ready for an draw message
+	void _waitDraw( void );
+
+	/// Returns when all the clients are ready for an swap message
+	void _waitSwap( void );
 
 	/// Copying is forbidden
 	// Something funcky with the io_service or socket, so we can not forbid copy
@@ -53,12 +109,19 @@ private :
 	boost::asio::io_service _io_service;
 	boost::udp::socket _socket;
 
-	// TODO add a list of clients to whom updates are sent
-	std::vector<boost::udp::endpoint> _clients;
-
-	std::vector<boost::udp::endpoint> _new_clients;
+	ClientList _clients;
 
 	std::vector<Message *> _input_msgs;
+
+	/// Messages stored for when new clients connect
+	/// Environment message, set in the start
+	std::vector<char> _env_msg;
+	/// Project message, the latest one set
+	std::vector<char> _proj_msg;
+	/// Init message, the latest one set
+	std::vector<char> _msg_init;
+	/// Last update message? Might need a whole vector of these
+	std::vector<char> _msg_update;
 
 };	// class Server
 

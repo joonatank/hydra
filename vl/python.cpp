@@ -68,7 +68,7 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 	std::cout << message << std::endl;
 	//Ogre::LogManager::getSingleton().logMessage( message );
 
-	EQASSERT( script.get() );
+	assert( script.get() );
 	if( !script.get() )
 	{ return; }
 

@@ -239,17 +239,7 @@ vl::DistribResourceManager::_loadResource( std::string const &name,
 	assert( fs::exists(path) );
 	// Load the resource
 
-	// Open in binary mode, so we don't mess up the file
-	// open it from the end so that we get the size with tellg
-	// TODO move the copy to use iterator insert
-	std::ifstream ifs( path.c_str(), std::ios::in | std::ios::binary | std::ios::ate );
-	size_t size = ifs.tellg();
-	char *mem = new char[size+1];
-	ifs.seekg( 0, std::ios::beg );
-	ifs.read( mem, size );
-	ifs.close();
-
-	data.set( mem, size+1 );
+	vl::loadResource( data, path );
 
 	// Set the resource name
 	data.setName( name );

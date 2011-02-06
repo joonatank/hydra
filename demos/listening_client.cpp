@@ -10,65 +10,166 @@
 #include "base/exceptions.hpp"
 
 // Necessary for settings
-#include "eq_cluster/eq_settings.hpp"
-// Necessary for creating equalizer nodes
-#include "eq_cluster/nodeFactory.hpp"
-// Necessary for equalizer client creation
+#include "base/envsettings.hpp"
+#include "base/projsettings.hpp"
+
+// Necessary for client creation
 #include "eq_cluster/client.hpp"
+
+#include "program_options.hpp"
+#include "base/string_utils.hpp"
+
+#include "settings.hpp"
+
+#include <OGRE/OgreException.h>
+
+vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions options )
+{
+	if( options.slave() )
+	{ return vl::EnvSettingsRefPtr(); }
+
+	if( options.environment_file.empty() )
+	{ return vl::EnvSettingsRefPtr(); }
+
+	/// This point both env_path and project_path are valid
+	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+
+	/// Read the Environment config
+	if( fs::exists( options.environment_file ) )
+	{
+		std::string env_data;
+		env_data = vl::readFileToString( options.environment_file );
+		// TODO check that the files are correct and we have good settings
+		vl::EnvSettingsSerializer env_ser( env );
+		env_ser.readString(env_data);
+		env->setFile( options.environment_file );
+	}
+
+	env->setLogDir( options.log_dir );
+	env->setExePath( options.exe_path );
+	env->setVerbose( options.verbose );
+
+	return env;
+}
+
+vl::Settings getProjectSettings( vl::ProgramOptions options )
+{
+	if( options.slave() )
+	{
+		std::cerr << "Trying to get projects for a slave configuration."
+			<< std::endl;
+		return vl::Settings();
+	}
+
+	vl::Settings settings;
+
+	/// Read the Project Config
+	if( fs::is_regular( options.project_file ) )
+	{
+		std::cout << "Reading project file." << std::endl;
+		vl::ProjSettings proj;
+
+		std::string proj_data;
+		proj_data = vl::readFileToString( options.project_file );
+		vl::ProjSettingsRefPtr proj_ptr( &proj, vl::null_deleter() );
+		vl::ProjSettingsSerializer proj_ser( proj_ptr );
+		proj_ser.readString(proj_data);
+		proj.setFile( options.project_file );
+
+		settings.setProjectSettings(proj);
+	}
+
+	/// Read the global config
+	if( fs::is_regular( options.global_file ) )
+	{
+		vl::ProjSettings global;
+		std::cout << "Reading global file." << std::endl;
+
+		std::string global_data;
+		global_data = vl::readFileToString( options.global_file );
+		vl::ProjSettingsRefPtr glob_ptr( &global, vl::null_deleter() );
+		vl::ProjSettingsSerializer glob_ser( glob_ptr );
+		glob_ser.readString(global_data);
+		global.setFile( options.global_file );
+
+		settings.addAuxilarySettings(global);
+	}
+
+	return settings;
+}
+
+// custom structure is unnecessary for slave configuration because it is small
+vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions options )
+{
+	if( options.master() )
+	{
+		std::cout << "Slave configuration with master options?" << std::endl;
+		return vl::EnvSettingsRefPtr();
+	}
+	if( options.slave_name.empty() || options.server_address.empty() )
+	{
+		std::cout << "Slave configuration without all the parameters." << std::endl;
+		return vl::EnvSettingsRefPtr();
+	}
+
+	size_t pos = options.server_address.find_last_of(":");
+	if( pos == std::string::npos )
+	{ return vl::EnvSettingsRefPtr(); }
+	std::string hostname = options.server_address.substr(0, pos-1);
+	std::cout << "Using server hostname = " << hostname;
+	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos) );
+	std::cout << " and port = " << port << "." << std::endl;
+
+	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+	env->setSlave();
+	vl::EnvSettings::Server server(port, hostname);
+	env->setServer(server);
+	env->getMaster().name = options.slave_name;
+
+	return env;
+}
+
 
 int main( const int argc, char** argv )
 {
-	std::ofstream *log_file = 0;
-
-	eq::base::RefPtr< eqOgre::Client > client;
-
 	bool error = false;
 	try
 	{
-		vl::SettingsRefPtr settings = eqOgre::getSettings( argc, argv );
-		if( !settings )
-		{ return -1; }
-
-		eqOgre::NodeFactory nodeFactory;
-
-		if( !settings->getVerbose() )
+		vl::ProgramOptions options;
+		options.parseOptions(argc, argv);
+		vl::EnvSettingsRefPtr env;
+		vl::Settings settings;
+		if( options.master() )
 		{
-			// NOTE uses absolute paths
-			// NOTE the log file needs to be set before any calls to Equalizer methods
-			log_file = new std::ofstream( settings->getEqLogFilePath().c_str() );
-			eq::base::Log::setOutput( *log_file );
-			std::cout << "Equalizer log file = " << settings->getEqLogFilePath()
-				<< std::endl;
+			std::cout << "Requested master configuration." << std::endl;
+			env = getMasterSettings(options);
+			settings = getProjectSettings(options);
 		}
-
-		vl::Args &arg = settings->getEqArgs();
-
-		std::cout << "Equalizer arguments = " << settings->getEqArgs() << std::endl;
-
-		int eq_argc = arg.size();
-		char **eq_argv = arg.getData();
-
-		// 1. Equalizer initialization
-		if( !eq::init( eq_argc, eq_argv, &nodeFactory ) )
+		else
 		{
-			EQERROR << "Equalizer init failed" << std::endl;
-			error = true;
+			std::cout << "Requested slave configuration." << std::endl;
+			env = getSlaveSettings(options);
 		}
 
 		// 2. initialization of local client node
-		client = new eqOgre::Client( settings );
-		if( !client->initLocal( eq_argc, eq_argv ) )
-		{
-			EQERROR << "client->initLocal failed" << std::endl;
-			error = true;
-		}
+		if( !env )
+		{ return -1; }
+
+		// TODO add checking for empty settings
+		if( env->isMaster() && settings.empty() )
+		{ return -1; }
+
+		std::cout << "Creating client" << std::endl;
+		eqOgre::Client client( env, settings );
+		client.init();
 
 		if( !error )
 		{
-			error = !client->run();
+			error = !client.run();
 			if( error )
 			{ std::cerr << "Client run returned an error." << std::endl; }
 		}
+		std::cout << "Client exited" << std::endl;
 	}
 	catch( vl::exception &e )
 	{
@@ -89,17 +190,6 @@ int main( const int argc, char** argv )
 	catch( ... )
 	{
 		error = true;
-	}
-
-	// Exit
-	client = 0;
-	eq::exit();
-
-	if( log_file )
-	{
-		log_file->close();
-		delete log_file;
-		log_file = 0;
 	}
 
 	if( error )

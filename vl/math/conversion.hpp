@@ -14,9 +14,9 @@
 
 #include "math/math.hpp"
 
-#include <vmmlib/vector.hpp>
-#include <vmmlib/math.hpp>
-#include <vmmlib/quaternion.hpp>
+//#include <vmmlib/vector.hpp>
+//#include <vmmlib/math.hpp>
+//#include <vmmlib/quaternion.hpp>
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -32,68 +32,7 @@ namespace vl
 
 namespace math
 {
-	inline 
-	vmml::mat4d convert( Ogre::Matrix4 const &mat )
-	{
-		vmml::mat4d m;
-		for( size_t i = 0; i < 4; i++ )
-		{
-			for( size_t j = 0; j < 4; j++ )
-			{ m(i, j) = mat[i][j]; }
-		}
-		return m;
-	}
 
-	inline 
-	vmml::vec3d convert( Ogre::Vector3 const &v )
-	{
-		return vmml::vec3d( v.x, v.y, v.z );
-	}
-	
-	inline
-	vmml::quaterniond convert( Ogre::Quaternion const &q )
-	{
-		return vmml::quaterniond( q.x, q.y, q.z, q.w );
-	}
-
-	inline
-	Ogre::Matrix4 convert( vmml::mat4d const &mat )
-	{
-		Ogre::Matrix4 m;
-		for( size_t i = 0; i < 4; i++ )
-		{
-			for( size_t j = 0; j < 4; j++ )
-			{ m[i][j] = scalar(mat(i, j)); }
-		}
-		return m;
-	}
-
-	inline
-	Ogre::Vector3 convert( vmml::vec3d const &v )
-	{
-		return Ogre::Vector3( scalar(v.x()), scalar(v.y()), scalar(v.z()) );
-	}
-
-	inline
-	Ogre::Quaternion convert( vmml::quaterniond const &q )
-	{
-		return Ogre::Quaternion( scalar(q.w()), scalar(q.x()), scalar(q.y()), scalar(q.z()) );
-	}
-
-	// Colour conversions
-	/*
-	inline
-	Ogre::ColourValue convert( vl::colour const &col )
-	{
-		return Ogre::ColourValue( col.r(), col.g(), col.b(), col.a() );
-	}
-
-	inline
-	vl::colour convert( Ogre::ColourValue const &col )
-	{
-		return vl::colour( col.r, col.g, col.b, col.a );
-	}
-	*/
 	inline
 	vl::angle convert( Ogre::Radian const &rad )
 	{

@@ -7,9 +7,6 @@
 // Interface
 #include "pipe.hpp"
 
-// Necessary for mapping distributed objects
-#include <eq/client/config.h>
-
 // Necessary for printing error messages from exceptions
 #include "base/exceptions.hpp"
 // Necessary for loading dotscene
@@ -17,22 +14,65 @@
 
 #include "window.hpp"
 #include "base/string_utils.hpp"
-
-char const *SERVER_NAME = "localhost";
-uint16_t const SERVER_PORT = 4699;
+#include "base/sleep.hpp"
+#include "distrib_settings.hpp"
 
 /// ------------------------- Public -------------------------------------------
-eqOgre::Pipe::Pipe( eq::Node* parent )
-	: eq::Pipe(parent), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
-{}
+// TODO should probably copy the env settings and not store the reference
+eqOgre::Pipe::Pipe( std::string const &name,
+					std::string const &server_address,
+					uint16_t server_port )
+	: _name(name), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
+{
+	std::cout << "eqOgre::Pipe::Pipe : name = " << _name << std::endl;
+	_createClient( server_address, server_port );
+}
 
 eqOgre::Pipe::~Pipe( void )
-{}
-
-eqOgre::DistributedSettings const &
-eqOgre::Pipe::getSettings( void ) const
 {
-	return _settings;
+	// Info
+	std::string message("Cleaning out OGRE");
+	Ogre::LogManager::getSingleton().logMessage( message );
+	_root.reset();
+
+	delete _client;
+}
+
+vl::EnvSettingsRefPtr
+eqOgre::Pipe::getSettings( void )
+{
+	return _env;
+}
+
+vl::EnvSettings::Node
+eqOgre::Pipe::getNodeConf( void )
+{
+	vl::EnvSettings::Node node;
+	if( getName() == _env->getMaster().name )
+	{ node = _env->getMaster(); }
+	else
+	{ node = _env->findSlave( getName() ); }
+
+	assert( !node.empty() );
+	return node;
+}
+
+vl::EnvSettings::Window
+eqOgre::Pipe::getWindowConf( std::string const &window_name )
+{
+	vl::EnvSettings::Node node = getNodeConf();
+
+	// TODO add real errors
+	assert( node.getNWindows() > 0 );
+
+	for( size_t i = 0; i < node.getNWindows(); ++i )
+	{
+		if( node.getWindow(i).name == window_name )
+		{ return node.getWindow(i); }
+	}
+
+	// TODO add real errors
+	assert( false );
 }
 
 void
@@ -48,218 +88,126 @@ eqOgre::Pipe::sendEvent( vl::cluster::EventData const &event )
 	_events.push_back(event);
 }
 
-
-/// ------------------------ Protected -----------------------------------------
-bool
-eqOgre::Pipe::configInit(const eq::uint128_t& initID)
+void
+eqOgre::Pipe::operator()()
 {
-	_createClient();
+	std::cout << "eqOgre::Pipe::operator() : Thread entered." << std::endl;
 
-	if( !eq::Pipe::configInit(initID) )
+	// Here we should wait for the EnvSettings from master
+	// TODO we should have a wait for Message function
+	while( !_env )
 	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eq::Pipe::configInit failed");
-		std::cerr << message << std::endl;
-		return false;
+		_handleMessages();
+		vl::msleep(1);
 	}
 
-	_mapData( initID );
+	_createOgre();
 
-	_handleMessages();
+	vl::EnvSettings::Node node = getNodeConf();
+	std::cout << "Creating " << node.getNWindows() << " windows." << std::endl;
+	assert( node.getNWindows() > 0 );
+	for( size_t i = 0; i < node.getNWindows(); ++i )
+	{ _createWindow( node.getWindow(i) ); }
 
-	_syncData();
-
-	if( !_createOgre() )
+	while( 1 )
 	{
-		// Error
-		// TODO move to using Ogre Logging, the log manager needs to be created sooner
-		std::string message("eqOgre::Pipe::configInit : createOgre failed");
-		std::cerr << message << std::endl;
-		return( false );
-	}
+		// Handle messages
+		_handleMessages();
 
-	return true;
+		// Process input events
+		assert( !_windows.empty() );
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->capture(); }
+
+		// Send messages
+		_sendEvents();
+
+		// Sleep
+		vl::msleep(1);
+	}
 }
 
-bool
-eqOgre::Pipe::configExit()
+
+/// ------------------------ Protected -----------------------------------------
+void
+eqOgre::Pipe::_reloadProjects( vl::Settings set )
 {
-	bool retval = eq::Pipe::configExit();
+	// TODO this should unload old projects
 
-	// Info
-	std::string message("Cleaning out OGRE");
-	Ogre::LogManager::getSingleton().logMessage( message );
-	_root.reset();
+	_settings = set;
 
-	return retval;
+	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
+
+	// Add resources
+	_root->addResource( _settings.getProjectDir() );
+	for( size_t i = 0; i < _settings.getAuxDirectories().size(); ++i )
+	{
+		_root->addResource( _settings.getAuxDirectories().at(i) );
+	}
+
+	std::cout << "Setting up the resources." << std::endl;
+	_root->setupResources();
+	_root->loadResources();
+
+	_ogre_sm = _root->createSceneManager("SceneManager");
+
+	std::cout << "eqOgre::Pipe::frameStart : loading scene" << std::endl;
+
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		_loadScene( scenes.at(i) );
+	}
+
+	_setCamera();
+}
+
+/// Ogre helpers
+void
+eqOgre::Pipe::_createOgre( void )
+{
+	std::cout << "eqOgre::Pipe::_createOgre" << std::endl;
+	assert( _env );
+
+	// TODO needs LogManager creation before this
+	std::string message("Creating Ogre Root");
+	std::cout << message << std::endl;
+
+	// TODO the project name should be used instead of the hydra for all
+	// problem is that the project name is not known at this point
+	// so we should use a tmp file and then move it.
+	std::string log_file = vl::createLogFilePath( "hydra", "ogre", "", _env->getLogDir() );
+	_root.reset( new vl::ogre::Root( log_file, _env->getVerbose() ) );
+	// Initialise ogre
+	_root->createRenderSystem();
 }
 
 void
-eqOgre::Pipe::frameStart(const eq::uint128_t& frameID, const uint32_t frameNumber)
+eqOgre::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
 {
-	static bool inited = false;
+	std::cout << "eqOgre::Pipe::_loadScene" << std::endl;
+	assert( _ogre_sm );
 
-	_handleMessages();
+	std::string message;
 
-	try {
-		// TODO should update the Pipe data in init
-		// FIXME this updates the SceneManager and tries to find Ogre nodes
-		// but it doesn't have the SceneManager as it's created in the init
-		// next.
-		_updateDistribData();
+	std::string const &name = scene.getName();
 
-		// Init the Ogre resources and load a Scene
-		// These are here because the RenderWindow needs to be created before
-		// loading Meshes
-		if( !inited )
-		{
-			std::cout << "eqOgre::Pipe::frameStart : init" << std::endl;
-			std::cout << "Resources = ";
-			// Resource registration
-			std::vector<std::string> const &resources = _resource_manager.getResourcePaths();
-			for( size_t i = 0; i < resources.size(); ++i )
-			{
-				std::cout << resources.at(i) << std::endl;
-				_root->addResource( resources.at(i) );
-			}
-			std::cout << "eqOgre::Pipe::frameStart : setup resources" << std::endl;
-			_root->setupResources( );
-			_root->loadResources();
+	message = "Loading scene " + name + " file = " + scene.getFile();
+	std::cout << message << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( message );
 
-			_ogre_sm = _root->createSceneManager("SceneManager");
+	eqOgre::DotSceneLoader loader;
+	// TODO pass attach node based on the scene
+	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+	loader.parseDotScene( scene.getFile(), _ogre_sm );
 
-			std::cout << "eqOgre::Pipe::frameStart : loading scene" << std::endl;
-
-			if( !_loadScene() )
-			{
-				// Error
-				std::string message("Problem loading the Scene");
-				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-			}
-
-			// We need to find the node from scene graph
-			std::string message = "SceneManager has "
-				+ vl::to_string(_scene_manager->getNSceneNodes()) + " SceneNodes.";
-			Ogre::LogManager::getSingleton().logMessage( message );
-
-			assert( _ogre_sm );
-			if( !_scene_manager->setSceneManager( _ogre_sm ) )
-			{
-				// Error
-				message = "Some SceneNodes were not found.";
-				Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-			}
-
-			inited = true;
-		}
-	}
-	catch( vl::exception &e )
-	{
-		// TODO add error status flag
-		std::cout << "VL Exception : " + boost::diagnostic_information<>(e) << std::endl;
-		assert( false );
-	}
-	catch( ... )
-	{
-		assert( false );
-	}
-
-	eq::Pipe::frameStart( frameID, frameNumber );
-
-	_sendEvents();
-}
-
-
-/// Ogre helpers
-bool
-eqOgre::Pipe::_createOgre( void )
-{
-	try {
-		// TODO needs LogManager creation before this
-		std::string message("Creating Ogre Root");
-		std::cout << message << std::endl;
-
-		_root.reset( new vl::ogre::Root( getSettings().getOgreLogFilePath() ) );
-		// Initialise ogre
-		_root->createRenderSystem();
-	}
-	catch( vl::exception &e )
-	{
-		std::string message = "VL Exception : " + boost::diagnostic_information<>(e);
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( Ogre::Exception const &e)
-	{
-		std::string message = std::string("Ogre Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( std::exception const &e )
-	{
-		std::string message = std::string("STD Exception: ") + e.what();
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-
-		return false;
-	}
-	catch( ... )
-	{
-		std::string err_msg( "eqOgre::Window::configInit : Exception thrown." );
-		Ogre::LogManager::getSingleton().logMessage( err_msg, Ogre::LML_CRITICAL );
-		return false;
-	}
-
-	return true;
-}
-
-bool
-eqOgre::Pipe::_loadScene( void )
-{
-	// TODO this should be divided to case load scenes function and loadScene function
-
-	// Get scenes
-	std::vector<vl::TextResource> scenes = _resource_manager.getSceneResources();
-	std::string message = "Loading Scenes for Project : " + getSettings().getProjectName();
+	message = "Scene " + name + " loaded.";
 	Ogre::LogManager::getSingleton().logMessage( message );
+}
 
-	// If we don't have Scenes there is no point loading them
-	if( scenes.empty() )
-	{
-		message = "Project does not have any scene files.";
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-		return false;
-	}
-	else
-	{
-		message = "Project has " + vl::to_string(scenes.size()) + " scene files.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
-
-	// Clean up old scenes
-	// TODO this should be a loader not a destroyer, move to another function
-	_ogre_sm->clearScene();
-	_ogre_sm->destroyAllCameras();
-
-	// TODO support for multiple scene files should be tested
-	// TODO support for case needs to be tested
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		std::string const &name = scenes.at(i).getName();
-
-		message = "Loading scene " + name + ".";
-		Ogre::LogManager::getSingleton().logMessage( message );
-
-		eqOgre::DotSceneLoader loader;
-		// TODO pass attach node based on the scene
-		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( scenes.at(i), _ogre_sm );
-
-		message = "Scene " + name + " loaded.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
+void
+eqOgre::Pipe::_setCamera ( void )
+{
+	assert( _ogre_sm );
 
 	/// Get the camera
 	// TODO move to separate function
@@ -267,42 +215,63 @@ eqOgre::Pipe::_loadScene( void )
 	// Loop through all cameras and grab their name and set their debug representation
 	Ogre::SceneManager::CameraIterator cameras = _ogre_sm->getCameraIterator();
 
-	// Grab the first available camera, for now
-	if( cameras.hasMoreElements() )
+	if( !_active_camera_name.empty() )
 	{
-		_camera = cameras.getNext();
-		message = "Using Camera " + _camera->getName()
-			+ " found from the scene.";
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
-	else
-	{
-		_camera = _ogre_sm->createCamera("Cam");
-		message = "No camera in the scene. Using created camera "
-			+ _camera->getName();
-		Ogre::LogManager::getSingleton().logMessage( message );
-	}
-	_active_camera_name = _camera->getName();
+		if( _camera && _camera->getName() == _active_camera_name )
+		{ return; }
 
-	return true;
+		if( _ogre_sm->hasCamera(_active_camera_name) )
+		{
+			_camera = _ogre_sm->getCamera(_active_camera_name);
+		}
+	}
+
+	if( !_camera )
+	{
+		std::string message;
+		// Grab the first available camera, for now
+		if( cameras.hasMoreElements() )
+		{
+			_camera = cameras.getNext();
+			message = "Using Camera " + _camera->getName() + " found from the scene.";
+			Ogre::LogManager::getSingleton().logMessage( message );
+		}
+		else
+		{
+			// TODO this should use a default camera created earlier that exists always
+			_camera = _ogre_sm->createCamera("Cam");
+			message = "No camera in the scene. Using created camera "
+				+ _camera->getName();
+			Ogre::LogManager::getSingleton().logMessage( message );
+		}
+		_active_camera_name = _camera->getName();
+	}
+
+	assert( _camera && _active_camera_name == _camera->getName() );
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->setCamera(_camera); }
+
+	std::cout << "Camera " << _active_camera_name << " set." << std::endl;
 }
 
 
 /// Distribution helpers
 void
-eqOgre::Pipe::_createClient( void )
+eqOgre::Pipe::_createClient( std::string const &server_address, uint16_t server_port )
 {
 	std::cout << "eqOgre::Pipe::_createClient" << std::endl;
 	assert( !_client );
 
-	// FIXME these should be configured in config file
-	_client = new vl::cluster::Client( SERVER_NAME, SERVER_PORT );
+	_client = new vl::cluster::Client( server_address.c_str(), server_port );
+
 	_client->registerForUpdates();
 }
 
 void
 eqOgre::Pipe::_handleMessages( void )
 {
+// 	std::cout << "eqOgre::Pipe::_handleMessages" << std::endl;
+
 	assert( _client );
 
 	_client->mainloop();
@@ -323,27 +292,83 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 
 	switch( msg->getType() )
 	{
+		// Environment configuration
+		case vl::cluster::MSG_ENVIRONMENT :
+		{
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
+			assert( !_env );
+			_env.reset( new vl::EnvSettings );
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(msg);
+ 			vl::cluster::ByteStream stream(&data);
+			stream >> _env;
+			// Only single environment settings should be in the message
+			assert( 0 == msg->size() );
+			_client->sendAck( vl::cluster::MSG_ENVIRONMENT );
+		}
+		break;
+
+		// Project configuration
+		case vl::cluster::MSG_PROJECT :
+		{
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
+			// TODO
+			// Test using multiple projects e.g. project and global
+			// The vector serailization might not work correctly
+			// TODO
+			// Problematic because the Project config should be
+			// updatable during the application run
+			// And this one will create them anew, so that we need to invalidate
+			// the scene and reload everything
+			// NOTE
+			// Combining the project configurations is not done automatically
+			// so they either need special structure or we need to iterate over
+			// all of them always.
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(msg);
+			vl::cluster::ByteStream stream(&data);
+			vl::Settings projects;
+			stream >> projects;
+			_reloadProjects(projects);
+			// TODO should the ACK be first so that the server has the
+			// information fast
+			_client->sendAck( vl::cluster::MSG_PROJECT );
+		}
+		break;
+
+		// Scene graph initial state
+		case vl::cluster::MSG_INITIAL_STATE :
+		{
+			std::cout << "eqOgre::Pipe::_handleMessage : MSG_INITIAL_STATE message" << std::endl;
+			_client->sendAck( vl::cluster::MSG_INITIAL_STATE );
+			_handleUpdateMsg(msg);
+			_mapData();
+		}
+		break;
+
+		// Scene graph update after the initial message
 		case vl::cluster::MSG_UPDATE :
 		{
-			// TODO objects array should not be cleared but rather updated
-			// so that objects that are not updated stay in the array.
-			_objects.clear();
-			// Read the IDs in the message and call pack on mapped objects
-			// based on thoses
-			// TODO multiple update messages in the same frame,
-			// only the most recent should be used.
-// 			std::cout << "Message = " << *msg << std::endl;
-			while( msg->size() > 0 )
-			{
-// 				std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
-//	 				<< "size = " << msg->size() << std::endl;
+			_client->sendAck( vl::cluster::MSG_UPDATE );
+			_handleUpdateMsg(msg);
+			_syncData();
+			_updateDistribData();
+		}
+		break;
 
-				vl::cluster::ObjectData data;
-				data.copyFromMessage(msg);
-				// Pushing back will create copies which is unnecessary
-				_objects.push_back(data);
-			}
-// 			std::cout << "Message handled" << std::endl;
+		case vl::cluster::MSG_DRAW :
+		{
+			_client->sendAck( vl::cluster::MSG_DRAW );
+			_draw();
+		}
+		break;
+
+		case vl::cluster::MSG_SWAP :
+		{
+			_client->sendAck( vl::cluster::MSG_SWAP );
+			_swap();
 		}
 		break;
 
@@ -355,18 +380,42 @@ eqOgre::Pipe::_handleMessage( vl::cluster::Message *msg )
 }
 
 void
+eqOgre::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
+{
+	// TODO objects array should not be cleared but rather updated
+	// so that objects that are not updated stay in the array.
+	_objects.clear();
+	// Read the IDs in the message and call pack on mapped objects
+	// based on thoses
+	// TODO multiple update messages in the same frame,
+	// only the most recent should be used.
+// 	std::cout << "Message = " << *msg << std::endl;
+	while( msg->size() > 0 )
+	{
+// 		std::cout << "eqOgre::Pipe::_syncData : UPDATE message : "
+//	 		<< "size = " << msg->size() << std::endl;
+
+		vl::cluster::ObjectData data;
+		data.copyFromMessage(msg);
+		// Pushing back will create copies which is unnecessary
+		_objects.push_back(data);
+	}
+
+// 	std::cout << "Message handled" << std::endl;
+}
+
+void
 eqOgre::Pipe::_syncData( void )
 {
-// 	std::cout << "eqOgre::Pipe::_syncData" << std::endl;
 // 	std::cout << "eqOgre::Pipe::_syncData : " << _objects.size() << " objects."
 // 		<< std::endl;
-	std::vector<vl::cluster::ObjectData>::iterator iter;
 	// TODO remove the temporary array
 	// use a custom structure that does not create temporaries
 	// rather two phase system one to read the array and mark objects for delete
 	// and second that really clear those that are marked for delete
 	// similar system for reading data to the array
 	std::vector<vl::cluster::ObjectData> tmp;
+	std::vector<vl::cluster::ObjectData>::iterator iter;
 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
 		vl::cluster::ByteStream stream = iter->getStream();
@@ -391,48 +440,50 @@ eqOgre::Pipe::_syncData( void )
 
 	_objects = tmp;
 
+	// TODO this is inconvenient and should be replaced with a generic callback
+	// called for all objects
+	// TODO this is will crash if the SceneManager is mapped but is has not been
+	// updated
 	if( _scene_manager )
 	{ _scene_manager->finaliseSync(); }
 
 // 	std::cout << "eqOgre::Pipe::_syncData : done" << std::endl;
 }
 
+// TODO this should dynamically create the new objects
 void
-eqOgre::Pipe::_mapData( eq::uint128_t const &settingsID )
+eqOgre::Pipe::_mapData( void )
 {
-	// TODO move to using Ogre Logging, needs LogManager creation
-	std::cout << "Mapping data." << std::endl;
-
-	// Get the cluster version of data
-	getConfig()->mapObject( &_settings, settingsID );
-	assert( _settings.getID() != eq::UUID::ZERO);
+	std::string message("eqOgre::Pipe::_mapData");
+	Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_NORMAL );
 
 	// TODO should be automatic when mapObjectC is called
 	// Also if we call it so many times it should not iterate through the whole
 	// message but rather already stored ID list
 
-	uint64_t id = _settings.getResourceManagerID();
-	assert( id != vl::ID_UNDEFINED );
-	mapObjectC( &_resource_manager, id );
-
-	assert( _settings.getPlayerID() != vl::ID_UNDEFINED );
-	mapObjectC( &_player, _settings.getPlayerID() );
-
-	uint64_t sm_id = _settings.getSceneManagerID();
-	std::cout << "Mapping SceneManager with id = " << sm_id << '.' << std::endl;
-	assert( sm_id != vl::ID_UNDEFINED );
+	// TODO remove hard coded IDs
+	mapObject( &_player, 1 );
 	_scene_manager = new vl::SceneManager( this );
-	mapObjectC( _scene_manager, sm_id );
+	mapObject( _scene_manager, 2 );
 
-	std::cout << "Data mapped." << std::endl;
+	_syncData();
+
+	assert( _ogre_sm );
+	if( !_scene_manager->setSceneManager( _ogre_sm ) )
+	{
+		// Error
+		message = "Some SceneNodes were not found.";
+		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+	}
+
+	message = "eqOgre::Pipe::_mapData : DONE";
+	Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_NORMAL );
 }
 
 void
 eqOgre::Pipe::_updateDistribData( void )
 {
 // 	std::cout << "eqOgre::Pipe::_updateDistribData" << std::endl;
-	// Custom sync code
-	_syncData();
 
 	// Update player
 	// Get active camera and change the rendering camera if there is a change
@@ -445,20 +496,15 @@ eqOgre::Pipe::_updateDistribData( void )
 		{
 			// Tell the Windows to change cameras
 			_camera = _ogre_sm->getCamera( _active_camera_name );
-			Windows const &window_list = getWindows();
-			for( size_t i = 0; i < window_list.size(); ++i )
-			{
-				assert( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
-				eqOgre::Window *window =
-					static_cast<eqOgre::Window *>( window_list.at(i) );
-				window->setCamera( _camera );
-			}
+			assert( !_windows.empty() );
+			for( size_t i = 0; i < _windows.size(); ++i )
+			{ _windows.at(i)->setCamera( _camera ); }
 		}
 		else
 		{
 			std::string message = "eqOgre::Window : New camera name set, but NO camera found";
 			std::cout << message << std::endl;
-			//Ogre::LogManager::getSingleton().logMessage( message );
+			Ogre::LogManager::getSingleton().logMessage( message );
 		}
 	}
 
@@ -473,39 +519,28 @@ eqOgre::Pipe::_updateDistribData( void )
 		std::string prefix( "screenshot_" );
 		std::string suffix = ".png";//
 
-		// Tell the Windows to take a screenshot
-		Windows const &window_list = getWindows();
-		for( size_t i = 0; i < window_list.size(); ++i )
-		{
-			assert( dynamic_cast<eqOgre::Window *>( window_list.at(i) ) );
-			eqOgre::Window *window =
-				static_cast<eqOgre::Window *>( window_list.at(i) );
-			window->takeScreenshot( prefix, suffix );
-		}
+		// Tell the Window to take a screenshot
+		// TODO support for multiple windows
+		assert( !_windows.empty() );
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 
 		_screenshot_num = _player.getScreenshotVersion();
 	}
+}
 
-// 	std::cout << "eqOgre::Pipe::_updateDistribData : done" << std::endl;
-	// FIXME this is completely screwed up.
-	/*
-	static uint32_t scene_version = 0;
-	if( _frame_data.getSceneVersion() > scene_version )
-	{
-		// This will reload the scene but all transformations remain
-		// As this will not reset the SceneNode structures that control the
-		// transformations of objects.
-		std::cout << "Reloading the Ogre scene now" << std::endl;
-		eqOgre::Window *win = static_cast<eqOgre::Window *>( getWindow() );
-		win->loadScene();
-		Ogre::Camera *camera = win->getCamera();
-		createViewport( camera );
-		_frame_data.setSceneManager( win->getSceneManager() );
-		std::cout << "Ogre Scene reloaded." << std::endl;
+void
+eqOgre::Pipe::_draw( void )
+{
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->draw(); }
+}
 
-		scene_version = _frame_data.getSceneVersion();
-	}
-	*/
+void
+eqOgre::Pipe::_swap( void )
+{
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->swap(); }
 }
 
 void
@@ -513,6 +548,9 @@ eqOgre::Pipe::_sendEvents( void )
 {
 	if( !_events.empty() )
 	{
+// 		std::cout << "eqOgre::Pipe::_sendEvents : " << _events.size()
+// 			<< " events to send." << std::endl;
+
 		vl::cluster::Message msg( vl::cluster::MSG_INPUT );
 		std::vector<vl::cluster::EventData>::iterator iter;
 		for( iter = _events.begin(); iter != _events.end(); ++iter )
@@ -523,4 +561,15 @@ eqOgre::Pipe::_sendEvents( void )
 
 		sendMessageToMaster(&msg);
 	}
+}
+
+// TODO add support for multiple windows
+void
+eqOgre::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
+{
+	std::cout << "eqOgre::Pipe::_createWindow : " << winConf.name << std::endl;
+
+	eqOgre::Window *window = new eqOgre::Window( winConf.name, this );
+	assert( window );
+	_windows.push_back(window);
 }

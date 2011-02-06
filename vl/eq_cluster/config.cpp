@@ -23,9 +23,6 @@
 
 #include "resource.hpp"
 
-// TODO this is for testing the audio moving to Client
-#include "client.hpp"
-
 // Necessary for retrieving other managers
 #include "game_manager.hpp"
 // HUH?
@@ -34,46 +31,66 @@
 #include "event_manager.hpp"
 // Necessary for registering Player
 #include "player.hpp"
+#include <distrib_settings.hpp>
 
 #include "base/string_utils.hpp"
 
-uint16_t const SERVER_PORT = 4699;
-
-eqOgre::Config::Config( eq::base::RefPtr< eq::Server > parent )
-	: eq::Config( parent ), _server(0)
-{}
+eqOgre::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
+	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
+{
+	std::cout << "eqOgre::Config::Config" << std::endl;
+	assert( _game_manager && _env );
+	// TODO assert that the settings are valid
+	assert( _env->isMaster() );
+}
 
 eqOgre::Config::~Config( void )
 {}
 
 bool
-eqOgre::Config::init( eq::uint128_t const & )
+eqOgre::Config::init( uint64_t const & )
 {
+	std::cout << "eqOgre::Config::init" << std::endl;
+
 	_game_manager->createSceneManager( this );
 
 	_createServer();
 
 	assert( _server );
+
+	// Send the Environment
+	_sendEnvironment();
+
+	// Send the project
+	_sendProject();
+
 	// TODO register the objects
+	// There needs to be a certain order in which they are registered
+	// so that they can be unpacked correctly in the rendering thread
+	// or we need an update structure that we can set the ids into.
+	// or we can use object types in the message so that they can be dynamically
+	// created in the rendering threads.
+
+	// Create the player necessary for Trackers
+	vl::PlayerPtr player = _game_manager->createPlayer();
+
+	assert( player );
+	// Registering Player in init
+	registerObject( player );
+
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
-	// FIXME
 	// Register SceneManager
 	std::cout << "Registering SceneManager" << std::endl;
-	registerObjectC( sm );
-
-
-	// Create the player necessary for Trackers
-	// Will be registered later
-	vl::PlayerPtr player = _game_manager->createPlayer();
+	registerObject( sm );
 
 	_loadScenes();
 
 	// Create Tracker needs the SceneNodes for mapping
-	_createTracker(_settings);
+	_createTracker( _env );
 
-	std::vector<std::string> scripts = _settings->getScripts();
+	std::vector<std::string> scripts = _settings.getScripts();
 
 	std::cout << "Running " << scripts.size() << " python scripts." << std::endl;
 
@@ -87,29 +104,6 @@ eqOgre::Config::init( eq::uint128_t const & )
 
 	_createQuitEvent();
 
-	std::cout << "Registering data." << std::endl;
-
-	vl::DistribResourceManager *res_man
-		= static_cast<vl::DistribResourceManager *>( _game_manager->getReourceManager() );
-	registerObjectC( res_man );
-
-	assert( player );
-	// Registering Player in init
-	registerObjectC( player );
-
-	_distrib_settings.setSceneManagerID( _game_manager->getSceneManager()->getID() );
-	_distrib_settings.setResourceManagerID( res_man->getID() );
-	_distrib_settings.setPlayerID( player->getID() );
-
-	std::cout << "Registering Settings" << std::endl;
-	registerObject( &_distrib_settings );
-	assert( _distrib_settings.getID().isGenerated() );
-
-	if( !eq::Config::init( _distrib_settings.getID() ) )
-	{ return false; }
-
-	std::cout << "Config::init DONE" << std::endl;
-
 	_updateServer();
 
 	return true;
@@ -118,43 +112,19 @@ eqOgre::Config::init( eq::uint128_t const & )
 bool
 eqOgre::Config::exit( void )
 {
-	// First let the children clean up
-	bool retval = eq::Config::exit();
-
+	std::cout << "eqOgre::Config::exit" << std::endl;
 	std::cout << "Deregistering distributed data." << std::endl;
-
-	_distrib_settings.setSceneManagerID( vl::ID_UNDEFINED );
-	_distrib_settings.setResourceManagerID( vl::ID_UNDEFINED );
-	_distrib_settings.setPlayerID( vl::ID_UNDEFINED );
-
-	deregisterObject( &_distrib_settings );
 
 	//	TODO add cleanup server
 
 	std::cout << "Config exited." << std::endl;
-	return retval;
+	return true;
 }
-
-void
-eqOgre::Config::setSettings( vl::SettingsRefPtr settings )
-{
-	assert( settings );
-	assert( _game_manager );
-
-	_settings = settings;
-	_distrib_settings.copySettings(_settings, _game_manager->getReourceManager() );
-}
-
-void eqOgre::Config::setGameManager(vl::GameManagerPtr man)
-{
-	assert( man );
-	_game_manager = man;
-}
-
 
 uint32_t
-eqOgre::Config::startFrame( eq::uint128_t const &frameID )
+eqOgre::Config::startFrame( uint64_t const &frameID )
 {
+// 	std::cout << "eqOgre::Config::startFrame" << std::endl;
 	/// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
@@ -165,10 +135,18 @@ eqOgre::Config::startFrame( eq::uint128_t const &frameID )
 	/// Provide the updates to slaves
 	_updateServer();
 
-	/// Start rendering the frame
-	uint32_t retval = eq::Config::startFrame( 0 );
+	/// Render the scene
+	_server->render();
 
-	return retval;
+	// TODO where the receive input messages should be?
+	_receiveEventMessages();
+
+	return true;
+}
+
+void
+eqOgre::Config::finishFrame( void )
+{
 }
 
 /// ------------ Private -------------
@@ -179,8 +157,7 @@ eqOgre::Config::_createServer( void )
 
 	assert( !_server );
 
-	// TODO configurable server port
-	_server = new vl::cluster::Server( SERVER_PORT );
+	_server = new vl::cluster::Server( _env->getServer().port );
 }
 
 void
@@ -188,13 +165,8 @@ eqOgre::Config::_updateServer( void )
 {
 // 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
 	// Handle received messages
-	_server->mainloop();
+	_server->receiveMessages();
 
-	_receiveEventMessages();
-
-	// TODO the new and old clients functions should be combined to one
-	// function which is called multiple times
-	if( _server->oldClients() )
 	{
 		// Create SceneGraph updates
 		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
@@ -218,15 +190,17 @@ eqOgre::Config::_updateServer( void )
 		if( msg.size() > 0 )
 		{
 // 			std::cout << "Sending updates to all clients." << std::endl;
-			_server->sendToAll( msg );
+			_server->sendUpdate( msg );
 		}
 	}
 
 	// New clients need the whole SceneGraph
-	if( _server->newClients() )
+	// TODO this is not good here
+	// Provide a functor that can create the initial message
+	if( _server->needsInit() )
 	{
 // 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
-		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
+		vl::cluster::Message msg( vl::cluster::MSG_INITIAL_STATE );
 		std::vector<vl::Distributed *>::iterator iter;
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )
@@ -243,13 +217,42 @@ eqOgre::Config::_updateServer( void )
 		}
 
 // 		std::cout << "Message = " << msg << std::endl;
-		// Send SceneGraph to all listeners
-		_server->sendToNewClients( msg );
+		_server->sendInit( msg );
 	}
 }
 
 void
-eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
+eqOgre::Config::_sendEnvironment ( void )
+{
+	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
+	assert( _server );
+
+	vl::SettingsByteData data;
+	vl::cluster::ByteStream stream( &data );
+	stream << _env;
+
+	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT );
+	data.copyToMessage( &msg );
+	_server->sendEnvironment(msg);
+}
+
+void
+eqOgre::Config::_sendProject ( void )
+{
+	std::cout << "eqOgre::Config::_sendProject" << std::endl;
+	assert( _server );
+
+	vl::SettingsByteData data;
+	vl::cluster::ByteStream stream( &data );
+	stream << _settings;
+
+	vl::cluster::Message msg( vl::cluster::MSG_PROJECT );
+	data.copyToMessage( &msg );
+	_server->sendProject(msg);
+}
+
+void
+eqOgre::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
 	std::cout << "Creating Trackers." << std::endl;
 
@@ -321,11 +324,11 @@ eqOgre::Config::_createTracker( vl::SettingsRefPtr settings )
 void
 eqOgre::Config::_loadScenes(void )
 {
-	std::cout << "Loading Scenes for Project : " << _settings->getProjectName()
+	std::cout << "Loading Scenes for Project : " << _settings.getProjectName()
 		<< std::endl;
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene> scenes = _settings->getScenes();
+	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
 
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
@@ -397,6 +400,8 @@ eqOgre::Config::_createQuitEvent(void )
 void
 eqOgre::Config::_receiveEventMessages( void )
 {
+	_server->receiveMessages();
+
 	while( _server->inputMessages() )
 	{
 		vl::cluster::Message *msg = _server->popInputMessage();

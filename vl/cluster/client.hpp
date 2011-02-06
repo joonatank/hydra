@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 
 #include <stdint.h>
+
 #include "message.hpp"
 
 namespace boost
@@ -28,15 +29,11 @@ public:
 
 	virtual ~Client( void );
 
-// 	void send( std::vector<double> const & msg );
-
 	/// Processes all the pending messages
 	void mainloop( void );
 
 	/// Register this client to receive updates in the Rendering context
 	void registerForUpdates( void );
-
-// 	void registerMessage( Message const &message, MessageCallback *callback );
 
 	bool messages() const
 	{ return !_messages.empty(); }
@@ -44,6 +41,8 @@ public:
 	Message *popMessage( void );
 
 	void sendMessage( Message *msg );
+
+	void sendAck( vl::cluster::MSG_TYPES );
 
 private :
 	/// Copying is forbidden

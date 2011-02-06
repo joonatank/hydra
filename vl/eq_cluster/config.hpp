@@ -6,15 +6,11 @@
 #ifndef EQ_OGRE_CONFIG_H
 #define EQ_OGRE_CONFIG_H
 
-#include <eq/eq.h>
-
 #include "settings.hpp"
-#include "eq_settings.hpp"
 #include "base/exceptions.hpp"
 
 #include "typedefs.hpp"
 #include "cluster/server.hpp"
-#include "distributed.hpp"
 #include "session.hpp"
 
 #include <OIS/OISMouse.h>
@@ -24,36 +20,37 @@
 namespace eqOgre
 {
 
-	class Config : public eq::Config, vl::Session
+	class Config : public vl::Session
 	{
 	public:
-		Config( eq::base::RefPtr< eq::Server > parent );
+		Config( vl::GameManagerPtr man,
+				vl::Settings const &settings,
+				vl::EnvSettingsRefPtr env );
 
-		/** @sa eq::Config::init. */
-		virtual bool init( eq::uint128_t const &initID );
+		virtual bool init( uint64_t const &initID );
 
-		/** @sa eq::Config::exit. */
 		virtual bool exit (void);
 
-		/** @sa eq::Config::handleEvent */
-		virtual bool handleEvent( const eq::ConfigEvent* event )
-		{ return true; }
+		virtual uint32_t startFrame( uint64_t const &frameID );
 
-		virtual uint32_t startFrame( eq::uint128_t const &frameID );
+		virtual void finishFrame( void );
 
-		void setSettings( vl::SettingsRefPtr settings );
+		virtual bool isRunning( void )
+		{ return _running; }
 
-		void setGameManager( vl::GameManagerPtr man );
+		virtual void stopRunning( void )
+		{ _running = false; }
 
 	protected :
 		virtual ~Config (void);
 
 		void _createServer( void );
-
 		void _updateServer( void );
+		void _sendEnvironment( void );
+		void _sendProject( void );
 
 		/// Tracking
-		void _createTracker( vl::SettingsRefPtr settings );
+		void _createTracker( vl::EnvSettingsRefPtr settings );
 
 		/// Scene
 		void _loadScenes( void );
@@ -72,14 +69,15 @@ namespace eqOgre
 		bool _handleMouseMotionEvent( OIS::MouseEvent const &event );
 		// TODO add joystick event
 
-		vl::SettingsRefPtr _settings;
-
-		/// Distributed
-		DistributedSettings _distrib_settings;
-
 		vl::GameManagerPtr _game_manager;
 
+		vl::Settings _settings;
+
+		vl::EnvSettingsRefPtr _env;
+
 		vl::cluster::Server *_server;
+
+		bool _running;
 
 	};	// class Config
 

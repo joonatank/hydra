@@ -13,6 +13,9 @@ const size_t MSG_BUFFER_SIZE = 128;
 vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	: _io_service(), _socket( _io_service ), _master()
 {
+	std::cout << "Connecting to host " << hostname << " at port " << port
+		<< "." << std::endl;
+
 	std::stringstream ss;
 	ss << port;
 	boost::udp::resolver resolver( _io_service );
@@ -44,7 +47,6 @@ vl::cluster::Client::mainloop( void )
 		{ throw boost::system::system_error(error); }
 
 		// Some constraints for the number of messages
-		// TODO this should be configurable and be reasonable low
 		if( _messages.size() > MSG_BUFFER_SIZE )
 		{
 			std::cerr << "Message stack full, cleaning out the oldest." << std::endl;
@@ -83,6 +85,14 @@ vl::cluster::Client::sendMessage( vl::cluster::Message *msg )
 	msg->dump(buf);
 // 	std::cout << "sending data" << std::endl;
 	_socket.send_to( boost::asio::buffer(buf), _master );
+}
+
+void
+vl::cluster::Client::sendAck ( vl::cluster::MSG_TYPES type )
+{
+	Message msg( vl::cluster::MSG_ACK );
+	msg.write(type);
+	sendMessage(&msg);
 }
 
 /// ------------------------ Private -------------------------------------------

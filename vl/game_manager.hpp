@@ -22,7 +22,6 @@
 #include "typedefs.hpp"
 
 #include "tracker.hpp"
-#include <eq/client/observer.h>
 
 // TODO this should not need to be included here
 #include "tracker_serializer.hpp"

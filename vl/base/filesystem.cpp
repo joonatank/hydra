@@ -1,6 +1,9 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-11
+ *
+ *	@file base/filesystem.cpp
  */
+
 // Header for this file
 #include "filesystem.hpp"
 
@@ -15,6 +18,38 @@
 
 // Necessary for logging
 #include <OGRE/OgreLogManager.h>
+
+#include "system_util.hpp"
+
+std::string
+vl::createLogFilePath( const std::string &project_name,
+					   const std::string &identifier,
+					   const std::string &prefix,
+					   const std::string &log_dir )
+{
+	uint32_t pid = vl::getPid();
+	std::stringstream ss;
+
+	if( !log_dir.empty() )
+	{ ss << log_dir << "/"; }
+
+	if( project_name.empty() )
+	{ ss << "unamed"; }
+	else
+	{ ss << project_name; }
+
+	if( !identifier.empty() )
+	{ ss << '_' << identifier; }
+
+	ss << '_' << pid;
+
+	if( !prefix.empty() )
+	{ ss << '_' << prefix; }
+
+	ss << ".log";
+
+	return ss.str();
+}
 
 std::string
 vl::findPlugin( std::string const &plugin )
@@ -61,7 +96,7 @@ vl::findPlugin( std::string const &plugin )
 		message = "Plugin found : " + path;
 		Ogre::LogManager::getSingleton().logMessage( message );
 	}
-	
+
 	return path;
 }
 

@@ -31,40 +31,51 @@ namespace cluster
 // TODO add support for ACK messages
 /**	Message Structures
  *
+ *	Acknowledge a message received
+ *	MSG_ACK
+ *	[MSG_ACK, message type, id]
+ *	message type is the type of message the client is acknowledging
+ *	id is the id of the message, this is optional and not used at the moment
+ *
  *	Reguest updates message
  *	MSG_REG_UPDATES
- *	[message type]
+ *	[MSG_REG_UPDATES]
  *
  *	Update message
  *	both MSG_INITIAL_STATE and MSG_UPDATE
- *	[message type, data size, [N | object id, object size, object data]]
+ *	[MSG_INITIAL_STATE, data size, [N | object id, object size, object data]]
  *	where one object is an versioned object (registered and can be mapped)
  *
  *	Input message
  *	MSG_INPUT
- *	[message type, data size, [N | input device type, input device id, event size, event data]]
+ *	[MSG_INPUT, data size, [N | input device type, input device id, event size, event data]]
  *	input device type : which kind of device joystick, keyboard, mouse
  *	input device id : every device has unique id
  *	event is the description of the event
  *
  *	Draw message
  *	MSG_DRAW
- *	[message type]
+ *	[MSG_DRAW]
  *
  *	Swap message
  *	MSG_SWAP
- *	[message type]
+ *	[MSG_SWAP]
  *
  */
 enum MSG_TYPES
 {
 	MSG_UNDEFINED,		// Not defined message type these should never be sent
+	MSG_ACK,			// Acknowledgement message
 	MSG_REG_UPDATES,	// Reguest updates from the application
+	MSG_ENVIRONMENT,	// Send the Environment configuration
+	MSG_PROJECT,		// Send the project configuration
 	MSG_INITIAL_STATE,	// Send the initial SceneGraph
-	MSG_UPDATE,	// Send updated SceneGraph and other versioned objects
-	MSG_INPUT,	// Send data from input devices from pipes to application
-	MSG_DRAW,	// Draw the image into back buffer
-	MSG_SWAP	// Swap the Window buffer Not in use yet
+	MSG_UPDATE,			// Send updated SceneGraph and other versioned objects
+	MSG_INPUT,			// Send data from input devices from pipes to application
+	MSG_READY_DRAW,		// Sent from Rendering thread when it's ready to draw
+	MSG_DRAW,			// Draw the image into back buffer
+	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
+	MSG_SWAP,			// Swap the Window buffer
 };
 
 enum EVENT_TYPES
@@ -291,6 +302,13 @@ ByteStream &operator<<( ByteStream &msg, T const &t )
 }
 
 template<typename T>
+ByteStream &operator>>( ByteStream &msg, T &t )
+{
+	msg.read( (char *)&t, (vl::msg_size)sizeof(t) );
+	return msg;
+}
+
+template<typename T>
 ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 {
 	msg << v.size();
@@ -301,38 +319,13 @@ ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 }
 
 template<typename T>
-ByteStream &operator>>( ByteStream &msg, T &t )
-{
-	msg.read( (char *)&t, (vl::msg_size)sizeof(t) );
-	return msg;
-}
-
-template<typename T>
 ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 {
-	size_t size;
+	typename std::vector<T>::size_type size;
 	msg >> size;
 	v.resize( size );
 	for(size_t i = 0; i < v.size(); ++i )
 	{ msg >> v.at(i); }
-
-	return msg;
-}
-
-// TODO  How about empty strings?
-// Not Tested but we write only size if the string is empty.
-template<> inline
-ByteStream &operator>>( ByteStream &msg, std::string &str )
-{
-	size_t size;
-	msg.read(size);
-	str.resize(size);
-	for( size_t i = 0; i < size; ++i )
-	{
-		char ch;
-		msg.read(ch);
-		str.at(i) = ch;
-	}
 
 	return msg;
 }
@@ -346,6 +339,28 @@ ByteStream &operator<<( ByteStream &msg, std::string const &str )
 
 	return msg;
 }
+
+template<> inline
+ByteStream &operator>>( ByteStream &msg, std::string &str )
+{
+	std::string::size_type size;
+	msg.read(size);
+	if( 0 == size )
+	{ str.clear(); }
+	else
+	{
+		str.resize(size);
+		for( size_t i = 0; i < size; ++i )
+		{
+			char ch;
+			msg.read(ch);
+			str.at(i) = ch;
+		}
+	}
+
+	return msg;
+}
+
 
 // TODO are these necessary still, when using the ByteStream to write data?
 template<typename T>

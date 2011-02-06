@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  *
  *
  */
@@ -7,10 +7,11 @@
 #ifndef EQ_OGRE_WINDOW_HPP
 #define EQ_OGRE_WINDOW_HPP
 
-#include <eq/client/window.h>
-
-#include "eq_settings.hpp"
 #include "player.hpp"
+#include "typedefs.hpp"
+
+// Necessary for Window config
+#include "base/envsettings.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -21,82 +22,88 @@
 
 namespace eqOgre
 {
-    /**
-     * A window represent an OpenGL drawable and context
-     *
-     * Manages OpenGL-specific data, i.e., it creates the logo texture during
-     * initialization and holds a state object for GL object creation. It
-     * initializes the OpenGL state and draws the statistics overlay.
-     */
-    class Window : public eq::Window,
-				   public OIS::KeyListener, public OIS::MouseListener
-    {
-    public:
-		Window( eq::Pipe *parent );
 
-		virtual ~Window( void );
+class Channel;
+class Pipe;
 
-		Ogre::RenderWindow *getRenderWindow( void )
-		{ return _ogre_window; }
+/**	@class Window represent an OpenGL drawable and context
+ *
+ */
+class Window : public OIS::KeyListener, public OIS::MouseListener
+{
+public:
+	/// @TODO change name to window config
+	Window( std::string const &name, eqOgre::Pipe *parent );
 
-		DistributedSettings const &getSettings( void ) const;
+	virtual ~Window( void );
 
-		vl::Player const &getPlayer( void ) const;
+	Ogre::RenderWindow *getRenderWindow( void )
+	{ return _ogre_window; }
 
-		vl::ogre::RootRefPtr getOgreRoot( void );
+	eqOgre::Pipe *getPipe( void )
+	{ return _pipe; }
 
-		void setCamera( Ogre::Camera *camera );
+	vl::EnvSettingsRefPtr getSettings( void );
 
-		Ogre::Camera *getCamera( void );
+	vl::Player const &getPlayer( void ) const;
 
-		Ogre::SceneManager *getSceneManager( void );
+	vl::ogre::RootRefPtr getOgreRoot( void );
 
-		void takeScreenshot( std::string const &prefix, std::string const &suffix );
+	void setCamera( Ogre::Camera *camera );
 
-		/// OIS overrides
-		bool keyPressed(const OIS::KeyEvent &key);
-		bool keyReleased(const OIS::KeyEvent &key);
+	Ogre::Camera *getCamera( void );
 
-		bool mouseMoved(const OIS::MouseEvent &evt);
-		bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
-		bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+	Ogre::SceneManager *getSceneManager( void );
 
-	protected :
-		void createOgreWindow( void );
+	std::string const &getName( void ) const
+	{ return _name; }
 
-		/// Create the OIS input handling
-		/// For now supports mouse and keyboard
-		// TODO add joystick support
-		void createInputHandling( void );
+	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
-		void printInputInformation( void );
+	/// Capture input events
+	virtual void capture( void );
 
-		/// Equalizer overrides
-		virtual bool configInit( const eq::uint128_t& initID );
+	/// OIS callback overrides
+	bool keyPressed(const OIS::KeyEvent &key);
+	bool keyReleased(const OIS::KeyEvent &key);
 
-		virtual bool configExit( void );
+	bool mouseMoved(const OIS::MouseEvent &evt);
+	bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+	bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
-		virtual void frameStart( const eq::uint128_t& frameID,
-								 const uint32_t frameNumber );
+	/// Instruct the Channels to draw the Scene
+	virtual void draw( void );
 
-		virtual void frameFinish( const eq::uint128_t& frameID,
-								  const uint32_t frameNumber );
+	/// Swap the back buffer to front
+	virtual void swap( void );
 
-		/// Override system window creation because we
-		/// use OIS for input handling
-		virtual bool configInitSystemWindow( const eq::uint128_t &initID );
+protected :
+	void _createOgreWindow( vl::EnvSettings::Window const &winConf );
 
-		void _sendEvent( vl::cluster::EventData const &event );
+	/// Create the OIS input handling
+	/// For now supports mouse and keyboard
+	/// @TODO add joystick support
+	void _createInputHandling( void );
 
-		// Ogre
-		Ogre::RenderWindow *_ogre_window;
+	void _printInputInformation( void );
 
-		// OIS variables
-		OIS::InputManager *_input_manager;
-		OIS::Keyboard *_keyboard;
-		OIS::Mouse *_mouse;
+	void _sendEvent( vl::cluster::EventData const &event );
 
-    };	// class Window
+	std::string _name;
+
+	eqOgre::Pipe *_pipe;
+	/// @TODO multi channel support?
+	eqOgre::Channel *_channel;
+
+	// Ogre
+	Ogre::RenderWindow *_ogre_window;
+
+	// OIS variables
+	OIS::InputManager *_input_manager;
+	OIS::Keyboard *_keyboard;
+	OIS::Mouse *_mouse;
+
+};	// class Window
 
 }	// namespace eqOgre
 

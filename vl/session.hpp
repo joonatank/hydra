@@ -29,17 +29,18 @@ public :
 	virtual ~Session( void ) {}
 
 	/// Register object to our own synchronisation system
-	// TODO rename after removing Equalizer
-	void registerObjectC( vl::Distributed *obj )
+	void registerObject( vl::Distributed *obj )
 	{
+		assert(obj);
 		assert( obj->getID() == vl::ID_UNDEFINED );
 		_last_id++;
 		obj->registered(_last_id);
 		_registered_objects.push_back(obj);
 	}
 
-	void mapObjectC( vl::Distributed *obj, uint64_t const id )
+	void mapObject( vl::Distributed *obj, uint64_t const id )
 	{
+		assert(obj);
 		assert( obj->getID() == vl::ID_UNDEFINED );
 		obj->registered(id);
 		_mapped_objects.push_back(obj);
