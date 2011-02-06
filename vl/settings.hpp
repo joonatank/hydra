@@ -22,9 +22,6 @@
 // Necessary because most parameters are strings
 #include <string>
 
-// Necessary for getEqArgs
-// #include "base/args.hpp"
-
 // Necessary for ProjSettings::Scene
 #include "base/projsettings.hpp"
 
@@ -66,51 +63,8 @@ class Settings
 		std::vector<ProjSettings> const &getAuxilarySettings( void ) const
 		{ return _aux_projs; }
 
-// 		ProjSettingsRefPtr getGlobalSettings( void )
-// 		{ return _global; }
-//
-// 		void setGlobalSettings( ProjSettingsRefPtr proj )
-// 		{ _global = proj; }
-
-
 		/// Returns the name of the project
 		std::string getProjectName( void ) const;
-
-		/**	Get the path to Equalizer log file
-		 *	Returns a filename which is in the log dir and has the project and pid
-		 *	If no project name is set will substitute unamed for project name
-		 *
-		 *	Use type parameter to chose if the path returned is
-		 *	relative to the exe or an absolute path
-		 *	Defaults to returning an absolute path
-		 */
-// 		std::string getEqLogFilePath( PATH_TYPE const type = PATH_ABS ) const;
-
-
-		/**	Get the path to Ogre log file
-		 *	Returns a filename which is in the log dir and has the project and pid
-		 *	If no project name is set will substitute unamed for project name
-		 *
-		 *	Use type parameter to chose if the path returned is
-		 *	relative to the exe or an absolute path
-		 *	Defaults to returning an absolute path
-		 */
-// 		std::string getOgreLogFilePath( PATH_TYPE const type = PATH_ABS ) const;
-//
-// 		/// Get the path to log file relative to the exe
-// 		/// Parameters: identifier can be used to distinquish libraries
-// 		/// 			prefix can be used to add a prefix like debug to the file
-// 		/// Returns a filename which is in the log dir and has the project and pid
-// 		/// If no project name is set will substitute unamed for project name
-// 		std::string getLogFilePath( std::string const &identifier,
-// 									std::string const &prefix = std::string(),
-// 									PATH_TYPE const type = PATH_ABS )
-// 									const;
-
-		/// Get the tracking files
-		/// Returns a vector of the names of the tracking files
-		/// Only tracking files that are in use are returned
-// 		std::vector<std::string> getTrackingFiles( void ) const;
 
 		/// Combines Global, the Project and the Case scenes to one vector
 		/// Only scenes that are in use are added

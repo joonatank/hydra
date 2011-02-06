@@ -10,9 +10,10 @@
 #include "base/exceptions.hpp"
 
 // Necessary for settings
-#include "eq_cluster/eq_settings.hpp"
+#include "base/envsettings.hpp"
+#include "base/projsettings.hpp"
 
-// Necessary for equalizer client creation
+// Necessary for client creation
 #include "eq_cluster/client.hpp"
 
 #include "program_options.hpp"

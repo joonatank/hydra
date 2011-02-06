@@ -1,10 +1,6 @@
-/**	Joonas Reunamo <joonas.reunamo@tut.fi>
- *	2010-10
- *
- *	Updated by Joonatan Kuosa <joonatan.kuosa@tut.fi>
- * 2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
  */
-
 
 /// Declaration
 #include "envsettings.hpp"
@@ -49,26 +45,11 @@ vl::EnvSettings::~EnvSettings( void )
 void
 vl::EnvSettings::clear( void )
 {
-// 	_eqc.clear();
-
 	_plugins.clear();
 	_tracking.clear();
 
 	_camera_rotations_allowed = 0;
 }
-
-// std::string
-// vl::EnvSettings::getEqcFullPath( void ) const
-// {
-// 	if( getEqc().empty() )
-// 	{ return std::string(); }
-//
-// 	fs::path env_path = getFile();
-// 	fs::path env_dir = env_path.parent_path();
-// 	fs::path path =  env_dir / "eqc" / getEqc();
-//
-// 	return path.file_string();
-// }
 
 std::string
 vl::EnvSettings::getPluginsDirFullPath( void ) const
@@ -158,7 +139,7 @@ vl::EnvSettings::removeTracking( Tracking const &track )
 	std::vector<Tracking>::iterator iter;
 	for( iter = _tracking.begin(); iter != _tracking.end(); ++iter )
 	{
-		if( iter->file == track.file )
+		if( *iter == track )
 		{
 			_tracking.erase( iter );
 			// TODO this should return here if we assume that no file can exist
@@ -299,10 +280,6 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processPlugins( xml_elem ); }
 
-// 	xml_elem = xml_root->first_node("eqc");
-// 	if( xml_elem )
-// 	{ processEqc( xml_elem ); }
-
 	xml_elem = xml_root->first_node("tracking");
 	if( xml_elem )
 	{ processTracking( xml_elem ); }
@@ -389,26 +366,6 @@ vl::EnvSettingsSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
 		pElement = pElement->next_sibling("plugin");
 	}
 }
-
-// void
-// vl::EnvSettingsSerializer::processEqc( rapidxml::xml_node<>* xml_node )
-// {
-//     rapidxml::xml_node<> *pElement = xml_node->first_node("file");
-//
-//     if( !pElement )
-//     { return; }
-//
-//     _envSettings->setEqc( pElement->value() );
-//
-//     // No more than one eqc
-//     pElement = pElement->next_sibling("file");
-//     if( pElement )
-//     {
-//         std::cerr << "More than one eqc file? Only first one taken." << std::endl;
-//         return;
-//     }
-// }
-
 
 void
 vl::EnvSettingsSerializer::processTracking( rapidxml::xml_node<>* xml_node )
@@ -597,18 +554,18 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 void
 vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
-	EnvSettings::CFG cfg_val = EnvSettings::ON;
+	CFG cfg_val = ON;
 	std::string stereo = xml_node->value();
 	vl::to_lower(stereo);
 	if( stereo == "on" )
 	{}
 	else if( stereo == "off" )
 	{
-		cfg_val = EnvSettings::OFF;
+		cfg_val = OFF;
 	}
 	else if( stereo == "required" )
 	{
-		cfg_val = EnvSettings::REQUIRED;
+		cfg_val = REQUIRED;
 	}
 
 	_envSettings->setStereo( cfg_val );

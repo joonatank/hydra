@@ -1,6 +1,9 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-11
  *
+ *	Updated 2011-02
+ *	Changed to only include project specific configurations i.e. project files
+ *	and project directory.
  */
 
 // Declaration
@@ -8,9 +11,6 @@
 
 // Necessary for exceptions
 #include "base/exceptions.hpp"
-
-// Necessary for getPid (used for log file names)
-#include "base/system_util.hpp"
 
 #include "base/envsettings.hpp"
 

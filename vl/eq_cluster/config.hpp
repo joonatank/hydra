@@ -6,15 +6,11 @@
 #ifndef EQ_OGRE_CONFIG_H
 #define EQ_OGRE_CONFIG_H
 
-// #include <eq/eq.h>
-
 #include "settings.hpp"
-#include "eq_settings.hpp"
 #include "base/exceptions.hpp"
 
 #include "typedefs.hpp"
 #include "cluster/server.hpp"
-// #include "distributed.hpp"
 #include "session.hpp"
 
 #include <OIS/OISMouse.h>
@@ -77,9 +73,6 @@ namespace eqOgre
 		vl::Settings _settings;
 
 		vl::EnvSettingsRefPtr _env;
-
-		/// Distributed
-// 		DistributedSettings _distrib_settings;
 
 		vl::cluster::Server *_server;
 

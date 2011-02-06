@@ -1,6 +1,8 @@
 /**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2011-01
  *
+ *	2011-02 Update
+ *	Removed Equalizer
  */
 
 #ifndef EQ_OGRE_CHANNEL_HPP

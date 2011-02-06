@@ -18,12 +18,11 @@
 
 eqOgre::Client::Client( vl::EnvSettingsRefPtr env, vl::Settings const &settings )
 	: _env(env),
-// 	  _settings(settings),
 	  _config(0),
 	  _pipe_thread(0),
 	   _pipe(0)
 {
-// 	assert( env && settings );
+	assert( env );
 	std::cout << "eqOgre::Client::init" << std::endl;
 	if( env->isMaster() )
 	{
@@ -106,8 +105,6 @@ eqOgre::Client::_render( uint32_t const frame )
 
 	_config->startFrame(frame);
 	_config->finishFrame();
-// 	if( _config->getError() )
-// 	{ EQWARN << "Error during frame start: " << _config->getError() << std::endl; }
 
 	double time = double(_frame_clock.getMicroseconds())/1000;
 	_rendering_time += time;

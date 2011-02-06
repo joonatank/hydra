@@ -1,6 +1,7 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-02
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-02
  *
+ *	@file distrib_settings.cpp
  *	Classes for distributing Environment Settings and Project settings
  *	using ByteStream
  */
@@ -98,7 +99,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &en
 {
 // 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	uint32_t rot_allowed(-1);
-	vl::EnvSettings::CFG stereo = vl::EnvSettings::OFF;
+	vl::CFG stereo = vl::OFF;
 	double ipd = 0;
 	std::string log_dir;
 	bool verbose;

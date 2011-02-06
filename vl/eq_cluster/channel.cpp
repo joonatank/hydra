@@ -12,7 +12,7 @@
  *	Added stereo rendering code. Tested with quad-buffer.
  *	Added rotation of the view matrix based on projection plane.
  *	Fixed scaling the frustum based on head tracker.
-		Would create non-continiuty on front and side walls otherwise.
+ *		Would create non-continiuty on front and side walls otherwise.
  */
 
 #include "channel.hpp"

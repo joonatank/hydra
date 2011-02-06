@@ -1,6 +1,7 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-02
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-02
  *
+ *	@file distrib_settings.hpp
  *	Classes for distributing Environment Settings and Project settings
  *	using ByteStream
  */
@@ -17,12 +18,6 @@
 
 namespace vl
 {
-
-enum SETTTINGS_TYPE
-{
-	SET_ENV,	// Environment settings
-	SET_PROJ,	// Project settings
-};
 
 class SettingsByteData : public vl::cluster::ByteData
 {
@@ -42,7 +37,6 @@ public :
 
 private :
 	std::vector<char> _data;
-	SETTTINGS_TYPE _type;
 
 };	// class EnvSettingsByteCopy
 
