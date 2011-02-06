@@ -21,6 +21,7 @@ eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
 	_input_manager(0), _keyboard(0), _mouse(0)
 {
 	assert( _pipe );
+	std::cout << "eqOgre::Window::Window : " << getName() << std::endl;
 
 	_createOgreWindow();
 	_createInputHandling();
@@ -291,7 +292,8 @@ eqOgre::Window::_createOgreWindow( void )
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 	assert( !winConf.empty() );
 
-	std::cout << "window left = " << winConf.x << " window top = " << winConf.y
+	std::cout << "Window config " << winConf.name
+		<< " : window left = " << winConf.x << " window top = " << winConf.y
 		<< std::endl;
 
 	params["left"] = vl::to_string( winConf.x );

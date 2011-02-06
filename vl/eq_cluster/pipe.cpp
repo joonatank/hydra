@@ -64,10 +64,18 @@ vl::EnvSettings::Window
 eqOgre::Pipe::getWindowConf( std::string const &window_name )
 {
 	vl::EnvSettings::Node node = getNodeConf();
+
+	// TODO add real errors
 	assert( node.getNWindows() > 0 );
 
-	// TODO add support for finding correct window by name
-	return node.getWindow(0);
+	for( size_t i = 0; i < node.getNWindows(); ++i )
+	{
+		if( node.getWindow(i).name == window_name )
+		{ return node.getWindow(i); }
+	}
+
+	// TODO add real errors
+	assert( false );
 }
 
 void
@@ -98,7 +106,11 @@ eqOgre::Pipe::operator()()
 
 	_createOgre();
 
-	_createWindow();
+	vl::EnvSettings::Node node = getNodeConf();
+	std::cout << "Creating " << node.getNWindows() << " windows." << std::endl;
+	assert( node.getNWindows() > 0 );
+	for( size_t i = 0; i < node.getNWindows(); ++i )
+	{ _createWindow( node.getWindow(i) ); }
 
 	while( 1 )
 	{
@@ -106,8 +118,9 @@ eqOgre::Pipe::operator()()
 		_handleMessages();
 
 		// Process input events
-		assert( _window );
-		_window->capture();
+		assert( !_windows.empty() );
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->capture(); }
 
 		// Send messages
 		_sendEvents();
@@ -238,7 +251,8 @@ eqOgre::Pipe::_setCamera ( void )
 	}
 
 	assert( _camera && _active_camera_name == _camera->getName() );
-	_window->setCamera(_camera);
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->setCamera(_camera); }
 
 	std::cout << "Camera " << _active_camera_name << " set." << std::endl;
 }
@@ -485,8 +499,9 @@ eqOgre::Pipe::_updateDistribData( void )
 		{
 			// Tell the Windows to change cameras
 			_camera = _ogre_sm->getCamera( _active_camera_name );
-			assert( _window );
-			_window->setCamera( _camera );
+			assert( !_windows.empty() );
+			for( size_t i = 0; i < _windows.size(); ++i )
+			{ _windows.at(i)->setCamera( _camera ); }
 		}
 		else
 		{
@@ -509,8 +524,9 @@ eqOgre::Pipe::_updateDistribData( void )
 
 		// Tell the Window to take a screenshot
 		// TODO support for multiple windows
-		assert( _window );
-		_window->takeScreenshot( prefix, suffix );
+		assert( !_windows.empty() );
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 
 		_screenshot_num = _player.getScreenshotVersion();
 	}
@@ -519,15 +535,15 @@ eqOgre::Pipe::_updateDistribData( void )
 void
 eqOgre::Pipe::_draw( void )
 {
-	// TODO support for multiple windows
-	_window->draw();
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->draw(); }
 }
 
 void
 eqOgre::Pipe::_swap( void )
 {
-	// TODO support for multiple windows
-	_window->swap();
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->swap(); }
 }
 
 void
@@ -552,12 +568,11 @@ eqOgre::Pipe::_sendEvents( void )
 
 // TODO add support for multiple windows
 void
-eqOgre::Pipe::_createWindow( void )
+eqOgre::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
 {
-	std::cout << "eqOgre::Pipe::_createWindow" << std::endl;
+	std::cout << "eqOgre::Pipe::_createWindow : " << winConf.name << std::endl;
 
-	vl::EnvSettings::Node node = getNodeConf();
-	assert( node.getNWindows() > 0 );
-	_window = new eqOgre::Window( node.getWindow(0).name, this );
-	assert( _window );
+	eqOgre::Window *window = new eqOgre::Window( winConf.name, this );
+	assert( window );
+	_windows.push_back(window);
 }

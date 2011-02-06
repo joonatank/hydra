@@ -97,7 +97,7 @@ protected :
 	/// Input events
 	void _sendEvents( void );
 
-	void _createWindow( void );
+	void _createWindow( vl::EnvSettings::Window const &winConf );
 
 	std::string _name;
 
@@ -124,7 +124,7 @@ protected :
 	/// Input events to be sent
 	std::vector<vl::cluster::EventData> _events;
 
-	eqOgre::Window *_window;
+	std::vector<eqOgre::Window *> _windows;
 
 };	// class Pipe
 
