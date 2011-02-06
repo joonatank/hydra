@@ -69,7 +69,7 @@ vl::SceneManager::addSceneNode( vl::SceneNodePtr node )
 	assert( _session );
 	setDirty( DIRTY_NODES );
 
-	_session->registerObjectC( node );
+	_session->registerObject( node );
 	assert( node->getID() != vl::ID_UNDEFINED );
 	_scene_nodes.push_back( SceneNodeIDPair(node, node->getID()) );
 
@@ -247,7 +247,7 @@ vl::SceneManager::_mapObject( vl::SceneManager::SceneNodeIDPair& node )
 	assert( node.id != vl::ID_UNDEFINED );
 	assert( node.node->getID() == vl::ID_UNDEFINED );
 
-	_session->mapObjectC( node.node, node.id );
+	_session->mapObject( node.node, node.id );
 
 	_new_scene_nodes.push_back( node );
 }

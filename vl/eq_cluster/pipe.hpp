@@ -65,10 +65,6 @@ public :
 	typedef std::vector<vl::ProjSettingsRefPtr> ProjectList;
 
 protected :
-	/// Override frameStart to update the distributed data
-	virtual void frameStart( uint64_t frameID,
-							 const uint32_t frameNumber );
-
 	/// Reload the projects
 	void _reloadProjects( vl::Settings set );
 
@@ -81,10 +77,16 @@ protected :
 	void _createClient( std::string const &server_address, uint16_t server_port );
 	void _handleMessages( void );
 	void _handleMessage( vl::cluster::Message *msg );
+	void _handleUpdateMsg( vl::cluster::Message *msg );
 
 	/// Distribution helpers
+	/// Syncs to the master copy stored when an Update message was received
 	void _syncData( void );
-	void _mapData( uint64_t settingsID);
+	/// Maps all distributed objects i.e. player and SceneManager
+	/// Scene Manager handles later mapping of SceneNodes
+	void _mapData( void );
+	/// Updates command data, uses versioning to and indexes to provide an
+	/// Commands that can be sent from Master thread
 	void _updateDistribData( void );
 
 	/// Rendering helpers

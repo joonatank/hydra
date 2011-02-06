@@ -68,17 +68,20 @@ eqOgre::Config::init( uint64_t const & )
 	// or we need an update structure that we can set the ids into.
 	// or we can use object types in the message so that they can be dynamically
 	// created in the rendering threads.
+
+	// Create the player necessary for Trackers
+	vl::PlayerPtr player = _game_manager->createPlayer();
+
+	assert( player );
+	// Registering Player in init
+	registerObject( player );
+
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
 	// Register SceneManager
 	std::cout << "Registering SceneManager" << std::endl;
-	registerObjectC( sm );
-
-
-	// Create the player necessary for Trackers
-	// Will be registered later
-	vl::PlayerPtr player = _game_manager->createPlayer();
+	registerObject( sm );
 
 	_loadScenes();
 
@@ -98,10 +101,6 @@ eqOgre::Config::init( uint64_t const & )
 	}
 
 	_createQuitEvent();
-
-	assert( player );
-	// Registering Player in init
-	registerObjectC( player );
 
 	_updateServer();
 
@@ -137,6 +136,9 @@ eqOgre::Config::startFrame( uint64_t const &frameID )
 	/// Render the scene
 	_server->render();
 
+	// TODO where the receive input messages should be?
+	_receiveEventMessages();
+
 	return true;
 }
 
@@ -162,8 +164,6 @@ eqOgre::Config::_updateServer( void )
 // 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
 	// Handle received messages
 	_server->receiveMessages();
-
-	_receiveEventMessages();
 
 	{
 		// Create SceneGraph updates
@@ -193,6 +193,8 @@ eqOgre::Config::_updateServer( void )
 	}
 
 	// New clients need the whole SceneGraph
+	// TODO this is not good here
+	// Provide a functor that can create the initial message
 	if( _server->needsInit() )
 	{
 // 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
@@ -379,6 +381,8 @@ eqOgre::Config::_createQuitEvent(void )
 void
 eqOgre::Config::_receiveEventMessages( void )
 {
+	_server->receiveMessages();
+
 	while( _server->inputMessages() )
 	{
 		vl::cluster::Message *msg = _server->popInputMessage();
