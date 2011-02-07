@@ -47,7 +47,7 @@ if game.scene.hasSceneNode( ogre_name ):
 	ogre = game.scene.getSceneNode(ogre_name)
 	trans = Transform( Vector3(0, 20, 0), Quaternion.IDENTITY )
 	motion_state = world.createMotionState( trans, ogre )
-	ogre_phys = world.createRigidBody( 'ogre', ogre_mass, motion_state, sphere, True )
+	ogre_phys = world.createRigidBody( 'ogre', ogre_mass, motion_state, sphere, Vector3(1,1,1), True )
 
 	# Add force action
 	print 'Adding Force action to KC_F'
@@ -58,11 +58,10 @@ if game.scene.hasSceneNode( ogre_name ):
 	trigger.addAction( action )
 
 	# Add torque action
-	# FIXME this doesn't do anything probably because we have have sphere shape
-	# which is not joint to anything so the torque has no moment arm
+	# FIXME this doesn't do anything
 	print 'Adding Torque action to KC_G'
 	action = ApplyTorque.create()
 	action.body = ogre_phys
-	action.force = Vector3(0, 50000, 0)
+	action.torque = Vector3(0, 2000, 0)
 	trigger = game.event_manager.createKeyPressedTrigger( KC.G )
 	trigger.addAction( action )

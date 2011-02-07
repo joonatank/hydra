@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
  *
  *	Bullet Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
@@ -28,7 +28,7 @@ namespace vl
 namespace physics
 {
 
-/**
+/** @class World
  *
  */
 class World
@@ -44,8 +44,10 @@ public :
 
 	void setGravity( Ogre::Vector3 const &gravity );
 
+	/// @TODO move to using btRigidBodyConstructionInfo
 	btRigidBody *createRigidBody( std::string const &name, vl::scalar mass,
 								  MotionState *state, btCollisionShape *shape,
+								  Ogre::Vector3 const &inertia = Ogre::Vector3(1, 1, 1),
 								  bool user_driven = false );
 
 	void addRigidBody( std::string const name, btRigidBody *body,

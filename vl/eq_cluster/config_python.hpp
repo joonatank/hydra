@@ -48,7 +48,7 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 
 /// Overloads need to be outside the module definition
 /// Physics world member overloads
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 6 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
 

@@ -3,9 +3,9 @@
 
 vl::physics::World::World( void )
 	: _broadphase( new btDbvtBroadphase() ),
-		_collision_config( new btDefaultCollisionConfiguration() ),
-		_dispatcher( new btCollisionDispatcher(_collision_config) ),
-		_solver( new btSequentialImpulseConstraintSolver )
+	  _collision_config( new btDefaultCollisionConfiguration() ),
+	  _dispatcher( new btCollisionDispatcher(_collision_config) ),
+	  _solver( new btSequentialImpulseConstraintSolver )
 {
 	_dynamicsWorld = new btDiscreteDynamicsWorld(_dispatcher,_broadphase,_solver,_collision_config);
 	_dynamicsWorld->setGravity( btVector3(0,-9.81,0) );
@@ -53,9 +53,14 @@ vl::physics::World::setGravity(const Ogre::Vector3& gravity)
 btRigidBody *
 vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 									 vl::physics::MotionState *state,
-									 btCollisionShape *shape, bool user_driven )
+									 btCollisionShape *shape,
+									 Ogre::Vector3 const &inertia,
+									 bool user_driven )
 {
+	// TODO move to using btRigidBodyConstructionInfo
 	btRigidBody *body = new btRigidBody(mass, state, shape );
+	btVector3 i( inertia.x, inertia.y, inertia.z );
+	body->setMassProps(mass, i);
 	addRigidBody( name, body, user_driven );
 	return body;
 }

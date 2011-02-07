@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  *
  */
 
@@ -16,10 +16,9 @@ namespace vl
 namespace physics
 {
 
-/**
+/** @class MotionState
  *
  */
-// TODO move to own header
 class MotionState : public btMotionState
 {
 public:

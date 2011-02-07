@@ -25,7 +25,7 @@ vl::physics::ApplyTorque::execute( void )
 	if( !_body )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_body->applyTorque( btVector3(_torque.x, _torque.y, _torque.z) );
+	_body->applyTorqueImpulse( btVector3(_torque.x, _torque.y, _torque.z) );
 }
 
 void
