@@ -47,11 +47,14 @@ eqOgre::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, v
 eqOgre::Config::~Config( void )
 {}
 
-bool
-eqOgre::Config::init( uint64_t const & )
+void
+eqOgre::Config::init( void )
 {
 	std::cout << "eqOgre::Config::init" << std::endl;
 
+	/// @todo most of this should be moved to the constructor, like object
+	/// creation
+	/// sending of initial messages to rendering threads should still be here
 	_game_manager->createSceneManager( this );
 
 	_createServer();
@@ -105,20 +108,16 @@ eqOgre::Config::init( uint64_t const & )
 	_createQuitEvent();
 
 	_updateServer();
-
-	return true;
 }
 
-bool
+void
 eqOgre::Config::exit( void )
 {
 	std::cout << "eqOgre::Config::exit" << std::endl;
-	std::cout << "Deregistering distributed data." << std::endl;
 
 	//	TODO add cleanup server
 
 	std::cout << "Config exited." << std::endl;
-	return true;
 }
 
 uint32_t

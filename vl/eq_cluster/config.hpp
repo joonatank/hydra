@@ -27,9 +27,11 @@ namespace eqOgre
 				vl::Settings const &settings,
 				vl::EnvSettingsRefPtr env );
 
-		virtual bool init( uint64_t const &initID );
+		/// @todo this should send initialisation messages to all the rendering
+		/// threads
+		virtual void init( void );
 
-		virtual bool exit (void);
+		virtual void exit (void);
 
 		virtual uint32_t startFrame( uint64_t const &frameID );
 

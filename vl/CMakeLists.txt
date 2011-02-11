@@ -28,7 +28,7 @@ set( SOURCES
 	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/pipe.cpp
-	eq_cluster/client.cpp
+	eq_cluster/application.cpp
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
 	cluster/client.cpp
@@ -76,7 +76,7 @@ set( HEADERS
 	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/pipe.hpp
-	eq_cluster/client.hpp
+	eq_cluster/application.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp

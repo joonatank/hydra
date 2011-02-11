@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
  *
  *	Demo executable
  *	Supports loading the settings
@@ -14,125 +14,16 @@
 #include "base/projsettings.hpp"
 
 // Necessary for client creation
-#include "eq_cluster/client.hpp"
+#include "eq_cluster/application.hpp"
 
-#include "program_options.hpp"
 #include "base/string_utils.hpp"
 
 #include "settings.hpp"
 
 #include <OGRE/OgreException.h>
 
-vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions options )
-{
-	if( options.slave() )
-	{ return vl::EnvSettingsRefPtr(); }
-
-	if( options.environment_file.empty() )
-	{ return vl::EnvSettingsRefPtr(); }
-
-	/// This point both env_path and project_path are valid
-	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
-
-	/// Read the Environment config
-	if( fs::exists( options.environment_file ) )
-	{
-		std::string env_data;
-		env_data = vl::readFileToString( options.environment_file );
-		// TODO check that the files are correct and we have good settings
-		vl::EnvSettingsSerializer env_ser( env );
-		env_ser.readString(env_data);
-		env->setFile( options.environment_file );
-	}
-
-	env->setLogDir( options.log_dir );
-	env->setExePath( options.exe_path );
-	env->setVerbose( options.verbose );
-
-	return env;
-}
-
-vl::Settings getProjectSettings( vl::ProgramOptions options )
-{
-	if( options.slave() )
-	{
-		std::cerr << "Trying to get projects for a slave configuration."
-			<< std::endl;
-		return vl::Settings();
-	}
-
-	vl::Settings settings;
-
-	/// Read the Project Config
-	if( fs::is_regular( options.project_file ) )
-	{
-		std::cout << "Reading project file." << std::endl;
-		vl::ProjSettings proj;
-
-		std::string proj_data;
-		proj_data = vl::readFileToString( options.project_file );
-		vl::ProjSettingsRefPtr proj_ptr( &proj, vl::null_deleter() );
-		vl::ProjSettingsSerializer proj_ser( proj_ptr );
-		proj_ser.readString(proj_data);
-		proj.setFile( options.project_file );
-
-		settings.setProjectSettings(proj);
-	}
-
-	/// Read the global config
-	if( fs::is_regular( options.global_file ) )
-	{
-		vl::ProjSettings global;
-		std::cout << "Reading global file." << std::endl;
-
-		std::string global_data;
-		global_data = vl::readFileToString( options.global_file );
-		vl::ProjSettingsRefPtr glob_ptr( &global, vl::null_deleter() );
-		vl::ProjSettingsSerializer glob_ser( glob_ptr );
-		glob_ser.readString(global_data);
-		global.setFile( options.global_file );
-
-		settings.addAuxilarySettings(global);
-	}
-
-	return settings;
-}
-
-// custom structure is unnecessary for slave configuration because it is small
-vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions options )
-{
-	if( options.master() )
-	{
-		std::cout << "Slave configuration with master options?" << std::endl;
-		return vl::EnvSettingsRefPtr();
-	}
-	if( options.slave_name.empty() || options.server_address.empty() )
-	{
-		std::cout << "Slave configuration without all the parameters." << std::endl;
-		return vl::EnvSettingsRefPtr();
-	}
-
-	size_t pos = options.server_address.find_last_of(":");
-	if( pos == std::string::npos )
-	{ return vl::EnvSettingsRefPtr(); }
-	std::string hostname = options.server_address.substr(0, pos-1);
-	std::cout << "Using server hostname = " << hostname;
-	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos) );
-	std::cout << " and port = " << port << "." << std::endl;
-
-	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
-	env->setSlave();
-	vl::EnvSettings::Server server(port, hostname);
-	env->setServer(server);
-	env->getMaster().name = options.slave_name;
-
-	return env;
-}
-
-
 int main( const int argc, char** argv )
 {
-	bool error = false;
 	try
 	{
 		vl::ProgramOptions options;
@@ -155,47 +46,35 @@ int main( const int argc, char** argv )
 		if( !env )
 		{ return -1; }
 
-		// TODO add checking for empty settings
 		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
-		std::cout << "Creating client" << std::endl;
-		eqOgre::Client client( env, settings );
+		vl::Application client( env, settings );
 		client.init();
 
-		if( !error )
-		{
-			error = !client.run();
-			if( error )
-			{ std::cerr << "Client run returned an error." << std::endl; }
-		}
-		std::cout << "Client exited" << std::endl;
+		client.run();
 	}
 	catch( vl::exception &e )
 	{
 		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
 			<< std::endl;
-		error = true;
+		return -1;
 	}
 	catch( Ogre::Exception const &e)
 	{
 		std::cerr << "Ogre Exception: " << e.what() << std::endl;
-		error = true;
+		return -1;
 	}
 	catch( std::exception const &e )
 	{
 		std::cerr << "STD Exception: " << e.what() << std::endl;
-		error = true;
+		return -1;
 	}
 	catch( ... )
 	{
-		error = true;
+		std::cerr << "An exception of unknow type occured." << std::endl;
+		return -1;
 	}
 
-	if( error )
-	{ std::cerr << "Application exited with an error." << std::endl; }
-	else
-	{ std::cerr << "Application exited fine." << std::endl; }
-
-	return error ? EXIT_FAILURE : EXIT_SUCCESS;
+	return 0;
 }
