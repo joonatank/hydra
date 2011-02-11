@@ -2,12 +2,12 @@
  *	@date 2010-12
  *
  *	Program starting point
- *	TODO should probably be replaced with just main function
+ *	@todo should probably be replaced with just the main function
+ *	or merge Config and Application classes and create the threads in the main
  */
+
 #ifndef VL_APPLICATION_HPP
 #define VL_APPLICATION_HPP
-
-#include <OGRE/OgreTimer.h>
 
 #include <boost/thread.hpp>
 
@@ -20,7 +20,6 @@
 
 namespace eqOgre
 {
-class Config;
 class Pipe;
 }
 
@@ -29,6 +28,8 @@ namespace vl
 vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
 vl::Settings getProjectSettings( vl::ProgramOptions const &options );
 vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
+
+class Config;
 
 class Application
 {
@@ -60,16 +61,7 @@ protected:
 
 	vl::GameManagerPtr _game_manager;
 
-	// Clocks
-	Ogre::Timer _clock;
-	// Used to measure one frame time
-	Ogre::Timer _frame_clock;
-	// Time used for rendering the frames
-	// (well not excatly as there is lots of other stuff in there also)
-	// but this does not have the sleeping time
-	double _rendering_time;
-
-	eqOgre::Config *_config;
+	vl::Config *_config;
 
 	boost::thread *_pipe_thread;
 	eqOgre::Pipe *_pipe;

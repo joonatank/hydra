@@ -21,6 +21,7 @@ set( SOURCES
 	distrib_resource_manager.cpp
 	distrib_settings.cpp
 	program_options.cpp
+	stats.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -45,6 +46,7 @@ set( HEADERS
 	ogre_xml_helpers.hpp
 	game_manager.hpp
 	player.hpp
+	stats.hpp
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp

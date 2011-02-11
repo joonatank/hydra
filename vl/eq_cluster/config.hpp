@@ -1,89 +1,99 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-10
- *
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-10
+ *	@file config.hpp
  */
 
-#ifndef EQ_OGRE_CONFIG_H
-#define EQ_OGRE_CONFIG_H
+#ifndef VL_CONFIG_HPP
+#define VL_CONFIG_HPP
 
+// Necessary for the project settings
 #include "settings.hpp"
 #include "base/exceptions.hpp"
 
+// Necessary for the ref pointers
 #include "typedefs.hpp"
+// Necessary for the message passing server, owned by Config
 #include "cluster/server.hpp"
+// A base class for the Config
 #include "session.hpp"
+// Necessary for keeping track of statistics
+#include "stats.hpp"
 
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
+// Necessary for timing statistics
+#include <OGRE/OgreTimer.h>
 
-namespace eqOgre
+namespace vl
 {
 
-	class Config : public vl::Session
-	{
-	public:
-		Config( vl::GameManagerPtr man,
-				vl::Settings const &settings,
-				vl::EnvSettingsRefPtr env );
+/**	@class Config
+ *
+ */
+class Config : public vl::Session
+{
+public:
+	Config( vl::GameManagerPtr man,
+			vl::Settings const &settings,
+			vl::EnvSettingsRefPtr env );
 
-		/// @todo this should send initialisation messages to all the rendering
-		/// threads
-		virtual void init( void );
+	virtual ~Config (void);
+	
+	/// @todo this should send initialisation messages to all the rendering
+	/// threads
+	virtual void init( void );
 
-		virtual void exit (void);
+	virtual void exit (void);
 
-		virtual uint32_t startFrame( uint64_t const &frameID );
+	virtual void render( void );
 
-		virtual void finishFrame( void );
+	virtual bool isRunning( void )
+	{ return _running; }
 
-		virtual bool isRunning( void )
-		{ return _running; }
+	virtual void stopRunning( void )
+	{ _running = false; }
 
-		virtual void stopRunning( void )
-		{ _running = false; }
+protected :
+	void _updateServer( void );
+	void _sendEnvironment( void );
+	void _sendProject( void );
 
-	protected :
-		virtual ~Config (void);
+	/// Tracking
+	void _createTracker( vl::EnvSettingsRefPtr settings );
 
-		void _createServer( void );
-		void _updateServer( void );
-		void _sendEnvironment( void );
-		void _sendProject( void );
+	/// Scene
+	void _loadScenes( void );
+	void _hideCollisionBarries( void );
 
-		/// Tracking
-		void _createTracker( vl::EnvSettingsRefPtr settings );
+	/// Events
+	void _createQuitEvent( void );
 
-		/// Scene
-		void _loadScenes( void );
-		void _hideCollisionBarries( void );
+	void _receiveEventMessages( void );
 
-		/// Events
-		void _createQuitEvent( void );
+	/// Input Events
+	bool _handleKeyPressEvent( OIS::KeyEvent const &event );
+	bool _handleKeyReleaseEvent( OIS::KeyEvent const &event );
+	bool _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+	bool _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+	bool _handleMouseMotionEvent( OIS::MouseEvent const &event );
+	// TODO add joystick event
 
-		void _receiveEventMessages( void );
+	vl::GameManagerPtr _game_manager;
 
-		/// Input Events
-		bool _handleKeyPressEvent( OIS::KeyEvent const &event );
-		bool _handleKeyReleaseEvent( OIS::KeyEvent const &event );
-		bool _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-		bool _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-		bool _handleMouseMotionEvent( OIS::MouseEvent const &event );
-		// TODO add joystick event
+	vl::Settings _settings;
 
-		vl::GameManagerPtr _game_manager;
+	vl::EnvSettingsRefPtr _env;
 
-		vl::Settings _settings;
+	vl::cluster::Server *_server;
 
-		vl::EnvSettingsRefPtr _env;
+	Ogre::Timer _stats_timer;
+	vl::Stats _stats;
 
-		vl::cluster::Server *_server;
+	bool _running;
 
-		bool _running;
+};	// class Config
 
-	};	// class Config
+}	// namespace vl
 
-
-}	// namespace eqOgre
-
-#endif // EQ_OGRE_CONFIG_H
+#endif // VL_CONFIG_HPP

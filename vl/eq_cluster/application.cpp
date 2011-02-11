@@ -92,7 +92,6 @@ vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
 	return settings;
 }
 
-// custom structure is unnecessary for slave configuration because it is small
 vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 {
 	if( options.master() )
@@ -143,7 +142,7 @@ vl::Application::Application( vl::EnvSettingsRefPtr env,
 		std::string song_name("The_Dummy_Song.ogg");
 		_game_manager->createBackgroundSound(song_name);
 
-		_config = new eqOgre::Config( _game_manager, settings, env );
+		_config = new vl::Config( _game_manager, settings, env );
 	}
 }
 
@@ -152,6 +151,7 @@ vl::Application::~Application(void )
 	delete _pipe_thread;
 	delete _pipe;
 	delete _game_manager;
+	delete _config;
 }
 
 
@@ -163,8 +163,6 @@ vl::Application::run( void )
 	if( _env->isMaster() )
 	{
 		assert( _config );
-		_clock.reset();
-		_rendering_time = 0;
 		// 4. run main loop
 		uint32_t frame = 0;
 		while( _config->isRunning() )
@@ -213,16 +211,16 @@ vl::Application::_exit(void )
 void
 vl::Application::_render( uint32_t const frame )
 {
+	Ogre::Timer timer;
+
 	// target FPS
+	// @todo should be configurable from EnvSettings
 	const double FPS = 60;
 
-	_frame_clock.reset();
+	_config->render();
 
-	_config->startFrame(frame);
-	_config->finishFrame();
+	double time = double(timer.getMicroseconds())/1000;
 
-	double time = double(_frame_clock.getMicroseconds())/1000;
-	_rendering_time += time;
 	// Sleep enough to get a 60 fps but no more
 	// NOTE Of course because the converting to uint makes the time really huge
 	// Of course the next question is why the time is negative without rendering data
@@ -231,22 +229,6 @@ vl::Application::_render( uint32_t const frame )
 	double sleep_time = 1000.0/FPS - time;
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
-
-	// Print info every two hundred frame
-	if( (frame % 200) == 0 )
-	{
-		// TODO the logging should probably go to stats file and optionally
-		// to the console
-		// TODO also there should be possibility to reset the clock
-		// for massive parts in a scene for example
-		std::cout << "Avarage fps = " << 200.0/(double(_clock.getMicroseconds())/1e6)
-			<< ". took " << _rendering_time/200
-			<< " ms in avarage for rendering one frame." << std::endl;
-
-		// Reset the stats
-		_rendering_time = 0;
-		_clock.reset();
-	}
 }
 
 void

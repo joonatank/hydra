@@ -1,14 +1,15 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-10
- *
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-10
+ *	@file config.cpp
  */
 
 #include "config.hpp"
 
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
+
 #include "vrpn_tracker.hpp"
 #include "fake_tracker.hpp"
-
-#include "math/conversion.hpp"
 
 #include "actions_misc.hpp"
 
@@ -18,48 +19,49 @@
 #include "base/filesystem.hpp"
 #include "distrib_resource_manager.hpp"
 
-#include <OIS/OISKeyboard.h>
-#include <OIS/OISMouse.h>
-
 #include "resource.hpp"
 
 // Necessary for retrieving other managers
 #include "game_manager.hpp"
-// HUH?
+// Necessary for executing python scripts
 #include "python.hpp"
 // Necessary for retrieving registered triggers, KeyTrigger and FrameTrigger.
 #include "event_manager.hpp"
 // Necessary for registering Player
 #include "player.hpp"
-#include <distrib_settings.hpp>
+// Necessary for sending Environment and Project configs
+#include "distrib_settings.hpp"
 
 #include "base/string_utils.hpp"
 
-eqOgre::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
+vl::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
 {
 	std::cout << "eqOgre::Config::Config" << std::endl;
 	assert( _game_manager && _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+
+	_game_manager->createSceneManager( this );
+
+	_server = new vl::cluster::Server( _env->getServer().port );
 }
 
-eqOgre::Config::~Config( void )
-{}
+vl::Config::~Config( void )
+{
+	// Destroy server
+	delete _server;
+}
 
 void
-eqOgre::Config::init( void )
+vl::Config::init( void )
 {
 	std::cout << "eqOgre::Config::init" << std::endl;
+	Ogre::Timer timer;
 
 	/// @todo most of this should be moved to the constructor, like object
 	/// creation
 	/// sending of initial messages to rendering threads should still be here
-	_game_manager->createSceneManager( this );
-
-	_createServer();
-
-	assert( _server );
 
 	// Send the Environment
 	_sendEnvironment();
@@ -108,10 +110,13 @@ eqOgre::Config::init( void )
 	_createQuitEvent();
 
 	_updateServer();
+
+	_stats.logInitTime( (double(timer.getMicroseconds()))/1e3 );
+	_stats_timer.reset();
 }
 
 void
-eqOgre::Config::exit( void )
+vl::Config::exit( void )
 {
 	std::cout << "eqOgre::Config::exit" << std::endl;
 
@@ -120,48 +125,51 @@ eqOgre::Config::exit( void )
 	std::cout << "Config exited." << std::endl;
 }
 
-uint32_t
-eqOgre::Config::startFrame( uint64_t const &frameID )
+void
+vl::Config::render( void )
 {
-// 	std::cout << "eqOgre::Config::startFrame" << std::endl;
-	/// Process a time step in the game
+	Ogre::Timer timer;
+
+	// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
+	_stats.logFrameProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
+	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
-
+	_stats.logStepTime( (double(timer.getMicroseconds()))/1e3 );
+	
+	timer.reset();
 	/// Provide the updates to slaves
 	_updateServer();
+	_stats.logStepTime( (double(timer.getMicroseconds()))/1e3 );
 
+	timer.reset();
 	/// Render the scene
 	_server->render();
+	_stats.logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
 
+	timer.reset();
 	// TODO where the receive input messages should be?
 	_receiveEventMessages();
+	_stats.logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
-	return true;
-}
-
-void
-eqOgre::Config::finishFrame( void )
-{
+	// Print info every 10 seconds
+	// @todo time limit and wether or not to print anything should be configurable
+	if( _stats_timer.getMilliseconds() > 10e3 )
+	{
+		_stats.print();
+		_stats.clear();
+		_stats_timer.reset();
+	}
 }
 
 /// ------------ Private -------------
 void
-eqOgre::Config::_createServer( void )
+vl::Config::_updateServer( void )
 {
-	std::cout << "eqOgre::Config::_createServer" << std::endl;
-
-	assert( !_server );
-
-	_server = new vl::cluster::Server( _env->getServer().port );
-}
-
-void
-eqOgre::Config::_updateServer( void )
-{
+	assert( _server );
 // 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
 	// Handle received messages
 	_server->receiveMessages();
@@ -209,7 +217,7 @@ eqOgre::Config::_updateServer( void )
 }
 
 void
-eqOgre::Config::_sendEnvironment ( void )
+vl::Config::_sendEnvironment ( void )
 {
 	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
 	assert( _server );
@@ -224,7 +232,7 @@ eqOgre::Config::_sendEnvironment ( void )
 }
 
 void
-eqOgre::Config::_sendProject ( void )
+vl::Config::_sendProject ( void )
 {
 	std::cout << "eqOgre::Config::_sendProject" << std::endl;
 	assert( _server );
@@ -239,7 +247,7 @@ eqOgre::Config::_sendProject ( void )
 }
 
 void
-eqOgre::Config::_createTracker( vl::EnvSettingsRefPtr settings )
+vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
 	std::cout << "Creating Trackers." << std::endl;
 
@@ -309,7 +317,7 @@ eqOgre::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 }
 
 void
-eqOgre::Config::_loadScenes(void )
+vl::Config::_loadScenes( void )
 {
 	std::cout << "Loading Scenes for Project : " << _settings.getProjectName()
 		<< std::endl;
@@ -355,7 +363,7 @@ eqOgre::Config::_loadScenes(void )
 }
 
 void 
-eqOgre::Config::_hideCollisionBarries( void )
+vl::Config::_hideCollisionBarries( void )
 {
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	
@@ -370,7 +378,7 @@ eqOgre::Config::_hideCollisionBarries( void )
 }
 
 void
-eqOgre::Config::_createQuitEvent(void )
+vl::Config::_createQuitEvent(void )
 {
 	std::cout << "Creating QuitEvent" << std::endl;
 
@@ -385,7 +393,7 @@ eqOgre::Config::_createQuitEvent(void )
 
 /// Event Handling
 void
-eqOgre::Config::_receiveEventMessages( void )
+vl::Config::_receiveEventMessages( void )
 {
 	_server->receiveMessages();
 
@@ -452,7 +460,7 @@ eqOgre::Config::_receiveEventMessages( void )
 }
 
 bool
-eqOgre::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
+vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 	// Check if the there is a trigger for this event
@@ -465,7 +473,7 @@ eqOgre::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 }
 
 bool
-eqOgre::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
+vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 	// Check if the there is a trigger for this event
@@ -478,19 +486,19 @@ eqOgre::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 }
 
 bool
-eqOgre::Config::_handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
+vl::Config::_handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
 	return false;
 }
 
 bool
-eqOgre::Config::_handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
+vl::Config::_handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
 	return false;
 }
 
 bool
-eqOgre::Config::_handleMouseMotionEvent( OIS::MouseEvent const &event )
+vl::Config::_handleMouseMotionEvent( OIS::MouseEvent const &event )
 {
 	return true;
 }
