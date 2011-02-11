@@ -32,16 +32,12 @@ find_path( TURTLE_INCLUDE_DIR
 # TODO add link variable so not all programs will link to these
 link_libraries( ${FS_LIB} ${TEST_LIB} )
 
-include_directories( util )
 include_directories( SYSTEM
 	${TURTLE_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
 	)
 
-subdirs(util
-# 		spikes
-		misc
-		)
+#subdirs( spikes )
 
 # NOTE For now removed as we move to using EnvSettings and ProjectSettings
 #add_executable( test_settings
@@ -118,13 +114,3 @@ add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
 
 
-
-
-
-# Test program for launching
-# TODO either fix QT linking or remove the prog
-#add_executable( test_prog
-#        test_prog.cpp
-#        )
-
-#target_link_libraries( test_prog ${Boost_LIBRARIES} ${QT_LIBRARIES}  )

@@ -21,7 +21,6 @@ set( SOURCES
 	distrib_resource_manager.cpp
 	distrib_settings.cpp
 	program_options.cpp
-	base/args.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -47,7 +46,6 @@ set( HEADERS
 	game_manager.hpp
 	player.hpp
 	base/system_util.hpp
-	base/args.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp
 	base/exceptions.hpp
