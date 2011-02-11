@@ -144,17 +144,11 @@ include( CopyScripts )
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
-set( EQOGRE_BUILD_QTLAUNCHER FALSE CACHE BOOL
-	"Build the GUI used for editing settings and launching." )
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 
 # TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
-
-if( EQOGRE_BUILD_QTLAUNCHER )
-	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/qtlauncher )
-endif()
 
 if( EQOGRE_BUILD_TESTS )
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
