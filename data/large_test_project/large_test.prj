@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<project_config name="large_test">
+
+	<scenes>
+		<scene name="large_test" use="true">
+			<file>large_test.scene</file>
+		</scene>
+	</scenes>
+
+</project_config>

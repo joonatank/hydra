@@ -63,11 +63,23 @@ public:
 	void sendUpdate( Message const &msg );
 
 	/// Returns true if some client needs an Initial SceneGraph
+	/// @todo This always returns true for now
+	/// the architecture should rather use functors/callbacks to be called 
+	/// when they are needed
 	bool needsInit( void ) const;
 
+	/// @brief Has the Server unprocessed Input Messages.
+	/// @return true if the server has input messages, false otherwise
+	/// @todo change to use functors/callbacks rather than this has + get
+	/// method
 	bool inputMessages( void )
 	{ return !_input_msgs.empty(); }
 
+	/**	@brief receive an input message from a stack.
+	 *	@todo same as above replace with callbacks
+	 *	All messages are dynamically allocated so the user needs to delete
+	 *	the message after use.
+	 */
 	Message *popInputMessage( void );
 
 	typedef std::vector< std::pair<boost::udp::endpoint, CLIENT_STATE> > ClientList;

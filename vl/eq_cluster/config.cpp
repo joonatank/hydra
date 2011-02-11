@@ -177,8 +177,6 @@ eqOgre::Config::_updateServer( void )
 			if( (*iter)->isDirty() )
 			{
 				assert( (*iter)->getID() != vl::ID_UNDEFINED );
-// 				std::cout << "eqOgre::Config::_updateServer dirty object found" << std::endl;
-// 				std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
 				vl::cluster::ObjectData data( (*iter)->getID() );
 				vl::cluster::ByteStream stream = data.getStream();
 				(*iter)->pack(stream);
@@ -186,12 +184,7 @@ eqOgre::Config::_updateServer( void )
 			}
 		}
 
-		// Send SceneGraph to all listeners
-		if( msg.size() > 0 )
-		{
-// 			std::cout << "Sending updates to all clients." << std::endl;
-			_server->sendUpdate( msg );
-		}
+		_server->sendUpdate( msg );
 	}
 
 	// New clients need the whole SceneGraph
@@ -206,17 +199,12 @@ eqOgre::Config::_updateServer( void )
 			++iter )
 		{
 			assert( (*iter)->getID() != vl::ID_UNDEFINED );
-// 			vl::cluster::UpdateMessageSerializer ser(&msg);
-// 			std::cout << "Serializing object with id = " << (*iter)->getID() << std::endl;
-// 			msg.write( (*iter)->getID() );
-// 			vl::cluster::ObjectStream stream = ser.openObject( (*iter)->getID() );
 			vl::cluster::ObjectData data( (*iter)->getID() );
 			vl::cluster::ByteStream stream = data.getStream();
 			(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
 			data.copyToMessage(&msg);
 		}
 
-// 		std::cout << "Message = " << msg << std::endl;
 		_server->sendInit( msg );
 	}
 }

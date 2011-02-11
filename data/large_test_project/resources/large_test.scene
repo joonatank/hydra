@@ -1,0 +1,2903 @@
+<scene formatVersion="1.0.0">
+  <nodes>
+    <node name="ulkokamera_node">
+      <position x="-4.000000" y="2.00000" z="6.000000"/>
+      <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <camera name="ulkokamera" fov="37.849289" projectionType="perspective">
+        <clipping nearPlaneDist="0.100000" farPlaneDist="100.000000"/>
+      </camera>
+    </node>
+    <node name="ymparisto">
+      <position x="0.000000" y="-7.800000" z="-13.000000"/>
+      <quaternion x="-0.707107" y="0.000000" z="0.000000" w="0.707107"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <node name="Spotlight_3_obj">
+        <position x="-16.710857" y="35.229488" z="17.374870"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_3" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.892307" g="0.892307" b="0.892307"/>
+          <colourSpecular r="0.892307" g="0.892307" b="0.892307"/>
+          <lightRange inner="120.000061" outer="120.000061" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="putki">
+        <position x="3.143000" y="-12.365938" z="7.787282"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="putki" meshFile="putki.mesh"/>
+      </node>
+      <node name="Spotlight_4_obj">
+        <position x="-31.844923" y="49.118267" z="17.182112"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_4" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.892307" g="0.892307" b="0.892307"/>
+          <colourSpecular r="0.892307" g="0.892307" b="0.892307"/>
+          <lightRange inner="120.000061" outer="120.000061" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="Spotlight_5_obj">
+        <position x="-12.986013" y="63.465881" z="35.839169"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_5" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.892307" g="0.892307" b="0.892307"/>
+          <colourSpecular r="0.892307" g="0.892307" b="0.892307"/>
+          <lightRange inner="60.000031" outer="60.000031" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.040000" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="Spotlight_drop_obj">
+        <position x="0.898270" y="-18.429926" z="17.355076"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_drop" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.500000" g="0.500000" b="0.500000"/>
+          <colourSpecular r="0.500000" g="0.500000" b="0.500000"/>
+          <lightRange inner="120.000061" outer="120.000061" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="Spotlight_1_obj">
+        <position x="18.588501" y="-0.064384" z="22.271067"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_1" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.500000" g="0.500000" b="0.500000"/>
+          <colourSpecular r="0.500000" g="0.500000" b="0.500000"/>
+          <lightRange inner="100.000038" outer="100.000038" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.050000" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="Spotlight_2_obj">
+        <position x="-3.313148" y="16.272842" z="22.946344"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Spotlight_2" type="spotLight" castShadows="true">
+          <normal x="0.0" y="0.0" z="-1.0"/>
+          <colourDiffuse r="0.892307" g="0.892307" b="0.892307"/>
+          <colourSpecular r="0.892307" g="0.892307" b="0.892307"/>
+          <lightRange inner="100.000038" outer="100.000038" falloff="1.0"/>
+          <lightAttenuation range="40.000000" constant="1.000000" linear="0.050000" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="Ambient_light_main">
+        <position x="3.143000" y="7.634061" z="4.787282"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <light name="Ambient_light_m" type="point">
+          <colourDiffuse r="0.280392" g="0.280392" b="0.280392"/>
+          <colourSpecular r="0.280392" g="0.280392" b="0.280392"/>
+          <lightAttenuation range="5000.0" constant="1.000000" linear="0.010000" quadratic="0.000000"/>
+        </light>
+      </node>
+      <node name="osa_3">
+        <position x="3.143000" y="-12.365938" z="7.787282"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="osa_3" meshFile="osa_3.mesh"/>
+      </node>
+      <node name="osa_2">
+        <position x="3.143000" y="-12.365938" z="7.787282"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="osa_2" meshFile="osa_2.mesh"/>
+      </node>
+      <node name="osa_1">
+        <position x="3.143000" y="-12.365938" z="7.787282"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="osa_1" meshFile="osa_1.mesh"/>
+      </node>
+    </node>
+    <node name="T7">
+      <position x="0.000000" y="2.700000" z="0.000000"/>
+      <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <node name="koiranluu">
+        <position x="1.482000" y="-0.363000" z="-0.004000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.011868" w="0.999930"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="koiranluu" meshFile="koiranluu.mesh"/>
+      </node>
+      <node name="nostovarsi">
+        <position x="-0.587500" y="0.647500" z="-0.004000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="nostovarsi_base">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="nostovarsi_base" meshFile="nostovarsi_base.mesh"/>
+        </node>
+        <node name="nostovarsi_nivelet">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="nostovarsi_nivelet" meshFile="nostovarsi_nivelet.mesh"/>
+        </node>
+      </node>
+      <node name="wheel_back_left">
+        <position x="-2.963000" y="-0.171000" z="-0.976000"/>
+        <quaternion x="-0.004363" y="-0.000056" z="0.012740" w="0.999909"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="tyre_back_left">
+          <position x="0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="tyre_back_left" meshFile="rengas.mesh"/>
+        </node>
+        <node name="rim_back_left">
+          <position x="0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="rim_back_left" meshFile="vanne.mesh"/>
+        </node>
+      </node>
+      <node name="nostoSP">
+        <position x="-0.553000" y="-0.473000" z="-0.004000"/>
+        <quaternion x="0.008048" y="0.003375" z="0.386696" w="0.922166"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="nostoSP" meshFile="nosto_barrels.mesh"/>
+      </node>
+      <node name="takarunko">
+        <position x="-3.143000" y="0.167000" z="-0.058000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="warning_flag_001">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="warning_flag_001" meshFile="warning_flag_001.mesh"/>
+        </node>
+        <node name="warning_flag_002">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="warning_flag_002" meshFile="warning_flag_002.mesh"/>
+        </node>
+        <node name="takarungon_sylinterit">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="takarungon_sylinterit" meshFile="Mesh.001_Dar_DarkGrey.mesh"/>
+        </node>
+        <node name="takarungon_kiekot">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="takarungon_kiekot" meshFile="Mesh.001.000_Chocolat.mesh"/>
+        </node>
+        <node name="t7_cabin_new">
+          <position x="1.506553" y="-0.528157" z="-0.900359"/>
+          <quaternion x="-0.707107" y="0.000000" z="0.000000" w="0.707107"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <node name="new___SHELL3_ncl1_1">
+            <position x="-0.606199" y="-0.267403" z="1.755838"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL3_ncl1_1" meshFile="new___SHELL3_ncl1_1-l.mesh"/>
+          </node>
+          <node name="new___SHELL489_ncl1_1">
+            <position x="0.367144" y="-0.584312" z="1.544572"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL489_ncl1_1" meshFile="new___SHELL489_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL361_ncl1_1">
+            <position x="0.143801" y="0.173447" z="0.724778"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL361_ncl1_1" meshFile="new___SHELL361_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL149_ncl1_1">
+            <position x="-0.592252" y="-0.181755" z="1.146913"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL149_ncl1_1" meshFile="new___SHELL149_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL468_ncl1_1">
+            <position x="-0.065824" y="0.030960" z="0.334695"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL468_ncl1_1" meshFile="new___SHELL468_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL459_ncl1_1">
+            <position x="0.413088" y="-0.197723" z="1.148340"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL459_ncl1_1" meshFile="new___SHELL459_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL333_ncl1_1">
+            <position x="-0.100584" y="-0.010559" z="0.570726"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL333_ncl1_1" meshFile="new___SHELL333_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL293_ncl1_1">
+            <position x="0.035433" y="-0.547737" z="1.123323"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL293_ncl1_1" meshFile="new___SHELL293_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL349_ncl1_1">
+            <position x="-0.347402" y="0.181168" z="0.704583"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL349_ncl1_1" meshFile="new___SHELL349_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL106_ncl1_1">
+            <position x="-0.329923" y="-0.435005" z="1.099382"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL106_ncl1_1" meshFile="new___SHELL106_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL381_ncl1_1">
+            <position x="-0.117750" y="-0.012413" z="0.519609"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL381_ncl1_1" meshFile="new___SHELL381_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL230_ncl1_1">
+            <position x="-0.583730" y="-0.372810" z="1.248948"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL230_ncl1_1" meshFile="new___SHELL230_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL41_ncl1_1">
+            <position x="-0.309446" y="-0.589142" z="1.146669"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL41_ncl1_1" meshFile="new___SHELL41_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL338_ncl1_1">
+            <position x="-0.343870" y="0.168640" z="0.726968"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL338_ncl1_1" meshFile="new___SHELL338_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL471_ncl1_1">
+            <position x="0.282282" y="0.208031" z="0.430124"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL471_ncl1_1" meshFile="new___SHELL471_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL555_ncl1_1">
+            <position x="0.235880" y="-0.562591" z="0.168489"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL555_ncl1_1" meshFile="new___SHELL555_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL258_ncl1_1">
+            <position x="-0.561513" y="-0.254829" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL258_ncl1_1" meshFile="new___SHELL258_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL371_ncl1_1">
+            <position x="-0.265958" y="-0.023857" z="0.551668"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL371_ncl1_1" meshFile="new___SHELL371_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL115_ncl1_1">
+            <position x="-0.401540" y="-0.483459" z="1.220781"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL115_ncl1_1" meshFile="new___SHELL115_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL406_ncl1_1">
+            <position x="-0.873449" y="-0.155380" z="1.203294"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL406_ncl1_1" meshFile="new___SHELL406_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL288_ncl1_1">
+            <position x="-0.356374" y="-0.483589" z="1.234658"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL288_ncl1_1" meshFile="new___SHELL288_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL50_ncl1_1">
+            <position x="-0.230115" y="-0.510956" z="1.688752"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL50_ncl1_1" meshFile="new___SHELL50_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL484_ncl1_1">
+            <position x="-0.911283" y="-0.589355" z="1.383264"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL484_ncl1_1" meshFile="new___SHELL484_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL247_ncl1_1">
+            <position x="-0.608831" y="-0.320885" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL247_ncl1_1" meshFile="new___SHELL247_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL364_ncl1_1">
+            <position x="0.143786" y="0.162445" z="0.724252"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL364_ncl1_1" meshFile="new___SHELL364_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL241_ncl1_1">
+            <position x="-0.608831" y="-0.346832" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL241_ncl1_1" meshFile="new___SHELL241_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL96_ncl1_1">
+            <position x="-0.474950" y="-0.435257" z="1.098794"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL96_ncl1_1" meshFile="new___SHELL96_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL370_ncl1_1">
+            <position x="-0.265958" y="0.143677" z="0.562440"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL370_ncl1_1" meshFile="new___SHELL370_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL130_ncl1_1">
+            <position x="-0.614072" y="-0.371879" z="1.282060"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL130_ncl1_1" meshFile="new___SHELL130_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL287_ncl1_1">
+            <position x="-0.422414" y="-0.483604" z="1.234689"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL287_ncl1_1" meshFile="new___SHELL287_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL408_ncl1_1">
+            <position x="-0.934995" y="-0.200882" z="1.198701"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL408_ncl1_1" meshFile="new___SHELL408_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL436_ncl1_1">
+            <position x="0.399416" y="-0.325943" z="1.279145"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL436_ncl1_1" meshFile="new___SHELL436_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL356_ncl1_1">
+            <position x="0.139903" y="0.168625" z="0.726915"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL356_ncl1_1" meshFile="new___SHELL356_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL111_ncl1_1">
+            <position x="-0.491338" y="-0.600281" z="1.104524"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL111_ncl1_1" meshFile="new___SHELL111_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL374_ncl1_1">
+            <position x="0.062045" y="-0.023857" z="0.551668"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL374_ncl1_1" meshFile="new___SHELL374_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL545_ncl1_1">
+            <position x="0.022089" y="0.307724" z="0.846490"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL545_ncl1_1" meshFile="new___SHELL545_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL496_ncl1_1">
+            <position x="0.336543" y="-0.237877" z="0.230691"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL496_ncl1_1" meshFile="new___SHELL496_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL160_ncl1_1">
+            <position x="-0.583272" y="-0.082878" z="1.223909"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL160_ncl1_1" meshFile="new___SHELL160_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL314_ncl1_1">
+            <position x="-0.446584" y="-0.195854" z="0.811456"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL314_ncl1_1" meshFile="new___SHELL314_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL135_ncl1_1">
+            <position x="-0.122808" y="-0.501648" z="1.201364"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL135_ncl1_1" meshFile="new___SHELL135_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL385_ncl1_1">
+            <position x="-0.265989" y="-0.011917" z="0.547159"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL385_ncl1_1" meshFile="new___SHELL385_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL245_ncl1_1">
+            <position x="-0.580091" y="-0.280784" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL245_ncl1_1" meshFile="new___SHELL245_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL255_ncl1_1">
+            <position x="-0.448408" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL255_ncl1_1" meshFile="new___SHELL255_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL30_ncl1_1">
+            <position x="0.345232" y="-0.277351" z="1.063455"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL30_ncl1_1" meshFile="new___SHELL30_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL410_ncl1_1">
+            <position x="0.257472" y="-0.025085" z="0.503442"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL410_ncl1_1" meshFile="new___SHELL410_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL500_ncl1_1">
+            <position x="0.336543" y="0.049935" z="0.531892"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL500_ncl1_1" meshFile="new___SHELL500_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL329_ncl1_1">
+            <position x="0.147242" y="0.076607" z="0.595933"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL329_ncl1_1" meshFile="new___SHELL329_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL31_ncl1_1">
+            <position x="0.345477" y="-0.271042" z="1.075448"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL31_ncl1_1" meshFile="new___SHELL31_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL52_ncl1_1">
+            <position x="-0.031843" y="-0.511009" z="1.688714"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL52_ncl1_1" meshFile="new___SHELL52_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL377_ncl1_1">
+            <position x="-0.094373" y="-0.021843" z="0.587694"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL377_ncl1_1" meshFile="new___SHELL377_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL353_ncl1_1">
+            <position x="0.143794" y="0.175026" z="0.724244"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL353_ncl1_1" meshFile="new___SHELL353_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL218_ncl1_1">
+            <position x="-0.448408" y="-0.448265" z="1.187249"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL218_ncl1_1" meshFile="new___SHELL218_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL362_ncl1_1">
+            <position x="0.143450" y="0.167236" z="0.699716"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL362_ncl1_1" meshFile="new___SHELL362_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL145_ncl1_1">
+            <position x="-0.592031" y="-0.191215" z="1.146447"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL145_ncl1_1" meshFile="new___SHELL145_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL104_ncl1_1">
+            <position x="-0.541669" y="-0.025253" z="1.099412"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL104_ncl1_1" meshFile="new___SHELL104_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL270_ncl1_1">
+            <position x="-0.448408" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL270_ncl1_1" meshFile="new___SHELL270_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL325_ncl1_1">
+            <position x="-0.356023" y="-0.582184" z="0.646684"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL325_ncl1_1" meshFile="new___SHELL325_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL140_ncl1_1">
+            <position x="-0.575017" y="-0.076721" z="1.156808"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL140_ncl1_1" meshFile="new___SHELL140_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL550_ncl1_1">
+            <position x="-0.005514" y="0.179596" z="0.287858"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL550_ncl1_1" meshFile="new___SHELL550_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL158_ncl1_1">
+            <position x="-0.590269" y="-0.035530" z="1.229257"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL158_ncl1_1" meshFile="new___SHELL158_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL291_ncl1_1">
+            <position x="-0.491910" y="-0.610031" z="1.116502"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL291_ncl1_1" meshFile="new___SHELL291_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL311_ncl1_1">
+            <position x="0.195773" y="0.278076" z="1.412874"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL311_ncl1_1" meshFile="new___SHELL311_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL676_ncl1_1">
+            <position x="0.284823" y="0.215187" z="0.430215"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL676_ncl1_1" meshFile="new___SHELL676_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL252_ncl1_1">
+            <position x="-0.561513" y="-0.372780" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL252_ncl1_1" meshFile="new___SHELL252_ncl1_1.mesh"/>
+          </node>
+          <node name="Toro_spot_side_obj">
+            <position x="-0.504835" y="-0.743716" z="1.850495"/>
+            <quaternion x="-0.000000" y="0.707107" z="0.707107" w="0.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <light name="Toro_spot_side" type="spotLight" castShadows="true">
+              <normal x="0.0" y="0.0" z="-1.0"/>
+              <colourDiffuse r="1.000000" g="1.000000" b="1.000000"/>
+              <colourSpecular r="1.000000" g="1.000000" b="1.000000"/>
+              <lightRange inner="90.000038" outer="90.000038" falloff="1.0"/>
+              <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+            </light>
+          </node>
+          <node name="new___SHELL369_ncl1_1">
+            <position x="0.062045" y="0.143677" z="0.562440"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL369_ncl1_1" meshFile="new___SHELL369_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL488_ncl1_1">
+            <position x="0.329646" y="-0.590706" z="1.583535"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL488_ncl1_1" meshFile="new___SHELL488_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL138_ncl1_1">
+            <position x="-0.601675" y="-0.186783" z="1.229341"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL138_ncl1_1" meshFile="new___SHELL138_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL18_ncl1_1">
+            <position x="0.356547" y="-0.030388" z="0.943956"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL18_ncl1_1" meshFile="new___SHELL18_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL503_ncl1_1">
+            <position x="0.336543" y="-0.607406" z="1.537431"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL503_ncl1_1" meshFile="new___SHELL503_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL119_ncl1_1">
+            <position x="-0.225446" y="-0.489166" z="1.210672"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL119_ncl1_1" meshFile="new___SHELL119_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL264_ncl1_1">
+            <position x="-0.590253" y="-0.280784" z="1.234666"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL264_ncl1_1" meshFile="new___SHELL264_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL334_ncl1_1">
+            <position x="-0.347700" y="0.162628" z="0.724069"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL334_ncl1_1" meshFile="new___SHELL334_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL439_ncl1_1">
+            <position x="-0.934812" y="-0.440697" z="1.381372"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL439_ncl1_1" meshFile="new___SHELL439_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL286_ncl1_1">
+            <position x="-0.330442" y="-0.483574" z="1.234636"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL286_ncl1_1" meshFile="new___SHELL286_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL387_ncl1_1">
+            <position x="-0.280279" y="0.186768" z="0.479677"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL387_ncl1_1" meshFile="new___SHELL387_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL250_ncl1_1">
+            <position x="-0.561513" y="-0.228882" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL250_ncl1_1" meshFile="new___SHELL250_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL268_ncl1_1">
+            <position x="-0.422452" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL268_ncl1_1" meshFile="new___SHELL268_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL339_ncl1_1">
+            <position x="-0.347715" y="0.173569" z="0.725129"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL339_ncl1_1" meshFile="new___SHELL339_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL129_ncl1_1">
+            <position x="-0.614065" y="-0.001861" z="1.282045"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL129_ncl1_1" meshFile="new___SHELL129_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL142_ncl1_1">
+            <position x="-0.544111" y="-0.186729" z="1.171182"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL142_ncl1_1" meshFile="new___SHELL142_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL561_nc.000">
+            <position x="0.228709" y="-0.865684" z="1.147111"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL561_nc.000" meshFile="new___SHELL561_nc.000.mesh"/>
+          </node>
+          <node name="new___SHELL95_ncl1_1">
+            <position x="-0.541959" y="-0.025276" z="1.098871"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL95_ncl1_1" meshFile="new___SHELL95_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL242_ncl1_1">
+            <position x="-0.474355" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL242_ncl1_1" meshFile="new___SHELL242_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL289_ncl1_1">
+            <position x="-0.474309" y="-0.483581" z="1.234636"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL289_ncl1_1" meshFile="new___SHELL289_ncl1_1.mesh"/>
+          </node>
+          <node name="Toro_spot_back_obj">
+            <position x="-1.163553" y="0.041641" z="1.967348"/>
+            <quaternion x="0.500000" y="0.500000" z="0.500000" w="0.500000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <light name="Toro_spot_back" type="spotLight" castShadows="true">
+              <normal x="0.0" y="0.0" z="-1.0"/>
+              <colourDiffuse r="1.000000" g="1.000000" b="1.000000"/>
+              <colourSpecular r="1.000000" g="1.000000" b="1.000000"/>
+              <lightRange inner="90.000038" outer="90.000038" falloff="1.0"/>
+              <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+            </light>
+          </node>
+          <node name="new___SHELL337_ncl1_1">
+            <position x="-0.347593" y="0.175301" z="0.703393"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL337_ncl1_1" meshFile="new___SHELL337_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL152_ncl1_1">
+            <position x="-0.593214" y="-0.035484" z="1.218065"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL152_ncl1_1" meshFile="new___SHELL152_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL561_nc.001">
+            <position x="-1.049299" y="-0.625412" z="1.161607"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL561_nc.001" meshFile="new___SHELL561_nc.001.mesh"/>
+          </node>
+          <node name="new___SHELL243_ncl1_1">
+            <position x="-0.608831" y="-0.372780" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL243_ncl1_1" meshFile="new___SHELL243_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL94_ncl1_1">
+            <position x="-0.580541" y="-0.340614" z="1.125947"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL94_ncl1_1" meshFile="new___SHELL94_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL501_ncl1_1">
+            <position x="0.336543" y="0.203736" z="1.116342"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL501_ncl1_1" meshFile="new___SHELL501_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL212_ncl1_1">
+            <position x="-0.583021" y="-0.320816" z="1.238755"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL212_ncl1_1" meshFile="new___SHELL212_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL330_ncl1_1">
+            <position x="0.133044" y="0.076752" z="0.595964"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL330_ncl1_1" meshFile="new___SHELL330_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL561_nc.002">
+            <position x="-0.298681" y="-0.026840" z="0.136003"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL561_nc.002" meshFile="new___SHELL561_nc.002.mesh"/>
+          </node>
+          <node name="new___SHELL373_ncl1_1">
+            <position x="-0.275136" y="-0.109543" z="0.558847"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL373_ncl1_1" meshFile="new___SHELL373_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL225_ncl1_1">
+            <position x="-0.583700" y="-0.254860" z="1.248903"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL225_ncl1_1" meshFile="new___SHELL225_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL76_ncl1_1">
+            <position x="-0.767683" y="-0.575683" z="1.568414"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL76_ncl1_1" meshFile="new___SHELL76_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL121_ncl1_1">
+            <position x="-0.127431" y="-0.481262" z="1.218217"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL121_ncl1_1" meshFile="new___SHELL121_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL261_ncl1_1">
+            <position x="-0.590253" y="-0.346832" z="1.234666"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL261_ncl1_1" meshFile="new___SHELL261_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL507_ncl1_1">
+            <position x="0.344546" y="-0.549362" z="0.719163"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL507_ncl1_1" meshFile="new___SHELL507_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL497_ncl1_1">
+            <position x="0.336543" y="-0.490181" z="0.276582"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL497_ncl1_1" meshFile="new___SHELL497_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL474_ncl1_1">
+            <position x="0.216204" y="0.182800" z="0.348047"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL474_ncl1_1" meshFile="new___SHELL474_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL213_ncl1_1">
+            <position x="-0.583013" y="-0.346809" z="1.238717"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL213_ncl1_1" meshFile="new___SHELL213_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL538_ncl1_1">
+            <position x="-0.894948" y="-0.088219" z="1.251428"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL538_ncl1_1" meshFile="new___SHELL538_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL520_ncl1_1">
+            <position x="0.375987" y="-0.611542" z="0.297670"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL520_ncl1_1" meshFile="new___SHELL520_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL221_ncl1_1">
+            <position x="-0.554960" y="-0.346802" z="1.187272"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL221_ncl1_1" meshFile="new___SHELL221_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL217_ncl1_1">
+            <position x="-0.554945" y="-0.280723" z="1.187249"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL217_ncl1_1" meshFile="new___SHELL217_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL400_ncl1_1">
+            <position x="0.254107" y="0.008621" z="0.419870"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL400_ncl1_1" meshFile="new___SHELL400_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL154_ncl1_1">
+            <position x="-0.607259" y="-0.122780" z="1.211511"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL154_ncl1_1" meshFile="new___SHELL154_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL372_ncl1_1">
+            <position x="-0.300153" y="-0.104286" z="0.548639"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL372_ncl1_1" meshFile="new___SHELL372_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL26_ncl1_1">
+            <position x="-0.860456" y="-0.360794" z="1.514177"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL26_ncl1_1" meshFile="new___SHELL26_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL295_ncl1_1">
+            <position x="-0.590147" y="-0.504639" z="1.282403"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL295_ncl1_1" meshFile="new___SHELL295_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL504_ncl1_1">
+            <position x="0.336543" y="0.217087" z="1.609346"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL504_ncl1_1" meshFile="new___SHELL504_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL136_ncl1_1">
+            <position x="-0.569158" y="-0.410492" z="1.039811"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL136_ncl1_1" meshFile="new___SHELL136_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL375_ncl1_1">
+            <position x="0.061297" y="-0.148323" z="0.562440"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL375_ncl1_1" meshFile="new___SHELL375_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL539_ncl1_1">
+            <position x="-0.920759" y="-0.012947" z="1.535737"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL539_ncl1_1" meshFile="new___SHELL539_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL544_ncl1_1">
+            <position x="-0.444837" y="-0.258522" z="1.742311"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL544_ncl1_1" meshFile="new___SHELL544_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL363_ncl1_1">
+            <position x="0.143801" y="0.164963" z="0.725854"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL363_ncl1_1" meshFile="new___SHELL363_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL156_ncl1_1">
+            <position x="-0.608633" y="-0.082878" z="1.212083"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL156_ncl1_1" meshFile="new___SHELL156_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL382_ncl1_1">
+            <position x="0.062022" y="-0.011955" z="0.547159"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL382_ncl1_1" meshFile="new___SHELL382_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL294_ncl1_1">
+            <position x="-0.599416" y="-0.041855" z="1.011453"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL294_ncl1_1" meshFile="new___SHELL294_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL273_ncl1_1">
+            <position x="-0.356405" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL273_ncl1_1" meshFile="new___SHELL273_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL6_ncl1_1">
+            <position x="0.302836" y="-0.449753" z="0.570253"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL6_ncl1_1" meshFile="new___SHELL6_ncl1_1-l.mesh"/>
+          </node>
+          <node name="new___SHELL508_ncl1_1">
+            <position x="0.344546" y="0.221405" z="1.112748"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL508_ncl1_1" meshFile="new___SHELL508_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL367_ncl1_1">
+            <position x="0.143771" y="0.172730" z="0.726678"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL367_ncl1_1" meshFile="new___SHELL367_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL227_ncl1_1">
+            <position x="-0.554945" y="-0.228828" z="1.187249"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL227_ncl1_1" meshFile="new___SHELL227_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL74_ncl1_1">
+            <position x="0.309000" y="-0.556198" z="1.446283"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL74_ncl1_1" meshFile="new___SHELL74_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL502_ncl1_1">
+            <position x="0.336543" y="0.238365" z="1.424783"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL502_ncl1_1" meshFile="new___SHELL502_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL234_ncl1_1">
+            <position x="-0.580091" y="-0.228882" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL234_ncl1_1" meshFile="new___SHELL234_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL45_ncl1_1">
+            <position x="-0.546064" y="-0.407333" z="1.695924"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL45_ncl1_1" meshFile="new___SHELL45_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL267_ncl1_1">
+            <position x="-0.330457" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL267_ncl1_1" meshFile="new___SHELL267_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL163_ncl1_1">
+            <position x="-0.571523" y="-0.124069" z="1.227746"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL163_ncl1_1" meshFile="new___SHELL163_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL97_ncl1_1">
+            <position x="-0.329954" y="-0.435257" z="1.098794"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL97_ncl1_1" meshFile="new___SHELL97_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL240_ncl1_1">
+            <position x="-0.382352" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL240_ncl1_1" meshFile="new___SHELL240_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL62_ncl1_1">
+            <position x="0.314326" y="-0.177933" z="1.011811"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL62_ncl1_1" meshFile="new___SHELL62_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL166_ncl1_1">
+            <position x="-0.611303" y="-0.483475" z="1.282403"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL166_ncl1_1" meshFile="new___SHELL166_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL473_ncl1_1">
+            <position x="0.221240" y="0.174202" z="0.513696"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL473_ncl1_1" meshFile="new___SHELL473_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL124_ncl1_1">
+            <position x="-0.245458" y="-0.477333" z="1.207788"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL124_ncl1_1" meshFile="new___SHELL124_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL172_ncl1_1">
+            <position x="-0.606687" y="-0.410286" z="1.030114"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL172_ncl1_1" meshFile="new___SHELL172_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL32_ncl1_1">
+            <position x="-0.248930" y="-0.680275" z="1.429925"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL32_ncl1_1" meshFile="new___SHELL32_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL360_ncl1_1">
+            <position x="0.143473" y="0.167816" z="0.709062"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL360_ncl1_1" meshFile="new___SHELL360_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL269_ncl1_1">
+            <position x="-0.474355" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL269_ncl1_1" meshFile="new___SHELL269_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL274_ncl1_1">
+            <position x="-0.474355" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL274_ncl1_1" meshFile="new___SHELL274_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL389_ncl1_1">
+            <position x="-0.280302" y="-0.203491" z="0.481630"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL389_ncl1_1" meshFile="new___SHELL389_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL347_ncl1_1">
+            <position x="-0.347730" y="0.160858" z="0.703706"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL347_ncl1_1" meshFile="new___SHELL347_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL343_ncl1_1">
+            <position x="-0.347707" y="0.163536" z="0.725488"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL343_ncl1_1" meshFile="new___SHELL343_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL171_ncl1_1">
+            <position x="-0.585729" y="-0.410080" z="1.016587"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL171_ncl1_1" meshFile="new___SHELL171_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL549_ncl1_1">
+            <position x="0.392741" y="-0.815254" z="1.545800"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL549_ncl1_1" meshFile="new___SHELL549_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL36_ncl1_1">
+            <position x="-0.551740" y="-0.419632" z="1.688005"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL36_ncl1_1" meshFile="new___SHELL36_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL441_ncl1_1">
+            <position x="-0.352247" y="-0.716720" z="1.281389"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL441_ncl1_1" meshFile="new___SHELL441_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL123_ncl1_1">
+            <position x="-0.617818" y="-0.371780" z="1.280298"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL123_ncl1_1" meshFile="new___SHELL123_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL202_ncl1_1">
+            <position x="-0.554258" y="-0.346817" z="1.177087"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL202_ncl1_1" meshFile="new___SHELL202_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL105_ncl1_1">
+            <position x="-0.474927" y="-0.435005" z="1.099382"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL105_ncl1_1" meshFile="new___SHELL105_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL257_ncl1_1">
+            <position x="-0.356405" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL257_ncl1_1" meshFile="new___SHELL257_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL248_ncl1_1">
+            <position x="-0.422452" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL248_ncl1_1" meshFile="new___SHELL248_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL366_ncl1_1">
+            <position x="0.143565" y="0.149620" z="0.703958"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL366_ncl1_1" meshFile="new___SHELL366_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL126_ncl1_1">
+            <position x="-0.617818" y="-0.001785" z="1.280298"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL126_ncl1_1" meshFile="new___SHELL126_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL276_ncl1_1">
+            <position x="-0.422452" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL276_ncl1_1" meshFile="new___SHELL276_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL199_ncl1_1">
+            <position x="-0.583005" y="-0.280731" z="1.238717"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL199_ncl1_1" meshFile="new___SHELL199_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL113_ncl1_1">
+            <position x="-0.778524" y="-0.474762" z="1.214486"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL113_ncl1_1" meshFile="new___SHELL113_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL35_ncl1_1">
+            <position x="0.431582" y="0.090607" z="0.830385"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL35_ncl1_1" meshFile="new___SHELL35_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL164_ncl1_1">
+            <position x="-0.586225" y="-0.075928" z="1.224138"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL164_ncl1_1" meshFile="new___SHELL164_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL345_ncl1_1">
+            <position x="-0.347456" y="0.149048" z="0.704599"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL345_ncl1_1" meshFile="new___SHELL345_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL505_ncl1_1">
+            <position x="0.336543" y="-0.592827" z="1.607942"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL505_ncl1_1" meshFile="new___SHELL505_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL254_ncl1_1">
+            <position x="-0.474355" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL254_ncl1_1" meshFile="new___SHELL254_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL68_ncl1_1">
+            <position x="-0.869222" y="-0.598106" z="1.457895"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL68_ncl1_1" meshFile="new___SHELL68_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL2_ncl1_1">
+            <position x="0.193881" y="-0.267441" z="1.755838"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL2_ncl1_1" meshFile="new___SHELL2_ncl1_1-l.mesh"/>
+          </node>
+          <node name="new___SHELL512_ncl1_1">
+            <position x="0.375689" y="-0.617493" z="1.541429"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL512_ncl1_1" meshFile="new___SHELL512_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL458_ncl1_1">
+            <position x="-0.071172" y="-0.729942" z="1.173257"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL458_ncl1_1" meshFile="new___SHELL458_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL299_ncl1_1">
+            <position x="-0.048414" y="-0.401413" z="0.207193"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL299_ncl1_1" meshFile="new___SHELL299_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL253_ncl1_1">
+            <position x="-0.330457" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL253_ncl1_1" meshFile="new___SHELL253_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL393_ncl1_1">
+            <position x="-0.186330" y="-0.226829" z="0.482415"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL393_ncl1_1" meshFile="new___SHELL393_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL392_ncl1_1">
+            <position x="-0.138235" y="-0.032036" z="0.506074"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL392_ncl1_1" meshFile="new___SHELL392_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL10_ncl1_1">
+            <position x="0.396655" y="-0.384033" z="1.505166"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL10_ncl1_1" meshFile="new___SHELL10_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL359_ncl1_1">
+            <position x="0.143633" y="0.176842" z="0.703897"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL359_ncl1_1" meshFile="new___SHELL359_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL482_ncl1_1">
+            <position x="0.278315" y="-0.726265" z="1.449929"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL482_ncl1_1" meshFile="new___SHELL482_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL348_ncl1_1">
+            <position x="-0.347387" y="0.167816" z="0.709062"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL348_ncl1_1" meshFile="new___SHELL348_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL532_ncl1_1">
+            <position x="0.091860" y="0.025627" z="0.244592"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL532_ncl1_1" meshFile="new___SHELL532_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL141_ncl1_1">
+            <position x="-0.551389" y="-0.131561" z="1.167840"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL141_ncl1_1" meshFile="new___SHELL141_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL207_ncl1_1">
+            <position x="-0.448392" y="-0.447594" z="1.177125"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL207_ncl1_1" meshFile="new___SHELL207_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL58_ncl1_1">
+            <position x="0.326426" y="-0.470169" z="0.406411"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL58_ncl1_1" meshFile="new___SHELL58_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL521_ncl1_1">
+            <position x="0.375689" y="-0.617493" z="1.261422"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL521_ncl1_1" meshFile="new___SHELL521_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL137_ncl1_1">
+            <position x="-0.620885" y="-0.186783" z="1.220384"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL137_ncl1_1" meshFile="new___SHELL137_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL328_ncl1_1">
+            <position x="-0.068685" y="-0.002876" z="0.343492"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL328_ncl1_1" meshFile="new___SHELL328_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL157_ncl1_1">
+            <position x="-0.611845" y="-0.065529" z="1.218972"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL157_ncl1_1" meshFile="new___SHELL157_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL134_ncl1_1">
+            <position x="-0.580411" y="-0.473801" z="1.233690"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL134_ncl1_1" meshFile="new___SHELL134_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL376_ncl1_1">
+            <position x="-0.322164" y="-0.202293" z="0.543351"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL376_ncl1_1" meshFile="new___SHELL376_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL397_ncl1_1">
+            <position x="0.220591" y="0.118271" z="0.272905"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL397_ncl1_1" meshFile="new___SHELL397_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL48_ncl1_1">
+            <position x="-0.551740" y="-0.419632" z="1.688005"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL48_ncl1_1" meshFile="new___SHELL48_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL239_ncl1_1">
+            <position x="-0.356405" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL239_ncl1_1" meshFile="new___SHELL239_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL466_ncl1_1">
+            <position x="-0.892919" y="-0.063194" z="1.198694"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL466_ncl1_1" meshFile="new___SHELL466_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL358_ncl1_1">
+            <position x="0.143748" y="0.156220" z="0.704583"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL358_ncl1_1" meshFile="new___SHELL358_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL139_ncl1_1">
+            <position x="-0.577222" y="-0.187103" z="1.240800"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL139_ncl1_1" meshFile="new___SHELL139_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL547_ncl1_1">
+            <position x="-0.178205" y="-0.622398" z="0.680810"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL547_ncl1_1" meshFile="new___SHELL547_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL216_ncl1_1">
+            <position x="-0.583715" y="-0.320885" z="1.248918"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL216_ncl1_1" meshFile="new___SHELL216_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL127_ncl1_1">
+            <position x="-0.481458" y="-0.511139" z="1.280298"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL127_ncl1_1" meshFile="new___SHELL127_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL341_ncl1_1">
+            <position x="-0.347715" y="0.172470" z="0.726640"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL341_ncl1_1" meshFile="new___SHELL341_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL401_ncl1_1">
+            <position x="0.229968" y="-0.021072" z="0.267228"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL401_ncl1_1" meshFile="new___SHELL401_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL266_ncl1_1">
+            <position x="-0.356405" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL266_ncl1_1" meshFile="new___SHELL266_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL191_ncl1_1">
+            <position x="-0.564481" y="-0.346863" z="1.171060"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL191_ncl1_1" meshFile="new___SHELL191_ncl1_1.mesh"/>
+          </node>
+          <node name="hyttikamera_node">
+            <position x="-0.363554" y="0.0" z="-0.438843"/>
+            <quaternion x="-0.000000" y="0.707107" z="0.707107" w="0.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <camera name="hyttikamera" fov="37.849289" projectionType="perspective">
+              <clipping nearPlaneDist="0.100000" farPlaneDist="100.000000"/>
+            </camera>
+          </node>
+          <node name="new___SHELL332_ncl1_1">
+            <position x="-0.336957" y="0.076752" z="0.595964"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL332_ncl1_1" meshFile="new___SHELL332_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL378_ncl1_1">
+            <position x="-0.099294" y="0.207138" z="0.847246"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL378_ncl1_1" meshFile="new___SHELL378_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL281_ncl1_1">
+            <position x="-0.356405" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL281_ncl1_1" meshFile="new___SHELL281_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL262_ncl1_1">
+            <position x="-0.590253" y="-0.320885" z="1.234666"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL262_ncl1_1" meshFile="new___SHELL262_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL14_ncl1_1">
+            <position x="0.383288" y="-0.191505" z="1.255067"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL14_ncl1_1" meshFile="new___SHELL14_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL12_ncl1_1">
+            <position x="0.387606" y="-0.622993" z="1.393701"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL12_ncl1_1" meshFile="new___SHELL12_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL98_ncl1_1">
+            <position x="-0.541959" y="-0.345276" z="1.098871"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL98_ncl1_1" meshFile="new___SHELL98_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL190_ncl1_1">
+            <position x="-0.356122" y="-0.486778" z="1.233056"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL190_ncl1_1" meshFile="new___SHELL190_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL201_ncl1_1">
+            <position x="-0.554273" y="-0.372703" z="1.177140"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL201_ncl1_1" meshFile="new___SHELL201_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL91_ncl1_1">
+            <position x="0.241503" y="-0.220939" z="0.813196"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL91_ncl1_1" meshFile="new___SHELL91_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL246_ncl1_1">
+            <position x="-0.448408" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL246_ncl1_1" meshFile="new___SHELL246_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL537_ncl1_1">
+            <position x="-0.641714" y="0.261963" z="0.963411"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL537_ncl1_1" meshFile="new___SHELL537_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL114_ncl1_1">
+            <position x="-0.719221" y="-0.222130" z="1.050470"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL114_ncl1_1" meshFile="new___SHELL114_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL194_ncl1_1">
+            <position x="-0.593458" y="-0.346954" z="1.233110"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL194_ncl1_1" meshFile="new___SHELL194_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL265_ncl1_1">
+            <position x="-0.561513" y="-0.320885" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL265_ncl1_1" meshFile="new___SHELL265_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL116_ncl1_1">
+            <position x="-0.579275" y="-0.108398" z="1.203523"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL116_ncl1_1" meshFile="new___SHELL116_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL355_ncl1_1">
+            <position x="0.143794" y="0.169098" z="0.703889"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL355_ncl1_1" meshFile="new___SHELL355_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL327_ncl1_1">
+            <position x="0.285441" y="-0.737762" z="1.495553"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL327_ncl1_1" meshFile="new___SHELL327_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL20_ncl1_1">
+            <position x="-0.147405" y="0.291718" z="1.114122"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL20_ncl1_1" meshFile="new___SHELL20_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL34_ncl1_1">
+            <position x="0.412142" y="-0.181366" z="1.404893"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL34_ncl1_1" meshFile="new___SHELL34_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL214_ncl1_1">
+            <position x="-0.582990" y="-0.372742" z="1.238679"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL214_ncl1_1" meshFile="new___SHELL214_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL131_ncl1_1">
+            <position x="-0.481626" y="-0.506683" z="1.282357"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL131_ncl1_1" meshFile="new___SHELL131_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL411_ncl1_1">
+            <position x="0.257540" y="-0.025345" z="0.511407"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL411_ncl1_1" meshFile="new___SHELL411_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL55_ncl1_1">
+            <position x="0.265391" y="-0.652344" z="1.621690"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL55_ncl1_1" meshFile="new___SHELL55_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL144_ncl1_1">
+            <position x="-0.595090" y="-0.185097" z="1.153001"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL144_ncl1_1" meshFile="new___SHELL144_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL51_ncl1_1">
+            <position x="0.161707" y="-0.466331" z="1.688966"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL51_ncl1_1" meshFile="new___SHELL51_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL117_ncl1_1">
+            <position x="-0.146551" y="-0.539703" z="1.137918"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL117_ncl1_1" meshFile="new___SHELL117_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL365_ncl1_1">
+            <position x="0.143389" y="0.183418" z="0.704385"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL365_ncl1_1" meshFile="new___SHELL365_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL102_ncl1_1">
+            <position x="-0.328817" y="-0.435188" z="1.099084"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL102_ncl1_1" meshFile="new___SHELL102_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL282_ncl1_1">
+            <position x="-0.474355" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL282_ncl1_1" meshFile="new___SHELL282_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL63_ncl1_1">
+            <position x="0.126017" y="-0.606972" z="1.211206"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL63_ncl1_1" meshFile="new___SHELL63_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL228_ncl1_1">
+            <position x="-0.554975" y="-0.254776" z="1.187295"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL228_ncl1_1" meshFile="new___SHELL228_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL80_ncl1_1">
+            <position x="0.258128" y="-0.080650" z="1.696237"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL80_ncl1_1" meshFile="new___SHELL80_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL271_ncl1_1">
+            <position x="-0.382352" y="-0.479668" z="1.226289"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL271_ncl1_1" meshFile="new___SHELL271_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL263_ncl1_1">
+            <position x="-0.590253" y="-0.254829" z="1.234666"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL263_ncl1_1" meshFile="new___SHELL263_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL506_ncl1_1">
+            <position x="0.336543" y="-0.188049" z="1.665696"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL506_ncl1_1" meshFile="new___SHELL506_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL535_ncl1_1">
+            <position x="0.354578" y="-0.177147" z="0.173082"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL535_ncl1_1" meshFile="new___SHELL535_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL298_ncl1_1">
+            <position x="-0.020154" y="-0.369163" z="0.225572"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL298_ncl1_1" meshFile="new___SHELL298_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL440_ncl1_1">
+            <position x="0.414240" y="-0.432503" z="1.371629"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL440_ncl1_1" meshFile="new___SHELL440_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL57_ncl1_1">
+            <position x="0.305949" y="0.215233" z="1.046281"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL57_ncl1_1" meshFile="new___SHELL57_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL208_ncl1_1">
+            <position x="-0.554250" y="-0.228866" z="1.177064"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL208_ncl1_1" meshFile="new___SHELL208_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL272_ncl1_1">
+            <position x="-0.330457" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL272_ncl1_1" meshFile="new___SHELL272_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL219_ncl1_1">
+            <position x="-0.382329" y="-0.448288" z="1.187265"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL219_ncl1_1" meshFile="new___SHELL219_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL344_ncl1_1">
+            <position x="-0.347028" y="0.187775" z="0.704263"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL344_ncl1_1" meshFile="new___SHELL344_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL189_ncl1_1">
+            <position x="-0.593435" y="-0.254883" z="1.233056"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL189_ncl1_1" meshFile="new___SHELL189_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL84_ncl1_1">
+            <position x="0.413043" y="-0.181602" z="1.409532"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL84_ncl1_1" meshFile="new___SHELL84_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL275_ncl1_1">
+            <position x="-0.382352" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL275_ncl1_1" meshFile="new___SHELL275_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL17_ncl1_1">
+            <position x="0.342486" y="-0.218910" z="1.454339"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL17_ncl1_1" meshFile="new___SHELL17_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL151_ncl1_1">
+            <position x="-0.553159" y="-0.186653" z="1.172624"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL151_ncl1_1" meshFile="new___SHELL151_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL133_ncl1_1">
+            <position x="-0.622892" y="-0.516151" z="1.213914"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL133_ncl1_1" meshFile="new___SHELL133_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL101_ncl1_1">
+            <position x="-0.541845" y="-0.344147" z="1.099077"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL101_ncl1_1" meshFile="new___SHELL101_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL167_ncl1_1">
+            <position x="-0.566877" y="-0.410278" z="1.040849"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL167_ncl1_1" meshFile="new___SHELL167_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL409_ncl1_1">
+            <position x="0.257334" y="-0.025444" z="0.488511"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL409_ncl1_1" meshFile="new___SHELL409_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL396_ncl1_1">
+            <position x="-0.077695" y="0.275673" z="0.448564"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL396_ncl1_1" meshFile="new___SHELL396_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL546_ncl1_1">
+            <position x="-0.562650" y="-0.220573" z="0.626931"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL546_ncl1_1" meshFile="new___SHELL546_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL21_ncl1_1">
+            <position x="-0.765783" y="-0.669273" z="1.489785"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL21_ncl1_1" meshFile="new___SHELL21_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL215_ncl1_1">
+            <position x="-0.554960" y="-0.372757" z="1.187272"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL215_ncl1_1" meshFile="new___SHELL215_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL118_ncl1_1">
+            <position x="0.003542" y="-0.488922" z="1.210428"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL118_ncl1_1" meshFile="new___SHELL118_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL380_ncl1_1">
+            <position x="-0.265951" y="-0.137291" z="0.530526"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL380_ncl1_1" meshFile="new___SHELL380_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL210_ncl1_1">
+            <position x="-0.382352" y="-0.447609" z="1.177140"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL210_ncl1_1" meshFile="new___SHELL210_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL548_ncl1_1">
+            <position x="0.415530" y="0.217774" z="0.964967"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL548_ncl1_1" meshFile="new___SHELL548_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL402_ncl1_1">
+            <position x="0.337756" y="-0.212402" z="1.245713"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL402_ncl1_1" meshFile="new___SHELL402_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL238_ncl1_1">
+            <position x="-0.580091" y="-0.372780" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL238_ncl1_1" meshFile="new___SHELL238_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL49_ncl1_1">
+            <position x="-0.933546" y="-0.186279" z="1.441713"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL49_ncl1_1" meshFile="new___SHELL49_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL534_ncl1_1">
+            <position x="0.352877" y="-0.631576" z="0.919587"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL534_ncl1_1" meshFile="new___SHELL534_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL53_ncl1_1">
+            <position x="-0.423452" y="-0.466293" z="1.688920"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL53_ncl1_1" meshFile="new___SHELL53_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL120_ncl1_1">
+            <position x="-0.110319" y="-0.503494" z="1.214227"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL120_ncl1_1" meshFile="new___SHELL120_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL200_ncl1_1">
+            <position x="-0.554235" y="-0.320854" z="1.177041"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL200_ncl1_1" meshFile="new___SHELL200_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL159_ncl1_1">
+            <position x="-0.590269" y="-0.123031" z="1.229257"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL159_ncl1_1" meshFile="new___SHELL159_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL499_ncl1_1">
+            <position x="0.336543" y="-0.572082" z="1.173486"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL499_ncl1_1" meshFile="new___SHELL499_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL399_ncl1_1">
+            <position x="0.287623" y="0.118241" z="0.272706"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL399_ncl1_1" meshFile="new___SHELL399_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL132_ncl1_1">
+            <position x="-0.245450" y="-0.473671" z="1.209489"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL132_ncl1_1" meshFile="new___SHELL132_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL251_ncl1_1">
+            <position x="-0.561513" y="-0.346832" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL251_ncl1_1" meshFile="new___SHELL251_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL352_ncl1_1">
+            <position x="0.143839" y="0.162262" z="0.703309"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL352_ncl1_1" meshFile="new___SHELL352_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL351_ncl1_1">
+            <position x="0.138430" y="0.134262" z="0.658258"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL351_ncl1_1" meshFile="new___SHELL351_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL204_ncl1_1">
+            <position x="-0.554265" y="-0.254791" z="1.177125"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL204_ncl1_1" meshFile="new___SHELL204_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL498_ncl1_1">
+            <position x="0.336543" y="-0.531364" z="0.727433"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL498_ncl1_1" meshFile="new___SHELL498_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL324_ncl1_1">
+            <position x="0.158976" y="-0.582184" z="0.721681"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL324_ncl1_1" meshFile="new___SHELL324_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL541_ncl1_1">
+            <position x="-0.253858" y="-0.640274" z="1.146806"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL541_ncl1_1" meshFile="new___SHELL541_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL40_ncl1_1">
+            <position x="-0.489683" y="-0.591308" z="1.103364"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL40_ncl1_1" meshFile="new___SHELL40_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL231_ncl1_1">
+            <position x="-0.583730" y="-0.346855" z="1.248948"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL231_ncl1_1" meshFile="new___SHELL231_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL322_ncl1_1">
+            <position x="-0.833639" y="-0.291237" z="1.257829"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL322_ncl1_1" meshFile="new___SHELL322_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL122_ncl1_1">
+            <position x="-0.111059" y="-0.486091" z="1.239587"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL122_ncl1_1" meshFile="new___SHELL122_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL78_ncl1_1">
+            <position x="0.301646" y="-0.417343" z="0.598001"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL78_ncl1_1" meshFile="new___SHELL78_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL486_ncl1_1">
+            <position x="0.248545" y="0.080299" z="1.736192"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL486_ncl1_1" meshFile="new___SHELL486_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL368_ncl1_1">
+            <position x="0.143816" y="0.163521" z="0.725320"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL368_ncl1_1" meshFile="new___SHELL368_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL192_ncl1_1">
+            <position x="-0.356351" y="-0.457825" z="1.171090"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL192_ncl1_1" meshFile="new___SHELL192_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL203_ncl1_1">
+            <position x="-0.554281" y="-0.280739" z="1.177133"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL203_ncl1_1" meshFile="new___SHELL203_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL232_ncl1_1">
+            <position x="-0.608831" y="-0.280784" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL232_ncl1_1" meshFile="new___SHELL232_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL43_ncl1_1">
+            <position x="-0.488973" y="-0.585770" z="1.092157"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL43_ncl1_1" meshFile="new___SHELL43_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL379_ncl1_1">
+            <position x="0.062045" y="-0.137291" z="0.530526"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL379_ncl1_1" meshFile="new___SHELL379_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL540_ncl1_1">
+            <position x="-0.873456" y="-0.380737" z="1.533052"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL540_ncl1_1" meshFile="new___SHELL540_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL220_ncl1_1">
+            <position x="-0.474325" y="-0.448288" z="1.187265"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL220_ncl1_1" meshFile="new___SHELL220_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL183_ncl1_1">
+            <position x="-0.448293" y="-0.457825" z="1.171067"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL183_ncl1_1" meshFile="new___SHELL183_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL162_ncl1_1">
+            <position x="-0.572011" y="-0.036285" z="1.229120"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL162_ncl1_1" meshFile="new___SHELL162_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL77_ncl1_1">
+            <position x="-0.781988" y="0.201317" z="1.190034"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL77_ncl1_1" meshFile="new___SHELL77_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL224_ncl1_1">
+            <position x="-0.554945" y="-0.320885" z="1.187249"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL224_ncl1_1" meshFile="new___SHELL224_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL326_ncl1_1">
+            <position x="-0.099172" y="-0.573860" z="0.681802"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL326_ncl1_1" meshFile="new___SHELL326_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL260_ncl1_1">
+            <position x="-0.590253" y="-0.372780" z="1.234666"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL260_ncl1_1" meshFile="new___SHELL260_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL278_ncl1_1">
+            <position x="-0.448408" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL278_ncl1_1" meshFile="new___SHELL278_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL89_ncl1_1">
+            <position x="0.233233" y="-0.107559" z="0.877496"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL89_ncl1_1" meshFile="new___SHELL89_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL25_ncl1_1">
+            <position x="-0.564626" y="-0.107437" z="0.667489"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL25_ncl1_1" meshFile="new___SHELL25_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL187_ncl1_1">
+            <position x="-0.448156" y="-0.486763" z="1.233033"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL187_ncl1_1" meshFile="new___SHELL187_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL147_ncl1_1">
+            <position x="-0.593900" y="-0.182350" z="1.150445"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL147_ncl1_1" meshFile="new___SHELL147_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL37_ncl1_1">
+            <position x="-0.548292" y="-0.412109" z="1.687005"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL37_ncl1_1" meshFile="new___SHELL37_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL205_ncl1_1">
+            <position x="-0.474348" y="-0.447616" z="1.177163"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL205_ncl1_1" meshFile="new___SHELL205_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL42_ncl1_1">
+            <position x="-0.669492" y="-0.589142" z="1.146684"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL42_ncl1_1" meshFile="new___SHELL42_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL350_ncl1_1">
+            <position x="-0.347707" y="0.174957" z="0.724183"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL350_ncl1_1" meshFile="new___SHELL350_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL395_ncl1_1">
+            <position x="-0.227766" y="-0.404388" z="0.112375"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL395_ncl1_1" meshFile="new___SHELL395_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL143_ncl1_1">
+            <position x="-0.549154" y="-0.186889" z="1.168908"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL143_ncl1_1" meshFile="new___SHELL143_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL60_ncl1_1">
+            <position x="-0.286153" y="0.207451" z="1.618791"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL60_ncl1_1" meshFile="new___SHELL60_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL354_ncl1_1">
+            <position x="0.143130" y="0.188370" z="0.704530"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL354_ncl1_1" meshFile="new___SHELL354_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL148_ncl1_1">
+            <position x="-0.593679" y="-0.191810" z="1.149972"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL148_ncl1_1" meshFile="new___SHELL148_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL335_ncl1_1">
+            <position x="-0.347379" y="0.167183" z="0.699716"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL335_ncl1_1" meshFile="new___SHELL335_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL125_ncl1_1">
+            <position x="-0.321455" y="-0.511139" z="1.280298"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL125_ncl1_1" meshFile="new___SHELL125_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL71_ncl1_1">
+            <position x="0.309069" y="-0.556213" z="1.442575"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL71_ncl1_1" meshFile="new___SHELL71_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL222_ncl1_1">
+            <position x="-0.356374" y="-0.448288" z="1.187265"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL222_ncl1_1" meshFile="new___SHELL222_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL197_ncl1_1">
+            <position x="-0.564497" y="-0.254852" z="1.171067"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL197_ncl1_1" meshFile="new___SHELL197_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL24_ncl1_1">
+            <position x="-0.167806" y="-0.589271" z="0.925119"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL24_ncl1_1" meshFile="new___SHELL24_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL209_ncl1_1">
+            <position x="-0.422483" y="-0.447601" z="1.177140"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL209_ncl1_1" meshFile="new___SHELL209_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL56_ncl1_1">
+            <position x="0.059428" y="-0.579674" z="0.947992"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL56_ncl1_1" meshFile="new___SHELL56_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL249_ncl1_1">
+            <position x="-0.561513" y="-0.280784" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL249_ncl1_1" meshFile="new___SHELL249_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL39_ncl1_1">
+            <position x="-0.933004" y="-0.186272" z="1.439050"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL39_ncl1_1" meshFile="new___SHELL39_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL279_ncl1_1">
+            <position x="-0.330457" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL279_ncl1_1" meshFile="new___SHELL279_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL542_ncl1_1">
+            <position x="-0.295896" y="-0.680275" z="1.347375"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL542_ncl1_1" meshFile="new___SHELL542_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL284_ncl1_1">
+            <position x="-0.448392" y="-0.483604" z="1.234689"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL284_ncl1_1" meshFile="new___SHELL284_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL155_ncl1_1">
+            <position x="-0.607259" y="-0.035484" z="1.211511"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL155_ncl1_1" meshFile="new___SHELL155_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL4_ncl1_1">
+            <position x="0.283000" y="-0.260628" z="1.148088"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL4_ncl1_1" meshFile="new___SHELL4_ncl1_1-l.mesh"/>
+          </node>
+          <node name="new___SHELL405_ncl1_1">
+            <position x="-0.851903" y="-0.070770" z="1.207681"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL405_ncl1_1" meshFile="new___SHELL405_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL403_ncl1_1">
+            <position x="-0.858419" y="-0.109398" z="1.239358"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL403_ncl1_1" meshFile="new___SHELL403_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL677_ncl1_1">
+            <position x="-0.413106" y="-0.427711" z="0.198770"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL677_ncl1_1" meshFile="new___SHELL677_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL495_ncl1_1">
+            <position x="0.379954" y="0.080498" z="0.947343"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL495_ncl1_1" meshFile="new___SHELL495_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL321_ncl1_1">
+            <position x="-0.340589" y="-0.621544" z="1.222581"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL321_ncl1_1" meshFile="new___SHELL321_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL292_ncl1_1">
+            <position x="0.035433" y="-0.547729" z="1.085336"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL292_ncl1_1" meshFile="new___SHELL292_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL259_ncl1_1">
+            <position x="-0.422452" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL259_ncl1_1" meshFile="new___SHELL259_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL211_ncl1_1">
+            <position x="-0.582990" y="-0.254791" z="1.238679"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL211_ncl1_1" meshFile="new___SHELL211_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL357_ncl1_1">
+            <position x="0.143931" y="0.168709" z="0.726892"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL357_ncl1_1" meshFile="new___SHELL357_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL66_ncl1_1">
+            <position x="-0.486555" y="-0.602157" z="1.644868"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL66_ncl1_1" meshFile="new___SHELL66_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL490_ncl1_1">
+            <position x="0.342143" y="0.130943" z="0.904176"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL490_ncl1_1" meshFile="new___SHELL490_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL226_ncl1_1">
+            <position x="-0.583730" y="-0.280807" z="1.248948"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL226_ncl1_1" meshFile="new___SHELL226_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL320_ncl1_1">
+            <position x="0.139491" y="-0.556480" z="0.974870"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL320_ncl1_1" meshFile="new___SHELL320_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL533_ncl1_1">
+            <position x="0.353541" y="-0.203941" z="1.609987"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL533_ncl1_1" meshFile="new___SHELL533_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL79_ncl1_1">
+            <position x="-0.726072" y="-0.573372" z="1.251977"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL79_ncl1_1" meshFile="new___SHELL79_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL561_ncl1_1">
+            <position x="-0.044569" y="-0.183868" z="0.228395"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL561_ncl1_1" meshFile="new___SHELL561_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL543_ncl1_1">
+            <position x="-0.096349" y="-0.311859" z="0.163324"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL543_ncl1_1" meshFile="new___SHELL543_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL277_ncl1_1">
+            <position x="-0.448408" y="-0.487488" z="1.243051"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL277_ncl1_1" meshFile="new___SHELL277_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL44_ncl1_1">
+            <position x="-0.548124" y="-0.411995" z="1.676812"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL44_ncl1_1" meshFile="new___SHELL44_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL235_ncl1_1">
+            <position x="-0.580091" y="-0.320885" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL235_ncl1_1" meshFile="new___SHELL235_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL236_ncl1_1">
+            <position x="-0.580091" y="-0.346832" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL236_ncl1_1" meshFile="new___SHELL236_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL47_ncl1_1">
+            <position x="-0.560277" y="-0.437935" z="1.691560"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL47_ncl1_1" meshFile="new___SHELL47_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL342_ncl1_1">
+            <position x="-0.347723" y="0.165032" z="0.725992"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL342_ncl1_1" meshFile="new___SHELL342_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL404_ncl1_1">
+            <position x="-0.849004" y="-0.134483" z="1.207559"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL404_ncl1_1" meshFile="new___SHELL404_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL304_ncl1_1">
+            <position x="-0.749105" y="0.161766" z="1.143655"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL304_ncl1_1" meshFile="new___SHELL304_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL531_ncl1_1">
+            <position x="-0.047567" y="-0.012977" z="0.323709"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL531_ncl1_1" meshFile="new___SHELL531_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL316_ncl1_1">
+            <position x="-0.435865" y="-0.102424" z="0.876283"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL316_ncl1_1" meshFile="new___SHELL316_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL383_ncl1_1">
+            <position x="0.062037" y="0.119698" z="0.530519"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL383_ncl1_1" meshFile="new___SHELL383_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL386_ncl1_1">
+            <position x="-0.099714" y="-0.203514" z="0.481622"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL386_ncl1_1" meshFile="new___SHELL386_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL472_ncl1_1">
+            <position x="0.162325" y="0.219353" z="0.447015"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL472_ncl1_1" meshFile="new___SHELL472_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL81_ncl1_1">
+            <position x="-0.791181" y="-0.082313" z="1.696244"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL81_ncl1_1" meshFile="new___SHELL81_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL27_ncl1_1">
+            <position x="-0.258337" y="0.225372" z="1.683969"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL27_ncl1_1" meshFile="new___SHELL27_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL346_ncl1_1">
+            <position x="-0.347715" y="0.168259" z="0.703851"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL346_ncl1_1" meshFile="new___SHELL346_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL38_ncl1_1">
+            <position x="-0.545965" y="-0.407379" z="1.695817"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL38_ncl1_1" meshFile="new___SHELL38_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL146_ncl1_1">
+            <position x="-0.590841" y="-0.188469" z="1.143884"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL146_ncl1_1" meshFile="new___SHELL146_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL229_ncl1_1">
+            <position x="-0.330427" y="-0.448288" z="1.187265"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL229_ncl1_1" meshFile="new___SHELL229_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL390_ncl1_1">
+            <position x="-0.280302" y="0.180771" z="0.481630"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL390_ncl1_1" meshFile="new___SHELL390_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL93_ncl1_1">
+            <position x="-0.101339" y="0.278877" z="1.001062"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL93_ncl1_1" meshFile="new___SHELL93_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL244_ncl1_1">
+            <position x="-0.608831" y="-0.254829" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL244_ncl1_1" meshFile="new___SHELL244_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL280_ncl1_1">
+            <position x="-0.382352" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL280_ncl1_1" meshFile="new___SHELL280_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL283_ncl1_1">
+            <position x="-0.422452" y="-0.502159" z="1.226007"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL283_ncl1_1" meshFile="new___SHELL283_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL150_ncl1_1">
+            <position x="-0.560529" y="-0.186790" z="1.163537"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL150_ncl1_1" meshFile="new___SHELL150_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL108_ncl1_1">
+            <position x="-0.541845" y="-0.024147" z="1.099077"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL108_ncl1_1" meshFile="new___SHELL108_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL391_ncl1_1">
+            <position x="-0.099683" y="-0.209480" z="0.479661"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL391_ncl1_1" meshFile="new___SHELL391_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL336_ncl1_1">
+            <position x="-0.344099" y="0.129166" z="0.656610"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL336_ncl1_1" meshFile="new___SHELL336_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL59_ncl1_1">
+            <position x="-0.494298" y="-0.227890" z="0.738481"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL59_ncl1_1" meshFile="new___SHELL59_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL206_ncl1_1">
+            <position x="-0.330465" y="-0.447616" z="1.177156"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL206_ncl1_1" meshFile="new___SHELL206_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL153_ncl1_1">
+            <position x="-0.593214" y="-0.122780" z="1.218065"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL153_ncl1_1" meshFile="new___SHELL153_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL28_ncl1_1">
+            <position x="-0.251623" y="-0.679748" z="1.428796"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL28_ncl1_1" meshFile="new___SHELL28_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL198_ncl1_1">
+            <position x="-0.356412" y="-0.447609" z="1.177148"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL198_ncl1_1" meshFile="new___SHELL198_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL388_ncl1_1">
+            <position x="-0.280286" y="-0.209480" z="0.479661"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL388_ncl1_1" meshFile="new___SHELL388_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL161_ncl1_1">
+            <position x="-0.587041" y="-0.065399" z="1.230493"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL161_ncl1_1" meshFile="new___SHELL161_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL340_ncl1_1">
+            <position x="-0.347616" y="0.153954" z="0.704355"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL340_ncl1_1" meshFile="new___SHELL340_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL470_ncl1_1">
+            <position x="0.026705" y="0.235611" z="0.316926"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL470_ncl1_1" meshFile="new___SHELL470_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL128_ncl1_1">
+            <position x="-0.321447" y="-0.507492" z="1.282029"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL128_ncl1_1" meshFile="new___SHELL128_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL46_ncl1_1">
+            <position x="-0.548238" y="-0.412086" z="1.684358"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL46_ncl1_1" meshFile="new___SHELL46_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL237_ncl1_1">
+            <position x="-0.330457" y="-0.473419" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL237_ncl1_1" meshFile="new___SHELL237_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL165_ncl1_1">
+            <position x="-0.594457" y="-0.228645" z="1.233781"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL165_ncl1_1" meshFile="new___SHELL165_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL323_ncl1_1">
+            <position x="-0.095769" y="-0.574302" z="0.684312"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL323_ncl1_1" meshFile="new___SHELL323_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL285_ncl1_1">
+            <position x="-0.382337" y="-0.483581" z="1.234636"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL285_ncl1_1" meshFile="new___SHELL285_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL233_ncl1_1">
+            <position x="-0.580091" y="-0.254829" z="1.164376"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL233_ncl1_1" meshFile="new___SHELL233_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL256_ncl1_1">
+            <position x="-0.382352" y="-0.454841" z="1.173043"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL256_ncl1_1" meshFile="new___SHELL256_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL479_ncl1_1">
+            <position x="0.220545" y="-0.701263" z="1.409433"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL479_ncl1_1" meshFile="new___SHELL479_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL384_ncl1_1">
+            <position x="-0.265958" y="0.119698" z="0.530526"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL384_ncl1_1" meshFile="new___SHELL384_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL536_ncl1_1">
+            <position x="-0.391149" y="0.257767" z="0.403749"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL536_ncl1_1" meshFile="new___SHELL536_ncl1_1.mesh"/>
+          </node>
+          <node name="Toro_spot_front_obj">
+            <position x="0.636446" y="0.041641" z="1.890058"/>
+            <quaternion x="0.500000" y="-0.500000" z="-0.500000" w="0.500000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <light name="Toro_spot_front" type="spotLight" castShadows="true">
+              <normal x="0.0" y="0.0" z="-1.0"/>
+              <colourDiffuse r="1.000000" g="1.000000" b="1.000000"/>
+              <colourSpecular r="1.000000" g="1.000000" b="1.000000"/>
+              <lightRange inner="90.000038" outer="90.000038" falloff="1.0"/>
+              <lightAttenuation range="40.000000" constant="1.000000" linear="0.066667" quadratic="0.000000"/>
+            </light>
+          </node>
+          <node name="new___SHELL398_ncl1_1">
+            <position x="0.240679" y="0.118279" z="0.272920"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL398_ncl1_1" meshFile="new___SHELL398_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL331_ncl1_1">
+            <position x="-0.351171" y="0.076630" z="0.595910"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL331_ncl1_1" meshFile="new___SHELL331_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL103_ncl1_1">
+            <position x="-0.541669" y="-0.345253" z="1.099412"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL103_ncl1_1" meshFile="new___SHELL103_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL223_ncl1_1">
+            <position x="-0.422422" y="-0.448288" z="1.187265"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL223_ncl1_1" meshFile="new___SHELL223_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL70_ncl1_1">
+            <position x="-0.022565" y="-0.602135" z="1.644868"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL70_ncl1_1" meshFile="new___SHELL70_ncl1_1-.mesh"/>
+          </node>
+          <node name="new___SHELL100_ncl1_1">
+            <position x="-0.473821" y="-0.435188" z="1.099084"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL100_ncl1_1" meshFile="new___SHELL100_ncl1_1.mesh"/>
+          </node>
+          <node name="new___SHELL561_nc.003">
+            <position x="0.196040" y="-0.027031" z="0.136033"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL561_nc.003" meshFile="new___SHELL561_nc.003.mesh"/>
+          </node>
+          <node name="new___SHELL407_ncl1_1">
+            <position x="-0.845495" y="-0.109352" z="1.175660"/>
+            <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+            <scale x="1.000000" y="1.000000" z="1.000000"/>
+            <entity name="new___SHELL407_ncl1_1" meshFile="new___SHELL407_ncl1_1.mesh"/>
+          </node>
+        </node>
+        <node name="ikkunana_tiiviste_001">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="ikkunana_tiiviste_001" meshFile="ikkunana_tiiviste_001.mesh"/>
+        </node>
+        <node name="takarunko_main">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="takarunko_main" meshFile="takarunko_main.mesh"/>
+        </node>
+        <node name="steel_mesh">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="steel_mesh" meshFile="Mesh_Chocola_SteelBlu.mesh"/>
+        </node>
+        <node name="takarunko_lista">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="takarunko_lista" meshFile="takarunko_lista.mesh"/>
+        </node>
+        <node name="ikkunana_tiiviste_002">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="ikkunana_tiiviste_002" meshFile="ikkunana_tiiviste_002.mesh"/>
+        </node>
+        <node name="ikkunana_tiiviste_003">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="ikkunana_tiiviste_003" meshFile="ikkunana_tiiviste_003.mesh"/>
+        </node>
+      </node>
+      <node name="ohjausSOP">
+        <position x="-1.898000" y="-0.441500" z="1.034400"/>
+        <quaternion x="-0.007683" y="0.350196" z="0.002873" w="0.936641"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="ohjausSOP" meshFile="ohjaus_barrel.mesh"/>
+      </node>
+      <node name="kauha">
+        <position x="1.938000" y="-0.562100" z="-0.004000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.002618" w="0.999997"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="kauha_obj">
+          <position x="-0.000000" y="0.000000" z="-0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="kauha_obj" meshFile="kauha.mesh"/>
+        </node>
+      </node>
+      <node name="ohjausSOM">
+        <position x="-0.975000" y="-0.442000" z="0.234000"/>
+        <quaternion x="-0.007683" y="0.350196" z="0.002873" w="0.936641"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="ohjaus_piston_holder">
+          <position x="0.000000" y="-0.000000" z="-0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="-0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="ohjaus_piston_holder" meshFile="ohjaus_piston_holder.mesh"/>
+        </node>
+        <node name="ohjaus_piston">
+          <position x="0.000000" y="-0.000000" z="-0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="-0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="ohjaus_piston" meshFile="ohjaus_piston.mesh"/>
+        </node>
+      </node>
+      <node name="wheel_back_right">
+        <position x="-2.962000" y="-0.188000" z="0.975000"/>
+        <quaternion x="-0.004363" y="0.000070" z="-0.016143" w="0.999860"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="rim_back_right">
+          <position x="0.000000" y="-0.000000" z="-0.000000"/>
+          <quaternion x="-0.000000" y="-0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="rim_back_right" meshFile="vanne.mesh"/>
+        </node>
+        <node name="tyre_back_right">
+          <position x="0.000000" y="-0.000000" z="-0.000000"/>
+          <quaternion x="-0.000000" y="-0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="tyre_back_right" meshFile="rengas.mesh"/>
+        </node>
+      </node>
+      <node name="taka-akseli">
+        <position x="-2.959000" y="-0.222000" z="0.000000"/>
+        <quaternion x="-0.004363" y="0.000000" z="0.000000" w="0.999991"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="taka-akseli_right">
+          <position x="-0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="taka-akseli_right" meshFile="taka-akseli_right_m.mesh"/>
+        </node>
+        <node name="taka-akseli_left">
+          <position x="-0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="taka-akseli_left" meshFile="taka-akseli_left_m.mesh"/>
+        </node>
+      </node>
+      <node name="kippiSM">
+        <position x="1.129000" y="0.926000" z="-0.004000"/>
+        <quaternion x="0.006687" y="0.001270" z="0.186520" w="0.982428"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="kippi_piston">
+          <position x="-0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="kippi_piston" meshFile="kippi_piston.mesh"/>
+        </node>
+        <node name="kippi_piston_holder">
+          <position x="-0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="kippi_piston_holder" meshFile="kippi_piston_holder.mesh"/>
+        </node>
+      </node>
+      <node name="wheel_front_right">
+        <position x="0.538000" y="-0.180000" z="0.972000"/>
+        <quaternion x="0.000000" y="0.000000" z="-0.002967" w="0.999996"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="tyre_front_right">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="tyre_front_right" meshFile="rengas.mesh"/>
+        </node>
+        <node name="rim_front_right">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="rim_front_right" meshFile="vanne.mesh"/>
+        </node>
+      </node>
+      <node name="keinuvipu">
+        <position x="1.116000" y="0.176000" z="-0.004000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.015707" w="0.999877"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="keinuvipu_yla_nivel">
+          <position x="-0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="keinuvipu_yla_nivel" meshFile="keinuvipu_yla_nivel.mesh"/>
+        </node>
+        <node name="keinuvipu_base">
+          <position x="-0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="keinuvipu_base" meshFile="keinuvipu_base.mesh"/>
+        </node>
+        <node name="keinuvipu_ala_nivel">
+          <position x="-0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="keinuvipu_ala_nivel" meshFile="keinuvipu_ala_nivel.mesh"/>
+        </node>
+      </node>
+      <node name="nostoSM">
+        <position x="0.343000" y="0.439000" z="-0.004000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.386711" w="0.922201"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="nosto_pistons">
+          <position x="0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="nosto_pistons" meshFile="nosto_pistons.mesh"/>
+        </node>
+        <node name="nosto_piston_holders">
+          <position x="0.000000" y="-0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="nosto_piston_holders" meshFile="nosto_piston_holders.mesh"/>
+        </node>
+      </node>
+      <node name="kippiSP">
+        <position x="-0.288000" y="0.368000" z="-0.004000"/>
+        <quaternion x="0.006687" y="0.001270" z="0.186520" w="0.982428"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <entity name="kippiSP" meshFile="kippi_barrel.mesh"/>
+      </node>
+      <node name="eturunko">
+        <position x="0.000000" y="0.000000" z="0.000000"/>
+        <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="etu_sylinterit">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="etu_sylinterit" meshFile="etu_sylinterit.mesh"/>
+        </node>
+        <node name="etu_mini_sylinterit">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="etu_mini_sylinterit" meshFile="etu_mini_sylinterit.mesh"/>
+        </node>
+        <node name="etu_lokasuojat">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="etu_lokasuojat" meshFile="etu_lokasuojat.mesh"/>
+        </node>
+        <node name="etuakselin_tuki">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="etuakselin_tuki" meshFile="etuakselin_tuki.mesh"/>
+        </node>
+        <node name="etuakseli">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="etuakseli" meshFile="etuakseli.mesh"/>
+        </node>
+        <node name="eturunko_base">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="eturunko_base" meshFile="eturunko_base.mesh"/>
+        </node>
+      </node>
+      <node name="wheel_front_left">
+        <position x="0.537500" y="-0.180000" z="-0.972000"/>
+        <quaternion x="0.000000" y="0.000000" z="-0.002496" w="0.999997"/>
+        <scale x="1.000000" y="1.000000" z="1.000000"/>
+        <node name="tyre_front_left">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="tyre_front_left" meshFile="rengas.mesh"/>
+        </node>
+        <node name="rim_front_left">
+          <position x="0.000000" y="0.000000" z="0.000000"/>
+          <quaternion x="0.000000" y="0.000000" z="0.002967" w="0.999996"/>
+          <scale x="1.000000" y="1.000000" z="1.000000"/>
+          <entity name="rim_front_left" meshFile="vanne.mesh"/>
+        </node>
+      </node>
+    </node>
+  </nodes>
+  <externals>
+    <item type="material">
+      <file name="Scene.material"/>
+    </item>
+  </externals>
+  <environment>
+    <colourAmbient r="0.000000" g="0.000000" b="0.000000"/>
+    <colourBackground r="0.056563" g="0.220815" b="0.400000"/>
+  </environment>
+</scene>

@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  */
 
 #include "message.hpp"
@@ -31,11 +31,15 @@ vl::cluster::Message::Message( std::vector<char> const &arr )
 		size_t size = _size;
 		if( arr.size() < pos + size )
 		{
-			std::cerr << "A message is partial!" << std::endl;
+			std::cout << "vl::cluster::Message : " 
+				<< "A message is partial! Waiting for append." 
+				<< " size = " << _size << " bytes " 
+				<< ": already has " << arr.size()-pos << " bytes."
+				<< std::endl;
 			size = arr.size() - pos;
 		}
 
-		_data.resize(_size);
+		_data.resize(size);
 		::memcpy( &_data[0], &arr[pos], size );
 	}
 }
@@ -82,6 +86,19 @@ vl::cluster::Message::write( char const *mem, vl::msg_size size )
 	_size += size;
 
 	return size;
+}
+
+/// -------------------------- MessagePart -----------------------------------
+bool
+vl::cluster::MessagePart::valid( void ) const
+{
+	return !partial();
+}
+
+bool
+vl::cluster::MessagePart::partial( void ) const
+{
+	return size() != _data.size();
 }
 
 /// ----------------------------- ObjectData -----------------------------------

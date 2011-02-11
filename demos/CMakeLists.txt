@@ -22,6 +22,10 @@ copy_start_scripts( renderer
 	tracking_test_project/tracking.prj
 	tracking )
 
+copy_start_scripts( renderer
+	large_test_project/large_test.prj
+	large_test )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	)

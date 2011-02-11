@@ -13,6 +13,9 @@ vl::cluster::Server::Server( uint16_t const port )
 {
 	std::cout << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
+	boost::asio::socket_base::receive_buffer_size buf_size;
+	_socket.get_option(buf_size);
+	std::cout << "Receive Buffer size = " << buf_size.value() << "." << std::endl;
 }
 
 
@@ -123,17 +126,9 @@ vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 	_sendEnvironment(_env_msg);
 }
 
-/// TODO
-/// This is problematic because we allow for sending new project messages
-/// But this calls _sendProject which only sends the project to those clients
-/// That are on the correct state
-/// This one needs to reset every clients state or we need to use different
-/// system.
 void
 vl::cluster::Server::sendProject( const vl::cluster::Message &msg )
 {
-	std::cout << "vl::cluster::Server::sendProject" << std::endl;
-
 	_proj_msg.clear();
 	msg.dump(_proj_msg);
 }
@@ -232,6 +227,10 @@ vl::cluster::Server::_sendInit( const boost::asio::ip::udp::endpoint& endpoint )
 void
 vl::cluster::Server::_sendUpdate( const boost::asio::ip::udp::endpoint& endpoint )
 {
+	// @todo should we send zero data messages?
+	// the client can not handle not receiving updates but only receiving a draw message
+	// at the moment, so should there always be an update message and
+	// then the draw message or is the update message optional?
 	_socket.send_to( boost::asio::buffer(_msg_update), endpoint );
 }
 

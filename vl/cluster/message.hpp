@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  */
 
 #ifndef VL_CLUSTER_MESSAGE_HPP
@@ -64,7 +64,7 @@ namespace cluster
  */
 enum MSG_TYPES
 {
-	MSG_UNDEFINED,		// Not defined message type these should never be sent
+	MSG_UNDEFINED = 0,	// Not defined message type these should never be sent
 	MSG_ACK,			// Acknowledgement message
 	MSG_REG_UPDATES,	// Reguest updates from the application
 	MSG_ENVIRONMENT,	// Send the Environment configuration
@@ -88,10 +88,46 @@ enum EVENT_TYPES
 	EVT_MOUSE_MOVED,
 };
 
+inline
+std::string getTypeAsString( MSG_TYPES type )
+{
+	switch( type )
+	{
+	case MSG_UNDEFINED :
+		return "MSG_UNDEFINED";
+	case MSG_ACK :
+		return "MSG_ACK";
+	case MSG_REG_UPDATES :
+		return "MSG_REG_UPDATES";
+	case MSG_ENVIRONMENT :
+		return "MSG_ENVIRONMENT";
+	case MSG_PROJECT :
+		return "MSG_PROJECT";
+	case MSG_INITIAL_STATE :
+		return "MSG_INITIAL_STATE";
+	case MSG_UPDATE :
+		return "MSG_UPDATE";
+	case MSG_INPUT :
+		return "MSG_INPUT";
+	case MSG_READY_DRAW :
+		return "MSG_READY_DRAW";
+	case MSG_DRAW :
+		return "MSG_DRAW";
+	case MSG_READY_SWAP :
+		return "MSG_READY_SWAP";
+	case MSG_SWAP :
+		return "MSG_SWAP";
+	default :
+		return std::string();
+	}
+}
+
 /// Description of an UDP message
 class Message
 {
 public :
+	typedef uint32_t size_type;
+
 	Message( std::vector<char> const &arr);
 
 	Message( MSG_TYPES type );
@@ -126,19 +162,70 @@ public :
 	/// Contains the message, not the type of the message which precedes the message
 	/// Maximum size is 8kbytes, which is more than one datagram can handle
 	/// For now larger messages are not supported
-	msg_size size( void )
+	size_type size( void )
 	{ return _size; }
 
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 
 private :
+	/**	@todo Replace all the message data with one std::vector<char>
+	 *	removes copying when the message is dumped for real sending
+	 *	anyway message will 
+	 *	HUH, doesn't make sense if we use different class to create the
+	 *	real message so that we can support message splitting.
+	 *	That message data should be completely in std::vector<char>
+	 */
 	MSG_TYPES _type;
-	msg_size _size;
+	size_type _size;
 	std::vector<char> _data;
 
 };	// class Message
 
 std::ostream &operator<<( std::ostream &os, Message const &msg );
+
+/** @class MessagePart
+ *	@brief A class used for splitting and reconstruction of Messages
+ *	@todo Not in use at the moment
+ *	
+ *	Messages should read/write to multiple MessageParts which are sent
+ *	separately.
+ */
+class MessagePart
+{
+public :
+	MessagePart( void );
+
+	MSG_TYPES getType( void ) const
+	{ return _type; }
+
+	Message::size_type start_index( void ) const
+	{ return _start_index; }
+
+	Message::size_type end_index( void ) const
+	{ return _end_index; }
+
+	Message::size_type size( void ) const
+	{ return _end_index-_start_index; }
+
+	/// Dump the whole message to a binary array, the array is modified
+	virtual void dump( std::vector<char> &arr ) const;
+
+	/**	@brief If the message is valid for reading or is partial
+	 *	@return True if message can be read and no data is missing, false otherwise
+	 *
+	 *	valid() = !partial() always
+	 */
+	bool valid( void ) const;
+
+	bool partial( void ) const;
+
+private :
+	MSG_TYPES _type;
+	Message::size_type _start_index;
+	Message::size_type _end_index;
+	Message::size_type _whole_size;
+	std::vector<char> _data;
+};
 
 class ByteData
 {

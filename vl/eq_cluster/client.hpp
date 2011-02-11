@@ -1,6 +1,8 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
  *
+ *	Program starting point
+ *	TODO should probably be replaced with just main function
  */
 #ifndef EQ_OGRE_CLIENT_HPP
 #define EQ_OGRE_CLIENT_HPP
@@ -40,7 +42,6 @@ namespace eqOgre
 
 
 		vl::EnvSettingsRefPtr _env;
-// 		vl::SettingsRefPtr _settings;
 
 		vl::GameManagerPtr _game_manager;
 
@@ -53,7 +54,6 @@ namespace eqOgre
 		// but this does not have the sleeping time
 		double _rendering_time;
 
-// 		eq::ServerPtr _server;
 		eqOgre::Config *_config;
 
 		boost::thread *_pipe_thread;

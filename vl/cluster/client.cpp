@@ -4,6 +4,8 @@
 
 #include "client.hpp"
 
+#include "base/exceptions.hpp"
+
 #include <sstream>
 
 #include <iostream>
@@ -13,8 +15,8 @@ const size_t MSG_BUFFER_SIZE = 128;
 vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	: _io_service(), _socket( _io_service ), _master()
 {
-	std::cout << "Connecting to host " << hostname << " at port " << port
-		<< "." << std::endl;
+	std::cout << "vl::cluster::Client::Client : Connecting to host " 
+		<< hostname << " at port " << port << "." << std::endl;
 
 	std::stringstream ss;
 	ss << port;
@@ -23,6 +25,15 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	_master = *resolver.resolve(query);
 
 	_socket.open( boost::udp::v4() );
+
+	// @todo this is not a real solution but allowes us to receive large
+	// messages
+	// replace this by dividing the messages to multiple parts before
+	// sending
+	boost::asio::socket_base::receive_buffer_size buf_size(8*8192);
+	_socket.set_option(buf_size);
+	std::cout << "vl::cluster::Client::Client : Receive Buffer size = " 
+		<< buf_size.value() << "." << std::endl;
 }
 
 vl::cluster::Client::~Client( void )
@@ -36,7 +47,19 @@ vl::cluster::Client::mainloop( void )
 // 	std::cout << "vl::cluster::Client::mainloop" << std::endl;
 	if( _socket.available() != 0 )
 	{
-// 		std::cout << "vl::cluster::Client::mainloop has a message" << std::endl;
+		// @todo does this system work for multiple messages also?
+		// This doesn't seem to have any effect what so ever
+		boost::asio::socket_base::receive_buffer_size buf_size;
+		_socket.get_option(buf_size);
+		if( buf_size.value() < _socket.available() )
+		{
+			std::stringstream ss;
+			std::string err("Receive buffer is too small : ");
+			ss << err << _socket.available() << " bytes available : buffer size " 
+				<< buf_size.value() << " bytes.";
+			BOOST_THROW_EXCEPTION( vl::long_message() << vl::desc(ss.str()) );
+		}
+
 		std::vector<char> recv_buf( _socket.available() );
 		boost::system::error_code error;
 
@@ -56,6 +79,8 @@ vl::cluster::Client::mainloop( void )
 
 		Message *msg = new Message( recv_buf );
 		_messages.push_back(msg);
+//		std::cout << "Message of type " << getTypeAsString(msg->getType()) << " with " << msg->size()
+//			<< " bytes received." << std::endl;
 	}
 }
 

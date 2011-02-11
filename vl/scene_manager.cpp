@@ -72,9 +72,6 @@ vl::SceneManager::addSceneNode( vl::SceneNodePtr node )
 	_session->registerObject( node );
 	assert( node->getID() != vl::ID_UNDEFINED );
 	_scene_nodes.push_back( SceneNodeIDPair(node, node->getID()) );
-
-	std::cout << "SceneNode : " << _scene_nodes.back().node->getName()
-		<< " registered." << std::endl;
 }
 
 bool
@@ -167,8 +164,6 @@ vl::SceneManager::finaliseSync( void )
 /// -------------------------------Protected -----------------------------------
 // NOTE No registering can be done in the serialize method, it's called from
 // different thread.
-// FIXME  serialize is called from getInstanceData (DIRTY_ALL) when new version
-// has been commited, why?
 void
 vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
@@ -214,11 +209,9 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			// the scene node.
 			msg >> _scene_nodes.at(i).id;
 			// Check for new SceneNodes
-			if( !node ) //|| !node->isAttached() )
+			if( !node )
 			{
 				assert( _scene_nodes.at(i).id != vl::ID_UNDEFINED );
-
-// 				std::cout << "SceneNode ID valid : should map the object." << std::endl;
 				_mapObject( _scene_nodes.at(i) );
 			}
 		}
