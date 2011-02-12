@@ -3,8 +3,8 @@
  *
  */
 
-#ifndef EQOGRE_DOT_SCENELOADER_HPP
-#define EQOGRE_DOT_SCENELOADER_HPP
+#ifndef VL_OGRE_DOT_SCENELOADER_HPP
+#define VL_OGRE_DOT_SCENELOADER_HPP
 
 // Standard library includes
 #include <vector>
@@ -19,7 +19,10 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
-namespace eqOgre
+namespace vl
+{
+
+namespace ogre
 {
 
 class nodeProperty
@@ -132,6 +135,8 @@ protected:
 
 };	// class DotSceneLoader
 
-}	// namespace eqOgre
+}	// namespace ogre
 
-#endif // EQOGRE_DOT_SCENELOADER_HPP
+}	// namespace vl
+
+#endif // VL_OGRE_DOT_SCENELOADER_HPP

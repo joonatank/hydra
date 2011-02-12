@@ -1,7 +1,8 @@
-/**	Joonatan Kuosa
- *	2010-02
+/**	@author Joonatan Kuosa
+ *	@date 2010-02
+ *	@file exceptions.hpp
  *
- *	Exceptions used by eqOgre.
+ *	Exceptions.
  */
 #ifndef VL_EXCEPTIONS_HPP
 #define VL_EXCEPTIONS_HPP

@@ -84,7 +84,7 @@ private :
 	// Reload the scene
 	uint32_t _scene_version;
 
-	// SceneManager used for creating mapping between eqOgre::SceneNode and
+	// SceneManager used for creating mapping between vl::SceneNode and
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;

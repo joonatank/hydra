@@ -1,11 +1,11 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
- *
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file pipe.hpp
  *
  */
 
-#ifndef EQ_ORGE_PIPE_HPP
-#define EQ_ORGE_PIPE_HPP
+#ifndef VL_PIPE_HPP
+#define VL_PIPE_HPP
 
 #include "eq_ogre/ogre_root.hpp"
 #include "base/envsettings.hpp"
@@ -16,12 +16,20 @@
 #include "session.hpp"
 #include "settings.hpp"
 
-namespace eqOgre
+namespace vl
 {
 
-class GLWindow;
 class Window;
 
+/**	@class Pipe
+ *	@brief Representation of a pipe i.e. a single GPU
+ *
+ *	A Pipe is always run on single GPU.
+ *	Pipe objects are executed completely in a separate threads from each other
+ *	and from the application thread.
+ *	At the moment the application supports only a single Pipe objects because
+ *	of the limitations in Ogre Design.
+ */
 class Pipe : public vl::Session
 {
 public :
@@ -98,6 +106,14 @@ protected :
 	void _sendEvents( void );
 
 	void _createWindow( vl::EnvSettings::Window const &winConf );
+	
+	/**	@todo should write the screenshot to the project directory not
+	 *	to current directory
+	 *	Add the screenshot dir to DistributedSettings
+	 *	@todo the format of the screenshot name should be
+	 *	screenshot_{project_name}-{year}-{month}-{day}-{time}-{window_name}.png
+	 */
+	void _takeScreenshot( void );
 
 	std::string _name;
 
@@ -124,10 +140,10 @@ protected :
 	/// Input events to be sent
 	std::vector<vl::cluster::EventData> _events;
 
-	std::vector<eqOgre::Window *> _windows;
+	std::vector<vl::Window *> _windows;
 
 };	// class Pipe
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif // EQ_ORGE_PIPE_HPP
+#endif // VL_PIPE_HPP

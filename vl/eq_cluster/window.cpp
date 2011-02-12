@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
- *
+ *	@file window.hpp
  */
 
 #include "window.hpp"
@@ -16,19 +16,19 @@
 #include "pipe.hpp"
 
 /// ----------------------------- Public ---------------------------------------
-eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
+vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	: _name(name), _pipe( parent ), _channel(0), _ogre_window(0),
 	_input_manager(0), _keyboard(0), _mouse(0)
 {
 	assert( _pipe );
-	std::cout << "eqOgre::Window::Window : " << getName() << std::endl;
+	std::cout << "vl::Window::Window : " << getName() << std::endl;
 
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 
 	_createOgreWindow( winConf );
 	_createInputHandling();
 
-	_channel = new eqOgre::Channel( winConf.channel, this );
+	_channel = new vl::Channel( winConf.channel, this );
 
 	// Init channel
 	// TODO this is idiotic here
@@ -43,7 +43,7 @@ eqOgre::Window::Window( std::string const &name, eqOgre::Pipe *parent )
 	_channel->setViewport(viewport);
 }
 
-eqOgre::Window::~Window(void )
+vl::Window::~Window(void )
 {
 	// Should clean out OIS and Ogre
 	std::string message = "Cleaning out OIS";
@@ -58,45 +58,44 @@ eqOgre::Window::~Window(void )
 }
 
 vl::EnvSettingsRefPtr
-eqOgre::Window::getSettings( void )
+vl::Window::getSettings( void )
 {
 	return _pipe->getSettings();
 }
 
 vl::Player const &
-eqOgre::Window::getPlayer( void ) const
+vl::Window::getPlayer( void ) const
 {
 	return _pipe->getPlayer();
 }
 
 vl::ogre::RootRefPtr
-eqOgre::Window::getOgreRoot( void )
+vl::Window::getOgreRoot( void )
 {
 	return _pipe->getRoot();
 }
 
 void
-eqOgre::Window::setCamera( Ogre::Camera *camera )
+vl::Window::setCamera( Ogre::Camera *camera )
 {
 	assert( _channel );
 	_channel->setCamera(camera);
 }
 
 Ogre::Camera *
-eqOgre::Window::getCamera( void )
+vl::Window::getCamera( void )
 {
 	return _pipe->getCamera();
 }
 
 Ogre::SceneManager *
-eqOgre::Window::getSceneManager( void )
+vl::Window::getSceneManager( void )
 {
 	return _pipe->getSceneManager();
 }
 
 void
-eqOgre::Window::takeScreenshot( const std::string& prefix,
-								const std::string& suffix )
+vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
 {
 	std::string real_suffix;
 	if( getName().empty() )
@@ -109,7 +108,7 @@ eqOgre::Window::takeScreenshot( const std::string& prefix,
 
 /// ------------------------ Public OIS Callbacks ------------------------------
 bool
-eqOgre::Window::keyPressed( OIS::KeyEvent const &key )
+vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
 	vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
 	// TODO add support for the device ID from where the event originated
@@ -121,7 +120,7 @@ eqOgre::Window::keyPressed( OIS::KeyEvent const &key )
 }
 
 bool
-eqOgre::Window::keyReleased( OIS::KeyEvent const &key )
+vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
 	vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
 	// TODO add support for the device ID from where the event originated
@@ -133,7 +132,7 @@ eqOgre::Window::keyReleased( OIS::KeyEvent const &key )
 }
 
 bool
-eqOgre::Window::mouseMoved( OIS::MouseEvent const &evt )
+vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
 	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
 	// TODO add support for the device ID from where the event originated
@@ -145,7 +144,7 @@ eqOgre::Window::mouseMoved( OIS::MouseEvent const &evt )
 }
 
 bool
-eqOgre::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
+vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 	// TODO add support for the device ID from where the event originated
@@ -157,7 +156,7 @@ eqOgre::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id 
 }
 
 bool
-eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
+vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
 	// TODO add support for the device ID from where the event originated
@@ -170,21 +169,21 @@ eqOgre::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id
 
 
 void
-eqOgre::Window::draw( void )
+vl::Window::draw( void )
 {
 	// TODO support for multiple channels
 	_channel->draw();
 }
 
 void
-eqOgre::Window::swap( void )
+vl::Window::swap( void )
 {
 	_ogre_window->swapBuffers();
 }
 
 
 void
-eqOgre::Window::capture( void )
+vl::Window::capture( void )
 {
 	if( _keyboard && _mouse )
 	{
@@ -200,13 +199,13 @@ eqOgre::Window::capture( void )
 }
 
 void
-eqOgre::Window::_sendEvent( vl::cluster::EventData const &event )
+vl::Window::_sendEvent( vl::cluster::EventData const &event )
 {
 	_pipe->sendEvent(event);
 }
 
 void
-eqOgre::Window::_createInputHandling( void )
+vl::Window::_createInputHandling( void )
 {
 	std::string message( "Creating OIS Input system." );
 	std::cerr << message << std::endl;
@@ -255,7 +254,7 @@ eqOgre::Window::_createInputHandling( void )
 }
 
 void
-eqOgre::Window::_printInputInformation( void )
+vl::Window::_printInputInformation( void )
 {
 	// Print debugging information
 	// TODO debug information should go to Ogre Log file
@@ -282,7 +281,7 @@ eqOgre::Window::_printInputInformation( void )
 }
 
 void
-eqOgre::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
+vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 {
 	// Info
 	std::string message = "Creating Ogre RenderWindow.";

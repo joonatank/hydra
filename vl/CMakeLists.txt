@@ -1,4 +1,17 @@
+#-------------------------------------------------------------------
+# Joonatan Kuosa
+# 2010-11
+#
+# This file is part of the CMake build system for Hydra
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#
+#-------------------------------------------------------------------
+
 project( "eqOgre" CXX )
+
+cmake_minimum_required(VERSION 2.6)
 
 set( SOURCES
 	eq_ogre/ogre_dotscene_loader.cpp

@@ -13,11 +13,6 @@
 #include <boost/weak_ptr.hpp>
 #include <memory>
 
-namespace eqOgre
-{
-
-}	// namespace eqOgre
-
 namespace vl
 {
 	// Forward declarations

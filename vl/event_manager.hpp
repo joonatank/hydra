@@ -94,7 +94,7 @@ operator<<( std::ostream &os, EventManager const &man )
 	return os;
 }
 
-}	// namespace eqOgre
+}	// namespace vl
 
 #endif	// VL_EVENT_MANAGER_HPP
 

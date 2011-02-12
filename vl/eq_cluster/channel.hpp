@@ -5,15 +5,15 @@
  *	Removed Equalizer
  */
 
-#ifndef EQ_OGRE_CHANNEL_HPP
-#define EQ_OGRE_CHANNEL_HPP
+#ifndef VL_CHANNEL_HPP
+#define VL_CHANNEL_HPP
 
 #include <OGRE/OgreCamera.h>
 #include <OGRE/OgreViewport.h>
 
 #include "base/envsettings.hpp"
 
-namespace eqOgre
+namespace vl
 {
 
 class Window;
@@ -24,7 +24,7 @@ class Window;
 class Channel
 {
 public:
-    Channel( vl::EnvSettings::Channel chanConf, eqOgre::Window *parent );
+    Channel( vl::EnvSettings::Channel chanConf, vl::Window *parent );
 
     virtual ~Channel (void);
 
@@ -50,7 +50,7 @@ protected:
 	void _setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
 	void _setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
 
-	eqOgre::Window *_window;
+	vl::Window *_window;
 
 	/// Ogre variables
 	Ogre::Viewport *_viewport;
@@ -63,7 +63,7 @@ protected:
 
 };	// class Channel
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif // EQ_OGRE_CHANNEL_H
+#endif // VL_CHANNEL_HPP
 

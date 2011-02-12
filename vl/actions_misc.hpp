@@ -31,7 +31,6 @@ typedef ActionBase<Player> PlayerAction;
 typedef ActionBase<GameManager> GameAction;
 typedef ActionBase<SceneManager> SceneManagerAction;
 
-/// Sets the Head matrix in eqOgre::Config
 // TODO this should use the same PlayerAction base
 // Problem is that it inherits from BasicAction and this inherits from TransformAction
 class HeadTrackerAction : public vl::TransformAction

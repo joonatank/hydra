@@ -18,18 +18,15 @@
 // Necessary for vl::ProgramOptions
 #include "program_options.hpp"
 
-namespace eqOgre
-{
-class Pipe;
-}
-
 namespace vl
 {
+
 vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
 vl::Settings getProjectSettings( vl::ProgramOptions const &options );
 vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
 
 class Config;
+class Pipe;
 
 class Application
 {
@@ -64,7 +61,7 @@ protected:
 	vl::Config *_config;
 
 	boost::thread *_pipe_thread;
-	eqOgre::Pipe *_pipe;
+	vl::Pipe *_pipe;
 
 };	// class Client
 

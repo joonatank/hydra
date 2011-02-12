@@ -188,9 +188,9 @@ vl::Application::init( void )
 
 	// Put the pipe thread spinning on both master and slave
 	assert( !_pipe && !_pipe_thread );
-	_pipe = new eqOgre::Pipe( _env->getMaster().name,
-							  _env->getServer().hostname,
-							  _env->getServer().port );
+	_pipe = new vl::Pipe( _env->getMaster().name,
+						  _env->getServer().hostname,
+						  _env->getServer().port );
 	// TODO create a custom wrapper for Pipe
 	_pipe_thread = new boost::thread( boost::ref(*_pipe) );
 }

@@ -22,8 +22,8 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("eqOgre", initeqOgre) == -1)
-			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+		if (PyImport_AppendInittab("vl", initvl) == -1)
+			throw std::runtime_error("Failed to add vl to the interpreter's "
 					"builtin modules");
 
 		// Retrieve the main module
@@ -32,9 +32,9 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 		// Retrieve the main module's namespace
 		_global = main.attr("__dict__");
 
-		// Import eqOgre module
-		python::handle<> ignored(( PyRun_String("from eqOgre import *\n"
-										"print 'eqOgre imported'       \n",
+		// Import vl module
+		python::handle<> ignored(( PyRun_String("from vl import *\n"
+										"print 'vl imported'       \n",
 										Py_file_input,
 										_global.ptr(),
 										_global.ptr() ) ));

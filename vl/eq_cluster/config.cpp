@@ -37,7 +37,7 @@
 vl::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
 {
-	std::cout << "eqOgre::Config::Config" << std::endl;
+	std::cout << "vl::Config::Config" << std::endl;
 	assert( _game_manager && _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
@@ -56,7 +56,7 @@ vl::Config::~Config( void )
 void
 vl::Config::init( void )
 {
-	std::cout << "eqOgre::Config::init" << std::endl;
+	std::cout << "vl::Config::init" << std::endl;
 	Ogre::Timer timer;
 
 	/// @todo most of this should be moved to the constructor, like object
@@ -118,7 +118,7 @@ vl::Config::init( void )
 void
 vl::Config::exit( void )
 {
-	std::cout << "eqOgre::Config::exit" << std::endl;
+	std::cout << "vl::Config::exit" << std::endl;
 
 	//	TODO add cleanup server
 
@@ -170,7 +170,7 @@ void
 vl::Config::_updateServer( void )
 {
 	assert( _server );
-// 	std::cout << "eqOgre::Config::_updateServer" << std::endl;
+// 	std::cout << "vl::Config::_updateServer" << std::endl;
 	// Handle received messages
 	_server->receiveMessages();
 
@@ -219,7 +219,7 @@ vl::Config::_updateServer( void )
 void
 vl::Config::_sendEnvironment ( void )
 {
-	std::cout << "eqOgre::Config::_sendEnvironment" << std::endl;
+	std::cout << "vl::Config::_sendEnvironment" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -234,7 +234,7 @@ vl::Config::_sendEnvironment ( void )
 void
 vl::Config::_sendProject ( void )
 {
-	std::cout << "eqOgre::Config::_sendProject" << std::endl;
+	std::cout << "vl::Config::_sendProject" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -450,7 +450,7 @@ vl::Config::_receiveEventMessages( void )
 				break;
 
 				default :
-					std::cout << "eqOgre::Config::_receiveEventMessages : "
+					std::cout << "vl::Config::_receiveEventMessages : "
 						<< "Unhandleded message type." << std::endl;
 					break;
 			}

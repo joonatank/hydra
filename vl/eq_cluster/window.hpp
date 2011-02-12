@@ -1,11 +1,11 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
- *
+ *	@file window.hpp
  *
  */
 
-#ifndef EQ_OGRE_WINDOW_HPP
-#define EQ_OGRE_WINDOW_HPP
+#ifndef VL_WINDOW_HPP
+#define VL_WINDOW_HPP
 
 #include "player.hpp"
 #include "typedefs.hpp"
@@ -20,7 +20,7 @@
 
 #include <OGRE/OgreRenderWindow.h>
 
-namespace eqOgre
+namespace vl
 {
 
 class Channel;
@@ -33,14 +33,14 @@ class Window : public OIS::KeyListener, public OIS::MouseListener
 {
 public:
 	/// @TODO change name to window config
-	Window( std::string const &name, eqOgre::Pipe *parent );
+	Window( std::string const &name, vl::Pipe *parent );
 
 	virtual ~Window( void );
 
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
 
-	eqOgre::Pipe *getPipe( void )
+	vl::Pipe *getPipe( void )
 	{ return _pipe; }
 
 	vl::EnvSettingsRefPtr getSettings( void );
@@ -91,9 +91,9 @@ protected :
 
 	std::string _name;
 
-	eqOgre::Pipe *_pipe;
+	vl::Pipe *_pipe;
 	/// @TODO multi channel support?
-	eqOgre::Channel *_channel;
+	vl::Channel *_channel;
 
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
@@ -105,6 +105,6 @@ protected :
 
 };	// class Window
 
-}	// namespace eqOgre
+}	// namespace vl
 
-#endif // EQ_OGRE_WINDOW_HPP
+#endif // VL_WINDOW_HPP

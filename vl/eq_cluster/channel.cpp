@@ -29,39 +29,39 @@
 #include <GL/gl.h>
 #include "pipe.hpp"
 
-eqOgre::Channel::Channel( vl::EnvSettings::Channel chanConf, eqOgre::Window *parent )
+vl::Channel::Channel( vl::EnvSettings::Channel chanConf, vl::Window *parent )
 	: _window(parent), _viewport(0), _stereo(false), _channel_conf(chanConf)
 {
 	assert( _window );
 	init( _window->getSettings() );
 }
 
-eqOgre::Channel::~Channel( void )
+vl::Channel::~Channel( void )
 {}
 
 vl::Player const &
-eqOgre::Channel::getPlayer( void ) const
+vl::Channel::getPlayer( void ) const
 {
 	return _window->getPlayer();
 }
 
 void
-eqOgre::Channel::setCamera( Ogre::Camera *cam )
+vl::Channel::setCamera( Ogre::Camera *cam )
 {
 	if( _viewport )
 	{ _viewport->setCamera(cam); }
 }
 
 void
-eqOgre::Channel::setViewport(Ogre::Viewport* viewport)
+vl::Channel::setViewport(Ogre::Viewport* viewport)
 {
 	_viewport = viewport;
 }
 
 void
-eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
+vl::Channel::init( vl::EnvSettingsRefPtr settings )
 {
-	std::cout << "eqOgre::Channel::init" << std::endl;
+	std::cout << "vl::Channel::init" << std::endl;
 	// If the channel has a name we try to find matching wall
 	// FIXME using the new system we should have a complete slave configuration
 	// in the Pipe and this is not necessary the wall should be retrieved
@@ -109,7 +109,7 @@ eqOgre::Channel::init( vl::EnvSettingsRefPtr settings )
 }
 
 void
-eqOgre::Channel::draw( void )
+vl::Channel::draw( void )
 {
 	assert( _viewport );
 	Ogre::Camera *camera = _viewport->getCamera();
@@ -143,7 +143,7 @@ eqOgre::Channel::draw( void )
 }
 
 void
-eqOgre::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
+vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	assert( camera );
 	assert( !_wall.empty() );
@@ -266,7 +266,7 @@ eqOgre::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 }
 
 void
-eqOgre::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
+vl::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 {
 	assert( camera );
 

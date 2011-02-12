@@ -19,7 +19,6 @@
 // Necessary for conversions
 #include <sstream>
 
-/// eqOgre headers
 // Necessary for throwing
 #include "exceptions.hpp"
 
