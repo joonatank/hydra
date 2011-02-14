@@ -1,7 +1,13 @@
+#-------------------------------------------------------------------
 # Joonatan Kuosa <joonatan.kuosa@tut.fi>
-# 2010-12
-# This file is part of eqOgre build system.
-# This file is in public domain, feel free to use it as you see fi
+# 2011-02
+#
+# This file is part of the CMake build system for Hydra
+#
+# The contents of this file are placed in the public domain. Feel
+# free to make use of it in any way you like.
+#
+#-------------------------------------------------------------------
 #
 # Finds Ogg library
 #

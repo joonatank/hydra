@@ -11,7 +11,7 @@ def mapTrackers():
 			trigger = game.event_manager.getTrackerTrigger( name + 'Trigger' )
 			trigger.action = action
 		else :
-			print 'Tracker trigger ' + name + 'Trigger' ' not found in Game.'
+			print( 'Tracker trigger ', name, 'Trigger' ' not found in Game.' )
 
 # Most of the functions are in the global config now, script global_script
 # Easy to define commonly used functions in there
@@ -20,7 +20,7 @@ def mapTrackers():
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
 
-print 'Getting Camera SceneNode'
+print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
 createCameraMovements(camera)
 

@@ -1,5 +1,6 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
+ *	@file python.hpp
  *
  *	Python Manager.
  *	Manages the updates to the python context.

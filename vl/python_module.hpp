@@ -52,7 +52,6 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 }
 */
 
-// TODO rename the module name
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;

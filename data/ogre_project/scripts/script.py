@@ -2,7 +2,7 @@
 
 def addOgreRotations(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
-	print 'Creating Rotation event on node = '
+	print( 'Creating Rotation event on node = ' )
 	# Create the rotation action using a proxy
 	rot_action_proxy = MoveActionProxy.create()
 	rot_action_proxy.enableRotation()
@@ -25,9 +25,9 @@ def addOgreRotations(node) :
 #
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
-print 'In python init script'
+print( 'In python init script' )
 
-print 'Getting Ogre SceneNode'
+print( 'Getting Ogre SceneNode' )
 # config.getSceneNode gets a reference to already created SceneNode
 # For now it's not possible to create SceneNodes from python
 # So use this function to get a SceneNode created from .scene file.
@@ -36,7 +36,7 @@ ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre)
 addOgreRotations(ogre)
 
-print 'Getting Camera SceneNode'
+print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
 createCameraMovements(camera)
 

@@ -14,10 +14,6 @@
 
 #include "math/math.hpp"
 
-//#include <vmmlib/vector.hpp>
-//#include <vmmlib/math.hpp>
-//#include <vmmlib/quaternion.hpp>
-
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreMatrix4.h>

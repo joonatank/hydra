@@ -2,7 +2,7 @@
 # Joonatan Kuosa
 # 2010-11
 #
-# This file is part of the CMake build system for eqOgre
+# This file is part of the CMake build system for Hydra
 #
 # The contents of this file are placed in the public domain. Feel
 # free to make use of it in any way you like.
@@ -11,6 +11,7 @@
 
 # TODO should move to using QUIET package searching
 # and add checking only after all packages are searched
+# TODO static boost::python doesn't work
 
 project("vl" CXX C)
 
@@ -30,7 +31,6 @@ elseif( WIN32 )
 					 -D_WIN32_WINNT=0x0501	# Windows XP target
 					 -DNOCOMM
 					 -DNOSOUND
-					 # Should not need release asserts anymore
 					 )
 endif( UNIX )
 
@@ -79,22 +79,25 @@ find_package( cAudio REQUIRED )
 
 
 ####### Find Boost ########
-# TODO
-# Add selectable components
 
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_LIBS   OFF)
+if( WIN32 )
+		# FIXME For some reason we can not get this to link to static lib
+		#set(Boost_USE_STATIC_LIBS   ON)
+		#add_definitions( -DBOOST_PYTHON_STATIC_MODULE )
+		set(Boost_USE_STATIC_LIBS   OFF)
+else()
+		set(Boost_USE_STATIC_LIBS   OFF)
+endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
 
-find_package(PythonLibs REQUIRED )
+find_package(Python REQUIRED )
 
-find_package(PythonInterp REQUIRED )
-
-include_directories( ${PYTHON_INCLUDE_DIRS} )
+message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION}" ) 
 
 if( WIN32 )
-	set(Boost_USE_STATIC_LIBS   ON)
+		set(Boost_USE_STATIC_LIBS   OFF)
 endif()
 
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
@@ -104,7 +107,7 @@ include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${Ogre_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
-	${PYTHON_INCLUDE_DIRS}
+	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
 	${cAudio_INCLUDE_DIR}
 	${OGG_INCLUDE_DIR}
@@ -118,7 +121,7 @@ set( EQOGRE_DEB_LIBS
 	${Ogre_LIBRARY}
 	${VRPN_LIBRARY}
 	${OIS_LIBRARY}
-	${PYTHON_LIBRARIES}
+	${PYTHON_LIBRARY}
 	${Boost_PYTHON_LIBRARIES}
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
@@ -146,15 +149,21 @@ include_directories(vl)
 
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
+set( EQOGRE_BUILD_TOOLS TRUE CACHE BOOL "Build the tools." )
 
-# TODO should be configurable
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 
 if( EQOGRE_BUILD_TESTS )
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 endif()
 
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
+if( EQOGRE_BUILD_TOOLS )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
+endif()
+
+if( EQOGRE_BUILD_DEMOS )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
+endif()
 
 include( Packaging )
 

@@ -1,8 +1,10 @@
-/**	Joonatan Kuosa
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file python.cpp
  *
  *	Python
  */
+
 #include "python.hpp"
 
 #include "python_module.hpp"
@@ -17,14 +19,14 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 	//Ogre::LogManager::getSingleton().logMessage( message );
 
 	try {
-		Py_Initialize();
-
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("vl", initvl) == -1)
+		if (PyImport_AppendInittab("vl", PyInit_vl) == -1)
 			throw std::runtime_error("Failed to add vl to the interpreter's "
 					"builtin modules");
+
+		Py_Initialize();
 
 		// Retrieve the main module
 		python::object main = python::import("__main__");
@@ -34,7 +36,7 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 
 		// Import vl module
 		python::handle<> ignored(( PyRun_String("from vl import *\n"
-										"print 'vl imported'       \n",
+										"print( 'vl imported' )  \n",
 										Py_file_input,
 										_global.ptr(),
 										_global.ptr() ) ));
