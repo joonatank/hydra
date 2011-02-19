@@ -93,3 +93,4 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 		PyErr_Print();
 	}
 }
+

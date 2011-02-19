@@ -25,7 +25,6 @@ def addOgreRotations(node) :
 #
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
-print( 'In python init script' )
 
 print( 'Getting Ogre SceneNode' )
 # config.getSceneNode gets a reference to already created SceneNode

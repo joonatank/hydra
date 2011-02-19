@@ -62,11 +62,9 @@ def createCameraMovements(node) :
 def addQuitEvent( kc ) :
 	print( 'Creating Quit Event' )
 	action = QuitAction.create()
-	print( 'Python Action type = ', action.type )
 	action.game = game
 
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	print( 'Python Trigger type = ', trigger.type )
 	trigger.addAction( action )
 
 
@@ -75,18 +73,15 @@ def addReloadEvent( kc ) :
 	print( 'Creating Reload Scene Event' )
 	# Create the action
 	action = ReloadScene.create()
-	print( 'Python Action type = ', action.type )
 	action.scene = game.scene
 
 	# Create the Time limit
 	proxy = TimerActionProxy.create()
-	print( 'Python Proxy type = ', proxy.type )
 	proxy.action = action
 	proxy.time_limit = 5 # Seconds
 
 	# Create the trigger
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	print( 'Python Trigger type = ', trigger.type )
 	trigger.addAction( proxy )
 
 
@@ -95,7 +90,6 @@ def addReloadEvent( kc ) :
 def addToggleMusicEvent( kc ) :
 	print( 'Creating Toggle Music Event' )
 	action = ToggleMusic.create()
-	print( 'Python Action type = ', action.type )
 	action.game = game
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	trigger.addAction( action )
