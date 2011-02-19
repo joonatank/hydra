@@ -298,6 +298,7 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 
 	params["left"] = vl::to_string( winConf.x );
 	params["top"] = vl::to_string( winConf.y );
+	params["border"] = "none";
 
 	// TODO add stereo
 	// If it doesn't work do some custom updates to the Ogre Library
