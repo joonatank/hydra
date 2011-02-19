@@ -22,7 +22,7 @@ eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("eqOgre", initeqOgre) == -1)
+		if (PyImport_AppendInittab("eqOgre", PyInit_eqOgre) == -1)
 			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
 					"builtin modules");
 
@@ -34,7 +34,7 @@ eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 
 		// Import eqOgre module
 		python::handle<> ignored(( PyRun_String("from eqOgre import *\n"
-										"print 'eqOgre imported'       \n",
+										"print( 'eqOgre imported' )  \n",
 										Py_file_input,
 										_global.ptr(),
 										_global.ptr() ) ));
@@ -91,3 +91,4 @@ eqOgre::PythonContext::executePythonScript( vl::TextResource const &script )
 		PyErr_Print();
 	}
 }
+
