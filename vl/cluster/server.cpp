@@ -54,7 +54,7 @@ vl::cluster::Server::receiveMessages( void )
 	// We should check that multiple clients work correctly
 	// At the moment we use single socket for all clients
 	// Better to use multiple sockets, one for each client
-	if( _socket.available() != 0 )
+	while( _socket.available() != 0 )
 	{
 // 		std::cout << "vl::cluster::Server::mainloop has a message" << std::endl;
 		std::vector<char> recv_buf( _socket.available() );
@@ -73,8 +73,6 @@ vl::cluster::Server::receiveMessages( void )
 		{
 			case vl::cluster::MSG_REG_UPDATES :
 			{
-				std::cout << "vl::cluster::Server::mainloop : MSG_REG_UPDATES message received."
-					<< std::endl;
 				_addClient( remote_endpoint );
 				if( !_env_msg.empty() )
 				{
@@ -200,16 +198,11 @@ vl::cluster::Server::popInputMessage( void )
 void
 vl::cluster::Server::_addClient( boost::udp::endpoint const &endpoint )
 {
-	std::cout << "vl::cluster::Server::_addClient : endpoint " << endpoint << std::endl;
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
 		if( iter->first == endpoint )
-		{
-			std::cerr << "vl::cluster::Server::_addClient : "
-				<< "Trying to add an already added client." << std::endl;
-			return;
-		}
+		{ return; }
 	}
 
 	_clients.push_back( std::make_pair( endpoint, CS_UNDEFINED ) );

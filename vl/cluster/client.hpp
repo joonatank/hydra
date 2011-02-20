@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  */
 
 #ifndef VL_CLUSTER_CLIENT_HPP
@@ -10,6 +10,9 @@
 #include <stdint.h>
 
 #include "message.hpp"
+#include "states.hpp"
+
+#include <OGRE/OgreTimer.h>
 
 namespace boost
 {
@@ -45,6 +48,8 @@ public:
 	void sendAck( vl::cluster::MSG_TYPES );
 
 private :
+	void _sentRequestUpdates( void );
+
 	/// Copying is forbidden
 //	Client(const Client& other) {}
 //	virtual Client& operator=(const Client& other) {}
@@ -57,6 +62,10 @@ private :
 	boost::udp::endpoint _master;
 
 	std::vector<Message *> _messages;
+
+	CLIENT_STATE _state;
+
+	Ogre::Timer _request_timer;
 
 };	// class Client
 

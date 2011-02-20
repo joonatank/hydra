@@ -606,8 +606,29 @@ vl::PipeThread::operator()()
 	{ _server_address = "localhost"; }
 	assert( _server_port != 0 );
 
-	vl::Pipe *pipe = new vl::Pipe( _name, _server_address, _server_port );
-	pipe->operator()();
+	vl::Pipe *pipe = 0;
+	try {
+		pipe = new vl::Pipe( _name, _server_address, _server_port );
+		pipe->operator()();
+	}
+	catch( vl::exception &e )
+	{
+		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+			<< std::endl;
+	}
+	catch( Ogre::Exception const &e)
+	{
+		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+	}
+	catch( std::exception const &e )
+	{
+		std::cerr << "STD Exception: " << e.what() << std::endl;
+	}
+	catch( ... )
+	{
+		std::cerr << "An exception of unknow type occured." << std::endl;
+	}
+	
 	std::cout << "PipeThread Exited" << std::endl;
 	delete pipe;
 }
