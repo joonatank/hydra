@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./${PROGRAM_NAME} -e ${DEMO_DATA_PATH}/multi_window.env\
+	-p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE}\
+	-g ${DEMO_DATA_PATH}/global/global_config.prj\
+	-v $@
+

@@ -2,10 +2,9 @@ REM Add necessary dlls to path
 Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR};${LIB_DIR}\OGRE\bin\${BUILD_TYPE}
 
 REM Start listening client
-start ${PROGRAM_NAME} --slave left --server ${SERVER_HOSTNAME}:${SERVER_PORT}
 REM Start the master
-start ${PROGRAM_NAME} ^
- -e ${DEMO_DATA_PATH}/env.env ^
+${PROGRAM_NAME} ^
+ -e ${DEMO_DATA_PATH}/multi_window.env ^
  -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} ^
  -g ${DEMO_DATA_PATH}/global/global_config.prj ^
  -v %*

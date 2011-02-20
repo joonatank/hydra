@@ -52,20 +52,16 @@ endif()
 
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
 copy_shell_script( ${script_path} start start_${start_suffix} )
+copy_shell_script( ${script_path} start_multi_window start_multi_window_${start_suffix} )
 
 # Copy the multi node listening start script
-
-set( HOSTNAME_TO_LISTEN 127.0.0.1 )
-
-set( LISTENING_PORT 4243 )
-set( EQUALIZER_SERVER_BIN "eqServer" )
-set( EQUALIZER_CONFIG ${DEMO_DATA_PATH}/eqc/2-node.layout.eqc )
-
+set( SERVER_HOSTNAME localhost )
+set( SERVER_PORT 4699 )
 
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
 set( script_name start_multi_node )
 set( output_name start_multi_${start_suffix} )
-copy_shell_script( ${script_path} start_multi_node start_multi_${start_suffix} )
+copy_shell_script( ${script_path} start_multi_node start_multi_node_${start_suffix} )
 
 ENDMACRO()
 
