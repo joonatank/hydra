@@ -21,6 +21,7 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	, _pipe( parent )
 	, _channel(0)
 	, _ogre_window(0)
+	, _viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
@@ -34,19 +35,30 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	_createOgreWindow( winConf );
 	_createInputHandling();
 
-	_channel = new vl::Channel( winConf.channel, this );
+	// If the channel has a name we try to find matching wall
 
-	// Init channel
-	// TODO this is idiotic here
-	if( getCamera() )
-	{ _channel->setCamera( getCamera() ); }
+	vl::EnvSettings::Wall wall;
+	if( !winConf.channel.name.empty() )
+	{
+		msg = "Finding Wall for channel : " + getName();
+		Ogre::LogManager::getSingleton().logMessage(msg);
+		wall = getSettings()->findWall( winConf.channel.wall_name );
+	}
 
-	Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
+	// Get the first wall definition if no named one was found
+	if( wall.empty() && getSettings()->getWalls().size() > 0 )
+	{
+		wall = getSettings()->getWall(0);
+		msg = "No wall found : using the first one " + wall.name;
+		Ogre::LogManager::getSingleton().logMessage(msg);
+	}
+
+	_channel = new vl::Channel( winConf.channel, wall, getSettings()->getIPD() );
+
+	_viewport = _ogre_window->addViewport( getCamera() );
 	// Set some parameters to the viewport
 	// TODO this should be configurable
-	viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
-	viewport->setAutoUpdated(false);
-	_channel->setViewport(viewport);
+	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
 }
 
 vl::Window::~Window( void )
@@ -54,7 +66,6 @@ vl::Window::~Window( void )
 	std::string msg("vl::Window::~Window");
 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
-	// Should clean out OIS and Ogre
 	msg = "Cleaning out OIS";
 	Ogre::LogManager::getSingleton().logMessage(msg);
 	if( _input_manager )
@@ -92,6 +103,7 @@ void
 vl::Window::setCamera( Ogre::Camera *camera )
 {
 	assert( _channel );
+	_viewport->setCamera(camera);
 	_channel->setCamera(camera);
 }
 
@@ -184,8 +196,13 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 void
 vl::Window::draw( void )
 {
-	// TODO support for multiple channels
+	// TODO this has broken the Stereo support
+	// _ogre_window needs two Viewports one for each eye
+	// or window->update needs to render to both back buffers
+	_channel->setHeadMatrix( getPlayer().getHeadMatrix() );
 	_channel->draw();
+	_ogre_window->update(false);
+	// TODO support for multiple channels
 }
 
 void
@@ -202,12 +219,6 @@ vl::Window::capture( void )
 	{
 		_keyboard->capture();
 		_mouse->capture();
-	}
-	else
-	{
-		std::string message("Mouse or keyboard does not exists! No input handling.");
-		std::cerr << message << std::endl;
-// 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 }
 
@@ -306,4 +317,5 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 	// TODO add swap sync
 	// same as with stereo
 	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
+	_ogre_window->setAutoUpdated(false);
 }

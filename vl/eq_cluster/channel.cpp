@@ -29,92 +29,51 @@
 #include <GL/gl.h>
 #include "pipe.hpp"
 
-vl::Channel::Channel( vl::EnvSettings::Channel chanConf, vl::Window *parent )
-	: _window(parent), _viewport(0), _stereo(false), _channel_conf(chanConf)
+vl::Channel::Channel( vl::EnvSettings::Channel const &chanConf, 
+					  vl::EnvSettings::Wall const &wall, double ipd )
+	: _channel_conf(chanConf)
+	, _wall(wall)
+	, _stereo(false)
+	, _ipd(ipd)
 {
-	assert( _window );
-	init( _window->getSettings() );
-}
-
-vl::Channel::~Channel( void )
-{}
-
-vl::Player const &
-vl::Channel::getPlayer( void ) const
-{
-	return _window->getPlayer();
-}
-
-void
-vl::Channel::setCamera( Ogre::Camera *cam )
-{
-	if( _viewport )
-	{ _viewport->setCamera(cam); }
-}
-
-void
-vl::Channel::setViewport(Ogre::Viewport* viewport)
-{
-	_viewport = viewport;
-}
-
-void
-vl::Channel::init( vl::EnvSettingsRefPtr settings )
-{
-	std::string msg("vl::Channel::init");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	// If the channel has a name we try to find matching wall
-	// FIXME using the new system we should have a complete slave configuration
-	// in the Pipe and this is not necessary the wall should be retrieved
-	// from the Pipe
-	assert( settings );
-	assert( settings->getNWalls() > 0);
-
-	msg = "Settings has "
-		+ vl::to_string( settings->getNWalls() ) + " wall configs.";
-	Ogre::LogManager::getSingleton().logMessage(msg);
-
-	if( !getName().empty() )
-	{
-		msg = "Finding Wall for channel : " + getName();
-		Ogre::LogManager::getSingleton().logMessage(msg);
-		_wall = settings->findWall( _channel_conf.wall_name );
-	}
-
-	// Get the first wall definition if no named one was found
-	if( _wall.empty() )
-	{
-		_wall = settings->getWall(0);
-		msg = "No wall found : using the default " + _wall.name;
-		Ogre::LogManager::getSingleton().logMessage(msg);
-	}
-
-	assert( !_wall.empty() );
+	assert( !_wall.empty() );	
 
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
 	_stereo = stereo;
 	if( _stereo )
 	{
-		msg = "Stereo supported";
+		std::string msg = "Stereo supported";
 		Ogre::LogManager::getSingleton().logMessage(msg);
-		msg = "IPD (Inter pupilar distance) = " + vl::to_string( settings->getIPD() );
+		msg = "IPD (Inter pupilar distance) = " + vl::to_string(_ipd);
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 	else
 	{
-		msg = "No stereo support.";
+		std::string msg = "No stereo support.";
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
+}
+
+vl::Channel::~Channel( void )
+{}
+
+void
+vl::Channel::setCamera( Ogre::Camera *cam )
+{
+	_camera = cam;
 }
 
 void
 vl::Channel::draw( void )
 {
-	assert( _viewport );
-	Ogre::Camera *camera = _viewport->getCamera();
-	assert( camera );
+	assert( _camera );
 
+	// @TODO stereo is not working at the moment
+	// we need to render the window twice and we are at the moment using
+	// the windows update system.
+	// So when window is updated it should render twice 
+	// (for example using two viewports) once for each backbuffer
 	if( _stereo )
 	{
 		// FIXME
@@ -123,22 +82,19 @@ vl::Channel::draw( void )
 		//draw into back left buffer
 		glDrawBuffer(GL_BACK_LEFT);
 		Ogre::Vector3 eye(-ipd/2, 0, 0);
-		_setOgreFrustum( camera, eye );
-		_setOgreView( camera, eye );
-		_viewport->update();
+		_setOgreFrustum( _camera, eye );
+		_setOgreView( _camera, eye );
 
 		//draw into back right buffer
 		glDrawBuffer(GL_BACK_RIGHT);
 		eye = Ogre::Vector3(ipd/2, 0, 0);
-		_setOgreFrustum( camera, eye );
-		_setOgreView( camera, eye );
-		_viewport->update();
+		_setOgreFrustum( _camera, eye );
+		_setOgreView( _camera, eye );
 	}
 	else
 	{
-		_setOgreFrustum( camera );
-		_setOgreView( camera );
-		_viewport->update();
+		_setOgreFrustum( _camera );
+		_setOgreView( _camera );
 	}
 }
 
@@ -166,8 +122,6 @@ vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	Ogre::Real c_near = camera->getNearClipDistance();
 	Ogre::Real c_far = camera->getFarClipDistance();
 
-	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
-
 	// Create the plane for transforming the head
 	// TODO this is same code for both view and frustum combine them
 	Ogre::Vector3 bottom_right( _wall.bottom_right.at(0), _wall.bottom_right.at(1), _wall.bottom_right.at(2) );
@@ -180,7 +134,7 @@ vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
 	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
-	Ogre::Vector3 headTrans = wallRot*headMat.getTrans();
+	Ogre::Vector3 headTrans = wallRot*_head_matrix.getTrans();
 
 	bottom_right = wallRot*bottom_right;
 	bottom_left = wallRot*bottom_left;
@@ -197,7 +151,7 @@ vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// eye orientation should modify the frustum when rotated around y and z
 	// but should stay constant when rotated around x.
 	// Tested it works that way.
-	Ogre::Quaternion headQuat = headMat.extractQuaternion();
+	Ogre::Quaternion headQuat = _head_matrix.extractQuaternion();
 	eye = headQuat*eye + headTrans;
 
 	// The coordinates right, left, top, bottom
@@ -298,8 +252,6 @@ vl::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 		vl::fromEulerAngles( cam_orient, x, y, z );
 	}
 
-	Ogre::Matrix4 const &headMat = getPlayer().getHeadMatrix();
-
 	// Create the plane for transforming the head
 	// Head doesn't need to be transformed for the view matrix
 	// Using the plane to create a correct orientation for the view
@@ -315,13 +267,13 @@ vl::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
 	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
 	// Doesn't seem to do anything, should check wether it should or not
-//	Ogre::Vector3 headTrans = wallRot*headMat.getTrans();
-	Ogre::Vector3 headTrans = headMat.getTrans();
+//	Ogre::Vector3 headTrans = wallRot*_head_matrix.getTrans();
+	Ogre::Vector3 headTrans = _head_matrix.getTrans();
 
 	// NOTE This is not HMD discard the rotation part
 	// Rotating the eye doesn't seem to have any affect.
 	// Though it's more realistic if it's there.
-	eye = headMat.extractQuaternion()*eye + cam_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
+	eye = _head_matrix.extractQuaternion()*eye + cam_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
 	Ogre::Vector3 cam_pos( camera->getRealPosition() );
 
 	// Combine eye and camera positions
