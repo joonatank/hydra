@@ -85,7 +85,7 @@ protected :
 
 	vl::EnvSettingsRefPtr _env;
 
-	vl::cluster::Server *_server;
+	vl::cluster::ServerRefPtr _server;
 
 	Ogre::Timer _stats_timer;
 	vl::Stats _stats;

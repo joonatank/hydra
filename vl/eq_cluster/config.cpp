@@ -33,9 +33,14 @@
 #include "distrib_settings.hpp"
 
 #include "base/string_utils.hpp"
+#include "base/sleep.hpp"
 
 vl::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
-	: _game_manager(man), _settings(settings), _env(env), _server(0), _running(true)
+	: _game_manager(man)
+	, _settings(settings)
+	, _env(env)
+	, _server(new vl::cluster::Server( _env->getServer().port ))
+	, _running(true)
 {
 	std::cout << "vl::Config::Config" << std::endl;
 	assert( _game_manager && _env );
@@ -43,14 +48,16 @@ vl::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::E
 	assert( _env->isMaster() );
 
 	_game_manager->createSceneManager( this );
-
-	_server = new vl::cluster::Server( _env->getServer().port );
 }
 
 vl::Config::~Config( void )
 {
+	std::cout << "vl::Config::~Config" << std::endl;
+
 	// Destroy server
-	delete _server;
+	_server.reset();
+
+	std::cout << "vl::Config::~Config : DONE" << std::endl;
 }
 
 void
@@ -120,7 +127,10 @@ vl::Config::exit( void )
 {
 	std::cout << "vl::Config::exit" << std::endl;
 
-	//	TODO add cleanup server
+	_server->shutdown();
+	// TODO this should wait till all the clients have shutdown
+	vl::msleep(1);
+	_server->receiveMessages();
 
 	std::cout << "Config exited." << std::endl;
 }

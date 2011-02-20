@@ -71,6 +71,9 @@ public :
 
 	typedef std::vector<vl::ProjSettingsRefPtr> ProjectList;
 
+	bool isRunning( void )
+	{ return _running; }
+
 protected :
 	/// Reload the projects
 	void _reloadProjects( vl::Settings set );
@@ -107,6 +110,8 @@ protected :
 
 	void _createWindow( vl::EnvSettings::Window const &winConf );
 	
+	void _shutdown( void );
+
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory
 	 *	Add the screenshot dir to DistributedSettings
@@ -134,13 +139,15 @@ protected :
 	std::string _active_camera_name;
 	uint32_t _screenshot_num;
 
-	vl::cluster::Client *_client;
+	vl::cluster::ClientRefPtr _client;
 	std::vector<vl::cluster::ObjectData> _objects;
 
 	/// Input events to be sent
 	std::vector<vl::cluster::EventData> _events;
 
 	std::vector<vl::Window *> _windows;
+
+	bool _running;
 
 };	// class Pipe
 

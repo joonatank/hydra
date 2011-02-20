@@ -32,6 +32,7 @@ enum CLIENT_STATE
 	CS_UPDATE,	// Rendering loop : Update has been sent
 	CS_DRAW,	// Rendering loop : Draw has been sent
 	CS_SWAP,	// Rendering loop : Swap has been sent
+	CS_SHUTDOWN,	// Has been shutdown
 };
 
 class Server
@@ -46,6 +47,8 @@ public:
 	/// Synchronious method that blocks till all the clients have done
 	/// update, draw and swap
 	void render( void );
+
+	void shutdown( void );
 
 	/// Store the Environment message for further use
 	// TODO change to use dynamically allocated memory so that the message

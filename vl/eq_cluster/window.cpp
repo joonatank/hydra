@@ -43,8 +43,10 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	_channel->setViewport(viewport);
 }
 
-vl::Window::~Window(void )
+vl::Window::~Window( void )
 {
+	std::cout << "vl::Window::~Window" << std::endl;
+
 	// Should clean out OIS and Ogre
 	std::string message = "Cleaning out OIS";
 	Ogre::LogManager::getSingleton().logMessage(message);
@@ -55,6 +57,11 @@ vl::Window::~Window(void )
         OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
+
+	delete _channel;
+
+	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
+	std::cout << "vl::Window::~Window : DONE" << std::endl;
 }
 
 vl::EnvSettingsRefPtr

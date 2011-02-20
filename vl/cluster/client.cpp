@@ -38,7 +38,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port )
 
 vl::cluster::Client::~Client( void )
 {
-
+	std::cout << "vl::cluster::Client::~Client" << std::endl;
 }
 
 void

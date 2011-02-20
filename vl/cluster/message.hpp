@@ -76,6 +76,7 @@ enum MSG_TYPES
 	MSG_DRAW,			// Draw the image into back buffer
 	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
 	MSG_SWAP,			// Swap the Window buffer
+	MSG_SHUTDOWN,		// Shutdown the rendering threads
 };
 
 enum EVENT_TYPES

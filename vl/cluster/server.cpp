@@ -21,6 +21,30 @@ vl::cluster::Server::Server( uint16_t const port )
 
 vl::cluster::Server::~Server()
 {
+	std::cout << "vl::cluster::Server::~Server" << std::endl;
+	
+	ClientList::iterator iter;
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{
+		// TODO replace assertion with error reporting
+		assert( iter->second == CS_UNDEFINED 
+			|| iter->second == CS_SHUTDOWN );
+	}
+}
+
+void 
+vl::cluster::Server::shutdown( void )
+{
+	Message msg( vl::cluster::MSG_SHUTDOWN );
+	std::vector<char> buf;
+	msg.dump(buf);
+	
+	ClientList::iterator iter;
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{
+		_socket.send_to( boost::asio::buffer(buf), iter->first );
+		iter->second = CS_SHUTDOWN;
+	}
 }
 
 void
@@ -263,6 +287,11 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 	{
 		if( iter->first == client )
 		{
+			// Hack to bypass other ACK messages than Shutdown
+			// if it has been started
+			if( iter->second == CS_SHUTDOWN && ack_to != MSG_SHUTDOWN )
+			{ continue; }
+
 			switch( ack_to )
 			{
 				case vl::cluster::MSG_ENVIRONMENT :
@@ -335,6 +364,13 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				}
 				break;
 
+				// TODO this ACK is never received by the server
+				case vl::cluster::MSG_SHUTDOWN :
+				{
+					iter->second = CS_UNDEFINED;
+				}
+				break;
+				
 				default:
 					assert(false);
 			};

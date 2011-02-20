@@ -52,7 +52,7 @@ void
 vl::ogre::Root::createRenderSystem( void )
 {
 	std::string str( "vl::ogre::Root::createRenderSystem" );
-	Ogre::LogManager::getSingleton().logMessage( str );
+	Ogre::LogManager::getSingleton().logMessage( str, Ogre::LML_TRIVIAL );
 
 	if( !_primary )
 	{ return; }
@@ -97,8 +97,8 @@ vl::ogre::Root::addResource(const std::string& resource_path)
 void
 vl::ogre::Root::setupResources( void )
 {
-	std::string msg( "setupResources" );
-	Ogre::LogManager::getSingleton().logMessage( msg );
+	std::string msg( "vl::ogre::Root::setupResources" );
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
 	for( std::vector<std::string>::iterator iter = _resources.begin();
 		iter != _resources.end(); ++iter )
@@ -176,7 +176,7 @@ Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, Ogre::NameValuePairList const &params )
 {
-	std::string str( "vl::ogre::Root::creatingWindow" );
+	std::string str( "vl::ogre::Root::creatingWindow", Ogre::LML_TRIVIAL );
 	Ogre::LogManager::getSingleton().logMessage( str );
 
 	if( !_ogre_root )

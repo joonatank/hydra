@@ -135,6 +135,7 @@ vl::Application::Application( vl::EnvSettingsRefPtr env,
 	std::cout << "vl::Application::init" << std::endl;
 	if( env->isMaster() )
 	{
+		// TODO GameManager and ResourceManager should be created in Config
 		_game_manager = new vl::GameManager;
 		_createResourceManager( settings, env );
 
@@ -146,12 +147,16 @@ vl::Application::Application( vl::EnvSettingsRefPtr env,
 	}
 }
 
-vl::Application::~Application(void )
+vl::Application::~Application( void )
 {
+	std::cout << "vl::Application::~Application" << std::endl;
+	
 	delete _pipe_thread;
 	delete _pipe;
 	delete _game_manager;
 	delete _config;
+
+	std::cout << "vl::Application::~Application : DONE" << std::endl;
 }
 
 
@@ -202,10 +207,8 @@ vl::Application::_exit(void )
 	if( _config )
 	{ _config->exit(); }
 
-	// Remove the pipe thread
-	// TODO this should exit the thread cleanly with join, by sending a message
-	// indicating an exit to the pipe thread from Config::exit
-	_pipe_thread->interrupt();
+	// Wait till the Pipe thread has received the shutdown message and is finished
+	_pipe_thread->join();
 }
 
 void

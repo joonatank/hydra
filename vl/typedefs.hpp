@@ -52,6 +52,15 @@ namespace vl
 		}
 	};
 
+namespace cluster
+{
+	class Client;
+	class Server;
+
+	typedef boost::shared_ptr<Client> ClientRefPtr;
+	typedef boost::shared_ptr<Server> ServerRefPtr;
+}
+
 namespace ogre
 {
 	class Root;

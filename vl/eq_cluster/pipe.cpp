@@ -22,20 +22,28 @@
 vl::Pipe::Pipe( std::string const &name,
 					std::string const &server_address,
 					uint16_t server_port )
-	: _name(name), _ogre_sm(0), _camera(0), _screenshot_num(0), _client(0)
+	: _name(name)
+	, _ogre_sm(0)
+	, _camera(0)
+	, _screenshot_num(0)
+	, _client( new vl::cluster::Client( server_address.c_str(), server_port ) )
+	, _running(true)	// TODO should this be true from the start?
 {
 	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
-	_createClient( server_address, server_port );
+
+	_client->registerForUpdates();
 }
 
 vl::Pipe::~Pipe( void )
 {
-	// Info
-	std::string message("Cleaning out OGRE");
-	Ogre::LogManager::getSingleton().logMessage( message );
-	_root.reset();
+	std::cout << "vl::Pipe::~Pipe" << std::endl;
 
-	delete _client;
+	// Some asserts for checking that the Pipe thread has been correctly shutdown
+	assert( !_root );
+
+	_client.reset();
+
+	std::cout << "vl::Pipe::~Pipe : DONE" << std::endl;
 }
 
 vl::EnvSettingsRefPtr
@@ -109,13 +117,14 @@ vl::Pipe::operator()()
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{ _createWindow( node.getWindow(i) ); }
 
-	while( 1 )
+	while( isRunning() )
 	{
 		// Handle messages
 		_handleMessages();
+		if( !isRunning() )
+		{ break; }
 
 		// Process input events
-		assert( !_windows.empty() );
 		for( size_t i = 0; i < _windows.size(); ++i )
 		{ _windows.at(i)->capture(); }
 
@@ -123,7 +132,7 @@ vl::Pipe::operator()()
 		_sendEvents();
 
 		// Sleep
-		vl::msleep(1);
+		boost::this_thread::sleep( boost::posix_time::milliseconds(1) );
 	}
 }
 
@@ -257,17 +266,6 @@ vl::Pipe::_setCamera ( void )
 
 /// Distribution helpers
 void
-vl::Pipe::_createClient( std::string const &server_address, uint16_t server_port )
-{
-	std::cout << "vl::Pipe::_createClient" << std::endl;
-	assert( !_client );
-
-	_client = new vl::cluster::Client( server_address.c_str(), server_port );
-
-	_client->registerForUpdates();
-}
-
-void
 vl::Pipe::_handleMessages( void )
 {
 // 	std::cout << "vl::Pipe::_handleMessages" << std::endl;
@@ -369,6 +367,14 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		{
 			_client->sendAck( vl::cluster::MSG_SWAP );
 			_swap();
+		}
+		break;
+
+		case vl::cluster::MSG_SHUTDOWN :
+		{
+			std::cout << "MSG_SHUTDOWN received" << std::endl;
+			_client->sendAck( vl::cluster::MSG_SHUTDOWN );
+			_shutdown();
 		}
 		break;
 
@@ -556,6 +562,28 @@ vl::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
 	vl::Window *window = new vl::Window( winConf.name, this );
 	assert( window );
 	_windows.push_back(window);
+}
+
+void 
+vl::Pipe::_shutdown( void )
+{
+	std::cout << "vl::Pipe::_shutdown" << std::endl;
+
+	std::vector<Window *>::iterator iter;
+	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
+	{ delete *iter; }
+	std::cout << "vl::Pipe::~Pipe : windows deleted" << std::endl;
+
+	_root->getNative()->destroySceneManager( _ogre_sm );
+
+	// Info
+	std::string message("Cleaning out OGRE");
+	Ogre::LogManager::getSingleton().logMessage( message );
+	_root.reset();
+
+	_running = false;
+
+	std::cout << "vl::Pipe::_shutdown : DONE" << std::endl;
 }
 
 void 
