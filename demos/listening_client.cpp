@@ -50,7 +50,6 @@ int main( const int argc, char** argv )
 		{ return -1; }
 
 		vl::Application client( env, settings );
-		client.init();
 
 		client.run();
 	}

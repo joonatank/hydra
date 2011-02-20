@@ -35,17 +35,23 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
-vl::Config::Config( vl::GameManagerPtr man, vl::Settings const & settings, vl::EnvSettingsRefPtr env )
-	: _game_manager(man)
+vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
+	: _game_manager( new vl::GameManager )
 	, _settings(settings)
 	, _env(env)
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _running(true)
 {
 	std::cout << "vl::Config::Config" << std::endl;
-	assert( _game_manager && _env );
+	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+
+	_createResourceManager( settings, env );
+
+	// TODO this should be done in python
+	std::string song_name("The_Dummy_Song.ogg");
+	_game_manager->createBackgroundSound(song_name);
 
 	_game_manager->createSceneManager( this );
 }
@@ -54,6 +60,8 @@ vl::Config::~Config( void )
 {
 	std::cout << "vl::Config::~Config" << std::endl;
 
+	delete _game_manager;
+	
 	// Destroy server
 	_server.reset();
 
@@ -399,6 +407,27 @@ vl::Config::_createQuitEvent(void )
 	// Add trigger
 	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE );
 	trig->addAction(quit);
+}
+
+void
+vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
+{
+	std::cout << "Initialising Resource Manager" << std::endl;
+
+	std::cout << "Adding project directories to resources. "
+		<< "Only project directory and global directory is added." << std::endl;
+
+	std::vector<std::string> paths = settings.getAuxDirectories();
+	paths.push_back(settings.getProjectDir());
+	for( size_t i = 0; i < paths.size(); ++i )
+	{ _game_manager->getReourceManager()->addResourcePath( paths.at(i) ); }
+
+	// TODO add case directory
+
+	// Add environment directory, used for tracking configurations
+	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
+	std::string tracking_dir( env->getEnvironementDir() + "/tracking" );
+	_game_manager->getReourceManager()->addResourcePath( tracking_dir );
 }
 
 /// Event Handling

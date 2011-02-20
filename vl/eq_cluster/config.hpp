@@ -34,8 +34,7 @@ namespace vl
 class Config : public vl::Session
 {
 public:
-	Config( vl::GameManagerPtr man,
-			vl::Settings const &settings,
+	Config( vl::Settings const &settings,
 			vl::EnvSettingsRefPtr env );
 
 	virtual ~Config (void);
@@ -65,6 +64,10 @@ protected :
 	/// Scene
 	void _loadScenes( void );
 	void _hideCollisionBarries( void );
+
+	/// Resources
+	void _createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env );
+
 
 	/// Events
 	void _createQuitEvent( void );

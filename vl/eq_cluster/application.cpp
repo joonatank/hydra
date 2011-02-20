@@ -124,27 +124,27 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application( vl::EnvSettingsRefPtr env, 
-								  vl::Settings const &settings )
-	: _env(env)
-	, _game_manager(0)
-	, _config(0)
+vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings )
+	: _config(0)
 	, _pipe_thread(0)
 {
 	assert( env );
-	std::cout << "vl::Application::init" << std::endl;
+
 	if( env->isMaster() )
 	{
-		// TODO GameManager and ResourceManager should be created in Config
-		_game_manager = new vl::GameManager;
-		_createResourceManager( settings, env );
-
-		// TODO this should be done in python
-		std::string song_name("The_Dummy_Song.ogg");
-		_game_manager->createBackgroundSound(song_name);
-
-		_config = new vl::Config( _game_manager, settings, env );
+		_config = new vl::Config( settings, env );
+		// NOTE This needs to be called before creating the Pipe thread
+		// probably because the Server the Pipe thread connects to has to be
+		// created before connecting to it.
+		_config->init();
 	}
+
+	// Put the pipe thread spinning on both master and slave
+	std::cout << "vl::Application::Application : name = " << env->getMaster().name << std::endl;
+	vl::PipeThread pipe( env->getMaster().name,
+						 env->getServer().hostname,
+						 env->getServer().port );
+	_pipe_thread = new boost::thread( pipe );
 }
 
 vl::Application::~Application( void )
@@ -152,7 +152,6 @@ vl::Application::~Application( void )
 	std::cout << "vl::Application::~Application" << std::endl;
 	
 	delete _pipe_thread;
-	delete _game_manager;
 	delete _config;
 
 	std::cout << "vl::Application::~Application : DONE" << std::endl;
@@ -164,53 +163,25 @@ vl::Application::run( void )
 {
 	std::cout << "vl::Application::run" << std::endl;
 
-	if( _env->isMaster() )
+	if( _config )
 	{
-		assert( _config );
-		// 4. run main loop
+		// run main loop
 		uint32_t frame = 0;
 		while( _config->isRunning() )
 		{
 			_render( ++frame );
 		}
+		
+		_config->exit();
 	}
-	_exit();
+
+	// Wait till the Pipe thread has received the shutdown message and is finished
+	_pipe_thread->join();
 
 	std::cout << "vl::Application::run : DONE" << std::endl;
 }
 
-void
-vl::Application::init( void )
-{
-	if( _env->isMaster() )
-	{
-		assert( _config );
-		// NOTE This needs to be called before creating the Pipe thread
-		// probably because the Server the Pipe thread connects to has to be
-		// created before connecting to it.
-		_config->init();
-	}
-
-	// Put the pipe thread spinning on both master and slave
-	assert( !_pipe_thread );
-	std::cout << "name = " << _env->getMaster().name << std::endl;
-	vl::PipeThread pipe( _env->getMaster().name,
-						  _env->getServer().hostname,
-						  _env->getServer().port );
-	_pipe_thread = new boost::thread( pipe );
-}
-
 /// ------------------------------- Private ------------------------------------
-void
-vl::Application::_exit(void )
-{
-	if( _config )
-	{ _config->exit(); }
-
-	// Wait till the Pipe thread has received the shutdown message and is finished
-	_pipe_thread->join();
-}
-
 void
 vl::Application::_render( uint32_t const frame )
 {
@@ -234,23 +205,4 @@ vl::Application::_render( uint32_t const frame )
 	{ vl::msleep( (uint32_t)sleep_time ); }
 }
 
-void
-vl::Application::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
-{
-	std::cout << "Initialising Resource Manager" << std::endl;
 
-	std::cout << "Adding project directories to resources. "
-		<< "Only project directory and global directory is added." << std::endl;
-
-	std::vector<std::string> paths = settings.getAuxDirectories();
-	paths.push_back(settings.getProjectDir());
-	for( size_t i = 0; i < paths.size(); ++i )
-	{ _game_manager->getReourceManager()->addResourcePath( paths.at(i) ); }
-
-	// TODO add case directory
-
-	// Add environment directory, used for tracking configurations
-	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	std::string tracking_dir( env->getEnvironementDir() + "/tracking" );
-	_game_manager->getReourceManager()->addResourcePath( tracking_dir );
-}
