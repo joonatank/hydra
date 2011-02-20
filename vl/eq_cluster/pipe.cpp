@@ -17,6 +17,8 @@
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
 
+#include <OGRE/OgreWindowEventUtilities.h>
+
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
 vl::Pipe::Pipe( std::string const &name,
@@ -99,14 +101,12 @@ vl::Pipe::sendEvent( vl::cluster::EventData const &event )
 void
 vl::Pipe::operator()()
 {
-	std::cout << "vl::Pipe::operator() : Thread entered." << std::endl;
-
 	// Here we should wait for the EnvSettings from master
 	// TODO we should have a wait for Message function
 	while( !_env )
 	{
 		_handleMessages();
-		vl::msleep(1);
+		boost::this_thread::sleep( boost::posix_time::milliseconds(1) );
 	}
 
 	_createOgre();
@@ -524,6 +524,7 @@ vl::Pipe::_updateDistribData( void )
 void
 vl::Pipe::_draw( void )
 {
+	Ogre::WindowEventUtilities::messagePump();
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 }
@@ -598,6 +599,8 @@ vl::Pipe::_takeScreenshot( void )
 void 
 vl::PipeThread::operator()()
 {
+	std::cout << "PipeThread Thread entered." << std::endl;
+
 	assert( !_name.empty() );
 	if( _server_address.empty() )
 	{ _server_address = "localhost"; }
@@ -605,6 +608,6 @@ vl::PipeThread::operator()()
 
 	vl::Pipe *pipe = new vl::Pipe( _name, _server_address, _server_port );
 	pipe->operator()();
-	std::cout << "Exiting PipeThread" << std::endl;
+	std::cout << "PipeThread Exited" << std::endl;
 	delete pipe;
 }
