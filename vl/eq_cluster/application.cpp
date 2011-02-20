@@ -108,9 +108,9 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 	size_t pos = options.server_address.find_last_of(":");
 	if( pos == std::string::npos )
 	{ return vl::EnvSettingsRefPtr(); }
-	std::string hostname = options.server_address.substr(0, pos-1);
+	std::string hostname = options.server_address.substr(0, pos);
 	std::cout << "Using server hostname = " << hostname;
-	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos) );
+	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
 	std::cout << " and port = " << port << "." << std::endl;
 
 	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
@@ -126,10 +126,10 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 /// -------------------------------- Application -----------------------------
 vl::Application::Application( vl::EnvSettingsRefPtr env, 
 								  vl::Settings const &settings )
-	: _env(env),
-	  _config(0),
-	  _pipe_thread(0),
-	  _pipe(0)
+	: _env(env)
+	, _game_manager(0)
+	, _config(0)
+	, _pipe_thread(0)
 {
 	assert( env );
 	std::cout << "vl::Application::init" << std::endl;
@@ -152,7 +152,6 @@ vl::Application::~Application( void )
 	std::cout << "vl::Application::~Application" << std::endl;
 	
 	delete _pipe_thread;
-	delete _pipe;
 	delete _game_manager;
 	delete _config;
 
@@ -174,9 +173,10 @@ vl::Application::run( void )
 		{
 			_render( ++frame );
 		}
-
-		_exit();
 	}
+	_exit();
+
+	std::cout << "vl::Application::run : DONE" << std::endl;
 }
 
 void
@@ -192,12 +192,12 @@ vl::Application::init( void )
 	}
 
 	// Put the pipe thread spinning on both master and slave
-	assert( !_pipe && !_pipe_thread );
-	_pipe = new vl::Pipe( _env->getMaster().name,
+	assert( !_pipe_thread );
+	std::cout << "name = " << _env->getMaster().name << std::endl;
+	vl::PipeThread pipe( _env->getMaster().name,
 						  _env->getServer().hostname,
 						  _env->getServer().port );
-	// TODO create a custom wrapper for Pipe
-	_pipe_thread = new boost::thread( boost::ref(*_pipe) );
+	_pipe_thread = new boost::thread( pipe );
 }
 
 /// ------------------------------- Private ------------------------------------

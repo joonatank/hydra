@@ -151,6 +151,23 @@ protected :
 
 };	// class Pipe
 
+class PipeThread
+{
+public :
+	PipeThread( std::string name, std::string server_address, uint16_t server_port )
+		: _name(name), _server_address(server_address), _server_port(server_port)
+	{}
+
+	/// Boost thread operator
+	void operator()();
+
+private :
+	std::string _name;
+	std::string _server_address;
+	uint16_t _server_port;
+
+};	// class PipeThread
+
 }	// namespace vl
 
 #endif // VL_PIPE_HPP

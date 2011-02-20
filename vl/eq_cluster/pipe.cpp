@@ -112,8 +112,9 @@ vl::Pipe::operator()()
 	_createOgre();
 
 	vl::EnvSettings::Node node = getNodeConf();
-	std::cout << "Creating " << node.getNWindows() << " windows." << std::endl;
-	assert( node.getNWindows() > 0 );
+	std::string msg = "Creating " + vl::to_string(node.getNWindows()) + " windows.";
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{ _createWindow( node.getWindow(i) ); }
 
@@ -154,13 +155,13 @@ vl::Pipe::_reloadProjects( vl::Settings set )
 		_root->addResource( _settings.getAuxDirectories().at(i) );
 	}
 
-	std::cout << "Setting up the resources." << std::endl;
+	std::string msg("Setting up the resources.");
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+
 	_root->setupResources();
 	_root->loadResources();
 
 	_ogre_sm = _root->createSceneManager("SceneManager");
-
-	std::cout << "vl::Pipe::frameStart : loading scene" << std::endl;
 
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
@@ -174,12 +175,7 @@ vl::Pipe::_reloadProjects( vl::Settings set )
 void
 vl::Pipe::_createOgre( void )
 {
-	std::cout << "vl::Pipe::_createOgre" << std::endl;
 	assert( _env );
-
-	// TODO needs LogManager creation before this
-	std::string message("Creating Ogre Root");
-	std::cout << message << std::endl;
 
 	// TODO the project name should be used instead of the hydra for all
 	// problem is that the project name is not known at this point
@@ -193,24 +189,25 @@ vl::Pipe::_createOgre( void )
 void
 vl::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
 {
-	std::cout << "vl::Pipe::_loadScene" << std::endl;
+	std::string msg("vl::Pipe::_loadScene");
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+
 	assert( _ogre_sm );
 
-	std::string message;
+//	std::string message;
 
 	std::string const &name = scene.getName();
 
-	message = "Loading scene " + name + " file = " + scene.getFile();
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( message );
+	msg = "Loading scene " + name + " file = " + scene.getFile();
+ 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
 
 	vl::ogre::DotSceneLoader loader;
 	// TODO pass attach node based on the scene
 	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 	loader.parseDotScene( scene.getFile(), _ogre_sm );
 
-	message = "Scene " + name + " loaded.";
-	Ogre::LogManager::getSingleton().logMessage( message );
+	msg = "Scene " + name + " loaded.";
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
 }
 
 void
@@ -260,7 +257,8 @@ vl::Pipe::_setCamera ( void )
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->setCamera(_camera); }
 
-	std::cout << "Camera " << _active_camera_name << " set." << std::endl;
+	std::string msg = "Camera " + _active_camera_name + " set.";
+	Ogre::LogManager::getSingleton().logMessage( msg );
 }
 
 
@@ -595,4 +593,18 @@ vl::Pipe::_takeScreenshot( void )
 	// Tell the Window to take a screenshot
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
+}
+
+void 
+vl::PipeThread::operator()()
+{
+	assert( !_name.empty() );
+	if( _server_address.empty() )
+	{ _server_address = "localhost"; }
+	assert( _server_port != 0 );
+
+	vl::Pipe *pipe = new vl::Pipe( _name, _server_address, _server_port );
+	pipe->operator()();
+	std::cout << "Exiting PipeThread" << std::endl;
+	delete pipe;
 }

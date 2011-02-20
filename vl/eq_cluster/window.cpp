@@ -17,11 +17,17 @@
 
 /// ----------------------------- Public ---------------------------------------
 vl::Window::Window( std::string const &name, vl::Pipe *parent )
-	: _name(name), _pipe( parent ), _channel(0), _ogre_window(0),
-	_input_manager(0), _keyboard(0), _mouse(0)
+	: _name(name)
+	, _pipe( parent )
+	, _channel(0)
+	, _ogre_window(0)
+	, _input_manager(0)
+	, _keyboard(0)
+	, _mouse(0)
 {
 	assert( _pipe );
-	std::cout << "vl::Window::Window : " << getName() << std::endl;
+	std::string msg = "vl::Window::Window : " + getName();
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 
@@ -45,15 +51,16 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 
 vl::Window::~Window( void )
 {
-	std::cout << "vl::Window::~Window" << std::endl;
+	std::string msg("vl::Window::~Window");
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
 	// Should clean out OIS and Ogre
-	std::string message = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	msg = "Cleaning out OIS";
+	Ogre::LogManager::getSingleton().logMessage(msg);
 	if( _input_manager )
 	{
-		message = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(message);
+		msg = "Destroy OIS input manager.";
+		Ogre::LogManager::getSingleton().logMessage(msg);
         OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
@@ -61,7 +68,6 @@ vl::Window::~Window( void )
 	delete _channel;
 
 	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
-	std::cout << "vl::Window::~Window : DONE" << std::endl;
 }
 
 vl::EnvSettingsRefPtr
@@ -215,8 +221,7 @@ void
 vl::Window::_createInputHandling( void )
 {
 	std::string message( "Creating OIS Input system." );
-	std::cerr << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
+ 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
 	assert( _ogre_window );
 
@@ -234,13 +239,9 @@ vl::Window::_createInputHandling( void )
 
 	// Info
 	message = "Creating OIS Input Manager";
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
+ 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
 	_input_manager = OIS::InputManager::createInputSystem( pl );
-	message = "OIS Input Manager created";
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
 
 	_printInputInformation();
 
@@ -254,10 +255,8 @@ vl::Window::_createInputHandling( void )
 
 	_mouse->setEventCallback(this);
 
-	// Info
 	message = "Input system created.";
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage(message);
+ 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 }
 
 void
@@ -274,8 +273,7 @@ vl::Window::_printInputInformation( void )
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
 		<< '\n';
-	std::cout << ss.str() << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+ 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
 	ss.str("");
 	// List all devices
@@ -283,8 +281,7 @@ vl::Window::_printInputInformation( void )
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
-	std::cout << ss.str() << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+ 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 }
 
 void
@@ -292,16 +289,11 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 {
 	// Info
 	std::string message = "Creating Ogre RenderWindow.";
-	std::cout << message << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( message );
+ 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
 	Ogre::NameValuePairList params;
 
 	assert( !winConf.empty() );
-
-	std::cout << "Window config " << winConf.name
-		<< " : window left = " << winConf.x << " window top = " << winConf.y
-		<< std::endl;
 
 	params["left"] = vl::to_string( winConf.x );
 	params["top"] = vl::to_string( winConf.y );

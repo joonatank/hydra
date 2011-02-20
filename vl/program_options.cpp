@@ -17,7 +17,7 @@ vl::ProgramOptions::ProgramOptions( void )
 {}
 
 bool
-vl::ProgramOptions::master(void ) const
+vl::ProgramOptions::master( void ) const
 {
 	return !_slave;
 }
@@ -72,10 +72,12 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	// Slave options
 	if( vm.count("slave") )
 	{
+		_slave = true;
 		_parseSlave( vm );
 	}
 	else
 	{
+		_slave = false;
 		_parseMaster( vm );
 	}
 }

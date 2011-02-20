@@ -61,7 +61,6 @@ protected:
 	vl::Config *_config;
 
 	boost::thread *_pipe_thread;
-	vl::Pipe *_pipe;
 
 };	// class Client
 

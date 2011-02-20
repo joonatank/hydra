@@ -61,7 +61,8 @@ vl::Channel::setViewport(Ogre::Viewport* viewport)
 void
 vl::Channel::init( vl::EnvSettingsRefPtr settings )
 {
-	std::cout << "vl::Channel::init" << std::endl;
+	std::string msg("vl::Channel::init");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	// If the channel has a name we try to find matching wall
 	// FIXME using the new system we should have a complete slave configuration
 	// in the Pipe and this is not necessary the wall should be retrieved
@@ -69,14 +70,14 @@ vl::Channel::init( vl::EnvSettingsRefPtr settings )
 	assert( settings );
 	assert( settings->getNWalls() > 0);
 
-	std::string message = "Settings has "
+	msg = "Settings has "
 		+ vl::to_string( settings->getNWalls() ) + " wall configs.";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	Ogre::LogManager::getSingleton().logMessage(msg);
 
 	if( !getName().empty() )
 	{
-		message = "Finding Wall for channel : " + getName();
-		Ogre::LogManager::getSingleton().logMessage(message);
+		msg = "Finding Wall for channel : " + getName();
+		Ogre::LogManager::getSingleton().logMessage(msg);
 		_wall = settings->findWall( _channel_conf.wall_name );
 	}
 
@@ -84,8 +85,8 @@ vl::Channel::init( vl::EnvSettingsRefPtr settings )
 	if( _wall.empty() )
 	{
 		_wall = settings->getWall(0);
-		message = "No wall found : using the default " + _wall.name;
-		Ogre::LogManager::getSingleton().logMessage(message);
+		msg = "No wall found : using the default " + _wall.name;
+		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
 	assert( !_wall.empty() );
@@ -95,17 +96,16 @@ vl::Channel::init( vl::EnvSettingsRefPtr settings )
 	_stereo = stereo;
 	if( _stereo )
 	{
-		message = "Stereo supported";
-		Ogre::LogManager::getSingleton().logMessage(message);
+		msg = "Stereo supported";
+		Ogre::LogManager::getSingleton().logMessage(msg);
+		msg = "IPD (Inter pupilar distance) = " + vl::to_string( settings->getIPD() );
+		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 	else
 	{
-		message = "No stereo support.";
-		Ogre::LogManager::getSingleton().logMessage(message);
+		msg = "No stereo support.";
+		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
-
-	message = "IPD (Inter pupilar distance) = " + vl::to_string( settings->getIPD() );
-	Ogre::LogManager::getSingleton().logMessage(message);
 }
 
 void

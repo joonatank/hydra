@@ -128,7 +128,7 @@ void
 vl::ogre::Root::_loadPlugins(void )
 {
 	std::string msg( "_loadPlugins" );
-	Ogre::LogManager::getSingleton().logMessage( msg );
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
 	// TODO add support for plugins in the EnvSettings
 
