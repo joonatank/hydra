@@ -55,7 +55,7 @@ public :
 	{ return _camera; }
 
 	vl::Player const &getPlayer( void ) const
-	{ return _player; }
+	{ return *_player; }
 
 	/// Send a message to the Master
 	/// Does not destroy the message so user is responsible for destroying it.
@@ -87,14 +87,12 @@ protected :
 	void _createClient( std::string const &server_address, uint16_t server_port );
 	void _handleMessages( void );
 	void _handleMessage( vl::cluster::Message *msg );
+	void _handleCreateMsg( vl::cluster::Message *msg );
 	void _handleUpdateMsg( vl::cluster::Message *msg );
 
 	/// Distribution helpers
 	/// Syncs to the master copy stored when an Update message was received
 	void _syncData( void );
-	/// Maps all distributed objects i.e. player and SceneManager
-	/// Scene Manager handles later mapping of SceneNodes
-	void _mapData( void );
 	/// Updates command data, uses versioning to and indexes to provide an
 	/// Commands that can be sent from Master thread
 	void _updateDistribData( void );
@@ -135,7 +133,7 @@ protected :
 
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;
-	vl::Player _player;
+	vl::Player *_player;
 	std::string _active_camera_name;
 	uint32_t _screenshot_num;
 

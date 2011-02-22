@@ -24,6 +24,7 @@ enum CLIENT_STATE
 	CS_ENV,		// Environment settings have been sent
 	CS_PROJ,	// Project settings have been sent
 	CS_INIT,	// Initial SceneGraph has been sent
+	CS_CREATE,
 	CS_UPDATE,	// Rendering loop : Update has been sent
 	CS_DRAW,	// Rendering loop : Draw has been sent
 	CS_SWAP,	// Rendering loop : Swap has been sent

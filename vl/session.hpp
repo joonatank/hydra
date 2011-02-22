@@ -19,6 +19,13 @@
 namespace vl
 {
 
+enum OBJ_TYPE
+{
+	OBJ_PLAYER,
+	OBJ_SCENE_MANAGER,
+	OBJ_SCENE_NODE,
+};
+
 class Session
 {
 public :
@@ -28,14 +35,26 @@ public :
 
 	virtual ~Session( void ) {}
 
-	/// Register object to our own synchronisation system
-	void registerObject( vl::Distributed *obj )
+	/// Register object to synchronisation system
+	/// @param id either a valid id or ID_UNDEFINED if undefined will register a new object
+	/// if valid will map already registered object
+	void registerObject( vl::Distributed *obj, OBJ_TYPE type, uint64_t id = vl::ID_UNDEFINED )
 	{
 		assert(obj);
-		assert( obj->getID() == vl::ID_UNDEFINED );
-		_last_id++;
-		obj->registered(_last_id);
-		_registered_objects.push_back(obj);
+		// Already registered objects should not be here
+		assert(obj->getID() == vl::ID_UNDEFINED);
+		// Register object
+		if( vl::ID_UNDEFINED == id )
+		{
+			_last_id++;
+			obj->registered(_last_id);
+			_new_objects.push_back( std::make_pair(type, obj) );
+			_registered_objects.push_back(obj);
+		}
+		else
+		{
+			mapObject(obj, id);
+		}
 	}
 
 	void mapObject( vl::Distributed *obj, uint64_t const id )
@@ -59,7 +78,19 @@ public :
 		return 0;
 	}
 
+	typedef std::vector< std::pair<OBJ_TYPE, Distributed *> > CreatedObjectsList;
+
+	CreatedObjectsList const &getNewObjects( void ) const
+	{
+		return _new_objects;
+	}
+
+	void clearNewObjects( void )
+	{ _new_objects.clear(); }
+
 protected :
+
+	CreatedObjectsList _new_objects;
 
 	/// Registered data
 	std::vector<vl::Distributed *> _registered_objects;

@@ -25,10 +25,6 @@ typedef uint32_t msg_size;
 namespace cluster
 {
 
-// TODO Add support for
-// requesting initial settings, project configuration resources
-// and responding to those requests
-// TODO add support for ACK messages
 /**	Message Structures
  *
  *	Acknowledge a message received
@@ -42,9 +38,14 @@ namespace cluster
  *	[MSG_REG_UPDATES]
  *
  *	Update message
- *	both MSG_INITIAL_STATE and MSG_UPDATE
- *	[MSG_INITIAL_STATE, data size, [N | object id, object size, object data]]
+ *	MSG_SG_UPDATE
+ *	[MSG_SG_UPDATE, data size, [N | object id, object size, object data]]
  *	where one object is an versioned object (registered and can be mapped)
+ *
+ *	Create message
+ *	MSG_SG_CREATE
+ *	[MSG_SG_CREATE, data size, [N | object type id, object id]]
+ *	where object type id is the id of the object to create
  *
  *	Input message
  *	MSG_INPUT
@@ -69,8 +70,8 @@ enum MSG_TYPES
 	MSG_REG_UPDATES,	// Reguest updates from the application
 	MSG_ENVIRONMENT,	// Send the Environment configuration
 	MSG_PROJECT,		// Send the project configuration
-	MSG_INITIAL_STATE,	// Send the initial SceneGraph
-	MSG_UPDATE,			// Send updated SceneGraph and other versioned objects
+	MSG_SG_CREATE,		// Create SceneGraph elements
+	MSG_SG_UPDATE,		// Send updated SceneGraph
 	MSG_INPUT,			// Send data from input devices from pipes to application
 	MSG_READY_DRAW,		// Sent from Rendering thread when it's ready to draw
 	MSG_DRAW,			// Draw the image into back buffer
@@ -104,10 +105,10 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_ENVIRONMENT";
 	case MSG_PROJECT :
 		return "MSG_PROJECT";
-	case MSG_INITIAL_STATE :
-		return "MSG_INITIAL_STATE";
-	case MSG_UPDATE :
-		return "MSG_UPDATE";
+	case MSG_SG_CREATE :
+		return "MSG_SG_CREATE";
+	case MSG_SG_UPDATE :
+		return "MSG_SG_UPDATE";
 	case MSG_INPUT :
 		return "MSG_INPUT";
 	case MSG_READY_DRAW :
@@ -133,7 +134,7 @@ public :
 
 	Message( MSG_TYPES type );
 
-	MSG_TYPES getType( void )
+	MSG_TYPES getType( void ) const
 	{ return _type; }
 
 	/// Dump the whole message to a binary array, the array is modified
@@ -163,7 +164,7 @@ public :
 	/// Contains the message, not the type of the message which precedes the message
 	/// Maximum size is 8kbytes, which is more than one datagram can handle
 	/// For now larger messages are not supported
-	size_type size( void )
+	size_type size( void ) const
 	{ return _size; }
 
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );

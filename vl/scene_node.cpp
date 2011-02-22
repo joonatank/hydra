@@ -1,44 +1,23 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file scene_node.cpp
  */
 
 #include "scene_node.hpp"
 
-vl::SceneNodePtr
-vl::SceneNode::create(const std::string& name)
-{
-	return new SceneNode(name);
-}
+#include "scene_manager.hpp"
 
 /// Public
-vl::SceneNode::SceneNode(const std::string& name)
-	: _name(name),
-	  _position( Ogre::Vector3::ZERO ),
-	  _orientation( Ogre::Quaternion::IDENTITY ),
-	  _visible(true),
-	  _ogre_node(0)
-{}
-
-bool
-vl::SceneNode::findNode(Ogre::SceneManager* man)
+vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
+	: _name(name)
+	, _position( Ogre::Vector3::ZERO )
+	, _orientation( Ogre::Quaternion::IDENTITY )
+	, _visible(true)
+	, _ogre_node(0)
+	, _creator(creator)
 {
-	if( _ogre_node )
-	{ _ogre_node = 0; }
-
-	if( man->hasSceneNode( _name ) )
-	{
-		_ogre_node = man->getSceneNode( _name );
-		_ogre_node->setOrientation(_orientation );
-		_ogre_node->setPosition(_position );
-		_ogre_node->setVisible( _visible );
-
-		return true;
-	}
-	else
-	{ return false; }
+	assert( _creator );
 }
-
-
 
 /// Protected
 // Does no transformation on the Ogre Node as the master copy should be in
@@ -74,6 +53,17 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 	if( dirtyBits & DIRTY_NAME )
 	{
 		msg >> _name;
+		// name should never be empty
+		// @todo add exception throwing
+		assert( !_name.empty() );
+		if( _findNode() )
+		{
+			std::cout << "Ogre node = " << _name << " found in the SG." << std::endl;
+		}
+		else
+		{
+			std::cout << "Ogre node = " << _name << " NOT found in the SG." << std::endl;
+		}
 	}
 	// Deserialize position
 	if( dirtyBits & DIRTY_POSITION )
@@ -100,6 +90,28 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		if( _ogre_node )
 		{ _ogre_node->setVisible(_visible); }
 	}
+}
+
+bool
+vl::SceneNode::_findNode( void )
+{
+	if( _ogre_node )
+	{ return true; }
+
+	assert( _creator );
+	assert( _creator->getNative() );
+
+	if( _creator->getNative()->hasSceneNode( _name ) )
+	{
+		_ogre_node = _creator->getNative()->getSceneNode( _name );
+		_ogre_node->setOrientation(_orientation);
+		_ogre_node->setPosition(_position);
+		_ogre_node->setVisible(_visible);
+
+		return true;
+	}
+	else
+	{ return false; }
 }
 
 

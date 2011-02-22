@@ -84,6 +84,7 @@ set( HEADERS
 	trigger.hpp
 	event_manager.hpp
 	keycode.hpp
+	session.hpp
 	distrib_resource_manager.hpp
 	distrib_settings.hpp
 	program_options.hpp
@@ -98,6 +99,7 @@ set( HEADERS
 	cluster/server.hpp
 	cluster/client.hpp
 	cluster/message.hpp
+	cluster/states.hpp
 	distributed.hpp
 	)
 

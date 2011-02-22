@@ -84,26 +84,16 @@ vl::Config::init( void )
 	// Send the project
 	_sendProject();
 
-	// TODO register the objects
-	// There needs to be a certain order in which they are registered
-	// so that they can be unpacked correctly in the rendering thread
-	// or we need an update structure that we can set the ids into.
-	// or we can use object types in the message so that they can be dynamically
-	// created in the rendering threads.
-
 	// Create the player necessary for Trackers
 	vl::PlayerPtr player = _game_manager->createPlayer();
 
 	assert( player );
 	// Registering Player in init
-	registerObject( player );
+	// TODO move this to do an automatic registration similar to SceneManager
+	registerObject( player, OBJ_PLAYER );
 
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
-
-	// Register SceneManager
-	std::cout << "Registering SceneManager" << std::endl;
-	registerObject( sm );
 
 	_loadScenes();
 
@@ -124,6 +114,7 @@ vl::Config::init( void )
 
 	_createQuitEvent();
 
+	std::cout << "vl::Config:: updating server" << std::endl;
 	_updateServer();
 
 	_stats.logInitTime( (double(timer.getMicroseconds()))/1e3 );
@@ -188,13 +179,29 @@ void
 vl::Config::_updateServer( void )
 {
 	assert( _server );
-// 	std::cout << "vl::Config::_updateServer" << std::endl;
+
 	// Handle received messages
 	_server->receiveMessages();
 
+	// New objects created need to send SG_CREATE message
+	if( !getNewObjects().empty() )
+	{
+		vl::cluster::Message msg( vl::cluster::MSG_SG_CREATE );
+		msg.write( getNewObjects().size() );
+		for( size_t i = 0; i < getNewObjects().size(); ++i )
+		{
+			OBJ_TYPE type = getNewObjects().at(i).first;
+			uint64_t id = getNewObjects().at(i).second->getID();
+			msg.write( type );
+			msg.write( id );
+		}
+		_server->sendCreate( msg );
+		clearNewObjects();
+	}
+
 	{
 		// Create SceneGraph updates
-		vl::cluster::Message msg( vl::cluster::MSG_UPDATE );
+		vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE );
 		std::vector<vl::Distributed *>::iterator iter;
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )
@@ -217,8 +224,7 @@ vl::Config::_updateServer( void )
 	// Provide a functor that can create the initial message
 	if( _server->needsInit() )
 	{
-// 		std::cout << "New clients sending the whole SceneGraph" << std::endl;
-		vl::cluster::Message msg( vl::cluster::MSG_INITIAL_STATE );
+		vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE );
 		std::vector<vl::Distributed *>::iterator iter;
 		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 			++iter )

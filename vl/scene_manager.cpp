@@ -1,77 +1,53 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file scene_manager.cpp
  */
 
 #include "scene_manager.hpp"
 
 /// Public
-vl::SceneManager::SceneManager( vl::Session *session )
+vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	: _scene_version( 0 ), _ogre_sm(0), _session(session)
-{}
+{
+	assert( _session );
+	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
+}
 
 vl::SceneManager::~SceneManager( void )
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
-	{ delete _scene_nodes.at(i).node; }
+	{ delete _scene_nodes.at(i); }
 
 	_scene_nodes.clear();
 }
 
-bool
+void
 vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 {
-	if( !man )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
+	assert( man );
 	_ogre_sm = man;
-
-	bool retval = true;
-	for( size_t i = 0; i < _scene_nodes.size(); ++i )
-	{
-		SceneNode *node = _scene_nodes.at(i).node;
-		if( node )
-		{
-			if( !node->findNode(man) )
-			{
-				std::cerr << "No Ogre SceneNode with name " << node->getName()
-					<< " found in the SceneGraph." << std::endl;
-				retval = false;
-			}
-		}
-	}
-
-	return retval;
 }
 
 vl::SceneNodePtr
-vl::SceneManager::createSceneNode( std::string const &name )
+vl::SceneManager::createSceneNode( std::string const &name, uint64_t id )
 {
-	// TODO check that no two SceneNodes have the same name
-	SceneNodePtr node = SceneNode::create( name );
-	addSceneNode( node );
-	return node;
-}
+	SceneNodePtr node = new SceneNode( name, this );
 
-void
-vl::SceneManager::addSceneNode( vl::SceneNodePtr node )
-{
-	assert(node);
+	assert( !name.empty() || vl::ID_UNDEFINED != id );
+
 	// Check that no two nodes have the same name
-	for( size_t i = 0; i < getNSceneNodes(); ++i )
+	if( !name.empty() && hasSceneNode(name) )
 	{
-		SceneNodePtr ptr = getSceneNode(i);
-		if( ptr == node || ptr->getName() == node->getName() )
-		{
-			// TODO is this the right exception?
-			BOOST_THROW_EXCEPTION( vl::duplicate() );
-		}
+		// TODO is this the right exception?
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
 	}
 	assert( _session );
-	setDirty( DIRTY_NODES );
 
-	_session->registerObject( node );
+	_session->registerObject( node, OBJ_SCENE_NODE, id );
 	assert( node->getID() != vl::ID_UNDEFINED );
-	_scene_nodes.push_back( SceneNodeIDPair(node, node->getID()) );
+	_scene_nodes.push_back( node );
+
+	return node;
 }
 
 bool
@@ -85,7 +61,7 @@ vl::SceneManager::getSceneNode(const std::string& name)
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		SceneNode *node = _scene_nodes.at(i).node;
+		SceneNode *node = _scene_nodes.at(i);
 		if( node->getName() == name )
 		{ return node; }
 	}
@@ -98,7 +74,7 @@ vl::SceneManager::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
 	{
-		SceneNode *node = _scene_nodes.at(i).node;
+		SceneNode *node = _scene_nodes.at(i);
 		if( node->getName() == name )
 		{ return node; }
 	}
@@ -109,77 +85,27 @@ vl::SceneManager::getSceneNode(const std::string& name) const
 vl::SceneNode *
 vl::SceneManager::getSceneNode(size_t i)
 {
-	return _scene_nodes.at(i).node;
+	return _scene_nodes.at(i);
 }
 
 const vl::SceneNodePtr
 vl::SceneManager::getSceneNode(size_t i) const
 {
-	return _scene_nodes.at(i).node;
+	return _scene_nodes.at(i);
 }
 
-void vl::SceneManager::reloadScene(void )
+void vl::SceneManager::reloadScene( void )
 {
 	std::cerr << "Should reload the scene now." << std::endl;
 	setDirty( DIRTY_RELOAD_SCENE );
 	_scene_version++;
 }
 
-void
-vl::SceneManager::finaliseSync( void )
-{
-// 	std::cout << "vl::SceneManager::finaliseSync" << std::endl;
-
-	// Map all nodes that are missing Ogre SceneNode
-	std::vector< SceneNodeIDPair > remaining_nodes;
-	if( _ogre_sm )
-	{
-		std::vector<SceneNodeIDPair>::iterator iter;
-		for( iter = _new_scene_nodes.begin(); iter != _new_scene_nodes.end(); ++iter )
-		{
-			if( !iter->node->findNode( _ogre_sm ) )
-			{
-				std::cout << "NO Ogre node = " << iter->node->getName()
-					<< " found in the scene." << std::endl;
-				remaining_nodes.push_back(*iter);
-			}
-			else
-			{
-				std::cout << "Ogre node = " << iter->node->getName()
-					<< " found in the scene." << std::endl;
-			}
-		}
-	}
-
-	_new_scene_nodes = remaining_nodes;
-
-	if( _new_scene_nodes.size() != 0 )
-	{
-		std::cout << "Still missing " << _new_scene_nodes.size()
-			<< " Ogre SceneNodes." << std::endl;
-	}
-}
-
 
 /// -------------------------------Protected -----------------------------------
-// NOTE No registering can be done in the serialize method, it's called from
-// different thread.
 void
 vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	if( dirtyBits & DIRTY_NODES )
-	{
-		msg << _scene_nodes.size();
-		for( size_t i = 0; i < _scene_nodes.size(); ++i )
-		{
-			uint64_t id = _scene_nodes.at(i).id;
-			std::string name = _scene_nodes.at(i).node->getName();
-			assert( id != vl::ID_UNDEFINED );
-
-			msg << _scene_nodes.at(i).id;
-		}
-	}
-
  	if( dirtyBits & DIRTY_RELOAD_SCENE )
  	{
  		msg << _scene_version;
@@ -189,56 +115,8 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 void
 vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	if( dirtyBits & DIRTY_NODES )
-	{
-		// TODO this does not work dynamically, we need to track changes in the
-		// vector and do mapping for those objects we want changes at runtime.
-		size_t size;
-		msg >> size;
-		// TODO this will leak memory
-		// Also if there is already registered SceneNodes this might crash the
-		// applicatation in exit.
-		// The user should not remove SceneNodes to avoid this.
-		_scene_nodes.resize(size);
-		for( size_t i = 0; i < _scene_nodes.size(); ++i )
-		{
-			SceneNode *node = _scene_nodes.at(i).node;
-			// FIXME this does not handle changes in the IDs it will merily
-			// ignore them
-			// Basicly we don't want the IDs to be changed without recreating
-			// the scene node.
-			msg >> _scene_nodes.at(i).id;
-			// Check for new SceneNodes
-			if( !node )
-			{
-				assert( _scene_nodes.at(i).id != vl::ID_UNDEFINED );
-				_mapObject( _scene_nodes.at(i) );
-			}
-		}
-	}
-
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		msg >> _scene_version;
 	}
 }
-
-void
-vl::SceneManager::_mapObject( vl::SceneManager::SceneNodeIDPair& node )
-{
-	assert( _session );
-
-	if( !node.node )
-	{
-		// TODO refactor this and sync version to separate function
-		node.node = SceneNode::create();
-	}
-
-	assert( node.id != vl::ID_UNDEFINED );
-	assert( node.node->getID() == vl::ID_UNDEFINED );
-
-	_session->mapObject( node.node, node.id );
-
-	_new_scene_nodes.push_back( node );
-}
-

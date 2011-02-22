@@ -1,5 +1,6 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file scene_node.hpp
  */
 
 #ifndef VL_SCENE_NODE_HPP
@@ -23,12 +24,9 @@ namespace vl
 class SceneNode : public vl::Distributed
 {
 public :
-	virtual ~SceneNode( void ) {}
+	SceneNode( std::string const &name, vl::SceneManager *creator );
 
-	// TODO this should really be ref counted
-	/// SceneNode has a protected Constructor so this method is the only way
-	/// to create one.
-	static SceneNodePtr create( std::string const &name = std::string() );
+	virtual ~SceneNode( void ) {}
 
 	std::string const &getName( void ) const
 	{ return _name; }
@@ -38,11 +36,6 @@ public :
 		setDirty( DIRTY_NAME );
 		_name = name;
 	}
-
-	/// Find the SceneNode with the same name from the Scene graph provided
-	/// Returns true if found, false otherwise
-	/// After this deserialization will transform the Ogre SceneNode
-	bool findNode( Ogre::SceneManager *man );
 
 	Ogre::Vector3 const &getPosition( void ) const
 	{ return _position; }
@@ -80,12 +73,13 @@ public :
 	};
 
 protected :
-	SceneNode( std::string const &name = std::string() );
 
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
+	bool _findNode( void );
+
 	std::string _name;
 
 	Ogre::Vector3 _position;
@@ -94,6 +88,8 @@ private :
 	bool _visible;
 
 	Ogre::SceneNode *_ogre_node;
+
+	vl::SceneManager *_creator;
 
 };	// class SceneNode
 

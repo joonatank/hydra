@@ -27,6 +27,8 @@ vl::Pipe::Pipe( std::string const &name,
 	: _name(name)
 	, _ogre_sm(0)
 	, _camera(0)
+	, _scene_manager(0)
+	, _player(0)
 	, _screenshot_num(0)
 	, _client( new vl::cluster::Client( server_address.c_str(), server_port ) )
 	, _running(true)	// TODO should this be true from the start?
@@ -42,6 +44,9 @@ vl::Pipe::~Pipe( void )
 
 	// Some asserts for checking that the Pipe thread has been correctly shutdown
 	assert( !_root );
+
+	delete _scene_manager;
+	delete _player;
 
 	_client.reset();
 
@@ -194,8 +199,6 @@ vl::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
 
 	assert( _ogre_sm );
 
-//	std::string message;
-
 	std::string const &name = scene.getName();
 
 	msg = "Loading scene " + name + " file = " + scene.getFile();
@@ -334,20 +337,17 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		}
 		break;
 
-		// Scene graph initial state
-		case vl::cluster::MSG_INITIAL_STATE :
+		case vl::cluster::MSG_SG_CREATE :
 		{
-			std::cout << "vl::Pipe::_handleMessage : MSG_INITIAL_STATE message" << std::endl;
-			_client->sendAck( vl::cluster::MSG_INITIAL_STATE );
-			_handleUpdateMsg(msg);
-			_mapData();
+			_client->sendAck( vl::cluster::MSG_SG_CREATE );
+			_handleCreateMsg(msg);
 		}
 		break;
-
+		
 		// Scene graph update after the initial message
-		case vl::cluster::MSG_UPDATE :
+		case vl::cluster::MSG_SG_UPDATE :
 		{
-			_client->sendAck( vl::cluster::MSG_UPDATE );
+			_client->sendAck( vl::cluster::MSG_SG_UPDATE );
 			_handleUpdateMsg(msg);
 			_syncData();
 			_updateDistribData();
@@ -383,55 +383,85 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 	}
 }
 
+void 
+vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
+{
+	std::cout << "vl::Pipe::_handleCreateMsg" << std::endl;
+	size_t size;
+	assert( msg->size() >= sizeof(size) );
+
+	msg->read( size );
+	for( size_t i = 0; i < size; ++i )
+	{
+		assert( msg->size() > 0 );
+		OBJ_TYPE type;
+		uint64_t id;
+
+		msg->read(type);
+		msg->read(id);
+		
+		// TODO create objects
+		if( OBJ_PLAYER == type )
+		{
+			std::cout << "Pipe : Creating player" << std::endl;
+			// TODO support multiple players
+			assert( !_player );
+			// TODO fix the constructor
+			_player = new vl::Player;
+			mapObject( _player, id );
+		}
+		else if( OBJ_SCENE_MANAGER == type )
+		{
+			std::cout << "Pipe : Creating SceneManager" << std::endl;
+			// TODO support multiple SceneManagers
+			assert( !_scene_manager );
+			_scene_manager = new SceneManager( this, id );
+			assert( _ogre_sm );
+			_scene_manager->setSceneManager( _ogre_sm );
+		}
+		else if( OBJ_SCENE_NODE == type )
+		{
+			std::cout << "Pipe : Creating SceneNode" << std::endl;
+			assert( _scene_manager );
+			_scene_manager->createSceneNode( "", id );
+		}
+	}
+}
+
 void
 vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
 {
-	// TODO objects array should not be cleared but rather updated
-	// so that objects that are not updated stay in the array.
-	_objects.clear();
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
-	// TODO multiple update messages in the same frame,
+	// @TODO multiple update messages in the same frame,
 	// only the most recent should be used.
-// 	std::cout << "Message = " << *msg << std::endl;
 	while( msg->size() > 0 )
 	{
-// 		std::cout << "vl::Pipe::_syncData : UPDATE message : "
-//	 		<< "size = " << msg->size() << std::endl;
-
 		vl::cluster::ObjectData data;
 		data.copyFromMessage(msg);
 		// Pushing back will create copies which is unnecessary
 		_objects.push_back(data);
 	}
-
-// 	std::cout << "Message handled" << std::endl;
 }
 
 void
 vl::Pipe::_syncData( void )
 {
-// 	std::cout << "vl::Pipe::_syncData : " << _objects.size() << " objects."
-// 		<< std::endl;
 	// TODO remove the temporary array
 	// use a custom structure that does not create temporaries
 	// rather two phase system one to read the array and mark objects for delete
 	// and second that really clear those that are marked for delete
 	// similar system for reading data to the array
+
+	// Temporary array used for objects not yet found and saved for later use
 	std::vector<vl::cluster::ObjectData> tmp;
 	std::vector<vl::cluster::ObjectData>::iterator iter;
 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
 		vl::cluster::ByteStream stream = iter->getStream();
-		// TODO break this to two different parts
-		// one creating the ObjectDatas and saving them to array
-		// other one that processes this array and removes the elements found in mapped
 		vl::Distributed *obj = findMappedObject( iter->getId() );
 		if( obj )
 		{
-// 			std::cout << "ID " << iter->getId() << " found in mapped objects."
-// 				<< " unpacking. " << std::endl;
-// 			std::cout << "object = " << *iter << std::endl;
 			obj->unpack(stream);
 		}
 		else
@@ -443,45 +473,6 @@ vl::Pipe::_syncData( void )
 	}
 
 	_objects = tmp;
-
-	// TODO this is inconvenient and should be replaced with a generic callback
-	// called for all objects
-	// TODO this is will crash if the SceneManager is mapped but is has not been
-	// updated
-	if( _scene_manager )
-	{ _scene_manager->finaliseSync(); }
-
-// 	std::cout << "vl::Pipe::_syncData : done" << std::endl;
-}
-
-// TODO this should dynamically create the new objects
-void
-vl::Pipe::_mapData( void )
-{
-	std::string message("vl::Pipe::_mapData");
-	Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_NORMAL );
-
-	// TODO should be automatic when mapObjectC is called
-	// Also if we call it so many times it should not iterate through the whole
-	// message but rather already stored ID list
-
-	// TODO remove hard coded IDs
-	mapObject( &_player, 1 );
-	_scene_manager = new vl::SceneManager( this );
-	mapObject( _scene_manager, 2 );
-
-	_syncData();
-
-	assert( _ogre_sm );
-	if( !_scene_manager->setSceneManager( _ogre_sm ) )
-	{
-		// Error
-		message = "Some SceneNodes were not found.";
-		Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-	}
-
-	message = "vl::Pipe::_mapData : DONE";
-	Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_NORMAL );
 }
 
 void
@@ -489,9 +480,12 @@ vl::Pipe::_updateDistribData( void )
 {
 // 	std::cout << "vl::Pipe::_updateDistribData" << std::endl;
 
+	if( !_player )
+	{ return; }
+
 	// Update player
 	// Get active camera and change the rendering camera if there is a change
-	std::string const &cam_name = _player.getActiveCamera();
+	std::string const &cam_name = _player->getActiveCamera();
 	if( !cam_name.empty() && cam_name != _active_camera_name )
 	{
 		_active_camera_name = cam_name;
@@ -513,11 +507,11 @@ vl::Pipe::_updateDistribData( void )
 	}
 
 	// Take a screenshot
-	if( _player.getScreenshotVersion() > _screenshot_num )
+	if( _player->getScreenshotVersion() > _screenshot_num )
 	{
 		_takeScreenshot();
 
-		_screenshot_num = _player.getScreenshotVersion();
+		_screenshot_num = _player->getScreenshotVersion();
 	}
 }
 

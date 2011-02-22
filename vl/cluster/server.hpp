@@ -1,5 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
+ *	@file server.hpp
  */
 
 #ifndef VL_CLUSTER_SERVER_HPP
@@ -25,6 +26,18 @@ namespace cluster
 class Server
 {
 public:
+
+	struct ClientInfo
+	{
+		ClientInfo( boost::udp::endpoint p, CLIENT_STATE s = CS_UNDEFINED, uint32_t f = 0 )
+			: address(p), state(s), frame(f)
+		{}
+
+		boost::udp::endpoint address;
+		CLIENT_STATE state;
+		uint32_t frame;
+	};
+
 	Server( uint16_t const port );
 
 	~Server();
@@ -52,6 +65,9 @@ public:
 	/// Send an SceneGraph update
 	void sendUpdate( Message const &msg );
 
+	/// Send information on new SceneGraph elements created
+	void sendCreate( Message const &msg );
+
 	/// Returns true if some client needs an Initial SceneGraph
 	/// @todo This always returns true for now
 	/// the architecture should rather use functors/callbacks to be called 
@@ -72,7 +88,7 @@ public:
 	 */
 	Message *popInputMessage( void );
 
-	typedef std::vector< std::pair<boost::udp::endpoint, CLIENT_STATE> > ClientList;
+	typedef std::vector<ClientInfo> ClientList;
 
 private :
 	void _addClient( boost::udp::endpoint const &endpoint );
@@ -83,15 +99,17 @@ private :
 
 	void _sendEnvironment( boost::udp::endpoint const &endpoint );
 
-	void _sendInit( boost::udp::endpoint const &endpoint );
+	void _sendCreate( ClientInfo const &client );
 
-	void _sendUpdate( boost::udp::endpoint const &endpoint );
+	void _sendUpdate( ClientInfo const &client );
 
 	void _sendDraw( boost::udp::endpoint const &endpoint );
 
 	void _sendSwap( boost::udp::endpoint const &endpoint );
 
 	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
+
+	void _waitCreate( void );
 
 	/// Returns when all the clients are ready for an update message
 	void _waitUpdate( void );
@@ -125,6 +143,10 @@ private :
 	/// Last update message? Might need a whole vector of these
 	std::vector<char> _msg_update;
 
+	/// Create MSGs 
+	std::vector< std::pair<uint32_t, Message> > _msg_creates;
+
+	uint32_t _frame;
 };	// class Server
 
 }	// namespace cluster
