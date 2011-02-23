@@ -400,10 +400,8 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 		msg->read(type);
 		msg->read(id);
 		
-		// TODO create objects
 		if( OBJ_PLAYER == type )
 		{
-			std::cout << "Pipe : Creating player" << std::endl;
 			// TODO support multiple players
 			assert( !_player );
 			// TODO fix the constructor
@@ -412,7 +410,6 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 		}
 		else if( OBJ_SCENE_MANAGER == type )
 		{
-			std::cout << "Pipe : Creating SceneManager" << std::endl;
 			// TODO support multiple SceneManagers
 			assert( !_scene_manager );
 			_scene_manager = new SceneManager( this, id );
@@ -421,7 +418,6 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 		}
 		else if( OBJ_SCENE_NODE == type )
 		{
-			std::cout << "Pipe : Creating SceneNode" << std::endl;
 			assert( _scene_manager );
 			_scene_manager->createSceneNode( "", id );
 		}

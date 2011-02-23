@@ -76,25 +76,25 @@ vl::Channel::draw( void )
 	// (for example using two viewports) once for each backbuffer
 	if( _stereo )
 	{
-		// FIXME
-		double ipd = 0;// getSettings().getIPD();
-
 		//draw into back left buffer
 		glDrawBuffer(GL_BACK_LEFT);
-		Ogre::Vector3 eye(-ipd/2, 0, 0);
+		Ogre::Vector3 eye(-_ipd/2, 0, 0);
 		_setOgreFrustum( _camera, eye );
 		_setOgreView( _camera, eye );
+		_camera->getViewport()->update();
 
 		//draw into back right buffer
 		glDrawBuffer(GL_BACK_RIGHT);
-		eye = Ogre::Vector3(ipd/2, 0, 0);
+		eye = Ogre::Vector3(_ipd/2, 0, 0);
 		_setOgreFrustum( _camera, eye );
 		_setOgreView( _camera, eye );
+		_camera->getViewport()->update();
 	}
 	else
 	{
 		_setOgreFrustum( _camera );
 		_setOgreView( _camera );
+		_camera->getViewport()->update();
 	}
 }
 

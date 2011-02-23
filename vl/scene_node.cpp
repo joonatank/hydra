@@ -56,11 +56,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		// name should never be empty
 		// @todo add exception throwing
 		assert( !_name.empty() );
-		if( _findNode() )
-		{
-			std::cout << "Ogre node = " << _name << " found in the SG." << std::endl;
-		}
-		else
+		if( !_findNode() )
 		{
 			std::cout << "Ogre node = " << _name << " NOT found in the SG." << std::endl;
 		}

@@ -59,6 +59,9 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	// Set some parameters to the viewport
 	// TODO this should be configurable
 	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	// This is necessary because we are using single camera and single viewport
+	// to draw to both backbuffers when using stereo.
+	_viewport->setAutoUpdated(false);
 }
 
 vl::Window::~Window( void )
@@ -309,6 +312,11 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 	params["left"] = vl::to_string( winConf.x );
 	params["top"] = vl::to_string( winConf.y );
 	params["border"] = "none";
+	// @todo should be configurable
+	// though these should fallback to default without the hardware
+	params["stereo"] = "true";
+	params["nvSwapSync"] = "true";
+	params["swapGroup"] = "1";
 
 	// TODO add stereo
 	// If it doesn't work do some custom updates to the Ogre Library
