@@ -19,14 +19,18 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 	//Ogre::LogManager::getSingleton().logMessage( message );
 
 	try {
+		Py_Initialize();
+
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("vl", PyInit_vl) == -1)
+#if PY_MAJOR_VERSION > 2
+		if(PyImport_AppendInittab("vl", PyInit_vl) == -1)
+#else
+		if(PyImport_AppendInittab("vl", initvl) == -1)
+#endif
 			throw std::runtime_error("Failed to add vl to the interpreter's "
 					"builtin modules");
-
-		Py_Initialize();
 
 		// Retrieve the main module
 		python::object main = python::import("__main__");
