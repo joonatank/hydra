@@ -66,15 +66,6 @@ vl::DotSceneLoader::_parse( char *xml_data )
 	// Grab the scene node
 	XMLRoot = XMLDoc.first_node("scene");
 
-	// Validate the File
-	if( getAttrib(XMLRoot, "formatVersion", "") == "")
-	{
-		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
-		// TODO add logging
-		// TODO add description
-		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
-	}
-
 	// Process the scene
 	processScene(XMLRoot);
 }

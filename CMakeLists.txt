@@ -97,7 +97,7 @@ find_package(Python REQUIRED )
 message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION}" ) 
 
 if( WIN32 )
-		set(Boost_USE_STATIC_LIBS   OFF)
+	set(Boost_USE_STATIC_LIBS   ON)
 endif()
 
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
