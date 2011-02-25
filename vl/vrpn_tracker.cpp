@@ -91,8 +91,9 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		if( sensor )
 		{
 			vl::Transform trans = vl::createTransform( t.pos, t.quat );
-			//std::cerr << "updating sensor transform = " << _transform << std::endl;
-			trans *= _transform;
+			trans = trans * _transform;
+			std::cerr << "updating sensor : " << sensor->getTrigger()->getName() 
+				<< " transform = " << trans << std::endl << std::endl;
 			sensor->update( trans );
 		}
 	}

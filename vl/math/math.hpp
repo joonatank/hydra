@@ -30,6 +30,8 @@ namespace vl
 
 	const scalar epsilon = scalar(1e-6);
 
+	void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
+
 	inline bool equal( scalar const &a, scalar const &b )
 	{
 		if( a-epsilon < b && a+epsilon > b )
@@ -84,6 +86,7 @@ namespace vl
 			Ogre::Matrix4 res = m2  * m;
 			position = res.getTrans();
 			quaternion = res.extractQuaternion();
+			quaternion.normalise();
 			return *this;
 		}
 
@@ -94,7 +97,12 @@ namespace vl
 	inline std::ostream &
 	operator<<( std::ostream &os, Transform const &d )
 	{
-		os << "Position = " << d.position << " : Orientation = " << d.quaternion;
+		Ogre::Radian rx, ry, rz;
+		getEulerAngles( d.quaternion, rx, ry, rz );
+		os << "Position = " << d.position << " : Orientation = " << d.quaternion 
+			<< " : Orientation euler angles = " 
+			<< '(' << Ogre::Degree(rx) << ", " << Ogre::Degree(ry) << ", " 
+			<< Ogre::Degree(rz) << ").";
 
 		return os;
 	}
@@ -113,7 +121,9 @@ namespace vl
 		Ogre::Matrix4 m2( t.quaternion );
 		m2.setTrans( t.position );
 		Ogre::Matrix4 res = m * m2;
-		return vl::Transform( res.getTrans(), res.extractQuaternion() );
+		Ogre::Quaternion q = res.extractQuaternion();
+		q.normalise();
+		return vl::Transform( res.getTrans(), q );
 	}
 
 	inline

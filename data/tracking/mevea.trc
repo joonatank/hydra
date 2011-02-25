@@ -1,69 +1,83 @@
 <?xml version="1.0"?>
 
 <clients>
-	<client type="VRPN" host="localhost" >
-
-		<tracker name="Mevea">
-			<sensor num="0">
-				<trigger type="VRPN" name="cube0Trigger" />
-			</sensor>
+	<client type="VRPN" host="mec-0.rd.tut.fi" port="3884">
+		<tracker name="DMTracker">
+			<transformation>
+				<sign x="1" y="-1" z="1"/>
+				<quaternion w="0.5" x="0.5" y="-0.5" z="-0.5"/>
+				<!--
+				<transformation>
+					<transformation>
+						<quaternion w="0.7071" z="0" x="0" y="-0.7071"/> 
+					</transformation>
+				</transformation>
+				-->
+			</transformation>
+			<!-- For some reason the first sensor is not in use 
+			<sensor num="0"/>
+			-->
 			<sensor num="1">
-				<trigger type="VRPN" name="cube1Trigger" />
+				<trigger type="VRPN" name="taka_akseliTrigger" />
 			</sensor>
 			<sensor num="2">
-				<trigger type="VRPN" name="cube2Trigger" />
+				<trigger type="VRPN" name="takarunkoTrigger" />
 			</sensor>
 			<sensor num="3">
-				<trigger type="VRPN" name="cube3Trigger" />
+				<trigger type="VRPN" name="eturunkoTrigger" />
 			</sensor>
 			<sensor num="4">
-				<trigger type="VRPN" name="cube4Trigger" />
+				<trigger type="VRPN" name="nostovarsiTrigger" />
 			</sensor>
 			<sensor num="5">
-				<trigger type="VRPN" name="cube5Trigger" />
+				<trigger type="VRPN" name="keinuvipuTrigger" />
 			</sensor>
 			<sensor num="6">
-				<trigger type="VRPN" name="cube6Trigger" />
+				<trigger type="VRPN" name="koiranluuTrigger" />
 			</sensor>
 			<sensor num="7">
-				<trigger type="VRPN" name="cube7Trigger" />
+				<trigger type="VRPN" name="kauhaTrigger" />
 			</sensor>
 			<sensor num="8">
-				<trigger type="VRPN" name="cube8Trigger" />
+				<trigger type="VRPN" name="wheel_front_rightTrigger" />
 			</sensor>
 			<sensor num="9">
-				<trigger type="VRPN" name="cube9Trigger" />
+				<trigger type="VRPN" name="wheel_front_leftTrigger" />
 			</sensor>
 			<sensor num="10">
-				<trigger type="VRPN" name="cube10Trigger" />
+				<trigger type="VRPN" name="wheel_back_rightTrigger" />
 			</sensor>
 			<sensor num="11">
-				<trigger type="VRPN" name="cube11Trigger" />
+				<trigger type="VRPN" name="wheel_back_leftTrigger" />
 			</sensor>
 			<sensor num="12">
-				<trigger type="VRPN" name="cube12Trigger" />
+				<trigger type="VRPN" name="nostoSPTrigger" />
 			</sensor>
 			<sensor num="13">
-				<trigger type="VRPN" name="cube13Trigger" />
+				<trigger type="VRPN" name="nostoSMTrigger" />
 			</sensor>
 			<sensor num="14">
-				<trigger type="VRPN" name="cube14Trigger" />
+				<trigger type="VRPN" name="kippiSPTrigger" />
 			</sensor>
 			<sensor num="15">
-				<trigger type="VRPN" name="cube15Trigger" />
+				<trigger type="VRPN" name="kippiSMTrigger" />
 			</sensor>
 			<sensor num="16">
-				<trigger type="VRPN" name="cube16Trigger" />
+				<trigger type="VRPN" name="ohjausSOPTrigger" />
 			</sensor>
 			<sensor num="17">
-				<trigger type="VRPN" name="cube17Trigger" />
+				<trigger type="VRPN" name="ohjausSOMTrigger" />
 			</sensor>
 			<sensor num="18">
-				<trigger type="VRPN" name="cube18Trigger" />
+				<trigger type="VRPN" name="ohjausSVPTrigger" />
 			</sensor>
 			<sensor num="19">
-				<trigger type="VRPN" name="cube19Trigger" />
+				<trigger type="VRPN" name="ohjausSVMTrigger" />
 			</sensor>
 		</tracker>
+
+		<tracker name="DMTrackerParticles">
+		</tracker>
 	</client>
+
 </clients>

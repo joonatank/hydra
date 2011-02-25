@@ -148,12 +148,12 @@ vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogr
 	}
 
 	Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
-	elem = XMLNode->first_node("vector");
+	elem = XMLNode->first_node("quaternion");
 	if( elem )
 	{ q = parseQuaternion( elem ); }
 
 	Ogre::Vector3 v = Ogre::Vector3::ZERO;
-	elem = XMLNode->first_node("quaternion");
+	elem = XMLNode->first_node("vector");
 	if( elem )
 	{ v = parseVector3( elem ); }
 
@@ -161,7 +161,7 @@ vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogr
 	m2.setTrans(v);
 
 	// Update the original matrix
-	trans = trans * m * m2;
+	trans = m2 * m * trans;
 	elem = XMLNode->first_node("transformation");
 	if( elem )
 	{ processTransformation( elem, trans ); }
