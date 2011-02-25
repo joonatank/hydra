@@ -30,7 +30,7 @@ def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg ) :
 # Fine using the new event interface
 def createCameraMovements(node) :
 	# TODO should print the node name, conversion to string is not impleted yet
-	print 'Creating Translation event on node = '
+	print( 'Creating Translation event on node = ' )
 
 	# Create the translation action using a proxy
 	trans_action_proxy = MoveActionProxy.create()
@@ -60,42 +60,36 @@ def createCameraMovements(node) :
 
 # Fine using the new event interface
 def addQuitEvent( kc ) :
-	print 'Creating Quit Event'
+	print( 'Creating Quit Event' )
 	action = QuitAction.create()
-	print 'Python Action type = ' + action.type
 	action.game = game
 
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	print 'Python Trigger type = ' + trigger.type
 	trigger.addAction( action )
 
 
 # Fine using the new event interface
 def addReloadEvent( kc ) :
-	print 'Creating Reload Scene Event'
+	print( 'Creating Reload Scene Event' )
 	# Create the action
 	action = ReloadScene.create()
-	print 'Python Action type = ' + action.type
 	action.scene = game.scene
 
 	# Create the Time limit
 	proxy = TimerActionProxy.create()
-	print 'Python Proxy type = ' + proxy.type
 	proxy.action = action
 	proxy.time_limit = 5 # Seconds
 
 	# Create the trigger
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	print 'Python Trigger type = ' + trigger.type
 	trigger.addAction( proxy )
 
 
 
 # Fine using the new event interface
 def addToggleMusicEvent( kc ) :
-	print 'Creating Toggle Music Event'
+	print( 'Creating Toggle Music Event' )
 	action = ToggleMusic.create()
-	print 'Python Action type = ' + action.type
 	action.game = game
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	trigger.addAction( action )
@@ -103,7 +97,7 @@ def addToggleMusicEvent( kc ) :
 
 def addScreenshotAction( kc ) :
 	# TODO add printing the kc
-	print 'Adding screenshot action to KC_F10'
+	print( 'Adding screenshot action to KC_F10' )
 	action = ScreenshotAction.create()
 	action.player = game.player
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
@@ -120,7 +114,7 @@ def addScreenshotAction( kc ) :
 # An error message is printed to std::cerr and the program continues normally
 # Fine using the new event interface
 def addToggleActiveCamera( camera1, camera2 ) :
-	print 'Creating Toggle Activate Camera'
+	print( 'Creating Toggle Activate Camera' )
 	action_on = ActivateCamera.create()
 	action_on.player = game.player
 	action_on.camera = camera1
@@ -140,7 +134,7 @@ def addToggleActiveCamera( camera1, camera2 ) :
 
 # Fine using the new event interface
 def addHideEvent(node) :
-	print 'Creating Hide Event'
+	print( 'Creating Hide Event' )
 	hide = HideAction.create()
 	hide.scene_node = node
 	show = ShowAction.create()
@@ -164,7 +158,7 @@ def addHideEvent(node) :
 
 
 # Add some global events that are useful no matter what the scene/project is
-print 'Adding game events'
+print( 'Adding game events' )
 addQuitEvent(KC.Q)
 addReloadEvent(KC.R)
 addToggleMusicEvent(KC.M)

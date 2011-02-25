@@ -34,18 +34,14 @@
  * 10 \t 0,0,1 \t 0,1,0,0
  */
 
-#include "base/sleep.hpp"
-#include "vrpn_Tracker.h"
 #include "math/math.hpp"
 #include "math/conversion.hpp"
 #include "base/filesystem.hpp"
+#include "base/sleep.hpp"
+
+#include <vrpn_Tracker.h>
 
 #include <iostream>
-
-// For MSV compilers to get M_PI
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #include <vector>
 
 #include <boost/program_options.hpp>
