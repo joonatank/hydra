@@ -43,7 +43,7 @@ vl::ogre::DotSceneLoader::parseDotScene( std::string const &scene_name,
 
 	_parse( xml_data );
 
-	::free( xml_data );
+//	::free( xml_data );
 }
 
 void
@@ -57,16 +57,6 @@ vl::ogre::DotSceneLoader::_parse(char* xml_data)
 
 	// Grab the scene node
 	XMLRoot = XMLDoc.first_node("scene");
-
-	// Validate the File
-	if( vl::getAttrib(XMLRoot, "formatVersion", "") == "")
-	{
-		std::string message("[DotSceneLoader] Error: Invalid .scene File. Missing <scene>" );
-		//	TODO add logging
-		Ogre::LogManager::getSingleton().logMessage( message );
-		// TODO add description
-		BOOST_THROW_EXCEPTION( vl::invalid_dotscene() );
-	}
 
 	// OgreMax exports angles in Radians by default so if the scene file is
 	// created with Maya we assume Radians
