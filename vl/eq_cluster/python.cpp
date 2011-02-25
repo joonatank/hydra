@@ -22,8 +22,12 @@ eqOgre::PythonContext::PythonContext( vl::GameManager *game_man )
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
-		if (PyImport_AppendInittab("eqOgre", PyInit_eqOgre) == -1)
-			throw std::runtime_error("Failed to add eqOgre to the interpreter's "
+#if PY_MAJOR_VERSION > 2
+		if(PyImport_AppendInittab("eqOgre", PyInit_eqOgre) == -1)
+#else
+		if(PyImport_AppendInittab("eqOgre", initeqOgre) == -1)
+#endif
+			throw std::runtime_error("Failed to add vl to the interpreter's "
 					"builtin modules");
 
 		// Retrieve the main module

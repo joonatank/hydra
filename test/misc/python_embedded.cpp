@@ -25,7 +25,7 @@ public:
 // Familiar Boost.Python wrapper class for Base
 struct BaseWrap : Base, python::wrapper<Base>
 {
-  virtual std::string hello() 
+  virtual std::string hello()
   {
 #if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
     // workaround for VC++ 6.x or 7.0, see
@@ -49,17 +49,21 @@ BOOST_PYTHON_MODULE(embedded_hello)
 void exec_test()
 {
     std::cout << "registering extension module embedded_hello..." << std::endl;
-    
-  // Register the module with the interpreter
-  if (PyImport_AppendInittab("embedded_hello", PyInit_embedded_hello) == -1)
+
+	// Register the module with the interpreter
+#if PY_MAJOR_VERSION > 2
+		if(PyImport_AppendInittab("eqOgre", PyInit_embedded_hello) == -1)
+#else
+		if(PyImport_AppendInittab("eqOgre", initembedded_hello) == -1)
+#endif
     throw std::runtime_error("Failed to add embedded_hello to the interpreter's "
                  "builtin modules");
 
   std::cout << "defining Python class derived from Base..." << std::endl;
-  
+
   // Retrieve the main module
   python::object main = python::import("__main__");
-  
+
   // Retrieve the main module's namespace
   python::object global(main.attr("__dict__"));
 
@@ -78,7 +82,7 @@ void exec_test()
   BOOST_TEST(cpp.hello() == "Hello from C++!");
 
   std::cout << "testing derived class from C++..." << std::endl;
-  
+
   // But now creating and using instances of the Python class is almost
   // as easy!
   python::object py_base = PythonDerived();
@@ -93,21 +97,21 @@ void exec_test()
 void exec_file_test(std::string const &script)
 {
     std::cout << "running file " << script << "..." << std::endl;
-    
+
     // Run a python script in an empty environment.
     python::dict global;
     python::object result = python::exec_file(script.c_str(), global, global);
 
     // Extract an object the script stored in the global dictionary.
     BOOST_TEST(python::extract<int>(global["number"]) ==  42);
-    
+
     std::cout << "success!" << std::endl;
 }
 
 void exec_test_error()
 {
     std::cout << "intentionally causing a python exception..." << std::endl;
-    
+
     // Execute a statement that raises a python exception.
     python::dict global;
     python::object result = python::exec("print unknown \n", global, global);
