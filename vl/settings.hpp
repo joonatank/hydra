@@ -96,7 +96,7 @@ class Settings
 
 		vl::ProjSettings const &findProject( std::string const &name ) const;
 
-		std::string const &getDir( vl::ProjSettings const &proj ) const;
+		std::string getDir( vl::ProjSettings const &proj ) const;
 
 	protected :
 		void _addScripts( std::vector<std::string> &vec,

@@ -144,10 +144,15 @@ vl::Settings::findProject( std::string const &name ) const
 	BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(desc) );
 }
 
-std::string const &
+std::string
 vl::Settings::getDir( vl::ProjSettings const &proj ) const
 {
+	fs::path projFile( proj.getFile() );
+	fs::path projDir = projFile.parent_path();
+	if( !fs::exists( projDir ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.file_string() ) ); }
 
+	return projDir.file_string();
 }
 
 

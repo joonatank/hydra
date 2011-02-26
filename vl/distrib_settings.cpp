@@ -227,6 +227,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
 {
+	std::cout << "Serializing Project " << proj.getName() << " file = "
+		<< proj.getFile() << std::endl;
 	msg << proj.getFile();
 	vl::ProjSettings::Case const &cas = proj.getCase();
 	msg << proj.getName() << cas.getNscenes();
@@ -247,6 +249,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 	size_t size;
 	msg >> file >> name >> size;
 
+	std::cout << "Deserializing : Project " << name << " file = " << file << std::endl;
 	proj.setFile(file);
 	proj.setName(name);
 

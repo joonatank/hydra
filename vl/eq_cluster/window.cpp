@@ -15,7 +15,32 @@
 #include <OGRE/OgreLogManager.h>
 
 /// GUI
+#include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
+
+namespace
+{
+	/// @todo Missing conversions for the extra buttons in OIS
+	/// they could be mapped to other buttons in CEGUI if necessary
+	CEGUI::MouseButton OISButtonToGUI( OIS::MouseButtonID button )
+	{
+		switch( button )
+		{
+			case OIS::MB_Left :
+				return CEGUI::LeftButton;
+			case OIS::MB_Right :
+				return CEGUI::RightButton;
+			case OIS::MB_Middle :
+				return CEGUI::MiddleButton;
+			case OIS::MB_Button3 :
+				return CEGUI::X1Button;
+			case OIS::MB_Button4 :
+				return CEGUI::X2Button;
+			default :
+				return CEGUI::NoButton;
+		}
+	}
+}
 
 /// ----------------------------- Public ---------------------------------------
 vl::Window::Window( std::string const &name, vl::Pipe *parent )
@@ -130,11 +155,20 @@ vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
-	vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
-	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
-	stream << key;
-	_sendEvent( data );
+ 	// TODO should check if GUI window is active
+	// TODO this might need translation for the key codes
+	// TODO this is missing auto-repeat for text
+	bool used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+	used |= CEGUI::System::getSingleton().injectChar(key.text);
+
+	if( !used )
+	{
+		vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
+		// TODO add support for the device ID from where the event originated
+		vl::cluster::ByteStream stream = data.getStream();
+		stream << key;
+		_sendEvent( data );
+	}
 
 	return true;
 }
@@ -142,11 +176,19 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 bool
 vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
-	vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
-	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
-	stream << key;
-	_sendEvent( data );
+	// TODO should check if GUI window is active
+	// TODO this might need translation for the key codes
+	bool used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+
+	// GUI didn't use the event
+	if( !used )
+	{
+		vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
+		// TODO add support for the device ID from where the event originated
+		vl::cluster::ByteStream stream = data.getStream();
+		stream << key;
+		_sendEvent( data );
+	}
 
 	return true;
 }
@@ -154,11 +196,24 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
-	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
-	stream << evt;
-	_sendEvent( data );
+	// TODO should check if GUI window is active
+	bool used = CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
+	// NOTE this has a problem of possibly consuming some mouse movements
+	// Assuming that mouse is moved and the wheel is changed at the same time
+	// CEGUI might consume either one of them and the other one will not be
+	// passed on.
+	// This is so rare that we don't care about it.
+	if( evt.state.Z.rel != 0 )
+	{ used |= CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+
+	if( !used )
+	{
+		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
+		// TODO add support for the device ID from where the event originated
+		vl::cluster::ByteStream stream = data.getStream();
+		stream << evt;
+		_sendEvent( data );
+	}
 
 	return true;
 }
@@ -166,11 +221,17 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 bool
 vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
-	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
-	stream << id << evt;
-	_sendEvent( data );
+	// TODO should check if GUI window is active
+	bool used = CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+
+	if( !used )
+	{
+		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
+		// TODO add support for the device ID from where the event originated
+		vl::cluster::ByteStream stream = data.getStream();
+		stream << id << evt;
+		_sendEvent( data );
+	}
 
 	return true;
 }
@@ -178,11 +239,17 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
-	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
-	stream << id << evt;
-	_sendEvent( data );
+	// TODO should check if GUI window is active
+	bool used = CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+
+	if( !used )
+	{
+		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
+		// TODO add support for the device ID from where the event originated
+		vl::cluster::ByteStream stream = data.getStream();
+		stream << id << evt;
+		_sendEvent( data );
+	}
 
 	return true;
 }
@@ -223,19 +290,6 @@ vl::Window::createGUIWindow(void )
 {
 	std::string message = "vl::Window::createGUIWindow";
 	Ogre::LogManager::getSingleton().logMessage(message);
-
-	// Create a test window
-	/*
-	CEGUI::FrameWindow *fWnd = static_cast<CEGUI::FrameWindow *>(
-		wmgr.createWindow( "TaharezLook/FrameWindow", "testWindow" ));
-	root_win->addChildWindow( fWnd );
-	// position a quarter of the way in from the top-left of parent.
-	fWnd->setPosition( CEGUI::UVector2( CEGUI::UDim( 0.25f, 0 ), CEGUI::UDim( 0.25f, 0 ) ) );
-
-	// set size to be half the size of the parent
-	fWnd->setSize( CEGUI::UVector2( CEGUI::UDim( 0.5f, 0 ), CEGUI::UDim( 0.5f, 0 ) ) );
-	fWnd->setText( "Hello World!" );
-	*/
 }
 
 /// ------------------------------- Protected ----------------------------------
@@ -287,7 +341,7 @@ vl::Window::_createInputHandling( void )
 	OIS::ParamList pl;
 	pl.insert( std::make_pair(std::string("WINDOW"), windowHndStr.str()) );
 	// Some extra parameters to avoid getting stuck with the window
-	// TODO These can probably be removed
+	// TODO should move these to the configuration file
 	pl.insert( std::make_pair(std::string("x11_keyboard_grab"), std::string("false") ) );
 	pl.insert( std::make_pair(std::string("x11_mouse_grab"), std::string("false") ) );
 

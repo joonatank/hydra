@@ -20,11 +20,14 @@
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// GUI
+#include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/CEGUIOgreRenderer.h>
 #include <CEGUI/CEGUISystem.h>
 #include <CEGUI/CEGUIWindow.h>
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/CEGUIDefaultResourceProvider.h>
+#include <CEGUI/CEGUIImageset.h>
+#include <CEGUI/CEGUIScheme.h>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -191,8 +194,6 @@ vl::Pipe::_initGUI(void )
 	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*_windows.at(0)->getRenderWindow() );
 	CEGUI::System::create( myRenderer );
 	CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
-	CEGUI::Window *root_win = wmgr.createWindow( "DefaultWindow", "root" );
-	CEGUI::System::getSingleton().setGUISheet(root_win );
 }
 
 void
@@ -200,14 +201,6 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 {
 	std::string message( "vl::Pipe::_initGUIResources" );
 	Ogre::LogManager::getSingleton().logMessage(message);
-
-	// TODO this needs the CEGUI resources loaded first
-	// sepcifically the TaharezLook, copy them from the /usr/local/share to
-	// global/resources/gui
-	// and add resource loading.
-
-	CEGUI::DefaultResourceProvider *rp = static_cast<CEGUI::DefaultResourceProvider *>
-		(CEGUI::System::getSingleton().getResourceProvider());
 
 	assert( !settings.empty() );
 	// Find global project and add those resources as default
@@ -227,6 +220,14 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 			_addGUIResourceGroup( "layouts", gui_path / "layouts/" );
 			_addGUIResourceGroup( "looknfeels", gui_path / "looknfeel/" );
 			_addGUIResourceGroup( "lua_scripts", gui_path / "lua_scripts/" );
+
+			// set the default resource groups to be used
+			CEGUI::Imageset::setDefaultResourceGroup("imagesets");
+			CEGUI::Font::setDefaultResourceGroup("fonts");
+			CEGUI::Scheme::setDefaultResourceGroup("schemes");
+			CEGUI::WidgetLookManager::setDefaultResourceGroup("looknfeels");
+			CEGUI::WindowManager::setDefaultResourceGroup("layouts");
+			CEGUI::ScriptModule::setDefaultResourceGroup("lua_scripts");
 		}
 		else
 		{
@@ -238,8 +239,6 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 	{
 		message = projName + " NOT found. There will be no GUI.";
 		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
-		// FIXME this is ugly
-		return;
 	}
 
 	// Find editor project and add those resources to groupd editor
@@ -249,6 +248,8 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 		message = "Found editor project";
 		Ogre::LogManager::getSingleton().logMessage(message);
 		settings.findProject(projName);
+
+		// TODO really load the editor resources
 	}
 	else
 	{
@@ -256,8 +257,7 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
 	}
 
-	// TODO
-	// Add project and add those resources to group projectName
+	// TODO Add project and add those resources to group projectName
 }
 
 void
@@ -268,7 +268,13 @@ vl::Pipe::_addGUIResourceGroup( std::string const &name, fs::path const &path )
 	assert(rp);
 
 	if( fs::is_directory( path ) )
-	{ rp->setResourceGroupDirectory( name, path.file_string() ); }
+	{
+		std::string message = "GUI resource " + name + " added "
+			" with path " + path.file_string() + ".";
+		Ogre::LogManager::getSingleton().logMessage(message);
+
+		rp->setResourceGroupDirectory( name, path.file_string() );
+	}
 	else
 	{
 		std::string message = "GUI resource " + name + " couldn't be added "
@@ -284,18 +290,19 @@ vl::Pipe::_createGUI(void )
 	std::string message( "vl::Pipe::_createGUI" );
 	Ogre::LogManager::getSingleton().logMessage(message);
 
+	// Load default data files used for the GUI
+	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-10.font" );
+	CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook", "MouseArrow" );
+
 	// Create the GUI windows
 	assert( _windows.size() > 0 );
 	_windows.at(0)->createGUIWindow();
 
+	CEGUI::Window* myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
+	CEGUI::System::getSingleton().setGUISheet( myRoot );
 	// TODO support for multiple windows
-	/*
-	std::vector<vl::Window *>::iterator iter;
-	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
-	{
-		iter->createGUIWindow();
-	}
-	*/
+	// at the moment every window will get the same GUI window layout
 }
 
 /// Ogre helpers
@@ -641,6 +648,7 @@ vl::Pipe::_draw( void )
 	Ogre::WindowEventUtilities::messagePump();
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
+	CEGUI::System::getSingleton().renderGUI();
 }
 
 void
