@@ -7,7 +7,7 @@ Joonatan Kuosa <joonatan.kuosa@tut.fi>
 Global config, used to have the demo resources available to all demos
 and to have global script.
 -->
-<project_config name="Global">
+<project_config name="global">
 	<scripts>
 		<file use="true">global_script.py</file>
 	</scripts>

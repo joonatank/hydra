@@ -39,7 +39,11 @@ public :
 
 	virtual ~Pipe( void );
 
-	vl::EnvSettingsRefPtr getSettings( void );
+	vl::EnvSettingsRefPtr getEnvironment( void )
+	{ return _env; }
+
+	vl::Settings const &getProject( void ) const
+	{ return _settings; }
 
 	vl::EnvSettings::Node getNodeConf( void );
 
@@ -76,7 +80,13 @@ public :
 
 protected :
 	/// Reload the projects
-	void _reloadProjects( vl::Settings set );
+	void _reloadProjects( vl::Settings const &set );
+
+	/// GUI specific
+	void _initGUI( void );
+	void _initGUIResources( vl::Settings const &set );
+	void _addGUIResourceGroup( std::string const &name, fs::path const &path );
+	void _createGUI( void );
 
 	/// Ogre helpers
 	void _createOgre( void );
@@ -84,7 +94,6 @@ protected :
 	void _setCamera( void );
 
 	/// message passing
-	void _createClient( std::string const &server_address, uint16_t server_port );
 	void _handleMessages( void );
 	void _handleMessage( vl::cluster::Message *msg );
 	void _handleCreateMsg( vl::cluster::Message *msg );
@@ -107,7 +116,7 @@ protected :
 	void _sendEvents( void );
 
 	void _createWindow( vl::EnvSettings::Window const &winConf );
-	
+
 	void _shutdown( void );
 
 	/**	@todo should write the screenshot to the project directory not

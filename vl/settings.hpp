@@ -92,6 +92,12 @@ class Settings
 
 		bool empty( void ) const;
 
+		bool hasProject( std::string const &name ) const;
+
+		vl::ProjSettings const &findProject( std::string const &name ) const;
+
+		std::string const &getDir( vl::ProjSettings const &proj ) const;
+
 	protected :
 		void _addScripts( std::vector<std::string> &vec,
 						  vl::ProjSettings::Case const &cas ) const;

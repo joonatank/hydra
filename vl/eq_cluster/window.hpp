@@ -43,7 +43,7 @@ public:
 	vl::Pipe *getPipe( void )
 	{ return _pipe; }
 
-	vl::EnvSettingsRefPtr getSettings( void );
+	vl::EnvSettingsRefPtr getEnvironment( void );
 
 	vl::Player const &getPlayer( void ) const;
 
@@ -76,6 +76,8 @@ public:
 
 	/// Swap the back buffer to front
 	virtual void swap( void );
+
+	void createGUIWindow( void );
 
 protected :
 	void _createOgreWindow( vl::EnvSettings::Window const &winConf );

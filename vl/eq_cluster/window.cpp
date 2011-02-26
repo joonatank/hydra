@@ -9,11 +9,13 @@
 #include "eq_cluster/config.hpp"
 #include "eq_ogre/ogre_dotscene_loader.hpp"
 
-#include <OGRE/OgreWindowEventUtilities.h>
-#include <OGRE/OgreLogManager.h>
-
 #include "channel.hpp"
 #include "pipe.hpp"
+
+#include <OGRE/OgreLogManager.h>
+
+/// GUI
+#include <CEGUI/elements/CEGUIFrameWindow.h>
 
 /// ----------------------------- Public ---------------------------------------
 vl::Window::Window( std::string const &name, vl::Pipe *parent )
@@ -42,18 +44,18 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	{
 		msg = "Finding Wall for channel : " + getName();
 		Ogre::LogManager::getSingleton().logMessage(msg);
-		wall = getSettings()->findWall( winConf.channel.wall_name );
+		wall = getEnvironment()->findWall( winConf.channel.wall_name );
 	}
 
 	// Get the first wall definition if no named one was found
-	if( wall.empty() && getSettings()->getWalls().size() > 0 )
+	if( wall.empty() && getEnvironment()->getWalls().size() > 0 )
 	{
-		wall = getSettings()->getWall(0);
+		wall = getEnvironment()->getWall(0);
 		msg = "No wall found : using the first one " + wall.name;
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
-	_channel = new vl::Channel( winConf.channel, wall, getSettings()->getIPD() );
+	_channel = new vl::Channel( winConf.channel, wall, getEnvironment()->getIPD() );
 
 	_viewport = _ogre_window->addViewport( getCamera() );
 	// Set some parameters to the viewport
@@ -85,22 +87,16 @@ vl::Window::~Window( void )
 }
 
 vl::EnvSettingsRefPtr
-vl::Window::getSettings( void )
-{
-	return _pipe->getSettings();
-}
+vl::Window::getEnvironment( void )
+{ return _pipe->getEnvironment(); }
 
 vl::Player const &
 vl::Window::getPlayer( void ) const
-{
-	return _pipe->getPlayer();
-}
+{ return _pipe->getPlayer(); }
 
 vl::ogre::RootRefPtr
 vl::Window::getOgreRoot( void )
-{
-	return _pipe->getRoot();
-}
+{ return _pipe->getRoot(); }
 
 void
 vl::Window::setCamera( Ogre::Camera *camera )
@@ -112,15 +108,11 @@ vl::Window::setCamera( Ogre::Camera *camera )
 
 Ogre::Camera *
 vl::Window::getCamera( void )
-{
-	return _pipe->getCamera();
-}
+{ return _pipe->getCamera(); }
 
-Ogre::SceneManager *
+	Ogre::SceneManager *
 vl::Window::getSceneManager( void )
-{
-	return _pipe->getSceneManager();
-}
+{ return _pipe->getSceneManager(); }
 
 void
 vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
@@ -225,11 +217,59 @@ vl::Window::capture( void )
 	}
 }
 
+
+void
+vl::Window::createGUIWindow(void )
+{
+	std::string message = "vl::Window::createGUIWindow";
+	Ogre::LogManager::getSingleton().logMessage(message);
+
+	// Create a test window
+	/*
+	CEGUI::FrameWindow *fWnd = static_cast<CEGUI::FrameWindow *>(
+		wmgr.createWindow( "TaharezLook/FrameWindow", "testWindow" ));
+	root_win->addChildWindow( fWnd );
+	// position a quarter of the way in from the top-left of parent.
+	fWnd->setPosition( CEGUI::UVector2( CEGUI::UDim( 0.25f, 0 ), CEGUI::UDim( 0.25f, 0 ) ) );
+
+	// set size to be half the size of the parent
+	fWnd->setSize( CEGUI::UVector2( CEGUI::UDim( 0.5f, 0 ), CEGUI::UDim( 0.5f, 0 ) ) );
+	fWnd->setText( "Hello World!" );
+	*/
+}
+
+/// ------------------------------- Protected ----------------------------------
 void
 vl::Window::_sendEvent( vl::cluster::EventData const &event )
 {
 	_pipe->sendEvent(event);
 }
+
+void
+vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
+{
+	// Info
+	std::string message = "Creating Ogre RenderWindow.";
+ 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+
+	Ogre::NameValuePairList params;
+
+	assert( !winConf.empty() );
+
+	params["left"] = vl::to_string( winConf.x );
+	params["top"] = vl::to_string( winConf.y );
+	params["border"] = "none";
+
+	/// @todo should be configurable
+	/// though these should fallback to default without the hardware
+	params["stereo"] = "true";
+	params["nvSwapSync"] = "true";
+	params["swapGroup"] = "1";
+
+	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
+	_ogre_window->setAutoUpdated(false);
+}
+
 
 void
 vl::Window::_createInputHandling( void )
@@ -296,34 +336,4 @@ vl::Window::_printInputInformation( void )
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
  	Ogre::LogManager::getSingleton().logMessage( ss.str() );
-}
-
-void
-vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
-{
-	// Info
-	std::string message = "Creating Ogre RenderWindow.";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
-
-	Ogre::NameValuePairList params;
-
-	assert( !winConf.empty() );
-
-	params["left"] = vl::to_string( winConf.x );
-	params["top"] = vl::to_string( winConf.y );
-	params["border"] = "none";
-	// @todo should be configurable
-	// though these should fallback to default without the hardware
-	params["stereo"] = "true";
-	params["nvSwapSync"] = "true";
-	params["swapGroup"] = "1";
-
-	// TODO add stereo
-	// If it doesn't work do some custom updates to the Ogre Library
-	// They are easy to merge using Mercurial
-	// And can be commited to our own Ogre fork.
-	// TODO add swap sync
-	// same as with stereo
-	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
-	_ogre_window->setAutoUpdated(false);
 }

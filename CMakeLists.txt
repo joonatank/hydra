@@ -60,13 +60,7 @@ find_package(Ogre REQUIRED)
 find_package(OIS REQUIRED )
 
 ######### Find CEGUI #########
-find_package( CEGUI QUIET )
-
-if( CEGUI_FOUND )
-	message( STATUS "CEGUI found : ${CEGUI_LIBRARY} " )
-elseif()
-	message( STATUS "CEGUI not found, will not build a GUI" )
-endif()
+find_package( CEGUI REQUIRED )
 
 
 ####### Find cAudio
@@ -94,7 +88,7 @@ find_package(Boost COMPONENTS python REQUIRED )
 
 find_package(Python REQUIRED )
 
-message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION}" ) 
+message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION}" )
 
 if( WIN32 )
 	set(Boost_USE_STATIC_LIBS   ON)
@@ -113,6 +107,7 @@ include_directories( SYSTEM
 	${OGG_INCLUDE_DIR}
 	${VORBIS_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
+	${CEGUI_INCLUDE_DIR}
 	)
 
 # Libraries that eqOgre library depends on
@@ -131,6 +126,7 @@ set( EQOGRE_DEB_LIBS
 	${Vorbis_LIBRARY}
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
+	${CEGUI_LIBRARIES}
 	)
 
 # Libraries used to build project binaries
@@ -158,7 +154,7 @@ if( EQOGRE_BUILD_TESTS )
 endif()
 
 if( EQOGRE_BUILD_TOOLS )
-	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
+# 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
 endif()
 
 if( EQOGRE_BUILD_DEMOS )

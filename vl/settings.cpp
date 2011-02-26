@@ -110,6 +110,46 @@ vl::Settings::empty( void ) const
 	return( _proj.empty() && _aux_projs.empty() );
 }
 
+bool
+vl::Settings::hasProject(const std::string& name) const
+{
+	if( _proj.getName() == name )
+	{ return true; }
+
+	std::vector<ProjSettings>::const_iterator iter;
+	for( iter = _aux_projs.begin(); iter != _aux_projs.end(); ++iter )
+	{
+		if( iter->getName() == name )
+		{ return true; }
+	}
+
+	return false;
+}
+
+vl::ProjSettings const &
+vl::Settings::findProject( std::string const &name ) const
+{
+	if( _proj.getName() == name )
+	{ return _proj; }
+
+	std::vector<ProjSettings>::const_iterator iter;
+	for( iter = _aux_projs.begin(); iter != _aux_projs.end(); ++iter )
+	{
+		if( iter->getName() == name )
+		{ return *iter; }
+	}
+
+	// TODO replace with correct exception
+	std::string desc( "No such project found" );
+	BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(desc) );
+}
+
+std::string const &
+vl::Settings::getDir( vl::ProjSettings const &proj ) const
+{
+
+}
+
 
 /// -------------------- Settings Protected ------------------------------------
 void

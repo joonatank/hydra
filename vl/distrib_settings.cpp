@@ -227,11 +227,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
 {
-	std::cout << "vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
-
 	msg << proj.getFile();
 	vl::ProjSettings::Case const &cas = proj.getCase();
-	msg << cas.getName() << cas.getNscenes();
+	msg << proj.getName() << cas.getNscenes();
 	for( size_t i = 0; i < cas.getNscenes(); ++i )
 	{
 		msg << cas.getScene(i);
@@ -244,18 +242,16 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 {
-	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettingsRefPtr proj )" << std::endl;
-
 	std::string file;
 	std::string name;
 	size_t size;
 	msg >> file >> name >> size;
 
 	proj.setFile(file);
-	vl::ProjSettings::Case &cas = proj.getCase();
-	cas.setName(name);
-	assert( cas.getNscenes() == 0 );
+	proj.setName(name);
 
+	vl::ProjSettings::Case &cas = proj.getCase();
+	assert( cas.getNscenes() == 0 );
 	for( size_t i = 0; i < size; ++i )
 	{
 		vl::ProjSettings::Scene scene;

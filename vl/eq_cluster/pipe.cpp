@@ -19,6 +19,13 @@
 
 #include <OGRE/OgreWindowEventUtilities.h>
 
+/// GUI
+#include <CEGUI/RendererModules/Ogre/CEGUIOgreRenderer.h>
+#include <CEGUI/CEGUISystem.h>
+#include <CEGUI/CEGUIWindow.h>
+#include <CEGUI/CEGUIWindowManager.h>
+#include <CEGUI/CEGUIDefaultResourceProvider.h>
+
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
 vl::Pipe::Pipe( std::string const &name,
@@ -51,12 +58,6 @@ vl::Pipe::~Pipe( void )
 	_client.reset();
 
 	std::cout << "vl::Pipe::~Pipe : DONE" << std::endl;
-}
-
-vl::EnvSettingsRefPtr
-vl::Pipe::getSettings( void )
-{
-	return _env;
 }
 
 vl::EnvSettings::Node
@@ -114,6 +115,7 @@ vl::Pipe::operator()()
 		boost::this_thread::sleep( boost::posix_time::milliseconds(1) );
 	}
 
+	// TODO these should be moved to a separate function
 	_createOgre();
 
 	vl::EnvSettings::Node node = getNodeConf();
@@ -122,6 +124,8 @@ vl::Pipe::operator()()
 
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{ _createWindow( node.getWindow(i) ); }
+
+	_initGUI();
 
 	while( isRunning() )
 	{
@@ -145,7 +149,7 @@ vl::Pipe::operator()()
 
 /// ------------------------ Protected -----------------------------------------
 void
-vl::Pipe::_reloadProjects( vl::Settings set )
+vl::Pipe::_reloadProjects( vl::Settings const &set )
 {
 	// TODO this should unload old projects
 
@@ -174,6 +178,124 @@ vl::Pipe::_reloadProjects( vl::Settings set )
 	}
 
 	_setCamera();
+}
+
+void
+vl::Pipe::_initGUI(void )
+{
+	std::string message( "vl::Pipe::_initGUI" );
+	Ogre::LogManager::getSingleton().logMessage(message);
+	assert( _windows.size() > 0 && _windows.at(0)->getRenderWindow() );
+
+	// TODO support for multiple windows
+	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*_windows.at(0)->getRenderWindow() );
+	CEGUI::System::create( myRenderer );
+	CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
+	CEGUI::Window *root_win = wmgr.createWindow( "DefaultWindow", "root" );
+	CEGUI::System::getSingleton().setGUISheet(root_win );
+}
+
+void
+vl::Pipe::_initGUIResources( vl::Settings const &settings )
+{
+	std::string message( "vl::Pipe::_initGUIResources" );
+	Ogre::LogManager::getSingleton().logMessage(message);
+
+	// TODO this needs the CEGUI resources loaded first
+	// sepcifically the TaharezLook, copy them from the /usr/local/share to
+	// global/resources/gui
+	// and add resource loading.
+
+	CEGUI::DefaultResourceProvider *rp = static_cast<CEGUI::DefaultResourceProvider *>
+		(CEGUI::System::getSingleton().getResourceProvider());
+
+	assert( !settings.empty() );
+	// Find global project and add those resources as default
+	std::string projName("global");
+	if( settings.hasProject(projName) )
+	{
+		vl::ProjSettings const &proj = settings.findProject(projName);
+		message = "Found " + projName + " project";
+		Ogre::LogManager::getSingleton().logMessage(message);
+
+		fs::path gui_path = fs::path(settings.getDir(proj)) / "gui";
+		if( fs::is_directory( gui_path ) )
+		{
+			_addGUIResourceGroup( "schemes", gui_path / "schemes/" );
+			_addGUIResourceGroup( "imagesets", gui_path / "imagesets/" );
+			_addGUIResourceGroup( "fonts", gui_path / "fonts/" );
+			_addGUIResourceGroup( "layouts", gui_path / "layouts/" );
+			_addGUIResourceGroup( "looknfeels", gui_path / "looknfeel/" );
+			_addGUIResourceGroup( "lua_scripts", gui_path / "lua_scripts/" );
+		}
+		else
+		{
+			message = projName + " Does not have gui resource directory.";
+			Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
+		}
+	}
+	else
+	{
+		message = projName + " NOT found. There will be no GUI.";
+		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
+		// FIXME this is ugly
+		return;
+	}
+
+	// Find editor project and add those resources to groupd editor
+	projName = "editor";
+	if( settings.hasProject(projName) )
+	{
+		message = "Found editor project";
+		Ogre::LogManager::getSingleton().logMessage(message);
+		settings.findProject(projName);
+	}
+	else
+	{
+		message = projName + " NOT found. There will be no Editor.";
+		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
+	}
+
+	// TODO
+	// Add project and add those resources to group projectName
+}
+
+void
+vl::Pipe::_addGUIResourceGroup( std::string const &name, fs::path const &path )
+{
+	CEGUI::DefaultResourceProvider *rp = static_cast<CEGUI::DefaultResourceProvider *>
+		(CEGUI::System::getSingleton().getResourceProvider());
+	assert(rp);
+
+	if( fs::is_directory( path ) )
+	{ rp->setResourceGroupDirectory( name, path.file_string() ); }
+	else
+	{
+		std::string message = "GUI resource " + name + " couldn't be added "
+			"because path " + path.file_string() + " does NOT exist.";
+		Ogre::LogManager::getSingleton().logMessage(message);
+	}
+}
+
+
+void
+vl::Pipe::_createGUI(void )
+{
+	std::string message( "vl::Pipe::_createGUI" );
+	Ogre::LogManager::getSingleton().logMessage(message);
+
+	// Create the GUI windows
+	assert( _windows.size() > 0 );
+	_windows.at(0)->createGUIWindow();
+
+	// TODO support for multiple windows
+	/*
+	std::vector<vl::Window *>::iterator iter;
+	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
+	{
+		iter->createGUIWindow();
+	}
+	*/
 }
 
 /// Ogre helpers
@@ -331,6 +453,8 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 			vl::Settings projects;
 			stream >> projects;
 			_reloadProjects(projects);
+			_initGUIResources(projects);
+			_createGUI();
 			// TODO should the ACK be first so that the server has the
 			// information fast
 			_client->sendAck( vl::cluster::MSG_PROJECT );
@@ -343,7 +467,7 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 			_handleCreateMsg(msg);
 		}
 		break;
-		
+
 		// Scene graph update after the initial message
 		case vl::cluster::MSG_SG_UPDATE :
 		{
@@ -383,7 +507,7 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 	}
 }
 
-void 
+void
 vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 {
 	std::cout << "vl::Pipe::_handleCreateMsg" << std::endl;
@@ -399,7 +523,7 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 
 		msg->read(type);
 		msg->read(id);
-		
+
 		if( OBJ_PLAYER == type )
 		{
 			// TODO support multiple players
@@ -553,7 +677,7 @@ vl::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
 	_windows.push_back(window);
 }
 
-void 
+void
 vl::Pipe::_shutdown( void )
 {
 	std::cout << "vl::Pipe::_shutdown" << std::endl;
@@ -575,7 +699,7 @@ vl::Pipe::_shutdown( void )
 	std::cout << "vl::Pipe::_shutdown : DONE" << std::endl;
 }
 
-void 
+void
 vl::Pipe::_takeScreenshot( void )
 {
 	std::string prefix( "screenshot_" );
@@ -586,7 +710,7 @@ vl::Pipe::_takeScreenshot( void )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 }
 
-void 
+void
 vl::PipeThread::operator()()
 {
 	std::cout << "PipeThread Thread entered." << std::endl;
@@ -618,7 +742,7 @@ vl::PipeThread::operator()()
 	{
 		std::cerr << "An exception of unknow type occured." << std::endl;
 	}
-	
+
 	std::cout << "PipeThread Exited" << std::endl;
 	delete pipe;
 }

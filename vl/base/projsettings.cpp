@@ -351,13 +351,12 @@ vl::ProjSettingsSerializer::readConfig( rapidxml::xml_node<>* xml_root )
 	if( !attrib )
 	{
 		std::cerr << "Missing project name. Default is used" << std::endl;
-		_projSettings->getCase().setName("Default");
+		_projSettings->setName("Default");
 	}
 	else
 	{
 		std::string nameFromFile = attrib->value();
-
-		_projSettings->getCase().setName(nameFromFile);
+		_projSettings->setName(nameFromFile);
 	}
 
 	ProjSettings::Case &projectCase = _projSettings->getCase();

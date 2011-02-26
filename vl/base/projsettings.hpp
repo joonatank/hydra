@@ -202,6 +202,12 @@ public :
 	Case &getCase( void )
 	{ return _projCase; }
 
+	std::string const &getName( void ) const
+	{ return _projCase.getName(); }
+
+	void setName( std::string const &name )
+	{ _projCase.setName(name); }
+
 	bool empty( void ) const;
 
 protected :

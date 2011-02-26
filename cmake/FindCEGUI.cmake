@@ -45,11 +45,13 @@
 # TODO should be tested on Windows
 # TODO before testing the CEGUI lib should be built on windows
 # TODO this needs the addition of CMake build system for CEGUI
-   
+
 if( CEGUI_LIBRARY AND CEGUI_INCLUDE_DIR )
 	# in cache already
 	set( CEGUI_FIND_QUIETLY TRUE )
 endif( CEGUI_LIBRARY AND CEGUI_INCLUDE_DIR )
+
+include( ${vl_SOURCE_DIR}/cmake/LibFinder.cmake )
 
 set( INCLUDE_PATHS
 	$ENV{CEGUI_DIR}/include
@@ -80,22 +82,49 @@ find_path( CEGUI_INCLUDE_DIR
 	#PATH_SUFFIXES cegui CEGUI
 	)
 
-find_library( CEGUI_BASE_LIBRARY_RELEASE
-	NAMES CEGUIBase
-	PATHS ${LIBRARY_PATHS}
-	${CEGUI_INCLUDE_DIR}/../lib/Release
+set( INCLUDE_DIR ${CEGUI_INCLUDE_DIR} )
+# Find the base library
+set( LIB_HELP_STRING "CEGUI Base library" )
+lib_finder( "CEGUI_BASE" CEGUIBase )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_BASE_LIBRARY}" )
+
+# Find the Falagar library
+set( LIB_HELP_STRING "CEGUI Falagard library" )
+lib_finder( "CEGUI_FALAGARD" CEGUIFalagardWRBase )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_FALAGARD_LIBRARY}" )
+
+# Find the Renderer library, only Ogre supported at the moment
+set( LIB_HELP_STRING "CEGUI Ogre Rendering library" )
+lib_finder( "CEGUI_OGRE_RENDERER" CEGUIOgreRenderer )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_OGRE_RENDERER_LIBRARY}" )
+
+# Find the XML parser library, only RapidXML supported at the moment
+set( LIB_HELP_STRING "CEGUI RapidXML parser library" )
+lib_finder( "CEGUI_RAPIDXML_PARSER" CEGUIRapidXMLParser )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_RAPIDXML_PARSER_LIBRARY}" )
+
+# Find the Image Codec library, only FreeImage supported at the moment
+set( LIB_HELP_STRING "CEGUI FreeImage Image Codec library" )
+lib_finder( "CEGUI_FREEIMAGE_IMAGE_CODEC" CEGUIFreeImageImageCodec )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_FREEIMAGE_IMAGE_CODEC_LIBRARY}" )
+
+set( CEGUI_LIBRARIES
+	${CEGUI_BASE_LIBRARY}
+	${CEGUI_FALAGARD_LIBRARY}
+	${CEGUI_OGRE_RENDERER_LIBRARY}
+	${CEGUI_RAPIDXML_PARSER_LIBRARY}
+	${CEGUI_FREEIMAGE_IMAGE_CODEC_LIBRARY}
 	)
 
-find_library( CEGUI_BASE_LIBRARY_DEBUG
-	NAMES CEGUIBase
-	PATHS ${LIBRARY_PATHS}
-	${CEGUI_INCLUDE_DIR}/../lib/Debug
-	)
-
-if( CEGUI_LIBRARY AND CEGUI_INCLUDE_DIR )
+if( CEGUI_LIBRARIES AND CEGUI_INCLUDE_DIR )
 	set( CEGUI_FOUND "YES" )
 	if( NOT CEGUI_FIND_QUIETLY )
-		message( STATUS "Found CEGUI: ${CEGUI_LIBRARY}" )
+		message( STATUS "Found CEGUI: ${CEGUI_LIBRARIES}" )
 	endif( NOT CEGUI_FIND_QUIETLY )
 else()
 	if( NOT CEGUI_FIND_QUIETLY )
