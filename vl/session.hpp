@@ -22,6 +22,7 @@ namespace vl
 enum OBJ_TYPE
 {
 	OBJ_PLAYER,
+	OBJ_GUI,
 	OBJ_SCENE_MANAGER,
 	OBJ_SCENE_NODE,
 };

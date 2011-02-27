@@ -26,9 +26,12 @@
 // TODO this should not need to be included here
 #include "tracker_serializer.hpp"
 
+#include "session.hpp"
+
+#include "eq_cluster/gui.hpp"
+
 // Audio
 #include <cAudio/cAudio.h>
-#include "session.hpp"
 
 namespace vl
 {
@@ -53,6 +56,12 @@ public :
 	vl::SceneManagerPtr getSceneManager( void );
 
 	PlayerPtr createPlayer( void );
+
+	void setGUI( GUI *gui )
+	{ _gui = gui; }
+
+	GUI *getGUI( void )
+	{ return _gui; }
 
 	void toggleBackgroundSound( void );
 
@@ -80,6 +89,7 @@ private :
 	/// Tracking
 	vl::ClientsRefPtr _trackers;
 
+	GUI *_gui;
 
 	/// Audio objects
 	cAudio::IAudioManager *_audio_manager;

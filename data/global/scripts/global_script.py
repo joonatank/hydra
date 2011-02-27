@@ -60,7 +60,7 @@ def createCameraMovements(node) :
 
 # Fine using the new event interface
 def addQuitEvent( kc ) :
-	print( 'Creating Quit Event' )
+	print( 'Creating Quit Event to ' + getPythonKeyName(kc) )
 	action = QuitAction.create()
 	action.game = game
 
@@ -70,7 +70,7 @@ def addQuitEvent( kc ) :
 
 # Fine using the new event interface
 def addReloadEvent( kc ) :
-	print( 'Creating Reload Scene Event' )
+	print( 'Creating Reload Scene Event to ' + getPythonKeyName(kc) )
 	# Create the action
 	action = ReloadScene.create()
 	action.scene = game.scene
@@ -88,7 +88,7 @@ def addReloadEvent( kc ) :
 
 # Fine using the new event interface
 def addToggleMusicEvent( kc ) :
-	print( 'Creating Toggle Music Event' )
+	print( 'Creating Toggle Music Event to ' + getPythonKeyName(kc) )
 	action = ToggleMusic.create()
 	action.game = game
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
@@ -97,7 +97,7 @@ def addToggleMusicEvent( kc ) :
 
 def addScreenshotAction( kc ) :
 	# TODO add printing the kc
-	print( 'Adding screenshot action to KC_F10' )
+	print( 'Adding screenshot action to ' + getPythonKeyName(kc) )
 	action = ScreenshotAction.create()
 	action.player = game.player
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
@@ -132,14 +132,13 @@ def addToggleActiveCamera( camera1, camera2 ) :
 	trigger.addAction( toggle )
 
 
-# Fine using the new event interface
-def addHideEvent(node) :
-	print( 'Creating Hide Event' )
+def addHideEvent(node, kc) :
+	print( 'Creating Hide Event to ' + getPythonKeyName(kc) )
 	hide = HideAction.create()
 	hide.scene_node = node
 	show = ShowAction.create()
 	show.scene_node = node
-	trigger = game.event_manager.createKeyPressedTrigger( KC.H )
+	trigger = game.event_manager.createKeyPressedTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
 	toggle = ToggleActionProxy.create()
@@ -156,6 +155,36 @@ def addHideEvent(node) :
 
 	trigger.addAction( proxy )
 
+def addToggleConsole(kc) :
+	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
+	hide = HideConsole.create()
+	hide.gui = game.gui
+	show = ShowConsole.create()
+	show.gui = game.gui
+	trigger = game.event_manager.createKeyPressedTrigger(kc)
+
+	# Create a proxy that handles the toggling between two different actions
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = show
+	toggle.action_off = hide
+
+	trigger.addAction( toggle )
+
+def addToggleEditor(kc) :
+	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
+	hide = HideEditor.create()
+	hide.gui = game.gui
+	show = ShowEditor.create()
+	show.gui = game.gui
+	trigger = game.event_manager.createKeyPressedTrigger(kc)
+
+	# Create a proxy that handles the toggling between two different actions
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = show
+	toggle.action_off = hide
+
+	trigger.addAction( toggle )
+
 
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
@@ -163,3 +192,5 @@ addQuitEvent(KC.Q)
 addReloadEvent(KC.R)
 addToggleMusicEvent(KC.M)
 addScreenshotAction(KC.F10)
+addToggleEditor(KC.F2)
+addToggleConsole(KC.GRAVE)

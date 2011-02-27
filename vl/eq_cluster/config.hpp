@@ -19,6 +19,8 @@
 // Necessary for keeping track of statistics
 #include "stats.hpp"
 
+#include "gui.hpp"
+
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
@@ -38,7 +40,7 @@ public:
 			vl::EnvSettingsRefPtr env );
 
 	virtual ~Config (void);
-	
+
 	/// @todo this should send initialisation messages to all the rendering
 	/// threads
 	virtual void init( void );
@@ -89,6 +91,8 @@ protected :
 	vl::EnvSettingsRefPtr _env;
 
 	vl::cluster::ServerRefPtr _server;
+
+	vl::GUI *_gui;
 
 	Ogre::Timer _stats_timer;
 	vl::Stats _stats;

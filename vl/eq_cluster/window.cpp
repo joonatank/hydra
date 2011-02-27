@@ -155,11 +155,15 @@ vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
- 	// TODO should check if GUI window is active
-	// TODO this might need translation for the key codes
-	// TODO this is missing auto-repeat for text
-	bool used = CEGUI::System::getSingleton().injectKeyUp(key.key);
-	used |= CEGUI::System::getSingleton().injectChar(key.text);
+	bool used = false;
+	if( getPipe()->guiShown() )
+	{
+		// TODO should check if GUI window is active
+		// TODO this might need translation for the key codes
+		// TODO this is missing auto-repeat for text
+		used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+		used |= CEGUI::System::getSingleton().injectChar(key.text);
+	}
 
 	if( !used )
 	{
@@ -176,9 +180,16 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 bool
 vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
-	// TODO should check if GUI window is active
-	// TODO this might need translation for the key codes
-	bool used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+	bool used = false;
+	if( getPipe()->guiShown() )
+	{
+		// TODO should check if GUI window is active
+		// TODO this might need translation for the key codes
+		used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+		// FIXME keyPressed is eaten by CEGUI, but keReleased is not
+		// we need to track the keys that are pressed and released
+		used |= CEGUI::System::getSingleton().injectChar(key.text);
+	}
 
 	// GUI didn't use the event
 	if( !used )
@@ -196,15 +207,19 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	// TODO should check if GUI window is active
-	bool used = CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
-	// NOTE this has a problem of possibly consuming some mouse movements
-	// Assuming that mouse is moved and the wheel is changed at the same time
-	// CEGUI might consume either one of them and the other one will not be
-	// passed on.
-	// This is so rare that we don't care about it.
-	if( evt.state.Z.rel != 0 )
-	{ used |= CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+	bool used = false;
+	if( getPipe()->guiShown() )
+	{
+		// TODO should check if GUI window is active
+		used = CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
+		// NOTE this has a problem of possibly consuming some mouse movements
+		// Assuming that mouse is moved and the wheel is changed at the same time
+		// CEGUI might consume either one of them and the other one will not be
+		// passed on.
+		// This is so rare that we don't care about it.
+		if( evt.state.Z.rel != 0 )
+		{ used |= CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+	}
 
 	if( !used )
 	{
@@ -221,8 +236,12 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 bool
 vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	// TODO should check if GUI window is active
-	bool used = CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+	bool used = false;
+	if( getPipe()->guiShown() )
+	{
+		// TODO should check if GUI window is active
+		used = CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+	}
 
 	if( !used )
 	{
@@ -239,8 +258,12 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	// TODO should check if GUI window is active
-	bool used = CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+	bool used = false;
+	if( getPipe()->guiShown() )
+	{
+		// TODO should check if GUI window is active
+		used = CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+	}
 
 	if( !used )
 	{

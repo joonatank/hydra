@@ -40,6 +40,7 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	, _settings(settings)
 	, _env(env)
 	, _server(new vl::cluster::Server( _env->getServer().port ))
+	, _gui(0)
 	, _running(true)
 {
 	std::cout << "vl::Config::Config" << std::endl;
@@ -61,7 +62,7 @@ vl::Config::~Config( void )
 	std::cout << "vl::Config::~Config" << std::endl;
 
 	delete _game_manager;
-	
+
 	// Destroy server
 	_server.reset();
 
@@ -91,6 +92,9 @@ vl::Config::init( void )
 	// Registering Player in init
 	// TODO move this to do an automatic registration similar to SceneManager
 	registerObject( player, OBJ_PLAYER );
+
+	_gui = new vl::GUI( this, vl::ID_UNDEFINED );
+	_game_manager->setGUI(_gui);
 
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
@@ -148,7 +152,7 @@ vl::Config::render( void )
 	if( !_game_manager->step() )
 	{ stopRunning(); }
 	_stats.logStepTime( (double(timer.getMicroseconds()))/1e3 );
-	
+
 	timer.reset();
 	/// Provide the updates to slaves
 	_updateServer();
@@ -386,11 +390,11 @@ vl::Config::_loadScenes( void )
 	_hideCollisionBarries();
 }
 
-void 
+void
 vl::Config::_hideCollisionBarries( void )
 {
 	vl::SceneManager *sm = _game_manager->getSceneManager();
-	
+
 	for( size_t i = 0; i < sm->getNSceneNodes(); ++i )
 	{
 		vl::SceneNode *node = sm->getSceneNode(i);
@@ -432,8 +436,9 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 
 	// Add environment directory, used for tracking configurations
 	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	std::string tracking_dir( env->getEnvironementDir() + "/tracking" );
-	_game_manager->getReourceManager()->addResourcePath( tracking_dir );
+	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
+	if( fs::is_directory(tracking_path) )
+	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.file_string() ); }
 }
 
 /// Event Handling

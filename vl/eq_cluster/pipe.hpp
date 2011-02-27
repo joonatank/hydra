@@ -15,6 +15,9 @@
 #include "cluster/client.hpp"
 #include "session.hpp"
 #include "settings.hpp"
+#include "gui.hpp"
+
+#include <CEGUI/CEGUIWindow.h>
 
 namespace vl
 {
@@ -77,6 +80,13 @@ public :
 
 	bool isRunning( void )
 	{ return _running; }
+
+	bool guiShown( void ) const
+	{
+		if( !_gui )
+		{ return false; }
+		return _gui->shown();
+	}
 
 protected :
 	/// Reload the projects
@@ -153,6 +163,13 @@ protected :
 	std::vector<vl::cluster::EventData> _events;
 
 	std::vector<vl::Window *> _windows;
+
+	/// GUI related
+	vl::GUI *_gui;
+
+	CEGUI::Window *_console;
+	CEGUI::Window *_editor;
+	CEGUI::Window *_loading_screen;
 
 	bool _running;
 

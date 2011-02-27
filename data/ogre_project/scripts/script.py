@@ -32,7 +32,7 @@ print( 'Getting Ogre SceneNode' )
 # So use this function to get a SceneNode created from .scene file.
 # All SceneNodes in .scene file are created and can be retrieved here.
 ogre = game.scene.getSceneNode("ogre")
-addHideEvent(ogre)
+addHideEvent(ogre, KC.H)
 addOgreRotations(ogre)
 
 print( 'Getting Camera SceneNode' )

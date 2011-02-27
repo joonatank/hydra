@@ -41,6 +41,10 @@ vl::Pipe::Pipe( std::string const &name,
 	, _player(0)
 	, _screenshot_num(0)
 	, _client( new vl::cluster::Client( server_address.c_str(), server_port ) )
+	, _gui(0)
+	, _console(0)
+	, _editor(0)
+	, _loading_screen(0)
 	, _running(true)	// TODO should this be true from the start?
 {
 	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
@@ -193,7 +197,6 @@ vl::Pipe::_initGUI(void )
 	// TODO support for multiple windows
 	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*_windows.at(0)->getRenderWindow() );
 	CEGUI::System::create( myRenderer );
-	CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
 }
 
 void
@@ -299,8 +302,16 @@ vl::Pipe::_createGUI(void )
 	assert( _windows.size() > 0 );
 	_windows.at(0)->createGUIWindow();
 
-	CEGUI::Window* myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
+	CEGUI::Window *myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
 	CEGUI::System::getSingleton().setGUISheet( myRoot );
+	_editor = myRoot->getChild("editor");
+	_console = CEGUI::WindowManager::getSingleton().loadWindowLayout( "console.layout" );
+	myRoot->addChildWindow(_console);
+
+	_loading_screen = CEGUI::WindowManager::getSingleton().loadWindowLayout( "loading_screen.layout" );
+	myRoot->addChildWindow(_loading_screen);
+	_loading_screen->hide();
+
 	// TODO support for multiple windows
 	// at the moment every window will get the same GUI window layout
 }
@@ -398,14 +409,11 @@ vl::Pipe::_setCamera ( void )
 void
 vl::Pipe::_handleMessages( void )
 {
-// 	std::cout << "vl::Pipe::_handleMessages" << std::endl;
-
 	assert( _client );
 
 	_client->mainloop();
 	while( _client->messages() )
 	{
-// 		std::cout << "vl::Pipe::_handleMessages : Messages received" << std::endl;
 		vl::cluster::Message *msg = _client->popMessage();
 		// TODO process the message
 		_handleMessage(msg);
@@ -531,26 +539,41 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 		msg->read(type);
 		msg->read(id);
 
-		if( OBJ_PLAYER == type )
+		switch( type )
 		{
-			// TODO support multiple players
-			assert( !_player );
-			// TODO fix the constructor
-			_player = new vl::Player;
-			mapObject( _player, id );
-		}
-		else if( OBJ_SCENE_MANAGER == type )
-		{
-			// TODO support multiple SceneManagers
-			assert( !_scene_manager );
-			_scene_manager = new SceneManager( this, id );
-			assert( _ogre_sm );
-			_scene_manager->setSceneManager( _ogre_sm );
-		}
-		else if( OBJ_SCENE_NODE == type )
-		{
-			assert( _scene_manager );
-			_scene_manager->createSceneNode( "", id );
+			case OBJ_PLAYER :
+			{
+				// TODO support multiple players
+				assert( !_player );
+				// TODO fix the constructor
+				_player = new vl::Player;
+				mapObject( _player, id );
+				break;
+			}
+			case OBJ_GUI :
+			{
+				assert( !_gui );
+				_gui = new vl::GUI( this, id );
+				break;
+			}
+			case OBJ_SCENE_MANAGER :
+			{
+				// TODO support multiple SceneManagers
+				assert( !_scene_manager );
+				_scene_manager = new SceneManager( this, id );
+				assert( _ogre_sm );
+				_scene_manager->setSceneManager( _ogre_sm );
+				break;
+			}
+			case OBJ_SCENE_NODE :
+			{
+				assert( _scene_manager );
+				_scene_manager->createSceneNode( "", id );
+				break;
+			}
+			default :
+				// TODO Might happen something unexpected so for now just kill the program
+				assert( false );
 		}
 	}
 }
@@ -560,8 +583,8 @@ vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
 {
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
-	// @TODO multiple update messages in the same frame,
-	// only the most recent should be used.
+	/// @TODO multiple update messages in the same frame,
+	/// only the most recent should be used.
 	while( msg->size() > 0 )
 	{
 		vl::cluster::ObjectData data;
@@ -605,40 +628,73 @@ vl::Pipe::_syncData( void )
 void
 vl::Pipe::_updateDistribData( void )
 {
-// 	std::cout << "vl::Pipe::_updateDistribData" << std::endl;
-
-	if( !_player )
-	{ return; }
-
-	// Update player
-	// Get active camera and change the rendering camera if there is a change
-	std::string const &cam_name = _player->getActiveCamera();
-	if( !cam_name.empty() && cam_name != _active_camera_name )
+	// TODO these should be moved to GUI
+	if( _gui )
 	{
-		_active_camera_name = cam_name;
-		assert( _ogre_sm );
-		if( _ogre_sm->hasCamera( cam_name ) )
+		assert( _console && _editor );
+		if( _gui->consoleShown() )
 		{
-			// Tell the Windows to change cameras
-			_camera = _ogre_sm->getCamera( _active_camera_name );
-			assert( !_windows.empty() );
-			for( size_t i = 0; i < _windows.size(); ++i )
-			{ _windows.at(i)->setCamera( _camera ); }
+			if( !_console->isVisible() )
+			{
+				_console->show();
+			}
 		}
 		else
 		{
-			std::string message = "vl::Window : New camera name set, but NO camera found";
-			std::cout << message << std::endl;
-			Ogre::LogManager::getSingleton().logMessage( message );
+			if( _console->isVisible() )
+			{
+				_console->hide();
+			}
+		}
+
+		if( _gui->editorShown() )
+		{
+			if( !_editor->isVisible() )
+			{
+				_editor->show();
+			}
+		}
+		else
+		{
+			if( _editor->isVisible() )
+			{
+				_editor->hide();
+			}
 		}
 	}
 
-	// Take a screenshot
-	if( _player->getScreenshotVersion() > _screenshot_num )
+	if( _player )
 	{
-		_takeScreenshot();
+		// Update player
+		// Get active camera and change the rendering camera if there is a change
+		std::string const &cam_name = _player->getActiveCamera();
+		if( !cam_name.empty() && cam_name != _active_camera_name )
+		{
+			_active_camera_name = cam_name;
+			assert( _ogre_sm );
+			if( _ogre_sm->hasCamera( cam_name ) )
+			{
+				// Tell the Windows to change cameras
+				_camera = _ogre_sm->getCamera( _active_camera_name );
+				assert( !_windows.empty() );
+				for( size_t i = 0; i < _windows.size(); ++i )
+				{ _windows.at(i)->setCamera( _camera ); }
+			}
+			else
+			{
+				std::string message = "vl::Window : New camera name set, but NO camera found";
+				std::cout << message << std::endl;
+				Ogre::LogManager::getSingleton().logMessage( message );
+			}
+		}
 
-		_screenshot_num = _player->getScreenshotVersion();
+		// Take a screenshot
+		if( _player->getScreenshotVersion() > _screenshot_num )
+		{
+			_takeScreenshot();
+
+			_screenshot_num = _player->getScreenshotVersion();
+		}
 	}
 }
 
@@ -648,7 +704,11 @@ vl::Pipe::_draw( void )
 	Ogre::WindowEventUtilities::messagePump();
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
-	CEGUI::System::getSingleton().renderGUI();
+
+	if( guiShown() )
+	{
+		CEGUI::System::getSingleton().renderGUI();
+	}
 }
 
 void
