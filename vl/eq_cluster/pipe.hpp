@@ -88,6 +88,12 @@ public :
 		return _gui->shown();
 	}
 
+	CEGUI::Window *getEditor( void )
+	{ return _editor; }
+
+	CEGUI::Window *getConsole( void )
+	{ return _console; }
+
 protected :
 	/// Reload the projects
 	void _reloadProjects( vl::Settings const &set );

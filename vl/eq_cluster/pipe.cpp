@@ -300,7 +300,7 @@ vl::Pipe::_createGUI(void )
 
 	// Create the GUI windows
 	assert( _windows.size() > 0 );
-	_windows.at(0)->createGUIWindow();
+	Window *win = _windows.at(0);
 
 	CEGUI::Window *myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
 	CEGUI::System::getSingleton().setGUISheet( myRoot );
@@ -311,6 +311,67 @@ vl::Pipe::_createGUI(void )
 	_loading_screen = CEGUI::WindowManager::getSingleton().loadWindowLayout( "loading_screen.layout" );
 	myRoot->addChildWindow(_loading_screen);
 	_loading_screen->hide();
+
+	win->createGUIWindow();
+
+	/// Subscripe to events
+	std::cout << "Subcribing to events." << std::endl;
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Window::onConsoleTextAccepted, win));
+
+	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onNewClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/openItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onOpenClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/saveItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onSaveClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/quitItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onQuitClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/resetItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onResetClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/importSceneItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onImportSceneClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/reloadScenes") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onReloadScenesClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/addScriptItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onAddScriptClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newScriptItem") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onNewScriptClicked, win));
+
+	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/reloadScripts") );
+	assert( item );
+	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onReloadScriptsClicked, win));
+
+
+	CEGUI::Checkbox *checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showAxes") );
+	assert( checkBox );
+	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowAxisChanged, win));
+
+	checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showNames") );
+	assert( checkBox );
+	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowNamesChanged, win));
+
+	checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showJoints") );
+	assert( checkBox );
+	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowJointsChanged, win));
 
 	// TODO support for multiple windows
 	// at the moment every window will get the same GUI window layout

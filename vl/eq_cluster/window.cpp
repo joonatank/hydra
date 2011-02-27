@@ -17,6 +17,8 @@
 /// GUI
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
+#include <CEGUI/elements/CEGUIEditbox.h>
+#include <CEGUI/elements/CEGUIMultiLineEditbox.h>
 
 namespace
 {
@@ -161,7 +163,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 		// TODO should check if GUI window is active
 		// TODO this might need translation for the key codes
 		// TODO this is missing auto-repeat for text
-		used = CEGUI::System::getSingleton().injectKeyUp(key.key);
+		used = CEGUI::System::getSingleton().injectKeyDown(key.key);
 		used |= CEGUI::System::getSingleton().injectChar(key.text);
 	}
 
@@ -277,7 +279,126 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	return true;
 }
 
+/// ------------------------ Public CEGUI callbacks ----------------------------
+bool
+vl::Window::onNewClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onNewClicked" << std::endl;
+	return true;
+}
 
+bool
+vl::Window::onOpenClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onOpenClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onSaveClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onSaveClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onQuitClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onResetClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onResetClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onImportSceneClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onImportSceneClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onReloadScenesClicked" << std::endl;
+	return true;
+}
+
+
+bool
+vl::Window::onNewScriptClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onNewScriptClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onAddScriptClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onAddScriptClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onReloadScriptsClicked( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onReloadScriptsClicked" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onShowAxisChanged( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onShowAxisChanged" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onShowNamesChanged( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onShowNamesChanged" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onShowJointsChanged" << std::endl;
+	return true;
+}
+
+bool
+vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
+{
+	std::cout << "vl::Window::onConsoleTextAccepted" << std::endl;
+
+	CEGUI::Window *console = getPipe()->getConsole();
+	assert( console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
+	assert( input );
+	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( console->getChild("console/output") );
+	assert( output );
+
+	CEGUI::String text = output->getText() + '\n' + input->getText();
+	output->setText(text);
+	input->setText("");
+
+	return true;
+}
+
+bool
+vl::Window::onConsoleKeyDown( CEGUI::EventArgs const &e )
+{
+
+}
+
+
+/// ----------------------------- Public methods -------------------------------
 void
 vl::Window::draw( void )
 {

@@ -2,10 +2,6 @@
 <GUILayout>
 	<Window Type="DefaultWindow" Name="root">
 		<Window Type="DefaultWindow" Name="editor">
-<!--			<Property Name="UnifiedSize" Value="{ {1, 0}, {1, 0} }" />
-			<Property Name="FrameEnabled" Value="False" />
-			<Property Name="MousePassThroughEnabled" Value="True" />
-			<Property Name="SizingEnabled" Value="False" />-->
 			<Window Type="TaharezLook/FrameWindow" Name="editorButtons">
 				<Property Name="UnifiedPosition" Value="{ {0, 0}, {0, 0} }" />
 				<Property Name="UnifiedSize" Value="{ {1, 0}, {0.3, 0} }" />
@@ -32,17 +28,22 @@
 					<Window Type="TaharezLook/MenuItem" Name="editor/quitItem" >
 						<Property Name="Text" Value="Quit" />
 					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/importSceneItem" >
-						<Property Name="Text" Value="Import Scene" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/addScriptItem" >
-						<Property Name="Text" Value="Add script" />
-					</Window>
 					<Window Type="TaharezLook/MenuItem" Name="editor/resetItem" >
 						<Property Name="Text" Value="Reset" />
 					</Window>
+					<!-- Scene buttons -->
+					<Window Type="TaharezLook/MenuItem" Name="editor/importSceneItem" >
+						<Property Name="Text" Value="Import Scene" />
+					</Window>
 					<Window Type="TaharezLook/MenuItem" Name="editor/reloadScenes" >
 						<Property Name="Text" Value="Reload Scenes" />
+					</Window>
+					<!-- Script buttons -->
+					<Window Type="TaharezLook/MenuItem" Name="editor/newScriptItem" >
+						<Property Name="Text" Value="New script" />
+					</Window>
+					<Window Type="TaharezLook/MenuItem" Name="editor/addScriptItem" >
+						<Property Name="Text" Value="Add script" />
 					</Window>
 					<Window Type="TaharezLook/MenuItem" Name="editor/reloadScripts" >
 						<Property Name="Text" Value="Reload Scripts" />

@@ -20,6 +20,9 @@
 
 #include <OGRE/OgreRenderWindow.h>
 
+// GUI
+#include <CEGUI/CEGUIEventArgs.h>
+
 namespace vl
 {
 
@@ -70,6 +73,30 @@ public:
 	bool mouseMoved(const OIS::MouseEvent &evt);
 	bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 	bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+
+	/// GECUI callbacks
+
+	/// Editor events
+	/// Menubar buttons clicked
+	bool onNewClicked( CEGUI::EventArgs const &e );
+	bool onOpenClicked( CEGUI::EventArgs const &e );
+	bool onSaveClicked( CEGUI::EventArgs const &e );
+	bool onQuitClicked( CEGUI::EventArgs const &e );
+	bool onResetClicked( CEGUI::EventArgs const &e );
+	bool onImportSceneClicked( CEGUI::EventArgs const &e );
+	bool onReloadScenesClicked( CEGUI::EventArgs const &e );
+	bool onNewScriptClicked( CEGUI::EventArgs const &e );
+	bool onAddScriptClicked( CEGUI::EventArgs const &e );
+	bool onReloadScriptsClicked( CEGUI::EventArgs const &e );
+
+	/// Checkboxes
+	bool onShowAxisChanged( CEGUI::EventArgs const &e );
+	bool onShowNamesChanged( CEGUI::EventArgs const &e );
+	bool onShowJointsChanged( CEGUI::EventArgs const &e );
+
+	/// Console events
+	bool onConsoleTextAccepted( CEGUI::EventArgs const &e );
+	bool onConsoleKeyDown( CEGUI::EventArgs const &e );
 
 	/// Instruct the Channels to draw the Scene
 	virtual void draw( void );
