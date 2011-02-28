@@ -19,7 +19,7 @@
 #include "actions_misc.hpp"
 #include "trigger.hpp"
 
-#include "eq_cluster/gui.hpp"
+#include "gui/gui.hpp"
 
 // Python global
 #include "python.hpp"
@@ -119,6 +119,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", python::make_function( &vl::GameManager::getGUI, python::return_value_policy<python::reference_existing_object>() ) )
+		.def("quit", &vl::GameManager::quit)
 	;
 
 	// TODO add setHeadMatrix function to python
@@ -341,30 +342,38 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// GUI actions
-	python::class_<vl::GUI, boost::noncopyable>("GUI", python::no_init )
+	python::class_<vl::gui::GUI, boost::noncopyable>("GUI", python::no_init )
+		.def("showEditor", &vl::gui::GUI::showEditor )
+		.def("hideEditor", &vl::gui::GUI::hideEditor )
+		.def("showConsole", &vl::gui::GUI::showConsole )
+		.def("hideConsole", &vl::gui::GUI::hideConsole )
+		.def("showStats", &vl::gui::GUI::showStats )
+		.def("hideStats", &vl::gui::GUI::hideStats )
+		.def("showLoadingScreen", &vl::gui::GUI::showLoadingScreen )
+		.def("hideLoadingScreen", &vl::gui::GUI::hideLoadingScreen )
 	;
 
-	python::class_<GUIActionBase, boost::noncopyable>("GUIActionBase", python::no_init )
-		.add_property("gui", python::make_function( &GUIActionBase::getGUI, python::return_value_policy< python::reference_existing_object>() ), &GUIActionBase::setGUI )
+	python::class_<vl::gui::GUIActionBase, boost::noncopyable>("GUIActionBase", python::no_init )
+		.add_property("gui", python::make_function( &vl::gui::GUIActionBase::getGUI, python::return_value_policy< python::reference_existing_object>() ), &vl::gui::GUIActionBase::setGUI )
 	;
 
-	python::class_<HideEditor, boost::noncopyable, python::bases<GUIActionBase, BasicAction> >("HideEditor", python::no_init )
-		.def("create", &HideEditor::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<vl::gui::HideEditor, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideEditor", python::no_init )
+		.def("create", &vl::gui::HideEditor::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
-	python::class_<ShowEditor, boost::noncopyable, python::bases<GUIActionBase, BasicAction> >("ShowEditor", python::no_init )
-		.def("create",&ShowEditor::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<vl::gui::ShowEditor, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowEditor", python::no_init )
+		.def("create",&vl::gui::ShowEditor::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
-	python::class_<HideConsole, boost::noncopyable, python::bases<GUIActionBase, BasicAction> >("HideConsole", python::no_init )
-		.def("create",&HideConsole::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<vl::gui::HideConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideConsole", python::no_init )
+		.def("create",&vl::gui::HideConsole::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
-	python::class_<ShowConsole, boost::noncopyable, python::bases<GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
-		.def("create",&ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
+	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
+		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

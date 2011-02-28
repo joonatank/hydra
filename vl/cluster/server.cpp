@@ -23,7 +23,7 @@ vl::cluster::Server::Server( uint16_t const port )
 vl::cluster::Server::~Server()
 {
 	std::cout << "vl::cluster::Server::~Server" << std::endl;
-	
+
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
@@ -32,13 +32,13 @@ vl::cluster::Server::~Server()
 	}
 }
 
-void 
+void
 vl::cluster::Server::shutdown( void )
 {
 	Message msg( vl::cluster::MSG_SHUTDOWN );
 	std::vector<char> buf;
 	msg.dump(buf);
-	
+
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
@@ -100,6 +100,17 @@ vl::cluster::Server::receiveMessages( void )
 			}
 			break;
 
+			case vl::cluster::MSG_COMMAND :
+			{
+				std::cout << "Server : vl::cluster::MSG_COMMAND received." << std::endl;
+				// TODO there should be a maximum amount of messages stored
+				std::vector<char> vec(msg->size());
+				msg->read( &vec[0], msg->size() );
+				_commands.push_back( std::string(&vec[0]) );
+				delete msg;
+			}
+			break;
+
 			default :
 			{
 				std::cout << "vl::cluster::Server::mainloop : "
@@ -140,7 +151,7 @@ vl::cluster::Server::render( void )
 	_waitSwap();
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		_sendSwap(iter->address); 
+		_sendSwap(iter->address);
 		iter->frame = _frame;
 	}
 
@@ -171,7 +182,7 @@ vl::cluster::Server::sendUpdate( vl::cluster::Message const &msg )
 	msg.dump(_msg_update);
 }
 
-void 
+void
 vl::cluster::Server::sendCreate( Message const &msg )
 {
 	// @TODO this needs frame or timestamp information when dealing with multiple
@@ -208,6 +219,13 @@ vl::cluster::Server::popInputMessage( void )
 {
 	Message *tmp = _input_msgs.front();
 	_input_msgs.erase( _input_msgs.begin() );
+	return tmp;
+}
+
+std::string vl::cluster::Server::popCommand( void )
+{
+	std::string tmp = _commands.front();
+	_commands.erase(_commands.begin());
 	return tmp;
 }
 
@@ -253,13 +271,13 @@ vl::cluster::Server::_sendProject( const boost::udp::endpoint &endpoint )
 	_socket.send_to( boost::asio::buffer(_proj_msg), endpoint );
 }
 
-void 
+void
 vl::cluster::Server::_sendCreate( ClientInfo const &client )
 {
 	std::vector<Message> msgs;
 
 	// Copy all the create messages that are newer than the client
-	for( std::vector< std::pair<uint32_t, Message> >::const_reverse_iterator iter = _msg_creates.rbegin(); 
+	for( std::vector< std::pair<uint32_t, Message> >::const_reverse_iterator iter = _msg_creates.rbegin();
 		iter != _msg_creates.rend(); ++iter )
 	{
 		if( client.frame >= iter->first )
@@ -267,7 +285,7 @@ vl::cluster::Server::_sendCreate( ClientInfo const &client )
 		msgs.push_back( iter->second );
 	}
 
-	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin(); 
+	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin();
 		iter != msgs.rend(); ++iter )
 	{
 		std::vector<char> buf;
@@ -400,7 +418,7 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 					iter->state = CS_UNDEFINED;
 				}
 				break;
-				
+
 				default:
 					assert(false);
 			};
@@ -408,7 +426,7 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 	}
 }
 
-void 
+void
 vl::cluster::Server::_waitCreate( void )
 {
 	bool ready_for_create = false;

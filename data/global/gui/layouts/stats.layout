@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<GUILayout>
+	<Window Type="DefaultWindow" Name="stats" >
+		<Property Name="Text" Value="Stats" />
+		<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+		<Property Name="UnifiedAreaRect" Value="{{0.7,0},{0.8,0},{1,0},{1,0}}" />
+		<Property Name="Alpha" Value="0.4" />
+		<Window Type="TaharezLook/StaticText" Name="stats/fpsText" >
+			<Property Name="Text" Value="FPS" />
+			<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+			<Property Name="UnifiedAreaRect" Value="{{0,0},{0,0},{1,0},{0,45}}" />
+			<Window Type="TaharezLook/StaticText" Name="stats/fps" >
+				<Property Name="Text" Value="0" />
+				<Property Name="HorizontalAlignment" Value="Right" />
+				<Property Name="UnifiedMaxSize" Value="{{0,80},{0,45}}" />
+			</Window>
+		</Window>
+		<Window Type="TaharezLook/StaticText" Name="stats/processingTimeText" >
+			<Property Name="Text" Value="Processing Time" />
+			<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+			<Property Name="UnifiedAreaRect" Value="{{0,0},{0,45},{1,0},{0,90}}" />
+			<Window Type="TaharezLook/StaticText" Name="stats/processingTime" >
+				<Property Name="Text" Value="0" />
+				<Property Name="HorizontalAlignment" Value="Right" />
+				<Property Name="UnifiedMaxSize" Value="{{0,80},{0,45}}" />
+			</Window>
+		</Window>
+	</Window>
+</GUILayout>

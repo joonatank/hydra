@@ -39,6 +39,8 @@ public :
 
 	void executePythonScript( vl::TextResource const &script );
 
+	void executePythonCommand( std::string const &cmd );
+
 private :
 	PythonContext( PythonContext const & );
 

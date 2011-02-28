@@ -28,6 +28,7 @@
 #include <CEGUI/CEGUIDefaultResourceProvider.h>
 #include <CEGUI/CEGUIImageset.h>
 #include <CEGUI/CEGUIScheme.h>
+#include <gui/window.hpp>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -45,6 +46,7 @@ vl::Pipe::Pipe( std::string const &name,
 	, _console(0)
 	, _editor(0)
 	, _loading_screen(0)
+	, _stats(0)
 	, _running(true)	// TODO should this be true from the start?
 {
 	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
@@ -109,6 +111,15 @@ vl::Pipe::sendEvent( vl::cluster::EventData const &event )
 {
 	// Add to event stack for sending them at once in one message to the Master
 	_events.push_back(event);
+}
+
+void
+vl::Pipe::sendCommand( std::string const &cmd )
+{
+	vl::cluster::Message msg( vl::cluster::MSG_COMMAND );
+	msg.write( cmd.c_str(), cmd.size() );
+
+	sendMessageToMaster(&msg);
 }
 
 void
@@ -305,6 +316,7 @@ vl::Pipe::_createGUI(void )
 	CEGUI::Window *myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
 	CEGUI::System::getSingleton().setGUISheet( myRoot );
 	_editor = myRoot->getChild("editor");
+
 	_console = CEGUI::WindowManager::getSingleton().loadWindowLayout( "console.layout" );
 	myRoot->addChildWindow(_console);
 
@@ -312,12 +324,19 @@ vl::Pipe::_createGUI(void )
 	myRoot->addChildWindow(_loading_screen);
 	_loading_screen->hide();
 
+	_stats = CEGUI::WindowManager::getSingleton().loadWindowLayout( "stats.layout" );
+	myRoot->addChildWindow(_stats);
+	_stats->hide();
+
 	win->createGUIWindow();
 
 	/// Subscripe to events
 	std::cout << "Subcribing to events." << std::endl;
+	CEGUI::Editbox *output = static_cast<CEGUI::Editbox *>( _console->getChild("console/output") );
+	assert(output);
+
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
-	assert( input );
+	assert(input);
 	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Window::onConsoleTextAccepted, win));
 
 	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
@@ -614,7 +633,11 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 			case OBJ_GUI :
 			{
 				assert( !_gui );
-				_gui = new vl::GUI( this, id );
+				_gui = new vl::gui::GUI( this, id );
+				_gui->setEditor( vl::gui::WindowRefPtr( new vl::gui::Window(_editor) ) );
+				_gui->setConsole( vl::gui::WindowRefPtr( new vl::gui::Window(_console) ) );
+				_gui->setLoadingScreen( vl::gui::WindowRefPtr( new vl::gui::Window(_loading_screen) ) );
+				_gui->setStats( vl::gui::WindowRefPtr( new vl::gui::Window(_stats) ) );
 				break;
 			}
 			case OBJ_SCENE_MANAGER :
@@ -689,41 +712,7 @@ vl::Pipe::_syncData( void )
 void
 vl::Pipe::_updateDistribData( void )
 {
-	// TODO these should be moved to GUI
-	if( _gui )
-	{
-		assert( _console && _editor );
-		if( _gui->consoleShown() )
-		{
-			if( !_console->isVisible() )
-			{
-				_console->show();
-			}
-		}
-		else
-		{
-			if( _console->isVisible() )
-			{
-				_console->hide();
-			}
-		}
-
-		if( _gui->editorShown() )
-		{
-			if( !_editor->isVisible() )
-			{
-				_editor->show();
-			}
-		}
-		else
-		{
-			if( _editor->isVisible() )
-			{
-				_editor->hide();
-			}
-		}
-	}
-
+	// TODO these should be moved to player using functors
 	if( _player )
 	{
 		// Update player

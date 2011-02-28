@@ -77,6 +77,7 @@ enum MSG_TYPES
 	MSG_DRAW,			// Draw the image into back buffer
 	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
 	MSG_SWAP,			// Swap the Window buffer
+	MSG_COMMAND,		// Command string sent to Application
 	MSG_SHUTDOWN,		// Shutdown the rendering threads
 };
 
@@ -172,7 +173,7 @@ public :
 private :
 	/**	@todo Replace all the message data with one std::vector<char>
 	 *	removes copying when the message is dumped for real sending
-	 *	anyway message will 
+	 *	anyway message will
 	 *	HUH, doesn't make sense if we use different class to create the
 	 *	real message so that we can support message splitting.
 	 *	That message data should be completely in std::vector<char>
@@ -188,7 +189,7 @@ std::ostream &operator<<( std::ostream &os, Message const &msg );
 /** @class MessagePart
  *	@brief A class used for splitting and reconstruction of Messages
  *	@todo Not in use at the moment
- *	
+ *
  *	Messages should read/write to multiple MessageParts which are sent
  *	separately.
  */

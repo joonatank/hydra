@@ -96,7 +96,6 @@ public:
 
 	/// Console events
 	bool onConsoleTextAccepted( CEGUI::EventArgs const &e );
-	bool onConsoleKeyDown( CEGUI::EventArgs const &e );
 
 	/// Instruct the Channels to draw the Scene
 	virtual void draw( void );

@@ -19,7 +19,7 @@
 // Necessary for keeping track of statistics
 #include "stats.hpp"
 
-#include "gui.hpp"
+#include "gui/gui.hpp"
 
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
@@ -92,7 +92,7 @@ protected :
 
 	vl::cluster::ServerRefPtr _server;
 
-	vl::GUI *_gui;
+	vl::gui::GUI *_gui;
 
 	Ogre::Timer _stats_timer;
 	vl::Stats _stats;

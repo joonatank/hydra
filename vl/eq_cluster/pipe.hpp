@@ -15,9 +15,10 @@
 #include "cluster/client.hpp"
 #include "session.hpp"
 #include "settings.hpp"
-#include "gui.hpp"
+#include "gui/gui.hpp"
 
 #include <CEGUI/CEGUIWindow.h>
+
 
 namespace vl
 {
@@ -69,6 +70,8 @@ public :
 	void sendMessageToMaster( vl::cluster::Message *msg );
 
 	void sendEvent( vl::cluster::EventData const &event );
+
+	void sendCommand( std::string const &cmd );
 
 	/// Boost thread operator
 	void operator()();
@@ -171,11 +174,12 @@ protected :
 	std::vector<vl::Window *> _windows;
 
 	/// GUI related
-	vl::GUI *_gui;
+	vl::gui::GUI *_gui;
 
 	CEGUI::Window *_console;
 	CEGUI::Window *_editor;
 	CEGUI::Window *_loading_screen;
+	CEGUI::Window *_stats;
 
 	bool _running;
 

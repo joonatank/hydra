@@ -70,7 +70,7 @@ public:
 
 	/// Returns true if some client needs an Initial SceneGraph
 	/// @todo This always returns true for now
-	/// the architecture should rather use functors/callbacks to be called 
+	/// the architecture should rather use functors/callbacks to be called
 	/// when they are needed
 	bool needsInit( void ) const;
 
@@ -78,7 +78,7 @@ public:
 	/// @return true if the server has input messages, false otherwise
 	/// @todo change to use functors/callbacks rather than this has + get
 	/// method
-	bool inputMessages( void )
+	bool inputMessages( void ) const
 	{ return !_input_msgs.empty(); }
 
 	/**	@brief receive an input message from a stack.
@@ -87,6 +87,11 @@ public:
 	 *	the message after use.
 	 */
 	Message *popInputMessage( void );
+
+	bool commands( void ) const
+	{ return !_commands.empty(); }
+
+	std::string popCommand( void );
 
 	typedef std::vector<ClientInfo> ClientList;
 
@@ -132,6 +137,7 @@ private :
 	ClientList _clients;
 
 	std::vector<Message *> _input_msgs;
+	std::vector<std::string> _commands;
 
 	/// Messages stored for when new clients connect
 	/// Environment message, set in the start
@@ -143,7 +149,7 @@ private :
 	/// Last update message? Might need a whole vector of these
 	std::vector<char> _msg_update;
 
-	/// Create MSGs 
+	/// Create MSGs
 	std::vector< std::pair<uint32_t, Message> > _msg_creates;
 
 	uint32_t _frame;

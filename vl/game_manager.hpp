@@ -28,7 +28,7 @@
 
 #include "session.hpp"
 
-#include "eq_cluster/gui.hpp"
+#include "gui/gui.hpp"
 
 // Audio
 #include <cAudio/cAudio.h>
@@ -57,10 +57,10 @@ public :
 
 	PlayerPtr createPlayer( void );
 
-	void setGUI( GUI *gui )
+	void setGUI( vl::gui::GUI *gui )
 	{ _gui = gui; }
 
-	GUI *getGUI( void )
+	vl::gui::GUI *getGUI( void )
 	{ return _gui; }
 
 	void toggleBackgroundSound( void );
@@ -89,7 +89,7 @@ private :
 	/// Tracking
 	vl::ClientsRefPtr _trackers;
 
-	GUI *_gui;
+	vl::gui::GUI *_gui;
 
 	/// Audio objects
 	cAudio::IAudioManager *_audio_manager;

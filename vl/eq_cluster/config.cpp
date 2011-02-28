@@ -93,7 +93,7 @@ vl::Config::init( void )
 	// TODO move this to do an automatic registration similar to SceneManager
 	registerObject( player, OBJ_PLAYER );
 
-	_gui = new vl::GUI( this, vl::ID_UNDEFINED );
+	_gui = new vl::gui::GUI( this, vl::ID_UNDEFINED );
 	_game_manager->setGUI(_gui);
 
 	vl::SceneManager *sm = _game_manager->getSceneManager();
@@ -506,6 +506,12 @@ vl::Config::_receiveEventMessages( void )
 			}
 		}
 		delete msg;
+	}
+
+	while( _server->commands() )
+	{
+		std::string cmd = _server->popCommand();
+		_game_manager->getPython()->executePythonCommand(cmd);
 	}
 }
 

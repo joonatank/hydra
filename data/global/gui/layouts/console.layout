@@ -6,8 +6,10 @@
 		<Property Name="TitlebarFont" Value="DejaVuSans-10" />
 		<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
 		<Property Name="TitlebarEnabled" Value="True" />
+		<Property Name="CloseButtonEnabled" Value="False" />
+		<Property Name="FrameEnabled" Value="False" />
 		<Property Name="AlwaysOnTop" Value="True" />
-		<Property Name="UnifiedAreaRect" Value="{{0.208832,0},{0.650387,0},{0.80736,0},{0.998062,0}}" />
+		<Property Name="UnifiedAreaRect" Value="{{0.0,0},{0.0,0},{0.7,0},{0.4,0}}" />
 		<Window Type="TaharezLook/MultiLineEditbox" Name="console/output" >
 			<Property Name="Text" Value=""/>
 			<Property Name="ReadOnly" Value="True" />

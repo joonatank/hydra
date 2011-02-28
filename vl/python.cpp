@@ -11,6 +11,13 @@
 
 #include "game_manager.hpp"
 
+/// Script always executed
+char const *script =
+	"from vl import *\n"
+	"def quit():\n"
+	"	game.quit()\n"
+	"print( 'vl imported' )\n";
+
 vl::PythonContext::PythonContext( vl::GameManager *game_man )
 {
 	// TODO Ogre LogManager not initialised yet
@@ -39,8 +46,7 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 		_global = main.attr("__dict__");
 
 		// Import vl module
-		python::handle<> ignored(( PyRun_String("from vl import *\n"
-										"print( 'vl imported' )  \n",
+		python::handle<> ignored(( PyRun_String(script,
 										Py_file_input,
 										_global.ptr(),
 										_global.ptr() ) ));
@@ -98,3 +104,25 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 	}
 }
 
+void
+vl::PythonContext::executePythonCommand(const std::string& cmd)
+{
+	try
+	{
+		// Run a python script.
+		python::object result = python::exec(cmd.c_str(), _global, _global);
+	}
+	// Some error handling so that we can continue the application
+	catch( ... )
+	{
+		// TODO these should be moved to ingame console and log file
+		// TODO Ogre LogManager not initialised yet
+		std::string message = "Exception occured in : " + cmd;
+		std::cerr << message << std::endl;
+		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
+	}
+	if( PyErr_Occurred() )
+	{
+		PyErr_Print();
+	}
+}

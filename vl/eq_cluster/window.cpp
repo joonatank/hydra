@@ -157,24 +157,33 @@ vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
-	bool used = false;
+	// Check if we have a GUI that uses user input
 	if( getPipe()->guiShown() )
 	{
-		// TODO should check if GUI window is active
-		// TODO this might need translation for the key codes
-		// TODO this is missing auto-repeat for text
-		used = CEGUI::System::getSingleton().injectKeyDown(key.key);
-		used |= CEGUI::System::getSingleton().injectChar(key.text);
+		switch( key.key )
+		{
+			// Keys that go to the Application always, used to control the GUI
+			// TODO should be configurable from python script
+			// and should match the one used there
+			case OIS::KC_ESCAPE :
+				break;
+			case OIS::KC_GRAVE :
+				break;
+			case OIS::KC_F2 :
+				break;
+			default :
+				// TODO this is missing auto-repeat for text
+				CEGUI::System::getSingleton().injectKeyDown(key.key);
+				CEGUI::System::getSingleton().injectChar(key.text);
+				return true;
+		}
 	}
 
-	if( !used )
-	{
-		vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
-		// TODO add support for the device ID from where the event originated
-		vl::cluster::ByteStream stream = data.getStream();
-		stream << key;
-		_sendEvent( data );
-	}
+	vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << key;
+	_sendEvent( data );
 
 	return true;
 }
@@ -182,19 +191,14 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 bool
 vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
-	bool used = false;
 	if( getPipe()->guiShown() )
 	{
 		// TODO should check if GUI window is active
 		// TODO this might need translation for the key codes
-		used = CEGUI::System::getSingleton().injectKeyUp(key.key);
-		// FIXME keyPressed is eaten by CEGUI, but keReleased is not
-		// we need to track the keys that are pressed and released
-		used |= CEGUI::System::getSingleton().injectChar(key.text);
+		CEGUI::System::getSingleton().injectKeyUp(key.key);
+// 		CEGUI::System::getSingleton().injectChar(key.text);
 	}
-
-	// GUI didn't use the event
-	if( !used )
+	else
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
 		// TODO add support for the device ID from where the event originated
@@ -209,21 +213,19 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	bool used = false;
 	if( getPipe()->guiShown() )
 	{
 		// TODO should check if GUI window is active
-		used = CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
+		CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
 		// NOTE this has a problem of possibly consuming some mouse movements
 		// Assuming that mouse is moved and the wheel is changed at the same time
 		// CEGUI might consume either one of them and the other one will not be
 		// passed on.
 		// This is so rare that we don't care about it.
 		if( evt.state.Z.rel != 0 )
-		{ used |= CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+		{ CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
 	}
-
-	if( !used )
+	else
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
 		// TODO add support for the device ID from where the event originated
@@ -238,14 +240,11 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 bool
 vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	bool used = false;
 	if( getPipe()->guiShown() )
 	{
-		// TODO should check if GUI window is active
-		used = CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+		CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
 	}
-
-	if( !used )
+	else
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 		// TODO add support for the device ID from where the event originated
@@ -260,14 +259,11 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	bool used = false;
 	if( getPipe()->guiShown() )
 	{
-		// TODO should check if GUI window is active
-		used = CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+		CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
 	}
-
-	if( !used )
+	else
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
 		// TODO add support for the device ID from where the event originated
@@ -305,6 +301,8 @@ bool
 vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 {
 	std::cout << "vl::Window::onQuitClicked" << std::endl;
+	getPipe()->sendCommand( "quit()" );
+
 	return true;
 }
 
@@ -384,19 +382,14 @@ vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
 	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( console->getChild("console/output") );
 	assert( output );
 
-	CEGUI::String text = output->getText() + '\n' + input->getText();
+	std::string command( input->getText().c_str() );
+	CEGUI::String text = output->getText() + '\n' + command;
 	output->setText(text);
 	input->setText("");
 
+	getPipe()->sendCommand(command);
 	return true;
 }
-
-bool
-vl::Window::onConsoleKeyDown( CEGUI::EventArgs const &e )
-{
-
-}
-
 
 /// ----------------------------- Public methods -------------------------------
 void
