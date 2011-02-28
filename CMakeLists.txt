@@ -108,6 +108,7 @@ include_directories( SYSTEM
 	${VORBIS_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
+	${CEGUI_INCLUDE_DIR}/CEGUI
 	)
 
 # Libraries that eqOgre library depends on

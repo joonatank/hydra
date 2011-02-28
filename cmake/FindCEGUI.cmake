@@ -107,17 +107,31 @@ lib_finder( "CEGUI_RAPIDXML_PARSER" CEGUIRapidXMLParser )
 
 message( "${LIB_HELP_STRING} = ${CEGUI_RAPIDXML_PARSER_LIBRARY}" )
 
+# Find the XML parser library, only RapidXML supported at the moment
+set( LIB_HELP_STRING "CEGUI Expat parser library" )
+lib_finder( "CEGUI_EXPAT_PARSER" CEGUIExpatParser )
+
+message( "${LIB_HELP_STRING} = ${CEGUI_EXPAT_PARSER_LIBRARY}" )
+
 # Find the Image Codec library, only FreeImage supported at the moment
 set( LIB_HELP_STRING "CEGUI FreeImage Image Codec library" )
 lib_finder( "CEGUI_FREEIMAGE_IMAGE_CODEC" CEGUIFreeImageImageCodec )
 
 message( "${LIB_HELP_STRING} = ${CEGUI_FREEIMAGE_IMAGE_CODEC_LIBRARY}" )
 
+if( CEGUI_RAPIDXML_PARSER_LIBRARY )
+	set( CEGUI_XML_PARSER_LIBRARY ${CEGUI_RAPIDXML_PARSER_LIBRARY} )
+elseif( CEGUI_EXPAT_PARSER_LIBRARY )
+	set( CEGUI_XML_PARSER_LIBRARY ${CEGUI_EXPAT_PARSER_LIBRARY} )
+else()
+	# Problem
+endif()
+
 set( CEGUI_LIBRARIES
 	${CEGUI_BASE_LIBRARY}
 	${CEGUI_FALAGARD_LIBRARY}
 	${CEGUI_OGRE_RENDERER_LIBRARY}
-	${CEGUI_RAPIDXML_PARSER_LIBRARY}
+	${CEGUI_XML_PARSER_LIBRARY}
 	${CEGUI_FREEIMAGE_IMAGE_CODEC_LIBRARY}
 	)
 

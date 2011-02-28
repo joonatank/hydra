@@ -206,6 +206,8 @@ vl::Pipe::_initGUI(void )
 	assert( _windows.size() > 0 && _windows.at(0)->getRenderWindow() );
 
 	// TODO support for multiple windows
+	CEGUI::System::setDefaultImageCodecName( "SILLYImageCodec" );
+	CEGUI::System::setDefaultXMLParserName( "ExpatParser" );
 	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*_windows.at(0)->getRenderWindow() );
 	CEGUI::System::create( myRenderer );
 }
