@@ -34,6 +34,7 @@ print( 'Getting Ogre SceneNode' )
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
 addOgreRotations(ogre)
+game.scene.addToSelection(ogre)
 
 print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")

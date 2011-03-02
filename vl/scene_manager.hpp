@@ -22,7 +22,7 @@ public :
 	/// Constructor
 	/// @param session a session this SceneManager belongs to,
 	/// used for registering and mapping objects
-	/// @param id undefined if this is to be registered 
+	/// @param id undefined if this is to be registered
 	/// and valid if this is to be mapped
 	SceneManager( vl::Session *session, uint64_t id = vl::ID_UNDEFINED );
 
@@ -55,6 +55,12 @@ public :
 	Ogre::SceneManager *getNative( void )
 	{ return _ogre_sm; }
 
+	void addToSelection( SceneNodePtr node );
+
+	void removeFromSelection( SceneNodePtr node );
+
+	bool isInSelection( SceneNodePtr node ) const;
+
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -66,7 +72,14 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	std::vector<SceneNode *> _scene_nodes;
+	std::vector<SceneNodePtr> _scene_nodes;
+
+	/// Selected SceneNodes
+	/// @remarks
+	/// At least for now not distributed
+	/// the attributes for showing the selected nodes are distributed in the
+	/// nodes them selves
+	std::vector<SceneNodePtr> _selection;
 
 	// Reload the scene
 	uint32_t _scene_version;

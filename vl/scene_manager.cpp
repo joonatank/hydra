@@ -94,11 +94,47 @@ vl::SceneManager::getSceneNode(size_t i) const
 	return _scene_nodes.at(i);
 }
 
-void vl::SceneManager::reloadScene( void )
+void
+vl::SceneManager::reloadScene( void )
 {
 	std::cerr << "Should reload the scene now." << std::endl;
 	setDirty( DIRTY_RELOAD_SCENE );
 	_scene_version++;
+}
+
+void
+vl::SceneManager::addToSelection( vl::SceneNodePtr node )
+{
+	if( !isInSelection(node) )
+	{
+		_selection.push_back(node);
+		node->showBoundingBox(true);
+	}
+}
+
+void
+vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
+{
+	std::vector<SceneNodePtr>::iterator iter
+		= std::find(_selection.begin(), _selection.end(), node);
+	if( iter != _selection.end() )
+	{
+		_selection.erase(iter);
+		node->showBoundingBox(false);
+	}
+}
+
+bool
+vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
+{
+	std::vector<SceneNodePtr>::const_iterator iter;
+	for( iter = _selection.begin(); iter != _selection.end(); ++iter )
+	{
+		if( *iter == node )
+		{ return true; }
+	}
+
+	return false;
 }
 
 
@@ -106,10 +142,10 @@ void vl::SceneManager::reloadScene( void )
 void
 vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
- 	if( dirtyBits & DIRTY_RELOAD_SCENE )
- 	{
- 		msg << _scene_version;
- 	}
+	if( dirtyBits & DIRTY_RELOAD_SCENE )
+	{
+		msg << _scene_version;
+	}
 }
 
 void

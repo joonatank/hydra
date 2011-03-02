@@ -60,8 +60,20 @@ public :
 
 	void setVisibility( bool visible )
 	{
-		setDirty( DIRTY_VISIBILITY );
-		_visible = visible;
+		if( _visible != visible )
+		{
+			setDirty( DIRTY_VISIBILITY );
+			_visible = visible;
+		}
+	}
+
+	void showBoundingBox( bool show )
+	{
+		if( _show_boundingbox != show )
+		{
+			setDirty(DIRTY_BOUNDING_BOX);
+			_show_boundingbox = show;
+		}
 	}
 
 	enum DirtyBits
@@ -69,7 +81,9 @@ public :
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_POSITION = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_ORIENTATION = vl::Distributed::DIRTY_CUSTOM << 2,
-		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 3
+		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
 	};
 
 protected :
@@ -86,6 +100,8 @@ private :
 	Ogre::Quaternion _orientation;
 
 	bool _visible;
+
+	bool _show_boundingbox;
 
 	Ogre::SceneNode *_ogre_node;
 

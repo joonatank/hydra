@@ -142,6 +142,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def("getSceneNode", getsn1, python::return_value_policy<python::reference_existing_object>() )
 		.def("getSceneNode", getsn3, python::return_value_policy<python::reference_existing_object>() )
 		.def("reloadScene", &SceneManager::reloadScene)
+		.def("addToSelection", &SceneManager::addToSelection)
+		.def("removeFromSelection", &SceneManager::removeFromSelection)
 	;
 
 

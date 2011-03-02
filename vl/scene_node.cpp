@@ -13,6 +13,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _position( Ogre::Vector3::ZERO )
 	, _orientation( Ogre::Quaternion::IDENTITY )
 	, _visible(true)
+	, _show_boundingbox(false)
 	, _ogre_node(0)
 	, _creator(creator)
 {
@@ -43,6 +44,11 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if( dirtyBits & DIRTY_VISIBILITY )
 	{
 		msg << _visible;
+	}
+
+	if( dirtyBits & DIRTY_BOUNDING_BOX )
+	{
+		msg << _show_boundingbox;
 	}
 }
 
@@ -85,6 +91,13 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		msg >> _visible;
 		if( _ogre_node )
 		{ _ogre_node->setVisible(_visible); }
+	}
+
+	if( dirtyBits & DIRTY_BOUNDING_BOX )
+	{
+		msg >> _show_boundingbox;
+		if( _ogre_node )
+		{ _ogre_node->showBoundingBox(_show_boundingbox); }
 	}
 }
 
