@@ -99,6 +99,16 @@ protected :
 
 };	// class TransformActionTrigger
 
+/// Keyboard modifiers
+enum KEY_MOD
+{
+	MOD_NONE = 0,		// No modifier is on
+	MOD_META = 1 << 1,	// Alt modifier, either alt
+	MOD_CTRL = 1 << 2,	// Control modifier, either control
+	MOD_SHIFT = 1 << 3,	// Shift modifier, either shift
+	MOD_SUPER = 1 << 4,	// Windows key modifier
+	// TODO missing menu modifier if one likes it
+};
 
 class KeyTrigger : public BasicActionTrigger
 {
@@ -113,6 +123,12 @@ public :
 	OIS::KeyCode getKey( void ) const
 	{ return _key; }
 
+	void setModifiers( KEY_MOD mod )
+	{ _modifiers = mod; }
+
+	KEY_MOD getModifiers( void ) const
+	{ return _modifiers; }
+
 	virtual std::string const &getTypeName( void ) const;
 
 	virtual std::ostream & print( std::ostream & os ) const;
@@ -122,6 +138,7 @@ public :
 
 private :
 	OIS::KeyCode _key;
+	KEY_MOD _modifiers;
 };
 
 

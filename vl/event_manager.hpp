@@ -56,26 +56,26 @@ public :
 	/// Returns true if there is one, false otherwise
 	bool hasTrackerTrigger( std::string const &name );
 
-	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc );
+	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
-	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc );
+	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
-	bool hasKeyPressedTrigger( OIS::KeyCode kc  );
+	bool hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
-	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc );
+	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
-	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc );
+	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
-	bool hasKeyReleasedTrigger( OIS::KeyCode kc  );
+	bool hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = MOD_NONE );
 
 	vl::FrameTrigger *getFrameTrigger( void );
 
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 
-	vl::KeyPressedTrigger *_findKeyPressedTrigger( OIS::KeyCode kc );
+	vl::KeyPressedTrigger *_findKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod );
 
-	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc );
+	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod );
 
 	// Data
 	std::vector<TriggerFactory *> _trigger_factories;

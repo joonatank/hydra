@@ -54,6 +54,13 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 }
 */
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyPressedTrigger_ov, createKeyPressedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyPressedTrigger_ov, getKeyPressedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyPressedTrigger_ov, hasKeyPressedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyReleasedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -131,9 +138,9 @@ BOOST_PYTHON_MODULE(vl)
 	// Overloads for the getSceneNode
 	// TODO const versions didn't go straight with the same return value policy
 	SceneNodePtr (SceneManager::*getsn1)( std::string const & ) = &SceneManager::getSceneNode;
-	const SceneNodePtr (SceneManager::*getsn2)( std::string const & ) const = &SceneManager::getSceneNode;
+// 	const SceneNodePtr (SceneManager::*getsn2)( std::string const & ) const = &SceneManager::getSceneNode;
 	SceneNodePtr (SceneManager::*getsn3)( size_t ) = &SceneManager::getSceneNode;
-	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
+// 	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
 
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove and add SceneNodes
@@ -154,15 +161,27 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
 	;
 
+	python::enum_<KEY_MOD>("KEY_MOD")
+		.value("NONE", MOD_NONE)
+		.value("META", MOD_META)
+		.value("CTRL", MOD_CTRL)
+		.value("SHIFT", MOD_SHIFT)
+		.value("SUPER", MOD_SUPER)
+	;
+
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
 		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
-		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("createKeyPressedTrigger", &vl::EventManager::createKeyPressedTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasKeyPressedTrigger", &vl::EventManager::hasKeyPressedTrigger )
-		.def("getKeyReleasedTrigger", &vl::EventManager::getKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger )
+		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger,
+			 getKeyPressedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("createKeyPressedTrigger", &vl::EventManager::createKeyPressedTrigger,
+			 createKeyPressedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("hasKeyPressedTrigger", &vl::EventManager::hasKeyPressedTrigger, hasKeyPressedTrigger_ov() )
+		.def("getKeyReleasedTrigger", &vl::EventManager::getKeyReleasedTrigger,
+			 getKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger,
+			 createKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger, hasKeyReleasedTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, python::return_value_policy<python::reference_existing_object>() )
 //		.def(python::str(python::self))
 	;

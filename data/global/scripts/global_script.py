@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
 
-def setVectorActionFromKey( vector_action, kc ):
+def setVectorActionFromKey( vector_action, kc, mod ):
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
 	key_action.value = 1
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
+	trigger = game.event_manager.createKeyPressedTrigger( kc, mod )
 	trigger.addAction( key_action )
 
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
 	key_action.value = -1
-	trigger = game.event_manager.createKeyReleasedTrigger( kc )
+	trigger = game.event_manager.createKeyReleasedTrigger( kc, mod )
 	trigger.addAction( key_action )
 
 
 
-def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg ) :
+def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE ) :
 	float_action = VectorActionMap.create()
 	float_action.axis = axis
-	setVectorActionFromKey( float_action, kc_pos )
+	setVectorActionFromKey( float_action, kc_pos, mod )
 	float_action.action = trans_action
 
 	float_action = VectorActionMap.create()
 	float_action.axis = -axis
-	setVectorActionFromKey( float_action, kc_neg )
+	setVectorActionFromKey( float_action, kc_neg, mod )
 	float_action.action = trans_action
 
 
@@ -42,7 +42,8 @@ def createCameraMovements(node) :
 	# Create the rotation action using a proxy
 	rot_action_proxy = MoveActionProxy.create()
 	rot_action_proxy.enableRotation()
-	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.LEFT, KC.RIGHT )
+	# This is not useful, maybe using Q and E
+	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.Q, KC.E )
 
 	# Create the real action
 	trans_action = MoveAction.create()
@@ -64,7 +65,7 @@ def addQuitEvent( kc ) :
 	action = QuitAction.create()
 	action.game = game
 
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
+	trigger = game.event_manager.createKeyPressedTrigger( kc, KEY_MOD.META )
 	trigger.addAction( action )
 
 

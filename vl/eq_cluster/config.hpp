@@ -21,6 +21,8 @@
 
 #include "gui/gui.hpp"
 
+#include "trigger.hpp"
+
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
@@ -98,6 +100,8 @@ protected :
 	vl::Stats _stats;
 
 	bool _running;
+
+	KEY_MOD _key_modifiers;
 
 };	// class Config
 

@@ -111,13 +111,15 @@ vl::EventManager::hasTrackerTrigger(const std::string& name)
 }
 
 vl::KeyPressedTrigger *
-vl::EventManager::createKeyPressedTrigger(OIS::KeyCode kc)
+vl::EventManager::createKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc);
+	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc, mod);
+
 	if( !trigger )
 	{
 		trigger = new vl::KeyPressedTrigger;
 		trigger->setKey(kc);
+		trigger->setModifiers(mod);
 		_key_pressed_triggers.push_back(trigger);
 	}
 
@@ -125,9 +127,9 @@ vl::EventManager::createKeyPressedTrigger(OIS::KeyCode kc)
 }
 
 vl::KeyPressedTrigger *
-vl::EventManager::getKeyPressedTrigger(OIS::KeyCode kc)
+vl::EventManager::getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc);
+	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc,mod);
 	if( trigger )
 	{ return trigger; }
 
@@ -135,22 +137,24 @@ vl::EventManager::getKeyPressedTrigger(OIS::KeyCode kc)
 }
 
 bool
-vl::EventManager::hasKeyPressedTrigger(OIS::KeyCode kc)
+vl::EventManager::hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	return _findKeyPressedTrigger(kc);
+	return _findKeyPressedTrigger(kc,mod);
 }
 
 
 
 
 vl::KeyReleasedTrigger *
-vl::EventManager::createKeyReleasedTrigger(OIS::KeyCode kc)
+vl::EventManager::createKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc);
+	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc,mod);
+
 	if( !trigger )
 	{
 		trigger = new vl::KeyReleasedTrigger;
 		trigger->setKey(kc);
+		trigger->setModifiers(mod);
 		_key_released_triggers.push_back(trigger);
 	}
 
@@ -158,9 +162,9 @@ vl::EventManager::createKeyReleasedTrigger(OIS::KeyCode kc)
 }
 
 vl::KeyReleasedTrigger *
-vl::EventManager::getKeyReleasedTrigger(OIS::KeyCode kc)
+vl::EventManager::getKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc);
+	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc, mod);
 	if( trigger )
 	{ return trigger; }
 
@@ -168,9 +172,9 @@ vl::EventManager::getKeyReleasedTrigger(OIS::KeyCode kc)
 }
 
 bool
-vl::EventManager::hasKeyReleasedTrigger(OIS::KeyCode kc)
+vl::EventManager::hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
-	return _findKeyReleasedTrigger(kc);
+	return _findKeyReleasedTrigger(kc, mod);
 }
 
 vl::FrameTrigger *
@@ -198,12 +202,13 @@ vl::EventManager::_findTrackerTrigger(const std::string& name)
 }
 
 vl::KeyPressedTrigger *
-vl::EventManager::_findKeyPressedTrigger(OIS::KeyCode kc)
+vl::EventManager::_findKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
 	for( size_t i = 0; i < _key_pressed_triggers.size(); ++i )
 	{
 		vl::KeyPressedTrigger *trigger = _key_pressed_triggers.at(i);
-		if( trigger->getKey() == kc )
+		// exact match
+		if( trigger->getKey() == kc && trigger->getModifiers() == mod )
 		{ return trigger; }
 	}
 
@@ -212,12 +217,13 @@ vl::EventManager::_findKeyPressedTrigger(OIS::KeyCode kc)
 
 
 vl::KeyReleasedTrigger *
-vl::EventManager::_findKeyReleasedTrigger(OIS::KeyCode kc)
+vl::EventManager::_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 {
 	for( size_t i = 0; i < _key_released_triggers.size(); ++i )
 	{
 		vl::KeyReleasedTrigger *trigger = _key_released_triggers.at(i);
-		if( trigger->getKey() == kc )
+		// exact match
+		if( trigger->getKey() == kc && trigger->getModifiers() == mod )
 		{ return trigger; }
 	}
 
