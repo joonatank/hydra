@@ -117,7 +117,9 @@ void
 vl::Pipe::sendCommand( std::string const &cmd )
 {
 	vl::cluster::Message msg( vl::cluster::MSG_COMMAND );
-	msg.write( cmd.c_str(), cmd.size() );
+	// Write size and string and terminating character
+	msg.write( cmd.size()+1 );
+	msg.write( cmd.c_str(), cmd.size()+1 );
 
 	sendMessageToMaster(&msg);
 }

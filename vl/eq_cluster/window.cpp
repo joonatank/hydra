@@ -171,6 +171,8 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 				break;
 			case OIS::KC_F2 :
 				break;
+			case OIS::KC_F10 :
+				break;
 			default :
 				// TODO this is missing auto-repeat for text
 				CEGUI::System::getSingleton().injectKeyDown(key.key);

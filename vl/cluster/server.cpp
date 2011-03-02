@@ -104,9 +104,14 @@ vl::cluster::Server::receiveMessages( void )
 			{
 				std::cout << "Server : vl::cluster::MSG_COMMAND received." << std::endl;
 				// TODO there should be a maximum amount of messages stored
-				std::vector<char> vec(msg->size());
-				msg->read( &vec[0], msg->size() );
+				// TODO works only on ASCII at the moment
+				assert( msg->size() > sizeof(size_t) );
+				size_t size;
+				msg->read(size);
+				std::vector<char> vec(size);
+				msg->read( &vec[0], size );
 				_commands.push_back( std::string(&vec[0]) );
+
 				delete msg;
 			}
 			break;
