@@ -113,12 +113,61 @@ BOOST_PYTHON_MODULE(vl)
 		;
 
 
-	// TODO these should be implemented
-	// Needs at least conversions from one to the other and constructors
-	python::class_<Ogre::Degree>("Degree")
+	python::class_<Ogre::Degree>("Degree", python::init< python::optional<Ogre::Real> >() )
+		.def(python::init<Ogre::Radian>())
+		.def("valueDegrees", &Ogre::Degree::valueDegrees)
+		.def("valueRadians", &Ogre::Degree::valueRadians)
+		.def("valueAngleUnits", &Ogre::Degree::valueAngleUnits)
+		// Operators
+		.def(python::self + python::self )
+		.def(python::self + Ogre::Radian() )
+		.def(python::self += python::self )
+		.def(python::self + Ogre::Radian() )
+		.def(python::self - python::self )
+		.def(python::self - Ogre::Radian() )
+		.def(python::self -= python::self )
+		.def(python::self -= Ogre::Radian() )
+		.def(python::self * python::self)
+		.def(python::self * Ogre::Real())
+		.def(python::self *= Ogre::Real())
+		.def(python::self / Ogre::Real())
+		.def(python::self /= Ogre::Real())
+		// Comparison operators
+		.def(python::self < python::self )
+		.def(python::self <= python::self )
+		.def(python::self == python::self )
+		.def(python::self != python::self )
+		.def(python::self > python::self )
+		.def(python::self >= python::self )
+// 		.def(python::str(python::self))
 	;
 
-	python::class_<Ogre::Radian>("Radian")
+	python::class_<Ogre::Radian>("Radian", python::init< python::optional<Ogre::Real> >())
+		.def(python::init<Ogre::Degree>())
+		.def("valueDegrees", &Ogre::Radian::valueDegrees)
+		.def("valueRadians", &Ogre::Radian::valueRadians)
+		.def("valueAngleUnits", &Ogre::Radian::valueAngleUnits)
+		// Operators
+		.def(python::self + python::self )
+		.def(python::self + Ogre::Degree() )
+		.def(python::self += python::self )
+		.def(python::self + Ogre::Degree() )
+		.def(python::self - python::self )
+		.def(python::self - Ogre::Degree() )
+		.def(python::self -= python::self )
+		.def(python::self -= Ogre::Degree() )
+		.def(python::self * python::self)
+		.def(python::self * Ogre::Real())
+		.def(python::self *= Ogre::Real())
+		.def(python::self / Ogre::Real())
+		.def(python::self /= Ogre::Real())
+		// Comparison operators
+		.def(python::self < python::self )
+		.def(python::self <= python::self )
+		.def(python::self == python::self )
+		.def(python::self != python::self )
+		.def(python::self > python::self )
+		.def(python::self >= python::self )
 	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
