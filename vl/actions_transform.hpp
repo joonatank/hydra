@@ -7,10 +7,8 @@
 #ifndef VL_ACTIONS_TRANSFORM_HPP
 #define VL_ACTIONS_TRANSFORM_HPP
 
-#include "scene_node.hpp"
-#include "keycode.hpp"
-#include "base/exceptions.hpp"
 #include "action.hpp"
+#include "typedefs.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -33,7 +31,9 @@ public :
 
 	// TODO this should be executed with a double parameter (delta time) from
 	// FrameTrigger
-	virtual void execute( void );
+	/// Purposefully not virtual override the private virtual move 
+	/// which is called from this
+	void execute( void );
 
 	/// Parameters
 	void setSpeed( double speed )
@@ -49,29 +49,19 @@ public :
 	Ogre::Radian const &getAngularSpeed( void ) const
 	{ return _angular_speed; }
 
-
-	void setSceneNode( vl::SceneNodePtr node )
-	{ _node = node; }
-
-	vl::SceneNodePtr getSceneNode( void )
-	{ return _node; }
-
 	void setMoveDir( Ogre::Vector3 const &mov_dir )
 	{ _move_dir = mov_dir; }
 
 	void setRotDir( Ogre::Vector3 const &rot_dir )
 	{ _rot_dir = rot_dir; }
 
-
-	static MoveAction *create( void )
-	{ return new MoveAction; }
-
-	std::string getTypeName( void ) const
-	{ return "MoveAction"; }
-
+/// Private virtual methods
 private :
-	vl::SceneNodePtr _node;
+	virtual void move(Ogre::Vector3 const &v) = 0;
+	virtual void rotate(Ogre::Quaternion const &v) = 0;
 
+/// Data
+protected :
 	Ogre::Vector3 _move_dir;
 
 	Ogre::Vector3 _rot_dir;
@@ -81,6 +71,62 @@ private :
 
 	Ogre::Timer _clock;
 };
+
+class MoveNodeAction : public MoveAction
+{
+public :
+	MoveNodeAction( void );
+
+	void setSceneNode( vl::SceneNodePtr node )
+	{ _node = node; }
+
+	vl::SceneNodePtr getSceneNode( void )
+	{ return _node; }
+
+	static MoveNodeAction *create( void )
+	{ return new MoveNodeAction; }
+
+	std::string getTypeName( void ) const
+	{ return "MoveNodeAction"; }
+
+/// Private virtual methods
+private :
+	virtual void move(Ogre::Vector3 const &v);
+	virtual void rotate(Ogre::Quaternion const &q);
+
+/// Data
+private :
+	vl::SceneNodePtr _node;
+
+};
+
+class MoveSelectionAction : public MoveAction
+{
+public :
+	MoveSelectionAction( void );
+
+	void setSceneManager( vl::SceneManagerPtr man )
+	{ _scene = man; }
+
+	vl::SceneManagerPtr getSceneManager( void )
+	{ return _scene; }
+
+	static MoveSelectionAction *create( void )
+	{ return new MoveSelectionAction; }
+
+	std::string getTypeName( void ) const
+	{ return "MoveSelectionAction"; }
+
+/// Private virtual methods
+private :
+	virtual void move(Ogre::Vector3 const &v);
+	virtual void rotate(Ogre::Quaternion const &q);
+
+/// Data
+private :
+	vl::SceneManagerPtr _scene;
+
+};	// class MoveSelectionAction
 
 class MoveActionProxy : public VectorAction
 {

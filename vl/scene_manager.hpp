@@ -16,6 +16,8 @@
 namespace vl
 {
 
+typedef std::vector<SceneNodePtr> SceneNodeList;
+
 class SceneManager : public vl::Distributed
 {
 public :
@@ -61,6 +63,9 @@ public :
 
 	bool isInSelection( SceneNodePtr node ) const;
 
+	SceneNodeList const &getSelection( void ) const
+	{ return _selection; }
+
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -72,14 +77,14 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	std::vector<SceneNodePtr> _scene_nodes;
+	SceneNodeList _scene_nodes;
 
 	/// Selected SceneNodes
 	/// @remarks
 	/// At least for now not distributed
 	/// the attributes for showing the selected nodes are distributed in the
 	/// nodes them selves
-	std::vector<SceneNodePtr> _selection;
+	SceneNodeList _selection;
 
 	// Reload the scene
 	uint32_t _scene_version;

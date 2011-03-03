@@ -162,11 +162,11 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::enum_<KEY_MOD>("KEY_MOD")
-		.value("NONE", MOD_NONE)
-		.value("META", MOD_META)
-		.value("CTRL", MOD_CTRL)
-		.value("SHIFT", MOD_SHIFT)
-		.value("SUPER", MOD_SUPER)
+		.value("NONE", KEY_MOD_NONE)
+		.value("META", KEY_MOD_META)
+		.value("CTRL", KEY_MOD_CTRL)
+		.value("SHIFT", KEY_MOD_SHIFT)
+		.value("SUPER", KEY_MOD_SUPER)
 	;
 
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
@@ -344,13 +344,21 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<MoveAction, boost::noncopyable, python::bases<BasicAction> >("MoveAction", python::no_init )
-		.add_property("scene_node", python::make_function( &MoveAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &MoveAction::setSceneNode)
 		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
 		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
-		.def("create",&MoveAction::create, python::return_value_policy<python::reference_existing_object>() )
+	;
+
+	python::class_<MoveNodeAction, boost::noncopyable, python::bases<MoveAction> >("MoveNodeAction", python::no_init )
+		.add_property("scene_node", python::make_function( &MoveNodeAction::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &MoveNodeAction::setSceneNode)
+		.def("create",&MoveNodeAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
+	python::class_<MoveSelectionAction, boost::noncopyable, python::bases<MoveAction> >("MoveSelectionAction", python::no_init )
+		.add_property("scene", python::make_function( &MoveSelectionAction::getSceneManager, python::return_value_policy< python::reference_existing_object>() ), &MoveSelectionAction::setSceneManager)
+		.def("create",&MoveSelectionAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
 
 	python::class_<MoveActionProxy, boost::noncopyable, python::bases<VectorAction> >("MoveActionProxy", python::no_init )
 		.add_property("action", python::make_function( &MoveActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &MoveActionProxy::setAction )

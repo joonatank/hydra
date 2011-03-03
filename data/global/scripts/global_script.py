@@ -46,7 +46,7 @@ def createCameraMovements(node) :
 	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.Q, KC.E )
 
 	# Create the real action
-	trans_action = MoveAction.create()
+	trans_action = MoveNodeAction.create()
 	trans_action.scene_node = node
 	trans_action.speed = 5
 	# Add the real action to the proxies
@@ -57,6 +57,32 @@ def createCameraMovements(node) :
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.addAction( trans_action )
 
+
+
+def addMoveSelection() :
+	print( 'Creating Move selection event' )
+
+	trans_action_proxy = MoveActionProxy.create()
+	trans_action_proxy.enableTranslation()
+	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.NUMPAD4, KC.NUMPAD6 )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.NUMPAD8, KC.NUMPAD5 )
+
+	# Create the rotation action using a proxy
+	rot_action_proxy = MoveActionProxy.create()
+	rot_action_proxy.enableRotation()
+	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.NUMPAD4, KC.NUMPAD6, KEY_MOD.CTRL )
+	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 0, 1), KC.NUMPAD8, KC.NUMPAD5, KEY_MOD.CTRL )
+
+	# Create the real action
+	trans_action = MoveSelectionAction.create()
+	trans_action.scene = game.scene
+
+	# Add the real action to the proxy
+	trans_action_proxy.action = trans_action
+	rot_action_proxy.action = trans_action
+	# Create a FrameTrigger and add the action to that
+	trigger = game.event_manager.getFrameTrigger()
+	trigger.addAction( trans_action )
 
 
 # Fine using the new event interface

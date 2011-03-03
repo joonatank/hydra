@@ -102,11 +102,11 @@ protected :
 /// Keyboard modifiers
 enum KEY_MOD
 {
-	MOD_NONE = 0,		// No modifier is on
-	MOD_META = 1 << 1,	// Alt modifier, either alt
-	MOD_CTRL = 1 << 2,	// Control modifier, either control
-	MOD_SHIFT = 1 << 3,	// Shift modifier, either shift
-	MOD_SUPER = 1 << 4,	// Windows key modifier
+	KEY_MOD_NONE = 0,		// No modifier is on
+	KEY_MOD_META = 1 << 1,	// Alt modifier, either alt
+	KEY_MOD_CTRL = 1 << 2,	// Control modifier, either control
+	KEY_MOD_SHIFT = 1 << 3,	// Shift modifier, either shift
+	KEY_MOD_SUPER = 1 << 4,	// Windows key modifier
 	// TODO missing menu modifier if one likes it
 };
 

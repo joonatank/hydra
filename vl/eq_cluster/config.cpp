@@ -43,25 +43,25 @@ vl::KEY_MOD getModifier( OIS::KeyCode kc )
 	// Shift
 	if( kc == OIS::KC_LSHIFT || kc == OIS::KC_RSHIFT )
 	{
-		return vl::MOD_SHIFT;
+		return vl::KEY_MOD_SHIFT;
 	}
 	// Alt
 	else if( kc == OIS::KC_LMENU || kc == OIS::KC_RMENU )
 	{
-		return vl::MOD_META;
+		return vl::KEY_MOD_META;
 	}
 	// Control
 	else if( kc == OIS::KC_RCONTROL || kc == OIS::KC_LCONTROL )
 	{
-		return vl::MOD_CTRL;
+		return vl::KEY_MOD_CTRL;
 	}
 	// Windows
 	else if( kc == OIS::KC_LWIN || kc == OIS::KC_RWIN )
 	{
-		return vl::MOD_SUPER;
+		return vl::KEY_MOD_SUPER;
 	}
 
-	return vl::MOD_NONE;
+	return vl::KEY_MOD_NONE;
 }
 
 }
@@ -73,7 +73,7 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _gui(0)
 	, _running(true)
-	, _key_modifiers(MOD_NONE)
+	, _key_modifiers(KEY_MOD_NONE)
 {
 	std::cout << "vl::Config::Config" << std::endl;
 	assert( _env );
@@ -447,7 +447,7 @@ vl::Config::_createQuitEvent(void )
 	vl::QuitAction *quit = vl::QuitAction::create();
 	quit->data = _game_manager;
 	// Add trigger
-	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE, MOD_META );
+	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
 	trig->addAction(quit);
 }
 
@@ -552,7 +552,7 @@ vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
-	if( getModifier(kc) != MOD_NONE )
+	if( getModifier(kc) != KEY_MOD_NONE )
 	{
 		// TODO this needs to release any event without the added modifier
 		// is this even possible?
@@ -583,7 +583,7 @@ vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 	OIS::KeyCode kc = event.key;
 
 	// TODO if modifier is removed we should release the event with modifiers
-	if( getModifier(kc) != MOD_NONE )
+	if( getModifier(kc) != KEY_MOD_NONE )
 	{
 		// TODO this should release all the events with this modifier
 		// needs a list of trigger events with this particular modifier
