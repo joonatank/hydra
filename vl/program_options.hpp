@@ -45,7 +45,7 @@ struct ProgramOptions
 
 	/// Global options
 	bool verbose;
-	std::string exe_path;
+	std::string exe_name;
 	std::string program_directory;
 	std::string log_dir;
 

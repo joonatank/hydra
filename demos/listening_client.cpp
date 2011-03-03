@@ -33,13 +33,13 @@ int main( const int argc, char** argv )
 		if( options.master() )
 		{
 			std::cout << "Requested master configuration." << std::endl;
-			env = getMasterSettings(options);
-			settings = getProjectSettings(options);
+			env = vl::getMasterSettings(options);
+			settings = vl::getProjectSettings(options);
 		}
 		else
 		{
 			std::cout << "Requested slave configuration." << std::endl;
-			env = getSlaveSettings(options);
+			env = vl::getSlaveSettings(options);
 		}
 
 		// 2. initialization of local client node

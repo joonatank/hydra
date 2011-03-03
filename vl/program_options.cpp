@@ -66,8 +66,9 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	}
 
 	// Some global settings
-	exe_path = argv[0];
-	program_directory = fs::path( argv[0] ).parent_path().file_string();
+	fs::path exe_path = fs::system_complete( argv[0] ).file_string();
+	exe_name = exe_path.filename();
+	program_directory = fs::path(exe_path).parent_path().file_string();
 
 	// Slave options
 	if( vm.count("slave") )

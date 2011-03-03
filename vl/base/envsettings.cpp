@@ -211,12 +211,6 @@ vl::EnvSettings::getLogDir( vl::PATH_TYPE const type ) const
 	}
 }
 
-void
-vl::EnvSettings::setExePath( std::string const &path )
-{
-	_exe_path = path;
-}
-
 std::string
 vl::EnvSettings::getEnvironementDir( void ) const
 {

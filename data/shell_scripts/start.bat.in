@@ -6,6 +6,6 @@ Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR}\OGRE\bin\${
 ${PROGRAM_NAME} ^
  -e ${DEMO_DATA_PATH}/env.env ^
  -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} ^
- -g ${DEMO_DATA_PATH}/global/global_config.prj ^
+ -g ${DEMO_DATA_PATH}/global/hydra.prj ^
  -v %*
 

@@ -422,8 +422,10 @@ public :
 	 *	@TODO Is this necessary? Where is it used?
 	 *		  We would need this for launching out of the exe directory
 	 *		  or adding the exe directory to PATH to be used for dlls.
+	 *	@TODO should be replaced with exe_name or program_name
+	 *		  and program directory
 	 */
-	void setExePath( std::string const &path );
+// 	void setExePath( std::string const &path );
 
 	/** @brief Get the directory where this environment file is stored.
 	 *	@return valid path to the file where this configuration is stored.
@@ -457,8 +459,6 @@ private :
 	bool _verbose;
 
 	std::string _log_dir;
-
-	std::string _exe_path;
 
 };	// class EnvSettings
 
