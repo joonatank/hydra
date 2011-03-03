@@ -15,6 +15,24 @@
 namespace vl
 {
 
+inline vl::KEY_MOD getModifier( OIS::KeyCode kc )
+{
+	// Shift
+	if( kc == OIS::KC_LSHIFT || kc == OIS::KC_RSHIFT )
+	{ return vl::KEY_MOD_SHIFT; }
+	// Alt
+	else if( kc == OIS::KC_LMENU || kc == OIS::KC_RMENU )
+	{ return vl::KEY_MOD_META; }
+	// Control
+	else if( kc == OIS::KC_RCONTROL || kc == OIS::KC_LCONTROL )
+	{ return vl::KEY_MOD_CTRL; }
+	// Windows
+	else if( kc == OIS::KC_LWIN || kc == OIS::KC_RWIN )
+	{ return vl::KEY_MOD_SUPER;	}
+
+	return vl::KEY_MOD_NONE;
+}
+
 class EventManager
 {
 public :
@@ -62,9 +80,13 @@ public :
 
 	bool hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
 
+	void updateKeyPressedTrigger( OIS::KeyCode kc );
+
 	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
 
 	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
+
+	void updateKeyReleasedTrigger( OIS::KeyCode kc );
 
 	bool hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
 
@@ -77,13 +99,22 @@ private :
 
 	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod );
 
-	// Data
+	void _keyDown( OIS::KeyCode kc );
+
+	void _keyUp( OIS::KeyCode kc );
+
+/// Data
+private :
 	std::vector<TriggerFactory *> _trigger_factories;
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
 	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
 	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
 
 	vl::FrameTrigger *_frame_trigger;
+	
+	KEY_MOD _key_modifiers;
+
+	std::vector<OIS::KeyCode> _keys_down;
 
 };	// class EventManager
 

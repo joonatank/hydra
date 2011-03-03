@@ -101,8 +101,6 @@ protected :
 
 	bool _running;
 
-	KEY_MOD _key_modifiers;
-
 };	// class Config
 
 }	// namespace vl

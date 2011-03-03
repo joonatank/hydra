@@ -35,37 +35,6 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
-namespace
-{
-
-vl::KEY_MOD getModifier( OIS::KeyCode kc )
-{
-	// Shift
-	if( kc == OIS::KC_LSHIFT || kc == OIS::KC_RSHIFT )
-	{
-		return vl::KEY_MOD_SHIFT;
-	}
-	// Alt
-	else if( kc == OIS::KC_LMENU || kc == OIS::KC_RMENU )
-	{
-		return vl::KEY_MOD_META;
-	}
-	// Control
-	else if( kc == OIS::KC_RCONTROL || kc == OIS::KC_LCONTROL )
-	{
-		return vl::KEY_MOD_CTRL;
-	}
-	// Windows
-	else if( kc == OIS::KC_LWIN || kc == OIS::KC_RWIN )
-	{
-		return vl::KEY_MOD_SUPER;
-	}
-
-	return vl::KEY_MOD_NONE;
-}
-
-}
-
 vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	: _game_manager( new vl::GameManager )
 	, _settings(settings)
@@ -73,7 +42,6 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _gui(0)
 	, _running(true)
-	, _key_modifiers(KEY_MOD_NONE)
 {
 	std::cout << "vl::Config::Config" << std::endl;
 	assert( _env );
@@ -552,27 +520,7 @@ vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
-	if( getModifier(kc) != KEY_MOD_NONE )
-	{
-		// TODO this needs to release any event without the added modifier
-		// is this even possible?
-
-		// Add modifiers
-		_key_modifiers = (KEY_MOD)(_key_modifiers | getModifier(kc));
-	}
-
-	// Modifiers can also be used as event triggers.
-
-	// Check if the there is a trigger for this event
-	if( _game_manager->getEventManager()->hasKeyPressedTrigger( kc, _key_modifiers ) )
-	{
-		_game_manager->getEventManager()->getKeyPressedTrigger( kc, _key_modifiers )->update();
-	}
-	// Try without modifiers if no event existed
-	else if( _game_manager->getEventManager()->hasKeyPressedTrigger(kc) )
-	{
-		_game_manager->getEventManager()->getKeyPressedTrigger(kc)->update();
-	}
+	_game_manager->getEventManager()->updateKeyPressedTrigger(kc);
 
 	return true;
 }
@@ -582,41 +530,7 @@ vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
-	// TODO if modifier is removed we should release the event with modifiers
-	if( getModifier(kc) != KEY_MOD_NONE )
-	{
-		// TODO this should release all the events with this modifier
-		// needs a list of trigger events with this particular modifier
-		// so that they can be released
-		// FIXME it is not possible with our current event system.
-		// We have no knowledge of the event states that particular keys or what
-		// not are. So it can not be done.
-
-		// Remove modifiers
-		// Negate the modifiers, this will produce only once if none of them is released
-		// and zero to the one that has been released. So and will produce all the once
-		// not released.
-		_key_modifiers = (KEY_MOD)(_key_modifiers & (~getModifier(kc)));
-
-		// TODO This needs to replace the released events with ones that
-		// don't have the modifier
-	}
-
-	// Modifiers can also be used as event triggers.
-
-	// Check if the there is a trigger for this event
-	// TODO we need to check all the different modifiers also, not just
-	// for the exact match
-	if( _game_manager->getEventManager()->hasKeyReleasedTrigger( kc, _key_modifiers ) )
-	{
-		_game_manager->getEventManager()->getKeyReleasedTrigger( kc, _key_modifiers )->update();
-	}
-	// Try without modifiers if no event existed
-	else if( _game_manager->getEventManager()->hasKeyReleasedTrigger(kc) )
-	{
-		_game_manager->getEventManager()->getKeyReleasedTrigger(kc)->update();
-	}
-
+	_game_manager->getEventManager()->updateKeyReleasedTrigger(kc);
 	return true;
 }
 
