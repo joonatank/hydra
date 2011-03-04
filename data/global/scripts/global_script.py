@@ -76,6 +76,7 @@ def addMoveSelection() :
 	# Create the real action
 	trans_action = MoveSelectionAction.create()
 	trans_action.scene = game.scene
+	trans_action.local = False
 
 	# Add the real action to the proxy
 	trans_action_proxy.action = trans_action

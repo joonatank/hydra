@@ -346,6 +346,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<MoveAction, boost::noncopyable, python::bases<BasicAction> >("MoveAction", python::no_init )
 		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
 		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
+		.add_property("local", &MoveAction::getLocal, &MoveAction::setLocal )
 	;
 
 	python::class_<MoveNodeAction, boost::noncopyable, python::bases<MoveAction> >("MoveNodeAction", python::no_init )

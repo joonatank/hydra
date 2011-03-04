@@ -42,6 +42,12 @@ public :
 	double getSpeed( void ) const
 	{ return _speed; }
 
+	void setLocal( bool local )
+	{ _local = local; }
+
+	bool getLocal( void ) const
+	{ return _local; }
+
 	/// Set the angular speed of the object in radians per second
 	void setAngularSpeed( Ogre::Radian const &speed )
 	{ _angular_speed = speed; }
@@ -57,8 +63,8 @@ public :
 
 /// Private virtual methods
 private :
-	virtual void move(Ogre::Vector3 const &v) = 0;
-	virtual void rotate(Ogre::Quaternion const &v) = 0;
+	virtual void move(Ogre::Vector3 const &v, bool local) = 0;
+	virtual void rotate(Ogre::Quaternion const &v, bool local) = 0;
 
 /// Data
 protected :
@@ -68,6 +74,8 @@ protected :
 
 	double _speed;
 	Ogre::Radian _angular_speed;
+
+	bool _local;
 
 	Ogre::Timer _clock;
 };
@@ -91,8 +99,8 @@ public :
 
 /// Private virtual methods
 private :
-	virtual void move(Ogre::Vector3 const &v);
-	virtual void rotate(Ogre::Quaternion const &q);
+	virtual void move(Ogre::Vector3 const &v, bool local);
+	virtual void rotate(Ogre::Quaternion const &q, bool local);
 
 /// Data
 private :
@@ -119,8 +127,8 @@ public :
 
 /// Private virtual methods
 private :
-	virtual void move(Ogre::Vector3 const &v);
-	virtual void rotate(Ogre::Quaternion const &q);
+	virtual void move(Ogre::Vector3 const &v, bool local);
+	virtual void rotate(Ogre::Quaternion const &q, bool local);
 
 /// Data
 private :
