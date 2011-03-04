@@ -111,8 +111,8 @@ include_directories( SYSTEM
 	${CEGUI_INCLUDE_DIR}/CEGUI
 	)
 
-# Libraries that eqOgre library depends on
-set( EQOGRE_DEB_LIBS
+# Libraries that Hydra library depends on
+set( HYDRA_DEB_LIBS
 	${OPENGL_LIBRARIES}
 	${Ogre_LIBRARY}
 	${VRPN_LIBRARY}
@@ -131,7 +131,7 @@ set( EQOGRE_DEB_LIBS
 	)
 
 # Libraries used to build project binaries
-set( eqOgre_LIBRARY eqOgre )
+set( HYDRA_LIBRARIES Hydra )
 
 # Add Boost library dir because Equalizer uses relative paths to boost libs
 # Linking to Equalizer will fail without it.

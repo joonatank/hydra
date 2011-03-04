@@ -35,6 +35,7 @@ set( SOURCES
 	distrib_settings.cpp
 	program_options.cpp
 	stats.cpp
+	logger.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -85,6 +86,7 @@ set( HEADERS
 	event_manager.hpp
 	keycode.hpp
 	session.hpp
+	logger.hpp
 	distrib_resource_manager.hpp
 	distrib_settings.hpp
 	program_options.hpp
@@ -103,9 +105,9 @@ set( HEADERS
 	distributed.hpp
 	)
 
-add_library( eqOgre ${SOURCES} ${HEADERS} )
+add_library( Hydra ${SOURCES} ${HEADERS} )
 
-target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )
+target_link_libraries( Hydra ${HYDRA_DEB_LIBS} )
 
 #install
 # TODO this is here for test only the filestructure is not preserved by this

@@ -1,9 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
  *
- *	Demo executable
- *	Supports loading the settings
- *	Supports listening to a port
  */
 
 // Necessary for vl::exceptions
@@ -20,6 +17,8 @@
 
 #include "settings.hpp"
 
+#include "logger.hpp"
+
 #include <OGRE/OgreException.h>
 
 int main( const int argc, char** argv )
@@ -32,13 +31,11 @@ int main( const int argc, char** argv )
 		vl::Settings settings;
 		if( options.master() )
 		{
-			std::cout << "Requested master configuration." << std::endl;
 			env = vl::getMasterSettings(options);
 			settings = vl::getProjectSettings(options);
 		}
 		else
 		{
-			std::cout << "Requested slave configuration." << std::endl;
 			env = vl::getSlaveSettings(options);
 		}
 

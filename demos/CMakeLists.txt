@@ -14,15 +14,15 @@ project( "demos" CXX )
 cmake_minimum_required(VERSION 2.6)
 
 # Copy configs
-copy_start_scripts( renderer
+copy_start_scripts( hydra
 	ogre_project/ogre.prj
 	"ogre" )
 
-copy_start_scripts( renderer
+copy_start_scripts( hydra
 	tracking_test_project/tracking.prj
 	tracking )
 
-copy_start_scripts( renderer
+copy_start_scripts( hydra
 	large_test_project/large_test.prj
 	large_test )
 
@@ -40,11 +40,9 @@ target_link_libraries( fake_tracking_server
 	)
 
 
-add_executable( renderer
-	listening_client.cpp
-	)
+add_executable( hydra hydra.cpp )
 
-target_link_libraries( renderer ${eqOgre_LIBRARY} )
+target_link_libraries( hydra ${HYDRA_LIBRARIES} )
 
 add_executable( angles_to_quaternion
 	angles_to_quaternion.cpp
@@ -54,4 +52,4 @@ target_link_libraries( angles_to_quaternion ${Ogre_LIBRARY} )
 
 
 # install
-install( TARGETS renderer fake_tracking_server DESTINATION ./ )
+# install( TARGETS renderer fake_tracking_server DESTINATION ./ )
