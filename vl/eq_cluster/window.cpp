@@ -197,17 +197,31 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 	{
 		// TODO should check if GUI window is active
 		// TODO this might need translation for the key codes
-		CEGUI::System::getSingleton().injectKeyUp(key.key);
-// 		CEGUI::System::getSingleton().injectChar(key.text);
+		switch( key.key )
+		{
+			// Keys that go to the Application always, used to control the GUI
+			// TODO should be configurable from python script
+			// and should match the one used there
+			case OIS::KC_ESCAPE :
+				break;
+			case OIS::KC_GRAVE :
+				break;
+			case OIS::KC_F2 :
+				break;
+			case OIS::KC_F10 :
+				break;
+			default :
+				CEGUI::System::getSingleton().injectKeyUp(key.key);
+// 				CEGUI::System::getSingleton().injectChar(key.text);
+				return true;
+		}
 	}
-	else
-	{
-		vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
-		// TODO add support for the device ID from where the event originated
-		vl::cluster::ByteStream stream = data.getStream();
-		stream << key;
-		_sendEvent( data );
-	}
+
+	vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << key;
+	_sendEvent( data );
 
 	return true;
 }
