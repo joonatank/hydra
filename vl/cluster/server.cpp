@@ -21,16 +21,7 @@ vl::cluster::Server::Server( uint16_t const port )
 
 
 vl::cluster::Server::~Server()
-{
-	std::cout << "vl::cluster::Server::~Server" << std::endl;
-
-	ClientList::iterator iter;
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{
-		// TODO replace assertion with error reporting
-		assert( iter->state == CS_UNDEFINED || iter->state == CS_SHUTDOWN );
-	}
-}
+{}
 
 void
 vl::cluster::Server::shutdown( void )
