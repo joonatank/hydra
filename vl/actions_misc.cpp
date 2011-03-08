@@ -43,6 +43,27 @@ vl::ReloadScene::execute( void )
 	data->reloadScene();
 }
 
+void 
+vl::AddToSelection::execute( void )
+{
+	if( !data || !_node )
+	{
+		BOOST_THROW_EXCEPTION( vl::null_pointer() ); 
+	}
+
+	data->addToSelection(_node);
+}
+
+void 
+vl::RemoveFromSelection::execute( void )
+{
+	if( !data || !_node )
+	{
+		BOOST_THROW_EXCEPTION( vl::null_pointer() ); 
+	}
+
+	data->removeFromSelection(_node);
+}
 
 /// -------- ToggleMusic ------------
 void

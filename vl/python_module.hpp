@@ -243,6 +243,20 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
+	python::class_<BufferActionProxy, boost::noncopyable, python::bases<BasicAction> >("BufferActionProxy", python::no_init )
+		.def("add_action", &BufferActionProxy::addAction)
+		.def("rem_action", &BufferActionProxy::remAction)
+		.def("get_action", python::make_function( &BufferActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ) )
+		.def("create", &BufferActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<GroupActionProxy, boost::noncopyable, python::bases<BasicAction> >("GroupActionProxy", python::no_init )
+		.def("add_action", &GroupActionProxy::addAction)
+		.def("rem_action", &GroupActionProxy::remAction)
+		.def("create", &GroupActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
 
 	python::class_<TimerActionProxy, boost::noncopyable, python::bases<BasicAction> >("TimerActionProxy", python::no_init )
 		.add_property("action", python::make_function( &TimerActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TimerActionProxy::setAction )
@@ -291,6 +305,17 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
+	python::class_<AddToSelection, boost::noncopyable, python::bases<SceneManagerAction> >("AddToSelection", python::no_init )
+		.add_property("scene_node", python::make_function( &AddToSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &AddToSelection::setSceneNode )		
+		.def("create",&AddToSelection::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<RemoveFromSelection, boost::noncopyable, python::bases<SceneManagerAction> >("RemoveFromSelection", python::no_init )
+		.add_property("scene_node", python::make_function( &RemoveFromSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &RemoveFromSelection::setSceneNode )		
+		.def("create",&RemoveFromSelection::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
 
 	python::class_<PlayerAction, boost::noncopyable, python::bases<BasicAction> >("PlayerAction", python::no_init )
 		.def_readwrite("player", &PlayerAction::data )

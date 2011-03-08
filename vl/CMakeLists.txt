@@ -24,6 +24,7 @@ set( SOURCES
 	game_manager.cpp
 	player.cpp
 	dotscene_loader.cpp
+	action.cpp
 	actions_misc.cpp
 	actions_transform.cpp
 	scene_manager.cpp

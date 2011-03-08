@@ -124,6 +124,55 @@ public :
 
 };
 
+class AddToSelection : public SceneManagerAction
+{
+public :
+	AddToSelection( void )
+		: _node(0)
+	{}
+
+	virtual void execute( void );
+
+	virtual std::string getTypeName( void ) const
+	{ return "AddToSelection"; }
+
+	static AddToSelection *create( void )
+	{ return new AddToSelection; }
+
+	void setSceneNode(SceneNodePtr node)
+	{ _node = node; }
+
+	SceneNodePtr getSceneNode(void)
+	{ return _node; }
+
+private :
+	SceneNodePtr _node;
+};
+
+class RemoveFromSelection : public SceneManagerAction
+{
+public :
+	RemoveFromSelection( void )
+		: _node(0)
+	{}
+
+	virtual void execute( void );
+
+	virtual std::string getTypeName( void ) const
+	{ return "RemoveFromSelection"; }
+
+	static RemoveFromSelection *create( void )
+	{ return new RemoveFromSelection; }
+
+	void setSceneNode(SceneNodePtr node)
+	{ _node = node; }
+
+	SceneNodePtr getSceneNode(void)
+	{ return _node; }
+
+private :
+	SceneNodePtr _node;
+};
 
 class ToggleMusic : public GameAction
 {

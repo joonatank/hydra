@@ -1,5 +1,6 @@
-/**	Joonatan Kuosa
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-03
+ *	@file action.cpp
  *
  *	Event Handling Action class
  */
@@ -76,21 +77,7 @@ public :
 	BasicActionPtr getActionOff( void )
 	{ return _action_off; }
 
-	void execute( void )
-	{
-		// It's not a real problem if we only have one action but the toggle
-		// will not work correctly till we have the other one
-		if( _state && _action_off )
-		{
-			_action_off->execute();
-			_state = !_state;
-		}
-		else if( !_state && _action_on )
-		{
-			_action_on->execute();
-			_state = !_state;
-		}
-	}
+	void execute( void );
 
 	static ToggleActionProxy *create( void )
 	{ return new ToggleActionProxy; }
@@ -105,6 +92,67 @@ private :
 
 };	// class ToggleActionProxy
 
+/** @class BufferActionProxy
+ *	@brief Ring buffer that executes the next action in the buffer
+ */
+class BufferActionProxy : public BasicAction
+{
+public :
+	BufferActionProxy( void )
+		: _index(0)
+	{}
+
+	void execute( void );
+
+	void addAction( BasicActionPtr action )
+	{
+		_buffer.push_back(action);
+	}
+
+	void remAction( BasicActionPtr action );
+
+	BasicActionPtr getAction( size_t index );
+
+	static BufferActionProxy *create( void )
+	{ return new BufferActionProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "BufferActionProxy"; }
+
+private :
+	std::vector<BasicActionPtr> _buffer;
+	size_t _index;
+
+};	// class BufferActionProxy
+
+/** @class GroupActionProxy
+ *	@brief Groups multiple actions together so that they are executed when 
+ *	ever the group is
+ */
+class GroupActionProxy : public BasicAction
+{
+public :
+	GroupActionProxy( void ) {}
+
+	void execute( void );
+
+	void addAction( BasicActionPtr action )
+	{
+		_actions.push_back(action);
+	}
+
+	void remAction( BasicActionPtr action );
+
+	static GroupActionProxy *create( void )
+	{ return new GroupActionProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "GroupActionProxy"; }
+
+private :
+	std::vector<BasicActionPtr> _actions;
+
+};	// GroupActionProxy
 
 /// Action proxy with a timer and time limit
 /// Depending on wether the enough time has passed since last activation
