@@ -58,11 +58,11 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 {
 	assert( _pipe );
 	std::string msg = "vl::Window::Window : " + getName();
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 
-	_createOgreWindow( winConf );
+	_createOgreWindow(winConf);
 	_createInputHandling();
 
 	// If the channel has a name we try to find matching wall
@@ -97,14 +97,14 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 vl::Window::~Window( void )
 {
 	std::string msg("vl::Window::~Window");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
 	msg = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(msg);
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	if( _input_manager )
 	{
 		msg = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(msg);
+		Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
         OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
@@ -282,28 +282,32 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::onNewClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onNewClicked" << std::endl;
+	std::string msg("vl::Window::onNewClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onOpenClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onOpenClicked" << std::endl;
+	std::string msg("vl::Window::onOpenClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onSaveClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onSaveClicked" << std::endl;
+	std::string msg("vl::Window::onSaveClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onQuitClicked" << std::endl;
+	std::string msg("vl::Window::onQuitClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	getPipe()->sendCommand( "quit()" );
 
 	return true;
@@ -312,21 +316,24 @@ vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 bool
 vl::Window::onResetClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onResetClicked" << std::endl;
+	std::string msg("vl::Window::onResetClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onImportSceneClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onImportSceneClicked" << std::endl;
+	std::string msg("vl::Window::onImportSceneClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onReloadScenesClicked" << std::endl;
+	std::string msg("vl::Window::onReloadScenesClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
@@ -334,50 +341,54 @@ vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
 bool
 vl::Window::onNewScriptClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onNewScriptClicked" << std::endl;
+	std::string msg("vl::Window::onNewScriptClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onAddScriptClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onAddScriptClicked" << std::endl;
+	std::string msg("vl::Window::onAddScriptClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onReloadScriptsClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onReloadScriptsClicked" << std::endl;
+	std::string msg("vl::Window::onReloadScriptsClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowAxisChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowAxisChanged" << std::endl;
+	std::string msg("vl::Window::onShowAxisChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowNamesChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowNamesChanged" << std::endl;
+	std::string msg("vl::Window::onShowNamesChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowJointsChanged" << std::endl;
+	std::string msg("vl::Window::onShowJointsChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onConsoleTextAccepted" << std::endl;
-
 	CEGUI::Window *console = getPipe()->getConsole();
 	assert( console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
@@ -385,12 +396,19 @@ vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
 	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( console->getChild("console/output") );
 	assert( output );
 
+	// TODO add support for time
 	std::string command( input->getText().c_str() );
 	input->setText("");
 	CEGUI::ListboxItem *item = new CEGUI::ListboxTextItem(CEGUI::String(command));
-	output->addRow(item, 1);
+	CEGUI::uint row = output->addRow(item, 2);
+
+	std::stringstream ss;
+	ss << row;
+	item = new CEGUI::ListboxTextItem(ss.str());
+	output->setItem(item, 0, row);
 
 	getPipe()->sendCommand(command);
+
 	return true;
 }
 
@@ -429,7 +447,7 @@ void
 vl::Window::createGUIWindow(void )
 {
 	std::string message = "vl::Window::createGUIWindow";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 }
 
 /// ------------------------------- Protected ----------------------------------

@@ -10,6 +10,15 @@
 #include <streambuf>
 #include <sstream>
 
+#include <iosfwd>							// streamsize
+#include <boost/iostreams/categories.hpp>	// sink_tag
+#include <boost/iostreams/concepts.hpp>		// sink
+#include <boost/iostreams/stream.hpp>
+
+#include <vector>
+
+namespace io = boost::iostreams;
+
 namespace vl
 {
 
@@ -18,6 +27,45 @@ enum LOG_TYPE
 	LOG_NONE,
 	LOG_OUT,
 	LOG_ERR,
+};
+
+struct LogMessage
+{
+LogMessage( LOG_TYPE ty = LOG_NONE, double tim = 0, std::string const &msg = std::string() )
+	: type(ty), time(tim), message(msg)
+{}
+
+LOG_TYPE type;
+double time;
+std::string message;
+
+};	// class LogMessage
+
+inline std::ostream &
+operator<<(std::ostream &os, LogMessage const &msg)
+{
+	os << msg.type << " " << msg.time << "s " << msg.message;
+	return os;
+}
+
+class Logger;
+
+class sink : public boost::iostreams::sink
+{
+public :
+	sink( Logger &logger, LOG_TYPE type );
+
+	std::streamsize write(const char* s, std::streamsize n);
+
+	LOG_TYPE getType( void ) const
+	{ return _type; }
+
+	Logger &getLogger( void )
+	{ return _logger; }
+
+private :
+	Logger &_logger;
+	LOG_TYPE _type;
 };
 
 class Logger
@@ -40,11 +88,15 @@ public :
 	void setErrorFile( std::string const &filename )
 	{ _error_filename = filename; }
 
-	std::stringstream &cout( void )
-	{ return _cout_ss; }
+	void logMessage( LOG_TYPE type, std::string const &str );
 
-	std::stringstream &cerr( void )
-	{ return _cerr_ss; }
+	bool newMessages(void) const
+	{ return !_messages.empty(); }
+
+	size_t nMessages(void) const
+	{ return _messages.size(); }
+
+	LogMessage popMessage(void);
 
 	// TODO separate cout and cerr for python
 
@@ -54,20 +106,15 @@ public :
 private :
 	bool _verbose;
 
-	// TODO add endpoints for output
-	std::streambuf *_cout_endpoint;
-	std::streambuf *_cerr_endpoint;
-
-	// Where the output is stored when we do not have endpoints
-	std::stringstream _cout_ss;
-	std::stringstream _cerr_ss;
-
 	// old streambuffers so we can restore them later
 	std::streambuf *_old_cout;
 	std::streambuf *_old_cerr;
 
 	std::string _output_filename;
 	std::string _error_filename;
+
+	std::vector<LogMessage> _messages;
+	std::vector< io::stream_buffer<sink> *> _streams;
 
 };	// namespace Logger
 

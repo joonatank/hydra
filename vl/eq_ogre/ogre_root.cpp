@@ -27,8 +27,14 @@ vl::ogre::Root::Root( std::string const &log_file_path, bool verbose )
 		_log_manager = new Ogre::LogManager();
 
 		// Create the log
+		// TODO remove file logging, we are using our own system that redirects std::cerr to a file
 		Ogre::Log *log = Ogre::LogManager::getSingleton()
-			.createLog( log_file_path, true, verbose );
+			.createLog(log_file_path, true, true);
+		if( verbose )
+		{
+			Ogre::LogManager::getSingleton().setLogDetail(Ogre::LL_BOREME);
+		}
+
 		log->setTimeStampEnabled( true );
 		std::cout << "Ogre log file path = " << log_file_path << std::endl;
 
@@ -176,8 +182,8 @@ Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, Ogre::NameValuePairList const &params )
 {
-	std::string str( "vl::ogre::Root::creatingWindow", Ogre::LML_TRIVIAL );
-	Ogre::LogManager::getSingleton().logMessage( str );
+	std::string str("vl::ogre::Root::creatingWindow");
+	Ogre::LogManager::getSingleton().logMessage(str, Ogre::LML_TRIVIAL);
 
 	if( !_ogre_root )
 	{ return 0; }

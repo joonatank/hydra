@@ -703,31 +703,54 @@ vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
 void
 vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
 {
-	LOG_TYPE type;
-	msg->read(type);
-	size_t size;
-	msg->read(size);
-	std::vector<char> buf(size);
-	msg->read(&buf[0], size);
+	assert( msg->getType() == vl::cluster::MSG_PRINT );
+	size_t msgs;
+	msg->read(msgs);
+	while(msgs > 0)
+	{
+		LOG_TYPE type;
+		msg->read(type);
+		double time;
+		msg->read(time);
+		size_t size;
+		msg->read(size);
+		std::vector<char> buf(size);
+		msg->read(&buf[0], size);
 
-	assert(_console);
-	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
-	CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(CEGUI::String(&buf[0]));
-	// Save data type for filtering
-	item->setUserData( (void *)(type) );
-	if( type == LOG_OUT )
-	{
-		item->setTextColours(CEGUI::colour(1, 0, 0));
+		assert(_console);
+		CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
+
+		// Add time
+		std::stringstream ss;
+		ss << time;
+		CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(ss.str());
+		CEGUI::uint row = output->addRow(item, 1);
+
+		// Set line number
+		ss.str("");
+		ss << row;
+		item = new CEGUI::ListboxTextItem(ss.str());
+		output->setItem(item, 0, row);
+
+		// Add the text field
+		item = new CEGUI::ListboxTextItem(CEGUI::String(&buf[0]));
+		// Save data type for filtering
+		item->setUserData( (void *)(type) );
+		if( type == LOG_OUT )
+		{
+			item->setTextColours(CEGUI::colour(1, 0, 0));
+		}
+		else if( type == LOG_ERR )
+		{
+			item->setTextColours(CEGUI::colour(0, 1, 0));
+		}
+		else
+		{
+			item->setTextColours(CEGUI::colour(0, 0, 1));
+		}
+		output->setItem(item, 2, row);
+		msgs--;
 	}
-	else if( type == LOG_ERR )
-	{
-		item->setTextColours(CEGUI::colour(0, 1, 0));
-	}
-	else
-	{
-		item->setTextColours(CEGUI::colour(0, 0, 1));
-	}
-	output->addRow(item, 1);
 }
 
 void

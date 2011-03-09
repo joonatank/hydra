@@ -281,22 +281,18 @@ vl::Config::_updateServer( void )
 	// Send logs
 	if( _server->wantsPrintMessages() )
 	{
-		if( !_logger.cerr().str().empty() )
+		if( _logger.newMessages() )
 		{
 			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
-			msg.write(vl::LOG_ERR);
-			msg.write(_logger.cerr().str().size()+1);
-			msg.write(_logger.cerr().str().c_str(), _logger.cerr().str().size()+1);
-			_logger.cerr().str("");
-			_server->sendPrintMessage(msg);
-		}
-		if( !_logger.cout().str().empty() )
-		{
-			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
-			msg.write(vl::LOG_OUT);
-			msg.write(_logger.cout().str().size()+1);
-			msg.write(_logger.cout().str().c_str(), _logger.cout().str().size()+1);
-			_logger.cout().str("");
+			msg.write(_logger.nMessages());
+			while( _logger.newMessages() )
+			{
+				LogMessage str = _logger.popMessage();
+				msg.write(str.type);
+				msg.write(str.time);
+				msg.write(str.message.size()+1);
+				msg.write(str.message.c_str(), str.message.size()+1);
+			}
 			_server->sendPrintMessage(msg);
 		}
 	}
