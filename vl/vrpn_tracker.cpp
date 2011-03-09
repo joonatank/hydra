@@ -92,8 +92,6 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		{
 			vl::Transform trans = vl::createTransform( t.pos, t.quat );
 			trans = trans * _transform;
-			std::cerr << "updating sensor : " << sensor->getTrigger()->getName() 
-				<< " transform = " << trans << std::endl << std::endl;
 			sensor->update( trans );
 		}
 	}
