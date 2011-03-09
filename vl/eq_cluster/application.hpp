@@ -17,6 +17,7 @@
 #include "typedefs.hpp"
 // Necessary for vl::ProgramOptions
 #include "program_options.hpp"
+#include "logger.hpp"
 
 namespace vl
 {
@@ -35,7 +36,7 @@ public:
 	/// Will create a rendering thread and start it running.
 	/// If this is the master node will also initialise the master node
 	/// and send messages to the rendering threads.
-	Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings );
+	Application( vl::EnvSettingsRefPtr env, vl::Settings const &, vl::Logger &logger );
 
 	virtual ~Application( void );
 

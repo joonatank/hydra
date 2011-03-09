@@ -17,6 +17,9 @@
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
 
+#include "gui/window.hpp"
+#include "logger.hpp"
+
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// GUI
@@ -28,7 +31,6 @@
 #include <CEGUI/CEGUIDefaultResourceProvider.h>
 #include <CEGUI/CEGUIImageset.h>
 #include <CEGUI/CEGUIScheme.h>
-#include <gui/window.hpp>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -314,7 +316,11 @@ vl::Pipe::_createGUI(void )
 
 	// Load default data files used for the GUI
 	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-8.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-10.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-9.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-7.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-6.font" );
 	CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook", "MouseArrow" );
 
 	// Create the GUI windows
@@ -340,7 +346,7 @@ vl::Pipe::_createGUI(void )
 
 	/// Subscripe to events
 	std::cout << "Subcribing to events." << std::endl;
-	CEGUI::Editbox *output = static_cast<CEGUI::Editbox *>( _console->getChild("console/output") );
+	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
 	assert(output);
 
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
@@ -399,6 +405,9 @@ vl::Pipe::_createGUI(void )
 	checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showJoints") );
 	assert( checkBox );
 	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowJointsChanged, win));
+
+	// Request output updates for the console
+	_client->registerForOutput();
 
 	// TODO support for multiple windows
 	// at the moment every window will get the same GUI window layout
@@ -503,7 +512,6 @@ vl::Pipe::_handleMessages( void )
 	while( _client->messages() )
 	{
 		vl::cluster::Message *msg = _client->popMessage();
-		// TODO process the message
 		_handleMessage(msg);
 		delete msg;
 	}
@@ -592,6 +600,12 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		{
 			_client->sendAck( vl::cluster::MSG_SWAP );
 			_swap();
+		}
+		break;
+
+		case vl::cluster::MSG_PRINT :
+		{
+			_handlePrintMsg(msg);
 		}
 		break;
 
@@ -684,6 +698,36 @@ vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
 		// Pushing back will create copies which is unnecessary
 		_objects.push_back(data);
 	}
+}
+
+void
+vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
+{
+	LOG_TYPE type;
+	msg->read(type);
+	size_t size;
+	msg->read(size);
+	std::vector<char> buf(size);
+	msg->read(&buf[0], size);
+
+	assert(_console);
+	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
+	CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(CEGUI::String(&buf[0]));
+	// Save data type for filtering
+	item->setUserData( (void *)(type) );
+	if( type == LOG_OUT )
+	{
+		item->setTextColours(CEGUI::colour(1, 0, 0));
+	}
+	else if( type == LOG_ERR )
+	{
+		item->setTextColours(CEGUI::colour(0, 1, 0));
+	}
+	else
+	{
+		item->setTextColours(CEGUI::colour(0, 0, 1));
+	}
+	output->addRow(item, 1);
 }
 
 void

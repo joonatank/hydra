@@ -116,6 +116,10 @@ vl::cluster::Server::receiveMessages( void )
 			}
 			break;
 
+			case vl::cluster::MSG_REG_OUTPUT :
+				_output_receivers.push_back( ClientInfo(remote_endpoint) );
+				break;
+
 			default :
 			{
 				std::cout << "vl::cluster::Server::mainloop : "
@@ -202,6 +206,28 @@ vl::cluster::Server::sendInit( vl::cluster::Message const &msg )
 	_msg_init.clear();
 	msg.dump(_msg_init);
 }
+
+void
+vl::cluster::Server::sendPrintMessage( vl::cluster::Message const & msg )
+{
+	assert( msg.getType() == MSG_PRINT );
+	assert( !_output_receivers.empty() );
+
+	std::vector<char> buf;
+	msg.dump(buf);
+	ClientList::iterator iter;
+	for( iter = _output_receivers.begin(); iter != _output_receivers.end(); ++iter )
+	{
+		_socket.send_to( boost::asio::buffer(buf), iter->address );
+	}
+}
+
+bool
+vl::cluster::Server::wantsPrintMessages( void )
+{
+	return !_output_receivers.empty();
+}
+
 
 bool
 vl::cluster::Server::needsInit( void ) const

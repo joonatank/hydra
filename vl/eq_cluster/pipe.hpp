@@ -117,6 +117,7 @@ protected :
 	void _handleMessage( vl::cluster::Message *msg );
 	void _handleCreateMsg( vl::cluster::Message *msg );
 	void _handleUpdateMsg( vl::cluster::Message *msg );
+	void _handlePrintMsg( vl::cluster::Message *msg );
 
 	/// Distribution helpers
 	/// Syncs to the master copy stored when an Update message was received

@@ -13,8 +13,9 @@
 
 #include "game_manager.hpp"
 
-#include "distrib_resource_manager.hpp"
+// #include "distrib_resource_manager.hpp"
 #include "pipe.hpp"
+#include "logger.hpp"
 
 /// -------------------------------- Global ----------------------------------
 vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
@@ -190,7 +191,7 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings )
+vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger )
 	: _config(0)
 	, _pipe_thread(0)
 {
@@ -198,7 +199,7 @@ vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &set
 
 	if( env->isMaster() )
 	{
-		_config = new vl::Config( settings, env );
+		_config = new vl::Config( settings, env, logger );
 		// NOTE This needs to be called before creating the Pipe thread
 		// probably because the Server the Pipe thread connects to has to be
 		// created before connecting to it.

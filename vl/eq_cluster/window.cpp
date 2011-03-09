@@ -18,7 +18,8 @@
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
 #include <CEGUI/elements/CEGUIEditbox.h>
-#include <CEGUI/elements/CEGUIMultiLineEditbox.h>
+#include <CEGUI/elements/CEGUIMultiColumnList.h>
+#include <CEGUI/elements/CEGUIListboxTextItem.h>
 
 namespace
 {
@@ -381,13 +382,13 @@ vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
 	assert( console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
 	assert( input );
-	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( console->getChild("console/output") );
+	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( console->getChild("console/output") );
 	assert( output );
 
 	std::string command( input->getText().c_str() );
-	CEGUI::String text = output->getText() + '\n' + command;
-	output->setText(text);
 	input->setText("");
+	CEGUI::ListboxItem *item = new CEGUI::ListboxTextItem(CEGUI::String(command));
+	output->addRow(item, 1);
 
 	getPipe()->sendCommand(command);
 	return true;

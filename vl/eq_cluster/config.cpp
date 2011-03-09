@@ -66,7 +66,7 @@ vl::KEY_MOD getModifier( OIS::KeyCode kc )
 
 }
 
-vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
+vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl::Logger &logger )
 	: _game_manager( new vl::GameManager )
 	, _settings(settings)
 	, _env(env)
@@ -74,6 +74,7 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
 	, _gui(0)
 	, _running(true)
 	, _key_modifiers(MOD_NONE)
+	, _logger(logger)
 {
 	std::cout << "vl::Config::Config" << std::endl;
 	assert( _env );
@@ -202,12 +203,14 @@ vl::Config::render( void )
 
 	// Print info every 10 seconds
 	// @todo time limit and wether or not to print anything should be configurable
+	/*
 	if( _stats_timer.getMilliseconds() > 10e3 )
 	{
 		_stats.print();
 		_stats.clear();
 		_stats_timer.reset();
 	}
+	*/
 }
 
 /// ------------ Private -------------
@@ -273,6 +276,29 @@ vl::Config::_updateServer( void )
 		}
 
 		_server->sendInit( msg );
+	}
+
+	// Send logs
+	if( _server->wantsPrintMessages() )
+	{
+		if( !_logger.cerr().str().empty() )
+		{
+			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
+			msg.write(vl::LOG_ERR);
+			msg.write(_logger.cerr().str().size()+1);
+			msg.write(_logger.cerr().str().c_str(), _logger.cerr().str().size()+1);
+			_logger.cerr().str("");
+			_server->sendPrintMessage(msg);
+		}
+		if( !_logger.cout().str().empty() )
+		{
+			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
+			msg.write(vl::LOG_OUT);
+			msg.write(_logger.cout().str().size()+1);
+			msg.write(_logger.cout().str().c_str(), _logger.cout().str().size()+1);
+			_logger.cout().str("");
+			_server->sendPrintMessage(msg);
+		}
 	}
 }
 

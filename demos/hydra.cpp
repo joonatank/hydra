@@ -25,6 +25,7 @@ int main( const int argc, char** argv )
 {
 	try
 	{
+		vl::Logger logger;
 		vl::ProgramOptions options;
 		options.parseOptions(argc, argv);
 		vl::EnvSettingsRefPtr env;
@@ -46,7 +47,7 @@ int main( const int argc, char** argv )
 		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
-		vl::Application client( env, settings );
+		vl::Application client( env, settings, logger );
 
 		client.run();
 	}
