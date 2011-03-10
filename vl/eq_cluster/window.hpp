@@ -125,7 +125,6 @@ protected :
 
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
-	Ogre::Viewport *_viewport;
 
 	// OIS variables
 	OIS::InputManager *_input_manager;

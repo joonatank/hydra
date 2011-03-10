@@ -51,7 +51,6 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	, _pipe( parent )
 	, _channel(0)
 	, _ogre_window(0)
-	, _viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
@@ -83,15 +82,15 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
-	_channel = new vl::Channel( winConf.channel, wall, getEnvironment()->getIPD() );
-
-	_viewport = _ogre_window->addViewport( getCamera() );
+	Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
 	// Set some parameters to the viewport
 	// TODO this should be configurable
-	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
 	// This is necessary because we are using single camera and single viewport
 	// to draw to both backbuffers when using stereo.
-	_viewport->setAutoUpdated(false);
+	viewport->setAutoUpdated(false);
+
+	_channel = new vl::Channel( viewport, winConf.channel, wall, getEnvironment()->getIPD() );
 }
 
 vl::Window::~Window( void )
@@ -130,7 +129,6 @@ void
 vl::Window::setCamera( Ogre::Camera *camera )
 {
 	assert( _channel );
-	_viewport->setCamera(camera);
 	_channel->setCamera(camera);
 }
 
