@@ -33,6 +33,13 @@ enum CFG
 	REQUIRED,
 };
 
+enum LogLevel
+{
+	LL_LOW = 0,
+	LL_NORMAL = 1,
+	LL_BOREME = 2,
+};
+
 /**	@class EnvSettings
  *	@brief Settings for the environment the program is run.
  *
@@ -378,23 +385,21 @@ public :
 	double getIPD( void ) const
 	{ return _ipd; }
 
-	/**	@brief Set wether or not to output to std::cerr
-	 *	@param verbose true for printing to std::cerr, false for not
+	/**	@brief Set how much information user wants
+	 *	@param level vl::LogLevel
 	 *
 	 *	If set to true the application will print to std::cerr
 	 *	instead of or in addition to printing to log file
 	 */
-	void setVerbose( bool verbose )
-	{ _verbose = verbose; }
+	void setLogLevel( vl::LogLevel level )
+	{ _level = level; }
 
-	/**	@brief Wether we are outputing to std::cerr
-	 *	@return true if should print to std::cerr, false should not
+	/**	@brief How much information user wants
+	 *	@return
 	 *
-	 *	Does not define anything about log files, the application might
-	 *	print to log files even when set true or it might not
 	 */
-	bool getVerbose( void ) const
-	{ return _verbose; }
+	vl::LogLevel getLogLevel( void ) const
+	{ return _level; }
 
 	/**	@brief Set the directory logs are stored
 	 *	@param dir relative path to the log directory.
@@ -456,7 +461,7 @@ private :
 	// Is this structure for a slave or a master
 	bool _slave;
 
-	bool _verbose;
+	vl::LogLevel _level;
 
 	std::string _log_dir;
 

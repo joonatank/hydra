@@ -30,7 +30,6 @@ vl::Logger::Logger(void )
 	, _old_cout(std::cout.rdbuf())
 	, _old_cerr(std::cerr.rdbuf())
 	, _output_filename("temp_log_cout.txt")
-	, _error_filename("temp_log_cerr.txt")
 {
 	io::stream_buffer<sink> *s = new io::stream_buffer<sink>(*this, LOG_ERR);
 	std::cerr.rdbuf(s);
@@ -43,16 +42,6 @@ vl::Logger::Logger(void )
 
 vl::Logger::~Logger(void )
 {
-	// flush the the messages to files
-	if( newMessages() )
-	{
-		std::ofstream file( _output_filename.c_str() );
-		while( newMessages() )
-		{
-			file << popMessage();
-		}
-	}
-
 	// restore old output buffer
 	std::cout.rdbuf(_old_cout);
 	std::cerr.rdbuf(_old_cerr);
@@ -67,9 +56,18 @@ void
 vl::Logger::logMessage(vl::LOG_TYPE type, std::string const &str)
 {
 	// TODO fix the time
-	_messages.push_back( LogMessage(type, 0, str) );
+	LogMessage msg(type, 0, str);
+	_messages.push_back(msg);
 
-	// TODO should put the message to the log file
+	// Print all the logs into same file
+	if( !_output_file.is_open() )
+	{
+		_output_file.open(_output_filename.c_str());
+	}
+	_output_file << msg;
+	// Workaround for lines without end line (Ogre logger)
+	if(str.at(str.size()-1) != '\n')
+	{ _output_file << std::endl; }
 
 	// TODO if verbose is on should print the message to console (old cout, cerr)
 }

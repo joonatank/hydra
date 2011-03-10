@@ -25,9 +25,14 @@ int main( const int argc, char** argv )
 {
 	try
 	{
-		vl::Logger logger;
+		// Options need to be parsed before creating logger because logger
+		// is designed to redirect logging out of console
 		vl::ProgramOptions options;
 		options.parseOptions(argc, argv);
+
+		vl::Logger logger;
+		logger.setOutputFile(options.getOutputFile());
+
 		vl::EnvSettingsRefPtr env;
 		vl::Settings settings;
 		if( options.master() )

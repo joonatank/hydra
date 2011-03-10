@@ -3,5 +3,5 @@
 ./${PROGRAM_NAME} -e ${DEMO_DATA_PATH}/env.env\
 	-p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE}\
 	-g ${DEMO_DATA_PATH}/global/hydra.prj\
-	-v $@
+	-l 2 $@
 

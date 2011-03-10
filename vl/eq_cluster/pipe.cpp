@@ -423,7 +423,7 @@ vl::Pipe::_createOgre( void )
 	// problem is that the project name is not known at this point
 	// so we should use a tmp file and then move it.
 	std::string log_file = vl::createLogFilePath( "hydra", "ogre", "", _env->getLogDir() );
-	_root.reset( new vl::ogre::Root( log_file, _env->getVerbose() ) );
+	_root.reset( new vl::ogre::Root(_env->getLogLevel()) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }

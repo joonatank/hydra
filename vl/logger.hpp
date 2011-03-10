@@ -9,6 +9,7 @@
 
 #include <streambuf>
 #include <sstream>
+#include <fstream>
 
 #include <iosfwd>							// streamsize
 #include <boost/iostreams/categories.hpp>	// sink_tag
@@ -83,10 +84,10 @@ public :
 	{ return _verbose; }
 
 	void setOutputFile( std::string const &filename )
-	{ _output_filename = filename; }
-
-	void setErrorFile( std::string const &filename )
-	{ _error_filename = filename; }
+	{
+		_output_filename = filename;
+		// TODO should close the old file if it's open
+	}
 
 	void logMessage( LOG_TYPE type, std::string const &str );
 
@@ -111,7 +112,7 @@ private :
 	std::streambuf *_old_cerr;
 
 	std::string _output_filename;
-	std::string _error_filename;
+	std::ofstream _output_file;
 
 	std::vector<LogMessage> _messages;
 	std::vector< io::stream_buffer<sink> *> _streams;
