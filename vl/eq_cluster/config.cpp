@@ -121,7 +121,7 @@ vl::Config::init( void )
 	std::cout << "vl::Config:: updating server" << std::endl;
 	_updateServer();
 
-	_stats.logInitTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logInitTime( (double(timer.getMicroseconds()))/1e3 );
 	_stats_timer.reset();
 }
 
@@ -146,34 +146,33 @@ vl::Config::render( void )
 	// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
-	_stats.logFrameProcessingTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logFrameProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
-	_stats.logStepTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logStepTime( (double(timer.getMicroseconds()))/1e3 );
 
 	timer.reset();
 	/// Provide the updates to slaves
 	_updateServer();
-	_stats.logStepTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logStepTime( (double(timer.getMicroseconds()))/1e3 );
 
 	timer.reset();
 	/// Render the scene
-	_server->render(_stats);
-	_stats.logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
+	_server->render(_game_manager->getStats());
+	_game_manager->getStats().logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
 
 	timer.reset();
 	// TODO where the receive input messages should be?
 	_receiveEventMessages();
-	_stats.logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
-	// Print info every 10 seconds
-	// @todo time limit and wether or not to print anything should be configurable
+	// Update statistics every second
+	// @todo time limit should be configurable
 	if( _stats_timer.getMilliseconds() > 10e3 )
 	{
-		std::cout << _stats << std::endl;
-		_stats.clear();
+		_game_manager->getStats().update();
 		_stats_timer.reset();
 	}
 }

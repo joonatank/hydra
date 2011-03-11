@@ -91,6 +91,7 @@ BOOST_PYTHON_MODULE(vl)
 		// Comparison
 		.def(python::self == python::self )
 		.def(python::self != python::self )
+		.def(python::self_ns::str(python::self_ns::self))
 		;
 
 	python::class_<Ogre::Quaternion>("Quaternion", python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>() )
@@ -110,7 +111,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self * Ogre::Real() )
 		.def(python::self == python::self )
 		.def(python::self != python::self )
-		;
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 
 	// TODO these should be implemented
@@ -126,6 +128,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", python::make_function( &vl::GameManager::getGUI, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("quit", &vl::GameManager::quit)
 	;
 
@@ -134,6 +137,9 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_internal_reference<>() ), &Player::setActiveCamera )
 	;
 
+	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	// Overloads for the getSceneNode
 	// TODO const versions didn't go straight with the same return value policy
@@ -159,6 +165,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
 		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::enum_<KEY_MOD>("KEY_MOD")
@@ -183,7 +190,7 @@ BOOST_PYTHON_MODULE(vl)
 			 createKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
 		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger, hasKeyReleasedTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, python::return_value_policy<python::reference_existing_object>() )
-//		.def(python::str(python::self))
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	// TODO try the Abstract classes out by overriding them in python
@@ -199,7 +206,7 @@ BOOST_PYTHON_MODULE(vl)
 		// (might be because it's a property not a function)
 		.add_property("type", python::make_function( &Trigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
 		.def("getName", &Trigger::getName )
-//		.def(python::str(python::self))
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
@@ -228,8 +235,7 @@ BOOST_PYTHON_MODULE(vl)
 	// TODO replace by a wrapper
 	python::class_<Action, boost::noncopyable>("Action", python::no_init )
 		.add_property("type", &Action::getTypeName )
-// 		FIXME this does not work
-// 		.def(python::str(python::self))
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	// TODO needs a wrapper
@@ -274,7 +280,6 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("scene_node", python::make_function( &vl::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &vl::SetTransformation::setSceneNode )
 		.def("create",&SetTransformation::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
-//		.def("execute", python::pure_virtual(&BasicAction::execute) )
 	;
 
 	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::TransformActionTrigger> >("TrackerTrigger", python::no_init )

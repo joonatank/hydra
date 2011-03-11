@@ -22,6 +22,8 @@ public :
 
 	double getAvarage(void) const;
 
+	void updateAvarage(void);
+
 	void clear(void);
 
 	bool isValid(void) const
@@ -34,6 +36,8 @@ private :
 	std::string _text;
 
 	std::vector<double> _times;
+
+	double _avarage;
 };
 
 std::ostream & operator<<(std::ostream &os, StatElem const &elem);
@@ -89,9 +93,9 @@ public :
 	 */
 	void logInitTime( double time );
 
-	/**	@brief Clear the statistics gathered
+	/**	@brief Update the avarages and clear the current gathered values
 	 */
-	void clear( void );
+	void update(void);
 
 	friend std::ostream &operator<<(std::ostream &os, Stats const &stats);
 

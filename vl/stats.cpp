@@ -38,6 +38,7 @@ vl::operator<<(std::ostream &os, vl::StatElem const &elem)
 
 vl::StatElem::StatElem( std::string const &text )
 	: _text(text)
+	, _avarage(0)
 {}
 
 void 
@@ -49,7 +50,14 @@ vl::StatElem::addTime(double time)
 double 
 vl::StatElem::getAvarage(void) const
 {
-	return calculate_avarage(_times);
+	return _avarage;
+}
+
+void 
+vl::StatElem::updateAvarage(void)
+{
+	_avarage = calculate_avarage(_times);
+	clear();
 }
 
 void 
@@ -128,14 +136,16 @@ vl::Stats::logInitTime( double time )
 }
 
 void 
-vl::Stats::clear( void )
+vl::Stats::update(void)
 {
-	_rendering_time.clear();
-	_event_time.clear();
-	_frame_time.clear();
-	_update_time.clear();
-	_step_time.clear();
-	_init_time = 0;
+	_rendering_time.updateAvarage();
+	_event_time.updateAvarage();
+	_frame_time.updateAvarage();
+	_update_time.updateAvarage();
+	_step_time.updateAvarage();
+	_wait_update_time.updateAvarage();
+	_wait_swap_time.updateAvarage();
+	_wait_draw_time.updateAvarage();
 }
 
 std::ostream &

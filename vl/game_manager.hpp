@@ -30,6 +30,8 @@
 
 #include "gui/gui.hpp"
 
+#include "stats.hpp"
+
 // Audio
 #include <cAudio/cAudio.h>
 
@@ -63,6 +65,9 @@ public :
 	vl::gui::GUI *getGUI( void )
 	{ return _gui; }
 
+	vl::Stats &getStats(void)
+	{ return _stats; }
+
 	void toggleBackgroundSound( void );
 
 	void quit( void );
@@ -90,6 +95,8 @@ private :
 	vl::ClientsRefPtr _trackers;
 
 	vl::gui::GUI *_gui;
+
+	vl::Stats _stats;
 
 	/// Audio objects
 	cAudio::IAudioManager *_audio_manager;

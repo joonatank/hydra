@@ -16,8 +16,6 @@
 #include "cluster/server.hpp"
 // A base class for the Config
 #include "session.hpp"
-// Necessary for keeping track of statistics
-#include "stats.hpp"
 
 #include "gui/gui.hpp"
 
@@ -97,7 +95,6 @@ protected :
 	vl::gui::GUI *_gui;
 
 	Ogre::Timer _stats_timer;
-	vl::Stats _stats;
 
 	bool _running;
 
