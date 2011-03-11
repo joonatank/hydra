@@ -53,6 +53,10 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 
 		// Add a global managers i.e. this and EventManager
 		_global["game"] = python::ptr<>( game_man );
+		vl::sink &python_sink_out = *(*game_man->getLogger()->getPythonOut());
+		vl::sink &python_sink_err = *(*game_man->getLogger()->getPythonErr());
+		boost::python::import("sys").attr("stdout") = python_sink_out;
+		boost::python::import("sys").attr("stderr") = python_sink_err;
 	}
 	// Some error handling so that we can continue the application
 	catch( ... )

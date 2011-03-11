@@ -28,6 +28,8 @@ enum LOG_TYPE
 	LOG_NONE,
 	LOG_OUT,
 	LOG_ERR,
+	LOG_PY_OUT,
+	LOG_PY_ERR,
 };
 
 struct LogMessage
@@ -57,6 +59,8 @@ public :
 	sink( Logger &logger, LOG_TYPE type );
 
 	std::streamsize write(const char* s, std::streamsize n);
+
+	void write(std::string const &str);
 
 	LOG_TYPE getType( void ) const
 	{ return _type; }
@@ -88,6 +92,10 @@ public :
 		_output_filename = filename;
 		// TODO should close the old file if it's open
 	}
+
+	io::stream_buffer<sink> *getPythonOut( void );
+
+	io::stream_buffer<sink> *getPythonErr( void );
 
 	void logMessage( LOG_TYPE type, std::string const &str );
 

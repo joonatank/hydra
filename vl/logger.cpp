@@ -25,6 +25,13 @@ vl::sink::write(const char* s, std::streamsize n)
 	return n;
 }
 
+void
+vl::sink::write(std::string const &str)
+{
+	if( str != "\n" )
+	{ _logger.logMessage(_type, str); }
+}
+
 vl::Logger::Logger(void )
 	: _verbose(false)
 	, _old_cout(std::cout.rdbuf())
@@ -38,6 +45,12 @@ vl::Logger::Logger(void )
 	s = new io::stream_buffer<sink>(*this, LOG_OUT);
 	std::cout.rdbuf(s);
 	_streams.push_back(s);
+
+	s = new io::stream_buffer<sink>(*this, LOG_PY_OUT);
+	_streams.push_back(s);
+
+	s = new io::stream_buffer<sink>(*this, LOG_PY_ERR);
+	_streams.push_back(s);
 }
 
 vl::Logger::~Logger(void )
@@ -50,6 +63,34 @@ vl::Logger::~Logger(void )
 	{
 		delete _streams.at(i);
 	}
+}
+
+io::stream_buffer<vl::sink> *
+vl::Logger::getPythonOut(void)
+{
+	for( size_t i = 0; i < _streams.size(); ++i )
+	{
+		if( LOG_PY_OUT == (*_streams.at(i))->getType() )
+		{
+			return _streams.at(i);
+		}
+	}
+
+	return 0;
+}
+
+io::stream_buffer<vl::sink> *
+vl::Logger::getPythonErr(void)
+{
+	for( size_t i = 0; i < _streams.size(); ++i )
+	{
+		if( LOG_PY_ERR == (*_streams.at(i))->getType() )
+		{
+			return _streams.at(i);
+		}
+	}
+
+	return 0;
 }
 
 void

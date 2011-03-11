@@ -106,8 +106,6 @@ protected :
 
 	KEY_MOD _key_modifiers;
 
-	vl::Logger &_logger;
-
 };	// class Config
 
 }	// namespace vl

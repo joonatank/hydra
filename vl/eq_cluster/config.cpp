@@ -67,14 +67,13 @@ vl::KEY_MOD getModifier( OIS::KeyCode kc )
 }
 
 vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl::Logger &logger )
-	: _game_manager( new vl::GameManager )
+	: _game_manager( new vl::GameManager(&logger) )
 	, _settings(settings)
 	, _env(env)
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _gui(0)
 	, _running(true)
 	, _key_modifiers(MOD_NONE)
-	, _logger(logger)
 {
 	std::cout << "vl::Config::Config" << std::endl;
 	assert( _env );
@@ -281,13 +280,13 @@ vl::Config::_updateServer( void )
 	// Send logs
 	if( _server->wantsPrintMessages() )
 	{
-		if( _logger.newMessages() )
+		if( _game_manager->getLogger()->newMessages() )
 		{
 			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
-			msg.write(_logger.nMessages());
-			while( _logger.newMessages() )
+			msg.write(_game_manager->getLogger()->nMessages());
+			while( _game_manager->getLogger()->newMessages() )
 			{
-				LogMessage str = _logger.popMessage();
+				LogMessage str = _game_manager->getLogger()->popMessage();
 				msg.write(str.type);
 				msg.write(str.time);
 				msg.write(str.message.size()+1);

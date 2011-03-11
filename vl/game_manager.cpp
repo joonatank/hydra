@@ -19,16 +19,17 @@
 // Player
 #include "player.hpp"
 
-vl::GameManager::GameManager( void )
-	: _python(0),
-	  _resource_man( new vl::DistribResourceManager ),
-	  _event_man( new vl::EventManager ),
-	  _scene_manager(0),
-	  _player(0),
-	  _trackers( new vl::Clients( _event_man ) ),
-	  _audio_manager(0),
-	  _background_sound(0),
-	  _quit( false )
+vl::GameManager::GameManager( vl::Logger *logger )
+	: _python(0)
+	, _resource_man( new vl::DistribResourceManager )
+	, _event_man( new vl::EventManager )
+	, _scene_manager(0)
+	, _player(0)
+	, _trackers( new vl::Clients( _event_man ) )
+	, _audio_manager(0)
+	, _background_sound(0)
+	, _logger(logger)
+	, _quit( false )
 {
 	// Add triggers
 	// FIXME it's broken in the EventManager
