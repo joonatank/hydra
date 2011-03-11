@@ -9,6 +9,8 @@
 
 #include "message.hpp"
 
+#include <OGRE/OgreTimer.h>
+
 vl::cluster::Server::Server( uint16_t const port )
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port)), _frame(1)
 {
@@ -124,32 +126,45 @@ vl::cluster::Server::receiveMessages( void )
 // update, draw and swap and immediately send the next message when all clients
 // have responded.
 void
-vl::cluster::Server::render( void )
+vl::cluster::Server::render( vl::Stats &stats )
 {
 	// Only render if we have rendering threads
 	if( _clients.empty() )
 	{ return; }
+
+	Ogre::Timer timer;
 
 	_waitCreate();
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{ _sendCreate(*iter); }
 
+	timer.reset();
 	_waitUpdate();
 	// Send update message to all
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{ _sendUpdate(*iter); }
+	stats.logWaitUpdateTime( (double(timer.getMicroseconds()))/1e3 );
 
+	timer.reset();
 	_waitDraw();
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{ _sendDraw(iter->address); }
+	{ 
+		_sendDraw(iter->address); 
+		iter->frame = _frame;
+	}
+	stats.logWaitDrawTime( (double(timer.getMicroseconds()))/1e3 );
 
+	/*
+	timer.reset();
 	_waitSwap();
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
 		_sendSwap(iter->address);
 		iter->frame = _frame;
 	}
+	stats.logWaitSwapTime( (double(timer.getMicroseconds()))/1e3 );
+	*/
 
 	++_frame;
 }
@@ -395,7 +410,8 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 					// on the same state at this point so that they swap the same
 					// time
 					// change the state
-					iter->state = CS_DRAW;
+					//iter->state = CS_DRAW;
+					iter->state = CS_SWAP;
 				}
 				break;
 

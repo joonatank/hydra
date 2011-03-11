@@ -160,7 +160,7 @@ vl::Config::render( void )
 
 	timer.reset();
 	/// Render the scene
-	_server->render();
+	_server->render(_stats);
 	_stats.logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
 
 	timer.reset();
@@ -172,7 +172,7 @@ vl::Config::render( void )
 	// @todo time limit and wether or not to print anything should be configurable
 	if( _stats_timer.getMilliseconds() > 10e3 )
 	{
-		_stats.print();
+		std::cout << _stats << std::endl;
 		_stats.clear();
 		_stats_timer.reset();
 	}

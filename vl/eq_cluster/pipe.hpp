@@ -84,6 +84,9 @@ public :
 	bool isRunning( void )
 	{ return _running; }
 
+	bool isRendering( void )
+	{ return _rendering; }
+
 	bool guiShown( void ) const
 	{
 		if( !_gui )
@@ -182,6 +185,7 @@ protected :
 	CEGUI::Window *_stats;
 
 	bool _running;
+	bool _rendering;
 
 };	// class Pipe
 

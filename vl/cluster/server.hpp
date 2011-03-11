@@ -12,6 +12,8 @@
 #include "message.hpp"
 #include "states.hpp"
 
+#include "stats.hpp"
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -46,7 +48,7 @@ public:
 
 	/// Synchronious method that blocks till all the clients have done
 	/// update, draw and swap
-	void render( void );
+	void render( vl::Stats &stats );
 
 	void shutdown( void );
 

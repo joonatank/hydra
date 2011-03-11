@@ -48,6 +48,7 @@ vl::Pipe::Pipe( std::string const &name,
 	, _loading_screen(0)
 	, _stats(0)
 	, _running(true)	// TODO should this be true from the start?
+	, _rendering(false)
 {
 	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
 
@@ -147,22 +148,27 @@ vl::Pipe::operator()()
 
 	_initGUI();
 
-	while( isRunning() )
+	while( true )
 	{
 		// Handle messages
 		_handleMessages();
 		if( !isRunning() )
 		{ break; }
 
-		// Process input events
-		for( size_t i = 0; i < _windows.size(); ++i )
-		{ _windows.at(i)->capture(); }
+		// Middle of a rendering loop not sleeping
+		if( !isRendering() )
+		{
+			// Process input events
+			for( size_t i = 0; i < _windows.size(); ++i )
+			{ _windows.at(i)->capture(); }
+
+			// Sleep
+			// TODO should sleep for 1ms
+			boost::this_thread::sleep( boost::posix_time::milliseconds(0) );
+		}
 
 		// Send messages
 		_sendEvents();
-
-		// Sleep
-		boost::this_thread::sleep( boost::posix_time::milliseconds(1) );
 	}
 }
 
@@ -578,6 +584,7 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 			_handleUpdateMsg(msg);
 			_syncData();
 			_updateDistribData();
+			_rendering = true;
 		}
 		break;
 
@@ -585,13 +592,14 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		{
 			_client->sendAck( vl::cluster::MSG_DRAW );
 			_draw();
+			_swap();
+			_rendering = false;
 		}
 		break;
 
 		case vl::cluster::MSG_SWAP :
 		{
 			_client->sendAck( vl::cluster::MSG_SWAP );
-			_swap();
 		}
 		break;
 
