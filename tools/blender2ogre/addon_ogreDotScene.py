@@ -2143,14 +2143,14 @@ class Ogre_ogremeshy_op(bpy.types.Operator):
 
 			if mgroup:
 				for ob in mgroup.objects:
-					nmats = dot_mesh( ob, path=path, normals=not self.preview )
+					nmats = ogre_mesh( ob, path=path, normals=not self.preview )
 					for m in nmats:
 						if m not in umaterials: umaterials.append( m )
 				MeshMagick.merge( mgroup, path=path, force_name='preview' )
 			elif merged:
-				umaterials = dot_mesh( merged, path=path, force_name='preview', normals=not self.preview )
+				umaterials = ogre_mesh( merged, path=path, force_name='preview', normals=not self.preview )
 			else:
-				umaterials = dot_mesh( context.active_object, path=path, force_name='preview', normals=not self.preview )
+				umaterials = ogre_mesh( context.active_object, path=path, force_name='preview', normals=not self.preview )
 
 		if mat or umaterials:
 			OPTIONS['TOUCH_TEXTURES'] = True
@@ -4207,7 +4207,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			'optimiseAnimations' : self.optimiseAnimations,
 
 		}
-		dot_mesh( ob, path, force_name, ignore_shape_animation=False, opts=opts )
+		ogre_mesh( ob, path, force_name, ignore_shape_animation=False, opts=opts )
 
 
 	def rex_entity( self, doc, ob ):		# does rex flatten the hierarchy? or keep it like ogredotscene?
@@ -5223,6 +5223,306 @@ def dot_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, op
 			mats.append( bpy.data.materials[name] )
 	return mats
 ## end dot_mesh ##
+
+import pyogre
+
+def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
+	print('Exporting Ogre mesh', ob.name)
+	if not os.path.isdir( path ):
+		print('creating directory', path )
+		os.makedirs( path )
+
+	Report.meshes.append( ob.data.name )
+	Report.faces += len( ob.data.faces )
+	Report.vertices += len( ob.data.vertices )
+
+	copy = ob.copy()
+	rem = []
+	for mod in copy.modifiers:		# remove armature and array modifiers before collaspe
+		if mod.type in 'ARMATURE ARRAY'.split(): rem.append( mod )
+	for mod in rem: copy.modifiers.remove( mod )
+
+	## bake mesh ##
+	_mesh_normals = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
+	_lookup_normals = False
+#	if normals: _lookup_normals = mesh_is_smooth( _mesh_normals )
+	if _lookup_normals: print('using super slow normal lookup...')
+
+	## hijack blender's edge-split modifier to make this easy ##
+	e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
+	e.use_edge_angle = False
+	e.use_edge_sharp = True
+	for edge in copy.data.edges: edge.use_edge_sharp = True
+	## bake mesh ##
+	# FIXME why there is a copy created?
+	mesh = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
+
+	prefix = ''
+	#if opts['mesh-sub-dir']:	#self.EX_MESH_SUBDIR:
+	#	mdir = os.path.join(path,'meshes')
+	#	if not os.path.isdir( mdir ): os.mkdir( mdir )
+	#	prefix = 'meshes/'
+
+	writer = pyogre.MeshWriter()
+	og_mesh = writer.createMesh()
+
+#	root.appendChild( sharedgeo )
+#	sharedgeo.vertexCount = len(mesh.vertices)
+#	if len(mesh.vertices) > (1 << 16):
+#		og_mesh.use32bitindexes = True
+
+	# FIXME add armature support
+#	arm = ob.find_armature()
+#	if arm:
+#		skel = doc.createElement('skeletonlink')
+#		skel.setAttribute('name', '%s%s.skeleton' %(prefix, force_name or ob.data.name) )
+#		root.appendChild( skel )
+
+	## verts ##
+	hasnormals = False
+
+	"""
+	if arm:
+		bweights = doc.createElement('boneassignments')
+		root.appendChild( bweights )
+
+	if opts['shape-anim'] and ob.data.shape_keys and len(ob.data.shape_keys.keys):
+		print('	writing shape animation')
+
+		poses = doc.createElement('poses'); root.appendChild( poses )
+		for sidx, skey in enumerate(ob.data.shape_keys.keys):
+			if sidx == 0: continue
+			pose = doc.createElement('pose'); poses.appendChild( pose )
+			pose.setAttribute('name', skey.name)
+			pose.setAttribute('index', str(sidx-1))
+
+			pose.setAttribute('target', 'mesh')		# If target is 'mesh', targets the shared geometry, if target is submesh, targets the submesh identified by 'index'. 
+			for i,p in enumerate( skey.data ):
+				x,y,z = swap( ob.data.vertices[i].co - p.co )
+				if x==.0 and y==.0 and z==.0: continue		# the older exporter optimized this way, is it safe?
+				po = doc.createElement('poseoffset'); pose.appendChild( po )
+				po.setAttribute('x', '%6f' %x)
+				po.setAttribute('y', '%6f' %y)
+				po.setAttribute('z', '%6f' %z)
+				po.setAttribute('index', str(i))		# this was 3 values in old exporter, from triangulation?
+
+		if ob.data.shape_keys.animation_data and len(ob.data.shape_keys.animation_data.nla_tracks):
+			anims = doc.createElement('animations'); root.appendChild( anims )
+			for nla in ob.data.shape_keys.animation_data.nla_tracks:
+				strip = nla.strips[0]
+				anim = doc.createElement('animation'); anims.appendChild( anim )
+				anim.setAttribute('name', nla.name)		# do not use the action's name
+				anim.setAttribute('length', str((strip.frame_end-strip.frame_start)/30.0) )		# TODO proper fps
+				tracks = doc.createElement('tracks'); anim.appendChild( tracks )
+				track = doc.createElement('track'); tracks.appendChild( track )
+				track.setAttribute('type','pose')
+				track.setAttribute('target','mesh')
+				track.setAttribute('index','0')
+				keyframes = doc.createElement('keyframes')
+				track.appendChild( keyframes )
+
+
+				for frame in range( int(strip.frame_start), int(strip.frame_end), 2):		# every other frame
+					bpy.context.scene.frame_current = frame
+					keyframe = doc.createElement('keyframe')
+					keyframes.appendChild( keyframe )
+					keyframe.setAttribute('time', str(frame/30.0))
+					for sidx, skey in enumerate( ob.data.shape_keys.keys ):
+						if sidx == 0: continue
+						poseref = doc.createElement('poseref'); keyframe.appendChild( poseref )
+						poseref.setAttribute('poseindex', str(sidx))
+						poseref.setAttribute('influence', str(skey.value) )
+	"""
+
+	## write all verts, even if not in material index, inflates xml, should not bloat .mesh (TODO is this true?)
+
+	# Used timing infomation
+	timer = Timer()
+	vertices_time = 0
+
+	badverts = 0
+	
+	uvOfVertex = {}
+	
+	## texture maps - vertex dictionary ##
+	# TODO I have no idea what this does
+	if mesh.uv_textures.active:
+		for layer in mesh.uv_textures:
+			uvOfVertex[layer] = {}
+			for fidx, uvface in enumerate(layer.data):
+				face = mesh.faces[ fidx ]
+				for vertex in face.vertices:
+					if vertex not in uvOfVertex[layer]:
+						uv = uvface.uv[ list(face.vertices).index(vertex) ]
+						uvOfVertex[layer][vertex] = uv
+
+	# Get the vertex buffer
+	for vidx, v in enumerate(mesh.vertices):
+		""" FIXME bone support
+		if arm:
+			check = 0
+			for vgroup in v.groups:
+				if vgroup.weight > opts['trim-bone-weights']:		#self.EX_TRIM_BONE_WEIGHTS:		# optimized
+					bnidx = find_bone_index(copy,arm,vgroup.group)
+					if bnidx is not None:		# allows other vertex groups, not just armature vertex groups
+						vba = doc.createElement('vertexboneassignment')
+						bweights.appendChild( vba )
+						vba.setAttribute( 'vertexindex', str(vidx) )
+						vba.setAttribute( 'boneindex', str(bnidx) )
+						vba.setAttribute( 'weight', str(vgroup.weight) )
+						check += 1
+			if check > 4:
+				badverts += 1
+				print('WARNING: vertex %s is in more than 4 vertex groups (bone weights)\n(this maybe Ogre incompatible)' %vidx)
+		"""
+
+		og_vertex = pyogre.Vertex()
+
+		x,y,z = swap( v.co )
+
+		# position
+		og_vertex.position = pyogre.Vector3(x,y,z)
+
+		## edge_split modifier causes normals to break
+
+		"""
+		if _lookup_normals:
+			# this is very expensive  (TODO manual face split - get rid of edgesplit-mod-hack)
+			for ov in _mesh_normals.vertices:		#fixed dec8th ob.data.vertices:
+				if ov.co == v.co:
+					hasnormals = True
+					x,y,z = swap( ov.normal )
+					n.setAttribute('x', '%6f' %x)
+					n.setAttribute('y', '%6f' %y)
+					n.setAttribute('z', '%6f' %z)
+					break
+		else:
+		"""
+		hasnormals = True
+		x,y,z = swap( v.normal )
+		og_vertex.normal = pyogre.Vector3(x,y,z)
+
+
+		## vertex colors ##
+		"""	TODO not implemented
+		if len( mesh.vertex_colors ):		# TODO need to do proper face lookup for color1,2,3,4
+			#vb.setAttribute('colours_diffuse','true')		# fixed Dec3rd
+			#cd = doc.createElement( 'colour_diffuse' )	#'color_diffuse')
+			#vertex.appendChild( cd )
+			vchan = mesh.vertex_colors[0]
+
+			valpha = None	## hack support for vertex color alpha
+			for bloc in mesh.vertex_colors:
+				if bloc.name.lower().startswith('alpha'):
+					valpha = bloc; break
+
+			for f in mesh.faces:
+				if vidx in f.vertices:
+					k = list(f.vertices).index(vidx)
+					r,g,b = getattr( vchan.data[ f.index ], 'color%s'%(k+1) )
+					if valpha:
+						ra,ga,ba = getattr( valpha.data[ f.index ], 'color%s'%(k+1) )
+						cd.setAttribute('value', '%6f %6f %6f %6f' %(r,g,b,ra) )	
+						og_vertex.diffuse = pyogre.ColourValue(x,y,z)
+					else:
+						cd.setAttribute('value', '%6f %6f %6f 1.0' %(r,g,b) )
+						og_vertex.diffuse = pyogre.ColourValue(x,y,z)
+					break
+		"""
+
+		## texture maps ##
+		""" FIXME
+		if mesh.uv_textures.active:
+			# TODO support more than one texture coords
+			#vb.setAttribute('texture_coords', '%s' %len(mesh.uv_textures) )
+
+			layer = 0
+			#for layer in mesh.uv_textures:
+			if vidx in uvOfVertex[layer]:
+				uv = uvOfVertex[layer][vidx]
+				og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
+				#('u', '%6f' %uv[0] )
+				#tcoord.setAttribute('v', '%6f' %(1.0-uv[1]) )
+				#tcoord.setAttribute('v', '%6f' %uv[1] )
+				#vertex.appendChild( tcoord )
+		"""
+
+		og_mesh.addVertex(og_vertex)
+
+	## end vert loop
+
+	# Print timing information
+	print( 'Exporting vertices took ', '%.3f'%(timer.elapsed()), 'ms' )
+
+	if badverts:
+		Report.warnings.append( '%s has %s vertices weighted to too many bones (Ogre limits a vertex to 4 bones)\n[try increaseing the Trim-Weights threshold option]' %(mesh.name, badverts) )
+
+
+
+	######################################################
+	used_materials = []
+	matnames = []
+	for mat in ob.data.materials:
+		if mat: matnames.append( mat.name )
+		else:
+			print('warning: bad material data', ob)
+			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
+	if not matnames: matnames.append( '_missing_material_' )
+
+	timer.reset()
+	for matidx, matname in enumerate( matnames ):
+		if not len(mesh.faces):		# bug fix dec10th, reported by Matti
+			print('WARNING: submesh without faces, skipping!', ob)
+			continue
+
+		sm = og_mesh.createSubMesh()
+		sm.material = matname
+
+		## faces ##
+		for F in mesh.faces:
+			## skip faces not in this material index ##
+			if F.material_index != matidx: continue
+			if matname not in used_materials: used_materials.append( matname )
+
+			## Ogre only supports triangles, so we will split quads
+			sm.addFace(F.vertices[0], F.vertices[1], F.vertices[2])
+			if len(F.vertices) >= 4:	#TODO split face on shortest edge? or will that mess up triangle-strips?
+				#correct-but-flipped#tris.append( (F.vertices[2], F.vertices[0], F.vertices[3]) )
+				sm.addFace(F.vertices[0], F.vertices[2], F.vertices[3])
+
+	print( 'Creating submeshes took ', '%.3f'%(timer.elapsed()), 'ms' )
+
+	bpy.data.objects.remove(copy)
+	bpy.data.meshes.remove(mesh)
+
+	name = force_name or ob.data.name
+
+	timer.reset()
+	meshfile = os.path.join(path, '%s%s.mesh' %(prefix,name) )
+	writer.writeMesh(og_mesh, meshfile)
+	mesh_write_time = timer.elapsed()
+	timer.reset()
+
+	print( 'Writing the mesh file to disk took ', '%.3f'%(mesh_write_time), 'ms' )
+
+	""" FIXME no bone support
+	if arm and opts['armature-anim']:		#self.EX_ANIM:
+		skel = Skeleton( ob )
+		data = skel.to_xml()
+		name = force_name or ob.data.name
+		xmlfile = os.path.join(path, '%s%s.skeleton.xml' %(prefix,name) )
+		f = open( xmlfile, 'wb' )
+		f.write( bytes(data,'utf-8') )
+		f.close()
+		OgreXMLConverter( xmlfile, opts )
+	"""
+
+	mats = []
+	for name in used_materials:
+		if name != '_missing_material_':
+			mats.append( bpy.data.materials[name] )
+	return mats
+## end ogre_mesh##
 
 class Bone(object):
 	''' EditBone

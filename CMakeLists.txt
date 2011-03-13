@@ -155,7 +155,7 @@ if( EQOGRE_BUILD_TESTS )
 endif()
 
 if( EQOGRE_BUILD_TOOLS )
-# 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
+ 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
 endif()
 
 if( EQOGRE_BUILD_DEMOS )
