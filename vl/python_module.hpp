@@ -1,6 +1,6 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
- *
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file python_module.cpp
  */
 #ifndef VL_PYTHON_MODULE_HPP
 #define VL_PYTHON_MODULE_HPP
@@ -64,64 +64,6 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedT
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
-	// TODO check for overloads and default arguments, they need some extra work
-
-	python::class_<Ogre::Vector3>("Vector3", python::init<Ogre::Real, Ogre::Real, Ogre::Real>() )
-		.def_readwrite("x", &Ogre::Vector3::x)
-		.def_readwrite("y", &Ogre::Vector3::y)
-		.def_readwrite("z", &Ogre::Vector3::z)
-		.def("length", &Ogre::Vector3::length)
-		.def("normalise", &Ogre::Vector3::normalise)
-		// Operators
-		.def(-python::self )
-		.def(python::self + python::self )
-		.def(python::self - python::self )
-		.def(python::self * python::self )
-		.def(python::self * Ogre::Real() )
-		.def(python::self / python::self )
-		.def(python::self / Ogre::Real() )
-		.def(python::self += python::self )
-		.def(python::self += Ogre::Real() )
-		.def(python::self -= python::self )
-		.def(python::self -= Ogre::Real() )
-		.def(python::self *= python::self )
-		.def(python::self *= Ogre::Real() )
-		.def(python::self /= python::self )
-		.def(python::self /= Ogre::Real() )
-		// Comparison
-		.def(python::self == python::self )
-		.def(python::self != python::self )
-		.def(python::self_ns::str(python::self_ns::self))
-		;
-
-	python::class_<Ogre::Quaternion>("Quaternion", python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>() )
-		.def_readwrite("x", &Ogre::Quaternion::x)
-		.def_readwrite("y", &Ogre::Quaternion::y)
-		.def_readwrite("z", &Ogre::Quaternion::z)
-		.def_readwrite("w", &Ogre::Quaternion::w)
-		.def("Norm", &Ogre::Quaternion::Norm)
-		.def("normalise", &Ogre::Quaternion::normalise)
-		.def("equals", &Ogre::Quaternion::equals)
-		.def("isNaN", &Ogre::Quaternion::isNaN)
-		// Operators
-		.def(python::self + python::self )
-		.def(python::self - python::self )
-		.def(python::self * python::self )
-		.def(python::self * Ogre::Vector3() )
-		.def(python::self * Ogre::Real() )
-		.def(python::self == python::self )
-		.def(python::self != python::self )
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-
-	// TODO these should be implemented
-	// Needs at least conversions from one to the other and constructors
-	python::class_<Ogre::Degree>("Degree")
-	;
-
-	python::class_<Ogre::Radian>("Radian")
-	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )

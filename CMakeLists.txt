@@ -146,19 +146,15 @@ include_directories(vl)
 
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
-set( EQOGRE_BUILD_TOOLS TRUE CACHE BOOL "Build the tools." )
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 
-if( EQOGRE_BUILD_TESTS )
+if(EQOGRE_BUILD_TESTS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 endif()
 
-if( EQOGRE_BUILD_TOOLS )
- 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/tools )
-endif()
-
-if( EQOGRE_BUILD_DEMOS )
+if(EQOGRE_BUILD_DEMOS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
 endif()
 

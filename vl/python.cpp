@@ -13,6 +13,7 @@
 
 /// Script always executed
 char const *script =
+	"from pyogre import *\n"
 	"from vl import *\n"
 	"def quit():\n"
 	"	game.quit()\n"

@@ -80,8 +80,8 @@ set( HEADERS
 	actions_transform.hpp
 	scene_manager.hpp
 	scene_node.hpp
-	python_module.hpp
 	python.hpp
+	python_module.hpp
 	trigger.hpp
 	event_manager.hpp
 	keycode.hpp
@@ -107,6 +107,8 @@ set( HEADERS
 add_library( eqOgre ${SOURCES} ${HEADERS} )
 
 target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )
+
+set_target_properties(eqOgre PROPERTIES DEBUG_POSTFIX d)
 
 #install
 # TODO this is here for test only the filestructure is not preserved by this

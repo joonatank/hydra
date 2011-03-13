@@ -114,6 +114,14 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
+	// TODO these should be implemented
+	// Needs at least conversions from one to the other and constructors
+	class_<Ogre::Degree>("Degree")
+	;
+
+	class_<Ogre::Radian>("Radian")
+	;
+
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_min2)() const = &Ogre::AxisAlignedBox::getMinimum;
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_max2)() const = &Ogre::AxisAlignedBox::getMaximum;
 	void (Ogre::AxisAlignedBox::*box_set_max)(Ogre::Vector3 const &) = &Ogre::AxisAlignedBox::setMaximum;
