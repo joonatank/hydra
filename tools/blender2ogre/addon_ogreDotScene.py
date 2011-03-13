@@ -2143,14 +2143,14 @@ class Ogre_ogremeshy_op(bpy.types.Operator):
 
 			if mgroup:
 				for ob in mgroup.objects:
-					nmats = ogre_mesh( ob, path=path, normals=not self.preview )
+					nmats = export_ogre_mesh( ob, path=path, normals=not self.preview )
 					for m in nmats:
 						if m not in umaterials: umaterials.append( m )
 				MeshMagick.merge( mgroup, path=path, force_name='preview' )
 			elif merged:
-				umaterials = ogre_mesh( merged, path=path, force_name='preview', normals=not self.preview )
+				umaterials = export_ogre_mesh( merged, path=path, force_name='preview', normals=not self.preview )
 			else:
-				umaterials = ogre_mesh( context.active_object, path=path, force_name='preview', normals=not self.preview )
+				umaterials = export_ogre_mesh( context.active_object, path=path, force_name='preview', normals=not self.preview )
 
 		if mat or umaterials:
 			OPTIONS['TOUCH_TEXTURES'] = True
@@ -4207,7 +4207,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			'optimiseAnimations' : self.optimiseAnimations,
 
 		}
-		ogre_mesh( ob, path, force_name, ignore_shape_animation=False, opts=opts )
+		export_ogre_mesh( ob, path, force_name, ignore_shape_animation=False, opts=opts )
 
 
 	def rex_entity( self, doc, ob ):		# does rex flatten the hierarchy? or keep it like ogredotscene?
@@ -5226,7 +5226,7 @@ def dot_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, op
 
 import pyogre
 
-def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
+def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
 	print('Exporting Ogre mesh', ob.name)
 	if not os.path.isdir( path ):
 		print('creating directory', path )
@@ -5236,17 +5236,13 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 	Report.faces += len( ob.data.faces )
 	Report.vertices += len( ob.data.vertices )
 
+	# Copies are needed to get the Texture coordinates correct
+	# Without them a vertex is mapped to texture coordinates of multiple faces
 	copy = ob.copy()
 	rem = []
 	for mod in copy.modifiers:		# remove armature and array modifiers before collaspe
 		if mod.type in 'ARMATURE ARRAY'.split(): rem.append( mod )
 	for mod in rem: copy.modifiers.remove( mod )
-
-	## bake mesh ##
-	_mesh_normals = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
-	_lookup_normals = False
-#	if normals: _lookup_normals = mesh_is_smooth( _mesh_normals )
-	if _lookup_normals: print('using super slow normal lookup...')
 
 	## hijack blender's edge-split modifier to make this easy ##
 	e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
@@ -5254,22 +5250,12 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 	e.use_edge_sharp = True
 	for edge in copy.data.edges: edge.use_edge_sharp = True
 	## bake mesh ##
-	# FIXME why there is a copy created?
 	mesh = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
 
 	prefix = ''
-	#if opts['mesh-sub-dir']:	#self.EX_MESH_SUBDIR:
-	#	mdir = os.path.join(path,'meshes')
-	#	if not os.path.isdir( mdir ): os.mkdir( mdir )
-	#	prefix = 'meshes/'
 
 	writer = pyogre.MeshWriter()
 	og_mesh = writer.createMesh()
-
-#	root.appendChild( sharedgeo )
-#	sharedgeo.vertexCount = len(mesh.vertices)
-#	if len(mesh.vertices) > (1 << 16):
-#		og_mesh.use32bitindexes = True
 
 	# FIXME add armature support
 #	arm = ob.find_armature()
@@ -5279,8 +5265,6 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 #		root.appendChild( skel )
 
 	## verts ##
-	hasnormals = False
-
 	"""
 	if arm:
 		bweights = doc.createElement('boneassignments')
@@ -5344,18 +5328,6 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 	
 	uvOfVertex = {}
 	
-	## texture maps - vertex dictionary ##
-	# TODO I have no idea what this does
-	if mesh.uv_textures.active:
-		for layer in mesh.uv_textures:
-			uvOfVertex[layer] = {}
-			for fidx, uvface in enumerate(layer.data):
-				face = mesh.faces[ fidx ]
-				for vertex in face.vertices:
-					if vertex not in uvOfVertex[layer]:
-						uv = uvface.uv[ list(face.vertices).index(vertex) ]
-						uvOfVertex[layer][vertex] = uv
-
 	# Get the vertex buffer
 	for vidx, v in enumerate(mesh.vertices):
 		""" FIXME bone support
@@ -5363,7 +5335,7 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 			check = 0
 			for vgroup in v.groups:
 				if vgroup.weight > opts['trim-bone-weights']:		#self.EX_TRIM_BONE_WEIGHTS:		# optimized
-					bnidx = find_bone_index(copy,arm,vgroup.group)
+					bnidx = find_bone_index(ob,arm,vgroup.group)
 					if bnidx is not None:		# allows other vertex groups, not just armature vertex groups
 						vba = doc.createElement('vertexboneassignment')
 						bweights.appendChild( vba )
@@ -5383,22 +5355,6 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 		# position
 		og_vertex.position = pyogre.Vector3(x,y,z)
 
-		## edge_split modifier causes normals to break
-
-		"""
-		if _lookup_normals:
-			# this is very expensive  (TODO manual face split - get rid of edgesplit-mod-hack)
-			for ov in _mesh_normals.vertices:		#fixed dec8th ob.data.vertices:
-				if ov.co == v.co:
-					hasnormals = True
-					x,y,z = swap( ov.normal )
-					n.setAttribute('x', '%6f' %x)
-					n.setAttribute('y', '%6f' %y)
-					n.setAttribute('z', '%6f' %z)
-					break
-		else:
-		"""
-		hasnormals = True
 		x,y,z = swap( v.normal )
 		og_vertex.normal = pyogre.Vector3(x,y,z)
 
@@ -5431,32 +5387,30 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 		"""
 
 		## texture maps ##
-		""" FIXME
+		# TODO add support for multiple texture coordinates
 		if mesh.uv_textures.active:
-			# TODO support more than one texture coords
-			#vb.setAttribute('texture_coords', '%s' %len(mesh.uv_textures) )
-
-			layer = 0
+			layer = mesh.uv_textures.active
 			#for layer in mesh.uv_textures:
-			if vidx in uvOfVertex[layer]:
-				uv = uvOfVertex[layer][vidx]
-				og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
-				#('u', '%6f' %uv[0] )
-				#tcoord.setAttribute('v', '%6f' %(1.0-uv[1]) )
-				#tcoord.setAttribute('v', '%6f' %uv[1] )
-				#vertex.appendChild( tcoord )
-		"""
+			for fidx, uvface in enumerate(layer.data):
+				face = mesh.faces[ fidx ]
+				if vidx in face.vertices:
+					uv = uvface.uv[ list(face.vertices).index(vidx) ]
+					og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
+					break
 
 		og_mesh.addVertex(og_vertex)
-
 	## end vert loop
+	if( len(mesh.uv_textures) > 1):
+		print("Warning mesh with multiple texture coordinates, only first one is exported")
 
 	# Print timing information
 	print( 'Exporting vertices took ', '%.3f'%(timer.elapsed()), 'ms' )
 
 	if badverts:
-		Report.warnings.append( '%s has %s vertices weighted to too many bones (Ogre limits a vertex to 4 bones)\n[try increaseing the Trim-Weights threshold option]' %(mesh.name, badverts) )
-
+		warning_msg = '%s has %s vertices weighted to too many bones'
+		'(Ogre limits a vertex to 4 bones)\n'
+		'[try increaseing the Trim-Weights threshold option]' %(mesh.name, badverts)
+		Report.warnings.append(warning_msg)
 
 
 	######################################################
@@ -5522,7 +5476,7 @@ def ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, o
 		if name != '_missing_material_':
 			mats.append( bpy.data.materials[name] )
 	return mats
-## end ogre_mesh##
+## end export_ogre_mesh##
 
 class Bone(object):
 	''' EditBone
