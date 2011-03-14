@@ -17,6 +17,8 @@
 #include "settings.hpp"
 #include "gui/gui.hpp"
 
+#include "logger.hpp"
+
 #include <CEGUI/CEGUIWindow.h>
 
 
@@ -97,7 +99,9 @@ public :
 	CEGUI::Window *getConsole( void )
 	{ return _console; }
 
-	void printToConsole(std::string const &text, double time, std::string const &type = std::string());
+	void printToConsole(std::string const &text, double time,
+						std::string const &type = std::string(),
+						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
 
 protected :
 	/// Reload the projects

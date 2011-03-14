@@ -41,8 +41,8 @@ struct LogMessage
 LogMessage( std::string const &ty = std::string(),
 			double tim = 0,
 			std::string const &msg = std::string(),
-			LOG_MESSAGE_LEVEL level = LML_CRITICAL )
-	: type(ty), time(tim), message(msg)
+			LOG_MESSAGE_LEVEL lvl = LML_CRITICAL )
+	: type(ty), time(tim), message(msg), level(lvl)
 {
 	// Remove the line ending because we are using custom line endings
 	if(*(message.end()-1) == '\n')
@@ -52,13 +52,22 @@ LogMessage( std::string const &ty = std::string(),
 std::string type;
 double time;
 std::string message;
+LOG_MESSAGE_LEVEL level;
 
 };	// class LogMessage
 
 inline std::ostream &
 operator<<(std::ostream &os, LogMessage const &msg)
 {
-	os << msg.type << " " << msg.time << "s " << msg.message;
+	std::string level;
+	if( msg.level == LML_CRITICAL )
+	{ level = "CRITICAL"; }
+	else if( msg.level == LML_NORMAL )
+	{ level = "NORMAL"; }
+	else if( msg.level == LML_TRIVIAL )
+	{ level = "TRIVIAL"; }
+
+	os << msg.type << "\t" << level << '\t' << msg.time << "s " << msg.message;
 	return os;
 }
 

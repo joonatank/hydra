@@ -75,7 +75,7 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl
 	, _running(true)
 	, _key_modifiers(MOD_NONE)
 {
-	std::cout << "vl::Config::Config" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
 	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
@@ -91,20 +91,18 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl
 
 vl::Config::~Config( void )
 {
-	std::cout << "vl::Config::~Config" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::~Config" << std::endl;
 
 	delete _game_manager;
 
 	// Destroy server
 	_server.reset();
-
-	std::cout << "vl::Config::~Config : DONE" << std::endl;
 }
 
 void
 vl::Config::init( void )
 {
-	std::cout << "vl::Config::init" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	Ogre::Timer timer;
 
 	/// @todo most of this should be moved to the constructor, like object
@@ -150,7 +148,7 @@ vl::Config::init( void )
 
 	_createQuitEvent();
 
-	std::cout << "vl::Config:: updating server" << std::endl;
+	std::cout << vl::TRACE << "vl::Config:: updating server" << std::endl;
 	_updateServer();
 
 	_stats.logInitTime( (double(timer.getMicroseconds()))/1e3 );
@@ -160,14 +158,12 @@ vl::Config::init( void )
 void
 vl::Config::exit( void )
 {
-	std::cout << "vl::Config::exit" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::exit" << std::endl;
 
 	_server->shutdown();
 	// TODO this should wait till all the clients have shutdown
 	vl::msleep(1);
 	_server->receiveMessages();
-
-	std::cout << "Config exited." << std::endl;
 }
 
 void
@@ -290,6 +286,7 @@ vl::Config::_updateServer( void )
 				msg.write(log_msg.type);
 				msg.write(log_msg.time);
 				msg.write(log_msg.message);
+				msg.write(log_msg.level);
 			}
 			_server->sendPrintMessage(msg);
 		}
@@ -299,7 +296,7 @@ vl::Config::_updateServer( void )
 void
 vl::Config::_sendEnvironment ( void )
 {
-	std::cout << "vl::Config::_sendEnvironment" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::_sendEnvironment" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -314,7 +311,7 @@ vl::Config::_sendEnvironment ( void )
 void
 vl::Config::_sendProject ( void )
 {
-	std::cout << "vl::Config::_sendProject" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::_sendProject" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -329,7 +326,7 @@ vl::Config::_sendProject ( void )
 void
 vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
-	std::cout << "Creating Trackers." << std::endl;
+	std::cout << vl::TRACE << "Creating Trackers." << std::endl;
 
 	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
 	assert( clients );
@@ -393,7 +390,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 		tracker->setSensor( 0, sensor );
 		clients->addTracker(tracker);
 	}
-	std::cout << "Trackers created." << std::endl;
+	std::cout << vl::TRACE << "Trackers created." << std::endl;
 }
 
 void
@@ -460,8 +457,6 @@ vl::Config::_hideCollisionBarries( void )
 void
 vl::Config::_createQuitEvent(void )
 {
-	std::cout << "Creating QuitEvent" << std::endl;
-
 	// Add a trigger event to Quit the Application
 	assert( _game_manager );
 	vl::QuitAction *quit = vl::QuitAction::create();
@@ -474,9 +469,9 @@ vl::Config::_createQuitEvent(void )
 void
 vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
 {
-	std::cout << "Initialising Resource Manager" << std::endl;
+	std::cout << vl::TRACE << "Initialising Resource Manager" << std::endl;
 
-	std::cout << "Adding project directories to resources. "
+	std::cout << vl::TRACE << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
 
 	std::vector<std::string> paths = settings.getAuxDirectories();
@@ -552,7 +547,7 @@ vl::Config::_receiveEventMessages( void )
 				break;
 
 				default :
-					std::cout << "vl::Config::_receiveEventMessages : "
+					std::cout << vl::ERROR << "vl::Config::_receiveEventMessages : "
 						<< "Unhandleded message type." << std::endl;
 					break;
 			}

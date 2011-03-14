@@ -13,6 +13,7 @@
 
 // Necessary for exceptions
 #include "base/exceptions.hpp"
+#include "logger.hpp"
 
 
 /// ------------ ResourceManager --------------
@@ -101,7 +102,7 @@ vl::DistribResourceManager::loadResource( const std::string &name, vl::Resource 
 void
 vl::DistribResourceManager::loadSceneResource(const std::string& name, vl::TextResource& data)
 {
-	std::cout << "Loading Scene Resource " << name << std::endl;
+	std::cout << vl::TRACE << "Loading Scene Resource " << name << std::endl;
 
 	std::string extension(".scene");
 	std::string scene_name = _stripExtension(name, extension);
@@ -118,7 +119,7 @@ vl::DistribResourceManager::loadSceneResource(const std::string& name, vl::TextR
 void
 vl::DistribResourceManager::loadPythonResource(const std::string& name, vl::TextResource& data)
 {
-	std::cout << "Loading Python Resource " << name << std::endl;
+	std::cout << vl::TRACE << "Loading Python Resource " << name << std::endl;
 
 	std::string extension(".py");
 	std::string script_name = _stripExtension(name, extension);
@@ -135,7 +136,7 @@ vl::DistribResourceManager::loadPythonResource(const std::string& name, vl::Text
 void
 vl::DistribResourceManager::loadOggResource(const std::string& name, vl::Resource& data)
 {
-	std::cout << "Loading Ogg Resource " << name << std::endl;
+	std::cout << vl::TRACE << "Loading Ogg Resource " << name << std::endl;
 
 	std::string extension(".ogg");
 	std::string ogg_name = _stripExtension(name, extension);

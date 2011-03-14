@@ -169,7 +169,8 @@ vl::Pipe::operator()()
 }
 
 void
-vl::Pipe::printToConsole(std::string const &text, double time, std::string const &type)
+vl::Pipe::printToConsole(std::string const &text, double time,
+						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
 {
 	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
 	assert( output );
@@ -187,7 +188,13 @@ vl::Pipe::printToConsole(std::string const &text, double time, std::string const
 	output->setItem(item, 0, row);
 
 	// Add the text field
-	item = new CEGUI::ListboxTextItem(CEGUI::String(text));
+	CEGUI::String prefix;
+	if( lvl == vl::LML_CRITICAL )
+	{ prefix = "CRITICAL : "; }
+	else if( lvl == vl::LML_TRIVIAL )
+	{ prefix = "TRIVIAL : "; }
+
+	item = new CEGUI::ListboxTextItem(prefix + CEGUI::String(text));
 	// Save data type for filtering, HOW?
 	if( type == "OUT" )
 	{
@@ -756,8 +763,10 @@ vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
 		msg->read(time);
 		std::string str;
 		msg->read(str);
+		vl::LOG_MESSAGE_LEVEL lvl;
+		msg->read(lvl);
 
-		printToConsole(str, time, type);
+		printToConsole(str, time, type, lvl);
 
 		msgs--;
 	}
