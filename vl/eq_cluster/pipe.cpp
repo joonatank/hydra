@@ -168,6 +168,46 @@ vl::Pipe::operator()()
 	}
 }
 
+void
+vl::Pipe::printToConsole(std::string const &text, double time, std::string const &type)
+{
+	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
+	assert( output );
+
+	// Add time
+	std::stringstream ss;
+	ss << time;
+	CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(ss.str());
+	CEGUI::uint row = output->addRow(item, 1);
+
+	// Set line number
+	ss.str("");
+	ss << row;
+	item = new CEGUI::ListboxTextItem(ss.str());
+	output->setItem(item, 0, row);
+
+	// Add the text field
+	item = new CEGUI::ListboxTextItem(CEGUI::String(text));
+	// Save data type for filtering, HOW?
+	if( type == "OUT" )
+	{
+		item->setTextColours(CEGUI::colour(0, 0.2, 0.4));
+	}
+	else if( type == "ERROR" )
+	{
+		item->setTextColours(CEGUI::colour(0.5, 0, 0));
+	}
+	else if( type == "PY_OUT" )
+	{
+		item->setTextColours(CEGUI::colour(0, 0.5, 0.5));
+	}
+	else if( type == "PY_ERROR" )
+	{
+		item->setTextColours(CEGUI::colour(0.5, 0.2, 0));
+	}
+	output->setItem(item, 2, row);
+}
+
 
 /// ------------------------ Protected -----------------------------------------
 void
@@ -348,6 +388,8 @@ vl::Pipe::_createGUI(void )
 	std::cout << "Subcribing to events." << std::endl;
 	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
 	assert(output);
+	assert(output->getVertScrollbar());
+	output->getVertScrollbar()->setEndLockEnabled(true);
 
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
 	assert(input);
@@ -715,41 +757,8 @@ vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
 		std::string str;
 		msg->read(str);
 
-		assert(_console);
-		CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
+		printToConsole(str, time, type);
 
-		// Add time
-		std::stringstream ss;
-		ss << time;
-		CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(ss.str());
-		CEGUI::uint row = output->addRow(item, 1);
-
-		// Set line number
-		ss.str("");
-		ss << row;
-		item = new CEGUI::ListboxTextItem(ss.str());
-		output->setItem(item, 0, row);
-
-		// Add the text field
-		item = new CEGUI::ListboxTextItem(CEGUI::String(str));
-		// Save data type for filtering, HOW?
-		if( type == "OUT" )
-		{
-			item->setTextColours(CEGUI::colour(0, 0.2, 0.4));
-		}
-		else if( type == "ERROR" )
-		{
-			item->setTextColours(CEGUI::colour(0.5, 0, 0));
-		}
-		else if( type == "PY_OUT" )
-		{
-			item->setTextColours(CEGUI::colour(0, 0.5, 0.5));
-		}
-		else if( type == "PY_ERROR" )
-		{
-			item->setTextColours(CEGUI::colour(0.5, 0.2, 0));
-		}
-		output->setItem(item, 2, row);
 		msgs--;
 	}
 }

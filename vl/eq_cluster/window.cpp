@@ -224,7 +224,11 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 		// passed on.
 		// This is so rare that we don't care about it.
 		if( evt.state.Z.rel != 0 )
-		{ CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+		{
+			// Dirty hack for scaling the wheel movement
+			float z = (float)(evt.state.Z.rel)/100;
+			CEGUI::System::getSingleton().injectMouseWheelChange(z);
+		}
 	}
 	else
 	{
@@ -391,19 +395,12 @@ vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
 	assert( console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
 	assert( input );
-	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( console->getChild("console/output") );
-	assert( output );
 
-	// TODO add support for time
 	std::string command( input->getText().c_str() );
 	input->setText("");
-	CEGUI::ListboxItem *item = new CEGUI::ListboxTextItem(CEGUI::String(command));
-	CEGUI::uint row = output->addRow(item, 2);
 
-	std::stringstream ss;
-	ss << row;
-	item = new CEGUI::ListboxTextItem(ss.str());
-	output->setItem(item, 0, row);
+	// TODO add support for time
+	getPipe()->printToConsole(command, 0);
 
 	getPipe()->sendCommand(command);
 

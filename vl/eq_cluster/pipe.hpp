@@ -97,6 +97,8 @@ public :
 	CEGUI::Window *getConsole( void )
 	{ return _console; }
 
+	void printToConsole(std::string const &text, double time, std::string const &type = std::string());
+
 protected :
 	/// Reload the projects
 	void _reloadProjects( vl::Settings const &set );
