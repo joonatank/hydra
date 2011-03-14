@@ -506,6 +506,37 @@ msg_size Message::write(const T& obj)
 	return size;
 }
 
+template<> inline
+msg_size Message::write(std::string const &str)
+{
+	write( str.size() );
+	if( str.size() != 0 )
+	{ write( str.c_str(), str.size() ); }
+
+	return sizeof(str.size())+sizeof(std::string::value_type)*str.size();
+}
+
+template<> inline
+msg_size Message::read(std::string &str)
+{
+	std::string::size_type size;
+	read(size);
+	if( 0 == size )
+	{ str.clear(); }
+	else
+	{
+		str.resize(size);
+		for( size_t i = 0; i < size; ++i )
+		{
+			char ch;
+			read(ch);
+			str.at(i) = ch;
+		}
+	}
+
+	return sizeof(size)+sizeof(std::string::value_type)*size;
+}
+
 }	// namespace cluster
 
 }	// namespace vl

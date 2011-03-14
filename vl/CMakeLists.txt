@@ -61,6 +61,7 @@ set( HEADERS
 	game_manager.hpp
 	player.hpp
 	stats.hpp
+	base/thread.hpp
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp

@@ -708,14 +708,12 @@ vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
 	msg->read(msgs);
 	while(msgs > 0)
 	{
-		LOG_TYPE type;
+		std::string type;
 		msg->read(type);
 		double time;
 		msg->read(time);
-		size_t size;
-		msg->read(size);
-		std::vector<char> buf(size);
-		msg->read(&buf[0], size);
+		std::string str;
+		msg->read(str);
 
 		assert(_console);
 		CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
@@ -733,20 +731,23 @@ vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
 		output->setItem(item, 0, row);
 
 		// Add the text field
-		item = new CEGUI::ListboxTextItem(CEGUI::String(&buf[0]));
-		// Save data type for filtering
-		item->setUserData( (void *)(type) );
-		if( type == LOG_OUT )
+		item = new CEGUI::ListboxTextItem(CEGUI::String(str));
+		// Save data type for filtering, HOW?
+		if( type == "OUT" )
 		{
-			item->setTextColours(CEGUI::colour(1, 0, 0));
+			item->setTextColours(CEGUI::colour(0, 0.2, 0.4));
 		}
-		else if( type == LOG_ERR )
+		else if( type == "ERROR" )
 		{
-			item->setTextColours(CEGUI::colour(0, 1, 0));
+			item->setTextColours(CEGUI::colour(0.5, 0, 0));
 		}
-		else
+		else if( type == "PY_OUT" )
 		{
-			item->setTextColours(CEGUI::colour(0, 0, 1));
+			item->setTextColours(CEGUI::colour(0, 0.5, 0.5));
+		}
+		else if( type == "PY_ERROR" )
+		{
+			item->setTextColours(CEGUI::colour(0.5, 0.2, 0));
 		}
 		output->setItem(item, 2, row);
 		msgs--;

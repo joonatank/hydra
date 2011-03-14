@@ -286,11 +286,10 @@ vl::Config::_updateServer( void )
 			msg.write(_game_manager->getLogger()->nMessages());
 			while( _game_manager->getLogger()->newMessages() )
 			{
-				LogMessage str = _game_manager->getLogger()->popMessage();
-				msg.write(str.type);
-				msg.write(str.time);
-				msg.write(str.message.size()+1);
-				msg.write(str.message.c_str(), str.message.size()+1);
+				LogMessage log_msg = _game_manager->getLogger()->popMessage();
+				msg.write(log_msg.type);
+				msg.write(log_msg.time);
+				msg.write(log_msg.message);
 			}
 			_server->sendPrintMessage(msg);
 		}

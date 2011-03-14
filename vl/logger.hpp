@@ -18,27 +18,38 @@
 
 #include <vector>
 
+#include "base/thread.hpp"
+
 namespace io = boost::iostreams;
 
 namespace vl
 {
 
-enum LOG_TYPE
+enum LOG_MESSAGE_LEVEL
 {
-	LOG_NONE,
-	LOG_OUT,
-	LOG_ERR,
-	LOG_PY_OUT,
-	LOG_PY_ERR,
+	LML_CRITICAL = 0,
+	LML_NORMAL,
+	LML_TRIVIAL,
 };
+
+char const ERROR = 17;
+char const NORMAL = 18;
+char const TRACE = 19;
 
 struct LogMessage
 {
-LogMessage( LOG_TYPE ty = LOG_NONE, double tim = 0, std::string const &msg = std::string() )
+LogMessage( std::string const &ty = std::string(),
+			double tim = 0,
+			std::string const &msg = std::string(),
+			LOG_MESSAGE_LEVEL level = LML_CRITICAL )
 	: type(ty), time(tim), message(msg)
-{}
+{
+	// Remove the line ending because we are using custom line endings
+	if(*(message.end()-1) == '\n')
+	{ message.erase(message.end()-1); }
+}
 
-LOG_TYPE type;
+std::string type;
 double time;
 std::string message;
 
@@ -56,13 +67,13 @@ class Logger;
 class sink : public boost::iostreams::sink
 {
 public :
-	sink( Logger &logger, LOG_TYPE type );
+	sink( Logger &logger, std::string const &type );
 
 	std::streamsize write(const char* s, std::streamsize n);
 
 	void write(std::string const &str);
 
-	LOG_TYPE getType( void ) const
+	std::string getType( void ) const
 	{ return _type; }
 
 	Logger &getLogger( void )
@@ -70,7 +81,7 @@ public :
 
 private :
 	Logger &_logger;
-	LOG_TYPE _type;
+	std::string _type;
 };
 
 class Logger
@@ -93,11 +104,17 @@ public :
 		// TODO should close the old file if it's open
 	}
 
+	io::stream_buffer<sink> *addSink(std::string const &name);
+
+	io::stream_buffer<sink> *getSink(std::string const &name);
+
 	io::stream_buffer<sink> *getPythonOut( void );
 
 	io::stream_buffer<sink> *getPythonErr( void );
 
-	void logMessage( LOG_TYPE type, std::string const &str );
+	void logMessage( std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level = LML_CRITICAL );
+
+	void logMessage(LogMessage const &message);
 
 	bool newMessages(void) const
 	{ return !_messages.empty(); }
@@ -113,6 +130,8 @@ public :
 
 /// Data
 private :
+	vl::mutex _mutex;
+
 	bool _verbose;
 
 	// old streambuffers so we can restore them later
