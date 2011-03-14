@@ -192,7 +192,6 @@ def addToggleEditor(kc) :
 print( 'Adding game events' )
 addQuitEvent(KC.Q)
 addReloadEvent(KC.R)
-addToggleMusicEvent(KC.M)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)

@@ -82,10 +82,6 @@ vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl
 
 	_createResourceManager( settings, env );
 
-	// TODO this should be done in python
-	std::string song_name("The_Dummy_Song.ogg");
-	_game_manager->createBackgroundSound(song_name);
-
 	_game_manager->createSceneManager( this );
 }
 
