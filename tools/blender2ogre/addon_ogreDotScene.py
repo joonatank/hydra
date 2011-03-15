@@ -191,7 +191,6 @@ Installing:
 ## TODO future idea: render procedural texture to images, more optimal to save settings and reimplment in Ogre, blender could also benifit from GLSL procedural shaders ##
 ## TODO request IDProperties support for material-nodes
 ## TODO check out https://github.com/realXtend/naali/blob/develop/bin/pymodules/webserver/webcontroller.py
-## <antont> we looked at adding support for the b2rex xmlrpc methods there, to add b2rex support to tundra
 ## TODO are 1e-10 exponent numbers ok in the xml files?
 ## TODO count verts, and count collision verts
 ## TODO - image compression browser (previews total size)
@@ -316,6 +315,7 @@ class Ogre_relocate_textures_op(bpy.types.Operator):
 
 	@classmethod
 	def poll(cls, context): return True
+
 	def invoke(self, context, event):
 		Report.reset()
 		badmats = []
@@ -1051,15 +1051,18 @@ class Ogre_Physics(bpy.types.Panel):
 
 
 class Ogre_game_logic_op(bpy.types.Operator):                
-	'''helper to hijack BGE logic'''                                                     
-	bl_idname = "ogre.gamelogic"                                             
-	bl_label = "ogre game logic helper"                                      
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
+	'''helper to hijack BGE logic'''
+	bl_idname = "ogre.gamelogic"
+	bl_label = "ogre game logic helper"
+	# Options for this panel type
+	bl_options = {'REGISTER', 'UNDO'}
 	logictype = StringProperty(name="logic-type", description="...", maxlen=32, default="")
 	subtype = StringProperty(name="logic-subtype", description="...", maxlen=32, default="")
 
 	@classmethod
-	def poll(cls, context): return True
+	def poll(cls, context):
+		return True
+
 	def invoke(self, context, event):
 		if self.logictype == 'sensor':
 			bpy.ops.logic.sensor_add( type=self.subtype )
@@ -4048,7 +4051,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	bl_options = {'REGISTER', 'UNDO'}      
 	filepath= StringProperty(name="File Path", description="Filepath used for exporting Ogre .scene file", maxlen=1024, default="", subtype='FILE_PATH')
 	#_force_image_format = None
-	#filename_ext= StringProperty(name="File Name", description="Filepath used for exporting Ogre .scene file", maxlen=1024, default="xxx")
 
 	#_axis_modes =  [
 	#	('1', '-x z y', 'default'),
@@ -4131,7 +4133,10 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		wm = context.window_manager
 		wm.fileselect_add(self)		# writes to filepath
 		return {'RUNNING_MODAL'}
-	def execute(self, context): self.ogre_export(  self.filepath, context ); return {'FINISHED'}
+
+	def execute(self, context):
+		self.ogre_export(  self.filepath, context );
+		return {'FINISHED'}
 
 	def dot_material( self, meshes, path='/tmp' ):
 		print('updating .material')
@@ -4139,8 +4144,12 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		for ob in meshes:
 			if len(ob.data.materials):
 				for mat in ob.data.materials:
-					if mat not in mats: mats.append( mat )
-		if not mats: print('WARNING: no materials, not writting .material script'); return
+					if mat not in mats:
+						mats.append( mat )
+		if not mats:
+			print('WARNING: no materials, not writting .material script');
+			return
+
 		M = MISSING_MATERIAL + '\n'
 		for mat in mats:
 			Report.materials.append( mat.name )
@@ -4185,7 +4194,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		return M
 
 
-	def dot_mesh( self, ob, path='/tmp', force_name=None, ignore_shape_animation=False ):
+	def ogre_mesh( self, ob, path='/tmp', force_name=None, ignore_shape_animation=False ):
 		opts = {
 			#'mesh-sub-dir' : self.EX_MESH_SUBDIR,
 			'shape-anim' : self.EX_SHAPE_ANIM,
@@ -4207,74 +4216,16 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			'optimiseAnimations' : self.optimiseAnimations,
 
 		}
-		export_ogre_mesh( ob, path, force_name, ignore_shape_animation=False, opts=opts )
-
-
-	def rex_entity( self, doc, ob ):		# does rex flatten the hierarchy? or keep it like ogredotscene?
-		e = doc.createElement( 'entity' )
-		doc.documentElement.appendChild( e )
-		e.setAttribute('id', str(len(doc.documentElement.childNodes)) )
-
-		c = doc.createElement('component'); e.appendChild( c )
-		c.setAttribute('type', "EC_Mesh")
-		c.setAttribute('sync', '1')
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Mesh ref" )
-		a.setAttribute('value', "file://%s.mesh"%ob.data.name )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Mesh materials" )
-		a.setAttribute('value', "file://%s.material"%bpy.context.scene.name )
-
-		if ob.find_armature():
-			a = doc.createElement('attribute'); c.appendChild(a)
-			a.setAttribute('name', "Skeleton ref" )
-			a.setAttribute('value', "file://%s.skeleton"%ob.data.name )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Draw distance" )
-		a.setAttribute('value', "0" )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Cast shadows" )
-		a.setAttribute('value', "false" )
-
-		c = doc.createElement('component'); e.appendChild( c )
-		c.setAttribute('type', "EC_Name")
-		c.setAttribute('sync', '1')
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "name" )
-		a.setAttribute('value', ob.data.name )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "description" )
-		a.setAttribute('value', "" )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "user-defined" )
-		a.setAttribute('value', "false" )
-
-		c = doc.createElement('component'); e.appendChild( c )
-		c.setAttribute('type', "EC_Placeable")
-		c.setAttribute('sync', '1')
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Transform" )
-		loc = '%6f,%6f,%6f' %tuple(ob.matrix_world.translation_part())
-		rot = '%6f,%6f,%6f' %tuple(ob.matrix_world.rotation_part().to_euler())
-		scl = '%6f,%6f,%6f' %tuple(ob.matrix_world.scale_part())
-		a.setAttribute('value', "%s,%s,%s" %(loc,rot,scl) )
-
-		a = doc.createElement('attribute'); c.appendChild(a)
-		a.setAttribute('name', "Show bounding box" )
-		a.setAttribute('value', "false" )
+		export_ogre_mesh( ob, path=path, force_name=force_name, ignore_shape_animation=False, opts=opts )
 
 
 		## realXtend internal Naali format ##
+		# We are removing realXtend from this exporter
+		# To which XML document this is even creating these elements
+		"""
 		if ob.game.physics_type == 'RIGID_BODY':
-			com = doc.createElement('component'); e.appendChild( com )
+			com = doc.createElement('component');
+			e.appendChild( com )
 			com.setAttribute('type', 'EC_RigidBody')
 			com.setAttribute('sync', '1')
 
@@ -4298,13 +4249,13 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			a = doc.createElement('attribute'); com.appendChild( a )
 			a.setAttribute('name', 'Phantom')		# is this no collide or hide from view?
 			a.setAttribute('value', str(ob.game.use_ghost).lower() )
+		"""
 
 
 
 
 	def ogre_export(self, url, context ):
 		timer = Timer()
-		print( 'Starting timer, time ', ('%.3f'%(timer.elapsed())), 'ms' )
 		global OPTIONS
 		#OPTIONS['TEXTURES_SUBDIR'] = self.EX_TEXTURES_SUBDIR
 		OPTIONS['FORCE_IMAGE_FORMAT'] = None
@@ -4326,16 +4277,21 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		print('ogre export->', url)
 		prefix = url.split('.')[0]
 
-		rex = dom.Document()		# realxtend .rex
-		rex.appendChild( rex.createElement('scene') )
-
 		now = time.time()
 		doc = dom.Document()
-		scn = doc.createElement('scene'); doc.appendChild( scn )
+		scn = doc.createElement('scene');
+		doc.appendChild( scn )
+
+		# Set the header to the scene
+		scn.setAttribute('formatVersion', '1.0.0')
+
+		# Set the export time to the scene
 		scn.setAttribute('export_time', str(now))
 		bscn = bpy.context.scene
-		if '_previous_export_time_' in bscn.keys(): scn.setAttribute('previous_export_time', str(bscn['_previous_export_time_']))
-		else: scn.setAttribute('previous_export_time', '0')
+		if '_previous_export_time_' in bscn.keys():
+			scn.setAttribute('previous_export_time', str(bscn['_previous_export_time_']))
+		else:
+			scn.setAttribute('previous_export_time', '0')
 		bscn[ '_previous_export_time_' ] = now
 		scn.setAttribute('exported_by', getpass.getuser())
 
@@ -4406,13 +4362,15 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			flat = []
 			_flatten( ob, flat )
 			root = flat[-1]
-			if root not in roots: roots.append( root )
+			if root not in roots:
+				roots.append( root )
 
 		exported_meshes = []		# don't export same data multiple times
 		for root in roots:
 			print('--------------- exporting root ->', root )
 			self._node_export( root, 
-				url=url, doc = doc, rex = rex, 
+				doc=doc,
+				url=url,
 				exported_meshes = exported_meshes, 
 				meshes = meshes,
 				mesh_collision_prims = mesh_collision_prims,
@@ -4423,15 +4381,10 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			)
 
 		if self.EX_SCENE:
-			data = rex.toprettyxml()
-			f = open( url+'.rex', 'wb' ); f.write( bytes(data,'utf-8') ); f.close()
-			print('realxtend scene dumped', url)
-
 			data = doc.toprettyxml()
 			if not url.endswith('.scene'): url += '.scene'
 			f = open( url, 'wb' ); f.write( bytes(data,'utf-8') ); f.close()
 			print('ogre scene dumped', url)
-
 
 		if self.EX_MATERIALS: self.dot_material( meshes, os.path.split(url)[0] )
 
@@ -4441,26 +4394,26 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 
 	############# node export - recursive ###############
-	def _node_export( self, ob, url='', doc=None, rex=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None ):
+	def _node_export( self, ob, url='', doc=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None ):
 
-		o = _ogre_node_helper( doc, ob, objects )
-		xmlparent.appendChild(o)
+		obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
+		xmlparent.appendChild(obj)
 
 		## UUID ##
-		o.setAttribute('uuid', UUID(ob))
+		obj.setAttribute('uuid', UUID(ob))
 
 		## custom user props ##
 		for prop in ob.items():
 			propname, propvalue = prop
 			if not propname.startswith('_'):
 				user = doc.createElement('user_data')
-				o.appendChild( user )
+				obj.appendChild( user )
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
 			elif propname in VersionControl+VersionControlUser:
 				user = doc.createElement('version_control')
-				o.appendChild( user )
+				obj.appendChild( user )
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
@@ -4473,7 +4426,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		## BGE subset ##
 		game = doc.createElement('game')
-		o.appendChild( game )
+		obj.appendChild( game )
 		sens = doc.createElement('sensors')
 		game.appendChild( sens )
 		acts = doc.createElement('actuators')
@@ -4485,163 +4438,215 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 
 		if ob.type == 'MESH' and len(ob.data.faces):
-			timer = Timer()
-			self.rex_entity( rex, ob )		# is dotREX flat?
-
-			collisionFile = None
-			collisionPrim = None
-			if ob.data.name in mesh_collision_prims: collisionPrim = mesh_collision_prims[ ob.data.name ]
-			if ob.data.name in mesh_collision_files: collisionFile = mesh_collision_files[ ob.data.name ]
-
-			meshes.append( ob )
-			e = doc.createElement('entity') 
-			o.appendChild(e); e.setAttribute('name', ob.data.name)
-			prefix = ''
-			#if self.EX_MESH_SUBDIR: prefix = 'meshes/'
-			e.setAttribute('meshFile', '%s%s.mesh' %(prefix,ob.data.name) )
-
-			if not collisionPrim and not collisionFile:
-				if ob.game.use_collision_bounds:
-					collisionPrim = ob.game.collision_bounds_type.lower()
-					mesh_collision_prims[ ob.data.name ] = collisionPrim
-				else:
-					for child in ob.children:
-						if child.name.startswith('collision'):		# double check, instances with decimate modifier are ok?
-							collisionFile = '%s_collision_%s.mesh' %(prefix,ob.data.name)
-							break
-					if collisionFile:
-						mesh_collision_files[ ob.data.name ] = collisionFile
-						self.dot_mesh( 
-							child, 
-							path=os.path.split(url)[0], 
-							force_name='_collision_%s' %ob.data.name
-						)
-
-			if collisionPrim: e.setAttribute('collisionPrim', collisionPrim )
-			elif collisionFile: e.setAttribute('collisionFile', collisionFile )
-
-			_mesh_entity_helper( doc, ob, e )
-
-			if self.EX_MESH:
-				murl = os.path.join( os.path.split(url)[0], '%s.mesh'%ob.data.name )
-				exists = os.path.isfile( murl )
-				if not exists or (exists and self.EX_MESH_OVERWRITE):
-					if ob.data.name not in exported_meshes:
-						if '_update_mesh_' in ob.data.keys() and not ob.data['_update_mesh_']: print('	skipping', ob.data)
-						else:
-							exported_meshes.append( ob.data.name )
-							self.dot_mesh( ob, os.path.split(url)[0] )
-
-			## deal with Array mod ##
-			vecs = [ ob.matrix_world.translation_part() ]
-			for mod in ob.modifiers:
-				if mod.type == 'ARRAY':
-					if mod.fit_type != 'FIXED_COUNT':
-						print( 'WARNING: unsupport array-modifier type->', mod.fit_type )
-						continue
-					if not mod.use_constant_offset:
-						print( 'WARNING: unsupport array-modifier mode, must be "constant offset" type' )
-						continue
-
-					else:
-						#v = ob.matrix_world.translation_part()
-
-						newvecs = []
-						for prev in vecs:
-							for i in range( mod.count-1 ):
-								v = prev + mod.constant_offset_displace
-								newvecs.append( v )
-								ao = _ogre_node_helper( doc, ob, objects, prefix='_array_%s_'%len(vecs+newvecs), pos=v )
-								xmlparent.appendChild(ao)
-
-								e = doc.createElement('entity') 
-								ao.appendChild(e); e.setAttribute('name', ob.data.name)
-								#if self.EX_MESH_SUBDIR: e.setAttribute('meshFile', 'meshes/%s.mesh' %ob.data.name)
-								#else:
-								e.setAttribute('meshFile', '%s.mesh' %ob.data.name)
-
-								if collisionPrim: e.setAttribute('collisionPrim', collisionPrim )
-								elif collisionFile: e.setAttribute('collisionFile', collisionFile )
-
-						vecs += newvecs
-			print( 'Exporting mesh ', ob.data.name, ' took ', '%.3f'%(timer.elapsed()), 'ms' )
-
-
+			self._mesh_export( ob,
+					url=url,
+					doc=doc,
+					exported_meshes=exported_meshes,
+					meshes=meshes,
+					mesh_collision_prims=mesh_collision_prims,
+					mesh_collision_files=mesh_collision_files,
+					prefix=prefix,
+					objects=objects,
+					xmlparent=xmlparent,
+					xml_par=obj )
 
 		elif ob.type == 'CAMERA':
-			Report.cameras.append( ob.name )
-			c = doc.createElement('camera')
-			o.appendChild(c); c.setAttribute('name', ob.data.name)
-			aspx = bpy.context.scene.render.pixel_aspect_x
-			aspy = bpy.context.scene.render.pixel_aspect_y
-			sx = bpy.context.scene.render.resolution_x
-			sy = bpy.context.scene.render.resolution_y
-			fovY = 0.0
-			if (sx*aspx > sy*aspy):
-				fovY = 2*math.atan(sy*aspy*16.0/(ob.data.lens*sx*aspx))
-			else:
-				fovY = 2*math.atan(16.0/ob.data.lens)
-			# fov in degree
-			fov = fovY*180.0/math.pi
-			c.setAttribute('fov', '%s'%fov)
-			c.setAttribute('projectionType', "perspective")
-			a = doc.createElement('clipping'); c.appendChild( a )
-			a.setAttribute('nearPlaneDist', '%s' %ob.data.clip_start)
-			a.setAttribute('farPlaneDist', '%s' %ob.data.clip_end)
-
+			self._camera_export(ob, url, doc, xml_par=obj)
 
 		elif ob.type == 'LAMP':
-			Report.lights.append( ob.name )
-			l = doc.createElement('light')
-			o.appendChild(l); l.setAttribute('name', ob.data.name)
-			l.setAttribute('type', ob.data.type.lower() )
-			a = doc.createElement('lightAttenuation'); l.appendChild( a )
-			a.setAttribute('range', '5000' )			# is this an Ogre constant?
-			a.setAttribute('constant', '1.0')		# TODO support quadratic light
-			a.setAttribute('linear', '%s'%(1.0/ob.data.distance))
-			a.setAttribute('quadratic', '0.0')
-
-
-			## actually need to precompute light brightness by adjusting colors below ##
-			if ob.data.use_diffuse:
-				a = doc.createElement('colorDiffuse'); l.appendChild( a )
-				a.setAttribute('r', '%s'%ob.data.color.r)
-				a.setAttribute('g', '%s'%ob.data.color.g)
-				a.setAttribute('b', '%s'%ob.data.color.b)
-
-			if ob.data.use_specular:
-				a = doc.createElement('colorSpecular'); l.appendChild( a )
-				a.setAttribute('r', '%s'%ob.data.color.r)
-				a.setAttribute('g', '%s'%ob.data.color.g)
-				a.setAttribute('b', '%s'%ob.data.color.b)
-
-			## bug reported by C.L.B ##
-			if ob.data.type != 'HEMI':		# hemi lights should actually provide info for fragment/vertex-program ambient shaders
-				if ob.data.shadow_method != 'NOSHADOW':		# just a guess - is this Ogre API?
-					a = doc.createElement('colorShadow'); l.appendChild( a )
-					a.setAttribute('r', '%s'%ob.data.color.r)
-					a.setAttribute('g', '%s'%ob.data.color.g)
-					a.setAttribute('b', '%s'%ob.data.color.b)
-					l.setAttribute('shadow','true')
+			self._light_export(ob, url, doc, xml_par=obj)
 
 		for child in ob.children:
 			self._node_export( child, 
-				url = url, doc = doc, rex = rex, 
+				url = url,
+				doc = doc,
 				exported_meshes = exported_meshes, 
 				meshes = meshes,
 				mesh_collision_prims = mesh_collision_prims,
 				mesh_collision_files = mesh_collision_files,
 				prefix = prefix,
 				objects=objects, 
-				xmlparent=o
+				xmlparent=obj
 			)
-		## end _node_export
+	## end _node_export
+
+	def _light_export( self, ob, url='', doc=None, xml_par=None):
+		Report.lights.append( ob.name )
+		light = doc.createElement('light')
+		xml_par.appendChild(light);
+		light.setAttribute('name', ob.data.name)
+		light.setAttribute('type', ob.data.type.lower() )
+
+		# Export attenuation
+		att = doc.createElement('lightAttenuation');
+		light.appendChild( att )
+		# is range an Ogre constant?
+		att.setAttribute('range', '5000' )
+		att.setAttribute('constant', '1.0')		
+		att.setAttribute('linear', '%s'%(1.0/ob.data.distance))
+		# TODO support quadratic light
+		att.setAttribute('quadratic', '0.0')
+
+
+		## actually need to precompute light brightness by adjusting colors below ##
+		if ob.data.use_diffuse:
+			diff = doc.createElement('colorDiffuse');
+			light.appendChild(diff)
+			diff.setAttribute('r', '%s'%ob.data.color.r)
+			diff.setAttribute('g', '%s'%ob.data.color.g)
+			diff.setAttribute('b', '%s'%ob.data.color.b)
+
+		if ob.data.use_specular:
+			spec = doc.createElement('colorSpecular');
+			light.appendChild(spec)
+			spec.setAttribute('r', '%s'%ob.data.color.r)
+			spec.setAttribute('g', '%s'%ob.data.color.g)
+			spec.setAttribute('b', '%s'%ob.data.color.b)
+
+		## bug reported by C.L.B ##
+		# hemi lights should actually provide info for fragment/vertex-program ambient shaders
+		if ob.data.type != 'HEMI':	
+			# just a guess - is this Ogre API?
+			if ob.data.shadow_method != 'NOSHADOW':	
+				shaw = doc.createElement('colorShadow');
+				light.appendChild(shaw)
+				shaw.setAttribute('r', '%s'%ob.data.color.r)
+				shaw.setAttribute('g', '%s'%ob.data.color.g)
+				shaw.setAttribute('b', '%s'%ob.data.color.b)
+				light.setAttribute('shadow','true')
+	## end _light_export
+
+	def _camera_export( self, ob, url='', doc=None, xml_par=None):
+		Report.cameras.append( ob.name )
+		cam = doc.createElement('camera')
+		xml_par.appendChild(cam);
+		cam.setAttribute('name', ob.data.name)
+		aspx = bpy.context.scene.render.pixel_aspect_x
+		aspy = bpy.context.scene.render.pixel_aspect_y
+		sx = bpy.context.scene.render.resolution_x
+		sy = bpy.context.scene.render.resolution_y
+		fovY = 0.0
+		if (sx*aspx > sy*aspy):
+			fovY = 2*math.atan(sy*aspy*16.0/(ob.data.lens*sx*aspx))
+		else:
+			fovY = 2*math.atan(16.0/ob.data.lens)
+		# fov in degree
+		fov = fovY*180.0/math.pi
+		cam.setAttribute('fov', '%s'%fov)
+		cam.setAttribute('projectionType', "perspective")
+		clip = doc.createElement('clipping');
+		cam.appendChild(clip)
+		clip.setAttribute('nearPlaneDist', '%s' %ob.data.clip_start)
+		clip.setAttribute('farPlaneDist', '%s' %ob.data.clip_end)
+	## end _camera_export
+
+	
+	# TODO
+	# At the moment the passed url for this is the scene file url
+	# It should definitely be changed to the directory we are exporting
+	# TODO separate the aux node stuff to another function
+	# TODO separate the collision model exporting
+	def _mesh_export( self, ob, url='', doc=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None, xml_par=None ):
+		timer = Timer()
+
+		collisionFile = None
+		collisionPrim = None
+		if ob.data.name in mesh_collision_prims:
+			collisionPrim = mesh_collision_prims[ ob.data.name ]
+		if ob.data.name in mesh_collision_files:
+			collisionFile = mesh_collision_files[ ob.data.name ]
+
+		meshes.append( ob )
+		ent = doc.createElement('entity') 
+		xml_par.appendChild(ent);
+		ent.setAttribute('name', ob.data.name)
+
+		prefix = ''
+		#if self.EX_MESH_SUBDIR: prefix = 'meshes/'
+		ent.setAttribute('meshFile', '%s%s.mesh' %(prefix,ob.data.name) )
+
+		if not collisionPrim and not collisionFile:
+			if ob.game.use_collision_bounds:
+				collisionPrim = ob.game.collision_bounds_type.lower()
+				mesh_collision_prims[ ob.data.name ] = collisionPrim
+			else:
+				for child in ob.children:
+					if child.name.startswith('collision'):		# double check, instances with decimate modifier are ok?
+						collisionFile = '%s_collision_%s.mesh' %(prefix,ob.data.name)
+						break
+				if collisionFile:
+					mesh_collision_files[ ob.data.name ] = collisionFile
+					self.ogre_mesh( 
+						child, 
+						path=os.path.split(url)[0], 
+						force_name='_collision_%s' %ob.data.name
+					)
+
+		if collisionPrim:
+			ent.setAttribute('collisionPrim', collisionPrim )
+		elif collisionFile:
+			ent.setAttribute('collisionFile', collisionFile )
+
+		_mesh_entity_helper( doc, ob, ent )
+
+		if self.EX_MESH:
+			# What url is this really?
+			murl = os.path.join( os.path.split(url)[0], '%s.mesh'%ob.data.name )
+			exists = os.path.isfile( murl )
+			if not exists or (exists and self.EX_MESH_OVERWRITE):
+				if ob.data.name not in exported_meshes:
+					if '_update_mesh_' in ob.data.keys() and not ob.data['_update_mesh_']:
+						print('	skipping', ob.data)
+					else:
+						exported_meshes.append( ob.data.name )
+						self.ogre_mesh( ob, path=os.path.split(url)[0] )
+
+		## deal with Array mod ##
+		vecs = [ ob.matrix_world.translation_part() ]
+		for mod in ob.modifiers:
+			if mod.type == 'ARRAY':
+				if mod.fit_type != 'FIXED_COUNT':
+					print( 'WARNING: unsupport array-modifier type->', mod.fit_type )
+					continue
+				if not mod.use_constant_offset:
+					print( 'WARNING: unsupport array-modifier mode, must be "constant offset" type' )
+					continue
+
+				else:
+					#v = ob.matrix_world.translation_part()
+
+					newvecs = []
+					for prev in vecs:
+						for i in range( mod.count-1 ):
+							v = prev + mod.constant_offset_displace
+							newvecs.append( v )
+							ao = _ogre_node_helper( doc=doc, ob=ob, objects=objects, prefix='_array_%s_'%len(vecs+newvecs), pos=v )
+							xmlparent.appendChild(ao)
+
+							ent = doc.createElement('entity') 
+							ao.appendChild(e); ent.setAttribute('name', ob.data.name)
+							#if self.EX_MESH_SUBDIR: e.setAttribute('meshFile', 'meshes/%s.mesh' %ob.data.name)
+							#else:
+							ent.setAttribute('meshFile', '%s.mesh' %ob.data.name)
+
+							if collisionPrim:
+								ent.setAttribute('collisionPrim', collisionPrim )
+							elif collisionFile:
+								ent.setAttribute('collisionFile', collisionFile )
+
+					vecs += newvecs
+		print( 'Exporting mesh ', ob.data.name, ' took ', '%.3f'%(timer.elapsed()), 'ms' )
+
+
+	## end _mesh_export
 
 def get_parent_matrix( ob, objects ):
 	if not ob.parent: return mathutils.Matrix((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
 	else:
-		if ob.parent in objects: return ob.parent.matrix_world.copy()
-		else: return get_parent_matrix( ob.parent, objects )
+		if ob.parent in objects:
+			return ob.parent.matrix_world.copy()
+		else:
+			return get_parent_matrix( ob.parent, objects )
 
 def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None ):
 	mat = get_parent_matrix(ob, objects).invert() * ob.matrix_world
@@ -4871,363 +4876,11 @@ def mesh_is_smooth( mesh ):
 	for face in mesh.faces:
 		if face.use_smooth: return True
 
-
-def dot_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
-	print('mesh to Ogre mesh XML format', ob.name)
-	if not os.path.isdir( path ):
-		print('creating directory', path )
-		os.makedirs( path )
-
-	Report.meshes.append( ob.data.name )
-	Report.faces += len( ob.data.faces )
-	Report.vertices += len( ob.data.vertices )
-
-	copy = ob.copy()
-	rem = []
-	for mod in copy.modifiers:		# remove armature and array modifiers before collaspe
-		if mod.type in 'ARMATURE ARRAY'.split(): rem.append( mod )
-	for mod in rem: copy.modifiers.remove( mod )
-
-	## bake mesh ##
-	_mesh_normals = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
-	_lookup_normals = False
-#	if normals: _lookup_normals = mesh_is_smooth( _mesh_normals )
-	if _lookup_normals: print('using super slow normal lookup...')
-
-	## hijack blender's edge-split modifier to make this easy ##
-	e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
-	e.use_edge_angle = False
-	e.use_edge_sharp = True
-	for edge in copy.data.edges: edge.use_edge_sharp = True
-	## bake mesh ##
-	mesh = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
-
-	prefix = ''
-	#if opts['mesh-sub-dir']:	#self.EX_MESH_SUBDIR:
-	#	mdir = os.path.join(path,'meshes')
-	#	if not os.path.isdir( mdir ): os.mkdir( mdir )
-	#	prefix = 'meshes/'
-
-	doc = dom.Document()
-	root = doc.createElement('mesh'); doc.appendChild( root )
-
-	sharedgeo = doc.createElement('sharedgeometry')
-	root.appendChild( sharedgeo )
-	sharedgeo.setAttribute('vertexcount', '%s' %len(mesh.vertices))
-	if len(mesh.vertices) > 65535:
-		sharedgeo.setAttribute("use32bitindexes", 'true')
-
-	subs = doc.createElement('submeshes')
-	root.appendChild( subs )
-
-	arm = ob.find_armature()
-	if arm:
-		skel = doc.createElement('skeletonlink')
-		skel.setAttribute('name', '%s%s.skeleton' %(prefix, force_name or ob.data.name) )
-		root.appendChild( skel )
-
-	## verts ##
-	print('	writing shared geometry')
-	#geo = doc.createElement('geometry')
-	#sm.appendChild( geo )
-	#geo.setAttribute('vertexcount', '%s' %len(mesh.vertices))
-	vb = doc.createElement('vertexbuffer')
-	vb.setAttribute('positions','true')
-	#buffix dec8th#vb.setAttribute('normals','true')
-	hasnormals = False
-	sharedgeo.appendChild( vb )
-
-	if arm:
-		bweights = doc.createElement('boneassignments')
-		root.appendChild( bweights )
-
-	if opts['shape-anim'] and ob.data.shape_keys and len(ob.data.shape_keys.keys):
-		print('	writing shape animation')
-
-		poses = doc.createElement('poses'); root.appendChild( poses )
-		for sidx, skey in enumerate(ob.data.shape_keys.keys):
-			if sidx == 0: continue
-			pose = doc.createElement('pose'); poses.appendChild( pose )
-			pose.setAttribute('name', skey.name)
-			pose.setAttribute('index', str(sidx-1))
-
-			pose.setAttribute('target', 'mesh')		# If target is 'mesh', targets the shared geometry, if target is submesh, targets the submesh identified by 'index'. 
-			for i,p in enumerate( skey.data ):
-				x,y,z = swap( ob.data.vertices[i].co - p.co )
-				if x==.0 and y==.0 and z==.0: continue		# the older exporter optimized this way, is it safe?
-				po = doc.createElement('poseoffset'); pose.appendChild( po )
-				po.setAttribute('x', '%6f' %x)
-				po.setAttribute('y', '%6f' %y)
-				po.setAttribute('z', '%6f' %z)
-				po.setAttribute('index', str(i))		# this was 3 values in old exporter, from triangulation?
-
-		if ob.data.shape_keys.animation_data and len(ob.data.shape_keys.animation_data.nla_tracks):
-			anims = doc.createElement('animations'); root.appendChild( anims )
-			for nla in ob.data.shape_keys.animation_data.nla_tracks:
-				strip = nla.strips[0]
-				anim = doc.createElement('animation'); anims.appendChild( anim )
-				anim.setAttribute('name', nla.name)		# do not use the action's name
-				anim.setAttribute('length', str((strip.frame_end-strip.frame_start)/30.0) )		# TODO proper fps
-				tracks = doc.createElement('tracks'); anim.appendChild( tracks )
-				track = doc.createElement('track'); tracks.appendChild( track )
-				track.setAttribute('type','pose')
-				track.setAttribute('target','mesh')
-				track.setAttribute('index','0')
-				keyframes = doc.createElement('keyframes')
-				track.appendChild( keyframes )
-
-
-				for frame in range( int(strip.frame_start), int(strip.frame_end), 2):		# every other frame
-					bpy.context.scene.frame_current = frame
-					keyframe = doc.createElement('keyframe')
-					keyframes.appendChild( keyframe )
-					keyframe.setAttribute('time', str(frame/30.0))
-					for sidx, skey in enumerate( ob.data.shape_keys.keys ):
-						if sidx == 0: continue
-						poseref = doc.createElement('poseref'); keyframe.appendChild( poseref )
-						poseref.setAttribute('poseindex', str(sidx))
-						poseref.setAttribute('influence', str(skey.value) )
-
-	## write all verts, even if not in material index, inflates xml, should not bloat .mesh (TODO is this true?)
-	print('	writing vertex data' )
-	# Used timing infomation
-	timer = Timer()
-	vertices_time = 0
-	normals_time = 0
-	xml_node_create_t = 0
-	xml_node_attrib_t = 0
-	swap_time = 0
-
-	badverts = 0
-	
-	uvOfVertex = {}
-	
-	## texture maps - vertex dictionary ##
-	if mesh.uv_textures.active:
-		for layer in mesh.uv_textures:
-			uvOfVertex[layer] = {}
-			for fidx, uvface in enumerate(layer.data):
-				face = mesh.faces[ fidx ]
-				for vertex in face.vertices:
-					if vertex not in uvOfVertex[layer]:
-						uv = uvface.uv[ list(face.vertices).index(vertex) ]
-						uvOfVertex[layer][vertex] = uv
-
-	for vidx, v in enumerate(mesh.vertices):
-		if arm:
-			check = 0
-			for vgroup in v.groups:
-				if vgroup.weight > opts['trim-bone-weights']:		#self.EX_TRIM_BONE_WEIGHTS:		# optimized
-					bnidx = find_bone_index(copy,arm,vgroup.group)
-					if bnidx is not None:		# allows other vertex groups, not just armature vertex groups
-						vba = doc.createElement('vertexboneassignment')
-						bweights.appendChild( vba )
-						vba.setAttribute( 'vertexindex', str(vidx) )
-						vba.setAttribute( 'boneindex', str(bnidx) )
-						vba.setAttribute( 'weight', str(vgroup.weight) )
-						check += 1
-			if check > 4:
-				badverts += 1
-				print('WARNING: vertex %s is in more than 4 vertex groups (bone weights)\n(this maybe Ogre incompatible)' %vidx)
-
-		vert_timer = Timer()
-
-		loop_timer = Timer()
-		vertex = doc.createElement('vertex')
-		p = doc.createElement('position')
-		n = doc.createElement('normal')
-		vb.appendChild( vertex )
-		vertex.appendChild( p )
-		vertex.appendChild( n )
-		xml_node_create_t += loop_timer.elapsed()
-
-		loop_timer.reset()
-		x,y,z = swap( v.co )
-		swap_time += loop_timer.elapsed()
-
-		loop_timer.reset()
-		p.setAttribute('x', '%6f' %x)
-		p.setAttribute('y', '%6f' %y)
-		p.setAttribute('z', '%6f' %z)
-		xml_node_attrib_t += loop_timer.elapsed()
-
-		vertices_time += vert_timer.elapsed()
-
-		## edge_split modifier causes normals to break
-
-		# this can not be done because the indices have changed
-		#ov = _mesh_normals.vertices[ vidx ]
-		#hasnormals = True
-		#x,y,z = swap( ov.normal )
-		#n.setAttribute('x', str(x))
-		#n.setAttribute('y', str(y))
-		#n.setAttribute('z', str(z))
-
-		loop_timer.reset()
-		if _lookup_normals:
-			# this is very expensive  (TODO manual face split - get rid of edgesplit-mod-hack)
-			for ov in _mesh_normals.vertices:		#fixed dec8th ob.data.vertices:
-				if ov.co == v.co:
-					hasnormals = True
-					x,y,z = swap( ov.normal )
-					n.setAttribute('x', '%6f' %x)
-					n.setAttribute('y', '%6f' %y)
-					n.setAttribute('z', '%6f' %z)
-					break
-		else:
-			hasnormals = True
-			x,y,z = swap( v.normal )
-			n.setAttribute('x', '%6f' %x)
-			n.setAttribute('y', '%6f' %y)
-			n.setAttribute('z', '%6f' %z)
-		normals_time += loop_timer.elapsed()
-
-
-		## vertex colors ##
-		if len( mesh.vertex_colors ):		# TODO need to do proper face lookup for color1,2,3,4
-			vb.setAttribute('colours_diffuse','true')		# fixed Dec3rd
-			cd = doc.createElement( 'colour_diffuse' )	#'color_diffuse')
-			vertex.appendChild( cd )
-			vchan = mesh.vertex_colors[0]
-
-			valpha = None	## hack support for vertex color alpha
-			for bloc in mesh.vertex_colors:
-				if bloc.name.lower().startswith('alpha'):
-					valpha = bloc; break
-
-			for f in mesh.faces:
-				if vidx in f.vertices:
-					k = list(f.vertices).index(vidx)
-					r,g,b = getattr( vchan.data[ f.index ], 'color%s'%(k+1) )
-					if valpha:
-						ra,ga,ba = getattr( valpha.data[ f.index ], 'color%s'%(k+1) )
-						cd.setAttribute('value', '%6f %6f %6f %6f' %(r,g,b,ra) )	
-					else:
-						cd.setAttribute('value', '%6f %6f %6f 1.0' %(r,g,b) )
-					break
-
-		## texture maps ##
-		if mesh.uv_textures.active:
-			vb.setAttribute('texture_coords', '%s' %len(mesh.uv_textures) )
-
-			for layer in mesh.uv_textures:
-				if vidx in uvOfVertex[layer]:
-					uv = uvOfVertex[layer][vidx]
-					tcoord = doc.createElement('texcoord')
-					tcoord.setAttribute('u', '%6f' %uv[0] )
-					tcoord.setAttribute('v', '%6f' %(1.0-uv[1]) )
-					#tcoord.setAttribute('v', '%6f' %uv[1] )
-					vertex.appendChild( tcoord )
-
-	## end vert loop
-	if hasnormals: vb.setAttribute('normals','true')
-	#else: vb.setAttribute('normals','false')
-
-	# Print timing information
-	print( 'Exporting vertices took ', '%.3f'%(timer.elapsed()), 'ms' )
-	print( '\tThe vertices took ', '%.3f'%(vertices_time), 'ms' )
-	print( '\t\tcreating xml nodes took ', '%.3f'%(xml_node_create_t), 'ms' )
-	print( '\t\tcalls to swap took ', '%.3f'%(swap_time), 'ms' )
-	print( '\t\tsetting xml attributes took ', '%.3f'%(xml_node_attrib_t), 'ms' )
-	print( '\tThe normals took ', '%.3f'%(normals_time), 'ms' )
-	
-
-	if badverts:
-		Report.warnings.append( '%s has %s vertices weighted to too many bones (Ogre limits a vertex to 4 bones)\n[try increaseing the Trim-Weights threshold option]' %(mesh.name, badverts) )
-
-
-
-	######################################################
-	used_materials = []
-	matnames = []
-	for mat in ob.data.materials:
-		if mat: matnames.append( mat.name )
-		else:
-			print('warning: bad material data', ob)
-			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
-	if not matnames: matnames.append( '_missing_material_' )
-
-	timer.reset()
-	print('	writing submeshes' )
-	for matidx, matname in enumerate( matnames ):
-		if not len(mesh.faces):		# bug fix dec10th, reported by Matti
-			print('WARNING: submesh without faces, skipping!', ob)
-			continue
-
-		sm = doc.createElement('submesh')		# material split?
-		sm.setAttribute('usesharedvertices', 'true')
-		sm.setAttribute('material', matname)
-
-
-		## faces ##
-		faces = doc.createElement('faces')
-		for F in mesh.faces:	#ob.data.faces:
-			## skip faces not in this material index ##
-			if F.material_index != matidx: continue
-			if matname not in used_materials: used_materials.append( matname )
-			## Ogre only supports triangles
-			tris = []
-			tris.append( (F.vertices[0], F.vertices[1], F.vertices[2]) )
-			if len(F.vertices) >= 4:	#TODO split face on shortest edge? or will that mess up triangle-strips?
-				#correct-but-flipped#tris.append( (F.vertices[2], F.vertices[0], F.vertices[3]) )
-				tris.append( (F.vertices[0], F.vertices[2], F.vertices[3]) )
-			for tri in tris:
-				v1,v2,v3 = tri
-				face = doc.createElement('face')
-				face.setAttribute('v1', str(v1))
-				face.setAttribute('v2', str(v2))
-				face.setAttribute('v3', str(v3))
-				faces.appendChild(face)
-
-		if len(faces.childNodes):
-			subs.appendChild( sm )
-			faces.setAttribute('count', '%s' %len(faces.childNodes))
-			Report.triangles += len(faces.childNodes)
-			sm.appendChild( faces )
-
-	print( 'Writing submeshes took ', '%.3f'%(timer.elapsed()), 'ms' )
-
-	bpy.data.objects.remove(copy)
-	bpy.data.meshes.remove(mesh)
-
-	name = force_name or ob.data.name
-
-	timer.reset()
-	data = doc.documentElement.toprettyxml()
-	xml_to_str_t = timer.elapsed()
-	timer.reset()
-	xmlfile = os.path.join(path, '%s%s.mesh.xml' %(prefix,name) )
-	f = open( xmlfile, 'wb' )
-	f.write( bytes(data,'utf-8') )
-	f.close()
-	file_write_t = timer.elapsed()
-
-	print( 'Mesh xml to string took ', '%.3f'%(xml_to_str_t), 'ms' )
-	print( 'Writing the mesh xml file to disk took ', '%.3f'%(file_write_t), 'ms' )
-
-	OgreXMLConverter( xmlfile, opts )
-
-	if arm and opts['armature-anim']:		#self.EX_ANIM:
-		skel = Skeleton( ob )
-		data = skel.to_xml()
-		name = force_name or ob.data.name
-		xmlfile = os.path.join(path, '%s%s.skeleton.xml' %(prefix,name) )
-		f = open( xmlfile, 'wb' )
-		f.write( bytes(data,'utf-8') )
-		f.close()
-		OgreXMLConverter( xmlfile, opts )
-
-	mats = []
-	for name in used_materials:
-		if name != '_missing_material_':
-			mats.append( bpy.data.materials[name] )
-	return mats
-## end dot_mesh ##
-
 import pyogre
 
+# Ogre Mesh binary exporter #
 def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
-	print('Exporting Ogre mesh', ob.name)
+	print('Exporting Ogre mesh ', ob.name, " to ", path)
 	if not os.path.isdir( path ):
 		print('creating directory', path )
 		os.makedirs( path )
@@ -5328,6 +4981,17 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 	
 	uvOfVertex = {}
 	
+	## texture maps - vertex dictionary ##
+	if mesh.uv_textures.active:
+		for layer in mesh.uv_textures:
+			uvOfVertex[layer] = {}
+			for fidx, uvface in enumerate(layer.data):
+				face = mesh.faces[ fidx ]
+				for vertex in face.vertices:
+					if vertex not in uvOfVertex[layer]:
+						uv = uvface.uv[ list(face.vertices).index(vertex) ]
+						uvOfVertex[layer][vertex] = uv
+	
 	# Get the vertex buffer
 	for vidx, v in enumerate(mesh.vertices):
 		""" FIXME bone support
@@ -5391,12 +5055,21 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 		if mesh.uv_textures.active:
 			layer = mesh.uv_textures.active
 			#for layer in mesh.uv_textures:
+			if vidx in uvOfVertex[layer]:
+				uv = uvOfVertex[layer][vidx]
+				og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
+		
+		"""
+		if mesh.uv_textures.active:
+			layer = mesh.uv_textures.active
+			#for layer in mesh.uv_textures:
 			for fidx, uvface in enumerate(layer.data):
 				face = mesh.faces[ fidx ]
 				if vidx in face.vertices:
 					uv = uvface.uv[ list(face.vertices).index(vidx) ]
 					og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
 					break
+		"""
 
 		og_mesh.addVertex(og_vertex)
 	## end vert loop
@@ -5435,8 +5108,10 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 		## faces ##
 		for F in mesh.faces:
 			## skip faces not in this material index ##
-			if F.material_index != matidx: continue
-			if matname not in used_materials: used_materials.append( matname )
+			if F.material_index != matidx:
+				continue
+			if matname not in used_materials:
+				used_materials.append( matname )
 
 			## Ogre only supports triangles, so we will split quads
 			sm.addFace(F.vertices[0], F.vertices[1], F.vertices[2])
@@ -5814,9 +5489,9 @@ class INFO_MT_instances(bpy.types.Menu):
 		layout.separator()
 
 class INFO_MT_instance(bpy.types.Operator):                
-	'''select instance group'''                                                     
-	bl_idname = "select_instances"                                             
-	bl_label = "Select Instance Group"                                             
+	'''select instance group'''
+	bl_idname = "select_instances"
+	bl_label = "Select Instance Group"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
 	@classmethod
@@ -5841,30 +5516,37 @@ class INFO_MT_groups(bpy.types.Menu):
 
 #TODO
 class INFO_MT_group_mark(bpy.types.Operator):                  
-	'''mark group auto combine on export'''                                                
+	'''mark group auto combine on export'''
 	bl_idname = "mark_group_export_combine"                                        
 	bl_label = "Group Auto Combine"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mybool= BoolProperty(name="groupautocombine", description="set group auto-combine", default=False)
 	mygroups = {}
-	@classmethod                                                      
-	def poll(cls, context): return True
+
+	@classmethod
+	def poll(cls, context):
+		return True
+
 	def invoke(self, context, event):
 		self.mygroups[ op.groupname ] = self.mybool
 		return {'FINISHED'}
 
 class INFO_MT_group(bpy.types.Operator):                  
-	'''select group'''                                                
-	bl_idname = "select_group"                                        
-	bl_label = "Select Group"                                                # The panel label, http://www.blender.org/documentation/250PythonDoc/bpy.types.Panel.html
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
+	'''select group'''
+	bl_idname = "select_group"
+	# The panel label, http://www.blender.org/documentation/250PythonDoc/bpy.types.Panel.html
+	bl_label = "Select Group"
+	# Options for this panel type
+	bl_options = {'REGISTER', 'UNDO'}
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
-	@classmethod                                                      
+
+	@classmethod
 	def poll(cls, context):
 		print('----poll group, below context -----')
 		print( dir(context) )
 		#return context.active_object != None  # as long as something is selected, return the active Object?
 		return True
+
 	def invoke(self, context, event):
 		select_group( context, self.mystring )
 		return {'FINISHED'}
@@ -5881,10 +5563,11 @@ class INFO_MT_actors(bpy.types.Menu):
 		layout.separator()
 
 class INFO_MT_actor(bpy.types.Operator):                
-	'''select actor'''                                                     
-	bl_idname = "select_actor"                                             
-	bl_label = "Select Actor"                                             
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
+	'''select actor'''
+	bl_idname = "select_actor"
+	bl_label = "Select Actor"
+	# Options for this panel type
+	bl_options = {'REGISTER', 'UNDO'}
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
 	@classmethod
 	def poll(cls, context): return True
@@ -5903,13 +5586,16 @@ class INFO_MT_dynamics(bpy.types.Menu):
 		layout.separator()
 
 class INFO_MT_dynamic(bpy.types.Operator):                
-	'''select dynamic'''                                                     
-	bl_idname = "select_dynamic"                                             
-	bl_label = "Select Dynamic"                                             
+	'''select dynamic'''
+	bl_idname = "select_dynamic"
+	bl_label = "Select Dynamic"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
+
 	@classmethod
-	def poll(cls, context): return True
+	def poll(cls, context):
+		return True
+
 	def invoke(self, context, event):
 		bpy.data.objects[self.mystring].select = True
 		return {'FINISHED'}
