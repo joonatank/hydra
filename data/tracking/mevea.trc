@@ -5,13 +5,14 @@
 		<tracker name="DMTracker">
 			<transformation>
 				<sign x="1" y="-1" z="1"/>
-				<quaternion w="0.5" x="0.5" y="-0.5" z="-0.5"/>
 				<!--
 				<transformation>
+					<quaternion w="0.7071" z="0" x="0" y="-0.7071"/> 
 					<transformation>
-						<quaternion w="0.7071" z="0" x="0" y="-0.7071"/> 
+						<quaternion w="0.7071" z="0" y="0" x="-0.7071"/> 
 					</transformation>
 				</transformation>
+				<quaternion w="0.5" x="0.5" y="-0.5" z="-0.5"/>
 				-->
 			</transformation>
 			<!-- For some reason the first sensor is not in use 

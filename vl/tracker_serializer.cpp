@@ -138,13 +138,13 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 void
 vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans )
 {
-	Ogre::Matrix4 m = Ogre::Matrix4::IDENTITY;
+	Ogre::Matrix4 sign_m = Ogre::Matrix4::IDENTITY;
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("sign");
 	if( elem )
 	{
 		Ogre::Vector3 v = parseVector3( elem );
-		m.setScale(v);
+		sign_m.setScale(v);
 	}
 
 	Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
@@ -161,7 +161,10 @@ vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogr
 	m2.setTrans(v);
 
 	// Update the original matrix
-	trans = m2 * m * trans;
+	// Mutiplication Order creates a coordinate conversion matrix that applies
+	// the transformations to the input in correct order for transforming
+	// from third party coordinate system to ours.
+	trans = trans * sign_m * m2;
 	elem = XMLNode->first_node("transformation");
 	if( elem )
 	{ processTransformation( elem, trans ); }
