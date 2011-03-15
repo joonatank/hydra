@@ -53,11 +53,7 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 		boost::python::import("sys").attr("stderr") = python_sink_err;
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		std::cerr << vl::ERROR << "Exception occured when initing python context."
-			<< std::endl;
-	}
+	catch( ... ) {}
 	if (PyErr_Occurred())
 	{
 		PyErr_Print();
@@ -84,11 +80,7 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 		python::object result = python::exec(script.get(), _global, _global);
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		std::cerr << vl::ERROR << "Exception occured in python script: "
-			<< script.getName() << std::endl;
-	}
+	catch( ... ) {}
 	if( PyErr_Occurred() )
 	{
 		PyErr_Print();
@@ -104,10 +96,7 @@ vl::PythonContext::executePythonCommand(const std::string& cmd)
 		python::object result = python::exec(cmd.c_str(), _global, _global);
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		std::cerr << vl::ERROR << "Exception occured in : " << cmd << std::endl;
-	}
+	catch( ... ) {}
 	if( PyErr_Occurred() )
 	{
 		PyErr_Print();

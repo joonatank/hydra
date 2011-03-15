@@ -94,9 +94,6 @@ public:
 	bool onShowNamesChanged( CEGUI::EventArgs const &e );
 	bool onShowJointsChanged( CEGUI::EventArgs const &e );
 
-	/// Console events
-	bool onConsoleTextAccepted( CEGUI::EventArgs const &e );
-
 	/// Instruct the Channels to draw the Scene
 	virtual void draw( void );
 

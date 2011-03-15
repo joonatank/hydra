@@ -31,6 +31,7 @@
 #include <CEGUI/CEGUIDefaultResourceProvider.h>
 #include <CEGUI/CEGUIImageset.h>
 #include <CEGUI/CEGUIScheme.h>
+#include <CEGUI/CEGUIInputEvent.h>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -49,6 +50,7 @@ vl::Pipe::Pipe( std::string const &name,
 	, _editor(0)
 	, _loading_screen(0)
 	, _stats(0)
+	, _console_memory_index(-1)	// Using -1 index to indicate not using memory
 	, _running(true)	// TODO should this be true from the start?
 {
 	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
@@ -216,6 +218,106 @@ vl::Pipe::printToConsole(std::string const &text, double time,
 }
 
 
+/// ------------------------- GECUI callbacks ----------------------------------
+bool
+vl::Pipe::onConsoleInputAccepted( CEGUI::EventArgs const &e )
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	std::string command( input->getText().c_str() );
+	input->setText("");
+
+	if( *(command.end()-1) == ':' )
+	{
+		std::string str("Multi Line commands are not supported yet.");
+		printToConsole(str, 0);
+	}
+	else
+	{
+		while( _console_memory.size() > 100 )
+		{ _console_memory.pop_back(); }
+
+		_console_memory.push_front(command);
+
+		// TODO add support for time
+		printToConsole(command, 0);
+
+		sendCommand(command);
+	}
+
+	// Reset the memory index because the user has accepted the command
+	_console_memory_index = -1;
+	_console_last_command.clear();
+
+	return true;
+}
+
+bool
+vl::Pipe::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	CEGUI::KeyEventArgs const &key = static_cast<CEGUI::KeyEventArgs const &>(e);
+	if(key.scancode == CEGUI::Key::ArrowUp)
+	{
+		// Save the current user input when the list has not been scrolled
+		if( _console_memory_index == -1 )
+		{
+			_console_last_command = input->getText().c_str();
+		}
+
+		++_console_memory_index;
+		if( _console_memory_index >= _console_memory.size() )
+		{ _console_memory_index = _console_memory.size()-1; }
+
+		if( _console_memory_index > -1 )
+		{
+			std::string command = _console_memory.at(_console_memory_index);
+
+			input->setText(command);
+			input->setCaratIndex(input->getText().size());
+		}
+
+		return true;
+	}
+	else if(key.scancode == CEGUI::Key::ArrowDown)
+	{
+		--_console_memory_index;
+		if( _console_memory_index < 0 )
+		{
+			_console_memory_index = -1;
+			input->setText(_console_last_command);
+		}
+		else
+		{
+			std::string command = _console_memory.at(_console_memory_index);
+
+			input->setText(command);
+			input->setCaratIndex(input->getText().size());
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool
+vl::Pipe::onConsoleShow(const CEGUI::EventArgs& e)
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	input->activate();
+
+	return true;
+}
+
 /// ------------------------ Protected -----------------------------------------
 void
 vl::Pipe::_reloadProjects( vl::Settings const &set )
@@ -363,10 +465,10 @@ vl::Pipe::_createGUI(void )
 
 	// Load default data files used for the GUI
 	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-7.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-8.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-10.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-9.font" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-7.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-6.font" );
 	CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook", "MouseArrow" );
 
@@ -393,6 +495,8 @@ vl::Pipe::_createGUI(void )
 
 	/// Subscripe to events
 	std::cout << "Subcribing to events." << std::endl;
+	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleShow, this));
+
 	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
 	assert(output);
 	assert(output->getVertScrollbar());
@@ -400,7 +504,8 @@ vl::Pipe::_createGUI(void )
 
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
 	assert(input);
-	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Window::onConsoleTextAccepted, win));
+	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputAccepted, this));
+	input->subscribeEvent(CEGUI::Editbox::EventKeyDown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputKeyDown, this));
 
 	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
 	assert( item );

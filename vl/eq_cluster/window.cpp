@@ -388,25 +388,6 @@ vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 	return true;
 }
 
-bool
-vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
-{
-	CEGUI::Window *console = getPipe()->getConsole();
-	assert( console );
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
-	assert( input );
-
-	std::string command( input->getText().c_str() );
-	input->setText("");
-
-	// TODO add support for time
-	getPipe()->printToConsole(command, 0);
-
-	getPipe()->sendCommand(command);
-
-	return true;
-}
-
 /// ----------------------------- Public methods -------------------------------
 void
 vl::Window::draw( void )
