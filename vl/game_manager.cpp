@@ -41,7 +41,14 @@ vl::GameManager::GameManager( vl::Logger *logger )
 
 	_python = new vl::PythonContext( this );
 
-	std::cout << "Init audio." << std::endl;
+	std::cout << vl::TRACE << "Init audio." << std::endl;
+
+	cAudio::ILogger *audio_logger = cAudio::getLogger();
+	if( audio_logger->isLogReceiverRegistered("File") )
+	{
+		std::cout << vl::TRACE << "Removing cAudio File logger" << std::endl;
+		audio_logger->unRegisterLogReceiver("File");
+	}
 
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
