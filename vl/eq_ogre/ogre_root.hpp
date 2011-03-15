@@ -23,6 +23,8 @@
 #include "typedefs.hpp"
 #include "base/filesystem.hpp"
 
+#include "base/envsettings.hpp"
+
 namespace vl
 {
 namespace ogre
@@ -30,7 +32,7 @@ namespace ogre
 	class Root
 	{
 		public :
-			Root( std::string const &log_file_path, bool verbose );
+			Root(vl::LogLevel level);
 
 			virtual ~Root( void );
 

@@ -38,6 +38,8 @@ public:
 	/// Register this client to receive updates in the Rendering context
 	void registerForUpdates( void );
 
+	void registerForOutput( void );
+
 	bool messages() const
 	{ return !_messages.empty(); }
 

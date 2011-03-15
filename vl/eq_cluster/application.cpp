@@ -13,8 +13,8 @@
 
 #include "game_manager.hpp"
 
-#include "distrib_resource_manager.hpp"
 #include "pipe.hpp"
+#include "logger.hpp"
 
 /// -------------------------------- Global ----------------------------------
 vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
@@ -22,45 +22,68 @@ vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
 	if( options.slave() )
 	{ return vl::EnvSettingsRefPtr(); }
 
-	if( options.environment_file.empty() )
-	{ return vl::EnvSettingsRefPtr(); }
-
-	/// This point both env_path and project_path are valid
-	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
-
-	/// Read the Environment config
-	if( fs::exists( options.environment_file ) )
+	fs::path env_path = options.environment_file;
+	if( !fs::is_regular(env_path) )
 	{
-		std::string env_data;
-		env_data = vl::readFileToString( options.environment_file );
-		// TODO check that the files are correct and we have good settings
-		vl::EnvSettingsSerializer env_ser( env );
-		env_ser.readString(env_data);
-		env->setFile( options.environment_file );
+		// Valid names for the environment config:
+		// hydra_env.xml, hydra.env
+		// paths ${Program_dir}, ${Program_dir}/data
+		std::vector<fs::path> paths;
+		paths.push_back( options.program_directory );
+		paths.push_back( options.program_directory + "/data" );
+		for( size_t i = 0; i < paths.size(); ++i )
+		{
+			if( fs::exists(paths.at(i) / "hydra.env") )
+			{
+				env_path = paths.at(i) / "hydra.env";
+				break;
+			}
+			else if( fs::exists(paths.at(i) / "hydra_env.xml") )
+			{
+				env_path = paths.at(i) / "hydra_env.xml";
+				break;
+			}
+		}
+
 	}
 
-	env->setLogDir( options.log_dir );
-	env->setExePath( options.exe_path );
-	env->setVerbose( options.verbose );
+	if( !fs::is_regular(env_path) )
+	{
+		return vl::EnvSettingsRefPtr();
+	}
+	else
+	{
+		/// This point both env_path and project_path are valid
+		vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 
-	return env;
+		/// Read the Environment config
+		if( fs::is_regular(env_path) )
+		{
+			std::string env_data;
+			env_data = vl::readFileToString( env_path.file_string() );
+			// TODO check that the files are correct and we have good settings
+			vl::EnvSettingsSerializer env_ser( env );
+			env_ser.readString(env_data);
+			env->setFile( env_path.file_string() );
+		}
+
+		env->setLogDir( options.log_dir );
+		env->setLogLevel( (vl::LogLevel)(options.log_level) );
+
+		return env;
+	}
 }
 
 vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
 {
 	if( options.slave() )
-	{
-		std::cerr << "Trying to get projects for a slave configuration."
-			<< std::endl;
-		return vl::Settings();
-	}
+	{ return vl::Settings(); }
 
 	vl::Settings settings;
 
 	/// Read the Project Config
 	if( fs::is_regular( options.project_file ) )
 	{
-		std::cout << "Reading project file." << std::endl;
 		vl::ProjSettings proj;
 
 		std::string proj_data;
@@ -73,18 +96,45 @@ vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
 		settings.setProjectSettings(proj);
 	}
 
+	std::string global_file = options.global_file;
+	/// If the user did not set the global, we try to find it
+	if( !fs::is_regular(global_file) )
+	{
+		// Try to find the global file from default paths
+		// ${program_dir}/hydra.prj, ${program_dir}/hydra.xml,
+		// ${program_dir}/data/hydra.xml, ${program_dir}/data/hydra.prj
+		// ${program_dir}/data/global/hydra.xml, ${program_dir}/data/global/hydra.prj
+		std::vector<fs::path> paths;
+		paths.push_back( options.program_directory );
+		paths.push_back( options.program_directory + "/data" );
+		paths.push_back( options.program_directory + "/data/global" );
+		for( size_t i = 0; i < paths.size(); ++i )
+		{
+			if( fs::exists(paths.at(i) / "hydra.prj") )
+			{
+				global_file = fs::path(paths.at(i) / "hydra.prj").file_string();
+				break;
+			}
+			else if( fs::exists(paths.at(i) / "hydra.xml") )
+			{
+				global_file = fs::path(paths.at(i) / "hydra.xml").file_string();
+				break;
+			}
+		}
+	}
+
+
 	/// Read the global config
-	if( fs::is_regular( options.global_file ) )
+	if( fs::is_regular(global_file) )
 	{
 		vl::ProjSettings global;
-		std::cout << "Reading global file." << std::endl;
 
 		std::string global_data;
-		global_data = vl::readFileToString( options.global_file );
+		global_data = vl::readFileToString( global_file );
 		vl::ProjSettingsRefPtr glob_ptr( &global, vl::null_deleter() );
 		vl::ProjSettingsSerializer glob_ser( glob_ptr );
 		glob_ser.readString(global_data);
-		global.setFile( options.global_file );
+		global.setFile( global_file );
 
 		settings.addAuxilarySettings(global);
 	}
@@ -96,12 +146,10 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 {
 	if( options.master() )
 	{
-		std::cout << "Slave configuration with master options?" << std::endl;
 		return vl::EnvSettingsRefPtr();
 	}
 	if( options.slave_name.empty() || options.server_address.empty() )
 	{
-		std::cout << "Slave configuration without all the parameters." << std::endl;
 		return vl::EnvSettingsRefPtr();
 	}
 
@@ -109,9 +157,7 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 	if( pos == std::string::npos )
 	{ return vl::EnvSettingsRefPtr(); }
 	std::string hostname = options.server_address.substr(0, pos);
-	std::cout << "Using server hostname = " << hostname;
 	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
-	std::cout << " and port = " << port << "." << std::endl;
 
 	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 	env->setSlave();
@@ -124,7 +170,7 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings )
+vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger )
 	: _config(0)
 	, _pipe_thread(0)
 {
@@ -132,7 +178,7 @@ vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &set
 
 	if( env->isMaster() )
 	{
-		_config = new vl::Config( settings, env );
+		_config = new vl::Config( settings, env, logger );
 		// NOTE This needs to be called before creating the Pipe thread
 		// probably because the Server the Pipe thread connects to has to be
 		// created before connecting to it.
@@ -149,20 +195,14 @@ vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &set
 
 vl::Application::~Application( void )
 {
-	std::cout << "vl::Application::~Application" << std::endl;
-	
 	delete _pipe_thread;
 	delete _config;
-
-	std::cout << "vl::Application::~Application : DONE" << std::endl;
 }
 
 
 void
 vl::Application::run( void )
 {
-	std::cout << "vl::Application::run" << std::endl;
-
 	if( _config )
 	{
 		// run main loop
@@ -171,14 +211,12 @@ vl::Application::run( void )
 		{
 			_render( ++frame );
 		}
-		
+
 		_config->exit();
 	}
 
 	// Wait till the Pipe thread has received the shutdown message and is finished
 	_pipe_thread->join();
-
-	std::cout << "vl::Application::run : DONE" << std::endl;
 }
 
 /// ------------------------------- Private ------------------------------------

@@ -21,6 +21,8 @@
 
 #include "trigger.hpp"
 
+#include "logger.hpp"
+
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
@@ -37,7 +39,8 @@ class Config : public vl::Session
 {
 public:
 	Config( vl::Settings const &settings,
-			vl::EnvSettingsRefPtr env );
+			vl::EnvSettingsRefPtr env,
+			vl::Logger &logger );
 
 	virtual ~Config (void);
 

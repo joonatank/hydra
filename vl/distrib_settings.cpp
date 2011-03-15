@@ -86,7 +86,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr const &env )
 {
 // 	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
-	msg << env->getVerbose() << env->getCameraRotationAllowed()
+	msg << env->getLogLevel() << env->getCameraRotationAllowed()
 		<< env->getMaster() << env->getSlaves()
 		<< env->getWalls() << env->getStereo()<< env->getIPD() << env->getLogDir();
 
@@ -102,15 +102,15 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &en
 	vl::CFG stereo = vl::OFF;
 	double ipd = 0;
 	std::string log_dir;
-	bool verbose;
-	msg >> verbose >> rot_allowed >> env->getMaster()
+	vl::LogLevel log_level;
+	msg >> log_level >> rot_allowed >> env->getMaster()
 		>> env->getSlaves() >> env->getWalls()
 		>> stereo >> ipd >> log_dir;
 	env->setCameraRotationAllowed( rot_allowed );
 	env->setStereo(stereo);
 	env->setIPD(ipd);
 	env->setLogDir(log_dir);
-	env->setVerbose(verbose);
+	env->setLogLevel(log_level);
 
 	return msg;
 }

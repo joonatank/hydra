@@ -18,7 +18,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	, _master()
 	, _state(CS_UNDEFINED)
 {
-	std::cout << "vl::cluster::Client::Client : Connecting to host " 
+	std::cout << "vl::cluster::Client::Client : Connecting to host "
 		<< hostname << " at port " << port << "." << std::endl;
 
 	std::stringstream ss;
@@ -35,7 +35,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	// sending
 	boost::asio::socket_base::receive_buffer_size buf_size(8*8192);
 	_socket.set_option(buf_size);
-	std::cout << "vl::cluster::Client::Client : Receive Buffer size = " 
+	std::cout << "vl::cluster::Client::Client : Receive Buffer size = "
 		<< buf_size.value() << "." << std::endl;
 }
 
@@ -113,6 +113,15 @@ vl::cluster::Client::registerForUpdates( void )
 	{ _state = CS_REQ; }
 }
 
+void
+vl::cluster::Client::registerForOutput( void )
+{
+	Message msg(MSG_REG_OUTPUT);
+	std::vector<char> buf;
+	msg.dump(buf);
+	_socket.send_to( boost::asio::buffer(buf), _master );
+}
+
 vl::cluster::Message *
 vl::cluster::Client::popMessage( void )
 {
@@ -126,7 +135,6 @@ vl::cluster::Client::sendMessage( vl::cluster::Message *msg )
 {
 	std::vector<char> buf;
 	msg->dump(buf);
-// 	std::cout << "sending data" << std::endl;
 	_socket.send_to( boost::asio::buffer(buf), _master );
 }
 
@@ -139,7 +147,7 @@ vl::cluster::Client::sendAck ( vl::cluster::MSG_TYPES type )
 }
 
 /// ------------------------ Private -------------------------------------------
-void 
+void
 vl::cluster::Client::_sentRequestUpdates( void )
 {
 	Message msg( MSG_REG_UPDATES );

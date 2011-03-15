@@ -29,14 +29,18 @@
 #include <GL/gl.h>
 #include "pipe.hpp"
 
-vl::Channel::Channel( vl::EnvSettings::Channel const &chanConf, 
+vl::Channel::Channel( Ogre::Viewport *viewport,
+					  vl::EnvSettings::Channel const &chanConf,
 					  vl::EnvSettings::Wall const &wall, double ipd )
 	: _channel_conf(chanConf)
 	, _wall(wall)
 	, _stereo(false)
 	, _ipd(ipd)
+	, _viewport(viewport)
+	, _camera(0)
 {
-	assert( !_wall.empty() );	
+	assert( !_wall.empty() );
+	assert( _viewport );
 
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
@@ -61,18 +65,21 @@ vl::Channel::~Channel( void )
 void
 vl::Channel::setCamera( Ogre::Camera *cam )
 {
+	_viewport->setCamera(cam);
 	_camera = cam;
 }
+
 
 void
 vl::Channel::draw( void )
 {
 	assert( _camera );
+	assert( _viewport );
 
 	// @TODO stereo is not working at the moment
 	// we need to render the window twice and we are at the moment using
 	// the windows update system.
-	// So when window is updated it should render twice 
+	// So when window is updated it should render twice
 	// (for example using two viewports) once for each backbuffer
 	if( _stereo )
 	{
@@ -81,20 +88,20 @@ vl::Channel::draw( void )
 		Ogre::Vector3 eye(-_ipd/2, 0, 0);
 		_setOgreFrustum( _camera, eye );
 		_setOgreView( _camera, eye );
-		_camera->getViewport()->update();
+		_viewport->update();
 
 		//draw into back right buffer
 		glDrawBuffer(GL_BACK_RIGHT);
 		eye = Ogre::Vector3(_ipd/2, 0, 0);
 		_setOgreFrustum( _camera, eye );
 		_setOgreView( _camera, eye );
-		_camera->getViewport()->update();
+		_viewport->update();
 	}
 	else
 	{
 		_setOgreFrustum( _camera );
 		_setOgreView( _camera );
-		_camera->getViewport()->update();
+		_viewport->update();
 	}
 }
 

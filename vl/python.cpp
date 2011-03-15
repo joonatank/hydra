@@ -16,16 +16,10 @@ char const *script =
 	"from pyogre import *\n"
 	"from vl import *\n"
 	"def quit():\n"
-	"	game.quit()\n"
-	"print( 'vl imported' )\n";
+	"	game.quit()\n";
 
 vl::PythonContext::PythonContext( vl::GameManager *game_man )
 {
-	// TODO Ogre LogManager not initialised yet
-	std::string message = "Initing python context.";
-	std::cout << message << std::endl;
-	//Ogre::LogManager::getSingleton().logMessage( message );
-
 	try {
 		Py_Initialize();
 
@@ -54,15 +48,13 @@ vl::PythonContext::PythonContext( vl::GameManager *game_man )
 
 		// Add a global managers i.e. this and EventManager
 		_global["game"] = python::ptr<>( game_man );
+		vl::sink &python_sink_out = *(*game_man->getLogger()->getPythonOut());
+		vl::sink &python_sink_err = *(*game_man->getLogger()->getPythonErr());
+		boost::python::import("sys").attr("stdout") = python_sink_out;
+		boost::python::import("sys").attr("stderr") = python_sink_err;
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		// TODO Ogre LogManager not initialised yet
-		message = "Exception occured when initing python context.";
-		std::cerr << message << std::endl;
-		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-	}
+	catch( ... ) {}
 	if (PyErr_Occurred())
 	{
 		PyErr_Print();
@@ -76,10 +68,8 @@ vl::PythonContext::~PythonContext( void )
 void
 vl::PythonContext::executePythonScript( vl::TextResource const &script )
 {
-	// TODO Ogre LogManager not initialised yet
-	std::string message = "Running python script file " + script.getName() + ".";
-	std::cout << message << std::endl;
-	//Ogre::LogManager::getSingleton().logMessage( message );
+	std::cout << vl::TRACE << "Running python script file " + script.getName() + "."
+		<< std::endl;
 
 	assert( script.get() );
 	if( !script.get() )
@@ -91,14 +81,7 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 		python::object result = python::exec(script.get(), _global, _global);
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		// TODO these should be moved to ingame console and log file
-		// TODO Ogre LogManager not initialised yet
-		message = "Exception occured in python script: " + script.getName();
-		std::cerr << message << std::endl;
-		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-	}
+	catch( ... ) {}
 	if( PyErr_Occurred() )
 	{
 		PyErr_Print();
@@ -114,14 +97,7 @@ vl::PythonContext::executePythonCommand(const std::string& cmd)
 		python::object result = python::exec(cmd.c_str(), _global, _global);
 	}
 	// Some error handling so that we can continue the application
-	catch( ... )
-	{
-		// TODO these should be moved to ingame console and log file
-		// TODO Ogre LogManager not initialised yet
-		std::string message = "Exception occured in : " + cmd;
-		std::cerr << message << std::endl;
-		//Ogre::LogManager::getSingleton().logMessage( message, Ogre::LML_CRITICAL );
-	}
+	catch( ... ) {}
 	if( PyErr_Occurred() )
 	{
 		PyErr_Print();

@@ -109,6 +109,10 @@ vl::cluster::Server::receiveMessages( void )
 			}
 			break;
 
+			case vl::cluster::MSG_REG_OUTPUT :
+				_output_receivers.push_back( ClientInfo(remote_endpoint) );
+				break;
+
 			default :
 			{
 				std::cout << "vl::cluster::Server::mainloop : "
@@ -209,6 +213,28 @@ vl::cluster::Server::sendInit( vl::cluster::Message const &msg )
 	msg.dump(_msg_init);
 }
 
+void
+vl::cluster::Server::sendPrintMessage( vl::cluster::Message const & msg )
+{
+	assert( msg.getType() == MSG_PRINT );
+	assert( !_output_receivers.empty() );
+
+	std::vector<char> buf;
+	msg.dump(buf);
+	ClientList::iterator iter;
+	for( iter = _output_receivers.begin(); iter != _output_receivers.end(); ++iter )
+	{
+		_socket.send_to( boost::asio::buffer(buf), iter->address );
+	}
+}
+
+bool
+vl::cluster::Server::wantsPrintMessages( void )
+{
+	return !_output_receivers.empty();
+}
+
+
 bool
 vl::cluster::Server::needsInit( void ) const
 {
@@ -263,7 +289,6 @@ vl::cluster::Server::_sendEnvironment ( const std::vector< char >& msg )
 	{
 		if( iter->state == CS_UNDEFINED )
 		{
-	// 		std::cout << "Sending to client = " << *iter << std::endl;
 			_socket.send_to( boost::asio::buffer(msg), iter->address );
 			iter->state = CS_REQ;
 		}
@@ -369,7 +394,6 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				{
 					std::cout << "vl::cluster::Server::_handleAck : MSG_PROJECT" << std::endl;
 					assert( iter->state == CS_ENV );
-					//_sendCreate(*iter);
 					// change the state
 					iter->state = CS_PROJ;
 				}
@@ -379,8 +403,6 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				// changed to SG_CREATE and SG_UPDATE
 				case vl::cluster::MSG_SG_CREATE :
 				{
-					//std::cout << "vl::cluster::Server::_handleAck : MSG_INITIAL_STATE" << std::endl;
-					//assert( iter->state == CS_PROJ );
 					// change the state
 					iter->state = CS_CREATE;
 				}
@@ -390,7 +412,6 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				// because they are tied to the master rendering loop
 				case vl::cluster::MSG_SG_UPDATE :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_UPDATE" << std::endl;
 					//assert( iter->state == CS_INIT || iter->state == CS_SWAP );
 					// TODO the rendering loop should be driven from the
 					// application loop or at least be configurable from there
@@ -404,7 +425,6 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 
 				case vl::cluster::MSG_DRAW :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_DRAW" << std::endl;
 					assert( iter->state == CS_UPDATE );
 					// TODO all the clients in the rendering loop needs to be
 					// on the same state at this point so that they swap the same
@@ -417,7 +437,6 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 
 				case vl::cluster::MSG_SWAP :
 				{
-// 					std::cout << "vl::cluster::Server::_handleAck : MSG_SWAP" << std::endl;
 					assert( iter->state == CS_DRAW );
 					// change the state
 					iter->state = CS_SWAP;

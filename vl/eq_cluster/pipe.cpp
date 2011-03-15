@@ -17,6 +17,9 @@
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
 
+#include "gui/window.hpp"
+#include "logger.hpp"
+
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// GUI
@@ -28,7 +31,7 @@
 #include <CEGUI/CEGUIDefaultResourceProvider.h>
 #include <CEGUI/CEGUIImageset.h>
 #include <CEGUI/CEGUIScheme.h>
-#include <gui/window.hpp>
+#include <CEGUI/CEGUIInputEvent.h>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -47,17 +50,18 @@ vl::Pipe::Pipe( std::string const &name,
 	, _editor(0)
 	, _loading_screen(0)
 	, _stats(0)
+	, _console_memory_index(-1)	// Using -1 index to indicate not using memory
 	, _running(true)	// TODO should this be true from the start?
 	, _rendering(false)
 {
-	std::cout << "vl::Pipe::Pipe : name = " << _name << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::Pipe : name = " << _name << std::endl;
 
 	_client->registerForUpdates();
 }
 
 vl::Pipe::~Pipe( void )
 {
-	std::cout << "vl::Pipe::~Pipe" << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::~Pipe" << std::endl;
 
 	// Some asserts for checking that the Pipe thread has been correctly shutdown
 	assert( !_root );
@@ -67,7 +71,7 @@ vl::Pipe::~Pipe( void )
 
 	_client.reset();
 
-	std::cout << "vl::Pipe::~Pipe : DONE" << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::~Pipe : DONE" << std::endl;
 }
 
 vl::EnvSettings::Node
@@ -172,6 +176,157 @@ vl::Pipe::operator()()
 	}
 }
 
+void
+vl::Pipe::printToConsole(std::string const &text, double time,
+						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
+{
+	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
+	assert( output );
+
+	// Add time
+	std::stringstream ss;
+	ss << time;
+	CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(ss.str());
+	CEGUI::uint row = output->addRow(item, 1);
+
+	// Set line number
+	ss.str("");
+	ss << row;
+	item = new CEGUI::ListboxTextItem(ss.str());
+	output->setItem(item, 0, row);
+
+	// Add the text field
+	CEGUI::String prefix;
+	if( lvl == vl::LML_CRITICAL )
+	{ prefix = "CRITICAL : "; }
+	else if( lvl == vl::LML_TRIVIAL )
+	{ prefix = "TRIVIAL : "; }
+
+	item = new CEGUI::ListboxTextItem(prefix + CEGUI::String(text));
+	// Save data type for filtering, HOW?
+	if( type == "OUT" )
+	{
+		item->setTextColours(CEGUI::colour(0, 0.2, 0.4));
+	}
+	else if( type == "ERROR" )
+	{
+		item->setTextColours(CEGUI::colour(0.5, 0, 0));
+	}
+	else if( type == "PY_OUT" )
+	{
+		item->setTextColours(CEGUI::colour(0, 0.5, 0.5));
+	}
+	else if( type == "PY_ERROR" )
+	{
+		item->setTextColours(CEGUI::colour(0.5, 0.2, 0));
+	}
+	output->setItem(item, 2, row);
+}
+
+
+/// ------------------------- GECUI callbacks ----------------------------------
+bool
+vl::Pipe::onConsoleInputAccepted( CEGUI::EventArgs const &e )
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	std::string command( input->getText().c_str() );
+
+	if( command.size() > 0 )
+	{
+		input->setText("");
+
+		if( *(command.end()-1) == ':' )
+		{
+			std::string str("Multi Line commands are not supported yet.");
+			printToConsole(str, 0);
+		}
+		else
+		{
+			while( _console_memory.size() > 100 )
+			{ _console_memory.pop_back(); }
+
+			_console_memory.push_front(command);
+
+			// TODO add support for time
+			printToConsole(command, 0);
+
+			sendCommand(command);
+		}
+
+		// Reset the memory index because the user has accepted the command
+		_console_memory_index = -1;
+		_console_last_command.clear();
+	}
+
+	return true;
+}
+
+bool
+vl::Pipe::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	CEGUI::KeyEventArgs const &key = static_cast<CEGUI::KeyEventArgs const &>(e);
+	if(key.scancode == CEGUI::Key::ArrowUp)
+	{
+		// Save the current user input when the list has not been scrolled
+		if( _console_memory_index == -1 )
+		{
+			_console_last_command = input->getText().c_str();
+		}
+
+		++_console_memory_index;
+		if( _console_memory_index >= _console_memory.size() )
+		{ _console_memory_index = _console_memory.size()-1; }
+
+		if( _console_memory_index > -1 )
+		{
+			std::string command = _console_memory.at(_console_memory_index);
+
+			input->setText(command);
+			input->setCaratIndex(input->getText().size());
+		}
+
+		return true;
+	}
+	else if(key.scancode == CEGUI::Key::ArrowDown)
+	{
+		--_console_memory_index;
+		if( _console_memory_index < 0 )
+		{
+			_console_memory_index = -1;
+			input->setText(_console_last_command);
+		}
+		else
+		{
+			std::string command = _console_memory.at(_console_memory_index);
+
+			input->setText(command);
+			input->setCaratIndex(input->getText().size());
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool
+vl::Pipe::onConsoleShow(const CEGUI::EventArgs& e)
+{
+	assert( _console );
+	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
+	assert( input );
+
+	input->activate();
+
+	return true;
+}
 
 /// ------------------------ Protected -----------------------------------------
 void
@@ -320,7 +475,11 @@ vl::Pipe::_createGUI(void )
 
 	// Load default data files used for the GUI
 	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-7.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-8.font" );
 	CEGUI::FontManager::getSingleton().create( "DejaVuSans-10.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-9.font" );
+	CEGUI::FontManager::getSingleton().create( "DejaVuSans-6.font" );
 	CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook", "MouseArrow" );
 
 	// Create the GUI windows
@@ -346,12 +505,17 @@ vl::Pipe::_createGUI(void )
 
 	/// Subscripe to events
 	std::cout << "Subcribing to events." << std::endl;
-	CEGUI::Editbox *output = static_cast<CEGUI::Editbox *>( _console->getChild("console/output") );
+	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleShow, this));
+
+	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
 	assert(output);
+	assert(output->getVertScrollbar());
+	output->getVertScrollbar()->setEndLockEnabled(true);
 
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
 	assert(input);
-	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Window::onConsoleTextAccepted, win));
+	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputAccepted, this));
+	input->subscribeEvent(CEGUI::Editbox::EventKeyDown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputKeyDown, this));
 
 	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
 	assert( item );
@@ -406,6 +570,9 @@ vl::Pipe::_createGUI(void )
 	assert( checkBox );
 	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowJointsChanged, win));
 
+	// Request output updates for the console
+	_client->registerForOutput();
+
 	// TODO support for multiple windows
 	// at the moment every window will get the same GUI window layout
 }
@@ -420,7 +587,7 @@ vl::Pipe::_createOgre( void )
 	// problem is that the project name is not known at this point
 	// so we should use a tmp file and then move it.
 	std::string log_file = vl::createLogFilePath( "hydra", "ogre", "", _env->getLogDir() );
-	_root.reset( new vl::ogre::Root( log_file, _env->getVerbose() ) );
+	_root.reset( new vl::ogre::Root(_env->getLogLevel()) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }
@@ -509,7 +676,6 @@ vl::Pipe::_handleMessages( void )
 	while( _client->messages() )
 	{
 		vl::cluster::Message *msg = _client->popMessage();
-		// TODO process the message
 		_handleMessage(msg);
 		delete msg;
 	}
@@ -525,7 +691,7 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		// Environment configuration
 		case vl::cluster::MSG_ENVIRONMENT :
 		{
-			std::cout << "vl::Pipe::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
+			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
 			assert( !_env );
 			_env.reset( new vl::EnvSettings );
 			// TODO needs a ByteData object for Environment settings
@@ -542,7 +708,7 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		// Project configuration
 		case vl::cluster::MSG_PROJECT :
 		{
-			std::cout << "vl::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
+			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
 			// TODO
 			// Test using multiple projects e.g. project and global
 			// The vector serailization might not work correctly
@@ -600,6 +766,12 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 		case vl::cluster::MSG_SWAP :
 		{
 			_client->sendAck( vl::cluster::MSG_SWAP );
+		}
+		break;
+
+		case vl::cluster::MSG_PRINT :
+		{
+			_handlePrintMsg(msg);
 		}
 		break;
 
@@ -691,6 +863,29 @@ vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
 		data.copyFromMessage(msg);
 		// Pushing back will create copies which is unnecessary
 		_objects.push_back(data);
+	}
+}
+
+void
+vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
+{
+	assert( msg->getType() == vl::cluster::MSG_PRINT );
+	size_t msgs;
+	msg->read(msgs);
+	while(msgs > 0)
+	{
+		std::string type;
+		msg->read(type);
+		double time;
+		msg->read(time);
+		std::string str;
+		msg->read(str);
+		vl::LOG_MESSAGE_LEVEL lvl;
+		msg->read(lvl);
+
+		printToConsole(str, time, type, lvl);
+
+		msgs--;
 	}
 }
 
@@ -804,7 +999,7 @@ vl::Pipe::_sendEvents( void )
 void
 vl::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
 {
-	std::cout << "vl::Pipe::_createWindow : " << winConf.name << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::_createWindow : " << winConf.name << std::endl;
 
 	vl::Window *window = new vl::Window( winConf.name, this );
 	assert( window );
@@ -814,12 +1009,12 @@ vl::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
 void
 vl::Pipe::_shutdown( void )
 {
-	std::cout << "vl::Pipe::_shutdown" << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::_shutdown" << std::endl;
 
 	std::vector<Window *>::iterator iter;
 	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
 	{ delete *iter; }
-	std::cout << "vl::Pipe::~Pipe : windows deleted" << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::~Pipe : windows deleted" << std::endl;
 
 	_root->getNative()->destroySceneManager( _ogre_sm );
 
@@ -830,7 +1025,7 @@ vl::Pipe::_shutdown( void )
 
 	_running = false;
 
-	std::cout << "vl::Pipe::_shutdown : DONE" << std::endl;
+	std::cout << vl::TRACE << "vl::Pipe::_shutdown : DONE" << std::endl;
 }
 
 void
@@ -847,7 +1042,7 @@ vl::Pipe::_takeScreenshot( void )
 void
 vl::PipeThread::operator()()
 {
-	std::cout << "PipeThread Thread entered." << std::endl;
+	std::cout << vl::TRACE << "PipeThread Thread entered." << std::endl;
 
 	assert( !_name.empty() );
 	if( _server_address.empty() )
@@ -877,6 +1072,6 @@ vl::PipeThread::operator()()
 		std::cerr << "An exception of unknow type occured." << std::endl;
 	}
 
-	std::cout << "PipeThread Exited" << std::endl;
+	std::cout << vl::TRACE << "PipeThread Exited" << std::endl;
 	delete pipe;
 }

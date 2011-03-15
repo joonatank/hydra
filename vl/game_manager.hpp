@@ -35,13 +35,15 @@
 // Audio
 #include <cAudio/cAudio.h>
 
+#include "logger.hpp"
+
 namespace vl
 {
 
 class GameManager
 {
 public :
-	GameManager( void );
+	GameManager(vl::Logger *logger);
 
 	virtual ~GameManager( void );
 
@@ -79,6 +81,9 @@ public :
 
 	void createBackgroundSound( std::string const &name );
 
+	vl::Logger *getLogger(void)
+	{ return _logger; }
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
@@ -101,6 +106,8 @@ private :
 	/// Audio objects
 	cAudio::IAudioManager *_audio_manager;
 	cAudio::IAudioSource *_background_sound;
+
+	vl::Logger *_logger;
 
 	/// State
 	bool _quit;

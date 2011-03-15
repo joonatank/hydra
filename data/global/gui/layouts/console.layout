@@ -3,24 +3,33 @@
 <GUILayout>
 	<Window Type="TaharezLook/FrameWindow" Name="console" >
 		<Property Name="Text" Value="Console" />
-		<Property Name="TitlebarFont" Value="DejaVuSans-10" />
+		<Property Name="TitlebarFont" Value="DejaVuSans-8" />
 		<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
 		<Property Name="TitlebarEnabled" Value="True" />
 		<Property Name="CloseButtonEnabled" Value="False" />
 		<Property Name="FrameEnabled" Value="False" />
 		<Property Name="AlwaysOnTop" Value="True" />
-		<Property Name="UnifiedAreaRect" Value="{{0.0,0},{0.0,0},{0.7,0},{0.4,0}}" />
-		<Window Type="TaharezLook/MultiLineEditbox" Name="console/output" >
-			<Property Name="Text" Value=""/>
-			<Property Name="ReadOnly" Value="True" />
-			<Property Name="MaxTextLength" Value="1073741823" />
+		<Property Name="UnifiedAreaRect" Value="{{0.0,0},{0.0,0},{0.9,0},{0.6,0}}" />
+
+		<!-- Output -->
+		<Window Type="TaharezLook/MultiColumnList" Name="console/output" >
+			<Property Name="Font" Value="DejaVuSans-6" />
+			<Property Name="SortSettingEnabled" Value="False" />
 			<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-			<Property Name="UnifiedAreaRect" Value="{{0.019238,0},{0.030633,0},{0.973721,0},{0.769186,0}}" />
+			<Property Name="UnifiedAreaRect" Value="{{0,0},{0.0,0},{1,0},{0.95,0}}" />
+			<Property Name="ColumnHeader" Value="text:# width:{0.03,0} id:0" />
+			<Property Name="ColumnHeader" Value="text:time width:{0.05,0} id:1" />
+			<Property Name="ColumnHeader" Value="text:line width:{0.9,0} id:2" />
+<!-- 			<Property Name="ColumnsSizable" Value="False" /> -->
 		</Window>
+
 		<Window Type="TaharezLook/Editbox" Name="console/input" >
+			<Property Name="Font" Value="DejaVuSans-6" />
+			<Property Name="Font" Value="DejaVuSans-6" />
 			<Property Name="MaxTextLength" Value="1073741823" />
 			<Property Name="UnifiedMaxSize" Value="{{1,0},{0,40}}" />
-			<Property Name="UnifiedAreaRect" Value="{{0.01,0},{0.90,0},{0.97,0},{0.99,0}}" />
+			<Property Name="UnifiedPosition" Value="{{0.0,0}, {0.95,0}}" />
+			<Property Name="UnifiedSize" Value="{{1, 0}, {0, 25}}" />
 		</Window>
 	</Window>
 </GUILayout>

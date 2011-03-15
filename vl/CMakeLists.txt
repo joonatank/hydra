@@ -36,6 +36,7 @@ set( SOURCES
 	distrib_settings.cpp
 	program_options.cpp
 	stats.cpp
+	logger.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -61,6 +62,7 @@ set( HEADERS
 	game_manager.hpp
 	player.hpp
 	stats.hpp
+	base/thread.hpp
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp
@@ -86,6 +88,7 @@ set( HEADERS
 	event_manager.hpp
 	keycode.hpp
 	session.hpp
+	logger.hpp
 	distrib_resource_manager.hpp
 	distrib_settings.hpp
 	program_options.hpp
@@ -104,11 +107,11 @@ set( HEADERS
 	distributed.hpp
 	)
 
-add_library( eqOgre ${SOURCES} ${HEADERS} )
+add_library(HydraMain ${SOURCES} ${HEADERS} )
 
-target_link_libraries( eqOgre ${EQOGRE_DEB_LIBS} )
+target_link_libraries(HydraMain ${HYDRA_DEB_LIBS})
 
-set_target_properties(eqOgre PROPERTIES DEBUG_POSTFIX d)
+set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
 
 #install
 # TODO this is here for test only the filestructure is not preserved by this

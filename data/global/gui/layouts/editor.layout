@@ -2,7 +2,7 @@
 <GUILayout>
 	<Window Type="DefaultWindow" Name="root">
 		<Window Type="DefaultWindow" Name="editor">
-			<Window Type="TaharezLook/FrameWindow" Name="editorButtons">
+			<Window Type="TaharezLook/FrameWindow" Name="editor/Buttons">
 				<Property Name="UnifiedPosition" Value="{ {0, 0}, {0, 0} }" />
 				<Property Name="UnifiedSize" Value="{ {1, 0}, {0.3, 0} }" />
 				<Property Name="FrameEnabled" Value="False" />
@@ -81,16 +81,44 @@
 
 			</Window>	<!-- EditorButtons -->
 
-			<!-- Test -->
-			<Window Type="TaharezLook/MultiLineEditbox" Name="editor/MLEditbox" >
-				<Property Name="Text">This text is a multiline text:
-					Line 1
-					Line 2
-					Line 3
-				</Property>
+			<!-- Script editor test -->
+			<Window Type="TaharezLook/FrameWindow" Name="editor/scriptEditor">
+				<Property Name="Text" Value="Script Editor" />
 				<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-				<Property Name="UnifiedAreaRect" Value="{{0,0},{0.31,0},{1,0},{0.3,0}}" />
+				<Property Name="UnifiedAreaRect" Value="{{0,0},{0.31,0},{1,0},{0.6,0}}" />
 				<Property Name="Alpha" Value="0.4" />
+				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/execute">
+					<Property Name="UnifiedPosition" Value="{{0.0,0},{0.0,0}}" />
+					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
+					<Property Name="Text" Value="Execute" />
+					<Property Name="Tooltip" Value="Executes a script." />
+				</Window>
+				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/clear">
+					<Property Name="UnifiedPosition" Value="{{0.13,0},{0.0,0}}" />
+					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
+					<Property Name="Text" Value="Clear" />
+					<Property Name="Tooltip" Value="Clears the script." />
+				</Window>
+				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/save">
+					<Property Name="UnifiedPosition" Value="{{0.26,0},{0,0}}" />
+					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
+					<Property Name="Text" Value="Save" />
+					<Property Name="Tooltip" Value="Saves the script." />
+				</Window>
+				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/new">
+					<Property Name="UnifiedPosition" Value="{{0.39,0},{0,0}}" />
+					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
+					<Property Name="Text" Value="New" />
+					<Property Name="Tooltip" Value="Creates a new script." />
+				</Window>
+				<Window Type="TaharezLook/MultiLineEditbox" Name="editor/scriptEditor/textEdit" >
+					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.1,0},{1,0},{1,0}}" />
+					<Property Name="Text">This text is a multiline text:
+						Line 1
+						Line 2
+						Line 3
+					</Property>
+				</Window>
 			</Window>
 
 			<!-- Add Separate Material and SceneNode editor windows -->

@@ -13,7 +13,9 @@
 #include "base/filesystem.hpp"
 
 vl::ProgramOptions::ProgramOptions( void )
-	: verbose(false), _slave(false)
+	: verbose(false)
+	, log_level(0)
+	, _slave(false)
 {}
 
 bool
@@ -28,6 +30,26 @@ vl::ProgramOptions::slave( void ) const
 	return _slave;
 }
 
+std::string
+vl::ProgramOptions::getOutputFile(void) const
+{
+	std::string name;
+	if(master())
+	{
+		name = "master";
+	}
+	else
+	{
+		name = "slave";
+		if( !slave_name.empty() )
+		{ name += ("_" + slave_name); }
+	}
+
+	fs::path log = fs::path(log_dir) / fs::path(name + ".log");
+
+	return log.file_string();
+}
+
 void
 vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
@@ -35,7 +57,8 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "produce a help message")
-		("verbose,v", "print the Equalizer output into std::cerr instead of log file")
+		("verbose,v", "print the output to system console")
+		("log_level,l", po::value<int>(), "how much detail is logged")
 		("environment,e", po::value< std::string >(), "environment file")
 		("project,p", po::value< std::string >(), "project file")
 		("global,g", po::value< std::string >(), "global file")
@@ -65,9 +88,15 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		verbose = true;
 	}
 
+	if( vm.count("log_level") )
+	{
+		log_level = vm["log_level"].as<int>();
+	}
+
 	// Some global settings
-	exe_path = argv[0];
-	program_directory = fs::path( argv[0] ).parent_path().file_string();
+	fs::path exe_path = fs::system_complete( argv[0] ).file_string();
+	exe_name = exe_path.filename();
+	program_directory = fs::path(exe_path).parent_path().file_string();
 
 	// Slave options
 	if( vm.count("slave") )

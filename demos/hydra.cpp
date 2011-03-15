@@ -1,9 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
  *
- *	Demo executable
- *	Supports loading the settings
- *	Supports listening to a port
  */
 
 // Necessary for vl::exceptions
@@ -20,26 +17,32 @@
 
 #include "settings.hpp"
 
+#include "logger.hpp"
+
 #include <OGRE/OgreException.h>
 
 int main( const int argc, char** argv )
 {
 	try
 	{
+		// Options need to be parsed before creating logger because logger
+		// is designed to redirect logging out of console
 		vl::ProgramOptions options;
 		options.parseOptions(argc, argv);
+
+		vl::Logger logger;
+		logger.setOutputFile(options.getOutputFile());
+
 		vl::EnvSettingsRefPtr env;
 		vl::Settings settings;
 		if( options.master() )
 		{
-			std::cout << "Requested master configuration." << std::endl;
-			env = getMasterSettings(options);
-			settings = getProjectSettings(options);
+			env = vl::getMasterSettings(options);
+			settings = vl::getProjectSettings(options);
 		}
 		else
 		{
-			std::cout << "Requested slave configuration." << std::endl;
-			env = getSlaveSettings(options);
+			env = vl::getSlaveSettings(options);
 		}
 
 		// 2. initialization of local client node
@@ -49,7 +52,7 @@ int main( const int argc, char** argv )
 		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
-		vl::Application client( env, settings );
+		vl::Application client( env, settings, logger );
 
 		client.run();
 	}

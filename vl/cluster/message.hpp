@@ -62,6 +62,18 @@ namespace cluster
  *	MSG_SWAP
  *	[MSG_SWAP]
  *
+ *	Command message
+ *	MSG_COMMAND
+ *	[MSG_COMMAND | string command]
+ *
+ *	Log or output message
+ *	MSG_PRINT
+ *	[MSG_PRINT | uint16_t log_stream | std::string log_message]
+ *
+ *	Shutdown message
+ *	MSG_SHUTDOWN
+ *	[MSG_SHUTDOWN]
+ *
  */
 enum MSG_TYPES
 {
@@ -78,6 +90,8 @@ enum MSG_TYPES
 	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
 	MSG_SWAP,			// Swap the Window buffer
 	MSG_COMMAND,		// Command string sent to Application
+	MSG_REG_OUTPUT,		// Request logger output messages
+	MSG_PRINT,			// Logger output messages, sent from application to pipes
 	MSG_SHUTDOWN,		// Shutdown the rendering threads
 };
 
@@ -120,6 +134,14 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_READY_SWAP";
 	case MSG_SWAP :
 		return "MSG_SWAP";
+	case MSG_COMMAND :
+		return "MSG_COMMAND";
+	case MSG_REG_OUTPUT:
+		return "MSG_REG_OUTPUT";
+	case MSG_PRINT :
+		return "MSG_PRINT";
+	case MSG_SHUTDOWN :
+		return "MSG_SHUTDOWN";
 	default :
 		return std::string();
 	}
@@ -482,6 +504,37 @@ msg_size Message::write(const T& obj)
 	_size += size;
 
 	return size;
+}
+
+template<> inline
+msg_size Message::write(std::string const &str)
+{
+	write( str.size() );
+	if( str.size() != 0 )
+	{ write( str.c_str(), str.size() ); }
+
+	return sizeof(str.size())+sizeof(std::string::value_type)*str.size();
+}
+
+template<> inline
+msg_size Message::read(std::string &str)
+{
+	std::string::size_type size;
+	read(size);
+	if( 0 == size )
+	{ str.clear(); }
+	else
+	{
+		str.resize(size);
+		for( size_t i = 0; i < size; ++i )
+		{
+			char ch;
+			read(ch);
+			str.at(i) = ch;
+		}
+	}
+
+	return sizeof(size)+sizeof(std::string::value_type)*size;
 }
 
 }	// namespace cluster

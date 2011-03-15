@@ -71,7 +71,15 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", python::make_function( &vl::GameManager::getGUI, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
+		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("quit", &vl::GameManager::quit)
+	;
+
+	void (sink::*write1)( std::string const & ) = &sink::write;
+
+	python::class_<vl::sink>("sink", python::no_init)
+		.def("write", write1 )
 	;
 
 	// TODO add setHeadMatrix function to python

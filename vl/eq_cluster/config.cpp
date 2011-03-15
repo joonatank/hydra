@@ -35,44 +35,38 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
-vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env )
-	: _game_manager( new vl::GameManager )
+vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl::Logger &logger )
+	: _game_manager( new vl::GameManager(&logger) )
 	, _settings(settings)
 	, _env(env)
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _gui(0)
 	, _running(true)
 {
-	std::cout << "vl::Config::Config" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
 	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
 
 	_createResourceManager( settings, env );
 
-	// TODO this should be done in python
-	std::string song_name("The_Dummy_Song.ogg");
-	_game_manager->createBackgroundSound(song_name);
-
 	_game_manager->createSceneManager( this );
 }
 
 vl::Config::~Config( void )
 {
-	std::cout << "vl::Config::~Config" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::~Config" << std::endl;
 
 	delete _game_manager;
 
 	// Destroy server
 	_server.reset();
-
-	std::cout << "vl::Config::~Config : DONE" << std::endl;
 }
 
 void
 vl::Config::init( void )
 {
-	std::cout << "vl::Config::init" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	Ogre::Timer timer;
 
 	/// @todo most of this should be moved to the constructor, like object
@@ -118,7 +112,7 @@ vl::Config::init( void )
 
 	_createQuitEvent();
 
-	std::cout << "vl::Config:: updating server" << std::endl;
+	std::cout << vl::TRACE << "vl::Config:: updating server" << std::endl;
 	_updateServer();
 
 	_game_manager->getStats().logInitTime( (double(timer.getMicroseconds()))/1e3 );
@@ -128,14 +122,12 @@ vl::Config::init( void )
 void
 vl::Config::exit( void )
 {
-	std::cout << "vl::Config::exit" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::exit" << std::endl;
 
 	_server->shutdown();
 	// TODO this should wait till all the clients have shutdown
 	vl::msleep(1);
 	_server->receiveMessages();
-
-	std::cout << "Config exited." << std::endl;
 }
 
 void
@@ -167,14 +159,6 @@ vl::Config::render( void )
 	// TODO where the receive input messages should be?
 	_receiveEventMessages();
 	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
-
-	// Update statistics every second
-	// @todo time limit should be configurable
-	if( _stats_timer.getMilliseconds() > 10e3 )
-	{
-		_game_manager->getStats().update();
-		_stats_timer.reset();
-	}
 }
 
 /// ------------ Private -------------
@@ -241,12 +225,31 @@ vl::Config::_updateServer( void )
 
 		_server->sendInit( msg );
 	}
+
+	// Send logs
+	if( _server->wantsPrintMessages() )
+	{
+		if( _game_manager->getLogger()->newMessages() )
+		{
+			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
+			msg.write(_game_manager->getLogger()->nMessages());
+			while( _game_manager->getLogger()->newMessages() )
+			{
+				LogMessage log_msg = _game_manager->getLogger()->popMessage();
+				msg.write(log_msg.type);
+				msg.write(log_msg.time);
+				msg.write(log_msg.message);
+				msg.write(log_msg.level);
+			}
+			_server->sendPrintMessage(msg);
+		}
+	}
 }
 
 void
 vl::Config::_sendEnvironment ( void )
 {
-	std::cout << "vl::Config::_sendEnvironment" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::_sendEnvironment" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -261,7 +264,7 @@ vl::Config::_sendEnvironment ( void )
 void
 vl::Config::_sendProject ( void )
 {
-	std::cout << "vl::Config::_sendProject" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::_sendProject" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
@@ -276,8 +279,6 @@ vl::Config::_sendProject ( void )
 void
 vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
-	std::cout << "Creating Trackers." << std::endl;
-
 	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
 	assert( clients );
 
@@ -290,8 +291,6 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 		 iter != tracking_files.end(); ++iter )
 	{
 		// Read a file
-		std::cout << "Copy tracking resource : " << *iter << std::endl;
-
 		vl::TextResource resource;
 		_game_manager->getReourceManager()->loadResource( *iter, resource );
 
@@ -323,24 +322,20 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 	}
 	else
 	{
-		std::cout << "Creating a fake head tracker" << std::endl;
 		vl::TrackerRefPtr tracker( new vl::FakeTracker );
 		vl::SensorRefPtr sensor( new vl::Sensor );
 		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
 
 		// Create the trigger
-		std::cout << "Creating a fake head tracker trigger" << std::endl;
 		vl::TrackerTrigger *head_trigger
 			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
 		head_trigger->setAction( action );
 		sensor->setTrigger( head_trigger );
 
-		std::cout << "Adding a fake head tracker" << std::endl;
 		// Add the tracker
 		tracker->setSensor( 0, sensor );
 		clients->addTracker(tracker);
 	}
-	std::cout << "Trackers created." << std::endl;
 }
 
 void
@@ -407,8 +402,6 @@ vl::Config::_hideCollisionBarries( void )
 void
 vl::Config::_createQuitEvent(void )
 {
-	std::cout << "Creating QuitEvent" << std::endl;
-
 	// Add a trigger event to Quit the Application
 	assert( _game_manager );
 	vl::QuitAction *quit = vl::QuitAction::create();
@@ -421,9 +414,9 @@ vl::Config::_createQuitEvent(void )
 void
 vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
 {
-	std::cout << "Initialising Resource Manager" << std::endl;
+	std::cout << vl::TRACE << "Initialising Resource Manager" << std::endl;
 
-	std::cout << "Adding project directories to resources. "
+	std::cout << vl::TRACE << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
 
 	std::vector<std::string> paths = settings.getAuxDirectories();
@@ -499,7 +492,7 @@ vl::Config::_receiveEventMessages( void )
 				break;
 
 				default :
-					std::cout << "vl::Config::_receiveEventMessages : "
+					std::cout << vl::ERR << "vl::Config::_receiveEventMessages : "
 						<< "Unhandleded message type." << std::endl;
 					break;
 			}

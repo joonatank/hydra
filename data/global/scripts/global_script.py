@@ -49,6 +49,7 @@ def createCameraMovements(node) :
 	trans_action = MoveNodeAction.create()
 	trans_action.scene_node = node
 	trans_action.speed = 5
+	trans_action.angular_speed = Radian(Degree(90))
 	# Add the real action to the proxies
 	trans_action_proxy.action = trans_action
 	rot_action_proxy.action = trans_action
@@ -221,7 +222,6 @@ def addToggleEditor(kc) :
 print( 'Adding game events' )
 addQuitEvent(KC.Q)
 addReloadEvent(KC.R)
-addToggleMusicEvent(KC.M)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)

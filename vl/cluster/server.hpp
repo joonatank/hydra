@@ -70,6 +70,10 @@ public:
 	/// Send information on new SceneGraph elements created
 	void sendCreate( Message const &msg );
 
+	void sendPrintMessage( Message const &msg );
+
+	bool wantsPrintMessages( void );
+
 	/// Returns true if some client needs an Initial SceneGraph
 	/// @todo This always returns true for now
 	/// the architecture should rather use functors/callbacks to be called
@@ -153,6 +157,8 @@ private :
 
 	/// Create MSGs
 	std::vector< std::pair<uint32_t, Message> > _msg_creates;
+
+	ClientList _output_receivers;
 
 	uint32_t _frame;
 };	// class Server

@@ -18,7 +18,8 @@
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
 #include <CEGUI/elements/CEGUIEditbox.h>
-#include <CEGUI/elements/CEGUIMultiLineEditbox.h>
+#include <CEGUI/elements/CEGUIMultiColumnList.h>
+#include <CEGUI/elements/CEGUIListboxTextItem.h>
 
 namespace
 {
@@ -50,18 +51,17 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	, _pipe( parent )
 	, _channel(0)
 	, _ogre_window(0)
-	, _viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
 {
 	assert( _pipe );
 	std::string msg = "vl::Window::Window : " + getName();
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
 	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
 
-	_createOgreWindow( winConf );
+	_createOgreWindow(winConf);
 	_createInputHandling();
 
 	// If the channel has a name we try to find matching wall
@@ -82,28 +82,28 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
-	_channel = new vl::Channel( winConf.channel, wall, getEnvironment()->getIPD() );
-
-	_viewport = _ogre_window->addViewport( getCamera() );
+	Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
 	// Set some parameters to the viewport
 	// TODO this should be configurable
-	_viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
 	// This is necessary because we are using single camera and single viewport
 	// to draw to both backbuffers when using stereo.
-	_viewport->setAutoUpdated(false);
+	viewport->setAutoUpdated(false);
+
+	_channel = new vl::Channel( viewport, winConf.channel, wall, getEnvironment()->getIPD() );
 }
 
 vl::Window::~Window( void )
 {
 	std::string msg("vl::Window::~Window");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
 	msg = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(msg);
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	if( _input_manager )
 	{
 		msg = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(msg);
+		Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
         OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
@@ -129,7 +129,6 @@ void
 vl::Window::setCamera( Ogre::Camera *camera )
 {
 	assert( _channel );
-	_viewport->setCamera(camera);
 	_channel->setCamera(camera);
 }
 
@@ -239,7 +238,11 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 		// passed on.
 		// This is so rare that we don't care about it.
 		if( evt.state.Z.rel != 0 )
-		{ CEGUI::System::getSingleton().injectMouseWheelChange(evt.state.Z.rel); }
+		{
+			// Dirty hack for scaling the wheel movement
+			float z = (float)(evt.state.Z.rel)/100;
+			CEGUI::System::getSingleton().injectMouseWheelChange(z);
+		}
 	}
 	else
 	{
@@ -295,28 +298,32 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::onNewClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onNewClicked" << std::endl;
+	std::string msg("vl::Window::onNewClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onOpenClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onOpenClicked" << std::endl;
+	std::string msg("vl::Window::onOpenClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onSaveClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onSaveClicked" << std::endl;
+	std::string msg("vl::Window::onSaveClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onQuitClicked" << std::endl;
+	std::string msg("vl::Window::onQuitClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	getPipe()->sendCommand( "quit()" );
 
 	return true;
@@ -325,21 +332,24 @@ vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 bool
 vl::Window::onResetClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onResetClicked" << std::endl;
+	std::string msg("vl::Window::onResetClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onImportSceneClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onImportSceneClicked" << std::endl;
+	std::string msg("vl::Window::onImportSceneClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onReloadScenesClicked" << std::endl;
+	std::string msg("vl::Window::onReloadScenesClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
@@ -347,63 +357,48 @@ vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
 bool
 vl::Window::onNewScriptClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onNewScriptClicked" << std::endl;
+	std::string msg("vl::Window::onNewScriptClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onAddScriptClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onAddScriptClicked" << std::endl;
+	std::string msg("vl::Window::onAddScriptClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onReloadScriptsClicked( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onReloadScriptsClicked" << std::endl;
+	std::string msg("vl::Window::onReloadScriptsClicked");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowAxisChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowAxisChanged" << std::endl;
+	std::string msg("vl::Window::onShowAxisChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowNamesChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowNamesChanged" << std::endl;
+	std::string msg("vl::Window::onShowNamesChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
 bool
 vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 {
-	std::cout << "vl::Window::onShowJointsChanged" << std::endl;
-	return true;
-}
-
-bool
-vl::Window::onConsoleTextAccepted( CEGUI::EventArgs const &e )
-{
-	std::cout << "vl::Window::onConsoleTextAccepted" << std::endl;
-
-	CEGUI::Window *console = getPipe()->getConsole();
-	assert( console );
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( console->getChild("console/input") );
-	assert( input );
-	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( console->getChild("console/output") );
-	assert( output );
-
-	std::string command( input->getText().c_str() );
-	CEGUI::String text = output->getText() + '\n' + command;
-	output->setText(text);
-	input->setText("");
-
-	getPipe()->sendCommand(command);
+	std::string msg("vl::Window::onShowJointsChanged");
+	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	return true;
 }
 
@@ -442,7 +437,7 @@ void
 vl::Window::createGUIWindow(void )
 {
 	std::string message = "vl::Window::createGUIWindow";
-	Ogre::LogManager::getSingleton().logMessage(message);
+	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 }
 
 /// ------------------------------- Protected ----------------------------------

@@ -17,6 +17,8 @@
 #include "settings.hpp"
 #include "gui/gui.hpp"
 
+#include "logger.hpp"
+
 #include <CEGUI/CEGUIWindow.h>
 
 
@@ -100,6 +102,21 @@ public :
 	CEGUI::Window *getConsole( void )
 	{ return _console; }
 
+	void printToConsole(std::string const &text, double time,
+						std::string const &type = std::string(),
+						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
+
+	/// GECUI callbacks
+	/// Console events
+	bool onConsoleInputAccepted(CEGUI::EventArgs const &e);
+
+	/// @brief Scroll the console memory using up and down arrows
+	/// If there is new user input it will be saved to the bottom of scroll
+	bool onConsoleInputKeyDown(CEGUI::EventArgs const &e);
+
+	/// @brief When console is shown it will automatically focus on the input
+	bool onConsoleShow(CEGUI::EventArgs const &e);
+
 protected :
 	/// Reload the projects
 	void _reloadProjects( vl::Settings const &set );
@@ -120,6 +137,7 @@ protected :
 	void _handleMessage( vl::cluster::Message *msg );
 	void _handleCreateMsg( vl::cluster::Message *msg );
 	void _handleUpdateMsg( vl::cluster::Message *msg );
+	void _handlePrintMsg( vl::cluster::Message *msg );
 
 	/// Distribution helpers
 	/// Syncs to the master copy stored when an Update message was received
@@ -183,6 +201,10 @@ protected :
 	CEGUI::Window *_editor;
 	CEGUI::Window *_loading_screen;
 	CEGUI::Window *_stats;
+
+	std::deque<std::string> _console_memory;
+	int _console_memory_index;
+	std::string _console_last_command;
 
 	bool _running;
 	bool _rendering;

@@ -23,10 +23,11 @@ class Channel
 public:
 	/// @brief Create a channel
 	/// @TODO we should have a default wall to use if one is not provided
-    Channel( vl::EnvSettings::Channel const &chanConf, 
+    Channel( Ogre::Viewport *viewport,
+			 vl::EnvSettings::Channel const &chanConf,
 			 vl::EnvSettings::Wall const &wall, double ipd );
 
-    virtual ~Channel (void);
+	virtual ~Channel (void);
 
 	void setCamera( Ogre::Camera *cam );
 
@@ -50,8 +51,9 @@ protected:
 	vl::EnvSettings::Wall _wall;
 	bool _stereo;
 	double _ipd;
-	
+
 	/// Ogre variables
+	Ogre::Viewport *_viewport;
 	Ogre::Camera *_camera;
 
 	Ogre::Matrix4 _head_matrix;

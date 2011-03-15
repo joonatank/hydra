@@ -10,6 +10,11 @@
 
 #include "mesh_writer.hpp"
 
+namespace py
+{
+    using namespace boost::python;
+}
+
 BOOST_PYTHON_MODULE(pyogre)
 {
     using namespace boost::python;
@@ -71,30 +76,30 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
-	class_<Ogre::ColourValue>("ColourValue", init<>())
-		.def(init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
-		.def(init<Ogre::Real, Ogre::Real, Ogre::Real>())
+	py::class_<Ogre::ColourValue>("ColourValue", py::init<>())
+		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real>())
 		.def_readwrite("r", &Ogre::ColourValue::r)
 		.def_readwrite("g", &Ogre::ColourValue::g)
 		.def_readwrite("b", &Ogre::ColourValue::b)
 		.def_readwrite("a", &Ogre::ColourValue::a)
 		// Operators
-		.def(self + self )
-		.def(self - self )
-		.def(self * Ogre::Real() )
-		.def(self / Ogre::Real() )
-		.def(self += self )
-		.def(self -= self )
-		.def(self *= Ogre::Real() )
-		.def(self /= Ogre::Real() )
+		.def(py::self + py::self)
+		.def(py::self - py::self)
+		.def(py::self * Ogre::Real())
+		.def(py::self / Ogre::Real())
+		.def(py::self += py::self)
+		.def(py::self -= py::self)
+		.def(py::self *= Ogre::Real())
+		.def(py::self /= Ogre::Real())
 		// Comparison
-		.def(self == self )
-		.def(self != self )
-		.def(self_ns::str(self_ns::self))
+		.def(py::self == py::self)
+		.def(py::self != py::self)
+		.def(py::self_ns::str(py::self_ns::self))
 	;
 
-	class_<Ogre::Quaternion>("Quaternion", init<>())
-		.def(init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+	py::class_<Ogre::Quaternion>("Quaternion", py::init<>())
+		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
 		.def_readwrite("x", &Ogre::Quaternion::x)
 		.def_readwrite("y", &Ogre::Quaternion::y)
 		.def_readwrite("z", &Ogre::Quaternion::z)
@@ -104,23 +109,74 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def("equals", &Ogre::Quaternion::equals)
 		.def("isNaN", &Ogre::Quaternion::isNaN)
 		// Operators
-		.def(self + self )
-		.def(self - self )
-		.def(self * self )
-		.def(self * Ogre::Vector3() )
-		.def(self * Ogre::Real() )
-		.def(self == self )
-		.def(self != self )
-		.def(self_ns::str(self_ns::self))
+		.def(py::self + py::self)
+		.def(py::self - py::self)
+		.def(py::self * py::self)
+		.def(py::self * Ogre::Vector3())
+		.def(py::self * Ogre::Real())
+		.def(py::self == py::self)
+		.def(py::self != py::self)
+		.def(py::self_ns::str(py::self_ns::self))
 	;
 
-	// TODO these should be implemented
-	// Needs at least conversions from one to the other and constructors
-	class_<Ogre::Degree>("Degree")
+	py::class_<Ogre::Degree>("Degree", py::init< py::optional<Ogre::Real> >() )
+		.def(py::init<Ogre::Radian>())
+		.def("valueDegrees", &Ogre::Degree::valueDegrees)
+		.def("valueRadians", &Ogre::Degree::valueRadians)
+		.def("valueAngleUnits", &Ogre::Degree::valueAngleUnits)
+		// Operators
+		.def(py::self + py::self )
+		.def(py::self + Ogre::Radian() )
+		.def(py::self += py::self )
+		.def(py::self + Ogre::Radian() )
+		.def(py::self - py::self )
+		.def(py::self - Ogre::Radian() )
+		.def(py::self -= py::self )
+		.def(py::self -= Ogre::Radian() )
+		.def(py::self * py::self)
+		.def(py::self * Ogre::Real())
+		.def(py::self *= Ogre::Real())
+		.def(py::self / Ogre::Real())
+		.def(py::self /= Ogre::Real())
+		// Comparison operators
+		.def(py::self < py::self )
+		.def(py::self <= py::self )
+		.def(py::self == py::self )
+		.def(py::self != py::self )
+		.def(py::self > py::self )
+		.def(py::self >= py::self )
+		.def(py::self_ns::str(py::self_ns::self))
 	;
 
-	class_<Ogre::Radian>("Radian")
+	py::class_<Ogre::Radian>("Radian", py::init< py::optional<Ogre::Real> >())
+		.def(py::init<Ogre::Degree>())
+		.def("valueDegrees", &Ogre::Radian::valueDegrees)
+		.def("valueRadians", &Ogre::Radian::valueRadians)
+		.def("valueAngleUnits", &Ogre::Radian::valueAngleUnits)
+		// Operators
+		.def(py::self + py::self )
+		.def(py::self + Ogre::Degree() )
+		.def(py::self += py::self )
+		.def(py::self + Ogre::Degree() )
+		.def(py::self - py::self )
+		.def(py::self - Ogre::Degree() )
+		.def(py::self -= py::self )
+		.def(py::self -= Ogre::Degree() )
+		.def(py::self * py::self)
+		.def(py::self * Ogre::Real())
+		.def(py::self *= Ogre::Real())
+		.def(py::self / Ogre::Real())
+		.def(py::self /= Ogre::Real())
+		// Comparison operators
+		.def(py::self < py::self )
+		.def(py::self <= py::self )
+		.def(py::self == py::self )
+		.def(py::self != py::self )
+		.def(py::self > py::self )
+		.def(py::self >= py::self )
+		.def(py::self_ns::str(py::self_ns::self))
 	;
+
 
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_min2)() const = &Ogre::AxisAlignedBox::getMinimum;
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_max2)() const = &Ogre::AxisAlignedBox::getMaximum;

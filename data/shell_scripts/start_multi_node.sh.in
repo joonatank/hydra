@@ -5,5 +5,5 @@
 ./${PROGRAM_NAME} --slave right --server ${SERVER_HOSTNAME}:${SERVER_PORT} &
 ./${PROGRAM_NAME} -e ${DEMO_DATA_PATH}/multi_node.env\
 	-p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE}\
-	-g ${DEMO_DATA_PATH}/global/global_config.prj\
-	-v $@
+	-g ${DEMO_DATA_PATH}/global/hydra.prj\
+	-l 0 $@

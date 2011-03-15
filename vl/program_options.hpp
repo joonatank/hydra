@@ -43,9 +43,12 @@ struct ProgramOptions
 	/// If this is true slave is always false
 	bool master( void ) const;
 
+	std::string getOutputFile(void) const;
+
 	/// Global options
 	bool verbose;
-	std::string exe_path;
+	int log_level;
+	std::string exe_name;
 	std::string program_directory;
 	std::string log_dir;
 

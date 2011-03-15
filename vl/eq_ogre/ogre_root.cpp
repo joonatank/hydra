@@ -16,7 +16,7 @@
 #include "base/system_util.hpp"
 #include "base/filesystem.hpp"
 
-vl::ogre::Root::Root( std::string const &log_file_path, bool verbose )
+vl::ogre::Root::Root(vl::LogLevel level)
 	: _ogre_root(0),
 	  _log_manager(0),
 	  _primary(false)
@@ -24,13 +24,19 @@ vl::ogre::Root::Root( std::string const &log_file_path, bool verbose )
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
+		// TODO move the logger to Pipe
 		_log_manager = new Ogre::LogManager();
 
 		// Create the log
 		Ogre::Log *log = Ogre::LogManager::getSingleton()
-			.createLog( log_file_path, true, verbose );
-		log->setTimeStampEnabled( true );
-		std::cout << "Ogre log file path = " << log_file_path << std::endl;
+			.createLog("", true, true, true);
+
+		Ogre::LoggingLevel ol;
+		if( level == vl::LL_LOW ) ol = Ogre::LL_LOW;
+		else if( level == vl::LL_NORMAL ) ol = Ogre::LL_NORMAL;
+		else if( level == vl::LL_BOREME ) ol = Ogre::LL_BOREME;
+
+		Ogre::LogManager::getSingleton().setLogDetail(ol);
 
 		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;
@@ -176,8 +182,8 @@ Ogre::RenderWindow *
 vl::ogre::Root::createWindow( std::string const &name, unsigned int width,
 		unsigned int height, Ogre::NameValuePairList const &params )
 {
-	std::string str( "vl::ogre::Root::creatingWindow", Ogre::LML_TRIVIAL );
-	Ogre::LogManager::getSingleton().logMessage( str );
+	std::string str("vl::ogre::Root::creatingWindow");
+	Ogre::LogManager::getSingleton().logMessage(str, Ogre::LML_TRIVIAL);
 
 	if( !_ogre_root )
 	{ return 0; }
