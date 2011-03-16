@@ -11,14 +11,16 @@
 
 #include <OGRE/OgreTimer.h>
 
+#include "logger.hpp"
+
 vl::cluster::Server::Server( uint16_t const port )
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port)), _frame(1)
 {
-	std::cout << "vl::cluster::Server::Server : " << "Creating server to port "
+	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
 	boost::asio::socket_base::receive_buffer_size buf_size;
 	_socket.get_option(buf_size);
-	std::cout << "Receive Buffer size = " << buf_size.value() << "." << std::endl;
+	std::cout << vl::TRACE << "Receive Buffer size = " << buf_size.value() << "." << std::endl;
 }
 
 
@@ -95,7 +97,7 @@ vl::cluster::Server::receiveMessages( void )
 
 			case vl::cluster::MSG_COMMAND :
 			{
-				std::cout << "Server : vl::cluster::MSG_COMMAND received." << std::endl;
+//				std::cout << "Server : vl::cluster::MSG_COMMAND received." << std::endl;
 				// TODO there should be a maximum amount of messages stored
 				// TODO works only on ASCII at the moment
 				assert( msg->size() > sizeof(size_t) );
@@ -115,7 +117,7 @@ vl::cluster::Server::receiveMessages( void )
 
 			default :
 			{
-				std::cout << "vl::cluster::Server::mainloop : "
+				std::cout << vl::ERR << "vl::cluster::Server::mainloop : "
 					<< "Unhandeled message type." << std::endl;
 				delete msg;
 			}
@@ -176,7 +178,7 @@ vl::cluster::Server::render( vl::Stats &stats )
 void
 vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 {
-	std::cout << "vl::cluster::Server::sendEnvironment" << std::endl;
+	std::cout << vl::TRACE << "vl::cluster::Server::sendEnvironment" << std::endl;
 
 	_env_msg.clear();
 	msg.dump(_env_msg);
@@ -381,7 +383,7 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 			{
 				case vl::cluster::MSG_ENVIRONMENT :
 				{
-					std::cout << "vl::cluster::Server::_handleAck : MSG_ENVIRONMENT" << std::endl;
+					std::cout << vl::TRACE << "vl::cluster::Server::_handleAck : MSG_ENVIRONMENT" << std::endl;
 					assert( iter->state == CS_REQ );
 					// Send the Project message
 					_sendProject( iter->address );
@@ -392,7 +394,7 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 
 				case vl::cluster::MSG_PROJECT :
 				{
-					std::cout << "vl::cluster::Server::_handleAck : MSG_PROJECT" << std::endl;
+					std::cout << vl::TRACE << "vl::cluster::Server::_handleAck : MSG_PROJECT" << std::endl;
 					assert( iter->state == CS_ENV );
 					// change the state
 					iter->state = CS_PROJ;

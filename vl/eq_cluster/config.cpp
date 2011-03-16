@@ -100,7 +100,7 @@ vl::Config::init( void )
 
 	std::vector<std::string> scripts = _settings.getScripts();
 
-	std::cout << "Running " << scripts.size() << " python scripts." << std::endl;
+	std::cout << vl::TRACE << "Running " << scripts.size() << " python scripts." << std::endl;
 
 	for( size_t i = 0; i < scripts.size(); ++i )
 	{
@@ -159,6 +159,14 @@ vl::Config::render( void )
 	// TODO where the receive input messages should be?
 	_receiveEventMessages();
 	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
+
+	// Update statistics every 10 seconds
+	// @todo time limit should be configurable
+	if( _stats_timer.getMilliseconds() > 10e3 )
+	{
+		_game_manager->getStats().update();
+		_stats_timer.reset();
+	}
 }
 
 /// ------------ Private -------------
@@ -284,7 +292,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 
 	std::vector<std::string> tracking_files = settings->getTrackingFiles();
 
-	std::cout << "Processing " << tracking_files.size() << " tracking files."
+	std::cout << vl::TRACE << "Processing " << tracking_files.size() << " tracking files."
 		<< std::endl;
 
 	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
@@ -299,7 +307,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 	}
 
 	// Start the trackers
-	std::cout << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
+	std::cout << vl::TRACE << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
 	for( size_t i = 0; i < clients->getNTrackers(); ++i )
 	{
 		clients->getTracker(i)->init();
@@ -341,7 +349,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 void
 vl::Config::_loadScenes( void )
 {
-	std::cout << "Loading Scenes for Project : " << _settings.getProjectName()
+	std::cout << vl::TRACE << "Loading Scenes for Project : " << _settings.getProjectName()
 		<< std::endl;
 
 	// Get scenes
@@ -350,12 +358,12 @@ vl::Config::_loadScenes( void )
 	// If we don't have Scenes there is no point loading them
 	if( !scenes.size() )
 	{
-		std::cout << "Project does not have any scene files." << std::endl;
+		std::cout << vl::TRACE << "Project does not have any scene files." << std::endl;
 		return;
 	}
 	else
 	{
-		std::cout << "Project has " << scenes.size() << " scene files."
+		std::cout << vl::TRACE << "Project has " << scenes.size() << " scene files."
 			<< std::endl;
 	}
 
@@ -368,7 +376,7 @@ vl::Config::_loadScenes( void )
 	{
 		std::string scene_file_name = scenes.at(i).getName();
 
-		std::cout << "Loading scene file = " << scene_file_name << std::endl;
+		std::cout << vl::TRACE << "Loading scene file = " << scene_file_name << std::endl;
 
 		vl::TextResource resource;
 		_game_manager->getReourceManager()->loadResource( scenes.at(i).getFile(), resource );
@@ -378,7 +386,7 @@ vl::Config::_loadScenes( void )
 		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 		loader.parseDotScene( resource, _game_manager->getSceneManager() );
 
-		std::cout << "Scene " << scene_file_name << " loaded." << std::endl;
+		std::cout << vl::TRACE << "Scene " << scene_file_name << " loaded." << std::endl;
 	}
 
 	_hideCollisionBarries();
@@ -427,7 +435,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 	// TODO add case directory
 
 	// Add environment directory, used for tracking configurations
-	std::cout << "Adding ${environment}/tracking to the resources paths." << std::endl;
+	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
 	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
 	if( fs::is_directory(tracking_path) )
 	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.file_string() ); }
