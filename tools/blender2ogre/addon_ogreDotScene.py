@@ -1662,11 +1662,14 @@ class ShaderTree(object):
 		if not hasattr(texture, 'image'):
 			print('WARNING: texture must be of type IMAGE->', texture)
 			return ''
+
 		if not texture.image:
 			print('WARNING: texture has no image assigned->', texture)
 			return ''
+
 		#if slot: print(dir(slot))
-		if slot and not slot.use: return ''
+		if slot and not slot.use:
+			return ''
 
 		path = OPTIONS['PATH']
 		M = ''; _alphahack = None
@@ -1748,7 +1751,7 @@ class ShaderTree(object):
 			btype = slot.blend_type
 
 			if rgba and slot.use_stencil:
-				texop = 	'blend_current_alpha'		# 'blend_texture_alpha' shadeless
+				texop = 'blend_current_alpha'		# 'blend_texture_alpha' shadeless
 			elif btype == 'MIX':
 				texop = 'blend_manual'
 			elif btype == 'MULTIPLY':
@@ -1765,6 +1768,8 @@ class ShaderTree(object):
 				texop = 'add_signed'		# add_smooth not very useful?
 			elif btype == 'DIFFERENCE':
 				texop = 'dotproduct'		# nothing closely matches blender
+			elif btype == 'VALUE':
+				texop = 'value'
 			else:
 				texop = 'blend_diffuse_colour'
 
@@ -1774,10 +1779,12 @@ class ShaderTree(object):
 
 			if texop == 'blend_manual':
 				M += indent(4, 'colour_op_ex %s src_current src_texture %s' %(texop, factor) )
-			else:
+			elif not texop == 'value':
+				# For value do not do anything
 				M += indent(4, 'colour_op_ex %s src_current src_texture' %texop )
 				#M += indent(4, 'colour_op_ex %s src_manual src_diffuse %s' %(texop, 1.0-factor) )
 				#M += indent(4, 'alpha_op_ex blend_manual src_current src_current %s' %factor )
+
 			if slot.use_map_alpha:
 				#alphafactor = 1.0 - slot.alpha_factor
 				#M += indent(4, 'colour_op_ex blend_manual src_current src_texture %s' %factor )
@@ -1809,10 +1816,12 @@ class ShaderTree(object):
 		if not self.material:
 			print('ERROR: material node with no submaterial block chosen')
 			return ''
+
 		mat = self.material
 		color = mat.diffuse_color
 		alpha = 1.0
-		if mat.use_transparency: alpha = mat.alpha
+		if mat.use_transparency:
+			alpha = mat.alpha
 
 		## textures ##
 		if not self.textures:		## class style materials
@@ -1879,7 +1888,12 @@ class ShaderTree(object):
 		else:
 			M += indent(3, 'emissive %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
 
-		M += indent( 3, 'scene_blend %s' %mat.scene_blend )
+		if mat.use_transparency:
+			M += indent( 3, 'scene_blend %s' %'alpha_blend')
+			M += indent( 3, 'depth_write %s' %'off')
+		else:
+			M += indent( 3, 'scene_blend %s' %mat.scene_blend )
+
 		for prop in mat.items():
 			name,val = prop
 			if not name.startswith('_'): M += indent( 3, '%s %s' %prop )
@@ -4310,7 +4324,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		## environ settings ##
 		world = context.scene.world
-		_c = {'colorAmbient':world.ambient_color, 'colorBackground':world.horizon_color, 'colorDiffuse':world.horizon_color}
+		_c = {'colourAmbient':world.ambient_color, 'colourBackground':world.horizon_color, 'colourDiffuse':world.horizon_color}
 		for ctag in _c:
 			a = doc.createElement(ctag); environ.appendChild( a )
 			color = _c[ctag]
