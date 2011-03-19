@@ -146,7 +146,7 @@ public :
 	void writeMesh(vl::Mesh *mesh, std::string const &filename);
 
 private :
-	void writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData);
+	void writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Mesh *og_mesh);
 
 	void writeSubMeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh);
 

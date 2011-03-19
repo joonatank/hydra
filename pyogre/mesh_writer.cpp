@@ -75,29 +75,8 @@ vl::MeshWriter::writeMesh(vl::Mesh *mesh, std::string const &filename)
 	newMesh->sharedVertexData = new Ogre::VertexData();
 
 	// TODO copy from mesh to newMesh
-	writeGeometry(mesh, newMesh->sharedVertexData);
+	writeGeometry(mesh, newMesh->sharedVertexData, newMesh.get());
 	writeSubMeshes(mesh, newMesh.get());
-
-    // Set bounds
-	Ogre::Vector3 min = mesh->getBounds().getMinimum();
-	Ogre::Vector3 max = mesh->getBounds().getMaximum();
-
-    const Ogre::AxisAlignedBox& currBox = newMesh->getBounds();
-    Ogre::Real currRadius = newMesh->getBoundingSphereRadius();
-    if (currBox.isNull())
-    {
-		//do not pad the bounding box
-        newMesh->_setBounds(Ogre::AxisAlignedBox(min, max), false);
-//        newMesh->_setBoundingSphereRadius(Ogre::Math::Sqrt(maxSquaredRadius));
-    }
-    else
-    {
-		Ogre::AxisAlignedBox newBox(min, max);
-		newBox.merge(currBox);
-		//do not pad the bounding box
-		newMesh->_setBounds(newBox, false);
-//		newMesh->_setBoundingSphereRadius(std::max(Ogre::Math::Sqrt(maxSquaredRadius), currRadius));
-    }
 
 	Ogre::MeshSerializer ser;
 	ser.exportMesh( newMesh.get(), filename );
@@ -109,7 +88,7 @@ vl::MeshWriter::writeMesh(vl::Mesh *mesh, std::string const &filename)
 /// Now just export MeshWriter, Ogre::Mesh, Ogre::SubMesh to python module.
 
 void 
-vl::MeshWriter::writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData)
+vl::MeshWriter::writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Mesh *og_mesh)
 {
 	assert(mesh);
 	assert(vertexData);
@@ -129,7 +108,8 @@ vl::MeshWriter::writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData)
     unsigned short totalTexCoords = 0; // across all buffers
 
     // Information for calculating bounds
-    Ogre::Vector3 min = Ogre::Vector3::ZERO, max = Ogre::Vector3::UNIT_SCALE, pos = Ogre::Vector3::ZERO;
+    Ogre::Vector3 min = Ogre::Vector3::ZERO;
+	Ogre::Vector3 max = Ogre::Vector3::UNIT_SCALE;
     Ogre::Real maxSquaredRadius = -1;
     bool first = true;
 
@@ -224,17 +204,31 @@ vl::MeshWriter::writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData)
 			// Find child for this element
 			switch(elem.getSemantic())
 			{
-			case Ogre::VES_POSITION:
-//				std::cout << "Writing Vertex " << i << " position " << mesh->getVertex(i).position << std::endl;
-				elem.baseVertexPointerToElement(pVert, &pFloat);
+				case Ogre::VES_POSITION:
+				{
+					elem.baseVertexPointerToElement(pVert, &pFloat);
 
-				*pFloat++ = mesh->getVertex(i).position.x;
-				*pFloat++ = mesh->getVertex(i).position.y;
-				*pFloat++ = mesh->getVertex(i).position.z;
+					Ogre::Vector3 const &pos = mesh->getVertex(i).position;
+					*pFloat++ = pos.x;
+					*pFloat++ = pos.y;
+					*pFloat++ = pos.z;
+				
+					if(first)
+					{
+						min = max = pos;
+						maxSquaredRadius = pos.squaredLength();
+						first = false;
+					}
+					else
+					{
+						min.makeFloor(pos);
+						max.makeCeil(pos);
+						maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
+					}
+				}
 				break;
 
 			case Ogre::VES_NORMAL:
-//				std::cout << "Writing Vertex " << i << " normal " << mesh->getVertex(i).normal << std::endl;
 				elem.baseVertexPointerToElement(pVert, &pFloat);
 
 				*pFloat++ = mesh->getVertex(i).normal.x;
@@ -344,6 +338,25 @@ vl::MeshWriter::writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData)
 
 	bufCount++;
     vbuf->unlock();
+	// Vertexbuffer done
+
+    // Set bounds
+    Ogre::AxisAlignedBox const &currBox = og_mesh->getBounds();
+    Ogre::Real currRadius = og_mesh->getBoundingSphereRadius();
+    if (currBox.isNull())
+    {
+		// do not pad the bounding box
+        og_mesh->_setBounds(Ogre::AxisAlignedBox(min, max), false);
+        og_mesh->_setBoundingSphereRadius(Ogre::Math::Sqrt(maxSquaredRadius));
+    }
+    else
+    {
+        Ogre::AxisAlignedBox newBox(min, max);
+        newBox.merge(currBox);
+		// do not pad the bounding box
+        og_mesh->_setBounds(newBox, false);
+        og_mesh->_setBoundingSphereRadius(std::max(Ogre::Math::Sqrt(maxSquaredRadius), currRadius));
+    }
 }
 
 void 
