@@ -66,10 +66,23 @@ public :
 	SceneNodeList const &getSelection( void ) const
 	{ return _selection; }
 
+	Ogre::ColourValue const &getAmbientLight(void) const
+	{ return _ambient_light; }
+
+	void setAmbientLight( Ogre::ColourValue const &colour )
+	{
+		if( _ambient_light != colour )
+		{
+			_ambient_light = colour;
+			setDirty( DIRTY_AMBIENT_LIGHT );
+		}
+	}
+	
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
 	};
 
 protected :
@@ -88,6 +101,8 @@ private :
 
 	// Reload the scene
 	uint32_t _scene_version;
+
+	Ogre::ColourValue _ambient_light;
 
 	// SceneManager used for creating mapping between vl::SceneNode and
 	// Ogre::SceneNode

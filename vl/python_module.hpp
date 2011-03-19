@@ -107,6 +107,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
+		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 	;
 
 

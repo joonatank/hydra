@@ -7,7 +7,10 @@
 
 /// Public
 vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
-	: _scene_version( 0 ), _ogre_sm(0), _session(session)
+	: _scene_version(0)
+	, _ogre_sm(0)
+	, _session(session)
+	, _ambient_light(0, 0, 0, 1)
 {
 	assert( _session );
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
@@ -25,7 +28,11 @@ void
 vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 {
 	assert( man );
-	_ogre_sm = man;
+	if( _ogre_sm != man )
+	{
+		_ogre_sm = man;
+		_ogre_sm->setAmbientLight(_ambient_light);
+	}
 }
 
 vl::SceneNodePtr
@@ -146,6 +153,12 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	{
 		msg << _scene_version;
 	}
+
+	
+	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
+	{
+		msg << _ambient_light.r << _ambient_light.g << _ambient_light.b << _ambient_light.a;
+	}
 }
 
 void
@@ -154,5 +167,14 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		msg >> _scene_version;
+	}
+	
+	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
+	{
+		msg >> _ambient_light.r >> _ambient_light.g >> _ambient_light.b >> _ambient_light.a;
+		if( _ogre_sm )
+		{
+			_ogre_sm->setAmbientLight(_ambient_light);
+		}
 	}
 }

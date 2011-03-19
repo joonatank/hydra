@@ -125,7 +125,7 @@ vl::ogre::DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	catch( Ogre::Exception const &e )
 	{
 		std::string message = "Ogre Exception : " + std::string(e.what());
-		Ogre::LogManager::getSingleton().logMessage(message);
+		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
 	}
 
 	// Process nodes (?)
