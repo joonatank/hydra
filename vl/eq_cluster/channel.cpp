@@ -280,7 +280,8 @@ vl::Channel::_setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// NOTE This is not HMD discard the rotation part
 	// Rotating the eye doesn't seem to have any affect.
 	// Though it's more realistic if it's there.
-	eye = _head_matrix.extractQuaternion()*eye + cam_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
+	eye = (cam_orient*_head_matrix.extractQuaternion())*eye 
+		+ cam_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
 	Ogre::Vector3 cam_pos( camera->getRealPosition() );
 
 	// Combine eye and camera positions
