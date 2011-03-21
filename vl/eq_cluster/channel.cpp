@@ -86,27 +86,27 @@ vl::Channel::draw( void )
 		//draw into back left buffer
 		glDrawBuffer(GL_BACK_LEFT);
 		Ogre::Vector3 eye(-_ipd/2, 0, 0);
-		_setOgreFrustum( _camera, eye );
+		_setOgreFrustum(_camera);
 		_setOgreView( _camera, eye );
 		_viewport->update();
 
 		//draw into back right buffer
 		glDrawBuffer(GL_BACK_RIGHT);
 		eye = Ogre::Vector3(_ipd/2, 0, 0);
-		_setOgreFrustum( _camera, eye );
+		_setOgreFrustum(_camera);
 		_setOgreView( _camera, eye );
 		_viewport->update();
 	}
 	else
 	{
-		_setOgreFrustum( _camera );
+		_setOgreFrustum(_camera);
 		_setOgreView( _camera );
 		_viewport->update();
 	}
 }
 
 void
-vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
+vl::Channel::_setOgreFrustum(Ogre::Camera *camera)
 {
 	assert( camera );
 	assert( !_wall.empty() );
@@ -154,13 +154,6 @@ vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	Ogre::Real wall_bottom = bottom_right.y;
 	Ogre::Real wall_front = bottom_right.z;
 
-	// eye is relative to the head, and has the same orientation
-	// eye orientation should modify the frustum when rotated around y and z
-	// but should stay constant when rotated around x.
-	// Tested it works that way.
-	Ogre::Quaternion headQuat = _head_matrix.extractQuaternion();
-	eye = headQuat*eye + headTrans;
-
 	// The coordinates right, left, top, bottom
 	// represent a view frustum with coordinates (left, bottom, -near)
 	// and (right, top, -near)
@@ -176,21 +169,17 @@ vl::Channel::_setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye )
 	// This comes because the front axis for every wall is different so for
 	// front wall z-axis is the left walls x-axis.
 	// Without the scale those axes will differ relative to each other.
-	//Ogre::Real scale = (wall_front+eye.z)/(-c_near);
+
 	Ogre::Real scale = (wall_front)/(-c_near);
-	// The eye.x should be positive.
-	//Ogre::Real right = (wall_right + eye.x)/scale;
-	//Ogre::Real left = (wall_left + eye.x)/scale;
+
 	Ogre::Real right = (wall_right)/scale;
 	Ogre::Real left = (wall_left)/scale;
-	// The eye.y has to be negative otherwise would happen something like
-	// top = (2.34 + 1.5)/scale and bottom = (0.34 + 1.5)/scale
-	// and they should be top positive and bottom negative (about the same size)
-//	Ogre::Real top = (wall_top - eye.y)/scale;
-//	Ogre::Real bottom = (wall_bottom - eye.y)/scale;
-	Ogre::Real wall_half = (wall_top - wall_bottom)/2;
-	Ogre::Real top = (wall_top - wall_half)/scale;
-	Ogre::Real bottom = (wall_bottom - wall_half)/scale;
+
+	// Golden ratio for the frustum
+	Ogre::Real phi = (1 + std::sqrt(5.0))/2;
+	Ogre::Real wall_height = wall_top - wall_bottom;
+	Ogre::Real top = (wall_top - (1/phi)*wall_height)/scale;
+	Ogre::Real bottom = (wall_bottom - (1/phi)*wall_height)/scale;
 
 	// Near and far clipping should not be modified because
 	// Increasing the near clip would clip the objects near the user.

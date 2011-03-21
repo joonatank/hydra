@@ -43,7 +43,7 @@ protected:
 
 	// Some task methods
 	// The eye is not a reference because it's going to get modified
-	void _setOgreFrustum( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
+	void _setOgreFrustum(Ogre::Camera *camera);
 	void _setOgreView( Ogre::Camera *camera, Ogre::Vector3 eye = Ogre::Vector3::ZERO );
 
 	/// Draw settings
