@@ -294,6 +294,41 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	return true;
 }
 
+bool 
+vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
+{
+	std::cout << vl::TRACE << "vl::Window::buttonPessed" << std::endl;
+	return true;
+}
+
+bool 
+vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
+{
+	std::cout << vl::TRACE << "vl::Window::buttonReleased" << std::endl;
+	return true;
+}
+
+bool 
+vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
+{
+	std::cout << vl::TRACE << "vl::Window::axisMoved" << std::endl;
+	return true;
+}
+
+bool 
+vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
+{
+	std::cout << vl::TRACE << "vl::Window::povMoved" << std::endl;
+	return true;
+}
+
+bool 
+vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
+{
+	std::cout << vl::TRACE << "vl::Window::vector3Moved" << std::endl;
+	return true;
+}
+
 /// ------------------------ Public CEGUI callbacks ----------------------------
 bool
 vl::Window::onNewClicked( CEGUI::EventArgs const &e )
@@ -425,10 +460,15 @@ vl::Window::swap( void )
 void
 vl::Window::capture( void )
 {
-	if( _keyboard && _mouse )
+	if( _keyboard )
+	{ _keyboard->capture(); }
+
+	if( _mouse )
+	{ _mouse->capture(); }
+
+	for( size_t i = 0; i < _joysticks.size(); ++i )
 	{
-		_keyboard->capture();
-		_mouse->capture();
+		_joysticks.at(i)->capture();
 	}
 }
 
@@ -511,6 +551,23 @@ vl::Window::_createInputHandling( void )
 
 	_mouse->setEventCallback(this);
 
+	int numSticks = _input_manager->getNumberOfDevices(OIS::OISJoyStick);
+	for( int i = 0; i < numSticks; ++i )
+	{
+		OIS::JoyStick *stick = static_cast<OIS::JoyStick *>(_input_manager->createInputObject(OIS::OISJoyStick, true));
+
+		std::cout << vl::TRACE << "Creating joystick " << i+1
+			<< "\n\t" << "Axes: " << stick->getNumberOfComponents(OIS::OIS_Axis)
+			<< "\n\t" << "Sliders: " << stick->getNumberOfComponents(OIS::OIS_Slider)
+			<< "\n\t" << "POV/HATs: " << stick->getNumberOfComponents(OIS::OIS_POV)
+			<< "\n\t" << "Buttons: " << stick->getNumberOfComponents(OIS::OIS_Button)
+			<< "\n\t" << "Vector3: " << stick->getNumberOfComponents(OIS::OIS_Vector3)
+				<< std::endl;
+
+		stick->setEventCallback(this);
+		_joysticks.push_back(stick);	
+	}
+
 	message = "Input system created.";
  	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 }
@@ -529,7 +586,8 @@ vl::Window::_printInputInformation( void )
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
 		<< '\n';
- 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	std::cout << ss.str() << std::endl;
+// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
 	ss.str("");
 	// List all devices
@@ -537,5 +595,6 @@ vl::Window::_printInputInformation( void )
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
- 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
+	std::cout << ss.str() << std::endl;
+//	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 }

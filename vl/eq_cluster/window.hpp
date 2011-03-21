@@ -17,6 +17,7 @@
 #include <OIS/OISInputManager.h>
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
+#include <OIS/OISJoyStick.h>
 
 #include <OGRE/OgreRenderWindow.h>
 
@@ -32,7 +33,7 @@ class Pipe;
 /**	@class Window represent an OpenGL drawable and context
  *
  */
-class Window : public OIS::KeyListener, public OIS::MouseListener
+class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
 	/// @TODO change name to window config
@@ -73,6 +74,12 @@ public:
 	bool mouseMoved(const OIS::MouseEvent &evt);
 	bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 	bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
+
+	bool buttonPressed(OIS::JoyStickEvent const &evt, int button);
+	bool buttonReleased(OIS::JoyStickEvent const &evt, int button);
+	bool axisMoved(OIS::JoyStickEvent const &evt, int axis);
+	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
+	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
 
 	/// GECUI callbacks
 
@@ -127,6 +134,7 @@ protected :
 	OIS::InputManager *_input_manager;
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
+	std::vector<OIS::JoyStick *> _joysticks;
 
 };	// class Window
 

@@ -1,5 +1,5 @@
 REM Add necessary dlls to path
-Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR};${LIB_DIR}\OGRE\bin\${BUILD_TYPE};${LIB_DIR}\CEGUI\bin\${BUILD_TYPE};${LIB_DIR}\expat\bin\${BUILD_TYPE}
+Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR};${LIB_DIR}\OGRE\bin\${BUILD_TYPE};${LIB_DIR}\CEGUI\bin\${BUILD_TYPE};${LIB_DIR}\expat\bin\${BUILD_TYPE};${LIB_DIR}\OIS\bin\${BUILD_TYPE}
 
 REM Start listening client
 REM Start the master

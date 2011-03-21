@@ -100,6 +100,7 @@ find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${Ogre_INCLUDE_DIR}
+	${OIS_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
