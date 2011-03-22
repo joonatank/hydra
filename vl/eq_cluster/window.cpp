@@ -301,35 +301,60 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool 
 vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
 {
-	std::cout << vl::TRACE << "vl::Window::buttonPessed" << std::endl;
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << button << evt;
+	_sendEvent( data );
+
 	return true;
 }
 
 bool 
 vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
 {
-	std::cout << vl::TRACE << "vl::Window::buttonReleased" << std::endl;
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << button << evt;
+	_sendEvent( data );
+
 	return true;
 }
 
 bool 
 vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
 {
-	std::cout << vl::TRACE << "vl::Window::axisMoved" << std::endl;
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << axis << evt;
+	_sendEvent( data );
+
 	return true;
 }
 
 bool 
 vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
 {
-	std::cout << vl::TRACE << "vl::Window::povMoved" << std::endl;
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << pov << evt;
+	_sendEvent( data );
+
 	return true;
 }
 
 bool 
 vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 {
-	std::cout << vl::TRACE << "vl::Window::vector3Moved" << std::endl;
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteStream stream = data.getStream();
+	stream << index << evt;
+	_sendEvent( data );
+
 	return true;
 }
 

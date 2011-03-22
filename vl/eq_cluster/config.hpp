@@ -25,6 +25,7 @@
 
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
+#include <OIS/OISJoyStick.h>
 
 // Necessary for timing statistics
 #include <OGRE/OgreTimer.h>
@@ -78,14 +79,22 @@ protected :
 	void _createQuitEvent( void );
 
 	void _receiveEventMessages( void );
+	void _receiveCommandMessages( void );
 
 	/// Input Events
-	bool _handleKeyPressEvent( OIS::KeyEvent const &event );
-	bool _handleKeyReleaseEvent( OIS::KeyEvent const &event );
-	bool _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-	bool _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-	bool _handleMouseMotionEvent( OIS::MouseEvent const &event );
-	// TODO add joystick event
+	/// Keyboard
+	void _handleKeyPressEvent( OIS::KeyEvent const &event );
+	void _handleKeyReleaseEvent( OIS::KeyEvent const &event );
+	/// Mouse
+	void _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+	void _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
+	void _handleMouseMotionEvent( OIS::MouseEvent const &event );
+	/// Joystick
+	void _handleJoystickButtonPressedEvent( OIS::JoyStickEvent const &event, int button );
+	void _handleJoystickButtonReleasedEvent( OIS::JoyStickEvent const &event, int button );
+	void _handleJoystickAxisMovedEvent( OIS::JoyStickEvent const &event, int axis );
+	void _handleJoystickPovMovedEvent( OIS::JoyStickEvent const &event, int pov );
+	void _handleJoystickVector3MovedEvent( OIS::JoyStickEvent const &event, int index );
 
 	vl::GameManagerPtr _game_manager;
 

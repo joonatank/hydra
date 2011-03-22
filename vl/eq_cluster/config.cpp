@@ -160,6 +160,8 @@ vl::Config::render( void )
 	timer.reset();
 	// TODO where the receive input messages should be?
 	_receiveEventMessages();
+	_receiveCommandMessages();
+
 	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
 	// Update statistics every 10 seconds
@@ -501,6 +503,51 @@ vl::Config::_receiveEventMessages( void )
 				}
 				break;
 
+				case vl::cluster::EVT_JOYSTICK_PRESSED :
+				{
+					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+					int button;
+					stream >> button >> evt;
+					_handleJoystickButtonPressedEvent(evt, button);
+				}
+				break;
+
+				case vl::cluster::EVT_JOYSTICK_RELEASED :
+				{
+					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+					int button;
+					stream >> button >> evt;
+					_handleJoystickButtonReleasedEvent(evt, button);
+				}
+				break;
+
+				case vl::cluster::EVT_JOYSTICK_AXIS :
+				{
+					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+					int axis;
+					stream >> axis >> evt;
+					_handleJoystickAxisMovedEvent(evt, axis);
+				}
+				break;
+
+				case vl::cluster::EVT_JOYSTICK_POV :
+				{
+					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+					int pov;
+					stream >> pov >> evt;
+					_handleJoystickPovMovedEvent(evt, pov);
+				}
+				break;
+
+				case vl::cluster::EVT_JOYSTICK_VECTOR3 :
+				{
+					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+					int index;
+					stream >> index >> evt;
+					_handleJoystickVector3MovedEvent(evt, index);
+				}
+				break;
+
 				default :
 					std::cout << vl::ERR << "vl::Config::_receiveEventMessages : "
 						<< "Unhandleded message type." << std::endl;
@@ -509,7 +556,11 @@ vl::Config::_receiveEventMessages( void )
 		}
 		delete msg;
 	}
+}
 
+void 
+vl::Config::_receiveCommandMessages( void )
+{
 	while( _server->commands() )
 	{
 		std::string cmd = _server->popCommand();
@@ -517,39 +568,65 @@ vl::Config::_receiveEventMessages( void )
 	}
 }
 
-bool
+void
 vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
 	_game_manager->getEventManager()->updateKeyPressedTrigger(kc);
-
-	return true;
 }
 
-bool
+void
 vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
 	_game_manager->getEventManager()->updateKeyReleasedTrigger(kc);
-	return true;
 }
 
-bool
+void
 vl::Config::_handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
-	return false;
+	std::cout << vl::TRACE << "vl::Config::_handleMousePressEvent" << std::endl;
 }
 
-bool
+void
 vl::Config::_handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
 {
-	return false;
+	std::cout << vl::TRACE << "vl::Config::_handleMouseReleaseEvent" << std::endl;
 }
 
-bool
+void
 vl::Config::_handleMouseMotionEvent( OIS::MouseEvent const &event )
 {
-	return true;
+}
+
+void
+vl::Config::_handleJoystickButtonPressedEvent( OIS::JoyStickEvent const &event, int button )
+{
+	std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonPressedEvent" << std::endl;
+}
+
+void
+vl::Config::_handleJoystickButtonReleasedEvent( OIS::JoyStickEvent const &event, int button )
+{
+	std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonReleasedEvent" << std::endl;
+}
+
+void
+vl::Config::_handleJoystickAxisMovedEvent( OIS::JoyStickEvent const &event, int axis )
+{
+	std::cout << vl::TRACE << "vl::Config::_handleJoystickAxisMovedEvent" << std::endl;
+}
+
+void
+vl::Config::_handleJoystickPovMovedEvent( OIS::JoyStickEvent const &event, int pov )
+{
+	std::cout << vl::TRACE << "vl::Config::_handleJoystickPovMovedEvent" << std::endl;
+}
+
+void
+vl::Config::_handleJoystickVector3MovedEvent( OIS::JoyStickEvent const &event, int index )
+{
+	std::cout << vl::TRACE << "vl::Config::_handleJoystickVector3MovedEvent" << std::endl;
 }
