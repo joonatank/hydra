@@ -37,6 +37,7 @@ set( SOURCES
 	program_options.cpp
 	stats.cpp
 	logger.cpp
+	math/math.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp

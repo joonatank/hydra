@@ -1,5 +1,5 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
  *
  *	2011-02 Update
  *	Removed Equalizer
