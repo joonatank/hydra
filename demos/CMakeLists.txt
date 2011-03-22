@@ -30,14 +30,7 @@ add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	)
 
-target_link_libraries( fake_tracking_server
-	${VRPN_LIBRARY}
-	${CMAKE_THREAD_LIBS_INIT}
-	${Ogre_LIBRARY}
-	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${Boost_SYSTEM_LIBRARIES}
-	${Boost_FILESYSTEM_LIBRARIES}
-	)
+target_link_libraries( fake_tracking_server ${HYDRA_LIBRARIES} )
 
 
 add_executable( hydra hydra.cpp )
@@ -48,7 +41,7 @@ add_executable( angles_to_quaternion
 	angles_to_quaternion.cpp
 	)
 
-target_link_libraries( angles_to_quaternion ${Ogre_LIBRARY} )
+target_link_libraries( angles_to_quaternion ${HYDRA_LIBRARIES} )
 
 
 # install

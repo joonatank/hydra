@@ -365,8 +365,7 @@ void
 vl::Pipe::_initGUI(void )
 {
 	std::string message( "vl::Pipe::_initGUI" );
-	Ogre::LogManager::getSingleton().logMessage(message);
-	assert( _windows.size() > 0 && _windows.at(0)->getRenderWindow() );
+	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
 	// TODO support for multiple windows
 
@@ -375,15 +374,19 @@ vl::Pipe::_initGUI(void )
 	CEGUI::System::setDefaultImageCodecName( "SILLYImageCodec" );
 	CEGUI::System::setDefaultXMLParserName( "ExpatParser" );
 #endif
-	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*_windows.at(0)->getRenderWindow() );
-	CEGUI::System::create( myRenderer );
+	assert( _windows.size() > 0);
+	Ogre::RenderWindow *win = _windows.at(0)->getRenderWindow();
+	assert(win);
+
+	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*win);
+	CEGUI::System::create(myRenderer);
 }
 
 void
 vl::Pipe::_initGUIResources( vl::Settings const &settings )
 {
 	std::string message( "vl::Pipe::_initGUIResources" );
-	Ogre::LogManager::getSingleton().logMessage(message);
+	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
 	assert( !settings.empty() );
 	// Find global project and add those resources as default
