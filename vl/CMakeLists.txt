@@ -42,7 +42,6 @@ set( SOURCES
 	base/envsettings.cpp
 	base/projsettings.cpp
 	eq_cluster/window.cpp
-	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
 	eq_cluster/pipe.cpp
 	eq_cluster/application.cpp
@@ -94,7 +93,6 @@ set( HEADERS
 	distrib_settings.hpp
 	program_options.hpp
 	eq_cluster/window.hpp
-	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
 	eq_cluster/pipe.hpp
 	eq_cluster/application.hpp
