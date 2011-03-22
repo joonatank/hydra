@@ -39,6 +39,9 @@ public:
 
 	virtual void draw( void );
 
+	void setIPD(double ipd)
+	{ _ipd = ipd; }
+
 protected:
 
 	// Some task methods

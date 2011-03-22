@@ -152,6 +152,10 @@ vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix
 	_ogre_window->writeContentsToTimestampedFile(prefix, real_suffix);
 }
 
+void
+vl::Window::setIPD(double ipd)
+{ _channel->setIPD(ipd); }
+
 /// ------------------------ Public OIS Callbacks ------------------------------
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )

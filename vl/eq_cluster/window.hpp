@@ -64,6 +64,8 @@ public:
 
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
+	void setIPD(double ipd);
+
 	/// Capture input events
 	virtual void capture( void );
 

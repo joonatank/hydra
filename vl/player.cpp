@@ -7,17 +7,13 @@
 
 // TODO we should pass the active camera to this, so it's not arbitary
 vl::Player::Player( void )
-	: _head_matrix(Ogre::Matrix4::IDENTITY), _screenshot_version(0)
+	: _head_matrix(Ogre::Matrix4::IDENTITY)
+	, _screenshot_version(0)
+	, _ipd(0)
 {}
 
 vl::Player::~Player( void )
 {}
-
-std::string const &
-vl::Player::getActiveCamera( void ) const
-{
-	return _active_camera;
-}
 
 void
 vl::Player::setActiveCamera( std::string const &name )
@@ -43,6 +39,15 @@ vl::Player::takeScreenshot( void )
 	_screenshot_version++;
 }
 
+void
+vl::Player::setIPD(double ipd)
+{
+	if( _ipd != ipd )
+	{
+		setDirty(DIRTY_IPD);
+		_ipd = ipd;
+	}
+}
 
 /// ------------------------------- Protected ----------------------------------
 void
@@ -56,6 +61,9 @@ vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 
 	if( dirtyBits & DIRTY_SCREENSHOT )
 	{ msg << _screenshot_version; }
+
+	if( dirtyBits & DIRTY_IPD )
+	{ msg << _ipd; }
 }
 
 void
@@ -69,4 +77,7 @@ vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 
 	if( dirtyBits & DIRTY_SCREENSHOT )
 	{ msg >> _screenshot_version; }
+
+	if( dirtyBits & DIRTY_IPD )
+	{ msg >> _ipd; }
 }

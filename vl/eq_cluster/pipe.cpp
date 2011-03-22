@@ -949,6 +949,9 @@ vl::Pipe::_updateDistribData( void )
 			}
 		}
 
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->setIPD( _player->getIPD() ); }
+
 		// Take a screenshot
 		if( _player->getScreenshotVersion() > _screenshot_num )
 		{

@@ -83,6 +83,8 @@ vl::Config::init( void )
 	vl::PlayerPtr player = _game_manager->createPlayer();
 
 	assert( player );
+	player->setIPD(_env->getIPD());
+
 	// Registering Player in init
 	// TODO move this to do an automatic registration similar to SceneManager
 	registerObject( player, OBJ_PLAYER );
