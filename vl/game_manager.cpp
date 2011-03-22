@@ -31,14 +31,6 @@ vl::GameManager::GameManager( vl::Logger *logger )
 	, _logger(logger)
 	, _quit( false )
 {
-	// Add triggers
-	// FIXME it's broken in the EventManager
-// 	_event_man->addTriggerFactory( new vl::KeyTriggerFactory );
-// 	_event_man->addTriggerFactory( new vl::KeyPressedTriggerFactory );
-// 	_event_man->addTriggerFactory( new vl::KeyReleasedTriggerFactory );
-// 	_event_man->addTriggerFactory( new vl::FrameTriggerFactory );
-// 	_event_man->addTriggerFactory( new vl::TrackerTriggerFactory );
-
 	_python = new vl::PythonContext( this );
 
 	std::cout << vl::TRACE << "Init audio." << std::endl;

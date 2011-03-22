@@ -15,12 +15,6 @@ vl::EventManager::~EventManager( void )
 {
 	delete _frame_trigger;
 
-	for( std::vector<vl::TriggerFactory *>::iterator iter = _trigger_factories.begin();
-		iter != _trigger_factories.end(); ++iter )
-	{
-		delete *iter;
-	}
-
 	for( std::vector<vl::TrackerTrigger *>::iterator iter = _tracker_triggers.begin();
 		iter != _tracker_triggers.end(); ++iter )
 	{

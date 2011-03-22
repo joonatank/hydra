@@ -12,18 +12,6 @@
 
 #include "tracker.hpp"
 
-/// ----------- TrackerTrigger ------------
-vl::TrackerTrigger::TrackerTrigger( void )
-{}
-
-std::string const &
-vl::TrackerTrigger::getTypeName(void ) const
-{ return TrackerTriggerFactory::TYPENAME; }
-
-const std::string vl::TrackerTriggerFactory::TYPENAME = "TrackerTrigger";
-
-
-
 /// ------------ Sensor ---------------
 
 vl::Sensor::Sensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)

@@ -155,7 +155,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<Trigger, boost::noncopyable>("Trigger", python::no_init )
 		// FIXME declaring getTypeName as virtual does not work
 		// (might be because it's a property not a function)
-		.add_property("type", python::make_function( &Trigger::getTypeName, python::return_value_policy<python::copy_const_reference>()  )  )
+		.add_property("type", &Trigger::getTypeName )
 		.def("getName", &Trigger::getName )
 		.def(python::self_ns::str(python::self_ns::self))
 	;

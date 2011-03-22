@@ -40,20 +40,6 @@ public :
 
 	~EventManager( void );
 
-	// FIXME for now the trigger factory interface is broken
-	// use the hard coded functions for creating different types of triggers.
-	Trigger *createTrigger( std::string const &type );
-
-	/// Parameter : Pointer to the factory which user wants to add
-	/// 	The factory is expected to be alive till the factory is removed
-	/// If a factory with that object typeName is not found the factory
-	/// is added to the list of factories.
-	/// If a factory with the same object typeName is found this will throw
-
-	// FIXME for now the trigger factory interface is broken
-	// use the hard coded functions for creating different types of triggers.
-	void addTriggerFactory( TriggerFactory *fact );
-
 	/// Tracker Triggers
 	/// Create a tracker trigger, this will never fail
 	/// If a tracker trigger with the same name exists it will return that one
@@ -74,6 +60,7 @@ public :
 	/// Returns true if there is one, false otherwise
 	bool hasTrackerTrigger( std::string const &name );
 
+	/// Key triggers
 	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
 
 	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
@@ -90,6 +77,7 @@ public :
 
 	bool hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
 
+	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
 
 private :
@@ -105,7 +93,6 @@ private :
 
 /// Data
 private :
-	std::vector<TriggerFactory *> _trigger_factories;
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
 	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
 	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;

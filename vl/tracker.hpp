@@ -28,9 +28,10 @@ namespace vl
 class TrackerTrigger : public vl::TransformActionTrigger
 {
 public :
-	TrackerTrigger( void );
+	TrackerTrigger( void ) {}
 
-	virtual std::string const &getTypeName( void ) const;
+	virtual std::string getTypeName( void ) const
+	{ return "TrackerTrigger"; }
 
 	/// -------------- Custom Methods ----------------
 
@@ -45,19 +46,6 @@ protected :
 	std::string _name;
 
 };
-
-class TrackerTriggerFactory : public vl::TriggerFactory
-{
-public :
-	virtual vl::Trigger *create( void )
-	{ return new TrackerTrigger; }
-
-	virtual std::string const &getTypeName( void ) const
-	{ return TYPENAME; }
-
-	static const std::string TYPENAME;
-};
-
 
 class Sensor
 {
