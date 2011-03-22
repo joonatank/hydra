@@ -504,9 +504,17 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 
 	/// @todo should be configurable
 	/// though these should fallback to default without the hardware
-	params["stereo"] = "true";
-	params["nvSwapSync"] = "true";
-	params["swapGroup"] = "1";
+	if( winConf.stereo )
+	{
+		std::cout << "Stereo requested" << std::endl;
+		params["stereo"] = "true";
+	}
+	if( winConf.nv_swap_sync )
+	{
+		std::cout << "NV swap sync requested" << std::endl;
+		params["nvSwapSync"] = "true";
+		params["swapGroup"] = "1";
+	}
 
 	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 	_ogre_window->setAutoUpdated(false);
