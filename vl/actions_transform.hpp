@@ -20,11 +20,19 @@
 namespace vl
 {
 
+class TransformationAction : public vl::BasicAction
+{
+public :
+	virtual void setMoveDir( Ogre::Vector3 const &mov_dir ) = 0;
+
+	virtual void setRotDir( Ogre::Vector3 const &rot_dir ) = 0;
+
+};	// class TransformationAction
 /// Simple Action class that does transformation based on key events
 /// Keeps track of the state of the object (moving, stopped)
 /// Transforms a SceneNode provided
 /// All parameters that need units are in SI units (e.g. speed is m/s)
-class MoveAction : public BasicAction
+class MoveAction : public TransformationAction
 {
 public :
 	MoveAction( void );
@@ -80,6 +88,8 @@ protected :
 	Ogre::Timer _clock;
 };
 
+// This is identical for both MoveAction and ApplyForce actions
+// TODO should be renamed and moved
 class MoveNodeAction : public MoveAction
 {
 public :
@@ -167,10 +177,10 @@ public :
 	void disableTranslation( void )
 	{ _translation = false; }
 
-	void setAction( MoveAction *action )
+	void setAction( TransformationAction *action )
 	{ _action = action; }
 
-	MoveAction *getAction( void )
+	TransformationAction *getAction( void )
 	{ return _action; }
 
 	static MoveActionProxy *create( void )
@@ -180,7 +190,7 @@ public :
 	{ return "MoveActionProxy"; }
 
 private :
-	MoveAction *_action;
+	TransformationAction *_action;
 
 	bool _rotation;
 	bool _translation;

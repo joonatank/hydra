@@ -49,6 +49,8 @@ set( SOURCES
 	cluster/server.cpp
 	cluster/client.cpp
 	cluster/message.cpp
+	physics/physics_events.cpp
+	physics/physics_world.cpp
 	)
 
 set( HEADERS
@@ -105,6 +107,9 @@ set( HEADERS
 	cluster/message.hpp
 	cluster/states.hpp
 	distributed.hpp
+	physics/motion_state.hpp
+	physics/physics_events.hpp
+	physics/physics_world.hpp
 	)
 
 add_library(HydraMain ${SOURCES} ${HEADERS} )

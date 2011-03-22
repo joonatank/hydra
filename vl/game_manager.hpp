@@ -39,6 +39,11 @@
 
 namespace vl
 {
+namespace physics {
+
+class World;
+}
+
 
 class GameManager
 {
@@ -84,6 +89,17 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	/// Get the physics World
+	/// IF physics has not been enabled returns zero
+	physics::World *getPhysicsWorld( void );
+
+	/// Enable physics to be used in this game
+	/// First call to this function will create the physics world with true
+	/// After that this function is a No OP.
+	/// Calling this with false is a No OP.
+	/// Parameters : enable, true to enable physics
+	void enablePhysics( bool enable );
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
@@ -111,6 +127,9 @@ private :
 
 	/// State
 	bool _quit;
+
+	/// Physics
+	physics::World *_physics_world;
 
 };	// class GameManager
 

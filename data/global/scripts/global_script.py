@@ -225,3 +225,4 @@ addReloadEvent(KC.R)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
+

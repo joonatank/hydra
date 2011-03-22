@@ -23,6 +23,8 @@
 
 // Python global
 #include "python.hpp"
+#include <physics/physics_events.hpp>
+#include <physics/physics_world.hpp>
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -61,9 +63,22 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyRel
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
 
+/// Overloads need to be outside the module definition
+/// Physics world member overloads
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 6 )
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
+
+	/// Transformation
+	python::class_<vl::Transform>("Transform", python::init< python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
+		.def_readwrite( "position", &vl::Transform::position )
+		.def_readwrite( "quaternion", &vl::Transform::quaternion )
+	;
+
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
@@ -71,6 +86,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", python::make_function( &vl::GameManager::getGUI, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property( "physics_world", python::make_function( &vl::GameManager::getPhysicsWorld, python::return_value_policy<python::reference_existing_object>() ) )
+		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("quit", &vl::GameManager::quit)
@@ -237,6 +254,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 
+	/// Game Actions
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
 		.def_readwrite("game", &GameAction::data )
 	;
@@ -252,6 +270,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 
+	/// SceneManager Actions
 	python::class_<SceneManagerAction, boost::noncopyable, python::bases<BasicAction> >("SceneAction", python::no_init )
 		.def_readwrite("scene", &SceneManagerAction::data )
 	;
@@ -324,7 +343,10 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::class_<MoveAction, boost::noncopyable, python::bases<BasicAction> >("MoveAction", python::no_init )
+	python::class_<TransformationAction, boost::noncopyable, python::bases<BasicAction> >("TransformationAction", python::no_init )
+	;
+
+	python::class_<MoveAction, boost::noncopyable, python::bases<TransformationAction> >("MoveAction", python::no_init )
 		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
 		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
 		.add_property("local", &MoveAction::getLocal, &MoveAction::setLocal )
@@ -380,11 +402,81 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::gui::HideConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideConsole", python::no_init )
 		.def("create",&vl::gui::HideConsole::create, python::return_value_policy<python::reference_existing_object>() )
+	;
+
+	/// Physics
+	python::class_<btCollisionShape, boost::noncopyable >("btCollisionShape", python::no_init )
+	;
+	
+	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
+	;
+	
+	python::class_<btStaticPlaneShape, boost::noncopyable, python::bases<btCollisionShape> >("btStaticPlaneShape", python::no_init )
+	;
+
+	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
+	;
+
+	python::class_<btRigidBody, boost::noncopyable >("btRigidBody", python::no_init )
+	;
+
+	// TODO add scene node setting
+	python::class_<vl::physics::MotionState, boost::noncopyable >("MotionState", python::no_init )
+	;
+
+	python::class_<vl::physics::World, boost::noncopyable >("PhysicsWorld", python::no_init )
+		.def("createRigidBody", &vl::physics::World::createRigidBody,
+			 createRigidBody_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("addRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("getRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("removeRigidBody", &vl::physics::World::addRigidBody,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("createMotionState", &vl::physics::World::createMotionState,
+			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("createPlaneShape", &vl::physics::World::createPlaneShape,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("createSphereShape", &vl::physics::World::createSphereShape,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+	;
+
+	/// Physics Actions
+	python::class_<vl::physics::MoveAction, boost::noncopyable, python::bases<TransformationAction> >("PhysicsMoveAction", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::MoveAction::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ),
+					  &vl::physics::MoveAction::setForce )
+		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ),
+					  &vl::physics::MoveAction::setTorque )
+		.def("create",&vl::physics::MoveAction::create,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
 	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
 		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<BasicAction> >("ApplyForce", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::ApplyForce::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_internal_reference<>() ),
+					  &vl::physics::ApplyForce::setForce )
+		.def("create",&vl::physics::ApplyForce::create,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<BasicAction> >("ApplyTorque", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::ApplyTorque::setRigidBody )
+		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_internal_reference<>() ),
+					  &vl::physics::ApplyTorque::setTorque )
+		.def("create",&vl::physics::ApplyTorque::create,
+			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

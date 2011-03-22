@@ -30,8 +30,8 @@ ENDMACRO()
 ## Copy all start scripts macro ##
 MACRO( copy_start_scripts program_name project_path start_suffix )
 
-message( STATUS "Copying start scripts for project = ${PROJECT_NAME}"
-	" : exe name = ${program_name}" )
+message( STATUS "Copying start scripts for CMake project = ${PROJECT_NAME}"
+	" : exe name = ${program_name} : project file ${project_path}" )
 
 # Copy the single Node start script
 set( PROGRAM_NAME ${program_name} )

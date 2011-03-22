@@ -74,6 +74,10 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self == self )
 		.def(self != self )
 		.def(self_ns::str(self_ns::self))
+		.def_readonly("unit_x", &Ogre::Vector3::UNIT_X)
+		.def_readonly("unit_y", &Ogre::Vector3::UNIT_Y)
+		.def_readonly("unit_z", &Ogre::Vector3::UNIT_Z)
+		.def_readonly("zero", &Ogre::Vector3::ZERO)
 	;
 
 	py::class_<Ogre::ColourValue>("ColourValue", py::init<>())
@@ -117,6 +121,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(py::self == py::self)
 		.def(py::self != py::self)
 		.def(py::self_ns::str(py::self_ns::self))
+		.def_readonly("identity", &Ogre::Quaternion::IDENTITY)
 	;
 
 	py::class_<Ogre::Degree>("Degree", py::init< py::optional<Ogre::Real> >() )

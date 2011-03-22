@@ -96,6 +96,8 @@ endif()
 
 find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
 
+find_package( Bullet REQUIRED )
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -110,6 +112,7 @@ include_directories( SYSTEM
 	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
+	${BULLET_INCLUDE_DIRS}
 	)
 
 # Libraries that Hydra library depends on
@@ -129,6 +132,7 @@ set( HYDRA_DEB_LIBS
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
+	${BULLET_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

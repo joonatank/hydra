@@ -19,6 +19,9 @@
 // Player
 #include "player.hpp"
 
+// Physics
+#include "physics/physics_world.hpp"
+
 vl::GameManager::GameManager( vl::Logger *logger )
 	: _python(0)
 	, _resource_man( new vl::DistribResourceManager )
@@ -30,6 +33,7 @@ vl::GameManager::GameManager( vl::Logger *logger )
 	, _background_sound(0)
 	, _logger(logger)
 	, _quit( false )
+	, _physics_world(0)
 {
 	_python = new vl::PythonContext( this );
 
@@ -44,6 +48,8 @@ vl::GameManager::GameManager( vl::Logger *logger )
 
 	//Create an Audio Manager
 	_audio_manager = cAudio::createAudioManager(true);
+
+	// Not Create the physics world because the user needs to enable it.
 }
 
 vl::GameManager::~GameManager(void )
@@ -56,6 +62,7 @@ vl::GameManager::~GameManager(void )
 		_audio_manager->shutDown();
 		cAudio::destroyAudioManager(_audio_manager);
 	}
+	delete _physics_world;
 }
 
 void
@@ -134,6 +141,11 @@ vl::GameManager::step(void )
 		_trackers->getTracker(i)->mainloop();
 	}
 
+	if( _physics_world )
+	{
+		_physics_world->step();
+	}
+
 	return !_quit;
 }
 
@@ -156,5 +168,24 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	else
 	{
 		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
+	}
+}
+
+vl::physics::World *
+vl::GameManager::getPhysicsWorld( void )
+{
+	return _physics_world;
+}
+
+void
+vl::GameManager::enablePhysics( bool enable )
+{
+	if( enable )
+	{
+		// Create the physics if they don't exist
+		if( _physics_world == 0 )
+		{
+			_physics_world = new physics::World();
+		}
 	}
 }
