@@ -1,18 +1,18 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
- *	@file pipe.cpp
+ *	@file renderer.cpp
  *
  */
 
 // Interface
-#include "pipe.hpp"
+#include "renderer.hpp"
 
 // Necessary for printing error messages from exceptions
 #include "base/exceptions.hpp"
 // Necessary for loading dotscene
 #include "eq_ogre/ogre_dotscene_loader.hpp"
 
-#include "window.hpp"
+#include "eq_cluster/window.hpp"
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
@@ -35,48 +35,70 @@
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
-vl::Pipe::Pipe( std::string const &name,
-					std::string const &server_address,
-					uint16_t server_port )
+vl::Renderer::Renderer(std::string const &name)
 	: _name(name)
 	, _ogre_sm(0)
 	, _camera(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
-	, _client( new vl::cluster::Client( server_address.c_str(), server_port ) )
 	, _gui(0)
 	, _console(0)
 	, _editor(0)
 	, _loading_screen(0)
 	, _stats(0)
 	, _console_memory_index(-1)	// Using -1 index to indicate not using memory
-	, _running(true)	// TODO should this be true from the start?
-	, _rendering(false)
+	, _send_message_cb(0)
+	, _n_log_messages(0)
 {
 	std::cout << vl::TRACE << "vl::Pipe::Pipe : name = " << _name << std::endl;
-
-	_client->registerForUpdates();
 }
 
-vl::Pipe::~Pipe( void )
+vl::Renderer::~Renderer(void)
 {
-	std::cout << vl::TRACE << "vl::Pipe::~Pipe" << std::endl;
+	std::cout << vl::TRACE << "vl::Renderer::~Renderer" << std::endl;
 
-	// Some asserts for checking that the Pipe thread has been correctly shutdown
-	assert( !_root );
+	std::vector<Window *>::iterator iter;
+	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
+	{ delete *iter; }
+	_windows.clear();
+
+	_root->getNative()->destroySceneManager( _ogre_sm );
+	_ogre_sm = 0;
+
+	_root.reset();
 
 	delete _scene_manager;
 	delete _player;
 
-	_client.reset();
+	std::cout << vl::TRACE << "vl::Renderer::~Renderer : DONE" << std::endl;
+}
 
-	std::cout << vl::TRACE << "vl::Pipe::~Pipe : DONE" << std::endl;
+void
+vl::Renderer::init(vl::EnvSettingsRefPtr env)
+{
+	assert(env);
+	// Single init allowed
+	assert(!_env);
+	_env = env;
+
+	_createOgre(env);
+
+	vl::EnvSettings::Node node = getNodeConf();
+	std::string msg = "Creating " + vl::to_string(node.getNWindows()) + " windows.";
+	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+
+	for( size_t i = 0; i < node.getNWindows(); ++i )
+	{ _createWindow( node.getWindow(i) ); }
+
+	_initGUI();
 }
 
 vl::EnvSettings::Node
-vl::Pipe::getNodeConf( void )
+vl::Renderer::getNodeConf( void )
 {
+	assert(_env);
+
 	vl::EnvSettings::Node node;
 	if( getName() == _env->getMaster().name )
 	{ node = _env->getMaster(); }
@@ -88,7 +110,7 @@ vl::Pipe::getNodeConf( void )
 }
 
 vl::EnvSettings::Window
-vl::Pipe::getWindowConf( std::string const &window_name )
+vl::Renderer::getWindowConf( std::string const &window_name )
 {
 	vl::EnvSettings::Node node = getNodeConf();
 
@@ -106,78 +128,45 @@ vl::Pipe::getWindowConf( std::string const &window_name )
 }
 
 void
-vl::Pipe::sendMessageToMaster( vl::cluster::Message *msg )
-{
-	_client->sendMessage(msg);
-}
-
-void
-vl::Pipe::sendEvent( vl::cluster::EventData const &event )
+vl::Renderer::sendEvent( vl::cluster::EventData const &event )
 {
 	// Add to event stack for sending them at once in one message to the Master
 	_events.push_back(event);
 }
 
 void
-vl::Pipe::sendCommand( std::string const &cmd )
+vl::Renderer::sendCommand( std::string const &cmd )
 {
 	vl::cluster::Message msg( vl::cluster::MSG_COMMAND );
 	// Write size and string and terminating character
 	msg.write( cmd.size()+1 );
 	msg.write( cmd.c_str(), cmd.size()+1 );
 
-	sendMessageToMaster(&msg);
+	// Callback
+	assert(_send_message_cb);
+	(*_send_message_cb)(msg);
 }
 
 void
-vl::Pipe::operator()()
+vl::Renderer::capture(void)
 {
 	// Here we should wait for the EnvSettings from master
 	// TODO we should have a wait for Message function
-	while( !_env )
+	if( !_env )
 	{
-		_handleMessages();
-		boost::this_thread::sleep( boost::posix_time::milliseconds(1) );
+		return;
 	}
 
-	// TODO these should be moved to a separate function
-	_createOgre();
+	// Process input events
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->capture(); }
 
-	vl::EnvSettings::Node node = getNodeConf();
-	std::string msg = "Creating " + vl::to_string(node.getNWindows()) + " windows.";
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	for( size_t i = 0; i < node.getNWindows(); ++i )
-	{ _createWindow( node.getWindow(i) ); }
-
-	_initGUI();
-
-	while( true )
-	{
-		// Handle messages
-		_handleMessages();
-		if( !isRunning() )
-		{ break; }
-
-		// Middle of a rendering loop not sleeping
-		if( !isRendering() )
-		{
-			// Process input events
-			for( size_t i = 0; i < _windows.size(); ++i )
-			{ _windows.at(i)->capture(); }
-
-			// Sleep
-			// TODO should sleep for 1ms
-			boost::this_thread::sleep( boost::posix_time::milliseconds(0) );
-		}
-
-		// Send messages
-		_sendEvents();
-	}
+	// Send messages
+	_sendEvents();
 }
 
 void
-vl::Pipe::printToConsole(std::string const &text, double time,
+vl::Renderer::printToConsole(std::string const &text, double time,
 						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
 {
 	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
@@ -226,7 +215,7 @@ vl::Pipe::printToConsole(std::string const &text, double time,
 
 /// ------------------------- GECUI callbacks ----------------------------------
 bool
-vl::Pipe::onConsoleInputAccepted( CEGUI::EventArgs const &e )
+vl::Renderer::onConsoleInputAccepted( CEGUI::EventArgs const &e )
 {
 	assert( _console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
@@ -265,7 +254,7 @@ vl::Pipe::onConsoleInputAccepted( CEGUI::EventArgs const &e )
 }
 
 bool
-vl::Pipe::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
+vl::Renderer::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
 {
 	assert( _console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
@@ -317,7 +306,7 @@ vl::Pipe::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
 }
 
 bool
-vl::Pipe::onConsoleShow(const CEGUI::EventArgs& e)
+vl::Renderer::onConsoleShow(const CEGUI::EventArgs& e)
 {
 	assert( _console );
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
@@ -328,9 +317,8 @@ vl::Pipe::onConsoleShow(const CEGUI::EventArgs& e)
 	return true;
 }
 
-/// ------------------------ Protected -----------------------------------------
 void
-vl::Pipe::_reloadProjects( vl::Settings const &set )
+vl::Renderer::reloadProjects( vl::Settings const &set )
 {
 	// TODO this should unload old projects
 
@@ -362,28 +350,27 @@ vl::Pipe::_reloadProjects( vl::Settings const &set )
 }
 
 void
-vl::Pipe::_initGUI(void )
+vl::Renderer::draw(void)
 {
-	std::string message( "vl::Pipe::_initGUI" );
-	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	Ogre::WindowEventUtilities::messagePump();
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->draw(); }
 
-	// TODO support for multiple windows
-
-	// TODO this should be cleanup, should work with any codec or parser...
-#ifdef VL_WIN32
-	CEGUI::System::setDefaultImageCodecName( "SILLYImageCodec" );
-	CEGUI::System::setDefaultXMLParserName( "ExpatParser" );
-#endif
-	assert( _windows.size() > 0);
-	Ogre::RenderWindow *win = _windows.at(0)->getRenderWindow();
-	assert(win);
-
-	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*win);
-	CEGUI::System::create(myRenderer);
+	if( guiShown() )
+	{
+		CEGUI::System::getSingleton().renderGUI();
+	}
 }
 
 void
-vl::Pipe::_initGUIResources( vl::Settings const &settings )
+vl::Renderer::swap(void)
+{
+	for( size_t i = 0; i < _windows.size(); ++i )
+	{ _windows.at(i)->swap(); }
+}
+
+void
+vl::Renderer::initGUIResources( vl::Settings const &settings )
 {
 	std::string message( "vl::Pipe::_initGUIResources" );
 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
@@ -400,12 +387,12 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 		fs::path gui_path = fs::path(settings.getDir(proj)) / "gui";
 		if( fs::is_directory( gui_path ) )
 		{
-			_addGUIResourceGroup( "schemes", gui_path / "schemes/" );
-			_addGUIResourceGroup( "imagesets", gui_path / "imagesets/" );
-			_addGUIResourceGroup( "fonts", gui_path / "fonts/" );
-			_addGUIResourceGroup( "layouts", gui_path / "layouts/" );
-			_addGUIResourceGroup( "looknfeels", gui_path / "looknfeel/" );
-			_addGUIResourceGroup( "lua_scripts", gui_path / "lua_scripts/" );
+			addGUIResourceGroup( "schemes", gui_path / "schemes/" );
+			addGUIResourceGroup( "imagesets", gui_path / "imagesets/" );
+			addGUIResourceGroup( "fonts", gui_path / "fonts/" );
+			addGUIResourceGroup( "layouts", gui_path / "layouts/" );
+			addGUIResourceGroup( "looknfeels", gui_path / "looknfeel/" );
+			addGUIResourceGroup( "lua_scripts", gui_path / "lua_scripts/" );
 
 			// set the default resource groups to be used
 			CEGUI::Imageset::setDefaultResourceGroup("imagesets");
@@ -447,7 +434,7 @@ vl::Pipe::_initGUIResources( vl::Settings const &settings )
 }
 
 void
-vl::Pipe::_addGUIResourceGroup( std::string const &name, fs::path const &path )
+vl::Renderer::addGUIResourceGroup( std::string const &name, fs::path const &path )
 {
 	CEGUI::DefaultResourceProvider *rp = static_cast<CEGUI::DefaultResourceProvider *>
 		(CEGUI::System::getSingleton().getResourceProvider());
@@ -469,9 +456,8 @@ vl::Pipe::_addGUIResourceGroup( std::string const &name, fs::path const &path )
 	}
 }
 
-
 void
-vl::Pipe::_createGUI(void )
+vl::Renderer::createGUI(void )
 {
 	std::string message( "vl::Pipe::_createGUI" );
 	Ogre::LogManager::getSingleton().logMessage(message);
@@ -508,7 +494,7 @@ vl::Pipe::_createGUI(void )
 
 	/// Subscripe to events
 	std::cout << "Subcribing to events." << std::endl;
-	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleShow, this));
+	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleShow, this));
 
 	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
 	assert(output);
@@ -517,8 +503,8 @@ vl::Pipe::_createGUI(void )
 
 	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
 	assert(input);
-	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputAccepted, this));
-	input->subscribeEvent(CEGUI::Editbox::EventKeyDown, CEGUI::Event::Subscriber(&vl::Pipe::onConsoleInputKeyDown, this));
+	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleInputAccepted, this));
+	input->subscribeEvent(CEGUI::Editbox::EventKeyDown, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleInputKeyDown, this));
 
 	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
 	assert( item );
@@ -573,30 +559,192 @@ vl::Pipe::_createGUI(void )
 	assert( checkBox );
 	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowJointsChanged, win));
 
-	// Request output updates for the console
-	_client->registerForOutput();
-
 	// TODO support for multiple windows
 	// at the moment every window will get the same GUI window layout
 }
 
+void
+vl::Renderer::handleMessage(vl::cluster::Message &msg)
+{
+	switch( msg.getType() )
+	{
+		// Environment configuration
+		case vl::cluster::MSG_ENVIRONMENT :
+		{
+			assert(false && "MSG_ENVIRONMENT should be handled in Client not in Renderer." );
+		}
+		break;
+
+		// Project configuration
+		case vl::cluster::MSG_PROJECT :
+		{
+			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
+			// TODO
+			// Test using multiple projects e.g. project and global
+			// The vector serailization might not work correctly
+			// TODO
+			// Problematic because the Project config should be
+			// updatable during the application run
+			// And this one will create them anew, so that we need to invalidate
+			// the scene and reload everything
+			// NOTE
+			// Combining the project configurations is not done automatically
+			// so they either need special structure or we need to iterate over
+			// all of them always.
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(&msg);
+			vl::cluster::ByteStream stream(&data);
+			vl::Settings projects;
+			stream >> projects;
+
+			reloadProjects(projects);
+
+			// TODO these should be moved elsewhere from project (to env)
+			initGUIResources(projects);
+			createGUI();
+
+			// Request output updates for the console
+			assert( _send_message_cb );
+			vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT);
+			(*_send_message_cb)(msg);
+		}
+		break;
+
+		case vl::cluster::MSG_SG_CREATE :
+		{
+			_handleCreateMsg(msg);
+		}
+		break;
+
+		// Scene graph update after the initial message
+		case vl::cluster::MSG_SG_UPDATE :
+		{
+			_handleUpdateMsg(msg);
+			_syncData();
+			_updateDistribData();
+		}
+		break;
+
+		case vl::cluster::MSG_DRAW :
+		{
+			assert(false && "MSG_DRAW should be handled in Client not in Renderer." );
+		}
+		break;
+
+		case vl::cluster::MSG_PRINT :
+		{
+			_handlePrintMsg(msg);
+		}
+		break;
+
+		case vl::cluster::MSG_SHUTDOWN :
+		{
+			assert(false && "MSG_SHUTDOWN should be handled in Client not in Renderer." );
+		}
+		break;
+
+		default :
+			std::cout << "Unhandled Message of type = " << msg.getType()
+				<< std::endl;
+			break;
+	}
+}
+
+void 
+vl::Renderer::setSendMessageCB(vl::MsgCallback *cb)
+{
+	// Only single instances are supported for now
+	assert(!_send_message_cb && cb);
+	_send_message_cb = cb;
+}
+
+/// ----------------------- Log Receiver overrides ---------------------------
+bool 
+vl::Renderer::logEnabled(void) const
+{
+	if( _console && _console->isChild("console/output") )
+	{ return true; }
+
+	return false;
+}
+
+void 
+vl::Renderer::logMessage(vl::LogMessage const &msg)
+{
+	printToConsole(msg.message, msg.time, msg.type, msg.level);
+	++_n_log_messages;
+}
+
+uint32_t 
+vl::Renderer::nLoggedMessages(void) const
+{ return _n_log_messages; }
+
+/// ------------------------ Protected -----------------------------------------
+void 
+vl::Renderer::guiCreated(vl::gui::GUI *gui)
+{
+	// Only single instances are supported for now
+	assert(!_gui && gui);
+	_gui = gui;
+}
+
+void 
+vl::Renderer::playerCreated(vl::Player *player)
+{
+	// Only single instances are supported for now
+	assert(!_player && player);
+	_player = player;
+}
+
+void 
+vl::Renderer::sceneManagerCreated(vl::SceneManager *sm)
+{
+	// Only single instances are supported for now
+	assert(!_scene_manager && sm);
+	_scene_manager = sm;
+	
+	assert( _ogre_sm );
+	_scene_manager->setSceneManager( _ogre_sm );
+}
+
+void
+vl::Renderer::_initGUI(void)
+{
+	std::string message( "vl::Pipe::_initGUI" );
+	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+
+	// TODO support for multiple windows
+
+	// TODO this should be cleanup, should work with any codec or parser...
+#ifdef VL_WIN32
+	CEGUI::System::setDefaultImageCodecName( "SILLYImageCodec" );
+	CEGUI::System::setDefaultXMLParserName( "ExpatParser" );
+#endif
+	assert( _windows.size() > 0);
+	Ogre::RenderWindow *win = _windows.at(0)->getRenderWindow();
+	assert(win);
+
+	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*win);
+	CEGUI::System::create(myRenderer);
+}
+
 /// Ogre helpers
 void
-vl::Pipe::_createOgre( void )
+vl::Renderer::_createOgre(vl::EnvSettingsRefPtr env)
 {
-	assert( _env );
+	assert(env);
 
 	// TODO the project name should be used instead of the hydra for all
 	// problem is that the project name is not known at this point
 	// so we should use a tmp file and then move it.
-	std::string log_file = vl::createLogFilePath( "hydra", "ogre", "", _env->getLogDir() );
-	_root.reset( new vl::ogre::Root(_env->getLogLevel()) );
+	_root.reset( new vl::ogre::Root(env->getLogLevel()) );
 	// Initialise ogre
 	_root->createRenderSystem();
 }
 
 void
-vl::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
+vl::Renderer::_loadScene( vl::ProjSettings::Scene const &scene )
 {
 	std::string msg("vl::Pipe::_loadScene");
 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
@@ -618,7 +766,7 @@ vl::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
 }
 
 void
-vl::Pipe::_setCamera ( void )
+vl::Renderer::_setCamera ( void )
 {
 	assert( _ogre_sm );
 
@@ -671,260 +819,7 @@ vl::Pipe::_setCamera ( void )
 
 /// Distribution helpers
 void
-vl::Pipe::_handleMessages( void )
-{
-	assert( _client );
-
-	_client->mainloop();
-	while( _client->messages() )
-	{
-		vl::cluster::Message *msg = _client->popMessage();
-		_handleMessage(msg);
-		delete msg;
-	}
-}
-
-void
-vl::Pipe::_handleMessage( vl::cluster::Message *msg )
-{
-	assert(msg);
-
-	switch( msg->getType() )
-	{
-		// Environment configuration
-		case vl::cluster::MSG_ENVIRONMENT :
-		{
-			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
-			assert( !_env );
-			_env.reset( new vl::EnvSettings );
-			// TODO needs a ByteData object for Environment settings
-			vl::SettingsByteData data;
-			data.copyFromMessage(msg);
- 			vl::cluster::ByteStream stream(&data);
-			stream >> _env;
-			// Only single environment settings should be in the message
-			assert( 0 == msg->size() );
-			_client->sendAck( vl::cluster::MSG_ENVIRONMENT );
-		}
-		break;
-
-		// Project configuration
-		case vl::cluster::MSG_PROJECT :
-		{
-			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
-			// TODO
-			// Test using multiple projects e.g. project and global
-			// The vector serailization might not work correctly
-			// TODO
-			// Problematic because the Project config should be
-			// updatable during the application run
-			// And this one will create them anew, so that we need to invalidate
-			// the scene and reload everything
-			// NOTE
-			// Combining the project configurations is not done automatically
-			// so they either need special structure or we need to iterate over
-			// all of them always.
-			// TODO needs a ByteData object for Environment settings
-			vl::SettingsByteData data;
-			data.copyFromMessage(msg);
-			vl::cluster::ByteStream stream(&data);
-			vl::Settings projects;
-			stream >> projects;
-			_reloadProjects(projects);
-			_initGUIResources(projects);
-			_createGUI();
-			// TODO should the ACK be first so that the server has the
-			// information fast
-			_client->sendAck( vl::cluster::MSG_PROJECT );
-		}
-		break;
-
-		case vl::cluster::MSG_SG_CREATE :
-		{
-			_client->sendAck( vl::cluster::MSG_SG_CREATE );
-			_handleCreateMsg(msg);
-		}
-		break;
-
-		// Scene graph update after the initial message
-		case vl::cluster::MSG_SG_UPDATE :
-		{
-			_client->sendAck( vl::cluster::MSG_SG_UPDATE );
-			_handleUpdateMsg(msg);
-			_syncData();
-			_updateDistribData();
-			_rendering = true;
-		}
-		break;
-
-		case vl::cluster::MSG_DRAW :
-		{
-			_client->sendAck( vl::cluster::MSG_DRAW );
-			_draw();
-			_swap();
-			_rendering = false;
-		}
-		break;
-
-		case vl::cluster::MSG_SWAP :
-		{
-			_client->sendAck( vl::cluster::MSG_SWAP );
-		}
-		break;
-
-		case vl::cluster::MSG_PRINT :
-		{
-			_handlePrintMsg(msg);
-		}
-		break;
-
-		case vl::cluster::MSG_SHUTDOWN :
-		{
-			std::cout << "MSG_SHUTDOWN received" << std::endl;
-			_client->sendAck( vl::cluster::MSG_SHUTDOWN );
-			_shutdown();
-		}
-		break;
-
-		default :
-			std::cout << "Unhandled Message of type = " << msg->getType()
-				<< std::endl;
-			break;
-	}
-}
-
-void
-vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
-{
-	std::cout << "vl::Pipe::_handleCreateMsg" << std::endl;
-	size_t size;
-	assert( msg->size() >= sizeof(size) );
-
-	msg->read( size );
-	for( size_t i = 0; i < size; ++i )
-	{
-		assert( msg->size() > 0 );
-		OBJ_TYPE type;
-		uint64_t id;
-
-		msg->read(type);
-		msg->read(id);
-
-		switch( type )
-		{
-			case OBJ_PLAYER :
-			{
-				// TODO support multiple players
-				assert( !_player );
-				// TODO fix the constructor
-				_player = new vl::Player;
-				mapObject( _player, id );
-				break;
-			}
-			case OBJ_GUI :
-			{
-				assert( !_gui );
-				_gui = new vl::gui::GUI( this, id );
-				_gui->setEditor( vl::gui::WindowRefPtr( new vl::gui::Window(_editor) ) );
-				_gui->setConsole( vl::gui::WindowRefPtr( new vl::gui::Window(_console) ) );
-				_gui->setLoadingScreen( vl::gui::WindowRefPtr( new vl::gui::Window(_loading_screen) ) );
-				_gui->setStats( vl::gui::WindowRefPtr( new vl::gui::Window(_stats) ) );
-				break;
-			}
-			case OBJ_SCENE_MANAGER :
-			{
-				// TODO support multiple SceneManagers
-				assert( !_scene_manager );
-				_scene_manager = new SceneManager( this, id );
-				assert( _ogre_sm );
-				_scene_manager->setSceneManager( _ogre_sm );
-				break;
-			}
-			case OBJ_SCENE_NODE :
-			{
-				assert( _scene_manager );
-				_scene_manager->createSceneNode( "", id );
-				break;
-			}
-			default :
-				// TODO Might happen something unexpected so for now just kill the program
-				assert( false );
-		}
-	}
-}
-
-void
-vl::Pipe::_handleUpdateMsg( vl::cluster::Message* msg )
-{
-	// Read the IDs in the message and call pack on mapped objects
-	// based on thoses
-	/// @TODO multiple update messages in the same frame,
-	/// only the most recent should be used.
-	while( msg->size() > 0 )
-	{
-		vl::cluster::ObjectData data;
-		data.copyFromMessage(msg);
-		// Pushing back will create copies which is unnecessary
-		_objects.push_back(data);
-	}
-}
-
-void
-vl::Pipe::_handlePrintMsg( vl::cluster::Message *msg )
-{
-	assert( msg->getType() == vl::cluster::MSG_PRINT );
-	size_t msgs;
-	msg->read(msgs);
-	while(msgs > 0)
-	{
-		std::string type;
-		msg->read(type);
-		double time;
-		msg->read(time);
-		std::string str;
-		msg->read(str);
-		vl::LOG_MESSAGE_LEVEL lvl;
-		msg->read(lvl);
-
-		printToConsole(str, time, type, lvl);
-
-		msgs--;
-	}
-}
-
-void
-vl::Pipe::_syncData( void )
-{
-	// TODO remove the temporary array
-	// use a custom structure that does not create temporaries
-	// rather two phase system one to read the array and mark objects for delete
-	// and second that really clear those that are marked for delete
-	// similar system for reading data to the array
-
-	// Temporary array used for objects not yet found and saved for later use
-	std::vector<vl::cluster::ObjectData> tmp;
-	std::vector<vl::cluster::ObjectData>::iterator iter;
-	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
-	{
-		vl::cluster::ByteStream stream = iter->getStream();
-		vl::Distributed *obj = findMappedObject( iter->getId() );
-		if( obj )
-		{
-			obj->unpack(stream);
-		}
-		else
-		{
-			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
-				<< std::endl;
-			tmp.push_back( *iter );
-		}
-	}
-
-	_objects = tmp;
-}
-
-void
-vl::Pipe::_updateDistribData( void )
+vl::Renderer::_updateDistribData( void )
 {
 	// TODO these should be moved to player using functors
 	if( _player )
@@ -966,27 +861,7 @@ vl::Pipe::_updateDistribData( void )
 }
 
 void
-vl::Pipe::_draw( void )
-{
-	Ogre::WindowEventUtilities::messagePump();
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->draw(); }
-
-	if( guiShown() )
-	{
-		CEGUI::System::getSingleton().renderGUI();
-	}
-}
-
-void
-vl::Pipe::_swap( void )
-{
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->swap(); }
-}
-
-void
-vl::Pipe::_sendEvents( void )
+vl::Renderer::_sendEvents( void )
 {
 	if( !_events.empty() )
 	{
@@ -998,44 +873,23 @@ vl::Pipe::_sendEvents( void )
 		}
 		_events.clear();
 
-		sendMessageToMaster(&msg);
+		assert(_send_message_cb);
+		(*_send_message_cb)(msg);
 	}
 }
 
 void
-vl::Pipe::_createWindow( vl::EnvSettings::Window const &winConf )
+vl::Renderer::_createWindow( vl::EnvSettings::Window const &winConf )
 {
 	std::cout << vl::TRACE << "vl::Pipe::_createWindow : " << winConf.name << std::endl;
 
 	vl::Window *window = new vl::Window( winConf.name, this );
-	assert( window );
+	window->setCamera(_camera);
 	_windows.push_back(window);
 }
 
 void
-vl::Pipe::_shutdown( void )
-{
-	std::cout << vl::TRACE << "vl::Pipe::_shutdown" << std::endl;
-
-	std::vector<Window *>::iterator iter;
-	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
-	{ delete *iter; }
-	std::cout << vl::TRACE << "vl::Pipe::~Pipe : windows deleted" << std::endl;
-
-	_root->getNative()->destroySceneManager( _ogre_sm );
-
-	// Info
-	std::string message("Cleaning out OGRE");
-	Ogre::LogManager::getSingleton().logMessage( message );
-	_root.reset();
-
-	_running = false;
-
-	std::cout << vl::TRACE << "vl::Pipe::_shutdown : DONE" << std::endl;
-}
-
-void
-vl::Pipe::_takeScreenshot( void )
+vl::Renderer::_takeScreenshot( void )
 {
 	std::string prefix( "screenshot_" );
 	std::string suffix = ".png";
@@ -1046,38 +900,134 @@ vl::Pipe::_takeScreenshot( void )
 }
 
 void
-vl::PipeThread::operator()()
+vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 {
-	std::cout << vl::TRACE << "PipeThread Thread entered." << std::endl;
+	std::cout << "vl::Pipe::_handleCreateMsg" << std::endl;
+	size_t size;
+	assert( msg.size() >= sizeof(size) );
 
-	assert( !_name.empty() );
-	if( _server_address.empty() )
-	{ _server_address = "localhost"; }
-	assert( _server_port != 0 );
+	msg.read( size );
+	for( size_t i = 0; i < size; ++i )
+	{
+		assert( msg.size() > 0 );
+		OBJ_TYPE type;
+		uint64_t id;
 
-	vl::Pipe *pipe = 0;
-	try {
-		pipe = new vl::Pipe( _name, _server_address, _server_port );
-		pipe->operator()();
+		msg.read(type);
+		msg.read(id);
+
+		switch( type )
+		{
+			case OBJ_PLAYER :
+			{
+				// TODO fix the constructor
+				vl::Player *player = new vl::Player;
+				mapObject(player, id);
+				playerCreated(player);
+			}
+			break;
+
+			case OBJ_GUI :
+			{
+				vl::gui::GUI *gui = new vl::gui::GUI( this, id );
+				gui->setEditor( vl::gui::WindowRefPtr( new vl::gui::Window(_editor) ) );
+				gui->setConsole( vl::gui::WindowRefPtr( new vl::gui::Window(_console) ) );
+				gui->setLoadingScreen( vl::gui::WindowRefPtr( new vl::gui::Window(_loading_screen) ) );
+				gui->setStats( vl::gui::WindowRefPtr( new vl::gui::Window(_stats) ) );
+				
+				guiCreated(gui);
+			}
+			break;
+
+			case OBJ_SCENE_MANAGER :
+			{
+				// TODO support multiple SceneManagers
+				vl::SceneManager *sm = new vl::SceneManager( this, id );
+				sceneManagerCreated(sm);
+			}
+			break;
+
+			case OBJ_SCENE_NODE :
+			{
+				// TODO move
+				assert( _scene_manager );
+				_scene_manager->createSceneNode( "", id );
+			}
+			break;
+
+			default :
+				// TODO Might happen something unexpected so for now just kill the program
+				assert( false );
+		}
 	}
-	catch( vl::exception &e )
+}
+
+void
+vl::Renderer::_handleUpdateMsg(vl::cluster::Message &msg)
+{
+	// Read the IDs in the message and call pack on mapped objects
+	// based on thoses
+	/// @TODO multiple update messages in the same frame,
+	/// only the most recent should be used.
+	while( msg.size() > 0 )
 	{
-		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
-			<< std::endl;
+		vl::cluster::ObjectData data;
+		data.copyFromMessage(&msg);
+		// Pushing back will create copies which is unnecessary
+		_objects.push_back(data);
 	}
-	catch( Ogre::Exception const &e)
+}
+
+void
+vl::Renderer::_handlePrintMsg(vl::cluster::Message &msg)
+{
+	assert( msg.getType() == vl::cluster::MSG_PRINT );
+	size_t msgs;
+	msg.read(msgs);
+	while(msgs > 0)
 	{
-		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		std::string type;
+		msg.read(type);
+		double time;
+		msg.read(time);
+		std::string str;
+		msg.read(str);
+		vl::LOG_MESSAGE_LEVEL lvl;
+		msg.read(lvl);
+
+		printToConsole(str, time, type, lvl);
+
+		msgs--;
 	}
-	catch( std::exception const &e )
+}
+
+void
+vl::Renderer::_syncData(void)
+{
+	// TODO remove the temporary array
+	// use a custom structure that does not create temporaries
+	// rather two phase system one to read the array and mark objects for delete
+	// and second that really clear those that are marked for delete
+	// similar system for reading data to the array
+
+	// Temporary array used for objects not yet found and saved for later use
+	std::vector<vl::cluster::ObjectData> tmp;
+	std::vector<vl::cluster::ObjectData>::iterator iter;
+	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		std::cerr << "STD Exception: " << e.what() << std::endl;
-	}
-	catch( ... )
-	{
-		std::cerr << "An exception of unknow type occured." << std::endl;
+		vl::cluster::ByteStream stream = iter->getStream();
+		vl::Distributed *obj = findMappedObject( iter->getId() );
+		if( obj )
+		{
+			obj->unpack(stream);
+		}
+		else
+		{
+			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
+				<< std::endl;
+			tmp.push_back( *iter );
+		}
 	}
 
-	std::cout << vl::TRACE << "PipeThread Exited" << std::endl;
-	delete pipe;
+	_objects = tmp;
 }

@@ -23,6 +23,9 @@
 
 #include "logger.hpp"
 
+// Necessary for the callback structs
+#include "renderer_interface.hpp"
+
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISJoyStick.h>
@@ -33,6 +36,20 @@
 namespace vl
 {
 
+class Config;
+
+/// Callbacks
+struct ConfigMsgCallback : public vl::MsgCallback
+{
+	ConfigMsgCallback(vl::Config *own);
+
+	virtual ~ConfigMsgCallback(void) {}
+
+	virtual void operator()(vl::cluster::Message const &msg);
+
+	vl::Config *owner;
+};
+
 /**	@class Config
  *
  */
@@ -41,7 +58,8 @@ class Config : public vl::Session
 public:
 	Config( vl::Settings const &settings,
 			vl::EnvSettingsRefPtr env,
-			vl::Logger &logger );
+			vl::Logger &logger,
+			vl::RendererInterfacePtr rend );
 
 	virtual ~Config (void);
 
@@ -59,10 +77,39 @@ public:
 	virtual void stopRunning( void )
 	{ _running = false; }
 
+	/// Message callback system functions
+	bool messages(void) const
+	{ return _messages.size(); }
+
+	vl::cluster::Message popMessage(void);
+
+	/// Push new message from callback to the stack
+	void pushMessage(vl::cluster::Message const &msg);
+
 protected :
+	// Helpers that update local renderer and do slave rpc calls
+	void _setEnvironment(vl::EnvSettingsRefPtr env);
+	void _setProject(vl::Settings const &proj);
+
+	// Cluster rpc calss
 	void _updateServer( void );
-	void _sendEnvironment( void );
-	void _sendProject( void );
+	void _updateRenderer(void);
+
+	// Updates the messages stored per frame
+	// This should definitely not be called more than once per frame
+	void _updateFrameMsgs(void);
+	// This shouldn't be called more than once per frame, resets changes
+	void _createMsgCreate(void);
+	// This shouldn't be called more than once per frame, resets changes
+	void _createMsgUpdate(void);
+	// This should always be called after createMsgUpdate
+	void _createMsgInit(void);
+
+	void _sendEnvironment(vl::EnvSettingsRefPtr env);
+	void _sendProject(vl::Settings const &proj);
+
+	// Send message to all receivers
+	void _sendMessage(vl::cluster::Message const &msg);
 
 	/// Tracking
 	void _createTracker( vl::EnvSettingsRefPtr settings );
@@ -78,8 +125,11 @@ protected :
 	/// Events
 	void _createQuitEvent( void );
 
-	void _receiveEventMessages( void );
-	void _receiveCommandMessages( void );
+	void _receiveMessages( void );
+
+	void _handleMessage(vl::cluster::Message &msg);
+	void _handleEventMessage(vl::cluster::Message &msg);
+	void _handleCommandMessage(vl::cluster::Message &msg);
 
 	/// Input Events
 	/// Keyboard
@@ -109,6 +159,24 @@ protected :
 	Ogre::Timer _stats_timer;
 
 	bool _running;
+
+	// Renderer
+	RendererInterfacePtr _renderer;
+
+	// Update messages for this frame
+	vl::cluster::Message _msg_create;
+	vl::cluster::Message _msg_update;
+	vl::cluster::Message _msg_init;
+	
+	// callback provided messages
+	std::deque<vl::cluster::Message> _messages;
+
+	// Callbacks owned by us
+	std::vector<vl::Callback *> _callbacks;
+
+	/// receivers for logging
+	/// first is the last logged message, second is the receiver it self
+	//std::vector<std::pair<uint32_t, vl::LogReceiver *> _log_receivers;
 
 };	// class Config
 

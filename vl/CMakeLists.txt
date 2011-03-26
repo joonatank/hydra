@@ -43,7 +43,7 @@ set( SOURCES
 	base/projsettings.cpp
 	eq_cluster/window.cpp
 	eq_cluster/config.cpp
-	eq_cluster/pipe.cpp
+	renderer.cpp
 	eq_cluster/application.cpp
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
@@ -94,7 +94,8 @@ set( HEADERS
 	program_options.hpp
 	eq_cluster/window.hpp
 	eq_cluster/config.hpp
-	eq_cluster/pipe.hpp
+	renderer.hpp
+	renderer_interface.hpp
 	eq_cluster/application.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp

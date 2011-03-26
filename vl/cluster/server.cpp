@@ -14,7 +14,11 @@
 #include "logger.hpp"
 
 vl::cluster::Server::Server( uint16_t const port )
-	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port)), _frame(1)
+	: _socket(_io_service
+	, boost::udp::endpoint(boost::udp::v4(), port))
+	, _frame(1)
+	, _n_log_messages(0)
+	, _receiving_log_messages(false)
 {
 	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
@@ -40,6 +44,25 @@ vl::cluster::Server::shutdown( void )
 		_socket.send_to( boost::asio::buffer(buf), iter->address );
 		iter->state = CS_SHUTDOWN;
 	}
+
+	// Block till successfull
+	// TODO should resent the Shutdown message if no response is received
+	// TODO should also have a timeout system which exits with an error
+	// TODO also best to create a blockTillState function for blocking
+	// while state is not correct
+	bool ready_to_quit = false;
+	while( ready_to_quit )
+	{
+		ready_to_quit = true;
+		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+		{
+			if( iter->state != CS_UNDEFINED )
+			{ 
+				ready_to_quit = false;
+				break;
+			}
+		}
+	}
 }
 
 void
@@ -62,8 +85,8 @@ vl::cluster::Server::receiveMessages( void )
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
-		Message *msg = new Message(recv_buf);
-		switch( msg->getType() )
+		Message msg(recv_buf);
+		switch( msg.getType() )
 		{
 			case vl::cluster::MSG_REG_UPDATES :
 			{
@@ -75,51 +98,36 @@ vl::cluster::Server::receiveMessages( void )
 				// TODO this should save the client as one that requested
 				// environment if no environment is set so that one will be sent
 				// as soon as one is available.
-				delete msg;
 			}
 			break;
 
 			case vl::cluster::MSG_ACK :
 			{
 				vl::cluster::MSG_TYPES type;
-				msg->read(type);
+				msg.read(type);
 				_handleAck(remote_endpoint, type);
-				delete msg;
 			}
 			break;
 
 			case vl::cluster::MSG_INPUT :
-			{
-				// TODO there should be a maximum amount of messages stored
-				_input_msgs.push_back( msg );
-			}
-			break;
-
 			case vl::cluster::MSG_COMMAND :
 			{
-//				std::cout << "Server : vl::cluster::MSG_COMMAND received." << std::endl;
 				// TODO there should be a maximum amount of messages stored
-				// TODO works only on ASCII at the moment
-				assert( msg->size() > sizeof(size_t) );
-				size_t size;
-				msg->read(size);
-				std::vector<char> vec(size);
-				msg->read( &vec[0], size );
-				_commands.push_back( std::string(&vec[0]) );
-
-				delete msg;
+				_messages.push_back(msg);
 			}
 			break;
 
 			case vl::cluster::MSG_REG_OUTPUT :
+			{
 				_output_receivers.push_back( ClientInfo(remote_endpoint) );
-				break;
+				_receiving_log_messages = true;
+			}
+			break;
 
 			default :
 			{
-				std::cout << vl::ERR << "vl::cluster::Server::mainloop : "
+				std::cout << vl::CRITICAL << "vl::cluster::Server::mainloop : "
 					<< "Unhandeled message type." << std::endl;
-				delete msg;
 			}
 			break;
 		}
@@ -152,6 +160,10 @@ vl::cluster::Server::render( vl::Stats &stats )
 	{ _sendUpdate(*iter); }
 	stats.logWaitUpdateTime( (double(timer.getMicroseconds()))/1e3 );
 
+	// Send the output messages
+	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	{ _sendOuput(iter->address); }
+
 	timer.reset();
 	_waitDraw();
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
@@ -173,6 +185,35 @@ vl::cluster::Server::render( vl::Stats &stats )
 	*/
 
 	++_frame;
+}
+
+void 
+vl::cluster::Server::sendMessage(Message const &msg)
+{
+	switch( msg.getType() )
+	{	
+		case MSG_ENVIRONMENT:
+			sendEnvironment(msg);
+			break;
+		case MSG_PROJECT:
+			sendProject(msg);
+			break;
+
+		case MSG_SG_CREATE:
+			sendCreate(msg);
+			break;
+
+		case MSG_SG_UPDATE:
+			sendUpdate(msg);
+			break;
+
+		// Uses the LogReceiver interface
+		case MSG_PRINT:
+		// Not yet supported
+		case MSG_DRAW:
+		default :
+			assert( false && "Not allowed message type to be sent." );
+	}
 }
 
 void
@@ -215,59 +256,39 @@ vl::cluster::Server::sendInit( vl::cluster::Message const &msg )
 	msg.dump(_msg_init);
 }
 
-void
-vl::cluster::Server::sendPrintMessage( vl::cluster::Message const & msg )
+vl::cluster::Message
+vl::cluster::Server::popMessage( void )
 {
-	assert( msg.getType() == MSG_PRINT );
-	assert( !_output_receivers.empty() );
+	Message tmp = _messages.front();
+	_messages.pop_front();
+	return tmp;
+}
 
-	std::vector<char> buf;
-	msg.dump(buf);
-	ClientList::iterator iter;
-	for( iter = _output_receivers.begin(); iter != _output_receivers.end(); ++iter )
+bool 
+vl::cluster::Server::logEnabled(void) const
+{
+	return _receiving_log_messages;
+}
+
+void 
+vl::cluster::Server::logMessage(vl::LogMessage const &msg)
+{
+	if( !logEnabled() )
 	{
-		_socket.send_to( boost::asio::buffer(buf), iter->address );
+		std::cout << vl::CRITICAL << "Trying to Log a message even though logging not enabled." << std::endl;
+		return;
 	}
+
+	_new_log_messages.push_back(msg);
+
+	++_n_log_messages;
 }
 
-bool
-vl::cluster::Server::wantsPrintMessages( void )
+uint32_t 
+vl::cluster::Server::nLoggedMessages(void) const
 {
-	return !_output_receivers.empty();
+	return _n_log_messages;
 }
-
-
-bool
-vl::cluster::Server::needsInit( void ) const
-{
-	return true;
-// 	ClientList::const_iterator iter;
-// 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-// 	{
-// 		if( iter->state == CS_PROJ )
-// 		{
-// 			return true;
-// 		}
-// 	}
-//
-// 	return false;
-}
-
-vl::cluster::Message *
-vl::cluster::Server::popInputMessage( void )
-{
-	Message *tmp = _input_msgs.front();
-	_input_msgs.erase( _input_msgs.begin() );
-	return tmp;
-}
-
-std::string vl::cluster::Server::popCommand( void )
-{
-	std::string tmp = _commands.front();
-	_commands.erase(_commands.begin());
-	return tmp;
-}
-
 
 /// ----------------------------- Private --------------------------------------
 void
@@ -349,9 +370,7 @@ void
 vl::cluster::Server::_sendDraw( const boost::asio::ip::udp::endpoint& endpoint )
 {
 	vl::cluster::Message msg( vl::cluster::MSG_DRAW );
-	std::vector<char> buf;
-	msg.dump(buf);
-	_socket.send_to( boost::asio::buffer(buf), endpoint );
+	_sendMessage(endpoint, msg);
 }
 
 
@@ -359,12 +378,37 @@ void
 vl::cluster::Server::_sendSwap( const boost::asio::ip::udp::endpoint& endpoint )
 {
 	vl::cluster::Message msg( vl::cluster::MSG_SWAP );
+	_sendMessage(endpoint, msg);
+}
+
+void
+vl::cluster::Server::_sendOuput( const boost::asio::ip::udp::endpoint& endpoint )
+{
+	if( !_new_log_messages.empty() )
+	{
+		vl::cluster::Message msg( vl::cluster::MSG_PRINT );
+		msg.write(_new_log_messages.size());
+		std::vector<vl::LogMessage>::iterator iter;
+		for( iter = _new_log_messages.begin(); iter != _new_log_messages.end(); ++iter )
+		{
+			msg.write(iter->type);
+			msg.write(iter->time);
+			msg.write(iter->message);
+			msg.write(iter->level);
+		}
+
+		_new_log_messages.clear();
+		_sendMessage(endpoint, msg);
+	}
+}
+
+void 
+vl::cluster::Server::_sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg)
+{
 	std::vector<char> buf;
 	msg.dump(buf);
 	_socket.send_to( boost::asio::buffer(buf), endpoint );
 }
-
-
 
 void
 vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster::MSG_TYPES ack_to )
@@ -452,8 +496,14 @@ vl::cluster::Server::_handleAck( const boost::udp::endpoint &client, vl::cluster
 				}
 				break;
 
+				case vl::cluster::MSG_PRINT :
+					break;
+
 				default:
-					assert(false);
+				{
+					// TODO change to out after confirmed that this doesn't happen at every frame
+					std::clog << "Unhandled ACK message : type = " << vl::cluster::getTypeAsString(ack_to);
+				}
 			};
 		}
 	}

@@ -13,8 +13,11 @@
 
 #include "game_manager.hpp"
 
-#include "pipe.hpp"
+#include "renderer.hpp"
+
 #include "logger.hpp"
+
+#include "cluster/client.hpp"
 
 /// -------------------------------- Global ----------------------------------
 vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
@@ -171,52 +174,60 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 
 /// -------------------------------- Application -----------------------------
 vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger )
-	: _config(0)
-	, _pipe_thread(0)
+	: _master()
+	, _slave_client()
 {
 	assert( env );
 
+	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
+
+	// We should hand over the Renderer to either client or config
+	vl::RendererInterfacePtr renderer( new Renderer(env->getName()) );
+
 	if( env->isMaster() )
 	{
-		_config = new vl::Config( settings, env, logger );
-		// NOTE This needs to be called before creating the Pipe thread
-		// probably because the Server the Pipe thread connects to has to be
-		// created before connecting to it.
-		_config->init();
+		_master.reset(new vl::Config( settings, env, logger, renderer ));
+		_master->init();
 	}
-
-	// Put the pipe thread spinning on both master and slave
-	std::cout << "vl::Application::Application : name = " << env->getMaster().name << std::endl;
-	vl::PipeThread pipe( env->getMaster().name,
-						 env->getServer().hostname,
-						 env->getServer().port );
-	_pipe_thread = new boost::thread( pipe );
+	else
+	{
+		char const *host = env->getServer().hostname.c_str();
+		uint16_t port = env->getServer().port;
+		_slave_client.reset(new vl::cluster::Client(host, port, renderer));
+	}
 }
 
 vl::Application::~Application( void )
-{
-	delete _pipe_thread;
-	delete _config;
-}
+{}
 
 
 void
 vl::Application::run( void )
 {
-	if( _config )
+	if(_master)
 	{
 		// run main loop
 		uint32_t frame = 0;
-		while( _config->isRunning() )
+		while( _master->isRunning() )
 		{
 			_render( ++frame );
 		}
 
-		_config->exit();
+		_master->exit();
 	}
+	else
+	{
+		assert(_slave_client);
+		while( _slave_client->isRunning() )
+		{
+			_slave_client->mainloop();
 
-	// Wait till the Pipe thread has received the shutdown message and is finished
-	_pipe_thread->join();
+			// TODO add sleep
+			vl::msleep(1);
+		}
+
+		// TODO add clean exit
+	}
 }
 
 /// ------------------------------- Private ------------------------------------
@@ -229,7 +240,7 @@ vl::Application::_render( uint32_t const frame )
 	// @todo should be configurable from EnvSettings
 	const double FPS = 60;
 
-	_config->render();
+	_master->render();
 
 	double time = double(timer.getMicroseconds())/1000;
 
@@ -242,5 +253,3 @@ vl::Application::_render( uint32_t const frame )
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
 }
-
-

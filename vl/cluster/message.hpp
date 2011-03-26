@@ -160,7 +160,7 @@ public :
 
 	Message( std::vector<char> const &arr);
 
-	Message( MSG_TYPES type );
+	Message( MSG_TYPES type = MSG_UNDEFINED );
 
 	MSG_TYPES getType( void ) const
 	{ return _type; }
@@ -168,7 +168,9 @@ public :
 	/// Dump the whole message to a binary array, the array is modified
 	virtual void dump( std::vector<char> &arr ) const;
 
-	void clear( void );
+	bool empty(void) const;
+
+	void clear(void);
 
 	/// Read an arbitary type from message data, this never reads the header or size
 	template<typename T>

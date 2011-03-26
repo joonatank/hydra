@@ -9,7 +9,7 @@
 #include "eq_cluster/config.hpp"
 #include "eq_ogre/ogre_dotscene_loader.hpp"
 
-#include "pipe.hpp"
+#include "renderer.hpp"
 
 #include <OGRE/OgreLogManager.h>
 
@@ -47,9 +47,9 @@ namespace
 }
 
 /// ----------------------------- Public ---------------------------------------
-vl::Window::Window( std::string const &name, vl::Pipe *parent )
+vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 	: _name(name)
-	, _pipe( parent )
+	, _renderer( parent )
 	, _ogre_window(0)
 	, _camera(0)
 	, _left_viewport(0)
@@ -58,13 +58,12 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	, _keyboard(0)
 	, _mouse(0)
 {
-	assert( _pipe );
-	_camera = _pipe->getCamera();
+	assert( _renderer );
 
 	std::string msg = "vl::Window::Window : " + getName();
 	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
-	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
+	vl::EnvSettings::Window winConf = _renderer->getWindowConf( getName() );
 
 	_ogre_window = _createOgreWindow(winConf);
 	_createInputHandling();
@@ -123,15 +122,15 @@ vl::Window::~Window( void )
 
 vl::EnvSettingsRefPtr
 vl::Window::getEnvironment( void )
-{ return _pipe->getEnvironment(); }
+{ return _renderer->getEnvironment(); }
 
 vl::Player const &
 vl::Window::getPlayer( void ) const
-{ return _pipe->getPlayer(); }
+{ return _renderer->getPlayer(); }
 
 vl::ogre::RootRefPtr
 vl::Window::getOgreRoot( void )
-{ return _pipe->getRoot(); }
+{ return _renderer->getRoot(); }
 
 void
 vl::Window::setCamera( Ogre::Camera *camera )
@@ -145,9 +144,11 @@ vl::Window::setCamera( Ogre::Camera *camera )
 	{ _right_viewport->setCamera(_camera); }
 }
 
+/*
 Ogre::SceneManager *
 vl::Window::getSceneManager( void )
-{ return _pipe->getSceneManager(); }
+{ return _renderer->getSceneManager(); }
+*/
 
 void
 vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
@@ -174,7 +175,7 @@ bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
 	// Check if we have a GUI that uses user input
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		switch( key.key )
 		{
@@ -209,7 +210,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 bool
 vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
 		// TODO this might need translation for the key codes
@@ -245,7 +246,7 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
 		CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
@@ -276,7 +277,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 bool
 vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
 	}
@@ -295,7 +296,7 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
 	}
@@ -401,7 +402,7 @@ vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 {
 	std::string msg("vl::Window::onQuitClicked");
 	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	getPipe()->sendCommand( "quit()" );
+	_renderer->sendCommand( "quit()" );
 
 	return true;
 }
@@ -565,7 +566,7 @@ vl::Window::createGUIWindow(void )
 void
 vl::Window::_sendEvent( vl::cluster::EventData const &event )
 {
-	_pipe->sendEvent(event);
+	_renderer->sendEvent(event);
 }
 
 Ogre::RenderWindow *

@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-// Necessary for EnvSettingsRefPtr
+// Necessary for Ref ptrs
 #include "typedefs.hpp"
 // Necessary for vl::ProgramOptions
 #include "program_options.hpp"
@@ -46,11 +46,11 @@ protected:
 
 	void _render( uint32_t const frame );
 
-	vl::Config *_config;
+	vl::ConfigRefPtr _master;
 
-	boost::thread *_pipe_thread;
+	vl::cluster::ClientRefPtr _slave_client;
 
-};	// class Client
+};	// class Application
 
 }	// namespace vl
 

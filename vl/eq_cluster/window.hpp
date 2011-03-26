@@ -24,10 +24,10 @@
 // GUI
 #include <CEGUI/CEGUIEventArgs.h>
 
+#include "renderer_interface.hpp"
+
 namespace vl
 {
-
-class Pipe;
 
 /**	@class Window represent an OpenGL drawable and context
  *
@@ -36,15 +36,13 @@ class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::J
 {
 public:
 	/// @TODO change name to window config
-	Window( std::string const &name, vl::Pipe *parent );
+	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
+	Window( std::string const &name, vl::RendererInterface *parent );
 
 	virtual ~Window( void );
 
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
-
-	vl::Pipe *getPipe( void )
-	{ return _pipe; }
 
 	vl::EnvSettingsRefPtr getEnvironment( void );
 
@@ -53,11 +51,6 @@ public:
 	vl::ogre::RootRefPtr getOgreRoot( void );
 
 	void setCamera( Ogre::Camera *camera );
-
-	Ogre::Camera *getCamera( void )
-	{ return _camera; }
-
-	Ogre::SceneManager *getSceneManager( void );
 
 	std::string const &getName( void ) const
 	{ return _name; }
@@ -130,7 +123,7 @@ protected :
 
 	std::string _name;
 
-	vl::Pipe *_pipe;
+	vl::RendererInterface *_renderer;
 
 	vl::EnvSettings::Wall _wall;
 

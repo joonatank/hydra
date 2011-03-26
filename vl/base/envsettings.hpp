@@ -343,6 +343,9 @@ public :
 
 	Node findSlave( std::string const &name ) const;
 
+	std::string const &getName(void) const
+	{ return _master.name; }
+
 	/** @brief Get the master nodes configuration
 	 *	@return Node representing the Master configuration
 	 */

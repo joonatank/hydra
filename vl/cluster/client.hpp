@@ -12,6 +12,14 @@
 #include "message.hpp"
 #include "states.hpp"
 
+//#include "session.hpp"
+
+// Necessary for the Renderer RefPtr
+#include "typedefs.hpp"
+
+// Necessary for the Callback structs
+#include "renderer_interface.hpp"
+
 #include <OGRE/OgreTimer.h>
 
 namespace boost
@@ -25,37 +33,36 @@ namespace vl
 namespace cluster
 {
 
+class Client;
+
+/// Callbacks
+struct ClientMsgCallback : public vl::MsgCallback
+{
+	ClientMsgCallback(Client *own);
+
+	virtual void operator()(vl::cluster::Message const &msg);
+
+	Client *owner;
+};
+
 class Client
 {
 public:
-	Client( char const *hostname, uint16_t port );
+	Client( char const *hostname, uint16_t port, vl::RendererInterfacePtr rend );
 
-	virtual ~Client( void );
+	virtual ~Client(void);
+
+	bool isRunning(void);
 
 	/// Processes all the pending messages
-	void mainloop( void );
+	void mainloop(void);
 
-	/// Register this client to receive updates in the Rendering context
-	void registerForUpdates( void );
-
-	void registerForOutput( void );
-
-	bool messages() const
-	{ return !_messages.empty(); }
-
-	Message *popMessage( void );
-
-	void sendMessage( Message *msg );
+	void sendMessage(vl::cluster::Message const &msg);
 
 	void sendAck( vl::cluster::MSG_TYPES );
 
 private :
-	void _sentRequestUpdates( void );
-
-	/// Copying is forbidden
-//	Client(const Client& other) {}
-//	virtual Client& operator=(const Client& other) {}
-//	virtual bool operator==(const Client& other) const {}
+	void _handleMessage(vl::cluster::Message &msg);
 
 	boost::asio::io_service _io_service;
 
@@ -68,6 +75,10 @@ private :
 	CLIENT_STATE _state;
 
 	Ogre::Timer _request_timer;
+
+	vl::RendererInterfacePtr _renderer;
+
+	std::vector<vl::Callback *> _callbacks;
 
 };	// class Client
 

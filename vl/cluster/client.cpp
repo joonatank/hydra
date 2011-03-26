@@ -1,25 +1,52 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file cluster/client.cpp
  */
 
 #include "client.hpp"
 
 #include "base/exceptions.hpp"
 
-#include <sstream>
+#include "distrib_settings.hpp"
 
+#include "logger.hpp"
+
+#include <sstream>
 #include <iostream>
 
 const size_t MSG_BUFFER_SIZE = 128;
 
-vl::cluster::Client::Client( char const *hostname, uint16_t port )
+/// ------------------------------ Callbacks ---------------------------------
+vl::cluster::ClientMsgCallback::ClientMsgCallback(vl::cluster::Client *own)
+	: owner(own)
+{
+	assert(owner);
+}
+
+void 
+vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
+{
+	assert(owner);
+	owner->sendMessage(msg);
+}
+
+/// ------------------------------ Client -------------------------------------
+vl::cluster::Client::Client( char const *hostname, uint16_t port, 
+							 vl::RendererInterfacePtr rend )
 	: _io_service()
 	, _socket( _io_service )
 	, _master()
 	, _state(CS_UNDEFINED)
+	, _renderer(rend)
 {
 	std::cout << "vl::cluster::Client::Client : Connecting to host "
 		<< hostname << " at port " << port << "." << std::endl;
+
+	assert(_renderer.get());
+	// TODO should set callbacks to Renderer
+	vl::MsgCallback *cb = new ClientMsgCallback(this);
+	_renderer->setSendMessageCB(cb);
+	_callbacks.push_back(cb);
 
 	std::stringstream ss;
 	ss << port;
@@ -37,17 +64,30 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port )
 	_socket.set_option(buf_size);
 	std::cout << "vl::cluster::Client::Client : Receive Buffer size = "
 		<< buf_size.value() << "." << std::endl;
+
+	// Request updates as soon as created.
+	_state = CS_REQ;
 }
 
 vl::cluster::Client::~Client( void )
 {
-	std::cout << "vl::cluster::Client::~Client" << std::endl;
+	std::cout << vl::TRACE << "vl::cluster::Client::~Client" << std::endl;
+
+	for( std::vector<vl::Callback *>::iterator iter = _callbacks.begin();
+		iter != _callbacks.end(); ++iter )
+	{ delete *iter; }
+}
+
+bool
+vl::cluster::Client::isRunning(void)
+{
+	return _state != CS_SHUTDOWN;
 }
 
 void
-vl::cluster::Client::mainloop( void )
+vl::cluster::Client::mainloop(void)
 {
-	if( _socket.available() != 0 )
+	while(_socket.available())
 	{
 		std::vector<char> recv_buf( _socket.available() );
 		boost::system::error_code error;
@@ -55,13 +95,14 @@ vl::cluster::Client::mainloop( void )
 		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
 				_master, 0, error );
 
+		/// TOOD when these do happen?
 		if( error && error == boost::asio::error::connection_refused )
 		{
-			std::cout << "Error : Connection refused" << std::endl;
+			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_aborted )
 		{
-			std::cout << "Error : Connection aborted" << std::endl;
+			std::cout << vl::CRITICAL << "Error : Connection aborted" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_reset )
 		{
@@ -69,90 +110,99 @@ vl::cluster::Client::mainloop( void )
 		}
 		else if( error && error == boost::asio::error::host_unreachable )
 		{
-			std::cout << "Error : Host unreachable" << std::endl;
+			std::cout << vl::CRITICAL << "Error : Host unreachable" << std::endl;
 		}
 		else if( error && error != boost::asio::error::message_size )
 		{ throw boost::system::system_error(error); }
 
 		if( n > 0 )
 		{
-			// Some constraints for the number of messages
-			if( _messages.size() > MSG_BUFFER_SIZE )
-			{
-				std::cerr << "Message stack full, cleaning out the oldest." << std::endl;
-				while( _messages.size() > MSG_BUFFER_SIZE )
-				{ delete popMessage(); }
-			}
-
-			Message *msg = new Message( recv_buf );
-			_messages.push_back(msg);
-			if( msg->getType() == vl::cluster::MSG_ENVIRONMENT )
-			{
-				std::cout << "Changing client state" << std::endl;
-				assert( _state == CS_REQ );
-				_state = CS_ENV;
-			}
+			Message msg( recv_buf );
+			sendAck(msg.getType());
+			_handleMessage(msg);
 		}
 	}
 
 	// Request updates
 	// Uses the timer so that the request is sent only so often
+	// TODO replace this with a more general purpose send till received
+	// blocking function
 	if( _state == CS_REQ  && _request_timer.getMilliseconds() > 100 )
 	{
-		_sentRequestUpdates();
+		Message msg( MSG_REG_UPDATES );
+		sendMessage(msg);
 		_request_timer.reset();
 	}
 }
 
 void
-vl::cluster::Client::registerForUpdates( void )
+vl::cluster::Client::sendMessage(vl::cluster::Message const &msg)
 {
-	std::cout << "vl::cluster::Client::registerForUpdates" << std::endl;
-	assert( _state == CS_UNDEFINED );
-	if( _state == CS_UNDEFINED )
-	{ _state = CS_REQ; }
-}
-
-void
-vl::cluster::Client::registerForOutput( void )
-{
-	Message msg(MSG_REG_OUTPUT);
 	std::vector<char> buf;
 	msg.dump(buf);
 	_socket.send_to( boost::asio::buffer(buf), _master );
 }
 
-vl::cluster::Message *
-vl::cluster::Client::popMessage( void )
-{
-	Message *tmp = _messages.front();
-	_messages.erase( _messages.begin() );
-	return tmp;
-}
-
 void
-vl::cluster::Client::sendMessage( vl::cluster::Message *msg )
-{
-	std::vector<char> buf;
-	msg->dump(buf);
-	_socket.send_to( boost::asio::buffer(buf), _master );
-}
-
-void
-vl::cluster::Client::sendAck ( vl::cluster::MSG_TYPES type )
+vl::cluster::Client::sendAck(vl::cluster::MSG_TYPES type)
 {
 	Message msg( vl::cluster::MSG_ACK );
 	msg.write(type);
-	sendMessage(&msg);
+	sendMessage(msg);
 }
 
 /// ------------------------ Private -------------------------------------------
 void
-vl::cluster::Client::_sentRequestUpdates( void )
+vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 {
-	Message msg( MSG_REG_UPDATES );
-	std::vector<char> buf;
-	msg.dump(buf);
-	_socket.connect( _master );
-	_socket.send_to( boost::asio::buffer(buf), _master);
+	switch( msg.getType() )
+	{
+		case vl::cluster::MSG_ENVIRONMENT:
+		{
+			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
+			assert( _state == CS_REQ );
+			_state = CS_ENV;
+			assert(_renderer.get());
+
+			// Deserialize the environment settings
+			vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+			// TODO needs a ByteData object for Environment settings
+			vl::SettingsByteData data;
+			data.copyFromMessage(&msg);
+ 			vl::cluster::ByteStream stream(&data);
+			stream >> env;
+			// Only single environment settings should be in the message
+			assert( 0 == msg.size() );
+			_renderer->init(env);
+		}
+		break;
+
+		case vl::cluster::MSG_SHUTDOWN:
+		{
+			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
+			_state = CS_SHUTDOWN;
+			_renderer.reset();
+		}
+		break;
+
+		case vl::cluster::MSG_DRAW :
+		{
+			_state = CS_DRAW;
+			assert(_renderer.get());
+			_renderer->draw();
+			_renderer->swap();
+			_renderer->capture();
+		}
+		break;
+
+		case vl::cluster::MSG_ACK:
+			break;
+
+		default:
+		{
+			assert(_renderer.get());
+			_renderer->handleMessage(msg);
+		}
+		break;
+	}
 }

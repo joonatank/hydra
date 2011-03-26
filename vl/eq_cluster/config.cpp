@@ -35,18 +35,47 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
-vl::Config::Config( vl::Settings const & settings, vl::EnvSettingsRefPtr env, vl::Logger &logger )
+#include "renderer_interface.hpp"
+
+/// ---------------------------------- Callbacks -----------------------------
+vl::ConfigMsgCallback::ConfigMsgCallback(vl::Config *own)
+	: owner(own)
+{
+	assert(owner);
+}
+
+void 
+vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
+{
+	assert(owner);
+	owner->pushMessage(msg);
+}
+
+/// ---------------------------------- Config --------------------------------
+vl::Config::Config( vl::Settings const & settings, 
+					vl::EnvSettingsRefPtr env, 
+					vl::Logger &logger,
+					vl::RendererInterfacePtr rend)
 	: _game_manager( new vl::GameManager(&logger) )
 	, _settings(settings)
 	, _env(env)
 	, _server(new vl::cluster::Server( _env->getServer().port ))
 	, _gui(0)
 	, _running(true)
+	, _renderer(rend)
 {
 	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
 	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+
+	// if we have a renderer we have to set callbacks
+	if(_renderer.get())
+	{
+		vl::MsgCallback *callback = new vl::ConfigMsgCallback(this);
+		_renderer->setSendMessageCB(callback);
+		_callbacks.push_back(callback);
+	}
 
 	_createResourceManager( settings, env );
 
@@ -59,8 +88,9 @@ vl::Config::~Config( void )
 
 	delete _game_manager;
 
-	// Destroy server
-	_server.reset();
+	for( std::vector<vl::Callback *>::iterator iter = _callbacks.begin();
+		iter != _callbacks.end(); ++iter )
+	{ delete *iter; }
 }
 
 void
@@ -73,11 +103,9 @@ vl::Config::init( void )
 	/// creation
 	/// sending of initial messages to rendering threads should still be here
 
-	// Send the Environment
-	_sendEnvironment();
+	_setEnvironment(_env);
 
-	// Send the project
-	_sendProject();
+	_setProject(_settings);
 
 	// Create the player necessary for Trackers
 	vl::PlayerPtr player = _game_manager->createPlayer();
@@ -115,21 +143,27 @@ vl::Config::init( void )
 	_createQuitEvent();
 
 	std::cout << vl::TRACE << "vl::Config:: updating server" << std::endl;
+	_updateFrameMsgs();
 	_updateServer();
+	if(_renderer.get())
+	{
+		_renderer->sendMessage(_msg_create);
+		_renderer->sendMessage(_msg_init);
+	}
 
 	_game_manager->getStats().logInitTime( (double(timer.getMicroseconds()))/1e3 );
 	_stats_timer.reset();
 }
 
 void
-vl::Config::exit( void )
+vl::Config::exit(void)
 {
 	std::cout << vl::TRACE << "vl::Config::exit" << std::endl;
 
+	_renderer.reset();
+
+	// TODO this should block till all the clients have shutdown
 	_server->shutdown();
-	// TODO this should wait till all the clients have shutdown
-	vl::msleep(1);
-	_server->receiveMessages();
 }
 
 void
@@ -147,20 +181,28 @@ vl::Config::render( void )
 	{ stopRunning(); }
 	_game_manager->getStats().logStepTime( (double(timer.getMicroseconds()))/1e3 );
 
-	timer.reset();
 	/// Provide the updates to slaves
+	_updateFrameMsgs();
 	_updateServer();
-	_game_manager->getStats().logStepTime( (double(timer.getMicroseconds()))/1e3 );
+	_updateRenderer();
 
+	// TODO separate stats for rendering slaves and local
 	timer.reset();
 	/// Render the scene
 	_server->render(_game_manager->getStats());
+	
+	// Rendering after the server has sent the command to slaves
+	if( _renderer.get() )
+	{
+		_renderer->draw();
+		_renderer->swap();
+		_renderer->capture();
+	}
 	_game_manager->getStats().logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
-
 	timer.reset();
+
 	// TODO where the receive input messages should be?
-	_receiveEventMessages();
-	_receiveCommandMessages();
+	_receiveMessages();
 
 	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
@@ -173,119 +215,207 @@ vl::Config::render( void )
 	}
 }
 
+vl::cluster::Message 
+vl::Config::popMessage(void)
+{
+	if( !messages() )
+	{ return vl::cluster::Message(); }
+
+	vl::cluster::Message msg = _messages.front();
+	_messages.pop_front();
+	return msg;
+}
+
+void 
+vl::Config::pushMessage(vl::cluster::Message const &msg)
+{
+	_messages.push_back(msg);
+}
+
 /// ------------ Private -------------
 void
 vl::Config::_updateServer( void )
 {
 	assert( _server );
 
-	// Handle received messages
-	_server->receiveMessages();
-
-	// New objects created need to send SG_CREATE message
-	if( !getNewObjects().empty() )
+	if( !_msg_create.empty() )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_SG_CREATE );
-		msg.write( getNewObjects().size() );
-		for( size_t i = 0; i < getNewObjects().size(); ++i )
-		{
-			OBJ_TYPE type = getNewObjects().at(i).first;
-			uint64_t id = getNewObjects().at(i).second->getID();
-			msg.write( type );
-			msg.write( id );
-		}
-		_server->sendCreate( msg );
-		clearNewObjects();
+		_server->sendCreate(_msg_create);
 	}
 
-	{
-		// Create SceneGraph updates
-		vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE );
-		std::vector<vl::Distributed *>::iterator iter;
-		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
-			++iter )
-		{
-			if( (*iter)->isDirty() )
-			{
-				assert( (*iter)->getID() != vl::ID_UNDEFINED );
-				vl::cluster::ObjectData data( (*iter)->getID() );
-				vl::cluster::ByteStream stream = data.getStream();
-				(*iter)->pack(stream);
-				data.copyToMessage(&msg);
-			}
-		}
-
-		_server->sendUpdate( msg );
-	}
+	_server->sendUpdate(_msg_update);
 
 	// New clients need the whole SceneGraph
 	// TODO this is not good here
 	// Provide a functor that can create the initial message
-	if( _server->needsInit() )
-	{
-		vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE );
-		std::vector<vl::Distributed *>::iterator iter;
-		for( iter = _registered_objects.begin(); iter != _registered_objects.end();
-			++iter )
-		{
-			assert( (*iter)->getID() != vl::ID_UNDEFINED );
-			vl::cluster::ObjectData data( (*iter)->getID() );
-			vl::cluster::ByteStream stream = data.getStream();
-			(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
-			data.copyToMessage(&msg);
-		}
 
-		_server->sendInit( msg );
-	}
+	_server->sendInit(_msg_init);
 
 	// Send logs
-	if( _server->wantsPrintMessages() )
+	if( _server->logEnabled() )
 	{
-		if( _game_manager->getLogger()->newMessages() )
+		vl::Logger *log = _game_manager->getLogger();
+		while( _server->nLoggedMessages() <  log->nMessages() )
 		{
-			vl::cluster::Message msg( vl::cluster::MSG_PRINT );
-			msg.write(_game_manager->getLogger()->nMessages());
-			while( _game_manager->getLogger()->newMessages() )
-			{
-				LogMessage log_msg = _game_manager->getLogger()->popMessage();
-				msg.write(log_msg.type);
-				msg.write(log_msg.time);
-				msg.write(log_msg.message);
-				msg.write(log_msg.level);
-			}
-			_server->sendPrintMessage(msg);
+			_server->logMessage( log->getMessage(_server->nLoggedMessages()) );
 		}
 	}
 }
 
 void
-vl::Config::_sendEnvironment ( void )
+vl::Config::_updateRenderer(void)
+{
+	if( !_renderer.get() )
+	{ return; }
+	
+	if( !_msg_create.empty() )
+	{ _renderer->sendMessage(_msg_create); }
+
+	_renderer->sendMessage(_msg_update);
+
+	// Does not send init, because the renderer is already initialised
+
+	// Send logs
+	if( _renderer->logEnabled() )
+	{
+		vl::Logger *log = _game_manager->getLogger();
+		while( _renderer->nLoggedMessages() <  log->nMessages() )
+		{
+			_renderer->logMessage( log->getMessage(_renderer->nLoggedMessages()) );
+		}
+	}
+}
+
+void 
+vl::Config::_updateFrameMsgs(void)
+{
+	_createMsgCreate();
+	_createMsgUpdate();
+	_createMsgInit();
+}
+
+void
+vl::Config::_createMsgCreate(void)
+{
+	// New objects created need to send SG_CREATE message
+	if( !getNewObjects().empty() )
+	{
+		_msg_create = vl::cluster::Message( vl::cluster::MSG_SG_CREATE );
+		_msg_create.write( getNewObjects().size() );
+		for( size_t i = 0; i < getNewObjects().size(); ++i )
+		{
+			OBJ_TYPE type = getNewObjects().at(i).first;
+			uint64_t id = getNewObjects().at(i).second->getID();
+			_msg_create.write( type );
+			_msg_create.write( id );
+		}
+
+		clearNewObjects();
+	}
+	else
+	{
+		_msg_create.clear();
+	}
+}
+
+void
+vl::Config::_createMsgUpdate(void)
+{
+	// Create SceneGraph updates
+	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
+	
+	std::vector<vl::Distributed *>::iterator iter;
+	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+		++iter )
+	{
+		if( (*iter)->isDirty() )
+		{
+			assert( (*iter)->getID() != vl::ID_UNDEFINED );
+			vl::cluster::ObjectData data( (*iter)->getID() );
+			vl::cluster::ByteStream stream = data.getStream();
+			(*iter)->pack(stream);
+			data.copyToMessage(&_msg_update);
+		}
+	}
+}
+
+void
+vl::Config::_createMsgInit(void)
+{
+	_msg_init = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
+	
+	std::vector<vl::Distributed *>::iterator iter;
+	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+		++iter )
+	{
+		assert( (*iter)->getID() != vl::ID_UNDEFINED );
+		vl::cluster::ObjectData data( (*iter)->getID() );
+		vl::cluster::ByteStream stream = data.getStream();
+		(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
+		data.copyToMessage(&_msg_init);
+	}
+}
+
+void
+vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
+{
+	// Send the Environment
+	_sendEnvironment(env);
+	
+	// Local renderer needs to be inited rather than send a message
+	if( _renderer.get() )
+	{
+		_renderer->init(env);
+	}
+}
+
+void
+vl::Config::_setProject(vl::Settings const &proj)
+{
+	// Send the project
+	_sendProject(proj);
+}
+
+void
+vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
 {
 	std::cout << vl::TRACE << "vl::Config::_sendEnvironment" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteStream stream( &data );
-	stream << _env;
+	stream << env;
 
 	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT );
 	data.copyToMessage( &msg );
-	_server->sendEnvironment(msg);
+	_server->sendMessage(msg);
 }
 
 void
-vl::Config::_sendProject ( void )
+vl::Config::_sendProject(vl::Settings const &proj)
 {
 	std::cout << vl::TRACE << "vl::Config::_sendProject" << std::endl;
 	assert( _server );
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteStream stream( &data );
-	stream << _settings;
+	stream << proj;
 
 	vl::cluster::Message msg( vl::cluster::MSG_PROJECT );
 	data.copyToMessage( &msg );
-	_server->sendProject(msg);
+
+	// TODO replace by local setProject
+	_sendMessage(msg);
+}
+
+void 
+vl::Config::_sendMessage(vl::cluster::Message const &msg)
+{
+	// Send to renderer
+	if(_renderer.get())
+	{ _renderer->sendMessage(msg); }
+
+	_server->sendMessage(msg);
 }
 
 void
@@ -447,125 +577,163 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 
 /// Event Handling
 void
-vl::Config::_receiveEventMessages( void )
+vl::Config::_receiveMessages( void )
 {
+	// Check local messages, pushed there by callbacks
+	while( messages() )
+	{
+		vl::cluster::Message msg = popMessage();
+		_handleMessage(msg);
+	}
+
 	_server->receiveMessages();
 
-	while( _server->inputMessages() )
+	// TODO this should use the same callback system as Renderer
+	while( _server->messages() )
 	{
-		vl::cluster::Message *msg = _server->popInputMessage();
-		while( msg->size() )
-		{
-			vl::cluster::EventData data;
-			data.copyFromMessage(msg);
-			vl::cluster::ByteStream stream = data.getStream();
-			switch( data.getType() )
-			{
-				case vl::cluster::EVT_KEY_PRESSED :
-				{
-					OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
-					stream >> evt;
-					_handleKeyPressEvent(evt);
-				}
-				break;
-
-				case vl::cluster::EVT_KEY_RELEASED :
-				{
-					OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
-					stream >> evt;
-					_handleKeyReleaseEvent(evt);
-				}
-				break;
-
-				case vl::cluster::EVT_MOUSE_PRESSED :
-				{
-					OIS::MouseButtonID b_id;
-					OIS::MouseEvent evt( 0, OIS::MouseState() );
-					stream >> b_id >> evt;
-					_handleMousePressEvent(evt, b_id);
-				}
-				break;
-
-				case vl::cluster::EVT_MOUSE_RELEASED :
-				{
-					OIS::MouseButtonID b_id;
-					OIS::MouseEvent evt( 0, OIS::MouseState() );
-					stream >> b_id >> evt;
-					_handleMouseReleaseEvent(evt, b_id);
-				}
-				break;
-
-				case vl::cluster::EVT_MOUSE_MOVED :
-				{
-					OIS::MouseEvent evt( 0, OIS::MouseState() );
-					stream >> evt;
-					_handleMouseMotionEvent(evt);
-				}
-				break;
-
-				case vl::cluster::EVT_JOYSTICK_PRESSED :
-				{
-					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
-					int button;
-					stream >> button >> evt;
-					_handleJoystickButtonPressedEvent(evt, button);
-				}
-				break;
-
-				case vl::cluster::EVT_JOYSTICK_RELEASED :
-				{
-					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
-					int button;
-					stream >> button >> evt;
-					_handleJoystickButtonReleasedEvent(evt, button);
-				}
-				break;
-
-				case vl::cluster::EVT_JOYSTICK_AXIS :
-				{
-					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
-					int axis;
-					stream >> axis >> evt;
-					_handleJoystickAxisMovedEvent(evt, axis);
-				}
-				break;
-
-				case vl::cluster::EVT_JOYSTICK_POV :
-				{
-					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
-					int pov;
-					stream >> pov >> evt;
-					_handleJoystickPovMovedEvent(evt, pov);
-				}
-				break;
-
-				case vl::cluster::EVT_JOYSTICK_VECTOR3 :
-				{
-					OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
-					int index;
-					stream >> index >> evt;
-					_handleJoystickVector3MovedEvent(evt, index);
-				}
-				break;
-
-				default :
-					std::cout << vl::ERR << "vl::Config::_receiveEventMessages : "
-						<< "Unhandleded message type." << std::endl;
-					break;
-			}
-		}
-		delete msg;
+		vl::cluster::Message msg = _server->popMessage();
+		_handleMessage(msg);
 	}
 }
 
 void 
-vl::Config::_receiveCommandMessages( void )
+vl::Config::_handleMessage(vl::cluster::Message &msg)
 {
-	while( _server->commands() )
+	switch( msg.getType() )
 	{
-		std::string cmd = _server->popCommand();
-		_game_manager->getPython()->executePythonCommand(cmd);
+		case vl::cluster::MSG_INPUT:
+			_handleEventMessage(msg);
+			break;
+
+		case vl::cluster::MSG_COMMAND:
+			_handleCommandMessage(msg);
+			break;
+	
+		case vl::cluster::MSG_REG_OUTPUT:
+			// Should not be added as we are using the LogReceiver interface
+			// Problematic as the Remote nodes need this message, but the
+			// local node does not.
+			break;
+
+		default :
+			std::cout << vl::CRITICAL << "Unhandled Message in Config : type = " 
+				<< vl::cluster::getTypeAsString(msg.getType()) << std::endl;
 	}
+}
+
+void 
+vl::Config::_handleEventMessage(vl::cluster::Message &msg)
+{
+	while( msg.size() )
+	{
+		vl::cluster::EventData data;
+		data.copyFromMessage(&msg);
+		vl::cluster::ByteStream stream = data.getStream();
+		switch( data.getType() )
+		{
+			case vl::cluster::EVT_KEY_PRESSED :
+			{
+				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+				stream >> evt;
+				_handleKeyPressEvent(evt);
+			}
+			break;
+
+			case vl::cluster::EVT_KEY_RELEASED :
+			{
+				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+				stream >> evt;
+				_handleKeyReleaseEvent(evt);
+			}
+			break;
+
+			case vl::cluster::EVT_MOUSE_PRESSED :
+			{
+				OIS::MouseButtonID b_id;
+				OIS::MouseEvent evt( 0, OIS::MouseState() );
+				stream >> b_id >> evt;
+				_handleMousePressEvent(evt, b_id);
+			}
+			break;
+
+			case vl::cluster::EVT_MOUSE_RELEASED :
+			{
+				OIS::MouseButtonID b_id;
+				OIS::MouseEvent evt( 0, OIS::MouseState() );
+				stream >> b_id >> evt;
+				_handleMouseReleaseEvent(evt, b_id);
+			}
+			break;
+
+			case vl::cluster::EVT_MOUSE_MOVED :
+			{
+				OIS::MouseEvent evt( 0, OIS::MouseState() );
+				stream >> evt;
+				_handleMouseMotionEvent(evt);
+			}
+			break;
+
+			case vl::cluster::EVT_JOYSTICK_PRESSED :
+			{
+				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				int button;
+				stream >> button >> evt;
+				_handleJoystickButtonPressedEvent(evt, button);
+			}
+			break;
+
+			case vl::cluster::EVT_JOYSTICK_RELEASED :
+			{
+				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				int button;
+				stream >> button >> evt;
+				_handleJoystickButtonReleasedEvent(evt, button);
+			}
+			break;
+
+			case vl::cluster::EVT_JOYSTICK_AXIS :
+			{
+				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				int axis;
+				stream >> axis >> evt;
+				_handleJoystickAxisMovedEvent(evt, axis);
+			}
+			break;
+
+			case vl::cluster::EVT_JOYSTICK_POV :
+			{
+				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				int pov;
+				stream >> pov >> evt;
+				_handleJoystickPovMovedEvent(evt, pov);
+			}
+			break;
+
+			case vl::cluster::EVT_JOYSTICK_VECTOR3 :
+			{
+				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				int index;
+				stream >> index >> evt;
+				_handleJoystickVector3MovedEvent(evt, index);
+			}
+			break;
+
+			default :
+				std::cout << vl::CRITICAL << "vl::Config::_receiveEventMessages : "
+					<< "Unhandleded message type." << std::endl;
+				break;
+		}
+	}
+}
+
+void 
+vl::Config::_handleCommandMessage(vl::cluster::Message &msg)
+{
+	// TODO there should be a maximum amount of messages stored
+	// TODO works only on ASCII at the moment
+	std::string cmd;
+	msg.read(cmd);
+	_game_manager->getPython()->executePythonCommand(cmd);
 }
 
 void
