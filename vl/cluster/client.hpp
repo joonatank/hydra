@@ -54,6 +54,8 @@ public:
 
 	bool isRunning(void);
 
+	bool isRendering(void);
+
 	/// Processes all the pending messages
 	void mainloop(void);
 
@@ -72,7 +74,7 @@ private :
 
 	std::vector<Message *> _messages;
 
-	CLIENT_STATE _state;
+	ClientState _state;
 
 	Ogre::Timer _request_timer;
 

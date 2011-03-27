@@ -33,24 +33,33 @@ public:
 
 	struct ClientInfo
 	{
-		ClientInfo( boost::udp::endpoint p, CLIENT_STATE s = CS_UNDEFINED, uint32_t f = 0 )
-			: address(p), state(s), frame(f)
+		ClientInfo(boost::udp::endpoint const &p)
+			: address(p)//, state(s), updates(0), frame(0), rendering(false), output(false)
 		{}
 
 		boost::udp::endpoint address;
-		CLIENT_STATE state;
-		uint32_t frame;
+		ClientState state;
 	};
 
 	Server( uint16_t const port );
 
 	~Server();
 
-	void receiveMessages( void );
+	void poll(void);
 
-	/// Synchronious method that blocks till all the clients have done
-	/// update, draw and swap
-	void render( vl::Stats &stats );
+	void block_till_initialised(double timelimit = 0);
+
+	/// Update the SceneGraph on slaves
+	/// Blocks till they are updated
+	void update(vl::Stats &stats);
+
+	/// @brief Start drawing on all the slaves. Non blocking
+	/// @return true if at least one slave is rendering, false otherwise
+	bool start_draw(vl::Stats &stats);
+
+	/// Finish drawing on every slave
+	/// Blocks till done
+	void finish_draw(vl::Stats &stats, double timelimit = 0);
 
 	// TODO this should block till all the clients have shutdown
 	void shutdown( void );
@@ -89,6 +98,7 @@ public:
 	vl::cluster::Message popMessage(void);
 
 	typedef std::vector<ClientInfo> ClientList;
+	typedef std::vector<ClientInfo *> ClientRefList;
 
 	/// LogReceiver overrides
 	virtual bool logEnabled(void) const;
@@ -98,38 +108,39 @@ public:
 	virtual uint32_t nLoggedMessages(void) const;
 
 private :
-	void _addClient( boost::udp::endpoint const &endpoint );
+	ClientInfo &_add_client( boost::udp::endpoint const &endpoint );
 
-	void _sendProject( boost::udp::endpoint const &endpoint );
+	bool _has_client(boost::udp::endpoint const &address) const;
+	
+	ClientInfo &_find_client(boost::udp::endpoint const &address);
 
-	void _sendEnvironment( std::vector<char> const &msg );
+	ClientInfo *_find_client_ptr(boost::udp::endpoint const &address);
 
-	void _sendEnvironment( boost::udp::endpoint const &endpoint );
+	ClientInfo const *_find_client_ptr(boost::udp::endpoint const &address) const;
 
-	void _sendCreate( ClientInfo const &client );
+	void _sendEnvironment(ClientInfo &client);
 
-	void _sendUpdate( ClientInfo const &client );
+	// Updates the clients update frame after sending
+	// Which will ensure that no matter where and how many times
+	// this is called the same messaage will never be sent more than once
+	void _sendCreate(ClientInfo &client);
 
-	void _sendDraw( boost::udp::endpoint const &endpoint );
+	void _sendUpdate(ClientInfo &client);
 
-	void _sendSwap( boost::udp::endpoint const &endpoint );
-
-	void _sendOuput(boost::udp::endpoint const &endpoint);
+	void _sendOuput(ClientInfo &client);
 
 	void _sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg);
 
 	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
 
-	void _waitCreate( void );
+	/// @brief blocks till all the clients have are in state
+	/// @param cs state which the clients should be in
+	/// @param timelimit maximum time in ms to wait before returning
+	/// 0 or negative means no timelimit
+	/// @return true if state was changed, false if timelimit expired
+	bool _block_till_state(CLIENT_STATE cs, double timelimit = 0);
 
-	/// Returns when all the clients are ready for an update message
-	void _waitUpdate( void );
-
-	/// Returns when all the clients are ready for an draw message
-	void _waitDraw( void );
-
-	/// Returns when all the clients are ready for an swap message
-	void _waitSwap( void );
+	bool _rendering( void );
 
 	boost::asio::io_service _io_service;
 	boost::udp::socket _socket;
@@ -151,12 +162,10 @@ private :
 	/// Create MSGs
 	std::vector< std::pair<uint32_t, Message> > _msg_creates;
 
-	ClientList _output_receivers;
-
 	uint32_t _frame;
+	uint32_t _update_frame;
 
 	uint32_t _n_log_messages;
-	bool _receiving_log_messages;
 	std::vector<vl::LogMessage> _new_log_messages;
 
 };	// class Server

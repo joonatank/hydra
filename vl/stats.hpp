@@ -62,7 +62,7 @@ public :
 	 */
 	void logRenderingTime( double time );
 
-	void logWaitSwapTime( double time );
+	void logWaitDrawDoneTime( double time );
 
 	void logWaitDrawTime( double time );
 
@@ -105,9 +105,9 @@ private :
 	StatElem _frame_time;
 	StatElem _update_time;
 	StatElem _step_time;
-	StatElem _wait_swap_time;
-	StatElem _wait_draw_time;
 	StatElem _wait_update_time;
+	StatElem _wait_draw_time;
+	StatElem _wait_draw_done_time;
 	double _init_time;
 
 };	// class Stats

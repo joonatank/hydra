@@ -63,7 +63,9 @@ vl::Renderer::~Renderer(void)
 	{ delete *iter; }
 	_windows.clear();
 
-	_root->getNative()->destroySceneManager( _ogre_sm );
+	// Shouldn't be necessary anymore, if _root handles destruction cleanly
+	if( _root && _ogre_sm )
+	{ _root->getNative()->destroySceneManager( _ogre_sm ); }
 	_ogre_sm = 0;
 
 	_root.reset();

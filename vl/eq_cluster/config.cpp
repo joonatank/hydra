@@ -153,6 +153,13 @@ vl::Config::init( void )
 
 	_game_manager->getStats().logInitTime( (double(timer.getMicroseconds()))/1e3 );
 	_stats_timer.reset();
+
+	// TODO this should block till both slaves and local renderer are ready
+	// Problematic as this does not take into account clients that are started
+	// later than this function is ran.
+//	std::clog << "blocking till slave clients are ready." << std::endl;
+//	_server->block_till_initialised();
+	_server->poll();
 }
 
 void
@@ -170,6 +177,8 @@ void
 vl::Config::render( void )
 {
 	Ogre::Timer timer;
+
+	assert(_server);
 
 	// Process a time step in the game
 	// New event interface
@@ -189,8 +198,8 @@ vl::Config::render( void )
 	// TODO separate stats for rendering slaves and local
 	timer.reset();
 	/// Render the scene
-	_server->render(_game_manager->getStats());
-	
+	_server->update(_game_manager->getStats());
+	bool rendering = _server->start_draw(_game_manager->getStats());
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
@@ -198,11 +207,18 @@ vl::Config::render( void )
 		_renderer->swap();
 		_renderer->capture();
 	}
+	if(rendering)
+	{ _server->finish_draw(_game_manager->getStats()); }
+	
 	_game_manager->getStats().logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
 	timer.reset();
 
+	// Poll after updating the drawables
+	_server->poll();
+
+
 	// TODO where the receive input messages should be?
-	_receiveMessages();
+	_handleMessages();
 
 	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
 
@@ -260,6 +276,8 @@ vl::Config::_updateServer( void )
 			_server->logMessage( log->getMessage(_server->nLoggedMessages()) );
 		}
 	}
+
+	_server->poll();
 }
 
 void
@@ -577,7 +595,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 
 /// Event Handling
 void
-vl::Config::_receiveMessages( void )
+vl::Config::_handleMessages( void )
 {
 	// Check local messages, pushed there by callbacks
 	while( messages() )
@@ -585,8 +603,6 @@ vl::Config::_receiveMessages( void )
 		vl::cluster::Message msg = popMessage();
 		_handleMessage(msg);
 	}
-
-	_server->receiveMessages();
 
 	// TODO this should use the same callback system as Renderer
 	while( _server->messages() )

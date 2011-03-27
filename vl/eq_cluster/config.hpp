@@ -125,8 +125,7 @@ protected :
 	/// Events
 	void _createQuitEvent( void );
 
-	void _receiveMessages( void );
-
+	void _handleMessages( void );
 	void _handleMessage(vl::cluster::Message &msg);
 	void _handleEventMessage(vl::cluster::Message &msg);
 	void _handleCommandMessage(vl::cluster::Message &msg);

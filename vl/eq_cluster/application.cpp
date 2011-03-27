@@ -223,7 +223,8 @@ vl::Application::run( void )
 			_slave_client->mainloop();
 
 			// TODO add sleep
-			vl::msleep(1);
+			if( !_slave_client->isRendering() )
+			{ vl::msleep(1); }
 		}
 
 		// TODO add clean exit

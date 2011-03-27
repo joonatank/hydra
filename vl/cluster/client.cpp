@@ -36,7 +36,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	: _io_service()
 	, _socket( _io_service )
 	, _master()
-	, _state(CS_UNDEFINED)
+	, _state()
 	, _renderer(rend)
 {
 	std::cout << "vl::cluster::Client::Client : Connecting to host "
@@ -65,8 +65,11 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	std::cout << "vl::cluster::Client::Client : Receive Buffer size = "
 		<< buf_size.value() << "." << std::endl;
 
-	// Request updates as soon as created.
-	_state = CS_REQ;
+	// Needs to sent the request as soon as possible
+	assert( !_state.environment );
+	Message msg( MSG_REG_UPDATES );
+	sendMessage(msg);
+	_request_timer.reset();
 }
 
 vl::cluster::Client::~Client( void )
@@ -81,7 +84,13 @@ vl::cluster::Client::~Client( void )
 bool
 vl::cluster::Client::isRunning(void)
 {
-	return _state != CS_SHUTDOWN;
+	return !_state.shutdown;
+}
+
+bool 
+vl::cluster::Client::isRendering(void)
+{
+	return _state.rendering;
 }
 
 void
@@ -127,7 +136,7 @@ vl::cluster::Client::mainloop(void)
 	// Uses the timer so that the request is sent only so often
 	// TODO replace this with a more general purpose send till received
 	// blocking function
-	if( _state == CS_REQ  && _request_timer.getMilliseconds() > 100 )
+	if( !_state.environment && _request_timer.getMilliseconds() > 100 )
 	{
 		Message msg( MSG_REG_UPDATES );
 		sendMessage(msg);
@@ -160,8 +169,8 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
 			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
-			assert( _state == CS_REQ );
-			_state = CS_ENV;
+			assert( !_state.environment );
+			_state.environment = true;
 			assert(_renderer.get());
 
 			// Deserialize the environment settings
@@ -180,24 +189,65 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 		case vl::cluster::MSG_SHUTDOWN:
 		{
 			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
-			_state = CS_SHUTDOWN;
+			_state.shutdown = true;
 			_renderer.reset();
 		}
 		break;
 
+		case vl::cluster::MSG_FRAME_START :
+		{
+			Message msg(MSG_SG_UPDATE_READY);
+			assert( !_state.rendering );
+			assert( _state.wants_render );
+			_state.rendering = true;
+			_state.rendering_state = CS_UPDATE_READY;
+			sendMessage(msg);
+		}
+		break;
+
+		case vl::cluster::MSG_SG_UPDATE :
+		{
+			assert(_renderer.get());
+			_state.rendering_state = CS_UPDATE;
+			_renderer->handleMessage(msg);
+			Message msg(MSG_DRAW_READY);
+			sendMessage(msg);
+		}
+		break;
+		
 		case vl::cluster::MSG_DRAW :
 		{
-			_state = CS_DRAW;
+			_state.rendering_state = CS_DRAW;
 			assert(_renderer.get());
 			_renderer->draw();
 			_renderer->swap();
 			_renderer->capture();
+
+			// Done
+			_state.rendering_state = CS_DRAW_DONE;
+			_state.rendering = false;
+			Message msg(MSG_DRAW_DONE);
+			sendMessage(msg);
 		}
 		break;
 
 		case vl::cluster::MSG_ACK:
 			break;
 
+		case vl::cluster::MSG_PROJECT :
+		{
+			assert( !_state.project );
+			_state.project = true;
+			assert(_renderer.get());
+			_renderer->handleMessage(msg);
+
+			// request rendering messages when initialised
+			Message msg(MSG_REG_RENDERING);
+			_state.wants_render = true;
+			sendMessage(msg);
+		}
+		break;
+		
 		default:
 		{
 			assert(_renderer.get());
