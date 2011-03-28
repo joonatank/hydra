@@ -44,12 +44,11 @@ add_executable( angles_to_quaternion
 target_link_libraries( angles_to_quaternion ${HYDRA_LIBRARIES} )
 
 # These should not need to link to anything else than boost
-add_executable(timestamp_client timestamp_client.cpp)
+add_executable(timestamp_client timestamp_client.cpp timer.hpp)
+target_link_libraries( timestamp_client ${Boost_LIBRARIES} )
 
-target_link_libraries( timestamp_client ${HYDRA_LIBRARIES} )
-
-add_executable(timestamp_server timestamp_server.cpp)
-target_link_libraries( timestamp_server ${HYDRA_LIBRARIES} )
+add_executable(timestamp_server timestamp_server.cpp timer.hpp)
+target_link_libraries( timestamp_server ${Boost_LIBRARIES} )
 
 # install
 # install( TARGETS renderer fake_tracking_server DESTINATION ./ )

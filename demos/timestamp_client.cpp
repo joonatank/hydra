@@ -10,6 +10,8 @@
 
 #include <deque>
 
+#include "timer.hpp"
+
 namespace po = boost::program_options;
 namespace asio = boost::asio;
 
@@ -48,10 +50,11 @@ public :
 			::memcpy(&buf[0], &MSG_REG_TIMESTAMP, sizeof(MSG_REG_TIMESTAMP));
 			size_t pos = sizeof(MSG_REG_TIMESTAMP);
 			buf[pos] = (char)(absolute);
-			_send_time.tv_sec = ::GetTickCount()/1000;
-			_send_time.tv_usec = 1000*(::GetTickCount()%1000);
+			_send_time = vl::get_system_time();
 			_socket.send_to( boost::asio::buffer(buf), _master );
 		}
+
+		vl::timer send_timer;
 
 		bool ready = false;
 		while( !ready )
@@ -64,7 +67,7 @@ public :
 				_messages.pop_front();
 				uint32_t typ = 0;
 				char absolute;
-				timeval time;
+				vl::time time;
 				size_t pos = 0;
 				::memcpy(&typ, &msg[0]+pos, sizeof(typ));
 				pos += sizeof(typ);
@@ -77,16 +80,15 @@ public :
 
 					os << "Message TIMESTAMP : ";
 					if( (bool)(absolute) )
-					{ 
-						timeval diff;
-						diff.tv_sec = time.tv_sec - _send_time.tv_sec;
-						diff.tv_usec = time.tv_usec - time.tv_usec;
-						os << "absolute time = " << time.tv_sec << "s " << time.tv_usec << "us." << " : difference to send time = " 
-							<< diff.tv_sec << "s " << diff.tv_usec << "us."; 
+					{
+						vl::time diff = time - _send_time;
+						os << "absolute time = " << time << " waited for time from server for " 
+							<< send_timer.getTime() << "s." << std::endl
+							<< "Difference between client send and server timestamp = " 
+							<< diff << std::endl;
 					}
 					else
-					{ os << "simulation time = " << time.tv_sec << "s " << time.tv_usec << "us."; }
-					os << std::endl;
+					{ os << "simulation time = " << time << std::endl; }
 
 					ready = true;
 				}
@@ -112,7 +114,7 @@ public :
 	}
 
 private :
-	timeval _send_time;
+	vl::time _send_time;
 	std::deque< std::vector<char> > _messages;
 	asio::io_service _io_service;
 	udp::socket _socket;

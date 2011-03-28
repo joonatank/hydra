@@ -12,6 +12,8 @@
 
 #include <iostream>
 
+#include "timer.hpp"
+
 namespace po = boost::program_options;
 namespace asio = boost::asio;
 
@@ -32,7 +34,7 @@ namespace asio = boost::asio;
  *	TIME is a timeval, measured from the CPU ticks so it will only change on reboot
  *	timeval struct contains two 32-bit? (long) integers, seconds and microseconds
  *
- *	If ABOSULTE is requested time is measured since reboot
+ *	If ABOSULTE is requested time is measured since the system was rebooted
  *	If relative is requested time is measured since simulation start
  *
  *	Reasons for abosolute and relative
@@ -65,10 +67,7 @@ public :
 	TimestampServer(uint16_t port)
 		: _io_service()
 		, _socket(_io_service, udp::endpoint(udp::v4(), port))
-	{
-		_start_time.tv_sec = ::GetTickCount()/1000;
-		_start_time.tv_sec = 1000*(::GetTickCount()%1000);
-	}
+	{}
 
 	void poll(void)
 	{
@@ -116,33 +115,24 @@ public :
 
 	void sendTimestamp(udp::endpoint const &endpoint, bool absolute)
 	{
-		// Construct the message
-		// TODO move to using high resolution timers, 
-		// because we need microsecond accuracy
-		uint32_t ticks = ::GetTickCount();
-		timeval tv;
-		tv.tv_sec = ticks/1000;
-		tv.tv_usec = 1000*(ticks%1000);
-
-		std::vector<char> buf(sizeof(MSG_TIMESTAMP)+1+sizeof(timeval));
+		std::vector<char> buf(sizeof(MSG_TIMESTAMP)+1+sizeof(vl::time));
 		::memcpy( &buf[0], &MSG_TIMESTAMP, sizeof(MSG_TIMESTAMP) );
 		size_t pos = sizeof(MSG_TIMESTAMP);
 		if( absolute )
 		{
 			buf[pos] = (char)(1);
 			pos++;
-			::memcpy( &buf[0]+pos, &tv, sizeof(tv) );
-			pos += sizeof(tv);
+			vl::time t = vl::get_system_time();
+			::memcpy( &buf[0]+pos, &t, sizeof(t) );
+			pos += sizeof(t);
 		}
 		else
 		{
 			buf[pos] = (char)0;
 			pos++;
-			timeval time;
-			time.tv_sec = tv.tv_sec - _start_time.tv_sec;
-			time.tv_usec = tv.tv_usec - _start_time.tv_usec;
-			::memcpy( &buf[0]+pos, &time, sizeof(time) );
-			pos += sizeof(time);
+			vl::time t = _start_timer.getTime();
+			::memcpy( &buf[0]+pos, &t, sizeof(t) );
+			pos += sizeof(t);
 		}
 
 		std::cout << "sending message = ";
@@ -162,7 +152,7 @@ public :
 private:
 	asio::io_service _io_service;
 	udp::socket _socket;
-	timeval _start_time;
+	vl::timer _start_timer;
 };
 
 struct Options
@@ -219,6 +209,8 @@ int main(int argc, char **argv)
 
 	if( !options.parse_options(argc, argv) )
 	{ return -1; }
+
+	std::cout << "Time accuracy is " << vl::get_system_time_accuracy() << " microseconds." << std::endl;
 
 	TimestampServer server(options.port);
 	while(true)
