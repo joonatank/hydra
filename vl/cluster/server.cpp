@@ -14,8 +14,7 @@
 #include "logger.hpp"
 
 vl::cluster::Server::Server( uint16_t const port )
-	: _socket(_io_service
-	, boost::udp::endpoint(boost::udp::v4(), port))
+	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _frame(1)
 	, _update_frame(1)
 	, _n_log_messages(0)

@@ -12,8 +12,6 @@
 #include "message.hpp"
 #include "states.hpp"
 
-//#include "session.hpp"
-
 // Necessary for the Renderer RefPtr
 #include "typedefs.hpp"
 

@@ -204,12 +204,15 @@ vl::Config::render( void )
 	if( _renderer.get() )
 	{
 		_renderer->draw();
-		_renderer->swap();
-		_renderer->capture();
 	}
 	if(rendering)
 	{ _server->finish_draw(_game_manager->getStats()); }
-	
+	// Finish local renderer
+	if( _renderer.get() )
+	{
+		_renderer->swap();
+		_renderer->capture();
+	}
 	_game_manager->getStats().logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
 	timer.reset();
 
