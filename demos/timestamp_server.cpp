@@ -17,7 +17,10 @@
 namespace po = boost::program_options;
 namespace asio = boost::asio;
 
-/** Timestamp messages 
+bool g_verbose;
+#define DLOG(str) if(g_verbose) std::cout << str << std::endl;
+
+/** Timestamp messages
  *
  *	MSG_REG_TIMESTAMP
  *	Request a timestamp from server, timestamp is sent back to the client
@@ -50,7 +53,7 @@ namespace asio = boost::asio;
  *	Used to bounce the message from a client
  *	[MSG_TIMESTAM_BOUNCE | ABSOLUTE | TIME]
  *	4 bytes (uint32_t), 1 byte, 8 bytes (pair of uint32_t, timeval)
- *	Client sends the same message as the one server sent 
+ *	Client sends the same message as the one server sent
  *	Used to measure round trip time.
  */
 const uint32_t MSG_REG_TIMESTAMP = 102;
@@ -78,7 +81,7 @@ public :
 			udp::endpoint sender_endpoint;
 			size_t length = _socket.receive_from(
 				boost::asio::buffer(data, BUF_SIZE), sender_endpoint);
-		
+
 			if( length >= sizeof(uint32_t) + sizeof(char) )
 			{
 				uint32_t type;
@@ -90,12 +93,12 @@ public :
 				pos++;
 				if( type == MSG_REG_TIMESTAMP )
 				{
-					std::cout << "Received MSG_REG_TIMESTAMP" << std::endl;
+					DLOG("Received MSG_REG_TIMESTAMP")
 					sendTimestamp(sender_endpoint, bool(absolute));
 				}
 				else if( type == MSG_TIMESTAMP_BOUNCE )
 				{
-					std::cout << "Received MSG_TIMESTAMP_BOUNCE" << std::endl;
+					DLOG("Received MSG_TIMESTAMP_BOUNCE")
 					uint64_t time;
 					::memcpy(&time, data+pos, sizeof(time));
 					pos += sizeof(time);
@@ -115,6 +118,7 @@ public :
 
 	void sendTimestamp(udp::endpoint const &endpoint, bool absolute)
 	{
+		DLOG("Sending TimeStamp")
 		std::vector<char> buf(sizeof(MSG_TIMESTAMP)+1+sizeof(vl::time));
 		::memcpy( &buf[0], &MSG_TIMESTAMP, sizeof(MSG_TIMESTAMP) );
 		size_t pos = sizeof(MSG_TIMESTAMP);
@@ -135,10 +139,11 @@ public :
 			pos += sizeof(t);
 		}
 
-		std::cout << "sending message = ";
+		std::stringstream ss;
+		ss << "sending message = ";
 		for(size_t i = 0; i < buf.size(); ++i )
-			std::cout << std::hex << (short)(buf[i]);
-		std::cout << std::endl;
+			ss << std::hex << (short)(buf[i]);
+		DLOG(ss.str());
 
 		// Send timestamp back
 		_socket.send_to(boost::asio::buffer(buf), endpoint);
@@ -209,6 +214,7 @@ int main(int argc, char **argv)
 
 	if( !options.parse_options(argc, argv) )
 	{ return -1; }
+	g_verbose = options.verbose;
 
 	std::cout << "Time accuracy is " << vl::get_system_time_accuracy() << " microseconds." << std::endl;
 

@@ -21,6 +21,10 @@ const uint32_t MSG_TIMESTAMP_BOUNCE = 104;
 
 using asio::ip::udp;
 
+bool g_verbose;
+
+#define DLOG(str) if(g_verbose) std::cout << str << std::endl;
+
 class TimestampClient
 {
 public :
@@ -45,6 +49,7 @@ public :
 	/// Will block till the request is successful
 	void request_time(std::ostream &os, bool absolute)
 	{
+		DLOG("Client::requesting time");
 		{
 			std::vector<char> buf(sizeof(MSG_REG_TIMESTAMP)+sizeof(char));
 			::memcpy(&buf[0], &MSG_REG_TIMESTAMP, sizeof(MSG_REG_TIMESTAMP));
@@ -62,6 +67,7 @@ public :
 			receive_msgs();
 			while( !_messages.empty() )
 			{
+				DLOG("Client has new messages");
 				std::vector<char> msg = _messages.front();
 
 				_messages.pop_front();
@@ -82,9 +88,9 @@ public :
 					if( (bool)(absolute) )
 					{
 						vl::time diff = time - _send_time;
-						os << "absolute time = " << time << " waited for time from server for " 
+						os << "absolute time = " << time << " waited for time from server for "
 							<< send_timer.getTime() << "s." << std::endl
-							<< "Difference between client send and server timestamp = " 
+							<< "Difference between client send and server timestamp = "
 							<< diff << std::endl;
 					}
 					else
@@ -106,7 +112,7 @@ public :
 		{
 			std::vector<char> recv_buf( _socket.available() );
 			boost::system::error_code error;
-			size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
+			_socket.receive_from( boost::asio::buffer(recv_buf),
 				_master, 0, error );
 
 			_messages.push_back(recv_buf);
@@ -124,6 +130,10 @@ private :
 
 struct Options
 {
+	Options(void)
+		: port(0), verbose(false)
+	{}
+
 	uint16_t port;
 	bool verbose;
 	std::string hostname;
@@ -188,6 +198,7 @@ int main(int argc, char **argv)
 
 	if( !options.parse_options(argc, argv) )
 	{ return -1; }
+	g_verbose = options.verbose;
 
 	TimestampClient client(options.hostname, options.port);
 
