@@ -10,7 +10,9 @@
 
 #include <deque>
 
-#include "timer.hpp"
+#include "base/timer.hpp"
+/// Used for gathering the timings and printing the avarage at finish
+#include "base/report.hpp"
 
 namespace po = boost::program_options;
 namespace asio = boost::asio;
@@ -61,6 +63,9 @@ public :
 
 		vl::timer send_timer;
 
+		vl::Number<vl::time> &wait_times = _report.get_number("wait time");
+		vl::Number<vl::time> &time_differences = _report.get_number("difference");
+
 		bool ready = false;
 		while( !ready )
 		{
@@ -84,17 +89,23 @@ public :
 					::memcpy(&time, &msg[0]+pos, sizeof(time));
 					pos += sizeof(time);
 
-					os << "Message TIMESTAMP : ";
 					if( (bool)(absolute) )
 					{
-						vl::time diff = time - _send_time;
+						wait_times.push(send_timer.getTime());
+						time_differences.push(time - _send_time);
+
+						/*
 						os << "absolute time = " << time << " waited for time from server for "
 							<< send_timer.getTime() << "s." << std::endl
 							<< "Difference between client send and server timestamp = "
 							<< diff << std::endl;
+						*/
 					}
 					else
-					{ os << "simulation time = " << time << std::endl; }
+					{
+						os << "Message TIMESTAMP : ";
+						os << "simulation time = " << time << std::endl;
+					}
 
 					ready = true;
 				}
@@ -119,12 +130,21 @@ public :
 		}
 	}
 
+	void report(std::ostream &os)
+	{
+		_report.finish();
+		os << _report << std::endl;
+	}
+
 private :
 	vl::time _send_time;
 	std::deque< std::vector<char> > _messages;
 	asio::io_service _io_service;
 	udp::socket _socket;
 	udp::endpoint _master;
+
+	/// Performance report
+	vl::Report<vl::time> _report;
 
 };
 
@@ -209,6 +229,8 @@ int main(int argc, char **argv)
 	{
 		client.request_time(std::cout, true);
 	}
+
+	client.report(std::cout);
 
 	return 0;
 }

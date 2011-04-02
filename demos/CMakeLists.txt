@@ -44,10 +44,15 @@ add_executable( angles_to_quaternion
 target_link_libraries( angles_to_quaternion ${HYDRA_LIBRARIES} )
 
 # These should not need to link to anything else than boost
-add_executable(timestamp_client timestamp_client.cpp timer.hpp)
+set( SRC
+	${vl_SOURCE_DIR}/vl/base/timer.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	${vl_SOURCE_DIR}/vl/base/report.hpp
+	)
+add_executable(timestamp_client timestamp_client.cpp ${SRC})
 target_link_libraries( timestamp_client ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
-add_executable(timestamp_server timestamp_server.cpp timer.hpp)
+add_executable(timestamp_server timestamp_server.cpp ${SRC})
 target_link_libraries( timestamp_server ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
 # install
