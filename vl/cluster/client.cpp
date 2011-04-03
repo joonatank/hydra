@@ -23,7 +23,7 @@ vl::cluster::ClientMsgCallback::ClientMsgCallback(vl::cluster::Client *own)
 	assert(owner);
 }
 
-void 
+void
 vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
 {
 	assert(owner);
@@ -31,7 +31,7 @@ vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
 }
 
 /// ------------------------------ Client -------------------------------------
-vl::cluster::Client::Client( char const *hostname, uint16_t port, 
+vl::cluster::Client::Client( char const *hostname, uint16_t port,
 							 vl::RendererInterfacePtr rend )
 	: _io_service()
 	, _socket( _io_service )
@@ -87,7 +87,7 @@ vl::cluster::Client::isRunning(void)
 	return !_state.shutdown;
 }
 
-bool 
+bool
 vl::cluster::Client::isRendering(void)
 {
 	return _state.rendering;
@@ -136,7 +136,7 @@ vl::cluster::Client::mainloop(void)
 	// Uses the timer so that the request is sent only so often
 	// TODO replace this with a more general purpose send till received
 	// blocking function
-	if( !_state.environment && _request_timer.getMilliseconds() > 100 )
+	if( !_state.environment && double(_request_timer.elapsed()) > 0.1 )
 	{
 		Message msg( MSG_REG_UPDATES );
 		sendMessage(msg);
@@ -168,21 +168,23 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 	{
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
-			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT message" << std::endl;
-			assert( !_state.environment );
-			_state.environment = true;
-			assert(_renderer.get());
+			/// Single environment supported
+			if( !_state.environment )
+			{
+				_state.environment = true;
+				assert(_renderer.get());
 
-			// Deserialize the environment settings
-			vl::EnvSettingsRefPtr env( new vl::EnvSettings );
-			// TODO needs a ByteData object for Environment settings
-			vl::SettingsByteData data;
-			data.copyFromMessage(&msg);
- 			vl::cluster::ByteStream stream(&data);
-			stream >> env;
-			// Only single environment settings should be in the message
-			assert( 0 == msg.size() );
-			_renderer->init(env);
+				// Deserialize the environment settings
+				vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+				// TODO needs a ByteData object for Environment settings
+				vl::SettingsByteData data;
+				data.copyFromMessage(&msg);
+				vl::cluster::ByteStream stream(&data);
+				stream >> env;
+				// Only single environment settings should be in the message
+				assert( 0 == msg.size() );
+				_renderer->init(env);
+			}
 		}
 		break;
 
@@ -200,7 +202,7 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 			assert( !_state.rendering );
 			assert( _state.wants_render );
 			_state.rendering = true;
-			_state.rendering_state = CS_UPDATE_READY;
+			_state.set_rendering_state(CS_UPDATE_READY);
 			sendMessage(msg);
 		}
 		break;
@@ -208,23 +210,25 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 		case vl::cluster::MSG_SG_UPDATE :
 		{
 			assert(_renderer.get());
-			_state.rendering_state = CS_UPDATE;
+			_state.set_rendering_state(CS_UPDATE);
 			_renderer->handleMessage(msg);
 			Message msg(MSG_DRAW_READY);
 			sendMessage(msg);
 		}
 		break;
-		
+
 		case vl::cluster::MSG_DRAW :
 		{
-			_state.rendering_state = CS_DRAW;
+			/// @todo move drawing to occure only if all the states required are
+			/// set, or should we?
+			_state.set_rendering_state(CS_DRAW);
 			assert(_renderer.get());
 			_renderer->draw();
 			_renderer->swap();
 			_renderer->capture();
 
 			// Done
-			_state.rendering_state = CS_DRAW_DONE;
+			_state.set_rendering_state(CS_DRAW_DONE);
 			_state.rendering = false;
 			Message msg(MSG_DRAW_DONE);
 			sendMessage(msg);
@@ -236,18 +240,21 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 
 		case vl::cluster::MSG_PROJECT :
 		{
-			assert( !_state.project );
-			_state.project = true;
-			assert(_renderer.get());
-			_renderer->handleMessage(msg);
+			/// Only single project is supported, discards the rest
+			if( !_state.project )
+			{
+				_state.project = true;
+				assert(_renderer.get());
+				_renderer->handleMessage(msg);
 
-			// request rendering messages when initialised
-			Message msg(MSG_REG_RENDERING);
-			_state.wants_render = true;
-			sendMessage(msg);
+				// request rendering messages when initialised
+				Message msg(MSG_REG_RENDERING);
+				_state.wants_render = true;
+				sendMessage(msg);
+			}
 		}
 		break;
-		
+
 		default:
 		{
 			assert(_renderer.get());

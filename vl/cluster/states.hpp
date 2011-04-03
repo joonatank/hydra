@@ -6,6 +6,8 @@
 #ifndef VL_CLUSTER_STATES_HPP
 #define VL_CLUSTER_STATES_HPP
 
+#include <stdint.h>
+
 namespace vl
 {
 
@@ -13,16 +15,16 @@ namespace cluster
 {
 
 /// The rendering state that the client is in rendering loop
-/// TODO should be divided to Rendering state and client state
+/// Flags
 enum CLIENT_STATE
 {
-	CS_UNDEFINED,
-	CS_UPDATE_READY,// Ready to receive an update
-	CS_UPDATE,		// NOT IN USE, Update has been sent
-	CS_UPDATE_DONE,	// NOT IN USE, An update has been completed
-	CS_DRAW_READY,
-	CS_DRAW,		// Rendering loop : Draw has been sent
-	CS_DRAW_DONE,
+	CS_CLEAR = 0,
+	CS_UPDATE_READY = 1<<0,	// Ready to receive an update
+	CS_UPDATE		= 1<<1,	// NOT IN USE, Update has been sent
+	CS_UPDATE_DONE	= 1<<2,	// NOT IN USE, An update has been completed
+	CS_DRAW_READY	= 1<<3,
+	CS_DRAW			= 1<<4,	// Rendering loop : Draw has been sent
+	CS_DRAW_DONE	= 1<<5,
 };
 
 /// Holds a compound state and allows complex queries
@@ -35,11 +37,21 @@ struct ClientState
 		: environment(false), project(false), rendering(false)
 		, wants_render(false), wants_output(false)
 		, has_init(false), frame(0), update_frame(0)
-		, rendering_state(CS_UNDEFINED), shutdown(false)
+		, rendering_state(CS_CLEAR), shutdown(false)
 	{}
 
 	// TODO implement print
 	// TODO implement comparison
+
+	void clear_rendering_state(void)
+	{ rendering_state = CS_CLEAR; }
+
+	/// @brief check if client is in a particular state
+	bool has_rendering_state(CLIENT_STATE cs) const
+	{ return (rendering_state & cs) == cs; }
+
+	void set_rendering_state(CLIENT_STATE cs)
+	{ rendering_state = rendering_state | cs; }
 
 	// Has environment config
 	bool environment;
@@ -58,7 +70,7 @@ struct ClientState
 	// Last received update
 	uint32_t update_frame;
 	// Rendering state, only valid if rendering is true
-	CLIENT_STATE rendering_state;
+	uint32_t rendering_state;
 	bool shutdown;
 };
 
@@ -67,16 +79,8 @@ char const *getStateAsString(CLIENT_STATE cs)
 {
 	switch(cs)
 	{
-	case CS_UNDEFINED :
-		return "CS_UNDEFINED";
-//	case CS_REQ :
-//		return "CS_REQ";
-//	case CS_ENV :
-//		return "CS_ENV";
-//	case CS_PROJ :
-//		return "CS_PROJ";
-//	case CS_INIT :
-//		return "CS_INIT";
+	case CS_CLEAR :
+		return "CS_CLEAR";
 	case CS_UPDATE_READY :
 		return "CS_UPDATE_READY";
 	case CS_UPDATE :
@@ -87,8 +91,6 @@ char const *getStateAsString(CLIENT_STATE cs)
 		return "CS_DRAW_READY";
 	case CS_DRAW_DONE :
 		return "CS_DRAW_DONE";
-//	case CS_SHUTDOWN :
-//		return "CS_SHUTDOWN";
 	default :
 		return "";
 	}

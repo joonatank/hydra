@@ -222,9 +222,14 @@ vl::Application::run( void )
 		{
 			_slave_client->mainloop();
 
-			// TODO add sleep
+			/// Windows can sleep too long if allowed to
+#ifdef WIN32
 			if( !_slave_client->isRendering() )
 			{ vl::msleep(1); }
+#else
+			/// Linux needs a sleeping in the mainloop
+			vl::msleep(0);
+#endif
 		}
 
 		// TODO add clean exit

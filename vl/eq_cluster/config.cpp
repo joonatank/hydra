@@ -143,8 +143,10 @@ vl::Config::init( void )
 	_createQuitEvent();
 
 	std::cout << vl::TRACE << "vl::Config:: updating server" << std::endl;
+	_server->poll();
 	_updateFrameMsgs();
 	_updateServer();
+
 	if(_renderer.get())
 	{
 		_renderer->sendMessage(_msg_create);
@@ -176,19 +178,19 @@ vl::Config::exit(void)
 void
 vl::Config::render( void )
 {
-	Ogre::Timer timer;
+	vl::timer timer;
 
 	assert(_server);
 
 	// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
-	_game_manager->getStats().logFrameProcessingTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logFrameProcessingTime( (double(timer.elapsed()))*1e3 );
 
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
-	_game_manager->getStats().logStepTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logStepTime( ((double)timer.elapsed())*1e3 );
 
 	/// Provide the updates to slaves
 	_updateFrameMsgs();
@@ -206,28 +208,31 @@ vl::Config::render( void )
 		_renderer->draw();
 	}
 	if(rendering)
-	{ _server->finish_draw(_game_manager->getStats()); }
+	{
+		vl::time limit(1, 0);
+		_server->finish_draw(_game_manager->getStats(), limit);
+	}
+
 	// Finish local renderer
 	if( _renderer.get() )
 	{
 		_renderer->swap();
 		_renderer->capture();
 	}
-	_game_manager->getStats().logRenderingTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logRenderingTime( ((double)timer.elapsed())*1e3 );
 	timer.reset();
 
 	// Poll after updating the drawables
 	_server->poll();
 
-
 	// TODO where the receive input messages should be?
 	_handleMessages();
 
-	_game_manager->getStats().logEventProcessingTime( (double(timer.getMicroseconds()))/1e3 );
+	_game_manager->getStats().logEventProcessingTime(((double)timer.elapsed())*1e3);
 
 	// Update statistics every 10 seconds
 	// @todo time limit should be configurable
-	if( _stats_timer.getMilliseconds() > 10e3 )
+	if( _stats_timer.elapsed() > vl::time(10) )
 	{
 		_game_manager->getStats().update();
 		_stats_timer.reset();

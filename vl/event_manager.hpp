@@ -87,9 +87,9 @@ private :
 
 	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod );
 
-	void _keyDown( OIS::KeyCode kc );
+	bool _keyDown( OIS::KeyCode kc );
 
-	void _keyUp( OIS::KeyCode kc );
+	bool _keyUp( OIS::KeyCode kc );
 
 /// Data
 private :
@@ -98,7 +98,7 @@ private :
 	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
 
 	vl::FrameTrigger *_frame_trigger;
-	
+
 	KEY_MOD _key_modifiers;
 
 	std::vector<OIS::KeyCode> _keys_down;

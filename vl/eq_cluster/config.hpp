@@ -152,10 +152,12 @@ protected :
 	vl::EnvSettingsRefPtr _env;
 
 	vl::cluster::ServerRefPtr _server;
+	/// timer used to see how much delay there is with server updates
+	vl::timer _server_timer;
 
 	vl::gui::GUI *_gui;
 
-	Ogre::Timer _stats_timer;
+	vl::timer _stats_timer;
 
 	bool _running;
 
@@ -166,7 +168,7 @@ protected :
 	vl::cluster::Message _msg_create;
 	vl::cluster::Message _msg_update;
 	vl::cluster::Message _msg_init;
-	
+
 	// callback provided messages
 	std::deque<vl::cluster::Message> _messages;
 

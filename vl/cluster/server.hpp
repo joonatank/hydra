@@ -16,6 +16,8 @@
 
 #include "logger.hpp"
 
+#include "base/timer.hpp"
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -47,7 +49,7 @@ public:
 
 	void poll(void);
 
-	void block_till_initialised(double timelimit = 0);
+	void block_till_initialised(vl::time const &limit = vl::time());
 
 	/// Update the SceneGraph on slaves
 	/// Blocks till they are updated
@@ -59,7 +61,7 @@ public:
 
 	/// Finish drawing on every slave
 	/// Blocks till done
-	void finish_draw(vl::Stats &stats, double timelimit = 0);
+	void finish_draw(vl::Stats &stats, vl::time const &limit = vl::time());
 
 	// TODO this should block till all the clients have shutdown
 	void shutdown( void );
@@ -108,10 +110,12 @@ public:
 	virtual uint32_t nLoggedMessages(void) const;
 
 private :
+	void _handle_message(Message &msg, ClientInfo &client);
+
 	ClientInfo &_add_client( boost::udp::endpoint const &endpoint );
 
 	bool _has_client(boost::udp::endpoint const &address) const;
-	
+
 	ClientInfo &_find_client(boost::udp::endpoint const &address);
 
 	ClientInfo *_find_client_ptr(boost::udp::endpoint const &address);
@@ -131,14 +135,14 @@ private :
 
 	void _sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg);
 
-	void _handleAck( boost::udp::endpoint const &client, MSG_TYPES ack_to );
+	void _handle_ack(ClientInfo &client, MSG_TYPES ack_to);
 
 	/// @brief blocks till all the clients have are in state
 	/// @param cs state which the clients should be in
 	/// @param timelimit maximum time in ms to wait before returning
-	/// 0 or negative means no timelimit
+	/// 0 means no timelimit
 	/// @return true if state was changed, false if timelimit expired
-	bool _block_till_state(CLIENT_STATE cs, double timelimit = 0);
+	bool _block_till_state(CLIENT_STATE cs, vl::time const &limit = vl::time());
 
 	bool _rendering( void );
 

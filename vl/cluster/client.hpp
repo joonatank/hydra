@@ -18,7 +18,7 @@
 // Necessary for the Callback structs
 #include "renderer_interface.hpp"
 
-#include <OGRE/OgreTimer.h>
+#include "base/timer.hpp"
 
 namespace boost
 {
@@ -74,7 +74,7 @@ private :
 
 	ClientState _state;
 
-	Ogre::Timer _request_timer;
+	vl::timer _request_timer;
 
 	vl::RendererInterfacePtr _renderer;
 
