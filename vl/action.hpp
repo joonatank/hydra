@@ -126,8 +126,7 @@ private :
 };	// class BufferActionProxy
 
 /** @class GroupActionProxy
- *	@brief Groups multiple actions together so that they are executed when
- *	ever the group is
+ *	@brief Groups multiple actions together so that they are executed when ever the group is
  */
 class GroupActionProxy : public BasicAction
 {
@@ -136,12 +135,15 @@ public :
 
 	void execute( void );
 
-	void addAction( BasicActionPtr action )
-	{
-		_actions.push_back(action);
-	}
+	void addAction(BasicActionPtr action);
 
-	void remAction( BasicActionPtr action );
+	void remAction(BasicActionPtr action);
+
+	BasicActionPtr getAction(size_t i);
+
+	size_t nActions(void) const;
+
+	bool hasAction(BasicActionPtr action) const;
 
 	static GroupActionProxy *create( void )
 	{ return new GroupActionProxy; }
@@ -163,9 +165,7 @@ private :
 class TimerActionProxy : public BasicAction
 {
 public :
-	TimerActionProxy( void )
-		: _action(0), _clock(10), _time_limit(0)
-	{}
+	TimerActionProxy( void );
 
 	void setAction( BasicActionPtr action )
 	{ _action = action; }
@@ -185,15 +185,7 @@ public :
 	double getTimeLimit( void ) const
 	{ return _time_limit; }
 
-	void execute( void )
-	{
-		double time = _clock.elapsed();
-		if( _action && time > _time_limit )
-		{
-			_action->execute();
-			_clock.reset();
-		}
-	}
+	void execute(void);
 
 	static TimerActionProxy *create( void )
 	{ return new TimerActionProxy; }

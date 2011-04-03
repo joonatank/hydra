@@ -91,7 +91,7 @@ public :
 
 					if( (bool)(absolute) )
 					{
-						wait_times.push(send_timer.getTime());
+						wait_times.push(send_timer.elapsed());
 						time_differences.push(time - _send_time);
 
 						/*
