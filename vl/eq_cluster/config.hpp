@@ -31,7 +31,7 @@
 #include <OIS/OISJoyStick.h>
 
 // Necessary for timing statistics
-#include <OGRE/OgreTimer.h>
+#include "base/timer.hpp"
 
 namespace vl
 {

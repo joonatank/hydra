@@ -93,19 +93,29 @@ vl::Config::~Config( void )
 	{ delete *iter; }
 }
 
+/// @todo this is taking way too long
+/// @todo server should be running and responding to messages at the same time
+/// Problem calling Server::poll infrequently through this function will
+/// cause the clients to freeze.
+/// Anyhow it would be much more useful to call Server::poll every 1ms,
+/// for example with interrupts.
 void
 vl::Config::init( void )
 {
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
-	Ogre::Timer timer;
-
+	vl::timer init_timer;
+	vl::timer t;
 	/// @todo most of this should be moved to the constructor, like object
 	/// creation
 	/// sending of initial messages to rendering threads should still be here
 
 	_setEnvironment(_env);
+	std::cout << "Sending Environment took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	_setProject(_settings);
+	std::cout << "Project took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	// Create the player necessary for Trackers
 	vl::PlayerPtr player = _game_manager->createPlayer();
@@ -123,10 +133,19 @@ vl::Config::init( void )
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );
 
+	std::cout << "Registering gui, scene manager and player took : "
+		<<  t.elapsed() << std::endl;
+	t.reset();
+
 	_loadScenes();
+
+	std::cout << "Loading scenes took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	// Create Tracker needs the SceneNodes for mapping
 	_createTracker( _env );
+	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	std::vector<std::string> scripts = _settings.getScripts();
 
@@ -139,6 +158,8 @@ vl::Config::init( void )
 		_game_manager->getReourceManager()->loadResource( scripts.at(i), script_resource );
 		_game_manager->getPython()->executePythonScript( script_resource );
 	}
+	std::cout << "Executing scripts took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	_createQuitEvent();
 
@@ -146,6 +167,8 @@ vl::Config::init( void )
 	_server->poll();
 	_updateFrameMsgs();
 	_updateServer();
+	std::cout << "Updating server took : " <<  t.elapsed() << std::endl;
+	t.reset();
 
 	if(_renderer.get())
 	{
@@ -153,7 +176,12 @@ vl::Config::init( void )
 		_renderer->sendMessage(_msg_init);
 	}
 
-	_game_manager->getStats().logInitTime( (double(timer.getMicroseconds()))/1e3 );
+	std::cout << "Loading Renderer with new created objects took : "
+		<<  t.elapsed() << std::endl;
+	t.reset();
+
+	_game_manager->getStats().logInitTime( ((double)init_timer.elapsed())*1e3 );
+
 	_stats_timer.reset();
 
 	// TODO this should block till both slaves and local renderer are ready
@@ -385,14 +413,18 @@ vl::Config::_createMsgInit(void)
 void
 vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 {
+	vl::timer t;
 	// Send the Environment
 	_sendEnvironment(env);
+	std::cout << "Sending environment to Server took : " << t.elapsed() << std::endl;
+	t.reset();
 
 	// Local renderer needs to be inited rather than send a message
 	if( _renderer.get() )
 	{
 		_renderer->init(env);
 	}
+	std::cout << "Initing Renderer took : " << t.elapsed() << std::endl;
 }
 
 void
@@ -420,30 +452,38 @@ vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
 void
 vl::Config::_sendProject(vl::Settings const &proj)
 {
-	std::cout << vl::TRACE << "vl::Config::_sendProject" << std::endl;
-	assert( _server );
-
+	vl::timer t;
 	vl::SettingsByteData data;
 	vl::cluster::ByteStream stream( &data );
 	stream << proj;
+	std::cout << "Streaming project to ByteData took : " << t.elapsed() << std::endl;
+	t.reset();
 
 	vl::cluster::Message msg( vl::cluster::MSG_PROJECT );
 	data.copyToMessage( &msg );
+	std::cout << "Copy project to message took : " << t.elapsed() << std::endl;
+	t.reset();
 
-	// TODO replace by local setProject
 	_sendMessage(msg);
+	std::cout << "Sending message took : " << t.elapsed() << std::endl;
 }
 
+/// @todo with project message this takes 450ms to complete
+/// because Renderer is damned slow parsing the message.
 void
 vl::Config::_sendMessage(vl::cluster::Message const &msg)
 {
+	vl::timer t;
 	// Send to renderer
 	if(_renderer.get())
 	{ _renderer->sendMessage(msg); }
+	std::cout << "Sending message of size " << sizeof(msg) << "bytes "
+		<< "to Renderer took " << t.elapsed() << std::endl;
 
 	_server->sendMessage(msg);
 }
 
+/// @todo this takes over 1 second to complete which is almost a second too much
 void
 vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 {
@@ -455,6 +495,9 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 	std::cout << vl::TRACE << "Processing " << tracking_files.size() << " tracking files."
 		<< std::endl;
 
+	/// @todo This part is the create time consumer
+	/// Need to use a report to pin point the hog
+	vl::timer t;
 	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
 		 iter != tracking_files.end(); ++iter )
 	{
@@ -465,14 +508,18 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 		vl::TrackerSerializer ser( clients );
 		ser.parseTrackers(resource);
 	}
+	std::cout << "Parsing tracking files took : " << t.elapsed() << std::endl;
 
+	t.reset();
 	// Start the trackers
 	std::cout << vl::TRACE << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
 	for( size_t i = 0; i < clients->getNTrackers(); ++i )
 	{
 		clients->getTracker(i)->init();
 	}
+	std::cout << "Starting trackers took : " << t.elapsed() << std::endl;
 
+	t.reset();
 	// Create Action
 	vl::HeadTrackerAction *action = vl::HeadTrackerAction::create();
 	assert( _game_manager->getPlayer() );
@@ -504,6 +551,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 		tracker->setSensor( 0, sensor );
 		clients->addTracker(tracker);
 	}
+	std::cout << "Creating head trigger took : " << t.elapsed() << std::endl;
 }
 
 void

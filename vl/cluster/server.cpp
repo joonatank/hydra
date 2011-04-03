@@ -245,6 +245,7 @@ vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 void
 vl::cluster::Server::sendProject( const vl::cluster::Message &msg )
 {
+	vl::timer t;
 	_proj_msg.clear();
 	msg.dump(_proj_msg);
 }
@@ -383,7 +384,6 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 		case vl::cluster::MSG_DRAW_READY :
 		{
 			assert( client.state.rendering );
-			assert( client.state.has_rendering_state(CS_UPDATE) );
 			// change the state
 			client.state.set_rendering_state(CS_DRAW_READY);
 		}
@@ -392,7 +392,6 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 		case vl::cluster::MSG_DRAW_DONE :
 		{
 			assert( client.state.rendering );
-			assert( client.state.has_rendering_state(CS_DRAW) );
 			// change the state
 			client.state.set_rendering_state(CS_DRAW_DONE);
 			/// Bit problematic because we can not finish the drawing here
