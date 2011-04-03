@@ -37,6 +37,11 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIR}
 	)
 
+add_executable( test_timer test_timer.cpp
+	${HydraMain_SOURCE_DIR}/base/timer.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	)
+
 #subdirs( spikes )
 
 # NOTE For now removed as we move to using EnvSettings and ProjectSettings

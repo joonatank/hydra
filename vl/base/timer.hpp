@@ -169,15 +169,24 @@ double get_system_time_accuracy(void);
 /// on current machines.
 time get_system_time(void);
 
-/// Class to measure timevals between creation/reset and query
+/// @class timer used to measure timevals between creation/reset and query
 class timer
 {
 public :
+	/// @brief Construct a timer with time set to current time
 	timer(void);
 
+	/// @brief Construct a timer with initial time at some point in the history
+	/// Basicly this adds an initial value for elapsed.
+	/// Useful for timers that are there to restrict events occuring too fast.
+	timer(time const &t);
+
+	/// @brief reset the start time to now
 	void reset(void);
 
-	time getTime(void) const;
+	/// @brief time elapsed since last reset
+	/// @return time between last call to reset and now
+	time elapsed(void) const;
 
 private:
 	time _start_time;   // A point in time
@@ -192,12 +201,18 @@ private:
 inline vl::timer::timer(void )
 { reset(); }
 
+inline vl::timer::timer(time const &t)
+{
+	reset();
+	_start_time -= t;
+}
+
 inline void
 vl::timer::reset(void )
 { _start_time = vl::get_system_time(); }
 
 inline vl::time
-vl::timer::getTime(void) const
+vl::timer::elapsed(void) const
 { return vl::get_system_time() - _start_time; }
 
 

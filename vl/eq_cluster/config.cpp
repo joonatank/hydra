@@ -44,7 +44,7 @@ vl::ConfigMsgCallback::ConfigMsgCallback(vl::Config *own)
 	assert(owner);
 }
 
-void 
+void
 vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
 {
 	assert(owner);
@@ -52,8 +52,8 @@ vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
 }
 
 /// ---------------------------------- Config --------------------------------
-vl::Config::Config( vl::Settings const & settings, 
-					vl::EnvSettingsRefPtr env, 
+vl::Config::Config( vl::Settings const & settings,
+					vl::EnvSettingsRefPtr env,
 					vl::Logger &logger,
 					vl::RendererInterfacePtr rend)
 	: _game_manager( new vl::GameManager(&logger) )
@@ -234,7 +234,7 @@ vl::Config::render( void )
 	}
 }
 
-vl::cluster::Message 
+vl::cluster::Message
 vl::Config::popMessage(void)
 {
 	if( !messages() )
@@ -245,7 +245,7 @@ vl::Config::popMessage(void)
 	return msg;
 }
 
-void 
+void
 vl::Config::pushMessage(vl::cluster::Message const &msg)
 {
 	_messages.push_back(msg);
@@ -288,7 +288,7 @@ vl::Config::_updateRenderer(void)
 {
 	if( !_renderer.get() )
 	{ return; }
-	
+
 	if( !_msg_create.empty() )
 	{ _renderer->sendMessage(_msg_create); }
 
@@ -307,7 +307,7 @@ vl::Config::_updateRenderer(void)
 	}
 }
 
-void 
+void
 vl::Config::_updateFrameMsgs(void)
 {
 	_createMsgCreate();
@@ -344,7 +344,7 @@ vl::Config::_createMsgUpdate(void)
 {
 	// Create SceneGraph updates
 	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
-	
+
 	std::vector<vl::Distributed *>::iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 		++iter )
@@ -364,7 +364,7 @@ void
 vl::Config::_createMsgInit(void)
 {
 	_msg_init = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
-	
+
 	std::vector<vl::Distributed *>::iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 		++iter )
@@ -382,7 +382,7 @@ vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 {
 	// Send the Environment
 	_sendEnvironment(env);
-	
+
 	// Local renderer needs to be inited rather than send a message
 	if( _renderer.get() )
 	{
@@ -429,7 +429,7 @@ vl::Config::_sendProject(vl::Settings const &proj)
 	_sendMessage(msg);
 }
 
-void 
+void
 vl::Config::_sendMessage(vl::cluster::Message const &msg)
 {
 	// Send to renderer
@@ -615,7 +615,7 @@ vl::Config::_handleMessages( void )
 	}
 }
 
-void 
+void
 vl::Config::_handleMessage(vl::cluster::Message &msg)
 {
 	switch( msg.getType() )
@@ -627,7 +627,7 @@ vl::Config::_handleMessage(vl::cluster::Message &msg)
 		case vl::cluster::MSG_COMMAND:
 			_handleCommandMessage(msg);
 			break;
-	
+
 		case vl::cluster::MSG_REG_OUTPUT:
 			// Should not be added as we are using the LogReceiver interface
 			// Problematic as the Remote nodes need this message, but the
@@ -635,12 +635,12 @@ vl::Config::_handleMessage(vl::cluster::Message &msg)
 			break;
 
 		default :
-			std::cout << vl::CRITICAL << "Unhandled Message in Config : type = " 
+			std::cout << vl::CRITICAL << "Unhandled Message in Config : type = "
 				<< vl::cluster::getTypeAsString(msg.getType()) << std::endl;
 	}
 }
 
-void 
+void
 vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 {
 	while( msg.size() )
@@ -745,7 +745,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 	}
 }
 
-void 
+void
 vl::Config::_handleCommandMessage(vl::cluster::Message &msg)
 {
 	// TODO there should be a maximum amount of messages stored
