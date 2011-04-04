@@ -24,13 +24,13 @@
 namespace
 {
 #ifdef _WIN32
-inline
-time convert_large_integer(LARGE_INTEGER const &ticks, LARGE_INTEGER const &ticks_per_s)
+vl::time convert_large_integer(LARGE_INTEGER const &ticks, LARGE_INTEGER const &ticks_per_s)
 {
-	double ticks_per_usec = ticks_per_s.QuadPart/1e6;
-	uint32_t secs = (uint32_t)ticks.QuadPart/ticks_per_s.QuadPart;
-	uint32_t usecs = (uint32_t)((ticks.QuadPart%ticks_per_s.QuadPart)/ticks_per_usec);
-	return time(secs, usecs);
+	double ticks_per_usec = ((double)ticks_per_s.QuadPart)/1e6;
+	uint32_t secs = (uint32_t)(ticks.QuadPart/ticks_per_s.QuadPart);
+	long long ticks_left = ticks.QuadPart%ticks_per_s.QuadPart;
+	uint32_t usecs = (uint32_t)((double)ticks_left)/ticks_per_usec;
+	return vl::time(secs, usecs);
 }
 #endif
 
@@ -178,3 +178,21 @@ vl::time::operator/=(long unsigned int n)
 	return *this;
 }
 
+vl::time &
+vl::time::operator*=(size_t n)
+{
+	// TODO should move usecs to secs if they qualify
+	sec *= n;
+	usec *= n;
+
+	return *this;
+}
+
+vl::time &
+vl::time::operator/=(size_t n)
+{
+	sec /= n;
+	usec /= n;
+
+	return *this;
+}

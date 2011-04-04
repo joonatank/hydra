@@ -14,6 +14,12 @@
  *	@todo Add results on Windows with sleeping
  *	If the results are bad we need a switch to enable sleeping in Linux and
  *	disable it on Windows (for example sleep 0ms or negative sleep time).
+ *	On Windows 7 64-bit 
+ *		with 0ms sleeping bit over 200 microseconds round trip time.
+ *		with 1ms sleeping bit over 1ms round trip time.
+ *		without sleeping around 150 microseconds round trip time, varied from 80-250.
+ *	Seems like on Windows 7 sleeping 0ms is the same as not sleeping. 
+ *	The server is using a complete core.
  *
  *	Working implementation is copied to the Hydra communication system and used
  *	as a reference for the latency there.

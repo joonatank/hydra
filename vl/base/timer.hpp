@@ -63,6 +63,10 @@ struct time
 
 	time &operator*=(double n);
 
+	time &operator/=(size_t n);
+
+	time &operator*=(size_t n);
+
 	time &operator/=(unsigned long n);
 
 	time &operator*=(unsigned long n);
@@ -85,32 +89,18 @@ time operator-(time const &t1, time const &t2)
 	return tmp;
 }
 
+template<typename T>
 inline
-time operator*(time const &t1, double n)
+time operator*(time const &t1, T n)
 {
 	time tmp(t1);
 	tmp *= n;
 	return tmp;
 }
 
+template<typename T>
 inline
-time operator/(time const &t1, double n)
-{
-	time tmp(t1);
-	tmp /= n;
-	return tmp;
-}
-
-inline
-time operator*(time const &t1, unsigned long n)
-{
-	time tmp(t1);
-	tmp *= n;
-	return tmp;
-}
-
-inline
-time operator/(time const &t1, unsigned long n)
+time operator/(time const &t1, T n)
 {
 	time tmp(t1);
 	tmp /= n;

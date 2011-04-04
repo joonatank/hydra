@@ -168,7 +168,9 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		iter->state.frame = _frame;
 	}
 	// Check that all clients started drawing
-	success = _block_till_state(CS_DRAW, limit);
+	// @todo on Windows if we use the time limit the block call will fail
+	// Some real performance problems with it.
+	success = _block_till_state(CS_DRAW);//, limit);
 	assert(success);
 	stats.logWaitDrawTime( (double(tim.elapsed()))*1e3 );
 
@@ -560,7 +562,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 		{
 			// Resetting environment NOT allowed
 			// TODO this should have environment sent and environment received field
-			if( !client.state.environment );
+			if( !client.state.environment )
 			{
 				// Change the state of the client
 				client.state.environment = true;
