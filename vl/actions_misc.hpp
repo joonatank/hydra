@@ -31,6 +31,21 @@ typedef ActionBase<Player> PlayerAction;
 typedef ActionBase<GameManager> GameAction;
 typedef ActionBase<SceneManager> SceneManagerAction;
 
+class ScriptAction : public vl::GameAction
+{
+public :
+	std::string script;
+
+	virtual void execute( void );
+
+	static ScriptAction *create( void )
+	{ return new ScriptAction; }
+
+	virtual std::string getTypeName( void ) const
+	{ return "ScriptAction"; }
+
+};	// class ScriptAction
+
 // TODO this should use the same PlayerAction base
 // Problem is that it inherits from BasicAction and this inherits from TransformAction
 class HeadTrackerAction : public vl::TransformAction

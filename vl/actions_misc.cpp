@@ -8,8 +8,19 @@
 #include "scene_manager.hpp"
 #include "game_manager.hpp"
 #include "player.hpp"
+#include "python.hpp"
 
-/// --------- HeadTrackerAction -----------
+/// ----------------------------- ScriptAction ---------------------------------
+void
+vl::ScriptAction::execute(void)
+{
+	if( !data )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+	data->getPython()->executePythonCommand(script);
+}
+
+
+/// ----------------------- HeadTrackerAction ----------------------------------
 void
 vl::HeadTrackerAction::execute( vl::Transform const &data )
 {
@@ -43,23 +54,23 @@ vl::ReloadScene::execute( void )
 	data->reloadScene();
 }
 
-void 
+void
 vl::AddToSelection::execute( void )
 {
 	if( !data || !_node )
 	{
-		BOOST_THROW_EXCEPTION( vl::null_pointer() ); 
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
 	}
 
 	data->addToSelection(_node);
 }
 
-void 
+void
 vl::RemoveFromSelection::execute( void )
 {
 	if( !data || !_node )
 	{
-		BOOST_THROW_EXCEPTION( vl::null_pointer() ); 
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
 	}
 
 	data->removeFromSelection(_node);

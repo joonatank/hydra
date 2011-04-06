@@ -281,13 +281,13 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<AddToSelection, boost::noncopyable, python::bases<SceneManagerAction> >("AddToSelection", python::no_init )
-		.add_property("scene_node", python::make_function( &AddToSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &AddToSelection::setSceneNode )		
+		.add_property("scene_node", python::make_function( &AddToSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &AddToSelection::setSceneNode )
 		.def("create",&AddToSelection::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 
 	python::class_<RemoveFromSelection, boost::noncopyable, python::bases<SceneManagerAction> >("RemoveFromSelection", python::no_init )
-		.add_property("scene_node", python::make_function( &RemoveFromSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &RemoveFromSelection::setSceneNode )		
+		.add_property("scene_node", python::make_function( &RemoveFromSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &RemoveFromSelection::setSceneNode )
 		.def("create",&RemoveFromSelection::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
@@ -405,12 +405,24 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// Physics
+	/// @todo these should have custom wrapper classes that take Ogre objects
+	/// as parameters
+	/// @todo physics should be in differen module
+	python::class_<btVector3, boost::noncopyable >("btVector3", python::init<>() )
+		.def(python::init<const btScalar &, const btScalar &, const btScalar &>() )
+	;
+
+	python::class_<btQuaternion, boost::noncopyable >("btQuaternion")
+		.def(python::init<const btScalar &, const btScalar &, const btScalar &, const btScalar &>() )
+		.def(python::init<const btVector3 &, const btScalar &>() )
+	;
+
 	python::class_<btCollisionShape, boost::noncopyable >("btCollisionShape", python::no_init )
 	;
-	
+
 	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
 	;
-	
+
 	python::class_<btStaticPlaneShape, boost::noncopyable, python::bases<btCollisionShape> >("btStaticPlaneShape", python::no_init )
 	;
 
@@ -418,6 +430,17 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<btRigidBody, boost::noncopyable >("btRigidBody", python::no_init )
+		.def( "getTotalForce", &btRigidBody::getTotalForce, python::return_value_policy<python::copy_const_reference>() )
+		.def( "getTotalTorque", &btRigidBody::getTotalTorque, python::return_value_policy<python::copy_const_reference>() )
+		.def( "applyForce", &btRigidBody::applyForce )
+		.def( "applyTorque", &btRigidBody::applyTorque )
+		.def( "applyTorqueImpulse", &btRigidBody::applyTorqueImpulse )
+		.def( "applyCentralForce", &btRigidBody::applyCentralForce )
+		.def( "applyCentralImpulse", &btRigidBody::applyCentralImpulse )
+		.def( "setAngularVelocity", &btRigidBody::setAngularVelocity )
+		.def( "setLinearVelocity", &btRigidBody::setLinearVelocity )
+		.def( "setDamping", &btRigidBody::setDamping )
+		.def( "getInvMass", &btRigidBody::getInvMass )
 	;
 
 	// TODO add scene node setting
