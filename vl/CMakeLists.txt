@@ -111,6 +111,7 @@ set( HEADERS
 	cluster/states.hpp
 	distributed.hpp
 	physics/motion_state.hpp
+	physics/rigid_body.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
 	)

@@ -20,7 +20,9 @@
 
 #include "scene_node.hpp"
 
+/// Physics objects
 #include "motion_state.hpp"
+#include "rigid_body.hpp"
 
 namespace vl
 {
@@ -44,21 +46,24 @@ public :
 
 	void setGravity( Ogre::Vector3 const &gravity );
 
-	/// @TODO move to using btRigidBodyConstructionInfo
-	btRigidBody *createRigidBody( std::string const &name, vl::scalar mass,
-								  MotionState *state, btCollisionShape *shape,
-								  Ogre::Vector3 const &inertia = Ogre::Vector3(1, 1, 1),
-								  bool user_driven = false );
+	/// @TODO replace name, when you have the time to fix the overloads for python
+	vl::physics::RigidBody *createRigidBodyEx( std::string const &name,
+											 btRigidBody::btRigidBodyConstructionInfo const &info );
 
-	void addRigidBody( std::string const name, btRigidBody *body,
-					   bool user_driven = false );
+	vl::physics::RigidBody *createRigidBody( std::string const &name, vl::scalar mass,
+								  vl::physics::MotionState *state, btCollisionShape *shape,
+								  Ogre::Vector3 const &inertia = Ogre::Vector3(1, 1, 1) );
 
-	btRigidBody *getRigidBody( std::string const &name );
+	/// @todo should be removed as they should be created using createRigidBody
+	void addRigidBody( std::string const &name, vl::physics::RigidBody *body);
 
-	// TODO implement
-	// Should this remove the body from the world and return a pointer or
-	// should it just destroy the body altogether
-	btRigidBody *removeRigidBody( std::string const &name );
+	vl::physics::RigidBody *getRigidBody( std::string const &name );
+
+	/// @TODO implement
+	/// Should this remove the body from the world and return a pointer or
+	/// should it just destroy the body altogether
+	/// if this returns a shared_ptr it's not a problem at all
+	vl::physics::RigidBody *removeRigidBody( std::string const &name );
 
 	bool hasRigidBody( std::string const &name );
 
@@ -73,19 +78,21 @@ public :
 	void destroyShape( btCollisionShape *shape );
 
 private :
-	btRigidBody *_findRigidBody( std::string const &name );
+	RigidBody *_findRigidBody( std::string const &name );
 
-	// Bullet physics world objects
-	// The order of them is important don't change it.
+	/// Bullet physics world objects
+	/// The order of them is important don't change it.
+	/// @todo move to using scoped ptrs if possible
 	btBroadphaseInterface *_broadphase;
 	btCollisionConfiguration *_collision_config;
 	btCollisionDispatcher *_dispatcher;
 	btSequentialImpulseConstraintSolver *_solver;
 	btDiscreteDynamicsWorld *_dynamicsWorld;
 
-	// Rigid bodies
-	// World owns all of them
-	std::map< std::string, btRigidBody * > _bodies;
+	/// Rigid bodies
+	/// World owns all of them
+	/// @todo move to using shared_ptrs
+	std::vector<RigidBody *> _rigid_bodies;
 
 };	// class World
 

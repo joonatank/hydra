@@ -14,8 +14,7 @@
 // Base classes for event handling
 #include "action.hpp"
 
-// For now we use bullet objects
-#include <bullet/btBulletDynamicsCommon.h>
+#include "rigid_body.hpp"
 
 #include "actions_transform.hpp"
 
@@ -46,14 +45,14 @@ public :
 	static ApplyForce *create( void )
 	{ return new ApplyForce; }
 
-	void setRigidBody( btRigidBody *body )
+	void setRigidBody( vl::physics::RigidBody *body )
 	{ _body = body; }
 
-	btRigidBody *getRigidBody( void )
+	vl::physics::RigidBody *getRigidBody( void )
 	{ return _body; }
 
 protected :
-	btRigidBody *_body;
+	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _force;
 };
@@ -79,20 +78,23 @@ public :
 	static ApplyTorque *create( void )
 	{ return new ApplyTorque; }
 
-	void setRigidBody( btRigidBody *body )
+	void setRigidBody(vl::physics::RigidBody *body)
 	{ _body = body; }
 
-	btRigidBody *getRigidBody( void )
+	vl::physics::RigidBody *getRigidBody( void )
 	{ return _body; }
 
 protected :
-	btRigidBody *_body;
+	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _torque;
 
 };
 
-// TODO the implementation of this should use two actions ApplyForce and ApplyTorque
+/// @todo the implementation of this should use two actions ApplyForce and ApplyTorque
+/// @todo this should use velocities
+/// we should have a different force based action
+/// basically this one is kinematic action and it would be dynamics action
 class MoveAction : public vl::TransformationAction
 {
 public :
@@ -121,10 +123,10 @@ public :
 	static MoveAction *create( void )
 	{ return new MoveAction; }
 
-	void setRigidBody( btRigidBody *body )
+	void setRigidBody(vl::physics::RigidBody *body)
 	{ _body = body; }
 
-	btRigidBody *getRigidBody( void )
+	vl::physics::RigidBody *getRigidBody( void )
 	{ return _body; }
 
 	void setMoveDir( Ogre::Vector3 const &mov_dir )
@@ -138,7 +140,7 @@ public :
 	}
 
 protected :
-	btRigidBody *_body;
+	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _force;
 	Ogre::Vector3 _torque;

@@ -47,21 +47,34 @@ if game.scene.hasSceneNode( ogre_name ):
 	ogre = game.scene.getSceneNode(ogre_name)
 	trans = Transform( Vector3(0, 20, 0), Quaternion.identity)
 	motion_state = world.createMotionState( trans, ogre )
-	ogre_phys = world.createRigidBody( 'ogre', ogre_mass, motion_state, sphere, Vector3(1,1,1), True )
+	ogre_phys = world.createRigidBody('ogre', ogre_mass, motion_state, sphere, Vector3(1,1,1))
+	ogre_phys.setUserControlled()
+
+	# Set some damping so it doesn't go on endlessly
+	ogre_phys.setDamping(0.3, 0.3)
 
 	# Add force action
 	print('Adding Force action to KC_F')
-	action = ApplyForce.create()
-	action.body = ogre_phys
-	action.force = Vector3(0, 2500, 0)
+#	action = ApplyForce.create()
+	action = ScriptAction.create()
+	action.game = game
+	action.script = 'ogre_phys.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
 	trigger = game.event_manager.createKeyPressedTrigger( KC.F )
 	trigger.addAction( action )
 
 	# Add torque action
 	print('Adding Torque action to KC_G')
-	action = ApplyTorque.create()
-	action.body = ogre_phys
-	action.torque = Vector3(0, 2000, 0)
+	#action = ApplyTorque.create()
+	action = ScriptAction.create()
+	action.game = game
+	action.script = 'ogre_phys.applyTorque(Vector3(0, 500, 0))'
 	trigger = game.event_manager.createKeyPressedTrigger( KC.G )
+	trigger.addAction( action )
+
+	print('Adding set Liner velocity action to KC_T')
+	action = ScriptAction.create()
+	action.game = game
+	action.script = 'ogre_phys.setLinearVelocity(Vector3(1, 0, 0))'
+	trigger = game.event_manager.createKeyPressedTrigger(KC.T)
 	trigger.addAction( action )
 

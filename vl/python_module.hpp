@@ -25,6 +25,7 @@
 #include "python.hpp"
 #include <physics/physics_events.hpp>
 #include <physics/physics_world.hpp>
+#include "physics/rigid_body.hpp"
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -65,7 +66,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedT
 
 /// Overloads need to be outside the module definition
 /// Physics world member overloads
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 6 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
 
@@ -444,21 +445,28 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
 	;
 
-	python::class_<btRigidBody, boost::noncopyable >("btRigidBody", python::no_init )
-		.def( "getTotalForce", &btRigidBody::getTotalForce, python::return_value_policy<python::copy_const_reference>() )
-		.def( "getTotalTorque", &btRigidBody::getTotalTorque, python::return_value_policy<python::copy_const_reference>() )
-		.def( "applyForce", &btRigidBody::applyForce )
-		.def( "applyTorque", &btRigidBody::applyTorque )
-		.def( "applyTorqueImpulse", &btRigidBody::applyTorqueImpulse )
-		.def( "applyCentralForce", &btRigidBody::applyCentralForce )
-		.def( "applyCentralImpulse", &btRigidBody::applyCentralImpulse )
-		.def( "setAngularVelocity", &btRigidBody::setAngularVelocity )
-		.def( "setLinearVelocity", &btRigidBody::setLinearVelocity )
-		.def( "setDamping", &btRigidBody::setDamping )
-		.def( "getInvMass", &btRigidBody::getInvMass )
-		.def( "clearForces", &btRigidBody::clearForces )
-		.def( "getLinearDamping", &btRigidBody::getLinearDamping )
-		.def( "getAngularDamping", &btRigidBody::getAngularDamping )
+	/// @TODO add custom RigidBody info structure
+
+	python::class_<vl::physics::RigidBody, boost::noncopyable >("RigidBody", python::no_init )
+		.def( "getTotalForce", &vl::physics::RigidBody::getTotalForce )
+		.def( "getTotalTorque", &vl::physics::RigidBody::getTotalTorque )
+		.def( "applyForce", &vl::physics::RigidBody::applyForce )
+		.def( "applyTorque", &vl::physics::RigidBody::applyTorque )
+		.def( "applyTorqueImpulse", &vl::physics::RigidBody::applyTorqueImpulse )
+		.def( "applyCentralForce", &vl::physics::RigidBody::applyCentralForce )
+		.def( "applyCentralImpulse", &vl::physics::RigidBody::applyCentralImpulse )
+		.def( "setAngularVelocity", &vl::physics::RigidBody::setAngularVelocity )
+		.def( "setLinearVelocity", &vl::physics::RigidBody::setLinearVelocity )
+		.def( "setDamping", &vl::physics::RigidBody::setDamping )
+		.def( "getInvMass", &vl::physics::RigidBody::getInvMass )
+		.def( "clearForces", &vl::physics::RigidBody::clearForces )
+		.def( "getLinearDamping", &vl::physics::RigidBody::getLinearDamping )
+		.def( "getAngularDamping", &vl::physics::RigidBody::getAngularDamping )
+		.def("setInertia", &vl::physics::RigidBody::setInertia)
+		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
+		/// @todo this should have false/true value
+		.def("setUserControlled", &vl::physics::RigidBody::setUserControlled)
+		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
 	;
 
 	// TODO add scene node setting
@@ -470,9 +478,9 @@ BOOST_PYTHON_MODULE(vl)
 			 createRigidBody_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addRigidBody", &vl::physics::World::addRigidBody,
 			 python::return_value_policy<python::reference_existing_object>() )
-		.def("getRigidBody", &vl::physics::World::addRigidBody,
+		.def("getRigidBody", &vl::physics::World::getRigidBody,
 			 python::return_value_policy<python::reference_existing_object>() )
-		.def("removeRigidBody", &vl::physics::World::addRigidBody,
+		.def("removeRigidBody", &vl::physics::World::removeRigidBody,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )

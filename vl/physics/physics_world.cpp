@@ -14,10 +14,10 @@ vl::physics::World::World( void )
 vl::physics::World::~World( void )
 {
 	// Cleanup the rigid bodies
-	for( std::map<std::string, btRigidBody *>::iterator iter = _bodies.begin();
-			iter != _bodies.end(); ++iter )
+	for( std::vector<RigidBody *>::iterator iter = _rigid_bodies.begin();
+			iter != _rigid_bodies.end(); ++iter )
 	{
-		delete iter->second;
+		delete *iter;
 	}
 
 	// cleanup the world
@@ -49,51 +49,45 @@ vl::physics::World::setGravity(const Ogre::Vector3& gravity)
 	_dynamicsWorld->setGravity( btVector3(gravity.x, gravity.y, gravity.z) );
 }
 
-
-btRigidBody *
-vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
-									 vl::physics::MotionState *state,
-									 btCollisionShape *shape,
-									 Ogre::Vector3 const &inertia,
-									 bool user_driven )
+vl::physics::RigidBody *
+vl::physics::World::createRigidBodyEx(std::string const &name, btRigidBody::btRigidBodyConstructionInfo const &info)
 {
-	// TODO move to using btRigidBodyConstructionInfo
-	btRigidBody *body = new btRigidBody(mass, state, shape );
-	btVector3 i( inertia.x, inertia.y, inertia.z );
-	body->setMassProps(mass, i);
-	addRigidBody( name, body, user_driven );
+	RigidBody *body = new RigidBody(name, info);
+	addRigidBody(name, body);
 	return body;
 }
 
-void
-vl::physics::World::addRigidBody( const std::string name, btRigidBody *body,
-								  bool user_driven )
+
+vl::physics::RigidBody *
+vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
+									 vl::physics::MotionState *state,
+									 btCollisionShape *shape,
+									 Ogre::Vector3 const &inertia)
 {
-	if( _bodies.find(name) == _bodies.end() )
+	btVector3 i(vl::math::convert_bt_vec(inertia));
+	btRigidBody::btRigidBodyConstructionInfo info(mass, state, shape, i);
+	return createRigidBodyEx(name, info);
+}
+
+void
+vl::physics::World::addRigidBody(std::string const &name, vl::physics::RigidBody *body)
+{
+	if( !hasRigidBody(name) )
 	{
-		_bodies.insert( std::make_pair(name, body) );
-		_dynamicsWorld->addRigidBody( body );
+		_rigid_bodies.push_back(body);
+		_dynamicsWorld->addRigidBody(body->getNative());
 	}
 	else
 	{
 		std::string err( "RigidBody with that name is already in the scene." );
 		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(err) );
 	}
-
-	// Every object that is controlled by the user should have
-	// DISABLE_DEACTIVATION set
-	// Because activation only happens when other bodies are come near
-	// NOTE might work also by using body->activate() before moving it
-	if( user_driven )
-	{
-		body->setActivationState(DISABLE_DEACTIVATION);
-	}
 }
 
-btRigidBody *
+vl::physics::RigidBody *
 vl::physics::World::getRigidBody( const std::string& name )
 {
-	btRigidBody *body = _findRigidBody(name);
+	RigidBody *body = _findRigidBody(name);
 	if( !body )
 	{
 		// TODO add a better exception to this
@@ -103,7 +97,7 @@ vl::physics::World::getRigidBody( const std::string& name )
 	return body;
 }
 
-btRigidBody *
+vl::physics::RigidBody *
 vl::physics::World::removeRigidBody( const std::string& name )
 {
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
@@ -130,8 +124,7 @@ vl::physics::World::destroyMotionState( vl::physics::MotionState *state )
 btStaticPlaneShape *
 vl::physics::World::createPlaneShape( const Ogre::Vector3& normal, vl::scalar constant )
 {
-	return new btStaticPlaneShape( btVector3( normal.x, normal.y, normal.z ),
-								   constant );
+	return new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant );
 }
 
 btSphereShape *
@@ -147,12 +140,13 @@ vl::physics::World::destroyShape( btCollisionShape *shape )
 }
 
 /// --------------------------------- Private ----------------------------------
-btRigidBody* vl::physics::World::_findRigidBody(const std::string& name)
+vl::physics::RigidBody *vl::physics::World::_findRigidBody(const std::string& name)
 {
-	std::map<std::string, btRigidBody *>::iterator iter = _bodies.find(name);
-	if( iter != _bodies.end() )
+	std::vector<RigidBody *>::iterator iter;
+	for( iter = _rigid_bodies.begin(); iter != _rigid_bodies.end(); ++iter )
 	{
-		return iter->second;
+		if( (*iter)->getName() == name )
+		{ return *iter; }
 	}
 
 	return 0;
