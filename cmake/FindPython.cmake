@@ -46,26 +46,30 @@ elseif( PYTHON_VERSION EQUAL "2" )
 	set( PYTHON_VERSIONS ${VERSIONS_2} )
 elseif( PYTHON_VERSION EQUAL "3" )
 	set( PYTHON_VERSIONS ${VERSIONS_3} )
+else()
+	set( PYTHON_VERSIONS ${PYTHON_VERSION} )
 endif()
 
-message( "Trying to find python library versions = ${PYTHON_VERSIONS}" )
-
 foreach( _CURRENT_VERSION ${PYTHON_VERSIONS} )
+	# Linux does use dots
+	# Windows doesn't use dots
 	string(REPLACE "." "" _CURRENT_VERSION_NO_DOTS ${_CURRENT_VERSION})
 
-	message( STATUS "Trying to find python version ${_CURRENT_VERSION}" )
-
 	find_library( PYTHON_LIBRARY_DEBUG
-		NAMES python${_CURRENT_VERSION_NO_DOTS}_d python
+		NAMES python${_CURRENT_VERSION_NO_DOTS}_d
 		PATHS
 		[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_CURRENT_VERSION}\\InstallPath]/libs
 		[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_CURRENT_VERSION}\\InstallPath]/libs/Debug
+		/usr/lib
+		/usr/local/lib
 		)
 
 	find_library( PYTHON_LIBRARY_RELEASE
 		NAMES python${_CURRENT_VERSION_NO_DOTS} python${_CURRENT_VERSION}
 		PATHS
 		[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_CURRENT_VERSION}\\InstallPath]/libs
+		/usr/lib
+		/usr/local/lib
 		# Avoid finding the .dll in the PATH.  We want the .lib.
 		NO_SYSTEM_ENVIRONMENT_PATH
 		)
@@ -75,6 +79,8 @@ foreach( _CURRENT_VERSION ${PYTHON_VERSIONS} )
 		NAMES Python.h
 		PATHS
 		[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_CURRENT_VERSION}\\InstallPath]/include
+		/usr/include/python${_CURRENT_VERSION}
+		/usr/local/include/python${_CURRENT_VERSION}
 		)
 
 	if( PYTHON_LIBRARY_DEBUG AND PYTHON_LIBRARY_RELEASE )

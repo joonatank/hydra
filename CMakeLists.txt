@@ -86,9 +86,19 @@ endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
 
+# Python version 3.1 for Windows
+# Linux has some problems with multiple pythons and boost installed from
+# package manager, so we can not compile boost python to use Python 3.1
+if(WIN32)
+	set( PYTHON_VERSION 3.1 CACHE STRING "Python version" )
+else()
+	set( PYTHON_VERSION 2.7 CACHE STRING "Python version" )
+endif()
+
 find_package(Python REQUIRED )
 
-message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION}" )
+message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION} : "
+	"Python include dir = ${PYTHON_INCLUDE_DIR}" )
 
 if( WIN32 )
 	set(Boost_USE_STATIC_LIBS   ON)
