@@ -90,6 +90,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
+		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound )
 		.def("quit", &vl::GameManager::quit)
 	;
 
@@ -103,6 +104,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Player, boost::noncopyable>("Player", python::no_init)
 		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_value_policy<python::copy_const_reference>() ), &Player::setActiveCamera )
 		.add_property("ipd", &Player::getIPD, &Player::setIPD)
+		.def("takeScreenshot", &vl::Player::takeScreenshot )
 	;
 
 	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
@@ -258,6 +260,12 @@ BOOST_PYTHON_MODULE(vl)
 	/// Game Actions
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
 		.def_readwrite("game", &GameAction::data )
+	;
+
+	python::class_<ScriptAction, boost::noncopyable, python::bases<GameAction> >("ScriptAction", python::no_init )
+		.def_readwrite("script", &vl::ScriptAction::script )
+		.def("create",&ScriptAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 	python::class_<QuitAction, boost::noncopyable, python::bases<GameAction> >("QuitAction", python::no_init )

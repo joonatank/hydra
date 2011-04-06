@@ -29,8 +29,8 @@ def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE
 
 # Fine using the new event interface
 def createCameraMovements(node) :
-	# TODO should print the node name, conversion to string is not impleted yet
-	print( 'Creating Translation event on node = ' )
+	# TODO stupid string casting, can we somehow remove it?
+	print( 'Creating Translation event on ' + str(node) )
 
 	# Create the translation action using a proxy
 	trans_action_proxy = MoveActionProxy.create()
@@ -93,50 +93,36 @@ def addMoveSelection() :
 # Fine using the new event interface
 def addQuitEvent( kc ) :
 	print( 'Creating Quit Event to ' + getPythonKeyName(kc) )
-	action = QuitAction.create()
+#	action = QuitAction.create()
+	action = ScriptAction.create()
 	action.game = game
+	action.script = "quit()"
 
 	trigger = game.event_manager.createKeyPressedTrigger( kc, KEY_MOD.META )
 	trigger.addAction( action )
 
 
-# Fine using the new event interface
-def addReloadEvent( kc ) :
-	print( 'Creating Reload Scene Event to ' + getPythonKeyName(kc) )
-	# Create the action
-	action = ReloadScene.create()
-	action.scene = game.scene
-
-	# Create the Time limit
-	proxy = TimerActionProxy.create()
-	proxy.action = action
-	proxy.time_limit = 5 # Seconds
-
-	# Create the trigger
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	trigger.addAction( proxy )
-
-
-
-# Fine using the new event interface
 def addToggleMusicEvent( kc ) :
 	print( 'Creating Toggle Music Event to ' + getPythonKeyName(kc) )
-	action = ToggleMusic.create()
+	#action = ToggleMusic.create()
+	action = ScriptAction.create()
 	action.game = game
+	action.script = "game.toggleBackgroundSound()"
+
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	trigger.addAction( action )
 
 
 def addScreenshotAction( kc ) :
-	# TODO add printing the kc
 	print( 'Adding screenshot action to ' + getPythonKeyName(kc) )
-	action = ScreenshotAction.create()
-	action.player = game.player
+#	action = ScreenshotAction.create()
+	action = ScriptAction.create()
+	action.game = game
+	action.script = "game.player.takeScreenshot()"
+
 	trigger = game.event_manager.createKeyPressedTrigger( kc )
 	trigger.addAction( action )
 
-
-# TODO create PrintOperation in python and register it into Event Manager
 
 # Change camera toggle
 # Use one Key in this case b to change between two active cameras
@@ -144,16 +130,20 @@ def addScreenshotAction( kc ) :
 #
 # If the camera name is incorrect the action will not change the camera
 # An error message is printed to std::cerr and the program continues normally
-# Fine using the new event interface
 def addToggleActiveCamera( camera1, camera2 ) :
-	print( 'Creating Toggle Activate Camera' )
-	action_on = ActivateCamera.create()
-	action_on.player = game.player
-	action_on.camera = camera1
+	print( 'Creating Toggle Activate Camera between ' + camera1 + ' and ' + camera2 )
+#	action_on = ActivateCamera.create()
+	action_on = ScriptAction.create()
+	action_on.game = game
+	# FIXME not a really nice technique, we need to escape the camera name
+	# because if it's simply string python tries to resolve the name and we
+	# get undefined variable error.
+	action_on.script = "game.player.camera = " + "\'" + camera1 + "\'"
 
-	action_off = ActivateCamera.create()
-	action_off.player = game.player
-	action_off.camera = camera2
+#	action_off = ActivateCamera.create()
+	action_off = ScriptAction.create()
+	action_off.game = game
+	action_off.script = "game.player.camera = " + "\'" + camera2 + "\'"
 
 	trigger = game.event_manager.createKeyPressedTrigger( KC.B )
 
@@ -165,7 +155,7 @@ def addToggleActiveCamera( camera1, camera2 ) :
 
 
 def addHideEvent(node, kc) :
-	print( 'Creating Hide Event to ' + getPythonKeyName(kc) )
+	print( 'Creating Hide Event for ' + str(node) + ' to ' + getPythonKeyName(kc) )
 	hide = HideAction.create()
 	hide.scene_node = node
 	show = ShowAction.create()
@@ -189,10 +179,12 @@ def addHideEvent(node, kc) :
 
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
-	hide = HideConsole.create()
-	hide.gui = game.gui
-	show = ShowConsole.create()
-	show.gui = game.gui
+	hide = ScriptAction.create()
+	hide.game = game
+	hide.script = "game.gui.hideConsole()"
+	show = ScriptAction.create()
+	show.game = game
+	show.script = "game.gui.showConsole()"
 	trigger = game.event_manager.createKeyPressedTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
@@ -204,10 +196,12 @@ def addToggleConsole(kc) :
 
 def addToggleEditor(kc) :
 	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
-	hide = HideEditor.create()
-	hide.gui = game.gui
-	show = ShowEditor.create()
-	show.gui = game.gui
+	hide = ScriptAction.create()
+	hide.game = game
+	hide.script = "game.gui.hideEditor()"
+	show = ScriptAction.create()
+	show.game = game
+	show.script = "game.gui.showEditor()"
 	trigger = game.event_manager.createKeyPressedTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
@@ -221,7 +215,6 @@ def addToggleEditor(kc) :
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
 addQuitEvent(KC.Q)
-addReloadEvent(KC.R)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
