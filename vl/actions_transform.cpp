@@ -23,7 +23,7 @@ vl::MoveAction::MoveAction( void )
 void
 vl::MoveAction::execute( void )
 {
-	double time = (double)(_clock.getMicroseconds())/1e6;
+	double time = _clock.elapsed();
 	if( !_move_dir.isZeroLength() )
 	{
 		move( _move_dir*_speed*time, _local );
@@ -43,7 +43,7 @@ vl::MoveNodeAction::MoveNodeAction( void )
 	: _node(0)
 {}
 
-void 
+void
 vl::MoveNodeAction::move(Ogre::Vector3 const &v, bool local)
 {
 	// TODO replace with error reporting
@@ -57,7 +57,7 @@ vl::MoveNodeAction::move(Ogre::Vector3 const &v, bool local)
 	_node->setPosition(_node->getPosition() + mov);
 }
 
-void 
+void
 vl::MoveNodeAction::rotate(Ogre::Quaternion const &q, bool local)
 {
 	// TODO replace with error reporting
@@ -71,7 +71,7 @@ vl::MoveSelectionAction::MoveSelectionAction( void )
 	: _scene(0)
 {}
 
-void 
+void
 vl::MoveSelectionAction::move(Ogre::Vector3 const &v, bool local)
 {
 	// TODO replace with error reporting
@@ -90,8 +90,8 @@ vl::MoveSelectionAction::move(Ogre::Vector3 const &v, bool local)
 		(*iter)->setPosition((*iter)->getPosition() + mov);
 	}
 }
-	
-void 
+
+void
 vl::MoveSelectionAction::rotate(Ogre::Quaternion const &q, bool local)
 {
 	// TODO replace with error reporting

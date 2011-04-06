@@ -33,9 +33,15 @@ namespace cluster
  *	message type is the type of message the client is acknowledging
  *	id is the id of the message, this is optional and not used at the moment
  *
- *	Reguest updates message
+ *	Reguest SceneGraph update messages
  *	MSG_REG_UPDATES
  *	[MSG_REG_UPDATES]
+ *
+ *	Add to the rendering group, 
+ *	this should be sent only after initalisation is done
+ *	avoids blocking for clients that are not ready to render
+ *	and also provides the possibility of receiving updates but not rendering messages
+ *	MSG_REG_RENDERING
  *
  *	Update message
  *	MSG_SG_UPDATE
@@ -80,15 +86,20 @@ enum MSG_TYPES
 	MSG_UNDEFINED = 0,	// Not defined message type these should never be sent
 	MSG_ACK,			// Acknowledgement message
 	MSG_REG_UPDATES,	// Reguest updates from the application
+	MSG_REG_RENDERING,	// Add to the rendering group, 
 	MSG_ENVIRONMENT,	// Send the Environment configuration
 	MSG_PROJECT,		// Send the project configuration
 	MSG_SG_CREATE,		// Create SceneGraph elements
+	MSG_FRAME_START,	// Send from master to start a frame loop
+	MSG_SG_UPDATE_READY,
 	MSG_SG_UPDATE,		// Send updated SceneGraph
+	MSG_SG_UPDATE_DONE,	// NOT IN USE
 	MSG_INPUT,			// Send data from input devices from pipes to application
-	MSG_READY_DRAW,		// Sent from Rendering thread when it's ready to draw
+	MSG_DRAW_READY,		// Sent from Rendering thread when it's ready to draw
 	MSG_DRAW,			// Draw the image into back buffer
-	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
-	MSG_SWAP,			// Swap the Window buffer
+	MSG_DRAW_DONE,
+//	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
+//	MSG_SWAP,			// Swap the Window buffer
 	MSG_COMMAND,		// Command string sent to Application
 	MSG_REG_OUTPUT,		// Request logger output messages
 	MSG_PRINT,			// Logger output messages, sent from application to pipes
@@ -121,24 +132,30 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_ACK";
 	case MSG_REG_UPDATES :
 		return "MSG_REG_UPDATES";
+	case MSG_REG_RENDERING:
+		return "MSG_REG_RENDERING";
 	case MSG_ENVIRONMENT :
 		return "MSG_ENVIRONMENT";
 	case MSG_PROJECT :
 		return "MSG_PROJECT";
 	case MSG_SG_CREATE :
 		return "MSG_SG_CREATE";
+	case MSG_FRAME_START:
+		return "MSG_FRAME_START";
+	case MSG_SG_UPDATE_READY :
+		return "MSG_SG_UPDATE_READY";
 	case MSG_SG_UPDATE :
 		return "MSG_SG_UPDATE";
+	case MSG_SG_UPDATE_DONE :
+		return "MSG_SG_UPDATE_DONE";
 	case MSG_INPUT :
 		return "MSG_INPUT";
-	case MSG_READY_DRAW :
-		return "MSG_READY_DRAW";
+	case MSG_DRAW_READY :
+		return "MSG_DRAW_READY";
 	case MSG_DRAW :
 		return "MSG_DRAW";
-	case MSG_READY_SWAP :
-		return "MSG_READY_SWAP";
-	case MSG_SWAP :
-		return "MSG_SWAP";
+	case MSG_DRAW_DONE :
+		return "MSG_DRAW_DONE";
 	case MSG_COMMAND :
 		return "MSG_COMMAND";
 	case MSG_REG_OUTPUT:
@@ -160,7 +177,7 @@ public :
 
 	Message( std::vector<char> const &arr);
 
-	Message( MSG_TYPES type );
+	Message( MSG_TYPES type = MSG_UNDEFINED );
 
 	MSG_TYPES getType( void ) const
 	{ return _type; }
@@ -168,7 +185,9 @@ public :
 	/// Dump the whole message to a binary array, the array is modified
 	virtual void dump( std::vector<char> &arr ) const;
 
-	void clear( void );
+	bool empty(void) const;
+
+	void clear(void);
 
 	/// Read an arbitary type from message data, this never reads the header or size
 	template<typename T>

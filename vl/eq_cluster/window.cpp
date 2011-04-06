@@ -9,8 +9,7 @@
 #include "eq_cluster/config.hpp"
 #include "eq_ogre/ogre_dotscene_loader.hpp"
 
-#include "channel.hpp"
-#include "pipe.hpp"
+#include "renderer.hpp"
 
 #include <OGRE/OgreLogManager.h>
 
@@ -20,6 +19,8 @@
 #include <CEGUI/elements/CEGUIEditbox.h>
 #include <CEGUI/elements/CEGUIMultiColumnList.h>
 #include <CEGUI/elements/CEGUIListboxTextItem.h>
+
+#include <GL/gl.h>
 
 namespace
 {
@@ -46,51 +47,59 @@ namespace
 }
 
 /// ----------------------------- Public ---------------------------------------
-vl::Window::Window( std::string const &name, vl::Pipe *parent )
+vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 	: _name(name)
-	, _pipe( parent )
-	, _channel(0)
+	, _renderer( parent )
 	, _ogre_window(0)
+	, _camera(0)
+	, _left_viewport(0)
+	, _right_viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
 {
-	assert( _pipe );
+	assert( _renderer );
+
 	std::string msg = "vl::Window::Window : " + getName();
 	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 
-	vl::EnvSettings::Window winConf = _pipe->getWindowConf( getName() );
+	vl::EnvSettings::Window winConf = _renderer->getWindowConf( getName() );
 
-	_createOgreWindow(winConf);
+	_ogre_window = _createOgreWindow(winConf);
 	_createInputHandling();
 
 	// If the channel has a name we try to find matching wall
 
-	vl::EnvSettings::Wall wall;
 	if( !winConf.channel.name.empty() )
 	{
 		msg = "Finding Wall for channel : " + getName();
 		Ogre::LogManager::getSingleton().logMessage(msg);
-		wall = getEnvironment()->findWall( winConf.channel.wall_name );
+		_wall = getEnvironment()->findWall( winConf.channel.wall_name );
 	}
 
 	// Get the first wall definition if no named one was found
-	if( wall.empty() && getEnvironment()->getWalls().size() > 0 )
+	if( _wall.empty() && getEnvironment()->getWalls().size() > 0 )
 	{
-		wall = getEnvironment()->getWall(0);
-		msg = "No wall found : using the first one " + wall.name;
+		_wall = getEnvironment()->getWall(0);
+		msg = "No wall found : using the first one " + _wall.name;
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 
-	Ogre::Viewport *viewport = _ogre_window->addViewport( getCamera() );
-	// Set some parameters to the viewport
 	// TODO this should be configurable
-	viewport->setBackgroundColour( Ogre::ColourValue(1.0, 0.0, 0.0, 0.0) );
+	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
+
+	_left_viewport = _ogre_window->addViewport(_camera);	
+	_left_viewport->setBackgroundColour(background_col);
 	// This is necessary because we are using single camera and single viewport
 	// to draw to both backbuffers when using stereo.
-	viewport->setAutoUpdated(false);
+	_left_viewport->setAutoUpdated(false);
 
-	_channel = new vl::Channel( viewport, winConf.channel, wall, getEnvironment()->getIPD() );
+	if(hasStereo())
+	{
+		_right_viewport = _ogre_window->addViewport(_camera, 1);
+		_right_viewport->setBackgroundColour(background_col);
+		_right_viewport->setAutoUpdated(false);
+	}
 }
 
 vl::Window::~Window( void )
@@ -108,37 +117,38 @@ vl::Window::~Window( void )
 		_input_manager = 0;
 	}
 
-	delete _channel;
-
 	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
 }
 
 vl::EnvSettingsRefPtr
 vl::Window::getEnvironment( void )
-{ return _pipe->getEnvironment(); }
+{ return _renderer->getEnvironment(); }
 
 vl::Player const &
 vl::Window::getPlayer( void ) const
-{ return _pipe->getPlayer(); }
+{ return _renderer->getPlayer(); }
 
 vl::ogre::RootRefPtr
 vl::Window::getOgreRoot( void )
-{ return _pipe->getRoot(); }
+{ return _renderer->getRoot(); }
 
 void
 vl::Window::setCamera( Ogre::Camera *camera )
 {
-	assert( _channel );
-	_channel->setCamera(camera);
+	std::cout << vl::TRACE << "vl::Window::setCamera" << std::endl;
+
+	_camera = camera;
+	if(_left_viewport)
+	{ _left_viewport->setCamera(_camera); }
+	if(_right_viewport)
+	{ _right_viewport->setCamera(_camera); }
 }
 
-Ogre::Camera *
-vl::Window::getCamera( void )
-{ return _pipe->getCamera(); }
-
-	Ogre::SceneManager *
+/*
+Ogre::SceneManager *
 vl::Window::getSceneManager( void )
-{ return _pipe->getSceneManager(); }
+{ return _renderer->getSceneManager(); }
+*/
 
 void
 vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
@@ -152,12 +162,20 @@ vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix
 	_ogre_window->writeContentsToTimestampedFile(prefix, real_suffix);
 }
 
+bool 
+vl::Window::hasStereo(void) const
+{
+	GLboolean stereo;
+	glGetBooleanv( GL_STEREO, &stereo );
+	return stereo;
+}
+
 /// ------------------------ Public OIS Callbacks ------------------------------
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
 {
 	// Check if we have a GUI that uses user input
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		switch( key.key )
 		{
@@ -192,7 +210,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 bool
 vl::Window::keyReleased( OIS::KeyEvent const &key )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
 		// TODO this might need translation for the key codes
@@ -228,7 +246,7 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
 		CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
@@ -259,7 +277,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 bool
 vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
 	}
@@ -278,7 +296,7 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 bool
 vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
-	if( getPipe()->guiShown() )
+	if( _renderer->guiShown() )
 	{
 		CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
 	}
@@ -384,7 +402,7 @@ vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
 {
 	std::string msg("vl::Window::onQuitClicked");
 	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	getPipe()->sendCommand( "quit()" );
+	_renderer->sendCommand( "quit()" );
 
 	return true;
 }
@@ -464,23 +482,63 @@ vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 
 /// ----------------------------- Public methods -------------------------------
 void
-vl::Window::draw( void )
+vl::Window::draw(void)
 {
-	// TODO this has broken the Stereo support
-	// _ogre_window needs two Viewports one for each eye
-	// or window->update needs to render to both back buffers
-	_channel->setHeadMatrix( getPlayer().getHeadMatrix() );
-	_channel->draw();
+	assert(_camera);
+	assert(_left_viewport);
+
+	Ogre::Real c_near = _camera->getNearClipDistance();
+	Ogre::Real c_far = _camera->getFarClipDistance();
+
+	Ogre::Matrix4 projMat = calculate_projection_matrix(c_near, c_far, _wall);
+	_camera->setCustomProjectionMatrix( true, projMat );
+
+	// if stereo is not enabled ipd should be zero 
+	// TODO should it be forced though?
+	if(!hasStereo())
+	{ _ipd = 0; }
+
+	// TODO performance problems with stereo
+	// If they are still present we need to add a separate camera also
+	// Left viewport
+	if( _left_viewport )
+	{
+		if(hasStereo())
+		{ glDrawBuffer(GL_BACK_LEFT); }
+
+		Ogre::Vector3 eye(-_ipd/2, 0, 0);
+
+		Ogre::Matrix4 viewMatrix = calculate_view_matrix(_camera->getRealPosition(), 
+			_camera->getRealOrientation(), _wall, getPlayer().getHeadMatrix(), eye);
+		_camera->setCustomViewMatrix(true, viewMatrix);
+
+		_left_viewport->update();
+	}
+	// Right viewport
+	if( _right_viewport )
+	{
+		if(hasStereo())
+		{ glDrawBuffer(GL_BACK_RIGHT); }
+
+		Ogre::Vector3 eye(_ipd/2, 0, 0);
+
+		Ogre::Matrix4 viewMatrix = calculate_view_matrix(_camera->getRealPosition(), 
+			_camera->getRealOrientation(), _wall, getPlayer().getHeadMatrix(), eye);
+		_camera->setCustomViewMatrix(true, viewMatrix);
+
+		_right_viewport->update();
+	}
+
+	assert(_ogre_window);
 	_ogre_window->update(false);
-	// TODO support for multiple channels
 }
 
 void
 vl::Window::swap( void )
 {
+	assert(_ogre_window);
 	_ogre_window->swapBuffers();
 }
-
 
 void
 vl::Window::capture( void )
@@ -497,7 +555,6 @@ vl::Window::capture( void )
 	}
 }
 
-
 void
 vl::Window::createGUIWindow(void )
 {
@@ -509,16 +566,12 @@ vl::Window::createGUIWindow(void )
 void
 vl::Window::_sendEvent( vl::cluster::EventData const &event )
 {
-	_pipe->sendEvent(event);
+	_renderer->sendEvent(event);
 }
 
-void
+Ogre::RenderWindow *
 vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 {
-	// Info
-	std::string message = "Creating Ogre RenderWindow.";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
-
 	Ogre::NameValuePairList params;
 
 	assert( !winConf.empty() );
@@ -527,14 +580,29 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 	params["top"] = vl::to_string( winConf.y );
 	params["border"] = "none";
 
+	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
+		<< "left = " << winConf.x << " top = " << winConf.y
+		<< " width = " << winConf.w << " height = " << winConf.h;
+
 	/// @todo should be configurable
 	/// though these should fallback to default without the hardware
-	params["stereo"] = "true";
-	params["nvSwapSync"] = "true";
-	params["swapGroup"] = "1";
+	if( winConf.stereo )
+	{
+		std::cout << " with stereo : ";
+		params["stereo"] = "true";
+	}
+	if( winConf.nv_swap_sync )
+	{
+		std::cout << "with NV swap sync";
+		params["nvSwapSync"] = "true";
+		params["swapGroup"] = "1";
+	}
+	std::cout << std::endl;
 
-	_ogre_window = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
-	_ogre_window->setAutoUpdated(false);
+	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
+	win->setAutoUpdated(false);
+	
+	return win;
 }
 
 
@@ -579,7 +647,8 @@ vl::Window::_createInputHandling( void )
 	int numSticks = _input_manager->getNumberOfDevices(OIS::OISJoyStick);
 	for( int i = 0; i < numSticks; ++i )
 	{
-		OIS::JoyStick *stick = static_cast<OIS::JoyStick *>(_input_manager->createInputObject(OIS::OISJoyStick, true));
+		OIS::JoyStick *stick = static_cast<OIS::JoyStick *>(
+			_input_manager->createInputObject(OIS::OISJoyStick, true) );
 
 		std::cout << vl::TRACE << "Creating joystick " << i+1
 			<< "\n\t" << "Axes: " << stick->getNumberOfComponents(OIS::OIS_Axis)
@@ -612,7 +681,6 @@ vl::Window::_printInputInformation( void )
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
 		<< '\n';
 	std::cout << ss.str() << std::endl;
-// 	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 
 	ss.str("");
 	// List all devices
@@ -621,5 +689,4 @@ vl::Window::_printInputInformation( void )
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
 	std::cout << ss.str() << std::endl;
-//	Ogre::LogManager::getSingleton().logMessage( ss.str() );
 }

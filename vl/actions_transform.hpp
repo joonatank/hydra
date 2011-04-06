@@ -13,9 +13,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-// TODO replace with our own timer, so that we can get time in seconds
-// and milliseconds easily
-#include <OGRE/OgreTimer.h>
+#include "base/timer.hpp"
 
 namespace vl
 {
@@ -39,7 +37,7 @@ public :
 
 	// TODO this should be executed with a double parameter (delta time) from
 	// FrameTrigger
-	/// Purposefully not virtual override the private virtual move 
+	/// Purposefully not virtual override the private virtual move
 	/// which is called from this
 	void execute( void );
 
@@ -85,7 +83,7 @@ protected :
 
 	bool _local;
 
-	Ogre::Timer _clock;
+	vl::timer _clock;
 };
 
 // This is identical for both MoveAction and ApplyForce actions

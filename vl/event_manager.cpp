@@ -100,9 +100,10 @@ vl::EventManager::hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 	return _findKeyPressedTrigger(kc,mod);
 }
 
-void 
+void
 vl::EventManager::updateKeyPressedTrigger( OIS::KeyCode kc )
 {
+	bool update = true;
 	if( getModifier(kc) != KEY_MOD_NONE )
 	{
 		// Add modifiers
@@ -124,12 +125,12 @@ vl::EventManager::updateKeyPressedTrigger( OIS::KeyCode kc )
 		_key_modifiers = new_key_modifiers;
 	}
 	else
-	{ _keyDown(kc); }
+	{ update = _keyDown(kc); }
 
 	// Modifiers can also be used as event triggers.
 
 	// Check if the there is a trigger for this event
-	if( hasKeyPressedTrigger( kc, _key_modifiers ) )
+	if( update && hasKeyPressedTrigger( kc, _key_modifiers ) )
 	{
 		getKeyPressedTrigger( kc, _key_modifiers )->update();
 	}
@@ -169,10 +170,11 @@ vl::EventManager::hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 	return _findKeyReleasedTrigger(kc, mod);
 }
 
-void 
+void
 vl::EventManager::updateKeyReleasedTrigger( OIS::KeyCode kc )
 {
 	// TODO if modifier is removed we should release the event with modifiers
+	bool update = true;
 	KEY_MOD modifier = getModifier(kc);
 	if( modifier != KEY_MOD_NONE )
 	{
@@ -194,7 +196,7 @@ vl::EventManager::updateKeyReleasedTrigger( OIS::KeyCode kc )
 			if( hasKeyReleasedTrigger( _keys_down.at(i), _key_modifiers ) )
 			{
 				getKeyReleasedTrigger( _keys_down.at(i), _key_modifiers )->update();
-				
+
 				if( hasKeyPressedTrigger( _keys_down.at(i), new_key_modifiers ) )
 				{
 					getKeyPressedTrigger(_keys_down.at(i), new_key_modifiers)->update();
@@ -205,14 +207,14 @@ vl::EventManager::updateKeyReleasedTrigger( OIS::KeyCode kc )
 		_key_modifiers = new_key_modifiers;
 	}
 	else
-	{ _keyUp(kc); }
+	{ update = _keyUp(kc); }
 
 	// Modifiers can also be used as event triggers.
 
 	// Check if the there is a trigger for this event
 	// TODO we need to check all the different modifiers also, not just
 	// for the exact match
-	if( hasKeyReleasedTrigger( kc, _key_modifiers ) )
+	if( update && hasKeyReleasedTrigger( kc, _key_modifiers ) )
 	{
 		getKeyReleasedTrigger( kc, _key_modifiers )->update();
 	}
@@ -272,18 +274,28 @@ vl::EventManager::_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 }
 
 
-void
+bool
 vl::EventManager::_keyDown( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	assert( iter == _keys_down.end() );
-	_keys_down.push_back(kc);
+	/// Don't assert, makes entering/exiting from window impossible
+	if( iter == _keys_down.end() )
+	{
+		_keys_down.push_back(kc);
+		return true;
+	}
+	return false;
 }
 
-void 
+bool
 vl::EventManager::_keyUp( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	assert( iter != _keys_down.end() );
-	_keys_down.erase(iter);
+	/// Don't assert, makes entering/exiting from window impossible
+	if( iter != _keys_down.end() )
+	{
+		_keys_down.erase(iter);
+		return true;
+	}
+	return false;
 }

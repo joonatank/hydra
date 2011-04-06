@@ -61,6 +61,12 @@ vl::cluster::Message::dump( std::vector< char >& arr ) const
 	{ ::memcpy( &arr[pos], &_data[0], _data.size() ); }
 }
 
+bool 
+vl::cluster::Message::empty(void) const
+{
+	return _size == 0 && _data.empty();
+}
+
 void
 vl::cluster::Message::clear( void )
 {

@@ -73,7 +73,7 @@ vl::Stats::Stats( void )
 	, _frame_time("Frame processing")
 	, _update_time("Update")
 	, _step_time("Step")
-	, _wait_swap_time("Wait swap")
+	, _wait_draw_done_time("Wait draw done")
 	, _wait_draw_time("Wait draw")
 	, _wait_update_time("Wait update")
 {}
@@ -88,9 +88,9 @@ vl::Stats::logRenderingTime( double time )
 }
 
 void
-vl::Stats::logWaitSwapTime( double time )
+vl::Stats::logWaitDrawDoneTime( double time )
 {
-	_wait_swap_time.addTime(time);
+	_wait_draw_done_time.addTime(time);
 }
 
 void
@@ -144,7 +144,7 @@ vl::Stats::update(void)
 	_update_time.updateAvarage();
 	_step_time.updateAvarage();
 	_wait_update_time.updateAvarage();
-	_wait_swap_time.updateAvarage();
+	_wait_draw_done_time.updateAvarage();
 	_wait_draw_time.updateAvarage();
 }
 
@@ -161,7 +161,7 @@ vl::operator<<(std::ostream &os, vl::Stats const &stats)
 	os << stats._update_time << std::endl;
 	os << stats._step_time << std::endl;
 	os << stats._wait_update_time << std::endl;
-	os << stats._wait_swap_time << std::endl;
+	os << stats._wait_draw_done_time << std::endl;
 	os << stats._wait_draw_time << std::endl;
 
 	os << "Total frame processing time = " << total << "ms." 

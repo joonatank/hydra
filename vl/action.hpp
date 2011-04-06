@@ -11,10 +11,10 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-#include <OGRE/OgreTimer.h>
-
 // Necessary for vl::scalar
 #include "math/math.hpp"
+// Necessary for timed action
+#include "base/timer.hpp"
 
 namespace vl
 {
@@ -126,8 +126,7 @@ private :
 };	// class BufferActionProxy
 
 /** @class GroupActionProxy
- *	@brief Groups multiple actions together so that they are executed when 
- *	ever the group is
+ *	@brief Groups multiple actions together so that they are executed when ever the group is
  */
 class GroupActionProxy : public BasicAction
 {
@@ -136,12 +135,15 @@ public :
 
 	void execute( void );
 
-	void addAction( BasicActionPtr action )
-	{
-		_actions.push_back(action);
-	}
+	void addAction(BasicActionPtr action);
 
-	void remAction( BasicActionPtr action );
+	void remAction(BasicActionPtr action);
+
+	BasicActionPtr getAction(size_t i);
+
+	size_t nActions(void) const;
+
+	bool hasAction(BasicActionPtr action) const;
 
 	static GroupActionProxy *create( void )
 	{ return new GroupActionProxy; }
@@ -163,13 +165,7 @@ private :
 class TimerActionProxy : public BasicAction
 {
 public :
-	TimerActionProxy( void )
-		: _action(0), _time_limit(0)
-	{
-		// TODO
-		// Reset the clock to something big, so that the first time action will
-		// be executed no matter the time limit
-	}
+	TimerActionProxy( void );
 
 	void setAction( BasicActionPtr action )
 	{ _action = action; }
@@ -179,23 +175,17 @@ public :
 
 	/// Set the time limit between the same actions beign triggered
 	/// parameter time_limit in seconds
+	/// @todo change to using time structure
 	void setTimeLimit( double time_limit )
-	{ _time_limit = time_limit*1000; }
+	{ _time_limit = time_limit; }
 
 	/// Get the time limit between actions beign triggered
 	/// returns the time limit in seconds
+	/// @todo change to using time structure
 	double getTimeLimit( void ) const
-	{ return _time_limit/1000; }
+	{ return _time_limit; }
 
-	void execute( void )
-	{
-		double time = (double)(_clock.getMicroseconds())/1000;
-		if( _action && time > _time_limit )
-		{
-			_action->execute();
-			_clock.reset();
-		}
-	}
+	void execute(void);
 
 	static TimerActionProxy *create( void )
 	{ return new TimerActionProxy; }
@@ -206,9 +196,10 @@ public :
 private :
 	BasicActionPtr _action;
 
-	Ogre::Timer _clock;
+	vl::timer _clock;
 
-	// Time limit in milliseconds, easier to compare to clock output
+	/// Time limit in seconds, easier to compare to clock output
+	/// @todo replace with time structure
 	double _time_limit;
 };
 

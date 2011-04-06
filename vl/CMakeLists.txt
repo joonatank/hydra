@@ -9,7 +9,7 @@
 #
 #-------------------------------------------------------------------
 
-project( "eqOgre" CXX )
+project( "HydraMain" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -37,13 +37,14 @@ set( SOURCES
 	program_options.cpp
 	stats.cpp
 	logger.cpp
+	math/math.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	base/timer.cpp
 	eq_cluster/window.cpp
-	eq_cluster/channel.cpp
 	eq_cluster/config.cpp
-	eq_cluster/pipe.cpp
+	renderer.cpp
 	eq_cluster/application.cpp
 	eq_ogre/ogre_root.cpp
 	cluster/server.cpp
@@ -75,6 +76,8 @@ set( HEADERS
 	base/rapidxml_print.hpp
 	base/sleep.hpp
 	base/string_utils.hpp
+	base/timer.hpp
+	base/report.hpp
 	typedefs.hpp
 	resource.hpp
 	resource_manager.hpp
@@ -95,9 +98,9 @@ set( HEADERS
 	distrib_settings.hpp
 	program_options.hpp
 	eq_cluster/window.hpp
-	eq_cluster/channel.hpp
 	eq_cluster/config.hpp
-	eq_cluster/pipe.hpp
+	renderer.hpp
+	renderer_interface.hpp
 	eq_cluster/application.hpp
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp

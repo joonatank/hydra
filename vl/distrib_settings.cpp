@@ -88,7 +88,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr con
 // 	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	msg << env->getLogLevel() << env->getCameraRotationAllowed()
 		<< env->getMaster() << env->getSlaves()
-		<< env->getWalls() << env->getStereo()<< env->getIPD() << env->getLogDir();
+		<< env->getWalls() << env->getIPD() << env->getLogDir();
 
 	return msg;
 }
@@ -99,15 +99,14 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &en
 {
 // 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	uint32_t rot_allowed(-1);
-	vl::CFG stereo = vl::OFF;
 	double ipd = 0;
 	std::string log_dir;
 	vl::LogLevel log_level;
 	msg >> log_level >> rot_allowed >> env->getMaster()
 		>> env->getSlaves() >> env->getWalls()
-		>> stereo >> ipd >> log_dir;
+		>> ipd >> log_dir;
+
 	env->setCameraRotationAllowed( rot_allowed );
-	env->setStereo(stereo);
 	env->setIPD(ipd);
 	env->setLogDir(log_dir);
 	env->setLogLevel(log_level);
@@ -159,7 +158,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Window& window )
 {
 	msg << window.name << window.channel << window.x << window.y << window.h
-		<< window.w;
+		<< window.w << window.stereo << window.nv_swap_sync;
 
 	return msg;
 }
@@ -169,7 +168,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& window )
 {
 	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
-		>> window.w;
+		>> window.w >> window.stereo >> window.nv_swap_sync;
 
 	return msg;
 }

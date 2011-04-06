@@ -39,7 +39,8 @@ public :
 
 	void setActiveCamera( std::string const &name );
 
-	std::string const &getActiveCamera( void ) const;
+	std::string const &getActiveCamera( void ) const
+	{ return _active_camera; }
 
 	Ogre::Matrix4 const &getHeadMatrix( void ) const
 	{ return _head_matrix; }
@@ -51,11 +52,18 @@ public :
 	uint32_t getScreenshotVersion( void ) const
 	{ return _screenshot_version; }
 
+	void setIPD(double ipd);
+
+	double getIPD(void) const
+	{ return _ipd; }
+
 	enum DirtyBits
 	{
 		DIRTY_HEAD = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_SCREENSHOT = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_IPD = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
 	};
 
 protected :
@@ -72,6 +80,8 @@ private :
 	Ogre::Matrix4 _head_matrix;
 
 	uint32_t _screenshot_version;
+
+	double _ipd;
 
 };	// class Player
 

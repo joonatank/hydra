@@ -121,9 +121,11 @@ public :
 	struct Window
 	{
 		Window( std::string const &nam, Channel const &chan,
-				int width, int height, int px, int py )
+				int width, int height, int px, int py,
+				bool s = false, bool nv_swap = false )
 			: name(nam), channel(chan),
 			  w(width), h(height), x(px), y(py)
+			, stereo(s), nv_swap_sync(nv_swap)
 		{
 			if( h < 0 || w < 0 )
 			{
@@ -157,6 +159,10 @@ public :
 		int x;
 		// y coordinate of the window
 		int y;
+
+		bool stereo;
+
+		bool nv_swap_sync;
 
 	};	// struct Window
 
@@ -337,6 +343,9 @@ public :
 
 	Node findSlave( std::string const &name ) const;
 
+	std::string const &getName(void) const
+	{ return _master.name; }
+
 	/** @brief Get the master nodes configuration
 	 *	@return Node representing the Master configuration
 	 */
@@ -361,17 +370,29 @@ public :
 	void setServer( Server const &server )
 	{ _server = server; }
 
-	/**	@brief set if we use stereo or not
-	 *	@param stereo the configuration value of stereo
+	/**	@brief get the configuration of stereo
+	 *	@return true if should use stereo false otherwise
 	 */
-	void setStereo( CFG stereo )
+	bool hasStereo( void ) const
+	{ return _stereo; }
+
+	/**	@brief set if we use stereo or not
+	 *	@param stereo true if should use stereo false otherwise
+	 */
+	void setStereo( bool stereo )
 	{ _stereo = stereo; }
 
-	/**	@brief get the configuration of stereo
-	 *	@return the configuration value of stereo param
+	/**	@brief using NVidia swap sync or not
+	 *	@return true if should use NVidia swap sync false otherwise
 	 */
-	CFG getStereo( void ) const
-	{ return _stereo; }
+	bool hasNVSwapSync(void) const
+	{ return _nv_swap_sync; }
+
+	/**	@brief set wether or not to use NVidia swap sync
+	 *	@param val true if should use NVidia swap sync false otherwise
+	 */
+	void setNVSwapSync(bool val)
+	{ _nv_swap_sync = val; }
 
 	/**	@brief set the amount of interpupilar distance used for stereo
 	 *	@param ipd the distance in meters
@@ -454,7 +475,10 @@ private :
 
 	std::vector<Wall> _walls;
 
-	CFG _stereo;
+	bool _stereo;
+	
+	bool _nv_swap_sync;
+
 	// Inter pupilar distance
 	double _ipd;
 
@@ -506,9 +530,13 @@ protected :
 
 	void processChannel( rapidxml::xml_node<>* XMLNode, EnvSettings::Window &window );
 
-	void processStereo( rapidxml::xml_node<>* XMLNode );
+	void processStereo(rapidxml::xml_node<> *xml_node);
 
-	void processIPD( rapidxml::xml_node<>* XMLNode );
+	void processNVSwapSync(rapidxml::xml_node<> *xml_node);
+
+	void processIPD(rapidxml::xml_node<> *xml_node);
+
+	void _checkUniqueNode(rapidxml::xml_node<> *xml_node);
 
 	std::vector<double> getVector( rapidxml::xml_node<>* xml_node );
 

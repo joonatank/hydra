@@ -34,14 +34,7 @@ add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	)
 
-target_link_libraries( fake_tracking_server
-	${VRPN_LIBRARY}
-	${CMAKE_THREAD_LIBS_INIT}
-	${Ogre_LIBRARY}
-	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${Boost_SYSTEM_LIBRARIES}
-	${Boost_FILESYSTEM_LIBRARIES}
-	)
+target_link_libraries( fake_tracking_server ${HYDRA_LIBRARIES} )
 
 
 add_executable( hydra hydra.cpp )
@@ -52,8 +45,19 @@ add_executable( angles_to_quaternion
 	angles_to_quaternion.cpp
 	)
 
-target_link_libraries( angles_to_quaternion ${Ogre_LIBRARY} )
+target_link_libraries( angles_to_quaternion ${HYDRA_LIBRARIES} )
 
+# These should not need to link to anything else than boost
+set( SRC
+	${vl_SOURCE_DIR}/vl/base/timer.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	${vl_SOURCE_DIR}/vl/base/report.hpp
+	)
+add_executable(timestamp_client timestamp_client.cpp ${SRC})
+target_link_libraries( timestamp_client ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
+
+add_executable(timestamp_server timestamp_server.cpp ${SRC})
+target_link_libraries( timestamp_server ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
 # install
 # install( TARGETS renderer fake_tracking_server DESTINATION ./ )

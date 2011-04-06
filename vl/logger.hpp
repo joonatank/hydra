@@ -32,7 +32,7 @@ enum LOG_MESSAGE_LEVEL
 	LML_TRIVIAL,
 };
 
-char const ERR = 17;
+char const CRITICAL = 17;
 char const NORMAL = 18;
 char const TRACE = 19;
 
@@ -44,9 +44,12 @@ LogMessage( std::string const &ty = std::string(),
 			LOG_MESSAGE_LEVEL lvl = LML_CRITICAL )
 	: type(ty), time(tim), message(msg), level(lvl)
 {
-	// Remove the line ending because we are using custom line endings
-	if(*(message.end()-1) == '\n')
-	{ message.erase(message.end()-1); }
+	if( message.size() > 0 )
+	{
+		// Remove the line ending because we are using custom line endings
+		if(*(message.end()-1) == '\n')
+		{ message.erase(message.end()-1); }
+	}
 }
 
 std::string type;
@@ -70,6 +73,20 @@ operator<<(std::ostream &os, LogMessage const &msg)
 	os << msg.type << "\t" << level << '\t' << msg.time << "s " << msg.message;
 	return os;
 }
+
+/// Abstract class which defines the interface for sending LoggedMessages
+class LogReceiver
+{
+public :
+	virtual ~LogReceiver(void) {}
+
+	virtual bool logEnabled(void) const = 0;
+
+	virtual void logMessage(LogMessage const &msg) = 0;
+
+	virtual uint32_t nLoggedMessages(void) const = 0;
+
+};
 
 class Logger;
 
@@ -107,11 +124,7 @@ public :
 	bool getVerbose( void ) const
 	{ return _verbose; }
 
-	void setOutputFile( std::string const &filename )
-	{
-		_output_filename = filename;
-		// TODO should close the old file if it's open
-	}
+	void setOutputFile( std::string const &filename );
 
 	io::stream_buffer<sink> *addSink(std::string const &name);
 
@@ -125,21 +138,13 @@ public :
 
 	void logMessage(LogMessage const &message);
 
-	bool newMessages(void) const
-	{ return !_messages.empty(); }
-
 	size_t nMessages(void) const
 	{ return _messages.size(); }
 
-	LogMessage popMessage(void);
-
-	// TODO separate cout and cerr for python
-
-	// TODO logging data to both a file and an endpoint
+	LogMessage const &getMessage(size_t i) const;
 
 /// Data
 private :
-	vl::mutex _mutex;
 
 	bool _verbose;
 
@@ -152,6 +157,8 @@ private :
 
 	std::vector<LogMessage> _messages;
 	std::vector< io::stream_buffer<sink> *> _streams;
+
+	mutable vl::mutex _mutex;
 
 };	// namespace Logger
 

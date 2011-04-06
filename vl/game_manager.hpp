@@ -45,9 +45,15 @@ class World;
 }
 
 
+/** @class GameManager
+ */
 class GameManager
 {
 public :
+	/// @brief constructor
+	/// @param logger an instance of Logging class where all logging is redirected
+	/// this one should usually be the only one
+	/// @todo add passing of the exe directory (for python modules)
 	GameManager(vl::Logger *logger);
 
 	virtual ~GameManager( void );

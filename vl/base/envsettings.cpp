@@ -36,7 +36,11 @@ vl::EnvSettings::Node::getWindow( size_t i ) const
 
 /// ------------------------------ vl::EnvSettings -----------------------------
 vl::EnvSettings::EnvSettings( void )
-	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 ), _slave(false)
+	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
+	, _stereo(false)
+	, _nv_swap_sync(false)
+	, _ipd(0)
+	, _slave(false)
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -290,6 +294,19 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processServer( xml_elem ); }
 
+	// These need to be befoce processing Windows e.g. master and slave
+	xml_elem = xml_root->first_node("stereo");
+	if( xml_elem )
+	{ processStereo( xml_elem ); }
+
+	xml_elem = xml_root->first_node("nv_swap_sync");
+	if( xml_elem )
+	{ processNVSwapSync( xml_elem ); }
+
+	xml_elem = xml_root->first_node("ipd");
+	if( xml_elem )
+	{ processIPD( xml_elem ); }
+
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
 	{ processNode( xml_elem, _envSettings->getMaster() ); }
@@ -303,14 +320,6 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 
 		xml_elem = xml_elem->next_sibling("slave");
 	}
-
-	xml_elem = xml_root->first_node("stereo");
-	if( xml_elem )
-	{ processStereo( xml_elem ); }
-
-	xml_elem = xml_root->first_node("ipd");
-	if( xml_elem )
-	{ processIPD( xml_elem ); }
 }
 
 
@@ -518,7 +527,9 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
 		int y = vl::from_string<int>( attrib->value() );
 
-		EnvSettings::Window window( name, EnvSettings::Channel(), w, h, x, y );
+		EnvSettings::Window window( name, EnvSettings::Channel(), w, h, x, y, x );
+		window.stereo = _envSettings->hasStereo();
+		window.nv_swap_sync = _envSettings->hasNVSwapSync();
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
 		processChannel(channel_elem, window);
 
@@ -528,11 +539,7 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		pWindow = pWindow->next_sibling("window");
 	}
 
-	if( xml_node->next_sibling("windows") )
-	{
-		std::string desc( "Only one windows token is supported" );
-		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
-	}
+	_checkUniqueNode(xml_node);
 }
 
 void
@@ -562,31 +569,31 @@ vl::EnvSettingsSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
 void
 vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
-	CFG cfg_val = ON;
-	std::string stereo = xml_node->value();
-	vl::to_lower(stereo);
-	if( stereo == "on" )
-	{}
-	else if( stereo == "off" )
-	{
-		cfg_val = OFF;
-	}
-	else if( stereo == "required" )
-	{
-		cfg_val = REQUIRED;
-	}
+	bool stereo = vl::from_string<bool>(xml_node->value());
 
-	_envSettings->setStereo( cfg_val );
+	if(stereo)
+	{ _envSettings->setStereo(true); }
+	else
+	{ _envSettings->setStereo(false); }
 
-	if( xml_node->next_sibling("stereo") )
-	{
-		std::string desc( "Only one stereo token is supported" );
-		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
-	}
+	_checkUniqueNode(xml_node);
+}
+
+void 
+vl::EnvSettingsSerializer::processNVSwapSync(rapidxml::xml_node<> *xml_node)
+{
+	bool swap = vl::from_string<bool>(xml_node->value());
+
+	if(swap)
+	{ _envSettings->setNVSwapSync(true); }
+	else
+	{ _envSettings->setNVSwapSync(false); }
+
+	_checkUniqueNode(xml_node);
 }
 
 void
-vl::EnvSettingsSerializer::processIPD( rapidxml::xml_node<>* xml_node )
+vl::EnvSettingsSerializer::processIPD(rapidxml::xml_node<>* xml_node)
 {
 	double ipd = vl::from_string<double>(xml_node->value());
 	if( ipd < 0 )
@@ -595,13 +602,9 @@ vl::EnvSettingsSerializer::processIPD( rapidxml::xml_node<>* xml_node )
 		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 	}
 
-	_envSettings->setIPD( ipd);
+	_envSettings->setIPD(ipd);
 
-	if( xml_node->next_sibling("stereo") )
-	{
-		std::string desc( "Only one IPD token is supported" );
-		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
-	}
+	_checkUniqueNode(xml_node);
 }
 
 std::vector<double>
@@ -625,4 +628,16 @@ vl::EnvSettingsSerializer::getVector( rapidxml::xml_node<>* xml_node )
 	tmp.at(2) = vl::from_string<double>( attrib->value() );
 
 	return tmp;
+}
+
+void 
+vl::EnvSettingsSerializer::_checkUniqueNode(rapidxml::xml_node<> *xml_node)
+{
+	assert(xml_node);
+
+	if( xml_node->next_sibling(xml_node->name()) )
+	{
+		std::string desc = "Only one " + std::string(xml_node->name()) + " token is supported";
+		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+	}
 }

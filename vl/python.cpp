@@ -12,7 +12,16 @@
 #include "game_manager.hpp"
 
 /// Script always executed
+/// @todo should this be broken down to multiple independent scripts?
+/// @todo this definitely should not add the current working directory
+/// to path, it should add the modules/exe directory where the pyogre module is
+/// in. This needs to be passed as a parameter to the PythonContext.
+/// On Linux if the path is not added, it fails to find pyogre module.
+/// On Windows working directory is automatically in the path.
+/// Both of these only work if the working directory is the exe directory.
 char const *script =
+	"import sys, os\n"
+	"sys.path.append(os.getcwd())\n"
 	"from pyogre import *\n"
 	"from vl import *\n"
 	"def quit():\n"

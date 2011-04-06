@@ -10,7 +10,7 @@
 #include "player.hpp"
 #include "typedefs.hpp"
 
-// Necessary for Window config
+// Necessary for Window config and Wall
 #include "base/envsettings.hpp"
 
 #include <OIS/OISEvents.h>
@@ -24,11 +24,10 @@
 // GUI
 #include <CEGUI/CEGUIEventArgs.h>
 
+#include "renderer_interface.hpp"
+
 namespace vl
 {
-
-class Channel;
-class Pipe;
 
 /**	@class Window represent an OpenGL drawable and context
  *
@@ -37,15 +36,13 @@ class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::J
 {
 public:
 	/// @TODO change name to window config
-	Window( std::string const &name, vl::Pipe *parent );
+	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
+	Window( std::string const &name, vl::RendererInterface *parent );
 
 	virtual ~Window( void );
 
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
-
-	vl::Pipe *getPipe( void )
-	{ return _pipe; }
 
 	vl::EnvSettingsRefPtr getEnvironment( void );
 
@@ -55,14 +52,17 @@ public:
 
 	void setCamera( Ogre::Camera *camera );
 
-	Ogre::Camera *getCamera( void );
-
-	Ogre::SceneManager *getSceneManager( void );
-
 	std::string const &getName( void ) const
 	{ return _name; }
 
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
+
+	void setIPD(double ipd)
+	{ _ipd = ipd; }
+
+	/// @brief Get wether hardware stereo is enabled or not
+	/// @return true if the window has stereo enabled
+	bool hasStereo(void) const;
 
 	/// Capture input events
 	virtual void capture( void );
@@ -110,7 +110,7 @@ public:
 	void createGUIWindow( void );
 
 protected :
-	void _createOgreWindow( vl::EnvSettings::Window const &winConf );
+	Ogre::RenderWindow *_createOgreWindow( vl::EnvSettings::Window const &winConf );
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -123,12 +123,17 @@ protected :
 
 	std::string _name;
 
-	vl::Pipe *_pipe;
-	/// @TODO multi channel support?
-	vl::Channel *_channel;
+	vl::RendererInterface *_renderer;
+
+	vl::EnvSettings::Wall _wall;
+
+	double _ipd;
 
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
+	Ogre::Camera *_camera;
+	Ogre::Viewport *_left_viewport;
+	Ogre::Viewport *_right_viewport;
 
 	// OIS variables
 	OIS::InputManager *_input_manager;

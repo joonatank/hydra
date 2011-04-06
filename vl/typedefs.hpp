@@ -28,12 +28,19 @@ namespace vl
 	class SceneManager;
 	class SceneNode;
 	class PythonContext;
+	class RendererInterface;
+	class Config;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
 	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 	typedef boost::shared_ptr<Clients> ClientsRefPtr;
+	typedef boost::shared_ptr<Config> ConfigRefPtr;
+
+	// Auto ptr because Renderer has a single owner
+	// usually created elsewhere and passed to Config or Client
+	typedef std::auto_ptr<RendererInterface> RendererInterfacePtr;
 
 	typedef Player * PlayerPtr;
 	typedef GameManager * GameManagerPtr;

@@ -101,7 +101,8 @@ BOOST_PYTHON_MODULE(vl)
 
 	// TODO add setHeadMatrix function to python
 	python::class_<vl::Player, boost::noncopyable>("Player", python::no_init)
-		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_internal_reference<>() ), &Player::setActiveCamera )
+		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_value_policy<python::copy_const_reference>() ), &Player::setActiveCamera )
+		.add_property("ipd", &Player::getIPD, &Player::setIPD)
 	;
 
 	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
@@ -129,7 +130,7 @@ BOOST_PYTHON_MODULE(vl)
 
 
 	python::class_<vl::SceneNode>("SceneNode", python::no_init)
-		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_internal_reference<>() ), &vl::SceneNode::setName )
+		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
 		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
@@ -200,9 +201,9 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<KeyReleasedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyReleasedTrigger", python::no_init )
 	;
 
-	// TODO replace by a wrapper
+	// TODO replace with a wrapper
 	python::class_<Action, boost::noncopyable>("Action", python::no_init )
-		.add_property("type", &Action::getTypeName )
+		.add_property("type", &Action::getTypeName)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -402,6 +403,12 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::gui::HideConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideConsole", python::no_init )
 		.def("create",&vl::gui::HideConsole::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
+		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
 	;
 
 	/// Physics
@@ -441,6 +448,9 @@ BOOST_PYTHON_MODULE(vl)
 		.def( "setLinearVelocity", &btRigidBody::setLinearVelocity )
 		.def( "setDamping", &btRigidBody::setDamping )
 		.def( "getInvMass", &btRigidBody::getInvMass )
+		.def( "clearForces", &btRigidBody::clearForces )
+		.def( "getLinearDamping", &btRigidBody::getLinearDamping )
+		.def( "getAngularDamping", &btRigidBody::getAngularDamping )
 	;
 
 	// TODO add scene node setting
@@ -475,11 +485,6 @@ BOOST_PYTHON_MODULE(vl)
 					  &vl::physics::MoveAction::setTorque )
 		.def("create",&vl::physics::MoveAction::create,
 			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
-		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

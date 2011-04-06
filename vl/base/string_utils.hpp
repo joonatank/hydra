@@ -24,6 +24,30 @@
 
 namespace vl
 {
+	/// @brief convert strings to contain only lower case characters
+	/// @param str string to convert
+	/// @throws nothing
+	inline
+	void to_lower( std::string &str )
+	{
+		for( size_t i = 0; i < str.length(); ++i )
+		{
+			str.at(i) = ::tolower(str.at(i));
+		}
+	}
+
+	/// @brief convert strings to contain only upper case characters
+	/// @param str string to convert
+	/// @throws nothing
+	inline
+	void to_upper( std::string &str )
+	{
+		for( size_t i = 0; i < str.length(); ++i )
+		{
+			str.at(i) = ::toupper(str.at(i));
+		}
+	}
+
 	/// Breaks a string containing multiple substrings separated by a delimiter
 	/// to those substrings and adds them to the broken_path vector parameter
 	inline
@@ -52,6 +76,9 @@ namespace vl
 		broken_path.push_back( str );
 	}
 
+	/// @brief replaces Windows line endings with unix ones
+	/// @param str string which should have it's line endings altered
+	/// @throws nothing
 	inline
 	void replace_line_endings( std::string &str )
 	{
@@ -83,22 +110,18 @@ namespace vl
 		return tmp;
 	}
 
+	template<>
 	inline
-	void to_lower( std::string &str )
+	bool from_string( std::string const &str )
 	{
-		for( size_t i = 0; i < str.length(); ++i )
+		std::string tmp = str;
+		vl::to_lower(tmp);	
+		if( tmp == "on" || tmp == "true" || tmp == "1" )
 		{
-			str.at(i) = ::tolower(str.at(i));
+			return true;
 		}
-	}
 
-	inline
-	void to_upper( std::string &str )
-	{
-		for( size_t i = 0; i < str.length(); ++i )
-		{
-			str.at(i) = ::toupper(str.at(i));
-		}
+		return false;
 	}
 
 }	// namespace vl

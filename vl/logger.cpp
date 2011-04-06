@@ -14,11 +14,11 @@ namespace
 
 std::string::iterator find_first_log_level(std::string &str)
 {
-	std::string::iterator err_iter = std::find(str.begin(), str.end(), vl::ERR);
+	std::string::iterator err_iter = std::find(str.begin(), str.end(), vl::CRITICAL);
 	std::string::iterator norm_iter = std::find(str.begin(), str.end(), vl::NORMAL);
 	std::string::iterator trace_iter = std::find(str.begin(), str.end(), vl::TRACE);
 
-	return std::min(std::min(err_iter, norm_iter),trace_iter);
+	return std::min(std::min(err_iter, norm_iter), trace_iter);
 }
 
 std::pair<std::string, vl::LOG_MESSAGE_LEVEL> parse_log_message(std::string &str)
@@ -28,7 +28,7 @@ std::pair<std::string, vl::LOG_MESSAGE_LEVEL> parse_log_message(std::string &str
 	vl::LOG_MESSAGE_LEVEL log_l = vl::LML_NORMAL;
 	if( iter != str.end() )
 	{
-		if( *iter == vl::ERR )
+		if( *iter == vl::CRITICAL )
 		{ log_l = vl::LML_CRITICAL; }
 		else if( *iter == vl::TRACE )
 		{ log_l = vl::LML_TRIVIAL; }
@@ -100,6 +100,13 @@ vl::Logger::~Logger(void )
 	}
 }
 
+void 
+vl::Logger::setOutputFile( std::string const &filename )
+{
+	_output_filename = filename;
+	// TODO should close the old file if it's open
+}
+
 io::stream_buffer<vl::sink> *
 vl::Logger::addSink(std::string const &name)
 {
@@ -155,6 +162,10 @@ vl::Logger::getPythonErr(void)
 void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
+	// For some reason this is called with an empty string
+	// Disallow for now so we can debug those
+	assert( message.size() > 0 );
+
 	// TODO fix the time
 	LogMessage msg(type, 0, message, level);
 	logMessage(msg);
@@ -180,17 +191,8 @@ vl::Logger::logMessage(vl::LogMessage const &message)
 	// TODO if verbose is on should print the message to console (old cout, cerr)
 }
 
-
-vl::LogMessage
-vl::Logger::popMessage(void)
+vl::LogMessage const &
+vl::Logger::getMessage(size_t i) const
 {
-	vl::scoped_lock<mutex> lock(_mutex);
-
-	if( !_messages.empty() )
-	{
-		LogMessage msg = _messages.front();
-		_messages.erase(_messages.begin());
-		return msg;
-	}
-	return LogMessage();
+	return _messages.at(i);
 }
