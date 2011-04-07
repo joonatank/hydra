@@ -27,6 +27,7 @@ namespace vl
 	class Clients;
 	class SceneManager;
 	class SceneNode;
+	class Entity;
 	class PythonContext;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
@@ -41,6 +42,7 @@ namespace vl
 	typedef ResourceManager * ResourceManagerPtr;
 	typedef SceneManager * SceneManagerPtr;
 	typedef SceneNode * SceneNodePtr;
+	typedef Entity * EntityPtr;
 	typedef PythonContext * PythonContextPtr;
 
 	typedef std::map<std::string, std::string> NamedValuePairList;

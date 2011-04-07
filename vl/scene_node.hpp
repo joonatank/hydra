@@ -58,23 +58,21 @@ public :
 	bool getVisibility( void ) const
 	{ return _visible; }
 
-	void setVisibility( bool visible )
-	{
-		if( _visible != visible )
-		{
-			setDirty( DIRTY_VISIBILITY );
-			_visible = visible;
-		}
-	}
+	void setVisibility( bool visible );
 
-	void showBoundingBox( bool show )
-	{
-		if( _show_boundingbox != show )
-		{
-			setDirty(DIRTY_BOUNDING_BOX);
-			_show_boundingbox = show;
-		}
-	}
+	void showBoundingBox( bool show );
+
+	void addEntity(vl::EntityPtr ent);
+
+	void removeEntity(vl::EntityPtr ent);
+
+	bool hasEntity(vl::EntityPtr ent) const;
+
+	void addChild(vl::SceneNodePtr child);
+
+	void removeChild(vl::SceneNodePtr child);
+
+	bool hasChild(vl::SceneNodePtr child) const;
 
 	enum DirtyBits
 	{
@@ -83,8 +81,15 @@ public :
 		DIRTY_ORIENTATION = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_ENTITIES = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 7,
 	};
+
+	Ogre::SceneNode *getNative(void) const
+	{ return _ogre_node; }
+
+	friend std::ostream &operator<<(  std::ostream &os, SceneNode const &a );
 
 protected :
 
@@ -103,22 +108,17 @@ private :
 
 	bool _show_boundingbox;
 
+	std::vector<vl::SceneNodePtr> _childs;
+	std::vector<vl::EntityPtr> _entities;
+
 	Ogre::SceneNode *_ogre_node;
 
 	vl::SceneManager *_creator;
 
 };	// class SceneNode
 
-inline std::ostream &
-operator<<(  std::ostream &os, SceneNode const &a )
-{
-	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
-		<< " with position " << a.getPosition()
-		<< " and orientation " << a.getOrientation();
-
-	return os;
-}
-
+std::ostream &
+operator<<(std::ostream &os, SceneNode const &a);
 
 
 /// ---------------------- SceneNode Actions -------------------------

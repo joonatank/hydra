@@ -5,6 +5,9 @@
 
 #include "scene_manager.hpp"
 
+#include "scene_node.hpp"
+#include "entity.hpp"
+
 /// Public
 vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	: _scene_version(0)
@@ -38,8 +41,6 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 vl::SceneNodePtr
 vl::SceneManager::createSceneNode( std::string const &name, uint64_t id )
 {
-	SceneNodePtr node = new SceneNode( name, this );
-
 	assert( !name.empty() || vl::ID_UNDEFINED != id );
 
 	// Check that no two nodes have the same name
@@ -49,6 +50,8 @@ vl::SceneManager::createSceneNode( std::string const &name, uint64_t id )
 		BOOST_THROW_EXCEPTION( vl::duplicate() );
 	}
 	assert( _session );
+
+	SceneNodePtr node = new SceneNode( name, this );
 
 	_session->registerObject( node, OBJ_SCENE_NODE, id );
 	assert( node->getID() != vl::ID_UNDEFINED );
@@ -64,19 +67,6 @@ vl::SceneManager::hasSceneNode(const std::string& name) const
 }
 
 vl::SceneNodePtr
-vl::SceneManager::getSceneNode(const std::string& name)
-{
-	for( size_t i = 0; i < _scene_nodes.size(); ++i )
-	{
-		SceneNode *node = _scene_nodes.at(i);
-		if( node->getName() == name )
-		{ return node; }
-	}
-
-	return 0;
-}
-
-const vl::SceneNodePtr
 vl::SceneManager::getSceneNode(const std::string& name) const
 {
 	for( size_t i = 0; i < _scene_nodes.size(); ++i )
@@ -89,16 +79,66 @@ vl::SceneManager::getSceneNode(const std::string& name) const
 	return 0;
 }
 
-vl::SceneNode *
-vl::SceneManager::getSceneNode(size_t i)
+vl::SceneNodePtr
+vl::SceneManager::getSceneNodeID(uint64_t id) const
 {
-	return _scene_nodes.at(i);
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		SceneNode *node = _scene_nodes.at(i);
+		if( node->getID() == id )
+		{ return node; }
+	}
+
+	return 0;
 }
 
-const vl::SceneNodePtr
-vl::SceneManager::getSceneNode(size_t i) const
+/// --------------------- SceneManager Entity --------------------------------
+vl::EntityPtr
+vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type, uint64_t id)
 {
-	return _scene_nodes.at(i);
+	if( !name.empty() && hasEntity(name) )
+	{
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	}
+
+	EntityPtr ent = new Entity(name, type, this);
+	
+	_session->registerObject( ent, OBJ_ENTITY, id );
+	assert( ent->getID() != vl::ID_UNDEFINED );
+	_entities.push_back(ent);
+
+	return ent;
+}
+
+bool 
+vl::SceneManager::hasEntity( std::string const &name ) const
+{
+	return( getEntity(name) );
+}
+
+vl::EntityPtr 
+vl::SceneManager::getEntity( std::string const &name ) const
+{
+	for( EntityList::const_iterator iter = _entities.begin(); iter != _entities.end(); ++iter )
+	{
+		if( (*iter)->getName() == name )
+		{ return *iter; }
+	}
+
+	return 0;
+}
+
+vl::EntityPtr
+vl::SceneManager::getEntityID(uint64_t id) const
+{
+	for( size_t i = 0; i < _entities.size(); ++i )
+	{
+		EntityPtr ent = _entities.at(i);
+		if( ent->getID() == id )
+		{ return ent; }
+	}
+
+	return 0;
 }
 
 void
@@ -122,7 +162,7 @@ vl::SceneManager::addToSelection( vl::SceneNodePtr node )
 void
 vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 {
-	std::vector<SceneNodePtr>::iterator iter
+	SceneNodeList::iterator iter
 		= std::find(_selection.begin(), _selection.end(), node);
 	if( iter != _selection.end() )
 	{
@@ -134,7 +174,7 @@ vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 bool
 vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
 {
-	std::vector<SceneNodePtr>::const_iterator iter;
+	SceneNodeList::const_iterator iter;
 	for( iter = _selection.begin(); iter != _selection.end(); ++iter )
 	{
 		if( *iter == node )
