@@ -74,6 +74,9 @@ public :
 
 	bool hasChild(vl::SceneNodePtr child) const;
 
+	vl::SceneNodePtr getParent(void) const
+	{ return _parent; }
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -107,6 +110,9 @@ private :
 	bool _visible;
 
 	bool _show_boundingbox;
+
+	/// Keep track of the parent, so we can inform it when hierarchy is changed
+	vl::SceneNodePtr _parent;
 
 	std::vector<vl::SceneNodePtr> _childs;
 	std::vector<vl::EntityPtr> _entities;

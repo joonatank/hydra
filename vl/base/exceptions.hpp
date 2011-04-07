@@ -51,6 +51,14 @@ namespace vl
 	};
 
 	/// ------------------ Function Parameter errors ---------------
+	/// Trying to add object it self
+	struct this_pointer : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Parameter is the object itself.";
+		}
+	};
 
 	/// Null pointer provided
 	struct null_pointer : public exception

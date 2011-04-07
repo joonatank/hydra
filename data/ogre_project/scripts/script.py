@@ -27,3 +27,9 @@ addToggleActiveCamera("OutsideCamera", "Omakamera" )
 
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
+
+# Some nodes for SceneNode creation and hierarchy modification examples
+node1 = game.scene.createSceneNode("node1")
+node2 = game.scene.createSceneNode("node2")
+node1.addChild(ogre)
+node1.addChild(node2)

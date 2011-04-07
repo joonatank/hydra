@@ -16,6 +16,10 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
 		<< " with position " << a.getPosition()
 		<< " and orientation " << a.getOrientation();
+	if( a._parent )
+	{ os << " with parent " << a._parent->getName(); }
+	else
+	{ os << " without a parent." << std::endl; }
 		
 	if( !a._childs.empty() )
 	{
@@ -53,6 +57,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _orientation( Ogre::Quaternion::IDENTITY )
 	, _visible(true)
 	, _show_boundingbox(false)
+	, _parent(0)
 	, _ogre_node(0)
 	, _creator(creator)
 {
@@ -133,7 +138,11 @@ void
 vl::SceneNode::addChild(vl::SceneNodePtr child)
 {
 	assert(child);
-	std::clog << "vl::SceneNode::addChild" << std::endl;
+
+	if( child == this )
+	{
+		BOOST_THROW_EXCEPTION( vl::this_pointer() );
+	}
 
 	if( hasChild(child) )
 	{ return; }
@@ -142,29 +151,51 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		setDirty(DIRTY_CHILDS);
 		_childs.push_back(child);
 
+		/// Remove from current parent
+		if( child->getParent() )
+		{
+			child->getParent()->removeChild(child);
+		}
+
+		child->_parent = this;
+
 		if( _ogre_node )
 		{
-			std::clog << "vl::SceneNode::addChild : Native" << std::endl;
-			assert(child->getNative());
-			_ogre_node->addChild(child->getNative()); 
+			Ogre::SceneNode *og_child = child->getNative();
+			if( og_child )
+			{
+				// Hack to remove parents that are in the Ogre SC but not in ours
+				// Should be removed when the DotScene serializer reads 
+				// hierarchy correctly
+				if( og_child->getParent() )
+				{ og_child->getParent()->removeChild(og_child); }
+
+				_ogre_node->addChild(child->getNative());
+			}
 		}
 	}
-
-	std::clog << "vl::SceneNode::addChild : DONE" << std::endl;
 }
 
 void 
 vl::SceneNode::removeChild(vl::SceneNodePtr child)
 {
 	assert(child);
+	if( child == this )
+	{
+		BOOST_THROW_EXCEPTION( vl::this_pointer() );
+	}
+
 	std::vector<vl::SceneNodePtr>::iterator iter;
 	for( iter = _childs.begin(); iter != _childs.end(); ++iter )
 	{
 		if( *iter == child )
 		{
+			assert(child->getParent() == this);
+			child->_parent = 0;
+
 			setDirty(DIRTY_CHILDS);
 			_childs.erase(iter);
-		
+
 			if( _ogre_node && child->getNative() )
 			{ _ogre_node->removeChild(child->getNative()); }
 			
@@ -249,10 +280,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		// name should never be empty
 		// @todo add exception throwing
 		assert( !_name.empty() );
-		if( !_findNode() )
-		{
-			std::cout << "Ogre node = " << _name << " NOT found in the SG." << std::endl;
-		}
+		_findNode();
 	}
 	// Deserialize position
 	if( dirtyBits & DIRTY_POSITION )
@@ -327,8 +355,6 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		{
 			addChild(_creator->getSceneNodeID(*id_iter));
 		}
-		std::clog << "DIRTY_CHILDS deserialized." << std::endl;
-
 	}
 
 	if( dirtyBits & DIRTY_ENTITIES )
@@ -391,6 +417,8 @@ vl::SceneNode::_findNode( void )
 	else
 	{
 		_ogre_node = _creator->getNative()->createSceneNode(_name);
+		// Attach to root so that this Node can be used
+		_creator->getNative()->getRootSceneNode()->addChild(_ogre_node);
 		_ogre_node->setOrientation(_orientation);
 		_ogre_node->setPosition(_position);
 		_ogre_node->setVisible(_visible);

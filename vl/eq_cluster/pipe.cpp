@@ -1068,22 +1068,21 @@ vl::PipeThread::operator()()
 	}
 	catch( vl::exception &e )
 	{
-		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
+		std::clog << "VL Exception : "<<   boost::diagnostic_information<>(e)
 			<< std::endl;
 	}
 	catch( Ogre::Exception const &e)
 	{
-		std::cerr << "Ogre Exception: " << e.what() << std::endl;
+		std::clog << "Ogre Exception: " << e.what() << std::endl;
 	}
 	catch( std::exception const &e )
 	{
-		std::cerr << "STD Exception: " << e.what() << std::endl;
+		std::clog << "STD Exception: " << e.what() << std::endl;
 	}
 	catch( ... )
 	{
-		std::cerr << "An exception of unknow type occured." << std::endl;
+		std::clog << "An exception of unknow type occured." << std::endl;
 	}
 
-	std::cout << vl::TRACE << "PipeThread Exited" << std::endl;
 	delete pipe;
 }
