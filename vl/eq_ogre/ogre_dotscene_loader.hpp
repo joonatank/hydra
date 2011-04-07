@@ -81,16 +81,9 @@ protected:
 	void processScene( rapidxml::xml_node<>* XMLRoot );
 
 	void processNodes( rapidxml::xml_node<>* XMLNode );
-	void processExternals( rapidxml::xml_node<>* XMLNode );
 	void processEnvironment( rapidxml::xml_node<>* XMLNode );
 	void processTerrain( rapidxml::xml_node<>* XMLNode );
 	void processTerrainPage( rapidxml::xml_node<>* XMLNode );
-	void processBlendmaps( rapidxml::xml_node<>* XMLNode );
-	void processUserDataReference( rapidxml::xml_node<>* XMLNode,
-			Ogre::SceneNode *parent = 0 );
-	void processUserDataReference( rapidxml::xml_node<>* XMLNode,
-			Ogre::Entity *entity );
-	void processOctree( rapidxml::xml_node<>* XMLNode );
 	void processLight( rapidxml::xml_node<>* XMLNode,
 			Ogre::SceneNode *parent = 0 );
 	void processCamera( rapidxml::xml_node<>* XMLNode,
@@ -128,10 +121,6 @@ protected:
 	Ogre::SceneNode *_attach_node;
 
 	std::string _sPrependNode;
-
-	// No terrain support for now
-//	Ogre::TerrainGroup* mTerrainGroup;
-//	Ogre::Vector3 mTerrainPosition;
 
 };	// class DotSceneLoader
 

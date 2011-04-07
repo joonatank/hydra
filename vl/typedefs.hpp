@@ -45,7 +45,11 @@ namespace vl
 	typedef Entity * EntityPtr;
 	typedef PythonContext * PythonContextPtr;
 
+	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;
+	
+	typedef std::vector<SceneNodePtr> SceneNodeList;
+	typedef std::vector<EntityPtr> EntityList;
 
 	struct null_deleter
 	{

@@ -38,12 +38,7 @@ vl::ogre::DotSceneLoader::parseDotScene( std::string const &scene_name,
 	char *xml_data = ::strdup( man.openResource(scene_name).get()->getAsString().c_str() );
 	assert( xml_data );
 
-	// Pass the ownership of the memory to this
-// 	= scene_data.get();
-
 	_parse( xml_data );
-
-//	::free( xml_data );
 }
 
 void
@@ -133,25 +128,6 @@ vl::ogre::DotSceneLoader::processScene(rapidxml::xml_node<>* XMLRoot)
 	if( pElement )
 	{ processNodes(pElement); }
 
-	// Process externals (?)
-	pElement = XMLRoot->first_node("externals");
-	if(pElement)
-	{ processExternals(pElement); }
-
-	// Process userDataReference (?)
-	/*
-	pElement = XMLRoot->first_node("userDataReference");
-	if(pElement)
-	{ processUserDataReference(pElement); }
-	*/
-
-	// Process octree (?)
-	/*
-	pElement = XMLRoot->first_node("octree");
-	if(pElement)
-	{ processOctree(pElement); }
-	*/
-
 	// Process light (?)
 	pElement = XMLRoot->first_node("light");
 	if(pElement)
@@ -180,46 +156,6 @@ vl::ogre::DotSceneLoader::processNodes(rapidxml::xml_node<>* XMLNode)
 		processNode(pElement);
 		pElement = pElement->next_sibling("node");
 	}
-
-	// NOTE these are weird why do we want to reset the attach node?
-	// Shouldn't we create another Node as the child of _attach_node
-	// and modify that one instead?
-	// Also why these are after processNode ?
-
-	// Process position (?)
-	pElement = XMLNode->first_node("position");
-	if(pElement)
-	{
-		_attach_node->setPosition(vl::parseVector3(pElement));
-		_attach_node->setInitialState();
-	}
-
-	// Process rotation (?)
-	pElement = XMLNode->first_node("rotation");
-	if(pElement)
-	{
-		_attach_node->setOrientation(vl::parseQuaternion(pElement));
-		_attach_node->setInitialState();
-	}
-	pElement = XMLNode->first_node("rotation");
-	if( pElement )
-	{
-		_attach_node->setOrientation(vl::parseQuaternion(pElement));
-	}
-
-	// Process scale (?)
-	pElement = XMLNode->first_node("scale");
-	if(pElement)
-	{
-		_attach_node->setScale(vl::parseVector3(pElement));
-		_attach_node->setInitialState();
-	}
-}
-
-void
-vl::ogre::DotSceneLoader::processExternals(rapidxml::xml_node<>* XMLNode)
-{
-	//! @todo Implement this
 }
 
 void
@@ -266,12 +202,7 @@ vl::ogre::DotSceneLoader::processEnvironment(rapidxml::xml_node<>* XMLNode)
 	//! @todo Set the background colour of all viewports (RenderWindow has to be provided then)
 	pElement = XMLNode->first_node("colourBackground");
 	if( pElement )
-		;
-
-	// Process userDataReference (?)
-	pElement = XMLNode->first_node("userDataReference");
-	if( pElement )
-	{ processUserDataReference(pElement); }
+	{}
 }
 
 /// Not implemented
@@ -428,72 +359,6 @@ vl::ogre::DotSceneLoader::processTerrainPage(rapidxml::xml_node<>* XMLNode)
 		mTerrainGroup->defineTerrain(pageX, pageY, &imp);
 	}
 	*/
-}
-
-/// Not implemented
-void
-vl::ogre::DotSceneLoader::processBlendmaps(rapidxml::xml_node<>* XMLNode)
-{
-	/* TODO implement Terrain
-	int pageX = std::stringConverter::parseInt(
-			XMLNode->first_attribute("pageX")->value());
-	int pageY = std::stringConverter::parseInt(
-			XMLNode->first_attribute("pageY")->value());
-
-	std::string filename = mTerrainGroup->generateFilename(pageX, pageY);
-	// skip this is terrain page has been saved already
-	if( !Ogre::ResourceGroupManager::getSingleton()
-			.resourceExists(mTerrainGroup->getResourceGroup(), filename) )
-	{
-		rapidxml::xml_node<>* pElement;
-
-		// Process blendmaps (*)
-		std::vector<std::string> blendMaps;
-		rapidxml::xml_node<>* pBlendmap;
-		pElement = XMLNode->first_node("blendMaps");
-		pBlendmap = pElement->first_node("blendMap");
-		while(pBlendmap)
-		{
-			blendMaps.push_back(getAttrib(pBlendmap, "texture",""));
-			pBlendmap = pBlendmap->next_sibling("blendMap");
-		}
-		int layerCount = mTerrainGroup->getTerrain(pageX, pageY)->getLayerCount();
-		for( int j = 1; j < layerCount; j++ )
-		{
-			Ogre::TerrainLayerBlendMap *blendmap
-				= mTerrainGroup->getTerrain(pageX, pageY)->getLayerBlendMap(j);
-			Ogre::Image img;
-			img.load(blendMaps[j-1],"General");
-			int blendmapsize = mTerrainGroup->getTerrain(pageX, pageY)->getLayerBlendMapSize();
-			if( img.getWidth() != blendmapsize )
-			{ img.resize(blendmapsize, blendmapsize); }
-
-			float *ptr = blendmap->getBlendPointer();
-			Ogre::uint8 *data = static_cast<Ogre::uint8*>(img.getPixelBox().data);
-
-			for(int bp = 0;bp < blendmapsize * blendmapsize;bp++)
-				ptr[bp] = static_cast<float>(data[bp]) / 255.0f;
-
-			blendmap->dirty();
-			blendmap->update();
-		}
-	}
-	*/
-}
-
-/// Not implemented
-void
-vl::ogre::DotSceneLoader::processUserDataReference(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *parent)
-{
-	//! @todo Implement this
-}
-
-/// Not implemented
-void
-vl::ogre::DotSceneLoader::processOctree(rapidxml::xml_node<>* XMLNode)
-{
-	//! @todo Implement this
 }
 
 void
@@ -690,25 +555,6 @@ vl::ogre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 
 	rapidxml::xml_node<>* pElement;
 
-	// Process position (?)
-	pElement = XMLNode->first_node("position");
-	if( pElement )
-	{ node->setPosition(vl::parseVector3(pElement)); }
-
-	// Process rotation (?)
-	pElement = XMLNode->first_node("rotation");
-	if( pElement )
-	{ node->setOrientation(vl::parseQuaternion(pElement)); }
-
-	pElement = XMLNode->first_node("quaternion");
-	if( pElement )
-	{ node->setOrientation(vl::parseQuaternion(pElement)); }
-
-	// Process scale (?)
-	pElement = XMLNode->first_node("scale");
-	if(pElement)
-	{ node->setScale(vl::parseVector3(pElement)); }
-
 	/*	Process lookTarget (?)
 	 *	TODO not supported yet
 	pElement = XMLNode->first_node("lookTarget");
@@ -785,13 +631,6 @@ vl::ogre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		processPlane(pElement, node);
 		pElement = pElement->next_sibling("plane");
 	}
-	*/
-
-	/*	Process userDataReference
-	 *	TODO not supported yet
-	pElement = XMLNode->first_node("userDataReference");
-	if( pElement )
-	{ processUserDataReference(pElement, node); }
 	*/
 }
 
@@ -910,16 +749,6 @@ vl::ogre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 
 	rapidxml::xml_node<>* pElement;
 
-	// Process vertexBuffer (?)
-	pElement = XMLNode->first_node("vertexBuffer");
-	if(pElement)
-		;//processVertexBuffer(pElement);
-
-	// Process indexBuffer (?)
-	pElement = XMLNode->first_node("indexBuffer");
-	if(pElement)
-		;//processIndexBuffer(pElement);
-
 	// Create the entity
 	Ogre::Entity *entity;
 	try
@@ -936,11 +765,6 @@ vl::ogre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
 		std::string msg("[DotSceneLoader] Error loading an entity!");
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
-
-	// Process userDataReference (?)
-	pElement = XMLNode->first_node("userDataReference");
-	if( pElement )
-	{ processUserDataReference(pElement, entity); }
 }
 
 /// Not implemented
@@ -1166,15 +990,4 @@ vl::ogre::DotSceneLoader::getProperty(const std::string &ndNm,
 	}
 
 	return "";
-}
-
-/// Not implemented
-void
-vl::ogre::DotSceneLoader::processUserDataReference( rapidxml::xml_node<>* XMLNode,
-		Ogre::Entity *pEntity )
-{
-/*
-	std::string str = XMLNode->first_attribute("id")->value();
-	pEntity->setUserAny(Ogre::Any(str));
-*/
 }

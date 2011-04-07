@@ -16,9 +16,9 @@
 // Necessary for XML parsing
 #include "base/rapidxml.hpp"
 
-#include "scene_node.hpp"
-#include "scene_manager.hpp"
 #include "resource_manager.hpp"
+
+#include "typedefs.hpp"
 
 namespace vl
 {
@@ -37,26 +37,26 @@ public :
 	 *				 name of every node
 	 */
 	void parseDotScene( std::string const &scene_data,
-			vl::SceneManager *scene,
-			vl::SceneNode *attachNode = 0,
+			vl::SceneManagerPtr scene_manager,
+			vl::SceneNodePtr attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	void parseDotScene( vl::TextResource &scene_data,
-			vl::SceneManager *config,
-			vl::SceneNode *attachNode = 0,
+			vl::SceneManagerPtr scene_manager,
+			vl::SceneNodePtr attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 private :
 	void _parse( char *xml_data );
 
-	void processScene( rapidxml::xml_node<>* XMLRoot );
+	void processScene(rapidxml::xml_node<> *xml_root);
 
-	void processNodes( rapidxml::xml_node<>* XMLNode );
+	void processNodes(rapidxml::xml_node<> *xml_node);
 
-	void processNode(rapidxml::xml_node<>* XMLNode,
-			vl::SceneNode *parent = 0 );
+	void processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
-	vl::SceneManager *_scene;
+	vl::SceneManagerPtr _scene;
+	vl::SceneNodePtr _attach_node;
 
 	std::string _sPrependNode;
 

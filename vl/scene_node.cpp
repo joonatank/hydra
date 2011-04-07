@@ -17,13 +17,13 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 		<< " with position " << a.getPosition()
 		<< " and orientation " << a.getOrientation();
 	if( a._parent )
-	{ os << " with parent " << a._parent->getName(); }
+	{ os << " with parent " << a._parent->getName() << ".\n"; }
 	else
-	{ os << " without a parent." << std::endl; }
+	{ os << " without a parent.\n"; }
 		
 	if( !a._childs.empty() )
 	{
-		os << "\n" << " with childs ";
+		os << "with childs : ";
 		for( std::vector<vl::SceneNodePtr>::const_iterator iter = a._childs.begin();
 			iter != a._childs.end(); ++iter )
 		{
@@ -178,6 +178,15 @@ vl::SceneNode::hasEntity(vl::EntityPtr ent) const
 	}
 
 	return false;
+}
+
+vl::SceneNodePtr 
+vl::SceneNode::createChildSceneNode(std::string const &name)
+{
+	assert(_creator);
+	vl::SceneNodePtr node = _creator->createFreeSceneNode(name);
+	addChild(node);
+	return node;
 }
 
 void 

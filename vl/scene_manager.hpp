@@ -21,9 +21,6 @@
 namespace vl
 {
 
-typedef std::vector<SceneNodePtr> SceneNodeList;
-typedef std::vector<EntityPtr> EntityList;
-
 class SceneManager : public vl::Distributed
 {
 public :
@@ -38,7 +35,15 @@ public :
 
 	void setSceneManager( Ogre::SceneManager *man );
 
-	SceneNodePtr createSceneNode( std::string const &name, uint64_t id = vl::ID_UNDEFINED );
+	SceneNodePtr getRootSceneNode(void)
+	{ return _root; }
+
+	/// @brief create a SceneNode that is attached to the Root node
+	SceneNodePtr createSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
+
+	/// @brief create a SceneNode that is not attached anywhere
+	/// Mostly for internal use and maybe for file parsers
+	SceneNodePtr createFreeSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -108,6 +113,9 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
+	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
+
+	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;
 	EntityList _entities;
 
@@ -123,12 +131,12 @@ private :
 
 	Ogre::ColourValue _ambient_light;
 
+	vl::Session *_session;
+
 	// SceneManager used for creating mapping between vl::SceneNode and
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
-
-	vl::Session *_session;
 
 };	// class FrameData
 

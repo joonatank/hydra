@@ -69,11 +69,15 @@ public :
 
 	void showBoundingBox( bool show );
 
+	/// --------------- Entities ----------------------
 	void addEntity(vl::EntityPtr ent);
 
 	void removeEntity(vl::EntityPtr ent);
 
 	bool hasEntity(vl::EntityPtr ent) const;
+
+	/// --------------- Childs ------------------------
+	vl::SceneNodePtr createChildSceneNode(std::string const &name);
 
 	void addChild(vl::SceneNodePtr child);
 

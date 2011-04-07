@@ -10,13 +10,15 @@
 
 /// Public
 vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
-	: _scene_version(0)
-	, _ogre_sm(0)
-	, _session(session)
+	: _root(0)
+	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
+	, _session(session)
+	, _ogre_sm(0)
 {
 	assert( _session );
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
+	_root = _createSceneNode("Root");
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -41,24 +43,18 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 vl::SceneNodePtr
 vl::SceneManager::createSceneNode( std::string const &name, uint64_t id )
 {
-	assert( !name.empty() || vl::ID_UNDEFINED != id );
-
-	// Check that no two nodes have the same name
-	if( !name.empty() && hasSceneNode(name) )
-	{
-		// TODO is this the right exception?
-		BOOST_THROW_EXCEPTION( vl::duplicate() );
-	}
-	assert( _session );
-
-	SceneNodePtr node = new SceneNode( name, this );
-
-	_session->registerObject( node, OBJ_SCENE_NODE, id );
-	assert( node->getID() != vl::ID_UNDEFINED );
-	_scene_nodes.push_back( node );
-
+	vl::SceneNodePtr node = _createSceneNode(name, id);
+	assert(_root);
+	_root->addChild(node);
 	return node;
 }
+
+vl::SceneNodePtr
+vl::SceneManager::createFreeSceneNode( std::string const &name, uint64_t id )
+{
+	return _createSceneNode(name, id);
+}
+
 
 bool
 vl::SceneManager::hasSceneNode(const std::string& name) const
@@ -217,4 +213,27 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			_ogre_sm->setAmbientLight(_ambient_light);
 		}
 	}
+}
+
+/// ------------------------------- Private ----------------------------------
+vl::SceneNodePtr 
+vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
+{
+	assert( !name.empty() || vl::ID_UNDEFINED != id );
+
+	// Check that no two nodes have the same name
+	if( !name.empty() && hasSceneNode(name) )
+	{
+		// TODO is this the right exception?
+		BOOST_THROW_EXCEPTION( vl::duplicate() );
+	}
+	assert( _session );
+
+	SceneNodePtr node = new SceneNode( name, this );
+
+	_session->registerObject( node, OBJ_SCENE_NODE, id );
+	assert( node->getID() != vl::ID_UNDEFINED );
+	_scene_nodes.push_back( node );
+
+	return node;
 }
