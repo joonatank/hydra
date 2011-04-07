@@ -401,13 +401,13 @@ vl::Config::_hideCollisionBarries( void )
 {
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 
-	for( size_t i = 0; i < sm->getNSceneNodes(); ++i )
+	for( vl::SceneNodeList::const_iterator iter = sm->getSceneNodeList().begin();
+		 iter != sm->getSceneNodeList().end(); ++iter )
 	{
-		vl::SceneNode *node = sm->getSceneNode(i);
-		std::string str( node->getName().substr(0, 3) );
+		std::string str( (*iter)->getName().substr(0, 3) );
 		vl::to_lower(str);
 		if(  str == "cb_" )
-		{ node->setVisibility(false); }
+		{ (*iter)->setVisibility(false); }
 	}
 }
 

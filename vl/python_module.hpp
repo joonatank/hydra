@@ -8,6 +8,7 @@
 #include "game_manager.hpp"
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
+#include "entity.hpp"
 #include "player.hpp"
 
 // Necessary for transforming OIS keycodes to python
@@ -61,6 +62,11 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyRel
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
 
+// SceneManager overloads
+// @todo the extra parameter is for ID, which should not be exposed to python
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createEntity_ov, createEntity, 1, 3)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createSceneNode_ov, createSceneNode, 1, 2)
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -92,27 +98,38 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	// Overloads for the getSceneNode
-	// TODO const versions didn't go straight with the same return value policy
-	SceneNodePtr (SceneManager::*getsn1)( std::string const & ) = &SceneManager::getSceneNode;
-// 	const SceneNodePtr (SceneManager::*getsn2)( std::string const & ) const = &SceneManager::getSceneNode;
-	SceneNodePtr (SceneManager::*getsn3)( size_t ) = &SceneManager::getSceneNode;
-// 	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
-
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
-		// TODO add remove and add SceneNodes
-//		.def("removeSceneNode", &SceneManager::removeSceneNode )
+		// TODO add remove SceneNodes
+		.def("createSceneNode", &SceneManager::createSceneNode, createSceneNode_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
-		.def("getSceneNode", getsn1, python::return_value_policy<python::reference_existing_object>() )
-		.def("getSceneNode", getsn3, python::return_value_policy<python::reference_existing_object>() )
+		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasEntity", &SceneManager::hasEntity )
+		.def("createEntity", &SceneManager::createEntity, createEntity_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 	;
 
+	python::enum_<vl::PREFAB>("PF")
+		.value("NONE", PF_NONE)
+		.value("PLANE", PF_PLANE)
+		.value("SPHERE", PF_SPHERE)
+		.value("CUBE", PF_CUBE)
+	;
 
-	python::class_<vl::SceneNode>("SceneNode", python::no_init)
+	python::class_<vl::Entity, boost::noncopyable>("Entity", python::no_init)
+		.add_property("name", python::make_function( &vl::Entity::getName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("prefab", &vl::Entity::getPrefab)
+	;
+
+
+	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
+		.def("addEntity", &vl::SceneNode::addEntity)
+		.def("removeEntity", &vl::SceneNode::removeEntity)
+		.def("addChild", &vl::SceneNode::addChild)
+		.def("removeChild", &vl::SceneNode::removeChild)
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )

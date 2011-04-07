@@ -49,10 +49,12 @@ set( SOURCES
 	cluster/server.cpp
 	cluster/client.cpp
 	cluster/message.cpp
+	entity.cpp
 	)
 
 set( HEADERS
 	tracker.hpp
+	entity.hpp
 	eq_ogre/ogre_dotscene_loader.hpp
 	tracker_serializer.hpp
 	fake_tracker.hpp

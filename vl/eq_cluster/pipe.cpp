@@ -846,6 +846,12 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 				_scene_manager->createSceneNode( "", id );
 				break;
 			}
+			case OBJ_ENTITY :
+			{
+				assert( _scene_manager );
+				_scene_manager->createEntity( "", vl::PF_NONE, id );
+				break;
+			}
 			default :
 				// TODO Might happen something unexpected so for now just kill the program
 				assert( false );

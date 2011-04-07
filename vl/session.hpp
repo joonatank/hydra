@@ -25,6 +25,7 @@ enum OBJ_TYPE
 	OBJ_GUI,
 	OBJ_SCENE_MANAGER,
 	OBJ_SCENE_NODE,
+	OBJ_ENTITY,
 };
 
 class Session

@@ -8,15 +8,21 @@
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
+#include <OGRE/OgreColourValue.h>
 
-#include "scene_node.hpp"
+// Necessary for PREFAB type
+#include "entity.hpp"
+
 #include "distributed.hpp"
 #include "session.hpp"
+
+#include "typedefs.hpp"
 
 namespace vl
 {
 
 typedef std::vector<SceneNodePtr> SceneNodeList;
+typedef std::vector<EntityPtr> EntityList;
 
 class SceneManager : public vl::Distributed
 {
@@ -36,18 +42,30 @@ public :
 
 	bool hasSceneNode( std::string const &name ) const;
 
-	SceneNodePtr getSceneNode( std::string const &name );
+	SceneNodePtr getSceneNode( std::string const &name ) const;
 
-	const SceneNodePtr getSceneNode( std::string const &name ) const;
-
-	SceneNodePtr getSceneNode( size_t i );
-
-	const SceneNodePtr getSceneNode( size_t i ) const;
+	SceneNodePtr getSceneNodeID(uint64_t id) const;
 
 	size_t getNSceneNodes( void ) const
 	{ return _scene_nodes.size(); }
 
 	// TODO add SceneNode removal
+
+	/// --- Entity ---
+	EntityPtr createEntity( std::string const &name, vl::PREFAB type = PF_NONE, 
+		uint64_t id = vl::ID_UNDEFINED );
+
+	bool hasEntity( std::string const &name ) const;
+
+	EntityPtr getEntity( std::string const &name ) const;
+
+	EntityPtr getEntityID(uint64_t id) const;
+
+	SceneNodeList const &getSceneNodeList(void) const
+	{ return _scene_nodes; }
+
+	EntityList const &getEntityList(void) const
+	{ return _entities; }
 
 	void reloadScene( void );
 
@@ -91,6 +109,7 @@ protected :
 
 private :
 	SceneNodeList _scene_nodes;
+	EntityList _entities;
 
 	/// Selected SceneNodes
 	/// @remarks
