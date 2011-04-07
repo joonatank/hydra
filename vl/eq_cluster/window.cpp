@@ -592,9 +592,22 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 	}
 	if( winConf.nv_swap_sync )
 	{
-		std::cout << "with NV swap sync";
+		std::cout << "with NV swap sync, group ";
 		params["nvSwapSync"] = "true";
-		params["swapGroup"] = "1";
+		std::stringstream ss;
+		ss << winConf.nv_swap_group;
+		std::cout << ss.str() << ", barrier ";
+		params["swapGroup"] = ss.str();
+		ss.str("");
+		ss << winConf.nv_swap_barrier;
+		std::cout << ss.str() << " : ";
+		params["swapBarrier"] = ss.str();
+	}
+
+	if( winConf.vert_sync )
+	{
+		std::cout << "with vertical sync";
+		params["vert_sync"] = "true";
 	}
 	std::cout << std::endl;
 
