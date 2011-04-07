@@ -497,15 +497,19 @@ vl::Window::draw(void)
 	if(!hasStereo())
 	{ _ipd = 0; }
 
-	// TODO performance problems with stereo
+	// @todo is there performance problems with stereo?
 	// If they are still present we need to add a separate camera also
+	// @todo rendering GUI for both eyes
+
 	// Left viewport
 	if( _left_viewport )
 	{
+		Ogre::Vector3 eye = Ogre::Vector3::ZERO;
 		if(hasStereo())
-		{ glDrawBuffer(GL_BACK_LEFT); }
-
-		Ogre::Vector3 eye(-_ipd/2, 0, 0);
+		{
+			glDrawBuffer(GL_BACK_LEFT);
+			eye = Ogre::Vector3(-_ipd/2, 0, 0);
+		}
 
 		Ogre::Matrix4 viewMatrix = calculate_view_matrix(_camera->getRealPosition(), 
 			_camera->getRealOrientation(), _wall, getPlayer().getHeadMatrix(), eye);
