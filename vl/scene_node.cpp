@@ -55,6 +55,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	: _name(name)
 	, _position( Ogre::Vector3::ZERO )
 	, _orientation( Ogre::Quaternion::IDENTITY )
+	, _scale(Ogre::Vector3(1,1,1))
 	, _visible(true)
 	, _show_boundingbox(false)
 	, _parent(0)
@@ -62,6 +63,51 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _creator(creator)
 {
 	assert( _creator );
+}
+
+void 
+vl::SceneNode::setPosition( Ogre::Vector3 const &v )
+{
+	if( v != _position )
+	{
+		setDirty( DIRTY_POSITION );
+		_position = v;
+	}
+}
+
+void 
+vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
+{
+	if( q != _orientation )
+	{
+		setDirty( DIRTY_ORIENTATION );
+		_orientation = q;
+	}
+}
+
+void 
+scale(Ogre::Real s)
+{
+}
+
+void 
+vl::SceneNode::scale(Ogre::Vector3 const &s)
+{
+	if( !s.isNaN() && !s.isZeroLength() && s != Ogre::Vector3(1,1,1) )
+	{
+		setDirty(DIRTY_SCALE);
+		_scale *= s;
+	}
+}
+
+void
+vl::SceneNode::setScale(Ogre::Vector3 const &s)
+{
+	if( !s.isNaN() && !s.isZeroLength() && s != _scale )
+	{
+		setDirty(DIRTY_SCALE);
+		_scale = s;
+	}
 }
 
 void 
@@ -239,6 +285,11 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _orientation;
 	}
 
+	if( DIRTY_SCALE & dirtyBits )
+	{
+		msg << _scale;
+	}
+
 	if( dirtyBits & DIRTY_VISIBILITY )
 	{
 		msg << _visible;
@@ -280,7 +331,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		// name should never be empty
 		// @todo add exception throwing
 		assert( !_name.empty() );
-		_findNode();
+		_createNative();
 	}
 	// Deserialize position
 	if( dirtyBits & DIRTY_POSITION )
@@ -299,6 +350,16 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		// If we have a correct node we need to transform it
 		if( _ogre_node )
 		{ _ogre_node->setOrientation(_orientation); }
+	}
+
+	
+	if( DIRTY_SCALE & dirtyBits )
+	{
+		msg >> _scale;
+		if( _ogre_node )
+		{
+			_ogre_node->setScale(_scale);
+		}
 	}
 
 	if( dirtyBits & DIRTY_VISIBILITY )
@@ -398,11 +459,11 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 	}
 }
 
-bool
-vl::SceneNode::_findNode( void )
+void
+vl::SceneNode::_createNative(void)
 {
 	if( _ogre_node )
-	{ return true; }
+	{ return; }
 
 	assert( _creator );
 	assert( _creator->getNative() );
@@ -410,21 +471,19 @@ vl::SceneNode::_findNode( void )
 	if( _creator->getNative()->hasSceneNode( _name ) )
 	{
 		_ogre_node = _creator->getNative()->getSceneNode(_name);
-		_ogre_node->setOrientation(_orientation);
-		_ogre_node->setPosition(_position);
-		_ogre_node->setVisible(_visible);
 	}
 	else
 	{
 		_ogre_node = _creator->getNative()->createSceneNode(_name);
 		// Attach to root so that this Node can be used
 		_creator->getNative()->getRootSceneNode()->addChild(_ogre_node);
-		_ogre_node->setOrientation(_orientation);
-		_ogre_node->setPosition(_position);
-		_ogre_node->setVisible(_visible);
 	}
-	
-	return true;
+
+	assert(_ogre_node);
+	_ogre_node->setOrientation(_orientation);
+	_ogre_node->setPosition(_position);
+	_ogre_node->setScale(_scale);
+	_ogre_node->setVisible(_visible);
 }
 
 

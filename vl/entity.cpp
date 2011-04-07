@@ -16,21 +16,7 @@ vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManager *c
 }
 
 vl::Entity::~Entity(void)
-{
-
-}
-
-/*
-void 
-vl::Entity::setPrefab(vl::PREFAB type)
-{
-	if( _prefab != type )
-	{
-		setDirty(DIRTY_PREFAB);
-		_prefab = type;
-	}
-}
-*/
+{}
 
 void 
 vl::Entity::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
@@ -39,7 +25,7 @@ vl::Entity::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 	{
 		msg << _name;
 	}
-	
+
 	if( DIRTY_PREFAB & dirtyBits )
 	{
 		msg << _prefab;
@@ -56,19 +42,19 @@ vl::Entity::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 		msg >> _name;
 		recreate = true;
 	}
-	
+
 	if( DIRTY_PREFAB & dirtyBits )
 	{
 		msg >> _prefab;
 	}
 
 	if( recreate )
-	{ _findEntity(); }
+	{ _createNative(); }
 }
 
 
 bool
-vl::Entity::_findEntity(void)
+vl::Entity::_createNative(void)
 {
 	if( _ogre_object )
 	{ return true; }

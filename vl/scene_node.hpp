@@ -40,20 +40,27 @@ public :
 	Ogre::Vector3 const &getPosition( void ) const
 	{ return _position; }
 
-	void setPosition( Ogre::Vector3 const &v )
-	{
-		setDirty( DIRTY_POSITION );
-		_position = v;
-	}
+	void setPosition( Ogre::Vector3 const &v );
 
 	Ogre::Quaternion const &getOrientation( void ) const
 	{ return _orientation; }
 
-	void setOrientation( Ogre::Quaternion const &q )
-	{
-		setDirty( DIRTY_ORIENTATION );
-		_orientation = q;
-	}
+	void setOrientation( Ogre::Quaternion const &q );
+
+	void scale(Ogre::Real s);
+	void scale(Ogre::Vector3 const &s);
+
+	void setScale(Ogre::Vector3 const &s);
+
+	Ogre::Vector3 const &getScale(void) const
+	{ return _scale; }
+
+	/// Set the world size of the object
+	/// This is effectively equal to scale(desired_size/getSize)
+	/// @todo not implemented
+	/// @todo size calculations and modifications need the mesh support
+	/// because we can not use Ogre meshes in the master node
+	//void setSize(Ogre::Vector3 const &s);
 
 	bool getVisibility( void ) const
 	{ return _visible; }
@@ -82,11 +89,12 @@ public :
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_POSITION = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_ORIENTATION = vl::Distributed::DIRTY_CUSTOM << 2,
-		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 3,
-		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 5,
-		DIRTY_ENTITIES = vl::Distributed::DIRTY_CUSTOM << 6,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 7,
+		DIRTY_SCALE = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_ENTITIES = vl::Distributed::DIRTY_CUSTOM << 7,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 8,
 	};
 
 	Ogre::SceneNode *getNative(void) const
@@ -100,12 +108,13 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	bool _findNode( void );
+	void _createNative( void );
 
 	std::string _name;
 
 	Ogre::Vector3 _position;
 	Ogre::Quaternion _orientation;
+	Ogre::Vector3 _scale;
 
 	bool _visible;
 

@@ -124,6 +124,11 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<  >* XMLNode, vl::SceneNode* 
 	if( pElement )
 	{ node->setOrientation(vl::parseQuaternion(pElement)); }
 
+	// Process scale (?)
+	pElement = XMLNode->first_node("scale");
+	if(pElement)
+	{ node->setScale(vl::parseVector3(pElement)); }
+
 	/*	Process node (*)
 	Needs to be here because the node can have children
 	*/

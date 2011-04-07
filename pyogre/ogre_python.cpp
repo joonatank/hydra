@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-03
  *	@file ogre_python.cpp
+ *
+ *	@todo division operators do not work with Python 3.1, need to upgrade boost::python
  */
 
 #include <boost/python.hpp>
@@ -48,7 +50,8 @@ BOOST_PYTHON_MODULE(pyogre)
 	;
 
 	class_<Ogre::Vector3>("Vector3", init<>())
-		.def(init< Ogre::Real, Ogre::Real, Ogre::Real>() )
+		.def( init< Ogre::Real, Ogre::Real, Ogre::Real>() )
+		.def( init<Ogre::Real>() )
 		.def_readwrite("x", &Ogre::Vector3::x)
 		.def_readwrite("y", &Ogre::Vector3::y)
 		.def_readwrite("z", &Ogre::Vector3::z)

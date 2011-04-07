@@ -16,9 +16,11 @@ ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
 addMoveSelection()
 game.scene.addToSelection(ogre)
+ogre.position = Vector3(0, 2.5, 0)
 
 print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
+camera.position = camera.position + Vector3(0, 3, 0)
 createCameraMovements(camera)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
@@ -28,8 +30,16 @@ addToggleActiveCamera("OutsideCamera", "Omakamera" )
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
 
-# Some nodes for SceneNode creation and hierarchy modification examples
-node1 = game.scene.createSceneNode("node1")
-node2 = game.scene.createSceneNode("node2")
-node1.addChild(ogre)
-node1.addChild(node2)
+# Create ground plane
+# TODO change material
+ground_ent = game.scene.createEntity('ground', PF.PLANE)
+ground = game.scene.createSceneNode('ground')
+ground.addEntity(ground_ent)
+ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
+
+sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
+sphere = game.scene.createSceneNode('sphere')
+sphere.addEntity(sphere_ent)
+sphere.position = Vector3(4, 2.5, 0)
+sphere.scale *= 0.003
+

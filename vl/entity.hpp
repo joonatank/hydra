@@ -52,8 +52,11 @@ public :
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_PREFAB = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
+		// Not used yet
+		DIRTY_MESH = vl::Distributed::DIRTY_CUSTOM << 1,
+		// Will be removed after mesh is used
+		DIRTY_PREFAB = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 3,
 	};
 
 	Ogre::MovableObject *getNative(void) const
@@ -68,7 +71,7 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	bool _findEntity(void);
+	bool _createNative(void);
 
 	/// Name and _prefab should not be changed after creation
 	std::string _name;
