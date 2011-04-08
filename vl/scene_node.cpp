@@ -141,8 +141,7 @@ vl::SceneNode::addEntity(vl::EntityPtr ent)
 		setDirty(DIRTY_ENTITIES);
 		_entities.push_back(ent);
 
-		if( _ogre_node )
-		{ _ogre_node->attachObject(ent->getNative()); }
+		ent->setParent(this);
 	}
 }
 

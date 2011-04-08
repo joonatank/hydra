@@ -30,14 +30,18 @@ addToggleActiveCamera("OutsideCamera", "Omakamera" )
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
 
+# Hack for some lighting before we can modify lights dynamically
+game.scene.ambient_light = ColourValue(0.2,0.2,0.2)
+
 # Create ground plane
-# TODO change material
 ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.addEntity(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
+ground_ent.material_name = 'ground'
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
+sphere_ent.material_name = 'debug_red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.addEntity(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)

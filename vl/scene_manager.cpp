@@ -18,7 +18,7 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 {
 	assert( _session );
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
-	_root = _createSceneNode("Root");
+	_root = _createSceneNode("Root", vl::ID_UNDEFINED);
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -41,20 +41,26 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 }
 
 vl::SceneNodePtr
-vl::SceneManager::createSceneNode( std::string const &name, uint64_t id )
+vl::SceneManager::createSceneNode(std::string const &name)
 {
-	vl::SceneNodePtr node = _createSceneNode(name, id);
+	vl::SceneNodePtr node = _createSceneNode(name, vl::ID_UNDEFINED);
 	assert(_root);
 	_root->addChild(node);
 	return node;
 }
 
 vl::SceneNodePtr
-vl::SceneManager::createFreeSceneNode( std::string const &name, uint64_t id )
+vl::SceneManager::createFreeSceneNode(std::string const &name)
 {
-	return _createSceneNode(name, id);
+	return _createSceneNode(name, vl::ID_UNDEFINED);
 }
 
+vl::SceneNodePtr
+vl::SceneManager::_createSceneNode(uint64_t id)
+{
+	assert(vl::ID_UNDEFINED != id);
+	return _createSceneNode(std::string(), id);
+}
 
 bool
 vl::SceneManager::hasSceneNode(const std::string& name) const
@@ -90,16 +96,50 @@ vl::SceneManager::getSceneNodeID(uint64_t id) const
 
 /// --------------------- SceneManager Entity --------------------------------
 vl::EntityPtr
-vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type, uint64_t id)
+vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 {
-	if( !name.empty() && hasEntity(name) )
-	{
-		BOOST_THROW_EXCEPTION( vl::duplicate() );
-	}
+	/// Disallow empty names for now, we need to generate one otherwise
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
+	if(hasEntity(name))
+	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
 
 	EntityPtr ent = new Entity(name, type, this);
 	
-	_session->registerObject( ent, OBJ_ENTITY, id );
+	_session->registerObject( ent, OBJ_ENTITY, vl::ID_UNDEFINED );
+	assert( ent->getID() != vl::ID_UNDEFINED );
+	_entities.push_back(ent);
+
+	return ent;
+}
+
+vl::EntityPtr
+vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_name)
+{
+	/// Disallow empty names for now, we need to generate one otherwise
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
+	if(hasEntity(name))
+	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
+
+	EntityPtr ent = new Entity(name, mesh_name, this);
+	
+	_session->registerObject(ent, OBJ_ENTITY, vl::ID_UNDEFINED);
+	assert( ent->getID() != vl::ID_UNDEFINED );
+	_entities.push_back(ent);
+
+	return ent;
+}
+
+vl::EntityPtr
+vl::SceneManager::_createEntity(uint64_t id)
+{
+	if( vl::ID_UNDEFINED == id )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_id() ); }
+
+	EntityPtr ent = new Entity("", "", this);
+	
+	_session->registerObject(ent, OBJ_ENTITY, id);
 	assert( ent->getID() != vl::ID_UNDEFINED );
 	_entities.push_back(ent);
 

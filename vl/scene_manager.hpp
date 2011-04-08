@@ -39,11 +39,14 @@ public :
 	{ return _root; }
 
 	/// @brief create a SceneNode that is attached to the Root node
-	SceneNodePtr createSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
+	SceneNodePtr createSceneNode(std::string const &name);
 
 	/// @brief create a SceneNode that is not attached anywhere
 	/// Mostly for internal use and maybe for file parsers
-	SceneNodePtr createFreeSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
+	SceneNodePtr createFreeSceneNode(std::string const &name);
+
+	/// Internal
+	SceneNodePtr _createSceneNode(uint64_t id);
 
 	bool hasSceneNode( std::string const &name ) const;
 
@@ -57,8 +60,14 @@ public :
 	// TODO add SceneNode removal
 
 	/// --- Entity ---
-	EntityPtr createEntity( std::string const &name, vl::PREFAB type = PF_NONE, 
-		uint64_t id = vl::ID_UNDEFINED );
+	EntityPtr createEntity( std::string const &name, vl::PREFAB type);
+
+	EntityPtr createEntity( std::string const &name, std::string const &mesh_name);
+
+	/// Internal
+	/// This should only be called on from slaves
+	/// This can not be private because it's called from the Renderer
+	EntityPtr _createEntity(uint64_t id);
 
 	bool hasEntity( std::string const &name ) const;
 
@@ -113,7 +122,8 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id = vl::ID_UNDEFINED);
+	// @todo rename to avoid confusion
+	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);
 
 	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;

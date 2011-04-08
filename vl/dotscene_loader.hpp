@@ -55,6 +55,8 @@ private :
 
 	void processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
+	void processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
+
 	vl::SceneManagerPtr _scene;
 	vl::SceneNodePtr _attach_node;
 

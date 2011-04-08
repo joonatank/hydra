@@ -70,6 +70,10 @@ public :
 	void showBoundingBox( bool show );
 
 	/// --------------- Entities ----------------------
+	/// @todo this should work on MovableObjects, a base class for Entities
+	void attachObject(vl::EntityPtr ent)
+	{ addEntity(ent); }
+
 	void addEntity(vl::EntityPtr ent);
 
 	void removeEntity(vl::EntityPtr ent);

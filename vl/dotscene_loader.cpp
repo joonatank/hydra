@@ -5,8 +5,9 @@
 
 #include "dotscene_loader.hpp"
 
-#include "scene_node.hpp"
 #include "scene_manager.hpp"
+#include "scene_node.hpp"
+#include "entity.hpp"
 
 #include "base/string_utils.hpp"
 #include "ogre_xml_helpers.hpp"
@@ -168,4 +169,33 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 		processNode(pElement, node);
 		pElement = pElement->next_sibling("node");
 	}
+
+	/*	Process entity (*) */
+	pElement = xml_node->first_node("entity");
+	while(pElement)
+	{
+		processEntity(pElement, node);
+		pElement = pElement->next_sibling("entity");
+	}
+}
+
+void
+vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent)
+{
+	assert(parent);
+
+	// Process attributes
+	std::string name = vl::getAttrib(xml_node, "name");
+	std::string id = vl::getAttrib(xml_node, "id");
+	std::string meshFile = vl::getAttrib(xml_node, "meshFile");
+	std::string materialFile = vl::getAttrib(xml_node, "materialFile");
+	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
+
+	// Create the entity
+	vl::EntityPtr entity = _scene->createEntity(name, meshFile);
+	entity->setCastShadows(castShadows);
+	parent->attachObject(entity);
+
+	if( !materialFile.empty() )
+	{ entity->setMaterialName(materialFile); }
 }

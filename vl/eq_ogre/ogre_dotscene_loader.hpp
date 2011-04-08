@@ -95,8 +95,6 @@ protected:
 			Ogre::SceneNode *parent);
 	void processTrackTarget(rapidxml::xml_node<>* XMLNode,
 			Ogre::SceneNode *parent);
-	void processEntity(rapidxml::xml_node<>* XMLNode,
-			Ogre::SceneNode *parent);
 	void processParticleSystem(rapidxml::xml_node<>* XMLNode,
 			Ogre::SceneNode *parent);
 	void processBillboardSet(rapidxml::xml_node<>* XMLNode,

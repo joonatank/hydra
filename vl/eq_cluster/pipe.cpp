@@ -843,13 +843,13 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 			case OBJ_SCENE_NODE :
 			{
 				assert( _scene_manager );
-				_scene_manager->createSceneNode( "", id );
+				_scene_manager->_createSceneNode(id);
 				break;
 			}
 			case OBJ_ENTITY :
 			{
 				assert( _scene_manager );
-				_scene_manager->createEntity( "", vl::PF_NONE, id );
+				_scene_manager->_createEntity(id);
 				break;
 			}
 			default :

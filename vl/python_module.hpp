@@ -62,11 +62,6 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyRel
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
 
-// SceneManager overloads
-// @todo the extra parameter is for ID, which should not be exposed to python
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createEntity_ov, createEntity, 1, 3)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createSceneNode_ov, createSceneNode, 1, 2)
-
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -98,14 +93,18 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
+	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
+
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
 		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
-		.def("createSceneNode", &SceneManager::createSceneNode, createSceneNode_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
 		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasEntity", &SceneManager::hasEntity )
-		.def("createEntity", &SceneManager::createEntity, createEntity_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
+		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
 		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def("addToSelection", &SceneManager::addToSelection)
@@ -122,6 +121,8 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::Entity, boost::noncopyable>("Entity", python::no_init)
 		.add_property("name", python::make_function( &vl::Entity::getName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
+		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
 		.add_property("prefab", &vl::Entity::getPrefab)
 	;
 

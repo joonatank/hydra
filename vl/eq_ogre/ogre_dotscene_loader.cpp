@@ -579,14 +579,6 @@ vl::ogre::DotSceneLoader::processNode(rapidxml::xml_node<>* XMLNode,
 		pElement = pElement->next_sibling("node");
 	}
 
-	/*	Process entity (*) */
-	pElement = XMLNode->first_node("entity");
-	while(pElement)
-	{
-		processEntity(pElement, node);
-		pElement = pElement->next_sibling("entity");
-	}
-
 	/*	Process light (*) */
 	pElement = XMLNode->first_node("light");
 	while(pElement)
@@ -723,48 +715,6 @@ vl::ogre::DotSceneLoader::processTrackTarget(rapidxml::xml_node<>* XMLNode, Ogre
 		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
 	*/
-}
-
-void
-vl::ogre::DotSceneLoader::processEntity(rapidxml::xml_node<>* XMLNode,
-		Ogre::SceneNode *parent)
-{
-	// If no parent is provided we use Root node
-	if( !parent )
-	{ parent = _attach_node; }
-
-	// Process attributes
-	std::string name = vl::getAttrib(XMLNode, "name");
-	std::string id = vl::getAttrib(XMLNode, "id");
-	std::string meshFile = vl::getAttrib(XMLNode, "meshFile");
-	std::string materialFile = vl::getAttrib(XMLNode, "materialFile");
-	bool isStatic = vl::getAttribBool(XMLNode, "static", false);;
-	bool castShadows = vl::getAttribBool(XMLNode, "castShadows", true);
-
-	// TEMP: Maintain a list of static and dynamic objects
-	if(isStatic)
-	{ staticObjects.push_back(name); }
-	else
-	{ dynamicObjects.push_back(name); }
-
-	rapidxml::xml_node<>* pElement;
-
-	// Create the entity
-	Ogre::Entity *entity;
-	try
-	{
-		entity = _scene_mgr->createEntity(name, meshFile);
-		entity->setCastShadows(castShadows);
-		parent->attachObject(entity);
-
-		if( !materialFile.empty() )
-		{ entity->setMaterialName(materialFile); }
-	}
-	catch(Ogre::Exception &/*e*/)
-	{
-		std::string msg("[DotSceneLoader] Error loading an entity!");
-		Ogre::LogManager::getSingleton().logMessage(msg);
-	}
 }
 
 /// Not implemented
