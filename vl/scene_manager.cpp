@@ -10,6 +10,29 @@
 #include "camera.hpp"
 #include "light.hpp"
 
+namespace
+{
+
+Ogre::FogMode
+getOgreFogMode(vl::FogMode m)
+{
+	switch(m)
+	{
+	case vl::FOG_NONE:
+		return Ogre::FOG_NONE;
+	case vl::FOG_LINEAR:
+		return Ogre::FOG_LINEAR;
+	case vl::FOG_EXP:
+		return Ogre::FOG_EXP;
+	case vl::FOG_EXP2:
+		return Ogre::FOG_EXP2;
+	default:
+		return Ogre::FOG_NONE;
+	}
+}
+
+}
+
 /// Public
 vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	: _root(0)
@@ -292,6 +315,35 @@ vl::SceneManager::hasMovableObject(std::string const &type_name, std::string con
 	return( getMovableObject(type_name, name) );
 }
 
+
+/// --------------------- Scene parameters -----------------------------------
+void 
+vl::SceneManager::setSkyDome(SkyDomeInfo const &dome)
+{
+	/// @todo add checking that the previous SkyDome is different
+	setDirty(DIRTY_SKY_DOME);
+	_sky_dome = dome;
+}
+
+void 
+vl::SceneManager::setFog(FogInfo const &fog)
+{
+	/// @todo add checking that the previous fog is different
+	setDirty(DIRTY_FOG);
+	_fog = fog;
+}
+
+void 
+vl::SceneManager::setAmbientLight( Ogre::ColourValue const &colour )
+{
+	if( _ambient_light != colour )
+	{
+		_ambient_light = colour;
+		setDirty( DIRTY_AMBIENT_LIGHT );
+	}
+}
+
+
 void
 vl::SceneManager::reloadScene( void )
 {
@@ -300,6 +352,7 @@ vl::SceneManager::reloadScene( void )
 	_scene_version++;
 }
 
+/// ------------------------ SceneManager Selection --------------------------
 void
 vl::SceneManager::addToSelection( vl::SceneNodePtr node )
 {
@@ -335,7 +388,6 @@ vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
 	return false;
 }
 
-
 /// -------------------------------Protected -----------------------------------
 void
 vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
@@ -345,9 +397,20 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		msg << _scene_version;
 	}
 
-	
+	if( dirtyBits & DIRTY_SKY_DOME )
+	{
+		msg << _sky_dome;
+	}
+
+	if( dirtyBits & DIRTY_FOG )
+	{
+		msg << _fog;
+	}
+
 	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
 	{
+		/// @todo do we have to do this component by component?
+		/// why memcpy would not work? 
 		msg << _ambient_light.r << _ambient_light.g << _ambient_light.b << _ambient_light.a;
 	}
 }
@@ -360,6 +423,35 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		msg >> _scene_version;
 	}
 	
+	// @todo fix the serialization crashes, because of the std::string
+	if( dirtyBits & DIRTY_SKY_DOME )
+	{
+		msg >> _sky_dome;
+		if( _ogre_sm )
+		{
+			if( _sky_dome.empty() )
+			{ _ogre_sm->setSkyDome(false, ""); }
+			else
+			{
+				 _ogre_sm->setSkyDome( true, _sky_dome.material_name,
+					 _sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
+					 _sky_dome.draw_first, _sky_dome.orientation, 
+					 _sky_dome.xsegments, _sky_dome.ysegments,
+					 _sky_dome.ysegments_keep );
+			}
+		}
+	}
+
+	if( dirtyBits & DIRTY_FOG )
+	{
+		msg >> _fog;
+		if( _ogre_sm )
+		{
+			_ogre_sm->setFog( getOgreFogMode(_fog.mode), _fog.colour_diffuse, 
+				_fog.exp_density, _fog.linear_start, _fog.linear_end );
+		}
+	}
+
 	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
 	{
 		msg >> _ambient_light.r >> _ambient_light.g >> _ambient_light.b >> _ambient_light.a;
@@ -391,4 +483,92 @@ vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
 	_scene_nodes.push_back( node );
 
 	return node;
+}
+
+/// --------------------------------- Global ---------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::SkyDomeInfo const &sky)
+{
+	os << "SkyDome : material " << sky.material_name
+		<< " : curvature " << sky.curvature
+		<< " : tiling " << sky.tiling
+		<< " : distance " << sky.distance
+		<< " : draw_first " << sky.draw_first
+		<< " : orientation " << sky.orientation
+		<< " : xsegments " << sky.xsegments
+		<< " : ysegments " << sky.ysegments;
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::FogInfo const &fog)
+{
+	os << "Fog : mode " << getFogModeAsString(fog.mode)
+		<< " : diffuse colour " << fog.colour_diffuse
+		<< " : density " << fog.exp_density
+		<< " : start " << fog.linear_start
+		<< " : end " << fog.linear_end;
+
+	return os;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SkyDomeInfo const &sky)
+{
+	msg << sky.material_name
+		<< sky.curvature
+		<< sky.tiling
+		<< sky.distance
+		<< sky.draw_first
+		<< sky.orientation
+		<< sky.xsegments
+		<< sky.ysegments
+		<< sky.ysegments_keep;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SkyDomeInfo &sky)
+{
+	msg >> sky.material_name
+		>> sky.curvature
+		>> sky.tiling
+		>> sky.distance
+		>> sky.draw_first
+		>> sky.orientation
+		>> sky.xsegments
+		>> sky.ysegments
+		>> sky.ysegments_keep;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::FogInfo const &fog)
+{
+	msg << fog.mode
+		<< fog.colour_diffuse
+		<< fog.exp_density
+		<< fog.linear_start
+		<< fog.linear_end;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::FogInfo &fog)
+{
+	msg >> fog.mode
+		>> fog.colour_diffuse
+		>> fog.exp_density
+		>> fog.linear_start
+		>> fog.linear_end;
+
+	return msg;
 }

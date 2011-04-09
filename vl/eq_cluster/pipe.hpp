@@ -48,9 +48,6 @@ public :
 	vl::EnvSettingsRefPtr getEnvironment( void )
 	{ return _env; }
 
-	vl::Settings const &getProject( void ) const
-	{ return _settings; }
-
 	vl::EnvSettings::Node getNodeConf( void );
 
 	vl::EnvSettings::Window getWindowConf( std::string const &window_name );
@@ -118,9 +115,6 @@ public :
 	bool onConsoleShow(CEGUI::EventArgs const &e);
 
 protected :
-	/// Reload the projects
-	void _reloadProjects( vl::Settings const &set );
-
 	/// GUI specific
 	void _initGUI( void );
 	void _initGUIResources( vl::Settings const &set );
@@ -128,9 +122,9 @@ protected :
 	void _createGUI( void );
 
 	/// Ogre helpers
-	void _createOgre( void );
-	void _loadScene( vl::ProjSettings::Scene const &scene );
-	void _setCamera( void );
+	void _createOgreRoot(void);
+	void _initialiseResources(vl::Settings const &set);
+	void _createOgreSceneManager(void);
 
 	/// message passing
 	void _handleMessages( void );
@@ -171,8 +165,6 @@ protected :
 
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
-	/// ProjectSettings mapped from Master
-	vl::Settings _settings;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;

@@ -121,11 +121,6 @@ vl::Camera::_doCreateNative(void)
 	if( _ogre_camera )
 	{ return true; }
 
-	std::clog << "Creating Ogre camera : " << _name 
-		<< " with near clipping " << _near_clip << " far clip " << _far_clip
-		<< " position " << _position << " orientation " << _orientation 
-		<< std::endl;
-
 	_ogre_camera = _creator->getNative()->createCamera(_name);
 
 	_ogre_camera->setNearClipDistance(_near_clip);

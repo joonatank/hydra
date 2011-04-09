@@ -54,10 +54,17 @@ private :
 	void parseSceneHeader(rapidxml::xml_node<> *xml_root);
 
 	void processNodes(rapidxml::xml_node<> *xml_node);
+	
 	/**	Not supported elements
+	 *	skyBox
+	 *	skyPlane
+	 *	clipping
 	 *	colourBackground
 	 */
 	void processEnvironment(rapidxml::xml_node<> *xml_node);
+
+	void processFog(rapidxml::xml_node<> *xml_node);
+	void processSkyDome(rapidxml::xml_node<> *xml_node);
 
 	/**	Not supported elements
 	 *	lookTarget

@@ -14,7 +14,6 @@ project( "eqOgre" CXX )
 cmake_minimum_required(VERSION 2.6)
 
 set( SOURCES
-	eq_ogre/ogre_dotscene_loader.cpp
 	tracker.cpp
 	vrpn_tracker.cpp
 	tracker_serializer.cpp
@@ -61,7 +60,6 @@ set( HEADERS
 	light.hpp
 	movable_object.hpp
 	camera.hpp
-	eq_ogre/ogre_dotscene_loader.hpp
 	tracker_serializer.hpp
 	fake_tracker.hpp
 	vrpn_tracker.hpp

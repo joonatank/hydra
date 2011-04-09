@@ -9,8 +9,6 @@
 
 // Necessary for printing error messages from exceptions
 #include "base/exceptions.hpp"
-// Necessary for loading dotscene
-#include "eq_ogre/ogre_dotscene_loader.hpp"
 
 #include "window.hpp"
 #include "base/string_utils.hpp"
@@ -141,7 +139,7 @@ vl::Pipe::operator()()
 	}
 
 	// TODO these should be moved to a separate function
-	_createOgre();
+	_createOgreRoot();
 
 	vl::EnvSettings::Node node = getNodeConf();
 	std::string msg = "Creating " + vl::to_string(node.getNWindows()) + " windows.";
@@ -329,38 +327,6 @@ vl::Pipe::onConsoleShow(const CEGUI::EventArgs& e)
 }
 
 /// ------------------------ Protected -----------------------------------------
-void
-vl::Pipe::_reloadProjects( vl::Settings const &set )
-{
-	// TODO this should unload old projects
-
-	_settings = set;
-
-	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
-
-	// Add resources
-	_root->addResource( _settings.getProjectDir() );
-	for( size_t i = 0; i < _settings.getAuxDirectories().size(); ++i )
-	{
-		_root->addResource( _settings.getAuxDirectories().at(i) );
-	}
-
-	std::string msg("Setting up the resources.");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	_root->setupResources();
-	_root->loadResources();
-
-	_ogre_sm = _root->createSceneManager("SceneManager");
-
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		_loadScene( scenes.at(i) );
-	}
-
-	_setCamera();
-}
-
 void
 vl::Pipe::_initGUI(void )
 {
@@ -582,7 +548,7 @@ vl::Pipe::_createGUI(void )
 
 /// Ogre helpers
 void
-vl::Pipe::_createOgre( void )
+vl::Pipe::_createOgreRoot( void )
 {
 	assert( _env );
 
@@ -596,76 +562,30 @@ vl::Pipe::_createOgre( void )
 }
 
 void
-vl::Pipe::_loadScene( vl::ProjSettings::Scene const &scene )
+vl::Pipe::_initialiseResources( vl::Settings const &set )
 {
-	std::string msg("vl::Pipe::_loadScene");
+	assert(_root);
+
+	// Add resources
+	_root->addResource( set.getProjectDir() );
+	for( size_t i = 0; i < set.getAuxDirectories().size(); ++i )
+	{
+		_root->addResource( set.getAuxDirectories().at(i) );
+	}
+
+	std::string msg("Setting up the resources.");
 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
-	assert( _ogre_sm );
-
-	std::string const &name = scene.getName();
-
-	msg = "Loading scene " + name + " file = " + scene.getFile();
- 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
-
-	vl::ogre::DotSceneLoader loader;
-	// TODO pass attach node based on the scene
-	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-	loader.parseDotScene( scene.getFile(), _ogre_sm );
-
-	msg = "Scene " + name + " loaded.";
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
+	_root->setupResources();
+	_root->loadResources();
 }
 
-void
-vl::Pipe::_setCamera ( void )
+void 
+vl::Pipe::_createOgreSceneManager(void)
 {
-	assert( _ogre_sm );
-
-	/// Get the camera
-	// TODO move to separate function
-
-	// Loop through all cameras and grab their name and set their debug representation
-	Ogre::SceneManager::CameraIterator cameras = _ogre_sm->getCameraIterator();
-
-	if( !_active_camera_name.empty() )
-	{
-		if( _camera && _camera->getName() == _active_camera_name )
-		{ return; }
-
-		if( _ogre_sm->hasCamera(_active_camera_name) )
-		{
-			_camera = _ogre_sm->getCamera(_active_camera_name);
-		}
-	}
-
-	if( !_camera )
-	{
-		std::string message;
-		// Grab the first available camera, for now
-		if( cameras.hasMoreElements() )
-		{
-			_camera = cameras.getNext();
-			message = "Using Camera " + _camera->getName() + " found from the scene.";
-			Ogre::LogManager::getSingleton().logMessage( message );
-		}
-		else
-		{
-			// TODO this should use a default camera created earlier that exists always
-			_camera = _ogre_sm->createCamera("Cam");
-			message = "No camera in the scene. Using created camera "
-				+ _camera->getName();
-			Ogre::LogManager::getSingleton().logMessage( message );
-		}
-		_active_camera_name = _camera->getName();
-	}
-
-	assert( _camera && _active_camera_name == _camera->getName() );
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->setCamera(_camera); }
-
-	std::string msg = "Camera " + _active_camera_name + " set.";
-	Ogre::LogManager::getSingleton().logMessage( msg );
+	assert(!_ogre_sm);
+	assert(_root);
+	_ogre_sm = _root->createSceneManager("SceneManager");
 }
 
 
@@ -730,7 +650,8 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 			vl::cluster::ByteStream stream(&data);
 			vl::Settings projects;
 			stream >> projects;
-			_reloadProjects(projects);
+			_initialiseResources(projects);
+			_createOgreSceneManager();
 			_initGUIResources(projects);
 			_createGUI();
 			// TODO should the ACK be first so that the server has the

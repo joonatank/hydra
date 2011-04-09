@@ -98,6 +98,29 @@ BOOST_PYTHON_MODULE(vl)
 	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
 	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
 
+	python::class_<vl::FogInfo>("FogInfo", python::init<>())
+		.def(python::init<std::string, python::optional<Ogre::ColourValue, Ogre::Real, Ogre::Real, Ogre::Real> >())
+		.add_property("mode", &vl::FogInfo::setMode, &vl::FogInfo::getMode)
+		.def_readwrite("colour", &vl::FogInfo::colour_diffuse)
+		.def_readwrite("density", &vl::FogInfo::exp_density)
+		.def_readwrite("linear_start", &vl::FogInfo::linear_start)
+		.def_readwrite("linear_end", &vl::FogInfo::linear_end)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::SkyDomeInfo>("SkyDomeInfo", python::init< python::optional<std::string> >())
+		.def_readwrite("material_name", &vl::SkyDomeInfo::material_name)
+		.def_readwrite("curvature", &vl::SkyDomeInfo::curvature)
+		.def_readwrite("tiling", &vl::SkyDomeInfo::tiling)
+		.def_readwrite("distance", &vl::SkyDomeInfo::distance)
+		.def_readwrite("draw_first", &vl::SkyDomeInfo::draw_first)
+		.def_readwrite("orientation", &vl::SkyDomeInfo::orientation)
+		.def_readwrite("xsegments", &vl::SkyDomeInfo::xsegments)
+		.def_readwrite("ysegments", &vl::SkyDomeInfo::ysegments)
+		.def_readwrite("ysegments_keep", &vl::SkyDomeInfo::ysegments_keep)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
 		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
@@ -114,10 +137,17 @@ BOOST_PYTHON_MODULE(vl)
 		.def("hasLight", &SceneManager::hasLight)
 		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
+		
+		/// Scene parameters
+		/// returns copies of the objects
+		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
+		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
+		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
-		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
+
+		/// @todo add printing
 	;
 
 	python::enum_<vl::PREFAB>("PF")

@@ -7,7 +7,6 @@
 
 #include "base/exceptions.hpp"
 #include "eq_cluster/config.hpp"
-#include "eq_ogre/ogre_dotscene_loader.hpp"
 
 #include "pipe.hpp"
 
@@ -136,7 +135,7 @@ vl::Window::getOgreRoot( void )
 void
 vl::Window::setCamera( Ogre::Camera *camera )
 {
-	std::cout << vl::TRACE << "vl::Window::setCamera" << std::endl;
+	std::cout << vl::TRACE << "vl::Window::setCamera : " << camera->getName() << std::endl;
 
 	_camera = camera;
 	if(_left_viewport)

@@ -21,6 +21,113 @@
 namespace vl
 {
 
+enum FogMode
+{
+	FOG_NONE,
+	FOG_LINEAR,
+	FOG_EXP,
+	FOG_EXP2,
+};
+
+inline std::string
+getFogModeAsString(FogMode mode)
+{
+	switch(mode)
+	{
+	case FOG_NONE:
+		return "none";
+	case FOG_LINEAR:
+		return "linear";
+	case FOG_EXP:
+		return "exp";
+	case FOG_EXP2:
+		return "exp2";
+	default:
+		return "unknown";
+	}
+}
+
+struct SkyDomeInfo
+{
+	SkyDomeInfo( std::string const &mat_name = std::string(), Ogre::Real curv = 10, 
+			Ogre::Real tile = 8, Ogre::Real dist = 50, bool drawFirst = true, 
+			Ogre::Quaternion const &orient = Ogre::Quaternion::IDENTITY, 
+			int xseg=16, int yseg=16, int yseg_keep=-1 )
+		: material_name(mat_name)
+		, curvature(curv)
+		, tiling(tile)
+		, distance(dist)
+		, draw_first(drawFirst)
+		, orientation(orient)
+		, xsegments(xseg)
+		, ysegments(yseg)
+		, ysegments_keep(yseg_keep)
+	{}
+
+	bool empty(void) const
+	{ return material_name.empty(); }
+	
+	std::string material_name;
+	Ogre::Real curvature;
+	Ogre::Real tiling;
+	Ogre::Real distance;
+	bool draw_first;
+	Ogre::Quaternion orientation;
+	int xsegments;
+	int ysegments;
+	int ysegments_keep;
+};
+
+struct FogInfo
+{
+	FogInfo( FogMode fog_mode = FOG_NONE, 
+			 Ogre::ColourValue const &diff = Ogre::ColourValue::White,
+			 Ogre::Real expDensity = 0.001, Ogre::Real linearStart = 0,
+			 Ogre::Real linearEnd = 1 )
+		: mode(fog_mode), colour_diffuse(diff), exp_density(expDensity)
+		, linear_start(linearStart), linear_end(linearEnd)
+	{}
+
+	/// Constructor for python (without the enum)
+	FogInfo( std::string const &fog_mode, 
+			 Ogre::ColourValue const &diff = Ogre::ColourValue::White,
+			 Ogre::Real expDensity = 0.001, Ogre::Real linearStart = 0,
+			 Ogre::Real linearEnd = 1 )
+		: mode(FOG_NONE), colour_diffuse(diff), exp_density(expDensity)
+		, linear_start(linearStart), linear_end(linearEnd)
+	{
+		setMode(fog_mode);
+	}
+
+	bool valid(void) const
+	{ return mode != FOG_NONE; }
+
+	/// For python, so that we don't need to expose enums
+	void setMode(std::string const &fog_mode)
+	{
+		std::string s(fog_mode);
+		vl::to_lower(s);
+		if( s == "linear" )
+		{ mode = FOG_LINEAR; }
+		else if( s == "exp" )
+		{ mode = FOG_EXP; }
+		else if( s == "exp2" )
+		{ mode = FOG_EXP2; }
+	}
+
+	std::string getMode(void) const
+	{ 
+		return getFogModeAsString(mode);
+	}
+
+	FogMode mode;
+	Ogre::ColourValue colour_diffuse;
+	Ogre::Real exp_density;
+	Ogre::Real linear_start;
+	Ogre::Real linear_end;
+};
+
+
 class SceneManager : public vl::Distributed
 {
 public :
@@ -117,14 +224,38 @@ public :
 	SceneNodeList const &getSceneNodeList(void) const
 	{ return _scene_nodes; }
 
+
+	/// --------- Scene parameters ---------------
+	void setSkyDome(SkyDomeInfo const &dome);
+
+	/// @todo these are problematic when used from python. 
+	/// User expects to be able to modify the object but because these return
+	/// const refs and are copied in python. User is editing temp object.
+	/// Can not be solved by changing to non-const refs because
+	/// the SceneManager has no knowledge that they have been modified
+	/// so we need to add DIRTIES to the SkyDomeInfo and FogInfo for this to work.
+	SkyDomeInfo const &getSkyDome(void) const
+	{ return _sky_dome; }
+
+	void setFog(FogInfo const &fog);
+
+	FogInfo const &getFog(void) const
+	{ return _fog; }
+
+	Ogre::ColourValue const &getAmbientLight(void) const
+	{ return _ambient_light; }
+
+	void setAmbientLight( Ogre::ColourValue const &colour );
+
+
+	/// @todo should be removed, this is going to the GameManager anyway
 	void reloadScene( void );
 
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
-	Ogre::SceneManager *getNative( void )
-	{ return _ogre_sm; }
 
+	/// --------------------- Selection -----------------------
 	void addToSelection( SceneNodePtr node );
 
 	void removeFromSelection( SceneNodePtr node );
@@ -133,31 +264,23 @@ public :
 
 	SceneNodeList const &getSelection( void ) const
 	{ return _selection; }
-
-	Ogre::ColourValue const &getAmbientLight(void) const
-	{ return _ambient_light; }
-
-	void setAmbientLight( Ogre::ColourValue const &colour )
-	{
-		if( _ambient_light != colour )
-		{
-			_ambient_light = colour;
-			setDirty( DIRTY_AMBIENT_LIGHT );
-		}
-	}
 	
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_SKY_DOME = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
 	};
 
-protected :
+	Ogre::SceneManager *getNative( void )
+	{ return _ogre_sm; }
+
+private :
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
-private :
 	// @todo rename to avoid confusion
 	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);
 
@@ -171,6 +294,9 @@ private :
 	/// the attributes for showing the selected nodes are distributed in the
 	/// nodes them selves
 	SceneNodeList _selection;
+
+	SkyDomeInfo _sky_dome;
+	FogInfo _fog;
 
 	// Reload the scene
 	uint32_t _scene_version;
@@ -186,6 +312,27 @@ private :
 
 };	// class FrameData
 
+
+std::ostream &operator<<(std::ostream &os, vl::SkyDomeInfo const &sky);
+
+std::ostream &operator<<(std::ostream &os, vl::FogInfo const &fog);
+
+namespace cluster
+{
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::SkyDomeInfo const &sky);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::SkyDomeInfo &sky);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::FogInfo const &fog);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::FogInfo &fog);
+
+}	// namespace cluster
 }	// namespace vl
 
 #endif	// VL_SCENE_MANAGER_HPP

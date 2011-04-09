@@ -206,37 +206,75 @@ vl::DotSceneLoader::processEnvironment(rapidxml::xml_node<> *xml_node)
 	if(pElement)
 	{ processCamera(pElement, _attach_node); }
 
-	/*	@todo not implemented
 	// Process fog (?)
 	pElement = xml_node->first_node("fog");
 	if(pElement)
 	{ processFog(pElement); }
-
-	// Process skyBox (?)
-	pElement = xml_node->first_node("skyBox");
-	if(pElement)
-	{ processSkyBox(pElement); }
 
 	// Process skyDome (?)
 	pElement = xml_node->first_node("skyDome");
 	if( pElement )
 	{ processSkyDome(pElement); }
 
-	// Process skyPlane (?)
-	pElement = xml_node->first_node("skyPlane");
-	if( pElement )
-	{ processSkyPlane(pElement); }
-
-	// Process clipping (?)
-	pElement = xml_node->first_node("clipping");
-	if( pElement )
-	{ processClipping(pElement); }
-	*/
-
 	// Process colourAmbient (?)
 	pElement = xml_node->first_node("colourAmbient");
 	if( pElement )
 	{ _scene->setAmbientLight( vl::parseColour(pElement) ); }
+}
+
+void
+vl::DotSceneLoader::processFog(rapidxml::xml_node<> *xml_node)
+{
+	// Process attributes
+	Ogre::Real expDensity = vl::getAttribReal(xml_node, "density", 0.001);
+	Ogre::Real linearStart = vl::getAttribReal(xml_node, "start", 0.0);
+	Ogre::Real linearEnd = vl::getAttribReal(xml_node, "end", 1.0);
+
+	vl::FogMode mode = vl::FOG_NONE;
+	std::string sMode = vl::getAttrib(xml_node, "mode");
+	if(sMode == "none")
+	{ mode = vl::FOG_NONE; }
+	else if(sMode == "exp")
+	{ mode = vl::FOG_EXP; }
+	else if(sMode == "exp2")
+	{ mode = vl::FOG_EXP2; }
+	else if(sMode == "linear")
+	{ mode = vl::FOG_LINEAR; }
+
+	rapidxml::xml_node<> *pElement;
+
+	// Process colourDiffuse (?)
+	Ogre::ColourValue colourDiffuse = Ogre::ColourValue(1.0, 1.0, 1.0, 1.0);
+	pElement = xml_node->first_node("colour");
+	if(pElement)
+	{ colourDiffuse = vl::parseColour(pElement); }
+
+	// Setup the fog
+	_scene->setFog( vl::FogInfo(mode, colourDiffuse, expDensity, linearStart, linearEnd) );
+}
+
+void
+vl::DotSceneLoader::processSkyDome(rapidxml::xml_node<> *xml_node)
+{
+	// Process attributes
+	// material attribute is required, all others are optional and have defaults
+	std::string material = xml_node->first_attribute("material")->value();
+	Ogre::Real curvature = vl::getAttribReal(xml_node, "curvature", 10);
+	Ogre::Real tiling = vl::getAttribReal(xml_node, "tiling", 8);
+	Ogre::Real distance = vl::getAttribReal(xml_node, "distance", 4000);
+	bool drawFirst = vl::getAttribBool(xml_node, "drawFirst", true);
+
+	rapidxml::xml_node<>* pElement;
+
+	// Process rotation (?)
+	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+	pElement = xml_node->first_node("rotation");
+	if(pElement)
+	{ rotation = vl::parseQuaternion(pElement); }
+
+	// Setup the sky dome
+	_scene->setSkyDome( vl::SkyDomeInfo(material, curvature, tiling,
+			distance, drawFirst, rotation, 16, 16, -1) );
 }
 
 void
@@ -408,7 +446,6 @@ vl::DotSceneLoader::processCamera(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 	std::string name = vl::getAttrib(xml_node, "name");
 	std::string id = vl::getAttrib(xml_node, "id");
 
-	std::string node_name = name + std::string("Node");
 	// Create the camera
 	vl::CameraPtr camera = _scene->createCamera( name );
 	parent->attachObject( camera );
