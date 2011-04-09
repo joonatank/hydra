@@ -35,6 +35,8 @@ public :
 
 	void setSceneManager( Ogre::SceneManager *man );
 
+
+	/// ---------- SceneNode ---------------
 	SceneNodePtr getRootSceneNode(void)
 	{ return _root; }
 
@@ -59,6 +61,7 @@ public :
 
 	// TODO add SceneNode removal
 
+
 	/// --- Entity ---
 	EntityPtr createEntity( std::string const &name, vl::PREFAB type);
 
@@ -73,13 +76,46 @@ public :
 
 	EntityPtr getEntity( std::string const &name ) const;
 
-	EntityPtr getEntityID(uint64_t id) const;
 
+	/// --------- Light -------
+	LightPtr createLight(std::string const &name);
+
+	/// Internal
+	/// This should only be called on from slaves
+	/// This can not be private because it's called from the Renderer
+	LightPtr _createLight(uint64_t id);
+
+	bool hasLight(std::string const &name) const;
+
+	LightPtr getLight(std::string const &name) const;
+	
+
+	/// --------- Camera -------
+	CameraPtr createCamera(std::string const &name);
+
+	/// Internal
+	/// This should only be called on from slaves
+	/// This can not be private because it's called from the Renderer
+	CameraPtr _createCamera(uint64_t id);
+
+	bool hasCamera(std::string const &name) const;
+
+	CameraPtr getCamera(std::string const &name) const;
+
+
+	/// --------- MovableObject ------------
+	/// Internal
+	MovableObjectPtr _createMovableObject(std::string const &type, uint64_t id);
+
+	MovableObjectPtr getMovableObjectID(uint64_t id) const;
+
+	MovableObjectPtr getMovableObject(std::string const &type, std::string const &name) const;
+
+	bool hasMovableObject(std::string const &type, std::string const &name) const;
+
+	/// --------- List access -------
 	SceneNodeList const &getSceneNodeList(void) const
 	{ return _scene_nodes; }
-
-	EntityList const &getEntityList(void) const
-	{ return _entities; }
 
 	void reloadScene( void );
 
@@ -127,7 +163,7 @@ private :
 
 	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;
-	EntityList _entities;
+	MovableObjectList _objects;
 
 	/// Selected SceneNodes
 	/// @remarks

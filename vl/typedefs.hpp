@@ -24,11 +24,15 @@ namespace vl
 	class GameManager;
 	class EventManager;
 	class ResourceManager;
+	class PythonContext;
 	class Clients;
+
 	class SceneManager;
 	class SceneNode;
+	class MovableObject;
 	class Entity;
-	class PythonContext;
+	class Light;
+	class Camera;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -40,16 +44,21 @@ namespace vl
 	typedef GameManager * GameManagerPtr;
 	typedef EventManager * EventManagerPtr;
 	typedef ResourceManager * ResourceManagerPtr;
+	typedef PythonContext * PythonContextPtr;
+
 	typedef SceneManager * SceneManagerPtr;
 	typedef SceneNode * SceneNodePtr;
+	typedef MovableObject * MovableObjectPtr;
 	typedef Entity * EntityPtr;
-	typedef PythonContext * PythonContextPtr;
+	typedef Light * LightPtr;
+	typedef Camera * CameraPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;
 	
 	typedef std::vector<SceneNodePtr> SceneNodeList;
 	typedef std::vector<EntityPtr> EntityList;
+	typedef std::vector<MovableObjectPtr> MovableObjectList;
 
 	struct null_deleter
 	{

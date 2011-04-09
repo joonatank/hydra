@@ -9,6 +9,8 @@
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
 #include "entity.hpp"
+#include "light.hpp"
+#include "camera.hpp"
 #include "player.hpp"
 
 // Necessary for transforming OIS keycodes to python
@@ -106,6 +108,12 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
 		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasCamera", &SceneManager::hasCamera)
+		.def("createCamera", &SceneManager::createCamera, python::return_value_policy<python::reference_existing_object>() )
+		.def("getCamera", &SceneManager::getCamera, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasLight", &SceneManager::hasLight)
+		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
+		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
@@ -119,17 +127,37 @@ BOOST_PYTHON_MODULE(vl)
 		.value("CUBE", PF_CUBE)
 	;
 
-	python::class_<vl::Entity, boost::noncopyable>("Entity", python::no_init)
-		.add_property("name", python::make_function( &vl::Entity::getName, python::return_value_policy<python::copy_const_reference>() ) )
+	python::class_<vl::MovableObject, boost::noncopyable>("MovableObject", python::no_init)
+		.add_property("name", python::make_function( &vl::MovableObject::getName, python::return_value_policy<python::copy_const_reference>() ) )
+		// @todo does not work, pure virtual
+		//.add_property("type", python::make_function( &vl::Camera::getTypeName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("parent", python::make_function( &vl::MovableObject::getParent,python::return_value_policy<python::reference_existing_object>() ) )
+	;
+
+	python::class_<vl::Light, boost::noncopyable, python::bases<vl::MovableObject> >("Light", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Camera, boost::noncopyable, python::bases<vl::MovableObject> >("Camera", python::no_init)
+		.add_property("near_clip", &vl::Camera::getNearClipDistance, &vl::Camera::setNearClipDistance )
+		.add_property("far_clip", &vl::Camera::getFarClipDistance, &vl::Camera::setFarClipDistance )
+		.add_property("position", python::make_function( &vl::Camera::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::Camera::setPosition )
+		.add_property("orientation", python::make_function( &vl::Camera::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::Camera::setOrientation )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Entity, boost::noncopyable, python::bases<vl::MovableObject> >("Entity", python::no_init)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
 		.add_property("prefab", &vl::Entity::getPrefab)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 
 	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
-		.def("addEntity", &vl::SceneNode::addEntity)
-		.def("removeEntity", &vl::SceneNode::removeEntity)
+		.def("attachObject", &vl::SceneNode::attachObject)
+		.def("detachObject", &vl::SceneNode::detachObject)
+		.def("hasObject", &vl::SceneNode::hasObject)
 		.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)

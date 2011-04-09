@@ -50,11 +50,17 @@ set( SOURCES
 	cluster/client.cpp
 	cluster/message.cpp
 	entity.cpp
+	light.cpp
+	camera.cpp
+	movable_object.cpp
 	)
 
 set( HEADERS
 	tracker.hpp
 	entity.hpp
+	light.hpp
+	movable_object.hpp
+	camera.hpp
 	eq_ogre/ogre_dotscene_loader.hpp
 	tracker_serializer.hpp
 	fake_tracker.hpp

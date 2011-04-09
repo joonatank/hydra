@@ -846,15 +846,30 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 				_scene_manager->_createSceneNode(id);
 				break;
 			}
+			/// @todo MovableObjects should have the same type and 
+			/// use the same create function
 			case OBJ_ENTITY :
 			{
 				assert( _scene_manager );
 				_scene_manager->_createEntity(id);
 				break;
 			}
+			case OBJ_LIGHT :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createLight(id);
+				break;
+			}
+			case OBJ_CAMERA :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createCamera(id);
+				break;
+			}
+
 			default :
 				// TODO Might happen something unexpected so for now just kill the program
-				assert( false );
+				assert(false && "Trying to create an object with an unknown type");
 		}
 	}
 }

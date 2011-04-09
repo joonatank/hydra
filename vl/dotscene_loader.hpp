@@ -51,11 +51,38 @@ private :
 
 	void processScene(rapidxml::xml_node<> *xml_root);
 
-	void processNodes(rapidxml::xml_node<> *xml_node);
+	void parseSceneHeader(rapidxml::xml_node<> *xml_root);
 
+	void processNodes(rapidxml::xml_node<> *xml_node);
+	/**	Not supported elements
+	 *	colourBackground
+	 */
+	void processEnvironment(rapidxml::xml_node<> *xml_node);
+
+	/**	Not supported elements
+	 *	lookTarget
+	 *	trackTarget
+	 *	particleSystem
+	 *	billboardSet
+	 *	plane
+	 */
 	void processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
 	void processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
+
+	void processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
+	
+	/** Not supported elements
+	 *	normal
+	 *	lookTarget
+	 *	trackTarget
+	 *	userDataReference
+	 */
+	void processCamera(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
+
+	void processLightRange(rapidxml::xml_node<> *xml_node, vl::LightPtr light);
+
+	void processLightAttenuation(rapidxml::xml_node<> *xml_node, vl::LightPtr light);
 
 	vl::SceneManagerPtr _scene;
 	vl::SceneNodePtr _attach_node;

@@ -69,16 +69,12 @@ public :
 
 	void showBoundingBox( bool show );
 
-	/// --------------- Entities ----------------------
-	/// @todo this should work on MovableObjects, a base class for Entities
-	void attachObject(vl::EntityPtr ent)
-	{ addEntity(ent); }
+	/// --------------- MovableObjects ----------------------
+	void attachObject(vl::MovableObjectPtr obj);
 
-	void addEntity(vl::EntityPtr ent);
+	void detachObject(vl::MovableObjectPtr obj);
 
-	void removeEntity(vl::EntityPtr ent);
-
-	bool hasEntity(vl::EntityPtr ent) const;
+	bool hasObject(vl::MovableObjectPtr obj) const;
 
 	/// --------------- Childs ------------------------
 	vl::SceneNodePtr createChildSceneNode(std::string const &name);
@@ -101,7 +97,7 @@ public :
 		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 4,
 		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
 		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 6,
-		DIRTY_ENTITIES = vl::Distributed::DIRTY_CUSTOM << 7,
+		DIRY_ATTACHED = vl::Distributed::DIRTY_CUSTOM << 7,
 		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 8,
 	};
 
@@ -132,7 +128,7 @@ private :
 	vl::SceneNodePtr _parent;
 
 	std::vector<vl::SceneNodePtr> _childs;
-	std::vector<vl::EntityPtr> _entities;
+	std::vector<vl::MovableObjectPtr> _objects;
 
 	Ogre::SceneNode *_ogre_node;
 

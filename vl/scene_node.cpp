@@ -34,14 +34,14 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 		os << "\n";
 	}
 
-	if( !a._entities.empty() )
+	if( !a._objects.empty() )
 	{
-		os << "with entities : ";
-		for( std::vector<vl::EntityPtr>::const_iterator iter = a._entities.begin();
-			 iter != a._entities.end(); ++iter )
+		os << "with objects : ";
+		for( std::vector<vl::MovableObjectPtr>::const_iterator iter = a._objects.begin();
+			 iter != a._objects.end(); ++iter )
 		{
 			os << (*iter)->getName();
-			if( iter != a._entities.end()-1 )
+			if( iter != a._objects.end()-1 )
 				os << ", ";
 		}
 	}
@@ -131,34 +131,34 @@ vl::SceneNode::showBoundingBox( bool show )
 }
 
 void 
-vl::SceneNode::addEntity(vl::EntityPtr ent)
+vl::SceneNode::attachObject(vl::MovableObjectPtr obj)
 {
-	assert(ent);
-	if( hasEntity(ent) )
+	assert(obj);
+	if( hasObject(obj) )
 	{ return; }
 	else
 	{
-		setDirty(DIRTY_ENTITIES);
-		_entities.push_back(ent);
+		setDirty(DIRY_ATTACHED);
+		_objects.push_back(obj);
 
-		ent->setParent(this);
+		obj->setParent(this);
 	}
 }
 
 void 
-vl::SceneNode::removeEntity(vl::EntityPtr ent)
+vl::SceneNode::detachObject(vl::MovableObjectPtr obj)
 {
-	assert(ent);
-	std::vector<vl::EntityPtr>::iterator iter;
-	for( iter = _entities.begin(); iter != _entities.end(); ++iter )
+	assert(obj);
+	std::vector<vl::MovableObjectPtr>::iterator iter;
+	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		if( *iter == ent)
+		if( *iter == obj )
 		{
-			setDirty(DIRTY_ENTITIES);
-			_entities.erase(iter);
+			setDirty(DIRY_ATTACHED);
+			_objects.erase(iter);
 
 			if( _ogre_node )
-			{ _ogre_node->detachObject(ent->getNative()); }
+			{ _ogre_node->detachObject(obj->getNative()); }
 			
 			break;
 		}
@@ -166,13 +166,13 @@ vl::SceneNode::removeEntity(vl::EntityPtr ent)
 }
 
 bool 
-vl::SceneNode::hasEntity(vl::EntityPtr ent) const
+vl::SceneNode::hasObject(vl::MovableObjectPtr obj) const
 {
-	assert(ent);
-	std::vector<vl::EntityPtr>::const_iterator iter;
-	for( iter = _entities.begin(); iter != _entities.end(); ++iter )
+	assert(obj);
+	std::vector<vl::MovableObjectPtr>::const_iterator iter;
+	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		if( *iter == ent )
+		if( *iter == obj )
 		{ return true; }
 	}
 
@@ -311,18 +311,18 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if( dirtyBits & DIRTY_CHILDS )
 	{
 		msg << _childs.size();
-		std::vector<vl::SceneNodePtr>::iterator iter;
+		vl::SceneNodeList::iterator iter;
 		for( iter = _childs.begin(); iter != _childs.end(); ++iter )
 		{
 			msg << (*iter)->getID();
 		}
 	}
 
-	if( dirtyBits & DIRTY_ENTITIES )
+	if( dirtyBits & DIRY_ATTACHED )
 	{
-		msg << _entities.size();
-		std::vector<vl::EntityPtr>::iterator iter;
-		for( iter = _entities.begin(); iter != _entities.end(); ++iter )
+		msg << _objects.size();
+		vl::MovableObjectList::iterator iter;
+		for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 		{
 			msg << (*iter)->getID();
 		}
@@ -426,21 +426,21 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		}
 	}
 
-	if( dirtyBits & DIRTY_ENTITIES )
+	if( dirtyBits & DIRY_ATTACHED )
 	{
-		std::vector<uint64_t> ent_ids;
-		msg >> ent_ids;
+		std::vector<uint64_t> obj_ids;
+		msg >> obj_ids;
 		
-		std::vector<EntityPtr> removed_ents;
+		MovableObjectList removed_ents;
 
 		// Compare the old and new
-		for( std::vector<EntityPtr>::iterator iter = _entities.begin(); 
-			iter != _entities.end(); ++iter )
+		for( MovableObjectList::iterator iter = _objects.begin(); 
+			iter != _objects.end(); ++iter )
 		{
 			std::vector<uint64_t>::iterator id_iter 
-				= std::find( ent_ids.begin(), ent_ids.end(), (*iter)->getID() );
+				= std::find( obj_ids.begin(), obj_ids.end(), (*iter)->getID() );
 			// Old id not found, we'll remove the child
-			if( id_iter == ent_ids.end() )
+			if( id_iter == obj_ids.end() )
 			{
 				removed_ents.push_back(*iter);
 			}
@@ -448,21 +448,21 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 			else
 			{
 				// remove from the list of ids
-				ent_ids.erase(id_iter);
+				obj_ids.erase(id_iter);
 			}
 		}
 
-		for( std::vector<EntityPtr>::iterator iter = removed_ents.begin();
+		for( MovableObjectList::iterator iter = removed_ents.begin();
 			 iter != removed_ents.end(); ++iter )
 		{
-			removeEntity(*iter);
+			detachObject(*iter);
 		}
 
 		/// Check the list and add remaining childs
 		std::vector<uint64_t>::iterator id_iter;
-		for( id_iter = ent_ids.begin(); id_iter != ent_ids.end(); ++id_iter )
+		for( id_iter = obj_ids.begin(); id_iter != obj_ids.end(); ++id_iter )
 		{
-			addEntity(_creator->getEntityID(*id_iter));
+			attachObject(_creator->getMovableObjectID(*id_iter));
 		}
 	}
 }

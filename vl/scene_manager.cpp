@@ -7,6 +7,8 @@
 
 #include "scene_node.hpp"
 #include "entity.hpp"
+#include "camera.hpp"
+#include "light.hpp"
 
 /// Public
 vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
@@ -108,7 +110,7 @@ vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 	
 	_session->registerObject( ent, OBJ_ENTITY, vl::ID_UNDEFINED );
 	assert( ent->getID() != vl::ID_UNDEFINED );
-	_entities.push_back(ent);
+	_objects.push_back(ent);
 
 	return ent;
 }
@@ -126,7 +128,7 @@ vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_
 	
 	_session->registerObject(ent, OBJ_ENTITY, vl::ID_UNDEFINED);
 	assert( ent->getID() != vl::ID_UNDEFINED );
-	_entities.push_back(ent);
+	_objects.push_back(ent);
 
 	return ent;
 }
@@ -134,47 +136,160 @@ vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_
 vl::EntityPtr
 vl::SceneManager::_createEntity(uint64_t id)
 {
-	if( vl::ID_UNDEFINED == id )
-	{ BOOST_THROW_EXCEPTION( vl::invalid_id() ); }
-
-	EntityPtr ent = new Entity("", "", this);
-	
-	_session->registerObject(ent, OBJ_ENTITY, id);
-	assert( ent->getID() != vl::ID_UNDEFINED );
-	_entities.push_back(ent);
-
-	return ent;
+	return static_cast<EntityPtr>(_createMovableObject("Entity", id));
 }
 
 bool 
 vl::SceneManager::hasEntity( std::string const &name ) const
 {
-	return( getEntity(name) );
+	return hasMovableObject("Entity", name);
 }
 
 vl::EntityPtr 
 vl::SceneManager::getEntity( std::string const &name ) const
 {
-	for( EntityList::const_iterator iter = _entities.begin(); iter != _entities.end(); ++iter )
+	return static_cast<EntityPtr>( getMovableObject("Entity", name) );
+}
+
+/// --------------------- SceneManager Light --------------------------------
+vl::LightPtr
+vl::SceneManager::createLight(std::string const &name)
+{
+	/// Disallow empty names for now, we need to generate one otherwise
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
+	if(hasEntity(name))
+	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
+
+	LightPtr light = new Light(name, this);
+	
+	_session->registerObject(light, OBJ_LIGHT, vl::ID_UNDEFINED);
+	assert( light->getID() != vl::ID_UNDEFINED );
+	_objects.push_back(light);
+
+	return light;
+}
+
+vl::LightPtr
+vl::SceneManager::_createLight(uint64_t id)
+{
+	return static_cast<LightPtr>(_createMovableObject("Light", id));
+}
+
+bool 
+vl::SceneManager::hasLight(std::string const &name) const
+{
+	return hasMovableObject("Light", name);
+}
+
+vl::LightPtr 
+vl::SceneManager::getLight(std::string const &name) const
+{
+	return static_cast<LightPtr>(getMovableObject("Light", name));
+}
+
+/// --------------------- SceneManager Camera --------------------------------
+vl::CameraPtr 
+vl::SceneManager::createCamera(std::string const &name)
+{
+	/// Disallow empty names for now, we need to generate one otherwise
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
+	if(hasEntity(name))
+	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
+
+	CameraPtr cam = new Camera(name, this);
+	
+	_session->registerObject(cam, OBJ_CAMERA, vl::ID_UNDEFINED);
+	assert( cam->getID() != vl::ID_UNDEFINED );
+	_objects.push_back(cam);
+
+	return cam;
+}
+
+vl::CameraPtr 
+vl::SceneManager::_createCamera(uint64_t id)
+{
+	return static_cast<CameraPtr>(_createMovableObject("Camera", id));
+}
+
+bool 
+vl::SceneManager::hasCamera(std::string const &name) const
+{
+	return hasMovableObject("Camera", name);
+}
+
+vl::CameraPtr 
+vl::SceneManager::getCamera(std::string const &name) const
+{
+	return static_cast<CameraPtr>(getMovableObject("Camera", name));
+}
+
+/// ------------------ SceneManager MovableObject ----------------------------
+vl::MovableObjectPtr
+vl::SceneManager::_createMovableObject(std::string const &type, uint64_t id)
+{
+	if( vl::ID_UNDEFINED == id )
+	{ BOOST_THROW_EXCEPTION( vl::invalid_id() ); }
+
+	MovableObjectPtr obj = 0;
+	OBJ_TYPE t;
+	if( type == "Entity" )
+	{ 
+		obj = new Entity(this);
+		t = OBJ_ENTITY;
+	}
+	if( type == "Camera" )
+	{ 
+		obj = new Camera(this); 
+		t = OBJ_CAMERA;
+	}
+	if( type == "Light" )
 	{
-		if( (*iter)->getName() == name )
+		obj = new Light(this);
+		t = OBJ_LIGHT;
+	}
+
+	if( obj )
+	{
+		_session->registerObject(obj, t, id);
+		assert( obj->getID() != vl::ID_UNDEFINED );
+		_objects.push_back(obj);
+	}
+
+	return obj;
+}
+
+vl::MovableObjectPtr 
+vl::SceneManager::getMovableObjectID(uint64_t id) const
+{
+	for( size_t i = 0; i < _objects.size(); ++i )
+	{
+		MovableObjectPtr obj = _objects.at(i);
+		if( obj->getID() == id )
+		{ return obj; }
+	}
+
+	return 0;
+}
+
+vl::MovableObjectPtr
+vl::SceneManager::getMovableObject(std::string const &type_name, 
+		std::string const &name) const
+{
+	for( MovableObjectList::const_iterator iter = _objects.begin(); iter != _objects.end(); ++iter )
+	{
+		if( (*iter)->getTypeName() == type_name && (*iter)->getName() == name )
 		{ return *iter; }
 	}
 
 	return 0;
 }
 
-vl::EntityPtr
-vl::SceneManager::getEntityID(uint64_t id) const
+bool 
+vl::SceneManager::hasMovableObject(std::string const &type_name, std::string const &name) const
 {
-	for( size_t i = 0; i < _entities.size(); ++i )
-	{
-		EntityPtr ent = _entities.at(i);
-		if( ent->getID() == id )
-		{ return ent; }
-	}
-
-	return 0;
+	return( getMovableObject(type_name, name) );
 }
 
 void

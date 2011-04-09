@@ -26,6 +26,7 @@ createCameraMovements(camera)
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
 # first one is the camera not active at the moment, second one is active at the moment
 addToggleActiveCamera("OutsideCamera", "Omakamera" )
+game.player.camera = "Omakamera"
 
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
@@ -36,14 +37,14 @@ game.scene.ambient_light = ColourValue(0.2,0.2,0.2)
 # Create ground plane
 ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
-ground.addEntity(ground_ent)
+ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 ground_ent.material_name = 'ground'
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
 sphere_ent.material_name = 'debug_red'
 sphere = game.scene.createSceneNode('sphere')
-sphere.addEntity(sphere_ent)
+sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
 sphere.scale *= 0.003
 

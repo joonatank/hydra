@@ -1,5 +1,5 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-03
+ *	@date 2011-04
  *	@file entity.cpp
  */
 
@@ -12,24 +12,24 @@
 #include <OGRE/OgreSceneManager.h>
 
 vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManager *creator)
-	: _name(name)
-	, _prefab(type)
-	, _mesh_name()
-	, _cast_shadows(true)
-	, _creator(creator)
-	, _parent(0)
-	, _ogre_object(0)
-{}
+	: MovableObject(name, creator)
+{
+	_clear();
+	_prefab = type;
+}
 
 vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::SceneManager *creator)
-	: _name(name)
-	, _prefab(PF_NONE)
-	, _mesh_name(mesh_name)
-	, _cast_shadows(true)
-	, _creator(creator)
-	, _parent(0)
-	, _ogre_object(0)
-{}
+	: MovableObject(name, creator)
+{
+	_clear();
+	_mesh_name = mesh_name;
+}
+
+vl::Entity::Entity(vl::SceneManagerPtr creator)
+	: MovableObject("", creator)
+{
+	_clear();
+}
 
 vl::Entity::~Entity(void)
 {}
@@ -55,40 +55,14 @@ vl::Entity::setMaterialName(std::string const &name)
 }
 
 void 
-vl::Entity::setParent(vl::SceneNodePtr parent)
+vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	_parent = parent;
-	if( _ogre_object && _parent->getNative() )
-	{
-		if( _ogre_object->isAttached() )
-		{
-			if( _ogre_object->getParentSceneNode() != _parent->getNative() )
-			{
-				_ogre_object->detachFromParent();
-				_parent->getNative()->attachObject(_ogre_object);
-			}
-		}
-		else
-		{
-			_parent->getNative()->attachObject(_ogre_object);
-		}
-	}
-}
-
-void 
-vl::Entity::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
-{
-	if( DIRTY_NAME & dirtyBits )
-	{
-		msg << _name;
-	}
-
 	if( DIRTY_PREFAB & dirtyBits )
 	{
 		msg << _prefab;
 	}
 
-	if( DIRTY_MESH & dirtyBits )
+	if( DIRTY_MESH_NAME & dirtyBits )
 	{
 		msg << _mesh_name;
 	}
@@ -105,22 +79,14 @@ vl::Entity::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 }
 
 void 
-vl::Entity::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	bool recreate = false;
-
-	if( DIRTY_NAME & dirtyBits )
-	{
-		msg >> _name;
-		recreate = true;
-	}
-
 	if( DIRTY_PREFAB & dirtyBits )
 	{
 		msg >> _prefab;
 	}
 
-	if( DIRTY_MESH & dirtyBits )
+	if( DIRTY_MESH_NAME & dirtyBits )
 	{
 		msg >> _mesh_name;
 	}
@@ -141,14 +107,11 @@ vl::Entity::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 			_ogre_object->setMaterialName(_material_name); 
 		}
 	}
-
-	if( recreate )
-	{ _createNative(); }
 }
 
 
 bool
-vl::Entity::_createNative(void)
+vl::Entity::_doCreateNative(void)
 {
 	if( _ogre_object )
 	{ return true; }
@@ -194,8 +157,14 @@ vl::Entity::_createNative(void)
 	if( !_material_name.empty() )
 	{ _ogre_object->setMaterialName(_material_name); }
 
-	if( _parent )
-	{ setParent(_parent); }
-
 	return true;
+}
+
+void 
+vl::Entity::_clear(void)
+{
+	_prefab = PF_NONE;
+	_cast_shadows = true;
+	_parent = 0;
+	_ogre_object = 0;
 }

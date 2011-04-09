@@ -8,6 +8,8 @@
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
 #include "entity.hpp"
+#include "camera.hpp"
+#include "light.hpp"
 
 #include "base/string_utils.hpp"
 #include "ogre_xml_helpers.hpp"
@@ -65,15 +67,33 @@ vl::DotSceneLoader::_parse(char *xml_data)
 {
 	rapidxml::xml_document<> XMLDoc;    // character type defaults to char
 
-	rapidxml::xml_node<>* XMLRoot;
+	rapidxml::xml_node<>* xml_root;
 
 	XMLDoc.parse<0>( xml_data );
 
 	// Grab the scene node
-	XMLRoot = XMLDoc.first_node("scene");
+	xml_root = XMLDoc.first_node("scene");
+
+	// OgreMax exports angles in Radians by default so if the scene file is
+	// created with Maya we assume Radians
+	// Blender how ever uses Degrees by default so we will assume Degrees otherwise
+	std::string app( vl::getAttrib(xml_root, "application", "") );
+	vl::to_lower( app );
+	// Mind you we might process multiple scene files some made with Maya and
+	// some with Blender so this setting needs to be changed for each file.
+	if( app == "maya" )
+	{
+		std::cout << "Processing Maya scene file." << std::endl;
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_RADIAN );
+	}
+	else
+	{
+		std::cout << "Processing Blender scene file." << std::endl;
+		Ogre::Math::setAngleUnit( Ogre::Math::AU_DEGREE );
+	}
 
 	// Process the scene
-	processScene(XMLRoot);
+	processScene(xml_root);
 }
 
 
@@ -81,12 +101,61 @@ vl::DotSceneLoader::_parse(char *xml_data)
 void
 vl::DotSceneLoader::processScene(rapidxml::xml_node<> *xml_root)
 {
+	parseSceneHeader(xml_root);
+
 	rapidxml::xml_node<>* pElement;
+
+	// Process environment (?)
+	pElement = xml_root->first_node("environment");
+	if(pElement)
+	{ processEnvironment(pElement); }
 
 	// Process nodes (?)
 	pElement = xml_root->first_node("nodes");
 	if( pElement )
 	{ processNodes(pElement); }
+
+	/// @todo why only one node is supported?
+	// Process light (?)
+	pElement = xml_root->first_node("light");
+	if(pElement)
+	{ processLight(pElement, _attach_node); }
+
+	// Process camera (?)
+	pElement = xml_root->first_node("camera");
+	if(pElement)
+	{ processCamera(pElement, _attach_node); }
+}
+
+void
+vl::DotSceneLoader::parseSceneHeader(rapidxml::xml_node<> *xml_root)
+{
+	// Process the scene parameters
+	std::string version = vl::getAttrib(xml_root, "formatVersion", "unknown");
+
+	std::string message = "[DotSceneLoader] Parsing dotScene file with version " + version;
+	if(xml_root->first_attribute("ID"))
+	{
+		message += ", id " + std::string(xml_root->first_attribute("ID")->value());
+	}
+	if(xml_root->first_attribute("sceneManager"))
+	{
+		message += ", scene manager "
+			+ std::string(xml_root->first_attribute("sceneManager")->value());
+	}
+	if(xml_root->first_attribute("minOgreVersion"))
+	{
+		message += ", min. Ogre version "
+			+ std::string(xml_root->first_attribute("minOgreVersion")->value());
+	}
+	if(xml_root->first_attribute("author"))
+	{
+		message += ", author "
+			+ std::string(xml_root->first_attribute("author")->value());
+	}
+
+	std::cout << message << std::endl;
+
 }
 
 void
@@ -125,6 +194,49 @@ vl::DotSceneLoader::processNodes(rapidxml::xml_node<> *xml_node)
 	pElement = xml_node->first_node("scale");
 	if(pElement)
 	{ _attach_node->setScale(vl::parseVector3(pElement)); }
+}
+
+void
+vl::DotSceneLoader::processEnvironment(rapidxml::xml_node<> *xml_node)
+{
+	rapidxml::xml_node<> *pElement;
+
+	// Process camera (?)
+	pElement = xml_node->first_node("camera");
+	if(pElement)
+	{ processCamera(pElement, _attach_node); }
+
+	/*	@todo not implemented
+	// Process fog (?)
+	pElement = xml_node->first_node("fog");
+	if(pElement)
+	{ processFog(pElement); }
+
+	// Process skyBox (?)
+	pElement = xml_node->first_node("skyBox");
+	if(pElement)
+	{ processSkyBox(pElement); }
+
+	// Process skyDome (?)
+	pElement = xml_node->first_node("skyDome");
+	if( pElement )
+	{ processSkyDome(pElement); }
+
+	// Process skyPlane (?)
+	pElement = xml_node->first_node("skyPlane");
+	if( pElement )
+	{ processSkyPlane(pElement); }
+
+	// Process clipping (?)
+	pElement = xml_node->first_node("clipping");
+	if( pElement )
+	{ processClipping(pElement); }
+	*/
+
+	// Process colourAmbient (?)
+	pElement = xml_node->first_node("colourAmbient");
+	if( pElement )
+	{ _scene->setAmbientLight( vl::parseColour(pElement) ); }
 }
 
 void
@@ -177,6 +289,22 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 		processEntity(pElement, node);
 		pElement = pElement->next_sibling("entity");
 	}
+
+	/*	Process light (*) */
+	pElement = xml_node->first_node("light");
+	while(pElement)
+	{
+		processLight(pElement, node);
+		pElement = pElement->next_sibling("light");
+	}
+
+	/*	Process camera (*) */
+	pElement = xml_node->first_node("camera");
+	while(pElement)
+	{
+		processCamera(pElement, node);
+		pElement = pElement->next_sibling("camera");
+	}
 }
 
 void
@@ -198,4 +326,153 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 
 	if( !materialFile.empty() )
 	{ entity->setMaterialName(materialFile); }
+}
+
+void
+vl::DotSceneLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent)
+{
+	// If no parent is provided we use Root node
+	if( !parent )
+	{ parent = _attach_node; }
+
+	// Process attributes
+	std::string name = vl::getAttrib(xml_node, "name");
+	std::string id = vl::getAttrib(xml_node, "id");
+
+	// Create the light
+	vl::LightPtr light = _scene->createLight(name);
+
+	parent->attachObject(light);
+
+	std::string sValue = vl::getAttrib(xml_node, "type");
+	if(sValue == "point")
+	{ light->setType( vl::Light::LT_POINT ); }
+	else if(sValue == "directional")
+	{ light->setType( vl::Light::LT_DIRECTIONAL ); }
+	// The correct value from specification is spotLight
+	// but OgreMax uses spot so we allow
+	else if(sValue == "spot" || sValue == "spotLight" )
+	{ light->setType( vl::Light::LT_SPOT ); }
+	else if(sValue == "radPoint")
+	{ light->setType( vl::Light::LT_POINT ); }
+
+	light->setVisible(vl::getAttribBool(xml_node, "visible", true));
+	light->setCastShadows(vl::getAttribBool(xml_node, "castShadows", true));
+
+	rapidxml::xml_node<>* pElement;
+
+	// Process position (?)
+	pElement = xml_node->first_node("position");
+	if(pElement)
+	{ light->setPosition(vl::parseVector3(pElement)); }
+
+	// Process normal (?)
+	pElement = xml_node->first_node("normal");
+	if(pElement)
+	{ light->setDirection(vl::parseVector3(pElement)); }
+
+	pElement = xml_node->first_node("directionVector");
+	if(pElement)
+	{ light->setDirection(vl::parseVector3(pElement)); }
+
+	// Process colourDiffuse (?)
+	pElement = xml_node->first_node("colourDiffuse");
+	if(pElement)
+	{ light->setDiffuseColour(vl::parseColour(pElement)); }
+
+	// Process colourSpecular (?)
+	pElement = xml_node->first_node("colourSpecular");
+	if(pElement)
+	{ light->setSpecularColour(vl::parseColour(pElement)); }
+
+	// Set the parameters wether or not the Light type supports them
+	// They are filtered by the light anyway
+	// and are usable if the light type is changed
+
+	// Process lightRange (?)
+	pElement = xml_node->first_node("lightRange");
+	if(pElement)
+	{ processLightRange(pElement, light); }
+
+	pElement = xml_node->first_node("lightAttenuation");
+	if(pElement)
+	{ processLightAttenuation(pElement, light); }
+}
+
+void
+vl::DotSceneLoader::processCamera(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent)
+{
+	assert(parent);
+
+	// Process attributes
+	std::string name = vl::getAttrib(xml_node, "name");
+	std::string id = vl::getAttrib(xml_node, "id");
+
+	std::string node_name = name + std::string("Node");
+	// Create the camera
+	vl::CameraPtr camera = _scene->createCamera( name );
+	parent->attachObject( camera );
+
+	rapidxml::xml_node<> *pElement;
+
+	// Process clipping (?)
+	pElement = xml_node->first_node("clipping");
+	if(pElement)
+	{
+		// Support both standard attribute name nearPlaneDist and
+		// non-standard near used by OgreMax
+		Ogre::Real nearDist = vl::getAttribReal(pElement, "near");
+		if( nearDist == 0 )
+		{ nearDist = vl::getAttribReal(pElement, "nearPlaneDist"); }
+
+		if( nearDist > 0 )
+		{ camera->setNearClipDistance(nearDist); }
+
+		// Support both standard and non-standard attribute names
+		Ogre::Real farDist =  vl::getAttribReal(pElement, "far");
+		if( farDist == 0 )
+		{ farDist = vl::getAttribReal(pElement, "farPlaneDist"); }
+
+		if( farDist > 0 && farDist > nearDist )
+		{ camera->setFarClipDistance(farDist); }
+	}
+
+	// Process position (?)
+	pElement = xml_node->first_node("position");
+	if(pElement)
+	{ camera->setPosition( vl::parseVector3(pElement) ); }
+
+	// Process rotation (?)
+	pElement = xml_node->first_node("rotation");
+	if(pElement)
+	{ camera->setOrientation( vl::parseQuaternion(pElement) ); }
+
+	pElement = xml_node->first_node("quaternion");
+	if(pElement)
+	{ camera->setOrientation( vl::parseQuaternion(pElement) ); }
+}
+
+void
+vl::DotSceneLoader::processLightRange(rapidxml::xml_node<> *xml_node, vl::LightPtr light)
+{
+	// Process attributes
+	Ogre::Real inner = vl::getAttribReal(xml_node, "inner");
+	Ogre::Real outer = vl::getAttribReal(xml_node, "outer");
+	Ogre::Real falloff = vl::getAttribReal(xml_node, "falloff", 1.0);
+
+	// Setup the light range
+	light->setSpotlightRange(Ogre::Angle(inner), Ogre::Angle(outer), falloff);
+}
+
+void
+vl::DotSceneLoader::processLightAttenuation(rapidxml::xml_node<> *xml_node, vl::LightPtr light)
+{
+	// Process attributes
+	Ogre::Real range = vl::getAttribReal(xml_node, "range");
+	Ogre::Real constant = vl::getAttribReal(xml_node, "constant");
+	Ogre::Real linear = vl::getAttribReal(xml_node, "linear");
+	Ogre::Real quadratic = vl::getAttribReal(xml_node, "quadratic");
+
+	// Setup the light attenuation
+	light->setAttenuation(range, constant, linear, quadratic);
 }
