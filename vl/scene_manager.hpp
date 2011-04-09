@@ -29,6 +29,15 @@ enum FogMode
 	FOG_EXP2,
 };
 
+enum ShadowTechnique
+{
+	SHADOWTYPE_NONE,
+	SHADOWTYPE_TEXTURE_MODULATIVE,
+	SHADOWTYPE_TEXTURE_ADDITIVE,
+	SHADOWTYPE_STENCIL_MODULATIVE,
+	SHADOWTYPE_STENCIL_ADDITIVE,
+};
+
 inline std::string
 getFogModeAsString(FogMode mode)
 {
@@ -247,6 +256,34 @@ public :
 
 	void setAmbientLight( Ogre::ColourValue const &colour );
 
+	/// @brief set the shadow technique
+	/// Be mindful that setting the technique can cause instabilities as they
+	/// are not quarantied to work, this is mostly a development features.
+	///
+	/// Additative shadows create almost black shadows. Good if one want's to
+	/// see which objects are in shadow, for visual appeal they need some extra work.
+	/// Use case visibility checking.
+	/// Also by default they don't do shadowed side of an object correctly
+	/// object is lit too uniformly everywhere with little regard to the light position.
+	///
+	/// Stencil shadows will crash at least the test model, 
+	/// problems with bounding boxes.
+	void setShadowTechnique(ShadowTechnique tech);
+
+	/// @brief set the shadow technique using a string, mostly for python
+	/// valid strings (upper or lower case):
+	/// texture_modulative, texture_additive, none, stencil_modulative, stencil_additive,
+	/// texture and stencil (for the modulative version)
+	/// Be mindful that setting the technique can cause instabilities as they
+	/// are not quarantied to work, this is mostly a development features.
+	void setShadowTechnique(std::string const &tech);
+
+	/// @brief Just enable or disable the damn shadows.
+	/// Uses the technique that seems to work in most cases.
+	void enableShadows(bool enabled);
+
+	bool isShadowsEnabled(void) const
+	{ return _shadow_technique != SHADOWTYPE_NONE; }
 
 	/// @todo should be removed, this is going to the GameManager anyway
 	void reloadScene( void );
@@ -271,6 +308,7 @@ public :
 		DIRTY_SKY_DOME = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_SHADOW_TECHNIQUE = vl::Distributed::DIRTY_CUSTOM << 4,
 		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
 	};
 
@@ -302,6 +340,8 @@ private :
 	uint32_t _scene_version;
 
 	Ogre::ColourValue _ambient_light;
+	
+	ShadowTechnique _shadow_technique;
 
 	vl::Session *_session;
 

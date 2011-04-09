@@ -10,6 +10,9 @@
 #include "camera.hpp"
 #include "light.hpp"
 
+/// Necessary for better shadow camera
+#include <OGRE/OgreShadowCameraSetupLiSPSM.h>
+
 namespace
 {
 
@@ -31,6 +34,25 @@ getOgreFogMode(vl::FogMode m)
 	}
 }
 
+Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
+{
+	switch(t)
+	{
+	case vl::SHADOWTYPE_NONE:
+		return Ogre::SHADOWTYPE_NONE;
+	case vl::SHADOWTYPE_TEXTURE_MODULATIVE:
+		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE;
+	case vl::SHADOWTYPE_TEXTURE_ADDITIVE:
+		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE;
+	case vl::SHADOWTYPE_STENCIL_MODULATIVE:
+		return Ogre::SHADOWTYPE_STENCIL_MODULATIVE;
+	case vl::SHADOWTYPE_STENCIL_ADDITIVE:
+		return Ogre::SHADOWTYPE_STENCIL_ADDITIVE;
+	default:
+		return Ogre::SHADOWTYPE_NONE;
+	}
+}
+
 }
 
 /// Public
@@ -39,6 +61,8 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
 	, _session(session)
+	// Default shadows to none before we have done enough testing
+	, _shadow_technique(SHADOWTYPE_NONE)
 	, _ogre_sm(0)
 {
 	assert( _session );
@@ -62,6 +86,23 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 	{
 		_ogre_sm = man;
 		_ogre_sm->setAmbientLight(_ambient_light);
+		/// @todo should set FOG and sky parameters also
+
+		/// @todo move these to our SceneManager and make them configurable using python
+		/// ideally most of these should be configurable from config file
+		/// because they are really performance intense, can look pretty crappy
+		/// and most of them need to be static during the simulation
+
+		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
+
+		_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
+		_ogre_sm->setShadowTextureSelfShadow(true);
+		/// LiSPSM has creately softer shadows compared to the default one
+		/// i.e. less pixelisation in the edges.
+		Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
+		_ogre_sm->setShadowCameraSetup(cam_setup);
+		// For texture shadows to work this must be set
+		_ogre_sm->setShadowFarDistance(50);
 	}
 }
 
@@ -338,11 +379,67 @@ vl::SceneManager::setAmbientLight( Ogre::ColourValue const &colour )
 {
 	if( _ambient_light != colour )
 	{
-		_ambient_light = colour;
 		setDirty( DIRTY_AMBIENT_LIGHT );
+		_ambient_light = colour;
 	}
 }
 
+void 
+vl::SceneManager::setShadowTechnique(ShadowTechnique tech)
+{
+	if( _shadow_technique != tech )
+	{
+		setDirty(DIRTY_SHADOW_TECHNIQUE);
+		_shadow_technique = tech;
+	}
+}
+
+void
+vl::SceneManager::setShadowTechnique(std::string const &tech)
+{
+	ShadowTechnique t;
+	std::string str(tech);
+	vl::to_lower(str);
+	if( str == "texture_modulative" || str == "texture" )
+	{
+		t = SHADOWTYPE_TEXTURE_MODULATIVE;
+	}
+	else if( str == "stencil_modulative" || str == "stencil" )
+	{
+		t = SHADOWTYPE_STENCIL_MODULATIVE;
+	}
+	else if( str == "texture_additive" )
+	{
+		t = SHADOWTYPE_TEXTURE_ADDITIVE;
+	}
+	else if( str == "stencil_additive" )
+	{
+		t = SHADOWTYPE_STENCIL_ADDITIVE;
+	}
+	else if( str == "none" )
+	{
+		t = SHADOWTYPE_NONE;
+	}
+	else
+	{
+		// Not valid technique
+		return;
+	}
+
+	setShadowTechnique(t);
+}
+
+void 
+vl::SceneManager::enableShadows(bool enabled)
+{
+	ShadowTechnique t;
+	if( !enabled )
+	{ t = SHADOWTYPE_NONE; }
+	else
+	{ t = SHADOWTYPE_TEXTURE_MODULATIVE; }
+
+	setShadowTechnique(t);
+}
 
 void
 vl::SceneManager::reloadScene( void )
@@ -409,9 +506,12 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 
 	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
 	{
-		/// @todo do we have to do this component by component?
-		/// why memcpy would not work? 
-		msg << _ambient_light.r << _ambient_light.g << _ambient_light.b << _ambient_light.a;
+		msg << _ambient_light;
+	}
+
+	if( dirtyBits & DIRTY_SHADOW_TECHNIQUE )
+	{
+		msg << _shadow_technique;
 	}
 }
 
@@ -454,10 +554,20 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 
 	if( dirtyBits & DIRTY_AMBIENT_LIGHT )
 	{
-		msg >> _ambient_light.r >> _ambient_light.g >> _ambient_light.b >> _ambient_light.a;
+		msg >> _ambient_light;
 		if( _ogre_sm )
 		{
 			_ogre_sm->setAmbientLight(_ambient_light);
+		}
+	}
+
+	if( dirtyBits & DIRTY_SHADOW_TECHNIQUE )
+	{
+		msg >> _shadow_technique;
+
+		if( _ogre_sm )
+		{
+			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 		}
 	}
 }

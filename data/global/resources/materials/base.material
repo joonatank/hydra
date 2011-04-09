@@ -22,9 +22,6 @@ material ground
 	{
 		pass
 		{
-			ambient 0.5 0.5 0.5
-			diffuse 1.0 1.0 1.0
-
 			texture_unit
 			{
 				texture rock_02.jpg
@@ -39,7 +36,7 @@ material debug_red
 	{
 		pass
 		{
-		    	diffuse 1.0 1.0 1.0
+		    	diffuse 0.0 0.0 0.0
 			emissive 1.0 0 0
 		}
 	}

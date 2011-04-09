@@ -23,7 +23,7 @@ class MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator)
-		: _name(name), _creator(creator)
+		: _name(name), _creator(creator), _parent(0)
 	{}
 
 	std::string const &getName(void) const

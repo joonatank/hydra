@@ -586,6 +586,24 @@ vl::Pipe::_createOgreSceneManager(void)
 	assert(!_ogre_sm);
 	assert(_root);
 	_ogre_sm = _root->createSceneManager("SceneManager");
+
+	/// These can not be moved to SceneManager at least not yet
+	/// because they need the RenderSystem capabilities.
+	/// @todo this should be user configurable (if the hardware supports it)
+	/// @todo the number of textures (four at the moment) should be user configurable
+	if (_root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
+	{
+		std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
+		_ogre_sm->setShadowTextureSettings(1024, 4);
+	}
+	else
+	{
+		/// @todo this doesn't work on Windows with size < (512,512)
+		/// should check the window size and select the largest
+		/// possible shadow texture based on that.
+		std::cout << "Using 512 x 512 shadow textures." << std::endl;
+		_ogre_sm->setShadowTextureSettings(512, 4);
+	}
 }
 
 
@@ -911,6 +929,9 @@ void
 vl::Pipe::_draw( void )
 {
 	Ogre::WindowEventUtilities::messagePump();
+
+	_root->getNative()->_fireFrameStarted();
+
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 
@@ -918,6 +939,8 @@ vl::Pipe::_draw( void )
 	{
 		CEGUI::System::getSingleton().renderGUI();
 	}
+
+	_root->getNative()->_fireFrameEnded();
 }
 
 void

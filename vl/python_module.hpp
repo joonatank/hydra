@@ -95,9 +95,6 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
-	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
-
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
 		.def(python::init<std::string, python::optional<Ogre::ColourValue, Ogre::Real, Ogre::Real, Ogre::Real> >())
 		.add_property("mode", &vl::FogInfo::setMode, &vl::FogInfo::getMode)
@@ -120,6 +117,10 @@ BOOST_PYTHON_MODULE(vl)
 		.def_readwrite("ysegments_keep", &vl::SkyDomeInfo::ysegments_keep)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
+	
+	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
+	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
+	void (SceneManager::*setShadowTechnique_ov1)(std::string const &tech) = &SceneManager::setShadowTechnique;
 
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
@@ -143,10 +144,14 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
-		.def("reloadScene", &SceneManager::reloadScene)
+		.add_property("shadows", &vl::SceneManager::isShadowsEnabled, &vl::SceneManager::enableShadows )
+		.def("setShadowTechnique", setShadowTechnique_ov1)
+
+		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
 
+		.def("reloadScene", &SceneManager::reloadScene)
 		/// @todo add printing
 	;
 
@@ -178,6 +183,7 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::Entity, boost::noncopyable, python::bases<vl::MovableObject> >("Entity", python::no_init)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
+		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
 		.add_property("prefab", &vl::Entity::getPrefab)
 		.def(python::self_ns::str(python::self_ns::self))

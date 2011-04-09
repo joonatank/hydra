@@ -86,8 +86,13 @@ vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
 }
 
 void 
-scale(Ogre::Real s)
+vl::SceneNode::scale(Ogre::Real s)
 {
+	if( s != 0 && s != 1 )
+	{
+		setDirty(DIRTY_SCALE);
+		_scale *= s;
+	}
 }
 
 void 
@@ -365,9 +370,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 	{
 		msg >> _scale;
 		if( _ogre_node )
-		{
-			_ogre_node->setScale(_scale);
-		}
+		{ _ogre_node->setScale(_scale); }
 	}
 
 	if( dirtyBits & DIRTY_VISIBILITY )

@@ -102,10 +102,7 @@ vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	{
 		msg >> _material_name;
 		if( _ogre_object )
-		{
-			std::cout << "Setting material name to Ogre object" << std::endl;
-			_ogre_object->setMaterialName(_material_name); 
-		}
+		{ _ogre_object->setMaterialName(_material_name); }
 	}
 }
 
@@ -165,6 +162,5 @@ vl::Entity::_clear(void)
 {
 	_prefab = PF_NONE;
 	_cast_shadows = true;
-	_parent = 0;
 	_ogre_object = 0;
 }

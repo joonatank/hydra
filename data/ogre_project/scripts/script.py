@@ -13,6 +13,7 @@ print( 'Getting Ogre SceneNode' )
 # So use this function to get a SceneNode created from .scene file.
 # All SceneNodes in .scene file are created and can be retrieved here.
 ogre = game.scene.getSceneNode("ogre")
+ogre_ent = game.scene.getEntity("Ogre")
 addHideEvent(ogre, KC.H)
 addMoveSelection()
 game.scene.addToSelection(ogre)
@@ -31,20 +32,22 @@ game.player.camera = "Omakamera"
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
 
-# Hack for some lighting before we can modify lights dynamically
-game.scene.ambient_light = ColourValue(0.2,0.2,0.2)
-
 # Create ground plane
 ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 ground_ent.material_name = 'ground'
+ground.scale = ground.scale*0.2
+ground_ent.cast_shadows = False
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
 sphere_ent.material_name = 'debug_red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
-sphere.scale *= 0.003
+sphere.scale = sphere.scale*0.003
+sphere_ent.cast_shadows = True
+
+game.scene.shadows = True
 
