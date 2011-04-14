@@ -25,27 +25,29 @@
 			<clipping near="0.01" far="1000" />
 		</camera>
 	</node>
-    <node name="Spotlight1">
-      <position x="-2.244730" y="30" z="0.625154"/>
+    <node name="spot">
+	<!-- position y is good with 30 for shadows, testing shader -->
+      <!--<position x="-2.244730" y="7" z="0.625154"/>-->
+      <position x="0" y="7" z="0"/>
       <quaternion x="-0.707107" y="0.000000" z="0.000000" w="0.707107"/>
       <scale x="1.000000" y="1.000000" z="1.000000"/>
-      <light name="Spotlight1_m" type="spot" castShadows="true">
+      <light name="spot" type="spot" castShadows="true">
         <normal x="0.0" y="0.0" z="-1.0"/>
-        <colourDiffuse r="1.5" g="1.5" b="1.5"/>
+        <colourDiffuse r="2.5" g="2.5" b="2.5"/>
         <colourSpecular r="0.0" g="0.0" b="0.0"/>
-        <lightRange inner="100" outer="100" falloff="1.0"/>
-        <lightAttenuation range="50.000000" constant="1.000000" linear="0" quadratic="0.000000"/>
+        <lightRange inner="70" outer="100" falloff="1.0"/>
+        <lightAttenuation range="150.000000" constant="0.900000" linear="0.09" quadratic="0.010000"/>
       </light>
     </node>
 <!--
-    <node name="Ambient_light_main">
-      <position x="7.336482" y="20" z="-2.931557"/>
+    <node name="Ambient_light">
+      <position x="7.336482" y="10" z="-2.931557"/>
       <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
       <scale x="1.000000" y="1.000000" z="1.000000"/>
-      <light name="Ambient_light_m" type="point">
+      <light name="Ambient_light" type="point">
         <colourDiffuse r="1.0" g="1.0" b="1.0"/>
         <colourSpecular r="0.0" g="0.0" b="0.0"/>
-        <lightAttenuation range="500.0" constant="1.000000" linear="0.010000" quadratic="0.000000"/>
+        <lightAttenuation range="20.0" constant="0.900000" linear="0.050000" quadratic="0.050000"/>
       </light>
     </node>
 -->

@@ -88,11 +88,10 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 		_ogre_sm->setAmbientLight(_ambient_light);
 		/// @todo should set FOG and sky parameters also
 
-		/// @todo move these to our SceneManager and make them configurable using python
+		/// @todo these should be configurable
 		/// ideally most of these should be configurable from config file
 		/// because they are really performance intense, can look pretty crappy
 		/// and most of them need to be static during the simulation
-
 		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 
 		_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
@@ -422,7 +421,7 @@ vl::SceneManager::setShadowTechnique(std::string const &tech)
 	}
 	else
 	{
-		// Not valid technique
+		// Not a valid technique
 		return;
 	}
 

@@ -1,0 +1,93 @@
+
+// Common parameters for both single and multi pass Bling-Phong shaders
+material base_material
+{
+	set $ambientCol "0 0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "1 1 1"
+	set $shininess "32"
+	// TODO add technique and pass
+	// TODO we should probably compine single and multi pass versions
+	// just with different techniques
+	// if it's possible to select
+}
+
+material bling_phong_multi_pass
+{
+	set $ambientCol "0 0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "1 1 1"
+	set $shininess "32"
+
+    technique
+    {
+	// ambient pass
+	// Do not name the passes, when using inheritance it's ok to reference
+	// a parents pass with an index. Names are not ok.
+	// Mhhh the problem was not the named passes
+	pass
+	{
+		vertex_program_ref pass_through_vs
+		{
+		}
+
+		fragment_program_ref ambient_ps
+		{
+		}
+
+		ambient $ambientCol
+		diffuse 0 0 0 0
+		specular 0 0 0 0
+	}
+
+	// diffuse pass
+        pass 
+        {
+            illumination_stage per_light
+
+            scene_blend add
+            iteration once_per_light
+
+            vertex_program_ref bling_phong_sl_vs
+            {
+            }
+
+            fragment_program_ref bling_phong_sl_ps
+            {
+            }
+
+            diffuse $diffuseCol
+            specular $specularCol $shininess
+            ambient 0 0 0 0
+
+	// TODO these should be in base_material or abstract pass
+	// doesn't work if they are in the base_material for some reason
+	// Don't change the order, because textures are mapped with index
+	// that is gotten from the order of the texture_units
+		texture_unit diffuseTexture
+		{
+			texture white.tga
+		}
+
+		texture_unit specularMap
+		{
+			texture white.tga
+		}
+
+		texture_unit normalMap
+		{
+			texture flat_NM.tga
+		}
+	}
+    }
+}
+
+material rock : bling_phong_multi_pass
+{
+//	set $ambientCol "1 0 0 1"
+	set $specularCol "0 0 0"
+	set_texture_alias diffuseTexture rock.jpg
+//	set_texture_alias specularMap rock.jpg
+	set_texture_alias normalMap rock_NM.jpg
+}
+

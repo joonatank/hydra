@@ -16,7 +16,7 @@ material CloudySky
 	}
 }
 
-material ground
+material ground/Basic
 {
 	technique
 	{
@@ -24,7 +24,7 @@ material ground
 		{
 			texture_unit
 			{
-				texture rock_02.jpg
+				texture rock.jpg
 			}
 		}
 	}

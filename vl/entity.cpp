@@ -150,6 +150,15 @@ vl::Entity::_doCreateNative(void)
 	}
 
 	assert(_ogre_object);
+	
+	Ogre::MeshPtr mesh = _ogre_object->getMesh();
+	unsigned short src, dest;
+	if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
+	{
+		std::cout << "Rebulding tangents on object : " << _name << std::endl;
+		mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
+	}
+
 	_ogre_object->setCastShadows(_cast_shadows);
 	if( !_material_name.empty() )
 	{ _ogre_object->setMaterialName(_material_name); }

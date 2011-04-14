@@ -47,7 +47,7 @@ vl::cluster::Client::~Client( void )
 void
 vl::cluster::Client::mainloop( void )
 {
-	if( _socket.available() != 0 )
+	while( _socket.available() != 0 )
 	{
 		std::vector<char> recv_buf( _socket.available() );
 		boost::system::error_code error;

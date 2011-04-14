@@ -37,7 +37,7 @@ ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
-ground_ent.material_name = 'ground'
+ground_ent.material_name = 'rock'
 ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
@@ -49,5 +49,12 @@ sphere.position = Vector3(4, 2.5, 0)
 sphere.scale = sphere.scale*0.003
 sphere_ent.cast_shadows = True
 
-game.scene.shadows = True
+#game.scene.shadows = True
+if( game.scene.hasSceneNode("spot") ):
+	light = game.scene.getSceneNode("spot")
+	game.scene.removeFromSelection(ogre)
+	game.scene.addToSelection(light)
+
+if( game.scene.hasSceneNode("Ambient_light") ):
+	ambient_light = game.scene.getSceneNode("Ambient_light")
 
