@@ -64,6 +64,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyRel
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -146,7 +148,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", &vl::SceneManager::isShadowsEnabled, &vl::SceneManager::enableShadows )
 		.def("setShadowTechnique", setShadowTechnique_ov1)
-
+		.add_property("shadow_colour", python::make_function( &vl::SceneManager::getShadowColour, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setShadowColour)
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
@@ -169,7 +171,28 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("parent", python::make_function( &vl::MovableObject::getParent,python::return_value_policy<python::reference_existing_object>() ) )
 	;
 
+	python::class_<vl::LightAttenuation>("LightAttenuation", python::init<>() )
+		.def(python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def_readwrite("range", &vl::LightAttenuation::range)
+		.def_readwrite("constant", &vl::LightAttenuation::constant)
+		.def_readwrite("linear", &vl::LightAttenuation::linear)
+		.def_readwrite("quadratic", &vl::LightAttenuation::quadratic)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	void (vl::Light::*setType_ov1)(std::string const &type) = &vl::Light::setType;
+
 	python::class_<vl::Light, boost::noncopyable, python::bases<vl::MovableObject> >("Light", python::no_init)
+		.add_property("type", &vl::Light::getLightTypeName, setType_ov1 )
+		.add_property("diffuse", python::make_function( &vl::Light::getDiffuseColour, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setDiffuseColour )
+		.add_property("specular", python::make_function( &vl::Light::getSpecularColour, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setSpecularColour )
+		.add_property("direction", python::make_function( &vl::Light::getDirection, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setDirection )
+		.add_property("position", python::make_function( &vl::Light::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setPosition )
+		.add_property("visible", &vl::Light::getVisible, &vl::Light::setVisible )
+		.add_property("cast_shadows", &vl::Light::getCastShadows, &vl::Light::setCastShadows )
+		// TODO this should use a struct and be a property
+		.def("setSpotRange", &vl::Light::setSpotlightRange, setSpotlightRange_ov())
+		.add_property("attenuation", python::make_function( &vl::Light::getAttenuation, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setAttenuation )
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

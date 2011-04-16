@@ -62,8 +62,18 @@ athene.scale = Vector3(1,1,1)*0.05;
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")
 	game.scene.removeFromSelection(ogre)
-	game.scene.addToSelection(light)
+
+if( game.scene.hasLight("spot") ):
+	game.scene.getLight("spot").visible = False
 
 if( game.scene.hasSceneNode("Ambient_light") ):
 	ambient_light = game.scene.getSceneNode("Ambient_light")
+
+l = game.scene.createLight("test_light")
+l.type = "spot"
+l_node = game.scene.createSceneNode("test_light")
+l_node.position = Vector3(5, 10, -10)
+l_node.orientation = Quaternion(0, 0, 0.7071, 0.7071)
+l_node.attachObject(l)
+game.scene.addToSelection(l_node)
 

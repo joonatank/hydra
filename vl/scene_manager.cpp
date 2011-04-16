@@ -60,6 +60,7 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
+	, _shadow_colour(0.1, 0.1, 0.1, 1)
 	, _session(session)
 	// Default shadows to none before we have done enough testing
 	, _shadow_technique(SHADOWTYPE_NONE)
@@ -94,7 +95,7 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 		/// and most of them need to be static during the simulation
 		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 
-		_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
+		_ogre_sm->setShadowColour(_shadow_colour);
 		_ogre_sm->setShadowTextureSelfShadow(true);
 		/// LiSPSM has creately softer shadows compared to the default one
 		/// i.e. less pixelisation in the edges.
@@ -440,12 +441,28 @@ vl::SceneManager::enableShadows(bool enabled)
 	setShadowTechnique(t);
 }
 
+void 
+vl::SceneManager::setShadowColour(Ogre::ColourValue const &col)
+{
+	if( _shadow_colour != col )
+	{
+		setDirty(DIRTY_SHADOW_COLOUR);
+		_shadow_colour = col;
+	}
+}
+
 void
 vl::SceneManager::reloadScene( void )
 {
 	std::cerr << "Should reload the scene now." << std::endl;
 	setDirty( DIRTY_RELOAD_SCENE );
 	_scene_version++;
+}
+
+void 
+vl::SceneManager::printBoundingBoxes( std::ostream &os )
+{
+//	Ogre::MovableObjectIterator iter = _ogre_sm->getMovableObjectIterator("Entity");
 }
 
 /// ------------------------ SceneManager Selection --------------------------
@@ -512,6 +529,11 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	{
 		msg << _shadow_technique;
 	}
+
+	if( dirtyBits & DIRTY_SHADOW_COLOUR)
+	{
+		msg << _shadow_colour;
+	}
 }
 
 void
@@ -568,6 +590,12 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		{
 			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 		}
+	}
+
+	if( dirtyBits & DIRTY_SHADOW_COLOUR)
+	{
+		msg >> _shadow_colour;
+		_ogre_sm->setShadowColour(_shadow_colour);
 	}
 }
 

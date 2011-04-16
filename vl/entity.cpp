@@ -163,9 +163,11 @@ vl::Entity::_doCreateNative(void)
 		// into the meshe files.
 		// TODO this does not work for the Ogre test object for some reason
 		// it still has the zero tangents even though it has UVs.
+		/*
 		std::cout << "Rebulding tangents on object : " << _name 
 			<< " : with source coord set = " << src << " and dest coord set = " 
 			<< dest << "." << std::endl;
+		*/
 		mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
 	}
 
