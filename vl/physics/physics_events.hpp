@@ -95,13 +95,53 @@ protected :
 /// @todo this should use velocities
 /// we should have a different force based action
 /// basically this one is kinematic action and it would be dynamics action
-class MoveAction : public vl::TransformationAction
+class KinematicAction : public vl::MoveAction
 {
 public :
-	MoveAction( void )
-		: _body(0), _force(0,0,0), _torque(0,0,0), _move_dir(0,0,0),
-		_rot_dir(0,0,0)
+	KinematicAction( void )
+		: _body(0)
 	{}
+
+	virtual std::string getTypeName( void ) const
+	{ return "KinematicAction"; }
+
+	static KinematicAction *create( void )
+	{ return new KinematicAction; }
+
+	void setRigidBody(vl::physics::RigidBody *body)
+	{ _body = body; }
+
+	vl::physics::RigidBody *getRigidBody( void )
+	{ return _body; }
+
+/// Private virtual methods
+private :
+	virtual void move(Ogre::Vector3 const &v, bool local);
+	virtual void rotate(Ogre::Quaternion const &v, bool local);
+
+protected :
+	vl::physics::RigidBody *_body;
+
+};	// class KinematicAction
+
+class DynamicAction : public vl::MoveAction
+{
+public:
+	DynamicAction( void )
+		: _body(0), _force(0,0,0), _torque(0,0,0)
+	{}
+
+	virtual std::string getTypeName( void ) const
+	{ return "DynamicAction"; }
+
+	static DynamicAction *create( void )
+	{ return new DynamicAction; }
+
+	void setRigidBody(vl::physics::RigidBody *body)
+	{ _body = body; }
+
+	vl::physics::RigidBody *getRigidBody( void )
+	{ return _body; }
 
 	void setForce( Ogre::Vector3 const &vec )
 	{ _force = vec; }
@@ -115,39 +155,18 @@ public :
 	Ogre::Vector3 const &getTorque( void )
 	{ return _torque; }
 
-	virtual void execute( void );
+/// Private virtual methods
+private :
+	virtual void move(Ogre::Vector3 const &v, bool local);
+	virtual void rotate(Ogre::Quaternion const &v, bool local);
 
-	virtual std::string getTypeName( void ) const
-	{ return "PhysicsMoveAction"; }
-
-	static MoveAction *create( void )
-	{ return new MoveAction; }
-
-	void setRigidBody(vl::physics::RigidBody *body)
-	{ _body = body; }
-
-	vl::physics::RigidBody *getRigidBody( void )
-	{ return _body; }
-
-	void setMoveDir( Ogre::Vector3 const &mov_dir )
-	{
-		_move_dir = mov_dir;
-	}
-
-	void setRotDir( Ogre::Vector3 const &rot_dir )
-	{
-		_rot_dir = rot_dir;
-	}
-
-protected :
+private:
 	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _force;
 	Ogre::Vector3 _torque;
-	Ogre::Vector3 _move_dir;
-	Ogre::Vector3 _rot_dir;
 
-};	// class MoveAction
+};	// class DynamicAction
 
 
 }	// namespace physics

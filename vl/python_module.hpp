@@ -445,8 +445,6 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
 	;
 
-	/// @TODO add custom RigidBody info structure
-
 	python::class_<vl::physics::RigidBody, boost::noncopyable >("RigidBody", python::no_init )
 		.def( "getTotalForce", &vl::physics::RigidBody::getTotalForce )
 		.def( "getTotalTorque", &vl::physics::RigidBody::getTotalTorque )
@@ -492,14 +490,22 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// Physics Actions
-	python::class_<vl::physics::MoveAction, boost::noncopyable, python::bases<TransformationAction> >("PhysicsMoveAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::MoveAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::MoveAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::MoveAction::getForce, python::return_internal_reference<>() ),
-					  &vl::physics::MoveAction::setForce )
-		.add_property("torque", python::make_function( &vl::physics::MoveAction::getTorque, python::return_internal_reference<>() ),
-					  &vl::physics::MoveAction::setTorque )
-		.def("create",&vl::physics::MoveAction::create,
+	python::class_<vl::physics::KinematicAction, boost::noncopyable, python::bases<vl::MoveAction> >("KinematicAction", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::KinematicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::KinematicAction::setRigidBody )
+		.def("create",&vl::physics::KinematicAction::create,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::DynamicAction, boost::noncopyable, python::bases<vl::MoveAction> >("DynamicAction", python::no_init )
+		.add_property("body", python::make_function( &vl::physics::DynamicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::DynamicAction::setRigidBody )
+		.add_property("force", python::make_function( &vl::physics::DynamicAction::getForce, python::return_internal_reference<>() ),
+					  &vl::physics::DynamicAction::setForce )
+		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_internal_reference<>() ),
+					  &vl::physics::DynamicAction::setTorque )
+		.def("create",&vl::physics::DynamicAction::create,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;

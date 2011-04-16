@@ -28,8 +28,28 @@ vl::physics::ApplyTorque::execute( void )
 	_body->applyTorqueImpulse(_torque);
 }
 
+/// @todo fix to use the parameters
 void
-vl::physics::MoveAction::execute( void )
+vl::physics::KinematicAction::move(Ogre::Vector3 const &v, bool local)
+{
+	if( !_body )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_body->setLinearVelocity(_move_dir*_speed);
+}
+
+
+void
+vl::physics::KinematicAction::rotate(Ogre::Quaternion const &v, bool local)
+{
+	if( !_body )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
+
+	_body->setAngularVelocity(_rot_dir*_angular_speed.valueRadians());
+}
+
+void
+vl::physics::DynamicAction::move(Ogre::Vector3 const &v, bool local)
 {
 	if( !_body )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
@@ -41,6 +61,13 @@ vl::physics::MoveAction::execute( void )
 		vl::scalar z = _force.z*_move_dir.z;
 		_body->applyForce(Ogre::Vector3(x,y,z), Ogre::Vector3::ZERO );
 	}
+}
+
+void
+vl::physics::DynamicAction::rotate(Ogre::Quaternion const &v, bool local)
+{
+	if( !_body )
+	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
 	if( !_rot_dir.isZeroLength() )
 	{

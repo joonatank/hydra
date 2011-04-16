@@ -6,7 +6,36 @@
 #
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
-print('Python ogre physics script')
+
+def addKinematicAction(body):
+	print( 'Creating Kinematic event on ' + body.name )
+
+	# Create the translation action using a proxy
+	trans_action_proxy = MoveActionProxy.create()
+	trans_action_proxy.enableTranslation()
+	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.NUMPAD6, KC.NUMPAD4 )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.NUMPAD5, KC.NUMPAD8 )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.NUMPAD9, KC.NUMPAD7 )
+
+	# Create the rotation action using a proxy
+	#rot_action_proxy = MoveActionProxy.create()
+	#rot_action_proxy.enableRotation()
+	# This is not useful, maybe using Q and E
+	# TODO add rotation proxy, using a CTRL modifier
+
+	# Create the real action
+	trans_action = KinematicAction.create()
+	trans_action.body = body
+	trans_action.speed = 5
+	trans_action.angular_speed = Radian(Degree(90))
+	# Add the real action to the proxies
+	trans_action_proxy.action = trans_action
+	#rot_action_proxy.action = trans_action
+	# TODO add rotation speed
+	# Create a FrameTrigger and add the action to that
+	trigger = game.event_manager.getFrameTrigger()
+	trigger.addAction( trans_action )
+
 
 # config.getSceneNode gets a reference to already created SceneNode
 # For now it's not possible to create SceneNodes from python
@@ -78,3 +107,5 @@ if game.scene.hasSceneNode( ogre_name ):
 	trigger = game.event_manager.createKeyPressedTrigger(KC.T)
 	trigger.addAction( action )
 
+	print('Adding kinematic action')
+	addKinematicAction(ogre_phys)
