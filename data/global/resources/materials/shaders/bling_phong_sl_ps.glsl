@@ -6,6 +6,7 @@
 // TODO test point lights
 // TODO test directional lights
 // TODO add shadow textures
+// TODO add vertex colours, needs an uniform switch
 //
 // Spotlights tested with inner, outer and falloff
 // Spotlights tested with changing position and orientation
@@ -24,6 +25,8 @@ uniform sampler2D diffuseTexture;
 uniform sampler2D specularMap;
 uniform sampler2D normalMap;
 
+uniform sampler2D shadowMap;
+
 in vec4 uv;
 
 in vec3 oNormal;
@@ -41,6 +44,12 @@ in float attenuation;
 // Spotlight direction, should be in the same space as the rest of the parameters,
 // especially dirToLight.  Tangent space is tested, but eye space should also work.
 in vec3 spotlightDir;
+
+// Vertex colour
+// Not supported yet, these need a switch wether the material has them or not
+in vec4 vColour;
+
+in vec4 shadowUV;
 
 out vec4 FragmentColour;
 
@@ -97,8 +106,13 @@ void main(void)
 				* pow(specularModifier, shininess);
 		}
 	}
+
+	// Shadow
+//	vec4 shadow_col = texture2DProj(shadowMap, shadowUV);
+	vec4 shadow_col = vec4(1.0, 1.0, 1.0, 1.0);
+
 	// Sum of all lights
-	colour += (diffuse + specular);
+	colour += shadow_col*(diffuse + specular);
 
 	FragmentColour = clamp(colour, 0.0, 1.0);
 

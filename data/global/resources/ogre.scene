@@ -35,7 +35,7 @@
         <normal x="0.0" y="0.0" z="-1.0"/>
         <colourDiffuse r="2.5" g="2.5" b="2.5"/>
         <colourSpecular r="0.0" g="0.0" b="0.0"/>
-        <lightRange inner="70" outer="100" falloff="1.0"/>
+        <lightRange inner="100" outer="100" falloff="1.0"/>
         <lightAttenuation range="150.000000" constant="0.900000" linear="0.09" quadratic="0.010000"/>
       </light>
     </node>
@@ -43,11 +43,11 @@
     <node name="Ambient_light">
       <position x="7.336482" y="10" z="-2.931557"/>
       <quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
-      <scale x="1.000000" y="1.000000" z="1.000000"/>
+      <scale x="1.00000" y="1.00000" z="1.00000"/>
       <light name="Ambient_light" type="point">
-        <colourDiffuse r="1.0" g="1.0" b="1.0"/>
+        <colourDiffuse r="2.0" g="2.0" b="2.0"/>
         <colourSpecular r="0.0" g="0.0" b="0.0"/>
-        <lightAttenuation range="20.0" constant="0.900000" linear="0.050000" quadratic="0.050000"/>
+        <lightAttenuation range="40.0" constant="0.900000" linear="0.090000" quadratic="0.010000"/>
       </light>
     </node>
 -->

@@ -4,13 +4,15 @@
 #version 140
 
 uniform mat4 modelView;
-uniform mat4 model;
+uniform mat4 worldMatrix;
 uniform mat4 modelViewProj;
 uniform mat4 normalMatrix;
 // Light position in eye space
 uniform vec4 lightPos;
 uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
+// Shadow texture transform
+uniform mat4 texViewProj;
 
 // The order of these is significant
 // my guess is that uv0 can not appear after tangent and binormal (uv6 and uv7)
@@ -37,6 +39,10 @@ out float attenuation;
 // in tangent space
 out vec3 spotlightDir;
 
+out vec4 vColour;
+
+out vec4 shadowUV;
+
 void main(void)
 {
 	// Vertex location
@@ -44,6 +50,12 @@ void main(void)
 
 	// Texture coordinates
 	uv = uv0;
+
+	// Colour
+//	vColour = colour;
+
+	vec4 worldPos = worldMatrix * vertex;
+	shadowUV = texViewProj * worldPos;
 
 	// Tangent space vectors (TBN) in eye space
 	// normalMatrix = gl_NormalMatrix = inverse transpose model view
@@ -69,7 +81,10 @@ void main(void)
 	tbnDirToEye.z = dot(mvDirToEye, mvNormal);
     
 	// Light direction from vertex
-	vec3 mvLightDir = vec3(lightPos) - mvVertex.xyz;//*lightPos.w;
+	// lightPos.w is for directional lights, they have w = 0
+	vec3 mvLightPos = vec3(lightPos) - mvVertex*lightPos.w;
+	// normalizing the direction does not make a difference
+	vec3 mvLightDir = normalize(mvLightPos);
 
 	// Light in tangent space
 	dirToLight.x = dot(mvLightDir, mvTangent);
@@ -86,7 +101,7 @@ void main(void)
 
 	// Compute attenuation, in eye space
 	// TODO add range parameter
-	float d = length(mvLightDir);
+	float d = length(mvLightPos);
 	attenuation =  1.0/( lightAttenuation.y +
 		(lightAttenuation.z * d) +
 		(lightAttenuation.w * d*d) );
