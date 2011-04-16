@@ -39,6 +39,8 @@ ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 ground_ent.material_name = 'rock'
+# For shadows
+#ground_ent.material_name = 'ground/Basic'
 ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
@@ -58,6 +60,7 @@ athene.position = Vector3(-3, 4, 5)
 athene.scale = Vector3(1,1,1)*0.05;
 
 #game.scene.shadows = True
+#game.scene.shadow_colour = ColourValue(0.3, 0.3, 0.3)
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")

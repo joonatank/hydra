@@ -96,7 +96,8 @@ vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
 		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 
 		_ogre_sm->setShadowColour(_shadow_colour);
-		_ogre_sm->setShadowTextureSelfShadow(true);
+		/// @todo for self shadowing we need to use custom shaders
+		//_ogre_sm->setShadowTextureSelfShadow(true);
 		/// LiSPSM has creately softer shadows compared to the default one
 		/// i.e. less pixelisation in the edges.
 		Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
@@ -460,9 +461,26 @@ vl::SceneManager::reloadScene( void )
 }
 
 void 
-vl::SceneManager::printBoundingBoxes( std::ostream &os )
+vl::SceneManager::printBoundingBoxes(void)
 {
-//	Ogre::MovableObjectIterator iter = _ogre_sm->getMovableObjectIterator("Entity");
+	assert( _ogre_sm );
+	std::clog << "Printing bounding boxes." << std::endl;
+
+	Ogre::SceneManager::MovableObjectIterator iter = _ogre_sm->getMovableObjectIterator("Entity");
+	while( iter.hasMoreElements() )
+	{
+		Ogre::AxisAlignedBox const &box = iter.current()->second->getBoundingBox();
+		std::clog << "Object " << iter.current()->second->getName() << " : bounding box " 
+			<< box << " : size = " << box.getSize() << std::endl;
+		Ogre::Vector3 diff =box.getMaximum() - box.getMinimum();
+		if( diff.x < 0 || diff.y < 0 || diff.z < 0 )
+		{
+			std::clog << "PROBLEM : Incorrect BoundingBox in object " << iter.current()->second->getName()
+				<< std::endl;
+		}
+		iter.moveNext();
+	}
+	std::clog << std::endl;
 }
 
 /// ------------------------ SceneManager Selection --------------------------

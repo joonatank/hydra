@@ -296,7 +296,7 @@ public :
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
-	void printBoundingBoxes( std::ostream &os );
+	void printBoundingBoxes(void);
 
 	/// --------------------- Selection -----------------------
 	void addToSelection( SceneNodePtr node );

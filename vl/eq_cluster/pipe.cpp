@@ -899,7 +899,7 @@ vl::Pipe::_updateDistribData( void )
 			if( _ogre_sm->hasCamera( cam_name ) )
 			{
 				// Tell the Windows to change cameras
-				_camera = _ogre_sm->getCamera( _active_camera_name );
+				_camera = _scene_manager->getCamera( _active_camera_name );
 				assert( !_windows.empty() );
 				for( size_t i = 0; i < _windows.size(); ++i )
 				{ _windows.at(i)->setCamera( _camera ); }
@@ -928,6 +928,18 @@ vl::Pipe::_updateDistribData( void )
 void
 vl::Pipe::_draw( void )
 {
+	/// @todo debug stuff, remove
+	/// This is for bounding box assertion failures which seems to be quite random
+	/*
+	static bool init = false;
+	if( !init )
+	{
+		assert(_scene_manager);
+		_scene_manager->printBoundingBoxes();
+		init = true;
+	}
+	*/
+
 	Ogre::WindowEventUtilities::messagePump();
 
 	_root->getNative()->_fireFrameStarted();

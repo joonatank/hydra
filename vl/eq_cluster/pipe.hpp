@@ -58,7 +58,7 @@ public :
 	Ogre::SceneManager *getSceneManager( void )
 	{ return _ogre_sm; }
 
-	Ogre::Camera *getCamera( void )
+	vl::CameraPtr getCamera( void )
 	{ return _camera; }
 
 	vl::Player const &getPlayer( void ) const
@@ -169,7 +169,8 @@ protected :
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;
-	Ogre::Camera *_camera;
+
+	vl::CameraPtr _camera;
 
 
 	/// Distributed data
