@@ -461,8 +461,7 @@ vl::Renderer::addGUIResourceGroup( std::string const &name, fs::path const &path
 void
 vl::Renderer::createGUI(void )
 {
-	std::string message( "vl::Pipe::_createGUI" );
-	Ogre::LogManager::getSingleton().logMessage(message);
+	std::cout << vl::TRACE << "vl::Renderer::createGUI" << std::endl;
 
 	// Load default data files used for the GUI
 	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
@@ -495,7 +494,6 @@ vl::Renderer::createGUI(void )
 	win->createGUIWindow();
 
 	/// Subscripe to events
-	std::cout << "Subcribing to events." << std::endl;
 	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleShow, this));
 
 	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );

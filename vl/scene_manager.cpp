@@ -131,6 +131,41 @@ vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 	}
 }
 
+void 
+vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitive)
+{
+	std::string str(pattern);
+	if(caseInsensitive)
+	{
+		vl::to_lower(str);
+	}
+
+	std::string::size_type pos = str.find('*');
+	bool asteriks = false;
+	if( pos != std::string::npos )
+	{ asteriks = true; }
+
+	std::string find_name = str.substr(0, pos);
+
+	SceneNodeList::iterator iter;
+	for( iter = _scene_nodes.begin(); iter != _scene_nodes.end(); ++iter )
+	{
+		std::string name = (*iter)->getName();
+		if(caseInsensitive)
+		{ vl::to_lower(name); }
+		if(asteriks)
+		{ name = name.substr(0, pos); }
+		
+		std::clog << "Test name = " << name << std::endl;
+		
+		if(find_name == name)
+		{
+			std::clog << "Found one node with name " << name << " : hiding it." << std::endl;
+			(*iter)->setVisibility(false); 
+		}
+	}
+}
+
 bool
 vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
 {

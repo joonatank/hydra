@@ -22,6 +22,11 @@ copy_start_scripts( hydra
 	ogre_physics_project/ogre.prj
 	"physics" )
 
+copy_start_scripts( hydra
+	robot_project/robot.prj
+	"robot" )
+
+
 copy_start_scripts( renderer
 	tracking_test_project/tracking.prj
 	tracking )

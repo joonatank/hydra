@@ -116,7 +116,6 @@ protected :
 
 	/// Scene
 	void _loadScenes( void );
-	void _hideCollisionBarries( void );
 
 	/// Resources
 	void _createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env );

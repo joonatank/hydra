@@ -30,6 +30,9 @@ namespace vl
 namespace physics
 {
 
+typedef std::vector<RigidBody *> RigidBodyList;
+typedef std::vector<btCollisionShape *> CollisionShapeList;
+
 /** @class World
  *
  */
@@ -42,7 +45,7 @@ public :
 
 	void step( void );
 
-	Ogre::Vector3 getGravity( void );
+	Ogre::Vector3 getGravity( void ) const;
 
 	void setGravity( Ogre::Vector3 const &gravity );
 
@@ -57,7 +60,7 @@ public :
 	/// @todo should be removed as they should be created using createRigidBody
 	void addRigidBody( std::string const &name, vl::physics::RigidBody *body);
 
-	vl::physics::RigidBody *getRigidBody( std::string const &name );
+	vl::physics::RigidBody *getRigidBody( std::string const &name ) const;
 
 	/// @TODO implement
 	/// Should this remove the body from the world and return a pointer or
@@ -65,7 +68,7 @@ public :
 	/// if this returns a shared_ptr it's not a problem at all
 	vl::physics::RigidBody *removeRigidBody( std::string const &name );
 
-	bool hasRigidBody( std::string const &name );
+	bool hasRigidBody( std::string const &name ) const;
 
 	MotionState *createMotionState( vl::Transform const &trans, vl::SceneNode *node = 0 );
 
@@ -77,8 +80,10 @@ public :
 
 	void destroyShape( btCollisionShape *shape );
 
+	friend std::ostream &operator<<(std::ostream &os, World const &w);
+
 private :
-	RigidBody *_findRigidBody( std::string const &name );
+	RigidBody *_findRigidBody( std::string const &name ) const;
 
 	/// Bullet physics world objects
 	/// The order of them is important don't change it.
@@ -92,9 +97,13 @@ private :
 	/// Rigid bodies
 	/// World owns all of them
 	/// @todo move to using shared_ptrs
-	std::vector<RigidBody *> _rigid_bodies;
+	RigidBodyList _rigid_bodies;
+
+	CollisionShapeList _shapes;
 
 };	// class World
+
+std::ostream &operator<<(std::ostream &os, World const &w);
 
 }	// namespace physics
 

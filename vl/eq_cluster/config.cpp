@@ -596,23 +596,6 @@ vl::Config::_loadScenes( void )
 
 		std::cout << vl::TRACE << "Scene " << scene_file_name << " loaded." << std::endl;
 	}
-
-	_hideCollisionBarries();
-}
-
-void
-vl::Config::_hideCollisionBarries( void )
-{
-	vl::SceneManager *sm = _game_manager->getSceneManager();
-
-	for( size_t i = 0; i < sm->getNSceneNodes(); ++i )
-	{
-		vl::SceneNode *node = sm->getSceneNode(i);
-		std::string str( node->getName().substr(0, 3) );
-		vl::to_lower(str);
-		if(  str == "cb_" )
-		{ node->setVisibility(false); }
-	}
 }
 
 void

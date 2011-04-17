@@ -1,6 +1,29 @@
 
 #include "physics_world.hpp"
 
+/// -------------------------------- Global ----------------------------------
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
+{
+	os << "Physics World : "
+		<< " gravity " << w.getGravity()
+		<< " with " << w._rigid_bodies.size() << " rigid bodies "
+		<< " and " << w._shapes.size() << " shapes."
+		<< "\n";
+	
+	os << "Bodies : \n";
+	RigidBodyList::const_iterator iter;
+	for( iter = w._rigid_bodies.begin(); iter != w._rigid_bodies.end(); ++iter )
+	{
+		os << (*iter)->getName();
+		if( iter+1 != w._rigid_bodies.end() )
+		{ os << "\n"; }
+	}
+
+	return os;
+}
+
+/// -------------------------------- Public ----------------------------------
 vl::physics::World::World( void )
 	: _broadphase( new btDbvtBroadphase() ),
 	  _collision_config( new btDefaultCollisionConfiguration() ),
@@ -36,7 +59,7 @@ vl::physics::World::step( void )
 }
 
 Ogre::Vector3
-vl::physics::World::getGravity(void )
+vl::physics::World::getGravity(void) const
 {
 	btVector3 v = _dynamicsWorld->getGravity();
 	return Ogre::Vector3( v.x(), v.y(), v.z() );
@@ -85,7 +108,7 @@ vl::physics::World::addRigidBody(std::string const &name, vl::physics::RigidBody
 }
 
 vl::physics::RigidBody *
-vl::physics::World::getRigidBody( const std::string& name )
+vl::physics::World::getRigidBody( const std::string& name ) const
 {
 	RigidBody *body = _findRigidBody(name);
 	if( !body )
@@ -104,7 +127,7 @@ vl::physics::World::removeRigidBody( const std::string& name )
 }
 
 bool
-vl::physics::World::hasRigidBody( const std::string& name )
+vl::physics::World::hasRigidBody( const std::string& name ) const
 {
 	return _findRigidBody(name);
 }
@@ -124,25 +147,38 @@ vl::physics::World::destroyMotionState( vl::physics::MotionState *state )
 btStaticPlaneShape *
 vl::physics::World::createPlaneShape( const Ogre::Vector3& normal, vl::scalar constant )
 {
-	return new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant );
+	btStaticPlaneShape *plane = new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant );
+	_shapes.push_back(plane);
+	return plane;
 }
 
 btSphereShape *
 vl::physics::World::createSphereShape( vl::scalar radius )
 {
-	return new btSphereShape( radius );
+	btSphereShape *sphere = new btSphereShape( radius );
+	_shapes.push_back(sphere);
+	return sphere;
 }
 
 void
 vl::physics::World::destroyShape( btCollisionShape *shape )
 {
-	delete shape;
+	CollisionShapeList::iterator iter;
+	for(iter = _shapes.begin(); iter != _shapes.end(); ++iter)
+	{
+		if( *iter == shape )
+		{
+			delete shape;
+			_shapes.erase(iter);
+			break;
+		}
+	}
 }
 
 /// --------------------------------- Private ----------------------------------
-vl::physics::RigidBody *vl::physics::World::_findRigidBody(const std::string& name)
+vl::physics::RigidBody *vl::physics::World::_findRigidBody(const std::string& name) const
 {
-	std::vector<RigidBody *>::iterator iter;
+	std::vector<RigidBody *>::const_iterator iter;
 	for( iter = _rigid_bodies.begin(); iter != _rigid_bodies.end(); ++iter )
 	{
 		if( (*iter)->getName() == name )

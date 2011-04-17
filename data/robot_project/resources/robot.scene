@@ -1,0 +1,178 @@
+<?xml version="1.0" ?>
+<scene export_time="1302991441.19" exported_by="jotu" formatVersion="1.0.0" previous_export_time="1302991232.84">
+	<nodes>
+		<node name="Camera" uuid="3bfcf0d2b0a3a4ae6ca44f712c3c659a">
+			<position x="-0.000000" y="0.000000" z="5.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<camera fov="28.841546255" name="Camera" projectionType="perspective">
+				<clipping farPlaneDist="100.0" nearPlaneDist="0.10000000149"/>
+			</camera>
+		</node>
+		<node name="cb_cylinder_actuator" uuid="5986eea6d294ea34d5ee041686d27f59">
+			<position x="0.285332" y="0.669046" z="-0.215588"/>
+			<quaternion w="0.648239" x="-0.000000" y="0.000000" z="-0.761437"/>
+			<scale x="10.999999" y="1.000000" z="11.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="True" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.5" meshFile="cb_cylinder_actuator.mesh" name="cb_cylinder_actuator" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_cylinder_pistonrod" uuid="b621369c836972d0a160eff50848d189">
+			<position x="-0.140334" y="0.733870" z="-0.214798"/>
+			<quaternion w="0.760644" x="-0.000000" y="0.000000" z="0.649169"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors>
+					<sensor name="Keyboard" type="KEYBOARD"/>
+				</sensors>
+				<actuators>
+					<actuator name="Motion" type="OBJECT"/>
+				</actuators>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="True" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.699999988079" meshFile="cb_cylinder_pistonrod.mesh" name="cb_cylinder_pistonrod" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link0" uuid="6d64a368e54d634e0913993f2eef4bd7">
+			<position x="-0.039970" y="0.095940" z="0.009128"/>
+			<quaternion w="0.707107" x="-0.707107" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="True" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="True" lock_rot_y="True" lock_rot_z="True" lock_trans_x="True" lock_trans_y="True" lock_trans_z="True" mass="20.0" mass_radius="0.800000011921" meshFile="cb_link0.mesh" name="cb_link0" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link1" uuid="ff5dfe8ac556a9b8555a77f17e4d0648">
+			<position x="-0.162153" y="0.570725" z="-0.026899"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors>
+					<sensor name="Keyboard" type="KEYBOARD"/>
+				</sensors>
+				<actuators>
+					<actuator name="p" type="OBJECT"/>
+				</actuators>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="1.0" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="500.0" mass_radius="1.0" meshFile="cb_link1.mesh" name="cb_link1" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+			<node name="partcb1_link1" uuid="2c292670ebae67221d685554885e9f68">
+				<position x="-0.010000" y="0.010000" z="0.000000"/>
+				<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+				<scale x="1.000000" y="1.000000" z="1.000000"/>
+				<game>
+					<sensors/>
+					<actuators/>
+				</game>
+				<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="partcb1_link1.mesh" name="partcb1_link1" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+			</node>
+			<node name="partcb2_link1" uuid="e2db12a5057bd193e2c49c7c7ef4cd7e">
+				<position x="-0.010000" y="0.010000" z="0.000000"/>
+				<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+				<scale x="1.000000" y="1.000000" z="1.000000"/>
+				<game>
+					<sensors/>
+					<actuators/>
+				</game>
+				<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="partcb2_link1.mesh" name="partcb2_link1" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+			</node>
+			<node name="partcb3_link1" uuid="ac091f5118636ba9d03a686294a831dd">
+				<position x="-0.000000" y="0.000000" z="0.000000"/>
+				<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+				<scale x="1.000000" y="1.000000" z="1.000000"/>
+				<game>
+					<sensors/>
+					<actuators/>
+				</game>
+				<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="partcb3_link1.mesh" name="partcb3_link1" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+			</node>
+		</node>
+		<node name="cb_link2" uuid="aff3b9832644f986c5ddb4a4b5ea5732">
+			<position x="-0.421882" y="1.165038" z="-0.189262"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors>
+					<sensor name="Keyboard" type="KEYBOARD"/>
+				</sensors>
+				<actuators>
+					<actuator name="Motion" type="OBJECT"/>
+				</actuators>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_link2.mesh" name="cb_link2" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link3" uuid="a901c85a6500978dc8a6a4490525c148">
+			<position x="-0.333026" y="1.933532" z="-0.039253"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="True" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="True" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_link3.mesh" name="cb_link3" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link4" uuid="c305cfc665412b862243047785b46778">
+			<position x="-0.986099" y="2.020460" z="-0.019053"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_link4.mesh" name="cb_link4" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link5" uuid="325dfdd794d7f09b032a9fe4f9898f28">
+			<position x="-1.304294" y="2.029133" z="0.002270"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors>
+					<sensor name="Keyboard" type="KEYBOARD"/>
+				</sensors>
+				<actuators>
+					<actuator name="Motion" type="OBJECT"/>
+				</actuators>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_link5.mesh" name="cb_link5" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_link6" uuid="d7793205e202328ce6e368c61fea801f">
+			<position x="-1.446425" y="2.017315" z="0.000221"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_link6.mesh" name="cb_link6" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="Sun" uuid="4480089f14e575cac2f8fc6a85b173ab">
+			<position x="-0.000000" y="5.000000" z="0.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<light name="Sun" type="sun">
+				<lightAttenuation constant="1.0" linear="0.04" quadratic="0.0" range="5000"/>
+				<colorDiffuse b="1.0" g="1.0" r="1.0"/>
+				<colorSpecular b="1.0" g="1.0" r="1.0"/>
+			</light>
+		</node>
+	</nodes>
+	<externals>
+		<item type="material">
+			<file name="Scene.material"/>
+		</item>
+	</externals>
+	<environment>
+		<skyDome material="CloudySky" distance="50" />
+		<colourBackground b="0.0508760884404" g="0.0508760884404" r="0.0508760884404"/>
+		<colourAmbient b="0.0" g="0.0" r="0.0"/>
+		<colourDiffuse b="0.0508760884404" g="0.0508760884404" r="0.0508760884404"/>
+	</environment>
+</scene>

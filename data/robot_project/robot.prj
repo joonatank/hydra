@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2010-11
+
+Ogre test project used for testing and demonstrating eqOgre
+-->
+<project_config name="robot">
+
+	<scenes>
+		<scene name="robot" use="true">
+			<file>robot.scene</file>
+		</scene>
+
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">robot_script.py</file>
+	</scripts>
+
+</project_config>

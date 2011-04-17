@@ -77,6 +77,13 @@ public :
 			setDirty( DIRTY_AMBIENT_LIGHT );
 		}
 	}
+
+	/// @brief hides Scene Nodes based on the pattern
+	/// use asteriks for any number of any characters
+	/// for example pattern cb_* hides any Node with 'cb_' in start of the name
+	/// For now asteriks is only supported at the end of the name string
+	/// so for example cb_*sp is equavivalent to cb_*
+	void hideSceneNodes(std::string const &pattern, bool caseInsensitive = true);
 	
 	enum DirtyBits
 	{

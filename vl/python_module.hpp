@@ -70,6 +70,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -129,6 +131,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
+		.def("hideSceneNodes", &vl::SceneManager::hideSceneNodes, hideSceneNodes_ov())
 	;
 
 
@@ -445,6 +448,8 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
 	;
 
+	/// @todo add joint type
+
 	python::class_<vl::physics::RigidBody, boost::noncopyable >("RigidBody", python::no_init )
 		.def( "getTotalForce", &vl::physics::RigidBody::getTotalForce )
 		.def( "getTotalTorque", &vl::physics::RigidBody::getTotalTorque )
@@ -487,7 +492,10 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createSphereShape", &vl::physics::World::createSphereShape,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+		.def(python::self_ns::str(python::self_ns::self))
 	;
+
+
 
 	/// Physics Actions
 	python::class_<vl::physics::KinematicAction, boost::noncopyable, python::bases<vl::MoveAction> >("KinematicAction", python::no_init )
