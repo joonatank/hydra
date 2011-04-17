@@ -18,6 +18,8 @@
 
 #include "base/timer.hpp"
 
+#include "typedefs.hpp"
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -28,6 +30,13 @@ namespace vl
 
 namespace cluster
 {
+
+struct ServerDataCallback : public vl::Callback
+{
+	virtual Message createInitMessage(void) = 0;
+
+	/// @todo add CREATE_MSG and UPDATE_MSG also
+};
 
 class Server : public LogReceiver
 {
@@ -43,13 +52,11 @@ public:
 		ClientState state;
 	};
 
-	Server( uint16_t const port );
+	Server(uint16_t const port, ServerDataCallback *cb);
 
 	~Server();
 
 	void poll(void);
-
-	void block_till_initialised(vl::time const &limit = vl::time());
 
 	/// Update the SceneGraph on slaves
 	/// Blocks till they are updated
@@ -66,7 +73,11 @@ public:
 	// TODO this should block till all the clients have shutdown
 	void shutdown( void );
 
-	// New message interface
+	/// New message interface
+	/// @todo should all be moved to callbacks
+	/// first it will simplify the interface (no duplicate methods)
+	/// second it will always provide the latest version when it's needed
+	/// no more copying temporaries and sending them when requested.
 	void sendMessage(Message const &msg);
 
 	/// Store the Environment message for further use
@@ -75,9 +86,6 @@ public:
 	/// Store the project message for further use
 	// Can be updated by a another call and will be sent again to all clients
 	void sendProject( Message const &msg );
-
-	/// Send an Initial SceneGraph
-	void sendInit( Message const &msg );
 
 	/// Send an SceneGraph update
 	void sendUpdate( Message const &msg );
@@ -98,6 +106,10 @@ public:
 	 *	the message after use.
 	 */
 	vl::cluster::Message popMessage(void);
+
+	void block_till_initialised(vl::time const &limit = vl::time());
+
+	vl::time getSimulationTime(void) const;
 
 	typedef std::vector<ClientInfo> ClientList;
 	typedef std::vector<ClientInfo *> ClientRefList;
@@ -158,8 +170,6 @@ private :
 	std::vector<char> _env_msg;
 	/// Project message, the latest one set
 	std::vector<char> _proj_msg;
-	/// Init message, the latest one set
-	std::vector<char> _msg_init;
 	/// Last update message? Might need a whole vector of these
 	std::vector<char> _msg_update;
 
@@ -169,8 +179,13 @@ private :
 	uint32_t _frame;
 	uint32_t _update_frame;
 
+	// @todo should this be moved to Config?
+	vl::timer _sim_timer;
+
 	uint32_t _n_log_messages;
 	std::vector<vl::LogMessage> _new_log_messages;
+
+	ServerDataCallback *_data_cb;
 
 };	// class Server
 
