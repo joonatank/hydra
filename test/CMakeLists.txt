@@ -2,7 +2,7 @@
 # Joonatan Kuosa
 # 2010-11
 #
-# This file is part of the CMake build system for eqOgre
+# This file is part of the CMake build system for Hydra
 #
 # The contents of this file are placed in the public domain. Feel
 # free to make use of it in any way you like.
@@ -65,7 +65,7 @@ add_executable( test_timer test_timer.cpp
 # Test exceptions
 add_executable( test_exceptions
 				test_exceptions.cpp
-				${eqOgre_SOURCE_DIR}/base/exceptions.hpp
+				${HydraMain_SOURCE_DIR}/base/exceptions.hpp
 				)
 
 # Is this needed
@@ -74,7 +74,7 @@ target_link_libraries( test_exceptions ${TEST_LIB} )
 # Test euler angles
 add_executable( test_euler_angles
 				test_euler_angles.cpp
-				${eqOgre_SOURCE_DIR}/math/math.hpp
+				${HydraMain_SOURCE_DIR}/math/math.hpp
 				)
 
 target_link_libraries( test_euler_angles ${HYDRA_LIBRARIES} ${TEST_LIB} )
@@ -96,8 +96,8 @@ target_link_libraries( test_euler_angles ${HYDRA_LIBRARIES} ${TEST_LIB} )
 # Test env settings
 add_executable( test_env_settings
     test_env_settings.cpp
-    ${eqOgre_SOURCE_DIR}/base/envsettings.cpp
-    ${eqOgre_SOURCE_DIR}/base/envsettings.hpp
+    ${HydraMain_SOURCE_DIR}/base/envsettings.cpp
+    ${HydraMain_SOURCE_DIR}/base/envsettings.hpp
     )
 
 target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )

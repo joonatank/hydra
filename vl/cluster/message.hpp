@@ -16,6 +16,9 @@
 #include "base/exceptions.hpp"
 #include "base/string_utils.hpp"
 
+// Necessary for saving timestamps into Messages
+#include "base/timer.hpp"
+
 namespace vl
 {
 
@@ -169,18 +172,36 @@ std::string getTypeAsString( MSG_TYPES type )
 	}
 }
 
-/// Description of an UDP message
+/** @class Message
+ *	@brief Description of an UDP message
+ *
+ *	Stucture: [MESSAGE_TYPE | FRAME | TIMESTAMP | DATA_SIZE | DATA]
+ */
 class Message
 {
 public :
 	typedef uint32_t size_type;
 
-	Message( std::vector<char> const &arr);
+	Message(std::vector<char> const &arr);
 
-	Message( MSG_TYPES type = MSG_UNDEFINED );
+	Message(MSG_TYPES type, uint32_t frame, vl::time const &timestamp);
+
+	Message(void);
 
 	MSG_TYPES getType( void ) const
 	{ return _type; }
+
+	uint32_t getFrame(void) const
+	{ return _frame; }
+
+	void setFrame(uint32_t frame)
+	{ _frame = frame; }
+
+	vl::time const &getTimestamp(void) const
+	{ return _timestamp; }
+
+	void setTimestamp(vl::time const &timestamp)
+	{ _timestamp = timestamp; }
 
 	/// Dump the whole message to a binary array, the array is modified
 	virtual void dump( std::vector<char> &arr ) const;
@@ -217,6 +238,26 @@ public :
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 
 private :
+
+	/// @brief copies a memory field to a member
+	/// @return true if successful, i.e. the char buffer has enough data
+	/// @param dest destination where to copy, this needs to be a primitive for templates to work
+	/// @param src char buffer where to copy the data
+	/// @param pos position variable, is updated to the new position after successful read
+	template<typename T>
+	bool _copy_memory(T *dest, std::vector<char> const &src, size_type &pos)
+	{
+		if( src.size() >= pos + sizeof(T) )
+		{
+			::memcpy( dest, &src[pos], sizeof(T) );
+			pos += sizeof(T);
+			return true;
+		}
+		else
+		{ return false; }
+	}
+
+	/// --------------------------- Data -------------------------------------
 	/**	@todo Replace all the message data with one std::vector<char>
 	 *	removes copying when the message is dumped for real sending
 	 *	anyway message will
@@ -225,6 +266,8 @@ private :
 	 *	That message data should be completely in std::vector<char>
 	 */
 	MSG_TYPES _type;
+	uint32_t _frame;
+	vl::time _timestamp;
 	size_type _size;
 	std::vector<char> _data;
 

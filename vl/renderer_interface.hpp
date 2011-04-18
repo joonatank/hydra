@@ -19,12 +19,6 @@
 namespace vl
 {
 
-/// Dummy struct makes easier to store all callbacks to same data structure
-struct Callback
-{
-	virtual ~Callback(void) {}
-};
-
 /// callback functors
 struct MsgCallback : public Callback
 {

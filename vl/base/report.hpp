@@ -251,7 +251,7 @@ template<typename T>
 bool
 vl::Report<T>::has_number(std::string const &name) const
 {
-	typename std::map< std::string, vl::Number<T> > iter = _numbers.find(name);
+	typename std::map< std::string, vl::Number<T> >::const_iterator iter = _numbers.find(name);
 	if( iter == _numbers.end() )
 	{ return false; }
 

@@ -7,36 +7,39 @@
 
 /// ---------------------------- Message ---------------------------------------
 vl::cluster::Message::Message( std::vector<char> const &arr )
-	: _type(vl::cluster::MSG_UNDEFINED), _size(0)
+	: _type(vl::cluster::MSG_UNDEFINED), _size(0), _frame(0)
 {
-	size_t pos = 0;
-	if( arr.size() >= pos + sizeof(_type) )
-	{
-		::memcpy( &_type, &arr[pos], sizeof(_type) );
-		pos += sizeof(_type);
-	}
-	else
-	{ return; }
+	// @todo this should work with simple casting/memcpy
+	// but do we want to use those, as it will break the user interface
 
-	if( arr.size() >= pos + sizeof(_size) )
-	{
-		::memcpy( &_size, &arr[pos], sizeof(_size) );
-		pos += sizeof(_size);
-	}
-	else
-	{ return; }
+	size_type pos = 0;
+	// Copy type
+	bool retval = _copy_memory(&_type, arr, pos);
+	if( !retval )
+	{ BOOST_THROW_EXCEPTION( vl::short_message() ); }
+
+	// Copy frame
+	retval = _copy_memory(&_frame, arr, pos);
+	if( !retval )
+	{ BOOST_THROW_EXCEPTION( vl::short_message() ); }
+
+	// Copy timestamp
+	retval = _copy_memory(&_timestamp, arr, pos);
+	if( !retval )
+	{ BOOST_THROW_EXCEPTION( vl::short_message() ); }
+
+	// Copy size
+	retval = _copy_memory(&_size, arr, pos);
+	if( !retval )
+	{ BOOST_THROW_EXCEPTION( vl::short_message() ); }
 
 	if( _size > 0 )
 	{
 		size_t size = _size;
 		if( arr.size() < pos + size )
 		{
-			std::cout << "vl::cluster::Message : " 
-				<< "A message is partial! Waiting for append." 
-				<< " size = " << _size << " bytes " 
-				<< ": already has " << arr.size()-pos << " bytes."
-				<< std::endl;
-			size = arr.size() - pos;
+			// Appending messages is not supported
+			BOOST_THROW_EXCEPTION( vl::short_message() );
 		}
 
 		_data.resize(size);
@@ -44,17 +47,34 @@ vl::cluster::Message::Message( std::vector<char> const &arr )
 	}
 }
 
-vl::cluster::Message::Message( vl::cluster::MSG_TYPES type )
-	: _type(type), _size(0)
+vl::cluster::Message::Message( vl::cluster::MSG_TYPES type, uint32_t frame, vl::time const &timestamp )
+	: _type(type), _size(0), _frame(frame), _timestamp(timestamp)
+{}
+
+vl::cluster::Message::Message(void)
+	: _type(MSG_UNDEFINED), _size(0), _frame(0), _timestamp(0)
 {}
 
 void
 vl::cluster::Message::dump( std::vector< char >& arr ) const
 {
-	arr.resize( sizeof(_type)+sizeof(_size)+_data.size() );
+	// this should work with just
+	// @todo no it doesn't on multi node systems, for some reason
+	// then again it's not symmetric if we use a struct memcpy here and
+	// single memcpys in parsing the message
+	// so the changes of something going wrong with reorganize or adding
+	// more data are really high
+//	arr.resize(sizeof(*this));
+//	::memcpy( &arr[0], this, sizeof(*this) );
+
+	arr.resize( sizeof(_type)+sizeof(_frame)+sizeof(_timestamp)+sizeof(_size)+_data.size() );
 	size_t pos = 0;
 	::memcpy( &arr[pos], &_type, sizeof(_type) );
 	pos += sizeof( _type );
+	::memcpy( &arr[pos], &_frame, sizeof(_frame) );
+	pos += sizeof( _frame );
+	::memcpy( &arr[pos], &_timestamp, sizeof(_timestamp) );
+	pos += sizeof(_timestamp);
 	::memcpy( &arr[pos], &_size, sizeof(_size) );
 	pos += sizeof(_size);
 	if( _data.size() > 0 )

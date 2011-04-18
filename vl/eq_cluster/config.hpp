@@ -50,6 +50,19 @@ struct ConfigMsgCallback : public vl::MsgCallback
 	vl::Config *owner;
 };
 
+struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
+{
+	ConfigServerDataCallback(vl::Config *own);
+
+	virtual ~ConfigServerDataCallback(void) {}
+
+	virtual vl::cluster::Message createInitMessage(void);
+
+	/// @todo add CREATE_MSG and UPDATE_MSG also
+	
+	vl::Config *owner;
+};
+
 /**	@class Config
  *
  */
@@ -86,6 +99,10 @@ public:
 	/// Push new message from callback to the stack
 	void pushMessage(vl::cluster::Message const &msg);
 
+	// This should always be called after createMsgUpdate
+	/// @todo fix const correctness, this method should not modify the object 
+	vl::cluster::Message createMsgInit(void);
+
 protected :
 	// Helpers that update local renderer and do slave rpc calls
 	void _setEnvironment(vl::EnvSettingsRefPtr env);
@@ -102,8 +119,6 @@ protected :
 	void _createMsgCreate(void);
 	// This shouldn't be called more than once per frame, resets changes
 	void _createMsgUpdate(void);
-	// This should always be called after createMsgUpdate
-	void _createMsgInit(void);
 
 	void _sendEnvironment(vl::EnvSettingsRefPtr env);
 	void _sendProject(vl::Settings const &proj);
@@ -166,7 +181,6 @@ protected :
 	// Update messages for this frame
 	vl::cluster::Message _msg_create;
 	vl::cluster::Message _msg_update;
-	vl::cluster::Message _msg_init;
 
 	// callback provided messages
 	std::deque<vl::cluster::Message> _messages;
