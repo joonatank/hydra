@@ -39,21 +39,21 @@ public :
 
 	/// Pack and unpack needs to be symmetric in every way otherwise
 	/// they will fail.
+	/// @todo fix const correctness, this method should not modify the object
 	void pack( cluster::ByteStream &msg )
 	{ pack( msg, _dirtyBits ); }
 
+	/// @todo fix const correctness, this method should not modify the object
 	void pack( cluster::ByteStream &msg, uint64_t const dirtyBits )
 	{
 		msg << dirtyBits;
 		serialize( msg, dirtyBits );
-		clearDirty();
 	}
 
 	void unpack( cluster::ByteStream &msg )
 	{
 		msg >> _dirtyBits;
 		deserialize(msg, getDirty() );
-		clearDirty();
 	}
 
 	uint64_t getID( void ) const
@@ -65,13 +65,14 @@ public :
 		setDirty( DIRTY_ALL );
 	}
 
+	void clearDirty( void )
+	{ _dirtyBits = DIRTY_NONE; }
+
 private :
+	/// @todo fix const correctness, this method should not modify the object
 	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
 	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
-
-	void clearDirty( void )
-	{ _dirtyBits = DIRTY_NONE; }
 
 	uint64_t _dirtyBits;
 	uint64_t _id;

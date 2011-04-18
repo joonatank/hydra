@@ -7,12 +7,15 @@
 
 #include "base/exceptions.hpp"
 
-vl::cluster::Server::Server( uint16_t const port )
+vl::cluster::Server::Server(uint16_t const port, ServerDataCallback *cb)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _frame(1)
 	, _update_frame(1)
 	, _n_log_messages(0)
+	, _data_cb(cb)
 {
+	assert(_data_cb);
+
 	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
 	boost::asio::socket_base::receive_buffer_size buf_size;
@@ -27,7 +30,7 @@ vl::cluster::Server::~Server()
 void
 vl::cluster::Server::shutdown( void )
 {
-	Message msg( vl::cluster::MSG_SHUTDOWN );
+	Message msg( vl::cluster::MSG_SHUTDOWN, _frame, getSimulationTime() );
 	std::vector<char> buf;
 	msg.dump(buf);
 
@@ -109,6 +112,11 @@ vl::cluster::Server::update(vl::Stats &stats)
 bool
 vl::cluster::Server::start_draw(vl::Stats &stats)
 {
+	if( _frame == 0 )
+	{ _sim_timer.reset(); }
+
+	++_frame;
+
 	// Only render if we have rendering threads
 	if( _clients.empty() )
 	{ return false; }
@@ -120,8 +128,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 
 	// TODO We can skip here all clients that are not yet rendering
 	ClientRefList renderers;
-	ClientList::iterator iter;
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
 		if( iter->state.wants_render )
 		renderers.push_back( &(*iter) );
@@ -134,10 +141,10 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	// Send frame start
 	// This is the first message and before this is answered
 	// Updates should not be sent
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	// this is sent to all
+	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_FRAME_START );
-		msg.write(_frame);
+		vl::cluster::Message msg( vl::cluster::MSG_FRAME_START, _frame, getSimulationTime() );
 		_sendMessage(iter->address, msg);
 	}
 
@@ -145,7 +152,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	bool success  = _block_till_state(CS_UPDATE_READY);
 	assert(success);
 	// Send update message to all
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{ _sendUpdate(*iter); }
 
 	// Not in use because DRAW_READY is sent so soon after this one
@@ -154,21 +161,23 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 //	_block_till_state(CS_UPDATE_DONE);
 
 	// Send the output messages
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{ _sendOuput(*iter); }
 	success = _block_till_state(CS_DRAW_READY, limit);
 	assert(success);
 	stats.logWaitUpdateTime( (double(tim.elapsed()))*1e3 );
 
 	tim.reset();
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_DRAW );
+		vl::cluster::Message msg( vl::cluster::MSG_DRAW, _frame, getSimulationTime() );
 		_sendMessage(iter->address, msg);
 		iter->state.frame = _frame;
 	}
 	// Check that all clients started drawing
-	success = _block_till_state(CS_DRAW, limit);
+	// @todo on Windows if we use the time limit the block call will fail
+	// Some real performance problems with it.
+	success = _block_till_state(CS_DRAW);//, limit);
 	assert(success);
 	stats.logWaitDrawTime( (double(tim.elapsed()))*1e3 );
 
@@ -231,7 +240,12 @@ vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 
 	// Resetting environment NOT supported
 	assert( _env_msg.empty() );
-	msg.dump(_env_msg);
+	
+	Message cpy(msg);
+	cpy.setFrame(_frame);
+	cpy.setTimestamp(getSimulationTime());
+
+	cpy.dump(_env_msg);
 
 	ClientList::iterator iter;
 	for(iter = _clients.begin(); iter != _clients.end(); ++iter )
@@ -245,32 +259,37 @@ vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
 void
 vl::cluster::Server::sendProject( const vl::cluster::Message &msg )
 {
-	vl::timer t;
+	Message cpy(msg);
+	cpy.setFrame(_frame);
+	cpy.setTimestamp(getSimulationTime());
+
 	_proj_msg.clear();
-	msg.dump(_proj_msg);
+	cpy.dump(_proj_msg);
 }
 
 void
 vl::cluster::Server::sendUpdate( vl::cluster::Message const &msg )
 {
+	Message cpy(msg);
+	cpy.setFrame(_frame);
+	cpy.setTimestamp(getSimulationTime());
+
 	_msg_update.clear();
-	msg.dump(_msg_update);
+	cpy.dump(_msg_update);
 }
 
 void
 vl::cluster::Server::sendCreate( Message const &msg )
 {
+	assert( msg.getType() == MSG_SG_CREATE );
+
 	// @TODO this needs frame or timestamp information when dealing with multiple
 	// slaves which can be in different states.
-	assert( msg.getType() == MSG_SG_CREATE );
-	_msg_creates.push_back( std::make_pair(_update_frame, msg) );
-}
+	Message cpy(msg);
+	cpy.setFrame(_frame);
+	cpy.setTimestamp(getSimulationTime());
 
-void
-vl::cluster::Server::sendInit( vl::cluster::Message const &msg )
-{
-	_msg_init.clear();
-	msg.dump(_msg_init);
+	_msg_creates.push_back( std::make_pair(_update_frame, cpy) );
 }
 
 vl::cluster::Message
@@ -286,6 +305,15 @@ vl::cluster::Server::block_till_initialised(vl::time const &limit)
 {
 	// This doesn't work at the moment
 	//_block_till_state(CS_PROJ, timelimit);
+}
+
+vl::time 
+vl::cluster::Server::getSimulationTime(void) const
+{
+	if( _frame == 0 )
+	{ return vl::time(); }
+	else
+	{ return _sim_timer.elapsed(); }
 }
 
 bool
@@ -505,11 +533,19 @@ vl::cluster::Server::_sendUpdate(ClientInfo &client)
 	// then the draw message or is the update message optional?
 	if( !client.state.has_init )
 	{
-		_socket.send_to( boost::asio::buffer(_msg_update), client.address );
+		assert(_data_cb);
+		Message msg = _data_cb->createInitMessage();
+		// TODO add frame and timestamp
+		std::vector<char> buf;
+		msg.dump(buf);
+		_socket.send_to( boost::asio::buffer(buf), client.address );
+
 		client.state.has_init = true;
 	}
 	else
-	{ _socket.send_to( boost::asio::buffer(_msg_init), client.address ); }
+	{
+		_socket.send_to( boost::asio::buffer(_msg_update), client.address );
+	}
 }
 
 void
@@ -520,7 +556,7 @@ vl::cluster::Server::_sendOuput(ClientInfo &client)
 
 	if( !_new_log_messages.empty() )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_PRINT );
+		vl::cluster::Message msg( vl::cluster::MSG_PRINT, _frame, getSimulationTime() );
 		msg.write(_new_log_messages.size());
 		std::vector<vl::LogMessage>::iterator iter;
 		for( iter = _new_log_messages.begin(); iter != _new_log_messages.end(); ++iter )
@@ -560,7 +596,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 		{
 			// Resetting environment NOT allowed
 			// TODO this should have environment sent and environment received field
-			if( !client.state.environment );
+			if( !client.state.environment )
 			{
 				// Change the state of the client
 				client.state.environment = true;

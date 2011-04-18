@@ -139,7 +139,7 @@ vl::Renderer::sendEvent( vl::cluster::EventData const &event )
 void
 vl::Renderer::sendCommand( std::string const &cmd )
 {
-	vl::cluster::Message msg( vl::cluster::MSG_COMMAND );
+	vl::cluster::Message msg( vl::cluster::MSG_COMMAND, 0, vl::time() );
 	// Write size and string and terminating character
 	msg.write( cmd.size()+1 );
 	msg.write( cmd.c_str(), cmd.size()+1 );
@@ -608,7 +608,7 @@ vl::Renderer::handleMessage(vl::cluster::Message &msg)
 
 			// Request output updates for the console
 			assert( _send_message_cb );
-			vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT);
+			vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
 			(*_send_message_cb)(msg);
 		}
 		break;
@@ -867,7 +867,7 @@ vl::Renderer::_sendEvents( void )
 {
 	if( !_events.empty() )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_INPUT );
+		vl::cluster::Message msg( vl::cluster::MSG_INPUT, 0, vl::time() );
 		std::vector<vl::cluster::EventData>::iterator iter;
 		for( iter = _events.begin(); iter != _events.end(); ++iter )
 		{

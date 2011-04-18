@@ -51,6 +51,20 @@ vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
 	owner->pushMessage(msg);
 }
 
+vl::ConfigServerDataCallback::ConfigServerDataCallback(vl::Config *own)
+	: owner(own)
+{
+	assert(owner);
+}
+
+vl::cluster::Message
+vl::ConfigServerDataCallback::createInitMessage(void)
+{
+	assert(owner);
+	return owner->createMsgInit();
+}
+
+
 /// ---------------------------------- Config --------------------------------
 vl::Config::Config( vl::Settings const & settings,
 					vl::EnvSettingsRefPtr env,
@@ -59,7 +73,7 @@ vl::Config::Config( vl::Settings const & settings,
 	: _game_manager( new vl::GameManager(&logger) )
 	, _settings(settings)
 	, _env(env)
-	, _server(new vl::cluster::Server( _env->getServer().port ))
+	, _server()
 	, _gui(0)
 	, _running(true)
 	, _renderer(rend)
@@ -68,6 +82,12 @@ vl::Config::Config( vl::Settings const & settings,
 	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+
+	/// Server can be created here because the callback is only called
+	/// when the Server has environment and project
+	vl::ConfigServerDataCallback *cb = new vl::ConfigServerDataCallback(this);
+	_server.reset(new vl::cluster::Server(_env->getServer().port, cb));
+	_callbacks.push_back(cb);
 
 	// if we have a renderer we have to set callbacks
 	if(_renderer.get())
@@ -173,7 +193,7 @@ vl::Config::init( void )
 	if(_renderer.get())
 	{
 		_renderer->sendMessage(_msg_create);
-		_renderer->sendMessage(_msg_init);
+		_renderer->sendMessage(createMsgInit());
 	}
 
 	std::cout << "Loading Renderer with new created objects took : "
@@ -199,7 +219,6 @@ vl::Config::exit(void)
 
 	_renderer.reset();
 
-	// TODO this should block till all the clients have shutdown
 	_server->shutdown();
 }
 
@@ -263,6 +282,7 @@ vl::Config::render( void )
 	if( _stats_timer.elapsed() > vl::time(10) )
 	{
 		_game_manager->getStats().update();
+		std::clog << _game_manager->getStats() << std::endl;
 		_stats_timer.reset();
 	}
 }
@@ -284,6 +304,26 @@ vl::Config::pushMessage(vl::cluster::Message const &msg)
 	_messages.push_back(msg);
 }
 
+vl::cluster::Message
+vl::Config::createMsgInit(void)
+{
+	vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
+
+	std::vector<vl::Distributed *>::iterator iter;
+	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
+		++iter )
+	{
+		assert( (*iter)->getID() != vl::ID_UNDEFINED );
+		vl::cluster::ObjectData data( (*iter)->getID() );
+		vl::cluster::ByteStream stream = data.getStream();
+		(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
+		data.copyToMessage(&msg);
+		/// Don't clear dirty because this is a special case
+	}
+
+	return msg;
+}
+
 /// ------------ Private -------------
 void
 vl::Config::_updateServer( void )
@@ -296,12 +336,6 @@ vl::Config::_updateServer( void )
 	}
 
 	_server->sendUpdate(_msg_update);
-
-	// New clients need the whole SceneGraph
-	// TODO this is not good here
-	// Provide a functor that can create the initial message
-
-	_server->sendInit(_msg_init);
 
 	// Send logs
 	if( _server->logEnabled() )
@@ -327,8 +361,6 @@ vl::Config::_updateRenderer(void)
 
 	_renderer->sendMessage(_msg_update);
 
-	// Does not send init, because the renderer is already initialised
-
 	// Send logs
 	if( _renderer->logEnabled() )
 	{
@@ -345,7 +377,6 @@ vl::Config::_updateFrameMsgs(void)
 {
 	_createMsgCreate();
 	_createMsgUpdate();
-	_createMsgInit();
 }
 
 void
@@ -354,7 +385,7 @@ vl::Config::_createMsgCreate(void)
 	// New objects created need to send SG_CREATE message
 	if( !getNewObjects().empty() )
 	{
-		_msg_create = vl::cluster::Message( vl::cluster::MSG_SG_CREATE );
+		_msg_create = vl::cluster::Message( vl::cluster::MSG_SG_CREATE, 0, vl::time() );
 		_msg_create.write( getNewObjects().size() );
 		for( size_t i = 0; i < getNewObjects().size(); ++i )
 		{
@@ -376,7 +407,7 @@ void
 vl::Config::_createMsgUpdate(void)
 {
 	// Create SceneGraph updates
-	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
+	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
 
 	std::vector<vl::Distributed *>::iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
@@ -389,24 +420,9 @@ vl::Config::_createMsgUpdate(void)
 			vl::cluster::ByteStream stream = data.getStream();
 			(*iter)->pack(stream);
 			data.copyToMessage(&_msg_update);
+			/// Clear dirty because this update has been applied
+			(*iter)->clearDirty();
 		}
-	}
-}
-
-void
-vl::Config::_createMsgInit(void)
-{
-	_msg_init = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE );
-
-	std::vector<vl::Distributed *>::iterator iter;
-	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
-		++iter )
-	{
-		assert( (*iter)->getID() != vl::ID_UNDEFINED );
-		vl::cluster::ObjectData data( (*iter)->getID() );
-		vl::cluster::ByteStream stream = data.getStream();
-		(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
-		data.copyToMessage(&_msg_init);
 	}
 }
 
@@ -444,7 +460,7 @@ vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
 	vl::cluster::ByteStream stream( &data );
 	stream << env;
 
-	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT );
+	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT, 0, vl::time() );
 	data.copyToMessage( &msg );
 	_server->sendMessage(msg);
 }
@@ -459,7 +475,7 @@ vl::Config::_sendProject(vl::Settings const &proj)
 	std::cout << "Streaming project to ByteData took : " << t.elapsed() << std::endl;
 	t.reset();
 
-	vl::cluster::Message msg( vl::cluster::MSG_PROJECT );
+	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
 	data.copyToMessage( &msg );
 	std::cout << "Copy project to message took : " << t.elapsed() << std::endl;
 	t.reset();

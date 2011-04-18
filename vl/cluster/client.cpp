@@ -67,7 +67,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 
 	// Needs to sent the request as soon as possible
 	assert( !_state.environment );
-	Message msg( MSG_REG_UPDATES );
+	Message msg( MSG_REG_UPDATES, 0, 0 );
 	sendMessage(msg);
 	_request_timer.reset();
 }
@@ -138,7 +138,7 @@ vl::cluster::Client::mainloop(void)
 	// blocking function
 	if( !_state.environment && double(_request_timer.elapsed()) > 0.1 )
 	{
-		Message msg( MSG_REG_UPDATES );
+		Message msg( MSG_REG_UPDATES, 0, vl::time() );
 		sendMessage(msg);
 		_request_timer.reset();
 	}
@@ -155,7 +155,7 @@ vl::cluster::Client::sendMessage(vl::cluster::Message const &msg)
 void
 vl::cluster::Client::sendAck(vl::cluster::MSG_TYPES type)
 {
-	Message msg( vl::cluster::MSG_ACK );
+	Message msg( vl::cluster::MSG_ACK, 0, vl::time() );
 	msg.write(type);
 	sendMessage(msg);
 }
@@ -198,10 +198,12 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 
 		case vl::cluster::MSG_FRAME_START :
 		{
-			Message msg(MSG_SG_UPDATE_READY);
+			/// @todo add checking for the server timestamp
+			Message msg(MSG_SG_UPDATE_READY, 0, vl::time());
 			assert( !_state.rendering );
 			assert( _state.wants_render );
 			_state.rendering = true;
+			_rend_timer.reset();
 			_state.set_rendering_state(CS_UPDATE_READY);
 			sendMessage(msg);
 		}
@@ -212,7 +214,7 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 			assert(_renderer.get());
 			_state.set_rendering_state(CS_UPDATE);
 			_renderer->handleMessage(msg);
-			Message msg(MSG_DRAW_READY);
+			Message msg(MSG_DRAW_READY, 0, vl::time());
 			sendMessage(msg);
 		}
 		break;
@@ -230,8 +232,24 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 			// Done
 			_state.set_rendering_state(CS_DRAW_DONE);
 			_state.rendering = false;
-			Message msg(MSG_DRAW_DONE);
+
+			/// Reply
+			Message msg(MSG_DRAW_DONE, 0, vl::time());
 			sendMessage(msg);
+			
+			/// Recond stats
+			/// Before first recording should reset the print timer
+			if( !_rend_report.has_number("Rendering ") )
+			{ _print_timer.reset(); }
+			_rend_report.get_number("Rendering ").push(_rend_timer.elapsed());
+
+			/// Print stats every ten seconds
+			if( _print_timer.elapsed() > vl::time(10) )
+			{
+				_rend_report.finish();
+				std::clog << _rend_report << std::endl;
+				_print_timer.reset();
+			}
 		}
 		break;
 
@@ -248,7 +266,7 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 				_renderer->handleMessage(msg);
 
 				// request rendering messages when initialised
-				Message msg(MSG_REG_RENDERING);
+				Message msg(MSG_REG_RENDERING, 0, vl::time());
 				_state.wants_render = true;
 				sendMessage(msg);
 			}
