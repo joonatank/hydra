@@ -1098,6 +1098,9 @@ class _WrapLogic(object):
 		g.setAttribute('name', self.name)
 		g.setAttribute('type', self.type)
 
+		# @todo this does not work for KEYBOARD keys for some reason
+		# We don't use the logics anyway so no matter for now.
+		"""
 		for name in self.TYPES[ self.type ]:
 			attr = getattr( self.node, name )
 			if name in self.SwapName: name = self.SwapName[name]
@@ -1115,6 +1118,7 @@ class _WrapLogic(object):
 				a.setAttribute('value', '%s %s %s' %(attr.x, attr.y, attr.z))
 			else:
 				print('ERROR: unknown type', attr)
+		"""
 		return g
 
 class WrapSensor( _WrapLogic ):
@@ -1888,7 +1892,9 @@ class ShaderTree(object):
 		else:
 			M += indent(3, 'emissive %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
 
+		print( 'Wrinting scene blend' )
 		if mat.use_transparency:
+			print( 'Using alpha blend' )
 			M += indent( 3, 'scene_blend %s' %'alpha_blend')
 			M += indent( 3, 'depth_write %s' %'off')
 		else:
