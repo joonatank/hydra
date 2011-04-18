@@ -30,12 +30,14 @@ find_path( TURTLE_INCLUDE_DIR
 	)
 
 # TODO add link variable so not all programs will link to these
-link_libraries( ${FS_LIB} ${TEST_LIB} )
+#link_libraries( )
 
 include_directories( SYSTEM
 	${TURTLE_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
 	)
+
+subdirs(examples)
 
 add_executable( test_timer test_timer.cpp
 	${HydraMain_SOURCE_DIR}/base/timer.hpp
@@ -69,7 +71,7 @@ add_executable( test_exceptions
 				)
 
 # Is this needed
-target_link_libraries( test_exceptions ${TEST_LIB} )
+target_link_libraries( test_exceptions ${TEST_LIB}  )
 
 # Test euler angles
 add_executable( test_euler_angles

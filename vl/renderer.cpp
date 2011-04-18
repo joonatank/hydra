@@ -9,8 +9,6 @@
 
 // Necessary for printing error messages from exceptions
 #include "base/exceptions.hpp"
-// Necessary for loading dotscene
-#include "eq_ogre/ogre_dotscene_loader.hpp"
 
 #include "eq_cluster/window.hpp"
 #include "base/string_utils.hpp"
@@ -320,41 +318,12 @@ vl::Renderer::onConsoleShow(const CEGUI::EventArgs& e)
 }
 
 void
-vl::Renderer::reloadProjects( vl::Settings const &set )
-{
-	// TODO this should unload old projects
-
-	_settings = set;
-
-	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
-
-	// Add resources
-	_root->addResource( _settings.getProjectDir() );
-	for( size_t i = 0; i < _settings.getAuxDirectories().size(); ++i )
-	{
-		_root->addResource( _settings.getAuxDirectories().at(i) );
-	}
-
-	std::string msg("Setting up the resources.");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	_root->setupResources();
-	_root->loadResources();
-
-	_ogre_sm = _root->createSceneManager("SceneManager");
-
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		_loadScene( scenes.at(i) );
-	}
-
-	_setCamera();
-}
-
-void
 vl::Renderer::draw(void)
 {
 	Ogre::WindowEventUtilities::messagePump();
+	
+	_root->getNative()->_fireFrameStarted();
+
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 
@@ -362,6 +331,8 @@ vl::Renderer::draw(void)
 	{
 		CEGUI::System::getSingleton().renderGUI();
 	}
+
+	_root->getNative()->_fireFrameEnded();
 }
 
 void
@@ -598,7 +569,7 @@ vl::Renderer::handleMessage(vl::cluster::Message &msg)
 			vl::Settings projects;
 			stream >> projects;
 
-			reloadProjects(projects);
+			_initialiseResources(projects);
 
 			// TODO these should be moved elsewhere from project (to env)
 			initGUIResources(projects);
@@ -681,33 +652,6 @@ vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
 
 /// ------------------------ Protected -----------------------------------------
-void 
-vl::Renderer::guiCreated(vl::gui::GUI *gui)
-{
-	// Only single instances are supported for now
-	assert(!_gui && gui);
-	_gui = gui;
-}
-
-void 
-vl::Renderer::playerCreated(vl::Player *player)
-{
-	// Only single instances are supported for now
-	assert(!_player && player);
-	_player = player;
-}
-
-void 
-vl::Renderer::sceneManagerCreated(vl::SceneManager *sm)
-{
-	// Only single instances are supported for now
-	assert(!_scene_manager && sm);
-	_scene_manager = sm;
-	
-	assert( _ogre_sm );
-	_scene_manager->setSceneManager( _ogre_sm );
-}
-
 void
 vl::Renderer::_initGUI(void)
 {
@@ -744,76 +688,49 @@ vl::Renderer::_createOgre(vl::EnvSettingsRefPtr env)
 }
 
 void
-vl::Renderer::_loadScene( vl::ProjSettings::Scene const &scene )
+vl::Renderer::_initialiseResources( vl::Settings const &set )
 {
-	std::string msg("vl::Pipe::_loadScene");
+	assert(_root);
+
+	// Add resources
+	_root->addResource( set.getProjectDir() );
+	for( size_t i = 0; i < set.getAuxDirectories().size(); ++i )
+	{
+		_root->addResource( set.getAuxDirectories().at(i) );
+	}
+
+	std::string msg("Setting up the resources.");
 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
 
-	assert( _ogre_sm );
-
-	std::string const &name = scene.getName();
-
-	msg = "Loading scene " + name + " file = " + scene.getFile();
- 	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
-
-	vl::ogre::DotSceneLoader loader;
-	// TODO pass attach node based on the scene
-	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-	loader.parseDotScene( scene.getFile(), _ogre_sm );
-
-	msg = "Scene " + name + " loaded.";
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_NORMAL );
+	_root->setupResources();
+	_root->loadResources();
 }
 
-void
-vl::Renderer::_setCamera ( void )
+Ogre::SceneManager *
+vl::Renderer::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name)
 {
-	assert( _ogre_sm );
+	assert(root);
+	Ogre::SceneManager *sm = _root->createSceneManager(name);
 
-	/// Get the camera
-	// TODO move to separate function
-
-	// Loop through all cameras and grab their name and set their debug representation
-	Ogre::SceneManager::CameraIterator cameras = _ogre_sm->getCameraIterator();
-
-	if( !_active_camera_name.empty() )
+	/// These can not be moved to SceneManager at least not yet
+	/// because they need the RenderSystem capabilities.
+	/// @todo this should be user configurable (if the hardware supports it)
+	/// @todo the number of textures (four at the moment) should be user configurable
+	if (root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
 	{
-		if( _camera && _camera->getName() == _active_camera_name )
-		{ return; }
-
-		if( _ogre_sm->hasCamera(_active_camera_name) )
-		{
-			_camera = _ogre_sm->getCamera(_active_camera_name);
-		}
+		std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
+		sm->setShadowTextureSettings(1024, 4);
+	}
+	else
+	{
+		/// @todo this doesn't work on Windows with size < (512,512)
+		/// should check the window size and select the largest
+		/// possible shadow texture based on that.
+		std::cout << "Using 512 x 512 shadow textures." << std::endl;
+		sm->setShadowTextureSettings(512, 4);
 	}
 
-	if( !_camera )
-	{
-		std::string message;
-		// Grab the first available camera, for now
-		if( cameras.hasMoreElements() )
-		{
-			_camera = cameras.getNext();
-			message = "Using Camera " + _camera->getName() + " found from the scene.";
-			Ogre::LogManager::getSingleton().logMessage( message );
-		}
-		else
-		{
-			// TODO this should use a default camera created earlier that exists always
-			_camera = _ogre_sm->createCamera("Cam");
-			message = "No camera in the scene. Using created camera "
-				+ _camera->getName();
-			Ogre::LogManager::getSingleton().logMessage( message );
-		}
-		_active_camera_name = _camera->getName();
-	}
-
-	assert( _camera && _active_camera_name == _camera->getName() );
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->setCamera(_camera); }
-
-	std::string msg = "Camera " + _active_camera_name + " set.";
-	Ogre::LogManager::getSingleton().logMessage( msg );
+	return sm;
 }
 
 
@@ -830,11 +747,11 @@ vl::Renderer::_updateDistribData( void )
 		if( !cam_name.empty() && cam_name != _active_camera_name )
 		{
 			_active_camera_name = cam_name;
-			assert( _ogre_sm );
-			if( _ogre_sm->hasCamera( cam_name ) )
+			assert(_scene_manager);
+			if( _scene_manager->hasCamera( cam_name ) )
 			{
 				// Tell the Windows to change cameras
-				_camera = _ogre_sm->getCamera( _active_camera_name );
+				_camera = _scene_manager->getCamera( _active_camera_name );
 				assert( !_windows.empty() );
 				for( size_t i = 0; i < _windows.size(); ++i )
 				{ _windows.at(i)->setCamera( _camera ); }
@@ -923,7 +840,10 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				// TODO fix the constructor
 				vl::Player *player = new vl::Player;
 				mapObject(player, id);
-				playerCreated(player);
+				
+				// Only single instances are supported for now
+				assert(!_player && player);
+				_player = player;
 			}
 			break;
 
@@ -935,29 +855,55 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				gui->setLoadingScreen( vl::gui::WindowRefPtr( new vl::gui::Window(_loading_screen) ) );
 				gui->setStats( vl::gui::WindowRefPtr( new vl::gui::Window(_stats) ) );
 				
-				guiCreated(gui);
+				// Only single instances are supported for now
+				assert(!_gui && gui);
+				_gui = gui;
 			}
 			break;
 
 			case OBJ_SCENE_MANAGER :
 			{
 				// TODO support multiple SceneManagers
-				vl::SceneManager *sm = new vl::SceneManager( this, id );
-				sceneManagerCreated(sm);
+				assert(!_scene_manager);
+				assert(!_ogre_sm);
+				// TODO should pass the _ogre_sm to there also or vl::Root as creator
+				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
+				_scene_manager = new SceneManager(this, id, _ogre_sm );
+
 			}
 			break;
 
 			case OBJ_SCENE_NODE :
 			{
-				// TODO move
 				assert( _scene_manager );
-				_scene_manager->createSceneNode( "", id );
+				_scene_manager->_createSceneNode(id);
 			}
 			break;
 
+			/// @todo MovableObjects should have the same type and 
+			/// use the same create function
+			case OBJ_ENTITY :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createEntity(id);
+				break;
+			}
+			case OBJ_LIGHT :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createLight(id);
+				break;
+			}
+			case OBJ_CAMERA :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createCamera(id);
+				break;
+			}
+
 			default :
 				// TODO Might happen something unexpected so for now just kill the program
-				assert( false );
+				assert(false && "Trying to create an object with an unknown type");
 		}
 	}
 }

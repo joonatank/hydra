@@ -104,7 +104,7 @@ vl::cluster::Client::mainloop(void)
 		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
 				_master, 0, error );
 
-		/// TOOD when these do happen?
+		/// @TODO when these do happen?
 		if( error && error == boost::asio::error::connection_refused )
 		{
 			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;

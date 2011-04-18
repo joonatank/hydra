@@ -27,6 +27,12 @@ vl::EnvSettings::Node::addWindow( vl::EnvSettings::Window const &window )
 	windows.push_back(window);
 }
 
+vl::EnvSettings::Window &
+vl::EnvSettings::Node::getWindow( size_t i )
+{
+	return windows.at(i);
+}
+
 vl::EnvSettings::Window const &
 vl::EnvSettings::Node::getWindow( size_t i ) const
 {
@@ -39,6 +45,8 @@ vl::EnvSettings::EnvSettings( void )
 	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
 	, _stereo(false)
 	, _nv_swap_sync(false)
+	, _swap_group(0)
+	, _swap_barrier(0)
 	, _ipd(0)
 	, _slave(false)
 {}
@@ -311,6 +319,12 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processNode( xml_elem, _envSettings->getMaster() ); }
 
+	if( _envSettings->getMaster().getNWindows() == 0 )
+	{
+		std::string str("Master needs to have at least one window.");
+		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(str) );
+	}
+
 	xml_elem = xml_root->first_node("slave");
 	while( xml_elem )
 	{
@@ -530,6 +544,14 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		EnvSettings::Window window( name, EnvSettings::Channel(), w, h, x, y, x );
 		window.stereo = _envSettings->hasStereo();
 		window.nv_swap_sync = _envSettings->hasNVSwapSync();
+		window.nv_swap_group = _envSettings->getNVSwapGroup();
+		window.nv_swap_barrier = _envSettings->getNVSwapBarrier();
+
+		if( attrib = pWindow->first_attribute("vert_sync"))
+		{
+			window.vert_sync= vl::from_string<bool>(attrib->value());
+		}
+
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
 		processChannel(channel_elem, window);
 
@@ -582,12 +604,24 @@ vl::EnvSettingsSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 void 
 vl::EnvSettingsSerializer::processNVSwapSync(rapidxml::xml_node<> *xml_node)
 {
-	bool swap = vl::from_string<bool>(xml_node->value());
+	rapidxml::xml_node<> *group_elem = xml_node->first_node("swap_group");
+	rapidxml::xml_node<> *barrier_elem = xml_node->first_node("swap_barrier");
 
-	if(swap)
-	{ _envSettings->setNVSwapSync(true); }
-	else
-	{ _envSettings->setNVSwapSync(false); }
+	if(group_elem)
+	{
+		_envSettings->setNVSwapSync(true);
+		uint32_t group = vl::from_string<uint32_t>(group_elem->value());
+		std::cout << "Setting swap group to = " << group << std::endl;
+		_envSettings->setNVSwapGroup(group);
+	}
+
+	if(barrier_elem)
+	{
+		_envSettings->setNVSwapSync(true); 
+		uint32_t barrier = vl::from_string<uint32_t>(barrier_elem->value());
+		std::cout << "Setting swap barrier to = " << barrier << std::endl;
+		_envSettings->setNVSwapBarrier(barrier);
+	}
 
 	_checkUniqueNode(xml_node);
 }

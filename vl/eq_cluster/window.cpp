@@ -7,9 +7,10 @@
 
 #include "base/exceptions.hpp"
 #include "eq_cluster/config.hpp"
-#include "eq_ogre/ogre_dotscene_loader.hpp"
 
 #include "renderer.hpp"
+
+#include "camera.hpp"
 
 #include <OGRE/OgreLogManager.h>
 
@@ -88,7 +89,11 @@ vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
 
-	_left_viewport = _ogre_window->addViewport(_camera);	
+	Ogre::Camera *og_cam = 0;
+	if( _camera )
+	{ og_cam = (Ogre::Camera *)_camera->getNative(); }
+
+	_left_viewport = _ogre_window->addViewport(og_cam);	
 	_left_viewport->setBackgroundColour(background_col);
 	// This is necessary because we are using single camera and single viewport
 	// to draw to both backbuffers when using stereo.
@@ -96,7 +101,7 @@ vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 
 	if(hasStereo())
 	{
-		_right_viewport = _ogre_window->addViewport(_camera, 1);
+		_right_viewport = _ogre_window->addViewport(og_cam, 1);
 		_right_viewport->setBackgroundColour(background_col);
 		_right_viewport->setAutoUpdated(false);
 	}
@@ -133,22 +138,19 @@ vl::Window::getOgreRoot( void )
 { return _renderer->getRoot(); }
 
 void
-vl::Window::setCamera( Ogre::Camera *camera )
+vl::Window::setCamera(vl::CameraPtr camera)
 {
-	std::cout << vl::TRACE << "vl::Window::setCamera" << std::endl;
+	if( !camera )
+	{ return; }
 
 	_camera = camera;
+	
+	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
 	if(_left_viewport)
-	{ _left_viewport->setCamera(_camera); }
+	{ _left_viewport->setCamera(og_cam); }
 	if(_right_viewport)
-	{ _right_viewport->setCamera(_camera); }
+	{ _right_viewport->setCamera(og_cam); }
 }
-
-/*
-Ogre::SceneManager *
-vl::Window::getSceneManager( void )
-{ return _renderer->getSceneManager(); }
-*/
 
 void
 vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
@@ -484,33 +486,66 @@ vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 void
 vl::Window::draw(void)
 {
-	assert(_camera);
+	if(!_camera)
+	{ return; }
+
 	assert(_left_viewport);
 
 	Ogre::Real c_near = _camera->getNearClipDistance();
 	Ogre::Real c_far = _camera->getFarClipDistance();
 
+	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
+
 	Ogre::Matrix4 projMat = calculate_projection_matrix(c_near, c_far, _wall);
-	_camera->setCustomProjectionMatrix( true, projMat );
+	og_cam->setCustomProjectionMatrix( true, projMat );
 
 	// if stereo is not enabled ipd should be zero 
 	// TODO should it be forced though?
 	if(!hasStereo())
 	{ _ipd = 0; }
 
-	// TODO performance problems with stereo
+	// @todo is there performance problems with stereo?
 	// If they are still present we need to add a separate camera also
+	// @todo rendering GUI for both eyes
+
+	Ogre::Matrix4 const &head = getPlayer().getHeadMatrix();
+
+	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
+
+	// Should not be rotated with wall, all the walls would be out of sync with each other
+	Ogre::Vector3 headTrans = head.getTrans();
+
+	Ogre::Vector3 cam_pos = og_cam->getPosition();
+	Ogre::Quaternion cam_quat = og_cam->getOrientation();
+
+	/// @todo test on VR system
+	/// @todo should really be replaced with a stereo camera setup
+
 	// Left viewport
 	if( _left_viewport )
 	{
+		Ogre::Vector3 eye = Ogre::Vector3::ZERO;
 		if(hasStereo())
-		{ glDrawBuffer(GL_BACK_LEFT); }
+		{
+			glDrawBuffer(GL_BACK_LEFT);
+			eye = Ogre::Vector3(-_ipd/2, 0, 0);
+		}
 
-		Ogre::Vector3 eye(-_ipd/2, 0, 0);
+		// NOTE This is not HMD discard the rotation part
+		// Rotating the eye doesn't seem to have any affect.
+		// Though it's more realistic if it's there.
+		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.extractQuaternion())*eye 
+			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
+			+ cam_pos;
 
-		Ogre::Matrix4 viewMatrix = calculate_view_matrix(_camera->getRealPosition(), 
-			_camera->getRealOrientation(), _wall, getPlayer().getHeadMatrix(), eye);
-		_camera->setCustomViewMatrix(true, viewMatrix);
+		// Combine eye and camera positions
+		// Combine camera and wall orientation to get the projection on correct wall
+		// Seems like the wallRotation needs to be inverse for this one, otherwise
+		// left and right wall are switched.
+		Ogre::Quaternion eye_orientation = wallRot.Inverse()*cam_quat;
+
+		og_cam->setPosition(eye_d);
+		og_cam->setOrientation(eye_orientation);
 
 		_left_viewport->update();
 	}
@@ -522,12 +557,28 @@ vl::Window::draw(void)
 
 		Ogre::Vector3 eye(_ipd/2, 0, 0);
 
-		Ogre::Matrix4 viewMatrix = calculate_view_matrix(_camera->getRealPosition(), 
-			_camera->getRealOrientation(), _wall, getPlayer().getHeadMatrix(), eye);
-		_camera->setCustomViewMatrix(true, viewMatrix);
+		// NOTE This is not HMD discard the rotation part
+		// Rotating the eye doesn't seem to have any affect.
+		// Though it's more realistic if it's there.
+		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.extractQuaternion())*eye 
+			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
+			+ cam_pos;
+
+		// Combine eye and camera positions
+		// Combine camera and wall orientation to get the projection on correct wall
+		// Seems like the wallRotation needs to be inverse for this one, otherwise
+		// left and right wall are switched.
+		Ogre::Quaternion eye_orientation = wallRot.Inverse()*cam_quat;
+
+		og_cam->setPosition(eye_d);
+		og_cam->setOrientation(eye_orientation);
 
 		_right_viewport->update();
 	}
+
+	// Push back the original position and orientation
+	og_cam->setPosition(_camera->getPosition());
+	og_cam->setOrientation(_camera->getOrientation());
 
 	assert(_ogre_window);
 	_ogre_window->update(false);
@@ -556,7 +607,7 @@ vl::Window::capture( void )
 }
 
 void
-vl::Window::createGUIWindow(void )
+vl::Window::createGUIWindow(void)
 {
 	std::string message = "vl::Window::createGUIWindow";
 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
@@ -584,8 +635,6 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 		<< "left = " << winConf.x << " top = " << winConf.y
 		<< " width = " << winConf.w << " height = " << winConf.h;
 
-	/// @todo should be configurable
-	/// though these should fallback to default without the hardware
 	if( winConf.stereo )
 	{
 		std::cout << " with stereo : ";
@@ -593,9 +642,22 @@ vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 	}
 	if( winConf.nv_swap_sync )
 	{
-		std::cout << "with NV swap sync";
+		std::cout << "with NV swap sync, group ";
 		params["nvSwapSync"] = "true";
-		params["swapGroup"] = "1";
+		std::stringstream ss;
+		ss << winConf.nv_swap_group;
+		std::cout << ss.str() << ", barrier ";
+		params["swapGroup"] = ss.str();
+		ss.str("");
+		ss << winConf.nv_swap_barrier;
+		std::cout << ss.str() << " : ";
+		params["swapBarrier"] = ss.str();
+	}
+
+	if( winConf.vert_sync )
+	{
+		std::cout << "with vertical sync";
+		params["vert_sync"] = "true";
 	}
 	std::cout << std::endl;
 

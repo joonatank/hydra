@@ -14,7 +14,6 @@ project( "HydraMain" CXX )
 cmake_minimum_required(VERSION 2.6)
 
 set( SOURCES
-	eq_ogre/ogre_dotscene_loader.cpp
 	tracker.cpp
 	vrpn_tracker.cpp
 	tracker_serializer.cpp
@@ -52,11 +51,18 @@ set( SOURCES
 	cluster/message.cpp
 	physics/physics_events.cpp
 	physics/physics_world.cpp
+	entity.cpp
+	light.cpp
+	camera.cpp
+	movable_object.cpp
 	)
 
 set( HEADERS
 	tracker.hpp
-	eq_ogre/ogre_dotscene_loader.hpp
+	entity.hpp
+	light.hpp
+	movable_object.hpp
+	camera.hpp
 	tracker_serializer.hpp
 	fake_tracker.hpp
 	vrpn_tracker.hpp

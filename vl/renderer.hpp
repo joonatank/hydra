@@ -48,8 +48,8 @@ public :
 	vl::EnvSettingsRefPtr getEnvironment(void)
 	{ return _env; }
 
-	vl::Settings const &getProject(void) const
-	{ return _settings; }
+//	vl::Settings const &getProject(void) const
+//	{ return _settings; }
 
 	vl::EnvSettings::Node getNodeConf( void );
 
@@ -61,7 +61,7 @@ public :
 	Ogre::SceneManager *getSceneManager( void )
 	{ return _ogre_sm; }
 
-	Ogre::Camera *getCamera( void )
+	vl::CameraPtr getCamera( void )
 	{ return _camera; }
 
 	vl::Player const &getPlayer( void ) const
@@ -113,7 +113,6 @@ public :
 	/// @brief When console is shown it will automatically focus on the input
 	bool onConsoleShow(CEGUI::EventArgs const &e);
 
-	/// Reload the projects
 	void reloadProjects( vl::Settings const &set );
 
 	/// GUI specific
@@ -135,19 +134,13 @@ public :
 	virtual uint32_t nLoggedMessages(void) const;
 
 protected :
-
-	// Object creations
-	void guiCreated(vl::gui::GUI *gui);
-	void playerCreated(vl::Player *player);
-	void sceneManagerCreated(vl::SceneManager *sm);
-
 	/// GUI specific
 	void _initGUI( void );
 
 	/// Ogre helpers
 	void _createOgre(vl::EnvSettingsRefPtr env);
-	void _loadScene( vl::ProjSettings::Scene const &scene );
-	void _setCamera( void );
+	void _initialiseResources(vl::Settings const &set);
+	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
 	/// Distribution helpers
 	/// Syncs to the master copy stored when an Update message was received
@@ -179,12 +172,13 @@ protected :
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
 	/// ProjectSettings mapped from Master
-	vl::Settings _settings;
+	//vl::Settings _settings;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;
-	Ogre::Camera *_camera;
+
+	vl::CameraPtr _camera;
 
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;

@@ -8,6 +8,9 @@
 #include "game_manager.hpp"
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
+#include "entity.hpp"
+#include "light.hpp"
+#include "camera.hpp"
 #include "player.hpp"
 
 // Necessary for transforming OIS keycodes to python
@@ -64,6 +67,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyRel
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
+
 /// Overloads need to be outside the module definition
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
@@ -114,31 +119,134 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	// Overloads for the getSceneNode
-	// TODO const versions didn't go straight with the same return value policy
-	SceneNodePtr (SceneManager::*getsn1)( std::string const & ) = &SceneManager::getSceneNode;
-// 	const SceneNodePtr (SceneManager::*getsn2)( std::string const & ) const = &SceneManager::getSceneNode;
-	SceneNodePtr (SceneManager::*getsn3)( size_t ) = &SceneManager::getSceneNode;
-// 	const SceneNodePtr (SceneManager::*getsn4)( size_t ) const = &SceneManager::getSceneNode;
+	python::class_<vl::FogInfo>("FogInfo", python::init<>())
+		.def(python::init<std::string, python::optional<Ogre::ColourValue, Ogre::Real, Ogre::Real, Ogre::Real> >())
+		.add_property("mode", &vl::FogInfo::setMode, &vl::FogInfo::getMode)
+		.def_readwrite("colour", &vl::FogInfo::colour_diffuse)
+		.def_readwrite("density", &vl::FogInfo::exp_density)
+		.def_readwrite("linear_start", &vl::FogInfo::linear_start)
+		.def_readwrite("linear_end", &vl::FogInfo::linear_end)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::SkyDomeInfo>("SkyDomeInfo", python::init< python::optional<std::string> >())
+		.def_readwrite("material_name", &vl::SkyDomeInfo::material_name)
+		.def_readwrite("curvature", &vl::SkyDomeInfo::curvature)
+		.def_readwrite("tiling", &vl::SkyDomeInfo::tiling)
+		.def_readwrite("distance", &vl::SkyDomeInfo::distance)
+		.def_readwrite("draw_first", &vl::SkyDomeInfo::draw_first)
+		.def_readwrite("orientation", &vl::SkyDomeInfo::orientation)
+		.def_readwrite("xsegments", &vl::SkyDomeInfo::xsegments)
+		.def_readwrite("ysegments", &vl::SkyDomeInfo::ysegments)
+		.def_readwrite("ysegments_keep", &vl::SkyDomeInfo::ysegments_keep)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+	
+	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
+	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
+	void (SceneManager::*setShadowTechnique_ov1)(std::string const &tech) = &SceneManager::setShadowTechnique;
 
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
-		// TODO add remove and add SceneNodes
-//		.def("removeSceneNode", &SceneManager::removeSceneNode )
+		// TODO add remove SceneNodes
+		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
+		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
-		.def("getSceneNode", getsn1, python::return_value_policy<python::reference_existing_object>() )
-		.def("getSceneNode", getsn3, python::return_value_policy<python::reference_existing_object>() )
-		.def("reloadScene", &SceneManager::reloadScene)
+		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasEntity", &SceneManager::hasEntity )
+		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
+		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
+		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasCamera", &SceneManager::hasCamera)
+		.def("createCamera", &SceneManager::createCamera, python::return_value_policy<python::reference_existing_object>() )
+		.def("getCamera", &SceneManager::getCamera, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasLight", &SceneManager::hasLight)
+		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
+		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
+		
+		/// Scene parameters
+		/// returns copies of the objects
+		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
+		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
+		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
+		.add_property("shadows", &vl::SceneManager::isShadowsEnabled, &vl::SceneManager::enableShadows )
+		.def("setShadowTechnique", setShadowTechnique_ov1)
+		.add_property("shadow_colour", python::make_function( &vl::SceneManager::getShadowColour, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setShadowColour)
+		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
-		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
+
 		.def("hideSceneNodes", &vl::SceneManager::hideSceneNodes, hideSceneNodes_ov())
+		.def("reloadScene", &SceneManager::reloadScene)
+		/// @todo add printing
+	;
+
+	python::enum_<vl::PREFAB>("PF")
+		.value("NONE", PF_NONE)
+		.value("PLANE", PF_PLANE)
+		.value("SPHERE", PF_SPHERE)
+		.value("CUBE", PF_CUBE)
+	;
+
+	python::class_<vl::MovableObject, boost::noncopyable>("MovableObject", python::no_init)
+		.add_property("name", python::make_function( &vl::MovableObject::getName, python::return_value_policy<python::copy_const_reference>() ) )
+		// @todo does not work, pure virtual
+		//.add_property("type", python::make_function( &vl::Camera::getTypeName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("parent", python::make_function( &vl::MovableObject::getParent,python::return_value_policy<python::reference_existing_object>() ) )
+	;
+
+	python::class_<vl::LightAttenuation>("LightAttenuation", python::init<>() )
+		.def(python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def_readwrite("range", &vl::LightAttenuation::range)
+		.def_readwrite("constant", &vl::LightAttenuation::constant)
+		.def_readwrite("linear", &vl::LightAttenuation::linear)
+		.def_readwrite("quadratic", &vl::LightAttenuation::quadratic)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	void (vl::Light::*setType_ov1)(std::string const &type) = &vl::Light::setType;
+
+	python::class_<vl::Light, boost::noncopyable, python::bases<vl::MovableObject> >("Light", python::no_init)
+		.add_property("type", &vl::Light::getLightTypeName, setType_ov1 )
+		.add_property("diffuse", python::make_function( &vl::Light::getDiffuseColour, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setDiffuseColour )
+		.add_property("specular", python::make_function( &vl::Light::getSpecularColour, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setSpecularColour )
+		.add_property("direction", python::make_function( &vl::Light::getDirection, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setDirection )
+		.add_property("position", python::make_function( &vl::Light::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setPosition )
+		.add_property("visible", &vl::Light::getVisible, &vl::Light::setVisible )
+		.add_property("cast_shadows", &vl::Light::getCastShadows, &vl::Light::setCastShadows )
+		// TODO this should use a struct and be a property
+		.def("setSpotRange", &vl::Light::setSpotlightRange, setSpotlightRange_ov())
+		.add_property("attenuation", python::make_function( &vl::Light::getAttenuation, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setAttenuation )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Camera, boost::noncopyable, python::bases<vl::MovableObject> >("Camera", python::no_init)
+		.add_property("near_clip", &vl::Camera::getNearClipDistance, &vl::Camera::setNearClipDistance )
+		.add_property("far_clip", &vl::Camera::getFarClipDistance, &vl::Camera::setFarClipDistance )
+		.add_property("position", python::make_function( &vl::Camera::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::Camera::setPosition )
+		.add_property("orientation", python::make_function( &vl::Camera::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::Camera::setOrientation )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Entity, boost::noncopyable, python::bases<vl::MovableObject> >("Entity", python::no_init)
+		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
+		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
+		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("prefab", &vl::Entity::getPrefab)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 
-	python::class_<vl::SceneNode>("SceneNode", python::no_init)
+	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
+		.def("attachObject", &vl::SceneNode::attachObject)
+		.def("detachObject", &vl::SceneNode::detachObject)
+		.def("hasObject", &vl::SceneNode::hasObject)
+		.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.def("addChild", &vl::SceneNode::addChild)
+		.def("removeChild", &vl::SceneNode::removeChild)
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
+		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_internal_reference<>() ), &vl::SceneNode::setScale )
 		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
 		.def(python::self_ns::str(python::self_ns::self))
 	;

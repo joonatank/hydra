@@ -51,6 +51,20 @@ namespace vl
 	};
 
 	/// ------------------ Function Parameter errors ---------------
+	struct invalid_id : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Distributed object has an invalid ID."; }
+	};
+
+	/// Trying to add object it self
+	struct this_pointer : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Parameter is the object itself.";
+		}
+	};
 
 	/// Null pointer provided
 	struct null_pointer : public exception

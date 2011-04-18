@@ -123,9 +123,10 @@ public :
 		Window( std::string const &nam, Channel const &chan,
 				int width, int height, int px, int py,
 				bool s = false, bool nv_swap = false )
-			: name(nam), channel(chan),
-			  w(width), h(height), x(px), y(py)
-			, stereo(s), nv_swap_sync(nv_swap)
+			: name(nam), channel(chan)
+			, w(width), h(height), x(px), y(py), stereo(s)
+			, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
+			, vert_sync(false)
 		{
 			if( h < 0 || w < 0 )
 			{
@@ -163,6 +164,10 @@ public :
 		bool stereo;
 
 		bool nv_swap_sync;
+		uint32_t nv_swap_group;
+		uint32_t nv_swap_barrier;
+
+		bool vert_sync;
 
 	};	// struct Window
 
@@ -181,6 +186,7 @@ public :
 
 		void addWindow( Window const &window );
 
+		Window &getWindow( size_t i );
 		Window const &getWindow( size_t i ) const;
 
 		size_t getNWindows( void ) const
@@ -394,6 +400,18 @@ public :
 	void setNVSwapSync(bool val)
 	{ _nv_swap_sync = val; }
 
+	uint32_t getNVSwapGroup(void) const
+	{ return _swap_group; }
+	
+	void setNVSwapGroup(uint32_t val)
+	{ _swap_group = val; }
+
+	uint32_t getNVSwapBarrier(void) const
+	{ return _swap_barrier; }
+	
+	void setNVSwapBarrier(uint32_t val)
+	{ _swap_barrier = val; }
+
 	/**	@brief set the amount of interpupilar distance used for stereo
 	 *	@param ipd the distance in meters
 	 */
@@ -478,6 +496,8 @@ private :
 	bool _stereo;
 	
 	bool _nv_swap_sync;
+	uint32_t _swap_group;
+	uint32_t _swap_barrier;
 
 	// Inter pupilar distance
 	double _ipd;

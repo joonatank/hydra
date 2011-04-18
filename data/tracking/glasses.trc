@@ -11,5 +11,10 @@
 				</default>
 			</sensor>
 		</tracker>
+		<tracker name="fingerpori">
+			<sensor num="0">
+				<trigger type="VRPN" name="fingerTrigger" />
+			</sensor>
+		</tracker>
 	</client>
 </clients>

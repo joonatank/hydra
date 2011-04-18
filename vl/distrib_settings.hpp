@@ -86,12 +86,6 @@ ByteStream &operator<<( ByteStream &msg, vl::ProjSettings const &proj );
 template<>
 ByteStream &operator>>( ByteStream &msg, vl::ProjSettings &proj );
 
-template<>
-ByteStream &operator<<( ByteStream &msg, vl::ProjSettings::Scene const &scene );
-
-template<>
-ByteStream &operator>>( ByteStream &msg, vl::ProjSettings::Scene &scene );
-
 }	// namespace cluster
 
 }	// namespace vl

@@ -113,13 +113,7 @@ Ogre::Matrix4
 calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far, 
 							vl::EnvSettings::Wall const &wall);
 
-Ogre::Matrix4 
-calculate_view_matrix(Ogre::Vector3 const &camera_pos, 
-					  Ogre::Quaternion const &camera_orient,
-					  vl::EnvSettings::Wall const &wall,
-					  Ogre::Matrix4 const &head,
-					  Ogre::Vector3 const &eye = Ogre::Vector3::ZERO);
-
+Ogre::Quaternion orientation_to_wall(vl::EnvSettings::Wall const &wall);
 
 }	// namespace vl
 

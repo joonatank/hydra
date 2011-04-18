@@ -18,8 +18,11 @@
 #include "tracker_serializer.hpp"
 #include "base/filesystem.hpp"
 #include "distrib_resource_manager.hpp"
-
 #include "resource.hpp"
+
+#include "scene_manager.hpp"
+// Necessary for hiding collision meshes
+#include "scene_node.hpp"
 
 // Necessary for retrieving other managers
 #include "game_manager.hpp"

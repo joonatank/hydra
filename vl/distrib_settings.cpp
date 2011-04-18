@@ -12,19 +12,14 @@
 #include "settings.hpp"
 
 vl::SettingsByteData::SettingsByteData( void )
-{
-// 	std::cout << "vl::SettingsByteData::SettingsByteData" << std::endl;
-}
+{}
 
 vl::SettingsByteData::~SettingsByteData( void )
-{
-// 	std::cout << "vl::SettingsByteData::~SettingsByteData" << std::endl;
-}
+{}
 
 void
 vl::SettingsByteData::read( char* mem, vl::msg_size size )
 {
-// 	std::cout << "vl::SettingsByteData::read" << std::endl;
 	assert( mem );
 	if( 0 == size )
 	{ return; }
@@ -38,7 +33,6 @@ vl::SettingsByteData::read( char* mem, vl::msg_size size )
 void
 vl::SettingsByteData::write( const char* mem, vl::msg_size size )
 {
-// 	std::cout << "vl::SettingsByteData::write" << std::endl;
 	assert( mem );
 	if( 0 == size )
 	{ return; }
@@ -51,10 +45,7 @@ vl::SettingsByteData::write( const char* mem, vl::msg_size size )
 void
 vl::SettingsByteData::copyToMessage( vl::cluster::Message* msg )
 {
-// 	std::cout << "vl::SettingsByteData::copyToMessage" << std::endl;
 	assert(msg);
-
-	// TODO copy settings type
 
 	assert( _data.size() < msg_size(-1) );
 	msg_size size = _data.size();
@@ -66,10 +57,7 @@ vl::SettingsByteData::copyToMessage( vl::cluster::Message* msg )
 void
 vl::SettingsByteData::copyFromMessage( vl::cluster::Message* msg )
 {
-// 	std::cout << "vl::SettingsByteData::copyFromMessage" << std::endl;
 	assert(msg);
-
-	// TODO copy settings type
 
 	msg_size size;
 	// Check that there is more data than the size
@@ -85,7 +73,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr const &env )
 {
-// 	std::cout << "vl::cluster::operator<< ( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	msg << env->getLogLevel() << env->getCameraRotationAllowed()
 		<< env->getMaster() << env->getSlaves()
 		<< env->getWalls() << env->getIPD() << env->getLogDir();
@@ -97,7 +84,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &env )
 {
-// 	std::cout << "vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr env )" << std::endl;
 	uint32_t rot_allowed(-1);
 	double ipd = 0;
 	std::string log_dir;
@@ -158,7 +144,8 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Window& window )
 {
 	msg << window.name << window.channel << window.x << window.y << window.h
-		<< window.w << window.stereo << window.nv_swap_sync;
+		<< window.w << window.stereo << window.nv_swap_sync 
+		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync;
 
 	return msg;
 }
@@ -168,7 +155,8 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& window )
 {
 	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
-		>> window.w >> window.stereo >> window.nv_swap_sync;
+		>> window.w >> window.stereo >> window.nv_swap_sync
+		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync;
 
 	return msg;
 }
@@ -202,6 +190,8 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::Settings& setti
 	return msg;
 }
 
+/// @todo the only information needed from these is paths, so we might as well
+/// just send them without serializing the projects.
 template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::Settings& settings )
@@ -226,15 +216,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
 {
-	std::cout << "Serializing Project " << proj.getName() << " file = "
-		<< proj.getFile() << std::endl;
-	msg << proj.getFile();
-	vl::ProjSettings::Case const &cas = proj.getCase();
-	msg << proj.getName() << cas.getNscenes();
-	for( size_t i = 0; i < cas.getNscenes(); ++i )
-	{
-		msg << cas.getScene(i);
-	}
+	msg << proj.getFile() << proj.getName();
 
 	return msg;
 }
@@ -245,45 +227,10 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 {
 	std::string file;
 	std::string name;
-	size_t size;
-	msg >> file >> name >> size;
+	msg >> file >> name;
 
-	std::cout << "Deserializing : Project " << name << " file = " << file << std::endl;
 	proj.setFile(file);
 	proj.setName(name);
-
-	vl::ProjSettings::Case &cas = proj.getCase();
-	assert( cas.getNscenes() == 0 );
-	for( size_t i = 0; i < size; ++i )
-	{
-		vl::ProjSettings::Scene scene;
-		msg >> scene;
-		cas.addScene(scene);
-	}
-
-	return msg;
-}
-
-template<>
-vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::ProjSettings::Scene &scene )
-{
-	msg << scene.getName() << scene.getUse() << scene.getFile();
-
-	return msg;
-}
-
-template<>
-vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings::Scene &scene )
-{
-	std::string name;
-	std::string file;
-	bool use;
-	msg >> name >> use >> file;
-	scene.setName(name);
-	scene.setUse(use);
-	scene.setFile(file);
 
 	return msg;
 }

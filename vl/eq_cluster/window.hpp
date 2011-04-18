@@ -50,7 +50,7 @@ public:
 
 	vl::ogre::RootRefPtr getOgreRoot( void );
 
-	void setCamera( Ogre::Camera *camera );
+	void setCamera(vl::CameraPtr camera);
 
 	std::string const &getName( void ) const
 	{ return _name; }
@@ -129,9 +129,10 @@ protected :
 
 	double _ipd;
 
+	vl::Camera *_camera;
+
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
-	Ogre::Camera *_camera;
 	Ogre::Viewport *_left_viewport;
 	Ogre::Viewport *_right_viewport;
 

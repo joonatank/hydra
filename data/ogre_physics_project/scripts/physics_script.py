@@ -59,6 +59,7 @@ if game.scene.hasSceneNode( camera_name ) :
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
 # first one is the camera not active at the moment, second one is active at the moment
 addToggleActiveCamera("OutsideCamera", "Omakamera" )
+game.player.camera = "Omakamera"
 
 # Create physics
 game.enablePhysics( True )

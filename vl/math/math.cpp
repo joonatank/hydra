@@ -109,6 +109,8 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	 * D = -2*far*near/(far - near)
 	 * E = 2*near/(right - left)
 	 * F = 2*near/(top - bottom)
+	 * some documents have B and C negative some positive, does not seem to make
+	 * any difference at all.
 	 */
 
 	// Create the plane for transforming the head
@@ -122,6 +124,7 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	// rotation from camera vector to wall
 	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
+	// This is correct, it should not be inverse
 	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
 
 	bottom_right = wallRot*bottom_right;
@@ -144,29 +147,42 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	// If scale is negative it rotates 180 deg around z,
 	// i.e. flips to the other side of the wall
 	//
-	// Scale can has to have the head front-axis because there will be
-	// non-continuity between the front and side walls if we don't.
-	//
 	// This comes because the front axis for every wall is different so for
 	// front wall z-axis is the left walls x-axis.
 	// Without the scale those axes will differ relative to each other.
+	// Huh?
+	// 
 
-	Ogre::Real scale = (wall_front)/(-c_near);
+	// A decent constant which to transform the bottom and top
+	// Basically pulled from the arm pit
+	// T7 looks quite alright with this one, but your milage might vary.
+	// Does still have huge problems with correct perspective front relative to sides.
+	// And for example moving camera (modifying the view matrix) will create distortions
+	// in the walls.
+	Ogre::Real herwood_constant = 0.8;
 
-	Ogre::Real right = (wall_right)/scale;
-	Ogre::Real left = (wall_left)/scale;
+	// Scale is necessary and is correct because 
+	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
+	// and if we decrease it we the the same part on both front and side screens (too large fov) 
+	Ogre::Real scale = -(wall_front)/c_near;
+
+	Ogre::Real right = wall_right/scale;
+	Ogre::Real left = wall_left/scale;
 
 	// Golden ratio for the frustum
-	Ogre::Real phi = (1 + std::sqrt(5.0))/2;
+//	Ogre::Real phi = (1 + std::sqrt(5.0))/2;
 	Ogre::Real wall_height = wall_top - wall_bottom;
-	Ogre::Real top = (wall_top - (1/phi)*wall_height)/scale;
-	Ogre::Real bottom = (wall_bottom - (1/phi)*wall_height)/scale;
+//	Ogre::Real top = (wall_top - (1/phi)*wall_height)/scale;
+//	Ogre::Real bottom = (wall_bottom - (1/phi)*wall_height)/scale;
+	
+	/// Projection plane needs to be centered around zero
+	/// because the camera is in zero the top half will be above zero and the
+	/// bottom half is below zero.
+	Ogre::Real top = (wall_top - herwood_constant)/scale;
+	Ogre::Real bottom = (wall_bottom - herwood_constant)/scale;
 
-	// Near and far clipping should not be modified because
-	// Increasing the near clip would clip the objects near the user.
-	// Decreasing the near clip would go to negative, which is not allowed.
-	Ogre::Real A = (right + left)/(right - left);
-	Ogre::Real B = (top + bottom)/(top - bottom);
+	Ogre::Real A = -(right + left)/(right - left);
+	Ogre::Real B = -(top + bottom)/(top - bottom);
 	Ogre::Real C = -(c_far + c_near)/(c_far - c_near);
 	Ogre::Real D = -2*c_far*c_near/(c_far - c_near);
 	Ogre::Real E = 2*c_near/(right - left);
@@ -196,12 +212,8 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	return projMat;
 }
 
-Ogre::Matrix4
-vl::calculate_view_matrix(Ogre::Vector3 const &camera_pos, 
-						  Ogre::Quaternion const &camera_orient,
-						  vl::EnvSettings::Wall const &wall,
-						  Ogre::Matrix4 const &head,
-						  Ogre::Vector3 const &eye)
+Ogre::Quaternion
+vl::orientation_to_wall(vl::EnvSettings::Wall const &wall)
 {
 	// Create the plane for transforming the head
 	// Head doesn't need to be transformed for the view matrix
@@ -216,22 +228,7 @@ vl::calculate_view_matrix(Ogre::Vector3 const &camera_pos,
 	// Should this be here? or should we only rotate the view matrix the correct angle
 	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
-	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
-	// Doesn't seem to do anything, should check wether it should or not
-//	Ogre::Vector3 headTrans = wallRot*_head_matrix.getTrans();
-	Ogre::Vector3 headTrans = head.getTrans();
-
-	// NOTE This is not HMD discard the rotation part
-	// Rotating the eye doesn't seem to have any affect.
-	// Though it's more realistic if it's there.
-	Ogre::Vector3 eye_d = (camera_orient*head.extractQuaternion())*eye 
-		+ camera_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
-
-	// Combine eye and camera positions
-	// Combine camera and wall orientation to get the projection on correct wall
-	// Seems like the wallRotation needs to be inverse for this one, otherwise
-	// left and right wall are switched.
-	Ogre::Quaternion eye_orientation = wallRot.Inverse()*camera_orient;
-
-	return Ogre::Math::makeViewMatrix( camera_pos+eye_d, eye_orientation );
+	// Wall rotation used for orientating the frustum correctly
+	// not used for any transformations
+	return plane_normal.getRotationTo(cam_vec);
 }
