@@ -63,6 +63,17 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _creator(creator)
 {
 	assert( _creator );
+	// On renderers (where the native version is available)
+	// Create an unamed Ogre SceneNode because we use our SceneNodes to handle
+	// the retrieval by name.
+	if( _creator->getNative() )
+	{
+		_ogre_node = _creator->getNative()->createSceneNode();
+		/// Attach all nodes to Ogre Root Node for now so that they are in the SG
+		/// Should really map our root node to Ogre Root
+		/// which would implicitly put every node into the SG (because they are attached to our Root)
+		_creator->getNative()->getRootSceneNode()->addChild(_ogre_node);
+	}
 }
 
 void 
@@ -203,9 +214,7 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		BOOST_THROW_EXCEPTION( vl::this_pointer() );
 	}
 
-	if( hasChild(child) )
-	{ return; }
-	else
+	if( !hasChild(child) )
 	{
 		setDirty(DIRTY_CHILDS);
 		_childs.push_back(child);
@@ -221,16 +230,15 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		if( _ogre_node )
 		{
 			Ogre::SceneNode *og_child = child->getNative();
-			if( og_child )
-			{
-				// Hack to remove parents that are in the Ogre SC but not in ours
-				// Should be removed when the DotScene serializer reads 
-				// hierarchy correctly
-				if( og_child->getParent() )
-				{ og_child->getParent()->removeChild(og_child); }
+			assert(og_child);
 
-				_ogre_node->addChild(child->getNative());
-			}
+			// Hack to remove parents that are in the Ogre SC but not in ours
+			// Should be removed when the DotScene serializer reads 
+			// hierarchy correctly
+			if( og_child->getParent() )
+			{ og_child->getParent()->removeChild(og_child); }
+
+			_ogre_node->addChild(child->getNative());
 		}
 	}
 }
@@ -337,14 +345,13 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 void
 vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
+	// Only renderers should deserialize
+	assert(_ogre_node);
+
 	// Deserialize name
 	if( dirtyBits & DIRTY_NAME )
 	{
 		msg >> _name;
-		// name should never be empty
-		// @todo add exception throwing
-		assert( !_name.empty() );
-		_createNative();
 	}
 	// Deserialize position
 	if( dirtyBits & DIRTY_POSITION )
@@ -353,16 +360,19 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 
 		// If we have a correct node we need to transform it
 		if( _ogre_node )
-		{ _ogre_node->setPosition(_position); }
+		{
+			_ogre_node->setPosition(_position);
+		}
 	}
 	// Deserialize orientation
 	if( dirtyBits & DIRTY_ORIENTATION )
 	{
 		msg >> _orientation;
-
 		// If we have a correct node we need to transform it
 		if( _ogre_node )
-		{ _ogre_node->setOrientation(_orientation); }
+		{
+			_ogre_node->setOrientation(_orientation);
+		}
 	}
 
 	
@@ -469,34 +479,6 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		}
 	}
 }
-
-void
-vl::SceneNode::_createNative(void)
-{
-	if( _ogre_node )
-	{ return; }
-
-	assert( _creator );
-	assert( _creator->getNative() );
-
-	if( _creator->getNative()->hasSceneNode( _name ) )
-	{
-		_ogre_node = _creator->getNative()->getSceneNode(_name);
-	}
-	else
-	{
-		_ogre_node = _creator->getNative()->createSceneNode(_name);
-		// Attach to root so that this Node can be used
-		_creator->getNative()->getRootSceneNode()->addChild(_ogre_node);
-	}
-
-	assert(_ogre_node);
-	_ogre_node->setOrientation(_orientation);
-	_ogre_node->setPosition(_position);
-	_ogre_node->setScale(_scale);
-	_ogre_node->setVisible(_visible);
-}
-
 
 /// --------- Actions ----------
 void

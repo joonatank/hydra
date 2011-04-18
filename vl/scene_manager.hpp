@@ -140,16 +140,17 @@ struct FogInfo
 class SceneManager : public vl::Distributed
 {
 public :
-	/// Constructor
-	/// @param session a session this SceneManager belongs to,
-	/// used for registering and mapping objects
-	/// @param id undefined if this is to be registered
-	/// and valid if this is to be mapped
-	SceneManager( vl::Session *session, uint64_t id = vl::ID_UNDEFINED );
+	/// Master constructor
+	/// @param session a session this SceneManager belongs to, used for registering objects.
+	SceneManager( vl::Session *session);
+
+	/// Renderer constructor
+	/// @param session a session this SceneManager belongs to, used for mapping objects.
+	/// @param id identifier of the master object this is mapped to.
+	/// @param native the Ogre SceneManager this manager drives.
+	SceneManager( vl::Session *session, uint64_t id, Ogre::SceneManager *native);
 
 	virtual ~SceneManager( void );
-
-	void setSceneManager( Ogre::SceneManager *man );
 
 
 	/// ---------- SceneNode ---------------

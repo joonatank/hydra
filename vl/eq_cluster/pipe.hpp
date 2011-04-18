@@ -124,7 +124,7 @@ protected :
 	/// Ogre helpers
 	void _createOgreRoot(void);
 	void _initialiseResources(vl::Settings const &set);
-	void _createOgreSceneManager(void);
+	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
 	/// message passing
 	void _handleMessages( void );

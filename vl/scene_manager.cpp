@@ -56,7 +56,8 @@ Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
 }
 
 /// Public
-vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
+/// Master constructor
+vl::SceneManager::SceneManager(vl::Session *session)
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
@@ -65,9 +66,43 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id )
 	, _shadow_technique(SHADOWTYPE_NONE)
 	, _ogre_sm(0)
 {
-	assert( _session );
+	_session->registerObject( this, OBJ_SCENE_MANAGER);
+	_root = createFreeSceneNode("Root");
+}
+
+/// Renderer constructor
+vl::SceneManager::SceneManager( vl::Session *session, uint64_t id, Ogre::SceneManager *native )
+	: _root(0)
+	, _scene_version(0)
+	, _ambient_light(0, 0, 0, 1)
+	, _session(session)
+	// Default shadows to none before we have done enough testing
+	, _shadow_technique(SHADOWTYPE_NONE)
+	, _ogre_sm(native)
+{
+	assert(_session);
+	assert(id != vl::ID_UNDEFINED );
+	assert(_ogre_sm);
+
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
-	_root = _createSceneNode("Root", vl::ID_UNDEFINED);
+
+	/// Set shadow parameters
+
+	/// @todo move these to our SceneManager and make them configurable using python
+	/// ideally most of these should be configurable from config file
+	/// because they are really performance intense, can look pretty crappy
+	/// and most of them need to be static during the simulation
+
+	//_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
+
+	_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
+	_ogre_sm->setShadowTextureSelfShadow(true);
+	/// LiSPSM has creately softer shadows compared to the default one
+	/// i.e. less pixelisation in the edges.
+	Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
+	_ogre_sm->setShadowCameraSetup(cam_setup);
+	// For texture shadows to work this must be set
+	_ogre_sm->setShadowFarDistance(50);
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -76,34 +111,6 @@ vl::SceneManager::~SceneManager( void )
 	{ delete _scene_nodes.at(i); }
 
 	_scene_nodes.clear();
-}
-
-void
-vl::SceneManager::setSceneManager( Ogre::SceneManager *man )
-{
-	assert( man );
-	if( _ogre_sm != man )
-	{
-		_ogre_sm = man;
-		_ogre_sm->setAmbientLight(_ambient_light);
-		/// @todo should set FOG and sky parameters also
-
-		/// @todo move these to our SceneManager and make them configurable using python
-		/// ideally most of these should be configurable from config file
-		/// because they are really performance intense, can look pretty crappy
-		/// and most of them need to be static during the simulation
-
-		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
-
-		_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
-		_ogre_sm->setShadowTextureSelfShadow(true);
-		/// LiSPSM has creately softer shadows compared to the default one
-		/// i.e. less pixelisation in the edges.
-		Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
-		_ogre_sm->setShadowCameraSetup(cam_setup);
-		// For texture shadows to work this must be set
-		_ogre_sm->setShadowFarDistance(50);
-	}
 }
 
 vl::SceneNodePtr
@@ -434,9 +441,15 @@ vl::SceneManager::enableShadows(bool enabled)
 {
 	ShadowTechnique t;
 	if( !enabled )
-	{ t = SHADOWTYPE_NONE; }
+	{
+		std::cout << "Disabling shadows." << std::endl;
+		t = SHADOWTYPE_NONE;
+	}
 	else
-	{ t = SHADOWTYPE_TEXTURE_MODULATIVE; }
+	{
+		std::cout << "Enabling shadows." << std::endl;
+		t = SHADOWTYPE_TEXTURE_MODULATIVE;
+	}
 
 	setShadowTechnique(t);
 }
@@ -518,6 +531,8 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 void
 vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
+	assert(_ogre_sm);
+
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
 		msg >> _scene_version;

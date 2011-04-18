@@ -580,21 +580,20 @@ vl::Pipe::_initialiseResources( vl::Settings const &set )
 	_root->loadResources();
 }
 
-void 
-vl::Pipe::_createOgreSceneManager(void)
+Ogre::SceneManager *
+vl::Pipe::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name)
 {
-	assert(!_ogre_sm);
-	assert(_root);
-	_ogre_sm = _root->createSceneManager("SceneManager");
+	assert(root);
+	Ogre::SceneManager *sm = _root->createSceneManager(name);
 
 	/// These can not be moved to SceneManager at least not yet
 	/// because they need the RenderSystem capabilities.
 	/// @todo this should be user configurable (if the hardware supports it)
 	/// @todo the number of textures (four at the moment) should be user configurable
-	if (_root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
+	if (root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
 	{
 		std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
-		_ogre_sm->setShadowTextureSettings(1024, 4);
+		sm->setShadowTextureSettings(1024, 4);
 	}
 	else
 	{
@@ -602,8 +601,10 @@ vl::Pipe::_createOgreSceneManager(void)
 		/// should check the window size and select the largest
 		/// possible shadow texture based on that.
 		std::cout << "Using 512 x 512 shadow textures." << std::endl;
-		_ogre_sm->setShadowTextureSettings(512, 4);
+		sm->setShadowTextureSettings(512, 4);
 	}
+
+	return sm;
 }
 
 
@@ -669,7 +670,6 @@ vl::Pipe::_handleMessage( vl::cluster::Message *msg )
 			vl::Settings projects;
 			stream >> projects;
 			_initialiseResources(projects);
-			_createOgreSceneManager();
 			_initGUIResources(projects);
 			_createGUI();
 			// TODO should the ACK be first so that the server has the
@@ -774,9 +774,10 @@ vl::Pipe::_handleCreateMsg( vl::cluster::Message *msg )
 			{
 				// TODO support multiple SceneManagers
 				assert( !_scene_manager );
-				_scene_manager = new SceneManager( this, id );
-				assert( _ogre_sm );
-				_scene_manager->setSceneManager( _ogre_sm );
+				// TODO should pass the _ogre_sm to there also or vl::Root as creator
+				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
+				_scene_manager = new SceneManager(this, id, _ogre_sm );
+
 				break;
 			}
 			case OBJ_SCENE_NODE :

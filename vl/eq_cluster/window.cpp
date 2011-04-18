@@ -482,7 +482,9 @@ vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
 void
 vl::Window::draw(void)
 {
-	assert(_camera);
+	if(!_camera)
+	{ return; }
+
 	assert(_left_viewport);
 
 	Ogre::Real c_near = _camera->getNearClipDistance();

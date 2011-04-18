@@ -112,8 +112,6 @@ protected :
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :
-	void _createNative( void );
-
 	std::string _name;
 
 	Ogre::Vector3 _position;
