@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <clients>
-	<client type="VRPN" host="mec-0.rd.tut.fi" >
+	<client type="VRPN" host="localhost" >
 		<tracker name="glasses">
 			<sensor num="0">
 				<trigger type="VRPN" name="glassesTrigger" />

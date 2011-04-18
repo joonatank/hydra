@@ -1,0 +1,188 @@
+
+// Common parameters for both single and multi pass Bling-Phong shaders
+material base_material
+{
+	set $ambientCol "0 0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "1 1 1"
+	set $shininess "32"
+	// TODO add technique and pass
+	// TODO we should probably compine single and multi pass versions
+	// just with different techniques
+	// if it's possible to select
+}
+
+material bling_phong_multi_pass
+{
+	set $ambientCol "0 0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "1 1 1"
+	set $shininess "32"
+
+    technique
+    {
+	// ambient pass
+	// Do not name the passes, when using inheritance it's ok to reference
+	// a parents pass with an index. Names are not ok.
+	// Mhhh the problem was not the named passes
+	pass
+	{
+		vertex_program_ref pass_through_vs
+		{
+		}
+
+		fragment_program_ref ambient_ps
+		{
+		}
+
+		ambient $ambientCol
+		diffuse 0 0 0 0
+		specular 0 0 0 0
+	}
+
+	// diffuse pass
+        pass 
+        {
+            illumination_stage per_light
+
+            scene_blend add
+            iteration once_per_light
+
+            vertex_program_ref bling_phong_sl_vs
+            {
+            }
+
+            fragment_program_ref bling_phong_sl_ps
+            {
+            }
+
+            diffuse $diffuseCol
+            specular $specularCol $shininess
+            ambient 0 0 0 0
+
+	// TODO these should be in base_material or abstract pass
+	// doesn't work if they are in the base_material for some reason
+	// Don't change the order, because textures are mapped with index
+	// that is gotten from the order of the texture_units
+		texture_unit diffuseTexture
+		{
+			texture white.tga
+		}
+
+		texture_unit specularMap
+		{
+			texture white.tga
+		}
+
+		texture_unit normalMap
+		{
+			texture flat_NM.tga
+		}
+
+		// shadowmap 1
+		texture_unit
+		{
+			content_type shadow
+		}
+	}
+    }
+}
+
+material rock : bling_phong_multi_pass
+{
+//	set $ambientCol "1 0 0 1"
+//	set $specularCol "0 0 0"
+	set_texture_alias diffuseTexture rock.jpg
+	set_texture_alias specularMap rock.jpg
+	set_texture_alias normalMap rock_NM.jpg
+}
+
+// TODO tangents don't work in the Ogre mesh, so replace this material
+// with one that has eye space lighting
+// Might be that the problem is related to it having two sets of texture
+// coordinates, but then either the head or the body should have tangents
+// after generation.
+material anthene_material : bling_phong_multi_pass
+{
+//	set $ambientCol "1 0 0 1"
+	set $specularCol "0 0 0"
+//	set_texture_alias diffuseTexture ogre.tex.jpg
+//	set_texture_alias specularMap ogre.tex.jpg
+//	set_texture_alias normalMap ogre.tex.jpg
+}
+
+fragment_program show_vertex_colours glsl
+{
+	source show_vertex_colours.glsl
+}
+
+vertex_program normals_to_vertex_colours glsl
+{
+	source normals_to_vertex_colours.glsl
+}
+
+
+vertex_program tangents_to_vertex_colours glsl
+{
+	source tangents_to_vertex_colours.glsl
+}
+
+material show_normals_in_world
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref normals_to_vertex_colours
+			{
+				param_named_auto transform world_matrix
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+
+material show_normals
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref normals_to_vertex_colours
+			{
+				// Don't leave empty matrices
+				param_named transform matrix4x4 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+
+material show_tangents
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref tangents_to_vertex_colours
+			{
+				// Don't leave empty matrices
+				param_named transform matrix4x4 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+

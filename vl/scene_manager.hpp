@@ -286,12 +286,18 @@ public :
 	bool isShadowsEnabled(void) const
 	{ return _shadow_technique != SHADOWTYPE_NONE; }
 
+	void setShadowColour(Ogre::ColourValue const &col);
+
+	Ogre::ColourValue const &getShadowColour(void) const
+	{ return _shadow_colour; }
+
 	/// @todo should be removed, this is going to the GameManager anyway
 	void reloadScene( void );
 
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
+	void printBoundingBoxes(void);
 
 	/// --------------------- Selection -----------------------
 	void addToSelection( SceneNodePtr node );
@@ -310,7 +316,8 @@ public :
 		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_SHADOW_TECHNIQUE = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_SHADOW_COLOUR = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
 	};
 
 	Ogre::SceneManager *getNative( void )
@@ -343,6 +350,7 @@ private :
 	Ogre::ColourValue _ambient_light;
 	
 	ShadowTechnique _shadow_technique;
+	Ogre::ColourValue _shadow_colour;
 
 	vl::Session *_session;
 

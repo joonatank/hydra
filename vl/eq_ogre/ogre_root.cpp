@@ -148,8 +148,9 @@ vl::ogre::Root::_loadPlugins(void )
 #endif
 
 	std::string plugin_path = vl::findPlugin( gl_plugin_name );
+	/// @todo this should throw if not found, because we don't have a rendering system
 	if( !plugin_path.empty() )
-		_ogre_root->loadPlugin( plugin_path );
+	{ _ogre_root->loadPlugin( plugin_path ); }
 }
 
 void

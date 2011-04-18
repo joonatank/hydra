@@ -30,6 +30,41 @@ getOgreLightType(vl::Light::LightType type)
 
 }
 
+/// ----------------------------- Global -------------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Light const &light)
+{
+	// @todo add type printing, in a clear text format (not enum)
+	// @todo booleans should be printed nicely
+	// @todo add printing of attenuation
+	// @todo add printing of spotlight parameters
+	os << light.getTypeName();
+	if( light.getVisible() )
+	{ os << " visible"; }
+	else
+	{ os << " not visible"; }
+	os << " : " << light.getName();
+	os 
+		<< " : type " << getLightTypeAsString(light.getType()) << "\n"
+		<< " : position " << light.getPosition() 
+		<< " : direction " << light.getDirection() << "\n"
+		<< " : diffuse colour " << light.getDiffuseColour()
+		<< " : specular colour " << light.getDiffuseColour() << "\n";
+
+	if( light.getCastShadows() )
+	{ os << " casts shadows"; }
+	else
+	{ os << " does not cast shadows"; }
+		
+	os << light.getAttenuation()
+		<< " : spot inner cone = " << light._inner_cone
+		<< " : spot outer cone = " << light._outer_cone
+		<< " : spot falloff = " << light._spot_falloff
+		<< std::endl;
+
+	return os;
+}
+
 /// ------------------------------ Public ------------------------------------
 vl::Light::Light(std::string const &name, vl::SceneManagerPtr creator)
 	: MovableObject(name, creator)
@@ -43,6 +78,22 @@ vl::Light::Light(vl::SceneManagerPtr creator)
 	_clear();
 }
 
+std::string 
+vl::Light::getLightTypeName(void) const
+{
+	switch( _type )
+	{
+	case LT_POINT:
+		return "point";
+	case LT_SPOT:
+		return "spot";
+	case LT_DIRECTIONAL:
+		return "directional";
+	default :
+		return "unknown";
+	}
+}
+
 void 
 vl::Light::setType(vl::Light::LightType type)
 {
@@ -50,6 +101,25 @@ vl::Light::setType(vl::Light::LightType type)
 	{
 		setDirty(DIRTY_TYPE);
 		_type = type;
+	}
+}
+
+void 
+vl::Light::setType(std::string const &type)
+{
+	std::string str(type);
+	vl::to_lower(str);
+	if( str == "spot" || str == "spotlight" )
+	{
+		setType(LT_SPOT);
+	}
+	if( str == "point" )
+	{
+		setType(LT_POINT);
+	}
+	if( str == "dir" || str == "directional" )
+	{
+		setType(LT_DIRECTIONAL);
 	}
 }
 
@@ -189,6 +259,8 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		// need to be set if appropriate
 		if( _ogre_light )
 		{ _ogre_light->setType(getOgreLightType(_type)); }
+		if( _ogre_light && _ogre_light->getType() == Ogre::Light::LT_SPOTLIGHT )
+		{ _ogre_light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff); }
 	}
 
 	if( DIRTY_COLOUR & dirtyBits )
@@ -276,5 +348,8 @@ vl::Light::_clear(void)
 	_direction = -Ogre::Vector3::UNIT_Z;
 	_visible = true;
 	_cast_shadows = true;
+	_inner_cone = Ogre::Radian(Ogre::Degree(60));
+	_outer_cone = Ogre::Radian(Ogre::Degree(60));
+	_spot_falloff = 1;
 	_ogre_light = 0;
 }

@@ -212,12 +212,8 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	return projMat;
 }
 
-Ogre::Matrix4
-vl::calculate_view_matrix(Ogre::Vector3 const &camera_pos, 
-						  Ogre::Quaternion const &camera_orient,
-						  vl::EnvSettings::Wall const &wall,
-						  Ogre::Matrix4 const &head,
-						  Ogre::Vector3 const &eye)
+Ogre::Quaternion
+vl::orientation_to_wall(vl::EnvSettings::Wall const &wall)
 {
 	// Create the plane for transforming the head
 	// Head doesn't need to be transformed for the view matrix
@@ -228,29 +224,11 @@ vl::calculate_view_matrix(Ogre::Vector3 const &camera_pos,
 
 	Ogre::Plane plane(bottom_right, bottom_left, top_left);
 
-	Ogre::Real height = top_left.y - bottom_left.y;
-
 	// Transform the head
 	// Should this be here? or should we only rotate the view matrix the correct angle
 	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
 	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
 	// Wall rotation used for orientating the frustum correctly
 	// not used for any transformations
-	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
-	// Should not be rotated with wall, all the walls would be out of sync with each other
-	Ogre::Vector3 headTrans = head.getTrans();
-
-	// NOTE This is not HMD discard the rotation part
-	// Rotating the eye doesn't seem to have any affect.
-	// Though it's more realistic if it's there.
-	Ogre::Vector3 eye_d = (camera_orient*wallRot*head.extractQuaternion())*eye 
-		+ camera_orient*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z);
-
-	// Combine eye and camera positions
-	// Combine camera and wall orientation to get the projection on correct wall
-	// Seems like the wallRotation needs to be inverse for this one, otherwise
-	// left and right wall are switched.
-	Ogre::Quaternion eye_orientation = wallRot.Inverse()*camera_orient;
-
-	return Ogre::Math::makeViewMatrix( camera_pos+eye_d, eye_orientation );
+	return plane_normal.getRotationTo(cam_vec);
 }

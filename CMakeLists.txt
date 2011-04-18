@@ -31,6 +31,7 @@ elseif( WIN32 )
 					 -D_WIN32_WINNT=0x0501	# Windows XP target
 					 -DNOCOMM
 					 -DNOSOUND
+					 -bigobj		# We have lots of inlines for python
 					 )
 endif( UNIX )
 

@@ -61,6 +61,7 @@ vl::SceneManager::SceneManager(vl::Session *session)
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
+	, _shadow_colour(0.1, 0.1, 0.1, 1)
 	, _session(session)
 	// Default shadows to none before we have done enough testing
 	, _shadow_technique(SHADOWTYPE_NONE)
@@ -92,11 +93,11 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id, Ogre::SceneMa
 	/// ideally most of these should be configurable from config file
 	/// because they are really performance intense, can look pretty crappy
 	/// and most of them need to be static during the simulation
-
 	//_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 
-	_ogre_sm->setShadowColour( Ogre::ColourValue(0.3, 0.3, 0.3) );
-	_ogre_sm->setShadowTextureSelfShadow(true);
+		_ogre_sm->setShadowColour(_shadow_colour);
+		/// @todo for self shadowing we need to use custom shaders
+		//_ogre_sm->setShadowTextureSelfShadow(true);
 	/// LiSPSM has creately softer shadows compared to the default one
 	/// i.e. less pixelisation in the edges.
 	Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
@@ -429,7 +430,7 @@ vl::SceneManager::setShadowTechnique(std::string const &tech)
 	}
 	else
 	{
-		// Not valid technique
+		// Not a valid technique
 		return;
 	}
 
@@ -454,12 +455,45 @@ vl::SceneManager::enableShadows(bool enabled)
 	setShadowTechnique(t);
 }
 
+void 
+vl::SceneManager::setShadowColour(Ogre::ColourValue const &col)
+{
+	if( _shadow_colour != col )
+	{
+		setDirty(DIRTY_SHADOW_COLOUR);
+		_shadow_colour = col;
+	}
+}
+
 void
 vl::SceneManager::reloadScene( void )
 {
 	std::cerr << "Should reload the scene now." << std::endl;
 	setDirty( DIRTY_RELOAD_SCENE );
 	_scene_version++;
+}
+
+void 
+vl::SceneManager::printBoundingBoxes(void)
+{
+	assert( _ogre_sm );
+	std::clog << "Printing bounding boxes." << std::endl;
+
+	Ogre::SceneManager::MovableObjectIterator iter = _ogre_sm->getMovableObjectIterator("Entity");
+	while( iter.hasMoreElements() )
+	{
+		Ogre::AxisAlignedBox const &box = iter.current()->second->getBoundingBox();
+		std::clog << "Object " << iter.current()->second->getName() << " : bounding box " 
+			<< box << " : size = " << box.getSize() << std::endl;
+		Ogre::Vector3 diff =box.getMaximum() - box.getMinimum();
+		if( diff.x < 0 || diff.y < 0 || diff.z < 0 )
+		{
+			std::clog << "PROBLEM : Incorrect BoundingBox in object " << iter.current()->second->getName()
+				<< std::endl;
+		}
+		iter.moveNext();
+	}
+	std::clog << std::endl;
 }
 
 /// ------------------------ SceneManager Selection --------------------------
@@ -526,6 +560,11 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	{
 		msg << _shadow_technique;
 	}
+
+	if( dirtyBits & DIRTY_SHADOW_COLOUR)
+	{
+		msg << _shadow_colour;
+	}
 }
 
 void
@@ -584,6 +623,12 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		{
 			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
 		}
+	}
+
+	if( dirtyBits & DIRTY_SHADOW_COLOUR)
+	{
+		msg >> _shadow_colour;
+		_ogre_sm->setShadowColour(_shadow_colour);
 	}
 }
 

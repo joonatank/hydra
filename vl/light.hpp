@@ -86,7 +86,15 @@ public :
 	LightType getType(void) const
 	{ return _type; }
 
+	/// @brief get light type as a string, mostly for python
+	std::string getLightTypeName(void) const;
+
 	void setType(LightType type);
+
+	/// @brief Set type with a typename, mostly for python
+	/// Case insensitive
+	/// valid values "spot" or "spotlight", "point", "directional" or "dir"
+	void setType(std::string const &type);
 
 	Ogre::ColourValue const &getDiffuseColour(void) const
 	{ return _diffuse_colour; }
@@ -144,6 +152,8 @@ public :
 	std::string getTypeName(void) const
 	{ return "Light"; }
 
+	friend std::ostream &operator<<(std::ostream &os, vl::Light const &light);
+
 /// Private virtual overrides
 private :
 	
@@ -194,26 +204,7 @@ getLightTypeAsString(Light::LightType t)
 	}
 }
 
-inline std::ostream &
-operator<<(std::ostream &os, vl::Light const &light)
-{
-	// @todo add type printing, in a clear text format (not enum)
-	// @todo booleans should be printed nicely
-	// @todo add printing of attenuation
-	// @todo add printing of spotlight parameters
-	os << light.getTypeName() << " : " << light.getName()  
-		<< " : type " << getLightTypeAsString(light.getType())
-		<< " : position " << light.getPosition() 
-		<< " : direction " << light.getDirection() 
-		<< " : visible " << light.getVisible()
-		<< " : diffuse colour " << light.getDiffuseColour()
-		<< " : specular colour " << light.getDiffuseColour()
-		<< " : cast shadows " << light.getCastShadows()
-		<< light.getAttenuation()
-		<< std::endl;
-
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, vl::Light const &light);
 
 }	// namespace vl
 
