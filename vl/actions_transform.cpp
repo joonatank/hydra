@@ -62,9 +62,15 @@ vl::MoveNodeAction::rotate(Ogre::Quaternion const &q, bool local)
 {
 	// TODO replace with error reporting
 	assert(_node);
+	
+	Ogre::Quaternion orient;
+	if(local)
+	{ orient = _node->getOrientation()*q; }
+	else
+	{ orient = q*_node->getOrientation(); }
 
-	Ogre::Quaternion orient = _node->getOrientation();
-	_node->setOrientation( q*orient );
+	
+	_node->setOrientation( orient );
 }
 
 vl::MoveSelectionAction::MoveSelectionAction( void )
@@ -101,7 +107,13 @@ vl::MoveSelectionAction::rotate(Ogre::Quaternion const &q, bool local)
 	SceneNodeList::const_iterator iter;
 	for( iter = list.begin(); iter != list.end(); ++iter )
 	{
-		Ogre::Quaternion orient = (*iter)->getOrientation();
-		(*iter)->setOrientation( q*orient );
+		Ogre::Quaternion orient;
+		if(local)
+		{ orient = (*iter)->getOrientation()*q; }
+		else
+		{ orient = q* (*iter)->getOrientation(); }
+
+	
+		(*iter)->setOrientation( orient );
 	}
 }
