@@ -136,6 +136,76 @@ struct FogInfo
 	Ogre::Real linear_end;
 };
 
+struct ShadowInfo
+{
+	ShadowInfo(std::string const &tech = "none", 
+		Ogre::ColourValue const &col = Ogre::ColourValue(0.3, 0.3, 0.3), 
+		std::string const &cam = "default")
+		: technique(SHADOWTYPE_NONE)
+		, colour(col)
+		, camera(cam)
+	{
+		setShadowTechnique(tech);
+	}
+
+	/// @brief enable the shadows
+	void enable(void);
+
+	/// @brief disable the shadows
+	void disable(void);
+
+	bool isEnabled(void) const
+	{ return technique != SHADOWTYPE_NONE; }
+
+	/// @brief set the shadow technique using a string, mostly for python
+	/// valid strings (upper or lower case):
+	/// texture_modulative, texture_additive, none, stencil_modulative, stencil_additive,
+	/// texture and stencil (for the modulative version)
+	/// Be mindful that setting the technique can cause instabilities as they
+	/// are not quarantied to work, this is mostly a development features.
+	void setShadowTechnique(std::string const &tech);
+
+	std::string getShadowTechnique(void) const;
+
+	/// @brief the shadow technique
+	/// Be mindful that setting the technique can cause instabilities as they
+	/// are not quarantied to work, this is mostly a development features.
+	///
+	/// Additative shadows create almost black shadows. Good if one want's to
+	/// see which objects are in shadow, for visual appeal they need some extra work.
+	/// Use case visibility checking.
+	/// Additative shadows need a shader that handles the addition of multiple lights.
+	///
+	/// Also by default they don't do shadowed side of an object correctly
+	/// object is lit too uniformly everywhere with little regard to the light position.
+	///
+	/// Stencil shadows will crash at least the test model, 
+	/// problems with bounding boxes.
+	ShadowTechnique technique;
+
+	Ogre::ColourValue colour;
+
+	/// Valid values for camera are "Default", "LiSPSM"
+	/// others maybe added later. Values are case insensitive.
+	/// Any other value will default to "Default" camera
+	/// @todo LiSPSM camera crashes Ogre Release version so don't use it
+	/// @todo "PlaneOptimal" camera needs a plane of interest
+	std::string camera;
+};
+
+inline
+bool operator==(ShadowInfo const &a, ShadowInfo const &b)
+{
+	return( a.technique == b.technique 
+		&& a.colour == b.colour
+		&& a.camera == b.camera );
+}
+
+inline
+bool operator!=(ShadowInfo const &a, ShadowInfo const &b)
+{
+	return !(a==b);
+}
 
 class SceneManager : public vl::Distributed
 {
@@ -257,39 +327,12 @@ public :
 
 	void setAmbientLight( Ogre::ColourValue const &colour );
 
-	/// @brief set the shadow technique
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	///
-	/// Additative shadows create almost black shadows. Good if one want's to
-	/// see which objects are in shadow, for visual appeal they need some extra work.
-	/// Use case visibility checking.
-	/// Also by default they don't do shadowed side of an object correctly
-	/// object is lit too uniformly everywhere with little regard to the light position.
-	///
-	/// Stencil shadows will crash at least the test model, 
-	/// problems with bounding boxes.
-	void setShadowTechnique(ShadowTechnique tech);
+	/// We can not provide non-const getters because this will mess up the 
+	/// distribution version control. No dirties are set.
+	ShadowInfo const &getShadowInfo(void) const
+	{ return _shadows; }
 
-	/// @brief set the shadow technique using a string, mostly for python
-	/// valid strings (upper or lower case):
-	/// texture_modulative, texture_additive, none, stencil_modulative, stencil_additive,
-	/// texture and stencil (for the modulative version)
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	void setShadowTechnique(std::string const &tech);
-
-	/// @brief Just enable or disable the damn shadows.
-	/// Uses the technique that seems to work in most cases.
-	void enableShadows(bool enabled);
-
-	bool isShadowsEnabled(void) const
-	{ return _shadow_technique != SHADOWTYPE_NONE; }
-
-	void setShadowColour(Ogre::ColourValue const &col);
-
-	Ogre::ColourValue const &getShadowColour(void) const
-	{ return _shadow_colour; }
+	void setShadowInfo(ShadowInfo const &info);
 
 	/// @todo should be removed, this is going to the GameManager anyway
 	void reloadScene( void );
@@ -315,9 +358,8 @@ public :
 		DIRTY_SKY_DOME = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
-		DIRTY_SHADOW_TECHNIQUE = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_SHADOW_COLOUR = vl::Distributed::DIRTY_CUSTOM << 5,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_SHADOW_INFO = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
 	};
 
 	Ogre::SceneManager *getNative( void )
@@ -349,8 +391,7 @@ private :
 
 	Ogre::ColourValue _ambient_light;
 	
-	ShadowTechnique _shadow_technique;
-	Ogre::ColourValue _shadow_colour;
+	ShadowInfo _shadows;
 
 	vl::Session *_session;
 
@@ -366,6 +407,8 @@ std::ostream &operator<<(std::ostream &os, vl::SkyDomeInfo const &sky);
 
 std::ostream &operator<<(std::ostream &os, vl::FogInfo const &fog);
 
+std::ostream &operator<<(std::ostream &os, vl::ShadowInfo const &shadows);
+
 namespace cluster
 {
 
@@ -380,6 +423,12 @@ ByteStream &operator<<(ByteStream &msg, vl::FogInfo const &fog);
 
 template<>
 ByteStream &operator>>(ByteStream &msg, vl::FogInfo &fog);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::ShadowInfo const &shadows);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::ShadowInfo &shadows);
 
 }	// namespace cluster
 }	// namespace vl

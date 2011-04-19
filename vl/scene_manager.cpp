@@ -12,6 +12,7 @@
 
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
+#include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
 
 namespace
 {
@@ -55,16 +56,77 @@ Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
 
 }
 
+void
+vl::ShadowInfo::setShadowTechnique(std::string const &tech)
+{
+	std::string str(tech);
+	vl::to_lower(str);
+	if( str == "texture_modulative" || str == "texture" )
+	{
+		technique = SHADOWTYPE_TEXTURE_MODULATIVE;
+	}
+	else if( str == "stencil_modulative" || str == "stencil" )
+	{
+		technique = SHADOWTYPE_STENCIL_MODULATIVE;
+	}
+	else if( str == "texture_additive" )
+	{
+		technique = SHADOWTYPE_TEXTURE_ADDITIVE;
+	}
+	else if( str == "stencil_additive" )
+	{
+		technique = SHADOWTYPE_STENCIL_ADDITIVE;
+	}
+	else if( str == "none" )
+	{
+		technique = SHADOWTYPE_NONE;
+	}
+	else
+	{
+		// Not a valid technique
+		return;
+	}
+}
+
+std::string
+vl::ShadowInfo::getShadowTechnique(void) const
+{
+	switch(technique)
+	{
+	case SHADOWTYPE_TEXTURE_MODULATIVE:
+		return "texture_modulative";
+	case SHADOWTYPE_STENCIL_MODULATIVE:
+		return "stencil_modulative";
+	case SHADOWTYPE_TEXTURE_ADDITIVE:
+		return "texture_additive";
+	case SHADOWTYPE_STENCIL_ADDITIVE:
+		return "stencil_additive";
+	case SHADOWTYPE_NONE:
+		return "none";
+	default :
+		return "UNKNOWN";
+	}
+}
+
+void
+vl::ShadowInfo::disable(void)
+{
+	technique = SHADOWTYPE_NONE;
+}
+
+void
+vl::ShadowInfo::enable(void)
+{
+	technique = SHADOWTYPE_TEXTURE_MODULATIVE;
+}
+
 /// Public
 /// Master constructor
 vl::SceneManager::SceneManager(vl::Session *session)
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
-	, _shadow_colour(0.1, 0.1, 0.1, 1)
 	, _session(session)
-	// Default shadows to none before we have done enough testing
-	, _shadow_technique(SHADOWTYPE_NONE)
 	, _ogre_sm(0)
 {
 	_session->registerObject( this, OBJ_SCENE_MANAGER);
@@ -77,8 +139,6 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id, Ogre::SceneMa
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
 	, _session(session)
-	// Default shadows to none before we have done enough testing
-	, _shadow_technique(SHADOWTYPE_NONE)
 	, _ogre_sm(native)
 {
 	assert(_session);
@@ -86,24 +146,6 @@ vl::SceneManager::SceneManager( vl::Session *session, uint64_t id, Ogre::SceneMa
 	assert(_ogre_sm);
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
-
-	/// Set shadow parameters
-
-	/// @todo move these to our SceneManager and make them configurable using python
-	/// ideally most of these should be configurable from config file
-	/// because they are really performance intense, can look pretty crappy
-	/// and most of them need to be static during the simulation
-	//_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
-
-		_ogre_sm->setShadowColour(_shadow_colour);
-		/// @todo for self shadowing we need to use custom shaders
-		//_ogre_sm->setShadowTextureSelfShadow(true);
-	/// LiSPSM has creately softer shadows compared to the default one
-	/// i.e. less pixelisation in the edges.
-	Ogre::ShadowCameraSetupPtr cam_setup(new Ogre::LiSPSMShadowCameraSetup());
-	_ogre_sm->setShadowCameraSetup(cam_setup);
-	// For texture shadows to work this must be set
-	_ogre_sm->setShadowFarDistance(50);
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -393,75 +435,12 @@ vl::SceneManager::setAmbientLight( Ogre::ColourValue const &colour )
 }
 
 void 
-vl::SceneManager::setShadowTechnique(ShadowTechnique tech)
+vl::SceneManager::setShadowInfo(ShadowInfo const &info)
 {
-	if( _shadow_technique != tech )
+	if( info != _shadows )
 	{
-		setDirty(DIRTY_SHADOW_TECHNIQUE);
-		_shadow_technique = tech;
-	}
-}
-
-void
-vl::SceneManager::setShadowTechnique(std::string const &tech)
-{
-	ShadowTechnique t;
-	std::string str(tech);
-	vl::to_lower(str);
-	if( str == "texture_modulative" || str == "texture" )
-	{
-		t = SHADOWTYPE_TEXTURE_MODULATIVE;
-	}
-	else if( str == "stencil_modulative" || str == "stencil" )
-	{
-		t = SHADOWTYPE_STENCIL_MODULATIVE;
-	}
-	else if( str == "texture_additive" )
-	{
-		t = SHADOWTYPE_TEXTURE_ADDITIVE;
-	}
-	else if( str == "stencil_additive" )
-	{
-		t = SHADOWTYPE_STENCIL_ADDITIVE;
-	}
-	else if( str == "none" )
-	{
-		t = SHADOWTYPE_NONE;
-	}
-	else
-	{
-		// Not a valid technique
-		return;
-	}
-
-	setShadowTechnique(t);
-}
-
-void 
-vl::SceneManager::enableShadows(bool enabled)
-{
-	ShadowTechnique t;
-	if( !enabled )
-	{
-		std::cout << "Disabling shadows." << std::endl;
-		t = SHADOWTYPE_NONE;
-	}
-	else
-	{
-		std::cout << "Enabling shadows." << std::endl;
-		t = SHADOWTYPE_TEXTURE_MODULATIVE;
-	}
-
-	setShadowTechnique(t);
-}
-
-void 
-vl::SceneManager::setShadowColour(Ogre::ColourValue const &col)
-{
-	if( _shadow_colour != col )
-	{
-		setDirty(DIRTY_SHADOW_COLOUR);
-		_shadow_colour = col;
+		setDirty(DIRTY_SHADOW_INFO);
+		_shadows = info;
 	}
 }
 
@@ -556,14 +535,9 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		msg << _ambient_light;
 	}
 
-	if( dirtyBits & DIRTY_SHADOW_TECHNIQUE )
+	if(dirtyBits & DIRTY_SHADOW_INFO)
 	{
-		msg << _shadow_technique;
-	}
-
-	if( dirtyBits & DIRTY_SHADOW_COLOUR)
-	{
-		msg << _shadow_colour;
+		msg << _shadows;
 	}
 }
 
@@ -615,20 +589,45 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		}
 	}
 
-	if( dirtyBits & DIRTY_SHADOW_TECHNIQUE )
+	if(dirtyBits & DIRTY_SHADOW_INFO)
 	{
-		msg >> _shadow_technique;
+		msg >> _shadows;
 
-		if( _ogre_sm )
+		/// @todo move these to our SceneManager and make them configurable using python
+		/// ideally most of these should be configurable from config file
+		/// because they are really performance intense, can look pretty crappy
+		/// and most of them need to be static during the simulation
+
+		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadows.technique) );
+		_ogre_sm->setShadowColour(_shadows.colour);
+		vl::to_lower(_shadows.camera);
+		Ogre::ShadowCameraSetupPtr cam_setup;
+		if( _shadows.camera == "default" )
 		{
-			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadow_technique) );
+			cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
 		}
-	}
+		else if( _shadows.camera == "planeoptimal" )
+		{
+			/// @todo needs a plane of interest
+			// cam_setup.bind(new Ogre::PlaneOptimalShadowCameraSetup());
+		}
+		else if( _shadows.camera == "lispsm" )
+		{
+			/// LiSPSM has creately softer shadows compared to the default one
+			/// i.e. less pixelisation in the edges.
+			cam_setup.bind(new Ogre::LiSPSMShadowCameraSetup());
+		}
 
-	if( dirtyBits & DIRTY_SHADOW_COLOUR)
-	{
-		msg >> _shadow_colour;
-		_ogre_sm->setShadowColour(_shadow_colour);
+		if( !cam_setup.isNull() )
+		{ _ogre_sm->setShadowCameraSetup(cam_setup); }
+
+		/// @todo for self shadowing we need to use custom shaders
+		/// @todo make configurable
+		//_ogre_sm->setShadowTextureSelfShadow(true);
+
+		/// For texture shadows to work this must be set
+		/// @todo make configurable
+		_ogre_sm->setShadowFarDistance(50);
 	}
 }
 
@@ -679,6 +678,16 @@ vl::operator<<(std::ostream &os, vl::FogInfo const &fog)
 		<< " : density " << fog.exp_density
 		<< " : start " << fog.linear_start
 		<< " : end " << fog.linear_end;
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::ShadowInfo const &shadows)
+{
+	os << "Shadows : technique " << shadows.getShadowTechnique()
+		<< " : colour " << shadows.colour
+		<< " : camera " << shadows.camera;
 
 	return os;
 }
@@ -739,6 +748,24 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::FogInfo &fog)
 		>> fog.exp_density
 		>> fog.linear_start
 		>> fog.linear_end;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shadows)
+{
+	msg << shadows.technique << shadows.colour << shadows.camera;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
+{
+	msg >> shadows.technique >> shadows.colour >> shadows.camera;
 
 	return msg;
 }
