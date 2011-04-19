@@ -38,9 +38,10 @@ ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
-ground_ent.material_name = 'rock'
+# Shader material, does not work with shadows
+#ground_ent.material_name = 'rock'
 # For shadows
-#ground_ent.material_name = 'ground/Basic'
+ground_ent.material_name = 'ground/Basic'
 ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
@@ -59,12 +60,16 @@ athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
 athene.scale = Vector3(1,1,1)*0.05;
 
-#game.scene.shadows = True
-#game.scene.shadow_colour = ColourValue(0.3, 0.3, 0.3)
+# enable shadows
+shadows = ShadowInfo()
+shadows.enable()
+shadows.colour = ColourValue(0.0, 0.5, 0.0)
+game.scene.shadows = shadows
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")
-	game.scene.removeFromSelection(ogre)
+
+game.scene.removeFromSelection(ogre)
 
 if( game.scene.hasLight("spot") ):
 	game.scene.getLight("spot").visible = False
