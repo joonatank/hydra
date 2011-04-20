@@ -16,8 +16,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-VERSION = 'Ogre Exporter v30'
+VERSION = 'Ogre Exporter v31'
 __devnotes__ = '''
+
+Apr18
+	. ported to Blender 2.57 final by Joonatan Kuosa
+
 --final bug fix milestone--
 
 Nov24:
@@ -197,13 +201,13 @@ Installing:
 ## useful for online content - texture load is speed hit
 
 
-bl_addon_info = {
+bl_info = {
     "name": "OGRE Exporter (.scene, .mesh, .skeleton)",
     "author": "HartsAntler",
-    "version": (0,3,0),
+    "version": (0,3,1),
     "blender": (2, 5, 6),
     "location": "INFO Menu",
-    "description": "Export to Ogre xml and binary formats",
+    "description": "Export to Ogre scene xml and mesh binary formats",
     "warning": "",
     #"wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"\
     #"tracker_url": "https://projects.blender.org/tracker/index.php?"\
@@ -554,6 +558,7 @@ def UUID( ob ):
 		ob[ '_UUID_' ] = uid
 		return uid
 
+
 class Ogre_setup_version_control_op(bpy.types.Operator):                
 	'''operator: setup version control helper'''  
 	bl_idname = "ogre.setup_version_control"  
@@ -581,6 +586,7 @@ class Ogre_setup_version_control_op(bpy.types.Operator):
 					if tag not in mkeys: mesh[tag] = True	# converted to 1
 
 		return {'FINISHED'}
+
 
 class Ogre_VC_Panel(bpy.types.Panel):
 	bl_space_type = 'PROPERTIES'
@@ -814,6 +820,7 @@ This script does the following hack to get the pixel value:
   6. apply the differences as vertex colors
 
 '''
+
 class Harts_Tools(bpy.types.Panel):
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
@@ -881,7 +888,7 @@ class Harts_bake_texture_vc_op(bpy.types.Operator):
 			tex.factor_red = 1.0
 			tex.factor_green = .0
 			tex.factor_blue = .0
-			_data = o2.create_mesh(bpy.context.scene, True, "PREVIEW")
+			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
 			baked.append( [] )
 			for v1 in ob.data.vertices:
 				v2 = _data.vertices[ v1.index ]
@@ -891,7 +898,7 @@ class Harts_bake_texture_vc_op(bpy.types.Operator):
 			tex.factor_red = .0
 			tex.factor_green = 1.0
 			tex.factor_blue = .0
-			_data = o2.create_mesh(bpy.context.scene, True, "PREVIEW")
+			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
 			baked.append( [] )
 			for v1 in ob.data.vertices:
 				v2 = _data.vertices[ v1.index ]
@@ -901,7 +908,7 @@ class Harts_bake_texture_vc_op(bpy.types.Operator):
 			tex.factor_red = .0
 			tex.factor_green = .0
 			tex.factor_blue = 1.0
-			_data = o2.create_mesh(bpy.context.scene, True, "PREVIEW")
+			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
 			baked.append( [] )
 			for v1 in ob.data.vertices:
 				v2 = _data.vertices[ v1.index ]
@@ -1098,9 +1105,6 @@ class _WrapLogic(object):
 		g.setAttribute('name', self.name)
 		g.setAttribute('type', self.type)
 
-		# @todo this does not work for KEYBOARD keys for some reason
-		# We don't use the logics anyway so no matter for now.
-		"""
 		for name in self.TYPES[ self.type ]:
 			attr = getattr( self.node, name )
 			if name in self.SwapName: name = self.SwapName[name]
@@ -1118,7 +1122,6 @@ class _WrapLogic(object):
 				a.setAttribute('value', '%s %s %s' %(attr.x, attr.y, attr.z))
 			else:
 				print('ERROR: unknown type', attr)
-		"""
 		return g
 
 class WrapSensor( _WrapLogic ):
@@ -1892,9 +1895,7 @@ class ShaderTree(object):
 		else:
 			M += indent(3, 'emissive %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
 
-		print( 'Wrinting scene blend' )
 		if mat.use_transparency:
-			print( 'Using alpha blend' )
 			M += indent( 3, 'scene_blend %s' %'alpha_blend')
 			M += indent( 3, 'depth_write %s' %'off')
 		else:
@@ -2345,6 +2346,7 @@ class _ogre_shader_progs_mixin_(object): # TODO chat with jesterking, layout.men
 			for prog in MyShaders.fragment_progs:
 				op = layout.operator("ogre.add_shader_program", text=prog.name, icon='ZOOMIN')
 				op.program_name = prog.name
+
 class OgreShader_vertexprogs(bpy.types.Menu, _ogre_shader_progs_mixin_):
 	bl_label = "Vertex Programs"
 	mytype = 'vertex'
@@ -4315,17 +4317,20 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		bscn[ '_previous_export_time_' ] = now
 		scn.setAttribute('exported_by', getpass.getuser())
 
-		nodes = doc.createElement('nodes')
+		xml_nodes = doc.createElement('nodes')
 		extern = doc.createElement('externals')
 		environ = doc.createElement('environment')
-		for n in (nodes,extern,environ): scn.appendChild( n )
+		for n in (xml_nodes, extern, environ):
+			scn.appendChild(n)
+
 		############################
 
 		## extern files ##
 		item = doc.createElement('item'); extern.appendChild( item )
 		item.setAttribute('type','material')
 		a = doc.createElement('file'); item.appendChild( a )
-		a.setAttribute('name', '%s.material' %context.scene.name)	# .material file (scene mats)
+		# .material file (scene mats)
+		a.setAttribute('name', '%s.material' %context.scene.name)
 
 
 		## environ settings ##
@@ -4372,6 +4377,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			temps.append( merged )
 
 		## gather roots because ogredotscene supports parents and children ##
+		# TODO this is quite frankly f up, I can't understand it
 		def _flatten( _c, _f ):
 			if _c.parent in objects: _f.append( _c.parent )
 			if _c.parent: _flatten( _c.parent, _f )
@@ -4387,7 +4393,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		exported_meshes = []		# don't export same data multiple times
 		for root in roots:
-			print('--------------- exporting root ->', root )
+			print('--------------- exporting root ->', root)
 			self._node_export( root, 
 				doc=doc,
 				url=url,
@@ -4397,8 +4403,8 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				mesh_collision_files = mesh_collision_files,
 				prefix = prefix,
 				objects=objects, 
-				xmlparent=nodes 
-			)
+				xmlparent=xml_nodes 
+				)
 
 		if self.EX_SCENE:
 			data = doc.toprettyxml()
@@ -4414,26 +4420,32 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 
 	############# node export - recursive ###############
-	def _node_export( self, ob, url='', doc=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None ):
+	# TODO the amount of parameters to pass here is quite frankly insane
+	def _node_export( self, ob, url='', doc=None, exported_meshes=[],
+			meshes=[], mesh_collision_prims={},
+			mesh_collision_files={}, prefix='',
+			objects=[], xmlparent=None ):
 
-		obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
-		xmlparent.appendChild(obj)
+		print('exporting object', ob)
+		print('world matrix', ob.matrix_world)
+		xml_obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
+		xmlparent.appendChild(xml_obj)
 
 		## UUID ##
-		obj.setAttribute('uuid', UUID(ob))
+		xml_obj.setAttribute('uuid', UUID(ob))
 
 		## custom user props ##
 		for prop in ob.items():
 			propname, propvalue = prop
 			if not propname.startswith('_'):
 				user = doc.createElement('user_data')
-				obj.appendChild( user )
+				xml_obj.appendChild( user )
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
 			elif propname in VersionControl+VersionControlUser:
 				user = doc.createElement('version_control')
-				obj.appendChild( user )
+				xml_obj.appendChild( user )
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
@@ -4446,7 +4458,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		## BGE subset ##
 		game = doc.createElement('game')
-		obj.appendChild( game )
+		xml_obj.appendChild( game )
 		sens = doc.createElement('sensors')
 		game.appendChild( sens )
 		acts = doc.createElement('actuators')
@@ -4468,13 +4480,13 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 					prefix=prefix,
 					objects=objects,
 					xmlparent=xmlparent,
-					xml_par=obj )
+					xml_par=xml_obj )
 
 		elif ob.type == 'CAMERA':
-			self._camera_export(ob, url, doc, xml_par=obj)
+			self._camera_export(ob, url, doc, xml_par=xml_obj)
 
 		elif ob.type == 'LAMP':
-			self._light_export(ob, url, doc, xml_par=obj)
+			self._light_export(ob, url, doc, xml_par=xml_obj)
 
 		for child in ob.children:
 			self._node_export( child, 
@@ -4486,8 +4498,8 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				mesh_collision_files = mesh_collision_files,
 				prefix = prefix,
 				objects=objects, 
-				xmlparent=obj
-			)
+				xmlparent=xml_obj
+				)
 	## end _node_export
 
 	def _light_export( self, ob, url='', doc=None, xml_par=None):
@@ -4622,7 +4634,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 						self.ogre_mesh( ob, path=os.path.split(url)[0] )
 
 		## deal with Array mod ##
-		vecs = [ ob.matrix_world.translation_part() ]
+		vecs = [ ob.matrix_world.to_translation() ]
 		for mod in ob.modifiers:
 			if mod.type == 'ARRAY':
 				if mod.fit_type != 'FIXED_COUNT':
@@ -4633,7 +4645,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 					continue
 
 				else:
-					#v = ob.matrix_world.translation_part()
+					#v = ob.matrix_world.to_translation()
 
 					newvecs = []
 					for prev in vecs:
@@ -4661,7 +4673,9 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	## end _mesh_export
 
 def get_parent_matrix( ob, objects ):
-	if not ob.parent: return mathutils.Matrix((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+	if not ob.parent:
+		# Constructs automatically identity matrix
+		return mathutils.Matrix()
 	else:
 		if ob.parent in objects:
 			return ob.parent.matrix_world.copy()
@@ -4669,7 +4683,10 @@ def get_parent_matrix( ob, objects ):
 			return get_parent_matrix( ob.parent, objects )
 
 def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None ):
-	mat = get_parent_matrix(ob, objects).invert() * ob.matrix_world
+	# Matrix can not be inverted if it's not a variable
+	parent_m = get_parent_matrix(ob, objects)
+	parent_m.invert()
+	mat = parent_m * ob.matrix_world
 
 	o = doc.createElement('node')
 	o.setAttribute('name',prefix+ob.name)
@@ -4679,13 +4696,13 @@ def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None
 	for n in (p,q,s): o.appendChild(n)
 
 	if pos: v = swap(pos)
-	else: v = swap( mat.translation_part() )
+	else: v = swap( mat.to_translation() )
 	p.setAttribute('x', '%6f'%v.x)
 	p.setAttribute('y', '%6f'%v.y)
 	p.setAttribute('z', '%6f'%v.z)
 
 	if rot: v = swap(rot)
-	else: v = swap( mat.rotation_part().to_quat() )
+	else: v = swap( mat.to_quaternion() )
 	q.setAttribute('x', '%6f'%v.x)
 	q.setAttribute('y', '%6f'%v.y)
 	q.setAttribute('z', '%6f'%v.z)
@@ -4698,9 +4715,9 @@ def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None
 		s.setAttribute('y', '%6f'%y)
 		s.setAttribute('z', '%6f'%z)
 	else:		# scale is different in Ogre from blender - rotation is removed
-		ri = mat.rotation_part().to_quat().inverse().to_matrix()
+		ri = mat.to_quaternion().inverted().to_matrix()
 		scale = ri.to_4x4() * mat
-		v = swap( scale.scale_part() )
+		v = swap( scale.to_scale() )
 		x=abs(v.x); y=abs(v.y); z=abs(v.z)
 		s.setAttribute('x', '%6f'%x)
 		s.setAttribute('y', '%6f'%y)
@@ -4715,7 +4732,7 @@ def merge_group( group ):
 		if ob.type == 'MESH':
 			print( '\t group member', ob.name )
 			o2 = ob.copy(); copies.append( o2 )
-			o2.data = o2.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
+			o2.data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
 			while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
 			bpy.context.scene.objects.link( o2 )#; o2.select = True
 	merged = merge( copies )
@@ -4728,7 +4745,7 @@ def merge_objects( objects, name='_temp_' ):
 	for ob in objects:
 		if ob.type == 'MESH':
 			o2 = ob.copy(); copies.append( o2 )
-			o2.data = o2.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
+			o2.data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
 			while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
 			bpy.context.scene.objects.link( o2 )#; o2.select = True
 	merged = merge( copies )
@@ -4923,7 +4940,7 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 	e.use_edge_sharp = True
 	for edge in copy.data.edges: edge.use_edge_sharp = True
 	## bake mesh ##
-	mesh = copy.create_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
+	mesh = copy.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
 
 	prefix = ''
 
@@ -5193,14 +5210,14 @@ class Bone(object):
 		# translation relative to parent coordinate system orientation
 		# and as difference to rest pose translation
 		#blender2.49#translation -= self.ogreRestPose.translationPart()
-		self.pose_location =  pose.translation_part()  -  self.ogre_rest_matrix.translation_part()
+		self.pose_location =  pose.to_translation()  -  self.ogre_rest_matrix.to_translation()
 		# rotation (and scale) relative to local coordiante system
 		# calculate difference to rest pose
 		#blender2.49#poseTransformation *= self.inverseOgreRestPose
 		#pose = pose * self.inverse_ogre_rest_matrix		# this was wrong, fixed Dec3rd
 		pose = self.inverse_ogre_rest_matrix * pose
-		self.pose_rotation = pose.rotation_part().to_quat()
-		self.pose_scale = pose.scale_part().copy()
+		self.pose_rotation = pose.to_quaternion()
+		self.pose_scale = pose.to_scale().copy()
 
 		#self.pose_location = self.bone.location.copy()
 		#self.pose_rotation = self.bone.rotation_quaternion.copy()
@@ -5313,14 +5330,14 @@ class Skeleton(object):
 				bh.appendChild( bp )
 
 			pos = doc.createElement( 'position' ); b.appendChild( pos )
-			x,y,z = mat.translation_part()
+			x,y,z = mat.to_translation()
 			pos.setAttribute('x', '%6f' %x )
 			pos.setAttribute('y', '%6f' %y )
 			pos.setAttribute('z', '%6f' %z )
 			rot =  doc.createElement( 'rotation' )		# note "rotation", not "rotate"
 			b.appendChild( rot )
 
-			q = mat.rotation_part().to_quat()
+			q = mat.to_quaternion()
 			rot.setAttribute('angle', '%6f' %q.angle )
 			axis = doc.createElement('axis'); rot.appendChild( axis )
 			x,y,z = q.axis
@@ -5330,7 +5347,7 @@ class Skeleton(object):
 			## Ogre bones do not have initial scaling? ##
 			if 0:
 				scale = doc.createElement('scale'); b.appendChild( scale )
-				x,y,z = swap( mat.scale_part() )
+				x,y,z = swap( mat.to_scale() )
 				scale.setAttribute('x', str(x))
 				scale.setAttribute('y', str(y))
 				scale.setAttribute('z', str(z))
@@ -5400,7 +5417,7 @@ class Skeleton(object):
 
 						rot =  doc.createElement( 'rotate' )		# note "rotate" - bug fixed Dec2nd
 						keyframe.appendChild( rot )
-						q = _rot #swap( mat.rotation_part().to_quat() )
+						q = _rot #swap( mat.to_quaternion() )
 						rot.setAttribute('angle', '%6f' %q.angle )
 						axis = doc.createElement('axis'); rot.appendChild( axis )
 						x,y,z = q.axis
@@ -5410,7 +5427,7 @@ class Skeleton(object):
 
 						scale = doc.createElement('scale')
 						keyframe.appendChild( scale )
-						x,y,z = _scl #swap( mat.scale_part() )
+						x,y,z = _scl #swap( mat.to_scale() )
 						scale.setAttribute('x', '%6f' %x)
 						scale.setAttribute('y', '%6f' %y)
 						scale.setAttribute('z', '%6f' %z)
@@ -5510,7 +5527,7 @@ class INFO_MT_instances(bpy.types.Menu):
 
 class INFO_MT_instance(bpy.types.Operator):                
 	'''select instance group'''
-	bl_idname = "select_instances"
+	bl_idname = "ogre.select_instances"
 	bl_label = "Select Instance Group"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
@@ -5537,7 +5554,7 @@ class INFO_MT_groups(bpy.types.Menu):
 #TODO
 class INFO_MT_group_mark(bpy.types.Operator):                  
 	'''mark group auto combine on export'''
-	bl_idname = "mark_group_export_combine"                                        
+	bl_idname = "ogre.mark_group_export_combine"                                        
 	bl_label = "Group Auto Combine"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mybool= BoolProperty(name="groupautocombine", description="set group auto-combine", default=False)
@@ -5553,7 +5570,7 @@ class INFO_MT_group_mark(bpy.types.Operator):
 
 class INFO_MT_group(bpy.types.Operator):                  
 	'''select group'''
-	bl_idname = "select_group"
+	bl_idname = "ogre.select_group"
 	# The panel label, http://www.blender.org/documentation/250PythonDoc/bpy.types.Panel.html
 	bl_label = "Select Group"
 	# Options for this panel type
@@ -5584,7 +5601,7 @@ class INFO_MT_actors(bpy.types.Menu):
 
 class INFO_MT_actor(bpy.types.Operator):                
 	'''select actor'''
-	bl_idname = "select_actor"
+	bl_idname = "ogre.select_actor"
 	bl_label = "Select Actor"
 	# Options for this panel type
 	bl_options = {'REGISTER', 'UNDO'}
@@ -5607,7 +5624,7 @@ class INFO_MT_dynamics(bpy.types.Menu):
 
 class INFO_MT_dynamic(bpy.types.Operator):                
 	'''select dynamic'''
-	bl_idname = "select_dynamic"
+	bl_idname = "ogre.select_dynamic"
 	bl_label = "Select Dynamic"
 	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
 	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
@@ -5633,8 +5650,10 @@ class INFO_HT_myheader(bpy.types.Header):
 		ob = context.active_object
 		screen = context.screen
 
-		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='FILE_REFRESH' ); op.mesh = True
-		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='MATERIAL' ); op.mesh = False
+		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='FILE_REFRESH' );
+		op.mesh = True
+		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='MATERIAL' );
+		op.mesh = False
 		row = layout.row(align=True)
 		sub = row.row(align=True)
 		sub.menu("INFO_MT_file")
@@ -5706,6 +5725,8 @@ class INFO_HT_myheader(bpy.types.Header):
 				row = layout.row(align=True)
 				mesh = ob.data
 				mkeys = mesh.keys()
+				# FIXME broken the version control when porting to Blender 2.57
+				"""
 				for tag in VersionControlMesh:
 					if tag in mkeys: v = mesh[tag]
 					else: v = True
@@ -5714,6 +5735,7 @@ class INFO_HT_myheader(bpy.types.Header):
 					txt = tag.replace('_',' ').split('update')[-1]
 					op = row.operator( 'ogre.toggle_prop', text=txt, icon=icon )
 					op.propname = tag
+				"""
 
 			layout.menu( "INFO_MT_ogre_docs" )
 
@@ -5734,14 +5756,72 @@ def register():
 	print( VERSION )
 	global MyShaders, _header_
 	_header_ = bpy.types.INFO_HT_header
-	bpy.types.unregister( bpy.types.INFO_HT_header )
+	# Unregister current header
+	bpy.utils.unregister_class( bpy.types.INFO_HT_header )
+	# register our header
+	bpy.utils.register_class( INFO_HT_myheader )
+	# Register operators
+	bpy.utils.register_class( Ogre_ogremeshy_op )
+	bpy.utils.register_class( Ogre_toggle_prop_op )
+	bpy.utils.register_class( Ogre_relocate_textures_op )
+	bpy.utils.register_class( Ogre_setup_version_control_op )
+	bpy.utils.register_class( Ogre_create_collision_op )
+	bpy.utils.register_class( Harts_bake_texture_vc_op )
+	bpy.utils.register_class( Ogre_game_logic_op )
+	# Register INFOs
+	bpy.utils.register_class( INFO_MT_ogre_helper )
+	bpy.utils.register_class( INFO_MT_ogre_docs )
+	bpy.utils.register_class( INFO_MT_ogre_shader_pass_attributes )
+	bpy.utils.register_class( INFO_MT_ogre_shader_texture_attributes )
+	bpy.utils.register_class( INFO_MT_dynamics )
+	bpy.utils.register_class( INFO_MT_dynamic )
+	bpy.utils.register_class( INFO_MT_actors )
+	bpy.utils.register_class( INFO_MT_groups )
+	bpy.utils.register_class( INFO_MT_group_mark )
+	bpy.utils.register_class( INFO_MT_group )
+	bpy.utils.register_class( INFO_MT_instances )
+	bpy.utils.register_class( INFO_MT_instance )
+	bpy.utils.register_class( INFO_OT_createOgreExport )
+	bpy.utils.register_class( INFO_OT_ogre_set_shader_param )
+	bpy.utils.register_class( INFO_OT_ogre_set_shader_tex_param )
+	bpy.utils.register_class( INFO_MT_actor )
+	# Register something, user interface panels etc.
+	bpy.utils.register_class( Ogre_User_Report )
+	bpy.utils.register_class( Ogre_VC_Panel )
+	bpy.utils.register_class( Ogre_select_by_prop_value )
+	bpy.utils.register_class( Ogre_update_mod_time )
+	bpy.utils.register_class( Ogre_Physics_LOD )
+	bpy.utils.register_class( Ogre_import_op )
+	bpy.utils.register_class( Ogre_Physics )
+	bpy.utils.register_class( Ogre_Logic_Sensors )
+	bpy.utils.register_class( Ogre_Logic_Actuators )
+	bpy.utils.register_class( Ogre_Material_Panel )
+	bpy.utils.register_class( Harts_Tools )
+	bpy.utils.register_class( Ogre_Texture_Panel )
+	bpy.utils.register_class( OgreShader_shaderprogs )
+	bpy.utils.register_class( OgreShader_vertexprogs )
+	bpy.utils.register_class( OgreShader_fragmentprogs )
+	bpy.utils.register_class( ogre_dot_mat_preview )
+
+	# Register PTs?
+	bpy.utils.register_class( NODE_PT_shader_toplevel )
+	bpy.utils.register_class( NODE_PT_material_props )
+	bpy.utils.register_class( NODE_PT_texture_props )
+	bpy.utils.register_class( NODE_PT_user_notes_props )
+
+	bpy.utils.register_class( _ogre_new_tex_block )
+	bpy.utils.register_class( _ogre_op_shader_program_param )
+	bpy.utils.register_class( _ogre_shader_prog_param_menu_ )
+	bpy.utils.register_class( _ogre_op_shader_program_subparam )
+	bpy.utils.register_class( _ogre_op_shader_programs )
+
 	MyShaders = MyShadersSingleton()
 	bpy.types.INFO_MT_file_export.append(export_menu_func)
 	bpy.types.INFO_MT_file_import.append(import_menu_func)
 
 def unregister():
 	print('unreg-> ogre exporter')
-	bpy.types.register( _header_ )
+	bpy.utils.register_class( _header_ )
 	bpy.types.INFO_MT_file_export.remove(export_menu_func)
 	bpy.types.INFO_MT_file_import.remove(import_menu_func)
 
