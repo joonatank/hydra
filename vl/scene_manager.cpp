@@ -45,6 +45,10 @@ Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
 		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE;
 	case vl::SHADOWTYPE_TEXTURE_ADDITIVE:
 		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE;
+	case vl::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
+		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED;
+	case vl::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
+		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
 	case vl::SHADOWTYPE_STENCIL_MODULATIVE:
 		return Ogre::SHADOWTYPE_STENCIL_MODULATIVE;
 	case vl::SHADOWTYPE_STENCIL_ADDITIVE:
@@ -69,9 +73,17 @@ vl::ShadowInfo::setShadowTechnique(std::string const &tech)
 	{
 		technique = SHADOWTYPE_STENCIL_MODULATIVE;
 	}
+	else if( str == "texture_modulative_integrated" )
+	{
+		technique = SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED;
+	}
 	else if( str == "texture_additive" )
 	{
 		technique = SHADOWTYPE_TEXTURE_ADDITIVE;
+	}
+	else if( str == "texture_additive_integrated" )
+	{
+		technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
 	}
 	else if( str == "stencil_additive" )
 	{
@@ -101,6 +113,10 @@ vl::ShadowInfo::getShadowTechnique(void) const
 		return "texture_additive";
 	case SHADOWTYPE_STENCIL_ADDITIVE:
 		return "stencil_additive";
+	case SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
+		return "texture_modulative_integrated";
+	case SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
+		return "texture_additive_integrated";
 	case SHADOWTYPE_NONE:
 		return "none";
 	default :
@@ -117,7 +133,7 @@ vl::ShadowInfo::disable(void)
 void
 vl::ShadowInfo::enable(void)
 {
-	technique = SHADOWTYPE_TEXTURE_MODULATIVE;
+	technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
 }
 
 /// Public
@@ -623,7 +639,11 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 
 		/// @todo for self shadowing we need to use custom shaders
 		/// @todo make configurable
-		//_ogre_sm->setShadowTextureSelfShadow(true);
+		_ogre_sm->setShadowTextureSelfShadow(true);
+		/// Hard coded floating point texture, needs current hardware
+		/// provides much better depth map
+		_ogre_sm->setShadowTexturePixelFormat(Ogre::PF_FLOAT32_R);
+		_ogre_sm->setShadowTextureCasterMaterial("ShadowCaster");
 
 		/// For texture shadows to work this must be set
 		/// @todo make configurable

@@ -1,16 +1,21 @@
-// Tangent space vertex shader for single light
-// Used with Bling-Phong pixel shader
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Bling-Phong (tangent-space) shading program for single light
+// The Vertex Program
 
 #version 140
 
 uniform mat4 modelView;
-uniform mat4 worldMatrix;
 uniform mat4 modelViewProj;
 uniform mat4 normalMatrix;
 // Light position in eye space
 uniform vec4 lightPos;
 uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
+
+uniform mat4 model;
 // Shadow texture transform
 uniform mat4 texViewProj;
 
@@ -39,8 +44,8 @@ out float attenuation;
 // in tangent space
 out vec3 spotlightDir;
 
-out vec4 vColour;
-
+// Shadow map uvs, x,y are the coordinates on the texture
+// z is the distance to light
 out vec4 shadowUV;
 
 void main(void)
@@ -51,10 +56,8 @@ void main(void)
 	// Texture coordinates
 	uv = uv0;
 
-	// Colour
-//	vColour = colour;
-
-	vec4 worldPos = worldMatrix * vertex;
+	// Shadow map tex coords
+	vec4 worldPos = model * vertex;
 	shadowUV = texViewProj * worldPos;
 
 	// Tangent space vectors (TBN) in eye space

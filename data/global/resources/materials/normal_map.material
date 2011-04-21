@@ -48,11 +48,11 @@ material bling_phong_multi_pass
             scene_blend add
             iteration once_per_light
 
-            vertex_program_ref bling_phong_sl_vs
+            vertex_program_ref bling_phong_sl_shadows_vs
             {
             }
 
-            fragment_program_ref bling_phong_sl_ps
+            fragment_program_ref bling_phong_sl_shadows_ps
             {
             }
 
@@ -83,6 +83,8 @@ material bling_phong_multi_pass
 		texture_unit
 		{
 			content_type shadow
+			tex_address_mode clamp
+			filtering none
 		}
 	}
     }
@@ -97,11 +99,12 @@ material rock : bling_phong_multi_pass
 	set_texture_alias normalMap rock_NM.jpg
 }
 
-// TODO tangents don't work in the Ogre mesh, so replace this material
-// with one that has eye space lighting
+// TODO tangents don't work in the Ogre mesh,
+// so we need a material with one that has eye space lighting
 // Might be that the problem is related to it having two sets of texture
 // coordinates, but then either the head or the body should have tangents
 // after generation.
+
 material anthene_material : bling_phong_multi_pass
 {
 //	set $ambientCol "1 0 0 1"

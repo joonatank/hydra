@@ -1,0 +1,40 @@
+vertex_program ShadowCasterVP glsl
+{
+	source shadow_caster_vp.glsl
+
+	default_params
+	{
+		param_named_auto modelViewProj worldviewproj_matrix
+		// Needs to be present for depth shadows to work
+		param_named_auto texelOffsets texel_offsets
+	}
+}
+
+fragment_program ShadowCasterFP glsl
+{
+	source shadow_caster_fp.glsl
+
+	default_params
+	{
+	}
+}
+
+material ShadowCaster
+{
+    technique default
+    {
+        // Z-write only pass
+        pass Z-write
+        {
+            vertex_program_ref ShadowCasterVP
+            {
+            }
+            fragment_program_ref ShadowCasterFP
+            {
+            }
+        }
+    }
+}
+
+// Shadows Receiver material is not necessary since Ogre 1.7
+
