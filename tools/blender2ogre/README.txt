@@ -28,6 +28,19 @@ if it works then something wrong with the python script.
 - Still problems, email maintenance :D
 	- post the error logs from console (python or system) if you can
 
+Common problems:
+
+	Exported models have their insides out.
+- Either a problem with normals or the material has a 'depth write off' parameter.
+- To determine which one, move/delete the .material script exported with the model.
+- If the insides are still out problem is with normals if not, depth write is the culprit.
+- To solve depth_write problem ensure that your materials
+don't have Transparancy set to True in Blender.
+- To solve normal problem, ensure that in Blender your meshes don't have
+'Double sided' parameter set to True (it defaults to true).
+	- Now you should be able to see the problem in Blender
+	- 'Recalculate normals outside' in Blender and check if it is solved
+
 Defects:
 - Do not disable the addon after enabling it, does not work correctly
 - Seems like the addon is not persistant
