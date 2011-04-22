@@ -35,8 +35,8 @@ out vec3 vNormal;
 
 // from vertex to light in eye space
 out vec3 dirToLight;
-// Half vector in tangent space, used for specular calculations
-out vec3 halfVector;
+// from vertex to eye in eye space
+out vec3 dirToEye;
 // Attenuation parameter
 out float attenuation;
 // Spotlight direction vector, should be vec4(1,0,0,1) for anything else
@@ -66,7 +66,11 @@ void main(void)
 	// Vertex coords from eye position
 	vec3 mvVertex = vec3(modelView * vertex);
 
-	vNormal = vec3(modelView * vec4(normal, 0.0));
+	// w component needs to be zero otherwise the eye distance is affecting
+	// the normal
+	// Needs to be normalized for some objects
+	// Those that have scale, I'm guessing?
+	vNormal = normalize(vec3(modelView * vec4(normal, 0.0)));
 
 	// Eye direction from vertex, for half vector
 	// If eye position is at (0, 0, 0), -mvVertex points
@@ -78,12 +82,11 @@ void main(void)
 	// lightPos.w is for directional lights, they have w = 0
 	vec3 mvLightPos = vec3(lightPos) - mvVertex*lightPos.w;
 	// normalizing the direction does not make a difference
-	dirToLight = mvLightPos;
+	dirToLight = normalize(mvLightPos);
 
 	spotlightDir = -spotDirection.xyz;
 
-	// Half-vector for specular highlights
-	halfVector = normalize(mvDirToEye + dirToLight);
+	dirToEye = normalize(mvDirToEye);
 
 	// Compute attenuation, in eye space
 	// TODO add range parameter

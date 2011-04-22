@@ -46,8 +46,8 @@ in vec3 vNormal;
 // space here be that object, eye or tangent.
 // Direction to light
 in vec3 dirToLight;
-// Half vector
-in vec3 halfVector; 
+// from vertex to eye in eye space
+out vec3 dirToEye;
 // How much the light is to be attenuated, this includes both spotlight
 // Should these be calculated in the pixel shader?
 in float attenuation;
@@ -88,7 +88,6 @@ void main(void)
 	{
 		spotFactor = pow(spotFactor, falloff);
 		float att = spotFactor * attenuation;
-		att = 1.0;
 
 		// Normalize interpolated direction to light
 		vec3 normDirToLight = normalize(dirToLight);
@@ -107,8 +106,9 @@ void main(void)
 			vec4 specularColour = texture2D(specularMap, uv.xy); 
 			specularColour *= surfaceSpecular;
 
+			vec3 half_v = normalize(dirToEye + dirToLight);
 			// Specular strength, Blinn-Phong shading model
-			float HdotN = max(dot(normalize(halfVector), vNormal), 0.0); 
+			float HdotN = max(dot(half_v, vNormal), 0.0); 
 			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(HdotN, shininess);
@@ -122,11 +122,8 @@ void main(void)
 	// read depth value from shadow map
 	float depth = texture(shadowMap, tex_coords.xy).r;
 	float inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
-//	inShadow = 1.0;
-//	diffuse = vec4(0.0, 1.0, 0.0, 1.0);
 #else
 	float inShadow = 1.0;
-//	diffuse = vec4(1.0, 0.0, 0.0, 1.0);
 #endif
 
 	colour = inShadow*(diffuse + specular);

@@ -30,6 +30,7 @@ fragment_program ambient_ps glsl
 	{
 		param_named_auto lightAmbient ambient_light_colour
 		param_named_auto surfaceAmbient surface_ambient_colour
+		param_named_auto surfaceEmissive surface_emissive_colour
 	}
 }
 

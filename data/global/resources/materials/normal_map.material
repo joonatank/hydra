@@ -22,6 +22,7 @@ material base_material
 material bling_phong_multi_pass
 {
 	set $ambientCol "0 0 0 0"
+	set $emissiveCol "0 0 0 0"
 	set $diffuseCol "1 1 1 1"
 	set $specularCol "1 1 1"
 	set $shininess "32"
@@ -43,6 +44,7 @@ material bling_phong_multi_pass
 		}
 
 		ambient $ambientCol
+		emissive $emissiveCol
 		diffuse 0 0 0 0
 		specular 0 0 0 0
 	}
@@ -100,6 +102,7 @@ material bling_phong_multi_pass
 material bling_phong_eye_space_multi_pass_shadows
 {
 	set $ambientCol "0 0 0 0"
+	set $emissiveCol "0 0 0 0"
 	set $diffuseCol "1 1 1 1"
 	set $specularCol "1 1 1"
 	set $shininess "32"
@@ -121,6 +124,7 @@ material bling_phong_eye_space_multi_pass_shadows
 		}
 
 		ambient $ambientCol
+		emissive $emissiveCol
 		diffuse 0 0 0 0
 		specular 0 0 0 0
 	}
@@ -173,6 +177,7 @@ material bling_phong_eye_space_multi_pass_shadows
 material bling_phong_eye_space_multi_pass
 {
 	set $ambientCol "0 0 0 0"
+	set $emissiveCol "0 0 0 0"
 	set $diffuseCol "1 1 1 1"
 	set $specularCol "1 1 1"
 	set $shininess "32"
@@ -194,6 +199,7 @@ material bling_phong_eye_space_multi_pass
 		}
 
 		ambient $ambientCol
+		emissive $emissiveCol
 		diffuse 0 0 0 0
 		specular 0 0 0 0
 	}

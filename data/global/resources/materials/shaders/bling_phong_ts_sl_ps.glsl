@@ -45,8 +45,8 @@ in vec3 oNormal;
 // space here be that object, eye or tangent.
 // Direction to light
 in vec3 dirToLight;
-// Half vector
-in vec3 halfVector; 
+// from vertex to eye in tangent space
+in vec3 dirToEye; 
 // How much the light is to be attenuated, this includes both spotlight
 // Should these be calculated in the pixel shader?
 in float attenuation;
@@ -112,8 +112,10 @@ void main(void)
 			vec4 specularColour = texture2D(specularMap, uv.xy); 
 			specularColour *= surfaceSpecular;
 
+			vec3 half_v = normalize(dirToEye + dirToLight);
+
 			// Specular strength, Blinn-Phong shading model
-			float HdotN = max(dot(normalize(halfVector), normal), 0.0); 
+			float HdotN = max(dot(normalize(half_v), normal), 0.0); 
 			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(HdotN, shininess);

@@ -32,8 +32,9 @@ material editor/hehkulamppu_material : bling_phong_eye_space_multi_pass
 //	set $ambientCol "0.8 0.8 0.8 1.0"
 	set $ambientCol "0 0 0 1.0"
 	set $diffuseCol "0.64 0.64 0.64 1.0"
-//	set $specularCol "0.7 0.7 0.7"
-	set $specularCol "0 0 0"
+	// TO test the specular
+	set $specularCol "0.7 0.7 0.7"
+//	set $specularCol "0 0 0"
 	// TODO fix the shininess
 	set $shininess "12.5"
 

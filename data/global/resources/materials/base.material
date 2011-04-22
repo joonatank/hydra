@@ -64,9 +64,26 @@ material debug_red
 	{
 		pass
 		{
-		    	diffuse 0.0 0.0 0.0
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ps
+			{
+			}
+
+			diffuse 0 0 0 0
+			specular 0 0 0 0
 			emissive 1.0 0 0
 		}
 	}
+}
+
+// TODO add a finger sphere material that has both diffuse and emissive
+material finger_sphere/emissive : bling_phong_eye_space_multi_pass
+{
+	set $emissiveCol "0.5 0 0 1"
+	set $diffuseCol "0.6 0.4 0.4 1"
+	set $specularCol "0 0 0"
 }
 
