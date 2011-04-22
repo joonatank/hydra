@@ -13,16 +13,6 @@
 		<scale x="1.000000" y="1.000000" z="1.000000"/>
 		<entity name="Ogre" meshFile="ogre.mesh"/>
 	</node>
-		<node name="spotti" uuid="95b9dfec175ea562bd99c07064b1003a">
-			<position x="-2.965910" y="0.122067" z="0.006760"/>
-			<quaternion w="0.957595" x="-0.000000" y="-0.000000" z="0.288119"/>
-			<scale x="1.000000" y="1.000000" z="1.000000"/>
-			<game>
-				<sensors/>
-				<actuators/>
-			</game>
-			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="spotlight.mesh" name="spotlight" physics_type="STATIC" velocity_max="0.0" velocity_min="0.0"/>
-		</node>
 	<node name="CameraNode">
 		<position x="0." y="0.5" z="5.607098"/>
 		<camera name="Omakamera" fov="37.849289" projectionType="perspective">

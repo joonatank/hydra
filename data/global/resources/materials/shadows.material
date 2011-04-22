@@ -1,3 +1,9 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Shadow caster material and programs, used to render shadows to Shadow Map
+
 vertex_program ShadowCasterVP glsl
 {
 	source shadow_caster_vp.glsl

@@ -1,0 +1,85 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Debug materials
+// Various materials that use shaders to debug the properties of the mesh 
+
+// Includes
+// show_normals, show_normals_in_world, show_tangents
+
+fragment_program show_vertex_colours glsl
+{
+	source show_vertex_colours.glsl
+}
+
+vertex_program normals_to_vertex_colours glsl
+{
+	source normals_to_vertex_colours.glsl
+}
+
+
+vertex_program tangents_to_vertex_colours glsl
+{
+	source tangents_to_vertex_colours.glsl
+}
+
+material show_normals_in_world
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref normals_to_vertex_colours
+			{
+				param_named_auto transform world_matrix
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+
+material show_normals
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref normals_to_vertex_colours
+			{
+				// Don't leave empty matrices
+				param_named transform matrix4x4 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+
+material show_tangents
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref tangents_to_vertex_colours
+			{
+				// Don't leave empty matrices
+				param_named transform matrix4x4 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+				param_named_auto modelViewProj worldviewproj_matrix
+			}
+
+			fragment_program_ref show_vertex_colours
+			{ 
+			}
+		}
+	}
+}
+

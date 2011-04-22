@@ -39,7 +39,7 @@ ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 # Shader material, with shadows
-ground_ent.material_name = 'rock'
+ground_ent.material_name = 'ground/bump_mapped/shadows'
 ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
@@ -85,3 +85,17 @@ l_node.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 l_node.attachObject(l)
 game.scene.addToSelection(l_node)
 """
+
+# Create spotlight and hehkulamppu objects
+spotti_n = game.scene.createSceneNode("spotti")
+spotti = game.scene.createEntity("spotti", "spotlight.mesh")
+spotti.material_name = "editor/spotlight_material"
+spotti_n.position = Vector3(5, 4, 0)
+spotti_n.attachObject(spotti)
+
+lightpulp_n = game.scene.createSceneNode("hehkulamppu")
+lightpulp = game.scene.createEntity("hehkulamppu", "hehkulamppu.mesh")
+lightpulp.material_name = "editor/hehkulamppu_material"
+lightpulp_n.position = Vector3(5, 4, -4)
+lightpulp_n.attachObject(lightpulp)
+

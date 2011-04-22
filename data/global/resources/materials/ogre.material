@@ -1,32 +1,17 @@
-material ogre.mat/SOLID/TEX/ogre.tex.jpg/VertCol 
+// From Ogre examples
+// Modified by Joonatan Kuosa to use shaders, for self shadowing
+
+import * from "normal_map.material"
+
+material ogre.mat/SOLID/TEX/ogre.tex.jpg/VertCol : bling_phong_eye_space_multi_pass_shadows
 {
-	technique
-	{
-		pass
-		{
-			diffuse vertexcolour
-			specular 0.000000 0.000000 0.000000 12.500000
-			texture_unit
-			{
-				texture ogre.tex.jpg
-			}
-		}
-	}
+	set $diffuseCol "0.7 0.7 0.7 1"
+	set_texture_alias diffuseTexture ogre.tex.jpg
 }
 
-material Material.001/SOLID/TEX/ogreahead.tex.jpg/VertCol
+material Material.001/SOLID/TEX/ogreahead.tex.jpg/VertCol : bling_phong_eye_space_multi_pass_shadows
 {
-	technique
-	{
-		pass
-		{
-			diffuse vertexcolour
-                  specular 0.000000 0.000000 0.000000 12.500000
-			texture_unit
-			{
-				texture ogreahead.tex.jpg
-			}
-		}
-	}
+	set $diffuseCol "0.7 0.7 0.7 1"
+	set_texture_alias diffuseTexture ogreahead.tex.jpg
 }
 
