@@ -32,6 +32,9 @@ add_executable( fake_tracking_server
 
 target_link_libraries( fake_tracking_server ${HYDRA_LIBRARIES} )
 
+add_executable( vrpn_tracker_recorder vrpn_tracker_recorder.cpp )
+
+target_link_libraries( vrpn_tracker_recorder ${VRPN_LIBRARY} )
 
 add_executable( hydra hydra.cpp )
 
