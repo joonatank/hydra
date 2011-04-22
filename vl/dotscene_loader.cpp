@@ -511,5 +511,5 @@ vl::DotSceneLoader::processLightAttenuation(rapidxml::xml_node<> *xml_node, vl::
 	Ogre::Real quadratic = vl::getAttribReal(xml_node, "quadratic");
 
 	// Setup the light attenuation
-	light->setAttenuation(range, constant, linear, quadratic);
+	light->setAttenuation( LightAttenuation(range, constant, linear, quadratic) );
 }

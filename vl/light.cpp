@@ -197,10 +197,8 @@ vl::Light::setSpotlightRange(Ogre::Radian const &inner,
 }
 
 void 
-vl::Light::setAttenuation(Ogre::Real range, Ogre::Real constant, 
-	Ogre::Real linear, Ogre::Real quadratic)
+vl::Light::setAttenuation(LightAttenuation const &att)
 {
-	LightAttenuation att(range, constant, linear, quadratic);
 	if( att != _attenuation )
 	{
 		setDirty(DIRTY_ATTENUATION);

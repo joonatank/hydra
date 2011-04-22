@@ -1,3 +1,8 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Bling-Phong shading program for single light
 // The Fragment Program
 
 // TODO hasn't been tested with specular lighting
@@ -16,11 +21,17 @@
 /// for more recent cards.
 #version 140
 
+// Material parameters
 uniform float shininess; // Shininess exponent for specular highlights
+uniform vec4 surfaceDiffuse;
+uniform vec4 surfaceSpecular;
+
+// Light parameters
 uniform vec4 lightDiffuse;
 uniform vec4 lightSpecular;
 uniform vec4 spotlightParams;
 
+// Textures
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularMap;
 uniform sampler2D normalMap;
@@ -79,8 +90,7 @@ void main(void)
 	// factor = (rho - cos(outer/2) / cos(inner/2) - cos(outer/2)) ^ falloff
 	float spotFactor = clamp((rho - outer_a)/(inner_a - outer_a), 0.0, 1.0);
 
-	// FIXME this check needs to be rewriten for Ogre spotlights
-//	if( spotFactor > spotlightParams.y )
+	if( spotFactor > 0 )
 	{
 		spotFactor = pow(spotFactor, falloff);
 		float att = spotFactor * attenuation;
@@ -93,15 +103,18 @@ void main(void)
 		if (lambertTerm > 0.0)
 		{
 			// Diffuse
-			diffuse = att * lightDiffuse * diffuseTexColour
+			vec4 diffuseColour = diffuseTexColour * surfaceDiffuse;
+			diffuse = att * lightDiffuse * diffuseColour
 				* lambertTerm;
 
 			// Specular
 			// Colour of specular reflection
 			vec4 specularColour = texture2D(specularMap, uv.xy); 
+			specularColour *= surfaceSpecular;
 			// Specular strength, Blinn-Phong shading model
 			float specularModifier =
 				max(dot(normal, normalize(halfVector)), 0.0); 
+			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(specularModifier, shininess);
 		}

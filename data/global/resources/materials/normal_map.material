@@ -43,6 +43,8 @@ material bling_phong_multi_pass
 	// diffuse pass
         pass 
         {
+		ambient 0 0 0 0
+
             illumination_stage per_light
 
             scene_blend add
