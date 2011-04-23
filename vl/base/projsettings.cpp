@@ -387,13 +387,6 @@ vl::ProjSettingsSerializer::readScenes( rapidxml::xml_node<>* xml_node, vl::Proj
 {
 	rapidxml::xml_node<> *scene_element = xml_node->first_node("scene");
 
-	if( !scene_element )
-	{
-		std::cerr << "No scenes in the case " << c.getName()
-			<<  ". Strange?" << std::endl;
-		return;
-	}
-
 	while( scene_element )
 	{
 		readScene( scene_element, c );

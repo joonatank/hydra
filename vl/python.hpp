@@ -37,14 +37,55 @@ public :
 
 	~PythonContext( void );
 
-	void executePythonScript( vl::TextResource const &script );
+	/// @todo depricated
+	void executeScript( vl::TextResource const &script );
 
-	void executePythonCommand( std::string const &cmd );
+	void executeCommand( std::string const &cmd );
+
+	/// @brief add a script resource to the stack
+	/// @param name
+	/// @param 
+	/// @param auto_run the script is run automatically
+	/// scripts can be run and retrieved using the name
+	/// auto run runs the script as soon as autoRunScripts is called
+	/// if a script is added after that they are run instantly
+	void addScript(std::string const &name, vl::TextResource const &script, bool auto_run = false);
+
+	/// @brief run all scripts marked for auto run which have not been ran yet
+	void autoRunScripts(void);
+
+	/// @brief get the whole script resource
+	/// throws vl::missing_resource if no such script has been added
+	vl::TextResource const &getScript(std::string const &name) const;	
+	vl::TextResource &getScript(std::string const &name);
+
+	/// @brief do there exist a script with that name
+	/// @return true if there is a script with that nam,e
+	/// @param name script name
+	bool hasScript(std::string const &name) const;
+
+	/// @return true if script with the name has been executed
+	bool hasBeenExecuted(std::string const &name) const;
 
 private :
+	struct Script
+	{
+		Script(vl::TextResource const &res = vl::TextResource(), bool aut = false)
+			: script(res), auto_run(aut), executed(false)
+		{}
+
+		vl::TextResource script;
+		bool auto_run;
+		bool executed;
+	};
+
 	PythonContext( PythonContext const & );
 
 	PythonContext & operator=( PythonContext const & );
+
+	bool _auto_run;
+
+	std::map<std::string, Script> _scripts;
 
 	// Python related
 	python::object _global;

@@ -12,6 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <memory>
+#include <boost/scoped_ptr.hpp>
 
 namespace vl
 {
@@ -48,7 +49,9 @@ namespace vl
 	typedef std::auto_ptr<RendererInterface> RendererInterfacePtr;
 
 	typedef Player * PlayerPtr;
-	typedef GameManager * GameManagerPtr;
+	// Can not be scoped ptr as config owns it but PythonContext needs access to it
+	// change to shared_ptr and weak_ptr when possible
+	typedef GameManager *GameManagerPtr;
 	typedef EventManager * EventManagerPtr;
 	typedef ResourceManager * ResourceManagerPtr;
 	typedef PythonContext * PythonContextPtr;
@@ -79,6 +82,15 @@ namespace vl
 	{
 		virtual ~Callback(void) {}
 	};
+
+namespace physics
+{
+	class World;
+	class RigidBody;
+
+	typedef World * WorldPtr;
+	typedef RigidBody * RigidBodyPtr;
+}
 
 namespace cluster
 {

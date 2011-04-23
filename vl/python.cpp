@@ -27,7 +27,8 @@ char const *script =
 	"def quit():\n"
 	"	game.quit()\n";
 
-vl::PythonContext::PythonContext( vl::GameManager *game_man )
+vl::PythonContext::PythonContext(vl::GameManagerPtr game_man)
+	: _auto_run(false)
 {
 	try {
 		Py_Initialize();
@@ -75,7 +76,7 @@ vl::PythonContext::~PythonContext( void )
 }
 
 void
-vl::PythonContext::executePythonScript( vl::TextResource const &script )
+vl::PythonContext::executeScript( vl::TextResource const &script )
 {
 	std::cout << vl::TRACE << "Running python script file " + script.getName() + "."
 		<< std::endl;
@@ -98,7 +99,7 @@ vl::PythonContext::executePythonScript( vl::TextResource const &script )
 }
 
 void
-vl::PythonContext::executePythonCommand(const std::string& cmd)
+vl::PythonContext::executeCommand(const std::string& cmd)
 {
 	try
 	{
@@ -111,4 +112,74 @@ vl::PythonContext::executePythonCommand(const std::string& cmd)
 	{
 		PyErr_Print();
 	}
+}
+
+void 
+vl::PythonContext::addScript(std::string const &name, vl::TextResource const &script, bool auto_run)
+{
+	if( hasScript(name) )
+	{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
+
+	_scripts[name] = Script(script, auto_run);
+	if(_auto_run && auto_run)
+	{
+		executeScript(script);
+		_scripts[name].executed = true;
+	}
+}
+
+void 
+vl::PythonContext::autoRunScripts(void)
+{
+	_auto_run = true;
+	std::map<std::string, Script>::iterator iter;
+	for( iter = _scripts.begin(); iter != _scripts.end(); ++iter )
+	{
+		if( iter->second.auto_run && !iter->second.executed )
+		{
+			executeScript(iter->second.script);
+			iter->second.executed = true;
+		}
+	}
+}
+
+vl::TextResource const &
+vl::PythonContext::getScript(std::string const &name) const
+{
+	/// Not the best exception
+	if( !hasScript(name) )
+	{ BOOST_THROW_EXCEPTION(vl::missing_resource()); }
+
+	return _scripts.find(name)->second.script;
+}
+	
+vl::TextResource &
+vl::PythonContext::getScript(std::string const &name)
+{
+	if( !hasScript(name) )
+	{ BOOST_THROW_EXCEPTION(vl::missing_resource()); }
+
+	return _scripts.find(name)->second.script;
+}
+
+bool 
+vl::PythonContext::hasScript(std::string const &name) const
+{
+	std::map<std::string, Script>::const_iterator iter = _scripts.find(name);
+	if( iter != _scripts.end() )
+	{ return true; }
+	else
+	{ return false; }
+}
+
+bool 
+vl::PythonContext::hasBeenExecuted(std::string const &name) const
+{
+	if( !hasScript(name) )
+	{ BOOST_THROW_EXCEPTION(vl::missing_resource()); }
+
+	std::map<std::string, Script>::const_iterator iter = _scripts.find(name);
+	// This should never happen, hasScript() has been called
+	assert( iter != _scripts.end() );
+	return iter->second.executed;
 }

@@ -183,6 +183,32 @@ private:
 
 };
 
+class stop_timer
+{
+public :
+	/// Construct a timer starting from now and running
+	stop_timer(void);
+
+	/// @brief resume counting
+	void resume(void);
+
+	/// @brief stop the counting
+	/// The time between call to a stop and a subsequent call to resume will
+	/// not be present when elapsed is called.
+	void stop(void);
+
+	/// @brief reset the current time and put the clock running
+	void reset(void);
+
+	/// @brief time elapsed since last reset accounting for the stopping
+	time elapsed(void) const;
+
+private :
+	time _elapsed;
+	time _last_time;
+	bool _stopped;
+};
+
 }	// namespace vl
 
 /// ----------------------------- Inlines --------------------------------------
@@ -205,5 +231,56 @@ inline vl::time
 vl::timer::elapsed(void) const
 { return vl::get_system_time() - _start_time; }
 
+/// ---------------------------------- stop_timer ----------------------------
+
+inline
+vl::stop_timer::stop_timer(void)
+	: _last_time(vl::get_system_time())
+	, _stopped(false)
+{}
+
+inline void
+vl::stop_timer::resume(void)
+{
+	// If the clock is already on do nothing
+	if(_stopped)
+	{
+		_stopped = false;
+		_last_time = vl::get_system_time();
+	}
+}
+
+inline void
+vl::stop_timer::stop(void)
+{
+	// If the clock is already stopped do nothing
+	if(!_stopped)
+	{
+		_stopped = true;
+		_elapsed += vl::get_system_time() - _last_time;
+		// No need to update last time as resume will do it
+	}
+}
+
+inline void
+vl::stop_timer::reset(void)
+{
+	_elapsed = vl::time();
+	_last_time = vl::get_system_time();
+	_stopped = false;
+}
+
+inline vl::time
+vl::stop_timer::elapsed(void) const
+{
+	vl::time elapsed = _elapsed;
+	// If the clock is not stopped we need to account for the time since resume
+	if(!_stopped)
+	{
+		elapsed += vl::get_system_time()-_last_time;
+	}
+
+	return elapsed;
+}
 
 #endif // HYDRA_TIMER_HPP

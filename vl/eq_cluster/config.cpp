@@ -127,6 +127,9 @@ vl::Config::init( void )
 {
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
+
+	_game_manager->requestStateChange(GS_INIT);
+
 	vl::timer t;
 	/// @todo most of this should be moved to the constructor, like object
 	/// creation
@@ -170,17 +173,25 @@ vl::Config::init( void )
 	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
 	t.reset();
 
+	/// @todo python scripts should be moved to GameManager with project
+	/// loading
+	/// @todo this should also load scripts that are not used but are
+	/// available, these should of course not be run
+	/// use the new auto_run interface in PythonContext
 	std::vector<std::string> scripts = _settings.getScripts();
 
-	std::cout << vl::TRACE << "Running " << scripts.size() << " python scripts." << std::endl;
-
+	/// @todo replace with the new interface
 	for( size_t i = 0; i < scripts.size(); ++i )
 	{
-		// Run init python scripts
+		// Load the python scripts
 		vl::TextResource script_resource;
 		_game_manager->getReourceManager()->loadResource( scripts.at(i), script_resource );
-		_game_manager->getPython()->executePythonScript( script_resource );
+		_game_manager->getPython()->addScript(scripts.at(i), script_resource, true);
 	}
+
+	/// Run the python scripts
+	t.reset();
+	_game_manager->getPython()->autoRunScripts();
 	std::cout << "Executing scripts took : " <<  t.elapsed() << std::endl;
 	t.reset();
 
@@ -213,6 +224,8 @@ vl::Config::init( void )
 //	std::clog << "blocking till slave clients are ready." << std::endl;
 //	_server->block_till_initialised();
 	_server->poll();
+
+	_game_manager->play();
 }
 
 void
@@ -468,23 +481,19 @@ vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
 	_server->sendMessage(msg);
 }
 
+/// @todo this should be replace by sending of a vector of paths
+/// that's the only thing needed in the Renderer
 void
 vl::Config::_sendProject(vl::Settings const &proj)
 {
-	vl::timer t;
 	vl::SettingsByteData data;
 	vl::cluster::ByteStream stream( &data );
 	stream << proj;
-	std::cout << "Streaming project to ByteData took : " << t.elapsed() << std::endl;
-	t.reset();
 
 	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
 	data.copyToMessage( &msg );
-	std::cout << "Copy project to message took : " << t.elapsed() << std::endl;
-	t.reset();
 
 	_sendMessage(msg);
-	std::cout << "Sending message took : " << t.elapsed() << std::endl;
 }
 
 /// @todo with project message this takes 450ms to complete
@@ -582,38 +591,12 @@ vl::Config::_loadScenes( void )
 	// Get scenes
 	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
 
-	// If we don't have Scenes there is no point loading them
-	if( !scenes.size() )
-	{
-		std::cout << vl::TRACE << "Project does not have any scene files." << std::endl;
-		return;
-	}
-	else
-	{
-		std::cout << vl::TRACE << "Project has " << scenes.size() << " scene files."
-			<< std::endl;
-	}
-
-	// Clean up old scenes
-	// TODO this should be implemented
-
 	// TODO support for multiple scene files should be tested
 	// TODO support for case needs to be tested
 	for( size_t i = 0; i < scenes.size(); ++i )
 	{
-		std::string scene_file_name = scenes.at(i).getName();
-
-		std::cout << vl::TRACE << "Loading scene file = " << scene_file_name << std::endl;
-
-		vl::TextResource resource;
-		_game_manager->getReourceManager()->loadResource( scenes.at(i).getFile(), resource );
-
-		vl::DotSceneLoader loader;
-		// TODO pass attach node based on the scene
-		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		loader.parseDotScene( resource, _game_manager->getSceneManager() );
-
-		std::cout << vl::TRACE << "Scene " << scene_file_name << " loaded." << std::endl;
+		vl::SceneInfo const &scene = scenes.at(i);
+		_game_manager->loadScene(scene);
 	}
 }
 
@@ -807,7 +790,7 @@ vl::Config::_handleCommandMessage(vl::cluster::Message &msg)
 	// TODO works only on ASCII at the moment
 	std::string cmd;
 	msg.read(cmd);
-	_game_manager->getPython()->executePythonCommand(cmd);
+	_game_manager->getPython()->executeCommand(cmd);
 }
 
 void

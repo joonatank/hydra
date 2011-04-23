@@ -16,7 +16,7 @@ vl::ScriptAction::execute(void)
 {
 	if( !data )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-	data->getPython()->executePythonCommand(script);
+	data->getPython()->executeCommand(script);
 }
 
 

@@ -27,6 +27,64 @@
 namespace vl
 {
 
+struct SceneInfo
+{
+	SceneInfo( std::string const &n = "",
+			bool u = false,
+			std::string const &f = "",
+			std::string const &s ="",
+			std::string const &p = "",
+			bool c = false )
+		: _name(n), _use(u), _file(f),
+			_attachto_scene(s), _attachto_point(p), _changed(c)
+	{}
+
+	void setName( std::string const &name )
+	{ _name = name; _changed = true; }
+
+	std::string const &getName( void ) const
+	{ return _name; }
+
+	void setUse( bool newState )
+	{ _use = newState; _changed = true; }
+
+	bool getUse( void ) const
+	{ return _use; }
+
+	void setFile( std::string const &file )
+	{ _file = file; _changed = true; }
+
+	std::string const &getFile( void ) const
+	{ return _file; }
+
+	void setAttachtoScene( std::string const &scene )
+	{ _attachto_scene = scene; _changed = true; }
+
+	std::string const &getAttachtoScene( void ) const
+	{ return _attachto_scene; }
+
+	void setAttachtoPoint( std::string const &point )
+	{ _attachto_point = point; _changed = true; }
+
+	std::string const &getAttachtoPoint( void ) const
+	{ return _attachto_point; }
+
+	bool getChanged( void ) const
+	{ return _changed; }
+
+	void clearChanged( void )
+	{ _changed = false; }
+
+private :
+	std::string _name;
+	bool _use;
+	std::string _file;
+	std::string _attachto_scene;
+	std::string _attachto_point;
+	bool _changed;
+
+};	// class Scene
+
 class ProjSettings
 {
 public :
@@ -63,65 +121,7 @@ public :
 
 	};	// class Script
 
-
-	struct Scene
-	{
-		Scene( std::string const &n = "",
-				bool u = false,
-				std::string const &f = "",
-				std::string const &s ="",
-				std::string const &p = "",
-				bool c = false )
-			: _name(n), _use(u), _file(f),
-			  _attachto_scene(s), _attachto_point(p), _changed(c)
-		{}
-
-		void setName( std::string const &name )
-		{ _name = name; _changed = true; }
-
-		std::string const &getName( void ) const
-		{ return _name; }
-
-		void setUse( bool newState )
-		{ _use = newState; _changed = true; }
-
-		bool getUse( void ) const
-		{ return _use; }
-
-		void setFile( std::string const &file )
-		{ _file = file; _changed = true; }
-
-		std::string const &getFile( void ) const
-		{ return _file; }
-
-		void setAttachtoScene( std::string const &scene )
-		{ _attachto_scene = scene; _changed = true; }
-
-		std::string const &getAttachtoScene( void ) const
-		{ return _attachto_scene; }
-
-		void setAttachtoPoint( std::string const &point )
-		{ _attachto_point = point; _changed = true; }
-
-		std::string const &getAttachtoPoint( void ) const
-		{ return _attachto_point; }
-
-		bool getChanged( void ) const
-		{ return _changed; }
-
-		void clearChanged( void )
-		{ _changed = false; }
-
-	private :
-		std::string _name;
-		bool _use;
-		std::string _file;
-		std::string _attachto_scene;
-		std::string _attachto_point;
-		bool _changed;
-
-	};	// class Scene
-
+	typedef vl::SceneInfo Scene;
 
 	struct Case
 	{
