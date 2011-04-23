@@ -73,7 +73,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 1, 2 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
 
@@ -85,6 +85,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Transform>("Transform", python::init< python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
 		.def_readwrite( "position", &vl::Transform::position )
 		.def_readwrite( "quaternion", &vl::Transform::quaternion )
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 
@@ -543,6 +544,8 @@ BOOST_PYTHON_MODULE(vl)
 	/// @todo these should have custom wrapper classes that take Ogre objects
 	/// as parameters
 	/// @todo physics should be in differen module
+	/// @todo remove the btVector3 and btQuaternion as soon as we have wrapper for joints and
+	/// collision shapes
 	python::class_<btVector3, boost::noncopyable >("btVector3", python::init<>() )
 		.def(python::init<const btScalar &, const btScalar &, const btScalar &>() )
 	;
@@ -561,10 +564,25 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<btStaticPlaneShape, boost::noncopyable, python::bases<btCollisionShape> >("btStaticPlaneShape", python::no_init )
 	;
 
-	python::class_<btSphereShape, boost::noncopyable, python::bases<btCollisionShape> >("btSphereShape", python::no_init )
+	python::class_<btBoxShape, boost::noncopyable, python::bases<btCollisionShape> >("btBoxShape", python::no_init )
+	;
+
+	python::class_<btCylinderShape, boost::noncopyable, python::bases<btCollisionShape> >("btCylinderShape", python::no_init )
+	;
+
+	python::class_<btConeShape, boost::noncopyable, python::bases<btCollisionShape> >("btConeShape", python::no_init )
+	;
+
+	python::class_<btCapsuleShape, boost::noncopyable, python::bases<btCollisionShape> >("btCapsuleShape", python::no_init )
+	;
+
+	python::class_<btTriangleMeshShape, boost::noncopyable, python::bases<btCollisionShape> >("btTriangleMeshShape", python::no_init )
 	;
 
 	/// @todo add joint type
+
+
+	vl::physics::MotionState *(vl::physics::RigidBody::*getMotionState_ov1)(void) = &vl::physics::RigidBody::getMotionState;
 
 	python::class_<vl::physics::RigidBody, boost::noncopyable >("RigidBody", python::no_init )
 		.def( "getTotalForce", &vl::physics::RigidBody::getTotalForce )
@@ -585,18 +603,23 @@ BOOST_PYTHON_MODULE(vl)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
 		/// @todo this should have false/true value
 		.def("setUserControlled", &vl::physics::RigidBody::setUserControlled)
+		.add_property("motion_state", python::make_function(getMotionState_ov1, python::return_value_policy<python::reference_existing_object>()), &vl::physics::RigidBody::setMotionState )
 		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	// TODO add scene node setting
 	python::class_<vl::physics::MotionState, boost::noncopyable >("MotionState", python::no_init )
+		.add_property("node", python::make_function( &vl::physics::MotionState::getNode, python::return_value_policy< python::reference_existing_object>() ),
+					  &vl::physics::MotionState::setNode )
+		.add_property("position", &vl::physics::MotionState::getPosition)
+		.add_property("orientation", &vl::physics::MotionState::getOrientation)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::physics::World, boost::noncopyable >("PhysicsWorld", python::no_init )
 		.def("createRigidBody", &vl::physics::World::createRigidBody,
 			 createRigidBody_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
-		.def("addRigidBody", &vl::physics::World::addRigidBody,
-			 python::return_value_policy<python::reference_existing_object>() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.def("removeRigidBody", &vl::physics::World::removeRigidBody,
@@ -604,6 +627,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("createPlaneShape", &vl::physics::World::createPlaneShape,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.def("createBoxShape", &vl::physics::World::createBoxShape,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.def("createSphereShape", &vl::physics::World::createSphereShape,
 			 python::return_value_policy<python::reference_existing_object>() )

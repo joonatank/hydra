@@ -61,22 +61,21 @@ vl::physics::World::step( void )
 Ogre::Vector3
 vl::physics::World::getGravity(void) const
 {
-	btVector3 v = _dynamicsWorld->getGravity();
-	return Ogre::Vector3( v.x(), v.y(), v.z() );
+	return vl::math::convert_vec(_dynamicsWorld->getGravity());
 }
 
 
 void
 vl::physics::World::setGravity(const Ogre::Vector3& gravity)
 {
-	_dynamicsWorld->setGravity( btVector3(gravity.x, gravity.y, gravity.z) );
+	_dynamicsWorld->setGravity( vl::math::convert_bt_vec(gravity) );
 }
 
 vl::physics::RigidBody *
 vl::physics::World::createRigidBodyEx(std::string const &name, btRigidBody::btRigidBodyConstructionInfo const &info)
 {
 	RigidBody *body = new RigidBody(name, info);
-	addRigidBody(name, body);
+	_addRigidBody(name, body);
 	return body;
 }
 
@@ -90,21 +89,6 @@ vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 	btVector3 i(vl::math::convert_bt_vec(inertia));
 	btRigidBody::btRigidBodyConstructionInfo info(mass, state, shape, i);
 	return createRigidBodyEx(name, info);
-}
-
-void
-vl::physics::World::addRigidBody(std::string const &name, vl::physics::RigidBody *body)
-{
-	if( !hasRigidBody(name) )
-	{
-		_rigid_bodies.push_back(body);
-		_dynamicsWorld->addRigidBody(body->getNative());
-	}
-	else
-	{
-		std::string err( "RigidBody with that name is already in the scene." );
-		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(err) );
-	}
 }
 
 vl::physics::RigidBody *
@@ -152,6 +136,14 @@ vl::physics::World::createPlaneShape( const Ogre::Vector3& normal, vl::scalar co
 	return plane;
 }
 
+btBoxShape *
+vl::physics::World::createBoxShape(Ogre::Vector3 const &bounds)
+{
+	btBoxShape *box = new btBoxShape(vl::math::convert_bt_vec(bounds));
+	_shapes.push_back(box);
+	return box;
+}
+
 btSphereShape *
 vl::physics::World::createSphereShape( vl::scalar radius )
 {
@@ -176,7 +168,23 @@ vl::physics::World::destroyShape( btCollisionShape *shape )
 }
 
 /// --------------------------------- Private ----------------------------------
-vl::physics::RigidBody *vl::physics::World::_findRigidBody(const std::string& name) const
+void
+vl::physics::World::_addRigidBody(std::string const &name, vl::physics::RigidBody *body)
+{
+	if( !hasRigidBody(name) )
+	{
+		_rigid_bodies.push_back(body);
+		_dynamicsWorld->addRigidBody(body->getNative());
+	}
+	else
+	{
+		std::string err( "RigidBody with that name is already in the scene." );
+		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(err) );
+	}
+}
+
+vl::physics::RigidBody *
+vl::physics::World::_findRigidBody(const std::string& name) const
 {
 	std::vector<RigidBody *>::const_iterator iter;
 	for( iter = _rigid_bodies.begin(); iter != _rigid_bodies.end(); ++iter )

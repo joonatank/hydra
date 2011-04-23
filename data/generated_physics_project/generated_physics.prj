@@ -6,13 +6,10 @@ Joonatan Kuosa <joonatan.kuosa@tut.fi>
 
 Ogre test project used for testing and demonstrating eqOgre
 -->
-<project_config name="ogre">
+<project_config name="generated_physics">
 
 	<scenes>
-		<scene name="ogre" use="true">
-			<file>ogre.scene</file>
-		</scene>
-
+		<!-- No scene files. Because we create everything in script -->
 	</scenes>
 
 	<scripts>

@@ -19,8 +19,8 @@ copy_start_scripts( hydra
 	"ogre" )
 
 copy_start_scripts( hydra
-	ogre_physics_project/ogre.prj
-	"physics" )
+	generated_physics_project/generated_physics.prj
+	"generated_physics" )
 
 copy_start_scripts( hydra
 	robot_project/robot.prj

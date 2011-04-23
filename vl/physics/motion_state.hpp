@@ -8,7 +8,11 @@
 
 // This class initialises Bullet physics so they are necessary
 #include <bullet/btBulletDynamicsCommon.h>
-#include <math/math.hpp>
+
+#include "math/math.hpp"
+#include "math/conversion.hpp"
+
+#include "scene_node.hpp"
 
 namespace vl
 {
@@ -27,29 +31,32 @@ public:
 				 vl::SceneNode *node = 0)
 		: _visibleobj(node)
 	{
-		btQuaternion q(orient.x, orient.y, orient.z, orient.w);
-		btVector3 v(pos.x, pos.y, pos.z);
-		_trans = btTransform( q, v );
+		_trans = vl::math::convert_bt_transform(orient, pos);
 	}
 
 	MotionState( vl::Transform const &trans,
 				 vl::SceneNode *node = 0)
 		: _visibleobj(node)
 	{
-		Ogre::Vector3 const &pos = trans.position;
-		Ogre::Quaternion const &orient = trans.quaternion;
-		btQuaternion q(orient.x, orient.y, orient.z, orient.w);
-		btVector3 v(pos.x, pos.y, pos.z);
-		_trans = btTransform( q, v );
+		_trans = vl::math::convert_bt_transform(trans);
 	}
 
 	virtual ~MotionState()
 	{}
 
-	void setNode(vl::SceneNode *node)
+	vl::SceneNodePtr getNode(void) const
+	{ return _visibleobj; }
+
+	void setNode(vl::SceneNodePtr node)
 	{
 		_visibleobj = node;
 	}
+
+	Ogre::Vector3 getPosition(void) const
+	{ return vl::math::convert_vec(_trans.getOrigin()); }
+
+	Ogre::Quaternion getOrientation(void) const
+	{ return vl::math::convert_quat(_trans.getRotation()); }
 
 	virtual void getWorldTransform(btTransform &worldTrans) const
 	{
@@ -63,19 +70,29 @@ public:
 		if( !_visibleobj)
 			return; // silently return before we set a node
 
-		btQuaternion rot = worldTrans.getRotation();
-		Ogre::Quaternion ogre_rot( rot.w(), rot.x(), rot.y(), rot.z() );
-		_visibleobj->setOrientation( ogre_rot );
-		btVector3 pos = worldTrans.getOrigin();
-		Ogre::Vector3 ogre_vec( pos.x(), pos.y(), pos.z() );
-		_visibleobj->setPosition( ogre_vec );
+		vl::Transform t = vl::math::convert_transform(_trans);
+		_visibleobj->setOrientation(t.quaternion);
+		_visibleobj->setPosition(t.position);
 	}
 
 protected:
-	vl::SceneNode *_visibleobj;
+	vl::SceneNodePtr _visibleobj;
 	btTransform _trans;
 
 };	// class MotionState
+
+inline std::ostream &
+operator<<(std::ostream &os, MotionState const &m)
+{
+	os << "Transform : ";
+	if( m.getNode() )
+	{ os << "with SceneNode " << m.getNode()->getName(); }
+	else
+	{ os << "without SceneNode"; }
+	os << " : position = " << m.getPosition() << " : orientation = " << m.getOrientation(); 
+
+	return os;
+}
 
 }	// namespace physics
 

@@ -78,7 +78,7 @@ btVector3 convert_bt_vec(Ogre::Vector3 const &v)
 inline
 btQuaternion convert_bt_quat(Ogre::Quaternion const &q)
 {
-	return btQuaternion(q.w, q.x, q.y, q.z);
+	return btQuaternion(q.x, q.y, q.z, q.w);
 }
 
 

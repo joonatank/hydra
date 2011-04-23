@@ -8,9 +8,11 @@
 #define HYDRA_RIGID_BODY_HPP
 
 #include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
-#include <OGRE/OgreVector3.h>
-#include <math/conversion.hpp>
+#include "math/conversion.hpp"
+
+#include "motion_state.hpp"
 
 namespace {
 	using vl::math::convert_bt_vec;
@@ -87,8 +89,20 @@ public :
 	void setUserControlled(void)
 	{ _bt_body->setActivationState(DISABLE_DEACTIVATION); }
 
+	bool isUserControlled(void) const
+	{ return _bt_body->getActivationState() == DISABLE_DEACTIVATION; }
+
 	void setActivationState(int state)
 	{ _bt_body->setActivationState(state); }
+	
+	MotionState *getMotionState(void)
+	{ return (MotionState *)_bt_body->getMotionState(); }
+
+	MotionState const *getMotionState(void) const
+	{ return (MotionState const *)_bt_body->getMotionState(); }
+
+	void setMotionState(MotionState *motionState)
+	{ _bt_body->setMotionState(motionState); }
 
 	std::string const &getName(void) const
 	{ return _name; }
@@ -102,6 +116,18 @@ private :
 	btRigidBody *_bt_body;
 
 };	// class RigidBody
+
+inline std::ostream &
+operator<<(std::ostream &os, RigidBody const &body)
+{
+	os << "RigidBody " << body.getName() << " : motion state " << *body.getMotionState();
+	if( body.isUserControlled() )
+	{ os << " : user controlled"; }
+
+	// TODO add the rest
+
+	return os;
+}
 
 }	// namespace physics
 

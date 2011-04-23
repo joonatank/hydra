@@ -53,12 +53,11 @@ public :
 	vl::physics::RigidBody *createRigidBodyEx( std::string const &name,
 											 btRigidBody::btRigidBodyConstructionInfo const &info );
 
+	/// Default inertia is zero because setting it will mess up static objects. 
+	/// For dynamic objects user should set it.
 	vl::physics::RigidBody *createRigidBody( std::string const &name, vl::scalar mass,
 								  vl::physics::MotionState *state, btCollisionShape *shape,
-								  Ogre::Vector3 const &inertia = Ogre::Vector3(1, 1, 1) );
-
-	/// @todo should be removed as they should be created using createRigidBody
-	void addRigidBody( std::string const &name, vl::physics::RigidBody *body);
+								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
 
 	vl::physics::RigidBody *getRigidBody( std::string const &name ) const;
 
@@ -70,11 +69,16 @@ public :
 
 	bool hasRigidBody( std::string const &name ) const;
 
-	MotionState *createMotionState( vl::Transform const &trans, vl::SceneNode *node = 0 );
+	MotionState *createMotionState( vl::Transform const &trans = vl::Transform(), vl::SceneNode *node = 0 );
 
 	void destroyMotionState( MotionState *state );
 
+	// Plane constant for some reason affects also in the direction of plane normal
+	// so usually you want to translate the plane by plane_constant*(-plane_normal)
 	btStaticPlaneShape *createPlaneShape( Ogre::Vector3 const &normal, vl::scalar constant );
+
+	// Create a box shape around origin: with size [-bounds, bounds]
+	btBoxShape *createBoxShape(Ogre::Vector3 const &bounds);
 
 	btSphereShape *createSphereShape( vl::scalar radius );
 
@@ -83,6 +87,8 @@ public :
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
 private :
+	void _addRigidBody( std::string const &name, vl::physics::RigidBody *body);
+
 	RigidBody *_findRigidBody( std::string const &name ) const;
 
 	/// Bullet physics world objects
