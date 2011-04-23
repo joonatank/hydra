@@ -38,7 +38,7 @@
       <light name="spot" type="spot" castShadows="true">
         <normal x="0.0" y="0.0" z="-1.0"/>
         <colourDiffuse r="2.5" g="2.5" b="2.5"/>
-        <colourSpecular r="0.0" g="0.0" b="0.0"/>
+        <colourSpecular r="3.0" g="0.0" b="2.0"/>
         <lightRange inner="100" outer="100" falloff="1.0"/>
         <lightAttenuation range="150.000000" constant="0.900000" linear="0.09" quadratic="0.010000"/>
       </light>

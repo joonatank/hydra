@@ -38,15 +38,13 @@ ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
-# Shader material, does not work with shadows
-#ground_ent.material_name = 'rock'
-# For shadows
-ground_ent.material_name = 'ground/Basic'
+# Shader material, with shadows
+ground_ent.material_name = 'ground/bump_mapped/shadows'
 ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
-sphere_ent.material_name = 'debug_red'
+sphere_ent.material_name = 'finger_sphere/emissive'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
@@ -61,22 +59,24 @@ athene.position = Vector3(-3, 4, 5)
 athene.scale = Vector3(1,1,1)*0.05;
 
 # enable shadows
-shadows = ShadowInfo()
-shadows.enable()
-shadows.colour = ColourValue(0.0, 0.5, 0.0)
+shadows = ShadowInfo("texture_additive_integrated")
+# Colour is useless for additive shadows
+#shadows.colour = ColourValue(0.0, 0.5, 0.0)
 game.scene.shadows = shadows
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")
+	game.scene.addToSelection(light)
 
 game.scene.removeFromSelection(ogre)
 
-if( game.scene.hasLight("spot") ):
-	game.scene.getLight("spot").visible = False
+#if( game.scene.hasLight("spot") ):
+#	game.scene.getLight("spot").visible = False
 
 if( game.scene.hasSceneNode("Ambient_light") ):
 	ambient_light = game.scene.getSceneNode("Ambient_light")
 
+""" We use the default spot for now
 l = game.scene.createLight("test_light")
 l.type = "spot"
 l_node = game.scene.createSceneNode("test_light")
@@ -84,4 +84,18 @@ l_node.position = Vector3(5, 10, -10)
 l_node.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 l_node.attachObject(l)
 game.scene.addToSelection(l_node)
+"""
+
+# Create spotlight and hehkulamppu objects
+spotti_n = game.scene.createSceneNode("spotti")
+spotti = game.scene.createEntity("spotti", "spotlight.mesh")
+spotti.material_name = "editor/spotlight_material"
+spotti_n.position = Vector3(5, 4, 0)
+spotti_n.attachObject(spotti)
+
+lightpulp_n = game.scene.createSceneNode("hehkulamppu")
+lightpulp = game.scene.createEntity("hehkulamppu", "hehkulamppu.mesh")
+lightpulp.material_name = "editor/hehkulamppu_material"
+lightpulp_n.position = Vector3(5, 4, -4)
+lightpulp_n.attachObject(lightpulp)
 

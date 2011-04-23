@@ -1,16 +1,21 @@
-// Tangent space vertex shader for single light
-// Used with Bling-Phong pixel shader
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Bling-Phong (tangent-space) shading program for single light
+// The Vertex Program
 
 #version 140
 
 uniform mat4 modelView;
-uniform mat4 worldMatrix;
 uniform mat4 modelViewProj;
 uniform mat4 normalMatrix;
 // Light position in eye space
 uniform vec4 lightPos;
 uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
+
+uniform mat4 model;
 // Shadow texture transform
 uniform mat4 texViewProj;
 
@@ -18,8 +23,6 @@ uniform mat4 texViewProj;
 // my guess is that uv0 can not appear after tangent and binormal (uv6 and uv7)
 in vec4 vertex;
 in vec3 normal;
-in vec4 colour;
-in vec4 secondary_colour;
 in vec4 uv0;
 in vec3 tangent;
 // Does not give the expected results i.e. [0 -1 0], gives [0 0 0]
@@ -29,8 +32,8 @@ out vec4 uv;
 
 // from vertex to light in tangent space
 out vec3 dirToLight;
-// Half vector in tangent space, used for specular calculations
-out vec3 halfVector;
+// from vertex to eye in tangent space, used for specular highlights
+out vec3 dirToEye;
 // Attenuation parameter
 out float attenuation;
 // Light to vertex in tangent space
@@ -39,8 +42,8 @@ out float attenuation;
 // in tangent space
 out vec3 spotlightDir;
 
-out vec4 vColour;
-
+// Shadow map uvs, x,y are the coordinates on the texture
+// z is the distance to light
 out vec4 shadowUV;
 
 void main(void)
@@ -51,10 +54,8 @@ void main(void)
 	// Texture coordinates
 	uv = uv0;
 
-	// Colour
-//	vColour = colour;
-
-	vec4 worldPos = worldMatrix * vertex;
+	// Shadow map tex coords
+	vec4 worldPos = model * vertex;
 	shadowUV = texViewProj * worldPos;
 
 	// Tangent space vectors (TBN) in eye space
@@ -96,8 +97,7 @@ void main(void)
 	spotlightDir.y = dot(mvSpotlightDir, mvBinormal);
 	spotlightDir.z = dot(mvSpotlightDir, mvNormal);
 
-	// Half-vector for specular highlights
-	halfVector = normalize(tbnDirToEye + dirToLight);
+	dirToEye = tbnDirToEye;
 
 	// Compute attenuation, in eye space
 	// TODO add range parameter

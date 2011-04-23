@@ -129,7 +129,9 @@ public :
 	/// @todo add getters
 	void setSpotlightRange(Ogre::Radian const &inner, Ogre::Radian const &outer, Ogre::Real falloff = 1.0);
 
-	void setAttenuation(Ogre::Real range, Ogre::Real constant, Ogre::Real linear, Ogre::Real quadratic);
+//	void setAttenuation(Ogre::Real range, Ogre::Real constant, Ogre::Real linear, Ogre::Real quadratic);
+
+	void setAttenuation(LightAttenuation const &att);
 
 	LightAttenuation const &getAttenuation(void) const
 	{ return _attenuation; }

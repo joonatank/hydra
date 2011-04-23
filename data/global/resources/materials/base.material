@@ -1,3 +1,12 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2011-04
+//
+// Some base materials used in most of the Scenes
+// Includes sky and ground using different shaders
+
+import * from "normal_map.material"
+
 material CloudySky
 {
 	technique
@@ -30,15 +39,51 @@ material ground/Basic
 	}
 }
 
+material ground/flat: bling_phong_eye_space_multi_pass
+{
+	set_texture_alias diffuseTexture rock.jpg
+}
+
+material ground/flat/shadows : bling_phong_eye_space_multi_pass_shadows
+{
+	set_texture_alias diffuseTexture rock.jpg
+}
+
+material ground/bump_mapped/shadows : bling_phong_multi_pass
+{
+//	set $ambientCol "1 0 0 1"
+//	set $specularCol "0 0 0"
+	set_texture_alias diffuseTexture rock.jpg
+//	set_texture_alias specularMap rock.jpg
+	set_texture_alias normalMap rock_NM.jpg
+}
+
 material debug_red 
 {
 	technique
 	{
 		pass
 		{
-		    	diffuse 0.0 0.0 0.0
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ps
+			{
+			}
+
+			diffuse 0 0 0 0
+			specular 0 0 0 0
 			emissive 1.0 0 0
 		}
 	}
+}
+
+// TODO add a finger sphere material that has both diffuse and emissive
+material finger_sphere/emissive : bling_phong_eye_space_multi_pass
+{
+	set $emissiveCol "0.5 0 0 1"
+	set $diffuseCol "0.6 0.4 0.4 1"
+	set $specularCol "0 0 0"
 }
 
