@@ -2,6 +2,8 @@
  *	2011-04
  */
 
+/// @todo add tracker element with time support
+
 #include "vrpn_Tracker.hpp"
 
 #include <vector>
@@ -55,9 +57,9 @@ struct options
 	std::string file;
 };
 
-struct data_elem
+struct sensor_elem
 {
-	data_elem(const vrpn_Tracker_Pos pos, const vrpn_Tracker_Quat quat)
+	sensor_elem(const vrpn_Tracker_Pos pos, const vrpn_Tracker_Quat quat)
 	{
 		for( size_t i = 0; i < 3; ++i )
 		{ position[i] = pos[i]; }
@@ -66,7 +68,7 @@ struct data_elem
 		{ quaternion[i] = quat[i]; }
 	}
 
-	data_elem(void)
+	sensor_elem(void)
 	{
 		for( size_t i = 0; i < 3; ++i )
 		{ position[i] = 0; }
@@ -86,11 +88,10 @@ struct data
 		if( sensors.size() < sensor+1 )
 		{ sensors.resize(sensor+1); }
 
-		sensors.at(sensor) = data_elem(pos, quat);
+		sensors.at(sensor) = sensor_elem(pos, quat);
 	}
 
-
-	std::vector< data_elem > sensors;
+	std::vector<sensor_elem> sensors;
 };
 
 std::ostream &
@@ -98,18 +99,22 @@ operator<<(std::ostream &os, data const &d)
 {
 	for( size_t i = 0; i < d.sensors.size(); ++i )
 	{
-		os << i << '\t';
-		for( size_t j = 0; j < 3; ++j )
-			os << d.sensors.at(i).position[j] << " ";
-		os << '\t';
-		for( size_t j = 0; j < 4; ++j )
-			os << d.sensors.at(i).quaternion[j] << " ";
+		// Print zero time for all now
+		os << 0 << '\t'
+			<< i << '\t';
+		sensor_elem const &elem = d.sensors.at(i);
+		os << elem.position[Q_X] << "," << elem.position[Q_Y] << "," << elem.position[Q_Z] 
+			<< '\t';
+		os << elem.quaternion[Q_W] << "," << elem.quaternion[Q_X] << "," 
+			<< elem.quaternion[Q_Y] << "," << elem.quaternion[Q_Z];
+
 		os << std::endl;
 	}
 
 	return os;
 }
 
+/// @brief VRPN callback handler
 void handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	assert(userdata);
@@ -153,9 +158,12 @@ int main(int argc, char **argv)
 
 	assert(!opt.file.empty());
 	std::ofstream file(opt.file);
-	file << "# sensor\t position\t orientation" << std::endl
-		<< "# delimeter is tabulator, sensor is integer, "
-		<< "position is float64[3] and orientation is float64[4]" << std::endl;
+	file << "# time\t sensor\t position\t orientation" << std::endl
+		<< "# delimeter is tabulator, vector elements are separated with ','"
+		<< "# sensor is an integer" << std::endl 
+		<< "# position is (x, y, z) vector" << std::endl
+		<< "# orientation (w, x, y, z) quaternion" << std::endl;
+
 	file << d;
 
 	return 0;
