@@ -1,0 +1,5 @@
+# time	 sensor	 position	 orientation
+# delimeter is tabulator, vector elements are separated with ','# sensor is an integer
+# position is (x, y, z) vector
+# orientation (w, x, y, z) quaternion
+9.1	0	-0.0014151, 0.826927, -0.209949 	0.0484552, 0.00271641, 0.0421556, 0.997932 

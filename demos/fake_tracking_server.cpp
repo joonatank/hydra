@@ -23,15 +23,18 @@
  *	name (unnamed parameter), server name to start for example glassess or Mevea
  *
  * Input file
- * vector \t quaternion \t time
+ * time\t sensor\t vector (x,y,z) \t quaternion (w, x, y, z)
  * Where vector is the position and quaternion is the rotation of the object
  * vector is in meters, quaternion is w,x,y,z quaternion
  * time is the time before moving to the next element, used for interpolation
  * time is in seconds and a double
  *
  * example:
- * 2 \t 0,1,2 \t 1,0,0,0
- * 10 \t 0,0,1 \t 0,1,0,0
+ * # This is a comment
+ * 2 \t 0 \t 0,1,2 \t 1,0,0,0
+ * 2 \t 1 \t 0,1,2 \t 1,0,0,0
+ * 10 \t 0 \t 0,0,1 \t 0,1,0,0
+ * 10 \t 1 \t 0,0,2 \t 1,0,0,0
  */
 
 #include "math/math.hpp"
@@ -47,18 +50,81 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
+struct sensor_elem
+{
+	sensor_elem(void)
+		: _last_index(0)
+	{}
+
+	void push_back(vl::Transform const &t)
+	{
+		transforms.push_back(std::make_pair(0, t) );
+	}
+
+	void push_back(double time, vl::Transform const &t)
+	{
+		transforms.push_back(std::make_pair(time, t) );
+	}
+
+	vl::Transform const &getOutput(double time)
+	{
+		double start = transforms.at(_last_index).first;
+		while( time > start )
+		{
+			// TODO this should interpolate
+			++_last_index;
+			if( _last_index == transforms.size() )
+			{ _last_index--; break; }
+
+			start = transforms.at(_last_index).first;
+			// Interpolate
+			/* TODO implement
+			double stop = _output.at(_last_index).first;
+			if( t < stop )
+			{
+				double progress = (stop - start)/(t - start);
+			}
+			*/
+		}
+/*
+		sensor_elem const &elem = _output.at(_last_index).second;
+			std::cout << "Increasing value for sensor " << elem.sensor <<
+				" : next value = " << elem.transform << std::endl;
+*/
+		
+		assert( _last_index < transforms.size() );
+		return transforms.at(_last_index).second;
+	}
+
+	/// Time - Transform pair
+	std::vector< std::pair<double, vl::Transform> > transforms;
+
+	size_t _last_index;
+};
+
+inline std::ostream &
+operator<<(std::ostream &os, sensor_elem const &elem)
+{
+	for( size_t i = 0; i < elem.transforms.size(); ++i )
+	{
+		os << "time : " << elem.transforms.at(i).first 
+			<< " transform : " << elem.transforms.at(i).second;
+	}
+
+	return os;
+}
+
 class Output
 {
 public :
 	// Default values
 	Output( void )
-		: _last_index(0)
 	{
-		_output.push_back( std::make_pair(1, vl::Transform( Ogre::Vector3(0, 1.5, 0) ) ) );
+		_output.resize(1);
+		_output.at(0).push_back(vl::Transform( Ogre::Vector3(0, 1.5, 0) ));
 	}
 
 	Output( std::ifstream &input )
-		: _last_index(0)
 	{
 		// TODO read the data
 		if( !input.is_open() )
@@ -77,97 +143,85 @@ public :
 		}
 	}
 
-	void parse_line( std::string const &line )
+	void parse_line( std::string const &input_line )
 	{
 		// TODO add comment support, any line starting with #
+		std::stringstream ss;
+		std::string::size_type comment = input_line.find_first_of('#');
+		
+		ss.str(input_line.substr(0, comment) );
 
-		std::string::size_type pos = 0;
-		std::string::size_type end_pos = line.find_first_of('\t', pos);
-
-		std::stringstream t( line.substr(pos, end_pos) );
-		double time = 0;
-		t >> time;
-
-		std::cerr << "Time parsed : time = " << time << std::endl;
-		if( end_pos == std::string::npos )
+		if(ss.str().find_first_not_of(" \t\v\n") == std::string::npos )
 		{
+			std::cout << "Either a comment line or empty line, skipping" << std::endl;
 			return;
 		}
 
-		pos = end_pos+1;
-		end_pos = line.find_first_of('\t', pos);
-
-		std::stringstream v(line.substr(pos, end_pos));
+		double time = 0;
+		int sensor = 0;
+		ss >> time >> sensor;
+		
 		double x = 0, y = 0, z = 0;
 		char ch;
-		v >> x >> ch >> y >> ch >> z;
+		ss >> x >> ch >> y >> ch >> z;
 		Ogre::Vector3 vec( x, y, z );
+
+		std::cerr << "Time parsed : time = " << time << std::endl;
+		std::cerr << "Sensor parsed : sensor = " << sensor << std::endl;
 		std::cerr << "Vector parsed : vector = " << vec << std::endl;
-		if( end_pos == std::string::npos )
+
+		Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY;
+		if( !ss.str().empty() )
 		{
-			// TODO this should not return
-			// The quaternion can be IDENTITY by default
-			return;
+			double w = 1;
+			ss >> w >> ch >> x >> ch >> y >> ch >> z;
+			quat = Ogre::Quaternion( w, x, y, z );
+			std::cerr << "Quaternion parsed : quat = " << quat << std::endl;
 		}
 
-		pos = end_pos+1;
-		end_pos = line.find_first_of('\t', pos);
-
-		std::stringstream q(line.substr(pos, end_pos));
-		double w = 0;
-		q >> w >> ch >> x >> ch >> y >> ch >> z;
-		Ogre::Quaternion quat( w, x, y, z );
-
-		std::cerr << "Quaternion parsed : quat = " << quat << std::endl;
-		if( end_pos != std::string::npos )
+		// TODO this does not account for whitespace in the end of the line
+		if(!ss.str().empty())
 		{
 			std::cerr << "Something fishy going on here, found another tabulator."
 				<< std::endl;
 		}
-		_output.push_back( std::make_pair(time, vl::Transform( vec, quat ) ) );
+
+		// Add a new sensor
+		if( _output.size() >= sensor )
+		{
+			_output.resize(sensor+1);
+		}
+
+		// For now time is stored as a double, in seconds
+		// The playback program uses milliseconds
+		_output.at(sensor).push_back( time/1000, vl::Transform( vec, quat ) );
 	}
 
 	void print( void ) const
 	{
-		std::cerr << "Output : " << std::endl;
+		std::cout << "Output : " << std::endl;
 		for( size_t i = 0; i < _output.size(); ++i )
 		{
-			std::cerr << "time = " << _output.at(i).first << " value "
-				<< _output.at(i).second << std::endl;
+			std::cout << "sensor " << i << " element : " << _output.at(i) << std::endl;
 		}
 	}
 
-	vl::Transform const &getOutput( double ms )
+	/// @brief retrieve the Transformation for particular sensor at a particular time
+	/// @param sensor which of the trackers sensors
+	/// @param time time in milliseconds
+	/// Get stored transformation for a sensor at a time
+	vl::Transform const &getOutput(int sensor, double time)
 	{
-		double t = ms/1000;
-		double start = _output.at(_last_index).first;
-		while( t > start )
-		{
-			// TODO this should interpolate
-			++_last_index;
-			if( _last_index == _output.size() )
-			{ _last_index--; break; }
-
-			std::cout << "Increasing value : next value = "
-				<< _output.at(_last_index).second << std::endl;
-
-			start = _output.at(_last_index).first;
-			// Interpolate
-			/* TODO implement
-			double stop = _output.at(_last_index).first;
-			if( t < stop )
-			{
-				double progress = (stop - start)/(t - start);
-			}
-			*/
-		}
-
-		return _output.at(_last_index).second;
+		/// @todo replace with error throwing
+		assert( sensor < _output.size() );
+		return _output.at(sensor).getOutput(time);
 	}
+
+	int nsensors(void) const
+	{ return _output.size(); }
 
 private :
-	size_t _last_index;
-	std::vector< std::pair<double, vl::Transform> > _output;
+	std::vector<sensor_elem> _output;
 };	// class Output
 
 class TrackerServer
@@ -251,7 +305,6 @@ public :
 
 		// TODO add support for address
 		_connection = vrpn_create_server_connection( _port );
-		_tracker = new vrpn_Tracker_Server(_name.c_str(), _connection );
 
 		// Set the output parameters
 		if( !_input_file.empty() )
@@ -264,30 +317,40 @@ public :
 			_output = new Output();
 		}
 		_time = 0;
+
+		std::cout << "Creating vrpn tracker with " << _output->nsensors() << " sensors." << std::endl;
+		_tracker = new vrpn_Tracker_Server(_name.c_str(), _connection, _output->nsensors() );
+		std::cout << "VRPN tracker created." << std::endl;
 	}
 
 	void mainloop( void )
 	{
+		assert(_tracker);
+		assert(_output);
+
 		const int msecs = 8;
 		struct timeval t;
 		t.tv_sec = 0;
 		t.tv_usec = msecs*1e3;
 
-		vl::Transform const &trans = _output->getOutput(_time);
+		for( int sensor = 0; sensor < _output->nsensors(); ++sensor )
+		{
+			vl::Transform const &trans = _output->getOutput(sensor, _time);
 
-		vrpn_float64 pos[3];
-		vrpn_float64 quat[4];
+			vrpn_float64 pos[3];
+			vrpn_float64 quat[4];
 
-		pos[Q_X] = trans.position.x;
-		pos[Q_Y] = trans.position.y;
-		pos[Q_Z] = trans.position.z;
-		quat[Q_W] = trans.quaternion.w;
-		quat[Q_X] = trans.quaternion.x;
-		quat[Q_Y] = trans.quaternion.y;
-		quat[Q_Z] = trans.quaternion.z;
+			pos[Q_X] = trans.position.x;
+			pos[Q_Y] = trans.position.y;
+			pos[Q_Z] = trans.position.z;
+			quat[Q_W] = trans.quaternion.w;
+			quat[Q_X] = trans.quaternion.x;
+			quat[Q_Y] = trans.quaternion.y;
+			quat[Q_Z] = trans.quaternion.z;
 
-		//		getHeadData(time, pos, quat);
-		_tracker->report_pose( 0, t, pos, quat );
+			//		getHeadData(time, pos, quat);
+			_tracker->report_pose(sensor, t, pos, quat);
+		}
 
 		_tracker->mainloop();
 		_connection->mainloop();
