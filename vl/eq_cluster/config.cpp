@@ -317,7 +317,7 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 	std::cout << vl::TRACE << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
 	for( size_t i = 0; i < clients->getNTrackers(); ++i )
 	{
-		clients->getTracker(i)->init();
+		clients->getTrackerPtr(i)->init();
 	}
 
 	// Create Action

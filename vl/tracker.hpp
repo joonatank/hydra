@@ -1,5 +1,4 @@
-
-/**	Joonatan Kuosa
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-05 initial
  *	2010-06 some meat
  *	2010-11 added trigger and action support
@@ -57,31 +56,44 @@ public :
 	/// Uses different sensor data stack, so if connection is lost for long it can be
 	/// defaulted to these values.
 	/// For now supports default values if no tracker updates are done
-	virtual void setDefaultPosition( Ogre::Vector3 const &pos );
-	virtual void setDefaultOrientation( Ogre::Quaternion const &quat );
+	void setDefaultPosition( Ogre::Vector3 const &pos );
+	void setDefaultOrientation( Ogre::Quaternion const &quat );
 
-	virtual void setTrigger( vl::TrackerTrigger *trigger );
+	vl::Transform const &getDefaultTransform(void) const
+	{ return _default_value; }
+
+	vl::Transform const &getCurrentTransform(void) const
+	{ return _last_value; }
+
+	void setTrigger( vl::TrackerTrigger *trigger );
 
 	/// This will return the current trigger of a sensor
-	virtual vl::TrackerTrigger *getTrigger( void );
+	vl::TrackerTrigger *getTrigger( void );
 
 	/// Callback function for updating the Sensor data
-	virtual void update( vl::Transform const &data );
+	void update( vl::Transform const &data );
 
 protected :
 	vl::TrackerTrigger *_trigger;
 
 	vl::Transform _default_value;
+	vl::Transform _last_value;
 
 };
 
-typedef boost::shared_ptr<Sensor> SensorRefPtr;
+inline std::ostream &
+operator<<(std::ostream &os, Sensor const &s)
+{
+	os << "default transform " << s.getDefaultTransform() 
+		<< " : current transform " << s.getCurrentTransform() << "\n";
 
+	return os;
+}
 
 class Tracker
 {
 public :
-	Tracker( void );
+	Tracker(std::string const &trackerName = std::string());
 
 	virtual ~Tracker( void ) {}
 
@@ -95,7 +107,11 @@ public :
 	// Should they be created here or in the calling code?
 	virtual void setSensor( size_t i, SensorRefPtr sensor );
 
-	virtual SensorRefPtr getSensor( size_t i );
+	SensorRefPtr getSensorPtr(size_t i)
+	{ return _sensors.at(i); }
+
+	Sensor const &getSensor(size_t i) const
+	{ return *(_sensors.at(i)); }
 
 	size_t getNSensors( void ) const
 	{ return _sensors.size(); }
@@ -103,10 +119,15 @@ public :
 	void setTransformation( Ogre::Matrix4 const &trans )
 	{ _transform = trans; }
 
-	Ogre::Matrix4 const &getTransformation( void )
+	Ogre::Matrix4 const &getTransformation( void ) const
 	{ return _transform; }
 
+	std::string const &getName(void) const
+	{ return _name; }
+
 protected :
+	std::string _name;
+
 	std::vector<SensorRefPtr> _sensors;
 
 	Ogre::Matrix4 _transform;
@@ -124,13 +145,16 @@ public :
 	void addTracker( TrackerRefPtr tracker )
 	{ _trackers.push_back( tracker ); }
 
-	TrackerRefPtr getTracker( size_t index )
+	Tracker const &getTracker(size_t index) const
+	{ return *_trackers.at(index); }
+
+	TrackerRefPtr getTrackerPtr(size_t index)
 	{ return _trackers.at(index); }
 
-	size_t getNTrackers( void ) const
+	size_t getNTrackers(void) const
 	{ return _trackers.size(); }
 
-	vl::EventManagerPtr getEventManager( void )
+	vl::EventManagerPtr getEventManager(void)
 	{ return _event_manager; }
 
 protected :
@@ -138,6 +162,30 @@ protected :
 
 	vl::EventManagerPtr _event_manager;
 };
+
+inline std::ostream &
+operator<<(std::ostream &os, Tracker const &t)
+{
+	os << t.getName() << " : transform " << t.getTransformation() << "\n";
+	for(size_t i = 0; i < t.getNSensors(); ++i)
+	{
+		os << "Sensor " << i << " : " << t.getSensor(i) << "\n";
+	}
+
+	return os;
+}
+
+inline std::ostream &
+operator<<(std::ostream &os, Clients const &c)
+{
+	os << "Clients : \n";
+	for( size_t i = 0; i < c.getNTrackers(); ++i )
+	{
+		os << "Tracker : " << c.getTracker(i) << "\n";
+	}
+
+	return os;
+}
 
 }	// namespace vl
 

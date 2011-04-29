@@ -79,6 +79,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("quit", &vl::GameManager::quit)
+		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;
@@ -258,6 +259,18 @@ BOOST_PYTHON_MODULE(vl)
 			 createKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
 		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger, hasKeyReleasedTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Sensor, SensorRefPtr, boost::noncopyable>("Sensor", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Tracker, TrackerRefPtr, boost::noncopyable>("Tracker", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::Clients, ClientsRefPtr, boost::noncopyable>("Clients", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

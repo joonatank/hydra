@@ -55,8 +55,11 @@ vl::Sensor::setTrigger( vl::TrackerTrigger* trigger )
 	update( _default_value );
 }
 
-void vl::Sensor::update(const vl::Transform& data)
+void 
+vl::Sensor::update(const vl::Transform& data)
 {
+	_last_value = data;
+
 	if( _trigger )
 	{
 		_trigger->update(data);
@@ -65,8 +68,9 @@ void vl::Sensor::update(const vl::Transform& data)
 
 
 /// --------- Tracker --------------
-vl::Tracker::Tracker( void )
-	: _transform( Ogre::Matrix4::IDENTITY )
+vl::Tracker::Tracker(std::string const &trackerName)
+	: _name(trackerName)
+	, _transform( Ogre::Matrix4::IDENTITY )
 {}
 
 void
@@ -75,12 +79,4 @@ vl::Tracker::setSensor(size_t i, vl::SensorRefPtr sensor)
 	if( _sensors.size() <= i )
 	{ _sensors.resize( i+1 ); }
 	_sensors.at(i) = sensor;
-}
-
-vl::SensorRefPtr
-vl::Tracker::getSensor(size_t i)
-{
-	if( _sensors.size() <= i )
-	{ return SensorRefPtr(); }
-	return _sensors.at(i);
 }

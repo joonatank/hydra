@@ -1,10 +1,13 @@
-/**	Joonatan Kuosa
- *	2010-11 major update to new event handling system
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11 major update to new event handling system
  *
  */
 #include "vrpn_tracker.hpp"
 
 #include "base/exceptions.hpp"
+
+/// Necessary for log levels
+#include "logger.hpp"
 
 /// -------------- Globals -------------
 std::ostream &operator<<( std::ostream &os, vrpn_TRACKERCB t )
@@ -30,11 +33,12 @@ void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 
 /// ----------- Public ----------------
 vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
-	: _tracker(0)
+	: Tracker(trackerName)
+	, _tracker(0)
 {
 	// TODO should use Ogre LogManager
 	// Needs to be created in Config
-	std::cout << "Creating vrpn tracker : " << trackerName << std::endl;
+	std::cout << vl::TRACE << "Creating vrpn tracker : " << trackerName << std::endl;
 	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
 	_tracker->shutup = true;
 }
@@ -42,7 +46,8 @@ vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
 vl::vrpnTracker::vrpnTracker(const std::string& hostname,
 							 const std::string& tracker,
 							 uint16_t port)
-	: _tracker(0)
+	: Tracker(tracker)
+	, _tracker(0)
 {
 	std::stringstream ss;
 	ss << tracker << "@" << hostname;
@@ -51,9 +56,7 @@ vl::vrpnTracker::vrpnTracker(const std::string& hostname,
 	if( port != 0 )
 	{ ss << ":" << port; }
 
-	// TODO should use Ogre LogManager
-	// Needs to be created in Config
-	std::cout << "Creating vrpn tracker : " << ss.str() << std::endl;
+	std::cout << vl::TRACE << "Creating vrpn tracker : " << ss.str() << std::endl;
 
 	_tracker = new vrpn_Tracker_Remote( ss.str().c_str() );
 	_tracker->shutup = true;

@@ -131,7 +131,7 @@ vl::GameManager::step(void )
 	// callbacks and appropriate updates (head matrix and scene nodes).
 	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
 	{
-		_trackers->getTracker(i)->mainloop();
+		_trackers->getTrackerPtr(i)->mainloop();
 	}
 
 	return !_quit;

@@ -1,6 +1,6 @@
-/**	Joonatan Kuosa
- *	2010-05 initial implementation
- *	2010-11 removed mapping and added Trigger support
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-05 initial implementation
+ *	@date 2010-11 removed mapping and added Trigger support
  *
  *	VRPN Tracker implementation.
  *
