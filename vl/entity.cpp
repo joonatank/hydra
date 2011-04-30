@@ -117,6 +117,9 @@ vl::Entity::_doCreateNative(void)
 	assert( _creator->getNative() );
 	assert( !_name.empty() );
 
+	
+	/// Catching the throw can not be used for mesh file 
+	/// because the ogre entity is not created then
 	if( _creator->getNative()->hasEntity( _name ) )
 	{
 		_ogre_object = _creator->getNative()->getEntity( _name );
@@ -151,10 +154,9 @@ vl::Entity::_doCreateNative(void)
 
 	assert(_ogre_object);
 
-	Ogre::MeshPtr mesh = _ogre_object->getMesh();
-	unsigned short src, dest;
-	if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
-	{
+	/// Really quick and dirty way to avoid problems when there is
+	/// no uv coordinates 
+	try {
 		// TODO this will not work for objects without UVs
 		// Will it try to use it when there is no UVs?
 		// TODO this might also be really slow, we should probably have materails
@@ -163,12 +165,16 @@ vl::Entity::_doCreateNative(void)
 		// into the meshe files.
 		// TODO this does not work for the Ogre test object for some reason
 		// it still has the zero tangents even though it has UVs.
-		/*
-		std::cout << "Rebulding tangents on object : " << _name 
-			<< " : with source coord set = " << src << " and dest coord set = " 
-			<< dest << "." << std::endl;
-		*/
-		mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
+		Ogre::MeshPtr mesh = _ogre_object->getMesh();
+		unsigned short src, dest;
+		if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
+		{
+			mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
+		}
+	}
+	catch( Ogre::Exception const &e)
+	{
+		std::cout << "Exception : " << e.what() << std::endl;
 	}
 
 	_ogre_object->setCastShadows(_cast_shadows);
