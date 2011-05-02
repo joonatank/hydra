@@ -65,7 +65,7 @@ protected :
 	void _sendProject( void );
 
 	/// Tracking
-	void _createTracker( vl::EnvSettingsRefPtr settings );
+	void _createTrackers(vl::EnvSettingsRefPtr settings);
 
 	/// Scene
 	void _loadScenes( void );

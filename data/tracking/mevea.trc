@@ -1,79 +1,83 @@
 <?xml version="1.0"?>
 
 <clients>
-	<client type="VRPN" host="mec-0.rd.tut.fi" port="3884">
+	<client type="VRPN" host="localhost" port="3884">
 		<tracker name="DMTracker">
 			<transformation>
-				<sign x="1" y="-1" z="1"/>
-				<!--
+				<quaternion w="0" x="-1" y="0" z="0"/> 
 				<transformation>
-					<quaternion w="0.7071" z="0" x="0" y="-0.7071"/> 
+					<quaternion w="0.7071" x="0" y="0.7071" z="0"/> 
+				</transformation>
+				<!--
+
+				<transformation>
+				<sign x="1" y="1" z="1"/>
 					<transformation>
 						<quaternion w="0.7071" z="0" y="0" x="-0.7071"/> 
 					</transformation>
-				</transformation>
 				<quaternion w="0.5" x="0.5" y="-0.5" z="-0.5"/>
+				</transformation>
 				-->
 			</transformation>
 			<!-- For some reason the first sensor is not in use 
 			<sensor num="0"/>
 			-->
 			<sensor num="1">
-				<trigger type="VRPN" name="taka_akseliTrigger" />
+				<trigger type="VRPN" name="Taka-akseliTrigger" />
 			</sensor>
 			<sensor num="2">
-				<trigger type="VRPN" name="takarunkoTrigger" />
+				<trigger type="VRPN" name="TakarunkoTrigger" />
 			</sensor>
 			<sensor num="3">
-				<trigger type="VRPN" name="eturunkoTrigger" />
+				<trigger type="VRPN" name="EturunkoTrigger" />
 			</sensor>
 			<sensor num="4">
-				<trigger type="VRPN" name="nostovarsiTrigger" />
+				<trigger type="VRPN" name="NostovarsiTrigger" />
 			</sensor>
 			<sensor num="5">
-				<trigger type="VRPN" name="keinuvipuTrigger" />
+				<trigger type="VRPN" name="KeinuvipuTrigger" />
 			</sensor>
 			<sensor num="6">
-				<trigger type="VRPN" name="koiranluuTrigger" />
+				<trigger type="VRPN" name="KoiranluuTrigger" />
 			</sensor>
 			<sensor num="7">
-				<trigger type="VRPN" name="kauhaTrigger" />
+				<trigger type="VRPN" name="KauhaTrigger" />
 			</sensor>
 			<sensor num="8">
-				<trigger type="VRPN" name="wheel_front_rightTrigger" />
+				<trigger type="VRPN" name="OERengasTrigger" />
 			</sensor>
 			<sensor num="9">
-				<trigger type="VRPN" name="wheel_front_leftTrigger" />
+				<trigger type="VRPN" name="VERengasTrigger" />
 			</sensor>
 			<sensor num="10">
-				<trigger type="VRPN" name="wheel_back_rightTrigger" />
+				<trigger type="VRPN" name="OTRengasTrigger" />
 			</sensor>
 			<sensor num="11">
-				<trigger type="VRPN" name="wheel_back_leftTrigger" />
+				<trigger type="VRPN" name="VTRengasTrigger" />
 			</sensor>
 			<sensor num="12">
-				<trigger type="VRPN" name="nostoSPTrigger" />
+				<trigger type="VRPN" name="NostoSPTrigger" />
 			</sensor>
 			<sensor num="13">
-				<trigger type="VRPN" name="nostoSMTrigger" />
+				<trigger type="VRPN" name="NostoSMTrigger" />
 			</sensor>
 			<sensor num="14">
-				<trigger type="VRPN" name="kippiSPTrigger" />
+				<trigger type="VRPN" name="KippiSPTrigger" />
 			</sensor>
 			<sensor num="15">
-				<trigger type="VRPN" name="kippiSMTrigger" />
+				<trigger type="VRPN" name="KippiSMTrigger" />
 			</sensor>
 			<sensor num="16">
-				<trigger type="VRPN" name="ohjausSOPTrigger" />
+				<trigger type="VRPN" name="OhjausSOPTrigger" />
 			</sensor>
 			<sensor num="17">
-				<trigger type="VRPN" name="ohjausSOMTrigger" />
+				<trigger type="VRPN" name="OhjausSOMTrigger" />
 			</sensor>
 			<sensor num="18">
-				<trigger type="VRPN" name="ohjausSVPTrigger" />
+				<trigger type="VRPN" name="OhjausSVPTrigger" />
 			</sensor>
 			<sensor num="19">
-				<trigger type="VRPN" name="ohjausSVMTrigger" />
+				<trigger type="VRPN" name="OhjausSVMTrigger" />
 			</sensor>
 		</tracker>
 

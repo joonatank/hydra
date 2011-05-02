@@ -32,45 +32,8 @@ void VRPN_CALLBACK vl::handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 /// ----------- vrpnTracker ------------
 
 /// ----------- Public ----------------
-vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
-	: Tracker(trackerName)
-	, _tracker(0)
-{
-	// TODO should use Ogre LogManager
-	// Needs to be created in Config
-	std::cout << vl::TRACE << "Creating vrpn tracker : " << trackerName << std::endl;
-	_tracker = new vrpn_Tracker_Remote( trackerName.c_str() );
-	_tracker->shutup = true;
-}
-
-vl::vrpnTracker::vrpnTracker(const std::string& hostname,
-							 const std::string& tracker,
-							 uint16_t port)
-	: Tracker(tracker)
-	, _tracker(0)
-{
-	std::stringstream ss;
-	ss << tracker << "@" << hostname;
-
-	// Add port if it's not default value
-	if( port != 0 )
-	{ ss << ":" << port; }
-
-	std::cout << vl::TRACE << "Creating vrpn tracker : " << ss.str() << std::endl;
-
-	_tracker = new vrpn_Tracker_Remote( ss.str().c_str() );
-	_tracker->shutup = true;
-}
-
-vl::vrpnTracker::~vrpnTracker( void )
-{
-	delete _tracker;
-}
-
-void vl::vrpnTracker::init(void )
-{
-	_tracker->register_change_handler(this, vl::handle_tracker);
-}
+vl::vrpnTracker::~vrpnTracker(void)
+{}
 
 void
 vl::vrpnTracker::mainloop(void )
@@ -82,20 +45,48 @@ vl::vrpnTracker::mainloop(void )
 }
 
 /// -------- Protected -------------
+vl::vrpnTracker::vrpnTracker(const std::string& trackerName )
+	: Tracker(trackerName)
+{
+	_create(trackerName.c_str());
+}
+
+vl::vrpnTracker::vrpnTracker(const std::string& hostname,
+							 const std::string& tracker,
+							 uint16_t port)
+	: Tracker(tracker)
+{
+	std::stringstream ss;
+	ss << tracker << "@" << hostname;
+
+	// Add port if it's not default value
+	if( port != 0 )
+	{ ss << ":" << port; }
+
+	_create(ss.str().c_str());
+}
+
+void 
+vl::vrpnTracker::_create(char const *tracker_name)
+{
+	std::cout << vl::TRACE << "Creating vrpn tracker : " << tracker_name << std::endl;
+
+	_tracker.reset( new vrpn_Tracker_Remote(tracker_name) );
+	_tracker->shutup = true;
+	_tracker->register_change_handler(this, vl::handle_tracker);
+
+}
+
 void
 vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 {
 	// Only update sensors that the user has created and added
 	if( _sensors.size() > t.sensor )
 	{
-		SensorRefPtr sensor = _sensors.at(t.sensor);
-		// Check that we have a sensor object
-		// Only sensors that are in use have an object
-		if( sensor )
-		{
-			vl::Transform trans = vl::createTransform( t.pos, t.quat );
-			trans = trans * _transform;
-			sensor->update( trans );
-		}
+		Sensor &sensor = _sensors.at(t.sensor);
+
+		vl::Transform trans = vl::createTransform( t.pos, t.quat );
+		trans = trans*_transform;
+		sensor.update( trans );
 	}
 }

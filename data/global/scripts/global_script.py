@@ -89,6 +89,23 @@ def addMoveSelection() :
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.addAction( trans_action )
 
+def mapHeadTracker(name) :
+	act = HeadTrackerAction.create()
+	act.player = game.player
+	# Create a fake tracker trigger
+	if(not game.event_manager.hasTrackerTrigger(name)):
+		tracker = Tracker.create("FakeHeadTracker")
+		tracker.n_sensors = 1
+		t = Transform(Vector3(0, 1.5, 0))
+		tracker.getSensor(0).default_transform = t
+		# Create trigger
+		trigger = game.event_manager.createTrackerTrigger(name)
+		tracker.getSensor(0).trigger = trigger
+		game.tracker_clients.addTracker(tracker)
+
+	trigger = game.event_manager.getTrackerTrigger(name)
+	trigger.action = act
+
 
 # Fine using the new event interface
 def addQuitEvent( kc ) :
@@ -217,6 +234,9 @@ def addToggleEditor(kc) :
 
 	trigger.addAction( toggle )
 
+
+# Add a head tracker support
+mapHeadTracker("glassesTrigger")
 
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )

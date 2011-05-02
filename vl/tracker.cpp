@@ -12,8 +12,61 @@
 
 #include "tracker.hpp"
 
-/// ------------ Sensor ---------------
+/// ------------------------------ Global ------------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Sensor const &s)
+{
+	if(s.getDefaultTransform().isIdentity())
+	{
+		os << " : default transform is identity." << std::endl;
+	}
+	else
+	{ os << "default transform " << s.getDefaultTransform(); }
+	os << "\n";
 
+	if(s.getCurrentTransform().isIdentity())
+	{
+		os << " : current transform is identity." << std::endl;
+	}
+	else
+	{ os << " : current transform " << s.getCurrentTransform(); }
+	os << "\n";
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Tracker const &t)
+{
+	os << t.getName();
+	if(!t.getTransformation().isIdentity())
+	{
+		os << " : transform ";
+		os << " position " << t.getTransformation().position << "\n"
+			<< " orientation" << t.getTransformation().quaternion << "\n";
+	}
+
+	for(size_t i = 0; i < t.getNSensors(); ++i)
+	{
+		os << "Sensor " << i << " : " << t.getSensor(i) << "\n";
+	}
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Clients const &c)
+{
+	os << "Clients : \n";
+	for( size_t i = 0; i < c.getNTrackers(); ++i )
+	{
+		os << "Tracker : " << c.getTracker(i) << "\n";
+	}
+
+	return os;
+}
+
+/// ------------------------------ Sensor ------------------------------------
 vl::Sensor::Sensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)
 	: _trigger(0), _default_value( default_pos, default_quat )
 {}
@@ -39,6 +92,13 @@ vl::Sensor::setDefaultOrientation( Ogre::Quaternion const &quat )
 	// So that if the values are not beign updated we are using the new defaults
 	// Problem if the values are updated every 8ms this will cause a slight clitch
 	update( _default_value );
+}
+
+void 
+vl::Sensor::setDefaultTransform(vl::Transform const &t)
+{
+	_default_value = t;
+	update(_default_value);
 }
 
 vl::TrackerTrigger *
@@ -70,13 +130,24 @@ vl::Sensor::update(const vl::Transform& data)
 /// --------- Tracker --------------
 vl::Tracker::Tracker(std::string const &trackerName)
 	: _name(trackerName)
-	, _transform( Ogre::Matrix4::IDENTITY )
 {}
 
 void
-vl::Tracker::setSensor(size_t i, vl::SensorRefPtr sensor)
+vl::Tracker::setSensor(size_t i, vl::Sensor const &sensor)
 {
-	if( _sensors.size() <= i )
-	{ _sensors.resize( i+1 ); }
 	_sensors.at(i) = sensor;
+}
+
+void
+vl::Tracker::addSensor(size_t i, vl::Sensor const &sensor)
+{
+	if(_sensors.size() <= i)
+	{ _sensors.resize(i+1); }
+	_sensors.at(i) = sensor;
+}
+
+void 
+vl::Tracker::setNSensors(size_t size)
+{
+	_sensors.resize(size);
 }

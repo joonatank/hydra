@@ -25,7 +25,6 @@ vl::BasicActionTrigger::getAction( size_t i )
 void
 vl::BasicActionTrigger::update( void )
 {
-	// FIXME this crashes
 	for( size_t i = 0; i < _actions.size(); ++i )
 	{
 		_actions.at(i)->execute();

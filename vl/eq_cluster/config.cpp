@@ -8,9 +8,6 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
-#include "vrpn_tracker.hpp"
-#include "fake_tracker.hpp"
-
 #include "actions_misc.hpp"
 
 #include "dotscene_loader.hpp"
@@ -101,7 +98,7 @@ vl::Config::init( void )
 	_loadScenes();
 
 	// Create Tracker needs the SceneNodes for mapping
-	_createTracker( _env );
+	_createTrackers(_env);
 
 	std::vector<std::string> scripts = _settings.getScripts();
 
@@ -292,7 +289,7 @@ vl::Config::_sendProject ( void )
 }
 
 void
-vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
+vl::Config::_createTrackers(vl::EnvSettingsRefPtr settings)
 {
 	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
 	assert( clients );
@@ -311,45 +308,6 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 
 		vl::TrackerSerializer ser( clients );
 		ser.parseTrackers(resource);
-	}
-
-	// Start the trackers
-	std::cout << vl::TRACE << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
-	for( size_t i = 0; i < clients->getNTrackers(); ++i )
-	{
-		clients->getTrackerPtr(i)->init();
-	}
-
-	// Create Action
-	vl::HeadTrackerAction *action = vl::HeadTrackerAction::create();
-	assert( _game_manager->getPlayer() );
-	action->setPlayer( _game_manager->getPlayer() );
-
-	// This will get the head sensor if there is one
-	// If not it will create a FakeTracker instead
-	std::string const head_trig_name("glassesTrigger");
-	vl::EventManager *event_man = _game_manager->getEventManager();
-
-	if( event_man->hasTrackerTrigger(head_trig_name) )
-	{
-		vl::TrackerTrigger *head_trigger = event_man->getTrackerTrigger(head_trig_name);
-		head_trigger->setAction( action );
-	}
-	else
-	{
-		vl::TrackerRefPtr tracker( new vl::FakeTracker );
-		vl::SensorRefPtr sensor( new vl::Sensor );
-		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
-
-		// Create the trigger
-		vl::TrackerTrigger *head_trigger
-			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
-		head_trigger->setAction( action );
-		sensor->setTrigger( head_trigger );
-
-		// Add the tracker
-		tracker->setSensor( 0, sensor );
-		clients->addTracker(tracker);
 	}
 }
 

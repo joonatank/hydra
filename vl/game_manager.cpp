@@ -48,14 +48,19 @@ vl::GameManager::GameManager( vl::Logger *logger )
 
 vl::GameManager::~GameManager(void )
 {
-	std::cout << "Exit audio." << std::endl;
-
 	//Shutdown cAudio
 	if( _audio_manager )
 	{
 		_audio_manager->shutDown();
 		cAudio::destroyAudioManager(_audio_manager);
 	}
+
+	_trackers.reset();
+
+	delete _scene_manager;
+	delete _python;
+	delete _resource_man;
+	delete _event_man;
 }
 
 void

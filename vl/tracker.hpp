@@ -59,6 +59,8 @@ public :
 	void setDefaultPosition( Ogre::Vector3 const &pos );
 	void setDefaultOrientation( Ogre::Quaternion const &quat );
 
+	void setDefaultTransform(vl::Transform const &t);
+
 	vl::Transform const &getDefaultTransform(void) const
 	{ return _default_value; }
 
@@ -81,56 +83,60 @@ protected :
 
 };
 
-inline std::ostream &
-operator<<(std::ostream &os, Sensor const &s)
-{
-	os << "default transform " << s.getDefaultTransform() 
-		<< " : current transform " << s.getCurrentTransform() << "\n";
-
-	return os;
-}
+std::ostream &
+operator<<(std::ostream &os, Sensor const &s);
 
 class Tracker
 {
 public :
-	Tracker(std::string const &trackerName = std::string());
-
 	virtual ~Tracker( void ) {}
 
-	virtual void init( void ) = 0;
+	/// @brief mainloop of the tracker for the base tracker empty
+	virtual void mainloop(void) {}
 
-	virtual void mainloop( void ) = 0;
+	/// @brief Set a sensor does not change the number of sensors
+	/// @param i sensor index
+	/// @param sensor sensor definition
+	void setSensor(size_t i, Sensor const &sensor);
 
-	/// Set a sensor created else where. Sensors should be created to the heap
-	/// So they stay alive as long as the tracker.
-	// TODO where are the sensors created?
-	// Should they be created here or in the calling code?
-	virtual void setSensor( size_t i, SensorRefPtr sensor );
+	/// @brief Set a sensor and if there is not enough sensors add it
+	/// @param i sensor index
+	/// @param sensor sensor definition
+	void addSensor(size_t i, vl::Sensor const &sensor);
 
-	SensorRefPtr getSensorPtr(size_t i)
+	Sensor &getSensor(size_t i)
 	{ return _sensors.at(i); }
 
 	Sensor const &getSensor(size_t i) const
-	{ return *(_sensors.at(i)); }
+	{ return _sensors.at(i); }
 
-	size_t getNSensors( void ) const
+	void setNSensors(size_t size);
+
+	size_t getNSensors(void) const
 	{ return _sensors.size(); }
 
-	void setTransformation( Ogre::Matrix4 const &trans )
+	void setTransformation(vl::Transform const &trans)
 	{ _transform = trans; }
 
-	Ogre::Matrix4 const &getTransformation( void ) const
+	vl::Transform const &getTransformation(void) const
 	{ return _transform; }
 
 	std::string const &getName(void) const
 	{ return _name; }
 
+	static TrackerRefPtr create(std::string const &trackerName = std::string())
+	{ return TrackerRefPtr(new Tracker(trackerName)); }
+
 protected :
+	/// Protected constructor so that user needs to call create
+	Tracker(std::string const &trackerName);
+
 	std::string _name;
 
-	std::vector<SensorRefPtr> _sensors;
+	std::vector<Sensor> _sensors;
 
-	Ogre::Matrix4 _transform;
+	/// @todo this needs a separate Transform class with permutation, scaling and flipping
+	vl::Transform _transform;
 
 };	// class Tracker
 
@@ -163,29 +169,11 @@ protected :
 	vl::EventManagerPtr _event_manager;
 };
 
-inline std::ostream &
-operator<<(std::ostream &os, Tracker const &t)
-{
-	os << t.getName() << " : transform " << t.getTransformation() << "\n";
-	for(size_t i = 0; i < t.getNSensors(); ++i)
-	{
-		os << "Sensor " << i << " : " << t.getSensor(i) << "\n";
-	}
+std::ostream &
+operator<<(std::ostream &os, Tracker const &t);
 
-	return os;
-}
-
-inline std::ostream &
-operator<<(std::ostream &os, Clients const &c)
-{
-	os << "Clients : \n";
-	for( size_t i = 0; i < c.getNTrackers(); ++i )
-	{
-		os << "Tracker : " << c.getTracker(i) << "\n";
-	}
-
-	return os;
-}
+std::ostream &
+operator<<(std::ostream &os, Clients const &c);
 
 }	// namespace vl
 

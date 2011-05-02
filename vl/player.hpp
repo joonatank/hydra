@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include <OGRE/OgreMatrix4.h>
+#include "math/math.hpp"
 
 #include "distributed.hpp"
 
@@ -42,10 +42,10 @@ public :
 	std::string const &getActiveCamera( void ) const
 	{ return _active_camera; }
 
-	Ogre::Matrix4 const &getHeadMatrix( void ) const
-	{ return _head_matrix; }
+	vl::Transform const &getHeadTransform(void) const
+	{ return _head_transform; }
 
-	void setHeadMatrix( Ogre::Matrix4 const &m );
+	void setHeadTransform(vl::Transform const &m);
 
 	void takeScreenshot( void );
 
@@ -77,7 +77,7 @@ private :
 
 	std::string _active_camera;
 
-	Ogre::Matrix4 _head_matrix;
+	vl::Transform _head_transform;
 
 	uint32_t _screenshot_version;
 
