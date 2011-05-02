@@ -1,5 +1,4 @@
-
-/**	Joonatan Kuosa
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-05 initial
  *	2010-06 some meat
  *	2010-11 added trigger and action support
@@ -57,59 +56,87 @@ public :
 	/// Uses different sensor data stack, so if connection is lost for long it can be
 	/// defaulted to these values.
 	/// For now supports default values if no tracker updates are done
-	virtual void setDefaultPosition( Ogre::Vector3 const &pos );
-	virtual void setDefaultOrientation( Ogre::Quaternion const &quat );
+	void setDefaultPosition( Ogre::Vector3 const &pos );
+	void setDefaultOrientation( Ogre::Quaternion const &quat );
 
-	virtual void setTrigger( vl::TrackerTrigger *trigger );
+	void setDefaultTransform(vl::Transform const &t);
+
+	vl::Transform const &getDefaultTransform(void) const
+	{ return _default_value; }
+
+	vl::Transform const &getCurrentTransform(void) const
+	{ return _last_value; }
+
+	void setTrigger( vl::TrackerTrigger *trigger );
 
 	/// This will return the current trigger of a sensor
-	virtual vl::TrackerTrigger *getTrigger( void );
+	vl::TrackerTrigger *getTrigger( void );
 
 	/// Callback function for updating the Sensor data
-	virtual void update( vl::Transform const &data );
+	void update( vl::Transform const &data );
 
 protected :
 	vl::TrackerTrigger *_trigger;
 
 	vl::Transform _default_value;
+	vl::Transform _last_value;
 
 };
 
-typedef boost::shared_ptr<Sensor> SensorRefPtr;
-
+std::ostream &
+operator<<(std::ostream &os, Sensor const &s);
 
 class Tracker
 {
 public :
-	Tracker( void );
-
 	virtual ~Tracker( void ) {}
 
-	virtual void init( void ) = 0;
+	/// @brief mainloop of the tracker for the base tracker empty
+	virtual void mainloop(void) {}
 
-	virtual void mainloop( void ) = 0;
+	/// @brief Set a sensor does not change the number of sensors
+	/// @param i sensor index
+	/// @param sensor sensor definition
+	void setSensor(size_t i, Sensor const &sensor);
 
-	/// Set a sensor created else where. Sensors should be created to the heap
-	/// So they stay alive as long as the tracker.
-	// TODO where are the sensors created?
-	// Should they be created here or in the calling code?
-	virtual void setSensor( size_t i, SensorRefPtr sensor );
+	/// @brief Set a sensor and if there is not enough sensors add it
+	/// @param i sensor index
+	/// @param sensor sensor definition
+	void addSensor(size_t i, vl::Sensor const &sensor);
 
-	virtual SensorRefPtr getSensor( size_t i );
+	Sensor &getSensor(size_t i)
+	{ return _sensors.at(i); }
 
-	size_t getNSensors( void ) const
+	Sensor const &getSensor(size_t i) const
+	{ return _sensors.at(i); }
+
+	void setNSensors(size_t size);
+
+	size_t getNSensors(void) const
 	{ return _sensors.size(); }
 
-	void setTransformation( Ogre::Matrix4 const &trans )
+	void setTransformation(vl::Transform const &trans)
 	{ _transform = trans; }
 
-	Ogre::Matrix4 const &getTransformation( void )
+	vl::Transform const &getTransformation(void) const
 	{ return _transform; }
 
-protected :
-	std::vector<SensorRefPtr> _sensors;
+	std::string const &getName(void) const
+	{ return _name; }
 
-	Ogre::Matrix4 _transform;
+	static TrackerRefPtr create(std::string const &trackerName = std::string())
+	{ return TrackerRefPtr(new Tracker(trackerName)); }
+
+protected :
+	/// Protected constructor so that user needs to call create
+	Tracker(std::string const &trackerName);
+
+	std::string _name;
+
+	std::vector<Sensor> _sensors;
+
+	/// @todo this needs a separate Transform class with permutation, scaling and flipping
+	vl::Transform _transform;
 
 };	// class Tracker
 
@@ -124,13 +151,16 @@ public :
 	void addTracker( TrackerRefPtr tracker )
 	{ _trackers.push_back( tracker ); }
 
-	TrackerRefPtr getTracker( size_t index )
+	Tracker const &getTracker(size_t index) const
+	{ return *_trackers.at(index); }
+
+	TrackerRefPtr getTrackerPtr(size_t index)
 	{ return _trackers.at(index); }
 
-	size_t getNTrackers( void ) const
+	size_t getNTrackers(void) const
 	{ return _trackers.size(); }
 
-	vl::EventManagerPtr getEventManager( void )
+	vl::EventManagerPtr getEventManager(void)
 	{ return _event_manager; }
 
 protected :
@@ -138,6 +168,12 @@ protected :
 
 	vl::EventManagerPtr _event_manager;
 };
+
+std::ostream &
+operator<<(std::ostream &os, Tracker const &t);
+
+std::ostream &
+operator<<(std::ostream &os, Clients const &c);
 
 }	// namespace vl
 

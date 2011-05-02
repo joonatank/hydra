@@ -7,8 +7,7 @@
 
 // TODO we should pass the active camera to this, so it's not arbitary
 vl::Player::Player( void )
-	: _head_matrix(Ogre::Matrix4::IDENTITY)
-	, _screenshot_version(0)
+	: _screenshot_version(0)
 	, _ipd(0)
 {}
 
@@ -26,10 +25,10 @@ vl::Player::setActiveCamera( std::string const &name )
 }
 
 void
-vl::Player::setHeadMatrix( Ogre::Matrix4 const &m )
+vl::Player::setHeadTransform(vl::Transform const &m)
 {
 	setDirty( DIRTY_HEAD );
-	_head_matrix = m;
+	_head_transform = m;
 }
 
 void
@@ -54,7 +53,7 @@ void
 vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_HEAD )
-	{ msg << _head_matrix; }
+	{ msg << _head_transform; }
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{ msg << _active_camera; }
@@ -70,7 +69,7 @@ void
 vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
 	if( dirtyBits & DIRTY_HEAD )
-	{ msg >> _head_matrix; }
+	{ msg >> _head_transform; }
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{ msg >> _active_camera; }

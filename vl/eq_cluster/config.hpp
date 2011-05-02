@@ -127,7 +127,7 @@ protected :
 	void _sendMessage(vl::cluster::Message const &msg);
 
 	/// Tracking
-	void _createTracker( vl::EnvSettingsRefPtr settings );
+	void _createTrackers(vl::EnvSettingsRefPtr settings);
 
 	/// Scene
 	void _loadScenes( void );

@@ -8,9 +8,6 @@
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
-#include "vrpn_tracker.hpp"
-#include "fake_tracker.hpp"
-
 #include "actions_misc.hpp"
 
 #include "dotscene_loader.hpp"
@@ -169,7 +166,7 @@ vl::Config::init( void )
 	t.reset();
 
 	// Create Tracker needs the SceneNodes for mapping
-	_createTracker( _env );
+	_createTrackers(_env);
 	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
 	t.reset();
 
@@ -513,7 +510,7 @@ vl::Config::_sendMessage(vl::cluster::Message const &msg)
 
 /// @todo this takes over 1 second to complete which is almost a second too much
 void
-vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
+vl::Config::_createTrackers(vl::EnvSettingsRefPtr settings)
 {
 	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
 	assert( clients );
@@ -537,48 +534,9 @@ vl::Config::_createTracker( vl::EnvSettingsRefPtr settings )
 		ser.parseTrackers(resource);
 	}
 	std::cout << "Parsing tracking files took : " << t.elapsed() << std::endl;
-
 	t.reset();
-	// Start the trackers
-	std::cout << vl::TRACE << "Starting " << clients->getNTrackers() << " trackers." << std::endl;
-	for( size_t i = 0; i < clients->getNTrackers(); ++i )
-	{
-		clients->getTracker(i)->init();
-	}
 	std::cout << "Starting trackers took : " << t.elapsed() << std::endl;
-
 	t.reset();
-	// Create Action
-	vl::HeadTrackerAction *action = vl::HeadTrackerAction::create();
-	assert( _game_manager->getPlayer() );
-	action->setPlayer( _game_manager->getPlayer() );
-
-	// This will get the head sensor if there is one
-	// If not it will create a FakeTracker instead
-	std::string const head_trig_name("glassesTrigger");
-	vl::EventManager *event_man = _game_manager->getEventManager();
-
-	if( event_man->hasTrackerTrigger(head_trig_name) )
-	{
-		vl::TrackerTrigger *head_trigger = event_man->getTrackerTrigger(head_trig_name);
-		head_trigger->setAction( action );
-	}
-	else
-	{
-		vl::TrackerRefPtr tracker( new vl::FakeTracker );
-		vl::SensorRefPtr sensor( new vl::Sensor );
-		sensor->setDefaultPosition( Ogre::Vector3(0, 1.5, 0) );
-
-		// Create the trigger
-		vl::TrackerTrigger *head_trigger
-			= _game_manager->getEventManager()->createTrackerTrigger(head_trig_name);
-		head_trigger->setAction( action );
-		sensor->setTrigger( head_trigger );
-
-		// Add the tracker
-		tracker->setSensor( 0, sensor );
-		clients->addTracker(tracker);
-	}
 	std::cout << "Creating head trigger took : " << t.elapsed() << std::endl;
 }
 

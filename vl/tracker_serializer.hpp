@@ -67,15 +67,15 @@ private :
 	/// Process a tracker node
 	void processTracker( rapidxml::xml_node<>* XMLNode, Connection const &connection );
 
-	void processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans );
+	void processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans);
 
 	/// Process a sensor node
 	void processSensor( rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker );
 
 	/// Process a trigger node
-	void processTrigger( rapidxml::xml_node<>* XMLNode, SensorRefPtr sensor );
+	void processTrigger( rapidxml::xml_node<>* XMLNode, Sensor &sensor );
 
-	void processDefault( rapidxml::xml_node<>* XMLNode, SensorRefPtr sensor );
+	void processDefault( rapidxml::xml_node<>* XMLNode, Sensor &sensor );
 
 	/// Config where the xml data is deserialized into
 	ClientsRefPtr _clients;

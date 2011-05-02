@@ -64,7 +64,6 @@ set( HEADERS
 	movable_object.hpp
 	camera.hpp
 	tracker_serializer.hpp
-	fake_tracker.hpp
 	vrpn_tracker.hpp
 	settings.hpp
 	ogre_xml_helpers.hpp

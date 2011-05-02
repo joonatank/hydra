@@ -27,9 +27,7 @@ vl::HeadTrackerAction::execute( vl::Transform const &data )
 	if( !_player )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	Ogre::Matrix4 m( data.quaternion );
-	m.setTrans(data.position);
-	_player->setHeadMatrix(m);
+	_player->setHeadTransform(data);
 }
 
 /// -------- QuitAction ------------

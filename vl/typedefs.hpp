@@ -18,7 +18,6 @@ namespace vl
 {
 	// Forward declarations
 	class Settings;
-	class Tracker;
 	class EnvSettings;
 	class ProjSettings;
 	class Player;
@@ -26,6 +25,9 @@ namespace vl
 	class EventManager;
 	class ResourceManager;
 	class PythonContext;
+	
+	class Sensor;
+	class Tracker;
 	class Clients;
 
 	class SceneManager;
@@ -40,6 +42,9 @@ namespace vl
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
 	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
+	
+	// Tracker objects
+	typedef boost::shared_ptr<Sensor> SensorRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 	typedef boost::shared_ptr<Clients> ClientsRefPtr;
 	typedef boost::shared_ptr<Config> ConfigRefPtr;

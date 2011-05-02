@@ -10,6 +10,8 @@
 
 #include "event_manager.hpp"
 
+/// Necessary for log levels
+#include "logger.hpp"
 
 /// ---------- Public ----------
 
@@ -115,29 +117,31 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
-	TrackerRefPtr tracker( new vrpnTracker( connection.hostname, name, connection.port ) );
+	TrackerRefPtr tracker = vrpnTracker::create(connection.hostname, name, connection.port);
 	_clients->addTracker(tracker);
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("transformation");
 	if( elem )
 	{
-		Ogre::Matrix4 trans = Ogre::Matrix4::IDENTITY;
-		processTransformation( elem, trans );
-		tracker->setTransformation( trans );
+		vl::Transform trans;
+		processTransformation(elem, trans);
+		tracker->setTransformation(trans);
 	}
 
-	std::cerr << "Finding sensors" << std::endl;
+	std::cout << vl::TRACE << "Finding sensors" << std::endl;
 	elem = XMLNode->first_node("sensor");
 	while( elem )
 	{
-		processSensor( elem, tracker );
+		processSensor(elem, tracker);
 		elem = elem->next_sibling("sensor");
 	}
 }
 
 void
-vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogre::Matrix4 &trans )
+vl::TrackerSerializer::processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans)
 {
+	/// @todo Sign is not supported for the moment
+	/*
 	Ogre::Matrix4 sign_m = Ogre::Matrix4::IDENTITY;
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("sign");
@@ -146,25 +150,22 @@ vl::TrackerSerializer::processTransformation( rapidxml::xml_node<>* XMLNode, Ogr
 		Ogre::Vector3 v = parseVector3( elem );
 		sign_m.setScale(v);
 	}
+	*/
 
-	Ogre::Quaternion q = Ogre::Quaternion::IDENTITY;
-	elem = XMLNode->first_node("quaternion");
+	vl::Transform t;
+	rapidxml::xml_node<> *elem = XMLNode->first_node("quaternion");
 	if( elem )
-	{ q = parseQuaternion( elem ); }
+	{ t.quaternion = parseQuaternion( elem ); }
 
-	Ogre::Vector3 v = Ogre::Vector3::ZERO;
 	elem = XMLNode->first_node("vector");
 	if( elem )
-	{ v = parseVector3( elem ); }
+	{ t.position = parseVector3( elem ); }
 
-	Ogre::Matrix4 m2(q);
-	m2.setTrans(v);
-
-	// Update the original matrix
+	// Update the original transformation
 	// Mutiplication Order creates a coordinate conversion matrix that applies
 	// the transformations to the input in correct order for transforming
 	// from third party coordinate system to ours.
-	trans = trans * sign_m * m2;
+	trans *= t;
 	elem = XMLNode->first_node("transformation");
 	if( elem )
 	{ processTransformation( elem, trans ); }
@@ -181,8 +182,11 @@ vl::TrackerSerializer::processSensor( rapidxml::xml_node< char >* XMLNode,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
-	vl::SensorRefPtr sensor( new vl::Sensor );
-	tracker->setSensor(num, sensor);
+	/// Make sure we have enough sensors in the tracker
+	if(tracker->getNSensors() <= num)
+	{ tracker->setNSensors(num+1); }
+
+	Sensor &sensor = tracker->getSensor(num);
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("trigger");
 	if( elem )
@@ -198,7 +202,7 @@ vl::TrackerSerializer::processSensor( rapidxml::xml_node< char >* XMLNode,
 
 void
 vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
-									   SensorRefPtr sensor )
+									   Sensor &sensor )
 {
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute("name");
@@ -207,28 +211,26 @@ vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
-	// TODO should use Ogre LogManager
-	// Needs to be created in Config
-	std::cerr << "Creating Trigger " << name << std::endl;
+	std::cout << vl::TRACE << "Creating Trigger " << name << std::endl;
 	vl::TrackerTrigger *trigger = _clients->getEventManager()->createTrackerTrigger(name);
-	sensor->setTrigger(trigger);
+	sensor.setTrigger(trigger);
 }
 
 void
 vl::TrackerSerializer::processDefault( rapidxml::xml_node< char >* XMLNode,
-									   SensorRefPtr sensor )
+									   Sensor &sensor )
 {
 	rapidxml::xml_node<> *elem = XMLNode->first_node("orientation");
 	if( elem )
 	{
 		Ogre::Quaternion q = vl::parseQuaternion(elem);
-		sensor->setDefaultOrientation(q);
+		sensor.setDefaultOrientation(q);
 	}
 
 	elem = XMLNode->first_node("position");
 	if( elem )
 	{
 		Ogre::Vector3 v = vl::parseVector3(elem);
-		sensor->setDefaultPosition(v);
+		sensor.setDefaultPosition(v);
 	}
 }

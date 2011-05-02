@@ -81,13 +81,13 @@ BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
 
-	/// Transformation
-	python::class_<vl::Transform>("Transform", python::init< python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
-		.def_readwrite( "position", &vl::Transform::position )
-		.def_readwrite( "quaternion", &vl::Transform::quaternion )
+	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
+		.def(python::init<Ogre::Quaternion>())
+		.def("isIdentity", &vl::Transform::isIdentity)
+		.def_readwrite("position", &vl::Transform::position)
+		.def_readwrite("quaternion", &vl::Transform::quaternion)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
-
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
@@ -102,6 +102,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound )
 		.def("quit", &vl::GameManager::quit)
+		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;
@@ -270,8 +271,11 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<vl::EventManager, boost::noncopyable>("EventManager", python::no_init)
-		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("getTrackerTrigger", &vl::EventManager::getTrackerTrigger, 
+			python::return_value_policy<python::reference_existing_object>() )
 		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
+		.def("createTrackerTrigger", &vl::EventManager::createTrackerTrigger, 
+			python::return_value_policy<python::reference_existing_object>() )
 		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger,
 			 getKeyPressedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
 		.def("createKeyPressedTrigger", &vl::EventManager::createKeyPressedTrigger,
@@ -282,7 +286,37 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger,
 			 createKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
 		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger, hasKeyReleasedTrigger_ov() )
-		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, python::return_value_policy<python::reference_existing_object>() )
+		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, 
+			python::return_value_policy<python::reference_existing_object>() )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+	
+	python::class_<vl::Sensor, boost::noncopyable>("Sensor", python::no_init)
+		.add_property("trigger", python::make_function(&vl::Sensor::getTrigger, python::return_value_policy<python::reference_existing_object>() ), &vl::Sensor::setTrigger)
+		.add_property("transform", python::make_function(&vl::Sensor::getCurrentTransform, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("default_transform", python::make_function(&vl::Sensor::getDefaultTransform, python::return_value_policy<python::copy_const_reference>() ), &vl::Sensor::setDefaultTransform)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+	
+	Sensor & (vl::Tracker::*getSensor_ov0)(size_t) = &vl::Tracker::getSensor;
+	
+	python::class_<vl::Tracker, TrackerRefPtr, boost::noncopyable>("Tracker", python::no_init)
+		.def("setSensor", &vl::Tracker::setSensor)
+		.def("addSensor", &vl::Tracker::addSensor)
+		.def("getSensor", python::make_function(getSensor_ov0, python::return_value_policy<python::reference_existing_object>()) )
+		.add_property("n_sensors", &vl::Tracker::getNSensors, &vl::Tracker::setNSensors)
+		.add_property("transformation", python::make_function(&vl::Tracker::getTransformation, python::return_value_policy<python::copy_const_reference>()), &vl::Tracker::setTransformation )
+		.add_property("name", python::make_function(&vl::Tracker::getName, python::return_value_policy<python::copy_const_reference>()) )
+		.def(python::self_ns::str(python::self_ns::self))
+		.def("create", &vl::Tracker::create)
+		.staticmethod("create")
+	;
+
+	python::class_<vl::Clients, ClientsRefPtr, boost::noncopyable>("Clients", python::no_init)
+		.def("addTracker", &vl::Clients::addTracker)
+		.def("getTracker", &vl::Clients::getTrackerPtr)
+		.add_property("n_trackers", &vl::Clients::getNTrackers)
+		.add_property("event_manager", python::make_function(&vl::Clients::getEventManager, python::return_value_policy<python::reference_existing_object>()))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -311,7 +345,11 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
 		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
 	;
-
+	
+	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
+		.add_property("name", &vl::TrackerTrigger::getName, &vl::TrackerTrigger::setName)
+	;
+	
 	python::class_<FrameTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("FrameTrigger", python::no_init )
 	;
 
@@ -375,9 +413,11 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::class_<vl::TrackerTrigger, boost::noncopyable, python::bases<vl::TransformActionTrigger> >("TrackerTrigger", python::no_init )
+	python::class_<vl::HeadTrackerAction, python::bases<vl::TransformAction>, boost::noncopyable>("HeadTrackerAction", python::no_init)
+		.add_property("player", python::make_function(&vl::HeadTrackerAction::getPlayer, python::return_value_policy<python::reference_existing_object>()), &vl::HeadTrackerAction::setPlayer)
+		.def("create", &vl::HeadTrackerAction::create, python::return_value_policy<python::reference_existing_object>())
+		.staticmethod("create")
 	;
-
 
 	/// Game Actions
 	python::class_<GameAction, boost::noncopyable, python::bases<BasicAction> >("GameAction", python::no_init )
@@ -391,7 +431,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<QuitAction, boost::noncopyable, python::bases<GameAction> >("QuitAction", python::no_init )
-		.def("create",&QuitAction::create, python::return_value_policy<python::reference_existing_object>() )
+		.def("create", &QuitAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

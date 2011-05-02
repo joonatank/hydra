@@ -4944,6 +4944,10 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 
 	prefix = ''
 
+	# TODO we should smooth the vertex normals here
+	# if the object has smooth shading enabled
+
+
 	writer = pyogre.MeshWriter()
 	og_mesh = writer.createMesh()
 

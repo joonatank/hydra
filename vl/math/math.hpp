@@ -77,19 +77,18 @@ struct Transform
 {
 	Transform( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
 				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
-		: position( pos ), quaternion( rot )
+		: position(pos), quaternion(rot)
 	{}
 
-	vl::Transform &operator*=( Ogre::Matrix4 const &m )
-	{
-		Ogre::Matrix4 m2( quaternion );
-		m2.setTrans( position );
-		Ogre::Matrix4 res = m2  * m;
-		position = res.getTrans();
-		quaternion = res.extractQuaternion();
-		quaternion.normalise();
-		return *this;
-	}
+	Transform(Ogre::Quaternion const &rot)
+		: position(Ogre::Vector3::ZERO), quaternion(rot)
+	{}
+
+	bool isIdentity(void) const;
+
+	vl::Transform &operator*=(Ogre::Matrix4 const &m);
+
+	vl::Transform &operator*=(vl::Transform const &t);
 
 	Ogre::Vector3 position;
 	Ogre::Quaternion quaternion;
@@ -98,11 +97,27 @@ struct Transform
 std::ostream &
 operator<<( std::ostream &os, Transform const &d );
 
+/// Transform arithmetic
+vl::Transform 
+operator*(vl::Transform const &t1, vl::Transform const &t2);
+
+/// Ogre::Matrix and Transform arithmetic
 vl::Transform 
 operator*( vl::Transform const &t, Ogre::Matrix4 const &m );
 
 vl::Transform 
 operator*( Ogre::Matrix4 const &m, vl::Transform const &t );
+
+/// Comparison
+bool
+operator==(vl::Transform const &t1, vl::Transform const &t2);
+
+inline bool
+operator!=(vl::Transform const &t1, vl::Transform const &t2)
+{
+	return !(t1 == t2);
+}
+
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 

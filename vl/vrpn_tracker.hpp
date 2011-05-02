@@ -1,6 +1,6 @@
-/**	Joonatan Kuosa
- *	2010-05 initial implementation
- *	2010-11 removed mapping and added Trigger support
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-05 initial implementation
+ *	@date 2010-11 removed mapping and added Trigger support
  *
  *	VRPN Tracker implementation.
  *
@@ -28,6 +28,8 @@
 #include <iostream>
 #include <stdint.h>
 
+#include <boost/scoped_ptr.hpp>
+
 namespace vl
 {
 
@@ -46,26 +48,33 @@ createTransform( vrpn_float64 const *pos, vrpn_float64 const *quat )
 class vrpnTracker : public vl::Tracker
 {
 public :
-	/// Construct a tracker from vrpn type of tracker name tracker@hostname:port
-	vrpnTracker( std::string const &trackerName );
-
-	/// Construct a tracker from tracker, hostname, port tuple
-	vrpnTracker( std::string const &hostname, std::string const &tracker, uint16_t port = 0 );
-
 	/// Destructor
 	virtual ~vrpnTracker( void );
-
-	virtual void init( void );
 
 	/// Called once in an iteration from main application
 	virtual void mainloop( void );
 
+	static TrackerRefPtr create(std::string const &trackerName)
+	{ return TrackerRefPtr(new vrpnTracker(trackerName)); }
+
+	static TrackerRefPtr create(std::string const &hostname, std::string const &tracker, uint16_t port = 0)
+	{ return TrackerRefPtr(new vrpnTracker(hostname, tracker, port)); }
+
 protected :
+	/// Protected constructors use create instead
+	/// Construct a tracker from vrpn type of tracker name tracker@hostname:port
+	vrpnTracker(std::string const &trackerName);
+
+	/// Construct a tracker from tracker, hostname, port tuple
+	vrpnTracker(std::string const &hostname, std::string const &tracker, uint16_t port);
+
+	void _create(char const *tracker_name);
+
 	// Callback function
 	/// Updates only sensors that are in use
 	void update( vrpn_TRACKERCB const t );
 
-	vrpn_Tracker_Remote *_tracker;
+	boost::scoped_ptr<vrpn_Tracker_Remote> _tracker;
 
 private :
 	// For access to udpate function

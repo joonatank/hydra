@@ -508,12 +508,12 @@ vl::Window::draw(void)
 	// If they are still present we need to add a separate camera also
 	// @todo rendering GUI for both eyes
 
-	Ogre::Matrix4 const &head = getPlayer().getHeadMatrix();
+	vl::Transform const &head = getPlayer().getHeadTransform();
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
 
 	// Should not be rotated with wall, all the walls would be out of sync with each other
-	Ogre::Vector3 headTrans = head.getTrans();
+	Ogre::Vector3 headTrans = head.position;
 
 	Ogre::Vector3 cam_pos = og_cam->getPosition();
 	Ogre::Quaternion cam_quat = og_cam->getOrientation();
@@ -534,7 +534,7 @@ vl::Window::draw(void)
 		// NOTE This is not HMD discard the rotation part
 		// Rotating the eye doesn't seem to have any affect.
 		// Though it's more realistic if it's there.
-		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.extractQuaternion())*eye 
+		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.quaternion)*eye 
 			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
 			+ cam_pos;
 
@@ -560,7 +560,7 @@ vl::Window::draw(void)
 		// NOTE This is not HMD discard the rotation part
 		// Rotating the eye doesn't seem to have any affect.
 		// Though it's more realistic if it's there.
-		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.extractQuaternion())*eye 
+		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.quaternion)*eye 
 			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
 			+ cam_pos;
 

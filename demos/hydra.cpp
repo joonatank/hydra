@@ -78,5 +78,6 @@ int main( const int argc, char** argv )
 		return -1;
 	}
 
+	/// @fixme Debug version hangs on return
 	return 0;
 }

@@ -56,6 +56,12 @@ vl::GameManager::~GameManager(void )
 	}
 
 	delete _physics_world;
+	_trackers.reset();
+
+	delete _scene_manager;
+	delete _python;
+	delete _resource_man;
+	delete _event_man;
 }
 
 void
@@ -132,7 +138,7 @@ vl::GameManager::step(void)
 		// callbacks and appropriate updates (head matrix and scene nodes).
 		for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
 		{
-			_trackers->getTracker(i)->mainloop();
+		_trackers->getTrackerPtr(i)->mainloop();
 		}
 
 		if( _physics_world )
