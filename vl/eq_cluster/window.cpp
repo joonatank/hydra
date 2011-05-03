@@ -84,8 +84,12 @@ vl::Window::Window( std::string const &name, vl::Pipe *parent )
 	{
 		_wall = getEnvironment()->getWall(0);
 		msg = "No wall found : using the first one " + _wall.name;
-		Ogre::LogManager::getSingleton().logMessage(msg);
 	}
+	else
+	{
+		msg = "Wall " + _wall.name + " found.";
+	}
+	Ogre::LogManager::getSingleton().logMessage(msg);
 
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
@@ -524,16 +528,26 @@ vl::Window::draw(void)
 
 	/// @todo test on VR system
 	/// @todo should really be replaced with a stereo camera setup
+	
+	/// Use tuples to eliminate code copying
+	typedef boost::tuple<Ogre::Viewport *, double, GLenum> view_tuple;
+	std::vector<view_tuple> views;
+	if(hasStereo() && _left_viewport && _right_viewport)
+	{
+		views.push_back( view_tuple(_left_viewport, -_ipd/2, GL_BACK_LEFT) );
+		views.push_back( view_tuple(_right_viewport, _ipd/2, GL_BACK_RIGHT) );
+	}
+	else if(_left_viewport)
+	{
+		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
+	}
 
 	// Left viewport
-	if( _left_viewport )
+	for(size_t i = 0; i < views.size(); ++i)
 	{
-		Ogre::Vector3 eye = Ogre::Vector3::ZERO;
-		if(hasStereo())
-		{
-			glDrawBuffer(GL_BACK_LEFT);
-			eye = Ogre::Vector3(-_ipd/2, 0, 0);
-		}
+		view_tuple const &view = views.at(i);
+		Ogre::Vector3 eye(view.get<1>(), 0, 0);
+		glDrawBuffer(view.get<2>());
 
 		// NOTE This is not HMD discard the rotation part
 		// Rotating the eye doesn't seem to have any affect.
@@ -551,8 +565,9 @@ vl::Window::draw(void)
 		og_cam->setPosition(eye_d);
 		og_cam->setOrientation(eye_orientation);
 
-		_left_viewport->update();
+		view.get<0>()->update();
 	}
+/*
 	// Right viewport
 	if( _right_viewport )
 	{
@@ -576,11 +591,10 @@ vl::Window::draw(void)
 
 		og_cam->setPosition(eye_d);
 		og_cam->setOrientation(eye_orientation);
-	//	og_cam->setCustomViewMatrix(true, viewMatrix);
 
 		_right_viewport->update();
 	}
-
+*/
 	// Push back the original position and orientation
 	og_cam->setPosition(_camera->getPosition());
 	og_cam->setOrientation(_camera->getOrientation());

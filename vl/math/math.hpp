@@ -33,6 +33,8 @@ typedef Ogre::Real scalar;
 
 const scalar epsilon = scalar(1e-6);
 
+const scalar PHI = (1 + std::sqrt(5.0))/2;
+
 inline bool equal( scalar const &a, scalar const &b )
 {
 	if( a-epsilon < b && a+epsilon > b )
@@ -125,7 +127,7 @@ void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 						Ogre::Radian const &rad_y, Ogre::Radian const &rad_z );
 
 Ogre::Matrix4 
-calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far, 
+calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane, 
 							vl::EnvSettings::Wall const &wall);
 
 Ogre::Quaternion orientation_to_wall(vl::EnvSettings::Wall const &wall);

@@ -276,14 +276,14 @@ void
 vl::EventManager::_keyDown( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	assert( iter == _keys_down.end() );
-	_keys_down.push_back(kc);
+	if( iter == _keys_down.end() );
+	{ _keys_down.push_back(kc); }
 }
 
 void 
 vl::EventManager::_keyUp( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	assert( iter != _keys_down.end() );
-	_keys_down.erase(iter);
+	if( iter != _keys_down.end() );
+	{ _keys_down.erase(iter); }
 }
