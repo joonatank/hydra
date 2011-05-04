@@ -526,7 +526,6 @@ vl::Window::draw(void)
 	Ogre::Vector3 cam_pos = og_cam->getPosition();
 	Ogre::Quaternion cam_quat = og_cam->getOrientation();
 
-	/// @todo test on VR system
 	/// @todo should really be replaced with a stereo camera setup
 	
 	/// Use tuples to eliminate code copying
@@ -549,52 +548,23 @@ vl::Window::draw(void)
 		Ogre::Vector3 eye(view.get<1>(), 0, 0);
 		glDrawBuffer(view.get<2>());
 
-		// NOTE This is not HMD discard the rotation part
-		// Rotating the eye doesn't seem to have any affect.
-		// Though it's more realistic if it's there.
-		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.quaternion)*eye 
-			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
-			+ cam_pos;
-
 		// Combine eye and camera positions
+		// Needs to be rotated with head for correct stereo
+		// Do not rotate with wall will cause incorrect view for the side walls
+		Ogre::Vector3 eye_d = (head.quaternion*cam_quat)*eye 
+			+ cam_quat*headTrans + cam_pos;
+
 		// Combine camera and wall orientation to get the projection on correct wall
 		// Seems like the wallRotation needs to be inverse for this one, otherwise
 		// left and right wall are switched.
-		Ogre::Quaternion eye_orientation = wallRot.Inverse()*cam_quat;
+		Ogre::Quaternion eye_orientation = cam_quat*wallRot.Inverse();
 
 		og_cam->setPosition(eye_d);
 		og_cam->setOrientation(eye_orientation);
 
 		view.get<0>()->update();
 	}
-/*
-	// Right viewport
-	if( _right_viewport )
-	{
-		if(hasStereo())
-		{ glDrawBuffer(GL_BACK_RIGHT); }
 
-		Ogre::Vector3 eye(_ipd/2, 0, 0);
-
-		// NOTE This is not HMD discard the rotation part
-		// Rotating the eye doesn't seem to have any affect.
-		// Though it's more realistic if it's there.
-		Ogre::Vector3 eye_d = (cam_quat*wallRot*head.quaternion)*eye 
-			+ cam_quat*Ogre::Vector3(headTrans.x, headTrans.y, headTrans.z)
-			+ cam_pos;
-
-		// Combine eye and camera positions
-		// Combine camera and wall orientation to get the projection on correct wall
-		// Seems like the wallRotation needs to be inverse for this one, otherwise
-		// left and right wall are switched.
-		Ogre::Quaternion eye_orientation = wallRot.Inverse()*cam_quat;
-
-		og_cam->setPosition(eye_d);
-		og_cam->setOrientation(eye_orientation);
-
-		_right_viewport->update();
-	}
-*/
 	// Push back the original position and orientation
 	og_cam->setPosition(_camera->getPosition());
 	og_cam->setOrientation(_camera->getOrientation());

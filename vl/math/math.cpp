@@ -191,14 +191,6 @@ vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 	// Huh?
 	// 
 
-	// A decent constant which to transform the bottom and top
-	// Basically pulled from the arm pit
-	// T7 looks quite alright with this one, but your milage might vary.
-	// Does still have huge problems with correct perspective front relative to sides.
-	// And for example moving camera (modifying the view matrix) will create distortions
-	// in the walls.
-	Ogre::Real herwood_constant = 0.8;
-
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
@@ -209,47 +201,18 @@ vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 
 	// Golden ratio for the frustum
 	Ogre::Real wall_height = wall_top - wall_bottom;
-	Ogre::Real top = (wall_top - (1/PHI)*wall_height)/scale;
-	Ogre::Real bottom = (wall_bottom - (1/PHI)*wall_height)/scale;
+//	Ogre::Real top = (wall_top - (1/PHI)*wall_height)/scale;
+//	Ogre::Real bottom = (wall_bottom - (1/PHI)*wall_height)/scale;
 	
+	// Calculating bottom and top this way ensures no disjoint
+	// between side and front walls, at least when objects are outside
+	// the projection walls.
+	// The projection is best using these, though I have no idea why.
+	// Tried to use Golden ration (above), scale factor, half height of a wall
+	Ogre::Real top = (wall_top - wall_height)/scale;
+	Ogre::Real bottom = (wall_bottom - wall_height)/scale;
+
 	Ogre::Matrix4 projMat;
-
-	/// Projection plane needs to be centered around zero
-	/// because the camera is in zero the top half will be above zero and the
-	/// bottom half is below zero.
-//	Ogre::Real top = (wall_top - herwood_constant)/scale;
-//	Ogre::Real bottom = (wall_bottom - herwood_constant)/scale;
-
-	/*
-	Ogre::Real A = -(right + left)/(right - left);
-	Ogre::Real B = -(top + bottom)/(top - bottom);
-	Ogre::Real C = -(c_far + c_near)/(c_far - c_near);
-	Ogre::Real D = -2*c_far*c_near/(c_far - c_near);
-	Ogre::Real E = 2*c_near/(right - left);
-	Ogre::Real F = 2*c_near/(top - bottom);
-
-	
-	
-	projMat[0][0] = E;
-	projMat[0][1] = 0;
-	projMat[0][2] = A;
-	projMat[0][3] = 0;
-
-	projMat[1][0] = 0;
-	projMat[1][1] = F;
-	projMat[1][2] = B;
-	projMat[1][3] = 0;
-
-	projMat[2][0] = 0;
-	projMat[2][1] = 0;
-	projMat[2][2] = C;
-	projMat[2][3] = D;
-
-	projMat[3][0] = 0;
-	projMat[3][1] = 0;
-	projMat[3][2] = -1;
-	projMat[3][3] = 0;
-	*/
 
 	/// test version from Equalizer vmmlib/frustum
 	projMat[0][0] = 2.0 * near_plane / ( right - left );
