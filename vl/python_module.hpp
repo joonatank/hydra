@@ -57,12 +57,9 @@ inline std::ostream &operator<<( std::ostream &os, ActionWrapper const &o )
 }
 */
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyPressedTrigger_ov, createKeyPressedTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyPressedTrigger_ov, getKeyPressedTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyPressedTrigger_ov, hasKeyPressedTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyReleasedTrigger_ov, createKeyReleasedTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyReleasedTrigger_ov, getKeyReleasedTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyReleasedTrigger_ov, hasKeyReleasedTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyTrigger_ov, getKeyTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyTrigger_ov, hasKeyTrigger, 1, 2)
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
 
@@ -259,16 +256,11 @@ BOOST_PYTHON_MODULE(vl)
 		.def("hasTrackerTrigger", &vl::EventManager::hasTrackerTrigger )
 		.def("createTrackerTrigger", &vl::EventManager::createTrackerTrigger, 
 			python::return_value_policy<python::reference_existing_object>() )
-		.def("getKeyPressedTrigger", &vl::EventManager::getKeyPressedTrigger,
-			 getKeyPressedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
-		.def("createKeyPressedTrigger", &vl::EventManager::createKeyPressedTrigger,
-			 createKeyPressedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
-		.def("hasKeyPressedTrigger", &vl::EventManager::hasKeyPressedTrigger, hasKeyPressedTrigger_ov() )
-		.def("getKeyReleasedTrigger", &vl::EventManager::getKeyReleasedTrigger,
-			 getKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
-		.def("createKeyReleasedTrigger", &vl::EventManager::createKeyReleasedTrigger,
-			 createKeyReleasedTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
-		.def("hasKeyReleasedTrigger", &vl::EventManager::hasKeyReleasedTrigger, hasKeyReleasedTrigger_ov() )
+		.def("getKeyTrigger", &vl::EventManager::getKeyTrigger,
+			 getKeyTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("createKeyTrigger", &vl::EventManager::createKeyTrigger,
+			 createKeyTrigger_ov()[python::return_value_policy<python::reference_existing_object>()] )
+		.def("hasKeyTrigger", &vl::EventManager::hasKeyTrigger, hasKeyTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>() )
 		.def(python::self_ns::str(python::self_ns::self))
@@ -301,49 +293,6 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("n_trackers", &vl::Clients::getNTrackers)
 		.add_property("event_manager", python::make_function(&vl::Clients::getEventManager, python::return_value_policy<python::reference_existing_object>()))
 		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	// TODO try the Abstract classes out by overriding them in python
-	// NOTE Abstract wrappers seem to be needed for inheriting from these classes
-	// in python
-	// Problem : how to expose these and get the hierarchy correct for c++ classes?
-	// should we expose both the wrappers and abstract classes
-	// should we declate the wrappers as bases for inherited c++ classes here
-	// should we just expose the wrapper for python inheritance and use the c++
-	// classes and bases otherwise?
-	python::class_<Trigger, boost::noncopyable>("Trigger", python::no_init )
-		// FIXME declaring getTypeName as virtual does not work
-		// (might be because it's a property not a function)
-		.add_property("type", &Trigger::getTypeName )
-		.def("getName", &Trigger::getName )
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
-		.def("getAction", python::make_function( &BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
-		.def("addAction", &BasicActionTrigger::addAction )
-		.def("getNActions", &BasicActionTrigger::getNActions )
-	;
-
-	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
-		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
-	;
-	
-	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
-		.add_property("name", &vl::TrackerTrigger::getName, &vl::TrackerTrigger::setName)
-	;
-	
-	python::class_<FrameTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("FrameTrigger", python::no_init )
-	;
-
-	python::class_<KeyTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("KeyTrigger", python::no_init )
-		.add_property("key", &KeyTrigger::getKey, &KeyTrigger::setKey )
-	;
-
-	python::class_<KeyPressedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyPressedTrigger", python::no_init )
-	;
-
-	python::class_<KeyReleasedTrigger, boost::noncopyable, python::bases<KeyTrigger> >("KeyReleasedTrigger", python::no_init )
 	;
 
 	// TODO replace with a wrapper
@@ -384,11 +333,49 @@ BOOST_PYTHON_MODULE(vl)
 		.def("create",&TimerActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
-
-
-
+	
 	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
 	;
+
+
+	// TODO try the Abstract classes out by overriding them in python
+	// NOTE Abstract wrappers seem to be needed for inheriting from these classes
+	// in python
+	// Problem : how to expose these and get the hierarchy correct for c++ classes?
+	// should we expose both the wrappers and abstract classes
+	// should we declate the wrappers as bases for inherited c++ classes here
+	// should we just expose the wrapper for python inheritance and use the c++
+	// classes and bases otherwise?
+	python::class_<Trigger, boost::noncopyable>("Trigger", python::no_init )
+		// FIXME declaring getTypeName as virtual does not work
+		// (might be because it's a property not a function)
+		.add_property("type", &Trigger::getTypeName )
+		.def("getName", &Trigger::getName )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
+		.add_property("action", python::make_function( &vl::BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
+	;
+
+	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
+		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
+	;
+	
+	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
+		.add_property("name", &vl::TrackerTrigger::getName, &vl::TrackerTrigger::setName)
+	;
+	
+	python::class_<FrameTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("FrameTrigger", python::no_init )
+	;
+
+	python::class_<vl::KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
+		.add_property("key", &vl::KeyTrigger::getKey, &vl::KeyTrigger::setKey )
+		.add_property("modifiers", &vl::KeyTrigger::getModifiers, &vl::KeyTrigger::setModifiers )
+		.add_property("action_down", python::make_function( &vl::KeyTrigger::getKeyDownAction, python::return_value_policy< python::reference_existing_object>() ), &vl::KeyTrigger::setKeyDownAction)
+		.add_property("action_up", python::make_function( &vl::KeyTrigger::getKeyUpAction, python::return_value_policy< python::reference_existing_object>() ), &vl::KeyTrigger::setKeyUpAction)
+	;
+
 
 	python::class_<vl::SetTransformation, boost::noncopyable, python::bases<vl::TransformAction> >("SetTransformation", python::no_init )
 		.add_property("scene_node", python::make_function( &vl::SetTransformation::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &vl::SetTransformation::setSceneNode )
