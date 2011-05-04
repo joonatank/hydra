@@ -4572,12 +4572,12 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		clip.setAttribute('farPlaneDist', '%s' %ob.data.clip_end)
 	## end _camera_export
 
-	
 	# TODO
 	# At the moment the passed url for this is the scene file url
 	# It should definitely be changed to the directory we are exporting
 	# TODO separate the aux node stuff to another function
 	# TODO separate the collision model exporting
+	# FIXME exported name is the name of the mesh which is not unique replace with separate name
 	def _mesh_export( self, ob, url='', doc=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None, xml_par=None ):
 		timer = Timer()
 
@@ -4591,6 +4591,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		meshes.append( ob )
 		ent = doc.createElement('entity') 
 		xml_par.appendChild(ent);
+
 		ent.setAttribute('name', ob.data.name)
 
 		prefix = ''
@@ -4672,28 +4673,16 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 	## end _mesh_export
 
-def get_parent_matrix( ob, objects ):
-	if not ob.parent:
-		# Constructs automatically identity matrix
-		return mathutils.Matrix()
-	else:
-		if ob.parent in objects:
-			return ob.parent.matrix_world.copy()
-		else:
-			return get_parent_matrix( ob.parent, objects )
-
 def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None ):
-	# Matrix can not be inverted if it's not a variable
-	parent_m = get_parent_matrix(ob, objects)
-	parent_m.invert()
-	mat = parent_m * ob.matrix_world
+	mat = ob.matrix_local
 
 	o = doc.createElement('node')
 	o.setAttribute('name',prefix+ob.name)
 	p = doc.createElement('position')
 	q = doc.createElement('quaternion')
 	s = doc.createElement('scale')
-	for n in (p,q,s): o.appendChild(n)
+	for n in (p,q,s):
+		o.appendChild(n)
 
 	if pos: v = swap(pos)
 	else: v = swap( mat.to_translation() )
@@ -5826,6 +5815,63 @@ def register():
 def unregister():
 	print('unreg-> ogre exporter')
 	bpy.utils.register_class( _header_ )
+	# unregister our header
+	bpy.utils.unregister_class( INFO_HT_myheader )
+	# unregister operators
+	bpy.utils.unregister_class( Ogre_ogremeshy_op )
+	bpy.utils.unregister_class( Ogre_toggle_prop_op )
+	bpy.utils.unregister_class( Ogre_relocate_textures_op )
+	bpy.utils.unregister_class( Ogre_setup_version_control_op )
+	bpy.utils.unregister_class( Ogre_create_collision_op )
+	bpy.utils.unregister_class( Harts_bake_texture_vc_op )
+	bpy.utils.unregister_class( Ogre_game_logic_op )
+	# unregister INFOs
+	bpy.utils.unregister_class( INFO_MT_ogre_helper )
+	bpy.utils.unregister_class( INFO_MT_ogre_docs )
+	bpy.utils.unregister_class( INFO_MT_ogre_shader_pass_attributes )
+	bpy.utils.unregister_class( INFO_MT_ogre_shader_texture_attributes )
+	bpy.utils.unregister_class( INFO_MT_dynamics )
+	bpy.utils.unregister_class( INFO_MT_dynamic )
+	bpy.utils.unregister_class( INFO_MT_actors )
+	bpy.utils.unregister_class( INFO_MT_groups )
+	bpy.utils.unregister_class( INFO_MT_group_mark )
+	bpy.utils.unregister_class( INFO_MT_group )
+	bpy.utils.unregister_class( INFO_MT_instances )
+	bpy.utils.unregister_class( INFO_MT_instance )
+	bpy.utils.unregister_class( INFO_OT_createOgreExport )
+	bpy.utils.unregister_class( INFO_OT_ogre_set_shader_param )
+	bpy.utils.unregister_class( INFO_OT_ogre_set_shader_tex_param )
+	bpy.utils.unregister_class( INFO_MT_actor )
+	# unregister something, user interface panels etc.
+	bpy.utils.unregister_class( Ogre_User_Report )
+	bpy.utils.unregister_class( Ogre_VC_Panel )
+	bpy.utils.unregister_class( Ogre_select_by_prop_value )
+	bpy.utils.unregister_class( Ogre_update_mod_time )
+	bpy.utils.unregister_class( Ogre_Physics_LOD )
+	bpy.utils.unregister_class( Ogre_import_op )
+	bpy.utils.unregister_class( Ogre_Physics )
+	bpy.utils.unregister_class( Ogre_Logic_Sensors )
+	bpy.utils.unregister_class( Ogre_Logic_Actuators )
+	bpy.utils.unregister_class( Ogre_Material_Panel )
+	bpy.utils.unregister_class( Harts_Tools )
+	bpy.utils.unregister_class( Ogre_Texture_Panel )
+	bpy.utils.unregister_class( OgreShader_shaderprogs )
+	bpy.utils.unregister_class( OgreShader_vertexprogs )
+	bpy.utils.unregister_class( OgreShader_fragmentprogs )
+	bpy.utils.unregister_class( ogre_dot_mat_preview )
+
+	# unregister PTs?
+	bpy.utils.unregister_class( NODE_PT_shader_toplevel )
+	bpy.utils.unregister_class( NODE_PT_material_props )
+	bpy.utils.unregister_class( NODE_PT_texture_props )
+	bpy.utils.unregister_class( NODE_PT_user_notes_props )
+
+	bpy.utils.unregister_class( _ogre_new_tex_block )
+	bpy.utils.unregister_class( _ogre_op_shader_program_param )
+	bpy.utils.unregister_class( _ogre_shader_prog_param_menu_ )
+	bpy.utils.unregister_class( _ogre_op_shader_program_subparam )
+	bpy.utils.unregister_class( _ogre_op_shader_programs )
+
 	bpy.types.INFO_MT_file_export.remove(export_menu_func)
 	bpy.types.INFO_MT_file_import.remove(import_menu_func)
 
