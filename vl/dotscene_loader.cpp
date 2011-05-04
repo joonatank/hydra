@@ -351,14 +351,26 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 	assert(parent);
 
 	// Process attributes
-	std::string name = vl::getAttrib(xml_node, "name");
+	std::string base_name = vl::getAttrib(xml_node, "name");
 	std::string id = vl::getAttrib(xml_node, "id");
 	std::string meshFile = vl::getAttrib(xml_node, "meshFile");
 	std::string materialFile = vl::getAttrib(xml_node, "materialFile");
 	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
 
+	/// Get an unique name for the entity
+	/// This is mostly because of problematic Blender exporter that copies the
+	/// entity name from the mesh name.
+	uint16_t index = 0;
+	std::stringstream name_ss(base_name);
+	while( _scene->hasEntity(name_ss.str()) )
+	{
+		name_ss.str("");
+		name_ss << base_name << "_" << index;
+		++index;
+	}
+
 	// Create the entity
-	vl::EntityPtr entity = _scene->createEntity(name, meshFile);
+	vl::EntityPtr entity = _scene->createEntity(name_ss.str(), meshFile);
 	entity->setCastShadows(castShadows);
 	parent->attachObject(entity);
 
