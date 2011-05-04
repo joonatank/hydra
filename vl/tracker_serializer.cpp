@@ -86,10 +86,14 @@ vl::TrackerSerializer::processClient(rapidxml::xml_node< char >* XMLNode)
 	// must have a host attribute
 	if( attrib )
 	{ host = attrib->value(); }
-	else
-	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+	
 	if( host.empty() )
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+
+	bool incorrect_quaternion = false;
+	attrib = XMLNode->first_attribute("incorrect_quaternion");
+	if( attrib )
+	{ incorrect_quaternion = vl::from_string<bool>(attrib->value()); }
 
 	uint16_t port = 0;
 	attrib = XMLNode->first_attribute("port");
@@ -100,7 +104,7 @@ vl::TrackerSerializer::processClient(rapidxml::xml_node< char >* XMLNode)
 	rapidxml::xml_node<> *elem = XMLNode->first_node("tracker");
 	while( elem )
 	{
-		processTracker( elem, connection );
+		processTracker( elem, connection, incorrect_quaternion );
 		elem = elem->next_sibling("tracker");
 	}
 
@@ -108,7 +112,8 @@ vl::TrackerSerializer::processClient(rapidxml::xml_node< char >* XMLNode)
 
 void
 vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
-									   Connection const &connection)
+									   Connection const &connection, 
+									   bool incorrect_quaternion)
 {
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute("name");
@@ -118,6 +123,7 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
 
 	TrackerRefPtr tracker = vrpnTracker::create(connection.hostname, name, connection.port);
+	tracker->incorrect_quaternion = incorrect_quaternion;
 	_clients->addTracker(tracker);
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("transformation");

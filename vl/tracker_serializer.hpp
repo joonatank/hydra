@@ -65,7 +65,7 @@ private :
 	void processClient( rapidxml::xml_node<>* XMLNode );
 
 	/// Process a tracker node
-	void processTracker( rapidxml::xml_node<>* XMLNode, Connection const &connection );
+	void processTracker(rapidxml::xml_node<>* XMLNode, Connection const &connection, bool incorrect_quaternion);
 
 	void processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans);
 

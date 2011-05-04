@@ -127,6 +127,8 @@ public :
 	static TrackerRefPtr create(std::string const &trackerName = std::string())
 	{ return TrackerRefPtr(new Tracker(trackerName)); }
 
+	bool incorrect_quaternion;
+
 protected :
 	/// Protected constructor so that user needs to call create
 	Tracker(std::string const &trackerName);
