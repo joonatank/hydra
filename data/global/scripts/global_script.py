@@ -4,14 +4,13 @@ def setVectorActionFromKey( vector_action, kc, mod ):
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
 	key_action.value = 1
-	trigger = game.event_manager.createKeyPressedTrigger( kc, mod )
-	trigger.addAction( key_action )
+	trigger = game.event_manager.createKeyTrigger( kc, mod )
+	trigger.action_down = key_action
 
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
 	key_action.value = -1
-	trigger = game.event_manager.createKeyReleasedTrigger( kc, mod )
-	trigger.addAction( key_action )
+	trigger.action_up = key_action
 
 
 
@@ -56,7 +55,7 @@ def createCameraMovements(node) :
 	# TODO add rotation speed
 	# Create a FrameTrigger and add the action to that
 	trigger = game.event_manager.getFrameTrigger()
-	trigger.addAction( trans_action )
+	trigger.action.add_action(trans_action)
 
 
 
@@ -86,8 +85,10 @@ def addMoveSelection() :
 	trans_action_proxy.action = trans_action
 	rot_action_proxy.action = trans_action
 	# Create a FrameTrigger and add the action to that
+	# TODO having the frame trigger action replacable causes the
+	# move camera to override this.
 	trigger = game.event_manager.getFrameTrigger()
-	trigger.addAction( trans_action )
+	trigger.action.add_action( trans_action )
 
 def mapHeadTracker(name) :
 	act = HeadTrackerAction.create()
@@ -113,8 +114,8 @@ def addQuitEvent( kc ) :
 	action = QuitAction.create()
 	action.game = game
 
-	trigger = game.event_manager.createKeyPressedTrigger( kc, KEY_MOD.META )
-	trigger.addAction( action )
+	trigger = game.event_manager.createKeyTrigger( kc, KEY_MOD.META )
+	trigger.action_down = action
 
 
 # Fine using the new event interface
@@ -130,8 +131,8 @@ def addReloadEvent( kc ) :
 	proxy.time_limit = 5 # Seconds
 
 	# Create the trigger
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	trigger.addAction( proxy )
+	trigger = game.event_manager.createKeyTrigger( kc )
+	trigger.action_down = proxy
 
 
 
@@ -140,8 +141,8 @@ def addToggleMusicEvent( kc ) :
 	print( 'Creating Toggle Music Event to ' + getPythonKeyName(kc) )
 	action = ToggleMusic.create()
 	action.game = game
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	trigger.addAction( action )
+	trigger = game.event_manager.createKeyTrigger( kc )
+	trigger.action_down = action
 
 
 def addScreenshotAction( kc ) :
@@ -149,8 +150,8 @@ def addScreenshotAction( kc ) :
 	print( 'Adding screenshot action to ' + getPythonKeyName(kc) )
 	action = ScreenshotAction.create()
 	action.player = game.player
-	trigger = game.event_manager.createKeyPressedTrigger( kc )
-	trigger.addAction( action )
+	trigger = game.event_manager.createKeyTrigger( kc )
+	trigger.action_down = action
 
 
 # TODO create PrintOperation in python and register it into Event Manager
@@ -172,13 +173,13 @@ def addToggleActiveCamera( camera1, camera2 ) :
 	action_off.player = game.player
 	action_off.camera = camera2
 
-	trigger = game.event_manager.createKeyPressedTrigger( KC.B )
+	trigger = game.event_manager.createKeyTrigger( KC.B )
 
 	toggle = ToggleActionProxy.create()
 	toggle.action_on = action_on
 	toggle.action_off = action_off
 
-	trigger.addAction( toggle )
+	trigger.action_down = toggle
 
 
 def addHideEvent(node, kc) :
@@ -187,7 +188,7 @@ def addHideEvent(node, kc) :
 	hide.scene_node = node
 	show = ShowAction.create()
 	show.scene_node = node
-	trigger = game.event_manager.createKeyPressedTrigger(kc)
+	trigger = game.event_manager.createKeyTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
 	toggle = ToggleActionProxy.create()
@@ -202,7 +203,7 @@ def addHideEvent(node, kc) :
 	proxy.action = toggle
 	proxy.time_limit = 2 # Seconds
 
-	trigger.addAction( proxy )
+	trigger.action_down = proxy
 
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
@@ -210,14 +211,14 @@ def addToggleConsole(kc) :
 	hide.gui = game.gui
 	show = ShowConsole.create()
 	show.gui = game.gui
-	trigger = game.event_manager.createKeyPressedTrigger(kc)
+	trigger = game.event_manager.createKeyTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
 	toggle = ToggleActionProxy.create()
 	toggle.action_on = show
 	toggle.action_off = hide
 
-	trigger.addAction( toggle )
+	trigger.action_down = toggle
 
 def addToggleEditor(kc) :
 	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
@@ -225,14 +226,14 @@ def addToggleEditor(kc) :
 	hide.gui = game.gui
 	show = ShowEditor.create()
 	show.gui = game.gui
-	trigger = game.event_manager.createKeyPressedTrigger(kc)
+	trigger = game.event_manager.createKeyTrigger(kc)
 
 	# Create a proxy that handles the toggling between two different actions
 	toggle = ToggleActionProxy.create()
 	toggle.action_on = show
 	toggle.action_off = hide
 
-	trigger.addAction( toggle )
+	trigger.action_down = toggle
 
 
 # Add a head tracker support
@@ -245,3 +246,4 @@ addReloadEvent(KC.R)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
+
