@@ -10,7 +10,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-#include "mesh_writer.hpp"
+#include "mesh_serializer.hpp"
 
 namespace py
 {

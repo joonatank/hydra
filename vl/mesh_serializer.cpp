@@ -1,21 +1,9 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-02
+ *	@file mesh_serializer.cpp
+ */
 
-#include "mesh_writer.hpp"
-
-vl::Mesh::~Mesh(void)
-{
-	for( size_t i = 0; i < _sub_meshes.size(); ++i )
-	{
-		delete _sub_meshes.at(i);
-	}
-}
-
-vl::SubMesh *
-vl::Mesh::createSubMesh(void)
-{
-	SubMesh *sm = new SubMesh;
-	_sub_meshes.push_back(sm);
-	return sm;
-}
+#include "mesh_serializer.hpp"
 
 vl::MeshWriter::MeshWriter( void )
 	: _logMgr(0)

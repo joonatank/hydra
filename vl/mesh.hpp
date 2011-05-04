@@ -1,18 +1,21 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-02
- *	@file mesh_writer.hpp
+ *	@date 2011-05
+ *	@file mesh.hpp
+ *
+ *	Mesh data structure, no real functionality but can be copied to
+ *	Ogre and/or Bullet as the user sees fit.
+ *	Also used by the serialization modules used by editor and exporters.
+ *
+ *	Minamal wrappers for Ogre Mesh so that we don't need Ogre to read, write
+ *	or modify these structures.
  */
 
-#ifndef VL_MESH_WRITER_HPP
-#define VL_MESH_WRITER_HPP
-
-#include <OGRE/OgreMesh.h>
-#include <OGRE/Ogre.h>
-#include <OGRE/OgreDefaultHardwareBufferManager.h>
+#ifndef HYDRA_MESH_HPP
+#define HYDRA_MESH_HPP
 
 #include <string>
 
-#include "boost/tuple/tuple.hpp"
+#include <boost/tuple/tuple.hpp>
 
 namespace vl
 {
@@ -133,38 +136,24 @@ std::ostream &operator<<( std::ostream &os, Mesh const &m )
 	return os;
 }
 
+}
 
-class MeshWriter
+/// ---------------------------------- inlines -------------------------------
+inline
+vl::Mesh::~Mesh(void)
 {
-public :
-	MeshWriter( void );
+	for( size_t i = 0; i < _sub_meshes.size(); ++i )
+	{
+		delete _sub_meshes.at(i);
+	}
+}
 
-	~MeshWriter( void );
+inline vl::SubMesh *
+vl::Mesh::createSubMesh(void)
+{
+	SubMesh *sm = new SubMesh;
+	_sub_meshes.push_back(sm);
+	return sm;
+}
 
-	vl::Mesh *createMesh(void);
-
-	void writeMesh(vl::Mesh *mesh, std::string const &filename);
-
-private :
-	void writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Mesh *og_mesh);
-
-	void writeSubMeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh);
-
-	void writeSubMesh(vl::SubMesh *mesh, Ogre::SubMesh *og_sm);
-
-	Ogre::LogManager *_logMgr;
-	Ogre::Math *_math;
-	Ogre::LodStrategyManager *_lodMgr;
-	Ogre::MaterialManager* _matMgr;
-	Ogre::MeshSerializer* _meshSerializer;
-	Ogre::DefaultHardwareBufferManager *_bufferMgr;
-	Ogre::MeshManager* _meshMgr;
-	Ogre::ResourceGroupManager* _resourcegm;
-	Ogre::SkeletonManager *_skelMgr;
-	Ogre::SkeletonSerializer *_skeletonSerializer;
-
-};	// class MeshWriter
-
-}	// namespace vl
-
-#endif	// VL_MESH_WRITER_HPP
+#endif	// HYDRA_MESH_HPP

@@ -13,13 +13,19 @@ project( "pyogre" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
+# Necessary for the mesh and mesh_serializer headers from HydraMain
+include_directories(${HydraMain_SOURCE_DIR})
+
+# Do not link to HydraMain, we have so few dependencies that it's easier to
+# compile them separately to objs
 set( SRC
-	mesh_writer.cpp
+	${HydraMain_SOURCE_DIR}/mesh_serializer.cpp
 	ogre_python.cpp
 	)
 
 set( HEADERS
-	mesh_writer.hpp
+	${HydraMain_SOURCE_DIR}/mesh.hpp
+	${HydraMain_SOURCE_DIR}/mesh_serializer.hpp
 	)
 
 # Using module type for runtime dynamically loaded libraries
