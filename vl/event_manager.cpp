@@ -21,14 +21,8 @@ vl::EventManager::~EventManager( void )
 		delete *iter;
 	}
 
-	for( std::vector<vl::KeyPressedTrigger *>::iterator iter = _key_pressed_triggers.begin();
-		iter != _key_pressed_triggers.end(); ++iter )
-	{
-		delete *iter;
-	}
-
-	for( std::vector<vl::KeyReleasedTrigger *>::iterator iter = _key_released_triggers.begin();
-		iter != _key_released_triggers.end(); ++iter )
+	for( std::vector<vl::KeyTrigger *>::iterator iter = _key_triggers.begin();
+		iter != _key_triggers.end(); ++iter )
 	{
 		delete *iter;
 	}
@@ -68,26 +62,27 @@ vl::EventManager::hasTrackerTrigger(const std::string& name)
 	return false;
 }
 
-vl::KeyPressedTrigger *
-vl::EventManager::createKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+vl::KeyTrigger *
+vl::EventManager::createKeyTrigger(OIS::KeyCode kc, KEY_MOD mod)
 {
-	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc, mod);
+	vl::KeyTrigger *trigger = _find_key_trigger(kc, std::bitset<8>(mod));
 
 	if( !trigger )
 	{
-		trigger = new vl::KeyPressedTrigger;
+		trigger = new vl::KeyTrigger;
 		trigger->setKey(kc);
 		trigger->setModifiers(mod);
-		_key_pressed_triggers.push_back(trigger);
+
+		_key_triggers.push_back(trigger);
 	}
 
 	return trigger;
 }
 
-vl::KeyPressedTrigger *
-vl::EventManager::getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+vl::KeyTrigger *
+vl::EventManager::getKeyTrigger(OIS::KeyCode kc, KEY_MOD mod)
 {
-	vl::KeyPressedTrigger *trigger = _findKeyPressedTrigger(kc,mod);
+	vl::KeyTrigger *trigger = _find_key_trigger(kc, std::bitset<8>(mod));
 	if( trigger )
 	{ return trigger; }
 
@@ -95,130 +90,129 @@ vl::EventManager::getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
 }
 
 bool
-vl::EventManager::hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+vl::EventManager::hasKeyTrigger(OIS::KeyCode kc, KEY_MOD mod)
 {
-	return _findKeyPressedTrigger(kc,mod);
+	return _find_key_trigger(kc, std::bitset<8>(mod));
 }
 
 void
-vl::EventManager::updateKeyPressedTrigger( OIS::KeyCode kc )
+vl::EventManager::keyPressed(OIS::KeyCode kc)
 {
-	bool update = true;
+	bool valid = true;
 	if( getModifier(kc) != KEY_MOD_NONE )
 	{
 		// Add modifiers
-		KEY_MOD new_key_modifiers = (KEY_MOD)(_key_modifiers | getModifier(kc));
+		std::bitset<8> new_key_modifiers = _key_modifiers | std::bitset<8>(getModifier(kc));
 
-		for( size_t i = 0; i < _keys_down.size(); ++i )
+		/// Just checking that we actually have a new modifier
+		if( new_key_modifiers == _key_modifiers )
 		{
-			// Only release a trigger if we have one with a better match
-			if( hasKeyReleasedTrigger( _keys_down.at(i), _key_modifiers ) )
-			{
-				getKeyReleasedTrigger( _keys_down.at(i), _key_modifiers )->update();
-				if( hasKeyPressedTrigger( _keys_down.at(i), new_key_modifiers ) )
-				{
-					getKeyPressedTrigger( _keys_down.at(i), new_key_modifiers )->update();
-				}
-			}
+			std::cout << "vl::EventManager::keyReleased : Modifiers are equal for some weird reason." << std::endl;
+			valid = false; 
 		}
+		else
+		{
+			/// If there is a different trigger for the keys that are down
+			/// with the new modifiers release the old and set the new
+			/// @todo this is same for both key released and key pressed
+			/// because the only variable is the different new and old modifiers
+			for( size_t i = 0; i < _keys_down.size(); ++i )
+			{
+				// Option would be to release all the keys and then repress them
+				// with the new modifiers which would try to find the best match
+				// Even one step further would be to do this for all keys
+				// which would allow arbitary key combinations to be used
+				// Problematic for trigger events that work only for release or press
+				// they are evoked even though the keys state is not changed.
+				//
+				// Current implementation provides fallbacks with less modifiers
+				// but lacks the ability to chain keys other than modifiers.
 
-		_key_modifiers = new_key_modifiers;
+				// Only release a trigger if we have one with a better match
+				vl::KeyTrigger *new_trigger = _find_best_match(kc, new_key_modifiers);
+				vl::KeyTrigger *old_trigger = _find_best_match(kc, _key_modifiers);
+				/// Update triggers if they are different
+				if( new_trigger != old_trigger )
+				{
+					if(old_trigger)
+					{ old_trigger->update(vl::KeyTrigger::KS_UP); }
+					if(new_trigger)
+					{ new_trigger->update(vl::KeyTrigger::KS_DOWN); }
+				}
+			}	// for keys
+
+			_key_modifiers = new_key_modifiers;
+		}	// if valid
 	}
 	else
-	{ update = _keyDown(kc); }
+	{ valid = _keyDown(kc); }
 
 	// Modifiers can also be used as event triggers.
 
-	// Check if the there is a trigger for this event
-	if( update && hasKeyPressedTrigger( kc, _key_modifiers ) )
+	/// Check that we don't invoke the event if the key was already down
+	if(valid)
 	{
-		getKeyPressedTrigger( kc, _key_modifiers )->update();
+		vl::KeyTrigger *trigger = _find_best_match(kc, _key_modifiers);
+		if(trigger)
+		{ trigger->update(vl::KeyTrigger::KS_DOWN); }
 	}
 }
 
-
-
-vl::KeyReleasedTrigger *
-vl::EventManager::createKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+void 
+vl::EventManager::keyReleased(OIS::KeyCode kc)
 {
-	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc,mod);
+	bool valid = true;
 
-	if( !trigger )
-	{
-		trigger = new vl::KeyReleasedTrigger;
-		trigger->setKey(kc);
-		trigger->setModifiers(mod);
-		_key_released_triggers.push_back(trigger);
-	}
-
-	return trigger;
-}
-
-vl::KeyReleasedTrigger *
-vl::EventManager::getKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
-{
-	vl::KeyReleasedTrigger *trigger = _findKeyReleasedTrigger(kc, mod);
-	if( trigger )
-	{ return trigger; }
-
-	BOOST_THROW_EXCEPTION( vl::null_pointer() );
-}
-
-bool
-vl::EventManager::hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
-{
-	return _findKeyReleasedTrigger(kc, mod);
-}
-
-void
-vl::EventManager::updateKeyReleasedTrigger( OIS::KeyCode kc )
-{
 	// TODO if modifier is removed we should release the event with modifiers
-	bool update = true;
-	KEY_MOD modifier = getModifier(kc);
-	if( modifier != KEY_MOD_NONE )
+	if( getModifier(kc) != KEY_MOD_NONE )
 	{
 		// Remove modifiers
 		// Negate the modifiers, this will produce only once if none of them is released
 		// and zero to the one that has been released. So and will produce all the once
 		// not released.
-		KEY_MOD new_key_modifiers = (KEY_MOD)(_key_modifiers & (~getModifier(kc)));
+		std::bitset<8> new_key_modifiers = _key_modifiers & (~std::bitset<8>(getModifier(kc)));
 
-		// TODO this should release all the events with this modifier
-		// needs a list of trigger events with this particular modifier
-		// so that they can be released
-		// FIXME it is not possible with our current event system.
-		// We have no knowledge of the event states that particular keys or what
-		// not are. So it can not be done.
-		for( size_t i = 0; i < _keys_down.size(); ++i )
+		if( new_key_modifiers == _key_modifiers )
 		{
-			// Only release a trigger if we have one with better match
-			if( hasKeyReleasedTrigger( _keys_down.at(i), _key_modifiers ) )
-			{
-				getKeyReleasedTrigger( _keys_down.at(i), _key_modifiers )->update();
-
-				if( hasKeyPressedTrigger( _keys_down.at(i), new_key_modifiers ) )
-				{
-					getKeyPressedTrigger(_keys_down.at(i), new_key_modifiers)->update();
-				}
-			}
+			std::cout << "vl::EventManager::keyReleased : Modifiers are equal for some weird reason." << std::endl;
+			valid = false; 
 		}
-
-		_key_modifiers = new_key_modifiers;
+		else
+		{
+			/// If there is a different trigger for the keys that are down
+			/// with the new modifiers release the old and set the new
+			for( size_t i = 0; i < _keys_down.size(); ++i )
+			{
+				vl::KeyTrigger *new_trigger = _find_best_match(kc, new_key_modifiers);
+				vl::KeyTrigger *old_trigger = _find_best_match(kc, _key_modifiers);
+				/// Update triggers if they are different
+				if( new_trigger != old_trigger )
+				{
+					if(old_trigger)
+					{ old_trigger->update(vl::KeyTrigger::KS_UP); }
+					if(new_trigger)
+					{ new_trigger->update(vl::KeyTrigger::KS_DOWN); }
+				}
+			}	// for keys
+			
+			_key_modifiers = new_key_modifiers;
+		}	// if valid
 	}
 	else
-	{ update = _keyUp(kc); }
+	{ valid = _keyUp(kc); }
 
 	// Modifiers can also be used as event triggers.
 
 	// Check if the there is a trigger for this event
-	// TODO we need to check all the different modifiers also, not just
-	// for the exact match
-	if( update && hasKeyReleasedTrigger( kc, _key_modifiers ) )
+	// Only check if the key was down and is now up
+	if(valid)
 	{
-		getKeyReleasedTrigger( kc, _key_modifiers )->update();
+		vl::KeyTrigger *trigger = _find_best_match(kc, _key_modifiers);
+		if(trigger)
+		{ trigger->update(vl::KeyTrigger::KS_UP); }
 	}
 }
+
 
 vl::FrameTrigger *
 vl::EventManager::getFrameTrigger( void )
@@ -244,41 +238,74 @@ vl::EventManager::_findTrackerTrigger(const std::string& name)
 	return 0;
 }
 
-vl::KeyPressedTrigger *
-vl::EventManager::_findKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+vl::KeyTrigger *
+vl::EventManager::_find_key_trigger(OIS::KeyCode kc, std::bitset<8> mod)
 {
-	for( size_t i = 0; i < _key_pressed_triggers.size(); ++i )
+	for( size_t i = 0; i < _key_triggers.size(); ++i )
 	{
-		vl::KeyPressedTrigger *trigger = _key_pressed_triggers.at(i);
+		vl::KeyTrigger *trigger = _key_triggers.at(i);
+		assert(trigger);
+
 		// exact match
-		if( trigger->getKey() == kc && trigger->getModifiers() == mod )
+		if( trigger->getKey() == kc && std::bitset<8>(trigger->getModifiers()) == mod )
 		{ return trigger; }
 	}
 
 	return 0;
 }
 
-
-vl::KeyReleasedTrigger *
-vl::EventManager::_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod )
+vl::KeyTrigger *
+vl::EventManager::_find_best_match(OIS::KeyCode kc, std::bitset<8> mod)
 {
-	for( size_t i = 0; i < _key_released_triggers.size(); ++i )
+	/// Find all the KeyTriggers with matchin keycode
+	std::vector<KeyTrigger *> matching_kc;
+
+	for(size_t i = 0; i < _key_triggers.size(); ++i)
 	{
-		vl::KeyReleasedTrigger *trigger = _key_released_triggers.at(i);
-		// exact match
-		if( trigger->getKey() == kc && trigger->getModifiers() == mod )
-		{ return trigger; }
+		vl::KeyTrigger *trigger = _key_triggers.at(i);
+		assert(trigger);
+		if( trigger->getKey() == kc )
+		{
+			std::bitset<8> to_match_mod(trigger->getModifiers());
+			// Any trigger that needs more modifiers than supplied will be discarded
+			if((to_match_mod & mod) == to_match_mod)
+			{ matching_kc.push_back(_key_triggers.at(i)); }
+		}
 	}
 
-	return 0;
-}
+	vl::KeyTrigger *best_match = 0;
+	for(size_t i = 0; i < matching_kc.size(); ++i)
+	{
+		/// Find KeyTrigger with modifiers most closest to mod parameter
+		vl::KeyTrigger *trigger = matching_kc.at(i);
 
+		if(!best_match)
+		{ best_match = trigger; }
+		else
+		{
+			std::bitset<8> best_match_mod(best_match->getModifiers());
+			std::bitset<8> test_mod(trigger->getModifiers());
+			// Remove the desired flags so we are left with the unwanted
+			/// XOR will give us the bits that differ between the two
+			/// As the mod can not have any extra bits here 
+			/// all the differing bits are in the matched.
+			std::bitset<8> best_left_mod(best_match_mod ^ mod);
+			std::bitset<8> possible_left_mod(test_mod ^ mod);
+			// Which one has the less of the unwanted flags
+			if( possible_left_mod.count() < best_left_mod.count() )
+			{
+				best_match = trigger;
+			}
+		}
+	}
+
+	return best_match;
+}
 
 bool
 vl::EventManager::_keyDown( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	/// Don't assert, makes entering/exiting from window impossible
 	if( iter == _keys_down.end() )
 	{
 		_keys_down.push_back(kc);
@@ -291,7 +318,6 @@ bool
 vl::EventManager::_keyUp( OIS::KeyCode kc )
 {
 	std::vector<OIS::KeyCode>::iterator iter = std::find( _keys_down.begin(), _keys_down.end(), kc );
-	/// Don't assert, makes entering/exiting from window impossible
 	if( iter != _keys_down.end() )
 	{
 		_keys_down.erase(iter);

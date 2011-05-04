@@ -85,7 +85,23 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 	{
 		Sensor &sensor = _sensors.at(t.sensor);
 
-		vl::Transform trans = vl::createTransform( t.pos, t.quat );
+		vrpn_float64 quat[4];
+		if( incorrect_quaternion )
+		{
+			quat[Q_W] = t.quat[Q_X];
+			quat[Q_X] = t.quat[Q_Y];
+			quat[Q_Y] = t.quat[Q_Z];
+			quat[Q_Z] = t.quat[Q_W];
+		}
+		else
+		{
+			quat[Q_X] = t.quat[Q_X];
+			quat[Q_Y] = t.quat[Q_Y];
+			quat[Q_Z] = t.quat[Q_Z];
+			quat[Q_W] = t.quat[Q_W];
+		}
+
+		vl::Transform trans = vl::createTransform( t.pos, quat);
 		trans = trans*_transform;
 		sensor.update( trans );
 	}

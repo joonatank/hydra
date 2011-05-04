@@ -61,21 +61,21 @@ public :
 	bool hasTrackerTrigger( std::string const &name );
 
 	/// Key triggers
-	vl::KeyPressedTrigger *createKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
+	/// @brief creates a new Key trigger or returns an already created one
+	/// Preferred method for doing event mapping, this one will always return
+	/// a working KeyTrigger.
+	vl::KeyTrigger *createKeyTrigger(OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE);
 
-	vl::KeyPressedTrigger *getKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
+	/// @brief get an already created key trigger
+	/// @return key trigger
+	/// @throw if no such trigger exists
+	vl::KeyTrigger *getKeyTrigger(OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE);
 
-	bool hasKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
+	bool hasKeyTrigger(OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE);
 
-	void updateKeyPressedTrigger( OIS::KeyCode kc );
-
-	vl::KeyReleasedTrigger *createKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
-
-	vl::KeyReleasedTrigger *getKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
-
-	void updateKeyReleasedTrigger( OIS::KeyCode kc );
-
-	bool hasKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE );
+	/// Update methods for key triggers should only be called from the Input event receiver
+	void keyPressed(OIS::KeyCode kc);
+	void keyReleased(OIS::KeyCode kc);
 
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
@@ -83,9 +83,9 @@ public :
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 
-	vl::KeyPressedTrigger *_findKeyPressedTrigger( OIS::KeyCode kc, KEY_MOD mod );
+	vl::KeyTrigger *_find_key_trigger(OIS::KeyCode kc, std::bitset<8> mod);
 
-	vl::KeyReleasedTrigger *_findKeyReleasedTrigger( OIS::KeyCode kc, KEY_MOD mod );
+	vl::KeyTrigger *_find_best_match(OIS::KeyCode kc, std::bitset<8> mod);
 
 	bool _keyDown( OIS::KeyCode kc );
 
@@ -94,12 +94,11 @@ private :
 /// Data
 private :
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
-	std::vector<vl::KeyPressedTrigger *> _key_pressed_triggers;
-	std::vector<vl::KeyReleasedTrigger *> _key_released_triggers;
+	std::vector<vl::KeyTrigger *> _key_triggers;
 
 	vl::FrameTrigger *_frame_trigger;
 
-	KEY_MOD _key_modifiers;
+	std::bitset<8> _key_modifiers;
 
 	std::vector<OIS::KeyCode> _keys_down;
 

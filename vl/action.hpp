@@ -156,6 +156,8 @@ private :
 
 };	// GroupActionProxy
 
+typedef GroupActionProxy * GroupActionProxyPtr;
+
 /// Action proxy with a timer and time limit
 /// Depending on wether the enough time has passed since last activation
 /// executes an action or is a NOP

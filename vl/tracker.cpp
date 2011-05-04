@@ -130,6 +130,7 @@ vl::Sensor::update(const vl::Transform& data)
 /// --------- Tracker --------------
 vl::Tracker::Tracker(std::string const &trackerName)
 	: _name(trackerName)
+	, incorrect_quaternion(false)
 {}
 
 void

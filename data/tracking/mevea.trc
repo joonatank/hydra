@@ -1,7 +1,12 @@
 <?xml version="1.0"?>
 
 <clients>
-	<client type="VRPN" host="localhost" port="3884">
+	<!--
+	incorrect_quaternion attribute uses (w, x, y, z) quaternion instead
+	of VRPN (x, y, z, w) quaternion. It's recerved for dealing with buggy
+	interfaces like Mevea's.
+	-->
+	<client type="VRPN" host="localhost" port="3884" incorrect_quaternion="true">
 		<tracker name="DMTracker">
 			<transformation>
 				<quaternion w="0" x="-1" y="0" z="0"/> 

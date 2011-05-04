@@ -34,7 +34,7 @@ def addKinematicAction(body):
 	# TODO add rotation speed
 	# Create a FrameTrigger and add the action to that
 	trigger = game.event_manager.getFrameTrigger()
-	trigger.addAction( trans_action )
+	trigger.action.add_action( trans_action )
 
 print('Creating Camera SceneNode')
 camera_n = game.scene.createSceneNode("Camera")
@@ -99,23 +99,23 @@ print('Adding Force action to KC_F')
 action = ScriptAction.create()
 action.game = game
 action.script = 'sphere_body.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
-trigger = game.event_manager.createKeyPressedTrigger( KC.F )
-trigger.addAction( action )
+trigger = game.event_manager.createKeyTrigger( KC.F )
+trigger.action_down = action
 
 # Add torque action
 print('Adding Torque action to KC_G')
 action = ScriptAction.create()
 action.game = game
 action.script = 'sphere_body.applyTorque(Vector3(0, 500, 0))'
-trigger = game.event_manager.createKeyPressedTrigger( KC.G )
-trigger.addAction( action )
+trigger = game.event_manager.createKeyTrigger( KC.G )
+trigger.action_down = action
 
 print('Adding set Liner velocity action to KC_T')
 action = ScriptAction.create()
 action.game = game
 action.script = 'sphere_body.setLinearVelocity(Vector3(1, 0, 0))'
-trigger = game.event_manager.createKeyPressedTrigger(KC.T)
-trigger.addAction( action )
+trigger = game.event_manager.createKeyTrigger(KC.T)
+trigger.action_down = action
 
 print('Adding kinematic action')
 addKinematicAction(sphere_body)

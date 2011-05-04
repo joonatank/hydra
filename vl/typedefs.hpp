@@ -38,6 +38,7 @@ namespace vl
 	class Entity;
 	class Light;
 	class Camera;
+	class Mesh;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -67,6 +68,8 @@ namespace vl
 	typedef Entity * EntityPtr;
 	typedef Light * LightPtr;
 	typedef Camera * CameraPtr;
+
+	typedef boost::shared_ptr<Mesh> MeshRefPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;
