@@ -137,7 +137,7 @@ vl::fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 }
 
 Ogre::Matrix4 
-vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
+vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 								vl::EnvSettings::Wall const &wall)
 {
 	/* Projection matrix i.e. frustum
@@ -157,19 +157,13 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	 * any difference at all.
 	 */
 
-	// Create the plane for transforming the head
-	// TODO this is same code for both view and frustum combine them
+	/// Necessary for calculating the frustum
 	Ogre::Vector3 bottom_right( wall.bottom_right.at(0), wall.bottom_right.at(1), wall.bottom_right.at(2) );
 	Ogre::Vector3 bottom_left( wall.bottom_left.at(0), wall.bottom_left.at(1), wall.bottom_left.at(2) );
 	Ogre::Vector3 top_left( wall.top_left.at(0), wall.top_left.at(1), wall.top_left.at(2) );
 
-	Ogre::Plane plane(bottom_right, bottom_left, top_left);
-
-	// rotation from camera vector to wall
-	Ogre::Vector3 cam_vec(-Ogre::Vector3::UNIT_Z);
-	Ogre::Vector3 plane_normal = plane.normal.normalisedCopy();
 	// This is correct, it should not be inverse
-	Ogre::Quaternion wallRot = plane_normal.getRotationTo(cam_vec);
+	Ogre::Quaternion wallRot = orientation_to_wall(wall);
 
 	bottom_right = wallRot*bottom_right;
 	bottom_left = wallRot*bottom_left;
@@ -197,61 +191,50 @@ vl::calculate_projection_matrix(Ogre::Real c_near, Ogre::Real c_far,
 	// Huh?
 	// 
 
-	// A decent constant which to transform the bottom and top
-	// Basically pulled from the arm pit
-	// T7 looks quite alright with this one, but your milage might vary.
-	// Does still have huge problems with correct perspective front relative to sides.
-	// And for example moving camera (modifying the view matrix) will create distortions
-	// in the walls.
-	Ogre::Real herwood_constant = 0.8;
-
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
-	Ogre::Real scale = -(wall_front)/c_near;
+	Ogre::Real scale = -(wall_front)/near_plane;
 
 	Ogre::Real right = wall_right/scale;
 	Ogre::Real left = wall_left/scale;
 
 	// Golden ratio for the frustum
-//	Ogre::Real phi = (1 + std::sqrt(5.0))/2;
 	Ogre::Real wall_height = wall_top - wall_bottom;
-//	Ogre::Real top = (wall_top - (1/phi)*wall_height)/scale;
-//	Ogre::Real bottom = (wall_bottom - (1/phi)*wall_height)/scale;
+//	Ogre::Real top = (wall_top - (1/PHI)*wall_height)/scale;
+//	Ogre::Real bottom = (wall_bottom - (1/PHI)*wall_height)/scale;
 	
-	/// Projection plane needs to be centered around zero
-	/// because the camera is in zero the top half will be above zero and the
-	/// bottom half is below zero.
-	Ogre::Real top = (wall_top - herwood_constant)/scale;
-	Ogre::Real bottom = (wall_bottom - herwood_constant)/scale;
-
-	Ogre::Real A = -(right + left)/(right - left);
-	Ogre::Real B = -(top + bottom)/(top - bottom);
-	Ogre::Real C = -(c_far + c_near)/(c_far - c_near);
-	Ogre::Real D = -2*c_far*c_near/(c_far - c_near);
-	Ogre::Real E = 2*c_near/(right - left);
-	Ogre::Real F = 2*c_near/(top - bottom);
+	// Calculating bottom and top this way ensures no disjoint
+	// between side and front walls, at least when objects are outside
+	// the projection walls.
+	// The projection is best using these, though I have no idea why.
+	// Tried to use Golden ration (above), scale factor, half height of a wall
+	Ogre::Real top = (wall_top - wall_height)/scale;
+	Ogre::Real bottom = (wall_bottom - wall_height)/scale;
 
 	Ogre::Matrix4 projMat;
-	projMat[0][0] = E;
-	projMat[0][1] = 0;
-	projMat[0][2] = A;
-	projMat[0][3] = 0;
 
-	projMat[1][0] = 0;
-	projMat[1][1] = F;
-	projMat[1][2] = B;
-	projMat[1][3] = 0;
+	/// test version from Equalizer vmmlib/frustum
+	projMat[0][0] = 2.0 * near_plane / ( right - left );
+	projMat[0][1] = 0.0;
+	projMat[0][2] = ( right + left ) / ( right - left );
+	projMat[0][3] = 0.0;
+    
+	projMat[1][0] = 0.0;
+	projMat[1][1] = 2.0 * near_plane / ( top - bottom );
+	projMat[1][2] = ( top + bottom ) / ( top - bottom );
+	projMat[1][3] = 0.0;
 
-	projMat[2][0] = 0;
-	projMat[2][1] = 0;
-	projMat[2][2] = C;
-	projMat[2][3] = D;
+	projMat[2][0] = 0.0;
+	projMat[2][1] = 0.0;
+	// NOTE: Some glfrustum man pages say wrongly '(far + near) / (far - near)'
+	projMat[2][2] = -( far_plane + near_plane ) / ( far_plane - near_plane );
+	projMat[2][3] = -2.0 * far_plane * near_plane / ( far_plane - near_plane );
 
-	projMat[3][0] = 0;
-	projMat[3][1] = 0;
-	projMat[3][2] = -1;
-	projMat[3][3] = 0;
+	projMat[3][0] = 0.0;
+	projMat[3][1] = 0.0;
+	projMat[3][2] = -1.0;
+	projMat[3][3] =  0.0;
 
 	return projMat;
 }

@@ -380,8 +380,8 @@ vl::Config::_createQuitEvent(void )
 	vl::QuitAction *quit = vl::QuitAction::create();
 	quit->data = _game_manager;
 	// Add trigger
-	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyPressedTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
-	trig->addAction(quit);
+	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
+	trig->setKeyDownAction(quit);
 }
 
 void
@@ -534,7 +534,7 @@ vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
-	_game_manager->getEventManager()->updateKeyPressedTrigger(kc);
+	_game_manager->getEventManager()->keyPressed(kc);
 }
 
 void
@@ -542,7 +542,7 @@ vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
 {
 	OIS::KeyCode kc = event.key;
 
-	_game_manager->getEventManager()->updateKeyReleasedTrigger(kc);
+	_game_manager->getEventManager()->keyReleased(kc);
 }
 
 void

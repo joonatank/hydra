@@ -8,27 +8,14 @@
 
 
 /// ----------------- BasicActionTrigger -------------------
-void
-vl::BasicActionTrigger::addAction(vl::BasicActionPtr action)
-{
-	// TODO should check that no two actions are the same
-	if( action )
-	{
-		_actions.push_back( action );
-	}
-}
-
-vl::BasicActionPtr 
-vl::BasicActionTrigger::getAction( size_t i )
-{ return _actions.at(i); }
+vl::BasicActionTrigger::BasicActionTrigger(void)
+	: _action(new GroupActionProxy)
+{}
 
 void
-vl::BasicActionTrigger::update( void )
+vl::BasicActionTrigger::update(void)
 {
-	for( size_t i = 0; i < _actions.size(); ++i )
-	{
-		_actions.at(i)->execute();
-	}
+	_action->execute();
 }
 
 /// ------------- TransformActionTrigger -----------------
@@ -62,9 +49,30 @@ vl::TransformActionTrigger::update(const vl::Transform& data)
 
 
 /// KeyTrigger Public
-vl::KeyTrigger::KeyTrigger( void )
+vl::KeyTrigger::KeyTrigger(void)
 	: _key( OIS::KC_UNASSIGNED )
+	, _modifiers(KEY_MOD_NONE)
+	, _action_down(0)
+	, _action_up(0)
+	, _state(KS_UP)
 {}
+
+void 
+vl::KeyTrigger::update(vl::KeyTrigger::KEY_STATE state)
+{
+	if( _state != state )
+	{
+		if( state == KS_DOWN && _action_down )
+		{
+			_action_down->execute();
+		}
+		else if( state == KS_UP && _action_up )
+		{
+			_action_up->execute();
+		}
+		_state = state;
+	}
+}
 
 std::ostream &
 vl::KeyTrigger::print(std::ostream& os) const
