@@ -23,6 +23,7 @@
 #include <string>
 
 #include "math/math.hpp"
+#include "math/transform.hpp"
 
 #include "distributed.hpp"
 

@@ -8,7 +8,6 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 	os << "Physics World : "
 		<< " gravity " << w.getGravity()
 		<< " with " << w._rigid_bodies.size() << " rigid bodies "
-		<< " and " << w._shapes.size() << " shapes."
 		<< "\n";
 	
 	os << "Bodies : \n";
@@ -36,13 +35,6 @@ vl::physics::World::World( void )
 
 vl::physics::World::~World( void )
 {
-	// Cleanup the rigid bodies
-	for( std::vector<RigidBody *>::iterator iter = _rigid_bodies.begin();
-			iter != _rigid_bodies.end(); ++iter )
-	{
-		delete *iter;
-	}
-
 	// cleanup the world
 	delete _dynamicsWorld;
 	delete _solver;
@@ -71,30 +63,29 @@ vl::physics::World::setGravity(const Ogre::Vector3& gravity)
 	_dynamicsWorld->setGravity( vl::math::convert_bt_vec(gravity) );
 }
 
-vl::physics::RigidBody *
-vl::physics::World::createRigidBodyEx(std::string const &name, btRigidBody::btRigidBodyConstructionInfo const &info)
+vl::physics::RigidBodyRefPtr
+vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 {
-	RigidBody *body = new RigidBody(name, info);
-	_addRigidBody(name, body);
+	RigidBodyRefPtr body(new RigidBody(info));
+	_addRigidBody(info.name, body);
 	return body;
 }
 
 
-vl::physics::RigidBody *
+vl::physics::RigidBodyRefPtr
 vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 									 vl::physics::MotionState *state,
-									 btCollisionShape *shape,
+									 CollisionShapeRefPtr shape,
 									 Ogre::Vector3 const &inertia)
 {
-	btVector3 i(vl::math::convert_bt_vec(inertia));
-	btRigidBody::btRigidBodyConstructionInfo info(mass, state, shape, i);
-	return createRigidBodyEx(name, info);
+	RigidBody::ConstructionInfo info(name, mass, state, shape, inertia);
+	return createRigidBodyEx(info);
 }
 
-vl::physics::RigidBody *
+vl::physics::RigidBodyRefPtr
 vl::physics::World::getRigidBody( const std::string& name ) const
 {
-	RigidBody *body = _findRigidBody(name);
+	RigidBodyRefPtr body = _findRigidBody(name);
 	if( !body )
 	{
 		// TODO add a better exception to this
@@ -104,7 +95,7 @@ vl::physics::World::getRigidBody( const std::string& name ) const
 	return body;
 }
 
-vl::physics::RigidBody *
+vl::physics::RigidBodyRefPtr
 vl::physics::World::removeRigidBody( const std::string& name )
 {
 	BOOST_THROW_EXCEPTION( vl::not_implemented() );
@@ -128,48 +119,9 @@ vl::physics::World::destroyMotionState( vl::physics::MotionState *state )
 	delete state;
 }
 
-btStaticPlaneShape *
-vl::physics::World::createPlaneShape( const Ogre::Vector3& normal, vl::scalar constant )
-{
-	btStaticPlaneShape *plane = new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant );
-	_shapes.push_back(plane);
-	return plane;
-}
-
-btBoxShape *
-vl::physics::World::createBoxShape(Ogre::Vector3 const &bounds)
-{
-	btBoxShape *box = new btBoxShape(vl::math::convert_bt_vec(bounds));
-	_shapes.push_back(box);
-	return box;
-}
-
-btSphereShape *
-vl::physics::World::createSphereShape( vl::scalar radius )
-{
-	btSphereShape *sphere = new btSphereShape( radius );
-	_shapes.push_back(sphere);
-	return sphere;
-}
-
-void
-vl::physics::World::destroyShape( btCollisionShape *shape )
-{
-	CollisionShapeList::iterator iter;
-	for(iter = _shapes.begin(); iter != _shapes.end(); ++iter)
-	{
-		if( *iter == shape )
-		{
-			delete shape;
-			_shapes.erase(iter);
-			break;
-		}
-	}
-}
-
 /// --------------------------------- Private ----------------------------------
 void
-vl::physics::World::_addRigidBody(std::string const &name, vl::physics::RigidBody *body)
+vl::physics::World::_addRigidBody(std::string const &name, vl::physics::RigidBodyRefPtr body)
 {
 	if( !hasRigidBody(name) )
 	{
@@ -183,15 +135,15 @@ vl::physics::World::_addRigidBody(std::string const &name, vl::physics::RigidBod
 	}
 }
 
-vl::physics::RigidBody *
+vl::physics::RigidBodyRefPtr
 vl::physics::World::_findRigidBody(const std::string& name) const
 {
-	std::vector<RigidBody *>::const_iterator iter;
+	RigidBodyList::const_iterator iter;
 	for( iter = _rigid_bodies.begin(); iter != _rigid_bodies.end(); ++iter )
 	{
 		if( (*iter)->getName() == name )
 		{ return *iter; }
 	}
 
-	return 0;
+	return RigidBodyRefPtr();
 }

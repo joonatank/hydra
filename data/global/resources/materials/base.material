@@ -79,11 +79,24 @@ material debug_red
 	}
 }
 
-// TODO add a finger sphere material that has both diffuse and emissive
-material finger_sphere/emissive : bling_phong_eye_space_multi_pass
+material finger_sphere/red : bling_phong_eye_space_multi_pass
 {
-	set $emissiveCol "0.5 0 0 1"
+	set $emissiveCol "0.4 0 0 1"
 	set $diffuseCol "0.6 0.4 0.4 1"
+	set $specularCol "0 0 0"
+}
+
+material finger_sphere/blue : bling_phong_eye_space_multi_pass
+{
+	set $emissiveCol "0.0 0 0.4 1"
+	set $diffuseCol "0.3 0.3 0.6 1"
+	set $specularCol "0 0 0"
+}
+
+material finger_sphere/green : bling_phong_eye_space_multi_pass
+{
+	set $emissiveCol "0.0 0.4 0 1"
+	set $diffuseCol "0.3 0.6 0.3 1"
 	set $specularCol "0 0 0"
 }
 

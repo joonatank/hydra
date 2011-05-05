@@ -30,7 +30,7 @@ namespace vl
 namespace physics
 {
 
-typedef std::vector<RigidBody *> RigidBodyList;
+typedef std::vector<RigidBodyRefPtr> RigidBodyList;
 typedef std::vector<btCollisionShape *> CollisionShapeList;
 
 /** @class World
@@ -50,22 +50,21 @@ public :
 	void setGravity( Ogre::Vector3 const &gravity );
 
 	/// @TODO replace name, when you have the time to fix the overloads for python
-	vl::physics::RigidBody *createRigidBodyEx( std::string const &name,
-											 btRigidBody::btRigidBodyConstructionInfo const &info );
+	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
 
 	/// Default inertia is zero because setting it will mess up static objects. 
 	/// For dynamic objects user should set it.
-	vl::physics::RigidBody *createRigidBody( std::string const &name, vl::scalar mass,
-								  vl::physics::MotionState *state, btCollisionShape *shape,
+	vl::physics::RigidBodyRefPtr createRigidBody( std::string const &name, vl::scalar mass,
+								  vl::physics::MotionState *state, CollisionShapeRefPtr shape,
 								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
 
-	vl::physics::RigidBody *getRigidBody( std::string const &name ) const;
+	vl::physics::RigidBodyRefPtr getRigidBody( std::string const &name ) const;
 
 	/// @TODO implement
 	/// Should this remove the body from the world and return a pointer or
 	/// should it just destroy the body altogether
 	/// if this returns a shared_ptr it's not a problem at all
-	vl::physics::RigidBody *removeRigidBody( std::string const &name );
+	vl::physics::RigidBodyRefPtr removeRigidBody( std::string const &name );
 
 	bool hasRigidBody( std::string const &name ) const;
 
@@ -73,23 +72,13 @@ public :
 
 	void destroyMotionState( MotionState *state );
 
-	// Plane constant for some reason affects also in the direction of plane normal
-	// so usually you want to translate the plane by plane_constant*(-plane_normal)
-	btStaticPlaneShape *createPlaneShape( Ogre::Vector3 const &normal, vl::scalar constant );
-
-	// Create a box shape around origin: with size [-bounds, bounds]
-	btBoxShape *createBoxShape(Ogre::Vector3 const &bounds);
-
-	btSphereShape *createSphereShape( vl::scalar radius );
-
-	void destroyShape( btCollisionShape *shape );
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
 private :
-	void _addRigidBody( std::string const &name, vl::physics::RigidBody *body);
+	void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body);
 
-	RigidBody *_findRigidBody( std::string const &name ) const;
+	RigidBodyRefPtr _findRigidBody( std::string const &name ) const;
 
 	/// Bullet physics world objects
 	/// The order of them is important don't change it.
@@ -102,10 +91,7 @@ private :
 
 	/// Rigid bodies
 	/// World owns all of them
-	/// @todo move to using shared_ptrs
 	RigidBodyList _rigid_bodies;
-
-	CollisionShapeList _shapes;
 
 };	// class World
 

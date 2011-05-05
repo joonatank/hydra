@@ -13,6 +13,7 @@
 #include "math/conversion.hpp"
 
 #include "motion_state.hpp"
+#include "shapes.hpp"
 
 namespace {
 	using vl::math::convert_bt_vec;
@@ -33,10 +34,31 @@ class RigidBody
 {
 
 public :
-	RigidBody(std::string const &name, btRigidBody::btRigidBodyConstructionInfo const &constructionInfo)
-		: _name(name), _bt_body(0)
+	struct ConstructionInfo
 	{
-		_bt_body = new btRigidBody(constructionInfo);
+		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert)
+			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
+		{}
+
+		btRigidBody::btRigidBodyConstructionInfo getBullet(void) const
+		{
+			btVector3 i(vl::math::convert_bt_vec(inertia));
+			return btRigidBody::btRigidBodyConstructionInfo(mass, state, shape->getNative(), i);
+		}
+
+		std::string name;
+		vl::scalar mass;
+		vl::physics::MotionState *state;
+		CollisionShapeRefPtr shape;
+		Ogre::Vector3 inertia;
+
+	};	// struct ConstructionInfo
+
+	RigidBody(ConstructionInfo const &constructionInfo)
+		: _name(constructionInfo.name), _shape(constructionInfo.shape), _bt_body(0)
+	{
+		_bt_body = new btRigidBody(constructionInfo.getBullet());
 	}
 
 	Ogre::Vector3 getTotalForce(void) const
@@ -86,8 +108,13 @@ public :
 	// DISABLE_DEACTIVATION set
 	// Because activation only happens when other bodies are come near
 	// NOTE might work also by using body->activate() before moving it
-	void setUserControlled(void)
-	{ _bt_body->setActivationState(DISABLE_DEACTIVATION); }
+	void setUserControlled(bool enabled)
+	{
+		if(enabled)
+		{ _bt_body->setActivationState(DISABLE_DEACTIVATION); }
+		else
+		{ _bt_body->setActivationState(ISLAND_SLEEPING); }
+	}
 
 	bool isUserControlled(void) const
 	{ return _bt_body->getActivationState() == DISABLE_DEACTIVATION; }
@@ -107,11 +134,16 @@ public :
 	std::string const &getName(void) const
 	{ return _name; }
 
+	CollisionShapeRefPtr getShape(void)
+	{ return _shape; }
+
 	btRigidBody *getNative(void)
 	{ return _bt_body; }
 
 private :
 	std::string _name;
+
+	CollisionShapeRefPtr _shape;
 
 	btRigidBody *_bt_body;
 

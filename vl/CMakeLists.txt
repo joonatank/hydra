@@ -37,6 +37,7 @@ set( SOURCES
 	stats.cpp
 	logger.cpp
 	math/math.cpp
+	math/transform.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -113,6 +114,7 @@ set( HEADERS
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp
+	math/transform.hpp
 	cluster/server.hpp
 	cluster/client.hpp
 	cluster/message.hpp
@@ -120,6 +122,8 @@ set( HEADERS
 	distributed.hpp
 	physics/motion_state.hpp
 	physics/rigid_body.hpp
+	physics/shapes.hpp
+	physics/constraints.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
 	)

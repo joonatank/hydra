@@ -15,6 +15,7 @@
 #define VL_MATH_CONVERSION_HPP
 
 #include "math/math.hpp"
+#include "math/transform.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>

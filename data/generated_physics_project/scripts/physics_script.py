@@ -36,6 +36,27 @@ def addKinematicAction(body):
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
 
+def addSphere(name, mat_name, position, mass = 1) :
+	print('Adding a sphere ', name)
+	sphere_node = game.scene.createSceneNode(name)
+	# TODO this should be copied from the shape, using bounding boxes
+	sphere_node.scale = Vector3(0.03, 0.03, 0.03)
+	sphere = game.scene.createEntity(name, PF.SPHERE)
+	sphere_node.attachObject(sphere)
+	sphere.material_name = mat_name
+
+	sphere_shape = SphereShape.create(0.1)
+	trans = Transform( position, Quaternion.identity)
+	motion_state = world.createMotionState(trans, sphere_node)
+	inertia = Vector3.zero
+	if(mass != 0) :
+		inertia = Vector3(1,1,1)
+	sphere_body = world.createRigidBody(name, mass, motion_state, sphere_shape, inertia)
+
+	# Set some damping so it doesn't go on endlessly
+	sphere_body.setDamping(0.3, 0.3)
+	return sphere_body
+
 print('Creating Camera SceneNode')
 camera_n = game.scene.createSceneNode("Camera")
 camera = game.scene.createCamera("Camera")
@@ -69,30 +90,17 @@ ground.cast_shadows = False
 ground_node.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 
 print('Physics : Adding ground plane')
-ground_shape = world.createBoxShape(Vector3(50, 1, 50))
+ground_shape = BoxShape.create(Vector3(50, 1, 50))
 g_motion_state = world.createMotionState()
 world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
 # TODO add some boxes
 
-print('Physics : Adding sphere')
-sphere_node = game.scene.createSceneNode("sphere")
-# TODO this should be copied from the shape, using bounding boxes
-sphere_node.scale = Vector3(0.03, 0.03, 0.03)
-sphere = game.scene.createEntity("sphere", PF.SPHERE)
-sphere_node.attachObject(sphere)
-# TODO change a decent material
-sphere.material_name = "debug_red"
+sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
+sphere_body.user_controlled = True
 
-sphere_shape = world.createSphereShape(0.1)
-trans = Transform( Vector3(5.0, 20, 0), Quaternion.identity)
-motion_state = world.createMotionState(trans, sphere_node)
-inertia = Vector3(1,1,1)
-sphere_body = world.createRigidBody('sphere', 10, motion_state, sphere_shape, inertia)
-sphere_body.setUserControlled()
 
-# Set some damping so it doesn't go on endlessly
-sphere_body.setDamping(0.3, 0.3)
+addSphere("sphere2", "finger_sphere/green", Vector3(-5.0, 10, 0))
 
 # Add force action
 print('Adding Force action to KC_F')

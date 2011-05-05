@@ -44,7 +44,7 @@ ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
-sphere_ent.material_name = 'finger_sphere/emissive'
+sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)

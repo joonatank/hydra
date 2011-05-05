@@ -13,6 +13,8 @@
 
 // Necessary for vl::scalar
 #include "math/math.hpp"
+// Necessary for Transform
+#include "math/transform.hpp"
 // Necessary for timed action
 #include "base/timer.hpp"
 
