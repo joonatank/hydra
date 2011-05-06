@@ -121,6 +121,15 @@ namespace physics
 	typedef boost::shared_ptr<CylinderShape> CylinderShapeRefPtr;
 	typedef boost::shared_ptr<ConeShape> ConeShapeRefPtr;
 	typedef boost::shared_ptr<CapsuleShape> CapsuleShapeRefPtr;
+
+	class MotionState;
+	class Constraint;
+	class SixDofConstraint;
+	class SliderConstraint;
+
+	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
+	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
+	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
 }
 
 namespace cluster

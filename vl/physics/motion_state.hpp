@@ -39,6 +39,12 @@ public:
 		: _visibleobj(node)
 	{
 		_trans = vl::math::convert_bt_transform(trans);
+		// set the object transform especially useful for static objects
+		if(_visibleobj)
+		{
+			_visibleobj->setPosition(trans.position);
+			_visibleobj->setOrientation(trans.quaternion);
+		}
 	}
 
 	virtual ~MotionState()
@@ -50,6 +56,13 @@ public:
 	void setNode(vl::SceneNodePtr node)
 	{
 		_visibleobj = node;
+		// set the object transform especially useful for static objects
+		if(_visibleobj)
+		{
+			vl::Transform trans = vl::math::convert_transform(_trans);
+			_visibleobj->setPosition(trans.position);
+			_visibleobj->setOrientation(trans.quaternion);
+		}
 	}
 
 	Ogre::Vector3 getPosition(void) const

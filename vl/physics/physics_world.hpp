@@ -21,8 +21,7 @@
 #include "scene_node.hpp"
 
 /// Physics objects
-#include "motion_state.hpp"
-#include "rigid_body.hpp"
+#include "constraints.hpp"
 
 namespace vl
 {
@@ -32,6 +31,7 @@ namespace physics
 
 typedef std::vector<RigidBodyRefPtr> RigidBodyList;
 typedef std::vector<btCollisionShape *> CollisionShapeList;
+typedef std::vector<ConstraintRefPtr> ConstraintList;
 
 /** @class World
  *
@@ -70,8 +70,11 @@ public :
 
 	MotionState *createMotionState( vl::Transform const &trans = vl::Transform(), vl::SceneNode *node = 0 );
 
-	void destroyMotionState( MotionState *state );
+	void destroyMotionState(vl::physics::MotionState *state);
 
+	void addConstraint(vl::physics::ConstraintRefPtr constraint);
+
+	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
@@ -92,6 +95,7 @@ private :
 	/// Rigid bodies
 	/// World owns all of them
 	RigidBodyList _rigid_bodies;
+	ConstraintList _constraints;
 
 };	// class World
 

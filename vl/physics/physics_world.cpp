@@ -1,6 +1,11 @@
 
 #include "physics_world.hpp"
 
+/// Physics objects
+#include "motion_state.hpp"
+#include "rigid_body.hpp"
+#include "constraints.hpp"
+
 /// -------------------------------- Global ----------------------------------
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
@@ -117,6 +122,30 @@ void
 vl::physics::World::destroyMotionState( vl::physics::MotionState *state )
 {
 	delete state;
+}
+
+void 
+vl::physics::World::addConstraint(vl::physics::ConstraintRefPtr constraint)
+{
+	ConstraintList::iterator iter = std::find(_constraints.begin(), _constraints.end(), constraint);
+	
+	if(iter == _constraints.end())
+	{
+		_constraints.push_back(constraint);
+		_dynamicsWorld->addConstraint(constraint->getNative());
+	}
+}
+
+void 
+vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
+{
+	ConstraintList::iterator iter = std::find(_constraints.begin(), _constraints.end(), constraint);
+	
+	if(iter != _constraints.end())
+	{
+		_dynamicsWorld->removeConstraint((*iter)->getNative());
+		_constraints.erase(iter);
+	}
 }
 
 /// --------------------------------- Private ----------------------------------

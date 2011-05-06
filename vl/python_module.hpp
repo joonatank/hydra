@@ -606,16 +606,34 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::physics::CapsuleShape, boost::noncopyable, vl::physics::CapsuleShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CapsuleShape", python::no_init )
 	;
 
-	/// @todo add joint type
-	python::class_<vl::physics::SixDofConstraint, boost::noncopyable>("SixDofConstraint", python::no_init )
+	/// Abstract master class for all constraints
+	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
+	;
+
+	/// 6dof constraint
+	python::class_<vl::physics::SixDofConstraint, vl::physics::SixDofConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("SixDofConstraint", python::no_init)
+		/// @todo change to properties
 		.def("setLinearLowerLimit", &vl::physics::SixDofConstraint::setLinearLowerLimit)
 		.def("setLinearUpperLimit", &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.def("setAngularLowerLimit", &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.def("setAngularUpperLimit", &vl::physics::SixDofConstraint::setAngularUpperLimit)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
+		.def("create", &vl::physics::SixDofConstraint::create)
+		.staticmethod("create")
 	;
 
+	/// slider constraint
+	python::class_<vl::physics::SliderConstraint, vl::physics::SliderConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("SliderConstraint", python::no_init)
+		.add_property("lower_lin_limit", &vl::physics::SliderConstraint::getLowerLinLimit, &vl::physics::SliderConstraint::setLowerLinLimit)
+		.add_property("upper_lin_limit", &vl::physics::SliderConstraint::getUpperLinLimit, &vl::physics::SliderConstraint::setUpperLinLimit)
+		.add_property("lower_ang_limit", &vl::physics::SliderConstraint::getLowerAngLimit, &vl::physics::SliderConstraint::setLowerAngLimit)
+		.add_property("upper_ang_limit", &vl::physics::SliderConstraint::getUpperAngLimit, &vl::physics::SliderConstraint::setUpperAngLimit)
+		.def("create", &vl::physics::SliderConstraint::create)
+		.staticmethod("create")
+	;
+
+	/// rigid body
 	vl::physics::MotionState *(vl::physics::RigidBody::*getMotionState_ov1)(void) = &vl::physics::RigidBody::getMotionState;
 
 	python::class_<vl::physics::RigidBody, vl::physics::RigidBodyRefPtr, boost::noncopyable>("RigidBody", python::no_init )
@@ -642,7 +660,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::physics::MotionState, boost::noncopyable >("MotionState", python::no_init )
+	/// motion state
+	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
 		.add_property("node", python::make_function( &vl::physics::MotionState::getNode, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::MotionState::setNode )
 		.add_property("position", &vl::physics::MotionState::getPosition)
@@ -650,12 +669,14 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::physics::World, boost::noncopyable >("PhysicsWorld", python::no_init )
+	/// world
+	python::class_<vl::physics::World, boost::noncopyable>("PhysicsWorld", python::no_init)
 		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody)
 		.def("removeRigidBody", &vl::physics::World::removeRigidBody)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
+		.def("addConstraint", &vl::physics::World::addConstraint)
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 		.def(python::self_ns::str(python::self_ns::self))
 	;

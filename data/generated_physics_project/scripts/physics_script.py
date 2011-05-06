@@ -36,8 +36,26 @@ def addKinematicAction(body):
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
 
+def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
+	print('Physics : Adding a box ' + name)
+	box_node = game.scene.createSceneNode(name)
+	box = game.scene.createEntity(name, PF.CUBE)
+	box_node.attachObject(box)
+	box.material_name = mat_name
+	box_node.scale = box_node.scale*size*0.001
+	#box_node.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
+
+	box_shape = BoxShape.create(size)
+	motion_state = world.createMotionState()
+	inertia = Vector3.zero
+	if(mass != 0) :
+		inertia = Vector3(1,1,1)
+	box = world.createRigidBody(name, mass, motion_state, box_shape, inertia)
+	return box
+
+
 def addSphere(name, mat_name, position, mass = 1) :
-	print('Adding a sphere ', name)
+	print('Adding a sphere ' + name)
 	sphere_node = game.scene.createSceneNode(name)
 	# TODO this should be copied from the shape, using bounding boxes
 	sphere_node.scale = Vector3(0.03, 0.03, 0.03)
@@ -95,12 +113,29 @@ g_motion_state = world.createMotionState()
 world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
 # TODO add some boxes
+box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
+box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 1, -5), size=Vector3(3, 3, 3), mass=30)
 
 sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
 sphere_body.user_controlled = True
 
 
-addSphere("sphere2", "finger_sphere/green", Vector3(-5.0, 10, 0))
+sphere_2_body = addSphere("sphere2", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
+
+sphere_3_body = addSphere("sphere3", "finger_sphere/red", Vector3(3, 7, 3))
+constraint = SliderConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+constraint.lower_lin_limit = -5
+constraint.upper_lin_limit = 5
+#constraint.lower_ang_limit = 0
+#constraint.upper_ang_limit = 1
+#world.addConstraint(constraint)
+
+six_dof = SixDofConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+six_dof.setLinearLowerLimit(Vector3(-10, -5, -5))
+six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
+#six_dof.setAngularLowerLimit(Vector3(1, 1, 1))
+#six_dof.setAngularUpperLimit(Vector3(1, 1, 1))
+world.addConstraint(six_dof)
 
 # Add force action
 print('Adding Force action to KC_F')
