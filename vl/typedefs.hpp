@@ -140,9 +140,11 @@ namespace cluster
 {
 	class Client;
 	class Server;
+	class Message;
 
 	typedef boost::shared_ptr<Client> ClientRefPtr;
 	typedef boost::shared_ptr<Server> ServerRefPtr;
+	typedef boost::shared_ptr<Message> MessageRefPtr;
 }
 
 namespace ogre

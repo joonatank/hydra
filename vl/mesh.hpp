@@ -24,7 +24,10 @@
 #include <OGRE/OgreAxisAlignedBox.h>
 #include <OGRE/OgreMesh.h>
 
+/// Necessary for Ref ptrs
 #include "typedefs.hpp"
+/// Necessary for serializing Meshes
+#include "cluster/message.hpp"
 
 namespace vl
 {
@@ -57,13 +60,13 @@ public :
 
 	~SubMesh(void) {}
 
-	std::string const &getName(void)
+	std::string const &getName(void) const
 	{ return _name; }
 
 	void setName(std::string const &name)
 	{ _name = name; }
 	
-	std::string const &getMaterial(void)
+	std::string const &getMaterial(void) const
 	{ return _material; }
 
 	void setMaterial(std::string const &material)
@@ -72,16 +75,21 @@ public :
 	void addFace(int i1, int i2, int i3)
 	{ _faces.push_back( boost::make_tuple(i1, i2, i3) ); }
 
-	boost::tuple<int, int, int> const &getFace(size_t i)
+	boost::tuple<int, int, int> const &getFace(size_t i) const
 	{ return _faces.at(i); }
 
-	size_t getNumFaces(void)
+	size_t getNumFaces(void) const
 	{ return _faces.size(); }
+
+	typedef std::vector< boost::tuple<int, int, int> > FaceList;
+
+	FaceList const &getFaces(void) const
+	{ return _faces; }
 
 private :
 	std::string _name;
 	std::string _material;
-	std::vector< boost::tuple<int, int, int> > _faces;
+	FaceList _faces;
 };
 
 
@@ -132,9 +140,24 @@ public :
 	void setBoundingSphereRadius(Ogre::Real radius)
 	{ _bound_radius = radius; }
 
+	typedef std::vector<Vertex> VertexList;
+	typedef std::vector<SubMesh *> SubMeshList;
+
+	VertexList &getVertices(void)
+	{ return _vertices; }
+
+	VertexList const &getVertices(void) const
+	{ return _vertices; }
+
+	SubMeshList &getSubMeshes(void)
+	{ return _sub_meshes; }
+
+	SubMeshList const &getSubMeshes(void) const
+	{ return _sub_meshes; }
+
 private :
-	std::vector<Vertex> _vertices;
-	std::vector<SubMesh *> _sub_meshes;
+	VertexList _vertices;
+	SubMeshList _sub_meshes;
 	Ogre::AxisAlignedBox _bounds;
 	Ogre::Real _bound_radius;
 };
@@ -148,6 +171,73 @@ void convert_ogre_submeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh);
 void convert_ogre_submesh(vl::SubMesh *mesh, Ogre::SubMesh *og_sm);
 
 std::ostream &operator<<( std::ostream &os, Mesh const &m );
+
+namespace cluster
+{
+
+template<> inline
+ByteStream &operator<<(ByteStream &msg, vl::SubMesh const &mesh)
+{
+	std::clog << "Serializing SubMesh." << std::endl;
+	/// @todo does msg << mesh.getFaces() work really?
+	msg << mesh.getName() << mesh.getMaterial() << mesh.getFaces();
+
+	return msg;
+}
+
+template<> inline
+ByteStream &operator>>(ByteStream &msg, vl::SubMesh &mesh)
+{
+	std::clog << "Serializing SubMesh." << std::endl;
+	std::string name;
+	std::string material;
+	size_t n_faces;
+
+	msg >> name >> material >> n_faces;
+	for(size_t i = 0; i < n_faces; ++i)
+	{
+		int f1, f2, f3;
+		msg >> f1 >> f2 >> f3;
+		mesh.addFace(f1, f2, f3);
+	}
+
+	return msg;
+}
+
+template<> inline
+ByteStream &operator<<(ByteStream &msg, vl::Mesh const &mesh)
+{
+	std::clog << "Serializing Mesh." << std::endl;
+	/// @todo add writing
+	msg << mesh.getVertices() << mesh.getBoundingSphereRadius() << mesh.getBounds();
+	msg << mesh.getSubMeshes().size();
+	for(size_t i = 0; i < mesh.getSubMeshes().size(); ++i)
+	{ msg << *mesh.getSubMeshes().at(i); }
+
+	return msg;
+}
+
+template<> inline
+ByteStream &operator>>(ByteStream &msg, vl::Mesh &mesh)
+{
+	std::clog << "Deserializing Mesh." << std::endl;
+	Ogre::Real radius;
+	Ogre::AxisAlignedBox bounds;
+	size_t n_s_meshes;
+	msg >> mesh.getVertices() >> radius >> bounds >> n_s_meshes;
+	mesh.setBoundingSphereRadius(radius);
+	mesh.setBounds(bounds);
+
+	for(size_t i = 0; i < n_s_meshes; ++i)
+	{
+		SubMesh *sm = mesh.createSubMesh();
+		msg >> *sm;
+	}
+
+	return msg;
+}
+
+}	// namespace cluster
 
 }	// namespace vl
 

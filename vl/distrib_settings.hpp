@@ -24,7 +24,7 @@ class SettingsByteData : public vl::cluster::ByteData
 public :
 	SettingsByteData( void );
 
-	~SettingsByteData( void );
+	virtual ~SettingsByteData( void );
 
 	virtual void read( char *mem, msg_size size );
 	virtual void write( char const *mem, msg_size size );

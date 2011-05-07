@@ -70,16 +70,28 @@ vl::ConfigServerDataCallback::createInitMessage(void)
 vl::cluster::Message
 vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name)
 {
-	/// Remove when done
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	std::clog << "vl::ConfigServerDataCallback::createResourceMessage" << std::endl;
+
+	vl::cluster::Message msg(vl::cluster::MSG_RESOURCE, 0, vl::time());
 	if( type == vl::cluster::RES_MESH )
 	{
 		assert(owner->getGameManager()->getMeshManager()->hasMesh(name));
-		if(owner->getGameManager()->getMeshManager()->hasMesh(name))
+		if(!owner->getGameManager()->getMeshManager()->hasMesh(name))
 		{
-			owner->getGameManager()->getMeshManager()->getMesh(name);
+			BOOST_THROW_EXCEPTION(vl::null_pointer());
 		}
+
+		vl::MeshRefPtr mesh = owner->getGameManager()->getMeshManager()->getMesh(name);
+		
+		vl::cluster::MessageStream stream = msg.getStream();
+		stream << vl::cluster::RES_MESH << name << *mesh;
 	}
+	else
+	{
+		BOOST_THROW_EXCEPTION(vl::not_implemented());
+	}
+
+	return msg;
 }
 
 /// ---------------------------------- Config --------------------------------
@@ -347,7 +359,7 @@ vl::Config::createMsgInit(void)
 	{
 		assert( (*iter)->getID() != vl::ID_UNDEFINED );
 		vl::cluster::ObjectData data( (*iter)->getID() );
-		vl::cluster::ByteStream stream = data.getStream();
+		vl::cluster::ByteDataStream stream = data.getStream();
 		(*iter)->pack( stream, vl::Distributed::DIRTY_ALL );
 		data.copyToMessage(&msg);
 		/// Don't clear dirty because this is a special case
@@ -449,7 +461,7 @@ vl::Config::_createMsgUpdate(void)
 		{
 			assert( (*iter)->getID() != vl::ID_UNDEFINED );
 			vl::cluster::ObjectData data( (*iter)->getID() );
-			vl::cluster::ByteStream stream = data.getStream();
+			vl::cluster::ByteDataStream stream = data.getStream();
 			(*iter)->pack(stream);
 			data.copyToMessage(&_msg_update);
 			/// Clear dirty because this update has been applied
@@ -489,7 +501,7 @@ vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
 	assert( _server );
 
 	vl::SettingsByteData data;
-	vl::cluster::ByteStream stream( &data );
+	vl::cluster::ByteDataStream stream( &data );
 	stream << env;
 
 	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT, 0, vl::time() );
@@ -503,7 +515,7 @@ void
 vl::Config::_sendProject(vl::Settings const &proj)
 {
 	vl::SettingsByteData data;
-	vl::cluster::ByteStream stream( &data );
+	vl::cluster::ByteDataStream stream( &data );
 	stream << proj;
 
 	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
@@ -662,7 +674,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 	{
 		vl::cluster::EventData data;
 		data.copyFromMessage(&msg);
-		vl::cluster::ByteStream stream = data.getStream();
+		vl::cluster::ByteDataStream stream = data.getStream();
 		switch( data.getType() )
 		{
 			case vl::cluster::EVT_KEY_PRESSED :

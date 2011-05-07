@@ -62,6 +62,7 @@ set( SOURCES
 	)
 
 set( HEADERS
+	system_tools/message_box.hpp
 	tracker.hpp
 	entity.hpp
 	light.hpp

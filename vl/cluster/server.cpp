@@ -128,15 +128,35 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 
 	// TODO We can skip here all clients that are not yet rendering
 	ClientRefList renderers;
+	ClientRefList wants_init;
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->state.wants_render )
-		renderers.push_back( &(*iter) );
+		if( iter->state.wants_render && iter->state.has_init )
+		{ renderers.push_back( &(*iter) ); }
+		else if(!iter->state.has_init)
+		{ wants_init.push_back( &(*iter) ); }
+	}
+
+	for(ClientRefList::iterator iter = wants_init.begin(); iter != wants_init.end();
+		++iter )
+	{
+		_sendUpdate(**iter);
+		(*iter)->state.has_init = true;
+	}
+
+	/// Clear all renderers states
+	for(ClientRefList::iterator iter = renderers.begin(); iter != renderers.end();
+		++iter )
+	{
+		(*iter)->state.clear_rendering_state();
 	}
 
 	// TODO even if client is not rendering it should get update messages
 	if( renderers.empty() )
-	{ return false; }
+	{
+		std::clog << "vl::cluster::Server::start_draw : no renderers" << std::endl;
+		return false;
+	}
 
 	// Send frame start
 	// This is the first message and before this is answered
@@ -145,15 +165,24 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
 		vl::cluster::Message msg( vl::cluster::MSG_FRAME_START, _frame, getSimulationTime() );
-		_sendMessage(iter->address, msg);
+		_sendMessage(*iter, msg);
 	}
 
 	tim.reset();
-	bool success  = _block_till_state(CS_UPDATE_READY);
-	assert(success);
+	bool success  = _block_till_state(CS_UPDATE_READY, renderers, limit);
+	if(!success)
+	{
+		std::clog << "vl::cluster::Server::start_draw : failed UPDATE_READY" << std::endl;
+		for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
+		{
+			(*iter)->state.clear_rendering_state();
+		}
+		return false;
+	}
+
 	// Send update message to all
-	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{ _sendUpdate(*iter); }
+	for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
+	{ _sendUpdate(**iter); }
 
 	// Not in use because DRAW_READY is sent so soon after this one
 //	_block_till_state(CS_UPDATE);
@@ -161,24 +190,46 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 //	_block_till_state(CS_UPDATE_DONE);
 
 	// Send the output messages
-	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{ _sendOuput(*iter); }
-	success = _block_till_state(CS_DRAW_READY, limit);
-	assert(success);
+	for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
+	{ _sendOuput(**iter); }
+	success = _block_till_state(CS_DRAW_READY, renderers, limit);
+	/// @todo this fails because the slaves are really slow to init
+	/// we need to fallback and not render on slaves before they have
+	/// been inited
+	/// Clear the rendering states if fails
+	if(!success)
+	{
+		std::clog << "vl::cluster::Server::start_draw : failed DRAW_READY" << std::endl;
+		for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
+		{
+			(*iter)->state.clear_rendering_state();
+		}
+		return false; 
+	}
+
 	stats.logWaitUpdateTime( (double(tim.elapsed()))*1e3 );
 
 	tim.reset();
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
 		vl::cluster::Message msg( vl::cluster::MSG_DRAW, _frame, getSimulationTime() );
-		_sendMessage(iter->address, msg);
+		_sendMessage(*iter, msg);
 		iter->state.frame = _frame;
 	}
 	// Check that all clients started drawing
 	// @todo on Windows if we use the time limit the block call will fail
 	// Some real performance problems with it.
-	success = _block_till_state(CS_DRAW);//, limit);
-	assert(success);
+	success = _block_till_state(CS_DRAW, renderers, limit);
+	if(!success)
+	{
+		std::clog << "vl::cluster::Server::start_draw : failed CS_DRAW" << std::endl;
+		for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
+		{
+			(*iter)->state.clear_rendering_state();
+		}
+		return false;
+	}
+
 	stats.logWaitDrawTime( (double(tim.elapsed()))*1e3 );
 
 	return true;
@@ -190,7 +241,14 @@ vl::cluster::Server::finish_draw(vl::Stats &stats, vl::time const &limit)
 	if(_rendering())
 	{
 		vl::timer t;
-		bool success = _block_till_state(CS_DRAW_DONE, limit);
+		ClientRefList renderers;
+		for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
+		{
+			if( iter->state.wants_render && iter->state.has_init )
+			{ renderers.push_back( &(*iter) ); }
+		}
+
+		bool success = _block_till_state(CS_DRAW_DONE, renderers, limit);
 		assert(success);
 		// Clear the rendering state on all the clients
 		ClientList::iterator iter;
@@ -409,11 +467,15 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 		break;
 
 		/// Rendering loop
+		/// @todo MSG_DRAW_READY should be renamed because it's sent as a reply
+		/// for MSG_UPDATE and can be sent by slaves not receiving draw messages
 		case vl::cluster::MSG_DRAW_READY :
 		{
-			assert( client.state.rendering );
-			// change the state
-			client.state.set_rendering_state(CS_DRAW_READY);
+			/// Change state for those that are rendering, ignore otherwise
+			if( client.state.rendering )
+			{
+				client.state.set_rendering_state(CS_DRAW_READY);
+			}
 		}
 		break;
 
@@ -432,6 +494,13 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 		{
 			std::clog << "vl::cluster::MSG_REG_RESOURCE message received." << std::endl;
 			/// @todo add the real code
+			RESOURCE_TYPE type;
+			std::string name;
+			msg.read(type);
+			msg.read(name);
+			Message resource_msg = _data_cb->createResourceMessage(type, name);
+
+			_sendMessage(client, resource_msg);
 		}
 		break;
 
@@ -497,12 +566,11 @@ vl::cluster::Server::_find_client_ptr(boost::udp::endpoint const &address) const
 
 
 void
-vl::cluster::Server::_sendEnvironment(ClientInfo &client)
+vl::cluster::Server::_sendEnvironment(ClientInfo const &client)
 {
 	if( !_env_msg.empty() )
 	{
 		_socket.send_to( boost::asio::buffer(_env_msg), client.address );
-		//client.state = CS_REQ;
 	}
 }
 
@@ -532,7 +600,7 @@ vl::cluster::Server::_sendCreate(ClientInfo &client)
 }
 
 void
-vl::cluster::Server::_sendUpdate(ClientInfo &client)
+vl::cluster::Server::_sendUpdate(ClientInfo const &client)
 {
 	// @todo should we send zero data messages?
 	// the client can not handle not receiving updates but only receiving a draw message
@@ -546,8 +614,6 @@ vl::cluster::Server::_sendUpdate(ClientInfo &client)
 		std::vector<char> buf;
 		msg.dump(buf);
 		_socket.send_to( boost::asio::buffer(buf), client.address );
-
-		client.state.has_init = true;
 	}
 	else
 	{
@@ -579,12 +645,20 @@ vl::cluster::Server::_sendOuput(ClientInfo &client)
 	}
 }
 
+void 
+vl::cluster::Server::_sendMessage(ClientInfo const &client, vl::cluster::Message const &msg)
+{
+	std::vector<char> buf;
+	msg.dump(buf);
+	_socket.send_to(boost::asio::buffer(buf), client.address);
+}
+
 void
 vl::cluster::Server::_sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg)
 {
 	std::vector<char> buf;
 	msg.dump(buf);
-	_socket.send_to( boost::asio::buffer(buf), endpoint );
+	_socket.send_to(boost::asio::buffer(buf), endpoint);
 }
 
 void
@@ -683,7 +757,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 }
 
 bool
-vl::cluster::Server::_block_till_state(CLIENT_STATE cs, vl::time const &limit)
+vl::cluster::Server::_block_till_state(CLIENT_STATE cs,  ClientRefList clients, vl::time const &limit)
 {
 	vl::timer t;
 	bool ready = false;
@@ -692,10 +766,10 @@ vl::cluster::Server::_block_till_state(CLIENT_STATE cs, vl::time const &limit)
 		poll();
 
 		ready = true;
-		ClientList::iterator iter;
-		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
+		ClientRefList::iterator iter;
+		for( iter = clients.begin(); iter != clients.end(); ++iter )
 		{
-			if( !iter->state.has_rendering_state(cs) )
+			if( !(*iter)->state.has_rendering_state(cs) )
 			{
 				ready = false;
 				break;

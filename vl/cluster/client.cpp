@@ -33,8 +33,8 @@ vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
 	owner->sendMessage(msg);
 }
 
-vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::ClientRefPtr clien)
-	: client(clien)
+vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::Client *own)
+	: owner(own)
 {}
 
 /// Blocks till the mesh is loaded and returns a valid mesh
@@ -42,23 +42,37 @@ vl::MeshRefPtr
 vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName)
 {
 	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : " << fileName << std::endl;
-	if(!client)
+	if(!owner)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
 	}
 
 //	BOOST_THROW_EXCEPTION(vl::not_implemented());
 	/// @todo fix time and frame parameters
-	Message msg(MSG_REG_RESOURCE, 0, vl::time());
-	msg.write(RES_MESH);
-	msg.write(fileName);
-	client->sendMessage(msg);
+	Message reg_msg(MSG_REG_RESOURCE, 0, vl::time());
+	reg_msg.write(RES_MESH);
+	reg_msg.write(fileName);
+	owner->sendMessage(reg_msg);
 
-	msg = client->waitForMessage(MSG_RESOURCE);
+	/// @todo it's not enough that the type of the Message matches
+	/// for blocking functions this might not be a problem but for non-blocking
+	/// this is a disaster.
+	MessageRefPtr msg = owner->waitForMessage(MSG_RESOURCE);
+	assert(!msg->empty());
+
+	vl::MeshRefPtr mesh(new vl::Mesh);
+	MessageStream stream = msg->getStream();
+	RESOURCE_TYPE type;
+	std::string name;
+	stream >> type >> name;
+	std::cout << "Resource type = " << type << " : name = " << name << std::endl;
+	assert(type == RES_MESH);
+	assert(name == fileName);
+	stream >> (*mesh);
 
 	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : got mesh data" << std::endl;
 
-	return vl::MeshRefPtr();
+	return mesh;
 }
 
 /// ------------------------------ Client -------------------------------------
@@ -80,9 +94,9 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	_renderer->setSendMessageCB(cb);
 	_callbacks.push_back(cb);
 
-	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(shared_from_this());
+	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(this);
 	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
-	rend->setMeshManager(mesh_man);
+	_renderer->setMeshManager(mesh_man);
 
 	std::stringstream ss;
 	ss << port;
@@ -134,37 +148,10 @@ vl::cluster::Client::mainloop(void)
 {
 	while(_socket.available())
 	{
-		std::vector<char> recv_buf( _socket.available() );
-		boost::system::error_code error;
-
-		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
-				_master, 0, error );
-
-		/// @TODO when these do happen?
-		if( error && error == boost::asio::error::connection_refused )
+		MessageRefPtr msg = _receive();
+		if(msg && MSG_UNDEFINED != msg->getType())
 		{
-			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;
-		}
-		else if( error && error == boost::asio::error::connection_aborted )
-		{
-			std::cout << vl::CRITICAL << "Error : Connection aborted" << std::endl;
-		}
-		else if( error && error == boost::asio::error::connection_reset )
-		{
-			// This is received if there is no service in the port we sent
-		}
-		else if( error && error == boost::asio::error::host_unreachable )
-		{
-			std::cout << vl::CRITICAL << "Error : Host unreachable" << std::endl;
-		}
-		else if( error && error != boost::asio::error::message_size )
-		{ throw boost::system::system_error(error); }
-
-		if( n > 0 )
-		{
-			Message msg( recv_buf );
-			sendAck(msg.getType());
-			_handleMessage(msg);
+			_handle_message(*msg);
 		}
 	}
 
@@ -188,25 +175,42 @@ vl::cluster::Client::sendMessage(vl::cluster::Message const &msg)
 	_socket.send_to( boost::asio::buffer(buf), _master );
 }
 
-void
-vl::cluster::Client::sendAck(vl::cluster::MSG_TYPES type)
+vl::cluster::MessageRefPtr
+vl::cluster::Client::waitForMessage(vl::cluster::MSG_TYPES type, vl::time timelimit)
 {
-	Message msg( vl::cluster::MSG_ACK, 0, vl::time() );
-	msg.write(type);
-	sendMessage(msg);
-}
+	std::cout << vl::TRACE << "vl::cluster::Client::waitForMessage" << std::endl;
 
-vl::cluster::Message
-vl::cluster::Client::waitForMessage(vl::cluster::MSG_TYPES type)
-{
-	std::clog << "vl::cluster::Client::waitForMessage" << std::endl;
+	MessageRefPtr msg;
+	bool done = false;
+	while(!done)
+	{
+		msg = _receive();
+		if(msg && MSG_UNDEFINED != msg->getType())
+		{
+			if(msg->getType() == type)
+			{
+				done = true;
+				/// Not calling handle because the message was requested from
+				/// somewhere
+			}
+			else
+			{
+				_handle_message(*msg);
+			}
+		}
+		/// @todo does this need sleeping between messages?
+		/// probably necessary on Linux
+#ifndef _WIN32
+		vl::msleep(0);
+#endif
+	}
 
-	return Message();
+	return msg;
 }
 
 /// ------------------------ Private -------------------------------------------
 void
-vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
+vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 {
 	switch( msg.getType() )
 	{
@@ -221,9 +225,11 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 				// Deserialize the environment settings
 				vl::EnvSettingsRefPtr env( new vl::EnvSettings );
 				// TODO needs a ByteData object for Environment settings
+				// @todo this should be changed to use MessageStream instead
+				// so no copying is necessary.
 				vl::SettingsByteData data;
 				data.copyFromMessage(&msg);
-				vl::cluster::ByteStream stream(&data);
+				vl::cluster::ByteDataStream stream(&data);
 				stream >> env;
 				// Only single environment settings should be in the message
 				assert( 0 == msg.size() );
@@ -244,7 +250,9 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 		{
 			/// @todo add checking for the server timestamp
 			Message msg(MSG_SG_UPDATE_READY, 0, vl::time());
-			assert( !_state.rendering );
+			// Not necessary for anything, should restart the frame though
+			// Oh might be also that we are getting messages in the wrong order, which would need timestamp support
+			//assert( !_state.rendering );
 			assert( _state.wants_render );
 			_state.rendering = true;
 			_rend_timer.reset();
@@ -324,4 +332,55 @@ vl::cluster::Client::_handleMessage(vl::cluster::Message &msg)
 		}
 		break;
 	}
+}
+
+void
+vl::cluster::Client::_send_ack(vl::cluster::MSG_TYPES type)
+{
+	Message msg( vl::cluster::MSG_ACK, 0, vl::time() );
+	msg.write(type);
+	sendMessage(msg);
+}
+
+vl::cluster::MessageRefPtr 
+vl::cluster::Client::_receive(void)
+{
+	MessageRefPtr msg;
+
+	if(_socket.available())
+	{
+		std::vector<char> recv_buf(_socket.available());
+		boost::system::error_code error;
+
+		size_t n = _socket.receive_from( boost::asio::buffer(recv_buf),
+				_master, 0, error );
+
+		/// @TODO when these do happen?
+		if( error && error == boost::asio::error::connection_refused )
+		{
+			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;
+		}
+		else if( error && error == boost::asio::error::connection_aborted )
+		{
+			std::cout << vl::CRITICAL << "Error : Connection aborted" << std::endl;
+		}
+		else if( error && error == boost::asio::error::connection_reset )
+		{
+			// This is received if there is no service in the port we sent
+		}
+		else if( error && error == boost::asio::error::host_unreachable )
+		{
+			std::cout << vl::CRITICAL << "Error : Host unreachable" << std::endl;
+		}
+		else if( error && error != boost::asio::error::message_size )
+		{ throw boost::system::system_error(error); }
+
+		if( n > 0 )
+		{
+			msg.reset(new Message(recv_buf));
+			_send_ack(msg->getType());
+		}
+	}
+
+	return msg;
 }

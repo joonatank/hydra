@@ -21,13 +21,16 @@
 
 #include <OGRE/OgreException.h>
 
+#include "system_tools/message_box.hpp"
+
 int main( const int argc, char** argv )
 {
+	std::string exception_msg;
+	vl::ProgramOptions options;
 	try
 	{
 		// Options need to be parsed before creating logger because logger
 		// is designed to redirect logging out of console
-		vl::ProgramOptions options;
 		options.parseOptions(argc, argv);
 
 		vl::Logger logger;
@@ -56,26 +59,39 @@ int main( const int argc, char** argv )
 
 		client.run();
 	}
-	catch( vl::exception &e )
+	catch(vl::exception const &e)
 	{
-		std::cerr << "VL Exception : "<<   boost::diagnostic_information<>(e)
-			<< std::endl;
-		return -1;
+		exception_msg = "VL Exception : \n" + boost::diagnostic_information<>(e);
 	}
-	catch( Ogre::Exception const &e)
+	catch(boost::exception const &e)
 	{
-		std::cerr << "Ogre Exception: " << e.what() << std::endl;
-		return -1;
+		exception_msg = "Boost Exception : \n"+ boost::diagnostic_information<>(e);
+	}
+	catch(Ogre::Exception const &e)
+	{
+		exception_msg = "Ogre Exception: \n" + std::string(e.what());
 	}
 	catch( std::exception const &e )
 	{
-		std::cerr << "STD Exception: " << e.what() << std::endl;
-		return -1;
+		exception_msg = "STD Exception: \n" + std::string(e.what()); 
 	}
 	catch( ... )
 	{
-		std::cerr << "An exception of unknow type occured." << std::endl;
-		return -1;
+		exception_msg = std::string("An exception of unknow type occured.");
+	}
+
+	if(!exception_msg.empty())
+	{
+		std::string title;
+		if(options.master())
+		{ title = "Master"; }
+		else
+		{ title = "Slave"; }
+		/// @todo We need a decent name function to options
+		title += " " + options.slave_name + " ERROR";
+
+		/// Show the exception message
+		vl::MessageDialog dialog(title, exception_msg);
 	}
 
 	/// @fixme Debug version hangs on return

@@ -138,16 +138,18 @@ private :
 
 	ClientInfo const *_find_client_ptr(boost::udp::endpoint const &address) const;
 
-	void _sendEnvironment(ClientInfo &client);
+	void _sendEnvironment(ClientInfo const &client);
 
 	// Updates the clients update frame after sending
 	// Which will ensure that no matter where and how many times
 	// this is called the same messaage will never be sent more than once
 	void _sendCreate(ClientInfo &client);
 
-	void _sendUpdate(ClientInfo &client);
+	void _sendUpdate(ClientInfo const &client);
 
 	void _sendOuput(ClientInfo &client);
+
+	void _sendMessage(ClientInfo const &client, vl::cluster::Message const &msg);
 
 	void _sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg);
 
@@ -158,7 +160,7 @@ private :
 	/// @param timelimit maximum time in ms to wait before returning
 	/// 0 means no timelimit
 	/// @return true if state was changed, false if timelimit expired
-	bool _block_till_state(CLIENT_STATE cs, vl::time const &limit = vl::time());
+	bool _block_till_state(CLIENT_STATE cs, ClientRefList clients, vl::time const &limit = vl::time());
 
 	bool _rendering( void );
 

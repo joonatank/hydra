@@ -206,7 +206,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 
 	vl::cluster::EventData data( vl::cluster::EVT_KEY_PRESSED );
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << key;
 	_sendEvent( data );
 
@@ -242,7 +242,7 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 
 	vl::cluster::EventData data( vl::cluster::EVT_KEY_RELEASED );
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << key;
 	_sendEvent( data );
 
@@ -272,7 +272,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
 		// TODO add support for the device ID from where the event originated
-		vl::cluster::ByteStream stream = data.getStream();
+		vl::cluster::ByteDataStream stream = data.getStream();
 		stream << evt;
 		_sendEvent( data );
 	}
@@ -291,7 +291,7 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 		// TODO add support for the device ID from where the event originated
-		vl::cluster::ByteStream stream = data.getStream();
+		vl::cluster::ByteDataStream stream = data.getStream();
 		stream << id << evt;
 		_sendEvent( data );
 	}
@@ -310,7 +310,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
 		// TODO add support for the device ID from where the event originated
-		vl::cluster::ByteStream stream = data.getStream();
+		vl::cluster::ByteDataStream stream = data.getStream();
 		stream << id << evt;
 		_sendEvent( data );
 	}
@@ -323,7 +323,7 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << button << evt;
 	_sendEvent( data );
 
@@ -335,7 +335,7 @@ vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << button << evt;
 	_sendEvent( data );
 
@@ -347,7 +347,7 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << axis << evt;
 	_sendEvent( data );
 
@@ -359,7 +359,7 @@ vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << pov << evt;
 	_sendEvent( data );
 
@@ -371,7 +371,7 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
 	// TODO add support for the device ID from where the event originated
-	vl::cluster::ByteStream stream = data.getStream();
+	vl::cluster::ByteDataStream stream = data.getStream();
 	stream << index << evt;
 	_sendEvent( data );
 

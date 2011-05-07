@@ -563,9 +563,10 @@ vl::Renderer::handleMessage(vl::cluster::Message &msg)
 			// so they either need special structure or we need to iterate over
 			// all of them always.
 			// TODO needs a ByteData object for Environment settings
+			/// @todo replace ByteDataStream with MessageStream, reduces copying
 			vl::SettingsByteData data;
 			data.copyFromMessage(&msg);
-			vl::cluster::ByteStream stream(&data);
+			vl::cluster::ByteDataStream stream(&data);
 			vl::Settings projects;
 			stream >> projects;
 
@@ -837,6 +838,7 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 		{
 			case OBJ_PLAYER :
 			{
+				std::cout << vl::TRACE << "Creating Player" << std::endl;
 				// TODO fix the constructor
 				vl::Player *player = new vl::Player;
 				mapObject(player, id);
@@ -849,6 +851,7 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 
 			case OBJ_GUI :
 			{
+				std::cout << vl::TRACE << "Creating GUI" << std::endl;
 				vl::gui::GUI *gui = new vl::gui::GUI( this, id );
 				gui->setEditor( vl::gui::WindowRefPtr( new vl::gui::Window(_editor) ) );
 				gui->setConsole( vl::gui::WindowRefPtr( new vl::gui::Window(_console) ) );
@@ -870,12 +873,13 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-
+				std::clog << "SceneManager created." << std::endl;
 			}
 			break;
 
 			case OBJ_SCENE_NODE :
 			{
+				std::cout << vl::TRACE << "Creating SceneNode" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createSceneNode(id);
 			}
@@ -885,18 +889,21 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 			/// use the same create function
 			case OBJ_ENTITY :
 			{
+				std::cout << vl::TRACE << "Creating Entity" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createEntity(id);
 				break;
 			}
 			case OBJ_LIGHT :
 			{
+				std::cout << vl::TRACE << "Creating Light" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createLight(id);
 				break;
 			}
 			case OBJ_CAMERA :
 			{
+				std::cout << vl::TRACE << "Creating Camera" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createCamera(id);
 				break;
@@ -962,7 +969,7 @@ vl::Renderer::_syncData(void)
 	std::vector<vl::cluster::ObjectData>::iterator iter;
 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		vl::cluster::ByteStream stream = iter->getStream();
+		vl::cluster::ByteDataStream stream = iter->getStream();
 		vl::Distributed *obj = findMappedObject( iter->getId() );
 		if( obj )
 		{
@@ -970,7 +977,7 @@ vl::Renderer::_syncData(void)
 		}
 		else
 		{
-			std::cerr << "No ID " << iter->getId() << " found in mapped objects."
+			std::cout << vl::CRITICAL << "No ID " << iter->getId() << " found in mapped objects."
 				<< std::endl;
 			tmp.push_back( *iter );
 		}

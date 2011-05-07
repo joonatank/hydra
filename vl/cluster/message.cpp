@@ -97,6 +97,8 @@ vl::cluster::Message::clear( void )
 vl::msg_size
 vl::cluster::Message::read( char *mem, vl::msg_size size )
 {
+	/// @todo replace with throw
+	assert(_data.size() >= size);
 	::memcpy( mem, &_data[0], size );
 	_size -= size;
 	_data.erase( _data.begin(), _data.begin()+size );

@@ -137,11 +137,12 @@ vl::Entity::_doCreateNative(void)
 	{
 		if( _use_new_mesh_manager )
 		{
-//			std::clog << "vl::Entity::_doCreateNative : Should use the new MeshManager." << std::endl;
+			std::clog << "vl::Entity::_doCreateNative : Should use the new MeshManager." << std::endl;
 			vl::MeshRefPtr mesh = _creator->getMeshManager()->loadMesh(_mesh_name);
+			assert(mesh);
 			Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
-//			std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
-//				<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+			std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+				<< " is loaded = " << og_mesh->isLoaded() << std::endl;
 		}
 		_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
 //		Ogre::MeshPtr og_mesh = _ogre_object->getMesh();
@@ -167,7 +168,7 @@ vl::Entity::_doCreateNative(void)
 	}
 	else
 	{
-		std::cerr << "Trying to create an entity without a mesh file" 
+		std::clog << "Trying to create an entity without a mesh file" 
 			<< " or prefab. Not supported." << std::endl;
 		return false;
 	}

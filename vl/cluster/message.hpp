@@ -174,10 +174,51 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_PRINT";
 	case MSG_SHUTDOWN :
 		return "MSG_SHUTDOWN";
+	case MSG_REG_RESOURCE :
+		return "MSG_REG_RESOURCE";
+	case MSG_RESOURCE :
+		return "MSG_RESOURCE";
 	default :
 		return std::string();
 	}
 }
+
+/// @class ByteStream Abstract stream interface
+class ByteStream
+{
+public :
+	template<typename T>
+	void read( T &t )
+	{ read( (char *)&t, (msg_size)sizeof(t) ); }
+
+	template<typename T>
+	void write( T const &t )
+	{ write( (char *)&t, (msg_size)sizeof(t) ); }
+
+	virtual void read(char *mem, msg_size size) = 0;
+
+	virtual void write(char const *mem, msg_size size) = 0;
+
+};	// class ByteStream
+
+class Message;
+
+class MessageStream : public ByteStream
+{
+public :
+	MessageStream(Message *msg)
+		: _data(msg)
+	{}
+
+	virtual void read(char *mem, msg_size size);
+
+	virtual void write(char const *mem, msg_size size);
+
+private :
+	Message *_data;
+
+};	// class MessageStream
+
 
 /** @class Message
  *	@brief Description of an UDP message
@@ -242,6 +283,9 @@ public :
 	size_type size( void ) const
 	{ return _size; }
 
+	MessageStream getStream(void)
+	{ return MessageStream(this); }
+
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 
 private :
@@ -281,6 +325,20 @@ private :
 };	// class Message
 
 std::ostream &operator<<( std::ostream &os, Message const &msg );
+
+inline void
+MessageStream::read(char *mem, msg_size size)
+{
+	assert(_data);
+	_data->read(mem, size);
+}
+
+inline void
+MessageStream::write(char const *mem, msg_size size)
+{
+	assert(_data);
+	_data->write(mem, size);
+}
 
 /** @class MessagePart
  *	@brief A class used for splitting and reconstruction of Messages
@@ -340,17 +398,16 @@ public :
 
 };	// class ByteData
 
-// TODO break down to IStream and OStream
 /// This can be copied, copied stream contains the original object pointer
 /// So it acts as a proxy for the object
-class ByteStream
+class ByteDataStream : public ByteStream
 {
 public :
-	ByteStream( ByteData *data )
+	ByteDataStream( ByteData *data )
 		: _data(data)
 	{ open(); }
 
-	~ByteStream( void )
+	~ByteDataStream( void )
 	{ close(); }
 
 	void setData( ByteData *data )
@@ -360,25 +417,17 @@ public :
 		open();
 	}
 
-	void open( void )
+	void open(void)
 	{
 		if( _data )
 		{ _data->open(); }
 	}
 
-	void close( void )
+	void close(void)
 	{
 		if( _data )
 		{ _data->close(); }
 	}
-
-	template<typename T>
-	void read( T &t )
-	{ read( (char *)&t, (msg_size)sizeof(t) ); }
-
-	template<typename T>
-	void write( T const &t )
-	{ write( (char *)&t, (msg_size)sizeof(t) ); }
 
 	virtual void read( char *mem, msg_size size )
 	{
@@ -434,8 +483,8 @@ public :
 	/// as a next element to it's ID.
 	virtual void copyFromMessage( Message *msg );
 
-	ByteStream getStream( void )
-	{ return ByteStream( this ); }
+	ByteDataStream getStream( void )
+	{ return ByteDataStream( this ); }
 
 	friend std::ostream &operator<<( std::ostream &os, ObjectData const &data );
 
@@ -467,8 +516,8 @@ public :
 	virtual void copyToMessage( Message *msg );
 	virtual void copyFromMessage( Message *msg );
 
-	ByteStream getStream( void )
-	{ return ByteStream( this ); }
+	ByteDataStream getStream( void )
+	{ return ByteDataStream( this ); }
 
 private :
 	std::vector<char> _data;
@@ -517,7 +566,7 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 }
 
 template<> inline
-ByteStream &operator<<( ByteStream &msg, std::string const &str )
+ByteStream &operator<<(ByteStream &msg, std::string const &str)
 {
 	msg.write( str.size() );
 	if( str.size() != 0 )
@@ -527,7 +576,7 @@ ByteStream &operator<<( ByteStream &msg, std::string const &str )
 }
 
 template<> inline
-ByteStream &operator>>( ByteStream &msg, std::string &str )
+ByteStream &operator>>(ByteStream &msg, std::string &str)
 {
 	std::string::size_type size;
 	msg.read(size);

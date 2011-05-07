@@ -54,18 +54,18 @@ struct ClientMsgCallback : public vl::MsgCallback
 /// blocking mesh loader for slave
 struct SlaveMeshLoaderCallback : public BlockingMeshLoaderCallback
 {
-	SlaveMeshLoaderCallback(vl::cluster::ClientRefPtr clien);
+	SlaveMeshLoaderCallback(Client *own);
 
 	/// Blocks till the mesh is loaded and returns a valid mesh
 	virtual vl::MeshRefPtr loadMesh(std::string const &fileName);
 
-	vl::cluster::ClientRefPtr client;
+	Client *owner;
 
 };	// class SlaveMeshLoaderCallback
 
 
 /// @class Client
-class Client : public boost::enable_shared_from_this<Client>
+class Client
 {
 public:
 	Client( char const *hostname, uint16_t port, vl::RendererInterfacePtr rend );
@@ -81,13 +81,25 @@ public:
 
 	void sendMessage(vl::cluster::Message const &msg);
 
-	void sendAck( vl::cluster::MSG_TYPES );
-
+	/// @brief wait till a Message with type is received and return the message
+	/// @param type the Message type to wait
+	/// @param timelimit maximum time to wait, zero will wait forever
+	/// @return the Message received
 	/// @todo should probably use ref pointers
-	Message waitForMessage(MSG_TYPES type);
+	/// @todo it's not enough that the type of the Message matches
+	/// part of the message data must match as well.
+	/// For blocking functions this might not be a problem but for non-blocking
+	/// this is a disaster.
+	MessageRefPtr waitForMessage(MSG_TYPES type, vl::time timelimit = vl::time());
 
 private :
-	void _handleMessage(vl::cluster::Message &msg);
+	void _handle_message(vl::cluster::Message &msg);
+
+	void _send_ack(vl::cluster::MSG_TYPES);
+
+	/// @todo replace with ref ptrs
+	/// @brief receives one message from the Master
+	MessageRefPtr _receive(void);
 
 	boost::asio::io_service _io_service;
 
