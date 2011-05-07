@@ -107,6 +107,8 @@ enum MSG_TYPES
 	MSG_REG_OUTPUT,		// Request logger output messages
 	MSG_PRINT,			// Logger output messages, sent from application to pipes
 	MSG_SHUTDOWN,		// Shutdown the rendering threads
+	MSG_REG_RESOURCE,	// Request a resource from Server
+	MSG_RESOURCE,		// Resource message, resource can be anything
 };
 
 enum EVENT_TYPES
@@ -122,6 +124,11 @@ enum EVENT_TYPES
 	EVT_JOYSTICK_AXIS,
 	EVT_JOYSTICK_POV,
 	EVT_JOYSTICK_VECTOR3,
+};
+
+enum RESOURCE_TYPE
+{
+	RES_MESH,
 };
 
 inline

@@ -13,6 +13,9 @@
 // Resource Manager concrete implementation
 #include "distrib_resource_manager.hpp"
 
+// concrete implementation of Mesh manager
+#include "mesh_manager.hpp"
+
 // SceneManager
 #include "scene_manager.hpp"
 
@@ -35,9 +38,11 @@ vl::GameManager::GameManager( vl::Logger *logger )
 	, _background_sound(0)
 	, _logger(logger)
 	, _env_effects_enabled(true)
+	, _mesh_manager()
 	, _state(GS_UNKNOWN)
 	, _physics_world(0)
 {
+	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
 
 	// Not creating audio context because user needs to enable it separately.
@@ -60,7 +65,6 @@ vl::GameManager::~GameManager(void )
 
 	delete _scene_manager;
 	delete _python;
-	delete _resource_man;
 	delete _event_man;
 }
 
@@ -68,38 +72,7 @@ void
 vl::GameManager::createSceneManager( vl::Session *session )
 {
 	assert( !_scene_manager );
-	_scene_manager = new vl::SceneManager( session );
-}
-
-
-vl::PythonContextPtr
-vl::GameManager::getPython(void )
-{
-	return _python;
-}
-
-vl::ResourceManagerPtr
-vl::GameManager::getReourceManager(void )
-{
-	return _resource_man;
-}
-
-vl::PlayerPtr
-vl::GameManager::getPlayer(void )
-{
-	return _player;
-}
-
-vl::EventManagerPtr
-vl::GameManager::getEventManager(void )
-{
-	return _event_man;
-}
-
-vl::SceneManagerPtr
-vl::GameManager::getSceneManager( void )
-{
-	return _scene_manager;
+	_scene_manager = new vl::SceneManager(session, _mesh_manager);
 }
 
 vl::PlayerPtr

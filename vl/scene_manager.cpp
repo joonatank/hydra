@@ -10,6 +10,9 @@
 #include "camera.hpp"
 #include "light.hpp"
 
+/// Necessary for creating PREFABS
+#include "mesh_manager.hpp"
+
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
@@ -138,11 +141,12 @@ vl::ShadowInfo::enable(void)
 
 /// Public
 /// Master constructor
-vl::SceneManager::SceneManager(vl::Session *session)
+vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_man)
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
 	, _session(session)
+	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
 {
 	_session->registerObject( this, OBJ_SCENE_MANAGER);
@@ -150,11 +154,12 @@ vl::SceneManager::SceneManager(vl::Session *session)
 }
 
 /// Renderer constructor
-vl::SceneManager::SceneManager( vl::Session *session, uint64_t id, Ogre::SceneManager *native )
+vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneManager *native, vl::MeshManagerRefPtr mesh_man)
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
 	, _session(session)
+	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
 {
 	assert(_session);
@@ -236,8 +241,30 @@ vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 	if(hasEntity(name))
 	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
 
-	EntityPtr ent = new Entity(name, type, this);
-	
+	EntityPtr ent = 0;
+	/// Test code for new MeshManager
+	if(type == PF_PLANE)
+	{
+		if(!_mesh_manager)
+		{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+		
+		std::string mesh_name("prefab_plane");
+		if(!_mesh_manager->hasMesh(mesh_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			_mesh_manager->createPlane(mesh_name, 20, 20);
+		}
+
+		ent = new Entity(name, mesh_name, this, true);
+	}
+	/// Old system for other PREFABS
+	else
+	{
+		ent = new Entity(name, type, this);
+	}
+
 	_session->registerObject( ent, OBJ_ENTITY, vl::ID_UNDEFINED );
 	assert( ent->getID() != vl::ID_UNDEFINED );
 	_objects.push_back(ent);

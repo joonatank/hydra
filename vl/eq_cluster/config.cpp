@@ -32,6 +32,9 @@
 // Necessary for sending Environment and Project configs
 #include "distrib_settings.hpp"
 
+// Necessary for loading meshes to Server
+#include "mesh_manager.hpp"
+
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 
@@ -64,6 +67,20 @@ vl::ConfigServerDataCallback::createInitMessage(void)
 	return owner->createMsgInit();
 }
 
+vl::cluster::Message
+vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name)
+{
+	/// Remove when done
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if( type == vl::cluster::RES_MESH )
+	{
+		assert(owner->getGameManager()->getMeshManager()->hasMesh(name));
+		if(owner->getGameManager()->getMeshManager()->hasMesh(name))
+		{
+			owner->getGameManager()->getMeshManager()->getMesh(name);
+		}
+	}
+}
 
 /// ---------------------------------- Config --------------------------------
 vl::Config::Config( vl::Settings const & settings,
@@ -99,7 +116,9 @@ vl::Config::Config( vl::Settings const & settings,
 
 	_createResourceManager( settings, env );
 
-	_game_manager->createSceneManager( this );
+	_game_manager->createSceneManager(this);
+
+	_renderer->setMeshManager(_game_manager->getMeshManager());
 }
 
 vl::Config::~Config( void )

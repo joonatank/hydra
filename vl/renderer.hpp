@@ -48,8 +48,8 @@ public :
 	vl::EnvSettingsRefPtr getEnvironment(void)
 	{ return _env; }
 
-//	vl::Settings const &getProject(void) const
-//	{ return _settings; }
+	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man)
+	{ _mesh_manager = mesh_man; }
 
 	vl::EnvSettings::Node getNodeConf( void );
 
@@ -171,9 +171,8 @@ protected :
 
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
-	/// ProjectSettings mapped from Master
-	//vl::Settings _settings;
 
+	vl::MeshManagerRefPtr _mesh_manager;
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;

@@ -866,9 +866,10 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				// TODO support multiple SceneManagers
 				assert(!_scene_manager);
 				assert(!_ogre_sm);
+				assert(_mesh_manager);
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
-				_scene_manager = new SceneManager(this, id, _ogre_sm );
+				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
 
 			}
 			break;

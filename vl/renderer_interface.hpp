@@ -36,6 +36,8 @@ public :
 
 	virtual ~RendererInterface(void) {}
 
+	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man) = 0;
+
 	/// @brief interface through which the Renderer is controlled
 	virtual void handleMessage(vl::cluster::Message &msg) = 0;
 

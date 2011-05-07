@@ -9,6 +9,9 @@
  *	@todo remove the OgreMain as a dependency, we might need headers for defines
  *	but remove the main dependencies for creating the mesh.
  *	@todo skeleton serialization is completely missing
+ *	@todo add mesh diff functions, one for telling if they are different,
+ *	one for getting the difference and one for writing it, needs a custom
+ *	format.
  */
 
 #ifndef HYDRA_MESH_SERIALIZER_HPP
@@ -20,6 +23,8 @@
 
 #include "mesh.hpp"
 
+#include "typedefs.hpp"
+
 namespace vl
 {
 
@@ -30,16 +35,11 @@ public :
 
 	~MeshWriter( void );
 
-	vl::Mesh *createMesh(void);
+	vl::MeshRefPtr createMesh(void);
 
-	void writeMesh(vl::Mesh *mesh, std::string const &filename);
+	void writeMesh(vl::MeshRefPtr mesh, std::string const &filename);
 
 private :
-	void writeGeometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Mesh *og_mesh);
-
-	void writeSubMeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh);
-
-	void writeSubMesh(vl::SubMesh *mesh, Ogre::SubMesh *og_sm);
 
 	Ogre::LogManager *_logMgr;
 	Ogre::Math *_math;

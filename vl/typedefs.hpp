@@ -38,7 +38,6 @@ namespace vl
 	class Entity;
 	class Light;
 	class Camera;
-	class Mesh;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -60,6 +59,7 @@ namespace vl
 	typedef GameManager *GameManagerPtr;
 	typedef EventManager * EventManagerPtr;
 	typedef ResourceManager * ResourceManagerPtr;
+	typedef boost::shared_ptr<ResourceManager> ResourceManagerRefPtr;
 	typedef PythonContext * PythonContextPtr;
 
 	typedef SceneManager * SceneManagerPtr;
@@ -69,7 +69,11 @@ namespace vl
 	typedef Light * LightPtr;
 	typedef Camera * CameraPtr;
 
+	class Mesh;
+	class MeshManager;
+
 	typedef boost::shared_ptr<Mesh> MeshRefPtr;
+	typedef boost::shared_ptr<MeshManager> MeshManagerRefPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;

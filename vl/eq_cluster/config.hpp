@@ -59,7 +59,9 @@ struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
 	virtual vl::cluster::Message createInitMessage(void);
 
 	/// @todo add CREATE_MSG and UPDATE_MSG also
-	
+
+	virtual vl::cluster::Message createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name);
+
 	vl::Config *owner;
 };
 
@@ -89,6 +91,9 @@ public:
 
 	virtual void stopRunning( void )
 	{ _running = false; }
+
+	vl::GameManagerPtr getGameManager(void)
+	{ return _game_manager; }
 
 	/// Message callback system functions
 	bool messages(void) const

@@ -11,6 +11,9 @@
 
 #include "logger.hpp"
 
+/// Necessary because we create MeshManager here and set it to Renderer
+#include "mesh_manager.hpp"
+
 #include <sstream>
 #include <iostream>
 
@@ -30,6 +33,34 @@ vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
 	owner->sendMessage(msg);
 }
 
+vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::ClientRefPtr clien)
+	: client(clien)
+{}
+
+/// Blocks till the mesh is loaded and returns a valid mesh
+vl::MeshRefPtr
+vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName)
+{
+	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : " << fileName << std::endl;
+	if(!client)
+	{
+		BOOST_THROW_EXCEPTION(vl::null_pointer());
+	}
+
+//	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/// @todo fix time and frame parameters
+	Message msg(MSG_REG_RESOURCE, 0, vl::time());
+	msg.write(RES_MESH);
+	msg.write(fileName);
+	client->sendMessage(msg);
+
+	msg = client->waitForMessage(MSG_RESOURCE);
+
+	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : got mesh data" << std::endl;
+
+	return vl::MeshRefPtr();
+}
+
 /// ------------------------------ Client -------------------------------------
 vl::cluster::Client::Client( char const *hostname, uint16_t port,
 							 vl::RendererInterfacePtr rend )
@@ -43,10 +74,15 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 		<< hostname << " at port " << port << "." << std::endl;
 
 	assert(_renderer.get());
-	// TODO should set callbacks to Renderer
+	
+	// set callbacks to Renderer
 	vl::MsgCallback *cb = new ClientMsgCallback(this);
 	_renderer->setSendMessageCB(cb);
 	_callbacks.push_back(cb);
+
+	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(shared_from_this());
+	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
+	rend->setMeshManager(mesh_man);
 
 	std::stringstream ss;
 	ss << port;
@@ -158,6 +194,14 @@ vl::cluster::Client::sendAck(vl::cluster::MSG_TYPES type)
 	Message msg( vl::cluster::MSG_ACK, 0, vl::time() );
 	msg.write(type);
 	sendMessage(msg);
+}
+
+vl::cluster::Message
+vl::cluster::Client::waitForMessage(vl::cluster::MSG_TYPES type)
+{
+	std::clog << "vl::cluster::Client::waitForMessage" << std::endl;
+
+	return Message();
 }
 
 /// ------------------------ Private -------------------------------------------

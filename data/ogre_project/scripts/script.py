@@ -34,13 +34,12 @@ game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
 
 # Create ground plane
+# TODO should create the mesh using MeshManager so the size can be assigned
 ground_ent = game.scene.createEntity('ground', PF.PLANE)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
-ground.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 # Shader material, with shadows
 ground_ent.material_name = 'ground/bump_mapped/shadows'
-ground.scale = ground.scale*0.2
 ground_ent.cast_shadows = False
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)

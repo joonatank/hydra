@@ -57,6 +57,8 @@ set( SOURCES
 	camera.cpp
 	movable_object.cpp
 	mesh_serializer.cpp
+	mesh_manager.cpp
+	mesh.cpp
 	)
 
 set( HEADERS
@@ -66,6 +68,7 @@ set( HEADERS
 	movable_object.hpp
 	mesh_serializer.hpp
 	mesh.hpp
+	mesh_manager.hpp
 	camera.hpp
 	tracker_serializer.hpp
 	vrpn_tracker.hpp

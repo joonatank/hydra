@@ -135,17 +135,25 @@ public :
 
 	void createSceneManager( vl::Session *session );
 
-	vl::PythonContextPtr getPython( void );
+	vl::PythonContextPtr getPython(void)
+	{ return _python; }
 
-	PlayerPtr getPlayer( void );
+	PlayerPtr getPlayer(void)
+	{ return _player; }
 
-	ResourceManagerPtr getReourceManager( void );
+	ResourceManagerRefPtr getReourceManager(void)
+	{ return _resource_man; }
 
-	EventManagerPtr getEventManager( void );
+	EventManagerPtr getEventManager(void)
+	{ return _event_man; }
 
-	vl::SceneManagerPtr getSceneManager( void );
+	vl::SceneManagerPtr getSceneManager(void)
+	{ return _scene_manager; }
 
 	PlayerPtr createPlayer( void );
+
+	MeshManagerRefPtr getMeshManager(void)
+	{ return _mesh_manager; }
 
 	void setGUI( vl::gui::GUI *gui )
 	{ _gui = gui; }
@@ -271,7 +279,7 @@ private :
 	GameManager & operator=( GameManager const &);
 
 	vl::PythonContextPtr _python;
-	vl::ResourceManagerPtr _resource_man;
+	vl::ResourceManagerRefPtr _resource_man;
 	vl::EventManagerPtr _event_man;
 	vl::SceneManagerPtr _scene_manager;
 
@@ -290,6 +298,7 @@ private :
 
 	vl::Logger *_logger;
 
+	vl::MeshManagerRefPtr _mesh_manager;
 	bool _env_effects_enabled;
 	Weather _weather;
 	Date _date;

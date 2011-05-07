@@ -37,7 +37,8 @@ public :
 	/// Should not be called from user code, use SceneManager to create these
 	Entity(std::string const &name, PREFAB type, vl::SceneManagerPtr creator);
 
-	Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator);
+	/// Should not be called from user code, use SceneManager to create these
+	Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager = false);
 
 	/// Internal used by slave mapping
 	Entity(vl::SceneManagerPtr creator);
@@ -95,6 +96,10 @@ private :
 	PREFAB _prefab;
 
 	std::string _mesh_name;
+
+	/// For new MeshManager
+	bool _use_new_mesh_manager;
+	vl::MeshRefPtr _mesh;
 
 	bool _cast_shadows;
 	std::string _material_name;

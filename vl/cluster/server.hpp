@@ -33,9 +33,13 @@ namespace cluster
 
 struct ServerDataCallback : public vl::Callback
 {
+	/// Create the SceneGraph init message
 	virtual Message createInitMessage(void) = 0;
 
 	/// @todo add CREATE_MSG and UPDATE_MSG also
+
+	/// Create a resource message containing certain type of resource with the name
+	virtual Message createResourceMessage(RESOURCE_TYPE type, std::string const &name) = 0;
 };
 
 class Server : public LogReceiver

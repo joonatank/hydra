@@ -150,7 +150,22 @@ vl::DistribResourceManager::loadOggResource(const std::string& name, vl::Resourc
 	_ogg_sounds.push_back( vl::Resource(data) );
 }
 
+void 
+vl::DistribResourceManager::loadMeshResource( std::string const &name, vl::Resource &data )
+{
+	std::cout << vl::TRACE << "Loading Mesh Resource " << name << std::endl;
 
+	std::string extension(".mesh");
+	std::string mesh_name = _stripExtension(name, extension);
+	std::string file_name = _getFileName(name, extension);
+	
+	std::string file_path;
+	if( !findResource( file_name, file_path ) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(file_name) ); }
+
+	_loadResource(mesh_name, file_path, data);
+	// Do not add them anywhere, they should be discarded when not in use anymore
+}
 
 bool
 vl::DistribResourceManager::findResource(const std::string& name, std::string& path) const

@@ -7,22 +7,31 @@
 
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
+// Necessary for loading meshes with the new interface
+#include "mesh_manager.hpp"
 
 #include <OGRE/OgreEntity.h>
 #include <OGRE/OgreSceneManager.h>
 
-vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManager *creator)
+vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManagerPtr creator)
 	: MovableObject(name, creator)
 {
 	_clear();
 	_prefab = type;
 }
 
-vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::SceneManager *creator)
+vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager)
 	: MovableObject(name, creator)
 {
 	_clear();
 	_mesh_name = mesh_name;
+	_use_new_mesh_manager = use_new_mesh_manager;
+	if(_use_new_mesh_manager)
+	{
+		std::clog << "vl::Entity::Entity : loading a mesh not implemented" << std::endl;
+		// @todo load the mesh
+		_mesh = creator->getMeshManager()->loadMesh(mesh_name);
+	}
 }
 
 vl::Entity::Entity(vl::SceneManagerPtr creator)
@@ -64,7 +73,7 @@ vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 
 	if( DIRTY_MESH_NAME & dirtyBits )
 	{
-		msg << _mesh_name;
+		msg << _mesh_name << _use_new_mesh_manager;
 	}
 
 	if( DIRTY_CAST_SHADOWS & dirtyBits )
@@ -88,7 +97,7 @@ vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 
 	if( DIRTY_MESH_NAME & dirtyBits )
 	{
-		msg >> _mesh_name;
+		msg >> _mesh_name >> _use_new_mesh_manager;
 	}
 
 	if( DIRTY_CAST_SHADOWS & dirtyBits )
@@ -126,7 +135,18 @@ vl::Entity::_doCreateNative(void)
 	}
 	else if( !_mesh_name.empty() )
 	{
+		if( _use_new_mesh_manager )
+		{
+//			std::clog << "vl::Entity::_doCreateNative : Should use the new MeshManager." << std::endl;
+			vl::MeshRefPtr mesh = _creator->getMeshManager()->loadMesh(_mesh_name);
+			Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
+//			std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+//				<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+		}
 		_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+//		Ogre::MeshPtr og_mesh = _ogre_object->getMesh();
+//		std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+//			<< " is loaded = " << og_mesh->isLoaded() << std::endl;
 	}
 	else if( PF_NONE != _prefab )
 	{
@@ -189,5 +209,6 @@ vl::Entity::_clear(void)
 {
 	_prefab = PF_NONE;
 	_cast_shadows = true;
+	_use_new_mesh_manager = false;
 	_ogre_object = 0;
 }

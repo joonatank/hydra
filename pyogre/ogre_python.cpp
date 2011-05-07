@@ -207,7 +207,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
-	class_< vl::Mesh, boost::noncopyable>("Mesh", no_init )
+	class_< vl::Mesh, vl::MeshRefPtr, boost::noncopyable>("Mesh", no_init )
 		.def("createSubMesh", make_function( &vl::Mesh::createSubMesh, return_value_policy<reference_existing_object>() ) )
 		.def("getNumSubMeshes", &vl::Mesh::getNumSubMeshes)
 		.def("getSubMesh", make_function( &vl::Mesh::getSubMesh, return_value_policy<reference_existing_object>() ) )
@@ -243,7 +243,7 @@ BOOST_PYTHON_MODULE(pyogre)
 	;
 
 	class_<vl::MeshWriter, boost::noncopyable>("MeshWriter")
-		.def("createMesh", make_function( &vl::MeshWriter::createMesh, return_value_policy<reference_existing_object>() ) )
+		.def("createMesh", &vl::MeshWriter::createMesh)
 		.def("writeMesh", &vl::MeshWriter::writeMesh)
 	;
 

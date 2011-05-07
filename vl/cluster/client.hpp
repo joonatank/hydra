@@ -21,6 +21,11 @@
 #include "base/timer.hpp"
 
 #include "base/report.hpp"
+/// Necessary for the MeshLoader callback base
+#include "mesh_manager.hpp"
+
+/// Necessary for Callbacks that take ref ptrs
+#include <boost/enable_shared_from_this.hpp>
 
 namespace boost
 {
@@ -43,9 +48,24 @@ struct ClientMsgCallback : public vl::MsgCallback
 	virtual void operator()(vl::cluster::Message const &msg);
 
 	Client *owner;
-};
 
-class Client
+};	// struct ClientMsgCallback
+
+/// blocking mesh loader for slave
+struct SlaveMeshLoaderCallback : public BlockingMeshLoaderCallback
+{
+	SlaveMeshLoaderCallback(vl::cluster::ClientRefPtr clien);
+
+	/// Blocks till the mesh is loaded and returns a valid mesh
+	virtual vl::MeshRefPtr loadMesh(std::string const &fileName);
+
+	vl::cluster::ClientRefPtr client;
+
+};	// class SlaveMeshLoaderCallback
+
+
+/// @class Client
+class Client : public boost::enable_shared_from_this<Client>
 {
 public:
 	Client( char const *hostname, uint16_t port, vl::RendererInterfacePtr rend );
@@ -62,6 +82,9 @@ public:
 	void sendMessage(vl::cluster::Message const &msg);
 
 	void sendAck( vl::cluster::MSG_TYPES );
+
+	/// @todo should probably use ref pointers
+	Message waitForMessage(MSG_TYPES type);
 
 private :
 	void _handleMessage(vl::cluster::Message &msg);

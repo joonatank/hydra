@@ -20,6 +20,7 @@ include_directories(${HydraMain_SOURCE_DIR})
 # compile them separately to objs
 set( SRC
 	${HydraMain_SOURCE_DIR}/mesh_serializer.cpp
+	${HydraMain_SOURCE_DIR}/mesh.cpp
 	ogre_python.cpp
 	)
 

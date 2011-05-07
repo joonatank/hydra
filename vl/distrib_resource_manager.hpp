@@ -68,6 +68,8 @@ public :
 
 	virtual void loadOggResource( std::string const &name, vl::Resource &data );
 
+	virtual void loadMeshResource( std::string const &name, vl::Resource &data );
+
 	/**	Add a resource path to the resource search paths
 	 *	Parameters : resource_dir needs to be a valid filesystem directory
 	 *				 recursive true if you want all the subdirectories added too

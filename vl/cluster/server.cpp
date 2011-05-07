@@ -428,6 +428,13 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 		}
 		break;
 
+		case vl::cluster::MSG_REG_RESOURCE :
+		{
+			std::clog << "vl::cluster::MSG_REG_RESOURCE message received." << std::endl;
+			/// @todo add the real code
+		}
+		break;
+
 		default :
 		{
 			std::cout << vl::CRITICAL << "vl::cluster::Server::mainloop : "

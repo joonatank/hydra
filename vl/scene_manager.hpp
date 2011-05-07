@@ -214,16 +214,21 @@ class SceneManager : public vl::Distributed
 public :
 	/// Master constructor
 	/// @param session a session this SceneManager belongs to, used for registering objects.
-	SceneManager( vl::Session *session);
+	SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_man);
 
 	/// Renderer constructor
 	/// @param session a session this SceneManager belongs to, used for mapping objects.
 	/// @param id identifier of the master object this is mapped to.
 	/// @param native the Ogre SceneManager this manager drives.
-	SceneManager( vl::Session *session, uint64_t id, Ogre::SceneManager *native);
+	SceneManager(vl::Session *session, uint64_t id, Ogre::SceneManager *native, vl::MeshManagerRefPtr mesh_man);
 
 	virtual ~SceneManager( void );
 
+
+	vl::MeshManagerRefPtr getMeshManager(void) const
+	{
+		return _mesh_manager;
+	}
 
 	/// ---------- SceneNode ---------------
 	SceneNodePtr getRootSceneNode(void)
@@ -404,6 +409,8 @@ private :
 	ShadowInfo _shadows;
 
 	vl::Session *_session;
+
+	vl::MeshManagerRefPtr _mesh_manager;
 
 	// SceneManager used for creating mapping between vl::SceneNode and
 	// Ogre::SceneNode
