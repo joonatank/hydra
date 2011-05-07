@@ -1,5 +1,6 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file game_manager.cpp
  *
  *	Game Manager
  *	Manages all the game manager and owns them

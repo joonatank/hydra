@@ -1,15 +1,18 @@
-/**	Joonatan Kuosa
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@file resource_manager.hpp
+ *
+ *	@date 2010-11
+ *	@date 2011-05 Changed from Abstract to Concrete (removed the distributed version)
  *
  *	Class to load resources
  *	Holds a number of resource paths from where the resources are searched
- *	Loads ascii file resources to std::strings
  *
+ *	Loads ascii file resources to std::strings
  *	Loads binary resources to memory
  */
 
-#ifndef VL_RESOURCE_MANAGER_HPP
-#define VL_RESOURCE_MANAGER_HPP
+#ifndef HYDRA_RESOURCE_MANAGER_HPP
+#define HYDRA_RESOURCE_MANAGER_HPP
 
 #include <vector>
 #include <string>
@@ -19,33 +22,69 @@
 namespace vl
 {
 
+/// @class ResourceManager
 class ResourceManager
 {
 public :
+	ResourceManager(void);
 
-	virtual void addResource( std::string const &name ) = 0;
+	~ResourceManager(void);
 
-	virtual void removeResource( std::string const &name ) = 0;
+	/**	@brief Find the resource with name from the search paths
+	 *	If the resource is found the full path to it is stored in path
+	 *
+	 *	@return true if resource was found, false otherwise
+	 *	@throw nothing
+	 */
+	bool findResource(std::string const &name, std::string &path) const;
 
-	virtual bool findResource( std::string const &name, std::string &path ) const = 0;
+	/**	@brief Loads a resource to the provided reference
+	 *	@throw vl::resource_not_found if the resource by the name was not found
+	 */
+	void loadResource(std::string const &name, vl::Resource &data);
 
-	virtual void loadResource( std::string const &name, vl::Resource &data ) = 0;
+	void loadSceneResource(std::string const &name, vl::TextResource &data);
 
-	virtual void loadSceneResource( std::string const &name, vl::TextResource &data ) = 0;
+	void loadPythonResource(std::string const &name, vl::TextResource &data);
 
-	virtual void loadPythonResource( std::string const &name, vl::TextResource &data ) = 0;
+	void loadOggResource(std::string const &name, vl::Resource &data);
 
-	virtual void loadOggResource( std::string const &name, vl::Resource &data ) = 0;
-
-	virtual void loadMeshResource( std::string const &name, vl::Resource &data ) = 0;
+	void loadMeshResource(std::string const &name, vl::Resource &data);
 
 	/// Resource path management
-	virtual void addResourcePath( std::string const &resource_dir, bool recursive = true ) = 0;
+	
+	/**	@brief Add a resource path to the resource search paths
+	 *	@param resource_dir needs to be a valid filesystem directory
+	 *	@param recursive true if you want all the subdirectories added too
+	 *
+	 *	@throw if the resource_dir does not exist or is not a directory
+	 */
+	void addResourcePath(std::string const &resource_dir, bool recursive = true);
 
-	virtual std::vector<std::string> const &getResourcePaths( void ) const = 0;
+	/**	@brief Get the current resource search paths
+	 *	@return current search paths
+	 *
+	 *	Always returns the current search paths, if there is none will return
+	 *	an empty vector.
+	 *
+	 *	@throw nothing
+	 */
+	std::vector<std::string> const &getResourcePaths(void) const;
+
+private :
+	/// Really load the resource
+	void _loadResource( std::string const &name,
+						std::string const &path,
+						vl::Resource &resource ) const;
+
+	/// Helper functions for manipulating resource files
+	std::string _getFileName( std::string const &name, std::string const &extension );
+	std::string _stripExtension( std::string const &name, std::string const &extension );
+
+	std::vector<std::string> _search_paths;
 
 };	// class ResourceManager
 
 }	// namepsace vl
 
-#endif // VL_RESOURCE_MANAGER_HPP
+#endif // HYDRA_RESOURCE_MANAGER_HPP

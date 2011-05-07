@@ -14,7 +14,7 @@
 
 #include "tracker_serializer.hpp"
 #include "base/filesystem.hpp"
-#include "distrib_resource_manager.hpp"
+#include "resource_manager.hpp"
 #include "resource.hpp"
 
 #include "scene_manager.hpp"

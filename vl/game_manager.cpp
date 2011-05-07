@@ -1,22 +1,19 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file game_manager.cpp
  */
 
 #include "game_manager.hpp"
 
 // Python manager
 #include "python.hpp"
-
 // Event Manager
 #include "event_manager.hpp"
-
-// Resource Manager concrete implementation
-#include "distrib_resource_manager.hpp"
-
-// concrete implementation of Mesh manager
+// Resource Manager
+#include "resource_manager.hpp"
+// Mesh manager
 #include "mesh_manager.hpp"
-
-// SceneManager
+// Scene Manager
 #include "scene_manager.hpp"
 
 // Player
@@ -27,10 +24,10 @@
 
 #include "dotscene_loader.hpp"
 
-vl::GameManager::GameManager( vl::Logger *logger )
+vl::GameManager::GameManager(vl::Logger *logger)
 	: _python(0)
-	, _resource_man( new vl::DistribResourceManager )
-	, _event_man( new vl::EventManager )
+	, _resource_man(new vl::ResourceManager)
+	, _event_man(new vl::EventManager)
 	, _scene_manager(0)
 	, _player(0)
 	, _trackers( new vl::Clients( _event_man ) )

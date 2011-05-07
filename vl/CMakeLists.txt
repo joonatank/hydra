@@ -31,7 +31,7 @@ set( SOURCES
 	python.cpp
 	trigger.cpp
 	event_manager.cpp
-	distrib_resource_manager.cpp
+	resource_manager.cpp
 	distrib_settings.cpp
 	program_options.cpp
 	stats.cpp
@@ -106,7 +106,6 @@ set( HEADERS
 	keycode.hpp
 	session.hpp
 	logger.hpp
-	distrib_resource_manager.hpp
 	distrib_settings.hpp
 	program_options.hpp
 	eq_cluster/window.hpp
