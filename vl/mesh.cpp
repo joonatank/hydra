@@ -330,6 +330,27 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 	*/
 }
 
+void 
+vl::calculate_bounds(vl::VertexData const *vertexData, Ogre::AxisAlignedBox &box, Ogre::Real &sphere)
+{
+	Ogre::Vector3 min, max;
+	Ogre::Real maxSquaredRadius;
+
+	Ogre::Vector3 pos = vertexData->getVertex(0).position;
+	min = max = pos;
+	maxSquaredRadius = pos.squaredLength();	
+	for(size_t i = 1; i < vertexData->getNVertices(); ++i)
+	{
+		pos = vertexData->getVertex(i).position;
+		min.makeFloor(pos);
+		max.makeCeil(pos);
+		maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
+	}
+	
+	box.setExtents(min, max);
+	sphere = Ogre::Math::Sqrt(maxSquaredRadius);
+}
+
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Vertex const &v)
 {
@@ -456,7 +477,147 @@ vl::VertexData::setVertex(size_t i, char const *buf, size_t size)
 	assert(offset == size);
 }
 
+/// --------------------------VertexDeclaration ------------------------------
+size_t 
+vl::VertexDeclaration::vertexSize(void) const
+{
+	size_t size = 0;
+		
+	for(size_t i =0; i < _semantics.size(); ++i)
+	{
+		size += getTypeSize(_semantics.at(i).second);
+	}
+
+	return size;
+}
+
+size_t vl::VertexDeclaration::getTypeSize(Ogre::VertexElementType type)
+{
+	switch(type)
+	{
+	case Ogre::VET_FLOAT1:
+		return 1*sizeof(float);
+	case Ogre::VET_FLOAT2:
+		return 2*sizeof(float);
+	case Ogre::VET_FLOAT3:
+		return 3*sizeof(float);
+	case Ogre::VET_FLOAT4:
+		return 4*sizeof(float);
+	case Ogre::VET_COLOUR:
+		return 4*sizeof(float);
+	case Ogre::VET_SHORT1:
+		return 1*sizeof(short);
+	case Ogre::VET_SHORT2:
+		return 2*sizeof(short);
+	case Ogre::VET_SHORT3:
+		return 3*sizeof(short);
+	case Ogre::VET_SHORT4:
+		return 4*sizeof(short);
+	case Ogre::VET_UBYTE4:
+		return 4*1;
+	case Ogre:: VET_COLOUR_ARGB:
+		return 4*sizeof(float);
+	case Ogre:: VET_COLOUR_ABGR:
+		return 4*sizeof(float);
+	default:
+		return 0;
+	}
+}
+
+/// ---------------------------- IndexBuffer ---------------------------------
+vl::IndexBuffer::IndexBuffer(void)
+	: _index_count(0)
+	, _buffer_size(IT_16BIT)
+{}
+
+vl::IndexBuffer::~IndexBuffer(void)
+{}
+
+void 
+vl::IndexBuffer::setIndexCount(size_t count)
+{
+	if(indexCount() != count)
+	{
+		_resize_buffer(count);
+	}
+}
+
+size_t 
+vl::IndexBuffer::indexCount(void) const
+{
+	if(_buffer_size == IT_32BIT)
+	{
+		return _buffer_32.size();
+	}
+	else
+	{
+		return _buffer_16.size();
+	}
+}
+
+void 
+vl::IndexBuffer::setIndexSize(vl::INDEX_SIZE size)
+{
+	if( size != _buffer_size )
+	{
+		_buffer_size = size;
+		_buffer_32.clear();
+		_buffer_16.clear();
+	}
+}
+
+void
+vl::IndexBuffer::push_back(uint16_t index)
+{
+	push_back((uint32_t)(index));
+}
+
+void
+vl::IndexBuffer::push_back(uint32_t index)
+{
+	if(_buffer_size == IT_32BIT)
+	{
+		_buffer_16.push_back(index);
+	}
+	else
+	{
+		_buffer_16.push_back((uint16_t)index);
+	}
+	++_index_count;
+}
+
+void 
+vl::IndexBuffer::_resize_buffer(size_t size)
+{
+	if(_buffer_size == IT_32BIT)
+	{
+		_buffer_32.resize(size);
+	}
+	else
+	{
+		_buffer_16.resize(size);
+	}
+}
+
+
 /// -------------------------------- Mesh ------------------------------------
+vl::Mesh::Mesh(std::string const &name)
+	: sharedVertexData(0)
+	, _name(name)
+	, _bound_radius(0)
+{}
+
+void
+vl::Mesh::removeSubMesh(uint16_t index)
+{
+	if(_sub_meshes.size() > index)
+	{
+		delete _sub_meshes.at(index);
+		_sub_meshes.erase(_sub_meshes.begin()+index);
+	}
+}
+
+
 vl::Mesh::~Mesh(void)
 {
 	for( size_t i = 0; i < _sub_meshes.size(); ++i )
@@ -484,23 +645,22 @@ vl::Mesh::calculateBounds(void)
 	if(!sharedVertexData || sharedVertexData->getNVertices() == 0)
 	{ return; }
 
-	Ogre::Vector3 min, max;
-	Ogre::Real maxSquaredRadius;
+	calculate_bounds(sharedVertexData, _bounds, _bound_radius);
 
-	Ogre::Vector3 pos = sharedVertexData->getVertex(0).position;
-	min = max = pos;
-	maxSquaredRadius = pos.squaredLength();	
-	for(size_t i = 1; i < sharedVertexData->getNVertices(); ++i)
+	// Iterate over the sub meshes for dedicated geometry
+	for(size_t i = 0; i < _sub_meshes.size(); ++i)
 	{
-		pos = sharedVertexData->getVertex(i).position;
-		min.makeFloor(pos);
-		max.makeCeil(pos);
-		maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
+		SubMesh *sm = _sub_meshes.at(i);
+		if(sm->vertexData)
+		{
+			Ogre::AxisAlignedBox box;
+			Ogre::Real sphere;
+			calculate_bounds(sm->vertexData, box, sphere);
+			_bound_radius = std::max(_bound_radius, sphere);
+			_bounds.merge(box);
+		}
 	}
 
-	// do not pad the bounding box
-	setBounds(Ogre::AxisAlignedBox(min, max));
-	setBoundingSphereRadius(Ogre::Math::Sqrt(maxSquaredRadius));
 	std::clog << "Setting new bounding box for " << getName() 
 		<< " box = " << getBounds() << std::endl;
 }
@@ -584,30 +744,34 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::IndexBuffer &ibf)
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &mesh)
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &sm)
 {
 	std::clog << "Serializing SubMesh." << std::endl;
 
-	msg << mesh.getName() << mesh.getMaterial() << mesh.indexData;
+	msg << sm.getName() << sm.getMaterial() << sm.operationType << sm.indexData << sm.useSharedGeometry;
 
 	/// @todo add serializing sub mesh dedicated geometry
+	if(!sm.useSharedGeometry)
+	{ msg << *sm.vertexData; }
 
 	return msg;
 }
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &mesh)
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &sm)
 {
-	std::clog << "Serializing SubMesh." << std::endl;
+	std::clog << "Deserializing SubMesh." << std::endl;
 	std::string name;
 	std::string material;
 
-	msg >> name >> material >> mesh.indexData;
-	mesh.setName(name);
-	mesh.setMaterial(material);
+	msg >> name >> material >> sm.operationType >> sm.indexData >> sm.useSharedGeometry;
+	sm.setName(name);
+	sm.setMaterial(material);
 
 	/// @todo add serializing sub mesh dedicated geometry
+	if(!sm.useSharedGeometry)
+	{ msg >> *sm.vertexData; }
 
 	return msg;
 }
@@ -619,7 +783,7 @@ vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::Mesh const &mesh)
 	std::clog << "Serializing Mesh." << std::endl;
 
 	if(mesh.sharedVertexData)
-		msg << true << mesh.sharedVertexData;
+		msg << true << *mesh.sharedVertexData;
 	else
 		msg << false;
 
@@ -636,9 +800,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
 {
 	std::clog << "Deserializing Mesh." << std::endl;
-	Ogre::Real radius;
-	Ogre::AxisAlignedBox bounds;
-	size_t n_s_meshes;
+
 	bool has_shared_vertex_data;
 	msg >> has_shared_vertex_data;
 
@@ -646,18 +808,28 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
 	{
 		if(!mesh.sharedVertexData)
 			mesh.sharedVertexData = new VertexData;
-		msg >> mesh.sharedVertexData;
+		msg >> *mesh.sharedVertexData;
 	}
+	else
+	{ delete mesh.sharedVertexData; }
 	
-	msg >> mesh.sharedVertexData->getVertices() >> radius >> bounds >> n_s_meshes;
-	
-	mesh.setBoundingSphereRadius(radius);
-	mesh.setBounds(bounds);
+	size_t n_s_meshes;
+	msg >> mesh.getBoundingSphereRadius() >> mesh.getBounds() >> n_s_meshes;
 
-	/// @todo this assumes that the mesh is empty
+	/// Remove old sub meshes if more than the new ones
+	while( n_s_meshes < mesh.getNumSubMeshes() )
+	{
+		mesh.removeSubMesh(mesh.getNumSubMeshes()-1);
+	}
+
+	/// Add new sub meshes
 	for(size_t i = 0; i < n_s_meshes; ++i)
 	{
-		SubMesh *sm = mesh.createSubMesh();
+		SubMesh *sm = 0;
+		if(mesh.getNumSubMeshes() > i)
+		{ sm = mesh.getSubMesh(i); }
+		else
+		{ sm = mesh.createSubMesh(); }
 		msg >> *sm;
 	}
 

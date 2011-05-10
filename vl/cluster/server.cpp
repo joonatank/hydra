@@ -730,7 +730,6 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 
 		case vl::cluster::MSG_DRAW :
 		{
-			assert( client.state.rendering && client.state.has_rendering_state(CS_DRAW_READY) );
 			// TODO all the clients in the rendering loop needs to be
 			// on the same state at this point so that they swap the same time
 			// change the state

@@ -52,7 +52,8 @@ sphere_ent.cast_shadows = True
 
 athene = game.scene.createSceneNode("athene")
 # Testing the new Mesh Manager for loading meshes
-athene_ent = game.scene.createEntity("athene", "athene.mesh", True)
+#athene_ent = game.scene.createEntity("athene", "athene.mesh", True)
+athene_ent = game.scene.createEntity("athene", "athene.mesh")
 athene_ent.material_name = "anthene_material"
 athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
