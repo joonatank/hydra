@@ -326,7 +326,7 @@ vl::Config::render( void )
 	if( _stats_timer.elapsed() > vl::time(10) )
 	{
 		_game_manager->getStats().update();
-		std::clog << _game_manager->getStats() << std::endl;
+//		std::clog << _game_manager->getStats() << std::endl;
 		_stats_timer.reset();
 	}
 }

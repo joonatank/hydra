@@ -257,9 +257,20 @@ public :
 
 
 	/// --- Entity ---
-	EntityPtr createEntity( std::string const &name, vl::PREFAB type);
+	EntityPtr createEntity(std::string const &name, vl::PREFAB type);
 
-	EntityPtr createEntity( std::string const &name, std::string const &mesh_name);
+	/// @brief create and entity
+	/// @return a newly create Entity
+	/// @param name the name of the entity, needs to be unique
+	/// @param mesh_name the name of the Mesh used for this entity, file name usually
+	/// @param use_new_mesh_manager wether to use the new MeshManager or not
+	/// @throw (add exception type) if mesh already exists
+	/// Don't use the new Mesh Manager other than for testing it's not stable yet
+	/// Mesh name can either be a file name or a precreated mesh name
+	EntityPtr createEntity(std::string const &name, 
+		std::string const &mesh_name);
+	EntityPtr createEntity(std::string const &name, 
+		std::string const &mesh_name, bool use_new_mesh_manager);
 
 	/// Internal
 	/// This should only be called on from slaves

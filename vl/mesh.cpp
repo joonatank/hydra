@@ -1,3 +1,7 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-05
+ *	@file mesh.cpp
+ */
 
 #include "mesh.hpp"
 
@@ -14,161 +18,72 @@ Ogre::MeshPtr
 vl::create_ogre_mesh(std::string const &name, vl::MeshRefPtr mesh)
 {
 	std::clog << "vl::create_ogre_mesh : " << name << std::endl;
-	/*
-Ogre::Mesh* mMesh = Ogre::MeshManager::getSingleton().createManual(yourMeshName, "General");
-// @todo add support for named submeshes
-Ogre::SubMesh* mSubMesh = mMesh->createSubMesh(yourSubMeshName);
 
-// We first create a VertexData
- Ogre::VertexData* data = new Ogre::VertexData();
- // Then, we link it to our Mesh/SubMesh :
- #ifdef SHARED_GEOMETRY
-     mMesh->sharedVertexData = data;
- #else
-     mSubMesh->useSharedVertices = false; // This value is 'true' by default
-     mSubMesh->vertexData = data;
- #endif
- // We have to provide the number of verteices we'll put into this Mesh/SubMesh
- data->vertexCount = iVertexCount;
- // Then we can create our VertexDeclaration
- Ogre::VertexDeclaration* decl = data->vertexDeclaration;
-
- size_t offset = 0;
- decl->addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
- offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
- decl->addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_NORMAL);
-
-Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(
-     decl->getVertexSize(0),                     // This value is the size of a vertex in memory
-     iVertexNbr,                                 // The number of vertices you'll put into this buffer
-     Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY // Properties
- );
-
-vbuf->writeData(0, vbuf->getSizeInBytes(), array, true);
-
-array[0] = vertices[1].x
- array[1] = vertices[1].y
- array[2] = vertices[1].z
- array[3] = vertices[1].normal.x
- array[4] = vertices[1].normal.y
- array[5] = vertices[1].normal.z
- 
- array[6] = vertices[2].x
-
- // "data" is the Ogre::VertexData* we created before
- Ogre::VertexBufferBinding* bind = data->vertexBufferBinding;
- bind->setBinding(0, vbuf);
- */
 	Ogre::MeshPtr og_mesh = Ogre::MeshManager::getSingleton().createManual(name, 
             Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
-	// Create shared VertexData for ease of use
-	og_mesh->sharedVertexData = new Ogre::VertexData();
+	// Copy the shared geometry
+	// Skip empty
+	if( !mesh->sharedVertexData || mesh->sharedVertexData->getNVertices() == 0 ) 
+	{
+		std::clog << "Empty shared geometry " << mesh->getName() << std::endl;
+	}
+	else
+	{
+		std::clog << "Converting shared geometry for " << mesh->getName() << std::endl;
+		// Create shared VertexData for ease of use
+		og_mesh->sharedVertexData = new Ogre::VertexData;
+		convert_ogre_geometry(mesh->sharedVertexData, og_mesh->sharedVertexData);
+	}
 
-	// TODO copy from mesh to newMesh
-	convert_ogre_geometry(mesh.get(), og_mesh->sharedVertexData, og_mesh.get());
+	// Set bounding box
+	og_mesh->_setBoundingSphereRadius(mesh->getBoundingSphereRadius());
+	og_mesh->_setBounds(mesh->getBounds(), false);
+
+	// Convert submeshes
 	convert_ogre_submeshes(mesh.get(), og_mesh.get());
 
 	return og_mesh;
 }
 
 void 
-vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Mesh *og_mesh)
+vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og_vertexData)
 {
-	std::clog << "vl::convert_ogre_geometry : " << og_mesh->getName() << std::endl;
-	
+	assert(vertexData && og_vertexData);
+
 	unsigned char *pVert = 0;
-    float *pFloat = 0;
-    Ogre::uint16 *pShort = 0;
-    Ogre::uint8 *pChar = 0;
-    Ogre::ARGB *pCol = 0;
+	float *pFloat = 0;
+	Ogre::uint16 *pShort = 0;
+	Ogre::uint8 *pChar = 0;
+	Ogre::ARGB *pCol = 0;
 
-    // Skip empty 
-    if( mesh->getNumVertices() == 0 ) 
-	{
-		std::cout << "Empty mesh " << og_mesh->getName() << std::endl;
-		return;
-	}
+	Ogre::VertexDeclaration *decl = og_vertexData->vertexDeclaration;
+	Ogre::VertexBufferBinding *bind = og_vertexData->vertexBufferBinding;
+	unsigned short bufCount = 0;
+	unsigned short totalTexCoords = 0; // across all buffers
 
-    Ogre::VertexDeclaration *decl = vertexData->vertexDeclaration;
-    Ogre::VertexBufferBinding *bind = vertexData->vertexBufferBinding;
-    unsigned short bufCount = 0;
-    unsigned short totalTexCoords = 0; // across all buffers
-
-    // Information for calculating bounds
-    Ogre::Vector3 min = Ogre::Vector3::ZERO;
-	Ogre::Vector3 max = Ogre::Vector3::UNIT_SCALE;
-    Ogre::Real maxSquaredRadius = -1;
-    bool first = true;
-
-    // Assume single vertexbuffer
+	// Assume single vertexbuffer
 
 	size_t offset = 0;
 
 	// Add element
-	decl->addElement(bufCount, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
-	offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
-
-	// Add element
-	decl->addElement(bufCount, offset, Ogre::VET_FLOAT3, Ogre::VES_NORMAL);
-	offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
-
-	/*	No tangents
-	Ogre::VertexElementType tangentType = Ogre::VET_FLOAT3;
-	attrib = vbElem->Attribute("tangent_dimensions");
-	if (attrib)
+	std::clog << "Adding " << vertexData->vertexDeclaration.getNSemantics() << " vertex schematics." << std::endl;
+	for(size_t i = 0; i < vertexData->vertexDeclaration.getNSemantics(); ++i)
 	{
-		unsigned int dims = StringConverter::parseUnsignedInt(attrib);
-		if (dims == 4)
-			tangentType = VET_FLOAT4;
+		VertexDeclaration::Semantic semantic = vertexData->vertexDeclaration.getSemantic(i);
+		decl->addElement(bufCount, offset, semantic.second, semantic.first);
+		offset += Ogre::VertexElement::getTypeSize(semantic.second);
 	}
 
-	// Add element
-	decl->addElement(bufCount, offset, tangentType, VES_TANGENT);
-	offset += VertexElement::getTypeSize(tangentType);
-	*/
+	og_vertexData->vertexCount = vertexData->getNVertices();
 
-	/*	No binormals
-	attrib = vbElem->Attribute("binormals");
-	if (attrib && StringConverter::parseBool(attrib))
-	{
-		// Add element
-		decl->addElement(bufCount, offset, VET_FLOAT3, VES_BINORMAL);
-		offset += VertexElement::getTypeSize(VET_FLOAT3);
-	}
-	*/
+	std::clog << "Converting " << og_vertexData->vertexCount << " vertices." << std::endl;
 
-	Ogre::VertexElementType colourElementType = Ogre::VET_FLOAT2;
-
-    // Process colour diffuse
-//	decl->addElement(bufCount, offset, colourElementType, Ogre::VES_DIFFUSE);
-//	offset += Ogre::VertexElement::getTypeSize(colourElementType);
-
-	// Process colour specular
-//	decl->addElement(bufCount, offset, colourElementType, Ogre::VES_SPECULAR);
-//	offset += Ogre::VertexElement::getTypeSize(colourElementType);
-
-	// Process texture coords
-    // TODO add support for multiple texture coordinates
-	unsigned short numTexCoords = 1;
-    for (unsigned short tx = 0; tx < numTexCoords; ++tx)
-	{
-		// NB set is local to this buffer, but will be translated into a 
-		// global set number across all vertex buffers
-		// Default
-		Ogre::VertexElementType vtype = Ogre::VET_FLOAT2; 
-
-		// Add element
-		decl->addElement(bufCount, offset, vtype,
-			Ogre::VES_TEXTURE_COORDINATES, totalTexCoords++);
-		offset += Ogre::VertexElement::getTypeSize(vtype);
-	}
-
-	vertexData->vertexCount = mesh->getNumVertices();
+	assert(og_vertexData->vertexDeclaration->getVertexSize(bufCount) == vertexData->vertexDeclaration.vertexSize());
 
 	// Now create the vertex buffer
 	Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().
-		createVertexBuffer(offset, vertexData->vertexCount, 
+		createVertexBuffer(offset, og_vertexData->vertexCount, 
 			Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
 	// Bind it
 	bind->setBinding(bufCount, vbuf);
@@ -179,7 +94,8 @@ vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Me
 	Ogre::VertexDeclaration::VertexElementList elems = decl->findElementsBySource(bufCount);
 
 	// Now the buffer is set up, parse all the vertices
-	for(size_t i = 0; i < mesh->getNumVertices(); ++i)
+	/// @todo this can probably use a direct copy of the Vertex data
+	for(size_t i = 0; i < vertexData->getNVertices(); ++i)
 	{
 		// Now parse the elements, ensure they are all matched
 		Ogre::VertexDeclaration::VertexElementList::const_iterator ielem, ielemend;
@@ -195,47 +111,27 @@ vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Me
 				{
 					elem.baseVertexPointerToElement(pVert, &pFloat);
 
-					Ogre::Vector3 const &pos = mesh->getVertex(i).position;
+					Ogre::Vector3 const &pos = vertexData->getVertex(i).position;
 					*pFloat++ = pos.x;
 					*pFloat++ = pos.y;
 					*pFloat++ = pos.z;
-				
-					if(first)
-					{
-						min = max = pos;
-						maxSquaredRadius = pos.squaredLength();
-						first = false;
-					}
-					else
-					{
-						min.makeFloor(pos);
-						max.makeCeil(pos);
-						maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
-					}
 				}
 				break;
 
 			case Ogre::VES_NORMAL:
 				elem.baseVertexPointerToElement(pVert, &pFloat);
 
-				*pFloat++ = mesh->getVertex(i).normal.x;
-				*pFloat++ = mesh->getVertex(i).normal.y;
-				*pFloat++ = mesh->getVertex(i).normal.z;
+				*pFloat++ = vertexData->getVertex(i).normal.x;
+				*pFloat++ = vertexData->getVertex(i).normal.y;
+				*pFloat++ = vertexData->getVertex(i).normal.z;
 				break;
 
 			case Ogre::VES_TANGENT:
-				/*	Tangents are not supported
 				elem.baseVertexPointerToElement(pVert, &pFloat);
 
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("x"));
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("y"));
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("z"));
-				if (elem.getType() == VET_FLOAT4)
-				{
-					*pFloat++ = StringConverter::parseReal(
-						xmlElem->Attribute("w"));
-				}
-				*/
+				*pFloat++ = vertexData->getVertex(i).tangent.x;
+				*pFloat++ = vertexData->getVertex(i).tangent.y;
+				*pFloat++ = vertexData->getVertex(i).tangent.z;
 				break;
 			case Ogre::VES_BINORMAL:
 				/*	Binormals are not supported
@@ -250,16 +146,16 @@ vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Me
 //				std::cout << "Writing Vertex diffuse data." << std::endl;
 				elem.baseVertexPointerToElement(pVert, &pCol);
 				{
-					Ogre::ColourValue cv = mesh->getVertex(i).diffuse;
-					*pCol++ = Ogre::VertexElement::convertColourValue(cv, colourElementType);
+					Ogre::ColourValue cv = vertexData->getVertex(i).diffuse;
+					*pCol++ = Ogre::VertexElement::convertColourValue(cv, elem.getType());
 				}
 				break;
 			case Ogre::VES_SPECULAR:
 //				std::cout << "Writing Vertex specular data." << std::endl;
 				elem.baseVertexPointerToElement(pVert, &pCol);
 				{
-					Ogre::ColourValue cv = mesh->getVertex(i).specular;
-					*pCol++ = Ogre::VertexElement::convertColourValue(cv, colourElementType);
+					Ogre::ColourValue cv = vertexData->getVertex(i).specular;
+					*pCol++ = Ogre::VertexElement::convertColourValue(cv, elem.getType());
 				}
 				break;
 			case Ogre::VES_TEXTURE_COORDINATES:
@@ -268,13 +164,13 @@ vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Me
 				{
 				case Ogre::VET_FLOAT1:
 					elem.baseVertexPointerToElement(pVert, &pFloat);
-					*pFloat++ = mesh->getVertex(i).uv.x;
+					*pFloat++ = vertexData->getVertex(i).uv.x;
 					break;
 
 				case Ogre::VET_FLOAT2:
 					elem.baseVertexPointerToElement(pVert, &pFloat);
-					*pFloat++ = mesh->getVertex(i).uv.x;
-					*pFloat++ = mesh->getVertex(i).uv.y;
+					*pFloat++ = vertexData->getVertex(i).uv.x;
+					*pFloat++ = vertexData->getVertex(i).uv.y;
 					break;
 
 				case Ogre::VET_FLOAT3:
@@ -326,34 +222,10 @@ vl::convert_ogre_geometry(vl::Mesh *mesh, Ogre::VertexData *vertexData, Ogre::Me
 	bufCount++;
     vbuf->unlock();
 	// Vertexbuffer done
-
-    // Set bounds
-	/// @todo this should be separate function in vl::Mesh
-	/// remove it from here when possible
-    Ogre::AxisAlignedBox const &currBox = og_mesh->getBounds();
-    Ogre::Real currRadius = og_mesh->getBoundingSphereRadius();
-    if (currBox.isNull())
-    {
-		// do not pad the bounding box
-        og_mesh->_setBounds(Ogre::AxisAlignedBox(min, max), false);
-        og_mesh->_setBoundingSphereRadius(Ogre::Math::Sqrt(maxSquaredRadius));
-		std::clog << "Setting new bounding box for " << og_mesh->getName() 
-			<< " box = " << og_mesh->getBounds() << std::endl;
-    }
-    else
-    {
-        Ogre::AxisAlignedBox newBox(min, max);
-        newBox.merge(currBox);
-		// do not pad the bounding box
-        og_mesh->_setBounds(newBox, false);
-        og_mesh->_setBoundingSphereRadius(std::max(Ogre::Math::Sqrt(maxSquaredRadius), currRadius));
-		std::clog << "Appending to bounding box for " << og_mesh->getName()
-			<< " box = " << og_mesh->getBounds() << std::endl;
-    }
 }
 
 void 
-vl::convert_ogre_submeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh)
+vl::convert_ogre_submeshes(vl::Mesh const *mesh, Ogre::Mesh *og_mesh)
 {
 	std::clog << "vl::convert_ogre_submeshes : " << og_mesh->getName() << std::endl;
 	for(size_t i = 0; i < mesh->getNumSubMeshes(); ++i)
@@ -361,7 +233,7 @@ vl::convert_ogre_submeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh)
 		// All children should be submeshes 
 		Ogre::SubMesh *og_sm = og_mesh->createSubMesh();
 
-		vl::SubMesh *sm = mesh->getSubMesh(i); 
+		vl::SubMesh const *sm = mesh->getSubMesh(i); 
 		convert_ogre_submesh(sm, og_sm);
 
 		og_mesh->nameSubMesh(sm->getName(), i);
@@ -369,83 +241,79 @@ vl::convert_ogre_submeshes(vl::Mesh *mesh, Ogre::Mesh *og_mesh)
 }
 
 void 
-vl::convert_ogre_submesh(vl::SubMesh *mesh, Ogre::SubMesh *og_sm)
+vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 {
-	assert(mesh);
+	std::clog << "vl::convert_ogre_submesh" << std::endl;
+	assert(sm);
 	assert(og_sm);
 
-	og_sm->setMaterialName(mesh->getMaterial());
+	og_sm->setMaterialName(sm->getMaterial());
 
-	if( mesh->getNumFaces() > 0 )
+	if(sm->indexData.indexCount() == 0)
 	{
-		// Faces
-		switch(og_sm->operationType)
+		std::clog << "Something really fishy SubMesh index count = 0" << std::endl;
+	}
+	else
+	{
+		// Indeces
+		og_sm->operationType = sm->operationType;
+		og_sm->indexData->indexCount = sm->indexData.indexCount();
+
+		std::clog << "Converting index buffers : operation type = " << og_sm->operationType 
+			<< " index count = " << og_sm->indexData->indexCount << std::endl;
+
+		if(sm->indexData.getIndexSize() == vl::IT_32BIT)
 		{
-		case Ogre::RenderOperation::OT_TRIANGLE_LIST:
-			// tri list
-			og_sm->indexData->indexCount = mesh->getNumFaces() * 3;
+			std::clog << "Copying 32bit index buffers." << std::endl;
+			// Allocate space
+			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
+				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
+					og_sm->indexData->indexCount,
+					Ogre::HardwareBuffer::HBU_DYNAMIC,
+					false);
 
-			break;
-		case Ogre::RenderOperation::OT_LINE_LIST:
-			og_sm->indexData->indexCount = mesh->getNumFaces() * 2;
-
-			break;
-		case Ogre::RenderOperation::OT_TRIANGLE_FAN:
-		case Ogre::RenderOperation::OT_TRIANGLE_STRIP:
-			// triangle fan or triangle strip
-			og_sm->indexData->indexCount = mesh->getNumFaces() + 2;
-
-			break;
-		default:
-			BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("operationType not implemented"));
-		}
-
-		// Allocate space
-		Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
-			createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
-				og_sm->indexData->indexCount,
-				Ogre::HardwareBuffer::HBU_DYNAMIC,
-				false);
-
-		og_sm->indexData->indexBuffer = ibuf;
-		unsigned int *pInt = 0;
-		unsigned short *pShort = 0;
+			og_sm->indexData->indexBuffer = ibuf;
+			unsigned int *pInt = 0;
+			unsigned short *pShort = 0;
 		
-		pInt = static_cast<unsigned int*>(ibuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
+			pInt = static_cast<unsigned int*>(ibuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
 
-		bool firstTri = true;
-		for(size_t i = 0; i < mesh->getNumFaces(); ++i)
-		{
-			*pInt++ = mesh->getFace(i).get<0>();
-			if(og_sm->operationType == Ogre::RenderOperation::OT_LINE_LIST)
-			{
-				*pInt++ = mesh->getFace(i).get<1>();
-			}
-			// only need all 3 vertices if it's a trilist or first tri
-			else if(og_sm->operationType == Ogre::RenderOperation::OT_TRIANGLE_LIST || firstTri)
-			{
-				*pInt++ = mesh->getFace(i).get<1>();
-				*pInt++ = mesh->getFace(i).get<2>();
-			}
-			firstTri = false;
+			assert(sm->indexData.getVec32().size() == sm->indexData.indexCount());
+			/// @todo replace with memcpy
+			::memcpy(pInt, sm->indexData.getBuffer32(), sm->indexData.indexCount()*sizeof(uint32_t));
+
+			ibuf->unlock();
 		}
-		ibuf->unlock();
+		else
+		{
+			std::clog << "Copying 16bit index buffers." << std::endl;
+			// Allocate space
+			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
+				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 
+					og_sm->indexData->indexCount,
+					Ogre::HardwareBuffer::HBU_DYNAMIC,
+					false);
+
+			og_sm->indexData->indexBuffer = ibuf;
+			unsigned short *pShort = static_cast<unsigned short *>(ibuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
+
+			assert(sm->indexData.getVec16().size() == sm->indexData.indexCount());
+			::memcpy(pShort, sm->indexData.getBuffer16(), sm->indexData.indexCount()*sizeof(uint16_t));
+
+			ibuf->unlock();
+		}
 	}
 
 
 	// Geometry
-	// Independent geometry not supported
-	/*
-	if(!og_sm->useSharedVertices)
+	og_sm->useSharedVertices = sm->useSharedGeometry;
+	if(!sm->useSharedGeometry)
 	{
-		TiXmlElement* geomNode = smElem->FirstChildElement("geometry");
-		if (geomNode)
-		{
-			og_sm->vertexData = new Ogre::VertexData();
-			readGeometry(geomNode, og_sm->vertexData);
-		}
+		std::clog << "Converting non shared geometry." << std::endl;
+		assert(sm->vertexData);
+		og_sm->vertexData = new Ogre::VertexData;
+		convert_ogre_geometry(sm->vertexData, og_sm->vertexData);
 	}
-	*/
 
 	// texture aliases, NOT supported
 	/*
@@ -462,23 +330,30 @@ vl::convert_ogre_submesh(vl::SubMesh *mesh, Ogre::SubMesh *og_sm)
 	*/
 }
 
-
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Vertex const &v)
 {
-	os << "Vertex : position " << v.position << " : normal " << v.normal;
+	os << "Vertex : position " << v.position << " : normal " << v.normal
+		<< " : tangent " << v.tangent << " : uvs " << v.uv;
 	return os;
 }
 
 std::ostream &
 vl::operator<<( std::ostream &os, vl::Mesh const &m )
 {
-	os << "Mesh : vertices = ";
-	for( size_t i = 0; i < m.getNumVertices(); ++i )
+	if(m.sharedVertexData)
 	{
-		os << m.getVertex(i).position << ", ";
+		os << "Mesh " << m.getName() << " : vertices = ";
+		for( size_t i = 0; i < m.sharedVertexData->getNVertices(); ++i )
+		{
+			os << m.sharedVertexData->getVertex(i).position << ", ";
+		}
+		os << std::endl;
 	}
-	os << std::endl;
+	else
+	{
+		os << "Mesh " << m.getName() << " has no vertices." << std::endl;
+	}
 	return os;
 }
 
@@ -486,6 +361,99 @@ std::ostream &
 vl::operator<<( std::ostream &os, vl::SubMesh const &m )
 {
 	return os;
+}
+
+/// ----------------------------- SubMesh ------------------------------------
+/// @todo the face system does not really work this way
+/// different GL modes (TRIANGLE_FAN and so on) determine
+/// what size a face is, it's not always a tuple of three
+/// No I'm probably wrong here, the number of Vertices is
+/// determined by the draw mode but the face number is always divisable
+/// with three.
+/// If operation type = TRIANGLE_LIST then this is fine otherwise
+/// this does not work right.
+void 
+vl::SubMesh::addFace(uint32_t i1, uint32_t i2, uint32_t i3)
+{
+	bool firstTri = false;
+	if(indexData.indexCount() == 0)
+	{
+		firstTri = true;
+	}
+
+	indexData.push_back(i1);
+	if(operationType == Ogre::RenderOperation::OT_LINE_LIST)
+	{
+		indexData.push_back(i2);
+	}
+	// only need all 3 vertices if it's a trilist or first tri
+	else if(operationType == Ogre::RenderOperation::OT_TRIANGLE_LIST || firstTri)
+	{
+		indexData.push_back(i2);
+		indexData.push_back(i3);
+	}
+}
+
+/// --------------------------------- VertexData -----------------------------
+void 
+vl::VertexData::setVertex(size_t i, char const *buf, size_t size)
+{
+	assert(i < _vertices.size());
+
+	Vertex &vert = _vertices.at(i);
+	size_t offset = 0;
+	for(size_t i = 0; i < vertexDeclaration.getNSemantics(); ++i)
+	{
+		/// Parse the buffer based on the current Declaration
+		VertexDeclaration::Semantic semantic = vertexDeclaration.getSemantic(i);
+		
+		assert(offset+vertexDeclaration.getTypeSize(semantic.second) <= size);
+		switch(semantic.first)
+		{
+		case Ogre::VES_POSITION:
+			if(semantic.second == Ogre::VET_FLOAT3)
+			{
+				vert.position = Ogre::Vector3((float const *)(buf+offset));
+			}
+			else
+			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
+			break;
+		case Ogre::VES_NORMAL:
+			if(semantic.second == Ogre::VET_FLOAT3)
+			{
+				vert.normal = Ogre::Vector3((float const *)(buf+offset));
+			}
+			else
+			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
+			break;
+		case Ogre::VES_TEXTURE_COORDINATES:
+			if(semantic.second == Ogre::VET_FLOAT2)
+			{
+				vert.uv = Ogre::Vector2((float const *)(buf+offset));
+			}
+			else
+			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
+			break;
+		case Ogre::VES_TANGENT:
+			if(semantic.second == Ogre::VET_FLOAT3)
+			{
+				vert.tangent = Ogre::Vector3((float const *)(buf+offset));
+			}
+			else
+			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
+			break;
+		case Ogre::VES_BLEND_WEIGHTS:
+		case Ogre::VES_BLEND_INDICES:
+		case Ogre::VES_DIFFUSE:
+		case Ogre::VES_SPECULAR:
+		case Ogre::VES_BINORMAL:
+		default :
+			BOOST_THROW_EXCEPTION(vl::not_implemented());
+		}
+		offset += vertexDeclaration.getTypeSize(semantic.second);
+	}
+
+	assert(offset == size);
 }
 
 /// -------------------------------- Mesh ------------------------------------
@@ -503,4 +471,195 @@ vl::Mesh::createSubMesh(void)
 	SubMesh *sm = new SubMesh;
 	_sub_meshes.push_back(sm);
 	return sm;
+}
+
+void 
+vl::Mesh::nameSubMesh(std::string const &name, uint16_t index)
+{
+}
+
+void
+vl::Mesh::calculateBounds(void)
+{
+	if(!sharedVertexData || sharedVertexData->getNVertices() == 0)
+	{ return; }
+
+	Ogre::Vector3 min, max;
+	Ogre::Real maxSquaredRadius;
+
+	Ogre::Vector3 pos = sharedVertexData->getVertex(0).position;
+	min = max = pos;
+	maxSquaredRadius = pos.squaredLength();	
+	for(size_t i = 1; i < sharedVertexData->getNVertices(); ++i)
+	{
+		pos = sharedVertexData->getVertex(i).position;
+		min.makeFloor(pos);
+		max.makeCeil(pos);
+		maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
+	}
+
+	// do not pad the bounding box
+	setBounds(Ogre::AxisAlignedBox(min, max));
+	setBoundingSphereRadius(Ogre::Math::Sqrt(maxSquaredRadius));
+	std::clog << "Setting new bounding box for " << getName() 
+		<< " box = " << getBounds() << std::endl;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexDeclaration const &decl)
+{
+	std::clog << "Serializing vertex semantics." << std::endl;
+	msg << decl.getSemantics();
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexDeclaration &decl)
+{
+	std::clog << "Deserializing vertex semantics." << std::endl;
+	msg >> decl.getSemantics();
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
+{
+	std::clog << "Serializing vertex data." << std::endl;
+	msg << vbuf.vertexDeclaration << vbuf._vertices;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
+{
+	std::clog << "Deserializing vertex data." << std::endl;
+	msg >> vbuf.vertexDeclaration >> vbuf._vertices;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::IndexBuffer const &ibf)
+{
+	std::clog << "Serializing IndexBuffer : with index count " << ibf.indexCount() << std::endl;
+	msg << ibf.getIndexSize();
+	if(ibf.getIndexSize() == IT_32BIT)
+	{
+		msg << ibf.getVec32();
+	}
+	else
+	{
+		msg << ibf.getVec16();
+	}
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::IndexBuffer &ibf)
+{
+	std::clog << "Deserializing IndexBuffer." << std::endl;
+	INDEX_SIZE index_size;
+	msg >> index_size;
+	ibf.setIndexSize(index_size);
+	if(index_size == IT_32BIT)
+	{
+		msg >> ibf.getVec32();
+	}
+	else
+	{
+		msg >> ibf.getVec16();
+	}
+
+	std::clog << "Index buffer with " << ibf.indexCount() << " indices deserialized." << std::endl;
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &mesh)
+{
+	std::clog << "Serializing SubMesh." << std::endl;
+
+	msg << mesh.getName() << mesh.getMaterial() << mesh.indexData;
+
+	/// @todo add serializing sub mesh dedicated geometry
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &mesh)
+{
+	std::clog << "Serializing SubMesh." << std::endl;
+	std::string name;
+	std::string material;
+
+	msg >> name >> material >> mesh.indexData;
+	mesh.setName(name);
+	mesh.setMaterial(material);
+
+	/// @todo add serializing sub mesh dedicated geometry
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::Mesh const &mesh)
+{
+	std::clog << "Serializing Mesh." << std::endl;
+
+	if(mesh.sharedVertexData)
+		msg << true << mesh.sharedVertexData;
+	else
+		msg << false;
+
+	msg << mesh.getBoundingSphereRadius() << mesh.getBounds();
+	msg << mesh.getSubMeshes().size();
+	for(size_t i = 0; i < mesh.getSubMeshes().size(); ++i)
+	{ msg << *mesh.getSubMeshes().at(i); }
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
+{
+	std::clog << "Deserializing Mesh." << std::endl;
+	Ogre::Real radius;
+	Ogre::AxisAlignedBox bounds;
+	size_t n_s_meshes;
+	bool has_shared_vertex_data;
+	msg >> has_shared_vertex_data;
+
+	if(has_shared_vertex_data)
+	{
+		if(!mesh.sharedVertexData)
+			mesh.sharedVertexData = new VertexData;
+		msg >> mesh.sharedVertexData;
+	}
+	
+	msg >> mesh.sharedVertexData->getVertices() >> radius >> bounds >> n_s_meshes;
+	
+	mesh.setBoundingSphereRadius(radius);
+	mesh.setBounds(bounds);
+
+	/// @todo this assumes that the mesh is empty
+	for(size_t i = 0; i < n_s_meshes; ++i)
+	{
+		SubMesh *sm = mesh.createSubMesh();
+		msg >> *sm;
+	}
+
+	return msg;
 }

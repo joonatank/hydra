@@ -76,6 +76,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState,
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
 
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -156,7 +157,8 @@ BOOST_PYTHON_MODULE(vl)
 
 	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
 	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
-
+	vl::EntityPtr (SceneManager::*createEntity_ov2)(std::string const &, std::string const &, bool) = &SceneManager::createEntity;
+	
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
 		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
@@ -166,6 +168,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("hasEntity", &SceneManager::hasEntity )
 		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
+		.def("createEntity", createEntity_ov2, python::return_value_policy<python::reference_existing_object>() )
 		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasCamera", &SceneManager::hasCamera)
 		.def("createCamera", &SceneManager::createCamera, python::return_value_policy<python::reference_existing_object>() )

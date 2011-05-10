@@ -31,12 +31,16 @@ vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName)
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
 	}
 
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-
 	Resource data;
 	manager->loadMeshResource(fileName, data);
 
 	/// @todo this needs to convert the Resource to a Mesh
+	MeshSerializer ser;
+	MeshRefPtr mesh(new Mesh(fileName));
+	ser.readMesh(mesh, data);
+
+	std::clog << "Read mesh " << mesh->getName() << " from file resource." << std::endl;
+	return mesh;
 }
 
 /// ------------------------------- MeshManager ------------------------------
@@ -90,7 +94,14 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 	/// so we rotate every vertex to the normal
 	Ogre::Quaternion vert_rot = Ogre::Vector3(0, 1, 0).getRotationTo(normal);
 
-	MeshRefPtr mesh(new Mesh);
+	MeshRefPtr mesh(new Mesh(name));
+	mesh->sharedVertexData = new VertexData;
+
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	/// @todo add tangents
+
 	/// Adding one because tesselation 1 would not make any sense
 	/// @todo the object center is in the right down corner, it should be in the middle
 	uint16_t M = tesselation_x;
@@ -104,9 +115,11 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 			vert.position = vert_rot*pos;
 			vert.normal = normal;
 			vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
-			mesh->addVertex(vert);
+			mesh->sharedVertexData->addVertex(vert);
 		}
 	}
+
+	mesh->calculateBounds();
 
 	SubMesh *sub = mesh->createSubMesh();
 	/// @todo add material (or not?) some clear default would be good
@@ -136,7 +149,7 @@ vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16
 	// (x, y, z) = (sin(Pi * m/M) cos(2Pi * n/N), sin(Pi * m/M) sin(2Pi * n/N), cos(Pi * m/M))
 	// where M is latitude and N is longitude
 	// might need to adjust M with 1 or 2
-	MeshRefPtr mesh(new Mesh);
+	MeshRefPtr mesh(new Mesh(name));
 	uint16_t M = latitude;
 	uint16_t N = longitude;
 	for(uint16_t m = 0; m < M; ++m)

@@ -1,7 +1,9 @@
-/**	Joonatan Kuosa
- *	2010-12
+/**	@author Joonatan Kuosa
+ *	@date 2010-12
+  *	@file resource.hpp
  *
  *	Class to hold memory block where data from resource is stored
+ *	@date 2011-05 Added ResourceStream for reading and writing to Resources
  */
 
 #ifndef VL_RESOURCE_HPP
@@ -13,6 +15,77 @@
 
 namespace vl
 {
+
+// Forward declaration for ResourceStream
+class Resource;
+
+class ResourceStream
+{
+public :
+	ResourceStream(Resource *resource);
+
+	void skip(int bytes);
+
+	/// @brief did we hit end of file
+	bool eof(void);
+
+	/// @brief Where in the stream are we
+	size_t tell(void) const
+	{ return _index; }
+
+	void seek(size_t index);
+
+	template<typename T>
+	size_t read(T &t)
+	{ return read( (char *)&t, sizeof(T) ); }
+
+	template<typename T>
+	size_t write(T const &t)
+	{ return write( (char *)&t, sizeof(T) ); }
+
+	size_t read(void *mem, size_t bytes)
+	{ return read( (char *)mem, bytes ); }
+
+	size_t write(void const *mem, size_t bytes)
+	{ return write( (char *)mem, bytes ); }
+
+	/// @brief read some data
+	/// @param mem, the memory field where read data is stored
+	/// @param bytes, the number of bytes to read
+	/// Does not modify the resource, but increases the index
+	size_t read(char *mem, size_t bytes);
+
+	/// @brief write some data
+	/// @param mem, memory field from where data is copied
+	/// @param bytes, number of bytes to write
+	size_t write(char const *mem, size_t bytes);
+
+	/** Returns a String containing the next line of data, optionally 
+		trimmed for whitespace. 
+	@remarks
+		This is a convenience method for text streams only, allowing you to 
+		retrieve a String object containing the next line of data. The data
+		is read up to the next newline character and the result trimmed if
+		required.
+    @note
+        If you used this function, you <b>must</b> open the stream in <b>binary mode</b>,
+        otherwise, it'll produce unexpected results.
+	@param 
+		trimAfter If true, the line is trimmed for whitespace (as in 
+		String.trim(true,true))
+	*/
+	virtual std::string getLine(bool trimAfter = true);
+
+	std::string getName(void) const;
+
+	bool isWriteable(void) const;
+
+	size_t left(void) const;
+
+private :
+	size_t _index;
+	vl::Resource *_resource;
+};
 
 class Resource
 {
@@ -72,6 +145,9 @@ public :
 
 	iterator end( void )
 	{ return _memory.end(); }
+
+	vl::ResourceStream getStream(void)
+	{ return ResourceStream(this); }
 
 protected :
 	std::string _name;

@@ -1,5 +1,9 @@
-/**	Joonatan Kuosa
- *	2010-12
+/**	@author Joonatan Kuosa
+ *	@date 2010-12
+ *	@file resource.cpp
+ *
+ *	Class to hold memory block where data from resource is stored
+ *	@date 2011-05 Added ResourceStream for reading and writing to Resources
  */
 
 // Interface
@@ -11,7 +15,116 @@
 // Necessary for replacing line endings
 #include "base/string_utils.hpp"
 
-/// ------------------ Resource -----------------------
+/// ----------------------- ResourceStream -----------------------------------
+vl::ResourceStream::ResourceStream(vl::Resource *resource)
+	: _resource(resource)
+	, _index(0)
+{
+	assert(_resource);
+}
+
+void 
+vl::ResourceStream::skip(int bytes)
+{
+	if(_index + bytes < 0)
+	{ _index = 0; }
+
+	_index += bytes;
+	assert(_index <= _resource->size());
+}
+
+bool 
+vl::ResourceStream::eof(void)
+{
+	assert(_resource);
+	if( _index >= _resource->size()-1 )
+	{ return true; }
+	else
+	{ return false; }
+}
+
+void
+vl::ResourceStream::seek(size_t index)
+{
+	assert(_resource);
+	_index = index;
+	assert(_index <= _resource->size());
+}
+
+size_t
+vl::ResourceStream::read(char *mem, size_t bytes)
+{
+	assert(_resource);
+	if(_index+bytes < _resource->size())
+	{
+		::memcpy(mem, _resource->get()+_index, bytes);
+		_index += bytes;
+		return bytes;
+	}
+	else
+	{ return 0; }
+}
+
+size_t
+vl::ResourceStream::write(char const *mem, size_t bytes)
+{
+	assert(_resource);
+	std::clog << "vl::ResourceStream::write" << std::endl;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	// @todo real implementation, needs to increase the Memory buffer
+	
+	return 0;
+}
+
+std::string
+vl::ResourceStream::getLine(bool trimAfter)
+{
+	assert(_resource);
+
+	std::string str;
+	bool ended = false;
+	while(!ended)
+	{
+		char ch;
+		if( read(ch) == 0 )
+		{ 
+			std::clog << "Hit End of file." << std::endl; 
+			break; 
+		}
+		if( ch == '\n' )
+		{ ended = true; }
+		else
+		{ str.push_back(ch); }
+	}
+
+	return str;
+}
+
+std::string
+vl::ResourceStream::getName(void) const
+{
+	assert(_resource);
+	return _resource->getName();
+}
+
+size_t 
+vl::ResourceStream::left(void) const
+{
+	assert(_resource);
+	return _resource->size()-(_index+1);
+}
+
+
+bool
+vl::ResourceStream::isWriteable(void) const
+{
+	std::clog << "vl::ResourceStream::isWriteable" << std::endl;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/// @todo real implementation
+	return true;
+}
+
+/// --------------------------- Resource -------------------------------------
 void
 vl::Resource::set( char const *mem, size_t size )
 {

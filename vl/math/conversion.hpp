@@ -14,6 +14,11 @@
 #ifndef VL_MATH_CONVERSION_HPP
 #define VL_MATH_CONVERSION_HPP
 
+#if defined _MSC_VER
+// Disable truncation warnings, data loss for floats does not concern us
+#   pragma warning (disable : 4244)
+#endif
+
 #include "math/math.hpp"
 #include "math/transform.hpp"
 
@@ -41,20 +46,13 @@ namespace math
 inline
 Ogre::Vector3 convert_vec( vrpn_float64 const *vec )
 {
-	scalar x = scalar(vec[Q_X]);
-	scalar y = scalar(vec[Q_Y]);
-	scalar z = scalar(vec[Q_Z]);
-	return Ogre::Vector3( x, y, z );
+	return Ogre::Vector3( vec[Q_X], vec[Q_Y], vec[Q_Z] );
 }
 
 inline
 Ogre::Quaternion convert_quat( vrpn_float64 const *quat )
 {
-	scalar x = scalar(quat[Q_X]);
-	scalar y = scalar(quat[Q_Y]);
-	scalar z = scalar(quat[Q_Z]);
-	scalar w = scalar(quat[Q_W]);
-	return Ogre::Quaternion( w, x, y, z );
+	return Ogre::Quaternion( quat[Q_W], quat[Q_X], quat[Q_Y], quat[Q_Z] );
 }
 
 /// Convert bullet vector and quat

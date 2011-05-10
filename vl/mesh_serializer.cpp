@@ -5,68 +5,111 @@
 
 #include "mesh_serializer.hpp"
 
-vl::MeshWriter::MeshWriter( void )
-	: _logMgr(0)
-	, _resourcegm(0)
-	, _math(0)
-	, _lodMgr(0)
-	, _meshMgr(0)
-	, _matMgr(0)
-	, _meshSerializer(0)
-	, _bufferMgr(0)
-	, _skelMgr(0)
-	, _skeletonSerializer(0)
-{
-	_logMgr = new Ogre::LogManager();
-	_resourcegm = new Ogre::ResourceGroupManager();
-	_math = new Ogre::Math();
-	_lodMgr = new Ogre::LodStrategyManager();
-	_meshMgr = new Ogre::MeshManager();
-	_matMgr = new Ogre::MaterialManager();
-	_matMgr->initialise();
-	_skelMgr = new Ogre::SkeletonManager();
+const unsigned short HEADER_CHUNK_ID = 0x1000;
 
-	_meshSerializer = new Ogre::MeshSerializer();
-	_skeletonSerializer = new Ogre::SkeletonSerializer();
-	_bufferMgr = new Ogre::DefaultHardwareBufferManager(); // needed because we don't have a rendersystem
+vl::MeshSerializer::MeshSerializer(void)
+	: _ogre_mgr(0)
+{
+	/// If we don't have Root create temporary Managers
+	if(!Ogre::Root::getSingletonPtr())
+	{ _ogre_mgr = new OgreManagers(); }
 }
 
-vl::MeshWriter::~MeshWriter( void )
+vl::MeshSerializer::~MeshSerializer( void )
 {
-	delete _skeletonSerializer;
-	delete _meshSerializer;
-	delete _skelMgr;
-	delete _matMgr;
-	delete _meshMgr;
-	delete _bufferMgr;
-	delete _lodMgr;
-	delete _math;
-	delete _resourcegm;
-	delete _logMgr;
+	delete _ogre_mgr;
 }
 
 vl::MeshRefPtr
-vl::MeshWriter::createMesh( void )
+vl::MeshSerializer::createMesh(void)
 {
-	MeshRefPtr mesh(new Mesh);
+	MeshRefPtr mesh(new Mesh("conversion"));
 	return mesh;
 }
 
 void 
-vl::MeshWriter::writeMesh(vl::MeshRefPtr mesh, std::string const &filename)
+vl::MeshSerializer::writeMesh(vl::MeshRefPtr mesh, std::string const &filename)
 {
-	Ogre::MeshPtr newMesh = Ogre::MeshManager::getSingleton().createManual("conversion", 
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-	// TODO add the mesh to an array, because otherwise it can get destroyed
-	// also we want to have the refptr at hand.
-
-	// Create shared VertexData for ease of use
-	newMesh->sharedVertexData = new Ogre::VertexData();
-
-	// TODO copy from mesh to newMesh
-	convert_ogre_geometry(mesh.get(), newMesh->sharedVertexData, newMesh.get());
-	convert_ogre_submeshes(mesh.get(), newMesh.get());
-
+	Ogre::MeshPtr og_mesh = vl::create_ogre_mesh("conversion", mesh);
 	Ogre::MeshSerializer ser;
-	ser.exportMesh( newMesh.get(), filename );
+	ser.exportMesh(og_mesh.get(), filename);
+}
+
+/// @todo this is quite problematic because it needs to read the Data in Ogre
+/// format and then convert it to Hydra structure then send it forward
+/// before it can be displayed it will be converted back to Ogre format.
+void
+vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
+{
+	std::clog << "vl::MeshSerializer::readMesh : from resource of size " << res.size() << std::endl;
+
+	ResourceStream stream = res.getStream();
+    determineEndianness(stream);
+
+    // Read header and determine the version
+    unsigned short headerID;
+        
+    // Read header ID
+    readShorts(stream, &headerID, 1);
+        
+    if(headerID != HEADER_CHUNK_ID)
+    {
+		std::clog << "vl::MeshSerializer::readMesh : NO header" << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("File header not found"));
+    }
+
+    // Read version
+    std::string ver = readString(stream);
+    // Jump back to start
+    stream.seek(0);
+
+    // Find the implementation to use
+	MeshSerializerImpl* impl = new MeshSerializerImpl;
+
+    // Call implementation
+    impl->importMesh(stream, mesh.get());
+    // Warn on old version of mesh
+    /*
+	if (ver != mVersionData[0]->versionString)
+    {
+        std::cout << "WARNING: " << pDest->getName()
+            << " is an older format (" << ver << "); you should upgrade it as soon as possible"
+            << " using the OgreMeshUpgrade tool.";
+    }
+	*/
+}
+
+/// ------------------------------- Private ----------------------------------
+vl::MeshSerializer::OgreManagers::OgreManagers(void)
+	: logMgr(0)
+	, resGroupMgr(0)
+	, math(0)
+	, lodMgr(0)
+	, meshMgr(0)
+	, matMgr(0)
+	, bufferMgr(0)
+	, skelMgr(0)
+{
+	logMgr = new Ogre::LogManager();
+	resGroupMgr = new Ogre::ResourceGroupManager();
+	math = new Ogre::Math();
+	lodMgr = new Ogre::LodStrategyManager();
+	meshMgr = new Ogre::MeshManager();
+	matMgr = new Ogre::MaterialManager();
+	matMgr->initialise();
+	skelMgr = new Ogre::SkeletonManager();
+	// needed because we don't have a rendersystem
+	bufferMgr = new Ogre::DefaultHardwareBufferManager();
+}
+
+vl::MeshSerializer::OgreManagers::~OgreManagers(void)
+{
+	delete skelMgr;
+	delete matMgr;
+	delete meshMgr;
+	delete bufferMgr;
+	delete lodMgr;
+	delete math;
+	delete resGroupMgr;
+	delete logMgr;
 }

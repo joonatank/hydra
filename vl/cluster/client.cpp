@@ -60,7 +60,7 @@ vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName)
 	MessageRefPtr msg = owner->waitForMessage(MSG_RESOURCE);
 	assert(!msg->empty());
 
-	vl::MeshRefPtr mesh(new vl::Mesh);
+	vl::MeshRefPtr mesh(new vl::Mesh(fileName));
 	MessageStream stream = msg->getStream();
 	RESOURCE_TYPE type;
 	std::string name;

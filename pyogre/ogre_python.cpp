@@ -207,14 +207,58 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
+	enum_<Ogre::VertexElementSemantic>("VES")
+		.value("position", Ogre::VES_POSITION)
+		.value("blend_weights", Ogre::VES_BLEND_WEIGHTS)
+		.value("blend_indices", Ogre::VES_BLEND_INDICES)
+	    .value("normal", Ogre::VES_NORMAL)
+		.value("diffuse", Ogre::VES_DIFFUSE)
+		.value("specular", Ogre::VES_SPECULAR)
+		.value("texture_coordinates", Ogre::VES_TEXTURE_COORDINATES)
+		.value("binormal", Ogre::VES_BINORMAL)
+		.value("tangent", Ogre::VES_TANGENT)
+	;
+
+	enum_<Ogre::VertexElementType>("VET")
+		.value("float1", Ogre::VET_FLOAT1)
+		.value("float2", Ogre::VET_FLOAT2)
+		.value("float3", Ogre::VET_FLOAT3)
+		.value("float4", Ogre::VET_FLOAT4)
+		.value("colour", Ogre::VET_COLOUR)
+		.value("short1", Ogre::VET_SHORT1)
+		.value("short2", Ogre::VET_SHORT2)
+		.value("short3", Ogre::VET_SHORT3)
+		.value("short4", Ogre::VET_SHORT4)
+		.value("ubyte4", Ogre::VET_UBYTE4)
+	;
+
+	class_<vl::VertexDeclaration>("VertexDeclaration")
+		.def("addSemantic", &vl::VertexDeclaration::addSemantic)
+		.def("getNSemantics", &vl::VertexDeclaration::getNSemantics)
+		.def("getSemantic", &vl::VertexDeclaration::getSemantic)
+	;
+
+	vl::Vertex &(vl::VertexData::*getVertex_ov0)(size_t) = &vl::VertexData::getVertex;
+
+	class_<vl::VertexData>("VertexData")
+		.def("addVertex", &vl::VertexData::addVertex)
+//		.def("getVertex", getVertex_ov0)
+		.add_property("n_vertices", &vl::VertexData::getNVertices)
+		.def_readwrite("vertex_declaration", &vl::VertexData::vertexDeclaration)
+	;
+
+	vl::SubMesh *(vl::Mesh::*getSubMesh_ov0)(unsigned int) = &vl::Mesh::getSubMesh;
+
 	class_< vl::Mesh, vl::MeshRefPtr, boost::noncopyable>("Mesh", no_init )
 		.def("createSubMesh", make_function( &vl::Mesh::createSubMesh, return_value_policy<reference_existing_object>() ) )
 		.def("getNumSubMeshes", &vl::Mesh::getNumSubMeshes)
-		.def("getSubMesh", make_function( &vl::Mesh::getSubMesh, return_value_policy<reference_existing_object>() ) )
-		.def("addVertex", &vl::Mesh::addVertex)
-		.def("getSubMesh", make_function(&vl::Mesh::getSubMesh, return_value_policy<reference_existing_object>() ) )
+		.def("getSubMesh", make_function(getSubMesh_ov0, return_value_policy<reference_existing_object>() ) )
 		.add_property("bounding_sphere", &vl::Mesh::getBoundingSphereRadius, &vl::Mesh::setBoundingSphereRadius)
 		.add_property("bounds", make_function( &vl::Mesh::getBounds, return_value_policy<copy_const_reference>() ), &vl::Mesh::setBounds)
+		.def("calculateBounds", &vl::Mesh::calculateBounds)
+		.def("createVertexData", &vl::Mesh::createVertexData)
+		.def_readonly("sharedVertexData", &vl::Mesh::sharedVertexData)
+
 		/*
 		.def("setSkeletonName", &vl::Mesh::setSkeletonName)
 		.def("hasSkeleton", &vl::Mesh::hasSkeleton)
@@ -225,11 +269,34 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
+	enum_<vl::INDEX_SIZE>("IT")
+		.value("16BIT", vl::IT_16BIT)
+		.value("32BIT", vl::IT_32BIT)
+	;
+
+	void (vl::IndexBuffer::*push_back_ov0)(uint32_t) = &vl::IndexBuffer::push_back;
+	
+	class_<vl::IndexBuffer, boost::noncopyable>("IndexBuffer", no_init )
+		.def("push_back", push_back_ov0)
+		.add_property("index_size", &vl::IndexBuffer::getIndexSize, &vl::IndexBuffer::setIndexSize)
+	;
+
+
+	enum_<Ogre::RenderOperation::OperationType>("OT")
+		.value("point_list", Ogre::RenderOperation::OT_POINT_LIST)
+	    .value("line_list", Ogre::RenderOperation::OT_LINE_LIST)
+		.value("line_stip", Ogre::RenderOperation::OT_LINE_STRIP)
+		.value("triangle_list", Ogre::RenderOperation::OT_TRIANGLE_LIST)
+		.value("triangle_strip", Ogre::RenderOperation::OT_TRIANGLE_STRIP)
+        .value("triangle_fan", Ogre::RenderOperation::OT_TRIANGLE_FAN)
+	;
+
 	class_<vl::SubMesh, boost::noncopyable>("SubMesh", no_init )
 		.add_property("material", make_function( &vl::SubMesh::getMaterial, return_value_policy<copy_const_reference>() ), &vl::SubMesh::setMaterial )
 		.add_property("name", make_function( &vl::SubMesh::getName, return_value_policy<copy_const_reference>() ), &vl::SubMesh::setName )
 		.def("addFace", &vl::SubMesh::addFace)
-		.def("getNumFaces", &vl::SubMesh::getNumFaces)
+		.def_readonly("index_data", &vl::SubMesh::indexData)
+		.def_readwrite("operation_type", &vl::SubMesh::operationType)
 		/*
 		.def("addBoneAssignment", &Ogre::SubMesh::addBoneAssignment)
 		.def("clearBoneAssignments", &Ogre::SubMesh::clearBoneAssignments)
@@ -242,9 +309,9 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(self_ns::str(self_ns::self))
 	;
 
-	class_<vl::MeshWriter, boost::noncopyable>("MeshWriter")
-		.def("createMesh", &vl::MeshWriter::createMesh)
-		.def("writeMesh", &vl::MeshWriter::writeMesh)
+	class_<vl::MeshSerializer, boost::noncopyable>("MeshSerializer")
+		.def("createMesh", &vl::MeshSerializer::createMesh)
+		.def("writeMesh", &vl::MeshSerializer::writeMesh)
 	;
 
 }

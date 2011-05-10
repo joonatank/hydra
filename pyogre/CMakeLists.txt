@@ -19,7 +19,10 @@ include_directories(${HydraMain_SOURCE_DIR})
 # Do not link to HydraMain, we have so few dependencies that it's easier to
 # compile them separately to objs
 set( SRC
+	${HydraMain_SOURCE_DIR}/serializer.cpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer.cpp
+	${HydraMain_SOURCE_DIR}/mesh_serializer_impl.cpp
+	${HydraMain_SOURCE_DIR}/resource.cpp
 	${HydraMain_SOURCE_DIR}/mesh.cpp
 	ogre_python.cpp
 	)
@@ -27,6 +30,9 @@ set( SRC
 set( HEADERS
 	${HydraMain_SOURCE_DIR}/mesh.hpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer.hpp
+	${HydraMain_SOURCE_DIR}/mesh_serializer_impl.hpp
+	${HydraMain_SOURCE_DIR}/serializer.hpp
+	${HydraMain_SOURCE_DIR}/resource.hpp
 	)
 
 # Using module type for runtime dynamically loaded libraries

@@ -25,32 +25,46 @@
 
 #include "typedefs.hpp"
 
+// Base class
+#include "serializer.hpp"
+
+#include "resource_manager.hpp"
+#include "mesh_serializer_impl.hpp"
+
 namespace vl
 {
 
-class MeshWriter
+class MeshSerializer : public Serializer
 {
 public :
-	MeshWriter( void );
+	MeshSerializer(void);
 
-	~MeshWriter( void );
+	~MeshSerializer(void);
 
 	vl::MeshRefPtr createMesh(void);
 
 	void writeMesh(vl::MeshRefPtr mesh, std::string const &filename);
 
-private :
+	void readMesh(vl::MeshRefPtr mesh, vl::Resource &res);
 
-	Ogre::LogManager *_logMgr;
-	Ogre::Math *_math;
-	Ogre::LodStrategyManager *_lodMgr;
-	Ogre::MaterialManager* _matMgr;
-	Ogre::MeshSerializer* _meshSerializer;
-	Ogre::DefaultHardwareBufferManager *_bufferMgr;
-	Ogre::MeshManager* _meshMgr;
-	Ogre::ResourceGroupManager* _resourcegm;
-	Ogre::SkeletonManager *_skelMgr;
-	Ogre::SkeletonSerializer *_skeletonSerializer;
+private :
+	/// Wrapper around Ogre Managers, created if Ogre is not initialised
+	struct OgreManagers {
+		OgreManagers(void);
+
+		~OgreManagers(void);
+		
+		Ogre::LogManager *logMgr;
+		Ogre::Math *math;
+		Ogre::LodStrategyManager *lodMgr;
+		Ogre::MaterialManager *matMgr;
+		Ogre::DefaultHardwareBufferManager *bufferMgr;
+		Ogre::MeshManager* meshMgr;
+		Ogre::ResourceGroupManager* resGroupMgr;
+		Ogre::SkeletonManager *skelMgr;
+	};
+
+	OgreManagers *_ogre_mgr;
 
 };	// class MeshWriter
 

@@ -272,8 +272,15 @@ vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 	return ent;
 }
 
-vl::EntityPtr
+vl::EntityPtr 
 vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_name)
+{
+	return createEntity(name, mesh_name, false);
+}
+
+vl::EntityPtr
+vl::SceneManager::createEntity(std::string const &name, 
+	std::string const &mesh_name, bool use_new_mesh_manager)
 {
 	/// Disallow empty names for now, we need to generate one otherwise
 	if(name.empty())
@@ -281,7 +288,7 @@ vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_
 	if(hasEntity(name))
 	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
 
-	EntityPtr ent = new Entity(name, mesh_name, this);
+	EntityPtr ent = new Entity(name, mesh_name, this, use_new_mesh_manager);
 	
 	_session->registerObject(ent, OBJ_ENTITY, vl::ID_UNDEFINED);
 	assert( ent->getID() != vl::ID_UNDEFINED );

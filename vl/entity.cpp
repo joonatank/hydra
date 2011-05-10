@@ -115,6 +115,7 @@ vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	}
 }
 
+#include <OGRE/OgreSubMesh.h>
 
 bool
 vl::Entity::_doCreateNative(void)
@@ -142,12 +143,22 @@ vl::Entity::_doCreateNative(void)
 			assert(mesh);
 			Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
 			std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
-				<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+				<< " is loaded = " << og_mesh->isLoaded() << std::endl
+				<< " index count = " << og_mesh->getSubMesh(0)->indexData->indexCount << std::endl;
+			if(og_mesh->sharedVertexData)
+			{
+				std::clog << " mesh has shared geometry : size " << og_mesh->sharedVertexData->vertexCount << std::endl;
+			}
+			if(!og_mesh->getSubMesh(0)->useSharedVertices)
+			{
+				std::clog << " sub mesh is using dedicated geometry : size = " 
+					<< og_mesh->getSubMesh(0)->vertexData->vertexCount << std::endl;
+			}
 		}
 		_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
-//		Ogre::MeshPtr og_mesh = _ogre_object->getMesh();
-//		std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
-//			<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+		Ogre::MeshPtr og_mesh = _ogre_object->getMesh();
+		std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+			<< " is loaded = " << og_mesh->isLoaded() << std::endl;
 	}
 	else if( PF_NONE != _prefab )
 	{
