@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<scene formatVersion="1.0.0">
+<nodes>
+	<node name="athene1">
+		<position x="10.000000" y="4.000000" z="-5.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.050000" y="0.050000" z="0.050000"/>
+		<entity name="athene1" meshFile="athene.mesh"/>
+	</node>
+	<node name="athene2">
+		<position x="-10.000000" y="4.000000" z="0.000000"/>
+		<quaternion x="0.000000" y="0.000000" z="0.000000" w="1.000000"/>
+		<scale x="0.050000" y="0.050000" z="0.050000"/>
+		<entity name="athene2" meshFile="athene.mesh"/>
+	</node>
+</nodes>
+</scene>
