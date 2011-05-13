@@ -203,10 +203,10 @@ public :
 
 class Message;
 
-class MessageStream : public ByteStream
+class MessageDataStream : public ByteStream
 {
 public :
-	MessageStream(Message *msg)
+	MessageDataStream(Message *msg)
 		: _data(msg)
 	{}
 
@@ -217,27 +217,127 @@ public :
 private :
 	Message *_data;
 
-};	// class MessageStream
+};	// class MessageDataStream
 
+/// @brief copies a memory field to a member
+/// @return true if successful, i.e. the char buffer has enough data
+/// @param dest destination where to copy, this needs to be a primitive for templates to work
+/// @param src char buffer where to copy the data
+/// @param pos position variable, is updated to the new position after successful read
+template<typename T, typename N>
+bool copy_memory(T *dest, std::vector<char> const &src, N &pos)
+{
+	if( src.size() >= pos + sizeof(T) )
+	{
+		::memcpy( dest, &src[pos], sizeof(T) );
+		pos += sizeof(T);
+		return true;
+	}
+	else
+	{ return false; }
+}
+
+const uint16_t MTU_SIZE = 1500;
+const uint16_t UDP_HEADER_SIZE = 8;
+const uint16_t IP_HEADER_SIZE = 20;
+const uint16_t MSG_HEADER_SIZE = 4+8+2+2;
+/// Size of a single message part, calculated from MTU and headers
+/// so that a single message would pass undivided through the uplink.
+/// @todo should be configurable (or overridable)
+/// @todo should be checked that the datagram will really be 1500bytes not more.
+const uint16_t MSG_PART_SIZE = 
+	MTU_SIZE - (MSG_HEADER_SIZE+UDP_HEADER_SIZE+IP_HEADER_SIZE);
+
+/*	Constant size message 
+ *	[HEADER | DATA]
+ *	Header:
+ *	[TYPE (32bit) | ID (64bit) | PARTS (16bit) | PART (16bit) ]
+ *	
+ *	Data
+ *	[DATA_SIZE (16bit) | DATA ]
+ *
+ *	@todo this should provide an interface for casting the Message into 
+ *	memory buffers (asio or void *)
+ *	Using asio buffers
+ *	First buffer can be created from the header structure especially using 
+ *	a separate struct for it (cast to void *).
+ *	Second buffer can be created using a pointer to the Message structures
+ *	Data part and an index for start data.
+ */
+struct MessagePart
+{
+	MessagePart(std::vector<char> const &buf);
+
+	MessagePart(MSG_TYPES t, uint64_t id_, uint16_t parts_, uint16_t part_)
+		: type(t), id(id_), parts(parts_), part(part_)
+	{
+		/// data size should be zero as long as there is no data in there
+	}
+	
+	/// Constructs an undefined MessagePart, used for container resizes
+	/// Do not use this!
+	MessagePart(void)
+		: type(vl::cluster::MSG_UNDEFINED)
+		, id(0)
+		, parts(0)
+		, part(0)
+	{}
+
+	void dump(std::vector<char> &arr) const;
+
+	size_t size(void) const;
+
+	MSG_TYPES type;
+	uint64_t id;
+	uint16_t parts;
+	uint16_t part;
+	std::vector<char> data;
+};
 
 /** @class Message
  *	@brief Description of an UDP message
  *
- *	Stucture: [MESSAGE_TYPE | FRAME | TIMESTAMP | DATA_SIZE | DATA]
+ *	Stucture: [MESSAGE_TYPE | MESSAGE_ID | MESSAGE_PARTS | MESSAGE_PART | DATA_SIZE | DATA]
+ *	MESSAGE_TYPE, MESSAGE_ID and MESSAGE_PARTS stay constant
+ *	between multiple parts of the same message.
+ *
+ *	DATA_SIZE is the number of bytes in this part.
+ *	DATA is some data that can be used to compose the complete message 
+ *	depends on which part this is and what type of message.
+ *
+ *	When the parts are composed to a complete message
+ *	[HEADER | DATA]
+ *	Header
+ *	[MESSAGE_TYPE | MESSAGE_ID | FRAME | TIMESTAMP]
+ *	Data
+ *	[DATA_SIZE | DATA]
  */
 class Message
 {
 public :
 	typedef uint32_t size_type;
 
-	Message(std::vector<char> const &arr);
+	/// @constructor using the first part of the message
+	Message(MessagePart const &part);
+
+	Message(std::vector<MessagePart> const &parts);
 
 	Message(MSG_TYPES type, uint32_t frame, vl::time const &timestamp);
 
 	Message(void);
 
+	void addPart(MessagePart const &part);
+
+	std::vector<MessagePart> createParts(void) const;
+
+	/// @brief is this message whole or is there a piece missing
+	bool partial(void) const;
+
 	MSG_TYPES getType( void ) const
 	{ return _type; }
+
+	uint64_t getID(void) const
+	{ return _id; }
 
 	uint32_t getFrame(void) const
 	{ return _frame; }
@@ -250,9 +350,6 @@ public :
 
 	void setTimestamp(vl::time const &timestamp)
 	{ _timestamp = timestamp; }
-
-	/// Dump the whole message to a binary array, the array is modified
-	virtual void dump( std::vector<char> &arr ) const;
 
 	bool empty(void) const;
 
@@ -281,32 +378,20 @@ public :
 	/// Maximum size is 8kbytes, which is more than one datagram can handle
 	/// For now larger messages are not supported
 	size_type size( void ) const
-	{ return _size; }
+	{ return _data.size(); }
 
-	MessageStream getStream(void)
-	{ return MessageStream(this); }
+	MessageDataStream getStream(void)
+	{ return MessageDataStream(this); }
 
 	friend std::ostream &operator<<( std::ostream &os, Message const &msg );
 
+	static uint64_t generateID(void);
+
 private :
 
-	/// @brief copies a memory field to a member
-	/// @return true if successful, i.e. the char buffer has enough data
-	/// @param dest destination where to copy, this needs to be a primitive for templates to work
-	/// @param src char buffer where to copy the data
-	/// @param pos position variable, is updated to the new position after successful read
-	template<typename T>
-	bool _copy_memory(T *dest, std::vector<char> const &src, size_type &pos)
-	{
-		if( src.size() >= pos + sizeof(T) )
-		{
-			::memcpy( dest, &src[pos], sizeof(T) );
-			pos += sizeof(T);
-			return true;
-		}
-		else
-		{ return false; }
-	}
+	static uint64_t _last_id;
+
+	void _assemble(void);
 
 	/// --------------------------- Data -------------------------------------
 	/**	@todo Replace all the message data with one std::vector<char>
@@ -317,9 +402,13 @@ private :
 	 *	That message data should be completely in std::vector<char>
 	 */
 	MSG_TYPES _type;
+	uint64_t _id;
+	/// Use map so that the parts are automatically sorted
+	std::map<uint16_t, MessagePart> _parts;
+
 	uint32_t _frame;
 	vl::time _timestamp;
-	size_type _size;
+
 	std::vector<char> _data;
 
 };	// class Message
@@ -327,62 +416,18 @@ private :
 std::ostream &operator<<( std::ostream &os, Message const &msg );
 
 inline void
-MessageStream::read(char *mem, msg_size size)
+MessageDataStream::read(char *mem, msg_size size)
 {
 	assert(_data);
 	_data->read(mem, size);
 }
 
 inline void
-MessageStream::write(char const *mem, msg_size size)
+MessageDataStream::write(char const *mem, msg_size size)
 {
 	assert(_data);
 	_data->write(mem, size);
 }
-
-/** @class MessagePart
- *	@brief A class used for splitting and reconstruction of Messages
- *	@todo Not in use at the moment
- *
- *	Messages should read/write to multiple MessageParts which are sent
- *	separately.
- */
-class MessagePart
-{
-public :
-	MessagePart( void );
-
-	MSG_TYPES getType( void ) const
-	{ return _type; }
-
-	Message::size_type start_index( void ) const
-	{ return _start_index; }
-
-	Message::size_type end_index( void ) const
-	{ return _end_index; }
-
-	Message::size_type size( void ) const
-	{ return _end_index-_start_index; }
-
-	/// Dump the whole message to a binary array, the array is modified
-	virtual void dump( std::vector<char> &arr ) const;
-
-	/**	@brief If the message is valid for reading or is partial
-	 *	@return True if message can be read and no data is missing, false otherwise
-	 *
-	 *	valid() = !partial() always
-	 */
-	bool valid( void ) const;
-
-	bool partial( void ) const;
-
-private :
-	MSG_TYPES _type;
-	Message::size_type _start_index;
-	Message::size_type _end_index;
-	Message::size_type _whole_size;
-	std::vector<char> _data;
-};
 
 class ByteData
 {
@@ -556,9 +601,9 @@ ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 template<typename T>
 ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 {
-	typename std::vector<T>::size_type size;
-	msg >> size;
-	v.resize( size );
+	typename std::vector<T>::size_type v_size;
+	msg >> v_size;
+	v.resize(v_size);
 	for(size_t i = 0; i < v.size(); ++i )
 	{ msg >> v.at(i); }
 
@@ -578,14 +623,14 @@ ByteStream &operator<<(ByteStream &msg, std::string const &str)
 template<> inline
 ByteStream &operator>>(ByteStream &msg, std::string &str)
 {
-	std::string::size_type size;
-	msg.read(size);
-	if( 0 == size )
+	std::string::size_type str_size;
+	msg.read(str_size);
+	if( 0 == str_size )
 	{ str.clear(); }
 	else
 	{
-		str.resize(size);
-		for( size_t i = 0; i < size; ++i )
+		str.resize(str_size);
+		for( size_t i = 0; i < str_size; ++i )
 		{
 			char ch;
 			msg.read(ch);
@@ -602,18 +647,17 @@ template<typename T>
 msg_size Message::read(T& obj)
 {
 	msg_size size = sizeof(obj);
-	if( _size < size )
+	if( _data.size() < size )
 	{
 		std::string str =
 			std::string("vl::Message::read - Not enough data to read from Message. There is")
-			+ vl::to_string(_size) + " bytes : needs "
+			+ vl::to_string(_data.size()) + " bytes : needs "
 			+ vl::to_string(sizeof(obj)) + " bytes.";
 		BOOST_THROW_EXCEPTION( vl::short_message() << vl::desc(str) );
 	}
 
 	::memcpy( &obj, &_data[0], size );
 	_data.erase( _data.begin(), _data.begin()+size );
-	_size -= size;
 
 	return size;
 }
@@ -621,10 +665,10 @@ msg_size Message::read(T& obj)
 template<typename T>
 msg_size Message::write(const T& obj)
 {
-	msg_size size = sizeof(obj);
-	_data.resize( _data.size() + size );
-	::memcpy( &_data[_size], &obj, size );
-	_size += size;
+	size_type index = (size_type)_data.size();
+	size_type size = sizeof(obj);
+	_data.resize( index + size );
+	::memcpy( &_data[0]+index, &obj, size );
 
 	return size;
 }

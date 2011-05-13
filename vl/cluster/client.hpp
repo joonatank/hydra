@@ -51,17 +51,34 @@ struct ClientMsgCallback : public vl::MsgCallback
 
 };	// struct ClientMsgCallback
 
-/// blocking mesh loader for slave
-struct SlaveMeshLoaderCallback : public BlockingMeshLoaderCallback
+/// No blocking loader is provided, because it would disrubt the message system
+struct SlaveMeshLoaderCallback : public MeshLoaderCallback
 {
 	SlaveMeshLoaderCallback(Client *own);
 
-	/// Blocks till the mesh is loaded and returns a valid mesh
-	virtual vl::MeshRefPtr loadMesh(std::string const &fileName);
+	/// Does not block, only request the Mesh and sets the callback
+	virtual void loadMesh(std::string const &fileName, MeshLoadedCallback *cb);
 
 	Client *owner;
 
 };	// class SlaveMeshLoaderCallback
+
+/// @brief callback structure for Waiting for certain type of message
+struct ClientMessageCallback
+{
+	virtual void messageReceived(MessageRefPtr msg) = 0;
+};
+
+/// @brief callback for Resource Messages
+/// Only supports Mesh types for now
+struct ResourceMessageCallback : public ClientMessageCallback
+{
+	ResourceMessageCallback(MeshManager *man);
+
+	virtual void messageReceived(MessageRefPtr msg);
+
+	MeshManager *manager;
+};
 
 
 /// @class Client
@@ -92,9 +109,15 @@ public:
 	/// this is a disaster.
 	MessageRefPtr waitForMessage(MSG_TYPES type, vl::time timelimit = vl::time());
 
+	void addMessageCallback(MSG_TYPES type, ClientMessageCallback *cb);
+
+	vl::MeshManagerRefPtr getMeshManager(void)
+	{ return _renderer->getMeshManager(); }
+
 private :
 	void _handle_message(vl::cluster::Message &msg);
 
+	/// @todo ACKs should send the message id and the part number also
 	void _send_ack(vl::cluster::MSG_TYPES);
 
 	/// @todo replace with ref ptrs
@@ -116,6 +139,10 @@ private :
 	vl::RendererInterfacePtr _renderer;
 
 	std::vector<vl::Callback *> _callbacks;
+
+	std::vector<MessageRefPtr> _partial_messages;
+
+	std::map<MSG_TYPES, ClientMessageCallback *> _msg_callbacks;
 
 	// @todo this should save the simulation time and frame
 	// uint32_t _frame

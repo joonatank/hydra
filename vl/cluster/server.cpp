@@ -18,9 +18,26 @@ vl::cluster::Server::Server(uint16_t const port, ServerDataCallback *cb)
 
 	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
-	boost::asio::socket_base::receive_buffer_size buf_size;
-	_socket.get_option(buf_size);
-	std::cout << vl::TRACE << "Receive Buffer size = " << buf_size.value() << "." << std::endl;
+
+	// Using a large send buffer so that we don't need to pause when sending
+	// large messages (like Resources). The buffer will be filled with all
+	// the send calls made close to each other.
+	// @todo make the buffer size configurable, 1Mbyte is reasonable, but there
+	// might be a reason for increasing it at least till we have a more
+	// permanent solution like keeping track of the buffer usage or using
+	// TCP for large resources.
+	// @todo sending the buffer size to all clients so that we don't need to
+	// reset it both here and there.
+	boost::asio::socket_base::send_buffer_size send_buf_size(1024*1024);
+	_socket.set_option(send_buf_size);
+
+	boost::asio::socket_base::receive_buffer_size rec_buf_size;
+	_socket.get_option(rec_buf_size);
+
+	std::cout << "Receive Buffer size = " << rec_buf_size.value() << "." 
+		<< " Send buffer size = " << send_buf_size.value() << "." << std::endl;
+
+	std::cout << "Message part size = " << MSG_PART_SIZE << "." << std::endl;
 }
 
 
@@ -31,13 +48,11 @@ void
 vl::cluster::Server::shutdown( void )
 {
 	Message msg( vl::cluster::MSG_SHUTDOWN, _frame, getSimulationTime() );
-	std::vector<char> buf;
-	msg.dump(buf);
 
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		_socket.send_to( boost::asio::buffer(buf), iter->address );
+		_sendMessage(*iter, msg);
 		iter->state.shutdown = true;
 	}
 
@@ -70,14 +85,26 @@ vl::cluster::Server::poll(void)
 		if (error && error != boost::asio::error::message_size)
 		{ throw boost::system::system_error(error); }
 
-		Message msg(recv_buf);
+		MessagePart part(recv_buf);
 
 		/// Create new clients for everyone who isn't already present
 		ClientInfo *cl_ptr = _find_client_ptr(remote_endpoint);
 		if( !cl_ptr )
 			cl_ptr = &_add_client(remote_endpoint);
 
-		_handle_message(msg, *cl_ptr);
+		if(part.parts == 1)
+		{
+			_handle_message(Message(part), *cl_ptr);
+		}
+		// @todo replace with a real solution
+		// for now clients should not send that large messages anyways
+		// similar solution that clients have (or the exact same one using inheritance)
+		// use RefPtrs and a partial message stack
+		else
+		{
+			std::string msg("Server does not support partial messages.");
+			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg)); 
+		}
 	}
 }
 
@@ -109,6 +136,13 @@ vl::cluster::Server::update(vl::Stats &stats)
 // because we should wait for the ACKs from rendering threads between
 // update, draw and swap and immediately send the next message when all clients
 // have responded.
+/// @todo change this to use Barriers, selectable Barriers
+/// remove the use of ACKs for state changes
+/// Barrier has enter and leave methods. When barrier is entered or left
+/// it sends a confirmation to the master.
+/// Barriers can be used for FRAME_START (or UPDATE), DRAW and SWAP
+/// At the moment we probably only need the first one to keep all the
+/// frames in sync.
 bool
 vl::cluster::Server::start_draw(vl::Stats &stats)
 {
@@ -154,7 +188,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	// TODO even if client is not rendering it should get update messages
 	if( renderers.empty() )
 	{
-		std::clog << "vl::cluster::Server::start_draw : no renderers" << std::endl;
+		//std::clog << "vl::cluster::Server::start_draw : no renderers" << std::endl;
 		return false;
 	}
 
@@ -265,13 +299,7 @@ vl::cluster::Server::sendMessage(Message const &msg)
 {
 	switch( msg.getType() )
 	{
-		case MSG_ENVIRONMENT:
-			sendEnvironment(msg);
-			break;
-		case MSG_PROJECT:
-			sendProject(msg);
-			break;
-
+		
 		case MSG_SG_CREATE:
 			sendCreate(msg);
 			break;
@@ -280,6 +308,9 @@ vl::cluster::Server::sendMessage(Message const &msg)
 			sendUpdate(msg);
 			break;
 
+		// Uses the new callback interface
+		case MSG_ENVIRONMENT:
+		case MSG_PROJECT:
 		// Uses the LogReceiver interface
 		case MSG_PRINT:
 		// Not yet supported
@@ -290,50 +321,11 @@ vl::cluster::Server::sendMessage(Message const &msg)
 }
 
 void
-vl::cluster::Server::sendEnvironment( const vl::cluster::Message &msg )
-{
-	std::cout << vl::TRACE << "vl::cluster::Server::sendEnvironment" << std::endl;
-
-	assert(msg.getType() == MSG_ENVIRONMENT );
-
-	// Resetting environment NOT supported
-	assert( _env_msg.empty() );
-	
-	Message cpy(msg);
-	cpy.setFrame(_frame);
-	cpy.setTimestamp(getSimulationTime());
-
-	cpy.dump(_env_msg);
-
-	ClientList::iterator iter;
-	for(iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{
-		// We don't allow sending the environment twice
-		assert( !iter->state.environment );
-		_sendEnvironment(*iter);
-	}
-}
-
-void
-vl::cluster::Server::sendProject( const vl::cluster::Message &msg )
-{
-	Message cpy(msg);
-	cpy.setFrame(_frame);
-	cpy.setTimestamp(getSimulationTime());
-
-	_proj_msg.clear();
-	cpy.dump(_proj_msg);
-}
-
-void
 vl::cluster::Server::sendUpdate( vl::cluster::Message const &msg )
 {
-	Message cpy(msg);
-	cpy.setFrame(_frame);
-	cpy.setTimestamp(getSimulationTime());
-
-	_msg_update.clear();
-	cpy.dump(_msg_update);
+	_msg_update = msg;
+	_msg_update.setFrame(_frame);
+	_msg_update.setTimestamp(getSimulationTime());
 }
 
 void
@@ -409,22 +401,30 @@ vl::cluster::Server::nLoggedMessages(void) const
 }
 
 /// ----------------------------- Private --------------------------------------
-void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &client)
+void 
+vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &client)
 {
 	switch( msg.getType() )
 	{
 		case vl::cluster::MSG_REG_UPDATES :
 		{
-			// TODO this might be problematic if the client manages to send
-			// the request message twice.
-			// Best would be to add a note to the client structure
-			// then process it after all the incoming messages are done
-			// Or we could add a stack of commands, and check for already existing one
-			_sendEnvironment(client);
+			// Don't send the environment more than once. 
+			// @todo Using ACKs and resend would be even better.
+			if(client.environment_sent_time.elapsed() > vl::time(1, 0))
+			{
+				assert(_data_cb);
+				vl::cluster::Message msg = _data_cb->createEnvironmentMessage();
+				assert(!msg.empty() && msg.getType() == MSG_ENVIRONMENT);
+				_sendMessage(client, msg);
+				client.environment_sent_time.reset();
 
-			// TODO this should save the client as one that requested
-			// environment if no environment is set so that one will be sent
-			// as soon as one is available.
+				// TODO this should save the client as one that requested
+				// environment if no environment is set so that one will be sent
+				// as soon as one is available.
+
+				// @todo should also save the client to a list of those wanting
+				// updates
+			}
 		}
 		break;
 
@@ -499,6 +499,7 @@ void vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo 
 			msg.read(type);
 			msg.read(name);
 			Message resource_msg = _data_cb->createResourceMessage(type, name);
+			assert(!resource_msg.empty() && resource_msg.getType() == MSG_RESOURCE);
 
 			_sendMessage(client, resource_msg);
 		}
@@ -564,16 +565,6 @@ vl::cluster::Server::_find_client_ptr(boost::udp::endpoint const &address) const
 	return 0;
 }
 
-
-void
-vl::cluster::Server::_sendEnvironment(ClientInfo const &client)
-{
-	if( !_env_msg.empty() )
-	{
-		_socket.send_to( boost::asio::buffer(_env_msg), client.address );
-	}
-}
-
 void
 vl::cluster::Server::_sendCreate(ClientInfo &client)
 {
@@ -593,9 +584,7 @@ vl::cluster::Server::_sendCreate(ClientInfo &client)
 	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin();
 		iter != msgs.rend(); ++iter )
 	{
-		std::vector<char> buf;
-		iter->dump(buf);
-		_socket.send_to( boost::asio::buffer(buf), client.address );
+		_sendMessage(client, *iter);
 	}
 }
 
@@ -610,14 +599,13 @@ vl::cluster::Server::_sendUpdate(ClientInfo const &client)
 	{
 		assert(_data_cb);
 		Message msg = _data_cb->createInitMessage();
+		assert(!msg.empty() && msg.getType() == MSG_SG_UPDATE);
+		_sendMessage(client, msg);
 		// TODO add frame and timestamp
-		std::vector<char> buf;
-		msg.dump(buf);
-		_socket.send_to( boost::asio::buffer(buf), client.address );
 	}
 	else
 	{
-		_socket.send_to( boost::asio::buffer(_msg_update), client.address );
+		_sendMessage(client, _msg_update);
 	}
 }
 
@@ -648,17 +636,23 @@ vl::cluster::Server::_sendOuput(ClientInfo &client)
 void 
 vl::cluster::Server::_sendMessage(ClientInfo const &client, vl::cluster::Message const &msg)
 {
+	/// @todo remove the copying that is needed both createParts and dump
 	std::vector<char> buf;
-	msg.dump(buf);
-	_socket.send_to(boost::asio::buffer(buf), client.address);
-}
-
-void
-vl::cluster::Server::_sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg)
-{
-	std::vector<char> buf;
-	msg.dump(buf);
-	_socket.send_to(boost::asio::buffer(buf), endpoint);
+	std::vector<MessagePart> parts = msg.createParts();
+	
+	if(parts.size() > 1)
+	{
+		std::clog << "Sending message " << getTypeAsString(msg.getType()) << " ID "
+			<< msg.getID() << " in " << parts.size() << " parts "
+			<< " and size of the message " << msg.size() << " bytes." << std::endl;
+	}
+	
+	for(size_t i = 0; i < parts.size(); ++i)
+	{
+		parts.at(i).dump(buf);
+		_socket.send_to(boost::asio::buffer(buf), client.address);
+		/// @todo we should add them to a sent stack, and verify the sending with ack
+	}
 }
 
 void
@@ -683,7 +677,10 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 				client.state.environment = true;
 				// Send the Project message
 				// TODO this should be moved to use a separate REQ_PROJECT message
-				_socket.send_to( boost::asio::buffer(_proj_msg), client.address);
+				assert(_data_cb);
+				vl::cluster::Message msg =_data_cb->createProjectMessage();
+				assert(!msg.empty() && msg.getType() == MSG_PROJECT);
+				_sendMessage(client, msg);
 			}
 		}
 		break;
@@ -743,6 +740,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 		}
 		break;
 
+		case vl::cluster::MSG_RESOURCE :
 		case vl::cluster::MSG_PRINT :
 			break;
 

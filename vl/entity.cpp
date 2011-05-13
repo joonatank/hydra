@@ -12,7 +12,22 @@
 
 #include <OGRE/OgreEntity.h>
 #include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreSubMesh.h>
 
+
+vl::EntityMeshLoadedCallback::EntityMeshLoadedCallback(Entity *ent)
+	: owner(ent)
+{
+	assert(owner);
+}
+
+void 
+vl::EntityMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
+{
+	owner->meshLoaded(mesh);
+}
+
+/// -------------------------------------- Entity ----------------------------
 vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManagerPtr creator)
 	: MovableObject(name, creator)
 {
@@ -61,6 +76,37 @@ vl::Entity::setMaterialName(std::string const &name)
 		setDirty(DIRTY_MATERIAL);
 		_material_name = name;
 	}
+}
+
+void 
+vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
+{
+	_mesh = mesh;
+
+	/// @todo add support for using an already existing Ogre Mesh
+
+	Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
+	std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+		<< " is loaded = " << og_mesh->isLoaded() << std::endl
+		<< " index count = " << og_mesh->getSubMesh(0)->indexData->indexCount << std::endl;
+	if(og_mesh->sharedVertexData)
+	{
+		std::clog << " mesh has shared geometry : size " << og_mesh->sharedVertexData->vertexCount << std::endl;
+	}
+	if(!og_mesh->getSubMesh(0)->useSharedVertices)
+	{
+		std::clog << " sub mesh is using dedicated geometry : size = " 
+			<< og_mesh->getSubMesh(0)->vertexData->vertexCount << std::endl;
+	}
+
+	_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+	assert(og_mesh == _ogre_object->getMesh());
+	std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
+		<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+
+	delete _loader_cb;
+
+	_finishCreateNative();
 }
 
 void 
@@ -115,8 +161,6 @@ vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	}
 }
 
-#include <OGRE/OgreSubMesh.h>
-
 bool
 vl::Entity::_doCreateNative(void)
 {
@@ -139,26 +183,13 @@ vl::Entity::_doCreateNative(void)
 		if( _use_new_mesh_manager )
 		{
 			std::clog << "vl::Entity::_doCreateNative : Should use the new MeshManager." << std::endl;
-			vl::MeshRefPtr mesh = _creator->getMeshManager()->loadMesh(_mesh_name);
-			assert(mesh);
-			Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
-			std::clog << "Ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
-				<< " is loaded = " << og_mesh->isLoaded() << std::endl
-				<< " index count = " << og_mesh->getSubMesh(0)->indexData->indexCount << std::endl;
-			if(og_mesh->sharedVertexData)
-			{
-				std::clog << " mesh has shared geometry : size " << og_mesh->sharedVertexData->vertexCount << std::endl;
-			}
-			if(!og_mesh->getSubMesh(0)->useSharedVertices)
-			{
-				std::clog << " sub mesh is using dedicated geometry : size = " 
-					<< og_mesh->getSubMesh(0)->vertexData->vertexCount << std::endl;
-			}
+			_loader_cb =  new EntityMeshLoadedCallback(this);
+			_creator->getMeshManager()->loadMesh(_mesh_name, _loader_cb);
 		}
-		_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
-		Ogre::MeshPtr og_mesh = _ogre_object->getMesh();
-		std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
-			<< " is loaded = " << og_mesh->isLoaded() << std::endl;
+		else
+		{
+			_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+		}
 	}
 	else if( PF_NONE != _prefab )
 	{
@@ -184,6 +215,17 @@ vl::Entity::_doCreateNative(void)
 		return false;
 	}
 
+	if(_ogre_object)
+	{
+		return _finishCreateNative();
+	}
+
+	return true;
+}
+
+bool 
+vl::Entity::_finishCreateNative(void)
+{
 	assert(_ogre_object);
 
 	/// Really quick and dirty way to avoid problems when there is
@@ -213,6 +255,12 @@ vl::Entity::_doCreateNative(void)
 	if( !_material_name.empty() )
 	{ _ogre_object->setMaterialName(_material_name); }
 
+	/// Reset parent for those that are background loaded
+	if(_parent && !_ogre_object->isAttached())
+	{
+		_parent->getNative()->attachObject(_ogre_object);
+	}
+
 	return true;
 }
 
@@ -223,4 +271,5 @@ vl::Entity::_clear(void)
 	_cast_shadows = true;
 	_use_new_mesh_manager = false;
 	_ogre_object = 0;
+	_loader_cb = 0;
 }

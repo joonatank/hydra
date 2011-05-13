@@ -247,14 +247,16 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def_readwrite("vertex_declaration", &vl::VertexData::vertexDeclaration)
 	;
 
-	vl::SubMesh *(vl::Mesh::*getSubMesh_ov0)(unsigned int) = &vl::Mesh::getSubMesh;
+	vl::SubMesh *(vl::Mesh::*getSubMesh_ov0)(uint16_t) = &vl::Mesh::getSubMesh;
+	Ogre::AxisAlignedBox &(vl::Mesh::*getBounds_ov0)() = &vl::Mesh::getBounds;
+	Ogre::Real &(vl::Mesh::*getBoundingSphere_ov0)() = &vl::Mesh::getBoundingSphereRadius;
 
 	class_< vl::Mesh, vl::MeshRefPtr, boost::noncopyable>("Mesh", no_init )
 		.def("createSubMesh", make_function( &vl::Mesh::createSubMesh, return_value_policy<reference_existing_object>() ) )
 		.def("getNumSubMeshes", &vl::Mesh::getNumSubMeshes)
-		.def("getSubMesh", make_function(getSubMesh_ov0, return_value_policy<reference_existing_object>() ) )
-		.add_property("bounding_sphere", &vl::Mesh::getBoundingSphereRadius, &vl::Mesh::setBoundingSphereRadius)
-		.add_property("bounds", make_function( &vl::Mesh::getBounds, return_value_policy<copy_const_reference>() ), &vl::Mesh::setBounds)
+		.def("getSubMesh", make_function(getSubMesh_ov0, return_value_policy<reference_existing_object>()) )
+		.add_property("bounding_sphere", make_function(getBoundingSphere_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBoundingSphereRadius)
+		.add_property("bounds", make_function(getBounds_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBounds)
 		.def("calculateBounds", &vl::Mesh::calculateBounds)
 		.def("createVertexData", &vl::Mesh::createVertexData)
 		.def_readonly("sharedVertexData", &vl::Mesh::sharedVertexData)

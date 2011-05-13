@@ -67,6 +67,21 @@ vl::ConfigServerDataCallback::createInitMessage(void)
 	return owner->createMsgInit();
 }
 
+
+vl::cluster::Message 
+vl::ConfigServerDataCallback::createEnvironmentMessage(void)
+{
+	assert(owner);
+	return owner->createMsgEnvironment();
+}
+
+vl::cluster::Message 
+vl::ConfigServerDataCallback::createProjectMessage(void)
+{
+	assert(owner);
+	return owner->createMsgProject();
+}
+
 vl::cluster::Message
 vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name)
 {
@@ -83,7 +98,7 @@ vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE t
 
 		vl::MeshRefPtr mesh = owner->getGameManager()->getMeshManager()->getMesh(name);
 		
-		vl::cluster::MessageStream stream = msg.getStream();
+		vl::cluster::MessageDataStream stream = msg.getStream();
 		stream << vl::cluster::RES_MESH << name << *mesh;
 	}
 	else
@@ -100,7 +115,7 @@ vl::Config::Config( vl::Settings const & settings,
 					vl::Logger &logger,
 					vl::RendererInterfacePtr rend)
 	: _game_manager( new vl::GameManager(&logger) )
-	, _settings(settings)
+	, _proj(settings)
 	, _env(env)
 	, _server()
 	, _gui(0)
@@ -167,7 +182,7 @@ vl::Config::init( void )
 	std::cout << "Sending Environment took : " <<  t.elapsed() << std::endl;
 	t.reset();
 
-	_setProject(_settings);
+	_setProject(_proj);
 	std::cout << "Project took : " <<  t.elapsed() << std::endl;
 	t.reset();
 
@@ -206,7 +221,7 @@ vl::Config::init( void )
 	/// @todo this should also load scripts that are not used but are
 	/// available, these should of course not be run
 	/// use the new auto_run interface in PythonContext
-	std::vector<std::string> scripts = _settings.getScripts();
+	std::vector<std::string> scripts = _proj.getScripts();
 
 	/// @todo replace with the new interface
 	for( size_t i = 0; i < scripts.size(); ++i )
@@ -368,6 +383,38 @@ vl::Config::createMsgInit(void)
 	return msg;
 }
 
+vl::cluster::Message 
+vl::Config::createMsgEnvironment(void) const
+{
+	std::clog << "vl::Config::createMsgEnvironemnt" << std::endl;
+
+	vl::SettingsByteData data;
+	vl::cluster::ByteDataStream stream( &data );
+	stream << _env;
+
+	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT, 0, vl::time() );
+	data.copyToMessage( &msg );
+
+	return msg;
+}
+
+/// @todo this should be replace by sending of a vector of paths
+/// that's the only thing needed in the Renderer
+vl::cluster::Message 
+vl::Config::createMsgProject(void) const
+{
+	std::clog << "vl::Config::createMsgProject" << std::endl;
+
+	vl::SettingsByteData data;
+	vl::cluster::ByteDataStream stream( &data );
+	stream << _proj;
+
+	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
+	data.copyToMessage( &msg );
+
+	return msg;
+}
+
 /// ------------ Private -------------
 void
 vl::Config::_updateServer( void )
@@ -474,10 +521,6 @@ void
 vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 {
 	vl::timer t;
-	// Send the Environment
-	_sendEnvironment(env);
-	std::cout << "Sending environment to Server took : " << t.elapsed() << std::endl;
-	t.reset();
 
 	// Local renderer needs to be inited rather than send a message
 	if( _renderer.get() )
@@ -490,38 +533,15 @@ vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 void
 vl::Config::_setProject(vl::Settings const &proj)
 {
-	// Send the project
-	_sendProject(proj);
-}
-
-void
-vl::Config::_sendEnvironment(vl::EnvSettingsRefPtr env)
-{
-	std::cout << vl::TRACE << "vl::Config::_sendEnvironment" << std::endl;
-	assert( _server );
-
-	vl::SettingsByteData data;
-	vl::cluster::ByteDataStream stream( &data );
-	stream << env;
-
-	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT, 0, vl::time() );
-	data.copyToMessage( &msg );
-	_server->sendMessage(msg);
-}
-
-/// @todo this should be replace by sending of a vector of paths
-/// that's the only thing needed in the Renderer
-void
-vl::Config::_sendProject(vl::Settings const &proj)
-{
-	vl::SettingsByteData data;
-	vl::cluster::ByteDataStream stream( &data );
-	stream << proj;
-
-	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
-	data.copyToMessage( &msg );
-
-	_sendMessage(msg);
+	// Send the project to the local Renderer
+	if(_renderer.get())
+	{
+		vl::timer t;
+		vl::cluster::Message msg = createMsgProject();
+		_renderer->sendMessage(msg);
+		std::cout << "Sending message of size " << sizeof(msg) << "bytes "
+			<< "to Renderer took " << t.elapsed() << std::endl;
+	}
 }
 
 /// @todo with project message this takes 450ms to complete
@@ -529,12 +549,8 @@ vl::Config::_sendProject(vl::Settings const &proj)
 void
 vl::Config::_sendMessage(vl::cluster::Message const &msg)
 {
-	vl::timer t;
-	// Send to renderer
 	if(_renderer.get())
 	{ _renderer->sendMessage(msg); }
-	std::cout << "Sending message of size " << sizeof(msg) << "bytes "
-		<< "to Renderer took " << t.elapsed() << std::endl;
 
 	_server->sendMessage(msg);
 }
@@ -574,11 +590,11 @@ vl::Config::_createTrackers(vl::EnvSettingsRefPtr settings)
 void
 vl::Config::_loadScenes( void )
 {
-	std::cout << vl::TRACE << "Loading Scenes for Project : " << _settings.getProjectName()
+	std::cout << vl::TRACE << "Loading Scenes for Project : " << _proj.getProjectName()
 		<< std::endl;
 
 	// Get scenes
-	std::vector<vl::ProjSettings::Scene> scenes = _settings.getScenes();
+	std::vector<vl::ProjSettings::Scene> scenes = _proj.getScenes();
 
 	// TODO support for multiple scene files should be tested
 	// TODO support for case needs to be tested

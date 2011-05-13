@@ -17,19 +17,27 @@
 
 #include "resource_manager.hpp"
 
+void 
+vl::ManagerMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
+{
+	assert(owner);
+	owner->meshLoaded(name, mesh);
+}
+
 vl::MasterMeshLoaderCallback::MasterMeshLoaderCallback(vl::ResourceManagerRefPtr res_man)
 	: manager(res_man)
 {}
 
-/// Blocks till the mesh is loaded and returns a valid mesh
-vl::MeshRefPtr 
-vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName)
+/// Blocks till the mesh is loaded and passes a valid mesh to callback
+void 
+vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName, vl::MeshLoadedCallback *cb)
 {
 	std::clog << "vl::MasterMeshLoaderCallback::loadMesh : " << fileName << std::endl;
 	if(!manager)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
 	}
+	assert(cb);
 
 	Resource data;
 	manager->loadMeshResource(fileName, data);
@@ -40,12 +48,13 @@ vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName)
 	ser.readMesh(mesh, data);
 
 	std::clog << "Read mesh " << mesh->getName() << " from file resource." << std::endl;
-	return mesh;
+	
+	cb->meshLoaded(mesh);
 }
 
 /// ------------------------------- MeshManager ------------------------------
 vl::MeshRefPtr
-vl::MeshManager::loadMesh(std::string const &file_name, bool block)
+vl::MeshManager::loadMesh(std::string const &file_name)
 {
 	vl::MeshRefPtr mesh;
 	/// Mesh has already been created
@@ -53,20 +62,48 @@ vl::MeshManager::loadMesh(std::string const &file_name, bool block)
 	{
 		mesh = getMesh(file_name);
 	}
-	else if( block )
+	else
 	{
 		if(!_load_callback)
 		{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
-		mesh = _load_callback->loadMesh(file_name);
-		_meshes[file_name] = mesh;
-	}
-	else
-	{
-		std::clog << "vl::MeshManager::loadMesh : non blocking version not implemented" << std::endl;
-		BOOST_THROW_EXCEPTION(vl::not_implemented());
+
+		MeshLoadedCallback *cb = new ManagerMeshLoadedCallback(file_name, this);
+		/// Blocking callback
+		_load_callback->loadMesh(file_name, cb);
+		delete cb;	// can delete because loader was blocking
+		
+		// mesh is now loaded
+		assert(hasMesh(file_name));
+		mesh = getMesh(file_name);
 	}
 
 	return mesh;
+}
+
+void
+vl::MeshManager::loadMesh(std::string const &file_name,  MeshLoadedCallback *cb)
+{
+	assert(cb);
+
+	if(hasMesh(file_name))
+	{
+		cb->meshLoaded(getMesh(file_name));
+	}
+	else
+	{
+		ListenerMap::iterator iter = _waiting_for_loading.find(file_name);
+		if(iter != _waiting_for_loading.end())
+		{
+			/// assume that this is not called twice with same cb
+			iter->second.push_back(cb);
+			// No need to call load it's already called
+		}
+		else
+		{
+			_waiting_for_loading[file_name].push_back(cb);
+			_load_callback->loadMesh(file_name, new ManagerMeshLoadedCallback(file_name, this));
+		}
+	}
 }
 
 void
@@ -197,4 +234,26 @@ vl::MeshManager::cleanup_unused(void)
 {
 	std::clog << "vl::MeshManager::cleanup_unused" << std::endl;
 	BOOST_THROW_EXCEPTION(vl::not_implemented());
+}
+
+void 
+vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
+{
+	std::clog << "vl::MeshManager::meshLoaded : " << mesh_name 
+		<< " :  waiting for loading size " << _waiting_for_loading.size() << std::endl;
+	// add to loaded stack
+	assert(!hasMesh(mesh_name));
+	_meshes[mesh_name] = mesh;
+
+	// check listeners
+	ListenerMap::iterator iter = _waiting_for_loading.find(mesh_name);
+	if(iter != _waiting_for_loading.end())
+	{
+		for(size_t i = 0; i < iter->second.size(); ++i)
+		{
+			iter->second.at(i)->meshLoaded(mesh);
+		}
+		_waiting_for_loading.erase(iter);
+	}
+	// else this was called using a blocking loader
 }

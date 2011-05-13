@@ -58,6 +58,10 @@ struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
 
 	virtual vl::cluster::Message createInitMessage(void);
 
+	virtual vl::cluster::Message createEnvironmentMessage(void);
+
+	virtual vl::cluster::Message createProjectMessage(void);
+
 	/// @todo add CREATE_MSG and UPDATE_MSG also
 
 	virtual vl::cluster::Message createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name);
@@ -108,6 +112,10 @@ public:
 	/// @todo fix const correctness, this method should not modify the object 
 	vl::cluster::Message createMsgInit(void);
 
+	vl::cluster::Message createMsgEnvironment(void) const;
+
+	vl::cluster::Message createMsgProject(void) const;
+
 protected :
 	// Helpers that update local renderer and do slave rpc calls
 	void _setEnvironment(vl::EnvSettingsRefPtr env);
@@ -124,9 +132,6 @@ protected :
 	void _createMsgCreate(void);
 	// This shouldn't be called more than once per frame, resets changes
 	void _createMsgUpdate(void);
-
-	void _sendEnvironment(vl::EnvSettingsRefPtr env);
-	void _sendProject(vl::Settings const &proj);
 
 	// Send message to all receivers
 	void _sendMessage(vl::cluster::Message const &msg);
@@ -166,7 +171,7 @@ protected :
 
 	vl::GameManagerPtr _game_manager;
 
-	vl::Settings _settings;
+	vl::Settings _proj;
 
 	vl::EnvSettingsRefPtr _env;
 

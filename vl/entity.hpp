@@ -12,6 +12,8 @@
 #include <string>
 
 #include "typedefs.hpp"
+/// Necessary for the Loaded callback
+#include "mesh_manager.hpp"
 
 #include <OGRE/OgreEntity.h>
 
@@ -24,6 +26,19 @@ enum PREFAB
 	PF_PLANE,
 	PF_SPHERE,
 	PF_CUBE,
+};
+
+/// @brief Callback functor for non-blocking mesh loading
+/// Called from MeshManager when mesh has been loaded.
+/// We need to use non-blocking mesh loading, because loading a mesh
+/// would otherwise distrubt the message system.
+struct EntityMeshLoadedCallback : public vl::MeshLoadedCallback
+{
+	EntityMeshLoadedCallback(Entity *ent);
+
+	virtual void meshLoaded(vl::MeshRefPtr mesh);
+
+	Entity *owner;
 };
 
 /**	@class Entity
@@ -74,6 +89,10 @@ public :
 		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 4,
 	};
 
+	/// Internal
+	/// Callback for MeshManager when background loading is used
+	void meshLoaded(vl::MeshRefPtr mesh);
+
 	// @todo needs a size (bounding box size is fine) and a scale
 
 /// Virtual overrides
@@ -88,6 +107,8 @@ private :
 	virtual void doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 	virtual bool _doCreateNative(void);
+
+	bool _finishCreateNative(void);
 
 	/// clears the structure to default values, called from constructors
 	void _clear(void);
@@ -105,6 +126,9 @@ private :
 	std::string _material_name;
 
 	Ogre::Entity *_ogre_object;
+
+	// Save the loader pointer so it can be destroyed when not needed anymore
+	EntityMeshLoadedCallback *_loader_cb;
 };
 
 inline std::ostream &

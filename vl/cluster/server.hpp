@@ -36,6 +36,10 @@ struct ServerDataCallback : public vl::Callback
 	/// Create the SceneGraph init message
 	virtual Message createInitMessage(void) = 0;
 
+	virtual Message createEnvironmentMessage(void) = 0;
+
+	virtual Message createProjectMessage(void) = 0;
+
 	/// @todo add CREATE_MSG and UPDATE_MSG also
 
 	/// Create a resource message containing certain type of resource with the name
@@ -49,11 +53,18 @@ public:
 	struct ClientInfo
 	{
 		ClientInfo(boost::udp::endpoint const &p)
-			: address(p)//, state(s), updates(0), frame(0), rendering(false), output(false)
+			: address(p)
+			, environment_sent_time(vl::time(10, 0))
 		{}
 
 		boost::udp::endpoint address;
 		ClientState state;
+
+		/// Used for not trying to send environment less than a couple of seconds a part
+		vl::timer environment_sent_time;
+
+		/// What messages have been sent to the client without receiving an ACK
+		std::map<vl::time, MessagePart> _sent_msgs;
 	};
 
 	Server(uint16_t const port, ServerDataCallback *cb);
@@ -83,13 +94,6 @@ public:
 	/// second it will always provide the latest version when it's needed
 	/// no more copying temporaries and sending them when requested.
 	void sendMessage(Message const &msg);
-
-	/// Store the Environment message for further use
-	void sendEnvironment( Message const &msg );
-
-	/// Store the project message for further use
-	// Can be updated by a another call and will be sent again to all clients
-	void sendProject( Message const &msg );
 
 	/// Send an SceneGraph update
 	void sendUpdate( Message const &msg );
@@ -138,8 +142,6 @@ private :
 
 	ClientInfo const *_find_client_ptr(boost::udp::endpoint const &address) const;
 
-	void _sendEnvironment(ClientInfo const &client);
-
 	// Updates the clients update frame after sending
 	// Which will ensure that no matter where and how many times
 	// this is called the same messaage will never be sent more than once
@@ -150,8 +152,6 @@ private :
 	void _sendOuput(ClientInfo &client);
 
 	void _sendMessage(ClientInfo const &client, vl::cluster::Message const &msg);
-
-	void _sendMessage(boost::udp::endpoint const &endpoint, vl::cluster::Message const &msg);
 
 	void _handle_ack(ClientInfo &client, MSG_TYPES ack_to);
 
@@ -171,21 +171,18 @@ private :
 
 	std::deque<Message> _messages;
 
-	/// Messages stored for when new clients connect
-	/// Environment message, set in the start
-	std::vector<char> _env_msg;
-	/// Project message, the latest one set
-	std::vector<char> _proj_msg;
+	/// @todo this should be removed, use a callback to create it when needed
 	/// Last update message? Might need a whole vector of these
-	std::vector<char> _msg_update;
+	Message _msg_update;
 
 	/// Create MSGs
 	std::vector< std::pair<uint32_t, Message> > _msg_creates;
 
+	// @todo these should be in GameManager/Config
 	uint32_t _frame;
 	uint32_t _update_frame;
 
-	// @todo should this be moved to Config?
+	// @todo this should be moved to GameManager
 	vl::timer _sim_timer;
 
 	uint32_t _n_log_messages;

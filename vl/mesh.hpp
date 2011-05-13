@@ -216,6 +216,7 @@ public :
 	SubMesh(void)
 		: operationType(Ogre::RenderOperation::OT_TRIANGLE_LIST)
 		, useSharedGeometry(true)
+		, vertexData(0)
 	{}
 
 	~SubMesh(void) {}
@@ -252,12 +253,13 @@ private :
 
 
 std::ostream &operator<<( std::ostream &os, SubMesh const &m );
+
 /// @class Mesh
 /// @todo add rebuildTangents function, similar to the one in Ogre::Mesh
 /// @todo add calculateSmoothNormals, for Blender exporter
 /// @todo add getPolygonCount, calculates the number of polygons in all SubMeshes
 /// @todo add merge, merges two meshes preserving their SubMeshes
-/// @todo add name, used as file name and to distinguis the Mesh
+/// @todo add nameSubMesh
 /// @todo add mergeSubMeshes, merges all SubMeshes to one and uses the material supplied
 class Mesh
 {

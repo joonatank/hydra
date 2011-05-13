@@ -67,6 +67,9 @@ public :
 	vl::Player const &getPlayer( void ) const
 	{ return *_player; }
 
+	virtual vl::MeshManagerRefPtr getMeshManager(void)
+	{ return _mesh_manager; }
+
 	/// Messaging system
 	void sendEvent( vl::cluster::EventData const &event );
 
@@ -173,6 +176,7 @@ protected :
 	vl::EnvSettingsRefPtr _env;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;

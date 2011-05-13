@@ -17,39 +17,52 @@
 namespace vl
 {
 
-/// Abstract interface for really loading a mesh
-/// Implementations:
-/// Master blocking and non-blocking
-/// Slave blocking and non-blocking
-struct MeshLoaderCallback
+/// Callback for the one needing the mesh
+struct MeshLoadedCallback
 {
-	/// For blocking loader returns the Mesh created
-	/// For non-blocking loader returns NULL
-	virtual vl::MeshRefPtr loadMesh(std::string const &fileName) = 0;
+	virtual ~MeshLoadedCallback(void) {}
+
+	virtual void meshLoaded(vl::MeshRefPtr mesh) = 0;
 };
 
-struct BlockingMeshLoaderCallback : public MeshLoaderCallback
+struct ManagerMeshLoadedCallback : public MeshLoadedCallback
 {
+	ManagerMeshLoadedCallback(std::string const &mesh_name, MeshManager *man)
+		: name(mesh_name), owner(man)
+	{}
 
+	virtual void meshLoaded(vl::MeshRefPtr mesh);
+
+	std::string name;
+	MeshManager *owner;
+};
+
+/// Abstract interface for really loading a mesh
+/// Can be either blocking of non-blocking, uses callbacks for both
+/// For master the default implementation is blocking (because of the lack of threading system)
+/// For slaves the only implementation is non-blocking
+/// because blocking would screw up the Message system and the slaves are automatically
+/// threaded with regards to resource loading (done by the master thread).
+struct MeshLoaderCallback
+{
+	/// @param cb callback called when the Mesh is loaded (with the Mesh)
+	virtual void loadMesh(std::string const &fileName, MeshLoadedCallback *cb) = 0;
 };
 
 /// blocking mesh loader for master
-struct MasterMeshLoaderCallback : public BlockingMeshLoaderCallback
+struct MasterMeshLoaderCallback : public MeshLoaderCallback
 {
 	MasterMeshLoaderCallback(vl::ResourceManagerRefPtr res_man);
 
 	/// Blocks till the mesh is loaded and returns a valid mesh
-	virtual vl::MeshRefPtr loadMesh(std::string const &fileName);
+	virtual void loadMesh(std::string const &fileName, MeshLoadedCallback *cb);
 
 	vl::ResourceManagerRefPtr manager;
 };
 
-/// @todo add non-blocking callbacks
+/// @todo add non-blocking callback for Master
 
-/// @todo add a callback for loading the actual mesh
-/// for Master this callback loads a file using ResourceManager
-/// for slaves this callback sends a load message to Server
-/// both blocking and non-blocking versions can be provided
+
 class MeshManager
 {
 public :
@@ -62,8 +75,13 @@ public :
 	virtual ~MeshManager(void)
 	{}
 
+	/// @brief blocking mesh loading
 	/// @todo only precreated mesh loading is implemented
-	virtual vl::MeshRefPtr loadMesh(std::string const &file_name, bool block = true);
+	virtual vl::MeshRefPtr loadMesh(std::string const &file_name);
+
+	/// @brief Non-blocking mesh loading, for masters this is still blocking
+	/// Master will need a threaded loader which is not supplied for now
+	virtual void loadMesh(std::string const &file_name, MeshLoadedCallback *cb);
 
 	/// @todo not implemented
 	virtual void writeMesh(vl::MeshRefPtr, std::string const &file_name);
@@ -102,13 +120,20 @@ public :
 
 	/// @todo not implemented
 	/// @brief checks every Mesh loaded and unloads it if there is no users
-	virtual void cleanup_unused(void);
+	void cleanup_unused(void);
+
+	/// @brief callback function
+	void meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh);
 
 	typedef std::map<std::string, vl::MeshRefPtr> MeshMap;
 
 private :
 	MeshLoaderCallback *_load_callback;
 
+	typedef std::map<std::string, std::vector<MeshLoadedCallback *> > ListenerMap;
+
+	/// Meshes that are loaded in the background
+	ListenerMap _waiting_for_loading;
 	MeshMap _meshes;
 };
 

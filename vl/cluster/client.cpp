@@ -37,42 +37,44 @@ vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::Clien
 	: owner(own)
 {}
 
-/// Blocks till the mesh is loaded and returns a valid mesh
-vl::MeshRefPtr
-vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName)
+void
+vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName, vl::MeshLoadedCallback *cb)
 {
 	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : " << fileName << std::endl;
 	if(!owner)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
 	}
+	assert(cb);
 
-//	BOOST_THROW_EXCEPTION(vl::not_implemented());
 	/// @todo fix time and frame parameters
 	Message reg_msg(MSG_REG_RESOURCE, 0, vl::time());
 	reg_msg.write(RES_MESH);
 	reg_msg.write(fileName);
 	owner->sendMessage(reg_msg);
+}
 
-	/// @todo it's not enough that the type of the Message matches
-	/// for blocking functions this might not be a problem but for non-blocking
-	/// this is a disaster.
-	MessageRefPtr msg = owner->waitForMessage(MSG_RESOURCE);
+vl::cluster::ResourceMessageCallback::ResourceMessageCallback(MeshManager *man)
+	: manager(man)
+{ assert(manager); }
+
+void
+vl::cluster::ResourceMessageCallback::messageReceived(MessageRefPtr msg)
+{
 	assert(!msg->empty());
 
-	vl::MeshRefPtr mesh(new vl::Mesh(fileName));
-	MessageStream stream = msg->getStream();
+	MessageDataStream stream = msg->getStream();
 	RESOURCE_TYPE type;
 	std::string name;
 	stream >> type >> name;
-	std::cout << "Resource type = " << type << " : name = " << name << std::endl;
+	std::clog << "Resource type = " << type << " : name = " << name << std::endl;
+
 	assert(type == RES_MESH);
-	assert(name == fileName);
+
+	vl::MeshRefPtr mesh(new vl::Mesh(name));
 	stream >> (*mesh);
 
-	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : got mesh data" << std::endl;
-
-	return mesh;
+	manager->meshLoaded(name, mesh);
 }
 
 /// ------------------------------ Client -------------------------------------
@@ -97,6 +99,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(this);
 	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
 	_renderer->setMeshManager(mesh_man);
+	addMessageCallback(MSG_RESOURCE, new ResourceMessageCallback(mesh_man.get()));
 
 	std::stringstream ss;
 	ss << port;
@@ -106,14 +109,15 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 
 	_socket.open( boost::udp::v4() );
 
-	// @todo this is not a real solution but allowes us to receive large
-	// messages
-	// replace this by dividing the messages to multiple parts before
-	// sending
-	boost::asio::socket_base::receive_buffer_size buf_size(8*8192);
-	_socket.set_option(buf_size);
-	std::cout << "vl::cluster::Client::Client : Receive Buffer size = "
-		<< buf_size.value() << "." << std::endl;
+	// Large receive buffer is necessary for receiving multiple messages
+	// have a look at Server for more information.
+	boost::asio::socket_base::receive_buffer_size rec_buf_size(1024*1024);
+	boost::asio::socket_base::send_buffer_size send_buf_size;
+	_socket.set_option(rec_buf_size);
+	_socket.get_option(send_buf_size);
+
+	std::cout << "Receive Buffer size = " << rec_buf_size.value() << "." 
+		<< " Send buffer size = " << send_buf_size.value() << "." << std::endl;
 
 	// Needs to sent the request as soon as possible
 	assert( !_state.environment );
@@ -124,8 +128,6 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 
 vl::cluster::Client::~Client( void )
 {
-	std::cout << vl::TRACE << "vl::cluster::Client::~Client" << std::endl;
-
 	for( std::vector<vl::Callback *>::iterator iter = _callbacks.begin();
 		iter != _callbacks.end(); ++iter )
 	{ delete *iter; }
@@ -149,7 +151,7 @@ vl::cluster::Client::mainloop(void)
 	while(_socket.available())
 	{
 		MessageRefPtr msg = _receive();
-		if(msg && MSG_UNDEFINED != msg->getType())
+		if(msg)
 		{
 			_handle_message(*msg);
 		}
@@ -161,6 +163,7 @@ vl::cluster::Client::mainloop(void)
 	// blocking function
 	if( !_state.environment && double(_request_timer.elapsed()) > 0.1 )
 	{
+		std::clog << "Sending another MSG_REG_UPDATES" << std::endl;
 		Message msg( MSG_REG_UPDATES, 0, vl::time() );
 		sendMessage(msg);
 		_request_timer.reset();
@@ -171,8 +174,13 @@ void
 vl::cluster::Client::sendMessage(vl::cluster::Message const &msg)
 {
 	std::vector<char> buf;
-	msg.dump(buf);
-	_socket.send_to( boost::asio::buffer(buf), _master );
+	std::vector<MessagePart> parts = msg.createParts();
+
+	for(size_t i = 0; i < parts.size(); ++i)
+	{
+		parts.at(i).dump(buf);
+		_socket.send_to(boost::asio::buffer(buf), _master);
+	}
 }
 
 vl::cluster::MessageRefPtr
@@ -216,6 +224,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 	{
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
+			std::clog << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
 			/// Single environment supported
 			if( !_state.environment )
 			{
@@ -325,6 +334,9 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		}
 		break;
 
+		case  vl::cluster::MSG_UNDEFINED :
+			std::clog << "ERROR : Undefined message should never be processed." << std::endl;
+
 		default:
 		{
 			assert(_renderer.get());
@@ -342,12 +354,26 @@ vl::cluster::Client::_send_ack(vl::cluster::MSG_TYPES type)
 	sendMessage(msg);
 }
 
+void 
+vl::cluster::Client::addMessageCallback(MSG_TYPES type, ClientMessageCallback *cb)
+{
+	/// Only Single callback per type is allowed
+	assert(_msg_callbacks.find(type) == _msg_callbacks.end());
+
+	_msg_callbacks[type] = cb;
+}
+
 vl::cluster::MessageRefPtr 
 vl::cluster::Client::_receive(void)
 {
 	MessageRefPtr msg;
 
-	if(_socket.available())
+	/// @todo problematic here is that we can not receive more than one
+	/// complete message at a time
+	/// but if we don't get all the messages at once and add them to a
+	/// received stack in the order they are received (or have been sent)
+	/// we are using newer messages instead of the older.
+	while(_socket.available() && !msg)
 	{
 		std::vector<char> recv_buf(_socket.available());
 		boost::system::error_code error;
@@ -377,8 +403,53 @@ vl::cluster::Client::_receive(void)
 
 		if( n > 0 )
 		{
-			msg.reset(new Message(recv_buf));
-			_send_ack(msg->getType());
+			MessagePart part(recv_buf);
+			// @todo send id and part number also
+			_send_ack(part.type);
+			if(part.parts == 1)
+			{
+				msg.reset(new Message(part));
+			}
+			else
+			{
+				bool consumed = false;
+				for(size_t i = 0; i < _partial_messages.size(); ++i)
+				{
+					MessageRefPtr p_m = _partial_messages.at(i);
+					if(p_m->getType() == part.type && p_m->getID() == part.id)
+					{
+						p_m->addPart(part);
+						consumed = true;
+						if( !p_m->partial() )
+						{
+							std::clog << "Partial message with type = " 
+								<< getTypeAsString(p_m->getType()) << " id = " << p_m->getID()
+								<< " made whole." << std::endl;
+							msg = p_m;
+							_partial_messages.erase(_partial_messages.begin()+i);
+						}
+						break;
+					}
+				}
+				if(!consumed)
+				{
+					MessageRefPtr p_m(new Message(part));
+					_partial_messages.push_back(p_m);
+				}
+			}
+		}
+	}
+
+	if(msg)
+	{
+		std::map<MSG_TYPES, ClientMessageCallback *>::iterator iter 
+			= _msg_callbacks.find(msg->getType());
+		if(iter != _msg_callbacks.end())
+		{
+			std::clog << "Callback found for message type : " << getTypeAsString(msg->getType())
+				<< std::endl;
+			iter->second->messageReceived(msg);
+			msg.reset();
 		}
 	}
 

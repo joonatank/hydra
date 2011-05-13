@@ -660,17 +660,14 @@ vl::Mesh::calculateBounds(void)
 			_bounds.merge(box);
 		}
 	}
-
-	std::clog << "Setting new bounding box for " << getName() 
-		<< " box = " << getBounds() << std::endl;
 }
 
 template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexDeclaration const &decl)
 {
-	std::clog << "Serializing vertex semantics." << std::endl;
 	msg << decl.getSemantics();
+
 	return msg;
 }
 
@@ -678,8 +675,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexDeclaration &decl)
 {
-	std::clog << "Deserializing vertex semantics." << std::endl;
 	msg >> decl.getSemantics();
+
 	return msg;
 }
 
@@ -687,7 +684,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
 {
-	std::clog << "Serializing vertex data." << std::endl;
 	msg << vbuf.vertexDeclaration << vbuf._vertices;
 
 	return msg;
@@ -697,7 +693,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
 {
-	std::clog << "Deserializing vertex data." << std::endl;
 	msg >> vbuf.vertexDeclaration >> vbuf._vertices;
 
 	return msg;
@@ -707,7 +702,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::IndexBuffer const &ibf)
 {
-	std::clog << "Serializing IndexBuffer : with index count " << ibf.indexCount() << std::endl;
 	msg << ibf.getIndexSize();
 	if(ibf.getIndexSize() == IT_32BIT)
 	{
@@ -725,7 +719,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::IndexBuffer &ibf)
 {
-	std::clog << "Deserializing IndexBuffer." << std::endl;
 	INDEX_SIZE index_size;
 	msg >> index_size;
 	ibf.setIndexSize(index_size);
@@ -738,7 +731,6 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::IndexBuffer &ibf)
 		msg >> ibf.getVec16();
 	}
 
-	std::clog << "Index buffer with " << ibf.indexCount() << " indices deserialized." << std::endl;
 	return msg;
 }
 
@@ -746,11 +738,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &sm)
 {
-	std::clog << "Serializing SubMesh." << std::endl;
-
 	msg << sm.getName() << sm.getMaterial() << sm.operationType << sm.indexData << sm.useSharedGeometry;
 
-	/// @todo add serializing sub mesh dedicated geometry
 	if(!sm.useSharedGeometry)
 	{ msg << *sm.vertexData; }
 
@@ -761,7 +750,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &sm)
 {
-	std::clog << "Deserializing SubMesh." << std::endl;
 	std::string name;
 	std::string material;
 
@@ -769,9 +757,14 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &sm)
 	sm.setName(name);
 	sm.setMaterial(material);
 
-	/// @todo add serializing sub mesh dedicated geometry
 	if(!sm.useSharedGeometry)
-	{ msg >> *sm.vertexData; }
+	{
+		if(!sm.vertexData)
+			sm.vertexData = new VertexData;
+		msg >> *sm.vertexData;
+	}
+	else if(sm.vertexData)
+		delete sm.vertexData;
 
 	return msg;
 }
@@ -780,14 +773,13 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::Mesh const &mesh)
 {
-	std::clog << "Serializing Mesh." << std::endl;
-
 	if(mesh.sharedVertexData)
 		msg << true << *mesh.sharedVertexData;
 	else
 		msg << false;
 
 	msg << mesh.getBoundingSphereRadius() << mesh.getBounds();
+	
 	msg << mesh.getSubMeshes().size();
 	for(size_t i = 0; i < mesh.getSubMeshes().size(); ++i)
 	{ msg << *mesh.getSubMeshes().at(i); }
@@ -799,8 +791,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
 {
-	std::clog << "Deserializing Mesh." << std::endl;
-
 	bool has_shared_vertex_data;
 	msg >> has_shared_vertex_data;
 

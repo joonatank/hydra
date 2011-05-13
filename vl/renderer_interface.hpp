@@ -76,6 +76,8 @@ public :
 
 	virtual vl::Player const &getPlayer( void ) const = 0;
 
+	virtual vl::MeshManagerRefPtr getMeshManager(void) = 0;
+
 	virtual vl::EnvSettings::Window getWindowConf(std::string const &name) = 0;
 
 	// Callbacks

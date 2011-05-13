@@ -919,6 +919,8 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 void
 vl::Renderer::_handleUpdateMsg(vl::cluster::Message &msg)
 {
+	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
 	/// @TODO multiple update messages in the same frame,
