@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+
+<clients>
+	<!--
+	incorrect_quaternion attribute uses (w, x, y, z) quaternion instead
+	of VRPN (x, y, z, w) quaternion. It's recerved for dealing with buggy
+	interfaces like Mevea's.
+	-->
+	<client type="VRPN" host="mec-0.rd.tut.fi" port="3884" incorrect_quaternion="true">
+		<tracker name="DMTracker">
+			<!-- The first sensor is the for the Static environment i.e. the cave
+			<sensor num="0"/>
+			-->
+			<sensor num="1">
+				<trigger type="VRPN" name="etuakseliTrigger" />
+			</sensor>
+			<sensor num="2">
+				<trigger type="VRPN" name="panhardTrigger" />
+			</sensor>
+			<sensor num="3">
+				<trigger type="VRPN" name="eturunkoTrigger" />
+			</sensor>
+			<sensor num="4">
+				<trigger type="VRPN" name="takarunkoTrigger" />
+			</sensor>
+			<sensor num="5">
+				<trigger type="VRPN" name="lavaTrigger" />
+			</sensor>
+			<sensor num="6">
+				<trigger type="VRPN" name="vaimennin_SOPTrigger" />
+			</sensor>
+			<sensor num="7">
+				<trigger type="VRPN" name="vaimennin_SOMTrigger" />
+			</sensor>
+			<sensor num="8">
+				<trigger type="VRPN" name="vaimennin_SVPTrigger" />
+			</sensor>
+			<sensor num="9">
+				<trigger type="VRPN" name="vaimennin_SVMTrigger" />
+			</sensor>
+			<sensor num="10">
+				<trigger type="VRPN" name="ohjaamoTrigger" />
+			</sensor>
+			<!-- no model for this one -->
+			<sensor num="11">
+				<trigger type="VRPN" name="penkkiTrigger" />
+			</sensor>
+			<sensor num="12">
+				<trigger type="VRPN" name="ohjaus_SOPTrigger" />
+			</sensor>
+			<sensor num="13">
+				<trigger type="VRPN" name="ohjaus_SOMTrigger" />
+			</sensor>
+			<sensor num="14">
+				<trigger type="VRPN" name="ohjaus_SVPTrigger" />
+			</sensor>
+			<sensor num="15">
+				<trigger type="VRPN" name="ohjaus_SVMTrigger" />
+			</sensor>
+			<sensor num="16">
+				<trigger type="VRPN" name="rengas_OETrigger" />
+			</sensor>
+			<sensor num="17">
+				<trigger type="VRPN" name="rengas_VETrigger" />
+			</sensor>
+			<sensor num="18">
+				<trigger type="VRPN" name="rengas_OTTrigger" />
+			</sensor>
+			<sensor num="19">
+				<trigger type="VRPN" name="rengas_VTTrigger" />
+			</sensor>
+			<!-- sensor 20 kuorma, no model -->
+			<sensor num="20">
+				<trigger type="VRPN" name="kuormaTrigger" />
+			</sensor>
+			<sensor num="21">
+				<trigger type="VRPN" name="kippi_SOPTrigger" />
+			</sensor>
+			<sensor num="22">
+				<trigger type="VRPN" name="kippi_SOMTrigger" />
+			</sensor>
+			<sensor num="23">
+				<trigger type="VRPN" name="kippi_SVPTrigger" />
+			</sensor>
+			<sensor num="24">
+				<trigger type="VRPN" name="kippi_SVMTrigger" />
+			</sensor>
+		</tracker>
+
+		<tracker name="DMTrackerParticles">
+		</tracker>
+	</client>
+
+</clients>

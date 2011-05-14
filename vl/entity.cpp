@@ -100,11 +100,12 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 	}
 
 	_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
-	assert(og_mesh == _ogre_object->getMesh());
+
 	std::clog << "Creating entity : with ogre mesh " << _mesh_name << " : bounds = " << og_mesh->getBounds()
 		<< " is loaded = " << og_mesh->isLoaded() << std::endl;
 
 	delete _loader_cb;
+	_loader_cb = 0;
 
 	_finishCreateNative();
 }

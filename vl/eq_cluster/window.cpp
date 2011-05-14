@@ -500,9 +500,6 @@ vl::Window::draw(void)
 
 	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
 
-	Ogre::Matrix4 projMat = calculate_projection_matrix(c_near, c_far, _wall);
-	og_cam->setCustomProjectionMatrix( true, projMat );
-
 	// if stereo is not enabled ipd should be zero 
 	// TODO should it be forced though?
 	if(!hasStereo())
@@ -513,6 +510,9 @@ vl::Window::draw(void)
 	// @todo rendering GUI for both eyes
 
 	vl::Transform const &head = getPlayer().getHeadTransform();
+
+	Ogre::Matrix4 projMat = calculate_projection_matrix(c_near, c_far, _wall, head.position);
+	og_cam->setCustomProjectionMatrix( true, projMat );
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
 

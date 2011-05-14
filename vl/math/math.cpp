@@ -62,7 +62,7 @@ vl::fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 
 Ogre::Matrix4 
 vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
-								vl::EnvSettings::Wall const &wall)
+								vl::EnvSettings::Wall const &wall, Ogre::Vector3 const &head)
 {
 	/* Projection matrix i.e. frustum
 	 * | E	0	A	0 |
@@ -108,12 +108,6 @@ vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 	// obtain the correct scale
 	// If scale is negative it rotates 180 deg around z,
 	// i.e. flips to the other side of the wall
-	//
-	// This comes because the front axis for every wall is different so for
-	// front wall z-axis is the left walls x-axis.
-	// Without the scale those axes will differ relative to each other.
-	// Huh?
-	// 
 
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
@@ -124,21 +118,20 @@ vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 	Ogre::Real left = wall_left/scale;
 
 	// Golden ratio for the frustum
+	// Should be tested with the head tracking if it doesn't work provide an
+	// alternative to use golden ratio for one screen systems and non for VR
 	Ogre::Real wall_height = wall_top - wall_bottom;
 //	Ogre::Real top = (wall_top - (1/PHI)*wall_height)/scale;
 //	Ogre::Real bottom = (wall_bottom - (1/PHI)*wall_height)/scale;
-	
-	// Calculating bottom and top this way ensures no disjoint
-	// between side and front walls, at least when objects are outside
-	// the projection walls.
-	// The projection is best using these, though I have no idea why.
-	// Tried to use Golden ration (above), scale factor, half height of a wall
-	Ogre::Real top = (wall_top - wall_height)/scale;
-	Ogre::Real bottom = (wall_bottom - wall_height)/scale;
+
+	// The head tracker y needs to be present for there to be no disjoint
+	// between side and front walls.
+	Ogre::Real top = (wall_top - head.y)/scale;
+	Ogre::Real bottom = (wall_bottom - head.y)/scale;
 
 	Ogre::Matrix4 projMat;
 
-	/// test version from Equalizer vmmlib/frustum
+	// from Equalizer vmmlib/frustum
 	projMat[0][0] = 2.0 * near_plane / ( right - left );
 	projMat[0][1] = 0.0;
 	projMat[0][2] = ( right + left ) / ( right - left );
