@@ -451,6 +451,13 @@ vl::Window::draw(void)
 		og_cam->setOrientation(eye_orientation);
 
 		view.get<0>()->update();
+
+		// @todo test with stereo setup if this really renders the gui for
+		// both left and right eye
+		if( _renderer->guiShown() )
+		{
+			CEGUI::System::getSingleton().renderGUI();
+		}
 	}
 
 	// Push back the original position and orientation

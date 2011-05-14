@@ -174,11 +174,6 @@ vl::Renderer::draw(void)
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 
-	if( guiShown() )
-	{
-		CEGUI::System::getSingleton().renderGUI();
-	}
-
 	_root->getNative()->_fireFrameEnded();
 }
 
