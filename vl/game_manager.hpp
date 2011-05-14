@@ -29,7 +29,6 @@
 
 #include "session.hpp"
 
-#include "gui/gui.hpp"
 #include "stats.hpp"
 #include "base/timer.hpp"
 #include "logger.hpp"
@@ -156,10 +155,10 @@ public :
 	MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
 
-	void setGUI( vl::gui::GUI *gui )
+	void setGUI(vl::gui::GUIRefPtr gui)
 	{ _gui = gui; }
 
-	vl::gui::GUI *getGUI( void )
+	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
 
 	vl::Stats &getStats(void)
@@ -289,7 +288,7 @@ private :
 	/// Tracking
 	vl::ClientsRefPtr _trackers;
 
-	vl::gui::GUI *_gui;
+	vl::gui::GUIRefPtr _gui;
 
 	vl::Stats _stats;
 

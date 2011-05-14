@@ -19,6 +19,8 @@
 // Player
 #include "player.hpp"
 
+#include "gui/gui.hpp"
+
 // Physics
 #include "physics/physics_world.hpp"
 

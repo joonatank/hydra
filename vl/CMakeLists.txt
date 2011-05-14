@@ -61,6 +61,8 @@ set( SOURCES
 	mesh_serializer_impl.cpp
 	mesh_manager.cpp
 	mesh.cpp
+	gui/gui.cpp
+	gui/window.cpp
 	)
 
 set( HEADERS
@@ -133,6 +135,9 @@ set( HEADERS
 	physics/constraints.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
+	gui/gui.hpp
+	gui/window.hpp
+	gui/gui_actions.hpp
 	)
 
 add_library(HydraMain ${SOURCES} ${HEADERS} )

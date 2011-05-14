@@ -40,6 +40,8 @@
 
 #include "renderer_interface.hpp"
 
+#include "gui/gui.hpp"
+
 /// ---------------------------------- Callbacks -----------------------------
 vl::ConfigMsgCallback::ConfigMsgCallback(vl::Config *own)
 	: owner(own)
@@ -118,7 +120,6 @@ vl::Config::Config( vl::Settings const & settings,
 	, _proj(settings)
 	, _env(env)
 	, _server()
-	, _gui(0)
 	, _running(true)
 	, _renderer(rend)
 {
@@ -196,8 +197,8 @@ vl::Config::init( void )
 	// TODO move this to do an automatic registration similar to SceneManager
 	registerObject( player, OBJ_PLAYER );
 
-	_gui = new vl::gui::GUI( this, vl::ID_UNDEFINED );
-	_game_manager->setGUI(_gui);
+	vl::gui::GUIRefPtr gui(new vl::gui::GUI(this));
+	_game_manager->setGUI(gui);
 
 	vl::SceneManager *sm = _game_manager->getSceneManager();
 	assert( sm );

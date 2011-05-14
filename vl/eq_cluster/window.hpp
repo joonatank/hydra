@@ -81,33 +81,11 @@ public:
 	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
 
-	/// GECUI callbacks
-
-	/// Editor events
-	/// Menubar buttons clicked
-	bool onNewClicked( CEGUI::EventArgs const &e );
-	bool onOpenClicked( CEGUI::EventArgs const &e );
-	bool onSaveClicked( CEGUI::EventArgs const &e );
-	bool onQuitClicked( CEGUI::EventArgs const &e );
-	bool onResetClicked( CEGUI::EventArgs const &e );
-	bool onImportSceneClicked( CEGUI::EventArgs const &e );
-	bool onReloadScenesClicked( CEGUI::EventArgs const &e );
-	bool onNewScriptClicked( CEGUI::EventArgs const &e );
-	bool onAddScriptClicked( CEGUI::EventArgs const &e );
-	bool onReloadScriptsClicked( CEGUI::EventArgs const &e );
-
-	/// Checkboxes
-	bool onShowAxisChanged( CEGUI::EventArgs const &e );
-	bool onShowNamesChanged( CEGUI::EventArgs const &e );
-	bool onShowJointsChanged( CEGUI::EventArgs const &e );
-
 	/// Instruct the Channels to draw the Scene
 	virtual void draw( void );
 
 	/// Swap the back buffer to front
 	virtual void swap( void );
-
-	void createGUIWindow( void );
 
 protected :
 	Ogre::RenderWindow *_createOgreWindow( vl::EnvSettings::Window const &winConf );

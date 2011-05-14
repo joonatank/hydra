@@ -13,19 +13,14 @@
 #include "scene_manager.hpp"
 
 #include "settings.hpp"
-#include "gui/gui.hpp"
 
 #include "logger.hpp"
-
-#include <CEGUI/CEGUIWindow.h>
 
 // Base class
 #include "renderer_interface.hpp"
 
 namespace vl
 {
-
-class Window;
 
 /**	@class Pipe
  *	@brief Representation of a pipe i.e. a single GPU
@@ -88,40 +83,14 @@ public :
 
 	typedef std::vector<vl::ProjSettingsRefPtr> ProjectList;
 
-	virtual bool guiShown( void ) const
-	{
-		if( !_gui )
-		{ return false; }
-		return _gui->shown();
-	}
+	virtual bool guiShown(void) const;
 
-	CEGUI::Window *getEditor( void )
-	{ return _editor; }
-
-	CEGUI::Window *getConsole( void )
-	{ return _console; }
-
+	/// @brief passes the messages to GUI::Console
 	void printToConsole(std::string const &text, double time,
 						std::string const &type = std::string(),
 						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
 
-	/// GECUI callbacks
-	/// Console events
-	bool onConsoleInputAccepted(CEGUI::EventArgs const &e);
-
-	/// @brief Scroll the console memory using up and down arrows
-	/// If there is new user input it will be saved to the bottom of scroll
-	bool onConsoleInputKeyDown(CEGUI::EventArgs const &e);
-
-	/// @brief When console is shown it will automatically focus on the input
-	bool onConsoleShow(CEGUI::EventArgs const &e);
-
 	void reloadProjects( vl::Settings const &set );
-
-	/// GUI specific
-	void initGUIResources( vl::Settings const &set );
-	void addGUIResourceGroup( std::string const &name, fs::path const &path );
-	void createGUI( void );
 
 	/// Overrides from Abstract interface
 	/// @brief interface through which the Renderer is controlled
@@ -137,8 +106,6 @@ public :
 	virtual uint32_t nLoggedMessages(void) const;
 
 protected :
-	/// GUI specific
-	void _initGUI( void );
 
 	/// Ogre helpers
 	void _createOgre(vl::EnvSettingsRefPtr env);
@@ -174,6 +141,7 @@ protected :
 
 	/// EnvSettings mapped from Master
 	vl::EnvSettingsRefPtr _env;
+	vl::Settings _settings;
 
 	vl::MeshManagerRefPtr _mesh_manager;
 
@@ -195,16 +163,7 @@ protected :
 	std::vector<vl::Window *> _windows;
 
 	/// GUI related
-	vl::gui::GUI *_gui;
-
-	CEGUI::Window *_console;
-	CEGUI::Window *_editor;
-	CEGUI::Window *_loading_screen;
-	CEGUI::Window *_stats;
-
-	std::deque<std::string> _console_memory;
-	int _console_memory_index;
-	std::string _console_last_command;
+	vl::gui::GUIRefPtr _gui;
 
 	bool _running;
 	bool _rendering;

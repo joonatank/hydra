@@ -2,16 +2,17 @@
  *	@date 2011-02
  *	@file gui.hpp
  *
+ *	This file is part of Hydra VR game engine.
  */
 
-#ifndef VL_GUI_GUI_HPP
-#define VL_GUI_GUI_HPP
+#ifndef HYDRA_GUI_GUI_HPP
+#define HYDRA_GUI_GUI_HPP
 
 #include "distributed.hpp"
 #include "session.hpp"
-#include "action.hpp"
 
-#include "window.hpp"
+// Necessary for command callback
+#include "renderer_interface.hpp"
 
 namespace vl
 {
@@ -25,113 +26,80 @@ namespace gui
 class GUI : public vl::Distributed
 {
 public :
-	GUI( vl::Session *session, uint64_t id = vl::ID_UNDEFINED )
-		: _editor_shown(false)
-		, _console_shown(false)
-		, _stats_shown(false)
-		, _loading_screen_shown(false)
-	{
-		session->registerObject(this, OBJ_GUI, id);
-	}
+	/// @brief Master constructor
+	GUI(vl::Session *session);
 
-	void setEditor( WindowRefPtr win )
-	{ _editor = win; }
+	/// @brief Slave or Renderer constructor
+	/// @param session the distributed session this GUI is attached to
+	/// @param id ID of this GUI, has to be valid
+	/// @param cb callback for sendCommand, ownership is passed to this
+	GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb);
+	
+	void initGUI(vl::Window *win);
+	void initGUIResources(vl::Settings const &set);
+	void addGUIResourceGroup(std::string const &name, fs::path const &path);
+	void createGUI(void);
 
-	void showEditor( void )
-	{
-		if( !_editor_shown )
-		{
-			setDirty(DIRTY_EDITOR);
-			_editor_shown = true;
-		}
-	}
+	EditorWindowRefPtr getEditor(void)
+	{ return _editor; }
 
-	void hideEditor( void )
-	{
-		if( _editor_shown )
-		{
-			setDirty(DIRTY_EDITOR);
-			_editor_shown = false;
-		}
-	}
+	void showEditor(void)
+	{ setEditorVisibility(true); }
+
+	void hideEditor(void)
+	{ setEditorVisibility(false); }
+
+	void setEditorVisibility(bool vis);
 
 	bool editorShown( void ) const
 	{ return _editor_shown; }
 
-	void setConsole( WindowRefPtr win )
-	{ _console = win; }
+	ConsoleWindowRefPtr getConsole(void)
+	{ return _console; }
 
-	void showConsole( void )
-	{
-		if( !_console_shown )
-		{
-			setDirty(DIRTY_CONSOLE);
-			_console_shown = true;
-		}
-	}
+	void setConsoleVisibility(bool vis);
 
-	void hideConsole( void )
-	{
-		if( _console_shown )
-		{
-			setDirty(DIRTY_CONSOLE);
-			_console_shown = false;
-		}
-	}
+	void showConsole(void)
+	{ setConsoleVisibility(true); }
+
+	void hideConsole(void)
+	{ setConsoleVisibility(false); }
 
 	bool consoleShown( void ) const
 	{ return _console_shown; }
 
-	void setStats( WindowRefPtr win )
-	{ _stats = win; }
+	WindowRefPtr getStats(void)
+	{ return _stats; }
 
-	void showStats( void )
-	{
-		if( !_stats_shown )
-		{
-			setDirty(DIRTY_STATS);
-			_stats_shown = true;
-		}
-	}
+	void setStatsVisibility(bool vis);
 
-	void hideStats( void )
-	{
-		if( _stats_shown )
-		{
-			setDirty(DIRTY_STATS);
-			_stats_shown = false;
-		}
-	}
+	void showStats(void)
+	{ setStatsVisibility(true); }
+
+	void hideStats(void)
+	{ setStatsVisibility(false); }
 
 	bool statsShown( void ) const
 	{ return _stats_shown; }
 
-	void setLoadingScreen( WindowRefPtr win )
-	{ _loading_screen = win; }
+	WindowRefPtr getLoadingScreen(void)
+	{ return _loading_screen; }
 
-	void showLoadingScreen( void )
-	{
-		if( !_loading_screen_shown )
-		{
-			setDirty(DIRTY_LOADING_SCREEN);
-			_loading_screen_shown = true;
-		}
-	}
+	void setLoadingScreenVisibility(bool vis);
 
-	void hideLoadingScreen( void )
-	{
-		if( _loading_screen_shown )
-		{
-			setDirty(DIRTY_LOADING_SCREEN);
-			_loading_screen_shown = false;
-		}
-	}
+	void showLoadingScreen(void)
+	{ setLoadingScreenVisibility(true); }
+
+	void hideLoadingScreen(void)
+	{ setLoadingScreenVisibility(false); }
 
 	bool loadingScreenShown( void ) const
 	{ return _loading_screen_shown; }
 
 	bool shown( void ) const
 	{ return consoleShown() || editorShown(); }
+
+	void sendCommand(std::string const &cmd);
 
 	enum DirtyBits
 	{
@@ -144,59 +112,10 @@ public :
 
 /// Private Methods
 private :
-	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits )
-	{
-		if( DIRTY_EDITOR & dirtyBits )
-		{
-			msg << _editor_shown;
-		}
 
-		if( DIRTY_CONSOLE & dirtyBits )
-		{
-			msg << _console_shown;
-		}
+	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits );
 
-		if( DIRTY_STATS & dirtyBits )
-		{
-			msg << _stats_shown;
-		}
-
-		if( DIRTY_LOADING_SCREEN & dirtyBits )
-		{
-			msg << _loading_screen_shown;
-		}
-	}
-
-	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits )
-	{
-		if( DIRTY_EDITOR & dirtyBits )
-		{
-			msg >> _editor_shown;
-			if( _editor )
-			{ _editor->setVisible(_editor_shown); }
-		}
-
-		if( DIRTY_CONSOLE & dirtyBits )
-		{
-			msg >> _console_shown;
-			if( _console )
-			{ _console->setVisible(_console_shown); }
-		}
-
-		if( DIRTY_STATS & dirtyBits )
-		{
-			msg >> _stats_shown;
-			if( _stats )
-			{ _stats->setVisible(_stats_shown); }
-		}
-
-		if( DIRTY_LOADING_SCREEN & dirtyBits )
-		{
-			msg >> _loading_screen_shown;
-			if( _loading_screen )
-			{ _loading_screen->setVisible(_loading_screen_shown); }
-		}
-	}
+	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 /// Data
 private :
@@ -205,98 +124,17 @@ private :
 	bool _stats_shown;
 	bool _loading_screen_shown;
 
-	vl::gui::WindowRefPtr _editor;
-	vl::gui::WindowRefPtr _console;
+	vl::gui::EditorWindowRefPtr _editor;
+	vl::gui::ConsoleWindowRefPtr _console;
 	vl::gui::WindowRefPtr _stats;
 	vl::gui::WindowRefPtr _loading_screen;
 
+	vl::CommandCallback *_cmd_cb;
+
 };	// class GUI
-
-/// Actions
-class GUIActionBase
-{
-public :
-	GUIActionBase( void )
-		: _gui(0)
-	{}
-
-	void setGUI( GUI *gui )
-	{ _gui = gui; }
-
-	GUI *getGUI( void )
-	{ return _gui; }
-
-protected :
-	GUI *_gui;
-
-};
-
-class HideEditor : public BasicAction, public GUIActionBase
-{
-public :
-	virtual void execute( void )
-	{
-		assert( _gui );
-		_gui->hideEditor();
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "HideEditor"; }
-
-	static HideEditor *create( void )
-	{ return new HideEditor; }
-};
-
-class ShowEditor : public BasicAction, public GUIActionBase
-{
-public :
-	virtual void execute( void )
-	{
-		assert( _gui );
-		_gui->showEditor();
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "ShowEditor"; }
-
-	static ShowEditor *create( void )
-	{ return new ShowEditor; }
-};
-
-class HideConsole : public BasicAction, public GUIActionBase
-{
-public :
-	virtual void execute( void )
-	{
-		assert( _gui );
-		_gui->hideConsole();
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "HideConsole"; }
-
-	static HideConsole *create( void )
-	{ return new HideConsole; }
-};
-
-class ShowConsole : public BasicAction, public GUIActionBase
-{
-public :
-	virtual void execute( void )
-	{
-		assert( _gui );
-		_gui->showConsole();
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "ShowConsole"; }
-
-	static ShowConsole *create( void )
-	{ return new ShowConsole; }
-};
 
 }	// namespace gui
 
 }	// namespace vl
 
-#endif	// VL_GUI_GUI_HPP
+#endif	// HYDRA_GUI_GUI_HPP

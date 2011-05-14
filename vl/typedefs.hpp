@@ -26,6 +26,8 @@ namespace vl
 	class ResourceManager;
 	class PythonContext;
 	
+	class Window;
+	
 	class Sensor;
 	class Tracker;
 	class Clients;
@@ -94,6 +96,19 @@ namespace vl
 	{
 		virtual ~Callback(void) {}
 	};
+
+namespace gui
+{
+	class GUI;
+	class Window;
+	class EditorWindow;
+	class ConsoleWindow;
+
+	typedef boost::shared_ptr<GUI> GUIRefPtr;
+	typedef boost::shared_ptr<Window> WindowRefPtr;
+	typedef boost::shared_ptr<EditorWindow> EditorWindowRefPtr;
+	typedef boost::shared_ptr<ConsoleWindow> ConsoleWindowRefPtr;
+}
 
 namespace physics
 {

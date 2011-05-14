@@ -17,8 +17,6 @@
 // A base class for the Config
 #include "session.hpp"
 
-#include "gui/gui.hpp"
-
 #include "trigger.hpp"
 
 #include "logger.hpp"
@@ -178,8 +176,6 @@ protected :
 	vl::cluster::ServerRefPtr _server;
 	/// timer used to see how much delay there is with server updates
 	vl::timer _server_timer;
-
-	vl::gui::GUI *_gui;
 
 	vl::timer _stats_timer;
 

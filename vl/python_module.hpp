@@ -1,11 +1,17 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file python_module.cpp
+ *
+ *	This file is part of Hydra VR game engine.
  */
+
 #ifndef VL_PYTHON_MODULE_HPP
 #define VL_PYTHON_MODULE_HPP
 
+// Game
 #include "game_manager.hpp"
+
+// SceneGraph
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
 #include "entity.hpp"
@@ -22,10 +28,14 @@
 #include "actions_misc.hpp"
 #include "trigger.hpp"
 
+// GUI
 #include "gui/gui.hpp"
+#include "gui/gui_actions.hpp"
 
 // Python global
 #include "python.hpp"
+
+// Physics
 #include "physics/physics_events.hpp"
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
@@ -93,7 +103,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
-		.add_property("gui", python::make_function( &vl::GameManager::getGUI, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("gui", &vl::GameManager::getGUI)
 		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property( "physics_world", python::make_function( &vl::GameManager::getPhysicsWorld, python::return_value_policy<python::reference_existing_object>() ) )
 		.def( "enableAudio", &vl::GameManager::enableAudio )
@@ -538,7 +548,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// GUI actions
-	python::class_<vl::gui::GUI, boost::noncopyable>("GUI", python::no_init )
+	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
 		.def("showEditor", &vl::gui::GUI::showEditor )
 		.def("hideEditor", &vl::gui::GUI::hideEditor )
 		.def("showConsole", &vl::gui::GUI::showConsole )
@@ -550,7 +560,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<vl::gui::GUIActionBase, boost::noncopyable>("GUIActionBase", python::no_init )
-		.add_property("gui", python::make_function( &vl::gui::GUIActionBase::getGUI, python::return_value_policy< python::reference_existing_object>() ), &vl::gui::GUIActionBase::setGUI )
+		.add_property("gui", &vl::gui::GUIActionBase::getGUI, &vl::gui::GUIActionBase::setGUI )
 	;
 
 	python::class_<vl::gui::HideEditor, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideEditor", python::no_init )

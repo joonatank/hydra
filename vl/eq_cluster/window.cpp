@@ -378,114 +378,6 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	return true;
 }
 
-/// ------------------------ Public CEGUI callbacks ----------------------------
-bool
-vl::Window::onNewClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onNewClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onOpenClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onOpenClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onSaveClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onSaveClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onQuitClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onQuitClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	_renderer->sendCommand( "quit()" );
-
-	return true;
-}
-
-bool
-vl::Window::onResetClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onResetClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onImportSceneClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onImportSceneClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onReloadScenesClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onReloadScenesClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-
-bool
-vl::Window::onNewScriptClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onNewScriptClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onAddScriptClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onAddScriptClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onReloadScriptsClicked( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onReloadScriptsClicked");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onShowAxisChanged( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onShowAxisChanged");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onShowNamesChanged( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onShowNamesChanged");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
-bool
-vl::Window::onShowJointsChanged( CEGUI::EventArgs const &e )
-{
-	std::string msg("vl::Window::onShowJointsChanged");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-	return true;
-}
-
 /// ----------------------------- Public methods -------------------------------
 void
 vl::Window::draw(void)
@@ -589,13 +481,6 @@ vl::Window::capture( void )
 	{
 		_joysticks.at(i)->capture();
 	}
-}
-
-void
-vl::Window::createGUIWindow(void)
-{
-	std::string message = "vl::Window::createGUIWindow";
-	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 }
 
 /// ------------------------------- Protected ----------------------------------

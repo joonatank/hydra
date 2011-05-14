@@ -15,21 +15,12 @@
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
 
+#include "gui/gui.hpp"
 #include "gui/window.hpp"
+
 #include "logger.hpp"
 
 #include <OGRE/OgreWindowEventUtilities.h>
-
-/// GUI
-#include <CEGUI/CEGUI.h>
-#include <CEGUI/RendererModules/Ogre/CEGUIOgreRenderer.h>
-#include <CEGUI/CEGUISystem.h>
-#include <CEGUI/CEGUIWindow.h>
-#include <CEGUI/CEGUIWindowManager.h>
-#include <CEGUI/CEGUIDefaultResourceProvider.h>
-#include <CEGUI/CEGUIImageset.h>
-#include <CEGUI/CEGUIScheme.h>
-#include <CEGUI/CEGUIInputEvent.h>
 
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
@@ -40,16 +31,10 @@ vl::Renderer::Renderer(std::string const &name)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
-	, _gui(0)
-	, _console(0)
-	, _editor(0)
-	, _loading_screen(0)
-	, _stats(0)
-	, _console_memory_index(-1)	// Using -1 index to indicate not using memory
 	, _send_message_cb(0)
 	, _n_log_messages(0)
 {
-	std::cout << vl::TRACE << "vl::Pipe::Pipe : name = " << _name << std::endl;
+	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
 }
 
 vl::Renderer::~Renderer(void)
@@ -90,8 +75,6 @@ vl::Renderer::init(vl::EnvSettingsRefPtr env)
 
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{ _createWindow( node.getWindow(i) ); }
-
-	_initGUI();
 }
 
 vl::EnvSettings::Node
@@ -165,157 +148,21 @@ vl::Renderer::capture(void)
 	_sendEvents();
 }
 
+bool 
+vl::Renderer::guiShown(void) const
+{
+	if( !_gui )
+	{ return false; }
+	return _gui->shown();
+}
+
 void
 vl::Renderer::printToConsole(std::string const &text, double time,
 						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
 {
-	CEGUI::MultiColumnList *output = static_cast<CEGUI::MultiColumnList *>( _console->getChild("console/output") );
-	assert( output );
-
-	// Add time
-	std::stringstream ss;
-	ss << time;
-	CEGUI::ListboxTextItem *item = new CEGUI::ListboxTextItem(ss.str());
-	CEGUI::uint row = output->addRow(item, 1);
-
-	// Set line number
-	ss.str("");
-	ss << row;
-	item = new CEGUI::ListboxTextItem(ss.str());
-	output->setItem(item, 0, row);
-
-	// Add the text field
-	CEGUI::String prefix;
-	if( lvl == vl::LML_CRITICAL )
-	{ prefix = "CRITICAL : "; }
-	else if( lvl == vl::LML_TRIVIAL )
-	{ prefix = "TRIVIAL : "; }
-
-	item = new CEGUI::ListboxTextItem(prefix + CEGUI::String(text));
-	// Save data type for filtering, HOW?
-	if( type == "OUT" )
-	{
-		item->setTextColours(CEGUI::colour(0, 0.2, 0.4));
-	}
-	else if( type == "ERROR" )
-	{
-		item->setTextColours(CEGUI::colour(0.5, 0, 0));
-	}
-	else if( type == "PY_OUT" )
-	{
-		item->setTextColours(CEGUI::colour(0, 0.5, 0.5));
-	}
-	else if( type == "PY_ERROR" )
-	{
-		item->setTextColours(CEGUI::colour(0.5, 0.2, 0));
-	}
-	output->setItem(item, 2, row);
+	_gui->getConsole()->printTo(text, time, type, lvl);
 }
 
-
-/// ------------------------- GECUI callbacks ----------------------------------
-bool
-vl::Renderer::onConsoleInputAccepted( CEGUI::EventArgs const &e )
-{
-	assert( _console );
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
-	assert( input );
-
-	std::string command( input->getText().c_str() );
-
-	if( command.size() > 0 )
-	{
-		input->setText("");
-
-		if( *(command.end()-1) == ':' )
-		{
-			std::string str("Multi Line commands are not supported yet.");
-			printToConsole(str, 0);
-		}
-		else
-		{
-			while( _console_memory.size() > 100 )
-			{ _console_memory.pop_back(); }
-
-			_console_memory.push_front(command);
-
-			// TODO add support for time
-			printToConsole(command, 0);
-
-			sendCommand(command);
-		}
-
-		// Reset the memory index because the user has accepted the command
-		_console_memory_index = -1;
-		_console_last_command.clear();
-	}
-
-	return true;
-}
-
-bool
-vl::Renderer::onConsoleInputKeyDown(const CEGUI::EventArgs& e)
-{
-	assert( _console );
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
-	assert( input );
-
-	CEGUI::KeyEventArgs const &key = static_cast<CEGUI::KeyEventArgs const &>(e);
-	if(key.scancode == CEGUI::Key::ArrowUp)
-	{
-		// Save the current user input when the list has not been scrolled
-		if( _console_memory_index == -1 )
-		{
-			_console_last_command = input->getText().c_str();
-		}
-
-		++_console_memory_index;
-		if( _console_memory_index >= _console_memory.size() )
-		{ _console_memory_index = _console_memory.size()-1; }
-
-		if( _console_memory_index > -1 )
-		{
-			std::string command = _console_memory.at(_console_memory_index);
-
-			input->setText(command);
-			input->setCaratIndex(input->getText().size());
-		}
-
-		return true;
-	}
-	else if(key.scancode == CEGUI::Key::ArrowDown)
-	{
-		--_console_memory_index;
-		if( _console_memory_index < 0 )
-		{
-			_console_memory_index = -1;
-			input->setText(_console_last_command);
-		}
-		else
-		{
-			std::string command = _console_memory.at(_console_memory_index);
-
-			input->setText(command);
-			input->setCaratIndex(input->getText().size());
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-bool
-vl::Renderer::onConsoleShow(const CEGUI::EventArgs& e)
-{
-	assert( _console );
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
-	assert( input );
-
-	input->activate();
-
-	return true;
-}
 
 void
 vl::Renderer::draw(void)
@@ -340,198 +187,6 @@ vl::Renderer::swap(void)
 {
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->swap(); }
-}
-
-void
-vl::Renderer::initGUIResources( vl::Settings const &settings )
-{
-	std::string message( "vl::Pipe::_initGUIResources" );
-	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
-
-	assert( !settings.empty() );
-	// Find global project and add those resources as default
-	std::string projName("global");
-	if( settings.hasProject(projName) )
-	{
-		vl::ProjSettings const &proj = settings.findProject(projName);
-		message = "Found " + projName + " project";
-		Ogre::LogManager::getSingleton().logMessage(message);
-
-		fs::path gui_path = fs::path(settings.getDir(proj)) / "gui";
-		if( fs::is_directory( gui_path ) )
-		{
-			addGUIResourceGroup( "schemes", gui_path / "schemes/" );
-			addGUIResourceGroup( "imagesets", gui_path / "imagesets/" );
-			addGUIResourceGroup( "fonts", gui_path / "fonts/" );
-			addGUIResourceGroup( "layouts", gui_path / "layouts/" );
-			addGUIResourceGroup( "looknfeels", gui_path / "looknfeel/" );
-			addGUIResourceGroup( "lua_scripts", gui_path / "lua_scripts/" );
-
-			// set the default resource groups to be used
-			CEGUI::Imageset::setDefaultResourceGroup("imagesets");
-			CEGUI::Font::setDefaultResourceGroup("fonts");
-			CEGUI::Scheme::setDefaultResourceGroup("schemes");
-			CEGUI::WidgetLookManager::setDefaultResourceGroup("looknfeels");
-			CEGUI::WindowManager::setDefaultResourceGroup("layouts");
-			CEGUI::ScriptModule::setDefaultResourceGroup("lua_scripts");
-		}
-		else
-		{
-			message = projName + " Does not have gui resource directory.";
-			Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
-		}
-	}
-	else
-	{
-		message = projName + " NOT found. There will be no GUI.";
-		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
-	}
-
-	// Find editor project and add those resources to groupd editor
-	projName = "editor";
-	if( settings.hasProject(projName) )
-	{
-		message = "Found editor project";
-		Ogre::LogManager::getSingleton().logMessage(message);
-		settings.findProject(projName);
-
-		// TODO really load the editor resources
-	}
-	else
-	{
-		message = projName + " NOT found. There will be no Editor.";
-		Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_CRITICAL);
-	}
-
-	// TODO Add project and add those resources to group projectName
-}
-
-void
-vl::Renderer::addGUIResourceGroup( std::string const &name, fs::path const &path )
-{
-	CEGUI::DefaultResourceProvider *rp = static_cast<CEGUI::DefaultResourceProvider *>
-		(CEGUI::System::getSingleton().getResourceProvider());
-	assert(rp);
-
-	if( fs::is_directory( path ) )
-	{
-		std::string message = "GUI resource " + name + " added "
-			" with path " + path.file_string() + ".";
-		Ogre::LogManager::getSingleton().logMessage(message);
-
-		rp->setResourceGroupDirectory( name, path.file_string() );
-	}
-	else
-	{
-		std::string message = "GUI resource " + name + " couldn't be added "
-			"because path " + path.file_string() + " does NOT exist.";
-		Ogre::LogManager::getSingleton().logMessage(message);
-	}
-}
-
-void
-vl::Renderer::createGUI(void )
-{
-	std::cout << vl::TRACE << "vl::Renderer::createGUI" << std::endl;
-
-	// Load default data files used for the GUI
-	CEGUI::SchemeManager::getSingleton().create( "TaharezLook.scheme" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-7.font" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-8.font" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-10.font" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-9.font" );
-	CEGUI::FontManager::getSingleton().create( "DejaVuSans-6.font" );
-	CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook", "MouseArrow" );
-
-	// Create the GUI windows
-	assert( _windows.size() > 0 );
-	Window *win = _windows.at(0);
-
-	CEGUI::Window *myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
-	CEGUI::System::getSingleton().setGUISheet( myRoot );
-	_editor = myRoot->getChild("editor");
-
-	_console = CEGUI::WindowManager::getSingleton().loadWindowLayout( "console.layout" );
-	myRoot->addChildWindow(_console);
-
-	_loading_screen = CEGUI::WindowManager::getSingleton().loadWindowLayout( "loading_screen.layout" );
-	myRoot->addChildWindow(_loading_screen);
-	_loading_screen->hide();
-
-	_stats = CEGUI::WindowManager::getSingleton().loadWindowLayout( "stats.layout" );
-	myRoot->addChildWindow(_stats);
-	_stats->hide();
-
-	win->createGUIWindow();
-
-	/// Subscripe to events
-	_console->subscribeEvent(CEGUI::FrameWindow::EventShown, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleShow, this));
-
-	CEGUI::MultiLineEditbox *output = static_cast<CEGUI::MultiLineEditbox *>( _console->getChild("console/output") );
-	assert(output);
-	assert(output->getVertScrollbar());
-	output->getVertScrollbar()->setEndLockEnabled(true);
-
-	CEGUI::Editbox *input = static_cast<CEGUI::Editbox *>( _console->getChild("console/input") );
-	assert(input);
-	input->subscribeEvent(CEGUI::Editbox::EventTextAccepted, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleInputAccepted, this));
-	input->subscribeEvent(CEGUI::Editbox::EventKeyDown, CEGUI::Event::Subscriber(&vl::Renderer::onConsoleInputKeyDown, this));
-
-	CEGUI::MenuItem *item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onNewClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/openItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onOpenClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/saveItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onSaveClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/quitItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onQuitClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/resetItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onResetClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/importSceneItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onImportSceneClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/reloadScenes") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onReloadScenesClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/addScriptItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onAddScriptClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/newScriptItem") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onNewScriptClicked, win));
-
-	item = static_cast<CEGUI::MenuItem *>( _editor->getChildRecursive("editor/reloadScripts") );
-	assert( item );
-	item->subscribeEvent(CEGUI::MenuItem::EventClicked, CEGUI::Event::Subscriber(&vl::Window::onReloadScriptsClicked, win));
-
-
-	CEGUI::Checkbox *checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showAxes") );
-	assert( checkBox );
-	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowAxisChanged, win));
-
-	checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showNames") );
-	assert( checkBox );
-	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowNamesChanged, win));
-
-	checkBox = static_cast<CEGUI::Checkbox *>( _editor->getChildRecursive("editor/showJoints") );
-	assert( checkBox );
-	checkBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged, CEGUI::Event::Subscriber(&vl::Window::onShowJointsChanged, win));
-
-	// TODO support for multiple windows
-	// at the moment every window will get the same GUI window layout
 }
 
 void
@@ -567,19 +222,9 @@ vl::Renderer::handleMessage(vl::cluster::Message &msg)
 			vl::SettingsByteData data;
 			data.copyFromMessage(&msg);
 			vl::cluster::ByteDataStream stream(&data);
-			vl::Settings projects;
-			stream >> projects;
+			stream >> _settings;
 
-			_initialiseResources(projects);
-
-			// TODO these should be moved elsewhere from project (to env)
-			initGUIResources(projects);
-			createGUI();
-
-			// Request output updates for the console
-			assert( _send_message_cb );
-			vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
-			(*_send_message_cb)(msg);
+			_initialiseResources(_settings);
 		}
 		break;
 
@@ -635,7 +280,7 @@ vl::Renderer::setSendMessageCB(vl::MsgCallback *cb)
 bool 
 vl::Renderer::logEnabled(void) const
 {
-	if( _console && _console->isChild("console/output") )
+	if(_gui && _gui->getConsole() && _gui->getConsole()->wantsLogging())
 	{ return true; }
 
 	return false;
@@ -653,26 +298,7 @@ vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
 
 /// ------------------------ Protected -----------------------------------------
-void
-vl::Renderer::_initGUI(void)
-{
-	std::string message( "vl::Pipe::_initGUI" );
-	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
 
-	// TODO support for multiple windows
-
-	// TODO this should be cleanup, should work with any codec or parser...
-#ifdef VL_WIN32
-	CEGUI::System::setDefaultImageCodecName( "SILLYImageCodec" );
-	CEGUI::System::setDefaultXMLParserName( "ExpatParser" );
-#endif
-	assert( _windows.size() > 0);
-	Ogre::RenderWindow *win = _windows.at(0)->getRenderWindow();
-	assert(win);
-
-	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*win);
-	CEGUI::System::create(myRenderer);
-}
 
 /// Ogre helpers
 void
@@ -851,21 +477,35 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 
 			case OBJ_GUI :
 			{
-				std::cout << vl::TRACE << "Creating GUI" << std::endl;
-				vl::gui::GUI *gui = new vl::gui::GUI( this, id );
-				gui->setEditor( vl::gui::WindowRefPtr( new vl::gui::Window(_editor) ) );
-				gui->setConsole( vl::gui::WindowRefPtr( new vl::gui::Window(_console) ) );
-				gui->setLoadingScreen( vl::gui::WindowRefPtr( new vl::gui::Window(_loading_screen) ) );
-				gui->setStats( vl::gui::WindowRefPtr( new vl::gui::Window(_stats) ) );
-				
-				// Only single instances are supported for now
-				assert(!_gui && gui);
-				_gui = gui;
+				// Only creating GUI on the master for now
+				// @todo add support for selecting the window
+				if( getName() == _env->getMaster().name )
+				{
+					std::cout << vl::TRACE << "Creating GUI" << std::endl;
+					// Do not create the GUI multiple times
+					assert(!_gui);
+					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
+					assert(_windows.size() > 0);
+					_gui->initGUI(_windows.at(0));
+					assert(!_settings.empty());
+
+					_gui->initGUIResources(_settings);
+					_gui->createGUI();
+
+					// Request output updates for the console
+					if(logEnabled())
+					{
+						assert( _send_message_cb );
+						vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
+						(*_send_message_cb)(msg);
+					}
+				}
 			}
 			break;
 
 			case OBJ_SCENE_MANAGER :
 			{
+				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
 				// TODO support multiple SceneManagers
 				assert(!_scene_manager);
 				assert(!_ogre_sm);
@@ -873,13 +513,11 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-				std::clog << "SceneManager created." << std::endl;
 			}
 			break;
 
 			case OBJ_SCENE_NODE :
 			{
-				std::cout << vl::TRACE << "Creating SceneNode" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createSceneNode(id);
 			}
@@ -889,21 +527,18 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 			/// use the same create function
 			case OBJ_ENTITY :
 			{
-				std::cout << vl::TRACE << "Creating Entity" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createEntity(id);
 				break;
 			}
 			case OBJ_LIGHT :
 			{
-				std::cout << vl::TRACE << "Creating Light" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createLight(id);
 				break;
 			}
 			case OBJ_CAMERA :
 			{
-				std::cout << vl::TRACE << "Creating Camera" << std::endl;
 				assert( _scene_manager );
 				_scene_manager->_createCamera(id);
 				break;

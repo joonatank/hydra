@@ -27,6 +27,13 @@ struct MsgCallback : public Callback
 	virtual void operator()(vl::cluster::Message const &) = 0;
 };
 
+struct CommandCallback : public Callback
+{
+	virtual ~CommandCallback(void) {}
+
+	virtual void operator()(std::string const &) = 0;
+};
+
 /**	@class RendererInterface
  *	@brief Abstract interface for the renderer
  */
@@ -88,6 +95,21 @@ public :
 	virtual void setSendMessageCB(MsgCallback *cb) = 0;
 
 };	// class RendererInterface
+
+struct RendererCommandCallback : public CommandCallback
+{
+	RendererCommandCallback(RendererInterface *rend)
+		: renderer(rend)
+	{}
+
+	virtual void operator()(std::string const &cmd)
+	{
+		assert(renderer);
+		renderer->sendCommand(cmd);
+	}
+
+	RendererInterface *renderer;
+};
 
 }	// namespace vl
 
