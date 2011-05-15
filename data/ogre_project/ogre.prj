@@ -13,7 +13,8 @@ Ogre test project used for testing and demonstrating eqOgre
 		<scene name="ogre" use="true">
 			<file>ogre.scene</file>
 		</scene>
-		<scene name="athene" use="true">
+		<!-- test the support for new mesh manager in config -->
+		<scene name="athene" use="true" use_new_mesh_manager="true">
 			<file>athene.scene</file>
 		</scene>
 

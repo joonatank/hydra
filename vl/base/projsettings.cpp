@@ -23,7 +23,7 @@
 #include "filesystem.hpp"
 #include "exceptions.hpp"
 
-
+#include "string_utils.hpp"
 
 /// Needed for writing the xml struct to string
 #include "rapidxml_print.hpp"
@@ -399,8 +399,8 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 {
 	std::string name;
 	// Name
-	rapidxml::xml_attribute<>* name_attrib = xml_node->first_attribute("name");
-	if( !name_attrib )
+	rapidxml::xml_attribute<>* attrib = xml_node->first_attribute("name");
+	if(!attrib)
 	{
 		std::cerr << "Name of scene in case " << c.getName()
 			<< " missing" << std::endl;
@@ -408,14 +408,14 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 	}
 	else
 	{
-		name = name_attrib->value();
+		name = attrib->value();
 	}
 
 	ProjSettings::Scene &s = c.addScene(name);
 
 	// Use
-	rapidxml::xml_attribute<>* use_attrib = xml_node->first_attribute("use");
-	if( !use_attrib )
+	attrib = xml_node->first_attribute("use");
+	if(!attrib)
 	{
 		s.setUse( true );
 		std::cerr << "Defaultin use of scene " << s.getName()
@@ -423,17 +423,25 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 	}
 	else
 	{
-		std::string useStr = use_attrib->value();
-		if( useStr == "true" )
-		{ s.setUse( true ); }
-		else if( useStr == "false" )
-		{ s.setUse( false ); }
-		else
-		{
-			s.setUse( false );
-			std::cerr << "Errenous use attribute of scene " << s.getName()
-				<< ". Defaulting to false." << std::endl;
-		}
+		bool use = vl::from_string<bool>(attrib->value());
+		s.setUse(use);
+	}
+
+	attrib = xml_node->first_attribute("use_new_mesh_manager");
+	if(attrib)
+	{
+		CFG use = CFG_OFF;
+		bool val = vl::from_string<bool>(attrib->value());
+		if(val)
+		{ use = CFG_ON; }
+		s.setUseNewMeshManager(use);
+	}
+
+	attrib = xml_node->first_attribute("enable_physics");
+	if(attrib)
+	{
+		bool use = vl::from_string<bool>(attrib->value());
+		s.setUsePhysics(use);
 	}
 
 	// File

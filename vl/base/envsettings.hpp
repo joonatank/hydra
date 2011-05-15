@@ -25,14 +25,6 @@
 namespace vl
 {
 
-/// @enum CFG Configurations tokens for boolean values
-enum CFG
-{
-	OFF,
-	ON,
-	REQUIRED,
-};
-
 enum LogLevel
 {
 	LL_LOW = 0,

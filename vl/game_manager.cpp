@@ -268,9 +268,15 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 	vl::TextResource resource;
 	getReourceManager()->loadResource(scene_info.getFile(), resource);
 
-	vl::DotSceneLoader loader;
+	// Default to false for now
+	bool use_mesh = false;
+	if(scene_info.getUseNewMeshManager() == CFG_ON)
+	{ use_mesh = true; }
+
+	vl::DotSceneLoader loader(use_mesh);
 	// TODO pass attach node based on the scene
 	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+	// @todo add physics
 	loader.parseDotScene(resource, getSceneManager());
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;

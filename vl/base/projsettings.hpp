@@ -27,16 +27,28 @@
 namespace vl
 {
 
+// Three value configs
+enum CFG
+{
+	// Uses parents settings, might be global config settings or program defaults
+	CFG_DEFAULT,
+	CFG_OFF,
+	CFG_ON,
+};
+
 struct SceneInfo
 {
-	SceneInfo( std::string const &n = "",
-			bool u = false,
-			std::string const &f = "",
-			std::string const &s ="",
-			std::string const &p = "",
-			bool c = false )
-		: _name(n), _use(u), _file(f),
-			_attachto_scene(s), _attachto_point(p), _changed(c)
+	SceneInfo( std::string const &name = "",
+			bool use = false,
+			std::string const &file = "",
+			std::string const &attach_scene ="",
+			std::string const &attach_point = "")
+		: _name(name), _use(use), _file(file)
+		, _attachto_scene(attach_scene)
+		, _attachto_point(attach_point)
+		, _use_new_mesh_manager(CFG_DEFAULT)
+		, _use_physics(false)
+		, _changed(false)
 	{}
 
 	void setName( std::string const &name )
@@ -69,6 +81,18 @@ struct SceneInfo
 	std::string const &getAttachtoPoint( void ) const
 	{ return _attachto_point; }
 
+	void setUseNewMeshManager(CFG val)
+	{ _use_new_mesh_manager = val; _changed = true; }
+	
+	CFG getUseNewMeshManager(void) const
+	{ return _use_new_mesh_manager; }
+
+	void setUsePhysics(bool val)
+	{ _use_physics = val; _changed = true; }
+
+	bool getUsePhysics(void) const
+	{ return _use_physics; }
+
 	bool getChanged( void ) const
 	{ return _changed; }
 
@@ -81,6 +105,8 @@ private :
 	std::string _file;
 	std::string _attachto_scene;
 	std::string _attachto_point;
+	CFG _use_new_mesh_manager;
+	bool _use_physics;
 	bool _changed;
 
 };	// class Scene

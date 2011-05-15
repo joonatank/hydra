@@ -26,7 +26,7 @@ namespace vl
 class DotSceneLoader
 {
 public :
-	DotSceneLoader();
+	DotSceneLoader(bool use_new_mesh_manager = false);
 
 	virtual ~DotSceneLoader();
 
@@ -95,6 +95,8 @@ private :
 	vl::SceneNodePtr _attach_node;
 
 	std::string _sPrependNode;
+
+	bool _use_new_mesh_manager;
 
 };	// class DotSceneLoader
 

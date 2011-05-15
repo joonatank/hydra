@@ -9,7 +9,7 @@ Ogre test project used for testing and demonstrating eqOgre
 <project_config name="robot">
 
 	<scenes>
-		<scene name="robot" use="true">
+		<scene name="robot" use="true" use_new_mesh_manager="true" enable_physics="true">
 			<file>robot.scene</file>
 		</scene>
 

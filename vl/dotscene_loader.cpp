@@ -14,7 +14,8 @@
 #include "base/string_utils.hpp"
 #include "ogre_xml_helpers.hpp"
 
-vl::DotSceneLoader::DotSceneLoader()
+vl::DotSceneLoader::DotSceneLoader(bool use_new_mesh_manager)
+	: _use_new_mesh_manager(use_new_mesh_manager)
 {}
 
 vl::DotSceneLoader::~DotSceneLoader()
@@ -370,7 +371,7 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 	}
 
 	// Create the entity
-	vl::EntityPtr entity = _scene->createEntity(name_ss.str(), meshFile);
+	vl::EntityPtr entity = _scene->createEntity(name_ss.str(), meshFile, _use_new_mesh_manager);
 	entity->setCastShadows(castShadows);
 	parent->attachObject(entity);
 
