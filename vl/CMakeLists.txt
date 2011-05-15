@@ -52,6 +52,7 @@ set( SOURCES
 	cluster/message.cpp
 	physics/physics_events.cpp
 	physics/physics_world.cpp
+	physics/shapes.cpp
 	entity.cpp
 	light.cpp
 	camera.cpp
@@ -61,6 +62,8 @@ set( SOURCES
 	mesh_serializer_impl.cpp
 	mesh_manager.cpp
 	mesh.cpp
+	mesh_ogre.cpp
+	mesh_bullet.cpp
 	gui/gui.cpp
 	gui/window.cpp
 	)
@@ -75,6 +78,8 @@ set( HEADERS
 	mesh_serializer.hpp
 	mesh_serializer_impl.hpp
 	mesh.hpp
+	mesh_ogre.hpp
+	mesh_bullet.hpp
 	mesh_manager.hpp
 	camera.hpp
 	tracker_serializer.hpp

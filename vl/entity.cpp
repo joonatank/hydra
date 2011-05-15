@@ -9,6 +9,7 @@
 #include "scene_node.hpp"
 // Necessary for loading meshes with the new interface
 #include "mesh_manager.hpp"
+#include "mesh_ogre.hpp"
 
 #include <OGRE/OgreEntity.h>
 #include <OGRE/OgreSceneManager.h>
@@ -43,8 +44,6 @@ vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::Sc
 	_use_new_mesh_manager = use_new_mesh_manager;
 	if(_use_new_mesh_manager)
 	{
-		std::clog << "vl::Entity::Entity : loading a mesh not implemented" << std::endl;
-		// @todo load the mesh
 		_mesh = creator->getMeshManager()->loadMesh(mesh_name);
 	}
 }

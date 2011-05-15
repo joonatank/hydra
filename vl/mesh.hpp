@@ -2,6 +2,8 @@
  *	@date 2011-05
  *	@file mesh.hpp
  *
+ *	This file is part of Hydra a VR game engine.
+ *
  *	Mesh data structure, no real functionality but can be copied to
  *	Ogre and/or Bullet as the user sees fit.
  *	Also used by the serialization modules used by editor and exporters.
@@ -16,18 +18,18 @@
 #include <vector>
 #include <string>
 
-#include <boost/tuple/tuple.hpp>
-
 #include <OGRE/OgreVector2.h>
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreColourValue.h>
 #include <OGRE/OgreAxisAlignedBox.h>
-#include <OGRE/OgreMesh.h>
 
 /// Necessary for Ref ptrs
 #include "typedefs.hpp"
 /// Necessary for serializing Meshes
 #include "cluster/message.hpp"
+
+// Necessary for Ogre enums
+#include <OGRE/OgreMesh.h>
 
 namespace vl
 {
@@ -95,6 +97,12 @@ private :
 
 };
 
+/// @class VertexData
+/// @todo Replace Vertex structure with a buffer where VertexElememt arrays
+/// are continous memory segments.
+/// for example [positions | normals | uvs | tangents]
+/// For now we can use a structure where every VertexElement has a
+/// different array, so it's easier to resize it.
 struct VertexData
 {
 	typedef std::vector<Vertex> VertexList;
@@ -337,12 +345,6 @@ private :
 };	// class Mesh
 
 Ogre::MeshPtr create_ogre_mesh(std::string const &name, vl::MeshRefPtr mesh);
-
-void convert_ogre_geometry(vl::VertexData const *VertexData, Ogre::VertexData *og_vertexData);
-
-void convert_ogre_submeshes(vl::Mesh const *mesh, Ogre::Mesh *og_mesh);
-
-void convert_ogre_submesh(vl::SubMesh const *mesh, Ogre::SubMesh *og_sm);
 
 void calculate_bounds(vl::VertexData const *vertexData, Ogre::AxisAlignedBox &box, Ogre::Real &sphere);
 

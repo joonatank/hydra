@@ -42,11 +42,15 @@ def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	box = game.scene.createEntity(name, PF.CUBE)
 	box_node.attachObject(box)
 	box.material_name = mat_name
-	box_node.scale = box_node.scale*size*0.001
-	#box_node.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
+	box_node.scale = size
 
-	box_shape = BoxShape.create(size)
-	motion_state = world.createMotionState()
+	# TODO fix the size
+	#box_shape = BoxShape.create(size)
+	box_mesh = game.mesh_manager.getMesh('prefab_cube')
+	box_shape = ConvexHullShape.create(box_mesh)
+	box_shape.scale = size
+	trans = Transform( position, Quaternion.identity)
+	motion_state = world.createMotionState(trans, box_node)
 	inertia = Vector3.zero
 	if(mass != 0) :
 		inertia = Vector3(1,1,1)
@@ -58,12 +62,12 @@ def addSphere(name, mat_name, position, mass = 1) :
 	print('Adding a sphere ' + name)
 	sphere_node = game.scene.createSceneNode(name)
 	# TODO this should be copied from the shape, using bounding boxes
-	sphere_node.scale = Vector3(0.03, 0.03, 0.03)
+	sphere_node.scale = Vector3(0.02, 0.02, 0.02)
 	sphere = game.scene.createEntity(name, PF.SPHERE)
 	sphere_node.attachObject(sphere)
 	sphere.material_name = mat_name
 
-	sphere_shape = SphereShape.create(0.1)
+	sphere_shape = SphereShape.create(1)
 	trans = Transform( position, Quaternion.identity)
 	motion_state = world.createMotionState(trans, sphere_node)
 	inertia = Vector3.zero
@@ -103,18 +107,21 @@ ground_node = game.scene.createSceneNode("ground")
 ground = game.scene.createEntity("ground", PF.PLANE)
 ground_node.attachObject(ground)
 ground.material_name = "ground/Basic"
-ground_node.scale = ground_node.scale*0.2
 ground.cast_shadows = False
-ground_node.orientation = Quaternion(-0.7071, 0.7071, 0, 0)
 
 print('Physics : Adding ground plane')
-ground_shape = BoxShape.create(Vector3(50, 1, 50))
-g_motion_state = world.createMotionState()
+ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
+ground_shape = StaticTriangleMeshShape.create(ground_mesh)
+g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
 world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
 # TODO add some boxes
 box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
-box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 1, -5), size=Vector3(3, 3, 3), mass=30)
+# FIXME Mass 30 causes the box to go through the ground plane
+# Also size 3 causes lots of accuracy problems in the collision detection
+# size 2 causes less accuracy problems but still does, probably a problem
+# with scaling a ConvexHull
+box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
 sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
 sphere_body.user_controlled = True
@@ -135,7 +142,7 @@ six_dof.setLinearLowerLimit(Vector3(-10, -5, -5))
 six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #six_dof.setAngularLowerLimit(Vector3(1, 1, 1))
 #six_dof.setAngularUpperLimit(Vector3(1, 1, 1))
-world.addConstraint(six_dof)
+#world.addConstraint(six_dof)
 
 # Add force action
 print('Adding Force action to KC_F')

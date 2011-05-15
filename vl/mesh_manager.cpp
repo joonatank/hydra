@@ -139,8 +139,6 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
 	/// @todo add tangents
 
-	/// Adding one because tesselation 1 would not make any sense
-	/// @todo the object center is in the right down corner, it should be in the middle
 	uint16_t M = tesselation_x;
 	uint16_t N = tesselation_y;
 	for(uint16_t m = 0; m < M+1; ++m)
@@ -205,7 +203,72 @@ vl::MeshRefPtr
 vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 {
 	std::clog << "vl::MeshManager::createCube" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if(size.isZeroLength())
+	{
+		// @todo replace with real exception
+		BOOST_THROW_EXCEPTION(vl::exception());
+	}
+	if(hasMesh(name))
+	{
+		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
+	}
+
+	MeshRefPtr mesh(new Mesh(name));
+	mesh->sharedVertexData = new VertexData;
+
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	/// @todo add tangents
+
+	// y direction
+	for(uint16_t m = 0; m < 2; ++m)
+	{
+		// x direction
+		for(uint16_t n = 0; n < 2; ++n)
+		{
+			// z direction
+			for(uint16_t l = 0; l < 2; ++l)
+			{
+				Vertex vert;
+				vl::scalar x = size.x *(n - 0.5);
+				vl::scalar y = size.z *(m - 0.5);
+				vl::scalar z = size.y *(l - 0.5);
+				vert.position = Ogre::Vector3(x, y, z);
+				vert.normal = vert.position;
+				vert.normal.normalise();
+				// @todo fix UV coords
+				//vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
+				mesh->sharedVertexData->addVertex(vert);
+			}
+		}
+	}
+
+	mesh->calculateBounds();
+
+	SubMesh *sub = mesh->createSubMesh();
+	/// @todo add material (or not?) some clear default would be good
+	// bottom (0, 1, 2, 3)
+	sub->addFace(0, 2, 1);
+	sub->addFace(1, 2, 3);
+	// left side (0, 1, 4, 5)
+	sub->addFace(0, 1, 4);
+	sub->addFace(4, 1, 5);
+	// back side (0, 2, 4, 6)
+	sub->addFace(0, 4, 2);
+	sub->addFace(2, 4, 6);
+	// fron side (1, 3, 5, 7)
+	sub->addFace(1, 3, 5);
+	sub->addFace(5, 3, 7);
+	// right side
+	sub->addFace(3, 2, 6);
+	sub->addFace(3, 6, 7);
+	// top side
+	sub->addFace(4, 5, 6);
+	sub->addFace(6, 5, 7);
+
+	_meshes[name] = mesh;
+	return mesh;
 }
 
 vl::MeshRefPtr 

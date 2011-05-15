@@ -75,8 +75,10 @@ public :
 	virtual ~MeshManager(void)
 	{}
 
-	/// @brief blocking mesh loading
-	/// @todo only precreated mesh loading is implemented
+	/// @brief load a mesh
+	/// @param file_name file name for the mesh file also used as mesh name
+	/// If mesh with the name is already loaded returns it else loads a mesh 
+	/// from file using the callback set for this manager.
 	virtual vl::MeshRefPtr loadMesh(std::string const &file_name);
 
 	/// @brief Non-blocking mesh loading, for masters this is still blocking
@@ -105,7 +107,7 @@ public :
 	/// @brief creates a cube mesh with minimum polygon count
 	/// @param name name for the mesh, used for storing it and writing it into a file
 	/// @param size the size of the mesh in meters
-	virtual vl::MeshRefPtr createCube(std::string const &name, Ogre::Vector3 size);
+	virtual vl::MeshRefPtr createCube(std::string const &name, Ogre::Vector3 size = Ogre::Vector3(1,1,1));
 	/// @todo add version with tesselation
 	/// @param tesselation how many divisions there is in the mesh
 	//virtual vl::MeshPtr createCube(std::string const &name, Ogre::Vector3 size, uint16_t tesselation_x, uint16_t tesselation_y, uint16_t tesselation_z);

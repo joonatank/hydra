@@ -113,6 +113,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound )
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
+		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;
@@ -130,6 +131,18 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	vl::MeshRefPtr (MeshManager::*loadMesh_ov0)(std::string const &) = &MeshManager::loadMesh;
+
+	python::class_<vl::MeshManager, vl::MeshManagerRefPtr, boost::noncopyable>("MeshManager", python::no_init)
+		.def("loadMesh", loadMesh_ov0)
+		.def("createPlane", &vl::MeshManager::createPlane)
+		.def("createSphere", &vl::MeshManager::createSphere)
+		.def("createCube", &vl::MeshManager::createCube)
+		.def("getMesh", &vl::MeshManager::getMesh)
+		.def("hasMesh", &vl::MeshManager::hasMesh)
+		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
 	;
 
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
@@ -604,10 +617,15 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::class_<vl::physics::StaticTriangleMeshShape, boost::noncopyable, python::bases<vl::physics::CollisionShape> >("StaticTriangleMeshShape", python::no_init )
+	python::class_<vl::physics::StaticTriangleMeshShape, boost::noncopyable, vl::physics::StaticTriangleMeshShapeRefPtr, python::bases<vl::physics::CollisionShape> >("StaticTriangleMeshShape", python::no_init )
+		.def("create", &vl::physics::StaticTriangleMeshShape::create)
+		.staticmethod("create")
 	;
 
-	python::class_<vl::physics::ConvexHullShape, boost::noncopyable, python::bases<vl::physics::CollisionShape> >("ConvexHullShape", python::no_init )
+	python::class_<vl::physics::ConvexHullShape, boost::noncopyable, vl::physics::ConvexHullShapeRefPtr, python::bases<vl::physics::CollisionShape> >("ConvexHullShape", python::no_init )
+		.add_property("scale", &vl::physics::ConvexHullShape::getLocalScaling, &vl::physics::ConvexHullShape::setLocalScaling)
+		.def("create", &vl::physics::ConvexHullShape::create)
+		.staticmethod("create")
 	;
 
 	python::class_<vl::physics::CylinderShape, boost::noncopyable, vl::physics::CylinderShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CylinderShape", python::no_init )

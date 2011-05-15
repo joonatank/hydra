@@ -259,6 +259,22 @@ vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 
 		ent = new Entity(name, mesh_name, this, true);
 	}
+	else if(type == PF_CUBE)
+	{
+		if(!_mesh_manager)
+		{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+		
+		std::string mesh_name("prefab_cube");
+		if(!_mesh_manager->hasMesh(mesh_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			_mesh_manager->createCube(mesh_name);
+		}
+
+		ent = new Entity(name, mesh_name, this, true);
+	}
 	/// Old system for other PREFABS
 	else
 	{

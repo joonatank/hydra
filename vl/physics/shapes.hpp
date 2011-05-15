@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
  *	@file shapes.hpp
+ *
+ *	This file is part of Hydra VR game engine.
  */
 
 #ifndef HYDRA_PHYSICS_SHAPES_HPP
@@ -10,7 +12,8 @@
 
 #include "bullet/btBulletCollisionCommon.h"
 
-#include "mesh.hpp"
+#include "math/math.hpp"
+#include "math/conversion.hpp"
 
 namespace vl
 {
@@ -31,19 +34,13 @@ class BoxShape : public CollisionShape
 public :
 
 	// Create a box shape around origin: with size [-bounds, bounds]
-	static BoxShapeRefPtr create(Ogre::Vector3 const &bounds)
-	{
-		BoxShapeRefPtr box(new BoxShape(bounds));
-		return box;
-	}
+	static BoxShapeRefPtr create(Ogre::Vector3 const &bounds);
 
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
 private :
-	BoxShape(Ogre::Vector3 const &bounds)
-		: _bt_shape( new btBoxShape(vl::math::convert_bt_vec(bounds)) )
-	{}
+	BoxShape(Ogre::Vector3 const &bounds);
 
 	BoxShape(BoxShape const &);
 	BoxShape &operator=(BoxShape const &);
@@ -56,19 +53,13 @@ class SphereShape : public CollisionShape
 {
 public :
 
-	static SphereShapeRefPtr create(vl::scalar radius)
-	{
-		SphereShapeRefPtr sphere(new SphereShape(radius));
-		return sphere;
-	}
+	static SphereShapeRefPtr create(vl::scalar radius);
 
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
 private :
-	SphereShape(vl::scalar radius)
-		: _bt_shape(new btSphereShape(radius))
-	{}
+	SphereShape(vl::scalar radius);
 
 	SphereShape(SphereShape const &other);
 	SphereShape &operator=(SphereShape const &other);
@@ -82,19 +73,13 @@ class StaticPlaneShape : public CollisionShape
 public :
 	// Plane constant for some reason affects also in the direction of plane normal
 	// so usually you want to translate the plane by plane_constant*(-plane_normal)
-	StaticPlaneShapeRefPtr create(Ogre::Vector3 const &normal, vl::scalar constant)
-	{
-		StaticPlaneShapeRefPtr plane(new StaticPlaneShape(normal, constant));
-		return plane;
-	}
+	StaticPlaneShapeRefPtr create(Ogre::Vector3 const &normal, vl::scalar constant);
 
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
 private :
-	StaticPlaneShape(Ogre::Vector3 const &normal, vl::scalar constant)
-		: _bt_shape( new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant ) )
-	{}
+	StaticPlaneShape(Ogre::Vector3 const &normal, vl::scalar constant);
 
 	StaticPlaneShape(StaticPlaneShape const &);
 	StaticPlaneShape &operator=(StaticPlaneShape const &);
@@ -110,16 +95,11 @@ public :
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
-	static StaticTriangleMeshShapeRefPtr create(vl::Mesh mesh)
-	{
-		StaticTriangleMeshShapeRefPtr shape(new StaticTriangleMeshShape(mesh));
-		return shape;
-	}
+	static StaticTriangleMeshShapeRefPtr create(vl::MeshRefPtr mesh);
 
 private :
 	/// @todo real implementation
-	StaticTriangleMeshShape(vl::Mesh mesh)
-	{}
+	StaticTriangleMeshShape(vl::MeshRefPtr mesh);
 
 	StaticTriangleMeshShape(StaticTriangleMeshShape const &);
 	StaticTriangleMeshShape &operator=(StaticTriangleMeshShape const &);
@@ -134,21 +114,24 @@ public :
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
-	static ConvexHullShapeRefPtr create(vl::Mesh mesh)
-	{
-		ConvexHullShapeRefPtr shape(new ConvexHullShape(mesh));
-		return shape;
-	}
+	static ConvexHullShapeRefPtr create(vl::MeshRefPtr mesh);
+
+	void setLocalScaling(Ogre::Vector3 const &scale)
+	{ _bt_shape->setLocalScaling(vl::math::convert_bt_vec(scale)); }
+
+	Ogre::Vector3 getLocalScaling(void) const
+	{ return vl::math::convert_vec(_bt_shape->getLocalScaling()); }
 
 private :
 	/// @todo real implementation
-	ConvexHullShape(vl::Mesh mesh)
-	{}
+	ConvexHullShape(vl::MeshRefPtr mesh);
 
 	ConvexHullShape(ConvexHullShape const &);
 	ConvexHullShape &operator=(ConvexHullShape const &);
 
-	btConvexHullShape *_bt_shape;
+	/// @todo move to using btConvexHull for this, better performance
+	/// needs a separate conversion algorithm
+	btConvexTriangleMeshShape *_bt_shape;
 
 };	// class ConvexHullShape
 
