@@ -594,7 +594,7 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitiv
 		if(find_name == name)
 		{
 			std::clog << "Found one node with name " << name << " : hiding it." << std::endl;
-			(*iter)->setVisibility(false); 
+			(*iter)->setVisible(false); 
 		}
 	}
 }

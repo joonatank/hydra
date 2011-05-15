@@ -16,6 +16,9 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
 		<< " with position " << a.getPosition()
 		<< " and orientation " << a.getOrientation();
+	if(!a._visible)
+	{ os << " Hidden"; }
+
 	if( a._parent )
 	{ os << " with parent " << a._parent->getName() << ".\n"; }
 	else
@@ -73,6 +76,8 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 		/// Should really map our root node to Ogre Root
 		/// which would implicitly put every node into the SG (because they are attached to our Root)
 		_creator->getNative()->getRootSceneNode()->addChild(_ogre_node);
+
+		/// Not setting any attributes, they will be overriden by Deserialize anyway
 	}
 }
 
@@ -127,12 +132,19 @@ vl::SceneNode::setScale(Ogre::Vector3 const &s)
 }
 
 void 
-vl::SceneNode::setVisibility( bool visible )
+vl::SceneNode::setVisible(bool visible)
 {
 	if( _visible != visible )
 	{
 		setDirty( DIRTY_VISIBILITY );
 		_visible = visible;
+
+		// Cascade to childs
+		for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
+		{ (*iter)->setVisible(_visible); }
+		
+		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
+		{ (*iter)->setVisible(_visible); }
 	}
 }
 
@@ -158,6 +170,7 @@ vl::SceneNode::attachObject(vl::MovableObjectPtr obj)
 		_objects.push_back(obj);
 
 		obj->setParent(this);
+		obj->setVisible(_visible);
 	}
 }
 
@@ -218,6 +231,10 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 	{
 		setDirty(DIRTY_CHILDS);
 		_childs.push_back(child);
+
+		// Copy cascading parameters
+		child->setVisible(_visible);
+		child->showBoundingBox(_show_boundingbox);
 
 		/// Remove from current parent
 		if( child->getParent() )
@@ -487,7 +504,7 @@ vl::HideAction::execute(void )
 	if( !_node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_node->setVisibility( false );
+	_node->hide();
 }
 
 void
@@ -496,7 +513,7 @@ vl::ShowAction::execute(void )
 	if( !_node )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_node->setVisibility( true );
+	_node->show();
 }
 
 void
