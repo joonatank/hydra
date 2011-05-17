@@ -71,5 +71,7 @@ vl::physics::ConvexHullShape::ConvexHullShape(vl::MeshRefPtr mesh)
 	btTriangleIndexVertexArray *bt_mesh = new btTriangleIndexVertexArray;
 	vl::convert_bullet_geometry(mesh.get(), bt_mesh);
 
-	_bt_shape = new btConvexTriangleMeshShape(bt_mesh, false);
+	/// Optimisation we should have valid bounding boxes in the meshes already
+	/// @todo crashes if we use the premade bounding boxes
+	_bt_shape = new btConvexTriangleMeshShape(bt_mesh, true);
 }

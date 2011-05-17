@@ -187,7 +187,7 @@ public :
 
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
-	physics::World *getPhysicsWorld( void );
+	physics::WorldRefPtr getPhysicsWorld( void );
 
 	/// Enable physics to be used in this game
 	/// First call to this function will create the physics world with true
@@ -311,7 +311,7 @@ private :
 	GAME_STATE _state;
 
 	/// Physics
-	physics::World *_physics_world;
+	physics::WorldRefPtr _physics_world;
 
 };	// class GameManager
 

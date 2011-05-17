@@ -37,9 +37,7 @@ vl::GameManager::GameManager(vl::Logger *logger)
 	, _background_sound(0)
 	, _logger(logger)
 	, _env_effects_enabled(true)
-	, _mesh_manager()
 	, _state(GS_UNKNOWN)
-	, _physics_world(0)
 {
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
@@ -59,7 +57,6 @@ vl::GameManager::~GameManager(void )
 		cAudio::destroyAudioManager(_audio_manager);
 	}
 
-	delete _physics_world;
 	_trackers.reset();
 
 	delete _scene_manager;
@@ -168,7 +165,7 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	}
 }
 
-vl::physics::World *
+vl::physics::WorldRefPtr
 vl::GameManager::getPhysicsWorld( void )
 {
 	return _physics_world;
@@ -177,12 +174,12 @@ vl::GameManager::getPhysicsWorld( void )
 void
 vl::GameManager::enablePhysics( bool enable )
 {
-	if( enable )
+	if(enable)
 	{
 		// Create the physics if they don't exist
-		if( _physics_world == 0 )
+		if(!_physics_world)
 		{
-			_physics_world = new physics::World();
+			_physics_world.reset(new physics::World());
 		}
 	}
 }
@@ -273,11 +270,14 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 	if(scene_info.getUseNewMeshManager() == CFG_ON)
 	{ use_mesh = true; }
 
+	if(scene_info.getUsePhysics())
+	{ enablePhysics(true); }
+
 	vl::DotSceneLoader loader(use_mesh);
 	// TODO pass attach node based on the scene
 	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 	// @todo add physics
-	loader.parseDotScene(resource, getSceneManager());
+	loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
 }

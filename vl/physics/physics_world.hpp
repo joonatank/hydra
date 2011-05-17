@@ -54,6 +54,7 @@ public :
 
 	/// Default inertia is zero because setting it will mess up static objects. 
 	/// For dynamic objects user should set it.
+	/// Automatically adds the RigidBody to the world.
 	vl::physics::RigidBodyRefPtr createRigidBody( std::string const &name, vl::scalar mass,
 								  vl::physics::MotionState *state, CollisionShapeRefPtr shape,
 								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );

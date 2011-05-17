@@ -14,6 +14,10 @@
 #include "base/string_utils.hpp"
 #include "ogre_xml_helpers.hpp"
 
+// Necessary for physics import
+#include "physics/shapes.hpp"
+#include "physics/physics_world.hpp"
+
 vl::DotSceneLoader::DotSceneLoader(bool use_new_mesh_manager)
 	: _use_new_mesh_manager(use_new_mesh_manager)
 {}
@@ -24,11 +28,13 @@ vl::DotSceneLoader::~DotSceneLoader()
 void
 vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 								   vl::SceneManager *scene,
+								   vl::physics::WorldRefPtr physics_world,
 								   vl::SceneNode* attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
 	_scene = scene;
+	_physics_world = physics_world;
 	_sPrependNode = sPrependNode;
 
 	char *xml_data = new char[scene_data.length()+1];
@@ -42,11 +48,13 @@ vl::DotSceneLoader::parseDotScene( const std::string& scene_data,
 void
 vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 								   vl::SceneManagerPtr scene,
+								   vl::physics::WorldRefPtr physics_world,
 								   vl::SceneNodePtr attachNode,
 								   const std::string& sPrependNode )
 {
 	// set up shared object values
 	_scene = scene;
+	_physics_world = physics_world;
 	_sPrependNode = sPrependNode;
 	_attach_node = attachNode;
 	if( !_attach_node )
@@ -61,6 +69,10 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 	}
 
 	_parse( xml_data );
+
+	// Reset data so that we don't end up with dangling pointers (or holding resources)
+	_physics_world.reset();
+	_scene = 0;
 }
 
 void
@@ -377,6 +389,47 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 
 	if( !materialFile.empty() )
 	{ entity->setMaterialName(materialFile); }
+
+	/// Create RigidBody for the entity
+	if( _physics_world )
+	{
+		// @todo would it just be easier to enable the mesh manager automatically?
+		if(!_use_new_mesh_manager)
+		{
+			std::string msg("Physics needs the new mesh manager.");
+			BOOST_THROW_EXCEPTION(vl::invalid_dotscene() << vl::desc(msg));
+		}
+
+		// Not checking collision primitive, only tiangle_mesh is supported
+		bool actor = vl::getAttribBool(xml_node, "actor", false);
+		Ogre::Real damping_rot = vl::getAttribReal(xml_node, "damping_rot", 0.1);
+		Ogre::Real damping_trans = vl::getAttribReal(xml_node, "damping_trans", 0.1);
+		// Friction and ghost not supported
+		// Inertia is only a scalar
+		Ogre::Real inertia = vl::getAttribReal(xml_node, "inertia_tensor", 1.0);
+		// lock_rot and lock_trans not supported
+		Ogre::Real mass = vl::getAttribReal(xml_node, "mass", 1);
+		Ogre::Real mass_radius = vl::getAttribReal(xml_node, "mass_radius", 1.0);
+		// defaults to rigid body, should probably be static
+		std::string type = vl::getAttrib(xml_node, "physics_type", "RIGID_BODY");
+		// velociy_max and velocity_min not supported
+
+		// @todo fix the transform to the one in the scene node
+		vl::Transform transform(parent->getPosition(), parent->getOrientation());
+		vl::physics::MotionState *m_state = _physics_world->createMotionState(transform, parent);
+		vl::MeshRefPtr mesh = _scene->getMeshManager()->getMesh(meshFile);
+		assert(mesh);
+		// @todo static mesh support for static objects
+		vl::physics::ConvexHullShapeRefPtr shape = vl::physics::ConvexHullShape::create(mesh);
+		// debug set mass to 1
+		//mass = 1;
+		if(mass == 0)
+		{ inertia = 0; }
+
+		std::clog << "Creating body " << name_ss.str() << " with mass " << mass << std::endl;
+		physics::RigidBodyRefPtr body = _physics_world->createRigidBody(name_ss.str(), mass, m_state, shape, Ogre::Vector3(1,1,1));
+		body->setUserControlled(actor);
+	}
 }
 
 void

@@ -105,7 +105,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", &vl::GameManager::getGUI)
 		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
-		.add_property( "physics_world", python::make_function( &vl::GameManager::getPhysicsWorld, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property( "physics_world", &vl::GameManager::getPhysicsWorld)
 		.def( "enableAudio", &vl::GameManager::enableAudio )
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
@@ -705,9 +705,10 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// world
-	python::class_<vl::physics::World, boost::noncopyable>("PhysicsWorld", python::no_init)
+	python::class_<vl::physics::World, vl::physics::WorldRefPtr, boost::noncopyable>("PhysicsWorld", python::no_init)
 		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody)
+		.def("hasRigidBody", &vl::physics::World::hasRigidBody)
 		.def("removeRigidBody", &vl::physics::World::removeRigidBody)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )

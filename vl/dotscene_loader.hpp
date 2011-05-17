@@ -38,11 +38,13 @@ public :
 	 */
 	void parseDotScene( std::string const &scene_data,
 			vl::SceneManagerPtr scene_manager,
+			vl::physics::WorldRefPtr physics_world = vl::physics::WorldRefPtr(),
 			vl::SceneNodePtr attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
 	void parseDotScene( vl::TextResource &scene_data,
 			vl::SceneManagerPtr scene_manager,
+			vl::physics::WorldRefPtr physics_world = vl::physics::WorldRefPtr(),
 			vl::SceneNodePtr attachNode = 0,
 			std::string const &sPrependNode = std::string() );
 
@@ -92,6 +94,8 @@ private :
 	void processLightAttenuation(rapidxml::xml_node<> *xml_node, vl::LightPtr light);
 
 	vl::SceneManagerPtr _scene;
+	vl::physics::WorldRefPtr _physics_world;
+
 	vl::SceneNodePtr _attach_node;
 
 	std::string _sPrependNode;

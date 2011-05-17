@@ -41,8 +41,6 @@ vl::MeshSerializer::writeMesh(vl::MeshRefPtr mesh, std::string const &filename)
 void
 vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
 {
-	std::clog << "vl::MeshSerializer::readMesh : from resource of size " << res.size() << std::endl;
-
 	ResourceStream stream = res.getStream();
     determineEndianness(stream);
 

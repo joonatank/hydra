@@ -7,6 +7,8 @@
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
 
+# TODO these are same in the physics_script move them to global physics_script
+# which is included from project (not global)
 def addKinematicAction(body):
 	print( 'Creating Kinematic event on ' + body.name )
 
@@ -34,7 +36,28 @@ def addKinematicAction(body):
 	# TODO add rotation speed
 	# Create a FrameTrigger and add the action to that
 	trigger = game.event_manager.getFrameTrigger()
-	trigger.addAction( trans_action )
+	trigger.action.add_action( trans_action )
+
+def addSphere(name, mat_name, position, mass = 1) :
+	print('Adding a sphere ' + name)
+	sphere_node = game.scene.createSceneNode(name)
+	# TODO this should be copied from the shape, using bounding boxes
+	sphere_node.scale = Vector3(0.02, 0.02, 0.02)
+	sphere = game.scene.createEntity(name, PF.SPHERE)
+	sphere_node.attachObject(sphere)
+	sphere.material_name = mat_name
+
+	sphere_shape = SphereShape.create(1)
+	trans = Transform( position, Quaternion.identity)
+	motion_state = world.createMotionState(trans, sphere_node)
+	inertia = Vector3.zero
+	if(mass != 0) :
+		inertia = Vector3(1,1,1)
+	sphere_body = world.createRigidBody(name, mass, motion_state, sphere_shape, inertia)
+
+	# Set some damping so it doesn't go on endlessly
+	sphere_body.setDamping(0.3, 0.3)
+	return sphere_body
 
 
 print('Getting Camera SceneNode')
@@ -49,18 +72,37 @@ game.enablePhysics( True )
 world = game.physics_world
 
 # TODO this is not supported yet in 0.2.1
+ground_node = game.scene.createSceneNode("ground")
+ground = game.scene.createEntity("ground", PF.PLANE)
+ground_node.attachObject(ground)
+ground.material_name = "ground/Basic"
+ground.cast_shadows = False
+
 print('Physics : Adding ground plane')
-plane = world.createPlaneShape( Vector3.unit_y, 100 )
-trans = Transform(-Vector3.unit_y, Quaternion.identity)
-motion_state = world.createMotionState( trans )
-world.createRigidBody( 'ground', 0, motion_state, plane )
+ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
+ground_shape = StaticTriangleMeshShape.create(ground_mesh)
+g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
+world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
 # TODO hides cb_:s automatically, needs to be a python command
+# the support is there in the engine, don't hide them before we have real models
 # game.scene.hideSceneNodes("cb_") if you need it
 
 if( game.scene.hasSceneNode("cb_cylinder_actuator") ):
 	cylinder = game.scene.getSceneNode("cb_cylinder_actuator")
 	print(cylinder)
+
+body_name = "cb_cylinder_actuator"
+if( game.physics_world.hasRigidBody(body_name) ):
+	print('Adding kinematic action to ', body_name)
+	body = game.physics_world.getRigidBody(body_name)
+#	addKinematicAction(body)
+else :
+	print('Physics world does not have body :', body_name)
+
+sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
+sphere.user_controlled = True
+addKinematicAction(sphere)
 """
 print('Physics : Adding ogre')
 if game.scene.hasSceneNode( ogre_name ):

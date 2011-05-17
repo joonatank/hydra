@@ -66,7 +66,7 @@ vl::MeshSerializerImpl::~MeshSerializerImpl()
 void 
 vl::MeshSerializerImpl::exportMesh(vl::Mesh const *pMesh, vl::ResourceStream &stream, Endian endianMode)
 {
-    std::cout << "MeshSerializer writing mesh data to stream " + stream.getName() + "..." << std::endl;
+	std::cout << "MeshSerializer writing mesh data to stream " + stream.getName() + "..." << std::endl;
 
 	// Decide on endian mode
 	determineEndianness(endianMode);
@@ -102,7 +102,7 @@ vl::MeshSerializerImpl::exportMesh(vl::Mesh const *pMesh, vl::ResourceStream &st
 void 
 vl::MeshSerializerImpl::importMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::importMesh : " << stream.getName() << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::importMesh : " << stream.getName() << std::endl;
 	// Determine endianness (must be the first thing we do!)
 	determineEndianness(stream);
 
@@ -695,7 +695,7 @@ vl::MeshSerializerImpl::calcGeometrySize(VertexData const *vertexData)
 void 
 vl::MeshSerializerImpl::readGeometry(vl::ResourceStream &stream, vl::Mesh *pMesh, VertexData *pDest)
 {
-	std::clog << "vl::MeshSerializerImpl::readGeometry" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readGeometry" << std::endl;
 	assert(pMesh && pDest);
 //    dest->vertexStart = 0;
 
@@ -739,7 +739,7 @@ vl::MeshSerializerImpl::readGeometry(vl::ResourceStream &stream, vl::Mesh *pMesh
 void 
 vl::MeshSerializerImpl::readGeometryVertexDeclaration(vl::ResourceStream &stream, vl::Mesh *pMesh, VertexData *pDest)
 {
-	std::clog << "vl::MeshSerializerImpl::readGeometryVertexDeclaration" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readGeometryVertexDeclaration" << std::endl;
     // Find optional geometry streams
     if(!stream.eof())
     {
@@ -771,7 +771,7 @@ vl::MeshSerializerImpl::readGeometryVertexDeclaration(vl::ResourceStream &stream
 void 
 vl::MeshSerializerImpl::readGeometryVertexElement(vl::ResourceStream &stream, vl::Mesh *pMesh, VertexData *pDest)
 {
-	std::clog << "vl::MeshSerializerImpl::readGeometryVertexElement" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readGeometryVertexElement" << std::endl;
 	assert(pMesh && pDest);
 
 	unsigned short source, offset, index, tmp;
@@ -790,7 +790,7 @@ vl::MeshSerializerImpl::readGeometryVertexElement(vl::ResourceStream &stream, vl
 	// unsigned short index;	// index of the semantic
 	readShorts(stream, &index, 1);
 
-	std::clog << "Data read : type =" << vType << " semantic = " << vSemantic << std::endl;
+//	std::clog << "Data read : type =" << vType << " semantic = " << vSemantic << std::endl;
 	pDest->vertexDeclaration.addSemantic(vSemantic, vType);
 
 	//dest->vertexDeclaration->addElement(source, offset, vType, vSemantic, index);
@@ -808,7 +808,7 @@ vl::MeshSerializerImpl::readGeometryVertexElement(vl::ResourceStream &stream, vl
 void 
 vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, vl::Mesh* pMesh, VertexData *pDest)
 {
-	std::clog << "vl::MeshSerializerImpl::readGeometryVertexBuffer" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readGeometryVertexBuffer" << std::endl;
 
 	unsigned short bindIndex, vertexSize;
 	// unsigned short bindIndex;	// Index to bind this buffer to
@@ -846,7 +846,7 @@ vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, vl:
 		std::clog << "Trying to bind data to other than first Buffer. Not supported." << std::endl;
 	}
 
-	std::clog << "Adding " << vertexCount << " vertices." << std::endl;
+//	std::clog << "Adding " << vertexCount << " vertices." << std::endl;
 	/// @todo replace with copying the whole stream at once
 	char *pBuf = new char[vertexSize];
 	for(size_t i = 0; i < vertexCount; ++i)
@@ -875,7 +875,7 @@ vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, vl:
 void 
 vl::MeshSerializerImpl::readSubMeshNameTable(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readSubMeshNameTable" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readSubMeshNameTable" << std::endl;
 
 	// The map for
 	std::map<unsigned short, std::string> subMeshNames;
@@ -928,7 +928,7 @@ vl::MeshSerializerImpl::readSubMeshNameTable(vl::ResourceStream &stream, vl::Mes
 void 
 vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readMesh" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readMesh" << std::endl;
 
 	unsigned short streamID;
 
@@ -939,7 +939,7 @@ vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 	// Find all substreams
 	if(!stream.eof())
 	{
-		std::clog << "vl::MeshSerializerImpl::readMesh : stream has data" << std::endl;
+//		std::clog << "vl::MeshSerializerImpl::readMesh : stream has data" << std::endl;
 		streamID = readChunk(stream);
 		while(!stream.eof() &&
 			(streamID == Ogre::M_GEOMETRY ||
@@ -954,14 +954,14 @@ vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 				streamID == Ogre::M_ANIMATIONS ||
 				streamID == Ogre::M_TABLE_EXTREMES))
 		{
-			std::clog << "Reading Mesh chunck" << std::endl;
+//			std::clog << "Reading Mesh chunck" << std::endl;
 			switch(streamID)
 			{
 				case Ogre::M_GEOMETRY:
 					assert(!pMesh->sharedVertexData);
 					pMesh->sharedVertexData = new VertexData;
 					try {
-						std::clog << "Reading Mesh shared geometry." << std::endl;
+//						std::clog << "Reading Mesh shared geometry." << std::endl;
 						readGeometry(stream, pMesh, pMesh->sharedVertexData);
 					}
 					catch(...)
@@ -1069,7 +1069,7 @@ vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 void 
 vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readSubMesh" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readSubMesh" << std::endl;
     unsigned short streamID;
 
     SubMesh* sm = pMesh->createSubMesh();
@@ -1098,7 +1098,7 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
     {
         if (idx32bit)
         {
-			std::clog << "Reading 32-bit indexes, " << indexCount << " of them." << std::endl;
+//			std::clog << "Reading 32-bit indexes, " << indexCount << " of them." << std::endl;
 			/*
             ibuf = HardwareBufferManager::getSingleton().
                 createIndexBuffer(
@@ -1133,7 +1133,7 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
             readShorts(stream, pIdx, sm->indexData->indexCount);
             ibuf->unlock();
 			*/
-			std::clog << "Reading 16-bit indexes, " << indexCount << " of them." << std::endl;
+//			std::clog << "Reading 16-bit indexes, " << indexCount << " of them." << std::endl;
 			sm->indexData.setIndexSize(vl::IT_16BIT);
 			/// Get the half count of indexes, if it's odd it will be increased
 			/// by one half, if it's even then the odd one is out in the division
@@ -1164,7 +1164,7 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
     // M_GEOMETRY stream (Optional: present only if useSharedVertices = false)
     if(!sm->useSharedGeometry)
     {
-		std::clog << "Reading non shared geometry." << std::endl;
+//		std::clog << "Reading non shared geometry." << std::endl;
         streamID = readChunk(stream);
         if (streamID != Ogre::M_GEOMETRY)
         {
@@ -1179,7 +1179,7 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
     // Find all bone assignments, submesh operation, and texture aliases (if present)
     if(!stream.eof())
     {
-		std::clog << "Reading all other submesh attributes." << std::endl;
+//		std::clog << "Reading all other submesh attributes." << std::endl;
         streamID = readChunk(stream);
         while(!stream.eof() &&
             (streamID == Ogre::M_SUBMESH_BONE_ASSIGNMENT ||
@@ -1217,7 +1217,7 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 void
 vl::MeshSerializerImpl::readSubMeshOperation(vl::ResourceStream &stream, vl::SubMesh *sm)
 {
-	std::clog << "vl::MeshSerializerImpl::readSubMeshOperation" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readSubMeshOperation" << std::endl;
     // unsigned short operationType
     unsigned short opType;
     readShorts(stream, &opType, 1);
@@ -1227,7 +1227,7 @@ vl::MeshSerializerImpl::readSubMeshOperation(vl::ResourceStream &stream, vl::Sub
 void
 vl::MeshSerializerImpl::readSubMeshTextureAlias(vl::ResourceStream &stream, vl::SubMesh *sub)
 {
-	std::clog << "vl::MeshSerializerImpl::readSubMeshTextureAlias" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readSubMeshTextureAlias" << std::endl;
     std::string aliasName = readString(stream);
     std::string textureName = readString(stream);
     std::cout << "vl::SubMesh::addTextureAlias does not exists." << std::endl;
@@ -1557,7 +1557,7 @@ vl::MeshSerializerImpl::writeBoundsInfo(const Mesh* pMesh)
 void 
 vl::MeshSerializerImpl::readBoundsInfo(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readBoundsInfo" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readBoundsInfo" << std::endl;
     Ogre::Vector3 min, max;
     // float minx, miny, minz
     readFloats(stream, &min.x, 1);
@@ -1981,7 +1981,7 @@ void MeshSerializerImpl::writeEdgeList(const Mesh* pMesh)
 void 
 vl::MeshSerializerImpl::readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readEdgeList : DUMMY" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readEdgeList : DUMMY" << std::endl;
 
 	unsigned short streamID;
 
@@ -1992,7 +1992,7 @@ vl::MeshSerializerImpl::readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh
             streamID == Ogre::M_EDGE_LIST_LOD)
         {
             // Process single LOD
-			std::clog <<  "vl::MeshSerializerImpl::readEdgeList : process single LOD" << std::endl;
+//			std::clog <<  "vl::MeshSerializerImpl::readEdgeList : process single LOD" << std::endl;
             // unsigned short lodIndex
             unsigned short lodIndex;
             readShorts(stream, &lodIndex, 1);
@@ -2056,7 +2056,7 @@ vl::MeshSerializerImpl::readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh
     }
 	
 	//pMesh->mEdgeListsBuilt = true;
-	std::clog << "vl::MeshSerializerImpl::readEdgeList : DONE" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readEdgeList : DONE" << std::endl;
 }
 
 //---------------------------------------------------------------------
@@ -2064,7 +2064,7 @@ void
 vl::MeshSerializerImpl::readEdgeListLodInfo(vl::ResourceStream &stream,
     Ogre::EdgeData *edgeData)
 {
-	std::clog << "vl::MeshSerializerImpl::readEdgeListLodInfo : DUMMY" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readEdgeListLodInfo : DUMMY" << std::endl;
 
 	assert(edgeData);
 
@@ -2150,7 +2150,7 @@ vl::MeshSerializerImpl::readEdgeListLodInfo(vl::ResourceStream &stream,
             readBools(stream, &(edge.degenerate), 1);
         }
 	}
-	std::clog << "vl::MeshSerializerImpl::readEdgeListLodInfo : DONE" << std::endl;
+//	std::clog << "vl::MeshSerializerImpl::readEdgeListLodInfo : DONE" << std::endl;
 }
 
 //---------------------------------------------------------------------
