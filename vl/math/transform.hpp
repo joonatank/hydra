@@ -28,6 +28,9 @@ struct Transform
 
 	bool isIdentity(void) const;
 
+	/// @brief inverts the transformation
+	void invert(void);
+
 	vl::Transform &operator*=(Ogre::Matrix4 const &m);
 
 	vl::Transform &operator*=(vl::Transform const &t);

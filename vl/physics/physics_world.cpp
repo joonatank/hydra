@@ -125,14 +125,14 @@ vl::physics::World::destroyMotionState( vl::physics::MotionState *state )
 }
 
 void 
-vl::physics::World::addConstraint(vl::physics::ConstraintRefPtr constraint)
+vl::physics::World::addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked)
 {
 	ConstraintList::iterator iter = std::find(_constraints.begin(), _constraints.end(), constraint);
 	
 	if(iter == _constraints.end())
 	{
 		_constraints.push_back(constraint);
-		_dynamicsWorld->addConstraint(constraint->getNative());
+		_dynamicsWorld->addConstraint(constraint->getNative(), disableCollisionBetweenLinked);
 	}
 }
 

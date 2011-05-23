@@ -131,6 +131,17 @@ public :
 	void setMotionState(MotionState *motionState)
 	{ _bt_body->setMotionState(motionState); }
 
+	vl::Transform transformToLocal(vl::Transform const &t) const
+	{
+		MotionState *ms = (MotionState *)_bt_body->getMotionState();
+		vl::Transform from_world = ms->getWorldTransform();
+		from_world.invert();
+		return from_world*t;
+	}
+
+	vl::Transform const &getWorldTransform(void) const
+	{ return ((MotionState *)_bt_body->getMotionState())->getWorldTransform(); }
+
 	std::string const &getName(void) const
 	{ return _name; }
 

@@ -81,11 +81,11 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 
 /// Overloads need to be outside the module definition
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
-
 
 BOOST_PYTHON_MODULE(vl)
 {
@@ -271,6 +271,10 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	void (vl::SceneNode::*setTransform_ov0)(vl::Transform const &) = &vl::SceneNode::setTransform;
+	void (vl::SceneNode::*setTransform_ov1)(vl::Transform const &, vl::SceneNodePtr) = &vl::SceneNode::setTransform;
+	vl::Transform const &(vl::SceneNode::*getTransform_ov0)(void) const = &vl::SceneNode::getTransform;
+	vl::Transform (vl::SceneNode::*getTransform_ov1)(vl::SceneNodePtr) const = &vl::SceneNode::getTransform;
 
 	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
 		.def("attachObject", &vl::SceneNode::attachObject)
@@ -280,10 +284,13 @@ BOOST_PYTHON_MODULE(vl)
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
-		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
-		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
-		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_internal_reference<>() ), &vl::SceneNode::setScale )
+		.add_property("transform", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
+		.add_property("world_transform", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
+		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setPosition )
+		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setOrientation )
+		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )
 		.add_property("visible", &SceneNode::getVisible, &vl::SceneNode::setVisible)
+		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
 		.def("hide", &vl::SceneNode::hide)
 		.def("isHidden", &vl::SceneNode::isHidden)
 		.def("show", &vl::SceneNode::show)
@@ -688,6 +695,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def( "getAngularDamping", &vl::physics::RigidBody::getAngularDamping )
 		.def("setInertia", &vl::physics::RigidBody::setInertia)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
+		.def("transform_to_local", &vl::physics::RigidBody::transformToLocal)
+		.add_property("world_transform", python::make_function(&vl::physics::RigidBody::getWorldTransform, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("shape", &vl::physics::RigidBody::getShape)
 		.add_property("user_controlled", &vl::physics::RigidBody::isUserControlled, &vl::physics::RigidBody::setUserControlled)
 		.add_property("motion_state", python::make_function(getMotionState_ov1, python::return_value_policy<python::reference_existing_object>()), &vl::physics::RigidBody::setMotionState )
@@ -712,7 +721,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("removeRigidBody", &vl::physics::World::removeRigidBody)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
-		.def("addConstraint", &vl::physics::World::addConstraint)
+		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 		.def(python::self_ns::str(python::self_ns::self))
 	;

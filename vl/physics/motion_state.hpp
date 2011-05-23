@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
+ *	@file motion_state.hpp
  *
+ *	This file is part of Hydra a VR game engine.
  */
 
 #ifndef VL_PHYSICS_MOTION_STATE_HPP
@@ -70,6 +72,11 @@ public:
 
 	Ogre::Quaternion getOrientation(void) const
 	{ return vl::math::convert_quat(_trans.getRotation()); }
+
+	Transform getWorldTransform(void) const
+	{
+		return vl::math::convert_transform(_trans);
+	}
 
 	virtual void getWorldTransform(btTransform &worldTrans) const
 	{

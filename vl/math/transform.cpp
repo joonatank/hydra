@@ -7,10 +7,19 @@
 #include "transform.hpp"
 
 /// ----------------------------- Transform ----------------------------------
-bool 
+bool
 vl::Transform::isIdentity(void) const
 {
 	return(position == Ogre::Vector3::ZERO && quaternion == Ogre::Quaternion::IDENTITY);
+}
+
+void
+vl::Transform::invert(void)
+{
+	// Transform needs to have the property that inv(T)*T = I and T*inv(T) = I
+	// so the position vector needs to be multiplied with inverse quaternion
+	quaternion = quaternion.Inverse();
+	position = -(quaternion*position);
 }
 
 vl::Transform &

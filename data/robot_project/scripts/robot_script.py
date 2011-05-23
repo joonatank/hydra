@@ -60,6 +60,19 @@ def addSphere(name, mat_name, position, mass = 1) :
 	return sphere_body
 
 
+def createFixedConstraint(body0, body1, transform):
+	# FIXME this is causing problems because the Transform is zero
+	# we need to find the joint position in world coordinates and
+	# then fix it in locals
+	local0_trans = body0.transform_to_local(transform)
+	local1_trans = body1.transform_to_local(transform)
+	constraint = SixDofConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint.setLinearLowerLimit(Vector3(0, 0, 0))
+	constraint.setLinearUpperLimit(Vector3(0, 0, 0))
+	constraint.setAngularLowerLimit(Vector3(0, 0, 0))
+	constraint.setAngularUpperLimit(Vector3(0, 0, 0))
+	game.physics_world.addConstraint(constraint)
+
 print('Getting Camera SceneNode')
 camera_name = "Camera"
 if game.scene.hasSceneNode( camera_name ) :
@@ -92,17 +105,48 @@ if( game.scene.hasSceneNode("cb_cylinder_actuator") ):
 	cylinder = game.scene.getSceneNode("cb_cylinder_actuator")
 	print(cylinder)
 
+body_name = "cb_link0"
+link0_body = game.physics_world.getRigidBody(body_name)
+body_name = "cb_link1"
+link1_body = game.physics_world.getRigidBody(body_name)
+body_name = "cb_link2"
+link2_body = game.physics_world.getRigidBody(body_name)
+body_name = "cb_link3"
+link3_body = game.physics_world.getRigidBody(body_name)
+body_name = "cb_link4"
+link4_body = game.physics_world.getRigidBody(body_name)
 body_name = "cb_cylinder_actuator"
-if( game.physics_world.hasRigidBody(body_name) ):
-	print('Adding kinematic action to ', body_name)
-	body = game.physics_world.getRigidBody(body_name)
-#	addKinematicAction(body)
-else :
-	print('Physics world does not have body :', body_name)
+cylinder_actuator_body = game.physics_world.getRigidBody(body_name)
+body_name = "cb_cylinder_pistonrod"
+cylinder_piston_body = game.physics_world.getRigidBody(body_name)
 
-sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
-sphere.user_controlled = True
-addKinematicAction(sphere)
+transform = link0_body.world_transformation
+transform.position += Vector3(0, -0.5, 0)
+createFixedConstraint(link0_body, link1_body, transform)
+
+transform = link1_body.world_transformation
+createFixedConstraint(link1_body, cylinder_actuator_body, transform)
+
+transform = cylinder_piston_body.world_transformation
+createFixedConstraint(cylinder_actuator_body, cylinder_piston_body, transform)
+
+transform = cylinder_piston_body.world_transformation
+createFixedConstraint(cylinder_piston_body, link2_body, transform)
+
+transform = link2_body.world_transformation
+transform.position += Vector3(0, 0.5, 0)
+createFixedConstraint(link2_body, link3_body, transform)
+
+transform = link3_body.world_transformation
+transform.position += Vector3(-0.25, 0, 0)
+createFixedConstraint(link3_body, link4_body, transform)
+
+cylinder_actuator_body.user_controlled = True
+addKinematicAction(cylinder_actuator_body)
+
+sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0))
+#sphere.user_controlled = True
+#addKinematicAction(sphere)
 """
 print('Physics : Adding ogre')
 if game.scene.hasSceneNode( ogre_name ):

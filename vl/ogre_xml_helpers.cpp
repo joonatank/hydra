@@ -30,16 +30,13 @@ vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
 }
 
 bool
-vl::getAttribBool( rapidxml::xml_node<>* XMLNode,
+vl::getAttribBool( rapidxml::xml_node<> *xml_node,
 		const std::string &attrib, bool defaultValue )
 {
-	if( !XMLNode->first_attribute(attrib.c_str()) )
+	if( !xml_node->first_attribute(attrib.c_str()) )
 	{ return defaultValue; }
 
-	if( std::string(XMLNode->first_attribute(attrib.c_str())->value()) == "true" )
-	{ return true; }
-
-	return false;
+	return vl::from_string<bool>(xml_node->first_attribute(attrib.c_str())->value());
 }
 
 Ogre::Vector3

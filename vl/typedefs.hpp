@@ -145,10 +145,12 @@ namespace physics
 	class Constraint;
 	class SixDofConstraint;
 	class SliderConstraint;
+	class HingeConstraint;
 
 	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
 	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
 	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
+	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
 }
 
 namespace cluster

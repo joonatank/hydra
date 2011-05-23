@@ -13,20 +13,19 @@
 std::ostream &
 vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 {
-	os << "SceneNode = " << a.getName() << " with ID = " << a.getID()
-		<< " with position " << a.getPosition()
-		<< " and orientation " << a.getOrientation();
+	os << "SceneNode = " << a.getName() << "\t ID = " << a.getID();
 	if(!a._visible)
-	{ os << " Hidden"; }
+	{ os << "\t Hidden"; }
+	os << "\n transform " << a.getTransform() << "\n";
 
 	if( a._parent )
-	{ os << " with parent " << a._parent->getName() << ".\n"; }
+	{ os << "\t with parent " << a._parent->getName() << ".\n"; }
 	else
-	{ os << " without a parent.\n"; }
+	{ os << "\t without a parent.\n"; }
 		
 	if( !a._childs.empty() )
 	{
-		os << "with childs : ";
+		os << "\t with childs : ";
 		for( std::vector<vl::SceneNodePtr>::const_iterator iter = a._childs.begin();
 			iter != a._childs.end(); ++iter )
 		{
@@ -39,7 +38,7 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 
 	if( !a._objects.empty() )
 	{
-		os << "with objects : ";
+		os << "\t with objects : ";
 		for( std::vector<vl::MovableObjectPtr>::const_iterator iter = a._objects.begin();
 			 iter != a._objects.end(); ++iter )
 		{
@@ -56,9 +55,7 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 /// ------------------------------ Public ------------------------------------
 vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	: _name(name)
-	, _position( Ogre::Vector3::ZERO )
-	, _orientation( Ogre::Quaternion::IDENTITY )
-	, _scale(Ogre::Vector3(1,1,1))
+	, _scale(Ogre::Vector3::UNIT_SCALE)
 	, _visible(true)
 	, _show_boundingbox(false)
 	, _parent(0)
@@ -82,22 +79,73 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 }
 
 void 
+vl::SceneNode::setTransform(vl::Transform const &trans)
+{
+	if(_transform != trans)
+	{
+		setDirty(DIRTY_TRANSFORM);
+		_transform = trans;
+	}
+}
+
+void 
+vl::SceneNode::setTransform(vl::Transform const &trans, vl::SceneNodePtr reference)
+{
+	vl::Transform world_trans;
+	if(_parent)
+	{ world_trans = _parent->getWorldTransform(); }
+	world_trans.invert();
+	setTransform(world_trans * reference->getWorldTransform() * trans);
+}
+
+vl::Transform 
+vl::SceneNode::getTransform(vl::SceneNodePtr reference) const
+{
+	vl::Transform world_trans;
+	if(_parent)
+	{ world_trans = _parent->getWorldTransform(); }
+	world_trans.invert();
+	return reference->getWorldTransform() * world_trans * _transform;
+}
+
+void 
+vl::SceneNode::setWorldTransform(vl::Transform const &trans)
+{
+	vl::Transform world_trans;
+	if(_parent)
+	{ world_trans = _parent->getWorldTransform(); }
+	world_trans.invert();
+	setTransform(world_trans*trans);
+}
+
+vl::Transform 
+vl::SceneNode::getWorldTransform(void) const
+{
+	if(_parent)
+	{
+		return _parent->getWorldTransform()*_transform;
+	}
+
+	return _transform; 
+}
+
+void 
 vl::SceneNode::setPosition( Ogre::Vector3 const &v )
 {
-	if( v != _position )
+	if( v != _transform.position )
 	{
-		setDirty( DIRTY_POSITION );
-		_position = v;
+		setDirty(DIRTY_TRANSFORM);
+		_transform.position = v;
 	}
 }
 
 void 
 vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
 {
-	if( q != _orientation )
+	if( q != _transform.quaternion )
 	{
-		setDirty( DIRTY_ORIENTATION );
-		_orientation = q;
+		setDirty(DIRTY_TRANSFORM);
+		_transform.quaternion = q;
 	}
 }
 
@@ -313,14 +361,9 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _name;
 	}
 	// Serialize position
-	if( dirtyBits & DIRTY_POSITION )
+	if(dirtyBits & DIRTY_TRANSFORM)
 	{
-		msg << _position;
-	}
-	// Serialize orientation
-	if( dirtyBits & DIRTY_ORIENTATION )
-	{
-		msg << _orientation;
+		msg << _transform;
 	}
 
 	if( DIRTY_SCALE & dirtyBits )
@@ -370,26 +413,13 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 	{
 		msg >> _name;
 	}
-	// Deserialize position
-	if( dirtyBits & DIRTY_POSITION )
+	// Deserialize Transformation
+	if(dirtyBits & DIRTY_TRANSFORM)
 	{
-		msg >> _position;
+		msg >> _transform;
 
-		// If we have a correct node we need to transform it
-		if( _ogre_node )
-		{
-			_ogre_node->setPosition(_position);
-		}
-	}
-	// Deserialize orientation
-	if( dirtyBits & DIRTY_ORIENTATION )
-	{
-		msg >> _orientation;
-		// If we have a correct node we need to transform it
-		if( _ogre_node )
-		{
-			_ogre_node->setOrientation(_orientation);
-		}
+		_ogre_node->setOrientation(_transform.quaternion);
+		_ogre_node->setPosition(_transform.position);
 	}
 
 	

@@ -1,6 +1,8 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
+ *	@file dotscene_loader.cpp
  *
+ *	This file is part of Hydra a VR game engine.
  */
 
 #include "dotscene_loader.hpp"
@@ -414,21 +416,35 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 		std::string type = vl::getAttrib(xml_node, "physics_type", "RIGID_BODY");
 		// velociy_max and velocity_min not supported
 
-		// @todo fix the transform to the one in the scene node
-		vl::Transform transform(parent->getPosition(), parent->getOrientation());
+		vl::Transform transform(parent->getWorldTransform());
 		vl::physics::MotionState *m_state = _physics_world->createMotionState(transform, parent);
 		vl::MeshRefPtr mesh = _scene->getMeshManager()->getMesh(meshFile);
 		assert(mesh);
 		// @todo static mesh support for static objects
+		// @todo add support for NO_COLLISION objects
 		vl::physics::ConvexHullShapeRefPtr shape = vl::physics::ConvexHullShape::create(mesh);
 		// debug set mass to 1
-		//mass = 1;
 		if(mass == 0)
 		{ inertia = 0; }
+		
+		if(type == "RIGID_BODY")
+		{
+			std::clog << "Creating body " << name_ss.str() << " with mass " << mass 
+				<< " damping : linear " << damping_trans << " rotational " << damping_rot 
+				<< std::endl;
+			physics::RigidBodyRefPtr body = _physics_world->createRigidBody(name_ss.str(), mass, m_state, shape, Ogre::Vector3(1,1,1));
+			body->setUserControlled(actor);
+			if(actor)
+			{ std::clog << "Actor enabled." << std::endl; }
+			body->setDamping(damping_trans, damping_rot);
+		}
+		else if(type == "NO_COLLISION")
+		{
+			std::clog << "Entity with no collision. Will not create a RigidBody." << std::endl;
+		}
 
-		std::clog << "Creating body " << name_ss.str() << " with mass " << mass << std::endl;
-		physics::RigidBodyRefPtr body = _physics_world->createRigidBody(name_ss.str(), mass, m_state, shape, Ogre::Vector3(1,1,1));
-		body->setUserControlled(actor);
+		// @todo add support for compound collision objects, 
+		// when they are in the SceneNode hierarchy
 	}
 }
 

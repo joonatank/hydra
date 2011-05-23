@@ -73,7 +73,13 @@ public :
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
-	void addConstraint(vl::physics::ConstraintRefPtr constraint);
+	/// @brief add a constraint i.e. a joint to the world
+	/// @param constraint the constraint to add to the world
+	/// @param disableCollisionBetweenLinked no collision detection between linked rigid bodies
+	/// The constraint is only active if it's added to the current world.
+	/// Otherwise it's created and defined but not used in the calculations.
+	/// @todo should this throw if the constraint already exists?
+	void addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked = false);
 
 	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
 

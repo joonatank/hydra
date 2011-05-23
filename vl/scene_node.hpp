@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file scene_node.hpp
+ *
+ *	This file is part of Hydra a VR game engine.
  */
 
 #ifndef VL_SCENE_NODE_HPP
@@ -15,12 +17,15 @@
 #include "base/exceptions.hpp"
 #include "typedefs.hpp"
 
+#include "math/transform.hpp"
+
 // Base class
 #include "distributed.hpp"
 
 namespace vl
 {
 
+/// @todo add getTransform and getWorldTransform using vl::Transform
 class SceneNode : public vl::Distributed
 {
 public :
@@ -37,14 +42,44 @@ public :
 		_name = name;
 	}
 
-	Ogre::Vector3 const &getPosition( void ) const
-	{ return _position; }
+	void setTransform(vl::Transform const &trans);
 
+	/// @brief set the transformation in the space of an another object
+	/// @param trans Transformation in reference space
+	/// @param reference the space to use for Transformation
+	/// @todo not testes, and probably does not work correctly
+	void setTransform(vl::Transform const &trans, SceneNodePtr reference);
+
+	vl::Transform const &getTransform(void) const
+	{ return _transform; }
+
+	/// @brief get transformation in the space of an another object
+	/// @param reference the space the Transformation is returned
+	/// @return Transformation in reference space
+	/// @todo not testes, and probably does not work correctly
+	vl::Transform getTransform(SceneNodePtr reference) const;
+
+	/// @brief set the transformation in the world space
+	/// @param Transformation in world space
+	/// @todo not testes, and probably does not work correctly
+	void setWorldTransform(vl::Transform const &trans);
+
+	/// @brief get the transformation in the world space
+	/// @return Transformation in world space
+	vl::Transform getWorldTransform(void) const;
+	
+	/// @brief get the position in object space
+	Ogre::Vector3 const &getPosition(void) const
+	{ return _transform.position; }
+
+	/// @brief set the position in object space
 	void setPosition( Ogre::Vector3 const &v );
 
+	/// @brief get the orientation in object space
 	Ogre::Quaternion const &getOrientation( void ) const
-	{ return _orientation; }
+	{ return _transform.quaternion; }
 
+	/// @brief set the orientation in object space
 	void setOrientation( Ogre::Quaternion const &q );
 
 	void scale(Ogre::Real s);
@@ -103,8 +138,7 @@ public :
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_POSITION = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_ORIENTATION = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_TRANSFORM = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_SCALE = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 4,
 		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
@@ -126,8 +160,7 @@ protected :
 private :
 	std::string _name;
 
-	Ogre::Vector3 _position;
-	Ogre::Quaternion _orientation;
+	vl::Transform _transform;
 	Ogre::Vector3 _scale;
 
 	bool _visible;

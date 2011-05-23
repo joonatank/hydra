@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
  *	@file constraints.hpp
+ *
+ *	This file is part of Hydra a VR game engine.
  */
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_HPP
@@ -71,18 +73,9 @@ public :
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 	{
-		std::clog << "SixDofConstraint::create" << std::endl;
 		SixDofConstraintRefPtr constraint(new SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
 		return constraint;
 	}
-
-	/*
-	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-	{
-		SixDofConstraintRefPtr constraint(new SixDofConstraint(rbB, frameInB, useLinearReferenceFrameB));
-		return constraint;
-	}
-	*/
 
 private :
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
@@ -91,22 +84,15 @@ private :
 		, _bodyA(rbA)
 		, _bodyB(rbB)
 	{
-		std::clog << "SixDofConstraint created." << std::endl;
 		_bt_constraint = new btGeneric6DofConstraint(*rbA->getNative(), 
 			*rbB->getNative(), convert_bt_transform(frameInA), 
 			convert_bt_transform(frameInB), useLinearReferenceFrameA);
-		
-		btVector3 lowerSliderLimit = btVector3(-10,0,0); 
-		btVector3 hiSliderLimit = btVector3(10,0,0);
-		_bt_constraint->setLinearLowerLimit(lowerSliderLimit);
-		_bt_constraint->setLinearUpperLimit(hiSliderLimit);
 	}
 
  	SixDofConstraint(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
 		: _bt_constraint(0)
 		, _bodyB(rbB)
 	{
-		std::clog << "SixDofConstraint created." << std::endl;
 		_bt_constraint = new btGeneric6DofConstraint(*rbB->getNative(), 
 			convert_bt_transform(frameInB), useLinearReferenceFrameB);
 	}
@@ -269,6 +255,56 @@ private :
 	RigidBodyWeakPtr _bodyB;
 
 };	// class SliderConstraint
+
+class HingeConstraint : public Constraint
+{
+public :
+	virtual btTypedConstraint *getNative(void)
+	{ return _bt_constraint; }
+
+	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+	{
+		std::clog << "HingeConstraint::create" << std::endl;
+		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
+		return constraint;
+	}
+
+	/*
+	static SliderConstraintRefPtr create(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
+	{
+		SliderConstraintRefPtr constraint(new SliderConstraint(rbB, frameInB, useLinearReferenceFrameB));
+		return constraint;
+	}
+	*/
+
+private :
+	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+		: _bt_constraint(0)
+		, _bodyA(rbA)
+		, _bodyB(rbB)
+	{
+		std::clog << "HingeConstraint created." << std::endl;
+		_bt_constraint = new btHingeConstraint(*rbA->getNative(), *rbB->getNative(), 
+			convert_bt_transform(frameInA), convert_bt_transform(frameInB), useLinearReferenceFrameA);
+	}
+
+ 	HingeConstraint(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
+		: _bt_constraint(0)
+		, _bodyB(rbB)
+	{
+		std::clog << "HingeConstraint created." << std::endl;
+		_bt_constraint = new btHingeConstraint(*rbB->getNative(), 
+			convert_bt_transform(frameInB), useLinearReferenceFrameB);
+	}
+
+	btHingeConstraint *_bt_constraint;
+
+	RigidBodyWeakPtr _bodyA;
+	RigidBodyWeakPtr _bodyB;
+
+};	// class HingeConstraint
 
 }	// namespace physics
 
