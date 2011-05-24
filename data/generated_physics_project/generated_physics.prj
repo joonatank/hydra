@@ -2,9 +2,9 @@
 
 <!--
 Joonatan Kuosa <joonatan.kuosa@tut.fi>
-2010-11
+2011-05
 
-Ogre test project used for testing and demonstrating eqOgre
+Configuration for physics test scene.
 -->
 <project_config name="generated_physics">
 
@@ -17,9 +17,12 @@ Ogre test project used for testing and demonstrating eqOgre
 		N scripts files can be present
 		They all are of python scripts and have extensions .py
 
-		They are in scripts directory relative to the project directory
+		They are in scripts directory relative to any of the project
+		directories. So you can refer to scripts in global projects
+		directory by name here.
 		-->
 		<file use="true">physics_script.py</file>
+		<file use="true">generated_physics.py</file>
 	</scripts>
 
 </project_config>

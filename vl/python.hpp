@@ -74,6 +74,7 @@ private :
 			: script(res), auto_run(aut), executed(false)
 		{}
 
+		std::string name;
 		vl::TextResource script;
 		bool auto_run;
 		bool executed;
@@ -85,7 +86,8 @@ private :
 
 	bool _auto_run;
 
-	std::map<std::string, Script> _scripts;
+	// Using vector to preserve the order they are added
+	std::vector<Script> _scripts;
 
 	// Python related
 	python::object _global;

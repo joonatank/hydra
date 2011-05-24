@@ -78,7 +78,13 @@ Project may be launchable
 		N scripts files can be present
 		They all are of python scripts and have extensions .py
 
-		They are in scripts directory relative to the project directory
+		They are in scripts directory relative to any of the project
+		directories. So you can refer to scripts in global projects
+		directory by name here.
+
+		The execution order is guarantied to be the order they appear
+		here. But auxilary projects (like global) is always executed
+		first.
 		-->
 		<file use="true">scrip1.py</file>
 		<file use="false">script2.py</file>

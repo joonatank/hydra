@@ -199,7 +199,6 @@ namespace vl
 	struct invalid_dotscene : public parsing_error {};
 	struct invalid_tracking : public parsing_error {};
 
-	///
 	/// ---------- UDP errors --------------
 	struct short_message : public exception
 	{
@@ -214,10 +213,18 @@ namespace vl
 	};
 
 	/// ----------- Resource errors -------------
+	/// @brief thrown by Resource loaders
 	struct missing_resource : public exception
 	{
 		virtual const char* what() const throw()
 		{ return "Resource not found."; }
+	};
+
+	/// @brief thrown by the Python context manager
+	struct missing_script : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Python script is not loaded."; }
 	};
 
 	/// ----------- Development throws ----------
