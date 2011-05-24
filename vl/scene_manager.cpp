@@ -609,7 +609,6 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 	{
 		msg >> _shadows;
 
-		/// @todo move these to our SceneManager and make them configurable using python
 		/// ideally most of these should be configurable from config file
 		/// because they are really performance intense, can look pretty crappy
 		/// and most of them need to be static during the simulation
@@ -645,8 +644,9 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		_ogre_sm->setShadowTexturePixelFormat(Ogre::PF_FLOAT32_R);
 		_ogre_sm->setShadowTextureCasterMaterial("ShadowCaster");
 
-		/// For texture shadows to work this must be set
+		/// For fixed functionality texture shadows to work this must be set
 		/// @todo make configurable
+		/// @todo add support for it in Shaders (just clip the shadow)
 		_ogre_sm->setShadowFarDistance(50);
 	}
 }

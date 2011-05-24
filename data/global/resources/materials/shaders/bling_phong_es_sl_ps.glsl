@@ -21,9 +21,9 @@
 #version 140
 
 // Material parameters
-uniform float shininess; // Shininess exponent for specular highlights
 uniform vec4 surfaceDiffuse;
 uniform vec4 surfaceSpecular;
+uniform float shininess; // Shininess exponent for specular highlights
 
 // Light parameters
 uniform vec4 lightDiffuse;
@@ -33,8 +33,14 @@ uniform vec4 spotlightParams;
 // Textures
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularMap;
+
 #ifdef SHADOW_MAP
 uniform sampler2D shadowMap;
+#endif
+
+#ifdef SHADOW_MAP
+// Wether or not this light casts shadows
+uniform float lightCastsShadows;
 #endif
 
 in vec4 uv;
@@ -47,7 +53,7 @@ in vec3 vNormal;
 // Direction to light
 in vec3 dirToLight;
 // from vertex to eye in eye space
-out vec3 dirToEye;
+in vec3 dirToEye;
 // How much the light is to be attenuated, this includes both spotlight
 // Should these be calculated in the pixel shader?
 in float attenuation;
@@ -115,15 +121,17 @@ void main(void)
 		}
 	}
 
-#ifdef SHADOW_MAP
-	// Projective shadows, and the shadow texture is a depth map
-	// note the perspective division!
-	vec3 tex_coords = shadowUV.xyz/shadowUV.w;
-	// read depth value from shadow map
-	float depth = texture(shadowMap, tex_coords.xy).r;
-	float inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
-#else
 	float inShadow = 1.0;
+#ifdef SHADOW_MAP
+	if(lightCastsShadows > 0.0)
+	{
+		// Projective shadows, and the shadow texture is a depth map
+		// note the perspective division!
+		vec3 tex_coords = shadowUV.xyz/shadowUV.w;
+		// read depth value from shadow map
+		float depth = texture(shadowMap, tex_coords.xy).r;
+		inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
+	}
 #endif
 
 	colour = inShadow*(diffuse + specular);
