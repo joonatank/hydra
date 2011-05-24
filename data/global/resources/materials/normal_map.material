@@ -24,7 +24,7 @@ material bling_phong_multi_pass
 	set $ambientCol "0 0 0 0"
 	set $emissiveCol "0 0 0 0"
 	set $diffuseCol "1 1 1 1"
-	set $specularCol "1 1 1"
+	set $specularCol "0 0 0"
 	set $shininess "32"
 
     technique

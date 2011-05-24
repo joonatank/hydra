@@ -31,15 +31,20 @@ uniform vec4 lightDiffuse;
 uniform vec4 lightSpecular;
 uniform vec4 spotlightParams;
 
+#ifdef SHADOW_MAP
+uniform float lightCastsShadows;
+#endif
+
 // Textures
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularMap;
 uniform sampler2D normalMap;
+#ifdef SHADOW_MAP
 uniform sampler2D shadowMap;
+#endif
 
 in vec4 uv;
 
-in vec3 oNormal;
 // Space in which these are does not matter as all the transformation
 // should be done in the vertex shader and they should be in the same
 // space here be that object, eye or tangent.
@@ -56,12 +61,14 @@ in float attenuation;
 in vec3 spotlightDir;
 
 // Vertex colour
-// Not supported yet, these need a whether or not the material has them or not
+// Not supported yet, these need a switch for the material
 in vec4 vColour;
 
 // Shadow map uvs, x,y are the coordinates on the texture
 // z is the distance to light
+#ifdef SHADOW_MAP
 in vec4 shadowUV;
+#endif
 
 out vec4 FragmentColour;
 
@@ -119,15 +126,22 @@ void main(void)
 			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(HdotN, shininess);
+			//specular = vec4(0, 0, 0, 1);
 		}
 	}
 
-	// Projective shadows, and the shadow texture is a depth map
-	// note the perspective division!
-	vec3 tex_coords = shadowUV.xyz/shadowUV.w;
-	// read depth value from shadow map
-	float depth = texture(shadowMap, tex_coords.xy).r;
-	float inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
+	float inShadow = 1.0;
+#ifdef SHADOW_MAP
+	if(lightCastsShadows > 0.0)
+	{
+		// Projective shadows, and the shadow texture is a depth map
+		// note the perspective division!
+		vec3 tex_coords = shadowUV.xyz/shadowUV.w;
+		// read depth value from shadow map
+		float depth = texture(shadowMap, tex_coords.xy).r;
+		inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
+	}
+#endif
 
 	colour = inShadow*(diffuse + specular);
 

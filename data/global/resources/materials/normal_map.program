@@ -1,6 +1,6 @@
-// FIXME preprocessor_defines don't work for version 140 for some reason
-// at least the ones without values
-// They work if you provide values to them, 0 disable and anything else enable
+
+// Preprocessor macros work only if you provide values to them,
+// 0 disable and anything else enable
 
 vertex_program pass_through_vs glsl
 {
@@ -39,6 +39,8 @@ vertex_program bling_phong_sl_shadows_vs glsl
 {
 	source bling_phong_ts_sl_vs.glsl
 
+	preprocessor_defines SHADOW_MAP=1
+
 	default_params
 	{
 		param_named_auto modelView worldview_matrix
@@ -47,6 +49,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 		param_named_auto lightPos light_position_view_space 0
 		param_named_auto spotDirection light_direction_view_space 0
 		param_named_auto lightAttenuation light_attenuation 0
+
 		// shadow texture projections
 		param_named_auto model world_matrix
 		// first shadow camera transformation
@@ -59,6 +62,8 @@ fragment_program bling_phong_sl_shadows_ps glsl
 {
 	source bling_phong_ts_sl_ps.glsl
 
+	preprocessor_defines SHADOW_MAP=1
+
 	default_params
 	{
 		param_named_auto shininess surface_shininess
@@ -68,6 +73,9 @@ fragment_program bling_phong_sl_shadows_ps glsl
 		param_named_auto lightDiffuse light_diffuse_colour 0
 		param_named_auto lightSpecular light_specular_colour 0
 		param_named_auto spotlightParams spotlight_params 0
+
+		// light casts shadows or not
+		param_named_auto lightCastsShadows light_casts_shadows 0
 
 		// Don't change the order, because they are mapped with index
 		param_named diffuseTexture int 0
@@ -106,13 +114,16 @@ fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 
 	default_params
 	{
-		param_named_auto shininess surface_shininess
 		param_named_auto surfaceDiffuse surface_diffuse_colour
 		param_named_auto surfaceSpecular surface_specular_colour
+		param_named_auto shininess surface_shininess
 
 		param_named_auto lightDiffuse light_diffuse_colour 0
 		param_named_auto lightSpecular light_specular_colour 0
 		param_named_auto spotlightParams spotlight_params 0
+
+		// light casts shadows or not
+		param_named_auto lightCastsShadows light_casts_shadows 0
 
 		// Don't change the order, because they are mapped with index
 		param_named diffuseTexture int 0
@@ -159,7 +170,6 @@ fragment_program bling_phong_eye_space_sl_ps glsl
 		// Don't change the order, because they are mapped with index
 		param_named diffuseTexture int 0
 		param_named specularMap int 1
-		param_named shadowMap int 2
 	}
 }
 
