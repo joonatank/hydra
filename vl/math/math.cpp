@@ -176,6 +176,12 @@ vl::calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane,
 	Ogre::Real wall_bottom = bottom_right.y;
 	Ogre::Real wall_front = bottom_right.z;
 
+	// @todo the head needs to be rotated by the wall so we get the
+	// up axis in wall coordinates
+	// this should fix the frustum for top and floor walls
+	// necessary because for the top and floor walls the up axis
+	// is z and not y as for the side walls
+
 	// The coordinates right, left, top, bottom
 	// represent a view frustum with coordinates (left, bottom, -near)
 	// and (right, top, -near)

@@ -18,9 +18,11 @@ vl::cluster::Server::Server( uint16_t const port )
 {
 	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
-	boost::asio::socket_base::receive_buffer_size buf_size;
-	_socket.get_option(buf_size);
-	std::cout << vl::TRACE << "Receive Buffer size = " << buf_size.value() << "." << std::endl;
+	boost::asio::socket_base::receive_buffer_size rec_buf_size;
+	_socket.get_option(rec_buf_size);
+	boost::asio::socket_base::send_buffer_size send_buf_size;
+	_socket.set_option(send_buf_size);
+	std::cout << vl::TRACE << "Receive Buffer size = " << rec_buf_size.value() << "." << std::endl;
 }
 
 
