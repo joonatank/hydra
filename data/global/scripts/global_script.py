@@ -52,7 +52,6 @@ def createCameraMovements(node) :
 	# Add the real action to the proxies
 	trans_action_proxy.action = trans_action
 	rot_action_proxy.action = trans_action
-	# TODO add rotation speed
 	# Create a FrameTrigger and add the action to that
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action(trans_action)

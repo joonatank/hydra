@@ -395,7 +395,7 @@ vl::DotSceneLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePt
 	parent->attachObject(light);
 
 	std::string sValue = vl::getAttrib(xml_node, "type");
-	if(sValue == "point")
+	if(sValue == "point" || sValue == "hemi" || sValue == "radPoint")
 	{ light->setType( vl::Light::LT_POINT ); }
 	else if(sValue == "directional")
 	{ light->setType( vl::Light::LT_DIRECTIONAL ); }
@@ -403,11 +403,11 @@ vl::DotSceneLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePt
 	// but OgreMax uses spot so we allow
 	else if(sValue == "spot" || sValue == "spotLight" )
 	{ light->setType( vl::Light::LT_SPOT ); }
-	else if(sValue == "radPoint")
-	{ light->setType( vl::Light::LT_POINT ); }
 
 	light->setVisible(vl::getAttribBool(xml_node, "visible", true));
-	light->setCastShadows(vl::getAttribBool(xml_node, "castShadows", true));
+	bool shadow = vl::getAttribBool(xml_node, "shadow", true);
+	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
+	light->setCastShadows(shadow || castShadows);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -427,11 +427,17 @@ vl::DotSceneLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePt
 
 	// Process colourDiffuse (?)
 	pElement = xml_node->first_node("colourDiffuse");
+	if(!pElement)
+	{ pElement = xml_node->first_node("colorDiffuse"); }
+
 	if(pElement)
 	{ light->setDiffuseColour(vl::parseColour(pElement)); }
 
 	// Process colourSpecular (?)
 	pElement = xml_node->first_node("colourSpecular");
+	if(!pElement)
+	{ pElement = xml_node->first_node("colorSpecular"); }
+
 	if(pElement)
 	{ light->setSpecularColour(vl::parseColour(pElement)); }
 
