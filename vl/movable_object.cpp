@@ -27,6 +27,17 @@ vl::MovableObject::setParent(vl::SceneNodePtr parent)
 	}
 }
 
+void 
+vl::MovableObject::setVisible(bool visible)
+{
+	if(_visible != visible)
+	{
+		setDirty(DIRTY_VISIBLE);
+		_visible = visible;
+	}
+}
+
+/// -------------------------------------- Private ---------------------------
 bool 
 vl::MovableObject::_createNative(void)
 {
@@ -46,6 +57,11 @@ vl::MovableObject::serialize( vl::cluster::ByteStream &msg, const uint64_t dirty
 		msg << _name;
 	}
 
+	if( DIRTY_VISIBLE & dirtyBits )
+	{
+		msg << _visible;
+	}
+
 	doSerialize(msg, dirtyBits);
 }
 
@@ -60,8 +76,21 @@ vl::MovableObject::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 		recreate = true;
 	}
 
+	if( DIRTY_VISIBLE & dirtyBits )
+	{
+		msg >> _visible;
+		if(getNative())
+		{ getNative()->setVisible(_visible); }
+	}
+
 	doDeserialize(msg, dirtyBits);
 		
 	if( recreate )
-	{ _createNative(); }
+	{
+		_createNative();
+
+		/// For background loaded they don't have natives
+		if(getNative())
+		{ getNative()->setVisible(_visible); }
+	}
 }

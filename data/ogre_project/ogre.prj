@@ -9,8 +9,12 @@ Ogre test project used for testing and demonstrating eqOgre
 <project_config name="ogre">
 
 	<scenes>
+		<!-- multiple scenes for testing -->
 		<scene name="ogre" use="true">
 			<file>ogre.scene</file>
+		</scene>
+		<scene name="athene" use="true">
+			<file>athene.scene</file>
 		</scene>
 
 	</scenes>

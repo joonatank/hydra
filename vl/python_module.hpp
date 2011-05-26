@@ -238,7 +238,11 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_internal_reference<>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_internal_reference<>() ), &vl::SceneNode::setOrientation )
 		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_internal_reference<>() ), &vl::SceneNode::setScale )
-		.add_property("visibility", &SceneNode::getVisibility, &vl::SceneNode::setVisibility )
+		.add_property("visible", &SceneNode::getVisible, &vl::SceneNode::setVisible)
+		.def("hide", &vl::SceneNode::hide)
+		.def("isHidden", &vl::SceneNode::isHidden)
+		.def("show", &vl::SceneNode::show)
+		.def("isShown", &vl::SceneNode::isShown)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

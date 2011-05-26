@@ -368,7 +368,7 @@ vl::Config::_hideCollisionBarries( void )
 		std::string str( (*iter)->getName().substr(0, 3) );
 		vl::to_lower(str);
 		if(  str == "cb_" )
-		{ (*iter)->setVisibility(false); }
+		{ (*iter)->setVisible(false); }
 	}
 }
 

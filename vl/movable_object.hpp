@@ -23,7 +23,7 @@ class MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator)
-		: _name(name), _creator(creator), _parent(0)
+		: _name(name), _visible(true), _creator(creator), _parent(0)
 	{}
 
 	std::string const &getName(void) const
@@ -39,10 +39,16 @@ public :
 
 	virtual std::string getTypeName(void) const = 0;
 
+	void setVisible(bool visible);
+
+	bool getVisible(void) const
+	{ return _visible; }
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_VISIBLE = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
 	};
 
 private :
@@ -65,6 +71,8 @@ private :
 /// Protected data
 protected :
 	std::string _name;
+
+	bool _visible;
 
 	vl::SceneManagerPtr _creator;
 	

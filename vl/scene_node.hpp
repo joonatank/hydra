@@ -62,10 +62,22 @@ public :
 	/// because we can not use Ogre meshes in the master node
 	//void setSize(Ogre::Vector3 const &s);
 
-	bool getVisibility( void ) const
+	bool getVisible( void ) const
 	{ return _visible; }
 
-	void setVisibility( bool visible );
+	/// @brief set the visibility of the object
+	/// @param visible
+	void setVisible(bool visible);
+
+	void show(void)
+	{ setVisible(true); }
+	bool isShown(void) const
+	{ return getVisible() == true; }
+
+	void hide(void)
+	{ setVisible(false); }
+	bool isHidden(void) const
+	{ return getVisible() == false; }
 
 	void showBoundingBox( bool show );
 
