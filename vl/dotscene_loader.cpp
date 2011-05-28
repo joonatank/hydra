@@ -312,13 +312,15 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 	{ node->setPosition(vl::parseVector3(pElement)); }
 
 	// Process rotation (?)
-	pElement = xml_node->first_node("rotation");
-	if( pElement )
-	{ node->setOrientation(vl::parseQuaternion(pElement)); }
-
 	pElement = xml_node->first_node("quaternion");
+	if(!pElement)
+	{ pElement = xml_node->first_node("rotation"); }
+
 	if( pElement )
-	{ node->setOrientation(vl::parseQuaternion(pElement)); }
+	{
+		Ogre::Quaternion q = vl::parseQuaternion(pElement);
+		node->setOrientation(q);
+	}
 
 	// Process scale (?)
 	pElement = xml_node->first_node("scale");

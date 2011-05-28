@@ -23,6 +23,7 @@
  *	name (unnamed parameter), server name to start for example glassess or Mevea
  *
  * Input file
+ * \t means tabulator
  * time\t sensor\t vector (x,y,z) \t quaternion (w, x, y, z)
  * Where vector is the position and quaternion is the rotation of the object
  * vector is in meters, quaternion is w,x,y,z quaternion
