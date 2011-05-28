@@ -38,28 +38,18 @@ class SixDofConstraint : public Constraint
 {
 public :
 	void setLinearLowerLimit(Ogre::Vector3 const &linearLower)
-	{
-		assert(_bt_constraint);
-		_bt_constraint->setLinearLowerLimit(convert_bt_vec(linearLower));
-	}
+	{ _bt_constraint->setLinearLowerLimit(convert_bt_vec(linearLower)); }
 	
 	void setLinearUpperLimit(Ogre::Vector3 const &linearUpper)
-	{
-		assert(_bt_constraint);
-		_bt_constraint->setLinearUpperLimit(convert_bt_vec(linearUpper));
-	}
+	{ _bt_constraint->setLinearUpperLimit(convert_bt_vec(linearUpper)); }
 
 	void setAngularLowerLimit(Ogre::Vector3 const &angularLower)
-	{
-		assert(_bt_constraint);
-		_bt_constraint->setAngularLowerLimit(convert_bt_vec(angularLower));
-	}
+	{ _bt_constraint->setAngularLowerLimit(convert_bt_vec(angularLower)); }
 
 	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
-	{
-		assert(_bt_constraint);
-		_bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper));
-	}
+	{ _bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper)); }
+
+	// @todo add motors
 
 	RigidBodyRefPtr getBodyA(void)
 	{ return _bodyA.lock(); }
@@ -215,7 +205,6 @@ public :
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 	{
-		std::clog << "SliderConstraint::create" << std::endl;
 		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
 		return constraint;
 	}
@@ -235,7 +224,6 @@ private :
 		, _bodyA(rbA)
 		, _bodyB(rbB)
 	{
-		std::clog << "SliderConstraint created." << std::endl;
 		_bt_constraint = new btSliderConstraint(*rbA->getNative(), *rbB->getNative(), 
 			convert_bt_transform(frameInA), convert_bt_transform(frameInB), useLinearReferenceFrameA);
 	}
@@ -244,7 +232,6 @@ private :
 		: _bt_constraint(0)
 		, _bodyB(rbB)
 	{
-		std::clog << "SliderConstraint created." << std::endl;
 		_bt_constraint = new btSliderConstraint(*rbB->getNative(), 
 			convert_bt_transform(frameInB), useLinearReferenceFrameB);
 	}

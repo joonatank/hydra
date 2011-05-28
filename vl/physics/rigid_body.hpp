@@ -18,6 +18,8 @@
 namespace {
 	using vl::math::convert_bt_vec;
 	using vl::math::convert_vec;
+	using vl::math::convert_bt_transform;
+	using vl::math::convert_transform;
 }
 
 namespace vl {
@@ -71,8 +73,17 @@ public :
 	{ _bt_body->applyTorque(vl::math::convert_bt_vec(v)); }
 	void applyTorqueImpulse(Ogre::Vector3 const &v)
 	{ _bt_body->applyTorqueImpulse(vl::math::convert_bt_vec(v)); }
-	void applyCentralForce(Ogre::Vector3 const &v)
-	{ _bt_body->applyCentralForce(vl::math::convert_bt_vec(v)); }
+	void applyCentralForce(Ogre::Vector3 const &v, bool local = false)
+	{
+		/// @todo this is insanily inefficient way to do this
+		/// I would think that all calculations are done in local space anyway
+		/// so doing transforms from local to world seems like an extra overhead
+		if(!local)
+		{ _bt_body->applyCentralForce(vl::math::convert_bt_vec(v)); }
+		else
+		{ _bt_body->applyCentralForce(vl::math::convert_bt_vec(positionToLocal(v))); }
+	}
+
 	void applyCentralImpulse(Ogre::Vector3 const &v)
 	{ _bt_body->applyCentralImpulse(vl::math::convert_bt_vec(v)); }
 	void setLinearVelocity(Ogre::Vector3 const &v)
@@ -95,14 +106,37 @@ public :
 	Ogre::Real getAngularDamping(void) const
 	{ return _bt_body->getAngularDamping(); }
 
-// 	void setMass(Ogre::Real mass);
-// 	{ return _bt_body-> }
+	/// Doesn't set mass if we have no inertia tensor use setMassProps
+	/// it might work, if you set the mass first and the inertia tensor after that
+ 	void setMass(Ogre::Real mass)
+ 	{
+		if(!_bt_body->getInvInertiaDiagLocal().isZero())
+		{
+			btVector3 inv = _bt_body->getInvInertiaDiagLocal();
+			btVector3 inertia(1/inv.x(), 1/inv.y(), 1/inv.z());
+			_bt_body->setMassProps(mass, inertia);
+		}
+	}
+
+	Ogre::Real getMass(void) const
+	{
+		if(_bt_body->getInvMass() != 0)
+		{ return 1/_bt_body->getInvMass(); }
+		else
+		{ return 0; }
+	}
 
 	void setInertia(Ogre::Vector3 const &inertia)
 	{ setMassProps( 1/getInvMass(), inertia ); }
 
 	void setMassProps(Ogre::Real mass, Ogre::Vector3 const &inertia)
 	{ _bt_body->setMassProps(mass, convert_bt_vec(inertia)); }
+
+	void setCenterOfMassTransform(vl::Transform const &xform)
+	{ _bt_body->setCenterOfMassTransform(convert_bt_transform(xform)); }
+
+	vl::Transform getCenterOfMassTransform(void) const
+	{ return convert_transform(_bt_body->getCenterOfMassTransform()); }
 
 	// Every object that is controlled by the user should have
 	// DISABLE_DEACTIVATION set
@@ -139,7 +173,15 @@ public :
 		return from_world*t;
 	}
 
-	vl::Transform const &getWorldTransform(void) const
+	Ogre::Vector3 positionToLocal(Ogre::Vector3 const &v) const
+	{
+		MotionState *ms = (MotionState *)_bt_body->getMotionState();
+		vl::Transform from_world = ms->getWorldTransform();
+		from_world.invert();
+		return from_world*v;
+	}
+
+	vl::Transform getWorldTransform(void) const
 	{ return ((MotionState *)_bt_body->getMotionState())->getWorldTransform(); }
 
 	std::string const &getName(void) const

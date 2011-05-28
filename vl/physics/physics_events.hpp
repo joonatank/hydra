@@ -28,7 +28,7 @@ class ApplyForce : public vl::BasicAction
 {
 public :
 	ApplyForce( void )
-		: _body(0), _force(0,0,0)
+		: _body(0), _force(0,0,0), _local(false)
 	{}
 
 	void setForce( Ogre::Vector3 const &vec )
@@ -42,19 +42,27 @@ public :
 	virtual std::string getTypeName( void ) const
 	{ return "ApplyForce"; }
 
-	static ApplyForce *create( void )
+	static ApplyForce *create(void)
 	{ return new ApplyForce; }
 
-	void setRigidBody( vl::physics::RigidBody *body )
+	void setRigidBody(vl::physics::RigidBody *body)
 	{ _body = body; }
 
 	vl::physics::RigidBody *getRigidBody( void )
 	{ return _body; }
 
+	void setLocal(bool local)
+	{ _local = local; }
+
+	bool getLocal(void) const
+	{ return _local; }
+
 protected :
 	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _force;
+
+	bool _local;
 };
 
 class ApplyTorque : public vl::BasicAction

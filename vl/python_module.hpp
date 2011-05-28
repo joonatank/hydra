@@ -94,8 +94,13 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
 		.def(python::init<Ogre::Quaternion>())
 		.def("isIdentity", &vl::Transform::isIdentity)
+		.def("invert", &vl::Transform::invert)
 		.def_readwrite("position", &vl::Transform::position)
 		.def_readwrite("quaternion", &vl::Transform::quaternion)
+		.def(python::self *= python::self)
+		.def(python::self * python::self)
+		.def(python::self == python::self)
+		.def(python::self != python::self)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -696,13 +701,16 @@ BOOST_PYTHON_MODULE(vl)
 		.def("setInertia", &vl::physics::RigidBody::setInertia)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
 		.def("transform_to_local", &vl::physics::RigidBody::transformToLocal)
-		.add_property("world_transform", python::make_function(&vl::physics::RigidBody::getWorldTransform, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("world_transform", &vl::physics::RigidBody::getWorldTransform)
 		.add_property("shape", &vl::physics::RigidBody::getShape)
 		.add_property("user_controlled", &vl::physics::RigidBody::isUserControlled, &vl::physics::RigidBody::setUserControlled)
 		.add_property("motion_state", python::make_function(getMotionState_ov1, python::return_value_policy<python::reference_existing_object>()), &vl::physics::RigidBody::setMotionState )
 		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
+		.add_property("mass", &vl::physics::RigidBody::getMass, &vl::physics::RigidBody::setMass)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
+
+	Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
@@ -710,6 +718,7 @@ BOOST_PYTHON_MODULE(vl)
 					  &vl::physics::MotionState::setNode )
 		.add_property("position", &vl::physics::MotionState::getPosition)
 		.add_property("orientation", &vl::physics::MotionState::getOrientation)
+		.add_property("world_transform", getWorldTransform_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -740,9 +749,9 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::physics::DynamicAction, boost::noncopyable, python::bases<vl::MoveAction> >("DynamicAction", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::DynamicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::DynamicAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::DynamicAction::getForce, python::return_internal_reference<>() ),
+		.add_property("force", python::make_function( &vl::physics::DynamicAction::getForce, python::return_value_policy<python::copy_const_reference>() ),
 					  &vl::physics::DynamicAction::setForce )
-		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_internal_reference<>() ),
+		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_value_policy<python::copy_const_reference>() ),
 					  &vl::physics::DynamicAction::setTorque )
 		.def("create",&vl::physics::DynamicAction::create,
 			 python::return_value_policy<python::reference_existing_object>() )
@@ -752,8 +761,9 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<BasicAction> >("ApplyForce", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::ApplyForce::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_internal_reference<>() ),
+		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_value_policy<python::copy_const_reference>() ),
 					  &vl::physics::ApplyForce::setForce )
+		.add_property("local", &vl::physics::ApplyForce::getLocal, &vl::physics::ApplyForce::setLocal)
 		.def("create",&vl::physics::ApplyForce::create,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
@@ -762,7 +772,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<BasicAction> >("ApplyTorque", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::ApplyTorque::setRigidBody )
-		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_internal_reference<>() ),
+		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_value_policy<python::copy_const_reference>() ),
 					  &vl::physics::ApplyTorque::setTorque )
 		.def("create",&vl::physics::ApplyTorque::create,
 			 python::return_value_policy<python::reference_existing_object>() )

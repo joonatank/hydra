@@ -15,7 +15,7 @@ vl::physics::ApplyForce::execute( void )
 	if( !_body )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
-	_body->applyCentralForce(_force);
+	_body->applyCentralForce(_force, _local);
 }
 
 

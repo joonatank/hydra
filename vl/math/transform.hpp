@@ -53,6 +53,12 @@ operator*( vl::Transform const &t, Ogre::Matrix4 const &m );
 vl::Transform 
 operator*( Ogre::Matrix4 const &m, vl::Transform const &t );
 
+Ogre::Vector3
+operator*( vl::Transform const &t, Ogre::Vector3 const &v);
+
+Ogre::Quaternion
+operator*( vl::Transform const &t, Ogre::Quaternion const &q);
+
 /// Comparison
 bool
 operator==(vl::Transform const &t1, vl::Transform const &t2);

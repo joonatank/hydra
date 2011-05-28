@@ -86,6 +86,18 @@ vl::operator*( Ogre::Matrix4 const &m, vl::Transform const &t )
 	return vl::Transform( res.getTrans(), q );
 }
 
+Ogre::Vector3
+vl::operator*( vl::Transform const &t, Ogre::Vector3 const &v)
+{
+	return t.quaternion * v + t.position;
+}
+
+Ogre::Quaternion
+vl::operator*( vl::Transform const &t, Ogre::Quaternion const &q)
+{
+	return t.quaternion*q;
+}
+
 bool
 vl::operator==(vl::Transform const &t1, vl::Transform const &t2)
 {

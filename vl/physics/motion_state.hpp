@@ -61,6 +61,7 @@ public:
 		// set the object transform especially useful for static objects
 		if(_visibleobj)
 		{
+			/// @todo these should set the world transform
 			vl::Transform trans = vl::math::convert_transform(_trans);
 			_visibleobj->setPosition(trans.position);
 			_visibleobj->setOrientation(trans.quaternion);
@@ -91,6 +92,7 @@ public:
 			return; // silently return before we set a node
 
 		vl::Transform t = vl::math::convert_transform(_trans);
+		/// @todo these should set the world transform
 		_visibleobj->setOrientation(t.quaternion);
 		_visibleobj->setPosition(t.position);
 	}

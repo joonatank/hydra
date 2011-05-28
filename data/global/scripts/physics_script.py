@@ -31,6 +31,38 @@ def addKinematicAction(body):
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
 
+def addDynamicAction(body):
+	print('Creating Dynamic event on ' + body.name)
+
+	# Create the translation action using a proxy
+	trans_action_proxy = MoveActionProxy.create()
+	trans_action_proxy.enableTranslation()
+	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.NUMPAD6, KC.NUMPAD4 )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.NUMPAD5, KC.NUMPAD8 )
+	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.NUMPAD9, KC.NUMPAD7 )
+
+	# Create the rotation action using a proxy
+	#rot_action_proxy = MoveActionProxy.create()
+	#rot_action_proxy.enableRotation()
+	# This is not useful, maybe using Q and E
+	# TODO add rotation proxy, using a CTRL modifier
+
+	# Create the real action
+	trans_action = DynamicAction.create()
+	trans_action.body = body
+	# Relative to the mass, so we get nice acceleration and add some force
+	# to win gravity
+	trans_action.force = Vector3(10, 10, 10)*body.mass + Vector3(0, 10, 0)
+	# No torque because no rotations
+	#trans_action.torque = Vector3(10, 100, 100)
+	# Add the real action to the proxies
+	trans_action_proxy.action = trans_action
+	#rot_action_proxy.action = trans_action
+	# TODO add rotation speed
+	# Create a FrameTrigger and add the action to that
+	trigger = game.event_manager.getFrameTrigger()
+	trigger.action.add_action( trans_action )
+
 def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	print('Physics : Adding a box ' + name)
 	box_node = game.scene.createSceneNode(name)
@@ -53,16 +85,16 @@ def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	return box
 
 
-def addSphere(name, mat_name, position, mass = 1) :
+def addSphere(name, mat_name, position, mass = 1, size = 1) :
 	print('Adding a sphere ' + name)
 	sphere_node = game.scene.createSceneNode(name)
 	# TODO this should be copied from the shape, using bounding boxes
-	sphere_node.scale = Vector3(0.02, 0.02, 0.02)
+	sphere_node.scale = Vector3(0.02, 0.02, 0.02)*size
 	sphere = game.scene.createEntity(name, PF.SPHERE)
 	sphere_node.attachObject(sphere)
 	sphere.material_name = mat_name
 
-	sphere_shape = SphereShape.create(1)
+	sphere_shape = SphereShape.create(size)
 	trans = Transform( position, Quaternion.identity)
 	motion_state = world.createMotionState(trans, sphere_node)
 	inertia = Vector3.zero
