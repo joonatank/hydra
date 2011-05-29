@@ -396,6 +396,8 @@ public :
 
 	SceneNodeList const &getSelection( void ) const
 	{ return _selection; }
+
+	void clearSelection(void);
 	
 	enum DirtyBits
 	{

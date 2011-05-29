@@ -169,6 +169,7 @@ BOOST_PYTHON_MODULE(vl)
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
+		.def("clearSelection", &SceneManager::clearSelection)
 
 		.def("reloadScene", &SceneManager::reloadScene)
 		/// @todo add printing

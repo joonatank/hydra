@@ -580,6 +580,17 @@ vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
 	return false;
 }
 
+void 
+vl::SceneManager::clearSelection(void)
+{
+	for(SceneNodeList::iterator iter = _selection.begin(); iter != _selection.end(); ++iter )
+	{
+		(*iter)->showBoundingBox(false);
+	}
+
+	_selection.clear();
+}
+
 /// -------------------------------Protected -----------------------------------
 void 
 vl::SceneManager::recaluclateDirties(void)
