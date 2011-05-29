@@ -50,7 +50,7 @@ vl::MovableObject::_createNative(void)
 }
 
 void
-vl::MovableObject::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::MovableObject::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( DIRTY_NAME & dirtyBits )
 	{

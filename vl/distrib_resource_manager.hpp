@@ -107,7 +107,7 @@ protected :
 	std::string _stripExtension( std::string const &name, std::string const &extension );
 
 	/// Overload Distributed virtuals
-	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 	std::vector<vl::TextResource> _scenes;

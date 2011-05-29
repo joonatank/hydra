@@ -214,7 +214,7 @@ vl::Light::getNative(void) const
 
 /// ---------------------------- Protected -----------------------------------
 void 
-vl::Light::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::Light::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( DIRTY_TYPE & dirtyBits )
 	{

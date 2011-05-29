@@ -58,11 +58,7 @@ athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
 athene.scale = Vector3(1,1,1)*0.05;
 
-# enable shadows
-shadows = ShadowInfo("texture_additive_integrated")
-# Colour is useless for additive shadows
-#shadows.colour = ColourValue(0.0, 0.5, 0.0)
-game.scene.shadows = shadows
+game.scene.shadows.enable()
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")

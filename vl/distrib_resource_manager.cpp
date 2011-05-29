@@ -269,7 +269,7 @@ vl::DistribResourceManager::_stripExtension( std::string const &name,
 
 /// --------------------------- Protected --------------------------------------
 void
-vl::DistribResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::DistribResourceManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	// Serialize resource paths, used by Ogre
 	if( dirtyBits & DIRTY_PATHS )

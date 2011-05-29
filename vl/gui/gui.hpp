@@ -144,7 +144,7 @@ public :
 
 /// Private Methods
 private :
-	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits )
+	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 	{
 		if( DIRTY_EDITOR & dirtyBits )
 		{

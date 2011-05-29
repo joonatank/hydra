@@ -126,18 +126,21 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
+	void (vl::ShadowInfo::*setShadowTechnique_ov0)(std::string const &) = &vl::ShadowInfo::setShadowTechnique;
+
 	python::class_<vl::ShadowInfo>("ShadowInfo",  python::init< python::optional<std::string, Ogre::ColourValue, std::string> >())
 		.def("enable", &vl::ShadowInfo::enable)
 		.def("disable", &vl::ShadowInfo::disable)
 		.def("isEnabled", &vl::ShadowInfo::isEnabled)
-		.add_property("technique", &vl::ShadowInfo::getShadowTechnique, &vl::ShadowInfo::setShadowTechnique)
-		.def_readwrite("colour", &vl::ShadowInfo::colour)
-		.def_readwrite("camera", &vl::ShadowInfo::camera)
+		.add_property("technique", &vl::ShadowInfo::getShadowTechniqueName, setShadowTechnique_ov0)
+		.add_property("colour", python::make_function(&vl::ShadowInfo::getColour, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setColour)
+		.add_property("camera", python::make_function(&vl::ShadowInfo::getCamera, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setCamera)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
 	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
+	vl::ShadowInfo &(SceneManager::*getShadowInfo_ov0)(void) = &vl::SceneManager::getShadowInfo;
 
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
@@ -161,7 +164,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
-		.add_property("shadows", python::make_function( &vl::SceneManager::getShadowInfo, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setShadowInfo)
+		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
 
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)

@@ -29,17 +29,6 @@ enum FogMode
 	FOG_EXP2,
 };
 
-enum ShadowTechnique
-{
-	SHADOWTYPE_NONE,
-	SHADOWTYPE_TEXTURE_MODULATIVE,
-	SHADOWTYPE_TEXTURE_ADDITIVE,
-	SHADOWTYPE_STENCIL_MODULATIVE,
-	SHADOWTYPE_STENCIL_ADDITIVE,
-	SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED,
-	SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED,
-};
-
 inline std::string
 getFogModeAsString(FogMode mode)
 {
@@ -57,6 +46,22 @@ getFogModeAsString(FogMode mode)
 		return "unknown";
 	}
 }
+
+enum ShadowTechnique
+{
+	SHADOWTYPE_NOT_VALID,
+	SHADOWTYPE_NONE,
+	SHADOWTYPE_TEXTURE_MODULATIVE,
+	SHADOWTYPE_TEXTURE_ADDITIVE,
+	SHADOWTYPE_STENCIL_MODULATIVE,
+	SHADOWTYPE_STENCIL_ADDITIVE,
+	SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED,
+	SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED,
+};
+
+std::string getShadowTechniqueAsString(ShadowTechnique tech);
+
+ShadowTechnique getShadowTechniqueFromString(std::string const &str);
 
 struct SkyDomeInfo
 {
@@ -138,26 +143,30 @@ struct FogInfo
 	Ogre::Real linear_end;
 };
 
-struct ShadowInfo
+/**	@class ShadowInfo
+ *	@todo add real disablation of the Shadows distinction between not updating
+ *	them and disabled. 
+ *	Disabled would need the SceneManager to reset the shadow textures.
+ */
+class ShadowInfo
 {
+public :
+	/// @brief constructor
+	/// Shadows are disabled by default, so call to enable is necessary.
 	ShadowInfo(std::string const &tech = "none", 
 		Ogre::ColourValue const &col = Ogre::ColourValue(0.3, 0.3, 0.3), 
-		std::string const &cam = "default")
-		: technique(SHADOWTYPE_NONE)
-		, colour(col)
-		, camera(cam)
-	{
-		setShadowTechnique(tech);
-	}
+		std::string const &cam = "default");
 
 	/// @brief enable the shadows
+	/// Remembers the technique user selected.
+	/// If no technique is selected uses the current default.
 	void enable(void);
 
 	/// @brief disable the shadows
 	void disable(void);
 
 	bool isEnabled(void) const
-	{ return technique != SHADOWTYPE_NONE; }
+	{ return _enabled && (_technique != SHADOWTYPE_NONE); }
 
 	/// @brief set the shadow technique using a string, mostly for python
 	/// valid strings (upper or lower case):
@@ -166,8 +175,6 @@ struct ShadowInfo
 	/// Be mindful that setting the technique can cause instabilities as they
 	/// are not quarantied to work, this is mostly a development features.
 	void setShadowTechnique(std::string const &tech);
-
-	std::string getShadowTechnique(void) const;
 
 	/// @brief the shadow technique
 	/// Be mindful that setting the technique can cause instabilities as they
@@ -183,24 +190,55 @@ struct ShadowInfo
 	///
 	/// Stencil shadows will crash at least the test model, 
 	/// problems with bounding boxes.
-	ShadowTechnique technique;
+	void setShadowTechnique(ShadowTechnique tech);
 
-	Ogre::ColourValue colour;
+	std::string getShadowTechniqueName(void) const;
+
+	ShadowTechnique getShadowTechnique(void) const
+	{ return _technique; }
 
 	/// Valid values for camera are "Default", "LiSPSM"
 	/// others maybe added later. Values are case insensitive.
 	/// Any other value will default to "Default" camera
 	/// @todo LiSPSM camera crashes Ogre Release version so don't use it
 	/// @todo "PlaneOptimal" camera needs a plane of interest
-	std::string camera;
+	void setCamera(std::string const &str);
+
+	std::string const &getCamera(void) const
+	{ return _camera; }
+
+	Ogre::ColourValue const &getColour(void) const
+	{ return _colour; }
+
+	void setColour(Ogre::ColourValue const &col);
+
+	bool isDirty(void) const
+	{ return _dirty; }
+
+	void clearDirty(void)
+	{ _dirty = false; }
+
+private :
+	void _setDirty(void)
+	{ _dirty = true; }
+
+	ShadowTechnique _technique;
+
+	Ogre::ColourValue _colour;
+
+	std::string _camera;
+
+	bool _enabled;
+
+	bool _dirty;
 };
 
 inline
 bool operator==(ShadowInfo const &a, ShadowInfo const &b)
 {
-	return( a.technique == b.technique 
-		&& a.colour == b.colour
-		&& a.camera == b.camera );
+	return( a.getShadowTechnique() == b.getShadowTechnique()
+		&& a.getColour() == b.getColour()
+		&& a.getCamera() == b.getCamera());
 }
 
 inline
@@ -329,8 +367,13 @@ public :
 
 	void setAmbientLight( Ogre::ColourValue const &colour );
 
-	/// We can not provide non-const getters because this will mess up the 
-	/// distribution version control. No dirties are set.
+	/// @brief get the shadow structure
+	/// Non-const version easier to edit. Uses the new dirty object system 
+	/// which allows for editing non-distributed objects and keeps track of the
+	/// edits for distribution.
+	ShadowInfo &getShadowInfo(void)
+	{ return _shadows; }
+
 	ShadowInfo const &getShadowInfo(void) const
 	{ return _shadows; }
 
@@ -368,7 +411,8 @@ public :
 	{ return _ogre_sm; }
 
 private :
-	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void recaluclateDirties(void);
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 	// @todo rename to avoid confusion

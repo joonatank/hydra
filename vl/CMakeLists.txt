@@ -109,6 +109,8 @@ set( HEADERS
 	cluster/message.hpp
 	cluster/states.hpp
 	distributed.hpp
+	gui/gui.hpp
+	gui/window.hpp
 	)
 
 add_library(HydraMain ${SOURCES} ${HEADERS} )
