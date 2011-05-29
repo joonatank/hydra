@@ -87,6 +87,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState,
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -147,9 +149,9 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::MeshManager, vl::MeshManagerRefPtr, boost::noncopyable>("MeshManager", python::no_init)
 		.def("loadMesh", loadMesh_ov0)
-		.def("createPlane", &vl::MeshManager::createPlane)
+		.def("createPlane", &vl::MeshManager::createPlane, createPlane_ovs())
 		.def("createSphere", &vl::MeshManager::createSphere)
-		.def("createCube", &vl::MeshManager::createCube)
+		.def("createCube", &vl::MeshManager::createCube, createCube_ovs())
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
