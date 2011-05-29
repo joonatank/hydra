@@ -112,36 +112,7 @@ vl::EventManager::keyPressed(OIS::KeyCode kc)
 		}
 		else
 		{
-			/// If there is a different trigger for the keys that are down
-			/// with the new modifiers release the old and set the new
-			/// @todo this is same for both key released and key pressed
-			/// because the only variable is the different new and old modifiers
-			for( size_t i = 0; i < _keys_down.size(); ++i )
-			{
-				// Option would be to release all the keys and then repress them
-				// with the new modifiers which would try to find the best match
-				// Even one step further would be to do this for all keys
-				// which would allow arbitary key combinations to be used
-				// Problematic for trigger events that work only for release or press
-				// they are evoked even though the keys state is not changed.
-				//
-				// Current implementation provides fallbacks with less modifiers
-				// but lacks the ability to chain keys other than modifiers.
-
-				// Only release a trigger if we have one with a better match
-				vl::KeyTrigger *new_trigger = _find_best_match(kc, new_key_modifiers);
-				vl::KeyTrigger *old_trigger = _find_best_match(kc, _key_modifiers);
-				/// Update triggers if they are different
-				if( new_trigger != old_trigger )
-				{
-					if(old_trigger)
-					{ old_trigger->update(vl::KeyTrigger::KS_UP); }
-					if(new_trigger)
-					{ new_trigger->update(vl::KeyTrigger::KS_DOWN); }
-				}
-			}	// for keys
-
-			_key_modifiers = new_key_modifiers;
+			_update_key_modifers(new_key_modifiers);
 		}	// if valid
 	}
 	else
@@ -179,23 +150,7 @@ vl::EventManager::keyReleased(OIS::KeyCode kc)
 		}
 		else
 		{
-			/// If there is a different trigger for the keys that are down
-			/// with the new modifiers release the old and set the new
-			for( size_t i = 0; i < _keys_down.size(); ++i )
-			{
-				vl::KeyTrigger *new_trigger = _find_best_match(kc, new_key_modifiers);
-				vl::KeyTrigger *old_trigger = _find_best_match(kc, _key_modifiers);
-				/// Update triggers if they are different
-				if( new_trigger != old_trigger )
-				{
-					if(old_trigger)
-					{ old_trigger->update(vl::KeyTrigger::KS_UP); }
-					if(new_trigger)
-					{ new_trigger->update(vl::KeyTrigger::KS_DOWN); }
-				}
-			}	// for keys
-			
-			_key_modifiers = new_key_modifiers;
+			_update_key_modifers(new_key_modifiers);
 		}	// if valid
 	}
 	else
@@ -324,4 +279,42 @@ vl::EventManager::_keyUp( OIS::KeyCode kc )
 		return true;
 	}
 	return false;
+}
+
+void 
+vl::EventManager::_update_key_modifers(std::bitset<8> new_mod)
+{
+	/// If there is a different trigger for the keys that are down
+	/// with the new modifiers release the old and set the new
+	for( size_t i = 0; i < _keys_down.size(); ++i )
+	{
+		// Option would be to release all the keys and then repress them
+		// with the new modifiers which would try to find the best match
+		// Even one step further would be to do this for all keys
+		// which would allow arbitary key combinations to be used
+		// Problematic for trigger events that work only for release or press
+		// they are evoked even though the keys state is not changed.
+		//
+		// Current implementation provides fallbacks with less modifiers
+		// but lacks the ability to chain keys other than modifiers.
+
+		/// If there is a different trigger for the keys that are down
+		/// with the new modifiers release the old and set the new
+
+		OIS::KeyCode kc = _keys_down.at(i);
+		vl::KeyTrigger *new_trigger = _find_best_match(kc, new_mod);
+		vl::KeyTrigger *old_trigger = _find_best_match(kc, _key_modifiers);
+
+		/// Only update triggers if they are different
+		if( new_trigger != old_trigger )
+		{
+			if(old_trigger)
+			{ old_trigger->update(vl::KeyTrigger::KS_UP); }
+			if(new_trigger)
+			{ new_trigger->update(vl::KeyTrigger::KS_DOWN); }
+		}
+
+	}	// for keys
+
+	_key_modifiers = new_mod;
 }
