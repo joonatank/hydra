@@ -15,9 +15,12 @@ uniform vec4 lightPos;
 uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
 
+#ifdef SHADOW_MAP
+// Shadow transformation matrix
 uniform mat4 model;
 // Shadow texture transform
 uniform mat4 texViewProj;
+#endif
 
 // The order of these is significant
 // my guess is that uv0 can not appear after tangent and binormal (uv6 and uv7)
@@ -44,7 +47,9 @@ out vec3 spotlightDir;
 
 // Shadow map uvs, x,y are the coordinates on the texture
 // z is the distance to light
+#ifdef SHADOW_MAP
 out vec4 shadowUV;
+#endif
 
 void main(void)
 {
@@ -55,8 +60,10 @@ void main(void)
 	uv = uv0;
 
 	// Shadow map tex coords
+#ifdef SHADOW_MAP
 	vec4 worldPos = model * vertex;
 	shadowUV = texViewProj * worldPos;
+#endif
 
 	// Tangent space vectors (TBN) in eye space
 	// normalMatrix = gl_NormalMatrix = inverse transpose model view

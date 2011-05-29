@@ -52,7 +52,7 @@ material ground/flat/shadows : bling_phong_eye_space_multi_pass_shadows
 material ground/bump_mapped/shadows : bling_phong_multi_pass
 {
 //	set $ambientCol "1 0 0 1"
-//	set $specularCol "0 0 0"
+	set $specularCol "0 0 0"
 	set_texture_alias diffuseTexture rock.jpg
 //	set_texture_alias specularMap rock.jpg
 	set_texture_alias normalMap rock_NM.jpg

@@ -253,12 +253,18 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if( DIRTY_TYPE & dirtyBits )
 	{
 		msg >> _type;
-		// @todo when type has been changed the attenuation and spotlight parameters
-		// need to be set if appropriate
+
 		if( _ogre_light )
-		{ _ogre_light->setType(getOgreLightType(_type)); }
-		if( _ogre_light && _ogre_light->getType() == Ogre::Light::LT_SPOTLIGHT )
-		{ _ogre_light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff); }
+		{
+			_ogre_light->setType(getOgreLightType(_type));
+
+			// Set the spotlight parameters if appropriate and also mandate
+			// point lights not to cast shadows (because they don't work with texture shadows).
+			if(_ogre_light->getType() == Ogre::Light::LT_SPOTLIGHT )
+			{ _ogre_light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff); }
+			else if(_ogre_light->getType() == Ogre::Light::LT_POINT)
+			{ _ogre_light->setCastShadows(false); }
+		}
 	}
 
 	if( DIRTY_COLOUR & dirtyBits )
@@ -287,7 +293,11 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		if( _ogre_light )
 		{ 
 			_ogre_light->setVisible(_visible);
-			_ogre_light->setCastShadows(_cast_shadows); 
+			_ogre_light->setCastShadows(_cast_shadows);
+			if(_ogre_light->getType() == Ogre::Light::LT_POINT)
+			{ _ogre_light->setCastShadows(false); }
+			else
+			{ _ogre_light->setCastShadows(_cast_shadows); }
 		}
 	}
 
@@ -327,7 +337,11 @@ vl::Light::_doCreateNative(void)
 	_ogre_light->setPosition(_position);
 	_ogre_light->setDirection(_direction);
 	_ogre_light->setVisible(_visible);
-	_ogre_light->setCastShadows(_cast_shadows);
+	if(_ogre_light->getType() == Ogre::Light::LT_POINT)
+	{ _ogre_light->setCastShadows(false); }
+	else
+	{ _ogre_light->setCastShadows(_cast_shadows); }
+
 	if( _ogre_light->getType() == Ogre::Light::LT_SPOTLIGHT )
 	{ _ogre_light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff); }
 	_ogre_light->setAttenuation(_attenuation.range, 
