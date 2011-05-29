@@ -94,6 +94,11 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
 		.def(python::init<Ogre::Quaternion>())
 		.def("isIdentity", &vl::Transform::isIdentity)
+		.def("setIdentity", &vl::Transform::setIdentity)
+		.def("isPositionZero", &vl::Transform::isPositionZero)
+		.def("setPositionZero", &vl::Transform::setPositionZero)
+		.def("isRotationIdentity", &vl::Transform::isRotationIdentity)
+		.def("setRotationIdentity", &vl::Transform::setRotationIdentity)
 		.def("invert", &vl::Transform::invert)
 		.def_readwrite("position", &vl::Transform::position)
 		.def_readwrite("quaternion", &vl::Transform::quaternion)
@@ -276,10 +281,22 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::enum_<TransformSpace>("TS")
+		.value("LOCAL", TS_LOCAL)
+		.value("PARENT", TS_PARENT)
+		.value("WORLD", TS_WORLD)
+	;
+
 	void (vl::SceneNode::*setTransform_ov0)(vl::Transform const &) = &vl::SceneNode::setTransform;
 	void (vl::SceneNode::*setTransform_ov1)(vl::Transform const &, vl::SceneNodePtr) = &vl::SceneNode::setTransform;
 	vl::Transform const &(vl::SceneNode::*getTransform_ov0)(void) const = &vl::SceneNode::getTransform;
 	vl::Transform (vl::SceneNode::*getTransform_ov1)(vl::SceneNodePtr) const = &vl::SceneNode::getTransform;
+	void (vl::SceneNode::*translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*translate_ov1)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*translate_ov2)(Ogre::Vector3 const &, TransformSpace) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
 
 	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
 		.def("attachObject", &vl::SceneNode::attachObject)
@@ -288,6 +305,12 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
+		.def("translate", translate_ov0)
+		.def("translate", translate_ov1)
+		.def("translate", translate_ov2)
+		.def("rotate", rotate_ov0)
+		.def("rotate", rotate_ov1)
+		.def("rotate", rotate_ov2)
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("transform", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
 		.add_property("world_transform", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
@@ -549,9 +572,12 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<MoveAction, boost::noncopyable, python::bases<TransformationAction> >("MoveAction", python::no_init )
-		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed )
-		.add_property("angular_speed", python::make_function( &MoveAction::getAngularSpeed, python::return_internal_reference<>() ), &MoveAction::setAngularSpeed )
-		.add_property("local", &MoveAction::getLocal, &MoveAction::setLocal )
+		.add_property("speed", &MoveAction::getSpeed, &MoveAction::setSpeed)
+		.add_property("angular_speed", python::make_function(&MoveAction::getAngularSpeed, python::return_value_policy<python::copy_const_reference>()), &MoveAction::setAngularSpeed )
+		.add_property("local", &MoveAction::getLocal, &MoveAction::setLocal)
+		.add_property("reference", python::make_function(&MoveAction::getReference, python::return_value_policy< python::reference_existing_object>()), &MoveAction::setReference)
+		.def("isLocal", &MoveAction::isLocal)
+		.def("isGlobal", &MoveAction::isGlobal)
 	;
 
 	python::class_<MoveNodeAction, boost::noncopyable, python::bases<MoveAction> >("MoveNodeAction", python::no_init )

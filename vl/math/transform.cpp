@@ -14,12 +14,49 @@ vl::Transform::isIdentity(void) const
 }
 
 void
+vl::Transform::setIdentity(void)
+{
+	quaternion = Ogre::Quaternion::IDENTITY;
+	position = Ogre::Vector3::ZERO;
+}
+
+bool
+vl::Transform::isPositionZero(void) const
+{
+	return(position == Ogre::Vector3::ZERO);
+}
+
+void
+vl::Transform::setPositionZero(void)
+{
+	position = Ogre::Vector3::ZERO;
+}
+
+bool
+vl::Transform::isRotationIdentity(void) const
+{
+	return(quaternion == Ogre::Quaternion::IDENTITY);
+}
+
+void 
+vl::Transform::setRotationIdentity(void)
+{
+	quaternion = Ogre::Quaternion::IDENTITY;
+}
+
+void
 vl::Transform::invert(void)
 {
 	// Transform needs to have the property that inv(T)*T = I and T*inv(T) = I
 	// so the position vector needs to be multiplied with inverse quaternion
 	quaternion = quaternion.Inverse();
 	position = -(quaternion*position);
+}
+
+Ogre::Vector3 
+vl::Transform::rotate(Ogre::Vector3 const &v) const
+{
+	return quaternion*v;
 }
 
 vl::Transform &

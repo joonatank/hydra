@@ -25,6 +25,13 @@
 namespace vl
 {
 
+enum TransformSpace
+{
+	TS_LOCAL,
+	TS_PARENT,
+	TS_WORLD,
+};
+
 /// @todo add getTransform and getWorldTransform using vl::Transform
 class SceneNode : public vl::Distributed
 {
@@ -75,12 +82,43 @@ public :
 	/// @brief set the position in object space
 	void setPosition( Ogre::Vector3 const &v );
 
+	/// @brief translate the SceneNode
+	/// @param v how much to translate
+	/// @param reference the coordinate system to use for translation
+	void translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference);
+
+	/// @brief translate the SceneNode
+	/// @param v how much to translate
+	/// @param which coordinate system to use
+	void translate(Ogre::Vector3 const &v, vl::TransformSpace space);
+
+	/// @brief translate the SceneNode in local coordinate system
+	/// defined separately because easier to expose for python
+	void translate(Ogre::Vector3 const &v);
+
 	/// @brief get the orientation in object space
 	Ogre::Quaternion const &getOrientation( void ) const
 	{ return _transform.quaternion; }
 
 	/// @brief set the orientation in object space
 	void setOrientation( Ogre::Quaternion const &q );
+
+	/// @brief rotates the SceneNode around reference
+	/// @param q how much to rotate
+	/// @param reference the coordinate system to use for translation
+	/// @todo seems like this doesn't not work as expected for some rotations
+	/// @todo should this be renamed to rotateAround, because this is only usefull for special cases
+	void rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference);
+
+	/// @brief rotates the SceneNode in transform space
+	/// @param q how much to rotate
+	/// @param which coordinate system to use
+	void rotate(Ogre::Quaternion const &q, vl::TransformSpace space);
+
+	/// @brief rotates the SceneNode in local coordinate system
+	/// defined separately because easier to expose for python
+	void rotate(Ogre::Quaternion const &q);
+
 
 	void scale(Ogre::Real s);
 	void scale(Ogre::Vector3 const &s);

@@ -26,16 +26,23 @@ public :
 	virtual void setRotDir( Ogre::Vector3 const &rot_dir ) = 0;
 
 };	// class TransformationAction
-/// Simple Action class that does transformation based on key events
-/// Keeps track of the state of the object (moving, stopped)
-/// Transforms a SceneNode provided
-/// All parameters that need units are in SI units (e.g. speed is m/s)
+
+
+/**	Simple Action class that does transformation based on key events
+ *	Keeps track of the state of the object (moving, stopped)
+ *	Transforms a SceneNode provided
+ *	All parameters that need units are in SI units (e.g. speed is m/s)
+ *	Default values:
+ *	speed = 1m/s
+ *	angular speed = 60 deg/s
+ *	local coordinate system
+ */
 class MoveAction : public TransformationAction
 {
 public :
 	MoveAction( void );
 
-	// TODO this should be executed with a double parameter (delta time) from
+	/// @todo this should be executed with a double parameter (delta time) from
 	// FrameTrigger
 	/// Purposefully not virtual override the private virtual move
 	/// which is called from this
@@ -53,6 +60,20 @@ public :
 
 	bool getLocal( void ) const
 	{ return _local; }
+
+	virtual bool isLocal(void) const
+	{ return !_reference && _local; }
+
+	virtual bool isGlobal(void) const
+	{ return !_reference && !_local; }
+
+	/// @brief set the reference coordinate system, if this is set it overrides local
+	void setReference(vl::SceneNodePtr ref)
+	{ _reference = ref; }
+
+	/// @brief get the reference coordinate system, NULL if using local or world reference
+	vl::SceneNodePtr getReference(void) const
+	{ return _reference; }
 
 	/// Set the angular speed of the object in radians per second
 	void setAngularSpeed( Ogre::Radian const &speed )
@@ -81,7 +102,10 @@ protected :
 	double _speed;
 	Ogre::Radian _angular_speed;
 
+	// If the movement is in local or global coordinates
 	bool _local;
+	// What reference to use for movements
+	vl::SceneNode *_reference;
 
 	vl::timer _clock;
 };
@@ -98,6 +122,10 @@ public :
 
 	vl::SceneNodePtr getSceneNode( void )
 	{ return _node; }
+
+	/// Override isLocal because it can be local if reference is the node itself
+	virtual bool isLocal(void) const
+	{ return (!_reference && _local) || _reference == _node; }
 
 	static MoveNodeAction *create( void )
 	{ return new MoveNodeAction; }

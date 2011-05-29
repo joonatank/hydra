@@ -130,13 +130,57 @@ vl::SceneNode::getWorldTransform(void) const
 }
 
 void 
-vl::SceneNode::setPosition( Ogre::Vector3 const &v )
+vl::SceneNode::setPosition(Ogre::Vector3 const &v)
 {
 	if( v != _transform.position )
 	{
 		setDirty(DIRTY_TRANSFORM);
 		_transform.position = v;
 	}
+}
+
+void 
+vl::SceneNode::translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference)
+{
+	/// World space
+	if(!reference)
+	{
+		setPosition(_transform.position + v);
+	}
+	/// Local space
+	else if(reference == this)
+	{
+		setPosition(_transform.position + _transform.rotate(v));
+	}
+	/// Reference space
+	else
+	{
+		vl::Transform ref_world = reference->getWorldTransform();
+		setPosition(_transform.position + ref_world.rotate(v));
+	}
+}
+
+void 
+vl::SceneNode::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
+{
+	if(space == TS_LOCAL)
+	{
+		translate(v, this);
+	}
+	else if(space == TS_PARENT)
+	{
+		translate(v, _parent);
+	}
+	else
+	{
+		translate(v, 0);
+	}
+}
+
+void 
+vl::SceneNode::translate(Ogre::Vector3 const &v)
+{
+	translate(v, this);
 }
 
 void 
@@ -147,6 +191,67 @@ vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
 		setDirty(DIRTY_TRANSFORM);
 		_transform.quaternion = q;
 	}
+}
+
+void
+vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference)
+{
+	/// With references, this function is rotate around a point
+	/// the matrix to represent such a rotation is T = inv(P)*R*P
+	/// where P is translate matrix for the point and R is the rotation matrix
+	/// this matrix can be represented with [Tq, Tv] = [Rq, Rq*p - p]
+	/// where Tq is the quaternion part of T and Tv is the vector part
+	/// Rq is the quaternion representation of R and p is the vector of P
+	/// seems like this is for left handed coordinate system, switch inv(P) and P for right handed.
+
+	// Um seems like the rotate around doesn't not work as expected when
+	// using multiple rotations. Though the usefulness of this feature is depatable.
+	vl::Transform t;
+	/// World space
+	if(!reference)
+	{
+		t.quaternion = q;
+		t.position = getWorldTransform().position - q*getWorldTransform().position;
+	}
+	/// Local space
+	else if(reference == this)
+	{
+		t.quaternion = q;
+	}
+	/// Reference space
+	else
+	{
+		vl::Transform ref_world = reference->getWorldTransform();
+		Transform inv_world = getWorldTransform();
+		//inv_world.invert();
+		t.quaternion = q;
+		t.position = ref_world.position - q*ref_world.position;
+	}
+
+	setTransform(_transform*t);
+}
+
+void
+vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::TransformSpace space)
+{
+	if(space == TS_LOCAL)
+	{
+		rotate(q, this);
+	}
+	else if(space == TS_PARENT)
+	{
+		rotate(q, _parent);
+	}
+	else
+	{
+		rotate(q, 0);
+	}
+}
+
+void
+vl::SceneNode::rotate(Ogre::Quaternion const &q)
+{
+	rotate(q, this);
 }
 
 void 

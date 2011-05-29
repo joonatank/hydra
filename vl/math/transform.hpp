@@ -28,8 +28,20 @@ struct Transform
 
 	bool isIdentity(void) const;
 
+	void setIdentity(void);
+
+	bool isPositionZero(void) const;
+
+	void setPositionZero(void);
+
+	bool isRotationIdentity(void) const;
+
+	void setRotationIdentity(void);
+
 	/// @brief inverts the transformation
 	void invert(void);
+
+	Ogre::Vector3 rotate(Ogre::Vector3 const &v) const;
 
 	vl::Transform &operator*=(Ogre::Matrix4 const &m);
 
@@ -53,6 +65,8 @@ operator*( vl::Transform const &t, Ogre::Matrix4 const &m );
 vl::Transform 
 operator*( Ogre::Matrix4 const &m, vl::Transform const &t );
 
+/// transforms the vector by transfrom t
+/// @todo should this include the position element?
 Ogre::Vector3
 operator*( vl::Transform const &t, Ogre::Vector3 const &v);
 

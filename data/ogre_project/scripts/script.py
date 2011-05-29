@@ -13,17 +13,17 @@ print( 'Getting Ogre SceneNode' )
 # So use this function to get a SceneNode created from .scene file.
 # All SceneNodes in .scene file are created and can be retrieved here.
 # Tangent space lighting does not work on the ogre_ent
-ogre = game.scene.getSceneNode("ogre")
-ogre_ent = game.scene.getEntity("Ogre")
-addHideEvent(ogre, KC.H)
-addMoveSelection()
-game.scene.addToSelection(ogre)
-ogre.position = Vector3(0, 2.5, 0)
 
 print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
 camera.position = Vector3(0, 3, 15)
-createCameraMovements(camera)
+createCameraMovements(camera, speed=10)
+
+ogre = game.scene.getSceneNode("ogre")
+addHideEvent(ogre, KC.H)
+addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
+game.scene.addToSelection(ogre)
+ogre.position = Vector3(0, 2.5, 0)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
 # first one is the camera not active at the moment, second one is active at the moment
@@ -66,9 +66,9 @@ game.scene.shadows = shadows
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")
-	game.scene.addToSelection(light)
+#	game.scene.addToSelection(light)
 
-game.scene.removeFromSelection(ogre)
+#game.scene.removeFromSelection(ogre)
 
 #if( game.scene.hasLight("spot") ):
 #	game.scene.getLight("spot").visible = False

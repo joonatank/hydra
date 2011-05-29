@@ -27,7 +27,7 @@ def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE
 
 
 # Fine using the new event interface
-def createCameraMovements(node) :
+def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
 	# TODO stupid string casting, can we somehow remove it?
 	print( 'Creating Translation event on ' + str(node) )
 
@@ -47,8 +47,8 @@ def createCameraMovements(node) :
 	# Create the real action
 	trans_action = MoveNodeAction.create()
 	trans_action.scene_node = node
-	trans_action.speed = 5
-	trans_action.angular_speed = Radian(Degree(90))
+	trans_action.speed = speed
+	trans_action.angular_speed = Radian(angular_speed)
 	# Add the real action to the proxies
 	trans_action_proxy.action = trans_action
 	rot_action_proxy.action = trans_action
@@ -59,7 +59,11 @@ def createCameraMovements(node) :
 
 
 
-def addMoveSelection() :
+# TODO add a possibility to speed up movements using SHIFT modifier
+# @param speed linear speed of the selection
+# @param angular_speed rotation speed of the selection
+# @param reference The object whom coordinate system is used for translation, usually camera
+def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None) :
 	print( 'Creating Move selection event' )
 
 	trans_action_proxy = MoveActionProxy.create()
@@ -79,7 +83,9 @@ def addMoveSelection() :
 	trans_action = MoveSelectionAction.create()
 	trans_action.scene = game.scene
 	trans_action.local = False
-	trans_action.speed = 0.3
+	trans_action.reference = reference
+	trans_action.speed = speed
+	trans_action.angular_speed = Radian(angular_speed)
 
 	# Add the real action to the proxy
 	trans_action_proxy.action = trans_action

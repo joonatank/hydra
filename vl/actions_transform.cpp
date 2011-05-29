@@ -18,6 +18,7 @@ vl::MoveAction::MoveAction( void )
 	, _speed(1)
 	, _angular_speed( Ogre::Degree(60) )
 	, _local(true)
+	, _reference(0)
 {}
 
 void
@@ -46,31 +47,25 @@ vl::MoveNodeAction::MoveNodeAction( void )
 void
 vl::MoveNodeAction::move(Ogre::Vector3 const &v, bool local)
 {
-	// TODO replace with error reporting
-	assert(_node);
-	Ogre::Vector3 mov;
-	if(local)
-	{ mov = _node->getOrientation() * v; }
-	else
-	{ mov = v; }
+	if(!_node)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
-	_node->setPosition(_node->getPosition() + mov);
+	if(_reference)
+	{ _node->translate(v, _reference); }
+	else if(local)
+	{ _node->translate(v); }
+	else
+	{ _node->translate(v, TS_WORLD); }
 }
 
 void
 vl::MoveNodeAction::rotate(Ogre::Quaternion const &q, bool local)
 {
-	// TODO replace with error reporting
-	assert(_node);
-	
-	Ogre::Quaternion orient;
-	if(local)
-	{ orient = _node->getOrientation()*q; }
-	else
-	{ orient = q*_node->getOrientation(); }
+	if(!_node)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
-	
-	_node->setOrientation( orient );
+	// references are not supported for rotations, it's usually not what user wants
+	_node->rotate(q);
 }
 
 vl::MoveSelectionAction::MoveSelectionAction( void )
@@ -80,40 +75,33 @@ vl::MoveSelectionAction::MoveSelectionAction( void )
 void
 vl::MoveSelectionAction::move(Ogre::Vector3 const &v, bool local)
 {
-	// TODO replace with error reporting
-	assert(_scene);
+	if(!_scene)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
 	SceneNodeList const &list = _scene->getSelection();
 	SceneNodeList::const_iterator iter;
 	for( iter = list.begin(); iter != list.end(); ++iter )
 	{
-		Ogre::Vector3 mov;
-		if(local)
-		{ mov = (*iter)->getOrientation() * v; }
+		if(_reference)
+		{ (*iter)->translate(v, _reference); }
+		else if(local)
+		{ (*iter)->translate(v); }
 		else
-		{ mov = v; }
-
-		(*iter)->setPosition((*iter)->getPosition() + mov);
+		{ (*iter)->translate(v, TS_WORLD); }
 	}
 }
 
 void
 vl::MoveSelectionAction::rotate(Ogre::Quaternion const &q, bool local)
 {
-	// TODO replace with error reporting
-	assert(_scene);
+	if(!_scene)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
 	SceneNodeList const &list = _scene->getSelection();
 	SceneNodeList::const_iterator iter;
 	for( iter = list.begin(); iter != list.end(); ++iter )
 	{
-		Ogre::Quaternion orient;
-		if(local)
-		{ orient = (*iter)->getOrientation()*q; }
-		else
-		{ orient = q* (*iter)->getOrientation(); }
-
-	
-		(*iter)->setOrientation( orient );
+		// references are not supported for rotations, it's usually not what user wants
+		(*iter)->rotate(q);
 	}
 }
