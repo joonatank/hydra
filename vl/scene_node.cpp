@@ -459,7 +459,7 @@ vl::SceneNode::hasChild(vl::SceneNodePtr child) const
 // Does no transformation on the Ogre Node as the master copy should be in
 // AppNode which does not have Ogre SceneGraph
 void
-vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( dirtyBits & DIRTY_NAME )
 	{
@@ -489,7 +489,7 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if( dirtyBits & DIRTY_CHILDS )
 	{
 		msg << _childs.size();
-		vl::SceneNodeList::iterator iter;
+		vl::SceneNodeList::const_iterator iter;
 		for( iter = _childs.begin(); iter != _childs.end(); ++iter )
 		{
 			msg << (*iter)->getID();
@@ -499,7 +499,7 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if( dirtyBits & DIRY_ATTACHED )
 	{
 		msg << _objects.size();
-		vl::MovableObjectList::iterator iter;
+		vl::MovableObjectList::const_iterator iter;
 		for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 		{
 			msg << (*iter)->getID();

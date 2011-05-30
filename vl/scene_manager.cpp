@@ -63,50 +63,9 @@ Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
 
 }
 
-void
-vl::ShadowInfo::setShadowTechnique(std::string const &tech)
+std::string vl::getShadowTechniqueAsString(ShadowTechnique tech)
 {
-	std::string str(tech);
-	vl::to_lower(str);
-	if( str == "texture_modulative" || str == "texture" )
-	{
-		technique = SHADOWTYPE_TEXTURE_MODULATIVE;
-	}
-	else if( str == "stencil_modulative" || str == "stencil" )
-	{
-		technique = SHADOWTYPE_STENCIL_MODULATIVE;
-	}
-	else if( str == "texture_modulative_integrated" )
-	{
-		technique = SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED;
-	}
-	else if( str == "texture_additive" )
-	{
-		technique = SHADOWTYPE_TEXTURE_ADDITIVE;
-	}
-	else if( str == "texture_additive_integrated" )
-	{
-		technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-	}
-	else if( str == "stencil_additive" )
-	{
-		technique = SHADOWTYPE_STENCIL_ADDITIVE;
-	}
-	else if( str == "none" )
-	{
-		technique = SHADOWTYPE_NONE;
-	}
-	else
-	{
-		// Not a valid technique
-		return;
-	}
-}
-
-std::string
-vl::ShadowInfo::getShadowTechnique(void) const
-{
-	switch(technique)
+	switch(tech)
 	{
 	case SHADOWTYPE_TEXTURE_MODULATIVE:
 		return "texture_modulative";
@@ -127,18 +86,112 @@ vl::ShadowInfo::getShadowTechnique(void) const
 	}
 }
 
+vl::ShadowTechnique vl::getShadowTechniqueFromString(std::string const &tech)
+{
+	std::string str(tech);
+	vl::to_lower(str);
+	if( str == "texture_modulative" || str == "texture" )
+	{ return SHADOWTYPE_TEXTURE_MODULATIVE; }
+	else if( str == "stencil_modulative" || str == "stencil" )
+	{ return SHADOWTYPE_STENCIL_MODULATIVE; }
+	else if( str == "texture_modulative_integrated" )
+	{ return SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED; }
+	else if( str == "texture_additive" )
+	{ return SHADOWTYPE_TEXTURE_ADDITIVE; }
+	else if( str == "texture_additive_integrated" )
+	{ return SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
+	else if( str == "stencil_additive" )
+	{ return SHADOWTYPE_STENCIL_ADDITIVE; }
+	else if( str == "none" )
+	{ return SHADOWTYPE_NONE; }
+	else
+	{ return SHADOWTYPE_NOT_VALID; }
+}
+
+/// ------------------------------ ShadowInfo --------------------------------
+vl::ShadowInfo::ShadowInfo(std::string const &tech, Ogre::ColourValue const &col, std::string const &cam)
+	: _technique(SHADOWTYPE_NONE)
+	, _colour(col)
+	, _camera(cam)
+	, _enabled(false)
+	, _dirty(true)
+{
+	setShadowTechnique(tech);
+}
+
 void
 vl::ShadowInfo::disable(void)
 {
-	technique = SHADOWTYPE_NONE;
+	if(_enabled)
+	{
+		_setDirty();
+		_enabled = false;
+	}
 }
 
 void
 vl::ShadowInfo::enable(void)
 {
-	technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
+	if(!_enabled || _technique == SHADOWTYPE_NONE)
+	{
+		_setDirty();
+		_enabled = true;
+		// Only change technique if we have no shadows
+		if(_technique == SHADOWTYPE_NONE)
+		{ _technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
+	}
 }
 
+void
+vl::ShadowInfo::setShadowTechnique(std::string const &tech)
+{
+	ShadowTechnique technique = getShadowTechniqueFromString(tech);
+	if(technique != SHADOWTYPE_NOT_VALID && technique != _technique)
+	{
+		_setDirty();
+		_technique = technique;
+	}
+}
+
+std::string
+vl::ShadowInfo::getShadowTechniqueName(void) const
+{
+	return getShadowTechniqueAsString(_technique);
+}
+
+void 
+vl::ShadowInfo::setShadowTechnique(ShadowTechnique tech)
+{
+	if(tech != _technique)
+	{
+		_setDirty();
+		_technique = tech;
+	}
+}
+
+void 
+vl::ShadowInfo::setCamera(std::string const &str)
+{
+	std::string name(str);
+	vl::to_lower(name);
+	if(name != _camera)
+	{
+		_setDirty();
+		_camera = name;
+	}
+}
+
+void 
+vl::ShadowInfo::setColour(Ogre::ColourValue const &col)
+{
+	if(col != _colour)
+	{
+		_setDirty();
+		_colour = col;
+	}
+}
+
+/// ------------------------------ SceneManager ------------------------------
 /// Public
 /// Master constructor
 vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_man)
@@ -612,9 +665,30 @@ vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
 	return false;
 }
 
+void 
+vl::SceneManager::clearSelection(void)
+{
+	for(SceneNodeList::iterator iter = _selection.begin(); iter != _selection.end(); ++iter )
+	{
+		(*iter)->showBoundingBox(false);
+	}
+
+	_selection.clear();
+}
+
 /// -------------------------------Protected -----------------------------------
+void 
+vl::SceneManager::recaluclateDirties(void)
+{
+	if(_shadows.isDirty())
+	{
+		setDirty(DIRTY_SHADOW_INFO);
+		_shadows.clearDirty();
+	}
+}
+
 void
-vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( dirtyBits & DIRTY_RELOAD_SCENE )
 	{
@@ -696,35 +770,40 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// ideally most of these should be configurable from config file
 		/// because they are really performance intense, can look pretty crappy
 		/// and most of them need to be static during the simulation
-
-		_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadows.technique) );
-		_ogre_sm->setShadowColour(_shadows.colour);
-		vl::to_lower(_shadows.camera);
-		Ogre::ShadowCameraSetupPtr cam_setup;
-		if( _shadows.camera == "default" )
+		if(_shadows.isEnabled())
 		{
-			cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
-		}
-		else if( _shadows.camera == "planeoptimal" )
-		{
-			/// @todo needs a plane of interest
-			// cam_setup.bind(new Ogre::PlaneOptimalShadowCameraSetup());
-		}
-		else if( _shadows.camera == "lispsm" )
-		{
-			/// LiSPSM has creately softer shadows compared to the default one
-			/// i.e. less pixelisation in the edges.
-			cam_setup.bind(new Ogre::LiSPSMShadowCameraSetup());
-		}
+			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadows.getShadowTechnique()) );
+			_ogre_sm->setShadowColour(_shadows.getColour());
+			Ogre::ShadowCameraSetupPtr cam_setup;
+			if( _shadows.getCamera() == "default" )
+			{
+				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
+			}
+			else if( _shadows.getCamera() == "planeoptimal" )
+			{
+				/// @todo needs a plane of interest
+				// cam_setup.bind(new Ogre::PlaneOptimalShadowCameraSetup());
+			}
+			else if( _shadows.getCamera() == "lispsm" )
+			{
+				/// LiSPSM has creately softer shadows compared to the default one
+				/// i.e. less pixelisation in the edges.
+				cam_setup.bind(new Ogre::LiSPSMShadowCameraSetup());
+			}
 
-		if( !cam_setup.isNull() )
-		{ _ogre_sm->setShadowCameraSetup(cam_setup); }
-
+			if( !cam_setup.isNull() )
+			{ _ogre_sm->setShadowCameraSetup(cam_setup); }
+		}
+		else
+		{ _ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_NONE); }
+	
 		/// @todo for self shadowing we need to use custom shaders
 		/// @todo make configurable
 		_ogre_sm->setShadowTextureSelfShadow(true);
 		/// Hard coded floating point texture, needs current hardware
 		/// provides much better depth map
+		/// @todo these are not runtime configurable variables they should
+		/// be set elsewhere
 		_ogre_sm->setShadowTexturePixelFormat(Ogre::PF_FLOAT32_R);
 		_ogre_sm->setShadowTextureCasterMaterial("ShadowCaster");
 
@@ -789,9 +868,14 @@ vl::operator<<(std::ostream &os, vl::FogInfo const &fog)
 std::ostream &
 vl::operator<<(std::ostream &os, vl::ShadowInfo const &shadows)
 {
-	os << "Shadows : technique " << shadows.getShadowTechnique()
-		<< " : colour " << shadows.colour
-		<< " : camera " << shadows.camera;
+	os << "Shadows : ";
+	if(shadows.isEnabled())
+	{ os << "enabled "; }
+	else
+	{ os << "disabled "; }
+	os << ": technique " << shadows.getShadowTechniqueName()
+		<< " : colour " << shadows.getColour()
+		<< " : camera " << shadows.getCamera();
 
 	return os;
 }
@@ -860,7 +944,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shadows)
 {
-	msg << shadows.technique << shadows.colour << shadows.camera;
+	msg << shadows.getShadowTechnique() << shadows.getColour() << shadows.getCamera() << shadows.isEnabled();
 
 	return msg;
 }
@@ -869,7 +953,19 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 {
-	msg >> shadows.technique >> shadows.colour >> shadows.camera;
+	ShadowTechnique tech;
+	Ogre::ColourValue col;
+	std::string camera;
+	bool enabled;
+	msg >> tech >> col >> camera >> enabled;
+
+	shadows.setShadowTechnique(tech);
+	shadows.setColour(col);
+	shadows.setCamera(camera);
+	if(enabled)
+	{ shadows.enable(); }
+	else
+	{ shadows.disable(); }
 
 	return msg;
 }

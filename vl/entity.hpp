@@ -103,7 +103,7 @@ public :
 	{ return "Entity"; }
 
 private :
-	virtual void doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 	virtual bool _doCreateNative(void);

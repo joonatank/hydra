@@ -66,7 +66,7 @@ vl::Camera::setOrientation(Ogre::Quaternion const &q)
 
 /// ---------------------------- Protected -----------------------------------
 void 
-vl::Camera::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::Camera::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( DIRTY_CLIPPING & dirtyBits )
 	{

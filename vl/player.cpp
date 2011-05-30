@@ -50,7 +50,7 @@ vl::Player::setIPD(double ipd)
 
 /// ------------------------------- Protected ----------------------------------
 void
-vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( dirtyBits & DIRTY_HEAD )
 	{ msg << _head_transform; }

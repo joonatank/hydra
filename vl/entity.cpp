@@ -95,7 +95,7 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 }
 
 void 
-vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( DIRTY_PREFAB & dirtyBits )
 	{

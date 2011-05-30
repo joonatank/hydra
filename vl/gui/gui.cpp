@@ -249,7 +249,7 @@ vl::gui::GUI::sendCommand(std::string const &cmd)
 
 /// --------------------------------- Private --------------------------------
 void
-vl::gui::GUI::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
+vl::gui::GUI::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
 	if( DIRTY_EDITOR & dirtyBits )
 	{

@@ -55,7 +55,7 @@ private :
 	/// Virtual private methods
 
 	virtual bool _doCreateNative(void) = 0;
-	virtual void doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
+	virtual void doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const = 0;
 	virtual void doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
 	/// Using template method pattern for creating the native object
@@ -63,7 +63,7 @@ private :
 	bool _createNative(void);
 
 	/// Template method patter for the serialization
-	void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 
 
 	void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );

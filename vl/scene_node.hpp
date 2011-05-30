@@ -192,7 +192,7 @@ public :
 
 protected :
 
-	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
 private :

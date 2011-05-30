@@ -34,15 +34,15 @@ def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
 	# Create the translation action using a proxy
 	trans_action_proxy = MoveActionProxy.create()
 	trans_action_proxy.enableTranslation()
-	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A )
-	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.S, KC.W )
-	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN )
+	addKeyActionsForAxis(trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A)
+	addKeyActionsForAxis(trans_action_proxy, Vector3(0, 0, 1), KC.S, KC.W)
+	addKeyActionsForAxis(trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN)
 
 	# Create the rotation action using a proxy
 	rot_action_proxy = MoveActionProxy.create()
 	rot_action_proxy.enableRotation()
 	# This is not useful, maybe using Q and E
-	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.Q, KC.E )
+	addKeyActionsForAxis(rot_action_proxy, Vector3(0, 1, 0), KC.Q, KC.E)
 
 	# Create the real action
 	trans_action = MoveNodeAction.create()
@@ -114,14 +114,14 @@ def mapHeadTracker(name) :
 
 
 # Fine using the new event interface
-def addQuitEvent( kc ) :
+def addQuitEvent( kc, key_mod = KEY_MOD.NONE ) :
 	print( 'Creating Quit Event to ' + getPythonKeyName(kc) )
 #	action = QuitAction.create()
 	action = ScriptAction.create()
 	action.game = game
 	action.script = "quit()"
 
-	trigger = game.event_manager.createKeyTrigger( kc, KEY_MOD.META )
+	trigger = game.event_manager.createKeyTrigger(kc, key_mod)
 	trigger.action_down = action
 
 
@@ -240,7 +240,6 @@ mapHeadTracker("glassesTrigger")
 
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
-addQuitEvent(KC.Q)
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)

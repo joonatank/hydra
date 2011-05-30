@@ -91,6 +91,8 @@ private :
 
 	bool _keyUp( OIS::KeyCode kc );
 
+	void _update_key_modifers(std::bitset<8> new_mod);
+
 /// Data
 private :
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;

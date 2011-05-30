@@ -21,14 +21,21 @@ public :
 
 	virtual ~Distributed( void ) {}
 
-	uint64_t getDirty( void ) const
-	{ return _dirtyBits; }
+	uint64_t getDirty(void)
+	{
+		recaluclateDirties();
+		return _dirtyBits;
+	}
 
+	/// @todo this should probably be protected?
 	void setDirty( uint64_t const bits )
 	{ _dirtyBits |= bits; }
 
-	bool isDirty( void ) const
-	{ return( _dirtyBits != DIRTY_NONE ); }
+	bool isDirty(void)
+	{
+		recaluclateDirties();
+		return( _dirtyBits != DIRTY_NONE );
+	}
 
 	enum DirtyBits
 	{
@@ -37,14 +44,14 @@ public :
 		DIRTY_ALL = 0xFFFFFFFFFFFFFFFFull
 	};
 
+	/// @brief serializes the current dirties and the current modifications
 	/// Pack and unpack needs to be symmetric in every way otherwise
 	/// they will fail.
-	/// @todo fix const correctness, this method should not modify the object
-	void pack( cluster::ByteStream &msg )
+	void pack( cluster::ByteStream &msg ) const
 	{ pack( msg, _dirtyBits ); }
 
-	/// @todo fix const correctness, this method should not modify the object
-	void pack( cluster::ByteStream &msg, uint64_t const dirtyBits )
+	/// @brief serialize the object with some dirties
+	void pack( cluster::ByteStream &msg, uint64_t const dirtyBits ) const
 	{
 		msg << dirtyBits;
 		serialize( msg, dirtyBits );
@@ -69,8 +76,10 @@ public :
 	{ _dirtyBits = DIRTY_NONE; }
 
 private :
-	/// @todo fix const correctness, this method should not modify the object
-	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
+	/// @brief Recalculate member dirties if necessary
+	virtual void recaluclateDirties(void) {}
+
+	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) const = 0;
 
 	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
