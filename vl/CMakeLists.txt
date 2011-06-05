@@ -53,6 +53,7 @@ set( SOURCES
 	physics/physics_events.cpp
 	physics/physics_world.cpp
 	physics/shapes.cpp
+	physics/rigid_body.cpp
 	entity.cpp
 	light.cpp
 	camera.cpp

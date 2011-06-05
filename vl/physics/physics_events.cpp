@@ -56,10 +56,22 @@ vl::physics::DynamicAction::move(Ogre::Vector3 const &v, bool local)
 
 	if( !_move_dir.isZeroLength() )
 	{
+		Ogre::Vector3 vel = _body->getLinearVelocity();
 		vl::scalar x = _force.x*_move_dir.x;
 		vl::scalar y = _force.y*_move_dir.y;
 		vl::scalar z = _force.z*_move_dir.z;
-		_body->applyForce(Ogre::Vector3(x,y,z), Ogre::Vector3::ZERO );
+		// Not really a speed, but as this is easier to calculate
+		if(vl::sign(vel.x) == vl::sign(x))
+		{ x = abs(vel.x) < _speed ? x : 0; }
+		if(vl::sign(vel.y) == vl::sign(y))
+		{ y = abs(vel.y) < _speed ? y : 0; }
+		if(vl::sign(vel.z) == vl::sign(z))
+		{ z = abs(vel.z) < _speed ? z : 0; }
+
+		if(_reference)
+		{ _body->applyCentralForce(Ogre::Vector3(x,y,z), _reference); }
+		else
+		{ _body->applyCentralForce(Ogre::Vector3(x,y,z), local); }
 	}
 }
 
@@ -69,6 +81,7 @@ vl::physics::DynamicAction::rotate(Ogre::Quaternion const &v, bool local)
 	if( !_body )
 	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
 
+	/// @todo add support for max speed
 	if( !_rot_dir.isZeroLength() )
 	{
 		vl::scalar x = _torque.x*_move_dir.x;

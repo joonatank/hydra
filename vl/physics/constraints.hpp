@@ -209,14 +209,6 @@ public :
 		return constraint;
 	}
 
-	/*
-	static SliderConstraintRefPtr create(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-	{
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbB, frameInB, useLinearReferenceFrameB));
-		return constraint;
-	}
-	*/
-
 private :
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
@@ -252,18 +244,42 @@ public :
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 	{
-		std::clog << "HingeConstraint::create" << std::endl;
 		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
 		return constraint;
 	}
 
-	/*
-	static SliderConstraintRefPtr create(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-	{
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbB, frameInB, useLinearReferenceFrameB));
-		return constraint;
-	}
-	*/
+	void setAngularOnly(bool angularOnly)
+	{ _bt_constraint->setAngularOnly(angularOnly); }
+
+	void enableAngularMotor(bool enableMotor, vl::scalar targetVelocity, vl::scalar maxMotorImpulse)
+	{ _bt_constraint->enableAngularMotor(enableMotor, targetVelocity, maxMotorImpulse); }
+
+	void enableMotor(bool enableMotor)
+	{ _bt_constraint->enableMotor(enableMotor); }
+	
+	void setMaxMotorImpulse(vl::scalar maxMotorImpulse)
+	{ _bt_constraint->setMaxMotorImpulse(maxMotorImpulse); }
+
+//	void setMotorTarget(const btQuaternion &qAinB, vl::scalar dt)
+//	{ return _bt_constraint->setMotorTarget(qAinB, dt); }
+
+	void setMotorTarget(vl::scalar targetAngle, vl::scalar dt)
+	{ _bt_constraint->setMotorTarget(targetAngle, dt); }
+
+	void setLimit(vl::scalar low, vl::scalar high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f)
+	{ _bt_constraint->setLimit(low, high, softness, biasFactor, relaxationFactor); }
+	
+	void setAxis(Ogre::Vector3 &axisInA)
+	{ _bt_constraint->setAxis(vl::math::convert_bt_vec(axisInA)); }
+	
+	vl::scalar getLowerLimit(void) const
+	{ return _bt_constraint->getLowerLimit(); }
+
+	vl::scalar getUpperLimit(void) const
+	{ return _bt_constraint->getUpperLimit(); }
+
+	vl::scalar getHingeAngle(void)
+	{ return _bt_constraint->getHingeAngle(); }
 
 private :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
@@ -272,7 +288,6 @@ private :
 		, _bodyA(rbA)
 		, _bodyB(rbB)
 	{
-		std::clog << "HingeConstraint created." << std::endl;
 		_bt_constraint = new btHingeConstraint(*rbA->getNative(), *rbB->getNative(), 
 			convert_bt_transform(frameInA), convert_bt_transform(frameInB), useLinearReferenceFrameA);
 	}
@@ -281,7 +296,6 @@ private :
 		: _bt_constraint(0)
 		, _bodyB(rbB)
 	{
-		std::clog << "HingeConstraint created." << std::endl;
 		_bt_constraint = new btHingeConstraint(*rbB->getNative(), 
 			convert_bt_transform(frameInB), useLinearReferenceFrameB);
 	}

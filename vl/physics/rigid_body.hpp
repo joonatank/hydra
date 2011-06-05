@@ -2,6 +2,7 @@
  *	@date 2011-03
  *	@file rigid_body.hpp
  *
+ *	This file is part of Hydra a VR game engine.
  */
 
 #ifndef HYDRA_RIGID_BODY_HPP
@@ -57,39 +58,47 @@ public :
 
 	};	// struct ConstructionInfo
 
-	RigidBody(ConstructionInfo const &constructionInfo)
-		: _name(constructionInfo.name), _shape(constructionInfo.shape), _bt_body(0)
-	{
-		_bt_body = new btRigidBody(constructionInfo.getBullet());
-	}
+	RigidBody(ConstructionInfo const &constructionInfo);
 
 	Ogre::Vector3 getTotalForce(void) const
 	{ return convert_vec(_bt_body->getTotalForce()); }
 	Ogre::Vector3 getTotalTorque(void) const
 	{ return convert_vec(_bt_body->getTotalTorque()); }
+	
+	void applyForce(Ogre::Vector3 const &force, Ogre::Vector3 const &rel_pos, RigidBodyRefPtr ref);
+
+	void applyForce(Ogre::Vector3 const &force, Ogre::Vector3 const &rel_pos, bool local);
+
 	void applyForce(Ogre::Vector3 const &force, Ogre::Vector3 const &rel_pos)
 	{ _bt_body->applyForce(convert_bt_vec(force), convert_bt_vec(rel_pos)); }
+
 	void applyTorque(Ogre::Vector3 const &v)
 	{ _bt_body->applyTorque(vl::math::convert_bt_vec(v)); }
 	void applyTorqueImpulse(Ogre::Vector3 const &v)
 	{ _bt_body->applyTorqueImpulse(vl::math::convert_bt_vec(v)); }
-	void applyCentralForce(Ogre::Vector3 const &v, bool local = false)
-	{
-		/// @todo this is insanily inefficient way to do this
-		/// I would think that all calculations are done in local space anyway
-		/// so doing transforms from local to world seems like an extra overhead
-		if(!local)
-		{ _bt_body->applyCentralForce(vl::math::convert_bt_vec(v)); }
-		else
-		{ _bt_body->applyCentralForce(vl::math::convert_bt_vec(positionToLocal(v))); }
-	}
+
+	void applyCentralForce(Ogre::Vector3 const &force, vl::SceneNodePtr ref);
+
+	void applyCentralForce(Ogre::Vector3 const &force, RigidBodyRefPtr ref);
+
+	void applyCentralForce(Ogre::Vector3 const &force, bool local)
+	{ applyForce(force, Ogre::Vector3::ZERO, local); }
+
+	void applyCentralForce(Ogre::Vector3 const &force)
+	{ applyForce(force, Ogre::Vector3::ZERO); }
 
 	void applyCentralImpulse(Ogre::Vector3 const &v)
 	{ _bt_body->applyCentralImpulse(vl::math::convert_bt_vec(v)); }
+	
 	void setLinearVelocity(Ogre::Vector3 const &v)
 	{ _bt_body->setLinearVelocity(convert_bt_vec(v)); }
+	Ogre::Vector3 getLinearVelocity(void) const
+	{ return convert_vec(_bt_body->getLinearVelocity()); }
+
 	void setAngularVelocity(Ogre::Vector3 const &v)
 	{ _bt_body->setAngularVelocity(convert_bt_vec(v)); }
+	Ogre::Vector3 getAngularVelocity(void) const
+	{ return convert_vec(_bt_body->getAngularVelocity()); }
 
 	void setDamping(Ogre::Real linear, Ogre::Real angular)
 	{ _bt_body->setDamping(linear, angular); }
@@ -100,23 +109,22 @@ public :
 	void clearForces(void)
 	{ _bt_body->clearForces(); }
 
+	void setLinearDamping(Ogre::Real damp)
+	{ setDamping(damp, getAngularDamping()); }
 	Ogre::Real getLinearDamping(void) const
 	{ return _bt_body->getLinearDamping(); }
 
+	void setAngularDamping(Ogre::Real damp)
+	{ setDamping(getLinearDamping(), damp); }
 	Ogre::Real getAngularDamping(void) const
 	{ return _bt_body->getAngularDamping(); }
 
+	void translate(Ogre::Vector3 const &v)
+	{ _bt_body->translate(convert_bt_vec(v)); }
+
 	/// Doesn't set mass if we have no inertia tensor use setMassProps
 	/// it might work, if you set the mass first and the inertia tensor after that
- 	void setMass(Ogre::Real mass)
- 	{
-		if(!_bt_body->getInvInertiaDiagLocal().isZero())
-		{
-			btVector3 inv = _bt_body->getInvInertiaDiagLocal();
-			btVector3 inertia(1/inv.x(), 1/inv.y(), 1/inv.z());
-			_bt_body->setMassProps(mass, inertia);
-		}
-	}
+ 	void setMass(Ogre::Real mass);
 
 	Ogre::Real getMass(void) const
 	{
@@ -165,21 +173,9 @@ public :
 	void setMotionState(MotionState *motionState)
 	{ _bt_body->setMotionState(motionState); }
 
-	vl::Transform transformToLocal(vl::Transform const &t) const
-	{
-		MotionState *ms = (MotionState *)_bt_body->getMotionState();
-		vl::Transform from_world = ms->getWorldTransform();
-		from_world.invert();
-		return from_world*t;
-	}
+	vl::Transform transformToLocal(vl::Transform const &t) const;
 
-	Ogre::Vector3 positionToLocal(Ogre::Vector3 const &v) const
-	{
-		MotionState *ms = (MotionState *)_bt_body->getMotionState();
-		vl::Transform from_world = ms->getWorldTransform();
-		from_world.invert();
-		return from_world*v;
-	}
+	Ogre::Vector3 positionToLocal(Ogre::Vector3 const &v) const;
 
 	vl::Transform getWorldTransform(void) const
 	{ return ((MotionState *)_bt_body->getMotionState())->getWorldTransform(); }
@@ -202,17 +198,7 @@ private :
 
 };	// class RigidBody
 
-inline std::ostream &
-operator<<(std::ostream &os, RigidBody const &body)
-{
-	os << "RigidBody " << body.getName() << " : motion state " << *body.getMotionState();
-	if( body.isUserControlled() )
-	{ os << " : user controlled"; }
-
-	// TODO add the rest
-
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, RigidBody const &body);
 
 }	// namespace physics
 

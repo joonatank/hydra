@@ -75,6 +75,18 @@ inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
 	return true;
 }
 
+template<typename T>
+inline T sign(T const &x)
+{
+	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
+}
+
+template<>
+inline Ogre::Vector3 sign(Ogre::Vector3 const &x)
+{
+	return Ogre::Vector3(sign(x.x), sign(x.y), sign(x.z));
+}
+
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 
 void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,

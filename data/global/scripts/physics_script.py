@@ -31,7 +31,7 @@ def addKinematicAction(body):
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
 
-def addDynamicAction(body):
+def addDynamicAction(body, reference = None):
 	print('Creating Dynamic event on ' + body.name)
 
 	# Create the translation action using a proxy
@@ -50,6 +50,9 @@ def addDynamicAction(body):
 	# Create the real action
 	trans_action = DynamicAction.create()
 	trans_action.body = body
+	trans_action.reference = reference
+	trans_action.local = False
+	trans_action.max_speed = 3
 	# Relative to the mass, so we get nice acceleration and add some force
 	# to win gravity
 	trans_action.force = Vector3(10, 10, 10)*body.mass + Vector3(0, 10, 0)

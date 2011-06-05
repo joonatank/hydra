@@ -71,8 +71,14 @@ public:
 	Ogre::Vector3 getPosition(void) const
 	{ return vl::math::convert_vec(_trans.getOrigin()); }
 
+	void setPosition(Ogre::Vector3 const &v)
+	{ _trans.setOrigin(vl::math::convert_bt_vec(v)); }
+
 	Ogre::Quaternion getOrientation(void) const
 	{ return vl::math::convert_quat(_trans.getRotation()); }
+
+	void setOrientation(Ogre::Quaternion const &q)
+	{ _trans.setRotation(vl::math::convert_bt_quat(q)); }
 
 	Transform getWorldTransform(void) const
 	{

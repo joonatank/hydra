@@ -712,27 +712,57 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
+	/// hinge constraint
+	python::class_<vl::physics::HingeConstraint, vl::physics::HingeConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("HingeConstraint", python::no_init)
+		.def("setAngularOnly", &vl::physics::HingeConstraint::setAngularOnly)
+		.def("enableAngularMotor", &vl::physics::HingeConstraint::enableAngularMotor)
+		.def("enableMotor", &vl::physics::HingeConstraint::enableMotor)
+		.def("setMaxMotorImpulse", &vl::physics::HingeConstraint::setMaxMotorImpulse)
+		.def("setMotorTarget", &vl::physics::HingeConstraint::setMotorTarget)
+		// @todo add setMotorTarget quaternion version
+		.def("setAxis", &vl::physics::HingeConstraint::setAxis)
+		.def("getLowerLimit", &vl::physics::HingeConstraint::getLowerLimit)
+		.def("getUpperLimit", &vl::physics::HingeConstraint::getUpperLimit)
+		.def("getHingeAngle", &vl::physics::HingeConstraint::getHingeAngle)
+		.def("create", &vl::physics::HingeConstraint::create)
+		.staticmethod("create")
+	;
+
 	/// rigid body
 	vl::physics::MotionState *(vl::physics::RigidBody::*getMotionState_ov1)(void) = &vl::physics::RigidBody::getMotionState;
+	void (vl::physics::RigidBody::*applyForce_ov0)(Ogre::Vector3 const &, Ogre::Vector3 const &) = &vl::physics::RigidBody::applyForce;
+	void (vl::physics::RigidBody::*applyForce_ov1)(Ogre::Vector3 const &, Ogre::Vector3 const &, bool) = &vl::physics::RigidBody::applyForce;
+	void (vl::physics::RigidBody::*applyForce_ov2)(Ogre::Vector3 const &, Ogre::Vector3 const &, vl::physics::RigidBodyRefPtr) = &vl::physics::RigidBody::applyForce;
+	void (vl::physics::RigidBody::*applyCentralForce_ov0)(Ogre::Vector3 const &) = &vl::physics::RigidBody::applyCentralForce;
+	void (vl::physics::RigidBody::*applyCentralForce_ov1)(Ogre::Vector3 const &, bool) = &vl::physics::RigidBody::applyCentralForce;
+	void (vl::physics::RigidBody::*applyCentralForce_ov2)(Ogre::Vector3 const &, vl::physics::RigidBodyRefPtr) = &vl::physics::RigidBody::applyCentralForce;
 
 	python::class_<vl::physics::RigidBody, vl::physics::RigidBodyRefPtr, boost::noncopyable>("RigidBody", python::no_init )
-		.def( "getTotalForce", &vl::physics::RigidBody::getTotalForce )
-		.def( "getTotalTorque", &vl::physics::RigidBody::getTotalTorque )
-		.def( "applyForce", &vl::physics::RigidBody::applyForce )
+		.def( "applyForce", applyForce_ov0)
+		.def( "applyForce", applyForce_ov1)
+		.def( "applyForce", applyForce_ov2)
 		.def( "applyTorque", &vl::physics::RigidBody::applyTorque )
 		.def( "applyTorqueImpulse", &vl::physics::RigidBody::applyTorqueImpulse )
-		.def( "applyCentralForce", &vl::physics::RigidBody::applyCentralForce )
+		.def( "applyCentralForce", applyCentralForce_ov0)
+		.def( "applyCentralForce", applyCentralForce_ov1)
+		.def( "applyCentralForce", applyCentralForce_ov2)
 		.def( "applyCentralImpulse", &vl::physics::RigidBody::applyCentralImpulse )
 		.def( "setAngularVelocity", &vl::physics::RigidBody::setAngularVelocity )
 		.def( "setLinearVelocity", &vl::physics::RigidBody::setLinearVelocity )
 		.def( "setDamping", &vl::physics::RigidBody::setDamping )
 		.def( "getInvMass", &vl::physics::RigidBody::getInvMass )
 		.def( "clearForces", &vl::physics::RigidBody::clearForces )
-		.def( "getLinearDamping", &vl::physics::RigidBody::getLinearDamping )
-		.def( "getAngularDamping", &vl::physics::RigidBody::getAngularDamping )
 		.def("setInertia", &vl::physics::RigidBody::setInertia)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
 		.def("transform_to_local", &vl::physics::RigidBody::transformToLocal)
+		.def("translate", &vl::physics::RigidBody::translate)
+		.add_property("total_force", &vl::physics::RigidBody::getTotalForce )
+		.add_property("total_torque", &vl::physics::RigidBody::getTotalTorque )
+		.add_property("center_of_mass_transform", &vl::physics::RigidBody::getCenterOfMassTransform, &vl::physics::RigidBody::setCenterOfMassTransform)
+		.add_property("linear_damping", &vl::physics::RigidBody::getLinearDamping, &vl::physics::RigidBody::setLinearDamping)
+		.add_property("angular_damping", &vl::physics::RigidBody::getAngularDamping, &vl::physics::RigidBody::setAngularDamping)
+		.add_property("linear_velocity", &vl::physics::RigidBody::getLinearVelocity, &vl::physics::RigidBody::setLinearVelocity)
+		.add_property("angular_velocity", &vl::physics::RigidBody::getAngularVelocity, &vl::physics::RigidBody::setAngularVelocity)
 		.add_property("world_transform", &vl::physics::RigidBody::getWorldTransform)
 		.add_property("shape", &vl::physics::RigidBody::getShape)
 		.add_property("user_controlled", &vl::physics::RigidBody::isUserControlled, &vl::physics::RigidBody::setUserControlled)
@@ -748,8 +778,8 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
 		.add_property("node", python::make_function( &vl::physics::MotionState::getNode, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::MotionState::setNode )
-		.add_property("position", &vl::physics::MotionState::getPosition)
-		.add_property("orientation", &vl::physics::MotionState::getOrientation)
+		.add_property("position", &vl::physics::MotionState::getPosition, &vl::physics::MotionState::setPosition)
+		.add_property("orientation", &vl::physics::MotionState::getOrientation, &vl::physics::MotionState::setOrientation)
 		.add_property("world_transform", getWorldTransform_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -785,6 +815,7 @@ BOOST_PYTHON_MODULE(vl)
 					  &vl::physics::DynamicAction::setForce )
 		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_value_policy<python::copy_const_reference>() ),
 					  &vl::physics::DynamicAction::setTorque )
+		.add_property("max_speed", &vl::physics::DynamicAction::getSpeed, &vl::physics::DynamicAction::setSpeed)
 		.def("create",&vl::physics::DynamicAction::create,
 			 python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
