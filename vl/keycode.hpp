@@ -20,16 +20,16 @@ inline std::string getKeyName( OIS::KeyCode key )
 	{
 		case KC_UNASSIGNED : return "UNASSIGNED";
 		case KC_ESCAPE :return "ESCAPE";
-		case KC_1 :return "1";
-		case KC_2 :return "2";
-		case KC_3 : return "3";
-		case KC_4 :return "4";
-		case KC_5 :return "5";
-		case KC_6 :return "6";
-		case KC_7 : return "7";
-		case KC_8 :return "8";
-		case KC_9 : return "9";
-		case KC_0 : return "0";
+		case KC_1 :return "N1";
+		case KC_2 :return "N2";
+		case KC_3 : return "N3";
+		case KC_4 :return "N4";
+		case KC_5 :return "N5";
+		case KC_6 :return "N6";
+		case KC_7 : return "N7";
+		case KC_8 :return "N8";
+		case KC_9 : return "N9";
+		case KC_0 : return "N0";
 		case KC_MINUS : return "MINUS";
 		case KC_EQUALS : return "EQUALS";
 		case KC_BACK : return "BACK";
