@@ -107,6 +107,7 @@ BOOST_PYTHON_MODULE(pyogre)
 
 	py::class_<Ogre::Quaternion>("Quaternion", py::init<>())
 		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def(py::init<Ogre::Radian, Ogre::Vector3>())
 		.def_readwrite("x", &Ogre::Quaternion::x)
 		.def_readwrite("y", &Ogre::Quaternion::y)
 		.def_readwrite("z", &Ogre::Quaternion::z)

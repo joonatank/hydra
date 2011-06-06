@@ -395,7 +395,13 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 			child->getParent()->removeChild(child);
 		}
 
+		assert(child->getParent() == 0);
+		vl::Transform child_world = child->getWorldTransform();
+
 		child->_parent = this;
+
+		// Keep the current transform of the child
+		child->setWorldTransform(child_world);
 
 		if( _ogre_node )
 		{
@@ -427,11 +433,16 @@ vl::SceneNode::removeChild(vl::SceneNodePtr child)
 	{
 		if( *iter == child )
 		{
+			// Reset the position relative to world
+			vl::Transform child_world = child->getWorldTransform();
+
 			assert(child->getParent() == this);
 			child->_parent = 0;
 
 			setDirty(DIRTY_CHILDS);
 			_childs.erase(iter);
+
+			child->setTransform(child_world);
 
 			if( _ogre_node && child->getNative() )
 			{ _ogre_node->removeChild(child->getNative()); }

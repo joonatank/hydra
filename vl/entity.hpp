@@ -131,17 +131,7 @@ private :
 	EntityMeshLoadedCallback *_loader_cb;
 };
 
-inline std::ostream &
-operator<<(std::ostream &os, vl::Entity const &ent)
-{
-	// @todo either mesh name or prefab should be printed
-	os << "Entity : " << ent.getName() << " : mesh name " << ent.getMeshName() 
-		<< " : prefab " << ent.getPrefab() 
-		<< " : cast shadows " << ent.getCastShadows()
-		<< std::endl;
-
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, vl::Entity const &ent);
 
 }	// namespace vl
 

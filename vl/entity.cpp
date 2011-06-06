@@ -16,6 +16,23 @@
 #include <OGRE/OgreSubMesh.h>
 #include <OGRE/OgreMeshManager.h>
 
+/// ------------------------------------- Global -----------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Entity const &ent)
+{
+	// @todo either mesh name or prefab should be printed
+	os << "Entity : " << ent.getName()
+		<< " : material " << ent.getMaterialName();
+	if(ent.getPrefab() != vl::PF_NONE)
+	{ os << " : prefab " << ent.getPrefab(); }
+	else
+	{ os << " : mesh " << ent.getMeshName(); }
+	os << " : cast shadows " << ent.getCastShadows() << std::endl;
+
+	return os;
+}
+
+/// -------------------- EntityMeshLoadedCallback ----------------------------
 vl::EntityMeshLoadedCallback::EntityMeshLoadedCallback(Entity *ent)
 	: owner(ent)
 {
