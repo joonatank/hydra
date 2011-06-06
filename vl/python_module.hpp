@@ -83,12 +83,15 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( setLimit_ovs, setLimit, 2, 5 )
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( hideSceneNodes_ov, hideSceneNodes, 1, 2 )
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
+
 BOOST_PYTHON_MODULE(vl)
 {
 	using namespace vl;
@@ -704,26 +707,24 @@ BOOST_PYTHON_MODULE(vl)
 
 	/// slider constraint
 	python::class_<vl::physics::SliderConstraint, vl::physics::SliderConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("SliderConstraint", python::no_init)
+		// Limits
 		.add_property("lower_lin_limit", &vl::physics::SliderConstraint::getLowerLinLimit, &vl::physics::SliderConstraint::setLowerLinLimit)
 		.add_property("upper_lin_limit", &vl::physics::SliderConstraint::getUpperLinLimit, &vl::physics::SliderConstraint::setUpperLinLimit)
 		.add_property("lower_ang_limit", &vl::physics::SliderConstraint::getLowerAngLimit, &vl::physics::SliderConstraint::setLowerAngLimit)
 		.add_property("upper_ang_limit", &vl::physics::SliderConstraint::getUpperAngLimit, &vl::physics::SliderConstraint::setUpperAngLimit)
+		// Motor
+		.add_property("powered_lin_motor", &vl::physics::SliderConstraint::getPoweredLinMotor, &vl::physics::SliderConstraint::setPoweredLinMotor)
+		.add_property("target_lin_motor_velocity", &vl::physics::SliderConstraint::getTargetLinMotorVelocity, &vl::physics::SliderConstraint::setTargetLinMotorVelocity)
+		.add_property("max_lin_motor_force", &vl::physics::SliderConstraint::getMaxLinMotorForce, &vl::physics::SliderConstraint::setMaxLinMotorForce)
+		.add_property("powered_ang_motor", &vl::physics::SliderConstraint::getPoweredAngMotor, &vl::physics::SliderConstraint::setPoweredAngMotor)
+		.add_property("target_ang_motor_velocity", &vl::physics::SliderConstraint::getTargetAngMotorVelocity, &vl::physics::SliderConstraint::setTargetAngMotorVelocity)
+		.add_property("max_ang_motor_force", &vl::physics::SliderConstraint::getMaxAngMotorForce, &vl::physics::SliderConstraint::setMaxAngMotorForce)
 		.def("create", &vl::physics::SliderConstraint::create)
 		.staticmethod("create")
 	;
 
 	/// hinge constraint
 	python::class_<vl::physics::HingeConstraint, vl::physics::HingeConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("HingeConstraint", python::no_init)
-		.def("setAngularOnly", &vl::physics::HingeConstraint::setAngularOnly)
-		.def("enableAngularMotor", &vl::physics::HingeConstraint::enableAngularMotor)
-		.def("enableMotor", &vl::physics::HingeConstraint::enableMotor)
-		.def("setMaxMotorImpulse", &vl::physics::HingeConstraint::setMaxMotorImpulse)
-		.def("setMotorTarget", &vl::physics::HingeConstraint::setMotorTarget)
-		// @todo add setMotorTarget quaternion version
-		.def("setAxis", &vl::physics::HingeConstraint::setAxis)
-		.def("getLowerLimit", &vl::physics::HingeConstraint::getLowerLimit)
-		.def("getUpperLimit", &vl::physics::HingeConstraint::getUpperLimit)
-		.def("getHingeAngle", &vl::physics::HingeConstraint::getHingeAngle)
 		.def("create", &vl::physics::HingeConstraint::create)
 		.staticmethod("create")
 	;
@@ -800,6 +801,14 @@ BOOST_PYTHON_MODULE(vl)
 
 
 	/// Physics Actions
+	python::class_<vl::physics::SliderMotorAction, boost::noncopyable, python::bases<vl::BasicAction> >("SliderMotorAction", python::no_init )
+		.def_readwrite("velocity", &vl::physics::SliderMotorAction::velocity)
+		.def_readwrite("constraint", &vl::physics::SliderMotorAction::constraint)
+		.def("create",&vl::physics::SliderMotorAction::create,
+			 python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
 	python::class_<vl::physics::KinematicAction, boost::noncopyable, python::bases<vl::MoveAction> >("KinematicAction", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::KinematicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::KinematicAction::setRigidBody )

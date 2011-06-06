@@ -199,6 +199,40 @@ public :
 	void setDampingOrthoAng(vl::scalar dampingOrthoAng)
 	{ _bt_constraint->setDampingOrthoAng(dampingOrthoAng); }
 
+	// Motor
+	void setPoweredLinMotor(bool onOff)
+	{ _bt_constraint->setPoweredLinMotor(onOff); }
+	bool getPoweredLinMotor(void)
+	{ return _bt_constraint->getPoweredLinMotor(); }
+
+	void addTargetLinMotorVelocity(vl::scalar velocity)
+	{ setTargetLinMotorVelocity(velocity + getTargetLinMotorVelocity()); }
+
+	void setTargetLinMotorVelocity(vl::scalar targetLinMotorVelocity)
+	{ _bt_constraint->setTargetLinMotorVelocity(targetLinMotorVelocity); }
+	vl::scalar getTargetLinMotorVelocity(void)
+	{ return _bt_constraint->getTargetLinMotorVelocity(); }
+
+	void setMaxLinMotorForce(vl::scalar maxLinMotorForce)
+	{ _bt_constraint->setMaxLinMotorForce(maxLinMotorForce); }
+	vl::scalar getMaxLinMotorForce(void)
+	{ return _bt_constraint->getMaxLinMotorForce(); }
+	
+	void setPoweredAngMotor(bool onOff)
+	{ _bt_constraint->setPoweredAngMotor(onOff); }
+	bool getPoweredAngMotor(void)
+	{ return _bt_constraint->getPoweredAngMotor(); }
+
+	void setTargetAngMotorVelocity(vl::scalar targetAngMotorVelocity)
+	{ _bt_constraint->setTargetAngMotorVelocity(targetAngMotorVelocity); }
+	vl::scalar getTargetAngMotorVelocity(void)
+	{ return _bt_constraint->getTargetAngMotorVelocity(); }
+
+	void setMaxAngMotorForce(vl::scalar maxAngMotorForce)
+	{ _bt_constraint->setMaxAngMotorForce(maxAngMotorForce); }
+	vl::scalar getMaxAngMotorForce(void)
+	{ return _bt_constraint->getMaxAngMotorForce(); }
+
 	virtual btTypedConstraint *getNative(void)
 	{ return _bt_constraint; }
 

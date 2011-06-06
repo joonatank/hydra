@@ -15,6 +15,7 @@
 #include "action.hpp"
 
 #include "rigid_body.hpp"
+#include "constraints.hpp"
 
 #include "actions_transform.hpp"
 
@@ -96,6 +97,31 @@ protected :
 	vl::physics::RigidBody *_body;
 
 	Ogre::Vector3 _torque;
+
+};
+
+class SliderMotorAction : public vl::BasicAction
+{
+public :
+	SliderMotorAction(void)
+		: velocity(0)
+	{}
+
+	virtual void execute(void)
+	{
+		if(constraint)
+		{ constraint->addTargetLinMotorVelocity(velocity); }
+	}
+
+	virtual std::string getTypeName( void ) const
+	{ return "SliderMotorAction"; }
+
+	static SliderMotorAction *create(void)
+	{ return new SliderMotorAction; }
+
+	vl::scalar velocity;
+
+	vl::physics::SliderConstraintRefPtr constraint;
 
 };
 
