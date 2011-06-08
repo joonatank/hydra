@@ -12,6 +12,8 @@
 
 #include "typedefs.hpp"
 
+#include "base/string_utils.hpp"
+
 namespace vl
 {
 
@@ -43,6 +45,19 @@ public :
 
 	bool getVisible(void) const
 	{ return _visible; }
+
+	/// @brief make a deep copy of the SceneNode
+	/// Shallow copies would not make much sense with SceneGraphs because you
+	/// can not have multiple parents unlike DAGs.
+	MovableObjectPtr clone(void) const
+	{
+		std::string name = vl::generate_random_string();
+		assert(!name.empty());
+
+		return clone(name);
+	}
+
+	virtual MovableObjectPtr clone(std::string const &append_to_name) const = 0;
 
 	enum DirtyBits
 	{

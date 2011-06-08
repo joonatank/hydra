@@ -64,6 +64,20 @@ vl::Camera::setOrientation(Ogre::Quaternion const &q)
 	}
 }
 
+vl::MovableObjectPtr
+vl::Camera::clone(std::string const &append_to_name) const
+{
+	assert(_creator);
+	CameraPtr cam = _creator->createCamera(_name+append_to_name);
+	cam->setFarClipDistance(_far_clip);
+	cam->setNearClipDistance(_near_clip);
+	cam->setPosition(_position);
+	cam->setOrientation(_orientation);
+	cam->setVisible(_visible);
+
+	return cam;
+}
+
 /// ---------------------------- Protected -----------------------------------
 void 
 vl::Camera::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const

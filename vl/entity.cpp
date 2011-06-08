@@ -111,6 +111,27 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 	_finishCreateNative();
 }
 
+vl::MovableObjectPtr
+vl::Entity::clone(std::string const &append_to_name) const
+{
+	if(append_to_name.empty())
+	{ return MovableObject::clone(); }
+
+	EntityPtr ent = 0;
+	if(_prefab != PF_NONE)
+	{ ent = _creator->createEntity(_name + append_to_name, _prefab); }
+	else if(_use_new_mesh_manager)
+	{ ent = _creator->createEntity(_name + append_to_name, _mesh_name, _use_new_mesh_manager); }
+	else
+	{ ent = _creator->createEntity(_name + append_to_name, _mesh_name); }
+
+	ent->setCastShadows(_cast_shadows);
+	ent->setMaterialName(_material_name);
+	ent->setVisible(_visible);
+
+	return ent;
+}
+
 void 
 vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {

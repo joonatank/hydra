@@ -124,6 +124,23 @@ namespace vl
 		return false;
 	}
 
+	inline
+	std::string generate_random_string(size_t len = 8)
+	{
+		static const char alphanum[] =
+			"0123456789"
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"abcdefghijklmnopqrstuvwxyz";
+
+		std::string s(len, 'a');
+		for (int i = 0; i < len; ++i)
+		{
+			s.at(i) = alphanum[rand() % (sizeof(alphanum) - 1)];
+		}
+
+		return s;
+	}
+
 }	// namespace vl
 
 #endif

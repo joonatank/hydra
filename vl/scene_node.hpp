@@ -154,6 +154,13 @@ public :
 
 	void showBoundingBox( bool show );
 
+	/// @brief make a deep copy of the SceneNode
+	/// Shallow copies would not make much sense with SceneGraphs because you
+	/// can not have multiple parents unlike DAGs.
+	SceneNodePtr clone(void) const;
+
+	SceneNodePtr clone(std::string const &append_to_name) const;
+
 	/// --------------- MovableObjects ----------------------
 	void attachObject(vl::MovableObjectPtr obj);
 
@@ -194,6 +201,8 @@ protected :
 
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+
+	vl::SceneNodePtr doClone(std::string const &append_to_name, vl::SceneNodePtr parent) const;
 
 private :
 	std::string _name;

@@ -207,6 +207,25 @@ vl::Light::setAttenuation(LightAttenuation const &att)
 }
 
 
+vl::MovableObjectPtr
+vl::Light::clone(std::string const &append_to_name) const
+{
+	assert(_creator);
+	LightPtr light = _creator->createLight(_name+append_to_name);
+	
+	light->setType(_type);
+	light->setAttenuation(_attenuation);
+	light->setCastShadows(_cast_shadows);
+	light->setDiffuseColour(_diffuse_colour);
+	light->setSpecularColour(_specular_colour);
+	light->setDirection(_direction);
+	light->setPosition(_position);
+	light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff);
+	light->setVisible(_visible);
+	
+	return light;
+}
+
 
 Ogre::MovableObject *
 vl::Light::getNative(void) const

@@ -311,6 +311,50 @@ vl::SceneNode::showBoundingBox( bool show )
 	}
 }
 
+vl::SceneNodePtr
+vl::SceneNode::clone(void) const
+{
+	std::string name = vl::generate_random_string();
+	assert(!name.empty());
+
+	return clone(name);
+}
+
+vl::SceneNodePtr
+vl::SceneNode::clone(std::string const &append_to_name) const
+{
+	if(append_to_name.empty())
+	{ return clone(); }
+
+	return doClone(append_to_name, _parent);
+}
+
+vl::SceneNodePtr 
+vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr parent) const
+{
+	SceneNodePtr node = parent->createChildSceneNode(_name + append_to_name);
+
+	for(SceneNodeList::const_iterator iter = _childs.begin(); 
+		iter != _childs.end(); ++iter)
+	{
+		SceneNodePtr child = (*iter)->doClone(append_to_name, node);
+	}
+	
+	for(MovableObjectList::const_iterator iter = _objects.begin(); 
+		iter != _objects.end(); ++iter)
+	{
+		node->attachObject((*iter)->clone(append_to_name));
+	}
+
+	node->setTransform(_transform);
+	node->setScale(_scale);
+	node->setVisible(_visible);
+
+	// Not adding to selection because it would be more confusing than useful
+
+	return node;
+}
+
 void 
 vl::SceneNode::attachObject(vl::MovableObjectPtr obj)
 {

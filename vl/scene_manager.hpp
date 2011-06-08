@@ -408,7 +408,7 @@ public :
 
 	void removeFromSelection( SceneNodePtr node );
 
-	bool isInSelection( SceneNodePtr node ) const;
+	bool isInSelection(vl::SceneNode const *node) const;
 
 	SceneNodeList const &getSelection( void ) const
 	{ return _selection; }

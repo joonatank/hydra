@@ -43,6 +43,8 @@ public :
 	Ogre::Quaternion const &getOrientation(void) const
 	{ return _orientation; }
 
+	virtual MovableObjectPtr clone(std::string const &append_to_name) const;
+
 	enum DirtyBits
 	{
 		DIRTY_CLIPPING = vl::MovableObject::DIRTY_CUSTOM << 0,

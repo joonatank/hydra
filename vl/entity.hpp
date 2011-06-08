@@ -80,6 +80,8 @@ public :
 	std::string const &getMaterialName(void) const
 	{ return _material_name; }
 
+	virtual vl::MovableObjectPtr clone(std::string const &append_to_name) const;
+
 	enum DirtyBits
 	{
 		DIRTY_MESH_NAME = vl::MovableObject::DIRTY_CUSTOM << 0,

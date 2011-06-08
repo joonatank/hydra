@@ -136,6 +136,8 @@ public :
 	LightAttenuation const &getAttenuation(void) const
 	{ return _attenuation; }
 
+	virtual MovableObjectPtr clone(std::string const &append_to_name) const;
+
 	enum DirtyBits
 	{
 		DIRTY_TYPE = vl::MovableObject::DIRTY_CUSTOM << 0,

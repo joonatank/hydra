@@ -306,6 +306,8 @@ BOOST_PYTHON_MODULE(vl)
 	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
+	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
+	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
 
 	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
 		.def("attachObject", &vl::SceneNode::attachObject)
@@ -320,6 +322,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def("rotate", rotate_ov0)
 		.def("rotate", rotate_ov1)
 		.def("rotate", rotate_ov2)
+		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
+		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("transform", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
 		.add_property("world_transform", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)

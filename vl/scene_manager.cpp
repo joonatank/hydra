@@ -596,7 +596,7 @@ vl::SceneManager::printBoundingBoxes(void)
 
 /// ------------------------ SceneManager Selection --------------------------
 void
-vl::SceneManager::addToSelection( vl::SceneNodePtr node )
+vl::SceneManager::addToSelection(vl::SceneNodePtr node)
 {
 	if( !isInSelection(node) )
 	{
@@ -653,7 +653,7 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitiv
 }
 
 bool
-vl::SceneManager::isInSelection( vl::SceneNodePtr node ) const
+vl::SceneManager::isInSelection(SceneNode const *node) const
 {
 	SceneNodeList::const_iterator iter;
 	for( iter = _selection.begin(); iter != _selection.end(); ++iter )
