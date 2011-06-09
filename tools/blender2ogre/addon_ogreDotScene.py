@@ -18,6 +18,7 @@
 
 VERSION = 'Ogre Exporter v31'
 __devnotes__ = '''
+Jun9	. Removed most of the unnecessary functionality by Joonatan Kuosa.
 
 Apr18
 	. ported to Blender 2.57 final by Joonatan Kuosa
@@ -165,28 +166,9 @@ Installing:
 		( its a good idea to delete the old version first )
 
 	Required:
-		1. blender2.56		(svn 33087+)
-
-		2. Install Ogre Command Line tools to the default path ( C:\\OgreCommandLineTools )
-			http://www.ogre3d.org/download/tools
-			(Linux users will need to use Wine)
-
-	Optional:
-		3. Install NVIDIA DDS Legacy Utilities	( install to default path )
-			http://developer.nvidia.com/object/dds_utilities_legacy.html
-			(Linux users will need to use Wine)
-
-		4. Install Image Magick
-			http://www.imagemagick.org
-
-		5. Copy folder 'myshaders' to C:\\myshaders
-			(Linux copy to your home folder)
-
-		6. Copy OgreMeshy to C:\\OgreMeshy
-			If your using 64bit Windows, you may need to download a 64bit OgreMeshy
-			(Linux copy to your home folder)
-
+		1. blender2.57
 '''
+
 ## Nov23, tried PyOgre, it sucks - new plan: Tundra
 
 ## KeyError: 'the length of IDProperty names is limited to 31 characters'		- chat with Jesterking request 64
@@ -205,7 +187,7 @@ bl_info = {
     "name": "OGRE Exporter (.scene, .mesh, .skeleton)",
     "author": "HartsAntler",
     "version": (0,3,1),
-    "blender": (2, 5, 6),
+    "blender": (2, 5, 7),
     "location": "INFO Menu",
     "description": "Export to Ogre scene xml and mesh binary formats",
     "warning": "",
@@ -216,25 +198,6 @@ bl_info = {
 
 
 import os, sys, time, hashlib, getpass
-
-IMAGE_MAGICK = '/usr/bin/'
-if sys.platform.startswith('win'):		# win32 and win64
-	MYSHADERS = 'C:\\myshaders'
-	OGRETOOLS = 'C:\\OgreCommandLineTools'
-	NVIDIATOOLS = 'C:\\Program Files\\NVIDIA Corporation\\DDS Utilities'
-	for name in os.listdir(  'C:\\Program Files' ):
-		if name.startswith( 'ImageMagick' ):
-			IMAGE_MAGICK = os.path.join(  'C:\\Program Files', name )
-			break
-	del name
-elif sys.platform.startswith('linux'):		# bug fix reported by Borris
-	OGRETOOLS = '%s/.wine/drive_c/OgreCommandLineTools' %os.environ['HOME']
-	NVIDIATOOLS = '%s/.wine/drive_c/Program Files/NVIDIA Corporation/DDS Utilities' %os.environ['HOME']
-
-if sys.platform.startswith('linux') or sys.platform == 'darwin':
-	MYSHADERS = '%s/myshaders' %os.environ['HOME']
-
-
 
 # customize missing material - red flags for users so they can quickly see what they forgot to assign a material to.
 # (do not crash if no material on object - thats annoying for the user)
@@ -412,6 +375,7 @@ class ReportSingleton(object):
 			r.append( '  Total Triangles: %s' %self.triangles )
 			## TODO report file sizes, meshes and textures
 
+		# TODO fix this to something bit more readable
 		for tag in 'meshes lights cameras armatures armature_animations shape_animations materials textures'.split():
 			attr = getattr(self, tag)
 			if attr:
@@ -430,78 +394,6 @@ class ReportSingleton(object):
 		return txt
 
 Report = ReportSingleton()
-
-
-
-class MyShadersSingleton(object):
-	def get(self, name):
-		if name in self.vertex_progs_by_name: return self.vertex_progs_by_name[ name ]
-		elif name in self.fragment_progs_by_name: return self.fragment_progs_by_name[ name ]
-			
-	def __init__(self):
-		self.path = MYSHADERS
-		self.files = []
-		self.vertex_progs = []
-		self.vertex_progs_by_name = {}
-		self.fragment_progs = []
-		self.fragment_progs_by_name = {}
-		if os.path.isdir( self.path ):
-			for name in os.listdir( self.path ):
-				if name.endswith('.program'):
-					url = os.path.join( self.path, name )
-					#self.parse(url)
-					try: self.parse( url )
-					except: print('WARNING: syntax error in .program!')
-
-	def parse(self, url ):
-		print('parsing .program', url )
-		data = open( url, 'rb' ).read().decode()
-		lines = data.splitlines()
-		lines.reverse()
-		while lines:
-			line = lines.pop().strip()
-			if line:
-				if line.startswith('vertex_program') or line.startswith('fragment_program'):
-					ptype, name, tech = line.split()
-					if tech == 'asm':
-						print('Warning: asm programs not supported')
-					else:
-						prog = Program(name, tech, url)
-						if ptype == 'vertex_program':
-							self.vertex_progs.append( prog ); prog.type = 'vertex'
-							self.vertex_progs_by_name[ prog.name ] = prog
-						else:
-							self.fragment_progs.append( prog ); prog.type = 'fragment'
-							self.fragment_progs_by_name[ prog.name ] = prog
-
-						while lines:		# continue parsing
-							subA = lines.pop()
-							if subA.startswith('}'): break
-							else:
-								a = subA = subA.strip()
-								if a.startswith('//') and len(a) > 2: prog.comments.append( a[2:] )
-								elif subA.startswith('source'): prog.source = subA.split()[-1]
-								elif subA.startswith('entry_point'): prog.entry_point = subA.split()[-1]
-								elif subA.startswith('profiles'): prog.profiles = subA.split()[-1]
-								elif subA.startswith('compile_arguments'): prog.compile_args = ' '.join( subA.split()[-1].split('-D') )
-								elif subA.startswith('default_params'):
-									while lines:
-										b = lines.pop().strip()
-										if b.startswith('}'): break
-										else:
-											if b.startswith('param_named_auto'):
-												s = b.split('param_named_auto')[-1].strip()
-												prog.add_param( s, auto=True )
-											elif b.startswith('param_named'):
-												s = b.split('param_named')[-1].strip()
-												prog.add_param( s )
-
-		# end ugly-simple parser #
-		self.files.append( url )
-		print('----------------vertex programs----------------')
-		for p in self.vertex_progs: p.debug()
-		print('----------------fragment programs----------------')
-		for p in self.fragment_progs: p.debug()
 
 class Program(object):
 	def debug( self ):
@@ -542,155 +434,6 @@ class Ogre_User_Report(bpy.types.Menu):
 		for line in txt.splitlines():
 			layout.label(text=line)
 
-############## Lite Version Control ###############
-VersionControl = '_version_  _modified_  _created_'.split()
-VersionControlUser = '_category_  _title_  _notes_  _owner_'.split()
-VersionControlMesh = '_update_mesh_  _update_material_'.split()
-
-def UUID( ob ):
-	#s = ''
-	keys = ob.keys()
-	#for tag in VersionControl + VersionControlUser
-	if '_UUID_' in keys: return ob[ '_UUID_' ]
-	else:
-		s = str(time.time()) + ob.name
-		uid = hashlib.md5(bytes(s, 'utf-8')).hexdigest()
-		ob[ '_UUID_' ] = uid
-		return uid
-
-
-class Ogre_setup_version_control_op(bpy.types.Operator):                
-	'''operator: setup version control helper'''  
-	bl_idname = "ogre.setup_version_control"  
-	bl_label = "setup version control"        
-	bl_options = {'REGISTER'}
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		ob = context.active_object
-		if ob:
-			keys = ob.keys()
-			now = time.time()
-			if '_created_' not in keys: ob['_created_'] = now
-			if '_modified_' not in keys: ob['_modified_'] = now
-			if '_version_' not in keys: ob['_version_'] = 0
-			if '_category_' not in keys: ob['_category_'] = 'my category'
-			if '_title_' not in keys: ob['_title_'] = 'my title'
-			if '_notes_' not in keys: ob['_notes_'] = 'my notes'
-			if '_owner_' not in keys: ob['_owner_'] = getpass.getuser()
-
-			if ob.type == 'MESH':
-				mesh = ob.data
-				mkeys = mesh.keys()
-				for tag in VersionControlMesh:
-					if tag not in mkeys: mesh[tag] = True	# converted to 1
-
-		return {'FINISHED'}
-
-
-class Ogre_VC_Panel(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "object"
-	bl_label = "Ogre Version Control"
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-	def draw(self, context):
-		layout = self.layout
-		ob = context.active_object
-
-		if ob.type == 'MESH':
-			mesh = ob.data
-			mkeys = mesh.keys()
-			box = layout.box()
-			box.label(text='mesh: %s' %mesh.name)
-			row = box.row()
-			for tag in VersionControlMesh:
-				#if tag not in mkeys: mesh[tag] = True	# converted to 1
-				if tag in mkeys: v = mesh[tag]
-				else: v = True
-				if v: icon = 'CHECKBOX_HLT'
-				else: icon = 'CHECKBOX_DEHLT'
-				op = row.operator( 'ogre.toggle_prop', text=tag.replace('_',' '), icon=icon )
-				op.propname = tag
-
-		keys = ob.keys()
-		box = layout.box()
-		issetup = True
-		for tag in VersionControl:
-			if tag not in keys: issetup=False; continue
-			a = tag.replace('_','')
-			row = box.row()
-			if tag == '_version_':
-				row.label( text='version: %s'%ob[tag] )
-				op = row.operator( 'ogre.update_modify_time', text='', icon='TIME' )
-			else:
-				v = ob[ tag ]
-				if not v: row.label( text='%s: <undefined>'%a )
-				else: row.label( text='%s: %s' %(a, time.asctime(time.localtime(v))) )
-		if not issetup:
-			op = box.operator('ogre.setup_version_control')
-		else:
-			box = layout.box()
-		for tag in VersionControlUser:
-			if tag not in keys: continue
-			a = tag.replace('_','')
-			row = box.row()
-			row.prop( ob, '["%s"]' %tag, text=a )
-			op = row.operator( 'ogre.select_by_prop_value', text='', icon='GROUP' )
-			op.propname = tag
-			op.propvalue = str( ob[tag] )
-
-
-
-class Ogre_toggle_prop_op(bpy.types.Operator):                
-	'''operator: prop toggle helper'''  
-	bl_idname = "ogre.toggle_prop"  
-	bl_label = "toggle"                    
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-	propname = StringProperty(name="property name", description="...", maxlen=32, default="")
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		ob = context.active_object
-		if self.propname not in ob.keys(): a = ob.data
-		else: a = ob
-		if self.propname not in a.keys(): a[ self.propname ] = True
-		a[ self.propname ] = not a[ self.propname ]
-		return {'FINISHED'}
-
-class Ogre_select_by_prop_value(bpy.types.Operator):                
-	'''select other objects with the same property value'''  
-	bl_idname = "ogre.select_by_prop_value"  
-	bl_label = "select by prop"
-	bl_options = {'REGISTER', 'UNDO'}
-	propname = StringProperty(name="property name", description="...", maxlen=32, default="")
-	propvalue = StringProperty(name="property value", maxlen=128, default="")
-
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		#ob = context.active_object
-		for ob in bpy.data.objects:
-			if self.propname in ob.keys():
-				if str(ob[self.propname]) == self.propvalue: ob.select = True
-		return {'FINISHED'}
-
-class Ogre_update_mod_time(bpy.types.Operator):                
-	'''set modified time and bump the version number up'''  
-	bl_idname = "ogre.update_modify_time"  
-	bl_label = "update mod time"
-	bl_options = {'REGISTER', 'UNDO'}
-
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		ob = context.active_object
-		ob['_modified_'] = time.time()
-		ob['_version_'] += 1
-		return {'FINISHED'}
 
 
 ############## mesh LOD physics #############
@@ -703,6 +446,7 @@ class Ogre_Physics_LOD(bpy.types.Panel):
 	def poll(cls, context):
 		if context.active_object: return True
 		else: return False
+
 	def draw(self, context):
 		layout = self.layout
 		ob = context.active_object
@@ -807,138 +551,6 @@ class Ogre_create_collision_op(bpy.types.Operator):
 		return {'FINISHED'}
 
 
-############### extra tools #############
-'''
-Getting a UV texture's pixel value per vertex, the stupid way.
-(this should be rewritten as a C function exposed to Python)
-This script does the following hack to get the pixel value:
-  1. copy the object
-  2. apply a displace modifier
-  3. for each RGB set the ImageTexture.<color>_factor to 1.0 and other to 0.0
-  4. for each RGB bake a mesh (apply the displace modifier)
-  5. for each RGB find the difference of vertex locations
-  6. apply the differences as vertex colors
-
-'''
-
-class Harts_Tools(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "data"
-	bl_label = "Harts Extra Tools"
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-	def draw(self, context):
-		layout = self.layout
-		layout.operator('ogre.relocate_textures')
-
-		ob = context.active_object
-		if ob.type != 'MESH': return
-		slot = context.texture_slot
-		node = context.texture_node
-		space = context.space_data
-		tex = context.texture
-		#idblock = context_tex_datablock(context)
-		idblock = ob.active_material
-		tex_collection = space.pin_id is None and type(idblock) != bpy.types.Brush and not node
-		if not tex_collection: return
-
-		box = layout.box()
-		box.label(text='bake selected texture to vertex colors')
-		if not ob.data.vertex_colors.active:
-			box.label(text='please select a vertex color channel to bake to')
-		else:
-			row = box.row()
-			row.operator( "harts.bake_texture_to_vertexcolors", text='bake' )
-			row.template_list(idblock, "texture_slots", idblock, "active_texture_index", rows=2)
-
-
-
-class Harts_bake_texture_vc_op(bpy.types.Operator):                
-	'''operator: bakes texture to vertex colors'''                    
-	bl_idname = "harts.bake_texture_to_vertexcolors"  
-	bl_label = "harts extra tools"                             
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		ob = context.active_object
-		#tex = context.texture
-		tex = ob.active_material.active_texture		# slot
-
-		o2 = ob.copy()
-		#bpy.context.scene.objects.link( o2 )#; o2.select = True
-		while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
-		mod = o2.modifiers.new('_hack_', type='DISPLACE')
-		mod.texture = tex
-		mod.texture_coords = 'UV'
-		mod.mid_level = 1.0
-		#print(dir(tex))
-		image = None
-		mult = 1.0
-		baked = []
-		if hasattr(tex, 'image'):
-			image = tex.image
-			ua = tex.use_alpha
-			tex.use_alpha = False
-
-			tex.factor_red = 1.0
-			tex.factor_green = .0
-			tex.factor_blue = .0
-			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
-			baked.append( [] )
-			for v1 in ob.data.vertices:
-				v2 = _data.vertices[ v1.index ]
-				baked[-1].append( (v1.co-v2.co).magnitude*mult )
-			print('red', baked[-1])
-
-			tex.factor_red = .0
-			tex.factor_green = 1.0
-			tex.factor_blue = .0
-			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
-			baked.append( [] )
-			for v1 in ob.data.vertices:
-				v2 = _data.vertices[ v1.index ]
-				baked[-1].append( (v1.co-v2.co).magnitude*mult )
-			print('green', baked[-1])
-
-			tex.factor_red = .0
-			tex.factor_green = .0
-			tex.factor_blue = 1.0
-			_data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")
-			baked.append( [] )
-			for v1 in ob.data.vertices:
-				v2 = _data.vertices[ v1.index ]
-				baked[-1].append( (v1.co-v2.co).magnitude*mult )
-			print('blue', baked[-1])
-
-
-			tex.factor_red = 1.0
-			tex.factor_green = 1.0
-			tex.factor_blue = 1.0
-			tex.use_alpha = ua
-
-			#while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
-
-			vchan = ob.data.vertex_colors.active
-			for f in ob.data.faces:
-				for i,vidx in enumerate(f.vertices):
-					r = baked[0][ vidx ]
-					g = baked[1][ vidx ]
-					b = baked[2][ vidx ]
-					#color = vchan.data[ f.index ].color1
-					color = getattr( vchan.data[ f.index ], 'color%s' %(i+1) )
-					color.r = 1.0-r
-					color.g = 1.0-g
-					color.b = 1.0-b
-
-		return {'FINISHED'}
-
-
-
 ##################################################################
 _game_logic_intro_doc_ = '''
 Hijacking the BGE
@@ -948,31 +560,6 @@ Blender contains a fully functional game engine (BGE) that is highly useful for 
 The OgreDocScene format can easily be extened to include extra game logic data.  While the BGE contains some features that can not be easily mapped to other game engines, there are many are highly useful generic features we can exploit, including many of the Sensors and Actuators.  Blender uses the paradigm of: 1. Sensor -> 2. Controller -> 3. Actuator.  In pseudo-code, this can be thought of as: 1. on-event -> 2. conditional logic -> 3. do-action.  The designer is most often concerned with the on-events (the Sensors), and the do-actions (the Actuators); and the BGE interface provides a clear way for defining and editing those.  Its a harder task to provide a good interface for the conditional logic (Controller), that is flexible enough to fit everyones different Ogre engine and requirements, so that is outside the scope of this exporter at this time.  A programmer will still be required to fill the gap between Sensor and Actuator, but hopefully his work is greatly reduced and can write more generic/reuseable code.
 
 The rules for which Sensors trigger which Actuators is left undefined, as explained above we are hijacking the BGE interface not trying to export and reimplement everything.  BGE Controllers and all links are ignored by the exporter, so whats the best way to define Sensor/Actuator relationships?  One convention that seems logical is to group Sensors and Actuators by name.  More complex syntax could be used in Sensor/Actuators names, or they could be completely ignored and instead all the mapping is done by the game programmer using other rules.  This issue is not easily solved so designers and the engine programmers will have to decide upon their own conventions, there is no one size fits all solution.
-'''
-
-
-_ogre_logic_types_doc_ = '''
-Supported Sensors:
-	. Collision
-	. Near
-	. Radar
-	. Touching
-	. Raycast
-	. Message
-
-Supported Actuators:
-	. Shape Action*
-	. Edit Object
-	. Camera
-	. Constraint
-	. Message
-	. Motion
-	. Sound
-	. Visibility
-
-*note: Shape Action
-The most common thing a designer will want to do is have an event trigger an animation.  The BGE contains an Actuator called "Shape Action", with useful properties like: start/end frame, and blending.  It also contains a property called "Action" but this is hidden because the exporter ignores action names and instead uses the names of NLA strips when exporting Ogre animation tracks.  The current workaround is to hijack the "Frame Property" attribute and change its name to "animation".  The designer can then simply type the name of the animation track (NLA strip).  Any custom syntax could actually be implemented here for calling animations, its up to the engine programmer to define how this field will be used.  For example: "*.explode" could be implemented to mean "on all objects" play the "explode" animation.
-
 '''
 
 
@@ -991,7 +578,6 @@ class Ogre_Physics(bpy.types.Panel):
 		layout = self.layout
 		ob = context.active_object
 		game = ob.game
-		#nothing useful here?#soft = ob.game.soft_body
 
 		#if game.physics_type:	# in ('DYNAMIC', 'RIGID_BODY'):
 		split = layout.split()
@@ -1053,282 +639,8 @@ class Ogre_Physics(bpy.types.Panel):
 		col.prop(game, "lock_rotation_y", text="Lock Rotation: Y")
 		col.prop(game, "lock_rotation_z", text="Lock Rotation: Z")
 
-		#elif game.physics_type == 'STATIC':
-		#elif game.physics_type in ('SENSOR', 'INVISIBLE', 'NO_COLLISION', 'OCCLUDE'):
-
-
-class Ogre_game_logic_op(bpy.types.Operator):                
-	'''helper to hijack BGE logic'''
-	bl_idname = "ogre.gamelogic"
-	bl_label = "ogre game logic helper"
-	# Options for this panel type
-	bl_options = {'REGISTER', 'UNDO'}
-	logictype = StringProperty(name="logic-type", description="...", maxlen=32, default="")
-	subtype = StringProperty(name="logic-subtype", description="...", maxlen=32, default="")
-
-	@classmethod
-	def poll(cls, context):
-		return True
-
-	def invoke(self, context, event):
-		if self.logictype == 'sensor':
-			bpy.ops.logic.sensor_add( type=self.subtype )
-		elif self.logictype == 'actuator':
-			bpy.ops.logic.actuator_add( type=self.subtype )
-
-		return {'FINISHED'}
-
-class _WrapLogic(object):
-	## custom name hacks ##
-	SwapName = {
-		'frame_property' : 'animation',
-	}
-	def __init__(self, node):
-		self.node = node
-		self.name = node.name
-		self.type = node.type
-	def widget(self, layout):
-		box = layout.box()
-		row = box.row()
-		row.label( text=self.type )
-		row.separator()
-		row.prop( self.node, 'name', text='' )
-		if self.type in self.TYPES:
-			for name in self.TYPES[ self.type ]:
-				if name in self.SwapName:
-					box.prop( self.node, name, text=self.SwapName[name] )
-				else:
-					box.prop( self.node, name )
-
-	def xml( self, doc ):
-		g = doc.createElement( self.LogicType )
-		g.setAttribute('name', self.name)
-		g.setAttribute('type', self.type)
-
-		for name in self.TYPES[ self.type ]:
-			attr = getattr( self.node, name )
-			if name in self.SwapName: name = self.SwapName[name]
-			a = doc.createElement( 'component' )
-			g.appendChild(a)
-			a.setAttribute('name', name)
-			if attr is None: a.setAttribute('type', 'POINTER' )
-			else: a.setAttribute('type', type(attr).__name__)
-
-			if type(attr) in (float, int, str, bool): a.setAttribute('value', str(attr))
-			elif not attr: a.setAttribute('value', '')		# None case
-			elif hasattr(attr,'filepath'): a.setAttribute('value', attr.filepath)
-			elif hasattr(attr,'name'): a.setAttribute('value', attr.name)
-			elif hasattr(attr,'x') and hasattr(attr,'y') and hasattr(attr,'z'):
-				a.setAttribute('value', '%s %s %s' %(attr.x, attr.y, attr.z))
-			else:
-				print('ERROR: unknown type', attr)
-		return g
-
-class WrapSensor( _WrapLogic ):
-	LogicType = 'sensor'
-	TYPES = {
-		'COLLISION': ['property'],
-		'MESSAGE' : ['subject'],
-		'NEAR' : ['property', 'distance', 'reset_distance'],
-		'RADAR'  :  ['property', 'axis', 'angle', 'distance' ],
-		'RAY'  :  ['ray_type', 'property', 'material', 'axis', 'range', 'use_x_ray'],
-		'TOUCH'  :  ['material'],
-	}
-
-
-class Ogre_Logic_Sensors(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "physics"		# selects tab within the properties
-	bl_label = "Ogre Game Logic | Sensors"
-
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-
-	def draw(self, context):
-		layout = self.layout
-		ob = context.active_object
-		game = ob.game
-
-		split = layout.split()
-
-		col = split.column()
-		col.label( text='New Sensor:' )
-
-		row = col.row()
-		op = row.operator( 'ogre.gamelogic', text='Near' )
-		op.logictype = 'sensor'
-		op.subtype = 'NEAR'
-		op = row.operator( 'ogre.gamelogic', text='Collision' )
-		op.logictype = 'sensor'
-		op.subtype = 'COLLISION'
-		op = row.operator( 'ogre.gamelogic', text='Radar' )
-		op.logictype = 'sensor'
-		op.subtype = 'RADAR'
-
-		row = col.row()
-		op = row.operator( 'ogre.gamelogic', text='Touching' )
-		op.logictype = 'sensor'
-		op.subtype = 'TOUCH'
-		op = row.operator( 'ogre.gamelogic', text='Raycast' )
-		op.logictype = 'sensor'
-		op.subtype = 'RAY'
-		op = row.operator( 'ogre.gamelogic', text='Message' )
-		op.logictype = 'sensor'
-		op.subtype = 'MESSAGE'
-
-		layout.separator()
-		split = layout.split()
-		left = split.column()
-		right = split.column()
-		mid = len(game.sensors)/2
-		for i,sen in enumerate(game.sensors):
-			w = WrapSensor( sen )
-			if i < mid: w.widget( left )
-			else: w.widget( right )
-
-class WrapActuator( _WrapLogic ):
-	LogicType = 'actuator'
-	TYPES = {
-		'CAMERA'  :  ['object', 'height', 'min', 'max', 'axis'],
-		'CONSTRAINT'  :  ['mode', 'limit', 'limit_min', 'limit_max', 'damping'], 
-		'MESSAGE' : ['to_property', 'subject', 'body_message'],		#skipping body_type
-		'OBJECT'  :  'damping derivate_coefficient force force_max_x force_max_y force_max_z force_min_x force_min_y force_min_z integral_coefficient linear_velocity mode offset_location offset_rotation proportional_coefficient reference_object torque use_local_location use_local_rotation use_local_torque use_servo_limit_x use_servo_limit_y use_servo_limit_z'.split(),
-		'SOUND'  :  'cone_inner_angle_3d cone_outer_angle_3d cone_outer_gain_3d distance_3d_max distance_3d_reference gain_3d_max gain_3d_min mode pitch rolloff_factor_3d sound use_sound_3d volume'.split(),		# note .sound contains .filepath
-		'VISIBILITY'  :  'apply_to_children use_occlusion use_visible'.split(),
-		'SHAPE_ACTION'  :  'frame_blend_in frame_end frame_property frame_start mode property use_continue_last_frame'.split(),
-		'EDIT_OBJECT'  :  'dynamic_operation linear_velocity mass mesh mode object time track_object use_3d_tracking use_local_angular_velocity use_local_linear_velocity use_replace_display_mesh use_replace_physics_mesh'.split(),
-	}
-
-
-class Ogre_Logic_Actuators(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "physics"
-	bl_label = "Ogre Game Logic | Actuators"
-
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-
-	def draw(self, context):
-		layout = self.layout
-		ob = context.active_object
-		game = ob.game
-
-		split = layout.split()
-
-		### actuators
-		col = split.column()
-		col.label( text='New Actuator:' )
-
-		row = col.row()
-		op = row.operator( 'ogre.gamelogic', text='Camera' )
-		op.logictype = 'actuator'
-		op.subtype = 'CAMERA'
-		op = row.operator( 'ogre.gamelogic', text='Constrain' )
-		op.logictype = 'actuator'
-		op.subtype = 'CONSTRAINT'
-		op = row.operator( 'ogre.gamelogic', text='Message' )
-		op.logictype = 'actuator'
-		op.subtype = 'MESSAGE'
-		op = row.operator( 'ogre.gamelogic', text='Animation' )
-		op.logictype = 'actuator'
-		op.subtype = 'SHAPE_ACTION'
-
-		row = col.row()
-		op = row.operator( 'ogre.gamelogic', text='Motion' )
-		op.logictype = 'actuator'
-		op.subtype = 'OBJECT'		# blender bug? 'MOTION'
-		op = row.operator( 'ogre.gamelogic', text='Sound' )
-		op.logictype = 'actuator'
-		op.subtype = 'SOUND'
-		op = row.operator( 'ogre.gamelogic', text='Visibility' )
-		op.logictype = 'actuator'
-		op.subtype = 'VISIBILITY'
-		op = row.operator( 'ogre.gamelogic', text='Change' )
-		op.logictype = 'actuator'
-		op.subtype = 'EDIT_OBJECT'
-
-
-		layout.separator()
-		split = layout.split()
-		left = split.column()
-		right = split.column()
-		mid = len(game.actuators)/2
-		for i,act in enumerate(game.actuators):
-			w = WrapActuator( act )
-			if i < mid: w.widget( left )
-			else: w.widget( right )
 
 ##################################################################
-
-_shader_intro_doc_ = '''
-Custom Shader Support | Hijacking Blender's Shader Nodes
-	You can use custom attributes and a restricted subset of shader nodes to generate custom Ogre shaders that supports all the 'pass' and 'texture' options of the OgreDotMaterial format.  This is presented to the user as a 'flat-wrapper' around the OgreDotMaterial format, so a good understanding of how shaders work is required - although once a shader is setup anyone could experiment changing its options.
-'''
-
-_shader_using_doc_ = '''
-Hijacking The Shader Nodes Interface:
-	In an effort to streamline the artist workflow (and keep this code clean and bugfree) a different approach is taken to determine the rendering pass order and texturing pass order.  Instead of using mixer nodes and their connections, rendering order is simply determined by height of a material or texture node relative to other nodes of the same type.  The blending options for a rendering pass are stored as custom attributes at the material or texture level, not in mixer nodes.  (Mixer nodes DO NOT map well to OgreDotMaterial blending options, so they are completely ignored)
-	This sort of hijacking leads to a shader that will not render in blender as it will in Ogre, as a workaround for this problem multiple rendering branches can be used within the same node tree.  You may have multiple 'Output' nodes, blender will only use the first one, the Ogre exporter will look for a second 'Output' node and consider only nodes connect to it.  This enables you to reuse the same texture nodes with the mapping options kept intact and connecting them to another branch of nodes that connect to the blender 'Output' node.  Using this double-branching the artist can preview their work in the blender software renderer, although it may not appear excatly the same - at a minimum texture mapping and animations can be previsualized.
-
-Example - Colored Ambient Setup:
-	1. check 'use_nodes' to initialize shader nodes for the given material
-	2. add an 'Extended Material'
-		(A). optionally add a 'RGB' input, and plug it into the material ambient input.
-		(B). optionally add a 'Geometry' input, select the first vertex color channel, and plug the vertex color output into the material ambient input.
-'''
-
-_shader_tips_doc_ = '''
-Hijacked Shader Nodes Advantages:
-	1. Faster reordering of passes and texture blending order.
-		(by hijacking the height of a shader node to determine its rendering order)
-
-	2. Improved workflow between the 'Shader-Programmer' and blender artist.  The experienced shader-programmer can setup node trees in blender with placeholder textures.  Later the blender artist can use blender library linking to link the shader into their scene, and update the textures.  The integrated OgreDotMaterial documentation can help the artist understand how they might modify the node tree.
-
-	3. Users can minimize the number of materials they must manage within blender because some shader options get 'moved-up' to the shader-node-level; and by exploting the nodes this way, we are ineffect instancing a base material and extending it with extra options like the ambient color.  In the example above a single base material can be referened by two separate node-enabled-materials.  The first node-enabled-material could use a RGB input shader node for the ambient color; while the second node-enabled-material could use a Geometry node (selecting the vertexcolor output).
-		[this will be improved in the future when blender supports custom properties on shader nodes]
-
-
-'''
-
-
-_shader_tex_doc_ = '''
-Ogre Shader Doc - Textures
-All 'Texture Unit' options of OgreDotMaterial are supported by 'Custom Properties' and the following material nodes:
-	Add>Input>Texture
-		. texture
-	Add>Input>Geometry
-		. vertex color	[only the first layer is supported]
-		. uv layer
-	Add>Vector>Mapping
-		. x and y location
-		. x rotation
-		. x and y scaling
-
-'''
-
-_shader_linking_intro_doc_ = '''
-Hijacked Shaders and Blender Library Linking:
-	Ogre offers some very advanced and complex ways to implement shaders.  This must be carefully considered by an experienced programmer who is dealing with the high-level shading code.  One particular issue is shadows and deforming mesh requires a shader that can easily be broken by an artist who changes the wrong options, or adds options that invalidate the shader.  These issues can mostly be solved by using Blender's library linking, because linked data beomes read-only - it in effect provides a layer of control by the shader-programmer over the artist.  Done in the right way, these restrictions will not hinder the artist either from experimenting and extending the shader's usefullness.  In addition, library linking allows automatic-push of updates downstream to artists; so whenever the shader-programmer updates their shader code and updates his own master .blend with new shader options, the change is propagated to all .blends linking to it.
-'''
-_shader_linking_steps_doc_ = '''
-Shader Linking Steps:
-	1. Communication: if the shader-programmer and artists do not stay in good communication, things are likely to break.  To help make this task simpler.  The shader-programmer can put comments in the .program file that will appear as 'notes' within the artists shader interface.  Comments declared in the 'shader-program-body' are considered comments the artist will see.  Comments in nested structures like 'default_params' are hidden from the artist.
-
-	2a. Material Library: the shader-programer first places their .program file in 'myshaders', then when enabling the addon in Blender any .program files found in myshaders will be parsed and each vertex/fragment shader is added to a menu within Blender's shader nodes interface.  Next, from the shader nodes interface the vertex/fragment shaders can be assigned to 'Sub-Materials' they create and name accordingly, note that references to a given vertex/fragment program are stored as custom-attributes' on the material.    
-
-	2b. A Sub-Material is one that does not contain any sub nodes ('use_nodes' is disabled), it however can be used as a sub-material within a shader node tree (to serve as examples and for testing), but its a good idea that these are named '_do_not_link_me_' so that artists do not get confused when linking which materials are 'node-tree-containers' and which are sub-materials that they should link to.  Default textures can also be defined, the artist will have the option later to over-ride these in their scene.  Finally the shader-programmer will save the file as their material library master .blend, and inform the artists it is ready to link in.
-
-	3. Linking: the artist can then link in Sub-Materials from the material library master .blend published by the shader-programmer.  The nice thing with linked materials is that their settings and custom-attributes become read-only.  The addon will detect when a material is linked, and this hides many options from the users view.  The artist can then create their own shader tree and integrate the linked material as the first or any pass they choose.  Another option is to link the entire 'node-tree-container' material, but then the artist can not alter the node tree, but still this is useful in some cases.
-
-
-
-'''
 
 OPTIONS = {
 	'FORCE_IMAGE_FORMAT' : None,
@@ -1515,11 +827,6 @@ class Ogre_Texture_Panel(bpy.types.Panel):
 		row.prop(slot, "use_map_emission", text="")
 
 
-		#box = layout.box()
-		#for param in TextureUnitAnimOps[ 'scroll_anim' ]:
-		#	box.prop( node.texture, '["%s"]' % param, text='' )
-
-
 def guess_uv_layer( layer ):
 	## small issue: in blender layer is a string, multiple objects may have the same material assigned, 
 	## but having different named UVTex slots, most often the user will never rename these so they get
@@ -1536,7 +843,8 @@ class ShaderTree(object):
 	Sometimes high resolution renderings may be required.  The user has the option of using multiple Output nodes, blender will only consider the first one, the second if named starting with 'ogre' will be used by the exporter.  This allows the user to have two branches in their node setup, one for blender software rendering, the other for Ogre output.  Also useful for baking procedurals, which then can be used by the ogre branch.
 	'''
 	@staticmethod
-	def valid_node_material( mat ):		# just incase the user enabled nodes but didn't do anything, then disabled nodes
+	def valid_node_material( mat ):
+		# just incase the user enabled nodes but didn't do anything, then disabled nodes
 		if mat.node_tree and len(mat.node_tree.nodes):
 			for node in mat.node_tree.nodes:
 				if node.type == 'MATERIAL':
@@ -1559,8 +867,6 @@ class ShaderTree(object):
 		if root:
 			ShaderTree.Output = root.to_node
 			print('setting Output node', root.to_node)
-			#tree = ShaderTree( root.from_node, mat )
-			#tree.parents.append( root.to_node )
 			tree = ShaderTree( node=root.to_node, parent_material=mat )
 			return tree
 		else:
@@ -1838,15 +1144,18 @@ class ShaderTree(object):
 				if slot.use_map_alpha and slot.texture.use_alpha: usealpha = True; break
 		if usealpha: alpha = 1.0
 
-		def _helper( child, opname, f ):		# python note, define inline function shares variables - copies?
+		# python note, define inline function shares variables - copies?
+		def _helper( child, opname, f ):
 			if child.type == 'RGB':
 				print('warning: RGB shader node bpy rna is incomplete, missing color attributes' )
 				return indent(3, '%s %s %s %s %s' %(opname, color.r*f, color.g*f, color.b*f, alpha) )
 			elif child.type == 'GEOMETRY':
-				if child.outputs[self] != 'Vertex Color': print('warning: you are supposed to connect the vertex color output of geometry')
+				if child.outputs[self] != 'Vertex Color':
+					print('warning: you are supposed to connect the vertex color output of geometry')
 				return indent(3, '%s vertexcolour' %opname)
 			elif child.type == 'TEXTURE':
-				print( 'TODO: connecting a texture to this slot will be supported for program-shaders in the future' )
+				print( 'TODO: connecting a texture to this ',
+					'slot will be supported for program-shaders in the future' )
 				#return indent(3, '%s 1.0 0.0 0.0 1.0' %opname)
 				return indent(3, '%s %s %s %s %s' %(opname, color.r*f, color.g*f, color.b*f, alpha) )
 
@@ -1858,7 +1167,8 @@ class ShaderTree(object):
 		else:
 			M += indent(2, 'pass', '{' )
 
-		M += indent(3, 'cull_hardware none' )		# directx and opengl are reversed, how to deal with this? TODO
+		# TODO directx and opengl are reversed, how to deal with this?
+		M += indent(3, 'cull_hardware none' )	
 
 		f = mat.ambient
 		if 'Ambient' in self.inputs:
@@ -1914,469 +1224,22 @@ class ShaderTree(object):
 				if slot.use_map_alpha: usealpha = True; break
 
 			if usealpha:
-				if mat.use_transparency: M += indent(3, 'depth_write off' ) # defined only once per pass (global attributes)
-
-			## write shader programs before textures
-			M += self._write_shader_programs( mat )
-			for slot in slots: M += self.dotmat_texture( slot.texture, slot=slot )
-
-
+				# defined only once per pass (global attributes)
+				if mat.use_transparency: M += indent(3, 'depth_write off' )
 		elif self.node:		# shader nodes
-
-			M += self._write_shader_programs( mat )
 			for wrap in self.textures:
 				M += self.dotmat_texture( wrap.node.texture, texwrapper=wrap )
 
 		M += indent(2, '}' )	# end pass
 		return M
 
-	def _write_shader_programs( self, mat ):
-		M = ''
-		for prop in mat.items():
-			name,val = prop
-			if name in '_vprograms_ _fprograms_'.split():
-				for progname in val:
-					if name=='_vprograms_':		# TODO over-ridden default params
-						M += indent( 3, 'vertex_program_ref %s' %progname, '{', '}' )
-					else:
-						M += indent( 3, 'fragment_program_ref %s' %progname, '{', '}' )
-		return M
-
 	############################################
-	def _reformat( self, image ): return image[ : image.rindex('.') ] + OPTIONS['FORCE_IMAGE_FORMAT']
-	def image_magick( self, infile ):
-		print('[Image Magick Wrapper]', infile )
-		if sys.platform.startswith('win'): exe = os.path.join(IMAGE_MAGICK,'convert.exe')
-		else: exe = os.path.join(IMAGE_MAGICK, 'convert')
-		if not os.path.isfile( exe ):
-			Report.warnings.append( 'ImageMagick not installed!' )
-			print( 'ERROR: can not find Image Magick - convert', exe ); return
-		path,name = os.path.split( infile )
-		outfile = os.path.join( path, self._reformat( name ) )
-		opts = [ infile, outfile ]
-		subprocess.call( [exe]+opts )
-		print( 'image magick->', outfile )
+	def _reformat( self, image ):
+		return image[ : image.rindex('.') ] + OPTIONS['FORCE_IMAGE_FORMAT']
 
-	EX_DDS_MIPS = 3	# default
-	def DDS_converter(self, infile ):
-		print('[NVIDIA DDS Wrapper]', infile )
-		exe = os.path.join(NVIDIATOOLS,'nvdxt.exe')
-		if not os.path.isfile( exe ):
-			Report.warnings.append( 'Nvidia DDS tools not installed!' )
-			print( 'ERROR: can not find nvdxt.exe', exe ); return
-		opts = '-quality_production -nmips %s -rescale nearest' %self.EX_DDS_MIPS
-		path,name = os.path.split( infile )
-		outfile = os.path.join( path, self._reformat( name ) )		#name.split('.')[0]+'.dds' )
-		opts = opts.split() + ['-file', infile, '-output', '_tmp_.dds']
-		if sys.platform == 'linux2': subprocess.call( ['/usr/bin/wine', exe]+opts )
-		else: subprocess.call( [exe]+opts ) 		## TODO support OSX
-		data = open( '_tmp_.dds', 'rb' ).read()
-		f = open( outfile, 'wb' )
-		f.write(data)
-		f.close()
-
-
-## from scripts/ui/space_node.py
-if False:
-	class NODE_HT_header(bpy.types.Header):
-		bl_space_type = 'NODE_EDITOR'
-		def draw(self, context):
-		    layout = self.layout
-		    snode = context.space_data
-		    row = layout.row(align=True)
-		    row.template_header()
-		    if context.area.show_menus:
-		        sub = row.row(align=True)
-		        sub.menu("NODE_MT_view")
-		        sub.menu("NODE_MT_select")
-		        sub.menu("NODE_MT_add")
-		        sub.menu("NODE_MT_node")
-		    row = layout.row()
-		    row.prop(snode, "tree_type", text="", expand=True)
-
-		    if snode.tree_type == 'MATERIAL':
-		        ob = snode.id_from
-		        snode_id = snode.id
-		        if ob:
-		            layout.template_ID(ob, "active_material", new="material.new")
-		        if snode_id:
-		            layout.prop(snode_id, "use_nodes")
-		        layout.menu( 'INFO_MT_ogre_shader_ref' )
-		        #layout.menu( 'ogre_dot_mat_preview' )
-		    elif snode.tree_type == 'TEXTURE':
-		        row.prop(snode, "texture_type", text="", expand=True)
-		        snode_id = snode.id
-		        id_from = snode.id_from
-		        if id_from:
-		            if snode.texture_type == 'BRUSH':
-		                layout.template_ID(id_from, "texture", new="texture.new")
-		            else:
-		                layout.template_ID(id_from, "active_texture", new="texture.new")
-		        if snode_id:
-		            layout.prop(snode_id, "use_nodes")
-
-		    elif snode.tree_type == 'COMPOSITING':
-		        scene = snode.id
-
-		        layout.prop(scene, "use_nodes")
-		        layout.prop(scene.render, "use_free_unused_nodes", text="Free Unused")
-		        layout.prop(snode, "show_backdrop")
-
-		    layout.separator()
-		    layout.template_running_jobs()
 
 SELECTED_MATERIAL_NODE = None
 SELECTED_TEXTURE_NODE = None
-
-## Custom Node Panel ##
-class _node_panel_mixin_(object):		# bug in bpy_rna.c line: 5005 (/* rare case. can happen when registering subclasses */)
-	bl_space_type = 'NODE_EDITOR'
-	bl_region_type = 'UI'
-
-	def draw(self, context):
-		global SELECTED_MATERIAL_NODE, SELECTED_TEXTURE_NODE
-		layout = self.layout
-		topmat = context.space_data.id						# always returns the toplevel material that contains the node_tree
-		material = topmat.active_node_material		# the currently selected sub-material
-		if not material: layout.label(text='please enable use_nodes'); return
-		for node in context.space_data.node_tree.nodes:
-			if node.type.startswith('MATERIAL') and node.material and node.material.name == material.name:
-				snode = node
-				break
-		else: snode = None
-
-		if self.mytype == 'shader':
-			box = layout.box()
-			if not material.library:		# if linked, hide
-				row = box.row()
-				row.menu( 'ogre_dot_mat_preview', icon='TEXT' )
-				row = box.row()
-				row.menu('INFO_MT_ogre_shader_pass_attributes', icon='RENDERLAYERS')
-				row.menu('INFO_MT_ogre_shader_texture_attributes', icon='TEXTURE')
-				row = box.row()
-				if MyShaders.vertex_progs:
-					row.menu('OgreShader_vertexprogs', icon='MESH_CUBE')
-				if MyShaders.fragment_progs:
-					row.menu('OgreShader_fragmentprogs', icon='MATERIAL_DATA')
-			else:
-				row = box.row()
-				row.menu( 'ogre_dot_mat_preview', icon='TEXT' )
-				row.menu('INFO_MT_ogre_shader_texture_attributes', icon='TEXTURE')
-				box.label( text='linked->'+os.path.split(material.library.filepath)[-1] )
-
-			box = layout.box()
-			row = box.row()
-			row.prop( topmat, 'use_shadows' )
-			row.prop( topmat, 'use_transparency' )
-			box.operator("ogre.new_texture_block", text="new texture", icon='ZOOMIN')
-
-		elif self.mytype == 'notes':
-			if not material or not snode:
-				print('error: no active node material, enable "use_nodes" and assign a material to the material-node'); return
-
-			node = SELECTED_MATERIAL_NODE
-			if node:
-				for prop in node.items():		# items is hidden function, dir(com) will not list it!		see rna_prop_ui.py
-					tag,progs = prop
-					if tag not in '_vprograms_ _fprograms_'.split(): continue
-					for name in progs:		# expects dict/idproperty
-						if MyShaders.get( name ):
-							prog = MyShaders.get( name )
-							if prog.comments:
-								box = layout.box()
-								for com in prog.comments: box.label(text=com)
-
-		else:
-			nodes = []
-			if not material or not snode:
-				print('error: no active node material, enable "use_nodes" and assign a material to the material-node'); return
-			if self.mytype == 'material':
-				nodes.append( material )
-				SELECTED_MATERIAL_NODE = material
-
-			elif self.mytype == 'texture':
-				#node = material.active_texture		# this is not material nodes (classic material texture slots)
-				#for socket in snode.inputs: #socket only contains: .default_value and .name		(links are stores in node_tree.links)
-				for link in context.space_data.node_tree.links:
-					if link.from_node and link.to_node:		# to_node can be none durring drag
-						if link.to_node.name == snode.name and link.from_node.type == 'TEXTURE':
-							if link.from_node.texture:
-								tex = link.from_node.texture
-								SELECTED_TEXTURE_NODE = tex		# need bpy_rna way to get selected in node editor! TODO
-								nodes.append( tex )
-							else:
-								layout.label(text='<no texture block>'); return
-
-			for node in nodes:
-				layout.label(text=node.name)
-				for prop in node.items():		# items is hidden function, dir(com) will not list it!		see rna_prop_ui.py
-					key,value = prop
-					if key.startswith('_'): continue
-					box = layout.box()
-					row = box.row()
-					row.label(text=key)
-					row.prop( node, '["%s"]' % key, text='' )		# so the dict exposes the props!
-					if not node.library:
-						op = row.operator("wm.properties_remove", text="", icon='ZOOMOUT')
-					#op.property = key
-					#op.data_path = 'texture'	#'material'
-					#del ob['key'] # works!
-			if not nodes:
-				if self.mytype == 'texture':
-					layout.label(text='no texture nodes directly connected')
-				else:
-					layout.label(text='no material')
-
-class Ogre_ogremeshy_op(bpy.types.Operator):              
-	'''helper to open ogremeshy'''     
-	bl_idname = 'ogre.preview_ogremeshy'
-	bl_label = "opens ogremeshy in a subprocess"           
-	bl_options = {'REGISTER'}
-	preview = BoolProperty(name="preview", description="fast preview", default=True)
-	groups = BoolProperty(name="preview merge groups", description="use merge groups", default=False)
-	mesh = BoolProperty(name="update mesh", description="update mesh (disable for fast material preview", default=True)
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-	def execute(self, context):
-		if sys.platform == 'linux2':
-			path = '%s/.wine/drive_c/tmp' %os.environ['HOME']
-		else:
-			path = 'C:\\tmp'
-
-		mat = context.active_object.active_material
-		mgroup = merged = None
-		umaterials = []
-		if not self.mesh:
-			for ob in context.selected_objects:
-				if ob.type == 'MESH':
-					for mat in ob.data.materials:
-						if mat and mat not in umaterials: umaterials.append( mat )
-
-		else:
-			mgroup = MeshMagick.get_merge_group( context.active_object )
-			if not mgroup and self.groups:
-				group = get_merge_group( context.active_object )
-				if group:
-					print('--------------- has merge group ---------------' )
-					merged = merge_group( group )
-				else:
-					print('--------------- NO merge group ---------------' )
-			elif len(context.selected_objects)>1:
-				merged = merge_objects( context.selected_objects )
-
-			if mgroup:
-				for ob in mgroup.objects:
-					nmats = export_ogre_mesh( ob, path=path, normals=not self.preview )
-					for m in nmats:
-						if m not in umaterials: umaterials.append( m )
-				MeshMagick.merge( mgroup, path=path, force_name='preview' )
-			elif merged:
-				umaterials = export_ogre_mesh( merged, path=path, force_name='preview', normals=not self.preview )
-			else:
-				umaterials = export_ogre_mesh( context.active_object, path=path, force_name='preview', normals=not self.preview )
-
-		if mat or umaterials:
-			OPTIONS['TOUCH_TEXTURES'] = True
-			OPTIONS['PATH'] = path
-			data = ''
-			for umat in umaterials:
-				data += INFO_OT_createOgreExport.gen_dot_material( umat, path=path )
-			f=open( os.path.join( path, 'preview.material' ), 'wb' )
-			f.write( bytes(data,'utf-8') ); f.close()
-
-		if merged: context.scene.objects.unlink( merged )
-
-		if sys.platform == 'linux2':
-			subprocess.call( 
-				['/usr/bin/wine', 
-				'%s/OgreMeshy/Ogre Meshy.exe' %os.environ['HOME'], 
-				'C:\\tmp\\preview.mesh'])
-		else:
-			subprocess.call( [ 'C:\\OgreMeshy\\Ogre Meshy.exe', 'C:\\tmp\\preview.mesh' ] )
-
-		return {'FINISHED'}
-
-
-class _ogre_new_tex_block(bpy.types.Operator):              
-	'''helper to create new texture block'''                   
-	bl_idname = "ogre.new_texture_block"    
-	bl_label = "helper creates a new texture block"           
-	bl_options = {'REGISTER', 'UNDO'}
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		tex = bpy.data.textures.new('Tex', type='IMAGE')
-		if len(bpy.data.images): tex.image = bpy.data.images[0]		# give a default
-		return {'FINISHED'}
-
-class NODE_PT_shader_toplevel(bpy.types.Panel, _node_panel_mixin_):
-	bl_label = "Ogre Shader"
-	mytype = 'shader'
-
-
-########## panels appear in order defined ? #############
-class OgreShader_shaderprogs(bpy.types.Panel):
-	bl_label = "Ogre Shader: Programs"
-	bl_space_type = 'NODE_EDITOR'
-	bl_region_type = 'UI'
-	def draw(self, context):
-		layout = self.layout
-		node = SELECTED_MATERIAL_NODE
-
-		if node:
-			for prop in node.items():		# items is hidden function, dir(com) will not list it!		see rna_prop_ui.py
-				tag,progs = prop
-				if tag not in '_vprograms_ _fprograms_'.split(): continue
-
-				box = layout.box()
-				for name in progs:		# expects dict/idproperty
-					row = box.row()
-					#row.label(text=name)
-					#row.prop( node, '["%s"]["%s"]' % (key,sname), text=sname )		# so the dict exposes the props!
-					#op = row.operator("ogre.add_shader_program_param", text=name, icon='SETTINGS')
-					if MyShaders.get( name ):
-						_prog = MyShaders.get( name )
-						_name = '%s  | %s' %(name, _prog.source)
-						if node.library:
-							row.label(text=_name)
-						elif _prog.type == 'vertex':
-							op = row.operator("ogre.add_shader_program_param", text=_name, icon='MESH_CUBE')
-							op.program_name = name
-						elif _prog.type == 'fragment':
-							op = row.operator("ogre.add_shader_program_param", text=_name, icon='MATERIAL_DATA')
-							op.program_name = name
-
-						#row.label(text=_prog.source)
-
-					else:		# can't find the shader
-						op = row.operator("ogre.add_shader_program_param", text=name, icon='QUESTION')
-						op.program_name = name
-
-					if not node.library:
-						op = row.operator("wm.properties_remove", text="", icon='ZOOMOUT')
-
-						col = box.column()
-						for param_name in progs[name]:
-							param = progs[name][ param_name ]
-							txt = '    %s  %s' %(param['name'], param['value-code'])
-							if 'args' in param: txt += ' ' + param['args']
-							row = col.row()
-							row.label(text=txt)		# TODO support over-ride value-code and args
-							#row.prop( node, '["%s"]["%s"]["%s"]["value-code"]' %(tag,name,param_name) )
-							#op = row.operator("wm.properties_remove", text="", icon='ZOOMOUT')
-
-
-###########################
-class NODE_PT_material_props(bpy.types.Panel, _node_panel_mixin_):
-	bl_label = "Ogre Shader: Pass"; mytype = 'material'
-class NODE_PT_texture_props(bpy.types.Panel, _node_panel_mixin_):
-	bl_label = "Ogre Shader: Textures"; mytype = 'texture'
-class NODE_PT_user_notes_props(bpy.types.Panel, _node_panel_mixin_):
-	bl_label = "Ogre Shader: User Notes"; mytype = 'notes'
-
-
-class _ogre_op_shader_program_param(bpy.types.Operator):              
-	'''helper to create new texture block'''                   
-	bl_idname = "ogre.add_shader_program_param"    
-	bl_label = "assign program shader to material"           
-	bl_options = {'REGISTER', 'UNDO'}
-	program_name = StringProperty('prog-name')
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		print( self.program_name )
-		MyShaders.Selected = self.program_name
-		bpy.ops.wm.call_menu( name='_ogre_shader_prog_param_menu_' )
-		return {'FINISHED'}
-
-class _ogre_shader_prog_param_menu_(bpy.types.Menu):
-	bl_label = "Vertex Program Params"
-	def draw(self, context):
-		layout = self.layout
-		pname = MyShaders.Selected
-		prog = MyShaders.get( pname )
-		for a in 'name file source technique entry_point profiles'.split():
-			attr = getattr(prog, a)
-			if attr: layout.label(text='%s=%s' %(a,attr.strip()))
-
-		for p in prog.params_auto:
-			name = p['name']
-			vcode = p['value-code']
-			txt = name + '|' + vcode
-			if 'args' in p: txt += '  ' + p['args']
-			op = layout.operator("ogre.add_shader_program_subparam", text=txt, icon='ZOOMIN')
-			op.program_name = prog.name
-			op.param_name = name
-
-class _ogre_op_shader_program_subparam(bpy.types.Operator):              
-	'''helper to...'''                   
-	bl_idname = "ogre.add_shader_program_subparam"    
-	bl_label = "assign program shader subparam to material"           
-	bl_options = {'REGISTER', 'UNDO'}
-	program_name = StringProperty('prog-name')
-	param_name = StringProperty('param-name')
-
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		print( self.program_name )
-		prog = MyShaders.get(self.program_name)
-		param = prog.get_param( self.param_name )
-
-		node = SELECTED_MATERIAL_NODE
-		if node:
-			if prog.type == 'vertex': P = node['_vprograms_']
-			else: P = node['_fprograms_']
-			P[ prog.name ][ self.param_name ] = param.copy()
-
-		context.area.tag_redraw()
-		return {'FINISHED'}
-
-
-#############################
-class _ogre_shader_progs_mixin_(object): # TODO chat with jesterking, layout.menu should return menu
-	def draw(self, context):
-		layout = self.layout
-		if self.mytype == 'vertex':
-			for prog in MyShaders.vertex_progs:
-				op = layout.operator("ogre.add_shader_program", text=prog.name, icon='ZOOMIN')
-				op.program_name = prog.name
-		else:
-			for prog in MyShaders.fragment_progs:
-				op = layout.operator("ogre.add_shader_program", text=prog.name, icon='ZOOMIN')
-				op.program_name = prog.name
-
-class OgreShader_vertexprogs(bpy.types.Menu, _ogre_shader_progs_mixin_):
-	bl_label = "Vertex Programs"
-	mytype = 'vertex'
-class OgreShader_fragmentprogs(bpy.types.Menu, _ogre_shader_progs_mixin_):
-	bl_label = "Fragment Programs"
-	mytype = 'fragment'
-
-class _ogre_op_shader_programs(bpy.types.Operator):              
-	'''helper to create new texture block'''                   
-	bl_idname = "ogre.add_shader_program"    
-	bl_label = "assign program shader to material"           
-	bl_options = {'REGISTER', 'UNDO'}
-	program_name = StringProperty('prog-name')
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		print( self.program_name )
-		prog = MyShaders.get( self.program_name )
-		mat = SELECTED_MATERIAL_NODE
-		if prog.type == 'vertex':
-			if '_vprograms_' not in mat: mat['_vprograms_'] = {}
-			d = mat['_vprograms_']
-		else:
-			if '_fprograms_' not in mat: mat['_fprograms_'] = {}
-			d = mat['_fprograms_']
-		d[ prog.name ] = {}
-
-		return {'FINISHED'}
-
-
 
 #############################
 
@@ -2416,77 +1279,17 @@ def ogredoc( cls ):
 		_OGRE_DOCS_.append( cls )
 	return cls
 
-class ogre_dot_mat_preview(bpy.types.Menu):
-	bl_label = 'preview'
-	def draw(self, context):
-		layout = self.layout
-		mat = context.active_object.active_material
-		if mat:
-			OPTIONS['TOUCH_TEXTURES'] = False
-			preview = INFO_OT_createOgreExport.gen_dot_material( mat )
-			for line in preview.splitlines():
-				if line.strip():
-					for ww in wordwrap( line ): layout.label(text=ww)
-
-
 
 class INFO_MT_ogre_helper(bpy.types.Menu):
 	bl_label = 'ogre_helper'
 	def draw(self, context):
 		layout = self.layout
-		#row = self.layout.box().split(percentage=0.05)
-		#col = row.column(align=False)
-		#print(dir(col))
-		#row.scale_x = 0.1
-		#row.alignment = 'RIGHT'
 
 		for line in self.mydoc.splitlines():
 			if line.strip():
 				for ww in wordwrap( line ): layout.label(text=ww)
 		layout.separator()
 
-		if hasattr(self, 'ogre_shader_params') and self.ogre_shader_params:
-			for param in self.ogre_shader_params:
-				if hasattr(self, 'ogre_shader_tex_op'):
-					txt = '%s    %s' %(self.ogre_shader_tex_op, param)
-					op = layout.operator("ogre.set_shader_tex_param", text=txt, icon='ZOOMIN')
-					op.shader_tex = self.ogre_shader_tex_op		# bpy op API note: uses slots to prevent an op from having dynamic attributes
-					op.shader_tex_param = param
-				else:
-					txt = '%s    %s' %(self.ogre_shader_op, param)
-					op = layout.operator("ogre.set_shader_param", text=txt, icon='ZOOMIN')
-					op.shader_pass = self.ogre_shader_op		# bpy op API note: uses slots to prevent an op from having dynamic attributes
-					op.shader_pass_param = param
-
-
-
-class INFO_OT_ogre_set_shader_param(bpy.types.Operator):              
-	'''assign ogre shader param'''                   
-	bl_idname = "ogre.set_shader_param"    
-	bl_label = "Ogre Shader Param"               
-	bl_options = {'REGISTER', 'UNDO'}
-	shader_pass = StringProperty(name="shader operation", description="", maxlen=64, default="")
-	shader_pass_param = StringProperty(name="shader param", description="", maxlen=64, default="")
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		SELECTED_MATERIAL_NODE[ self.shader_pass ] = self.shader_pass_param
-		context.area.tag_redraw()
-		return {'FINISHED'}
-
-class INFO_OT_ogre_set_shader_tex_param(bpy.types.Operator):              
-	'''assign ogre shader texture param'''                   
-	bl_idname = "ogre.set_shader_tex_param"    
-	bl_label = "Ogre Shader Texture Param"               
-	bl_options = {'REGISTER', 'UNDO'}
-	shader_tex = StringProperty(name="shader operation", description="", maxlen=64, default="")
-	shader_tex_param = StringProperty(name="shader param", description="", maxlen=64, default="")
-	@classmethod
-	def poll(cls, context): return True
-	def execute(self, context):
-		SELECTED_TEXTURE_NODE[ self.shader_tex ] = self.shader_tex_param
-		context.area.tag_redraw()
-		return {'FINISHED'}
 
 class INFO_MT_ogre_docs(bpy.types.Menu):
 	bl_label = "Ogre Help"
@@ -2497,21 +1300,6 @@ class INFO_MT_ogre_docs(bpy.types.Menu):
 			layout.separator()
 		layout.separator()
 		layout.label(text='bug reports to: bhartsho@yahoo.com')
-
-class INFO_MT_ogre_shader_pass_attributes(bpy.types.Menu):
-	bl_label = "Shader-Pass"
-	def draw(self, context):
-		layout = self.layout
-		for cls in _OGRE_SHADER_REF_:
-			layout.menu( cls.__name__ )
-
-class INFO_MT_ogre_shader_texture_attributes(bpy.types.Menu):
-	bl_label = "Shader-Texture"
-	def draw(self, context):
-		layout = self.layout
-		for cls in _OGRE_SHADER_REF_TEX_:
-			layout.menu( cls.__name__ )
-
 
 @ogredoc
 class _ogredoc_Installing( INFO_MT_ogre_helper ):
@@ -2541,7 +1329,6 @@ Ogre Exporter Features:
 	Export .mesh
 
 		verts, normals, uv
-		LOD (Ogre Command Line Tools)
 		export `meshes` subdirectory
 		bone weights
 		shape animation (using NLA-hijacking)
@@ -2564,15 +1351,6 @@ Ogre Exporter Features:
 @ogredoc
 class _ogredoc_Texture_Options( INFO_MT_ogre_helper ):
 	mydoc = _ogre_doc_classic_textures_
-
-@ogredoc
-class _ogredoc_Game_Logic_Intro( INFO_MT_ogre_helper ):
-	mydoc = _game_logic_intro_doc_
-
-@ogredoc
-class _ogredoc_Game_Logic_Types( INFO_MT_ogre_helper ):
-	mydoc = _ogre_logic_types_doc_
-
 
 @ogredoc
 class _ogredoc_Animation_System( INFO_MT_ogre_helper ):
@@ -2788,30 +1566,6 @@ If an object is self-illuminating, it does not need external sources to light it
 
 Default: emissive 0.0 0.0 0.0 0.0
 '''
-
-# TODO remove this
-if 0:
-	@ogredoc
-	class _ogredoc_Shader_Nodes_scene_blend( INFO_MT_ogre_helper ):
-		mydoc = '''
-	scene_blend
-
-	Sets the kind of blending this pass has with the existing contents of the scene. Wheras the texture blending operations seen in the texture_unit entries are concerned with blending between texture layers, this blending is about combining the output of this pass as a whole with the existing contents of the rendering target. This blending therefore allows object transparency and other special effects. There are 2 formats, one using predefined blend types, the other allowing a roll-your-own approach using source and destination factors.
-
-	Format1: scene_blend <add|modulate|alpha_blend|colour_blend>
-	Example: scene_blend add
-
-	This is the simpler form, where the most commonly used blending modes are enumerated using a single parameter. Valid <blend_type> parameters are:
-		@add
-	The colour of the rendering output is added to the scene. Good for explosions, flares, lights, ghosts etc. Equivalent to 'scene_blend one one'.
-		@modulate
-	The colour of the rendering output is multiplied with the scene contents. Generally colours and darkens the scene, good for smoked glass, semi-transparent objects etc. Equivalent to 'scene_blend dest_colour zero'.
-		@colour_blend
-	Colour the scene based on the brightness of the input colours, but don't darken. Equivalent to 'scene_blend src_colour one_minus_src_colour'
-		@alpha_blend
-	The alpha value of the rendering output is used as a mask. Equivalent to 'scene_blend src_alpha one_minus_src_alpha'
-
-	'''
 
 @ogredoc
 class _ogredoc_Shader_Nodes_separate_scene_blend( INFO_MT_ogre_helper ):
@@ -3975,60 +2729,6 @@ def _mesh_entity_helper( doc, ob, o ):
 			user.setAttribute( 'name', propname )
 			user.setAttribute( 'value', str(propvalue) )
 			user.setAttribute( 'type', type(propvalue).__name__ )
-		elif propname in VersionControlMesh:
-			user = doc.createElement('version_control')
-			o.appendChild( user )
-			user.setAttribute( 'name', propname )
-			user.setAttribute( 'value', str(propvalue) )
-			user.setAttribute( 'type', type(propvalue).__name__ )
-
-
-class Ogre_import_op(bpy.types.Operator):              
-	'''Import Ogre Scene'''                   
-	bl_idname = "ogre.import"    
-	bl_label = "Import Ogre"               
-	bl_options = {'REGISTER', 'UNDO'}      
-	filepath= StringProperty(name="File Path", description="Filepath used for importing Ogre .scene file", maxlen=1024, default="")
-	COPY_ATTRIBUTES = BoolProperty(name="Copy Attributes", description="copy version control attributes: category, title, owner, etc.", default=True)
-
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		wm= context.window_manager; wm.fileselect_add(self)		# writes to filepath
-		return {'RUNNING_MODAL'}
-	def execute(self, context):
-		Report.reset()
-		doc = dom.parse( self.filepath )
-		nodes = doc.getElementsByTagName('node')
-		for node in nodes:
-			print( node )
-			name = node.getAttribute('name')
-			if node.hasAttribute('uuid') and name in bpy.data.objects.keys():
-				ob = bpy.data.objects[ name ]
-				uuid = node.getAttribute('uuid')
-				print(name, uuid)
-				if '_UUID_' in ob.keys():
-					if ob['_UUID_'] == uuid:
-						Report.messages.append( '%s: already has matching UUID' %name )
-					else:
-						Report.messages.append( '%s: syncing UUID' %name )
-				else:
-					Report.messages.append( '%s: updating UUID' %name )
-
-				ob[ '_UUID_' ] = uuid
-				if self.COPY_ATTRIBUTES:
-					vcs = node.getElementsByTagName('version_control')
-					d = {}
-					for vc in vcs:
-						n = vc.getAttribute('name')
-						v = vc.getAttribute('value')
-						t = vc.getAttribute('type')
-						if t == 'int': v = int( v )
-						elif t == 'float': v = float( v )
-						d[ n ] = v
-
-		Report.show()
-		return {'FINISHED'}
 
 
 # Ogre supports .dds in both directx and opengl
@@ -4039,18 +2739,12 @@ IMAGE_FORMATS = {
 	'jpg',
 }
 
-#class _type(bpy.types.IDPropertyGroup):
-#	name = StringProperty(name="jpeg format", description="", maxlen=64, default="")
-
 OptionsEx = {
 	'mesh-sub-dir' : False,
 	'shape-anim' : True,
 	'trim-bone-weights' : 0.01,
 	'armature-anim' : True,
 
-	'lodLevels' : 0,
-	'lodDistance' : 100,
-	'lodPercent' : 40,
 	'nuextremityPoints' : 0,
 	'generateEdgeLists' : False,
 
@@ -4071,15 +2765,11 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	bl_idname = "ogre.export"    
 	bl_label = "Export Ogre"               
 	bl_options = {'REGISTER', 'UNDO'}      
-	filepath= StringProperty(name="File Path", description="Filepath used for exporting Ogre .scene file", maxlen=1024, default="", subtype='FILE_PATH')
-	#_force_image_format = None
 
-	#_axis_modes =  [
-	#	('1', '-x z y', 'default'),
-	#	('2', 'x z -y', 'old standard'),
-	#	('3', 'x z y', 'swap z y'),
-	#	('4', 'x y z', 'no swap'),
-	#]
+	filepath= StringProperty( name="File Path",
+			description="Filepath used for exporting Ogre .scene file",
+			maxlen=1024, default="", subtype='FILE_PATH' )
+
 	_axis_modes =  [
 		('-x z y', '-x z y', 'default'),
 		('x z -y', 'x z -y', 'old default'),
@@ -4101,24 +2791,11 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	EX_ANIM = BoolProperty(name="Armature Animation", description="export armature animations - updates the .skeleton file", default=True)
 	EX_SHAPE_ANIM = BoolProperty(name="Shape Animation", description="export shape animations - updates the .mesh file", default=True)
 
-	#EX_LAYERS = BoolProperty(name="Active/All-Layers", description="toggle export active/all-layers", default=False)
 	EX_INSTANCES = BoolProperty(name="Optimize Instances", description="optimize instances in OgreDotScene xml", default=True)
 	EX_ARRAY = BoolProperty(name="Optimize Arrays", description="optimize array modifiers as instances (constant offset only)", default=True)
 
-	#EX_CONVERT_TEXTURES = BoolProperty( name="Enable Convert Textures", default=False )
-	#EX_IMAGE_FORMAT = CollectionProperty(IMAGE_FORMATS, type=_type, description="convert textures for platform\n\tinstall python -> c:\\python26\n\t\t.install PIL (http://www.pythonware.com/products/pil/)\n\tinstall Nvidia DDS tools http://developer.nvidia.com/object/dds_utilities_legacy.html")
-
-	## TODO replace with per texture conversion and resizing options ?
-	#EX_CONVERT_DDS = BoolProperty( name="Convert DDS Files", default=True )
-	#EX_DDS_TO_FORMAT = CollectionProperty({'jpg','png'}, description="convert only DDS textures to selected format", default='png')
-	#EX_TEX_SIZE_MAX = CollectionProperty({128,256,512,1024}, description="limit texture size to", default=512)
-	#EX_LIMIT_TEX_SIZE = BoolProperty( name="Enable Limit Tex Size", default=False )
-
 	EX_MATERIALS = BoolProperty(name="Export Materials", description="exports .material script", default=True)
-	#EX_MESH_SUBDIR = BoolProperty(name="Mesh Subdir", description="exports .mesh and .xml files to ./meshes subdirectory", default=False)
-	#EX_TEXTURES_SUBDIR = BoolProperty(name="Texture Subdir", description="exports textures to ./textures subdirectory", default=False)
 
-	#EX_FORCE_IMAGE = StringProperty(name="Convert Textures", description="convert texture maps using Image Magick (or Nvidia DDS)\nrequires image magick to be installed\ntype name of format or leave blank (do not convert)", maxlen=5, default="")
 	_image_formats =  [
 		('','do not convert', 'default'),
 		('jpg', 'jpg', 'jpeg format'),
@@ -4126,17 +2803,10 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		('dds', 'dds', 'nvidia dds format'),
 	]
 
-	EX_FORCE_IMAGE = EnumProperty( items=_image_formats, name='Convert Images',  description='convert all textures to format', default='' )
 	EX_DDS_MIPS = IntProperty(name="DDS Mips", description="number of mip maps (DDS)", default=3, min=0, max=16)
-
-	#EX_SWAP_AXIS = BoolProperty(name="Swap Axis", description="fix up axis (swap y and z, and negate y)", default=True)
 
 	EX_TRIM_BONE_WEIGHTS = FloatProperty(name="Trim Weights", description="ignore bone weights below this value\n(Ogre may only support 4 bones per vertex", default=0.01, min=0.0, max=0.1)
 
-
-	lodLevels = IntProperty(name="LOD Levels", description="MESH number of LOD levels", default=0, min=0, max=32)
-	lodDistance = IntProperty(name="LOD Distance", description="MESH distance increment to reduce LOD", default=100, min=0, max=2000)
-	lodPercent = IntProperty(name="LOD Percentage", description="LOD percentage reduction", default=40, min=0, max=99)
 
 	nuextremityPoints = IntProperty(name="Extremity Points", description="MESH Extremity Points", default=0, min=0, max=65536)
 	generateEdgeLists = BoolProperty(name="Edge Lists", description="MESH generate edge lists (for stencil shadows)", default=False)
@@ -4150,17 +2820,19 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 
 	@classmethod
-	def poll(cls, context): return True
+	def poll(cls, context):
+		return True
+
 	def invoke(self, context, event):
 		wm = context.window_manager
 		wm.fileselect_add(self)		# writes to filepath
 		return {'RUNNING_MODAL'}
 
 	def execute(self, context):
-		self.ogre_export(  self.filepath, context );
+		self.ogre_export(self.filepath, context);
 		return {'FINISHED'}
 
-	def dot_material( self, meshes, path='/tmp' ):
+	def dot_material(self, meshes, path='/tmp'):
 		print('updating .material')
 		mats = []
 		for ob in meshes:
@@ -4176,13 +2848,18 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		for mat in mats:
 			Report.materials.append( mat.name )
 			M += self.gen_dot_material( mat, path, convert_textures=True )
-		url = os.path.join(path, '%s.material' %bpy.context.scene.name)
-		f = open( url, 'wb' ); f.write( bytes(M,'utf-8') ); f.close()
+		basepath = os.path.splitext(self.filepath)[0]
+		url = basepath + '.material'
+		f = open( url, 'wb' );
+		f.write( bytes(M,'utf-8') );
+		f.close()
 		print('saved', url)
 
-	## python note: classmethods prefer attributes defined at the classlevel, kinda makes sense, (even if called by an instance)
+	## python note: classmethods prefer attributes defined at the classlevel,
+	# kinda makes sense, (even if called by an instance)
 	@classmethod
-	def gen_dot_material( self, mat, path='/tmp', convert_textures=False ):		# TODO deprecated context_textures...
+	# TODO deprecated context_textures...
+	def gen_dot_material( self, mat, path='/tmp', convert_textures=False ):
 		M = ''
 		M += 'material %s \n{\n'		%mat.name
 		if mat.use_shadows: M += indent(1, 'receive_shadows on')
@@ -4201,31 +2878,18 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		print('gen_dot_material_pass', mat)
 		OPTIONS['PATH'] = path
 		M = ''
-		#if mat.node_tree and len(mat.node_tree.nodes):
-		if ShaderTree.valid_node_material( mat ):
-			print('		material has nodes')
-			tree = ShaderTree.parse( mat )
-			passes = tree.get_passes()
-			for P in passes:
-				print('		shader pass:', P)
-				M += P.dotmat_pass()
-		else:
-			print('		standard material')
-			tree = ShaderTree( material=mat )
-			M += tree.dotmat_pass()
+		print('		standard material')
+		tree = ShaderTree( material=mat )
+		M += tree.dotmat_pass()
 		return M
 
 
 	def ogre_mesh( self, ob, path='/tmp', force_name=None, ignore_shape_animation=False ):
 		opts = {
-			#'mesh-sub-dir' : self.EX_MESH_SUBDIR,
 			'shape-anim' : self.EX_SHAPE_ANIM,
 			'trim-bone-weights' : self.EX_TRIM_BONE_WEIGHTS,
 			'armature-anim' : self.EX_ANIM,
 
-			'lodLevels' : self.lodLevels,
-			'lodDistance' : self.lodDistance,
-			'lodPercent' : self.lodPercent,
 			'nuextremityPoints' : self.nuextremityPoints,
 			'generateEdgeLists' : self.generateEdgeLists,
 
@@ -4241,56 +2905,14 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		export_ogre_mesh( ob, path=path, force_name=force_name, ignore_shape_animation=False, opts=opts )
 
 
-		## realXtend internal Naali format ##
-		# We are removing realXtend from this exporter
-		# To which XML document this is even creating these elements
-		"""
-		if ob.game.physics_type == 'RIGID_BODY':
-			com = doc.createElement('component');
-			e.appendChild( com )
-			com.setAttribute('type', 'EC_RigidBody')
-			com.setAttribute('sync', '1')
-
-			a = doc.createElement('attribute'); com.appendChild( a )
-			a.setAttribute('name', 'Mass')
-			a.setAttribute('value', str(ob.game.mass))
-
-			a = doc.createElement('attribute'); com.appendChild( a )
-			a.setAttribute('name', 'Friction')
-			avg = sum( ob.game.friction_coefficients ) / 3.0
-			a.setAttribute('value', str(avg))
-
-			a = doc.createElement('attribute'); com.appendChild( a )
-			a.setAttribute('name', 'Linear damping')
-			a.setAttribute('value', str(ob.game.damping))
-
-			a = doc.createElement('attribute'); com.appendChild( a )
-			a.setAttribute('name', 'Angular damping')
-			a.setAttribute('value', str(ob.game.rotation_damping))
-
-			a = doc.createElement('attribute'); com.appendChild( a )
-			a.setAttribute('name', 'Phantom')		# is this no collide or hide from view?
-			a.setAttribute('value', str(ob.game.use_ghost).lower() )
-		"""
-
-
-
-
 	def ogre_export(self, url, context ):
 		timer = Timer()
 		global OPTIONS
-		#OPTIONS['TEXTURES_SUBDIR'] = self.EX_TEXTURES_SUBDIR
-		OPTIONS['FORCE_IMAGE_FORMAT'] = None
 		OPTIONS['TOUCH_TEXTURES'] = True
 		OPTIONS['SWAP_AXIS'] = self.EX_SWAP_MODE
 		Report.reset()
 
 		ShaderTree.EX_DDS_MIPS = self.EX_DDS_MIPS
-
-		if self.EX_FORCE_IMAGE:
-			fmt = self.EX_FORCE_IMAGE.lower()
-			if not fmt.startswith('.'): fmt = '.'+fmt
-			OPTIONS['FORCE_IMAGE_FORMAT'] = fmt
 
 		meshes = []
 		mesh_collision_prims = {}
@@ -4307,16 +2929,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		# Set the header to the scene
 		scn.setAttribute('formatVersion', '1.0.0')
 
-		# Set the export time to the scene
-		scn.setAttribute('export_time', str(now))
-		bscn = bpy.context.scene
-		if '_previous_export_time_' in bscn.keys():
-			scn.setAttribute('previous_export_time', str(bscn['_previous_export_time_']))
-		else:
-			scn.setAttribute('previous_export_time', '0')
-		bscn[ '_previous_export_time_' ] = now
-		scn.setAttribute('exported_by', getpass.getuser())
-
 		xml_nodes = doc.createElement('nodes')
 		extern = doc.createElement('externals')
 		environ = doc.createElement('environment')
@@ -4326,16 +2938,20 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		############################
 
 		## extern files ##
-		item = doc.createElement('item'); extern.appendChild( item )
+		item = doc.createElement('item');
+		extern.appendChild(item)
 		item.setAttribute('type','material')
-		a = doc.createElement('file'); item.appendChild( a )
+		a = doc.createElement('file');
+		item.appendChild( a )
 		# .material file (scene mats)
+		# FIXME material name
 		a.setAttribute('name', '%s.material' %context.scene.name)
 
 
 		## environ settings ##
 		world = context.scene.world
-		_c = {'colourAmbient':world.ambient_color, 'colourBackground':world.horizon_color, 'colourDiffuse':world.horizon_color}
+		_c = {'colourAmbient':world.ambient_color, 'colourBackground':world.horizon_color}
+
 		for ctag in _c:
 			a = doc.createElement(ctag); environ.appendChild( a )
 			color = _c[ctag]
@@ -4345,43 +2961,32 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		if world.mist_settings.use_mist:
 			a = doc.createElement('fog'); environ.appendChild( a )
 			a.setAttribute('linearStart', '%s'%world.mist_settings.start )
-			a.setAttribute('mode', world.mist_settings.falloff.lower() )	# only linear supported?
+			# only linear supported?
+			a.setAttribute('mode', world.mist_settings.falloff.lower() )
 			a.setAttribute('linearEnd', '%s' %(world.mist_settings.start+world.mist_settings.depth))
 
 		## nodes (objects) ##
-		objects = []		# gather because macros will change selection state
+		objects = []
+		# gather because macros will change selection state
 		for ob in bpy.data.objects:
-			if ob.name.startswith('collision'): continue
 			if self.EX_SELONLY and not ob.select:
-				if ob.type == 'CAMERA' and self.EX_FORCE_CAMERA: pass
-				elif ob.type == 'LAMP' and self.EX_FORCE_LAMPS: pass
-				else: continue
-			objects.append( ob )
-
-		## find merge groups
-		mgroups = []
-		mobjects = []
-		for ob in objects:
-			group = get_merge_group( ob )
-			if group:
-				for member in group.objects:
-					if member not in mobjects: mobjects.append( member )
-				if group not in mgroups: mgroups.append( group )
-		for rem in mobjects:
-			if rem in objects: objects.remove( rem )
-
-		temps = []
-		for group in mgroups:
-			merged = merge_group( group )
-			objects.append( merged )
-			temps.append( merged )
+				if ob.type == 'CAMERA' and self.EX_FORCE_CAMERA:
+					pass
+				elif ob.type == 'LAMP' and self.EX_FORCE_LAMPS:
+					pass
+				else:
+					continue
+			objects.append(ob)
 
 		## gather roots because ogredotscene supports parents and children ##
 		# TODO this is quite frankly f up, I can't understand it
 		def _flatten( _c, _f ):
-			if _c.parent in objects: _f.append( _c.parent )
-			if _c.parent: _flatten( _c.parent, _f )
-			else: _f.append( _c )
+			if _c.parent in objects:
+				_f.append( _c.parent )
+			if _c.parent:
+				_flatten( _c.parent, _f )
+			else:
+				_f.append( _c )
 
 		roots = []
 		for ob in objects:
@@ -4408,13 +3013,16 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		if self.EX_SCENE:
 			data = doc.toprettyxml()
-			if not url.endswith('.scene'): url += '.scene'
-			f = open( url, 'wb' ); f.write( bytes(data,'utf-8') ); f.close()
+			if not url.endswith('.scene'):
+				url += '.scene'
+			f = open( url, 'wb' );
+			f.write( bytes(data,'utf-8') );
+			f.close()
 			print('ogre scene dumped', url)
 
-		if self.EX_MATERIALS: self.dot_material( meshes, os.path.split(url)[0] )
+		if self.EX_MATERIALS:
+			self.dot_material( meshes, os.path.split(url)[0] )
 
-		for ob in temps:context.scene.objects.unlink( ob )
 		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
 		print( 'Exporting took ', ('%.3f'%(timer.elapsedSecs())), 's' )
 
@@ -4426,13 +3034,8 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			mesh_collision_files={}, prefix='',
 			objects=[], xmlparent=None ):
 
-		print('exporting object', ob)
-		print('world matrix', ob.matrix_world)
 		xml_obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
 		xmlparent.appendChild(xml_obj)
-
-		## UUID ##
-		xml_obj.setAttribute('uuid', UUID(ob))
 
 		## custom user props ##
 		for prop in ob.items():
@@ -4443,31 +3046,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
-			elif propname in VersionControl+VersionControlUser:
-				user = doc.createElement('version_control')
-				xml_obj.appendChild( user )
-				user.setAttribute( 'name', propname )
-				user.setAttribute( 'value', str(propvalue) )
-				user.setAttribute( 'type', type(propvalue).__name__ )
-
-		# no need to store _exported_ time per object?? #
-		#if '_modified_' in ob.keys():
-		#	#if ob['_modified_'] >= ob['_exported_']:
-		#	ob['_exported_'] = time.time()		# Ogre engine can test if _modified_ is newer than _exported_, and decide if to reload
-
-
-		## BGE subset ##
-		game = doc.createElement('game')
-		xml_obj.appendChild( game )
-		sens = doc.createElement('sensors')
-		game.appendChild( sens )
-		acts = doc.createElement('actuators')
-		game.appendChild( acts )
-		for sen in ob.game.sensors:
-			sens.appendChild( WrapSensor(sen).xml(doc) )
-		for act in ob.game.actuators:
-			acts.appendChild( WrapActuator(act).xml(doc) )
-
 
 		if ob.type == 'MESH' and len(ob.data.faces):
 			self._mesh_export( ob,
@@ -4513,6 +3091,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		att = doc.createElement('lightAttenuation');
 		light.appendChild( att )
 		# is range an Ogre constant?
+		# FIXME these parameters are messed up
 		att.setAttribute('range', '5000' )
 		att.setAttribute('constant', '1.0')		
 		att.setAttribute('linear', '%s'%(1.0/ob.data.distance))
@@ -4522,14 +3101,14 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		## actually need to precompute light brightness by adjusting colors below ##
 		if ob.data.use_diffuse:
-			diff = doc.createElement('colorDiffuse');
+			diff = doc.createElement('colourDiffuse');
 			light.appendChild(diff)
 			diff.setAttribute('r', '%s'%ob.data.color.r)
 			diff.setAttribute('g', '%s'%ob.data.color.g)
 			diff.setAttribute('b', '%s'%ob.data.color.b)
 
 		if ob.data.use_specular:
-			spec = doc.createElement('colorSpecular');
+			spec = doc.createElement('colourSpecular');
 			light.appendChild(spec)
 			spec.setAttribute('r', '%s'%ob.data.color.r)
 			spec.setAttribute('g', '%s'%ob.data.color.g)
@@ -4537,15 +3116,11 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		## bug reported by C.L.B ##
 		# hemi lights should actually provide info for fragment/vertex-program ambient shaders
-		if ob.data.type != 'HEMI':	
-			# just a guess - is this Ogre API?
-			if ob.data.shadow_method != 'NOSHADOW':	
-				shaw = doc.createElement('colorShadow');
-				light.appendChild(shaw)
-				shaw.setAttribute('r', '%s'%ob.data.color.r)
-				shaw.setAttribute('g', '%s'%ob.data.color.g)
-				shaw.setAttribute('b', '%s'%ob.data.color.b)
-				light.setAttribute('shadow','true')
+		if ob.data.type != 'HEMI' and ob.data.shadow_method != 'NOSHADOW':
+			light.setAttribute('castShadows','true')
+		else:
+			light.setAttribute('castShadows','false')
+
 	## end _light_export
 
 	def _camera_export( self, ob, url='', doc=None, xml_par=None):
@@ -4713,184 +3288,6 @@ def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None
 		s.setAttribute('z', '%6f'%z)
 
 	return o
-
-def merge_group( group ):
-	print('--------------- merge group ->', group )
-	copies = []
-	for ob in group.objects:
-		if ob.type == 'MESH':
-			print( '\t group member', ob.name )
-			o2 = ob.copy(); copies.append( o2 )
-			o2.data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
-			while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
-			bpy.context.scene.objects.link( o2 )#; o2.select = True
-	merged = merge( copies )
-	merged.name = group.name
-	merged.data.name = group.name
-	return merged
-
-def merge_objects( objects, name='_temp_' ):
-	copies = []
-	for ob in objects:
-		if ob.type == 'MESH':
-			o2 = ob.copy(); copies.append( o2 )
-			o2.data = o2.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe modifiers
-			while o2.modifiers: o2.modifiers.remove( o2.modifiers[0] )
-			bpy.context.scene.objects.link( o2 )#; o2.select = True
-	merged = merge( copies )
-	merged.name = name
-	merged.data.name = name
-	return merged
-
-
-def merge( objects ):
-	for ob in bpy.context.selected_objects: ob.select = False
-	for ob in objects: ob.select = True
-	bpy.context.scene.objects.active = ob
-	bpy.ops.object.join()
-	return bpy.context.active_object
-
-def get_merge_group( ob, prefix='merge' ):
-	m = []
-	for grp in ob.users_group:
-		if grp.name.lower().startswith(prefix): m.append( grp )
-	if len(m)==1:
-		#if ob.data.users != 1:
-		#	print( 'WARNING: an instance can not be in a merge group' )
-		#	return
-		return m[0]
-	elif m:
-		print('WARNING: an object can not be in two merge groups at the same time', ob)
-		return
-
-
-############ Ogre Command Line Tools ###########
-class MeshMagick(object):
-	''' Usage: MeshMagick [global_options] toolname [tool_options] infile(s) -- [outfile(s)]
-	Available Tools
-	===============
-	info - print information about the mesh.
-	meshmerge - Merge multiple submeshes into a single mesh.
-	optimise - Optimise meshes and skeletons.
-	rename - Rename different elements of meshes and skeletons.
-	transform - Scale, rotate or otherwise transform a mesh.
-	'''
-
-	@staticmethod
-	def get_merge_group( ob ): return get_merge_group( ob, prefix='magicmerge' )
-
-	@staticmethod
-	def merge( group, path='/tmp', force_name=None ):
-		print('-'*80)
-		print(' mesh magick - merge ')
-		exe = os.path.join(OGRETOOLS, 'MeshMagick.exe')
-		if not os.path.isfile( exe ):
-			print( 'ERROR: can not find MeshMagick.exe' )
-			print( exe )
-			return
-
-		files = []
-		for ob in group.objects:
-			if ob.data.users == 1:	# single users only
-				files.append( os.path.join( path, ob.data.name+'.mesh' ) )
-				print( files[-1] )
-
-		opts = 'meshmerge'
-		if sys.platform == 'linux2': cmd = '/usr/bin/wine %s %s' %(exe, opts)
-		else: cmd = '%s %s' %(exe, opts)
-		if force_name: output = force_name + '.mesh'
-		else: output = '_%s_.mesh' %group.name
-		cmd = cmd.split() + files + ['--', os.path.join(path,output) ]
-		subprocess.call( cmd )
-		print(' mesh magick - complete ')
-		print('-'*80)
-
-_ogre_command_line_tools_doc = '''
-Bug reported by CLB: converter expects .mesh.xml or .skeleton.xml to determine the type - fixed nov24
-
-Usage: OgreXMLConverter [options] sourcefile [destfile]
-
-Available options:
-	-i             = interactive mode - prompt for options
-	(The next 4 options are only applicable when converting XML to Mesh)
-	-l lodlevels   = number of LOD levels
-	-d loddist     = distance increment to reduce LOD
-	-p lodpercent  = Percentage triangle reduction amount per LOD
-
-	-f lodnumtris  = Fixed vertex reduction per LOD
-
-	-e             = DON'T generate edge lists (for stencil shadows)
-
-	-r             = DON'T reorganise vertex buffers to OGRE recommended format.
-	-t             = Generate tangents (for normal mapping)
-
-	-o             = DON'T optimise out redundant tracks & keyframes
-	-d3d           = Prefer D3D packed colour formats (default on Windows)
-
-
-	-gl            = Prefer GL packed colour formats (default on non-Windows)
-	-E endian      = Set endian mode 'big' 'little' or 'native' (default)
-	-q             = Quiet mode, less output
-
-	-log filename  = name of the log file (default: 'OgreXMLConverter.log')
-	sourcefile     = name of file to convert
-
-	destfile       = optional name of file to write to. If you don't
-			           specify this OGRE works it out through the extension
-			           and the XML contents if the source is XML. For example
-
-			           test.mesh becomes test.xml, test.xml becomes test.mesh
-			           if the XML document root is <mesh> etc.
-
-'''
-
-def OgreXMLConverter( infile, opts ):
-	print('[Ogre Tools Wrapper]', infile )
-
-	exe = os.path.join(OGRETOOLS,'OgreXmlConverter.exe')
-	if not os.path.isfile( exe ):
-		print( 'ERROR: can not find OgreXmlConverter.exe' )
-		print( exe )
-		return
-
-	basicArguments = ''
-
-	if opts['lodLevels']:
-		basicArguments += ' -l %s -d %s -p %s' %(opts['lodLevels'], opts['lodDistance'], opts['lodPercent'])
-		
-	if opts['nuextremityPoints'] > 0:
-		basicArguments += ' -x %s' %opts['nuextremityPoints']
-
-	if not opts['generateEdgeLists']:
-		basicArguments += ' -e'
-
-	if opts['generateTangents']:
-		basicArguments += ' -t'
-		if opts['tangentSemantic']:
-			basicArguments += ' -td %s' %opts['tangentSemantic']
-		if opts['tangentUseParity']:
-			basicArguments += ' -ts %s' %opts['tangentUseParity']
-		if opts['tangentSplitMirrored']:
-			basicArguments += ' -tm'
-		if opts['tangentSplitRotated']:
-			basicArguments += ' -tr'
-	if not opts['reorganiseBuffers']:
-		basicArguments += ' -r'
-	if not opts['optimiseAnimations']:
-		basicArguments += ' -o'
-
-	opts = '-log _ogre_debug.txt %s' %basicArguments
-	path,name = os.path.split( infile )
-
-	if sys.platform == 'linux2': cmd = '/usr/bin/wine %s %s' %(exe, opts)
-	else: cmd = '%s %s' %(exe, opts)
-	print(cmd)
-	cmd = cmd.split() + [infile]		#, outfile] #[ infile.replace(' ','\\ '), outfile.replace(' ','\\ ') ]
-
-	subprocess.call( cmd )
-	#if not os.path.isfile( outfile ): print('warning: OgreXmlConverter failed')
-
-
 
 
 def find_bone_index( ob, arm, groupidx):	# sometimes the groups are out of order, this finds the right index.
@@ -5428,35 +3825,6 @@ class Skeleton(object):
 
 		return doc.documentElement.toprettyxml()
 
-	## below _convertRestpose is from blender2.49 script
-'''
-	#meshObjectSpaceTransformation = armatureExporter.getAdditionalRootBoneTransformation()
-	#track.addKeyframe(pose, frameTime, meshObjectSpaceTransformation)
-	def _convertRestpose(self):
-		"""Convert rest pose of Blender skeleton.
-		
-		   Note that not every Blender bone has a corresponding OGRE bone.
-		   Root bones need an additional transformation caused by the
-		   possibliy different object coordinate systems of Blender's
-		   armature object and Blender's mesh object.
-		"""
-		# Warning: Blender uses left-multiplication: vector*matrix
-		
-		# additional transformation caused by the objects
-		inverseMeshObjectMatrix = Blender.Mathutils.Matrix(*self.bMeshObject.getMatrix())
-		inverseMeshObjectMatrix.invert()
-		armatureObjectMatrix = Blender.Mathutils.Matrix(*self.bArmatureObject.getMatrix())
-		
-		# additional transformation for root bones:
-		# from armature object space into mesh object space, i.e.,
-		# (x,y,z,w)*AO*MO^(-1)
-		self.additionalRootBoneTransformation = armatureObjectMatrix*inverseMeshObjectMatrix
-'''
-
-
-
-
-
 
 def get_image_textures( mat ):
 	r = []
@@ -5505,81 +3873,6 @@ def select_group( context, name, options={} ):
 			bpy.context.scene.objects.active = grp.objects[0]
 			for ob in grp.objects: ob.select = True
 		else: pass
-
-class INFO_MT_instances(bpy.types.Menu):
-	bl_label = "Instances"
-
-	def draw(self, context):
-		layout = self.layout
-		inst = gather_instances()
-		for data in inst:
-			ob = inst[data][0]
-			op = layout.operator("select_instances", text=ob.name)	# operator has no variable for button name?
-			op.mystring = ob.name
-		layout.separator()
-
-class INFO_MT_instance(bpy.types.Operator):                
-	'''select instance group'''
-	bl_idname = "ogre.select_instances"
-	bl_label = "Select Instance Group"
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
-	@classmethod
-	def poll(cls, context):
-		return True
-	def invoke(self, context, event):
-		print( 'invoke select_instances op', event )
-		select_instances( context, self.mystring )
-		return {'FINISHED'}
-
-
-class INFO_MT_groups(bpy.types.Menu):
-	bl_label = "Groups"
-	def draw(self, context):
-		layout = self.layout
-		for group in bpy.data.groups:
-			op = layout.operator("select_group", text=group.name)	# operator no variable for button name?
-			op.mystring = group.name
-			#op = layout.operator("mark_group_export_combine")
-			#op.groupname = group.name
-		layout.separator()
-
-#TODO
-class INFO_MT_group_mark(bpy.types.Operator):                  
-	'''mark group auto combine on export'''
-	bl_idname = "ogre.mark_group_export_combine"                                        
-	bl_label = "Group Auto Combine"
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-	mybool= BoolProperty(name="groupautocombine", description="set group auto-combine", default=False)
-	mygroups = {}
-
-	@classmethod
-	def poll(cls, context):
-		return True
-
-	def invoke(self, context, event):
-		self.mygroups[ op.groupname ] = self.mybool
-		return {'FINISHED'}
-
-class INFO_MT_group(bpy.types.Operator):                  
-	'''select group'''
-	bl_idname = "ogre.select_group"
-	# The panel label, http://www.blender.org/documentation/250PythonDoc/bpy.types.Panel.html
-	bl_label = "Select Group"
-	# Options for this panel type
-	bl_options = {'REGISTER', 'UNDO'}
-	mystring= StringProperty(name="MyString", description="...", maxlen=1024, default="my string")
-
-	@classmethod
-	def poll(cls, context):
-		print('----poll group, below context -----')
-		print( dir(context) )
-		#return context.active_object != None  # as long as something is selected, return the active Object?
-		return True
-
-	def invoke(self, context, event):
-		select_group( context, self.mystring )
-		return {'FINISHED'}
 
 #############
 class INFO_MT_actors(bpy.types.Menu):
@@ -5630,528 +3923,56 @@ class INFO_MT_dynamic(bpy.types.Operator):
 		bpy.data.objects[self.mystring].select = True
 		return {'FINISHED'}
 
-
-
-class INFO_HT_myheader(bpy.types.Header):
-	bl_space_type = 'INFO'
-	def draw(self, context):
-		layout = self.layout
-		wm = context.window_manager
-		window = context.window
-		scene = context.scene
-		rd = scene.render
-		ob = context.active_object
-		screen = context.screen
-
-		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='FILE_REFRESH' );
-		op.mesh = True
-		op = layout.operator( 'ogre.preview_ogremeshy', text='', icon='MATERIAL' );
-		op.mesh = False
-		row = layout.row(align=True)
-		sub = row.row(align=True)
-		sub.menu("INFO_MT_file")
-		sub.menu("INFO_MT_add")
-		if rd.use_game_engine: sub.menu("INFO_MT_game")
-		else: sub.menu("INFO_MT_render")
-		layout.separator()
-		sub.menu("INFO_MT_instances")
-		sub.menu("INFO_MT_groups")
-
-		#layout.separator()
-		layout.operator("wm.window_fullscreen_toggle", icon='FULLSCREEN_ENTER', text="")
-
-
-		layout.template_header()
-		if not context.area.show_menus:
-			if window.screen.show_fullscreen: layout.operator("screen.back_to_previous", icon='SCREEN_BACK', text="Back to Previous")
-			else: layout.template_ID(context.window, "screen", new="screen.new", unlink="screen.delete")
-			layout.template_ID(context.screen, "scene", new="scene.new", unlink="scene.delete")
-
-			layout.separator()
-			layout.template_running_jobs()
-			layout.template_reports_banner()
-			layout.separator()
-			if rd.has_multiple_engines: layout.prop(rd, "engine", text="")
-
-			layout.label(text=scene.statistics())
-			layout.menu( "INFO_MT_help" )
-
-		else:
-			row = layout.row(align=True)		# align makes buttons compact together
-			#row.operator("screen.frame_jump", text="", icon='REW').end = False
-			row.operator("screen.keyframe_jump", text="", icon='PREV_KEYFRAME').next = False
-			if not screen.is_animation_playing: row.operator("screen.animation_play", text="", icon='PLAY')
-			else: sub = row.row(); sub.scale_x = 1.0; sub.operator("screen.animation_play", text="", icon='PAUSE')
-			row.operator("screen.keyframe_jump", text="", icon='NEXT_KEYFRAME').next = True
-			#row.operator("screen.frame_jump", text="", icon='FF').end = True
-			row = layout.row(align=True)
-			layout.prop(scene, "frame_current", text="")
-
-			if ob:
-				row = layout.row(align=True)
-				row.prop( ob, 'name', text='' )
-				keys = ob.keys()
-
-				if '_modified_' in keys:
-					op = row.operator( 'ogre.update_modify_time', text='', icon='TIME' )
-					v = ob['_modified_']
-					if v: v = time.asctime(time.localtime(v))
-					else: v = ''
-					row.label( text='version: %s  %s' %(ob['_version_'],v) )
-				else:
-					op = row.operator('ogre.setup_version_control')
-
-				row = layout.row(align=True); row.scale_x=1.1
-				if '_category' in keys:
-					tag = '_category_'
-					a = tag.replace('_','')
-					row.prop( ob, '["%s"]' %tag, text='' )
-					op = row.operator( 'ogre.select_by_prop_value', text='', icon='GROUP' )
-					op.propname = tag
-					op.propvalue = str( ob[tag] )
-
-			row = layout.row(align=True); row.scale_x=1.6
-			row.menu("INFO_MT_actors", icon='GAME')
-			row.menu("INFO_MT_dynamics", icon='PHYSICS')
-
-			if ob and ob.type == 'MESH':
-				row = layout.row(align=True)
-				mesh = ob.data
-				mkeys = mesh.keys()
-				# FIXME broken the version control when porting to Blender 2.57
-				"""
-				for tag in VersionControlMesh:
-					if tag in mkeys: v = mesh[tag]
-					else: v = True
-					if v: icon = 'CHECKBOX_HLT'
-					else: icon = 'CHECKBOX_DEHLT'
-					txt = tag.replace('_',' ').split('update')[-1]
-					op = row.operator( 'ogre.toggle_prop', text=txt, icon=icon )
-					op.propname = tag
-				"""
-
-			layout.menu( "INFO_MT_ogre_docs" )
-
 def export_menu_func(self, context):
 	#ext = os.path.splitext(bpy.app.binary_path)[-1]
 	#default_blend_path = bpy.data.filepath.replace(".blend", ext)
 	path,name = os.path.split( context.blend_data.filepath )
 	op = self.layout.operator("ogre.export", text="Ogre3D (.scene)")
+	# TODO should split the path using splitext and only replace the ext
+	# if it's equal to scene
 	op.filepath=os.path.join( path, name.split('.')[0]+'.scene' )
 
-def import_menu_func(self, context):
-	self.layout.operator("ogre.import", text="Ogre3D (.scene) | read version control attributes (UUIDs)")
-
-
-_header_ = None
-MyShaders = None
 def register():
 	print( VERSION )
-	global MyShaders, _header_
-	_header_ = bpy.types.INFO_HT_header
-	# Unregister current header
-	bpy.utils.unregister_class( bpy.types.INFO_HT_header )
-	# register our header
-	bpy.utils.register_class( INFO_HT_myheader )
 	# Register operators
-	bpy.utils.register_class( Ogre_ogremeshy_op )
 	bpy.utils.register_class( Ogre_toggle_prop_op )
 	bpy.utils.register_class( Ogre_relocate_textures_op )
-	bpy.utils.register_class( Ogre_setup_version_control_op )
 	bpy.utils.register_class( Ogre_create_collision_op )
-	bpy.utils.register_class( Harts_bake_texture_vc_op )
-	bpy.utils.register_class( Ogre_game_logic_op )
 	# Register INFOs
 	bpy.utils.register_class( INFO_MT_ogre_helper )
 	bpy.utils.register_class( INFO_MT_ogre_docs )
-	bpy.utils.register_class( INFO_MT_ogre_shader_pass_attributes )
-	bpy.utils.register_class( INFO_MT_ogre_shader_texture_attributes )
 	bpy.utils.register_class( INFO_MT_dynamics )
 	bpy.utils.register_class( INFO_MT_dynamic )
 	bpy.utils.register_class( INFO_MT_actors )
-	bpy.utils.register_class( INFO_MT_groups )
-	bpy.utils.register_class( INFO_MT_group_mark )
-	bpy.utils.register_class( INFO_MT_group )
-	bpy.utils.register_class( INFO_MT_instances )
-	bpy.utils.register_class( INFO_MT_instance )
 	bpy.utils.register_class( INFO_OT_createOgreExport )
-	bpy.utils.register_class( INFO_OT_ogre_set_shader_param )
-	bpy.utils.register_class( INFO_OT_ogre_set_shader_tex_param )
 	bpy.utils.register_class( INFO_MT_actor )
 	# Register something, user interface panels etc.
 	bpy.utils.register_class( Ogre_User_Report )
-	bpy.utils.register_class( Ogre_VC_Panel )
-	bpy.utils.register_class( Ogre_select_by_prop_value )
-	bpy.utils.register_class( Ogre_update_mod_time )
-	bpy.utils.register_class( Ogre_Physics_LOD )
-	bpy.utils.register_class( Ogre_import_op )
 	bpy.utils.register_class( Ogre_Physics )
-	bpy.utils.register_class( Ogre_Logic_Sensors )
-	bpy.utils.register_class( Ogre_Logic_Actuators )
 	bpy.utils.register_class( Ogre_Material_Panel )
-	bpy.utils.register_class( Harts_Tools )
 	bpy.utils.register_class( Ogre_Texture_Panel )
-	bpy.utils.register_class( OgreShader_shaderprogs )
-	bpy.utils.register_class( OgreShader_vertexprogs )
-	bpy.utils.register_class( OgreShader_fragmentprogs )
-	bpy.utils.register_class( ogre_dot_mat_preview )
 
-	# Register PTs?
-	bpy.utils.register_class( NODE_PT_shader_toplevel )
-	bpy.utils.register_class( NODE_PT_material_props )
-	bpy.utils.register_class( NODE_PT_texture_props )
-	bpy.utils.register_class( NODE_PT_user_notes_props )
-
-	bpy.utils.register_class( _ogre_new_tex_block )
-	bpy.utils.register_class( _ogre_op_shader_program_param )
-	bpy.utils.register_class( _ogre_shader_prog_param_menu_ )
-	bpy.utils.register_class( _ogre_op_shader_program_subparam )
-	bpy.utils.register_class( _ogre_op_shader_programs )
-
-	MyShaders = MyShadersSingleton()
 	bpy.types.INFO_MT_file_export.append(export_menu_func)
-	bpy.types.INFO_MT_file_import.append(import_menu_func)
 
 def unregister():
 	print('unreg-> ogre exporter')
-	bpy.utils.register_class( _header_ )
-	# unregister our header
-	bpy.utils.unregister_class( INFO_HT_myheader )
-	# unregister operators
-	bpy.utils.unregister_class( Ogre_ogremeshy_op )
 	bpy.utils.unregister_class( Ogre_toggle_prop_op )
 	bpy.utils.unregister_class( Ogre_relocate_textures_op )
-	bpy.utils.unregister_class( Ogre_setup_version_control_op )
 	bpy.utils.unregister_class( Ogre_create_collision_op )
-	bpy.utils.unregister_class( Harts_bake_texture_vc_op )
-	bpy.utils.unregister_class( Ogre_game_logic_op )
 	# unregister INFOs
 	bpy.utils.unregister_class( INFO_MT_ogre_helper )
 	bpy.utils.unregister_class( INFO_MT_ogre_docs )
-	bpy.utils.unregister_class( INFO_MT_ogre_shader_pass_attributes )
-	bpy.utils.unregister_class( INFO_MT_ogre_shader_texture_attributes )
 	bpy.utils.unregister_class( INFO_MT_dynamics )
 	bpy.utils.unregister_class( INFO_MT_dynamic )
 	bpy.utils.unregister_class( INFO_MT_actors )
-	bpy.utils.unregister_class( INFO_MT_groups )
-	bpy.utils.unregister_class( INFO_MT_group_mark )
-	bpy.utils.unregister_class( INFO_MT_group )
-	bpy.utils.unregister_class( INFO_MT_instances )
-	bpy.utils.unregister_class( INFO_MT_instance )
 	bpy.utils.unregister_class( INFO_OT_createOgreExport )
-	bpy.utils.unregister_class( INFO_OT_ogre_set_shader_param )
-	bpy.utils.unregister_class( INFO_OT_ogre_set_shader_tex_param )
 	bpy.utils.unregister_class( INFO_MT_actor )
-	# unregister something, user interface panels etc.
 	bpy.utils.unregister_class( Ogre_User_Report )
-	bpy.utils.unregister_class( Ogre_VC_Panel )
-	bpy.utils.unregister_class( Ogre_select_by_prop_value )
-	bpy.utils.unregister_class( Ogre_update_mod_time )
-	bpy.utils.unregister_class( Ogre_Physics_LOD )
-	bpy.utils.unregister_class( Ogre_import_op )
 	bpy.utils.unregister_class( Ogre_Physics )
-	bpy.utils.unregister_class( Ogre_Logic_Sensors )
-	bpy.utils.unregister_class( Ogre_Logic_Actuators )
 	bpy.utils.unregister_class( Ogre_Material_Panel )
-	bpy.utils.unregister_class( Harts_Tools )
 	bpy.utils.unregister_class( Ogre_Texture_Panel )
-	bpy.utils.unregister_class( OgreShader_shaderprogs )
-	bpy.utils.unregister_class( OgreShader_vertexprogs )
-	bpy.utils.unregister_class( OgreShader_fragmentprogs )
-	bpy.utils.unregister_class( ogre_dot_mat_preview )
-
-	# unregister PTs?
-	bpy.utils.unregister_class( NODE_PT_shader_toplevel )
-	bpy.utils.unregister_class( NODE_PT_material_props )
-	bpy.utils.unregister_class( NODE_PT_texture_props )
-	bpy.utils.unregister_class( NODE_PT_user_notes_props )
-
-	bpy.utils.unregister_class( _ogre_new_tex_block )
-	bpy.utils.unregister_class( _ogre_op_shader_program_param )
-	bpy.utils.unregister_class( _ogre_shader_prog_param_menu_ )
-	bpy.utils.unregister_class( _ogre_op_shader_program_subparam )
-	bpy.utils.unregister_class( _ogre_op_shader_programs )
 
 	bpy.types.INFO_MT_file_export.remove(export_menu_func)
-	bpy.types.INFO_MT_file_import.remove(import_menu_func)
 
 if __name__ == "__main__": register()
 
-NVDXT_DOC = '''
-Version 8.30
-NVDXT
-This program
-   compresses images
-   creates normal maps from color or alpha
-   creates DuDv map
-   creates cube maps
-   writes out .dds file
-   does batch processing
-   reads .tga, .bmp, .gif, .ppm, .jpg, .tif, .cel, .dds, .png, .psd, .rgb, *.bw and .rgba
-   filters MIP maps
-
-Options:
-  -profile <profile name> : Read a profile created from the Photoshop plugin
-  -quick : use fast compression method
-  -quality_normal : normal quality compression
-  -quality_production : production quality compression
-  -quality_highest : highest quality compression (this can be very slow)
-  -rms_threshold <int> : quality RMS error. Above this, an extensive search is performed.
-  -prescale <int> <int>: rescale image to this size first
-  -rescale <nearest | hi | lo | next_lo>: rescale image to nearest, next highest or next lowest power of two
-  -rel_scale <float, float> : relative scale of original image. 0.5 is half size Default 1.0, 1.0
-
-Optional Filtering for rescaling. Default cube filter:
-  -RescalePoint
-  -RescaleBox
-  -RescaleTriangle
-  -RescaleQuadratic
-  -RescaleCubic
-  -RescaleCatrom
-  -RescaleMitchell
-  -RescaleGaussian
-  -RescaleSinc
-  -RescaleBessel
-  -RescaleHanning
-  -RescaleHamming
-  -RescaleBlackman
-  -RescaleKaiser
-  -clamp <int, int> : maximum image size. image width and height are clamped
-  -clampScale <int, int> : maximum image size. image width and height are scaled 
-  -window <left, top, right, bottom> : window of original window to compress
-  -nomipmap : don't generate MIP maps
-  -nmips <int> : specify the number of MIP maps to generate
-  -rgbe : Image is RGBE format
-  -dither : add dithering
-  -sharpenMethod <method>: sharpen method MIP maps
-  <method> is 
-        None
-        Negative
-        Lighter
-        Darker
-        ContrastMore
-        ContrastLess
-        Smoothen
-        SharpenSoft
-        SharpenMedium
-        SharpenStrong
-        FindEdges
-        Contour
-        EdgeDetect
-        EdgeDetectSoft
-        Emboss
-        MeanRemoval
-        UnSharp <radius, amount, threshold>
-        XSharpen <xsharpen_strength, xsharpen_threshold>
-        Custom
-  -pause : wait for keyboard on error
-  -flip : flip top to bottom 
-  -timestamp : Update only changed files
-  -list <filename> : list of files to convert
-  -cubeMap : create cube map . 
-            Cube faces specified with individual files with -list option
-                  positive x, negative x, positive y, negative y, positive z, negative z
-                  Use -output option to specify filename
-            Cube faces specified in one file.  Use -file to specify input filename
-
-  -volumeMap : create volume texture. 
-            Volume slices specified with individual files with -list option
-                  Use -output option to specify filename
-            Volume specified in one file.  Use -file to specify input filename
-
-  -all : all image files in current directory
-  -outdir <directory>: output directory
-  -deep [directory]: include all subdirectories
-  -outsamedir : output directory same as input
-  -overwrite : if input is .dds file, overwrite old file
-  -forcewrite : write over readonly files
-  -file <filename> : input file to process. Accepts wild cards
-  -output <filename> : filename to write to [-outfile can also be specified]
-  -append <filename_append> : append this string to output filename
-  -8  <dxt1c | dxt1a | dxt3 | dxt5 | u1555 | u4444 | u565 | u8888 | u888 | u555 | L8 | A8>  : compress 8 bit images with this format
-  -16 <dxt1c | dxt1a | dxt3 | dxt5 | u1555 | u4444 | u565 | u8888 | u888 | u555 | A8L8> : compress 16 bit images with this format
-  -24 <dxt1c | dxt1a | dxt3 | dxt5 | u1555 | u4444 | u565 | u8888 | u888 | u555> : compress 24 bit images with this format
-  -32 <dxt1c | dxt1a | dxt3 | dxt5 | u1555 | u4444 | u565 | u8888 | u888 | u555> : compress 32 bit images with this format
-
-  -swapRB : swap rb
-  -swapRG : swap rg
-  -gamma <float value>: gamma correcting during filtering
-  -outputScale <float, float, float, float>: scale the output by this (r,g,b,a)
-  -outputBias <float, float, float, float>: bias the output by this amount (r,g,b,a)
-  -outputWrap : wraps overflow values modulo the output format 
-  -inputScale <float, float, float, float>: scale the inpput by this (r,g,b,a)
-  -inputBias <float, float, float, float>: bias the input by this amount (r,g,b,a)
-  -binaryalpha : treat alpha as 0 or 1
-  -alpha_threshold <byte>: [0-255] alpha reference value 
-  -alphaborder : border images with alpha = 0
-  -alphaborderLeft : border images with alpha (left) = 0
-  -alphaborderRight : border images with alpha (right)= 0
-  -alphaborderTop : border images with alpha (top) = 0
-  -alphaborderBottom : border images with alpha (bottom)= 0
-  -fadeamount <int>: percentage to fade each MIP level. Default 15
-
-  -fadecolor : fade map (color, normal or DuDv) over MIP levels
-  -fadetocolor <hex color> : color to fade to
-  -custom_fade <n> <n fadeamounts> : set custom fade amount.  n is number number of fade amounts. fadeamount are [0,1]
-  -fadealpha : fade alpha over MIP levels
-  -fadetoalpha <byte>: [0-255] alpha to fade to
-  -border : border images with color
-  -bordercolor <hex color> : color for border
-  -force4 : force DXT1c to use always four colors
-  -weight <float, float, float>: Compression weightings for R G and B
-  -luminance :  convert color values to luminance for L8 formats
-  -greyScale : Convert to grey scale
-  -greyScaleWeights <float, float, float, float>: override greyscale conversion weights of (0.3086, 0.6094, 0.0820, 0)  
-  -brightness <float, float, float, float>: per channel brightness. Default 0.0  usual range [0,1]
-  -contrast <float, float, float, float>: per channel contrast. Default 1.0  usual range [0.5, 1.5]
-
-Texture Format  Default DXT3:
-  -dxt1c   : DXT1 (color only)
-  -dxt1a   : DXT1 (one bit alpha)
-  -dxt3    : DXT3
-  -dxt5    : DXT5n
-  -u1555   : uncompressed 1:5:5:5
-  -u4444   : uncompressed 4:4:4:4
-  -u565    : uncompressed 5:6:5
-  -u8888   : uncompressed 8:8:8:8
-  -u888    : uncompressed 0:8:8:8
-  -u555    : uncompressed 0:5:5:5
-  -p8c     : paletted 8 bit (256 colors)
-  -p8a     : paletted 8 bit (256 colors with alpha)
-  -p4c     : paletted 4 bit (16 colors)
-  -p4a     : paletted 4 bit (16 colors with alpha)
-  -a8      : 8 bit alpha channel
-  -cxv8u8  : normal map format
-  -v8u8    : EMBM format (8, bit two component signed)
-  -v16u16  : EMBM format (16 bit, two component signed)
-  -A8L8    : 8 bit alpha channel, 8 bit luminance
-  -fp32x4  : fp32 four channels (A32B32G32R32F)
-  -fp32    : fp32 one channel (R32F)
-  -fp16x4  : fp16 four channels (A16B16G16R16F)
-  -dxt5nm  : dxt5 style normal map
-  -3Dc     : 3DC
-  -g16r16  : 16 bit in, two component
-  -g16r16f : 16 bit float, two components
-
-Mip Map Filtering Options. Default box filter:
-  -Point
-  -Box
-  -Triangle
-  -Quadratic
-  -Cubic
-  -Catrom
-  -Mitchell
-  -Gaussian
-  -Sinc
-  -Bessel
-  -Hanning
-  -Hamming
-  -Blackman
-  -Kaiser
-
-***************************
-To make a normal or dudv map, specify one of
-  -n4 : normal map 4 sample
-  -n3x3 : normal map 3x3 filter
-  -n5x5 : normal map 5x5 filter
-  -n7x7 : normal map 7x7 filter
-  -n9x9 : normal map 9x9 filter
-  -dudv : DuDv
-
-and source of height info:
-  -alpha : alpha channel
-  -rgb : average rgb
-  -biased : average rgb biased
-  -red : red channel
-  -green : green channel
-  -blue : blue channel
-  -max : max of (r,g,b)
-  -colorspace : mix of r,g,b
-
--norm : normalize mip maps (source is a normal map)
-
--toHeight : create a height map (source is a normal map)
-
-
-Normal/DuDv Map dxt:
-  -aheight : store calculated height in alpha field
-  -aclear : clear alpha channel
-  -awhite : set alpha channel = 1.0
-  -scale <float> : scale of height map. Default 1.0
-  -wrap : wrap texture around. Default off
-  -minz <int> : minimum value for up vector [0-255]. Default 0
-
-***************************
-To make a depth sprite, specify:
-  -depth
-
-and source of depth info:
-  -alpha  : alpha channel
-  -rgb    : average rgb (default)
-  -red    : red channel
-  -green  : green channel
-  -blue   : blue channel
-  -max    : max of (r,g,b)
-  -colorspace : mix of r,g,b
-
-
-Depth Sprite dxt:
-  -aheight : store calculated depth in alpha channel
-  -aclear : store 0.0 in alpha channel
-  -awhite : store 1.0 in alpha channel
-  -scale <float> : scale of depth sprite (default 1.0)
-  -alpha_modulate : multiplies color by alpha during filtering
-  -pre_modulate : multiplies color by alpha before processing
-
-
-
-
-Examples
-  nvdxt -cubeMap -list cubemapfile.lst -output cubemap.dds
-  nvdxt -cubeMap -file cubemapfile.tga
-  nvdxt -file test.tga -dxt1c
-  nvdxt -file *.tga
-  nvdxt -file c:\temp\*.tga
-  nvdxt -file temp\*.tga
-  nvdxt -file height_field_in_alpha.tga -n3x3 -alpha -scale 10 -wrap
-  nvdxt -file grey_scale_height_field.tga -n5x5 -rgb -scale 1.3
-  nvdxt -file normal_map.tga -norm
-  nvdxt -file image.tga -dudv -fade -fadeamount 10
-  nvdxt -all -dxt3 -gamma -outdir .\dds_dir -time
-  nvdxt -file *.tga -depth -max -scale 0.5
-
-'''
-
-
-
-'''
-https://svn.blender.org/svnroot/bf-extensions/extern/py/scripts/addons/luxrender/addon_data.py
-
-bl_addon_data = {
-	(2,5,4): {
-		(0,7,1): {
-			'api_compatibility': {
-				32591:{
-					(0,7,1):	(1105,-1)
-				}
-			},
-			'binary_urls': {
-				'linux-32':		('http://www.luxrender.net/release/pylux/0.7.1/lin/32/pylux.so.gz',
-								'4e4fc041da4f90b7b5011fd944437f21'),
-				'linux-64':		('http://www.luxrender.net/release/pylux/0.7.1/lin/64/pylux.so.gz',
-								'0ec790ddbdcd295202c0b7b02b37c297'),
-				'windows-32':	('http://www.luxrender.net/release/pylux/0.7.1/win/32/pylux.pyd.gz',
-								'38a5621063e5d76fb1a8c8d17f42427e'),
-				'windows-64':	('http://www.luxrender.net/release/pylux/0.7.1/win/64/pylux.pyd.gz',
-								'95b352e384810a44fd38580d8ac81a57'),
-				'osx-intel-32':	('http://www.luxrender.net/release/pylux/0.7.1/mac/intel_32/pylux.so.gz',
-								'fd88b7ab4c1ea23f932f83ea56b00346'),
-				'osx-intel-64':	('http://www.luxrender.net/release/pylux/0.7.1/mac/intel_64/pylux.so.gz',
-								'51c57a3dee3a200ecf34ae98e9372c85'),
-				'osx-ppc':		(),
-			}
-		}
-	}
-}
-
-'''
