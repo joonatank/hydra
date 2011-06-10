@@ -2740,21 +2740,21 @@ IMAGE_FORMATS = {
 }
 
 OptionsEx = {
-	'mesh-sub-dir' : False,
-	'shape-anim' : True,
-	'trim-bone-weights' : 0.01,
-	'armature-anim' : True,
+#	'mesh-sub-dir' : False,
+#	'shape-anim' : True,
+#	'trim-bone-weights' : 0.01,
+#	'armature-anim' : True,
 
-	'nuextremityPoints' : 0,
-	'generateEdgeLists' : False,
+#	'nuextremityPoints' : 0,
+#	'generateEdgeLists' : False,
 
-	'generateTangents' : False,
-	'tangentSemantic' : "uvw", 
-	'tangentUseParity' : 4,
-	'tangentSplitMirrored' : False,
-	'tangentSplitRotated' : False,
-	'reorganiseBuffers' : True,
-	'optimiseAnimations' : True,
+#	'generateTangents' : False,
+#	'tangentSemantic' : "uvw", 
+#	'tangentUseParity' : 4,
+#	'tangentSplitMirrored' : False,
+#	'tangentSplitRotated' : False,
+#	'reorganiseBuffers' : True,
+#	'optimiseAnimations' : True,
 
 }
 
@@ -2776,48 +2776,25 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		('x z y', 'x z y', 'swap y and z'),
 		('x y z', 'x y z', 'no swapping'),
 	]
-	EX_SWAP_MODE = EnumProperty( items=_axis_modes, name='swap axis',  description='axis swapping mode', default='-x z y' )
-
+	EX_SWAP_MODE = EnumProperty( items=_axis_modes, name='swap axis',
+			description='axis swapping mode', default='-x z y' )
 
 	## Options ##
-	EX_SCENE = BoolProperty(name="Export Scene", description="export current scene (OgreDotScene xml)", default=True)
-	EX_SELONLY = BoolProperty(name="Export Selected Only", description="export selected", default=True)
+	EX_SCENE = BoolProperty(name="Export Scene",
+			description="export current scene (OgreDotScene xml)", default=True)
+	EX_SELONLY = BoolProperty(name="Export Selected Only", description="export selected", default=False)
 	EX_FORCE_CAMERA = BoolProperty(name="Force Camera", description="export active camera", default=True)
 	EX_FORCE_LAMPS = BoolProperty(name="Force Lamps", description="export all lamps", default=True)
 
 	EX_MESH = BoolProperty(name="Export Meshes", description="export meshes", default=True)
-	EX_MESH_OVERWRITE = BoolProperty(name="Export Meshes (overwrite)", description="export meshes (overwrite existing files)", default=True)
-
-	EX_ANIM = BoolProperty(name="Armature Animation", description="export armature animations - updates the .skeleton file", default=True)
-	EX_SHAPE_ANIM = BoolProperty(name="Shape Animation", description="export shape animations - updates the .mesh file", default=True)
-
-	EX_INSTANCES = BoolProperty(name="Optimize Instances", description="optimize instances in OgreDotScene xml", default=True)
-	EX_ARRAY = BoolProperty(name="Optimize Arrays", description="optimize array modifiers as instances (constant offset only)", default=True)
+	EX_MESH_OVERWRITE = BoolProperty(name="Export Meshes (overwrite)",
+			description="export meshes (overwrite existing files)", default=True)
 
 	EX_MATERIALS = BoolProperty(name="Export Materials", description="exports .material script", default=True)
 
-	_image_formats =  [
-		('','do not convert', 'default'),
-		('jpg', 'jpg', 'jpeg format'),
-		('png', 'png', 'png format'),
-		('dds', 'dds', 'nvidia dds format'),
-	]
-
-	EX_DDS_MIPS = IntProperty(name="DDS Mips", description="number of mip maps (DDS)", default=3, min=0, max=16)
-
-	EX_TRIM_BONE_WEIGHTS = FloatProperty(name="Trim Weights", description="ignore bone weights below this value\n(Ogre may only support 4 bones per vertex", default=0.01, min=0.0, max=0.1)
-
-
-	nuextremityPoints = IntProperty(name="Extremity Points", description="MESH Extremity Points", default=0, min=0, max=65536)
-	generateEdgeLists = BoolProperty(name="Edge Lists", description="MESH generate edge lists (for stencil shadows)", default=False)
-	generateTangents = BoolProperty(name="Tangents", description="MESH generate tangents", default=False)
-	tangentSemantic = StringProperty(name="Tangent Semantic", description="MESH tangent semantic", maxlen=3, default="uvw")
-	tangentUseParity = IntProperty(name="Tangent Parity", description="MESH tangent use parity", default=4, min=0, max=16)
-	tangentSplitMirrored = BoolProperty(name="Tangent Split Mirrored", description="MESH split mirrored tangents", default=False)
-	tangentSplitRotated = BoolProperty(name="Tangent Split Rotated", description="MESH split rotated tangents", default=False)
-	reorganiseBuffers = BoolProperty(name="Reorganise Buffers", description="MESH reorganise vertex buffers", default=True)
-	optimiseAnimations = BoolProperty(name="Optimize Animations", description="MESH optimize animations", default=True)
-
+	# Use custom inherited ogre materials
+	EX_CUSTOM_MATERIALS = BoolProperty(name="Export Custom GLSL Materials",
+			description="uses custom inherited materials rather than Ogre's default materials", default=True)
 
 	@classmethod
 	def poll(cls, context):
@@ -2858,7 +2835,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	## python note: classmethods prefer attributes defined at the classlevel,
 	# kinda makes sense, (even if called by an instance)
 	@classmethod
-	# TODO deprecated context_textures...
 	def gen_dot_material( self, mat, path='/tmp', convert_textures=False ):
 		M = ''
 		M += 'material %s \n{\n'		%mat.name
@@ -2866,7 +2842,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		else: M += indent(1, 'receive_shadows off')
 
 		M += indent(1, 'technique', '{' )	# technique GLSL
-		#if mat.use_vertex_color_paint:
 		M += self.gen_dot_material_pass( mat, path, convert_textures )
 
 		M += indent(1, '}' )	# end technique
@@ -2884,62 +2859,59 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		return M
 
 
-	def ogre_mesh( self, ob, path='/tmp', force_name=None, ignore_shape_animation=False ):
-		opts = {
-			'shape-anim' : self.EX_SHAPE_ANIM,
-			'trim-bone-weights' : self.EX_TRIM_BONE_WEIGHTS,
-			'armature-anim' : self.EX_ANIM,
+	def _export_ogre_mesh( self, ob, path='/tmp'):
+		export_ogre_mesh(ob, path=path)
 
-			'nuextremityPoints' : self.nuextremityPoints,
-			'generateEdgeLists' : self.generateEdgeLists,
+	def _write_environment(self, xml_doc, xml_scene, world):
+		## environ settings ##
+		environ = xml_doc.createElement('environment')
+		xml_scene.appendChild(environ)
 
-			'generateTangents' : self.generateTangents,
-			'tangentSemantic' : self.tangentSemantic, 
-			'tangentUseParity' : self.tangentUseParity,
-			'tangentSplitMirrored' : self.tangentSplitMirrored,
-			'tangentSplitRotated' : self.tangentSplitRotated,
-			'reorganiseBuffers' : self.reorganiseBuffers,
-			'optimiseAnimations' : self.optimiseAnimations,
+		_c = {'colourAmbient':world.ambient_color, 'colourBackground':world.horizon_color}
 
-		}
-		export_ogre_mesh( ob, path=path, force_name=force_name, ignore_shape_animation=False, opts=opts )
+		for ctag in _c:
+			a = xml_doc.createElement(ctag)
+			environ.appendChild(a)
+			color = _c[ctag]
+			a.setAttribute('r', '%s'%color.r)
+			a.setAttribute('g', '%s'%color.g)
+			a.setAttribute('b', '%s'%color.b)
+		if world.mist_settings.use_mist:
+			fog = xml_doc.createElement('fog')
+			environ.appendChild(fog)
+			fog.setAttribute('linearStart', '%s'%world.mist_settings.start )
+			# only linear supported?
+			fog.setAttribute('mode', world.mist_settings.falloff.lower() )
+			fog.setAttribute('linearEnd', '%s' %(world.mist_settings.start+world.mist_settings.depth))
 
 
-	def ogre_export(self, url, context ):
+
+	def ogre_export(self, url, context):
 		timer = Timer()
 		global OPTIONS
 		OPTIONS['TOUCH_TEXTURES'] = True
 		OPTIONS['SWAP_AXIS'] = self.EX_SWAP_MODE
 		Report.reset()
 
-		ShaderTree.EX_DDS_MIPS = self.EX_DDS_MIPS
-
-		meshes = []
-		mesh_collision_prims = {}
-		mesh_collision_files = {}
-
 		print('ogre export->', url)
 		prefix = url.split('.')[0]
 
 		now = time.time()
 		doc = dom.Document()
-		scn = doc.createElement('scene');
-		doc.appendChild( scn )
+		xml_scene = doc.createElement('scene');
+		doc.appendChild(xml_scene)
 
 		# Set the header to the scene
-		scn.setAttribute('formatVersion', '1.0.0')
-
-		xml_nodes = doc.createElement('nodes')
-		extern = doc.createElement('externals')
-		environ = doc.createElement('environment')
-		for n in (xml_nodes, extern, environ):
-			scn.appendChild(n)
+		xml_scene.setAttribute('formatVersion', '1.0.0')
 
 		############################
 
 		## extern files ##
+		xml_extern = doc.createElement('externals')
+		xml_scene.appendChild(xml_extern)
+
 		item = doc.createElement('item');
-		extern.appendChild(item)
+		xml_extern.appendChild(item)
 		item.setAttribute('type','material')
 		a = doc.createElement('file');
 		item.appendChild( a )
@@ -2947,23 +2919,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		# FIXME material name
 		a.setAttribute('name', '%s.material' %context.scene.name)
 
-
-		## environ settings ##
-		world = context.scene.world
-		_c = {'colourAmbient':world.ambient_color, 'colourBackground':world.horizon_color}
-
-		for ctag in _c:
-			a = doc.createElement(ctag); environ.appendChild( a )
-			color = _c[ctag]
-			a.setAttribute('r', '%s'%color.r)
-			a.setAttribute('g', '%s'%color.g)
-			a.setAttribute('b', '%s'%color.b)
-		if world.mist_settings.use_mist:
-			a = doc.createElement('fog'); environ.appendChild( a )
-			a.setAttribute('linearStart', '%s'%world.mist_settings.start )
-			# only linear supported?
-			a.setAttribute('mode', world.mist_settings.falloff.lower() )
-			a.setAttribute('linearEnd', '%s' %(world.mist_settings.start+world.mist_settings.depth))
+		self._write_environment(xml_doc=doc, xml_scene=xml_scene, world = context.scene.world)
 
 		## nodes (objects) ##
 		objects = []
@@ -2996,44 +2952,56 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			if root not in roots:
 				roots.append( root )
 
-		exported_meshes = []		# don't export same data multiple times
+		xml_nodes = doc.createElement('nodes')
+		xml_scene.appendChild(xml_nodes)
+
+		export_meshes = []
 		for root in roots:
 			print('--------------- exporting root ->', root)
-			self._node_export( root, 
+			self._write_node( root, 
 				doc=doc,
-				url=url,
-				exported_meshes = exported_meshes, 
-				meshes = meshes,
-				mesh_collision_prims = mesh_collision_prims,
-				mesh_collision_files = mesh_collision_files,
-				prefix = prefix,
+				meshes=export_meshes,
 				objects=objects, 
 				xmlparent=xml_nodes 
 				)
 
+		self._export_ogre_meshes(export_meshes, url)
+
 		if self.EX_SCENE:
-			data = doc.toprettyxml()
-			if not url.endswith('.scene'):
-				url += '.scene'
-			f = open( url, 'wb' );
-			f.write( bytes(data,'utf-8') );
-			f.close()
-			print('ogre scene dumped', url)
+			self._write_scene_file(url, doc)
 
 		if self.EX_MATERIALS:
-			self.dot_material( meshes, os.path.split(url)[0] )
+			self.dot_material(export_meshes, os.path.split(url)[0])
 
 		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
 		print( 'Exporting took ', ('%.3f'%(timer.elapsedSecs())), 's' )
 
 
-	############# node export - recursive ###############
-	# TODO the amount of parameters to pass here is quite frankly insane
-	def _node_export( self, ob, url='', doc=None, exported_meshes=[],
-			meshes=[], mesh_collision_prims={},
-			mesh_collision_files={}, prefix='',
-			objects=[], xmlparent=None ):
+	def _export_ogre_meshes(self, meshes, url):
+		# don't export same data multiple times
+		already_exported = []
+		for mesh in meshes:
+			# What url is this really?
+			murl = os.path.join( os.path.split(url)[0], '%s.mesh'%mesh.data.name )
+			exists = os.path.isfile(murl)
+			if self.EX_MESH_OVERWRITE or not exists:
+				if mesh.data.name not in already_exported:
+					self._export_ogre_mesh(mesh, path=os.path.split(url)[0])
+					already_exported.append(mesh.data.name)
 
+
+	def _write_scene_file(self, url, xml_doc):
+		data = xml_doc.toprettyxml()
+		if not url.endswith('.scene'):
+			url += '.scene'
+		f = open( url, 'wb' );
+		f.write( bytes(data,'utf-8') );
+		f.close()
+		print('ogre scene dumped', url)
+
+
+	############# node export - recursive ###############
+	def _write_node(self, ob, doc, meshes=[], objects=[], xmlparent=None):
 		xml_obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
 		xmlparent.appendChild(xml_obj)
 
@@ -3048,39 +3016,25 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				user.setAttribute( 'type', type(propvalue).__name__ )
 
 		if ob.type == 'MESH' and len(ob.data.faces):
-			self._mesh_export( ob,
-					url=url,
+			self._write_entity( ob,
 					doc=doc,
-					exported_meshes=exported_meshes,
 					meshes=meshes,
-					mesh_collision_prims=mesh_collision_prims,
-					mesh_collision_files=mesh_collision_files,
-					prefix=prefix,
 					objects=objects,
-					xmlparent=xmlparent,
-					xml_par=xml_obj )
+					xmlparent=xml_obj)
 
 		elif ob.type == 'CAMERA':
-			self._camera_export(ob, url, doc, xml_par=xml_obj)
+			self._write_camera(ob, doc, xml_par=xml_obj)
 
 		elif ob.type == 'LAMP':
-			self._light_export(ob, url, doc, xml_par=xml_obj)
+			self._write_light(ob, doc, xml_par=xml_obj)
 
 		for child in ob.children:
-			self._node_export( child, 
-				url = url,
-				doc = doc,
-				exported_meshes = exported_meshes, 
-				meshes = meshes,
-				mesh_collision_prims = mesh_collision_prims,
-				mesh_collision_files = mesh_collision_files,
-				prefix = prefix,
-				objects=objects, 
-				xmlparent=xml_obj
-				)
-	## end _node_export
+			self._write_node( child, doc=doc,
+				meshes=meshes, objects=objects, xmlparent=xml_obj )
 
-	def _light_export( self, ob, url='', doc=None, xml_par=None):
+	## end _write_node
+
+	def _write_light( self, ob, doc, xml_par=None):
 		Report.lights.append( ob.name )
 		light = doc.createElement('light')
 		xml_par.appendChild(light);
@@ -3123,7 +3077,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 	## end _light_export
 
-	def _camera_export( self, ob, url='', doc=None, xml_par=None):
+	def _write_camera( self, ob, doc, xml_par=None):
 		Report.cameras.append( ob.name )
 		cam = doc.createElement('camera')
 		xml_par.appendChild(cam);
@@ -3147,67 +3101,23 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		clip.setAttribute('farPlaneDist', '%s' %ob.data.clip_end)
 	## end _camera_export
 
-	# TODO
-	# At the moment the passed url for this is the scene file url
-	# It should definitely be changed to the directory we are exporting
+	#def _write_entity(self, ent, doc)
+
 	# TODO separate the aux node stuff to another function
-	# TODO separate the collision model exporting
 	# FIXME exported name is the name of the mesh which is not unique replace with separate name
-	def _mesh_export( self, ob, url='', doc=None, exported_meshes=[], meshes=[], mesh_collision_prims={}, mesh_collision_files={}, prefix='', objects=[], xmlparent=None, xml_par=None ):
-		timer = Timer()
-
-		collisionFile = None
-		collisionPrim = None
-		if ob.data.name in mesh_collision_prims:
-			collisionPrim = mesh_collision_prims[ ob.data.name ]
-		if ob.data.name in mesh_collision_files:
-			collisionFile = mesh_collision_files[ ob.data.name ]
-
-		meshes.append( ob )
+	def _write_entity(self, ob, doc, entities=[], meshes=[], objects=[], xmlparent=None):
+		entities.append(ob)
 		ent = doc.createElement('entity') 
-		xml_par.appendChild(ent);
+		xmlparent.appendChild(ent);
 
 		ent.setAttribute('name', ob.data.name)
+		ent.setAttribute('meshFile', '%s.mesh' %(ob.data.name) )
 
-		prefix = ''
-		#if self.EX_MESH_SUBDIR: prefix = 'meshes/'
-		ent.setAttribute('meshFile', '%s%s.mesh' %(prefix,ob.data.name) )
-
-		if not collisionPrim and not collisionFile:
-			if ob.game.use_collision_bounds:
-				collisionPrim = ob.game.collision_bounds_type.lower()
-				mesh_collision_prims[ ob.data.name ] = collisionPrim
-			else:
-				for child in ob.children:
-					if child.name.startswith('collision'):		# double check, instances with decimate modifier are ok?
-						collisionFile = '%s_collision_%s.mesh' %(prefix,ob.data.name)
-						break
-				if collisionFile:
-					mesh_collision_files[ ob.data.name ] = collisionFile
-					self.ogre_mesh( 
-						child, 
-						path=os.path.split(url)[0], 
-						force_name='_collision_%s' %ob.data.name
-					)
-
-		if collisionPrim:
-			ent.setAttribute('collisionPrim', collisionPrim )
-		elif collisionFile:
-			ent.setAttribute('collisionFile', collisionFile )
-
-		_mesh_entity_helper( doc, ob, ent )
+		_mesh_entity_helper(doc, ob, ent)
 
 		if self.EX_MESH:
-			# What url is this really?
-			murl = os.path.join( os.path.split(url)[0], '%s.mesh'%ob.data.name )
-			exists = os.path.isfile( murl )
-			if not exists or (exists and self.EX_MESH_OVERWRITE):
-				if ob.data.name not in exported_meshes:
-					if '_update_mesh_' in ob.data.keys() and not ob.data['_update_mesh_']:
-						print('	skipping', ob.data)
-					else:
-						exported_meshes.append( ob.data.name )
-						self.ogre_mesh( ob, path=os.path.split(url)[0] )
+			if ob not in meshes:
+				meshes.append(ob)
 
 		## deal with Array mod ##
 		vecs = [ ob.matrix_world.to_translation() ]
@@ -3219,34 +3129,22 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				if not mod.use_constant_offset:
 					print( 'WARNING: unsupport array-modifier mode, must be "constant offset" type' )
 					continue
-
 				else:
-					#v = ob.matrix_world.to_translation()
-
 					newvecs = []
 					for prev in vecs:
 						for i in range( mod.count-1 ):
 							v = prev + mod.constant_offset_displace
 							newvecs.append( v )
-							ao = _ogre_node_helper( doc=doc, ob=ob, objects=objects, prefix='_array_%s_'%len(vecs+newvecs), pos=v )
+							ao = _ogre_node_helper( doc=doc, ob=ob, objects=objects,
+									prefix='_array_%s_'%len(vecs+newvecs), pos=v )
 							xmlparent.appendChild(ao)
 
 							ent = doc.createElement('entity') 
 							ao.appendChild(e); ent.setAttribute('name', ob.data.name)
-							#if self.EX_MESH_SUBDIR: e.setAttribute('meshFile', 'meshes/%s.mesh' %ob.data.name)
-							#else:
 							ent.setAttribute('meshFile', '%s.mesh' %ob.data.name)
-
-							if collisionPrim:
-								ent.setAttribute('collisionPrim', collisionPrim )
-							elif collisionFile:
-								ent.setAttribute('collisionFile', collisionFile )
-
 					vecs += newvecs
-		print( 'Exporting mesh ', ob.data.name, ' took ', '%.3f'%(timer.elapsed()), 'ms' )
 
-
-	## end _mesh_export
+	## end _write_entity
 
 def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None ):
 	mat = ob.matrix_local
@@ -3302,11 +3200,11 @@ def mesh_is_smooth( mesh ):
 import pyogre
 
 # Ogre Mesh binary exporter #
-def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=False, opts=OptionsEx, normals=True ):
+def export_ogre_mesh( ob, path='/tmp'):
 	print('Exporting Ogre mesh ', ob.name, " to ", path)
-	if not os.path.isdir( path ):
-		print('creating directory', path )
-		os.makedirs( path )
+	if not os.path.isdir(path):
+		print('creating directory', path)
+		os.makedirs(path)
 
 	Report.meshes.append( ob.data.name )
 	Report.faces += len( ob.data.faces )
@@ -3316,7 +3214,8 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 	# Without them a vertex is mapped to texture coordinates of multiple faces
 	copy = ob.copy()
 	rem = []
-	for mod in copy.modifiers:		# remove armature and array modifiers before collaspe
+	# remove armature and array modifiers before collaspe
+	for mod in copy.modifiers:
 		if mod.type in 'ARMATURE ARRAY'.split(): rem.append( mod )
 	for mod in rem: copy.modifiers.remove( mod )
 
@@ -3341,7 +3240,7 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 #	arm = ob.find_armature()
 #	if arm:
 #		skel = doc.createElement('skeletonlink')
-#		skel.setAttribute('name', '%s%s.skeleton' %(prefix, force_name or ob.data.name) )
+#		skel.setAttribute('name', '%s%s.skeleton' %(prefix, ob.data.name) )
 #		root.appendChild( skel )
 
 	## verts ##
@@ -3401,7 +3300,6 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 	## write all verts, even if not in material index, inflates xml, should not bloat .mesh (TODO is this true?)
 
 	# Used timing infomation
-	timer = Timer()
 	vertices_time = 0
 
 	badverts = 0
@@ -3503,9 +3401,6 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 	if( len(mesh.uv_textures) > 1):
 		print("Warning mesh with multiple texture coordinates, only first one is exported")
 
-	# Print timing information
-	print( 'Exporting vertices took ', '%.3f'%(timer.elapsed()), 'ms' )
-
 	if badverts:
 		warning_msg = '%s has %s vertices weighted to too many bones'
 		'(Ogre limits a vertex to 4 bones)\n'
@@ -3523,7 +3418,6 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
 	if not matnames: matnames.append( '_missing_material_' )
 
-	timer.reset()
 	for matidx, matname in enumerate( matnames ):
 		if not len(mesh.faces):		# bug fix dec10th, reported by Matti
 			print('WARNING: submesh without faces, skipping!', ob)
@@ -3546,20 +3440,13 @@ def export_ogre_mesh( ob, path='/tmp', force_name=None, ignore_shape_animation=F
 				#correct-but-flipped#tris.append( (F.vertices[2], F.vertices[0], F.vertices[3]) )
 				sm.addFace(F.vertices[0], F.vertices[2], F.vertices[3])
 
-	print( 'Creating submeshes took ', '%.3f'%(timer.elapsed()), 'ms' )
-
 	bpy.data.objects.remove(copy)
 	bpy.data.meshes.remove(mesh)
 
-	name = force_name or ob.data.name
+	name = ob.data.name
 
-	timer.reset()
 	meshfile = os.path.join(path, '%s%s.mesh' %(prefix,name) )
 	writer.writeMesh(og_mesh, meshfile)
-	mesh_write_time = timer.elapsed()
-	timer.reset()
-
-	print( 'Writing the mesh file to disk took ', '%.3f'%(mesh_write_time), 'ms' )
 
 	""" FIXME no bone support
 	if arm and opts['armature-anim']:		#self.EX_ANIM:
