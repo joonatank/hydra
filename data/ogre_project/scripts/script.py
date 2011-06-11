@@ -90,7 +90,7 @@ spotti_n.position = Vector3(5, 4, 0)
 spotti_n.attachObject(spotti)
 
 lightpulp_n = game.scene.createSceneNode("hehkulamppu")
-lightpulp = game.scene.createEntity("hehkulamppu", "hehkulamppu.mesh")
+lightpulp = game.scene.createEntity("hehkulamppu", "light_pulp.mesh")
 lightpulp.material_name = "editor/hehkulamppu_material"
 lightpulp_n.position = Vector3(5, 4, -4)
 lightpulp_n.attachObject(lightpulp)
