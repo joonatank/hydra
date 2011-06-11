@@ -184,9 +184,9 @@ Installing:
 
 
 bl_info = {
-    "name": "OGRE Exporter (.scene, .mesh, .skeleton)",
-    "author": "HartsAntler",
-    "version": (0,3,1),
+    "name": "OGRE Exporter (.scene, .mesh)",
+    "author": "Joonatan Kuosa",
+    "version": (0,3,2),
     "blender": (2, 5, 7),
     "location": "INFO Menu",
     "description": "Export to Ogre scene xml and mesh binary formats",
@@ -274,63 +274,13 @@ def get_materials_using_image( img ):
 				if mat not in mats: mats.append( mat )
 	return mats
 
-class Ogre_relocate_textures_op(bpy.types.Operator):                
-	'''operator: finds missing textures - checks directories with textures to see if missing are there.'''  
-	bl_idname = "ogre.relocate_textures"  
-	bl_label = "relocate textures"                    
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-
-	@classmethod
-	def poll(cls, context): return True
-
-	def invoke(self, context, event):
-		Report.reset()
-		badmats = []
-		for img in bpy.data.images:
-			url = bpy.path.abspath( img.filepath )
-			path,name = os.path.split(url)
-			if not name: continue		# user cleared the value
-
-			if os.path.isfile( url ):
-				if path not in Report.paths: Report.paths.append( path )
-				#Report.messages.append( 'OK: %s' %name )
-			else:
-				Report.messages.append( 'MISSING: %s' %name )
-				found = None
-				for p in Report.paths:
-					if os.path.isfile( os.path.join(p,name) ):
-						Report.messages.append( '  found texture in: %s' %p )
-						found = os.path.join( p,name )
-						break
-				if not found:		# try lower case
-					for p in Report.paths:
-						name = name.lower()
-						if os.path.isfile( os.path.join(p,name) ):
-							Report.messages.append( '  found texture in (lower-case): %s' %p )
-							found = os.path.join( p,name )
-							break
-				if found:
-					img.filepath = bpy.path.relpath( found )
-					Report.messages.append( '  reassigned to -> %s ' %img.filepath )
-				else:
-					for mat in get_materials_using_image( img ):
-						if mat not in badmats:
-							badmats.append( mat )
-
-		for ob in get_objects_using_materials(badmats): ob.select=True
-		for mat in badmats:
-			Report.warnings.append( 'BAD-MATERIAL:  %s' %mat.name )
-
-		if not Report.messages and not badmats: Report.messages.append( 'Everything is OK' )
-
-		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
-		return {'FINISHED'}
-
-
-
 class ReportSingleton(object):
-	def show(self): bpy.ops.wm.call_menu( name='Ogre_User_Report' )
-	def __init__(self): self.reset()
+	def show(self):
+		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
+
+	def __init__(self):
+		self.reset()
+
 	def reset(self):
 		self.materials = []
 		self.meshes = []
@@ -394,37 +344,6 @@ class ReportSingleton(object):
 		return txt
 
 Report = ReportSingleton()
-
-class Program(object):
-	def debug( self ):
-		print('GPU Program')
-		print('  ', self.name)
-		print('  ', self.technique)
-		print('  ', self.file)
-		for p in self.params + self.params_auto: print('    ', p)
-
-	def __init__(self, name, tech, file):
-		if len(name) >= 31:		#KeyError: 'the length of IDProperty names is limited to 31 characters'
-			if '/' in name: name = name.split('/')[-1]
-			if len(name) >= 31: name = name[ : 29 ] + '..'
-		self.name = name; self.technique = tech; self.file = file
-		self.source = self.entry_point = self.profiles = self.compile_args = self.type = None
-		self.params = []; self.params_auto = []
-		self.comments = []
-
-	def add_param( self, line, auto=False ):
-		name = line.split()[0]
-		value_code = line.split()[1]
-		p = {'name': name, 'value-code': value_code }
-		if auto: self.params_auto.append( p )
-		else: self.params.append( p )
-		if len( line.split() ) >= 3:
-			args = line.split( p['value-code'] )[-1]
-			p['args'] = args.strip()
-
-	def get_param( self, name ):
-		for p in self.params + self.params_auto:
-			if p['name'] == name: return p
 
 class Ogre_User_Report(bpy.types.Menu):
 	bl_label = "Mini-Report | (see console for full report)"
@@ -643,10 +562,6 @@ class Ogre_Physics(bpy.types.Panel):
 ##################################################################
 
 OPTIONS = {
-	'FORCE_IMAGE_FORMAT' : None,
-	'TEXTURES_SUBDIR' : False,
-	'PATH' : '/tmp',
-	'TOUCH_TEXTURES' : False,
 	'SWAP_AXIS' : '-x z y',
 }
 
@@ -838,411 +753,6 @@ def guess_uv_layer( layer ):
 		else: print('warning: it is not allowed to give custom names to UVTexture channels ->', layer)
 	return idx
 
-class ShaderTree(object):
-	'''
-	Sometimes high resolution renderings may be required.  The user has the option of using multiple Output nodes, blender will only consider the first one, the second if named starting with 'ogre' will be used by the exporter.  This allows the user to have two branches in their node setup, one for blender software rendering, the other for Ogre output.  Also useful for baking procedurals, which then can be used by the ogre branch.
-	'''
-	@staticmethod
-	def valid_node_material( mat ):
-		# just incase the user enabled nodes but didn't do anything, then disabled nodes
-		if mat.node_tree and len(mat.node_tree.nodes):
-			for node in mat.node_tree.nodes:
-				if node.type == 'MATERIAL':
-					if node.material: return True
-
-	Materials = []
-	Output = None
-	@staticmethod
-	def parse( mat ):		# only called for noded materials
-		print('		parsing node_tree')
-		ShaderTree.Materials = []
-		ShaderTree.Output = None
-		outputs = []
-		for link in mat.node_tree.links:
-			if link.to_node and link.to_node.type == 'OUTPUT': outputs.append( link )
-
-		root = None
-		for link in outputs:
-			if root is None or link.to_node.name.lower().startswith('ogre'): root = link
-		if root:
-			ShaderTree.Output = root.to_node
-			print('setting Output node', root.to_node)
-			tree = ShaderTree( node=root.to_node, parent_material=mat )
-			return tree
-		else:
-			print('warning: no Output shader node found')
-
-	def __init__(self, node=None, material=None, parent_material=None ):
-		if node: print('		shader node ->', node)
-		if node and node.type.startswith('MATERIAL'):
-			ShaderTree.Materials.append( self )
-			self.material = node.material
-		elif material:		# standard material
-			self.material = material
-			self.textures = []
-
-		self.node = node
-		if node:
-			self.type = node.type
-			self.name = node.name
-		self.children = []
-		self.parents = []
-		self.inputs = {}		# socket name : child
-		self.outputs = {}	# parent : socket name
-		if parent_material:
-			for link in parent_material.node_tree.links:
-				if link.to_node and link.to_node.name == self.name:
-					branch = ShaderTree(
-						node=link.from_node, 
-						parent_material=parent_material
-					)
-					self.children.append( branch )
-					self.inputs[ link.to_socket.name ] = branch
-					branch.outputs[ self ] = link.from_socket.name
-					branch.parents.append( self )
-
-	def ancestors(self):
-		if not self.parents: return []
-		else: c = []; self._ancestors(c); return c
-	def _ancestors(self, c):
-		for p in self.parents: c.append( p ); p._ancestors( c )
-
-	def decendents(self):
-		if not self.children: return []
-		else: c = []; self._decendents(c); return c
-	def _decendents(self, c):
-		for p in self.children: c.append( p ); p._decendents( c )
-
-	def is_ogre_branch( self ):
-		ancestors = []
-		self._ancestors( ancestors )
-		for parent in ancestors:
-			if parent.node.name == ShaderTree.Output.name: return True
-		print('node not in ogre branch', self.node)
-
-
-	## returns height sorted materials, 'passes' in Ogre speak ##
-	# called after tree=ShaderTree.parse( nodedmat ); mats=tree.get_passes()
-	def get_passes( self ):
-		mats = []
-		for mat in ShaderTree.Materials:
-			print('			checking material ancestors:', mat)
-			# only consider materials that are connected to the ogre Output
-			#if self.Output in ancestors:
-			if mat.is_ogre_branch():
-				print('			material is in ogre branch->', mat)
-				mats.append( mat )
-		mats.sort( key=lambda x: x.node.location.y, reverse=True )
-		if not mats: print('WARNING: no materials connected to Output node')
-		## collect and sort textures of a material ##
-		for mat in mats:
-			mat.textures = []
-			d = mat.decendents()
-			for child in d:
-				if child.node.type == 'TEXTURE': mat.textures.append( child )
-			mat.textures.sort( key=lambda x: x.node.location.y, reverse=True )
-		return mats
-
-	def get_texture_attributes(self):
-		M = ''
-		ops = {}
-		for prop in self.node.texture.items():
-			name,value = prop
-			ops[name]=value
-			M += indent(4, '%s %s' %prop )
-
-		d = self.decendents()
-		for child in d:
-			if child.type == 'GEOMETRY' and child.node.uv_layer:
-				idx = guess_uv_layer( child.node.uv_layer )
-				M += indent(4, 'tex_coord_set %s' %idx)
-
-			elif child.type == 'MAPPING':
-				snode = child.node
-				x,y,z = snode.location			# bpy bug, mapping node has two .location attrs
-				if x or y:
-					M += indent(4, 'scroll %s %s' %(x,y))
-				angle = math.degrees(snode.rotation.x)
-				if angle:
-					M += indent(4, 'rotate %s' %angle)
-				x,y,z = snode.scale
-				if x != 1.0 or y != 1.0:
-					M += indent(4, 'scale %s %s' %(1.0/x,1.0/y))	# reported by Sanni and Reyn
-
-		return M
-
-	def dotmat_texture(self, texture, texwrapper=None, slot=None):
-		if not hasattr(texture, 'image'):
-			print('WARNING: texture must be of type IMAGE->', texture)
-			return ''
-
-		if not texture.image:
-			print('WARNING: texture has no image assigned->', texture)
-			return ''
-
-		#if slot: print(dir(slot))
-		if slot and not slot.use:
-			return ''
-
-		path = OPTIONS['PATH']
-		M = ''; _alphahack = None
-		M += indent(3, 'texture_unit', '{' )
-
-		iurl = bpy.path.abspath( texture.image.filepath )
-		postname = texname = os.path.split(iurl)[-1]
-		destpath = path
-
-		## packed images - dec10th 2010 ##
-		if texture.image.packed_file:
-			orig = texture.image.filepath
-			if sys.platform.startswith('linux'):
-				iurl = '/tmp/%s' %texname
-			else:
-				iurl = 'C:\\tmp\\%s' %texname
-				if not os.path.isdir( 'C:\\tmp' ):
-					print('creating tmp directory' )
-					os.makedirs( 'C:\\tmp' )
-			if not os.path.isfile( iurl ):
-				print('MESSAGE: unpacking image: ', iurl)
-				texture.image.filepath = iurl
-				texture.image.save()
-				texture.image.filepath = orig
-			else:
-				print('MESSAGE: packed image already in temp, not updating', iurl)
-
-		if OPTIONS['FORCE_IMAGE_FORMAT']: postname = self._reformat( texname )		#texname.split('.')[0]+'.dds'
-		if OPTIONS['TEXTURES_SUBDIR']:
-			destpath = os.path.join(path,'textures')
-			if not os.path.isdir( destpath ): os.mkdir( destpath )
-			M += indent(4, 'texture textures/%s' %postname )	
-		else: 
-			M += indent(4, 'texture %s' %postname )	
-
-		exmode = texture.extension
-		if exmode == 'REPEAT':
-			M += indent(4, 'tex_address_mode wrap' )
-		elif exmode == 'EXTEND':
-			M += indent(4, 'tex_address_mode clamp' )
-		elif exmode == 'CLIP':
-			M += indent(4, 'tex_address_mode border' )
-		elif exmode == 'CHECKER':
-			M += indent(4, 'tex_address_mode mirror' )
-
-		if texwrapper:	# shader node options
-			M += texwrapper.get_texture_attributes()
-
-		elif slot:		# class blender material slot options
-			if exmode == 'CLIP': M += indent(4, 'tex_border_colour %s %s %s' %(slot.color.r, slot.color.g, slot.color.b) )	
-			M += indent(4, 'scale %s %s' %(1.0/slot.scale.x, 1.0/slot.scale.y) )	# thanks Reyn
-			if slot.texture_coords != 'UV':
-				if slot.mapping == 'SPHERE':
-					M += indent(4, 'env_map spherical' )
-				elif slot.mapping == 'FLAT':
-					M += indent(4, 'env_map planar' )
-				else: print('WARNING: <%s> has a non-UV mapping type (%s) and not picked a proper projection type of: Sphere or Flat' %(texture.name, slot.mapping))
-
-			ox,oy,oz = slot.offset
-			if ox or oy:
-				M += indent(4, 'scroll %s %s' %(ox,oy) )
-			if oz:
-				M += indent(4, 'rotate %s' %oz )
-
-			if slot.use_map_emission:	# hijacked from volume shaders
-				M += indent(4, 'rotate_anim %s' %slot.emission_color_factor )
-			if slot.use_map_scatter:	# hijacked from volume shaders
-				M += indent(4, 'scroll_anim %s %s ' %(slot.density_factor, slot.emission_factor) )
-
-
-			## set uv layer
-			if slot.uv_layer:
-				idx = guess_uv_layer( slot.uv_layer )
-				M += indent(4, 'tex_coord_set %s' %idx)
-
-			rgba = False
-			if texture.image.depth == 32: rgba = True
-
-			btype = slot.blend_type
-
-			if rgba and slot.use_stencil:
-				texop = 'blend_current_alpha'		# 'blend_texture_alpha' shadeless
-			elif btype == 'MIX':
-				texop = 'blend_manual'
-			elif btype == 'MULTIPLY':
-				texop = 'modulate'
-			elif btype == 'SCREEN':
-				texop = 'modulate_x2'
-			elif btype == 'LIGHTEN':
-				texop = 'modulate_x4'
-			elif btype == 'ADD':
-				texop = 'add'
-			elif btype == 'SUBTRACT':
-				texop = 'subtract'
-			elif btype == 'OVERLAY':
-				texop = 'add_signed'		# add_smooth not very useful?
-			elif btype == 'DIFFERENCE':
-				texop = 'dotproduct'		# nothing closely matches blender
-			elif btype == 'VALUE':
-				texop = 'value'
-			else:
-				texop = 'blend_diffuse_colour'
-
-			#factor = .0
-			#if slot.use_map_color_diffuse:
-			factor = 1.0 - slot.diffuse_color_factor
-
-			if texop == 'blend_manual':
-				M += indent(4, 'colour_op_ex %s src_current src_texture %s' %(texop, factor) )
-			elif not texop == 'value':
-				# For value do not do anything
-				M += indent(4, 'colour_op_ex %s src_current src_texture' %texop )
-				#M += indent(4, 'colour_op_ex %s src_manual src_diffuse %s' %(texop, 1.0-factor) )
-				#M += indent(4, 'alpha_op_ex blend_manual src_current src_current %s' %factor )
-
-			if slot.use_map_alpha:
-				#alphafactor = 1.0 - slot.alpha_factor
-				#M += indent(4, 'colour_op_ex blend_manual src_current src_texture %s' %factor )
-				M += indent(4, 'alpha_op_ex modulate src_current src_texture' )
-
-
-		#else:		# fallback to default options
-		#	M += indent(4, 'filtering trilinear' )
-
-		M += indent(3, '}' )	# end texture
-
-		if OPTIONS['TOUCH_TEXTURES']:
-			## copy texture only if newer ##
-			if not os.path.isfile( iurl ): Report.warnings.append( 'missing texture: %s' %iurl )
-			else:
-				desturl = os.path.join( destpath, texname )
-				if not os.path.isfile( desturl ) or os.stat( desturl ).st_mtime < os.stat( iurl ).st_mtime:
-					f = open( desturl, 'wb' )
-					f.write( open(iurl,'rb').read() )
-					f.close()
-				if OPTIONS['FORCE_IMAGE_FORMAT']:		# bug fix jan7th 2011
-					if OPTIONS['FORCE_IMAGE_FORMAT'] == '.dds': self.DDS_converter( desturl )
-					else: self.image_magick( desturl )
-
-		return M
-
-
-	def dotmat_pass(self):	# must be a material
-		if not self.material:
-			print('ERROR: material node with no submaterial block chosen')
-			return ''
-
-		mat = self.material
-		color = mat.diffuse_color
-		alpha = 1.0
-		if mat.use_transparency:
-			alpha = mat.alpha
-
-		## textures ##
-		if not self.textures:		## class style materials
-			slots = get_image_textures( mat )		# returns texture_slot object
-			usealpha = False
-			for slot in slots:
-				if slot.use_map_alpha and slot.texture.use_alpha: usealpha = True; break
-		if usealpha: alpha = 1.0
-
-		# python note, define inline function shares variables - copies?
-		def _helper( child, opname, f ):
-			if child.type == 'RGB':
-				print('warning: RGB shader node bpy rna is incomplete, missing color attributes' )
-				return indent(3, '%s %s %s %s %s' %(opname, color.r*f, color.g*f, color.b*f, alpha) )
-			elif child.type == 'GEOMETRY':
-				if child.outputs[self] != 'Vertex Color':
-					print('warning: you are supposed to connect the vertex color output of geometry')
-				return indent(3, '%s vertexcolour' %opname)
-			elif child.type == 'TEXTURE':
-				print( 'TODO: connecting a texture to this ',
-					'slot will be supported for program-shaders in the future' )
-				#return indent(3, '%s 1.0 0.0 0.0 1.0' %opname)
-				return indent(3, '%s %s %s %s %s' %(opname, color.r*f, color.g*f, color.b*f, alpha) )
-
-		M = ''
-		if self.node:		# ogre combines passes with the same name, be careful!
-			passname = '%s__%s' %(self.node.name,mat.name)
-			passname = passname.replace(' ','_')
-			M += indent(2, 'pass %s' %passname, '{' )		# be careful with pass names
-		else:
-			M += indent(2, 'pass', '{' )
-
-		# TODO directx and opengl are reversed, how to deal with this?
-		M += indent(3, 'cull_hardware none' )	
-
-		f = mat.ambient
-		if 'Ambient' in self.inputs:
-			child = self.inputs['Ambient']
-			M += _helper( child, 'ambient', f )
-		elif mat.use_vertex_color_paint:
-			M += indent(3, 'ambient vertexcolour' )
-		else:		# fall back to basic material
-			M += indent(3, 'ambient %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
-
-		f = mat.diffuse_intensity
-		if 'Color' in self.inputs:
-			child = self.inputs['Color']
-			M += _helper( child, 'diffuse', f )
-		elif mat.use_vertex_color_paint:
-			M += indent(3, 'diffuse vertexcolour' )
-		else:		# fall back to basic material 
-			M += indent(3, 'diffuse %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
-
-		f = mat.specular_intensity
-		if 'Spec' in self.inputs:
-			child = self.inputs['Spec']
-			M += _helper( child, 'specular', f ) + ' %s'%(mat.specular_hardness/4.0)
-		else:
-			s = mat.specular_color
-			M += indent(3, 'specular %s %s %s %s %s' %(s.r*f, s.g*f, s.b*f, alpha, mat.specular_hardness/4.0) )
-
-		f = mat.emit		# remains valid even if material_ex inputs a color node
-		if 'Emit' in self.inputs:
-			child = self.inputs['Emit']
-			M += _helper( child, 'emissive', f )
-		elif mat.use_vertex_color_light:
-			M += indent(3, 'emissive vertexcolour' )
-		else:
-			M += indent(3, 'emissive %s %s %s %s' %(color.r*f, color.g*f, color.b*f, alpha) )
-
-		if mat.use_transparency:
-			M += indent( 3, 'scene_blend %s' %'alpha_blend')
-			M += indent( 3, 'depth_write %s' %'off')
-		else:
-			M += indent( 3, 'scene_blend %s' %mat.scene_blend )
-
-		for prop in mat.items():
-			name,val = prop
-			if not name.startswith('_'): M += indent( 3, '%s %s' %prop )
-
-		## textures ##
-		if not self.textures:		## class style materials
-			slots = get_image_textures( mat )		# returns texture_slot object
-			usealpha = False
-			for slot in slots:
-				#if slot.use_map_alpha and slot.texture.use_alpha: usealpha = True; break
-				if slot.use_map_alpha: usealpha = True; break
-
-			if usealpha:
-				# defined only once per pass (global attributes)
-				if mat.use_transparency: M += indent(3, 'depth_write off' )
-		elif self.node:		# shader nodes
-			for wrap in self.textures:
-				M += self.dotmat_texture( wrap.node.texture, texwrapper=wrap )
-
-		M += indent(2, '}' )	# end pass
-		return M
-
-	############################################
-	def _reformat( self, image ):
-		return image[ : image.rindex('.') ] + OPTIONS['FORCE_IMAGE_FORMAT']
-
-
-SELECTED_MATERIAL_NODE = None
-SELECTED_TEXTURE_NODE = None
-
-#############################
-
 def wordwrap( txt ):
 	r = ['']
 	for word in txt.split(' '):	# do not split on tabs
@@ -1252,31 +762,12 @@ def wordwrap( txt ):
 	return r
 
 _OGRE_DOCS_ = []
-_OGRE_SHADER_REF_ = []
-_OGRE_SHADER_REF_TEX_ = []
 def ogredoc( cls ):
 	tag = cls.__name__.split('_ogredoc_')[-1]
 
-	if tag.startswith('Shader_Nodes_'):
-		cls.bl_label = cls.ogre_shader_op = tag.split('Shader_Nodes_')[-1]
-		cls.ogre_shader_params = []
-		if cls.ogre_shader_op not in 'ambient diffuse specular emissive'.split():
-			for line in cls.mydoc.splitlines():
-				if line.strip().startswith('@'):		# custom markup
-					cls.ogre_shader_params.append( line.strip()[1:] )
-		_OGRE_SHADER_REF_.append( cls )
-	elif tag.startswith('TEX_'):
-		cls.bl_label = cls.ogre_shader_tex_op = tag.split('TEX_')[-1]
-		cls.ogre_shader_params = []
-		if cls.ogre_shader_tex_op not in 'texture tex_coord_set'.split():
-			for line in cls.mydoc.splitlines():
-				if line.strip().startswith('@'):		# custom markup
-					cls.ogre_shader_params.append( line.strip()[1:] )
-		_OGRE_SHADER_REF_TEX_.append( cls )
+	cls.bl_label = tag.replace('_', ' ')
+	_OGRE_DOCS_.append( cls )
 
-	else:
-		cls.bl_label = tag.replace('_', ' ')
-		_OGRE_DOCS_.append( cls )
 	return cls
 
 
@@ -1287,7 +778,8 @@ class INFO_MT_ogre_helper(bpy.types.Menu):
 
 		for line in self.mydoc.splitlines():
 			if line.strip():
-				for ww in wordwrap( line ): layout.label(text=ww)
+				for ww in wordwrap( line ):
+					layout.label(text=ww)
 		layout.separator()
 
 
@@ -1299,7 +791,7 @@ class INFO_MT_ogre_docs(bpy.types.Menu):
 			layout.menu( cls.__name__ )
 			layout.separator()
 		layout.separator()
-		layout.label(text='bug reports to: bhartsho@yahoo.com')
+		layout.label(text='bug reports to: joonatan.kuosa@savantsimulators.com')
 
 @ogredoc
 class _ogredoc_Installing( INFO_MT_ogre_helper ):
@@ -1456,17 +948,6 @@ General Warnings:
 	. quadratic lights falloff not supported (needs pre calc)
 	. do not enable subsurf modifier on meshes that have shape or armature animation.  
 		(Any modifier that changes the vertex count is bad with shape anim or armature anim)
-
-Current Shader Issues:
-	1. You can not create a shader that ends up being more than 16 passes (Ogre limitation)
-	2. Shader nodes do not support custom attributes, this limits material attribute overloading.
-	3. At this time GLSL in Blender can not compile complex node trees, this will prevent
-	you from seeing the output of the shader in the viewport, not seeing your textures in
-	the viewport is a serious problem.  There are two workarounds:
-		(a) disable 'use_nodes' and assign textures to the material in the normal manner.
-			[ the shader nodes are still exported to Ogre ]
-		(b) use a second branch connected to the first 'Output' and preview with software renderer.
-
 '''
 
 
@@ -1475,749 +956,11 @@ class _ogredoc_Bugs( INFO_MT_ogre_helper ):
 	mydoc = '''
 Known Issues:
 	. all bones must be connected
-	. exporting with normals is very slow
-
 '''
-
-"""
-@ogredoc
-class _ogredoc_Node_Shaders_Introduction( INFO_MT_ogre_helper ):
-	mydoc = _shader_intro_doc_
-
-@ogredoc
-class _ogredoc_Node_Shaders_Doc( INFO_MT_ogre_helper ):
-	mydoc = _shader_using_doc_
-
-@ogredoc
-class _ogredoc_Node_Shaders_Tips_and_Tricks( INFO_MT_ogre_helper ):
-	mydoc = _shader_tips_doc_
-
-@ogredoc
-class _ogredoc_Node_Shaders_Textures( INFO_MT_ogre_helper ):
-	mydoc = _shader_tex_doc_
-
-@ogredoc
-class _ogredoc_Node_Shaders_Linking_Intro( INFO_MT_ogre_helper ):
-	mydoc = _shader_linking_intro_doc_
-@ogredoc
-class _ogredoc_Node_Shaders_Linking_Steps( INFO_MT_ogre_helper ):
-	mydoc = _shader_linking_steps_doc_
-"""
 
 
 ############ Ogre v.17 Doc ######
-@ogredoc
-class _ogredoc_Shader_Nodes_ambient( INFO_MT_ogre_helper ):
-	mydoc = '''
-Sets the ambient colour reflectance properties of this pass. This attribute has no effect if a asm, CG, or HLSL shader program is used. With GLSL, the shader can read the OpenGL material state. 
 
-Format: ambient (<red> <green> <blue> [<alpha>]| vertexcolour)
-NB valid colour values are between 0.0 and 1.0.
-
-Example: ambient 0.0 0.8 0.0
-
-The base colour of a pass is determined by how much red, green and blue light is reflects at each vertex. This property determines how much ambient light (directionless global light) is reflected. It is also possible to make the ambient reflectance track the vertex colour as defined in the mesh by using the keyword vertexcolour instead of the colour values. The default is full white, meaning objects are completely globally illuminated. Reduce this if you want to see diffuse or specular light effects, or change the blend of colours to make the object have a base colour other than white. This setting has no effect if dynamic lighting is disabled using the 'lighting off' attribute, or if any texture layer has a 'colour_op replace' attribute.
-
-Default: ambient 1.0 1.0 1.0 1.0
-
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_diffuse( INFO_MT_ogre_helper ):
-	mydoc = '''
-Sets the diffuse colour reflectance properties of this pass. This attribute has no effect if a asm, CG, or HLSL shader program is used. With GLSL, the shader can read the OpenGL material state.
-
-Format: diffuse (<red> <green> <blue> [<alpha>]| vertexcolour)
-NB valid colour values are between 0.0 and 1.0.
-
-Example: diffuse 1.0 0.5 0.5
-
-The base colour of a pass is determined by how much red, green and blue light is reflects at each vertex. This property determines how much diffuse light (light from instances of the Light class in the scene) is reflected. It is also possible to make the diffuse reflectance track the vertex colour as defined in the mesh by using the keyword vertexcolour instead of the colour values. The default is full white, meaning objects reflect the maximum white light they can from Light objects. This setting has no effect if dynamic lighting is disabled using the 'lighting off' attribute, or if any texture layer has a 'colour_op replace' attribute.
-
-Default: diffuse 1.0 1.0 1.0 1.0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_specular( INFO_MT_ogre_helper ):
-	mydoc = '''
-Sets the specular colour reflectance properties of this pass. This attribute has no effect if a asm, CG, or HLSL shader program is used. With GLSL, the shader can read the OpenGL material state.
-
-Format: specular (<red> <green> <blue> [<alpha>]| vertexcolour) <shininess>
-NB valid colour values are between 0.0 and 1.0. Shininess can be any value greater than 0.
-
-Example: specular 1.0 1.0 1.0 12.5
-
-The base colour of a pass is determined by how much red, green and blue light is reflects at each vertex. This property determines how much specular light (highlights from instances of the Light class in the scene) is reflected. It is also possible to make the diffuse reflectance track the vertex colour as defined in the mesh by using the keyword vertexcolour instead of the colour values. The default is to reflect no specular light. The colour of the specular highlights is determined by the colour parameters, and the size of the highlights by the separate shininess parameter.. The higher the value of the shininess parameter, the sharper the highlight ie the radius is smaller. Beware of using shininess values in the range of 0 to 1 since this causes the the specular colour to be applied to the whole surface that has the material applied to it. When the viewing angle to the surface changes, ugly flickering will also occur when shininess is in the range of 0 to 1. Shininess values between 1 and 128 work best in both DirectX and OpenGL renderers. This setting has no effect if dynamic lighting is disabled using the 'lighting off' attribute, or if any texture layer has a 'colour_op replace' attribute.
-
-Default: specular 0.0 0.0 0.0 0.0 0.0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_emissive( INFO_MT_ogre_helper ):
-	mydoc = '''
-emissive
-
-Sets the amount of self-illumination an object has. This attribute has no effect if a asm, CG, or HLSL shader program is used. With GLSL, the shader can read the OpenGL material state.
-
-Format: emissive (<red> <green> <blue> [<alpha>]| vertexcolour)
-NB valid colour values are between 0.0 and 1.0.
-
-Example: emissive 1.0 0.0 0.0
-
-If an object is self-illuminating, it does not need external sources to light it, ambient or otherwise. It's like the object has it's own personal ambient light. Unlike the name suggests, this object doesn't act as a light source for other objects in the scene (if you want it to, you have to create a light which is centered on the object). It is also possible to make the emissive colour track the vertex colour as defined in the mesh by using the keyword vertexcolour instead of the colour values. This setting has no effect if dynamic lighting is disabled using the 'lighting off' attribute, or if any texture layer has a 'colour_op replace' attribute.
-
-Default: emissive 0.0 0.0 0.0 0.0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_separate_scene_blend( INFO_MT_ogre_helper ):
-	mydoc = '''
-separate_scene_blend
-
-This option operates in exactly the same way as scene_blend, except that it allows you to specify the operations to perform between the rendered pixel and the frame buffer separately for colour and alpha components. By nature this option is only useful when rendering to targets which have an alpha channel which you'll use for later processing, such as a render texture.
-
-Format1: separate_scene_blend <simple_colour_blend> <simple_alpha_blend>
-Example: separate_scene_blend add modulate
-
-This example would add colour components but multiply alpha components. The blend modes available are as in scene_blend. The more advanced form is also available:
-
-Params:
-	@add  modulate
-	@add  alpha_blend
-	@add  color_blend
-
-	@modulate  add
-	@modulate  alpha_blend
-	@modulate  color_blend
-
-	@alpha_blend	add
-	@alpha_blend	modulate
-	@alpha_blend	color_blend
-
-	@colour_blend  add
-	@colour_blend  modulate
-	@colour_blend  alpha_blend
-
-Format2: separate_scene_blend <colour_src_factor> <colour_dest_factor> <alpha_src_factor> <alpha_dest_factor>
-Example: separate_scene_blend one one_minus_dest_alpha one one 
-
-Again the options available in the second format are the same as those in the second format of scene_blend.
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_scene_blend_op( INFO_MT_ogre_helper ):
-	mydoc = '''
-scene_blend_op
-
-This directive changes the operation which is applied between the two components of the scene blending equation, which by default is 'add' (sourceFactor * source + destFactor * dest). You may change this to 'add', 'subtract', 'reverse_subtract', 'min' or 'max'.
-
-Format: scene_blend_op <add|subtract|reverse_subtract|min|max>
-Default: scene_blend_op add
-
-Params:
-	@add
-	@subtract
-	@reverse_subtract
-	@min
-	@max
-
-----------------------------------------------------
-Math shader node can support: add, subtract, min and max
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_separate_scene_blend_op( INFO_MT_ogre_helper ):
-	mydoc = '''
-
-separate_scene_blend_op
-
-This directive is as scene_blend_op, except that you can set the operation for colour and alpha separately. 
-Format: separate_scene_blend_op <colourOp> <alphaOp>
-Default: separate_scene_blend_op add add
-
-Params:
-	@add  subtract
-	@add  reverse_subtract
-	@add  min
-	@add  max
-
-	@subtract  add
-	@subtract  reverse_subtract
-	@subtract  min
-	@subtract  max
-
-	@reverse_subtract  subtract
-	@reverse_subtract  add
-	@reverse_subtract  min
-	@reverse_subtract  max
-
-	@min  add
-	@min  subtract
-	@min  reverse_subtract
-	@min  max
-
-	@max  add
-	@max  subtract
-	@max  reverse_subtract
-	@max  min
-
-'''
-
-
-@ogredoc
-class _ogredoc_Shader_Nodes_depth_check( INFO_MT_ogre_helper ):
-	mydoc = '''
-depth_check
-Params:
-	@on
-	@off
-
-Sets whether or not this pass renders with depth-buffer checking on or not.
-
-Format: depth_check <on|off>
-
-If depth-buffer checking is on, whenever a pixel is about to be written to the frame buffer the depth buffer is checked to see if the pixel is in front of all other pixels written at that point. If not, the pixel is not written. If depth checking is off, pixels are written no matter what has been rendered before. Also see depth_func for more advanced depth check configuration.
-
-Default: depth_check on
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_depth_write( INFO_MT_ogre_helper ):
-	mydoc = '''
-depth_write
-Params:
-	@on
-	@off
-
-Sets whether or not this pass renders with depth-buffer writing on or not.
-Format: depth_write <on|off>
-
-If depth-buffer writing is on, whenever a pixel is written to the frame buffer the depth buffer is updated with the depth value of that new pixel, thus affecting future rendering operations if future pixels are behind this one. If depth writing is off, pixels are written without updating the depth buffer. Depth writing should normally be on but can be turned off when rendering static backgrounds or when rendering a collection of transparent objects at the end of a scene so that they overlap each other correctly.
-
-Default: depth_write on
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_depth_func( INFO_MT_ogre_helper ):
-	mydoc = '''
-depth_func
-
-Sets the function used to compare depth values when depth checking is on.
-
-Format: depth_func <func>
-
-If depth checking is enabled (see depth_check) a comparison occurs between the depth value of the pixel to be written and the current contents of the buffer. This comparison is normally less_equal, i.e. the pixel is written if it is closer (or at the same distance) than the current contents. The possible functions are:
-	@always_fail
-		Never writes a pixel to the render target
-	@always_pass
-		Always writes a pixel to the render target
-	@less
-		Write if (new_Z < existing_Z)
-	@less_equal
-		Write if (new_Z <= existing_Z)
-	@equal
-		Write if (new_Z == existing_Z)
-	@not_equal
-		Write if (new_Z != existing_Z)
-	@greater_equal
-		Write if (new_Z >= existing_Z)
-	@greater
-		Write if (new_Z >existing_Z)
-
-Default: depth_func less_equal
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_depth_bias( INFO_MT_ogre_helper ):
-	mydoc = '''
-depth_bias
-Params:
-	@1
-	@2
-	@3
-	@4
-
-Sets the bias applied to the depth value of this pass. Can be used to make coplanar polygons appear on top of others e.g. for decals. 
-
-Format: depth_bias <constant_bias> [<slopescale_bias>]
-
-The final depth bias value is constant_bias * minObservableDepth + maxSlope * slopescale_bias. Slope scale biasing is relative to the angle of the polygon to the camera, which makes for a more appropriate bias value, but this is ignored on some older hardware. Constant biasing is expressed as a factor of the minimum depth value, so a value of 1 will nudge the depth by one 'notch' if you will. Also see iteration_depth_bias
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_iteration_depth_bias( INFO_MT_ogre_helper ):
-	mydoc = '''
-iteration_depth_bias
-Params:
-	@1
-	@2
-	@3
-	@4
-
-Sets an additional bias derived from the number of times a given pass has been iterated. Operates just like depth_bias except that it applies an additional bias factor to the base depth_bias value, multiplying the provided value by the number of times this pass has been iterated before, through one of the iteration variants. So the first time the pass will get the depth_bias value, the second time it will get depth_bias + iteration_depth_bias, the third time it will get depth_bias + iteration_depth_bias * 2, and so on. The default is zero. 
-
-Format: iteration_depth_bias <bias_per_iteration>
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_alpha_rejection( INFO_MT_ogre_helper ):
-	mydoc = '''
-alpha_rejection
-Params:
-	@always_pass
-	@greater_equal 0
-	@greater_equal 16
-	@greater_equal 32
-	@greater_equal 64
-
-Sets the way the pass will have use alpha to totally reject pixels from the pipeline.
-
-Format: alpha_rejection <function> <value>
-
-Example: alpha_rejection greater_equal 128
-
-
-The function parameter can be any of the options listed in the material depth_function attribute. The value parameter can theoretically be any value between 0 and 255, but is best limited to 0 or 128 for hardware compatibility.
-
-Default: alpha_rejection always_pass
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_alpha_to_coverage( INFO_MT_ogre_helper ):
-	mydoc = '''
-alpha_to_coverage
-Params:
-	@on
-	@off
-
-Sets whether this pass will use 'alpha to coverage', a way to multisample alpha texture edges so they blend more seamlessly with the background. This facility is typically only available on cards from around 2006 onwards, but it is safe to enable it anyway - Ogre will just ignore it if the hardware does not support it. The common use for alpha to coverage is foliage rendering and chain-link fence style textures. 
-
-Format: alpha_to_coverage <on|off>
-Default: alpha_to_coverage off
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_light_scissor( INFO_MT_ogre_helper ):
-	mydoc = '''
-light_scissor
-Params:
-	@on
-	@off
-
-Sets whether when rendering this pass, rendering will be limited to a screen-space scissor rectangle representing the coverage of the light(s) being used in this pass, derived from their attenuation ranges.
-
-Format: light_scissor <on|off>
-Default: light_scissor off
-
-This option is usually only useful if this pass is an additive lighting pass, and is at least the second one in the technique. Ie areas which are not affected by the current light(s) will never need to be rendered. If there is more than one light being passed to the pass, then the scissor is defined to be the rectangle which covers all lights in screen-space. Directional lights are ignored since they are infinite.
-
-This option does not need to be specified if you are using a standard additive shadow mode, i.e. SHADOWTYPE_STENCIL_ADDITIVE or SHADOWTYPE_TEXTURE_ADDITIVE, since it is the default behaviour to use a scissor for each additive shadow pass. However, if you're not using shadows, or you're using Integrated Texture Shadows where passes are specified in a custom manner, then this could be of use to you.
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_light_clip_planes( INFO_MT_ogre_helper ):
-	mydoc = '''
-light_clip_planes
-Params:
-	@on
-	@off
-Sets whether when rendering this pass, triangle setup will be limited to clipping volume covered by the light. Directional lights are ignored, point lights clip to a cube the size of the attenuation range or the light, and spotlights clip to a pyramid bounding the spotlight angle and attenuation range.
-
-Format: light_clip_planes <on|off>
-Default: light_clip_planes off
-
-This option will only function if there is a single non-directional light being used in this pass. If there is more than one light, or only directional lights, then no clipping will occur. If there are no lights at all then the objects won't be rendered at all.
-
-When using a standard additive shadow mode, ie SHADOWTYPE_STENCIL_ADDITIVE or SHADOWTYPE_TEXTURE_ADDITIVE, you have the option of enabling clipping for all light passes by calling SceneManager::setShadowUseLightClipPlanes regardless of this pass setting, since rendering is done lightwise anyway. This is off by default since using clip planes is not always faster - it depends on how much of the scene the light volumes cover. Generally the smaller your lights are the more chance you'll see a benefit rather than a penalty from clipping. If you're not using shadows, or you're using Integrated Texture Shadows where passes are specified in a custom manner, then specify the option per-pass using this attribute.
-
-A specific note about OpenGL: user clip planes are completely ignored when you use an ARB vertex program. This means light clip planes won't help much if you use ARB vertex programs on GL, although OGRE will perform some optimisation of its own, in that if it sees that the clip volume is completely off-screen, it won't perform a render at all. When using GLSL, user clipping can be used but you have to use glClipVertex in your shader, see the GLSL documentation for more information. In Direct3D user clip planes are always respected.
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_illumination_stage( INFO_MT_ogre_helper ):
-	mydoc = '''
-illumination_stage
-Params:
-	@ambient
-	@per_light
-	@decal
-
-When using an additive lighting mode (SHADOWTYPE_STENCIL_ADDITIVE or SHADOWTYPE_TEXTURE_ADDITIVE), the scene is rendered in 3 discrete stages, ambient (or pre-lighting), per-light (once per light, with shadowing) and decal (or post-lighting). Usually OGRE figures out how to categorise your passes automatically, but there are some effects you cannot achieve without manually controlling the illumination. For example specular effects are muted by the typical sequence because all textures are saved until the 'decal' stage which mutes the specular effect. Instead, you could do texturing within the per-light stage if it's possible for your material and thus add the specular on after the decal texturing, and have no post-light rendering. 
-
-If you assign an illumination stage to a pass you have to assign it to all passes in the technique otherwise it will be ignored. Also note that whilst you can have more than one pass in each group, they cannot alternate, ie all ambient passes will be before all per-light passes, which will also be before all decal passes. Within their categories the passes will retain their ordering though. Format: illumination_stage <ambient|per_light|decal>
-
-Default: none (autodetect)
-'''
-
-
-@ogredoc
-class _ogredoc_Shader_Nodes_normalise_normals( INFO_MT_ogre_helper ):
-	mydoc = '''
-normalise_normals
-Params:
-	@on
-	@off
-
-Sets whether or not this pass renders with all vertex normals being automatically re-normalised.
-Format: normalise_normals <on|off>
-
-Scaling objects causes normals to also change magnitude, which can throw off your lighting calculations. By default, the SceneManager detects this and will automatically re-normalise normals for any scaled object, but this has a cost. If you'd prefer to control this manually, call SceneManager::setNormaliseNormalsOnScale(false) and then use this option on materials which are sensitive to normals being resized. 
-
-Default: normalise_normals off
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_transparent_sorting( INFO_MT_ogre_helper ):
-	mydoc = '''
-transparent_sorting
-Params:
-	@on
-	@off
-	@force
-
-Sets if transparent textures should be sorted by depth or not.
-
-Format: transparent_sorting <on|off|force>
-
-By default all transparent materials are sorted such that renderables furthest away from the camera are rendered first. This is usually the desired behaviour but in certain cases this depth sorting may be unnecessary and undesirable. If for example it is necessary to ensure the rendering order does not change from one frame to the next. In this case you could set the value to 'off' to prevent sorting.
-
-You can also use the keyword 'force' to force transparent sorting on, regardless of other circumstances. Usually sorting is only used when the pass is also transparent, and has a depth write or read which indicates it cannot reliably render without sorting. By using 'force', you tell OGRE to sort this pass no matter what other circumstances are present.
-
-Default: transparent_sorting on
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_cull_hardware( INFO_MT_ogre_helper ):
-	mydoc = '''
-cull_hardware
-Params:
-	@clockwise
-	@anticlockwise
-	@none
-
-Sets the hardware culling mode for this pass.
-
-Format: cull_hardware <clockwise|anticlockwise|none>
-
-A typical way for the hardware rendering engine to cull triangles is based on the 'vertex winding' of triangles. Vertex winding refers to the direction in which the vertices are passed or indexed to in the rendering operation as viewed from the camera, and will wither be clockwise or anticlockwise (that's 'counterclockwise' for you Americans out there ;). If the option 'cull_hardware clockwise' is set, all triangles whose vertices are viewed in clockwise order from the camera will be culled by the hardware. 'anticlockwise' is the reverse (obviously), and 'none' turns off hardware culling so all triagles are rendered (useful for creating 2-sided passes).
-
-Default: cull_hardware clockwise
-NB this is the same as OpenGL's default but the opposite of Direct3D's default (because Ogre uses a right-handed coordinate system like OpenGL).
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_cull_software( INFO_MT_ogre_helper ):
-	mydoc = '''
-cull_software
-Params:
-	@back
-	@front
-	@none
-
-Sets the software culling mode for this pass.
-
-Format: cull_software <back|front|none>
-
-In some situations the engine will also cull geometry in software before sending it to the hardware renderer. This setting only takes effect on SceneManager's that use it (since it is best used on large groups of planar world geometry rather than on movable geometry since this would be expensive), but if used can cull geometry before it is sent to the hardware. In this case the culling is based on whether the 'back' or 'front' of the triangle is facing the camera - this definition is based on the face normal (a vector which sticks out of the front side of the polygon perpendicular to the face). Since Ogre expects face normals to be on anticlockwise side of the face, 'cull_software back' is the software equivalent of 'cull_hardware clockwise' setting, which is why they are both the default. The naming is different to reflect the way the culling is done though, since most of the time face normals are pre-calculated and they don't have to be the way Ogre expects - you could set 'cull_hardware none' and completely cull in software based on your own face normals, if you have the right SceneManager which uses them.
-
-Default: cull_software back
-
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_lighting( INFO_MT_ogre_helper ):
-	mydoc = '''
-lighting
-Params:
-	@on
-	@off
-
-Sets whether or not dynamic lighting is turned on for this pass or not. If lighting is turned off, all objects rendered using the pass will be fully lit. This attribute has no effect if a vertex program is used.
-
-Format: lighting <on|off>
-
-Turning dynamic lighting off makes any ambient, diffuse, specular, emissive and shading properties for this pass redundant. When lighting is turned on, objects are lit according to their vertex normals for diffuse and specular light, and globally for ambient and emissive.
-
-Default: lighting on
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_shading( INFO_MT_ogre_helper ):
-	mydoc = '''
-shading
-Params:
-	@flat
-	@gouraud
-	@phong
-
-Sets the kind of shading which should be used for representing dynamic lighting for this pass.
-
-Format: shading <flat|gouraud|phong>
-
-When dynamic lighting is turned on, the effect is to generate colour values at each vertex. Whether these values are interpolated across the face (and how) depends on this setting.
-
-flat
-	No interpolation takes place. Each face is shaded with a single colour determined from the first vertex in the face.
-gouraud
-	Colour at each vertex is linearly interpolated across the face.
-phong
-	Vertex normals are interpolated across the face, and these are used to determine colour at each pixel. Gives a more natural lighting effect but is more expensive and works better at high levels of tessellation. Not supported on all hardware.
-
-Default: shading gouraud
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_polygon_mode( INFO_MT_ogre_helper ):
-	mydoc = '''
-polygon_mode
-Params:
-	@solid
-	@wireframe
-	@points
-
-Sets how polygons should be rasterised, i.e. whether they should be filled in, or just drawn as lines or points.
-
-Format: polygon_mode <solid|wireframe|points>
-
-solid
-The normal situation - polygons are filled in.
-wireframe
-Polygons are drawn in outline only.
-points
-Only the points of each polygon are rendered.
-Default: polygon_mode solid
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_polygon_mode_overrideable( INFO_MT_ogre_helper ):
-	mydoc = '''
-polygon_mode_overrideable
-Params:
-	@true
-	@false
-
-Sets whether or not the polygon_mode set on this pass can be downgraded by the camera, if the camera itself is set to a lower polygon mode. If set to false, this pass will always be rendered at its own chosen polygon mode no matter what the camera says. The default is true.
-
-Format: polygon_mode_overrideable <true|false>
-'''
-
-
-@ogredoc
-class _ogredoc_Shader_Nodes_fog_override( INFO_MT_ogre_helper ):
-	mydoc = '''
-fog_override
-Params:
-	@true
-	@false
-	@true exp 1 1 1 0.002 100 10000
-
-Tells the pass whether it should override the scene fog settings, and enforce it's own. Very useful for things that you don't want to be affected by fog when the rest of the scene is fogged, or vice versa. Note that this only affects fixed-function fog - the original scene fog parameters are still sent to shaders which use the fog_params parameter binding (this allows you to turn off fixed function fog and calculate it in the shader instead; if you want to disable shader fog you can do that through shader parameters anyway). 
-
-Format: fog_override <override?> [<type> <colour> <density> <start> <end>]
-
-Default: fog_override false
-
-If you specify 'true' for the first parameter and you supply the rest of the parameters, you are telling the pass to use these fog settings in preference to the scene settings, whatever they might be. If you specify 'true' but provide no further parameters, you are telling this pass to never use fogging no matter what the scene says. Here is an explanation of the parameters:
-type
-	none = No fog, equivalent of just using 'fog_override true'
-	linear = Linear fog from the <start> and <end> distances
-	exp = Fog increases exponentially from the camera (fog = 1/e^(distance * density)), use <density> param to control it
-	exp2 = Fog increases at the square of FOG_EXP, i.e. even quicker (fog = 1/e^(distance * density)^2), use <density> param to control it
-colour
-	Sequence of 3 floating point values from 0 to 1 indicating the red, green and blue intensities
-density
-	The density parameter used in the 'exp' or 'exp2' fog types. Not used in linear mode but param must still be there as a placeholder 
-start
-	The start distance from the camera of linear fog. Must still be present in other modes, even though it is not used.
-end
-	The end distance from the camera of linear fog. Must still be present in other modes, even though it is not used.
-
-Example: fog_override true exp 1 1 1 0.002 100 10000
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_colour_write( INFO_MT_ogre_helper ):
-	mydoc = '''
-colour_write
-Params:
-	@on
-	@off
-
-Sets whether or not this pass renders with colour writing on or not.
-Format: colour_write <on|off>
-
-If colour writing is off no visible pixels are written to the screen during this pass. You might think this is useless, but if you render with colour writing off, and with very minimal other settings, you can use this pass to initialise the depth buffer before subsequently rendering other passes which fill in the colour data. This can give you significant performance boosts on some newer cards, especially when using complex fragment programs, because if the depth check fails then the fragment program is never run. 
-
-Default: colour_write on
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_start_light( INFO_MT_ogre_helper ):
-	mydoc = '''
-start_light
-Params:
-	@0
-	@1
-	@2
-	@3
-	@4
-	@5
-	@6
-
-Sets the first light which will be considered for use with this pass.
-
-Format: start_light <number>
-
-You can use this attribute to offset the starting point of the lights for this pass. In other words, if you set start_light to 2 then the first light to be processed in that pass will be the third actual light in the applicable list. You could use this option to use different passes to process the first couple of lights versus the second couple of lights for example, or use it in conjunction with the iteration option to start the iteration from a given point in the list (e.g. doing the first 2 lights in the first pass, and then iterating every 2 lights from then on perhaps). 
-
-Default: start_light 0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_max_lights( INFO_MT_ogre_helper ):
-	mydoc = '''
-max_lights
-Params:
-	@1
-	@2
-	@3
-	@4
-	@5
-	@6
-
-Sets the maximum number of lights which will be considered for use with this pass.
-
-Format: max_lights <number>
-
-The maximum number of lights which can be used when rendering fixed-function materials is set by the rendering system, and is typically set at 8. When you are using the programmable pipeline (See section 3.1.9 Using Vertex/Geometry/Fragment Programs in a Pass) this limit is dependent on the program you are running, or, if you use 'iteration once_per_light' or a variant (See section iteration), it effectively only bounded by the number of passes you are willing to use. If you are not using pass iteration, the light limit applies once for this pass. If you are using pass iteration, the light limit applies across all iterations of this pass - for example if you have 12 lights in range with an 'iteration once_per_light' setup but your max_lights is set to 4 for that pass, the pass will only iterate 4 times. 
-
-Default: max_lights 8
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_iteration( INFO_MT_ogre_helper ):
-	mydoc = '''
-iteration
-Params:
-	@once
-	@once_per_light
-	@1 once
-	@1 once_per_light
-	@2 once
-	@2 once_per_light
-
-Sets whether or not this pass is iterated, i.e. issued more than once.
-
-Format 1: iteration <once | once_per_light> [lightType]
-
-Format 2: iteration <number> [<per_light> [lightType]]
-
-Format 3: iteration <number> [<per_n_lights> <num_lights> [lightType]]
-
-Examples:
-	iteration once
-		The pass is only executed once which is the default behaviour.
-	iteration once_per_light point
-		The pass is executed once for each point light.
-	iteration 5
-		The render state for the pass will be setup and then the draw call will execute 5 times.
-	iteration 5 per_light point
-		The render state for the pass will be setup and then the draw call will execute 5 times. This will be done for each point light.
-	iteration 1 per_n_lights 2 point
-		The render state for the pass will be setup and the draw call executed once for every 2 lights.
-
-By default, passes are only issued once. However, if you use the programmable pipeline, or you wish to exceed the normal limits on the number of lights which are supported, you might want to use the once_per_light option. In this case, only light index 0 is ever used, and the pass is issued multiple times, each time with a different light in light index 0. Clearly this will make the pass more expensive, but it may be the only way to achieve certain effects such as per-pixel lighting effects which take into account 1..n lights.
-
-Using a number instead of "once" instructs the pass to iterate more than once after the render state is setup. The render state is not changed after the initial setup so repeated draw calls are very fast and ideal for passes using programmable shaders that must iterate more than once with the same render state i.e. shaders that do fur, motion blur, special filtering.
-
-If you use once_per_light, you should also add an ambient pass to the technique before this pass, otherwise when no lights are in range of this object it will not get rendered at all; this is important even when you have no ambient light in the scene, because you would still want the objects silhouette to appear.
-
-The lightType parameter to the attribute only applies if you use once_per_light, per_light, or per_n_lights and restricts the pass to being run for lights of a single type (either 'point', 'directional' or 'spot'). In the example, the pass will be run once per point light. This can be useful because when you're writing a vertex / fragment program it is a lot easier if you can assume the kind of lights you'll be dealing with. However at least point and directional lights can be dealt with in one way. 
-
-Default: iteration once
-
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_point_size( INFO_MT_ogre_helper ):
-	mydoc = '''
-point_size
-Params:
-	@4
-	@16
-	@32
-
-This setting allows you to change the size of points when rendering a point list, or a list of point sprites. The interpretation of this command depends on the point_size_attenuation option - if it is off (the default), the point size is in screen pixels, if it is on, it expressed as normalised screen coordinates (1.0 is the height of the screen) when the point is at the origin. 
-
-NOTE: Some drivers have an upper limit on the size of points they support - this can even vary between APIs on the same card! Don't rely on point sizes that cause the points to get very large on screen, since they may get clamped on some cards. Upper sizes can range from 64 to 256 pixels.
-
-Format: point_size <size>
-
-Default: point_size 1.0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_point_sprites( INFO_MT_ogre_helper ):
-	mydoc = '''
-point_sprites
-Params:
-	@on
-	@off
-
-This setting specifies whether or not hardware point sprite rendering is enabled for this pass. Enabling it means that a point list is rendered as a list of quads rather than a list of dots. It is very useful to use this option if you're using a BillboardSet and only need to use point oriented billboards which are all of the same size. You can also use it for any other point list render. 
-
-Format: point_sprites <on|off>
-
-Default: point_sprites off
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_point_size_attenuation( INFO_MT_ogre_helper ):
-	mydoc = '''
-point_size_attenuation
-Params:
-	@on
-	@off
-	@on constant
-	@on linear
-	@on quadratic
-
-Defines whether point size is attenuated with view space distance, and in what fashion. This option is especially useful when you're using point sprites (See section point_sprites) since it defines how they reduce in size as they get further away from the camera. You can also disable this option to make point sprites a constant screen size (like points), or enable it for points so they change size with distance.
-
-You only have to provide the final 3 parameters if you turn attenuation on. The formula for attenuation is that the size of the point is multiplied by 1 / (constant + linear * dist + quadratic * d^2); therefore turning it off is equivalent to (constant = 1, linear = 0, quadratic = 0) and standard perspective attenuation is (constant = 0, linear = 1, quadratic = 0). The latter is assumed if you leave out the final 3 parameters when you specify 'on'.
-
-Note that the resulting attenuated size is clamped to the minimum and maximum point size, see the next section.
-
-Format: point_size_attenuation <on|off> [constant linear quadratic] Default: point_size_attenuation off
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_point_size_min( INFO_MT_ogre_helper ):
-	mydoc = '''
-point_size_min
-Params:
-	@1
-	@4
-	@8
-
-Sets the minimum point size after attenuation (point_size_attenuation). For details on the size metrics, See section point_size.
-
-Format: point_size_min <size> Default: point_size_min 0
-'''
-
-@ogredoc
-class _ogredoc_Shader_Nodes_point_size_max( INFO_MT_ogre_helper ):
-	mydoc = '''
-point_size_max
-Params:
-	@32
-	@64
-	@128
-
-Sets the maximum point size after attenuation (point_size_attenuation). For details on the size metrics, See section point_size. A value of 0 means the maximum is set to the same as the max size reported by the current card. 
-
-Format: point_size_max <size> Default: point_size_max 0
-'''
 
 ## Ogre 1.7 doc - 3.1.3 Texture Units ##
 @ogredoc
@@ -2741,27 +1484,6 @@ IMAGE_FORMATS = {
 	'jpg',
 }
 
-OptionsEx = {
-#	'mesh-sub-dir' : False,
-#	'shape-anim' : True,
-#	'trim-bone-weights' : 0.01,
-#	'armature-anim' : True,
-
-#	'nuextremityPoints' : 0,
-#	'generateEdgeLists' : False,
-
-#	'generateTangents' : False,
-#	'tangentSemantic' : "uvw", 
-#	'tangentUseParity' : 4,
-#	'tangentSplitMirrored' : False,
-#	'tangentSplitRotated' : False,
-#	'reorganiseBuffers' : True,
-#	'optimiseAnimations' : True,
-
-}
-
-
-
 class INFO_OT_createOgreExport(bpy.types.Operator):              
 	'''Export Ogre Scene'''                   
 	bl_idname = "ogre.export"    
@@ -2794,9 +1516,13 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 	EX_MATERIALS = BoolProperty(name="Export Materials", description="exports .material script", default=True)
 
+	EX_COPY_TEXTURES = BoolProperty(name="Copy Textures",
+			description="Copies the texture files to export directory.",
+			default=True)
+
 	# Use custom inherited ogre materials
 	EX_CUSTOM_MATERIALS = BoolProperty(name="Export Custom GLSL Materials",
-			description="uses custom inherited materials rather than Ogre's default materials", default=True)
+			description="uses custom inherited materials rather than Ogre's default materials", default=False)
 
 	@classmethod
 	def poll(cls, context):
@@ -2811,58 +1537,98 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		self.ogre_export(self.filepath, context);
 		return {'FINISHED'}
 
-	def dot_material(self, meshes, path='/tmp'):
+	# @param materials list of materials to export
+	# @param file_name the name of the material file, usually scene name
+	# @param path to the export directory
+	def dot_material(self, materials, file_name, path='/tmp'):
 		print('updating .material')
-		mats = []
-		for ob in meshes:
-			if len(ob.data.materials):
-				for mat in ob.data.materials:
-					if mat not in mats:
-						mats.append( mat )
-		if not mats:
+
+		if not materials:
 			print('WARNING: no materials, not writting .material script');
 			return
 
 		M = MISSING_MATERIAL + '\n'
-		for mat in mats:
-			Report.materials.append( mat.name )
-			M += self.gen_dot_material( mat, path, convert_textures=True )
-		basepath = os.path.splitext(self.filepath)[0]
-		url = basepath + '.material'
-		f = open( url, 'wb' );
-		f.write( bytes(M,'utf-8') );
+		for mat in materials:
+			Report.materials.append(mat.name)
+			M += (self.gen_dot_material(mat) + '\n')
+
+		# Write the material file
+		if not file_name.endswith('.material'):
+			file_name += '.material'
+		url = os.path.join(path, file_name)
+		print('Writing material file to ', url)
+		f = open( url, 'wb' )
+		f.write( bytes(M,'utf-8') )
 		f.close()
-		print('saved', url)
+	# End of dot_material #
+
 
 	## python note: classmethods prefer attributes defined at the classlevel,
 	# kinda makes sense, (even if called by an instance)
+	# @param mat the blender material
+	# @return the ogre material string
 	@classmethod
-	def gen_dot_material( self, mat, path='/tmp', convert_textures=False ):
+	def gen_dot_material(self, mat):
 		M = ''
+		# TODO add support for custom GLSL materials
 		M += 'material %s \n{\n'		%mat.name
-		if mat.use_shadows: M += indent(1, 'receive_shadows on')
-		else: M += indent(1, 'receive_shadows off')
+		if mat.use_shadows:
+			M += indent(1, 'receive_shadows on')
+		else:
+			M += indent(1, 'receive_shadows off')
 
-		M += indent(1, 'technique', '{' )	# technique GLSL
-		M += self.gen_dot_material_pass( mat, path, convert_textures )
+		# technique GLSL
+		M += indent(1, 'technique', '{' )
 
+		# Multiple passes are not supported
+		M += indent(2, 'pass', '{')
+
+		# Depth write and diffuse lighting should be off
+		mat.use_sky
+
+		# Invisible object, only used for shadow casting
+		# Not sure what Ogre parameter this is
+		#mat.use_cast_shadows_only
+
+		# Ambient parameters
+		ambient = convert_color(mat.diffuse_color, mat.ambient, mat.alpha)
+		line = 'ambient ' + convert_list_to_string(ambient)
+		M += indent(3, line)
+		emissive = convert_color(mat.diffuse_color, mat.emit, mat.alpha)
+		line = 'emissive ' + convert_list_to_string(emissive)
+		M += indent(3, line)
+
+		# Diffuse
+		# shader parammeters not supported for now
+		# mat.diffuse_shader
+		diff = convert_color(mat.diffuse_color, mat.diffuse_intensity, mat.alpha)
+		line = 'diffuse ' + convert_list_to_string(diff)
+		M += indent(3, line)
+
+		# Specular
+		# shader parammeters not supported for now
+		# mat.specular_shader
+		spec = convert_color(mat.specular_color, mat.specular_intensity, mat.specular_alpha)
+		spec.append(mat.specular_hardness)
+		line = 'specular ' + convert_list_to_string(spec)
+		M += indent(3, line)
+		# If we have transparency and also we should take depth write off
+		# TODO should this be done or not?
+		if mat.use_transparency and mat.alpha < 1.0:
+			M += indent(3, 'depth_write off')
+
+		# TODO add vertex colour
+		#mat.use_vertex_color_paint
+
+		# Textures
+		if mat.active_texture:
+			M += textures_to_string(mat)
+
+		M += indent(2, '}' )	# end pass
 		M += indent(1, '}' )	# end technique
 		M += '}\n'	# end material
+
 		return M
-
-	@classmethod
-	def gen_dot_material_pass( self, mat, path, convert_textures ):
-		print('gen_dot_material_pass', mat)
-		OPTIONS['PATH'] = path
-		M = ''
-		print('		standard material')
-		tree = ShaderTree( material=mat )
-		M += tree.dotmat_pass()
-		return M
-
-
-	def _export_ogre_mesh( self, ob, path='/tmp'):
-		export_ogre_mesh(ob, path=path)
 
 	def _write_environment(self, xml_doc, xml_scene, world):
 		## environ settings ##
@@ -2891,7 +1657,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	def ogre_export(self, url, context):
 		timer = Timer()
 		global OPTIONS
-		OPTIONS['TOUCH_TEXTURES'] = True
 		OPTIONS['SWAP_AXIS'] = self.EX_SWAP_MODE
 		Report.reset()
 
@@ -2960,36 +1725,59 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		export_meshes = []
 		for root in roots:
 			print('--------------- exporting root ->', root)
-			self._write_node( root, 
-				doc=doc,
+			self._write_node( root, doc=doc,
 				meshes=export_meshes,
-				objects=objects, 
-				xmlparent=xml_nodes 
-				)
+				xmlparent=xml_nodes )
 
-		self._export_ogre_meshes(export_meshes, url)
+		mesh_dir = os.path.split(url)[0]
+		materials = self._export_ogre_meshes(export_meshes, mesh_dir)
 
 		if self.EX_SCENE:
 			self._write_scene_file(url, doc)
 
+
+		basepath = os.path.splitext(self.filepath)[0]
+		material_path = os.path.split(basepath)
+		#url = basepath + '.material'
+
+		material_dir = mesh_dir
 		if self.EX_MATERIALS:
-			self.dot_material(export_meshes, os.path.split(url)[0])
+			self.dot_material(materials, material_path[1], material_path[0]) 
+			if self.EX_COPY_TEXTURES:
+				for mat in materials:
+					textures = collect_used_textures(mat)
+					copy_textures(textures, material_dir)
 
 		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
 		print( 'Exporting took ', ('%.3f'%(timer.elapsedSecs())), 's' )
 
 
-	def _export_ogre_meshes(self, meshes, url):
+	# @brief exports meshes does checking for not exporting a mesh multiple times
+	# @param meshes, a list of meshes to export can contain same mesh multiple times
+	# @param url, the directory used to export the meshes
+	# @return a list of materials used by the meshes exported
+	# @todo fix the url to directory instead of scene.file or something
+	def _export_ogre_meshes(self, meshes, mesh_dir):
+		# Create the export directory if necessary
+		# TODO this does not work if the mesh_dir exists and is a file
+		if not os.path.isdir(mesh_dir):
+			print('creating directory', path)
+			os.makedirs(path)
+
 		# don't export same data multiple times
 		already_exported = []
+		materials = []
 		for mesh in meshes:
 			# What url is this really?
-			murl = os.path.join( os.path.split(url)[0], '%s.mesh'%mesh.data.name )
+			murl = os.path.join(mesh_dir, '%s.mesh' %mesh.data.name)
 			exists = os.path.isfile(murl)
 			if self.EX_MESH_OVERWRITE or not exists:
 				if mesh.data.name not in already_exported:
-					self._export_ogre_mesh(mesh, path=os.path.split(url)[0])
+					materials.extend(export_ogre_mesh(mesh, file_path=murl))
 					already_exported.append(mesh.data.name)
+
+		return materials
+	# end of _export_ogre_meshes #
 
 
 	def _write_scene_file(self, url, xml_doc):
@@ -3003,8 +1791,8 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 
 	############# node export - recursive ###############
-	def _write_node(self, ob, doc, meshes=[], objects=[], xmlparent=None):
-		xml_obj = _ogre_node_helper( doc=doc, ob=ob, objects=objects )
+	def _write_node(self, ob, doc, meshes=[], xmlparent=None):
+		xml_obj = _ogre_node_helper(doc=doc, ob=ob)
 		xmlparent.appendChild(xml_obj)
 
 		## custom user props ##
@@ -3021,7 +1809,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			self._write_entity( ob,
 					doc=doc,
 					meshes=meshes,
-					objects=objects,
 					xmlparent=xml_obj)
 
 		elif ob.type == 'CAMERA':
@@ -3032,7 +1819,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 		for child in ob.children:
 			self._write_node( child, doc=doc,
-				meshes=meshes, objects=objects, xmlparent=xml_obj )
+				meshes=meshes, xmlparent=xml_obj )
 
 	## end _write_node
 
@@ -3107,7 +1894,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 	# TODO separate the aux node stuff to another function
 	# FIXME exported name is the name of the mesh which is not unique replace with separate name
-	def _write_entity(self, ob, doc, entities=[], meshes=[], objects=[], xmlparent=None):
+	def _write_entity(self, ob, doc, entities=[], meshes=[], xmlparent=None):
 		entities.append(ob)
 		ent = doc.createElement('entity') 
 		xmlparent.appendChild(ent);
@@ -3122,6 +1909,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				meshes.append(ob)
 
 		## deal with Array mod ##
+		""" We don't use
 		vecs = [ ob.matrix_world.to_translation() ]
 		for mod in ob.modifiers:
 			if mod.type == 'ARRAY':
@@ -3145,10 +1933,63 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 							ao.appendChild(e); ent.setAttribute('name', ob.data.name)
 							ent.setAttribute('meshFile', '%s.mesh' %ob.data.name)
 					vecs += newvecs
+		"""
 
 	## end _write_entity
 
-def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None ):
+from shutil import copy2
+
+def copy_textures(textures, path):
+	if not os.path.isdir(path):
+		path = os.path.dirname(path)
+
+	for tex in textures:
+		if tex.image and tex.image.type == 'IMAGE' and tex.image.filepath != '':
+			copy2(bpy.path.abspath(tex.image.filepath), path)
+
+
+# @brief get used textures for a material
+# @return a list of used textures
+def collect_used_textures(material):
+	# TODO add support for multiple textures
+	textures = []
+	if material.active_texture:
+		textures.append(material.texture_slots[material.active_texture_index].texture)
+
+	# Get all texture slots that are used and valid (existing)
+	for i, use in enumerate(material.use_textures):
+		if use and i != material.active_texture_index and material.texture_slots[i]:
+			textures.append(material.texture_slots[i].texture)
+
+	return textures
+
+# @brief convert blender materials textures to a string
+# @param mat the blender material which textures to convert
+# @return string containing the textures part of the material
+def textures_to_string(mat):
+	textures = collect_used_textures(mat)
+
+	M = ''
+	# Only file textures are supported
+	for tex in textures:
+		image = tex.image
+		if image and image.type == 'IMAGE' and image.filepath != '':
+			# TODO this might not not work for filepaths that are absolute
+			tex_path = os.path.split(image.filepath)[1]
+			texture = 'texture ' + tex_path
+			M += indent(3, 'texture_unit', '{')
+			# FIXME the filepath should be the new one where textures are copied
+			M += indent(4, texture)
+			M += indent(3, '}')	#end texture_unit
+			# TODO add scale, offset and other parameters
+
+	return M
+
+
+
+
+
+def _ogre_node_helper( doc, ob, prefix='', pos=None, rot=None, scl=None ):
 	mat = ob.matrix_local
 
 	o = doc.createElement('node')
@@ -3190,23 +2031,26 @@ def _ogre_node_helper( doc, ob, objects, prefix='', pos=None, rot=None, scl=None
 	return o
 
 
-def find_bone_index( ob, arm, groupidx):	# sometimes the groups are out of order, this finds the right index.
+# sometimes the groups are out of order, this finds the right index.
+def find_bone_index( ob, arm, groupidx):
 	vg = ob.vertex_groups[ groupidx ]
 	for i,bone in enumerate(arm.pose.bones):
-		if bone.name == vg.name: return i
+		if bone.name == vg.name:
+			return i
 
 def mesh_is_smooth( mesh ):
 	for face in mesh.faces:
-		if face.use_smooth: return True
+		if face.use_smooth:
+			return True
 
 import pyogre
 
 # Ogre Mesh binary exporter #
-def export_ogre_mesh( ob, path='/tmp'):
-	print('Exporting Ogre mesh ', ob.name, " to ", path)
-	if not os.path.isdir(path):
-		print('creating directory', path)
-		os.makedirs(path)
+# @param ob, mesh to export
+# @param path, path where to write the mesh file
+# @return all the materials used by that mesh
+def export_ogre_mesh( ob, file_path):
+	print('Exporting Ogre mesh ', ob.name, " to ", file_path)
 
 	copy = ob.copy()
 	rem = []
@@ -3478,6 +2322,9 @@ def export_ogre_mesh( ob, path='/tmp'):
 			sm.setFace(i, F[0], F[1], F[2])
 			sm.setFaceNormal(i, m.face_normals[i])
 
+	for i in range(og_mesh.getNumSubMeshes()):
+		Report.triangles += og_mesh.getSubMesh(i).getNumFaces()
+
 	# Calculate smooth normals
 	# This isn't working properly, but seems like we don't need it
 	# after removing the EDGE_SPLIT hack from start of the exporter
@@ -3489,10 +2336,8 @@ def export_ogre_mesh( ob, path='/tmp'):
 	bpy.data.objects.remove(copy)
 	bpy.data.meshes.remove(mesh)
 
-	name = ob.data.name
 
-	meshfile = os.path.join(path, '%s.mesh' %(name) )
-	writer.writeMesh(og_mesh, meshfile)
+	writer.writeMesh(og_mesh, file_path)
 
 	""" FIXME no bone support
 	if arm and opts['armature-anim']:		#self.EX_ANIM:
@@ -3556,7 +2401,9 @@ class Bone(object):
 		#self.matrix *= mathutils.Matrix([1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1])
 		self.bone = pbone		# safe to hold pointer to pose bone, not edit bone!
 		if not pbone.bone.use_deform: print('warning: bone <%s> is non-deformabled, this is inefficient!' %self.name)
-		#TODO test#if pbone.bone.use_inherit_scale: print('warning: bone <%s> is using inherit scaling, Ogre has no support for this' %self.name)
+		#TODO test
+		#if pbone.bone.use_inherit_scale:
+		#	print('warning: bone <%s> is using inherit scaling, Ogre has no support for this' %self.name)
 		self.parent = pbone.parent
 		self.children = []
 		self.fixUpAxis = True
@@ -3674,7 +2521,9 @@ class Skeleton(object):
 				scale.setAttribute('x', str(x))
 				scale.setAttribute('y', str(y))
 				scale.setAttribute('z', str(z))
-			## NOTE: Ogre bones by default do not pass down their scaling in animation, in blender all bones are like 'do-not-inherit-scaling'
+			## NOTE: Ogre bones by default do not pass down their
+			# scaling in animation, in blender all bones are like
+			# 'do-not-inherit-scaling'
 
 		arm = self.arm
 		if arm.animation_data:
@@ -3692,17 +2541,24 @@ class Skeleton(object):
 				tracks = doc.createElement('tracks'); anim.appendChild( tracks )
 				Report.armature_animations.append( '%s : %s [start frame=%s  end frame=%s]' %(arm.name, nla.name, strip.frame_start, strip.frame_end) )
 
-				anim.setAttribute('name', nla.name)		# do not use the action's name
-				anim.setAttribute('length', str( (strip.frame_end-strip.frame_start)/30.0 ) )		# TODO proper fps
+				# do not use the action's name
+				anim.setAttribute('name', nla.name)
+				# TODO proper fps
+				anim.setAttribute('length', str( (strip.frame_end-strip.frame_start)/30.0 ) )
 				## using the fcurves directly is useless, because:
 				## we need to support constraints and the interpolation between keys
-				## is Ogre smart enough that if a track only has a set of bones, then blend animation with current animation?
-				## the exporter will not be smart enough to know which bones are active for a given track...
-				## can hijack blender NLA, user sets a single keyframe for only selected bones, and keys last frame
+				## is Ogre smart enough that if a track only has a set of bones,
+				## then blend animation with current animation?
+				## the exporter will not be smart enough to know which bones
+				## are active for a given track...
+				## can hijack blender NLA, user sets a single keyframe for only selected bones,
+				## and keys last frame
 				stripbones = []
-				for group in strip.action.groups:		# check if the user has keyed only some of the bones (for anim blending)
+				# check if the user has keyed only some of the bones (for anim blending)
+				for group in strip.action.groups:	
 					if group.name in arm.pose.bones: stripbones.append( group.name )
-				if not stripbones:									# otherwise we use all bones
+				# otherwise we use all bones
+				if not stripbones:
 					for bone in arm.pose.bones: stripbones.append( bone.name )
 				print('NLA-strip:',  nla.name)
 				_keyframes = {}
@@ -3715,7 +2571,8 @@ class Skeleton(object):
 					_keyframes[ bonename ] = keyframes
 					print('\t', bonename)
 
-				for frame in range( int(strip.frame_start), int(strip.frame_end), 2):		# every other frame
+				# every other frame
+				for frame in range( int(strip.frame_start), int(strip.frame_end), 2):
 					#bpy.context.scene.frame_current = frame
 					bpy.context.scene.frame_set(frame)
 					#self.object.update( bpy.context.scene )
@@ -3738,7 +2595,8 @@ class Skeleton(object):
 						trans.setAttribute('y', '%6f' %y)
 						trans.setAttribute('z', '%6f' %z)
 
-						rot =  doc.createElement( 'rotate' )		# note "rotate" - bug fixed Dec2nd
+						# note "rotate" - bug fixed Dec2nd
+						rot =  doc.createElement( 'rotate' )
 						keyframe.appendChild( rot )
 						q = _rot #swap( mat.to_quaternion() )
 						rot.setAttribute('angle', '%6f' %q.angle )
@@ -3758,6 +2616,7 @@ class Skeleton(object):
 
 		return doc.documentElement.toprettyxml()
 
+############ tools ##############
 
 def get_image_textures( mat ):
 	r = []
@@ -3765,7 +2624,26 @@ def get_image_textures( mat ):
 		if s and s.texture.type == 'IMAGE': r.append( s )
 	return r
 
+# @brief converts a list of floats to a string separated with a space
+# @param l a list of floating point numbers
+# Rounds the floats to 6 decimals, as it's the one used by Ogre
+def convert_list_to_string(l):
+	s = ''
+	for elem in l:
+		s += (str(round(elem, 6)) + ' ')
+	return s
 
+# @brief convert colour to list
+# @param col the base three component colour to convert
+# @param intnsity the base colour intensity
+# @param alpha the alpha channel
+# @return four element list
+def convert_color(col, intensity=1.0, alpha=1.0):
+	return [col.r*intensity, col.g*intensity, col.b*intensity, alpha]
+
+# @brief indent correctly and write a number of lines
+# @param level how many indentiation levels
+# @param args lines to write
 def indent( level, *args ):
 	if not args: return '\t' * level
 	else:
@@ -3776,36 +2654,6 @@ def indent( level, *args ):
 			a += '\n'
 
 		return a
-
-############ extra tools ##############
-
-
-def gather_instances():
-	instances = {}
-	for ob in bpy.data.objects:
-		if ob.data and ob.data.users > 1:
-			if ob.data not in instances: instances[ ob.data ] = []
-			instances[ ob.data ].append( ob )
-	return instances
-
-def select_instances( context, name ):
-	for ob in bpy.data.objects: ob.select = False
-	ob = bpy.data.objects[ name ]
-	if ob.data:
-		inst = gather_instances()
-		for ob in inst[ ob.data ]: ob.select = True
-		bpy.context.scene.objects.active = ob
-
-
-def select_group( context, name, options={} ):
-	for ob in bpy.data.objects: ob.select = False
-	for grp in bpy.data.groups:
-		if grp.name == name:
-			#context.scene.objects.active = grp.objects
-			#Note that the context is read-only. These values cannot be modified directly, though they may be changed by running API functions or by using the data API. So bpy.context.object = obj will raise an error. But bpy.context.scene.objects.active = obj will work as expected. - http://wiki.blender.org/index.php?title=Dev:2.5/Py/API/Intro&useskin=monobook
-			bpy.context.scene.objects.active = grp.objects[0]
-			for ob in grp.objects: ob.select = True
-		else: pass
 
 #############
 class INFO_MT_actors(bpy.types.Menu):
@@ -3868,8 +2716,6 @@ def export_menu_func(self, context):
 def register():
 	print( VERSION )
 	# Register operators
-	#bpy.utils.register_class( Ogre_toggle_prop_op )
-	bpy.utils.register_class( Ogre_relocate_textures_op )
 	bpy.utils.register_class( Ogre_create_collision_op )
 	# Register INFOs
 	bpy.utils.register_class( INFO_MT_ogre_helper )
@@ -3888,9 +2734,6 @@ def register():
 	bpy.types.INFO_MT_file_export.append(export_menu_func)
 
 def unregister():
-	print('unreg-> ogre exporter')
-	#bpy.utils.unregister_class( Ogre_toggle_prop_op )
-	bpy.utils.unregister_class( Ogre_relocate_textures_op )
 	bpy.utils.unregister_class( Ogre_create_collision_op )
 	# unregister INFOs
 	bpy.utils.unregister_class( INFO_MT_ogre_helper )
