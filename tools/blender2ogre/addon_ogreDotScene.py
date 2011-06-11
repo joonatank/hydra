@@ -297,6 +297,7 @@ class ReportSingleton(object):
 		self.errors = []
 		self.messages = []
 		self.paths = []
+		self.time = 0.0
 
 	def report(self):
 		r = ['Report:']
@@ -318,11 +319,12 @@ class ReportSingleton(object):
 			r.append( '  PATHS:' )
 			for a in self.paths: r.append( '    . %s' %a )
 
+		r.append('  Total Export time: %.3f seconds' %self.time)
 
 		if self.vertices:
-			r.append( '  Total Vertices: %s' %self.vertices )
-			r.append( '  Total Faces: %s' %self.faces )
-			r.append( '  Total Triangles: %s' %self.triangles )
+			r.append('  Total Vertices: %s' %self.vertices)
+			r.append('  Total Faces: %s' %self.faces)
+			r.append('  Total Triangles: %s' %self.triangles)
 			## TODO report file sizes, meshes and textures
 
 		# TODO fix this to something bit more readable
@@ -333,7 +335,8 @@ class ReportSingleton(object):
 				r.append( '  %s: %s' %(name, len(attr)) )
 				if attr:
 					ex.append( '  %s:' %name )
-					for a in attr: ex.append( '    . %s' %a )
+					for a in attr:
+						ex.append( '    . %s' %a )
 
 		txt = '\n'.join( r )
 		ex = '\n'.join( ex )		# console only - extended report
@@ -1748,8 +1751,10 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 					textures = collect_used_textures(mat)
 					copy_textures(textures, material_dir)
 
+		Report.time = timer.elapsedSecs()
+
+		# Needs to be the last call so that we have all the reported issues
 		bpy.ops.wm.call_menu( name='Ogre_User_Report' )
-		print( 'Exporting took ', ('%.3f'%(timer.elapsedSecs())), 's' )
 
 
 	# @brief exports meshes does checking for not exporting a mesh multiple times
@@ -1776,7 +1781,8 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 					materials.extend(export_ogre_mesh(mesh, file_path=murl))
 					already_exported.append(mesh.data.name)
 
-		return materials
+		# Cleanup doubles
+		return list(set(materials))
 	# end of _export_ogre_meshes #
 
 
@@ -2052,6 +2058,8 @@ import pyogre
 def export_ogre_mesh( ob, file_path):
 	print('Exporting Ogre mesh ', ob.name, " to ", file_path)
 
+	Report.meshes.append(ob.name)
+
 	copy = ob.copy()
 	rem = []
 	# remove armature and array modifiers before collaspe
@@ -2087,7 +2095,6 @@ def export_ogre_mesh( ob, file_path):
 		return;
 
 	# Use the copy for report as we use it for exporting
-	Report.meshes.append(mesh.name)
 	Report.faces += len(mesh.faces)
 	Report.vertices += len(mesh.vertices)
 
@@ -2269,7 +2276,8 @@ def export_ogre_mesh( ob, file_path):
 	used_materials = []
 	matnames = []
 	for mat in ob.data.materials:
-		if mat: matnames.append( mat.name )
+		if mat:
+			matnames.append( mat.name )
 		else:
 			print('warning: bad material data', ob)
 			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
@@ -2465,7 +2473,8 @@ class Skeleton(object):
 			mybone = Bone( mats[pbone.name] ,pbone, self )
 			self.bones.append( mybone )
 
-		if arm.name not in Report.armatures: Report.armatures.append( arm.name )
+		if arm.name not in Report.armatures:
+			Report.armatures.append( arm.name )
 
 		# additional transformation for root bones:
 		# from armature object space into mesh object space, i.e.,
