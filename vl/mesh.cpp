@@ -66,6 +66,68 @@ vl::operator<<( std::ostream &os, vl::SubMesh const &m )
 }
 
 /// ----------------------------- SubMesh ------------------------------------
+
+void
+vl::SubMesh::allocateFaces(size_t n_faces)
+{
+	if(operationType == Ogre::RenderOperation::OT_LINE_LIST)
+	{ indexData.setIndexCount(n_faces*2); }
+	else if(operationType == Ogre::RenderOperation::OT_TRIANGLE_LIST)
+	{ indexData.setIndexCount(n_faces*3); }
+	// Other types use only three vertices for the first triangle
+	// rest is defined by a single vertex
+	else
+	{ indexData.setIndexCount(n_faces+2); }
+}
+
+size_t
+vl::SubMesh::getNumFaces(void) const
+{
+	if(operationType == Ogre::RenderOperation::OT_LINE_LIST)
+	{ return indexData.indexCount()/2; }
+	else if(operationType == Ogre::RenderOperation::OT_TRIANGLE_LIST)
+	{ return indexData.indexCount()/3; }
+	// Other types use only three vertices for the first triangle
+	// rest is defined by a single vertex
+	else
+	{ return indexData.indexCount()-2; }
+}
+
+void
+vl::SubMesh::setFace(size_t face, uint32_t  i1, uint32_t  i2, uint32_t i3)
+{
+	// @todo replace with a real exception
+	if(getNumFaces()-1 > face)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	if(operationType == Ogre::RenderOperation::OT_LINE_LIST)
+	{ 
+		indexData.set(face*2+1, i1);
+		indexData.set(face*2+2, i2);
+	}
+	else if(operationType == Ogre::RenderOperation::OT_TRIANGLE_LIST)
+	{ 
+		indexData.set(face*3, i1);
+		indexData.set(face*3+1, i2);
+		indexData.set(face*3+2, i3);
+	}
+	// Other types use only three vertices for the first triangle
+	// rest is defined by a single vertex
+	else
+	{
+		if(face == 0)
+		{
+			indexData.set(face, i1);
+			indexData.set(face+1, i2);
+			indexData.set(face+2, i3);
+		}
+		else
+		{
+			indexData.set(face+2, i3);
+		}
+	}
+}
+
 /// @todo the face system does not really work this way
 /// different GL modes (TRIANGLE_FAN and so on) determine
 /// what size a face is, it's not always a tuple of three
@@ -258,7 +320,7 @@ vl::IndexBuffer::push_back(uint32_t index)
 {
 	if(_buffer_size == IT_32BIT)
 	{
-		_buffer_16.push_back(index);
+		_buffer_32.push_back(index);
 	}
 	else
 	{
@@ -266,6 +328,30 @@ vl::IndexBuffer::push_back(uint32_t index)
 	}
 	++_index_count;
 }
+
+void
+vl::IndexBuffer::set(size_t i, uint32_t index)
+{
+	// @todo replace with a real exception
+	if(i-1 > _index_count)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	if(_buffer_size == IT_32BIT)
+	{
+		_buffer_32.at(i) = index;
+	}
+	else
+	{
+		_buffer_16.at(i) = (uint16_t)index;
+	}
+}
+
+void
+vl::IndexBuffer::set(size_t i, uint16_t index)
+{
+	set(i, (uint32_t)index);
+}
+
 
 void 
 vl::IndexBuffer::_resize_buffer(size_t size)

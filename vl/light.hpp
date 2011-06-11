@@ -116,11 +116,6 @@ public :
 
 	void setPosition(Ogre::Vector3 const &pos);
 
-	bool getVisible(void) const
-	{ return _visible; }
-
-	void setVisible(bool v);
-
 	bool getCastShadows(void) const
 	{ return _cast_shadows; }
 
@@ -179,7 +174,6 @@ private :
 	Ogre::Vector3 _position;
 	Ogre::Vector3 _direction;
 
-	bool _visible;
 	bool _cast_shadows;
 	
 	Ogre::Radian _inner_cone; 

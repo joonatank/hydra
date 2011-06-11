@@ -200,6 +200,10 @@ public :
 
 	void push_back(uint32_t index);
 
+	void set(size_t i, uint32_t index);
+
+	void set(size_t i, uint16_t index);
+
 	/// @brief Calculate the index count from the 
 	//void recalculateIndexCount(void)
 private :
@@ -240,6 +244,12 @@ public :
 
 	void setMaterial(std::string const &material)
 	{ _material = material; }
+
+	void allocateFaces(size_t n_faces);
+
+	size_t getNumFaces(void) const;
+
+	void setFace(size_t face, uint32_t  i1, uint32_t  i2, uint32_t i3);
 
 	void addFace(uint32_t i1, uint32_t i2, uint32_t i3);
 

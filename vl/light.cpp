@@ -164,16 +164,6 @@ vl::Light::setPosition(Ogre::Vector3 const &pos)
 }
 
 void 
-vl::Light::setVisible(bool v)
-{
-	if( _visible != v )
-	{
-		setDirty(DIRTY_GEN_PARAMS);
-		_visible = v;
-	}
-}
-
-void 
 vl::Light::setCastShadows(bool v)
 {
 	if( _cast_shadows != v )
@@ -252,7 +242,7 @@ vl::Light::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 	
 	if( DIRTY_GEN_PARAMS & dirtyBits )
 	{
-		msg << _visible << _cast_shadows;
+		msg << _cast_shadows;
 	}
 
 	if( DIRTY_ATTENUATION & dirtyBits )
@@ -308,7 +298,7 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	
 	if( DIRTY_GEN_PARAMS & dirtyBits )
 	{
-		msg >> _visible >> _cast_shadows;
+		msg >> _cast_shadows;
 		if( _ogre_light )
 		{ 
 			_ogre_light->setVisible(_visible);

@@ -297,9 +297,11 @@ BOOST_PYTHON_MODULE(pyogre)
 	class_<vl::SubMesh, boost::noncopyable>("SubMesh", no_init )
 		.add_property("material", make_function( &vl::SubMesh::getMaterial, return_value_policy<copy_const_reference>() ), &vl::SubMesh::setMaterial )
 		.add_property("name", make_function( &vl::SubMesh::getName, return_value_policy<copy_const_reference>() ), &vl::SubMesh::setName )
-		.def("addFace", &vl::SubMesh::addFace)
+		.def("allocateFaces", &vl::SubMesh::allocateFaces)
 		.def_readonly("index_data", &vl::SubMesh::indexData)
+		.def("setFace", &vl::SubMesh::setFace)
 		.def_readwrite("operation_type", &vl::SubMesh::operationType)
+		
 		/*
 		.def("addBoneAssignment", &Ogre::SubMesh::addBoneAssignment)
 		.def("clearBoneAssignments", &Ogre::SubMesh::clearBoneAssignments)
