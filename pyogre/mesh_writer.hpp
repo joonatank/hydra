@@ -119,27 +119,6 @@ public :
 	void setBoundingSphereRadius(Ogre::Real radius)
 	{ _bound_radius = radius; }
 
-	/* Generates smooth vertex normals for a model.
-	 * First builds a list of all the triangles each vertex is in.   Then
-	 * loops through each vertex in the the list averaging all the facet
-	 * normals of the triangles each vertex is in.   Finally, sets the
-	 * normal index in the triangle for the vertex to the generated smooth
-	 * normal.   If the dot product of a facet normal and the facet normal
-	 * associated with the first triangle in the list of triangles the
-	 * current vertex is in is greater than the cosine of the angle
-	 * parameter to the function, that facet normal is not added into the
-	 * average normal calculation and the corresponding vertex is given
-	 * the facet normal.  This tends to preserve hard edges.  The angle to
-	 * use depends on the model, but 90 degrees is usually a good start.
-	 *
-	 * angle - maximum angle to smooth across
-	 *
-	 * @todo not properly tested, and definitely not guarantied to work.
-	 *
-	 * Taken from glmVertexNormals by Nate Robins
-	 */
-	void smoothNormals(Ogre::Radian const &angle);
-
 private :
 	std::vector<Vertex> _vertices;
 	std::vector<SubMesh *> _sub_meshes;
