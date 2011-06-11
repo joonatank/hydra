@@ -51,23 +51,46 @@ public :
 	void setMaterial(std::string const &material)
 	{ _material = material; }
 
-	void addFace(int i1, int i2, int i3)
+	void allocateFaces(size_t n_faces)
 	{
-		_faces.push_back( boost::make_tuple(i1, i2, i3) );
+		_faces.resize(n_faces);
+		_facet_normals.resize(n_faces);
 	}
 
-	boost::tuple<int, int, int> const &getFace(size_t i)
+	size_t getNumFaces(void) const
+	{ return _faces.size(); }
+
+	void setFace(size_t face, int i1, int i2, int i3)
+	{
+		_faces.at(face) = boost::make_tuple(i1, i2, i3);
+	}
+	
+	boost::tuple<int, int, int> const &getFace(size_t i) const
 	{
 		return _faces.at(i);
 	}
 
-	size_t getNumFaces(void)
-	{ return _faces.size(); }
+	void setFaceNormal(size_t face, Ogre::Vector3 const &n)
+	{
+		_facet_normals.at(face) = n;
+	}
+
+	Ogre::Vector3 const &getFaceNormal(size_t i) const
+	{ return _facet_normals.at(i); }
+
+	bool hasFaceNormals(void) const
+	{ return !_facet_normals.empty(); }
+
+	/// @brief find the first face index based on a vertex index
+	/// @return -1 if not found, valid index otherwise
+	/// @todo not properly tested, and definitely not guarantied to work.
+	int findFaceIndex(int vertex_index, size_t start_face) const;
 
 private :
 	std::string _name;
 	std::string _material;
 	std::vector< boost::tuple<int, int, int> > _faces;
+	std::vector<Ogre::Vector3> _facet_normals;
 };
 
 inline
@@ -76,6 +99,7 @@ std::ostream &operator<<( std::ostream &os, SubMesh const &m )
 	return os;
 }
 
+// @todo add more mesh tools from Nate Robins' GML
 class Mesh
 {
 public :
@@ -113,6 +137,27 @@ public :
 
 	void setBoundingSphereRadius(Ogre::Real radius)
 	{ _bound_radius = radius; }
+
+	/* Generates smooth vertex normals for a model.
+	 * First builds a list of all the triangles each vertex is in.   Then
+	 * loops through each vertex in the the list averaging all the facet
+	 * normals of the triangles each vertex is in.   Finally, sets the
+	 * normal index in the triangle for the vertex to the generated smooth
+	 * normal.   If the dot product of a facet normal and the facet normal
+	 * associated with the first triangle in the list of triangles the
+	 * current vertex is in is greater than the cosine of the angle
+	 * parameter to the function, that facet normal is not added into the
+	 * average normal calculation and the corresponding vertex is given
+	 * the facet normal.  This tends to preserve hard edges.  The angle to
+	 * use depends on the model, but 90 degrees is usually a good start.
+	 *
+	 * angle - maximum angle to smooth across
+	 *
+	 * @todo not properly tested, and definitely not guarantied to work.
+	 *
+	 * Taken from glmVertexNormals by Nate Robins
+	 */
+	void smoothNormals(Ogre::Radian const &angle);
 
 private :
 	std::vector<Vertex> _vertices;

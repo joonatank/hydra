@@ -1479,6 +1479,7 @@ Known Issues:
 
 '''
 
+"""
 @ogredoc
 class _ogredoc_Node_Shaders_Introduction( INFO_MT_ogre_helper ):
 	mydoc = _shader_intro_doc_
@@ -1501,6 +1502,7 @@ class _ogredoc_Node_Shaders_Linking_Intro( INFO_MT_ogre_helper ):
 @ogredoc
 class _ogredoc_Node_Shaders_Linking_Steps( INFO_MT_ogre_helper ):
 	mydoc = _shader_linking_steps_doc_
+"""
 
 
 ############ Ogre v.17 Doc ######
@@ -3206,12 +3208,6 @@ def export_ogre_mesh( ob, path='/tmp'):
 		print('creating directory', path)
 		os.makedirs(path)
 
-	Report.meshes.append( ob.data.name )
-	Report.faces += len( ob.data.faces )
-	Report.vertices += len( ob.data.vertices )
-
-	# Copies are needed to get the Texture coordinates correct
-	# Without them a vertex is mapped to texture coordinates of multiple faces
 	copy = ob.copy()
 	rem = []
 	# remove armature and array modifiers before collaspe
@@ -3220,18 +3216,36 @@ def export_ogre_mesh( ob, path='/tmp'):
 	for mod in rem: copy.modifiers.remove( mod )
 
 	## hijack blender's edge-split modifier to make this easy ##
-	e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
-	e.use_edge_angle = False
-	e.use_edge_sharp = True
-	for edge in copy.data.edges: edge.use_edge_sharp = True
+	# The edge-split is needed to get the Texture coordinates correct
+	# Without them a vertex is mapped to texture coordinates of multiple faces
+	# Minimal bloating by only duplicating the vertices that have seams in them
+	# so we preserve the uv coordinates.
+	# TODO should not use the EDGE_SPLIT for this, because it will screw smooth
+	# normals completely. We need to copy the vertices, just like edge split does
+	# but we want them to have same normals.
+	# Good thing though that this will only screw smooth notmals for the seams.
+	if copy.data.uv_textures.active:
+		e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
+		e.use_edge_angle = False
+		e.use_edge_sharp = True
+		for edge in copy.data.edges:
+			# Only duplicate edges with seams
+			# (and those that already are marked as sharp)
+			if(edge.use_seam):
+				edge.use_edge_sharp = True
+
 	## bake mesh ##
 	mesh = copy.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
 
-	prefix = ''
+	# This shouldn't happen and it's not the sub mesh but the mesh
+	if not len(mesh.faces):		# bug fix dec10th, reported by Matti
+		print('ERROR : mesh without faces, skipping!', ob)
+		return;
 
-	# TODO we should smooth the vertex normals here
-	# if the object has smooth shading enabled
-
+	# Use the copy for report as we use it for exporting
+	Report.meshes.append(mesh.name)
+	Report.faces += len(mesh.faces)
+	Report.vertices += len(mesh.vertices)
 
 	writer = pyogre.MeshWriter()
 	og_mesh = writer.createMesh()
@@ -3240,7 +3254,7 @@ def export_ogre_mesh( ob, path='/tmp'):
 #	arm = ob.find_armature()
 #	if arm:
 #		skel = doc.createElement('skeletonlink')
-#		skel.setAttribute('name', '%s%s.skeleton' %(prefix, ob.data.name) )
+#		skel.setAttribute('name', '%s.skeleton' %(ob.data.name) )
 #		root.appendChild( skel )
 
 	## verts ##
@@ -3296,8 +3310,6 @@ def export_ogre_mesh( ob, path='/tmp'):
 						poseref.setAttribute('poseindex', str(sidx))
 						poseref.setAttribute('influence', str(skey.value) )
 	"""
-
-	## write all verts, even if not in material index, inflates xml, should not bloat .mesh (TODO is this true?)
 
 	# Used timing infomation
 	vertices_time = 0
@@ -3398,6 +3410,7 @@ def export_ogre_mesh( ob, path='/tmp'):
 
 		og_mesh.addVertex(og_vertex)
 	## end vert loop
+
 	if( len(mesh.uv_textures) > 1):
 		print("Warning mesh with multiple texture coordinates, only first one is exported")
 
@@ -3416,15 +3429,21 @@ def export_ogre_mesh( ob, path='/tmp'):
 		else:
 			print('warning: bad material data', ob)
 			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
-	if not matnames: matnames.append( '_missing_material_' )
+	if not matnames:
+		matnames.append( '_missing_material_' )
 
+	# Data structure for dividing the Blender mesh to Ogre SubMeshes
+	class MeshData:
+		material_name = ""
+		# Set of tri tuples of vertex indexes
+		faces = []
+		# Already swapped Ogre vector
+		face_normals = []
+
+	mesh_datas = []
 	for matidx, matname in enumerate( matnames ):
-		if not len(mesh.faces):		# bug fix dec10th, reported by Matti
-			print('WARNING: submesh without faces, skipping!', ob)
-			continue
-
-		sm = og_mesh.createSubMesh()
-		sm.material = matname
+		mdata = MeshData()
+		mdata.material_name = matname
 
 		## faces ##
 		for F in mesh.faces:
@@ -3435,17 +3454,44 @@ def export_ogre_mesh( ob, path='/tmp'):
 				used_materials.append( matname )
 
 			## Ogre only supports triangles, so we will split quads
-			sm.addFace(F.vertices[0], F.vertices[1], F.vertices[2])
-			if len(F.vertices) >= 4:	#TODO split face on shortest edge? or will that mess up triangle-strips?
-				#correct-but-flipped#tris.append( (F.vertices[2], F.vertices[0], F.vertices[3]) )
-				sm.addFace(F.vertices[0], F.vertices[2], F.vertices[3])
+			mdata.faces.append((F.vertices[0], F.vertices[1], F.vertices[2]))
+			x, y, z = swap(F.normal)
+			normal = pyogre.Vector3(x, y, z) 
+			mdata.face_normals.append(normal)
+			if len(F.vertices) >= 4:
+				mdata.faces.append((F.vertices[0], F.vertices[2], F.vertices[3]))
+				mdata.face_normals.append(normal)
+
+		# Do not add empty sub meshes, not sure if this is necessary though
+		if(len(mdata.faces) > 0):
+			mesh_datas.append(mdata)
+
+	for m in mesh_datas:
+		print("creating submesh with material name : ", m.material_name)
+		sm = og_mesh.createSubMesh()
+		sm.material = m.material_name
+
+		# Preallocate the faces for efficiency
+		sm.allocateFaces(len(m.faces))
+
+		for i, F in enumerate(m.faces):
+			sm.setFace(i, F[0], F[1], F[2])
+			sm.setFaceNormal(i, m.face_normals[i])
+
+	# Calculate smooth normals
+	# This isn't working properly, but seems like we don't need it
+	# after removing the EDGE_SPLIT hack from start of the exporter
+	#if(mesh.use_auto_smooth):
+	#	print('calculating smooth normals with angle ', mesh.auto_smooth_angle)
+	#	og_mesh.smoothNormals(pyogre.Radian(pyogre.Degree(mesh.auto_smooth_angle)))
+
 
 	bpy.data.objects.remove(copy)
 	bpy.data.meshes.remove(mesh)
 
 	name = ob.data.name
 
-	meshfile = os.path.join(path, '%s%s.mesh' %(prefix,name) )
+	meshfile = os.path.join(path, '%s.mesh' %(name) )
 	writer.writeMesh(og_mesh, meshfile)
 
 	""" FIXME no bone support
@@ -3453,7 +3499,7 @@ def export_ogre_mesh( ob, path='/tmp'):
 		skel = Skeleton( ob )
 		data = skel.to_xml()
 		name = force_name or ob.data.name
-		xmlfile = os.path.join(path, '%s%s.skeleton.xml' %(prefix,name) )
+		xmlfile = os.path.join(path, '%s.skeleton.xml' %(name) )
 		f = open( xmlfile, 'wb' )
 		f.write( bytes(data,'utf-8') )
 		f.close()
@@ -3822,7 +3868,7 @@ def export_menu_func(self, context):
 def register():
 	print( VERSION )
 	# Register operators
-	bpy.utils.register_class( Ogre_toggle_prop_op )
+	#bpy.utils.register_class( Ogre_toggle_prop_op )
 	bpy.utils.register_class( Ogre_relocate_textures_op )
 	bpy.utils.register_class( Ogre_create_collision_op )
 	# Register INFOs
@@ -3843,7 +3889,7 @@ def register():
 
 def unregister():
 	print('unreg-> ogre exporter')
-	bpy.utils.unregister_class( Ogre_toggle_prop_op )
+	#bpy.utils.unregister_class( Ogre_toggle_prop_op )
 	bpy.utils.unregister_class( Ogre_relocate_textures_op )
 	bpy.utils.unregister_class( Ogre_create_collision_op )
 	# unregister INFOs
