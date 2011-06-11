@@ -188,6 +188,7 @@ bl_info = {
     "author": "Joonatan Kuosa",
     "version": (0,3,2),
     "blender": (2, 5, 7),
+    "api": 36339,
     "location": "INFO Menu",
     "description": "Export to Ogre scene xml and mesh binary formats",
     "warning": "",
@@ -2289,8 +2290,6 @@ def export_ogre_mesh( ob, file_path):
 		material_name = ""
 		# Set of tri tuples of vertex indexes
 		faces = []
-		# Already swapped Ogre vector
-		face_normals = []
 
 	mesh_datas = []
 	for matidx, matname in enumerate( matnames ):
@@ -2309,10 +2308,8 @@ def export_ogre_mesh( ob, file_path):
 			mdata.faces.append((F.vertices[0], F.vertices[1], F.vertices[2]))
 			x, y, z = swap(F.normal)
 			normal = pyogre.Vector3(x, y, z) 
-			mdata.face_normals.append(normal)
 			if len(F.vertices) >= 4:
 				mdata.faces.append((F.vertices[0], F.vertices[2], F.vertices[3]))
-				mdata.face_normals.append(normal)
 
 		# Do not add empty sub meshes, not sure if this is necessary though
 		if(len(mdata.faces) > 0):
@@ -2328,22 +2325,12 @@ def export_ogre_mesh( ob, file_path):
 
 		for i, F in enumerate(m.faces):
 			sm.setFace(i, F[0], F[1], F[2])
-			sm.setFaceNormal(i, m.face_normals[i])
 
 	for i in range(og_mesh.getNumSubMeshes()):
 		Report.triangles += og_mesh.getSubMesh(i).getNumFaces()
 
-	# Calculate smooth normals
-	# This isn't working properly, but seems like we don't need it
-	# after removing the EDGE_SPLIT hack from start of the exporter
-	#if(mesh.use_auto_smooth):
-	#	print('calculating smooth normals with angle ', mesh.auto_smooth_angle)
-	#	og_mesh.smoothNormals(pyogre.Radian(pyogre.Degree(mesh.auto_smooth_angle)))
-
-
 	bpy.data.objects.remove(copy)
 	bpy.data.meshes.remove(mesh)
-
 
 	writer.writeMesh(og_mesh, file_path)
 

@@ -54,7 +54,6 @@ public :
 	void allocateFaces(size_t n_faces)
 	{
 		_faces.resize(n_faces);
-		_facet_normals.resize(n_faces);
 	}
 
 	size_t getNumFaces(void) const
@@ -70,27 +69,10 @@ public :
 		return _faces.at(i);
 	}
 
-	void setFaceNormal(size_t face, Ogre::Vector3 const &n)
-	{
-		_facet_normals.at(face) = n;
-	}
-
-	Ogre::Vector3 const &getFaceNormal(size_t i) const
-	{ return _facet_normals.at(i); }
-
-	bool hasFaceNormals(void) const
-	{ return !_facet_normals.empty(); }
-
-	/// @brief find the first face index based on a vertex index
-	/// @return -1 if not found, valid index otherwise
-	/// @todo not properly tested, and definitely not guarantied to work.
-	int findFaceIndex(int vertex_index, size_t start_face) const;
-
 private :
 	std::string _name;
 	std::string _material;
 	std::vector< boost::tuple<int, int, int> > _faces;
-	std::vector<Ogre::Vector3> _facet_normals;
 };
 
 inline
@@ -99,7 +81,6 @@ std::ostream &operator<<( std::ostream &os, SubMesh const &m )
 	return os;
 }
 
-// @todo add more mesh tools from Nate Robins' GML
 class Mesh
 {
 public :

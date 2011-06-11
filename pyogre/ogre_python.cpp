@@ -209,7 +209,6 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def("addVertex", &vl::Mesh::addVertex)
 		.def("getNumVertices", &vl::Mesh::getNumVertices)
 		.def("getSubMesh", make_function(&vl::Mesh::getSubMesh, return_value_policy<reference_existing_object>() ) )
-		.def("smoothNormals", &vl::Mesh::smoothNormals)
 		.add_property("bounding_sphere", &vl::Mesh::getBoundingSphereRadius, &vl::Mesh::setBoundingSphereRadius)
 		.add_property("bounds", make_function( &vl::Mesh::getBounds, return_value_policy<copy_const_reference>() ), &vl::Mesh::setBounds)
 		/*
@@ -227,8 +226,6 @@ BOOST_PYTHON_MODULE(pyogre)
 		.add_property("name", make_function( &vl::SubMesh::getName, return_value_policy<copy_const_reference>() ), &vl::SubMesh::setName )
 		.def("allocateFaces", &vl::SubMesh::allocateFaces)
 		.def("getNumFaces", &vl::SubMesh::getNumFaces)
-		.def("getFaceNormal", make_function(&vl::SubMesh::getFaceNormal, return_value_policy<copy_const_reference>()))
-		.def("setFaceNormal", &vl::SubMesh::setFaceNormal)
 		.def("setFace", &vl::SubMesh::setFace)
 		
 		/*

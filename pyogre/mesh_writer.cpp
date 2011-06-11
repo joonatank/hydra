@@ -1,107 +1,11 @@
 
 #include "mesh_writer.hpp"
 
-int
-vl::SubMesh::findFaceIndex(int vertex_index, size_t start_face) const
-{
-	for(size_t i = start_face; i < _faces.size(); ++i)
-	{
-		boost::tuple<int, int, int> const &face = _faces.at(i);
-		if(vertex_index == face.get<0>() || vertex_index == face.get<1>()
-			|| vertex_index == face.get<2>())
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
 vl::Mesh::~Mesh(void)
 {
 	for( size_t i = 0; i < _sub_meshes.size(); ++i )
 	{
 		delete _sub_meshes.at(i);
-	}
-}
-
-void
-vl::Mesh::smoothNormals(Ogre::Radian const &angle)
-{
-	double cos_angle = std::cos(angle.valueRadians());
-
-	/* calculate the average normal for each vertex */
-	for(uint32_t vert_index = 0; vert_index < _vertices.size(); vert_index++)
-	{
-		std::vector<Ogre::Vector3> face_normals;
-		for(size_t sm = 0; sm < _sub_meshes.size(); ++sm)
-		{
-			if(!_sub_meshes.at(sm)->hasFaceNormals())
-			{ continue; }
-
-			int start_face = -1;
-			while(true)
-			{
-				start_face = _sub_meshes.at(sm)->findFaceIndex(vert_index, start_face+1);
-				if(start_face < 0 )
-				{ break; }
-				face_normals.push_back(_sub_meshes.at(sm)->getFaceNormal(start_face));
-			}
-		}
-			
-		if(face_normals.empty())
-		{
-			std::clog << "No such vertex index : " << vert_index << " in the mesh face data." << std::endl;
-			continue;
-		}
-		else if(face_normals.size() == 1)
-		{
-		//	std::clog << "Single vertex normal for " << vert_index << "." << std::endl;
-		}
-
-		Ogre::Vector3 average(0, 0, 0);
-		size_t f_n;
-		size_t f_n_used_for_average = 0;
-		for(f_n = 0; f_n < face_normals.size(); ++f_n)
-		{
-			if(average != Ogre::Vector3::ZERO)
-			{ break; }
-			average = face_normals.at(f_n);
-			f_n_used_for_average++;
-		}
-		// Increment so we avoid the reusing the one we already selected for avarage
-		f_n++;
-
-		for(; f_n < face_normals.size(); ++f_n)
-		{
-			/* only average if the dot product of the angle between the two
-			facet normals is greater than the cosine of the threshold
-			angle -- or, said another way, the angle between the two
-			facet normals is less than (or equal to) the threshold angle */
-			// @todo this should avarage all the face normals to avarage
-			Ogre::Vector3 const &facet_n = face_normals.at(f_n);
-			//Ogre::Vector3 const &facet2_n = face_normals.at(f_n+1);
-
-			double dot = average.dotProduct(facet_n);
-			if(dot > cos_angle)
-			{
-				f_n_used_for_average++;
-				average += facet_n;
-			}
-		}
-
-		if(average == Ogre::Vector3::ZERO)
-		{ continue; }
-
-		average.normalise();
-
-		if(f_n_used_for_average > 1)
-		{
-			std::clog << "Used " << f_n_used_for_average << " face normals for creating average normal." << std::endl; 
-			std::clog << "Original normal = " << _vertices.at(vert_index).normal << " and Avaraged normal = " << average << std::endl;
-		}
-
-		_vertices.at(vert_index).normal = average;
 	}
 }
 
