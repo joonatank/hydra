@@ -296,8 +296,13 @@ BOOST_PYTHON_MODULE(vl)
 		.value("WORLD", TS_WORLD)
 	;
 
+	void (vl::SceneNode::*transform_ov0)(vl::Transform const &) = &vl::SceneNode::transform;
+	void (vl::SceneNode::*transform_ov1)(Ogre::Matrix4 const &) = &vl::SceneNode::transform;
+
 	void (vl::SceneNode::*setTransform_ov0)(vl::Transform const &) = &vl::SceneNode::setTransform;
 	void (vl::SceneNode::*setTransform_ov1)(vl::Transform const &, vl::SceneNodePtr) = &vl::SceneNode::setTransform;
+	void (vl::SceneNode::*setTransform_ov2)(Ogre::Matrix4 const &) = &vl::SceneNode::setTransform;
+
 	vl::Transform const &(vl::SceneNode::*getTransform_ov0)(void) const = &vl::SceneNode::getTransform;
 	vl::Transform (vl::SceneNode::*getTransform_ov1)(vl::SceneNodePtr) const = &vl::SceneNode::getTransform;
 	void (vl::SceneNode::*translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
@@ -309,6 +314,9 @@ BOOST_PYTHON_MODULE(vl)
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
 
+	// naming convention 
+	// transform is the operation of transforming
+	// transformation is the noun descriping that transform operation
 	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)
@@ -316,6 +324,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
+		.def("transform", transform_ov0)
+		.def("transform", transform_ov1)
 		.def("translate", translate_ov0)
 		.def("translate", translate_ov1)
 		.def("translate", translate_ov2)
@@ -325,8 +335,8 @@ BOOST_PYTHON_MODULE(vl)
 		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
 		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
-		.add_property("transform", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
-		.add_property("world_transform", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
+		.add_property("transformation", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
+		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setOrientation )
 		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )

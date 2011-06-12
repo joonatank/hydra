@@ -79,6 +79,42 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 }
 
 void 
+vl::SceneNode::transform(Ogre::Matrix4 const &m)
+{
+	if(m != Ogre::Matrix4::IDENTITY)
+	{
+		Ogre::Vector3 s, pos;
+		Ogre::Quaternion q;
+		m.decomposition(pos, s, q);
+
+		translate(pos);
+		rotate(q);
+		scale(s);
+	}
+}
+
+void 
+vl::SceneNode::setTransform(Ogre::Matrix4 const &m)
+{
+	Ogre::Vector3 s, pos;
+	Ogre::Quaternion q;
+	m.decomposition(pos, s, q);
+	
+	setOrientation(q);
+	setPosition(pos);
+	setScale(s);
+}
+
+void 
+vl::SceneNode::transform(vl::Transform const &trans)
+{
+	if(!trans.isIdentity())
+	{
+		setTransform(trans*_transform);
+	}
+}
+
+void
 vl::SceneNode::setTransform(vl::Transform const &trans)
 {
 	if(_transform != trans)

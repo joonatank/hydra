@@ -62,6 +62,7 @@ game.scene.shadows.enable()
 
 if( game.scene.hasSceneNode("spot") ):
 	light = game.scene.getSceneNode("spot")
+	light.position = Vector3(0, 20, 0)
 #	game.scene.addToSelection(light)
 
 #game.scene.removeFromSelection(ogre)
@@ -94,4 +95,16 @@ lightpulp = game.scene.createEntity("hehkulamppu", "light_pulp.mesh")
 lightpulp.material_name = "editor/hehkulamppu_material"
 lightpulp_n.position = Vector3(5, 4, -4)
 lightpulp_n.attachObject(lightpulp)
+
+plane = Plane(Vector3(0, 0, 1), 1)
+m = buildReflectionMatrix(plane)
+
+ogre.addChild(spotti_n)
+ogre.addChild(lightpulp_n)
+
+ogre2 = ogre.clone()
+ogre2.translate(Vector3(0, 10, 0))
+
+game.scene.addToSelection(ogre2)
+#athene.transform(m)
 

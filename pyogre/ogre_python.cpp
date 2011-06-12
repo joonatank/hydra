@@ -17,6 +17,13 @@ namespace py
     using namespace boost::python;
 }
 
+namespace math
+{
+	inline
+	Ogre::Matrix4 buildReflectionMatrix(Ogre::Plane const &p)
+	{ return Ogre::Math::buildReflectionMatrix(p); }
+}
+
 BOOST_PYTHON_MODULE(pyogre)
 {
     using namespace boost::python;
@@ -128,6 +135,25 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def_readonly("identity", &Ogre::Quaternion::IDENTITY)
 	;
 
+	py::class_<Ogre::Matrix4>("Matrix", py::init<>())
+		.def(py::init<Ogre::Quaternion>())
+		.def("transpose", &Ogre::Matrix4::transpose)
+		.add_property("has_scale", &Ogre::Matrix4::hasScale)
+		.add_property("has_negative_scale", &Ogre::Matrix4::hasNegativeScale)
+		.add_property("to_quaternion", &Ogre::Matrix4::extractQuaternion)
+		// Operators
+		.def(py::self + py::self)
+		.def(py::self - py::self)
+		.def(py::self * py::self)
+		.def(py::self * Ogre::Plane())
+		.def(py::self * Ogre::Vector3())
+		.def(py::self * Ogre::Real())
+		.def(py::self == py::self)
+		.def(py::self != py::self)
+		.def(py::self_ns::str(py::self_ns::self))
+		.def_readonly("identity", &Ogre::Matrix4::IDENTITY)
+	;
+
 	py::class_<Ogre::Degree>("Degree", py::init< py::optional<Ogre::Real> >() )
 		.def(py::init<Ogre::Radian>())
 		.def("valueDegrees", &Ogre::Degree::valueDegrees)
@@ -186,6 +212,17 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(py::self_ns::str(py::self_ns::self))
 	;
 
+	py::class_<Ogre::Plane>("Plane", py::init<>())
+		.def(py::init<Ogre::Vector3, Ogre::Real>())
+		.def(py::init<Ogre::Vector3, Ogre::Vector3, Ogre::Vector3>())
+		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def("projectVector", &Ogre::Plane::projectVector)
+		.def("getDistance", &Ogre::Plane::getDistance)
+		.def("normalise", &Ogre::Plane::normalise)
+		.def(py::self_ns::str(py::self_ns::self))
+	;
+
+	def("buildReflectionMatrix", math::buildReflectionMatrix);
 
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_min2)() const = &Ogre::AxisAlignedBox::getMinimum;
 	Ogre::Vector3 const &(Ogre::AxisAlignedBox::*box_max2)() const = &Ogre::AxisAlignedBox::getMaximum;

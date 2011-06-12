@@ -49,6 +49,18 @@ public :
 		_name = name;
 	}
 
+	/// @brief transform the node by a matrix, includes the scale part
+	/// @param m matrix to use for transformation
+	void transform(Ogre::Matrix4 const &m);
+
+	/// @brief set the transformation of the node by a matrix, includes the scale part
+	/// @param m matrix to replace the transformation
+	void setTransform(Ogre::Matrix4 const &m);
+
+	/// @brief transform the node, does not include the scale part
+	void transform(vl::Transform const &trans);
+
+	/// @brief set the transformation, does not include the scale part
 	void setTransform(vl::Transform const &trans);
 
 	/// @brief set the transformation in the space of an another object
