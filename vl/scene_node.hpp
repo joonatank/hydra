@@ -164,7 +164,20 @@ public :
 	bool isHidden(void) const
 	{ return getVisible() == false; }
 
-	void showBoundingBox( bool show );
+	/// @brief show the bounding box of the object
+	/// Shows a combined bounding box of all childs of this node
+	void setShowBoundingBox(bool show);
+
+	bool getShowBoundingBox(void) const
+	{ return _show_boundingbox; }
+
+	/// @brief get if the node inherits scale from it's parent
+	/// Default value is false
+	bool getInheritScale(void) const
+	{ return _inherit_scale; }
+
+	/// @brief set if the node inherits scale from it's parent
+	void setInheritScale(bool b);
 
 	/// @brief make a deep copy of the SceneNode
 	/// Shallow copies would not make much sense with SceneGraphs because you
@@ -201,7 +214,8 @@ public :
 		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
 		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 6,
 		DIRY_ATTACHED = vl::Distributed::DIRTY_CUSTOM << 7,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 8,
+		DIRTY_INHERIT_SCALE = vl::Distributed::DIRTY_CUSTOM << 8,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 9,
 	};
 
 	Ogre::SceneNode *getNative(void) const
@@ -222,9 +236,12 @@ private :
 	vl::Transform _transform;
 	Ogre::Vector3 _scale;
 
+	// @todo combine the boolean attributes
 	bool _visible;
 
 	bool _show_boundingbox;
+
+	bool _inherit_scale;
 
 	/// Keep track of the parent, so we can inform it when hierarchy is changed
 	vl::SceneNodePtr _parent;

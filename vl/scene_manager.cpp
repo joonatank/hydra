@@ -601,7 +601,7 @@ vl::SceneManager::addToSelection(vl::SceneNodePtr node)
 	if( !isInSelection(node) )
 	{
 		_selection.push_back(node);
-		node->showBoundingBox(true);
+		node->setShowBoundingBox(true);
 	}
 }
 
@@ -613,7 +613,7 @@ vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 	if( iter != _selection.end() )
 	{
 		_selection.erase(iter);
-		node->showBoundingBox(false);
+		node->setShowBoundingBox(false);
 	}
 }
 
@@ -670,7 +670,7 @@ vl::SceneManager::clearSelection(void)
 {
 	for(SceneNodeList::iterator iter = _selection.begin(); iter != _selection.end(); ++iter )
 	{
-		(*iter)->showBoundingBox(false);
+		(*iter)->setShowBoundingBox(false);
 	}
 
 	_selection.clear();

@@ -58,6 +58,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _scale(Ogre::Vector3::UNIT_SCALE)
 	, _visible(true)
 	, _show_boundingbox(false)
+	, _inherit_scale(false)
 	, _parent(0)
 	, _ogre_node(0)
 	, _creator(creator)
@@ -338,12 +339,22 @@ vl::SceneNode::setVisible(bool visible)
 }
 
 void 
-vl::SceneNode::showBoundingBox( bool show )
+vl::SceneNode::setShowBoundingBox(bool show)
 {
 	if( _show_boundingbox != show )
 	{
 		setDirty(DIRTY_BOUNDING_BOX);
 		_show_boundingbox = show;
+	}
+}
+
+void
+vl::SceneNode::setInheritScale(bool b)
+{
+	if(_inherit_scale != b)
+	{
+		setDirty(DIRTY_INHERIT_SCALE);
+		_inherit_scale = b;
 	}
 }
 
@@ -576,6 +587,11 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _show_boundingbox;
 	}
 
+	if(dirtyBits & DIRTY_INHERIT_SCALE)
+	{
+		msg << _inherit_scale;
+	}
+
 	if( dirtyBits & DIRTY_CHILDS )
 	{
 		msg << _childs.size();
@@ -637,6 +653,12 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		msg >> _show_boundingbox;
 		if( _ogre_node )
 		{ _ogre_node->showBoundingBox(_show_boundingbox); }
+	}
+
+	if(dirtyBits & DIRTY_INHERIT_SCALE)
+	{
+		msg >> _inherit_scale;
+		_ogre_node->setInheritScale(_inherit_scale);
 	}
 
 	if( dirtyBits & DIRTY_CHILDS )
