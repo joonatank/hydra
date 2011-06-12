@@ -467,7 +467,6 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 
 		// Copy cascading parameters
 		child->setVisible(_visible);
-		child->showBoundingBox(_show_boundingbox);
 
 		/// Remove from current parent
 		if( child->getParent() )
