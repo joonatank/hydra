@@ -86,6 +86,9 @@ struct Transform
 		: position(Ogre::Vector3::ZERO), quaternion(rot)
 	{}
 
+	bool isValid(void) const
+	{ return !quaternion.isNaN() && !position.isNaN(); }
+
 	bool isIdentity(void) const;
 
 	vl::Transform &operator*=(Ogre::Matrix4 const &m);
