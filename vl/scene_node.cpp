@@ -532,7 +532,7 @@ vl::SceneNode::removeChild(vl::SceneNodePtr child)
 			setDirty(DIRTY_CHILDS);
 			_childs.erase(iter);
 
-			child->setTransform(child_world);
+			child->setWorldTransform(child_world);
 
 			if( _ogre_node && child->getNative() )
 			{ _ogre_node->removeChild(child->getNative()); }
