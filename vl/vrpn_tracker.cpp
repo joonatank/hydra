@@ -102,7 +102,10 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		}
 
 		vl::Transform trans = vl::createTransform( t.pos, quat);
-		trans = trans*_transform;
-		sensor.update( trans );
+		if(trans.isValid())
+		{
+			trans = trans*_transform;
+			sensor.update( trans );
+		}
 	}
 }
