@@ -224,6 +224,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
+		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
 
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
@@ -232,7 +233,7 @@ BOOST_PYTHON_MODULE(vl)
 
 		.def("hideSceneNodes", &vl::SceneManager::hideSceneNodes, hideSceneNodes_ov())
 		.def("reloadScene", &SceneManager::reloadScene)
-		/// @todo add printing
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::enum_<vl::PREFAB>("PF")
