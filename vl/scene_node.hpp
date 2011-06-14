@@ -172,7 +172,8 @@ public :
 	{ return _show_boundingbox; }
 
 	/// @brief get if the node inherits scale from it's parent
-	/// Default value is false
+	/// Default value is true, because this will mess up reflections also
+	/// as they use negative scale along an axis to do the reflection
 	bool getInheritScale(void) const
 	{ return _inherit_scale; }
 
