@@ -1,9 +1,12 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-05
+ *	@file constraints.hpp
+ *
+ *	This file is part of Hydra a VR game engine.
  */
 
-#ifndef VL_TYPEDEFS_HPP
-#define VL_TYPEDEFS_HPP
+#ifndef HYDRA_TYPEDEFS_HPP
+#define HYDRA_TYPEDEFS_HPP
 
 #include <map>
 #include <string>
@@ -97,6 +100,17 @@ namespace vl
 		virtual ~Callback(void) {}
 	};
 
+	/// Non-physics constraints
+	class Constraint;
+	class SixDofConstraint;
+	class SliderConstraint;
+	class HingeConstraint;
+
+	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
+	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
+	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
+	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
+
 namespace gui
 {
 	class GUI;
@@ -147,10 +161,10 @@ namespace physics
 	class SliderConstraint;
 	class HingeConstraint;
 
-	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
-	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
-	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
-	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
+	typedef boost::shared_ptr<vl::physics::Constraint> ConstraintRefPtr;
+	typedef boost::shared_ptr<vl::physics::SixDofConstraint> SixDofConstraintRefPtr;
+	typedef boost::shared_ptr<vl::physics::SliderConstraint> SliderConstraintRefPtr;
+	typedef boost::shared_ptr<vl::physics::HingeConstraint> HingeConstraintRefPtr;
 }
 
 namespace cluster

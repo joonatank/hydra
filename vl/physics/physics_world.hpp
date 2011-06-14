@@ -21,7 +21,7 @@
 #include "scene_node.hpp"
 
 /// Physics objects
-#include "constraints.hpp"
+#include "physics_constraints.hpp"
 
 namespace vl
 {
