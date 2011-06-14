@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
- *	@file constraints.hpp
+ *	@file physics/physics_constraints.hpp
  *
  *	This file is part of Hydra a VR game engine.
  */
@@ -14,6 +14,8 @@
 
 #include <bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
 
+#include "constraints.hpp"
+
 namespace {
 	using vl::math::convert_bt_vec;
 	using vl::math::convert_vec;
@@ -26,7 +28,7 @@ namespace vl
 namespace physics
 {
 
-class Constraint
+class Constraint : public vl::Constraint
 {
 public :
 	virtual btTypedConstraint *getNative(void) = 0;

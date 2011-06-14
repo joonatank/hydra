@@ -360,6 +360,8 @@ public :
 	SceneNodeList const &getSceneNodeList(void) const
 	{ return _scene_nodes; }
 
+	MovableObjectList const &getMovableObjectList(void) const
+	{ return _objects; }
 
 	/// --------- Scene parameters ---------------
 	void setSkyDome(SkyDomeInfo const &dome);
@@ -474,8 +476,9 @@ private :
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
 
-};	// class FrameData
+};	// class SceneManager
 
+std::ostream &operator<<(std::ostream &os, vl::SceneManager const &scene);
 
 std::ostream &operator<<(std::ostream &os, vl::SkyDomeInfo const &sky);
 

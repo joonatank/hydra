@@ -5,8 +5,8 @@
  *	This file is part of Hydra a VR game engine.
  */
 
-#ifndef VL_PHYSICS_MOTION_STATE_HPP
-#define VL_PHYSICS_MOTION_STATE_HPP
+#ifndef HYDRA_PHYSICS_MOTION_STATE_HPP
+#define HYDRA_PHYSICS_MOTION_STATE_HPP
 
 // This class initialises Bullet physics so they are necessary
 #include <bullet/btBulletDynamicsCommon.h>
@@ -36,8 +36,7 @@ public:
 		_trans = vl::math::convert_bt_transform(orient, pos);
 	}
 
-	MotionState( vl::Transform const &trans,
-				 vl::SceneNode *node = 0)
+	MotionState(vl::Transform const &trans, vl::SceneNode *node = 0)
 		: _visibleobj(node)
 	{
 		_trans = vl::math::convert_bt_transform(trans);
@@ -62,7 +61,7 @@ public:
 		if(_visibleobj)
 		{
 			/// @todo these should set the world transform
-			vl::Transform trans = vl::math::convert_transform(_trans);
+			Transform trans = vl::math::convert_transform(_trans);
 			_visibleobj->setPosition(trans.position);
 			_visibleobj->setOrientation(trans.quaternion);
 		}
@@ -97,14 +96,14 @@ public:
 		if( !_visibleobj)
 			return; // silently return before we set a node
 
-		vl::Transform t = vl::math::convert_transform(_trans);
+		Transform t = vl::math::convert_transform(_trans);
 		/// @todo these should set the world transform
 		_visibleobj->setOrientation(t.quaternion);
 		_visibleobj->setPosition(t.position);
 	}
 
 protected:
-	vl::SceneNodePtr _visibleobj;
+	SceneNodePtr _visibleobj;
 	btTransform _trans;
 
 };	// class MotionState
@@ -126,4 +125,4 @@ operator<<(std::ostream &os, MotionState const &m)
 
 }	// namespace vl
 
-#endif // VL_PHYSICS_MOTION_STATE_HPP
+#endif // HYDRA_PHYSICS_MOTION_STATE_HPP

@@ -839,6 +839,16 @@ vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
 
 /// --------------------------------- Global ---------------------------------
 std::ostream &
+vl::operator<<(std::ostream &os, vl::SceneManager const &scene)
+{
+	os << "SceneManager : with " << scene.getSceneNodeList().size() << " scene nodes "
+		<< " and " << scene.getMovableObjectList().size() << " objects.\n"
+		<< "With a selection of " << scene.getSelection().size() << " numbers." << std::endl;
+
+	return os;
+}
+
+std::ostream &
 vl::operator<<(std::ostream &os, vl::SkyDomeInfo const &sky)
 {
 	os << "SkyDome : material " << sky.material_name

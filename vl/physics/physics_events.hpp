@@ -8,14 +8,14 @@
  *	Moved to the main tree
  */
 
-#ifndef VL_PHYSICS_EVENTS_HPP
-#define VL_PHYSICS_EVENTS_HPP
+#ifndef HYDRA_PHYSICS_EVENTS_HPP
+#define HYDRA_PHYSICS_EVENTS_HPP
 
 // Base classes for event handling
 #include "action.hpp"
 
 #include "rigid_body.hpp"
-#include "constraints.hpp"
+#include "physics_constraints.hpp"
 
 #include "actions_transform.hpp"
 
@@ -207,5 +207,4 @@ private:
 
 }	// namespace vl
 
-#endif // VL_PHYSICS_EVENTS_HPP
-
+#endif // HYDRA_PHYSICS_EVENTS_HPP

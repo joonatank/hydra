@@ -135,10 +135,11 @@ set( HEADERS
 	cluster/message.hpp
 	cluster/states.hpp
 	distributed.hpp
+	constraints.hpp
 	physics/motion_state.hpp
 	physics/rigid_body.hpp
 	physics/shapes.hpp
-	physics/constraints.hpp
+	physics/physics_constraints.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
 	gui/gui.hpp

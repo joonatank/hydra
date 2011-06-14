@@ -5,8 +5,8 @@
  *	This file is part of Hydra VR game engine.
  */
 
-#ifndef VL_PYTHON_MODULE_HPP
-#define VL_PYTHON_MODULE_HPP
+#ifndef HYDRA_PYTHON_MODULE_HPP
+#define HYDRA_PYTHON_MODULE_HPP
 
 // Game
 #include "game_manager.hpp"
@@ -32,6 +32,8 @@
 #include "gui/gui.hpp"
 #include "gui/gui_actions.hpp"
 
+#include "constraints.hpp"
+
 // Python global
 #include "python.hpp"
 
@@ -40,7 +42,7 @@
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
-#include "physics/constraints.hpp"
+#include "physics/physics_constraints.hpp"
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -224,6 +226,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
+		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
 
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
@@ -232,7 +235,7 @@ BOOST_PYTHON_MODULE(vl)
 
 		.def("hideSceneNodes", &vl::SceneManager::hideSceneNodes, hideSceneNodes_ov())
 		.def("reloadScene", &SceneManager::reloadScene)
-		/// @todo add printing
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::enum_<vl::PREFAB>("PF")
@@ -402,6 +405,20 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("n_trackers", &vl::Clients::getNTrackers)
 		.add_property("event_manager", python::make_function(&vl::Clients::getEventManager, python::return_value_policy<python::reference_existing_object>()))
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	/// Abstract master class for all constraints, both physics and non-physics constraint
+	/// derive from this
+	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
+	;
+
+	python::class_<vl::SixDofConstraint, vl::SixDofConstraintRefPtr, boost::noncopyable>("SixDofConstraint", python::no_init)
+	;
+
+	python::class_<vl::SliderConstraint, vl::SliderConstraintRefPtr, boost::noncopyable>("SliderConstraint", python::no_init)
+	;
+
+	python::class_<vl::HingeConstraint, vl::HingeConstraintRefPtr, boost::noncopyable>("HingeConstraint", python::no_init)
 	;
 
 	// TODO replace with a wrapper
@@ -663,9 +680,32 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	/// Physics
-	/// @todo physics should be in differen module
+	python::def( "getKeyName", getKeyName );
 
+	python::def( "getPythonKeyName", getPythonKeyName );
+
+	python::enum_<OIS::KeyCode> python_keycode = python::enum_<OIS::KeyCode>("KC");
+
+	int i = 0;
+	while( i < OIS::KC_MEDIASELECT )
+	{
+		OIS::KeyCode code = (OIS::KeyCode)(i);
+		std::string keyName = getKeyName( code );
+		if( !keyName.empty() )
+		{
+			python_keycode.value( keyName.c_str(), code );
+		}
+
+		++i;
+	}
+
+}	// endof hydra python module
+
+/// Physics
+/// @todo physics should be in hydra.physics
+/// needs a package strucutre
+BOOST_PYTHON_MODULE(physics)
+{
 	python::class_<vl::physics::CollisionShape, boost::noncopyable >("CollisionShape", python::no_init )
 	;
 
@@ -705,7 +745,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// Abstract master class for all constraints
-	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
+	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr,  python::bases<vl::Constraint>, boost::noncopyable>("Constraint", python::no_init)
 	;
 
 	/// 6dof constraint
@@ -789,7 +829,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
+	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
@@ -846,7 +886,7 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<BasicAction> >("ApplyForce", python::no_init )
+	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyForce", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::ApplyForce::setRigidBody )
 		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_value_policy<python::copy_const_reference>() ),
@@ -857,7 +897,7 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<BasicAction> >("ApplyTorque", python::no_init )
+	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyTorque", python::no_init )
 		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::ApplyTorque::setRigidBody )
 		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_value_policy<python::copy_const_reference>() ),
@@ -867,25 +907,6 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	python::def( "getKeyName", getKeyName );
+}	// endof physics python modules
 
-	python::def( "getPythonKeyName", getPythonKeyName );
-
-	python::enum_<OIS::KeyCode> python_keycode = python::enum_<OIS::KeyCode>("KC");
-
-	int i = 0;
-	while( i < OIS::KC_MEDIASELECT )
-	{
-		OIS::KeyCode code = (OIS::KeyCode)(i);
-		std::string keyName = getKeyName( code );
-		if( !keyName.empty() )
-		{
-			python_keycode.value( keyName.c_str(), code );
-		}
-
-		++i;
-	}
-
-}
-
-#endif	// VL_PYTHON_MODULE_HPP
+#endif	// HYDRA_PYTHON_MODULE_HPP
