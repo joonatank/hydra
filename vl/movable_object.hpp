@@ -28,6 +28,10 @@ public :
 		: _name(name), _visible(true), _creator(creator), _parent(0)
 	{}
 
+	MovableObject(vl::SceneManagerPtr creator)
+		: _name(), _visible(true), _creator(creator), _parent(0)
+	{}
+
 	std::string const &getName(void) const
 	{ return _name; }
 

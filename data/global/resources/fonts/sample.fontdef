@@ -1,0 +1,42 @@
+StarWars
+{
+	// Now this one I agree with ;)
+	// A Star Wars font :)
+	type 		truetype
+	source 		solo5.ttf
+	size 		16
+	resolution 	96
+}
+
+BlueHighway-12
+{
+	type 		truetype
+	source 		bluehighway.ttf
+	size 		12
+	resolution 	96
+}
+
+BlueHighway-10
+{
+	type 		truetype
+	source 		bluehighway.ttf
+	size 		10
+	resolution 	96
+}
+
+BlueHighway-16
+{
+	type 		truetype
+	source 		bluehighway.ttf
+	size 		16
+	resolution 	96
+}
+
+BlueHighway-22
+{
+	type 		truetype
+	source 		bluehighway.ttf
+	size 		22
+	resolution 	96
+}
+

@@ -518,30 +518,13 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 			}
 			break;
 
-			/// @todo MovableObjects should have the same type and 
-			/// use the same create function
-			case OBJ_ENTITY :
-			{
-				assert( _scene_manager );
-				_scene_manager->_createEntity(id);
-				break;
-			}
-			case OBJ_LIGHT :
-			{
-				assert( _scene_manager );
-				_scene_manager->_createLight(id);
-				break;
-			}
-			case OBJ_CAMERA :
-			{
-				assert( _scene_manager );
-				_scene_manager->_createCamera(id);
-				break;
-			}
-
+			/// @todo MovableObjects type should be divided into two one for
+			/// the movable object type and other one dynamic so more movable objects
+			/// can be created with ease.
 			default :
-				// TODO Might happen something unexpected so for now just kill the program
-				assert(false && "Trying to create an object with an unknown type");
+				assert( _scene_manager );
+				_scene_manager->_createMovableObject(type, id);
+				break;
 		}
 	}
 }

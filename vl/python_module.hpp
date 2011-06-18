@@ -17,7 +17,10 @@
 #include "entity.hpp"
 #include "light.hpp"
 #include "camera.hpp"
+#include "movable_text.hpp"
+
 #include "player.hpp"
+
 
 // Necessary for transforming OIS keycodes to python
 #include "keycode.hpp"
@@ -219,7 +222,9 @@ BOOST_PYTHON_MODULE(vl)
 		.def("hasLight", &SceneManager::hasLight)
 		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
-		
+		.def("createMovableText", &SceneManager::createMovableText, python::return_value_policy<python::reference_existing_object>() )
+		/// @todo add getter functions for movable text
+
 		/// Scene parameters
 		/// returns copies of the objects
 		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
@@ -292,6 +297,18 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("prefab", &vl::Entity::getPrefab)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
+
+	python::class_<vl::MovableText, boost::noncopyable, python::bases<vl::MovableObject> >("MovableText", python::no_init)
+		.add_property("font_name", python::make_function( &vl::MovableText::getFontName, python::return_value_policy<python::copy_const_reference>() ), &vl::MovableText::setFontName )
+		.add_property("caption", python::make_function( &vl::MovableText::getCaption, python::return_value_policy<python::copy_const_reference>() ), &vl::MovableText::setCaption )
+		.add_property("colour", python::make_function( &vl::MovableText::getColour, python::return_value_policy<python::copy_const_reference>() ), &vl::MovableText::setColour)
+		.add_property("char_height", &vl::MovableText::getCharacterHeight, &vl::MovableText::setCharacterHeight)
+		.add_property("space_width", &vl::MovableText::getSpaceWidth, &vl::MovableText::setSpaceWidth)
+		.add_property("position", python::make_function( &vl::MovableText::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::MovableText::setPosition)
+		.add_property("show_on_top", &vl::MovableText::getShowOnTop, &vl::MovableText::showOnTop)
+		.add_property("track_camera", &vl::MovableText::getTrackCamera, &vl::MovableText::setTrackCamera)
+	;
+	
 
 	python::enum_<TransformSpace>("TS")
 		.value("LOCAL", TS_LOCAL)
