@@ -76,6 +76,12 @@ inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
 }
 
 template<typename T>
+inline T clamp(T const &x, T const &min, T const &max)
+{
+	return (x < min) ? min : ((x > max) ? max : x);
+}
+
+template<typename T>
 inline T sign(T const &x)
 {
 	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);

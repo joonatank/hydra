@@ -114,7 +114,11 @@ vl::GameManager::step(void)
 		{
 			_physics_world->step();
 		}
+
+		_process_constraints(_step_timer.elapsed());
 	}
+
+	_step_timer.reset();
 
 	return !isQuited();
 }
@@ -163,6 +167,44 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	{
 		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
 	}
+}
+
+void 
+vl::GameManager::addConstraint(vl::ConstraintRefPtr constraint)
+{
+	if(!hasConstraint(constraint))
+	{
+		_constraints.push_back(constraint);
+	}
+}
+
+void
+vl::GameManager::removeConstraint(vl::ConstraintRefPtr constraint)
+{
+	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if(*iter == constraint)
+		{
+			_constraints.erase(iter);
+			break;
+		}
+	}
+}
+
+bool
+vl::GameManager::hasConstraint(vl::ConstraintRefPtr constraint)
+{
+	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if(*iter == constraint)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 vl::physics::WorldRefPtr
@@ -231,6 +273,7 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 		else
 		{ return false; }
 		_state = GS_PLAY;
+		_step_timer.reset();
 		break;
 
 	case GS_PAUSE:
@@ -280,4 +323,14 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 	loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
+}
+
+void
+vl::GameManager::_process_constraints(vl::time const &t)
+{
+	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		(*iter)->_proggress(t);
+	}
 }

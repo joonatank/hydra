@@ -28,7 +28,8 @@ namespace vl
 namespace physics
 {
 
-class Constraint : public vl::Constraint
+/// The base constraint for physics needs to be abstract interface
+class Constraint
 {
 public :
 	virtual btTypedConstraint *getNative(void) = 0;
@@ -274,16 +275,6 @@ private :
 class HingeConstraint : public Constraint
 {
 public :
-	virtual btTypedConstraint *getNative(void)
-	{ return _bt_constraint; }
-
-	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
-		return constraint;
-	}
-
 	void setAngularOnly(bool angularOnly)
 	{ _bt_constraint->setAngularOnly(angularOnly); }
 
@@ -316,6 +307,16 @@ public :
 
 	vl::scalar getHingeAngle(void)
 	{ return _bt_constraint->getHingeAngle(); }
+
+	virtual btTypedConstraint *getNative(void)
+	{ return _bt_constraint; }
+
+	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+	{
+		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
+		return constraint;
+	}
 
 private :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 

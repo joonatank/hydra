@@ -185,6 +185,14 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	/// ------------------------------ Constraints ---------------------------
+	void addConstraint(vl::ConstraintRefPtr constraint);
+
+	void removeConstraint(vl::ConstraintRefPtr constraint);
+
+	bool hasConstraint(vl::ConstraintRefPtr constraint);
+
+	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
 	physics::WorldRefPtr getPhysicsWorld( void );
@@ -278,6 +286,8 @@ private :
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
 
+	void _process_constraints(vl::time const &t);
+
 	vl::PythonContextPtr _python;
 	vl::ResourceManagerRefPtr _resource_man;
 	vl::EventManagerPtr _event_man;
@@ -306,12 +316,16 @@ private :
 	/// Timers
 	vl::timer _program_timer;
 	vl::stop_timer _game_timer;
+	vl::timer _step_timer;
 
 	/// State
 	GAME_STATE _state;
 
 	/// Physics
 	physics::WorldRefPtr _physics_world;
+
+	/// Non physics constraints
+	std::vector<vl::ConstraintRefPtr> _constraints;
 
 };	// class GameManager
 

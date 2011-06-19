@@ -67,6 +67,7 @@ set( SOURCES
 	mesh_bullet.cpp
 	gui/gui.cpp
 	gui/window.cpp
+	constraints.cpp
 	)
 
 set( HEADERS
