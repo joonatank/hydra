@@ -5,14 +5,14 @@
  *	This file is part of Hydra a VR game engine tests.
  *
  *	Test the usage of NVidia Swap sync.
+ *
+ *	Works only on Windows.
+ *
  */
-
-#ifdef _WIN32
 
 #include "gl_common.hpp"
 
 #include <fstream>
-#include "wglext.h"
 
 void
 joinNVSwapBarrier(std::ostream &log, GLWindow const *win, uint32_t const group, uint32_t const barrier)
@@ -152,7 +152,5 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	// Shutdown
 	delete win;
-	return 0;							// Exit The Program
+	return 0;
 }
-
-#endif	// ifndef _WIN32

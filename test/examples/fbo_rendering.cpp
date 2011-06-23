@@ -1,9 +1,17 @@
-
-#ifdef _WIN32
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-06
+ *	@file fbo_rendering.cpp
+ *
+ *	This file is part of Hydra a VR game engine tests.
+ *
+ *	Needs OpenGL 3.0
+ *
+ *	Test the FBO rendering.
+ *	Works only on Windows.
+ *
+ */
 
 #include "gl_common.hpp"
-
-//#include "wglext.h"
 
 #include <fstream>
 
@@ -56,55 +64,10 @@ struct FBO
 	void beginDraw(void)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-//		glPushAttrib(GL_VIEWPORT_BIT);
-//		glViewport(0, 0, _width, _height);
-
-		// define render targets (empty texture is at GL_COLOR_ATTACHMENT0)
-		// not necessary
-		//glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-
-//		glClearColor(0.0f, 0.0f, 1.0f, 0.0f);
-//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				
-		// Working till this
-//		glMatrixMode(GL_PROJECTION);
-//		glLoadIdentity();
-		//glViewport(0, 0, mWidth, mHeight);
-//		glOrtho(-1, 1, -1, 1, 0.01, 20);
-//		if(glGetError() != GL_NO_ERROR)
-//		{ std::clog << "Error in setting the projection matrix" << std::endl; }
-				
-//		glMatrixMode(GL_MODELVIEW);
-//		glLoadIdentity();
-//		glTranslatef(0, 0, -10);
-
-//		glDisable(GL_TEXTURE_2D);
-
-		// setting colour will cause the screen to be black
-		//glColor3f(0.0f, 1.0f, 0.0f);
-			
-		/*
-		glBegin(GL_QUADS);
-				glVertex3f(-.5f, .5f, 0.0f);				// Top Left
-				glVertex3f( .5f, .5f, 0.0f);				// Top Right
-				glVertex3f( .5f,-.5f, 0.0f);				// Bottom Right
-				glVertex3f(-.5f,-.5f, 0.0f);				// Bottom Left
-		glEnd();
-		
-		glBegin(GL_QUADS);
-			glVertex3f(-1.0f, 1.0f, 0.0f);				// Top Left
-			glVertex3f( 0.0f, 1.0f, 0.0f);				// Top Right
-			glVertex3f( 0.0f,-0.0f, 0.0f);				// Bottom Right
-			glVertex3f(-1.0f,-0.0f, 0.0f);				// Bottom Left
-		glEnd();
-		if(glGetError() != GL_NO_ERROR)
-		{ std::clog << "Error in GL draw" << std::endl; }
-		*/
 	}
 
 	void endDraw(void)
 	{
-//		glPopAttrib();
 		/// Unbind the framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		if(glGetError() != GL_NO_ERROR)
@@ -245,5 +208,3 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	delete fbo;
 	return 0;			// Exit The Program
 }
-
-#endif	// ifndef _WIN32

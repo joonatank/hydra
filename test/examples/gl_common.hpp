@@ -6,6 +6,8 @@
  *
  *	Common functions for the usage of OpenGL, window creation and so on
  *	used by the minimal OpenGL test programs.
+ *
+ *	Works only on Windows.
  */
 
 #ifndef HYDRA_GL_COMMON_HPP
