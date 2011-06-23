@@ -18,8 +18,16 @@ if( WIN32 )
 
 	link_libraries(${OPENGL_LIBRARIES} glew)
 
-	add_executable(fbo_rendering WIN32 fbo_rendering.cpp ${HEADERS})
+	add_executable(fbo_rendering WIN32 fbo_rendering.cpp
+		${HEADERS} gl_fbo.hpp)
 
-	add_executable(nv_swap_sync WIN32 nv_swap_sync.cpp ${HEADERS})
+	add_executable(nv_swap_sync WIN32 nv_swap_sync.cpp 
+		${HEADERS}) 
+
+	add_executable(nv_copy_image WIN32 nv_copy_image.cpp
+		${HEADERS} gl_fbo.hpp)
+
+	add_executable(nv_gpu_affinity WIN32 nv_gpu_affinity.cpp
+		${HEADERS} gl_fbo.hpp)
 endif()
 

@@ -7,6 +7,8 @@
  *	Test the usage of NVidia Swap sync.
  *
  *	Works only on Windows.
+ *	Works only with Quadro GPUs with G-sync cards using multiple contexes for renderig.
+ *	These requirements might be relaxed later on if at all possible.
  *
  */
 

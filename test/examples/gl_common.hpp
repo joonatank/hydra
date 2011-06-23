@@ -26,10 +26,71 @@
 #include <iostream>
 #include <stdint.h>
 
+/// @brief OpenGL context wrapper
+struct GLContext
+{
+	/// @brief constructor
+	/// @param hdc the device context where the OpenGL Context is created
+	GLContext(HDC hdc)
+		: _device(hdc), _gl_context(0)
+	{
+		// Are We Able To Get A Rendering Context?
+		if( !(_gl_context=wglCreateContext(_device)) )
+		{
+			// TODO should throw
+			throw std::string("Can't Create A GL Rendering Context.");
+		}
+
+		// Try To Activate The Rendering Context
+		if(!wglMakeCurrent(_device, _gl_context))
+		{
+			// TODO should throw
+			throw std::string("Can't Activate The GL Rendering Context.");
+		}
+	}
+
+	~GLContext(void)
+	{
+		if(_gl_context)
+		{
+			// Are We Able To Release The DC And RC Contexts?
+			if( !wglMakeCurrent(NULL,NULL) )
+			{
+				MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+			}
+
+			// Are We Able To Delete The RC?
+			if( !wglDeleteContext(_gl_context) )
+			{
+				MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+			}
+		}
+	}
+
+	bool makeCurrent(void)
+	{
+		// @todo should throw
+		return wglMakeCurrent(_device, _gl_context);
+	}
+
+	HGLRC getGLContext(void)
+	{ return _gl_context; }
+
+	HDC getDevice(void)
+	{ return _device; }
+
+private :
+	HDC _device;
+
+	// Permanent Rendering Context
+	HGLRC _gl_context;
+
+};
+
 class GLWindow
 {
 public :
-	static GLWindow *create(char* title, int width, int height, int bits);
+	static GLWindow *create(char* title, int width, int height, int bits, GLContext *ctx = 0);
 
 	~GLWindow(void);
 
@@ -43,14 +104,21 @@ public :
 	HWND getHandle(void) const
 	{ return hWnd; }
 
+	GLContext *getContext(void)
+	{ return _context; }
+
+	void makeCurrent(void)
+	{ _context->makeCurrent(); }
+
 private :
-	GLWindow(HDC hdc, HGLRC glrc, HWND win)
-		: hDC(hdc), hRC(glrc), hWnd(win)
+	GLWindow(HDC hdc, HWND win, GLContext *context)
+		: hDC(hdc), hWnd(win), _context(context)
 	{}
 
 	HDC			hDC;		// Private GDI Device Context
-	HGLRC		hRC;		// Permanent Rendering Context
 	HWND		hWnd;		// Holds Our Window Handle
+
+	GLContext *_context;
 };
 
 GLvoid KillGLWindow(HINSTANCE hInstance, GLWindow &win);
@@ -147,7 +215,7 @@ getPixelFormat(DWORD dwFlags, int bits)
  *	bits			- Number Of Bits To Use For Color (8/16/24/32)			*
  *	fullscreenflag	- Use Fullscreen Mode (TRUE) Or Windowed Mode (FALSE)	*/ 
 inline GLWindow *
-GLWindow::create(char* title, int width, int height, int bits)
+GLWindow::create(char* title, int width, int height, int bits, GLContext *ctx)
 {
 	GLuint		PixelFormat;			// Holds The Results After Searching For A Match
 	WNDCLASS	wc;						// Windows Class Structure
@@ -208,7 +276,9 @@ GLWindow::create(char* title, int width, int height, int bits)
 	std::clog << "Window created." << std::endl;
 	
 	HDC hDC = 0;
-	if (!(hDC=GetDC(hWnd)))							// Did We Get A Device Context?
+	if(ctx)
+	{ hDC = ctx->getDevice(); }
+	else if( !(hDC=GetDC(hWnd)) )
 	{
 		//KillGLWindow(hInstance, GLWindow(hDC, 0, hWnd));								// Reset The Display
 		// TODO cleanup
@@ -216,17 +286,18 @@ GLWindow::create(char* title, int width, int height, int bits)
 		return 0;
 	}
 
-	DWORD dwFlags = PFD_DRAW_TO_WINDOW |					// Format Must Support Window
-		PFD_SUPPORT_OPENGL |						// Format Must Support OpenGL
-		PFD_DOUBLEBUFFER;							// Must Support Double Buffering
+	DWORD dwFlags = PFD_DRAW_TO_WINDOW |	// Format Must Support Window
+		PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
+		PFD_DOUBLEBUFFER;					// Must Support Double Buffering
 
 	PIXELFORMATDESCRIPTOR pfd = getPixelFormat(dwFlags | PFD_STEREO, bits);
-	if (!(PixelFormat=ChoosePixelFormat(hDC,&pfd)))	// Did Windows Find A Matching Pixel Format?
+	if( !(PixelFormat=ChoosePixelFormat(hDC, &pfd)) )
 	{
+		// Without quad-buffer stereo 
 		pfd = getPixelFormat(dwFlags, bits);
-		if (!(PixelFormat=ChoosePixelFormat(hDC,&pfd)))	// Did Windows Find A Matching Pixel Format?
+		if( !(PixelFormat=ChoosePixelFormat(hDC,&pfd)) )
 		{
-			//KillGLWindow(hInstance, GLWindow(hDC, 0, 0));								// Reset The Display
+			//KillGLWindow(hInstance, GLWindow(hDC, 0, 0));
 			// TODO cleanup
 			MessageBox(NULL,"Can't Find A Suitable PixelFormat.","ERROR", MB_OK|MB_ICONEXCLAMATION);
 			return 0;
@@ -241,7 +312,7 @@ GLWindow::create(char* title, int width, int height, int bits)
 		std::clog << "Selecting stereo pixel format" << std::endl;
 	}
 
-	if(!SetPixelFormat(hDC,PixelFormat,&pfd))		// Are We Able To Set The Pixel Format?
+	if(!SetPixelFormat(hDC, PixelFormat, &pfd))		// Are We Able To Set The Pixel Format?
 	{
 		//KillGLWindow(hInstance, GLWindow(hDC, 0, hWnd));								// Reset The Display
 		// TODO cleanup
@@ -249,24 +320,11 @@ GLWindow::create(char* title, int width, int height, int bits)
 		return 0;
 	}
 
-	HGLRC hRC = 0;
-	if (!(hRC=wglCreateContext(hDC)))				// Are We Able To Get A Rendering Context?
-	{
-		//KillGLWindow(hInstance, GLWindow(hDC, hRC, hWnd));								// Reset The Display
-		// TODO cleanup
-		MessageBox(NULL,"Can't Create A GL Rendering Context.","ERROR",MB_OK|MB_ICONEXCLAMATION);
-		return 0;
-	}
+	GLContext *context = ctx;
+	if(!context)
+		context = new GLContext(hDC);
 
-	if(!wglMakeCurrent(hDC,hRC))					// Try To Activate The Rendering Context
-	{
-		//KillGLWindow(hInstance, GLWindow(hDC, hRC, hWnd));								// Reset The Display
-		// TODO cleanup
-		MessageBox(NULL,"Can't Activate The GL Rendering Context.","ERROR",MB_OK|MB_ICONEXCLAMATION);
-		return 0;
-	}
-
-	ShowWindow(hWnd,SW_SHOW);						// Show The Window
+	ShowWindow(hWnd, SW_SHOW);						// Show The Window
 	SetForegroundWindow(hWnd);						// Slightly Higher Priority
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
 	ReSizeGLScene(width, height);					// Set Up Our Perspective GL Screen
@@ -283,25 +341,14 @@ GLWindow::create(char* title, int width, int height, int bits)
 
 	std::clog << "OpenGL inited" << std::endl;
 
-	return new GLWindow(hDC, hRC, hWnd);
+	return new GLWindow(hDC, hWnd, context);
 }
 
 
 inline
 GLWindow::~GLWindow(void)
 {
-	if(hRC)											// Do We Have A Rendering Context?
-	{
-		if (!wglMakeCurrent(NULL,NULL))					// Are We Able To Release The DC And RC Contexts?
-		{
-			MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		}
-
-		if (!wglDeleteContext(hRC))						// Are We Able To Delete The RC?
-		{
-			MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		}
-	}
+	delete _context;
 
 	if(hDC && !ReleaseDC(hWnd, hDC))					// Are We Able To Release The DC
 	{
@@ -319,6 +366,7 @@ GLWindow::~GLWindow(void)
 		MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 	}
 }
+
 
 bool	g_keys[256];			// Array Used For The Keyboard Routine
 bool	g_active=TRUE;		// Window Active Flag Set To TRUE By Default

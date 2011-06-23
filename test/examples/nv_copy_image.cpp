@@ -1,13 +1,15 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-06
- *	@file fbo_rendering.cpp
+ *	@file nv_copy_image.cpp
  *
  *	This file is part of Hydra a VR game engine tests.
  *
+ *	Test the usage of NVidia copy image extension.
+ *
  *	Needs OpenGL 3.0
  *
- *	Test the FBO rendering.
  *	Works only on Windows.
+ *	Works only with Quadro GPUs.
  *
  */
 
@@ -26,15 +28,15 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	uint32_t height = 480;
 
 	// Create Our OpenGL Window
-	GLWindow *win = GLWindow::create("OpenGL FBO rendering test", width, height, 16);
+	GLWindow *win = GLWindow::create("NV image copy test", width, height, 16);
 	if(!win)
 	{
-		MessageBox(NULL, "OpenGL window creation failed.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+		MessageBox(NULL, "OpenGL window creation failed.", "ERROR", MB_OK|MB_ICONEXCLAMATION); 
 		return 0;
 	}
 
 	GLenum err = glewInit();
-	if (GLEW_OK != err)
+	if(GLEW_OK != err)
 	{
 		MessageBox(NULL, "GLEW init failed.", "ERROR", MB_OK|MB_ICONEXCLAMATION); 
 		return 0;
@@ -42,7 +44,12 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	if(!GLEW_VERSION_3_0)
 	{
-		MessageBox(NULL, "The FBO demo needs OpenGL 3.0.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+		MessageBox(NULL, "The Copy image demo needs OpenGL 3.0.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+		return 0;
+	}
+	if(!WGLEW_NV_copy_image)
+	{
+		MessageBox(NULL, "The Copy image demo needs NV_copy_image extension.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
 		return 0;
 	}
 
@@ -50,6 +57,25 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	log_file << "Starting FBO rendering test" << std::endl;
 
+	// Create the final texture to display in the Window context
+	GLuint win_texture;
+	glGenTextures(1, &win_texture);
+
+	glBindTexture(GL_TEXTURE_2D, win_texture);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+	if(glGetError() != GL_NO_ERROR)
+	{
+		MessageBox(NULL, "Error in creating Window texture", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+		return -1;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Setup multiple OpenGL contexts
+	// one for the FBO and another one for the window.
+	GLContext *fbo_context = new GLContext(win->getDC());
 	FBO *fbo = new FBO(width, height);
 
 	bool done = !win;
@@ -80,6 +106,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				else								// Not Time To Quit, Update Screen
 				{
 					// Draw to the FBO
+					fbo_context->makeCurrent();
 					fbo->beginDraw();
 
 					glMatrixMode(GL_PROJECTION);
@@ -93,9 +120,21 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					
 					fbo->endDraw();
 
-
 					// Draw the FBO to the Window
-					fbo->drawToScreen();
+					// needs a copy image and a texture in the window context where to copy
+					if( !wglCopyImageSubDataNV(fbo_context->getGLContext(), fbo->getTexture(), 
+							GL_TEXTURE_2D, 0, 0, 0, 0,
+							win->getContext()->getGLContext(), win_texture, 
+							GL_TEXTURE_2D, 0, 0, 0, 0, 
+							width, height, 1) )
+					{
+						MessageBox(NULL, "Error in copying fbo image.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+						return -1;
+					}
+	
+					win->makeCurrent();
+
+					drawToScreen(width, height, win_texture);
 
 					win->swapBuffers();
 				}
