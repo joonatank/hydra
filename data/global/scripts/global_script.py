@@ -200,6 +200,32 @@ def addHideEvent(node, kc) :
 
 	trigger.action_down = proxy
 
+original_ipd = 0
+def stereo_off():
+	if(game.player.ipd > 0):
+		original_ipd = game.player.ipd
+	
+	game.player.ipd = 0
+
+def stereo_on():
+	game.player.ipd = original_ipd
+
+def addToggleStereo(kc) :
+	off_action = ScriptAction.create()
+	off_action.game = game
+	off_action.script = "stereo_on()"
+
+	on_action = ScriptAction.create()
+	on_action.game = game
+	on_action.script = "stereo_off()"
+
+	toggle = ToggleActionProxy.create()
+	toggle.action_on = on_action
+	toggle.action_off = off_action
+
+	trigger = game.event_manager.createKeyTrigger(kc)
+	trigger.action_down = toggle
+
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
 	hide = ScriptAction.create()
@@ -243,4 +269,6 @@ print( 'Adding game events' )
 addScreenshotAction(KC.F10)
 addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
+# Not working yet
+#addToggleStereo(KC.F12)
 

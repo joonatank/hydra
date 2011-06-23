@@ -553,6 +553,16 @@ vl::SceneManager::setAmbientLight( Ogre::ColourValue const &colour )
 	}
 }
 
+void
+vl::SceneManager::setBackgroundColour(Ogre::ColourValue const &colour)
+{
+	if(_background_colour != colour)
+	{
+		setDirty(DIRTY_BACKGROUND_COLOUR);
+		_background_colour = colour;
+	}
+}
+
 void 
 vl::SceneManager::setShadowInfo(ShadowInfo const &info)
 {
@@ -710,6 +720,11 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		msg << _ambient_light;
 	}
 
+	if(dirtyBits & DIRTY_BACKGROUND_COLOUR)
+	{
+		msg << _background_colour;
+	}
+
 	if(dirtyBits & DIRTY_SHADOW_INFO)
 	{
 		msg << _shadows;
@@ -760,6 +775,15 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		if( _ogre_sm )
 		{
 			_ogre_sm->setAmbientLight(_ambient_light);
+		}
+	}
+
+	if(dirtyBits & DIRTY_BACKGROUND_COLOUR)
+	{
+		msg >> _background_colour;
+		if( _ogre_sm )
+		{
+			// @todo can not change background colour without access to Viewports
 		}
 	}
 

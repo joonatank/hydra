@@ -431,6 +431,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
 	;
 
+	// @todo add start state changing
 	python::class_<ToggleActionProxy, boost::noncopyable, python::bases<BasicAction> >("ToggleActionProxy", python::no_init )
 		.add_property("action_on", python::make_function( &ToggleActionProxy::getActionOn, python::return_value_policy< python::reference_existing_object>() ), &ToggleActionProxy::setActionOn)
 		.add_property("action_off", python::make_function( &ToggleActionProxy::getActionOff, python::return_value_policy< python::reference_existing_object>() ), &ToggleActionProxy::setActionOff)

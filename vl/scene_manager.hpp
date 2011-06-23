@@ -383,7 +383,12 @@ public :
 	Ogre::ColourValue const &getAmbientLight(void) const
 	{ return _ambient_light; }
 
-	void setAmbientLight( Ogre::ColourValue const &colour );
+	void setAmbientLight(Ogre::ColourValue const &colour);
+
+	Ogre::ColourValue const &getBackgroundColour(void) const
+	{ return _background_colour; }
+
+	void setBackgroundColour(Ogre::ColourValue const &colour);
 
 	/// @brief get the shadow structure
 	/// Non-const version easier to edit. Uses the new dirty object system 
@@ -431,8 +436,9 @@ public :
 		DIRTY_SKY_DOME = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
-		DIRTY_SHADOW_INFO = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_BACKGROUND_COLOUR = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_SHADOW_INFO = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
 	};
 
 	Ogre::SceneManager *getNative( void )
@@ -464,7 +470,9 @@ private :
 	uint32_t _scene_version;
 
 	Ogre::ColourValue _ambient_light;
-	
+
+	Ogre::ColourValue _background_colour;
+
 	ShadowInfo _shadows;
 
 	vl::Session *_session;
