@@ -71,16 +71,28 @@ namespace vl
 	{
 		virtual const char* what() const throw()
 		{
-			return "null pointer parameter";
+			return "null pointer";
 		}
 	};
 
+	struct item_not_found : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "item was not found"; }
+	};
+
+	struct invalid_param : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "invalid parameter provided"; }
+	};
+
 	/// Empty parameter provided to a function where that parameter is required
-	struct empty_param : public exception
+	struct empty_param : public invalid_param
 	{
 		virtual const char* what() const throw()
 		{
-			return "empty parameter provided to a function";
+			return "empty parameter provided";
 		}
 	};
 

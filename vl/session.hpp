@@ -21,6 +21,7 @@ namespace vl
 
 enum OBJ_TYPE
 {
+	OBJ_INVALID,
 	OBJ_PLAYER,
 	OBJ_GUI,
 	OBJ_SCENE_MANAGER,
@@ -28,6 +29,7 @@ enum OBJ_TYPE
 	OBJ_ENTITY,
 	OBJ_LIGHT,
 	OBJ_CAMERA,
+	OBJ_MOVABLE_TEXT,
 };
 
 class Session

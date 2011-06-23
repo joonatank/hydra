@@ -346,13 +346,36 @@ public :
 	CameraPtr getCamera(std::string const &name) const;
 
 
+	/// --------- MovableText --------------
+
+	MovableTextPtr createMovableText(std::string const &name, std::string const &text);
+
+	/// @internal
+	/// This should only be called on from slaves
+	/// This can not be private because it's called from the Renderer
+	MovableTextPtr _createMovableText(uint64_t id);
+
+
 	/// --------- MovableObject ------------
-	/// Internal
+	/// @brief Common creator for all the movable objects, extra params are passed using a param list
+	MovableObjectPtr createMovableObject(std::string const &type_name, std::string const &name, vl::NamedParamList const &params = vl::NamedParamList());
+	MovableObjectPtr createMovableObject(vl::OBJ_TYPE type, std::string const &name, vl::NamedParamList const &params = vl::NamedParamList());
+
+	/// @internal
 	MovableObjectPtr _createMovableObject(std::string const &type, uint64_t id);
+
+	/// @internal
+	MovableObjectPtr _createMovableObject(vl::OBJ_TYPE type, uint64_t id);
 
 	MovableObjectPtr getMovableObjectID(uint64_t id) const;
 
 	MovableObjectPtr getMovableObject(std::string const &type, std::string const &name) const;
+
+	OBJ_TYPE getMovableObjectType(std::string const &type) const;
+
+	std::string getMovableObjectTypeName(OBJ_TYPE type) const;
+
+	bool hasMovableObject(vl::OBJ_TYPE, std::string const &name) const;
 
 	bool hasMovableObject(std::string const &type, std::string const &name) const;
 
@@ -448,6 +471,11 @@ private :
 	virtual void recaluclateDirties(void);
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
+
+	MovableObjectPtr _createEntity(std::string const &name, vl::NamedParamList const &params);
+	MovableObjectPtr _createLight(std::string const &name, vl::NamedParamList const &params);
+	MovableObjectPtr _createCamera(std::string const &name, vl::NamedParamList const &params);
+	MovableObjectPtr _createMovableText(std::string const &name, vl::NamedParamList const &params);
 
 	// @todo rename to avoid confusion
 	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);
