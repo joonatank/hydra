@@ -58,7 +58,7 @@ find_package(OpenGL REQUIRED)
 find_package(Ogre REQUIRED)
 
 ######### Find OIS ###########
-find_package(OIS REQUIRED )
+find_package(OIS REQUIRED)
 
 ######### Find CEGUI #########
 find_package( CEGUI REQUIRED )
@@ -163,6 +163,7 @@ include_directories(vl)
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 
