@@ -12,38 +12,70 @@
 
 #include "scene_node.hpp"
 
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Constraint const &c)
+{
+	os << "Constraint with bodies : " << c._bodyA->getName() << " and " 
+		<< c._bodyB->getName() << "\n"
+		<< " Transformation = " << c._getLink()->getTransform()
+		<< " Initial transformation = " << c._getLink()->getInitialTransform()
+		<< std::endl;
+
+
+	return os;
+}
+
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------
-vl::Transform const &
-vl::Constraint::getStartWorldFrame(void) const
-{ return _bodyA->getWorldTransform()*_start_local_frame_a; }
-
-vl::Transform const &
-vl::Constraint::getWorldFrame(void) const
-{ return _bodyA->getWorldTransform()*_current_local_frame_a; }
 
 /// ------------------------------ Protected ---------------------------------
 vl::Constraint::Constraint(SceneNodePtr rbA, SceneNodePtr rbB, vl::Transform const &worldFrame)
-	: _bodyA(rbA), _bodyB(rbB)
+	: _bodyA(rbA)
+	, _bodyB(rbB)
 {
 	assert(_bodyA);
 	assert(_bodyB);
-	vl::Transform wt(_bodyA->getWorldTransform());
-	_start_local_frame_a = wt*worldFrame;
-	wt = _bodyB->getWorldTransform();
-	_start_local_frame_b = wt*worldFrame;
 
-	_current_local_frame_a = _start_local_frame_a;
+	vl::Transform wtA(_bodyA->getWorldTransform());
+	wtA.invert();
+
+	vl::Transform wtB(_bodyB->getWorldTransform());
+	wtB.invert();
+
+	_current_local_frame_a = wtA*worldFrame;
+	_current_local_frame_b = wtB*worldFrame;
+}
+
+void 
+vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
+{
+	assert(!_link && link);
+	_link = link;
+
+	// Shouldn't change parent's transformation
+	// This problem only arises because there is a problem when setting
+	// the transformation of bodyB
+	if( !_link->getParent()->getWorldTransform().isIdentity() &&
+		_link->getParent()->getWorldTransform() != _bodyA->getWorldTransform() )
+	{}
+	else
+	{
+		_link->getParent()->setWorldTransform(_bodyA->getWorldTransform());
+	}
+	
+	// needs to be set before child to get the correct local matrix for child
+	_link->setTransform(_current_local_frame_b);
+	_link->setInitialState();
+
+	Transform wt(_bodyB->getWorldTransform());
+	_link->getChild()->setWorldTransform(wt);
 }
 
 /// ------------------------------ FixedConstraint ---------------------------
 /// ------------------------------ Public ------------------------------------
 void
 vl::FixedConstraint::_proggress(vl::time const &t)
-{
-	vl::Transform wt(_bodyA->getWorldTransform());
-	_bodyB->setWorldTransform(wt*_current_local_frame_a);
-}
+{}
 
 /// ------------------------------ Private -----------------------------------
 vl::FixedConstraint::FixedConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
@@ -51,6 +83,7 @@ vl::FixedConstraint::FixedConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transfo
 {}
 
 /// ------------------------------ SixDofConstraint --------------------------
+/*
 /// ------------------------------ Public ------------------------------------	
 void
 vl::SixDofConstraint::enableMotor(bool enable)
@@ -115,9 +148,22 @@ vl::SixDofConstraint::getAngularUpperLimit(void) const
 void
 vl::SixDofConstraint::_proggress(vl::time const &t)
 {
+	std::vector<bool> free;
+	free.push_back(_linear_upper_limit.x < _linear_lower_limit.x);
+	free.push_back(_linear_upper_limit.y < _linear_lower_limit.y);
+	free.push_back(_linear_upper_limit.z < _linear_lower_limit.z);
+	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
+	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
+	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
+
 	if(_motor_enabled)
 	{
 	}
+	else
+	{
+	}
+
+	_update_bodies();
 }
 
 /// ------------------------------ Private -----------------------------------
@@ -129,6 +175,7 @@ vl::SixDofConstraint::SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Trans
 	, _ang_lower_limit(0, 0, 0)
 	, _ang_upper_limit(0, 0, 0)
 {}
+*/
 
 /// ------------------------------ SliderConstraint --------------------------
 /// ------------------------------ Public ------------------------------------	
@@ -205,14 +252,19 @@ vl::SliderConstraint::getMotorVelocity(void) const
 
 void
 vl::SliderConstraint::_proggress(vl::time const &t)
-{
+{	
+	if(!_link)
+	{ return; }
+
 	/// @todo add configurable axis using _axisInA
 	/// @todo starting position is in Frame A, so we should fix the offset from Frame B
 	/// that is in the start, 
 	/// as WT*_start_local_frame_a.position.y != WT*_start_local_frame_b.position.y
 	/// which causes the zero position for Frame B be in the origin of Frame A
 	/// but this does not change it before the target has been changed.
-	vl::scalar pos = _current_local_frame_a.position.y - _start_local_frame_a.position.y;
+
+	vl::scalar translate = 0;
+	vl::scalar pos = _link->getTransform().position.y - _link->getInitialTransform().position.y;
 	/// @todo add tolerance
 	if(_motor_enabled && _target_position != pos)
 	{
@@ -224,44 +276,44 @@ vl::SliderConstraint::_proggress(vl::time const &t)
 		/// @todo how to handle negative targets, should the user use negative
 		/// velocity or is it only speed and we need to decide which way to go?
 		vl::scalar s = vl::sign(_target_position - pos);
-		vl::scalar translate = s*abs(_velocity) * double(t);
+		translate = s*abs(_velocity) * double(t);
 		
 		/// Clamp the translation
 		if(translate < 0)
 		{ translate = vl::clamp(translate, _target_position-pos, vl::scalar(0)); }
 		else
 		{ translate = vl::clamp(translate, vl::scalar(0), _target_position-pos); }
-		//if(abs(translate) > abs(pos-_target_position))
-		//{ translate = pos-_target_position; }
+	}
+	else
+	{
+		// @todo this should handle free movemenf following the A object
+	}
+	
+	/// Move the child body
+	/// Wether the joint is limited or not
+	/// @todo this is common for all joints, though the constraint type linear/angular changes
+	bool free = _lower_limit > _upper_limit;
+	/// Check constraints
+	if(!free)
+	{
+		if(translate < 0)
+		{ free = (pos > _lower_limit); }
+		else if(translate > 0)
+		{ free = (pos < _upper_limit); }
 
-		/// Check constraints
-		/// @todo this is common for all joints, though the constraint type linear/angular changes
-		bool free = _lower_limit > _upper_limit;
-		if(!free)
-		{
-			if(translate < 0)
-			{ free = (pos > _lower_limit); }
-			else if(translate > 0)
-			{ free = (pos < _upper_limit); }
-
-			// Clamp only if not free
-			// @todo should we clamp the target instead of the result? 
-			// then again any subsequent change in limits would not get the actuator moving
-			translate = vl::clamp(translate, _lower_limit-pos, _upper_limit-pos);
-			assert(translate+pos >= _lower_limit);
-			assert(translate+pos <= _upper_limit);
-		}
-
-		if(free)
-		{
-			_current_local_frame_a.position.y += translate;
-			vl::Transform wt(_bodyA->getWorldTransform());
-			wt.invert();
-			_bodyB->setWorldTransform(wt*_current_local_frame_a);
-		}
+		// Clamp only if not free
+		// @todo should we clamp the target instead of the result? 
+		// then again any subsequent change in limits would not get the actuator moving
+		translate = vl::clamp(translate, _lower_limit-pos, _upper_limit-pos);
+		assert(translate+pos >= _lower_limit);
+		assert(translate+pos <= _upper_limit);
 	}
 
-	/// @todo add IK
+	if(free)
+	{
+		/// Update object B
+		_link->getTransform().position.y += translate;
+	}
 }
 
 /// ------------------------------ Private -----------------------------------
@@ -364,9 +416,18 @@ vl::HingeConstraint::getHingeAngle(void) const
 void
 vl::HingeConstraint::_proggress(vl::time const &t)
 {
+	bool free = _upper_limit < _lower_limit;
 	if(_motor_enabled)
 	{
 	}
+	else
+	{
+
+	}
+
+	// @todo update _current_local_frame_a
+//	_current_local_frame_a.position.y += translate;
+	//_update_bodies();
 }
 
 /// ------------------------------ Private -----------------------------------

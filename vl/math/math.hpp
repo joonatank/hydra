@@ -26,6 +26,8 @@
 // Necessary for the Wall configuration needed for calculating view and frustum matrices
 #include "base/envsettings.hpp"
 
+#include "transform.hpp"
+
 namespace vl
 {
 
@@ -60,6 +62,11 @@ inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2 )
 		{ return false; }
 	}
 	return true;
+}
+
+inline bool equal(vl::Transform const &t1, vl::Transform const &t2)
+{
+	return equal(t1.position, t2.position) && equal(t1.quaternion, t2.quaternion);
 }
 
 inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )

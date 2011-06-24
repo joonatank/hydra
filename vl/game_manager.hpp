@@ -190,7 +190,10 @@ public :
 
 	void removeConstraint(vl::ConstraintRefPtr constraint);
 
-	bool hasConstraint(vl::ConstraintRefPtr constraint);
+	bool hasConstraint(vl::ConstraintRefPtr constraint) const;
+
+	ConstraintSolverRefPtr getConstraintSolver(void)
+	{ return _constraint_solver; }
 
 	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
@@ -325,7 +328,7 @@ private :
 	physics::WorldRefPtr _physics_world;
 
 	/// Non physics constraints
-	std::vector<vl::ConstraintRefPtr> _constraints;
+	ConstraintSolverRefPtr _constraint_solver;
 
 };	// class GameManager
 

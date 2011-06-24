@@ -50,7 +50,7 @@ vl::Transform::invert(void)
 	// Transform needs to have the property that inv(T)*T = I and T*inv(T) = I
 	// so the position vector needs to be multiplied with inverse quaternion
 	quaternion = quaternion.Inverse();
-	position = -(quaternion*position);
+	position = quaternion*(-position);
 }
 
 Ogre::Vector3 

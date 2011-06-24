@@ -111,7 +111,7 @@ vl::SceneNode::transform(vl::Transform const &trans)
 {
 	if(!trans.isIdentity())
 	{
-		setTransform(trans*_transform);
+		setTransform(_transform*trans);
 	}
 }
 

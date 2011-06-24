@@ -26,6 +26,8 @@
 
 #include "dotscene_loader.hpp"
 
+#include "constraint_solver.hpp"
+
 vl::GameManager::GameManager(vl::Logger *logger)
 	: _python(0)
 	, _resource_man(new vl::ResourceManager)
@@ -38,6 +40,7 @@ vl::GameManager::GameManager(vl::Logger *logger)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _state(GS_UNKNOWN)
+	, _constraint_solver(new vl::ConstraintSolver)
 {
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
@@ -172,39 +175,19 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 void 
 vl::GameManager::addConstraint(vl::ConstraintRefPtr constraint)
 {
-	if(!hasConstraint(constraint))
-	{
-		_constraints.push_back(constraint);
-	}
+	_constraint_solver->addConstraint(constraint);
 }
 
 void
 vl::GameManager::removeConstraint(vl::ConstraintRefPtr constraint)
 {
-	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		if(*iter == constraint)
-		{
-			_constraints.erase(iter);
-			break;
-		}
-	}
+	_constraint_solver->removeConstraint(constraint);
 }
 
 bool
-vl::GameManager::hasConstraint(vl::ConstraintRefPtr constraint)
+vl::GameManager::hasConstraint(vl::ConstraintRefPtr constraint) const
 {
-	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		if(*iter == constraint)
-		{
-			return true;
-		}
-	}
-
-	return false;
+	return _constraint_solver->hasConstraint(constraint);
 }
 
 vl::physics::WorldRefPtr
@@ -328,9 +311,5 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 void
 vl::GameManager::_process_constraints(vl::time const &t)
 {
-	for(std::vector<vl::ConstraintRefPtr>::iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		(*iter)->_proggress(t);
-	}
+	_constraint_solver->step(t);
 }

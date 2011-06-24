@@ -18,6 +18,8 @@
 
 #include "base/timer.hpp"
 
+#include "animation.hpp"
+
 namespace vl
 {
 
@@ -33,16 +35,19 @@ public :
 	SceneNodePtr getBodyB(void)
 	{ return _bodyB; }
 
-	/// @brief get the start transformation for this constraint
-	vl::Transform const &getStartWorldFrame(void) const;
-
-	/// @brief get the current transformation for this constraint
-	vl::Transform const &getWorldFrame(void) const;
-
 	/// @internal
 	/// @brief progresses the constraint if it's used as an actuator
 	/// @param t time since last call, i.e. simulation time step
 	virtual void _proggress(vl::time const &t) = 0;
+
+	friend std::ostream &operator<<(std::ostream &, vl::Constraint const &c);
+
+	/// @internal
+	void _setLink(vl::animation::LinkRefPtr link);
+
+	/// @internal
+	vl::animation::LinkRefPtr _getLink(void) const
+	{ return _link; }
 
 protected :
 	/// only child classes are allowed to use the constructor
@@ -50,9 +55,12 @@ protected :
 
 	SceneNodePtr _bodyA;
 	SceneNodePtr _bodyB;
-	vl::Transform _start_local_frame_a;
-	vl::Transform _start_local_frame_b;
+
+	/// Current frames in object coordinates
 	vl::Transform _current_local_frame_a;
+	vl::Transform _current_local_frame_b;
+
+	vl::animation::LinkRefPtr _link;
 
 };	// class Constraint
 
@@ -75,6 +83,7 @@ private :
 
 };	// class FixedConstraint
 
+/* For now no SixDof constraint
 class SixDofConstraint : public Constraint
 {
 public :
@@ -119,12 +128,14 @@ private :
 	Ogre::Vector3 _ang_upper_limit;
 
 };	// class SixDofConstraint
+*/
 
 /** @class SliderConstraint
  *	@brief constraint that allows for one axis of freedom between two bodies
  *	Does not implement dynamics calculation.
  *	Angular limits for slider constraint are not supported
  *	Supports servo motors so that the constraint can be used as an actuator.
+ *	@todo rename to prismatic joint, as used in Robot literature
  */
 class SliderConstraint : public Constraint
 {
@@ -186,6 +197,7 @@ private :
 /** @class HingeConstraint
  *	@brief a constraint that has all axes locked except for one rotation axis
  *	Supports servo motors for using the constraint as an actuator.
+ *	@todo rename to revolute joint, as used in Robot literature
  */
 class HingeConstraint : public Constraint
 {

@@ -26,6 +26,9 @@ copy_start_scripts( hydra
 	robot_project/robot.prj
 	"robot" )
 
+copy_start_scripts( hydra
+	perapora_project/perapora.prj
+	"perapora" )
 
 copy_start_scripts( renderer
 	tracking_test_project/tracking.prj

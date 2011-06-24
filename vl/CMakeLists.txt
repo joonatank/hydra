@@ -68,6 +68,8 @@ set( SOURCES
 	gui/gui.cpp
 	gui/window.cpp
 	constraints.cpp
+	constraint_solver.cpp
+	animation.cpp
 	)
 
 set( HEADERS
@@ -137,6 +139,8 @@ set( HEADERS
 	cluster/states.hpp
 	distributed.hpp
 	constraints.hpp
+	constraint_solver.hpp
+	animation.hpp
 	physics/motion_state.hpp
 	physics/rigid_body.hpp
 	physics/shapes.hpp
@@ -147,6 +151,13 @@ set( HEADERS
 	gui/window.hpp
 	gui/gui_actions.hpp
 	)
+
+# Set parallel build
+# TODO make configurable, maybe move to solution level
+if(WIN32)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+	message("CXX flags ${CMAKE_CXX_FLAGS}")
+endif()
 
 add_library(HydraMain ${SOURCES} ${HEADERS} )
 
