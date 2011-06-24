@@ -1,0 +1,581 @@
+<?xml version="1.0" ?>
+<scene export_time="1307020729.544" exported_by="jotu" formatVersion="1.0.0" previous_export_time="1307019857.794">
+	<nodes>
+		<node name="cb_kaantokappale" uuid="a0cca8d206b056df218e2c453ab81c80">
+			<position x="-0.599441" y="0.676197" z="-0.899973"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_kaantokappale.mesh" name="cb_kaantokappale" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_kehto" uuid="492126c51dfe402f4341ea778d4f709a">
+			<position x="-4.437250" y="1.243146" z="-0.975012"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_kehto.mesh" name="cb_kehto" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_kiinnike1_slaite" uuid="8524b0a6af2890b5777f9b8500dc87e4">
+			<position x="-3.542942" y="1.501945" z="-0.760851"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_kiinnike1_slaite.mesh" name="cb_kiinnike1_slaite" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_kiinnityslevy" uuid="dee0d6226e552abd52fe23a83bfdc03f">
+			<position x="-0.420162" y="0.771950" z="-0.795378"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="0.0" mass_radius="0.4000000059604645" meshFile="cb_kiinnityslevy.mesh" name="cb_kiinnityslevy" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_ohjaamo" uuid="70fa036cf807f1c67a8641eda0911382">
+			<position x="0.981347" y="1.118069" z="-0.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.600000023841858" meshFile="cb_ohjaamo.mesh" name="cb_ohjaamo" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_ohjuri_slaite" uuid="420d3a4b29a68fb842527a7474a4408f">
+			<position x="-4.588869" y="1.516631" z="-0.964765"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.30000001192092896" meshFile="cb_ohjuri_slaite.mesh" name="cb_ohjuri_slaite" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_porakanki" uuid="ccb591097f13045e63e79bc17c36b0bf">
+			<position x="-2.939086" y="1.698639" z="-0.975043"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="4.0" meshFile="cb_porakanki.mesh" name="cb_porakanki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_porakelkka" uuid="1bcbc27cf9f4ef7196ad2805bddf1471">
+			<position x="-1.692466" y="1.643843" z="-0.973522"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.6000000238418579" meshFile="cb_porakelkka.mesh" name="cb_porakelkka" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_pulttausnivel" uuid="c4fd80d96c04669aa40163306667fa74">
+			<position x="-4.028614" y="1.004707" z="-0.975927"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.20000000298023224" meshFile="cb_pulttausnivel.mesh" name="cb_pulttausnivel" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_puomiteline" uuid="773938ee63c4bcb5198e099328a53cce">
+			<position x="-0.223366" y="0.498850" z="-0.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_puomiteline.mesh" name="cb_puomiteline" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_ristikpl_kaantosyl" uuid="f29f6e882b81e09d341ac88f758c335d">
+			<position x="-0.586807" y="0.833269" z="-0.527194"/>
+			<quaternion w="-0.000000" x="-0.748955" y="-0.000000" z="0.662620"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.20000000298023224" meshFile="cb_ristikpl_kaantosyl.mesh" name="cb_ristikpl_kaantosyl" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_ristikpl_swing" uuid="c040db28ff552de74dfa3e58025a7a4a">
+			<position x="-3.545033" y="0.742372" z="-1.204313"/>
+			<quaternion w="0.000000" x="-0.043619" y="-0.000000" z="0.999048"/>
+			<scale x="0.999999" y="0.999999" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.20000000298023224" meshFile="cb_ristikpl_swing.mesh" name="cb_ristikpl_swing" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_sisaputki" uuid="786df9f0c1c4769a96fac1d2757f4b97">
+			<position x="-2.900258" y="0.830841" z="-1.014184"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.7999999523162842" meshFile="cb_sisaputki.mesh" name="cb_sisaputki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_swingkappale" uuid="7a4349e6210becd81d9befef7386ae02">
+			<position x="-3.718737" y="0.742794" z="-1.036484"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.25" meshFile="cb_swingkappale.mesh" name="cb_swingkappale" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_kaanto_putki" uuid="3426dd5945822d51ca72f5b3b43b12cd">
+			<position x="-1.836645" y="0.669309" z="-0.684036"/>
+			<quaternion w="0.765564" x="0.039172" y="-0.046816" z="-0.640457"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.699999988079071" meshFile="cb_syl_kaanto_putki.mesh" name="cb_syl_kaanto_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_kaanto_varsi" uuid="d71b2ffadc07b7a3e27beda2d611a5cb">
+			<position x="-0.985954" y="0.823374" z="-0.579570"/>
+			<quaternion w="0.765565" x="0.039174" y="-0.046819" z="-0.640456"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.699999988079071" meshFile="cb_syl_kaanto_varsi.mesh" name="cb_syl_kaanto_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_nosto_putki" uuid="297fed95d8fe568b6711db81e8d2ed2d">
+			<position x="-1.832236" y="0.583379" z="-0.900571"/>
+			<quaternion w="-0.000001" x="-0.748956" y="-0.662620" z="-0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.699999988079071" meshFile="cb_syl_nosto_putki.mesh" name="cb_syl_nosto_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_nosto_varsi" uuid="3d66941d7221ae469a53c49ca0ba4ac2">
+			<position x="-1.015957" y="0.483045" z="-0.900068"/>
+			<quaternion w="-0.000001" x="-0.748956" y="-0.662620" z="-0.000001"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.699999988079071" meshFile="cb_syl_nosto_varsi.mesh" name="cb_syl_nosto_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_pulttaus_putki" uuid="cb4e4fc4d35882755ff0feb5dca5bfac">
+			<position x="-4.626746" y="1.059652" z="-0.941499"/>
+			<quaternion w="0.442595" x="-0.442595" y="-0.551461" z="-0.551461"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.5" meshFile="cb_syl_pulttaus_putki.mesh" name="cb_syl_pulttaus_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_pulttaus_varsi" uuid="54eabfda90946cf38b0f78490db36afe">
+			<position x="-4.266383" y="1.059561" z="-0.861812"/>
+			<quaternion w="0.442595" x="-0.442595" y="-0.551461" z="-0.551461"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_syl_pulttaus_varsi.mesh" name="cb_syl_pulttaus_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_swing_putki" uuid="b3912b107f97ebd21aabec1506e6dd40">
+			<position x="-2.827013" y="0.847459" z="-1.130120"/>
+			<quaternion w="0.030507" x="-0.762020" y="0.646051" z="-0.031835"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_syl_swing_putki.mesh" name="cb_syl_swing_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_swing_varsi" uuid="6ddd27394af370067f59db4695429e91">
+			<position x="-3.317752" y="0.765278" z="-1.173725"/>
+			<quaternion w="0.030507" x="-0.762020" y="0.646051" z="-0.031835"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_syl_swing_varsi.mesh" name="cb_syl_swing_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_syotto_putki" uuid="8311ddbdfec1fe745c6c4516aad4a3a5">
+			<position x="-4.526251" y="1.260131" z="-0.972997"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.100000023841858" meshFile="cb_syl_syotto_putki.mesh" name="cb_syl_syotto_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_syotto_varsi" uuid="0ae997d929f5fdf5558f8d42c99301e5">
+			<position x="-5.291042" y="1.260068" z="-0.973035"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_syl_syotto_varsi.mesh" name="cb_syl_syotto_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_tilt_putki" uuid="0205814c56a5b7fd1a6094b9446280af">
+			<position x="-2.836015" y="0.883170" z="-0.900083"/>
+			<quaternion w="0.000000" x="-0.669131" y="0.743145" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_syl_tilt_putki.mesh" name="cb_syl_tilt_putki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syl_tilt_varsi" uuid="aa2a798ac021749a5e503380e72a02f3">
+			<position x="-3.295836" y="0.931904" z="-0.899889"/>
+			<quaternion w="0.000000" x="-0.669131" y="0.743145" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_syl_tilt_varsi.mesh" name="cb_syl_tilt_varsi" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_syottol_kiskot" uuid="6fc5b395b609623292aa6723b1820b30">
+			<position x="-3.235755" y="1.533802" z="-0.960627"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="3.700000047683716" meshFile="cb_syottol_kiskot.mesh" name="cb_syottol_kiskot" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_tiltkappale" uuid="161730ce14e05786a85509effde5cd80">
+			<position x="-3.555117" y="0.806610" z="-0.971080"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.30000001192092896" meshFile="cb_tiltkappale.mesh" name="cb_tiltkappale" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_ulkoputki" uuid="a3efb660dae052fa563be3ba1f504411">
+			<position x="-1.536867" y="0.850508" z="-0.925594"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="cb_ulkoputki.mesh" name="cb_ulkoputki" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="cb_vaantomot" uuid="31c7322d00b8d6ccd83b2a3dbedfa86a">
+			<position x="-4.133116" y="0.745834" z="-0.974205"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="True" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="0.4000000059604645" meshFile="cb_vaantomot.mesh" name="cb_vaantomot" physics_type="RIGID_BODY" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="letkukiinnikepiste1" uuid="09fb85d81c06e802c2bc3b6111d2c78b">
+			<position x="-2.117021" y="0.459675" z="-0.800235"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+		</node>
+		<node name="letkukiinnikepiste2" uuid="c0cdc8e4760c08a794630852a2f7b662">
+			<position x="-2.983557" y="0.596923" z="-0.843991"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+		</node>
+		<node name="letkukiinnikepiste3" uuid="c4e6de5cba0cbe0db4ec39c3dfef55c7">
+			<position x="-2.983557" y="0.596517" z="-0.956041"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+		</node>
+		<node name="letkukiinnikepiste4" uuid="a00d72953670703c50fb16630e23ebcb">
+			<position x="-4.301990" y="0.500000" z="-0.974936"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+		</node>
+		<node name="nivel_kaantosyl1_rotz" uuid="ab0e662873f893f2f7fa3f452efc8374">
+			<position x="-2.115957" y="0.620198" z="-0.709711"/>
+			<quaternion w="0.706434" x="-0.706434" y="-0.030843" z="-0.030843"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_kaantosyl1_rotz.mesh" name="nivel_kaantosyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_kaantosyl2_rotz" uuid="106a4b3226b33e06326a984319993788">
+			<position x="-0.711755" y="0.870193" z="-0.543047"/>
+			<quaternion w="0.043167" x="-0.043167" y="0.705788" z="0.705788"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_kaantosyl2_rotz.mesh" name="nivel_kaantosyl2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_kehto_rotz" uuid="3c3fada2186a6387b0987b1ecf479b42">
+			<position x="-3.966688" y="1.013855" z="-0.976944"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_kehto_rotz.mesh" name="nivel_kehto_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_klevy1_rotz" uuid="c622144a1ad8160227d00706da06dd54">
+			<position x="-0.542256" y="0.713211" z="-0.901946"/>
+			<quaternion w="0.000000" x="-0.707107" y="-0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_klevy1_rotz.mesh" name="nivel_klevy1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_klevy2_rotz" uuid="204dc9ae2c00c8d2e28eb05c1e984eb7">
+			<position x="-0.543382" y="0.796393" z="-0.521969"/>
+			<quaternion w="0.000000" x="0.000000" y="-0.000000" z="1.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_klevy2_rotz.mesh" name="nivel_klevy2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_nostosyl1_rotz" uuid="97c234cf3af90939f298bc7e8e23f394">
+			<position x="-2.115930" y="0.620198" z="-0.898809"/>
+			<quaternion w="0.707107" x="-0.707107" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_nostosyl1_rotz.mesh" name="nivel_nostosyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_nostosyl2_rotz" uuid="cc3e3b9724088b839a4f256025d277a1">
+			<position x="-0.750059" y="0.450694" z="-0.900195"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_nostosyl2_rotz.mesh" name="nivel_nostosyl2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_pulttsyl1_rotz" uuid="db421fa7667aa4e51062252b14fdf011">
+			<position x="-4.777830" y="1.076423" z="-0.975772"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_pulttsyl1_rotz.mesh" name="nivel_pulttsyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_pulttsyl2_rotz" uuid="b825fff8b8df434ee9a111b410d4aec8">
+			<position x="-4.113870" y="1.062304" z="-0.828773"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_pulttsyl2_rotz.mesh" name="nivel_pulttsyl2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_puomi_rotz" uuid="c64691064dfbbf856168d103f1c8d0e5">
+			<position x="-0.714921" y="0.870382" z="-0.891257"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_puomi_rotz.mesh" name="nivel_puomi_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_swingristi_rotz" uuid="f8e574e80beda750038cbdada8e3b74d">
+			<position x="-3.616704" y="0.701169" z="-1.199487"/>
+			<quaternion w="0.000000" x="0.000000" y="-0.000000" z="1.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_swingristi_rotz.mesh" name="nivel_swingristi_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_swingsyl1_rotz" uuid="8a99a1cca2c648bbdda4792edd78cda7">
+			<position x="-2.682216" y="0.871643" z="-1.121748"/>
+			<quaternion w="0.706865" x="-0.706864" y="-0.018510" z="-0.018510"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_swingsyl1_rotz.mesh" name="nivel_swingsyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_swingsyl2_rotz" uuid="cc883ef99d8ed12f4904120aec3ec29e">
+			<position x="-3.457887" y="0.742643" z="-1.187951"/>
+			<quaternion w="0.030843" x="-0.030843" y="0.706434" z="0.706434"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_swingsyl2_rotz.mesh" name="nivel_swingsyl2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_syottlaite_trz" uuid="88df5ef405ec27b398c0c41312edd68c">
+			<position x="-5.576707" y="1.260212" z="-0.973774"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_syottlaite_trz.mesh" name="nivel_syottlaite_trz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_syottosyl1_rotz" uuid="5393dfc0afb1f75567e74372b8052b9f">
+			<position x="-4.120500" y="1.260000" z="-0.974997"/>
+			<quaternion w="0.500000" x="0.500000" y="-0.500000" z="-0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_syottosyl1_rotz.mesh" name="nivel_syottosyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_syottosyl2_rotz" uuid="5e5a8a54b7be4e066c9ae9362bc99e86">
+			<position x="-5.700000" y="1.260000" z="-0.974996"/>
+			<quaternion w="0.500000" x="0.500000" y="-0.500000" z="-0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_syottosyl2_rotz.mesh" name="nivel_syottosyl2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_telesk_trz" uuid="a8daf775587269f07df7e2917874b175">
+			<position x="-2.310337" y="0.871746" z="-0.901945"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_telesk_trz.mesh" name="nivel_telesk_trz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_tilt_rotz" uuid="f49e9409331b23029e65c4cc43051ec9">
+			<position x="-3.454082" y="0.742879" z="-0.899005"/>
+			<quaternion w="0.707107" x="-0.707107" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_tilt_rotz.mesh" name="nivel_tilt_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_tiltkpl_rotz" uuid="1ec374b250ee344ed7173f17a5738228">
+			<position x="-3.616638" y="0.747343" z="-0.977916"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_tiltkpl_rotz.mesh" name="nivel_tiltkpl_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_tiltsyl1_rotz" uuid="79cecc245978d3be5e954242d007b3ac">
+			<position x="-2.684781" y="0.871643" z="-0.900192"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_tiltsyl1_rotz.mesh" name="nivel_tiltsyl1_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_tiltsyl2_rotz" uuid="9f735965b32b2f47fcd1e3825aa3411c">
+			<position x="-3.442786" y="0.947137" z="-0.902685"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_tiltsyl2_rotx.mesh" name="nivel_tiltsyl2_rotx" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_vaantomot2_rotz" uuid="13e7157a19197c99adc3aedb6021245c">
+			<position x="-3.967031" y="1.001338" z="-0.974913"/>
+			<quaternion w="-0.000000" x="-0.707107" y="0.000000" z="-0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_vaantomot2_rotz.mesh" name="nivel_vaantomot2_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+		<node name="nivel_vaantomot_rotz" uuid="9d14cc99a1f673e3adacd211bf743435">
+			<position x="-3.960065" y="0.743005" z="-0.978889"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<game>
+				<sensors/>
+				<actuators/>
+			</game>
+			<entity actor="False" anisotropic_friction="False" damping_rot="0.10000000149011612" damping_trans="0.03999999910593033" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.4000000059604645" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="1.0" mass_radius="1.0" meshFile="nivel_vaantomot_rotz.mesh" name="nivel_vaantomot_rotz" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
+		</node>
+	</nodes>
+	<externals>
+		<item type="material">
+			<file name="Scene.material"/>
+		</item>
+	</externals>
+	<environment>
+		<colourBackground b="0.05087608844041824" g="0.05087608844041824" r="0.05087608844041824"/>
+		<colourAmbient b="0.0" g="0.0" r="0.0"/>
+		<colourDiffuse b="0.05087608844041824" g="0.05087608844041824" r="0.05087608844041824"/>
+	</environment>
+</scene>

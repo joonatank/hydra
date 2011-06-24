@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2011-06
+
+-->
+<project_config name="perapora">
+
+	<scenes>
+		<scene name="perapora" use="true">
+			<file>perapora_collision.scene</file>
+		</scene>
+
+	</scenes>
+
+	<scripts>
+		<!-- Global physics script defines some common functions -->
+		<file use="false">physics_script.py</file>
+		<!-- Project specific definitions -->
+		<file use="false">perapora_physics.py</file>
+		<file use="true">perapora_constraints.py</file>
+	</scripts>
+
+</project_config>
+
