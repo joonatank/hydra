@@ -12,13 +12,16 @@
 #include <string>
 #include <vector>
 
+/// Pointers
+#include <memory>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-#include <memory>
 #include <boost/scoped_ptr.hpp>
 
 namespace vl
 {
+	typedef std::map<std::string, std::string> NamedParamList;
+
 	// Forward declarations
 	class Settings;
 	class EnvSettings;
@@ -43,6 +46,7 @@ namespace vl
 	class Entity;
 	class Light;
 	class Camera;
+	class MovableText;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -73,6 +77,7 @@ namespace vl
 	typedef Entity * EntityPtr;
 	typedef Light * LightPtr;
 	typedef Camera * CameraPtr;
+	typedef MovableText * MovableTextPtr;
 
 	class Mesh;
 	class MeshManager;

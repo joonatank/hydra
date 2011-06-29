@@ -118,3 +118,15 @@ def printSpotti():
 	print('Ts = ', Ts, ' inv(Ts) = ', iTs, "Ts*inv(Ts) = ",
 			Ts*iTs, "inv(Ts)*Ts = ", iTs*Ts)
 
+text = game.scene.createMovableText('text', 'text')
+text.font_name = "BlueHighway-22"
+#text.font_name = "StarWars"
+text.track_camera = False
+text.colour = ColourValue(0, 1.0, 0)
+text_n = game.scene.createSceneNode('text')
+text_n.attachObject(text)
+text_n.translate(Vector3(3, 2, 2))
+
+game.scene.clearSelection()
+game.scene.addToSelection(text_n)
+

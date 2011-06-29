@@ -58,6 +58,7 @@ set( SOURCES
 	light.cpp
 	camera.cpp
 	movable_object.cpp
+	movable_text.cpp
 	serializer.cpp
 	mesh_serializer.cpp
 	mesh_serializer_impl.cpp
@@ -78,6 +79,7 @@ set( HEADERS
 	entity.hpp
 	light.hpp
 	movable_object.hpp
+	movable_text.hpp
 	serializer.hpp
 	mesh_serializer.hpp
 	mesh_serializer_impl.hpp
