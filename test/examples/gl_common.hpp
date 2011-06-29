@@ -111,6 +111,7 @@ public :
 	{ _context->makeCurrent(); }
 
 private :
+	// TODO shouldn't need the HDC
 	GLWindow(HDC hdc, HWND win, GLContext *context)
 		: hDC(hdc), hWnd(win), _context(context)
 	{}
@@ -277,7 +278,15 @@ GLWindow::create(char* title, int width, int height, int bits, GLContext *ctx)
 	
 	HDC hDC = 0;
 	if(ctx)
-	{ hDC = ctx->getDevice(); }
+	{
+		hDC = ctx->getDevice();
+
+		if(!ctx->makeCurrent())
+		{
+			MessageBox(NULL,"Failed to make provided context current.","ERROR",MB_OK|MB_ICONEXCLAMATION);
+			return 0;
+		}
+	}
 	else if( !(hDC=GetDC(hWnd)) )
 	{
 		//KillGLWindow(hInstance, GLWindow(hDC, 0, hWnd));								// Reset The Display

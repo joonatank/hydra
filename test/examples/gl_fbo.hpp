@@ -104,37 +104,6 @@ public :
 	void drawToScreen(void)
 	{
 		::drawToScreen(_width, _height, _fbo_texture);
-		/*
-		glEnable(GL_TEXTURE_2D);
-
-		//glViewport(0, 0, width, height);
-		// Draw the FBO to the Screen
-		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
-		// If we don't clear depth buffer this does not draw the texture to the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, (GLfloat)_width, 0, GLfloat(_height), -10, 10);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glBindTexture(GL_TEXTURE_2D, _fbo_texture);
-					
-		glBegin(GL_QUADS);
-			glTexCoord2f(0, 0);
-			glVertex2f(0, 0);
-			glTexCoord2f(1, 0);
-			glVertex2f(_width, 0);
-			glTexCoord2f(1, 1);
-			glVertex2f(_width, _height);
-			glTexCoord2f(0, 1);
-			glVertex2f(0, _height);
-		glEnd();
-					
-		glDisable(GL_TEXTURE_2D);
-		*/
 	}
 
 private :
