@@ -35,6 +35,12 @@ public :
 	SceneNodePtr getBodyB(void)
 	{ return _bodyB; }
 
+	/// @brief change between constraint and actuator
+	/// @param enable weather the constraint is an actuator or not
+	virtual void setActuator(bool enable) = 0;
+
+	virtual bool isActuator(void) const = 0;
+
 	/// @internal
 	/// @brief progresses the constraint if it's used as an actuator
 	/// @param t time since last call, i.e. simulation time step
@@ -67,6 +73,11 @@ protected :
 class FixedConstraint : public Constraint
 {
 public :
+
+	/// Abstract overrides
+	virtual void setActuator(bool enable) {}
+
+	virtual bool isActuator(void) const { return false; }
 
 	/// @internal
 	void _proggress(vl::time const &t);
@@ -140,18 +151,23 @@ private :
 class SliderConstraint : public Constraint
 {
 public :
-	vl::scalar getLowerLimit(void) const;
+	vl::scalar getLowerLimit(void) const
+	{ return _lower_limit; }
 	
 	void setLowerLimit(vl::scalar lowerLimit);
 
-	vl::scalar getUpperLimit(void) const;
+	vl::scalar getUpperLimit(void) const
+	{ return _upper_limit; }
 	
 	void setUpperLimit(vl::scalar upperLimit);
 
-	// Motor
-	void enableMotor(bool enable);
+	/// @brief change between constraint and actuator
+	/// @param enable weather the constraint is an actuator or not
+	virtual void setActuator(bool enable)
+	{ _actuator = enable; }
 
-	bool getMotorEnabled(void) const;
+	virtual bool isActuator(void) const
+	{ return _actuator; }
 
 	/// @todo should we remove the target velocity and replace it by
 	/// constant velocity and target position
@@ -160,16 +176,21 @@ public :
 	void addTarget(vl::scalar target_pos_addition);
 
 	/// @brief set the translation target
-	void setMotorTarget(vl::scalar target_pos);
+	void setActuatorTarget(vl::scalar target_pos);
 
-	vl::scalar getMotorTarget(void);
+	vl::scalar getActuatorTarget(void)
+	{ return _target_position; }
 
-	/// @brief add to target velocity
-	void addMotorVelocity(vl::scalar velocity);
+	/// @brief add to target speed, the final result is clamped positive
+	/// @param velocity to add to speed can be either negative or positive
+	void addActuatorSpeed(vl::scalar velocity);
 
-	void setMotorVelocity(vl::scalar velocity);
+	/// @brief set the motor speed, the speed is always positive
+	/// @param velocity, the velocity of the motor negative values are clamped to zero
+	void setActuatorSpeed(vl::scalar velocity);
 
-	vl::scalar getMotorVelocity(void) const;
+	vl::scalar getActuatorSpeed(void) const
+	{ return _speed; }
 
 	/// @internal
 	void _proggress(vl::time const &t);
@@ -188,9 +209,9 @@ private :
 	vl::scalar _upper_limit;
 	Ogre::Vector3 _axisInA;
 
-	bool _motor_enabled;
+	bool _actuator;
 	vl::scalar _target_position;
-	vl::scalar _velocity;
+	vl::scalar _speed;
 
 };	// class SliderConstraint
 
@@ -203,47 +224,55 @@ class HingeConstraint : public Constraint
 {
 public :
 	/// @brief change between constraint and actuator
-	/// @param enableMotor weather the constraint is an actuator or not
-	void enableMotor(bool enableMotor);
+	/// @param enable weather the constraint is an actuator or not
+	virtual void setActuator(bool enable)
+	{ _actuator = enable; }
 
-	bool getMotorEnabled(void) const;
+	virtual bool isActuator(void) const
+	{ return _actuator; }
 
 	/// @brief set the target angle to motor
 	/// @param angle target angle which the actuator tries to achieve over time
-	void setMotorTarget(Ogre::Radian const &angle);
-	
+	void setActuatorTarget(Ogre::Radian const &angle);
+
+	Ogre::Radian const &getActuatorTarget(void) const
+	{ return _target; }
+
 	/// @brief set the velocity of the actuator
 	/// @param dt the derivative or how much to change for one time step.
-	void setMotorVelocity(Ogre::Radian const &dt);
-	
-	Ogre::Radian const &getMotorTarget(void) const;
-	Ogre::Radian const &getMotorDerivative(void) const;
+	void setActuatorSpeed(Ogre::Radian const &dt);
+
+	Ogre::Radian const &getActuatorSpeed(void) const
+	{ return _speed; }
 
 	void setLowerLimit(Ogre::Radian const &lower);
 
-	Ogre::Radian const &getLowerLimit(void) const;
+	Ogre::Radian const &getLowerLimit(void) const
+	{ return _lower_limit; }
 
 	void setUpperLimit(Ogre::Radian const &upper);
 
-	Ogre::Radian const &getUpperLimit(void) const;
+	Ogre::Radian const &getUpperLimit(void) const
+	{ return _upper_limit; }
 
 	// Do we need some extra damping, softness parameters?
 
 	void setAxis(Ogre::Vector3 const &axisInA);
 
 	/// @todo do we store the axis in world or in local, so which one of these is a reference?
-	Ogre::Vector3 const &getAxisInA(void) const;
+	Ogre::Vector3 const &getAxisInA(void) const
+	{ return _axisInA; }
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
-	Ogre::Radian const &getHingeAngle(void) const;
+	Ogre::Radian const &getHingeAngle(void) const
+	{ return _angle; }
 
 	/// @internal
 	void _proggress(vl::time const &t);
 
 	static HingeConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
 		Transform const &worldFrame)
-
 	{
 		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, worldFrame));
 		return constraint;
@@ -258,9 +287,9 @@ private :
 
 	Ogre::Radian _angle;
 
-	bool _motor_enabled;
+	bool _actuator;
 	Ogre::Radian _target;
-	Ogre::Radian _velocity;
+	Ogre::Radian _speed;
 
 };	// class HingeConstraint
 
