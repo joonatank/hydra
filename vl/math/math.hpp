@@ -91,13 +91,31 @@ inline T clamp(T const &x, T const &min, T const &max)
 template<typename T>
 inline T sign(T const &x)
 {
-	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
+	return (x > T(0)) ? T(1) : ((x < T(0)) ? T(-1) : T(0));
 }
 
 template<>
 inline Ogre::Vector3 sign(Ogre::Vector3 const &x)
 {
 	return Ogre::Vector3(sign(x.x), sign(x.y), sign(x.z));
+}
+
+template<typename T>
+inline T abs(T const &x)
+{
+	return (x > T(0)) ? x : -x;
+}
+
+template<typename T>
+inline T const &max(T const &a, T const &b)
+{
+	return (a > b ? a : b);
+}
+
+template<typename T>
+inline T const &min(T const &a, T const &b)
+{
+	return (a < b ? a : b);
 }
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );

@@ -258,6 +258,7 @@ vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference)
 	/// Reference space
 	else
 	{
+		/// @todo this is incorrect
 		vl::Transform ref_world = reference->getWorldTransform();
 		Transform inv_world = getWorldTransform();
 		//inv_world.invert();

@@ -86,7 +86,7 @@ syl_kaanto_varsi = game.scene.getSceneNode("cb_syl_kaanto_varsi")
 # reference joint
 nivel_kaantosyl2_rotz = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
 transform = nivel_kaantosyl2_rotz.world_transformation
-createHingeConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform)
+kaanto_hinge = createHingeConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform)
 #createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform)
 #syl_kaanto_varsi.hide()
 
@@ -132,14 +132,19 @@ nivel_telesk = game.scene.getSceneNode("nivel_telesk_trz")
 teleskooppi_joint = createTranslationConstraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, -1, 1)
 
 # enable motors for cylinders
-#kaanto_joint.powered_motor = True
+#kaanto_joint.actuator = True
 #kaanto_joint.max_lin_motor_force = 100
-nosto_joint.powered_motor = True
+nosto_joint.actuator = True
 #nosto_joint.max_lin_motor_force = 100
-nosto_joint.motor_velocity = 0.1
-#teleskooppi_joint.powered_motor = True
+nosto_joint.speed = 0.1
+#teleskooppi_joint.actuator = True
 #teleskooppi_joint.max_lin_motor_force = 100
 #teleskooppi_joint.motor_velocity = 0.5
+kaanto_hinge.actuator = True
+kaanto_hinge.speed = Radian(0.1)
+kaanto_hinge.lower_limit = Radian(0.1)
+kaanto_hinge.upper_limit = Radian(0)
+kaanto_hinge.target = Radian(1)
 
 #kiinnityslevy.translate(Vector3(0, 2, 0))
 

@@ -422,6 +422,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyA, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyB, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -441,19 +442,21 @@ BOOST_PYTHON_MODULE(vl)
 	*/
 
 	python::class_<vl::SliderConstraint, vl::SliderConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("SliderConstraint", python::no_init)
-		.def("create", &vl::SliderConstraint::create)
 		.add_property("lower_limit", &vl::SliderConstraint::getLowerLimit, &vl::SliderConstraint::setLowerLimit)
 		.add_property("upper_limit", &vl::SliderConstraint::getUpperLimit, &vl::SliderConstraint::setUpperLimit)
-		.add_property("powered_motor", &vl::SliderConstraint::getMotorEnabled, &vl::SliderConstraint::enableMotor)
-		.add_property("velocity", &vl::SliderConstraint::getMotorVelocity, &vl::SliderConstraint::setMotorVelocity)
-		.add_property("target", &vl::SliderConstraint::getMotorTarget, &vl::SliderConstraint::setMotorTarget)
+		.add_property("speed", &vl::SliderConstraint::getActuatorSpeed, &vl::SliderConstraint::setActuatorSpeed)
+		.add_property("target", &vl::SliderConstraint::getActuatorTarget, &vl::SliderConstraint::setActuatorTarget)
+		.def("create", &vl::SliderConstraint::create)
 		.staticmethod("create")
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::HingeConstraint, vl::HingeConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("HingeConstraint", python::no_init)
+		.add_property("lower_limit", python::make_function(&vl::HingeConstraint::getLowerLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setLowerLimit)
+		.add_property("upper_limit", python::make_function(&vl::HingeConstraint::getUpperLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setUpperLimit)
+		.add_property("speed", python::make_function(&vl::HingeConstraint::getActuatorSpeed, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorSpeed)
+		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
 		.def("create", &vl::HingeConstraint::create)
-		.add_property("powered_motor", &vl::HingeConstraint::getMotorEnabled, &vl::HingeConstraint::enableMotor)
 		.staticmethod("create")
 		.def(python::self_ns::str(python::self_ns::self))
 	;

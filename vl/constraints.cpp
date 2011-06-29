@@ -17,10 +17,9 @@ vl::operator<<(std::ostream &os, vl::Constraint const &c)
 {
 	os << "Constraint with bodies : " << c._bodyA->getName() << " and " 
 		<< c._bodyB->getName() << "\n"
-		<< " Transformation = " << c._getLink()->getTransform()
-		<< " Initial transformation = " << c._getLink()->getInitialTransform()
+		<< "   Transformation = " << c._getLink()->getTransform() << "\n"
+		<< "   Initial transformation = " << c._getLink()->getInitialTransform()
 		<< std::endl;
-
 
 	return os;
 }
@@ -75,7 +74,12 @@ vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 /// ------------------------------ Public ------------------------------------
 void
 vl::FixedConstraint::_proggress(vl::time const &t)
-{}
+{
+	// Purposefully empty the animation engine will handle following of an
+	// another object be that a real parent or an auxilary parent.
+	// progress should only update link information which for FixedConstraint
+	// is always fixed.
+}
 
 /// ------------------------------ Private -----------------------------------
 vl::FixedConstraint::FixedConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
@@ -179,11 +183,6 @@ vl::SixDofConstraint::SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Trans
 
 /// ------------------------------ SliderConstraint --------------------------
 /// ------------------------------ Public ------------------------------------	
-vl::scalar
-vl::SliderConstraint::getLowerLimit(void) const
-{
-	return _lower_limit;
-}
 	
 void
 vl::SliderConstraint::setLowerLimit(vl::scalar lowerLimit)
@@ -191,29 +190,10 @@ vl::SliderConstraint::setLowerLimit(vl::scalar lowerLimit)
 	_lower_limit = lowerLimit;
 }
 
-vl::scalar
-vl::SliderConstraint::getUpperLimit(void) const
-{
-	return _upper_limit;
-}
-	
 void
 vl::SliderConstraint::setUpperLimit(vl::scalar upperLimit)
 {
 	_upper_limit = upperLimit;
-}
-
-// Motor
-void
-vl::SliderConstraint::enableMotor(bool enable)
-{
-	_motor_enabled = enable;
-}
-
-bool
-vl::SliderConstraint::getMotorEnabled(void) const
-{
-	return _motor_enabled;
 }
 
 void 
@@ -221,33 +201,21 @@ vl::SliderConstraint::addTarget(vl::scalar target_pos_addition)
 {_target_position += target_pos_addition; }
 
 void 
-vl::SliderConstraint::setMotorTarget(vl::scalar target_pos)
+vl::SliderConstraint::setActuatorTarget(vl::scalar target_pos)
 {
 	_target_position = target_pos; 
 }
 
-vl::scalar 
-vl::SliderConstraint::getMotorTarget(void)
+void
+vl::SliderConstraint::addActuatorSpeed(vl::scalar velocity)
 {
-	return _target_position;
+	_speed = vl::max(vl::scalar(0), _speed + velocity);
 }
 
 void
-vl::SliderConstraint::addMotorVelocity(vl::scalar velocity)
+vl::SliderConstraint::setActuatorSpeed(vl::scalar velocity)
 {
-	_velocity += velocity;
-}
-
-void
-vl::SliderConstraint::setMotorVelocity(vl::scalar velocity)
-{
-	_velocity = velocity;
-}
-
-vl::scalar
-vl::SliderConstraint::getMotorVelocity(void) const
-{
-	return _velocity;
+	_speed = vl::max(vl::scalar(0), velocity);
 }
 
 void
@@ -266,17 +234,16 @@ vl::SliderConstraint::_proggress(vl::time const &t)
 	vl::scalar translate = 0;
 	vl::scalar pos = _link->getTransform().position.y - _link->getInitialTransform().position.y;
 	/// @todo add tolerance
-	if(_motor_enabled && _target_position != pos)
+	if(isActuator() && _target_position != pos)
 	{
 		/// Axis is either not limited (lower limit is greater than upper)
 		/// or if it's current position is within the limits
 		/// @todo should we update the target position based on limits, 
 		/// so that there is no impossible target
 
-		/// @todo how to handle negative targets, should the user use negative
-		/// velocity or is it only speed and we need to decide which way to go?
 		vl::scalar s = vl::sign(_target_position - pos);
-		translate = s*abs(_velocity) * double(t);
+		assert(vl::sign(_speed) >= 0);
+		translate = s*_speed * double(t);
 		
 		/// Clamp the translation
 		if(translate < 0)
@@ -309,7 +276,7 @@ vl::SliderConstraint::_proggress(vl::time const &t)
 		assert(translate+pos <= _upper_limit);
 	}
 
-	if(free)
+	if(free && translate != 0)
 	{
 		/// Update object B
 		_link->getTransform().position.y += translate;
@@ -322,47 +289,23 @@ vl::SliderConstraint::SliderConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Trans
 	, _lower_limit(0)
 	, _upper_limit(0)
 	, _axisInA(0, 0, 1)
-	, _motor_enabled(false)
+	, _actuator(false)
 	, _target_position(0)
-	, _velocity(1)
+	, _speed(1)
 {}
 
 /// ------------------------------ HingeConstraint ---------------------------
 /// ------------------------------ Public ------------------------------------	
 void
-vl::HingeConstraint::enableMotor(bool enableMotor)
-{
-	_motor_enabled = enableMotor;
-}
-
-bool
-vl::HingeConstraint::getMotorEnabled(void) const
-{
-	return _motor_enabled;
-}
-
-void
-vl::HingeConstraint::setMotorTarget(Ogre::Radian const &angle)
+vl::HingeConstraint::setActuatorTarget(Ogre::Radian const &angle)
 {
 	_target = angle;
 }
 
 void 
-vl::HingeConstraint::setMotorVelocity(Ogre::Radian const &dt)
+vl::HingeConstraint::setActuatorSpeed(Ogre::Radian const &dt)
 {
-	_velocity = dt;
-}
-
-Ogre::Radian const &
-vl::HingeConstraint::getMotorTarget(void) const
-{
-	return _target;
-}
-
-Ogre::Radian const &
-vl::HingeConstraint::getMotorDerivative(void) const
-{
-	return _velocity;
+	_speed = vl::max(Ogre::Radian(0), dt);
 }
 
 void
@@ -371,22 +314,10 @@ vl::HingeConstraint::setLowerLimit(Ogre::Radian const &lower)
 	_lower_limit = lower;
 }
 
-Ogre::Radian const &
-vl::HingeConstraint::getLowerLimit(void) const
-{
-	return _lower_limit;
-}
-
 void
 vl::HingeConstraint::setUpperLimit(Ogre::Radian const &upper)
 {
 	_upper_limit = upper;
-}
-
-Ogre::Radian const &
-vl::HingeConstraint::getUpperLimit(void) const
-{
-	return _upper_limit;
 }
 
 void
@@ -395,39 +326,80 @@ vl::HingeConstraint::setAxis(Ogre::Vector3 const &axisInA)
 	_axisInA = axisInA;
 }
 
-Ogre::Vector3 const &
-vl::HingeConstraint::getAxisInA(void) const
-{
-	return _axisInA;
-}
-
 Ogre::Vector3
 vl::HingeConstraint::getAxisInWorld(void) const
 {
+	// @todo should probably use the link transformation
 	return _bodyA->getWorldTransform()*_axisInA;
-}
-
-Ogre::Radian const &
-vl::HingeConstraint::getHingeAngle(void) const
-{
-	return _angle;
 }
 
 void
 vl::HingeConstraint::_proggress(vl::time const &t)
 {
-	bool free = _upper_limit < _lower_limit;
-	if(_motor_enabled)
-	{
-	}
-	else
-	{
+	if(!_link)
+	{ return; }
 
+	/// @todo add configurable axis using _axisInA
+	/// Something really wrong with the axes, using x-axis in code will result in model
+	/// local z-axis...
+
+	// @todo add some checking if the actuator parameters are even plausable
+	// like isActuator == true -> _speed != 0 and so on, some error reporting
+	// to the user.
+
+	Ogre::Radian rotate;
+	/// @todo add tolerance
+	if(isActuator() && _target != _angle)
+	{
+		/// Axis is either not limited (lower limit is greater than upper)
+		/// or if it's current position is within the limits
+		/// @todo should we update the target position based on limits, 
+		/// so that there is no impossible target
+		/// Or should we? We could also report to user that the system is impossible
+		/// and the possible target closest to it would be x.
+		/// This would handle gracefully incorrect limits resulted from user errors.
+
+		Ogre::Radian s = vl::sign(_target - _angle);
+		assert(vl::sign(_speed) >= Ogre::Radian(0));
+		rotate = s*_speed * double(t);
+
+		if(rotate < Ogre::Radian(0))
+		{ rotate = vl::clamp(rotate, _target-_angle, Ogre::Radian(0)); }
+		else
+		{ rotate = vl::clamp(rotate, Ogre::Radian(0), _target-_angle); }
 	}
 
-	// @todo update _current_local_frame_a
-//	_current_local_frame_a.position.y += translate;
-	//_update_bodies();
+	/// Wether the joint is limited or not
+	/// @todo this is common for all joints, though the constraint type linear/angular changes
+	bool free = _lower_limit > _upper_limit;
+	/// Check constraints
+	// @todo have not been tested
+	if(!free)
+	{
+		free = (rotate > _lower_limit) && (rotate  < _upper_limit);
+
+		// Clamp only if not free
+		// @todo should we clamp the target instead of the result? 
+		// then again any subsequent change in limits would not get the actuator moving
+		rotate = vl::clamp(rotate, _lower_limit-_angle, _upper_limit-_angle);
+		assert(rotate+_angle >= _lower_limit);
+		assert(rotate+_angle <= _upper_limit);
+	}
+
+	if(free && rotate != Ogre::Radian(0))
+	{
+		_angle = _angle + rotate;
+		
+		// @todo this will rotate around the parents axis
+		// it should rotate around the current link axis
+		// but rotate around an axis is not working correctly for the moment.
+		// Basic matrix formulae is inv(Tp)*R*Tp
+		// where Tp is the translation matrix (for the axis) and R is the rotation matrix.
+		vl::Transform link_axis;//(-_link->getInitialTransform().position);
+		vl::Transform rot = link_axis * vl::Transform(Ogre::Quaternion(_angle, _axisInA)) * link_axis.inverted();
+
+		_link->setTransform(rot*_link->getInitialTransform());
+	}
 }
 
 /// ------------------------------ Private -----------------------------------
@@ -435,9 +407,9 @@ vl::HingeConstraint::HingeConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transfo
 	: Constraint(rbA, rbB, worldFrame)
 	, _lower_limit()
 	, _upper_limit()
-	, _axisInA(0, 0, 1)
+	, _axisInA(1, 0, 0)
 	, _angle()
-	, _motor_enabled(false)
+	, _actuator(false)
 	, _target()
-	, _velocity(Ogre::Degree(30))
+	, _speed(Ogre::Degree(30))
 {}
