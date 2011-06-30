@@ -20,6 +20,9 @@
 
 #include "animation.hpp"
 
+/// Necessary for constraint actions
+#include "action.hpp"
+
 namespace vl
 {
 
@@ -173,7 +176,7 @@ public :
 	/// constant velocity and target position
 
 	/// @brief add to translation target
-	void addTarget(vl::scalar target_pos_addition);
+	void addActuatorTarget(vl::scalar target_pos_addition);
 
 	/// @brief set the translation target
 	void setActuatorTarget(vl::scalar target_pos);
@@ -191,6 +194,14 @@ public :
 
 	vl::scalar getActuatorSpeed(void) const
 	{ return _speed; }
+
+	Ogre::Vector3 const &getAxis(void) const
+	{ return _axisInA; }
+
+	void setAxis(Ogre::Vector3 const &v)
+	{ _axisInA = v; }
+
+	vl::scalar getPosition(void) const;
 
 	/// @internal
 	void _proggress(vl::time const &t);
@@ -231,6 +242,9 @@ public :
 	virtual bool isActuator(void) const
 	{ return _actuator; }
 
+	void addActuatorTarget(Ogre::Radian const &angle)
+	{ setActuatorTarget(angle+_angle); }
+
 	/// @brief set the target angle to motor
 	/// @param angle target angle which the actuator tries to achieve over time
 	void setActuatorTarget(Ogre::Radian const &angle);
@@ -257,11 +271,11 @@ public :
 
 	// Do we need some extra damping, softness parameters?
 
-	void setAxis(Ogre::Vector3 const &axisInA);
-
-	/// @todo do we store the axis in world or in local, so which one of these is a reference?
-	Ogre::Vector3 const &getAxisInA(void) const
+	Ogre::Vector3 const &getAxis(void) const
 	{ return _axisInA; }
+
+	void setAxis(Ogre::Vector3 const &v)
+	{ _axisInA = v; }
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
@@ -292,6 +306,58 @@ private :
 	Ogre::Radian _speed;
 
 };	// class HingeConstraint
+
+
+class SliderActuatorAction : public vl::BasicAction
+{
+public :
+	SliderActuatorAction(void)
+		: target(0)
+	{}
+
+	virtual void execute(void)
+	{
+		if(constraint)
+		{ constraint->addActuatorTarget(target); }
+	}
+
+	virtual std::string getTypeName( void ) const
+	{ return "SliderActuatorAction"; }
+
+	static SliderActuatorAction *create(void)
+	{ return new SliderActuatorAction; }
+
+	vl::scalar target;
+
+	vl::SliderConstraintRefPtr constraint;
+
+};
+
+class HingeActuatorAction : public vl::BasicAction
+{
+public :
+	HingeActuatorAction(void)
+		: target(0)
+	{}
+
+	virtual void execute(void)
+	{
+		if(constraint)
+		{ constraint->addActuatorTarget(target); }
+	}
+
+	virtual std::string getTypeName( void ) const
+	{ return "HingeActuatorAction"; }
+
+	static HingeActuatorAction *create(void)
+	{ return new HingeActuatorAction; }
+
+	Ogre::Radian target;
+
+	vl::HingeConstraintRefPtr constraint;
+
+};
+
 
 }	// namespace vl
 
