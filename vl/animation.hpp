@@ -1,0 +1,209 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-06
+ *	@file animation.hpp
+ *
+ *	This file is part of Hydra a VR game engine.
+ *
+ *	Internal Kinematic animation implementation. Defined in a separate namespace.
+ */
+
+#ifndef HYDRA_ANIMATION_HPP
+#define HYDRA_ANIMATION_HPP
+
+#include <vector>
+
+#include "math/transform.hpp"
+
+#include <boost/weak_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+
+namespace vl
+{
+
+namespace animation
+{
+
+// Forward declartions
+class Link;
+class Node;
+class Graph;
+
+// Using ref counted pointers for easy memory handling
+// also these will scale to implementation where object can have multiple parents
+typedef boost::shared_ptr<Link> LinkRefPtr;
+typedef boost::shared_ptr<Node> NodeRefPtr;
+typedef boost::shared_ptr<Graph> GraphRefPtr;
+
+typedef boost::weak_ptr<Link> LinkWeakPtr;
+typedef boost::weak_ptr<Node> NodeWeakPtr;
+typedef boost::weak_ptr<Graph> GraphWeakPtr;
+
+/// @class Node
+/// @brief A node in the animation graph
+class Node
+{
+public :
+	/// @brief Constructor
+	Node(void);
+
+	/// @brief Destructor
+	~Node(void);
+
+	/// @brief is this node a leaf in the graph i.e. contains no child nodes
+	bool isLeaf(void) const;
+
+	/// @brief is this the root of the graph i.e. contains no parent node
+	bool isRoot(void) const;
+
+	/// @brief get the link to a parent node
+	/// @return valid link if this object is not the root otherwise NULL
+	LinkRefPtr getParent(void);
+
+	/// @brief get the link to a next child, increase the internal child counter
+	/// @return valid link if there is a next child otherwise NULL
+	/// @throw nothing
+	/// Uses an internal counter for the current child that is increased by this function
+	LinkRefPtr getNextChild(void);
+
+	/// @brief get the child with index, never fails
+	/// @return valid child link if such exists otherwise NULL
+	/// @param i the index for the child
+	/// Modifies the current child index used by getNextChild.
+	LinkRefPtr getChild(size_t i = 0);
+
+	/// @brief get the local transformation
+	/// @return Transformation of the Node in local coordinates
+	Transform &getTransform(void);
+	Transform const &getTransform(void) const;
+
+	/// @brief set the local transformation
+	/// @param t a new Transformation for the Node in local coordinates
+	void setTransform(Transform const &t);
+
+	/// @brief get the current world transformation
+	/// @return Transformation of the Node in world coordinates
+	Transform getWorldTransform(void) const;
+	
+	/// @brief set the current world transformation
+	/// @param t a new Transformation for the Node in world coordinates
+	void setWorldTransform(Transform const &t);
+
+	/// @internal
+	/// @brief set the parent link
+	void _setParent(LinkRefPtr link);
+	
+	/// @internal
+	/// @brief add a child link
+	void _addChild(LinkRefPtr link);
+
+	/// @internal
+	/// @brief remove a child link
+	void _removeChild(LinkRefPtr link);
+
+	bool _hasChild(LinkRefPtr link);
+
+private :
+	typedef std::vector<LinkRefPtr> LinkList;
+
+	LinkWeakPtr _parent;
+	LinkList _childs;
+	size_t _next_child;
+
+	Transform _transform;
+	
+};	// class Node
+
+/// @class Link
+/// @brief A link between two Nodes in the animation graph
+/// All links are owned by their parent Nodes so when the parent node
+/// is destroyed it destroys all the links owned by it also.
+class Link : public boost::enable_shared_from_this<Link>
+{
+public :
+	/// @brief constructor
+	/// @param t Transformation where the link starts
+	Link(Transform const &t = Transform());
+
+	/// @brief destructor
+	~Link(void);
+
+	NodeRefPtr getParent(void) const;
+
+	void setParent(NodeRefPtr parent);
+
+	NodeRefPtr getChild(void) const;
+
+	void setChild(NodeRefPtr child);
+
+	/// @brief get the local transformation
+	/// @return Transformation of the Link in local coordinates
+	Transform &getTransform(void);
+	Transform const &getTransform(void) const;
+
+	/// @brief set the local transformation
+	/// @param t a new Transformation for the Link in local coordinates
+	void setTransform(Transform const &t);
+
+	/// @brief get the current world transformation
+	/// @return Transformation of the Link in world coordinates
+	Transform getWorldTransform(void) const;
+
+	/// @brief set the current world transformation
+	/// @param t a new Transformation for the Link in world coordinates
+	void setWorldTransform(Transform const &t);
+
+	/// @brief get the initial state transformation
+	/// Purposefully non-const method is not provided as the initial state 
+	/// should be set and not modified independently.
+	Transform const &getInitialTransform(void) const
+	{ return _initial_transform; }
+
+	/// @brief set the initial state of the link to current state
+	void setInitialState(void);
+
+	/// @brief resets the link to initial state
+	void reset(void);
+
+private :
+	NodeWeakPtr _parent;
+	NodeRefPtr _child;
+
+	Transform _transform;
+	Transform _initial_transform;
+
+};	// class Link
+
+/// @class Graph
+/// @brief A graph containing all the animation Nodes and Links
+class Graph
+{
+public :
+	/// @brief constructor
+	Graph(void);
+
+	/// @brief destructor
+	~Graph(void);
+
+	/// @brief get the start node i.e. root for the whole graph
+	NodeRefPtr getRoot(void);
+
+	/// @todo Transformation Stack is not in use for the moment
+
+	/// @brief push a transform to the transformation stack
+	void _pushTransform(Transform const &);
+
+	/// @brief pop a transform from the transformation stack
+	void _popTransform(void);
+
+private :
+	NodeRefPtr _root;
+
+};	// class Graph
+
+
+}	// namespace animation
+
+}	// namespace vl
+
+#endif	// HYDRA_ANIMATION_HPP

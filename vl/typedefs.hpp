@@ -106,15 +106,19 @@ namespace vl
 	};
 
 	/// Non-physics constraints
+	class ConstraintSolver;
 	class Constraint;
 	class SixDofConstraint;
 	class SliderConstraint;
 	class HingeConstraint;
+	class FixedConstraint;
 
+	typedef boost::shared_ptr<ConstraintSolver> ConstraintSolverRefPtr;
 	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
 	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
 	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
 	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
+	typedef boost::shared_ptr<FixedConstraint> FixedConstraintRefPtr;
 
 namespace gui
 {

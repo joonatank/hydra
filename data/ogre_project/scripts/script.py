@@ -108,6 +108,16 @@ ogre2.translate(Vector3(0, 10, 0))
 game.scene.addToSelection(ogre2)
 #athene.transform(m)
 
+def printSpotti():
+	Ts = spotti_n.world_transformation
+	# Don't try to copy the object, it uses references by default
+	iTs = spotti_n.world_transformation
+	iTs.invert()
+	# For some reason  inv(Ts)*Ts has better accuracy, but both of them
+	# are pretty close to zero using this with arbitary transformations
+	print('Ts = ', Ts, ' inv(Ts) = ', iTs, "Ts*inv(Ts) = ",
+			Ts*iTs, "inv(Ts)*Ts = ", iTs*Ts)
+
 text = game.scene.createMovableText('text', 'text')
 text.font_name = "BlueHighway-22"
 #text.font_name = "StarWars"

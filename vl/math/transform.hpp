@@ -44,6 +44,13 @@ struct Transform
 	/// @brief inverts the transformation
 	void invert(void);
 
+	vl::Transform inverted(void) const
+	{
+		vl::Transform t(*this);
+		t.invert();
+		return t;
+	}
+
 	Ogre::Vector3 rotate(Ogre::Vector3 const &v) const;
 
 	vl::Transform &operator*=(Ogre::Matrix4 const &m);

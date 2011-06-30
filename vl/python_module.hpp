@@ -35,7 +35,9 @@
 #include "gui/gui.hpp"
 #include "gui/gui_actions.hpp"
 
+// Constraints
 #include "constraints.hpp"
+#include "constraint_solver.hpp"
 
 // Python global
 #include "python.hpp"
@@ -119,6 +121,10 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::ConstraintSolver, vl::ConstraintSolverRefPtr, boost::noncopyable>("ConstraintSolver", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -130,7 +136,11 @@ BOOST_PYTHON_MODULE(vl)
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
-		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound )
+		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
+		.def("addConstraint", &vl::GameManager::addConstraint)
+		.def("removeConstraint", &vl::GameManager::removeConstraint)
+		.def("hasConstraint", &vl::GameManager::hasConstraint)
+		.add_property("constraint_solver", &vl::GameManager::getConstraintSolver)
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
@@ -427,15 +437,45 @@ BOOST_PYTHON_MODULE(vl)
 	/// Abstract master class for all constraints, both physics and non-physics constraint
 	/// derive from this
 	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
+		.add_property("body_a", python::make_function(&vl::Constraint::getBodyA, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("body_a", python::make_function(&vl::Constraint::getBodyB, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::SixDofConstraint, vl::SixDofConstraintRefPtr, boost::noncopyable>("SixDofConstraint", python::no_init)
+	python::class_<vl::FixedConstraint, vl::FixedConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("FixedConstraint", python::no_init)
+		.def("create", &vl::FixedConstraint::create)
+		.staticmethod("create")
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::SliderConstraint, vl::SliderConstraintRefPtr, boost::noncopyable>("SliderConstraint", python::no_init)
+	/*
+	python::class_<vl::SixDofConstraint, vl::SixDofConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("SixDofConstraint", python::no_init)
+		.def("create", &vl::SixDofConstraint::create)
+		.add_property("powered_motor", &vl::SixDofConstraint::getMotorEnabled, &vl::SixDofConstraint::enableMotor)
+		.staticmethod("create")
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+	*/
+
+	python::class_<vl::SliderConstraint, vl::SliderConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("SliderConstraint", python::no_init)
+		.add_property("lower_limit", &vl::SliderConstraint::getLowerLimit, &vl::SliderConstraint::setLowerLimit)
+		.add_property("upper_limit", &vl::SliderConstraint::getUpperLimit, &vl::SliderConstraint::setUpperLimit)
+		.add_property("speed", &vl::SliderConstraint::getActuatorSpeed, &vl::SliderConstraint::setActuatorSpeed)
+		.add_property("target", &vl::SliderConstraint::getActuatorTarget, &vl::SliderConstraint::setActuatorTarget)
+		.def("create", &vl::SliderConstraint::create)
+		.staticmethod("create")
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::HingeConstraint, vl::HingeConstraintRefPtr, boost::noncopyable>("HingeConstraint", python::no_init)
+	python::class_<vl::HingeConstraint, vl::HingeConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("HingeConstraint", python::no_init)
+		.add_property("lower_limit", python::make_function(&vl::HingeConstraint::getLowerLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setLowerLimit)
+		.add_property("upper_limit", python::make_function(&vl::HingeConstraint::getUpperLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setUpperLimit)
+		.add_property("speed", python::make_function(&vl::HingeConstraint::getActuatorSpeed, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorSpeed)
+		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
+		.def("create", &vl::HingeConstraint::create)
+		.staticmethod("create")
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	// TODO replace with a wrapper

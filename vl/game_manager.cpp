@@ -26,6 +26,8 @@
 
 #include "dotscene_loader.hpp"
 
+#include "constraint_solver.hpp"
+
 vl::GameManager::GameManager(vl::Logger *logger)
 	: _python(0)
 	, _resource_man(new vl::ResourceManager)
@@ -38,6 +40,7 @@ vl::GameManager::GameManager(vl::Logger *logger)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _state(GS_UNKNOWN)
+	, _constraint_solver(new vl::ConstraintSolver)
 {
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
@@ -114,7 +117,11 @@ vl::GameManager::step(void)
 		{
 			_physics_world->step();
 		}
+
+		_process_constraints(_step_timer.elapsed());
 	}
+
+	_step_timer.reset();
 
 	return !isQuited();
 }
@@ -163,6 +170,24 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	{
 		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
 	}
+}
+
+void 
+vl::GameManager::addConstraint(vl::ConstraintRefPtr constraint)
+{
+	_constraint_solver->addConstraint(constraint);
+}
+
+void
+vl::GameManager::removeConstraint(vl::ConstraintRefPtr constraint)
+{
+	_constraint_solver->removeConstraint(constraint);
+}
+
+bool
+vl::GameManager::hasConstraint(vl::ConstraintRefPtr constraint) const
+{
+	return _constraint_solver->hasConstraint(constraint);
 }
 
 vl::physics::WorldRefPtr
@@ -231,6 +256,7 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 		else
 		{ return false; }
 		_state = GS_PLAY;
+		_step_timer.reset();
 		break;
 
 	case GS_PAUSE:
@@ -280,4 +306,10 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 	loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
+}
+
+void
+vl::GameManager::_process_constraints(vl::time const &t)
+{
+	_constraint_solver->step(t);
 }
