@@ -249,6 +249,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("clearSelection", &SceneManager::clearSelection)
 
 		.def("hideSceneNodes", &vl::SceneManager::hideSceneNodes, hideSceneNodes_ov())
+		.def("mapCollisionBarriers", &vl::SceneManager::mapCollisionBarriers)
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def(python::self_ns::str(python::self_ns::self))
 	;

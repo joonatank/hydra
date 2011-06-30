@@ -705,6 +705,51 @@ vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 	}
 }
 
+void
+vl::SceneManager::mapCollisionBarriers(void)
+{
+	SceneNodeList cbs;
+	for(SceneNodeList::iterator iter = _scene_nodes.begin(); iter != _scene_nodes.end(); ++iter)
+	{
+		if((*iter)->getName().substr(0, 3) == "cb_")
+		{
+			cbs.push_back(*iter);
+		}
+	}
+
+	for(SceneNodeList::iterator cb_iter = cbs.begin(); cb_iter != cbs.end(); ++cb_iter)
+	{
+		std::string name = (*cb_iter)->getName().substr(3);
+		bool found = false;
+		for(SceneNodeList::iterator iter = _scene_nodes.begin(); iter != _scene_nodes.end(); ++iter)
+		{
+			if((*iter)->getName() == name)
+			{
+				_mapped_nodes[*cb_iter] = *iter;
+				found = true;
+				break;
+			}
+		}
+
+		if(!found)
+		{
+			std::cout << "Collision barrier with name: " << (*cb_iter)->getName() 
+				<< " didn't find visual object " << name << std::endl;
+		}
+	}
+}
+
+void
+vl::SceneManager::_step(vl::time const &t)
+{
+	// Copy transformations for automatically mapped objects
+	for(std::map<SceneNode *, SceneNode *>::iterator iter = _mapped_nodes.begin();
+		iter != _mapped_nodes.end(); ++iter)
+	{
+		iter->second->setWorldTransform(iter->first->getWorldTransform());
+	}
+}
+
 void 
 vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitive)
 {

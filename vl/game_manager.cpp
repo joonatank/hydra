@@ -118,7 +118,11 @@ vl::GameManager::step(void)
 			_physics_world->step();
 		}
 
-		_process_constraints(_step_timer.elapsed());
+		vl::time elapsed = _step_timer.elapsed();
+
+		_process_constraints(elapsed);
+
+		_scene_manager->_step(elapsed);
 	}
 
 	_step_timer.reset();

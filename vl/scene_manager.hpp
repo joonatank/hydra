@@ -445,6 +445,7 @@ public :
 
 	void clearSelection(void);
 	
+	void mapCollisionBarriers(void);
 
 	/// @brief hides Scene Nodes based on the pattern
 	/// use asteriks for any number of any characters
@@ -467,6 +468,10 @@ public :
 	Ogre::SceneManager *getNative( void )
 	{ return _ogre_sm; }
 
+	/// @internal
+	/// @brief step the SceneManager does things like progression of automatic mappings
+	void _step(vl::time const &t);
+
 private :
 	virtual void recaluclateDirties(void);
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
@@ -483,6 +488,8 @@ private :
 	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;
 	MovableObjectList _objects;
+
+	std::map<SceneNode *, SceneNode *> _mapped_nodes;
 
 	/// Selected SceneNodes
 	/// @remarks

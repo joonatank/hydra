@@ -228,6 +228,9 @@ game.scene.hideSceneNodes("nivel*")
 # some test code
 pulttaus_hinge.target = Radian(1)
 
+# CB mapping
+game.scene.mapCollisionBarriers()
+
 #kiinnityslevy.translate(Vector3(0, 2, 0))
 
 # Add a motor action to nosto cylinder
