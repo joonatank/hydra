@@ -18,6 +18,7 @@
 #include "light.hpp"
 #include "camera.hpp"
 #include "movable_text.hpp"
+#include "ray_object.hpp"
 
 #include "player.hpp"
 
@@ -234,6 +235,9 @@ BOOST_PYTHON_MODULE(vl)
 		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("createMovableText", &SceneManager::createMovableText, python::return_value_policy<python::reference_existing_object>() )
 		/// @todo add getter functions for movable text
+		.def("createRayObject", &SceneManager::createRayObject, python::return_value_policy<python::reference_existing_object>() )
+		// @todo add getters for ray object
+
 
 		/// Scene parameters
 		/// returns copies of the objects
@@ -320,6 +324,11 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("track_camera", &vl::MovableText::getTrackCamera, &vl::MovableText::setTrackCamera)
 	;
 	
+	python::class_<vl::RayObject, boost::noncopyable, python::bases<vl::MovableObject> >("RayObject", python::no_init)
+		.add_property("direction", python::make_function( &vl::RayObject::getDirection, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setDirection)
+		.add_property("position", python::make_function( &vl::RayObject::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setPosition)
+		.add_property("material", python::make_function( &vl::RayObject::getMaterial, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setMaterial)
+	;
 
 	python::enum_<TransformSpace>("TS")
 		.value("LOCAL", TS_LOCAL)

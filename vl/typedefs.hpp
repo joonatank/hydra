@@ -47,6 +47,7 @@ namespace vl
 	class Light;
 	class Camera;
 	class MovableText;
+	class RayObject;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
 	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
@@ -78,6 +79,7 @@ namespace vl
 	typedef Light * LightPtr;
 	typedef Camera * CameraPtr;
 	typedef MovableText * MovableTextPtr;
+	typedef RayObject * RayObjectPtr;
 
 	class Mesh;
 	class MeshManager;

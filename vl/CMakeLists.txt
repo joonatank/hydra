@@ -71,6 +71,7 @@ set( SOURCES
 	constraints.cpp
 	constraint_solver.cpp
 	animation.cpp
+	ray_object.hpp
 	)
 
 set( HEADERS

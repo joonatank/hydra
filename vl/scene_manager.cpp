@@ -10,6 +10,7 @@
 #include "camera.hpp"
 #include "light.hpp"
 #include "movable_text.hpp"
+#include "ray_object.hpp"
 
 /// Necessary for creating PREFABS
 #include "mesh_manager.hpp"
@@ -448,6 +449,15 @@ vl::SceneManager::_createMovableText(uint64_t id)
 	return static_cast<MovableTextPtr>(_createMovableObject("MovableText", id));
 }
 
+vl::MovableObjectPtr
+vl::SceneManager::createRayObject(std::string const &name, std::string const &material_name)
+{
+	vl::RayObjectPtr obj = static_cast<RayObjectPtr>(createMovableObject(OBJ_RAY_OBJECT, name));
+	obj->setMaterial(material_name);
+
+	return obj;
+}
+
 
 /// ------------------ SceneManager MovableObject ----------------------------
 vl::MovableObjectPtr 
@@ -481,6 +491,9 @@ vl::SceneManager::createMovableObject(vl::OBJ_TYPE type, std::string const &name
 	case vl::OBJ_MOVABLE_TEXT:
 		obj = _createMovableText(name, params);
 		break;
+	case vl::OBJ_RAY_OBJECT:
+		obj = _createRayObject(name, params);
+		break;
 	}
 
 	_session->registerObject(obj, type, vl::ID_UNDEFINED);
@@ -510,6 +523,9 @@ vl::SceneManager::_createMovableObject(vl::OBJ_TYPE type, uint64_t id)
 		break;
 	case OBJ_MOVABLE_TEXT:
 		obj = new MovableText(this);
+		break;
+	case vl::OBJ_RAY_OBJECT:
+		obj = new RayObject(this);
 		break;
 	}
 
@@ -571,6 +587,8 @@ vl::SceneManager::getMovableObjectType(std::string const &type) const
 		return OBJ_LIGHT;
 	else if( type_name == "movable_text" )
 		return OBJ_MOVABLE_TEXT;
+	else if( type_name == "ray_object" )
+		return OBJ_RAY_OBJECT;
 	else
 		return OBJ_INVALID;
 }
@@ -588,6 +606,10 @@ vl::SceneManager::getMovableObjectTypeName(vl::OBJ_TYPE type) const
 		return "light";
 	case OBJ_MOVABLE_TEXT:
 		return "movable_text";
+	case OBJ_RAY_OBJECT:
+		return "ray_object";
+	default:
+		return "";
 	}
 }
 
@@ -1048,6 +1070,13 @@ vl::SceneManager::_createMovableText(std::string const &name, vl::NamedParamList
 	return new MovableText(name, this);
 }
 
+
+vl::MovableObjectPtr
+vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList const &params)
+{
+	// Does not accept any params for now
+	return new RayObject(name, this);
+}
 
 
 /// --------------------------------- Global ---------------------------------

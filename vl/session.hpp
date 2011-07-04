@@ -30,6 +30,7 @@ enum OBJ_TYPE
 	OBJ_LIGHT,
 	OBJ_CAMERA,
 	OBJ_MOVABLE_TEXT,
+	OBJ_RAY_OBJECT,
 };
 
 class Session
