@@ -102,7 +102,20 @@ vl::time::time(uint32_t s, uint32_t us)
 {
 	/// @todo replace with throwing
 	/// disallow setting a second long usec part
-	assert( us < 1e6 );
+	assert(usec < 1e6);
+}
+
+vl::time::time(int s)
+	: sec(s), usec(0)
+{
+	assert(s >= 0);
+}
+
+vl::time::time(double sec_)
+	: sec(sec_), usec(0)
+{
+	usec = (uint32_t)((double)(sec_-sec)*1e6);
+	assert(usec < 1e6);
 }
 
 vl::time::operator double() const
