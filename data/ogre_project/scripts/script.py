@@ -22,7 +22,7 @@ createCameraMovements(camera, speed=10)
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
 addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
-game.scene.addToSelection(ogre)
+#game.scene.addToSelection(ogre)
 ogre.position = Vector3(0, 2.5, 0)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
@@ -35,7 +35,12 @@ addToggleMusicEvent(KC.M)
 
 # Create ground plane
 # TODO should create the mesh using MeshManager so the size can be assigned
-ground_ent = game.scene.createEntity('ground', PF.PLANE)
+# Create a large plane for shader testing
+# This shows the usage of the new mesh manager
+ground_length = 100;
+ground_mesh = game.mesh_manager.createPlane("ground", ground_length, ground_length)
+print(ground_mesh)
+ground_ent = game.scene.createEntity('ground', "ground", True)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 # Shader material, with shadows
@@ -60,17 +65,18 @@ athene.scale = Vector3(1,1,1)*0.05;
 
 game.scene.shadows.enable()
 
-if( game.scene.hasSceneNode("spot") ):
-	light = game.scene.getSceneNode("spot")
-	light.position = Vector3(0, 20, 0)
-#	game.scene.addToSelection(light)
+if game.scene.hasSceneNode("spot"):
+	spot = game.scene.getLight("spot")
+	spot_n = game.scene.getSceneNode("spot")
+	spot_n.position = Vector3(0, 20, 0)
+	game.scene.addToSelection(spot_n)
 
 #game.scene.removeFromSelection(ogre)
 
-#if( game.scene.hasLight("spot") ):
+#if game.scene.hasLight("spot"):
 #	game.scene.getLight("spot").visible = False
 
-if( game.scene.hasSceneNode("Ambient_light") ):
+if game.scene.hasSceneNode("Ambient_light"):
 	ambient_light = game.scene.getSceneNode("Ambient_light")
 
 """ We use the default spot for now
@@ -105,7 +111,7 @@ ogre.addChild(lightpulp_n)
 ogre2 = ogre.clone()
 ogre2.translate(Vector3(0, 10, 0))
 
-game.scene.addToSelection(ogre2)
+#game.scene.addToSelection(ogre2)
 #athene.transform(m)
 
 def printSpotti():
@@ -127,6 +133,6 @@ text_n = game.scene.createSceneNode('text')
 text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
 
-game.scene.clearSelection()
-game.scene.addToSelection(text_n)
+#game.scene.clearSelection()
+#game.scene.addToSelection(text_n)
 

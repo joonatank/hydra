@@ -1018,7 +1018,7 @@ vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList cons
 	{ prefab = iter->second; }
 
 	bool use_new_manager = false;
-	iter = params.find("new_mesh_manager");
+	iter = params.find("use_new_mesh_manager");
 	if(iter != params.end())
 	{
 		use_new_manager = vl::from_string<bool>(iter->second);

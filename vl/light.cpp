@@ -49,18 +49,24 @@ vl::operator<<(std::ostream &os, vl::Light const &light)
 		<< " : position " << light.getPosition() 
 		<< " : direction " << light.getDirection() << "\n"
 		<< " : diffuse colour " << light.getDiffuseColour()
-		<< " : specular colour " << light.getDiffuseColour() << "\n";
+		<< " : specular colour " << light.getDiffuseColour();
 
 	if( light.getCastShadows() )
 	{ os << " casts shadows"; }
 	else
 	{ os << " does not cast shadows"; }
-		
-	os << light.getAttenuation()
-		<< " : spot inner cone = " << light._inner_cone
-		<< " : spot outer cone = " << light._outer_cone
-		<< " : spot falloff = " << light._spot_falloff
-		<< std::endl;
+	os << "\n";
+
+	// Attenuation on one line
+	os << " : " << light.getAttenuation() << "\n";
+	// Spot light parameters for spot lights in one line
+	if(light.getType() == vl::Light::LT_SPOT)
+	{
+		os << " : spot inner cone = " << light._inner_cone
+			<< " : spot outer cone = " << light._outer_cone
+			<< " : spot falloff = " << light._spot_falloff
+			<< std::endl;
+	}
 
 	return os;
 }
