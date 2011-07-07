@@ -37,7 +37,7 @@ addToggleMusicEvent(KC.M)
 # TODO should create the mesh using MeshManager so the size can be assigned
 # Create a large plane for shader testing
 # This shows the usage of the new mesh manager
-ground_length = 100;
+ground_length = 40;
 ground_mesh = game.mesh_manager.createPlane("ground", ground_length, ground_length)
 print(ground_mesh)
 ground_ent = game.scene.createEntity('ground', "ground", True)
@@ -67,8 +67,13 @@ game.scene.shadows.enable()
 
 if game.scene.hasSceneNode("spot"):
 	spot = game.scene.getLight("spot")
+	spot.setSpotRange(Radian(1.5), Radian(1.7), 0.7)
+	spot.attenuation = LightAttenuation(35, 0.9, 0.09, 0.01)
 	spot_n = game.scene.getSceneNode("spot")
 	spot_n.position = Vector3(0, 20, 0)
+	# Test code for lights at a distance
+	#spot_n.position = Vector3(0, 100, 0)
+	#spot.attenuation = LightAttenuation(200, 0.9, 0.09, 0.01)
 	game.scene.addToSelection(spot_n)
 
 #game.scene.removeFromSelection(ogre)

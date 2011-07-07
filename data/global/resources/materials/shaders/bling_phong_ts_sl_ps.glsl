@@ -5,12 +5,10 @@
 // Bling-Phong shading program for single light
 // The Fragment Program
 
-// TODO hasn't been tested with specular lighting
-// works fine with white specular map and not defining specular colour in material (black spec)
-// TODO add emissive materials
-// TODO test point lights
 // TODO test directional lights
-// TODO add vertex colours, needs an uniform param wether they are enabled or not
+// TODO add vertex colours, needs an define if the user wants to compile them
+// or not
+// TODO specular lights are not correct
 //
 // Spotlights tested with inner, outer and falloff
 // Spotlights tested with changing position and orientation
@@ -19,6 +17,8 @@
 /// Version 120 is the most recent supported by G71 (Quadro FX 5500)
 /// If you need more recent features, please do create another shader
 /// for more recent cards.
+// Version parameter does not work correctly in Ogre, the main tree uses
+// OpenGL 2. No harm about it though. Waiting for OpenGL 3+ rendering system.
 #version 140
 
 // Material parameters
@@ -30,6 +30,7 @@ uniform vec4 surfaceSpecular;
 uniform vec4 lightDiffuse;
 uniform vec4 lightSpecular;
 uniform vec4 spotlightParams;
+uniform vec4 lightAttenuation;
 
 #ifdef SHADOW_MAP
 uniform float lightCastsShadows;
@@ -52,9 +53,10 @@ in vec4 uv;
 in vec3 dirToLight;
 // from vertex to eye in tangent space
 in vec3 dirToEye; 
-// How much the light is to be attenuated, this includes both spotlight
-// Should these be calculated in the pixel shader?
-in float attenuation;
+// Eye space light position needed for attenuation calculation
+// Attenuation in pixel shader otherwise large objects
+// with few vertices are incorrectly lit
+in vec3 mvLightPos;
 
 // Spotlight direction, should be in the same space as the rest of the parameters,
 // especially dirToLight.  Tangent space is tested, but eye space should also work.
@@ -71,6 +73,43 @@ in vec4 shadowUV;
 #endif
 
 out vec4 FragmentColour;
+
+// Calculate the attenuation parameter
+// Compute attenuation, in eye space
+float attenuate(vec3 lightPos, vec4 attenuation)
+{
+	float distSqr = dot(lightPos, lightPos);
+	// Calculating everything as squared
+	// TODO this will fail for range = 0
+	float invRadius = 1.0/attenuation.x;
+	float invRadiusSqr = invRadius*invRadius;
+	float radiusSqr = attenuation.x*attenuation.x;
+	
+	// distance attenuation
+	// larger than 1 if the distance < radius, 1 for distance = radius
+	// we want the distance attenuation to be
+	// distAtt > 1 when distance << radius
+	// distAtt = [0, 1] when distance < radius
+	// distAtt = 0 when distance == radius
+	// this is because for large distances the quadratic term in attenuation
+	// will dominate the light intensity so we compensate it with the
+	// difference in radius and distance
+#ifdef NEW_ATTENUATION
+	// Taking a square root would help with objects that are close
+	// but would ruin this function if objects are far away
+	float distAtt = radiusSqr/distSqr -1;
+#else
+	// Old function creates values in [0, 1]
+	float distAtt = clamp(1.0 - invRadiusSqr * distSqr, 0.0, 1.0);
+#endif
+
+	float d = length(lightPos);
+	float att =  distAtt/( attenuation.y +
+		(attenuation.z * d) +
+		(attenuation.w * d*d) );
+
+	return clamp(att, 0.0, 1.0);
+}
 
 void main(void)
 {
@@ -100,7 +139,10 @@ void main(void)
 	if( spotFactor > 0 )
 	{
 		spotFactor = pow(spotFactor, falloff);
-		float att = spotFactor * attenuation;
+
+		// Calculate the attenuation
+		float att = spotFactor *
+			attenuate(mvLightPos, lightAttenuation);
 
 		// Normalize interpolated direction to light
 		vec3 normDirToLight = normalize(dirToLight);
@@ -126,7 +168,6 @@ void main(void)
 			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(HdotN, shininess);
-			//specular = vec4(0, 0, 0, 1);
 		}
 	}
 

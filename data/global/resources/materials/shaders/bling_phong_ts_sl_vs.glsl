@@ -12,7 +12,6 @@ uniform mat4 modelViewProj;
 uniform mat4 normalMatrix;
 // Light position in eye space
 uniform vec4 lightPos;
-uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
 
 #ifdef SHADOW_MAP
@@ -37,8 +36,8 @@ out vec4 uv;
 out vec3 dirToLight;
 // from vertex to eye in tangent space, used for specular highlights
 out vec3 dirToEye;
-// Attenuation parameter
-out float attenuation;
+// Eye space light position for attenuation calculation
+out vec3 mvLightPos;
 // Light to vertex in tangent space
 //out vec4 vertexToLight;
 // Spotlight direction vector, should be vec4(1,0,0,1) for anything else
@@ -90,7 +89,7 @@ void main(void)
     
 	// Light direction from vertex
 	// lightPos.w is for directional lights, they have w = 0
-	vec3 mvLightPos = vec3(lightPos) - mvVertex*lightPos.w;
+	mvLightPos = vec3(lightPos) - mvVertex*lightPos.w;
 	// normalizing the direction does not make a difference
 	vec3 mvLightDir = normalize(mvLightPos);
 
@@ -105,12 +104,5 @@ void main(void)
 	spotlightDir.z = dot(mvSpotlightDir, mvNormal);
 
 	dirToEye = tbnDirToEye;
-
-	// Compute attenuation, in eye space
-	// TODO add range parameter
-	float d = length(mvLightPos);
-	attenuation =  1.0/( lightAttenuation.y +
-		(lightAttenuation.z * d) +
-		(lightAttenuation.w * d*d) );
 }
 
