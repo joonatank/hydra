@@ -37,7 +37,7 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIR}
 	)
 
-subdirs(examples)
+subdirs(gl_tests)
 
 add_executable( test_timer test_timer.cpp
 	${HydraMain_SOURCE_DIR}/base/timer.hpp
@@ -106,6 +106,9 @@ target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
 
 add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
+add_executable(serial_reader serial_reader.cpp)
+
+target_link_libraries(serial_reader ${HYDRA_LIBRARIES})
 
 # Test project settings
 # FIXME these use old interface

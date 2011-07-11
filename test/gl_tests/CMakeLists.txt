@@ -11,8 +11,6 @@ project("gl_tests" CXX)
 cmake_minimum_required(VERSION 2.6)
 
 if( WIN32 )
-	add_executable(serial_reader serial_reader.cpp)
-
 	include_directories(${GLEW_SOURCE_DIR})
 	set(HEADERS gl_common.hpp)
 

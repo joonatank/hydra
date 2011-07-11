@@ -68,7 +68,17 @@ set(MATH_SRC
 	)
 source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
 
+set(INPUT_HEADERS
+	input/joystick_event.hpp
+	input/serial_joystick.hpp
+	)
+set(INPUT_SRC
+	input/serial_joystick.cpp
+	)
+source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
+
 set(BASE_HEADERS 
+	base/serial.hpp
 	base/thread.hpp
 	base/system_util.hpp
 	base/envsettings.hpp
@@ -83,6 +93,7 @@ set(BASE_HEADERS
 	base/timer.hpp
 	base/report.hpp)
 set(BASE_SRC
+	base/serial.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
@@ -199,6 +210,8 @@ add_library(HydraMain
 	${HEADERS}
 	${BASE_HEADERS}
 	${BASE_SRC}
+	${INPUT_HEADERS}
+	${INPUT_SRC}
 	${PHYSICS_HEADERS}
 	${PHYSICS_SRC}
 	${CLUSTER_HEADERS}
