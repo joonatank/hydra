@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-02
- *	@file window.hpp
+ *	@file gui_window.hpp
  *
  */
 

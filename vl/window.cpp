@@ -6,7 +6,7 @@
 #include "window.hpp"
 
 #include "base/exceptions.hpp"
-#include "eq_cluster/config.hpp"
+#include "config.hpp"
 
 #include "renderer.hpp"
 

@@ -21,11 +21,11 @@
 #include <OGRE/OgreLogManager.h>
 
 // gui window, necessary for the windows this creates
-#include "window.hpp"
+#include "gui_window.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI
-#include "eq_cluster/window.hpp"
+#include "window.hpp"
 
 vl::gui::GUI::GUI(vl::Session *session)
 	: _editor_shown(false)

@@ -10,13 +10,13 @@
 // Necessary for printing error messages from exceptions
 #include "base/exceptions.hpp"
 
-#include "eq_cluster/window.hpp"
+#include "window.hpp"
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
 
 #include "gui/gui.hpp"
-#include "gui/window.hpp"
+#include "gui/gui_window.hpp"
 
 #include "logger.hpp"
 

@@ -11,7 +11,7 @@
 #include "base/projsettings.hpp"
 
 // Necessary for client creation
-#include "eq_cluster/application.hpp"
+#include "application.hpp"
 
 #include "base/string_utils.hpp"
 

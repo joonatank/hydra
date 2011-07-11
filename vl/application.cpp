@@ -4,7 +4,7 @@
  */
 #include "application.hpp"
 
-#include "eq_cluster/config.hpp"
+#include "config.hpp"
 
 // Necessary for vl::Settings
 #include "settings.hpp"
