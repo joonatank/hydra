@@ -94,7 +94,8 @@ vl::cluster::Server::poll(void)
 
 		if(part.parts == 1)
 		{
-			_handle_message(Message(part), *cl_ptr);
+			Message msg_part(part);
+			_handle_message(msg_part, *cl_ptr);
 		}
 		// @todo replace with a real solution
 		// for now clients should not send that large messages anyways

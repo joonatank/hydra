@@ -18,6 +18,7 @@
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
+#include "logger.hpp"
 
 namespace
 {
@@ -204,6 +205,8 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
 {
+	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
+
 	_session->registerObject( this, OBJ_SCENE_MANAGER);
 	_root = createFreeSceneNode("Root");
 }
@@ -217,6 +220,8 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
 {
+	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
+
 	assert(_session);
 	assert(id != vl::ID_UNDEFINED );
 	assert(_ogre_sm);
@@ -493,6 +498,9 @@ vl::SceneManager::createMovableObject(vl::OBJ_TYPE type, std::string const &name
 		break;
 	case vl::OBJ_RAY_OBJECT:
 		obj = _createRayObject(name, params);
+		break;
+	default:
+		std::cout << vl::CRITICAL << "Object type : " << type << " not a movable object." << std::endl;
 		break;
 	}
 

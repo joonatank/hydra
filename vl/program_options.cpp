@@ -47,7 +47,7 @@ vl::ProgramOptions::getOutputFile(void) const
 
 	fs::path log = fs::path(log_dir) / fs::path(name + ".log");
 
-	return log.file_string();
+	return log.string();
 }
 
 void
@@ -94,9 +94,9 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	}
 
 	// Some global settings
-	fs::path exe_path = fs::system_complete( argv[0] ).file_string();
-	exe_name = exe_path.filename();
-	program_directory = fs::path(exe_path).parent_path().file_string();
+	fs::path exe_path = fs::system_complete( argv[0] ).string();
+	exe_name = exe_path.filename().string();
+	program_directory = fs::path(exe_path).parent_path().string();
 
 	// Slave options
 	if( vm.count("slave") )

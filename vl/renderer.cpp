@@ -62,6 +62,8 @@ vl::Renderer::~Renderer(void)
 void
 vl::Renderer::init(vl::EnvSettingsRefPtr env)
 {
+	std::cout << vl::TRACE << "vl::Renderer::init" << std::endl;
+
 	assert(env);
 	// Single init allowed
 	assert(!_env);
@@ -299,6 +301,8 @@ vl::Renderer::nLoggedMessages(void) const
 void
 vl::Renderer::_createOgre(vl::EnvSettingsRefPtr env)
 {
+	std::cout << vl::TRACE << "vl::Renderer::_createOgre" << std::endl;
+
 	assert(env);
 
 	// TODO the project name should be used instead of the hydra for all
@@ -420,7 +424,7 @@ vl::Renderer::_sendEvents( void )
 void
 vl::Renderer::_createWindow( vl::EnvSettings::Window const &winConf )
 {
-	std::cout << vl::TRACE << "vl::Pipe::_createWindow : " << winConf.name << std::endl;
+	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
 
 	vl::Window *window = new vl::Window( winConf.name, this );
 	window->setCamera(_camera);
@@ -472,6 +476,8 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 
 			case OBJ_GUI :
 			{
+				std::clog << "Creating GUI." << std::endl;
+				
 				// Only creating GUI on the master for now
 				// @todo add support for selecting the window
 				if( getName() == _env->getMaster().name )
@@ -508,6 +514,7 @@ vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
+				std::clog << "SceneManager created." << std::endl;
 			}
 			break;
 

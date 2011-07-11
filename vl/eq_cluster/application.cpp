@@ -63,11 +63,11 @@ vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
 		if( fs::is_regular(env_path) )
 		{
 			std::string env_data;
-			env_data = vl::readFileToString( env_path.file_string() );
+			env_data = vl::readFileToString( env_path.string() );
 			// TODO check that the files are correct and we have good settings
 			vl::EnvSettingsSerializer env_ser( env );
 			env_ser.readString(env_data);
-			env->setFile( env_path.file_string() );
+			env->setFile( env_path.string() );
 		}
 
 		env->setLogDir( options.log_dir );
@@ -115,12 +115,12 @@ vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
 		{
 			if( fs::exists(paths.at(i) / "hydra.prj") )
 			{
-				global_file = fs::path(paths.at(i) / "hydra.prj").file_string();
+				global_file = fs::path(paths.at(i) / "hydra.prj").string();
 				break;
 			}
 			else if( fs::exists(paths.at(i) / "hydra.xml") )
 			{
-				global_file = fs::path(paths.at(i) / "hydra.xml").file_string();
+				global_file = fs::path(paths.at(i) / "hydra.xml").string();
 				break;
 			}
 		}

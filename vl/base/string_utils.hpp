@@ -133,7 +133,7 @@ namespace vl
 			"abcdefghijklmnopqrstuvwxyz";
 
 		std::string s(len, 'a');
-		for (int i = 0; i < len; ++i)
+		for(size_t i = 0; i < len; ++i)
 		{
 			s.at(i) = alphanum[rand() % (sizeof(alphanum) - 1)];
 		}

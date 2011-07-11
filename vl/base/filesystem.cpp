@@ -113,7 +113,7 @@ vl::find_file( const std::string &dir_path,
 	{
 		if( iter->path().filename() == filename )
 		{
-			path_found = iter->path().file_string();
+			path_found = iter->path().string();
 			return true;
 		}
 	}

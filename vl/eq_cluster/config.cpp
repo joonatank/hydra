@@ -172,7 +172,10 @@ vl::Config::init( void )
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
 
-	_game_manager->requestStateChange(GS_INIT);
+	if(!_game_manager->requestStateChange(GS_INIT))
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT"));
+	}
 
 	vl::timer t;
 	/// @todo most of this should be moved to the constructor, like object
@@ -521,6 +524,8 @@ vl::Config::_createMsgUpdate(void)
 void
 vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 {
+	std::cout << vl::TRACE << "vl::Config::_setEnvironment" << std::endl;
+
 	vl::timer t;
 
 	// Local renderer needs to be inited rather than send a message
@@ -637,7 +642,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
 	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
 	if( fs::is_directory(tracking_path) )
-	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.file_string() ); }
+	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.string() ); }
 }
 
 /// Event Handling
