@@ -55,6 +55,7 @@ set(SRC
 	constraints.cpp
 	constraint_solver.cpp
 	animation.cpp
+	ray_object.hpp
 	)
 
 set(MATH_HEADERS

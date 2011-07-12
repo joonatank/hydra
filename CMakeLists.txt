@@ -87,11 +87,11 @@ endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
 
-# Python version 3.1 for Windows
+# Python version 3.2 for Windows
 # Linux has some problems with multiple pythons and boost installed from
 # package manager, so we can not compile boost python to use Python 3.1
 if(WIN32)
-	set( PYTHON_VERSION 3.1 CACHE STRING "Python version" )
+	set( PYTHON_VERSION 3.2 CACHE STRING "Python version" )
 else()
 	set( PYTHON_VERSION 2.7 CACHE STRING "Python version" )
 endif()

@@ -6,6 +6,7 @@
 #include "client.hpp"
 
 #include "base/exceptions.hpp"
+#include "base/sleep.hpp"
 
 #include "distrib_settings.hpp"
 

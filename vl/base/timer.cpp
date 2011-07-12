@@ -160,7 +160,7 @@ vl::time::operator/=(double n)
 }
 
 vl::time &
-vl::time::operator*=(long unsigned int n)
+vl::time::operator*=(int32_t n)
 {
 	// TODO should move usecs to secs if they qualify
 	sec *= n;
@@ -170,7 +170,7 @@ vl::time::operator*=(long unsigned int n)
 }
 
 vl::time &
-vl::time::operator/=(long unsigned int n)
+vl::time::operator/=(int32_t n)
 {
 	sec /= n;
 	usec /= n;

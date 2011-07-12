@@ -44,6 +44,8 @@ add_executable( test_timer test_timer.cpp
 	${HydraMain_SOURCE_DIR}/base/timer.cpp
 	)
 
+target_link_libraries(test_timer ${TEST_LIB})
+
 #subdirs( spikes )
 
 # NOTE For now removed as we move to using EnvSettings and ProjectSettings
@@ -77,9 +79,10 @@ target_link_libraries( test_exceptions ${TEST_LIB}  )
 add_executable( test_euler_angles
 				test_euler_angles.cpp
 				${HydraMain_SOURCE_DIR}/math/math.hpp
+				${HydraMain_SOURCE_DIR}/math/math.cpp
 				)
 
-target_link_libraries( test_euler_angles ${HYDRA_LIBRARIES} ${TEST_LIB} )
+target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${Boost_FILESYSTEM_LIBRARIES} ${TEST_LIB} )
 
 # Test tracking
 #add_executable( test_tracking

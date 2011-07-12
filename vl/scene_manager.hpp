@@ -356,6 +356,10 @@ public :
 	MovableTextPtr _createMovableText(uint64_t id);
 
 
+	/// --------- RayObject ----------------
+	MovableObjectPtr createRayObject(std::string const &name, std::string const &material_name);
+
+
 	/// --------- MovableObject ------------
 	/// @brief Common creator for all the movable objects, extra params are passed using a param list
 	MovableObjectPtr createMovableObject(std::string const &type_name, std::string const &name, vl::NamedParamList const &params = vl::NamedParamList());
@@ -481,6 +485,7 @@ private :
 	MovableObjectPtr _createLight(std::string const &name, vl::NamedParamList const &params);
 	MovableObjectPtr _createCamera(std::string const &name, vl::NamedParamList const &params);
 	MovableObjectPtr _createMovableText(std::string const &name, vl::NamedParamList const &params);
+	MovableObjectPtr _createRayObject(std::string const &name, vl::NamedParamList const &params);
 
 	// @todo rename to avoid confusion
 	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);

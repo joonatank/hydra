@@ -70,7 +70,7 @@ vl::EnvSettings::getPluginsDirFullPath( void ) const
 	fs::path env_dir = env_path.parent_path();
 	fs::path path =  env_dir / "plugins";
 
-	return path.file_string();
+	return path.string();
 }
 
 void
@@ -218,8 +218,8 @@ vl::EnvSettings::getLogDir( vl::PATH_TYPE const type ) const
 	{ return _log_dir; }
 	else
 	{
-		fs::path path = fs::complete( _log_dir );
-		return path.file_string();
+		fs::path path = fs::absolute(_log_dir);
+		return path.string();
 	}
 }
 
@@ -229,9 +229,9 @@ vl::EnvSettings::getEnvironementDir( void ) const
 	fs::path envFile( getFile() );
 	fs::path envDir = envFile.parent_path();
 	if( !fs::exists( envDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.file_string() ) ); }
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.string() ) ); }
 
-	return envDir.file_string();
+	return envDir.string();
 }
 
 

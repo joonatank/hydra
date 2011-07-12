@@ -4,7 +4,7 @@
  *
  *	This file is part of Hydra VR game engine.
  *
- *	description: This create create a billboarding object that display a text.
+ *	description: This create a billboarding object that display a text.
  *
  *	Copied from Ogre Wiki, original created by
  *	2003 by cTh see gavocanov@rambler.ru
