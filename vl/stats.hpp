@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 
+#include "base/timer.hpp"
+
 namespace vl
 {
 
@@ -60,38 +62,42 @@ public :
 	/**	@brief Log time used for rendering a frame to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logRenderingTime( double time );
+	void logRenderingTime(vl::time const &t);
 
-	void logWaitDrawDoneTime( double time );
+	void logLocalRenderingTime(vl::time const &t);
+	
+	void logLocalCaptureTime(vl::time const &t);
+	
+	void logWaitDrawDoneTime(vl::time const &t);
 
-	void logWaitDrawTime( double time );
+	void logWaitDrawTime(vl::time const &t);
 
-	void logWaitUpdateTime( double time );
+	void logWaitUpdateTime(vl::time const &t);
 
 	/**	@brief Log time used for processing events to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logEventProcessingTime( double time );
+	void logEventProcessingTime(vl::time const &t);
 
 	/**	@brief Log time used for processing frame events to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logFrameProcessingTime( double time );
+	void logFrameProcessingTime(vl::time const &t);
 
 	/**	@brief Log time used for creating update to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logUpdateTime( double time );
+	void logUpdateTime(vl::time const &t);
 
 	/**	@brief Log time used for stepping the simulation to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logStepTime( double time );
+	void logStepTime(vl::time const &t);
 
 	/**	@brief Log time used for stepping the simulation to the stats
 	 *	@param time time in milliseconds
 	 */
-	void logInitTime( double time );
+	void logInitTime(vl::time const &t);
 
 	/**	@brief Update the avarages and clear the current gathered values
 	 */
@@ -101,6 +107,9 @@ public :
 
 private :
 	StatElem _rendering_time;
+	StatElem _local_rendering_time;
+	StatElem _local_capture_time;
+
 	StatElem _event_time;
 	StatElem _frame_time;
 	StatElem _update_time;
@@ -108,6 +117,7 @@ private :
 	StatElem _wait_update_time;
 	StatElem _wait_draw_time;
 	StatElem _wait_draw_done_time;
+
 	double _init_time;
 
 };	// class Stats

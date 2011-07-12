@@ -105,7 +105,8 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	std::stringstream ss;
 	ss << port;
 	boost::udp::resolver resolver( _io_service );
-	boost::udp::resolver::query query( boost::udp::v4(), hostname, ss.str().c_str() );
+	boost::udp::resolver::query query( boost::udp::v4(), hostname, ss.str().c_str(), 
+									   boost::udp::resolver_query::all_matching);
 	_master = *resolver.resolve(query);
 
 	_socket.open( boost::udp::v4() );
@@ -209,9 +210,7 @@ vl::cluster::Client::waitForMessage(vl::cluster::MSG_TYPES type, vl::time timeli
 		}
 		/// @todo does this need sleeping between messages?
 		/// probably necessary on Linux
-#ifndef _WIN32
 		vl::msleep(0);
-#endif
 	}
 
 	return msg;

@@ -19,7 +19,7 @@
  *		with 1ms sleeping bit over 1ms round trip time.
  *		without sleeping around 150 microseconds round trip time, varied from 80-250.
  *	Seems like on Windows 7 sleeping 0ms is the same as not sleeping. 
- *	The server is using a complete core.
+ *	The server is using a complete CPU core.
  *
  *	Working implementation is copied to the Hydra communication system and used
  *	as a reference for the latency there.

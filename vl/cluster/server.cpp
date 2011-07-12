@@ -6,6 +6,8 @@
 #include "server.hpp"
 
 #include "base/exceptions.hpp"
+// Necessary for blocking functions
+#include "base/sleep.hpp"
 
 vl::cluster::Server::Server(uint16_t const port, ServerDataCallback *cb)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
@@ -242,7 +244,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		return false; 
 	}
 
-	stats.logWaitUpdateTime( (double(tim.elapsed()))*1e3 );
+	stats.logWaitUpdateTime(tim.elapsed());
 
 	tim.reset();
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
@@ -265,7 +267,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		return false;
 	}
 
-	stats.logWaitDrawTime( (double(tim.elapsed()))*1e3 );
+	stats.logWaitDrawTime(tim.elapsed());
 
 	return true;
 }
@@ -290,7 +292,7 @@ vl::cluster::Server::finish_draw(vl::Stats &stats, vl::time const &limit)
 		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 		{ iter->state.clear_rendering_state(); }
 
-		stats.logWaitDrawDoneTime( (double(t.elapsed()))*1e3 );
+		stats.logWaitDrawDoneTime(t.elapsed());
 		++_frame;
 	}
 }
@@ -778,7 +780,11 @@ vl::cluster::Server::_block_till_state(CLIENT_STATE cs,  ClientRefList clients, 
 		{
 			return false;
 		}
+
 		// TODO should wait only for a while and then resent the last message
+
+		// Needs to sleep in Linux at least. Busy wait will cause a huge lag.
+		vl::msleep(0);
 	}
 
 	return true;

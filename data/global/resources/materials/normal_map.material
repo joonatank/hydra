@@ -27,76 +27,92 @@ material bling_phong_multi_pass
 	set $specularCol "0 0 0"
 	set $shininess "32"
 
-    technique
-    {
-	// ambient pass
-	// Do not name the passes, when using inheritance it's ok to reference
-	// a parents pass with an index. Names are not ok.
-	// Mhhh the problem was not the named passes
-	pass
+	technique
 	{
-		vertex_program_ref pass_through_vs
+		// ambient pass
+		// Do not name the passes, when using inheritance it's ok to reference
+		// a parents pass with an index. Names are not ok.
+		// Mhhh the problem was not the named passes
+		pass
 		{
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ps
+			{
+			}
+
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse 0 0 0 0
+			specular 0 0 0 0
 		}
 
-		fragment_program_ref ambient_ps
+		// diffuse pass
+		pass 
 		{
-		}
+			illumination_stage per_light
 
-		ambient $ambientCol
-		emissive $emissiveCol
-		diffuse 0 0 0 0
-		specular 0 0 0 0
+			scene_blend add
+			iteration once_per_light
+
+			vertex_program_ref bling_phong_sl_shadows_vs
+			{
+			}
+
+			fragment_program_ref bling_phong_sl_shadows_ps
+			{
+			}
+
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			ambient 0 0 0 0
+
+			// TODO these should be in base_material or abstract pass
+			// doesn't work if they are in the base_material for some reason
+			// Don't change the order, because textures are mapped with index
+			// that is gotten from the order of the texture_units
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
+
+			texture_unit specularMap
+			{
+				texture white.tga
+			}
+
+			texture_unit normalMap
+			{
+				texture flat_NM.tga
+			}
+
+			// shadowmap 1
+			texture_unit
+			{
+				content_type shadow
+				tex_address_mode clamp
+				filtering none
+			}
+		}
 	}
-
-	// diffuse pass
-        pass 
-        {
-            illumination_stage per_light
-
-            scene_blend add
-            iteration once_per_light
-
-            vertex_program_ref bling_phong_sl_shadows_vs
-            {
-            }
-
-            fragment_program_ref bling_phong_sl_shadows_ps
-            {
-            }
-
-            diffuse $diffuseCol
-            specular $specularCol $shininess
-            ambient 0 0 0 0
-
-	// TODO these should be in base_material or abstract pass
-	// doesn't work if they are in the base_material for some reason
-	// Don't change the order, because textures are mapped with index
-	// that is gotten from the order of the texture_units
-		texture_unit diffuseTexture
+	// Fallback to fixed functions for OpenGL 2 cards
+	technique FFP
+	{
+		pass
 		{
-			texture white.tga
-		}
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
 
-		texture_unit specularMap
-		{
-			texture white.tga
-		}
-
-		texture_unit normalMap
-		{
-			texture flat_NM.tga
-		}
-
-		// shadowmap 1
-		texture_unit
-		{
-			content_type shadow
-			tex_address_mode clamp
-			filtering none
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
 		}
 	}
-    }
 }
 
 material bling_phong_eye_space_multi_pass_shadows
@@ -109,69 +125,85 @@ material bling_phong_eye_space_multi_pass_shadows
 
     technique
     {
-	// ambient pass
-	// Do not name the passes, when using inheritance it's ok to reference
-	// a parents pass with an index. Names are not ok.
-	// Mhhh the problem was not the named passes
-	pass
+		// ambient pass
+		// Do not name the passes, when using inheritance it's ok to reference
+		// a parents pass with an index. Names are not ok.
+		// Mhhh the problem was not the named passes
+		pass
+		{
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ps
+			{
+			}
+
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse 0 0 0 0
+			specular 0 0 0 0
+		}
+
+		// diffuse pass
+		pass 
+		{
+			illumination_stage per_light
+
+			scene_blend add
+			iteration once_per_light
+
+			vertex_program_ref bling_phong_eye_space_sl_shadows_vs
+			{
+			}
+
+			fragment_program_ref bling_phong_eye_space_sl_shadows_ps
+			{
+			}
+
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			ambient 0 0 0 0
+
+			// TODO these should be in base_material or abstract pass
+			// doesn't work if they are in the base_material for some reason
+			// Don't change the order, because textures are mapped with index
+			// that is gotten from the order of the texture_units
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
+
+			texture_unit specularMap
+			{
+				texture white.tga
+			}
+
+			// shadowmap 1
+			texture_unit
+			{
+				content_type shadow
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+	// Fallback to fixed functions for OpenGL 2 cards
+	technique FFP
 	{
-		vertex_program_ref pass_through_vs
+		pass
 		{
-		}
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
 
-		fragment_program_ref ambient_ps
-		{
-		}
-
-		ambient $ambientCol
-		emissive $emissiveCol
-		diffuse 0 0 0 0
-		specular 0 0 0 0
-	}
-
-	// diffuse pass
-        pass 
-        {
-		illumination_stage per_light
-
-		scene_blend add
-		iteration once_per_light
-
-		vertex_program_ref bling_phong_eye_space_sl_shadows_vs
-		{
-		}
-
-		fragment_program_ref bling_phong_eye_space_sl_shadows_ps
-		{
-		}
-
-            diffuse $diffuseCol
-            specular $specularCol $shininess
-            ambient 0 0 0 0
-
-	// TODO these should be in base_material or abstract pass
-	// doesn't work if they are in the base_material for some reason
-	// Don't change the order, because textures are mapped with index
-	// that is gotten from the order of the texture_units
-		texture_unit diffuseTexture
-		{
-			texture white.tga
-		}
-
-		texture_unit specularMap
-		{
-			texture white.tga
-		}
-
-		// shadowmap 1
-		texture_unit
-		{
-			content_type shadow
-			tex_address_mode clamp
-			filtering none
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
 		}
 	}
-    }
 }
 
 material bling_phong_eye_space_multi_pass
@@ -184,61 +216,79 @@ material bling_phong_eye_space_multi_pass
 
     technique
     {
-	// ambient pass
-	// Do not name the passes, when using inheritance it's ok to reference
-	// a parents pass with an index. Names are not ok.
-	// Mhhh the problem was not the named passes
-	pass
+		// ambient pass
+		// Do not name the passes, when using inheritance it's ok to reference
+		// a parents pass with an index. Names are not ok.
+		// Mhhh the problem was not the named passes
+		pass
+		{
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ps
+			{
+			}
+
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse 0 0 0 0
+			specular 0 0 0 0
+		}
+
+		// diffuse pass
+		pass 
+		{
+			illumination_stage per_light
+
+			scene_blend add
+			iteration once_per_light
+
+			vertex_program_ref bling_phong_eye_space_sl_vs
+			{
+			}
+
+			fragment_program_ref bling_phong_eye_space_sl_ps
+			{
+			}
+
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			ambient 0 0 0 0
+
+			// TODO these should be in base_material or abstract pass
+			// doesn't work if they are in the base_material for some reason
+			// Don't change the order, because textures are mapped with index
+			// that is gotten from the order of the texture_units
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
+
+			texture_unit specularMap
+			{
+				texture white.tga
+			}
+		}	// pass
+	}	// technique
+	
+	// Fallback to fixed functions for OpenGL 2 cards
+	technique FFP
 	{
-		vertex_program_ref pass_through_vs
+		pass
 		{
-		}
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
 
-		fragment_program_ref ambient_ps
-		{
-		}
+			texture_unit diffuseTexture
+			{
+				texture white.tga
+			}
 
-		ambient $ambientCol
-		emissive $emissiveCol
-		diffuse 0 0 0 0
-		specular 0 0 0 0
-	}
-
-	// diffuse pass
-        pass 
-        {
-            illumination_stage per_light
-
-            scene_blend add
-            iteration once_per_light
-
-            vertex_program_ref bling_phong_eye_space_sl_vs
-            {
-            }
-
-            fragment_program_ref bling_phong_eye_space_sl_ps
-            {
-            }
-
-            diffuse $diffuseCol
-            specular $specularCol $shininess
-            ambient 0 0 0 0
-
-	// TODO these should be in base_material or abstract pass
-	// doesn't work if they are in the base_material for some reason
-	// Don't change the order, because textures are mapped with index
-	// that is gotten from the order of the texture_units
-		texture_unit diffuseTexture
-		{
-			texture white.tga
-		}
-
-		texture_unit specularMap
-		{
-			texture white.tga
-		}
-	}
-    }
+		}	// pass
+	}	// technique FFP
 }
 
 material rock : bling_phong_multi_pass
