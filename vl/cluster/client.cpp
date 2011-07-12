@@ -210,9 +210,7 @@ vl::cluster::Client::waitForMessage(vl::cluster::MSG_TYPES type, vl::time timeli
 		}
 		/// @todo does this need sleeping between messages?
 		/// probably necessary on Linux
-#ifndef _WIN32
 		vl::msleep(0);
-#endif
 	}
 
 	return msg;

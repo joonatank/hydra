@@ -32,6 +32,7 @@ elseif( WIN32 )
 					 -DNOCOMM
 					 -DNOSOUND
 					 -bigobj		# We have lots of inlines for python
+					 -DWIN_ZERO_SLEEP	# Rather do context switching than busy-wait
 					 )
 endif( UNIX )
 

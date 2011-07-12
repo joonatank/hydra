@@ -16,7 +16,13 @@ namespace vl
 
 inline void msleep( uint32_t milliseconds )
 {
-#ifdef VL_WIN32
+#ifdef _WIN32
+	// Easy to disable zero millisecond sleep on Windows which at least is a problem
+	// for Windows XP
+	#ifndef WIN_ZERO_SLEEP
+	if(milliseconds == 0)
+	{ return; }
+	#endif
 	::Sleep(milliseconds);
 #else
 	timespec tv;

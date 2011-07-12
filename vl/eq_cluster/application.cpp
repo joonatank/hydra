@@ -222,14 +222,17 @@ vl::Application::run( void )
 		{
 			_slave_client->mainloop();
 
-			/// Windows can sleep too long if allowed to
-#ifdef WIN32
-			if( !_slave_client->isRendering() )
-			{ vl::msleep(1); }
-#else
-			/// Linux needs a sleeping in the mainloop
+			/// @todo test
+			/// Windows can have problems with context switching.
+			/// At least this is the case for Windows XP.
+			/// Might need a workaround for some or all Windows versions
+			/// For now use WIN_ZERO_SLEEP define for testing.
+			/// Real solution will need a separate busy-wait while rendering 
+			/// and context switching while not.
+			///
+			/// Linux can not handle busy wait,
+			/// much faster with context switching in every iteration.
 			vl::msleep(0);
-#endif
 		}
 
 		// TODO add clean exit

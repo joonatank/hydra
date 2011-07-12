@@ -69,6 +69,8 @@ vl::StatElem::clear(void)
 vl::Stats::Stats( void )
 	: _init_time(0)
 	, _rendering_time("Rendering")
+	, _local_rendering_time("Local Rendering")
+	, _local_capture_time("Local capture")
 	, _event_time("Event processing")
 	, _frame_time("Frame processing")
 	, _update_time("Update")
@@ -82,63 +84,78 @@ vl::Stats::~Stats( void )
 {}
 
 void
-vl::Stats::logRenderingTime( double time )
+vl::Stats::logRenderingTime(vl::time const &t)
 {
-	_rendering_time.addTime(time);
+	_rendering_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logWaitDrawDoneTime( double time )
+vl::Stats::logLocalRenderingTime(vl::time const &t)
 {
-	_wait_draw_done_time.addTime(time);
+	_local_rendering_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logWaitDrawTime( double time )
+vl::Stats::logLocalCaptureTime(vl::time const &t)
 {
-	_wait_draw_time.addTime(time);
+	_local_capture_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logWaitUpdateTime( double time )
+vl::Stats::logWaitDrawDoneTime(vl::time const &t)
 {
-	_wait_update_time.addTime(time);
+	_wait_draw_done_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logEventProcessingTime( double time )
+vl::Stats::logWaitDrawTime(vl::time const &t)
 {
-	_event_time.addTime(time);
+	_wait_draw_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logFrameProcessingTime( double time )
+vl::Stats::logWaitUpdateTime(vl::time const &t)
 {
-	_frame_time.addTime(time);
+	_wait_update_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logUpdateTime( double time )
+vl::Stats::logEventProcessingTime(vl::time const &t)
 {
-	_update_time.addTime(time);
+	_event_time.addTime((double)t*1e3);
 }
 
 void
-vl::Stats::logStepTime( double time )
+vl::Stats::logFrameProcessingTime(vl::time const &t)
 {
-	_step_time.addTime(time);
+	_frame_time.addTime((double)t*1e3);
+}
+
+void
+vl::Stats::logUpdateTime(vl::time const &t)
+{
+	_update_time.addTime((double)t*1e3);
+}
+
+void
+vl::Stats::logStepTime(vl::time const &t)
+{
+	_step_time.addTime((double)t*1e3);
 }
 
 void 
-vl::Stats::logInitTime( double time )
+vl::Stats::logInitTime(vl::time const &t)
 {
-	_init_time = time;
+	_init_time = (double)t*1e3;
 }
 
 void 
 vl::Stats::update(void)
 {
 	_rendering_time.updateAvarage();
+	_local_rendering_time.updateAvarage();
+	_local_capture_time.updateAvarage();
+	
 	_event_time.updateAvarage();
 	_frame_time.updateAvarage();
 	_update_time.updateAvarage();
@@ -156,6 +173,8 @@ vl::operator<<(std::ostream &os, vl::Stats const &stats)
 		+ stats._step_time.getAvarage();
 
 	os << stats._rendering_time << std::endl;
+	os << stats._local_rendering_time << std::endl;
+	os << stats._local_capture_time << std::endl;
 	os << stats._event_time << std::endl;
 	os << stats._frame_time << std::endl;
 	os << stats._update_time << std::endl;
