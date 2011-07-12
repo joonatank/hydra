@@ -77,12 +77,13 @@ find_package( cAudio REQUIRED )
 
 set(Boost_USE_MULTITHREADED ON)
 if( WIN32 )
-		# FIXME For some reason we can not get this to link to static lib
-		#set(Boost_USE_STATIC_LIBS   ON)
-		#add_definitions( -DBOOST_PYTHON_STATIC_MODULE )
-		set(Boost_USE_STATIC_LIBS   OFF)
+	# FIXME Linking statically causes runtime errors when mixing
+	# pyogre module (which extends python) and vl module which is embedded
+	#set(Boost_USE_STATIC_LIBS   ON)
+	#add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+	set(Boost_USE_STATIC_LIBS   OFF)
 else()
-		set(Boost_USE_STATIC_LIBS   OFF)
+	set(Boost_USE_STATIC_LIBS   OFF)
 endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
