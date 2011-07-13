@@ -70,6 +70,7 @@ set(MATH_SRC
 source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
 
 set(INPUT_HEADERS
+	input/input.hpp
 	input/joystick_event.hpp
 	input/serial_joystick.hpp
 	)

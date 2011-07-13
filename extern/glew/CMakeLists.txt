@@ -2,7 +2,7 @@ project("GLEW" C)
 
 set(HEADERS GL/glew.h)
 
-include_directories(SYSTEM ./)
+include_directories(./)
 
 if(WIN32)
 	list(APPEND HEADERS GL/wglew.h)

@@ -11,13 +11,35 @@
 #include "serial_joystick.hpp"
 const int BAUD_RATE = CBR_9600;
 
-vl::SerialJoystickReader::SerialJoystickReader(std::string const &device)
+/// --------------------------------- Public ---------------------------------
+vl::SerialJoystick::SerialJoystick(std::string const &device)
 	: _serial(device, BAUD_RATE)
-	, _cb(0)
 {}
 
-JoystickEvent
-vl::SerialJoystickReader::_parse(std::vector<char> msg, size_t bytes)
+void
+vl::SerialJoystick::mainloop(void)
+{
+	// Get new data
+	// Write a request to the serial port for reading analog channel 0
+	std::vector<char> buf(128);
+	buf.at(0) = char(MSG_READ_JOYSTICK);
+	size_t bytes = _serial.write(buf, 1);
+	// @todo replace by throwing
+	if(bytes != 1)
+	{
+		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
+	}
+
+	bytes = _serial.read(buf, 128);
+
+	JoystickEvent evt = _parse(buf, bytes);
+
+	_signal(evt);
+}
+
+/// --------------------------------- Private --------------------------------
+vl::JoystickEvent
+vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes)
 {
 	/// Parse the message
 	assert(msg.at(0) == MSG_READ_JOYSTICK);
@@ -70,31 +92,3 @@ vl::SerialJoystickReader::_parse(std::vector<char> msg, size_t bytes)
 
 	return evt;
 }
-
-
-
-void
-vl::SerialJoystickReader::mainloop(void)
-{
-	// Get new data
-	// Write a request to the serial port for reading analog channel 0
-	std::vector<char> buf(128);
-	buf.at(0) = char(MSG_READ_JOYSTICK);
-	size_t bytes = _serial.write(buf, 1);
-	// @todo replace by throwing
-	if(bytes != 1)
-	{
-		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
-	}
-
-	bytes = _serial.read(buf, 128);
-
-	JoystickEvent evt = _parse(buf, bytes);
-
-	// Callback
-	if(_cb)
-	{
-		_cb->valueChanged(evt);
-	}
-}
-

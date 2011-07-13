@@ -130,3 +130,17 @@ text_n.translate(Vector3(3, 2, 2))
 game.scene.clearSelection()
 game.scene.addToSelection(text_n)
 
+# Test serial joystick and signals
+joy = SerialJoystick.create("COM5")
+
+# FIXME
+# This is really slow, STEP time increases by 120ms for one callback function
+# For both debug and release versions
+# TODO add a c++ version and do timings for it
+def joystick_handler(e) :
+	camera.translate(Vector3(e.axis_x, 0, e.axis_y))
+
+joy.doOnValueChanged(joystick_handler)
+
+game.addInputDevice(joy)
+

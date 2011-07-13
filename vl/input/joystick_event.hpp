@@ -12,13 +12,14 @@
 #ifndef HYDRA_INPUT_JOYSTICK_EVENT_HPP
 #define HYDRA_INPUT_JOYSTICK_EVENT_HPP
 
-// Necesasry for uint8_t and uint32_t
-#include <stdint.h>
 // Necessary for ostream implementation
 #include <iostream>
 
-// Necessary for vl::scalar
+// Necessary for vl::scalar and uintX_t types
 #include "math/math.hpp"
+
+namespace vl
+{
 
 struct JoystickEvent
 {
@@ -75,7 +76,8 @@ struct JoystickEvent
 	vl::scalar axis_z;
 
 	uint32_t buttons;
-};
+
+};	// struct JoystickEvent
 
 inline std::ostream &
 operator<<(std::ostream &os, JoystickEvent const &evt)
@@ -89,5 +91,7 @@ operator<<(std::ostream &os, JoystickEvent const &evt)
 
 	return os;
 }
+
+}	// namespace vl
 
 #endif	// HYDRA_INPUT_JOYSTICK_EVENT_HPP

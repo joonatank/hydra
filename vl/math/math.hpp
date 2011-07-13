@@ -11,6 +11,9 @@
 #ifndef VL_MATH_MATH_HPP
 #define VL_MATH_MATH_HPP
 
+// uint64_t uint32_t uint16_t and uint8_t
+#include <stdint.h>
+
 // For MSV compilers to get M_PI
 #define _USE_MATH_DEFINES
 #include <math.h>

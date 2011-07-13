@@ -13,6 +13,8 @@
 #include <vector>
 
 /// Pointers
+/// Using boost types rather than tr1 because they can be automatically mapped 
+/// with boost::python
 #include <memory>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -121,6 +123,11 @@ namespace vl
 	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
 	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
 	typedef boost::shared_ptr<FixedConstraint> FixedConstraintRefPtr;
+
+	class InputDevice;
+	class SerialJoystick;
+	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
+	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
 
 namespace gui
 {

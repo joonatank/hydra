@@ -107,7 +107,7 @@ if( WIN32 )
 	set(Boost_USE_STATIC_LIBS   ON)
 endif()
 
-find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
+find_package( Boost COMPONENTS system filesystem program_options signals REQUIRED )
 
 find_package( Bullet REQUIRED )
 
@@ -158,6 +158,10 @@ link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 
 include( CopyScripts )
 
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
+
+# Adding include directory for Toast
+include_directories(extern)
 
 # include rendering engine, eq ogre directories
 include_directories(vl)
@@ -165,7 +169,6 @@ include_directories(vl)
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 

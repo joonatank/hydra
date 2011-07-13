@@ -82,15 +82,19 @@ struct options
 	std::string input_file;
 };
 
+void joystickValueChanged(vl::JoystickEvent const &evt)
+{
+	std::cout << "New joystick values : " << evt << std::endl;
+}
+
 int main(int argc, char **argv)
 {
 	try {
 		options opt;
 		opt.parse(argc, argv);
 
-		vl::PrintJoystickCallback cb(std::cout);
-		vl::SerialJoystickReader joy(opt.com_port);
-		joy.setCallback(&cb);
+		vl::SerialJoystick joy(opt.com_port);
+		joy.doOnValueChanged(&joystickValueChanged);
 		// Read the response
 		while(true)
 		{

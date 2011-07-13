@@ -30,12 +30,17 @@
 #ifndef HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 #define HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 
-#include <stdint.h>
+#include <boost/signal.hpp>
+
+// Interface
+#include "input.hpp"
 
 #include "math/math.hpp"
 
+// Communications proto
 #include "base/serial.hpp"
 
+// Event stucture
 #include "joystick_event.hpp"
 
 namespace vl
@@ -53,44 +58,32 @@ inline vl::scalar convert_analog(uint16_t data)
 	return ((double)data)/(1024.0/2) - 1.0;
 }
 
-
-struct JoystickReaderCallback 
+class SerialJoystick : public InputDevice
 {
-	virtual void valueChanged(JoystickEvent const &evt) = 0;
-};
+	typedef boost::signal<void (JoystickEvent const &)> OnValueChanged;
+public :
 
-struct PrintJoystickCallback : public JoystickReaderCallback
-{
-	PrintJoystickCallback(std::ostream &os)
-		: _stream(os)
-	{}
+	SerialJoystick(std::string const &device);
 
-	virtual void valueChanged(JoystickEvent const &evt)
+	virtual void mainloop(void);
+
+	int doOnValueChanged(OnValueChanged::slot_type const &slot)
 	{
-		std::cout << "New joystick values : " << evt << std::endl;
+		_signal.connect(slot);
+		return 1;
 	}
 
-	std::ostream &_stream;
-};
+	static SerialJoystickRefPtr create(std::string const &dev)
+	{
+		SerialJoystickRefPtr joy(new SerialJoystick(dev));
+		return joy;
+	}
 
-class SerialJoystickReader
-{
-public :
-	SerialJoystickReader(std::string const &device);
-
+private :
 	// New parse function that creates the event structure
 	JoystickEvent _parse(std::vector<char> msg, size_t bytes);
 
-	void mainloop(void);
-
-	void setCallback(JoystickReaderCallback *cb)
-	{ _cb = cb; }
-
-	JoystickReaderCallback *getCallback(void) const
-	{ return _cb; }
-
-private :
-	JoystickReaderCallback *_cb;
+	OnValueChanged _signal;
 	Serial _serial;
 
 };	// Class SerialJoystickReader

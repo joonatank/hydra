@@ -185,6 +185,8 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	void addInputDevice(InputDeviceRefPtr dev);
+
 	/// ------------------------------ Constraints ---------------------------
 	void addConstraint(vl::ConstraintRefPtr constraint);
 
@@ -329,6 +331,8 @@ private :
 
 	/// Non physics constraints
 	ConstraintSolverRefPtr _constraint_solver;
+
+	std::vector<InputDeviceRefPtr> _input_devices;
 
 };	// class GameManager
 

@@ -8,6 +8,12 @@
 #ifndef HYDRA_PYTHON_MODULE_HPP
 #define HYDRA_PYTHON_MODULE_HPP
 
+// Callback helpers
+#include <toast/python/callback.hpp>
+
+// Python global
+#include "python.hpp"
+
 // Game
 #include "game_manager.hpp"
 
@@ -40,15 +46,16 @@
 #include "constraints.hpp"
 #include "constraint_solver.hpp"
 
-// Python global
-#include "python.hpp"
-
 // Physics
 #include "physics/physics_events.hpp"
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
 #include "physics/physics_constraints.hpp"
+
+// Input
+#include "input/joystick_event.hpp"
+#include "input/serial_joystick.hpp"
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -138,6 +145,7 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
+		.def("addInputDevice", &vl::GameManager::addInputDevice)
 		.def("addConstraint", &vl::GameManager::addConstraint)
 		.def("removeConstraint", &vl::GameManager::removeConstraint)
 		.def("hasConstraint", &vl::GameManager::hasConstraint)
@@ -764,6 +772,21 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
 		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
+	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
+		.def_readonly("axis_x", &vl::JoystickEvent::axis_x)
+		.def_readonly("axis_y", &vl::JoystickEvent::axis_y)
+	;
+
+	/// Input
+	python::class_<vl::InputDevice, vl::InputDeviceRefPtr, boost::noncopyable>("InputDevice", python::no_init)
+	;
+
+	python::class_<vl::SerialJoystick, vl::SerialJoystickRefPtr, boost::noncopyable, python::bases<vl::InputDevice> >("SerialJoystick", python::no_init)
+		.def("doOnValueChanged", toast::python::signal_connect<void (JoystickEvent const &)>(&vl::SerialJoystick::doOnValueChanged))
+		.def("create", &vl::SerialJoystick::create)
 		.staticmethod("create")
 	;
 
