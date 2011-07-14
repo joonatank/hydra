@@ -95,11 +95,13 @@ enum MSG_TYPES
 	MSG_SG_CREATE,		// Create SceneGraph elements
 	MSG_FRAME_START,	// Send from master to start a frame loop
 	MSG_SG_UPDATE_READY,
+	MSG_SG_INIT,		// Same as MSG_SG_UPDATE but sent before any other updates
 	MSG_SG_UPDATE,		// Send updated SceneGraph
 	MSG_SG_UPDATE_DONE,	// NOT IN USE
 	MSG_INPUT,			// Send data from input devices from pipes to application
 	MSG_DRAW_READY,		// Sent from Rendering thread when it's ready to draw
 	MSG_DRAW,			// Draw the image into back buffer
+	MSG_DRAWING,		// Slave started drawing
 	MSG_DRAW_DONE,
 //	MSG_READY_SWAP,		// Sent from Rendering thread when it's ready to swap
 //	MSG_SWAP,			// Swap the Window buffer

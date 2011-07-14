@@ -145,13 +145,12 @@ private :
 	std::map<MSG_TYPES, ClientMessageCallback *> _msg_callbacks;
 
 	// @todo this should save the simulation time and frame
-	// uint32_t _frame
 	// vl::time _sim_time;
 
 	/// Rendering pipeline performance checks
-	vl::timer _rend_timer;
-	vl::Report<vl::time> _rend_report;
-	vl::timer _print_timer;
+//	vl::timer _rend_timer;
+//	vl::Report<vl::time> _rend_report;
+//	vl::timer _print_timer;
 
 };	// class Client
 

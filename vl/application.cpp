@@ -243,7 +243,7 @@ vl::Application::run( void )
 void
 vl::Application::_render( uint32_t const frame )
 {
-	Ogre::Timer timer;
+	vl::timer timer;
 
 	// target FPS
 	// @todo should be configurable from EnvSettings
@@ -251,14 +251,17 @@ vl::Application::_render( uint32_t const frame )
 
 	_master->render();
 
-	double time = double(timer.getMicroseconds())/1000;
+	// time in milliseconds
+	double t = ((double)timer.elapsed())*1e3;
 
 	// Sleep enough to get a 60 fps but no more
 	// NOTE Of course because the converting to uint makes the time really huge
 	// Of course the next question is why the time is negative without rendering data
 	// i.e. why it would take more than 16.66ms for rendering a frame without data
 	// TODO the fps should be configurable
-	double sleep_time = 1000.0/FPS - time;
+	double sleep_time = 1000.0/FPS - t;
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
+	else	// Force context switching
+	{ vl::msleep(0); }
 }

@@ -383,7 +383,10 @@ void
 vl::Window::draw(void)
 {
 	if(!_camera)
-	{ return; }
+	{
+		std::cout << "vl::Window::draw : no camera." << std::endl;
+		return;
+	}
 
 	assert(_left_viewport);
 
@@ -472,7 +475,7 @@ void
 vl::Window::swap( void )
 {
 	assert(_ogre_window);
-	_ogre_window->swapBuffers();
+	_ogre_window->swapBuffers(false);
 }
 
 void

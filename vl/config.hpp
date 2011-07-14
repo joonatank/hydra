@@ -132,7 +132,7 @@ protected :
 	void _createMsgUpdate(void);
 
 	// Send message to all receivers
-	void _sendMessage(vl::cluster::Message const &msg);
+// 	void _sendMessage(vl::cluster::Message const &msg);
 
 	/// Tracking
 	void _createTrackers(vl::EnvSettingsRefPtr settings);

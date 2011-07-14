@@ -18,23 +18,23 @@ namespace cluster
 /// Flags
 enum CLIENT_STATE
 {
-	CS_CLEAR = 0,
-	CS_UPDATE_READY = 1<<0,	// Ready to receive an update
-	CS_UPDATE		= 1<<1,	// NOT IN USE, Update has been sent
-	CS_UPDATE_DONE	= 1<<2,	// NOT IN USE, An update has been completed
-	CS_DRAW_READY	= 1<<3,
-	CS_DRAW			= 1<<4,	// Rendering loop : Draw has been sent
-	CS_DRAW_DONE	= 1<<5,
+	CS_CLEAR		= 0,
+	CS_START		= 1<<0,
+	CS_UPDATE_READY = 1<<1,	// Ready to receive an update
+	CS_UPDATE		= 1<<2,	// NOT IN USE, Update has been sent
+	CS_UPDATE_DONE	= 1<<3,	// NOT IN USE, An update has been completed
+	CS_DRAW_READY	= 1<<4,
+	CS_DRAW			= 1<<5,	// Rendering loop : Draw has been sent
+	CS_DRAW_DONE	= 1<<6,
 };
 
 /// Holds a compound state and allows complex queries
 /// Possible for non exclusive states
 /// TODO change booleans to FLAGS
-/// TODO change rendering state to FLAGS
 struct ClientState
 {
 	ClientState(void)
-		: environment(false), project(false), rendering(false)
+		: environment(false), project(false)
 		, wants_render(false), wants_output(false)
 		, has_init(false), frame(0), update_frame(0)
 		, rendering_state(CS_CLEAR), shutdown(false)
@@ -45,6 +45,11 @@ struct ClientState
 
 	void clear_rendering_state(void)
 	{ rendering_state = CS_CLEAR; }
+
+	bool is_rendering(void) const
+	{
+		return rendering_state != CS_CLEAR;
+	}
 
 	/// @brief check if client is in a particular state
 	bool has_rendering_state(CLIENT_STATE cs) const
@@ -58,7 +63,7 @@ struct ClientState
 	// Has project config
 	bool project;
 	// Is currently rendering
-	bool rendering;
+//	bool rendering;
 	// Wants rendering commands
 	bool wants_render;
 	// Wants output

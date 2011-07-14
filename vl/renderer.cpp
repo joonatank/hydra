@@ -187,81 +187,184 @@ vl::Renderer::swap(void)
 }
 
 void
-vl::Renderer::handleMessage(vl::cluster::Message &msg)
+vl::Renderer::setProject(vl::cluster::Message& msg)
 {
-	switch( msg.getType() )
+	assert(msg.getType() == vl::cluster::MSG_PROJECT);
+	
+	std::cout << vl::TRACE << "vl::Renderer::setProject" << std::endl;
+
+	// TODO
+	// Problematic because the Project config should be
+	// updatable during the application run
+	// And this one will create them anew, so that we need to invalidate
+	// the scene and reload everything
+	// NOTE
+	// Combining the project configurations is not done automatically
+	// so they either need special structure or we need to iterate over
+	// all of them always.
+	/// @todo replace ByteDataStream with MessageStream, reduces copying
+	vl::SettingsByteData data;
+	data.copyFromMessage(&msg);
+	vl::cluster::ByteDataStream stream(&data);
+	stream >> _settings;
+
+	_initialiseResources(_settings);
+}
+
+void
+vl::Renderer::initScene(vl::cluster::Message& msg)
+{
+	/// @todo change to use a custom type
+	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+	
+	std::cout << vl::TRACE << "vl::Renderer::initScene" << std::endl;
+	
+	updateScene(msg);
+}
+
+void
+vl::Renderer::createSceneNodes(vl::cluster::Message& msg)
+{
+	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
+	
+	std::cout << vl::TRACE << "vl::Renderer::createSceneNodes" << std::endl;
+
+	size_t size;
+	assert( msg.size() >= sizeof(size) );
+
+	msg.read( size );
+	for( size_t i = 0; i < size; ++i )
 	{
-		// Environment configuration
-		case vl::cluster::MSG_ENVIRONMENT :
+		assert( msg.size() > 0 );
+		OBJ_TYPE type;
+		uint64_t id;
+
+		msg.read(type);
+		msg.read(id);
+
+		switch( type )
 		{
-			assert(false && "MSG_ENVIRONMENT should be handled in Client not in Renderer." );
-		}
-		break;
-
-		// Project configuration
-		case vl::cluster::MSG_PROJECT :
-		{
-			std::cout << vl::TRACE << "vl::Pipe::_handleMessage : MSG_PROJECT message" << std::endl;
-			// TODO
-			// Test using multiple projects e.g. project and global
-			// The vector serailization might not work correctly
-			// TODO
-			// Problematic because the Project config should be
-			// updatable during the application run
-			// And this one will create them anew, so that we need to invalidate
-			// the scene and reload everything
-			// NOTE
-			// Combining the project configurations is not done automatically
-			// so they either need special structure or we need to iterate over
-			// all of them always.
-			// TODO needs a ByteData object for Environment settings
-			/// @todo replace ByteDataStream with MessageStream, reduces copying
-			vl::SettingsByteData data;
-			data.copyFromMessage(&msg);
-			vl::cluster::ByteDataStream stream(&data);
-			stream >> _settings;
-
-			_initialiseResources(_settings);
-		}
-		break;
-
-		case vl::cluster::MSG_SG_CREATE :
-		{
-			_handleCreateMsg(msg);
-		}
-		break;
-
-		// Scene graph update after the initial message
-		case vl::cluster::MSG_SG_UPDATE :
-		{
-			_handleUpdateMsg(msg);
-			_syncData();
-			_updateDistribData();
-		}
-		break;
-
-		case vl::cluster::MSG_DRAW :
-		{
-			assert(false && "MSG_DRAW should be handled in Client not in Renderer." );
-		}
-		break;
-
-		case vl::cluster::MSG_PRINT :
-		{
-			_handlePrintMsg(msg);
-		}
-		break;
-
-		case vl::cluster::MSG_SHUTDOWN :
-		{
-			assert(false && "MSG_SHUTDOWN should be handled in Client not in Renderer." );
-		}
-		break;
-
-		default :
-			std::cout << "Unhandled Message of type = " << msg.getType()
-				<< std::endl;
+			case OBJ_PLAYER :
+			{
+				std::cout << vl::TRACE << "Creating Player with ID : " << id << std::endl;
+				// TODO fix the constructor
+				vl::Player *player = new vl::Player;
+				mapObject(player, id);
+				
+				// Only single instances are supported for now
+				assert(!_player && player);
+				_player = player;
+			}
 			break;
+
+			case OBJ_GUI :
+			{
+				std::cout << vl::TRACE << "Creating GUI with id " << id << std::endl;
+				
+				// Only creating GUI on the master for now
+				// @todo add support for selecting the window
+				if( getName() == _env->getMaster().name )
+				{
+					std::cout << vl::TRACE << "Creating GUI" << std::endl;
+					// Do not create the GUI multiple times
+					assert(!_gui);
+					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
+					assert(_windows.size() > 0);
+					_gui->initGUI(_windows.at(0));
+					assert(!_settings.empty());
+
+					_gui->initGUIResources(_settings);
+					_gui->createGUI();
+
+					// Request output updates for the console
+					if(logEnabled())
+					{
+						assert( _send_message_cb );
+						vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
+						(*_send_message_cb)(msg);
+					}
+				}
+				else
+				{
+					// Slaves need to ignore the GUI updates
+					_ignored_distributed_objects.push_back(id);
+				}
+			}
+			break;
+
+			case OBJ_SCENE_MANAGER :
+			{
+				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
+				// TODO support multiple SceneManagers
+				assert(!_scene_manager);
+				assert(!_ogre_sm);
+				assert(_mesh_manager);
+				// TODO should pass the _ogre_sm to there also or vl::Root as creator
+				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
+				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
+				std::clog << "SceneManager created." << std::endl;
+			}
+			break;
+
+			case OBJ_SCENE_NODE :
+			{
+				assert( _scene_manager );
+				_scene_manager->_createSceneNode(id);
+			}
+			break;
+
+			/// @todo MovableObjects type should be divided into two one for
+			/// the movable object type and other one dynamic so more movable objects
+			/// can be created with ease.
+			default :
+				assert( _scene_manager );
+				_scene_manager->_createMovableObject(type, id);
+				break;
+		}
+	}
+}
+
+void
+vl::Renderer::updateScene(vl::cluster::Message& msg)
+{
+	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+
+	// Read the IDs in the message and call pack on mapped objects
+	// based on thoses
+	/// @TODO multiple update messages in the same frame,
+	/// only the most recent should be used.
+	while( msg.size() > 0 )
+	{
+		vl::cluster::ObjectData data;
+		data.copyFromMessage(&msg);
+		// Pushing back will create copies which is unnecessary
+		_objects.push_back(data);
+	}
+
+	_syncData();
+	_updateDistribData();
+}
+
+void
+vl::Renderer::print(vl::cluster::Message& msg)
+{
+	assert( msg.getType() == vl::cluster::MSG_PRINT );
+	size_t msgs;
+	msg.read(msgs);
+	while(msgs > 0)
+	{
+		std::string type;
+		msg.read(type);
+		double time;
+		msg.read(time);
+		std::string str;
+		msg.read(str);
+		vl::LOG_MESSAGE_LEVEL lvl;
+		msg.read(lvl);
+
+		printToConsole(str, time, type, lvl);
+
+		msgs--;
 	}
 }
 
@@ -362,6 +465,42 @@ vl::Renderer::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string con
 
 /// Distribution helpers
 void
+vl::Renderer::_syncData(void)
+{
+	// TODO remove the temporary array
+	// use a custom structure that does not create temporaries
+	// rather two phase system one to read the array and mark objects for delete
+	// and second that really clear those that are marked for delete
+	// similar system for reading data to the array
+
+	// Temporary array used for objects not yet found and saved for later use
+	std::vector<vl::cluster::ObjectData> tmp;
+	std::vector<vl::cluster::ObjectData>::iterator iter;
+	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
+	{
+		// Skip objects that this slave should not update
+		if(std::find(_ignored_distributed_objects.begin(), _ignored_distributed_objects.end(),
+			iter->getId()) == _ignored_distributed_objects.end())
+		{
+			vl::cluster::ByteDataStream stream = iter->getStream();
+			vl::Distributed *obj = findMappedObject( iter->getId() );
+			if( obj )
+			{
+				obj->unpack(stream);
+			}
+			else
+			{
+				std::cout << vl::CRITICAL << "No ID " << iter->getId() << " found in mapped objects."
+					<< std::endl;
+				tmp.push_back( *iter );
+			}
+		}
+	}
+
+	_objects = tmp;
+}
+
+void
 vl::Renderer::_updateDistribData( void )
 {
 	// TODO these should be moved to player using functors
@@ -442,168 +581,3 @@ vl::Renderer::_takeScreenshot( void )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 }
 
-void
-vl::Renderer::_handleCreateMsg(vl::cluster::Message &msg)
-{
-	std::cout << "vl::Pipe::_handleCreateMsg" << std::endl;
-	size_t size;
-	assert( msg.size() >= sizeof(size) );
-
-	msg.read( size );
-	for( size_t i = 0; i < size; ++i )
-	{
-		assert( msg.size() > 0 );
-		OBJ_TYPE type;
-		uint64_t id;
-
-		msg.read(type);
-		msg.read(id);
-
-		switch( type )
-		{
-			case OBJ_PLAYER :
-			{
-				std::cout << vl::TRACE << "Creating Player" << std::endl;
-				// TODO fix the constructor
-				vl::Player *player = new vl::Player;
-				mapObject(player, id);
-				
-				// Only single instances are supported for now
-				assert(!_player && player);
-				_player = player;
-			}
-			break;
-
-			case OBJ_GUI :
-			{
-				std::clog << "Creating GUI." << std::endl;
-				
-				// Only creating GUI on the master for now
-				// @todo add support for selecting the window
-				if( getName() == _env->getMaster().name )
-				{
-					std::cout << vl::TRACE << "Creating GUI" << std::endl;
-					// Do not create the GUI multiple times
-					assert(!_gui);
-					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
-					assert(_windows.size() > 0);
-					_gui->initGUI(_windows.at(0));
-					assert(!_settings.empty());
-
-					_gui->initGUIResources(_settings);
-					_gui->createGUI();
-
-					// Request output updates for the console
-					if(logEnabled())
-					{
-						assert( _send_message_cb );
-						vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
-						(*_send_message_cb)(msg);
-					}
-				}
-			}
-			break;
-
-			case OBJ_SCENE_MANAGER :
-			{
-				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
-				// TODO support multiple SceneManagers
-				assert(!_scene_manager);
-				assert(!_ogre_sm);
-				assert(_mesh_manager);
-				// TODO should pass the _ogre_sm to there also or vl::Root as creator
-				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
-				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-				std::clog << "SceneManager created." << std::endl;
-			}
-			break;
-
-			case OBJ_SCENE_NODE :
-			{
-				assert( _scene_manager );
-				_scene_manager->_createSceneNode(id);
-			}
-			break;
-
-			/// @todo MovableObjects type should be divided into two one for
-			/// the movable object type and other one dynamic so more movable objects
-			/// can be created with ease.
-			default :
-				assert( _scene_manager );
-				_scene_manager->_createMovableObject(type, id);
-				break;
-		}
-	}
-}
-
-void
-vl::Renderer::_handleUpdateMsg(vl::cluster::Message &msg)
-{
-	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
-
-	// Read the IDs in the message and call pack on mapped objects
-	// based on thoses
-	/// @TODO multiple update messages in the same frame,
-	/// only the most recent should be used.
-	while( msg.size() > 0 )
-	{
-		vl::cluster::ObjectData data;
-		data.copyFromMessage(&msg);
-		// Pushing back will create copies which is unnecessary
-		_objects.push_back(data);
-	}
-}
-
-void
-vl::Renderer::_handlePrintMsg(vl::cluster::Message &msg)
-{
-	assert( msg.getType() == vl::cluster::MSG_PRINT );
-	size_t msgs;
-	msg.read(msgs);
-	while(msgs > 0)
-	{
-		std::string type;
-		msg.read(type);
-		double time;
-		msg.read(time);
-		std::string str;
-		msg.read(str);
-		vl::LOG_MESSAGE_LEVEL lvl;
-		msg.read(lvl);
-
-		printToConsole(str, time, type, lvl);
-
-		msgs--;
-	}
-}
-
-void
-vl::Renderer::_syncData(void)
-{
-	// TODO remove the temporary array
-	// use a custom structure that does not create temporaries
-	// rather two phase system one to read the array and mark objects for delete
-	// and second that really clear those that are marked for delete
-	// similar system for reading data to the array
-
-	// Temporary array used for objects not yet found and saved for later use
-	std::vector<vl::cluster::ObjectData> tmp;
-	std::vector<vl::cluster::ObjectData>::iterator iter;
-	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
-	{
-		vl::cluster::ByteDataStream stream = iter->getStream();
-		vl::Distributed *obj = findMappedObject( iter->getId() );
-		if( obj )
-		{
-			obj->unpack(stream);
-		}
-		else
-		{
-			std::cout << vl::CRITICAL << "No ID " << iter->getId() << " found in mapped objects."
-				<< std::endl;
-			tmp.push_back( *iter );
-		}
-	}
-
-	_objects = tmp;
-}

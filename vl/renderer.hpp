@@ -94,7 +94,17 @@ public :
 
 	/// Overrides from Abstract interface
 	/// @brief interface through which the Renderer is controlled
-	virtual void handleMessage(vl::cluster::Message &msg);
+// 	virtual void handleMessage(vl::cluster::Message &msg);
+
+	virtual void setProject(vl::cluster::Message &msg);
+	
+	virtual void initScene(vl::cluster::Message &msg);
+	
+	virtual void updateScene(vl::cluster::Message &msg);
+	
+	virtual void createSceneNodes(vl::cluster::Message &msg);
+	
+	virtual void print(vl::cluster::Message &msg);
 
 	virtual void setSendMessageCB(vl::MsgCallback *cb);
 
@@ -132,11 +142,6 @@ protected :
 	 */
 	void _takeScreenshot( void );
 
-	/// message passing
-	void _handleCreateMsg(vl::cluster::Message &msg);
-	void _handleUpdateMsg(vl::cluster::Message &msg);
-	void _handlePrintMsg(vl::cluster::Message &msg);
-
 	std::string _name;
 
 	/// EnvSettings mapped from Master
@@ -165,6 +170,10 @@ protected :
 	/// GUI related
 	vl::gui::GUIRefPtr _gui;
 
+	/// ID list of objects which should be ignored when updating
+	/// used for GUI at the moment.
+	std::vector<uint32_t> _ignored_distributed_objects;
+	
 	bool _running;
 	bool _rendering;
 
