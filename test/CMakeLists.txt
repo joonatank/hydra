@@ -109,9 +109,12 @@ target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
 
 add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
-add_executable(serial_reader serial_reader.cpp)
+# @todo Linux support missing
+if(WIN32)
+	add_executable(serial_reader serial_reader.cpp)
 
-target_link_libraries(serial_reader ${HYDRA_LIBRARIES})
+	target_link_libraries(serial_reader ${HYDRA_LIBRARIES})
+endif()
 
 # Test project settings
 # FIXME these use old interface
