@@ -500,6 +500,8 @@ vl::Window::_sendEvent( vl::cluster::EventData const &event )
 	_renderer->sendEvent(event);
 }
 
+#include <stdlib.h>
+
 Ogre::RenderWindow *
 vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
 {

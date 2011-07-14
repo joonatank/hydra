@@ -16,6 +16,8 @@ vl::ProgramOptions::ProgramOptions( void )
 	: verbose(false)
 	, log_level(0)
 	, _slave(false)
+	, auto_fork(false)
+	, display_n(0)
 {}
 
 bool
@@ -65,6 +67,8 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("case,c", po::value< std::string >(), "case name")
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
+		("auto-fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
+		("display,d", po::value<int>(), "Display to use for the window. Only on X11.")
 	;
 	// TODO add support for setting the log directory
 	// TODO add control for the log level at least ERROR, INFO, TRACE
@@ -108,6 +112,12 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	{
 		_slave = false;
 		_parseMaster( vm );
+	}
+
+	/// Display setting available both on master and slave
+	if( vm.count("display") )
+	{
+		display_n = vm["display"].as<int>();
 	}
 }
 
@@ -172,18 +182,25 @@ vl::ProgramOptions::_parseMaster( po::variables_map const &vm )
 	else
 	{ std::cout << "Case was not set." << std::endl; }
 
+	if( vm.count("auto-fork") )
+	{
+		auto_fork = true;
+	}
+
 	// We need to be either listening or have both environment config
 	// and project config (this might be changed later)
 	// TODO the validity of the options should not be concerned here
+/*
 	bool valid_env = (!environment_file.empty() && fs::exists( environment_file ) );
 	bool valid_proj = (!project_file.empty() && fs::exists( project_file ) );
 	if( !valid_env && !valid_proj )
 	{
-		std::cerr << "Either start in listening mode using --eq-client or "
+		std::cerr << "Either start in listening mode using or "
 			<< std::endl << " provide valid environment config file and "
 			"project config file." << std::endl;
 		return;
 	}
+*/
 
 	/// Get the log dir we use
 	// Create the logging directory if it doesn't exist

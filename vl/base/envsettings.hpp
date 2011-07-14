@@ -118,7 +118,7 @@ public :
 			: name(nam), channel(chan)
 			, w(width), h(height), x(px), y(py), stereo(s)
 			, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
-			, vert_sync(false)
+			, vert_sync(false), n_display(-1)
 		{
 			if( h < 0 || w < 0 )
 			{
@@ -160,6 +160,8 @@ public :
 		uint32_t nv_swap_barrier;
 
 		bool vert_sync;
+
+		int n_display;
 
 	};	// struct Window
 
@@ -469,6 +471,10 @@ public :
 	 */
 	std::string getEnvironementDir( void ) const;
 
+	/// @brief the display number to use
+	/// Only useful for X11 for now and needs to be a valid X11 display
+	int display_n;
+	
 private :
 
 	std::string _file_path;

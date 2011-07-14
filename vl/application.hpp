@@ -31,12 +31,17 @@ class Config;
 class Application
 {
 public:
-	/// @brief start the rendering threads and initialise the application
-	///
-	/// Will create a rendering thread and start it running.
-	/// If this is the master node will also initialise the master node
-	/// and send messages to the rendering threads.
-	Application( vl::EnvSettingsRefPtr env, vl::Settings const &, vl::Logger &logger );
+	/** @brief start the rendering threads and initialise the application
+	 *	@param env the environment settings to use
+	 *	@param settings the project settings to use
+	 *	@param logger the log manager instance to use
+	 *	@param auto_fork wether to autolaunch slaves or not
+	 * 
+	 *	Will create a rendering thread and start it running.
+	 *	If this is the master node will also initialise the master node
+	 *	and send messages to the rendering threads.
+	 */
+	Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork);
 
 	virtual ~Application( void );
 

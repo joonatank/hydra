@@ -55,9 +55,9 @@ int main( const int argc, char** argv )
 		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
-		vl::Application client( env, settings, logger );
+		vl::Application application(env, settings, logger, options.auto_fork);
 
-		client.run();
+		application.run();
 	}
 	catch(vl::exception const &e)
 	{

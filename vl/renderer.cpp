@@ -408,6 +408,25 @@ vl::Renderer::_createOgre(vl::EnvSettingsRefPtr env)
 
 	assert(env);
 
+	// A hack to set display on Linux
+	// Should really pass the display number to Ogre Window creation
+	// but this requires modification of Ogre library
+	// Also this only sets the display using the first window config
+	// can't do much about it because when Ogre initialises the rendering
+	// system it grabs the current display.
+#ifndef _WIN32
+	if(getNodeConf().getNWindows() > 0 && getNodeConf().getWindow(0).n_display > -1)
+	{
+		std::stringstream ss_disp;
+		// format :0.x where x is the display number
+		ss_disp << ":0." << getNodeConf().getWindow(0).n_display;
+		::setenv("DISPLAY", ss_disp.str().c_str(), 1);
+	}
+	
+	char *disp_env = ::getenv("DISPLAY");
+	std::cout << "DISPLAY environment variable = " << disp_env << std::endl;
+#endif
+
 	// TODO the project name should be used instead of the hydra for all
 	// problem is that the project name is not known at this point
 	// so we should use a tmp file and then move it.

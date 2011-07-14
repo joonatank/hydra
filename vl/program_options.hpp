@@ -51,6 +51,7 @@ struct ProgramOptions
 	std::string exe_name;
 	std::string program_directory;
 	std::string log_dir;
+	int display_n;
 
 	/// Slave specific options
 	bool _slave;
@@ -62,6 +63,7 @@ struct ProgramOptions
 	std::string project_file;
 	std::string global_file;
 	std::string case_name;
+	bool auto_fork;
 
 private :
 	void _parseSlave( po::variables_map const &vm );
