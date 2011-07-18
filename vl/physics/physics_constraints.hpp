@@ -297,7 +297,10 @@ public :
 	{ _bt_constraint->setLimit(low, high, softness, biasFactor, relaxationFactor); }
 	
 	void setAxis(Ogre::Vector3 &axisInA)
-	{ _bt_constraint->setAxis(vl::math::convert_bt_vec(axisInA)); }
+	{
+		btVector3 axis = vl::math::convert_bt_vec(axisInA);
+		_bt_constraint->setAxis(axis);
+	}
 	
 	vl::scalar getLowerLimit(void) const
 	{ return _bt_constraint->getLowerLimit(); }

@@ -29,7 +29,8 @@
 #include "cluster/message.hpp"
 
 // Necessary for Ogre enums
-#include <OGRE/OgreMesh.h>
+//#include <OGRE/OgreMesh.h>
+#include <OGRE/OgreRenderOperation.h>
 
 namespace vl
 {

@@ -86,8 +86,8 @@ vl::Settings::getAuxDirectories(void ) const
 		fs::path file( _aux_projs.at(i).getFile() );
 		fs::path dir = file.parent_path();
 		if( !fs::exists( dir ) )
-		{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( dir.file_string() ) ); }
-		paths.push_back(dir.file_string());
+		{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( dir.string() ) ); }
+		paths.push_back(dir.string());
 	}
 
 	return paths;
@@ -99,9 +99,9 @@ vl::Settings::getProjectDir( void ) const
 	fs::path projFile( _proj.getFile() );
 	fs::path projDir = projFile.parent_path();
 	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.file_string() ) ); }
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.string() ) ); }
 
-	return projDir.file_string();
+	return projDir.string();
 }
 
 bool
@@ -150,9 +150,9 @@ vl::Settings::getDir( vl::ProjSettings const &proj ) const
 	fs::path projFile( proj.getFile() );
 	fs::path projDir = projFile.parent_path();
 	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.file_string() ) ); }
+	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name(projDir.string()) ); }
 
-	return projDir.file_string();
+	return projDir.string();
 }
 
 

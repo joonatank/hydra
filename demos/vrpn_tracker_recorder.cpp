@@ -4,14 +4,21 @@
 
 /// @todo add tracker element with time support
 
-#include "vrpn_Tracker.hpp"
+#include <vrpn_Tracker.h>
+#include <quat.h>
 
 #include <vector>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include <cassert>
 
 #include <boost/program_options.hpp>
+
+#ifndef _WIN32
+#include <time.h>
+#endif
 
 namespace po = boost::program_options;
 
@@ -153,11 +160,18 @@ int main(int argc, char **argv)
 		if( !d.sensors.empty() )
 		{ done = true; }
 		
+#ifdef _WIN32
 		::Sleep(1);
+#else
+		timespec tv;
+		tv.tv_sec = 0;
+		tv.tv_nsec = 1e6;
+		::nanosleep( &tv, 0 );
+#endif
 	}
 
 	assert(!opt.file.empty());
-	std::ofstream file(opt.file);
+	std::ofstream file(opt.file.c_str());
 	file << "# time\t sensor\t position\t orientation" << std::endl
 		<< "# delimeter is tabulator, vector elements are separated with ','"
 		<< "# sensor is an integer" << std::endl 

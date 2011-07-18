@@ -16,11 +16,16 @@
 #include "base/system_util.hpp"
 #include "base/filesystem.hpp"
 
+/// Necessary for logging levels
+#include "logger.hpp"
+
 vl::ogre::Root::Root(vl::LogLevel level)
 	: _ogre_root(0),
 	  _log_manager(0),
 	  _primary(false)
 {
+	std::cout << vl::TRACE << "vl::ogre::Root::Root" << std::endl;
+
 	_ogre_root = Ogre::Root::getSingletonPtr();
 	if( !_ogre_root )
 	{
@@ -38,9 +43,12 @@ vl::ogre::Root::Root(vl::LogLevel level)
 
 		Ogre::LogManager::getSingleton().setLogDetail(ol);
 
+		std::cout << vl::TRACE << "vl::ogre::Root::Root : create Ogre Root" << std::endl;
 		_ogre_root = new Ogre::Root( "", "", "" );
 		_primary = true;
 	}
+
+	std::cout << vl::TRACE << "vl::ogre::Root::Root : done" << std::endl;
 }
 
 vl::ogre::Root::~Root( void )
@@ -57,8 +65,7 @@ vl::ogre::Root::~Root( void )
 void
 vl::ogre::Root::createRenderSystem( void )
 {
-	std::string str( "vl::ogre::Root::createRenderSystem" );
-	Ogre::LogManager::getSingleton().logMessage( str, Ogre::LML_TRIVIAL );
+	std::cout << vl::TRACE << "vl::ogre::Root::createRenderSystem" << std::endl;
 
 	if( !_primary )
 	{ return; }
@@ -161,11 +168,11 @@ vl::ogre::Root::_setupResourceDir( const std::string& dir )
 	{
 		if( fs::is_directory( dirIter->path() ) )
 		{
-			_setupResourceDir(dirIter->path().file_string() );
+			_setupResourceDir(dirIter->path().string() );
 		}
 		else if( dirIter->path().extension() == ".zip" )
 		{
-			_setupResource( dirIter->path().file_string(), "Zip" );
+			_setupResource( dirIter->path().string(), "Zip" );
 		}
 	}
 	// Add the root resource dir

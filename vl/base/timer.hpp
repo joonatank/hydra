@@ -67,9 +67,9 @@ struct time
 
 	time &operator*=(size_t n);
 
-	time &operator/=(unsigned long n);
+	time &operator/=(int32_t n);
 
-	time &operator*=(unsigned long n);
+	time &operator*=(int32_t n);
 };
 
 /// time arithmetic operators

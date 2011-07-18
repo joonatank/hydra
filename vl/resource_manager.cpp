@@ -136,7 +136,7 @@ vl::ResourceManager::findResource(const std::string& name, std::string& path) co
 		if( fs::exists( file_path ) )
 		{
 
-			path = file_path.file_string();
+			path = file_path.string();
 			return true;
 		}
 	}
@@ -166,9 +166,9 @@ vl::ResourceManager::addResourcePath(std::string const &resource_dir, bool recur
 			fs::path path( dir_iter->path() );
 			if( fs::is_directory( path ) )
 			{
-				iter = std::find( _search_paths.begin(), _search_paths.end(), path.file_string() );
+				iter = std::find( _search_paths.begin(), _search_paths.end(), path.string() );
 				if( iter == _search_paths.end() )
-				{ _search_paths.push_back( dir_iter->path().file_string() ); }
+				{ _search_paths.push_back( dir_iter->path().string() ); }
 			}
 		}
 	}
@@ -212,7 +212,7 @@ vl::ResourceManager::_stripExtension( std::string const &name,
 										  std::string const &extension )
 {
 	if( fs::path(name).extension() == extension )
-	{ return fs::path(name).stem(); }
+	{ return fs::path(name).stem().string(); }
 	else
 	{ return name; }
 }

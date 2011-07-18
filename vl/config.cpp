@@ -172,7 +172,10 @@ vl::Config::init( void )
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
 
-	_game_manager->requestStateChange(GS_INIT);
+	if(!_game_manager->requestStateChange(GS_INIT))
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT"));
+	}
 
 	vl::timer t;
 	/// @todo most of this should be moved to the constructor, like object
@@ -292,12 +295,12 @@ vl::Config::render( void )
 	// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
-	_game_manager->getStats().logFrameProcessingTime( (double(timer.elapsed()))*1e3 );
+	_game_manager->getStats().logFrameProcessingTime(timer.elapsed());
 
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
-	_game_manager->getStats().logStepTime( ((double)timer.elapsed())*1e3 );
+	_game_manager->getStats().logStepTime(timer.elapsed());
 
 	/// Provide the updates to slaves
 	_updateFrameMsgs();
@@ -305,14 +308,16 @@ vl::Config::render( void )
 	_updateRenderer();
 
 	// TODO separate stats for rendering slaves and local
-	timer.reset();
 	/// Render the scene
 	_server->update(_game_manager->getStats());
+	timer.reset();
 	bool rendering = _server->start_draw(_game_manager->getStats());
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
+		vl::timer l;
 		_renderer->draw();
+		_game_manager->getStats().logLocalRenderingTime(l.elapsed());
 	}
 	if(rendering)
 	{
@@ -320,13 +325,16 @@ vl::Config::render( void )
 		_server->finish_draw(_game_manager->getStats(), limit);
 	}
 
+	
 	// Finish local renderer
 	if( _renderer.get() )
 	{
+		vl::timer l;
 		_renderer->swap();
 		_renderer->capture();
+		_game_manager->getStats().logLocalRenderingTime(l.elapsed());
 	}
-	_game_manager->getStats().logRenderingTime( ((double)timer.elapsed())*1e3 );
+	_game_manager->getStats().logRenderingTime(timer.elapsed());
 	timer.reset();
 
 	// Poll after updating the drawables
@@ -335,7 +343,7 @@ vl::Config::render( void )
 	// TODO where the receive input messages should be?
 	_handleMessages();
 
-	_game_manager->getStats().logEventProcessingTime(((double)timer.elapsed())*1e3);
+	_game_manager->getStats().logEventProcessingTime(timer.elapsed());
 
 	// Update statistics every 10 seconds
 	// @todo time limit should be configurable
@@ -521,6 +529,8 @@ vl::Config::_createMsgUpdate(void)
 void
 vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
 {
+	std::cout << vl::TRACE << "vl::Config::_setEnvironment" << std::endl;
+
 	vl::timer t;
 
 	// Local renderer needs to be inited rather than send a message
@@ -637,7 +647,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
 	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
 	if( fs::is_directory(tracking_path) )
-	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.file_string() ); }
+	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.string() ); }
 }
 
 /// Event Handling

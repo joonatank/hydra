@@ -88,6 +88,8 @@ class Settings
 
 		std::vector<std::string> getAuxDirectories( void ) const;
 
+		/// @brief get the main project directory
+		/// @return path name in native format
 		std::string getProjectDir( void ) const;
 
 		bool empty( void ) const;

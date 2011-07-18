@@ -21,11 +21,11 @@
 #include <OGRE/OgreLogManager.h>
 
 // gui window, necessary for the windows this creates
-#include "window.hpp"
+#include "gui_window.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI
-#include "eq_cluster/window.hpp"
+#include "window.hpp"
 
 vl::gui::GUI::GUI(vl::Session *session)
 	: _editor_shown(false)
@@ -157,15 +157,15 @@ vl::gui::GUI::addGUIResourceGroup( std::string const &name, fs::path const &path
 	if( fs::is_directory( path ) )
 	{
 		std::string message = "GUI resource " + name + " added "
-			" with path " + path.file_string() + ".";
+			" with path " + path.string() + ".";
 		Ogre::LogManager::getSingleton().logMessage(message);
 
-		rp->setResourceGroupDirectory( name, path.file_string() );
+		rp->setResourceGroupDirectory( name, path.string() );
 	}
 	else
 	{
 		std::string message = "GUI resource " + name + " couldn't be added "
-			"because path " + path.file_string() + " does NOT exist.";
+			"because path " + path.string() + " does NOT exist.";
 		Ogre::LogManager::getSingleton().logMessage(message);
 	}
 }

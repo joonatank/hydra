@@ -32,6 +32,7 @@ elseif( WIN32 )
 					 -DNOCOMM
 					 -DNOSOUND
 					 -bigobj		# We have lots of inlines for python
+					 -DWIN_ZERO_SLEEP	# Rather do context switching than busy-wait
 					 )
 endif( UNIX )
 
@@ -77,21 +78,22 @@ find_package( cAudio REQUIRED )
 
 set(Boost_USE_MULTITHREADED ON)
 if( WIN32 )
-		# FIXME For some reason we can not get this to link to static lib
-		#set(Boost_USE_STATIC_LIBS   ON)
-		#add_definitions( -DBOOST_PYTHON_STATIC_MODULE )
-		set(Boost_USE_STATIC_LIBS   OFF)
+	# FIXME Linking statically causes runtime errors when mixing
+	# pyogre module (which extends python) and vl module which is embedded
+	#set(Boost_USE_STATIC_LIBS   ON)
+	#add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+	set(Boost_USE_STATIC_LIBS   OFF)
 else()
-		set(Boost_USE_STATIC_LIBS   OFF)
+	set(Boost_USE_STATIC_LIBS   OFF)
 endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
 
-# Python version 3.1 for Windows
+# Python version 3.2 for Windows
 # Linux has some problems with multiple pythons and boost installed from
 # package manager, so we can not compile boost python to use Python 3.1
 if(WIN32)
-	set( PYTHON_VERSION 3.1 CACHE STRING "Python version" )
+	set( PYTHON_VERSION 3.2 CACHE STRING "Python version" )
 else()
 	set( PYTHON_VERSION 2.7 CACHE STRING "Python version" )
 endif()
@@ -105,7 +107,7 @@ if( WIN32 )
 	set(Boost_USE_STATIC_LIBS   ON)
 endif()
 
-find_package( Boost COMPONENTS system filesystem program_options REQUIRED )
+find_package( Boost COMPONENTS system filesystem program_options signals REQUIRED )
 
 find_package( Bullet REQUIRED )
 
@@ -156,6 +158,10 @@ link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 
 include( CopyScripts )
 
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
+
+# Adding include directory for Toast
+include_directories(extern)
 
 # include rendering engine, eq ogre directories
 include_directories(vl)
@@ -163,7 +169,6 @@ include_directories(vl)
 set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
 set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
 
-add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 

@@ -13,7 +13,7 @@ project( "HydraMain" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
-set( SOURCES
+set(SRC
 	tracker.cpp
 	vrpn_tracker.cpp
 	tracker_serializer.cpp
@@ -36,24 +36,11 @@ set( SOURCES
 	program_options.cpp
 	stats.cpp
 	logger.cpp
-	math/math.cpp
-	math/transform.cpp
-	base/filesystem.cpp
-	base/envsettings.cpp
-	base/projsettings.cpp
-	base/timer.cpp
-	eq_cluster/window.cpp
-	eq_cluster/config.cpp
+	window.cpp
+	config.cpp
 	renderer.cpp
-	eq_cluster/application.cpp
-	eq_ogre/ogre_root.cpp
-	cluster/server.cpp
-	cluster/client.cpp
-	cluster/message.cpp
-	physics/physics_events.cpp
-	physics/physics_world.cpp
-	physics/shapes.cpp
-	physics/rigid_body.cpp
+	application.cpp
+	ogre_root.cpp
 	entity.cpp
 	light.cpp
 	camera.cpp
@@ -65,14 +52,74 @@ set( SOURCES
 	mesh_manager.cpp
 	mesh.cpp
 	mesh_ogre.cpp
-	mesh_bullet.cpp
-	gui/gui.cpp
-	gui/window.cpp
 	constraints.cpp
 	constraint_solver.cpp
 	animation.cpp
 	ray_object.hpp
 	)
+
+set(MATH_HEADERS
+	math/conversion.hpp
+	math/math.hpp
+	math/transform.hpp
+	)
+set(MATH_SRC
+	math/math.cpp
+	math/transform.cpp
+	)
+source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
+
+set(INPUT_HEADERS
+	input/input.hpp
+	input/joystick_event.hpp
+	input/serial_joystick.hpp
+	)
+set(INPUT_SRC
+	input/serial_joystick.cpp
+	)
+source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
+
+set(BASE_HEADERS 
+	base/serial.hpp
+	base/thread.hpp
+	base/system_util.hpp
+	base/envsettings.hpp
+	base/projsettings.hpp
+	base/exceptions.hpp
+	base/filesystem.hpp
+	base/print.hpp
+	base/rapidxml.hpp
+	base/rapidxml_print.hpp
+	base/sleep.hpp
+	base/string_utils.hpp
+	base/timer.hpp
+	base/report.hpp)
+set(BASE_SRC
+	base/serial.cpp
+	base/filesystem.cpp
+	base/envsettings.cpp
+	base/projsettings.cpp
+	base/timer.cpp
+	)
+SOURCE_GROUP(HydraMain\\base FILES ${BASE_HEADERS} ${BASE_SRC})
+
+set(PHYSICS_HEADERS
+	physics/motion_state.hpp
+	physics/rigid_body.hpp
+	physics/shapes.hpp
+	physics/physics_constraints.hpp
+	physics/physics_events.hpp
+	physics/physics_world.hpp
+	physics/mesh_bullet.hpp
+	)
+set(PHYSICS_SRC
+	physics/physics_events.cpp
+	physics/physics_world.cpp
+	physics/shapes.cpp
+	physics/rigid_body.cpp
+	physics/mesh_bullet.cpp
+	)
+source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
 set( HEADERS
 	system_tools/message_box.hpp
@@ -86,7 +133,6 @@ set( HEADERS
 	mesh_serializer_impl.hpp
 	mesh.hpp
 	mesh_ogre.hpp
-	mesh_bullet.hpp
 	mesh_manager.hpp
 	camera.hpp
 	tracker_serializer.hpp
@@ -96,19 +142,6 @@ set( HEADERS
 	game_manager.hpp
 	player.hpp
 	stats.hpp
-	base/thread.hpp
-	base/system_util.hpp
-	base/envsettings.hpp
-	base/projsettings.hpp
-	base/exceptions.hpp
-	base/filesystem.hpp
-	base/print.hpp
-	base/rapidxml.hpp
-	base/rapidxml_print.hpp
-	base/sleep.hpp
-	base/string_utils.hpp
-	base/timer.hpp
-	base/report.hpp
 	typedefs.hpp
 	resource.hpp
 	resource_manager.hpp
@@ -127,33 +160,45 @@ set( HEADERS
 	logger.hpp
 	distrib_settings.hpp
 	program_options.hpp
-	eq_cluster/window.hpp
-	eq_cluster/config.hpp
+	window.hpp
+	config.hpp
 	renderer.hpp
 	renderer_interface.hpp
-	eq_cluster/application.hpp
-	eq_ogre/ogre_root.hpp
-	math/conversion.hpp
-	math/math.hpp
-	math/transform.hpp
-	cluster/server.hpp
-	cluster/client.hpp
-	cluster/message.hpp
-	cluster/states.hpp
+	application.hpp
+	ogre_root.hpp
 	distributed.hpp
 	constraints.hpp
 	constraint_solver.hpp
 	animation.hpp
-	physics/motion_state.hpp
-	physics/rigid_body.hpp
-	physics/shapes.hpp
-	physics/physics_constraints.hpp
-	physics/physics_events.hpp
-	physics/physics_world.hpp
+	)
+
+source_group(HydraMain FILES ${HEADERS} ${SRC})
+
+set(GUI_HEADERS
 	gui/gui.hpp
-	gui/window.hpp
+	gui/gui_window.hpp
 	gui/gui_actions.hpp
 	)
+
+set(GUI_SRC
+	gui/gui.cpp
+	gui/gui_window.cpp
+	)
+source_group(HydraMain\\GUI FILES ${GUI_HEADERS} ${GUI_SRC})
+
+set(CLUSTER_HEADERS
+	cluster/server.hpp
+	cluster/client.hpp
+	cluster/message.hpp
+	cluster/states.hpp
+	)
+
+set(CLUSTER_SRC
+	cluster/server.cpp
+	cluster/client.cpp
+	cluster/message.cpp
+	)
+source_group(HydraMain\\cluster FILES ${CLUSTER_HEADERS} ${CLUSTER_SRC})
 
 # Set parallel build
 # TODO make configurable, maybe move to solution level
@@ -162,7 +207,22 @@ if(WIN32)
 	message("CXX flags ${CMAKE_CXX_FLAGS}")
 endif()
 
-add_library(HydraMain ${SOURCES} ${HEADERS} )
+add_library(HydraMain
+	${SRC}
+	${HEADERS}
+	${BASE_HEADERS}
+	${BASE_SRC}
+	${INPUT_HEADERS}
+	${INPUT_SRC}
+	${PHYSICS_HEADERS}
+	${PHYSICS_SRC}
+	${CLUSTER_HEADERS}
+	${CLUSTER_SRC}
+	${GUI_HEADERS}
+	${GUI_SRC}
+	${MATH_HEADERS}
+	${MATH_SRC}
+	)
 
 target_link_libraries(HydraMain ${HYDRA_DEB_LIBS})
 

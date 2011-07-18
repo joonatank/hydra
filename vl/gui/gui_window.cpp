@@ -1,11 +1,11 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
- *	@file window.cpp
+ *	@file gui_window.cpp
  *
  */
 
 /// Interface
-#include "window.hpp"
+#include "gui_window.hpp"
 
 /// GUI
 #include <CEGUI/CEGUI.h>

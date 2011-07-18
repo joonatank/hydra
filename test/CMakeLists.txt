@@ -37,12 +37,14 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIR}
 	)
 
-subdirs(examples)
+subdirs(gl_tests)
 
 add_executable( test_timer test_timer.cpp
 	${HydraMain_SOURCE_DIR}/base/timer.hpp
 	${HydraMain_SOURCE_DIR}/base/timer.cpp
 	)
+
+target_link_libraries(test_timer ${TEST_LIB})
 
 #subdirs( spikes )
 
@@ -77,9 +79,10 @@ target_link_libraries( test_exceptions ${TEST_LIB}  )
 add_executable( test_euler_angles
 				test_euler_angles.cpp
 				${HydraMain_SOURCE_DIR}/math/math.hpp
+				${HydraMain_SOURCE_DIR}/math/math.cpp
 				)
 
-target_link_libraries( test_euler_angles ${HYDRA_LIBRARIES} ${TEST_LIB} )
+target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${Boost_FILESYSTEM_LIBRARIES} ${TEST_LIB} )
 
 # Test tracking
 #add_executable( test_tracking
@@ -106,6 +109,9 @@ target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
 
 add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
+add_executable(serial_reader serial_reader.cpp)
+
+target_link_libraries(serial_reader ${HYDRA_LIBRARIES})
 
 # Test project settings
 # FIXME these use old interface

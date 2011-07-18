@@ -28,6 +28,9 @@
 
 #include "constraint_solver.hpp"
 
+// Input devices
+#include "input/input.hpp"
+
 vl::GameManager::GameManager(vl::Logger *logger)
 	: _python(0)
 	, _resource_man(new vl::ResourceManager)
@@ -105,12 +108,18 @@ vl::GameManager::step(void)
 {
 	if(isPlayed())
 	{
+		// process input devices
+		for(size_t i = 0; i < _input_devices.size(); ++i)
+		{
+			_input_devices.at(i)->mainloop();
+		}
+
 		// Process Tracking
 		// If we have a tracker object update it, the update will handle all the
 		// callbacks and appropriate updates (head matrix and scene nodes).
 		for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
 		{
-		_trackers->getTrackerPtr(i)->mainloop();
+			_trackers->getTrackerPtr(i)->mainloop();
 		}
 
 		if( _physics_world )
@@ -174,6 +183,12 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	{
 		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
 	}
+}
+
+void
+vl::GameManager::addInputDevice(vl::InputDeviceRefPtr dev)
+{
+	_input_devices.push_back(dev);
 }
 
 void 

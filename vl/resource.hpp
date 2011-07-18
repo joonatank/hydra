@@ -83,8 +83,9 @@ public :
 	size_t left(void) const;
 
 private :
-	size_t _index;
 	vl::Resource *_resource;
+	size_t _index;
+
 };
 
 class Resource

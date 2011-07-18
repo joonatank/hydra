@@ -7,7 +7,7 @@
 #ifndef VL_RENDERER_HPP
 #define VL_RENDERER_HPP
 
-#include "eq_ogre/ogre_root.hpp"
+#include "ogre_root.hpp"
 #include "base/envsettings.hpp"
 #include "player.hpp"
 #include "scene_manager.hpp"
