@@ -169,10 +169,17 @@ vl::Renderer::draw(void)
 {
 	Ogre::WindowEventUtilities::messagePump();
 	
+	// @todo move the callback notifiying to Root
 	_root->getNative()->_fireFrameStarted();
+
+	if(_scene_manager)
+	{ _scene_manager->_notifyFrameStart(); }
 
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
+
+	if(_scene_manager)
+	{ _scene_manager->_notifyFrameEnd(); }
 
 	_root->getNative()->_fireFrameEnded();
 }

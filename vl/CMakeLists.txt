@@ -71,7 +71,8 @@ set( SOURCES
 	constraints.cpp
 	constraint_solver.cpp
 	animation.cpp
-	ray_object.hpp
+	ray_object.cpp
+	ray_cast.cpp
 	)
 
 set( HEADERS
@@ -135,6 +136,7 @@ set( HEADERS
 	eq_ogre/ogre_root.hpp
 	math/conversion.hpp
 	math/math.hpp
+	math/types.hpp
 	math/transform.hpp
 	cluster/server.hpp
 	cluster/client.hpp
@@ -153,6 +155,8 @@ set( HEADERS
 	gui/gui.hpp
 	gui/window.hpp
 	gui/gui_actions.hpp
+	ray_object.hpp
+	ray_cast.hpp
 	)
 
 # Set parallel build

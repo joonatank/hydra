@@ -128,5 +128,31 @@ text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
 
 game.scene.clearSelection()
-game.scene.addToSelection(text_n)
+game.scene.addToSelection(ogre)
+#game.scene.addToSelection(text_n)
+
+eye_trigger_n = "glassesTrigger"
+if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
+	print("Adding eye tracker action")
+	ray = game.scene.createRayObject("ray", "finger_sphere/red")
+	ray.direction = Vector3(0, 0, 1)
+	ray.sphere_radius = 0.2
+	#ray.position = Vector3(0, 0, 10)
+	#ray.length = 20
+	ray.draw_collision_sphere = True
+	ray.collision_detection = True
+	ray_n = game.scene.createSceneNode("ray")
+	ray_n.attachObject(ray)
+	# Using the ogre object for easier visualization
+	ogre.addChild(ray_n)
+	#camera.addChild(ray_n)
+	# Hard coded transform to show the ray object
+	ray_n.transformation = Transform(Vector3(0, 0.5, 0), Quaternion(0, 0, 0, 1))
+	action = SetTransformation.create()
+	action.scene_node = ray_n
+
+	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
+	# TODO this will remove the head tracking action
+	# TODO this will override the ray_n transformation
+	#eye_trigger.action = action
 

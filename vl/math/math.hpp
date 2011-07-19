@@ -2,23 +2,11 @@
  *	@date 2010-03
  *	@file math.hpp
  *
- *	Base class for some math helper functions and typedefs for the math
- *	types we use.
- *	e.g. here you can change the vector, quaternion, matrix, scalar classes
- *	to use another library.
+ *	Base math functions.
  */
 
 #ifndef VL_MATH_MATH_HPP
 #define VL_MATH_MATH_HPP
-
-// For MSV compilers to get M_PI
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-// Necessary for Math types
-#include <OGRE/OgreQuaternion.h>
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreMatrix4.h>
 
 // Necessary for printing
 #include <iostream>
@@ -26,16 +14,10 @@
 // Necessary for the Wall configuration needed for calculating view and frustum matrices
 #include "base/envsettings.hpp"
 
-#include "transform.hpp"
+#include "types.hpp"
 
 namespace vl
 {
-
-typedef Ogre::Real scalar;
-
-const scalar epsilon = scalar(1e-6);
-
-const scalar PHI = (1 + std::sqrt(5.0))/2;
 
 inline bool equal( scalar const &a, scalar const &b )
 {

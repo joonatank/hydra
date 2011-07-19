@@ -772,6 +772,24 @@ vl::SceneManager::_step(vl::time const &t)
 	}
 }
 
+void
+vl::SceneManager::_notifyFrameStart(void)
+{
+	for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
+	{
+		(*iter)->_notifyFrameStart();
+	}
+}
+
+void
+vl::SceneManager::_notifyFrameEnd(void)
+{
+	for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
+	{
+		(*iter)->_notifyFrameEnd();
+	}
+}
+
 void 
 vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitive)
 {

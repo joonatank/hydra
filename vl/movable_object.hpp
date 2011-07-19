@@ -25,11 +25,11 @@ class MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator)
-		: _name(name), _visible(true), _creator(creator), _parent(0)
+		: _name(name), _visible(true), _creator(creator), _parent(0), _listener(0)
 	{}
 
 	MovableObject(vl::SceneManagerPtr creator)
-		: _name(), _visible(true), _creator(creator), _parent(0)
+		: _name(), _visible(true), _creator(creator), _parent(0), _listener(0)
 	{}
 
 	std::string const &getName(void) const
@@ -70,6 +70,43 @@ public :
 		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
 	};
 
+	// Provides callbacks for rendering methods
+	struct Listener
+	{
+		Listener(vl::MovableObjectPtr obj)
+			: object(obj)
+		{
+		}
+
+		virtual ~Listener(void)
+		{}
+
+		virtual void frameStart(void) {}
+
+		virtual void frameEnd(void) {}
+
+		vl::MovableObjectPtr object;
+	};
+
+	void setListener(Listener *list)
+	{ _listener = list; }
+
+	Listener *getListener(void)
+	{ return _listener; }
+
+	/// Update rendering callbacks
+	void _notifyFrameStart(void)
+	{
+		if(_listener)
+		{ _listener->frameStart(); }
+	}
+
+	void _notifyFrameEnd(void)
+	{
+		if(_listener)
+		{ _listener->frameEnd(); }
+	}
+
 private :
 	/// Virtual private methods
 
@@ -96,6 +133,8 @@ protected :
 	vl::SceneManagerPtr _creator;
 	
 	vl::SceneNodePtr _parent;
+
+	Listener *_listener;
 
 };	// class MovableObject
 

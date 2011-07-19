@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-06
- *	@file: movable_text.hpp
+ *	@date 2011-07
+ *	@file: ray_object.hpp
  *
  *	This file is part of Hydra VR game engine.
  *
@@ -15,10 +15,13 @@
 /// Base class
 #include "movable_object.hpp"
 
-#include "scene_manager.hpp"
-#include <OGRE/OgreManualObject.h>
+#include "math/types.hpp"
 
-#include "cluster/message.hpp"
+// Necessary for ray collisions
+#include "ray_cast.hpp"
+
+// Ogre object
+#include <OGRE/OgreManualObject.h>
 
 namespace vl
 {
@@ -27,66 +30,53 @@ class RayObject : public vl::MovableObject
 {
 public :
 	/// @brief Master constructor
-	RayObject(std::string const &name, vl::SceneManagerPtr creator)
-		: MovableObject(name, creator)
-		, _position(Ogre::Vector3::ZERO)
-		, _direction(-Ogre::Vector3::UNIT_Z)
-		, _ogre_object(0)
-	{}
+	RayObject(std::string const &name, vl::SceneManagerPtr creator);
 
 	/// @brief Slave constructor
-	RayObject(vl::SceneManagerPtr creator)
-		: MovableObject(creator)
-		, _position(Ogre::Vector3::ZERO)
-		, _direction(-Ogre::Vector3::UNIT_Z)
-		, _ogre_object(0)
-	{}
+	RayObject(vl::SceneManagerPtr creator);
 
 	/// @brief Destructor
-	virtual ~RayObject(void)
-	{
-		// @todo destroy the manual object
-		//myManualObjectNode->detachObject("manual1");
-		//mSceneMgr->destroyManualObject ("manual1"
-	}
+	virtual ~RayObject(void);
 
-	void setPosition(Ogre::Vector3 const &pos)
-	{
-		if(_position != pos)
-		{
-			setDirty(DIRTY_TRANSFORM);
-			_position = pos;
-		}
-	}
+	void setPosition(Ogre::Vector3 const &pos);
 
 	Ogre::Vector3 const &getPosition(void) const
 	{ return _position; }
 
-	void setDirection(Ogre::Vector3 const &dir)
-	{
-		if(_position != dir)
-		{
-			setDirty(DIRTY_TRANSFORM);
-			_direction = dir;
-		}
-	}
+	void setDirection(Ogre::Vector3 const &dir);
 
 	Ogre::Vector3 const &getDirection(void) const
 	{ return _direction; }
 
-	void setMaterial(std::string const &name)
-	{
-		if(_material != name)
-		{
-			setDirty(DIRTY_PARAMS);
-			_material = name;
-		}
-	}
+	void setMaterial(std::string const &name);
 
 	std::string const &getMaterial(void) const
 	{ return _material; }
 
-	// @todo add legth
+	/// @brief set the maximum length of the ray
+	void setLength(vl::scalar l);
+
+	vl::scalar getLength(void) const
+	{ return _length; }
+
+	void setSphereRadius(vl::scalar radius);
+
+	vl::scalar getSphereRadius(void) const
+	{ return _sphere_radius; }
+	
+	/// @brief set on/off the collision detection for the ray
+	void setCollisionDetection(bool enable);
+
+	bool getCollisionDetection(void) const
+	{ return _collision_detection; }
+
+	/// @brief set on/off whether to draw a sphere where the ray collided
+	void setDrawCollisionSphere(bool enable);
+
+	bool getDrawCollisionSphere(void) const
+	{ return _draw_collision_sphere; }
+
+	/// @todo add thickness
 
 	virtual Ogre::MovableObject *getNative(void) const
 	{ return _ogre_object; }
@@ -105,64 +95,57 @@ public :
 		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 2,
 	};
 
+	/// @internal
+	/// @brief used to update the ray once per frame before rendering
+	/// Handles updates to collision detection
+	void _updateRay(void);
 
 private :
-	virtual bool _doCreateNative(void)
-	{
-		if(!_ogre_object)
-		{
-			_ogre_object =  _creator->getNative()->createManualObject(_name);
-			assert(_ogre_object);
-			_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
-			_ogre_object->position(_position);
-			_ogre_object->position(_position + (_direction*1000));
-			_ogre_object->end();
-		}
+	virtual bool _doCreateNative(void);
 
-		return true;
-	}
+	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
 
-	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const
-	{
-		if(dirtyBits & DIRTY_TRANSFORM)
-		{
-			msg << _position << _direction;
-		}
+	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
 
-		if(dirtyBits & DIRTY_PARAMS)
-		{
-			msg << _material;
-		}
-	}
+	void _clear(void);
 
-	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
-	{
-		if(dirtyBits & DIRTY_TRANSFORM)
-		{
-			msg >> _position >> _direction;
-			if(_ogre_object)
-			{
-				// @todo update the manual object
-			}
-		}
+	void _create(void);
 
-		if(dirtyBits & DIRTY_PARAMS)
-		{
-			msg >> _material;
-			if(_ogre_object)
-			{
-				// @todo update the manual object
-			}
-		}
-	}
+	void _generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point);
+
+	void _generateCollisionSphere(Ogre::Vector3 const &point);
 
 	Ogre::Vector3 _direction;
 	Ogre::Vector3 _position;
 	std::string _material;
 
-	Ogre::ManualObject *_ogre_object;
-};
+	vl::scalar _length;
 
-}
+	vl::scalar _sphere_radius;
+
+	// @todo change to flags
+	bool _draw_collision_sphere;
+	bool _collision_detection;
+
+	Ogre::ManualObject *_ogre_object;
+
+	vl::RayCast *_ray_cast;
+
+	struct RayListener : public vl::MovableObject::Listener
+	{
+		RayListener(RayObjectPtr ray)
+			: Listener(ray)
+		{
+			std::clog << "vl::RayObject::RayListener::RayListener" << std::endl;
+		}
+
+		/// using object rendering callback because any scene object
+		/// transformation can affect the ray collision detection
+		virtual void frameStart(void);
+	};
+
+};	// class RayObject
+
+}	// namespace vl
 
 #endif	// HYDRA_RAY_OBJECT_HPP
