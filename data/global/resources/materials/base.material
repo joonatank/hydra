@@ -61,12 +61,22 @@ material ground/bump_mapped/shadows : bling_phong/normal_map/shadows/multi_pass
 }
 
 
-material anthene_material : bling_phong/shadows/multi_pass
+material athene_material : bling_phong/shadows/multi_pass
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
 // TODO add normal map
 //	set_texture_alias normalMap ogre.tex.jpg
+}
+
+// Basic class material without any texture effects
+material glass/blue : bling_phong/shadows/multi_pass
+{
+	set $ambientCol "0 0 0.5 0.2"
+	set $diffuseCol "0 0 0.5 0.2"
+//	set $specularCol "0 0 0"
+	set $shininess 250
+	set $depthWrite off
 }
 
 material debug_red 

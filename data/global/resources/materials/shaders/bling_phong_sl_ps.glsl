@@ -170,9 +170,10 @@ void main(void)
 	vec3 normal = vNormal;
 #endif
 
-	vec4 colour = vec4(0.0, 0.0, 0.0, 0.0);
-	vec4 diffuse = vec4(0.0, 0.0, 0.0, 0.0);
-	vec4 specular = vec4(0.0, 0.0, 0.0, 0.0);
+	// TODO should be moved to respective positions
+	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
+	vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
+	vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
 
 	// Light vector needs to be calculated in fragment shader for low
 	// poly objects like flat walls.
@@ -214,7 +215,7 @@ void main(void)
 			vec3 half_v = normalize(normDirToEye + normDirToLight);
 
 			// Specular strength, Blinn-Phong shading model
-			float HdotN = max(dot(normalize(half_v), normal), 0.0); 
+			float HdotN = max(dot(half_v, normal), 0.0); 
 			// FIXME the speculars don't work correctly
 			specular = att * lightSpecular * specularColour
 				* pow(HdotN, shininess);
@@ -234,11 +235,11 @@ void main(void)
 	}
 #endif
 
+	// Combine diffuse alphas
+	float alpha = diffuseTexColour.a*surfaceDiffuse.a;
 	colour = inShadow*(diffuse + specular);
+	colour.a = alpha;
 
 	FragmentColour = clamp(colour, 0.0, 1.0);
-
-	// Use the diffuse texture's alpha value.
-	FragmentColour.a = diffuseTexColour.a;
 }
 

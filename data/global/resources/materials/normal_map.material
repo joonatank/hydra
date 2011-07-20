@@ -24,8 +24,9 @@ material bling_phong/normal_map/shadows/multi_pass
 	set $ambientCol "0 0 0 0"
 	set $emissiveCol "0 0 0 0"
 	set $diffuseCol "1 1 1 1"
-	set $specularCol "0 0 0"
+	set $specularCol "1 1 1"
 	set $shininess "32"
+	set $depthWrite "on"
 
 	technique
 	{
@@ -35,6 +36,9 @@ material bling_phong/normal_map/shadows/multi_pass
 		// Mhhh the problem was not the named passes
 		pass
 		{
+			scene_blend alpha_blend
+			depth_write $depthWrite
+
 			vertex_program_ref pass_through_vs
 			{
 			}
@@ -53,9 +57,11 @@ material bling_phong/normal_map/shadows/multi_pass
 		pass 
 		{
 			illumination_stage per_light
-
-			scene_blend add
 			iteration once_per_light
+
+			//scene_blend add
+			scene_blend alpha_blend
+			depth_write $depthWrite
 
 			vertex_program_ref bling_phong_sl_shadows_vs
 			{
@@ -117,20 +123,23 @@ material bling_phong/normal_map/shadows/multi_pass
 
 material bling_phong/shadows/multi_pass
 {
-	set $ambientCol "0 0 0 0"
-	set $emissiveCol "0 0 0 0"
+	set $ambientCol "0 0 0 0.0"
+	set $emissiveCol "0 0 0 0.0"
 	set $diffuseCol "1 1 1 1"
 	set $specularCol "1 1 1"
 	set $shininess "32"
 
-    technique
-    {
+	technique
+	{
 		// ambient pass
 		// Do not name the passes, when using inheritance it's ok to reference
 		// a parents pass with an index. Names are not ok.
 		// Mhhh the problem was not the named passes
 		pass
 		{
+			scene_blend alpha_blend
+			depth_write $depthWrite
+
 			vertex_program_ref pass_through_vs
 			{
 			}
@@ -149,9 +158,11 @@ material bling_phong/shadows/multi_pass
 		pass 
 		{
 			illumination_stage per_light
-
-			scene_blend add
 			iteration once_per_light
+
+			//scene_blend add
+			scene_blend alpha_blend
+			depth_write $depthWrite
 
 			vertex_program_ref bling_phong_eye_space_sl_shadows_vs
 			{
@@ -214,14 +225,17 @@ material bling_phong/multi_pass
 	set $specularCol "1 1 1"
 	set $shininess "32"
 
-    technique
-    {
+	technique
+	{
 		// ambient pass
 		// Do not name the passes, when using inheritance it's ok to reference
 		// a parents pass with an index. Names are not ok.
 		// Mhhh the problem was not the named passes
 		pass
 		{
+			scene_blend alpha_blend
+			depth_write $depthWrite
+
 			vertex_program_ref pass_through_vs
 			{
 			}
@@ -240,9 +254,11 @@ material bling_phong/multi_pass
 		pass 
 		{
 			illumination_stage per_light
-
-			scene_blend add
 			iteration once_per_light
+
+			//scene_blend add
+			scene_blend alpha_blend
+			depth_write $depthWrite
 
 			vertex_program_ref bling_phong_eye_space_sl_vs
 			{

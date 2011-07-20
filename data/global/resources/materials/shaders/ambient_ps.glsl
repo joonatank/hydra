@@ -15,6 +15,7 @@ out vec4 FragmentColour;
 void main(void)
 {
 	vec4 colour = surfaceAmbient*lightAmbient + surfaceEmissive;
+	colour.a = surfaceAmbient.a;
 	FragmentColour = clamp(colour, 0.0, 1.0);
 }
 

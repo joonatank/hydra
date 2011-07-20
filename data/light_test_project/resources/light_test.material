@@ -1,0 +1,42 @@
+
+import * from "normal_map.material"
+
+material hytti_mat : bling_phong/shadows/multi_pass
+{
+	set $specularCol "0.4 0.4 0.4"
+	set $shininess 50 
+	set $depthWrite off
+	set_texture_alias diffuseTexture hytti_tekstuuri.png
+}
+
+// Basic class material without any texture effects
+material ash_tree : bling_phong/shadows/multi_pass
+{
+	set $specularCol "0 0 0"
+	set $depthWrite off
+	set_texture_alias diffuseTexture ash_tree.png
+}
+
+material kontti_bump : bling_phong/normal_map/shadows/multi_pass
+{
+	set $diffuseCol "1.0 0.5 0.5 1.0"
+	set $specularCol "0.5 0.5 0.5"
+	set $shininess 80 
+	set_texture_alias normalMap kontti_pitka_NRM.jpg
+}
+
+material kontti_both : bling_phong/normal_map/shadows/multi_pass
+{
+	set $specularCol "0.5 0.5 0.5"
+	set $shininess 80 
+	set_texture_alias diffuseTexture Kontti_12_Red.png
+	set_texture_alias normalMap kontti_pitka_NRM.jpg
+}
+
+material kontti_tex : bling_phong/normal_map/shadows/multi_pass
+{
+	set $specularCol "0.5 0.5 0.5"
+	set $shininess 80 
+	set_texture_alias diffuseTexture Kontti_12_Red.png
+}
+
