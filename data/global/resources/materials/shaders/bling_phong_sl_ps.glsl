@@ -6,13 +6,20 @@
 // The Fragment Program
 
 // TODO test directional lights
-// TODO add vertex colours, needs an define if the user wants to compile them
-// or not
 // TODO specular lights are not correct
 //
 // Spotlights tested with inner, outer and falloff
 // Spotlights tested with changing position and orientation
 // Single depth shadow map supported. As simple as possible.
+
+// Defines:
+// These values must correspond to the ones in vertex shader.
+// SHADOW_MAP : Shadows can be turned on/off.
+// NORMAL_MAP : Normal mapping can be turned on/off.
+// Pixel shader only defines.
+// NEW_ATTENUATION : Turns on/off quadratic distance for attenuation
+//	creates high lights for objects for which distance << light_max_distance
+
 
 // Version parameter does not work correctly in Ogre, the main tree uses
 // OpenGL 2. No harm about it though. Waiting for OpenGL 3+ rendering system.
@@ -58,9 +65,8 @@ in vec3 vNormal;
 // Space in which these are does not matter as all the transformation
 // should be done in the vertex shader and they should be in the same
 // space here be that object, eye or tangent.
-// Direction to light
-in vec3 dirToLight;
-// from vertex to eye in tangent space
+
+// From vertex to eye
 in vec3 dirToEye; 
 // Light position needed for attenuation calculation.
 // Space where this is does not really matter because it's only used for calculating
@@ -71,12 +77,12 @@ in vec3 dirToEye;
 in vec3 lightPos;
 
 // Spotlight direction, should be in the same space as the rest of the parameters,
-// especially dirToLight.  Tangent space is tested, but eye space should also work.
 in vec3 spotlightDir;
 
-// Vertex colour
-// Not supported yet, these need a switch for the material
-//in vec4 vColour;
+// Vertex for calculating light direction vector
+// Calculating direction vector in Vertex shader screws up the accuracy for low poly models
+// Try it using a 20 x 40 meter plane with four vertices.
+in vec3 vVertex;
 
 // Shadow map uvs, x,y are the coordinates on the texture
 // z is the distance to light
@@ -87,8 +93,7 @@ in vec4 shadowUV;
 out vec4 FragmentColour;
 
 // Calculate the attenuation parameter
-// Compute attenuation, in eye space
-float attenuate(vec3 light_pos, vec4 attenuation)
+float calculate_attenuation(vec3 light_pos, vec4 attenuation)
 {
 	float distSqr = dot(light_pos, light_pos);
 	// Calculating everything as squared
@@ -134,7 +139,7 @@ float calculate_spot(vec3 light_dir, vec3 spot_dir, vec4 spot_params)
 	{ return 1.0; }
 
 	// angle between surface vector and a spotlight direction vector
-	float rho = dot(light_dir, spot_dir);
+	float rho = dot(spot_dir, -light_dir);
 	// Ogre gives us spotlight params as a
 	// vec4(cos(inner_angle/2), cos(outer_angle/2), falloff, 1)
 	float inner_a = spotlightParams.x;
@@ -143,11 +148,6 @@ float calculate_spot(vec3 light_dir, vec3 spot_dir, vec4 spot_params)
 	// from DirectX documentation the spotlight factor
 	// factor = (rho - cos(outer/2) / cos(inner/2) - cos(outer/2)) ^ falloff
 	float factor = clamp((rho - outer_a)/(inner_a - outer_a), 0.0, 1.0);
-	// Debug
-//	if(rho < outer_a)
-//	{ factor = 0.0; }
-//	else
-//	{ factor = 1.0; }
 	
 
 	if(factor > 0.0)
@@ -174,22 +174,26 @@ void main(void)
 	vec4 diffuse = vec4(0.0, 0.0, 0.0, 0.0);
 	vec4 specular = vec4(0.0, 0.0, 0.0, 0.0);
 
+	// Light vector needs to be calculated in fragment shader for low
+	// poly objects like flat walls.
+	vec3 fragmentToLight = lightPos - vVertex;
+
 	// Normalize interpolated direction to light
-	vec3 normDirToLight = normalize(dirToLight);
+	vec3 normDirToLight = normalize(fragmentToLight);
 	vec3 normSpotDir = normalize(spotlightDir);
 
 	float spotFactor = calculate_spot(normDirToLight, normSpotDir, spotlightParams);
 
 	// TODO move attenuation calculation here and add checking for zero to skip
 	// the light calculation
-
+	float attenuation = 0.0;
 	// Spotlight check
-	if(spotFactor > 0)
-	{
-		// Calculate the attenuation
-		float att = spotFactor *
-			attenuate(lightPos, lightAttenuation);
+	if(spotFactor > 0.0)
+	{ attenuation = calculate_attenuation(fragmentToLight, lightAttenuation); }
 
+	float att = spotFactor * attenuation;
+	if(att > 0.0)
+	{
 		// Full strength if normal points directly at light
 		float lambertTerm = max(dot(normDirToLight, normal), 0.0);
 		// Only calculate diffuse and specular if light reaches the fragment.
@@ -231,8 +235,6 @@ void main(void)
 #endif
 
 	colour = inShadow*(diffuse + specular);
-	// Debug
-//	colour = vec4(spotFactor, spotFactor, spotFactor, 1.0);
 
 	FragmentColour = clamp(colour, 0.0, 1.0);
 

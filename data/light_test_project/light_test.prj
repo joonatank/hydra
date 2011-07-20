@@ -8,11 +8,7 @@ Ogre test project used for testing and demonstrating eqOgre
 -->
 <project_config name="light_test">
 
-	<scenes>
-		<scene name="ogre" use="true">
-			<file>ogre.scene</file>
-		</scene>
-	</scenes>
+	<!-- Dynamic scene -->
 
 	<scripts>
 		<!--

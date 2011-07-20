@@ -2,10 +2,12 @@
 // Savant Simulators
 // 2011-04
 //
-// Bling-Phong shading program for single light in eye space
-// The Vertex Program
+// Eye space vertex program for single light.
 
-// Shadows can be turned on/off with SHADOW_MAP define
+// Defines:
+// These values must correspond to the ones in pixel shader.
+// SHADOW_MAP : Shadows can be turned on/off.
+
 
 #version 140
 
@@ -13,7 +15,6 @@ uniform mat4 modelView;
 uniform mat4 modelViewProj;
 // Light position in eye space
 uniform vec4 mvLightPos;
-uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
 
 #ifdef SHADOW_MAP
@@ -33,14 +34,16 @@ out vec4 uv;
 
 out vec3 vNormal;
 
-// from vertex to light in eye space
-out vec3 dirToLight;
 // from vertex to eye in eye space
 out vec3 dirToEye;
-// Eye space light position for attenuation calculation
+// Eye space light position for attenuation and spotlight
+// For low poly object this needs to pass through to get the correct
+// interpolated values for fragment.
 out vec3 lightPos;
 // Spotlight direction vector in eye space
 out vec3 spotlightDir;
+// Vertex in eye space for calculating light direction
+out vec3 vVertex;
 
 // Shadow map uvs, x,y are the coordinates on the texture
 // z is the distance to light
@@ -64,6 +67,7 @@ void main(void)
 
 	// Vertex coords from eye position
 	vec3 mvVertex = vec3(modelView * vertex);
+	vVertex = mvVertex;
 
 	// w component needs to be zero otherwise the eye distance is affecting
 	// the normal
@@ -75,17 +79,13 @@ void main(void)
 	// If eye position is at (0, 0, 0), -mvVertex points
 	// to eye position from vertex. Otherwise
 	// direction to eye is: eyePosition - mvVertex
-	vec3 mvDirToEye = - mvVertex;
+	vec3 mvDirToEye = -mvVertex;
     
-	// Light direction from vertex
-	// lightPos.w is for directional lights, they have w = 0
-	vec3 l_pos = vec3(mvLightPos) - mvVertex*mvLightPos.w;
-	// normalizing the direction does not make a difference
-	lightPos = l_pos;
-	dirToLight = normalize(l_pos);
-
-	spotlightDir = -spotDirection.xyz;
-
 	dirToEye = normalize(mvDirToEye);
+
+	// Light direction from vertex
+	lightPos = vec3(mvLightPos);
+
+	spotlightDir = spotDirection.xyz;
 }
 

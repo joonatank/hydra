@@ -2,8 +2,12 @@
 // Savant Simulators
 // 2011-04
 //
-// Bling-Phong (tangent-space) shading program for single light
-// The Vertex Program
+// Tangent space vertex program for single light
+
+// Defines:
+// These values must correspond to the ones in pixel shader.
+// SHADOW_MAP : Shadows can be turned on/off.
+// NORMAL_MAP : Normal mapping can be turned on/off.
 
 #version 140
 
@@ -39,15 +43,18 @@ out vec3 vNormal;
 #endif
 
 // from vertex to light in tangent space
-out vec3 dirToLight;
+//out vec3 dirToLight;
 // from vertex to eye in tangent space, used for specular highlights
 out vec3 dirToEye;
-// Eye space light position for attenuation calculation
+// Tangent space light position for attenuation and spotlight
+// For low poly object this needs to pass through to get the correct
+// interpolated values for fragment.
 out vec3 lightPos;
 // Light to vertex in tangent space
-//out vec4 vertexToLight;
 // Spotlight direction vector in tangent space
 out vec3 spotlightDir;
+// Vertex in tangent space for calculating light direction
+out vec3 vVertex;
 
 // Shadow map uvs, x,y are the coordinates on the texture
 // z is the distance to light
@@ -85,6 +92,10 @@ void main(void)
 	// Vertex coords from eye position
 	vec3 mvVertex = vec3(modelView * vertex);
 
+	vVertex.x = dot(mvVertex, mvTangent);
+	vVertex.y = dot(mvVertex, mvBinormal);
+	vVertex.z = dot(mvVertex, mvNormal);
+
 	// Eye direction from vertex, for half vector
 	// If eye position is at (0, 0, 0), -mvVertex points
 	// to eye position from vertex. Otherwise
@@ -98,29 +109,21 @@ void main(void)
 	tbnDirToEye.y = dot(mvDirToEye, mvBinormal);
 	tbnDirToEye.z = dot(mvDirToEye, mvNormal);
     
+	dirToEye = normalize(tbnDirToEye);
+
 	// Light direction from vertex
 	// lightPos.w is for directional lights, they have w = 0
-	vec3 l_pos = mvLightPos.xyz - mvVertex*mvLightPos.w;
-	// normalizing the direction does not make a difference
-	lightPos = l_pos;
-	vec3 mvLightDir = normalize(l_pos);
-
-	// Light in tangent space
-	dirToLight.x = dot(mvLightDir, mvTangent);
-	dirToLight.y = dot(mvLightDir, mvBinormal);
-	dirToLight.z = dot(mvLightDir, mvNormal);
-	dirToLight = normalize(dirToLight);
+	vec3 tbnLightPos = mvLightPos.xyz;
+	lightPos.x = dot(tbnLightPos, mvTangent);
+	lightPos.y = dot(tbnLightPos, mvBinormal);
+	lightPos.z = dot(tbnLightPos, mvNormal);
 	
 	// lightDirection is in eye space already and it's direction vector
 	// not a position
-	// TODO Why was there a minus? I have no idea, but the light is the
-	// wrong way around if there isn't a one.
-	vec3 mvSpotlightDir = -spotDirection.xyz;
+	vec3 mvSpotlightDir = spotDirection.xyz;
 	spotlightDir.x = dot(mvSpotlightDir, mvTangent);
 	spotlightDir.y = dot(mvSpotlightDir, mvBinormal);
 	spotlightDir.z = dot(mvSpotlightDir, mvNormal);
 	spotlightDir = normalize(spotlightDir);
-
-	dirToEye = normalize(tbnDirToEye);
 }
 

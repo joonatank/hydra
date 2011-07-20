@@ -61,7 +61,7 @@ material ground/bump_mapped/shadows : bling_phong/normal_map/shadows/multi_pass
 }
 
 
-material anthene_material : bling_phong/normal_map/shadows/multi_pass
+material anthene_material : bling_phong/shadows/multi_pass
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
