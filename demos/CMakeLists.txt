@@ -23,6 +23,10 @@ copy_start_scripts( hydra
 	"light_test" )
 
 copy_start_scripts( hydra
+	signal_test_project/signal_test.prj
+	"signal_test" )
+
+copy_start_scripts( hydra
 	generated_physics_project/generated_physics.prj
 	"generated_physics" )
 
