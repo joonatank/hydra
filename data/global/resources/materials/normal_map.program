@@ -34,19 +34,19 @@ fragment_program ambient_ps glsl
 	}
 }
 
-// Single light version with shadows
+// Single light version with shadows and normal mapping
 vertex_program bling_phong_sl_shadows_vs glsl
 {
-	source bling_phong_ts_sl_vs.glsl
+	source tangent_space_sl_vs.glsl
 
-	preprocessor_defines SHADOW_MAP=1
+	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1
 
 	default_params
 	{
 		param_named_auto modelView worldview_matrix
 		param_named_auto modelViewProj worldviewproj_matrix
 		param_named_auto normalMatrix inverse_transpose_worldview_matrix
-		param_named_auto lightPos light_position_view_space 0
+		param_named_auto mvLightPos light_position_view_space 0
 		param_named_auto spotDirection light_direction_view_space 0
 
 		// shadow texture projections
@@ -59,10 +59,8 @@ vertex_program bling_phong_sl_shadows_vs glsl
 
 fragment_program bling_phong_sl_shadows_ps glsl
 {
-	source bling_phong_ts_sl_ps.glsl
-
-	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=1
-	//preprocessor_defines SHADOW_MAP=1
+	source bling_phong_sl_ps.glsl
+	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,NEW_ATTENUATION=1
 
 	default_params
 	{
@@ -89,14 +87,14 @@ fragment_program bling_phong_sl_shadows_ps glsl
 // Single light version in eye space with shadows
 vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 {
-	source bling_phong_es_sl_vs.glsl
+	source eye_space_sl_vs.glsl
 	preprocessor_defines SHADOW_MAP=1
 
 	default_params
 	{
 		param_named_auto modelView worldview_matrix
 		param_named_auto modelViewProj worldviewproj_matrix
-		param_named_auto lightPos light_position_view_space 0
+		param_named_auto mvLightPos light_position_view_space 0
 		param_named_auto spotDirection light_direction_view_space 0
 		param_named_auto lightAttenuation light_attenuation 0
 
@@ -110,8 +108,8 @@ vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 
 fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 {
-	source bling_phong_es_sl_ps.glsl
-	preprocessor_defines SHADOW_MAP=1
+	source bling_phong_sl_ps.glsl
+	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=1
 
 	default_params
 	{
@@ -136,13 +134,13 @@ fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 // Single light version in eye space without shadows
 vertex_program bling_phong_eye_space_sl_vs glsl
 {
-	source bling_phong_es_sl_vs.glsl
+	source eye_space_sl_vs.glsl
 
 	default_params
 	{
 		param_named_auto modelView worldview_matrix
 		param_named_auto modelViewProj worldviewproj_matrix
-		param_named_auto lightPos light_position_view_space 0
+		param_named_auto mvLightPos light_position_view_space 0
 		param_named_auto spotDirection light_direction_view_space 0
 		param_named_auto lightAttenuation light_attenuation 0
 
@@ -154,9 +152,11 @@ vertex_program bling_phong_eye_space_sl_vs glsl
 }
 
 
+// Single light bling-phong shader without shadows and without normal mapping
 fragment_program bling_phong_eye_space_sl_ps glsl
 {
-	source bling_phong_es_sl_ps.glsl
+	source bling_phong_sl_ps.glsl
+	preprocessor_defines NEW_ATTENUATION=1
 
 	default_params
 	{

@@ -12,7 +12,7 @@
 uniform mat4 modelView;
 uniform mat4 modelViewProj;
 // Light position in eye space
-uniform vec4 lightPos;
+uniform vec4 mvLightPos;
 uniform vec4 lightAttenuation;
 uniform vec4 spotDirection;
 
@@ -37,10 +37,9 @@ out vec3 vNormal;
 out vec3 dirToLight;
 // from vertex to eye in eye space
 out vec3 dirToEye;
-// Attenuation parameter
-out float attenuation;
-// Spotlight direction vector, should be vec4(1,0,0,1) for anything else
-// in eye space
+// Eye space light position for attenuation calculation
+out vec3 lightPos;
+// Spotlight direction vector in eye space
 out vec3 spotlightDir;
 
 // Shadow map uvs, x,y are the coordinates on the texture
@@ -80,19 +79,13 @@ void main(void)
     
 	// Light direction from vertex
 	// lightPos.w is for directional lights, they have w = 0
-	vec3 mvLightPos = vec3(lightPos) - mvVertex*lightPos.w;
+	vec3 l_pos = vec3(mvLightPos) - mvVertex*mvLightPos.w;
 	// normalizing the direction does not make a difference
-	dirToLight = normalize(mvLightPos);
+	lightPos = l_pos;
+	dirToLight = normalize(l_pos);
 
 	spotlightDir = -spotDirection.xyz;
 
 	dirToEye = normalize(mvDirToEye);
-
-	// Compute attenuation, in eye space
-	// TODO add range parameter
-	float d = length(mvLightPos);
-	attenuation =  1.0/( lightAttenuation.y +
-		(lightAttenuation.z * d) +
-		(lightAttenuation.w * d*d) );
 }
 

@@ -19,6 +19,10 @@ copy_start_scripts( hydra
 	"ogre" )
 
 copy_start_scripts( hydra
+	light_test_project/light_test.prj
+	"light_test" )
+
+copy_start_scripts( hydra
 	generated_physics_project/generated_physics.prj
 	"generated_physics" )
 

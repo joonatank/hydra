@@ -25,7 +25,7 @@ material CloudySky
 	}
 }
 
-material ground/Basic
+material ground/basic
 {
 	technique
 	{
@@ -39,23 +39,34 @@ material ground/Basic
 	}
 }
 
-material ground/flat: bling_phong_eye_space_multi_pass
+material ground/flat : bling_phong/multi_pass
 {
+	set $specularCol "0 0 0"
 	set_texture_alias diffuseTexture rock.jpg
 }
 
-material ground/flat/shadows : bling_phong_eye_space_multi_pass_shadows
+material ground/flat/shadows : bling_phong/shadows/multi_pass
 {
+	set $specularCol "0 0 0"
 	set_texture_alias diffuseTexture rock.jpg
 }
 
-material ground/bump_mapped/shadows : bling_phong_multi_pass
+material ground/bump_mapped/shadows : bling_phong/normal_map/shadows/multi_pass
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
 	set_texture_alias diffuseTexture rock.jpg
-//	set_texture_alias specularMap rock.jpg
+	set_texture_alias specularMap rock.jpg
 	set_texture_alias normalMap rock_NM.jpg
+}
+
+
+material anthene_material : bling_phong/normal_map/shadows/multi_pass
+{
+//	set $ambientCol "1 0 0 1"
+	set $specularCol "0 0 0"
+// TODO add normal map
+//	set_texture_alias normalMap ogre.tex.jpg
 }
 
 material debug_red 
@@ -79,21 +90,21 @@ material debug_red
 	}
 }
 
-material finger_sphere/red : bling_phong_eye_space_multi_pass
+material finger_sphere/red : bling_phong/shadows/multi_pass
 {
 	set $emissiveCol "0.4 0 0 1"
 	set $diffuseCol "0.6 0.4 0.4 1"
 	set $specularCol "0 0 0"
 }
 
-material finger_sphere/blue : bling_phong_eye_space_multi_pass
+material finger_sphere/blue : bling_phong/shadows/multi_pass
 {
 	set $emissiveCol "0.0 0 0.4 1"
 	set $diffuseCol "0.3 0.3 0.6 1"
 	set $specularCol "0 0 0"
 }
 
-material finger_sphere/green : bling_phong_eye_space_multi_pass
+material finger_sphere/green : bling_phong/shadows/multi_pass
 {
 	set $emissiveCol "0.0 0.4 0 1"
 	set $diffuseCol "0.3 0.6 0.3 1"
