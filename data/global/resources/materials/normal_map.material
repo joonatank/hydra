@@ -6,7 +6,13 @@
 //
 // Includes eye and tangent space Bling-Phong base materials
 
+// TODO
+// Emissive materials don't work at the moment
+// ambient not tested
+// problem with scene blending ambient pass
+
 // Common parameters for both single and multi pass Bling-Phong shaders
+// TODO does not work
 material base_material
 {
 	set $ambientCol "0 0 0 0"
@@ -59,7 +65,7 @@ material bling_phong/normal_map/shadows/multi_pass
 			illumination_stage per_light
 			iteration once_per_light
 
-			//scene_blend add
+//			scene_blend add
 			scene_blend alpha_blend
 			depth_write $depthWrite
 
@@ -160,7 +166,7 @@ material bling_phong/shadows/multi_pass
 			illumination_stage per_light
 			iteration once_per_light
 
-			//scene_blend add
+//			scene_blend add
 			scene_blend alpha_blend
 			depth_write $depthWrite
 
@@ -256,7 +262,7 @@ material bling_phong/multi_pass
 			illumination_stage per_light
 			iteration once_per_light
 
-			//scene_blend add
+//			scene_blend add
 			scene_blend alpha_blend
 			depth_write $depthWrite
 
