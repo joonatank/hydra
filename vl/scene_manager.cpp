@@ -535,6 +535,8 @@ vl::SceneManager::_createMovableObject(vl::OBJ_TYPE type, uint64_t id)
 	case vl::OBJ_RAY_OBJECT:
 		obj = new RayObject(this);
 		break;
+	default :
+		std::cout << vl::CRITICAL << "MovableObject type not recognised." << std::endl;
 	}
 
 	if(!obj)

@@ -15,6 +15,8 @@
  *	i.e. time, double, integer
  */
 
+/// @todo Report doesn't work correctly for times for some reason
+
 #ifndef HYDRA_REPORT_HPP
 #define HYDRA_REPORT_HPP
 
@@ -45,7 +47,7 @@ T
 calculate_avarage( std::vector<T> const &v )
 {
 	if( v.size() == 0 )
-	{ return 0; }
+	{ return T(); }
 	else
 	{ return calculate_sum(v)/v.size(); }
 }

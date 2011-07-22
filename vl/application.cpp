@@ -1,5 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-12
+ *	@file application.cpp
  *
  */
 #include "application.hpp"
@@ -19,8 +20,13 @@
 
 #include "cluster/client.hpp"
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 /// -------------------------------- Global ----------------------------------
-vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
+vl::EnvSettingsRefPtr
+vl::getMasterSettings( vl::ProgramOptions const &options )
 {
 	if( options.slave() )
 	{ return vl::EnvSettingsRefPtr(); }
@@ -50,14 +56,16 @@ vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
 
 	}
 
+	vl::EnvSettingsRefPtr env;
+
 	if( !fs::is_regular(env_path) )
 	{
-		return vl::EnvSettingsRefPtr();
+		return env;
 	}
 	else
 	{
 		/// This point both env_path and project_path are valid
-		vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+		env.reset( new vl::EnvSettings );
 
 		/// Read the Environment config
 		if( fs::is_regular(env_path) )
@@ -69,15 +77,19 @@ vl::EnvSettingsRefPtr vl::getMasterSettings( vl::ProgramOptions const &options )
 			env_ser.readString(env_data);
 			env->setFile( env_path.string() );
 		}
-
-		env->setLogDir( options.log_dir );
-		env->setLogLevel( (vl::LogLevel)(options.log_level) );
-
-		return env;
 	}
+
+	env->setLogDir( options.log_dir );
+	env->setLogLevel( (vl::LogLevel)(options.log_level) );
+
+	env->display_n = options.display_n;
+
+	return env;
+
 }
 
-vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
+vl::Settings
+vl::getProjectSettings( vl::ProgramOptions const &options )
 {
 	if( options.slave() )
 	{ return vl::Settings(); }
@@ -145,7 +157,8 @@ vl::Settings vl::getProjectSettings( vl::ProgramOptions const &options )
 	return settings;
 }
 
-vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
+vl::EnvSettingsRefPtr
+vl::getSlaveSettings( vl::ProgramOptions const &options )
 {
 	if( options.master() )
 	{
@@ -167,18 +180,43 @@ vl::EnvSettingsRefPtr vl::getSlaveSettings( vl::ProgramOptions const &options )
 	vl::EnvSettings::Server server(port, hostname);
 	env->setServer(server);
 	env->getMaster().name = options.slave_name;
+	env->display_n = options.display_n;
 
 	return env;
 }
 
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application( vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger )
+vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork)
 	: _master()
 	, _slave_client()
 {
 	assert( env );
 
+	if(env->isMaster())
+	{
+		// auto_fork is silently ignored for slaves
+		if(auto_fork)
+		{
+// Windows forking not supported
+#ifndef _WIN32
+			for(size_t i = 0; i < env->getSlaves().size(); ++i)
+			{
+				pid_t pid = ::fork();
+				// Reset the environment file for a slave
+				if(pid != 0)
+				{
+					env->setSlave();
+					env->getMaster().name = env->getSlaves().at(i).name;
+					// Master needs to continue the loop and create the remaining slaves
+					break;
+				}
+			}
+#endif
+		}
+	}
+
+	/// Correct name has been set
 	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
 
 	// We should hand over the Renderer to either client or config
@@ -243,7 +281,7 @@ vl::Application::run( void )
 void
 vl::Application::_render( uint32_t const frame )
 {
-	Ogre::Timer timer;
+	vl::timer timer;
 
 	// target FPS
 	// @todo should be configurable from EnvSettings
@@ -251,14 +289,17 @@ vl::Application::_render( uint32_t const frame )
 
 	_master->render();
 
-	double time = double(timer.getMicroseconds())/1000;
+	// time in milliseconds
+	double t = ((double)timer.elapsed())*1e3;
 
 	// Sleep enough to get a 60 fps but no more
 	// NOTE Of course because the converting to uint makes the time really huge
 	// Of course the next question is why the time is negative without rendering data
 	// i.e. why it would take more than 16.66ms for rendering a frame without data
 	// TODO the fps should be configurable
-	double sleep_time = 1000.0/FPS - time;
+	double sleep_time = 1000.0/FPS - t;
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
+	else	// Force context switching
+	{ vl::msleep(0); }
 }

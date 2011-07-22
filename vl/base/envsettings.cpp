@@ -49,6 +49,7 @@ vl::EnvSettings::EnvSettings( void )
 	, _swap_barrier(0)
 	, _ipd(0)
 	, _slave(false)
+	, display_n(0)
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -546,6 +547,9 @@ vl::EnvSettingsSerializer::processWindows( rapidxml::xml_node<> *xml_node, EnvSe
 		window.nv_swap_sync = _envSettings->hasNVSwapSync();
 		window.nv_swap_group = _envSettings->getNVSwapGroup();
 		window.nv_swap_barrier = _envSettings->getNVSwapBarrier();
+		attrib = pWindow->first_attribute("display");
+		if(attrib)
+		window.n_display = vl::from_string<int>( attrib->value() );
 
 		if( attrib = pWindow->first_attribute("vert_sync"))
 		{

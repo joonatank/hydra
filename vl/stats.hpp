@@ -20,7 +20,7 @@ class StatElem
 public :
 	StatElem( std::string const &text );
 
-	void addTime(double time);
+	void addTime(vl::time const &t);
 
 	double getAvarage(void) const;
 
@@ -65,7 +65,9 @@ public :
 	void logRenderingTime(vl::time const &t);
 
 	void logLocalRenderingTime(vl::time const &t);
-	
+
+	void logLocalSwapTime(vl::time const &t);
+
 	void logLocalCaptureTime(vl::time const &t);
 	
 	void logWaitDrawDoneTime(vl::time const &t);
@@ -78,11 +80,6 @@ public :
 	 *	@param time time in milliseconds
 	 */
 	void logEventProcessingTime(vl::time const &t);
-
-	/**	@brief Log time used for processing frame events to the stats
-	 *	@param time time in milliseconds
-	 */
-	void logFrameProcessingTime(vl::time const &t);
 
 	/**	@brief Log time used for creating update to the stats
 	 *	@param time time in milliseconds
@@ -108,10 +105,10 @@ public :
 private :
 	StatElem _rendering_time;
 	StatElem _local_rendering_time;
+	StatElem _local_swap_time;
 	StatElem _local_capture_time;
 
 	StatElem _event_time;
-	StatElem _frame_time;
 	StatElem _update_time;
 	StatElem _step_time;
 	StatElem _wait_update_time;

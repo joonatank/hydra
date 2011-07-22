@@ -253,15 +253,17 @@ vl::Config::init( void )
 
 	if(_renderer.get())
 	{
-		_renderer->sendMessage(_msg_create);
-		_renderer->sendMessage(createMsgInit());
+		vl::cluster::Message msg(_msg_create);
+		_renderer->createSceneNodes(msg);
+		msg = createMsgInit();
+		_renderer->initScene(msg);
 	}
 
 	std::cout << "Loading Renderer with new created objects took : "
 		<<  t.elapsed() << std::endl;
 	t.reset();
 
-	_game_manager->getStats().logInitTime( ((double)init_timer.elapsed())*1e3 );
+	_game_manager->getStats().logInitTime(init_timer.elapsed());
 
 	_stats_timer.reset();
 
@@ -288,14 +290,20 @@ vl::Config::exit(void)
 void
 vl::Config::render( void )
 {
+	assert(_server);
+
 	vl::timer timer;
 
-	assert(_server);
+	_server->poll();
+
+	// TODO where the receive input messages should be?
+	_handleMessages();
 
 	// Process a time step in the game
 	// New event interface
 	_game_manager->getEventManager()->getFrameTrigger()->update();
-	_game_manager->getStats().logFrameProcessingTime(timer.elapsed());
+
+	_game_manager->getStats().logEventProcessingTime(timer.elapsed());
 
 	timer.reset();
 	if( !_game_manager->step() )
@@ -303,13 +311,16 @@ vl::Config::render( void )
 	_game_manager->getStats().logStepTime(timer.elapsed());
 
 	/// Provide the updates to slaves
+	timer.reset();
 	_updateFrameMsgs();
 	_updateServer();
 	_updateRenderer();
 
 	// TODO separate stats for rendering slaves and local
-	/// Render the scene
 	_server->update(_game_manager->getStats());
+	_game_manager->getStats().logUpdateTime(timer.elapsed());
+
+	/// Render the scene
 	timer.reset();
 	bool rendering = _server->start_draw(_game_manager->getStats());
 	// Rendering after the server has sent the command to slaves
@@ -325,32 +336,23 @@ vl::Config::render( void )
 		_server->finish_draw(_game_manager->getStats(), limit);
 	}
 
-	
 	// Finish local renderer
 	if( _renderer.get() )
 	{
 		vl::timer l;
 		_renderer->swap();
+		_game_manager->getStats().logLocalSwapTime(l.elapsed());
+		l.reset();
 		_renderer->capture();
-		_game_manager->getStats().logLocalRenderingTime(l.elapsed());
+		_game_manager->getStats().logLocalCaptureTime(l.elapsed());
 	}
 	_game_manager->getStats().logRenderingTime(timer.elapsed());
-	timer.reset();
-
-	// Poll after updating the drawables
-	_server->poll();
-
-	// TODO where the receive input messages should be?
-	_handleMessages();
-
-	_game_manager->getStats().logEventProcessingTime(timer.elapsed());
 
 	// Update statistics every 10 seconds
 	// @todo time limit should be configurable
 	if( _stats_timer.elapsed() > vl::time(10) )
 	{
 		_game_manager->getStats().update();
-//		std::clog << _game_manager->getStats() << std::endl;
 		_stats_timer.reset();
 	}
 }
@@ -395,7 +397,7 @@ vl::Config::createMsgInit(void)
 vl::cluster::Message 
 vl::Config::createMsgEnvironment(void) const
 {
-	std::clog << "vl::Config::createMsgEnvironemnt" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::createMsgEnvironemnt" << std::endl;
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteDataStream stream( &data );
@@ -412,7 +414,7 @@ vl::Config::createMsgEnvironment(void) const
 vl::cluster::Message 
 vl::Config::createMsgProject(void) const
 {
-	std::clog << "vl::Config::createMsgProject" << std::endl;
+	std::cout << vl::TRACE << "vl::Config::createMsgProject" << std::endl;
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteDataStream stream( &data );
@@ -457,9 +459,13 @@ vl::Config::_updateRenderer(void)
 	{ return; }
 
 	if( !_msg_create.empty() )
-	{ _renderer->sendMessage(_msg_create); }
+	{
+		vl::cluster::Message msg(_msg_create);
+		_renderer->createSceneNodes(msg);
+	}
 
-	_renderer->sendMessage(_msg_update);
+	vl::cluster::Message msg(_msg_update);
+	_renderer->updateScene(msg);
 
 	// Send logs
 	if( _renderer->logEnabled() )
@@ -549,21 +555,10 @@ vl::Config::_setProject(vl::Settings const &proj)
 	{
 		vl::timer t;
 		vl::cluster::Message msg = createMsgProject();
-		_renderer->sendMessage(msg);
+		_renderer->setProject(msg);
 		std::cout << "Sending message of size " << sizeof(msg) << "bytes "
 			<< "to Renderer took " << t.elapsed() << std::endl;
 	}
-}
-
-/// @todo with project message this takes 450ms to complete
-/// because Renderer is damned slow parsing the message.
-void
-vl::Config::_sendMessage(vl::cluster::Message const &msg)
-{
-	if(_renderer.get())
-	{ _renderer->sendMessage(msg); }
-
-	_server->sendMessage(msg);
 }
 
 /// @todo this takes over 1 second to complete which is almost a second too much

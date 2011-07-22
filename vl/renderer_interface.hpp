@@ -46,14 +46,25 @@ public :
 	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man) = 0;
 
 	/// @brief interface through which the Renderer is controlled
-	virtual void handleMessage(vl::cluster::Message &msg) = 0;
+// 	virtual void handleMessage(vl::cluster::Message &msg) = 0;
+
+	/// @brief specialisation of handleMessage
+	virtual void setProject(vl::cluster::Message &msg) = 0;
+	
+	virtual void initScene(vl::cluster::Message &msg) = 0;
+	
+	virtual void updateScene(vl::cluster::Message &msg) = 0;
+	
+	virtual void createSceneNodes(vl::cluster::Message &msg) = 0;
+	
+	virtual void print(vl::cluster::Message &msg) = 0;
 
 	// Interface for sending local changes
-	void sendMessage(vl::cluster::Message const &msg)
-	{
-		vl::cluster::Message msg_cpy(msg);
-		handleMessage(msg_cpy);
-	}
+// 	void sendMessage(vl::cluster::Message const &msg)
+// 	{
+// 		vl::cluster::Message msg_cpy(msg);
+// 		handleMessage(msg_cpy);
+// 	}
 
 	virtual void sendEvent(vl::cluster::EventData const &event) = 0;
 

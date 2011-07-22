@@ -181,18 +181,18 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		(*iter)->state.has_init = true;
 	}
 
-	/// Clear all renderers states
-	for(ClientRefList::iterator iter = renderers.begin(); iter != renderers.end();
-		++iter )
-	{
-		(*iter)->state.clear_rendering_state();
-	}
-
 	// TODO even if client is not rendering it should get update messages
 	if( renderers.empty() )
 	{
 		//std::clog << "vl::cluster::Server::start_draw : no renderers" << std::endl;
 		return false;
+	}
+
+	/// Clear all renderers states
+	for(ClientRefList::iterator iter = renderers.begin(); iter != renderers.end();
+		++iter )
+	{
+		(*iter)->state.clear_rendering_state();
 	}
 
 	// Send frame start
@@ -201,7 +201,9 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	// this is sent to all
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		vl::cluster::Message msg( vl::cluster::MSG_FRAME_START, _frame, getSimulationTime() );
+		iter->state.frame = _frame;
+		iter->state.set_rendering_state(CS_START);
+		vl::cluster::Message msg(vl::cluster::MSG_FRAME_START, _frame, getSimulationTime());
 		_sendMessage(*iter, msg);
 	}
 
@@ -251,7 +253,6 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	{
 		vl::cluster::Message msg( vl::cluster::MSG_DRAW, _frame, getSimulationTime() );
 		_sendMessage(*iter, msg);
-		iter->state.frame = _frame;
 	}
 	// Check that all clients started drawing
 	// @todo on Windows if we use the time limit the block call will fail
@@ -259,7 +260,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 	success = _block_till_state(CS_DRAW, renderers, limit);
 	if(!success)
 	{
-		std::clog << "vl::cluster::Server::start_draw : failed CS_DRAW" << std::endl;
+		std::clog << "vl::cluster::Server::start_draw : failed DRAW" << std::endl;
 		for( ClientRefList::iterator iter = renderers.begin(); iter != renderers.end(); ++iter )
 		{
 			(*iter)->state.clear_rendering_state();
@@ -293,7 +294,6 @@ vl::cluster::Server::finish_draw(vl::Stats &stats, vl::time const &limit)
 		{ iter->state.clear_rendering_state(); }
 
 		stats.logWaitDrawDoneTime(t.elapsed());
-		++_frame;
 	}
 }
 
@@ -457,9 +457,22 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 
 		case vl::cluster::MSG_SG_UPDATE_READY :
 		{
-			assert( client.state.rendering );
-			// change the state
-			client.state.set_rendering_state(CS_UPDATE_READY);
+			if(client.state.is_rendering())
+			{
+				if(msg.getFrame() != _frame)
+				{
+					std::clog << "Server : MSG_SG_UPDATE_READY Client has incorrect frame number."
+						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
+						<< std::endl;
+					// Reset client state
+					client.state.clear_rendering_state();
+				}
+				else
+				{
+					// change the state
+					client.state.set_rendering_state(CS_UPDATE_READY);
+				}
+			}
 		}
 		break;
 
@@ -475,21 +488,73 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 		case vl::cluster::MSG_DRAW_READY :
 		{
 			/// Change state for those that are rendering, ignore otherwise
-			if( client.state.rendering )
+			if(client.state.is_rendering())
 			{
-				client.state.set_rendering_state(CS_DRAW_READY);
+				if(msg.getFrame() != _frame)
+				{
+					std::clog << "Server : MSG_DRAW_READY Client has incorrect frame number."
+						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
+						<< std::endl;
+					// Reset client state
+					client.state.clear_rendering_state();
+				}
+				else
+				{
+					client.state.set_rendering_state(CS_DRAW_READY);
+				}
 			}
 		}
 		break;
 
+		case vl::cluster::MSG_DRAWING :
+		{
+			/// Change state for those that are rendering, ignore otherwise
+			if(client.state.is_rendering())
+			{
+				if(msg.getFrame() != _frame)
+				{
+					std::clog << "Server : MSG_DRAWING Client has incorrect frame number."
+						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
+						<< std::endl;
+					// Reset client state
+					client.state.clear_rendering_state();
+				}
+				else
+				{
+					// TODO all the clients in the rendering loop needs to be
+					// on the same state at this point so that they swap the same time
+					// change the state
+					client.state.set_rendering_state(CS_DRAW);
+				}
+			}
+		}
+		break;
+		
 		case vl::cluster::MSG_DRAW_DONE :
 		{
-			assert( client.state.rendering );
-			// change the state
-			client.state.set_rendering_state(CS_DRAW_DONE);
-			/// Bit problematic because we can not finish the drawing here
-			/// but we need to wait till all the clients are done.
-			client.state.rendering = false;
+			if(client.state.is_rendering())
+			{
+				if(msg.getFrame() != _frame)
+				{
+					std::clog << "Server : MSG_DRAW_DONE Client has incorrect frame number."
+						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
+						<< std::endl;
+					// Reset client state
+					client.state.clear_rendering_state();
+				}
+				else
+				{
+					// change the state
+					client.state.set_rendering_state(CS_DRAW_DONE);
+					/// Bit problematic because we can not finish the drawing here
+					/// but we need to wait till all the clients are done.
+//					client.state.rendering = false;
+				}
+			}
+			else
+			{
+				std::cout << vl::CRITICAL << "Server : MSG_DRAW_DONE received even though not rendering." << std::endl;
+			}
 		}
 		break;
 
@@ -601,13 +666,22 @@ vl::cluster::Server::_sendUpdate(ClientInfo const &client)
 	if( !client.state.has_init )
 	{
 		assert(_data_cb);
+		// @todo check that these are created as valid, so no need to reset
+		// time and frame number
 		Message msg = _data_cb->createInitMessage();
+		msg.setFrame(_frame);
+		msg.setTimestamp(getSimulationTime());
 		assert(!msg.empty() && msg.getType() == MSG_SG_UPDATE);
 		_sendMessage(client, msg);
 		// TODO add frame and timestamp
 	}
 	else
 	{
+		// @todo create these here when needed so no need to reset
+		// time and frame number
+		// also minimises the overhead from useless creations
+		_msg_update.setFrame(_frame);
+		_msg_update.setTimestamp(getSimulationTime());
 		_sendMessage(client, _msg_update);
 	}
 }
@@ -708,7 +782,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 		case vl::cluster::MSG_FRAME_START :
 			// Move to rendering loop
 			// Not yet implemented
-			client.state.rendering = true;
+			//client.state.rendering = true;
 			// @todo this does not work for some reason
 			//assert( iter->state.rendering_state == CS_CLEAR );
 
@@ -730,10 +804,6 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 
 		case vl::cluster::MSG_DRAW :
 		{
-			// TODO all the clients in the rendering loop needs to be
-			// on the same state at this point so that they swap the same time
-			// change the state
-			client.state.set_rendering_state(CS_DRAW);
 		}
 		break;
 
@@ -769,6 +839,10 @@ vl::cluster::Server::_block_till_state(CLIENT_STATE cs,  ClientRefList clients, 
 		ClientRefList::iterator iter;
 		for( iter = clients.begin(); iter != clients.end(); ++iter )
 		{
+			/// Break the block if one of the clients has failed its rendering loop
+			if(!(*iter)->state.is_rendering())
+			{ return false; }
+			
 			if( !(*iter)->state.has_rendering_state(cs) )
 			{
 				ready = false;
@@ -796,7 +870,7 @@ vl::cluster::Server::_rendering( void )
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->state.rendering )
+		if(iter->state.is_rendering())
 		{ return true; }
 	}
 	return false;

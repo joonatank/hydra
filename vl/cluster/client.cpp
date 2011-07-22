@@ -41,7 +41,7 @@ vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::Clien
 void
 vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName, vl::MeshLoadedCallback *cb)
 {
-	std::clog << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : " << fileName << std::endl;
+	std::cout << vl::TRACE << "vl::cluster::SlaveMeshLoaderCallback::loadMesh : " << fileName << std::endl;
 	if(!owner)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
@@ -68,7 +68,7 @@ vl::cluster::ResourceMessageCallback::messageReceived(MessageRefPtr msg)
 	RESOURCE_TYPE type;
 	std::string name;
 	stream >> type >> name;
-	std::clog << "Resource type = " << type << " : name = " << name << std::endl;
+	std::cout << vl::TRACE << "Resource type = " << type << " : name = " << name << std::endl;
 
 	assert(type == RES_MESH);
 
@@ -144,7 +144,7 @@ vl::cluster::Client::isRunning(void)
 bool
 vl::cluster::Client::isRendering(void)
 {
-	return _state.rendering;
+	return _state.is_rendering();
 }
 
 void
@@ -165,7 +165,7 @@ vl::cluster::Client::mainloop(void)
 	// blocking function
 	if( !_state.environment && double(_request_timer.elapsed()) > 0.1 )
 	{
-		std::clog << "Sending another MSG_REG_UPDATES" << std::endl;
+		std::cout << vl::TRACE << "Sending another MSG_REG_UPDATES" << std::endl;
 		Message msg( MSG_REG_UPDATES, 0, vl::time() );
 		sendMessage(msg);
 		_request_timer.reset();
@@ -224,7 +224,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 	{
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
-			std::clog << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
+			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
 			/// Single environment supported
 			if( !_state.environment )
 			{
@@ -257,59 +257,112 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 		case vl::cluster::MSG_FRAME_START :
 		{
+			assert(_state.environment);
+			assert(_state.project);
 			/// @todo add checking for the server timestamp
-			Message msg(MSG_SG_UPDATE_READY, 0, vl::time());
 			// Not necessary for anything, should restart the frame though
 			// Oh might be also that we are getting messages in the wrong order, which would need timestamp support
 			//assert( !_state.rendering );
 			assert( _state.wants_render );
-			_state.rendering = true;
-			_rend_timer.reset();
+			//_state.rendering = true;
+			_state.frame = msg.getFrame();
 			_state.set_rendering_state(CS_UPDATE_READY);
-			sendMessage(msg);
+
+			Message reply(MSG_SG_UPDATE_READY, msg.getFrame(), vl::time());
+			sendMessage(reply);
 		}
 		break;
 
+		case vl::cluster::MSG_SG_INIT :
+			_renderer->initScene(msg);
+			_state.has_init = true;
+			/// @todo add reply
+			break;
+		
 		case vl::cluster::MSG_SG_UPDATE :
 		{
-			assert(_renderer.get());
-			_state.set_rendering_state(CS_UPDATE);
-			_renderer->handleMessage(msg);
-			Message msg(MSG_DRAW_READY, 0, vl::time());
-			sendMessage(msg);
+			uint32_t frame = 0;
+			if(_state.is_rendering())
+			{
+				assert(_state.environment);
+				assert(_state.project);
+				assert(_renderer.get());
+				// Send back either the current frame if valid or 0 for errors
+				
+				if(_state.frame == msg.getFrame())
+				{
+					if(!_state.has_rendering_state(CS_UPDATE_READY))
+					{ std::cout << vl::CRITICAL << "Client should update though it has invalid state." << std::endl; }
+
+					frame = _state.frame;
+					_state.set_rendering_state(CS_UPDATE);
+					_renderer->updateScene(msg);
+				}
+				else
+				{
+					std::cout << vl::TRACE << "Incorrect frame number to for MSG_SG_UPDATE : local frame = " 
+						<< _state.frame << " : remote frame = " << msg.getFrame() << std::endl;
+					_state.clear_rendering_state();
+				}
+			}
+			else if(!_state.has_init)
+			{
+				_renderer->initScene(msg);
+				_state.has_init = true;
+			}
+
+			Message reply(MSG_DRAW_READY, frame, vl::time());
+			sendMessage(reply);
 		}
 		break;
 
 		case vl::cluster::MSG_DRAW :
 		{
-			/// @todo move drawing to occure only if all the states required are
-			/// set, or should we?
-			_state.set_rendering_state(CS_DRAW);
-			assert(_renderer.get());
-			_renderer->draw();
-			_renderer->swap();
-			_renderer->capture();
-
-			// Done
-			_state.set_rendering_state(CS_DRAW_DONE);
-			_state.rendering = false;
-
-			/// Reply
-			Message msg(MSG_DRAW_DONE, 0, vl::time());
-			sendMessage(msg);
-			
-			/// Recond stats
-			/// Before first recording should reset the print timer
-			if( !_rend_report.has_number("Rendering ") )
-			{ _print_timer.reset(); }
-			_rend_report.get_number("Rendering ").push(_rend_timer.elapsed());
-
-			/// Print stats every ten seconds
-			if( _print_timer.elapsed() > vl::time(10) )
+			uint32_t frame = 0;
+			if(_state.is_rendering())
 			{
-				_rend_report.finish();
-				std::clog << _rend_report << std::endl;
-				_print_timer.reset();
+				assert(_state.environment);
+				assert(_state.project);
+				/// @todo move drawing to occure only if all the states required are
+				/// set, or should we?
+				assert(_renderer.get());
+				
+				if(_state.frame == msg.getFrame())
+				{
+					if(!_state.has_rendering_state(CS_UPDATE))
+					{ std::cout << vl::CRITICAL << "Client should render though it has invalid state." << std::endl; }
+					
+					frame = _state.frame;
+					_state.set_rendering_state(CS_DRAW);
+				}
+				else
+				{
+					std::cout << vl::TRACE << "Incorrect frame number for MSG_DRAW : local frame = " 
+						<< _state.frame << " : remote frame = " << msg.getFrame() << std::endl;
+					_state.clear_rendering_state();
+				}
+			}
+			Message reply(MSG_DRAWING, frame, 0);
+			sendMessage(reply);
+
+			if(_state.is_rendering())
+			{
+				if(!_state.has_rendering_state(CS_DRAW))
+				{ std::cout << vl::CRITICAL << "Client should render though it has invalid state." << std::endl; }
+
+				_renderer->draw();
+				_renderer->swap();
+				_renderer->capture();
+
+				// Done
+				_state.clear_rendering_state();
+
+				/// Removed printing of timing stats, they are incorrect anyway
+				/// because they measure draw calls which are async functions.
+
+				/// Reply
+				reply = Message(MSG_DRAW_DONE, frame, 0);
+				sendMessage(reply);
 			}
 		}
 		break;
@@ -324,23 +377,31 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			{
 				_state.project = true;
 				assert(_renderer.get());
-				_renderer->handleMessage(msg);
+				_renderer->setProject(msg);
 
 				// request rendering messages when initialised
-				Message msg(MSG_REG_RENDERING, 0, vl::time());
+				Message reply(MSG_REG_RENDERING, 0, vl::time());
 				_state.wants_render = true;
-				sendMessage(msg);
+				sendMessage(reply);
 			}
 		}
 		break;
 
 		case  vl::cluster::MSG_UNDEFINED :
-			std::clog << "ERROR : Undefined message should never be processed." << std::endl;
+			std::cout << vl::CRITICAL << "Undefined message should never be processed." << std::endl;
+			break;
+
+		case  vl::cluster::MSG_SG_CREATE :
+			assert(_renderer.get());
+			_renderer->createSceneNodes(msg);
+			break;
 
 		default:
 		{
-			assert(_renderer.get());
-			_renderer->handleMessage(msg);
+			std::cout << vl::CRITICAL << "Passing message with type = " << msg.getType()
+				<< " to renderer because it has no handler." << std::endl;
+//			assert(_renderer.get());
+//			_renderer->handleMessage(msg);
 		}
 		break;
 	}
@@ -422,7 +483,7 @@ vl::cluster::Client::_receive(void)
 						consumed = true;
 						if( !p_m->partial() )
 						{
-							std::clog << "Partial message with type = " 
+							std::cout << vl::TRACE << "Partial message with type = " 
 								<< getTypeAsString(p_m->getType()) << " id = " << p_m->getID()
 								<< " made whole." << std::endl;
 							msg = p_m;
@@ -446,7 +507,7 @@ vl::cluster::Client::_receive(void)
 			= _msg_callbacks.find(msg->getType());
 		if(iter != _msg_callbacks.end())
 		{
-			std::clog << "Callback found for message type : " << getTypeAsString(msg->getType())
+			std::cout << vl::TRACE << "Callback found for message type : " << getTypeAsString(msg->getType())
 				<< std::endl;
 			iter->second->messageReceived(msg);
 			msg.reset();
