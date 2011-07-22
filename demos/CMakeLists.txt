@@ -19,6 +19,10 @@ copy_start_scripts( hydra
 	"ogre" )
 
 copy_start_scripts( hydra
+	"eye_tracking_test_project/eye_tracking_test.prj"
+	"eye_tracking" )
+
+copy_start_scripts( hydra
 	light_test_project/light_test.prj
 	"light_test" )
 
