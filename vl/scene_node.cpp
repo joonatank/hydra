@@ -406,7 +406,9 @@ vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr paren
 void 
 vl::SceneNode::attachObject(vl::MovableObjectPtr obj)
 {
-	assert(obj);
+	if(!obj)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing object to attach.")); }
+
 	if( hasObject(obj) )
 	{ return; }
 	else
@@ -422,7 +424,9 @@ vl::SceneNode::attachObject(vl::MovableObjectPtr obj)
 void 
 vl::SceneNode::detachObject(vl::MovableObjectPtr obj)
 {
-	assert(obj);
+	if(!obj)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing object to detach.")); }
+
 	std::vector<vl::MovableObjectPtr>::iterator iter;
 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
@@ -442,7 +446,9 @@ vl::SceneNode::detachObject(vl::MovableObjectPtr obj)
 bool 
 vl::SceneNode::hasObject(vl::MovableObjectPtr obj) const
 {
-	assert(obj);
+	if(!obj)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing object to search for.")); }
+
 	std::vector<vl::MovableObjectPtr>::const_iterator iter;
 	for( iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
@@ -465,12 +471,12 @@ vl::SceneNode::createChildSceneNode(std::string const &name)
 void 
 vl::SceneNode::addChild(vl::SceneNodePtr child)
 {
-	assert(child);
+	if(!child)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing Child node to add.")); }
+
 
 	if( child == this )
-	{
-		BOOST_THROW_EXCEPTION( vl::this_pointer() );
-	}
+	{ BOOST_THROW_EXCEPTION( vl::this_pointer() ); }
 
 	if( !hasChild(child) )
 	{
@@ -513,11 +519,11 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 void 
 vl::SceneNode::removeChild(vl::SceneNodePtr child)
 {
-	assert(child);
+	if(!child)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing Child node to remove.")); }
+
 	if( child == this )
-	{
-		BOOST_THROW_EXCEPTION( vl::this_pointer() );
-	}
+	{ BOOST_THROW_EXCEPTION( vl::this_pointer() ); }
 
 	std::vector<vl::SceneNodePtr>::iterator iter;
 	for( iter = _childs.begin(); iter != _childs.end(); ++iter )
@@ -546,7 +552,9 @@ vl::SceneNode::removeChild(vl::SceneNodePtr child)
 bool 
 vl::SceneNode::hasChild(vl::SceneNodePtr child) const
 {
-	assert(child);
+	if(!child)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing Child node to search for.")); }
+
 	std::vector<vl::SceneNodePtr>::const_iterator iter;
 	for( iter = _childs.begin(); iter != _childs.end(); ++iter )
 	{

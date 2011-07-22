@@ -12,6 +12,8 @@
 
 #include "scene_node.hpp"
 
+#include "base/exceptions.hpp"
+
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Constraint const &c)
 {
@@ -32,8 +34,8 @@ vl::Constraint::Constraint(SceneNodePtr rbA, SceneNodePtr rbB, vl::Transform con
 	: _bodyA(rbA)
 	, _bodyB(rbB)
 {
-	assert(_bodyA);
-	assert(_bodyB);
+	if(!_bodyA || !_bodyB)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing a body.")); }
 
 	vl::Transform wtA(_bodyA->getWorldTransform());
 	wtA.invert();
@@ -48,7 +50,11 @@ vl::Constraint::Constraint(SceneNodePtr rbA, SceneNodePtr rbB, vl::Transform con
 void 
 vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 {
-	assert(!_link && link);
+	if(!link)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+	if(_link)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting a Link is not supported.")); }
+
 	_link = link;
 
 	// Shouldn't change parent's transformation

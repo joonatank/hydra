@@ -695,7 +695,6 @@ void
 vl::SceneManager::printBoundingBoxes(void)
 {
 	assert( _ogre_sm );
-	std::clog << "Printing bounding boxes." << std::endl;
 
 	Ogre::SceneManager::MovableObjectIterator iter = _ogre_sm->getMovableObjectIterator("Entity");
 	while( iter.hasMoreElements() )
@@ -825,13 +824,8 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitiv
 		if(asteriks)
 		{ name = name.substr(0, pos); }
 		
-		std::clog << "Test name = " << name << std::endl;
-		
 		if(find_name == name)
-		{
-			std::clog << "Found one node with name " << name << " : hiding it." << std::endl;
-			(*iter)->setVisible(false); 
-		}
+		{ (*iter)->setVisible(false); }
 	}
 }
 

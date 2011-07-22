@@ -717,13 +717,6 @@ vl::cluster::Server::_sendMessage(ClientInfo const &client, vl::cluster::Message
 	std::vector<char> buf;
 	std::vector<MessagePart> parts = msg.createParts();
 	
-	if(parts.size() > 1)
-	{
-		std::clog << "Sending message " << getTypeAsString(msg.getType()) << " ID "
-			<< msg.getID() << " in " << parts.size() << " parts "
-			<< " and size of the message " << msg.size() << " bytes." << std::endl;
-	}
-	
 	for(size_t i = 0; i < parts.size(); ++i)
 	{
 		parts.at(i).dump(buf);
