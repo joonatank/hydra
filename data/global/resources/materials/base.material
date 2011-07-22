@@ -77,6 +77,8 @@ material glass/blue : bling_phong/shadows/multi_pass
 //	set $specularCol "0 0 0"
 	set $shininess 250
 	set $depthWrite off
+	set $ambient_scene_blend "alpha_blend"
+	set $diffuse_scene_blend "alpha_blend"
 }
 
 material debug_red 
