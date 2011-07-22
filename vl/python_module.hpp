@@ -336,6 +336,10 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("direction", python::make_function( &vl::RayObject::getDirection, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setDirection)
 		.add_property("position", python::make_function( &vl::RayObject::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setPosition)
 		.add_property("material", python::make_function( &vl::RayObject::getMaterial, python::return_value_policy<python::copy_const_reference>() ), &vl::RayObject::setMaterial)
+		.add_property("length", &vl::RayObject::getLength, &vl::RayObject::setLength)
+		.add_property("sphere_radius", &vl::RayObject::getSphereRadius, &vl::RayObject::setSphereRadius)
+		.add_property("collision_detection", &vl::RayObject::getCollisionDetection, &vl::RayObject::setCollisionDetection)
+		.add_property("draw_collision_sphere", &vl::RayObject::getDrawCollisionSphere, &vl::RayObject::setDrawCollisionSphere)
 	;
 
 	python::enum_<TransformSpace>("TS")

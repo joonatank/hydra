@@ -55,7 +55,8 @@ set(SRC
 	constraints.cpp
 	constraint_solver.cpp
 	animation.cpp
-	ray_object.hpp
+	ray_object.cpp
+	ray_cast.cpp
 	)
 
 set(MATH_HEADERS
@@ -174,6 +175,7 @@ set( HEADERS
 	renderer_interface.hpp
 	application.hpp
 	ogre_root.hpp
+	math/types.hpp
 	distributed.hpp
 	constraints.hpp
 	constraint_solver.hpp
@@ -186,6 +188,8 @@ set(GUI_HEADERS
 	gui/gui.hpp
 	gui/gui_window.hpp
 	gui/gui_actions.hpp
+	ray_object.hpp
+	ray_cast.hpp
 	)
 
 set(GUI_SRC

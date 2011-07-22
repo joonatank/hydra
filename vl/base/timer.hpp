@@ -48,6 +48,11 @@ namespace vl
 struct time
 {
 	time(uint32_t s = 0, uint32_t us = 0);
+	
+	time(int s);
+
+	time(double s);
+
 	uint32_t sec;
 	uint32_t usec;
 

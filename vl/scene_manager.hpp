@@ -476,6 +476,14 @@ public :
 	/// @brief step the SceneManager does things like progression of automatic mappings
 	void _step(vl::time const &t);
 
+	/// @internal
+	/// @brief slave method for notifying the SceneManager that the frame is about to be rendered
+	void _notifyFrameStart(void);
+
+	/// @internal
+	/// @brief slave method for notifying the SceneManager that the frame has been rendered
+	void _notifyFrameEnd(void);
+
 private :
 	virtual void recaluclateDirties(void);
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;

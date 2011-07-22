@@ -42,6 +42,7 @@
 #include "math/conversion.hpp"
 #include "base/filesystem.hpp"
 #include "base/sleep.hpp"
+#include "base/timer.hpp"
 
 #include <vrpn_Tracker.h>
 
@@ -67,9 +68,9 @@ struct sensor_elem
 		transforms.push_back(std::make_pair(time, t) );
 	}
 
-	vl::Transform const &getOutput(double time)
+	vl::Transform const &getOutput(vl::time time)
 	{
-		double start = transforms.at(_last_index).first;
+		vl::time start = transforms.at(_last_index).first;
 		while( time > start )
 		{
 			// TODO this should interpolate
@@ -98,7 +99,7 @@ struct sensor_elem
 	}
 
 	/// Time - Transform pair
-	std::vector< std::pair<double, vl::Transform> > transforms;
+	std::vector< std::pair<vl::time, vl::Transform> > transforms;
 
 	size_t _last_index;
 };
@@ -158,16 +159,16 @@ public :
 			return;
 		}
 
-		double time = 0;
+		double t = 0;
 		int sensor = 0;
-		ss >> time >> sensor;
+		ss >> t >> sensor;
 		
 		double x = 0, y = 0, z = 0;
 		char ch;
 		ss >> x >> ch >> y >> ch >> z;
 		Ogre::Vector3 vec( x, y, z );
 
-		std::cerr << "Time parsed : time = " << time << std::endl;
+		std::cerr << "Time parsed : time = " << t << std::endl;
 		std::cerr << "Sensor parsed : sensor = " << sensor << std::endl;
 		std::cerr << "Vector parsed : vector = " << vec << std::endl;
 
@@ -194,8 +195,7 @@ public :
 		}
 
 		// For now time is stored as a double, in seconds
-		// The playback program uses milliseconds
-		_output.at(sensor).push_back( time/1000, vl::Transform( vec, quat ) );
+		_output.at(sensor).push_back( vl::time(t), vl::Transform( vec, quat ) );
 	}
 
 	void print( void ) const
@@ -209,9 +209,9 @@ public :
 
 	/// @brief retrieve the Transformation for particular sensor at a particular time
 	/// @param sensor which of the trackers sensors
-	/// @param time time in milliseconds
+	/// @param time current time for the output
 	/// Get stored transformation for a sensor at a time
-	vl::Transform const &getOutput(int sensor, double time)
+	vl::Transform const &getOutput(int sensor, vl::time time)
 	{
 		/// @todo replace with error throwing
 		assert( sensor < _output.size() );
@@ -317,11 +317,12 @@ public :
 		{
 			_output = new Output();
 		}
-		_time = 0;
 
 		std::cout << "Creating vrpn tracker with " << _output->nsensors() << " sensors." << std::endl;
 		_tracker = new vrpn_Tracker_Server(_name.c_str(), _connection, _output->nsensors() );
 		std::cout << "VRPN tracker created." << std::endl;
+
+		_timer.reset();
 	}
 
 	void mainloop( void )
@@ -329,14 +330,15 @@ public :
 		assert(_tracker);
 		assert(_output);
 
+		// Hard coded timeval
 		const int msecs = 8;
 		struct timeval t;
 		t.tv_sec = 0;
 		t.tv_usec = msecs*1e3;
 
-		for( int sensor = 0; sensor < _output->nsensors(); ++sensor )
+		for(int sensor = 0; sensor < _output->nsensors(); ++sensor)
 		{
-			vl::Transform const &trans = _output->getOutput(sensor, _time);
+			vl::Transform const &trans = _output->getOutput(sensor, _timer.elapsed());
 
 			vrpn_float64 pos[3];
 			vrpn_float64 quat[4];
@@ -349,7 +351,6 @@ public :
 			quat[Q_Y] = trans.quaternion.y;
 			quat[Q_Z] = trans.quaternion.z;
 
-			//		getHeadData(time, pos, quat);
 			_tracker->report_pose(sensor, t, pos, quat);
 		}
 
@@ -357,7 +358,6 @@ public :
 		_connection->mainloop();
 
 		vl::msleep(msecs);
-		_time += double(msecs);
 	}
 
 private :
@@ -368,7 +368,7 @@ private :
 
 	Output *_output;
 
-	double _time;
+	vl::timer _timer;
 	vrpn_Connection *_connection;
 	vrpn_Tracker_Server *_tracker;
 
