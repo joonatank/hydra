@@ -283,10 +283,6 @@ vl::Application::_render( uint32_t const frame )
 {
 	vl::timer timer;
 
-	// target FPS
-	// @todo should be configurable from EnvSettings
-	const double FPS = 60;
-
 	_master->render();
 
 	// time in milliseconds
@@ -297,7 +293,12 @@ vl::Application::_render( uint32_t const frame )
 	// Of course the next question is why the time is negative without rendering data
 	// i.e. why it would take more than 16.66ms for rendering a frame without data
 	// TODO the fps should be configurable
-	double sleep_time = 1000.0/FPS - t;
+	// We start with negative sleep_time so that we force instant context switch
+	double sleep_time = -1;
+	// Try to get the requested frame rate but avoid division by zero 
+	if( _fps > 0 )
+	{ sleep_time = 1000.0/_fps - t; }
+	
 	if( sleep_time > 0 )
 	{ vl::msleep( (uint32_t)sleep_time ); }
 	else	// Force context switching

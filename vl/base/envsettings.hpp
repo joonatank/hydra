@@ -471,6 +471,16 @@ public :
 	 */
 	std::string getEnvironementDir( void ) const;
 
+	/// @brief get and set the FPS limit used for this session
+	/// if zero FPS is not limited
+	/// Defaults to 60.
+	/// Only meaningful for the master as it controls the slaves.
+	uint32_t getFPS(void) const
+	{ return _fps; }
+
+	void setFPS(uint32_t fps)
+	{ _fps = fps; }
+
 	/// @brief the display number to use
 	/// Only useful for X11 for now and needs to be a valid X11 display
 	int display_n;
@@ -506,6 +516,8 @@ private :
 	vl::LogLevel _level;
 
 	std::string _log_dir;
+
+	uint32_t _fps;
 
 };	// class EnvSettings
 
@@ -553,6 +565,8 @@ protected :
 	void processNVSwapSync(rapidxml::xml_node<> *xml_node);
 
 	void processIPD(rapidxml::xml_node<> *xml_node);
+
+	void processFPS(rapidxml::xml_node<> *xml_node);
 
 	void _checkUniqueNode(rapidxml::xml_node<> *xml_node);
 
