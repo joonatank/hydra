@@ -69,7 +69,7 @@ light.position = Vector3(0, 20, 0)
 ground_node = game.scene.createSceneNode("ground")
 ground = game.scene.createEntity("ground", PF.PLANE)
 ground_node.attachObject(ground)
-ground.material_name = "ground/Basic"
+ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
 kiinnityslevy= game.scene.getSceneNode("cb_kiinnityslevy")

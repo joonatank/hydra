@@ -22,7 +22,6 @@ createCameraMovements(camera, speed=10)
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
 addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
-#game.scene.addToSelection(ogre)
 ogre.position = Vector3(0, 2.5, 0)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
@@ -116,9 +115,6 @@ ogre.addChild(lightpulp_n)
 ogre2 = ogre.clone()
 ogre2.translate(Vector3(0, 10, 0))
 
-#game.scene.addToSelection(ogre2)
-#athene.transform(m)
-
 def printSpotti():
 	Ts = spotti_n.world_transformation
 	# Don't try to copy the object, it uses references by default
@@ -137,10 +133,6 @@ text.colour = ColourValue(0, 1.0, 0)
 text_n = game.scene.createSceneNode('text')
 text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
-
-#game.scene.clearSelection()
-game.scene.addToSelection(ogre)
-#game.scene.addToSelection(text_n)
 
 eye_trigger_n = "glassesTrigger"
 if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
