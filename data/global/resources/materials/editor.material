@@ -27,7 +27,7 @@ import * from "normal_map.material"
 
 material editor/hehkulamppu_material : bling_phong/shadows/multi_pass
 {
-	set $emissiveCol "0.5 0.5 0.0 1.0"
+//	set $emissiveCol "0.5 0.5 0.0 1.0"
 	set $diffuseCol "0.64 0.64 0.64 1.0"
 	set $specularCol "0.7 0.7 0.7"
 	set $shininess "50"
