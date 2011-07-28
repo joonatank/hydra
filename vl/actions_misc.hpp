@@ -189,6 +189,25 @@ private :
 	SceneNodePtr _node;
 };
 
+class RecordRayAction : public TransformAction
+{
+public :
+	RecordRayAction(void)
+		: manager(0)
+	{}
+
+	virtual void execute(vl::Transform const &t);
+
+	virtual std::string getTypeName( void ) const
+	{ return "RemoveFromSelection"; }
+
+	static RecordRayAction *create( void )
+	{ return new RecordRayAction; }
+
+	SceneManagerPtr manager;
+};
+
+
 class ToggleMusic : public GameAction
 {
 public :

@@ -94,9 +94,7 @@ vl::GroupActionProxy::remAction( BasicActionPtr action )
 		// TODO throw
 	}
 	else
-	{
-		_actions.erase(iter);
-	}
+	{ _actions.erase(iter); }
 }
 
 bool
@@ -110,18 +108,51 @@ vl::GroupActionProxy::hasAction(vl::BasicActionPtr action) const
 	{ return true; }
 }
 
-vl::BasicActionPtr
-vl::GroupActionProxy::getAction(size_t i)
+void
+vl::GroupTransformActionProxy::execute(vl::Transform const &t)
 {
-	return _actions.at(i);
+	std::vector<TransformActionPtr>::iterator iter;
+	for( iter = _actions.begin(); iter != _actions.end(); ++iter )
+	{ (*iter)->execute(t); }
+
+	// Save for later use
+	_value = t;
 }
 
-size_t
-vl::GroupActionProxy::nActions(void) const
+void
+vl::GroupTransformActionProxy::addAction(vl::TransformActionPtr action)
 {
-	return _actions.size();
+	/// Silently ignored if trying to add the same action multiple times
+	if( !hasAction(action) )
+	{
+		_actions.push_back(action);
+		action->execute(_value);
+	}
 }
 
+void
+vl::GroupTransformActionProxy::remAction(vl::TransformActionPtr action)
+{
+	std::vector<TransformActionPtr>::iterator iter
+		= std::find( _actions.begin(), _actions.end(), action );
+	if( iter == _actions.end() )
+	{
+		// TODO throw
+	}
+	else
+	{ _actions.erase(iter); }
+}
+
+bool
+vl::GroupTransformActionProxy::hasAction(vl::TransformActionPtr action) const
+{
+	std::vector<TransformActionPtr>::const_iterator iter
+		= std::find( _actions.begin(), _actions.end(), action );
+	if( iter == _actions.end() )
+	{ return false; }
+	else
+	{ return true; }
+}
 
 /// ---------------------------- TimerAction -----------------------------------
 vl::TimerActionProxy::TimerActionProxy(void)

@@ -74,6 +74,17 @@ vl::RemoveFromSelection::execute( void )
 	data->removeFromSelection(_node);
 }
 
+void
+vl::RecordRayAction::execute(vl::Transform const &t)
+{
+	if(!manager)
+	{
+		BOOST_THROW_EXCEPTION( vl::null_pointer() );
+	}
+
+	manager->addRecordedRay(t);
+}
+
 /// -------- ToggleMusic ------------
 void
 vl::ToggleMusic::execute(void )

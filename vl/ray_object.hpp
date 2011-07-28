@@ -76,6 +76,13 @@ public :
 	bool getDrawCollisionSphere(void) const
 	{ return _draw_collision_sphere; }
 
+	/// @brief set if the ray is dynamically updated every frame
+	void setDynamic(bool dyn)
+	{ _dynamic = dyn; }
+
+	bool getDynamic(void) const
+	{ return _dynamic; }
+
 	/// @todo add thickness
 
 	virtual Ogre::MovableObject *getNative(void) const
@@ -126,6 +133,8 @@ private :
 	// @todo change to flags
 	bool _draw_collision_sphere;
 	bool _collision_detection;
+
+	bool _dynamic;
 
 	Ogre::ManualObject *_ogre_object;
 

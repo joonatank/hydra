@@ -254,7 +254,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
 		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
-
+		.add_property("show_recorded_rays", &vl::SceneManager::getShowRecordedRays, &vl::SceneManager::showRecordedRays)
+		
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
@@ -514,6 +515,10 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<BasicAction, boost::noncopyable, python::bases<Action> >("BasicAction", python::no_init )
 	;
 
+	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
+	;
+
+
 	// @todo add start state changing
 	python::class_<ToggleActionProxy, boost::noncopyable, python::bases<BasicAction> >("ToggleActionProxy", python::no_init )
 		.add_property("action_on", python::make_function( &ToggleActionProxy::getActionOn, python::return_value_policy< python::reference_existing_object>() ), &ToggleActionProxy::setActionOn)
@@ -537,6 +542,13 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
+	python::class_<vl::GroupTransformActionProxy, boost::noncopyable, python::bases<vl::TransformAction> >("GroupTransformActionProxy", python::no_init )
+		.def("add_action", &vl::GroupTransformActionProxy::addAction)
+		.def("rem_action", &vl::GroupTransformActionProxy::remAction)
+		.def("create", &GroupActionProxy::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+
 	python::class_<TimerActionProxy, boost::noncopyable, python::bases<BasicAction> >("TimerActionProxy", python::no_init )
 		.add_property("action", python::make_function( &TimerActionProxy::getAction, python::return_value_policy< python::reference_existing_object>() ), &TimerActionProxy::setAction )
 		.add_property("time_limit", &TimerActionProxy::getTimeLimit, &TimerActionProxy::setTimeLimit )
@@ -544,10 +556,6 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 	
-	python::class_<vl::TransformAction, boost::noncopyable, python::bases<Action> >("TransformAction", python::no_init )
-	;
-
-
 	// TODO try the Abstract classes out by overriding them in python
 	// NOTE Abstract wrappers seem to be needed for inheriting from these classes
 	// in python
@@ -569,7 +577,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
-		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
+		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ))
 	;
 	
 	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
@@ -639,7 +647,13 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<RemoveFromSelection, boost::noncopyable, python::bases<SceneManagerAction> >("RemoveFromSelection", python::no_init )
 		.add_property("scene_node", python::make_function( &RemoveFromSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &RemoveFromSelection::setSceneNode )
-		.def("create",&RemoveFromSelection::create, python::return_value_policy<python::reference_existing_object>() )
+		.def("create", &RemoveFromSelection::create, python::return_value_policy<python::reference_existing_object>() )
+		.staticmethod("create")
+	;
+	
+	python::class_<vl::RecordRayAction, boost::noncopyable, python::bases<vl::TransformAction> >("RecordRayAction", python::no_init )
+		.def_readwrite("scene", &vl::RecordRayAction::manager)
+		.def("create", &vl::RecordRayAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

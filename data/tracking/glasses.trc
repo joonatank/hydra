@@ -16,5 +16,10 @@
 				<trigger type="VRPN" name="fingerTrigger" />
 			</sensor>
 		</tracker>
+		<tracker name="eye">
+			<sensor num="0">
+				<trigger type="VRPN" name="eyeTrigger" />
+			</sensor>
+		</tracker>
 	</client>
 </clients>

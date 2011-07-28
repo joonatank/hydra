@@ -54,6 +54,19 @@ public :
 
 typedef BasicAction * BasicActionPtr;
 
+/// Callback Action class designed for Trackers
+/// Could be expanded for use with anything that sets the object transformation
+// For now the Tracker Triggers are the test case
+class TransformAction : public Action
+{
+public :
+	/// Callback function for TrackerTrigger
+	/// Called when new data is received from the tracker
+	virtual void execute( Transform const &data ) = 0;
+
+};
+
+typedef TransformAction * TransformActionPtr;
 
 /// Action proxy with two states: on and off
 /// Depending on the current state executes different a action
@@ -107,9 +120,7 @@ public :
 	void execute( void );
 
 	void addAction( BasicActionPtr action )
-	{
-		_buffer.push_back(action);
-	}
+	{ _buffer.push_back(action); }
 
 	void remAction( BasicActionPtr action );
 
@@ -141,9 +152,11 @@ public :
 
 	void remAction(BasicActionPtr action);
 
-	BasicActionPtr getAction(size_t i);
+	BasicActionPtr getAction(size_t i)
+	{ return _actions.at(i); }
 
-	size_t nActions(void) const;
+	size_t nActions(void) const
+	{ return _actions.size(); }
 
 	bool hasAction(BasicActionPtr action) const;
 
@@ -159,6 +172,41 @@ private :
 };	// GroupActionProxy
 
 typedef GroupActionProxy * GroupActionProxyPtr;
+
+class GroupTransformActionProxy : public TransformAction
+{
+public :
+	GroupTransformActionProxy(void) {}
+
+	void execute(vl::Transform const &t);
+
+	void addAction(TransformActionPtr action);
+
+	void remAction(TransformActionPtr action);
+
+	TransformActionPtr getAction(size_t i)
+	{ return _actions.at(i); }
+
+	size_t nActions(void) const
+	{ return _actions.size(); }
+
+	bool hasAction(TransformActionPtr action) const;
+
+	static GroupTransformActionProxy *create( void )
+	{ return new GroupTransformActionProxy; }
+
+	std::string getTypeName( void ) const
+	{ return "GroupTransformActionProxy"; }
+
+private :
+	std::vector<TransformActionPtr> _actions;
+
+	vl::Transform _value;
+
+};	// GroupTransformActionProxy
+
+typedef GroupTransformActionProxy * GroupTransformActionProxyPtr;
+
 
 /// Action proxy with a timer and time limit
 /// Depending on wether the enough time has passed since last activation
@@ -222,20 +270,6 @@ public :
 };
 
 typedef VectorAction *VectorActionPtr;
-
-/// Callback Action class designed for Trackers
-/// Could be expanded for use with anything that sets the object transformation
-// For now the Tracker Triggers are the test case
-class TransformAction : public Action
-{
-public :
-	/// Callback function for TrackerTrigger
-	/// Called when new data is received from the tracker
-	virtual void execute( Transform const &data ) = 0;
-
-};
-
-typedef TransformAction * TransformActionPtr;
 
 /// Convert a BasicAction to a FloatAction with a specific value
 class FloatActionMap : public BasicAction

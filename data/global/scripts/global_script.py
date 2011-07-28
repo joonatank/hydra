@@ -98,8 +98,8 @@ def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None) :
 def mapHeadTracker(name) :
 	act = HeadTrackerAction.create()
 	act.player = game.player
-	# Create a fake tracker trigger
-	if(not game.event_manager.hasTrackerTrigger(name)):
+	if not game.event_manager.hasTrackerTrigger(name):
+		print("Creating a fake tracker trigger")
 		tracker = Tracker.create("FakeHeadTracker")
 		tracker.n_sensors = 1
 		t = Transform(Vector3(0, 1.5, 0))
@@ -110,7 +110,7 @@ def mapHeadTracker(name) :
 		game.tracker_clients.addTracker(tracker)
 
 	trigger = game.event_manager.getTrackerTrigger(name)
-	trigger.action = act
+	trigger.action.add_action(act)
 
 
 # Fine using the new event interface

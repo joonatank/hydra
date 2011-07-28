@@ -108,7 +108,7 @@ vl::RayObject::setDrawCollisionSphere(bool enable)
 void
 vl::RayObject::_updateRay(void)
 {
-	if(_collision_detection)
+	if(_collision_detection && _dynamic)
 	{
 		// @todo get derived position from parent Node
 		Ogre::Vector3 result;
@@ -166,7 +166,8 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 
 	if(dirtyBits & DIRTY_PARAMS)
 	{
-		msg << _material << _length << _sphere_radius << _draw_collision_sphere << _collision_detection;
+		msg << _material << _length << _sphere_radius << _draw_collision_sphere 
+			<< _collision_detection << _dynamic;
 	}
 }
 
@@ -182,7 +183,8 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 
 	if(dirtyBits & DIRTY_PARAMS)
 	{
-		msg >> _material >> _length >> _sphere_radius >> _draw_collision_sphere >> _collision_detection;
+		msg >> _material >> _length >> _sphere_radius >> _draw_collision_sphere 
+			>> _collision_detection >> _dynamic;
 		dirty = true;
 	}
 
@@ -201,6 +203,7 @@ vl::RayObject::_clear(void)
 	_sphere_radius = 1;
 	_draw_collision_sphere = false;
 	_collision_detection = false;
+	_dynamic = true;
 	_ogre_object = 0;
 	_listener = 0;
 	_ray_cast = 0;

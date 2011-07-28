@@ -50,7 +50,7 @@ class BasicActionTrigger : public vl::Trigger
 public :
 	BasicActionTrigger(void);
 
-	/// Action to execute when updated
+	/// @brief Action to execute when updated, a group of multiple actions
 	/// Can not be replaced and will always exist
 	GroupActionProxyPtr getAction(void)
 	{ return _action; }
@@ -66,20 +66,18 @@ protected :
 class TransformActionTrigger : public vl::Trigger
 {
 public :
-	TransformActionTrigger( void );
+	TransformActionTrigger(void);
 
-	/// Action to execute when updated
-	// TODO there should be a stack of actions not just one of them
-	void setAction( TransformActionPtr action );
-
-	TransformActionPtr getAction( void )
+	/// @brief Action to execute when updated, a group of multiple actions
+	/// Can not be replaced and will always exist
+	GroupTransformActionProxyPtr getAction(void)
 	{ return _action; }
 
 	/// Callback function
-	void update( Transform const &data );
+	void update(Transform const &data);
 
 protected :
-	TransformActionPtr _action;
+	GroupTransformActionProxyPtr _action;
 
 	Transform _value;
 

@@ -393,7 +393,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 		case  vl::cluster::MSG_SG_CREATE :
 			assert(_renderer.get());
-			_renderer->createSceneNodes(msg);
+			_renderer->createSceneObjects(msg);
 			break;
 
 		default:

@@ -55,7 +55,7 @@ public :
 	
 	virtual void updateScene(vl::cluster::Message &msg) = 0;
 	
-	virtual void createSceneNodes(vl::cluster::Message &msg) = 0;
+	virtual void createSceneObjects(vl::cluster::Message &msg) = 0;
 	
 	virtual void print(vl::cluster::Message &msg) = 0;
 

@@ -62,7 +62,7 @@ l_node.position = Vector3(0, 30, 0)
 l_node.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 l_node.attachObject(l)
 
-eye_trigger_n = "glassesTrigger"
+eye_trigger_n = "eyeTrigger"
 if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	print("Adding eye tracker action")
 	ray = game.scene.createRayObject("ray", "finger_sphere/red")
@@ -79,11 +79,16 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	#camera.addChild(ray_n)
 	# Hard coded transform to show the ray object
 	ray_n.transformation = Transform(Vector3(0, 0.5, 0), Quaternion(0, 0, 0, 1))
+	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
+
+	# Create the current transformation showing
 	action = SetTransformation.create()
 	action.scene_node = ray_n
 
-	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
-	# TODO this will remove the head tracking action
-	# TODO this will override the ray_n transformation
-	#eye_trigger.action = action
+	eye_trigger.action.add_action(action)
+
+	# Create the recorder
+	action = RecordRayAction.create()
+	action.scene = game.scene
+	eye_trigger.action.add_action(action)
 

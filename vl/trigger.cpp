@@ -20,32 +20,16 @@ vl::BasicActionTrigger::update(void)
 
 /// ------------- TransformActionTrigger -----------------
 vl::TransformActionTrigger::TransformActionTrigger( void )
-	: _action(0)
+	: _action(new GroupTransformActionProxy)
 {}
-
-void 
-vl::TransformActionTrigger::setAction(vl::TransformActionPtr action)
-{
-	if( _action != action )
-	{
-		_action = action;
-
-		update(_value);
-	}
-}
 
 void
 vl::TransformActionTrigger::update(const vl::Transform& data)
 {
 	// Copy the data for futher reference
 	_value = data;
-	if( _action )
-	{
-		_action->execute(data);
-	}
+	_action->execute(data);
 }
-
-
 
 
 /// KeyTrigger Public

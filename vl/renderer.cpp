@@ -230,12 +230,10 @@ vl::Renderer::initScene(vl::cluster::Message& msg)
 }
 
 void
-vl::Renderer::createSceneNodes(vl::cluster::Message& msg)
+vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 {
 	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
 	
-	std::cout << vl::TRACE << "vl::Renderer::createSceneNodes" << std::endl;
-
 	size_t size;
 	assert( msg.size() >= sizeof(size) );
 

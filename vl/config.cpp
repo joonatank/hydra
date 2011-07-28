@@ -254,7 +254,7 @@ vl::Config::init( void )
 	if(_renderer.get())
 	{
 		vl::cluster::Message msg(_msg_create);
-		_renderer->createSceneNodes(msg);
+		_renderer->createSceneObjects(msg);
 		msg = createMsgInit();
 		_renderer->initScene(msg);
 	}
@@ -354,6 +354,7 @@ vl::Config::render( void )
 	{
 		_game_manager->getStats().update();
 		_stats_timer.reset();
+		std::clog << _game_manager->getStats() << std::endl;
 	}
 }
 
@@ -461,7 +462,7 @@ vl::Config::_updateRenderer(void)
 	if( !_msg_create.empty() )
 	{
 		vl::cluster::Message msg(_msg_create);
-		_renderer->createSceneNodes(msg);
+		_renderer->createSceneObjects(msg);
 	}
 
 	vl::cluster::Message msg(_msg_update);

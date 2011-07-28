@@ -194,6 +194,8 @@ vl::ShadowInfo::setColour(Ogre::ColourValue const &col)
 	}
 }
 
+std::string const RAY_PARENT_NAME = "RecordedRayParent";
+
 /// ------------------------------ SceneManager ------------------------------
 /// Public
 /// Master constructor
@@ -201,6 +203,8 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
+	, _recorded_rays_show(false)
+	, _ray_parent(0)
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
@@ -209,6 +213,8 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER);
 	_root = createFreeSceneNode("Root");
+	// @todo ray parent should star hidden
+	_ray_parent = _root->createChildSceneNode(RAY_PARENT_NAME);
 }
 
 /// Renderer constructor
@@ -216,6 +222,8 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	: _root(0)
 	, _scene_version(0)
 	, _ambient_light(0, 0, 0, 1)
+	, _recorded_rays_show(false)
+	, _ray_parent(0)
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
@@ -829,6 +837,47 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitiv
 	}
 }
 
+void
+vl::SceneManager::addRecordedRay(vl::Transform const &t)
+{
+	std::stringstream ss;
+	ss << "recorded_ray_" << _recorded_rays.size()-1;
+	// Add a ray object
+	// @todo fix the hard-coded material.
+	RayObjectPtr ray = static_cast<RayObjectPtr>(createRayObject(ss.str(), "finger_sphere/red"));
+
+	// @todo add parent for all rays
+	assert(_ray_parent);
+	_ray_parent->attachObject(ray);
+	ray->setDynamic(false);
+	ray->setPosition(t.position);
+	// @todo is this negative or positive?
+	ray->setDirection(t.quaternion*Ogre::Vector3::UNIT_Z);
+
+	_recorded_rays.push_back(ray);
+
+	// Only update slaves if the rays are visible
+	// Is this necessary? Do we really need the object list in the slaves?
+	// As we are already adding an object and creating the CREATE_MSG
+	// then syncing the object which is done automatically by UPDATE_MSG
+	/*
+	if(_recorded_rays_show)
+	{
+		setDirty(DIRTY_RECORDED_RAYS);
+	}
+	*/
+}
+
+void
+vl::SceneManager::showRecordedRays(bool show)
+{
+	if(show != _recorded_rays_show)
+	{
+		setDirty(DIRTY_RECORDED_RAYS);
+		_recorded_rays_show = show;
+	}
+}
+
 bool
 vl::SceneManager::isInSelection(SceneNode const *node) const
 {
@@ -895,6 +944,11 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	if(dirtyBits & DIRTY_SHADOW_INFO)
 	{
 		msg << _shadows;
+	}
+
+	if(dirtyBits & DIRTY_RECORDED_RAYS)
+	{
+		msg << _recorded_rays_show;
 	}
 }
 
@@ -1002,6 +1056,29 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// @todo make configurable
 		/// @todo add support for it in Shaders (just clip the shadow)
 		_ogre_sm->setShadowFarDistance(50);
+	}
+
+	if(dirtyBits & DIRTY_RECORDED_RAYS)
+	{
+		msg >> _recorded_rays_show;
+		
+		// Try to find the parent
+		if(!_ray_parent)
+		{
+			for(SceneNodeList::iterator iter = _scene_nodes.begin();
+				iter != _scene_nodes.end(); ++iter)
+			{
+				if((*iter)->getName() == RAY_PARENT_NAME)
+				{
+					_ray_parent = *iter;
+					break;
+				}
+			}
+		}
+
+		// @todo show hide them
+		if(_ray_parent)
+		{ _ray_parent->setVisible(_recorded_rays_show); }
 	}
 }
 

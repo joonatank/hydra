@@ -18,6 +18,8 @@
 
 #include "typedefs.hpp"
 
+#include "math/transform.hpp"
+
 namespace vl
 {
 
@@ -458,6 +460,14 @@ public :
 	/// so for example cb_*sp is equavivalent to cb_*
 	void hideSceneNodes(std::string const &pattern, bool caseInsensitive = true);
 	
+	/// @brief records a Transform which is used to generate a ray
+	void addRecordedRay(vl::Transform const &t);
+
+	void showRecordedRays(bool show);
+
+	bool getShowRecordedRays(void) const
+	{ return _recorded_rays_show; }
+
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -466,7 +476,8 @@ public :
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_BACKGROUND_COLOUR = vl::Distributed::DIRTY_CUSTOM << 4,
 		DIRTY_SHADOW_INFO = vl::Distributed::DIRTY_CUSTOM << 5,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_RECORDED_RAYS = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 7,
 	};
 
 	Ogre::SceneManager *getNative( void )
@@ -522,6 +533,10 @@ private :
 	Ogre::ColourValue _background_colour;
 
 	ShadowInfo _shadows;
+
+	std::vector<RayObjectPtr> _recorded_rays;
+	vl::SceneNodePtr _ray_parent;
+	bool _recorded_rays_show;
 
 	vl::Session *_session;
 

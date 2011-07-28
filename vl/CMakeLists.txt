@@ -180,6 +180,8 @@ set( HEADERS
 	constraints.hpp
 	constraint_solver.hpp
 	animation.hpp
+	ray_object.hpp
+	ray_cast.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})
@@ -188,8 +190,6 @@ set(GUI_HEADERS
 	gui/gui.hpp
 	gui/gui_window.hpp
 	gui/gui_actions.hpp
-	ray_object.hpp
-	ray_cast.hpp
 	)
 
 set(GUI_SRC

@@ -102,7 +102,7 @@ public :
 	
 	virtual void updateScene(vl::cluster::Message &msg);
 	
-	virtual void createSceneNodes(vl::cluster::Message &msg);
+	virtual void createSceneObjects(vl::cluster::Message &msg);
 	
 	virtual void print(vl::cluster::Message &msg);
 
