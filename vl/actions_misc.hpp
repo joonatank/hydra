@@ -193,18 +193,18 @@ class RecordRayAction : public TransformAction
 {
 public :
 	RecordRayAction(void)
-		: manager(0)
+		: ray(0)
 	{}
 
 	virtual void execute(vl::Transform const &t);
 
 	virtual std::string getTypeName( void ) const
-	{ return "RemoveFromSelection"; }
+	{ return "RecordRayAction"; }
 
 	static RecordRayAction *create( void )
 	{ return new RecordRayAction; }
 
-	SceneManagerPtr manager;
+	RayObjectPtr ray;
 };
 
 

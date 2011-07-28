@@ -38,6 +38,10 @@ public :
 	/// @brief Destructor
 	virtual ~RayObject(void);
 
+	/// @todo this is badly designed if position and direction are set separately
+	/// they are not recorded. Using this function will record the ray.
+	void setTransform(vl::Transform const &t);
+
 	void setPosition(Ogre::Vector3 const &pos);
 
 	Ogre::Vector3 const &getPosition(void) const
@@ -85,6 +89,13 @@ public :
 
 	/// @todo add thickness
 
+
+	void showRecordedRays(bool show);
+
+	bool getShowRecordedRays(void) const
+	{ return _recorded_rays_show; }
+
+	/// Virtual overrides
 	virtual Ogre::MovableObject *getNative(void) const
 	{ return _ogre_object; }
 
@@ -99,7 +110,9 @@ public :
 	{
 		DIRTY_TRANSFORM = vl::MovableObject::DIRTY_CUSTOM << 0,
 		DIRTY_PARAMS = vl::MovableObject::DIRTY_CUSTOM << 1,
-		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 2,
+		DIRTY_SHOW_RECORDER = vl::MovableObject::DIRTY_CUSTOM << 2,
+		DIRTY_RECORDING = vl::MovableObject::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 4,
 	};
 
 	/// @internal
@@ -118,6 +131,13 @@ private :
 
 	void _create(void);
 
+	// @todo this does not definitely work in real time as it clears the object
+	// it will also set dynamic off so that the new values will not override
+	// the currently drawn configuration
+	void _createRecordedRays(void);
+
+	void _record_ray(vl::Transform const &t);
+
 	void _generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point);
 
 	void _generateCollisionSphere(Ogre::Vector3 const &point);
@@ -135,6 +155,9 @@ private :
 	bool _collision_detection;
 
 	bool _dynamic;
+
+	std::vector<vl::Transform> _recorded_rays;
+	bool _recorded_rays_show;
 
 	Ogre::ManualObject *_ogre_object;
 

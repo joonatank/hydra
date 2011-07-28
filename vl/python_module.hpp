@@ -254,7 +254,6 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
 		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
-		.add_property("show_recorded_rays", &vl::SceneManager::getShowRecordedRays, &vl::SceneManager::showRecordedRays)
 		
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
@@ -341,6 +340,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("sphere_radius", &vl::RayObject::getSphereRadius, &vl::RayObject::setSphereRadius)
 		.add_property("collision_detection", &vl::RayObject::getCollisionDetection, &vl::RayObject::setCollisionDetection)
 		.add_property("draw_collision_sphere", &vl::RayObject::getDrawCollisionSphere, &vl::RayObject::setDrawCollisionSphere)
+		.add_property("show_recorded_rays", &vl::RayObject::getShowRecordedRays, &vl::RayObject::showRecordedRays)
+		// @todo add recording on/off switch
 	;
 
 	python::enum_<TransformSpace>("TS")
@@ -652,7 +653,7 @@ BOOST_PYTHON_MODULE(vl)
 	;
 	
 	python::class_<vl::RecordRayAction, boost::noncopyable, python::bases<vl::TransformAction> >("RecordRayAction", python::no_init )
-		.def_readwrite("scene", &vl::RecordRayAction::manager)
+		.def_readwrite("ray", &vl::RecordRayAction::ray)
 		.def("create", &vl::RecordRayAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;

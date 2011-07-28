@@ -76,6 +76,7 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	ray_n.attachObject(ray)
 	# Using the ogre object for easier visualization
 	ogre.addChild(ray_n)
+	"""
 	#camera.addChild(ray_n)
 	# Hard coded transform to show the ray object
 	ray_n.transformation = Transform(Vector3(0, 0.5, 0), Quaternion(0, 0, 0, 1))
@@ -86,9 +87,11 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	action.scene_node = ray_n
 
 	eye_trigger.action.add_action(action)
+	"""
+	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
 
 	# Create the recorder
 	action = RecordRayAction.create()
-	action.scene = game.scene
+	action.ray = ray
 	eye_trigger.action.add_action(action)
 

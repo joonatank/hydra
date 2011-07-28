@@ -463,11 +463,6 @@ public :
 	/// @brief records a Transform which is used to generate a ray
 	void addRecordedRay(vl::Transform const &t);
 
-	void showRecordedRays(bool show);
-
-	bool getShowRecordedRays(void) const
-	{ return _recorded_rays_show; }
-
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -533,10 +528,6 @@ private :
 	Ogre::ColourValue _background_colour;
 
 	ShadowInfo _shadows;
-
-	std::vector<RayObjectPtr> _recorded_rays;
-	vl::SceneNodePtr _ray_parent;
-	bool _recorded_rays_show;
 
 	vl::Session *_session;
 

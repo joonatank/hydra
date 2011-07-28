@@ -1,6 +1,6 @@
-/**	Joonatan Kuosa
- *	2010-11 initial implementation
- *
+/**	@author Joonatan Kuosa
+ *	@date 2010-11 initial implementation
+ *	@file actions_misc.cpp
  */
 
 #include "actions_misc.hpp"
@@ -8,6 +8,8 @@
 #include "scene_manager.hpp"
 #include "game_manager.hpp"
 #include "player.hpp"
+#include "ray_object.hpp"
+
 #include "python.hpp"
 
 /// ----------------------------- ScriptAction ---------------------------------
@@ -77,12 +79,12 @@ vl::RemoveFromSelection::execute( void )
 void
 vl::RecordRayAction::execute(vl::Transform const &t)
 {
-	if(!manager)
+	if(!ray)
 	{
 		BOOST_THROW_EXCEPTION( vl::null_pointer() );
 	}
 
-	manager->addRecordedRay(t);
+	ray->setTransform(t);
 }
 
 /// -------- ToggleMusic ------------

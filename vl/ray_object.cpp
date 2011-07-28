@@ -36,6 +36,14 @@ vl::RayObject::~RayObject(void)
 }
 
 void
+vl::RayObject::setTransform(vl::Transform const &t)
+{
+	_record_ray(t);
+	setPosition(t.position);
+	setDirection(t.quaternion*Ogre::Vector3::UNIT_Z);
+}
+
+void
 vl::RayObject::setPosition(Ogre::Vector3 const &pos)
 {
 	if(_position != pos)
@@ -106,6 +114,16 @@ vl::RayObject::setDrawCollisionSphere(bool enable)
 }
 
 void
+vl::RayObject::showRecordedRays(bool show)
+{
+	if(show != _recorded_rays_show)
+	{
+		setDirty(DIRTY_SHOW_RECORDER);
+		_recorded_rays_show = show;
+	}
+}
+
+void
 vl::RayObject::_updateRay(void)
 {
 	if(_collision_detection && _dynamic)
@@ -169,6 +187,21 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 		msg << _material << _length << _sphere_radius << _draw_collision_sphere 
 			<< _collision_detection << _dynamic;
 	}
+
+	if(dirtyBits & DIRTY_SHOW_RECORDER)
+	{
+		msg << _recorded_rays_show;
+	}
+
+	// This is really really slow if the program is run for multiple minutes
+	// we should use a divide system or an update system
+	// either divide the array to multiples or send only updates to the array
+	// we could also do a slow update where the array is only updated once every
+	// second or so.
+	if(dirtyBits & DIRTY_RECORDING)
+	{
+		msg << _recorded_rays;
+	}
 }
 
 void
@@ -188,9 +221,24 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		dirty = true;
 	}
 
+	if(dirtyBits & DIRTY_SHOW_RECORDER)
+	{
+		msg >> _recorded_rays_show;
+
+		dirty = true;
+	}
+
+	if(dirtyBits & DIRTY_SHOW_RECORDER)
+	{
+		msg >> _recorded_rays;
+	}
+
 	if(dirty && _ogre_object)
 	{
-		_create();
+		if(_recorded_rays_show)
+		{ _createRecordedRays(); }
+		else
+		{ _create(); }
 	}
 }
 
@@ -204,6 +252,7 @@ vl::RayObject::_clear(void)
 	_draw_collision_sphere = false;
 	_collision_detection = false;
 	_dynamic = true;
+	_recorded_rays_show = false;
 	_ogre_object = 0;
 	_listener = 0;
 	_ray_cast = 0;
@@ -211,7 +260,7 @@ vl::RayObject::_clear(void)
 
 void
 vl::RayObject::_create(void)
-{	
+{
 	// @todo add needs to calculate the number of vertices and indexes
 	// from the line and if we are using a sphere
 	// _ogre_object->estimateVertexCount((mNumRings+1)*(mNumSegments+1));
@@ -249,6 +298,41 @@ vl::RayObject::_create(void)
 	}
 
 	_ogre_object->setCastShadows(false);
+}
+
+void
+vl::RayObject::_createRecordedRays(void)
+{
+	std::clog << "vl::RayObject::_createRecordedRays : creating " << _recorded_rays.size() << " recorded rays." << std::endl;
+
+	assert(_ogre_object);
+	_ogre_object->clear();
+	for(std::vector<Transform>::iterator iter = _recorded_rays.begin();
+		iter != _recorded_rays.end(); ++iter)
+	{
+		Ogre::Vector3 direction = iter->quaternion*Ogre::Vector3::UNIT_Z;
+		Ogre::Vector3 start_position = iter->position;
+		Ogre::Vector3 end_position = start_position + (direction*_length); 
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
+		_generateLine(start_position, end_position);
+		_ogre_object->end();
+		// Draw the collision sphere
+		if(_draw_collision_sphere)
+		{
+			_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			_generateCollisionSphere(end_position);
+			_ogre_object->end();
+		}
+	}
+
+	setDynamic(false);
+}
+
+void
+vl::RayObject::_record_ray(vl::Transform const &t)
+{
+	_recorded_rays.push_back(t);
+	setDirty(DIRTY_RECORDING);
 }
 
 void
