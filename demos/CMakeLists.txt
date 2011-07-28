@@ -56,7 +56,12 @@ add_executable( fake_tracking_server
 
 target_link_libraries( fake_tracking_server ${HYDRA_LIBRARIES} )
 
-add_executable( vrpn_tracker_recorder vrpn_tracker_recorder.cpp )
+add_executable(vrpn_tracker_recorder 
+	vrpn_tracker_recorder.cpp
+	${vl_SOURCE_DIR}/vl/base/sleep.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	)
 
 target_link_libraries( vrpn_tracker_recorder ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 

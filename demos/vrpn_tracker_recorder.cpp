@@ -1,8 +1,13 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-04
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-04
+ *
+ *	@update 2011-07 - Extended for recording large sequenzes of VRPN data
  */
 
 /// @todo add tracker element with time support
+
+#include "base/timer.hpp"
+#include "base/sleep.hpp"
 
 #include <vrpn_Tracker.h>
 #include <quat.h>
@@ -16,10 +21,6 @@
 
 #include <boost/program_options.hpp>
 
-#ifndef _WIN32
-#include <time.h>
-#endif
-
 namespace po = boost::program_options;
 
 struct options
@@ -28,13 +29,15 @@ struct options
 		: file("default.log")
 	{}
 
-	void parseOptions( int argc, char **argv )
+	bool parseOptions( int argc, char **argv )
 	{
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help,h", "produce a help message")
 			("tracker,t",po::value<std::string>(), "tracker name to connect to, Tracker@host:port")
-			("file,f", po::value<std::string>(), "file to log")
+			("file,f", po::value<std::string>(&file)->default_value("vrpn_record.log"), "file to log")
+			("samples,s", po::value<int>(&samples)->default_value(0), "Samples to gather before exiting. Use zero for inifinite.")
+			("frequenzy", po::value<double>(&frequenzy)->default_value(60.0), "The frequenzy which to gather samples. Valid values greater than zero.")
 		;
 
 		// Parse command line
@@ -46,7 +49,7 @@ struct options
 		if( vm.count("help") )
 		{
 			std::cout << "Help : " << desc << "\n";
-			return;
+			return false;
 		}
 
 		if( vm.count("tracker") )
@@ -58,10 +61,27 @@ struct options
 		{
 			file = vm["file"].as<std::string>();
 		}
+
+		if( vm.count("samples") )
+		{
+			samples = vm["samples"].as<int>();
+		}
+
+		if( vm.count("frequenzy") )
+		{
+			frequenzy = vm["frequenzy"].as<double>();
+		}
+
+		// Needs to be greater than zero
+		frequenzy = frequenzy > 0 ? frequenzy : 1.0;
+
+		return true;
 	}
 
 	std::string tracker;
 	std::string file;
+	int samples;
+	double frequenzy;
 };
 
 struct sensor_elem
@@ -101,13 +121,14 @@ struct data
 	std::vector<sensor_elem> sensors;
 };
 
+vl::timer g_timer;
+
 std::ostream &
 operator<<(std::ostream &os, data const &d)
 {
 	for( size_t i = 0; i < d.sensors.size(); ++i )
 	{
-		// Print zero time for all now
-		os << 0 << '\t'
+		os << (double)g_timer.elapsed() << '\t'
 			<< i << '\t';
 		sensor_elem const &elem = d.sensors.at(i);
 		os << elem.position[Q_X] << "," << elem.position[Q_Y] << "," << elem.position[Q_Z] 
@@ -130,17 +151,31 @@ void handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 	d->add_sensor_data(t.sensor, t.pos, t.quat);
 }
 
+void mainloop(vrpn_Tracker_Remote *tkr, uint32_t sleep_time)
+{
+	// Purge all of the old reports
+	tkr->mainloop();
+
+	vl::msleep(sleep_time);
+}
+
 int main(int argc, char **argv)
 {
 	options opt;
-	opt.parseOptions(argc, argv);
-
-	// Open the tracker
+	if(!opt.parseOptions(argc, argv))
+	{ return 0; }
+	std::cout << "Options parsed." << std::endl;
 
 	if( opt.tracker.empty() )
 	{
 		std::cout << "Tracker name can not be empty." << std::endl;
-		return 0;
+		return -1;
+	}
+
+	if(opt.file.empty())
+	{
+		std::cout << "Output file can not be empty." << std::endl;
+		return -1;
 	}
 
 	std::cout << "Connecting to tracker " << opt.tracker << std::endl;
@@ -150,35 +185,51 @@ int main(int argc, char **argv)
 	data d;
 	tkr->register_change_handler((void *)&d, handle_tracker);
 
-	bool done = false;
-	while(!done) 
+	std::ofstream file(opt.file.c_str());
+	if(!file.is_open())
 	{
-		// Purge all of the old reports
-		tkr->mainloop();
-		
-		// Just the first input
-		if( !d.sensors.empty() )
-		{ done = true; }
-		
-#ifdef _WIN32
-		::Sleep(1);
-#else
-		timespec tv;
-		tv.tv_sec = 0;
-		tv.tv_nsec = 1e6;
-		::nanosleep( &tv, 0 );
-#endif
+		std::cerr << "Couldn't open file: " << opt.file << " for writing." << std::endl;
+		return -1;
 	}
 
-	assert(!opt.file.empty());
-	std::ofstream file(opt.file.c_str());
+	// Write the header for the file
 	file << "# time\t sensor\t position\t orientation" << std::endl
-		<< "# delimeter is tabulator, vector elements are separated with ','"
+		<< "# delimeter is tabulator, vector elements are separated with ','" << std::endl
+		<< "# time is a floating point, the absolute program time in seconds" << std::endl
 		<< "# sensor is an integer" << std::endl 
-		<< "# position is (x, y, z) vector" << std::endl
+		<< "# position is (x, y, z) vector in meters" << std::endl
 		<< "# orientation (w, x, y, z) quaternion" << std::endl;
 
-	file << d;
+	g_timer.reset();
+
+	// Sleep time in milliseconds
+	uint32_t sleep_time = 1;
+	double st = (double)(1000)/opt.frequenzy;
+	if(st < 0)
+	{ std::cerr << "ERROR: can not sleep negative time!" << std::endl; }
+	else
+	{ sleep_time = (uint32_t)st; }
+
+	if(opt.samples > 0)
+	{
+		int count = 0;
+		while(count < opt.samples) 
+		{
+			mainloop(tkr, sleep_time);
+			file << d;
+		}
+	}
+	// Infinite loop
+	else
+	{
+		while(true)
+		{
+			mainloop(tkr, sleep_time);
+			file << d;
+		}
+	}
+
+	delete tkr;
 
 	return 0;
 }
