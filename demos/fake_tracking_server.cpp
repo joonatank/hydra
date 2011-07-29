@@ -225,7 +225,7 @@ public :
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
-			("port,P", po::value<unsigned int>(), "VRPN server port.")
+			("port,P", po::value<int>(), "VRPN server port.")
 			("input-file,I", po::value<std::string>(), "Input file for the values to send.")
 			("name", po::value<std::string>(), "Name of the VRPN server.")
 		;
@@ -246,7 +246,7 @@ public :
 
 		if( vm.count("port") )
 		{
-			_port = vm["port"].as<unsigned int>();
+			_port = vm["port"].as<int>();
 		}
 		if( vm.count("input-file") )
 		{
@@ -328,7 +328,7 @@ public :
 	}
 
 private :
-	unsigned int _port;
+	int _port;
 	std::string _input_file;
 	std::string _name;
 

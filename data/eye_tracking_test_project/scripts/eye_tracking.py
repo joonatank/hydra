@@ -18,25 +18,55 @@ game.player.camera = "camera"
 
 addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
 
+"""
 ogre_ent = game.scene.createEntity("ogre", "ogre.mesh")
 ogre = game.scene.createSceneNode("ogre")
 ogre.attachObject(ogre_ent)
 ogre.position = Vector3(0, 2.5, 0)
+"""
+
+#game.scene.addToSelection(ogre)
 
 game.scene.sky = SkyDomeInfo("CloudySky")
 
-game.scene.addToSelection(ogre)
-
 # Create ground plane
-ground_length = 40;
+ground_length = 20;
 game.mesh_manager.createPlane("ground", ground_length, ground_length)
 ground_ent = game.scene.createEntity('ground', "ground", True)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
-# Shader material, with shadows
 ground_ent.material_name = 'ground/bump_mapped/shadows'
 ground_ent.cast_shadows = False
 
+# Create walls
+rot = Quaternion(0.7071, 0.7071, 0, 0)*Quaternion(0.7071, 0, 0.7071, 0)
+
+wall_ent = game.scene.createEntity('wall_left', "ground", True)
+wall_ent.material_name = 'ground/bump_mapped/shadows'
+wall_ent.cast_shadows = False
+wall_left = game.scene.createSceneNode('wall_left')
+wall_left.attachObject(wall_ent)
+wall_left.rotate(Quaternion(0.7071, 0, 0.7071, 0)*rot)
+wall_left.translate(Vector3(0, -10, 0))
+
+wall_ent = game.scene.createEntity('wall_front', "ground", True)
+wall_ent.material_name = 'ground/bump_mapped/shadows'
+wall_ent.cast_shadows = False
+wall_front = game.scene.createSceneNode('wall_front')
+wall_front.attachObject(wall_ent)
+wall_front.translate(Vector3(0, 0, -10))
+wall_front.rotate(rot)
+
+wall_ent = game.scene.createEntity('wall_right', "ground", True)
+wall_ent.material_name = 'ground/bump_mapped/shadows'
+wall_ent.cast_shadows = False
+wall_right = game.scene.createSceneNode('wall_right')
+wall_right.attachObject(wall_ent)
+#wall_right.rotate(Quaternion(0.7071, 0.7071, 0, 0)*Quaternion(0.7071, 0, 0.7071, 0))
+wall_right.rotate(Quaternion(-0.7071, 0, 0.7071, 0)*rot)
+wall_right.translate(Vector3(0, -10, 0))
+
+"""
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
 sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
@@ -44,6 +74,7 @@ sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
 sphere.scale = sphere.scale*0.003
 sphere_ent.cast_shadows = True
+"""
 
 athene = game.scene.createSceneNode("athene")
 # Testing the new Mesh Manager for loading meshes
@@ -66,7 +97,7 @@ eye_trigger_n = "eyeTrigger"
 if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	print("Adding eye tracker action")
 	ray = game.scene.createRayObject("ray", "finger_sphere/red")
-	ray.direction = Vector3(0, 0, 1)
+	ray.direction = Vector3(0, 0, -1)
 	ray.sphere_radius = 0.2
 	#ray.position = Vector3(0, 0, 10)
 	#ray.length = 20
@@ -76,12 +107,12 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	ray_n = game.scene.createSceneNode("ray")
 	ray_n.attachObject(ray)
 	# Using the ogre object for easier visualization
-	ogre.addChild(ray_n)
+	#ogre.addChild(ray_n)
+	camera.addChild(ray_n)
 
 	# Real time updater
-	#camera.addChild(ray_n)
 	# Hard coded transform to show the ray object
-	ray_n.transformation = Transform(Vector3(0, 0.5, 0), Quaternion(0, 0, 0, 1))
+	#ray_n.transformation = Transform(Vector3(0, 1.5, 0))
 	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
 
 	# Create the current transformation showing
