@@ -312,11 +312,6 @@ public :
 	EntityPtr createEntity(std::string const &name, 
 		std::string const &mesh_name, bool use_new_mesh_manager);
 
-	/// Internal
-	/// This should only be called on from slaves
-	/// This can not be private because it's called from the Renderer
-	EntityPtr _createEntity(uint64_t id);
-
 	bool hasEntity( std::string const &name ) const;
 
 	EntityPtr getEntity( std::string const &name ) const;
@@ -325,11 +320,6 @@ public :
 	/// --------- Light -------
 	LightPtr createLight(std::string const &name);
 
-	/// Internal
-	/// This should only be called on from slaves
-	/// This can not be private because it's called from the Renderer
-	LightPtr _createLight(uint64_t id);
-
 	bool hasLight(std::string const &name) const;
 
 	LightPtr getLight(std::string const &name) const;
@@ -337,11 +327,6 @@ public :
 
 	/// --------- Camera -------
 	CameraPtr createCamera(std::string const &name);
-
-	/// Internal
-	/// This should only be called on from slaves
-	/// This can not be private because it's called from the Renderer
-	CameraPtr _createCamera(uint64_t id);
 
 	bool hasCamera(std::string const &name) const;
 
@@ -352,15 +337,17 @@ public :
 
 	MovableTextPtr createMovableText(std::string const &name, std::string const &text);
 
-	/// @internal
-	/// This should only be called on from slaves
-	/// This can not be private because it's called from the Renderer
-	MovableTextPtr _createMovableText(uint64_t id);
+	bool hasMovableText(std::string const &name) const;
+
+	MovableTextPtr getMovableText(std::string const &name) const;
 
 
 	/// --------- RayObject ----------------
-	MovableObjectPtr createRayObject(std::string const &name, std::string const &material_name);
+	RayObjectPtr createRayObject(std::string const &name, std::string const &material_name);
 
+	bool hasRayObject(std::string const &name) const;
+
+	RayObjectPtr getRayObject(std::string const &name) const;
 
 	/// --------- MovableObject ------------
 	/// @brief Common creator for all the movable objects, extra params are passed using a param list

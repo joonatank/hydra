@@ -370,12 +370,6 @@ vl::SceneManager::createEntity(std::string const &name,
 	return static_cast<EntityPtr>(createMovableObject(OBJ_ENTITY, name, params));
 }
 
-vl::EntityPtr
-vl::SceneManager::_createEntity(uint64_t id)
-{
-	return static_cast<EntityPtr>(_createMovableObject("Entity", id));
-}
-
 bool 
 vl::SceneManager::hasEntity( std::string const &name ) const
 {
@@ -395,12 +389,6 @@ vl::SceneManager::createLight(std::string const &name)
 	return static_cast<LightPtr>(createMovableObject(OBJ_LIGHT, name));
 }
 
-vl::LightPtr
-vl::SceneManager::_createLight(uint64_t id)
-{
-	return static_cast<LightPtr>(_createMovableObject("Light", id));
-}
-
 bool 
 vl::SceneManager::hasLight(std::string const &name) const
 {
@@ -418,12 +406,6 @@ vl::CameraPtr
 vl::SceneManager::createCamera(std::string const &name)
 {
 	return static_cast<CameraPtr>(createMovableObject(OBJ_CAMERA, name));
-}
-
-vl::CameraPtr 
-vl::SceneManager::_createCamera(uint64_t id)
-{
-	return static_cast<CameraPtr>(_createMovableObject("Camera", id));
 }
 
 bool 
@@ -448,13 +430,19 @@ vl::SceneManager::createMovableText(std::string const &name, std::string const &
 	return obj;
 }
 
-vl::MovableTextPtr
-vl::SceneManager::_createMovableText(uint64_t id)
+bool
+vl::SceneManager::hasMovableText(std::string const &name) const
 {
-	return static_cast<MovableTextPtr>(_createMovableObject("MovableText", id));
+	return hasMovableObject("MovableText", name);
 }
 
-vl::MovableObjectPtr
+vl::MovableTextPtr
+vl::SceneManager::getMovableText(std::string const &name) const
+{
+	return static_cast<MovableTextPtr>(getMovableObject("MovableText", name));
+}
+
+vl::RayObjectPtr
 vl::SceneManager::createRayObject(std::string const &name, std::string const &material_name)
 {
 	vl::RayObjectPtr obj = static_cast<RayObjectPtr>(createMovableObject(OBJ_RAY_OBJECT, name));
@@ -463,6 +451,17 @@ vl::SceneManager::createRayObject(std::string const &name, std::string const &ma
 	return obj;
 }
 
+bool
+vl::SceneManager::hasRayObject(std::string const &name) const
+{
+	return hasMovableObject("RayObject", name);
+}
+
+vl::RayObjectPtr
+vl::SceneManager::getRayObject(std::string const &name) const
+{
+	return static_cast<RayObjectPtr>(getMovableObject("RayObject", name));
+}
 
 /// ------------------ SceneManager MovableObject ----------------------------
 vl::MovableObjectPtr 
