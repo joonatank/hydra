@@ -355,7 +355,6 @@ vl::Config::render( void )
 	{
 		_game_manager->getStats().update();
 		_stats_timer.reset();
-		std::clog << _game_manager->getStats() << std::endl;
 	}
 }
 

@@ -77,7 +77,8 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	ray_n.attachObject(ray)
 	# Using the ogre object for easier visualization
 	ogre.addChild(ray_n)
-	"""
+
+	# Real time updater
 	#camera.addChild(ray_n)
 	# Hard coded transform to show the ray object
 	ray_n.transformation = Transform(Vector3(0, 0.5, 0), Quaternion(0, 0, 0, 1))
@@ -88,15 +89,11 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	action.scene_node = ray_n
 
 	eye_trigger.action.add_action(action)
-	"""
-	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
 
-	# Create the recorder
-	# Removed
-	#action = RecordRayAction.create()
-	#action.ray = ray
-	#eye_trigger.action.add_action(action)
-
+	# Create recording visialisation
+	# Recording file needs to be in the project/global resources
+	# for it to be loaded.
 	rec = game.loadRecording("eye_tracker_test.log")
 	ray.recording = rec
+	#ray.show_recording = True
 

@@ -132,7 +132,6 @@ vl::RayObject::_updateRay(void)
 {
 	if(_collision_detection && _dynamic)
 	{
-		// @todo get derived position from parent Node
 		Ogre::Vector3 result;
 		Ogre::Vector3 ray_end = _position + (_direction*_length);
 		Ogre::Matrix4 t = _ogre_object->_getParentNodeFullTransform();
@@ -341,24 +340,52 @@ vl::RayObject::_createRecordedRays(void)
 	assert(_ogre_object);
 	_ogre_object->clear();
 
-	/// @todo this does not do collision detection which it most certainly needs to do
-	/// because it will not be modified like the real-time one
+	// Store the end positions for sphere creation
+	// Because we want the minimal number of separate segments
+	std::vector<Ogre::Vector3> ray_end_positions;
+
+	/// Create all the lines
+	_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
 	for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
 		iter != _recording->sensors.at(0).transforms.end(); ++iter)
 	{
 		Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
 		Ogre::Vector3 start_position = iter->second.position;
-		Ogre::Vector3 end_position = start_position + (direction*_length); 
-		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
-		_generateLine(start_position, end_position);
-		_ogre_object->end();
-		// Draw the collision sphere
-		if(_draw_collision_sphere)
+		Ogre::Vector3 end_position = start_position + (direction*_length);
+		
+		if(_collision_detection)
 		{
-			_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-			_generateCollisionSphere(end_position);
-			_ogre_object->end();
+			Ogre::Vector3 result;
+			//Ogre::Vector3 ray_end = _position + (_direction*_length);
+			Ogre::Matrix4 t = _ogre_object->_getParentNodeFullTransform();
+			Ogre::Vector3 translate;
+			Ogre::Vector3 scale;
+			Ogre::Quaternion q;
+			t.decomposition(translate, scale, q);
+			if(_ray_cast->raycastFromPoint(translate+q*start_position, q*direction, result))
+			{
+				// Remove parents transformation as the collision detection 
+				// is done in the World space
+				end_position = t.inverse() * result;
+			}
 		}
+
+		_generateLine(start_position, end_position);
+		ray_end_positions.push_back(end_position);
+	}
+	_ogre_object->end();
+
+	// Draw the collision spheres
+	if(_draw_collision_sphere)
+	{
+		uint32_t index = 0;
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		for(std::vector<Ogre::Vector3>::iterator iter = ray_end_positions.begin();
+			iter != ray_end_positions.end(); ++iter)
+		{
+			index = _generateCollisionSphere(*iter, index);
+		}
+		_ogre_object->end();
 	}
 
 	setDynamic(false);
@@ -367,20 +394,19 @@ vl::RayObject::_createRecordedRays(void)
 void
 vl::RayObject::_generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point)
 {
+	// Does not need indexes
 	_ogre_object->position(start_point);
-	_ogre_object->index(0);
 	_ogre_object->position(end_point);
-	_ogre_object->index(1);
 }
 
-void
-vl::RayObject::_generateCollisionSphere(Ogre::Vector3 const &point)
+uint32_t
+vl::RayObject::_generateCollisionSphere(Ogre::Vector3 const &point, uint32_t start_index)
 {
 	// Generate the sphere mesh
 	// using a 512 tri mesh for the sphere
 	uint16_t numRings = 16;
 	uint16_t numSegments = 16;
-	int offset = 0;
+	int offset = start_index;
 	// Note the less than equal for sphere generation
 	for(uint16_t ring = 0; ring <= numRings; ++ring)
 	{
@@ -411,6 +437,8 @@ vl::RayObject::_generateCollisionSphere(Ogre::Vector3 const &point)
 			}
 		}
 	}
+
+	return offset;
 }
 
 void

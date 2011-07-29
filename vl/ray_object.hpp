@@ -139,7 +139,11 @@ private :
 
 	void _generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point);
 
-	void _generateCollisionSphere(Ogre::Vector3 const &point);
+	void _generateCollisionSphere(Ogre::Vector3 const &point)
+	{ _generateCollisionSphere(point, 0); }
+
+	/// @brief version that can start from any index and also returns the end index
+	uint32_t _generateCollisionSphere(Ogre::Vector3 const &point, uint32_t start_index);
 
 	Ogre::Vector3 _direction;
 	Ogre::Vector3 _position;
