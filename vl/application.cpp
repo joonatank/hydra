@@ -220,7 +220,7 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
 
 	// We should hand over the Renderer to either client or config
-	vl::RendererInterfacePtr renderer( new Renderer(env->getName()) );
+	vl::RendererUniquePtr renderer( new Renderer(env->getName()) );
 
 	if( env->isMaster() )
 	{

@@ -51,6 +51,8 @@ public :
 
 	void loadMeshResource(std::string const &name, vl::Resource &data);
 
+	void loadRecording(std::string const &name, vl::Resource &data);
+
 	/// Resource path management
 	
 	/**	@brief Add a resource path to the resource search paths

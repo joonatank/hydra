@@ -125,6 +125,20 @@ vl::ResourceManager::loadMeshResource(std::string const &name, vl::Resource &dat
 	_loadResource(mesh_name, file_path, data);
 }
 
+void
+vl::ResourceManager::loadRecording(std::string const &name, vl::Resource &data)
+{
+	std::cout << vl::TRACE << "Loading Recording " << name << std::endl;
+
+	// Doesn't have an extension so we assume the name olready has one
+	
+	std::string file_path;
+	if( !findResource(name, file_path) )
+	{ BOOST_THROW_EXCEPTION( vl::missing_resource() << vl::resource_name(name) ); }
+
+	_loadResource(name, file_path, data);
+}
+
 bool
 vl::ResourceManager::findResource(const std::string& name, std::string& path) const
 {

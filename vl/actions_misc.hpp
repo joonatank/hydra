@@ -189,25 +189,6 @@ private :
 	SceneNodePtr _node;
 };
 
-class RecordRayAction : public TransformAction
-{
-public :
-	RecordRayAction(void)
-		: ray(0)
-	{}
-
-	virtual void execute(vl::Transform const &t);
-
-	virtual std::string getTypeName( void ) const
-	{ return "RecordRayAction"; }
-
-	static RecordRayAction *create( void )
-	{ return new RecordRayAction; }
-
-	RayObjectPtr ray;
-};
-
-
 class ToggleMusic : public GameAction
 {
 public :

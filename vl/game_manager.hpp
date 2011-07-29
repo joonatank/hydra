@@ -141,7 +141,7 @@ public :
 	PlayerPtr getPlayer(void)
 	{ return _player; }
 
-	ResourceManagerRefPtr getReourceManager(void)
+	ResourceManagerRefPtr getResourceManager(void)
 	{ return _resource_man; }
 
 	EventManagerPtr getEventManager(void)
@@ -278,6 +278,7 @@ public :
 	GAME_STATE getState(void) const
 	{ return _state; }
 
+	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// Project handling
 	/// @todo should the file already be loaded or not?

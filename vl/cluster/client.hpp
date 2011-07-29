@@ -63,21 +63,25 @@ struct SlaveMeshLoaderCallback : public MeshLoaderCallback
 
 };	// class SlaveMeshLoaderCallback
 
+class Client;
+
 /// @brief callback structure for Waiting for certain type of message
 struct ClientMessageCallback
 {
+	ClientMessageCallback(Client *c);
+
 	virtual void messageReceived(MessageRefPtr msg) = 0;
+	
+	Client *client;
 };
 
 /// @brief callback for Resource Messages
 /// Only supports Mesh types for now
 struct ResourceMessageCallback : public ClientMessageCallback
 {
-	ResourceMessageCallback(MeshManager *man);
+	ResourceMessageCallback(Client *client);
 
 	virtual void messageReceived(MessageRefPtr msg);
-
-	MeshManager *manager;
 };
 
 
@@ -85,7 +89,7 @@ struct ResourceMessageCallback : public ClientMessageCallback
 class Client
 {
 public:
-	Client( char const *hostname, uint16_t port, vl::RendererInterfacePtr rend );
+	Client( char const *hostname, uint16_t port, vl::RendererUniquePtr rend );
 
 	virtual ~Client(void);
 
@@ -111,8 +115,11 @@ public:
 
 	void addMessageCallback(MSG_TYPES type, ClientMessageCallback *cb);
 
-	vl::MeshManagerRefPtr getMeshManager(void)
+	vl::MeshManagerRefPtr getMeshManager(void) const
 	{ return _renderer->getMeshManager(); }
+
+	vl::RendererPtr getRenderer(void) const
+	{ return _renderer.get(); }
 
 private :
 	void _handle_message(vl::cluster::Message &msg);
@@ -136,7 +143,7 @@ private :
 
 	vl::timer _request_timer;
 
-	vl::RendererInterfacePtr _renderer;
+	vl::RendererUniquePtr _renderer;
 
 	std::vector<vl::Callback *> _callbacks;
 

@@ -70,6 +70,7 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	ray.sphere_radius = 0.2
 	#ray.position = Vector3(0, 0, 10)
 	#ray.length = 20
+	# Doesn't affect performance that much if the spheres are on or off
 	ray.draw_collision_sphere = True
 	ray.collision_detection = True
 	ray_n = game.scene.createSceneNode("ray")
@@ -91,7 +92,11 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	eye_trigger = game.event_manager.getTrackerTrigger(eye_trigger_n)
 
 	# Create the recorder
-	action = RecordRayAction.create()
-	action.ray = ray
-	eye_trigger.action.add_action(action)
+	# Removed
+	#action = RecordRayAction.create()
+	#action.ray = ray
+	#eye_trigger.action.add_action(action)
+
+	rec = game.loadRecording("eye_tracker_test.log")
+	ray.recording = rec
 

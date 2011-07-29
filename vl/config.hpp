@@ -76,7 +76,7 @@ public:
 	Config( vl::Settings const &settings,
 			vl::EnvSettingsRefPtr env,
 			vl::Logger &logger,
-			vl::RendererInterfacePtr rend );
+			vl::RendererUniquePtr rend );
 
 	virtual ~Config (void);
 
@@ -182,7 +182,7 @@ protected :
 	bool _running;
 
 	// Renderer
-	RendererInterfacePtr _renderer;
+	RendererUniquePtr _renderer;
 
 	// Update messages for this frame
 	vl::cluster::Message _msg_create;

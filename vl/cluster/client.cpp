@@ -55,9 +55,13 @@ vl::cluster::SlaveMeshLoaderCallback::loadMesh(std::string const &fileName, vl::
 	owner->sendMessage(reg_msg);
 }
 
-vl::cluster::ResourceMessageCallback::ResourceMessageCallback(MeshManager *man)
-	: manager(man)
-{ assert(manager); }
+vl::cluster::ClientMessageCallback::ClientMessageCallback(Client *c)
+	: client(c)
+{ assert(client); }
+
+vl::cluster::ResourceMessageCallback::ResourceMessageCallback(Client *client)
+	: ClientMessageCallback(client)
+{}
 
 void
 vl::cluster::ResourceMessageCallback::messageReceived(MessageRefPtr msg)
@@ -70,17 +74,21 @@ vl::cluster::ResourceMessageCallback::messageReceived(MessageRefPtr msg)
 	stream >> type >> name;
 	std::cout << vl::TRACE << "Resource type = " << type << " : name = " << name << std::endl;
 
-	assert(type == RES_MESH);
+	if(type == RES_MESH)
+	{
+		vl::MeshRefPtr mesh(new vl::Mesh(name));
+		stream >> (*mesh);
 
-	vl::MeshRefPtr mesh(new vl::Mesh(name));
-	stream >> (*mesh);
-
-	manager->meshLoaded(name, mesh);
+		assert(client && client->getMeshManager());
+		client->getMeshManager()->meshLoaded(name, mesh);
+	}
+	else
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknow Resource type.")); }
 }
 
 /// ------------------------------ Client -------------------------------------
 vl::cluster::Client::Client( char const *hostname, uint16_t port,
-							 vl::RendererInterfacePtr rend )
+							 vl::RendererUniquePtr rend )
 	: _io_service()
 	, _socket( _io_service )
 	, _master()
@@ -100,7 +108,7 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(this);
 	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
 	_renderer->setMeshManager(mesh_man);
-	addMessageCallback(MSG_RESOURCE, new ResourceMessageCallback(mesh_man.get()));
+	addMessageCallback(MSG_RESOURCE, new ResourceMessageCallback(this));
 
 	std::stringstream ss;
 	ss << port;
@@ -387,15 +395,15 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		}
 		break;
 
-		case  vl::cluster::MSG_UNDEFINED :
+		case vl::cluster::MSG_UNDEFINED :
 			std::cout << vl::CRITICAL << "Undefined message should never be processed." << std::endl;
 			break;
 
-		case  vl::cluster::MSG_SG_CREATE :
+		case vl::cluster::MSG_SG_CREATE :
 			assert(_renderer.get());
 			_renderer->createSceneObjects(msg);
 			break;
-
+		
 		default:
 		{
 			std::cout << vl::CRITICAL << "Passing message with type = " << msg.getType()

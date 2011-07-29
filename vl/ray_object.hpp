@@ -35,12 +35,13 @@ public :
 	/// @brief Slave constructor
 	RayObject(vl::SceneManagerPtr creator);
 
+	void setRecording(RecordingRefPtr rec);
+
+	RecordingRefPtr getRecording(void) const
+	{ return _recording; }
+
 	/// @brief Destructor
 	virtual ~RayObject(void);
-
-	/// @todo this is badly designed if position and direction are set separately
-	/// they are not recorded. Using this function will record the ray.
-	void setTransform(vl::Transform const &t);
 
 	void setPosition(Ogre::Vector3 const &pos);
 
@@ -136,8 +137,6 @@ private :
 	// the currently drawn configuration
 	void _createRecordedRays(void);
 
-	void _record_ray(vl::Transform const &t);
-
 	void _generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point);
 
 	void _generateCollisionSphere(Ogre::Vector3 const &point);
@@ -156,7 +155,7 @@ private :
 
 	bool _dynamic;
 
-	std::vector<vl::Transform> _recorded_rays;
+	RecordingRefPtr _recording;
 	bool _recorded_rays_show;
 
 	Ogre::ManualObject *_ogre_object;

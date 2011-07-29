@@ -63,7 +63,9 @@ namespace vl
 
 	// Auto ptr because Renderer has a single owner
 	// usually created elsewhere and passed to Config or Client
-	typedef std::auto_ptr<RendererInterface> RendererInterfacePtr;
+	// Normal pointer for callbacks
+	typedef RendererInterface *RendererPtr;
+	typedef std::auto_ptr<RendererInterface> RendererUniquePtr;
 
 	typedef Player * PlayerPtr;
 	// Can not be scoped ptr as config owns it but PythonContext needs access to it
@@ -88,6 +90,9 @@ namespace vl
 
 	typedef boost::shared_ptr<Mesh> MeshRefPtr;
 	typedef boost::shared_ptr<MeshManager> MeshManagerRefPtr;
+
+	class Recording;
+	typedef boost::shared_ptr<Recording> RecordingRefPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;

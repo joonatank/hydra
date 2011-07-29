@@ -57,6 +57,8 @@
 #include "input/joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 
+#include "recording.hpp"
+
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 {
@@ -133,6 +135,10 @@ BOOST_PYTHON_MODULE(vl)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::Recording, vl::RecordingRefPtr, boost::noncopyable>("Recording", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -153,6 +159,7 @@ BOOST_PYTHON_MODULE(vl)
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
+		.def("loadRecording", &vl::GameManager::loadRecording)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;
@@ -230,22 +237,23 @@ BOOST_PYTHON_MODULE(vl)
 		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
 		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasEntity", &SceneManager::hasEntity )
 		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov2, python::return_value_policy<python::reference_existing_object>() )
 		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasCamera", &SceneManager::hasCamera)
+		.def("hasEntity", &SceneManager::hasEntity)
 		.def("createCamera", &SceneManager::createCamera, python::return_value_policy<python::reference_existing_object>() )
 		.def("getCamera", &SceneManager::getCamera, python::return_value_policy<python::reference_existing_object>() )
-		.def("hasLight", &SceneManager::hasLight)
+		.def("hasCamera", &SceneManager::hasCamera)
 		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasLight", &SceneManager::hasLight)
 		.def("createMovableText", &SceneManager::createMovableText, python::return_value_policy<python::reference_existing_object>() )
-		/// @todo add getter functions for movable text
+		.def("getMovableText", &SceneManager::getMovableText, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasMovableText", &SceneManager::hasMovableText)
 		.def("createRayObject", &SceneManager::createRayObject, python::return_value_policy<python::reference_existing_object>() )
-		// @todo add getters for ray object
-
+		.def("getRayObject", &SceneManager::getRayObject, python::return_value_policy<python::reference_existing_object>() )
+		.def("hasRayObject", &SceneManager::hasRayObject)
 
 		/// Scene parameters
 		/// returns copies of the objects
@@ -340,8 +348,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("sphere_radius", &vl::RayObject::getSphereRadius, &vl::RayObject::setSphereRadius)
 		.add_property("collision_detection", &vl::RayObject::getCollisionDetection, &vl::RayObject::setCollisionDetection)
 		.add_property("draw_collision_sphere", &vl::RayObject::getDrawCollisionSphere, &vl::RayObject::setDrawCollisionSphere)
-		.add_property("show_recorded_rays", &vl::RayObject::getShowRecordedRays, &vl::RayObject::showRecordedRays)
-		// @todo add recording on/off switch
+		.add_property("show_recording", &vl::RayObject::getShowRecordedRays, &vl::RayObject::showRecordedRays)
+		.add_property("recording", &vl::RayObject::getRecording, &vl::RayObject::setRecording)
 	;
 
 	python::enum_<TransformSpace>("TS")
@@ -649,12 +657,6 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<RemoveFromSelection, boost::noncopyable, python::bases<SceneManagerAction> >("RemoveFromSelection", python::no_init )
 		.add_property("scene_node", python::make_function( &RemoveFromSelection::getSceneNode, python::return_value_policy< python::reference_existing_object>() ), &RemoveFromSelection::setSceneNode )
 		.def("create", &RemoveFromSelection::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-	
-	python::class_<vl::RecordRayAction, boost::noncopyable, python::bases<vl::TransformAction> >("RecordRayAction", python::no_init )
-		.def_readwrite("ray", &vl::RecordRayAction::ray)
-		.def("create", &vl::RecordRayAction::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 

@@ -131,6 +131,7 @@ enum EVENT_TYPES
 enum RESOURCE_TYPE
 {
 	RES_MESH,
+	RES_RECORDING,		// Recorded data that should be drawn
 };
 
 inline

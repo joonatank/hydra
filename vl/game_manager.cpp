@@ -31,6 +31,8 @@
 // Input devices
 #include "input/input.hpp"
 
+#include "recording.hpp"
+
 vl::GameManager::GameManager(vl::Logger *logger)
 	: _python(0)
 	, _resource_man(new vl::ResourceManager)
@@ -167,17 +169,17 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	if( !isAudioEnabled() )
 	{ return; }
 
-	assert( getReourceManager() );
+	assert(getResourceManager());
 
 	//Create an audio source and load a sound from a file
 	std::string file_path;
 
-	if( getReourceManager()->findResource( song_name, file_path ) )
+	if(getResourceManager()->findResource(song_name, file_path))
 	{
 		vl::Resource resource;
-		getReourceManager()->loadOggResource( song_name, resource );
+		getResourceManager()->loadOggResource( song_name, resource );
 		_background_sound = _audio_manager
-			->createFromMemory("The_Dummy_Song", resource.get(), resource.size(), "ogg" );
+			->createFromMemory(song_name.c_str(), resource.get(), resource.size(), "ogg");
 	}
 	else
 	{
@@ -302,13 +304,26 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 	return true;
 }
 
+vl::RecordingRefPtr
+vl::GameManager::loadRecording(std::string const &path)
+{
+	std::cout << vl::TRACE << "vl::GameManager::loadRecording" << std::endl;
+	vl::Resource resource;
+	getResourceManager()->loadRecording(path, resource);
+
+	RecordingRefPtr rec(new Recording(path));
+	rec->read(resource);
+
+	return rec;
+}
+
 void
 vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
 	vl::TextResource resource;
-	getReourceManager()->loadResource(scene_info.getFile(), resource);
+	getResourceManager()->loadResource(scene_info.getFile(), resource);
 
 	// Default to false for now
 	bool use_mesh = false;

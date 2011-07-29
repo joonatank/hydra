@@ -16,6 +16,8 @@
 
 #include "cluster/message.hpp"
 
+#include "recording.hpp"
+
 #include <OGRE/OgreSceneManager.h>
 
 /// ----------------------------- Public -------------------------------------
@@ -36,11 +38,13 @@ vl::RayObject::~RayObject(void)
 }
 
 void
-vl::RayObject::setTransform(vl::Transform const &t)
+vl::RayObject::setRecording(RecordingRefPtr rec)
 {
-	_record_ray(t);
-	setPosition(t.position);
-	setDirection(t.quaternion*Ogre::Vector3::UNIT_Z);
+	if(rec != _recording)
+	{
+		setDirty(DIRTY_RECORDING);
+		_recording = rec;
+	}
 }
 
 void
@@ -200,7 +204,10 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	// second or so.
 	if(dirtyBits & DIRTY_RECORDING)
 	{
-		msg << _recorded_rays;
+		if(!_recording)
+		{ msg << false; }
+		else
+		{ msg << true << *_recording; }
 	}
 }
 
@@ -224,18 +231,30 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	if(dirtyBits & DIRTY_SHOW_RECORDER)
 	{
 		msg >> _recorded_rays_show;
-
-		dirty = true;
+		
+		if(_recording)
+		{ dirty = true; }
 	}
 
-	if(dirtyBits & DIRTY_SHOW_RECORDER)
+	if(dirtyBits & DIRTY_RECORDING)
 	{
-		msg >> _recorded_rays;
+		bool valid;
+		msg >> valid;
+		
+		if(valid)
+		{
+			if(!_recording)
+			{ _recording.reset(new Recording); }
+			msg >> *_recording;
+
+			if(_recorded_rays_show)
+			{ dirty = true; }
+		}
 	}
 
 	if(dirty && _ogre_object)
 	{
-		if(_recorded_rays_show)
+		if(_recorded_rays_show && _recording)
 		{ _createRecordedRays(); }
 		else
 		{ _create(); }
@@ -300,18 +319,35 @@ vl::RayObject::_create(void)
 	_ogre_object->setCastShadows(false);
 }
 
+/// @todo performance issues because creates N*2 manual object sections 
+/// where N is the number of recorded rays.
+/// We should instead use just two sections one for lines and one for triangle lists
+/// We need to fix indexing for the triangle lists for this to work though.
 void
 vl::RayObject::_createRecordedRays(void)
 {
-	std::clog << "vl::RayObject::_createRecordedRays : creating " << _recorded_rays.size() << " recorded rays." << std::endl;
+	std::clog << "vl::RayObject::_createRecordedRays" << std::endl;
+
+	if(!_recording)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Something really wrong with recording pointer.")); }
+
+	// Empty recording
+	if(_recording->sensors.size() == 0)
+	{ return; }
+
+	std::clog << "vl::RayObject::_createRecordedRays : creating " 
+		<< _recording->sensors.at(0).transforms.size() << " recorded rays." << std::endl;
 
 	assert(_ogre_object);
 	_ogre_object->clear();
-	for(std::vector<Transform>::iterator iter = _recorded_rays.begin();
-		iter != _recorded_rays.end(); ++iter)
+
+	/// @todo this does not do collision detection which it most certainly needs to do
+	/// because it will not be modified like the real-time one
+	for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
+		iter != _recording->sensors.at(0).transforms.end(); ++iter)
 	{
-		Ogre::Vector3 direction = iter->quaternion*Ogre::Vector3::UNIT_Z;
-		Ogre::Vector3 start_position = iter->position;
+		Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
+		Ogre::Vector3 start_position = iter->second.position;
 		Ogre::Vector3 end_position = start_position + (direction*_length); 
 		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
 		_generateLine(start_position, end_position);
@@ -326,13 +362,6 @@ vl::RayObject::_createRecordedRays(void)
 	}
 
 	setDynamic(false);
-}
-
-void
-vl::RayObject::_record_ray(vl::Transform const &t)
-{
-	_recorded_rays.push_back(t);
-	setDirty(DIRTY_RECORDING);
 }
 
 void

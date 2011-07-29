@@ -115,7 +115,7 @@ vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE t
 vl::Config::Config( vl::Settings const & settings,
 					vl::EnvSettingsRefPtr env,
 					vl::Logger &logger,
-					vl::RendererInterfacePtr rend)
+					vl::RendererUniquePtr rend)
 	: _game_manager( new vl::GameManager(&logger) )
 	, _proj(settings)
 	, _env(env)
@@ -232,7 +232,7 @@ vl::Config::init( void )
 	{
 		// Load the python scripts
 		vl::TextResource script_resource;
-		_game_manager->getReourceManager()->loadResource( scripts.at(i), script_resource );
+		_game_manager->getResourceManager()->loadResource( scripts.at(i), script_resource );
 		_game_manager->getPython()->addScript(scripts.at(i), script_resource, true);
 	}
 
@@ -274,6 +274,7 @@ vl::Config::init( void )
 //	_server->block_till_initialised();
 	_server->poll();
 
+	// Start
 	_game_manager->play();
 }
 
@@ -582,7 +583,7 @@ vl::Config::_createTrackers(vl::EnvSettingsRefPtr settings)
 	{
 		// Read a file
 		vl::TextResource resource;
-		_game_manager->getReourceManager()->loadResource( *iter, resource );
+		_game_manager->getResourceManager()->loadResource(*iter, resource);
 
 		vl::TrackerSerializer ser( clients );
 		ser.parseTrackers(resource);
@@ -635,7 +636,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 	std::vector<std::string> paths = settings.getAuxDirectories();
 	paths.push_back(settings.getProjectDir());
 	for( size_t i = 0; i < paths.size(); ++i )
-	{ _game_manager->getReourceManager()->addResourcePath( paths.at(i) ); }
+	{ _game_manager->getResourceManager()->addResourcePath( paths.at(i) ); }
 
 	// TODO add case directory
 
@@ -643,7 +644,7 @@ vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSetting
 	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
 	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
 	if( fs::is_directory(tracking_path) )
-	{ _game_manager->getReourceManager()->addResourcePath( tracking_path.string() ); }
+	{ _game_manager->getResourceManager()->addResourcePath( tracking_path.string() ); }
 }
 
 /// Event Handling

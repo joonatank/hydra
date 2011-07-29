@@ -20,6 +20,7 @@ set(SRC
 	settings.cpp
 	ogre_xml_helpers.cpp
 	resource.cpp
+	recording.cpp
 	game_manager.cpp
 	player.cpp
 	dotscene_loader.cpp
@@ -153,6 +154,7 @@ set( HEADERS
 	stats.hpp
 	typedefs.hpp
 	resource.hpp
+	recording.hpp
 	resource_manager.hpp
 	dotscene_loader.hpp
 	action.hpp
