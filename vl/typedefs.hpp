@@ -23,49 +23,43 @@
 namespace vl
 {
 	typedef std::map<std::string, std::string> NamedParamList;
+	
+	class Window;
 
-	// Forward declarations
+	/// Settings
 	class Settings;
 	class EnvSettings;
 	class ProjSettings;
-	class Player;
-	class GameManager;
-	class EventManager;
-	class ResourceManager;
-	class PythonContext;
-	
-	class Window;
-	
-	class Sensor;
-	class Tracker;
-	class Clients;
-
-	class SceneManager;
-	class SceneNode;
-	class MovableObject;
-	class RendererInterface;
-	class Config;
-	class Entity;
-	class Light;
-	class Camera;
-	class MovableText;
-	class RayObject;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
-	typedef boost::shared_ptr< EnvSettings > EnvSettingsRefPtr;
-	typedef boost::shared_ptr< ProjSettings > ProjSettingsRefPtr;
+	typedef boost::shared_ptr<EnvSettings> EnvSettingsRefPtr;
+	typedef boost::shared_ptr<ProjSettings> ProjSettingsRefPtr;
 	
-	// Tracker objects
-	typedef boost::shared_ptr<Sensor> SensorRefPtr;
-	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
-	typedef boost::shared_ptr<Clients> ClientsRefPtr;
-	typedef boost::shared_ptr<Config> ConfigRefPtr;
+	class RendererInterface;
+	class Config;
 
+	typedef boost::shared_ptr<Config> ConfigRefPtr;
 	// Auto ptr because Renderer has a single owner
 	// usually created elsewhere and passed to Config or Client
 	// Normal pointer for callbacks
 	typedef RendererInterface *RendererPtr;
 	typedef std::auto_ptr<RendererInterface> RendererUniquePtr;
+
+	// Tracker objects
+	class Sensor;
+	class Tracker;
+	class Clients;
+
+	typedef boost::shared_ptr<Sensor> SensorRefPtr;
+	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
+	typedef boost::shared_ptr<Clients> ClientsRefPtr;
+
+
+	class Player;
+	class GameManager;
+	class EventManager;
+	class ResourceManager;
+	class PythonContext;
 
 	typedef Player * PlayerPtr;
 	// Can not be scoped ptr as config owns it but PythonContext needs access to it
@@ -76,6 +70,16 @@ namespace vl
 	typedef boost::shared_ptr<ResourceManager> ResourceManagerRefPtr;
 	typedef PythonContext * PythonContextPtr;
 
+	/// SceneObjects
+	class SceneManager;
+	class SceneNode;
+	class MovableObject;
+	class Entity;
+	class Light;
+	class Camera;
+	class MovableText;
+	class RayObject;
+
 	typedef SceneManager * SceneManagerPtr;
 	typedef SceneNode * SceneNodePtr;
 	typedef MovableObject * MovableObjectPtr;
@@ -85,6 +89,7 @@ namespace vl
 	typedef MovableText * MovableTextPtr;
 	typedef RayObject * RayObjectPtr;
 
+	/// Resources
 	class Mesh;
 	class MeshManager;
 

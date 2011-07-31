@@ -116,7 +116,7 @@ vl::Config::Config( vl::Settings const & settings,
 					vl::EnvSettingsRefPtr env,
 					vl::Logger &logger,
 					vl::RendererUniquePtr rend)
-	: _game_manager( new vl::GameManager(&logger) )
+	: _game_manager(0)
 	, _proj(settings)
 	, _env(env)
 	, _server()
@@ -127,6 +127,8 @@ vl::Config::Config( vl::Settings const & settings,
 	assert( _env );
 	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+
+	_game_manager = new vl::GameManager(this, &logger);
 
 	/// Server can be created here because the callback is only called
 	/// when the Server has environment and project
@@ -143,8 +145,6 @@ vl::Config::Config( vl::Settings const & settings,
 	}
 
 	_createResourceManager( settings, env );
-
-	_game_manager->createSceneManager(this);
 
 	_renderer->setMeshManager(_game_manager->getMeshManager());
 }
@@ -191,20 +191,9 @@ vl::Config::init( void )
 	t.reset();
 
 	// Create the player necessary for Trackers
-	vl::PlayerPtr player = _game_manager->createPlayer();
-
-	assert( player );
+	vl::PlayerPtr player = _game_manager->getPlayer();
+	assert(player);
 	player->setIPD(_env->getIPD());
-
-	// Registering Player in init
-	// TODO move this to do an automatic registration similar to SceneManager
-	registerObject( player, OBJ_PLAYER );
-
-	vl::gui::GUIRefPtr gui(new vl::gui::GUI(this));
-	_game_manager->setGUI(gui);
-
-	vl::SceneManager *sm = _game_manager->getSceneManager();
-	assert( sm );
 
 	std::cout << "Registering gui, scene manager and player took : "
 		<<  t.elapsed() << std::endl;

@@ -20,6 +20,8 @@
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
 #include "logger.hpp"
 
+const char *vl::EDITOR_CAMERA = "editor/perspective";
+
 namespace
 {
 
@@ -209,6 +211,16 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER);
 	_root = createFreeSceneNode("Root");
+
+	SceneNodePtr camera = _root->createChildSceneNode(EDITOR_CAMERA);
+	CameraPtr cam = createCamera(EDITOR_CAMERA);
+	camera->attachObject(cam);
+	// @todo the position and orientation should be such that it can see the whole scene
+	// this needs bounding box calculations which are not available in the master copy
+	camera->setPosition(Ogre::Vector3(0, 3, 15));
+	// @todo we need some nice way of moving the camera
+	// we could use the state system, when the state is EDITOR the camera movements are
+	// applied to editor camera otherwise they are passed to the user processing
 }
 
 /// Renderer constructor

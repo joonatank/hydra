@@ -33,8 +33,9 @@
 
 #include "recording.hpp"
 
-vl::GameManager::GameManager(vl::Logger *logger)
-	: _python(0)
+vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
+	: _session(session)
+	, _python(0)
 	, _resource_man(new vl::ResourceManager)
 	, _event_man(new vl::EventManager)
 	, _scene_manager(0)
@@ -47,6 +48,9 @@ vl::GameManager::GameManager(vl::Logger *logger)
 	, _state(GS_UNKNOWN)
 	, _constraint_solver(new vl::ConstraintSolver)
 {
+	if(!_session || !_logger)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
 
@@ -70,21 +74,6 @@ vl::GameManager::~GameManager(void )
 	delete _scene_manager;
 	delete _python;
 	delete _event_man;
-}
-
-void
-vl::GameManager::createSceneManager( vl::Session *session )
-{
-	assert( !_scene_manager );
-	_scene_manager = new vl::SceneManager(session, _mesh_manager);
-}
-
-vl::PlayerPtr
-vl::GameManager::createPlayer( void )
-{
-	assert( !_player );
-	_player = new Player();
-	return _player;
 }
 
 void
@@ -262,6 +251,7 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 	case GS_INIT:
 		if(_state != GS_UNKNOWN)
 		{ return false; }
+		_init();
 		_state = GS_INIT;
 		break;
 
@@ -307,6 +297,9 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 vl::RecordingRefPtr
 vl::GameManager::loadRecording(std::string const &path)
 {
+	if(!isInited())
+	{ BOOST_THROW_EXCEPTION(vl::invalid_game_state()); }
+
 	std::cout << vl::TRACE << "vl::GameManager::loadRecording" << std::endl;
 	vl::Resource resource;
 	getResourceManager()->loadRecording(path, resource);
@@ -320,6 +313,9 @@ vl::GameManager::loadRecording(std::string const &path)
 void
 vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 {
+	if(!isInited())
+	{ BOOST_THROW_EXCEPTION(vl::invalid_game_state()); }
+
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
 	vl::TextResource resource;
@@ -340,6 +336,41 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 	loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
+}
+
+/// ------------------------------ Private -----------------------------------
+void
+vl::GameManager::_init(void)
+{
+	// Create the distributed objects
+	_createSceneManager();
+	_createPlayer();
+
+	assert(_session);
+	assert(!_gui);
+	_gui.reset(new vl::gui::GUI(_session));
+}
+
+vl::SceneManagerPtr
+vl::GameManager::_createSceneManager(void)
+{
+	assert(!_scene_manager);
+	assert(_mesh_manager && _session);
+	_scene_manager = new vl::SceneManager(_session, _mesh_manager);
+	return _scene_manager;
+}
+
+vl::PlayerPtr
+vl::GameManager::_createPlayer(void)
+{
+	assert(!_player);
+	assert(_scene_manager);
+	_player = new Player(_scene_manager);
+	// Registering Player in init
+	// TODO move this to do an automatic registration similar to SceneManager
+	_session->registerObject(_player, OBJ_PLAYER);
+
+	return _player;
 }
 
 void

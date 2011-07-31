@@ -23,6 +23,8 @@
 namespace vl
 {
 
+extern const char *EDITOR_CAMERA;
+
 enum FogMode
 {
 	FOG_NONE,
@@ -371,6 +373,10 @@ public :
 	bool hasMovableObject(vl::OBJ_TYPE, std::string const &name) const;
 
 	bool hasMovableObject(std::string const &type, std::string const &name) const;
+
+	/// ---------------------- Editor objects --------------------------------
+	CameraPtr getEditorCamera(void)
+	{ return getCamera(EDITOR_CAMERA); }
 
 	/// --------- List access -------
 	SceneNodeList const &getSceneNodeList(void) const

@@ -114,6 +114,14 @@ namespace vl
 		}
 	};
 
+	struct invalid_game_state : public exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Game state was invalid for this function.";
+		}
+	};
+	
 	/// Event object creation using Factories
 
 	/// No registered factory for the object name

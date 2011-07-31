@@ -252,8 +252,9 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			case OBJ_PLAYER :
 			{
 				std::cout << vl::TRACE << "Creating Player with ID : " << id << std::endl;
-				// TODO fix the constructor
-				vl::Player *player = new vl::Player;
+				// @todo replace asserts with throwing
+				assert(_scene_manager);
+				vl::Player *player = new vl::Player(_scene_manager);
 				mapObject(player, id);
 				
 				// Only single instances are supported for now
@@ -313,7 +314,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_SCENE_NODE :
 			{
-				assert( _scene_manager );
+				assert(_scene_manager);
 				_scene_manager->_createSceneNode(id);
 			}
 			break;
@@ -547,9 +548,11 @@ vl::Renderer::_updateDistribData( void )
 			}
 			else
 			{
-				std::string message = "vl::Window : New camera name set, but NO camera found";
-				std::cout << message << std::endl;
-				Ogre::LogManager::getSingleton().logMessage( message );
+				// Throws because this should be already checked when the camera
+				// is set to player.
+				std::string error_msg(std::string("New camera name set, but NO \"")
+					+ cam_name + std::string("\" camera found"));
+				BOOST_THROW_EXCEPTION(vl::item_not_found() << vl::desc(error_msg));
 			}
 		}
 

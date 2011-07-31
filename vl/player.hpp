@@ -1,8 +1,9 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file player.hpp
  *
  *	Player class
- *	Manages the player in the Game world
+ *	Manages the player or observer in the Game world
  *	Contains current active camera
  *	Contains current camera target
  *	Contains all the possible cameras player can use and their targets
@@ -17,15 +18,16 @@
  *	Removed dependency to Equalizer.
  */
 
-#ifndef VL_PLAYER_HPP
-#define VL_PLAYER_HPP
+#ifndef HYDRA_PLAYER_HPP
+#define HYDRA_PLAYER_HPP
 
 #include <string>
 
-#include "math/math.hpp"
 #include "math/transform.hpp"
 
 #include "distributed.hpp"
+
+#include "typedefs.hpp"
 
 namespace vl
 {
@@ -33,8 +35,9 @@ namespace vl
 class Player : public vl::Distributed
 {
 public :
-	/// Constructor
-	Player( void );
+	/// @brief Constructor
+	/// @param scene_manager used for retrieving the camera
+	Player(SceneManagerPtr scene_manager);
 
 	virtual ~Player( void );
 
@@ -83,6 +86,8 @@ private :
 	uint32_t _screenshot_version;
 
 	double _ipd;
+
+	SceneManagerPtr _scene_manager;
 
 };	// class Player
 

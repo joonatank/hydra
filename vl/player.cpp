@@ -1,26 +1,39 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file player.cpp
+ *
  */
+
 #include "player.hpp"
 
-#include "math/conversion.hpp"
+// Necessary for retrieving the camera
+#include "scene_manager.hpp"
 
-// TODO we should pass the active camera to this, so it's not arbitary
-vl::Player::Player( void )
-	: _screenshot_version(0)
+vl::Player::Player(SceneManagerPtr scene_manager)
+	: _active_camera(EDITOR_CAMERA)
+	, _screenshot_version(0)
 	, _ipd(0)
+	, _scene_manager(scene_manager)
 {}
 
 vl::Player::~Player( void )
 {}
 
 void
-vl::Player::setActiveCamera( std::string const &name )
+vl::Player::setActiveCamera(std::string const &name)
 {
-	if( _active_camera != name )
+	if(_active_camera != name)
 	{
-		_active_camera = name;
-		setDirty( DIRTY_ACTIVE_CAMERA );
+		if(_scene_manager->hasCamera(name))
+		{
+			_active_camera = name;
+			setDirty(DIRTY_ACTIVE_CAMERA);
+		}
+		else
+		{
+			std::cout << "Couldn't set active camera because Camera \""
+				<< name << "\" doesn't exists." << std::endl;
+		}
 	}
 }
 

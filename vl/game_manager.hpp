@@ -111,13 +111,15 @@ struct Date
 	uint16_t min;
 };
 
+// Only one state can be active at a time
+// Do not change the order Init needs to be lower than other states
 enum GAME_STATE
 {
-	GS_UNKNOWN,
-	GS_INIT,
-	GS_PLAY,
-	GS_PAUSE,
-	GS_QUIT,
+	GS_UNKNOWN = 0,	// Starting state
+	GS_INIT = 1,	// Game initialised
+	GS_PLAY = 2,	// Game played
+	GS_PAUSE = 3,	// Game paused
+	GS_QUIT = 4,	// Game quited
 };
 
 /** @class GameManager
@@ -126,14 +128,13 @@ class GameManager
 {
 public :
 	/// @brief constructor
+	/// @param session the distributed session where to register objects to
 	/// @param logger an instance of Logging class where all logging is redirected
 	/// this one should usually be the only one
 	/// @todo add passing of the exe directory (for python modules)
-	GameManager(vl::Logger *logger);
+	GameManager(vl::Session *session, vl::Logger *logger);
 
 	virtual ~GameManager( void );
-
-	void createSceneManager( vl::Session *session );
 
 	vl::PythonContextPtr getPython(void)
 	{ return _python; }
@@ -150,13 +151,8 @@ public :
 	vl::SceneManagerPtr getSceneManager(void)
 	{ return _scene_manager; }
 
-	PlayerPtr createPlayer( void );
-
 	MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
-
-	void setGUI(vl::gui::GUIRefPtr gui)
-	{ _gui = gui; }
 
 	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
@@ -278,6 +274,9 @@ public :
 	GAME_STATE getState(void) const
 	{ return _state; }
 
+	bool isInited(void) const
+	{ return _state > GS_INIT; }
+
 	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// Project handling
@@ -292,7 +291,20 @@ private :
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
 
+	/// Session is not valid in the constructor because 
+	/// GameManager is created from sessions constructor
+	/// so the init function is provided for creating distributed objects.
+	/// Called when user initiates INIT state change.
+	void _init(void);
+
+	SceneManagerPtr _createSceneManager(void);
+
+	PlayerPtr _createPlayer(void);
+
 	void _process_constraints(vl::time const &t);
+
+	// Where objects are registered
+	vl::Session *_session;
 
 	vl::PythonContextPtr _python;
 	vl::ResourceManagerRefPtr _resource_man;
