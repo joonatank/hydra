@@ -385,13 +385,13 @@ vl::SceneManager::createEntity(std::string const &name,
 bool 
 vl::SceneManager::hasEntity( std::string const &name ) const
 {
-	return hasMovableObject("Entity", name);
+	return hasMovableObject(OBJ_ENTITY, name);
 }
 
 vl::EntityPtr 
 vl::SceneManager::getEntity( std::string const &name ) const
 {
-	return static_cast<EntityPtr>( getMovableObject("Entity", name) );
+	return static_cast<EntityPtr>( getMovableObject(OBJ_ENTITY, name) );
 }
 
 /// --------------------- SceneManager Light --------------------------------
@@ -404,13 +404,13 @@ vl::SceneManager::createLight(std::string const &name)
 bool 
 vl::SceneManager::hasLight(std::string const &name) const
 {
-	return hasMovableObject("Light", name);
+	return hasMovableObject(OBJ_LIGHT, name);
 }
 
 vl::LightPtr 
 vl::SceneManager::getLight(std::string const &name) const
 {
-	return static_cast<LightPtr>(getMovableObject("Light", name));
+	return static_cast<LightPtr>(getMovableObject(OBJ_LIGHT, name));
 }
 
 /// --------------------- SceneManager Camera --------------------------------
@@ -423,13 +423,13 @@ vl::SceneManager::createCamera(std::string const &name)
 bool 
 vl::SceneManager::hasCamera(std::string const &name) const
 {
-	return hasMovableObject("Camera", name);
+	return hasMovableObject(OBJ_CAMERA, name);
 }
 
 vl::CameraPtr 
 vl::SceneManager::getCamera(std::string const &name) const
 {
-	return static_cast<CameraPtr>(getMovableObject("Camera", name));
+	return static_cast<CameraPtr>(getMovableObject(OBJ_CAMERA, name));
 }
 
 vl::MovableTextPtr
@@ -445,13 +445,13 @@ vl::SceneManager::createMovableText(std::string const &name, std::string const &
 bool
 vl::SceneManager::hasMovableText(std::string const &name) const
 {
-	return hasMovableObject("MovableText", name);
+	return hasMovableObject(OBJ_MOVABLE_TEXT, name);
 }
 
 vl::MovableTextPtr
 vl::SceneManager::getMovableText(std::string const &name) const
 {
-	return static_cast<MovableTextPtr>(getMovableObject("MovableText", name));
+	return static_cast<MovableTextPtr>(getMovableObject(OBJ_MOVABLE_TEXT, name));
 }
 
 vl::RayObjectPtr
@@ -466,13 +466,13 @@ vl::SceneManager::createRayObject(std::string const &name, std::string const &ma
 bool
 vl::SceneManager::hasRayObject(std::string const &name) const
 {
-	return hasMovableObject("RayObject", name);
+	return hasMovableObject(OBJ_RAY_OBJECT, name);
 }
 
 vl::RayObjectPtr
 vl::SceneManager::getRayObject(std::string const &name) const
 {
-	return static_cast<RayObjectPtr>(getMovableObject("RayObject", name));
+	return static_cast<RayObjectPtr>(getMovableObject(OBJ_RAY_OBJECT, name));
 }
 
 /// ------------------ SceneManager MovableObject ----------------------------
@@ -585,13 +585,22 @@ vl::MovableObjectPtr
 vl::SceneManager::getMovableObject(std::string const &type_name, 
 		std::string const &name) const
 {
+	std::string tname(type_name);
+	vl::to_lower(tname);
 	for( MovableObjectList::const_iterator iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		if( (*iter)->getTypeName() == type_name && (*iter)->getName() == name )
+		if( (*iter)->getTypeName() == tname && (*iter)->getName() == name )
 		{ return *iter; }
 	}
 
 	return 0;
+}
+
+/// @todo should use a faster search without string comparison
+vl::MovableObjectPtr
+vl::SceneManager::getMovableObject(vl::OBJ_TYPE type, std::string const &name) const
+{
+	return getMovableObject(getMovableObjectTypeName(type), name);
 }
 
 vl::OBJ_TYPE

@@ -366,6 +366,8 @@ public :
 
 	MovableObjectPtr getMovableObject(std::string const &type, std::string const &name) const;
 
+	MovableObjectPtr getMovableObject(vl::OBJ_TYPE type, std::string const &name) const;
+
 	OBJ_TYPE getMovableObjectType(std::string const &type) const;
 
 	std::string getMovableObjectTypeName(OBJ_TYPE type) const;
