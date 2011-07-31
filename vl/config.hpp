@@ -106,6 +106,11 @@ public:
 	/// Push new message from callback to the stack
 	void pushMessage(vl::cluster::Message const &msg);
 
+	/// Callback methods called from Server to retrieve the messages needed
+	/// by the Rendering clients.
+	/// Which message is needed depends on the client state. That's why these
+	/// are implemented as callbacks.
+
 	// This should always be called after createMsgUpdate
 	/// @todo fix const correctness, this method should not modify the object 
 	vl::cluster::Message createMsgInit(void);
@@ -115,10 +120,6 @@ public:
 	vl::cluster::Message createMsgProject(void) const;
 
 protected :
-	// Helpers that update local renderer and do slave rpc calls
-	void _setEnvironment(vl::EnvSettingsRefPtr env);
-	void _setProject(vl::Settings const &proj);
-
 	// Cluster rpc calss
 	void _updateServer( void );
 	void _updateRenderer(void);
@@ -131,46 +132,21 @@ protected :
 	// This shouldn't be called more than once per frame, resets changes
 	void _createMsgUpdate(void);
 
-	// Send message to all receivers
-// 	void _sendMessage(vl::cluster::Message const &msg);
-
-	/// Tracking
-	void _createTrackers(vl::EnvSettingsRefPtr settings);
-
-	/// Scene
-	void _loadScenes( void );
-
 	/// Resources
 	void _createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env );
-
-
-	/// Events
-	void _createQuitEvent( void );
 
 	void _handleMessages( void );
 	void _handleMessage(vl::cluster::Message &msg);
 	void _handleEventMessage(vl::cluster::Message &msg);
 	void _handleCommandMessage(vl::cluster::Message &msg);
 
-	/// Input Events
-	/// Keyboard
-	void _handleKeyPressEvent( OIS::KeyEvent const &event );
-	void _handleKeyReleaseEvent( OIS::KeyEvent const &event );
-	/// Mouse
-	void _handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-	void _handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id );
-	void _handleMouseMotionEvent( OIS::MouseEvent const &event );
-	/// Joystick
-	void _handleJoystickButtonPressedEvent( OIS::JoyStickEvent const &event, int button );
-	void _handleJoystickButtonReleasedEvent( OIS::JoyStickEvent const &event, int button );
-	void _handleJoystickAxisMovedEvent( OIS::JoyStickEvent const &event, int axis );
-	void _handleJoystickPovMovedEvent( OIS::JoyStickEvent const &event, int pov );
-	void _handleJoystickVector3MovedEvent( OIS::JoyStickEvent const &event, int index );
-
 	vl::GameManagerPtr _game_manager;
 
+	/// Settings both project and environment saved because they are requested
+	/// by the slaves later than used by the Master.
+	/// Current project settings
 	vl::Settings _proj;
-
+	/// Current environment settings
 	vl::EnvSettingsRefPtr _env;
 
 	vl::cluster::ServerRefPtr _server;

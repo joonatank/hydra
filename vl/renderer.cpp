@@ -194,26 +194,11 @@ vl::Renderer::swap(void)
 }
 
 void
-vl::Renderer::setProject(vl::cluster::Message& msg)
+vl::Renderer::setProject(vl::Settings const &settings)
 {
-	assert(msg.getType() == vl::cluster::MSG_PROJECT);
-	
 	std::cout << vl::TRACE << "vl::Renderer::setProject" << std::endl;
 
-	// TODO
-	// Problematic because the Project config should be
-	// updatable during the application run
-	// And this one will create them anew, so that we need to invalidate
-	// the scene and reload everything
-	// NOTE
-	// Combining the project configurations is not done automatically
-	// so they either need special structure or we need to iterate over
-	// all of them always.
-	/// @todo replace ByteDataStream with MessageStream, reduces copying
-	vl::SettingsByteData data;
-	data.copyFromMessage(&msg);
-	vl::cluster::ByteDataStream stream(&data);
-	stream >> _settings;
+	_settings = settings;
 
 	_initialiseResources(_settings);
 }

@@ -33,6 +33,10 @@
 
 #include "recording.hpp"
 
+#include "actions_misc.hpp"
+
+#include "settings.hpp"
+
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	: _session(session)
 	, _python(0)
@@ -99,6 +103,8 @@ vl::GameManager::step(void)
 {
 	if(isPlayed())
 	{
+		getEventManager()->getFrameTrigger()->update();
+
 		// process input devices
 		for(size_t i = 0; i < _input_devices.size(); ++i)
 		{
@@ -294,6 +300,50 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 	return true;
 }
 
+void
+vl::GameManager::setupResources(vl::Settings const &settings, vl::EnvSettings const &env)
+{
+	std::cout << vl::TRACE << "Adding project directories to resources. "
+		<< "Only project directory and global directory is added." << std::endl;
+
+	std::vector<std::string> paths = settings.getAuxDirectories();
+	paths.push_back(settings.getProjectDir());
+	for( size_t i = 0; i < paths.size(); ++i )
+	{ getResourceManager()->addResourcePath( paths.at(i) ); }
+
+	// TODO add case directory
+
+	// Add environment directory, used for tracking configurations
+	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
+	fs::path tracking_path( fs::path(env.getEnvironementDir()) / "tracking" );
+	if( fs::is_directory(tracking_path) )
+	{ getResourceManager()->addResourcePath( tracking_path.string() ); }
+}
+
+void
+vl::GameManager::load(vl::EnvSettings const &env)
+{
+	// Create Tracker needs the SceneNodes for mapping
+	timer t;
+	createTrackers(env);
+	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
+
+	assert(_player);
+	_player->setIPD(env.getIPD());
+}
+
+void
+vl::GameManager::load(vl::Settings const &proj)
+{
+	timer t;
+	loadScenes(proj);
+	std::cout << "Loading scenes took : " <<  t.elapsed() << std::endl;
+
+	t.reset();
+	runPythonScripts(proj);
+	std::cout << "Executing scripts took : " <<  t.elapsed() << std::endl;
+}
+
 vl::RecordingRefPtr
 vl::GameManager::loadRecording(std::string const &path)
 {
@@ -308,6 +358,66 @@ vl::GameManager::loadRecording(std::string const &path)
 	rec->read(resource);
 
 	return rec;
+}
+
+void
+vl::GameManager::loadScenes(vl::Settings const &proj)
+{
+	std::cout << vl::TRACE << "Loading Scenes for Project : " << proj.getProjectName()
+		<< std::endl;
+
+	// Get scenes
+	std::vector<vl::ProjSettings::Scene> scenes = proj.getScenes();
+
+	// TODO support for case needs to be tested
+	for( size_t i = 0; i < scenes.size(); ++i )
+	{
+		vl::SceneInfo const &scene = scenes.at(i);
+		loadScene(scene);
+	}
+}
+
+void
+vl::GameManager::runPythonScripts(vl::Settings const &proj)
+{
+	/// @todo this should also load scripts that are not used but are
+	/// available, these should of course not be run
+	/// use the new auto_run interface in PythonContext
+	std::vector<std::string> scripts = proj.getScripts();
+
+	for( size_t i = 0; i < scripts.size(); ++i )
+	{
+		// Load the python scripts
+		vl::TextResource script_resource;
+		getResourceManager()->loadResource( scripts.at(i), script_resource );
+		getPython()->addScript(scripts.at(i), script_resource, true);
+	}
+
+	/// Run the python scripts
+	getPython()->autoRunScripts();
+}
+
+void
+vl::GameManager::createTrackers(vl::EnvSettings const &env)
+{
+	assert(_trackers);
+
+	std::vector<std::string> tracking_files = env.getTrackingFiles();
+
+	std::cout << vl::TRACE << "Processing " << tracking_files.size()
+		<< " tracking files." << std::endl;
+
+	/// @todo This part is the great time consumer, need to pin point the time hog
+	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
+		 iter != tracking_files.end(); ++iter )
+	{
+		// Read a file
+		vl::TextResource resource;
+		getResourceManager()->loadResource(*iter, resource);
+
+		vl::TrackerSerializer ser(_trackers);
+		ser.parseTrackers(resource);
+	}
 }
 
 void
@@ -349,6 +459,8 @@ vl::GameManager::_init(void)
 	assert(_session);
 	assert(!_gui);
 	_gui.reset(new vl::gui::GUI(_session));
+
+	_createQuitEvent();
 }
 
 vl::SceneManagerPtr
@@ -371,6 +483,17 @@ vl::GameManager::_createPlayer(void)
 	_session->registerObject(_player, OBJ_PLAYER);
 
 	return _player;
+}
+
+void
+vl::GameManager::_createQuitEvent(void)
+{
+	// Add a trigger event to Quit the Application
+	QuitAction *quit = QuitAction::create();
+	quit->data = this;
+	// Add trigger
+	vl::KeyTrigger *trig = getEventManager()->createKeyTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
+	trig->setKeyDownAction(quit);
 }
 
 void

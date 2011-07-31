@@ -14,6 +14,8 @@
 
 /// Necessary because we create MeshManager here and set it to Renderer
 #include "mesh_manager.hpp"
+/// Necessary for parsing the settings structure from a message
+#include "settings.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -384,8 +386,16 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			if( !_state.project )
 			{
 				_state.project = true;
+
+				/// @todo replace ByteDataStream with MessageStream, reduces copying
+				vl::SettingsByteData data;
+				data.copyFromMessage(&msg);
+				vl::cluster::ByteDataStream stream(&data);
+				vl::Settings settings;
+				stream >> settings;
+
 				assert(_renderer.get());
-				_renderer->setProject(msg);
+				_renderer->setProject(settings);
 
 				// request rendering messages when initialised
 				Message reply(MSG_REG_RENDERING, 0, vl::time());

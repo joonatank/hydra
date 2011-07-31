@@ -125,8 +125,8 @@ vl::Config::Config( vl::Settings const & settings,
 {
 	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
 	assert( _env );
-	// TODO assert that the settings are valid
 	assert( _env->isMaster() );
+	// @todo should check that the environment settings are valid
 
 	_game_manager = new vl::GameManager(this, &logger);
 
@@ -144,7 +144,7 @@ vl::Config::Config( vl::Settings const & settings,
 		_callbacks.push_back(callback);
 	}
 
-	_createResourceManager( settings, env );
+	_game_manager->setupResources(settings, *env);
 
 	_renderer->setMeshManager(_game_manager->getMeshManager());
 }
@@ -172,88 +172,50 @@ vl::Config::init( void )
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
 
-	if(!_game_manager->requestStateChange(GS_INIT))
-	{
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT"));
-	}
-
 	vl::timer t;
-	/// @todo most of this should be moved to the constructor, like object
-	/// creation
-	/// sending of initial messages to rendering threads should still be here
+	if(!_game_manager->requestStateChange(GS_INIT))
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT")); }
+	std::cout << "Starting GameManager took " << t.elapsed() << std::endl;
 
-	_setEnvironment(_env);
-	std::cout << "Sending Environment took : " <<  t.elapsed() << std::endl;
-	t.reset();
-
-	_setProject(_proj);
-	std::cout << "Project took : " <<  t.elapsed() << std::endl;
-	t.reset();
-
-	// Create the player necessary for Trackers
-	vl::PlayerPtr player = _game_manager->getPlayer();
-	assert(player);
-	player->setIPD(_env->getIPD());
-
-	std::cout << "Registering gui, scene manager and player took : "
-		<<  t.elapsed() << std::endl;
-	t.reset();
-
-	_loadScenes();
-
-	std::cout << "Loading scenes took : " <<  t.elapsed() << std::endl;
-	t.reset();
-
-	// Create Tracker needs the SceneNodes for mapping
-	_createTrackers(_env);
-	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
-	t.reset();
-
-	/// @todo python scripts should be moved to GameManager with project
-	/// loading
-	/// @todo this should also load scripts that are not used but are
-	/// available, these should of course not be run
-	/// use the new auto_run interface in PythonContext
-	std::vector<std::string> scripts = _proj.getScripts();
-
-	/// @todo replace with the new interface
-	for( size_t i = 0; i < scripts.size(); ++i )
+	// Local renderer needs to be inited rather than send a message
+	if( _renderer.get() )
 	{
-		// Load the python scripts
-		vl::TextResource script_resource;
-		_game_manager->getResourceManager()->loadResource( scripts.at(i), script_resource );
-		_game_manager->getPython()->addScript(scripts.at(i), script_resource, true);
+		t.reset();
+		_renderer->init(_env);
+		std::cout << "Initing Renderer took : " << t.elapsed() << std::endl;
 	}
 
-	/// Run the python scripts
-	t.reset();
-	_game_manager->getPython()->autoRunScripts();
-	std::cout << "Executing scripts took : " <<  t.elapsed() << std::endl;
-	t.reset();
+	// Send the project to the local Renderer
+	if(_renderer.get())
+	{
+		t.reset();
+		_renderer->setProject(_proj);
+		std::cout << "Setting project to Renderer took " << t.elapsed() << std::endl;	
+	}
 
-	_createQuitEvent();
+	/// @todo change to use GS_LOAD which is inititiated automatically after GS_INIT
+	_game_manager->load(*_env);
+	_game_manager->load(_proj);
 
-	std::cout << vl::TRACE << "vl::Config:: updating server" << std::endl;
+	/// Updating the Renderers
+	t.reset();
 	_server->poll();
 	_updateFrameMsgs();
 	_updateServer();
 	std::cout << "Updating server took : " <<  t.elapsed() << std::endl;
-	t.reset();
 
 	if(_renderer.get())
 	{
+		t.reset();
 		vl::cluster::Message msg(_msg_create);
 		_renderer->createSceneObjects(msg);
 		msg = createMsgInit();
 		_renderer->initScene(msg);
+		std::cout << "Loading Renderer with new created objects took : "
+			<<  t.elapsed() << std::endl;
 	}
 
-	std::cout << "Loading Renderer with new created objects took : "
-		<<  t.elapsed() << std::endl;
-	t.reset();
-
 	_game_manager->getStats().logInitTime(init_timer.elapsed());
-
 	_stats_timer.reset();
 
 	// TODO this should block till both slaves and local renderer are ready
@@ -284,17 +246,11 @@ vl::Config::render( void )
 
 	vl::timer timer;
 
+	// Get new event messages that are processed in GameManager::step
 	_server->poll();
-
-	// TODO where the receive input messages should be?
 	_handleMessages();
 
 	// Process a time step in the game
-	// New event interface
-	_game_manager->getEventManager()->getFrameTrigger()->update();
-
-	_game_manager->getStats().logEventProcessingTime(timer.elapsed());
-
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
@@ -522,119 +478,6 @@ vl::Config::_createMsgUpdate(void)
 	}
 }
 
-void
-vl::Config::_setEnvironment(vl::EnvSettingsRefPtr env)
-{
-	std::cout << vl::TRACE << "vl::Config::_setEnvironment" << std::endl;
-
-	vl::timer t;
-
-	// Local renderer needs to be inited rather than send a message
-	if( _renderer.get() )
-	{
-		_renderer->init(env);
-	}
-	std::cout << "Initing Renderer took : " << t.elapsed() << std::endl;
-}
-
-void
-vl::Config::_setProject(vl::Settings const &proj)
-{
-	// Send the project to the local Renderer
-	if(_renderer.get())
-	{
-		vl::timer t;
-		vl::cluster::Message msg = createMsgProject();
-		_renderer->setProject(msg);
-		std::cout << "Sending message of size " << sizeof(msg) << "bytes "
-			<< "to Renderer took " << t.elapsed() << std::endl;
-	}
-}
-
-/// @todo this takes over 1 second to complete which is almost a second too much
-void
-vl::Config::_createTrackers(vl::EnvSettingsRefPtr settings)
-{
-	vl::ClientsRefPtr clients = _game_manager->getTrackerClients();
-	assert( clients );
-
-	std::vector<std::string> tracking_files = settings->getTrackingFiles();
-
-	std::cout << vl::TRACE << "Processing " << tracking_files.size() << " tracking files."
-		<< std::endl;
-
-	/// @todo This part is the create time consumer
-	/// Need to use a report to pin point the hog
-	vl::timer t;
-	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
-		 iter != tracking_files.end(); ++iter )
-	{
-		// Read a file
-		vl::TextResource resource;
-		_game_manager->getResourceManager()->loadResource(*iter, resource);
-
-		vl::TrackerSerializer ser( clients );
-		ser.parseTrackers(resource);
-	}
-	std::cout << "Parsing tracking files took : " << t.elapsed() << std::endl;
-	t.reset();
-	std::cout << "Starting trackers took : " << t.elapsed() << std::endl;
-	t.reset();
-	std::cout << "Creating head trigger took : " << t.elapsed() << std::endl;
-}
-
-void
-vl::Config::_loadScenes( void )
-{
-	std::cout << vl::TRACE << "Loading Scenes for Project : " << _proj.getProjectName()
-		<< std::endl;
-
-	// Get scenes
-	std::vector<vl::ProjSettings::Scene> scenes = _proj.getScenes();
-
-	// TODO support for multiple scene files should be tested
-	// TODO support for case needs to be tested
-	for( size_t i = 0; i < scenes.size(); ++i )
-	{
-		vl::SceneInfo const &scene = scenes.at(i);
-		_game_manager->loadScene(scene);
-	}
-}
-
-void
-vl::Config::_createQuitEvent(void )
-{
-	// Add a trigger event to Quit the Application
-	assert( _game_manager );
-	vl::QuitAction *quit = vl::QuitAction::create();
-	quit->data = _game_manager;
-	// Add trigger
-	vl::KeyTrigger *trig = _game_manager->getEventManager()->createKeyTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
-	trig->setKeyDownAction(quit);
-}
-
-void
-vl::Config::_createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env )
-{
-	std::cout << vl::TRACE << "Initialising Resource Manager" << std::endl;
-
-	std::cout << vl::TRACE << "Adding project directories to resources. "
-		<< "Only project directory and global directory is added." << std::endl;
-
-	std::vector<std::string> paths = settings.getAuxDirectories();
-	paths.push_back(settings.getProjectDir());
-	for( size_t i = 0; i < paths.size(); ++i )
-	{ _game_manager->getResourceManager()->addResourcePath( paths.at(i) ); }
-
-	// TODO add case directory
-
-	// Add environment directory, used for tracking configurations
-	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	fs::path tracking_path( fs::path(env->getEnvironementDir()) / "tracking" );
-	if( fs::is_directory(tracking_path) )
-	{ _game_manager->getResourceManager()->addResourcePath( tracking_path.string() ); }
-}
-
 /// Event Handling
 void
 vl::Config::_handleMessages( void )
@@ -693,7 +536,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 			{
 				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
 				stream >> evt;
-				_handleKeyPressEvent(evt);
+				// @todo should pass the whole event structure
+				_game_manager->getEventManager()->keyPressed(evt.key);
 			}
 			break;
 
@@ -701,7 +545,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 			{
 				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
 				stream >> evt;
-				_handleKeyReleaseEvent(evt);
+				// @todo should pass the whole event structure
+				_game_manager->getEventManager()->keyReleased(evt.key);
 			}
 			break;
 
@@ -710,7 +555,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::MouseButtonID b_id;
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> b_id >> evt;
-				_handleMousePressEvent(evt, b_id);
+
+				std::cout << vl::TRACE << "vl::Config::_handleMousePressEvent" << std::endl;
 			}
 			break;
 
@@ -719,7 +565,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::MouseButtonID b_id;
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> b_id >> evt;
-				_handleMouseReleaseEvent(evt, b_id);
+				
+				std::cout << vl::TRACE << "vl::Config::_handleMouseReleaseEvent" << std::endl;
 			}
 			break;
 
@@ -727,7 +574,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 			{
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> evt;
-				_handleMouseMotionEvent(evt);
+				
+				std::cout << vl::TRACE << "vl::Config::_handleMouseMotionEvent" << std::endl;
 			}
 			break;
 
@@ -736,7 +584,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
 				int button;
 				stream >> button >> evt;
-				_handleJoystickButtonPressedEvent(evt, button);
+
+				std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonPressedEvent" << std::endl;
 			}
 			break;
 
@@ -745,7 +594,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
 				int button;
 				stream >> button >> evt;
-				_handleJoystickButtonReleasedEvent(evt, button);
+
+				std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonReleasedEvent" << std::endl;
 			}
 			break;
 
@@ -754,7 +604,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
 				int axis;
 				stream >> axis >> evt;
-				_handleJoystickAxisMovedEvent(evt, axis);
+
+				std::cout << vl::TRACE << "vl::Config::_handleJoystickAxisMovedEvent" << std::endl;
 			}
 			break;
 
@@ -763,7 +614,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
 				int pov;
 				stream >> pov >> evt;
-				_handleJoystickPovMovedEvent(evt, pov);
+
+				std::cout << vl::TRACE << "vl::Config::_handleJoystickPovMovedEvent" << std::endl;
 			}
 			break;
 
@@ -772,7 +624,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
 				int index;
 				stream >> index >> evt;
-				_handleJoystickVector3MovedEvent(evt, index);
+
+				std::cout << vl::TRACE << "vl::Config::_handleJoystickVector3MovedEvent" << std::endl;
 			}
 			break;
 
@@ -792,67 +645,4 @@ vl::Config::_handleCommandMessage(vl::cluster::Message &msg)
 	std::string cmd;
 	msg.read(cmd);
 	_game_manager->getPython()->executeCommand(cmd);
-}
-
-void
-vl::Config::_handleKeyPressEvent( OIS::KeyEvent const &event )
-{
-	OIS::KeyCode kc = event.key;
-
-	_game_manager->getEventManager()->keyPressed(kc);
-}
-
-void
-vl::Config::_handleKeyReleaseEvent( OIS::KeyEvent const &event )
-{
-	OIS::KeyCode kc = event.key;
-
-	_game_manager->getEventManager()->keyReleased(kc);
-}
-
-void
-vl::Config::_handleMousePressEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleMousePressEvent" << std::endl;
-}
-
-void
-vl::Config::_handleMouseReleaseEvent( OIS::MouseEvent const &event, OIS::MouseButtonID id )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleMouseReleaseEvent" << std::endl;
-}
-
-void
-vl::Config::_handleMouseMotionEvent( OIS::MouseEvent const &event )
-{
-}
-
-void
-vl::Config::_handleJoystickButtonPressedEvent( OIS::JoyStickEvent const &event, int button )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonPressedEvent" << std::endl;
-}
-
-void
-vl::Config::_handleJoystickButtonReleasedEvent( OIS::JoyStickEvent const &event, int button )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonReleasedEvent" << std::endl;
-}
-
-void
-vl::Config::_handleJoystickAxisMovedEvent( OIS::JoyStickEvent const &event, int axis )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleJoystickAxisMovedEvent" << std::endl;
-}
-
-void
-vl::Config::_handleJoystickPovMovedEvent( OIS::JoyStickEvent const &event, int pov )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleJoystickPovMovedEvent" << std::endl;
-}
-
-void
-vl::Config::_handleJoystickVector3MovedEvent( OIS::JoyStickEvent const &event, int index )
-{
-	std::cout << vl::TRACE << "vl::Config::_handleJoystickVector3MovedEvent" << std::endl;
 }

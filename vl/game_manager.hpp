@@ -275,7 +275,15 @@ public :
 	{ return _state; }
 
 	bool isInited(void) const
-	{ return _state > GS_INIT; }
+	{ return _state >= GS_INIT; }
+
+	void setupResources(vl::Settings const &settings, vl::EnvSettings const &env);
+
+	/// Resource loading
+	
+	/// Main loading functions use configurations files
+	void load(vl::EnvSettings const &env);
+	void load(vl::Settings const &proj);
 
 	RecordingRefPtr loadRecording(std::string const &path);
 
@@ -283,8 +291,14 @@ public :
 	/// @todo should the file already be loaded or not?
 	///void loadProject(std::string const &file_name);
 
-	/// Scene handling
+	void loadScenes(vl::Settings const &proj);
+
 	void loadScene(vl::SceneInfo const &scene_info);
+
+	void runPythonScripts(vl::Settings const &proj);
+
+	/// @todo this takes over 1 second to complete which is almost a second too much
+	void createTrackers(vl::EnvSettings const &env);
 
 private :
 	/// Non copyable
@@ -297,9 +311,12 @@ private :
 	/// Called when user initiates INIT state change.
 	void _init(void);
 
+	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);
-
 	PlayerPtr _createPlayer(void);
+
+	/// Events
+	void _createQuitEvent( void );
 
 	void _process_constraints(vl::time const &t);
 

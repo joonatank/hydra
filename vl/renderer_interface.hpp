@@ -49,7 +49,7 @@ public :
 // 	virtual void handleMessage(vl::cluster::Message &msg) = 0;
 
 	/// @brief specialisation of handleMessage
-	virtual void setProject(vl::cluster::Message &msg) = 0;
+	virtual void setProject(vl::Settings const &settings) = 0;
 	
 	virtual void initScene(vl::cluster::Message &msg) = 0;
 	

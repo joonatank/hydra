@@ -96,7 +96,17 @@ public :
 	/// @brief interface through which the Renderer is controlled
 // 	virtual void handleMessage(vl::cluster::Message &msg);
 
-	virtual void setProject(vl::cluster::Message &msg);
+	/** @todo
+	 * Problematic because the Project config should be
+	 * updatable during the application run
+	 * And this one will create them anew, so that we need to invalidate
+	 * the scene and reload everything
+	 * NOTE
+	 * Combining the project configurations is not done automatically
+	 * so they either need special structure or we need to iterate over
+	 * all of them always.
+	 */
+	virtual void setProject(vl::Settings const &settings);
 	
 	virtual void initScene(vl::cluster::Message &msg);
 	
