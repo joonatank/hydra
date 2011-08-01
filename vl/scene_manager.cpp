@@ -585,11 +585,14 @@ vl::MovableObjectPtr
 vl::SceneManager::getMovableObject(std::string const &type_name, 
 		std::string const &name) const
 {
+	// @todo replace to_lower with the use of case insensitive comparison
 	std::string tname(type_name);
 	vl::to_lower(tname);
 	for( MovableObjectList::const_iterator iter = _objects.begin(); iter != _objects.end(); ++iter )
 	{
-		if( (*iter)->getTypeName() == tname && (*iter)->getName() == name )
+		std::string it_type_name((*iter)->getTypeName());
+		vl::to_lower(it_type_name);
+		if( it_type_name == tname && (*iter)->getName() == name )
 		{ return *iter; }
 	}
 
@@ -646,7 +649,7 @@ vl::SceneManager::getMovableObjectTypeName(vl::OBJ_TYPE type) const
 bool
 vl::SceneManager::hasMovableObject(vl::OBJ_TYPE type, std::string const &name) const
 {
-	return hasMovableObject(getMovableObjectTypeName(type), name);
+	return( getMovableObject(type, name));
 }
 
 bool 
