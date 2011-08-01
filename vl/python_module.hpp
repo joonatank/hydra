@@ -172,7 +172,8 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::Player, boost::noncopyable>("Player", python::no_init)
 		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_value_policy<python::copy_const_reference>() ), &Player::setActiveCamera )
 		.add_property("ipd", &Player::getIPD, &Player::setIPD)
-		.def("takeScreenshot", &vl::Player::takeScreenshot )
+		.def("takeScreenshot", &vl::Player::takeScreenshot)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)

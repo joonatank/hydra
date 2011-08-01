@@ -43,8 +43,7 @@ public :
 
 	void setActiveCamera( std::string const &name );
 
-	std::string const &getActiveCamera( void ) const
-	{ return _active_camera; }
+	std::string const &getActiveCamera(void) const;
 
 	vl::Transform const &getHeadTransform(void) const
 	{ return _head_transform; }
@@ -79,7 +78,7 @@ private :
 	Player( Player const &);
 	Player & operator=( Player const &);
 
-	std::string _active_camera;
+	CameraPtr _active_camera;
 
 	vl::Transform _head_transform;
 
@@ -91,6 +90,8 @@ private :
 
 };	// class Player
 
+std::ostream &operator<<(std::ostream &os, Player const &player);
+
 }	// namespace vl
 
-#endif // VL_PLAYER_HPP
+#endif	// HYDRA_PLAYER_HPP
