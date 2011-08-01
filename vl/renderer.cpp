@@ -100,7 +100,8 @@ vl::Renderer::getWindowConf( std::string const &window_name )
 	vl::EnvSettings::Node node = getNodeConf();
 
 	// TODO add real errors
-	assert( node.getNWindows() > 0 );
+	if( node.getNWindows() == 0 )
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Node has no windows.")); }
 
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{
@@ -108,8 +109,7 @@ vl::Renderer::getWindowConf( std::string const &window_name )
 		{ return node.getWindow(i); }
 	}
 
-	// TODO add real errors
-	assert( false );
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No such Window"));
 }
 
 void
@@ -237,8 +237,9 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			case OBJ_PLAYER :
 			{
 				std::cout << vl::TRACE << "Creating Player with ID : " << id << std::endl;
-				// @todo replace asserts with throwing
-				assert(_scene_manager);
+				if(!_scene_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager")); }
+
 				vl::Player *player = new vl::Player(_scene_manager);
 				mapObject(player, id);
 				
@@ -258,7 +259,9 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				{
 					std::cout << vl::TRACE << "Creating GUI" << std::endl;
 					// Do not create the GUI multiple times
-					assert(!_gui);
+					if(_gui)
+					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
+
 					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
 					assert(_windows.size() > 0);
 					_gui->initGUI(_windows.at(0));
@@ -287,9 +290,11 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			{
 				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
 				// TODO support multiple SceneManagers
-				assert(!_scene_manager);
-				assert(!_ogre_sm);
-				assert(_mesh_manager);
+				if(_scene_manager || _ogre_sm)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
+				if(!_mesh_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
+
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
@@ -299,7 +304,8 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_SCENE_NODE :
 			{
-				assert(_scene_manager);
+				if(!_scene_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
 				_scene_manager->_createSceneNode(id);
 			}
 			break;
@@ -308,7 +314,8 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			/// the movable object type and other one dynamic so more movable objects
 			/// can be created with ease.
 			default :
-				assert( _scene_manager );
+				if(!_scene_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
 				_scene_manager->_createMovableObject(type, id);
 				break;
 		}
