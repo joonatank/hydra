@@ -349,8 +349,10 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("sphere_radius", &vl::RayObject::getSphereRadius, &vl::RayObject::setSphereRadius)
 		.add_property("collision_detection", &vl::RayObject::getCollisionDetection, &vl::RayObject::setCollisionDetection)
 		.add_property("draw_collision_sphere", &vl::RayObject::getDrawCollisionSphere, &vl::RayObject::setDrawCollisionSphere)
+		.add_property("draw_ray", &vl::RayObject::getDrawRay, &vl::RayObject::setDrawRay)
 		.add_property("show_recording", &vl::RayObject::getShowRecordedRays, &vl::RayObject::showRecordedRays)
 		.add_property("recording", &vl::RayObject::getRecording, &vl::RayObject::setRecording)
+		.def("update", &vl::RayObject::update)
 	;
 
 	python::enum_<TransformSpace>("TS")

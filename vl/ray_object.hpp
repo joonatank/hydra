@@ -70,27 +70,38 @@ public :
 	{ return _sphere_radius; }
 	
 	/// @brief set on/off the collision detection for the ray
+	/// If this is set to false will automatically disable sphere drawing and
+	/// enable ray drawing.
 	void setCollisionDetection(bool enable);
 
 	bool getCollisionDetection(void) const
 	{ return _collision_detection; }
 
 	/// @brief set on/off whether to draw a sphere where the ray collided
+	/// If this is set to true will automatically enable collision detection and 
+	/// if set to false will automatically enable ray drawing.
 	void setDrawCollisionSphere(bool enable);
 
 	bool getDrawCollisionSphere(void) const
 	{ return _draw_collision_sphere; }
 
-	/// @brief set if the ray is dynamically updated every frame
-	void setDynamic(bool dyn)
-	{ _dynamic = dyn; }
+	/// @brief set whether to draw the ray
+	/// If this is set to false will automatically enable collision detection
+	/// and draw collision sphere.
+	void setDrawRay(bool enable);
 
-	bool getDynamic(void) const
-	{ return _dynamic; }
+	bool getDrawRay(void) const
+	{ return _draw_ray; }
+
+	/// @brief update the drawing of a recording
+	void update(void);
 
 	/// @todo add thickness
 
-
+	/// @brief show the current recording 
+	/// The recording needs to be set before calling this.
+	/// Automatically sets dynamic off when showing recorded rays and on when
+	/// showing the current ray.
 	void showRecordedRays(bool show);
 
 	bool getShowRecordedRays(void) const
@@ -113,12 +124,15 @@ public :
 		DIRTY_PARAMS = vl::MovableObject::DIRTY_CUSTOM << 1,
 		DIRTY_SHOW_RECORDER = vl::MovableObject::DIRTY_CUSTOM << 2,
 		DIRTY_RECORDING = vl::MovableObject::DIRTY_CUSTOM << 3,
-		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 4,
+		DIRTY_UPDATE = vl::MovableObject::DIRTY_CUSTOM << 4,
+		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 5,
 	};
 
 	/// @internal
 	/// @brief used to update the ray once per frame before rendering
 	/// Handles updates to collision detection
+	/// @todo does not update recording correctly in the start
+	/// user is required to call update for recordings
 	void _updateRay(void);
 
 private :
@@ -130,7 +144,11 @@ private :
 
 	void _clear(void);
 
+	// Selector function that either creates based on recording or the current ray
 	void _create(void);
+
+	// Create the single ray
+	void _createDynamic(void);
 
 	// @todo this does not definitely work in real time as it clears the object
 	// it will also set dynamic off so that the new values will not override
@@ -156,8 +174,11 @@ private :
 	// @todo change to flags
 	bool _draw_collision_sphere;
 	bool _collision_detection;
+	bool _draw_ray;
 
-	bool _dynamic;
+	// Recording updates
+	uint32_t _update_version;
+	bool _needs_updating;
 
 	RecordingRefPtr _recording;
 	bool _recorded_rays_show;

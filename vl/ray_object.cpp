@@ -44,6 +44,8 @@ vl::RayObject::setRecording(RecordingRefPtr rec)
 	{
 		setDirty(DIRTY_RECORDING);
 		_recording = rec;
+		if(_recorded_rays_show)
+		{ update(); }
 	}
 }
 
@@ -104,6 +106,11 @@ vl::RayObject::setCollisionDetection(bool enable)
 	{
 		setDirty(DIRTY_PARAMS);
 		_collision_detection = enable;
+		if(!_collision_detection)
+		{
+			setDrawCollisionSphere(false);
+			setDrawRay(true);
+		}
 	}
 }
 
@@ -114,60 +121,157 @@ vl::RayObject::setDrawCollisionSphere(bool enable)
 	{
 		setDirty(DIRTY_PARAMS);
 		_draw_collision_sphere = enable;
+		if(_draw_collision_sphere)
+		{
+			setCollisionDetection(true);
+		}
+		else
+		{
+			setDrawRay(true);
+		}
 	}
+}
+
+void
+vl::RayObject::setDrawRay(bool enable)
+{
+	if(_draw_ray != enable)
+	{
+		setDirty(DIRTY_PARAMS);
+		_draw_ray = enable;
+		if(!_draw_ray)
+		{
+			setDrawCollisionSphere(true);
+		}
+	}
+}
+
+void
+vl::RayObject::update(void)
+{
+	setDirty(DIRTY_UPDATE);
+	++_update_version;
 }
 
 void
 vl::RayObject::showRecordedRays(bool show)
 {
-	if(show != _recorded_rays_show)
+	if(show != _recorded_rays_show && _recording)
 	{
 		setDirty(DIRTY_SHOW_RECORDER);
 		_recorded_rays_show = show;
+		if(_recorded_rays_show)
+		{ update(); }
 	}
 }
 
 void
 vl::RayObject::_updateRay(void)
 {
-	if(_collision_detection && _dynamic)
+	// Nop if no collision detection
+	if(!_collision_detection)
+	{ return; }
+
+	// Nop for recording if user has not requested recalculation
+	// because this is really slow for the number of rays recordings contain
+	if(_recording && _recorded_rays_show && !_needs_updating)
+	{ return; }
+
+	/// Gather all rays that are to be drawn
+	/// if recording is not shown this is a single ray
+	// pair of start and end positions
+	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > ray_positions;
+	// pair of vectors, start_position and direction for collision detection
+	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > collision_det_array;
+	// Store the position and direction for collision detection
+	if(_recording && _recorded_rays_show)
 	{
-		Ogre::Vector3 result;
-		Ogre::Vector3 ray_end = _position + (_direction*_length);
+		// Create a list of start and end positions
+		for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
+			iter != _recording->sensors.at(0).transforms.end(); ++iter)
+		{
+			// @todo should the direction be -Z or should it be configurable using the direction parameter?
+			Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
+			Ogre::Vector3 start_position = iter->second.position;
+
+			// No collision detection because this will only initialise the list
+
+			collision_det_array.push_back(std::make_pair(start_position, direction));
+		}
+	}
+	else
+	{
+		collision_det_array.push_back(std::make_pair(_position, _direction));
+	}
+	
+	// Run collision detection store start and end positions
+	// @todo move the collision detection to a separate function
+	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> >::const_iterator iter;
+	for( iter = collision_det_array.begin();
+		iter != collision_det_array.end(); ++iter)
+	{
+		Ogre::Vector3 const &start_position = iter->first;
+		Ogre::Vector3 const &direction = iter->second;
+		
+		// Parent transformation
 		Ogre::Matrix4 t = _ogre_object->_getParentNodeFullTransform();
 		Ogre::Vector3 translate;
 		Ogre::Vector3 scale;
 		Ogre::Quaternion q;
 		t.decomposition(translate, scale, q);
-		if(_ray_cast->raycastFromPoint(translate+q*_position, q*_direction, result))
+		
+		// Results
+		Ogre::Vector3 result;
+		Ogre::Vector3 ray_end = start_position + (direction*_length);
+		if(_ray_cast->raycastFromPoint(translate+q*start_position, q*direction, result))
 		{
 			// Remove parents transformation as the collision detection 
 			// is done in the World space
 			ray_end = t.inverse() * result;
 		}
 
-		_ogre_object->beginUpdate(0);
-		_generateLine(_position, ray_end);
-		_ogre_object->end();
-
-		if(_draw_collision_sphere)
-		{
-			_ogre_object->beginUpdate(1);
-			_generateCollisionSphere(ray_end);
-			_ogre_object->end();
-		}
-
-		// @todo should update the bounding box because if the hit state
-		// or the hitted object changed from last one
-		// the bounding volume will be different than before
-		// _ogre_object->setBoundingBox(Box)
+		ray_positions.push_back(std::make_pair(start_position, ray_end));
 	}
+
+	uint16_t sub_obj_index = 0;
+	if(_draw_ray)
+	{
+		_ogre_object->beginUpdate(sub_obj_index);
+		for(iter = ray_positions.begin(); iter != ray_positions.end(); ++iter)
+		{
+			_generateLine(iter->first, iter->second);
+		}
+		_ogre_object->end();
+		++sub_obj_index;
+	}
+
+	if(_draw_collision_sphere)
+	{
+		_ogre_object->beginUpdate(sub_obj_index);
+		uint32_t index = 0;
+		for(iter = ray_positions.begin(); iter != ray_positions.end(); ++iter)
+		{
+			index = _generateCollisionSphere(iter->second, index);
+		}
+		_ogre_object->end();
+		++sub_obj_index;
+	}
+
+	// @todo should update the bounding box because if the hit state
+	// or the hitted object changed from last one
+	// the bounding volume will be different than before
+	// _ogre_object->setBoundingBox(Box)
+
+	// Clear the update flag
+	_needs_updating = false;
 }
 
 /// ----------------------------- Private ------------------------------------
 bool
 vl::RayObject::_doCreateNative(void)
 {
+	assert(_creator);
+
 	if(!_ogre_object)
 	{
 		_ogre_object =  _creator->getNative()->createManualObject(_name);
@@ -188,7 +292,7 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	if(dirtyBits & DIRTY_PARAMS)
 	{
 		msg << _material << _length << _sphere_radius << _draw_collision_sphere 
-			<< _collision_detection << _dynamic;
+			<< _draw_ray << _collision_detection;
 	}
 
 	if(dirtyBits & DIRTY_SHOW_RECORDER)
@@ -208,6 +312,9 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 		else
 		{ msg << true << *_recording; }
 	}
+
+	if(dirtyBits & DIRTY_UPDATE)
+	{ msg << _update_version; }
 }
 
 void
@@ -223,7 +330,7 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	if(dirtyBits & DIRTY_PARAMS)
 	{
 		msg >> _material >> _length >> _sphere_radius >> _draw_collision_sphere 
-			>> _collision_detection >> _dynamic;
+			>> _draw_ray >> _collision_detection;
 		dirty = true;
 	}
 
@@ -251,13 +358,25 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		}
 	}
 
-	if(dirty && _ogre_object)
+	if(dirtyBits & DIRTY_UPDATE)
 	{
-		if(_recorded_rays_show && _recording)
-		{ _createRecordedRays(); }
+		uint32_t version;
+		msg >> version;
+		if(version > _update_version || version == 0)
+		{
+			_update_version = version;
+			_needs_updating = true;
+		}
 		else
-		{ _create(); }
+		{
+			std::clog << "Something really odd with the version we should update to : "
+				<< "current version " << _update_version << " new version : " << version
+				<< std::endl;
+		}
 	}
+
+	if(dirty && _ogre_object)
+	{ _create(); }
 }
 
 void
@@ -269,35 +388,26 @@ vl::RayObject::_clear(void)
 	_sphere_radius = 1;
 	_draw_collision_sphere = false;
 	_collision_detection = false;
-	_dynamic = true;
+	_draw_ray = true;
+	_update_version = 0;
+	_needs_updating = false;
 	_recorded_rays_show = false;
 	_ogre_object = 0;
 	_listener = 0;
 	_ray_cast = 0;
 }
 
+// Collision detection does not work here always
+// if created before any other objects it will not work.
 void
 vl::RayObject::_create(void)
 {
-	// @todo add needs to calculate the number of vertices and indexes
-	// from the line and if we are using a sphere
-	// _ogre_object->estimateVertexCount((mNumRings+1)*(mNumSegments+1));
-	// _ogre_object->estimateIndexCount(mNumRings*(mNumSegments+1)*6);
+	std::clog << "vl::RayObject::_create" << std::endl;
 
-	assert(_ogre_object);
-	_ogre_object->clear();
-	Ogre::Vector3 end_position = _position + (_direction*_length); 
-	_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
-	_generateLine(_position, end_position);
-	_ogre_object->end();
-	// Draw the collision sphere
-	if(_draw_collision_sphere)
-	{
-		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-		_generateCollisionSphere(end_position);
-		_ogre_object->end();
-	}
+	// Specification does not allow empty objects
+	assert((_draw_collision_sphere && _collision_detection) || _draw_ray);
 
+	// Some general definitions for collision detection
 	if(_collision_detection)
 	{
 		if(!_ray_cast)
@@ -315,20 +425,49 @@ vl::RayObject::_create(void)
 		}
 	}
 
+	if(_recorded_rays_show && _recording)
+	{ _createRecordedRays(); }
+	else
+	{ _createDynamic(); }
+
 	_ogre_object->setCastShadows(false);
 }
 
-/// @todo performance issues because creates N*2 manual object sections 
-/// where N is the number of recorded rays.
-/// We should instead use just two sections one for lines and one for triangle lists
-/// We need to fix indexing for the triangle lists for this to work though.
+void
+vl::RayObject::_createDynamic(void)
+{
+	// @todo add needs to calculate the number of vertices and indexes
+	// from the line and if we are using a sphere
+	// _ogre_object->estimateVertexCount((mNumRings+1)*(mNumSegments+1));
+	// _ogre_object->estimateIndexCount(mNumRings*(mNumSegments+1)*6);
+
+	assert(_ogre_object);
+	_ogre_object->clear();
+	Ogre::Vector3 end_position = _position + (_direction*_length); 
+	// @todo this should use the ray casting already
+	if(_draw_ray)
+	{
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
+		_generateLine(_position, end_position);
+		_ogre_object->end();
+	}
+
+	// Draw the collision sphere
+	if(_draw_collision_sphere)
+	{
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		_generateCollisionSphere(end_position);
+		_ogre_object->end();
+	}
+}
+
 void
 vl::RayObject::_createRecordedRays(void)
 {
 	std::clog << "vl::RayObject::_createRecordedRays" << std::endl;
 
 	if(!_recording)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Something really wrong with recording pointer.")); }
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Something wrong with the recording.")); }
 
 	// Empty recording
 	if(_recording->sensors.size() == 0)
@@ -340,55 +479,52 @@ vl::RayObject::_createRecordedRays(void)
 	assert(_ogre_object);
 	_ogre_object->clear();
 
-	// Store the end positions for sphere creation
-	// Because we want the minimal number of separate segments
-	std::vector<Ogre::Vector3> ray_end_positions;
+	// Store the positions to an array for creating the segments
+	// we want the minimal number of separate segments.
+	// pair of start and end positions
+	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > ray_positions;
 
-	/// Create all the lines
-	_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
+	// Create a list of start and end positions
 	for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
 		iter != _recording->sensors.at(0).transforms.end(); ++iter)
 	{
+		// @todo should the direction be -Z or should it be configurable using the direction parameter?
 		Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
 		Ogre::Vector3 start_position = iter->second.position;
 		Ogre::Vector3 end_position = start_position + (direction*_length);
-		
-		if(_collision_detection)
-		{
-			Ogre::Vector3 result;
-			//Ogre::Vector3 ray_end = _position + (_direction*_length);
-			Ogre::Matrix4 t = _ogre_object->_getParentNodeFullTransform();
-			Ogre::Vector3 translate;
-			Ogre::Vector3 scale;
-			Ogre::Quaternion q;
-			t.decomposition(translate, scale, q);
-			if(_ray_cast->raycastFromPoint(translate+q*start_position, q*direction, result))
-			{
-				// Remove parents transformation as the collision detection 
-				// is done in the World space
-				end_position = t.inverse() * result;
-			}
-		}
 
-		_generateLine(start_position, end_position);
-		ray_end_positions.push_back(end_position);
+		// collision detection does not work if some objects are created
+		// after this object so we run separate update phase every frame.
+
+		ray_positions.push_back(std::make_pair(start_position, end_position));
 	}
-	_ogre_object->end();
 
-	// Draw the collision spheres
-	if(_draw_collision_sphere)
+	/// Draw all the lines
+	if(_draw_ray)
 	{
-		uint32_t index = 0;
-		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-		for(std::vector<Ogre::Vector3>::iterator iter = ray_end_positions.begin();
-			iter != ray_end_positions.end(); ++iter)
+		std::clog << "Drawing rays." << std::endl;
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
+		for(std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> >::const_iterator iter = ray_positions.begin();
+				iter != ray_positions.end(); ++iter)
 		{
-			index = _generateCollisionSphere(*iter, index);
+			_generateLine(iter->first, iter->second);
 		}
 		_ogre_object->end();
 	}
 
-	setDynamic(false);
+	// Draw the collision spheres
+	if(_draw_collision_sphere)
+	{
+		std::clog << "Drawing collision spheres." << std::endl;
+		uint32_t index = 0;
+		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		for(std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> >::const_iterator iter = ray_positions.begin();
+			iter != ray_positions.end(); ++iter)
+		{
+			index = _generateCollisionSphere(iter->second, index);
+		}
+		_ogre_object->end();
+	}
 }
 
 void
