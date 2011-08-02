@@ -55,6 +55,8 @@ protected:
 
 	vl::cluster::ClientRefPtr _slave_client;
 
+	uint32_t _fps;
+
 };	// class Application
 
 }	// namespace vl

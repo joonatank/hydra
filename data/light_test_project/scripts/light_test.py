@@ -125,3 +125,37 @@ spot_n.orientation = Quaternion(0.974, -0.225, 0.025, 0.03)
 
 game.scene.addToSelection(spot_n)
 
+game.scene.sky = SkyDomeInfo("CloudySky")
+
+hemi = game.scene.createLight("hemi")
+hemi.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
+hemi_n = game.scene.createSceneNode("hemi")
+hemi_n.attachObject(hemi)
+hemi_n.position = Vector3(-20, 35, 0)
+
+hemi2 = game.scene.createLight("hemi2")
+hemi2.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
+hemi2_n = game.scene.createSceneNode("hemi2")
+hemi2_n.attachObject(hemi2)
+hemi2_n.position = Vector3(20, 35, -10)
+
+spot2 = game.scene.createLight("spot_2")
+spot2.type = "spot"
+spot2.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
+spot2_n = game.scene.createSceneNode("spot_2")
+spot2_n.attachObject(spot2)
+# Really weird shadow effects when light is tied to the camera
+spot2_n.position = Vector3(0, 50, 0)
+spot2_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
+
+# TODO create a configuration for lights toggled by keyboard/python commands
+# Easy to do with python commands
+# one point light
+# one spot light
+# two point lights
+# two spot lights
+# two point lights and two spot lights
+# This is then profiled using the gDEBugger's profiler mode
+# and saved
+# DO the same tests for single pass shader when it's ready
+

@@ -50,6 +50,7 @@ vl::EnvSettings::EnvSettings( void )
 	, _ipd(0)
 	, _slave(false)
 	, display_n(0)
+	, _fps(60)
 {}
 
 vl::EnvSettings::~EnvSettings( void )
@@ -315,6 +316,10 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	xml_elem = xml_root->first_node("ipd");
 	if( xml_elem )
 	{ processIPD( xml_elem ); }
+
+	xml_elem = xml_root->first_node("fps");
+	if( xml_elem )
+	{ processFPS( xml_elem ); }
 
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
@@ -633,14 +638,21 @@ vl::EnvSettingsSerializer::processNVSwapSync(rapidxml::xml_node<> *xml_node)
 void
 vl::EnvSettingsSerializer::processIPD(rapidxml::xml_node<>* xml_node)
 {
+	/// IPD can be either negative or positive doesn't matter
+	/// if it's negative it will do swap eyes
 	double ipd = vl::from_string<double>(xml_node->value());
-	if( ipd < 0 )
-	{
-		std::string desc( "IPD can not be less than zero." );
-		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
-	}
 
 	_envSettings->setIPD(ipd);
+
+	_checkUniqueNode(xml_node);
+}
+
+void
+vl::EnvSettingsSerializer::processFPS(rapidxml::xml_node<> *xml_node)
+{
+	uint32_t fps = vl::from_string<uint32_t>(xml_node->value());
+
+	_envSettings->setFPS(fps);
 
 	_checkUniqueNode(xml_node);
 }
