@@ -238,7 +238,7 @@ add_library(HydraMain
 	${MATH_SRC}
 	)
 
-target_link_libraries(HydraMain ${HYDRA_DEB_LIBS})
+target_link_libraries(HydraMain ${HYDRA_DEP_LIBS})
 
 set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
 

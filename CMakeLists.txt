@@ -91,7 +91,7 @@ find_package(Boost COMPONENTS python REQUIRED )
 
 # Python version 3.2 for Windows
 # Linux has some problems with multiple pythons and boost installed from
-# package manager, so we can not compile boost python to use Python 3.1
+# package manager, so we can not compile boost python to use Python 3
 if(WIN32)
 	set( PYTHON_VERSION 3.2 CACHE STRING "Python version" )
 else()
@@ -109,7 +109,8 @@ endif()
 
 find_package( Boost COMPONENTS system filesystem program_options signals REQUIRED )
 
-find_package( Bullet REQUIRED )
+find_package(Bullet)
+find_package(Newton)
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM
@@ -125,11 +126,10 @@ include_directories( SYSTEM
 	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
-	${BULLET_INCLUDE_DIRS}
 	)
 
 # Libraries that Hydra library depends on
-set( HYDRA_DEB_LIBS
+set( HYDRA_DEP_LIBS
 	${OPENGL_LIBRARIES}
 	${Ogre_LIBRARY}
 	${VRPN_LIBRARY}
@@ -145,7 +145,6 @@ set( HYDRA_DEB_LIBS
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
-	${BULLET_LIBRARIES}
 	)
 
 # Libraries used to build project binaries
@@ -158,6 +157,32 @@ link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 
 include( CopyScripts )
 
+set(HYDRA_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests.")
+set(HYDRA_BUILD_DEMOS TRUE CACHE BOOL "Build the demos.")
+
+set(HYDRA_PHYSICS "Bullet" CACHE STRING
+	"Physics library to use: Bullet, Newton or None")
+
+
+# TODO check that the physics library has been found
+if(HYDRA_PHYSICS STREQUAL "Bullet")
+	if(BULLET_FOUND)
+		add_definitions(-DUSE_BULLET)
+		include_directories(SYSTEM ${BULLET_INCLUDE_DIRS})
+		list(APPEND HYDRA_DEP_LIBS ${BULLET_LIBRARIES})
+	else()
+		message(FATAL_ERROR "Requested to use Bullet for physics but didn't find the library.")
+	endif()
+elseif(HYDRA_PHYSICS STREQUAL "Newton")
+	if(Newton_FOUND)
+		add_definitions(-DUSE_NEWTON)
+		list(APPEND HYDRA_DEP_LIBS ${Newton_LIBRARY})
+		include_directories(SYSTEM ${Newton_INCLUDE_DIRS})
+	else()
+		message(FATAL_ERROR "Requested to use Newton for physics but didn't find the library.")
+	endif()
+endif()
+
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 
 # Adding include directory for Toast
@@ -166,17 +191,14 @@ include_directories(extern)
 # include rendering engine, eq ogre directories
 include_directories(vl)
 
-set( EQOGRE_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests." )
-set( EQOGRE_BUILD_DEMOS TRUE CACHE BOOL "Build the demos." )
-
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 
-if(EQOGRE_BUILD_TESTS)
+if(HYDRA_BUILD_TESTS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 endif()
 
-if(EQOGRE_BUILD_DEMOS)
+if(HYDRA_BUILD_DEMOS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
 endif()
 

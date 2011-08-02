@@ -1,14 +1,17 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
  *
- *	Bullet Physics World used to initialise the physics with some default
+ *	Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
  *
- *	Also contains mixed physics classes for now.
+ *	Uses Bullet for now
+ *	Later this will provide object management for the general interface
+ *	objects the abstract inteface for physics world.
+ *
  */
 
-#ifndef VL_PHYSICS_WORLD_HPP
-#define VL_PHYSICS_WORLD_HPP
+#ifndef HYDRA_PHYSICS_WORLD_HPP
+#define HYDRA_PHYSICS_WORLD_HPP
 
 // This class initialises Bullet physics so they are necessary
 #include <bullet/btBulletDynamicsCommon.h>
@@ -112,5 +115,4 @@ std::ostream &operator<<(std::ostream &os, World const &w);
 
 }	// namespace vl
 
-#endif // VL_PHYSICS_EVENTS_HPP
-
+#endif	// HYDRA_PHYSICS_WORLD_HPP
