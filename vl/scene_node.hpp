@@ -206,6 +206,9 @@ public :
 	vl::SceneNodePtr getParent(void) const
 	{ return _parent; }
 
+	SceneManagerPtr getCreator(void) const
+	{ return _creator; }
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,

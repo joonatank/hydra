@@ -10,12 +10,14 @@
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
 #include "physics/physics_constraints.hpp"
+#include "physics/tube.hpp"
 
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( setLimit_ovs, setLimit, 2, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createTube_ov, createTube, 3, 5 )
 
 // @todo remove the namespace usage
 using namespace vl;
@@ -159,8 +161,17 @@ void export_physics_objects(void)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
+		.def("createTube", &vl::physics::World::createTube, createTube_ov() )
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
+		.add_property("stiffness", &vl::physics::Tube::getStiffness)
+		.add_property("element_size", &vl::physics::Tube::getElementSize)
+		.add_property("radius", &vl::physics::Tube::getRadius)
+		.add_property("leght", &vl::physics::Tube::getLength)
+		.add_property("mass", &vl::physics::Tube::getMass)
 	;
 }
 

@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
- *	@file physics_world.cpp
+ *	@file physics/physics_world.cpp
  *
  *	This file is part of Hydra a VR game engine.
  */
@@ -10,6 +10,7 @@
 /// Physics objects
 #include "motion_state.hpp"
 #include "physics_constraints.hpp"
+#include "tube.hpp"
 
 #include "base/exceptions.hpp"
 
@@ -146,6 +147,15 @@ vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
 		_removeConstraint(*iter);
 		_constraints.erase(iter);
 	}
+}
+
+	/// ----------------------- Tubes --------------------------
+vl::physics::TubeRefPtr
+vl::physics::World::createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
+		vl::scalar length, vl::scalar radius, vl::scalar mass)
+{
+	TubeRefPtr tube(new Tube(this, start_body, end_body, length, radius, mass));
+	return tube;
 }
 
 

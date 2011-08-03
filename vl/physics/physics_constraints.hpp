@@ -25,6 +25,8 @@ public :
 	virtual ~Constraint(void) {}
 };
 
+/// @class SixDofConstraint
+/// Generic six dof constraint with a spring damper system
 class SixDofConstraint : public vl::physics::Constraint
 {
 public :
@@ -44,6 +46,12 @@ public :
 
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
 
+	virtual void enableSpring(int index, bool onOff) = 0;
+	virtual void setStiffness(int index, btScalar stiffness) = 0;
+	virtual void setDamping(int index, btScalar damping) = 0;
+	virtual void setEquilibriumPoint(void) = 0;
+	virtual void setEquilibriumPoint(int index) = 0;
+	
 	// @todo add motors
 
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 

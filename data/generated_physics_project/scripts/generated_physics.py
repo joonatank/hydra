@@ -29,7 +29,7 @@ spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 ground_node = game.scene.createSceneNode("ground")
 ground = game.scene.createEntity("ground", PF.PLANE)
 ground_node.attachObject(ground)
-ground.material_name = "ground/Basic"
+ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
 print('Physics : Adding ground plane')
@@ -50,17 +50,17 @@ sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10
 sphere_body.user_controlled = True
 
 
-sphere_2_body = addSphere("sphere2", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
+sphere_fixed = addSphere("sphere_fixed", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
 
 sphere_3_body = addSphere("sphere3", "finger_sphere/red", Vector3(3, 7, 3))
-constraint = SliderConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+constraint = SliderConstraint.create(sphere_body, sphere_fixed, Transform(), Transform(), False)
 constraint.lower_lin_limit = -5
 constraint.upper_lin_limit = 5
 #constraint.lower_ang_limit = 0
 #constraint.upper_ang_limit = 1
 #world.addConstraint(constraint)
 
-six_dof = SixDofConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+six_dof = SixDofConstraint.create(sphere_body, sphere_fixed, Transform(), Transform(), False)
 six_dof.setLinearLowerLimit(Vector3(-10, -5, -5))
 six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #six_dof.setAngularLowerLimit(Vector3(1, 1, 1))
@@ -92,4 +92,10 @@ trigger.action_down = action
 
 print('Adding kinematic action')
 addKinematicAction(sphere_body)
+
+print('Creating a tube')
+# The distance between the bodies is ~11m so lets put the tube length to 15m
+tube_length = 15
+tube = game.physics_world.createTube(sphere_fixed, sphere_3_body, tube_length)
+
 

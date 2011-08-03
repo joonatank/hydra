@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
- *	@file physics_world.cpp
+ *	@file physics/physics_world.cpp
  *
  *	This file is part of Hydra a VR game engine.
  *
@@ -33,9 +33,6 @@ namespace vl
 namespace physics
 {
 
-typedef std::vector<RigidBodyRefPtr> RigidBodyList;
-typedef std::vector<ConstraintRefPtr> ConstraintList;
-
 /** @class World
  *	Interface for physics world, provides concrete implementations of object
  *	management using our wrapper objects.
@@ -54,6 +51,7 @@ public :
 
 	virtual void setGravity(Ogre::Vector3 const &gravity) = 0;
 
+	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
 
@@ -74,10 +72,13 @@ public :
 
 	bool hasRigidBody( std::string const &name ) const;
 
+
+	/// ---------------------- MotionStates ------------------
 	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
+	/// ---------------------- Constraints ------------------
 	/// @brief add a constraint i.e. a joint to the world
 	/// @param constraint the constraint to add to the world
 	/// @param disableCollisionBetweenLinked no collision detection between linked rigid bodies
@@ -87,6 +88,12 @@ public :
 	void addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked = false);
 
 	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
+
+
+	/// ----------------------- Tubes --------------------------
+	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
+		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass = 50.0);
+
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 

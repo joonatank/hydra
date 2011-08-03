@@ -156,11 +156,14 @@ namespace physics
 {
 	class World;
 	class RigidBody;
+	class Tube;
 
 	typedef boost::shared_ptr<World> WorldRefPtr;
 	typedef boost::weak_ptr<World> WorldWeakPtr;
+	typedef World * WorldPtr;
 	typedef boost::shared_ptr<RigidBody> RigidBodyRefPtr;
 	typedef boost::weak_ptr<RigidBody> RigidBodyWeakPtr;
+	typedef boost::shared_ptr<Tube> TubeRefPtr;
 
 	// collision shapes
 	class CollisionShape;
@@ -193,6 +196,10 @@ namespace physics
 	typedef boost::shared_ptr<vl::physics::SixDofConstraint> SixDofConstraintRefPtr;
 	typedef boost::shared_ptr<vl::physics::SliderConstraint> SliderConstraintRefPtr;
 	typedef boost::shared_ptr<vl::physics::HingeConstraint> HingeConstraintRefPtr;
+
+	// Containers
+	typedef std::vector<RigidBodyRefPtr> RigidBodyList;
+	typedef std::vector<ConstraintRefPtr> ConstraintList;
 }
 
 namespace cluster

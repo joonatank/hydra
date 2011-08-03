@@ -53,7 +53,7 @@ public :
 		BulletRigidBodyRefPtr body1 = boost::static_pointer_cast<BulletRigidBody>(rbA);
 		BulletRigidBodyRefPtr body2 = boost::static_pointer_cast<BulletRigidBody>(rbB);
 
-		_bt_constraint = new btGeneric6DofConstraint(*body1->getNative(), 
+		_bt_constraint = new btGeneric6DofSpringConstraint(*body1->getNative(), 
 			*body2->getNative(), convert_bt_transform(frameInA), 
 			convert_bt_transform(frameInB), useLinearReferenceFrameA);
 	}
@@ -72,12 +72,27 @@ public :
 	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
 	{ _bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper)); }
 
+	void enableSpring(int index, bool onOff)
+	{ _bt_constraint->enableSpring(index, onOff); }
+
+	void setStiffness(int index, btScalar stiffness)
+	{ _bt_constraint->setStiffness(index, stiffness); }
+
+	void setDamping(int index, btScalar damping)
+	{ _bt_constraint->setDamping(index, damping); }
+
+	void setEquilibriumPoint(void)
+	{ _bt_constraint->setEquilibriumPoint(); }
+
+	void setEquilibriumPoint(int index)
+	{ _bt_constraint->setEquilibriumPoint(index); }
+
 	virtual btTypedConstraint *getNative(void)
 	{ return _bt_constraint; }
 
 private :
+	btGeneric6DofSpringConstraint *_bt_constraint;
 
-	btGeneric6DofConstraint *_bt_constraint;
 };
 
 class BulletSliderConstraint : public BulletConstraint, public vl::physics::SliderConstraint

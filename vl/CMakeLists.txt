@@ -120,6 +120,7 @@ set(PHYSICS_HEADERS
 	physics/physics_constraints.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
+	physics/tube.hpp
 	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
@@ -128,6 +129,7 @@ set(PHYSICS_SRC
 	physics/physics_constraints.cpp
 	physics/shapes.cpp
 	physics/rigid_body.cpp
+	physics/tube.cpp
 	physics/mesh_bullet.cpp
 	)
 if(HYDRA_PHYSICS STREQUAL "Bullet")
