@@ -1,12 +1,15 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-12
  *	@file game_manager.cpp
+ *	
+ *	This file is part of Hydra VR game engine.
+ *
  */
 
 #include "game_manager.hpp"
 
 // Python manager
-#include "python.hpp"
+#include "python/python.hpp"
 // Event Manager
 #include "event_manager.hpp"
 // Resource Manager

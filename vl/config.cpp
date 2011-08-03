@@ -1,46 +1,33 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-10
  *	@file config.cpp
+ *
+ *	This file is part of Hydra VR game engine.
  */
 
+/// Interface
 #include "config.hpp"
 
-#include <OIS/OISKeyboard.h>
-#include <OIS/OISMouse.h>
-
-#include "actions_misc.hpp"
-
-#include "dotscene_loader.hpp"
-
-#include "tracker_serializer.hpp"
-#include "base/filesystem.hpp"
-#include "resource_manager.hpp"
-#include "resource.hpp"
-
-#include "scene_manager.hpp"
-// Necessary for hiding collision meshes
-#include "scene_node.hpp"
+#include "base/exceptions.hpp"
 
 // Necessary for retrieving other managers
 #include "game_manager.hpp"
-// Necessary for executing python scripts
-#include "python.hpp"
-// Necessary for retrieving registered triggers, KeyTrigger and FrameTrigger.
+// Necessary for executing python commands from slaves
+#include "python/python.hpp"
+// Necessary for retrieving registered triggers, KeyTrigger and FrameTrigger and sending events.
 #include "event_manager.hpp"
-// Necessary for registering Player
-#include "player.hpp"
+// Necessary for the Event handling
+#include <OIS/OISMouse.h>
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISJoyStick.h>
+
 // Necessary for sending Environment and Project configs
 #include "distrib_settings.hpp"
-
 // Necessary for loading meshes to Server
 #include "mesh_manager.hpp"
 
-#include "base/string_utils.hpp"
-#include "base/sleep.hpp"
-
+// Necessary for local renderer
 #include "renderer_interface.hpp"
-
-#include "gui/gui.hpp"
 
 /// ---------------------------------- Callbacks -----------------------------
 vl::ConfigMsgCallback::ConfigMsgCallback(vl::Config *own)

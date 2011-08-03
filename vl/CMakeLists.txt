@@ -29,7 +29,6 @@ set(SRC
 	actions_transform.cpp
 	scene_manager.cpp
 	scene_node.cpp
-	python.cpp
 	trigger.cpp
 	event_manager.cpp
 	resource_manager.cpp
@@ -154,6 +153,19 @@ endif()
 
 source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
+set(PYTHON_HEADERS
+	python/python.hpp
+	python/python_module.hpp
+	)
+
+set(PYTHON_SRC
+	python/python.cpp
+	python/python_module.cpp
+	python/python_events.cpp
+	python/python_physics.cpp
+	)
+source_group(HydraMain\\python FILES ${PYTHON_HEADERS} ${PYTHON_SRC})
+
 set( HEADERS
 	system_tools/message_box.hpp
 	tracker.hpp
@@ -185,8 +197,6 @@ set( HEADERS
 	actions_transform.hpp
 	scene_manager.hpp
 	scene_node.hpp
-	python.hpp
-	python_module.hpp
 	trigger.hpp
 	event_manager.hpp
 	keycode.hpp
@@ -253,6 +263,8 @@ add_library(HydraMain
 	${INPUT_SRC}
 	${PHYSICS_HEADERS}
 	${PHYSICS_SRC}
+	${PYTHON_HEADERS}
+	${PYTHON_SRC}
 	${CLUSTER_HEADERS}
 	${CLUSTER_SRC}
 	${GUI_HEADERS}

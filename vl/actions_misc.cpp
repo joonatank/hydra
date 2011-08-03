@@ -10,7 +10,7 @@
 #include "player.hpp"
 #include "ray_object.hpp"
 
-#include "python.hpp"
+#include "python/python.hpp"
 
 /// ----------------------------- ScriptAction ---------------------------------
 void
