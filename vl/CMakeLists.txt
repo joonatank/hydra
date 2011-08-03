@@ -63,6 +63,7 @@ set(MATH_HEADERS
 	math/conversion.hpp
 	math/math.hpp
 	math/transform.hpp
+	math/types.hpp
 	)
 set(MATH_SRC
 	math/math.cpp
@@ -210,7 +211,6 @@ set( HEADERS
 	renderer_interface.hpp
 	application.hpp
 	ogre_root.hpp
-	math/types.hpp
 	distributed.hpp
 	constraints.hpp
 	constraint_solver.hpp
