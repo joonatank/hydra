@@ -220,7 +220,8 @@ vl::GameManager::enablePhysics( bool enable )
 		// Create the physics if they don't exist
 		if(!_physics_world)
 		{
-			_physics_world.reset(new physics::World());
+			_physics_world = physics::World::create();
+			assert(_physics_world);
 		}
 	}
 }

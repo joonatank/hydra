@@ -80,11 +80,11 @@ def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	box_shape = ConvexHullShape.create(box_mesh)
 	box_shape.scale = size
 	trans = Transform( position, Quaternion.identity)
-	motion_state = world.createMotionState(trans, box_node)
+	motion_state = game.physics_world.createMotionState(trans, box_node)
 	inertia = Vector3.zero
 	if(mass != 0) :
 		inertia = Vector3(1,1,1)
-	box = world.createRigidBody(name, mass, motion_state, box_shape, inertia)
+	box = game.physics_world.createRigidBody(name, mass, motion_state, box_shape, inertia)
 	return box
 
 
@@ -99,11 +99,11 @@ def addSphere(name, mat_name, position, mass = 1, size = 1) :
 
 	sphere_shape = SphereShape.create(size)
 	trans = Transform( position, Quaternion.identity)
-	motion_state = world.createMotionState(trans, sphere_node)
+	motion_state = game.physics_world.createMotionState(trans, sphere_node)
 	inertia = Vector3.zero
 	if(mass != 0) :
 		inertia = Vector3(1,1,1)
-	sphere_body = world.createRigidBody(name, mass, motion_state, sphere_shape, inertia)
+	sphere_body = game.physics_world.createRigidBody(name, mass, motion_state, sphere_shape, inertiasphere)
 
 	# Set some damping so it doesn't go on endlessly
 	sphere_body.setDamping(0.3, 0.3)

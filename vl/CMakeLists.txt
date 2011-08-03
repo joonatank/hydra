@@ -125,10 +125,33 @@ set(PHYSICS_HEADERS
 set(PHYSICS_SRC
 	physics/physics_events.cpp
 	physics/physics_world.cpp
+	physics/physics_constraints.cpp
 	physics/shapes.cpp
 	physics/rigid_body.cpp
 	physics/mesh_bullet.cpp
 	)
+if(HYDRA_PHYSICS STREQUAL "Bullet")
+	list(APPEND PHYSICS_HEADERS
+		physics/physics_world_bullet.hpp
+		physics/rigid_body_bullet.hpp
+		physics/shapes_bullet.hpp
+		physics/physics_constraints_bullet.hpp
+		)
+	list(APPEND PHYSICS_SRC
+		physics/physics_world_bullet.cpp
+		)
+elseif(HYDRA_PHYSICS STREQUAL "Newton")
+	list(APPEND PHYSICS_HEADERS
+		physics/physics_world_newton.hpp
+		physics/rigid_body_newton.hpp
+		physics/shapes_newton.hpp
+		physics/physics_constraints_newton.hpp
+		)
+	list(APPEND PHYSICS_SRC
+		physics/physics_world_newton.cpp
+		)
+endif()
+
 source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
 set( HEADERS

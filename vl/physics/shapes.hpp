@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
- *	@file shapes.hpp
+ *	@file physics/shapes.hpp
  *
  *	This file is part of Hydra VR game engine.
  */
@@ -9,8 +9,6 @@
 #define HYDRA_PHYSICS_SHAPES_HPP
 
 #include "typedefs.hpp"
-
-#include "bullet/btBulletCollisionCommon.h"
 
 #include "math/math.hpp"
 #include "math/conversion.hpp"
@@ -22,49 +20,45 @@ namespace physics
 {
 
 /// @brief abstract interface for collision shapes
+/// To avoid collisions this can not have any concrete data as it's inherited multiple times.
 class CollisionShape
 {
 public :
-	virtual btCollisionShape *getNative(void) = 0;
+	virtual ~CollisionShape(void) {}
 
 };	// class CollisionShape
 
 class BoxShape : public CollisionShape
 {
 public :
-
 	// Create a box shape around origin: with size [-bounds, bounds]
 	static BoxShapeRefPtr create(Ogre::Vector3 const &bounds);
 
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
+	virtual ~BoxShape(void) {}
+
+protected :
+	BoxShape(void) {}
 
 private :
-	BoxShape(Ogre::Vector3 const &bounds);
-
 	BoxShape(BoxShape const &);
 	BoxShape &operator=(BoxShape const &);
 
-	btBoxShape *_bt_shape;
 
 };	// class BoxShape
 
 class SphereShape : public CollisionShape
 {
 public :
-
 	static SphereShapeRefPtr create(vl::scalar radius);
 
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
+	virtual ~SphereShape(void) {}
+
+protected :
+	SphereShape(void) {}
 
 private :
-	SphereShape(vl::scalar radius);
-
 	SphereShape(SphereShape const &other);
 	SphereShape &operator=(SphereShape const &other);
-
-	btSphereShape *_bt_shape;
 
 };	// class SphereShape
 
@@ -75,72 +69,63 @@ public :
 	// so usually you want to translate the plane by plane_constant*(-plane_normal)
 	StaticPlaneShapeRefPtr create(Ogre::Vector3 const &normal, vl::scalar constant);
 
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
+	virtual ~StaticPlaneShape(void) {}
+
+protected :
+	StaticPlaneShape(void) {}
 
 private :
-	StaticPlaneShape(Ogre::Vector3 const &normal, vl::scalar constant);
-
 	StaticPlaneShape(StaticPlaneShape const &);
 	StaticPlaneShape &operator=(StaticPlaneShape const &);
 
-	btStaticPlaneShape *_bt_shape;
 
 };	// class ConvexHullShape
 
 class StaticTriangleMeshShape : public CollisionShape
 {
 public :
-	
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
-
 	static StaticTriangleMeshShapeRefPtr create(vl::MeshRefPtr mesh);
 
-private :
-	/// @todo real implementation
-	StaticTriangleMeshShape(vl::MeshRefPtr mesh);
+	virtual ~StaticTriangleMeshShape(void) {}
 
+protected :
+	StaticTriangleMeshShape(void) {}
+
+private :
 	StaticTriangleMeshShape(StaticTriangleMeshShape const &);
 	StaticTriangleMeshShape &operator=(StaticTriangleMeshShape const &);
 
-	btBvhTriangleMeshShape *_bt_shape;
 
 };	// class StaticTriangleMeshShape
 
 class ConvexHullShape : public CollisionShape
 {
 public :
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
-
 	static ConvexHullShapeRefPtr create(vl::MeshRefPtr mesh);
 
+	virtual ~ConvexHullShape(void) {}
+
+	/* Do we need these for some reason?
 	void setLocalScaling(Ogre::Vector3 const &scale)
 	{ _bt_shape->setLocalScaling(vl::math::convert_bt_vec(scale)); }
 
 	Ogre::Vector3 getLocalScaling(void) const
 	{ return vl::math::convert_vec(_bt_shape->getLocalScaling()); }
+	*/
+
+protected :
+	ConvexHullShape(void) {}
 
 private :
-	/// @todo real implementation
-	ConvexHullShape(vl::MeshRefPtr mesh);
-
 	ConvexHullShape(ConvexHullShape const &);
 	ConvexHullShape &operator=(ConvexHullShape const &);
 
-	/// @todo move to using btConvexHull for this, better performance
-	/// needs a separate conversion algorithm
-	btConvexTriangleMeshShape *_bt_shape;
-
 };	// class ConvexHullShape
 
+/// @todo not implemented
 class CylinderShape : public CollisionShape
 {
 public :
-
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
 
 private :
 	CylinderShape(void)
@@ -149,16 +134,12 @@ private :
 	CylinderShape(CylinderShape const &);
 	CylinderShape &operator=(CylinderShape const &);
 
-	btCylinderShape *_bt_shape;
-
 };	// class CylinderShape
 
+/// @todo not implemented
 class CapsuleShape : public CollisionShape
 {
 public :
-
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
 
 private :
 	CapsuleShape(void)
@@ -167,16 +148,12 @@ private :
 	CapsuleShape(CapsuleShape const &);
 	CapsuleShape operator=(CapsuleShape const &);
 
-	btCapsuleShape *_bt_shape;
-
 };	// class CapsuleShape
 
+/// @todo not implemented
 class ConeShape : public CollisionShape
 {
 public :
-
-	virtual btCollisionShape *getNative(void)
-	{ return _bt_shape; }
 
 private :
 	ConeShape(void)
@@ -184,8 +161,6 @@ private :
 
 	ConeShape(ConeShape const &);
 	ConeShape &operator=(ConeShape const &);
-
-	btConeShape *_bt_shape;
 
 };	// class ConeShape
 

@@ -1,23 +1,20 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
+ *	@file physics_world.cpp
+ *
+ *	This file is part of Hydra a VR game engine.
  *
  *	Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
+ *	Provides object management for and the general interface for physics engine world.
  *
- *	Uses Bullet for now
- *	Later this will provide object management for the general interface
- *	objects the abstract inteface for physics world.
+ *	@update 2011-07
+ *	Removed dependencies to Bullet for selectable physics engine.
  *
  */
 
 #ifndef HYDRA_PHYSICS_WORLD_HPP
 #define HYDRA_PHYSICS_WORLD_HPP
-
-// This class initialises Bullet physics so they are necessary
-#include <bullet/btBulletDynamicsCommon.h>
-
-#include <vector>
-#include <string>
 
 #include "base/exceptions.hpp"
 
@@ -26,6 +23,9 @@
 /// Physics objects
 #include "physics_constraints.hpp"
 
+#include <vector>
+#include <string>
+
 namespace vl
 {
 
@@ -33,24 +33,26 @@ namespace physics
 {
 
 typedef std::vector<RigidBodyRefPtr> RigidBodyList;
-typedef std::vector<btCollisionShape *> CollisionShapeList;
+//typedef std::vector<btCollisionShape *> CollisionShapeList;
 typedef std::vector<ConstraintRefPtr> ConstraintList;
 
 /** @class World
- *
+ *	Interface for physics world, provides concrete implementations of object
+ *	management using our wrapper objects.
+ *	Provides abstract interface for physics engine implementation.
  */
 class World
 {
 public :
-	World( void );
+	static WorldRefPtr create(void);
 
-	~World( void );
+	virtual ~World(void);
 
-	void step( void );
+	virtual void step(void) = 0;
 
-	Ogre::Vector3 getGravity( void ) const;
+	virtual Ogre::Vector3 getGravity(void) const = 0;
 
-	void setGravity( Ogre::Vector3 const &gravity );
+	virtual void setGravity(Ogre::Vector3 const &gravity) = 0;
 
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
@@ -88,19 +90,19 @@ public :
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
-private :
-	void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body);
+protected :
+
+	// Protected because this is abstract class
+	World(void);
+
+	// Real engine implementation using template method pattern
+	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked) = 0;
+	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body) = 0;
+
+	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
+
 
 	RigidBodyRefPtr _findRigidBody( std::string const &name ) const;
-
-	/// Bullet physics world objects
-	/// The order of them is important don't change it.
-	/// @todo move to using scoped ptrs if possible
-	btBroadphaseInterface *_broadphase;
-	btCollisionConfiguration *_collision_config;
-	btCollisionDispatcher *_dispatcher;
-	btSequentialImpulseConstraintSolver *_solver;
-	btDiscreteDynamicsWorld *_dynamicsWorld;
 
 	/// Rigid bodies
 	/// World owns all of them

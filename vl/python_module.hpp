@@ -833,13 +833,9 @@ BOOST_PYTHON_MODULE(vl)
 		++i;
 	}
 
-}	// endof hydra python module
-
-/// Physics
-/// @todo physics should be in hydra.physics
-/// needs a package strucutre
-BOOST_PYTHON_MODULE(physics)
-{
+	/// Physics
+	/// @todo physics should be in hydra.physics
+	/// needs a package strucutre
 	python::class_<vl::physics::CollisionShape, boost::noncopyable >("CollisionShape", python::no_init )
 	;
 
@@ -864,7 +860,7 @@ BOOST_PYTHON_MODULE(physics)
 	;
 
 	python::class_<vl::physics::ConvexHullShape, boost::noncopyable, vl::physics::ConvexHullShapeRefPtr, python::bases<vl::physics::CollisionShape> >("ConvexHullShape", python::no_init )
-		.add_property("scale", &vl::physics::ConvexHullShape::getLocalScaling, &vl::physics::ConvexHullShape::setLocalScaling)
+//		.add_property("scale", &vl::physics::ConvexHullShape::getLocalScaling, &vl::physics::ConvexHullShape::setLocalScaling)
 		.def("create", &vl::physics::ConvexHullShape::create)
 		.staticmethod("create")
 	;

@@ -1,3 +1,9 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-11
+ *	@file physics_world.cpp
+ *
+ *	This file is part of Hydra a VR game engine.
+ */
 
 #include "physics_world.hpp"
 
@@ -5,6 +11,13 @@
 #include "motion_state.hpp"
 #include "rigid_body.hpp"
 #include "constraints.hpp"
+
+/// Concrete implementations
+#ifdef USE_BULLET
+#include "physics_world_bullet.hpp"
+#else if USE_NEWTON
+#include "physics_world_newton.hpp"
+#endif
 
 /// -------------------------------- Global ----------------------------------
 std::ostream &
@@ -28,51 +41,37 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 }
 
 /// -------------------------------- Public ----------------------------------
-vl::physics::World::World( void )
-	: _broadphase( new btDbvtBroadphase() ),
-	  _collision_config( new btDefaultCollisionConfiguration() ),
-	  _dispatcher( new btCollisionDispatcher(_collision_config) ),
-	  _solver( new btSequentialImpulseConstraintSolver )
+vl::physics::WorldRefPtr
+vl::physics::World::create(void)
 {
-	_dynamicsWorld = new btDiscreteDynamicsWorld(_dispatcher,_broadphase,_solver,_collision_config);
-	_dynamicsWorld->setGravity( btVector3(0,-9.81,0) );
-}
-
-vl::physics::World::~World( void )
-{
-	// cleanup the world
-	delete _dynamicsWorld;
-	delete _solver;
-	delete _dispatcher;
-	delete _collision_config;
-	delete _broadphase;
-}
-
-void
-vl::physics::World::step( void )
-{
-	// Some hard-coded parameters for the simulation
-	_dynamicsWorld->stepSimulation(1/60.f,10);
-}
-
-Ogre::Vector3
-vl::physics::World::getGravity(void) const
-{
-	return vl::math::convert_vec(_dynamicsWorld->getGravity());
+	WorldRefPtr world;
+#ifdef USE_BULLET
+	world.reset(new BulletWorld);
+#else if USE_NEWTON
+#endif
+	return world;
 }
 
 
-void
-vl::physics::World::setGravity(const Ogre::Vector3& gravity)
-{
-	_dynamicsWorld->setGravity( vl::math::convert_bt_vec(gravity) );
-}
+vl::physics::World::~World(void)
+{}
+
 
 vl::physics::RigidBodyRefPtr
 vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 {
-	RigidBodyRefPtr body(new RigidBody(info));
+	if(hasRigidBody(info.name))
+	{
+		std::string err( "RigidBody with that name is already in the scene." );
+		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(err) );
+	}
+
+	RigidBodyRefPtr body = RigidBody::create(info);
+	assert(body);
+	_rigid_bodies.push_back(body);
+	// Add the body to the physics engine
 	_addRigidBody(info.name, body);
+
 	return body;
 }
 
@@ -132,7 +131,7 @@ vl::physics::World::addConstraint(vl::physics::ConstraintRefPtr constraint, bool
 	if(iter == _constraints.end())
 	{
 		_constraints.push_back(constraint);
-		_dynamicsWorld->addConstraint(constraint->getNative(), disableCollisionBetweenLinked);
+		_addConstraint(constraint, disableCollisionBetweenLinked);
 	}
 }
 
@@ -143,26 +142,15 @@ vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
 	
 	if(iter != _constraints.end())
 	{
-		_dynamicsWorld->removeConstraint((*iter)->getNative());
+		_removeConstraint(*iter);
 		_constraints.erase(iter);
 	}
 }
 
-/// --------------------------------- Private ----------------------------------
-void
-vl::physics::World::_addRigidBody(std::string const &name, vl::physics::RigidBodyRefPtr body)
-{
-	if( !hasRigidBody(name) )
-	{
-		_rigid_bodies.push_back(body);
-		_dynamicsWorld->addRigidBody(body->getNative());
-	}
-	else
-	{
-		std::string err( "RigidBody with that name is already in the scene." );
-		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(err) );
-	}
-}
+
+/// ------------------------------- Protected --------------------------------
+vl::physics::World::World(void)
+{}
 
 vl::physics::RigidBodyRefPtr
 vl::physics::World::_findRigidBody(const std::string& name) const
