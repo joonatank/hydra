@@ -34,7 +34,7 @@ public :
 	virtual ~BulletWorld(void);
 
 	/// Virtual overrides
-	virtual void step(void);
+	virtual void step(vl::time const &time_step);
 
 	virtual Ogre::Vector3 getGravity(void) const;
 

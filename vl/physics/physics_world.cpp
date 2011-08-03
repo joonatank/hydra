@@ -9,8 +9,9 @@
 
 /// Physics objects
 #include "motion_state.hpp"
-#include "rigid_body.hpp"
-#include "constraints.hpp"
+#include "physics_constraints.hpp"
+
+#include "base/exceptions.hpp"
 
 /// Concrete implementations
 #ifdef USE_BULLET

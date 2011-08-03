@@ -35,10 +35,10 @@ vl::physics::BulletWorld::~BulletWorld(void)
 }
 
 void
-vl::physics::BulletWorld::step( void )
+vl::physics::BulletWorld::step(vl::time const &time_step)
 {
 	// Some hard-coded parameters for the simulation
-	_dynamicsWorld->stepSimulation(1/60.f,10);
+	_dynamicsWorld->stepSimulation((double)time_step, 10);
 }
 
 Ogre::Vector3

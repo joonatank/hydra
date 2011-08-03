@@ -122,18 +122,18 @@ vl::GameManager::step(void)
 			_trackers->getTrackerPtr(i)->mainloop();
 		}
 
-		if( _physics_world )
-		{
-			_physics_world->step();
-		}
+		vl::time elapsed_time = _step_timer.elapsed();
 
-		vl::time elapsed = _step_timer.elapsed();
+		if(_physics_world)
+		{ _physics_world->step(elapsed_time); }
 
-		_process_constraints(elapsed);
+		_process_constraints(elapsed_time);
 
-		_scene_manager->_step(elapsed);
+		_scene_manager->_step(elapsed_time);
 	}
 
+	// Reset the timer always, no matter the state so we don't have a huge
+	// elapsed time if the simulation is paused
 	_step_timer.reset();
 
 	return !isQuited();

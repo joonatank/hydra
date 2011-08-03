@@ -16,12 +16,13 @@
 #ifndef HYDRA_PHYSICS_WORLD_HPP
 #define HYDRA_PHYSICS_WORLD_HPP
 
-#include "base/exceptions.hpp"
-
-#include "scene_node.hpp"
-
-/// Physics objects
-#include "physics_constraints.hpp"
+#include "typedefs.hpp"
+// Necessary for time step
+#include "base/timer.hpp"
+// Necessary for vl::scalar
+#include "math/types.hpp"
+// Necessary for RigidBody::ConstructionInfo
+#include "rigid_body.hpp"
 
 #include <vector>
 #include <string>
@@ -33,7 +34,6 @@ namespace physics
 {
 
 typedef std::vector<RigidBodyRefPtr> RigidBodyList;
-//typedef std::vector<btCollisionShape *> CollisionShapeList;
 typedef std::vector<ConstraintRefPtr> ConstraintList;
 
 /** @class World
@@ -48,7 +48,7 @@ public :
 
 	virtual ~World(void);
 
-	virtual void step(void) = 0;
+	virtual void step(vl::time const &time_step) = 0;
 
 	virtual Ogre::Vector3 getGravity(void) const = 0;
 
@@ -74,7 +74,7 @@ public :
 
 	bool hasRigidBody( std::string const &name ) const;
 
-	MotionState *createMotionState( vl::Transform const &trans = vl::Transform(), vl::SceneNode *node = 0 );
+	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
