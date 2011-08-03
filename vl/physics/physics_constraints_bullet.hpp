@@ -48,8 +48,8 @@ public :
 		: SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
 		, _bt_constraint(0)
 	{
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbA));
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbB));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbB));
 		BulletRigidBodyRefPtr body1 = boost::static_pointer_cast<BulletRigidBody>(rbA);
 		BulletRigidBodyRefPtr body2 = boost::static_pointer_cast<BulletRigidBody>(rbB);
 
@@ -88,8 +88,8 @@ public :
 		: SliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
 		, _bt_constraint(0)
 	{
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbA));
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbB));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbB));
 		BulletRigidBodyRefPtr body1 = boost::static_pointer_cast<BulletRigidBody>(rbA);
 		BulletRigidBodyRefPtr body2 = boost::static_pointer_cast<BulletRigidBody>(rbB);
 
@@ -285,8 +285,8 @@ public :
 		: HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
 		, _bt_constraint(0)
 	{
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbA));
-		assert(boost::dynamic_pointer_cast<BulletRigidBodyRefPtr>(rbB));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));
+		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbB));
 		BulletRigidBodyRefPtr body1 = boost::static_pointer_cast<BulletRigidBody>(rbA);
 		BulletRigidBodyRefPtr body2 = boost::static_pointer_cast<BulletRigidBody>(rbB);
 

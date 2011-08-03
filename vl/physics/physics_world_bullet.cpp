@@ -56,6 +56,7 @@ vl::physics::BulletWorld::setGravity(Ogre::Vector3 const &gravity)
 void
 vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body)
 {
+	// for some reason we can not do static_pointer_cast here
 	BulletRigidBodyRefPtr b = boost::dynamic_pointer_cast<BulletRigidBody>(body);
 
 	assert(b && b->getNative());
@@ -65,6 +66,7 @@ vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::R
 void
 vl::physics::BulletWorld::_addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked)
 {
+	// for some reason we can not do static_pointer_cast here
 	BulletConstraintRefPtr c = boost::dynamic_pointer_cast<BulletConstraint>(constraint);
 
 	assert(c && c->getNative());
@@ -74,6 +76,7 @@ vl::physics::BulletWorld::_addConstraint(vl::physics::ConstraintRefPtr constrain
 void
 vl::physics::BulletWorld::_removeConstraint(vl::physics::ConstraintRefPtr constraint)
 {
+	// for some reason we can not do static_pointer_cast here
 	BulletConstraintRefPtr c = boost::dynamic_pointer_cast<BulletConstraint>(constraint);
 
 	assert(c && c->getNative());

@@ -103,11 +103,11 @@ def addSphere(name, mat_name, position, mass = 1, size = 1) :
 	inertia = Vector3.zero
 	if(mass != 0) :
 		inertia = Vector3(1,1,1)
-	sphere_body = game.physics_world.createRigidBody(name, mass, motion_state, sphere_shape, inertiasphere)
+	body = game.physics_world.createRigidBody(name, mass, motion_state, sphere_shape, inertia)
 
 	# Set some damping so it doesn't go on endlessly
-	sphere_body.setDamping(0.3, 0.3)
-	return sphere_body
+	body.setDamping(0.3, 0.3)
+	return body 
 
 def createFixedConstraint(body0, body1, transform, disableCollision = True):
 	local0_trans = body0.transform_to_local(transform)
