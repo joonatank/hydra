@@ -12,7 +12,7 @@
 /// Necessary as we create new bodies for all the elements
 #include "rigid_body.hpp"
 /// Necessary for the string-dampers
-#include "constraints.hpp"
+#include "physics_constraints.hpp"
 
 /// Necessary for generating the mesh
 #include "mesh_manager.hpp"
@@ -27,7 +27,8 @@ vl::physics::Tube::Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRef
 	, _end_body(end_body)
 	, _length(length)
 	, _stiffness(0.9)
-	, _element_size(0.3)
+	, _damping(0.1)
+	, _element_size(0.6)
 	, _tube_radius(radius)
 	, _mass(mass)
 	, _world(world)
@@ -36,7 +37,6 @@ vl::physics::Tube::Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRef
 	std::clog << "vl::physics::Tube::Tube" << std::endl;
 
 	assert(_world);
-	assert(_start_body && _end_body);
 
 	/// @todo create the tube bodies using a user given length
 	/// this is usually different than the length between start and end bodies
@@ -44,26 +44,33 @@ vl::physics::Tube::Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRef
 	
 	/// @todo check the distance between the two bodies
 	uint16_t n_elements = std::ceil(_length/_element_size);
-
-	Ogre::Vector3 bounds(_tube_radius*2, _tube_radius*2, _length/n_elements);
+	vl::scalar elem_length = _length/n_elements;
+	Ogre::Vector3 bounds(_tube_radius, elem_length/2, _tube_radius);
 	BoxShapeRefPtr shape = BoxShape::create(bounds);
 	Ogre::Vector3 inertia(1, 1, 1);
+	vl::scalar elem_mass = _mass/n_elements;
 	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl;
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		std::stringstream name;
 		name << "tube_element_" << i;
 		// @todo fix the transformations for the bodies now they are on top of each other
-		MotionState *ms = _world->createMotionState(vl::Transform(Ogre::Vector3(0, 1+i, 0)));
-
-		RigidBodyRefPtr body = _world->createRigidBody(name.str(), _mass/n_elements, ms, shape, inertia);
+		// Motions state transformation is correct, tested without mass it creates a nice string
+		// to the world zero that goes upwards.
+		// Of course we should have the string going in the z-axis
+		// Of course we should have the bodies created between start and end body
+		Transform ms_t(Ogre::Vector3(0, 2, (i-n_elements/2)*elem_length), Ogre::Quaternion(0.7071, 0.7071, 0, 0));
+		MotionState *ms = _world->createMotionState(ms_t);
+		// @todo should check what axis is up and so on, set mass and inertia to zero for testing
+		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, inertia);
 		_bodies.push_back(body);
 	}
 
-	std::clog << "Created " << _bodies.size() << " rigid bodies for the tube." << std::endl;
+	_createConstraints(elem_length);
 
-	/// create string-damper constraints between the bodies
-	
+	std::clog << "Created " << _bodies.size() << " rigid bodies and "
+		<< _constraints.size() << " constraints for the tube." << std::endl;
+
 	/// Create the SceneNodes
 	assert(start_body->getMotionState() && start_body->getMotionState()->getNode());
 	_createMesh(start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
@@ -78,6 +85,75 @@ vl::physics::Tube::setStiffness(vl::scalar stiffness)
 {
 	// @todo needs to reconfigure the constraints
 	_stiffness = stiffness;
+}
+
+void
+vl::physics::Tube::setDamping(vl::scalar damping)
+{
+	// @todo needs to reconfigure the constraints
+	_damping = damping;
+}
+
+/// ---------------------------------- Private -------------------------------
+void
+vl::physics::Tube::_createConstraints(vl::scalar elem_length)
+{
+	/// Create spring-damper constraints
+	/// Maximum number of constraint is N+1 where N is the number of elements
+	vl::Transform frameA(Ogre::Vector3(0, elem_length/2, 0));
+	vl::Transform frameB = -frameA;	
+//	frameA.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);
+//	frameB.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);*
+	if(_start_body && _bodies.size() > 0)
+	{
+		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), frameA, frameB, true);
+		_constraints.push_back(constraint);
+	}
+
+	for(size_t i = 1; i < _bodies.size(); ++i)
+	{	
+		ConstraintRefPtr constraint;
+
+		// first element
+		constraint = SixDofConstraint::create(_bodies.at(i-1), _bodies.at(i), frameA, frameB, true);
+		_constraints.push_back(constraint);
+	}
+	
+	// Last element
+	if(_end_body && _bodies.size() > 0)
+	{
+		ConstraintRefPtr constraint = SixDofConstraint::create(_bodies.back(), _end_body, frameA, frameB, true);
+		_constraints.push_back(constraint);
+	}
+
+	/// Configure all created constraints using same parameters
+	for(ConstraintList::iterator iter = _constraints.begin(); iter != _constraints.end(); ++iter)
+	{
+		/// @todo set limits
+		/// all translations should be fixed
+		/// rotation around y-axis is allowed to a small extent
+		/// the tube should have y-axis running through it in this scenario
+		/// rotation around x and z axes are allowed to a large extent
+
+		_world->addConstraint(*iter);
+		
+		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+		assert(spring);
+		/// @todo set limits
+		spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
+		spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
+
+		/// @todo enable spring damper
+		/// @todo set stiffness and damping
+		// Enable spring for rotations around x, y and z
+		for(uint16_t i = 3; i < 6; ++i)
+		{
+			//spring->enableSpring(i, true);
+			//spring->setStiffness(i, _stiffness);
+			//spring->setDamping(i, _damping);
+		}
+		//spring->setEquilibriumPoint();
+	}
 }
 
 void

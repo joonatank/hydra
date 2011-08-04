@@ -33,7 +33,9 @@ namespace
 
 		btVector3 inertia(convert_bt_vec(info.inertia));
 		BulletCollisionShapeRefPtr shape = boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape);
-		
+		if(info.mass == 0)
+		{ inertia = btVector3(0, 0, 0); }
+
 		return btRigidBody::btRigidBodyConstructionInfo(info.mass, info.state, shape->getNative(), inertia);
 	}
 }

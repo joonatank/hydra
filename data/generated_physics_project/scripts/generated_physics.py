@@ -46,21 +46,21 @@ box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
 # with scaling a ConvexHull
 box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
-sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
-sphere_body.user_controlled = True
+user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
+user_sphere.user_controlled = True
 
 
 sphere_fixed = addSphere("sphere_fixed", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
 
 sphere_3_body = addSphere("sphere3", "finger_sphere/red", Vector3(3, 7, 3))
-constraint = SliderConstraint.create(sphere_body, sphere_fixed, Transform(), Transform(), False)
+constraint = SliderConstraint.create(user_sphere, sphere_fixed, Transform(), Transform(), False)
 constraint.lower_lin_limit = -5
 constraint.upper_lin_limit = 5
 #constraint.lower_ang_limit = 0
 #constraint.upper_ang_limit = 1
 #world.addConstraint(constraint)
 
-six_dof = SixDofConstraint.create(sphere_body, sphere_fixed, Transform(), Transform(), False)
+six_dof = SixDofConstraint.create(user_sphere, sphere_fixed, Transform(), Transform(), False)
 six_dof.setLinearLowerLimit(Vector3(-10, -5, -5))
 six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #six_dof.setAngularLowerLimit(Vector3(1, 1, 1))
@@ -71,7 +71,7 @@ six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 print('Adding Force action to KC_F')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
+action.script = 'user_sphere.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
 trigger = game.event_manager.createKeyTrigger( KC.F )
 trigger.action_down = action
 
@@ -79,23 +79,23 @@ trigger.action_down = action
 print('Adding Torque action to KC_G')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.applyTorque(Vector3(0, 500, 0))'
+action.script = 'user_sphere.applyTorque(Vector3(0, 500, 0))'
 trigger = game.event_manager.createKeyTrigger( KC.G )
 trigger.action_down = action
 
 print('Adding set Liner velocity action to KC_T')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.setLinearVelocity(Vector3(1, 0, 0))'
+action.script = 'user_sphere.setLinearVelocity(Vector3(1, 0, 0))'
 trigger = game.event_manager.createKeyTrigger(KC.T)
 trigger.action_down = action
 
 print('Adding kinematic action')
-addKinematicAction(sphere_body)
+addKinematicAction(user_sphere)
 
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m
 tube_length = 15
-tube = game.physics_world.createTube(sphere_fixed, sphere_3_body, tube_length)
+tube = game.physics_world.createTube(user_sphere, sphere_3_body, tube_length)
 
 

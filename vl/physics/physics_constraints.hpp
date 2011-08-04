@@ -46,6 +46,8 @@ public :
 
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
 
+	/// Index 0-2 for translation (x, y, z)
+	/// Index 3-5 for rotations (x, y, z)
 	virtual void enableSpring(int index, bool onOff) = 0;
 	virtual void setStiffness(int index, btScalar stiffness) = 0;
 	virtual void setDamping(int index, btScalar damping) = 0;

@@ -26,8 +26,8 @@ class Tube
 public :
 	/**	@brief Constructor
 	 *	@param world where to add the tube
-	 *	@param start_body the body where the one end of the tube is tied to
-	 *	@param end_body the point where the other end of the tube is tied to
+	 *	@param start_body the body where the one end of the tube is tied to can be NULL
+	 *	@param end_body the point where the other end of the tube is tied to can be NULL
 	 *	@param length the length of the tube
 	 *	@param radius the radius of the tube
 	 *	@param mass the mass of the tube
@@ -46,6 +46,11 @@ public :
 	vl::scalar getStiffness(void) const
 	{ return _stiffness; }
 
+	void setDamping(vl::scalar damping);
+
+	vl::scalar getDamping(void) const
+	{ return _damping; }
+
 	/// @brief get the size of a single simulated rigid body
 	/// hard coded for now.
 	vl::scalar getElementSize(void) const
@@ -63,6 +68,8 @@ public :
 	{ return _mass; }
 
 private :
+	void _createConstraints(vl::scalar elem_length);
+
 	/// Helper methods for Graphics engine so we don't need to pass 
 	/// all this information to the constructor, which would be pretty hard
 	/// as we would need to pass it also to the World.
@@ -79,6 +86,7 @@ private :
 	
 	vl::scalar _length;
 	vl::scalar _stiffness;
+	vl::scalar _damping;
 	vl::scalar _element_size;
 	vl::scalar _tube_radius;
 	vl::scalar _mass;
