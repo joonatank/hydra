@@ -11,8 +11,6 @@
 #ifndef HYDRA_MATH_TYPES_HPP
 #define HYDRA_MATH_TYPES_HPP
 
-#include "transform.hpp"
-
 // For MSV compilers to get M_PI
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -27,9 +25,9 @@ namespace vl
 
 typedef Ogre::Real scalar;
 
-typedef Ogre::Vector3 vec3;
-typedef Ogre::Quaternion quaternion;
-typedef Ogre::Matrix4 mat4;
+typedef Ogre::Vector3 Vector3;
+typedef Ogre::Quaternion Quaternion;
+typedef Ogre::Matrix4 Matrix4;
 
 /// Constants
 const scalar epsilon = scalar(1e-6);

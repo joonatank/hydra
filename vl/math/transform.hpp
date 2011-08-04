@@ -7,23 +7,22 @@
 #ifndef HYDRA_MATH_TRANSFORM_HPP
 #define HYDRA_MATH_TRANSFORM_HPP
 
-// Necessary for Math types
-#include <OGRE/OgreQuaternion.h>
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreMatrix4.h>
+// Necessary for vl::scalar, vector, quaternion and matrix types
+#include "math/types.hpp"
 
 namespace vl
 {
 
 struct Transform
 {
+	/// Constructors allows for defining Vector and Quaternion pair in any order
 	Transform( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,
 				Ogre::Quaternion const &rot = Ogre::Quaternion::IDENTITY )
 		: position(pos), quaternion(rot)
 	{}
 
-	Transform(Ogre::Quaternion const &rot)
-		: position(Ogre::Vector3::ZERO), quaternion(rot)
+	Transform(Ogre::Quaternion const &rot, Ogre::Vector3 const &pos = Ogre::Vector3::ZERO)
+		: position(pos), quaternion(rot)
 	{}
 
 	bool isValid(void) const
@@ -57,6 +56,14 @@ struct Transform
 
 	vl::Transform &operator*=(vl::Transform const &t);
 
+	/// Does not define T+T and T-T because those are meaningless for Transformations
+	/// and would screw quaternions for sure
+	/// The multiplication operator is provided and is quarantied not to
+	/// touch the quaternion.
+	vl::Transform &operator*=(Ogre::Vector3 const &v);
+
+	vl::Transform &operator*=(vl::scalar s);
+
 	Ogre::Vector3 position;
 	Ogre::Quaternion quaternion;
 };
@@ -65,8 +72,14 @@ std::ostream &
 operator<<( std::ostream &os, Transform const &d );
 
 /// Transform arithmetic
+// Invert the transformation, returns a version with Quaternion inverted and
+// Vector negated so that T*(-T) = (-T)*T = I for all Ts.
+vl::Transform
+operator-(vl::Transform const &t);
+
 vl::Transform 
 operator*(vl::Transform const &t1, vl::Transform const &t2);
+
 
 /// Ogre::Matrix and Transform arithmetic
 vl::Transform 
@@ -76,12 +89,18 @@ vl::Transform
 operator*( Ogre::Matrix4 const &m, vl::Transform const &t );
 
 /// transforms the vector by transfrom t
-/// @todo should this include the position element?
+/// Does both, rotates the vector by the quaternion and adds the positions element
+/// Equivalent to Matrix Vector multiplication
 Ogre::Vector3
 operator*( vl::Transform const &t, Ogre::Vector3 const &v);
 
+/// Transforms quaternion by Transform, only rotation part is considered
+/// Equivalent to Matrix Rotatation matrix (quaternion) multiplication
 Ogre::Quaternion
 operator*( vl::Transform const &t, Ogre::Quaternion const &q);
+
+
+
 
 /// Comparison
 bool

@@ -79,6 +79,20 @@ vl::Transform::operator*=(Ogre::Matrix4 const &m)
 	return *this;
 }
 
+vl::Transform &
+vl::Transform::operator*=(Ogre::Vector3 const &v)
+{
+	position *= v;
+	return *this;
+}
+
+vl::Transform &
+vl::Transform::operator*=(vl::scalar s)
+{
+	position *= s;
+	return *this;
+}
+
 /// -------------------------------- Global ----------------------------------
 std::ostream &
 vl::operator<<( std::ostream &os, vl::Transform const &d )	
@@ -94,6 +108,12 @@ vl::operator<<( std::ostream &os, vl::Transform const &d )
 	*/
 
 	return os;
+}
+
+vl::Transform 
+vl::operator-(vl::Transform const &t)
+{
+	return t.inverted();
 }
 
 vl::Transform 

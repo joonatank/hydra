@@ -2,11 +2,11 @@
  *	@date 2010-03
  *	@file math.hpp
  *
- *	Base math functions.
+ *	Math helper functions.
  */
 
-#ifndef VL_MATH_MATH_HPP
-#define VL_MATH_MATH_HPP
+#ifndef HYDRA_MATH_MATH_HPP
+#define HYDRA_MATH_MATH_HPP
 
 // uint64_t uint32_t uint16_t and uint8_t
 #include <stdint.h>
@@ -18,6 +18,7 @@
 #include "base/envsettings.hpp"
 
 #include "types.hpp"
+#include "transform.hpp"
 
 namespace vl
 {
@@ -125,4 +126,4 @@ Ogre::Quaternion orientation_to_wall(vl::EnvSettings::Wall const &wall);
 
 }	// namespace vl
 
-#endif
+#endif	// HYDRA_MATH_MATH_HPP
