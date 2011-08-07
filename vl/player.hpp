@@ -45,6 +45,13 @@ public :
 
 	std::string const &getActiveCamera(void) const;
 
+	// New functions, should in the long run replace the name retrieval
+
+	void setCamera(CameraPtr cam);
+
+	CameraPtr getCamera(void) const
+	{ return _active_camera; }
+
 	vl::Transform const &getHeadTransform(void) const
 	{ return _head_transform; }
 

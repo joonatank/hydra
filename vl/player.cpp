@@ -56,6 +56,17 @@ vl::Player::setActiveCamera(std::string const &name)
 	}
 }
 
+void
+vl::Player::setCamera(vl::CameraPtr cam)
+{
+	if(_active_camera != cam)
+	{
+		setDirty(DIRTY_ACTIVE_CAMERA);
+		_active_camera = cam;
+	}
+}
+
+
 std::string const &
 vl::Player::getActiveCamera(void) const
 {
@@ -115,7 +126,7 @@ vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{
-		uint32_t id;
+		uint64_t id;
 		msg >> id;
 
 		assert(_scene_manager);
