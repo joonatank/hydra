@@ -27,7 +27,6 @@
 vl::Renderer::Renderer(std::string const &name)
 	: _name(name)
 	, _ogre_sm(0)
-	, _camera(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
@@ -520,33 +519,15 @@ vl::Renderer::_syncData(void)
 void
 vl::Renderer::_updateDistribData( void )
 {
+	// Update player
 	// TODO these should be moved to player using functors
 	if( _player )
-	{
-		// Update player
-		// Get active camera and change the rendering camera if there is a change
-		std::string const &cam_name = _player->getActiveCamera();
-		if( !cam_name.empty() && cam_name != _active_camera_name )
-		{
-			_active_camera_name = cam_name;
-			assert(_scene_manager);
-			if( _scene_manager->hasCamera( cam_name ) )
-			{
-				// Tell the Windows to change cameras
-				_camera = _scene_manager->getCamera( _active_camera_name );
-				assert( !_windows.empty() );
-				for( size_t i = 0; i < _windows.size(); ++i )
-				{ _windows.at(i)->setCamera( _camera ); }
-			}
-			else
-			{
-				// Throws because this should be already checked when the camera
-				// is set to player.
-				std::string error_msg(std::string("New camera name set, but NO \"")
-					+ cam_name + std::string("\" camera found"));
-				BOOST_THROW_EXCEPTION(vl::item_not_found() << vl::desc(error_msg));
-			}
-		}
+	{		
+		if(!_player->getCamera())
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Active Camera name empty.")); }
+
+		for( size_t i = 0; i < _windows.size(); ++i )
+		{ _windows.at(i)->setCamera(_player->getCamera()); }
 
 		for( size_t i = 0; i < _windows.size(); ++i )
 		{ _windows.at(i)->setIPD( _player->getIPD() ); }
@@ -585,7 +566,8 @@ vl::Renderer::_createWindow( vl::EnvSettings::Window const &winConf )
 	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
 
 	vl::Window *window = new vl::Window( winConf.name, this );
-	window->setCamera(_camera);
+	if(_player)
+	{ window->setCamera(_player->getCamera()); }
 	_windows.push_back(window);
 }
 

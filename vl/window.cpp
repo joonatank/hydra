@@ -144,6 +144,7 @@ vl::Window::getOgreRoot( void )
 void
 vl::Window::setCamera(vl::CameraPtr camera)
 {
+	// @todo does not allow removing the camera, should it?
 	if( !camera )
 	{ return; }
 
@@ -382,18 +383,28 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
+	// @todo this should probably never happen
 	if(!_camera)
 	{
 		std::cout << "vl::Window::draw : no camera." << std::endl;
 		return;
 	}
 
-	assert(_left_viewport);
+	if(!_left_viewport)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	Ogre::Real c_near = _camera->getNearClipDistance();
 	Ogre::Real c_far = _camera->getFarClipDistance();
 
 	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
+	if(!og_cam)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	/// @todo checking these every frame is bit too much
+	if(og_cam != _left_viewport->getCamera())
+	{ _left_viewport->setCamera(og_cam); }
+	if(_right_viewport && _right_viewport->getCamera() != og_cam)
+	{ _right_viewport->setCamera(og_cam); }
 
 	// if stereo is not enabled ipd should be zero 
 	// TODO should it be forced though?
@@ -422,13 +433,18 @@ vl::Window::draw(void)
 	/// Use tuples to eliminate code copying
 	typedef boost::tuple<Ogre::Viewport *, double, GLenum> view_tuple;
 	std::vector<view_tuple> views;
-	if(hasStereo() && _left_viewport && _right_viewport)
+	if(hasStereo())
 	{
+		if(!_left_viewport || !_right_viewport)
+		{
+			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing left or right viewport for stereo."));
+		}
 		views.push_back( view_tuple(_left_viewport, -_ipd/2, GL_BACK_LEFT) );
 		views.push_back( view_tuple(_right_viewport, _ipd/2, GL_BACK_RIGHT) );
 	}
-	else if(_left_viewport)
+	else
 	{
+		assert(_left_viewport);
 		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
 	}
 

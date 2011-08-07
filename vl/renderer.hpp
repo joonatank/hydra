@@ -56,9 +56,6 @@ public :
 	Ogre::SceneManager *getSceneManager( void )
 	{ return _ogre_sm; }
 
-	vl::CameraPtr getCamera( void )
-	{ return _camera; }
-
 	vl::Player const &getPlayer( void ) const
 	{ return *_player; }
 
@@ -164,12 +161,9 @@ protected :
 	vl::ogre::RootRefPtr _root;
 	Ogre::SceneManager *_ogre_sm;
 
-	vl::CameraPtr _camera;
-
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;
 	vl::Player *_player;
-	std::string _active_camera_name;
 	uint32_t _screenshot_num;
 
 	/// Input events to be sent
