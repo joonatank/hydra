@@ -38,12 +38,13 @@ vl::Recording::_parse_line(std::string const &input_line)
 	std::stringstream ss;
 	std::string::size_type comment = input_line.find_first_of('#');
 		
-	ss.str(input_line.substr(0, comment) );
+	ss.str(input_line.substr(0, comment));
 
 	// Either a comment line or an empty line skip
-	if(ss.str().find_first_not_of(" \t\v\n") == std::string::npos )
+	if(has_only_whitespace(ss.str()))
 	{ return; }
 
+	// @todo should check that the line is correctly formated
 	double t = 0;
 	int sensor = 0;
 	ss >> t >> sensor;
@@ -73,7 +74,6 @@ vl::Recording::_parse_line(std::string const &input_line)
 		sensors.resize(sensor+1);
 	}
 
-	// For now time is stored as a double, in seconds
 	sensors.at(sensor).transforms[vl::time(t)] = vl::Transform(vec, quat);
 }
 

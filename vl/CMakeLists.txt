@@ -105,6 +105,7 @@ set(BASE_SRC
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	base/string_utils.cpp
 	base/timer.cpp
 	)
 if(WIN32)
