@@ -25,10 +25,12 @@ set( SRC
 	${HydraMain_SOURCE_DIR}/resource.cpp
 	${HydraMain_SOURCE_DIR}/mesh.cpp
 	${HydraMain_SOURCE_DIR}/mesh_ogre.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
 	ogre_python.cpp
 	)
 
 set( HEADERS
+	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
 	${HydraMain_SOURCE_DIR}/mesh.hpp
 	${HydraMain_SOURCE_DIR}/mesh_ogre.hpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer.hpp
