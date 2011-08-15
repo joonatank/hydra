@@ -225,8 +225,8 @@ vl::RayObject::_updateRay(void)
 		if(_ray_cast->raycastFromPoint(translate+q*start_position, q*direction, result))
 		{
 			// Remove parents transformation as the collision detection 
-			// is done in the World space
-			ray_end = Ogre::Quaternion(q).Inverse() * result - translate;
+			// is done in the World space	
+			ray_end = q.Inverse() * (result - translate);
 		}
 
 		ray_positions.push_back(std::make_pair(start_position, ray_end));

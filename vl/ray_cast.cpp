@@ -99,7 +99,8 @@ vl::RayCast::raycastFromPoint(Ogre::Vector3 const &point, Ogre::Vector3 const &n
 					if ((closest_distance < 0.0f) || (hit.second < closest_distance))
 					{
 						// this is the closest so far, save it off
-						closest_distance = hit.second; new_closest_found = true;
+						closest_distance = hit.second;
+						new_closest_found = true;
 					}
 				}
 			}
@@ -108,8 +109,8 @@ vl::RayCast::raycastFromPoint(Ogre::Vector3 const &point, Ogre::Vector3 const &n
 			delete[] indices;
 			// if we found a new closest raycast for this object, update the
 			// closest_result before moving on to the next object.
-			if (new_closest_found) { closest_result = ray.getPoint(closest_distance); 
-			}
+			if (new_closest_found)
+			{ closest_result = ray.getPoint(closest_distance); }
 		}
 	}
 	// return the result
