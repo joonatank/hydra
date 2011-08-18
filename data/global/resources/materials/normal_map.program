@@ -34,6 +34,20 @@ fragment_program ambient_ps glsl
 	}
 }
 
+fragment_program ambient_ao_ps glsl
+{
+	source ambient_ps.glsl
+	preprocessor_defines AMBIENT_OCCLUSION=1
+
+	default_params
+	{
+		param_named_auto lightAmbient ambient_light_colour
+		param_named_auto surfaceAmbient surface_ambient_colour
+		param_named_auto surfaceEmissive surface_emissive_colour
+		param_named aoMap int 0
+	}
+}
+
 // Single light version with shadows and normal mapping
 vertex_program bling_phong_sl_shadows_vs glsl
 {

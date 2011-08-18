@@ -154,8 +154,13 @@ material bling_phong/shadows/multi_pass
 			{
 			}
 
-			fragment_program_ref ambient_ps
+			fragment_program_ref ambient_ao_ps
 			{
+			}
+
+			texture_unit ambientOcclusionMap
+			{
+				texture white.tga
 			}
 
 			ambient $ambientCol
