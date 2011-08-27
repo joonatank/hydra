@@ -96,7 +96,8 @@ l_node.attachObject(l)
 eye_trigger_n = "eyeTrigger"
 if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	print("Adding eye tracker action")
-	ray = game.scene.createRayObject("ray", "collision_sphere/transparent/red")
+	ray = game.scene.createRayObject("ray", "collision_sphere/red")
+	#ray = game.scene.createRayObject("ray", "collision_sphere/transparent/red")
 	ray.direction = Vector3(0, 0, -1)
 	ray.sphere_radius = 0.2
 	#ray.position = Vector3(0, 0, 10)
@@ -104,7 +105,7 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	# Doesn't affect performance that much if the spheres are on or off
 	ray.draw_collision_sphere = True
 	ray.collision_detection = True
-	ray.draw_ray = False
+	#ray.draw_ray = False
 	ray_n = game.scene.createSceneNode("ray")
 	ray_n.attachObject(ray)
 
@@ -118,8 +119,8 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	# y-axis at maximum.
 	# This is acceptable because same applies to the head tracking
 	# user experiences.
-	ray_n.rotate(Quaternion(0.7071, 0, 0.7071, 0))
-	ray_n.position = Vector3(-0.5, 0, 0.5)
+	#ray_n.rotate(Quaternion(0.7071, 0, 0.7071, 0))
+	#ray_n.position = Vector3(-0.5, 0, 0.5)
 
 	# Real time updater
 	# Hard coded transform to show the ray object
@@ -137,10 +138,10 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	# Create recording visialisation
 	# Recording file needs to be in the project/global resources
 	# for it to be loaded.
-	rec = game.loadRecording("tracker_recording_eye.log")
-	#rec = game.loadRecording("tracker_recording_eye_2.log")
+	#rec = game.loadRecording("tracker_recording_eye.log")
+	rec = game.loadRecording("tracker_recording_eye_2.log")
 	ray.recording = rec
 	# TODO this does not update the ray correctly
 	# If enabled here user needs to call ray.update() from command line
-	#ray.show_recording = True
+	ray.show_recording = True
 

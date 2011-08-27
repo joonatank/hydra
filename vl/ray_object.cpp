@@ -190,8 +190,9 @@ vl::RayObject::_updateRay(void)
 		for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
 			iter != _recording->sensors.at(0).transforms.end(); ++iter)
 		{
+			Ogre::Quaternion q = iter->second.quaternion;
 			// @todo should the direction be -Z or should it be configurable using the direction parameter?
-			Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
+			Ogre::Vector3 direction = q*_direction;
 			Ogre::Vector3 start_position = iter->second.position;
 
 			// No collision detection because this will only initialise the list
@@ -214,11 +215,9 @@ vl::RayObject::_updateRay(void)
 		Ogre::Vector3 const &direction = iter->second;
 		
 		// Parent transformation
-		Ogre::Matrix4 t = _ogre_object->_getParentNodeFullTransform();
-		Ogre::Vector3 translate;
-		Ogre::Vector3 scale;
-		Ogre::Quaternion q;
-		t.decomposition(translate, scale, q);
+		Ogre::Vector3 const &translate = _ogre_object->getParentNode()->_getDerivedPosition();
+		Ogre::Vector3 const &scale = _ogre_object->getParentNode()->_getDerivedScale();
+		Ogre::Quaternion const &q = _ogre_object->getParentNode()->_getDerivedOrientation();
 		
 		// Results
 		Ogre::Vector3 result;
@@ -226,8 +225,8 @@ vl::RayObject::_updateRay(void)
 		if(_ray_cast->raycastFromPoint(translate+q*start_position, q*direction, result))
 		{
 			// Remove parents transformation as the collision detection 
-			// is done in the World space
-			ray_end = t.inverse() * result;
+			// is done in the World space	
+			ray_end = q.Inverse() * (result - translate);
 		}
 
 		ray_positions.push_back(std::make_pair(start_position, ray_end));
@@ -464,8 +463,6 @@ vl::RayObject::_createDynamic(void)
 void
 vl::RayObject::_createRecordedRays(void)
 {
-	std::clog << "vl::RayObject::_createRecordedRays" << std::endl;
-
 	if(!_recording)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Something wrong with the recording.")); }
 
@@ -489,9 +486,10 @@ vl::RayObject::_createRecordedRays(void)
 		iter != _recording->sensors.at(0).transforms.end(); ++iter)
 	{
 		// @todo should the direction be -Z or should it be configurable using the direction parameter?
-		Ogre::Vector3 direction = iter->second.quaternion*Ogre::Vector3::UNIT_Z;
+		Ogre::Vector3 dir = iter->second.quaternion*_direction;
 		Ogre::Vector3 start_position = iter->second.position;
-		Ogre::Vector3 end_position = start_position + (direction*_length);
+
+		Ogre::Vector3 end_position = start_position + (dir*_length);
 
 		// collision detection does not work if some objects are created
 		// after this object so we run separate update phase every frame.
@@ -502,7 +500,6 @@ vl::RayObject::_createRecordedRays(void)
 	/// Draw all the lines
 	if(_draw_ray)
 	{
-		std::clog << "Drawing rays." << std::endl;
 		_ogre_object->begin(_material, Ogre::RenderOperation::OT_LINE_LIST);
 		for(std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> >::const_iterator iter = ray_positions.begin();
 				iter != ray_positions.end(); ++iter)
@@ -515,7 +512,6 @@ vl::RayObject::_createRecordedRays(void)
 	// Draw the collision spheres
 	if(_draw_collision_sphere)
 	{
-		std::clog << "Drawing collision spheres." << std::endl;
 		uint32_t index = 0;
 		_ogre_object->begin(_material, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		for(std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> >::const_iterator iter = ray_positions.begin();
@@ -530,6 +526,8 @@ vl::RayObject::_createRecordedRays(void)
 void
 vl::RayObject::_generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 const &end_point)
 {
+	assert(_ogre_object);
+
 	// Does not need indexes
 	_ogre_object->position(start_point);
 	_ogre_object->position(end_point);
@@ -538,6 +536,8 @@ vl::RayObject::_generateLine(Ogre::Vector3 const &start_point, Ogre::Vector3 con
 uint32_t
 vl::RayObject::_generateCollisionSphere(Ogre::Vector3 const &point, uint32_t start_index)
 {
+	assert(_ogre_object);
+
 	// Generate the sphere mesh
 	// using a 512 tri mesh for the sphere
 	uint16_t numRings = 16;

@@ -1,13 +1,16 @@
-/*	Joonatan Kuosa
- *	2010-04
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-04
+ *	@file base/string_utils.hpp
+ *
+ *	This file is part of Hydra VR game engine.
  *
  *	Basic utilities for strings. Mostly used by the parsers.
  *
  *	Update 2011-01
  *	Added to_lower and to_upper. Change case of the whole string.
  */
-#ifndef VL_STRING_UTILS_HPP
-#define VL_STRING_UTILS_HPP
+#ifndef HYDRA_STRING_UTILS_HPP
+#define HYDRA_STRING_UTILS_HPP
 
 /// c++ standard headers
 // Necessary for std::find
@@ -24,6 +27,16 @@
 
 namespace vl
 {
+	extern const char* WHITESPACE;
+
+	inline bool has_only_whitespace(std::string const str)
+	{
+		if(str.find_first_not_of(WHITESPACE) == std::string::npos )
+		{ return true; }
+
+		return false;
+	}
+
 	/// @brief convert strings to contain only lower case characters
 	/// @param str string to convert
 	/// @throws nothing
@@ -50,45 +63,14 @@ namespace vl
 
 	/// Breaks a string containing multiple substrings separated by a delimiter
 	/// to those substrings and adds them to the broken_path vector parameter
-	inline
 	void break_string_down( std::vector<std::string> &broken_path,
 							std::string &longString,
-							char delimeter )
-	{
-		std::string::iterator begin = longString.begin();
-		std::string::iterator path_iter
-			= std::find( begin, longString.end(), delimeter );
-
-		while( path_iter != longString.end() )
-		{
-			if( path_iter == begin )
-			{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "Iterators incorrect" ) ); }
-
-			std::string str;
-			str.insert( str.begin(), begin, path_iter );
-			broken_path.push_back( str );
-			begin = ++path_iter;
-			path_iter = std::find( begin, longString.end(), delimeter );
-		}
-
-		std::string str;
-		str.insert( str.begin(), begin, path_iter );
-		broken_path.push_back( str );
-	}
+							char delimeter );
 
 	/// @brief replaces Windows line endings with unix ones
 	/// @param str string which should have it's line endings altered
 	/// @throws nothing
-	inline
-	void replace_line_endings( std::string &str )
-	{
-		size_t index = str.find( "\r\n" ); 
-		while( index != std::string::npos )
-		{
-			str.erase(index,1);
-			index = str.find( "\r\n" );
-		}
-	}
+	void replace_line_endings(std::string &str);
 
 	template<typename T>
 	inline
@@ -124,24 +106,8 @@ namespace vl
 		return false;
 	}
 
-	inline
-	std::string generate_random_string(size_t len = 8)
-	{
-		static const char alphanum[] =
-			"0123456789"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"abcdefghijklmnopqrstuvwxyz";
-
-		std::string s(len, 'a');
-		for(size_t i = 0; i < len; ++i)
-		{
-			s.at(i) = alphanum[rand() % (sizeof(alphanum) - 1)];
-		}
-
-		return s;
-	}
+	std::string generate_random_string(size_t len = 8);
 
 }	// namespace vl
 
-#endif
-
+#endif	// HYDRA_STRING_UTILS_HPP

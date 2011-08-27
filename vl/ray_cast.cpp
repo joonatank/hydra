@@ -42,22 +42,20 @@ bool
 vl::RayCast::raycastFromPoint(Ogre::Vector3 const &point, Ogre::Vector3 const &normal, Ogre::Vector3 &result) 
 {
 	// create the ray to test
-	Ogre::Ray ray(Ogre::Vector3(point.x, point.y, point.z), Ogre::Vector3(normal.x, normal.y, normal.z));
+	Ogre::Ray ray(point, normal);
 	// check we are initialised
-	if(_ray_scene_query != NULL)
-	{
-		// create a query object
-		_ray_scene_query->setRay(ray);
-		// execute the query, returns a vector of hits 
-		if(_ray_scene_query->execute().size() <= 0)
-		{
-			// raycast did not hit an objects bounding box 
-			return (false);
-		}
-	}
-	else 
+	if(!_ray_scene_query)
 	{
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Cannot raycast without RaySceneQuery instance"));
+	}
+
+	// create a query object
+	_ray_scene_query->setRay(ray);
+	// execute the query, returns a vector of hits 
+	if(_ray_scene_query->execute().size() <= 0)
+	{
+		// raycast did not hit an objects bounding box 
+		return (false);
 	}
 
 	// at this point we have raycast to a series of different objects bounding boxes.
@@ -101,7 +99,8 @@ vl::RayCast::raycastFromPoint(Ogre::Vector3 const &point, Ogre::Vector3 const &n
 					if ((closest_distance < 0.0f) || (hit.second < closest_distance))
 					{
 						// this is the closest so far, save it off
-						closest_distance = hit.second; new_closest_found = true;
+						closest_distance = hit.second;
+						new_closest_found = true;
 					}
 				}
 			}
@@ -110,8 +109,8 @@ vl::RayCast::raycastFromPoint(Ogre::Vector3 const &point, Ogre::Vector3 const &n
 			delete[] indices;
 			// if we found a new closest raycast for this object, update the
 			// closest_result before moving on to the next object.
-			if (new_closest_found) { closest_result = ray.getPoint(closest_distance); 
-			}
+			if (new_closest_found)
+			{ closest_result = ray.getPoint(closest_distance); }
 		}
 	}
 	// return the result
