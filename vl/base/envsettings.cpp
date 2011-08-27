@@ -1,5 +1,9 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
+ *	@file base/envsettings.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *
  */
 
 /// Declaration
@@ -236,6 +240,31 @@ vl::EnvSettings::getEnvironementDir( void ) const
 	return envDir.string();
 }
 
+void
+vl::EnvSettings::addProgram(vl::EnvSettings::Program const &prog)
+{
+	/// Check for unique name
+	for(size_t i = 0; i < _programs.size(); ++i)
+	{
+		if( prog.name == _programs.at(i).name )
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Program name needs to be unique.")); }
+	}
+
+	_programs.push_back(prog);
+}
+	
+std::vector<vl::EnvSettings::Program>
+vl::EnvSettings::getUsedPrograms(void) const
+{
+	std::vector<vl::EnvSettings::Program> progs;
+	for(size_t i = 0; i < _programs.size(); ++i)
+	{
+		if(_programs.at(i).use)
+		{ progs.push_back(_programs.at(i)); }
+	}
+
+	return progs;
+}
 
 ///////////////////////////////////////////////////////////////////////
 ////////////////////// --- EnvSettingsSerializer --- //////////////////
@@ -324,6 +353,10 @@ vl::EnvSettingsSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
 	{ processNode( xml_elem, _envSettings->getMaster() ); }
+
+	xml_elem = xml_root->first_node("programs");
+	if(xml_elem)
+	{ processPrograms(xml_elem); }
 
 	if( _envSettings->getMaster().getNWindows() == 0 )
 	{
@@ -655,6 +688,61 @@ vl::EnvSettingsSerializer::processFPS(rapidxml::xml_node<> *xml_node)
 	_envSettings->setFPS(fps);
 
 	_checkUniqueNode(xml_node);
+}
+
+void
+vl::EnvSettingsSerializer::processPrograms(rapidxml::xml_node<> *xml_node)
+{
+	rapidxml::xml_node<> *xml_elem = xml_node->first_node("program");
+	// @todo should check for the autolaunch attribute
+	while(xml_elem)
+	{
+		processProgram(xml_elem);
+		xml_elem = xml_elem->next_sibling("program");
+	}
+
+	_checkUniqueNode(xml_node);
+}
+
+void
+vl::EnvSettingsSerializer::processProgram(rapidxml::xml_node<> *xml_node)
+{
+	EnvSettings::Program prog;
+
+	// Attributes: use, name, directory, command
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("use");
+	if(attrib)
+	{ prog.use = vl::from_string<bool>(attrib->value()); }
+
+	attrib = xml_node->first_attribute("new_console");
+	if(attrib)
+	{ prog.new_console = vl::from_string<bool>(attrib->value()); }
+	
+	attrib = xml_node->first_attribute("name");
+	if(!attrib)
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("name is a necessary attribute for Program") ); }
+	prog.name = attrib->value();
+
+	attrib = xml_node->first_attribute("command");
+	if(!attrib)
+	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("command is a necessary attribute for Program") ); }
+	prog.command = attrib->value();
+
+	attrib = xml_node->first_attribute("directory");
+	if(attrib)
+	{ prog.directory = attrib->value(); }
+
+	// Get params
+	rapidxml::xml_node<> *xml_elem = xml_node->first_node("param");
+	while(xml_elem)
+	{
+		if(xml_elem->value() && xml_elem->value() != "")
+		{ prog.params.push_back(xml_elem->value()); }
+
+		xml_elem = xml_elem->next_sibling("param");
+	}
+
+	_envSettings->addProgram(prog);
 }
 
 std::vector<double>

@@ -1,13 +1,16 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-12
+ *	@file application.hpp
+ *
+ *	This file is part of Hydra VR game engine.
  *
  *	Program starting point
  *	@todo should probably be replaced with just the main function
  *	or merge Config and Application classes and create the threads in the main
  */
 
-#ifndef VL_APPLICATION_HPP
-#define VL_APPLICATION_HPP
+#ifndef HYDRA_APPLICATION_HPP
+#define HYDRA_APPLICATION_HPP
 
 #include <boost/thread.hpp>
 
@@ -57,8 +60,10 @@ protected:
 
 	uint32_t _fps;
 
+	std::vector<uint32_t> _spawned_processes;
+
 };	// class Application
 
 }	// namespace vl
 
-#endif // VL_APPLICATION_HPP
+#endif	// HYDRA_APPLICATION_HPP

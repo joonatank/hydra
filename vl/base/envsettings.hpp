@@ -1,5 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
+ *	@file base/envsettings.hpp
+ *
+ *	This file is part of Hydra VR game engine.
  *
  *	2010-11-29 Added camera rotations to env file
  *	moved ref ptr definition to typedefs.hpp
@@ -8,8 +11,8 @@
  *	Added stereo and inter pupilar distance to env file
  */
 
-#ifndef VL_ENVSETTINGS_HPP
-#define VL_ENVSETTINGS_HPP
+#ifndef HYDRA_ENVSETTINGS_HPP
+#define HYDRA_ENVSETTINGS_HPP
 
 #include <string>
 #include <vector>
@@ -205,6 +208,22 @@ public :
 
 		uint16_t port;
 		std::string hostname;
+	};
+
+	/// External program description
+	struct Program
+	{
+		std::string name;
+		std::string directory;
+		std::string command;
+		std::vector<std::string> params;
+		bool use;
+		bool new_console;
+
+		Program(void)
+			: use(false)
+			, new_console(false)
+		{}
 	};
 
 	/// Constructor
@@ -485,12 +504,18 @@ public :
 	/// Only useful for X11 for now and needs to be a valid X11 display
 	int display_n;
 	
+	void addProgram(Program const &prog);
+	
+	std::vector<Program> getUsedPrograms(void) const;
+
 private :
 
 	std::string _file_path;
 
 	std::vector<std::pair<std::string, bool> > _plugins;
 	std::vector<Tracking> _tracking;
+
+	std::vector<Program> _programs;
 
 	uint32_t _camera_rotations_allowed;
 
@@ -568,6 +593,10 @@ protected :
 
 	void processFPS(rapidxml::xml_node<> *xml_node);
 
+	void processPrograms(rapidxml::xml_node<> *xml_node);
+
+	void processProgram(rapidxml::xml_node<> *xml_node);
+
 	void _checkUniqueNode(rapidxml::xml_node<> *xml_node);
 
 	std::vector<double> getVector( rapidxml::xml_node<>* xml_node );
@@ -581,4 +610,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_ENVSETTINGS_HPP
+#endif	// HYDRA_ENVSETTINGS_HPP

@@ -2,7 +2,9 @@
  *	@date 2010-12
  *	@file application.cpp
  *
+ *	This file is part of Hydra VR game engine.
  */
+
 #include "application.hpp"
 
 #include "config.hpp"
@@ -19,8 +21,11 @@
 #include "logger.hpp"
 
 #include "cluster/client.hpp"
+// Necessary for spawning external processes
+#include "base/system_util.hpp"
 
 #ifndef _WIN32
+// Necessary for fork
 #include <unistd.h>
 #endif
 
@@ -198,7 +203,9 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 		// auto_fork is silently ignored for slaves
 		if(auto_fork)
 		{
-// Windows forking not supported
+			// @todo should be changed to use create_process instead of forking
+			// will work on both Windows and Linux, but is slightly slower in Linux
+// Windows forking not supported		
 #ifndef _WIN32
 			for(size_t i = 0; i < env->getSlaves().size(); ++i)
 			{
@@ -212,6 +219,9 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 					break;
 				}
 			}
+#else
+			std::cout << "Trying to autofork local slaves, which is not supported on Windows." 
+				<< std::endl;
 #endif
 		}
 	}
@@ -226,6 +236,16 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 	{
 		_master.reset(new vl::Config( settings, env, logger, renderer ));
 		_master->init();
+		std::vector<EnvSettings::Program> programs = env->getUsedPrograms();
+		std::clog << "Should start " << programs.size() << " autolaunched programs."
+			<< std::endl;
+		for(size_t i = 0; i < programs.size(); ++i)
+		{
+			std::clog << "Starting : " << programs.at(i).name 
+				<< " with command : " << programs.at(i).command << std::endl;
+			uint32_t pid = create_process(programs.at(i).command, programs.at(i).params, programs.at(i).new_console);
+			_spawned_processes.push_back(pid);
+		}
 	}
 	else
 	{
@@ -236,7 +256,12 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 }
 
 vl::Application::~Application( void )
-{}
+{
+	for(size_t i = 0; i < _spawned_processes.size(); ++i)
+	{
+		kill_process(_spawned_processes.at(i));
+	}
+}
 
 
 void

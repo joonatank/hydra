@@ -102,6 +102,7 @@ set(BASE_HEADERS
 	base/timer.hpp
 	base/report.hpp)
 set(BASE_SRC
+	base/system_util.cpp
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp

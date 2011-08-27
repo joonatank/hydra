@@ -1,31 +1,36 @@
-#ifndef VL_BASE_HELPERS_HPP
-#define VL_BASE_HELPERS_HPP
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-08
+ *	@file base/system_utils.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ */
 
-/// C headers
+#ifndef HYDRA_SYSTEM_UTILS_HPP
+#define HYDRA_SYSTEM_UTILS_HPP
 
-// Necessary for uint32_t
+/// Necessary for uint32_t
 #include <stdint.h>
 
-#ifdef VL_WIN32
-// Necessary for GetCurrentProcessId
-#include <Windows.h>
-#else
-// Necessary for getpid()
-#include <unistd.h>
-#endif
+#include <string>
+#include <vector>
+
+
+#include "exceptions.hpp"
 
 namespace vl
 {
 
-inline uint32_t getPid( void )
-{
-#ifdef VL_WIN32
-	return GetCurrentProcessId();
-#else
-	return ::getpid();
-#endif
-}
+uint32_t getPid(void);
+
+/// @brief Create a new process
+/// @param path the path to the binary to start
+/// @param params what to pass to the process
+/// @return PID
+/// @todo should this return a process information structure similar to Win32 API instead
+uint32_t create_process(std::string const &path, std::vector<std::string> const &params, bool create_new_console = false);
+
+void kill_process(uint32_t pid);
 
 }
 
-#endif
+#endif	// HYDRA_SYSTEM_UTILS_HPP
