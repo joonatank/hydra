@@ -1,6 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-10
  *	@file config.hpp
+ *
+ *	This file is part of Hydra VR game engine.
  */
 
 #ifndef VL_CONFIG_HPP

@@ -2,6 +2,7 @@
  *	@date 2011-01
  *	@file renderer.cpp
  *
+ *	This file is part of Hydra VR game engine.
  */
 
 // Interface
