@@ -192,11 +192,14 @@ vl::getSlaveSettings( vl::ProgramOptions const &options )
 
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork)
+vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)
 	: _master()
 	, _slave_client()
 {
 	assert( env );
+
+	if(!show_system_console)
+	{ hide_system_console(); }
 
 	if(env->isMaster())
 	{

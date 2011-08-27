@@ -58,6 +58,8 @@
 #include "input/serial_joystick.hpp"
 
 #include "recording.hpp"
+// Necessary for hide/show system console
+#include "base/system_util.hpp"
 
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
@@ -111,6 +113,10 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
 
 BOOST_PYTHON_MODULE(vl)
 {
+	/// System utils
+	python::def("show_system_console", vl::show_system_console);
+	python::def("hide_system_console", vl::hide_system_console);
+
 	using namespace vl;
 
 	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )

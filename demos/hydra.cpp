@@ -55,7 +55,7 @@ int main( const int argc, char** argv )
 		if( env->isMaster() && settings.empty() )
 		{ return -1; }
 
-		vl::Application application(env, settings, logger, options.auto_fork);
+		vl::Application application(env, settings, logger, options.auto_fork, options.show_system_console);
 
 		application.run();
 	}

@@ -44,7 +44,7 @@ public:
 	 *	If this is the master node will also initialise the master node
 	 *	and send messages to the rendering threads.
 	 */
-	Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork);
+	Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console);
 
 	virtual ~Application( void );
 

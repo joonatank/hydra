@@ -15,9 +15,10 @@
 vl::ProgramOptions::ProgramOptions( void )
 	: verbose(false)
 	, log_level(0)
+	, display_n(0)
 	, _slave(false)
 	, auto_fork(false)
-	, display_n(0)
+	, show_system_console(false)
 {}
 
 bool
@@ -68,7 +69,8 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
 		("auto-fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
-		("display,d", po::value<int>(), "Display to use for the window. Only on X11.")
+		("display", po::value<int>()->default_value(0), "Display to use for the window. Only on X11.")
+		("show_system_console", "Show the system console window on startup.")
 	;
 	// TODO add support for setting the log directory
 	// TODO add control for the log level at least ERROR, INFO, TRACE
@@ -118,6 +120,11 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	if( vm.count("display") )
 	{
 		display_n = vm["display"].as<int>();
+	}
+
+	if( vm.count("show_system_console") )
+	{
+		show_system_console = true;
 	}
 }
 

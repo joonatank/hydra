@@ -64,6 +64,7 @@ struct ProgramOptions
 	std::string global_file;
 	std::string case_name;
 	bool auto_fork;
+	bool show_system_console;
 
 private :
 	void _parseSlave( po::variables_map const &vm );

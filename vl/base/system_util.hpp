@@ -31,6 +31,9 @@ uint32_t create_process(std::string const &path, std::vector<std::string> const 
 
 void kill_process(uint32_t pid);
 
+void hide_system_console(void);
+
+void show_system_console(void);
 }
 
 #endif	// HYDRA_SYSTEM_UTILS_HPP

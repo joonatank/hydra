@@ -134,3 +134,23 @@ vl::kill_process(uint32_t pid)
 #error "kill_process not implemented for Linux"
 #endif
 }
+
+void vl::hide_system_console(void)
+{
+#ifdef _WIN32
+	HWND hWnd = GetConsoleWindow();
+	ShowWindow(hWnd, SW_HIDE);
+#else
+#error "hide_system_console not implemented for Linux"
+#endif
+}
+
+void vl::show_system_console(void)
+{
+#ifdef _WIN32
+	HWND hWnd = GetConsoleWindow();
+	ShowWindow(hWnd, SW_SHOW);
+#else
+#error "show_system_console not implemented for Linux"
+#endif
+}
