@@ -12,55 +12,45 @@
 
 #include "base/timer.hpp"
 
-const int BAUD_RATE = CBR_9600;
+const int BAUD_RATE = CBR_128000;
 
 /// --------------------------------- Public ---------------------------------
 vl::SerialJoystick::SerialJoystick(std::string const &device)
 	: _serial(device, BAUD_RATE)
-{}
+{
+	// If necessary to decrease the timeouts be sure to increase baud rate also
+	// on both arduino and here. Otherwise part of the message is lost.
+	_serial.set_read_timeout(5, 2);
+}
 
 void
 vl::SerialJoystick::mainloop(void)
 {
-	vl::timer t;
-	// Get new data
-	// Write a request to the serial port for reading analog channel 0
+	// Read old data
 	std::vector<char> buf(128);
-	buf.at(0) = char(MSG_READ_JOYSTICK);
-	size_t bytes = _serial.write(buf, 1);
-	// @todo replace by throwing
-	if(bytes != 1)
+	size_t bytes = _serial.read(buf, 128);
+
+	if(bytes > 0)
 	{
-		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
+		// Test code
+		assert(bytes == 18);
+
+		JoystickEvent evt = _parse(buf, bytes);
+		
+		// old signal system
+		_signal(evt);
+
+		for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
+			iter != _handlers.end(); ++iter)
+		{
+			(*iter)->execute(evt);
+		}
 	}
-	vl::time ser_write_t = t.elapsed();
-	t.reset();
 
-	bytes = _serial.read(buf, 128);
-	vl::time ser_read_t = t.elapsed();
-	t.reset();
-	std::clog << "Read " << bytes << " from serial : took " << ser_read_t << std::endl;
+	// @todo should we sent a new request if we read 0 bytes?
+	// Write request for new data
+	_write_data();
 
-	JoystickEvent evt = _parse(buf, bytes);
-	vl::time evt_parse_t = t.elapsed();
-	t.reset();
-
-	// old signal system
-	_signal(evt);
-	vl::time signal_t = t.elapsed();
-	t.reset();
-
-	for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
-		iter != _handlers.end(); ++iter)
-	{
-		(*iter)->execute(evt);
-	}
-	vl::time handler_t = t.elapsed();
-
-	std::clog << "vl::SerialJoystick::mainloop : serial write took "
-		<< ser_write_t << " : serial read took " << ser_read_t 
-		<< " : event parsing took " << evt_parse_t << " : signal took " << signal_t
-		<< " : handlers took " << handler_t << std::endl;
 }
 
 
@@ -127,4 +117,19 @@ vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes)
 	}
 
 	return evt;
+}
+
+
+void
+vl::SerialJoystick::_write_data(void)
+{
+	// Get new data
+	std::vector<char> buf(128);
+	buf.at(0) = char(MSG_READ_JOYSTICK);
+	size_t bytes = _serial.write(buf, 1);
+	// @todo replace by throwing
+	if(bytes != 1)
+	{
+		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
+	}
 }

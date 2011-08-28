@@ -300,6 +300,11 @@ public :
 	/// @todo this takes over 1 second to complete which is almost a second too much
 	void createTrackers(vl::EnvSettings const &env);
 
+	/// @todo should be replaced with a Report system
+	/// that allows addition of arbitary number of results be they times
+	/// or anything else.
+	vl::time getAvarageInputHandlingTime(void) const;
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
@@ -363,6 +368,8 @@ private :
 	ConstraintSolverRefPtr _constraint_solver;
 
 	std::vector<InputDeviceRefPtr> _input_devices;
+
+	std::deque<vl::time> _input_handling_times;
 
 };	// class GameManager
 

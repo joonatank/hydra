@@ -106,10 +106,14 @@ vl::GameManager::step(void)
 		getEventManager()->getFrameTrigger()->update();
 
 		// process input devices
+		vl::timer t;
 		for(size_t i = 0; i < _input_devices.size(); ++i)
 		{
 			_input_devices.at(i)->mainloop();
 		}
+		if(_input_handling_times.size() > 100)
+		{ _input_handling_times.pop_front(); }
+		_input_handling_times.push_back(t.elapsed());
 
 		// Process Tracking
 		// If we have a tracker object update it, the update will handle all the
@@ -447,6 +451,17 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 
 	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
 }
+
+vl::time
+vl::GameManager::getAvarageInputHandlingTime(void) const
+{
+	time avg;
+	for(size_t i = 0; i < _input_handling_times.size(); ++i)
+	{ avg += _input_handling_times.at(i); }
+	
+	return avg/_input_handling_times.size();
+}
+
 
 /// ------------------------------ Private -----------------------------------
 void

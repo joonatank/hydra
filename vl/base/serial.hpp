@@ -46,6 +46,11 @@ public :
 	/// blocking
 	size_t write(std::vector<char> const &buf, size_t n_bytes);
 
+	/// @brief set timeout parameters, these only work for opened serial device
+	void set_read_timeout(uint32_t total_ms, uint32_t per_byte_ms);
+
+	void set_write_timeout(uint32_t total_ms);
+
 private :
 #ifdef _WIN32
 	HANDLE _hSerial;

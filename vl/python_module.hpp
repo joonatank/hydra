@@ -168,6 +168,23 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
+		.add_property("avarage_input_handling_time", &vl::GameManager::getAvarageInputHandlingTime)
+	;
+
+	python::class_<vl::time>("time", python::init<uint32_t, uint32_t>())
+		.def(python::init<int>())
+		.def(python::init<double>())
+		.def(python::self -= python::self)
+		.def(python::self - python::self)
+		.def(python::self += python::self)
+		.def(python::self + python::self)
+		.def(python::self == python::self)
+		.def(python::self != python::self)
+		.def(python::self >= python::self)
+		.def(python::self <= python::self)
+		.def(python::self > python::self)
+		.def(python::self < python::self)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;

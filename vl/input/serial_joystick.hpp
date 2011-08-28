@@ -85,6 +85,8 @@ private :
 	// New parse function that creates the event structure
 	JoystickEvent _parse(std::vector<char> msg, size_t bytes);
 
+	void _write_data(void);
+
 	OnValueChanged _signal;
 	Serial _serial;
 
