@@ -205,15 +205,15 @@ createFixedConstraint(raide, porakanki, raide.world_transformation)
 #kaanto_joint.max_lin_motor_force = 100
 nosto_joint.actuator = True
 #nosto_joint.max_lin_motor_force = 100
-nosto_joint.speed = 0.1
+#nosto_joint.speed = 0.1
 teleskooppi.actuator = True
-teleskooppi.speed = 0.1
+#teleskooppi.speed = 0.1
 puomi_hinge.actuator = True
-puomi_hinge.speed = Radian(0.1)
+#puomi_hinge.speed = Radian(0.1)
 motor_hinge.actuator = True
-motor_hinge.speed = Radian(0.1)
+#motor_hinge.speed = Radian(0.1)
 pulttaus_hinge.actuator = True
-pulttaus_hinge.speed = Radian(0.1)
+#pulttaus_hinge.speed = Radian(0.1)
 
 
 kaanto_hinge.actuator = True
@@ -233,6 +233,21 @@ game.scene.mapCollisionBarriers()
 
 #kiinnityslevy.translate(Vector3(0, 2, 0))
 
+# Joystick control
+# TODO add handler if this fails
+joy = SerialJoystick.create("COM5")
+
+# TODO check the mapping
+joy_handler = ConstraintJoystickHandler.create()
+joy_handler.set_axis_constraint(0, puomi_hinge)
+joy_handler.set_axis_constraint(1, motor_hinge)
+joy_handler.set_axis_constraint(1, 0, teleskooppi)
+
+joy.add_handler(joy_handler)
+
+game.addInputDevice(joy)
+
+"""
 # Add a motor action to nosto cylinder
 # Note this action does not repeat so it's executed once for every key down 
 toggle = ToggleActionProxy.create()
@@ -363,4 +378,5 @@ toggle.action_off = action
 
 trigger = game.event_manager.createKeyTrigger(KC.Y)
 trigger.action_down = toggle
+"""
 

@@ -9,6 +9,9 @@
 
 // Interface
 #include "serial_joystick.hpp"
+
+#include "base/timer.hpp"
+
 const int BAUD_RATE = CBR_9600;
 
 /// --------------------------------- Public ---------------------------------
@@ -19,6 +22,7 @@ vl::SerialJoystick::SerialJoystick(std::string const &device)
 void
 vl::SerialJoystick::mainloop(void)
 {
+	vl::timer t;
 	// Get new data
 	// Write a request to the serial port for reading analog channel 0
 	std::vector<char> buf(128);
@@ -29,12 +33,44 @@ vl::SerialJoystick::mainloop(void)
 	{
 		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
 	}
+	vl::time ser_write_t = t.elapsed();
+	t.reset();
 
 	bytes = _serial.read(buf, 128);
+	vl::time ser_read_t = t.elapsed();
+	t.reset();
+	std::clog << "Read " << bytes << " from serial : took " << ser_read_t << std::endl;
 
 	JoystickEvent evt = _parse(buf, bytes);
+	vl::time evt_parse_t = t.elapsed();
+	t.reset();
 
+	// old signal system
 	_signal(evt);
+	vl::time signal_t = t.elapsed();
+	t.reset();
+
+	for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
+		iter != _handlers.end(); ++iter)
+	{
+		(*iter)->execute(evt);
+	}
+	vl::time handler_t = t.elapsed();
+
+	std::clog << "vl::SerialJoystick::mainloop : serial write took "
+		<< ser_write_t << " : serial read took " << ser_read_t 
+		<< " : event parsing took " << evt_parse_t << " : signal took " << signal_t
+		<< " : handlers took " << handler_t << std::endl;
+}
+
+
+void
+vl::SerialJoystick::add_handler(vl::SerialJoystickHandlerRefPtr handler)
+{
+	// @tood check that it doesn't exist already
+	std::vector<SerialJoystickHandlerRefPtr>::iterator iter = std::find(_handlers.begin(), _handlers.end(), handler);
+	if(iter == _handlers.end())
+	{ _handlers.push_back(handler); }
 }
 
 /// --------------------------------- Private --------------------------------

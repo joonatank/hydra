@@ -189,7 +189,25 @@ vl::SixDofConstraint::SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Trans
 
 /// ------------------------------ SliderConstraint --------------------------
 /// ------------------------------ Public ------------------------------------	
-	
+void
+vl::SliderConstraint::setVelocity(vl::scalar velocity)
+{
+	// @todo does this need to set to lower limit if velocity is negative?
+	// yes because speed is always positive
+	if(velocity < 0)
+	{ _target_position = _lower_limit; }
+	else
+	{ _target_position = _upper_limit; }
+	_speed = vl::abs(velocity);
+}
+
+void
+vl::SliderConstraint::addVelocity(vl::scalar velocity)
+{
+	vl::scalar sign = vl::sign(_target_position);
+	setVelocity(velocity + sign*_speed);
+}
+
 void
 vl::SliderConstraint::setLowerLimit(vl::scalar lowerLimit)
 {
@@ -302,6 +320,25 @@ vl::SliderConstraint::SliderConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Trans
 
 /// ------------------------------ HingeConstraint ---------------------------
 /// ------------------------------ Public ------------------------------------	
+void
+vl::HingeConstraint::setVelocity(vl::scalar velocity)
+{
+	// @todo does this need to set to lower limit if velocity is negative?
+	// yes because speed is always positive
+	if(velocity < 0)
+	{ _target = _lower_limit; }
+	else
+	{ _target = _upper_limit; }
+	_speed = Ogre::Radian(vl::abs(velocity));
+}
+
+void
+vl::HingeConstraint::addVelocity(vl::scalar velocity)
+{
+	vl::scalar sign = vl::sign(_target.valueRadians());
+	setVelocity(sign*_speed.valueRadians() + velocity);
+}
+
 void
 vl::HingeConstraint::setActuatorTarget(Ogre::Radian const &angle)
 {

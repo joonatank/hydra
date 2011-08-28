@@ -61,6 +61,8 @@
 // Necessary for hide/show system console
 #include "base/system_util.hpp"
 
+#include "constraints_handlers.hpp"
+
 /*
 struct TriggerWrapper : vl::Trigger, python::wrapper<vl::Trigger>
 {
@@ -481,6 +483,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyA, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyB, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
+		.def("set_velocity", &vl::Constraint::setVelocity)
+		.def("add_velocity", &vl::Constraint::addVelocity)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -811,11 +815,28 @@ BOOST_PYTHON_MODULE(vl)
 	;
 
 	/// Input
+	/// Handlers
+	python::class_<vl::SerialJoystickHandler, vl::SerialJoystickHandlerRefPtr, boost::noncopyable>("SerialJoystickHandler", python::no_init)
+	;
+
+	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov0)(int, ConstraintRefPtr)
+		= &vl::ConstraintJoystickHandler::set_axis_constraint;
+	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov1)(int, int, ConstraintRefPtr)
+		= &vl::ConstraintJoystickHandler::set_axis_constraint;
+
+	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::SerialJoystickHandler> >("ConstraintJoystickHandler", python::no_init)
+		.def("set_axis_constraint", set_axis_constraint_ov0)
+		.def("set_axis_constraint", set_axis_constraint_ov1)
+		.def("create", &vl::ConstraintJoystickHandler::create)
+		.staticmethod("create")
+	;
+
 	python::class_<vl::InputDevice, vl::InputDeviceRefPtr, boost::noncopyable>("InputDevice", python::no_init)
 	;
 
 	python::class_<vl::SerialJoystick, vl::SerialJoystickRefPtr, boost::noncopyable, python::bases<vl::InputDevice> >("SerialJoystick", python::no_init)
 		.def("doOnValueChanged", toast::python::signal_connect<void (JoystickEvent const &)>(&vl::SerialJoystick::doOnValueChanged))
+		.def("add_handler", &vl::SerialJoystick::add_handler)
 		.def("create", &vl::SerialJoystick::create)
 		.staticmethod("create")
 	;

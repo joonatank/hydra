@@ -79,6 +79,8 @@ public :
 		return joy;
 	}
 
+	void add_handler(SerialJoystickHandlerRefPtr handler);
+
 private :
 	// New parse function that creates the event structure
 	JoystickEvent _parse(std::vector<char> msg, size_t bytes);
@@ -86,7 +88,19 @@ private :
 	OnValueChanged _signal;
 	Serial _serial;
 
+	std::vector<SerialJoystickHandlerRefPtr> _handlers;
+
 };	// Class SerialJoystickReader
+
+struct SerialJoystickHandler
+{
+	SerialJoystickHandler(void) {}
+
+	virtual ~SerialJoystickHandler(void) {}
+
+	virtual void execute(JoystickEvent const &evt) = 0;
+
+};
 
 }	// namespace vl
 

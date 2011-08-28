@@ -54,6 +54,7 @@ set(SRC
 	mesh.cpp
 	mesh_ogre.cpp
 	constraints.cpp
+	constraints_handlers.cpp
 	constraint_solver.cpp
 	animation.cpp
 	ray_object.cpp
@@ -182,6 +183,7 @@ set( HEADERS
 	math/types.hpp
 	distributed.hpp
 	constraints.hpp
+	constraints_handlers.hpp
 	constraint_solver.hpp
 	animation.hpp
 	ray_object.hpp

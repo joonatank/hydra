@@ -136,8 +136,12 @@ namespace vl
 
 	class InputDevice;
 	class SerialJoystick;
+	class SerialJoystickHandler;
+	class ConstraintJoystickHandler;
 	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
 	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
+	typedef boost::shared_ptr<SerialJoystickHandler> SerialJoystickHandlerRefPtr;
+	typedef boost::shared_ptr<ConstraintJoystickHandler> ConstraintJoystickHandlerRefPtr;
 
 namespace gui
 {

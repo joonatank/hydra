@@ -71,6 +71,19 @@ struct JoystickEvent
 		{ buttons &= ~(1 << index); }
 	}
 
+	int firstButtonDown(void) const
+	{
+		if(buttons & BUTTON0) { return 0; }
+		else if(buttons & BUTTON1) { return 1; }
+		else if(buttons & BUTTON2) { return 2; }
+		else if(buttons & BUTTON3) { return 3; }
+		else if(buttons & BUTTON4) { return 4; }
+		else if(buttons & BUTTON5) { return 5; }
+		else if(buttons & BUTTON6) { return 6; }
+		else if(buttons & BUTTON7) { return 7; }
+		else { return -1; }
+	}
+
 	vl::scalar axis_x;
 	vl::scalar axis_y;
 	vl::scalar axis_z;

@@ -44,6 +44,10 @@ public :
 
 	virtual bool isActuator(void) const = 0;
 
+	virtual void setVelocity(vl::scalar velocity) = 0;
+
+	virtual void addVelocity(vl::scalar velocity) = 0;
+
 	/// @internal
 	/// @brief progresses the constraint if it's used as an actuator
 	/// @param t time since last call, i.e. simulation time step
@@ -81,6 +85,10 @@ public :
 	virtual void setActuator(bool enable) {}
 
 	virtual bool isActuator(void) const { return false; }
+
+	virtual void setVelocity(vl::scalar velocity) {}
+
+	virtual void addVelocity(vl::scalar velocity) {}
 
 	/// @internal
 	void _proggress(vl::time const &t);
@@ -172,6 +180,12 @@ public :
 	virtual bool isActuator(void) const
 	{ return _actuator; }
 
+	/// Sets the target to maximum and controls the approaching velocity
+	/// provides a servo motor control for the constraint
+	virtual void setVelocity(vl::scalar velocity);
+
+	virtual void addVelocity(vl::scalar velocity);
+
 	/// @todo should we remove the target velocity and replace it by
 	/// constant velocity and target position
 
@@ -241,6 +255,12 @@ public :
 
 	virtual bool isActuator(void) const
 	{ return _actuator; }
+
+	/// Sets the target to maximum and controls the approaching velocity
+	/// provides a servo motor control for the constraint
+	virtual void setVelocity(vl::scalar velocity);
+
+	virtual void addVelocity(vl::scalar velocity);
 
 	void addActuatorTarget(Ogre::Radian const &angle)
 	{ setActuatorTarget(angle+_angle); }
