@@ -1,12 +1,16 @@
-#ifndef VL_BASE_SLEEP_HPP
-#define VL_BASE_SLEEP_HPP
+/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-07
+ *	@file base/sleep.hpp
+ *
+ */
+
+#ifndef HYDRA_BASE_SLEEP_HPP
+#define HYDRA_BASE_SLEEP_HPP
 
 #include <stdint.h>
 
 #ifdef VL_WIN32
-#include <winsock2.h>
 #include <windows.h>
-#include <windef.h>
 #else
 #include <time.h>
 #endif
@@ -38,6 +42,6 @@ inline void sleep(vl::time const &t)
 	msleep((uint32_t)ms);
 }
 
-}
+}	// namespace vl
 
-#endif
+#endif	// HYDRA_BASE_SLEEP_HPP

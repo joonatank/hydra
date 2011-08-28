@@ -76,21 +76,30 @@ public :
 	static SerialJoystickRefPtr create(std::string const &dev)
 	{
 		SerialJoystickRefPtr joy(new SerialJoystick(dev));
+		joy->calibrate_zero();
 		return joy;
 	}
 
 	void add_handler(SerialJoystickHandlerRefPtr handler);
 
+	void calibrate_zero(void);
+
 private :
 	// New parse function that creates the event structure
 	JoystickEvent _parse(std::vector<char> msg, size_t bytes);
 
-	void _write_data(void);
+	// combined write/read the serial
+	bool _request_data(JoystickEvent &evt);
+
+	// only read the serial for new data
+	bool _read_data(JoystickEvent &evt);
 
 	OnValueChanged _signal;
 	Serial _serial;
 
 	std::vector<SerialJoystickHandlerRefPtr> _handlers;
+
+	JoystickEvent _zero;
 
 };	// Class SerialJoystickReader
 

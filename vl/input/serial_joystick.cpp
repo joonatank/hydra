@@ -11,6 +11,8 @@
 #include "serial_joystick.hpp"
 
 #include "base/timer.hpp"
+// Necessary for waiting the controller to respond
+#include "base/sleep.hpp"
 
 const int BAUD_RATE = CBR_128000;
 
@@ -20,37 +22,28 @@ vl::SerialJoystick::SerialJoystick(std::string const &device)
 {
 	// If necessary to decrease the timeouts be sure to increase baud rate also
 	// on both arduino and here. Otherwise part of the message is lost.
-	_serial.set_read_timeout(5, 2);
+	_serial.set_read_timeout(10, 5);
 }
 
 void
 vl::SerialJoystick::mainloop(void)
 {
-	// Read old data
-	std::vector<char> buf(128);
-	size_t bytes = _serial.read(buf, 128);
+	JoystickEvent evt;
+	bool res = _request_data(evt);
+	while(!res)
+	{ res = _read_data(evt); }
 
-	if(bytes > 0)
+	evt -= _zero;
+
+	// @todo should check that the data is valid new data
+	// old signal system
+	_signal(evt);
+
+	for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
+		iter != _handlers.end(); ++iter)
 	{
-		// Test code
-		assert(bytes == 18);
-
-		JoystickEvent evt = _parse(buf, bytes);
-		
-		// old signal system
-		_signal(evt);
-
-		for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
-			iter != _handlers.end(); ++iter)
-		{
-			(*iter)->execute(evt);
-		}
+		(*iter)->execute(evt);
 	}
-
-	// @todo should we sent a new request if we read 0 bytes?
-	// Write request for new data
-	_write_data();
-
 }
 
 
@@ -61,6 +54,26 @@ vl::SerialJoystick::add_handler(vl::SerialJoystickHandlerRefPtr handler)
 	std::vector<SerialJoystickHandlerRefPtr>::iterator iter = std::find(_handlers.begin(), _handlers.end(), handler);
 	if(iter == _handlers.end())
 	{ _handlers.push_back(handler); }
+}
+
+void
+vl::SerialJoystick::calibrate_zero(void)
+{
+	if(!_request_data(_zero))
+	{
+		vl::msleep(1);
+		// @todo add sleep
+		while(!_read_data(_zero))
+		{
+			vl::msleep(1);
+		}
+	}
+
+	std::clog << "Zero calibrated." << std::endl;
+
+	// Request more data for the next read operation
+	JoystickEvent evt;
+	_request_data(evt);
 }
 
 /// --------------------------------- Private --------------------------------
@@ -120,10 +133,19 @@ vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes)
 }
 
 
-void
-vl::SerialJoystick::_write_data(void)
+bool
+vl::SerialJoystick::_request_data(vl::JoystickEvent &evt)
 {
-	// Get new data
+	// The reading and request are switched because otherwise we don't have the
+	// buffer filled when read.
+	// The cleaner way to handle this would be to use message sizes
+	// and custom buffer that is converted to JoyEvent when complete message
+	// is received.
+
+	// Read old data
+	bool res = _read_data(evt);
+
+	// Request new data
 	std::vector<char> buf(128);
 	buf.at(0) = char(MSG_READ_JOYSTICK);
 	size_t bytes = _serial.write(buf, 1);
@@ -132,4 +154,32 @@ vl::SerialJoystick::_write_data(void)
 	{
 		std::cerr << "Something fishy : wrote " << bytes << " instead of 1." << std::endl;
 	}
+
+	return res;
+}
+
+bool
+vl::SerialJoystick::_read_data(vl::JoystickEvent &evt)
+{
+	// Read data
+	std::vector<char> buf(128);
+	// @todo fix the hard coded number of bytes with arduino writing the
+	// number first in the sequence
+	size_t bytes = _serial.read(buf, 18);
+
+	if(bytes > 0)
+	{
+		// Needs to throw because we can't handle partial messages
+		if(bytes != 18)
+		{
+			std::stringstream ss;
+			ss << "Incorrect number of bytes. Read " << bytes << " bytes." << std::endl;
+			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+		}
+
+		evt = _parse(buf, bytes);
+		return true;
+	}
+	else
+	{ return false; }
 }

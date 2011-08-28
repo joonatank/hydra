@@ -84,6 +84,15 @@ struct JoystickEvent
 		else { return -1; }
 	}
 
+	JoystickEvent &
+	operator-=(JoystickEvent const &a)
+	{
+		axis_x -= a.axis_x;
+		axis_y -= a.axis_y;
+		axis_z -= a.axis_z;
+		return *this;
+	}
+
 	vl::scalar axis_x;
 	vl::scalar axis_y;
 	vl::scalar axis_z;
@@ -103,6 +112,27 @@ operator<<(std::ostream &os, JoystickEvent const &evt)
 	}
 
 	return os;
+}
+
+inline JoystickEvent
+operator-(JoystickEvent const &a, JoystickEvent const &b)
+{
+	JoystickEvent res(a);
+	res -= b;
+	return res;
+}
+
+inline bool
+operator==(JoystickEvent const &a, JoystickEvent const &b)
+{
+	return( a.axis_x == b.axis_x && a.axis_y == b.axis_y
+		&& a.axis_z == b.axis_z && a.buttons == b.buttons);
+}
+
+inline bool
+operator!=(JoystickEvent const &a, JoystickEvent const &b)
+{
+	return !(a==b);
 }
 
 }	// namespace vl
