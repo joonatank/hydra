@@ -203,6 +203,8 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 
 	if(env->isMaster())
 	{
+		_max_fps = env->getFPS();
+
 		// auto_fork is silently ignored for slaves
 		if(auto_fork)
 		{
@@ -313,22 +315,13 @@ vl::Application::_render( uint32_t const frame )
 
 	_master->render();
 
-	// time in milliseconds
-	double t = ((double)timer.elapsed())*1e3;
+	vl::time sleep_time;
+	// Try to get the requested frame rate but avoid division by zero
+	// also check that the time used for the frame is less than the max fps so we
+	// don't overflow the sleep time
+	if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
+	{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
 
-	// Sleep enough to get a 60 fps but no more
-	// NOTE Of course because the converting to uint makes the time really huge
-	// Of course the next question is why the time is negative without rendering data
-	// i.e. why it would take more than 16.66ms for rendering a frame without data
-	// TODO the fps should be configurable
-	// We start with negative sleep_time so that we force instant context switch
-	double sleep_time = -1;
-	// Try to get the requested frame rate but avoid division by zero 
-	if( _fps > 0 )
-	{ sleep_time = 1000.0/_fps - t; }
-	
-	if( sleep_time > 0 )
-	{ vl::msleep( (uint32_t)sleep_time ); }
-	else	// Force context switching
-	{ vl::msleep(0); }
+	// Force context switching by zero sleep
+	vl::sleep(sleep_time);
 }

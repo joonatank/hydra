@@ -58,7 +58,7 @@ protected:
 
 	vl::cluster::ClientRefPtr _slave_client;
 
-	uint32_t _fps;
+	uint32_t _max_fps;
 
 	std::vector<uint32_t> _spawned_processes;
 

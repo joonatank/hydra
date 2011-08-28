@@ -14,7 +14,7 @@
 namespace vl
 {
 
-inline void msleep( uint32_t milliseconds )
+inline void msleep(uint32_t milliseconds)
 {
 #ifdef _WIN32
 	// Easy to disable zero millisecond sleep on Windows which at least is a problem
@@ -30,6 +30,12 @@ inline void msleep( uint32_t milliseconds )
 	tv.tv_nsec = milliseconds * 1e6;
 	::nanosleep( &tv, 0 );
 #endif
+}
+
+inline void sleep(vl::time const &t)
+{
+	double ms = ((double)t)*1e3;
+	msleep((uint32_t)ms);
 }
 
 }
