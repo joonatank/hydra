@@ -34,6 +34,10 @@
 
 #include "recording.hpp"
 
+/// Necessary for exporting math
+#include "math/transform.hpp"
+#include "math/types.hpp"
+
 /// Overloads need to be outside the module definition
 
 /// SceneGraph overloads
@@ -47,7 +51,7 @@ using namespace vl;
 void export_math(void)
 {
 	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
-		.def(python::init<Ogre::Quaternion>())
+		.def(python::init<Ogre::Quaternion, python::optional<Ogre::Vector3> >())
 		.def("isIdentity", &vl::Transform::isIdentity)
 		.def("setIdentity", &vl::Transform::setIdentity)
 		.def("isPositionZero", &vl::Transform::isPositionZero)
@@ -55,10 +59,21 @@ void export_math(void)
 		.def("isRotationIdentity", &vl::Transform::isRotationIdentity)
 		.def("setRotationIdentity", &vl::Transform::setRotationIdentity)
 		.def("invert", &vl::Transform::invert)
+		.def("inverted", &vl::Transform::inverted)
+
 		.def_readwrite("position", &vl::Transform::position)
 		.def_readwrite("quaternion", &vl::Transform::quaternion)
+		
+		.def(-python::self)
 		.def(python::self *= python::self)
+		.def(python::self *= Ogre::Vector3())
+		.def(python::self *= Ogre::Matrix4())
+		
 		.def(python::self * python::self)
+		.def(python::self * Ogre::Quaternion())
+		.def(python::self * Ogre::Vector3())
+		.def(python::self * Ogre::Matrix4())
+
 		.def(python::self == python::self)
 		.def(python::self != python::self)
 		.def(python::self_ns::str(python::self_ns::self))

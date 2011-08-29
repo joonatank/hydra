@@ -149,13 +149,26 @@ vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
 	}
 }
 
-	/// ----------------------- Tubes --------------------------
+/// ----------------------- Tubes --------------------------
+vl::physics::TubeRefPtr
+vl::physics::World::createTubeEx(vl::physics::Tube::ConstructionInfo const &info)
+{
+	TubeRefPtr tube(new Tube(this, info));
+	return tube;
+}
+
 vl::physics::TubeRefPtr
 vl::physics::World::createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
 		vl::scalar length, vl::scalar radius, vl::scalar mass)
 {
-	TubeRefPtr tube(new Tube(this, start_body, end_body, length, radius, mass));
-	return tube;
+	Tube::ConstructionInfo info;
+	info.start_body = start_body;
+	info.end_body = end_body;
+	info.length = length;
+	info.radius = radius;
+	info.mass = mass;
+
+	return createTubeEx(info);
 }
 
 

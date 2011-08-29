@@ -8,8 +8,11 @@
 #ifndef HYDRA_PHYSICS_TUBE_HPP
 #define HYDRA_PHYSICS_TUBE_HPP
 
+// Necessary for vl::scalar
 #include "math/types.hpp"
-
+// Necessary for Transform
+#include "math/transform.hpp"
+// Necessary for pointer types and forward declarations
 #include "typedefs.hpp"
 
 namespace vl
@@ -24,6 +27,36 @@ namespace physics
 class Tube
 {
 public :
+	struct ConstructionInfo
+	{
+		/// @todo should we either add parameters for things that we can not
+		/// guess like length, radius and mass
+		/// or should we make them invalid (0) and check when the structure 
+		/// is used that the user has made them valid.
+		ConstructionInfo(void)
+			: length(10)
+			, radius(0.1)
+			, mass(50.0)
+			, stiffness(0.9)
+			, damping(0.1)
+			, element_size(0.6)
+		{}
+
+//		ConstructionInfo(RigidBodyRefPtr body1, RigidBodyRefPtr body2, Transform frame1, Transform frame2, 
+
+		RigidBodyRefPtr start_body;
+		RigidBodyRefPtr end_body;
+		Transform start_body_frame;
+		Transform end_body_frame;
+
+		vl::scalar length;
+		vl::scalar radius;
+		vl::scalar mass;
+		vl::scalar stiffness;
+		vl::scalar damping;
+		vl::scalar element_size;
+	};
+
 	/**	@brief Constructor
 	 *	@param world where to add the tube
 	 *	@param start_body the body where the one end of the tube is tied to can be NULL
@@ -34,8 +67,7 @@ public :
 	 *	@todo how to integrate this in to our animation system with out rigid body
 	 *	simulation
 	 */
-	Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
-		vl::scalar length, vl::scalar radius, vl::scalar mass);
+	Tube(WorldPtr world, ConstructionInfo const &info);
 
 	/// @brief Destructor
 	~Tube(void);
@@ -68,7 +100,7 @@ public :
 	{ return _mass; }
 
 private :
-	void _createConstraints(vl::scalar elem_length);
+	void _createConstraints(vl::Transform const &start_frame, vl::Transform const &end_frame, vl::scalar elem_length);
 
 	/// Helper methods for Graphics engine so we don't need to pass 
 	/// all this information to the constructor, which would be pretty hard

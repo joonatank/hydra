@@ -75,10 +75,10 @@ public :
 	void enableSpring(int index, bool onOff)
 	{ _bt_constraint->enableSpring(index, onOff); }
 
-	void setStiffness(int index, btScalar stiffness)
+	void setStiffness(int index, vl::scalar stiffness)
 	{ _bt_constraint->setStiffness(index, stiffness); }
 
-	void setDamping(int index, btScalar damping)
+	void setDamping(int index, vl::scalar damping)
 	{ _bt_constraint->setDamping(index, damping); }
 
 	void setEquilibriumPoint(void)

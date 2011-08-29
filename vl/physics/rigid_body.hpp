@@ -8,8 +8,14 @@
 #ifndef HYDRA_RIGID_BODY_HPP
 #define HYDRA_RIGID_BODY_HPP
 
-#include "motion_state.hpp"
-#include "shapes.hpp"
+// Necessary for pointers
+#include "typedefs.hpp"
+// Necessary for vl::scalar
+#include "math/types.hpp"
+// Necessary for Transform
+#include "math/transform.hpp"
+// Necessary for name
+#include <string>
 
 namespace vl {
 

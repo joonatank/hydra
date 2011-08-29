@@ -8,15 +8,20 @@
 #ifndef HYDRA_RIGID_BODY_BULLET_HPP
 #define HYDRA_RIGID_BODY_BULLET_HPP
 
+/// Base class
+#include "rigid_body.hpp"
+
+/// Necessary for converting vectors and quaternions
+#include "math/conversion.hpp"
+/// Necessary for casting collision shapes
+#include "shapes_bullet.hpp"
+/// Necessary for passing MotionState
+#include "motion_state.hpp"
+
+/// Engine implementation
 #include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
 #include <bullet/btBulletDynamicsCommon.h>
 
-#include "math/conversion.hpp"
-
-// Base class
-#include "rigid_body.hpp"
-
-#include "shapes_bullet.hpp"
 
 namespace 
 {
@@ -29,7 +34,6 @@ namespace
 	{
 		using vl::physics::BulletCollisionShape;
 		using vl::physics::BulletCollisionShapeRefPtr;
-
 
 		btVector3 inertia(convert_bt_vec(info.inertia));
 		BulletCollisionShapeRefPtr shape = boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape);

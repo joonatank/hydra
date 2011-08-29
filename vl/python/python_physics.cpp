@@ -11,6 +11,7 @@
 #include "physics/shapes.hpp"
 #include "physics/physics_constraints.hpp"
 #include "physics/tube.hpp"
+#include "physics/motion_state.hpp"
 
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
@@ -27,6 +28,7 @@ namespace
 
 void export_physics_objects(void)
 {
+	/// @todo add size
 	python::class_<vl::physics::CollisionShape, boost::noncopyable >("CollisionShape", python::no_init )
 	;
 
@@ -161,9 +163,23 @@ void export_physics_objects(void)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
-		.def("createTube", &vl::physics::World::createTube, createTube_ov() )
+		.def("createTube", &vl::physics::World::createTube, createTube_ov())
+		.def("createTube", &vl::physics::World::createTubeEx)
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::physics::Tube::ConstructionInfo>("TubeConstructionInfo", python::init<>())
+		.def_readwrite("start_body", &vl::physics::Tube::ConstructionInfo::start_body)
+		.def_readwrite("end_body", &vl::physics::Tube::ConstructionInfo::end_body)
+		.def_readwrite("start_frame", &vl::physics::Tube::ConstructionInfo::start_body_frame)
+		.def_readwrite("end_frame", &vl::physics::Tube::ConstructionInfo::end_body_frame)
+		.def_readwrite("length", &vl::physics::Tube::ConstructionInfo::length)
+		.def_readwrite("radius", &vl::physics::Tube::ConstructionInfo::radius)
+		.def_readwrite("mass", &vl::physics::Tube::ConstructionInfo::mass)
+		.def_readwrite("stiffness", &vl::physics::Tube::ConstructionInfo::stiffness)
+		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
+		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
 	;
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)

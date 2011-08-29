@@ -8,11 +8,15 @@
 #include "tube.hpp"
 
 /// Necessary for registering all the bodies and constraints
-#include "physics_world.hpp"
+#include "physics/physics_world.hpp"
 /// Necessary as we create new bodies for all the elements
-#include "rigid_body.hpp"
+#include "physics/rigid_body.hpp"
 /// Necessary for the string-dampers
-#include "physics_constraints.hpp"
+#include "physics/physics_constraints.hpp"
+/// Necessary for setting the MotionState on created Bodies
+#include "physics/motion_state.hpp"
+/// Necessary for creating collision shapes
+#include "physics/shapes.hpp"
 
 /// Necessary for generating the mesh
 #include "mesh_manager.hpp"
@@ -21,16 +25,15 @@
 // Necessary for creating SceneNodes and retriving mesh manager
 #include "scene_manager.hpp"
 
-vl::physics::Tube::Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
-		vl::scalar length, vl::scalar radius, vl::scalar mass)
-	: _start_body(start_body)
-	, _end_body(end_body)
-	, _length(length)
-	, _stiffness(0.9)
-	, _damping(0.1)
-	, _element_size(0.6)
-	, _tube_radius(radius)
-	, _mass(mass)
+vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
+	: _start_body(info.start_body)
+	, _end_body(info.end_body)
+	, _length(info.length)
+	, _stiffness(info.stiffness)
+	, _damping(info.damping)
+	, _element_size(info.element_size)
+	, _tube_radius(info.radius)
+	, _mass(info.mass)
 	, _world(world)
 	, _mesh_created(false)
 {
@@ -66,14 +69,14 @@ vl::physics::Tube::Tube(WorldPtr world, RigidBodyRefPtr start_body, RigidBodyRef
 		_bodies.push_back(body);
 	}
 
-	_createConstraints(elem_length);
+	_createConstraints(info.start_body_frame, info.end_body_frame, elem_length);
 
 	std::clog << "Created " << _bodies.size() << " rigid bodies and "
 		<< _constraints.size() << " constraints for the tube." << std::endl;
 
 	/// Create the SceneNodes
-	assert(start_body->getMotionState() && start_body->getMotionState()->getNode());
-	_createMesh(start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
+	assert(_start_body->getMotionState() && _start_body->getMotionState()->getNode());
+	_createMesh(_start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
 }
 
 vl::physics::Tube::~Tube(void)
@@ -96,17 +99,17 @@ vl::physics::Tube::setDamping(vl::scalar damping)
 
 /// ---------------------------------- Private -------------------------------
 void
-vl::physics::Tube::_createConstraints(vl::scalar elem_length)
+vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Transform const &end_frame, vl::scalar elem_length)
 {
 	/// Create spring-damper constraints
 	/// Maximum number of constraint is N+1 where N is the number of elements
 	vl::Transform frameA(Ogre::Vector3(0, elem_length/2, 0));
-	vl::Transform frameB = -frameA;	
+	vl::Transform frameB = -frameA;
 //	frameA.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);
-//	frameB.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);*
+//	frameB.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);
 	if(_start_body && _bodies.size() > 0)
 	{
-		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), frameA, frameB, true);
+		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), start_frame, frameB, true);
 		_constraints.push_back(constraint);
 	}
 
@@ -122,7 +125,7 @@ vl::physics::Tube::_createConstraints(vl::scalar elem_length)
 	// Last element
 	if(_end_body && _bodies.size() > 0)
 	{
-		ConstraintRefPtr constraint = SixDofConstraint::create(_bodies.back(), _end_body, frameA, frameB, true);
+		ConstraintRefPtr constraint = SixDofConstraint::create(_bodies.back(), _end_body, frameA, end_frame, true);
 		_constraints.push_back(constraint);
 	}
 
@@ -142,15 +145,17 @@ vl::physics::Tube::_createConstraints(vl::scalar elem_length)
 		/// @todo set limits
 		spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
 		spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
+		spring->setAngularLowerLimit(Ogre::Vector3(0, 0, 0));
+		spring->setAngularUpperLimit(Ogre::Vector3(0, 0, 0));
 
 		/// @todo enable spring damper
 		/// @todo set stiffness and damping
 		// Enable spring for rotations around x, y and z
 		for(uint16_t i = 3; i < 6; ++i)
 		{
-			//spring->enableSpring(i, true);
-			//spring->setStiffness(i, _stiffness);
-			//spring->setDamping(i, _damping);
+			spring->enableSpring(i, true);
+			spring->setStiffness(i, _stiffness);
+			spring->setDamping(i, _damping);
 		}
 		//spring->setEquilibriumPoint();
 	}

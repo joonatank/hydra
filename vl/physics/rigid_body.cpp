@@ -8,6 +8,9 @@
 /// Interface
 #include "rigid_body.hpp"
 
+#include "motion_state.hpp"
+#include "shapes.hpp"
+
 /// Concrete implementations
 #ifdef USE_BULLET
 #include "rigid_body_bullet.hpp"

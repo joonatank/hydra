@@ -21,8 +21,12 @@
 #include "base/timer.hpp"
 // Necessary for vl::scalar
 #include "math/types.hpp"
+// Necesessary for Transform
+#include "math/transform.hpp"
 // Necessary for RigidBody::ConstructionInfo
 #include "rigid_body.hpp"
+// Necessary for Tube::ConstructionInfo
+#include "tube.hpp"
 
 #include <vector>
 #include <string>
@@ -91,6 +95,8 @@ public :
 
 
 	/// ----------------------- Tubes --------------------------
+	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
+
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
 		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass = 50.0);
 
