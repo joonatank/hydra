@@ -106,8 +106,12 @@ vl::GameManager::toggleBackgroundSound( void )
 bool
 vl::GameManager::step(void)
 {
+	_fire_step_start();
+
 	if(isPlayed())
 	{
+		getEventManager()->getFrameTrigger()->update(getDeltaTime());
+
 		// process input devices
 		for(size_t i = 0; i < _input_devices.size(); ++i)
 		{
@@ -127,14 +131,12 @@ vl::GameManager::step(void)
 			_physics_world->step();
 		}
 
-		vl::time elapsed = _step_timer.elapsed();
+		_process_constraints(getDeltaTime());
 
-		_process_constraints(elapsed);
-
-		_scene_manager->_step(elapsed);
+		_scene_manager->_step(getDeltaTime());
 	}
 
-	_step_timer.reset();
+	_fire_step_end();
 
 	return !isQuited();
 }
@@ -331,4 +333,16 @@ void
 vl::GameManager::_process_constraints(vl::time const &t)
 {
 	_constraint_solver->step(t);
+}
+
+void
+vl::GameManager::_fire_step_start(void)
+{
+	_delta_time = _step_timer.elapsed();
+}
+
+void
+vl::GameManager::_fire_step_end(void)
+{
+	_step_timer.reset();
 }

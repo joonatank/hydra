@@ -286,12 +286,19 @@ public :
 	/// Scene handling
 	void loadScene(vl::SceneInfo const &scene_info);
 
+	vl::time const &getDeltaTime(void) const
+	{ return _delta_time; }
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
 
 	void _process_constraints(vl::time const &t);
+
+	void _fire_step_start(void);
+
+	void _fire_step_end(void);
 
 	vl::PythonContextPtr _python;
 	vl::ResourceManagerRefPtr _resource_man;
@@ -322,6 +329,7 @@ private :
 	vl::timer _program_timer;
 	vl::stop_timer _game_timer;
 	vl::timer _step_timer;
+	vl::time _delta_time;
 
 	/// State
 	GAME_STATE _state;

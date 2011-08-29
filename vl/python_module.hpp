@@ -40,6 +40,7 @@
 
 // GUI
 #include "gui/gui.hpp"
+#include "gui/gui_window.hpp"
 #include "gui/gui_actions.hpp"
 
 // Constraints
@@ -562,17 +563,21 @@ BOOST_PYTHON_MODULE(vl)
 
 	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
 		.add_property("action", python::make_function( &vl::BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
+		.def("addListener", &vl::BasicActionTrigger::addListener)
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
-		.add_property("action", python::make_function( &TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
+		.add_property("action", python::make_function( &vl::TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ), &TransformActionTrigger::setAction)
+		.def("addListener", &vl::TransformActionTrigger::addListener)
 	;
 	
 	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
 		.add_property("name", &vl::TrackerTrigger::getName, &vl::TrackerTrigger::setName)
 	;
 	
-	python::class_<FrameTrigger, boost::noncopyable, python::bases<BasicActionTrigger> >("FrameTrigger", python::no_init )
+	python::class_<FrameTrigger, boost::noncopyable, python::bases<Trigger> >("FrameTrigger", python::no_init )
+		.add_property("action", python::make_function(&vl::FrameTrigger::getAction, python::return_value_policy< python::reference_existing_object>()))
+		.def("addListener", &vl::FrameTrigger::addListener)
 	;
 
 	python::class_<vl::KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )
@@ -580,6 +585,8 @@ BOOST_PYTHON_MODULE(vl)
 		.add_property("modifiers", &vl::KeyTrigger::getModifiers, &vl::KeyTrigger::setModifiers )
 		.add_property("action_down", python::make_function( &vl::KeyTrigger::getKeyDownAction, python::return_value_policy< python::reference_existing_object>() ), &vl::KeyTrigger::setKeyDownAction)
 		.add_property("action_up", python::make_function( &vl::KeyTrigger::getKeyUpAction, python::return_value_policy< python::reference_existing_object>() ), &vl::KeyTrigger::setKeyUpAction)
+		.def("addKeyUpListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyUpListener))
+		.def("addKeyDownListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyDownListener))
 	;
 
 
@@ -739,18 +746,39 @@ BOOST_PYTHON_MODULE(vl)
 		.staticmethod("create")
 	;
 
-	/// GUI actions
+	/// GUI
+	/// @todo these are useless till the Window exist on both master and rendering thread
+	/// so it needs to be distributed...
+	python::class_<vl::gui::Window, vl::gui::WindowRefPtr, boost::noncopyable>("GUIWindow", python::no_init)
+		.add_property("visible", &vl::gui::Window::isVisible, &vl::gui::Window::setVisible)
+		.def("toggle_visible", &vl::gui::Window::toggleVisible)
+	;
+
+	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
+	;
+
+	python::class_<vl::gui::EditorWindow, vl::gui::EditorWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIEditorWindow", python::no_init)
+	;
+
 	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
+		.def("toggleEditor", &vl::gui::GUI::toggleEditorVisibility)
 		.def("showEditor", &vl::gui::GUI::showEditor )
 		.def("hideEditor", &vl::gui::GUI::hideEditor )
+		.def("toggleConsole", &vl::gui::GUI::toggleConsoleVisibility)
 		.def("showConsole", &vl::gui::GUI::showConsole )
 		.def("hideConsole", &vl::gui::GUI::hideConsole )
+		.def("toggleStats", &vl::gui::GUI::toggleStatsVisibility)
 		.def("showStats", &vl::gui::GUI::showStats )
 		.def("hideStats", &vl::gui::GUI::hideStats )
 		.def("showLoadingScreen", &vl::gui::GUI::showLoadingScreen )
 		.def("hideLoadingScreen", &vl::gui::GUI::hideLoadingScreen )
+		// Useless till Widow is distributed
+//		.add_property("console", &vl::gui::GUI::getConsole)
+//		.add_property("editor", &vl::gui::GUI::getEditor)
+//		.add_property("stats", &vl::gui::GUI::getStats)
 	;
 
+	/// GUI actions
 	python::class_<vl::gui::GUIActionBase, boost::noncopyable>("GUIActionBase", python::no_init )
 		.add_property("gui", &vl::gui::GUIActionBase::getGUI, &vl::gui::GUIActionBase::setGUI )
 	;

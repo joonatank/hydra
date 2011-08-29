@@ -293,10 +293,6 @@ vl::Config::render( void )
 	assert(_server);
 
 	// Process a time step in the game
-	// New event interface
-	_game_manager->getEventManager()->getFrameTrigger()->update();
-	_game_manager->getStats().logFrameProcessingTime(timer.elapsed());
-
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }

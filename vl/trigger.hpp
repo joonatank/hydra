@@ -3,14 +3,18 @@
  *	@file trigger.hpp
  *
  *	Event Handling Trigger class
+ *	
+ *	2011-07 Updated to use boost::signals
  */
 
-#ifndef VL_TRIGGER_HPP
-#define VL_TRIGGER_HPP
+#ifndef HYDRA_TRIGGER_HPP
+#define HYDRA_TRIGGER_HPP
 
 #include "keycode.hpp"
 
 #include "action.hpp"
+
+#include <boost/signal.hpp>
 
 namespace vl
 {
@@ -47,6 +51,7 @@ inline std::ostream &operator<<( std::ostream &os, vl::Trigger const &t )
 // for floating point updates
 class BasicActionTrigger : public vl::Trigger
 {
+	typedef boost::signal<void ()> Tripped;
 public :
 	BasicActionTrigger(void);
 
@@ -58,27 +63,39 @@ public :
 	/// Callback function
 	void update(void);
 
+	int addListener(Tripped::slot_type const &slot)
+	{ _signal.connect(slot); return 1; }
+
 protected :
+	Tripped _signal;
+
 	GroupActionProxyPtr _action;
 
 };	// class BasicActionTrigger
 
 class TransformActionTrigger : public vl::Trigger
 {
+	typedef boost::signal<void (Transform const &)> Tripped;
+
 public :
-	TransformActionTrigger( void );
+	TransformActionTrigger(void);
 
 	/// Action to execute when updated
 	// TODO there should be a stack of actions not just one of them
-	void setAction( TransformActionPtr action );
+	void setAction(TransformActionPtr action);
 
-	TransformActionPtr getAction( void )
+	TransformActionPtr getAction(void)
 	{ return _action; }
 
 	/// Callback function
-	void update( Transform const &data );
+	void update(Transform const &data);
+
+	int addListener(Tripped::slot_type const &slot)
+	{ _signal.connect(slot); return 1; }
 
 protected :
+	Tripped _signal;
+
 	TransformActionPtr _action;
 
 	Transform _value;
@@ -98,6 +115,8 @@ enum KEY_MOD
 
 class KeyTrigger : public Trigger
 {
+	typedef boost::signal<void ()> Tripped;
+
 public :
 	enum KEY_STATE
 	{
@@ -144,6 +163,12 @@ public :
 	/// Also Trigger is valid even though both actions are zero.
 	void update(KEY_STATE state);
 
+	int addKeyDownListener(Tripped::slot_type const &slot)
+	{ _key_down_signal.connect(slot); return 1; }
+
+	int addKeyUpListener(Tripped::slot_type const &slot)
+	{ _key_up_signal.connect(slot); return 1; }
+
 	virtual std::string getTypeName( void ) const
 	{ return "KeyTrigger"; }
 
@@ -153,6 +178,9 @@ public :
 	{ return vl::getKeyName( _key ); }
 
 private :
+	Tripped _key_down_signal;
+	Tripped _key_up_signal;
+
 	OIS::KeyCode _key;
 	KEY_MOD _modifiers;
 	
@@ -178,18 +206,19 @@ public :
 /// Trigger that is triggered when a frame is rendered
 // TODO should be a float trigger, so that the frame time can be passed
 // the actions this executes
-class FrameTrigger : public BasicActionTrigger
+class FrameTrigger : public Trigger
 {
+	typedef boost::signal<void (vl::time const &)> Tripped;
 public :
 	FrameTrigger( void )
-		: _delta_time(0)
+		: _action(new GroupActionProxy)
 	{}
 
 	virtual std::string getTypeName( void ) const
 	{ return "FrameTrigger"; }
 
-	void setDeltaTime( double delta_time )
-	{ _delta_time = delta_time; }
+//	void setDeltaTime( double delta_time )
+//	{ _delta_time = delta_time; }
 
 	virtual double value( void ) const
 	{ return _delta_time; }
@@ -197,8 +226,29 @@ public :
 	virtual std::string getName( void ) const
 	{ return "FrameTrigger"; }
 
-protected :
-	double _delta_time;
+	/// Action to execute when updated
+	/// Can not be replaced and will always exist
+	GroupActionProxyPtr getAction(void)
+	{ return _action; }
+
+	/// Callback function
+	void update(vl::time const &t)
+	{
+		_delta_time = t;
+		_action->execute();
+		_signal(t);
+	}
+
+	int addListener(Tripped::slot_type const &slot)
+	{ _signal.connect(slot); return 1; }
+
+private :
+	Tripped _signal;
+
+	GroupActionProxyPtr _action;
+
+	vl::time _delta_time;
+//	double _delta_time;
 
 };
 

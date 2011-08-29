@@ -27,8 +27,8 @@ ogre.position = Vector3(0, 2.5, 0)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names
 # first one is the camera not active at the moment, second one is active at the moment
-addToggleActiveCamera("OutsideCamera", "Omakamera" )
-game.player.camera = "Omakamera"
+addToggleActiveCamera("Omakamera", "OutsideCamera")
+#game.player.camera = ""
 
 game.createBackgroundSound("The_Dummy_Song.ogg")
 addToggleMusicEvent(KC.M)
@@ -131,6 +131,7 @@ game.scene.clearSelection()
 game.scene.addToSelection(text_n)
 
 # Test serial joystick and signals
+"""
 joy = SerialJoystick.create("COM5")
 
 # FIXME
@@ -143,4 +144,4 @@ def joystick_handler(e) :
 joy.doOnValueChanged(joystick_handler)
 
 game.addInputDevice(joy)
-
+"""
