@@ -844,6 +844,7 @@ BOOST_PYTHON_MODULE(vl)
 	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::SerialJoystickHandler> >("ConstraintJoystickHandler", python::no_init)
 		.def("set_axis_constraint", set_axis_constraint_ov0)
 		.def("set_axis_constraint", set_axis_constraint_ov1)
+		.add_property("velocity_multiplier", &vl::ConstraintJoystickHandler::get_velocity_multiplier, &vl::ConstraintJoystickHandler::set_velocity_multiplier)
 		.def("create", &vl::ConstraintJoystickHandler::create)
 		.staticmethod("create")
 	;

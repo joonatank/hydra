@@ -242,6 +242,7 @@ joy_handler = ConstraintJoystickHandler.create()
 joy_handler.set_axis_constraint(0, puomi_hinge)
 joy_handler.set_axis_constraint(1, motor_hinge)
 joy_handler.set_axis_constraint(1, 0, teleskooppi)
+joy_handler.velocity_multiplier = 0.4
 
 joy.add_handler(joy_handler)
 

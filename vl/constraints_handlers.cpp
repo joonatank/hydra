@@ -38,18 +38,19 @@ vl::ConstraintJoystickHandler::execute(JoystickEvent const &evt)
 	std::vector<AxisConstraintElem>::iterator z_iter= std::find(_constraint_map.begin(), _constraint_map.end(), elem_z);
 
 	/// @todo add fallback to no buttons down
+	/// @todo reset the velocities for anything not present
+	/// for example button was pressed is no longer so set it's velocity to zero
 	if(x_iter != _constraint_map.end())
 	{
-		// @todo set speed to the constraint
-		x_iter->constraint->setVelocity(evt.axis_x);
+		x_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_x);
 	}
 	if(y_iter != _constraint_map.end())
 	{
-		y_iter->constraint->setVelocity(evt.axis_y);
+		y_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_y);
 	}
 	if(z_iter != _constraint_map.end())
 	{
-		z_iter->constraint->setVelocity(evt.axis_z);
+		z_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_z);
 	}
 }
 

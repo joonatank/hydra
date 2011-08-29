@@ -49,6 +49,11 @@ struct ConstraintJoystickHandler : public SerialJoystickHandler
 	void set_axis_constraint(int axis, ConstraintRefPtr constraint);
 	void set_axis_constraint(int axis, int button, ConstraintRefPtr constraint);
 	
+	void set_velocity_multiplier(vl::scalar multi)
+	{ _velocity_multiplier = vl::abs(multi); }
+
+	vl::scalar get_velocity_multiplier(void) const
+	{ return _velocity_multiplier; }
 
 	virtual void execute(JoystickEvent const &evt);
 
@@ -56,6 +61,8 @@ struct ConstraintJoystickHandler : public SerialJoystickHandler
 	
 protected :
 	ConstraintJoystickHandler(void) {}
+
+	vl::scalar _velocity_multiplier;
 
 	std::vector<AxisConstraintElem> _constraint_map;
 };
