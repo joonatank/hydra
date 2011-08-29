@@ -51,6 +51,9 @@ public :
 
 	void setEditorVisibility(bool vis);
 
+	void toggleEditorVisibility(void)
+	{ setEditorVisibility(!editorShown()); }
+
 	bool editorShown( void ) const
 	{ return _editor_shown; }
 
@@ -58,6 +61,9 @@ public :
 	{ return _console; }
 
 	void setConsoleVisibility(bool vis);
+
+	void toggleConsoleVisibility(void)
+	{ setConsoleVisibility(!consoleShown()); }
 
 	void showConsole(void)
 	{ setConsoleVisibility(true); }
@@ -72,6 +78,9 @@ public :
 	{ return _stats; }
 
 	void setStatsVisibility(bool vis);
+
+	void toggleStatsVisibility(void)
+	{ setStatsVisibility(!statsShown()); }
 
 	void showStats(void)
 	{ setStatsVisibility(true); }

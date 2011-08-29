@@ -41,10 +41,14 @@ public :
 		// use CEGUI functions for that.
 	}
 
+	bool isVisible(void) const
+	{ return _window->isVisible(); }
+
 	void setVisible(bool visible)
-	{
-		_window->setVisible(visible);
-	}
+	{ _window->setVisible(visible); }
+
+	void toggleVisible(void)
+	{ setVisible(!isVisible()); }
 
 protected :
 	CEGUI::Window *_window;

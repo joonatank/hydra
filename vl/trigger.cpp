@@ -15,7 +15,9 @@ vl::BasicActionTrigger::BasicActionTrigger(void)
 void
 vl::BasicActionTrigger::update(void)
 {
-	_action->execute();
+	if(_action)
+	{ _action->execute(); }
+	_signal();
 }
 
 /// ------------- TransformActionTrigger -----------------
@@ -28,9 +30,9 @@ vl::TransformActionTrigger::update(const vl::Transform& data)
 {
 	// Copy the data for futher reference
 	_value = data;
-	_action->execute(data);
+	_action->execute(_value);
+	_signal(_value);
 }
-
 
 /// KeyTrigger Public
 vl::KeyTrigger::KeyTrigger(void)
@@ -46,13 +48,17 @@ vl::KeyTrigger::update(vl::KeyTrigger::KEY_STATE state)
 {
 	if( _state != state )
 	{
-		if( state == KS_DOWN && _action_down )
+		if(state == KS_DOWN)
 		{
-			_action_down->execute();
+			if(_action_down)
+			{ _action_down->execute(); }
+			_key_down_signal();
 		}
-		else if( state == KS_UP && _action_up )
+		else if( state == KS_UP)
 		{
-			_action_up->execute();
+			if(_action_up)
+			{ _action_up->execute(); }
+			_key_up_signal();
 		}
 		_state = state;
 	}

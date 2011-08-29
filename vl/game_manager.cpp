@@ -104,9 +104,11 @@ vl::GameManager::toggleBackgroundSound( void )
 bool
 vl::GameManager::step(void)
 {
+	_fire_step_start();
+
 	if(isPlayed())
 	{
-		getEventManager()->getFrameTrigger()->update();
+		getEventManager()->getFrameTrigger()->update(getDeltaTime());
 
 		// process input devices
 		vl::timer t;
@@ -126,19 +128,17 @@ vl::GameManager::step(void)
 			_trackers->getTrackerPtr(i)->mainloop();
 		}
 
-		vl::time elapsed_time = _step_timer.elapsed();
+		if( _physics_world )
+		{
+			_physics_world->step(getDeltaTime());
+		}
 
-		if(_physics_world)
-		{ _physics_world->step(elapsed_time); }
+		_process_constraints(getDeltaTime());
 
-		_process_constraints(elapsed_time);
-
-		_scene_manager->_step(elapsed_time);
+		_scene_manager->_step(getDeltaTime());
 	}
 
-	// Reset the timer always, no matter the state so we don't have a huge
-	// elapsed time if the simulation is paused
-	_step_timer.reset();
+	_fire_step_end();
 
 	return !isQuited();
 }
@@ -519,4 +519,16 @@ void
 vl::GameManager::_process_constraints(vl::time const &t)
 {
 	_constraint_solver->step(t);
+}
+
+void
+vl::GameManager::_fire_step_start(void)
+{
+	_delta_time = _step_timer.elapsed();
+}
+
+void
+vl::GameManager::_fire_step_end(void)
+{
+	_step_timer.reset();
 }

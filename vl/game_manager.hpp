@@ -295,6 +295,9 @@ public :
 
 	void loadScene(vl::SceneInfo const &scene_info);
 
+	vl::time const &getDeltaTime(void) const
+	{ return _delta_time; }
+
 	void runPythonScripts(vl::Settings const &proj);
 
 	/// @todo this takes over 1 second to complete which is almost a second too much
@@ -324,6 +327,10 @@ private :
 	void _createQuitEvent( void );
 
 	void _process_constraints(vl::time const &t);
+
+	void _fire_step_start(void);
+
+	void _fire_step_end(void);
 
 	// Where objects are registered
 	vl::Session *_session;
@@ -357,6 +364,7 @@ private :
 	vl::timer _program_timer;
 	vl::stop_timer _game_timer;
 	vl::timer _step_timer;
+	vl::time _delta_time;
 
 	/// State
 	GAME_STATE _state;

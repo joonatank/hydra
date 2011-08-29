@@ -115,37 +115,37 @@ def mapHeadTracker(name) :
 
 # Fine using the new event interface
 def addQuitEvent( kc, key_mod = KEY_MOD.NONE ) :
-	print( 'Creating Quit Event to ' + getPythonKeyName(kc) )
-#	action = QuitAction.create()
-	action = ScriptAction.create()
-	action.game = game
-	action.script = "quit()"
-
 	trigger = game.event_manager.createKeyTrigger(kc, key_mod)
-	trigger.action_down = action
-
+	trigger.addKeyDownListener(game.quit)
 
 def addToggleMusicEvent( kc ) :
 	print( 'Creating Toggle Music Event to ' + getPythonKeyName(kc) )
-	#action = ToggleMusic.create()
-	action = ScriptAction.create()
-	action.game = game
-	action.script = "game.toggleBackgroundSound()"
-
 	trigger = game.event_manager.createKeyTrigger( kc )
-	trigger.action_down = action
+	trigger.addKeyDownListener(game.toggleBackgroundSound)
 
 
 def addScreenshotAction( kc ) :
 	print( 'Adding screenshot action to ' + getPythonKeyName(kc) )
-#	action = ScreenshotAction.create()
-	action = ScriptAction.create()
-	action.game = game
-	action.script = "game.player.takeScreenshot()"
 	trigger = game.event_manager.createKeyTrigger( kc )
-	trigger.action_down = action
+	trigger.addKeyDownListener(game.player.takeScreenshot)
 
 
+# Class to handle camera switching between two cameras
+class ChangeCamera :
+	def __init__(self, cam1, cam2):
+	    self.camera1 = cam1
+	    self.camera2 = cam2
+	    self.on = True
+	    self.switch()
+
+	def switch(self):
+		if(self.on):
+			game.player.camera = self.camera1
+		else:
+			game.player.camera = self.camera2
+		self.on = not self.on
+
+g_change_camera = None
 
 # Change camera toggle
 # Use one Key in this case b to change between two active cameras
@@ -155,50 +155,37 @@ def addScreenshotAction( kc ) :
 # An error message is printed to std::cerr and the program continues normally
 def addToggleActiveCamera( camera1, camera2 ) :
 	print( 'Creating Toggle Activate Camera between ' + camera1 + ' and ' + camera2 )
-#	action_on = ActivateCamera.create()
-	action_on = ScriptAction.create()
-	action_on.game = game
-	# FIXME not a really nice technique, we need to escape the camera name
-	# because if it's simply string python tries to resolve the name and we
-	# get undefined variable error.
-	action_on.script = "game.player.camera = " + "\'" + camera1 + "\'"
+	# Needs to use global because otherwise it would go out of scope
+	g_change_camera = ChangeCamera(camera1, camera2)
+	trigger = game.event_manager.createKeyTrigger(KC.B)
+	trigger.addKeyDownListener(g_change_camera.switch)
 
-#	action_off = ActivateCamera.create()
-	action_off = ScriptAction.create()
-	action_off.game = game
-	action_off.script = "game.player.camera = " + "\'" + camera2 + "\'"
+# TODO replace with a general purpose toggle
+# converts void parameter to bool parameter so we can map
+# void events (like key presses) to bool functions (like setVisible)
+class HideToggle:
+	def __init__(self, node):
+		self.on = False
+		self.node = node
 
-	trigger = game.event_manager.createKeyTrigger( KC.B )
+	def switch(self):
+		if self.on:
+			self.node.show()
+		else:
+			self.node.hide()
+		self.on = not self.on
 
-	toggle = ToggleActionProxy.create()
-	toggle.action_on = action_on
-	toggle.action_off = action_off
-
-	trigger.action_down = toggle
-
+g_hide_toggles = []
 
 def addHideEvent(node, kc) :
 	print( 'Creating Hide Event for ' + str(node) + ' to ' + getPythonKeyName(kc) )
-	hide = HideAction.create()
-	hide.scene_node = node
-	show = ShowAction.create()
-	show.scene_node = node
+	# Does not have Delay between changes, but only works on key down
+	# so user would need to press key up and down multiple times
+	toggle = HideToggle(node)
+	# Uses global storage so they don't go out of scope
+	g_hide_toggles.append(toggle)
 	trigger = game.event_manager.createKeyTrigger(kc)
-
-	# Create a proxy that handles the toggling between two different actions
-	toggle = ToggleActionProxy.create()
-	toggle.action_on = hide
-	toggle.action_off = show
-
-	# Create a proxy for slowing down the toggling
-	# NOTE This can be done the otherway around also i.e. create two timer
-	# proxys and assign them to the toggle proxy
-	# This allows individual control on the wait time from one state to another
-	proxy = TimerActionProxy.create()
-	proxy.action = toggle
-	proxy.time_limit = 2 # Seconds
-
-	trigger.action_down = proxy
+	trigger.addKeyDownListener(toggle.switch)
 
 original_ipd = 0
 def stereo_off():
@@ -228,41 +215,17 @@ def addToggleStereo(kc) :
 
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
-	hide = ScriptAction.create()
-	hide.game = game
-	hide.script = "game.gui.hideConsole()"
-	show = ScriptAction.create()
-	show.game = game
 	trigger = game.event_manager.createKeyTrigger(kc)
-	show.script = "game.gui.showConsole()"
-
-	# Create a proxy that handles the toggling between two different actions
-	toggle = ToggleActionProxy.create()
-	toggle.action_on = show
-	toggle.action_off = hide
-
-	trigger.action_down = toggle
+	trigger.addKeyDownListener(game.gui.toggleConsole)
 
 def addToggleEditor(kc) :
 	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
-	hide = ScriptAction.create()
-	hide.game = game
-	hide.script = "game.gui.hideEditor()"
-	show = ScriptAction.create()
-	show.game = game
 	trigger = game.event_manager.createKeyTrigger(kc)
-	show.script = "game.gui.showEditor()"
-
-	# Create a proxy that handles the toggling between two different actions
-	toggle = ToggleActionProxy.create()
-	toggle.action_on = show
-	toggle.action_off = hide
-
-	trigger.action_down = toggle
-
+	trigger.addKeyDownListener(game.gui.toggleEditor)
 
 # Add a head tracker support
 mapHeadTracker("glassesTrigger")
+
 
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
@@ -271,4 +234,6 @@ addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
 # Not working yet
 #addToggleStereo(KC.F12)
+
+#addQuitEvent(KC.ESCAPE)
 
