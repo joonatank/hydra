@@ -5,11 +5,30 @@
  *	Python
  */
 
+/// Interface
 #include "python.hpp"
 
+/// Module
 #include "python_module.hpp"
-
+/// Access to the Simulation data
 #include "game_manager.hpp"
+
+// Module
+BOOST_PYTHON_MODULE(vl)
+{
+	export_math();
+
+	export_animation();
+
+	export_scene_graph();
+
+	export_events();
+
+	export_game();
+
+	export_physics();
+
+}	// endof hydra python module
 
 /// Script always executed
 /// @todo should this be broken down to multiple independent scripts?

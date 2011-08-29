@@ -14,8 +14,8 @@
  *	This receives data in TextResource format.
  */
 
-#ifndef VL_PYTHON_HPP
-#define VL_PYTHON_HPP
+#ifndef HYDRA_PYTHON_HPP
+#define HYDRA_PYTHON_HPP
 
 #include <boost/python.hpp>
 
@@ -27,8 +27,6 @@ namespace python = boost::python;
 
 namespace vl
 {
-
-// class Config;
 
 class PythonContext
 {
@@ -93,6 +91,8 @@ private :
 	python::object _global;
 };
 
+
 }
 
-#endif // VL_PYTHON_HPP
+
+#endif // HYDRA_PYTHON_HPP

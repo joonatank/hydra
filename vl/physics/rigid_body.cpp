@@ -1,16 +1,45 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-06
- *	@file rigid_body.cpp
+ *	@file physics/rigid_body.cpp
  *
  *	This file is part of Hydra a VR game engine.
  */
 
+/// Interface
 #include "rigid_body.hpp"
 
-vl::physics::RigidBody::RigidBody(vl::physics::RigidBody::ConstructionInfo const &constructionInfo)
-	: _name(constructionInfo.name), _shape(constructionInfo.shape), _bt_body(0)
+#include "motion_state.hpp"
+#include "shapes.hpp"
+
+/// Concrete implementations
+#ifdef USE_BULLET
+#include "rigid_body_bullet.hpp"
+#else if USE_NEWTON
+#include "rigid_body_newton.hpp"
+#endif
+
+/// --------------------------------- Global ---------------------------------
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::RigidBody const &body)
 {
-	_bt_body = new btRigidBody(constructionInfo.getBullet());
+	os << "RigidBody " << body.getName() << " : motion state " << *body.getMotionState();
+	if( body.isUserControlled() )
+	{ os << " : user controlled"; }
+
+	// TODO add the rest
+
+	return os;
+}
+
+vl::physics::RigidBodyRefPtr
+vl::physics::RigidBody::create(vl::physics::RigidBody::ConstructionInfo const &info)
+{
+	RigidBodyRefPtr body;
+#ifdef USE_BULLET
+	body.reset(new BulletRigidBody(info));
+#else if USE_NEWTON
+#endif
+	return body;
 }
 
 void 
@@ -52,22 +81,10 @@ vl::physics::RigidBody::applyCentralForce(Ogre::Vector3 const &force, vl::physic
 	{ applyCentralForce(force); }
 }
 
-void
-vl::physics::RigidBody::setMass(Ogre::Real mass)
-{
-	if(!_bt_body->getInvInertiaDiagLocal().isZero())
-	{
-		btVector3 inv = _bt_body->getInvInertiaDiagLocal();
-		btVector3 inertia(1/inv.x(), 1/inv.y(), 1/inv.z());
-		_bt_body->setMassProps(mass, inertia);
-	}
-}
-
 vl::Transform
 vl::physics::RigidBody::transformToLocal(vl::Transform const &t) const
 {
-	MotionState *ms = (MotionState *)_bt_body->getMotionState();
-	vl::Transform from_world = ms->getWorldTransform();
+	vl::Transform from_world =  getMotionState()->getWorldTransform();
 	from_world.invert();
 	return from_world*t;
 }
@@ -76,20 +93,13 @@ vl::physics::RigidBody::transformToLocal(vl::Transform const &t) const
 Ogre::Vector3
 vl::physics::RigidBody::positionToLocal(Ogre::Vector3 const &v) const
 {
-	MotionState *ms = (MotionState *)_bt_body->getMotionState();
-	vl::Transform from_world = ms->getWorldTransform();
+	vl::Transform from_world = getMotionState()->getWorldTransform();
 	from_world.invert();
 	return from_world*v;
 }
 
-std::ostream &
-vl::physics::operator<<(std::ostream &os, vl::physics::RigidBody const &body)
-{
-	os << "RigidBody " << body.getName() << " : motion state " << *body.getMotionState();
-	if( body.isUserControlled() )
-	{ os << " : user controlled"; }
-
-	// TODO add the rest
-
-	return os;
-}
+/// --------------------------------- Protected ------------------------------
+vl::physics::RigidBody::RigidBody(vl::physics::RigidBody::ConstructionInfo const &info)
+	: _name(info.name)
+	, _shape(info.shape)
+{}

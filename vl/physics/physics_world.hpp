@@ -1,27 +1,35 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2010-11
+ *	@file physics/physics_world.cpp
  *
- *	Bullet Physics World used to initialise the physics with some default
+ *	This file is part of Hydra a VR game engine.
+ *
+ *	Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
+ *	Provides object management for and the general interface for physics engine world.
  *
- *	Also contains mixed physics classes for now.
+ *	@update 2011-07
+ *	Removed dependencies to Bullet for selectable physics engine.
+ *
  */
 
-#ifndef VL_PHYSICS_WORLD_HPP
-#define VL_PHYSICS_WORLD_HPP
+#ifndef HYDRA_PHYSICS_WORLD_HPP
+#define HYDRA_PHYSICS_WORLD_HPP
 
-// This class initialises Bullet physics so they are necessary
-#include <bullet/btBulletDynamicsCommon.h>
+#include "typedefs.hpp"
+// Necessary for time step
+#include "base/timer.hpp"
+// Necessary for vl::scalar
+#include "math/types.hpp"
+// Necesessary for Transform
+#include "math/transform.hpp"
+// Necessary for RigidBody::ConstructionInfo
+#include "rigid_body.hpp"
+// Necessary for Tube::ConstructionInfo
+#include "tube.hpp"
 
 #include <vector>
 #include <string>
-
-#include "base/exceptions.hpp"
-
-#include "scene_node.hpp"
-
-/// Physics objects
-#include "physics_constraints.hpp"
 
 namespace vl
 {
@@ -29,26 +37,25 @@ namespace vl
 namespace physics
 {
 
-typedef std::vector<RigidBodyRefPtr> RigidBodyList;
-typedef std::vector<btCollisionShape *> CollisionShapeList;
-typedef std::vector<ConstraintRefPtr> ConstraintList;
-
 /** @class World
- *
+ *	Interface for physics world, provides concrete implementations of object
+ *	management using our wrapper objects.
+ *	Provides abstract interface for physics engine implementation.
  */
 class World
 {
 public :
-	World( void );
+	static WorldRefPtr create(void);
 
-	~World( void );
+	virtual ~World(void);
 
-	void step( void );
+	virtual void step(vl::time const &time_step) = 0;
 
-	Ogre::Vector3 getGravity( void ) const;
+	virtual Ogre::Vector3 getGravity(void) const = 0;
 
-	void setGravity( Ogre::Vector3 const &gravity );
+	virtual void setGravity(Ogre::Vector3 const &gravity) = 0;
 
+	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
 
@@ -69,10 +76,13 @@ public :
 
 	bool hasRigidBody( std::string const &name ) const;
 
-	MotionState *createMotionState( vl::Transform const &trans = vl::Transform(), vl::SceneNode *node = 0 );
+
+	/// ---------------------- MotionStates ------------------
+	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
+	/// ---------------------- Constraints ------------------
 	/// @brief add a constraint i.e. a joint to the world
 	/// @param constraint the constraint to add to the world
 	/// @param disableCollisionBetweenLinked no collision detection between linked rigid bodies
@@ -83,21 +93,29 @@ public :
 
 	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
 
+
+	/// ----------------------- Tubes --------------------------
+	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
+
+	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
+		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass = 50.0);
+
+
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
-private :
-	void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body);
+protected :
+
+	// Protected because this is abstract class
+	World(void);
+
+	// Real engine implementation using template method pattern
+	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked) = 0;
+	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body) = 0;
+
+	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
+
 
 	RigidBodyRefPtr _findRigidBody( std::string const &name ) const;
-
-	/// Bullet physics world objects
-	/// The order of them is important don't change it.
-	/// @todo move to using scoped ptrs if possible
-	btBroadphaseInterface *_broadphase;
-	btCollisionConfiguration *_collision_config;
-	btCollisionDispatcher *_dispatcher;
-	btSequentialImpulseConstraintSolver *_solver;
-	btDiscreteDynamicsWorld *_dynamicsWorld;
 
 	/// Rigid bodies
 	/// World owns all of them
@@ -112,5 +130,4 @@ std::ostream &operator<<(std::ostream &os, World const &w);
 
 }	// namespace vl
 
-#endif // VL_PHYSICS_EVENTS_HPP
-
+#endif	// HYDRA_PHYSICS_WORLD_HPP

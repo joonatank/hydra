@@ -3,32 +3,27 @@
  *	@file config.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *
  */
 
-#ifndef VL_CONFIG_HPP
-#define VL_CONFIG_HPP
+#ifndef HYDRA_CONFIG_HPP
+#define HYDRA_CONFIG_HPP
+
+// Base class
+#include "session.hpp"
 
 // Necessary for the project settings
 #include "settings.hpp"
-#include "base/exceptions.hpp"
 
 // Necessary for the ref pointers
 #include "typedefs.hpp"
-// Necessary for the message passing server, owned by Config
-#include "cluster/server.hpp"
-// A base class for the Config
-#include "session.hpp"
-
-#include "trigger.hpp"
 
 #include "logger.hpp"
 
 // Necessary for the callback structs
 #include "renderer_interface.hpp"
-
-#include <OIS/OISMouse.h>
-#include <OIS/OISKeyboard.h>
-#include <OIS/OISJoyStick.h>
+// Necessary for callback structures
+#include "cluster/server.hpp"
 
 // Necessary for timing statistics
 #include "base/timer.hpp"
@@ -180,4 +175,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_CONFIG_HPP
+#endif	// HYDRA_CONFIG_HPP

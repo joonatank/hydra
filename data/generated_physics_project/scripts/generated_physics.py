@@ -29,7 +29,7 @@ spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 ground_node = game.scene.createSceneNode("ground")
 ground = game.scene.createEntity("ground", PF.PLANE)
 ground_node.attachObject(ground)
-ground.material_name = "ground/Basic"
+ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
 print('Physics : Adding ground plane')
@@ -46,21 +46,21 @@ box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
 # with scaling a ConvexHull
 box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
-sphere_body = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
-sphere_body.user_controlled = True
+user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
+user_sphere.user_controlled = True
 
 
-sphere_2_body = addSphere("sphere2", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
+sphere_fixed = addSphere("sphere_fixed", "finger_sphere/green", Vector3(-5.0, 5, 0), 0)
 
 sphere_3_body = addSphere("sphere3", "finger_sphere/red", Vector3(3, 7, 3))
-constraint = SliderConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+constraint = PSliderConstraint.create(user_sphere, sphere_fixed, Transform(), Transform(), False)
 constraint.lower_lin_limit = -5
 constraint.upper_lin_limit = 5
 #constraint.lower_ang_limit = 0
 #constraint.upper_ang_limit = 1
 #world.addConstraint(constraint)
 
-six_dof = SixDofConstraint.create(sphere_body, sphere_2_body, Transform(), Transform(), False)
+six_dof = PSixDofConstraint.create(user_sphere, sphere_fixed, Transform(), Transform(), False)
 six_dof.setLinearLowerLimit(Vector3(-10, -5, -5))
 six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #six_dof.setAngularLowerLimit(Vector3(1, 1, 1))
@@ -71,7 +71,7 @@ six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 print('Adding Force action to KC_F')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
+action.script = 'user_sphere.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
 trigger = game.event_manager.createKeyTrigger( KC.F )
 trigger.action_down = action
 
@@ -79,17 +79,33 @@ trigger.action_down = action
 print('Adding Torque action to KC_G')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.applyTorque(Vector3(0, 500, 0))'
+action.script = 'user_sphere.applyTorque(Vector3(0, 500, 0))'
 trigger = game.event_manager.createKeyTrigger( KC.G )
 trigger.action_down = action
 
 print('Adding set Liner velocity action to KC_T')
 action = ScriptAction.create()
 action.game = game
-action.script = 'sphere_body.setLinearVelocity(Vector3(1, 0, 0))'
+action.script = 'user_sphere.setLinearVelocity(Vector3(1, 0, 0))'
 trigger = game.event_manager.createKeyTrigger(KC.T)
 trigger.action_down = action
 
 print('Adding kinematic action')
-addKinematicAction(sphere_body)
+addKinematicAction(user_sphere)
+
+print('Creating a tube')
+# The distance between the bodies is ~11m so lets put the tube length to 15m
+tube_info = TubeConstructionInfo()
+tube_info.start_body = user_sphere
+tube_info.end_body = sphere_fixed
+tube_info.start_frame = Transform(Vector3(0, 0, 1), Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.end_frame = Transform(Vector3(0, 0, -1), Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.length = 15
+tube_info.mass = 50
+tube_info.radius = 0.1
+#tube_info.stiffness = 0.6
+#tube_info.damping = 0.3
+
+tube = game.physics_world.createTube(tube_info)
+
 

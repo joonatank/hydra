@@ -29,7 +29,6 @@ set(SRC
 	actions_transform.cpp
 	scene_manager.cpp
 	scene_node.cpp
-	python.cpp
 	trigger.cpp
 	event_manager.cpp
 	resource_manager.cpp
@@ -65,6 +64,7 @@ set(MATH_HEADERS
 	math/conversion.hpp
 	math/math.hpp
 	math/transform.hpp
+	math/types.hpp
 	)
 set(MATH_SRC
 	math/math.cpp
@@ -123,16 +123,54 @@ set(PHYSICS_HEADERS
 	physics/physics_constraints.hpp
 	physics/physics_events.hpp
 	physics/physics_world.hpp
+	physics/tube.hpp
 	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
 	physics/physics_events.cpp
 	physics/physics_world.cpp
+	physics/physics_constraints.cpp
 	physics/shapes.cpp
 	physics/rigid_body.cpp
+	physics/tube.cpp
 	physics/mesh_bullet.cpp
 	)
+if(HYDRA_PHYSICS STREQUAL "Bullet")
+	list(APPEND PHYSICS_HEADERS
+		physics/physics_world_bullet.hpp
+		physics/rigid_body_bullet.hpp
+		physics/shapes_bullet.hpp
+		physics/physics_constraints_bullet.hpp
+		)
+	list(APPEND PHYSICS_SRC
+		physics/physics_world_bullet.cpp
+		)
+elseif(HYDRA_PHYSICS STREQUAL "Newton")
+	list(APPEND PHYSICS_HEADERS
+		physics/physics_world_newton.hpp
+		physics/rigid_body_newton.hpp
+		physics/shapes_newton.hpp
+		physics/physics_constraints_newton.hpp
+		)
+	list(APPEND PHYSICS_SRC
+		physics/physics_world_newton.cpp
+		)
+endif()
+
 source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
+
+set(PYTHON_HEADERS
+	python/python.hpp
+	python/python_module.hpp
+	)
+
+set(PYTHON_SRC
+	python/python.cpp
+	python/python_module.cpp
+	python/python_events.cpp
+	python/python_physics.cpp
+	)
+source_group(HydraMain\\python FILES ${PYTHON_HEADERS} ${PYTHON_SRC})
 
 set( HEADERS
 	system_tools/message_box.hpp
@@ -165,8 +203,6 @@ set( HEADERS
 	actions_transform.hpp
 	scene_manager.hpp
 	scene_node.hpp
-	python.hpp
-	python_module.hpp
 	trigger.hpp
 	event_manager.hpp
 	keycode.hpp
@@ -180,7 +216,6 @@ set( HEADERS
 	renderer_interface.hpp
 	application.hpp
 	ogre_root.hpp
-	math/types.hpp
 	distributed.hpp
 	constraints.hpp
 	constraints_handlers.hpp
@@ -234,6 +269,8 @@ add_library(HydraMain
 	${INPUT_SRC}
 	${PHYSICS_HEADERS}
 	${PHYSICS_SRC}
+	${PYTHON_HEADERS}
+	${PYTHON_SRC}
 	${CLUSTER_HEADERS}
 	${CLUSTER_SRC}
 	${GUI_HEADERS}
@@ -242,7 +279,7 @@ add_library(HydraMain
 	${MATH_SRC}
 	)
 
-target_link_libraries(HydraMain ${HYDRA_DEB_LIBS})
+target_link_libraries(HydraMain ${HYDRA_DEP_LIBS})
 
 set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
 

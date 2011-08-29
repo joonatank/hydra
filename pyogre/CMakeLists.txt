@@ -60,8 +60,7 @@ if( WIN32 )
 	set(PYOGRE_MODULE_NAME "pyogre.pyd")
 endif()
 
-if( EQOGRE_BUILD_DEMOS )
-
+if(HYDRA_BUILD_DEMOS)
 	# For Linux we don't have configuration types
 	if( NOT CMAKE_CONFIGURATION_TYPES )
 		file(TO_NATIVE_PATH ${pyogre_BINARY_DIR}/${PYOGRE_MODULE_NAME} cp_src)
@@ -93,3 +92,4 @@ if( EQOGRE_BUILD_DEMOS )
 	endforeach()
 
 endif()
+

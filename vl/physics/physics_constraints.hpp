@@ -12,16 +12,6 @@
 
 #include "rigid_body.hpp"
 
-#include <bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h>
-
-#include "constraints.hpp"
-
-namespace {
-	using vl::math::convert_bt_vec;
-	using vl::math::convert_vec;
-	using vl::math::convert_bt_transform;
-}
-
 namespace vl
 {
 
@@ -32,27 +22,15 @@ namespace physics
 class Constraint
 {
 public :
-	virtual btTypedConstraint *getNative(void) = 0;
-
-private :
+	virtual ~Constraint(void) {}
 };
 
-class SixDofConstraint : public Constraint
+/// @class SixDofConstraint
+/// Generic six dof constraint with a spring damper system
+class SixDofConstraint : public vl::physics::Constraint
 {
 public :
-	void setLinearLowerLimit(Ogre::Vector3 const &linearLower)
-	{ _bt_constraint->setLinearLowerLimit(convert_bt_vec(linearLower)); }
-	
-	void setLinearUpperLimit(Ogre::Vector3 const &linearUpper)
-	{ _bt_constraint->setLinearUpperLimit(convert_bt_vec(linearUpper)); }
-
-	void setAngularLowerLimit(Ogre::Vector3 const &angularLower)
-	{ _bt_constraint->setAngularLowerLimit(convert_bt_vec(angularLower)); }
-
-	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
-	{ _bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper)); }
-
-	// @todo add motors
+	virtual ~SixDofConstraint(void) {}
 
 	RigidBodyRefPtr getBodyA(void)
 	{ return _bodyA.lock(); }
@@ -60,287 +38,225 @@ public :
 	RigidBodyRefPtr getBodyB(void)
 	{ return _bodyB.lock(); }
 
-	virtual btTypedConstraint *getNative(void)
-	{ return _bt_constraint; }
+	virtual void setLinearLowerLimit(Ogre::Vector3 const &linearLower) = 0;
+	
+	virtual void setLinearUpperLimit(Ogre::Vector3 const &linearUpper) = 0;
+
+	virtual void setAngularLowerLimit(Ogre::Vector3 const &angularLower) = 0;
+
+	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
+
+	/// Index 0-2 for translation (x, y, z)
+	/// Index 3-5 for rotations (x, y, z)
+	virtual void enableSpring(int index, bool onOff) = 0;
+	virtual void setStiffness(int index, vl::scalar stiffness) = 0;
+	virtual void setDamping(int index, vl::scalar damping) = 0;
+	virtual void setEquilibriumPoint(void) = 0;
+	virtual void setEquilibriumPoint(int index) = 0;
+	
+	// @todo add motors
 
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-	{
-		SixDofConstraintRefPtr constraint(new SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
-		return constraint;
-	}
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
-private :
+protected :
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bt_constraint(0)
-		, _bodyA(rbA)
+		: _bodyA(rbA)
 		, _bodyB(rbB)
-	{
-		_bt_constraint = new btGeneric6DofConstraint(*rbA->getNative(), 
-			*rbB->getNative(), convert_bt_transform(frameInA), 
-			convert_bt_transform(frameInB), useLinearReferenceFrameA);
-	}
+	{}
 
- 	SixDofConstraint(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-		: _bt_constraint(0)
-		, _bodyB(rbB)
-	{
-		_bt_constraint = new btGeneric6DofConstraint(*rbB->getNative(), 
-			convert_bt_transform(frameInB), useLinearReferenceFrameB);
-	}
-
-	btGeneric6DofConstraint *_bt_constraint;
 
 	RigidBodyWeakPtr _bodyA;
 	RigidBodyWeakPtr _bodyB;
 
 };	// class SixDofConstraint
 
-class SliderConstraint : public Constraint
+class SliderConstraint : public vl::physics::Constraint
 {
 public :
+	virtual ~SliderConstraint(void) {}
+
 	RigidBodyRefPtr getBodyA(void)
 	{ return _bodyA.lock(); }
 
 	RigidBodyRefPtr getBodyB(void)
 	{ return _bodyB.lock(); }
 
-	vl::scalar getLowerLinLimit(void) const
-	{ return _bt_constraint->getLowerLinLimit(); }
-	void setLowerLinLimit(vl::scalar lowerLimit)
-	{ _bt_constraint->setLowerLinLimit(lowerLimit); }
+	virtual vl::scalar getLowerLinLimit(void) const = 0;
+	
+	virtual void setLowerLinLimit(vl::scalar lowerLimit) = 0;
 
-	vl::scalar getUpperLinLimit(void) const
-	{ return _bt_constraint->getUpperLinLimit(); }
-	void setUpperLinLimit(vl::scalar upperLimit)
-	{ _bt_constraint->setUpperLinLimit(upperLimit); }
+	virtual vl::scalar getUpperLinLimit(void) const = 0;
+	
+	virtual void setUpperLinLimit(vl::scalar upperLimit) = 0;
+	
+	virtual vl::scalar getLowerAngLimit(void) = 0;
 
-	vl::scalar getLowerAngLimit(void)
-	{ return _bt_constraint->getLowerAngLimit(); }
-	void setLowerAngLimit(vl::scalar lowerLimit)
-	{ _bt_constraint->setLowerAngLimit(lowerLimit); }
+	virtual void setLowerAngLimit(vl::scalar lowerLimit) = 0;	
 
-	vl::scalar getUpperAngLimit(void)
-	{ return _bt_constraint->getUpperAngLimit(); }
-	void setUpperAngLimit(vl::scalar upperLimit)
-	{ _bt_constraint->setUpperAngLimit(upperLimit); }
+	virtual vl::scalar getUpperAngLimit(void) = 0;
 
-	bool getUseLinearReferenceFrameA(void)
-	{ return _bt_constraint->getUseLinearReferenceFrameA(); }
-	vl::scalar getSoftnessDirLin(void)
-	{ return _bt_constraint->getSoftnessDirLin(); }
-	vl::scalar getRestitutionDirLin(void)
-	{ return _bt_constraint->getRestitutionDirLin(); }
-	vl::scalar getDampingDirLin(void)
-	{ return _bt_constraint->getDampingDirLin(); }
-	vl::scalar getSoftnessDirAng(void)
-	{ return _bt_constraint->getSoftnessDirAng(); }
-	vl::scalar getRestitutionDirAng(void)
-	{ return _bt_constraint->getRestitutionDirAng(); }
-	vl::scalar getDampingDirAng(void)
-	{ return _bt_constraint->getDampingDirAng(); }
-	vl::scalar getSoftnessLimLin(void)
-	{ return _bt_constraint->getSoftnessLimLin(); }
-	vl::scalar getRestitutionLimLin(void)
-	{ return _bt_constraint->getRestitutionLimLin(); }
-	vl::scalar getDampingLimLin(void)
-	{ return _bt_constraint->getDampingLimLin(); }
-	vl::scalar getSoftnessLimAng(void)
-	{ return _bt_constraint->getSoftnessLimAng(); }
-	vl::scalar getRestitutionLimAng(void)
-	{ return _bt_constraint->getRestitutionLimAng(); }
-	vl::scalar getDampingLimAng(void)
-	{ return _bt_constraint->getDampingLimAng(); }
-	vl::scalar getSoftnessOrthoLin(void)
-	{ return _bt_constraint->getSoftnessOrthoLin(); }
-	vl::scalar getRestitutionOrthoLin(void)
-	{ return _bt_constraint->getRestitutionOrthoLin(); }
-	vl::scalar getDampingOrthoLin(void)
-	{ return _bt_constraint->getDampingOrthoLin(); }
-	vl::scalar getSoftnessOrthoAng(void)
-	{ return _bt_constraint->getSoftnessOrthoAng(); }
-	vl::scalar getRestitutionOrthoAng(void)
-	{ return _bt_constraint->getRestitutionOrthoAng(); }
-	vl::scalar getDampingOrthoAng(void)
-	{ return _bt_constraint->getDampingOrthoAng(); }
+	virtual void setUpperAngLimit(vl::scalar upperLimit) = 0;
+	
+	virtual bool getUseLinearReferenceFrameA(void) = 0;
+	
+	virtual vl::scalar getSoftnessDirLin(void) = 0;
+	
+	virtual vl::scalar getRestitutionDirLin(void) = 0;
 
-	void setSoftnessDirLin(vl::scalar softnessDirLin)
-	{ _bt_constraint->setSoftnessDirLin(softnessDirLin); }
-	void setRestitutionDirLin(vl::scalar restitutionDirLin)
-	{ _bt_constraint->setRestitutionDirLin(restitutionDirLin); }
-	void setDampingDirLin(vl::scalar dampingDirLin)
-	{ _bt_constraint->setDampingDirLin(dampingDirLin); }
-	void setSoftnessDirAng(vl::scalar softnessDirAng)
-	{ _bt_constraint->setSoftnessDirAng(softnessDirAng); }
-	void setRestitutionDirAng(vl::scalar restitutionDirAng)
-	{ _bt_constraint->setRestitutionDirAng(restitutionDirAng); }
-	void setDampingDirAng(vl::scalar dampingDirAng)
-	{ _bt_constraint->setDampingDirAng(dampingDirAng); }
-	void setSoftnessLimLin(vl::scalar softnessLimLin)
-	{ _bt_constraint->setSoftnessLimLin(softnessLimLin); }
-	void setRestitutionLimLin(vl::scalar restitutionLimLin)
-	{ _bt_constraint->setRestitutionLimLin(restitutionLimLin); }
-	void setDampingLimLin(vl::scalar dampingLimLin)
-	{ _bt_constraint->setDampingLimLin(dampingLimLin); }
-	void setSoftnessLimAng(vl::scalar softnessLimAng)
-	{ _bt_constraint->setSoftnessLimAng(softnessLimAng); }
-	void setRestitutionLimAng(vl::scalar restitutionLimAng)
-	{ _bt_constraint->setRestitutionLimAng(restitutionLimAng); }
-	void setDampingLimAng(vl::scalar dampingLimAng)
-	{ _bt_constraint->setDampingLimAng(dampingLimAng); }
-	void setSoftnessOrthoLin(vl::scalar softnessOrthoLin)
-	{ _bt_constraint->setSoftnessOrthoLin(softnessOrthoLin); }
-	void setRestitutionOrthoLin(vl::scalar restitutionOrthoLin)
-	{ _bt_constraint->setRestitutionOrthoLin(restitutionOrthoLin); }
-	void setDampingOrthoLin(vl::scalar dampingOrthoLin)
-	{ _bt_constraint->setDampingOrthoLin(dampingOrthoLin); }
-	void setSoftnessOrthoAng(vl::scalar softnessOrthoAng)
-	{ _bt_constraint->setSoftnessOrthoAng(softnessOrthoAng); }
-	void setRestitutionOrthoAng(vl::scalar restitutionOrthoAng)
-	{ _bt_constraint->setRestitutionOrthoAng(restitutionOrthoAng); }
-	void setDampingOrthoAng(vl::scalar dampingOrthoAng)
-	{ _bt_constraint->setDampingOrthoAng(dampingOrthoAng); }
+	virtual vl::scalar getDampingDirLin(void) = 0;
+	
+	virtual vl::scalar getSoftnessDirAng(void) = 0;
+	
+	virtual vl::scalar getRestitutionDirAng(void) = 0;
+	
+	virtual vl::scalar getDampingDirAng(void) = 0;
+	
+	virtual vl::scalar getSoftnessLimLin(void) = 0;
+	
+	virtual vl::scalar getRestitutionLimLin(void) = 0;
+	virtual vl::scalar getDampingLimLin(void) = 0;
+	
+	virtual vl::scalar getSoftnessLimAng(void) = 0;
+	
+	virtual vl::scalar getRestitutionLimAng(void) = 0;
+	
+	virtual vl::scalar getDampingLimAng(void) = 0;
+	
+	virtual vl::scalar getSoftnessOrthoLin(void) = 0;
+	
+	virtual vl::scalar getRestitutionOrthoLin(void) = 0;
+	
+	virtual vl::scalar getDampingOrthoLin(void) = 0;
+	
+	virtual vl::scalar getSoftnessOrthoAng(void) = 0;
+
+	virtual vl::scalar getRestitutionOrthoAng(void) = 0;
+
+	virtual vl::scalar getDampingOrthoAng(void) = 0;
+
+	virtual void setSoftnessDirLin(vl::scalar softnessDirLin) = 0;
+	
+	virtual void setRestitutionDirLin(vl::scalar restitutionDirLin) = 0;
+	
+	virtual void setDampingDirLin(vl::scalar dampingDirLin) = 0;
+	
+	virtual void setSoftnessDirAng(vl::scalar softnessDirAng) = 0;
+	
+	virtual void setRestitutionDirAng(vl::scalar restitutionDirAng) = 0;
+	
+	virtual void setDampingDirAng(vl::scalar dampingDirAng) = 0;
+	
+	virtual void setSoftnessLimLin(vl::scalar softnessLimLin) = 0;
+
+	virtual void setRestitutionLimLin(vl::scalar restitutionLimLin) = 0;
+	
+	virtual void setDampingLimLin(vl::scalar dampingLimLin) = 0;
+	
+	virtual void setSoftnessLimAng(vl::scalar softnessLimAng) = 0;
+	
+	virtual void setRestitutionLimAng(vl::scalar restitutionLimAng) = 0;
+
+	virtual void setDampingLimAng(vl::scalar dampingLimAng) = 0;
+	
+	virtual void setSoftnessOrthoLin(vl::scalar softnessOrthoLin) = 0;
+	
+	virtual void setRestitutionOrthoLin(vl::scalar restitutionOrthoLin) = 0;
+	
+	virtual void setDampingOrthoLin(vl::scalar dampingOrthoLin) = 0;
+
+	virtual void setSoftnessOrthoAng(vl::scalar softnessOrthoAng) = 0;
+	
+	virtual void setRestitutionOrthoAng(vl::scalar restitutionOrthoAng) = 0;
+	
+	virtual void setDampingOrthoAng(vl::scalar dampingOrthoAng) = 0;
+
 
 	// Motor
-	void setPoweredLinMotor(bool onOff)
-	{ _bt_constraint->setPoweredLinMotor(onOff); }
-	bool getPoweredLinMotor(void)
-	{ return _bt_constraint->getPoweredLinMotor(); }
+	virtual void setPoweredLinMotor(bool onOff) = 0;
+	
+	virtual bool getPoweredLinMotor(void) = 0;
 
 	void addTargetLinMotorVelocity(vl::scalar velocity)
 	{ setTargetLinMotorVelocity(velocity + getTargetLinMotorVelocity()); }
 
-	void setTargetLinMotorVelocity(vl::scalar targetLinMotorVelocity)
-	{ _bt_constraint->setTargetLinMotorVelocity(targetLinMotorVelocity); }
-	vl::scalar getTargetLinMotorVelocity(void)
-	{ return _bt_constraint->getTargetLinMotorVelocity(); }
-
-	void setMaxLinMotorForce(vl::scalar maxLinMotorForce)
-	{ _bt_constraint->setMaxLinMotorForce(maxLinMotorForce); }
-	vl::scalar getMaxLinMotorForce(void)
-	{ return _bt_constraint->getMaxLinMotorForce(); }
+	virtual void setTargetLinMotorVelocity(vl::scalar targetLinMotorVelocity) = 0;
 	
-	void setPoweredAngMotor(bool onOff)
-	{ _bt_constraint->setPoweredAngMotor(onOff); }
-	bool getPoweredAngMotor(void)
-	{ return _bt_constraint->getPoweredAngMotor(); }
+	virtual vl::scalar getTargetLinMotorVelocity(void) = 0;
 
-	void setTargetAngMotorVelocity(vl::scalar targetAngMotorVelocity)
-	{ _bt_constraint->setTargetAngMotorVelocity(targetAngMotorVelocity); }
-	vl::scalar getTargetAngMotorVelocity(void)
-	{ return _bt_constraint->getTargetAngMotorVelocity(); }
+	virtual void setMaxLinMotorForce(vl::scalar maxLinMotorForce) = 0;
 
-	void setMaxAngMotorForce(vl::scalar maxAngMotorForce)
-	{ _bt_constraint->setMaxAngMotorForce(maxAngMotorForce); }
-	vl::scalar getMaxAngMotorForce(void)
-	{ return _bt_constraint->getMaxAngMotorForce(); }
+	virtual vl::scalar getMaxLinMotorForce(void) = 0;
 
-	virtual btTypedConstraint *getNative(void)
-	{ return _bt_constraint; }
+	virtual void setPoweredAngMotor(bool onOff) = 0;
+	
+	virtual bool getPoweredAngMotor(void) = 0;
+
+	virtual void setTargetAngMotorVelocity(vl::scalar targetAngMotorVelocity) = 0;
+
+	virtual vl::scalar getTargetAngMotorVelocity(void) = 0;
+	
+	virtual void setMaxAngMotorForce(vl::scalar maxAngMotorForce) = 0;
+	
+	virtual vl::scalar getMaxAngMotorForce(void) = 0;
+
 
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-	{
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
-		return constraint;
-	}
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
-private :
+protected :
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bt_constraint(0)
-		, _bodyA(rbA)
+		: _bodyA(rbA)
 		, _bodyB(rbB)
-	{
-		_bt_constraint = new btSliderConstraint(*rbA->getNative(), *rbB->getNative(), 
-			convert_bt_transform(frameInA), convert_bt_transform(frameInB), useLinearReferenceFrameA);
-	}
-
- 	SliderConstraint(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-		: _bt_constraint(0)
-		, _bodyB(rbB)
-	{
-		_bt_constraint = new btSliderConstraint(*rbB->getNative(), 
-			convert_bt_transform(frameInB), useLinearReferenceFrameB);
-	}
-
-	btSliderConstraint *_bt_constraint;
+	{}
 
 	RigidBodyWeakPtr _bodyA;
 	RigidBodyWeakPtr _bodyB;
 
 };	// class SliderConstraint
 
-class HingeConstraint : public Constraint
+class HingeConstraint : public vl::physics::Constraint
 {
 public :
-	void setAngularOnly(bool angularOnly)
-	{ _bt_constraint->setAngularOnly(angularOnly); }
+	virtual ~HingeConstraint(void) {}
 
-	void enableAngularMotor(bool enableMotor, vl::scalar targetVelocity, vl::scalar maxMotorImpulse)
-	{ _bt_constraint->enableAngularMotor(enableMotor, targetVelocity, maxMotorImpulse); }
+	RigidBodyRefPtr getBodyA(void)
+	{ return _bodyA.lock(); }
 
-	void enableMotor(bool enableMotor)
-	{ _bt_constraint->enableMotor(enableMotor); }
+	RigidBodyRefPtr getBodyB(void)
+	{ return _bodyB.lock(); }
+
+	virtual void setAngularOnly(bool angularOnly) = 0;
+
+	virtual void enableAngularMotor(bool enableMotor, vl::scalar targetVelocity, vl::scalar maxMotorImpulse) = 0;
+
+	virtual void enableMotor(bool enableMotor) = 0;
 	
-	void setMaxMotorImpulse(vl::scalar maxMotorImpulse)
-	{ _bt_constraint->setMaxMotorImpulse(maxMotorImpulse); }
+	virtual void setMaxMotorImpulse(vl::scalar maxMotorImpulse) = 0;
 
-//	void setMotorTarget(const btQuaternion &qAinB, vl::scalar dt)
-//	{ return _bt_constraint->setMotorTarget(qAinB, dt); }
+	virtual void setMotorTarget(vl::scalar targetAngle, vl::scalar dt) = 0;
 
-	void setMotorTarget(vl::scalar targetAngle, vl::scalar dt)
-	{ _bt_constraint->setMotorTarget(targetAngle, dt); }
+	virtual void setLimit(vl::scalar low, vl::scalar high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f) = 0;
 
-	void setLimit(vl::scalar low, vl::scalar high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f)
-	{ _bt_constraint->setLimit(low, high, softness, biasFactor, relaxationFactor); }
+	virtual void setAxis(Ogre::Vector3 &axisInA) = 0;
 	
-	void setAxis(Ogre::Vector3 &axisInA)
-	{
-		btVector3 axis = vl::math::convert_bt_vec(axisInA);
-		_bt_constraint->setAxis(axis);
-	}
+	virtual vl::scalar getLowerLimit(void) const = 0;
+
+	virtual vl::scalar getUpperLimit(void) const = 0;
+
+	virtual vl::scalar getHingeAngle(void) = 0;
 	
-	vl::scalar getLowerLimit(void) const
-	{ return _bt_constraint->getLowerLimit(); }
-
-	vl::scalar getUpperLimit(void) const
-	{ return _bt_constraint->getUpperLimit(); }
-
-	vl::scalar getHingeAngle(void)
-	{ return _bt_constraint->getHingeAngle(); }
-
-	virtual btTypedConstraint *getNative(void)
-	{ return _bt_constraint; }
-
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
-		return constraint;
-	}
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
-private :
+protected :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bt_constraint(0)
-		, _bodyA(rbA)
+		: _bodyA(rbA)
 		, _bodyB(rbB)
-	{
-		_bt_constraint = new btHingeConstraint(*rbA->getNative(), *rbB->getNative(), 
-			convert_bt_transform(frameInA), convert_bt_transform(frameInB), useLinearReferenceFrameA);
-	}
-
- 	HingeConstraint(RigidBodyRefPtr rbB, Transform const &frameInB, bool useLinearReferenceFrameB)
-		: _bt_constraint(0)
-		, _bodyB(rbB)
-	{
-		_bt_constraint = new btHingeConstraint(*rbB->getNative(), 
-			convert_bt_transform(frameInB), useLinearReferenceFrameB);
-	}
-
-	btHingeConstraint *_bt_constraint;
+	{}
 
 	RigidBodyWeakPtr _bodyA;
 	RigidBodyWeakPtr _bodyB;

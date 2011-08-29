@@ -15,6 +15,8 @@
 #include <time.h>
 #endif
 
+#include "timer.hpp"
+
 namespace vl
 {
 

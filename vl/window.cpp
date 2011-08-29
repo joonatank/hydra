@@ -1,16 +1,25 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
- *	@file window.hpp
+ *	@file window.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *
  */
 
+// Interface
 #include "window.hpp"
 
 #include "base/exceptions.hpp"
+
 #include "config.hpp"
 
-#include "renderer.hpp"
+#include "renderer_interface.hpp"
 
 #include "camera.hpp"
+// Necessary for calculating projection matrix
+#include "math/math.hpp"
+
+#include "ogre_root.hpp"
 
 #include <OGRE/OgreLogManager.h>
 

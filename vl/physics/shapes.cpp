@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-05
- *	@file shapes.hpp
+ *	@file  physics/shapes.cpp
  *
  *	This file is part of Hydra VR game engine.
  */
@@ -8,70 +8,66 @@
 // Declaration
 #include "shapes.hpp"
 
-#include "mesh.hpp"
-#include "mesh_bullet.hpp"
+/// Concrete implementations
+#ifdef USE_BULLET
+#include "shapes_bullet.hpp"
+#else if USE_NEWTON
+#include "shapes_newton.hpp"
+#endif
 
-vl::physics::BoxShapeRefPtr 
+// @todo the create methods should return concrete bullet or newton objects
+vl::physics::BoxShapeRefPtr
 vl::physics::BoxShape::create(Ogre::Vector3 const &bounds)
 {
-	BoxShapeRefPtr box(new BoxShape(bounds));
+	BoxShapeRefPtr box;
+#ifdef USE_BULLET
+	box.reset(new BulletBoxShape(bounds));
+#else if USE_NEWTON
+#endif
 	return box;
 }
 
-vl::physics::BoxShape::BoxShape(Ogre::Vector3 const &bounds)
-	: _bt_shape( new btBoxShape(vl::math::convert_bt_vec(bounds)) )
-{}
 
-vl::physics::SphereShapeRefPtr 
+vl::physics::SphereShapeRefPtr
 vl::physics::SphereShape::create(vl::scalar radius)
 {
-	SphereShapeRefPtr sphere(new SphereShape(radius));
+	SphereShapeRefPtr sphere;
+#ifdef USE_BULLET
+	sphere.reset(new BulletSphereShape(radius));
+#else if USE_NEWTON
+#endif
 	return sphere;
 }
-
-vl::physics::SphereShape::SphereShape(vl::scalar radius)
-	: _bt_shape(new btSphereShape(radius))
-{}
 
 vl::physics::StaticPlaneShapeRefPtr
 vl::physics::StaticPlaneShape::create(Ogre::Vector3 const &normal, vl::scalar constant)
 {
-	StaticPlaneShapeRefPtr plane(new StaticPlaneShape(normal, constant));
+	StaticPlaneShapeRefPtr plane;
+#ifdef USE_BULLET
+	plane.reset(new BulletStaticPlaneShape(normal, constant));
+#else if USE_NEWTON
+#endif
 	return plane;
 }
-
-vl::physics::StaticPlaneShape::StaticPlaneShape(Ogre::Vector3 const &normal, vl::scalar constant)
-	: _bt_shape( new btStaticPlaneShape( vl::math::convert_bt_vec(normal), constant ) )
-{}
 
 vl::physics::StaticTriangleMeshShapeRefPtr
 vl::physics::StaticTriangleMeshShape::create(vl::MeshRefPtr mesh)
 {
-	StaticTriangleMeshShapeRefPtr shape(new StaticTriangleMeshShape(mesh));
+	StaticTriangleMeshShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletStaticTriangleMeshShape(mesh));
+#else if USE_NEWTON
+#endif
 	return shape;
-}
-
-vl::physics::StaticTriangleMeshShape::StaticTriangleMeshShape(vl::MeshRefPtr mesh)
-{
-	btTriangleIndexVertexArray *bt_mesh = new btTriangleIndexVertexArray;
-	vl::convert_bullet_geometry(mesh.get(), bt_mesh);
-
-	_bt_shape = new btBvhTriangleMeshShape(bt_mesh, false);
 }
 
 vl::physics::ConvexHullShapeRefPtr
 vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 {
-	ConvexHullShapeRefPtr shape(new ConvexHullShape(mesh));
+	ConvexHullShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletConvexHullShape(mesh));
+#else if USE_NEWTON
+#endif
 	return shape;
-}
-
-vl::physics::ConvexHullShape::ConvexHullShape(vl::MeshRefPtr mesh)
-{
-	btTriangleIndexVertexArray *bt_mesh = new btTriangleIndexVertexArray;
-	vl::convert_bullet_geometry(mesh.get(), bt_mesh);
-
-	/// Optimisation we should have valid bounding boxes in the meshes already
-	/// @todo crashes if we use the premade bounding boxes
-	_bt_shape = new btConvexTriangleMeshShape(bt_mesh, true);
 }
