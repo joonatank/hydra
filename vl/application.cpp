@@ -41,10 +41,14 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 	{
 		// Valid names for the environment config:
 		// hydra_env.xml, hydra.env
-		// paths ${Program_dir}, ${Program_dir}/data
+		// paths ${Program_dir}, ${Program_dir}/data, ${Program_dir}/../data
+		// ${Program_dir}/config, ${Program_dir}/../config
 		std::vector<fs::path> paths;
 		paths.push_back( options.program_directory );
 		paths.push_back( options.program_directory + "/data" );
+		paths.push_back( options.program_directory + "/../data" );
+		paths.push_back( options.program_directory + "/../config" );
+		paths.push_back( options.program_directory + "/config" );
 		for( size_t i = 0; i < paths.size(); ++i )
 		{
 			if( fs::exists(paths.at(i) / "hydra.env") )
@@ -124,10 +128,17 @@ vl::getProjectSettings( vl::ProgramOptions const &options )
 		// ${program_dir}/hydra.prj, ${program_dir}/hydra.xml,
 		// ${program_dir}/data/hydra.xml, ${program_dir}/data/hydra.prj
 		// ${program_dir}/data/global/hydra.xml, ${program_dir}/data/global/hydra.prj
+		// ${program_dir}/../data ${program_dir}/../data/global
+		// @todo these should have steady file name (single filename)
+		// and they should have at the most two valid default paths
+		// or they could have a master directory "data" or "config" and recursively
+		// search it for all matching files. If more than one report to user conflicts.
 		std::vector<fs::path> paths;
 		paths.push_back( options.program_directory );
 		paths.push_back( options.program_directory + "/data" );
+		paths.push_back( options.program_directory + "/../data" );
 		paths.push_back( options.program_directory + "/data/global" );
+		paths.push_back( options.program_directory + "/../data/global" );
 		for( size_t i = 0; i < paths.size(); ++i )
 		{
 			if( fs::exists(paths.at(i) / "hydra.prj") )
