@@ -466,8 +466,7 @@ public :
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_BACKGROUND_COLOUR = vl::Distributed::DIRTY_CUSTOM << 4,
 		DIRTY_SHADOW_INFO = vl::Distributed::DIRTY_CUSTOM << 5,
-		DIRTY_RECORDED_RAYS = vl::Distributed::DIRTY_CUSTOM << 6,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 7,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
 	};
 
 	Ogre::SceneManager *getNative( void )

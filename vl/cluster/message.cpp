@@ -325,7 +325,13 @@ vl::cluster::ObjectData::read( char *mem, vl::msg_size size )
 	if( 0 == size )
 	{ return; }
 
-	assert( _data.size() >= size );
+	if( _data.size() < size )
+	{
+		// @todo replace with real exception
+		std::clog << "Trying to read " << size << " bytes : but only has "
+			<< _data.size() << " bytes left in the Message." << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception());
+	}
 
 	::memcpy( mem, &_data[0], size );
 	_data.erase( _data.begin(), _data.begin()+size );
