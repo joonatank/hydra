@@ -654,7 +654,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 	{
 		msg >> _visible;
 		if( _ogre_node )
-		{ _ogre_node->setVisible(_visible); }
+		{ _ogre_node->setVisible(_visible, false); }
 	}
 
 	if( dirtyBits & DIRTY_BOUNDING_BOX )
