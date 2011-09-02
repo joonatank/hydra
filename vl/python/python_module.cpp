@@ -96,6 +96,8 @@ void export_animation(void)
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyA, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("body_a", python::make_function(&vl::Constraint::getBodyB, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
+		.def("set_velocity", &vl::Constraint::setVelocity)
+		.def("add_velocity", &vl::Constraint::addVelocity)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -391,8 +393,7 @@ void export_game(void)
 		.def(python::self > python::self)
 		.def(python::self < python::self)
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("set_velocity", &vl::Constraint::setVelocity)
-		.def("add_velocity", &vl::Constraint::addVelocity)
+		.def(python::self_ns::float_(python::self_ns::self))
 	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)

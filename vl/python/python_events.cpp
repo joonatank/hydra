@@ -62,6 +62,8 @@ void export_managers(void)
 		.def("hasKeyTrigger", &vl::EventManager::hasKeyTrigger, hasKeyTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>() )
+		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
+			python::return_value_policy<python::reference_existing_object>()) )
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
@@ -169,13 +171,13 @@ void export_triggers(void)
 	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
 		.add_property("action", python::make_function( &vl::BasicActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ) )
 		// @todo fix this to use toast for callbacks
-		.def("addListener", &vl::BasicActionTrigger::addListener)
+		.def("addListener", toast::python::signal_connect<void (void)>(&vl::BasicActionTrigger::addListener))
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
 		.add_property("action", python::make_function( &vl::TransformActionTrigger::getAction, python::return_value_policy< python::reference_existing_object>() ))
 		// @todo fix this to use toast for callbacks
-		.def("addListener", &vl::TransformActionTrigger::addListener)
+		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::TransformActionTrigger::addListener))
 	;
 	
 	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)

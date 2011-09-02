@@ -134,3 +134,10 @@ text_n = game.scene.createSceneNode('text')
 text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
 
+def rotateSpotti(t):
+	speed = Degree(10)
+	angle = Radian(speed*Degree(float(t)))
+	spotti_n.rotate(Quaternion(angle, Vector3(0, 1, 0)))
+
+game.event_manager.frame_trigger.addListener(rotateSpotti)
+
