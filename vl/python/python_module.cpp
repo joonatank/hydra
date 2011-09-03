@@ -408,7 +408,6 @@ void export_game(void)
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
-		.def("addInputDevice", &vl::GameManager::addInputDevice)
 		.def("addConstraint", &vl::GameManager::addConstraint)
 		.def("removeConstraint", &vl::GameManager::removeConstraint)
 		.def("hasConstraint", &vl::GameManager::hasConstraint)
@@ -417,7 +416,6 @@ void export_game(void)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
-		.add_property("avarage_input_handling_time", &vl::GameManager::getAvarageInputHandlingTime)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;

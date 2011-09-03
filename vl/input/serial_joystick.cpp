@@ -39,21 +39,11 @@ vl::SerialJoystick::mainloop(void)
 	// old signal system
 	_signal(evt);
 
-	for(std::vector<SerialJoystickHandlerRefPtr>::iterator iter = _handlers.begin();
+	for(std::vector<JoystickHandlerRefPtr>::iterator iter = _handlers.begin();
 		iter != _handlers.end(); ++iter)
 	{
 		(*iter)->execute(evt);
 	}
-}
-
-
-void
-vl::SerialJoystick::add_handler(vl::SerialJoystickHandlerRefPtr handler)
-{
-	// @tood check that it doesn't exist already
-	std::vector<SerialJoystickHandlerRefPtr>::iterator iter = std::find(_handlers.begin(), _handlers.end(), handler);
-	if(iter == _handlers.end())
-	{ _handlers.push_back(handler); }
 }
 
 void

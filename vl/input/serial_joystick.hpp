@@ -30,8 +30,6 @@
 #ifndef HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 #define HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 
-#include <boost/signal.hpp>
-
 // Interface
 #include "input.hpp"
 
@@ -39,9 +37,6 @@
 
 // Communications proto
 #include "base/serial.hpp"
-
-// Event stucture
-#include "joystick_event.hpp"
 
 namespace vl
 {
@@ -58,20 +53,14 @@ inline vl::scalar convert_analog(uint16_t data)
 	return ((double)data)/(1024.0/2) - 1.0;
 }
 
-class SerialJoystick : public InputDevice
+class SerialJoystick : public Joystick
 {
-	typedef boost::signal<void (JoystickEvent const &)> OnValueChanged;
 public :
-
 	SerialJoystick(std::string const &device);
 
-	virtual void mainloop(void);
+	virtual ~SerialJoystick(void) {}
 
-	int doOnValueChanged(OnValueChanged::slot_type const &slot)
-	{
-		_signal.connect(slot);
-		return 1;
-	}
+	virtual void mainloop(void);
 
 	static SerialJoystickRefPtr create(std::string const &dev)
 	{
@@ -79,8 +68,6 @@ public :
 		joy->calibrate_zero();
 		return joy;
 	}
-
-	void add_handler(SerialJoystickHandlerRefPtr handler);
 
 	void calibrate_zero(void);
 
@@ -94,24 +81,11 @@ private :
 	// only read the serial for new data
 	bool _read_data(JoystickEvent &evt);
 
-	OnValueChanged _signal;
 	Serial _serial;
-
-	std::vector<SerialJoystickHandlerRefPtr> _handlers;
 
 	JoystickEvent _zero;
 
 };	// Class SerialJoystickReader
-
-struct SerialJoystickHandler
-{
-	SerialJoystickHandler(void) {}
-
-	virtual ~SerialJoystickHandler(void) {}
-
-	virtual void execute(JoystickEvent const &evt) = 0;
-
-};
 
 }	// namespace vl
 

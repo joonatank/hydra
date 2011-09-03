@@ -1,10 +1,22 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file event_manager.cpp
  *
+ *	This file is part of Hydra a VR game engine.
  */
+
 #include "event_manager.hpp"
 
 #include "base/exceptions.hpp"
+
+#include "base/string_utils.hpp"
+
+#include "input/serial_joystick.hpp"
+#include "input/game_joystick.hpp"
+
+#include "input/ois_converters.hpp"
+
+#include "logger.hpp"
 
 vl::EventManager::EventManager( void )
 	: _frame_trigger(0)
@@ -178,6 +190,78 @@ vl::EventManager::getFrameTrigger( void )
 	return _frame_trigger;
 }
 
+vl::JoystickRefPtr
+vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
+{
+	std::string str(name);
+	vl::to_lower(str);
+	// only com ports are supported by name
+	bool serial = false;
+	if(str.substr(0, 3) != "com")
+	{
+		str = "default";
+	}
+	else
+	{ serial = true; }
+	
+	std::map<std::string, JoystickRefPtr>::iterator iter =_joysticks.find(str);
+	if(iter != _joysticks.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		JoystickRefPtr joy;
+		if(serial)
+		{
+			// @todo add bit more descriptive exception handling
+			try {
+				joy = SerialJoystick::create(str);
+			}
+			catch(...)
+			{
+				std::cout << vl::CRITICAL << "Exception in creating SerialJoystick." 
+					<< std::endl;
+			}
+		}
+
+		// Create joystick if not already created
+		// If no fallbacking is requested will not create default joystick
+		// for serial joysticks
+		if(!joy && (!serial || fallback_to_all))
+		{
+			assert(!_game_joystick);
+			_game_joystick = GameJoystick::create();
+			joy = _game_joystick;
+		}
+
+		// @todo add fallback
+
+		_joysticks[str] = joy;
+		return joy;
+	}
+}
+
+void
+vl::EventManager::update_joystick(OIS::JoyStickEvent const &evt)
+{
+	// @todo should we add it if it doesn't exist already?
+	if(_game_joystick)
+	{
+		// Copy values from OIS to our structure
+		_game_joystick->_update(convert_ois_to_hydra(evt));
+	}
+}
+
+void
+vl::EventManager::mainloop(void)
+{
+	for(std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.begin();
+		iter != _joysticks.end(); ++iter)
+	{
+		iter->second->mainloop();
+	}
+}
 
 /// ----------- Protected -------------
 vl::TrackerTrigger *

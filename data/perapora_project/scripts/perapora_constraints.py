@@ -234,8 +234,9 @@ game.scene.mapCollisionBarriers()
 #kiinnityslevy.translate(Vector3(0, 2, 0))
 
 # Joystick control
-# TODO add handler if this fails
-joy = SerialJoystick.create("COM5")
+# Falls back to game joysticks, if none exists the movements
+# are just disabled...
+joy = game.event_manager.getJoystick("COM5")
 
 # TODO check the mapping
 joy_handler = ConstraintJoystickHandler.create()
@@ -245,8 +246,6 @@ joy_handler.set_axis_constraint(1, 0, teleskooppi)
 joy_handler.velocity_multiplier = 0.4
 
 joy.add_handler(joy_handler)
-
-game.addInputDevice(joy)
 
 """
 # Add a motor action to nosto cylinder

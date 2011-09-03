@@ -1,8 +1,12 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-12
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2010-12
+ *	@file event_manager.hpp
+ *
+ *	This file is part of Hydra a VR game engine.
  *
  *	EventManager used to create and retrieve Triggers
  */
+
 #ifndef VL_EVENT_MANAGER_HPP
 #define VL_EVENT_MANAGER_HPP
 
@@ -11,6 +15,8 @@
 #include "trigger.hpp"
 
 #include "tracker.hpp"
+
+#include <OIS/OISJoyStick.h>
 
 namespace vl
 {
@@ -80,6 +86,17 @@ public :
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
 
+	/// @todo add params to get specifc joystick and also allow for fallbacks
+	/// @param name only valid values are COM ports for now
+	/// @param fallback_to_all do we fall to another device if not present
+	/// @return valid pointer if such joystick exists, NULL pointer if not
+	JoystickRefPtr getJoystick(std::string const &name = "default", bool fallback_to_all = true);
+
+	void update_joystick(OIS::JoyStickEvent const &evt);
+
+	/// @brief called from GameManager to update input devices
+	void mainloop(void);
+
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 
@@ -103,6 +120,11 @@ private :
 	std::bitset<8> _key_modifiers;
 
 	std::vector<OIS::KeyCode> _keys_down;
+
+	std::map<std::string, JoystickRefPtr> _joysticks;
+
+	// stored also separately to avoid searching and casting
+	GameJoystickRefPtr _game_joystick;
 
 };	// class EventManager
 

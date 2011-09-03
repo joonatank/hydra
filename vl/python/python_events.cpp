@@ -33,6 +33,7 @@
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyTrigger_ov, getKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyTrigger_ov, hasKeyTrigger, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getJoystick_ov, getJoystick, 0, 2)
 
 using namespace vl;
 
@@ -64,6 +65,7 @@ void export_managers(void)
 			python::return_value_policy<python::reference_existing_object>() )
 		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>()) )
+		.def("getJoystick", &vl::EventManager::getJoystick, getJoystick_ov())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
@@ -104,7 +106,7 @@ void export_managers(void)
 	/// Input
 	
 	/// Handlers
-	python::class_<vl::SerialJoystickHandler, vl::SerialJoystickHandlerRefPtr, boost::noncopyable>("SerialJoystickHandler", python::no_init)
+	python::class_<vl::JoystickHandler, vl::JoystickHandlerRefPtr, boost::noncopyable>("JoystickHandler", python::no_init)
 	;
 
 	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov0)(int, ConstraintRefPtr)
@@ -112,7 +114,7 @@ void export_managers(void)
 	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov1)(int, int, ConstraintRefPtr)
 		= &vl::ConstraintJoystickHandler::set_axis_constraint;
 
-	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::SerialJoystickHandler> >("ConstraintJoystickHandler", python::no_init)
+	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::JoystickHandler> >("ConstraintJoystickHandler", python::no_init)
 		.def("set_axis_constraint", set_axis_constraint_ov0)
 		.def("set_axis_constraint", set_axis_constraint_ov1)
 		.add_property("velocity_multiplier", &vl::ConstraintJoystickHandler::get_velocity_multiplier, &vl::ConstraintJoystickHandler::set_velocity_multiplier)
@@ -123,9 +125,12 @@ void export_managers(void)
 	python::class_<vl::InputDevice, vl::InputDeviceRefPtr, boost::noncopyable>("InputDevice", python::no_init)
 	;
 
-	python::class_<vl::SerialJoystick, vl::SerialJoystickRefPtr, boost::noncopyable, python::bases<vl::InputDevice> >("SerialJoystick", python::no_init)
+	python::class_<vl::Joystick, vl::JoystickRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("Joystick", python::no_init)
 		.def("doOnValueChanged", toast::python::signal_connect<void (JoystickEvent const &)>(&vl::SerialJoystick::doOnValueChanged))
 		.def("add_handler", &vl::SerialJoystick::add_handler)
+	;
+
+	python::class_<vl::SerialJoystick, vl::SerialJoystickRefPtr, boost::noncopyable, python::bases<vl::Joystick> >("SerialJoystick", python::no_init)
 		.def("create", &vl::SerialJoystick::create)
 		.staticmethod("create")
 	;

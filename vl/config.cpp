@@ -572,7 +572,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				int button;
 				stream >> button >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonPressedEvent" << std::endl;
+				_game_manager->getEventManager()->update_joystick(evt);
 			}
 			break;
 
@@ -582,7 +582,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				int button;
 				stream >> button >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleJoystickButtonReleasedEvent" << std::endl;
+				_game_manager->getEventManager()->update_joystick(evt);
 			}
 			break;
 
@@ -592,7 +592,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				int axis;
 				stream >> axis >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleJoystickAxisMovedEvent" << std::endl;
+				_game_manager->getEventManager()->update_joystick(evt);
 			}
 			break;
 
@@ -602,7 +602,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				int pov;
 				stream >> pov >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleJoystickPovMovedEvent" << std::endl;
+				_game_manager->getEventManager()->update_joystick(evt);
 			}
 			break;
 
@@ -612,7 +612,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				int index;
 				stream >> index >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleJoystickVector3MovedEvent" << std::endl;
+				_game_manager->getEventManager()->update_joystick(evt);
 			}
 			break;
 

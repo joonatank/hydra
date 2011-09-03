@@ -17,7 +17,7 @@
 namespace vl
 {
 
-struct ConstraintJoystickHandler : public SerialJoystickHandler
+struct ConstraintJoystickHandler : public JoystickHandler
 {
 	struct AxisConstraintElem
 	{

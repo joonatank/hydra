@@ -75,12 +75,16 @@ source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
 # @todo no Linux version for now
 if(WIN32)
 	set(INPUT_HEADERS
-	input/input.hpp
+		input/input.hpp
 		input/joystick_event.hpp
 		input/serial_joystick.hpp
+		input/game_joystick.hpp
+		input/ois_converters.hpp
 		)
 	set(INPUT_SRC
+		input/input.cpp
 		input/serial_joystick.cpp
+		input/game_joystick.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()
