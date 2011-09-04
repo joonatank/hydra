@@ -122,6 +122,7 @@ class Controller:
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
 
+
 class ObjectController(Controller):
 	def __init__(self, node, speed = 5, angular_speed = Degree(90)):
 		Controller.__init__(self, speed, angular_speed)
@@ -131,7 +132,6 @@ class ObjectController(Controller):
 		nodes = [self.node]
 		self.transform(nodes, t)
 
-# TODO add reference
 class SelectionController(Controller):
 	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None):
 		Controller.__init__(self, speed, angular_speed, reference)
@@ -140,6 +140,8 @@ class SelectionController(Controller):
 		self.transform(game.scene.selection, t)
 
 # New system using classes and signal callbacks
+# TODO add a separate controller for joystick values
+# selectable using a flag for example
 def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
 	# TODO stupid string casting, can we somehow remove it?
 	print( 'Creating Translation event on ' + str(node) )

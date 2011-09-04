@@ -34,7 +34,7 @@ class Joystick : public InputDevice
 public :
 	virtual ~Joystick(void) {}
 
-	int doOnValueChanged(OnValueChanged::slot_type const &slot)
+	int addListener(OnValueChanged::slot_type const &slot)
 	{
 		_signal.connect(slot);
 		return 1;
