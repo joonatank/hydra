@@ -73,8 +73,9 @@ if game.scene.hasSceneNode("spot"):
 	# Test code for lights at a distance
 	#spot_n.position = Vector3(0, 100, 0)
 	#spot.attenuation = LightAttenuation(200, 0.9, 0.09, 0.01)
-	game.scene.addToSelection(spot_n)
+	#game.scene.addToSelection(spot_n)
 
+game.scene.addToSelection(ogre)
 #game.scene.removeFromSelection(ogre)
 
 #if game.scene.hasLight("spot"):

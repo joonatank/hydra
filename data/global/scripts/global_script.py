@@ -59,11 +59,32 @@ def createCameraMovementsOld(node, speed = 5, angular_speed = Degree(90)) :
 # so we can have controllers for a group of objects and selections
 # as well as single objects.
 class Controller:
-	def __init__(self, speed = 5, angular_speed = Degree(90)):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None):
 		self.speed = speed
 		self.angular_speed = angular_speed
 		self.mov_dir = Vector3.zero
 		self.rot_axis = Vector3.zero
+		self.ref = reference
+
+	def transform(self, nodes, t):
+		# Normalises the move dir, this works for keyboard but it
+		# does not work for joysticks
+		# for joysticks we need to clip the length at 1
+		if self.mov_dir.length() != 0:
+			v = self.mov_dir/self.mov_dir.length()
+			mov = self.speed*float(t)*v
+			# can not use for n in nodes because of missing
+			# by-value converter.
+			for i in range(len(nodes)):
+				nodes[i].translate(mov, self.ref)
+
+		axis = self.rot_axis
+		if axis.length() != 0:
+			axis.normalise()
+			angle = Radian(self.angular_speed*float(t))
+			q = Quaternion(angle, axis)
+			for i in range(len(nodes)):
+				nodes[i].rotate(q)
 
 	def up(self):
 		self.mov_dir += Vector3.unit_y
@@ -89,26 +110,34 @@ class Controller:
 	def rotate_left(self):
 		self.rot_axis += Vector3.unit_y
 
+	def rotate_up(self):
+		self.rot_axis -= Vector3.unit_x
+
+	def rotate_down(self):
+		self.rot_axis += Vector3.unit_x
+
+	def roll_right(self):
+		self.rot_axis -= Vector3.unit_z
+
+	def roll_left(self):
+		self.rot_axis += Vector3.unit_z
+
 class ObjectController(Controller):
 	def __init__(self, node, speed = 5, angular_speed = Degree(90)):
 		Controller.__init__(self, speed, angular_speed)
 		self.node = node
 
 	def progress(self, t):
-		# Normalises the move dir, this works for keyboard but it
-		# does not work for joysticks
-		# for joysticks we need to clip the length at 1
-		if self.mov_dir.length() != 0:
-			v = self.mov_dir/self.mov_dir.length()
-			self.node.translate(self.speed*float(t)*v)
-		# TODO how to do rotations, we need to convert
-		# axis-angle to quaternion for the rotate
-		axis = self.rot_axis
-		if axis.length() != 0:
-			axis.normalise()
-			angle = Radian(self.angular_speed*float(t))
-			q = Quaternion(angle, axis)
-			self.node.rotate(q)
+		nodes = [self.node]
+		self.transform(nodes, t)
+
+# TODO add reference
+class SelectionController(Controller):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None):
+		Controller.__init__(self, speed, angular_speed, reference)
+
+	def progress(self, t):
+		self.transform(game.scene.selection, t)
 
 # New system using classes and signal callbacks
 def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
@@ -157,6 +186,59 @@ def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
 # @param angular_speed rotation speed of the selection
 # @param reference The object whom coordinate system is used for translation, usually camera
 def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None) :
+	selection_movements = SelectionController(speed, angular_speed, reference)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
+	trigger.addKeyDownListener(selection_movements.right)
+	trigger.addKeyUpListener(selection_movements.left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
+	trigger.addKeyDownListener(selection_movements.left)
+	trigger.addKeyUpListener(selection_movements.right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5)
+	trigger.addKeyDownListener(selection_movements.backward)
+	trigger.addKeyUpListener(selection_movements.forward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8)
+	trigger.addKeyDownListener(selection_movements.forward)
+	trigger.addKeyUpListener(selection_movements.backward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9)
+	trigger.addKeyDownListener(selection_movements.up)
+	trigger.addKeyUpListener(selection_movements.down)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7)
+	trigger.addKeyDownListener(selection_movements.down)
+	trigger.addKeyUpListener(selection_movements.up)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_left)
+	trigger.addKeyUpListener(selection_movements.rotate_right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_right)
+	trigger.addKeyUpListener(selection_movements.rotate_left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.roll_right)
+	trigger.addKeyUpListener(selection_movements.roll_left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.roll_left)
+	trigger.addKeyUpListener(selection_movements.roll_right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_up)
+	trigger.addKeyUpListener(selection_movements.rotate_down)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_down)
+	trigger.addKeyUpListener(selection_movements.rotate_up)
+
+	game.event_manager.frame_trigger.addListener(selection_movements.progress)
+
+def addMoveSelectionOld(speed = 0.3, angular_speed = Degree(40), reference=None) :
 	print( 'Creating Move selection event' )
 
 	trans_action_proxy = MoveActionProxy.create()
