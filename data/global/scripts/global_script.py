@@ -25,9 +25,8 @@ def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE
 	setVectorActionFromKey( float_action, kc_neg, mod )
 	float_action.action = trans_action
 
-
-# Fine using the new event interface
-def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
+# Old function that uses the action system and proxies
+def createCameraMovementsOld(node, speed = 5, angular_speed = Degree(90)) :
 	# TODO stupid string casting, can we somehow remove it?
 	print( 'Creating Translation event on ' + str(node) )
 
@@ -56,6 +55,101 @@ def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action(trans_action)
 
+# TODO separate the interface and the progress implementation
+# so we can have controllers for a group of objects and selections
+# as well as single objects.
+class Controller:
+	def __init__(self, speed = 5, angular_speed = Degree(90)):
+		self.speed = speed
+		self.angular_speed = angular_speed
+		self.mov_dir = Vector3.zero
+		self.rot_axis = Vector3.zero
+
+	def up(self):
+		self.mov_dir += Vector3.unit_y
+
+	def down(self):
+		self.mov_dir -= Vector3.unit_y
+
+	def left(self):
+		self.mov_dir -= Vector3.unit_x
+		
+	def right(self):
+		self.mov_dir += Vector3.unit_x
+
+	def forward(self):
+		self.mov_dir -= Vector3.unit_z
+
+	def backward(self):
+		self.mov_dir += Vector3.unit_z
+
+	def rotate_right(self):
+		self.rot_axis -= Vector3.unit_y
+
+	def rotate_left(self):
+		self.rot_axis += Vector3.unit_y
+
+class ObjectController(Controller):
+	def __init__(self, node, speed = 5, angular_speed = Degree(90)):
+		Controller.__init__(self, speed, angular_speed)
+		self.node = node
+
+	def progress(self, t):
+		# Normalises the move dir, this works for keyboard but it
+		# does not work for joysticks
+		# for joysticks we need to clip the length at 1
+		if self.mov_dir.length() != 0:
+			v = self.mov_dir/self.mov_dir.length()
+			self.node.translate(self.speed*float(t)*v)
+		# TODO how to do rotations, we need to convert
+		# axis-angle to quaternion for the rotate
+		axis = self.rot_axis
+		if axis.length() != 0:
+			axis.normalise()
+			angle = Radian(self.angular_speed*float(t))
+			q = Quaternion(angle, axis)
+			self.node.rotate(q)
+
+# New system using classes and signal callbacks
+def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
+	# TODO stupid string casting, can we somehow remove it?
+	print( 'Creating Translation event on ' + str(node) )
+
+	camera_movements = ObjectController(node, speed, angular_speed)
+
+	trigger = game.event_manager.createKeyTrigger(KC.D)
+	trigger.addKeyDownListener(camera_movements.right)
+	trigger.addKeyUpListener(camera_movements.left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.A)
+	trigger.addKeyDownListener(camera_movements.left)
+	trigger.addKeyUpListener(camera_movements.right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.S)
+	trigger.addKeyDownListener(camera_movements.backward)
+	trigger.addKeyUpListener(camera_movements.forward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.W)
+	trigger.addKeyDownListener(camera_movements.forward)
+	trigger.addKeyUpListener(camera_movements.backward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.PGUP)
+	trigger.addKeyDownListener(camera_movements.up)
+	trigger.addKeyUpListener(camera_movements.down)
+
+	trigger = game.event_manager.createKeyTrigger(KC.PGDOWN)
+	trigger.addKeyDownListener(camera_movements.down)
+	trigger.addKeyUpListener(camera_movements.up)
+
+	trigger = game.event_manager.createKeyTrigger(KC.Q)
+	trigger.addKeyDownListener(camera_movements.rotate_left)
+	trigger.addKeyUpListener(camera_movements.rotate_right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.E)
+	trigger.addKeyDownListener(camera_movements.rotate_right)
+	trigger.addKeyUpListener(camera_movements.rotate_left)
+
+	game.event_manager.frame_trigger.addListener(camera_movements.progress)
 
 
 # TODO add a possibility to speed up movements using SHIFT modifier
