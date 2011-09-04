@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 		opt.parse(argc, argv);
 
 		vl::SerialJoystick joy(opt.com_port);
-		joy.doOnValueChanged(&joystickValueChanged);
+		joy.addListener(&joystickValueChanged);
 		// Read the response
 		while(true)
 		{
