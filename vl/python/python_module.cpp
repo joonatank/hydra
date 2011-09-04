@@ -350,9 +350,14 @@ void export_scene_graph(void)
 	void (vl::SceneNode::*translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov1)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov2)(Ogre::Vector3 const &, TransformSpace) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*translate_ov3)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
-	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov4)(Ogre::Vector3 const &, Ogre::Radian const &) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov5)(Ogre::Degree const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
 
@@ -371,9 +376,14 @@ void export_scene_graph(void)
 		.def("translate", translate_ov0)
 		.def("translate", translate_ov1)
 		.def("translate", translate_ov2)
+		.def("translate", translate_ov3)
 		.def("rotate", rotate_ov0)
 		.def("rotate", rotate_ov1)
 		.def("rotate", rotate_ov2)
+		.def("rotate", rotate_ov3)
+		.def("rotate", rotate_ov4)
+		.def("rotate", rotate_ov5)
+		.def("rotate", rotate_ov6)
 		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
 		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )

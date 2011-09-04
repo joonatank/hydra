@@ -107,6 +107,8 @@ public :
 	/// @brief translate the SceneNode in local coordinate system
 	/// defined separately because easier to expose for python
 	void translate(Ogre::Vector3 const &v);
+	void translate(Ogre::Real x, Ogre::Real y, Ogre::Real z)
+	{ translate(Ogre::Vector3(x, y, z)); }
 
 	/// @brief get the orientation in object space
 	Ogre::Quaternion const &getOrientation( void ) const
@@ -130,7 +132,15 @@ public :
 	/// @brief rotates the SceneNode in local coordinate system
 	/// defined separately because easier to expose for python
 	void rotate(Ogre::Quaternion const &q);
-
+	/// @brief helper overloads
+	void rotate(Ogre::Vector3 const &axis, Ogre::Radian const &angle)
+	{ rotate(Ogre::Quaternion(angle, axis)); }
+	void rotate(Ogre::Radian const &angle, Ogre::Vector3 const &axis)
+	{ rotate(Ogre::Quaternion(angle, axis)); }
+	void rotate(Ogre::Vector3 const &axis, Ogre::Degree const &angle)
+	{ rotate(Ogre::Quaternion(Ogre::Radian(angle), axis)); }
+	void rotate(Ogre::Degree const &angle, Ogre::Vector3 const &axis)
+	{ rotate(Ogre::Quaternion(Ogre::Radian(angle), axis)); }
 
 	void scale(Ogre::Real s);
 	void scale(Ogre::Vector3 const &s);
