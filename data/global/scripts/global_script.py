@@ -125,7 +125,7 @@ class Controller:
 
 class ObjectController(Controller):
 	def __init__(self, node, speed = 5, angular_speed = Degree(90)):
-		Controller.__init__(self, speed, angular_speed)
+		Controller.__init__(self, speed, angular_speed, node)
 		self.node = node
 
 	def progress(self, t):
