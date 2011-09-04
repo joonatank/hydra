@@ -105,6 +105,7 @@ namespace vl
 	typedef std::vector<SceneNodePtr> SceneNodeList;
 	typedef std::vector<EntityPtr> EntityList;
 	typedef std::vector<MovableObjectPtr> MovableObjectList;
+	typedef std::vector<CameraPtr> CameraList;
 
 	struct null_deleter
 	{

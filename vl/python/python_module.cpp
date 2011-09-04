@@ -41,6 +41,9 @@
 // Necessary for hide/show system console
 #include "base/system_util.hpp"
 
+// Necessary for exposing vectors
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 /// Overloads need to be outside the module definition
 
 /// SceneGraph overloads
@@ -186,10 +189,29 @@ void export_scene_graph(void)
 	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
 	vl::EntityPtr (SceneManager::*createEntity_ov2)(std::string const &, std::string const &, bool) = &SceneManager::createEntity;
 	vl::ShadowInfo &(SceneManager::*getShadowInfo_ov0)(void) = &vl::SceneManager::getShadowInfo;
-	
+
+	python::class_<std::vector<SceneNode *> >("SceneNodeList")
+		.def(python::vector_indexing_suite<std::vector<SceneNode *> >())
+	;
+
+	python::class_<std::vector<Camera *> >("CameraList")
+		.def(python::vector_indexing_suite<std::vector<Camera *> >())
+	;
+
+	python::class_<std::vector<MovableObject *> >("ObjectList")
+		.def(python::vector_indexing_suite<std::vector<MovableObject *> >())
+	;
+
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
 		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
+		// Copy const reference here causes the containers to be out-of-date 
+		// if they are stored in the python side. Returning internal references
+		// might work but we need to be sure they can not be modified from python.
+		.add_property("selection", python::make_function(&SceneManager::getSelection, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("scene_nodes", python::make_function(&SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("objects", python::make_function(&SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("cameras", &SceneManager::getCameraList )
 		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
 		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )

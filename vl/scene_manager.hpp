@@ -387,6 +387,8 @@ public :
 	MovableObjectList const &getMovableObjectList(void) const
 	{ return _objects; }
 
+	CameraList getCameraList(void) const;
+
 	/// --------- Scene parameters ---------------
 	void setSkyDome(SkyDomeInfo const &dome);
 

@@ -658,6 +658,21 @@ vl::SceneManager::hasMovableObject(std::string const &type_name, std::string con
 	return( getMovableObject(type_name, name) );
 }
 
+vl::CameraList
+vl::SceneManager::getCameraList(void) const
+{
+	CameraList cam_list;
+	for(MovableObjectList::const_iterator iter = _objects.begin(); 
+		iter != _objects.end(); ++iter)
+	{
+		std::string t_name((*iter)->getTypeName());
+		vl::to_lower(t_name);
+		if(t_name == "camera")
+		{ cam_list.push_back((CameraPtr)*iter); }
+	}
+
+	return cam_list;
+}
 
 /// --------------------- Scene parameters -----------------------------------
 void 
