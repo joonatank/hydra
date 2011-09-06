@@ -254,8 +254,8 @@ vl::ogre::MovableText::_setupGeometry()
     size_t charlen = mCaption.size();
     float *pPCBuff = static_cast<float*>(ptbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
  
-    float left = 0 * 2.0 - 1.0;
-    float top = -((0 * 2.0) - 1.0);
+    float left = 0;
+    float top = 0;
  
     Ogre::Real spaceWidth = mSpaceWidth;
     // Derive space width from a capital A
@@ -341,14 +341,14 @@ vl::ogre::MovableText::_setupGeometry()
 		// First tri
 		//
 		// Upper left
-		*pPCBuff++ = left;
+		*pPCBuff++ = left - (len / 2);
 		*pPCBuff++ = top;
 		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v1;
  
 		// Deal with bounds
-		currPos = Ogre::Vector3(left, top, z_coord);
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
 		if (first)
 		{
 			min = max = currPos;
@@ -365,14 +365,14 @@ vl::ogre::MovableText::_setupGeometry()
 		top -= mCharHeight * 2.0;
  
 		// Bottom left
-		*pPCBuff++ = left;
+		*pPCBuff++ = left - (len / 2);
 		*pPCBuff++ = top;
 		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v2;
  
 		// Deal with bounds
-		currPos = Ogre::Vector3(left, top, z_coord);
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -382,7 +382,7 @@ vl::ogre::MovableText::_setupGeometry()
  
 		// Top right
 		// We could create the currPos here and use it instead of separate left, top, z_coord
-		*pPCBuff++ = left;
+		*pPCBuff++ = left - (len / 2);
 		*pPCBuff++ = top;
 		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u2;
@@ -390,7 +390,7 @@ vl::ogre::MovableText::_setupGeometry()
 		//-------------------------------------------------------------------------------------
  
 		// Deal with bounds
-		currPos = Ogre::Vector3(left, top, z_coord);
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -399,15 +399,14 @@ vl::ogre::MovableText::_setupGeometry()
 		// Second tri
 		//
 		// Top right (again)
-		*pPCBuff++ = left;
+		*pPCBuff++ = left - (len / 2);
 		*pPCBuff++ = top;
 		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u2;
 		*pPCBuff++ = v1;
  
 		// Deal with bounds
-		// why using left here instead of left - (len/2)?
-		currPos = Ogre::Vector3(left, top, z_coord);
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -416,14 +415,14 @@ vl::ogre::MovableText::_setupGeometry()
 		left -= horiz_height  * mCharHeight * 2.0;
  
 		// Bottom left (again)
-		*pPCBuff++ = left;
+		*pPCBuff++ = left - (len / 2);
 		*pPCBuff++ = top;
 		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v2;
  
 		// Deal with bounds
-		currPos = Ogre::Vector3(left, top, z_coord);
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -431,14 +430,15 @@ vl::ogre::MovableText::_setupGeometry()
 		left += horiz_height * mCharHeight * 2.0;
  
 		// Bottom right
-		*pPCBuff++ = left;
-		*pPCBuff++ = top;
-		*pPCBuff++ = z_coord;
+		currPos = Ogre::Vector3(left - (len / 2), top, z_coord);
+		*pPCBuff++ = currPos.x;
+		*pPCBuff++ = currPos.y;
+		*pPCBuff++ = currPos.z;
 		*pPCBuff++ = u2;
 		*pPCBuff++ = v2;
 
 		// Deal with bounds
-		currPos = Ogre::Vector3(left, top, z_coord);
+		
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
