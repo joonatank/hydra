@@ -65,6 +65,15 @@ add_executable(vrpn_tracker_recorder
 
 target_link_libraries( vrpn_tracker_recorder ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
+add_executable(vrpn_analog_server
+	vrpn_analog_server.cpp
+	${vl_SOURCE_DIR}/vl/base/sleep.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.hpp
+	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	)
+
+target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
+
 add_executable( hydra hydra.cpp )
 
 target_link_libraries( hydra ${HYDRA_LIBRARIES} )

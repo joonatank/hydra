@@ -301,6 +301,8 @@ public :
 	/// @todo this takes over 1 second to complete which is almost a second too much
 	void createTrackers(vl::EnvSettings const &env);
 
+	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
@@ -367,6 +369,8 @@ private :
 
 	/// Non physics constraints
 	ConstraintSolverRefPtr _constraint_solver;
+
+	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
 
 };	// class GameManager
 

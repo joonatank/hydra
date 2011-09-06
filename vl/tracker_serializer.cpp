@@ -146,18 +146,6 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 void
 vl::TrackerSerializer::processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans)
 {
-	/// @todo Sign is not supported for the moment
-	/*
-	Ogre::Matrix4 sign_m = Ogre::Matrix4::IDENTITY;
-
-	rapidxml::xml_node<> *elem = XMLNode->first_node("sign");
-	if( elem )
-	{
-		Ogre::Vector3 v = parseVector3( elem );
-		sign_m.setScale(v);
-	}
-	*/
-
 	vl::Transform t;
 	rapidxml::xml_node<> *elem = XMLNode->first_node("quaternion");
 	if( elem )
@@ -192,7 +180,7 @@ vl::TrackerSerializer::processSensor( rapidxml::xml_node< char >* XMLNode,
 	if(tracker->getNSensors() <= num)
 	{ tracker->setNSensors(num+1); }
 
-	Sensor &sensor = tracker->getSensor(num);
+	TrackerSensor &sensor = tracker->getSensor(num);
 
 	rapidxml::xml_node<> *elem = XMLNode->first_node("trigger");
 	if( elem )
@@ -208,7 +196,7 @@ vl::TrackerSerializer::processSensor( rapidxml::xml_node< char >* XMLNode,
 
 void
 vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
-									   Sensor &sensor )
+									   TrackerSensor &sensor )
 {
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute("name");
@@ -224,7 +212,7 @@ vl::TrackerSerializer::processTrigger( rapidxml::xml_node< char >* XMLNode,
 
 void
 vl::TrackerSerializer::processDefault( rapidxml::xml_node< char >* XMLNode,
-									   Sensor &sensor )
+									   TrackerSensor &sensor )
 {
 	rapidxml::xml_node<> *elem = XMLNode->first_node("orientation");
 	if( elem )

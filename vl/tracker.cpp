@@ -14,7 +14,7 @@
 
 /// ------------------------------ Global ------------------------------------
 std::ostream &
-vl::operator<<(std::ostream &os, vl::Sensor const &s)
+vl::operator<<(std::ostream &os, vl::TrackerSensor const &s)
 {
 	if(s.getDefaultTransform().isIdentity())
 	{
@@ -67,12 +67,12 @@ vl::operator<<(std::ostream &os, vl::Clients const &c)
 }
 
 /// ------------------------------ Sensor ------------------------------------
-vl::Sensor::Sensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)
+vl::TrackerSensor::TrackerSensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)
 	: _trigger(0), _default_value( default_pos, default_quat )
 {}
 
 void
-vl::Sensor::setDefaultPosition( Ogre::Vector3 const &pos )
+vl::TrackerSensor::setDefaultPosition( Ogre::Vector3 const &pos )
 {
 	// Save the reference for later
 	_default_value.position = pos;
@@ -84,7 +84,7 @@ vl::Sensor::setDefaultPosition( Ogre::Vector3 const &pos )
 }
 
 void
-vl::Sensor::setDefaultOrientation( Ogre::Quaternion const &quat )
+vl::TrackerSensor::setDefaultOrientation( Ogre::Quaternion const &quat )
 {
 	_default_value.quaternion = quat;
 
@@ -95,20 +95,20 @@ vl::Sensor::setDefaultOrientation( Ogre::Quaternion const &quat )
 }
 
 void 
-vl::Sensor::setDefaultTransform(vl::Transform const &t)
+vl::TrackerSensor::setDefaultTransform(vl::Transform const &t)
 {
 	_default_value = t;
 	update(_default_value);
 }
 
 vl::TrackerTrigger *
-vl::Sensor::getTrigger( void )
+vl::TrackerSensor::getTrigger( void )
 {
 	return _trigger;
 }
 
 void
-vl::Sensor::setTrigger( vl::TrackerTrigger* trigger )
+vl::TrackerSensor::setTrigger( vl::TrackerTrigger* trigger )
 {
 	_trigger = trigger;
 	// We need to update the new trigger
@@ -116,7 +116,7 @@ vl::Sensor::setTrigger( vl::TrackerTrigger* trigger )
 }
 
 void 
-vl::Sensor::update(const vl::Transform& data)
+vl::TrackerSensor::update(const vl::Transform& data)
 {
 	_last_value = data;
 
@@ -134,13 +134,13 @@ vl::Tracker::Tracker(std::string const &trackerName)
 {}
 
 void
-vl::Tracker::setSensor(size_t i, vl::Sensor const &sensor)
+vl::Tracker::setSensor(size_t i, vl::TrackerSensor const &sensor)
 {
 	_sensors.at(i) = sensor;
 }
 
 void
-vl::Tracker::addSensor(size_t i, vl::Sensor const &sensor)
+vl::Tracker::addSensor(size_t i, vl::TrackerSensor const &sensor)
 {
 	if(_sensors.size() <= i)
 	{ _sensors.resize(i+1); }

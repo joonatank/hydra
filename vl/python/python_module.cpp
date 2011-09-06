@@ -448,6 +448,7 @@ void export_game(void)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
+		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;

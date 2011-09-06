@@ -143,3 +143,11 @@ def rotateSpotti(t):
 
 game.event_manager.frame_trigger.addListener(rotateSpotti)
 
+def printAnalog(val):
+	text.caption = "analog value = " + str(int(val))
+
+# Test vrpn analog client
+analog = game.create_analog_client("meh@localhost")
+analog.n_sensors = 1
+analog.get_sensor(0).addListener(printAnalog)
+

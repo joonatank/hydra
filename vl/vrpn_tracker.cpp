@@ -83,7 +83,7 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 	// Only update sensors that the user has created and added
 	if( _sensors.size() > t.sensor )
 	{
-		Sensor &sensor = _sensors.at(t.sensor);
+		TrackerSensor &sensor = _sensors.at(t.sensor);
 
 		vrpn_float64 quat[4];
 		if( incorrect_quaternion )

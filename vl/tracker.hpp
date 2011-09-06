@@ -46,10 +46,10 @@ protected :
 
 };
 
-class Sensor
+class TrackerSensor
 {
 public :
-	Sensor( Ogre::Vector3 const &default_pos = Ogre::Vector3::ZERO,
+	TrackerSensor( Ogre::Vector3 const &default_pos = Ogre::Vector3::ZERO,
 			Ogre::Quaternion const &default_quat = Ogre::Quaternion::IDENTITY );
 
 	/// Sensor values used when not connected to a tracker
@@ -84,7 +84,7 @@ protected :
 };
 
 std::ostream &
-operator<<(std::ostream &os, Sensor const &s);
+operator<<(std::ostream &os, vl::TrackerSensor const &s);
 
 class Tracker
 {
@@ -97,17 +97,17 @@ public :
 	/// @brief Set a sensor does not change the number of sensors
 	/// @param i sensor index
 	/// @param sensor sensor definition
-	void setSensor(size_t i, Sensor const &sensor);
+	void setSensor(size_t i, TrackerSensor const &sensor);
 
 	/// @brief Set a sensor and if there is not enough sensors add it
 	/// @param i sensor index
 	/// @param sensor sensor definition
-	void addSensor(size_t i, vl::Sensor const &sensor);
+	void addSensor(size_t i, vl::TrackerSensor const &sensor);
 
-	Sensor &getSensor(size_t i)
+	TrackerSensor &getSensor(size_t i)
 	{ return _sensors.at(i); }
 
-	Sensor const &getSensor(size_t i) const
+	TrackerSensor const &getSensor(size_t i) const
 	{ return _sensors.at(i); }
 
 	void setNSensors(size_t size);
@@ -135,7 +135,7 @@ protected :
 
 	std::string _name;
 
-	std::vector<Sensor> _sensors;
+	std::vector<TrackerSensor> _sensors;
 
 	/// @todo this needs a separate Transform class with permutation, scaling and flipping
 	vl::Transform _transform;

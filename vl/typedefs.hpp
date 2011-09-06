@@ -46,14 +46,17 @@ namespace vl
 	typedef std::auto_ptr<RendererInterface> RendererUniquePtr;
 
 	// Tracker objects
-	class Sensor;
+	class TrackerSensor;
 	class Tracker;
 	class Clients;
+	class analog_sensor;
+	class vrpn_analog_client;
 
-	typedef boost::shared_ptr<Sensor> SensorRefPtr;
+	typedef boost::shared_ptr<TrackerSensor> SensorRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 	typedef boost::shared_ptr<Clients> ClientsRefPtr;
-
+	typedef boost::shared_ptr<analog_sensor> analog_sensor_ref_ptr;
+	typedef boost::shared_ptr<vrpn_analog_client> vrpn_analog_client_ref_ptr;
 
 	class Player;
 	class GameManager;

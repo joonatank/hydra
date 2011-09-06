@@ -16,6 +16,7 @@ cmake_minimum_required(VERSION 2.6)
 set(SRC
 	tracker.cpp
 	vrpn_tracker.cpp
+	vrpn_analog_client.cpp
 	tracker_serializer.cpp
 	settings.cpp
 	ogre_xml_helpers.cpp
@@ -192,6 +193,7 @@ set( HEADERS
 	camera.hpp
 	tracker_serializer.hpp
 	vrpn_tracker.hpp
+	vrpn_analog_client.hpp
 	settings.hpp
 	ogre_xml_helpers.hpp
 	game_manager.hpp

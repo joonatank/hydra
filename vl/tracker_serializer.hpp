@@ -67,15 +67,16 @@ private :
 	/// Process a tracker node
 	void processTracker(rapidxml::xml_node<>* XMLNode, Connection const &connection, bool incorrect_quaternion);
 
+	/// @todo Sign is not supported for the moment
 	void processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans);
 
 	/// Process a sensor node
 	void processSensor( rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker );
 
 	/// Process a trigger node
-	void processTrigger( rapidxml::xml_node<>* XMLNode, Sensor &sensor );
+	void processTrigger( rapidxml::xml_node<>* XMLNode, TrackerSensor &sensor );
 
-	void processDefault( rapidxml::xml_node<>* XMLNode, Sensor &sensor );
+	void processDefault( rapidxml::xml_node<>* XMLNode, TrackerSensor &sensor );
 
 	/// Config where the xml data is deserialized into
 	ClientsRefPtr _clients;

@@ -30,6 +30,8 @@
 // Necessary for joystick handler
 #include "constraints_handlers.hpp"
 
+#include "vrpn_analog_client.hpp"
+
 /// Event system overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyTrigger_ov, getKeyTrigger, 1, 2)
@@ -70,19 +72,20 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
-	python::class_<vl::Sensor, boost::noncopyable>("Sensor", python::no_init)
-		.add_property("trigger", python::make_function(&vl::Sensor::getTrigger, python::return_value_policy<python::reference_existing_object>() ), &vl::Sensor::setTrigger)
-		.add_property("transform", python::make_function(&vl::Sensor::getCurrentTransform, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("default_transform", python::make_function(&vl::Sensor::getDefaultTransform, python::return_value_policy<python::copy_const_reference>() ), &vl::Sensor::setDefaultTransform)
+	python::class_<vl::TrackerSensor, boost::noncopyable>("TrackerSensor", python::no_init)
+		.add_property("trigger", python::make_function(&vl::TrackerSensor::getTrigger, python::return_value_policy<python::reference_existing_object>() ), &vl::TrackerSensor::setTrigger)
+		.add_property("transform", python::make_function(&vl::TrackerSensor::getCurrentTransform, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("default_transform", python::make_function(&vl::TrackerSensor::getDefaultTransform, python::return_value_policy<python::copy_const_reference>() ), &vl::TrackerSensor::setDefaultTransform)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
-	Sensor & (vl::Tracker::*getSensor_ov0)(size_t) = &vl::Tracker::getSensor;
+	/// @todo replace with a list
+	TrackerSensor & (vl::Tracker::*trackerGetSensor_ov0)(size_t) = &vl::Tracker::getSensor;
 	
 	python::class_<vl::Tracker, TrackerRefPtr, boost::noncopyable>("Tracker", python::no_init)
 		.def("setSensor", &vl::Tracker::setSensor)
 		.def("addSensor", &vl::Tracker::addSensor)
-		.def("getSensor", python::make_function(getSensor_ov0, python::return_value_policy<python::reference_existing_object>()) )
+		.def("getSensor", python::make_function(trackerGetSensor_ov0, python::return_value_policy<python::reference_existing_object>()) )
 		.add_property("n_sensors", &vl::Tracker::getNSensors, &vl::Tracker::setNSensors)
 		.add_property("transformation", python::make_function(&vl::Tracker::getTransformation, python::return_value_policy<python::copy_const_reference>()), &vl::Tracker::setTransformation )
 		.add_property("name", python::make_function(&vl::Tracker::getName, python::return_value_policy<python::copy_const_reference>()) )
@@ -99,6 +102,18 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::analog_sensor, vl::analog_sensor_ref_ptr, boost::noncopyable>("analog_sensor", python::no_init)
+		.def("addListener", toast::python::signal_connect<void (vl::scalar)>(&vl::analog_sensor::addListener))
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	
+	python::class_<vl::vrpn_analog_client, vrpn_analog_client_ref_ptr, boost::noncopyable>("vrpn_analog_client", python::no_init)
+		/// @todo replace with a list
+		.add_property("n_sensors", &vl::vrpn_analog_client::getNSensors, &vl::vrpn_analog_client::setNSensors)
+		.def("get_sensor", &vl::vrpn_analog_client::getSensor)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	
 	bool (vl::JoystickEvent::*isButtonDown_ov0)(size_t) const = &vl::JoystickEvent::isButtonDown;

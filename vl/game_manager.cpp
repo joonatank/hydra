@@ -37,6 +37,8 @@
 
 #include "settings.hpp"
 
+#include "vrpn_analog_client.hpp"
+
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	: _session(session)
 	, _python(0)
@@ -117,6 +119,9 @@ vl::GameManager::step(void)
 		{
 			_trackers->getTrackerPtr(i)->mainloop();
 		}
+
+		for(size_t i = 0; i < _analog_clients.size(); ++i )
+		{ _analog_clients.at(i)->mainloop(); }
 
 		if( _physics_world )
 		{
@@ -410,6 +415,15 @@ vl::GameManager::createTrackers(vl::EnvSettings const &env)
 		vl::TrackerSerializer ser(_trackers);
 		ser.parseTrackers(resource);
 	}
+}
+
+vl::vrpn_analog_client_ref_ptr
+vl::GameManager::createAnalogClient(std::string const &name)
+{
+	vrpn_analog_client_ref_ptr ptr(new vrpn_analog_client);
+	ptr->_create(name);
+	_analog_clients.push_back(ptr);
+	return ptr;
 }
 
 void
