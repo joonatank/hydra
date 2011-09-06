@@ -24,24 +24,17 @@ vl::ogre::MovableText::MovableText(std::string const &name,
 	std::string const &caption, std::string const &fontName, 
 	Ogre::Real charHeight, const Ogre::ColourValue &color)
 	: MovableObject(name)
-	, mpCam(NULL)
-	, mpWin(NULL)
 	, mpFont(NULL)
 	, mCaption(caption)
 	, mFontName(fontName)
 	, mCharHeight(charHeight)
 	, mColor(color)
-	, mType("MovableText")
-	, mTimeUntilNextToggle(0)
 	, mSpaceWidth(0)
 	, mUpdateColors(true)
-	, mTrackCamera(true)
 	, mOnTop(false)
-	, mHorizontalAlignment(H_LEFT)
-	, mVerticalAlignment(V_BELOW)
+	, mVerticalAlignment(V_CENTER)
 	, mPosition(Ogre::Vector3::ZERO)
 {
-	std::clog << "vl::ogre::MovableText::MovableText" << std::endl;
     if (name == "")
     {
 		std::string str("Trying to create MovableText without name");
@@ -144,13 +137,8 @@ vl::ogre::MovableText::setSpaceWidth(Ogre::Real width)
 }
  
 void
-vl::ogre::MovableText::setTextAlignment(const HorizontalAlignment& horizontalAlignment, const VerticalAlignment& verticalAlignment)
+vl::ogre::MovableText::setTextAlignment(VerticalAlignment const &verticalAlignment)
 {
-    if(mHorizontalAlignment != horizontalAlignment)
-    {
-        mHorizontalAlignment = horizontalAlignment;
-        mNeedUpdate = true;
-    }
     if(mVerticalAlignment != verticalAlignment)
     {
         mVerticalAlignment = verticalAlignment;
@@ -176,68 +164,37 @@ vl::ogre::MovableText::showOnTop(bool show)
     }
 }
 
-void
-vl::ogre::MovableText::setTrackCamera(bool track)
-{
-	mTrackCamera = track;
-}
- 
-Ogre::Quaternion const &
-vl::ogre::MovableText::getWorldOrientation(void) const
-{
-    if(mTrackCamera && mpCam)
-	{ return mpCam->getDerivedOrientation(); }
-	else if(mParentNode)
-	{ return mParentNode->_getDerivedOrientation(); }
-	return Ogre::Quaternion::IDENTITY;
-}
-
 void 
 vl::ogre::MovableText::visitRenderables(Ogre::Renderable::Visitor* visitor, 
         bool debugRenderables)
 {}
- 
-Ogre::Vector3 const &
-vl::ogre::MovableText::getWorldPosition(void) const
-{
-    if(mParentNode)
-	{ return mParentNode->_getDerivedPosition(); }
-	return Ogre::Vector3::ZERO;
-}
- 
+
 void 
 vl::ogre::MovableText::getWorldTransforms(Ogre::Matrix4 *xform) const 
 {
 	if(this->isVisible())
 	{
-		Ogre::Quaternion const &quat = getWorldOrientation();
-		Ogre::Vector3 position = getWorldPosition() + quat*mPosition;
-
-		// apply all transforms to xform       
-		*xform = Ogre::Matrix4(quat);
-		// Why is the scale divided by two? it looks better but why?
-		xform->setScale(mParentNode->_getDerivedScale()/2);
-		xform->setTrans(position);
+		if(mParentNode)
+		{ *xform = mParentNode->_getFullTransform(); }
 	}
 }
- 
+
 void
 vl::ogre::MovableText::getRenderOperation(Ogre::RenderOperation &op)
 {
-    if (this->isVisible())
-    {
-        if (mNeedUpdate)
-            this->_setupGeometry();
-        if (mUpdateColors)
-            this->_updateColors();
-        op = mRenderOp;
-    }
+	if (this->isVisible())
+	{
+		if (mNeedUpdate)
+			this->_setupGeometry();
+		if (mUpdateColors)
+			this->_updateColors();
+		op = mRenderOp;
+	}
 }
 
 void
 vl::ogre::MovableText::_setupGeometry()
 {
-	std::clog << "vl::ogre::MovableText::_setupGeometry" << std::endl;
     assert(mpFont);
     assert(!mpMaterial.isNull());
  
@@ -297,7 +254,6 @@ vl::ogre::MovableText::_setupGeometry()
     size_t charlen = mCaption.size();
     float *pPCBuff = static_cast<float*>(ptbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
  
-    float largestWidth = 0;
     float left = 0 * 2.0 - 1.0;
     float top = -((0 * 2.0) - 1.0);
  
@@ -340,6 +296,7 @@ vl::ogre::MovableText::_setupGeometry()
  
     for (i = mCaption.begin(); i != iend; ++i)
     {
+		Ogre::Real const z_coord = 0;
         if (newLine)
         {
             len = 0.0f;
@@ -384,20 +341,14 @@ vl::ogre::MovableText::_setupGeometry()
 		// First tri
 		//
 		// Upper left
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v1;
  
 		// Deal with bounds
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-		{ currPos = Ogre::Vector3(left, top, -1.0); }
-		else
-		{ currPos = Ogre::Vector3(left - (len / 2), top, -1.0); }
+		currPos = Ogre::Vector3(left, top, z_coord);
 		if (first)
 		{
 			min = max = currPos;
@@ -414,20 +365,14 @@ vl::ogre::MovableText::_setupGeometry()
 		top -= mCharHeight * 2.0;
  
 		// Bottom left
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v2;
  
 		// Deal with bounds
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			currPos = Ogre::Vector3(left, top, -1.0);
-		else
-			currPos = Ogre::Vector3(left - (len / 2), top, -1.0);
+		currPos = Ogre::Vector3(left, top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -436,21 +381,16 @@ vl::ogre::MovableText::_setupGeometry()
 		left += horiz_height * mCharHeight * 2.0;
  
 		// Top right
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		// We could create the currPos here and use it instead of separate left, top, z_coord
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u2;
 		*pPCBuff++ = v1;
 		//-------------------------------------------------------------------------------------
  
 		// Deal with bounds
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			currPos = Ogre::Vector3(left, top, -1.0);
-		else
-			currPos = Ogre::Vector3(left - (len / 2), top, -1.0);
+		currPos = Ogre::Vector3(left, top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -459,16 +399,15 @@ vl::ogre::MovableText::_setupGeometry()
 		// Second tri
 		//
 		// Top right (again)
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u2;
 		*pPCBuff++ = v1;
  
-		currPos = Ogre::Vector3(left, top, -1.0);
+		// Deal with bounds
+		// why using left here instead of left - (len/2)?
+		currPos = Ogre::Vector3(left, top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
@@ -477,44 +416,37 @@ vl::ogre::MovableText::_setupGeometry()
 		left -= horiz_height  * mCharHeight * 2.0;
  
 		// Bottom left (again)
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u1;
 		*pPCBuff++ = v2;
  
-		currPos = Ogre::Vector3(left, top, -1.0);
+		// Deal with bounds
+		currPos = Ogre::Vector3(left, top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
  
-		left += horiz_height  * mCharHeight * 2.0;
+		left += horiz_height * mCharHeight * 2.0;
  
 		// Bottom right
-		if(mHorizontalAlignment == MovableText::H_LEFT)
-			*pPCBuff++ = left;
-		else
-			*pPCBuff++ = left - (len / 2);
+		*pPCBuff++ = left;
 		*pPCBuff++ = top;
-		*pPCBuff++ = -1.0;
+		*pPCBuff++ = z_coord;
 		*pPCBuff++ = u2;
 		*pPCBuff++ = v2;
-		//-------------------------------------------------------------------------------------
- 
-		currPos = Ogre::Vector3(left, top, -1.0);
+
+		// Deal with bounds
+		currPos = Ogre::Vector3(left, top, z_coord);
 		min.makeFloor(currPos);
 		max.makeCeil(currPos);
 		maxSquaredRadius = std::max(maxSquaredRadius, currPos.squaredLength());
+
+		//-------------------------------------------------------------------------------------
  
 		// Go back up with top
 		top += mCharHeight * 2.0;
- 
-		float currentWidth = (left + 1)/2 - 0;
-		if (currentWidth > largestWidth)
-			largestWidth = currentWidth;
 	}
  
 	// Unlock vertex buffer
@@ -522,7 +454,7 @@ vl::ogre::MovableText::_setupGeometry()
  
 	// update AABB/Sphere radius
 	mAABB = Ogre::AxisAlignedBox(min, max);
-	mRadius = Ogre::Math::Sqrt(maxSquaredRadius);
+	mBoundingRadius = Ogre::Math::Sqrt(maxSquaredRadius);
  
 	if (mUpdateColors)
 		this->_updateColors();
@@ -533,7 +465,6 @@ vl::ogre::MovableText::_setupGeometry()
 void
 vl::ogre::MovableText::_updateColors(void)
 {
-	std::clog << "vl::ogre::MovableText::_updateColors" << std::endl;
 	assert(mpFont);
 	assert(!mpMaterial.isNull());
  
@@ -549,12 +480,6 @@ vl::ogre::MovableText::_updateColors(void)
 }
 
 void 
-vl::ogre::MovableText::_notifyCurrentCamera(Ogre::Camera *cam)
-{
-	mpCam = cam;
-}
- 
-void 
 vl::ogre::MovableText::_updateRenderQueue(Ogre::RenderQueue *queue)
 {
 	if (this->isVisible())
@@ -565,7 +490,6 @@ vl::ogre::MovableText::_updateRenderQueue(Ogre::RenderQueue *queue)
 			this->_updateColors();
  
 		queue->addRenderable(this, mRenderQueueID, OGRE_RENDERABLE_DEFAULT_PRIORITY);
-		//queue->addRenderable(this, mRenderQueueID, RENDER_QUEUE_SKIES_LATE);
 	}
 }
 
@@ -575,14 +499,12 @@ vl::ogre::MovableText::_updateRenderQueue(Ogre::RenderQueue *queue)
 vl::MovableText::MovableText(std::string const &name, vl::SceneManagerPtr creator)
 	: vl::MovableObject(name, creator)
 {
-	std::clog << "Creating movable text : Master copy" << std::endl;
 	_clear();
 }
 
 vl::MovableText::MovableText(vl::SceneManagerPtr creator)
 	: vl::MovableObject(creator)
 {
-	std::clog << "Creating movable text : Slave copy" << std::endl;
 	_clear();
 }
 
@@ -637,7 +559,7 @@ vl::MovableText::setSpaceWidth(Ogre::Real width)
 }
 
 void
-vl::MovableText::setTextAlignment(std::string const &horizontal, std::string const &vertical)
+vl::MovableText::setTextAlignment(std::string const &vertical)
 {
 	// @todo implement
 }
@@ -662,16 +584,6 @@ vl::MovableText::showOnTop(bool show)
 	}
 }
 
-void
-vl::MovableText::setTrackCamera(bool track)
-{
-	if(_track_camera != track)
-	{
-		setDirty(DIRTY_TEXT_PARAMS);
-		_track_camera = track;
-	}
-}
-
 vl::MovableObjectPtr
 vl::MovableText::clone(std::string const &append_to_name) const
 {
@@ -686,9 +598,8 @@ vl::MovableText::_doCreateNative(void)
 	if(!_ogre_text)
 	{
 		_ogre_text = new vl::ogre::MovableText(getName(), _caption, _font_name, _char_height, _colour);
-		_ogre_text->setTextAlignment(_horizontal_alignment, _vertical_alignment);
+		_ogre_text->setTextAlignment(_vertical_alignment);
 		_ogre_text->setPosition(_position);
-		_ogre_text->setTrackCamera(_track_camera);
 		_ogre_text->showOnTop(_on_top);
 	}
 
@@ -705,7 +616,7 @@ vl::MovableText::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 
 	if(DIRTY_TEXT_PARAMS & dirtyBits)
 	{
-		msg << _font_name << _colour << _char_height << _space_width << _position << _on_top << _track_camera;
+		msg << _font_name << _colour << _char_height << _space_width << _position << _on_top;
 	}
 }
 
@@ -721,7 +632,7 @@ vl::MovableText::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirt
 
 	if(DIRTY_TEXT_PARAMS & dirtyBits)
 	{
-		msg >> _font_name >> _colour >> _char_height >> _space_width >> _position >> _on_top >> _track_camera;
+		msg >> _font_name >> _colour >> _char_height >> _space_width >> _position >> _on_top;
 		if(_ogre_text)
 		{
 			_ogre_text->setFontName(_font_name);
@@ -730,7 +641,6 @@ vl::MovableText::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirt
 			_ogre_text->setSpaceWidth(_space_width);
 			_ogre_text->setPosition(_position);
 			_ogre_text->showOnTop(_on_top);
-			_ogre_text->setTrackCamera(_track_camera);
 		}
 	}
 }
@@ -745,9 +655,7 @@ vl::MovableText::_clear(void)
 	_space_width = 0;
 	_position = Ogre::Vector3::ZERO;
 	_on_top = false;
-	_track_camera = true;
-	_horizontal_alignment = vl::ogre::MovableText::H_LEFT;
-	_vertical_alignment = vl::ogre::MovableText::V_BELOW;
+	_vertical_alignment = vl::ogre::MovableText::V_CENTER;
 
 	_ogre_text = 0;
 }

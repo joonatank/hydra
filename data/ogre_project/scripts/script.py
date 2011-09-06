@@ -75,7 +75,7 @@ if game.scene.hasSceneNode("spot"):
 	#spot.attenuation = LightAttenuation(200, 0.9, 0.09, 0.01)
 	#game.scene.addToSelection(spot_n)
 
-game.scene.addToSelection(ogre)
+#game.scene.addToSelection(ogre)
 #game.scene.removeFromSelection(ogre)
 
 #if game.scene.hasLight("spot"):
@@ -129,11 +129,12 @@ def printSpotti():
 text = game.scene.createMovableText('text', 'text')
 text.font_name = "BlueHighway-22"
 #text.font_name = "StarWars"
-text.track_camera = False
 text.colour = ColourValue(0, 1.0, 0)
+text.char_height = 0.4
 text_n = game.scene.createSceneNode('text')
 text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
+game.scene.addToSelection(text_n)
 
 def rotateSpotti(t):
 	speed = Degree(10)

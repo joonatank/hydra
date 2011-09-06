@@ -29,7 +29,6 @@ namespace ogre {
 class MovableText : public Ogre::MovableObject, public Ogre::Renderable
 {
 public:
-	enum HorizontalAlignment    {H_LEFT, H_CENTER};
 	enum VerticalAlignment      {V_BELOW, V_ABOVE, V_CENTER};
  
 	/******************************** public methods ******************************/
@@ -38,40 +37,34 @@ public:
 		std::string const &fontName = "BlueHighway-12", Ogre::Real charHeight = 1.0, 
 		Ogre::ColourValue const &color = Ogre::ColourValue::White );
 	virtual ~MovableText();
- 
+
 	// Add to build on Shoggoth:
 	virtual void visitRenderables(Ogre::Renderable::Visitor* visitor, bool debugRenderables = false);
- 
+
 	// Set settings
 	void    setFontName(const std::string &fontName);
 	void    setCaption(const std::string &caption);
 	void    setColor(const Ogre::ColourValue &color);
 	void    setCharacterHeight(Ogre::Real height);
 	void    setSpaceWidth(Ogre::Real width);
-	void    setTextAlignment(const HorizontalAlignment& horizontalAlignment, const VerticalAlignment& verticalAlignment);
+	void    setTextAlignment(VerticalAlignment const &verticalAlignment);
 	void    setPosition(Ogre::Vector3 const &trans);
 	void    showOnTop(bool show=true);
-	void	setTrackCamera(bool track);
- 
+
 	// Get settings
 	std::string const &getFontName() const {return mFontName;}
 	std::string const &getCaption() const {return mCaption;}
 	Ogre::ColourValue const &getColor() const {return mColor;}
- 
+
 	Ogre::Real getCharacterHeight() const {return mCharHeight;}
 	Ogre::Real getSpaceWidth() const {return mSpaceWidth;}
 	Ogre::Vector3 const &getPosition() const {return mPosition;}
 	bool getShowOnTop() const {return mOnTop;}
-	bool getTrackCamera(void) const { return mTrackCamera; }
 
 	// from MovableObject
 	void getWorldTransforms(Ogre::Matrix4 *xform) const;
-	Ogre::Real getBoundingRadius(void) const {return mRadius;};
+	Ogre::Real getBoundingRadius(void) const {return mBoundingRadius;};
 	Ogre::Real getSquaredViewDepth(const Ogre::Camera *cam) const {return 0;};
-	Ogre::Quaternion const &getWorldOrientation(void) const;
-	Ogre::Vector3 const &getWorldPosition(void) const;
-	/// @todo there's a problem with the bounding box size, it does not correctly
-	/// reflect the size and position of the font
 	Ogre::AxisAlignedBox const &getBoundingBox(void) const {return mAABB;}
 
 	std::string const &getMovableType(void) const 
@@ -97,43 +90,34 @@ protected:
 
 	/// from MovableObject, automatic methods called from redender system
 
-	/// change the camera used for orientating the text
-	void    _notifyCurrentCamera(Ogre::Camera *cam);
 	void    _updateRenderQueue(Ogre::RenderQueue* queue);
  
 
 	/************************** protected data *******************************/
 protected:
 	std::string mFontName;
-	std::string mType;
 	std::string mCaption;
-	HorizontalAlignment mHorizontalAlignment;
 	VerticalAlignment mVerticalAlignment;
  
 	Ogre::ColourValue mColor;
 	Ogre::RenderOperation mRenderOp;
 	Ogre::AxisAlignedBox mAABB;
 	Ogre::LightList mLList;
- 
+
 	Ogre::Real mCharHeight;
 	Ogre::Real mSpaceWidth;
- 
+
 	bool mNeedUpdate;
 	bool mUpdateColors;
-	
-	bool mTrackCamera;
+
 	bool mOnTop;
- 
-	Ogre::Real mTimeUntilNextToggle;
-	Ogre::Real mRadius;
- 
+
+	Ogre::Real mBoundingRadius;
+
 	Ogre::Vector3 mPosition;
- 
-	Ogre::Camera *mpCam;
-	Ogre::RenderWindow *mpWin;
+
 	Ogre::Font *mpFont;
 	Ogre::MaterialPtr mpMaterial;
-	Ogre::MaterialPtr mpBackgroundMaterial;
 
 };	// end class MovableText
  
@@ -158,12 +142,10 @@ public :
 	void    setCharacterHeight(Ogre::Real height);
 	void    setSpaceWidth(Ogre::Real width);
 	/// set the text aligment
-	/// @param horizontal valid values H_LEFT, H_CENTER
 	/// @param vertical valid values V_BELOW, V_ABOVE, V_CENTER
-	void    setTextAlignment(std::string const &horizontal, std::string const &vertical);
+	void    setTextAlignment(std::string const &vertical);
 	void    setPosition(Ogre::Vector3 const &trans);
 	void    showOnTop(bool show);
-	void    setTrackCamera(bool track);
 	
 	// Get settings
 	std::string const &getFontName() const { return _font_name; }
@@ -174,7 +156,6 @@ public :
 	Ogre::Real getSpaceWidth() const { return _space_width; }
 	Ogre::Vector3 const &getPosition() const { return _position; }
 	bool getShowOnTop() const { return _on_top; }
-	bool getTrackCamera() const { return _track_camera; }
 
 	virtual Ogre::MovableObject *getNative(void) const
 	{ return _ogre_text; }
@@ -210,9 +191,7 @@ private :
 	Ogre::Real _space_width;
 	Ogre::Vector3 _position;
 	bool _on_top;
-	bool _track_camera;
-	
-	vl::ogre::MovableText::HorizontalAlignment _horizontal_alignment;
+
 	vl::ogre::MovableText::VerticalAlignment _vertical_alignment;
 
 	vl::ogre::MovableText *_ogre_text;

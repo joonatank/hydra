@@ -315,7 +315,7 @@ void export_scene_graph(void)
 		.add_property("space_width", &vl::MovableText::getSpaceWidth, &vl::MovableText::setSpaceWidth)
 		.add_property("position", python::make_function( &vl::MovableText::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::MovableText::setPosition)
 		.add_property("show_on_top", &vl::MovableText::getShowOnTop, &vl::MovableText::showOnTop)
-		.add_property("track_camera", &vl::MovableText::getTrackCamera, &vl::MovableText::setTrackCamera)
+		.def("set_text_alignment", &vl::MovableText::setTextAlignment)
 	;
 	
 	python::class_<vl::RayObject, boost::noncopyable, python::bases<vl::MovableObject> >("RayObject", python::no_init)
