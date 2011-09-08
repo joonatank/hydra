@@ -26,14 +26,15 @@ spot.attachObject(spot_l)
 spot.position = Vector3(0, 20, 0)
 spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 
+ground_mesh = game.mesh_manager.createPlane("ground", 40, 40)
 ground_node = game.scene.createSceneNode("ground")
-ground = game.scene.createEntity("ground", PF.PLANE)
+ground = game.scene.createEntity("ground", 'ground', True)
 ground_node.attachObject(ground)
 ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
 print('Physics : Adding ground plane')
-ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
+ground_mesh = game.mesh_manager.loadMesh("ground")
 ground_shape = StaticTriangleMeshShape.create(ground_mesh)
 g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
 world.createRigidBody('ground', 0, g_motion_state, ground_shape)
@@ -46,7 +47,7 @@ box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
 # with scaling a ConvexHull
 box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
-user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 10)
+user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 0)
 user_sphere.user_controlled = True
 
 
@@ -68,6 +69,7 @@ six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #world.addConstraint(six_dof)
 
 # Add force action
+"""
 print('Adding Force action to KC_F')
 action = ScriptAction.create()
 action.game = game
@@ -89,9 +91,13 @@ action.game = game
 action.script = 'user_sphere.setLinearVelocity(Vector3(1, 0, 0))'
 trigger = game.event_manager.createKeyTrigger(KC.T)
 trigger.action_down = action
+"""
+
+
 
 print('Adding kinematic action')
-addKinematicAction(user_sphere)
+#addKinematicAction(user_sphere)
+addRigidBodyController(user_sphere)
 
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m

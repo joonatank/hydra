@@ -76,7 +76,17 @@ class Controller:
 			# can not use for n in nodes because of missing
 			# by-value converter.
 			for i in range(len(nodes)):
-				nodes[i].translate(mov, self.ref)
+				# Hack to handle rigid bodies
+				# Should use a bit more convenient system
+				# as the none reference is used to indicate
+				# world coordinates
+				# but on the other hand local reference is
+				# impossible to indicate if the list contains
+				# more than one element
+				if self.ref:
+					nodes[i].translate(mov, self.ref)
+				else:
+					nodes[i].translate(mov)
 
 		axis = self.rot_axis
 		if axis.length() != 0:
@@ -138,6 +148,15 @@ class SelectionController(Controller):
 
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
+
+class RigidBodyController(Controller):
+	def __init__(self, body):
+		Controller.__init__(self)
+		self.body = body
+
+	def progress(self, t):
+		bodies = [self.body]
+		self.transform(bodies, t)
 
 # New system using classes and signal callbacks
 # TODO add a separate controller for joystick values
@@ -272,6 +291,36 @@ def addMoveSelectionOld(speed = 0.3, angular_speed = Degree(40), reference=None)
 	# move camera to override this.
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
+
+def addRigidBodyController(body):
+	controller = RigidBodyController(body)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
+	trigger.addKeyDownListener(controller.right)
+	trigger.addKeyUpListener(controller.left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
+	trigger.addKeyDownListener(controller.left)
+	trigger.addKeyUpListener(controller.right)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8)
+	trigger.addKeyDownListener(controller.forward)
+	trigger.addKeyUpListener(controller.backward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5)
+	trigger.addKeyDownListener(controller.backward)
+	trigger.addKeyUpListener(controller.forward)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9)
+	trigger.addKeyDownListener(controller.up)
+	trigger.addKeyUpListener(controller.down)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7)
+	trigger.addKeyDownListener(controller.down)
+	trigger.addKeyUpListener(controller.up)
+
+	game.event_manager.frame_trigger.addListener(controller.progress)
+
 
 def mapHeadTracker(name) :
 	act = HeadTrackerAction.create()
