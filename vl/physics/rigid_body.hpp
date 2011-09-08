@@ -136,6 +136,8 @@ public :
 
 	virtual vl::Transform getWorldTransform(void) const = 0;
 
+	virtual void setWorldTransform(Transform const &worldTrans) = 0;
+
 	std::string const &getName(void) const
 	{ return _name; }
 

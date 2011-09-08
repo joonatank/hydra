@@ -5,13 +5,16 @@
  *	This file is part of Hydra a VR game engine.
  */
 
-#ifndef VL_SCENE_NODE_HPP
-#define VL_SCENE_NODE_HPP
+#ifndef HYDRA_SCENE_NODE_HPP
+#define HYDRA_SCENE_NODE_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
+
+// Used for user callbacks
+#include <boost/signal.hpp>
 
 #include "action.hpp"
 #include "base/exceptions.hpp"
@@ -35,6 +38,8 @@ enum TransformSpace
 /// @todo add getTransform and getWorldTransform using vl::Transform
 class SceneNode : public vl::Distributed
 {
+	typedef boost::signal<void (vl::Transform const &)> TransformedCB;
+
 public :
 	SceneNode( std::string const &name, vl::SceneManager *creator );
 
@@ -219,6 +224,11 @@ public :
 	SceneManagerPtr getCreator(void) const
 	{ return _creator; }
 
+
+	// -------------------- Callbacks -----------------------
+	int addListener(TransformedCB::slot_type const &slot)
+	{ _transformed_cb.connect(slot); return 1; }
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -245,6 +255,10 @@ protected :
 	vl::SceneNodePtr doClone(std::string const &append_to_name, vl::SceneNodePtr parent) const;
 
 private :
+	// Disallow copying use clone instead
+	SceneNode(SceneNode const &);
+	SceneNode & operator=(SceneNode const &);
+
 	std::string _name;
 
 	vl::Transform _transform;
@@ -262,6 +276,9 @@ private :
 
 	std::vector<vl::SceneNodePtr> _childs;
 	std::vector<vl::MovableObjectPtr> _objects;
+
+	// Callbacks
+	TransformedCB _transformed_cb;
 
 	Ogre::SceneNode *_ogre_node;
 
@@ -339,4 +356,4 @@ public :
 
 }	// namespace vl
 
-#endif // VL_SCENE_NODE_HPP
+#endif	// HYDRA_SCENE_NODE_HPP

@@ -122,6 +122,7 @@ vl::SceneNode::setTransform(vl::Transform const &trans)
 	{
 		setDirty(DIRTY_TRANSFORM);
 		_transform = trans;
+		_transformed_cb(_transform);
 	}
 }
 
@@ -173,6 +174,7 @@ vl::SceneNode::setPosition(Ogre::Vector3 const &v)
 	{
 		setDirty(DIRTY_TRANSFORM);
 		_transform.position = v;
+		_transformed_cb(_transform);
 	}
 }
 
@@ -227,6 +229,7 @@ vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
 	{
 		setDirty(DIRTY_TRANSFORM);
 		_transform.quaternion = q;
+		_transformed_cb(_transform);
 	}
 }
 

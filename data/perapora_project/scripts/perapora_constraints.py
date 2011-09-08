@@ -247,136 +247,33 @@ joy_handler.velocity_multiplier = 0.4
 
 joy.add_handler(joy_handler)
 
-"""
-# Add a motor action to nosto cylinder
-# Note this action does not repeat so it's executed once for every key down 
-toggle = ToggleActionProxy.create()
+# Add tube simulation
+game.enablePhysics(True)
+# Tie the ends to SceneNodes
+tube_info = TubeConstructionInfo()
+# Some test bodies
+# TODO create the bodies using the SceneNodes as references
+shape = BoxShape.create(Vector3(0.1, 0.1, 0.1))
+ms = game.physics_world.createMotionState(kaantokappale.world_transformation, kaantokappale)
+start_body = game.physics_world.createRigidBody('kaantokappale', 0, ms, shape)
+ms = game.physics_world.createMotionState(vaantomoottori.world_transformation, vaantomoottori)
+end_body = game.physics_world.createRigidBody('vaantomoottori', 0, ms, shape)
+tube_info.start_body = start_body
+tube_info.end_body = end_body 
+tube_info.start_frame = Transform(Vector3(0.4, 0, 0), Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.end_frame = Transform(Vector3(0, 0, 0), Quaternion(1., 0., 0, 0))
+# Leght between vaantomoottori and kaantokappale is bit over 3m
+tube_info.length = 4
+tube_info.mass = 50
+tube_info.radius = 0.05
+#tube_info.stiffness = 0.6
+#tube_info.damping = 0.3
+tube_info.element_size = 0.1
 
-# Movements for puomi_hinge
-action = ScriptAction.create()
-action.script = "teleskooppi.target = teleskooppi.upper_limit"
-action.game = game
-toggle.action_on = action
+tube = game.physics_world.createTube(tube_info)
 
-action = ScriptAction.create()
-action.script = "teleskooppi.target = teleskooppi.position"
-action.game = game
-toggle.action_off = action
+def setBodyTransform(t):
+	end_body.world_transform = t
 
-trigger = game.event_manager.createKeyTrigger(KC.U)
-trigger.action_down = toggle
-
-
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "teleskooppi.target = teleskooppi.lower_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "teleskooppi.target = teleskooppi.position"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.I)
-trigger.action_down = toggle
-
-
-# Movements for puomi_hinge
-# The axis for the puomi is flipped so up and low limits are flipped
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "puomi_hinge.target = puomi_hinge.lower_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "puomi_hinge.target = puomi_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.J)
-trigger.action_down = toggle
-
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "puomi_hinge.target = puomi_hinge.upper_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "puomi_hinge.target = puomi_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.K)
-trigger.action_down = toggle
-
-
-# Movements for motor_hinge
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "motor_hinge.target = motor_hinge.upper_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "motor_hinge.target = motor_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.N)
-trigger.action_down = toggle
-
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "motor_hinge.target = motor_hinge.lower_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "motor_hinge.target = motor_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.M)
-trigger.action_down = toggle
-
-
-# Movements for motor_hinge
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "pulttaus_hinge.target = pulttaus_hinge.upper_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "pulttaus_hinge.target = pulttaus_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.T)
-trigger.action_down = toggle
-
-toggle = ToggleActionProxy.create()
-
-action = ScriptAction.create()
-action.script = "pulttaus_hinge.target = pulttaus_hinge.lower_limit"
-action.game = game
-toggle.action_on = action
-
-action = ScriptAction.create()
-action.script = "pulttaus_hinge.target = pulttaus_hinge.angle"
-action.game = game
-toggle.action_off = action
-
-trigger = game.event_manager.createKeyTrigger(KC.Y)
-trigger.action_down = toggle
-"""
+vaantomoottori.addListener(setBodyTransform)
 

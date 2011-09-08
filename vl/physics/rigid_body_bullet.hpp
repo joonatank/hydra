@@ -174,7 +174,10 @@ public :
 	{ _bt_body->setMotionState(motionState); }
 
 	virtual vl::Transform getWorldTransform(void) const
-	{ return ((MotionState *)_bt_body->getMotionState())->getWorldTransform(); }
+	{ return convert_transform(_bt_body->getWorldTransform()); }
+
+	virtual void setWorldTransform(Transform const &worldTrans)
+	{ _bt_body->setWorldTransform(convert_bt_transform(worldTrans)); }
 
 	btRigidBody *getNative(void)
 	{ return _bt_body; }

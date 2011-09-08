@@ -400,6 +400,7 @@ void export_scene_graph(void)
 		.def("isHidden", &vl::SceneNode::isHidden)
 		.def("show", &vl::SceneNode::show)
 		.def("isShown", &vl::SceneNode::isShown)
+		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
