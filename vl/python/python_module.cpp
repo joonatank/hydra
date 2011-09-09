@@ -29,8 +29,9 @@
 #include "gui/gui.hpp"
 
 // Animation framework
-#include "constraints.hpp"
-#include "constraint_solver.hpp"
+#include "animation/constraints.hpp"
+#include "animation/kinematic_body.hpp"
+#include "animation/kinematic_world.hpp"
 
 #include "recording.hpp"
 
@@ -53,6 +54,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
 
 using namespace vl;
+
 
 void export_math(void)
 {
@@ -89,15 +91,35 @@ void export_math(void)
 
 void export_animation(void)
 {
-	python::class_<vl::ConstraintSolver, vl::ConstraintSolverRefPtr, boost::noncopyable>("ConstraintSolver", python::no_init)
+	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable>("KinematicBody", python::no_init)
+		.add_property("scene_node", python::make_function(&vl::KinematicBody::getSceneNode, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("name", python::make_function(&vl::KinematicBody::getName, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("world_transformation", &vl::KinematicBody::getWorldTransform, &vl::KinematicBody::setWorldTransform)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<KinematicBodyRefPtr> >("KinematicBodyList")
+		.def(python::vector_indexing_suite<std::vector<KinematicBodyRefPtr> >())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	/// @todo add list getters
+	// bodies not yet working as we would like, probably something to do with ref ptrs
+	python::class_<vl::KinematicWorld, vl::KinematicWorldRefPtr, boost::noncopyable>("KinematicWorld", python::no_init)
+		.def("get_kinematic_body", &vl::KinematicWorld::getKinematicBody)
+		.def("create_kinematic_body", &vl::KinematicWorld::createKinematicBody)
+		.def("remove_kinematic_body", &vl::KinematicWorld::removeKinematicBody)
+		.def("create_constraint", &vl::KinematicWorld::createConstraint)
+		.def("remove_constraint", &vl::KinematicWorld::removeConstraint)
+		.add_property("bodies", python::make_function(&vl::KinematicWorld::getBodies, python::return_value_policy<python::copy_const_reference>()))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	/// Abstract master class for all constraints, both physics and non-physics constraint
 	/// derive from this
 	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
-		.add_property("body_a", python::make_function(&vl::Constraint::getBodyA, python::return_value_policy<python::reference_existing_object>()))
-		.add_property("body_a", python::make_function(&vl::Constraint::getBodyB, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("body_a", &vl::Constraint::getBodyA)
+		.add_property("body_b", &vl::Constraint::getBodyB)
 		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
 		.def("set_velocity", &vl::Constraint::setVelocity)
 		.def("add_velocity", &vl::Constraint::addVelocity)
@@ -105,8 +127,6 @@ void export_animation(void)
 	;
 
 	python::class_<vl::FixedConstraint, vl::FixedConstraintRefPtr, boost::noncopyable, python::bases<vl::Constraint> >("FixedConstraint", python::no_init)
-		.def("create", &vl::FixedConstraint::create)
-		.staticmethod("create")
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -117,8 +137,6 @@ void export_animation(void)
 		.add_property("target", &vl::SliderConstraint::getActuatorTarget, &vl::SliderConstraint::setActuatorTarget)
 		.add_property("position", &vl::SliderConstraint::getPosition)
 		.add_property("axis", python::make_function(&vl::SliderConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::SliderConstraint::setAxis)
-		.def("create", &vl::SliderConstraint::create)
-		.staticmethod("create")
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -129,8 +147,6 @@ void export_animation(void)
 		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
 		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("axis", python::make_function(&vl::HingeConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setAxis)
-		.def("create", &vl::HingeConstraint::create)
-		.staticmethod("create")
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 }
@@ -441,10 +457,7 @@ void export_game(void)
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
-		.def("addConstraint", &vl::GameManager::addConstraint)
-		.def("removeConstraint", &vl::GameManager::removeConstraint)
-		.def("hasConstraint", &vl::GameManager::hasConstraint)
-		.add_property("constraint_solver", &vl::GameManager::getConstraintSolver)
+		.add_property("kinematic_world", &vl::GameManager::getKinematicWorld)
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)

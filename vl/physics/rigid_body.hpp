@@ -17,6 +17,9 @@
 // Necessary for name
 #include <string>
 
+// Base class
+#include "object_interface.hpp"
+
 namespace vl {
 
 namespace physics {
@@ -25,7 +28,7 @@ namespace physics {
  *	@brief Abstract interface for Physics engine rigid body
  *	Derived classes implement this for specific physics engines.
  */
-class RigidBody
+class RigidBody : vl::ObjectInterface
 {
 
 public :

@@ -53,10 +53,6 @@ set(SRC
 	mesh_manager.cpp
 	mesh.cpp
 	mesh_ogre.cpp
-	constraints.cpp
-	constraints_handlers.cpp
-	constraint_solver.cpp
-	animation.cpp
 	ray_object.cpp
 	ray_cast.cpp
 	)
@@ -164,6 +160,23 @@ endif()
 
 source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
+set(ANIMATION_HEADERS
+	animation/constraints.hpp
+	animation/constraints_handlers.hpp
+	animation/animation.hpp
+	animation/kinematic_body.hpp
+	animation/kinematic_world.hpp
+	)
+set(ANIMATION_SRC
+	animation/constraints.cpp
+	animation/constraints_handlers.cpp
+	animation/animation.cpp
+	animation/kinematic_body.cpp
+	animation/kinematic_world.cpp
+	)
+source_group(HydraMain\\animation FILES ${ANIMATION_HEADERS} ${ANIMATION_SRC})
+
+
 set(PYTHON_HEADERS
 	python/python.hpp
 	python/python_module.hpp
@@ -179,6 +192,7 @@ source_group(HydraMain\\python FILES ${PYTHON_HEADERS} ${PYTHON_SRC})
 
 set( HEADERS
 	system_tools/message_box.hpp
+	object_interface.hpp
 	tracker.hpp
 	entity.hpp
 	light.hpp
@@ -223,10 +237,6 @@ set( HEADERS
 	application.hpp
 	ogre_root.hpp
 	distributed.hpp
-	constraints.hpp
-	constraints_handlers.hpp
-	constraint_solver.hpp
-	animation.hpp
 	ray_object.hpp
 	ray_cast.hpp
 	)
@@ -275,6 +285,8 @@ add_library(HydraMain
 	${INPUT_SRC}
 	${PHYSICS_HEADERS}
 	${PHYSICS_SRC}
+	${ANIMATION_HEADERS}
+	${ANIMATION_SRC}
 	${PYTHON_HEADERS}
 	${PYTHON_SRC}
 	${CLUSTER_HEADERS}

@@ -29,7 +29,7 @@
 
 #include "dotscene_loader.hpp"
 
-#include "constraint_solver.hpp"
+#include "animation/kinematic_world.hpp"
 
 #include "recording.hpp"
 
@@ -52,7 +52,7 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _state(GS_UNKNOWN)
-	, _constraint_solver(new vl::ConstraintSolver)
+	, _kinematic_world(new vl::KinematicWorld)
 {
 	if(!_session || !_logger)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
@@ -128,7 +128,7 @@ vl::GameManager::step(void)
 			_physics_world->step(getDeltaTime());
 		}
 
-		_process_constraints(getDeltaTime());
+		_kinematic_world->step(getDeltaTime());
 
 		_scene_manager->_step(getDeltaTime());
 	}
@@ -182,24 +182,6 @@ vl::GameManager::createBackgroundSound( std::string const &song_name )
 	{
 		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
 	}
-}
-
-void 
-vl::GameManager::addConstraint(vl::ConstraintRefPtr constraint)
-{
-	_constraint_solver->addConstraint(constraint);
-}
-
-void
-vl::GameManager::removeConstraint(vl::ConstraintRefPtr constraint)
-{
-	_constraint_solver->removeConstraint(constraint);
-}
-
-bool
-vl::GameManager::hasConstraint(vl::ConstraintRefPtr constraint) const
-{
-	return _constraint_solver->hasConstraint(constraint);
 }
 
 vl::physics::WorldRefPtr
@@ -500,12 +482,6 @@ vl::GameManager::_createQuitEvent(void)
 	// Add trigger
 	vl::KeyTrigger *trig = getEventManager()->createKeyTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
 	trig->setKeyDownAction(quit);
-}
-
-void
-vl::GameManager::_process_constraints(vl::time const &t)
-{
-	_constraint_solver->step(t);
 }
 
 void

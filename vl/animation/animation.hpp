@@ -58,7 +58,7 @@ public :
 
 	/// @brief get the link to a parent node
 	/// @return valid link if this object is not the root otherwise NULL
-	LinkRefPtr getParent(void);
+	LinkRefPtr getParent(void) const;
 
 	/// @brief get the link to a next child, increase the internal child counter
 	/// @return valid link if there is a next child otherwise NULL
@@ -88,6 +88,8 @@ public :
 	/// @brief set the current world transformation
 	/// @param t a new Transformation for the Node in world coordinates
 	void setWorldTransform(Transform const &t);
+
+	size_t length_to_root(void) const;
 
 	/// @internal
 	/// @brief set the parent link
@@ -143,7 +145,9 @@ public :
 
 	/// @brief set the local transformation
 	/// @param t a new Transformation for the Link in local coordinates
-	void setTransform(Transform const &t);
+	/// @param preserve_child_transforms modify the link only preserving the
+	/// childs world coordinate frame.
+	void setTransform(Transform const &t, bool preserve_child_transforms = false);
 
 	/// @brief get the current world transformation
 	/// @return Transformation of the Link in world coordinates
@@ -201,6 +205,15 @@ private :
 
 };	// class Graph
 
+
+std::ostream &
+operator<<(std::ostream &os, Node const &n);
+
+std::ostream &
+operator<<(std::ostream &os, Link const &l);
+
+std::ostream &
+operator<<(std::ostream &os, Graph const &g);
 
 }	// namespace animation
 

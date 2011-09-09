@@ -181,16 +181,10 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
-	/// ------------------------------ Constraints ---------------------------
-	void addConstraint(vl::ConstraintRefPtr constraint);
-
-	void removeConstraint(vl::ConstraintRefPtr constraint);
-
-	bool hasConstraint(vl::ConstraintRefPtr constraint) const;
-
-	ConstraintSolverRefPtr getConstraintSolver(void)
-	{ return _constraint_solver; }
-
+	/// ------------------------------ Kinematics ----------------------------
+	KinematicWorldRefPtr getKinematicWorld(void)
+	{ return _kinematic_world; }
+	
 	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
@@ -321,8 +315,6 @@ private :
 	/// Events
 	void _createQuitEvent( void );
 
-	void _process_constraints(vl::time const &t);
-
 	void _fire_step_start(void);
 
 	void _fire_step_end(void);
@@ -368,7 +360,7 @@ private :
 	physics::WorldRefPtr _physics_world;
 
 	/// Non physics constraints
-	ConstraintSolverRefPtr _constraint_solver;
+	KinematicWorldRefPtr _kinematic_world;
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
 

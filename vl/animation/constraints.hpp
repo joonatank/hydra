@@ -32,10 +32,10 @@ public :
 	virtual ~Constraint(void)
 	{}
 
-	SceneNodePtr getBodyA(void)
+	KinematicBodyRefPtr getBodyA(void) const
 	{ return _bodyA; }
 
-	SceneNodePtr getBodyB(void)
+	KinematicBodyRefPtr getBodyB(void) const
 	{ return _bodyB; }
 
 	/// @brief change between constraint and actuator
@@ -64,10 +64,10 @@ public :
 
 protected :
 	/// only child classes are allowed to use the constructor
-	Constraint(SceneNodePtr rbA, SceneNodePtr rbB, vl::Transform const &worldFrame);
+	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame);
 
-	SceneNodePtr _bodyA;
-	SceneNodePtr _bodyB;
+	KinematicBodyRefPtr _bodyA;
+	KinematicBodyRefPtr _bodyB;
 
 	/// Current frames in object coordinates
 	vl::Transform _current_local_frame_a;
@@ -93,7 +93,7 @@ public :
 	/// @internal
 	void _proggress(vl::time const &t);
 
-	static FixedConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
+	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, worldFrame));
@@ -101,7 +101,7 @@ public :
 	}
 
 private :
-	FixedConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame);
+	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
 
 };	// class FixedConstraint
 
@@ -195,7 +195,7 @@ public :
 	/// @brief set the translation target
 	void setActuatorTarget(vl::scalar target_pos);
 
-	vl::scalar getActuatorTarget(void)
+	vl::scalar getActuatorTarget(void) const
 	{ return _target_position; }
 
 	/// @brief add to target speed, the final result is clamped positive
@@ -220,7 +220,7 @@ public :
 	/// @internal
 	void _proggress(vl::time const &t);
 
-	static SliderConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
+	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, worldFrame));
@@ -228,7 +228,7 @@ public :
 	}
 
 private :
-	SliderConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame);
+	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
 
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
@@ -305,7 +305,7 @@ public :
 	/// @internal
 	void _proggress(vl::time const &t);
 
-	static HingeConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
+	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, worldFrame));
@@ -313,7 +313,7 @@ public :
 	}
 
 private :
-	HingeConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame);
+	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;
@@ -327,6 +327,11 @@ private :
 
 };	// class HingeConstraint
 
+std::ostream &
+operator<<(std::ostream &os, HingeConstraint const &c);
+
+std::ostream &
+operator<<(std::ostream &os, SliderConstraint const &c);
 
 class SliderActuatorAction : public vl::BasicAction
 {

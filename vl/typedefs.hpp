@@ -124,6 +124,8 @@ namespace vl
 	};
 
 	/// Non-physics constraints
+	class KinematicBody;
+	class KinematicWorld;
 	class ConstraintSolver;
 	class Constraint;
 	class SixDofConstraint;
@@ -131,12 +133,17 @@ namespace vl
 	class HingeConstraint;
 	class FixedConstraint;
 
+	typedef boost::shared_ptr<KinematicBody> KinematicBodyRefPtr;
+	typedef boost::shared_ptr<KinematicWorld> KinematicWorldRefPtr;
 	typedef boost::shared_ptr<ConstraintSolver> ConstraintSolverRefPtr;
 	typedef boost::shared_ptr<Constraint> ConstraintRefPtr;
 	typedef boost::shared_ptr<SixDofConstraint> SixDofConstraintRefPtr;
 	typedef boost::shared_ptr<SliderConstraint> SliderConstraintRefPtr;
 	typedef boost::shared_ptr<HingeConstraint> HingeConstraintRefPtr;
 	typedef boost::shared_ptr<FixedConstraint> FixedConstraintRefPtr;
+
+	typedef std::vector<KinematicBodyRefPtr> KinematicBodyList;
+	typedef std::vector<ConstraintRefPtr> ConstraintList;
 
 	class InputDevice;
 	class Joystick;

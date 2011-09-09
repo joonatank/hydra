@@ -9,6 +9,38 @@
 
 #include "animation.hpp"
 
+/// ---------------------------------- Global --------------------------------
+std::ostream &
+vl::animation::operator<<(std::ostream &os, vl::animation::Node const &n)
+{
+	os << "Animation Node : length to root = " << n.length_to_root() << "\n"
+		<< " transformation = " << n.getTransform() << "\n"
+		<< " world transformation = " << n.getWorldTransform() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::animation::operator<<(std::ostream &os, vl::animation::Link const &l)
+{
+	os << "Animation Link : "
+		<< " transformation = " << l.getTransform() << "\n"
+		<< " world transformation = " << l.getWorldTransform() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::animation::operator<<(std::ostream &os, vl::animation::Graph const &g)
+{
+	// Not that many attributes we can print. Might add size of the graph
+	// the longest path and so on.
+	os << "Animation graph : ";
+
+	return os;
+}
+
+
 /// ---------------------------------- Node ----------------------------------
 
 vl::animation::Node::Node(void)
@@ -28,7 +60,7 @@ vl::animation::Node::isRoot(void) const
 { return _parent.expired(); }
 
 vl::animation::LinkRefPtr
-vl::animation::Node::getParent(void)
+vl::animation::Node::getParent(void) const
 { return _parent.lock(); }
 
 vl::animation::LinkRefPtr
@@ -91,6 +123,28 @@ vl::animation::Node::setWorldTransform(Transform const &t)
 	_transform = wt*t;
 }
 
+size_t
+vl::animation::Node::length_to_root(void) const
+{
+	// Count the number of links from this node upwards
+	// the first node not having a link is the root node.
+
+	size_t count = 0;
+	animation::LinkRefPtr l(getParent());
+	while(l)
+	{
+		++count;
+		// shouldn't be necessary as all links have parents
+		// nodes don't necessarily
+		if(!l->getParent())
+		{ break; }
+
+		l = l->getParent()->getParent();
+	}
+	
+	return count;
+}
+
 void
 vl::animation::Node::_setParent(LinkRefPtr link)
 {
@@ -115,7 +169,10 @@ vl::animation::Node::_removeChild(LinkRefPtr link)
 	{
 		if(*iter == link)
 		{
+			// The link can only exist once in the node so we can safely
+			// do an erase here and return.
 			_childs.erase(iter);
+			return;
 		}
 	}
 }
@@ -145,7 +202,6 @@ vl::animation::Link::getParent(void) const
 void
 vl::animation::Link::setParent(NodeRefPtr parent)
 {
-	// @todo should preserve the world transformation
 	// Keep the transformation
 	Transform wt(getWorldTransform());
 
@@ -192,8 +248,20 @@ vl::animation::Link::getTransform(void) const
 { return _transform; }
 
 void
-vl::animation::Link::setTransform(Transform const &t)
-{ _transform = t; }
+vl::animation::Link::setTransform(Transform const &t, bool preserve_child_transforms)
+{
+	if(preserve_child_transforms && _child)
+	{
+		/// Save the old transformation before resetting link
+		/// this is because changing the link will change the world transformation
+		/// of the child node.
+		Transform wt(_child->getWorldTransform());
+		_transform = t;
+		_child->setWorldTransform(wt);
+	}
+	else
+	{ _transform = t; }
+}
 
 vl::Transform
 vl::animation::Link::getWorldTransform(void) const

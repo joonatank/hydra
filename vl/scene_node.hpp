@@ -24,6 +24,7 @@
 
 // Base class
 #include "distributed.hpp"
+#include "object_interface.hpp"
 
 namespace vl
 {
@@ -35,8 +36,7 @@ enum TransformSpace
 	TS_WORLD,
 };
 
-/// @todo add getTransform and getWorldTransform using vl::Transform
-class SceneNode : public vl::Distributed
+class SceneNode : public vl::Distributed, vl::ObjectInterface
 {
 	typedef boost::signal<void (vl::Transform const &)> TransformedCB;
 

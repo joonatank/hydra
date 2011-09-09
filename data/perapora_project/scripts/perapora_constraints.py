@@ -7,37 +7,40 @@ import math
 # Depending on wether the original coordinates have positive or negative
 # z forward, you need to use positive or negative velocity for driving
 # positive z forward positive velocity
-def createTranslationConstraint(body0, body1, transform, min, max) :
+def createTranslationConstraint(sn0, sn1, transform, min, max) :
 	# SliderConstraint works on x-axis, so we rotate the reference
 	# z-axis to x-axis
 	trans = transform #*Transform(Quaternion(-0.7071, 0, 0, 0.7071))
 	#local0_trans = body0.transform_to_local(trans)
 	#local1_trans = body1.transform_to_local(trans)
-	constraint = SliderConstraint.create(body0, body1, trans)
+	body0 = game.kinematic_world.create_kinematic_body(sn0)
+	body1 = game.kinematic_world.create_kinematic_body(sn1)
+	constraint = game.kinematic_world.create_constraint('slider', body0, body1, trans)
 	constraint.lower_limit = min
 	constraint.upper_limit = max
-	game.addConstraint(constraint)
 	return constraint
 
 # Define a hinge constraint using objects +y axis
 # +y because the objects were modeled in Blender with +z as the rotation axis
 # but the exporter flips y and z
-def createHingeConstraint(body0, body1, transform, min = Radian(), max = Radian()) :
+def createHingeConstraint(sn0, sn1, transform, min = Radian(), max = Radian()) :
 	trans = transform #*Transform(Quaternion(0.7071, 0.7071, 0, 0))
 	#local0_trans = body0.transform_to_local(trans)
 	#local1_trans = body1.transform_to_local(trans)
-	constraint = HingeConstraint.create(body0, body1, trans)
+	body0 = game.kinematic_world.create_kinematic_body(sn0)
+	body1 = game.kinematic_world.create_kinematic_body(sn1)
+	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, trans)
 	constraint.lower_limit = min
 	constraint.upper_limit = max
-	game.addConstraint(constraint)
 	return constraint
 
-def createFixedConstraint(body0, body1, transform) :
+def createFixedConstraint(sn0, sn1, transform) :
 	trans = transform #*Transform(Quaternion(0.7071, 0.7071, 0, 0))
 	#local0_trans = body0.transform_to_local(trans)
 	#local1_trans = body1.transform_to_local(trans)
-	constraint = FixedConstraint.create(body0, body1, trans)
-	game.addConstraint(constraint)
+	body0 = game.kinematic_world.create_kinematic_body(sn0)
+	body1 = game.kinematic_world.create_kinematic_body(sn1)
+	constraint = game.kinematic_world.create_constraint('fixed', body0, body1, trans)
 	return constraint
 
 camera_name = "Camera"
@@ -91,28 +94,22 @@ syl_kaanto_varsi = game.scene.getSceneNode("cb_syl_kaanto_varsi")
 nivel_kaantosyl2_rotz = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
 transform = nivel_kaantosyl2_rotz.world_transformation
 kaanto_hinge = createHingeConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform)
-#createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform)
-#syl_kaanto_varsi.hide()
 
 transform = syl_kaanto_varsi.world_transformation
 syl_kaanto_putki = game.scene.getSceneNode("cb_syl_kaanto_putki")
 # TODO can't create another joint because we already have one for ulkoputki
 #kaanto_joint = createTranslationConstraint(syl_kaanto_varsi, syl_kaanto_putki, transform, -0.3, 0.3)
-#syl_kaanto_putki.hide()
 
 nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
 transform = nivel_klevy1.world_transformation
 kaantokappale = game.scene.getSceneNode("cb_kaantokappale")
 createHingeConstraint(kiinnityslevy, kaantokappale, transform)
-#createFixedConstraint(kiinnityslevy, kaantokappale, transform)
-#kaantokappale.hide()
 
 # Sylinteri nosto
 nivel_sylnosto_rotz = game.scene.getSceneNode("nivel_nostosyl2_rotz")
 transform = nivel_sylnosto_rotz.world_transformation
 syl_nosto_varsi = game.scene.getSceneNode("cb_syl_nosto_varsi")
 createHingeConstraint(kaantokappale, syl_nosto_varsi, transform)
-#createFixedConstraint(kaantokappale, syl_nosto_varsi, transform)
 
 syl_nosto_putki = game.scene.getSceneNode("cb_syl_nosto_putki")
 transform = syl_nosto_varsi.world_transformation
@@ -124,7 +121,6 @@ nosto_joint = createTranslationConstraint(syl_nosto_varsi, syl_nosto_putki, tran
 ulkoputki = game.scene.getSceneNode("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
 puomi_hinge = createHingeConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, Radian(-1), Radian(0))
-#ulkoputki.hide()
 
 nivel_nostosyl1 = game.scene.getSceneNode("nivel_nostosyl1_rotz")
 createHingeConstraint(syl_nosto_putki, ulkoputki, nivel_nostosyl1.world_transformation)
@@ -202,31 +198,23 @@ createFixedConstraint(raide, porakanki, raide.world_transformation)
 
 # enable motors for cylinders
 #kaanto_joint.actuator = True
-#kaanto_joint.max_lin_motor_force = 100
-nosto_joint.actuator = True
-#nosto_joint.max_lin_motor_force = 100
-#nosto_joint.speed = 0.1
+#nosto_joint.actuator = True
 teleskooppi.actuator = True
-#teleskooppi.speed = 0.1
 puomi_hinge.actuator = True
-#puomi_hinge.speed = Radian(0.1)
 motor_hinge.actuator = True
-#motor_hinge.speed = Radian(0.1)
 pulttaus_hinge.actuator = True
-#pulttaus_hinge.speed = Radian(0.1)
 
-
-kaanto_hinge.actuator = True
-kaanto_hinge.speed = Radian(0.1)
-kaanto_hinge.lower_limit = Radian(0.1)
-kaanto_hinge.upper_limit = Radian(0)
+#kaanto_hinge.actuator = True
+#kaanto_hinge.speed = Radian(0.1)
+#kaanto_hinge.lower_limit = Radian(0.1)
+#kaanto_hinge.upper_limit = Radian(0)
 #kaanto_hinge.target = Radian(1)
 
 # Hide links
 game.scene.hideSceneNodes("nivel*")
 
 # some test code
-pulttaus_hinge.target = Radian(1)
+#pulttaus_hinge.target = Radian(1)
 
 # CB mapping
 game.scene.mapCollisionBarriers()
@@ -240,14 +228,16 @@ joy = game.event_manager.getJoystick("COM5")
 
 # TODO check the mapping
 joy_handler = ConstraintJoystickHandler.create()
-joy_handler.set_axis_constraint(0, puomi_hinge)
-joy_handler.set_axis_constraint(1, motor_hinge)
+joy_handler.set_axis_constraint(1, puomi_hinge)
 joy_handler.set_axis_constraint(1, 0, teleskooppi)
+joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
+joy_handler.set_axis_constraint(1, 1, motor_hinge)
 joy_handler.velocity_multiplier = 0.4
 
 joy.add_handler(joy_handler)
 
 # Add tube simulation
+"""
 game.enablePhysics(True)
 # Tie the ends to SceneNodes
 tube_info = TubeConstructionInfo()
@@ -276,4 +266,5 @@ def setBodyTransform(t):
 	end_body.world_transform = t
 
 vaantomoottori.addListener(setBodyTransform)
+"""
 

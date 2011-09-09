@@ -139,21 +139,26 @@ vl::SceneNode::setTransform(vl::Transform const &trans, vl::SceneNodePtr referen
 vl::Transform 
 vl::SceneNode::getTransform(vl::SceneNodePtr reference) const
 {
-	vl::Transform world_trans;
+	vl::Transform wt;
 	if(_parent)
-	{ world_trans = _parent->getWorldTransform(); }
-	world_trans.invert();
-	return reference->getWorldTransform() * world_trans * _transform;
+	{
+		wt = _parent->getWorldTransform();
+		wt.invert();
+	}
+	return reference->getWorldTransform() * wt * _transform;
 }
 
 void 
 vl::SceneNode::setWorldTransform(vl::Transform const &trans)
 {
-	vl::Transform world_trans;
+	vl::Transform wt;
 	if(_parent)
-	{ world_trans = _parent->getWorldTransform(); }
-	world_trans.invert();
-	setTransform(world_trans*trans);
+	{
+		wt = _parent->getWorldTransform();
+		wt.invert();
+	}
+
+	setTransform(wt*trans);
 }
 
 vl::Transform 

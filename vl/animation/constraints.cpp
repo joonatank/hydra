@@ -14,6 +14,10 @@
 
 #include "base/exceptions.hpp"
 
+#include "kinematic_body.hpp"
+
+#include "logger.hpp"
+
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Constraint const &c)
 {
@@ -26,16 +30,60 @@ vl::operator<<(std::ostream &os, vl::Constraint const &c)
 	return os;
 }
 
+std::ostream &
+vl::operator<<(std::ostream &os, vl::HingeConstraint const &c)
+{
+	os << "HingeConstraint with bodies : " << c.getBodyA()->getName() << " and " 
+		<< c.getBodyB()->getName() << "\n"
+		<< "   Transformation = " << c._getLink()->getTransform() << "\n"
+		<< "   Initial transformation = " << c._getLink()->getInitialTransform() << "\n";
+	if(c.isActuator())
+	{
+		os << "   target : = " << c.getActuatorTarget() << " lower limit = " 
+			<< c.getLowerLimit() << " upper limit = " << c.getUpperLimit()
+			<< " speed = " << c.getActuatorSpeed();
+	}
+	else
+	{ os << "   Not an actuator."; }
+	os << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::SliderConstraint const &c)
+{
+	os << "SliderConstraint with bodies : " << c.getBodyA()->getName() << " and " 
+		<< c.getBodyB()->getName() << "\n"
+		<< "   Transformation = " << c._getLink()->getTransform() << "\n"
+		<< "   Initial transformation = " << c._getLink()->getInitialTransform() << "\n";
+	if(c.isActuator())
+	{
+		os << "   target : = " << c.getActuatorTarget() << " lower limit = " 
+			<< c.getLowerLimit() << " upper limit = " << c.getUpperLimit()
+			<< " speed = " << c.getActuatorSpeed();
+	}
+	else
+	{ os << "   Not an actuator."; }
+	os << std::endl;
+
+	return os;
+}
+
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------
 
 /// ------------------------------ Protected ---------------------------------
-vl::Constraint::Constraint(SceneNodePtr rbA, SceneNodePtr rbB, vl::Transform const &worldFrame)
+vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame)
 	: _bodyA(rbA)
 	, _bodyB(rbB)
 {
 	if(!_bodyA || !_bodyB)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing a body.")); }
+	{
+		std::string err_msg("Missing a body.");
+		std::cout << vl::CRITICAL << err_msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
+	}
 
 	vl::Transform wtA(_bodyA->getWorldTransform());
 	wtA.invert();
@@ -51,29 +99,22 @@ void
 vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 {
 	if(!link)
-	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+	{
+		std::string err_msg("Trying to set NULL link.");
+		std::cout << vl::CRITICAL << err_msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc(err_msg));
+	}
 	if(_link)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting a Link is not supported.")); }
+	{
+		std::string err_msg("Resetting a Link is not supported.");
+		std::cout << vl::CRITICAL << err_msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg)); 
+	}
 
 	_link = link;
 
-	// Shouldn't change parent's transformation
-	// This problem only arises because there is a problem when setting
-	// the transformation of bodyB
-	if( !_link->getParent()->getWorldTransform().isIdentity() &&
-		_link->getParent()->getWorldTransform() != _bodyA->getWorldTransform() )
-	{}
-	else
-	{
-		_link->getParent()->setWorldTransform(_bodyA->getWorldTransform());
-	}
-	
-	// needs to be set before child to get the correct local matrix for child
-	_link->setTransform(_current_local_frame_b);
+	_link->setTransform(_current_local_frame_b, true);
 	_link->setInitialState();
-
-	Transform wt(_bodyB->getWorldTransform());
-	_link->getChild()->setWorldTransform(wt);
 }
 
 /// ------------------------------ FixedConstraint ---------------------------
@@ -88,7 +129,7 @@ vl::FixedConstraint::_proggress(vl::time const &t)
 }
 
 /// ------------------------------ Private -----------------------------------
-vl::FixedConstraint::FixedConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
+vl::FixedConstraint::FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
 	: Constraint(rbA, rbB, worldFrame)
 {}
 
@@ -250,7 +291,7 @@ vl::SliderConstraint::getPosition(void) const
 
 void
 vl::SliderConstraint::_proggress(vl::time const &t)
-{	
+{
 	if(!_link)
 	{ return; }
 
@@ -308,7 +349,7 @@ vl::SliderConstraint::_proggress(vl::time const &t)
 }
 
 /// ------------------------------ Private -----------------------------------
-vl::SliderConstraint::SliderConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
+vl::SliderConstraint::SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
 	: Constraint(rbA, rbB, worldFrame)
 	, _lower_limit(0)
 	, _upper_limit(0)
@@ -439,7 +480,7 @@ vl::HingeConstraint::_proggress(vl::time const &t)
 }
 
 /// ------------------------------ Private -----------------------------------
-vl::HingeConstraint::HingeConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
+vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
 	: Constraint(rbA, rbB, worldFrame)
 	, _lower_limit()
 	, _upper_limit()

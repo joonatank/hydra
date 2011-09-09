@@ -13,7 +13,9 @@
 // Necessary for SceneNode actions
 #include "scene_node.hpp"
 // Necessary for constraint actions
-#include "constraints.hpp"
+#include "animation/constraints.hpp"
+// Necessary for joystick handler
+#include "animation/constraints_handlers.hpp"
 
 // Necessary because referenced by the Actions
 #include "scene_manager.hpp"
@@ -27,8 +29,7 @@
 #include "input/joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 #include "input/game_joystick.hpp"
-// Necessary for joystick handler
-#include "constraints_handlers.hpp"
+
 
 #include "vrpn_analog_client.hpp"
 
