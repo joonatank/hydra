@@ -196,19 +196,10 @@ createFixedConstraint(raide, kiinnike1_slaite, raide.world_transformation)
 createFixedConstraint(raide, porakelkka, raide.world_transformation)
 createFixedConstraint(raide, porakanki, raide.world_transformation)
 
-# enable motors for cylinders
-#kaanto_joint.actuator = True
-#nosto_joint.actuator = True
 teleskooppi.actuator = True
 puomi_hinge.actuator = True
 motor_hinge.actuator = True
 pulttaus_hinge.actuator = True
-
-#kaanto_hinge.actuator = True
-#kaanto_hinge.speed = Radian(0.1)
-#kaanto_hinge.lower_limit = Radian(0.1)
-#kaanto_hinge.upper_limit = Radian(0)
-#kaanto_hinge.target = Radian(1)
 
 # Hide links
 game.scene.hideSceneNodes("nivel*")
@@ -237,7 +228,6 @@ joy_handler.velocity_multiplier = 0.4
 joy.add_handler(joy_handler)
 
 # Add tube simulation
-"""
 game.enablePhysics(True)
 # Tie the ends to SceneNodes
 tube_info = TubeConstructionInfo()
@@ -266,5 +256,4 @@ def setBodyTransform(t):
 	end_body.world_transform = t
 
 vaantomoottori.addListener(setBodyTransform)
-"""
 
