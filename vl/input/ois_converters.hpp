@@ -25,7 +25,6 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 	double x = ((double)evt.state.mAxes[2].abs) / OIS::JoyStick::MAX_AXIS;
 	double y = ((double)evt.state.mAxes[1].abs) / OIS::JoyStick::MAX_AXIS;
 	double z = ((double)evt.state.mAxes[0].abs) / OIS::JoyStick::MAX_AXIS;
-	std::clog << "converting ois axes : " << x << ", " << y << ", " << z << std::endl;
 
 	JoystickEvent e;
 	e.axis_x = x;

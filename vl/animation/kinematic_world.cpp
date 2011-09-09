@@ -211,8 +211,6 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 			}
 			else
 			{
-				std::clog << "Using the Link from child node : " 
-					<< constraint->getBodyB()->getName() << "." << std::endl;
 				link = child->getParent();
 			}
 		}
