@@ -62,7 +62,11 @@ struct ConstraintJoystickHandler : public JoystickHandler
 protected :
 	ConstraintJoystickHandler(void) {}
 
+	void _apply_event(JoystickEvent const &evt);
+
 	vl::scalar _velocity_multiplier;
+
+	JoystickEvent _last_event;
 
 	std::vector<AxisConstraintElem> _constraint_map;
 };
