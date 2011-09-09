@@ -34,6 +34,7 @@ vl::SerialJoystick::mainloop(void)
 	{ res = _read_data(evt); }
 
 	evt -= _zero;
+	evt.clip_zero(_zero_size);
 
 	// @todo should check that the data is valid new data
 	// old signal system

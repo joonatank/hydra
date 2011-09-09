@@ -23,12 +23,15 @@ void
 vl::GameJoystick::_update(vl::JoystickEvent const &evt)
 {
 	// @todo should check that the data is valid new data
-	// old signal system
-	_signal(evt);
+	JoystickEvent jevt(evt);
+
+	jevt.clip_zero(_zero_size);
+
+	_signal(jevt);
 
 	for(std::vector<JoystickHandlerRefPtr>::iterator iter = _handlers.begin();
 		iter != _handlers.end(); ++iter)
 	{
-		(*iter)->execute(evt);
+		(*iter)->execute(jevt);
 	}
 }

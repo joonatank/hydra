@@ -93,6 +93,16 @@ struct JoystickEvent
 		return *this;
 	}
 
+	void clip_zero(vl::scalar zero_size)
+	{
+		if(std::abs(axis_x) < zero_size)
+		{ axis_x = 0; }
+		if(std::abs(axis_y) < zero_size)
+		{ axis_y = 0; }
+		if(std::abs(axis_z) < zero_size)
+		{ axis_z = 0; }
+	}
+
 	vl::scalar axis_x;
 	vl::scalar axis_y;
 	vl::scalar axis_z;

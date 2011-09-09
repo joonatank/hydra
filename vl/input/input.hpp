@@ -40,12 +40,22 @@ public :
 		return 1;
 	}
 
+	/// @brief set what values are considered zero (percentage)
+	/// @param size what is still considered as zero, 1 would mean everything
+	void set_zero_size(vl::scalar size)
+	{ _zero_size = size; }
+
+	vl::scalar get_zero_size(void)
+	{ return _zero_size; }
+
 	void add_handler(JoystickHandlerRefPtr handler);
 
 protected :
 	std::vector<JoystickHandlerRefPtr> _handlers;
 
 	OnValueChanged _signal;
+
+	vl::scalar _zero_size;
 
 };	// class Joystick
 

@@ -216,6 +216,7 @@ game.scene.mapCollisionBarriers()
 # Falls back to game joysticks, if none exists the movements
 # are just disabled...
 joy = game.event_manager.getJoystick("COM5")
+joy.zero_size = 0.1
 
 # TODO check the mapping
 joy_handler = ConstraintJoystickHandler.create()
