@@ -330,6 +330,73 @@ vl::SceneNode::setScale(Ogre::Vector3 const &s)
 	}
 }
 
+void
+vl::SceneNode::lookAt(Ogre::Vector3 const &dir)
+{
+	Ogre::Quaternion q = vl::lookAt(dir, getDirection(), _transform.position);
+	rotate(q);
+}
+
+Ogre::Vector3
+vl::SceneNode::getDirection(void) const
+{
+	return _transform.quaternion * Ogre::Vector3::NEGATIVE_UNIT_Z;
+}
+
+void
+vl::SceneNode::setDirection(Ogre::Vector3 const &dir, Ogre::Vector3 const &localDirectionVector, Ogre::Vector3 const &upAxis, bool yawFixed)
+{
+	Ogre::Vector3 targetDir = dir.normalisedCopy();
+
+	Quaternion targetOrientation;
+    if(yawFixed)
+    {
+		// Calculate the quaternion for rotate local Z to target direction
+		Vector3 xVec = upAxis.crossProduct(targetDir);
+		xVec.normalise();
+		Vector3 yVec = targetDir.crossProduct(xVec);
+		yVec.normalise();
+		Quaternion unitZToTarget = Quaternion(xVec, yVec, targetDir);
+
+		if(localDirectionVector == Vector3::NEGATIVE_UNIT_Z)
+		{
+			// Special case for avoid calculate 180 degree turn
+			targetOrientation =
+				Quaternion(-unitZToTarget.y, -unitZToTarget.z, unitZToTarget.w, unitZToTarget.x);
+		}
+        else
+        {
+			// Calculate the quaternion for rotate local direction to target direction
+			Quaternion localToUnitZ = localDirectionVector.getRotationTo(Vector3::UNIT_Z);
+			targetOrientation = unitZToTarget * localToUnitZ;
+        }
+    }
+	else
+	{
+		Quaternion const &currentOrient = getWorldTransform().quaternion;
+
+		// Get current local direction relative to world space
+		Vector3 currentDir = currentOrient * localDirectionVector;
+
+		if ((currentDir+targetDir).squaredLength() < 0.00005f)
+		{
+			// Oops, a 180 degree turn (infinite possible rotation axes)
+			// Default to yaw i.e. use current UP
+			targetOrientation =
+				Quaternion(-currentOrient.y, -currentOrient.z, currentOrient.w, currentOrient.x);
+		}
+		else
+		{
+			// Derive shortest arc to new direction
+			Ogre::Quaternion rotQuat = currentDir.getRotationTo(targetDir);
+			targetOrientation = rotQuat * currentOrient;
+		}
+	}
+
+	setOrientation(targetOrientation);
+}
+
+
 void 
 vl::SceneNode::setVisible(bool visible)
 {

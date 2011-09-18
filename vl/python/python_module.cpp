@@ -52,6 +52,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setDirection_ovs, setDirection, 1, 4)
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(lookAt_ovs, lookAt, 3, 5)
 
 using namespace vl;
 
@@ -60,6 +63,7 @@ void export_math(void)
 {
 	python::class_<vl::Transform>("Transform", python::init<python::optional<Ogre::Vector3, Ogre::Quaternion> >() )
 		.def(python::init<Ogre::Quaternion, python::optional<Ogre::Vector3> >())
+		.def(python::init<vl::Transform>())
 		.def("isIdentity", &vl::Transform::isIdentity)
 		.def("setIdentity", &vl::Transform::setIdentity)
 		.def("isPositionZero", &vl::Transform::isPositionZero)
@@ -68,7 +72,9 @@ void export_math(void)
 		.def("setRotationIdentity", &vl::Transform::setRotationIdentity)
 		.def("invert", &vl::Transform::invert)
 		.def("inverted", &vl::Transform::inverted)
-
+		/// @todo these make links so if we store the value in one of these
+		/// it will be a reference so changing it will change
+		/// the transformation and vice versa
 		.def_readwrite("position", &vl::Transform::position)
 		.def_readwrite("quaternion", &vl::Transform::quaternion)
 		
@@ -87,6 +93,7 @@ void export_math(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::def("lookAt", vl::lookAt, lookAt_ovs());
 }
 
 void export_animation(void)
@@ -168,6 +175,7 @@ void export_scene_graph(void)
 
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
 		.def(python::init<std::string, python::optional<Ogre::ColourValue, Ogre::Real, Ogre::Real, Ogre::Real> >())
+		.def(python::init<vl::FogInfo>())
 		.add_property("mode", &vl::FogInfo::setMode, &vl::FogInfo::getMode)
 		.def_readwrite("colour", &vl::FogInfo::colour_diffuse)
 		.def_readwrite("density", &vl::FogInfo::exp_density)
@@ -177,6 +185,7 @@ void export_scene_graph(void)
 	;
 
 	python::class_<vl::SkyDomeInfo>("SkyDomeInfo", python::init< python::optional<std::string> >())
+		.def(python::init<vl::SkyDomeInfo>())
 		.def_readwrite("material_name", &vl::SkyDomeInfo::material_name)
 		.def_readwrite("curvature", &vl::SkyDomeInfo::curvature)
 		.def_readwrite("tiling", &vl::SkyDomeInfo::tiling)
@@ -192,6 +201,7 @@ void export_scene_graph(void)
 	void (vl::ShadowInfo::*setShadowTechnique_ov0)(std::string const &) = &vl::ShadowInfo::setShadowTechnique;
 
 	python::class_<vl::ShadowInfo>("ShadowInfo",  python::init< python::optional<std::string, Ogre::ColourValue, std::string> >())
+		.def(python::init<vl::ShadowInfo>())
 		.def("enable", &vl::ShadowInfo::enable)
 		.def("disable", &vl::ShadowInfo::disable)
 		.def("isEnabled", &vl::ShadowInfo::isEnabled)
@@ -285,6 +295,7 @@ void export_scene_graph(void)
 
 	python::class_<vl::LightAttenuation>("LightAttenuation", python::init<>() )
 		.def(python::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def(python::init<vl::LightAttenuation>())
 		.def_readwrite("range", &vl::LightAttenuation::range)
 		.def_readwrite("constant", &vl::LightAttenuation::constant)
 		.def_readwrite("linear", &vl::LightAttenuation::linear)
@@ -412,6 +423,9 @@ void export_scene_graph(void)
 		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
 		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
 		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
+		.add_property("direction", &vl::SceneNode::getDirection)
+		.def("set_direction", &vl::SceneNode::setDirection, setDirection_ovs())
+		.def("look_at", &vl::SceneNode::lookAt)
 		.def("hide", &vl::SceneNode::hide)
 		.def("isHidden", &vl::SceneNode::isHidden)
 		.def("show", &vl::SceneNode::show)

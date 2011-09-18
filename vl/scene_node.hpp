@@ -155,6 +155,16 @@ public :
 	Ogre::Vector3 const &getScale(void) const
 	{ return _scale; }
 
+
+	void lookAt(Ogre::Vector3 const &dir);
+
+	Ogre::Vector3 getDirection(void) const;
+
+	/// @todo move the yawFixed and upAxis to class variables
+	void setDirection(Ogre::Vector3 const &dir, 
+		Ogre::Vector3 const &localDirectionVector = Ogre::Vector3::NEGATIVE_UNIT_Z, 
+		Ogre::Vector3 const &upAxis = Ogre::Vector3::UNIT_Y, bool yawFixed = true);
+
 	/// Set the world size of the object
 	/// This is effectively equal to scale(desired_size/getSize)
 	/// @todo not implemented

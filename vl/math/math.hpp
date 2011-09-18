@@ -109,6 +109,19 @@ void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y
 void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 						Ogre::Radian const &rad_y, Ogre::Radian const &rad_z );
 
+/// @brief create a rotation that can be used to transform look to a point
+/// @param target what we want to look at
+/// @param current what are we looking at now
+/// @param eye where are we looking from
+/// @param up what our up vector is
+/// @return quaternion that can be used to rotate from current orientation to target
+/// @todo break this function to yaw fixed version that takes up axis as a param
+/// and free yaw that does not.
+Ogre::Quaternion
+lookAt(Ogre::Vector3 const &target, Ogre::Vector3 const &current, 
+	Ogre::Vector3 const &eye, Ogre::Vector3 const &up = Ogre::Vector3::UNIT_Y,
+	bool yawFixed = true);
+
 /// @brief calculate projetion matrix using VR parameters
 /// @param near_plane the near clipping plane distance
 /// @param far_plane the far clipping plane distance
