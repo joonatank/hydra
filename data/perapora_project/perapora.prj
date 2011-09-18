@@ -17,6 +17,7 @@ Joonatan Kuosa <joonatan.kuosa@tut.fi>
 	<scripts>
 		<!-- Global physics script defines some common functions -->
 		<file use="false">physics_script.py</file>
+		<file use="true">kinematics_script.py</file>
 		<!-- Project specific definitions -->
 		<file use="false">perapora_physics.py</file>
 		<file use="true">perapora_constraints.py</file>

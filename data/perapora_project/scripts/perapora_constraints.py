@@ -2,103 +2,6 @@
 
 import math
 
-# Create a translation joint between two bodies along z-axis
-# min and max defines the freedom of the joint in meters
-# Depending on wether the original coordinates have positive or negative
-# z forward, you need to use positive or negative velocity for driving
-# positive z forward positive velocity
-def createTranslationConstraint(sn0, sn1, transform, min, max) :
-	# SliderConstraint works on x-axis, so we rotate the reference
-	# z-axis to x-axis
-	trans = transform #*Transform(Quaternion(-0.7071, 0, 0, 0.7071))
-	#local0_trans = body0.transform_to_local(trans)
-	#local1_trans = body1.transform_to_local(trans)
-	body0 = game.kinematic_world.create_kinematic_body(sn0)
-	body1 = game.kinematic_world.create_kinematic_body(sn1)
-	constraint = game.kinematic_world.create_constraint('slider', body0, body1, trans)
-	constraint.lower_limit = min
-	constraint.upper_limit = max
-	return constraint
-
-# Define a hinge constraint using objects +y axis
-# +y because the objects were modeled in Blender with +z as the rotation axis
-# but the exporter flips y and z
-def createHingeConstraint(sn0, sn1, transform, min = Radian(), max = Radian()) :
-	trans = transform #*Transform(Quaternion(0.7071, 0.7071, 0, 0))
-	#local0_trans = body0.transform_to_local(trans)
-	#local1_trans = body1.transform_to_local(trans)
-	body0 = game.kinematic_world.create_kinematic_body(sn0)
-	body1 = game.kinematic_world.create_kinematic_body(sn1)
-	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, trans)
-	constraint.lower_limit = min
-	constraint.upper_limit = max
-	return constraint
-
-def createFixedConstraint(sn0, sn1, transform) :
-	trans = transform #*Transform(Quaternion(0.7071, 0.7071, 0, 0))
-	#local0_trans = body0.transform_to_local(trans)
-	#local1_trans = body1.transform_to_local(trans)
-	body0 = game.kinematic_world.create_kinematic_body(sn0)
-	body1 = game.kinematic_world.create_kinematic_body(sn1)
-	constraint = game.kinematic_world.create_constraint('fixed', body0, body1, trans)
-	return constraint
-
-class Cylinder:
-	def __init__(self, rod, piston, rod_fixing, piston_fixing):
-		self.rod= rod
-		self.piston = piston
-		self.rod_fixing = rod_fixing
-		self.piston_fixing = piston_fixing
-
-		rod_fixing_pos = rod_fixing.world_transformation.position
-		rod_pos = rod.world_transformation.position 
-		self.rod_position_diff = rod_fixing_pos - rod_pos
-
-		piston_fixing_pos = piston_fixing.world_transformation.position
-		piston_pos = piston.world_transformation.position
-		self.piston_position_diff = piston_fixing_pos - piston_pos 
-
-		print('piston position diff', self.piston_position_diff)
-		print('piston position diff local', piston.world_transformation.quaternion*self.piston_position_diff)
-
-		print('rod', self.rod)
-		print('piston', self.piston)
-	
-	# Callback from the object we should follow
-	# rod fixing point moved
-	def moved(self, trans):
-		# we no longer need trans but the callback is type safe
-		# so the parameter needs to be there
-		# we can just use the fixing points saved here
-		# as anyway we need to update both rod and piston here
-
-		# Set position first so the look at uses the correct position
-		# difference is in fixing points coordinates
-		t = self.rod_fixing.world_transformation
-		self.rod.position = t.position - t.quaternion*self.rod_position_diff
-
-		direction = self.rod_fixing.world_transformation.position - self.piston_fixing.world_transformation.position
-		self.rod.set_direction(direction, Vector3(0, -1, 0))
-
-		# Update piston
-		# Pistons position does not change
-		# yes it does we need to use the coordine frame from piston_fixing for it
-		#t = self.piston_fixing.world_transformation
-		piston_fixing_pos = self.piston_fixing.world_transformation.position
-		# TODO these set local frames even though the positions are in world
-		self.piston.set_direction(direction, Vector3(0, -1, 0))
-
-		# TODO
-		# This is incorrect for some reason
-		# For some reason the the new position is in incorrect coordinate system
-		q = self.piston.world_transformation.quaternion
-		#q = Quaternion(0.7071, 0.7071, 0, 0) * q
-		q = Quaternion(0.7071, 0, -0.7071, 0) * q
-		self.piston.position = piston_fixing_pos + q*self.piston_position_diff
-		#print('moving piston by : ', q*self.piston_position_diff)
-
-
-
 camera_name = "Camera"
 camera = game.scene.createSceneNode(camera_name)
 camera.position = Vector3(-0.77, 0, 4)
@@ -131,46 +34,71 @@ ground_node.attachObject(ground)
 ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
+# Some test code
+class copyOrientation:
+	def __init__(self, obj, orientation_diff):
+		self.obj = obj
+		self.diff = orientation_diff
+
+	def copy(self, t):
+		self.obj.orientation = t.quaternion*self.diff 
 
 # Create the kinematics
 kiinnityslevy= game.scene.getSceneNode("cb_kiinnityslevy")
-ristikpl_kaantosyl = game.scene.getSceneNode("cb_ristikpl_kaantosyl")
 nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
 
-nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
 kaantokappale = game.scene.getSceneNode("cb_kaantokappale")
-createHingeConstraint(kiinnityslevy, kaantokappale, nivel_klevy1.world_transformation)
 
-# Ulkoputki constraints:
-# Needs IK solver for adding more than one constraint
-# kaantokappale, nostosylinteri, kaantosylinteri and sisaputki
+# Nosto
 ulkoputki = game.scene.getSceneNode("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
 puomi_hinge = createHingeConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, Radian(-1), Radian(0))
 
 # Cylinder nosto
 nivel_nostosyl1 = game.scene.getSceneNode("nivel_nostosyl1_rotz")
+nivel_nostosyl2 = game.scene.getSceneNode("nivel_nostosyl2_rotz")
 createFixedConstraint(ulkoputki, nivel_nostosyl1, nivel_nostosyl1.world_transformation)
+createFixedConstraint(kaantokappale, nivel_nostosyl2, nivel_nostosyl2.world_transformation)
 
 # Not creating constraints but a Cylinder handler class
-nivel_nostosyl2 = game.scene.getSceneNode("nivel_nostosyl2_rotz")
 syl_nosto_varsi = game.scene.getSceneNode("cb_syl_nosto_varsi")
 syl_nosto_putki = game.scene.getSceneNode("cb_syl_nosto_putki")
 
 syl_nosto = Cylinder(syl_nosto_putki, syl_nosto_varsi, nivel_nostosyl1, nivel_nostosyl2)
-nivel_nostosyl1.addListener(syl_nosto.moved)
 
+# Kaanto
+nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
+transform = Transform(Quaternion(0.7071, 0, 0.7071, 0)) * nivel_klevy1.world_transformation
+kaanto_hinge = createHingeConstraint(kiinnityslevy, kaantokappale, transform, Radian(-1), Radian(1))
+createFixedConstraint(kaantokappale, nivel_klevy1, nivel_klevy1.world_transformation)
+
+ristikpl_kaantosyl = game.scene.getSceneNode("cb_ristikpl_kaantosyl")
+
+# Add copying of orientation from kaantokappale to ristikpl
+diff_q  = ristikpl_kaantosyl.world_transformation.quaternion * kaantokappale.world_transformation.quaternion
+# TODO these work on SceneNodes at the moment
+# they will not work anymore if we add a constraint there
+kaanto_copy_orient = copyOrientation(ristikpl_kaantosyl, diff_q)
+kaantokappale.addListener(kaanto_copy_orient.copy)
 
 # Cylinder kaanto
 nivel_kaantosyl1 = game.scene.getSceneNode("nivel_kaantosyl1_rotz")
+nivel_kaantosyl2 = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
 createFixedConstraint(ulkoputki, nivel_kaantosyl1, nivel_kaantosyl1.world_transformation)
+createFixedConstraint(kaantokappale, nivel_kaantosyl2, nivel_kaantosyl2.world_transformation)
 
 # Not creating constraints but a Cylinder handler class
 syl_kaanto_varsi = game.scene.getSceneNode("cb_syl_kaanto_varsi")
-nivel_kaantosyl2 = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
 syl_kaanto_putki = game.scene.getSceneNode("cb_syl_kaanto_putki")
 
+syl_kaanto = Cylinder(syl_kaanto_putki, syl_kaanto_varsi, nivel_kaantosyl1, nivel_kaantosyl2)
 
+# Create constraint for keeping the cylinder piston fixed
+# Adding this will screw up anything that uses SceneNodes
+# We need to move that code to use KinematicBodies instead
+#createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, nivel_kaantosyl2.world_transformation)
+
+# Zoom
 sisaputki = game.scene.getSceneNode("cb_sisaputki")
 nivel_telesk = game.scene.getSceneNode("nivel_telesk_trz")
 teleskooppi = createTranslationConstraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, 0., 1.05)
@@ -241,6 +169,7 @@ createFixedConstraint(raide, porakanki, raide.world_transformation)
 
 teleskooppi.actuator = True
 puomi_hinge.actuator = True
+kaanto_hinge.actuator = True
 motor_hinge.actuator = True
 pulttaus_hinge.actuator = True
 
@@ -264,6 +193,7 @@ joy.zero_size = 0.1
 # TODO check the mapping
 joy_handler = ConstraintJoystickHandler.create()
 joy_handler.set_axis_constraint(1, puomi_hinge)
+joy_handler.set_axis_constraint(0, kaanto_hinge)
 joy_handler.set_axis_constraint(1, 0, teleskooppi)
 joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
 joy_handler.set_axis_constraint(1, 1, motor_hinge)
