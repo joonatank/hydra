@@ -129,6 +129,8 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def("normalise", &Ogre::Quaternion::normalise)
 		.def("equals", &Ogre::Quaternion::equals)
 		.def("isNaN", &Ogre::Quaternion::isNaN)
+		.def("inverse", &Ogre::Quaternion::Inverse)
+		.def("unit_inverse", &Ogre::Quaternion::UnitInverse)
 		// Operators
 		.def(py::self + py::self)
 		.def(py::self - py::self)
