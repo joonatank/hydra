@@ -48,12 +48,10 @@ public :
 
 	virtual void addVelocity(vl::scalar velocity) = 0;
 
-	/// @internal
-	/// @brief progresses the constraint if it's used as an actuator
-	/// @param t time since last call, i.e. simulation time step
-	virtual void _proggress(vl::time const &t) = 0;
-
 	friend std::ostream &operator<<(std::ostream &, vl::Constraint const &c);
+
+	/// @internal
+	void _solve(vl::time const &t);
 
 	/// @internal
 	void _setLink(vl::animation::LinkRefPtr link);
@@ -61,6 +59,20 @@ public :
 	/// @internal
 	vl::animation::LinkRefPtr _getLink(void) const
 	{ return _link; }
+
+	/// Private virtuals
+private :
+	/// @internal
+	/// @brief progresses the constraint if it's used as an actuator
+	/// @param t time since last call, i.e. simulation time step
+	virtual void _progress(vl::time const &t) = 0;
+
+	/// @todo this is not used for anything as it does not work
+	/// as excepted.
+	/// Left because we don't have any other implementations planned
+	/// in the near future so this might be useful when such implementation
+	/// is going to be done.
+	void _solve_aux_parents(void);
 
 protected :
 	/// only child classes are allowed to use the constructor
@@ -90,15 +102,17 @@ public :
 
 	virtual void addVelocity(vl::scalar velocity) {}
 
-	/// @internal
-	void _proggress(vl::time const &t);
-
 	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, worldFrame));
 		return constraint;
 	}
+
+	/// Private virtual overrides
+private :
+	/// @internal
+	void _progress(vl::time const &t);
 
 private :
 	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
@@ -217,15 +231,17 @@ public :
 
 	vl::scalar getPosition(void) const;
 
-	/// @internal
-	void _proggress(vl::time const &t);
-
 	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, worldFrame));
 		return constraint;
 	}
+
+	/// Private virtual overrides
+private :
+	/// @internal
+	void _progress(vl::time const &t);
 
 private :
 	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
@@ -302,15 +318,17 @@ public :
 	Ogre::Radian const &getHingeAngle(void) const
 	{ return _angle; }
 
-	/// @internal
-	void _proggress(vl::time const &t);
-
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
 		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, worldFrame));
 		return constraint;
 	}
+
+	/// Private virtual overrides
+private :
+	/// @internal
+	void _progress(vl::time const &t);
 
 private :
 	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);

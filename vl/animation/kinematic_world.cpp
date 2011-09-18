@@ -178,9 +178,11 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	}
 	else
 	{
-		std::cout << vl::CRITICAL << "No Kinematic node \"" 
-			<< constraint->getBodyA()->getName() 
-			<< "\" exists : should never happen." << std::endl;
+		std::stringstream err_msg;
+		err_msg << "No Kinematic node \"" << constraint->getBodyA()->getName()
+			<< "\" exists : should never happen.";
+		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
 
 	iter = std::find(_bodies.begin(), _bodies.end(), constraint->getBodyB());
@@ -188,9 +190,11 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	{ child = (*iter)->getAnimationNode(); }
 	else
 	{
-		std::cout << vl::CRITICAL << "No Kinematic node \"" 
-			<< constraint->getBodyB()->getName() 
-			<< "\" exists : should never happen." << std::endl;
+		std::stringstream err_msg;
+		err_msg << "No Kinematic node \"" << constraint->getBodyB()->getName()
+			<< "\" exists : should never happen.";
+		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
 
 	animation::LinkRefPtr link;
@@ -206,7 +210,7 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 					<< " already has a parent and it's not root so the constraint to "
 					<< constraint->getBodyA()->getName() << " can't be added."
 					<< std::endl;
-				// @todo throw as long as this is not supported feature
+
 				return;
 			}
 			else
@@ -234,13 +238,6 @@ vl::KinematicWorld::_createNode(void)
 	animation::LinkRefPtr link(new animation::Link);
 	link->setParent(_graph->getRoot());
 	link->setChild(node);
-	// @todo do we need to add the constraint to the map?
-	// nope but we have a serious problem with doing the mapping using the new
-	// system as the Constraint Solver does not anymore have all the information
-	// to manage the map.
-	// The map needs to be instead in the KinematicsWorld, or we can use
-	// KinamaticsBodies for the mapping.
-	//_node_map[constraint->getBodyA()] = node;
 
 	return node;
 }
@@ -248,11 +245,14 @@ vl::KinematicWorld::_createNode(void)
 void
 vl::KinematicWorld::_progress_constraints(vl::time const &t)
 {
+	// First phase
 	/// Progress the constraints
 	for(ConstraintList::iterator iter = _constraints.begin();
 		iter != _constraints.end(); ++iter)
 	{ 
-		(*iter)->_proggress(t);
+		(*iter)->_solve(t);
 	}
-}
 
+	/// Second phase needs an IK solver using the Jacobian to progress
+	/// the constraints... not implemented yet.
+}

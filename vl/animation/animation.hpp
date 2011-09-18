@@ -41,9 +41,12 @@ typedef boost::weak_ptr<Graph> GraphWeakPtr;
 
 /// @class Node
 /// @brief A node in the animation graph
-class Node
+class Node : public boost::enable_shared_from_this<Node>
 {
 public :
+	typedef std::vector<LinkRefPtr> LinkList;
+	typedef std::vector<LinkWeakPtr> LinkWeakList;
+
 	/// @brief Constructor
 	Node(void);
 
@@ -91,10 +94,16 @@ public :
 
 	size_t length_to_root(void) const;
 
-	/// @internal
+	void addAuxilaryParent(LinkRefPtr link);
+
+	LinkList getAuxilaryParents(void) const;
+
 	/// @brief set the parent link
-	void _setParent(LinkRefPtr link);
+	void setParent(LinkRefPtr link);
 	
+	/// @internal
+	void _setParent(LinkRefPtr link);
+
 	/// @internal
 	/// @brief add a child link
 	void _addChild(LinkRefPtr link);
@@ -106,11 +115,13 @@ public :
 	bool _hasChild(LinkRefPtr link);
 
 private :
-	typedef std::vector<LinkRefPtr> LinkList;
 
 	LinkWeakPtr _parent;
 	LinkList _childs;
 	size_t _next_child;
+
+	// Does not own parents
+	LinkWeakList _aux_parents;
 
 	Transform _transform;
 	
@@ -136,7 +147,9 @@ public :
 
 	NodeRefPtr getChild(void) const;
 
-	void setChild(NodeRefPtr child);
+	/// @param child the child to set child of this Link
+	/// @param primary_parent if this link is the primary (or only) parent
+	void setChild(NodeRefPtr child, bool primary_parent = true);
 
 	/// @brief get the local transformation
 	/// @return Transformation of the Link in local coordinates
@@ -168,6 +181,12 @@ public :
 
 	/// @brief resets the link to initial state
 	void reset(void);
+
+	/// @internal
+	void _setParent(NodeRefPtr parent);
+
+	/// @internal
+	void _setChild(NodeRefPtr child);
 
 private :
 	NodeWeakPtr _parent;

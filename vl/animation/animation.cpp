@@ -146,6 +146,52 @@ vl::animation::Node::length_to_root(void) const
 }
 
 void
+vl::animation::Node::addAuxilaryParent(vl::animation::LinkRefPtr link)
+{
+	// Never add same link twice
+	for(std::vector<LinkWeakPtr>::iterator iter =_aux_parents.begin();
+		iter != _aux_parents.end(); ++iter)
+	{
+		// @todo remove expired
+		if(!iter->expired())
+		{
+			if(iter->lock() == link)
+			{ return; }
+		}
+	}
+
+	_aux_parents.push_back(link);
+}
+
+vl::animation::Node::LinkList
+vl::animation::Node::getAuxilaryParents(void) const
+{
+	// @todo should we store ref pointers still?
+	// this makes for a bit akward code and also probably inefficient.
+	vl::animation::Node::LinkList parents;
+	for(size_t i = 0; i < _aux_parents.size(); ++i)
+	{
+		// @todo should remove expired
+		if(!_aux_parents.at(i).expired())
+		{ parents.push_back(_aux_parents.at(i).lock()); }
+	}
+
+	return parents;
+}
+
+void
+vl::animation::Node::setParent(LinkRefPtr link)
+{
+	// Check that the link has our already
+	if(link)
+	{
+		link->_setChild(shared_from_this());
+	}
+
+	_setParent(link);
+}
+
+void
 vl::animation::Node::_setParent(LinkRefPtr link)
 {
 	// Keep the transformation
@@ -202,9 +248,6 @@ vl::animation::Link::getParent(void) const
 void
 vl::animation::Link::setParent(NodeRefPtr parent)
 {
-	// Keep the transformation
-	Transform wt(getWorldTransform());
-
 	if(!_parent.expired())
 	{
 		_parent.lock()->_removeChild(shared_from_this());
@@ -214,6 +257,15 @@ vl::animation::Link::setParent(NodeRefPtr parent)
 	{
 		parent->_addChild(shared_from_this());
 	}
+
+	_setParent(parent);
+}
+
+void
+vl::animation::Link::_setParent(NodeRefPtr parent)
+{
+	// Keep the transformation
+	Transform wt(getWorldTransform());
 
 	_parent = parent;
 
@@ -225,18 +277,19 @@ vl::animation::Link::getChild(void) const
 { return _child; }
 
 void
-vl::animation::Link::setChild(NodeRefPtr child)
+vl::animation::Link::setChild(NodeRefPtr child, bool primary_parent)
 {
-	if(_child)
+	if(child && primary_parent)
 	{
-		_child->_setParent(LinkRefPtr());
+		child->setParent(shared_from_this());
 	}
+	
+	_setChild(child);
+}
 
-	if(child)
-	{
-		child->_setParent(shared_from_this());
-	}
-
+void
+vl::animation::Link::_setChild(NodeRefPtr child)
+{
 	_child = child;
 }
 

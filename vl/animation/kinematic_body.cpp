@@ -85,10 +85,5 @@ vl::KinematicBody::_update(void)
 {
 	assert(_scene_node && _node);
 
-	if( _scene_node->getWorldTransform() != _node->getWorldTransform())
-	{
-//		std::clog << "Kinematic Body : " << getName() 
-//			<< " scene node and node have different transformations." << std::endl;
-	}
 	_scene_node->setWorldTransform(_node->getWorldTransform());
 }
