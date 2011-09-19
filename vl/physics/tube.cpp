@@ -25,6 +25,8 @@
 // Necessary for creating SceneNodes and retriving mesh manager
 #include "scene_manager.hpp"
 
+size_t vl::physics::Tube::n_tubes = 0;
+
 vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	: _start_body(info.start_body)
 	, _end_body(info.end_body)
@@ -35,10 +37,9 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _tube_radius(info.radius)
 	, _mass(info.mass)
 	, _world(world)
+	, _material_name(info.material_name)
 	, _mesh_created(false)
 {
-	std::clog << "vl::physics::Tube::Tube" << std::endl;
-
 	assert(_world);
 
 	/// @todo create the tube bodies using a user given length
@@ -56,7 +57,7 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		std::stringstream name;
-		name << "tube_element_" << i;
+		name << "tube_" << n_tubes << "_element_" << i;
 		// @todo fix the transformations for the bodies now they are on top of each other
 		// Motions state transformation is correct, tested without mass it creates a nice string
 		// to the world zero that goes upwards.
@@ -77,6 +78,8 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	/// Create the SceneNodes
 	assert(_start_body->getMotionState() && _start_body->getMotionState()->getNode());
 	_createMesh(_start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
+	
+	++n_tubes;
 }
 
 vl::physics::Tube::~Tube(void)
@@ -96,6 +99,35 @@ vl::physics::Tube::setDamping(vl::scalar damping)
 	// @todo needs to reconfigure the constraints
 	_damping = damping;
 }
+
+void
+vl::physics::Tube::setMaterial(std::string const &material)
+{
+	_material_name = material;
+}
+
+void
+vl::physics::Tube::hide(void)
+{
+	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+	{
+		MotionState *ms = (*iter)->getMotionState();
+		assert(ms->getNode());
+		ms->getNode()->hide();
+	}
+}
+
+void
+vl::physics::Tube::show(void)
+{
+	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+	{
+		MotionState *ms = (*iter)->getMotionState();
+		assert(ms->getNode());
+		ms->getNode()->show();
+	}
+}
+
 
 /// ---------------------------------- Private -------------------------------
 void
@@ -145,8 +177,8 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 		/// @todo set limits
 		spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
 		spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
-		spring->setAngularLowerLimit(Ogre::Vector3(0, 0, 0));
-		spring->setAngularUpperLimit(Ogre::Vector3(0, 0, 0));
+		//spring->setAngularLowerLimit(Ogre::Vector3(0, 0, 0));
+		//spring->setAngularUpperLimit(Ogre::Vector3(0, 0, 0));
 
 		/// @todo enable spring damper
 		/// @todo set stiffness and damping
@@ -164,8 +196,6 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 void
 vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 {
-	std::clog << "vl::physics::Tube::_createMesh" << std::endl;
-
 	if(_mesh_created)
 	{ return; }
 
@@ -175,8 +205,9 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	/// bones and a generated tube mesh.
 	
 	// Create the box element reused for all the bodies
-	std::string const mesh_name("tube_element");
-	mesh_manager->createCube(mesh_name, Ogre::Vector3(_tube_radius*2, _tube_radius*2, _length/_bodies.size()));
+	std::stringstream mesh_name;
+	mesh_name << "tube_" << n_tubes << "_element";
+	mesh_manager->createCube(mesh_name.str(), Ogre::Vector3(_tube_radius*2, _tube_radius*2, _length/_bodies.size()));
 
 	SceneNodePtr parent_node = _start_body->getMotionState()->getNode();
 	assert(parent_node);
@@ -190,12 +221,13 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	{
 		/// Create the SceneNode and Entity
 		std::stringstream name;
-		name << mesh_name << "_" << index;
+		name << mesh_name.str() << "_" << index;
 		MotionState *ms = (*iter)->getMotionState();
 		assert(!ms->getNode());
 		SceneNodePtr node = parent_node->createChildSceneNode(name.str());
 		ms->setNode(node);
-		EntityPtr ent = sm->createEntity(name.str(), mesh_name, true);
+		EntityPtr ent = sm->createEntity(name.str(), mesh_name.str(), true);
+		ent->setMaterialName(_material_name);
 		node->attachObject(ent);
 
 		++index;

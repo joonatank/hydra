@@ -180,6 +180,7 @@ void export_physics_objects(void)
 		.def_readwrite("stiffness", &vl::physics::Tube::ConstructionInfo::stiffness)
 		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
 		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
+		.def_readwrite("material_name", &vl::physics::Tube::ConstructionInfo::material_name)
 	;
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
@@ -188,6 +189,8 @@ void export_physics_objects(void)
 		.add_property("radius", &vl::physics::Tube::getRadius)
 		.add_property("leght", &vl::physics::Tube::getLength)
 		.add_property("mass", &vl::physics::Tube::getMass)
+		.def("hide", &vl::physics::Tube::hide)
+		.def("show", &vl::physics::Tube::show)
 	;
 }
 

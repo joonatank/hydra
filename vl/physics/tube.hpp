@@ -55,6 +55,12 @@ public :
 		vl::scalar stiffness;
 		vl::scalar damping;
 		vl::scalar element_size;
+
+		std::string material_name;
+
+		// Angular limits
+		Ogre::Vector3 lower_lim;
+		Ogre::Vector3 upper_lim;
 	};
 
 	/**	@brief Constructor
@@ -99,7 +105,19 @@ public :
 	vl::scalar getMass(void) const
 	{ return _mass; }
 
+	std::string const &getMaterial(void) const
+	{ return _material_name; }
+
+	/// @todo does not work yet as it does not update the entities.
+	void setMaterial(std::string const &material);
+
+	void hide(void);
+
+	void show(void);
+
 private :
+	static size_t n_tubes;
+
 	void _createConstraints(vl::Transform const &start_frame, vl::Transform const &end_frame, vl::scalar elem_length);
 
 	/// Helper methods for Graphics engine so we don't need to pass 
@@ -122,6 +140,8 @@ private :
 	vl::scalar _element_size;
 	vl::scalar _tube_radius;
 	vl::scalar _mass;
+
+	std::string _material_name;
 
 	WorldPtr _world;
 
