@@ -28,8 +28,8 @@ def createHingeConstraint(sn0, sn1, transform, min = Radian(), max = Radian()) :
 	body0 = game.kinematic_world.create_kinematic_body(sn0)
 	body1 = game.kinematic_world.create_kinematic_body(sn1)
 	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, transform)
-	constraint.lower_limit = min
-	constraint.upper_limit = max
+	constraint.lower_limit = Radian(min)
+	constraint.upper_limit = Radian(max)
 	return constraint
 
 def createFixedConstraint(sn0, sn1, transform) :
@@ -44,21 +44,23 @@ class Cylinder:
 		self.piston = piston
 		self.rod_fixing = rod_fixing
 		self.piston_fixing = piston_fixing
+		self.up_axis = Vector3(1, 0, 0)
+		self.local_dir = Vector3(0, -1, 0)
 
+		# Rod is a "parent" of rod fixing so the difference needs to be
+		# in the rod fixings coordinate frame
 		rod_fixing_pos = rod_fixing.world_transformation.position
 		rod_pos = rod.world_transformation.position 
-		self.rod_position_diff = rod_fixing_pos - rod_pos
+		q = self.rod_fixing.world_transformation.quaternion.inverse()
+		self.rod_position_diff = q*(rod_fixing_pos - rod_pos)
 
+		# Piston is "child" of the piston fixing so the difference needs to be
+		# in its coordinate frame.
 		piston_fixing_pos = piston_fixing.world_transformation.position
 		piston_pos = piston.world_transformation.position
-		self.piston_position_diff = piston_fixing_pos - piston_pos 
-
-		print('piston position diff', self.piston_position_diff)
-		print('piston position diff local', piston.world_transformation.quaternion*self.piston_position_diff)
-
-		print('rod', self.rod)
-		print('piston', self.piston)
-
+		q = self.piston.world_transformation.quaternion.inverse()
+		self.piston_position_diff = q*(piston_fixing_pos - piston_pos)
+		
 		rod_fixing.addListener(self.moved)
 	
 	# Callback from the object we should follow
@@ -69,23 +71,27 @@ class Cylinder:
 		# we can just use the fixing points saved here
 		# as anyway we need to update both rod and piston here
 
+		# First update the direction because we need to modify
+		# the world transformation for the position.
+		direction = self.rod_fixing.world_transformation.position - self.piston_fixing.world_transformation.position
+		self.rod.set_direction(direction, self.local_dir, self.up_axis)
 		# Set position first so the look at uses the correct position
 		# difference is in fixing points coordinates
 		t = self.rod_fixing.world_transformation
-		self.rod.position = t.position - t.quaternion*self.rod_position_diff
-
-		direction = self.rod_fixing.world_transformation.position - self.piston_fixing.world_transformation.position
-		self.rod.set_direction(direction, Vector3(0, -1, 0))
+		wt = Transform(self.rod.world_transformation)
+		q = self.rod_fixing.world_transformation.quaternion
+		wt.position = t.position - q*self.rod_position_diff
+		self.rod.world_transformation = wt
 
 		# Update piston
 		# Pistons position does not change
 		# yes it does we need to use the coordine frame from piston_fixing for it
-		#t = self.piston_fixing.world_transformation
-		piston_fixing_pos = self.piston_fixing.world_transformation.position
-		# TODO these set local frames even though the positions are in world
-		self.piston.set_direction(direction, Vector3(0, -1, 0))
+		self.piston.set_direction(direction, self.local_dir, self.up_axis)
 
-		# FIXME There is a small offset with this
-		self.piston.position = piston_fixing_pos - t.quaternion*self.piston_position_diff
+		piston_fixing_pos = self.piston_fixing.world_transformation.position
+		wt = Transform(self.piston.world_transformation)
+		q = Quaternion(wt.quaternion)
+		wt.position = piston_fixing_pos - q*self.piston_position_diff
+		self.piston.world_transformation = wt
 
 
