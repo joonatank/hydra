@@ -60,7 +60,6 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn)
 vl::KinematicBodyRefPtr
 vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 {
-	// @todo should check no other body for the node exists
 	KinematicBodyRefPtr body = getKinematicBody(sn);
 	if(!body)
 	{

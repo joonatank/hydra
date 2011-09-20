@@ -88,14 +88,10 @@ vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl:
 	vl::Transform wtA(_bodyA->getWorldTransform());
 	wtA.invert();
 
-	vl::Transform wtB(_bodyB->getWorldTransform());
-	wtB.invert();
-
-	_current_local_frame_a = wtA*worldFrame;
-	_current_local_frame_b = wtB*worldFrame;
+	_local_frame_a = wtA*worldFrame;
 }
 
-void 
+void
 vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 {
 	if(!link)
@@ -113,8 +109,9 @@ vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 
 	_link = link;
 
-	_link->setTransform(_current_local_frame_b, true);
+	_link->setTransform(_local_frame_a, true);
 	_link->setInitialState();
+	_local_frame_b = _link->getChild()->getTransform();
 }
 
 void
@@ -525,9 +522,13 @@ vl::HingeConstraint::_progress(vl::time const &t)
 		// Basic matrix formulae is inv(Tp)*R*Tp
 		// where Tp is the translation matrix (for the axis) and R is the rotation matrix.
 		Ogre::Vector3 axis = _link->getInitialTransform().quaternion * _axisInA;
-		vl::Transform rot = vl::Transform(Ogre::Quaternion(_angle, axis));
+		Quaternion rot = Ogre::Quaternion(_angle, axis);
+		
+		// test code inefficent
+		// if it does work we should use the model matrix and do an inverse rotation to position
+		Vector3 child_pos = _link->getChild()->getWorldTransform().position;
 
-		_link->setTransform(rot*_link->getInitialTransform());
+		_link->setOrientation(rot);
 	}
 }
 

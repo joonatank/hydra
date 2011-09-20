@@ -53,6 +53,7 @@ kaantokappale = game.scene.getSceneNode("cb_kaantokappale")
 ulkoputki = game.scene.getSceneNode("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
 puomi_hinge = createHingeConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, Radian(-1), Radian(0))
+puomi_hinge.axis = Vector3(0, 1, 0)
 
 # Cylinder nosto
 nivel_nostosyl1 = game.scene.getSceneNode("nivel_nostosyl1_rotz")
@@ -65,11 +66,14 @@ syl_nosto_varsi = game.scene.getSceneNode("cb_syl_nosto_varsi")
 syl_nosto_putki = game.scene.getSceneNode("cb_syl_nosto_putki")
 
 syl_nosto = Cylinder(syl_nosto_putki, syl_nosto_varsi, nivel_nostosyl1, nivel_nostosyl2)
+syl_nosto.up_axis = Vector3(0, 1, 0)
 
 # Kaanto
 nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
-transform = Transform(Quaternion(0.7071, 0, 0.7071, 0)) * nivel_klevy1.world_transformation
-kaanto_hinge = createHingeConstraint(kiinnityslevy, kaantokappale, transform, Radian(-1), Radian(1))
+#transform = Transform(Quaternion(0.7071, 0, 0.7071, 0)) * 
+kaanto_hinge = createHingeConstraint(kiinnityslevy, kaantokappale, nivel_klevy1.world_transformation, Radian(-1), Radian(1))
+kaanto_hinge.axis = Vector3(0, 1, 0)
+
 createFixedConstraint(kaantokappale, nivel_klevy1, nivel_klevy1.world_transformation)
 
 ristikpl_kaantosyl = game.scene.getSceneNode("cb_ristikpl_kaantosyl")
@@ -92,6 +96,7 @@ syl_kaanto_varsi = game.scene.getSceneNode("cb_syl_kaanto_varsi")
 syl_kaanto_putki = game.scene.getSceneNode("cb_syl_kaanto_putki")
 
 syl_kaanto = Cylinder(syl_kaanto_putki, syl_kaanto_varsi, nivel_kaantosyl1, nivel_kaantosyl2)
+syl_kaanto.up_axis = Vector3(0, 1, 0)
 
 # Create constraint for keeping the cylinder piston fixed
 # Adding this will screw up anything that uses SceneNodes

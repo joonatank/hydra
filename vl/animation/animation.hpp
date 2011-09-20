@@ -170,6 +170,10 @@ public :
 	/// @param t a new Transformation for the Link in world coordinates
 	void setWorldTransform(Transform const &t);
 
+	/// @brief set the current orientation relative to the initial transformation
+	/// preseres childs translation and only affects it's orientation
+	void setOrientation(Quaternion const &);
+
 	/// @brief get the initial state transformation
 	/// Purposefully non-const method is not provided as the initial state 
 	/// should be set and not modified independently.

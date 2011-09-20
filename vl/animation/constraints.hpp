@@ -82,8 +82,8 @@ protected :
 	KinematicBodyRefPtr _bodyB;
 
 	/// Current frames in object coordinates
-	vl::Transform _current_local_frame_a;
-	vl::Transform _current_local_frame_b;
+	vl::Transform _local_frame_a;
+	vl::Transform _local_frame_b;
 
 	vl::animation::LinkRefPtr _link;
 

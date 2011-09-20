@@ -339,6 +339,16 @@ vl::animation::Link::setWorldTransform(Transform const &t)
 	_transform = wt*t;
 }
 
+void
+vl::animation::Link::setOrientation(Quaternion const &q)
+{
+	/// this messes up the axis of rotation, but that's easy to fix
+	/// per constraint using python.
+	/// preserves the translation correctly and center of orientation.
+	_transform.quaternion = q*_initial_transform.quaternion;
+	_transform.position = _initial_transform.position;
+}
+
 void 
 vl::animation::Link::setInitialState(void)
 {
