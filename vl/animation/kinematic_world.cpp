@@ -45,9 +45,25 @@ vl::KinematicWorld::step(vl::time const &t)
 }
 
 vl::KinematicBodyRefPtr
-vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn)
+vl::KinematicWorld::getKinematicBody(std::string const &name) const
 {
-	for(KinematicBodyList::iterator iter = _bodies.begin();
+	for(KinematicBodyList::const_iterator iter = _bodies.begin();
+		iter != _bodies.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{ return *iter; }
+	}
+
+	return KinematicBodyRefPtr();
+}
+
+vl::KinematicBodyRefPtr
+vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn) const
+{
+	if(!sn)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
+	for(KinematicBodyList::const_iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter)
 	{
 		if((*iter)->getSceneNode() == sn)
@@ -60,6 +76,9 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn)
 vl::KinematicBodyRefPtr
 vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 {
+	if(!sn)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
 	KinematicBodyRefPtr body = getKinematicBody(sn);
 	if(!body)
 	{

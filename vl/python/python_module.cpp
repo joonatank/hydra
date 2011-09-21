@@ -98,10 +98,44 @@ void export_math(void)
 
 void export_animation(void)
 {
+	void (vl::KinematicBody::*translate_ov0)(Ogre::Vector3 const &) = &vl::KinematicBody::translate;
+	void (vl::KinematicBody::*translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::KinematicBody::translate;
+//	void (vl::KinematicBody::*translate_ov2)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::KinematicBody::translate;
+//	void (vl::KinematicBody::*translate_ov3)(Ogre::Vector3 const &, TransformSpace) = &vl::KinematicBody::translate;
+	
+	void (vl::KinematicBody::*rotate_ov0)(Ogre::Quaternion const &) = &vl::KinematicBody::rotate;
+//	void (vl::KinematicBody::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::KinematicBody::rotate;
+//	void (vl::KinematicBody::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::KinematicBody::rotate;
+	/*
+	void (vl::KinematicBody::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::KinematicBody::rotate;
+	void (vl::KinematicBody::*rotate_ov4)(Ogre::Vector3 const &, Ogre::Radian const &) = &vl::KinematicBody::rotate;
+	void (vl::KinematicBody::*rotate_ov5)(Ogre::Degree const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
+	void (vl::KinematicBody::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
+	*/
+	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov0)() const = &vl::KinematicBody::clone;
+	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov1)(std::string const &) const = &vl::KinematicBody::clone;
+
+	/// @todo most of this should be moved to abstract interface
 	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable>("KinematicBody", python::no_init)
 		.add_property("scene_node", python::make_function(&vl::KinematicBody::getSceneNode, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("name", python::make_function(&vl::KinematicBody::getName, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("world_transformation", &vl::KinematicBody::getWorldTransform, &vl::KinematicBody::setWorldTransform)
+		.def("transform", &vl::KinematicBody::transform)
+		.def("translate", translate_ov0)
+		.def("translate", translate_ov1)
+		//.def("translate", translate_ov2)
+		//.def("translate", translate_ov3)
+		.def("rotate", rotate_ov0)
+		/*
+		.def("rotate", rotate_ov1)
+		.def("rotate", rotate_ov2)
+		.def("rotate", rotate_ov3)
+		.def("rotate", rotate_ov4)
+		.def("rotate", rotate_ov5)
+		.def("rotate", rotate_ov6)
+		*/
+		.def("clone", kb_clone_ov0)
+		.def("clone", kb_clone_ov1)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -110,10 +144,14 @@ void export_animation(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov0)(std::string const &) const = &vl::KinematicWorld::getKinematicBody;
+	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov1)(vl::SceneNodePtr) const = &vl::KinematicWorld::getKinematicBody;
+
 	/// @todo add list getters
 	// bodies not yet working as we would like, probably something to do with ref ptrs
 	python::class_<vl::KinematicWorld, vl::KinematicWorldRefPtr, boost::noncopyable>("KinematicWorld", python::no_init)
-		.def("get_kinematic_body", &vl::KinematicWorld::getKinematicBody)
+		.def("get_kinematic_body", getKinematicBody_ov0)
+		.def("get_kinematic_body", getKinematicBody_ov1)
 		.def("create_kinematic_body", &vl::KinematicWorld::createKinematicBody)
 		.def("remove_kinematic_body", &vl::KinematicWorld::removeKinematicBody)
 		.def("create_constraint", &vl::KinematicWorld::createConstraint)

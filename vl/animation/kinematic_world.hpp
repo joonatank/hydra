@@ -34,10 +34,12 @@ public :
 
 	void step(vl::time const &t);
 
+	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
+
 	/// @brief retrieve already created by for the SceneNode
 	/// @param sn the scene node which the body controls
 	/// @return valid body if one already exists, None if not
-	KinematicBodyRefPtr getKinematicBody(vl::SceneNodePtr sn);
+	KinematicBodyRefPtr getKinematicBody(vl::SceneNodePtr sn) const;
 
 	/// @brief retrieve already existing body for the SceneNode or create a new
 	/// @param sn the scene node which this body controls

@@ -36,12 +36,29 @@ public :
 
 	virtual std::string const &getName(void) const;
 
+	void translate(Ogre::Vector3 const &);
+
+	void translate(Ogre::Real x, Ogre::Real y, Ogre::Real z)
+	{ translate(Vector3(x, y, z)); }
+
+	void rotate(Ogre::Quaternion const &);
+
+	void transform(vl::Transform const &t);
+
 	virtual void setWorldTransform(vl::Transform const &trans);
 
 	virtual vl::Transform getWorldTransform(void) const;
 
 	SceneNodePtr getSceneNode(void) const
 	{ return _scene_node; }
+
+	/// @todo not implemented
+	vl::KinematicBodyRefPtr clone(void) const
+	{ return KinematicBodyRefPtr(); }
+
+	/// @todo not implemented
+	vl::KinematicBodyRefPtr clone(std::string const &) const
+	{ return KinematicBodyRefPtr(); }
 
 	// @todo do we need this?
 	// or can we use animation::Link for all purposes necessary?

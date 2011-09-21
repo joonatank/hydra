@@ -65,6 +65,26 @@ vl::KinematicBody::getName(void) const
 }
 
 void
+vl::KinematicBody::translate(Ogre::Vector3 const &v)
+{
+	Transform t(v);
+	transform(t);
+}
+
+void
+vl::KinematicBody::rotate(Ogre::Quaternion const &q)
+{
+	Transform t(q);
+	transform(t);
+}
+
+void
+vl::KinematicBody::transform(vl::Transform const &t)
+{
+	_node->setTransform(_node->getTransform()*t);
+}
+
+void
 vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 {
 	std::clog << "vl::KinematicBody::setWorldTransform" << std::endl;
