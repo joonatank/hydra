@@ -74,6 +74,14 @@ vl::Player::getActiveCamera(void) const
 	return _active_camera->getName();
 }
 
+vl::SceneNodePtr
+vl::Player::getCameraNode(void) const
+{
+	if(_active_camera)
+	{ return _active_camera->getParent(); }
+}
+
+
 void
 vl::Player::setHeadTransform(vl::Transform const &t)
 {

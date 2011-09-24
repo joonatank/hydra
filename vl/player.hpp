@@ -52,6 +52,8 @@ public :
 	CameraPtr getCamera(void) const
 	{ return _active_camera; }
 
+	SceneNodePtr getCameraNode(void) const;
+
 	vl::Transform const &getHeadTransform(void) const
 	{ return _head_transform; }
 

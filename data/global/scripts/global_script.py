@@ -158,14 +158,22 @@ class RigidBodyController(Controller):
 		bodies = [self.body]
 		self.transform(bodies, t)
 
+class ActiveCameraController(Controller):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None):
+		Controller.__init__(self, speed, angular_speed, reference)
+
+	def progress(self, t):
+		nodes = [game.player.camera_node]
+		self.transform(nodes, t)
+
 # New system using classes and signal callbacks
 # TODO add a separate controller for joystick values
 # selectable using a flag for example
-def createCameraMovements(node, speed = 5, angular_speed = Degree(90)) :
+def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
 	# TODO stupid string casting, can we somehow remove it?
-	print( 'Creating Translation event on ' + str(node) )
+	print( 'Creating Move Active camera event.')
 
-	camera_movements = ObjectController(node, speed, angular_speed)
+	camera_movements = ActiveCameraController(speed, angular_speed)
 
 	trigger = game.event_manager.createKeyTrigger(KC.D)
 	trigger.addKeyDownListener(camera_movements.right)
