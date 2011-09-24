@@ -46,6 +46,8 @@ class Cylinder:
 		self.piston_fixing = piston_fixing
 		self.up_axis = Vector3(1, 0, 0)
 		self.local_dir = Vector3(0, -1, 0)
+		self.piston_up_axis = self.up_axis
+		self.piston_rotation = Quaternion(1, 0, 0, 0)
 
 		# Rod is a "parent" of rod fixing so the difference needs to be
 		# in the rod fixings coordinate frame
@@ -86,12 +88,13 @@ class Cylinder:
 		# Update piston
 		# Pistons position does not change
 		# yes it does we need to use the coordine frame from piston_fixing for it
-		self.piston.set_direction(direction, self.local_dir, self.up_axis)
+		local_dir = self.local_dir
+		self.piston.set_direction(direction, local_dir, self.piston_up_axis)
 
-		piston_fixing_pos = self.piston_fixing.world_transformation.position
+		wt_fixing = Transform(self.piston_fixing.world_transformation)
 		wt = Transform(self.piston.world_transformation)
-		q = Quaternion(wt.quaternion)
-		wt.position = piston_fixing_pos - q*self.piston_position_diff
+		q = wt.quaternion
+		wt.position = wt_fixing.position - q*self.piston_position_diff
 		self.piston.world_transformation = wt
-
+		self.piston.rotate(self.piston_rotation)
 
