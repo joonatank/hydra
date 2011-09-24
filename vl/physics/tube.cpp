@@ -36,6 +36,8 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _element_size(info.element_size)
 	, _tube_radius(info.radius)
 	, _mass(info.mass)
+	, _lower_lim(info.lower_lim)
+	, _upper_lim(info.upper_lim)
 	, _world(world)
 	, _material_name(info.material_name)
 	, _mesh_created(false)
@@ -89,6 +91,8 @@ vl::physics::Tube::~Tube(void)
 void
 vl::physics::Tube::setStiffness(vl::scalar stiffness)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
 	// @todo needs to reconfigure the constraints
 	_stiffness = stiffness;
 }
@@ -96,6 +100,8 @@ vl::physics::Tube::setStiffness(vl::scalar stiffness)
 void
 vl::physics::Tube::setDamping(vl::scalar damping)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
 	// @todo needs to reconfigure the constraints
 	_damping = damping;
 }
@@ -103,7 +109,25 @@ vl::physics::Tube::setDamping(vl::scalar damping)
 void
 vl::physics::Tube::setMaterial(std::string const &material)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
 	_material_name = material;
+}
+
+void
+vl::physics::Tube::setLowerLim(Ogre::Vector3 const &lim)
+{
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	
+	_lower_lim = lim;
+}
+
+void
+vl::physics::Tube::setUpperLim(Ogre::Vector3 const &lim)
+{
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
+	_upper_lim = lim;
 }
 
 void

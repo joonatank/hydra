@@ -40,9 +40,9 @@ public :
 			, stiffness(0.9)
 			, damping(0.1)
 			, element_size(0.6)
+			, lower_lim(Vector3::ZERO)
+			, upper_lim(Vector3::ZERO)
 		{}
-
-//		ConstructionInfo(RigidBodyRefPtr body1, RigidBodyRefPtr body2, Transform frame1, Transform frame2, 
 
 		RigidBodyRefPtr start_body;
 		RigidBodyRefPtr end_body;
@@ -111,6 +111,18 @@ public :
 	/// @todo does not work yet as it does not update the entities.
 	void setMaterial(std::string const &material);
 
+	Ogre::Vector3 const &getLowerLim(void) const
+	{ return _lower_lim; }
+
+	/// @todo does not work yet as it does not update the constraints.
+	void setLowerLim(Ogre::Vector3 const &lim);
+
+	Ogre::Vector3 const &getUpperLim(void) const
+	{ return _upper_lim; }
+
+	/// @todo does not work yet as it does not update the constraints.
+	void setUpperLim(Ogre::Vector3 const &lim);
+
 	void hide(void);
 
 	void show(void);
@@ -140,6 +152,10 @@ private :
 	vl::scalar _element_size;
 	vl::scalar _tube_radius;
 	vl::scalar _mass;
+
+	// Angular limits
+	Ogre::Vector3 _lower_lim;
+	Ogre::Vector3 _upper_lim;
 
 	std::string _material_name;
 

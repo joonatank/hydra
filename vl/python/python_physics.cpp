@@ -181,6 +181,8 @@ void export_physics_objects(void)
 		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
 		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
 		.def_readwrite("material_name", &vl::physics::Tube::ConstructionInfo::material_name)
+		.def_readwrite("upper_lim", &vl::physics::Tube::ConstructionInfo::lower_lim)
+		.def_readwrite("lower_lim", &vl::physics::Tube::ConstructionInfo::upper_lim)
 	;
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
