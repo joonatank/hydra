@@ -12,8 +12,15 @@
 void
 vl::Joystick::add_handler(vl::JoystickHandlerRefPtr handler)
 {
-	// @tood check that it doesn't exist already
 	std::vector<JoystickHandlerRefPtr>::iterator iter = std::find(_handlers.begin(), _handlers.end(), handler);
 	if(iter == _handlers.end())
 	{ _handlers.push_back(handler); }
+}
+
+void
+vl::Joystick::remove_handler(JoystickHandlerRefPtr handler)
+{
+	std::vector<JoystickHandlerRefPtr>::iterator iter = std::find(_handlers.begin(), _handlers.end(), handler);
+	if(iter != _handlers.end())
+	{ _handlers.erase(iter); }
 }

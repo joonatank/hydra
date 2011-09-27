@@ -150,6 +150,7 @@ void export_managers(void)
 	python::class_<vl::Joystick, vl::JoystickRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("Joystick", python::no_init)
 		.def("addListener", toast::python::signal_connect<void (JoystickEvent const &)>(&vl::Joystick::addListener))
 		.def("add_handler", &vl::Joystick::add_handler)
+		.def("remove_handler", &vl::Joystick::remove_handler)
 		.add_property("zero_size", &vl::Joystick::get_zero_size, &vl::Joystick::set_zero_size)
 	;
 

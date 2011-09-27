@@ -50,6 +50,8 @@ public :
 
 	void add_handler(JoystickHandlerRefPtr handler);
 
+	void remove_handler(JoystickHandlerRefPtr handler);
+
 protected :
 	std::vector<JoystickHandlerRefPtr> _handlers;
 
