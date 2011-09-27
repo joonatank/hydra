@@ -227,7 +227,10 @@ public :
 	{ return _axisInA; }
 
 	void setAxis(Ogre::Vector3 const &v)
-	{ _axisInA = v; }
+	{
+		_axisInA = v;
+		_axisInA.normalise();
+	}
 
 	vl::scalar getPosition(void) const;
 
@@ -311,7 +314,10 @@ public :
 	{ return _axisInA; }
 
 	void setAxis(Ogre::Vector3 const &v)
-	{ _axisInA = v; }
+	{
+		_axisInA = v;
+		_axisInA.normalise();
+	}
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 

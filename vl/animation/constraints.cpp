@@ -354,7 +354,8 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	/// but this does not change it before the target has been changed.
 
 	vl::scalar translate = 0;
-	vl::scalar pos = _link->getTransform().position.y - _link->getInitialTransform().position.y;
+
+	vl::scalar pos = _link->getTransform().position.distance(_link->getInitialTransform().position);
 	/// @todo add tolerance
 	if(isActuator() && _target_position != pos)
 	{
@@ -395,7 +396,7 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	if(translate != 0)
 	{
 		/// Update object B
-		_link->getTransform().position.y += translate;
+		_link->getTransform().position += (_axisInA*translate);
 	}
 }
 
