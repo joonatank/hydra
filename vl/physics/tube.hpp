@@ -41,7 +41,11 @@ public :
 			, damping(0.1)
 			, element_size(0.6)
 			, lower_lim(Vector3::ZERO)
-			, upper_lim(Vector3::ZERO)
+			, upper_lim(Vector3(-1, -1, -1))
+			, spring(true)
+			, disable_collisions(false)
+			, inertia(Vector3(1, 1, 1))
+			, body_damping(0.1)
 		{}
 
 		RigidBodyRefPtr start_body;
@@ -59,8 +63,15 @@ public :
 		std::string material_name;
 
 		// Angular limits
-		Ogre::Vector3 lower_lim;
-		Ogre::Vector3 upper_lim;
+		Vector3 lower_lim;
+		Vector3 upper_lim;
+
+		bool spring;
+		bool disable_collisions;
+
+		Vector3 inertia;
+
+		vl::scalar body_damping;
 	};
 
 	/**	@brief Constructor
@@ -127,6 +138,8 @@ public :
 
 	void show(void);
 
+	void setEquilibrium(void);
+
 private :
 	static size_t n_tubes;
 
@@ -152,6 +165,8 @@ private :
 	vl::scalar _element_size;
 	vl::scalar _tube_radius;
 	vl::scalar _mass;
+	bool _spring;
+	bool _disable_internal_collisions;
 
 	// Angular limits
 	Ogre::Vector3 _lower_lim;

@@ -36,6 +36,8 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _element_size(info.element_size)
 	, _tube_radius(info.radius)
 	, _mass(info.mass)
+	, _spring(info.spring)
+	, _disable_internal_collisions(info.disable_collisions)
 	, _lower_lim(info.lower_lim)
 	, _upper_lim(info.upper_lim)
 	, _world(world)
@@ -51,11 +53,15 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	/// @todo check the distance between the two bodies
 	uint16_t n_elements = std::ceil(_length/_element_size);
 	vl::scalar elem_length = _length/n_elements;
-	Ogre::Vector3 bounds(_tube_radius, elem_length/2, _tube_radius);
+	Ogre::Vector3 bounds(_tube_radius, _tube_radius, elem_length/2);
 	BoxShapeRefPtr shape = BoxShape::create(bounds);
-	Ogre::Vector3 inertia(1, 1, 1);
+	Ogre::Vector3 inertia(info.inertia);
 	vl::scalar elem_mass = _mass/n_elements;
 	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl;
+
+	Ogre::Vector3 from_start_to_end = _end_body->getWorldTransform().position - _start_body->getWorldTransform().position;
+	from_start_to_end.normalise();
+	std::clog << "start body to end body vector : " << from_start_to_end << std::endl;
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		std::stringstream name;
@@ -65,11 +71,18 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 		// to the world zero that goes upwards.
 		// Of course we should have the string going in the z-axis
 		// Of course we should have the bodies created between start and end body
-		Transform ms_t(Ogre::Vector3(0, 2, (i-n_elements/2)*elem_length), Ogre::Quaternion(0.7071, 0.7071, 0, 0));
+		Ogre::Vector3 pos = _start_body->getWorldTransform().position 
+			+ from_start_to_end*((i-n_elements/2)*elem_length);
+		Ogre::Quaternion orient(1, 0, 0, 0); //(0.7071, 0.7071, 0, 0);
+		Transform ms_t(pos, orient);
 		MotionState *ms = _world->createMotionState(ms_t);
 		// @todo should check what axis is up and so on, set mass and inertia to zero for testing
 		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, inertia);
 		_bodies.push_back(body);
+		
+		// Needs to be here so that it will not be deactivated
+		body->setUserControlled(true);
+		body->setDamping(info.body_damping, info.body_damping);
 	}
 
 	_createConstraints(info.start_body_frame, info.end_body_frame, elem_length);
@@ -194,28 +207,44 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 		/// the tube should have y-axis running through it in this scenario
 		/// rotation around x and z axes are allowed to a large extent
 
-		_world->addConstraint(*iter);
+		_world->addConstraint(*iter, _disable_internal_collisions);
 		
 		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
 		assert(spring);
 		/// @todo set limits
 		spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
 		spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
-		//spring->setAngularLowerLimit(Ogre::Vector3(0, 0, 0));
-		//spring->setAngularUpperLimit(Ogre::Vector3(0, 0, 0));
+		spring->setAngularLowerLimit(_lower_lim);
+		spring->setAngularUpperLimit(_upper_lim);
 
 		/// @todo enable spring damper
 		/// @todo set stiffness and damping
 		// Enable spring for rotations around x, y and z
-		for(uint16_t i = 3; i < 6; ++i)
+		if(_spring)
 		{
-			spring->enableSpring(i, true);
-			spring->setStiffness(i, _stiffness);
-			spring->setDamping(i, _damping);
+			for(uint16_t i = 3; i < 6; ++i)
+			{
+				spring->enableSpring(i, true);
+				spring->setStiffness(i, _stiffness);
+				spring->setDamping(i, _damping);
+			}
 		}
-		//spring->setEquilibriumPoint();
 	}
 }
+void
+vl::physics::Tube::setEquilibrium(void)
+{
+	if(!_spring)
+	{ return; }
+
+	for(ConstraintList::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+		spring->setEquilibriumPoint();
+	}
+}
+
 
 void
 vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)

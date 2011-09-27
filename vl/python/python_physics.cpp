@@ -181,8 +181,12 @@ void export_physics_objects(void)
 		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
 		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
 		.def_readwrite("material_name", &vl::physics::Tube::ConstructionInfo::material_name)
-		.def_readwrite("upper_lim", &vl::physics::Tube::ConstructionInfo::lower_lim)
-		.def_readwrite("lower_lim", &vl::physics::Tube::ConstructionInfo::upper_lim)
+		.def_readwrite("upper_lim", &vl::physics::Tube::ConstructionInfo::upper_lim)
+		.def_readwrite("lower_lim", &vl::physics::Tube::ConstructionInfo::lower_lim)
+		.def_readwrite("spring", &vl::physics::Tube::ConstructionInfo::spring)
+		.def_readwrite("inertia", &vl::physics::Tube::ConstructionInfo::inertia)
+		.def_readwrite("disable_collisions", &vl::physics::Tube::ConstructionInfo::disable_collisions)
+		.def_readwrite("body_damping", &vl::physics::Tube::ConstructionInfo::body_damping)
 	;
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
@@ -193,6 +197,7 @@ void export_physics_objects(void)
 		.add_property("mass", &vl::physics::Tube::getMass)
 		.def("hide", &vl::physics::Tube::hide)
 		.def("show", &vl::physics::Tube::show)
+		.def("set_equilibrium", &vl::physics::Tube::setEquilibrium)
 	;
 }
 
