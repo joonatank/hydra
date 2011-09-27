@@ -175,6 +175,9 @@ vl::KinematicWorld::getBodies(void) const
 void
 vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 {
+	if(!constraint)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
 	// checks
 	if(hasConstraint(constraint))
 	{ return; }

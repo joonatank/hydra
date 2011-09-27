@@ -87,7 +87,6 @@ vl::KinematicBody::transform(vl::Transform const &t)
 void
 vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 {
-	std::clog << "vl::KinematicBody::setWorldTransform" << std::endl;
 	assert(_node);
 	_node->setWorldTransform(trans);
 }
