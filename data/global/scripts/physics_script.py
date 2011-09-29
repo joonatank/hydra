@@ -112,7 +112,7 @@ def addSphere(name, mat_name, position, mass = 1, size = 1) :
 def createFixedConstraint(body0, body1, transform, disableCollision = True):
 	local0_trans = body0.transform_to_local(transform)
 	local1_trans = body1.transform_to_local(transform)
-	constraint = SixDofConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint = PSixDofConstraint.create(body0, body1, local0_trans, local1_trans, False)
 	constraint.setLinearLowerLimit(Vector3(0, 0, 0))
 	constraint.setLinearUpperLimit(Vector3(0, 0, 0))
 	constraint.setAngularLowerLimit(Vector3(0, 0, 0))

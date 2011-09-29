@@ -11,7 +11,7 @@ def createTranslationConstraint(body0, body1, transform, min, max, disableCollis
 	trans = transform*Transform(Quaternion(-0.7071, 0, 0, 0.7071))
 	local0_trans = body0.transform_to_local(trans)
 	local1_trans = body1.transform_to_local(trans)
-	constraint = SliderConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint = PSliderConstraint.create(body0, body1, local0_trans, local1_trans, False)
 	constraint.lower_lin_limit = min
 	constraint.upper_lin_limit = max
 	constraint.lower_ang_limit = 0
@@ -26,7 +26,7 @@ def createHingeConstraint(body0, body1, transform, disableCollision = True) :
 	trans = transform*Transform(Quaternion(0.7071, 0.7071, 0, 0))
 	local0_trans = body0.transform_to_local(trans)
 	local1_trans = body1.transform_to_local(trans)
-	constraint = HingeConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint = PHingeConstraint.create(body0, body1, local0_trans, local1_trans, False)
 	game.physics_world.addConstraint(constraint, disableCollision)
 	return constraint
 
@@ -43,12 +43,13 @@ game.scene.sky = SkyDomeInfo("CloudySky")
 # Create light
 spot = game.scene.createSceneNode("spot")
 spot_l = game.scene.createLight("spot")
-spot_l.type = "spot"
-spot_l.diffuse = ColourValue(0.6, 0.6, 0.6)
+# does not work for some reason
+#spot_l.type = "spot"
+spot_l.diffuse = ColourValue(1.0, 1.0, 0.6)
 spot.attachObject(spot_l)
-spot.position = Vector3(0, 1.5, 0)
 #spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
-camera.addChild(spot)
+#camera.addChild(spot)
+spot.position = camera.position + Vector3(0, 1.5, 0)
 
 light = game.scene.createSceneNode("light")
 light_l = game.scene.createLight("light")
@@ -74,7 +75,7 @@ g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_nod
 ground_body = world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
 print('Physics: adding kiinnityslevy joint')
-kiinnityslevy= game.physics_world.getRigidBody("cb_kiinnityslevy")
+kiinnityslevy = game.physics_world.getRigidBody("cb_kiinnityslevy")
 ristikpl_kaantosyl = game.physics_world.getRigidBody("cb_ristikpl_kaantosyl")
 nivel_klevy2_rotz = game.scene.getSceneNode("nivel_klevy2_rotz")
 transform = nivel_klevy2_rotz.world_transformation
@@ -136,12 +137,12 @@ teleskooppi_joint = createTranslationConstraint(ulkoputki, sisaputki, nivel_tele
 
 # enable motors for cylinders
 kaanto_joint.powered_lin_motor = True
-kaanto_joint.max_lin_motor_force = 100
+kaanto_joint.max_lin_motor_force = 200
 nosto_joint.powered_lin_motor = True
-nosto_joint.max_lin_motor_force = 100
+nosto_joint.max_lin_motor_force = 200
 nosto_joint.target_lin_motor_velocity = -0.5
 teleskooppi_joint.powered_lin_motor = True
-teleskooppi_joint.max_lin_motor_force = 100
+teleskooppi_joint.max_lin_motor_force = 10
 teleskooppi_joint.target_lin_motor_velocity = 0.5
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), size=0.5, mass=10)

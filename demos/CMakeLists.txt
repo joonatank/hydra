@@ -42,6 +42,10 @@ copy_start_scripts( hydra
 	perapora_project/perapora.prj
 	"perapora" )
 
+copy_start_scripts( hydra
+	perapora_project/perapora_physics.prj
+	"perapora_physics" )
+
 copy_start_scripts( renderer
 	tracking_test_project/tracking.prj
 	tracking )
