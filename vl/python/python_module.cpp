@@ -136,6 +136,7 @@ void export_animation(void)
 		*/
 		.def("clone", kb_clone_ov0)
 		.def("clone", kb_clone_ov1)
+		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -273,8 +274,8 @@ void export_scene_graph(void)
 		// if they are stored in the python side. Returning internal references
 		// might work but we need to be sure they can not be modified from python.
 		.add_property("selection", python::make_function(&SceneManager::getSelection, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("scene_nodes", python::make_function(&SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("objects", python::make_function(&SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("scene_nodes", python::make_function(&SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("objects", python::make_function(&SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("cameras", &SceneManager::getCameraList )
 		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
@@ -462,6 +463,8 @@ void export_scene_graph(void)
 		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
 		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
 		.add_property("direction", &vl::SceneNode::getDirection)
+		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
 		.def("set_direction", &vl::SceneNode::setDirection, setDirection_ovs())
 		.def("look_at", &vl::SceneNode::lookAt)
 		.def("hide", &vl::SceneNode::hide)

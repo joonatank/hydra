@@ -68,6 +68,10 @@ public :
 	animation::NodeRefPtr getAnimationNode(void) const
 	{ return _node; }
 
+	// -------------------- Callbacks -----------------------
+	int addListener(TransformedCB::slot_type const &slot)
+	{ _transformed_cb.connect(slot); return 1; }
+
 	/// @internal
 	void _update(void);
 
@@ -81,6 +85,9 @@ private :
 
 	SceneNodePtr _scene_node;
 	animation::NodeRefPtr _node;
+
+	// Callbacks
+	TransformedCB _transformed_cb;
 
 };	// class KinematicBody
 

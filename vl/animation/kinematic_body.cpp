@@ -104,5 +104,10 @@ vl::KinematicBody::_update(void)
 {
 	assert(_scene_node && _node);
 
-	_scene_node->setWorldTransform(_node->getWorldTransform());
+	Transform wt = _node->getWorldTransform();
+	if(_scene_node->getWorldTransform() != wt)
+	{
+		_scene_node->setWorldTransform(wt);
+		_transformed_cb(wt);
+	}
 }

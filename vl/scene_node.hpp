@@ -13,8 +13,6 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
-// Used for user callbacks
-#include <boost/signal.hpp>
 
 #include "action.hpp"
 #include "base/exceptions.hpp"
@@ -38,8 +36,6 @@ enum TransformSpace
 
 class SceneNode : public vl::Distributed, vl::ObjectInterface
 {
-	typedef boost::signal<void (vl::Transform const &)> TransformedCB;
-
 public :
 	SceneNode( std::string const &name, vl::SceneManager *creator );
 
@@ -219,6 +215,9 @@ public :
 
 	bool hasObject(vl::MovableObjectPtr obj) const;
 
+	vl::MovableObjectList const &getObjects(void) const
+	{ return _objects; }
+
 	/// --------------- Childs ------------------------
 	vl::SceneNodePtr createChildSceneNode(std::string const &name);
 
@@ -228,6 +227,9 @@ public :
 
 	bool hasChild(vl::SceneNodePtr child) const;
 
+	vl::SceneNodeList const &getChilds(void) const
+	{ return _childs; }
+
 	vl::SceneNodePtr getParent(void) const
 	{ return _parent; }
 
@@ -236,7 +238,7 @@ public :
 
 
 	// -------------------- Callbacks -----------------------
-	int addListener(TransformedCB::slot_type const &slot)
+	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ _transformed_cb.connect(slot); return 1; }
 
 	enum DirtyBits

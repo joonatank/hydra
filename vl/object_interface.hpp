@@ -13,11 +13,16 @@
 #include "math/types.hpp"
 #include "math/transform.hpp"
 
+// Used for user callbacks
+#include <boost/signal.hpp>
+
 namespace vl
 {
 
 class ObjectInterface
 {
+protected :
+	typedef boost::signal<void (vl::Transform const &)> TransformedCB;
 public :
 	virtual ~ObjectInterface(void) {}
 
@@ -36,6 +41,7 @@ public :
 	// @todo add hide/show
 
 	// @todo add callbacks for all changes
+	virtual int addListener(TransformedCB::slot_type const &slot) = 0;
 };
 
 }	// namespace vl

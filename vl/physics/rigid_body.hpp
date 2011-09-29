@@ -141,6 +141,9 @@ public :
 
 	virtual void setWorldTransform(Transform const &worldTrans) = 0;
 
+	virtual int addListener(TransformedCB::slot_type const &slot)
+	{ return -1; }
+
 	std::string const &getName(void) const
 	{ return _name; }
 
