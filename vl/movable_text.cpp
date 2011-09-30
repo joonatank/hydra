@@ -312,7 +312,7 @@ vl::ogre::MovableText::_setupGeometry()
  
         if (*i == '\n')
         {
-            left = 0 * 2.0 - 1.0;
+            left = 0;
             top -= mCharHeight * 2.0;
             newLine = true;
             continue;
