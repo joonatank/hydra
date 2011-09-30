@@ -238,7 +238,7 @@ public :
 
 	virtual void setMotorTarget(vl::scalar targetAngle, vl::scalar dt) = 0;
 
-	virtual void setLimit(vl::scalar low, vl::scalar high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f) = 0;
+	virtual void setLimit(Ogre::Radian const &low, Ogre::Radian const &high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f) = 0;
 
 	virtual void setAxis(Ogre::Vector3 &axisInA) = 0;
 	

@@ -120,3 +120,35 @@ def createFixedConstraint(body0, body1, transform, disableCollision = True):
 	game.physics_world.addConstraint(constraint, disableCollision)
 	return constraint
 
+
+# Create a translation joint between two bodies along z-axis
+# min and max defines the freedom of the joint in meters
+# Depending on wether the original coordinates have positive or negative
+# z forward, you need to use positive or negative velocity for driving
+# positive z forward positive velocity
+def createTranslationConstraint(body0, body1, transform, min, max, disableCollision = True) :
+	# SliderConstraint works on x-axis, so we rotate the reference
+	# z-axis to x-axis
+	trans = transform*Transform(Quaternion(-0.7071, 0, 0, 0.7071))
+	local0_trans = body0.transform_to_local(trans)
+	local1_trans = body1.transform_to_local(trans)
+	constraint = PSliderConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint.lower_lin_limit = min
+	constraint.upper_lin_limit = max
+	constraint.lower_ang_limit = 0
+	constraint.upper_ang_limit = 0
+	game.physics_world.addConstraint(constraint, disableCollision)
+	return constraint
+
+# Define a hinge constraint using objects +y axis
+# +y because the objects were modeled in Blender with +z as the rotation axis
+# but the exporter flips y and z
+def createHingeConstraint(body0, body1, transform, disableCollision = True, min = Degree(0), max = Degree(0)) :
+	trans = transform*Transform(Quaternion(0.7071, 0.7071, 0, 0))
+	local0_trans = body0.transform_to_local(trans)
+	local1_trans = body1.transform_to_local(trans)
+	constraint = PHingeConstraint.create(body0, body1, local0_trans, local1_trans, False)
+	constraint.set_limit(Radian(min), Radian(max))
+	game.physics_world.addConstraint(constraint, disableCollision)
+	return constraint
+

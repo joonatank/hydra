@@ -94,6 +94,19 @@ void export_physics_objects(void)
 
 	/// hinge constraint
 	python::class_<vl::physics::HingeConstraint, vl::physics::HingeConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("PHingeConstraint", python::no_init)
+		// Limits
+		//.add_property("lower_lin_limit", &vl::physics::HingeConstraint::getLowerLinLimit, &vl::physics::HingeConstraint::setLowerLinLimit)
+		//.add_property("upper_lin_limit", &vl::physics::HingeConstraint::getUpperLinLimit, &vl::physics::HingeConstraint::setUpperLinLimit)
+		//.add_property("lower_ang_limit", &vl::physics::HingeConstraint::getLowerAngLimit, &vl::physics::HingeConstraint::setLowerAngLimit)
+		//.add_property("upper_ang_limit", &vl::physics::HingeConstraint::getUpperAngLimit, &vl::physics::HingeConstraint::setUpperAngLimit)
+		.def("set_limit", &vl::physics::HingeConstraint::setLimit, setLimit_ovs())
+		// Motor
+		.def("enable_motor", &vl::physics::HingeConstraint::enableMotor)
+		.def("set_motor_target", &vl::physics::HingeConstraint::setMotorTarget)
+		.def("set_motor_max_impulse", &vl::physics::HingeConstraint::setMaxMotorImpulse)
+		.def("set_axis", &vl::physics::HingeConstraint::setAxis)
+		
+
 		.def("create", &vl::physics::HingeConstraint::create)
 		.staticmethod("create")
 	;

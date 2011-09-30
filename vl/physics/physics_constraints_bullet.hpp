@@ -325,8 +325,8 @@ public :
 
 	void setMotorTarget(vl::scalar targetAngle, vl::scalar dt)
 	{ _bt_constraint->setMotorTarget(targetAngle, dt); }
-	void setLimit(vl::scalar low, vl::scalar high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f)
-	{ _bt_constraint->setLimit(low, high, softness, biasFactor, relaxationFactor); }
+	void setLimit(Ogre::Radian const &low, Ogre::Radian const &high, vl::scalar softness=0.9f, vl::scalar biasFactor=0.3f, vl::scalar relaxationFactor=1.0f)
+	{ _bt_constraint->setLimit(low.valueRadians(), high.valueRadians(), softness, biasFactor, relaxationFactor); }
 
 	void setAxis(Ogre::Vector3 &axisInA)
 	{
