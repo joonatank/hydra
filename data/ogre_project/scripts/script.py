@@ -22,6 +22,8 @@ createCameraMovements(camera, speed=10)
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
 addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
+key = game.event_manager.createKeyTrigger(KC.SPACE)
+addTrackerMoveSelection("fingerTrigger", key)
 ogre.position = Vector3(0, 2.5, 0)
 
 # ActiveCamera toggle, supports two cameras. Parameters passed are camera names

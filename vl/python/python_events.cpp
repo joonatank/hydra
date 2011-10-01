@@ -226,6 +226,7 @@ void export_triggers(void)
 		.add_property("action_up", python::make_function( &vl::KeyTrigger::getKeyUpAction, python::return_value_policy< python::reference_existing_object>() ), &vl::KeyTrigger::setKeyUpAction)
 		.def("addKeyUpListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyUpListener))
 		.def("addKeyDownListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyDownListener))
+		.def("addListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addListener))
 	;
 }
 

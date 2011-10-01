@@ -267,38 +267,25 @@ def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None) :
 
 	game.event_manager.frame_trigger.addListener(selection_movements.progress)
 
-def addMoveSelectionOld(speed = 0.3, angular_speed = Degree(40), reference=None) :
-	print( 'Creating Move selection event' )
+# @param tracker the tracker used for moving the objects
+# @param trigger the trigger used to trigger start moving and stop moving
+def addTrackerMoveSelection(tracker_trigger_name, trigger) :
+	class TrackerMoveSelection :
+		def __init__(self) :
+			self.on_move = False
 
-	trans_action_proxy = MoveActionProxy.create()
-	trans_action_proxy.enableTranslation()
-	addKeyActionsForAxis( trans_action_proxy, Vector3(1, 0, 0), KC.NUMPAD4, KC.NUMPAD6 )
-	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 1, 0), KC.NUMPAD7, KC.NUMPAD9 )
-	addKeyActionsForAxis( trans_action_proxy, Vector3(0, 0, 1), KC.NUMPAD8, KC.NUMPAD5 )
+		def switch_state(self) :
+			self.on_move = not self.on_move
 
-	# Create the rotation action using a proxy
-	rot_action_proxy = MoveActionProxy.create()
-	rot_action_proxy.enableRotation()
-	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 1, 0), KC.NUMPAD4, KC.NUMPAD6, KEY_MOD.CTRL )
-	addKeyActionsForAxis( rot_action_proxy, Vector3(1, 0, 0), KC.NUMPAD7, KC.NUMPAD9, KEY_MOD.CTRL )
-	addKeyActionsForAxis( rot_action_proxy, Vector3(0, 0, 1), KC.NUMPAD8, KC.NUMPAD5, KEY_MOD.CTRL )
+		def move(self, t) :
+			if self.on_move:
+				for i in range(len(game.scene.selection)) :
+					game.scene.selection[i].transformation = t
 
-	# Create the real action
-	trans_action = MoveSelectionAction.create()
-	trans_action.scene = game.scene
-	trans_action.local = False
-	trans_action.reference = reference
-	trans_action.speed = speed
-	trans_action.angular_speed = Radian(angular_speed)
-
-	# Add the real action to the proxy
-	trans_action_proxy.action = trans_action
-	rot_action_proxy.action = trans_action
-	# Create a FrameTrigger and add the action to that
-	# TODO having the frame trigger action replacable causes the
-	# move camera to override this.
-	trigger = game.event_manager.getFrameTrigger()
-	trigger.action.add_action( trans_action )
+	tms = TrackerMoveSelection()
+	tracker_trigger = game.event_manager.getTrackerTrigger(tracker_trigger_name)
+	tracker_trigger.addListener(tms.move)
+	trigger.addListener(tms.switch_state)
 
 def addRigidBodyController(body):
 	controller = RigidBodyController(body)
@@ -331,8 +318,10 @@ def addRigidBodyController(body):
 
 
 def mapHeadTracker(name) :
-	act = HeadTrackerAction.create()
-	act.player = game.player
+	def setHeadTransform(t):
+		print("Setting head transformation")
+		game.player.head_transformation = t
+
 	if not game.event_manager.hasTrackerTrigger(name):
 		print("Creating a fake tracker trigger")
 		tracker = Tracker.create("FakeHeadTracker")
@@ -345,7 +334,7 @@ def mapHeadTracker(name) :
 		game.tracker_clients.addTracker(tracker)
 
 	trigger = game.event_manager.getTrackerTrigger(name)
-	trigger.action.add_action(act)
+	trigger.addListener(setHeadTransform)
 
 
 # Fine using the new event interface

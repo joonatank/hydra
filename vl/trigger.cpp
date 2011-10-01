@@ -26,13 +26,26 @@ vl::TransformActionTrigger::TransformActionTrigger( void )
 {}
 
 void
-vl::TransformActionTrigger::update(const vl::Transform& data)
+vl::TransformActionTrigger::update(vl::Transform const &data)
 {
 	// Copy the data for futher reference
 	_value = data;
 	_action->execute(_value);
 	_signal(_value);
 }
+
+int
+vl::TransformActionTrigger::addListener(vl::TransformActionTrigger::Tripped::slot_type const &slot)
+{
+	_signal.connect(slot);
+		
+	// Call the slot with old value
+	// this calls needlesly the other handlers also
+	_signal(_value);
+
+	return 1; 
+}
+
 
 /// KeyTrigger Public
 vl::KeyTrigger::KeyTrigger(void)

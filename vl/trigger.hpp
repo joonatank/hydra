@@ -88,8 +88,7 @@ public :
 	/// Callback function
 	void update(Transform const &data);
 
-	int addListener(Tripped::slot_type const &slot)
-	{ _signal.connect(slot); return 1; }
+	int addListener(Tripped::slot_type const &slot);
 
 protected :
 	Tripped _signal;
@@ -166,6 +165,11 @@ public :
 
 	int addKeyUpListener(Tripped::slot_type const &slot)
 	{ _key_up_signal.connect(slot); return 1; }
+
+	// Syntax sugar, common name for all listeners
+	// provides just a common key pressed/released functionality when user does not care which is tripped
+	int addListener(Tripped::slot_type const &slot)
+	{ _key_down_signal.connect(slot); return 1; }
 
 	virtual std::string getTypeName( void ) const
 	{ return "KeyTrigger"; }
