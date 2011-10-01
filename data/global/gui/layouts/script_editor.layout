@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<GUILayout>
+
+<Window Type="DefaultGUISheet" Name="scriptEditor">
+	<Property Name="Text" Value="Script Editor" />
+	<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+	<Property Name="Alpha" Value="0.8" />
+	<Window Type="TaharezLook/Menubar" Name="scriptEditor/menubar" >
+		<Property Name="Text" Value="File" />
+		<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+		<Property Name="UnifiedAreaRect" Value="{{0,0},{0,0},{1.0,0},{0.05,0}}" />
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/execute" >
+			<Property Name="Text" Value="Execute" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/clear" >
+			<Property Name="Text" Value="Clear" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/new" >
+			<Property Name="Text" Value="New" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/save" >
+			<Property Name="Text" Value="Save" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/add" >
+			<Property Name="Text" Value="Add" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/run_all" >
+			<Property Name="Text" Value="Run All" />
+		</Window>
+		<Window Type="TaharezLook/MenuItem" Name="scriptEditor/menubar/reload" >
+			<Property Name="Text" Value="Reload Scripts" />
+		</Window>
+	</Window>
+
+	<Window Type="TaharezLook/Combobox" Name="scriptEditor/script_list" >
+		<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+		<Property Name="UnifiedPosition" Value="{{0.0,0},{0.07,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.40,0},{0.30,0}}" />
+		<Property Name="MaxEditTextLength" Value="1073741823" />
+	</Window>
+
+	<Window Type="TaharezLook/MultiLineEditbox" Name="scriptEditor/textEdit" >
+		<Property Name="UnifiedAreaRect" Value="{{0,0},{0.2,0},{1,0},{1,0}}" />
+		<Property Name="Text">This text is a multiline text:
+			Line 1
+			Line 2
+			Line 3
+		</Property>
+	</Window>
+</Window>
+
+</GUILayout>

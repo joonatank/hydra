@@ -36,6 +36,7 @@
 **.glsl = native
 **.bat = native
 **.cfg = native
+**.layout = native
 
 **.jpg = BIN
 **.ico = BIN

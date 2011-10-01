@@ -126,37 +126,6 @@ private :
 
 };	// class ConsoleWindow
 
-class EditorWindow : public Window
-{
-public :
-	EditorWindow(vl::gui::GUI *creator);
-
-	~EditorWindow(void);
-
-	/// GECUI callbacks
-
-	/// Menubar buttons clicked
-	bool onNewClicked( CEGUI::EventArgs const &e );
-	bool onOpenClicked( CEGUI::EventArgs const &e );
-	bool onSaveClicked( CEGUI::EventArgs const &e );
-	bool onQuitClicked( CEGUI::EventArgs const &e );
-	bool onResetClicked( CEGUI::EventArgs const &e );
-	bool onImportSceneClicked( CEGUI::EventArgs const &e );
-	bool onReloadScenesClicked( CEGUI::EventArgs const &e );
-	bool onNewScriptClicked( CEGUI::EventArgs const &e );
-	bool onAddScriptClicked( CEGUI::EventArgs const &e );
-	bool onReloadScriptsClicked( CEGUI::EventArgs const &e );
-
-	/// Checkboxes
-	bool onShowAxisChanged( CEGUI::EventArgs const &e );
-	bool onShowNamesChanged( CEGUI::EventArgs const &e );
-	bool onShowJointsChanged( CEGUI::EventArgs const &e );
-
-// Private virtual overrides
-private :
-	virtual void _window_resetted(void);
-
-};	// class EditorWindow
 
 }	// namespace gui
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<GUILayout>
+
+<Window Type="TaharezLook/FrameWindow" Name="menu">
+	<Property Name="UnifiedPosition" Value="{ {0.2, 0}, {0.2, 0} }" />
+	<Property Name="UnifiedSize" Value="{ {0.6, 0}, {0.6, 0} }" />
+	<Property Name="FrameEnabled" Value="False" />
+	<Property Name="TitlebarEnabled" Value="False" />
+	<Property Name="CloseButtonEnabled" Value="False" />
+	<Property Name="Tooltip" Value="Buttons for changing settings." />
+	<Property Name="Alpha" Value="1.0" />
+
+	<Window Type="TaharezLook/Button" Name="menu/resume">
+		<Property Name="UnifiedPosition" Value="{{0.3,0},{0.01,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.4,0},{0.18,0}}" />
+		<Property Name="Text" Value="Resume" />
+	</Window>
+
+	<Window Type="TaharezLook/Button" Name="menu/reset">
+		<Property Name="UnifiedPosition" Value="{{0.3,0},{0.21,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.4,0},{0.18,0}}" />
+		<Property Name="Text" Value="Reset" />
+	</Window>
+
+	<Window Type="TaharezLook/Button" Name="menu/save">
+		<Property Name="UnifiedPosition" Value="{{0.3,0},{0.41,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.4,0},{0.18,0}}" />
+		<Property Name="Text" Value="Save" />
+	</Window>
+
+	<Window Type="TaharezLook/Button" Name="menu/open">
+		<Property Name="UnifiedPosition" Value="{{0.3,0},{0.61,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.4,0},{0.18,0}}" />
+		<Property Name="Text" Value="Open" />
+	</Window>
+
+	<Window Type="TaharezLook/Button" Name="menu/quit">
+		<Property Name="UnifiedPosition" Value="{{0.3,0},{0.81,0}}" />
+		<Property Name="UnifiedSize" Value="{{0.4,0},{0.18,0}}" />
+		<Property Name="Text" Value="Quit" />
+	</Window>
+
+</Window>
+
+</GUILayout>

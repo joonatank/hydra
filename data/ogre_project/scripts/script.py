@@ -153,5 +153,6 @@ analog = game.create_analog_client("meh@localhost")
 analog.n_sensors = 1
 analog.get_sensor(0).addListener(printAnalog)
 
-stats_window = game.gui.createWindow("window", "stats", "stats.layout")
+#stats_window = game.gui.createWindow("window", "stats", "stats.layout")
+#menu_window = game.gui.createWindow("window", "menu", "menu.layout")
 

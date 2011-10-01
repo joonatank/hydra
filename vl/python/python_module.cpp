@@ -28,6 +28,7 @@
 // GUI
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
+#include "gui/editor.hpp"
 
 // Animation framework
 #include "animation/constraints.hpp"

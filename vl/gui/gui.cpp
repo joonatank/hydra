@@ -23,6 +23,7 @@
 
 // gui window, necessary for the windows this creates
 #include "gui_window.hpp"
+#include "editor.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI

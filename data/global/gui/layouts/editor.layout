@@ -1,136 +1,32 @@
 <?xml version="1.0" ?>
 <GUILayout>
-	<Window Type="DefaultWindow" Name="root">
-		<Window Type="DefaultWindow" Name="editor">
-			<Window Type="TaharezLook/FrameWindow" Name="editor/Buttons">
-				<Property Name="UnifiedPosition" Value="{ {0, 0}, {0, 0} }" />
-				<Property Name="UnifiedSize" Value="{ {1, 0}, {0.3, 0} }" />
-				<Property Name="FrameEnabled" Value="False" />
-				<Property Name="TitlebarEnabled" Value="False" />
-				<Property Name="CloseButtonEnabled" Value="False" />
-				<Property Name="Tooltip" Value="Buttons for changing settings." />
-				<Property Name="Alpha" Value="0.7" />
+	<Window Type="DefaultWindow" Name="editor">
 
-				<!-- TODO add proper menubar with multiple popup menus (file, edit, about) -->
-				<Window Type="TaharezLook/Menubar" Name="editor/menubar" >
-					<Property Name="Text" Value="File" />
-					<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0,0},{1.0,0},{0.1,0}}" />
-					<Window Type="TaharezLook/MenuItem" Name="editor/newItem" >
-						<Property Name="Text" Value="New" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/openItem" >
-						<Property Name="Text" Value="Open" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/saveItem" >
-						<Property Name="Text" Value="Save" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/quitItem" >
-						<Property Name="Text" Value="Quit" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/resetItem" >
-						<Property Name="Text" Value="Reset" />
-					</Window>
-					<!-- Scene buttons -->
-					<Window Type="TaharezLook/MenuItem" Name="editor/importSceneItem" >
-						<Property Name="Text" Value="Import Scene" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/reloadScenes" >
-						<Property Name="Text" Value="Reload Scenes" />
-					</Window>
-					<!-- Script buttons -->
-					<Window Type="TaharezLook/MenuItem" Name="editor/newScriptItem" >
-						<Property Name="Text" Value="New script" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/addScriptItem" >
-						<Property Name="Text" Value="Add script" />
-					</Window>
-					<Window Type="TaharezLook/MenuItem" Name="editor/reloadScripts" >
-						<Property Name="Text" Value="Reload Scripts" />
-					</Window>
-				</Window>
-
-				<Window Type="TaharezLook/Checkbox" Name="editor/showAxes" >
-					<Property Name="Text" Value="Show Axes" />
-					<Property Name="Selected" Value="False" />
-					<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.1,0},{0.2,0},{0.18,0}}" />
-					<Property Name="Tooltip" Value="Show or hide object axes." />
-				</Window>
-				<Window Type="TaharezLook/Checkbox" Name="editor/showNames" >
-					<Property Name="Text" Value="Show Names" />
-					<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.19,0},{0.2,0},{0.27,0}}" />
-				</Window>
-				<Window Type="TaharezLook/Checkbox" Name="editor/showJoints" >
-					<Property Name="Text" Value="Show Joints" />
-					<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.28,0},{0.2,0},{0.36,0}}" />
-				</Window>
-				<Window Type="TaharezLook/Slider" Name="editor/ambientSlider" >
-					<Property Name="Text" Value="Ambient light" />
-					<!-- Horizontal sliders seem not to work, so we use vertical ones for now -->
-					<Property Name="VerticalSlider" Value="True" />
-					<Property Name="CurrentValue" Value="0.1" />
-					<Property Name="MaximumValue" Value="1" />
-					<Property Name="ClickStepSize" Value="0.01" />
-					<Property Name="UnifiedMaxSize" Value="{{0.01,0},{0.3,0}}" />
-					<Property Name="UnifiedMinSize" Value="{{0.01,0},{0.2,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0.96,0},{0.15,0},{0.01,0},{0.2,0}}" />
-				</Window>
-
-			</Window>	<!-- EditorButtons -->
-
-			<!-- Script editor test -->
-			<Window Type="TaharezLook/FrameWindow" Name="editor/scriptEditor">
-				<Property Name="Text" Value="Script Editor" />
-				<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-				<Property Name="UnifiedAreaRect" Value="{{0,0},{0.31,0},{1,0},{0.6,0}}" />
-				<Property Name="Alpha" Value="0.4" />
-				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/execute">
-					<Property Name="UnifiedPosition" Value="{{0.0,0},{0.0,0}}" />
-					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
-					<Property Name="Text" Value="Execute" />
-					<Property Name="Tooltip" Value="Executes a script." />
-				</Window>
-				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/clear">
-					<Property Name="UnifiedPosition" Value="{{0.13,0},{0.0,0}}" />
-					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
-					<Property Name="Text" Value="Clear" />
-					<Property Name="Tooltip" Value="Clears the script." />
-				</Window>
-				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/save">
-					<Property Name="UnifiedPosition" Value="{{0.26,0},{0,0}}" />
-					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
-					<Property Name="Text" Value="Save" />
-					<Property Name="Tooltip" Value="Saves the script." />
-				</Window>
-				<Window Type="TaharezLook/Button" Name="editor/scriptEditor/new">
-					<Property Name="UnifiedPosition" Value="{{0.39,0},{0,0}}" />
-					<Property Name="UnifiedSize" Value="{{0.1,0},{0.1,0}}" />
-					<Property Name="Text" Value="New" />
-					<Property Name="Tooltip" Value="Creates a new script." />
-				</Window>
-				<Window Type="TaharezLook/MultiLineEditbox" Name="editor/scriptEditor/textEdit" >
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.1,0},{1,0},{1,0}}" />
-					<Property Name="Text">This text is a multiline text:
-						Line 1
-						Line 2
-						Line 3
-					</Property>
-				</Window>
+		<Window Type="TaharezLook/FrameWindow" Name="editor/Frame" >
+			<Property Name="Text" Value="Editor tabs" />
+			<Property Name="Tooltip" Value="Editor tabs." />
+			<Property Name="TitlebarFont" Value="DejaVuSans-10" />
+			<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+			<Property Name="UnifiedMinSize" Value="{{0,128},{0,128}}" />
+			<Property Name="TitlebarEnabled" Value="True" />
+			<Property Name="UnifiedAreaRect" Value="{{0.1,0},{0.1,0},{0.9,0},{0.9,0}}" />
+			<Window Type="TaharezLook/TabControl" Name="editor/Frame/editor_tabs" >
+			    <Property Name="Tooltip" Value="Editors" />
+			    <Property Name="TabHeight" Value="{0,-1}" />
+			    <Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+			    <Property Name="TabPanePosition" Value="Bottom" />
+			    <Property Name="UnifiedAreaRect" Value="{{0,10},{0,10},{1,-10},{1,-10}}" />
 			</Window>
+		</Window>
 
-			<!-- Add Separate Material and SceneNode editor windows -->
+		<!-- Lower portion
+		TODO custom tooltip needs to be set for this to work -->
+		<Window Type="TaharezLook/Tooltip" Name="editor/tooltip" >
+			<Property Name="Text" Value="Tooltip" />
+			<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
+			<Property Name="UnifiedAreaRect" Value="{{0,0},{0.95,0},{1,0},{0.05,0}}" />
+		</Window>
 
-			<!-- Lower portion
-			TODO custom tooltip needs to be set for this to work -->
-			<Window Type="TaharezLook/Tooltip" Name="editor/tooltip" >
-					<Property Name="Text" Value="Tooltip" />
-					<Property Name="UnifiedMaxSize" Value="{{1,0},{1,0}}" />
-					<Property Name="UnifiedAreaRect" Value="{{0,0},{0.95,0},{1,0},{0.05,0}}" />
-			</Window>
-
-		</Window>	<!-- Editor -->
-	</Window>	<!-- Root -->
+	</Window>	<!-- Editor -->
 </GUILayout>
+

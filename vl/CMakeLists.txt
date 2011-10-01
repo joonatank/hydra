@@ -246,11 +246,13 @@ source_group(HydraMain FILES ${HEADERS} ${SRC})
 set(GUI_HEADERS
 	gui/gui.hpp
 	gui/gui_window.hpp
+	gui/editor.hpp
 	)
 
 set(GUI_SRC
 	gui/gui.cpp
 	gui/gui_window.cpp
+	gui/editor.cpp
 	)
 source_group(HydraMain\\GUI FILES ${GUI_HEADERS} ${GUI_SRC})
 
