@@ -26,4 +26,6 @@ void export_game(void);
 
 void export_events(void);
 
+void export_gui(void);
+
 #endif	// HYDRA_PYTHON_MODULE_HPP

@@ -1,16 +1,21 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-02
- *	@file gui_window.hpp
- *
+ *	@file GUI/gui_window.hpp
+ *	
+ *	This file is part of Hydra VR game engine.
  */
 
-#ifndef VL_GUI_WINDOW_HPP
-#define VL_GUI_WINDOW_HPP
+#ifndef HYDRA_GUI_WINDOW_HPP
+#define HYDRA_GUI_WINDOW_HPP
 
 #include <CEGUI/CEGUIWindow.h>
 
 #include <string>
 #include <deque>
+
+// Necessary for distribution
+#include "distributed.hpp"
+#include "session.hpp"
 
 // Necessary for log level
 #include "logger.hpp"
@@ -25,15 +30,11 @@ namespace gui
 /** @class Window
  *	@brief Wrapper around CEGUI Window, provides the callbacks
  */
-class Window
+class Window : public vl::Distributed
 {
 public :
-	Window(CEGUI::Window *win, vl::gui::GUI *creator)
-		: _window(win), _creator(creator)
-	{
-		assert(_window);
-		assert(_creator);
-	}
+
+	Window(vl::gui::GUI *creator, std::string const &layout = std::string());
 
 	virtual ~Window(void)
 	{
@@ -42,23 +43,57 @@ public :
 	}
 
 	bool isVisible(void) const
-	{ return _window->isVisible(); }
+	{ return _visible; }
 
-	void setVisible(bool visible)
-	{ _window->setVisible(visible); }
+	void setVisible(bool visible);
 
 	void toggleVisible(void)
 	{ setVisible(!isVisible()); }
 
+	void hide(void)
+	{ setVisible(false); }
+
+	void show(void)
+	{ setVisible(true); }
+
+	std::string const &getLayout(void) const
+	{ return _layout; }
+
+	enum DirtyBits
+	{
+		DIRTY_VISIBLE = Distributed::DIRTY_CUSTOM << 0,
+		DIRTY_LAYOUT = Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 2,
+	};
+
+
+/// Private virtual overrides
+private :
+	virtual void serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
+
+	virtual void deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+
+	virtual void _window_resetted(void) {}
+
+private :
+	Window(Window const &);
+	Window &operator=(Window const &);
+
 protected :
+	bool _check_valid_window(void);
+
 	CEGUI::Window *_window;
 	vl::gui::GUI *_creator;
-};
+
+	std::string _layout;
+	bool _visible;
+
+};	// class Window
 
 class ConsoleWindow : public Window
 {
 public :
-	ConsoleWindow(CEGUI::Window *win, vl::gui::GUI *creator);
+	ConsoleWindow(vl::gui::GUI *creator);
 
 	~ConsoleWindow(void);
 
@@ -80,17 +115,21 @@ public :
 	bool wantsLogging(void) const
 	{ return true; }
 
+// Private virtual overrides
+private :
+	virtual void _window_resetted(void);
+
 private :
 	std::deque<std::string> _console_memory;
 	int _console_memory_index;
 	std::string _console_last_command;
 
-};
+};	// class ConsoleWindow
 
 class EditorWindow : public Window
 {
 public :
-	EditorWindow(CEGUI::Window *win, vl::gui::GUI *creator);
+	EditorWindow(vl::gui::GUI *creator);
 
 	~EditorWindow(void);
 
@@ -113,10 +152,14 @@ public :
 	bool onShowNamesChanged( CEGUI::EventArgs const &e );
 	bool onShowJointsChanged( CEGUI::EventArgs const &e );
 
-};
+// Private virtual overrides
+private :
+	virtual void _window_resetted(void);
+
+};	// class EditorWindow
 
 }	// namespace gui
 
 }	// namespace vl
 
-#endif	// VL_GUI_WINDOW_HPP
+#endif	// HYDRA_GUI_WINDOW_HPP

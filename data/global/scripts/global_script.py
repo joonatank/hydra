@@ -440,12 +440,12 @@ def addToggleStereo(kc) :
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
 	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addKeyDownListener(game.gui.toggleConsole)
+	trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
 def addToggleEditor(kc) :
 	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
 	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addKeyDownListener(game.gui.toggleEditor)
+	trigger.addKeyDownListener(game.gui.editor.toggle_visible)
 
 # Add a head tracker support
 mapHeadTracker("glassesTrigger")

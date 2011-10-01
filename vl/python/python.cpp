@@ -22,6 +22,8 @@ BOOST_PYTHON_MODULE(vl)
 
 	export_scene_graph();
 
+	export_gui();
+
 	export_events();
 
 	export_game();

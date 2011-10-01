@@ -447,7 +447,12 @@ public :
 	{ return _selection; }
 
 	void clearSelection(void);
-	
+
+	SceneNodePtr getActiveObject(void) const
+	{ return _active_object; }
+
+	void setActiveObject(SceneNodePtr node);
+
 	void mapCollisionBarriers(void);
 
 	/// @brief hides Scene Nodes based on the pattern
@@ -511,7 +516,15 @@ private :
 	/// At least for now not distributed
 	/// the attributes for showing the selected nodes are distributed in the
 	/// nodes them selves
+	/// @todo active object and selection should be moved to separate class
+	/// and moved the interface to GameManager
+	/// because they work on Game objects (SceneNodes, KinematicBodies, RigidBodies)
+	/// use the common object interface for them.
+	/// Also they are not distributed because they need not be. We can use some
+	/// visual cues that can be separate MovableObjects to show them in the renderer
+	/// or bounding boxes as they are for the moment.
 	SceneNodeList _selection;
+	SceneNodePtr _active_object;
 
 	SkyDomeInfo _sky_dome;
 	FogInfo _fog;

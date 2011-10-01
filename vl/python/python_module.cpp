@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-08
- *	@file python_module.cpp
+ *	@file python/python_module.cpp
  *
  *	This file is part of Hydra VR game engine.
  */
@@ -27,6 +27,7 @@
 
 // GUI
 #include "gui/gui.hpp"
+#include "gui/gui_window.hpp"
 
 // Animation framework
 #include "animation/constraints.hpp"
@@ -269,15 +270,16 @@ void export_scene_graph(void)
 
 	python::class_<vl::SceneManager, boost::noncopyable>("SceneManager", python::no_init)
 		// TODO add remove SceneNodes
-		.add_property("root", python::make_function( &SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
 		// Copy const reference here causes the containers to be out-of-date 
 		// if they are stored in the python side. Returning internal references
 		// might work but we need to be sure they can not be modified from python.
-		.add_property("selection", python::make_function(&SceneManager::getSelection, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("scene_nodes", python::make_function(&SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>()))
-		.add_property("objects", python::make_function(&SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>()))
-		.add_property("cameras", &SceneManager::getCameraList )
-		.def("createSceneNode", &SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.add_property("selection", python::make_function(&vl::SceneManager::getSelection, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("active_object", python::make_function(&vl::SceneManager::getActiveObject, python::return_value_policy<python::reference_existing_object>()), &vl::SceneManager::setActiveObject)
+		.add_property("scene_nodes", python::make_function(&vl::SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("objects", python::make_function(&vl::SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("cameras", &vl::SceneManager::getCameraList )
+		.def("createSceneNode", &vl::SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
 		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
@@ -542,5 +544,38 @@ void export_game(void)
 
 	python::class_<vl::Recording, vl::RecordingRefPtr, boost::noncopyable>("Recording", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+}
+
+void export_gui(void)
+{
+	/// GUI
+	/// @todo these are useless till the Window exist on both master and rendering thread
+	/// so it needs to be distributed...
+	python::class_<vl::gui::Window, vl::gui::WindowRefPtr, boost::noncopyable>("GUIWindow", python::no_init)
+		.add_property("visible", &vl::gui::Window::isVisible, &vl::gui::Window::setVisible)
+		.def("toggle_visible", &vl::gui::Window::toggleVisible)
+		.def("hide", &vl::gui::Window::hide)
+		.def("show", &vl::gui::Window::show)
+	;
+
+	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
+	;
+
+	python::class_<vl::gui::EditorWindow, vl::gui::EditorWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIEditorWindow", python::no_init)
+	;
+
+	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
+	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov0)(std::string const &)= &vl::gui::GUI::createWindow;
+	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov1)(std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
+	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov2)(std::string const &, std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
+
+	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
+		.def("createWindow", createWindow_ov0)
+		.def("createWindow", createWindow_ov1)
+		.def("createWindow", createWindow_ov2)
+		.add_property("console", &vl::gui::GUI::getConsole)
+		.add_property("editor", &vl::gui::GUI::getEditor)
+		/// @todo add get window by name
 	;
 }

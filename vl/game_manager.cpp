@@ -23,6 +23,7 @@
 #include "player.hpp"
 
 #include "gui/gui.hpp"
+#include "gui/gui_window.hpp"
 
 // Physics
 #include "physics/physics_world.hpp"
@@ -446,7 +447,14 @@ vl::GameManager::_init(void)
 
 	assert(_session);
 	assert(!_gui);
+
 	_gui.reset(new vl::gui::GUI(_session));
+
+	// Window creation
+	gui::WindowRefPtr win = _gui->createWindow("console");
+	win->setVisible(false);
+	win = _gui->createWindow("editor");
+	win->setVisible(false);
 
 	_createQuitEvent();
 }

@@ -1,3 +1,9 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-08
+ *	@file python/python_events.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ */
 
 // Interface
 #include "python_module.hpp"
@@ -7,9 +13,7 @@
 #include "actions_transform.hpp"
 #include "actions_misc.hpp"
 #include "trigger.hpp"
-// Necessary for GUI actions
-#include "gui/gui_actions.hpp"
-#include "gui/gui_window.hpp"
+
 // Necessary for SceneNode actions
 #include "scene_node.hpp"
 // Necessary for constraint actions
@@ -424,63 +428,6 @@ void export_actions(void)
 		.def_readwrite("constraint", &vl::HingeActuatorAction::constraint)
 		.def_readwrite("target", &vl::HingeActuatorAction::target)
 		.def("create",&vl::HingeActuatorAction::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	/// GUI
-	/// @todo these are useless till the Window exist on both master and rendering thread
-	/// so it needs to be distributed...
-	python::class_<vl::gui::Window, vl::gui::WindowRefPtr, boost::noncopyable>("GUIWindow", python::no_init)
-		.add_property("visible", &vl::gui::Window::isVisible, &vl::gui::Window::setVisible)
-		.def("toggle_visible", &vl::gui::Window::toggleVisible)
-	;
-
-	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
-	;
-
-	python::class_<vl::gui::EditorWindow, vl::gui::EditorWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIEditorWindow", python::no_init)
-	;
-
-	/// GUI actions
-	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
-		.def("showEditor", &vl::gui::GUI::showEditor )
-		.def("hideEditor", &vl::gui::GUI::hideEditor )
-		.def("showConsole", &vl::gui::GUI::showConsole )
-		.def("hideConsole", &vl::gui::GUI::hideConsole )
-		.def("showStats", &vl::gui::GUI::showStats )
-		.def("hideStats", &vl::gui::GUI::hideStats )
-		.def("showLoadingScreen", &vl::gui::GUI::showLoadingScreen )
-		.def("hideLoadingScreen", &vl::gui::GUI::hideLoadingScreen )
-		.def("toggleEditor", &vl::gui::GUI::toggleEditorVisibility)
-		.def("toggleConsole", &vl::gui::GUI::toggleConsoleVisibility)
-		.def("toggleStats", &vl::gui::GUI::toggleStatsVisibility)
-		// Useless till Widow is distributed
-//		.add_property("console", &vl::gui::GUI::getConsole)
-//		.add_property("editor", &vl::gui::GUI::getEditor)
-//		.add_property("stats", &vl::gui::GUI::getStats)
-	;
-
-	python::class_<vl::gui::GUIActionBase, boost::noncopyable>("GUIActionBase", python::no_init )
-		.add_property("gui", &vl::gui::GUIActionBase::getGUI, &vl::gui::GUIActionBase::setGUI )
-	;
-
-	python::class_<vl::gui::HideEditor, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideEditor", python::no_init )
-		.def("create", &vl::gui::HideEditor::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::gui::ShowEditor, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowEditor", python::no_init )
-		.def("create",&vl::gui::ShowEditor::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::gui::HideConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("HideConsole", python::no_init )
-		.def("create",&vl::gui::HideConsole::create, python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::gui::ShowConsole, boost::noncopyable, python::bases<vl::gui::GUIActionBase, BasicAction> >("ShowConsole", python::no_init )
-		.def("create",&vl::gui::ShowConsole::create, python::return_value_policy<python::reference_existing_object>() )
 		.staticmethod("create")
 	;
 }

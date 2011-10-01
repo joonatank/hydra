@@ -775,6 +775,12 @@ vl::SceneManager::removeFromSelection( vl::SceneNodePtr node )
 }
 
 void
+vl::SceneManager::setActiveObject(vl::SceneNodePtr node)
+{
+	_active_object = node;
+}
+
+void
 vl::SceneManager::mapCollisionBarriers(void)
 {
 	SceneNodeList cbs;

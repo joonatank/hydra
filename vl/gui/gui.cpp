@@ -1,7 +1,8 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-02
- *	@file gui.cpp
+ *	@file GUI/gui.cpp
  *
+ *	This file is part of Hydra VR game engine.
  */
 
 // Interface
@@ -28,27 +29,91 @@
 #include "window.hpp"
 
 vl::gui::GUI::GUI(vl::Session *session)
-	: _editor_shown(false)
-	, _console_shown(false)
-	, _stats_shown(false)
-	, _loading_screen_shown(false)
+	: _session(session)
 {
-	session->registerObject(this, OBJ_GUI);
+	assert(_session);
+	_session->registerObject(this, OBJ_GUI);
 }
 
 vl::gui::GUI::GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb)
-	: _editor_shown(false)
-	, _console_shown(false)
-	, _stats_shown(false)
-	, _loading_screen_shown(false)
-	, _cmd_cb(cb)
+	: _cmd_cb(cb)
+	, _session(session)
+	, _root(0)
 {
+	assert(_session);
+
 	if(id == vl::ID_UNDEFINED)
 	{ BOOST_THROW_EXCEPTION(vl::invalid_id()); }
 
-	session->registerObject(this, OBJ_GUI, id);
+	_session->registerObject(this, OBJ_GUI, id);
+}
 
-	/// @todo the slave version should hold CEGUI instance and create the windows
+vl::gui::WindowRefPtr
+vl::gui::GUI::createWindow(std::string const &type, std::string const &name, std::string const &layout)
+{
+	/// @todo add name support
+	vl::gui::WindowRefPtr win;
+	OBJ_TYPE t;
+	if(type == "console")
+	{
+		_console.reset(new ConsoleWindow(this));
+		win = _console;
+		t = OBJ_GUI_CONSOLE;
+	}
+	else if(type == "editor")
+	{
+		_editor.reset(new EditorWindow(this));
+		win = _editor;
+		t = OBJ_GUI_EDITOR;
+	}
+	else if(type == "window")
+	{
+		t = OBJ_GUI_WINDOW;
+		win.reset(new Window(this, layout));
+	}
+	else
+	{
+		std::cout << vl::CRITICAL << "Unknown window type : " << type << std::endl;
+		t = OBJ_GUI_WINDOW;
+		win.reset(new Window(this, layout));
+	}
+
+	assert(win);
+	_session->registerObject(win.get(), t);
+
+	_windows.push_back(win);
+
+	return win;
+}
+
+vl::gui::WindowRefPtr
+vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
+{
+	vl::gui::WindowRefPtr win;
+	switch(t)
+	{
+	case OBJ_GUI_CONSOLE:
+		_console.reset(new ConsoleWindow(this));
+		win = _console;
+		break;
+	case OBJ_GUI_EDITOR:
+		_editor.reset(new EditorWindow(this));
+		win = _editor;
+		break;
+	case OBJ_GUI_WINDOW:
+		win.reset(new Window(this));
+		break;
+	default :
+		std::cout << vl::CRITICAL << "GUI::createWindow : Incorrect type for Window" << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception());
+	}
+	
+	assert(win);
+	_session->registerObject(win.get(), t, id);
+
+	_windows.push_back(win);
+
+	return win;
 }
 
 void
@@ -72,6 +137,9 @@ vl::gui::GUI::initGUI(vl::Window *window)
 
 	CEGUI::OgreRenderer& myRenderer = CEGUI::OgreRenderer::create(*win);
 	CEGUI::System::create(myRenderer);
+
+	_root = CEGUI::WindowManager::getSingleton().createWindow("DefaultWindow", "root");
+	CEGUI::System::getSingleton().setGUISheet(_root);
 }
 
 void
@@ -170,74 +238,12 @@ vl::gui::GUI::addGUIResourceGroup( std::string const &name, fs::path const &path
 	}
 }
 
-void
-vl::gui::GUI::createGUI(void )
+bool
+vl::gui::GUI::isVisible(void) const
 {
-	std::cout << vl::TRACE << "vl::gui::GUI::createGUI" << std::endl;
-
-	/// @todo should create the Window wrappers
-	CEGUI::Window *myRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout( "editor.layout" );
-	CEGUI::System::getSingleton().setGUISheet( myRoot );
-	CEGUI::Window *editor = myRoot->getChild("editor");
-	_editor.reset(new EditorWindow(editor, this));
-
-	CEGUI::Window *console = CEGUI::WindowManager::getSingleton().loadWindowLayout( "console.layout" );
-	myRoot->addChildWindow(console);
-	_console.reset(new ConsoleWindow(console, this));
-
-	CEGUI::Window *loading_screen = CEGUI::WindowManager::getSingleton().loadWindowLayout( "loading_screen.layout" );
-	myRoot->addChildWindow(loading_screen);
-	loading_screen->hide();
-	_loading_screen.reset(new Window(loading_screen, this));
-
-	CEGUI::Window *stats = CEGUI::WindowManager::getSingleton().loadWindowLayout( "stats.layout" );
-	myRoot->addChildWindow(stats);
-	stats->hide();
-	_stats.reset(new Window(stats, this));
-
-	// TODO support for multiple windows
-	// at the moment every window will get the same GUI window layout
-}
-
-
-void 
-vl::gui::GUI::setEditorVisibility(bool vis)
-{
-	if(_editor_shown != vis)
-	{
-		setDirty(DIRTY_EDITOR);
-		_editor_shown = vis;
-	}
-}
-
-void 
-vl::gui::GUI::setConsoleVisibility(bool vis)
-{
-	if(_console_shown != vis)
-	{
-		setDirty(DIRTY_CONSOLE);
-		_console_shown = vis;
-	}
-}
-
-void 
-vl::gui::GUI::setStatsVisibility(bool vis)
-{
-	if(_stats_shown != vis)
-	{
-		setDirty(DIRTY_STATS);
-		_stats_shown = vis;
-	}
-}
-
-void 
-vl::gui::GUI::setLoadingScreenVisibility(bool vis)
-{
-	if(_loading_screen_shown != vis)
-	{
-		setDirty(DIRTY_LOADING_SCREEN);
-		_loading_screen_shown = vis;
-	}
+	/// @todo should iterate over all windows, and check all that have
+	/// value wantsInput in them
+	return _console->isVisible() || _editor->isVisible();
 }
 
 void 
@@ -251,55 +257,9 @@ vl::gui::GUI::sendCommand(std::string const &cmd)
 void
 vl::gui::GUI::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
-	if( DIRTY_EDITOR & dirtyBits )
-	{
-		msg << _editor_shown;
-	}
-
-	if( DIRTY_CONSOLE & dirtyBits )
-	{
-		msg << _console_shown;
-	}
-
-	if( DIRTY_STATS & dirtyBits )
-	{
-		msg << _stats_shown;
-	}
-
-	if( DIRTY_LOADING_SCREEN & dirtyBits )
-	{
-		msg << _loading_screen_shown;
-	}
 }
 
 void 
 vl::gui::GUI::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	if( DIRTY_EDITOR & dirtyBits )
-	{
-		msg >> _editor_shown;
-		if( _editor )
-		{ _editor->setVisible(_editor_shown); }
-	}
-
-	if( DIRTY_CONSOLE & dirtyBits )
-	{
-		msg >> _console_shown;
-		if( _console )
-		{ _console->setVisible(_console_shown); }
-	}
-
-	if( DIRTY_STATS & dirtyBits )
-	{
-		msg >> _stats_shown;
-		if( _stats )
-		{ _stats->setVisible(_stats_shown); }
-	}
-
-	if( DIRTY_LOADING_SCREEN & dirtyBits )
-	{
-		msg >> _loading_screen_shown;
-		if( _loading_screen )
-		{ _loading_screen->setVisible(_loading_screen_shown); }
-	}
 }

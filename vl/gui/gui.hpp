@@ -1,12 +1,14 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-02
- *	@file gui.hpp
+ *	@file GUI/gui.hpp
  *
  *	This file is part of Hydra VR game engine.
  */
 
 #ifndef HYDRA_GUI_GUI_HPP
 #define HYDRA_GUI_GUI_HPP
+
+#include <CEGUI/CEGUIWindow.h>
 
 #include "distributed.hpp"
 #include "session.hpp"
@@ -35,109 +37,63 @@ public :
 	/// @param cb callback for sendCommand, ownership is passed to this
 	GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb);
 	
+	/// @brief Master creator
+	WindowRefPtr createWindow(std::string const &type, std::string const &name, std::string const &layout);
+
+	WindowRefPtr createWindow(std::string const &type)
+	{ return createWindow(type, std::string(), std::string()); }
+
+	WindowRefPtr createWindow(std::string const &type, std::string const &name)
+	{ return createWindow(type, name, std::string()); }
+
+	/// @brief Slave creator
+	WindowRefPtr createWindow(vl::OBJ_TYPE, uint64_t id);
+
 	void initGUI(vl::Window *win);
 	void initGUIResources(vl::Settings const &set);
 	void addGUIResourceGroup(std::string const &name, fs::path const &path);
-	void createGUI(void);
 
 	EditorWindowRefPtr getEditor(void)
 	{ return _editor; }
 
-	void showEditor(void)
-	{ setEditorVisibility(true); }
-
-	void hideEditor(void)
-	{ setEditorVisibility(false); }
-
-	void setEditorVisibility(bool vis);
-
-	void toggleEditorVisibility(void)
-	{ setEditorVisibility(!editorShown()); }
-
-	bool editorShown( void ) const
-	{ return _editor_shown; }
-
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
 
-	void setConsoleVisibility(bool vis);
-
-	void toggleConsoleVisibility(void)
-	{ setConsoleVisibility(!consoleShown()); }
-
-	void showConsole(void)
-	{ setConsoleVisibility(true); }
-
-	void hideConsole(void)
-	{ setConsoleVisibility(false); }
-
-	bool consoleShown( void ) const
-	{ return _console_shown; }
-
-	WindowRefPtr getStats(void)
-	{ return _stats; }
-
-	void setStatsVisibility(bool vis);
-
-	void toggleStatsVisibility(void)
-	{ setStatsVisibility(!statsShown()); }
-
-	void showStats(void)
-	{ setStatsVisibility(true); }
-
-	void hideStats(void)
-	{ setStatsVisibility(false); }
-
-	bool statsShown( void ) const
-	{ return _stats_shown; }
-
-	WindowRefPtr getLoadingScreen(void)
-	{ return _loading_screen; }
-
-	void setLoadingScreenVisibility(bool vis);
-
-	void showLoadingScreen(void)
-	{ setLoadingScreenVisibility(true); }
-
-	void hideLoadingScreen(void)
-	{ setLoadingScreenVisibility(false); }
-
-	bool loadingScreenShown( void ) const
-	{ return _loading_screen_shown; }
-
-	bool shown( void ) const
-	{ return consoleShown() || editorShown(); }
+	bool isVisible(void) const;
 
 	void sendCommand(std::string const &cmd);
 
+	CEGUI::Window *getRoot(void) const
+	{ return _root; }
+
 	enum DirtyBits
 	{
-		DIRTY_EDITOR = Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_CONSOLE = Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_STATS = Distributed::DIRTY_CUSTOM << 2,
-		DIRTY_LOADING_SCREEN = Distributed::DIRTY_CUSTOM << 3,
-		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 0,
 	};
 
-/// Private Methods
+/// Private virtual overrides
 private :
 	virtual void serialize( cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 
 	virtual void deserialize( cluster::ByteStream &msg, const uint64_t dirtyBits );
 
+private :
+	GUI(GUI const &);
+	GUI &operator=(GUI const &);
+
 /// Data
 private :
-	bool _editor_shown;
-	bool _console_shown;
-	bool _stats_shown;
-	bool _loading_screen_shown;
 
 	vl::gui::EditorWindowRefPtr _editor;
 	vl::gui::ConsoleWindowRefPtr _console;
-	vl::gui::WindowRefPtr _stats;
-	vl::gui::WindowRefPtr _loading_screen;
+
+	std::vector<vl::gui::WindowRefPtr> _windows;
 
 	vl::CommandCallback *_cmd_cb;
+
+	vl::Session *_session;
+
+	CEGUI::Window *_root;
 
 };	// class GUI
 

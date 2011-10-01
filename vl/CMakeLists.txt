@@ -246,7 +246,6 @@ source_group(HydraMain FILES ${HEADERS} ${SRC})
 set(GUI_HEADERS
 	gui/gui.hpp
 	gui/gui_window.hpp
-	gui/gui_actions.hpp
 	)
 
 set(GUI_SRC

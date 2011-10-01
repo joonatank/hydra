@@ -155,7 +155,7 @@ vl::Renderer::guiShown(void) const
 {
 	if( !_gui )
 	{ return false; }
-	return _gui->shown();
+	return _gui->isVisible();
 }
 
 void
@@ -268,7 +268,6 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					assert(!_settings.empty());
 
 					_gui->initGUIResources(_settings);
-					_gui->createGUI();
 
 					// Request output updates for the console
 					if(logEnabled())
@@ -283,6 +282,15 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					// Slaves need to ignore the GUI updates
 					_ignored_distributed_objects.push_back(id);
 				}
+			}
+			break;
+
+			case OBJ_GUI_WINDOW :
+			case OBJ_GUI_CONSOLE :
+			case OBJ_GUI_EDITOR :
+			{
+				assert(_gui);
+				_gui->createWindow(type, id);
 			}
 			break;
 
