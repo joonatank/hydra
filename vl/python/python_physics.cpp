@@ -1,3 +1,9 @@
+/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-08
+ *	@file python/python_physics.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ */
 
 /// Interface
 #include "python_module.hpp"

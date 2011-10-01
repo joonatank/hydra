@@ -543,7 +543,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> b_id >> evt;
 
-				std::cout << vl::TRACE << "vl::Config::_handleMousePressEvent" << std::endl;
+				// @todo should pass the mouse state to event manager
 			}
 			break;
 
@@ -552,8 +552,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 				OIS::MouseButtonID b_id;
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> b_id >> evt;
-				
-				std::cout << vl::TRACE << "vl::Config::_handleMouseReleaseEvent" << std::endl;
+
+				// @todo should pass the mouse state to event manager
 			}
 			break;
 
@@ -561,8 +561,8 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 			{
 				OIS::MouseEvent evt( 0, OIS::MouseState() );
 				stream >> evt;
-				
-				std::cout << vl::TRACE << "vl::Config::_handleMouseMotionEvent" << std::endl;
+
+				// @todo should pass the mouse state to event manager
 			}
 			break;
 

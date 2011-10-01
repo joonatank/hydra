@@ -2,6 +2,7 @@
  *	@date 2010-12
  *	@file player.cpp
  *
+ *	This file is part of Hydra VR game engine.
  */
 
 #include "player.hpp"
@@ -79,6 +80,8 @@ vl::Player::getCameraNode(void) const
 {
 	if(_active_camera)
 	{ return _active_camera->getParent(); }
+
+	return 0;
 }
 
 
