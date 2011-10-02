@@ -188,3 +188,70 @@ fragment_program bling_phong_eye_space_sl_ps glsl
 	}
 }
 
+// Multi light version in eye space with shadows
+vertex_program bling_phong_eye_space_ml_shadows_vs glsl
+{
+	source eye_space_ml_vs.glsl
+	preprocessor_defines MAX_LIGHTS=8,SHADOW_MAP=1
+
+	default_params
+	{
+		param_named_auto modelView worldview_matrix
+		param_named_auto modelViewProj worldviewproj_matrix
+		param_named_auto mvLightPos light_position_view_space_array 8
+		param_named_auto spotDirection light_direction_view_space_array 8
+		param_named_auto nLights light_count
+
+		// shadow texture projections
+		param_named_auto model world_matrix
+		// first shadow camera transformation
+		param_named_auto texViewProj texture_viewproj_matrix 0
+	}
+}
+
+
+fragment_program bling_phong_eye_space_ml_shadows_ps glsl
+{
+	source bling_phong_ml_ps.glsl
+	//preprocessor_defines SPECULAR_MAP=1,AMBIENT_OCCLUSION=1,SHADOW_MAP=1,NEW_ATTENUATION=1
+	preprocessor_defines MAX_LIGHTS=8,AMBIENT_OCCLUSION=1,SHADOW_MAP=1,NEW_ATTENUATION=1
+
+	default_params
+	{
+		param_named_auto surfaceDiffuse surface_diffuse_colour
+		param_named_auto surfaceSpecular surface_specular_colour
+		param_named_auto shininess surface_shininess
+
+		// FIXME add ambient and emissive
+		param_named_auto lightAmbient ambient_light_colour
+		param_named_auto surfaceAmbient surface_ambient_colour
+		param_named_auto surfaceEmissive surface_emissive_colour
+
+		param_named_auto lightDiffuse light_diffuse_colour_array 8
+		param_named_auto lightSpecular light_specular_colour_array 8
+		param_named_auto spotlightParams spotlight_params_array 8
+		param_named_auto lightAttenuation light_attenuation_array 8
+
+		// light casts shadows or not
+		// TODO fix this doesn't have an array parameter
+		param_named_auto lightCastsShadows0 light_casts_shadows 0
+		param_named_auto lightCastsShadows1 light_casts_shadows 1
+		param_named_auto lightCastsShadows2 light_casts_shadows 2
+		param_named_auto lightCastsShadows3 light_casts_shadows 3
+		param_named_auto lightCastsShadows4 light_casts_shadows 4
+		param_named_auto lightCastsShadows5 light_casts_shadows 5
+		param_named_auto lightCastsShadows6 light_casts_shadows 6
+		param_named_auto lightCastsShadows7 light_casts_shadows 7
+
+		param_named_auto nLights light_count
+
+		// Don't change the order, because they are mapped with index
+		param_named diffuseTexture int 0
+		//param_named specularMap int 1
+		param_named aoMap int 1
+		param_named shadowMap1 int 2
+		param_named shadowMap2 int 3
+		param_named shadowMap3 int 4
+	}
+}
+

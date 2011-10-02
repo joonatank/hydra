@@ -1,6 +1,5 @@
 // Fragment Shader 
 // Ambient lighting
-// TODO add support for ambient occulusion maps
 // TODO add support for light maps (emissive channel)
  
 #version 140

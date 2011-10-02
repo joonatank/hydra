@@ -45,7 +45,8 @@ ground_ent = game.scene.createEntity('ground', "ground", True)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 # Shader material, with shadows
-ground_ent.material_name = 'ground/bump_mapped/shadows'
+#ground_ent.material_name = 'ground/bump_mapped/shadows'
+ground_ent.material_name = 'ground/flat/shadows'
 ground_ent.cast_shadows = False
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
