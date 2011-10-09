@@ -332,7 +332,9 @@ void export_scene_graph(void)
 		// @todo does not work, pure virtual
 		//.add_property("type", python::make_function( &vl::Camera::getTypeName, python::return_value_policy<python::copy_const_reference>() ) )
 		.add_property("parent", python::make_function( &vl::MovableObject::getParent,python::return_value_policy<python::reference_existing_object>() ) )
-		.add_property("visible", &vl::MovableObject::getVisible, &vl::MovableObject::setVisible )
+		.add_property("visible", &vl::MovableObject::getVisible, &vl::MovableObject::setVisible)
+		.def("hide", &vl::MovableObject::hide)
+		.def("show", &vl::MovableObject::show)
 	;
 
 	python::class_<vl::LightAttenuation>("LightAttenuation", python::init<>() )
@@ -353,7 +355,7 @@ void export_scene_graph(void)
 		.add_property("specular", python::make_function( &vl::Light::getSpecularColour, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setSpecularColour )
 		.add_property("direction", python::make_function( &vl::Light::getDirection, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setDirection )
 		.add_property("position", python::make_function( &vl::Light::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setPosition )
-		.add_property("cast_shadows", &vl::Light::getCastShadows, &vl::Light::setCastShadows )
+		.add_property("cast_shadows", &vl::Light::getCastShadows, &vl::Light::setCastShadows)
 		// TODO this should use a struct and be a property
 		.def("setSpotRange", &vl::Light::setSpotlightRange, setSpotlightRange_ov())
 		.add_property("attenuation", python::make_function( &vl::Light::getAttenuation, python::return_value_policy<python::copy_const_reference>() ), &vl::Light::setAttenuation )

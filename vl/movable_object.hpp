@@ -50,6 +50,12 @@ public :
 	bool getVisible(void) const
 	{ return _visible; }
 
+	void hide(void)
+	{ setVisible(false); }
+
+	void show(void)
+	{ setVisible(true); }
+
 	/// @brief make a deep copy of the SceneNode
 	/// Shallow copies would not make much sense with SceneGraphs because you
 	/// can not have multiple parents unlike DAGs.

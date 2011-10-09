@@ -159,3 +159,54 @@ spot2_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
 # and saved
 # DO the same tests for single pass shader when it's ready
 
+class Lights :
+	def __init__(self):
+		self.spot1 = spot
+		self.spot2 = spot2
+		self.hemi1 = hemi
+		self.hemi2 = hemi2
+
+		self._create_sun()
+
+	def _create_sun(self):
+		self.sun = game.scene.createLight("sun")
+		self.sun.type = "directional"
+		self.sun.cast_shadows = False
+		#spot2.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
+		self.sun_n = game.scene.createSceneNode("sun")
+		self.sun_n.attachObject(self.sun)
+		# Really weird shadow effects when light is tied to the camera
+		# TODO find a better place for the light
+		#self.sun_n.position = Vector3(-30, 200, -50)
+		self.sun_n.position = Vector3(-10, 50, -5)
+		self.sun_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
+
+	def toggleSun(self):
+		self.sun.visible = not self.sun.visible
+
+	def toggleHemis(self):
+		vis = self.hemi1.visible
+		self.hemi1.visible = not vis
+		self.hemi2.visible = not vis
+
+	def toggleSpots(self):
+		# Keep the visibility same for both spots
+		vis = self.spot1.visible
+		self.spot1.visible = not vis
+		self.spot2.visible = not vis
+
+lights = Lights()
+
+trigger = game.event_manager.createKeyTrigger(KC.U)
+trigger.addListener(lights.toggleSpots)
+
+trigger = game.event_manager.createKeyTrigger(KC.I)
+trigger.addListener(lights.toggleHemis)
+
+trigger = game.event_manager.createKeyTrigger(KC.P)
+trigger.addListener(lights.toggleSun)
+
+# Start with only the directional light
+lights.toggleSpots()
+lights.toggleHemis()
+
