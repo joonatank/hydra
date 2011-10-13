@@ -39,16 +39,13 @@ set( DEMO_DATA_PATH ${vl_SOURCE_DIR}/data )
 set( PROJ_PATH_RELATIVE ${project_path} )
 # TODO the LIB_DIR should be user configurable
 # TODO we need to add Debug and Release support
-if( WIN32 )
+if( WIN32 AND NOT DEFINED LIB_DIR )
 	if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
 		set( LIB_DIR "d:\\libs" )
 	else()
 		set( LIB_DIR "d:\\libs32" )
 	endif()
 endif()
-
-# TODO should also copy the eqc file so that the hostname and port can be set
-# correctly there also.
 
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
 copy_shell_script( ${script_path} start start_${start_suffix} )

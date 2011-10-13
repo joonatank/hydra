@@ -13,6 +13,8 @@ project( "demos" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
+set(LIB_DIR "C:\\jotu\\software_development\\hydra_dependencies_libraries\\libs" CACHE PATH "Dependencies library dir")
+
 # Copy configs
 copy_start_scripts( hydra
 	ogre_project/ogre.prj

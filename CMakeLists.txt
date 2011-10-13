@@ -36,9 +36,10 @@ elseif( WIN32 )
 					 )
 endif( UNIX )
 
-if(CMAKE_CONFIGURATION_TYPES)
-	set(CMAKE_CONFIGURATION_TYPES Debug Release)
-endif(CMAKE_CONFIGURATION_TYPES)
+# For Visual Studio
+if(DEFINED CMAKE_CONFIGURATION_TYPES)
+	set(CMAKE_CONFIGURATION_TYPES "release;debug" CACHE STRING "" FORCE)
+endif()
 
 
 # Add our local scripts to CMake path
