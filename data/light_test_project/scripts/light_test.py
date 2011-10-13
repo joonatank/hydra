@@ -23,14 +23,14 @@ ground_ent = game.scene.createEntity('ground', "ground", True)
 ground = game.scene.createSceneNode('ground')
 ground.attachObject(ground_ent)
 # Shader material with shadows
-#ground_ent.material_name = 'ground/bump_mapped/shadows'
-ground_ent.material_name = 'ground/flat/shadows'
+ground_ent.material_name = 'ground/bump_mapped/shadows'
+#ground_ent.material_name = 'ground/flat/shadows'
 ground_ent.cast_shadows = False
 
 wall_ent = game.scene.createEntity('wall', "ground", True)
 wall = game.scene.createSceneNode("wall")
 wall.attachObject(wall_ent)
-wall_ent.material_name = 'ground/flat/shadows'
+wall_ent.material_name = ground_ent.material_name
 wall_ent.cast_shadows = False
 wall.orientation = Quaternion(0.7071, 0.7071, 0, 0)
 wall.position = Vector3(0, 20, -20)

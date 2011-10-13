@@ -410,7 +410,7 @@ material bling_phong/shadows/single_pass
 // it's only a implementation detail users of the shaders should
 // not need to worry about it.
 material bling_phong/normal_map/shadows : bling_phong/normal_map/shadows/multi_pass {}
-//material bling_phong/shadows : bling_phong/shadows/multi_pass {}
-material bling_phong/shadows : bling_phong/shadows/single_pass {}
+material bling_phong/shadows : bling_phong/shadows/multi_pass {}
+//material bling_phong/shadows : bling_phong/shadows/single_pass {}
 material bling_phong : bling_phong/multi_pass {}
 
