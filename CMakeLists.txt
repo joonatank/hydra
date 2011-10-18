@@ -113,6 +113,8 @@ find_package( Boost COMPONENTS system filesystem program_options signals REQUIRE
 find_package(Bullet)
 find_package(Newton)
 
+find_package(OpenCollada REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -127,6 +129,10 @@ include_directories( SYSTEM
 	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
+	${OPENCOLLADA_INCLUDE_DIR}
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	)
 
 # Libraries that Hydra library depends on
@@ -146,6 +152,7 @@ set( HYDRA_DEP_LIBS
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
+	${OPENCOLLADA_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

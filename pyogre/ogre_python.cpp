@@ -312,7 +312,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.add_property("bounding_sphere", make_function(getBoundingSphere_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBoundingSphereRadius)
 		.add_property("bounds", make_function(getBounds_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBounds)
 		.def("calculateBounds", &vl::Mesh::calculateBounds)
-		.def("createVertexData", &vl::Mesh::createVertexData)
+		.def("createVertexData", &vl::Mesh::createSharedVertexData)
 		.def_readonly("sharedVertexData", &vl::Mesh::sharedVertexData)
 
 		/*

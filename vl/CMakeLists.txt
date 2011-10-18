@@ -117,6 +117,15 @@ if(WIN32)
 endif()
 source_group(HydraMain\\base FILES ${BASE_HEADERS} ${BASE_SRC})
 
+
+set(COLLADA_HEADERS
+	collada/dae_importer.hpp
+	collada/dae_mesh_importer.hpp)
+set(COLLADA_SRC
+	collada/dae_importer.cpp
+	collada/dae_mesh_importer.cpp)
+source_group(HydraMain\\collada FILES ${COLLADA_HEADERS} ${COLLADA_SRC})
+
 set(PHYSICS_HEADERS
 	physics/motion_state.hpp
 	physics/rigid_body.hpp
@@ -282,6 +291,8 @@ add_library(HydraMain
 	${HEADERS}
 	${BASE_HEADERS}
 	${BASE_SRC}
+	${COLLADA_HEADERS}
+	${COLLADA_SRC}
 	${INPUT_HEADERS}
 	${INPUT_SRC}
 	${PHYSICS_HEADERS}

@@ -124,6 +124,9 @@ public :
 	/// @brief checks every Mesh loaded and unloads it if there is no users
 	void cleanup_unused(void);
 
+	/// @brief create an empty mesh object where the user can add data
+	vl::MeshRefPtr createMesh(std::string const &name);
+
 	/// @brief callback function
 	void meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh);
 

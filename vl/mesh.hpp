@@ -64,6 +64,43 @@ struct Vertex
 
 std::ostream &operator<<( std::ostream &os, Vertex const &v );
 
+/* VertexElementSematic
+VES_POSITION 	Position, 3 reals per vertex.
+
+VES_BLEND_WEIGHTS 	Blending weights.
+
+VES_BLEND_INDICES 	Blending indices.
+
+VES_NORMAL 	Normal, 3 reals per vertex.
+
+VES_DIFFUSE 	Diffuse colours.
+
+VES_SPECULAR 	Specular colours.
+
+VES_TEXTURE_COORDINATES 	Texture coordinates.
+
+VES_BINORMAL 	Binormal (Y axis if normal is Z)
+
+VES_TANGENT 
+*/
+
+/* VertexElementType
+VET_FLOAT1 	
+VET_FLOAT2 	
+VET_FLOAT3 	
+VET_FLOAT4 	
+VET_COLOUR 	alias to more specific colour type - use the current rendersystem's colour packing
+
+VET_SHORT1 	
+VET_SHORT2 	
+VET_SHORT3 	
+VET_SHORT4 	
+VET_UBYTE4 	
+VET_COLOUR_ARGB 	D3D style compact colour.
+
+VET_COLOUR_ABGR 	GL style compact colour.
+*/
+
 struct VertexDeclaration
 {
 	VertexDeclaration(void)
@@ -339,7 +376,7 @@ public :
 	/// and adding them to the shared geometry
 	void calculateBounds(void);
 
-	void createVertexData(void)
+	void createSharedVertexData(void)
 	{ sharedVertexData = new VertexData; }
 
 	/// ---------------------- Public Data ------------------------

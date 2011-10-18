@@ -28,7 +28,9 @@
 // Physics
 #include "physics/physics_world.hpp"
 
+/// File Loaders
 #include "dotscene_loader.hpp"
+#include "collada/dae_importer.hpp"
 
 #include "animation/kinematic_world.hpp"
 
@@ -417,24 +419,54 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
-	vl::TextResource resource;
-	getResourceManager()->loadResource(scene_info.getFile(), resource);
+	vl::timer t;
+	fs::path file(scene_info.getFile());
+	if(file.extension() == ".dae")
+	{
+		std::clog << "Loading Collada file." << std::endl;
 
-	// Default to false for now
-	bool use_mesh = false;
-	if(scene_info.getUseNewMeshManager() == CFG_ON)
-	{ use_mesh = true; }
+		/// @todo this needs to find the absolute path using ResourceManager
+		/// OpenCollada needs file name not the complete file
+		/// per it's design to handle large files.
+		std::string path;
+		if(getResourceManager()->findResource(file.string(), path))
+		{
+			vl::dae::FileDeserializer loader(path, _scene_manager);
+			loader.write();
+		}
+		else
+		{
+			std::cout << "Couldn't find DAE resource : " << file << std::endl;
+		}
+	}
+	else if(file.extension() == ".scene")
+	{
+		std::clog << "Loading scene file." << std::endl;
 
-	if(scene_info.getUsePhysics())
-	{ enablePhysics(true); }
+		vl::TextResource resource;
+		getResourceManager()->loadResource(scene_info.getFile(), resource);
 
-	vl::DotSceneLoader loader(use_mesh);
-	// TODO pass attach node based on the scene
-	// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-	// @todo add physics
-	loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
+		// Default to false for now
+		bool use_mesh = false;
+		if(scene_info.getUseNewMeshManager() == CFG_ON)
+		{ use_mesh = true; }
 
-	std::cout << "Scene " << scene_info.getName() << " loaded." << std::endl;
+		if(scene_info.getUsePhysics())
+		{ enablePhysics(true); }
+
+		vl::DotSceneLoader loader(use_mesh);
+		// TODO pass attach node based on the scene
+		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+		// @todo add physics
+		loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
+	}
+	else
+	{
+		// @todo should throw or do some default magic
+		std::clog << "ERROR : Unknown scene file extension." << std::endl;
+	}
+
+	std::cout << "Scene " << scene_info.getName() << " loaded. Loading took " << t.elapsed() << "." << std::endl;
 }
 
 /// ------------------------------ Private -----------------------------------

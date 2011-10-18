@@ -299,6 +299,14 @@ vl::MeshManager::cleanup_unused(void)
 	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
+vl::MeshRefPtr 
+vl::MeshManager::createMesh(std::string const &name)
+{
+	MeshRefPtr mesh(new Mesh(name));
+	_meshes[name] = mesh;
+	return mesh;
+}
+
 void 
 vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 {
