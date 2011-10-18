@@ -285,7 +285,8 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 	ibf->setIndexSize(vl::IT_32BIT);
 
 	// Do not resize the index buffer here
-	// because we don't have the exact size after splitting all the quads
+	// because we don't have the exact size before handling the type of indeces 
+	// and splitting all polygons to triangles.
 
 	switch (meshPrimitive->getPrimitiveType())
 	{
@@ -315,7 +316,7 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 				// how to handle face normals and face UVs?
 
 				// Split quads
-				if(vert_count > 3)
+				if(vert_count == 4)
 				{
 					/// @todo copy working version for quads to SubMesh::addFace
 					ibf->push_back(positionIndices[index]);
@@ -325,12 +326,19 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 					ibf->push_back(positionIndices[index+2]);
 					ibf->push_back(positionIndices[index+3]);
 				}
-				else
+				else if(vert_count == 3)
 				{
 					ibf->push_back(positionIndices[index]);
 					ibf->push_back(positionIndices[index+1]);
 					ibf->push_back(positionIndices[index+2]);
 				}
+				else
+				{
+					std::stringstream ss;
+					ss << "Unknown vertex count for face : count = " << vert_count;
+					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+				}
+
 				index += vert_count;
 			}
 		}
@@ -339,6 +347,9 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 		{
 			const COLLADAFW::Triangles* triangles = (const COLLADAFW::Triangles*) meshPrimitive;
 			numIndices = (int)positionIndicesCount;
+
+			// All faces have three indices, we can copy them as is after resize
+			ibf->setIndexCount(positionIndicesCount);
 
 			for ( int j = 0; j < numIndices; ++j )
 			{
@@ -352,7 +363,7 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 				if(has_uv_coords)
 					uvIndex = (*uvIndices)[j];
 
-				ibf->getBuffer32()[j] = positionIndex;
+				ibf->set(j, positionIndex);
 			}
 		}
 		break;

@@ -11,6 +11,11 @@ Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
 			<file>cube.dae</file>
 		</scene>
 
+		<!-- For more advanced testing Anark core made collada file -->
+		<scene name="boomcrane" use="false">
+			<file>anark_testi.dae</file>
+		</scene>
+
 	</scenes>
 
 	<scripts>
