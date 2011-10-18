@@ -132,6 +132,13 @@ public :
 
 	typedef std::map<std::string, vl::MeshRefPtr> MeshMap;
 
+	// Methods
+private :
+	// Non-copyable
+	MeshManager &operator=(MeshManager const &);
+	MeshManager(MeshManager const &);
+
+	// Data
 private :
 	MeshLoaderCallback *_load_callback;
 

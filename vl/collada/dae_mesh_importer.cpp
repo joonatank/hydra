@@ -389,7 +389,11 @@ vl::dae::MeshImporter::handleSubMesh(COLLADAFW::MeshPrimitive* meshPrimitive,
 	const COLLADABU::Math::Matrix4& matrix, vl::SubMesh *submesh)
 {
 	std::clog << "vl::dae::MeshImporter::handleSubMesh" << std::endl;
-	
+	assert(submesh);
+	assert(meshPrimitive);
+
+	std::clog << "Submesh material = " << meshPrimitive->getMaterial() << std::endl;
+	submesh->setMaterial(meshPrimitive->getMaterial());
 	handleIndexBuffer(meshPrimitive, matrix, &submesh->indexData);
 }
 

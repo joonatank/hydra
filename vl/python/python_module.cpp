@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-08
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/Oct  Savant Simulators Oy
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
  *	@file python/python_module.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3	
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Interface
@@ -19,6 +29,9 @@
 #include "camera.hpp"
 #include "movable_text.hpp"
 #include "ray_object.hpp"
+
+#include "material.hpp"
+#include "material_manager.hpp"
 
 #include "player.hpp"
 
@@ -212,6 +225,32 @@ void export_scene_graph(void)
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
+	;
+
+	
+	python::class_<vl::Material, vl::MaterialRefPtr, boost::noncopyable>("Material", python::no_init)
+		.add_property("shader", python::make_function(&vl::Material::getShader, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setShader)
+		.add_property("texture", python::make_function(&vl::Material::getTexture, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setTexture)
+		.add_property("diffuse", python::make_function(&vl::Material::getDiffuse, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setDiffuse)
+		.add_property("specular", python::make_function(&vl::Material::getSpecular, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setSpecular)
+		.add_property("emissive", python::make_function(&vl::Material::getEmissive, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setEmissive)
+		.add_property("ambient", python::make_function(&vl::Material::getAmbient, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setAmbient)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	//vl::MaterialRefPtr (vl::MaterialManager::*createMaterial_ov0)(std::string const &) = ;
+
+	python::class_<vl::MaterialManager, vl::MaterialManagerRefPtr, boost::noncopyable>("MaterialManager", python::no_init)
+		.def("create_material", &vl::MaterialManager::createMaterial)
+		// @todo add list access
+		// vl::MaterialManager::getMaterials
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
@@ -521,6 +560,7 @@ void export_game(void)
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
+		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;

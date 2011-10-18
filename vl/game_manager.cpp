@@ -6,17 +6,15 @@
  *
  */
 
+// Interface
 #include "game_manager.hpp"
 
-// Python manager
+// Managers that we own
 #include "python/python.hpp"
-// Event Manager
 #include "event_manager.hpp"
-// Resource Manager
 #include "resource_manager.hpp"
-// Mesh manager
 #include "mesh_manager.hpp"
-// Scene Manager
+#include "material_manager.hpp"
 #include "scene_manager.hpp"
 
 // Player
@@ -62,6 +60,8 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
+
+	_material_manager.reset(new MaterialManager(_session));
 
 	// Not creating audio context because user needs to enable it separately.
 
@@ -431,7 +431,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		std::string path;
 		if(getResourceManager()->findResource(file.string(), path))
 		{
-			vl::dae::FileDeserializer loader(path, _scene_manager);
+			vl::dae::FileDeserializer loader(path, _scene_manager, _material_manager);
 			loader.write();
 		}
 		else

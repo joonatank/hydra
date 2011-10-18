@@ -304,6 +304,10 @@ public :
 	IndexBuffer indexData;
 
 private :
+	// Non-copyable
+	SubMesh(SubMesh const &);
+	SubMesh &operator=(SubMesh const &);
+
 	/// --------------- Private Data --------------------
 	std::string _name;
 	std::string _material;
@@ -386,6 +390,10 @@ public :
 	VertexData *sharedVertexData;
 
 private :
+	// Non-copyable
+	Mesh(Mesh const &);
+	Mesh &operator=(Mesh const &);
+
 	/// ---------------------- Private Data ------------------------
 	std::string _name;
 

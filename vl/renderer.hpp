@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/Oct Savant Simulators Oy
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -156,6 +167,7 @@ protected :
 	vl::Settings _settings;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;

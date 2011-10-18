@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/Oct Savant Simulators Oy
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Interface
@@ -15,6 +25,7 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
+#include "material_manager.hpp"
 
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
@@ -315,6 +326,24 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				if(!_scene_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
 				_scene_manager->_createSceneNode(id);
+			}
+			break;
+
+			case OBJ_MATERIAL_MANAGER :
+			{
+				std::clog << "Creating Material Manager" << std::endl;
+				if(_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
+				_material_manager.reset(new MaterialManager(this, id));
+			}
+			break;
+
+			case OBJ_MATERIAL :
+			{
+				std::clog << "Creating material" << std::endl;
+				if(!_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO Material Manager.")); }
+				_material_manager->_createMaterial(id);
 			}
 			break;
 

@@ -1,9 +1,25 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/Oct Savant Simulators Oy
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+ *	@date 2011-01
+ *	@file cluster/session.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_SESSION_HPP
-#define VL_CLUSTER_SESSION_HPP
+#ifndef HYDRA_SESSION_HPP
+#define HYDRA_SESSION_HPP
+
+#include "object_types.hpp"
+#include "distributed.hpp"
 
 #include <stdint.h>
 
@@ -12,29 +28,11 @@
 #include <cstring>
 
 #include <iostream>
-#include <distributed.hpp>
 
 #include <assert.h>
 
 namespace vl
 {
-
-enum OBJ_TYPE
-{
-	OBJ_INVALID,
-	OBJ_PLAYER,
-	OBJ_GUI,			// GUI object
-	OBJ_GUI_WINDOW,		// Genera GUI window
-	OBJ_GUI_CONSOLE,	// GUI Console window
-	OBJ_GUI_EDITOR,		// GUI editor window
-	OBJ_SCENE_MANAGER,
-	OBJ_SCENE_NODE,
-	OBJ_ENTITY,
-	OBJ_LIGHT,
-	OBJ_CAMERA,
-	OBJ_MOVABLE_TEXT,
-	OBJ_RAY_OBJECT,
-};
 
 class Session
 {
@@ -113,4 +111,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_CLUSTER_SESSION_HPP
+#endif // HYDRA_SESSION_HPP

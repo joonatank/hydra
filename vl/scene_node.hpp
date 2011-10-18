@@ -21,7 +21,7 @@
 #include "math/transform.hpp"
 
 // Base class
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 #include "object_interface.hpp"
 
 namespace vl

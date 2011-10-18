@@ -50,7 +50,8 @@ class FileDeserializer  : public COLLADAFW::IWriter
 {
 public:
 	/// Constructor
-	FileDeserializer(fs::path const &inputFile, vl::SceneManagerPtr scene_manager);
+	FileDeserializer(fs::path const &inputFile, 
+		vl::SceneManagerPtr scene_manager, vl::MaterialManagerRefPtr material_man);
 
 	/// Destructor
 	virtual ~FileDeserializer();
@@ -163,6 +164,7 @@ private:
 	fs::path _input_file;
 
 	vl::SceneManagerPtr _scene_manager;
+	vl::MaterialManagerRefPtr _material_manager;
 
 	// Maps for instances, these are handled at the end of file reading
 	// and used to map the concrete objects (_cameras, _entities, _lights) to
@@ -174,6 +176,8 @@ private:
 	std::map<COLLADAFW::UniqueId, vl::EntityPtr> _entities;
 	std::map<COLLADAFW::UniqueId, vl::LightPtr> _lights;
 
+	std::map<COLLADAFW::UniqueId, vl::MaterialRefPtr> _effect_map;
+	std::vector< std::pair<COLLADAFW::UniqueId, std::string> > _materials;
 };
 
 }	// namespace dae

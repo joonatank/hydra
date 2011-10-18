@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-05
- *	@file constraints.hpp
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/Oct  Savant Simulators Oy
  *
- *	This file is part of Hydra a VR game engine.
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
+ *	@file typedefs.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3	
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_TYPEDEFS_HPP
@@ -98,6 +108,12 @@ namespace vl
 
 	typedef boost::shared_ptr<Mesh> MeshRefPtr;
 	typedef boost::shared_ptr<MeshManager> MeshManagerRefPtr;
+
+	class Material;
+	class MaterialManager;
+
+	typedef boost::shared_ptr<Material> MaterialRefPtr;
+	typedef boost::shared_ptr<MaterialManager> MaterialManagerRefPtr;
 
 	class Recording;
 	typedef boost::shared_ptr<Recording> RecordingRefPtr;

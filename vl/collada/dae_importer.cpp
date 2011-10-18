@@ -41,6 +41,10 @@
 #include "camera.hpp"
 #include "entity.hpp"
 
+/// Necessary for creating materials
+#include "material_manager.hpp"
+#include "material.hpp"
+
 namespace {
 
 Ogre::Vector3 convert_vec(COLLADABU::Math::Vector3 const &v)
@@ -51,11 +55,14 @@ Ogre::Quaternion convert_quat(COLLADABU::Math::Quaternion const &q)
 }
 
 //--------------------------------------------------------------------
-vl::dae::FileDeserializer::FileDeserializer(fs::path const &inputFile, vl::SceneManagerPtr scene_manager)
+vl::dae::FileDeserializer::FileDeserializer(fs::path const &inputFile, 
+	vl::SceneManagerPtr scene_manager, vl::MaterialManagerRefPtr material_man)
 	: _input_file(inputFile)
 	, _scene_manager(scene_manager)
+	, _material_manager(material_man)
 {
 	assert(_scene_manager);
+	assert(_material_manager);
 }
 
 //--------------------------------------------------------------------
@@ -141,6 +148,28 @@ vl::dae::FileDeserializer::finish()
 			std::clog << "Found the light and attaching : " << l_iter->second->getName() 
 				<< " to node " << iter->first->getName() << std::endl;
 			iter->first->attachObject(l_iter->second);
+		}
+	}
+
+	// Rename materials
+	for(std::vector< std::pair<COLLADAFW::UniqueId, std::string> >::iterator iter =
+		_materials.begin(); iter != _materials.end(); ++iter)
+	{
+		std::clog << "Renaming material " << iter->second << std::endl;
+		std::map<COLLADAFW::UniqueId, vl::MaterialRefPtr>::iterator l_iter = _effect_map.find(iter->first);
+		if(l_iter == _effect_map.end())
+		{
+			std::clog << "Something really wrong! Couldn't find the Effect." << std::endl;
+		}
+		else
+		{
+			/// @todo needs to check the uniqueness of the name before resetting it
+			/// collisions when using multiple import files
+			/// This will of course be problematic for meshes... as they already said to use
+			/// certain material. Ah well.
+			std::clog << "Found the effect and renamed : " << l_iter->second->getName() 
+				<< " to " << iter->second << std::endl;
+			l_iter->second->setName(iter->second);
 		}
 	}
 }
@@ -336,8 +365,12 @@ vl::dae::FileDeserializer::writeGeometry(COLLADAFW::Geometry const *geometry)
 bool
 vl::dae::FileDeserializer::writeMaterial( const COLLADAFW::Material* material )
 {
-	std::clog << "vl::dae::FileDeserializer::writeMaterial : NOT IMPLEMENTED" << std::endl;
-//	mUniqueIdFWMaterialMap.insert(std::make_pair(material->getUniqueId(), *material ));
+	std::clog << "vl::dae::FileDeserializer::writeMaterial" << std::endl;
+	assert(_material_manager);
+
+	_materials.push_back(std::make_pair(material->getInstantiatedEffect(), material->getName())); 
+
+	//	mUniqueIdFWMaterialMap.insert(std::make_pair(material->getUniqueId(), *material ));
 	return true;
 }
 
@@ -345,7 +378,21 @@ vl::dae::FileDeserializer::writeMaterial( const COLLADAFW::Material* material )
 bool
 vl::dae::FileDeserializer::writeEffect( const COLLADAFW::Effect* effect )
 {
-	std::clog << "vl::dae::FileDeserializer::writeEffect : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::FileDeserializer::writeEffect" << std::endl;
+
+	MaterialRefPtr mat = _material_manager->createMaterial(effect->getName());
+
+	COLLADAFW::Color const &col = effect->getStandardColor();
+	mat->setDiffuse(Ogre::ColourValue(col.getRed(), col.getGreen(), col.getBlue(), col.getAlpha()));
+
+	// @todo add support for the real material information
+
+	_effect_map[effect->getUniqueId()] = mat;
+
+	// @todo add the material to stack? do we need this?
+	// we will anyway use material names not pointers to them.
+	// Ogre takes care of that.
+
 //	mUniqueIdFWEffectMap.insert(std::make_pair(effect->getUniqueId(), *effect ));
 	return true;
 }

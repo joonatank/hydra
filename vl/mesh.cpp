@@ -332,10 +332,7 @@ vl::IndexBuffer::push_back(uint32_t index)
 void
 vl::IndexBuffer::set(size_t i, uint32_t index)
 {
-	// @todo replace with a real exception
-	if(i-1 > _index_count)
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
+	// No checking for the index provided, vector::at will do that for us
 	if(_buffer_size == IT_32BIT)
 	{
 		_buffer_32.at(i) = index;

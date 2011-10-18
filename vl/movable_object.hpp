@@ -8,7 +8,7 @@
 #define HYDRA_MOVABLE_OBJECT_HPP
 
 // Base class
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 
 #include "typedefs.hpp"
 

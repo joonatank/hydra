@@ -8,19 +8,21 @@
 #ifndef HYDRA_GUI_WINDOW_HPP
 #define HYDRA_GUI_WINDOW_HPP
 
-#include <CEGUI/CEGUIWindow.h>
-
 #include <string>
 #include <deque>
 
+// Base class
+#include "cluster/distributed.hpp"
 // Necessary for distribution
-#include "distributed.hpp"
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 // Necessary for log level
 #include "logger.hpp"
 
 #include "typedefs.hpp"
+
+// Concrete implementation
+#include <CEGUI/CEGUIWindow.h>
 
 namespace vl
 {

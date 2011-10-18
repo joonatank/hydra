@@ -8,13 +8,16 @@
 #ifndef HYDRA_GUI_GUI_HPP
 #define HYDRA_GUI_GUI_HPP
 
-#include <CEGUI/CEGUIWindow.h>
+// Base class
+#include "cluster/distributed.hpp"
 
-#include "distributed.hpp"
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 // Necessary for command callback
 #include "renderer_interface.hpp"
+
+// Concrete implementation
+#include <CEGUI/CEGUIWindow.h>
 
 namespace vl
 {

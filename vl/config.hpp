@@ -10,7 +10,7 @@
 #define HYDRA_CONFIG_HPP
 
 // Base class
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 // Necessary for the project settings
 #include "settings.hpp"

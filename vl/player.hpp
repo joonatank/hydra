@@ -21,13 +21,13 @@
 #ifndef HYDRA_PLAYER_HPP
 #define HYDRA_PLAYER_HPP
 
-#include <string>
-
 #include "math/transform.hpp"
 
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 
 #include "typedefs.hpp"
+
+#include <string>
 
 namespace vl
 {
