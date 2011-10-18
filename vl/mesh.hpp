@@ -242,6 +242,9 @@ public :
 
 	void set(size_t i, uint16_t index);
 
+	// can't define operator[] 
+	// because the only difference for overloads can't be the return type
+
 	/// @brief Calculate the index count from the 
 	//void recalculateIndexCount(void)
 private :
