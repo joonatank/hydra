@@ -59,12 +59,13 @@ def createCameraMovementsOld(node, speed = 5, angular_speed = Degree(90)) :
 # so we can have controllers for a group of objects and selections
 # as well as single objects.
 class Controller:
-	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None, rotation = Quaternion(1, 0, 0, 0)):
 		self.speed = speed
 		self.angular_speed = angular_speed
 		self.mov_dir = Vector3.zero
 		self.rot_axis = Vector3.zero
 		self.ref = reference
+		self.rotation = rotation
 
 	def transform(self, nodes, t):
 		# Normalises the move dir, this works for keyboard but it
@@ -84,9 +85,9 @@ class Controller:
 				# impossible to indicate if the list contains
 				# more than one element
 				if self.ref:
-					nodes[i].translate(mov, self.ref)
+					nodes[i].translate(self.rotation * mov, self.ref)
 				else:
-					nodes[i].translate(mov)
+					nodes[i].translate(self.rotation * mov)
 
 		axis = self.rot_axis
 		if axis.length() != 0:
@@ -143,8 +144,8 @@ class ObjectController(Controller):
 		self.transform(nodes, t)
 
 class SelectionController(Controller):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None):
-		Controller.__init__(self, speed, angular_speed, reference)
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, rotation = Quaternion(1, 0, 0, 0)):
+		Controller.__init__(self, speed, angular_speed, reference, rotation)
 
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
@@ -214,8 +215,8 @@ def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
 # @param speed linear speed of the selection
 # @param angular_speed rotation speed of the selection
 # @param reference The object whom coordinate system is used for translation, usually camera
-def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None) :
-	selection_movements = SelectionController(speed, angular_speed, reference)
+def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
+	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
 
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
 	trigger.addKeyDownListener(selection_movements.right)
@@ -319,7 +320,6 @@ def addRigidBodyController(body):
 
 def mapHeadTracker(name) :
 	def setHeadTransform(t):
-		print("Setting head transformation")
 		game.player.head_transformation = t
 
 	if not game.event_manager.hasTrackerTrigger(name):
