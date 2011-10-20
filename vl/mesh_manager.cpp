@@ -17,6 +17,9 @@
 
 #include "resource_manager.hpp"
 
+// Necessary for comparing sub mesh materials
+#include "material.hpp"
+
 void 
 vl::ManagerMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
 {
@@ -307,6 +310,34 @@ vl::MeshManager::createMesh(std::string const &name)
 	return mesh;
 }
 
+bool
+vl::MeshManager::checkMaterialUsers(vl::MaterialRefPtr mat)
+{
+	bool retval = false;
+
+	// temp array for the ones that are left
+	std::vector<Ogre::SubEntity *> remaining;
+	for(std::vector<Ogre::SubEntity *>::iterator iter = _og_sub_entities.begin();
+		iter != _og_sub_entities.end(); ++iter)
+	{
+		// sub mesh has the original material name before Ogre overwrote it with "BaseWhite"
+		if((*iter)->getSubMesh()->getMaterialName() == mat->getName())
+		{
+			assert(mat->getNative().get());
+			(*iter)->setMaterial(mat->getNative());
+			retval = true;
+		}
+		else
+		{ remaining.push_back(*iter); }
+	}
+
+	_og_sub_entities = remaining;
+
+	// @todo needs to loop through Ogre meshes also... as they are copies of our meshes. Argh.
+	//Ogre::MeshManager::getSingleton().
+	return retval;
+}
+
 void 
 vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 {
@@ -327,4 +358,12 @@ vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 		_waiting_for_loading.erase(iter);
 	}
 	// else this was called using a blocking loader
+}
+
+void
+vl::MeshManager::_addSubEntityWithInvalidMaterial(Ogre::SubEntity *se)
+{
+	if(std::find(_og_sub_entities.begin(), _og_sub_entities.end(), se)
+		== _og_sub_entities.end())
+	{ _og_sub_entities.push_back(se); }
 }

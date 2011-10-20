@@ -48,10 +48,14 @@ public :
 	/// @internal Slave creator
 	MaterialRefPtr _createMaterial(uint64_t id);
 
+	MaterialRefPtr getMaterial(std::string const &name);
+
+	bool hasMaterial(std::string const &name);
+
 	Ogre::MaterialManager *getNative(void) const
 	{ return _ogre_manager; }
 
-	std::vector<MaterialRefPtr> const &getMaterials(void) const
+	std::vector<MaterialRefPtr> const &getMaterialList(void) const
 	{ return _materials; }
 
 	enum DirtyBits
@@ -83,8 +87,16 @@ private :
 inline
 std::ostream &operator<<(std::ostream &os, MaterialManager const &man)
 {
-	os << "Material Manager : with " << man.getMaterials().size() << " materials." << std::endl;
+	os << "Material Manager : with " << man.getMaterialList().size() << " materials." << std::endl;
 
+	return os;
+}
+
+inline
+std::ostream &operator<<(std::ostream &os, 	std::vector<MaterialRefPtr> const &material_list)
+{
+	os << "Material list with " << material_list.size() << " materials.";
+	
 	return os;
 }
 

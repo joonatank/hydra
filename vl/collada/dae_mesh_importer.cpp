@@ -35,12 +35,63 @@
 /// Necessary for typedefs
 #include "dae_importer.hpp"
 
-std::string const MATERIAL("BaseWhite");
+namespace {
+
+Ogre::Vector3 convert_vertex_data(COLLADAFW::MeshVertexData const &data, size_t index)
+{
+	Ogre::Vector3 v;
+	if(data.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
+	{
+		const double* arr = data.getDoubleValues()->getData();
+		arr += 3*index;
+		//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
+		v.x = (Ogre::Real)arr[0];
+		v.y = (Ogre::Real)arr[1];
+		v.z = (Ogre::Real)arr[2];
+	}
+	else
+	{
+		const float* arr = data.getFloatValues()->getData();
+		arr += 3*index;
+		//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
+		v.x = (Ogre::Real)arr[0];
+		v.y = (Ogre::Real)arr[1];
+		v.z = (Ogre::Real)arr[2];
+	}
+
+	return v;
+}
+
+Ogre::Vector2 convert_uvs(COLLADAFW::MeshVertexData const &data, size_t index)
+{
+	Ogre::Vector2 uv;
+	if(data.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
+	{
+		const double* arr = data.getDoubleValues()->getData();
+		arr += 2*index;
+		uv.x = (Ogre::Real)arr[0];
+		uv.y = (Ogre::Real)arr[1];
+	}
+	else
+	{
+		const float* arr = data.getFloatValues()->getData();
+		arr += 2*index;
+		uv.x = (Ogre::Real)arr[0];
+		uv.y = (Ogre::Real)arr[1];
+	}
+
+	return uv;
+}
+
+}	// unamed namespace
+
 
 //------------------------------
-vl::dae::MeshImporter::MeshImporter(MeshManagerRefPtr mesh_manager, COLLADAFW::Mesh const *mesh)
+vl::dae::MeshImporter::MeshImporter(MeshManagerRefPtr mesh_manager, 
+	COLLADAFW::Mesh const *mesh, bool flat_shading)
 	: _collada_mesh(mesh)
 	, _mesh_manager(mesh_manager)
+	, _flat_shading(flat_shading)
 {}
 
 //------------------------------
@@ -59,57 +110,12 @@ vl::dae::MeshImporter::write()
 
 	assert(_mesh_manager);
 	assert(_collada_mesh);
-	vl::MeshRefPtr mesh = _mesh_manager->createMesh(_collada_mesh->getName());
+	_mesh = _mesh_manager->createMesh(_collada_mesh->getName());
 
-	mesh->createSharedVertexData();
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_DIFFUSE, Ogre::VET_FLOAT3);
-	
-	/// Shared vertex data
-	COLLADAFW::MeshVertexData const &positions = _collada_mesh->getPositions();
-	for(size_t i = 0; i < positions.getValuesCount()/3; ++i)
-	{
-		Vertex vert;
-		Ogre::Vector3 pos;
-		if( positions.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
-		{
-			const double* positionsArray = positions.getDoubleValues()->getData();
-			positionsArray += 3*i;
-			COLLADABU::Math::Vector3 position(positionsArray[0], positionsArray[1], positionsArray[2]);
-			//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
-			pos.x = (Ogre::Real)position.x;
-			pos.y = (Ogre::Real)position.y;
-			pos.z = (Ogre::Real)position.z;
-		}
-		else
-		{
-			const float* positionsArray = positions.getFloatValues()->getData();
-			positionsArray += 3*i;
-			COLLADABU::Math::Vector3 position(positionsArray[0], positionsArray[1], positionsArray[2]);
-			//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
-			pos.x = (Ogre::Real)position.x;
-			pos.y = (Ogre::Real)position.y;
-			pos.z = (Ogre::Real)position.z;
-		}
-		
-		vert.position = pos;
-		std::clog << "Position = " << pos << std::endl;
+	_mesh->createSharedVertexData();
+	handleVertexBuffer(_collada_mesh, _mesh->sharedVertexData);
 
-		/// This needs to add UV coords before the mesh is usable
-		mesh->sharedVertexData->addVertex(vert);
-	}
-
-	std::clog << "Mesh with " << mesh->sharedVertexData->getNVertices() << " vertices created." << std::endl;
-
-	/*	TODO add support for normals
-	if(_collada_mesh->hasNormals())
-	{
-		mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-		COLLADAFW::MeshVertexData const &normals = _collada_mesh->getNormals();
-	}
-	
-	COLLADAFW::MeshVertexData const &colours = _collada_mesh->getColors();
-	*/
+	std::clog << "Mesh with " << _mesh->sharedVertexData->getNVertices() << " vertices created." << std::endl;
 
 	/// Submeshes
 	COLLADAFW::MeshPrimitiveArray const &submesh_array = _collada_mesh->getMeshPrimitives();
@@ -119,7 +125,7 @@ vl::dae::MeshImporter::write()
 		// @todo this world matrix business I don't understand.
 		COLLADABU::Math::Matrix4 worldMatrix;
 		COLLADAFW::MeshPrimitive* meshPrimitive = submesh_array[i];
-		vl::SubMesh *submesh = mesh->createSubMesh();
+		vl::SubMesh *submesh = _mesh->createSubMesh();
 		handleSubMesh(meshPrimitive, worldMatrix, submesh);
 	}
 
@@ -149,95 +155,12 @@ vl::dae::MeshImporter::write()
 	}
 	*/
 
-	mesh->calculateBounds();
+	_mesh->calculateBounds();
 
-	std::clog << "Mesh bounds = " << mesh->getBounds() << std::endl;
+	std::clog << "Mesh bounds = " << _mesh->getBounds() << std::endl;
 
 	return true;
 }
-
-//------------------------------
-/*
-void
-vl::dae::MeshImporter::addTupleIndex(Tuple const &tuple)
-{
-	TupleIndexMap::const_iterator it = mTupleMap.find(tuple);
-	if ( it == mTupleMap.end() )
-	{
-		mOgreIndices.append( mTupleMap[tuple] = mNextTupleIndex++ );
-
-		if ( mMeshPositions.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
-		{
-			const double* positionsArray = mMeshPositions.getDoubleValues()->getData();
-			positionsArray += 3*tuple.positionIndex;
-			COLLADABU::Math::Vector3 position(positionsArray[0], positionsArray[1], positionsArray[2]);
-			position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
-			mOgrPositions.append((float)position.x);
-			mOgrPositions.append((float)position.y);
-			mOgrPositions.append((float)position.z);
-		}
-		else
-		{
-			const float* positionsArray = mMeshPositions.getFloatValues()->getData();
-			positionsArray += 3*tuple.positionIndex;
-			COLLADABU::Math::Vector3 position(positionsArray[0], positionsArray[1], positionsArray[2]);
-			position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
-			mOgrPositions.append((float)position.x);
-			mOgrPositions.append((float)position.y);
-			mOgrPositions.append((float)position.z);
-		}
-
-		if ( mHasNormals )
-		{
-			if ( mMeshNormals.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
-			{
-				const double* normalsArray = mMeshNormals.getDoubleValues()->getData();
-				normalsArray += 3*tuple.normalIndex;
-				COLLADABU::Math::Vector3 normal(normalsArray[0], normalsArray[1], normalsArray[2]);
-				normal = mCurrentRotationMatrix * normal;
-				normal.normalise();
-				mOgreNormals.append((float)normal.x);
-				mOgreNormals.append((float)normal.y);
-				mOgreNormals.append((float)normal.z);
-			}
-			else
-			{
-				const float* normalsArray = mMeshNormals.getFloatValues()->getData();
-				normalsArray += 3*tuple.normalIndex;
-				COLLADABU::Math::Vector3 normal(normalsArray[0], normalsArray[1], normalsArray[2]);
-				normal = mCurrentRotationMatrix * normal;
-				normal.normalise();
-				mOgreNormals.append((float)normal.x);
-				mOgreNormals.append((float)normal.y);
-				mOgreNormals.append((float)normal.z);
-			}
-		}
-
-		if ( mHasUVCoords )
-		{
-			if ( mMeshUVCoordinates.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
-			{
-				const double* uVCoordinateArray = mMeshUVCoordinates.getDoubleValues()->getData();
-				uVCoordinateArray += mMeshUVCoordinates.getStride(0)*tuple.textureIndex;
-				mOgreUVCoordinates.append((float)uVCoordinateArray[0]);
-				mOgreUVCoordinates.append((float)uVCoordinateArray[1]);
-			}
-			else
-			{
-				const float* uVCoordinateArray = mMeshUVCoordinates.getFloatValues()->getData();
-				uVCoordinateArray += mMeshUVCoordinates.getStride(0)*tuple.textureIndex;
-				mOgreUVCoordinates.append((float)uVCoordinateArray[0]);
-				mOgreUVCoordinates.append((float)uVCoordinateArray[1]);
-			}
-		}
-
-	}
-	else
-	{
-		mOgreIndices.append(it->second);
-	}
-}
-*/
 
 void
 vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive, 
@@ -255,14 +178,15 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 	const COLLADAFW::UIntValuesArray& positionIndices =  meshPrimitive->getPositionIndices();
 	size_t positionIndicesCount  = positionIndices.getCount();
 
-	const COLLADAFW::UIntValuesArray& normalIndices =  meshPrimitive->getNormalIndices();
+	COLLADAFW::UIntValuesArray const &normalIndices =  meshPrimitive->getNormalIndices();
 	size_t normalIndicesCount = normalIndices.getCount();
 	has_normals = (normalIndicesCount != 0);
 
 
-	const COLLADAFW::UIntValuesArray* uvIndices;
+	COLLADAFW::UIntValuesArray const *uvIndices;
 	size_t uvIndicesCount = 0;
-	const COLLADAFW::IndexListArray& uVIndicesList = meshPrimitive->getUVCoordIndicesArray();
+	// Multiple uv coordinates
+	COLLADAFW::IndexListArray const &uVIndicesList = meshPrimitive->getUVCoordIndicesArray();
 	if ( !uVIndicesList.empty() )
 	{
 		uvIndices = &uVIndicesList[0]->getIndices();
@@ -274,6 +198,17 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 		has_uv_coords = false;
 	}
 
+	if(has_uv_coords)
+	{
+		std::clog << "Submesh has face uvs : NOT SUPPORTED" << std::endl;
+		std::clog << uvIndicesCount << " uv indices." << std::endl;
+	}
+
+	if(has_normals)
+	{
+		std::clog << "Submesh has face normals : NOT SUPPORTED" << std::endl;
+		std::clog << normalIndices.getCount() << " face normals." << std::endl;
+	}
 
 	assert( !has_normals || (positionIndicesCount == normalIndicesCount));
 	assert( !has_uv_coords || (positionIndicesCount == uvIndicesCount));
@@ -287,6 +222,15 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 	// Do not resize the index buffer here
 	// because we don't have the exact size before handling the type of indeces 
 	// and splitting all polygons to triangles.
+	size_t index_buffer_size = _calculate_index_buffer_size(meshPrimitive);
+
+	std::clog << "Index buffer size = " << index_buffer_size << std::endl;
+
+	ibf->setIndexCount(index_buffer_size);
+
+	// Custom arrays for triangle normal and uv indices
+	std::vector<uint32_t> tri_uv_indices(index_buffer_size);
+	std::vector<uint32_t> tri_normal_indices(index_buffer_size);
 
 	switch (meshPrimitive->getPrimitiveType())
 	{
@@ -308,6 +252,7 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 			std::clog << "Mesh with " << polygons->getFaceCount() << " faces." << std::endl;
 			/// Handle quads (four vertices per face)
 			size_t index = 0;
+			size_t ibf_index = 0;
 			for(size_t f = 0; f < polygons->getFaceCount(); ++f)
 			{
 				size_t const vert_count = polygons->getGroupedVerticesVertexCount(f);
@@ -319,18 +264,56 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 				if(vert_count == 4)
 				{
 					/// @todo copy working version for quads to SubMesh::addFace
-					ibf->push_back(positionIndices[index]);
-					ibf->push_back(positionIndices[index+1]);
-					ibf->push_back(positionIndices[index+2]);
-					ibf->push_back(positionIndices[index]);
-					ibf->push_back(positionIndices[index+2]);
-					ibf->push_back(positionIndices[index+3]);
+					// @todo move to using shorthand ibf_index++
+					ibf->set(ibf_index, positionIndices[index]);
+					ibf->set(ibf_index+1, positionIndices[index+1]);
+					ibf->set(ibf_index+2, positionIndices[index+2]);
+					ibf->set(ibf_index+3, positionIndices[index]);
+					ibf->set(ibf_index+4, positionIndices[index+2]);
+					ibf->set(ibf_index+5, positionIndices[index+3]);
+
+					if(has_normals)
+					{
+						tri_normal_indices.at(ibf_index) = normalIndices[index];
+						tri_normal_indices.at(ibf_index+1) = normalIndices[index+1];
+						tri_normal_indices.at(ibf_index+2) = normalIndices[index+2];
+						tri_normal_indices.at(ibf_index+3) = normalIndices[index];
+						tri_normal_indices.at(ibf_index+4) = normalIndices[index+2];
+						tri_normal_indices.at(ibf_index+5) = normalIndices[index+3];
+					}
+					if(has_uv_coords)
+					{
+						tri_uv_indices.at(ibf_index) = (*uvIndices)[index];
+						tri_uv_indices.at(ibf_index+1) = (*uvIndices)[index+1];
+						tri_uv_indices.at(ibf_index+2) = (*uvIndices)[index+2];
+						tri_uv_indices.at(ibf_index+3) = (*uvIndices)[index];
+						tri_uv_indices.at(ibf_index+4) = (*uvIndices)[index+2];
+						tri_uv_indices.at(ibf_index+5) = (*uvIndices)[index+3];
+					}
+
+					ibf_index += 6;
 				}
 				else if(vert_count == 3)
 				{
-					ibf->push_back(positionIndices[index]);
-					ibf->push_back(positionIndices[index+1]);
-					ibf->push_back(positionIndices[index+2]);
+					ibf->set(ibf_index, positionIndices[index]);
+					ibf->set(ibf_index+1, positionIndices[index+1]);
+					ibf->set(ibf_index+2, positionIndices[index+2]);
+			
+					if(has_normals)
+					{
+						tri_normal_indices.at(ibf_index) = normalIndices[index];
+						tri_normal_indices.at(ibf_index+1) = normalIndices[index+1];
+						tri_normal_indices.at(ibf_index+2) = normalIndices[index+2];
+					}
+
+					if(has_uv_coords)
+					{
+						tri_uv_indices.at(ibf_index) = (*uvIndices)[index];
+						tri_uv_indices.at(ibf_index+1) = (*uvIndices)[index+1];
+						tri_uv_indices.at(ibf_index+2) = (*uvIndices)[index+2];
+					}
+
+					ibf_index += 3;
 				}
 				else
 				{
@@ -346,24 +329,17 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 	case COLLADAFW::MeshPrimitive::TRIANGLES:
 		{
 			const COLLADAFW::Triangles* triangles = (const COLLADAFW::Triangles*) meshPrimitive;
-			numIndices = (int)positionIndicesCount;
 
-			// All faces have three indices, we can copy them as is after resize
-			ibf->setIndexCount(positionIndicesCount);
-
-			for ( int j = 0; j < numIndices; ++j )
+			for(int j = 0; j < index_buffer_size; ++j)
 			{
-				unsigned int positionIndex = positionIndices[j];
-
-				unsigned int normalIndex = 0;
+				ibf->set(j, positionIndices[j]);
+				//unsigned int normalIndex = 0;
 				if(has_normals)
-					normalIndex = normalIndices[j];
+					tri_normal_indices.at(j) = normalIndices[j];
 
-				unsigned int uvIndex = 0;
+				//unsigned int uvIndex = 0;
 				if(has_uv_coords)
-					uvIndex = (*uvIndices)[j];
-
-				ibf->set(j, positionIndex);
+					tri_uv_indices.at(j) = (*uvIndices)[j];
 			}
 		}
 		break;
@@ -381,6 +357,19 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 			<< meshPrimitive->getPrimitiveType() << std::endl;
 		break;
 	}
+
+	/// @todo this will probably cause problems for any Mesh that needed
+	/// modifications to the IndexBuffer for example splitting quads
+	/// because the length of the ibf is no longer the same as normalIndices...
+	if(has_normals)
+	{
+		_calculate_vertex_normals(tri_normal_indices, ibf);
+	}
+
+	if(has_uv_coords)
+	{
+		_calculate_vertex_uvs(tri_uv_indices, ibf);
+	}
 }
 
 //------------------------------
@@ -392,46 +381,223 @@ vl::dae::MeshImporter::handleSubMesh(COLLADAFW::MeshPrimitive* meshPrimitive,
 	assert(submesh);
 	assert(meshPrimitive);
 
-	std::clog << "Submesh material = " << meshPrimitive->getMaterial() << std::endl;
-	submesh->setMaterial(meshPrimitive->getMaterial());
+//	std::clog << "Submesh material = " << meshPrimitive->getMaterial() << std::endl;
+//	submesh->setMaterial(meshPrimitive->getMaterialId());
+	_submeshes.push_back(std::make_pair(submesh, meshPrimitive->getMaterialId()));
 	handleIndexBuffer(meshPrimitive, matrix, &submesh->indexData);
 }
 
-
 //-----------------------------------------------------------------------
 void
-vl::dae::MeshImporter::handleVertexBuffer(vl::VertexData *vbf)
+vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::VertexData *vbf)
 {
 	std::clog << "vl::dae::MeshImporter::handleVertexBuffer" << std::endl;
-
 	assert(vbf);
+
+	/// Correct semantics
+	/// Not used yet but later on these will be crucial
+	vbf->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	if(mesh->hasNormals())
+	{
+		std::clog << "Mesh has normals." << std::endl;
+		vbf->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	}
+	COLLADAFW::MeshVertexData const &colours = mesh->getColors();
+	COLLADAFW::MeshVertexData const &uvs = mesh->getUVCoords();
+	bool has_uvs = (uvs.getValuesCount() != 0);
+	if(has_uvs)
+	{
+		vbf->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	}
+
+	bool has_colours = (colours.getValuesCount() != 0);
+	if(has_colours)
+	{
+		vbf->vertexDeclaration.addSemantic(Ogre::VES_DIFFUSE, Ogre::VET_COLOUR);
+	}
+
+	// @todo should resize the vertex buffer here
+	// and then use array indexing when reading the other attributes
+	COLLADAFW::MeshVertexData const &positions = mesh->getPositions();
+	assert(positions.getValuesCount() % 3 == 0);
+	size_t n_vertices = positions.getValuesCount()/3; 
+	vbf->setNVertices(n_vertices);
+	for(size_t i = 0; i < n_vertices; ++i)
+	{
+		vbf->getVertex(i).position = convert_vertex_data(positions, i);
+	}
+
+	//	TODO add support for normals
+	// Collada uses real normals (aka face normals) so we don't process them here
+	// but store them for use when faces are processed.
+	if(mesh->hasNormals())
+	{
+		COLLADAFW::MeshVertexData const &normals = _collada_mesh->getNormals();
+		// Will make it bit more difficult for us if some vertices have normals
+		// and some don't. Doh.
+		// this fails for some reason
+		//assert(normals.getValuesCount() / 3 == n_vertices);
+		size_t n_normals = normals.getValuesCount()/3;
+		assert(normals.getValuesCount() % 3 == 0);
+
+		// How do we do the mapping?
+		_normals.resize(n_normals);
+		for(size_t i = 0; i < n_normals; ++i)
+		{
+			_normals.at(i) = convert_vertex_data(normals, i);
+		}
+	}
+
+	if(has_uvs)
+	{
+		/// What type of uvs are these? two double values?
+		// The 2 dimensional uv coordinates array. 
+        // UV coordinates can be stored as float or double values.
+		// @todo are these vertex or face uvs?
+		std::clog << "Mesh has uvs : NOT_IMPLEMENTED" << std::endl;
+		size_t n_uvs = uvs.getValuesCount()/2;
+		assert(uvs.getValuesCount() % 2 == 0); 
+
+		_uvs.resize(n_uvs);
+		for(size_t i = 0; i < n_uvs; ++i)
+		{
+			_uvs.at(i) = convert_uvs(uvs, i);
+		}
+	}
+
+	if(has_colours)
+	{
+		// What type of a colour is this? three or four floats?
+		// seems like 3 floats/doubles but seems like OpenCollada does not store
+		// this information here. Question where is it stored then?
+		std::clog << "Mesh has vertex colours : NOT_IMPLEMENTED" << std::endl;
+	}
 }
 
-//-----------------------------------------------------------------------
-void
-vl::dae::MeshImporter::handleSubMeshOperation( COLLADAFW::MeshPrimitive::PrimitiveType primitiveType )
+struct VertexNormal
 {
-	/*
-	// Header
-	size_t csubMeshOperationSize = STREAM_OVERHEAD_SIZE + sizeof( uint16 );
-
-	writeChunkHeader( Ogre::M_SUBMESH_OPERATION, csubMeshOperationSize );
-
-	// unsigned short operationType
-	unsigned short opType = 0;
-
-	switch ( primitiveType )
+	// uses huge amounts of memory but should never be necessary to resize
+	VertexNormal(void)
 	{
-	case COLLADAFW::MeshPrimitive::TRIANGLES:
-		opType = static_cast<unsigned short>( Ogre::OT_TRIANGLE_LIST );
-		break;
-	case COLLADAFW::MeshPrimitive::TRIANGLE_FANS:
-		opType = static_cast<unsigned short>( Ogre::OT_TRIANGLE_FAN );
-		break;
-	case COLLADAFW::MeshPrimitive::TRIANGLE_STRIPS:
-		opType = static_cast<unsigned short>( Ogre::OT_TRIANGLE_STRIP );
-		break;
+		normals.reserve(32);
 	}
-	writeShorts( &opType, 1 );
-	*/
+
+	Ogre::Vector3 avarage(void) const
+	{
+		if(normals.size() == 0)
+		{ return Ogre::Vector3::ZERO; }
+
+		return sum()/normals.size();
+	}
+
+	Ogre::Vector3 sum(void) const
+	{
+		Ogre::Vector3 s = Ogre::Vector3::ZERO;
+		for(size_t i = 0; i < normals.size(); ++i)
+		{
+			s += normals.at(i);
+		}
+
+		return s;
+	}
+
+	std::vector<Ogre::Vector3> normals;
+};
+
+void
+vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &normalIndices, vl::IndexBuffer *ibf)
+{
+	std::clog << "vl::dae::MeshImporter::_calculate_vertex_normals" << std::endl;
+
+	// we have a map from faces -> normals (normalIndices)
+	// we have a map from vertices -> faces (ibf)
+	// we need a map from vertices -> normals
+	std::vector<VertexNormal> vert_to_normal;
+	vert_to_normal.resize(_mesh->sharedVertexData->getNVertices());
+
+	for(size_t i = 0; i < _mesh->sharedVertexData->getNVertices(); ++i)
+	{
+		for(size_t j = 0; j < ibf->indexCount(); ++j)
+		{
+			// Find the face id
+			// @todo this should be done before by using a temporary array
+			if(ibf->getVec32().at(j) == i)
+			{
+				Ogre::Vector3 normal = _normals.at(normalIndices.at(j));
+				vert_to_normal.at(i).normals.push_back(normal);
+			}
+		}
+	}
+
+	// if smooth shading is on
+	// the vertex normal is the avarage of all the face normals
+	// @todo flat shading is not implemented
+//	if(!_flat_shading)
+	{
+		for(size_t i = 0; i < vert_to_normal.size(); ++i)
+		{
+			VertexNormal const &vn = vert_to_normal.at(i);
+			Vertex &vertex = _mesh->sharedVertexData->getVertex(i);
+			vertex.normal = vn.avarage();
+			// just to check
+			if(vertex.normal == Ogre::Vector3::ZERO)
+			{
+				std::clog << "Something very funny we have a zero length normal vector." << std::endl;
+			}
+		}
+	}
+	// if flat shading is on
+	// we need to create new vertices when fn1 != fn2 or fn1 != fn3 or fn2 != fn3
+	// so that every normal that is different has a dedicated vertex
+	// this will need to update vbf (adding new vertices) 
+	// and also need to update ibf to match the new vertices
+//	else
+	{
+		// first we need to create new map which has unique
+	}
+
+}
+
+void
+vl::dae::MeshImporter::_calculate_vertex_uvs(std::vector<uint32_t> const &uvIndices, vl::IndexBuffer *ibf)
+{
+	std::clog << "vl::dae::MeshImporter::_calculate_vertex_uvs : NOT_IMPLEMENTED" << std::endl;
+}
+
+size_t
+vl::dae::MeshImporter::_calculate_index_buffer_size(COLLADAFW::MeshPrimitive *meshPrimitive) const
+{
+	switch(meshPrimitive->getPrimitiveType())
+	{
+		case COLLADAFW::MeshPrimitive::POLYGONS:
+		{
+			const COLLADAFW::Polygons *polygons = (const COLLADAFW::Polygons*) meshPrimitive;
+			size_t size = 0;
+			for(size_t f = 0; f < polygons->getFaceCount(); ++f)
+			{
+				size_t vertices = polygons->getGroupedVerticesVertexCount(f);
+				if(vertices == 3)
+				{ size += 3; }
+				else if(vertices == 4)
+				{ size += 6; }
+				else
+				{ BOOST_THROW_EXCEPTION(vl::exception()); }
+			}
+			return size;
+		}
+		case COLLADAFW::MeshPrimitive::TRIANGLES:
+		{
+			return meshPrimitive->getFaceCount()*3;
+		}
+
+		// Not supported types
+		case COLLADAFW::MeshPrimitive::LINES:
+		case COLLADAFW::MeshPrimitive::LINE_STRIPS:
+		case COLLADAFW::MeshPrimitive::POLYLIST:
+		case COLLADAFW::MeshPrimitive::TRIANGLE_FANS:
+		case COLLADAFW::MeshPrimitive::TRIANGLE_STRIPS:
+		case COLLADAFW::MeshPrimitive::POINTS:
+		default:
+			return 0;
+	}
 }

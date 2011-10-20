@@ -25,17 +25,17 @@
 // --------------------------------- Public ----------------------------------
 vl::Material::Material(std::string const &name)
 	: _name(name)
-	, _ogre_material(0)
+	, _ogre_material()
+	, _shininess(20)
 {}
 
 vl::Material::Material(void)
 	: _name()
-	, _ogre_material(0)
+	, _ogre_material()
 {}
 
 vl::Material::~Material(void)
-{
-}
+{}
 
 /// Attributes
 
@@ -109,6 +109,16 @@ vl::Material::setAmbient(Ogre::ColourValue const &ambient)
 	}
 }
 
+void
+vl::Material::setShininess(vl::scalar shininess)
+{
+	if(shininess != _shininess)
+	{
+		setDirty(DIRTY_COLOUR);
+		_shininess = shininess;
+	}
+}
+
 // --------------------------------- Private ---------------------------------
 void
 vl::Material::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const
@@ -125,7 +135,7 @@ vl::Material::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) 
 
 	if(DIRTY_COLOUR & dirtyBits)
 	{
-		msg << _diffuse << _specular << _emissive << _ambient;
+		msg << _diffuse << _specular << _emissive << _ambient << _shininess;
 	}
 
 	if(DIRTY_TEXTURE & dirtyBits)
@@ -151,13 +161,14 @@ vl::Material::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 
 	if(DIRTY_COLOUR & dirtyBits)
 	{
-		msg >> _diffuse >> _specular >> _emissive >> _ambient;
-		if(_ogre_material)
+		msg >> _diffuse >> _specular >> _emissive >> _ambient >> _shininess;
+		if(_ogre_material.get())
 		{
 			_ogre_material->setDiffuse(_diffuse);
 			_ogre_material->setSpecular(_specular);
 			_ogre_material->setSelfIllumination(_emissive);
 			_ogre_material->setAmbient(_ambient);
+			_ogre_material->setShininess(_shininess);
 		}
 	}
 
@@ -168,21 +179,22 @@ vl::Material::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 
 	if(create)
 	{
-		if(_ogre_material)
+		if(_ogre_material.get())
 		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Recreating Ogre material not supported.")); }
 
-		// @todo Create ogre object
-		// we can just use the singleton
-		std::clog << "Creating Ogre material " << _name << std::endl;
-		// @todo should provide the ManualResourceLoader (which we don't have...)
-		Ogre::ResourcePtr res = Ogre::MaterialManager::getSingleton()
-			.create(_name, Ogre::ResourceGroupManager::AUTODETECT_RESOURCE_GROUP_NAME, true);
-		
-		assert(dynamic_cast<Ogre::Material *>(res.get()));
-		_ogre_material = static_cast<Ogre::Material *>(res.get());
+		// @todo fix hard coded base material name
+		// @todo add error handling
+		Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton()
+			.getByName("bling_phong/shadows");
+
+		assert(dynamic_cast<Ogre::Material *>(base_mat_res.get()));
+		_ogre_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(_name);
 		_ogre_material->setDiffuse(_diffuse);
 		_ogre_material->setSpecular(_specular);
+		_ogre_material->setShininess(_shininess);
 		_ogre_material->setSelfIllumination(_emissive);
 		_ogre_material->setAmbient(_ambient);
+
+		_ogre_material->load();
 	}
 }

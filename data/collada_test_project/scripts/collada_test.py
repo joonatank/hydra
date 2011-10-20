@@ -27,3 +27,13 @@ ground.translate(0, -1, 0)
 ground_ent.material_name = 'ground/flat/shadows'
 ground_ent.cast_shadows = False
 
+light = game.scene.createLight("light")
+light_n = game.scene.createSceneNode("light")
+light_n.attachObject(light)
+light_n.position = Vector3(0, 30, 5)
+
+# TODO fix the enity name in the DAE importer
+cube_ent = game.scene.getEntity("Cube-mesh")
+material = game.material_manager.get_material("Material")
+#material.emissive = ColourValue(0.5, 0, 0)
+

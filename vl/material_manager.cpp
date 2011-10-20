@@ -72,6 +72,28 @@ vl::MaterialManager::_createMaterial(uint64_t id)
 	return mat;
 }
 
+vl::MaterialRefPtr
+vl::MaterialManager::getMaterial(std::string const &name)
+{
+	for(std::vector<MaterialRefPtr>::iterator iter = _materials.begin();
+		iter != _materials.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{
+			return *iter;
+		}
+	}
+
+	return vl::MaterialRefPtr();
+}
+
+bool
+vl::MaterialManager::hasMaterial(std::string const &name)
+{
+	return(getMaterial(name) != 0);
+}
+
+
 
 // --------------------------------- Public ----------------------------------
 

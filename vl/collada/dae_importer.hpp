@@ -24,6 +24,7 @@
 #include <COLLADAFramework/COLLADAFWMaterial.h>
 #include <COLLADAFramework/COLLADAFWEffect.h>
 #include <COLLADAFramework/COLLADAFWImage.h>
+#include <COLLADAFramework/COLLADAFWMaterialBinding.h>
 
 #include "COLLADABUURI.h"
 #include "Math/COLLADABUMathMatrix4.h"
@@ -36,6 +37,9 @@
 #include "base/filesystem.hpp"
 /// Necessary because the scene graph is straightly read here
 #include "scene_manager.hpp"
+
+/// Necessary for importing a mesh
+#include "dae_mesh_importer.hpp"
 
 namespace vl
 {
@@ -51,7 +55,8 @@ class FileDeserializer  : public COLLADAFW::IWriter
 public:
 	/// Constructor
 	FileDeserializer(fs::path const &inputFile, 
-		vl::SceneManagerPtr scene_manager, vl::MaterialManagerRefPtr material_man);
+		vl::SceneManagerPtr scene_manager, 
+		vl::MaterialManagerRefPtr material_man, bool flat_shading = false);
 
 	/// Destructor
 	virtual ~FileDeserializer();
@@ -154,7 +159,7 @@ private :
 	
 	void handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const &instanceNodes);
 
-    /** Disable default copy ctor. */
+	/** Disable default copy ctor. */
 	FileDeserializer( const FileDeserializer& pre );
     /** Disable default assignment operator. */
 	const FileDeserializer& operator= ( const FileDeserializer& pre );
@@ -166,18 +171,67 @@ private:
 	vl::SceneManagerPtr _scene_manager;
 	vl::MaterialManagerRefPtr _material_manager;
 
+	struct NodeEntityDefinition
+	{
+		NodeEntityDefinition(void)
+			: node(0)
+			, geometry_id()
+		{}
+
+		NodeEntityDefinition(vl::SceneNodePtr n, COLLADAFW::UniqueId g_id)
+			: node(n), geometry_id(g_id)
+		{}
+
+		vl::SceneNodePtr node;
+		COLLADAFW::UniqueId geometry_id;
+	};
+
+	struct EffectMapEntry
+	{
+		EffectMapEntry(void)
+		{}
+
+		EffectMapEntry(COLLADAFW::UniqueId const &id, MaterialRefPtr mat)
+			: effect_id(id), material(mat)
+		{}
+
+		COLLADAFW::UniqueId effect_id;
+		MaterialRefPtr material;
+	};
+
+	struct MaterialMapEntry
+	{
+		MaterialMapEntry(void)
+		{}
+
+		MaterialMapEntry(COLLADAFW::UniqueId const &mat_id, COLLADAFW::UniqueId const &eff_id, std::string const &n)
+			: material_id(mat_id), effect_id(eff_id), name(n)
+		{}
+
+		COLLADAFW::UniqueId material_id;
+		COLLADAFW::UniqueId effect_id;
+		std::string name;
+	};
+
+
 	// Maps for instances, these are handled at the end of file reading
 	// and used to map the concrete objects (_cameras, _entities, _lights) to
 	// their parent nodes.
-	std::vector< std::pair<vl::SceneNodePtr, COLLADAFW::UniqueId> > _node_entity_map;
+	std::vector<NodeEntityDefinition> _node_entity_map;
 	std::vector< std::pair<vl::SceneNodePtr, COLLADAFW::UniqueId> > _node_camera_map;
 	std::vector< std::pair<vl::SceneNodePtr, COLLADAFW::UniqueId> > _node_light_map;
 	std::map<COLLADAFW::UniqueId, vl::CameraPtr> _cameras;
 	std::map<COLLADAFW::UniqueId, vl::EntityPtr> _entities;
 	std::map<COLLADAFW::UniqueId, vl::LightPtr> _lights;
+	SubMeshMaterialIDMap _submesh_material_map;
 
-	std::map<COLLADAFW::UniqueId, vl::MaterialRefPtr> _effect_map;
-	std::vector< std::pair<COLLADAFW::UniqueId, std::string> > _materials;
+	/// Map which maps effect id to an information node
+	std::map<COLLADAFW::UniqueId, EffectMapEntry> _effect_map;
+	std::vector<MaterialMapEntry> _materials;
+
+	std::map<COLLADAFW::MaterialId, COLLADAFW::UniqueId> _material_instance_map;
+
+	bool _flat_shading;
 };
 
 }	// namespace dae

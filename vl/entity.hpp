@@ -64,6 +64,9 @@ public :
 	std::string const &getMeshName(void) const
 	{ return _mesh_name; }
 
+	MeshRefPtr getMesh(void) const
+	{ return _mesh; }
+
 	bool isPrefab(void) const
 	{ return _prefab != PF_NONE; }
 

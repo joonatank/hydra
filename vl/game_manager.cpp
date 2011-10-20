@@ -431,7 +431,8 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		std::string path;
 		if(getResourceManager()->findResource(file.string(), path))
 		{
-			vl::dae::FileDeserializer loader(path, _scene_manager, _material_manager);
+			bool flat_shading = true;
+			vl::dae::FileDeserializer loader(path, _scene_manager, _material_manager, flat_shading);
 			loader.write();
 		}
 		else

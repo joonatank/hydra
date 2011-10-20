@@ -160,6 +160,8 @@ protected :
 	 */
 	void _takeScreenshot( void );
 
+	void _check_materials(uint64_t const id);
+
 	std::string _name;
 
 	/// EnvSettings mapped from Master
@@ -200,6 +202,8 @@ protected :
 
 	// LogReceiver
 	uint32_t _n_log_messages;
+
+	std::vector<vl::MaterialRefPtr> _materials_to_check;
 
 };	// class Renderer
 

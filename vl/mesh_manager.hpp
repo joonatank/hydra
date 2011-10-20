@@ -127,8 +127,13 @@ public :
 	/// @brief create an empty mesh object where the user can add data
 	vl::MeshRefPtr createMesh(std::string const &name);
 
+	bool checkMaterialUsers(vl::MaterialRefPtr mat);
+
 	/// @brief callback function
 	void meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh);
+
+	/// @brief add sub meshes that have invalid (not loaded) materials
+	void _addSubEntityWithInvalidMaterial(Ogre::SubEntity *sm);
 
 	typedef std::map<std::string, vl::MeshRefPtr> MeshMap;
 
@@ -147,6 +152,8 @@ private :
 	/// Meshes that are loaded in the background
 	ListenerMap _waiting_for_loading;
 	MeshMap _meshes;
+
+	std::vector<Ogre::SubEntity *> _og_sub_entities;
 };
 
 }	// namespace vl

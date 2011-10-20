@@ -12,6 +12,9 @@
 
 #include "mesh_serializer.hpp"
 
+// Necessary for exposing vectors
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 namespace py
 {
     using namespace boost::python;
@@ -301,14 +304,21 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def_readwrite("vertex_declaration", &vl::VertexData::vertexDeclaration)
 	;
 
+	class_<std::vector<vl::SubMesh *> >("SubMeshList")
+		.def(vector_indexing_suite<std::vector<vl::SubMesh *> >())
+	;
+
 	vl::SubMesh *(vl::Mesh::*getSubMesh_ov0)(uint16_t) = &vl::Mesh::getSubMesh;
 	Ogre::AxisAlignedBox &(vl::Mesh::*getBounds_ov0)() = &vl::Mesh::getBounds;
 	Ogre::Real &(vl::Mesh::*getBoundingSphere_ov0)() = &vl::Mesh::getBoundingSphereRadius;
+	vl::Mesh::SubMeshList const &(vl::Mesh::*getSubMeshes_ov0)() const = &vl::Mesh::getSubMeshes;
 
+	/// @todo add list access to submeshes
 	class_< vl::Mesh, vl::MeshRefPtr, boost::noncopyable>("Mesh", no_init )
 		.def("createSubMesh", make_function( &vl::Mesh::createSubMesh, return_value_policy<reference_existing_object>() ) )
 		.def("getNumSubMeshes", &vl::Mesh::getNumSubMeshes)
 		.def("getSubMesh", make_function(getSubMesh_ov0, return_value_policy<reference_existing_object>()) )
+		.add_property("sub_meshes", make_function(getSubMeshes_ov0, return_value_policy<copy_const_reference>()) )
 		.add_property("bounding_sphere", make_function(getBoundingSphere_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBoundingSphereRadius)
 		.add_property("bounds", make_function(getBounds_ov0, return_value_policy<copy_non_const_reference>()), &vl::Mesh::setBounds)
 		.def("calculateBounds", &vl::Mesh::calculateBounds)

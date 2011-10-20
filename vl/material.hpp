@@ -22,6 +22,8 @@
 
 #include "typedefs.hpp"
 
+#include "math/types.hpp"
+
 // Concrete implementation
 #include <OGRE/OgreMaterial.h>
 
@@ -81,8 +83,12 @@ public :
 	void setAmbient(Ogre::ColourValue const &ambient);
 
 	/// @todo add shininess
+	vl::scalar getShininess(void) const
+	{ return _shininess; }
 
-	Ogre::Material *getNative(void) const
+	void setShininess(vl::scalar shininess);
+
+	Ogre::MaterialPtr getNative(void) const
 	{ return _ogre_material; }
 
 	enum DirtyBits
@@ -114,10 +120,11 @@ private :
 	Ogre::ColourValue _specular;
 	Ogre::ColourValue _emissive;
 	Ogre::ColourValue _ambient;
+	vl::scalar _shininess;
 
 	std::string _texture;
 
-	Ogre::Material *_ogre_material;
+	Ogre::MaterialPtr _ogre_material;
 
 };	// class Material
 

@@ -245,9 +245,16 @@ void export_scene_graph(void)
 	;
 
 	//vl::MaterialRefPtr (vl::MaterialManager::*createMaterial_ov0)(std::string const &) = ;
+	python::class_<std::vector<MaterialRefPtr> >("MaterialList")
+		.def(python::vector_indexing_suite<std::vector<MaterialRefPtr> >())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	python::class_<vl::MaterialManager, vl::MaterialManagerRefPtr, boost::noncopyable>("MaterialManager", python::no_init)
 		.def("create_material", &vl::MaterialManager::createMaterial)
+		.def("get_material", &vl::MaterialManager::getMaterial)
+		.def("has_material", &vl::MaterialManager::hasMaterial)
+		.add_property("materials", python::make_function(&vl::MaterialManager::getMaterialList, python::return_value_policy<python::copy_const_reference>()) )
 		// @todo add list access
 		// vl::MaterialManager::getMaterials
 		.def(python::self_ns::str(python::self_ns::self))
@@ -414,6 +421,7 @@ void export_scene_graph(void)
 		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
 		.add_property("prefab", &vl::Entity::getPrefab)
+		.add_property("mesh", &vl::Entity::getMesh)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

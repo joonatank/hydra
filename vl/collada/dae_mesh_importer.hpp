@@ -35,22 +35,37 @@ namespace vl
 namespace dae
 {
 
+typedef std::vector< std::pair<vl::SubMesh *, COLLADAFW::MaterialId> > SubMeshMaterialIDMap;
+
 class MeshImporter
 {
 public:
 
     /** Constructor. */
-	MeshImporter(MeshManagerRefPtr mesh_manager, COLLADAFW::Mesh const *mesh);
+	MeshImporter(MeshManagerRefPtr mesh_manager, COLLADAFW::Mesh const *mesh, bool flat_shading = false);
 
     /** Destructor. */
 	~MeshImporter();
 
 	bool write();
 
+	SubMeshMaterialIDMap const &getSubMeshMaterialMap(void)
+	{ return _submeshes; }
+
 /// Data
 private:
-	const COLLADAFW::Mesh* _collada_mesh;
+	COLLADAFW::Mesh const *_collada_mesh;
 	MeshManagerRefPtr _mesh_manager;
+	bool _flat_shading;
+
+	std::vector<Ogre::Vector3> _normals;
+	std::vector<Ogre::Vector2> _uvs;
+
+	// Necessary because we need to reference this when we create the index buffer
+	vl::MeshRefPtr _mesh;
+
+	// Necessary for mapping materials when the whole mesh is imported
+	SubMeshMaterialIDMap _submeshes;
 
 /// Methods
 private:
@@ -63,11 +78,14 @@ private:
 
 	void handleSubMesh(COLLADAFW::MeshPrimitive* meshPrimitive, COLLADABU::Math::Matrix4 const &matrix, vl::SubMesh *submesh);
 
-	void handleSubMeshOperation(COLLADAFW::MeshPrimitive::PrimitiveType primitiveType);
-
-	void handleVertexBuffer(vl::VertexData *data);
+	void handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::VertexData *vbf);
 	void handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive,
-		const COLLADABU::Math::Matrix4& matrix, vl::IndexBuffer *data);
+		const COLLADABU::Math::Matrix4& matrix, vl::IndexBuffer *ibf);
+
+	void _calculate_vertex_normals(std::vector<uint32_t> const &normalIndices, vl::IndexBuffer *ibf);
+	void _calculate_vertex_uvs(std::vector<uint32_t> const &uvIndices, vl::IndexBuffer *ibf);
+	
+	size_t _calculate_index_buffer_size(COLLADAFW::MeshPrimitive *meshPrimitive) const;
 };
 
 
