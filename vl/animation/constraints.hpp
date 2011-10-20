@@ -223,6 +223,7 @@ public :
 	vl::scalar getActuatorSpeed(void) const
 	{ return _speed; }
 
+	/// Default axis UNIT_Z
 	Ogre::Vector3 const &getAxis(void) const
 	{ return _axisInA; }
 
@@ -310,6 +311,7 @@ public :
 
 	// Do we need some extra damping, softness parameters?
 
+	/// Default axis UNIT_Z
 	Ogre::Vector3 const &getAxis(void) const
 	{ return _axisInA; }
 

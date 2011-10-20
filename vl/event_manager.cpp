@@ -230,14 +230,17 @@ vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
 		// for serial joysticks
 		if(!joy && (!serial || fallback_to_all))
 		{
-			assert(!_game_joystick);
-			_game_joystick = GameJoystick::create();
+			if(!_game_joystick)
+			{ _game_joystick = GameJoystick::create(); }
+
 			joy = _game_joystick;
 		}
 
 		// @todo add fallback
 
-		_joysticks[str] = joy;
+		if(joy)
+		{ _joysticks[str] = joy; }
+
 		return joy;
 	}
 }

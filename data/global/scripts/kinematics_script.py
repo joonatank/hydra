@@ -38,6 +38,55 @@ def createFixedConstraint(sn0, sn1, transform) :
 	constraint = game.kinematic_world.create_constraint('fixed', body0, body1, transform)
 	return constraint
 
+# Constraint functions that work on KinematicBodies and not SceneNodes
+
+# Create a translation joint between two bodies along z-axis
+# min and max defines the freedom of the joint in meters
+# Depending on wether the original coordinates have positive or negative
+# z forward, you need to use positive or negative velocity for driving
+# positive z forward positive velocity
+def slider_constraint(body0, body1, world_transform, min = 0, max = 0) :
+	constraint = game.kinematic_world.create_constraint('slider', body0, body1, world_transform)
+	constraint.lower_limit = min
+	constraint.upper_limit = max
+	return constraint
+
+# Define a hinge constraint using objects +y axis
+# +y because the objects were modeled in Blender with +z as the rotation axis
+# but the exporter flips y and z
+def hinge_constraint(body0, body1, world_transform, min = Radian(), max = Radian()) :
+	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, world_transform)
+	constraint.lower_limit = Radian(min)
+	constraint.upper_limit = Radian(max)
+	return constraint
+
+def fixed_constraint(body0, body1):
+	# Hard coded transform because it should not matter for fixed constraints
+	return game.kinematic_world.create_constraint('fixed', body0, body1, body1.world_transformation)
+
+
+def _create_body(name) :
+	node = game.scene.getSceneNode(name)
+	body = game.kinematic_world.create_kinematic_body(node)
+	assert(body)
+	return body
+
+
+# Cylinder type actuator
+# Modifies the orientation and position of the cylinder rod and piston
+# TODO rod and piston are incorrectly named
+# rod is used here for the body that is nearer to the root of the kinematic
+# chain, piston for the body that is farther away
+# example root -> rod_fixing -> rod -> piston -> piston_fixing -> body
+# @param rod, SceneNode (needs to have setDirection method)
+# @param piston, SceneNode (needs to have setDirection method)
+# @param rod_fixing, object with world_transformation property
+# @param piston_fixing, object with world_transformation property
+# NOTE Cylinder object rod only works correctly if they have an
+# offset from their geometric centers. Best for now has been an origin in
+# the end where the body is fixed.
+# TODO not sure if this true also for piston, all of our models have pistons
+# that have origin different than their geometric origin.
 class Cylinder:
 	def __init__(self, rod, piston, rod_fixing, piston_fixing):
 		self.rod= rod
@@ -48,6 +97,7 @@ class Cylinder:
 		self.local_dir = Vector3(0, -1, 0)
 		self.piston_up_axis = self.up_axis
 		self.piston_rotation = Quaternion(1, 0, 0, 0)
+		self.debug_print = False
 
 		# Rod is a "parent" of rod fixing so the difference needs to be
 		# in the rod fixings coordinate frame
@@ -64,6 +114,9 @@ class Cylinder:
 		self.piston_position_diff = q*(piston_fixing_pos - piston_pos)
 		
 		rod_fixing.addListener(self.moved)
+		# TODO should we add the listener to also piston_fixing
+		# this would avoid rather akward problem with the excavator model
+		piston_fixing.addListener(self.moved)
 	
 	# Callback from the object we should follow
 	# rod fixing point moved
@@ -79,22 +132,30 @@ class Cylinder:
 		self.rod.set_direction(direction, self.local_dir, self.up_axis)
 		# Set position first so the look at uses the correct position
 		# difference is in fixing points coordinates
-		t = self.rod_fixing.world_transformation
+		wt_fixing = self.rod_fixing.world_transformation
 		wt = Transform(self.rod.world_transformation)
-		q = self.rod_fixing.world_transformation.quaternion
-		wt.position = t.position - q*self.rod_position_diff
+		# As the rod fixing is the 'parent' of the rod we use it's frame
+		q = wt_fixing.quaternion
+		wt.position = wt_fixing.position - q*self.rod_position_diff
+		if self.debug_print :
+			print("Fixing orientation : ", q, " position offset : ", q*self.rod_position_diff)
 		self.rod.world_transformation = wt
 
 		# Update piston
 		# Pistons position does not change
 		# yes it does we need to use the coordine frame from piston_fixing for it
 		local_dir = self.local_dir
-		self.piston.set_direction(direction, local_dir, self.piston_up_axis)
+		piston_up_axis = self.up_axis
+		#piston_up_axis = self.piston_up_axis
+		self.piston.set_direction(direction, local_dir, piston_up_axis)
 
 		wt_fixing = Transform(self.piston_fixing.world_transformation)
 		wt = Transform(self.piston.world_transformation)
+		# As the piston is the 'parent' of the fixing we use it's frame
 		q = wt.quaternion
 		wt.position = wt_fixing.position - q*self.piston_position_diff
 		self.piston.world_transformation = wt
+
+		# Hack to handle incorrect rotation of the piston
 		self.piston.rotate(self.piston_rotation)
 

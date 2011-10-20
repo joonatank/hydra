@@ -307,8 +307,18 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			case OBJ_GUI_CONSOLE :
 			case OBJ_GUI_EDITOR :
 			{
-				assert(_gui);
-				_gui->createWindow(type, id);
+				// GUI objects are only used by master
+				if( getName() == _env->getMaster().name )
+				{
+					if(!_gui)
+					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
+					_gui->createWindow(type, id);
+				}
+				else
+				{
+					// Slaves need to ignore the GUI updates
+					_ignored_distributed_objects.push_back(id);
+				}
 			}
 			break;
 
