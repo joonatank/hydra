@@ -162,6 +162,10 @@ vl::Logger::getPythonErr(void)
 void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
+	// filter annoying error report from CEGUI
+	if(message == "Error prior to using GLSL Program Object : invalid operation")
+	{ return; }
+
 	// TODO fix the time
 	LogMessage msg(type, 0, message, level);
 	logMessage(msg);
