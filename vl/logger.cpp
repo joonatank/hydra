@@ -166,6 +166,10 @@ vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_
 	// Disallow for now so we can debug those
 	assert( message.size() > 0 );
 
+	// filter annoying error report from CEGUI
+	if(message == "Error prior to using GLSL Program Object : invalid operation")
+	{ return; }
+
 	// TODO fix the time
 	LogMessage msg(type, 0, message, level);
 	logMessage(msg);
