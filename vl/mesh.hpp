@@ -156,6 +156,9 @@ struct VertexData
 	Vertex &getVertex(size_t i)
 	{ return _vertices.at(i); }
 
+	void setNVertices(size_t n)
+	{ _vertices.resize(n); }
+
 	size_t getNVertices(void) const
 	{ return _vertices.size(); }
 
@@ -164,9 +167,6 @@ struct VertexData
 
 	VertexList const &getVertices(void) const
 	{ return _vertices; }
-
-	void setNVertices(size_t size)
-	{ _vertices.resize(size); }
 
 	VertexList _vertices;
 

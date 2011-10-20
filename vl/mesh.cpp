@@ -43,25 +43,33 @@ vl::operator<<(std::ostream &os, vl::Vertex const &v)
 std::ostream &
 vl::operator<<( std::ostream &os, vl::Mesh const &m )
 {
+	os << "Mesh " << m.getName();
 	if(m.sharedVertexData)
 	{
-		os << "Mesh " << m.getName() << " : vertices = ";
-		for( size_t i = 0; i < m.sharedVertexData->getNVertices(); ++i )
-		{
-			os << m.sharedVertexData->getVertex(i).position << ", ";
-		}
-		os << std::endl;
+		os << " : has " << m.sharedVertexData->getNVertices() << " vertices";
 	}
 	else
 	{
-		os << "Mesh " << m.getName() << " has no vertices." << std::endl;
+		os << " : has no vertices." << std::endl;
 	}
+
+	if(m.getNumSubMeshes() > 0)
+	{
+		os << " : has " << m.getNumSubMeshes() << " submeshes";
+	}
+	else
+	{
+		os << " : has no submeshes";
+	}
+
 	return os;
 }
 
 std::ostream &
 vl::operator<<( std::ostream &os, vl::SubMesh const &m )
 {
+	os << "Submesh with material " << m.getMaterial();
+
 	return os;
 }
 
