@@ -162,10 +162,6 @@ vl::Logger::getPythonErr(void)
 void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
-	// For some reason this is called with an empty string
-	// Disallow for now so we can debug those
-	assert( message.size() > 0 );
-
 	// TODO fix the time
 	LogMessage msg(type, 0, message, level);
 	logMessage(msg);
