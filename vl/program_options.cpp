@@ -1,7 +1,18 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
  *
- *	Implementation for program options parsing
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
+ *	@file program_options.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Interface
@@ -53,7 +64,7 @@ vl::ProgramOptions::getOutputFile(void) const
 	return log.string();
 }
 
-void
+bool
 vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
 	// Process command line arguments
@@ -73,9 +84,8 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("display", po::value<int>()->default_value(0), "Display to use for the window. Only on X11.")
 		("show_system_console", "Show the system console window on startup.")
 	;
-	// TODO add support for setting the log directory
+
 	// TODO add control for the log level at least ERROR, INFO, TRACE
-	// TODO add support for the case
 
 	// Parse command line
 	po::variables_map vm;
@@ -86,7 +96,7 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	if( vm.count("help") )
 	{
 		std::cout << "Help : " << desc << "\n";
-		return;
+		return false;
 	}
 
 	// Verbose
@@ -105,18 +115,6 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	exe_name = exe_path.filename().string();
 	program_directory = fs::path(exe_path).parent_path().string();
 
-	// Slave options
-	if( vm.count("slave") )
-	{
-		_slave = true;
-		_parseSlave( vm );
-	}
-	else
-	{
-		_slave = false;
-		_parseMaster( vm );
-	}
-
 	/// Display setting available both on master and slave
 	if( vm.count("display") )
 	{
@@ -132,9 +130,21 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	{
 		log_dir = vm["log_dir"].as<std::string>();
 	}
+
+	// Slave options
+	if( vm.count("slave") )
+	{
+		_slave = true;
+		return _parseSlave( vm );
+	}
+	else
+	{
+		_slave = false;
+		return _parseMaster( vm );
+	}
 }
 
-void
+bool
 vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
 {
 	if( vm.count("slave") )
@@ -146,7 +156,7 @@ vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
 	{
 		std::cerr << "A slave without a name is not allowed."
 			<< std::endl;
-		return;
+		return false;
 	}
 
 	if( vm.count("server") )
@@ -158,45 +168,34 @@ vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
 	{
 		std::cerr << "A slave without a server address to connect to is not allowed."
 			<< std::endl;
-		return;
+		return false;
 	}
+
+	return true;
 }
 
-void
+bool
 vl::ProgramOptions::_parseMaster( po::variables_map const &vm )
 {
 	if (vm.count("environment"))
 	{
 		environment_file = vm["environment"].as<std::string>();
-		std::cout << "Environment path was set to : " << environment_file << std::endl;
-	} else
-	{
-		std::cout << "Environment was not set." << std::endl;
 	}
+
 	if (vm.count("project"))
 	{
 		project_file = vm["project"].as<std::string>();
-		std::cout << "Project path was set to : " << project_file << std::endl;
 	}
-	else
-	{ std::cout << "Project was not set." << std::endl; }
+
 	if (vm.count("global"))
 	{
 		global_file = vm["global"].as<std::string>();
-		std::cout << "Global path was set to : " << global_file << std::endl;
 	}
-	else
-	{ std::cout << "Global was not set." << std::endl; }
-	if (vm.count("case"))
-	{
-		case_name = vm["case"].as<std::string>();
-		std::cout << "Case was set to : " << case_name << std::endl;
-	}
-	else
-	{ std::cout << "Case was not set." << std::endl; }
 
 	if( vm.count("auto_fork") )
 	{
 		auto_fork = true;
 	}
+
+	return true;
 }

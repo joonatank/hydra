@@ -31,7 +31,8 @@ int main( const int argc, char** argv )
 	{
 		// Options need to be parsed before creating logger because logger
 		// is designed to redirect logging out of console
-		options.parseOptions(argc, argv);
+		if(!options.parseOptions(argc, argv))
+		{ return 0; }
 
 		// File doesn't exist (checked earlier)
 		if(!options.log_dir.empty() && !fs::exists(options.log_dir))

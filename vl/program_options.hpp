@@ -1,6 +1,21 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
+ *	@file program_options.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Interface for program options parsing
  *	Command line or settings file options passed to the program when started
  *	These options are static and can not be changed at run time
@@ -31,7 +46,7 @@ struct ProgramOptions
 	 *	@ Post-condition valid or invalid configuration with all the parameters
 	 *	parsed
 	 */
-	void parseOptions( int argc, char **argv );
+	bool parseOptions( int argc, char **argv );
 
 	/// Is the configuration for a slave,
 	/// true for both valid and invalid configurations
@@ -67,8 +82,8 @@ struct ProgramOptions
 	bool show_system_console;
 
 private :
-	void _parseSlave( po::variables_map const &vm );
-	void _parseMaster( po::variables_map const &vm );
+	bool _parseSlave( po::variables_map const &vm );
+	bool _parseMaster( po::variables_map const &vm );
 
 };
 
