@@ -2,11 +2,12 @@ REM Add necessary dlls to path
 Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR};${LIB_DIR}\OGRE\bin\${BUILD_TYPE};${LIB_DIR}\CEGUI\bin\${BUILD_TYPE};${LIB_DIR}\expat\bin\${BUILD_TYPE};${LIB_DIR}\OIS\bin\${BUILD_TYPE}
 
 REM Start listening client
-start ${PROGRAM_NAME} --slave right --server ${SERVER_HOSTNAME}:${SERVER_PORT}
+REM Is no longer necessary as we can use auto_fork on both Windows and Linux
+REM start ${PROGRAM_NAME} --slave right --server ${SERVER_HOSTNAME}:${SERVER_PORT}
 REM Start the master
 ${PROGRAM_NAME} ^
  -e ${DEMO_DATA_PATH}/multi_node.env ^
  -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} ^
  -g ${DEMO_DATA_PATH}/global/hydra.prj ^
- -l 0 %*
+ -l 0 --auto_fork --log_dir logs %*
 

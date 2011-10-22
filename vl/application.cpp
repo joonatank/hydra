@@ -219,12 +219,9 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 		// auto_fork is silently ignored for slaves
 		if(auto_fork)
 		{
-			// @todo should be changed to use create_process instead of forking
-			// will work on both Windows and Linux, but is slightly slower in Linux
-// Windows forking not supported		
-#ifndef _WIN32
 			for(size_t i = 0; i < env->getSlaves().size(); ++i)
 			{
+#ifndef _WIN32
 				pid_t pid = ::fork();
 				// Reset the environment file for a slave
 				if(pid != 0)
@@ -234,10 +231,24 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 					// Master needs to continue the loop and create the remaining slaves
 					break;
 				}
-			}
 #else
-			std::cout << "Trying to autofork local slaves, which is not supported on Windows." 
-				<< std::endl;
+				std::clog << "Windows autoforking local slaves." << std::endl;
+				/// @todo use a more general parameter for the program name
+				std::vector<std::string> params;
+				// Add slave param
+				params.push_back("--slave");
+				params.push_back(env->getSlaves().at(i).name);
+				// Add server param
+				params.push_back("--server");
+				std::stringstream ss;
+				ss << env->getServer().hostname << ":" << env->getServer().port;
+				params.push_back(ss.str());
+				params.push_back("--log_dir");
+				params.push_back(env->getLogDir());
+				// Create the process
+				uint32_t pid = create_process("hydra.exe", params, true);
+				_spawned_processes.push_back(pid);
+			}
 #endif
 		}
 	}

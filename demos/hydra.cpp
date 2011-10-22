@@ -33,6 +33,15 @@ int main( const int argc, char** argv )
 		// is designed to redirect logging out of console
 		options.parseOptions(argc, argv);
 
+		// File doesn't exist (checked earlier)
+		if(!options.log_dir.empty() && !fs::exists(options.log_dir))
+		{
+			fs::create_directory(options.log_dir);
+		}
+
+		// Otherwise the file exists and it's a directory
+		std::cout << "Using log file: " << options.getOutputFile() << std::endl;
+
 		vl::Logger logger;
 		logger.setOutputFile(options.getOutputFile());
 

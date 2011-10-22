@@ -151,8 +151,7 @@ set( HYDRA_DEP_LIBS
 # Libraries used to build project binaries
 set( HYDRA_LIBRARIES HydraMain )
 
-# Add Boost library dir because Equalizer uses relative paths to boost libs
-# Linking to Equalizer will fail without it.
+# Add Boost library dir because some of our dependencies need it
 link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 
 

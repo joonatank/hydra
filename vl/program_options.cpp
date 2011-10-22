@@ -62,13 +62,14 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("help,h", "produce a help message")
 		("verbose,v", "print the output to system console")
 		("log_level,l", po::value<int>(), "how much detail is logged")
+		("log_dir", po::value<std::string>(), "where to write the log files")
 		("environment,e", po::value< std::string >(), "environment file")
 		("project,p", po::value< std::string >(), "project file")
 		("global,g", po::value< std::string >(), "global file")
 		("case,c", po::value< std::string >(), "case name")
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
-		("auto-fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
+		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
 		("display", po::value<int>()->default_value(0), "Display to use for the window. Only on X11.")
 		("show_system_console", "Show the system console window on startup.")
 	;
@@ -125,6 +126,11 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	if( vm.count("show_system_console") )
 	{
 		show_system_console = true;
+	}
+
+	if( vm.count("log_dir") )
+	{
+		log_dir = vm["log_dir"].as<std::string>();
 	}
 }
 
@@ -189,51 +195,8 @@ vl::ProgramOptions::_parseMaster( po::variables_map const &vm )
 	else
 	{ std::cout << "Case was not set." << std::endl; }
 
-	if( vm.count("auto-fork") )
+	if( vm.count("auto_fork") )
 	{
 		auto_fork = true;
 	}
-
-	// We need to be either listening or have both environment config
-	// and project config (this might be changed later)
-	// TODO the validity of the options should not be concerned here
-/*
-	bool valid_env = (!environment_file.empty() && fs::exists( environment_file ) );
-	bool valid_proj = (!project_file.empty() && fs::exists( project_file ) );
-	if( !valid_env && !valid_proj )
-	{
-		std::cerr << "Either start in listening mode using or "
-			<< std::endl << " provide valid environment config file and "
-			"project config file." << std::endl;
-		return;
-	}
-*/
-
-	/// Get the log dir we use
-	// Create the logging directory if it doesn't exist
-	// TODO this should create it to the exe path, not current directory
-	std::string log_base("logs");
-	log_dir = std::string(log_base);
-
-	// File already exists but it's not a directory
-	size_t index = 0;
-	while( fs::exists(log_dir) && !fs::is_directory( log_dir ) )
-	{
-		std::cerr << "File : " << log_dir << " already exists and it's not "
-			<< "a directory. Trying another dir." << std::endl;
-		++index;
-		std::stringstream ss;
-		// TODO should add zeros so we have three numbers
-		ss << log_base << index;
-		log_dir = ss.str();
-	}
-
-	// File doesn't exist (checked earlier)
-	if( !fs::exists( log_dir ) )
-	{
-		fs::create_directory( log_dir );
-	}
-
-	// Otherwise the file exists and it's a directory
-	std::cout << "Using log dir: " << log_dir << std::endl;
 }

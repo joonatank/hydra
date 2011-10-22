@@ -7,5 +7,5 @@ ${PROGRAM_NAME} ^
  -e ${DEMO_DATA_PATH}/multi_window.env ^
  -p ${DEMO_DATA_PATH}/${PROJ_PATH_RELATIVE} ^
  -g ${DEMO_DATA_PATH}/global/hydra.prj ^
- -l 0 %*
+ -l 0 --log_dir logs %*
 
