@@ -25,8 +25,8 @@
  *	later use is copied from it.
  */
 
-#ifndef VL_PROGRAM_OPTIONS_HPP
-#define VL_PROGRAM_OPTIONS_HPP
+#ifndef HYDRA_PROGRAM_OPTIONS_HPP
+#define HYDRA_PROGRAM_OPTIONS_HPP
 
 #include <string>
 
@@ -85,8 +85,8 @@ private :
 	bool _parseSlave( po::variables_map const &vm );
 	bool _parseMaster( po::variables_map const &vm );
 
-};
+};	// class ProgramOptions
 
 }	// namespace vl
 
-#endif
+#endif	// HYDRA_PROGRAM_OPTIONS_HPP

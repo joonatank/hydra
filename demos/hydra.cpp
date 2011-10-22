@@ -104,6 +104,5 @@ int main( const int argc, char** argv )
 		vl::MessageDialog dialog(title, exception_msg);
 	}
 
-	/// @fixme Debug version hangs on return
 	return 0;
 }
