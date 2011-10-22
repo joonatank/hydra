@@ -552,6 +552,8 @@ void export_game(void)
 		.def(python::self_ns::float_(python::self_ns::self))
 	;
 
+	void (vl::GameManager::*loadScene_ov0)(std::string const &)= &vl::GameManager::loadScene;
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -570,6 +572,8 @@ void export_game(void)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
+		.def("load_scene", loadScene_ov0)
+		.def("save_scene", &vl::GameManager::saveScene)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 

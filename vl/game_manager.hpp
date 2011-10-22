@@ -290,6 +290,10 @@ public :
 
 	void loadScene(vl::SceneInfo const &scene_info);
 
+	/// Test functions for Collada importer/exporter
+	void loadScene(std::string const &file_name);
+	void saveScene(std::string const &file_name);
+
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 

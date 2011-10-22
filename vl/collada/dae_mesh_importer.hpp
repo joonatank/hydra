@@ -2,7 +2,7 @@
  *	Copyright (c) 2011 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-11
+ *	@date 2011-10
  *	@file collada/dae_mesh_importer.hpp
  *
  *	This file is part of Hydra VR game engine.

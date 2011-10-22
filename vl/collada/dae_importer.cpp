@@ -74,30 +74,29 @@ Ogre::ColourValue convert_colour(COLLADAFW::ColorOrTexture const &col)
 }
 
 //--------------------------------------------------------------------
-vl::dae::FileDeserializer::FileDeserializer(fs::path const &inputFile, 
-	vl::SceneManagerPtr scene_manager, vl::MaterialManagerRefPtr material_man, bool flat_shading)
-	: _input_file(inputFile)
-	, _scene_manager(scene_manager)
-	, _material_manager(material_man)
-	, _flat_shading(flat_shading)
+vl::dae::Importer::Importer(ImporterSettings const &settings, Managers const &managers)
+	: _scene_manager(managers.scene)
+	, _material_manager(managers.material)
+	, _flat_shading(false)
 {
+	// @todo add settings
 	assert(_scene_manager);
 	assert(_material_manager);
 }
 
 //--------------------------------------------------------------------
-vl::dae::FileDeserializer::~FileDeserializer()
+vl::dae::Importer::~Importer()
 {}
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::write()
+vl::dae::Importer::read(fs::path const &input_file)
 {
 	COLLADASaxFWL::Loader loader;
 	COLLADAFW::Root root(&loader, this);
 
 	// Load scene graph 
-	if ( !root.loadDocument(_input_file.string()) )
+	if ( !root.loadDocument(input_file.string()) )
 		return false;
 
 	return true;
@@ -105,19 +104,19 @@ vl::dae::FileDeserializer::write()
 
 //--------------------------------------------------------------------
 void
-vl::dae::FileDeserializer::cancel(std::string const &errorMessage )
+vl::dae::Importer::cancel(std::string const &errorMessage )
 {
 }
 
 //--------------------------------------------------------------------
 void
-vl::dae::FileDeserializer::start()
+vl::dae::Importer::start()
 {
 }
 
 //--------------------------------------------------------------------
 void
-vl::dae::FileDeserializer::finish()
+vl::dae::Importer::finish()
 {
 	// Create material instance map
 	//std::map<COLLADAFW::MaterialId, std::string> instance_material_map;
@@ -227,18 +226,18 @@ vl::dae::FileDeserializer::finish()
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeGlobalAsset( const COLLADAFW::FileInfo* asset )
+vl::dae::Importer::writeGlobalAsset( const COLLADAFW::FileInfo* asset )
 {
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeVisualScene(COLLADAFW::VisualScene const *visualScene)
+vl::dae::Importer::writeVisualScene(COLLADAFW::VisualScene const *visualScene)
 {
 	assert(visualScene);
 
-	std::clog << "vl::dae::FileDeserializer::write : importing visual scene" << std::endl;
+	std::clog << "vl::dae::Importer::write : importing visual scene" << std::endl;
 
 	writeNodes(visualScene->getRootNodes(), _scene_manager->getRootSceneNode());
 
@@ -247,23 +246,23 @@ vl::dae::FileDeserializer::writeVisualScene(COLLADAFW::VisualScene const *visual
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeScene( const COLLADAFW::Scene* scene )
+vl::dae::Importer::writeScene( const COLLADAFW::Scene* scene )
 {
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeLibraryNodes( const COLLADAFW::LibraryNodes* libraryNodes )
+vl::dae::Importer::writeLibraryNodes( const COLLADAFW::LibraryNodes* libraryNodes )
 {
-	std::clog << "vl::dae::FileDeserializer::writeLibraryNodes" << std::endl;
+	std::clog << "vl::dae::Importer::writeLibraryNodes" << std::endl;
 //	mLibraryNodesList.push_back(*libraryNodes);
 	return true;
 }
 
 //------------------------------
 bool
-vl::dae::FileDeserializer::writeNodes(COLLADAFW::NodePointerArray const &nodesToWriter, vl::SceneNodePtr parent)
+vl::dae::Importer::writeNodes(COLLADAFW::NodePointerArray const &nodesToWriter, vl::SceneNodePtr parent)
 {
 	for ( size_t i = 0, count = nodesToWriter.getCount(); i < count; ++i)
 	{
@@ -274,7 +273,7 @@ vl::dae::FileDeserializer::writeNodes(COLLADAFW::NodePointerArray const &nodesTo
 
 //------------------------------
 bool
-vl::dae::FileDeserializer::writeNode(const COLLADAFW::Node* nodeToWriter, vl::SceneNodePtr parent)
+vl::dae::Importer::writeNode(const COLLADAFW::Node* nodeToWriter, vl::SceneNodePtr parent)
 {
 	assert(parent);
 
@@ -322,7 +321,7 @@ vl::dae::FileDeserializer::writeNode(const COLLADAFW::Node* nodeToWriter, vl::Sc
 }
 
 void
-vl::dae::FileDeserializer::handleInstanceGeometries(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
+vl::dae::Importer::handleInstanceGeometries(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
 {
 	for(size_t i = 0; i < nodeToWriter->getInstanceGeometries().getCount(); ++i)
 	{
@@ -340,7 +339,7 @@ vl::dae::FileDeserializer::handleInstanceGeometries(COLLADAFW::Node const *nodeT
 }
 
 void
-vl::dae::FileDeserializer::handleInstanceCameras(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
+vl::dae::Importer::handleInstanceCameras(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
 {
 	for(size_t i = 0; i < nodeToWriter->getInstanceCameras().getCount(); ++i)
 	{
@@ -350,7 +349,7 @@ vl::dae::FileDeserializer::handleInstanceCameras(COLLADAFW::Node const *nodeToWr
 }
 
 void
-vl::dae::FileDeserializer::handleInstanceLights(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
+vl::dae::Importer::handleInstanceLights(COLLADAFW::Node const *nodeToWriter, vl::SceneNodePtr parent)
 {
 	for(size_t i = 0; i < nodeToWriter->getInstanceLights().getCount(); ++i)
 	{
@@ -361,9 +360,9 @@ vl::dae::FileDeserializer::handleInstanceLights(COLLADAFW::Node const *nodeToWri
 
 //------------------------------
 void
-vl::dae::FileDeserializer::handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const & instanceNodes)
+vl::dae::Importer::handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const & instanceNodes)
 {
-	std::clog << "vl::dae::FileDeserializer::handleInstanceNodes : NOT SUPPORTED!" << std::endl;
+	std::clog << "vl::dae::Importer::handleInstanceNodes : NOT SUPPORTED!" << std::endl;
 	/*
 	for ( size_t i = 0, count = instanceNodes.getCount(); i < count; ++i)
 	{
@@ -382,12 +381,12 @@ vl::dae::FileDeserializer::handleInstanceNodes(COLLADAFW::InstanceNodePointerArr
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeGeometry(COLLADAFW::Geometry const *geometry)
+vl::dae::Importer::writeGeometry(COLLADAFW::Geometry const *geometry)
 {
-	std::clog << "vl::dae::FileDeserializer::writeGeometry" << std::endl;
+	std::clog << "vl::dae::Importer::writeGeometry" << std::endl;
 	if ( geometry->getType() != COLLADAFW::Geometry::GEO_TYPE_MESH )
 	{
-		std::clog << "vl::dae::FileDeserializer::writeGeometry " 
+		std::clog << "vl::dae::Importer::writeGeometry " 
 			<< ": Unhandled Geometry type " << geometry->getType() << std::endl;
 		return true;
 	}
@@ -426,7 +425,7 @@ vl::dae::FileDeserializer::writeGeometry(COLLADAFW::Geometry const *geometry)
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeMaterial( const COLLADAFW::Material* material )
+vl::dae::Importer::writeMaterial( const COLLADAFW::Material* material )
 {
 	assert(_material_manager);
 
@@ -438,9 +437,9 @@ vl::dae::FileDeserializer::writeMaterial( const COLLADAFW::Material* material )
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeEffect( const COLLADAFW::Effect* effect )
+vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 {
-	std::clog << "vl::dae::FileDeserializer::writeEffect" << std::endl;
+	std::clog << "vl::dae::Importer::writeEffect" << std::endl;
 
 	MaterialRefPtr mat = _material_manager->createMaterial(effect->getName());
 
@@ -550,9 +549,9 @@ vl::dae::FileDeserializer::writeEffect( const COLLADAFW::Effect* effect )
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeCamera(COLLADAFW::Camera const *camera)
+vl::dae::Importer::writeCamera(COLLADAFW::Camera const *camera)
 {
-	std::clog << "vl::dae::FileDeserializer::writeCamera" << std::endl;
+	std::clog << "vl::dae::Importer::writeCamera" << std::endl;
 
 	// @todo
 	// This has the problem that we are creating an instance here
@@ -572,18 +571,18 @@ vl::dae::FileDeserializer::writeCamera(COLLADAFW::Camera const *camera)
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeImage( const COLLADAFW::Image* image )
+vl::dae::Importer::writeImage( const COLLADAFW::Image* image )
 {
-	std::clog << "vl::dae::FileDeserializer::writeImage : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::Importer::writeImage : NOT IMPLEMENTED" << std::endl;
 //	mUniqueIdFWImageMap.insert(std::make_pair(image->getUniqueId(),*image ));
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeLight(COLLADAFW::Light const *light)
+vl::dae::Importer::writeLight(COLLADAFW::Light const *light)
 {
-	std::clog << "vl::dae::FileDeserializer::writeLight" << std::endl;
+	std::clog << "vl::dae::Importer::writeLight" << std::endl;
 
 	// @todo
 	// This has the problem that we are creating an instance here
@@ -611,32 +610,32 @@ vl::dae::FileDeserializer::writeLight(COLLADAFW::Light const *light)
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeAnimation( const COLLADAFW::Animation* animation )
+vl::dae::Importer::writeAnimation( const COLLADAFW::Animation* animation )
 {
-	std::clog << "vl::dae::FileDeserializer::writeAnimation : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::Importer::writeAnimation : NOT IMPLEMENTED" << std::endl;
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeAnimationList( const COLLADAFW::AnimationList* animationList )
+vl::dae::Importer::writeAnimationList( const COLLADAFW::AnimationList* animationList )
 {
-	std::clog << "vl::dae::FileDeserializer::writeAnimationList : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::Importer::writeAnimationList : NOT IMPLEMENTED" << std::endl;
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeSkinControllerData( const COLLADAFW::SkinControllerData* skinControllerData )
+vl::dae::Importer::writeSkinControllerData( const COLLADAFW::SkinControllerData* skinControllerData )
 {
-	std::clog << "vl::dae::FileDeserializer::writeSkinControllerData : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::Importer::writeSkinControllerData : NOT IMPLEMENTED" << std::endl;
 	return true;
 }
 
 //--------------------------------------------------------------------
 bool
-vl::dae::FileDeserializer::writeController( const COLLADAFW::Controller* Controller )
+vl::dae::Importer::writeController( const COLLADAFW::Controller* Controller )
 {
-	std::clog << "vl::dae::FileDeserializer::writeController : NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::Importer::writeController : NOT IMPLEMENTED" << std::endl;
 	return true;
 }

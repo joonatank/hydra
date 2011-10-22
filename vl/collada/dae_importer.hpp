@@ -2,12 +2,12 @@
  *	Copyright (c) 2011 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-11
+ *	@date 2011-10
  *	@file collada/dae_importer.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- 
  *	Licensed under the MIT Open Source License, 
  *	for details please see LICENSE file or the website
  *	http://www.opensource.org/licenses/mit-license.php
@@ -41,27 +41,56 @@
 /// Necessary for importing a mesh
 #include "dae_mesh_importer.hpp"
 
+#include "dae_common.hpp"
+
 namespace vl
 {
 
 namespace dae
 {
 
+struct ImporterSettings
+{
+	// How to calculate normals for shading
+	enum SHADING
+	{
+		SMOOTH,		// calculate smooth normals everywhere
+		FLAT,		// every edge is sharp
+		COMBINED,	// use cut angle to smooth normals
+	};
+
+	SHADING shading;
+
+	Ogre::Radian normals_cut_angle;
+
+	// where to attach all scene nodes (root)
+	vl::SceneNodePtr attach_node;
+
+	// what material to use as a base for all materials
+	std::string base_material;
+
+	/// @brief checks all materials for exact duplicates and removes them
+	/// exact duplicate here is all parameters except name
+	bool remove_duplicate_materials;
+
+	// traverses all the meshes removing exact duplicates
+	// @todo not implemented
+	bool remove_duplicate_meshes;
+};
+
 /// @class DaeReader
 /// @brief class used read dae files to the Hydra runtime
 /// Remapping the name of writer used by OpenCollada to Reader (or deserializer) as used in Hydra.
-class FileDeserializer  : public COLLADAFW::IWriter
+class Importer : public COLLADAFW::IWriter
 {
 public:
 	/// Constructor
-	FileDeserializer(fs::path const &inputFile, 
-		vl::SceneManagerPtr scene_manager, 
-		vl::MaterialManagerRefPtr material_man, bool flat_shading = false);
+	Importer(ImporterSettings const &settings, Managers const &managers);
 
 	/// Destructor
-	virtual ~FileDeserializer();
+	virtual ~Importer();
 
-	bool write();
+	bool read(fs::path const &input_file);
 
 
 	/// Virtual overrides
@@ -160,14 +189,12 @@ private :
 	void handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const &instanceNodes);
 
 	/** Disable default copy ctor. */
-	FileDeserializer( const FileDeserializer& pre );
+	Importer(Importer const &);
     /** Disable default assignment operator. */
-	const FileDeserializer& operator= ( const FileDeserializer& pre );
+	Importer &operator= (Importer const &);
 
 	/// Data
 private:
-	fs::path _input_file;
-
 	vl::SceneManagerPtr _scene_manager;
 	vl::MaterialManagerRefPtr _material_manager;
 

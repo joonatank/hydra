@@ -121,10 +121,13 @@ source_group(HydraMain\\base FILES ${BASE_HEADERS} ${BASE_SRC})
 
 
 set(COLLADA_HEADERS
+	collada/dae_common.hpp
 	collada/dae_importer.hpp
+	collada/dae_exporter.hpp
 	collada/dae_mesh_importer.hpp)
 set(COLLADA_SRC
 	collada/dae_importer.cpp
+	collada/dae_exporter.cpp
 	collada/dae_mesh_importer.cpp)
 source_group(HydraMain\\collada FILES ${COLLADA_HEADERS} ${COLLADA_SRC})
 

@@ -30,6 +30,9 @@
 #include "dotscene_loader.hpp"
 #include "collada/dae_importer.hpp"
 
+// File writers
+#include "collada/dae_exporter.hpp"
+
 #include "animation/kinematic_world.hpp"
 
 #include "recording.hpp"
@@ -431,9 +434,13 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		std::string path;
 		if(getResourceManager()->findResource(file.string(), path))
 		{
-			bool flat_shading = true;
-			vl::dae::FileDeserializer loader(path, _scene_manager, _material_manager, flat_shading);
-			loader.write();
+			vl::dae::ImporterSettings settings;
+			vl::dae::Managers man;
+			man.material = _material_manager;
+			man.scene = _scene_manager;
+			man.mesh = _mesh_manager;
+			vl::dae::Importer loader(settings, man);
+			loader.read(path);
 		}
 		else
 		{
@@ -469,6 +476,39 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 
 	std::cout << "Scene " << scene_info.getName() << " loaded. Loading took " << t.elapsed() << "." << std::endl;
 }
+
+void
+vl::GameManager::loadScene(std::string const &file_name)
+{
+	vl::SceneInfo scene_info;
+	scene_info.setUse(true);
+	scene_info.setFile(file_name);
+	scene_info.setName(file_name);
+
+	loadScene(scene_info);
+}
+
+void
+vl::GameManager::saveScene(std::string const &file_name)
+{
+	fs::path file(file_name);
+	if(file.extension() == ".dae")
+	{
+		std::cout << vl::TRACE << "Writing dae file" << std::endl;
+		vl::dae::ExporterSettings settings;
+		vl::dae::Managers man;
+		man.material = _material_manager;
+		man.scene = _scene_manager;
+		man.mesh = _mesh_manager;
+		vl::dae::Exporter writer(settings, man);
+		writer.write(file);
+	}
+	else
+	{
+		std::cout << vl::CRITICAL << "Only Collada supports writing scene file." << std::endl;
+	}
+}
+
 
 /// ------------------------------ Private -----------------------------------
 void
