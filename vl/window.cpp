@@ -441,8 +441,13 @@ vl::Window::draw(void)
 	Ogre::Vector3 cam_pos = og_cam->getPosition();
 	Ogre::Quaternion cam_quat = og_cam->getOrientation();
 
-	/// @todo should really be replaced with a stereo camera setup
-	
+	// Force ipd to zero if has GUI window
+	vl::scalar ipd = _ipd;
+	if(_renderer->guiShown())
+	{ ipd = 0; }
+
+	/// @todo should really be replaced with a stereo camera setup	
+
 	/// Use tuples to eliminate code copying
 	typedef boost::tuple<Ogre::Viewport *, double, GLenum> view_tuple;
 	std::vector<view_tuple> views;
@@ -452,8 +457,8 @@ vl::Window::draw(void)
 		{
 			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing left or right viewport for stereo."));
 		}
-		views.push_back( view_tuple(_left_viewport, -_ipd/2, GL_BACK_LEFT) );
-		views.push_back( view_tuple(_right_viewport, _ipd/2, GL_BACK_RIGHT) );
+		views.push_back( view_tuple(_left_viewport, -ipd/2, GL_BACK_LEFT) );
+		views.push_back( view_tuple(_right_viewport, ipd/2, GL_BACK_RIGHT) );
 	}
 	else
 	{
