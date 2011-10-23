@@ -1,33 +1,55 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file application.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
+// Interface
 #include "application.hpp"
 
+// Necessary for checking architecture
+#include "defines.hpp"
+// Necessary for creating the Master
 #include "config.hpp"
 
-// Necessary for vl::Settings
+// Necessary for Settings
 #include "settings.hpp"
+#include "base/envsettings.hpp"
+#include "base/projsettings.hpp"
+
 // Necessary for vl::msleep
 #include "base/sleep.hpp"
 
-#include "game_manager.hpp"
-
+//#include "game_manager.hpp"
+// Necessary for creating Renderer for slave and master
 #include "renderer.hpp"
-
+// Necessary for creating the Logger
 #include "logger.hpp"
 
 #include "cluster/client.hpp"
 // Necessary for spawning external processes
 #include "base/system_util.hpp"
 
-#ifndef _WIN32
+#include "base/string_utils.hpp"
+
+#ifdef HYDRA_LINUX
 // Necessary for fork
 #include <unistd.h>
 #endif
+
+// Necessary for printing Ogre exceptions
+#include <OGRE/OgreException.h>
 
 /// -------------------------------- Global ----------------------------------
 vl::EnvSettingsRefPtr
@@ -201,6 +223,90 @@ vl::getSlaveSettings( vl::ProgramOptions const &options )
 	return env;
 }
 
+
+vl::ExceptionMessage
+vl::Hydra_Run(const int argc, char** argv)
+{
+	std::string exception_msg;
+	vl::ProgramOptions options;
+	try
+	{
+		// Options need to be parsed before creating logger because logger
+		// is designed to redirect logging out of console
+		if(!options.parseOptions(argc, argv))
+		{ return ExceptionMessage(); }
+
+		// File doesn't exist (checked earlier)
+		if(!options.log_dir.empty() && !fs::exists(options.log_dir))
+		{
+			fs::create_directory(options.log_dir);
+		}
+
+		// Otherwise the file exists and it's a directory
+		std::cout << "Using log file: " << options.getOutputFile() << std::endl;
+
+		vl::Logger logger;
+		logger.setOutputFile(options.getOutputFile());
+
+		vl::EnvSettingsRefPtr env;
+		vl::Settings settings;
+		if( options.master() )
+		{
+			env = vl::getMasterSettings(options);
+			settings = vl::getProjectSettings(options);
+		}
+		else
+		{
+			env = vl::getSlaveSettings(options);
+		}
+
+		// 2. initialization of local client node
+		if( !env )
+		{ return ExceptionMessage(); }
+
+		if( env->isMaster() && settings.empty() )
+		{ return ExceptionMessage(); }
+
+		vl::Application application(env, settings, logger, options.auto_fork, options.show_system_console);
+
+		application.run();
+	}
+	catch(vl::exception const &e)
+	{
+		exception_msg = "VL Exception : \n" + boost::diagnostic_information<>(e);
+	}
+	catch(boost::exception const &e)
+	{
+		exception_msg = "Boost Exception : \n"+ boost::diagnostic_information<>(e);
+	}
+	catch(Ogre::Exception const &e)
+	{
+		exception_msg = "Ogre Exception: \n" + std::string(e.what());
+	}
+	catch( std::exception const &e )
+	{
+		exception_msg = "STD Exception: \n" + std::string(e.what()); 
+	}
+	catch( ... )
+	{
+		exception_msg = std::string("An exception of unknow type occured.");
+	}
+
+	if(!exception_msg.empty())
+	{
+		std::string title;
+		if(options.master())
+		{ title = "Master"; }
+		else
+		{ title = "Slave"; }
+		/// @todo We need a decent name function to options
+		title += " " + options.slave_name + " ERROR";
+
+		return ExceptionMessage(title, exception_msg);
+	}
+	else
+	{ return ExceptionMessage(); }
+}
 
 /// -------------------------------- Application -----------------------------
 vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)

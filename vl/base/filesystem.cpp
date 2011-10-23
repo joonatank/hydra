@@ -1,7 +1,18 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
  *	@file base/filesystem.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Header for this file
@@ -9,17 +20,17 @@
 
 // Necessary for readFile and writeFile
 #include <fstream>
-
 // Necessary for error printing
 #include <iostream>
 
+// Necessary for HYDRA_WIN32
+#include "defines.hpp"
 // Necessary for break_string_down
 #include "string_utils.hpp"
-
-// Necessary for logging
-#include <OGRE/OgreLogManager.h>
-
+// Necessary for creating file path with pid
 #include "system_util.hpp"
+// Necessary for log levels
+#include "logger.hpp"
 
 std::string
 vl::createLogFilePath( const std::string &project_name,
@@ -56,7 +67,7 @@ vl::findPlugin( std::string const &plugin )
 {
 	// Ogre plugins have empty prefix
 	std::string const prefix;
-#ifdef VL_WIN32
+#ifdef HYDRA_WIN32
 	std::string const postfix(".dll");
 	char const delimiter(';');
 	std::string paths = std::string(::getenv( "PATH" )) + ';' + std::string("./");
@@ -66,7 +77,7 @@ vl::findPlugin( std::string const &plugin )
 	std::string paths = "/usr/lib:/usr/local/lib:./";
 #endif
 	std::string message = "Finding Plugins : paths = " + paths;
-	Ogre::LogManager::getSingleton().logMessage( message );
+	std::cout << vl::TRACE << message << std::endl;
 
 	std::vector<std::string> vec;
 	vl::break_string_down( vec, paths, delimiter );
@@ -93,8 +104,7 @@ vl::findPlugin( std::string const &plugin )
 	if( !path.empty() )
 	{
 		// Plugin found
-		message = "Plugin found : " + path;
-		Ogre::LogManager::getSingleton().logMessage( message );
+		std::cout << vl::TRACE << "Plugin found : " << path << std::endl;
 	}
 
 	return path;
@@ -147,7 +157,7 @@ vl::writeFileFromString(const std::string& filePath, const std::string& content)
 
 	if(!file)
 	{
-		std::cerr << "Cannot open " << filePath << " for writing" << std::endl;
+		std::cout << vl::CRITICAL << "Cannot open " << filePath << " for writing" << std::endl;
 		return false;
 		}
 
@@ -156,7 +166,7 @@ vl::writeFileFromString(const std::string& filePath, const std::string& content)
 	file.close();
 	if(file.fail())
 	{
-		std::cerr << "Writing to " << filePath << " failed" << std::endl;
+		std::cout << vl::CRITICAL << "Writing to " << filePath << " failed" << std::endl;
 		return false;
 	}
 	return true;

@@ -38,7 +38,12 @@ endif( UNIX )
 
 # For Visual Studio
 if(DEFINED CMAKE_CONFIGURATION_TYPES)
-	set(CMAKE_CONFIGURATION_TYPES "release;debug" CACHE STRING "" FORCE)
+	# Don't compile debug version for 32-bit Windows
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(CMAKE_CONFIGURATION_TYPES "Release;Debug" CACHE STRING "" FORCE)
+	else()
+		set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+	endif()
 endif()
 
 

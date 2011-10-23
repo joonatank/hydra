@@ -191,7 +191,7 @@ set(PYTHON_SRC
 source_group(HydraMain\\python FILES ${PYTHON_HEADERS} ${PYTHON_SRC})
 
 set( HEADERS
-	system_tools/message_box.hpp
+	defines.hpp
 	object_interface.hpp
 	tracker.hpp
 	entity.hpp
@@ -277,7 +277,9 @@ if(WIN32)
 	message("CXX flags ${CMAKE_CXX_FLAGS}")
 endif()
 
-add_library(HydraMain
+add_definitions(-DHYDRA_SHARED_LIB)
+
+add_library(HydraMain SHARED
 	${SRC}
 	${HEADERS}
 	${BASE_HEADERS}
@@ -301,6 +303,18 @@ add_library(HydraMain
 target_link_libraries(HydraMain ${HYDRA_DEP_LIBS})
 
 set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
+
+set(HYDRA_LIB_NAME "HydraMain")
+# TODO this could be handleded in the MACRO
+# but we need two different macros one with extensions and other without
+# because of the .pyd ext for python modules.
+if(WIN32)
+	set(EXTE "dll")
+else()
+	set(EXTE "so")
+endif()
+
+copy_binaries(${HYDRA_LIB_NAME} ${HydraMain_BINARY_DIR} ${demos_BINARY_DIR} ${EXTE} "_d")
 
 #install
 # TODO this is here for test only the filestructure is not preserved by this

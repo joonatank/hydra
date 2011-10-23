@@ -33,6 +33,24 @@ namespace vl
 	/// UDP number of bytes
 	typedef boost::error_info<struct tag_bytes, size_t> bytes;
 
+	/// @struct ExceptionMessage
+	/// @brief struct that is returned from Hydra_run library functio
+	/// collects all different types of exceptions in printable format.
+	struct ExceptionMessage
+	{
+		ExceptionMessage(std::string const &t, std::string const &msg)
+			: title(t), message(msg)
+		{}
+
+		ExceptionMessage(void) {}
+
+		bool empty(void) const
+		{ return title.empty() && message.empty(); }
+
+		std::string title;
+		std::string message;
+	};
+
 	struct exception : virtual std::exception, virtual boost::exception
 	{
 		virtual const char* what() const throw()

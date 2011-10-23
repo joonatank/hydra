@@ -1,15 +1,28 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-11
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
  *	@file base/filesystem.hpp
  *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+ /*
  *	filesystem utilities
  *	functions to find specific files
  *	Uses boost::filesystem
  */
 
-#ifndef VL_BASE_FILESYSTEM_HPP
-#define VL_BASE_FILESYSTEM_HPP
+#ifndef HYDRA_BASE_FILESYSTEM_HPP
+#define HYDRA_BASE_FILESYSTEM_HPP
 
 #include <boost/filesystem.hpp>
 
@@ -106,4 +119,4 @@ writeFileFromString( std::string const &filePath, std::string const &content );
 
 }	// namespace vl
 
-#endif	// VL_BASE_FILESYSTEM_HPP
+#endif	// HYDRA_BASE_FILESYSTEM_HPP

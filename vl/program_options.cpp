@@ -118,18 +118,22 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
     po::notify(vm);
     
 	/// Config file
-    std::ifstream ifs(config_file.c_str());
-    if (!ifs)
-    {
-        std::cout << "can not open config file: " << config_file << std::endl;
-        return 0;
-    }
-    else
-    {
-		std::cout << "parsing config file : " << config_file << std::endl;
-        po::store(po::parse_config_file(ifs, config_file_options), vm);
-        po::notify(vm);
-    }
+	if(fs::exists(config_file))
+	{
+		std::ifstream ifs(config_file.c_str());
+	
+		if (!ifs)
+		{
+			std::cout << "can not open config file: " << config_file << std::endl;
+			return 0;
+		}
+		else
+		{
+			std::cout << "parsing config file : " << config_file << std::endl;
+			po::store(po::parse_config_file(ifs, config_file_options), vm);
+			po::notify(vm);
+		}
+	}
 
 	// Print help
 	if( vm.count("help") )

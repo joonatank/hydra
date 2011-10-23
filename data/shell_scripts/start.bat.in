@@ -1,7 +1,6 @@
 REM this should be divided into two scripts one for the environment which
 REM handles the paths, env config and global config
 REM And another one which only passes the project config to this one
-Path = %Path%;${LIB_DIR}\bin;${LIB_DIR}\bin\${BUILD_TYPE};${LIB_DIR}\OGRE\bin\${BUILD_TYPE};${LIB_DIR}\CEGUI\bin\${BUILD_TYPE};${LIB_DIR}\expat\bin\${BUILD_TYPE};${LIB_DIR}\OIS\bin\${BUILD_TYPE}
 
 ${PROGRAM_NAME} ^
  -e ${DEMO_DATA_PATH}/env.env ^

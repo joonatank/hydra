@@ -58,43 +58,64 @@ copy_start_scripts( hydra
 
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
+	${HydraMain_SOURCE_DIR}/base/sleep.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/math/conversion.hpp
+	${HydraMain_SOURCE_DIR}/math/math.hpp
+	${HydraMain_SOURCE_DIR}/math/math.cpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.cpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.hpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
+	${HydraMain_SOURCE_DIR}/base/system_util.hpp
+	${HydraMain_SOURCE_DIR}/base/system_util.cpp
+	${HydraMain_SOURCE_DIR}/logger.hpp
+	${HydraMain_SOURCE_DIR}/defines.hpp
 	)
 
-target_link_libraries( fake_tracking_server ${HYDRA_LIBRARIES} )
+target_link_libraries(fake_tracking_server
+	${Ogre_LIBRARY}
+	${VRPN_LIBRARY}
+	${Boost_FILESYSTEM_LIBRARIES}
+	${Boost_PROGRAM_OPTIONS_LIBRARIES}
+	)
 
 add_executable(vrpn_tracker_recorder 
 	vrpn_tracker_recorder.cpp
-	${vl_SOURCE_DIR}/vl/base/sleep.hpp
-	${vl_SOURCE_DIR}/vl/base/timer.hpp
-	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/sleep.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.cpp
 	)
 
-target_link_libraries( vrpn_tracker_recorder ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
+target_link_libraries(vrpn_tracker_recorder
+	${VRPN_LIBRARY}
+	${Boost_PROGRAM_OPTIONS_LIBRARIES}
+	)
 
 add_executable(vrpn_analog_server
 	vrpn_analog_server.cpp
-	${vl_SOURCE_DIR}/vl/base/sleep.hpp
-	${vl_SOURCE_DIR}/vl/base/timer.hpp
-	${vl_SOURCE_DIR}/vl/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/sleep.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.cpp
 	)
 
 target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
-add_executable( hydra hydra.cpp )
+add_executable(hydra hydra.cpp system_tools/message_box.hpp)
 
-target_link_libraries( hydra ${HYDRA_LIBRARIES} )
-
-add_executable( angles_to_quaternion
+add_executable(angles_to_quaternion
 	angles_to_quaternion.cpp
-	)
+	${HydraMain_SOURCE_DIR}/math/math.cpp
+	${HydraMain_SOURCE_DIR}/math/math.hpp)
 
-target_link_libraries( angles_to_quaternion ${HYDRA_LIBRARIES} )
+target_link_libraries(angles_to_quaternion ${Ogre_LIBRARY})
 
 # These should not need to link to anything else than boost
 set( SRC
-	${vl_SOURCE_DIR}/vl/base/timer.hpp
-	${vl_SOURCE_DIR}/vl/base/timer.cpp
-	${vl_SOURCE_DIR}/vl/base/report.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.hpp
+	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/report.hpp
 	)
 add_executable(timestamp_client timestamp_client.cpp ${SRC})
 target_link_libraries( timestamp_client ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )

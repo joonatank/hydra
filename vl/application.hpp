@@ -1,9 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011-10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file application.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Program starting point
  *	@todo should probably be replaced with just the main function
  *	or merge Config and Application classes and create the threads in the main
@@ -16,11 +28,15 @@
 
 #include <stdint.h>
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Necessary for Ref ptrs
 #include "typedefs.hpp"
 // Necessary for vl::ProgramOptions
 #include "program_options.hpp"
 #include "logger.hpp"
+// Necessary for ExceptionMessage struct
+#include "base/exceptions.hpp"
 
 namespace vl
 {
@@ -28,6 +44,13 @@ namespace vl
 vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
 vl::Settings getProjectSettings( vl::ProgramOptions const &options );
 vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
+
+
+extern "C"
+{
+	// Application
+	HYDRA_API vl::ExceptionMessage Hydra_Run(const int argc, char** argv);
+}
 
 class Config;
 
