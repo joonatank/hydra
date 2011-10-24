@@ -43,6 +43,10 @@ vl::KinematicBody::KinematicBody(KinematicWorld *world,
 	: _world(world)
 	, _scene_node(sn)
 	, _node(node)
+	, _dirty_transformation(true)
+	, _use_dirty(false)
+	, _disable_updates(false)
+	, _assume_node_is_in_world(false)
 {
 	assert(_world);
 	assert(_scene_node);
@@ -88,6 +92,7 @@ void
 vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 {
 	assert(_node);
+	_dirty_transformation = true;
 	_node->setWorldTransform(trans);
 }
 
@@ -104,10 +109,29 @@ vl::KinematicBody::_update(void)
 {
 	assert(_scene_node && _node);
 
-	Transform wt = _node->getWorldTransform();
-	if(_scene_node->getWorldTransform() != wt)
+	bool update = !_disable_updates;
+
+	if(_use_dirty)
 	{
-		_scene_node->setWorldTransform(wt);
-		_transformed_cb(wt);
+		update = update && _dirty_transformation;
 	}
+	
+	if(update)
+	{
+		if(_assume_node_is_in_world)
+		{
+			_scene_node->setTransform(_node->getWorldTransform());
+		}
+		else
+		{
+			Transform wt = _node->getWorldTransform();
+			if(_scene_node->getWorldTransform() != wt)
+			{
+				_scene_node->setWorldTransform(wt);
+				_transformed_cb(wt);
+			}
+		}
+	}
+
+	_dirty_transformation = false;
 }

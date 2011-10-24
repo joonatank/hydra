@@ -138,12 +138,17 @@ void export_animation(void)
 		*/
 		.def("clone", kb_clone_ov0)
 		.def("clone", kb_clone_ov1)
+		/// Optimisation parameters
+		.add_property("disable", &vl::KinematicBody::isDisableUpdate, &vl::KinematicBody::setDisableUpdate)
+		.add_property("use_dirties", &vl::KinematicBody::isUseDirties, &vl::KinematicBody::setUseDirties)
+		.add_property("assume_in_world", &vl::KinematicBody::isAssumeInWorld, &vl::KinematicBody::setAssumeInWorld)
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<std::vector<KinematicBodyRefPtr> >("KinematicBodyList")
-		.def(python::vector_indexing_suite<std::vector<KinematicBodyRefPtr> >())
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<KinematicBody> > >("KinematicBodyList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<KinematicBody> >, true>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

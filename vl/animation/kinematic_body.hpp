@@ -68,6 +68,32 @@ public :
 	animation::NodeRefPtr getAnimationNode(void) const
 	{ return _node; }
 
+	/// Update parameters
+	/// default values use lots of resources (prosessing time) 
+	/// but should work in every situtation
+	/// Setting some or all of these on should increase performance
+	
+	/// @brief disable updates for this body (useful if it's hidden and not used)
+	void setDisableUpdate(bool disable)
+	{ _disable_updates = disable; }
+
+	bool isDisableUpdate(void) const
+	{ return _disable_updates; }
+
+	/// @brief use transformation dirties and only update if setTransformation is called
+	void setUseDirties(bool use)
+	{ _use_dirty = use; }
+
+	bool isUseDirties(void) const
+	{ return _use_dirty; }
+
+	/// @brief assume that the node we control is already in world frame
+	void setAssumeInWorld(bool enable)
+	{ _assume_node_is_in_world = enable; }
+
+	bool isAssumeInWorld(void) const
+	{ return _assume_node_is_in_world; }
+
 	// -------------------- Callbacks -----------------------
 	int addListener(TransformedCB::slot_type const &slot)
 	{ _transformed_cb.connect(slot); return 1; }
@@ -85,6 +111,12 @@ private :
 
 	SceneNodePtr _scene_node;
 	animation::NodeRefPtr _node;
+
+	// Some parameters to avoid updating transformation every frame
+	bool _dirty_transformation;
+	bool _use_dirty;
+	bool _disable_updates;
+	bool _assume_node_is_in_world;
 
 	// Callbacks
 	TransformedCB _transformed_cb;
