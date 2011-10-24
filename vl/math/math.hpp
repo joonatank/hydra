@@ -69,9 +69,17 @@ inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
 }
 
 template<typename T>
-inline T clamp(T const &x, T const &min, T const &max)
+inline void clamp(T &x, T const &min, T const &max)
 {
-	return (x < min) ? min : ((x > max) ? max : x);
+	x = (x < min) ? min : ((x > max) ? max : x);
+}
+
+template<>
+inline void clamp(Ogre::Vector3 &v, Ogre::Vector3 const &min, Ogre::Vector3 const &max)
+{
+	clamp(v.x, min.x, max.x);
+	clamp(v.y, min.y, max.y);	
+	clamp(v.z, min.z, max.z);	
 }
 
 template<typename T>

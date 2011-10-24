@@ -353,30 +353,33 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	/// which causes the zero position for Frame B be in the origin of Frame A
 	/// but this does not change it before the target has been changed.
 
-	vl::scalar translate = 0;
+	Ogre::Vector3 translate = Ogre::Vector3::ZERO;
 
-	vl::scalar pos = _link->getTransform().position.distance(_link->getInitialTransform().position);
-	/// @todo add tolerance
-	if(isActuator() && _target_position != pos)
+	Ogre::Vector3 v = _link->getTransform().position - _link->getInitialTransform().position;
+	vl::scalar pos_size = _axisInA.dotProduct(v);
+	Ogre::Vector3 pos = pos_size*_axisInA;
+	Ogre::Vector3 target = _target_position * _axisInA;
+
+	if(isActuator() && !target.positionEquals(pos))
 	{
 		/// Axis is either not limited (lower limit is greater than upper)
 		/// or if it's current position is within the limits
 		/// @todo should we update the target position based on limits, 
 		/// so that there is no impossible target
 
-		vl::scalar s = vl::sign(_target_position - pos);
-		assert(vl::sign(_speed) >= 0);
-		translate = s*_speed * double(t);
-		
-		/// Clamp the translation
-		if(translate < 0)
-		{ translate = vl::clamp(translate, _target_position-pos, vl::scalar(0)); }
-		else
-		{ translate = vl::clamp(translate, vl::scalar(0), _target_position-pos); }
+		Ogre::Vector3 s = vl::sign(target - pos);
+		vl::scalar mov = vl::abs(_speed) * double(t); 
+		vl::scalar target_to_pos_dist = pos.distance(target);
+		if(mov > target_to_pos_dist)
+		{
+			mov = target_to_pos_dist;
+		}
+
+		translate = s*mov;
 	}
 	else
 	{
-		// @todo this should handle free movemenf following the A object
+		// @todo this should handle free movement following the A object
 	}
 	
 	/// Move the child body
@@ -388,15 +391,24 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	{
 		// @todo should we clamp the target instead of the result? 
 		// then again any subsequent change in limits would not get the actuator moving
-		translate = vl::clamp(translate, _lower_limit-pos, _upper_limit-pos);
-		assert(translate+pos >= _lower_limit);
-		assert(translate+pos <= _upper_limit);
+		Ogre::Vector3 low_limit = _lower_limit*_axisInA - pos;
+		Ogre::Vector3 up_limit = _upper_limit*_axisInA - pos;
+		// Rearrange the vectors to handle negative axes
+		Ogre::Vector3 max, min;
+		min.x = low_limit.x < up_limit.x ? low_limit.x : up_limit.x;
+		min.y = low_limit.y < up_limit.y ? low_limit.y : up_limit.y;
+		min.z = low_limit.z < up_limit.z ? low_limit.z : up_limit.z;
+		max.x = low_limit.x < up_limit.x ? up_limit.x : low_limit.x;
+		max.y = low_limit.y < up_limit.y ? up_limit.y : low_limit.y;
+		max.x = low_limit.z < up_limit.z ? up_limit.z : low_limit.z;
+
+		vl::clamp(translate, min, max);
 	}
 
-	if(translate != 0)
+	if(!translate.positionEquals(Ogre::Vector3::ZERO))
 	{
 		/// Update object B
-		_link->getTransform().position += (_axisInA*translate);
+		_link->getTransform().position += translate;
 	}
 }
 
@@ -494,9 +506,9 @@ vl::HingeConstraint::_progress(vl::time const &t)
 		rotate = s*_speed * double(t);
 
 		if(rotate < Ogre::Radian(0))
-		{ rotate = vl::clamp(rotate, _target-_angle, Ogre::Radian(0)); }
+		{ vl::clamp(rotate, _target-_angle, Ogre::Radian(0)); }
 		else
-		{ rotate = vl::clamp(rotate, Ogre::Radian(0), _target-_angle); }
+		{ vl::clamp(rotate, Ogre::Radian(0), _target-_angle); }
 	}
 
 	/// Wether the joint is limited or not
@@ -508,7 +520,7 @@ vl::HingeConstraint::_progress(vl::time const &t)
 		// Clamp only if not free
 		// @todo should we clamp the target instead of the result? 
 		// then again any subsequent change in limits would not get the actuator moving
-		rotate = vl::clamp(rotate, _lower_limit-_angle, _upper_limit-_angle);
+		vl::clamp(rotate, _lower_limit-_angle, _upper_limit-_angle);
 		assert(rotate+_angle >= _lower_limit);
 		assert(rotate+_angle <= _upper_limit);
 	}

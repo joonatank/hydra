@@ -46,6 +46,7 @@ def createFixedConstraint(sn0, sn1, transform) :
 # z forward, you need to use positive or negative velocity for driving
 # positive z forward positive velocity
 def slider_constraint(body0, body1, world_transform, min = 0, max = 0) :
+	assert(min < max)
 	constraint = game.kinematic_world.create_constraint('slider', body0, body1, world_transform)
 	constraint.lower_limit = min
 	constraint.upper_limit = max
@@ -55,6 +56,7 @@ def slider_constraint(body0, body1, world_transform, min = 0, max = 0) :
 # +y because the objects were modeled in Blender with +z as the rotation axis
 # but the exporter flips y and z
 def hinge_constraint(body0, body1, world_transform, min = Radian(), max = Radian()) :
+	assert(min < max)
 	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, world_transform)
 	constraint.lower_limit = Radian(min)
 	constraint.upper_limit = Radian(max)
