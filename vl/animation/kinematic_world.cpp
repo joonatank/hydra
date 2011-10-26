@@ -101,6 +101,11 @@ vl::ConstraintRefPtr
 vl::KinematicWorld::createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans)
 {
+	if(body0 == body1)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
+	if(!body0 || !body1)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
+
 	std::string type_name(type);
 	vl::to_lower(type_name);
 
