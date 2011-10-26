@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file physics/tube.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "tube.hpp"
@@ -36,15 +45,37 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _element_size(info.element_size)
 	, _tube_radius(info.radius)
 	, _mass(info.mass)
+	, _body_damping(info.body_damping)
 	, _spring(info.spring)
 	, _disable_internal_collisions(info.disable_collisions)
 	, _lower_lim(info.lower_lim)
 	, _upper_lim(info.upper_lim)
 	, _world(world)
 	, _material_name(info.material_name)
-	, _mesh_created(false)
 {
 	assert(_world);
+
+	/// Check for validity
+	if(_mass < 0)
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create RigidBodies with negative mass"));
+	}
+	else if(_mass == 0)
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Tube with zero mass is meaningless."));
+	}
+	if(_element_size <= 0)
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Tube element size can't be zero or negative."));
+	}
+	if(!_start_body)
+	{
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Tube start body is mandatory."));
+	}
+	if(!_end_body)
+	{
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Tube end body is mandatory."));
+	}
 
 	/// @todo create the tube bodies using a user given length
 	/// this is usually different than the length between start and end bodies
@@ -62,6 +93,13 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	Ogre::Vector3 from_start_to_end = _end_body->getWorldTransform().position - _start_body->getWorldTransform().position;
 	from_start_to_end.normalise();
 	std::clog << "start body to end body vector : " << from_start_to_end << std::endl;
+	
+	/// Set parameters to start and end bodies
+	_start_body->setUserControlled(true);
+	_start_body->setDamping(_body_damping, _body_damping);
+	_end_body->setUserControlled(true);
+	_end_body->setDamping(_body_damping, _body_damping);
+	
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		std::stringstream name;
@@ -82,7 +120,7 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 		
 		// Needs to be here so that it will not be deactivated
 		body->setUserControlled(true);
-		body->setDamping(info.body_damping, info.body_damping);
+		body->setDamping(_body_damping, _body_damping);
 	}
 
 	_createConstraints(info.start_body_frame, info.end_body_frame, elem_length);
@@ -102,7 +140,7 @@ vl::physics::Tube::~Tube(void)
 }
 
 void
-vl::physics::Tube::setStiffness(vl::scalar stiffness)
+vl::physics::Tube::setSpringStiffness(vl::scalar stiffness)
 {
 	BOOST_THROW_EXCEPTION(vl::not_implemented());
 
@@ -111,12 +149,27 @@ vl::physics::Tube::setStiffness(vl::scalar stiffness)
 }
 
 void
-vl::physics::Tube::setDamping(vl::scalar damping)
+vl::physics::Tube::setSpringDamping(vl::scalar damping)
 {
 	BOOST_THROW_EXCEPTION(vl::not_implemented());
 
 	// @todo needs to reconfigure the constraints
 	_damping = damping;
+}
+
+void
+vl::physics::Tube::setDamping(vl::scalar damping)
+{
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
+	// @todo needs to reconfigure the constraints
+	_body_damping = damping;
+}
+
+void
+vl::physics::Tube::setMass(vl::scalar mass)
+{
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
 void
@@ -163,6 +216,87 @@ vl::physics::Tube::show(void)
 		assert(ms->getNode());
 		ms->getNode()->show();
 	}
+}
+
+void
+vl::physics::Tube::setEquilibrium(void)
+{
+	if(!_spring)
+	{ return; }
+
+	for(ConstraintList::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+		spring->setEquilibriumPoint();
+	}
+}
+
+void
+vl::physics::Tube::addFixingPoint(RigidBodyRefPtr body, vl::scalar length)
+{
+	std::clog << "vl::physics::Tube::addFixingPoint" << std::endl;
+
+	if(!body)
+	{
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Body where to fix is mandatory."));
+	}
+
+	RigidBodyRefPtr tube_body;
+
+	// Find the closest body
+	if(length < 0)
+	{
+		tube_body = _findBodyByPosition(body->getWorldTransform().position);
+	}
+	else
+	{
+		tube_body = _findBodyByLength(length);
+	}
+
+	if(!tube_body)
+	{
+		std::string msg = "Finding a RigidBody failed.";
+		std::clog << "Tube::addFixingPoint : " << msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc(msg));
+	}
+
+	// Create the fixed constraint
+	// @todo fix the frames, we should have the option to pass either local or world frame here
+	vl::Transform frameA, frameB;
+	SixDofConstraintRefPtr constraint = SixDofConstraint::create(body, tube_body, frameA, frameB, true);
+
+	constraint->setLinearLowerLimit(Ogre::Vector3::ZERO);
+	constraint->setLinearUpperLimit(Ogre::Vector3::ZERO);
+	//constraint->setAngularLowerLimit(Ogre::Vector3::ZERO);
+	//constraint->setAngularUpperLimit(Ogre::Vector3::ZERO);
+	body->setUserControlled(true);
+	body->setDamping(_body_damping, _body_damping);
+
+	_world->addConstraint(constraint, _disable_internal_collisions);
+	_external_fixings.push_back(constraint);
+}
+
+/// @todo even though this is implemented here physics::World::removeConstraint is not
+/// so this method is completely untested and unusable.
+void
+vl::physics::Tube::removeFixingPoint(RigidBodyRefPtr body)
+{
+	std::clog << "vl::physics::Tube::removeFixingPoint" << std::endl;
+
+	for(ConstraintList::iterator iter = _external_fixings.begin(); 
+		iter != _external_fixings.end(); ++iter)
+	{
+		if((*iter)->getBodyA() == body || (*iter)->getBodyB() == body)
+		{
+			std::clog << "Found constraint and removing it." << std::endl;
+			_world->removeConstraint(*iter);
+			_external_fixings.erase(iter);
+			return;
+		}
+	}
+
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No such constraint."));
 }
 
 
@@ -231,27 +365,10 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 		}
 	}
 }
-void
-vl::physics::Tube::setEquilibrium(void)
-{
-	if(!_spring)
-	{ return; }
-
-	for(ConstraintList::iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
-		spring->setEquilibriumPoint();
-	}
-}
-
 
 void
 vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 {
-	if(_mesh_created)
-	{ return; }
-
 	/// create the graphics objects
 	/// we need access to the MeshManager and SceneManager for this
 	/// for now using simple cubes for the graphics meshes, later
@@ -291,6 +408,50 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	/// Mesh and Scene managers can be accessed using the start and end bodies
 	/// they need to have a MotionState attached to them and a SceneNode
 	/// attached to that for this to work.
+}
 
-	_mesh_created = true;
+vl::physics::RigidBodyRefPtr
+vl::physics::Tube::_findBodyByLength(vl::scalar length)
+{
+	if(length < 0)
+	{ return RigidBodyRefPtr(); }
+	else if(length < _element_size)
+	{ return _start_body; }
+	else if(length > _length - _element_size)
+	{ return _end_body; }
+	else
+	{
+		size_t index = (size_t)(length/_element_size);
+		return _bodies.at(index);
+	}
+}
+
+vl::physics::RigidBodyRefPtr
+vl::physics::Tube::_findBodyByPosition(Ogre::Vector3 const &pos)
+{
+	RigidBodyRefPtr closest;
+	Ogre::Vector3 pos_diff;
+	
+	// Initialise with start and end bodies
+	closest = _start_body;
+	pos_diff = _start_body->getWorldTransform().position - pos;
+
+	if((_end_body->getWorldTransform().position - pos).length() < pos_diff.length())
+	{ closest = _end_body; }
+
+	for(RigidBodyList::iterator iter = _bodies.begin(); iter != _bodies.end();
+		++iter)
+	{
+		Ogre::Vector3 comp_pos_diff = (*iter)->getWorldTransform().position - pos;
+		if(comp_pos_diff.length() < pos_diff.length())
+		{
+			closest = *iter;
+			pos_diff = comp_pos_diff;
+		}
+	}
+
+	std::clog << "Found RigidBody with error : " << pos_diff.length() 
+		<< "m from the requested position." << std::endl;
+
+	return closest;
 }

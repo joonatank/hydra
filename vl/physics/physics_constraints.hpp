@@ -22,6 +22,10 @@ namespace physics
 class Constraint
 {
 public :
+	virtual RigidBodyRefPtr getBodyA(void) = 0;
+
+	virtual RigidBodyRefPtr getBodyB(void) = 0;
+
 	virtual ~Constraint(void) {}
 };
 

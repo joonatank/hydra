@@ -25,6 +25,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( setLimit_ovs, setLimit, 2, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createTube_ov, createTube, 3, 5 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addFixingPoint_ovs, addFixingPoint, 1, 2 )
 
 // @todo remove the namespace usage
 using namespace vl;
@@ -209,14 +210,19 @@ void export_physics_objects(void)
 	;
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
-		.add_property("stiffness", &vl::physics::Tube::getStiffness)
+		.add_property("spring_stiffness", &vl::physics::Tube::getSpringStiffness, &vl::physics::Tube::setSpringStiffness)
+		.add_property("spring_damping", &vl::physics::Tube::getSpringDamping, &vl::physics::Tube::setSpringDamping)
+		.add_property("mass", &vl::physics::Tube::getMass, &vl::physics::Tube::setMass)
+		.add_property("damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
+		.add_property("material", python::make_function(&vl::physics::Tube::getMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setMaterial)
+		// Setters here would need to modify the meshes, both physics and graphics
 		.add_property("element_size", &vl::physics::Tube::getElementSize)
 		.add_property("radius", &vl::physics::Tube::getRadius)
 		.add_property("leght", &vl::physics::Tube::getLength)
-		.add_property("mass", &vl::physics::Tube::getMass)
 		.def("hide", &vl::physics::Tube::hide)
 		.def("show", &vl::physics::Tube::show)
 		.def("set_equilibrium", &vl::physics::Tube::setEquilibrium)
+		.def("add_fixing", &vl::physics::Tube::addFixingPoint, addFixingPoint_ovs())
 	;
 }
 

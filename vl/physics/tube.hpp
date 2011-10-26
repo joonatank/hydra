@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file physics/tube.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_PHYSICS_TUBE_HPP
@@ -90,23 +99,26 @@ public :
 	~Tube(void);
 
 	/// @brief
-	void setStiffness(vl::scalar stiffness);
+	void setSpringStiffness(vl::scalar stiffness);
 
-	vl::scalar getStiffness(void) const
+	vl::scalar getSpringStiffness(void) const
 	{ return _stiffness; }
+
+	void setSpringDamping(vl::scalar damping);
+
+	vl::scalar getSpringDamping(void) const
+	{ return _damping; }
 
 	void setDamping(vl::scalar damping);
 
 	vl::scalar getDamping(void) const
-	{ return _damping; }
+	{ return _body_damping; }
 
 	/// @brief get the size of a single simulated rigid body
-	/// hard coded for now.
 	vl::scalar getElementSize(void) const
 	{ return _element_size; }
 
 	/// @brief get the radius of the tube
-	/// hard coded for now
 	vl::scalar getRadius(void) const
 	{ return _tube_radius; }
 
@@ -115,6 +127,8 @@ public :
 
 	vl::scalar getMass(void) const
 	{ return _mass; }
+
+	void setMass(vl::scalar mass);
 
 	std::string const &getMaterial(void) const
 	{ return _material_name; }
@@ -140,7 +154,25 @@ public :
 
 	void setEquilibrium(void);
 
+	/// @brief add a point where the tube is fixed to a body
+	/// @param body the body where to fix the tube
+	/// @param legnth the length of the tube where the fixing should be 
+	/// if negative uses the position of body
+	void addFixingPoint(RigidBodyRefPtr body, vl::scalar length = -1);
+
+	void removeFixingPoint(RigidBodyRefPtr body);
+/*
+	struct TubeElement
+	{
+		vl::scalar position;
+		vl::scalar legth;
+		RigidBodyRefPtr body;
+		Constraint constraint;
+	};
+*/
+
 private :
+	/// Used for naming purposes
 	static size_t n_tubes;
 
 	void _createConstraints(vl::Transform const &start_frame, vl::Transform const &end_frame, vl::scalar elem_length);
@@ -149,6 +181,9 @@ private :
 	/// all this information to the constructor, which would be pretty hard
 	/// as we would need to pass it also to the World.
 	void _createMesh(MeshManagerRefPtr mesh_manager);
+
+	RigidBodyRefPtr _findBodyByLength(vl::scalar length);
+	RigidBodyRefPtr _findBodyByPosition(Ogre::Vector3 const &pos);
 
 	RigidBodyRefPtr _start_body;
 	RigidBodyRefPtr _end_body;
@@ -159,12 +194,14 @@ private :
 	RigidBodyList _bodies;
 	ConstraintList _constraints;
 	
+	ConstraintList _external_fixings;
 	vl::scalar _length;
 	vl::scalar _stiffness;
 	vl::scalar _damping;
 	vl::scalar _element_size;
 	vl::scalar _tube_radius;
 	vl::scalar _mass;
+	vl::scalar _body_damping;
 	bool _spring;
 	bool _disable_internal_collisions;
 
@@ -175,8 +212,6 @@ private :
 	std::string _material_name;
 
 	WorldPtr _world;
-
-	bool _mesh_created;
 
 };	// class Tube
 
