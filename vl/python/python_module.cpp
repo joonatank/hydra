@@ -51,7 +51,7 @@
 
 /// SceneGraph overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 3)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setDirection_ovs, setDirection, 1, 4)
@@ -429,13 +429,19 @@ void export_scene_graph(void)
 	void (vl::SceneNode::*translate_ov3)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
-	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
+//	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov4)(Ogre::Vector3 const &, Ogre::Radian const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov5)(Ogre::Degree const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
+	void (vl::SceneNode::*scale_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::scale;
+	void (vl::SceneNode::*scale_ov1)(Ogre::Real) = &vl::SceneNode::scale;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
+
+	
+	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisible;
+	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisible;
 
 	// naming convention 
 	// transform is the operation of transforming
@@ -454,12 +460,14 @@ void export_scene_graph(void)
 		.def("translate", translate_ov2)
 		.def("translate", translate_ov3)
 		.def("rotate", rotate_ov0)
-		.def("rotate", rotate_ov1)
 		.def("rotate", rotate_ov2)
 		.def("rotate", rotate_ov3)
 		.def("rotate", rotate_ov4)
 		.def("rotate", rotate_ov5)
 		.def("rotate", rotate_ov6)
+		.def("rotate_around", &vl::SceneNode::rotateAround)
+		.def("scale", scale_ov0)
+		.def("scale", scale_ov1)
 		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
 		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
 		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
@@ -467,8 +475,10 @@ void export_scene_graph(void)
 		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
 		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setPosition )
 		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setOrientation )
-		.add_property("scale", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )
-		.add_property("visible", &SceneNode::getVisible, &vl::SceneNode::setVisible)
+		.add_property("scaling", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )
+		.add_property("visible", &SceneNode::getVisible, setVisible_ov0)
+		.def("set_visible", setVisible_ov0)
+		.def("set_visible", setVisible_ov1)
 		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
 		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
 		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
@@ -483,6 +493,11 @@ void export_scene_graph(void)
 		.def("isShown", &vl::SceneNode::isShown)
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
+		/// @todo add repr with a debug string presentation
+		/// This is used for debuging purposes (which we use __str__ or operator<< at the moment)
+		/// then we can clear the default print values to something sensible
+		/// that can be presented to the user.
+		//.def("__repr__", &vl::SceneNode::getDebugString)
 	;
 
 }
@@ -494,8 +509,9 @@ void export_game(void)
 	python::def("hide_system_console", vl::hide_system_console);
 
 	python::class_<vl::time>("time", python::init<uint32_t, uint32_t>())
-		.def(python::init<int>())
-		.def(python::init<double>())
+ 		.def(python::init<int>())
+ 		.def(python::init<double>())
+		.def(python::init<>())
 		.def(python::self -= python::self)
 		.def(python::self - python::self)
 		.def(python::self += python::self)
@@ -506,9 +522,22 @@ void export_game(void)
 		.def(python::self <= python::self)
 		.def(python::self > python::self)
 		.def(python::self < python::self)
+		.def(python::self / double())
+		.def(python::self /= double())
+		.def(python::self / size_t())
+		.def(python::self /= size_t())
+		.def(python::self / int32_t())
+		.def(python::self /= int32_t())
 		.def(python::self_ns::str(python::self_ns::self))
 		.def(python::self_ns::float_(python::self_ns::self))
+ 	;
+
+	python::class_<vl::timer>("timer", python::init<>())
+		.def(python::init<vl::time const &>())
+		.def("elapsed", &vl::timer::elapsed)
+		.def("reset", &vl::timer::reset)
 	;
+
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )

@@ -118,21 +118,26 @@ public :
 	/// @brief set the orientation in object space
 	void setOrientation( Ogre::Quaternion const &q );
 
+	/// @todo properly document the rotation functions and their uses
+
 	/// @brief rotates the SceneNode around reference
 	/// @param q how much to rotate
 	/// @param reference the coordinate system to use for translation
 	/// @todo seems like this doesn't not work as expected for some rotations
-	/// @todo should this be renamed to rotateAround, because this is only usefull for special cases
-	void rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference);
+	/// @todo should this be renamed to rotateAround, because this is only useful for special cases
+	void rotateAround(Ogre::Quaternion const &q, vl::SceneNodePtr reference);
+
+//	void rotateAround(Ogre::Quaternion const &q, Ogre::Vector3 const &point, 
+//		TransformSpace relativeTo = TS_LOCAL);
 
 	/// @brief rotates the SceneNode in transform space
 	/// @param q how much to rotate
 	/// @param which coordinate system to use
 	void rotate(Ogre::Quaternion const &q, vl::TransformSpace space);
 
-	/// @brief rotates the SceneNode in local coordinate system
-	/// defined separately because easier to expose for python
+	/// @brief rotates the SceneNode using World axes
 	void rotate(Ogre::Quaternion const &q);
+
 	/// @brief helper overloads
 	void rotate(Ogre::Vector3 const &axis, Ogre::Radian const &angle)
 	{ rotate(Ogre::Quaternion(angle, axis)); }
@@ -173,7 +178,10 @@ public :
 
 	/// @brief set the visibility of the object
 	/// @param visible
-	void setVisible(bool visible);
+	/// @param cascade wether or not affect childs also
+	void setVisible(bool visible)
+	{ setVisible(visible, true); }
+	void setVisible(bool visible, bool cascade);
 
 	void show(void)
 	{ setVisible(true); }

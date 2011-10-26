@@ -460,7 +460,7 @@ public :
 	/// for example pattern cb_* hides any Node with 'cb_' in start of the name
 	/// For now asteriks is only supported at the end of the name string
 	/// so for example cb_*sp is equavivalent to cb_*
-	void hideSceneNodes(std::string const &pattern, bool caseInsensitive = true);
+	void hideSceneNodes(std::string const &pattern, bool cascade = true, bool caseInsensitive = true);
 	
 	/// @brief records a Transform which is used to generate a ray
 	void addRecordedRay(vl::Transform const &t);

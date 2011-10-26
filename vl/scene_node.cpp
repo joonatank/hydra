@@ -239,8 +239,13 @@ vl::SceneNode::setOrientation( Ogre::Quaternion const &q )
 }
 
 void
-vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference)
+vl::SceneNode::rotateAround(Ogre::Quaternion const &q, vl::SceneNodePtr reference)
 {
+	if(!reference)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Rotate around without the point.")); }
+	if(reference == this)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Rotate around with this as point.")); }
+
 	/// With references, this function is rotate around a point
 	/// the matrix to represent such a rotation is T = inv(P)*R*P
 	/// where P is translate matrix for the point and R is the rotation matrix
@@ -251,53 +256,55 @@ vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::SceneNodePtr reference)
 
 	// Um seems like the rotate around doesn't not work as expected when
 	// using multiple rotations. Though the usefulness of this feature is depatable.
-	vl::Transform t;
-	/// World space
-	if(!reference)
-	{
-		t.quaternion = q;
-		t.position = getWorldTransform().position - q*getWorldTransform().position;
-	}
-	/// Local space
-	else if(reference == this)
-	{
-		t.quaternion = q;
-	}
-	/// Reference space
-	else
-	{
-		/// @todo this is incorrect
-		vl::Transform ref_world = reference->getWorldTransform();
-		Transform inv_world = getWorldTransform();
-		//inv_world.invert();
-		t.quaternion = q;
-		t.position = ref_world.position - q*ref_world.position;
-	}
+	
 
-	setTransform(_transform*t);
+	vl::Transform t;
+	/// @todo this is incorrect
+	vl::Transform ref_world = reference->getWorldTransform();
+	//Transform inv_world = getWorldTransform();
+	//inv_world.invert();
+	t.quaternion = q;
+	t.position = ref_world.position - q*ref_world.position;
+	setTransform(t*_transform*t.inverted());
 }
 
 void
 vl::SceneNode::rotate(Ogre::Quaternion const &q, vl::TransformSpace space)
 {
-	if(space == TS_LOCAL)
+	switch(space)
 	{
-		rotate(q, this);
-	}
-	else if(space == TS_PARENT)
-	{
-		rotate(q, _parent);
-	}
-	else
-	{
-		rotate(q, 0);
+		case TS_LOCAL:
+		{
+			Transform t(q);
+			setTransform(_transform*t);
+		}
+		break;
+
+		case TS_PARENT:
+		{
+			Transform t(q);
+			setTransform(t*_transform);
+		}
+		break;
+
+		case TS_WORLD:
+		{
+			Transform const &world = getWorldTransform();
+			Transform t;
+			t.position = _transform.position;
+			t.quaternion = _transform.quaternion * world.quaternion.Inverse() * q *world.quaternion;
+			//t.position = getWorldTransform().position - q*getWorldTransform().position;
+			setTransform(t);
+		}
+		break;
+
 	}
 }
 
 void
 vl::SceneNode::rotate(Ogre::Quaternion const &q)
 {
-	rotate(q, this);
+	rotate(q, TS_LOCAL);
 }
 
 void 
@@ -398,7 +405,7 @@ vl::SceneNode::setDirection(Ogre::Vector3 const &dir, Ogre::Vector3 const &local
 
 
 void 
-vl::SceneNode::setVisible(bool visible)
+vl::SceneNode::setVisible(bool visible, bool cascade)
 {
 	if( _visible != visible )
 	{
@@ -406,9 +413,12 @@ vl::SceneNode::setVisible(bool visible)
 		_visible = visible;
 
 		// Cascade to childs
-		for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
-		{ (*iter)->setVisible(_visible); }
-		
+		if(cascade)
+		{
+			for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
+			{ (*iter)->setVisible(_visible, cascade); }
+		}
+
 		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
 		{ (*iter)->setVisible(_visible); }
 	}

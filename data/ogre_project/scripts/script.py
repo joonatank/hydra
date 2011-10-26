@@ -54,7 +54,7 @@ sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
-sphere.scale = sphere.scale*0.003
+sphere.scale(0.003)
 sphere_ent.cast_shadows = True
 
 athene = game.scene.createSceneNode("athene")
@@ -63,7 +63,7 @@ athene_ent = game.scene.createEntity("athene", "athene.mesh", True)
 athene_ent.material_name = "athene_material"
 athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
-athene.scale = Vector3(1,1,1)*0.05;
+athene.scale(0.05)
 
 game.scene.shadows.enable()
 

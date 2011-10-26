@@ -844,7 +844,7 @@ vl::SceneManager::_notifyFrameEnd(void)
 }
 
 void 
-vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitive)
+vl::SceneManager::hideSceneNodes(std::string const &pattern, bool cascade, bool caseInsensitive)
 {
 	std::string str(pattern);
 	if(caseInsensitive)
@@ -869,7 +869,7 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool caseInsensitiv
 		{ name = name.substr(0, pos); }
 		
 		if(find_name == name)
-		{ (*iter)->setVisible(false); }
+		{ (*iter)->setVisible(false, cascade); }
 	}
 }
 
