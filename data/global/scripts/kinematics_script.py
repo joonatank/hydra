@@ -46,7 +46,6 @@ def createFixedConstraint(sn0, sn1, transform) :
 # z forward, you need to use positive or negative velocity for driving
 # positive z forward positive velocity
 def slider_constraint(body0, body1, world_transform, min = 0, max = 0) :
-	assert(min < max)
 	constraint = game.kinematic_world.create_constraint('slider', body0, body1, world_transform)
 	constraint.lower_limit = min
 	constraint.upper_limit = max
@@ -56,7 +55,6 @@ def slider_constraint(body0, body1, world_transform, min = 0, max = 0) :
 # +y because the objects were modeled in Blender with +z as the rotation axis
 # but the exporter flips y and z
 def hinge_constraint(body0, body1, world_transform, min = Radian(), max = Radian()) :
-	assert(min < max)
 	constraint = game.kinematic_world.create_constraint('hinge', body0, body1, world_transform)
 	constraint.lower_limit = Radian(min)
 	constraint.upper_limit = Radian(max)
@@ -160,4 +158,141 @@ class Cylinder:
 
 		# Hack to handle incorrect rotation of the piston
 		self.piston.rotate(self.piston_rotation)
+
+# Rotates the rod and piston around their fixing points
+# Trying to align them.
+# Problem can be unsolvable if the axis we should rotate around is incorrect
+# or if the fixing points move relative to each other in more than one DOF.
+# TODO fix naming rod = tube
+class Cylinder2 :
+	def __init__(self, barrel, rod, barrel_fixing, rod_fixing):
+		self.barrel = barrel
+		self.rod = rod
+		self.barrel_fixing = barrel_fixing
+		self.rod_fixing = rod_fixing
+		# Around what axis should we rotate
+		self.barrel_axis = Vector3(-1, 0, 0)
+		self.rod_axis = Vector3(-1, 0, 0)
+
+		# Propably the direction should not be configurable
+		self.local_dir = Vector3(0, 0, -1)
+		# How much to progress at each step
+		self.step_size = Degree(0.1)
+		# Debug variable for how many times this was left unsolved
+		self.unsolved = 0
+		self.max_iterations = 20
+		self.times_solve_took = []
+
+		# NOTE using SceneGraph for the solver because we don't
+		# have access to the Kinematic graph from python.
+		# avoids ineffient copying of transformations.
+		self.rod_fixing.scene_node.addChild(self.rod)
+		self.barrel_fixing.scene_node.addChild(self.barrel)
+		
+		self.current_dir = self._get_direction_vec()
+
+		self.barrel_fixing.addListener(self.moved)
+		self.rod_fixing.addListener(self.moved)
+	
+	def __str__(self):
+		avg_time = time()
+		if len(self.times_solve_took) > 0:
+			for t in self.times_solve_took:
+				avg_time += t
+			avg_time /= len(self.times_solve_took)
+
+		s = "Cylinder : has been left unsolved {:0d} times\n"\
+			"   barrel = '{:1s}' and rod '{:2s}'\n"\
+			"   step size {:3s}\n"\
+			"   took {:4s} at avarage to solve\n"
+
+		return s.format(self.unsolved, self.barrel.name, self.rod.name, self.step_size, avg_time)
+
+	# Callback from fixing points
+	def moved(self, trans):
+		t = timer()
+
+
+		# get the direction vector
+		direction = self._get_direction_vec()
+
+		# TODO add tolerance
+		# TODO break into two parts one for barrel and one for rod
+		if self.current_dir != direction:
+			barrel_solved = self._run_solver_loop(direction, self.barrel, self.barrel_axis)
+			if not barrel_solved:
+				barrel_solved = self._run_solver_loop(direction, self.barrel, -self.barrel_axis)
+
+			rod_solved = self._run_solver_loop(direction, self.rod, self.rod_axis)
+			if not rod_solved:
+				rod_solved = self._run_solver_loop(direction, self.rod, -self.rod_axis)
+
+			if not barrel_solved or not rod_solved:
+				self.unsolved += 1
+			self.current_dir = self._get_direction_vec() 
+
+		self.times_solve_took.append(t.elapsed())
+
+	# Return true if the problem is solved, false if unsolvable
+	def _run_solver_loop(self, direction, node, axis):
+		iteration = 0
+		not_solved = True
+		while self._progress(direction, node, axis):
+
+			# TODO add checking if we are near enough the limit
+
+			++iteration
+			# Took too long
+			if iteration == self.max_iterations:
+				return False
+
+		# The first iteration fails only if we are rotating along the negative axis
+		if iteration == 0:
+			return False
+		return True
+
+	def _get_direction_vec(self):
+		d = self.barrel_fixing.world_transformation.position - self.rod_fixing.world_transformation.position
+		d.normalise()
+		return d
+
+	# Returns true if we have a better result than before, False otherwise
+	def _progress(self, desired_dir, node, axis):
+		assert(node)
+
+		d_old = node.world_transformation.quaternion * self.local_dir
+		
+		node.rotate(Quaternion(Radian(self.step_size), axis))
+		
+		# Check the new direction vector
+		d = node.world_transformation.quaternion * self.local_dir
+
+		# Check if new direction vector is closer to desired direction than old one
+		if not closer(desired_dir, d_old, d):
+			# Pop old result
+			node.rotate(Quaternion(Radian(-self.step_size), axis))
+			return False
+		else :
+			return True
+
+
+# Develop the rotate around method
+# FIXME this doesn't work
+# TODO create a simple test case for this and move it to global script
+def rotate_around(node, q, ref):
+	ref_world = ref.world_transformation
+	pos = ref_world.position - q*ref_world.position
+	t = Transform(q, pos)
+	#t = t*Transform(ref_world.quaternion)
+
+	# The problem is that this does not take into account the local
+	# frame of the node
+	# So if we have different than default orientation on the node this does
+	# not work
+	node.transformation = node.transformation*t
+
+def closer(compared, old, new):
+	if compared.dot(old) < compared.dot(new): return True
+	else : return False
+
 
