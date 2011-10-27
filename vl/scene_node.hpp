@@ -235,6 +235,9 @@ public :
 
 	bool hasChild(vl::SceneNodePtr child) const;
 
+	/// @brief removes all children from this node and puts them under root
+	void removeAllChildren(void);
+
 	vl::SceneNodeList const &getChilds(void) const
 	{ return _childs; }
 
@@ -243,7 +246,6 @@ public :
 
 	SceneManagerPtr getCreator(void) const
 	{ return _creator; }
-
 
 	// -------------------- Callbacks -----------------------
 	virtual int addListener(TransformedCB::slot_type const &slot)
@@ -258,7 +260,7 @@ public :
 		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
 		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 6,
 		DIRY_ATTACHED = vl::Distributed::DIRTY_CUSTOM << 7,
-		DIRTY_INHERIT_SCALE = vl::Distributed::DIRTY_CUSTOM << 8,
+		DIRTY_PARAMS = vl::Distributed::DIRTY_CUSTOM << 8,
 		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 9,
 	};
 

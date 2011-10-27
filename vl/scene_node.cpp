@@ -439,7 +439,7 @@ vl::SceneNode::setInheritScale(bool b)
 {
 	if(_inherit_scale != b)
 	{
-		setDirty(DIRTY_INHERIT_SCALE);
+		setDirty(DIRTY_PARAMS);
 		_inherit_scale = b;
 	}
 }
@@ -650,6 +650,17 @@ vl::SceneNode::hasChild(vl::SceneNodePtr child) const
 	return false;
 }
 
+void
+vl::SceneNode::removeAllChildren(void)
+{
+	// Make a copy as removeChild will modify the original list
+	SceneNodeList childs = _childs;
+	for(SceneNodeList::iterator iter = childs.begin(); iter != childs.end(); ++iter)
+	{
+		removeChild(*iter);
+	}
+}
+
 /// ------------------------- Protected --------------------------------------
 // Does no transformation on the Ogre Node as the master copy should be in
 // AppNode which does not have Ogre SceneGraph
@@ -681,7 +692,7 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _show_boundingbox;
 	}
 
-	if(dirtyBits & DIRTY_INHERIT_SCALE)
+	if(dirtyBits & DIRTY_PARAMS)
 	{
 		msg << _inherit_scale;
 	}
@@ -749,7 +760,7 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		{ _ogre_node->showBoundingBox(_show_boundingbox); }
 	}
 
-	if(dirtyBits & DIRTY_INHERIT_SCALE)
+	if(dirtyBits & DIRTY_PARAMS)
 	{
 		msg >> _inherit_scale;
 		_ogre_node->setInheritScale(_inherit_scale);
