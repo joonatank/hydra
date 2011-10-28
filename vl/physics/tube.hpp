@@ -51,6 +51,8 @@ public :
 			, element_size(0.6)
 			, lower_lim(Vector3::ZERO)
 			, upper_lim(Vector3(-1, -1, -1))
+			, fixing_lower_lim(Vector3::ZERO)
+			, fixing_upper_lim(Vector3(-1, -1, -1))
 			, spring(true)
 			, disable_collisions(false)
 			, inertia(Vector3(1, 1, 1))
@@ -72,8 +74,10 @@ public :
 		std::string material_name;
 
 		// Angular limits
-		Vector3 lower_lim;
-		Vector3 upper_lim;
+		Ogre::Vector3 lower_lim;
+		Ogre::Vector3 upper_lim;
+		Ogre::Vector3 fixing_lower_lim;
+		Ogre::Vector3 fixing_upper_lim;
 
 		bool spring;
 		bool disable_collisions;
@@ -182,6 +186,8 @@ private :
 	/// as we would need to pass it also to the World.
 	void _createMesh(MeshManagerRefPtr mesh_manager);
 
+	void _setConstraint(ConstraintRefPtr constraint, Ogre::Vector3 const &lower, Ogre::Vector3 const &upper);
+
 	RigidBodyRefPtr _findBodyByLength(vl::scalar length);
 	RigidBodyRefPtr _findBodyByPosition(Ogre::Vector3 const &pos);
 
@@ -208,6 +214,8 @@ private :
 	// Angular limits
 	Ogre::Vector3 _lower_lim;
 	Ogre::Vector3 _upper_lim;
+	Ogre::Vector3 _fixing_lower_lim;
+	Ogre::Vector3 _fixing_upper_lim;
 
 	std::string _material_name;
 

@@ -50,6 +50,8 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _disable_internal_collisions(info.disable_collisions)
 	, _lower_lim(info.lower_lim)
 	, _upper_lim(info.upper_lim)
+	, _fixing_lower_lim(info.fixing_lower_lim)
+	, _fixing_upper_lim(info.fixing_upper_lim)
 	, _world(world)
 	, _material_name(info.material_name)
 {
@@ -137,6 +139,9 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 
 vl::physics::Tube::~Tube(void)
 {
+	/// @todo should remove constraints and bodies from world
+	/// and destroy them
+	/// @todo should remove and destroy all used SceneNodes
 }
 
 void
@@ -266,10 +271,11 @@ vl::physics::Tube::addFixingPoint(RigidBodyRefPtr body, vl::scalar length)
 	vl::Transform frameA, frameB;
 	SixDofConstraintRefPtr constraint = SixDofConstraint::create(body, tube_body, frameA, frameB, true);
 
+	// @todo this should be changed to use _setConstraint
 	constraint->setLinearLowerLimit(Ogre::Vector3::ZERO);
 	constraint->setLinearUpperLimit(Ogre::Vector3::ZERO);
-	//constraint->setAngularLowerLimit(Ogre::Vector3::ZERO);
-	//constraint->setAngularUpperLimit(Ogre::Vector3::ZERO);
+	constraint->setAngularLowerLimit(_fixing_lower_lim);
+	constraint->setAngularUpperLimit(_fixing_upper_lim);
 	body->setUserControlled(true);
 	body->setDamping(_body_damping, _body_damping);
 
@@ -313,6 +319,7 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 	if(_start_body && _bodies.size() > 0)
 	{
 		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), start_frame, frameB, true);
+		_setConstraint(constraint, _fixing_lower_lim, _fixing_upper_lim);
 		_constraints.push_back(constraint);
 	}
 
@@ -322,6 +329,7 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 
 		// first element
 		constraint = SixDofConstraint::create(_bodies.at(i-1), _bodies.at(i), frameA, frameB, true);
+		_setConstraint(constraint, _lower_lim, _upper_lim);
 		_constraints.push_back(constraint);
 	}
 	
@@ -329,42 +337,45 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 	if(_end_body && _bodies.size() > 0)
 	{
 		ConstraintRefPtr constraint = SixDofConstraint::create(_bodies.back(), _end_body, frameA, end_frame, true);
+		// Configure constraint
+		_setConstraint(constraint, _fixing_lower_lim, _fixing_upper_lim);
 		_constraints.push_back(constraint);
 	}
+}
 
-	/// Configure all created constraints using same parameters
-	for(ConstraintList::iterator iter = _constraints.begin(); iter != _constraints.end(); ++iter)
-	{
-		/// @todo set limits
-		/// all translations should be fixed
-		/// rotation around y-axis is allowed to a small extent
-		/// the tube should have y-axis running through it in this scenario
-		/// rotation around x and z axes are allowed to a large extent
+void
+vl::physics::Tube::_setConstraint(ConstraintRefPtr constraint, 
+	Ogre::Vector3 const &lower, Ogre::Vector3 const &upper)
+{
+	/// @todo set limits
+	/// all translations should be fixed
+	/// rotation around y-axis is allowed to a small extent
+	/// the tube should have y-axis running through it in this scenario
+	/// rotation around x and z axes are allowed to a large extent
 
-		_world->addConstraint(*iter, _disable_internal_collisions);
+	_world->addConstraint(constraint, _disable_internal_collisions);
 		
-		SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
-		assert(spring);
-		/// @todo set limits
-		spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
-		spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
-		spring->setAngularLowerLimit(_lower_lim);
-		spring->setAngularUpperLimit(_upper_lim);
+	SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(constraint);
+	assert(spring);
+	spring->setLinearLowerLimit(Ogre::Vector3(0, 0, 0));
+	spring->setLinearUpperLimit(Ogre::Vector3(0, 0, 0));
+	spring->setAngularLowerLimit(lower);
+	spring->setAngularUpperLimit(upper);
 
-		/// @todo enable spring damper
-		/// @todo set stiffness and damping
-		// Enable spring for rotations around x, y and z
-		if(_spring)
+	/// @todo enable spring damper
+	/// @todo set stiffness and damping
+	// Enable spring for rotations around x, y and z
+	if(_spring)
+	{
+		for(uint16_t i = 3; i < 6; ++i)
 		{
-			for(uint16_t i = 3; i < 6; ++i)
-			{
-				spring->enableSpring(i, true);
-				spring->setStiffness(i, _stiffness);
-				spring->setDamping(i, _damping);
-			}
+			spring->enableSpring(i, true);
+			spring->setStiffness(i, _stiffness);
+			spring->setDamping(i, _damping);
 		}
 	}
 }
+
 
 void
 vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
