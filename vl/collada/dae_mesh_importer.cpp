@@ -35,6 +35,8 @@
 /// Necessary for typedefs
 #include "dae_importer.hpp"
 
+#include "math/math.hpp"
+
 namespace {
 
 Ogre::Vector3 convert_vertex_data(COLLADAFW::MeshVertexData const &data, size_t index)
@@ -44,7 +46,6 @@ Ogre::Vector3 convert_vertex_data(COLLADAFW::MeshVertexData const &data, size_t 
 	{
 		const double* arr = data.getDoubleValues()->getData();
 		arr += 3*index;
-		//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
 		v.x = (Ogre::Real)arr[0];
 		v.y = (Ogre::Real)arr[1];
 		v.z = (Ogre::Real)arr[2];
@@ -53,7 +54,6 @@ Ogre::Vector3 convert_vertex_data(COLLADAFW::MeshVertexData const &data, size_t 
 	{
 		const float* arr = data.getFloatValues()->getData();
 		arr += 3*index;
-		//position = mCurrentRotationMatrix * position + mCurrentTranslationVector;
 		v.x = (Ogre::Real)arr[0];
 		v.y = (Ogre::Real)arr[1];
 		v.z = (Ogre::Real)arr[2];
@@ -87,11 +87,8 @@ Ogre::Vector2 convert_uvs(COLLADAFW::MeshVertexData const &data, size_t index)
 
 
 //------------------------------
-vl::dae::MeshImporter::MeshImporter(MeshManagerRefPtr mesh_manager, 
-	COLLADAFW::Mesh const *mesh, bool flat_shading)
-	: _collada_mesh(mesh)
-	, _mesh_manager(mesh_manager)
-	, _flat_shading(flat_shading)
+vl::dae::MeshImporter::MeshImporter(MeshManagerRefPtr mesh_manager)
+	: _mesh_manager(mesh_manager)
 {}
 
 //------------------------------
@@ -102,23 +99,23 @@ vl::dae::MeshImporter::~MeshImporter()
 
 //------------------------------
 bool
-vl::dae::MeshImporter::write()
+vl::dae::MeshImporter::read(COLLADAFW::Mesh const *mesh, ImporterSettings const &settings)
 {
 	std::clog << "vl::dae::MeshImporter::write" << std::endl;
 
 //	bool skelAnim = _collada_mesh->hasSkeleton();
 
 	assert(_mesh_manager);
-	assert(_collada_mesh);
-	_mesh = _mesh_manager->createMesh(_collada_mesh->getName());
+	assert(mesh);
+	_mesh = _mesh_manager->createMesh(mesh->getName());
 
 	_mesh->createSharedVertexData();
-	handleVertexBuffer(_collada_mesh, _mesh->sharedVertexData);
+	handleVertexBuffer(mesh, _mesh->sharedVertexData);
 
 	std::clog << "Mesh with " << _mesh->sharedVertexData->getNVertices() << " vertices created." << std::endl;
 
 	/// Submeshes
-	COLLADAFW::MeshPrimitiveArray const &submesh_array = _collada_mesh->getMeshPrimitives();
+	COLLADAFW::MeshPrimitiveArray const &submesh_array = mesh->getMeshPrimitives();
 	std::clog << "Creating " << submesh_array.getCount() << " submeshes." << std::endl;
 	for(size_t i = 0; i < submesh_array.getCount(); ++i)
 	{
@@ -141,7 +138,7 @@ vl::dae::MeshImporter::write()
 	{
 		FileDeserializer::InstanceGeometryInfo const &instanceGeometryInfo = it->second;
 		COLLADABU::Math::Matrix4 const &worldMatrix = instanceGeometryInfo.worldMatrix;
-		COLLADAFW::MeshPrimitiveArray const &meshPrimitives = _collada_mesh->getMeshPrimitives();
+		COLLADAFW::MeshPrimitiveArray const &meshPrimitives = mesh->getMeshPrimitives();
 		COLLADAFW::InstanceGeometry const *instanceGeometry = instanceGeometryInfo.fwInstanceGeometry;
 
 		worldMatrix.extract3x3Matrix(mCurrentRotationMatrix);
@@ -158,6 +155,8 @@ vl::dae::MeshImporter::write()
 	_mesh->calculateBounds();
 
 	std::clog << "Mesh bounds = " << _mesh->getBounds() << std::endl;
+
+	/// @todo clean up all the stored values so we can be run again
 
 	return true;
 }
@@ -333,11 +332,10 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 			for(int j = 0; j < index_buffer_size; ++j)
 			{
 				ibf->set(j, positionIndices[j]);
-				//unsigned int normalIndex = 0;
+
 				if(has_normals)
 					tri_normal_indices.at(j) = normalIndices[j];
 
-				//unsigned int uvIndex = 0;
 				if(has_uv_coords)
 					tri_uv_indices.at(j) = (*uvIndices)[j];
 			}
@@ -432,7 +430,7 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 	// but store them for use when faces are processed.
 	if(mesh->hasNormals())
 	{
-		COLLADAFW::MeshVertexData const &normals = _collada_mesh->getNormals();
+		COLLADAFW::MeshVertexData const &normals = mesh->getNormals();
 		// Will make it bit more difficult for us if some vertices have normals
 		// and some don't. Doh.
 		// this fails for some reason
@@ -453,8 +451,6 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 		/// What type of uvs are these? two double values?
 		// The 2 dimensional uv coordinates array. 
         // UV coordinates can be stored as float or double values.
-		// @todo are these vertex or face uvs?
-		std::clog << "Mesh has uvs : NOT_IMPLEMENTED" << std::endl;
 		size_t n_uvs = uvs.getValuesCount()/2;
 		assert(uvs.getValuesCount() % 2 == 0); 
 
@@ -523,7 +519,7 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 			// @todo this should be done before by using a temporary array
 			if(ibf->getVec32().at(j) == i)
 			{
-				Ogre::Vector3 normal = _normals.at(normalIndices.at(j));
+				Ogre::Vector3 const &normal = _normals.at(normalIndices.at(j));
 				vert_to_normal.at(i).normals.push_back(normal);
 			}
 		}
@@ -532,7 +528,6 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 	// if smooth shading is on
 	// the vertex normal is the avarage of all the face normals
 	// @todo flat shading is not implemented
-//	if(!_flat_shading)
 	{
 		for(size_t i = 0; i < vert_to_normal.size(); ++i)
 		{
@@ -558,10 +553,197 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 
 }
 
+/// @brief adds a copy of vertex and remaps the face in index buffer 
+/// modifies both index and vertex buffer
+/// does not add any new idices to index buffer, only modifies existing ones
+/// inefficent way to split vertices and does not take into account possibility
+/// to remap multiple faces to a single new vertex
+/// Only works on 32bit indices.
+/// @return vertex index which we added
+size_t split_vertex(vl::IndexBuffer *ibf, vl::VertexData *vbf, size_t face_index, size_t vertex_index)
+{
+	assert(ibf->indexCount() > face_index);
+	assert(vbf->getNVertices() > vertex_index);
+
+	vl::Vertex const &vertex = vbf->getVertex(vertex_index);
+	vbf->addVertex(vertex);
+	// last element in vertex buffer
+	std::clog << "Changing face index : " << face_index << " from vertex " 
+		<< ibf->getVec32()[face_index] << " to " << vbf->getNVertices()-1 << std::endl;
+	size_t vert_idx = vbf->getNVertices()-1;
+	ibf->getVec32()[face_index] = vert_idx;
+
+	return vert_idx;
+}
+
+struct VertexUV
+{
+	// uses huge amounts of memory but should never be necessary to resize
+	VertexUV(void)
+		: vertex_index(0)
+	{
+		uvs.reserve(32);
+	}
+
+	void add(size_t face_index, Ogre::Vector2 const &uv, size_t v_index)
+	{
+		bool unique = true;
+		/* This opmisation breaks the splitting for some reason
+		 * now we split all vertices so we get all uvs correct
+		for(size_t i = 0; i < uvs.size(); ++i)
+		{
+			// @todo add tolerance
+			if(vl::equal(uv, uvs.at(i).second))
+			{ unique = false; break; }
+		}
+		*/
+
+		if(unique)
+		{ uvs.push_back(std::make_pair(face_index, uv)); }
+
+		if(vertex_index != 0)
+		{ assert(vertex_index == v_index); }
+		vertex_index = v_index;
+	}
+
+	bool needs_splitting(void) const
+	{ return uvs.size() > 1; }
+
+	// Return array of splitted vertices
+	// inefficent we should pass a pre allocated array and index (or a pointer to memory)
+	void split(vl::IndexBuffer *ibf, vl::VertexData *vbf, size_t v_index, std::vector<VertexUV> &new_vert_uvs)
+	{
+		if(!needs_splitting())
+		{ return; }
+		
+		// skip the first uv set, as it remains valid
+		std::clog << "Splitting vertex " << uvs.size()-1 << " times." << std::endl;
+		for(size_t i = 1; i < uvs.size(); ++i)
+		{
+			assert(vertex_index == v_index);
+			size_t face_idx = uvs.at(i).first;
+			size_t vert_idx = split_vertex(ibf, vbf, face_idx, v_index);
+			new_vert_uvs.push_back(VertexUV());
+			
+			new_vert_uvs.back().add(face_idx, uvs.at(i).second, vert_idx);
+		}
+
+		// Clean this structure to reflect the splitting
+		uvs.erase(uvs.begin()+1, uvs.end());
+	}
+
+	// face index uv pair array
+	std::vector<std::pair<size_t, Ogre::Vector2> > uvs;
+	size_t vertex_index;
+};
+
+std::ostream &operator<<(std::ostream &os, VertexUV const &uv)
+{
+	os << uv.uvs.size() << " vertex uvs : ";
+	for(size_t i = 0; i < uv.uvs.size(); ++i)
+	{
+		os << uv.uvs.at(i).second << " , ";
+	}
+
+	return os;
+}
+
 void
 vl::dae::MeshImporter::_calculate_vertex_uvs(std::vector<uint32_t> const &uvIndices, vl::IndexBuffer *ibf)
 {
-	std::clog << "vl::dae::MeshImporter::_calculate_vertex_uvs : NOT_IMPLEMENTED" << std::endl;
+	std::clog << "vl::dae::MeshImporter::_calculate_vertex_uvs" << std::endl;
+
+	assert(!_uvs.empty());
+
+	std::clog << "uv array size = " << _uvs.size() << " uv indices size = " << uvIndices.size() << std::endl;
+	/// For now just assume that every vertex has an unique uv coordinate
+	/// later we need to implement vertex splitting
+	/// but we need to coordinate with vertex normal generation for this
+	/// as both of these will split vertices based on different parameters
+
+	// we have a map from faces -> uvs (uvIndices)
+	// we have a map from vertices -> faces (ibf)
+	// we need a map from vertices -> uvs
+	VertexData *vbf = _mesh->sharedVertexData;
+	std::vector<VertexUV> vert_to_uv;
+	vert_to_uv.resize(vbf->getNVertices());
+
+	for(size_t j = 0; j < ibf->indexCount(); ++j)
+	{
+		// Find the face id
+		// @todo this should be done before by using a temporary array
+		size_t vert_index = ibf->getVec32().at(j);
+		assert(vert_index < vbf->getNVertices());
+
+		Ogre::Vector2 const &uv = _uvs.at(uvIndices.at(j));
+		std::clog << "Vetex : " << vbf->getVertex(vert_index).position 
+			<< " uv = " << uv << " face index : " << j/3 << std::endl;
+		vert_to_uv.at(vert_index).add(j, uv, vert_index);
+	}
+
+	std::vector<VertexUV> new_vert_uvs;
+	// Splitting phase
+	for(size_t i = 0; i < vert_to_uv.size(); ++i)
+	{
+		assert(i == vert_to_uv.at(i).vertex_index);
+		VertexUV &vertex_uv = vert_to_uv.at(i);
+		if(vertex_uv.needs_splitting())
+		{
+			vertex_uv.split(ibf, vbf, i, new_vert_uvs);
+		}
+	}
+
+	// Combine the arrays
+	for(size_t i = 0; i < new_vert_uvs.size(); ++i)
+	{
+		vert_to_uv.push_back(new_vert_uvs.at(i));
+	}
+
+	assert(vert_to_uv.size() == vbf->getNVertices());
+
+	// Debug print the mesh structure
+	std::clog << "Mesh vertices : " << std::endl;
+	for(size_t i = 0; i < vbf->getNVertices(); ++i)
+	{
+		std::clog << "\t" << vbf->getVertex(i) << std::endl;
+	}
+
+	std::clog << "Mesh indices : " << std::endl;
+	for(size_t i = 0; i < ibf->indexCount(); ++i)
+	{
+		std::clog << "\t" << ibf->getVec32().at(i) << std::endl;
+	}
+
+	// Calculate the real uvs
+	// this really does nothing except copying the first ones and then warning for all the others
+	for(size_t i = 0; i < vert_to_uv.size(); ++i)
+	{
+		size_t vertex_index = vert_to_uv.at(i).vertex_index;
+		assert(vertex_index < vert_to_uv.size());
+		//assert(i == vert_to_uv.at(i).vertex_index);
+		VertexUV const &vertex_uv = vert_to_uv.at(i);
+		Vertex &vertex = vbf->getVertex(vertex_index);
+		if(vertex_uv.uvs.size() > 1)
+		{
+			std::clog << "Warning : vertex has " << vertex_uv.uvs.size() 
+				<< " uvs of which only 1 is supported." << std::endl;
+			std::clog << "All uvs : " << vertex_uv << std::endl;
+			// now we should duplicate the vertex
+			// we can assume that all attributes are already set
+			// because this is the last step
+			// this does not work for normals though
+			// also this might mess the face indices
+		}
+		if(vertex_uv.uvs.size() > 0)
+		{
+			assert(ibf->getVec32().at(vertex_uv.uvs.at(0).first) == vertex_index);
+			vertex.uv = vertex_uv.uvs.at(0).second;
+			std::clog << "Copying uvs for vertex at " << vertex_index 
+				<< " : uvs = " << vertex.uv.x <<  ", " << vertex.uv.y << std::endl;
+		}
+		else
+		{ std::clog << "Warning : vertex has no uvs." << std::endl; }
+	}
 }
 
 size_t

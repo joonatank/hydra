@@ -49,35 +49,6 @@ namespace vl
 namespace dae
 {
 
-struct ImporterSettings
-{
-	// How to calculate normals for shading
-	enum SHADING
-	{
-		SMOOTH,		// calculate smooth normals everywhere
-		FLAT,		// every edge is sharp
-		COMBINED,	// use cut angle to smooth normals
-	};
-
-	SHADING shading;
-
-	Ogre::Radian normals_cut_angle;
-
-	// where to attach all scene nodes (root)
-	vl::SceneNodePtr attach_node;
-
-	// what material to use as a base for all materials
-	std::string base_material;
-
-	/// @brief checks all materials for exact duplicates and removes them
-	/// exact duplicate here is all parameters except name
-	bool remove_duplicate_materials;
-
-	// traverses all the meshes removing exact duplicates
-	// @todo not implemented
-	bool remove_duplicate_meshes;
-};
-
 /// @class DaeReader
 /// @brief class used read dae files to the Hydra runtime
 /// Remapping the name of writer used by OpenCollada to Reader (or deserializer) as used in Hydra.
@@ -141,7 +112,7 @@ public:
 
 	/** Writes the image.
 	@return True on succeeded, false otherwise.*/
-	virtual bool writeImage( const COLLADAFW::Image* image );
+	virtual bool writeImage(COLLADAFW::Image const *image);
 
 	/** Writes the light.
 	@return True on succeeded, false otherwise.*/
@@ -188,6 +159,14 @@ private :
 	
 	void handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const &instanceNodes);
 
+	/// @todo does not need material pointer as this should create a sampler to image id map
+	void _processSampler(COLLADAFW::Sampler const *sampler, vl::MaterialRefPtr mat);
+
+	/// Handles only diffuse texture for now, as we don't have a texture type
+	/// we could map for different texture maps.
+	/// Maybe added later.
+	void _processTexture(COLLADAFW::Texture const &tex, vl::MaterialRefPtr mat);
+
 	/** Disable default copy ctor. */
 	Importer(Importer const &);
     /** Disable default assignment operator. */
@@ -197,6 +176,19 @@ private :
 private:
 	vl::SceneManagerPtr _scene_manager;
 	vl::MaterialManagerRefPtr _material_manager;
+	vl::MeshManagerRefPtr _mesh_manager;
+
+	struct Image
+	{
+		Image(std::string const &n, COLLADABU::URI const &u)
+			: uri(u), name(n)
+		{}
+
+		Image(void) {}
+
+		COLLADABU::URI uri;
+		std::string name;
+	};
 
 	struct NodeEntityDefinition
 	{
@@ -252,13 +244,17 @@ private:
 	std::map<COLLADAFW::UniqueId, vl::LightPtr> _lights;
 	SubMeshMaterialIDMap _submesh_material_map;
 
+	std::map<COLLADAFW::UniqueId, Image> _images;
+	std::map<COLLADAFW::UniqueId, COLLADAFW::UniqueId> _sampler_to_image_map;
+	std::vector<std::pair<MaterialRefPtr, COLLADAFW::UniqueId> > _material_to_sampler_map;
+
 	/// Map which maps effect id to an information node
 	std::map<COLLADAFW::UniqueId, EffectMapEntry> _effect_map;
 	std::vector<MaterialMapEntry> _materials;
 
 	std::map<COLLADAFW::MaterialId, COLLADAFW::UniqueId> _material_instance_map;
 
-	bool _flat_shading;
+	ImporterSettings const &_settings;
 };
 
 }	// namespace dae

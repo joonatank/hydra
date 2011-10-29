@@ -244,9 +244,8 @@ void export_scene_graph(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	//vl::MaterialRefPtr (vl::MaterialManager::*createMaterial_ov0)(std::string const &) = ;
 	python::class_<std::vector<MaterialRefPtr> >("MaterialList")
-		.def(python::vector_indexing_suite<std::vector<MaterialRefPtr> >())
+		.def(python::vector_indexing_suite<std::vector<MaterialRefPtr>, true>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -255,8 +254,6 @@ void export_scene_graph(void)
 		.def("get_material", &vl::MaterialManager::getMaterial)
 		.def("has_material", &vl::MaterialManager::hasMaterial)
 		.add_property("materials", python::make_function(&vl::MaterialManager::getMaterialList, python::return_value_policy<python::copy_const_reference>()) )
-		// @todo add list access
-		// vl::MaterialManager::getMaterials
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

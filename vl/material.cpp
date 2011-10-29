@@ -175,6 +175,19 @@ vl::Material::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 	if(DIRTY_TEXTURE & dirtyBits)
 	{
 		msg >> _texture;
+		if(_ogre_material.get())
+		{
+			Ogre::AliasTextureNamePairList alias_list;
+			alias_list["diffuseTexture"] = _texture;
+			if(_ogre_material->applyTextureAliases(alias_list))
+			{
+				std::clog << "Succesfully applied texture aliases for material " << _name << std::endl;
+			}
+			else
+			{
+				std::clog << "Failed to apply texture aliases for material " << _name << std::endl;
+			}
+		}
 	}
 
 	if(create)
@@ -185,7 +198,8 @@ vl::Material::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		// @todo fix hard coded base material name
 		// @todo add error handling
 		Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton()
-			.getByName("bling_phong/shadows");
+			.getByName("ffp/basic");
+			//.getByName("bling_phong/shadows");
 
 		assert(dynamic_cast<Ogre::Material *>(base_mat_res.get()));
 		_ogre_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(_name);
@@ -195,6 +209,19 @@ vl::Material::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		_ogre_material->setSelfIllumination(_emissive);
 		_ogre_material->setAmbient(_ambient);
 
+		if(!_texture.empty())
+		{
+			Ogre::AliasTextureNamePairList alias_list;
+			alias_list["diffuseTexture"] = _texture;
+			if(_ogre_material->applyTextureAliases(alias_list))
+			{
+				std::clog << "Succesfully applied texture aliases for material " << _name << std::endl;
+			}
+			else
+			{
+				std::clog << "Failed to apply texture aliases for material " << _name << std::endl;
+			}
+		}
 		_ogre_material->load();
 	}
 }

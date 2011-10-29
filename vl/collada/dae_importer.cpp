@@ -77,7 +77,8 @@ Ogre::ColourValue convert_colour(COLLADAFW::ColorOrTexture const &col)
 vl::dae::Importer::Importer(ImporterSettings const &settings, Managers const &managers)
 	: _scene_manager(managers.scene)
 	, _material_manager(managers.material)
-	, _flat_shading(false)
+	, _mesh_manager(managers.mesh)
+	, _settings(settings)
 {
 	// @todo add settings
 	assert(_scene_manager);
@@ -220,6 +221,29 @@ vl::dae::Importer::finish()
 		else
 		{
 			std::clog << "Instance material id " << iter->second << " not found from material instance map." << std::endl;
+		}
+	}
+
+	// Map textures to materials
+	// @todo there is no information to which channel in the material to map the texture
+	// we only support diffuse for now, so this is not a problem but later it will be.
+	for(std::vector<std::pair<MaterialRefPtr, COLLADAFW::UniqueId> >::iterator iter = _material_to_sampler_map.begin();
+		iter != _material_to_sampler_map.end(); ++iter)
+	{
+		if(!iter->first->getTexture().empty())
+		{
+			std::clog << "Multiple textures not supported for single material!" <<  std::endl;
+		}
+		else
+		{
+			Image const &img = _images[_sampler_to_image_map[iter->second]];
+			// discarding name parameter for now, we need a more comprehessive Texture type
+			img.name;
+			// We use relatie paths because the textures should in resource folder.
+			std::string path = img.uri.originalStr();
+			iter->first->setTexture(path);
+			std::clog << "Setting texture : " << path << " to material : " 
+				<< iter->first->getName() << std::endl;
 		}
 	}
 }
@@ -398,8 +422,8 @@ vl::dae::Importer::writeGeometry(COLLADAFW::Geometry const *geometry)
 		// this because Collada does not guerantie that every object has unique
 		// names and they can even be unamed
 		// in which case we need to use the unique id for the name.
-		MeshImporter meshImporter(_scene_manager->getMeshManager(), (COLLADAFW::Mesh*)geometry, _flat_shading);
-		bool ret_val = meshImporter.write();
+		MeshImporter meshImporter(_mesh_manager);
+		bool ret_val = meshImporter.read((COLLADAFW::Mesh*)geometry, _settings);
 	
 		// Here we could create the Entity but we don't have the node it should be mapped to
 		// we could also use a map that we store all the meshes... or well we already have
@@ -409,16 +433,20 @@ vl::dae::Importer::writeGeometry(COLLADAFW::Geometry const *geometry)
 		// This has the problem that we are creating an instance here
 		// though we should only create the mesh
 		// then instance it when it's used
-		_entities[geometry->getUniqueId()] = _scene_manager->createEntity(geometry->getName(), geometry->getName(), true);
-		
-		// Save the submeshes that need material remapping for later
-		SubMeshMaterialIDMap const &map = meshImporter.getSubMeshMaterialMap();
-		for(size_t i = 0; i < map.size(); ++i)
+		if(ret_val)
 		{
-			_submesh_material_map.push_back(map.at(i));
+			_entities[geometry->getUniqueId()] = _scene_manager->createEntity(geometry->getName(), geometry->getName(), true);
+		
+			// Save the submeshes that need material remapping for later
+			SubMeshMaterialIDMap const &map = meshImporter.getSubMeshMaterialMap();
+			for(size_t i = 0; i < map.size(); ++i)
+			{
+				_submesh_material_map.push_back(map.at(i));
+			}
+
+			std::clog << "Loading mesh : " << geometry->getName() << " took " << t.elapsed() << std::endl;
 		}
 
-		std::clog << "Loading mesh : " << geometry->getName() << " took " << t.elapsed() << std::endl;
 		return ret_val;
 	}
 }
@@ -492,37 +520,46 @@ vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 		COLLADAFW::ColorOrTexture const &specular = effect_common->getSpecular();
 		COLLADAFW::FloatOrParam const &shininess = effect_common->getShininess();
 
-		Ogre::ColourValue colour = convert_colour(emission);
-		if(colour != Ogre::ColourValue(-1, -1, -1, -1))
+		if(emission.isTexture())
 		{
-			mat->setEmissive(colour);
+			// How to convert texture?
+			std::clog << "Emissive textures : NOT IMPLEMENTED." << std::endl;
 		}
-		else
-		{ std::clog << "Emission is invalid : probably a texture there which we don't yet support." << std::endl; }
+		else if(emission.isColor())
+		{
+			mat->setEmissive(convert_colour(emission.getColor()));
+		}
 
-		colour = convert_colour(ambient);
-		if(colour != Ogre::ColourValue(-1, -1, -1, -1))
+		if(ambient.isTexture())
 		{
-			mat->setAmbient(colour);
+			// How to convert texture?
+			std::clog << "Ambient textures : NOT IMPLEMENTED." << std::endl;
 		}
-		else
-		{ std::clog << "Ambient is invalid : probably a texture there which we don't yet support." << std::endl; }
-		
-		colour = convert_colour(diffuse);
-		if(colour != Ogre::ColourValue(-1, -1, -1, -1))
+		else if(ambient.isColor())
 		{
-			mat->setDiffuse(colour);
+			mat->setAmbient(convert_colour(ambient.getColor()));
 		}
-		else
-		{ std::clog << "Diffuse is invalid : probably a texture there which we don't yet support." << std::endl; }
 
-		colour = convert_colour(specular);
-		if(colour != Ogre::ColourValue(-1, -1, -1, -1))
+		if(diffuse.isTexture())
 		{
-			mat->setSpecular(colour);
+			// How to convert texture?
+			std::clog << "Diffuse textures : NOT IMPLEMENTED." << std::endl;
+			_processTexture(diffuse.getTexture(), mat);
 		}
-		else
-		{ std::clog << "Diffuse is invalid : probably a texture there which we don't yet support." << std::endl; }
+		else if(diffuse.isColor())
+		{
+			mat->setDiffuse(convert_colour(diffuse.getColor()));
+		}
+
+		if(specular.isTexture())
+		{
+			// How to convert texture?
+			std::clog << "Specular textures : NOT IMPLEMENTED." << std::endl;
+		}
+		else if(specular.isColor())
+		{
+			mat->setSpecular(convert_colour(specular.getColor()));
+		}
 
 		if(shininess.getType() == COLLADAFW::FloatOrParam::FLOAT)
 		{
@@ -540,6 +577,37 @@ vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 		getIndexOfRefraction
 		getSamplerPointerArray
 		*/
+		COLLADAFW::ColorOrTexture const &reflective = effect_common->getReflective();
+		if(reflective.isValid())
+		{
+			std::clog << "Effect has Reflective param : NOT SUPPORTED" << std::endl;
+		}
+
+
+		COLLADAFW::FloatOrParam const &reflectivity = effect_common->getReflectivity();
+		if(reflectivity.getFloatValue())
+		{
+			std::clog << "Effect has Reflectivity param : NOT SUPPORTED" << std::endl;
+		}
+
+		COLLADAFW::ColorOrTexture const &opacity = effect_common->getOpacity();
+		if(opacity.isValid())
+		{
+			std::clog << "Effect has opacity param : NOT SUPPORTED" << std::endl;
+		}
+
+		COLLADAFW::FloatOrParam const &refraction = effect_common->getIndexOfRefraction();
+		if(refraction.getFloatValue())
+		{
+			std::clog << "Effect has Refraction param : NOT SUPPORTED" << std::endl;
+		}
+
+		COLLADAFW::SamplerPointerArray const &samplers  = effect_common->getSamplerPointerArray();
+		for(size_t i = 0; i < samplers.getCount(); ++i)
+		{
+			std::clog << "Processing effect sampler : " << i << std::endl;
+			_processSampler(samplers[i], mat);
+		}
 	}
 
 	_effect_map[effect->getUniqueId()] = EffectMapEntry(effect->getUniqueId(), mat);
@@ -571,10 +639,42 @@ vl::dae::Importer::writeCamera(COLLADAFW::Camera const *camera)
 
 //--------------------------------------------------------------------
 bool
-vl::dae::Importer::writeImage( const COLLADAFW::Image* image )
+vl::dae::Importer::writeImage(COLLADAFW::Image const *image)
 {
-	std::clog << "vl::dae::Importer::writeImage : NOT IMPLEMENTED" << std::endl;
-//	mUniqueIdFWImageMap.insert(std::make_pair(image->getUniqueId(),*image ));
+	std::clog << "vl::dae::Importer::writeImage" << std::endl;
+
+	switch(image->getSourceType())
+	{
+	case COLLADAFW::Image::SOURCE_TYPE_URI:
+		break;
+	case COLLADAFW::Image::SOURCE_TYPE_DATA:
+		std::clog << "Image data embedded into Collada file NOT SUPPORTED." << std::endl;
+		return true;
+	default :
+		std::clog << "Unkown source data format." << std::endl;
+		return true;
+	}
+
+	if(image->getDepth() != 1)
+	{
+		std::clog << "Images with depth NOT SUPPORTED" << std::endl;
+		return true;
+	}
+
+	COLLADAFW::UniqueId const &id = image->getUniqueId();
+	std::string const &name = image->getName();
+	std::string const &format = image->getFormat();
+//	unsigned int image->getHeight();
+//	unsigned int image->getWidth();
+
+	/// All images should have URIs because the COLLADAFW reader doesn't support data
+	COLLADABU::URI const &uri = image->getImageURI();
+
+	std::clog << "Should add image with name : " << name << " and format : " << format << std::endl;
+	// Format is empty if the file is external
+	// so we only need to add name, id and uri
+	_images[id] = Image(name, uri);
+
 	return true;
 }
 
@@ -607,6 +707,75 @@ vl::dae::Importer::writeLight(COLLADAFW::Light const *light)
 
 	return true;
 }
+
+void
+vl::dae::Importer::_processSampler(COLLADAFW::Sampler const *sampler, vl::MaterialRefPtr mat)
+{
+	std::clog << "vl::dae::Importer::_processSampler" << std::endl;
+	
+	bool valid = false;
+	switch(sampler->getSamplerType())
+	{
+	case COLLADAFW::Sampler::SAMPLER_TYPE_UNSPECIFIED :
+		std::clog << "Something weird with the DAE file unspecified sampler type." << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_1D :
+		std::clog << "1D sampler NOT SUPPORTED" << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_2D : 
+		std::clog << "2D sampler" << std::endl;
+		valid = true;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_3D :
+		std::clog << "3D sampler NOT SUPPORTED" << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_CUBE : 
+		std::clog << "CUBE sampler NOT SUPPORTED" << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_RECT :
+		std::clog << "RECT sampler NOT SUPPORTED" << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_DEPTH :
+		std::clog << "DEPTH sampler NOT SUPPORTED" << std::endl;
+		break;
+	case COLLADAFW::Sampler::SAMPLER_TYPE_STATE :
+		std::clog << "STATE sampler NOT SUPPORTED" << std::endl;
+		break;
+	}
+
+	if(valid)
+	{
+		COLLADAFW::UniqueId const &id = sampler->getUniqueId();
+		COLLADAFW::UniqueId const &image_id = sampler->getSourceImage();
+
+		_sampler_to_image_map[id] = image_id;
+
+		_material_to_sampler_map.push_back(std::make_pair(mat, id));
+
+		// we need to write the map from sampler id to image id
+		// at least if we need no other parameters for now.
+
+		/* Mapping parameters not supported yet
+		SamplerFilter getMinFilter();
+		SamplerFilter getMagFilter();
+		SamplerFilter getMipFilter();
+		WrapMode getWrapS();
+		WrapMode getWrapT();
+		const Color& getBorderColor ();
+		unsigned char getMipmapMaxlevel ();
+		float getMipmapBias () const;
+		*/
+	}
+}
+
+
+void
+vl::dae::Importer::_processTexture(COLLADAFW::Texture const &tex, vl::MaterialRefPtr mat)
+{
+	tex.getSamplerId();
+	tex.getTextureMapId();
+}
+
 
 //--------------------------------------------------------------------
 bool

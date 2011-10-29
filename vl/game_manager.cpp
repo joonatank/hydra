@@ -435,6 +435,11 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		if(getResourceManager()->findResource(file.string(), path))
 		{
 			vl::dae::ImporterSettings settings;
+			// Settings for testing Anark core importing, cleanup
+			// can't be enabled as long as we are testing cube importing
+			// we could use runtime for changing settings but there is no such functionality yet.
+			//settings.handle_duplicates = vl::dae::ImporterSettings::HDN_USE_ORIGINAL;
+			//settings.remove_duplicate_materials = true;
 			vl::dae::Managers man;
 			man.material = _material_manager;
 			man.scene = _scene_manager;

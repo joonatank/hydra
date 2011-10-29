@@ -25,6 +25,27 @@ material CloudySky
 	}
 }
 
+/// Basic Fixed function pipeline material used for testing
+/// uses the same interface as our custom shader materials but
+/// gives all the goodies that FFP has.
+/// Used mostly testing when we make assumptions based on Ogre's material
+/// system and are not certain whether those assumptions are scene, object,
+/// material or shading dependant i.e. if they work only with FFP shading or not.
+material ffp/basic
+{
+	technique
+	{
+		pass
+		{
+			texture_unit diffuseTexture
+			{
+				tex_address_mode wrap
+				texture white.tga
+			}
+		}
+	}
+}
+
 material ground/basic
 {
 	technique

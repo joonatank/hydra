@@ -29,34 +29,32 @@
 /// Necessary for mesh schematics
 #include "mesh.hpp"
 
+#include "dae_common.hpp"
+
 namespace vl
 {
 
 namespace dae
 {
 
-typedef std::vector< std::pair<vl::SubMesh *, COLLADAFW::MaterialId> > SubMeshMaterialIDMap;
-
 class MeshImporter
 {
 public:
 
     /** Constructor. */
-	MeshImporter(MeshManagerRefPtr mesh_manager, COLLADAFW::Mesh const *mesh, bool flat_shading = false);
+	MeshImporter(MeshManagerRefPtr mesh_manager);
 
     /** Destructor. */
 	~MeshImporter();
 
-	bool write();
+	bool read(COLLADAFW::Mesh const *mesh, ImporterSettings const &settings);
 
 	SubMeshMaterialIDMap const &getSubMeshMaterialMap(void)
 	{ return _submeshes; }
 
 /// Data
 private:
-	COLLADAFW::Mesh const *_collada_mesh;
 	MeshManagerRefPtr _mesh_manager;
-	bool _flat_shading;
 
 	std::vector<Ogre::Vector3> _normals;
 	std::vector<Ogre::Vector2> _uvs;

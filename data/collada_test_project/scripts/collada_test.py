@@ -30,10 +30,20 @@ ground_ent.cast_shadows = False
 light = game.scene.createLight("light")
 light_n = game.scene.createSceneNode("light")
 light_n.attachObject(light)
-light_n.position = Vector3(0, 30, 5)
+light_n.position = Vector3(0, -30, 10)
+
+light = game.scene.createLight("light2")
+light_n = game.scene.createSceneNode("light2")
+light_n.attachObject(light)
+light_n.position = Vector3(0, 0, -10)
+
+camera = game.player.camera_node
+assert(camera)
+camera.position = Vector3(-1.5, -0.8, 0.6)
+camera.orientation = Quaternion(-0.7071, 0, 0.7071, 0)
 
 # TODO fix the enity name in the DAE importer
-cube_ent = game.scene.getEntity("Cube-mesh")
-material = game.material_manager.get_material("Material")
+#cube_ent = game.scene.getEntity("Cube-mesh")
+#material = game.material_manager.get_material("Material")
 #material.emissive = ColourValue(0.5, 0, 0)
 

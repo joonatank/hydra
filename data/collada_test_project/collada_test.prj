@@ -7,12 +7,12 @@ Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
 <project_config name="collada_test">
 
 	<scenes>
-		<scene name="cube" use="false">
+		<scene name="cube" use="true">
 			<file>cube.dae</file>
 		</scene>
 
 		<!-- For more advanced testing Anark core made collada file -->
-		<scene name="boomcrane" use="true">
+		<scene name="boomcrane" use="false">
 			<file>anark_testi.dae</file>
 		</scene>
 

@@ -20,6 +20,8 @@
 #include "types.hpp"
 #include "transform.hpp"
 
+#include <OGRE/OgreVector2.h>
+
 namespace vl
 {
 
@@ -38,6 +40,11 @@ inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2 )
 		{ return false; }
 	}
 	return true;
+}
+
+inline bool equal(Ogre::Vector2 const &v1, Ogre::Vector2 const &v2 )
+{
+	return( equal(v1.x, v2.x) && equal(v1.y, v2.y) );
 }
 
 inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2 )
