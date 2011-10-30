@@ -62,6 +62,8 @@ set(MATH_HEADERS
 	math/math.hpp
 	math/transform.hpp
 	math/types.hpp
+	math/frustum.hpp
+	math/frustum.cpp
 	)
 set(MATH_SRC
 	math/math.cpp
@@ -102,7 +104,9 @@ set(BASE_HEADERS
 	base/sleep.hpp
 	base/string_utils.hpp
 	base/timer.hpp
-	base/report.hpp)
+	base/report.hpp
+	base/wall.hpp
+	)
 set(BASE_SRC
 	base/system_util.cpp
 	base/filesystem.cpp

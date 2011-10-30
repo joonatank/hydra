@@ -25,7 +25,12 @@
 #include "typedefs.hpp"
 #include "exceptions.hpp"
 
+#include "wall.hpp"
+
 namespace vl
+{
+
+namespace config
 {
 
 enum LogLevel
@@ -33,6 +38,158 @@ enum LogLevel
 	LL_LOW = 0,
 	LL_NORMAL = 1,
 	LL_BOREME = 2,
+};
+
+struct Tracking
+{
+	Tracking( std::string const &file_name, bool u = "true" )
+		: file(file_name), use(u)
+	{}
+
+	bool operator==( Tracking const &other ) const
+	{
+		if( file == other.file )
+		{ return true; }
+
+		return false;
+	}
+
+	std::string file;
+	bool use;
+};
+
+struct Channel
+{
+	Channel( std::string const &nam, std::string const &wall )
+		: name(nam), wall_name(wall)
+	{}
+
+	/// Default constructor for vector resizes
+	Channel( void )
+	{}
+
+	bool empty( void ) const
+	{ return( name.empty() && wall_name.empty() ); }
+
+	std::string name;
+
+	// Name of the wall used for this window
+	std::string wall_name;
+
+};	// struct Channel
+
+struct Window
+{
+	Window( std::string const &nam, Channel const &chan,
+			int width, int height, int px, int py,
+			bool s = false, bool nv_swap = false )
+		: name(nam), channel(chan)
+		, w(width), h(height), x(px), y(py), stereo(s)
+		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
+		, vert_sync(false), n_display(-1)
+	{
+		if( h < 0 || w < 0 )
+		{
+			std::string desc("Width or height of a Window can not be negative");
+			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+		}
+	}
+
+	// Default constructor to allow vector resize
+	Window( void )
+		: w(0), h(0), x(0), y(0)
+	{}
+
+	// Wether or not the Window has been initialised
+	bool empty( void ) const
+	{
+		return( name.empty() && channel.empty()
+			&& w == 0 && h == 0 && x == 0 && y == 0 );
+	}
+
+	// Name of the window
+	std::string name;
+
+	Channel channel;
+
+	// Width of the window
+	int w;
+	// Height of the window
+	int h;
+	// x coordinate of the window
+	int x;
+	// y coordinate of the window
+	int y;
+
+	bool stereo;
+
+	bool nv_swap_sync;
+	uint32_t nv_swap_group;
+	uint32_t nv_swap_barrier;
+
+	bool vert_sync;
+
+	int n_display;
+
+};	// struct Window
+
+struct Node
+{
+	Node( std::string const &nam )
+		: name(nam)
+	{}
+
+	// Default constructor to allow vector resize
+	Node( void )
+	{}
+
+	bool empty( void ) const
+	{ return name.empty() && windows.empty(); }
+
+	void addWindow( Window const &window );
+
+	Window &getWindow(size_t i);
+	
+	Window const &getWindow(size_t i) const;
+
+	size_t getNWindows( void ) const
+	{ return windows.size(); }
+
+	std::vector<Window> const &getWindows( void ) const
+	{ return windows; }
+
+	std::string name;
+	std::vector<Window> windows;
+};
+
+struct Server
+{
+	Server( uint16_t por, std::string const hostnam )
+		: port(por), hostname(hostnam)
+	{}
+
+	// Default constructor
+	Server( void )
+	{}
+
+	uint16_t port;
+	std::string hostname;
+};
+
+/// External program description
+struct Program
+{
+	std::string name;
+	std::string directory;
+	std::string command;
+	std::vector<std::string> params;
+	bool use;
+	bool new_console;
+
+	Program(void)
+		: use(false)
+		, new_console(false)
+	{}
 };
 
 /**	@class EnvSettings
@@ -44,188 +201,6 @@ enum LogLevel
 class EnvSettings
 {
 public :
-	struct Tracking
-	{
-		Tracking( std::string const &file_name, bool u = "true" )
-			: file(file_name), use(u)
-		{}
-
-		bool operator==( Tracking const &other ) const
-		{
-			if( file == other.file )
-			{ return true; }
-
-			return false;
-		}
-
-		std::string file;
-		bool use;
-	};
-
-	struct Wall
-	{
-		Wall( std::string const &nam, std::vector<double> b_left,
-			  std::vector<double> b_right, std::vector<double> t_left )
-			: name(nam), bottom_left(b_left),
-			  bottom_right(b_right), top_left(t_left)
-		{}
-
-		// Default constructor to allow vector resize
-		Wall( void )
-		{}
-
-		// Wether or not the Wall has been initialised
-		bool empty( void ) const
-		{
-			return( name.empty() && bottom_left.empty()
-					&& bottom_right.empty() && top_left.empty() );
-		}
-
-		// Name of the wall
-		std::string name;
-
-		// Bottom left coordinates for this wall
-		std::vector<double> bottom_left;
-		// Bottom right coordinates for this wall
-		std::vector<double> bottom_right;
-		// Top left coordinates for this wall
-		std::vector<double> top_left;
-
-	};	// struct Wall
-
-	struct Channel
-	{
-		Channel( std::string const &nam, std::string const &wall )
-			: name(nam), wall_name(wall)
-		{}
-
-		/// Default constructor for vector resizes
-		Channel( void )
-		{}
-
-		bool empty( void ) const
-		{ return( name.empty() && wall_name.empty() ); }
-
-		std::string name;
-
-		// Name of the wall used for this window
-		std::string wall_name;
-
-	};	// struct Channel
-
-	struct Window
-	{
-		Window( std::string const &nam, Channel const &chan,
-				int width, int height, int px, int py,
-				bool s = false, bool nv_swap = false )
-			: name(nam), channel(chan)
-			, w(width), h(height), x(px), y(py), stereo(s)
-			, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
-			, vert_sync(false), n_display(-1)
-		{
-			if( h < 0 || w < 0 )
-			{
-				std::string desc("Width or height of a Window can not be negative");
-				BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
-			}
-		}
-
-		// Default constructor to allow vector resize
-		Window( void )
-			: w(0), h(0), x(0), y(0)
-		{}
-
-		// Wether or not the Window has been initialised
-		bool empty( void ) const
-		{
-			return( name.empty() && channel.empty()
-				&& w == 0 && h == 0 && x == 0 && y == 0 );
-		}
-
-		// Name of the window
-		std::string name;
-
-		Channel channel;
-
-		// Width of the window
-		int w;
-		// Height of the window
-		int h;
-		// x coordinate of the window
-		int x;
-		// y coordinate of the window
-		int y;
-
-		bool stereo;
-
-		bool nv_swap_sync;
-		uint32_t nv_swap_group;
-		uint32_t nv_swap_barrier;
-
-		bool vert_sync;
-
-		int n_display;
-
-	};	// struct Window
-
-	struct Node
-	{
-		Node( std::string const &nam )
-			: name(nam)
-		{}
-
-		// Default constructor to allow vector resize
-		Node( void )
-		{}
-
-		bool empty( void ) const
-		{ return name.empty() && windows.empty(); }
-
-		void addWindow( Window const &window );
-
-		Window &getWindow( size_t i );
-		Window const &getWindow( size_t i ) const;
-
-		size_t getNWindows( void ) const
-		{ return windows.size(); }
-
-		std::vector<Window> const &getWindows( void ) const
-		{ return windows; }
-
-		std::string name;
-		std::vector<Window> windows;
-	};
-
-	struct Server
-	{
-		Server( uint16_t por, std::string const hostnam )
-			: port(por), hostname(hostnam)
-		{}
-
-		// Default constructor
-		Server( void )
-		{}
-
-		uint16_t port;
-		std::string hostname;
-	};
-
-	/// External program description
-	struct Program
-	{
-		std::string name;
-		std::string directory;
-		std::string command;
-		std::vector<std::string> params;
-		bool use;
-		bool new_console;
-
-		Program(void)
-			: use(false)
-			, new_console(false)
-		{}
-	};
-
 	/// Constructor
 	EnvSettings( void );
 
@@ -339,7 +314,7 @@ public :
 	void setCameraRotationAllowed( uint32_t const flags )
 	{ _camera_rotations_allowed = flags; }
 
-	void addWall( Wall const &wall );
+	void addWall(vl::Wall const &wall);
 
 	Wall const &getWall( size_t i ) const;
 
@@ -360,7 +335,7 @@ public :
 	std::vector<Node> const &getSlaves( void ) const
 	{ return _slaves; }
 
-	Node findSlave( std::string const &name ) const;
+	Node const &findSlave( std::string const &name ) const;
 
 	std::string const &getName(void) const
 	{ return _master.name; }
@@ -443,14 +418,14 @@ public :
 	 *	If set to true the application will print to std::cerr
 	 *	instead of or in addition to printing to log file
 	 */
-	void setLogLevel( vl::LogLevel level )
+	void setLogLevel(vl::config::LogLevel level)
 	{ _level = level; }
 
 	/**	@brief How much information user wants
 	 *	@return
 	 *
 	 */
-	vl::LogLevel getLogLevel( void ) const
+	vl::config::LogLevel getLogLevel( void ) const
 	{ return _level; }
 
 	/**	@brief Set the directory logs are stored
@@ -538,7 +513,7 @@ private :
 	// Is this structure for a slave or a master
 	bool _slave;
 
-	vl::LogLevel _level;
+	vl::config::LogLevel _level;
 
 	std::string _log_dir;
 
@@ -550,15 +525,15 @@ private :
 
 
 
-class EnvSettingsSerializer
+class EnvSerializer
 {
 public :
 	/// Will completely over-ride the provided EnvSettings
 	/// when XML data is processed.
 	/// Any error in processing will result to defaulting EnvSettings.
-	EnvSettingsSerializer( EnvSettingsRefPtr );
+	EnvSerializer(EnvSettingsRefPtr env);
 
-	~EnvSettingsSerializer( void );
+	~EnvSerializer( void );
 
 	/// Read data from string buffer. Buffer is not modified.
 	bool readString( std::string const &xml_data );
@@ -579,11 +554,11 @@ protected :
 
 	void processServer( rapidxml::xml_node<>* XMLNode );
 
-	void processNode( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
+	void processNode( rapidxml::xml_node<>* XMLNode, vl::config::Node &node );
 
-	void processWindows( rapidxml::xml_node<>* XMLNode, EnvSettings::Node &node );
+	void processWindows( rapidxml::xml_node<>* XMLNode, vl::config::Node &node );
 
-	void processChannel( rapidxml::xml_node<>* XMLNode, EnvSettings::Window &window );
+	void processChannel( rapidxml::xml_node<>* XMLNode, vl::config::Window &window );
 
 	void processStereo(rapidxml::xml_node<> *xml_node);
 
@@ -601,12 +576,16 @@ protected :
 
 	std::vector<double> getVector( rapidxml::xml_node<>* xml_node );
 
-	EnvSettingsRefPtr _envSettings;
+	EnvSettingsRefPtr _env;
 
 	/// file content needed for rapidxml
 	char *_xml_data;
 
 };	// class EnvSettingsSerializer
+
+
+}	// namespace config
+
 
 }	// namespace vl
 

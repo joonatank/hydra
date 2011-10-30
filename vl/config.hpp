@@ -71,7 +71,7 @@ class Config : public vl::Session
 {
 public:
 	Config( vl::Settings const &settings,
-			vl::EnvSettingsRefPtr env,
+			vl::config::EnvSettingsRefPtr env,
 			vl::Logger &logger,
 			vl::RendererUniquePtr rend );
 
@@ -130,7 +130,7 @@ protected :
 	void _createMsgUpdate(void);
 
 	/// Resources
-	void _createResourceManager( vl::Settings const &settings, vl::EnvSettingsRefPtr env );
+	void _createResourceManager(vl::Settings const &settings, vl::config::EnvSettingsRefPtr env);
 
 	void _handleMessages( void );
 	void _handleMessage(vl::cluster::Message &msg);
@@ -144,7 +144,7 @@ protected :
 	/// Current project settings
 	vl::Settings _proj;
 	/// Current environment settings
-	vl::EnvSettingsRefPtr _env;
+	vl::config::EnvSettingsRefPtr _env;
 
 	vl::cluster::ServerRefPtr _server;
 	/// timer used to see how much delay there is with server updates

@@ -281,7 +281,7 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 }
 
 void
-vl::GameManager::setupResources(vl::Settings const &settings, vl::EnvSettings const &env)
+vl::GameManager::setupResources(vl::Settings const &settings, vl::config::EnvSettings const &env)
 {
 	std::cout << vl::TRACE << "Adding project directories to resources. "
 		<< "Only project directory and global directory is added." << std::endl;
@@ -301,7 +301,7 @@ vl::GameManager::setupResources(vl::Settings const &settings, vl::EnvSettings co
 }
 
 void
-vl::GameManager::load(vl::EnvSettings const &env)
+vl::GameManager::load(vl::config::EnvSettings const &env)
 {
 	// Create Tracker needs the SceneNodes for mapping
 	timer t;
@@ -378,7 +378,7 @@ vl::GameManager::runPythonScripts(vl::Settings const &proj)
 }
 
 void
-vl::GameManager::createTrackers(vl::EnvSettings const &env)
+vl::GameManager::createTrackers(vl::config::EnvSettings const &env)
 {
 	assert(_trackers);
 

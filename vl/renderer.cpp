@@ -60,7 +60,7 @@ vl::Renderer::~Renderer(void)
 }
 
 void
-vl::Renderer::init(vl::EnvSettingsRefPtr env)
+vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 {
 	std::cout << vl::TRACE << "vl::Renderer::init" << std::endl;
 
@@ -71,33 +71,32 @@ vl::Renderer::init(vl::EnvSettingsRefPtr env)
 
 	_createOgre(env);
 
-	vl::EnvSettings::Node node = getNodeConf();
-	std::string msg = "Creating " + vl::to_string(node.getNWindows()) + " windows.";
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	vl::config::Node const &node = getNodeConf();
+	if(node.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Node configuration")); }
+
+	std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
 
 	for( size_t i = 0; i < node.getNWindows(); ++i )
 	{ _createWindow( node.getWindow(i) ); }
 }
 
-vl::EnvSettings::Node
-vl::Renderer::getNodeConf( void )
+vl::config::Node const &
+vl::Renderer::getNodeConf(void) const
 {
-	assert(_env);
+	if(!_env)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No environment configuration.")); }
 
-	vl::EnvSettings::Node node;
-	if( getName() == _env->getMaster().name )
-	{ node = _env->getMaster(); }
+	if(getName() == _env->getMaster().name)
+	{ return _env->getMaster(); }
 	else
-	{ node = _env->findSlave( getName() ); }
-
-	assert( !node.empty() );
-	return node;
+	{ return _env->findSlave( getName() ); }
 }
 
-vl::EnvSettings::Window
-vl::Renderer::getWindowConf( std::string const &window_name )
+vl::config::Window const &
+vl::Renderer::getWindowConf(std::string const &window_name) const
 {
-	vl::EnvSettings::Node node = getNodeConf();
+	vl::config::Node const &node = getNodeConf();
 
 	// TODO add real errors
 	if( node.getNWindows() == 0 )
@@ -418,7 +417,7 @@ vl::Renderer::nLoggedMessages(void) const
 
 /// Ogre helpers
 void
-vl::Renderer::_createOgre(vl::EnvSettingsRefPtr env)
+vl::Renderer::_createOgre(vl::config::EnvSettingsRefPtr env)
 {
 	std::cout << vl::TRACE << "vl::Renderer::_createOgre" << std::endl;
 
@@ -580,7 +579,7 @@ vl::Renderer::_sendEvents( void )
 }
 
 void
-vl::Renderer::_createWindow( vl::EnvSettings::Window const &winConf )
+vl::Renderer::_createWindow(vl::config::Window const &winConf)
 {
 	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
 

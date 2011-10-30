@@ -1,17 +1,32 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.hpp
  *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_WINDOW_HPP
-#define VL_WINDOW_HPP
+#ifndef HYDRA_WINDOW_HPP
+#define HYDRA_WINDOW_HPP
 
 #include "player.hpp"
 #include "typedefs.hpp"
 
 // Necessary for Window config and Wall
 #include "base/envsettings.hpp"
+
+#include "renderer_interface.hpp"
+// Necessary for frustum type used in projection calculation
+#include "math/frustum.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -23,8 +38,6 @@
 
 // GUI
 #include <CEGUI/CEGUIEventArgs.h>
-
-#include "renderer_interface.hpp"
 
 namespace vl
 {
@@ -44,7 +57,7 @@ public:
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
 
-	vl::EnvSettingsRefPtr getEnvironment( void );
+	vl::config::EnvSettingsRefPtr getEnvironment(void) const;
 
 	vl::Player const &getPlayer( void ) const;
 
@@ -88,7 +101,7 @@ public:
 	virtual void swap( void );
 
 protected :
-	Ogre::RenderWindow *_createOgreWindow( vl::EnvSettings::Window const &winConf );
+	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -103,7 +116,7 @@ protected :
 
 	vl::RendererInterface *_renderer;
 
-	vl::EnvSettings::Wall _wall;
+	vl::Frustum _frustum;
 
 	double _ipd;
 
@@ -124,4 +137,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_WINDOW_HPP
+#endif // HYDRA_WINDOW_HPP

@@ -52,11 +52,11 @@
 #include <OGRE/OgreException.h>
 
 /// -------------------------------- Global ----------------------------------
-vl::EnvSettingsRefPtr
+vl::config::EnvSettingsRefPtr
 vl::getMasterSettings( vl::ProgramOptions const &options )
 {
 	if( options.slave() )
-	{ return vl::EnvSettingsRefPtr(); }
+	{ return vl::config::EnvSettingsRefPtr(); }
 
 	fs::path env_path = options.environment_file;
 	if( !fs::is_regular(env_path) )
@@ -87,7 +87,7 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 
 	}
 
-	vl::EnvSettingsRefPtr env;
+	vl::config::EnvSettingsRefPtr env;
 
 	if( !fs::is_regular(env_path) )
 	{
@@ -96,7 +96,7 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 	else
 	{
 		/// This point both env_path and project_path are valid
-		env.reset( new vl::EnvSettings );
+		env.reset( new vl::config::EnvSettings );
 
 		/// Read the Environment config
 		if( fs::is_regular(env_path) )
@@ -104,14 +104,14 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 			std::string env_data;
 			env_data = vl::readFileToString( env_path.string() );
 			// TODO check that the files are correct and we have good settings
-			vl::EnvSettingsSerializer env_ser( env );
+			vl::config::EnvSerializer env_ser( env );
 			env_ser.readString(env_data);
 			env->setFile( env_path.string() );
 		}
 	}
 
 	env->setLogDir( options.log_dir );
-	env->setLogLevel( (vl::LogLevel)(options.log_level) );
+	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
 
 	env->display_n = options.display_n;
 
@@ -195,27 +195,27 @@ vl::getProjectSettings( vl::ProgramOptions const &options )
 	return settings;
 }
 
-vl::EnvSettingsRefPtr
+vl::config::EnvSettingsRefPtr
 vl::getSlaveSettings( vl::ProgramOptions const &options )
 {
 	if( options.master() )
 	{
-		return vl::EnvSettingsRefPtr();
+		return vl::config::EnvSettingsRefPtr();
 	}
 	if( options.slave_name.empty() || options.server_address.empty() )
 	{
-		return vl::EnvSettingsRefPtr();
+		return vl::config::EnvSettingsRefPtr();
 	}
 
 	size_t pos = options.server_address.find_last_of(":");
 	if( pos == std::string::npos )
-	{ return vl::EnvSettingsRefPtr(); }
+	{ return vl::config::EnvSettingsRefPtr(); }
 	std::string hostname = options.server_address.substr(0, pos);
 	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
 
-	vl::EnvSettingsRefPtr env( new vl::EnvSettings );
+	vl::config::EnvSettingsRefPtr env( new vl::config::EnvSettings );
 	env->setSlave();
-	vl::EnvSettings::Server server(port, hostname);
+	vl::config::Server server(port, hostname);
 	env->setServer(server);
 	env->getMaster().name = options.slave_name;
 	env->display_n = options.display_n;
@@ -248,7 +248,7 @@ vl::Hydra_Run(const int argc, char** argv)
 		vl::Logger logger;
 		logger.setOutputFile(options.getOutputFile());
 
-		vl::EnvSettingsRefPtr env;
+		vl::config::EnvSettingsRefPtr env;
 		vl::Settings settings;
 		if( options.master() )
 		{
@@ -309,7 +309,7 @@ vl::Hydra_Run(const int argc, char** argv)
 }
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)
+vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)
 	: _master()
 	, _slave_client()
 {
@@ -369,7 +369,7 @@ vl::Application::Application(vl::EnvSettingsRefPtr env, vl::Settings const &sett
 	{
 		_master.reset(new vl::Config( settings, env, logger, renderer ));
 		_master->init();
-		std::vector<EnvSettings::Program> programs = env->getUsedPrograms();
+		std::vector<vl::config::Program> programs = env->getUsedPrograms();
 		std::clog << "Should start " << programs.size() << " autolaunched programs."
 			<< std::endl;
 		for(size_t i = 0; i < programs.size(); ++i)

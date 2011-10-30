@@ -44,34 +44,34 @@ namespace cluster
 {
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::EnvSettingsRefPtr const &env );
+ByteStream &operator<<( ByteStream &msg, vl::config::EnvSettingsRefPtr const &env );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::EnvSettingsRefPtr &env );
+ByteStream &operator>>( ByteStream &msg, vl::config::EnvSettingsRefPtr &env );
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Node const &node );
+ByteStream &operator<<( ByteStream &msg, vl::config::Node const &node );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Node &node );
+ByteStream &operator>>( ByteStream &msg, vl::config::Node &node );
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Wall const &wall );
+ByteStream &operator<<( ByteStream &msg, vl::Wall const &wall );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Wall &wall );
+ByteStream &operator>>( ByteStream &msg, vl::Wall &wall );
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Window const &window );
+ByteStream &operator<<( ByteStream &msg, vl::config::Window const &window );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Window &window );
+ByteStream &operator>>( ByteStream &msg, vl::config::Window &window );
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::EnvSettings::Channel const &chan );
+ByteStream &operator<<( ByteStream &msg, vl::config::Channel const &chan );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::EnvSettings::Channel &chan );
+ByteStream &operator>>( ByteStream &msg, vl::config::Channel &chan );
 
 
 template<>

@@ -73,7 +73,7 @@ public :
 	virtual bool guiShown(void) const = 0;
 
 	// Needed by slave and master for controlling the application run
-	virtual void init(vl::EnvSettingsRefPtr env) = 0;
+	virtual void init(vl::config::EnvSettingsRefPtr env) = 0;
 
 	/// Loop functions
 
@@ -90,13 +90,13 @@ public :
 	// These are needed in Window
 	virtual vl::ogre::RootRefPtr getRoot( void ) = 0;
 
-	virtual vl::EnvSettingsRefPtr getEnvironment( void ) = 0;
+	virtual vl::config::EnvSettingsRefPtr getEnvironment( void ) = 0;
 
 	virtual vl::Player const &getPlayer( void ) const = 0;
 
 	virtual vl::MeshManagerRefPtr getMeshManager(void) = 0;
 
-	virtual vl::EnvSettings::Window getWindowConf(std::string const &name) = 0;
+	virtual vl::config::Window const &getWindowConf(std::string const &name) const = 0;
 
 	// Callbacks
 //	virtual void setRegisterForOutputCallback(RendererCallback *cb) = 0;

@@ -28,13 +28,17 @@ namespace vl
 
 	/// Settings
 	class Settings;
-	class EnvSettings;
 	class ProjSettings;
 
 	typedef boost::shared_ptr<Settings> SettingsRefPtr;
-	typedef boost::shared_ptr<EnvSettings> EnvSettingsRefPtr;
 	typedef boost::shared_ptr<ProjSettings> ProjSettingsRefPtr;
 	
+	namespace config
+	{
+		class EnvSettings;
+		typedef boost::shared_ptr<EnvSettings> EnvSettingsRefPtr;
+	}
+
 	class RendererInterface;
 	class Config;
 

@@ -32,7 +32,7 @@ namespace ogre
 	class Root
 	{
 		public :
-			Root(vl::LogLevel level);
+			Root(vl::config::LogLevel level);
 
 			virtual ~Root( void );
 

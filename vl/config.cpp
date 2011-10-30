@@ -100,7 +100,7 @@ vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE t
 
 /// ---------------------------------- Config --------------------------------
 vl::Config::Config( vl::Settings const & settings,
-					vl::EnvSettingsRefPtr env,
+					vl::config::EnvSettingsRefPtr env,
 					vl::Logger &logger,
 					vl::RendererUniquePtr rend)
 	: _game_manager(0)

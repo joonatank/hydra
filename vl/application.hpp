@@ -41,9 +41,9 @@
 namespace vl
 {
 
-vl::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
+vl::config::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
 vl::Settings getProjectSettings( vl::ProgramOptions const &options );
-vl::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
+vl::config::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
 
 
 extern "C"
@@ -67,7 +67,8 @@ public:
 	 *	If this is the master node will also initialise the master node
 	 *	and send messages to the rendering threads.
 	 */
-	Application(vl::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console);
+	Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
+		vl::Logger &logger, bool auto_fork, bool show_system_console);
 
 	virtual ~Application( void );
 

@@ -269,12 +269,12 @@ public :
 	bool isInited(void) const
 	{ return _state >= GS_INIT; }
 
-	void setupResources(vl::Settings const &settings, vl::EnvSettings const &env);
+	void setupResources(vl::Settings const &settings, vl::config::EnvSettings const &env);
 
 	/// Resource loading
 	
 	/// Main loading functions use configurations files
-	void load(vl::EnvSettings const &env);
+	void load(vl::config::EnvSettings const &env);
 	void load(vl::Settings const &proj);
 
 	RecordingRefPtr loadRecording(std::string const &path);
@@ -293,7 +293,7 @@ public :
 	void runPythonScripts(vl::Settings const &proj);
 
 	/// @todo this takes over 1 second to complete which is almost a second too much
-	void createTrackers(vl::EnvSettings const &env);
+	void createTrackers(vl::config::EnvSettings const &env);
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 

@@ -130,20 +130,7 @@ lookAt(Ogre::Vector3 const &target, Ogre::Vector3 const &current,
 	Ogre::Vector3 const &eye, Ogre::Vector3 const &up = Ogre::Vector3::UNIT_Y,
 	bool yawFixed = true);
 
-/// @brief calculate projetion matrix using VR parameters
-/// @param near_plane the near clipping plane distance
-/// @param far_plane the far clipping plane distance
-/// @param wall the projection wall/screen used for this frustum
-/// @param head the head transformation used for this projection
-/// @return OpenGL projection matrix
-/// @todo add asymmetric stereo frustum support (needs head rotation)
-Ogre::Matrix4
-calculate_projection_matrix(Ogre::Real near_plane, Ogre::Real far_plane, 
-							vl::EnvSettings::Wall const &wall,
-							Ogre::Vector3 const &head);
 
-/// @brief calculate the orientation from eye space to wall
-Ogre::Quaternion orientation_to_wall(vl::EnvSettings::Wall const &wall);
 
 }	// namespace vl
 

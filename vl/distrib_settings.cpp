@@ -71,7 +71,7 @@ vl::SettingsByteData::copyFromMessage( vl::cluster::Message* msg )
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr const &env )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRefPtr const &env )
 {
 	msg << env->getLogLevel() << env->getCameraRotationAllowed()
 		<< env->getMaster() << env->getSlaves()
@@ -82,12 +82,12 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr con
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &env )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRefPtr &env )
 {
 	uint32_t rot_allowed(-1);
 	double ipd = 0;
 	std::string log_dir;
-	vl::LogLevel log_level;
+	vl::config::LogLevel log_level;
 	msg >> log_level >> rot_allowed >> env->getMaster()
 		>> env->getSlaves() >> env->getWalls()
 		>> ipd >> log_dir;
@@ -102,7 +102,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettingsRefPtr &en
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Node& node )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Node const &node )
 {
 	msg << node.name << node.windows;
 
@@ -111,7 +111,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::No
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Node& node )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Node& node )
 {
 	msg >> node.name >> node.windows;
 
@@ -120,7 +120,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Node& no
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Wall& wall )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::Wall& wall )
 {
 	msg << wall.name << wall.bottom_left << wall.bottom_right
 		<< wall.top_left;
@@ -130,7 +130,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Wa
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Wall& wall )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::Wall& wall )
 {
 	msg >> wall.name >> wall.bottom_left >> wall.bottom_right
 		>> wall.top_left;
@@ -141,7 +141,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Wall& wa
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Window& window )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
 	msg << window.name << window.channel << window.x << window.y << window.h
 		<< window.w << window.n_display << window.stereo << window.nv_swap_sync 
@@ -152,7 +152,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::EnvSettings::Wi
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& window )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
 	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
 		>> window.w >> window.n_display >> window.stereo >> window.nv_swap_sync
@@ -163,7 +163,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Window& 
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettings::Channel const &chan )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
 	msg << chan.name << chan.wall_name;
 
@@ -172,7 +172,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::EnvSettings::Channel 
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::EnvSettings::Channel &chan )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
 	msg >> chan.name >> chan.wall_name;
 

@@ -1,10 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
+
 
 // Interface
 #include "window.hpp"
@@ -17,7 +27,7 @@
 
 #include "camera.hpp"
 // Necessary for calculating projection matrix
-#include "math/math.hpp"
+#include "math/frustum.hpp"
 
 #include "ogre_root.hpp"
 
@@ -31,6 +41,8 @@
 #include <CEGUI/elements/CEGUIListboxTextItem.h>
 
 #include <GL/gl.h>
+
+#include <stdlib.h>
 
 namespace
 {
@@ -70,34 +82,34 @@ vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 {
 	assert( _renderer );
 
-	std::string msg = "vl::Window::Window : " + getName();
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "vl::Window::Window : " << getName() << std::endl;
 
-	vl::EnvSettings::Window winConf = _renderer->getWindowConf( getName() );
+	vl::config::Window winConf = _renderer->getWindowConf( getName() );
 
 	_ogre_window = _createOgreWindow(winConf);
 	_createInputHandling();
 
 	// If the channel has a name we try to find matching wall
 
+	Wall wall;
 	if( !winConf.channel.name.empty() )
 	{
-		msg = "Finding Wall for channel : " + getName();
-		Ogre::LogManager::getSingleton().logMessage(msg);
-		_wall = getEnvironment()->findWall( winConf.channel.wall_name );
+		std::cout << vl::TRACE << "Finding Wall for channel : " << getName() << std::endl;
+		wall = getEnvironment()->findWall( winConf.channel.wall_name );
 	}
 
 	// Get the first wall definition if no named one was found
-	if( _wall.empty() && getEnvironment()->getWalls().size() > 0 )
+	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
 	{
-		_wall = getEnvironment()->getWall(0);
-		msg = "No wall found : using the first one " + _wall.name;
+		wall = getEnvironment()->getWall(0);
+		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
 	}
 	else
 	{
-		msg = "Wall " + _wall.name + " found.";
+		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
 	}
-	Ogre::LogManager::getSingleton().logMessage(msg);
+
+	_frustum.setWall(wall);
 
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
@@ -138,8 +150,8 @@ vl::Window::~Window( void )
 	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
 }
 
-vl::EnvSettingsRefPtr
-vl::Window::getEnvironment( void )
+vl::config::EnvSettingsRefPtr
+vl::Window::getEnvironment(void) const
 { return _renderer->getEnvironment(); }
 
 vl::Player const &
@@ -428,12 +440,14 @@ vl::Window::draw(void)
 	// If they are still present we need to add a separate camera also
 	// @todo rendering GUI for both eyes
 
-	vl::Transform const &head = getPlayer().getHeadTransform();
+	Transform const &head = getPlayer().getHeadTransform();
+	_frustum.setHeadTransformation(head);
+	_frustum.setClipping(c_near, c_far);
 
-	Ogre::Matrix4 projMat = calculate_projection_matrix(c_near, c_far, _wall, head.position);
+	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix();
 	og_cam->setCustomProjectionMatrix( true, projMat );
 
-	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
+	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
 
 	// Should not be rotated with wall, all the walls would be out of sync with each other
 	Ogre::Vector3 headTrans = head.position;
@@ -534,10 +548,8 @@ vl::Window::_sendEvent( vl::cluster::EventData const &event )
 	_renderer->sendEvent(event);
 }
 
-#include <stdlib.h>
-
 Ogre::RenderWindow *
-vl::Window::_createOgreWindow( vl::EnvSettings::Window const &winConf )
+vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 {
 	Ogre::NameValuePairList params;
 

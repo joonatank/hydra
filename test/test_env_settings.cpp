@@ -14,9 +14,9 @@
 
 #include <OGRE/OgreStringConverter.h>
 
-using vl::EnvSettings;
-using vl::EnvSettingsRefPtr;
-using vl::EnvSettingsSerializer;
+using vl::config::EnvSettings;
+using vl::config::EnvSettingsRefPtr;
+using vl::config::EnvSerializer;
 
 // TODO test creation of settings
 // TODO test copying of settings
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE( invalid_xml )
         root->append_node(path);
 
         EnvSettingsRefPtr settings( new EnvSettings() );
-        EnvSettingsSerializer ser( settings );
+        EnvSerializer ser( settings );
 
         // Create the test data
         std::string data;
@@ -52,7 +52,7 @@ struct SettingsFixture
         SettingsFixture( void )
                 : _settings( new EnvSettings() ), _ser(0), _doc(), _config(0)
         {
-            _ser = new EnvSettingsSerializer( _settings );
+            _ser = new EnvSerializer( _settings );
             _config = _doc.allocate_node(rapidxml::node_element, "env_config" );
             _doc.append_node(_config);
         }
@@ -169,7 +169,7 @@ struct SettingsFixture
 
         std::string _data;
         EnvSettingsRefPtr _settings;
-        EnvSettingsSerializer* _ser;
+        EnvSerializer* _ser;
         rapidxml::xml_document<> _doc;
         rapidxml::xml_node<> *_config;
 };
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( tracking_add_test )
     // is xml valid?
     BOOST_CHECK( readXML() );
 
-    _settings->addTracking( EnvSettings::Tracking("new_track") );
+    _settings->addTracking( vl::config::Tracking("new_track") );
 
     // Does getTracking and serializer work correctly?
     BOOST_CHECK_EQUAL( _settings->getTracking().at(0).file, "new_track" );

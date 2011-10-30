@@ -38,17 +38,17 @@ public :
 
 	virtual ~Renderer(void);
 
-	void init(vl::EnvSettingsRefPtr env);
+	void init(vl::config::EnvSettingsRefPtr env);
 
-	vl::EnvSettingsRefPtr getEnvironment(void)
+	vl::config::EnvSettingsRefPtr getEnvironment(void)
 	{ return _env; }
 
 	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man)
 	{ _mesh_manager = mesh_man; }
 
-	vl::EnvSettings::Node getNodeConf( void );
+	vl::config::Node const &getNodeConf(void) const;
 
-	vl::EnvSettings::Window getWindowConf( std::string const &window_name );
+	vl::config::Window const &getWindowConf(std::string const &window_name) const;
 
 	vl::ogre::RootRefPtr getRoot( void )
 	{ return _root; }
@@ -125,7 +125,7 @@ public :
 protected :
 
 	/// Ogre helpers
-	void _createOgre(vl::EnvSettingsRefPtr env);
+	void _createOgre(vl::config::EnvSettingsRefPtr env);
 	void _initialiseResources(vl::Settings const &set);
 	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
@@ -139,7 +139,7 @@ protected :
 	/// Input events
 	void _sendEvents( void );
 
-	void _createWindow( vl::EnvSettings::Window const &winConf );
+	void _createWindow(vl::config::Window const &winConf);
 
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory
@@ -152,7 +152,7 @@ protected :
 	std::string _name;
 
 	/// EnvSettings mapped from Master
-	vl::EnvSettingsRefPtr _env;
+	vl::config::EnvSettingsRefPtr _env;
 	vl::Settings _settings;
 
 	vl::MeshManagerRefPtr _mesh_manager;

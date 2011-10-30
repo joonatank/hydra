@@ -19,7 +19,7 @@
 /// Necessary for logging levels
 #include "logger.hpp"
 
-vl::ogre::Root::Root(vl::LogLevel level)
+vl::ogre::Root::Root(vl::config::LogLevel level)
 	: _ogre_root(0),
 	  _log_manager(0),
 	  _primary(false)
@@ -37,9 +37,9 @@ vl::ogre::Root::Root(vl::LogLevel level)
 			.createLog("", true, true, true);
 
 		Ogre::LoggingLevel ol;
-		if( level == vl::LL_LOW ) ol = Ogre::LL_LOW;
-		else if( level == vl::LL_NORMAL ) ol = Ogre::LL_NORMAL;
-		else if( level == vl::LL_BOREME ) ol = Ogre::LL_BOREME;
+		if( level == vl::config::LL_LOW ) ol = Ogre::LL_LOW;
+		else if( level == vl::config::LL_NORMAL ) ol = Ogre::LL_NORMAL;
+		else if( level == vl::config::LL_BOREME ) ol = Ogre::LL_BOREME;
 
 		Ogre::LogManager::getSingleton().setLogDetail(ol);
 
