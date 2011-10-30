@@ -48,9 +48,8 @@ namespace vl
 class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
-	/// @TODO change name to window config
 	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
-	Window( std::string const &name, vl::RendererInterface *parent );
+	Window(vl::config::Window const &windowConf, vl::RendererInterface *parent);
 
 	virtual ~Window( void );
 

@@ -73,6 +73,17 @@ ByteStream &operator<<( ByteStream &msg, vl::config::Channel const &chan );
 template<>
 ByteStream &operator>>( ByteStream &msg, vl::config::Channel &chan );
 
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::config::Renderer const &rend);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::config::Renderer &rend);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::config::Projection const &projection);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::config::Projection &projection);
 
 template<>
 ByteStream &operator<<( ByteStream &msg, vl::Settings const &settings);

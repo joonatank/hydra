@@ -69,8 +69,8 @@ namespace
 }
 
 /// ----------------------------- Public ---------------------------------------
-vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
-	: _name(name)
+vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
+	: _name(windowConf.name)
 	, _renderer( parent )
 	, _ogre_window(0)
 	, _camera(0)
@@ -84,18 +84,16 @@ vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 
 	std::cout << vl::TRACE << "vl::Window::Window : " << getName() << std::endl;
 
-	vl::config::Window winConf = _renderer->getWindowConf( getName() );
-
-	_ogre_window = _createOgreWindow(winConf);
+	_ogre_window = _createOgreWindow(windowConf);
 	_createInputHandling();
 
 	// If the channel has a name we try to find matching wall
 
 	Wall wall;
-	if( !winConf.channel.name.empty() )
+	if( !windowConf.channel.name.empty() )
 	{
 		std::cout << vl::TRACE << "Finding Wall for channel : " << getName() << std::endl;
-		wall = getEnvironment()->findWall( winConf.channel.wall_name );
+		wall = getEnvironment()->findWall(windowConf.channel.wall_name);
 	}
 
 	// Get the first wall definition if no named one was found
@@ -109,7 +107,19 @@ vl::Window::Window( std::string const &name, vl::RendererInterface *parent )
 		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
 	}
 
+	/// Set frustum
 	_frustum.setWall(wall);
+	vl::config::Projection const &projection = windowConf.renderer.projection;
+	_frustum.setFov(Ogre::Degree(projection.fov));
+	if(projection.perspective_type == vl::config::Projection::FOV)
+	{ _frustum.setType(Frustum::FOV); }
+	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
+	_frustum.enableTransformationModifications(projection.modify_transformations);
+
+	if(windowConf.renderer.type == vl::config::Renderer::FBO)
+	{
+		std::cout << "Should Render to FBO which is not supported yet." << std::endl;
+	}
 
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);

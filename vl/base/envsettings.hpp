@@ -78,6 +78,68 @@ struct Channel
 
 };	// struct Channel
 
+struct Projection
+{
+	enum Type
+	{
+		PERSPECTIVE,
+		ORTHO,
+	};
+
+	enum PerspectiveType
+	{
+		WALL,
+		FOV,
+	};
+
+	Projection(void)
+		: type(PERSPECTIVE)
+		, perspective_type(WALL)
+		, fov(60)
+		, horizontal(-1)
+		, head_x(false)
+		, head_y(true)
+		, head_z(false)
+	{}
+
+	Type type;
+
+	PerspectiveType perspective_type;
+
+	// Field-of-View in Degrees
+	double fov;
+
+	// Horizontal in percentage zero is floor and one is ceiling
+	double horizontal;
+
+	bool head_x;
+	bool head_y;
+	bool head_z;
+
+	bool modify_transformations;
+};
+
+/// The rendering element that can be individually rendered
+/// usually either a window or a FBO
+/// this is completely independent of the two though and does not reference 
+/// either of them.
+struct Renderer
+{
+	enum Type
+	{
+		WINDOW,
+		FBO,
+	};
+
+	Renderer(void)
+		: type(WINDOW)
+		, projection()
+	{}
+
+	Type type;
+	Projection projection;
+};
+
 struct Window
 {
 	Window( std::string const &nam, Channel const &chan,
@@ -111,6 +173,8 @@ struct Window
 	std::string name;
 
 	Channel channel;
+
+	Renderer renderer;
 
 	// Width of the window
 	int w;
@@ -483,6 +547,11 @@ public :
 	
 	std::vector<Program> getUsedPrograms(void) const;
 
+	Renderer const &getRenderer(void) const
+	{ return _renderer; }
+	Renderer &getRenderer(void)
+	{ return _renderer; }
+
 private :
 
 	std::string _file_path;
@@ -518,6 +587,8 @@ private :
 	std::string _log_dir;
 
 	uint32_t _fps;
+
+	Renderer _renderer;
 
 };	// class EnvSettings
 
@@ -571,6 +642,10 @@ protected :
 	void processPrograms(rapidxml::xml_node<> *xml_node);
 
 	void processProgram(rapidxml::xml_node<> *xml_node);
+
+	void processRenderer(rapidxml::xml_node<> *xml_node, Renderer &renderer);
+
+	void processProjection(rapidxml::xml_node<> *xml_node, Projection &projection);
 
 	void _checkUniqueNode(rapidxml::xml_node<> *xml_node);
 

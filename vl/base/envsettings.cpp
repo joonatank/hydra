@@ -344,6 +344,16 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processFPS( xml_elem ); }
 
+	// renderer and projection needs to be processed before Nodes 
+	// because the global configs are copied to every node
+	xml_elem = xml_root->first_node("renderer");
+	if( xml_elem )
+	{ processRenderer(xml_elem, _env->getRenderer()); }
+
+	xml_elem = xml_root->first_node("projection");
+	if( xml_elem )
+	{ processProjection(xml_elem, _env->getRenderer().projection); }
+
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
 	{ processNode( xml_elem, _env->getMaster() ); }
@@ -591,6 +601,9 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
 		processChannel(channel_elem, window);
 
+		// Copy render parameters
+		window.renderer = _env->getRenderer();
+
 		// Add the window
 		node.addWindow( window );
 
@@ -738,6 +751,93 @@ vl::config::EnvSerializer::processProgram(rapidxml::xml_node<> *xml_node)
 
 	_env->addProgram(prog);
 }
+
+void
+vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::config::Renderer &renderer)
+{
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("surface");
+	if(attrib)
+	{
+		std::string type(attrib->value());
+		vl::to_lower(type);
+		if(type == "fbo")
+		{
+			renderer.type = Renderer::FBO;
+		}
+		// Assume type window otherwise
+	}
+}
+
+void
+vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl::config::Projection &projection)
+{
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
+	if(attrib)
+	{
+		std::string type(attrib->value());
+		vl::to_lower(type);
+		if(type == "ortho")
+		{
+			projection.type = Projection::ORTHO;
+		}
+		// Assume perspective otherwise
+	}
+
+	rapidxml::xml_node<> *xml_pers = xml_node->first_node("perspective");
+	if(xml_pers)
+	{
+		attrib = xml_pers->first_attribute("type");
+		if(attrib)
+		{
+			// Process perspective type
+			std::string type(attrib->value());
+			vl::to_lower(type);
+			if(type == "fov")
+			{
+				projection.perspective_type = Projection::FOV;
+			}
+			// Assume Wall otherwise
+		}
+
+		rapidxml::xml_node<> *wall = xml_pers->first_node("wall");
+		rapidxml::xml_node<> *fov = xml_pers->first_node("fov");
+		if(wall)
+		{
+			rapidxml::xml_node<> *head = wall->first_node("head");
+			if(head)
+			{
+				attrib = head->first_attribute("x");
+				if(attrib)
+				{ projection.head_x = vl::from_string<bool>(attrib->value()); }
+				attrib = head->first_attribute("y");
+				if(attrib)
+				{ projection.head_y = vl::from_string<bool>(attrib->value()); }
+				attrib = head->first_attribute("z");
+				if(attrib)
+				{ projection.head_z = vl::from_string<bool>(attrib->value()); }
+			}
+
+			rapidxml::xml_node<> *modify = wall->first_node("modify_transformations");
+			if(modify)
+			{
+				attrib = modify->first_attribute("use");
+				if(attrib)
+				{ projection.modify_transformations = vl::from_string<bool>(attrib->value()); }
+			}
+		}
+
+		if(fov)
+		{
+			attrib = fov->first_attribute("angle");
+			if(attrib)
+			{ projection.fov = vl::from_string<double>(attrib->value()); }
+			attrib = fov->first_attribute("horizontal");
+			if(attrib)
+			{ projection.horizontal = vl::from_string<double>(attrib->value()); }
+		}
+	}
+}
+
 
 std::vector<double>
 vl::config::EnvSerializer::getVector( rapidxml::xml_node<>* xml_node )

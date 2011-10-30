@@ -139,6 +139,7 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// Modify the front plane (or scale in this case)
 	if(_head_frustum_z)
 	{
+		scale = -(wall_front - _head.position.z)/_near_clipping;
 	}
 
 	Ogre::Real right = wall_right/scale;
@@ -146,6 +147,8 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// Modify the right and left planes
 	if(_head_frustum_x)
 	{
+		right = (wall_right - _head.position.x)/scale;
+		left = (wall_left - _head.position.x)/scale;
 	}
 
 	// Golden ratio for the frustum

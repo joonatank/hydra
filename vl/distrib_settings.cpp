@@ -145,7 +145,8 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window&
 {
 	msg << window.name << window.channel << window.x << window.y << window.h
 		<< window.w << window.n_display << window.stereo << window.nv_swap_sync 
-		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync;
+		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
+		<< window.renderer;
 
 	return msg;
 }
@@ -156,7 +157,8 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& windo
 {
 	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
 		>> window.w >> window.n_display >> window.stereo >> window.nv_swap_sync
-		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync;
+		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
+		>> window.renderer;
 
 	return msg;
 }
@@ -175,6 +177,46 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
 	msg >> chan.name >> chan.wall_name;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Renderer const &rend)
+{
+	msg << rend.type << rend.projection;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Renderer &rend)
+{
+	msg >> rend.type >> rend.projection;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Projection const &projection)
+{
+	msg << projection.type << projection.perspective_type << projection.fov 
+		<< projection.horizontal << projection.head_x << projection.head_y << projection.head_z 
+		<< projection.modify_transformations;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Projection &projection)
+{
+	msg >> projection.type >> projection.perspective_type >> projection.fov
+		>> projection.horizontal >> projection.head_x >> projection.head_y >> projection.head_z 
+		>> projection.modify_transformations;
 
 	return msg;
 }

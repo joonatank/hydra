@@ -96,6 +96,12 @@ public :
 	Ogre::Radian const &getFov(void) const
 	{ return _fov; }
 
+	void enableTransformationModifications(bool enable)
+	{ _transformation_modifications = enable; }
+
+	bool isTransformationModifications(void) const
+	{ return _transformation_modifications; }
+
 private :
 
 	Ogre::Matrix4 _calculate_wall_projection(vl::scalar eye_offset) const;
@@ -116,6 +122,8 @@ private :
 	bool _head_frustum_z;
 
 	Ogre::Radian _fov;
+
+	bool _transformation_modifications;
 
 };	// class Frustum
 

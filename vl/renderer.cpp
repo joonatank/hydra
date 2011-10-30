@@ -583,7 +583,7 @@ vl::Renderer::_createWindow(vl::config::Window const &winConf)
 {
 	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
 
-	vl::Window *window = new vl::Window( winConf.name, this );
+	vl::Window *window = new vl::Window(winConf, this);
 	if(_player)
 	{ window->setCamera(_player->getCamera()); }
 	_windows.push_back(window);
