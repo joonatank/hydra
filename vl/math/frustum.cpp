@@ -76,6 +76,46 @@ vl::Frustum::getProjectionMatrix(vl::scalar eye_offset) const
 	}
 }
 
+vl::Transform
+vl::Frustum::getModificationTransformation(void) const
+{
+	if(_transformation_modifications)
+	{
+		Transform t;
+		// Transformation is different for every wall
+		Quaternion const toWall = orientation_to_wall(_wall);
+		if(_head_frustum_x)
+		{
+		}
+
+		// Only y direction supported for the moment
+		if(_head_frustum_y)
+		{
+			Plane plane(_wall);
+			// Calculate the difference from center point to current height
+			//Ogre::Real top = (plane.top - _head.position.y);
+			//Ogre::Real bottom = (plane.bottom - _head.position.y);
+			
+			Ogre::Vector3 screen_center(0, plane.top - plane.bottom, plane.front);
+			Ogre::Vector3 user(0, _head.position.y, 0);
+			Ogre::Vector3 frustum_center(0, plane.top - plane.bottom, 0);
+
+			Ogre::Vector3 user_to_screen = screen_center - user;
+			Ogre::Vector3 center_to_screen = screen_center - frustum_center;
+			// the angle between user and frustum center vectors
+			t.quaternion = user_to_screen.getRotationTo(center_to_screen);
+		}
+
+		if(_head_frustum_z)
+		{
+		}
+
+		return t;
+	}
+	else
+	{ return Transform(); }
+}
+
 
 /// ------------------------------ Private -----------------------------------
 Ogre::Matrix4
@@ -98,24 +138,7 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	 * any difference at all.
 	 */
 
-	/// Necessary for calculating the frustum
-	Ogre::Vector3 bottom_right(_wall.bottom_right[0], _wall.bottom_right[1], _wall.bottom_right[2]);
-	Ogre::Vector3 bottom_left(_wall.bottom_left[0], _wall.bottom_left[1], _wall.bottom_left[2]);
-	Ogre::Vector3 top_left(_wall.top_left[0], _wall.top_left[1], _wall.top_left[2]);
-
-	// This is correct, it should not be inverse
-	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
-
-	bottom_right = wallRot*bottom_right;
-	bottom_left = wallRot*bottom_left;
-	top_left = wallRot*top_left;
-
-	// Calculate the frustum
-	Ogre::Real wall_right = bottom_right.x;
-	Ogre::Real wall_left = bottom_left.x;
-	Ogre::Real wall_top = top_left.y;
-	Ogre::Real wall_bottom = bottom_right.y;
-	Ogre::Real wall_front = bottom_right.z;
+	Plane plane(_wall);
 
 	// @todo the head needs to be rotated by the wall so we get the
 	// up axis in wall coordinates
@@ -131,38 +154,40 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// obtain the correct scale
 	// If scale is negative it rotates 180 deg around z,
 	// i.e. flips to the other side of the wall
+	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
+	Ogre::Vector3 head = wallRot*_head.position;
 
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
-	Ogre::Real scale = -(wall_front)/_near_clipping;
+	Ogre::Real scale = -(plane.front)/_near_clipping;
 	// Modify the front plane (or scale in this case)
 	if(_head_frustum_z)
 	{
-		scale = -(wall_front - _head.position.z)/_near_clipping;
+		scale = (-plane.front + head.z)/_near_clipping;
 	}
 
-	Ogre::Real right = wall_right/scale;
-	Ogre::Real left = wall_left/scale;
+	Ogre::Real right = plane.right/scale;
+	Ogre::Real left = plane.left/scale;
 	// Modify the right and left planes
 	if(_head_frustum_x)
 	{
-		right = (wall_right - _head.position.x)/scale;
-		left = (wall_left - _head.position.x)/scale;
+		right = (plane.right - head.x)/scale;
+		left = (plane.left - head.x)/scale;
 	}
 
 	// Golden ratio for the frustum
 	// Should be tested with the head tracking if it doesn't work provide an
 	// alternative to use golden ratio for one screen systems and non for VR
-	Ogre::Real wall_height = wall_top - wall_bottom;
-	Ogre::Real top = (wall_top - (1/PHI)*wall_height)/scale;
-	Ogre::Real bottom = (wall_bottom - (1/PHI)*wall_height)/scale;
+	Ogre::Real wall_height = plane.top - plane.bottom;
+	Ogre::Real top = (plane.top - (1/PHI)*wall_height)/scale;
+	Ogre::Real bottom = (plane.bottom - (1/PHI)*wall_height)/scale;
 
 	// Modify the top and botoom planes
 	if(_head_frustum_y)
 	{
-		top = (wall_top - _head.position.y)/scale;
-		bottom = (wall_bottom - _head.position.y)/scale;
+		top = (plane.top - head.y)/scale;
+		bottom = (plane.bottom - head.y)/scale;
 	}
 
 	Ogre::Matrix4 projMat;

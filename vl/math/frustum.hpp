@@ -28,6 +28,8 @@ namespace vl
 Ogre::Quaternion orientation_to_wall(vl::Wall const &wall);
 
 /// @todo only type supported for the moment is WALL
+/// @todo there is a problem if either x or z is enabled and not the other one 
+/// in three wall system, because x and z axes switch between front and side walls
 class Frustum
 {
 public :
@@ -35,6 +37,43 @@ public :
 	{
 		WALL,
 		FOV,
+	};
+
+	struct Plane
+	{
+		Plane(void)
+			: right(0)
+			, left(0)
+			, top(0)
+			, bottom(0)
+			, front(0)
+		{}
+
+		Plane(vl::Wall const &wall)
+		{
+			Ogre::Vector3 bottom_right(wall.bottom_right[0], wall.bottom_right[1], wall.bottom_right[2]);
+			Ogre::Vector3 bottom_left(wall.bottom_left[0], wall.bottom_left[1], wall.bottom_left[2]);
+			Ogre::Vector3 top_left(wall.top_left[0], wall.top_left[1], wall.top_left[2]);
+
+			// This is correct, it should not be inverse
+			Ogre::Quaternion wallRot = orientation_to_wall(wall);
+
+			bottom_right = wallRot*bottom_right;
+			bottom_left = wallRot*bottom_left;
+			top_left = wallRot*top_left;
+
+			right = bottom_right.x;
+			left = bottom_left.x;
+			top = top_left.y;
+			bottom = bottom_right.y;
+			front = bottom_right.z;
+		}
+
+		Ogre::Real right;
+		Ogre::Real left;
+		Ogre::Real top;
+		Ogre::Real bottom;
+		Ogre::Real front;
 	};
 
 	Frustum(Type type = WALL);
@@ -101,6 +140,8 @@ public :
 
 	bool isTransformationModifications(void) const
 	{ return _transformation_modifications; }
+
+	Transform getModificationTransformation(void) const;
 
 private :
 
