@@ -799,6 +799,12 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 			// Assume Wall otherwise
 		}
 
+		attrib = xml_pers->first_attribute("asymmetric_stereo_frustum");
+		if(attrib)
+		{
+			projection.use_asymmetric_stereo = vl::from_string<bool>(attrib->value());
+		}
+
 		rapidxml::xml_node<> *wall = xml_pers->first_node("wall");
 		rapidxml::xml_node<> *fov = xml_pers->first_node("fov");
 		if(wall)

@@ -115,10 +115,16 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	{ _frustum.setType(Frustum::FOV); }
 	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
 	_frustum.enableTransformationModifications(projection.modify_transformations);
+	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
+
+	if(windowConf.renderer.projection.use_asymmetric_stereo)
+	{
+		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
+	}
 
 	if(windowConf.renderer.type == vl::config::Renderer::FBO)
 	{
-		std::cout << "Should Render to FBO which is not supported yet." << std::endl;
+		std::cout << "NOT IMPLEMENTED : Should Render to FBO." << std::endl;
 	}
 
 	// TODO this should be configurable
@@ -456,9 +462,6 @@ vl::Window::draw(void)
 	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
 	_frustum.setClipping(c_near, c_far);
 
-	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix();
-	og_cam->setCustomProjectionMatrix( true, projMat );
-
 	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
 
 	// Should not be rotated with wall, all the walls would be out of sync with each other
@@ -492,12 +495,14 @@ vl::Window::draw(void)
 		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
 	}
 
-	// Left viewport
 	for(size_t i = 0; i < views.size(); ++i)
 	{
 		view_tuple const &view = views.at(i);
 		Ogre::Vector3 eye(view.get<1>(), 0, 0);
 		glDrawBuffer(view.get<2>());
+
+		Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(view.get<1>());
+		og_cam->setCustomProjectionMatrix(true, projMat);
 
 		// Combine eye and camera positions
 		// Needs to be rotated with head for correct stereo

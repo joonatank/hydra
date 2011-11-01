@@ -129,6 +129,12 @@ public :
 		_head_frustum_z = enable_z;
 	}
 
+	void enableAsymmetricStereoFrustum(bool enable)
+	{ _use_asymmetric_stereo = enable; }
+
+	bool isAsymmetricStereoFrustum(void) const
+	{ return _use_asymmetric_stereo; }
+
 	void setFov(Ogre::Radian const &fov)
 	{ _fov = fov; }
 
@@ -165,6 +171,8 @@ private :
 	Ogre::Radian _fov;
 
 	bool _transformation_modifications;
+
+	bool _use_asymmetric_stereo;
 
 };	// class Frustum
 

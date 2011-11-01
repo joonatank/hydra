@@ -100,6 +100,7 @@ struct Projection
 		, head_x(false)
 		, head_y(true)
 		, head_z(false)
+		, use_asymmetric_stereo(false)
 	{}
 
 	Type type;
@@ -117,6 +118,8 @@ struct Projection
 	bool head_z;
 
 	bool modify_transformations;
+
+	bool use_asymmetric_stereo;
 };
 
 /// The rendering element that can be individually rendered

@@ -50,6 +50,9 @@ vl::Frustum::Frustum(Type type)
 	, _head_frustum_x(false)
 	, _head_frustum_y(true)
 	, _head_frustum_z(false)
+	, _transformation_modifications(false)
+	, _fov(Ogre::Degree(60))
+	, _use_asymmetric_stereo(false)
 {
 }
 
@@ -157,23 +160,31 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
 	Ogre::Vector3 head = wallRot*_head.position;
 
+	Ogre::Vector3 eye = Ogre::Vector3::ZERO;
+	if(_use_asymmetric_stereo)
+	{
+		// get the eye vector in head coordinates
+		// then in the wall coordinates we are using for this wall
+		eye = wallRot.Inverse() * _head.quaternion * Ogre::Vector3(eye_offset, 0, 0);
+	}
+
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
-	Ogre::Real scale = -(plane.front)/_near_clipping;
+	Ogre::Real scale = -(plane.front - eye.z)/_near_clipping;
 	// Modify the front plane (or scale in this case)
 	if(_head_frustum_z)
 	{
-		scale = (-plane.front + head.z)/_near_clipping;
+		scale = -(plane.front - head.z - eye.z)/_near_clipping;
 	}
 
-	Ogre::Real right = plane.right/scale;
-	Ogre::Real left = plane.left/scale;
+	Ogre::Real right = (plane.right - eye.x)/scale;
+	Ogre::Real left = (plane.left - eye.x)/scale;
 	// Modify the right and left planes
 	if(_head_frustum_x)
 	{
-		right = (plane.right - head.x)/scale;
-		left = (plane.left - head.x)/scale;
+		right = (plane.right - head.x - eye.x)/scale;
+		left = (plane.left - head.x - eye.x)/scale;
 	}
 
 	// Golden ratio for the frustum
@@ -186,8 +197,8 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// Modify the top and botoom planes
 	if(_head_frustum_y)
 	{
-		top = (plane.top - head.y)/scale;
-		bottom = (plane.bottom - head.y)/scale;
+		top = (plane.top - head.y - eye.y)/scale;
+		bottom = (plane.bottom - head.y - eye.y)/scale;
 	}
 
 	Ogre::Matrix4 projMat;
