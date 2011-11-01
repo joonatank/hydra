@@ -59,6 +59,13 @@ public :
 
 	void setHeadTransform(vl::Transform const &m);
 
+	vl::Transform const &getCyclopTransform(void) const
+	{ return _cyclop_transform; }
+
+	void setCyclopTransform(vl::Transform const &t);
+
+	vl::Transform getCyclopWorldTransform(void) const;
+
 	void takeScreenshot( void );
 
 	uint32_t getScreenshotVersion( void ) const
@@ -72,10 +79,11 @@ public :
 	enum DirtyBits
 	{
 		DIRTY_HEAD = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_SCREENSHOT = vl::Distributed::DIRTY_CUSTOM << 2,
-		DIRTY_IPD = vl::Distributed::DIRTY_CUSTOM << 3,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_CYCLOP = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_SCREENSHOT = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_IPD = vl::Distributed::DIRTY_CUSTOM << 4,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
 	};
 
 protected :
@@ -90,6 +98,8 @@ private :
 	CameraPtr _active_camera;
 
 	vl::Transform _head_transform;
+
+	vl::Transform _cyclop_transform;
 
 	uint32_t _screenshot_version;
 

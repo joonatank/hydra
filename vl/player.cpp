@@ -93,6 +93,22 @@ vl::Player::setHeadTransform(vl::Transform const &t)
 }
 
 void
+vl::Player::setCyclopTransform(vl::Transform const &t)
+{
+	if(t != _cyclop_transform)
+	{
+		setDirty(DIRTY_CYCLOP);
+		_cyclop_transform = t;
+	}
+}
+
+vl::Transform
+vl::Player::getCyclopWorldTransform(void) const
+{
+	return _head_transform*_cyclop_transform;
+}
+
+void
 vl::Player::takeScreenshot( void )
 {
 	setDirty( DIRTY_SCREENSHOT );
@@ -116,6 +132,9 @@ vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) 
 	if( dirtyBits & DIRTY_HEAD )
 	{ msg << _head_transform; }
 
+	if( dirtyBits & DIRTY_CYCLOP )
+	{ msg << _cyclop_transform; }
+
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{
 		assert(_active_camera);
@@ -134,6 +153,9 @@ vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 {
 	if( dirtyBits & DIRTY_HEAD )
 	{ msg >> _head_transform; }
+
+	if( dirtyBits & DIRTY_CYCLOP )
+	{ msg >> _cyclop_transform; }
 
 	if( dirtyBits & DIRTY_ACTIVE_CAMERA )
 	{

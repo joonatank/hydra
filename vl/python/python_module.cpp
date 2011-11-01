@@ -566,11 +566,11 @@ void export_game(void)
 		.def("write", write1 )
 	;
 
-	// TODO add setHeadMatrix function to python
 	python::class_<vl::Player, boost::noncopyable>("Player", python::no_init)
 		.add_property("camera", python::make_function( &Player::getActiveCamera , python::return_value_policy<python::copy_const_reference>() ), &Player::setActiveCamera)
 		.add_property("camera_node", python::make_function(&Player::getCameraNode, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("head_transformation", python::make_function(&Player::getHeadTransform, python::return_value_policy<python::copy_const_reference>()), &Player::setHeadTransform)
+		.add_property("cyclop_transformation", python::make_function(&Player::getCyclopTransform, python::return_value_policy<python::copy_const_reference>()), &Player::setCyclopTransform)
 		.add_property("ipd", &Player::getIPD, &Player::setIPD)
 		.def("takeScreenshot", &vl::Player::takeScreenshot)
 		.def(python::self_ns::str(python::self_ns::self))
