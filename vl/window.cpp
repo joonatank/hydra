@@ -450,8 +450,10 @@ vl::Window::draw(void)
 	// If they are still present we need to add a separate camera also
 	// @todo rendering GUI for both eyes
 
-	Transform const &head = getPlayer().getHeadTransform();
+	Transform const &head = getPlayer().getCyclopWorldTransform();
+
 	_frustum.setHeadTransformation(head);
+	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
 	_frustum.setClipping(c_near, c_far);
 
 	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix();

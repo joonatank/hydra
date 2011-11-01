@@ -76,6 +76,35 @@ public :
 	double getIPD(void) const
 	{ return _ipd; }
 
+	
+	bool isHeadFrustumX(void) const
+	{ return _head_frustum_x; }
+	
+	bool isHeadFrustumY(void) const
+	{ return _head_frustum_y; }
+
+	bool isHeadFrustumZ(void) const
+	{ return _head_frustum_z; }
+
+	void enableHeadFrustumX(bool e)
+	{
+		setDirty(DIRTY_FRUSTUM);
+		_head_frustum_x = e;
+	}
+
+	void enableHeadFrustumY(bool e)
+	{
+		setDirty(DIRTY_FRUSTUM);
+		_head_frustum_y = e;
+	}
+
+	void enableHeadFrustumZ(bool e)
+	{
+		setDirty(DIRTY_FRUSTUM);
+		_head_frustum_z = e;
+	}
+
+
 	enum DirtyBits
 	{
 		DIRTY_HEAD = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -83,14 +112,14 @@ public :
 		DIRTY_ACTIVE_CAMERA = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_SCREENSHOT = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_IPD = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_FRUSTUM = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 6,
 	};
 
-protected :
+private :
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
-private :
 	/// Non copyable
 	Player( Player const &);
 	Player & operator=( Player const &);
@@ -104,6 +133,10 @@ private :
 	uint32_t _screenshot_version;
 
 	double _ipd;
+
+	bool _head_frustum_x;
+	bool _head_frustum_y;
+	bool _head_frustum_z;
 
 	SceneManagerPtr _scene_manager;
 
