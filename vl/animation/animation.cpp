@@ -1,12 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
- *	@file animation.cpp
+ *	@file animation/animation.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Internal Kinematic animation implementation. Defined in a separate namespace.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
+/*
+ *	Internal Kinematic animation implementation. Defined in a separate namespace.
+ */
 #include "animation.hpp"
 
 /// ---------------------------------- Global --------------------------------
