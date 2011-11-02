@@ -40,6 +40,7 @@ class Controller:
 		self.ref = reference
 		self.rotation = rotation
 		self.disabled = False
+		self.frame = TS.LOCAL
 
 	def transform(self, nodes, t):
 		if self.disabled:
@@ -61,10 +62,14 @@ class Controller:
 				# but on the other hand local reference is
 				# impossible to indicate if the list contains
 				# more than one element
-				if self.ref:
-					nodes[i].translate(self.rotation * mov, self.ref)
-				else:
+				try:
+					if self.ref:
+						nodes[i].translate(self.rotation * mov, self.ref)
+					else:
+						nodes[i].translate(self.rotation * mov, self.frame)
+				except:
 					nodes[i].translate(self.rotation * mov)
+
 
 		axis = self.rot_axis
 		if axis.length() != 0:
@@ -221,7 +226,7 @@ def createCameraController(speed = 5, angular_speed = Degree(90), high_speed = 1
 def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
 	return createSelectionController(speed, angular_speed, reference, rotation)
 
-def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
+def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
 	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
 
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
@@ -291,10 +296,13 @@ def addTrackerMoveSelection(tracker_trigger_name, trigger) :
 				for i in range(len(game.scene.selection)) :
 					game.scene.selection[i].transformation = t
 
-	tms = TrackerMoveSelection()
-	tracker_trigger = game.event_manager.getTrackerTrigger(tracker_trigger_name)
-	tracker_trigger.addListener(tms.move)
-	trigger.addListener(tms.switch_state)
+	if game.event_manager.hasTrackerTrigger(tracker_trigger_name):
+		tracker_trigger = game.event_manager.getTrackerTrigger(tracker_trigger_name)
+		tms = TrackerMoveSelection()
+		tracker_trigger.addListener(tms.move)
+		trigger.addListener(tms.switch_state)
+	else:
+		print("ERROR : No such trigger. Not adding tracker move selection.")
 
 def addRigidBodyController(body):
 	controller = RigidBodyController(body)
