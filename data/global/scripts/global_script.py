@@ -25,49 +25,26 @@ def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE
 	setVectorActionFromKey( float_action, kc_neg, mod )
 	float_action.action = trans_action
 
-# Old function that uses the action system and proxies
-def createCameraMovementsOld(node, speed = 5, angular_speed = Degree(90)) :
-	# TODO stupid string casting, can we somehow remove it?
-	print( 'Creating Translation event on ' + str(node) )
-
-	# Create the translation action using a proxy
-	trans_action_proxy = MoveActionProxy.create()
-	trans_action_proxy.enableTranslation()
-	addKeyActionsForAxis(trans_action_proxy, Vector3(1, 0, 0), KC.D, KC.A)
-	addKeyActionsForAxis(trans_action_proxy, Vector3(0, 0, 1), KC.S, KC.W)
-	addKeyActionsForAxis(trans_action_proxy, Vector3(0, 1, 0), KC.PGUP, KC.PGDOWN)
-
-	# Create the rotation action using a proxy
-	rot_action_proxy = MoveActionProxy.create()
-	rot_action_proxy.enableRotation()
-	# This is not useful, maybe using Q and E
-	addKeyActionsForAxis(rot_action_proxy, Vector3(0, 1, 0), KC.Q, KC.E)
-
-	# Create the real action
-	trans_action = MoveNodeAction.create()
-	trans_action.scene_node = node
-	trans_action.speed = speed
-	trans_action.angular_speed = Radian(angular_speed)
-	# Add the real action to the proxies
-	trans_action_proxy.action = trans_action
-	rot_action_proxy.action = trans_action
-	# Create a FrameTrigger and add the action to that
-	trigger = game.event_manager.getFrameTrigger()
-	trigger.action.add_action(trans_action)
-
 # TODO separate the interface and the progress implementation
 # so we can have controllers for a group of objects and selections
 # as well as single objects.
 class Controller:
-	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None, rotation = Quaternion(1, 0, 0, 0)):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None,
+			rotation = Quaternion(1, 0, 0, 0), high_speed = 10):
 		self.speed = speed
+		self.low_speed = speed
+		self.high_speed = high_speed
 		self.angular_speed = angular_speed
 		self.mov_dir = Vector3.zero
 		self.rot_axis = Vector3.zero
 		self.ref = reference
 		self.rotation = rotation
+		self.disabled = False
 
 	def transform(self, nodes, t):
+		if self.disabled:
+			return;
+
 		# Normalises the move dir, this works for keyboard but it
 		# does not work for joysticks
 		# for joysticks we need to clip the length at 1
@@ -133,10 +110,22 @@ class Controller:
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
 
+	def toggle_high_speed(self):
+		if self.speed < self.high_speed:
+			self.speed = self.high_speed
+		else:
+			self.speed = self.low_speed
+
+	def disable(self):
+		self.disabled = True
+
+	def enable(self):
+		self.disabled = False
+
 
 class ObjectController(Controller):
-	def __init__(self, node, speed = 5, angular_speed = Degree(90)):
-		Controller.__init__(self, speed, angular_speed, node)
+	def __init__(self, node, speed = 5, angular_speed = Degree(90), high_speed=10):
+		Controller.__init__(self, speed, angular_speed, node, high_speed=high_speed)
 		self.node = node
 
 	def progress(self, t):
@@ -160,21 +149,26 @@ class RigidBodyController(Controller):
 		self.transform(bodies, t)
 
 class ActiveCameraController(Controller):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None):
-		Controller.__init__(self, speed, angular_speed, reference)
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10):
+		Controller.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
 
 	def progress(self, t):
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
 
+# Old interface map it to new one and remove in Hydra-0.4
+# node is discarded as we are using active controller now
+def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
+	return createCameraController(speed, angular_speed)
+
 # New system using classes and signal callbacks
 # TODO add a separate controller for joystick values
 # selectable using a flag for example
-def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
-	# TODO stupid string casting, can we somehow remove it?
-	print( 'Creating Move Active camera event.')
+# @return ActiveCameraController
+def createCameraController(speed = 5, angular_speed = Degree(90), high_speed = 10) :
+	print( 'Creating Active camera controller.')
 
-	camera_movements = ActiveCameraController(speed, angular_speed)
+	camera_movements = ActiveCameraController(speed, angular_speed, high_speed=high_speed)
 
 	trigger = game.event_manager.createKeyTrigger(KC.D)
 	trigger.addKeyDownListener(camera_movements.right)
@@ -208,13 +202,25 @@ def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
 	trigger.addKeyDownListener(camera_movements.rotate_right)
 	trigger.addKeyUpListener(camera_movements.rotate_left)
 
+	# Create speed toggle to both shifts
+	triggers = [game.event_manager.createKeyTrigger(KC.LSHIFT),
+		game.event_manager.createKeyTrigger(KC.RSHIFT)]
+	for t in triggers:
+		t.addKeyDownListener(camera_movements.toggle_high_speed)
+		t.addKeyUpListener(camera_movements.toggle_high_speed)
+
 	game.event_manager.frame_trigger.addListener(camera_movements.progress)
+
+	return camera_movements
 
 
 # TODO add a possibility to speed up movements using SHIFT modifier
 # @param speed linear speed of the selection
 # @param angular_speed rotation speed of the selection
 # @param reference The object whom coordinate system is used for translation, usually camera
+def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
+	return createSelectionController(speed, angular_speed, reference, rotation)
+
 def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
 	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
 
@@ -267,6 +273,8 @@ def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, ro
 	trigger.addKeyUpListener(selection_movements.rotate_up)
 
 	game.event_manager.frame_trigger.addListener(selection_movements.progress)
+
+	return selection_movements;
 
 # @param tracker the tracker used for moving the objects
 # @param trigger the trigger used to trigger start moving and stop moving
