@@ -1,7 +1,7 @@
 # - Locate CEGUI library
 # Joonatan Kuosa <joonatan.kuosa@tut.fi>
 # 2011-01
-# This file is part of eqOgre build system.
+# This file is part of Hydra build system.
 # This file is in public domain, feel free to use it as you see fit
 #
 # TODO add parameters

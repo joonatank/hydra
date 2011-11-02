@@ -1,7 +1,7 @@
 # Joonatan Kuosa <joonatan.kuosa@tut.fi>
 # 2010-12
-# This file is part of eqOgre build system.
-# This file is in public domain, feel free to use it as you see fi
+# This file is part of Hydra build system.
+# This file is in public domain, feel free to use it as you see fit
 #
 # - Locate cAudio library
 #

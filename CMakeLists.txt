@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# Joonatan Kuosa
+# Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
 # 2010-11
 #
 # This file is part of the CMake build system for Hydra

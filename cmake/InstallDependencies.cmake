@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# This file is part of the CMake build system for eqOgre
+# This file is part of the CMake build system for Hydra
 #
 # The contents of this file are placed in the public domain. Feel
 # free to make use of it in any way you like.

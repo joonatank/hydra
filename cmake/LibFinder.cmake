@@ -1,3 +1,8 @@
+# Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+# 2011-10
+# This file is part of Hydra build system.
+# This file is in public domain, feel free to use it as you see fit
+
 
 # TODO document
 # TODO document the variables necessary to be set before running
