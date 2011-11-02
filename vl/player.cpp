@@ -31,6 +31,7 @@ vl::Player::Player(SceneManagerPtr scene_manager)
 	, _head_frustum_x(false)
 	, _head_frustum_y(true)
 	, _head_frustum_z(false)
+	, _asymmetric_stereo_frustum(false)
 	, _scene_manager(scene_manager)
 {
 	assert(_scene_manager);
@@ -152,7 +153,7 @@ vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) 
 	{ msg << _ipd; }
 
 	if(dirtyBits & DIRTY_FRUSTUM)
-	{ msg << _head_frustum_x << _head_frustum_y << _head_frustum_z; }
+	{ msg << _head_frustum_x << _head_frustum_y << _head_frustum_z << _asymmetric_stereo_frustum; }
 }
 
 void
@@ -182,5 +183,5 @@ vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 	{ msg >> _ipd; }
 
 	if(dirtyBits & DIRTY_FRUSTUM)
-	{ msg >> _head_frustum_x >> _head_frustum_y >> _head_frustum_z; }
+	{ msg >> _head_frustum_x >> _head_frustum_y >> _head_frustum_z >> _asymmetric_stereo_frustum; }
 }

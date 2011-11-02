@@ -165,7 +165,7 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	{
 		// get the eye vector in head coordinates
 		// then in the wall coordinates we are using for this wall
-		eye = wallRot.Inverse() * _head.quaternion * Ogre::Vector3(eye_offset, 0, 0);
+		eye = wallRot * _head.quaternion * Ogre::Vector3(eye_offset, 0, 0);
 	}
 
 	// Scale is necessary and is correct because 

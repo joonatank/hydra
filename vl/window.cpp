@@ -456,10 +456,11 @@ vl::Window::draw(void)
 	// If they are still present we need to add a separate camera also
 	// @todo rendering GUI for both eyes
 
-	Transform const &head = getPlayer().getCyclopWorldTransform();
+	Transform const &head = getPlayer().getHeadTransform();
 
-	_frustum.setHeadTransformation(head);
+	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
 	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
+	_frustum.enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
 	_frustum.setClipping(c_near, c_far);
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());

@@ -456,3 +456,68 @@ addToggleStereo(KC.F12)
 
 #addQuitEvent(KC.ESCAPE)
 
+class FrustumToggler:
+	def __init__(self):
+		game.player.head_frustum_x = False
+		game.player.head_frustum_y = True
+		game.player.head_frustum_z = False
+		self.cyclop_vector = Vector3(0, 0, -0.15)
+		self.cyclop = False
+
+		game.player.asymmetric_stereo_frustum = True
+
+		self.all_on()
+
+	def all_on(self):
+		self.on = True
+
+		game.player.cyclop_transformation = Transform(self.cyclop_vector)
+		self.cyclop = True
+		game.player.head_frustum_x = True
+		game.player.head_frustum_y = True
+		game.player.head_frustum_z = True
+
+	def all_off(self):
+		self.on = False
+
+		game.player.head_frustum_x = False
+		game.player.head_frustum_y = True
+		game.player.head_frustum_z = False
+		game.player.cyclop_transformation = Transform()
+		self.cyclop = False
+		
+
+	def toggle_all(self):
+		if self.on:
+			self.all_off()
+		else:
+			self.all_on()
+
+	def toggle_asymmetric_frustum(self):
+		game.player.asymmetric_stereo_frustum = not game.player.asymmetric_stereo_frustum
+
+	def toggle_head_frustum(self):
+		game.player.head_frustum_x = not game.player.head_frustum_x
+		game.player.head_frustum_z = not game.player.head_frustum_z
+
+	def toggle_cyclop(self):
+		if self.cyclop:
+			game.player.cyclop_transformation = Transform(self.cyclop_vector)
+		else:
+			game.player.cyclop_transformation = Transform()
+		self.cyclop = not self.cyclop
+
+print("Creating frustum toggler")
+toggler = FrustumToggler()
+trigger = game.event_manager.createKeyTrigger(KC.F5, KEY_MOD.CTRL)
+trigger.addListener(toggler.toggle_asymmetric_frustum)
+
+trigger = game.event_manager.createKeyTrigger(KC.F6, KEY_MOD.CTRL)
+trigger.addListener(toggler.toggle_head_frustum)
+
+trigger = game.event_manager.createKeyTrigger(KC.F7, KEY_MOD.CTRL)
+trigger.addListener(toggler.toggle_cyclop)
+
+trigger = game.event_manager.createKeyTrigger(KC.F5)
+trigger.addListener(toggler.toggle_all)
+

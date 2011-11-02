@@ -104,6 +104,14 @@ public :
 		_head_frustum_z = e;
 	}
 
+	void enableAsymmetricStereoFrustum(bool e)
+	{
+		setDirty(DIRTY_FRUSTUM);
+		_asymmetric_stereo_frustum = e;
+	}
+
+	bool isAsymmetricStereoFrustum(void) const
+	{ return _asymmetric_stereo_frustum; }
 
 	enum DirtyBits
 	{
@@ -137,6 +145,8 @@ private :
 	bool _head_frustum_x;
 	bool _head_frustum_y;
 	bool _head_frustum_z;
+
+	bool _asymmetric_stereo_frustum;
 
 	SceneManagerPtr _scene_manager;
 
