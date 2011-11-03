@@ -246,13 +246,13 @@ vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
 }
 
 void
-vl::EventManager::update_joystick(OIS::JoyStickEvent const &evt)
+vl::EventManager::update_joystick(vl::JoystickEvent const &evt)
 {
 	// @todo should we add it if it doesn't exist already?
 	if(_game_joystick)
 	{
 		// Copy values from OIS to our structure
-		_game_joystick->_update(convert_ois_to_hydra(evt));
+		_game_joystick->_update(evt);
 	}
 }
 

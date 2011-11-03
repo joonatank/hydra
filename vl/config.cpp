@@ -19,7 +19,8 @@
 // Necessary for the Event handling
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
-#include <OIS/OISJoyStick.h>
+
+#include "input/joystick_event.hpp"
 
 // Necessary for sending Environment and Project configs
 #include "distrib_settings.hpp"
@@ -568,7 +569,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 
 			case vl::cluster::EVT_JOYSTICK_PRESSED :
 			{
-				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				vl::JoystickEvent evt;
 				int button;
 				stream >> button >> evt;
 
@@ -578,7 +579,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 
 			case vl::cluster::EVT_JOYSTICK_RELEASED :
 			{
-				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				vl::JoystickEvent evt;
 				int button;
 				stream >> button >> evt;
 
@@ -588,7 +589,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 
 			case vl::cluster::EVT_JOYSTICK_AXIS :
 			{
-				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				vl::JoystickEvent evt;
 				int axis;
 				stream >> axis >> evt;
 
@@ -598,7 +599,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 
 			case vl::cluster::EVT_JOYSTICK_POV :
 			{
-				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				vl::JoystickEvent evt;
 				int pov;
 				stream >> pov >> evt;
 
@@ -608,7 +609,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 
 			case vl::cluster::EVT_JOYSTICK_VECTOR3 :
 			{
-				OIS::JoyStickEvent evt( 0, OIS::JoyStickState() );
+				vl::JoystickEvent evt;
 				int index;
 				stream >> index >> evt;
 

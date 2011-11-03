@@ -16,7 +16,7 @@
 
 #include "tracker.hpp"
 
-#include <OIS/OISJoyStick.h>
+#include "input/joystick_event.hpp"
 
 namespace vl
 {
@@ -92,7 +92,7 @@ public :
 	/// @return valid pointer if such joystick exists, NULL pointer if not
 	JoystickRefPtr getJoystick(std::string const &name = "default", bool fallback_to_all = true);
 
-	void update_joystick(OIS::JoyStickEvent const &evt);
+	void update_joystick(vl::JoystickEvent const &evt);
 
 	/// @brief called from GameManager to update input devices
 	void mainloop(void);

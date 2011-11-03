@@ -33,6 +33,9 @@
 
 #include <OGRE/OgreLogManager.h>
 
+#include "input/joystick_event.hpp"
+#include "input/ois_converters.hpp"
+
 /// GUI
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
@@ -366,8 +369,9 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << button << evt;
-	_sendEvent( data );
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << button << e;
+	_sendEvent(data);
 
 	return true;
 }
@@ -378,7 +382,8 @@ vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << button << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << button << e;
 	_sendEvent( data );
 
 	return true;
@@ -390,7 +395,8 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << axis << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << axis << e;
 	_sendEvent( data );
 
 	return true;
@@ -402,7 +408,8 @@ vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << pov << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << pov << e;
 	_sendEvent( data );
 
 	return true;
@@ -414,7 +421,8 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << index << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << index << e;
 	_sendEvent( data );
 
 	return true;
@@ -615,10 +623,9 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 
 void
-vl::Window::_createInputHandling( void )
+vl::Window::_createInputHandling(void)
 {
-	std::string message( "Creating OIS Input system." );
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << "Creating OIS Input system." << std::endl;
 
 	assert( _ogre_window );
 
@@ -635,8 +642,7 @@ vl::Window::_createInputHandling( void )
 	pl.insert( std::make_pair(std::string("x11_mouse_grab"), std::string("false") ) );
 
 	// Info
-	message = "Creating OIS Input Manager";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "Creating OIS Input Manager" << std::endl;
 
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 
@@ -658,7 +664,7 @@ vl::Window::_createInputHandling( void )
 		OIS::JoyStick *stick = static_cast<OIS::JoyStick *>(
 			_input_manager->createInputObject(OIS::OISJoyStick, true) );
 
-		std::cout << vl::TRACE << "Creating joystick " << i+1
+		std::cout << "Creating joystick " << i+1
 			<< "\n\t" << "Axes: " << stick->getNumberOfComponents(OIS::OIS_Axis)
 			<< "\n\t" << "Sliders: " << stick->getNumberOfComponents(OIS::OIS_Slider)
 			<< "\n\t" << "POV/HATs: " << stick->getNumberOfComponents(OIS::OIS_POV)
@@ -670,31 +676,27 @@ vl::Window::_createInputHandling( void )
 		_joysticks.push_back(stick);	
 	}
 
-	message = "Input system created.";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "Input system created." << std::endl;
 }
 
 void
-vl::Window::_printInputInformation( void )
+vl::Window::_printInputInformation(void)
 {
 	// Print debugging information
-	// TODO debug information should go to Ogre Log file
 	unsigned int v = _input_manager->getVersionNumber();
-	std::stringstream ss;
-	ss << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
+
+	std::cout << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
 		<< "\nRelease Name: " << _input_manager->getVersionName()
 		<< "\nManager: " << _input_manager->inputSystemName()
 		<< "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
-		<< '\n';
-	std::cout << ss.str() << std::endl;
+		<< std::endl;
 
-	ss.str("");
 	// List all devices
 	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
-	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
-	std::cout << ss.str() << std::endl;
+	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
+	std::cout << std::endl;
 }
