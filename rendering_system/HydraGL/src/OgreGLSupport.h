@@ -102,15 +102,6 @@ public:
     */
     bool checkMinGLVersion(const String& v) const;
 
-    /**
-    * Check if an extension is available
-    */
-    virtual bool checkExtension(const String& ext) const;
-    /**
-    * Get the address of a function
-    */
-    virtual void* getProcAddress(const String& procname) = 0;
-
 	/// @copydoc RenderSystem::getDisplayMonitorCount
 	virtual unsigned int getDisplayMonitorCount() const
 	{

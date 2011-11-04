@@ -28,31 +28,33 @@ THE SOFTWARE.
 #ifndef __OgreW32Context_H__
 #define __OgreW32Context_H__
 
-#include "OgreWin32Prerequisites.h"
+//#include "OgreWin32Prerequisites.h"
 #include "OgreGLContext.h"
 
-namespace Ogre {
+namespace Ogre
+{
 
-    class _OgreGLExport Win32Context: public GLContext
-    {
-    public:
-        Win32Context(HDC     HDC,
-                     HGLRC   Glrc);
-        virtual ~Win32Context();
+class _OgreGLExport Win32Context: public GLContext
+{
+public:
+    Win32Context(HDC hdc, HGLRC glrc);
+    virtual ~Win32Context();
 
-        /** See GLContext */
-        virtual void setCurrent();
-		/** See GLContext */
-		virtual void endCurrent();
-		/// @copydoc GLContext::clone
-		GLContext* clone() const;
+    /** See GLContext */
+    virtual void setCurrent();
+	/** See GLContext */
+	virtual void endCurrent();
+	/// @copydoc GLContext::clone
+	GLContext* clone() const;
 
-		virtual void releaseContext();
+	virtual void releaseContext();
 
-	protected:
-        HDC     mHDC;
-        HGLRC   mGlrc;
-    };
-}
+protected:
+    HDC     mHDC;
+    HGLRC   mGlrc;
 
-#endif
+};	// class Win32Context
+
+}	// namespace Ogre
+
+#endif	// __OgreW32Context_H__

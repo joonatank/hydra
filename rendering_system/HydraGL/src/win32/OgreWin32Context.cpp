@@ -39,89 +39,66 @@ THE SOFTWARE.
 // Necessary for translateWGLerror
 #include "OgreWin32GLSupport.h"
 
-namespace Ogre {
-
-    Win32Context::Win32Context(HDC     HDC,
-                 HGLRC   Glrc):
-        mHDC(HDC),
-        mGlrc(Glrc)
-    {
-    }
+Ogre::Win32Context::Win32Context(HDC hdc, HGLRC glrc)
+	: mHDC(hdc)
+	, mGlrc(glrc)
+{}
     
-    Win32Context::~Win32Context()
-    {
-		// NB have to do this is subclass to ensure any methods called back
-		// are on this subclass and not half-destructed superclass
-		GLRenderSystem *rs = static_cast<GLRenderSystem*>(Root::getSingleton().getRenderSystem());
-		rs->_unregisterContext(this);
-    }
-        
-    void Win32Context::setCurrent()
-    {
-         wglMakeCurrent(mHDC, mGlrc);      
-    }
-	void Win32Context::endCurrent()
-	{
-		wglMakeCurrent(NULL, NULL);
-	}
-
-	GLContext* Win32Context::clone() const
-	{
-		// Create new context based on own HDC
-		HGLRC newCtx = wglCreateContext(mHDC);
-		
-		if (!newCtx)
-		{
-			OGRE_EXCEPT(Exception::ERR_INTERNAL_ERROR, 
-				"Error calling wglCreateContext", "Win32Context::clone");
-		}
-
-		HGLRC oldrc = wglGetCurrentContext();
-		HDC oldhdc = wglGetCurrentDC();
-		wglMakeCurrent(NULL, NULL);
-		// Share lists with old context
-	    if (!wglShareLists(mGlrc, newCtx))
-		{
-			std::string errorMsg = translateWGLError();
-			wglDeleteContext(newCtx);
-			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, String("wglShareLists() failed: ") + errorMsg, "Win32Context::clone");
-		}
-		// restore old context
-		wglMakeCurrent(oldhdc, oldrc);
-		
-
-		return new Win32Context(mHDC, newCtx);
-	}
-
-	void Win32Context::releaseContext()
-	{
-		if (mGlrc != NULL)
-		{
-			wglDeleteContext(mGlrc);
-			mGlrc = NULL;
-			mHDC  = NULL;
-		}		
-	}
-}
-
-#if OGRE_THREAD_SUPPORT == 1
-
-// declared in OgreGLPrerequisites.h 
-WGLEWContext * wglewGetContext()
+Ogre::Win32Context::~Win32Context()
 {
-	using namespace Ogre;
-	static OGRE_THREAD_POINTER_VAR(WGLEWContext, WGLEWContextsPtr);
-
-	WGLEWContext * currentWGLEWContextsPtr = OGRE_THREAD_POINTER_GET(WGLEWContextsPtr);
-	if (currentWGLEWContextsPtr == NULL)
-	{
-		currentWGLEWContextsPtr = new WGLEWContext();
-		OGRE_THREAD_POINTER_SET(WGLEWContextsPtr, currentWGLEWContextsPtr);
-		ZeroMemory(currentWGLEWContextsPtr, sizeof(WGLEWContext));
-		wglewInit();
-
-	}
-	return currentWGLEWContextsPtr;
+	// NB have to do this is subclass to ensure any methods called back
+	// are on this subclass and not half-destructed superclass
+	GLRenderSystem *rs = static_cast<GLRenderSystem*>(Root::getSingleton().getRenderSystem());
+	rs->_unregisterContext(this);
+}
+        
+void
+Ogre::Win32Context::setCurrent()
+{
+	wglMakeCurrent(mHDC, mGlrc);      
 }
 
-#endif
+void
+Ogre::Win32Context::endCurrent()
+{
+	wglMakeCurrent(NULL, NULL);
+}
+
+Ogre::GLContext *
+Ogre::Win32Context::clone() const
+{
+	// Create new context based on own HDC
+	HGLRC newCtx = wglCreateContext(mHDC);
+		
+	if (!newCtx)
+	{
+		OGRE_EXCEPT(Exception::ERR_INTERNAL_ERROR, 
+			"Error calling wglCreateContext", "Win32Context::clone");
+	}
+
+	HGLRC oldrc = wglGetCurrentContext();
+	HDC oldhdc = wglGetCurrentDC();
+	wglMakeCurrent(NULL, NULL);
+	// Share lists with old context
+	if (!wglShareLists(mGlrc, newCtx))
+	{
+		std::string errorMsg = translateWGLError();
+		wglDeleteContext(newCtx);
+		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, String("wglShareLists() failed: ") + errorMsg, "Win32Context::clone");
+	}
+	// restore old context
+	wglMakeCurrent(oldhdc, oldrc);
+
+	return new Win32Context(mHDC, newCtx);
+}
+
+void
+Ogre::Win32Context::releaseContext()
+{
+	if (mGlrc != NULL)
+	{
+		wglDeleteContext(mGlrc);
+		mGlrc = NULL;
+		mHDC  = NULL;
+	}		
+}

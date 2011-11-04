@@ -136,14 +136,6 @@ namespace Ogre {
         return false;
     }
 
-    bool GLSupport::checkExtension(const String& ext) const
-    {
-        if(extensionList.find(ext) == extensionList.end())
-            return false; 
-        
-        return true;
-    }
-
 	bool GLSupport::isValidGPU(void) const
 	{
 		// For now just check the vendor
