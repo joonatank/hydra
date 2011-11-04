@@ -48,6 +48,8 @@
 #include <unistd.h>
 #endif
 
+#include "revision_defines.hpp"
+
 // Necessary for printing Ogre exceptions
 #include <OGRE/OgreException.h>
 
@@ -227,6 +229,7 @@ vl::getSlaveSettings( vl::ProgramOptions const &options )
 vl::ExceptionMessage
 vl::Hydra_Run(const int argc, char** argv)
 {
+	std::clog << "Starting Hydra : " << HYDRA_REVISION << std::endl;
 	std::string exception_msg;
 	vl::ProgramOptions options;
 	try
