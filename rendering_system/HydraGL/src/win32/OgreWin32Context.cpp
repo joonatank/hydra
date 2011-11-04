@@ -36,6 +36,9 @@ THE SOFTWARE.
 #include <OGRE/OgreException.h>
 #include <OGRE/OgreRoot.h>
 
+// Necessary for translateWGLerror
+#include "OgreWin32GLSupport.h"
+
 namespace Ogre {
 
     Win32Context::Win32Context(HDC     HDC,
@@ -79,7 +82,7 @@ namespace Ogre {
 		// Share lists with old context
 	    if (!wglShareLists(mGlrc, newCtx))
 		{
-			String errorMsg = translateWGLError();
+			std::string errorMsg = translateWGLError();
 			wglDeleteContext(newCtx);
 			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, String("wglShareLists() failed: ") + errorMsg, "Win32Context::clone");
 		}

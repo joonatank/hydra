@@ -24,8 +24,6 @@ set(HEADER_FILES
   src/OgreGLHardwareOcclusionQuery.h
   src/OgreGLHardwarePixelBuffer.h
   src/OgreGLHardwareVertexBuffer.h
-  src/OgreGLPBRenderTexture.h
-  src/OgreGLPBuffer.h
   src/OgreGLPixelFormat.h
   src/OgreGLPlugin.h
   src/OgreGLPrerequisites.h
@@ -53,7 +51,6 @@ set(SOURCE_FILES
   src/OgreGLHardwareOcclusionQuery.cpp
   src/OgreGLHardwarePixelBuffer.cpp
   src/OgreGLHardwareVertexBuffer.cpp
-  src/OgreGLPBRenderTexture.cpp
   src/OgreGLPixelFormat.cpp
   src/OgreGLPlugin.cpp
   src/OgreGLRenderSystem.cpp
@@ -87,13 +84,10 @@ if (WIN32)
     src/win32/OgreWin32Context.h
     src/win32/OgreWin32GLSupport.h
     src/win32/OgreWin32Prerequisites.h
-    src/win32/OgreWin32RenderTexture.h
     src/win32/OgreWin32Window.h
-    src/win32/OgreGLUtil.h
   )
   set(PLATFORM_SOURCES
     src/win32/OgreWin32GLSupport.cpp
-    src/win32/OgreWin32RenderTexture.cpp
     src/win32/OgreWin32Window.cpp
     src/win32/OgreWin32Context.cpp
   )

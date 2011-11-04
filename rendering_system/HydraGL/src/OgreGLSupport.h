@@ -30,7 +30,6 @@ THE SOFTWARE.
 
 #include "OgreGLPrerequisites.h"
 #include "OgreGLRenderSystem.h"
-#include "OgreGLPBuffer.h"
 
 #include <OGRE/OgreRenderWindow.h>
 #include <OGRE/OgreConfigOptionMap.h>
@@ -45,6 +44,10 @@ class _OgreGLExport GLSupport
 public:
     GLSupport() { }
     virtual ~GLSupport() { }
+
+	/// Static create function for easier usage and choosing between
+	/// different platform versions.
+	static GLSupport *create(void);
 
     /**
     * Add any special config values to the system.
@@ -68,9 +71,6 @@ public:
 	/// @copydoc RenderSystem::_createRenderWindow
 	virtual RenderWindow* newWindow(const String &name, unsigned int width, unsigned int height, 
 		bool fullScreen, const NameValuePairList *miscParams = 0) = 0;
-
-    virtual bool supportsPBuffers();
-    virtual GLPBuffer *createPBuffer(PixelComponentType format, size_t width, size_t height);
 
     /**
     * Start anything special

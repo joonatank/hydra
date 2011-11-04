@@ -11,11 +11,34 @@
 
 #include "OgreGLTexture.h"
 #include "OgreWin32Window.h"
-#include "OgreWin32RenderTexture.h"
 
 #include <GL/wglew.h>
 
 using namespace Ogre;
+
+
+/// ----------------------------------- Global -------------------------------
+std::string Ogre::translateWGLError(void)
+{
+	int winError = GetLastError();
+	char* errDesc;
+	int i;
+
+	errDesc = new char[255];
+	// Try windows errors first
+	i = FormatMessage(
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		winError,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) errDesc,
+		255,
+		NULL
+		);
+
+	return String(errDesc);
+}
 
 namespace Ogre {
 	Win32GLSupport::Win32GLSupport()
@@ -125,8 +148,6 @@ namespace Ogre {
 
 		optRTTMode.name = "RTT Preferred Mode";
 		optRTTMode.possibleValues.push_back("FBO");
-		optRTTMode.possibleValues.push_back("PBuffer");
-		optRTTMode.possibleValues.push_back("Copy");
 		optRTTMode.currentValue = "FBO";
 		optRTTMode.immutable = false;
 
@@ -424,12 +445,9 @@ namespace Ogre {
 		// First, initialise the normal extensions
 		GLSupport::initialiseExtensions();
 		// wglew init
-/*
-#if OGRE_THREAD_SUPPORT != 1
-		wglewContextInit(this);
-#endif
-*/
+
 		// Check for W32 specific extensions probe function
+		/// @todo replace with GLEW
 		PFNWGLGETEXTENSIONSSTRINGARBPROC _wglGetExtensionsStringARB = 
 			(PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
 		if(!_wglGetExtensionsStringARB)
@@ -520,6 +538,7 @@ namespace Ogre {
 			// if wglMakeCurrent fails, wglGetProcAddress will return null
 			wglMakeCurrent(hdc, hrc);
 			
+			/// @todo replace with GLEW
 			PFNWGLGETEXTENSIONSSTRINGARBPROC _wglGetExtensionsStringARB =
 				(PFNWGLGETEXTENSIONSSTRINGARBPROC)
 				wglGetProcAddress("wglGetExtensionsStringARB");
@@ -564,7 +583,8 @@ namespace Ogre {
 				unsigned int count;
                 // cheating here.  wglChoosePixelFormatARB procc address needed later on
                 // when a valid GL context does not exist and glew is not initialized yet.
-                WGLEW_GET_FUN(__wglewChoosePixelFormatARB) =
+                /// @todo replace with GLEW
+				WGLEW_GET_FUN(__wglewChoosePixelFormatARB) =
                     (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
                 if (WGLEW_GET_FUN(__wglewChoosePixelFormatARB)(hdc, iattr, 0, 256, formats, &count))
                 {
@@ -572,6 +592,7 @@ namespace Ogre {
                     int query = WGL_SAMPLES_ARB, samples;
                     for (unsigned int i = 0; i < count; ++i)
                     {
+						/// @todo replace with GLEW
                         PFNWGLGETPIXELFORMATATTRIBIVARBPROC _wglGetPixelFormatAttribivARB =
                             (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)
                             wglGetProcAddress("wglGetPixelFormatAttribivARB");
@@ -669,43 +690,12 @@ namespace Ogre {
 		return (format && SetPixelFormat(hdc, format, &pfd));
 	}
 
-	bool Win32GLSupport::supportsPBuffers()
-	{
-		return WGLEW_GET_FUN(__WGLEW_ARB_pbuffer) != GL_FALSE;
-	}
-    GLPBuffer *Win32GLSupport::createPBuffer(PixelComponentType format, size_t width, size_t height)
-	{
-		return new Win32PBuffer(format, width, height);
-	}
-
 	unsigned int Win32GLSupport::getDisplayMonitorCount() const
 	{
 		if (mMonitorInfoList.empty())		
 			EnumDisplayMonitors(NULL, NULL, sCreateMonitorsInfoEnumProc, (LPARAM)&mMonitorInfoList);
 
 		return (unsigned int)mMonitorInfoList.size();
-	}
-
-	String translateWGLError()
-	{
-		int winError = GetLastError();
-		char* errDesc;
-		int i;
-
-		errDesc = new char[255];
-		// Try windows errors first
-		i = FormatMessage(
-			FORMAT_MESSAGE_FROM_SYSTEM |
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			winError,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-			(LPTSTR) errDesc,
-			255,
-			NULL
-			);
-
-		return String(errDesc);
 	}
 
 }

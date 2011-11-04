@@ -113,6 +113,7 @@ namespace Ogre {
     
     /** Simple, copying manager/factory for RenderTextures. This is only used as the last fallback if
         both PBuffers and FBOs aren't supported.
+		@todo remove after forcing FBO support
     */
     class _OgreGLExport GLCopyingRTTManager: public GLRTTManager
     {

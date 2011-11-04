@@ -41,9 +41,7 @@ THE SOFTWARE.s
 #include "OgreGLHardwareVertexBuffer.h"
 #include "OgreGLHardwareIndexBuffer.h"
 #include "OgreGLDefaultHardwareBufferManager.h"
-#include "OgreGLUtil.h"
 #include "OgreGLGpuProgram.h"
-//#include "ATI_FS_GLGpuProgram.h"
 #include "OgreGLGpuProgramManager.h"
 
 #include "OgreGLSLExtSupport.h"
@@ -54,11 +52,12 @@ THE SOFTWARE.s
 #include "OgreGLSLProgramFactory.h"
 
 #include "OgreGLFBORenderTexture.h"
-#include "OgreGLPBRenderTexture.h"
 
 // HydraMain
 // Seems like the exceptions are not working well
 // through couple of dlls: this (HydraGL), OgreMain and HydraMain
+// @todo remove after all exceptions have been replaced with either
+// throwing Ogre::Exceptions or assertions
 #include "base/exceptions.hpp"
 
 // Convenience macro from ARB_vertex_buffer_object spec
@@ -303,7 +302,8 @@ namespace Ogre {
         mRenderInstanceAttribsBound.reserve(100);
 
 		// Get our GLSupport
-		mGLSupport = getGLSupport();
+
+		mGLSupport = Ogre::GLSupport::create();
 
 		for( i=0; i<MAX_LIGHTS; i++ )
 			mLights[i] = NULL;
@@ -796,14 +796,6 @@ namespace Ogre {
 			rsc->setCapability(RSC_HWRENDER_TO_TEXTURE);
 		}
 
-		// Check GLSupport for PBuffer support
-		if(mGLSupport->supportsPBuffers())
-		{
-			// Use PBuffers
-			rsc->setCapability(RSC_HWRENDER_TO_TEXTURE);
-			rsc->setCapability(RSC_PBUFFER);
-		}
-
 		// Point size
 		if (GLEW_VERSION_1_4)
 		{
@@ -1028,28 +1020,9 @@ namespace Ogre {
 		}
 
 
-		/// Do this after extension function pointers are initialised as the extension
-		/// is used to probe further capabilities.
-		ConfigOptionMap::iterator cfi = getConfigOptions().find("RTT Preferred Mode");
-		// RTT Mode: 0 use whatever available, 1 use PBuffers, 2 force use copying
-		int rttMode = 0;
-		if (cfi != getConfigOptions().end())
-		{
-			if (cfi->second.currentValue == "PBuffer")
-			{
-				rttMode = 1;
-			}
-			else if (cfi->second.currentValue == "Copy")
-			{
-				rttMode = 2;
-			}
-		}
-
-
-
-
 		// Check for framebuffer object extension
-		if(caps->hasCapability(RSC_FBO) && rttMode < 1)
+		// @todo we should really require this because we don't support OpenGL < 2
+		if(caps->hasCapability(RSC_FBO))
 		{
 			// Before GL version 2.0, we need to get one of the extensions
 			if(caps->hasCapability(RSC_FBO_ARB))
@@ -1070,29 +1043,18 @@ namespace Ogre {
 		}
 		else
 		{
-			// Check GLSupport for PBuffer support
-			if(caps->hasCapability(RSC_PBUFFER) && rttMode < 2)
-			{
-				if(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE))
-				{
-					// Use PBuffers
-					mRTTManager = new GLPBRTTManager(mGLSupport, primary);
-					LogManager::getSingleton().logMessage("GL: Using PBuffers for rendering to textures");
+			// @todo This should fail
+			// as FBO support is required
 
-					//TODO: Depth buffer sharing in pbuffer is left unsupported
-				}
-			}
-			else
-			{
-				// No pbuffer support either -- fallback to simplest copying from framebuffer
-				mRTTManager = new GLCopyingRTTManager();
-				LogManager::getSingleton().logMessage("GL: Using framebuffer copy for rendering to textures (worst)");
-				LogManager::getSingleton().logMessage("GL: Warning: RenderTexture size is restricted to size of framebuffer. If you are on Linux, consider using GLX instead of SDL.");
+			// fallback to simplest copying from framebuffer
+			mRTTManager = new GLCopyingRTTManager();
+			LogManager::getSingleton().logMessage("GL: Using framebuffer copy for rendering to textures (worst)");
+			LogManager::getSingleton().logMessage("GL: Warning: RenderTexture size is restricted to size of framebuffer. If you are on Linux, consider using GLX instead of SDL.");
 
-				//Copy method uses the main depth buffer but no other depth buffer
-				caps->setCapability(RSC_RTT_MAIN_DEPTHBUFFER_ATTACHABLE);
-				caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
-			}
+			//Copy method uses the main depth buffer but no other depth buffer
+			caps->setCapability(RSC_RTT_MAIN_DEPTHBUFFER_ATTACHABLE);
+			caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
+
 
 			// Downgrade number of simultaneous targets
 			caps->setNumMultiRenderTargets(1);

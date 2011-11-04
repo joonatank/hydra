@@ -34,6 +34,16 @@ THE SOFTWARE.
 
 #include <OGRE/OgreLogManager.h>
 
+#ifdef _WIN32
+#include "OgreWin32GLSupport.h"
+Ogre::GLSupport *Ogre::GLSupport::create()
+{
+	return new Ogre::Win32GLSupport();
+}
+#else
+#error "Linux and OSX support is not implemented!"
+#endif
+
 namespace Ogre {
 
 	void GLSupport::setConfigOption(const String &name, const String &value)
@@ -133,15 +143,4 @@ namespace Ogre {
         
         return true;
     }
-    
-    bool GLSupport::supportsPBuffers()
-    {
-        return (GLEW_ARB_pixel_buffer_object || GLEW_EXT_pixel_buffer_object) != GL_FALSE;
-    }
-
-    GLPBuffer* GLSupport::createPBuffer(PixelComponentType format, size_t width, size_t height)
-    {
-        return 0;
-    }
-
 }

@@ -30,7 +30,8 @@ THE SOFTWARE.
 
 #include <OGRE/OgrePrerequisites.h>
 
-namespace Ogre {
+namespace Ogre 
+{
     // Forward declarations
     class GLSupport;
     class GLRenderSystem;
@@ -44,10 +45,6 @@ namespace Ogre {
     class GLRenderBuffer;
 	class GLDepthBuffer;
 }
-
-#if OGRE_THREAD_SUPPORT == 1
-#	define GLEW_MX
-#endif
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #if !defined( __MINGW32__ )
@@ -68,17 +65,6 @@ namespace Ogre {
 #elif OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #   include <GL/glew.h>
 #   include <OpenGL/glu.h>
-#endif
-
-#if OGRE_THREAD_SUPPORT == 1
-	// implemented in OgreGLContext.cpp
-	GLEWContext * glewGetContext();
-
-#	if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-	// implemented in OgreWin32Context.cpp
-	WGLEWContext * wglewGetContext();
-#	endif
-
 #endif
 
 /// Lots of generated code in here which triggers the new VC CRT security warnings
