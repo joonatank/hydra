@@ -44,6 +44,10 @@ namespace Ogre
 		null pointers all the time) Those dummy DepthBuffers are identified thanks to their GL context.
 		Note that FBOs don't allow sharing with the main window's depth buffer. Therefore even
 		when FBO is enabled, a dummy DepthBuffer is still used to manage the windows.
+		
+		@todo I'm having hard time understanding what this means and what is the purpose of this class
+		@todo we are forcing FBO support to be enabled for the Engine to run
+		so references to pbuffer and Copy can be removed.
 	*/
 	class GLDepthBuffer : public DepthBuffer
 	{

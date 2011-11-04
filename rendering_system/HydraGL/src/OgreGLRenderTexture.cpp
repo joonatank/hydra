@@ -36,101 +36,47 @@ THE SOFTWARE.
 #include <OGRE/OgreStringConverter.h>
 #include <OGRE/OgreRoot.h>
 
-namespace Ogre {
-
-    const String GLRenderTexture::CustomAttributeString_FBO = "FBO";
-    const String GLRenderTexture::CustomAttributeString_TARGET = "TARGET";
-    const String GLRenderTexture::CustomAttributeString_GLCONTEXT = "GLCONTEXT";
+const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_FBO = "FBO";
+const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_TARGET = "TARGET";
+const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_GLCONTEXT = "GLCONTEXT";
 
 //-----------------------------------------------------------------------------
 
-template<> GLRTTManager* Singleton<GLRTTManager>::ms_Singleton = 0;
-    GLRTTManager::~GLRTTManager()
-    {
-    }
-    MultiRenderTarget* GLRTTManager::createMultiRenderTarget(const String & name)
-    {
-    	OGRE_EXCEPT(Exception::ERR_NOT_IMPLEMENTED, "MultiRenderTarget can only be used with GL_EXT_framebuffer_object extension", "GLRTTManager::createMultiRenderTarget");
-    }
-    PixelFormat GLRTTManager::getSupportedAlternative(PixelFormat format)
-    {
-        if(checkFormat(format))
-            return format;
-        /// Find first alternative
-        PixelComponentType pct = PixelUtil::getComponentType(format);
-        switch(pct)
-        {
-        case PCT_BYTE: format = PF_A8R8G8B8; break;
-        case PCT_SHORT: format = PF_SHORT_RGBA; break;
-        case PCT_FLOAT16: format = PF_FLOAT16_RGBA; break;
-        case PCT_FLOAT32: format = PF_FLOAT32_RGBA; break;
-        case PCT_COUNT: break;
-        }
-        if(checkFormat(format))
-            return format;
-        /// If none at all, return to default
-        return PF_A8R8G8B8;
-    }
-//-----------------------------------------------------------------------------  
-    GLRenderTexture::GLRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa):
-        RenderTexture(target.buffer, target.zoffset)
-    {
-        mName = name;
-		mHwGamma = writeGamma;
-		mFSAA = fsaa;
-    }
-    GLRenderTexture::~GLRenderTexture()
-    {
-    }
-//-----------------------------------------------------------------------------  
-    GLCopyingRenderTexture::GLCopyingRenderTexture(GLCopyingRTTManager *manager, 
-		const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa):
-        GLRenderTexture(name, target, writeGamma, fsaa)
-    {
-    }
-    void GLCopyingRenderTexture::getCustomAttribute(const String& name, void* pData)
-    {
-        if( name == GLRenderTexture::CustomAttributeString_TARGET )
-        {
-			GLSurfaceDesc &target = *static_cast<GLSurfaceDesc*>(pData);
-			target.buffer = static_cast<GLHardwarePixelBuffer*>(mBuffer);
-			target.zoffset = mZOffset;
-        }
-    }
-//-----------------------------------------------------------------------------  
-    GLCopyingRTTManager::GLCopyingRTTManager()
-    {
-    }  
-    GLCopyingRTTManager::~GLCopyingRTTManager()
-    {
-    }
-
-    RenderTexture *GLCopyingRTTManager::createRenderTexture(const String &name, const GLSurfaceDesc &target, 
-		bool writeGamma, uint fsaa)
-    {
-        return new GLCopyingRenderTexture(this, name, target, writeGamma, fsaa);
-    }
+template<> Ogre::GLRTTManager* Ogre::Singleton<Ogre::GLRTTManager>::ms_Singleton = 0;
     
-    bool GLCopyingRTTManager::checkFormat(PixelFormat format) 
-    { 
-        return true; 
-    }
-
-    void GLCopyingRTTManager::bind(RenderTarget *target)
-    {
-        // Nothing to do here
-    }
-
-    void GLCopyingRTTManager::unbind(RenderTarget *target)
-    {
-        // Copy on unbind
-        GLSurfaceDesc surface;
-		surface.buffer = 0;
-        target->getCustomAttribute(GLRenderTexture::CustomAttributeString_TARGET, &surface);
-        if(surface.buffer)
-            static_cast<GLTextureBuffer*>(surface.buffer)->copyFromFramebuffer(surface.zoffset);
-    }
-	//---------------------------------------------------------------------------------------------
-
+Ogre::GLRTTManager::~GLRTTManager()
+{
 }
 
+Ogre::PixelFormat
+Ogre::GLRTTManager::getSupportedAlternative(Ogre::PixelFormat format)
+{
+    if(checkFormat(format))
+        return format;
+    /// Find first alternative
+    PixelComponentType pct = PixelUtil::getComponentType(format);
+    switch(pct)
+    {
+    case PCT_BYTE: format = PF_A8R8G8B8; break;
+    case PCT_SHORT: format = PF_SHORT_RGBA; break;
+    case PCT_FLOAT16: format = PF_FLOAT16_RGBA; break;
+    case PCT_FLOAT32: format = PF_FLOAT32_RGBA; break;
+    case PCT_COUNT: break;
+    }
+    if(checkFormat(format))
+        return format;
+    /// If none at all, return to default
+    return PF_A8R8G8B8;
+}
+
+//-----------------------------------------------------------------------------  
+Ogre::GLRenderTexture::GLRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa)
+	: RenderTexture(target.buffer, target.zoffset)
+{
+    mName = name;
+	mHwGamma = writeGamma;
+	mFSAA = fsaa;
+}
+
+Ogre::GLRenderTexture::~GLRenderTexture()
+{}

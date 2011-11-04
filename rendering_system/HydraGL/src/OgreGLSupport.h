@@ -110,6 +110,8 @@ public:
 	/// OpenGL 2.0 might became a requirement later.
 	bool isValidGPU(void) const;
 
+	virtual bool hasFBO(void) const = 0;
+
 protected:
 	/// @brief Initialises GL extensions.
 	///	@preconditions Valid OpenGL Context is set (can be temporary)

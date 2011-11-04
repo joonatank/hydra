@@ -115,12 +115,6 @@ namespace Ogre {
 
 		// Get our GLSupport
 		mGLSupport = Ogre::GLSupport::create();
-		if(!mGLSupport->isValidGPU())
-		{
-			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
-				"Only NVidia, ATI and Intel GPUs are supported.", 
-				"GLRenderSystem::GLRenderSystem");
-		}
 
 		mDriverVersion = mGLSupport->getGLVersion();
 
@@ -203,6 +197,17 @@ namespace Ogre {
 	{
 		mGLSupport->start();
 		
+		// @todo this exception does not go through to the main application
+		// I would except it to be some unrolling issue
+		if(!mGLSupport->isValidGPU())
+		{
+			// extra printing because the exception causes the program to crash
+			std::clog << "Either invalid GPU vendor or we don't have FBO support." << std::endl;
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"Only NVidia, ATI and Intel GPUs with FBOs are supported.", 
+				"GLRenderSystem::GLRenderSystem");
+		}
+
 		RenderWindow* autoWindow = 0;
 		if(autoCreateWindow)
 		{
@@ -698,39 +703,36 @@ namespace Ogre {
 		rsc->setCapability(RSC_TEXTURE_3D);
 
 		// Check for framebuffer object extension
-		if(GLEW_EXT_framebuffer_object)
-		{
-			// Probe number of draw buffers
-			// Only makes sense with FBO support, so probe here
-			if(GLEW_VERSION_2_0 || 
-				GLEW_ARB_draw_buffers ||
-				GLEW_ATI_draw_buffers)
-			{
-				GLint buffers;
-				glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &buffers);
-				rsc->setNumMultiRenderTargets(std::min<int>(buffers, (GLint)OGRE_MAX_MULTIPLE_RENDER_TARGETS));
-				rsc->setCapability(RSC_MRT_DIFFERENT_BIT_DEPTHS);
-				if(!GLEW_VERSION_2_0)
-				{
-					// Before GL version 2.0, we need to get one of the extensions
-					if(GLEW_ARB_draw_buffers)
-						rsc->setCapability(RSC_FBO_ARB);
-					if(GLEW_ATI_draw_buffers)
-						rsc->setCapability(RSC_FBO_ATI);
-				}
-				// Set FBO flag for all 3 'subtypes'
-				rsc->setCapability(RSC_FBO);
+		assert(mGLSupport->hasFBO());
 
+		// Probe number of draw buffers
+		// Only makes sense with FBO support, so probe here
+		if(GLEW_VERSION_2_0 || GLEW_ARB_draw_buffers || GLEW_ATI_draw_buffers)
+		{
+			GLint buffers;
+			glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &buffers);
+			rsc->setNumMultiRenderTargets(std::min<int>(buffers, (GLint)OGRE_MAX_MULTIPLE_RENDER_TARGETS));
+			rsc->setCapability(RSC_MRT_DIFFERENT_BIT_DEPTHS);
+			if(!GLEW_VERSION_2_0)
+			{
+				// Before GL version 2.0, we need to get one of the extensions
+				if(GLEW_ARB_draw_buffers)
+					rsc->setCapability(RSC_FBO_ARB);
+				if(GLEW_ATI_draw_buffers)
+					rsc->setCapability(RSC_FBO_ATI);
 			}
-			rsc->setCapability(RSC_HWRENDER_TO_TEXTURE);
+			// Set FBO flag for all 3 'subtypes'
+			rsc->setCapability(RSC_FBO);
+
 		}
+		rsc->setCapability(RSC_HWRENDER_TO_TEXTURE);
 
 		// Point size
 		if (GLEW_VERSION_1_4)
 		{
-		float ps;
-		glGetFloatv(GL_POINT_SIZE_MAX, &ps);
-		rsc->setMaxPointSize(ps);
+			float ps;
+			glGetFloatv(GL_POINT_SIZE_MAX, &ps);
+			rsc->setMaxPointSize(ps);
 		}
 		else
 		{
@@ -949,47 +951,28 @@ namespace Ogre {
 			}
 		}
 
+		// Check for framebuffer which is required now.
+		assert(caps->hasCapability(RSC_FBO));
 
-		// Check for framebuffer object extension
-		// @todo we should really require this because we don't support OpenGL < 2
-		if(caps->hasCapability(RSC_FBO))
+		// Before GL version 2.0, we need to get one of the extensions
+		if(caps->hasCapability(RSC_FBO_ARB))
+			GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersARB;
+		else if(caps->hasCapability(RSC_FBO_ATI))
+			GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersATI;
+
+		if(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE))
 		{
-			// Before GL version 2.0, we need to get one of the extensions
-			if(caps->hasCapability(RSC_FBO_ARB))
-				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersARB;
-			else if(caps->hasCapability(RSC_FBO_ATI))
-				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersATI;
+			// Create FBO manager
+			LogManager::getSingleton().logMessage("GL: Using GL_EXT_framebuffer_object for rendering to textures (best)");
+			mRTTManager = new GLFBOManager(false);
+			caps->setCapability(RSC_RTT_SEPARATE_DEPTHBUFFER);
 
-			if(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE))
+			//TODO: Check if we're using OpenGL 3.0 and add RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL flag
+			if(GLEW_VERSION_3_0)
 			{
-				// Create FBO manager
-				LogManager::getSingleton().logMessage("GL: Using GL_EXT_framebuffer_object for rendering to textures (best)");
-				mRTTManager = new GLFBOManager(false);
-				caps->setCapability(RSC_RTT_SEPARATE_DEPTHBUFFER);
-
-				//TODO: Check if we're using OpenGL 3.0 and add RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL flag
+				caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
 			}
-
 		}
-		else
-		{
-			// @todo This should fail
-			// as FBO support is required
-
-			// fallback to simplest copying from framebuffer
-			mRTTManager = new GLCopyingRTTManager();
-			LogManager::getSingleton().logMessage("GL: Using framebuffer copy for rendering to textures (worst)");
-			LogManager::getSingleton().logMessage("GL: Warning: RenderTexture size is restricted to size of framebuffer. If you are on Linux, consider using GLX instead of SDL.");
-
-			//Copy method uses the main depth buffer but no other depth buffer
-			caps->setCapability(RSC_RTT_MAIN_DEPTHBUFFER_ATTACHABLE);
-			caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
-
-
-			// Downgrade number of simultaneous targets
-			caps->setNumMultiRenderTargets(1);
-		}
-
 
 		Log* defaultLog = LogManager::getSingleton().getDefaultLog();
 		if (defaultLog)
@@ -1045,7 +1028,8 @@ namespace Ogre {
 		}
 		mBackgroundContextList.clear();
 
-		mGLSupport->stop();
+		if(mGLSupport)
+		{ mGLSupport->stop(); }
 		mStopRendering = true;
 
 		delete mTextureManager;
@@ -1139,7 +1123,7 @@ namespace Ogre {
 
 		attachRenderTarget(*window);
 
-		// @todo this should never happend
+		// @todo this is quite a mess...
 		if (!mGLInitialised) 
 		{
 			// Set up main context

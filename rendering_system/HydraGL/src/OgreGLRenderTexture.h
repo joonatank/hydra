@@ -32,111 +32,77 @@ THE SOFTWARE.
 #include "OgreGLTexture.h"
 
 namespace Ogre {
-    /** GL surface descriptor. Points to a 2D surface that can be rendered to. 
-    */
-    struct _OgrePrivate GLSurfaceDesc
-    {
-    public:
-        GLHardwarePixelBuffer *buffer;
-        size_t zoffset;
-		uint numSamples;
 
-		GLSurfaceDesc() :buffer(0), zoffset(0), numSamples(0) {}
-    };
-    
-    /** Base class for GL Render Textures
-    */
-    class _OgreGLExport GLRenderTexture: public RenderTexture
-    {
-    public:
-        GLRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa);
-        virtual ~GLRenderTexture();
-        
-        bool requiresTextureFlipping() const { return true; }
+/** GL surface descriptor. Points to a 2D surface that can be rendered to. 
+*/
+struct _OgrePrivate GLSurfaceDesc
+{
+public:
+    GLHardwarePixelBuffer *buffer;
+    size_t zoffset;
+	uint numSamples;
 
-        static const String CustomAttributeString_FBO;
-        static const String CustomAttributeString_TARGET;
-        static const String CustomAttributeString_GLCONTEXT;
-    };
-    
-    /** Manager/factory for RenderTextures.
-    */
-    class _OgreGLExport GLRTTManager: public Singleton<GLRTTManager>
-    {
-    public:
-        virtual ~GLRTTManager();
-        
-        /** Create a texture rendertarget object
-        */
-        virtual RenderTexture *createRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa) = 0;
-        
-         /** Check if a certain format is usable as rendertexture format
-        */
-        virtual bool checkFormat(PixelFormat format) = 0;
-        
-        /** Bind a certain render target.
-        */
-        virtual void bind(RenderTarget *target) = 0;
-        
-        /** Unbind a certain render target. This is called before binding another RenderTarget, and
-            before the context is switched. It can be used to do a copy, or just be a noop if direct
-            binding is used.
-        */
-        virtual void unbind(RenderTarget *target) = 0;
+	GLSurfaceDesc() :buffer(0), zoffset(0), numSamples(0) {}
 
-		virtual void getBestDepthStencil(GLenum internalFormat, GLenum *depthFormat, GLenum *stencilFormat)
-		{
-			*depthFormat = GL_NONE;
-			*stencilFormat = GL_NONE;
-		}
+};	// struct GLSurfaceDesc
+    
+/** Base class for GL Render Textures
+*/
+class _OgreGLExport GLRenderTexture: public RenderTexture
+{
+public:
+    GLRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa);
+    virtual ~GLRenderTexture();
+        
+    bool requiresTextureFlipping() const { return true; }
 
-		/** Create a multi render target 
-		*/
-		virtual MultiRenderTarget* createMultiRenderTarget(const String & name);
-        
-        /** Get the closest supported alternative format. If format is supported, returns format.
-        */
-        virtual PixelFormat getSupportedAlternative(PixelFormat format);
-    };
+    static const String CustomAttributeString_FBO;
+    static const String CustomAttributeString_TARGET;
+    static const String CustomAttributeString_GLCONTEXT;
+
+};	// class GLRenderTexture
     
-    /** RenderTexture for simple copying from frame buffer
+/** Manager/factory for RenderTextures.
+*/
+class _OgreGLExport GLRTTManager: public Singleton<GLRTTManager>
+{
+public:
+    virtual ~GLRTTManager();
+        
+    /** Create a texture rendertarget object
     */
-    class GLCopyingRTTManager;
-    class _OgreGLExport GLCopyingRenderTexture: public GLRenderTexture
-    {
-    public:
-        GLCopyingRenderTexture(GLCopyingRTTManager *manager, const String &name, const GLSurfaceDesc &target, 
-			bool writeGamma, uint fsaa);
+    virtual RenderTexture *createRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa) = 0;
         
-        virtual void getCustomAttribute(const String& name, void* pData);
-    };
-    
-    /** Simple, copying manager/factory for RenderTextures. This is only used as the last fallback if
-        both PBuffers and FBOs aren't supported.
-		@todo remove after forcing FBO support
+        /** Check if a certain format is usable as rendertexture format
     */
-    class _OgreGLExport GLCopyingRTTManager: public GLRTTManager
-    {
-    public:
-        GLCopyingRTTManager();
-        virtual ~GLCopyingRTTManager();
+    virtual bool checkFormat(PixelFormat format) = 0;
         
-        /** @copydoc GLRTTManager::createRenderTexture
-        */
-        virtual RenderTexture *createRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa);
+    /** Bind a certain render target.
+    */
+    virtual void bind(RenderTarget *target) = 0;
         
-        /** @copydoc GLRTTManager::checkFormat
-        */
-        virtual bool checkFormat(PixelFormat format);
+    /** Unbind a certain render target. This is called before binding another RenderTarget, and
+        before the context is switched. It can be used to do a copy, or just be a noop if direct
+        binding is used.
+    */
+    virtual void unbind(RenderTarget *target) = 0;
+
+	virtual void getBestDepthStencil(GLenum internalFormat, GLenum *depthFormat, GLenum *stencilFormat)
+	{
+		*depthFormat = GL_NONE;
+		*stencilFormat = GL_NONE;
+	}
+
+	/** Create a multi render target 
+	*/
+	virtual MultiRenderTarget* createMultiRenderTarget(const String & name) = 0;
         
-        /** @copydoc GLRTTManager::bind
-        */
-        virtual void bind(RenderTarget *target);
-        
-        /** @copydoc GLRTTManager::unbind
-        */
-        virtual void unbind(RenderTarget *target);
-    };
-}
+    /** Get the closest supported alternative format. If format is supported, returns format.
+    */
+    virtual PixelFormat getSupportedAlternative(PixelFormat format);
+
+};	// class GLRTTManager
+
+}	// namespace Ogre
 
 #endif // __GLTEXTURE_H__

@@ -84,8 +84,11 @@ public:
 	// @todo Where is this used? or what is its primary use case?
 	virtual unsigned int getDisplayMonitorCount() const;
 
-	// Virtual override from Ogre::GLSupport
 	bool selectPixelFormat(HDC hdc, int colourDepth, int multisample, bool hwGamma, bool stereo);
+
+	// Virtual override from Ogre::GLSupport
+	bool hasFBO(void) const
+	{ return mHasFBO; }
 
 // Private Typedefs
 private:
@@ -110,6 +113,7 @@ private :
 
 	bool mHasNvSwapGroup;
 	bool mHasStereo;
+	bool mHasFBO;
 
 	// WGL extensions available, retrieved with the dummy window
 	set<String>::type _wgl_extension_list;

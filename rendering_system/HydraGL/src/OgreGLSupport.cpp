@@ -158,13 +158,16 @@ namespace Ogre {
 
 	bool GLSupport::isValidGPU(void) const
 	{
+		std::clog << "GLSupport::isValidGPU" << std::endl;
 		// For now just check the vendor
 		if(mVendor == "NVIDIA" || mVendor == "ATI" || mVendor == "Intel")
-		{ return true; }
+		{
+			// FBOs are now required as we are going to move all rendering
+			// to them
+			return hasFBO();
+		}
 
 		// @todo check OpenGL version
-
-		// @todo check FBO support
 
 		return false;
 	}

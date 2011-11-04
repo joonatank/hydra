@@ -81,6 +81,7 @@ Ogre::Win32GLSupport::Win32GLSupport(void)
 	, mHasHardwareGamma(false)
 	, mHasNvSwapGroup(false)
 	, mHasStereo(false)
+	, mHasFBO(false)
 {
 	// immediately test WGL_ARB_pixel_format and FSAA support
 	// so we can set configuration options appropriately
@@ -461,6 +462,17 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 			}
 		}
 
+		// Get OpenGL extensions we need
+		mHasFBO = (GLEW_VERSION_3_0 || GLEW_EXT_framebuffer_object || GLEW_ARB_framebuffer_object);
+		if(mHasFBO)
+		{
+			std::clog << "Has FBO support" << std::endl;
+		}
+		else
+		{
+			std::clog << "Shouldn't happen! Doesn't have FBO support" << std::endl;
+		}
+		
 		/// Retrieve WGL extensions
 		if(WGLEW_ARB_extensions_string)
 		{
