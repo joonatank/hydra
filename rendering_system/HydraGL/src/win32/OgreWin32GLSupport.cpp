@@ -13,16 +13,9 @@
 #include "OgreWin32Window.h"
 #include "OgreWin32RenderTexture.h"
 
-//#include <GL/wglext.h>
 #include <GL/wglew.h>
 
 using namespace Ogre;
-
-/*
-#if OGRE_THREAD_SUPPORT != 1
-GLenum wglewContextInit (Ogre::GLSupport *glSupport);
-#endif
-*/
 
 namespace Ogre {
 	Win32GLSupport::Win32GLSupport()
@@ -47,7 +40,7 @@ namespace Ogre {
 
 	void Win32GLSupport::addConfig()
 	{
-		//TODO: EnumDisplayDevices http://msdn.microsoft.com/library/en-us/gdi/devcons_2303.asp
+		//TODO: EnumDisplayDevices http://msdn.microsoft.com/en-us/library/dd162609
 		/*vector<string> DisplayDevices;
 		DISPLAY_DEVICE DisplayDevice;
 		DisplayDevice.cb = sizeof(DISPLAY_DEVICE);

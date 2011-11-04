@@ -37,7 +37,9 @@ THE SOFTWARE.
 
 namespace Ogre
 {
-    
+
+/// @todo what is the purpose of this class?
+/// Why is it separate from GLContext and RenderSystem?
 class _OgreGLExport GLSupport
 {
 public:

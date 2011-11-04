@@ -152,9 +152,9 @@ elseif (UNIX)
 endif ()
 
 
-#include_directories(
-#  BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include
-#)
+source_group(HydraGL FILES ${HEADER_FILES} ${SOURCE_FILES})
+source_group(HydraGL\\platform FILES ${PLATFORM_HEADERS} ${PLATFORM_SOURCES})
+source_group(HydraGL\\glsl FILES ${GLSL_FILES})
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src
