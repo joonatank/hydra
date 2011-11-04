@@ -77,15 +77,24 @@ vl::ogre::Root::createRenderSystem( void )
 
 
 	// We only support OpenGL rasterizer
-	Ogre::RenderSystem *rast
-		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
-	if( !rast )
+	
+	// Try our own rasterizer first
+	std::string rasterizer_name = "Hydra OpenGL Rasterizer";
+	Ogre::RenderSystem *rast = _ogre_root->getRenderSystemByName(rasterizer_name);
+	if(!rast)
 	{
-		std::string err_desc( "No OpenGL rendering system plugin found" );
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err_desc) );
+		// Fallback to Ogres
+		rasterizer_name = "OpenGL Rendering Subsystem";
+		rast = _ogre_root->getRenderSystemByName(rasterizer_name);
+
+		if(!rast)
+		{
+			std::string err_desc( "No OpenGL rendering system plugin found" );
+			BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err_desc) );
+		}
 	}
-	else
-	{ _ogre_root->setRenderSystem( rast ); }
+	
+	_ogre_root->setRenderSystem( rast );
 }
 
 void
@@ -138,26 +147,37 @@ vl::ogre::Root::loadResources(void)
 /// Private
 
 void
-vl::ogre::Root::_loadPlugins(void )
+vl::ogre::Root::_loadPlugins(void)
 {
-	std::string msg( "_loadPlugins" );
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	std::cout << vl::TRACE << "vl::ogre::Root::_loadPlugins" << std::endl;
 
-	// TODO add support for plugins in the EnvSettings
-
-
-// Check if this is a debug version, only Windows uses debug versions of the libraries
-// So we need to load the debug versions of the Ogre plugins only on Windows.
 #if defined(_WIN32) && defined(_DEBUG)
-	std::string gl_plugin_name( "RenderSystem_GL_d" );
+	std::string gl_plugin_name("HydraGL_d");
 #else
-	std::string gl_plugin_name( "RenderSystem_GL" );
+	std::string gl_plugin_name("HydraGL");
 #endif
 
 	std::string plugin_path = vl::findPlugin( gl_plugin_name );
+
+	/// Fallback to Ogre GL plugin
+	if(plugin_path.empty())
+	{
+// Check if this is a debug version, only Windows uses debug versions of the libraries
+// So we need to load the debug versions of the Ogre plugins only on Windows.
+#if defined(_WIN32) && defined(_DEBUG)
+	gl_plugin_name = "RenderSystem_GL_d";
+#else
+	gl_plugin_name = "RenderSystem_GL";
+#endif
+
+	std::string plugin_path = vl::findPlugin( gl_plugin_name );
+	}
+
 	/// @todo this should throw if not found, because we don't have a rendering system
-	if( !plugin_path.empty() )
-	{ _ogre_root->loadPlugin( plugin_path ); }
+	if(plugin_path.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Neither OpenGL plugins found.")); }
+
+	_ogre_root->loadPlugin( plugin_path );
 }
 
 void
