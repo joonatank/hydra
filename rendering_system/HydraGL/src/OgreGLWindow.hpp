@@ -19,6 +19,15 @@ public:
 
 	static GLWindow *createWindow(GLSupport &support);
 
+	// Override RenderTarget::update
+	// We use a FBO to render the real scene and then render that scene
+	// to the window using a quad.
+	// This will later be extended to grabbing other FBO inputs that are filled
+	// elsewhere.
+	// Also we will provide a stereo camera support, using two user set cameras
+	// that are passed as misc parameters.
+	virtual void update(bool swapBuffers = true);
+
 };	// class GLWindow
 
 }	// namespace Ogre

@@ -42,6 +42,15 @@ namespace Ogre
 class _OgreGLExport GLSupport
 {
 public:
+	/// @brief options format for what is required for the window
+	struct PixelFormatOptions
+	{
+		int colourDepth;
+		int multisample;
+		bool hwGamma;
+		bool stereo;
+	};
+
     GLSupport() { }
     virtual ~GLSupport() { }
 

@@ -504,7 +504,7 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 }
 
 bool
-Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, int colourDepth, int multisample, bool hwGamma, bool stereo)
+Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt)
 {
 	PIXELFORMATDESCRIPTOR pfd;
 	memset(&pfd, 0, sizeof(pfd));
@@ -512,27 +512,27 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, int colourDepth, int multisampl
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = (colourDepth > 16)? 24 : colourDepth;
-	pfd.cAlphaBits = (colourDepth > 16)? 8 : 0;
+	pfd.cColorBits = (opt.colourDepth > 16)? 24 : opt.colourDepth;
+	pfd.cAlphaBits = (opt.colourDepth > 16)? 8 : 0;
 	pfd.cDepthBits = 24;
 	pfd.cStencilBits = 8;
 
-	if( stereo )
+	if(opt.stereo)
 	{
 		pfd.dwFlags |= PFD_STEREO;
 	}
 
 	int format = 0;
 
-	int useHwGamma = hwGamma? GL_TRUE : GL_FALSE;
+	int useHwGamma = opt.hwGamma? GL_TRUE : GL_FALSE;
 
-	if (multisample && (!mHasMultisample || !mHasPixelFormatARB))
+	if(opt.multisample && (!mHasMultisample || !mHasPixelFormatARB))
 		return false;
 
-	if (hwGamma && !mHasHardwareGamma)
+	if(opt.hwGamma && !mHasHardwareGamma)
 		return false;
 		
-	if ((multisample || hwGamma ) && WGLEW_GET_FUN(__wglewChoosePixelFormatARB))
+	if((opt.multisample || opt.hwGamma ) && WGLEW_ARB_pixel_format)
 	{
 
 		// Use WGL to test extended caps (multisample, sRGB)
@@ -546,13 +546,13 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, int colourDepth, int multisampl
 		attribList.push_back(WGL_ALPHA_BITS_ARB); attribList.push_back(pfd.cAlphaBits);
 		attribList.push_back(WGL_DEPTH_BITS_ARB); attribList.push_back(24);
 		attribList.push_back(WGL_STENCIL_BITS_ARB); attribList.push_back(8);
-		attribList.push_back(WGL_SAMPLES_ARB); attribList.push_back(multisample);
+		attribList.push_back(WGL_SAMPLES_ARB); attribList.push_back(opt.multisample);
 		if (useHwGamma && WGLEW_EXT_framebuffer_sRGB)
 		{
 			attribList.push_back(WGL_FRAMEBUFFER_SRGB_CAPABLE_EXT); attribList.push_back(GL_TRUE);
 		}
 
-		if(stereo)
+		if(opt.stereo)
 		{
 			attribList.push_back(WGL_STEREO_ARB); attribList.push_back(GL_TRUE);
 		}
@@ -575,6 +575,50 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, int colourDepth, int multisampl
 
 
 	return (format && SetPixelFormat(hdc, format, &pfd));
+}
+
+GLSupport::PixelFormatOptions 
+Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt)
+{
+	GLSupport::PixelFormatOptions real_opts(opt);
+
+	// @todo this doesn't go through all the combinations
+	// also should be bit more general using than this
+	bool formatOk = selectPixelFormat(dc, real_opts);
+	if (!formatOk)
+	{
+		if (opt.multisample > 0)
+		{
+			// try without FSAA
+			real_opts.multisample = 0;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
+
+		if (!formatOk && opt.hwGamma)
+		{
+			// try without sRGB
+			real_opts.hwGamma = false;
+			real_opts.multisample = opt.multisample;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
+
+		if( !formatOk && opt.stereo )
+		{
+			real_opts.stereo = false;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
+
+		if (!formatOk && opt.hwGamma && (opt.multisample > 0))
+		{
+			// try without both
+			real_opts.hwGamma = false;
+			real_opts.multisample = 0;
+			real_opts.stereo = false;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
+	}
+
+	return real_opts;
 }
 
 unsigned int

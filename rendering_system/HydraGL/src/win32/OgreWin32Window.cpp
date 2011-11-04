@@ -76,6 +76,135 @@ Ogre::Win32Window::~Win32Window()
 }
 
 void
+Ogre::Win32Window::Options::parse(Ogre::NameValuePairList const &miscParams)
+{
+	// Get variable-length params
+	NameValuePairList::const_iterator opt;
+	NameValuePairList::const_iterator end = miscParams.end();
+
+	if ((opt = miscParams.find("title")) != end)
+		title = opt->second;
+
+	if ((opt = miscParams.find("left")) != end)
+		left = StringConverter::parseInt(opt->second);
+
+	if ((opt = miscParams.find("top")) != end)
+		top = StringConverter::parseInt(opt->second);
+
+	if ((opt = miscParams.find("depthBuffer")) != end)
+	{
+// Don't understand this one
+//		mDepthBufferPoolId = StringConverter::parseBool(opt->second) ?
+//										DepthBuffer::POOL_DEFAULT : DepthBuffer::POOL_NO_DEPTH;
+	}
+
+	if ((opt = miscParams.find("vsync")) != end)
+		vsync = StringConverter::parseBool(opt->second);
+
+	if ((opt = miscParams.find("hidden")) != end)
+		hidden = StringConverter::parseBool(opt->second);
+
+	if ((opt = miscParams.find("vsyncInterval")) != end)
+		vsync_interval = StringConverter::parseUnsignedInt(opt->second);
+
+	if ((opt = miscParams.find("FSAA")) != end)
+		fsaa = StringConverter::parseUnsignedInt(opt->second);
+
+	if ((opt = miscParams.find("FSAAHint")) != end)
+		fsaa_hint = opt->second;
+
+	if ((opt = miscParams.find("gamma")) != end)
+		hwGamma = StringConverter::parseBool(opt->second);
+
+	if ((opt = miscParams.find("externalWindowHandle")) != end)
+	{
+#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
+		std::istringstream ss( opt->second );
+		uint64 pointer;
+		ss >> std::hex >> pointer;
+		hwnd = (HWND)pointer;
+#else
+ 		hwnd = (HWND)StringConverter::parseUnsignedInt(opt->second);
+#endif
+		if(hwnd)
+		{
+			external_window = true;
+			fullscreen = false;
+		}
+
+		if ((opt = miscParams.find("externalGLControl")) != end)
+		{
+			externalGLControl = StringConverter::parseBool(opt->second);
+		}
+	}
+	if ((opt = miscParams.find("externalGLContext")) != end)
+	{
+#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
+		std::istringstream ss( opt->second );
+		uint64 pointer;
+		ss >> std::hex >> pointer;
+		glrc = (HGLRC)pointer;
+#else
+		glrc = (HGLRC)StringConverter::parseUnsignedInt(opt->second);
+#endif
+		if(glrc)
+			externalGLContext = true;
+	}
+
+	// window border style
+	opt = miscParams.find("border");
+	if(opt != miscParams.end())
+		border = opt->second;
+	// set outer dimensions?
+	opt = miscParams.find("outerDimensions");
+	if(opt != miscParams.end())
+		outerSize = StringConverter::parseBool(opt->second);
+
+	// only available with fullscreen
+	if ((opt = miscParams.find("displayFrequency")) != end)
+		frequency = StringConverter::parseUnsignedInt(opt->second);
+	if ((opt = miscParams.find("colourDepth")) != end)
+	{
+		colour_depth = StringConverter::parseUnsignedInt(opt->second);
+		if (!fullscreen)
+		{
+			// make sure we don't exceed desktop colour depth
+			if ((int)colour_depth > GetDeviceCaps(GetDC(0), BITSPIXEL))
+				colour_depth = GetDeviceCaps(GetDC(0), BITSPIXEL);
+		}
+	}
+
+	// incompatible with fullscreen
+	if ((opt = miscParams.find("parentWindowHandle")) != end)
+	{
+#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
+		std::istringstream ss( opt->second );
+		uint64 pointer;
+		ss >> std::hex >> pointer;
+		parent = (HWND)pointer;
+#else
+ 		parent = (HWND)StringConverter::parseUnsignedInt(opt->second);
+#endif
+	}
+
+
+	// monitor index
+	if ((opt = miscParams.find("monitorIndex")) != end)
+		monitorIndex = StringConverter::parseInt(opt->second);
+			
+	// monitor handle
+	if ((opt = miscParams.find("monitorHandle")) != end)
+		hMonitor = (HMONITOR)StringConverter::parseInt(opt->second);
+
+	// enable double click messages
+	if ((opt = miscParams.find("enableDoubleClick")) != end)
+		enableDoubleClick = StringConverter::parseBool(opt->second);
+
+	if ((opt = miscParams.find("stereo")) != end)
+		stereo = StringConverter::parseBool(opt->second);
+}
+
+void
 Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int height,
 						bool fullScreen, const Ogre::NameValuePairList *miscParams)
 {
@@ -93,176 +222,47 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 #  endif
 #endif
 
+	// Set members
 	mHWnd = 0;
 	mName = name;
-	mIsFullScreen = fullScreen;
-	mClosed = false;		
-	mDisplayFrequency = 0;
+	mClosed = false;
 	mDepthBufferPoolId = DepthBuffer::POOL_DEFAULT;
-	mColourDepth = mIsFullScreen? 32 : GetDeviceCaps(GetDC(0), BITSPIXEL);
-	int left = -1; // Defaults to screen center
-	int top = -1; // Defaults to screen center
-	HWND parent = 0;
-	String title = name;
-	bool hidden = false;
-	String border;
-	bool outerSize = false;
-	bool hwGamma = false;
-	bool enableDoubleClick = false;
-	int monitorIndex = -1;
-	HMONITOR hMonitor = NULL;
-	bool stereo = false;
-		
+	
+	// Options
+	Options options;
+	options.fullscreen = fullScreen;
+	options.title = name;
+	options.frequency = 0;
+	options.colour_depth = mIsFullScreen? 32 : GetDeviceCaps(GetDC(0), BITSPIXEL);
+
+	// Parsing misc parameters should be in separate function
 	if(miscParams)
+	{ options.parse(*miscParams); }
+
+	if(!options.external_window)
 	{
-		// Get variable-length params
-		NameValuePairList::const_iterator opt;
-		NameValuePairList::const_iterator end = miscParams->end();
-
-		if ((opt = miscParams->find("title")) != end)
-			title = opt->second;
-
-		if ((opt = miscParams->find("left")) != end)
-			left = StringConverter::parseInt(opt->second);
-
-		if ((opt = miscParams->find("top")) != end)
-			top = StringConverter::parseInt(opt->second);
-
-		if ((opt = miscParams->find("depthBuffer")) != end)
-		{
-			mDepthBufferPoolId = StringConverter::parseBool(opt->second) ?
-											DepthBuffer::POOL_DEFAULT : DepthBuffer::POOL_NO_DEPTH;
-		}
-
-		if ((opt = miscParams->find("vsync")) != end)
-			mVSync = StringConverter::parseBool(opt->second);
-
-		if ((opt = miscParams->find("hidden")) != end)
-			hidden = StringConverter::parseBool(opt->second);
-
-		if ((opt = miscParams->find("vsyncInterval")) != end)
-			mVSyncInterval = StringConverter::parseUnsignedInt(opt->second);
-
-		if ((opt = miscParams->find("FSAA")) != end)
-			mFSAA = StringConverter::parseUnsignedInt(opt->second);
-
-		if ((opt = miscParams->find("FSAAHint")) != end)
-			mFSAAHint = opt->second;
-
-		if ((opt = miscParams->find("gamma")) != end)
-			hwGamma = StringConverter::parseBool(opt->second);
-
-		if ((opt = miscParams->find("externalWindowHandle")) != end)
-		{
-#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
-			std::istringstream ss( opt->second );
-			uint64 pointer;
-			ss >> std::hex >> pointer;
-			mHWnd = (HWND)pointer;
-#else
- 			mHWnd = (HWND)StringConverter::parseUnsignedInt(opt->second);
-#endif
-			if (mHWnd)
-			{
-				mIsExternal = true;
-				mIsFullScreen = false;
-			}
-
-			if ((opt = miscParams->find("externalGLControl")) != end) {
-				mIsExternalGLControl = StringConverter::parseBool(opt->second);
-			}
-		}
-		if ((opt = miscParams->find("externalGLContext")) != end)
-		{
-#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
-			std::istringstream ss( opt->second );
-			uint64 pointer;
-			ss >> std::hex >> pointer;
-			mGlrc = (HGLRC)pointer;
-#else
-			mGlrc = (HGLRC)StringConverter::parseUnsignedInt(opt->second);
-#endif
-			if( mGlrc )
-				mIsExternalGLContext = true;
-		}
-
-		// window border style
-		opt = miscParams->find("border");
-		if(opt != miscParams->end())
-			border = opt->second;
-		// set outer dimensions?
-		opt = miscParams->find("outerDimensions");
-		if(opt != miscParams->end())
-			outerSize = StringConverter::parseBool(opt->second);
-
-		// only available with fullscreen
-		if ((opt = miscParams->find("displayFrequency")) != end)
-			mDisplayFrequency = StringConverter::parseUnsignedInt(opt->second);
-		if ((opt = miscParams->find("colourDepth")) != end)
-		{
-			mColourDepth = StringConverter::parseUnsignedInt(opt->second);
-			if (!mIsFullScreen)
-			{
-				// make sure we don't exceed desktop colour depth
-				if ((int)mColourDepth > GetDeviceCaps(GetDC(0), BITSPIXEL))
-					mColourDepth = GetDeviceCaps(GetDC(0), BITSPIXEL);
-			}
-		}
-
-		// incompatible with fullscreen
-		if ((opt = miscParams->find("parentWindowHandle")) != end)
-		{
-#if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
-			std::istringstream ss( opt->second );
-			uint64 pointer;
-			ss >> std::hex >> pointer;
-			parent = (HWND)pointer;
-#else
- 			parent = (HWND)StringConverter::parseUnsignedInt(opt->second);
-#endif
-		}
-
-
-		// monitor index
-		if ((opt = miscParams->find("monitorIndex")) != end)
-			monitorIndex = StringConverter::parseInt(opt->second);
-			
-		// monitor handle
-		if ((opt = miscParams->find("monitorHandle")) != end)
-			hMonitor = (HMONITOR)StringConverter::parseInt(opt->second);
-
-		// enable double click messages
-		if ((opt = miscParams->find("enableDoubleClick")) != end)
-			enableDoubleClick = StringConverter::parseBool(opt->second);
-
-		if ((opt = miscParams->find("stereo")) != end)
-			stereo = StringConverter::parseBool(opt->second);
-	}
-
-	if (!mIsExternal)
-	{	
 		DWORD		  dwStyleEx = 0;					
 		MONITORINFOEX monitorInfoEx;
 		RECT		  rc;
 			
 		// If we didn't specified the adapter index, or if it didn't find it
-		if (hMonitor == NULL)
+		if(options.hMonitor == NULL)
 		{
 			POINT windowAnchorPoint;
 
 			// Fill in anchor point.
-			windowAnchorPoint.x = left;
-			windowAnchorPoint.y = top;
+			windowAnchorPoint.x = options.left;
+			windowAnchorPoint.y = options.top;
 
 
 			// Get the nearest monitor to this window.
-			hMonitor = MonitorFromPoint(windowAnchorPoint, MONITOR_DEFAULTTONEAREST);
+			options.hMonitor = MonitorFromPoint(windowAnchorPoint, MONITOR_DEFAULTTONEAREST);
 		}
 
 		// Get the target monitor info		
 		memset(&monitorInfoEx, 0, sizeof(MONITORINFOEX));
 		monitorInfoEx.cbSize = sizeof(MONITORINFOEX);
-		GetMonitorInfo(hMonitor, &monitorInfoEx);
+		GetMonitorInfo(options.hMonitor, &monitorInfoEx);
 
 		size_t devNameLen = strlen(monitorInfoEx.szDevice);
 		mDeviceName = new char[devNameLen + 1];
@@ -270,28 +270,26 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 		strcpy(mDeviceName, monitorInfoEx.szDevice);
 
 		// Update window style flags.
-		mFullscreenWinStyle = (hidden ? 0 : WS_VISIBLE) | WS_CLIPCHILDREN | WS_POPUP;
-		mWindowedWinStyle   = (hidden ? 0 : WS_VISIBLE) | WS_CLIPCHILDREN;
+		mFullscreenWinStyle = (options.hidden ? 0 : WS_VISIBLE) | WS_CLIPCHILDREN | WS_POPUP;
+		mWindowedWinStyle   = (options.hidden ? 0 : WS_VISIBLE) | WS_CLIPCHILDREN;
 			
-		if (parent)
+		if(options.parent)
 		{
 			mWindowedWinStyle |= WS_CHILD;
 		}
 		else
 		{
-			if (border == "none")
-				mWindowedWinStyle |= WS_POPUP;
-			else if (border == "fixed")
-				mWindowedWinStyle |= WS_OVERLAPPED | WS_BORDER | WS_CAPTION |
-				WS_SYSMENU | WS_MINIMIZEBOX;
+			if (options.border == "none")
+			{ mWindowedWinStyle |= WS_POPUP; }
+			else if (options.border == "fixed")
+			{ mWindowedWinStyle |= WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX; }
 			else
-				mWindowedWinStyle |= WS_OVERLAPPEDWINDOW;
-
+			{ mWindowedWinStyle |= WS_OVERLAPPEDWINDOW; }
 		}
 
 
 		// No specified top left -> Center the window in the middle of the monitor
-		if (left == -1 || top == -1)
+		if (options.left == -1 || options.top == -1)
 		{				
 			int screenw = monitorInfoEx.rcWork.right  - monitorInfoEx.rcWork.left;
 			int screenh = monitorInfoEx.rcWork.bottom - monitorInfoEx.rcWork.top;
@@ -303,28 +301,28 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 			int outerw = (winWidth < screenw)? winWidth : screenw;
 			int outerh = (winHeight < screenh)? winHeight : screenh;
 
-			if (left == -1)
-				left = monitorInfoEx.rcWork.left + (screenw - outerw) / 2;
-			else if (monitorIndex != -1)
-				left += monitorInfoEx.rcWork.left;
+			if (options.left == -1)
+				options.left = monitorInfoEx.rcWork.left + (screenw - outerw) / 2;
+			else if (options.monitorIndex != -1)
+				options.left += monitorInfoEx.rcWork.left;
 
-			if (top == -1)
-				top = monitorInfoEx.rcWork.top + (screenh - outerh) / 2;
-			else if (monitorIndex != -1)
-				top += monitorInfoEx.rcWork.top;
+			if (options.top == -1)
+				options.top = monitorInfoEx.rcWork.top + (screenh - outerh) / 2;
+			else if (options.monitorIndex != -1)
+				options.top += monitorInfoEx.rcWork.top;
 		}
-		else if (monitorIndex != -1)
+		else if (options.monitorIndex != -1)
 		{
-			left += monitorInfoEx.rcWork.left;
-			top += monitorInfoEx.rcWork.top;
+			options.left += monitorInfoEx.rcWork.left;
+			options.top += monitorInfoEx.rcWork.top;
 		}
 
 		mWidth = width;
 		mHeight = height;
-		mTop = top;
-		mLeft = left;
+		mTop = options.top;
+		mLeft = options.left;
 
-		if (mIsFullScreen)
+		if(options.fullscreen)
 		{				
 			dwStyleEx |= WS_EX_TOPMOST;
 			mTop = monitorInfoEx.rcMonitor.top;
@@ -335,7 +333,7 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 			int screenw = GetSystemMetrics(SM_CXSCREEN);
 			int screenh = GetSystemMetrics(SM_CYSCREEN);
 
-			if (!outerSize)
+			if (!options.outerSize)
 			{
 				// Calculate window dimensions required
 				// to get the requested client area
@@ -360,8 +358,8 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 		}
  
 		UINT classStyle = CS_OWNDC;
-		if (enableDoubleClick)
-			classStyle |= CS_DBLCLKS;
+		if (options.enableDoubleClick)
+		{ classStyle |= CS_DBLCLKS; }
 
 		// register class and create window
 		WNDCLASS wc = { classStyle, WindowEventUtilities::_WndProc, 0, 0, hInst,
@@ -369,44 +367,23 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 			(HBRUSH)GetStockObject(BLACK_BRUSH), NULL, "OgreGLWindow" };
 		RegisterClass(&wc);
 
-		if (mIsFullScreen)
-		{
-			DEVMODE displayDeviceMode;
-
-			memset(&displayDeviceMode, 0, sizeof(displayDeviceMode));
-			displayDeviceMode.dmSize = sizeof(DEVMODE);
-			displayDeviceMode.dmBitsPerPel = mColourDepth;
-			displayDeviceMode.dmPelsWidth = mWidth;
-			displayDeviceMode.dmPelsHeight = mHeight;
-			displayDeviceMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-
-			if (mDisplayFrequency)
-			{
-				displayDeviceMode.dmDisplayFrequency = mDisplayFrequency;
-				displayDeviceMode.dmFields |= DM_DISPLAYFREQUENCY;
-				if (ChangeDisplaySettingsEx(mDeviceName, &displayDeviceMode, NULL, CDS_FULLSCREEN | CDS_TEST, NULL) != DISP_CHANGE_SUCCESSFUL)
-				{
-					LogManager::getSingleton().logMessage(LML_NORMAL, "ChangeDisplaySettings with user display frequency failed");
-					displayDeviceMode.dmFields ^= DM_DISPLAYFREQUENCY;
-				}
-			}
-			if (ChangeDisplaySettingsEx(mDeviceName, &displayDeviceMode, NULL, CDS_FULLSCREEN, NULL) != DISP_CHANGE_SUCCESSFUL)								
-				LogManager::getSingleton().logMessage(LML_CRITICAL, "ChangeDisplaySettings failed");
-		}
-
 		// Pass pointer to self as WM_CREATE parameter
-		mHWnd = CreateWindowEx(dwStyleEx, "OgreGLWindow", title.c_str(),
-			getWindowStyle(fullScreen), mLeft, mTop, mWidth, mHeight, parent, 0, hInst, this);
+		mHWnd = CreateWindowEx(dwStyleEx, "OgreGLWindow", options.title.c_str(),
+			getWindowStyle(options.fullscreen), mLeft, mTop, mWidth, mHeight, 
+			options.parent, 0, hInst, this);
 
 		WindowEventUtilities::_addRenderWindow(this);
 
-		LogManager::getSingleton().stream() << "Created Win32Window '"
-			<< mName << "' : " << mWidth << "x" << mHeight
-			<< ", " << mColourDepth << "bpp";
+		LogManager::getSingleton().stream() << "Created Win32Window '" 
+			<< mName << "' : " << mWidth << "x" << mHeight << ", " 
+			<< options.colour_depth << "bpp";
 	}
 
-	HDC old_hdc = wglGetCurrentDC();
-	HGLRC old_context = wglGetCurrentContext();
+	// @todo can't we just run setFullscreen() ?
+	// @todo No idea if this works but it's so much cleaner that
+	// if we need it we are going to use this.
+	if(options.fullscreen)
+	{ setFullscreen(options.fullscreen, mWidth, mHeight); }
 
 	RECT rc;
 	// top and left represent outer window position
@@ -420,16 +397,33 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 
 	mHDC = GetDC(mHWnd);
 
-	if (!mIsExternalGLControl)
+	GLSupport::PixelFormatOptions format_opt;
+	format_opt.stereo = options.stereo;
+	format_opt.hwGamma = options.hwGamma;
+	format_opt.colourDepth = options.colour_depth;
+	format_opt.multisample = options.fsaa;
+	
+	_initialise_gl(format_opt);
+
+	setHidden(options.hidden);
+}
+
+void
+Ogre::Win32Window::_initialise_gl(GLSupport::PixelFormatOptions const &opt)
+{
+	HDC old_hdc = wglGetCurrentDC();
+	HGLRC old_context = wglGetCurrentContext();
+
+	if(!mIsExternalGLControl)
 	{
-		if(!selectPixelFormat(mHDC, hwGamma, stereo))
+		if(!_selectPixelFormat(mHDC, opt))
 		{
 			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
 				"selectPixelFormat failed", "Win32Window::create");
 		}
 	}
 
-	if (!mIsExternalGLContext)
+	if(!mIsExternalGLContext)
 	{
 		const HDC dc = mHDC;
 		mGlrc = wglCreateContext(dc);
@@ -441,16 +435,13 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "wglMakeCurrent", "Win32Window::create");
 
 	// Do not change vsync if the external window has the OpenGL control
-	if (!mIsExternalGLControl) 
+	if(!mIsExternalGLControl) 
 	{
-		// Don't use wglew as if this is the first window, we won't have initialised yet
-		PFNWGLSWAPINTERVALEXTPROC _wglSwapIntervalEXT = 
-			(PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-		if (_wglSwapIntervalEXT)
-			_wglSwapIntervalEXT(mVSync? mVSyncInterval : 0);
+		if (wglSwapIntervalEXT)
+		{ wglSwapIntervalEXT(mVSync? mVSyncInterval : 0); }
 	}
 
-    if (old_context && old_context != mGlrc)
+    if(old_context && old_context != mGlrc)
     {
 		std::clog << "Has an old context" << std::endl;
         // Restore old context
@@ -466,7 +457,6 @@ Ogre::Win32Window::create(const String& name, unsigned int width, unsigned int h
 	mContext = new Win32Context(mHDC, mGlrc);
 
 	mActive = true;
-	setHidden(hidden);
 }
 
 void
@@ -508,8 +498,7 @@ Ogre::Win32Window::setFullscreen(bool fullScreen, unsigned int width, unsigned i
 		mIsFullScreen = fullScreen;
 			
 		if (mIsFullScreen)
-		{
-				
+		{	
 			DEVMODE displayDeviceMode;
 
 			memset(&displayDeviceMode, 0, sizeof(displayDeviceMode));
@@ -571,8 +560,6 @@ Ogre::Win32Window::setFullscreen(bool fullScreen, unsigned int width, unsigned i
 				SWP_NOACTIVATE);
 			mWidth = width;
 			mHeight = height;
-
-
 		}
 		else
 		{				
@@ -694,7 +681,10 @@ Ogre::Win32Window::setVSyncEnabled(bool vsync)
 	HDC old_hdc = wglGetCurrentDC();
 	HGLRC old_context = wglGetCurrentContext();
 	if (!wglMakeCurrent(mHDC, mGlrc))
-		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "wglMakeCurrent", "Win32Window::setVSyncEnabled");
+	{
+		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "wglMakeCurrent",
+			"Win32Window::setVSyncEnabled");
+	}
 
 	// Do not change vsync if the external window has the OpenGL control
 	if (!mIsExternalGLControl)
@@ -710,7 +700,10 @@ Ogre::Win32Window::setVSyncEnabled(bool vsync)
     {
         // Restore old context
 		if (!wglMakeCurrent(old_hdc, old_context))
-			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "wglMakeCurrent() failed", "Win32Window::setVSyncEnabled");
+		{
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"wglMakeCurrent() failed", "Win32Window::setVSyncEnabled");
+		}
 	}
 }
 
@@ -827,13 +820,15 @@ Ogre::Win32Window::swapBuffers(bool waitForVSync)
 void
 Ogre::Win32Window::copyContentsToMemory(const PixelBox &dst, FrameBuffer buffer)
 {
+	/// @todo this is slow as hell
+	/// after moving all rendering to be into FBOs we should replace this with a
+	/// copy of the FBO to a texture file
 	if ((dst.left < 0) || (dst.right > mWidth) ||
 		(dst.top < 0) || (dst.bottom > mHeight) ||
 		(dst.front != 0) || (dst.back != 1))
 	{
 		OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
-					"Invalid box.",
-					"Win32Window::copyContentsToMemory" );
+					"Invalid box.", "Win32Window::copyContentsToMemory" );
 	}
 
 	if (buffer == FB_AUTO)
@@ -847,8 +842,7 @@ Ogre::Win32Window::copyContentsToMemory(const PixelBox &dst, FrameBuffer buffer)
 	if ((format == GL_NONE) || (type == 0))
 	{
 		OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
-					"Unsupported format.",
-					"Win32Window::copyContentsToMemory" );
+					"Unsupported format.", "Win32Window::copyContentsToMemory" );
 	}
 
 
@@ -952,51 +946,17 @@ Ogre::Win32Window::setActive(bool state)
 }
 
 bool
-Ogre::Win32Window::selectPixelFormat(HDC dc, bool hwGamma, bool stereo)
+Ogre::Win32Window::_selectPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt)
 {
-	int testFsaa = mFSAA;
-	bool testHwGamma = hwGamma;
-	bool testStereo = stereo;
-
-	bool formatOk = mGLSupport.selectPixelFormat(dc, mColourDepth, testFsaa, testHwGamma, testStereo);
-	if (!formatOk)
-	{
-		// @todo this doesn't go through all the combinations
-		if (mFSAA > 0)
-		{
-			// try without FSAA
-			testFsaa = 0;
-			formatOk = mGLSupport.selectPixelFormat(dc, mColourDepth, testFsaa, testHwGamma, testStereo);
-		}
-
-		if (!formatOk && hwGamma)
-		{
-			// try without sRGB
-			testHwGamma = false;
-			testFsaa = mFSAA;
-			formatOk = mGLSupport.selectPixelFormat(dc, mColourDepth, testFsaa, testHwGamma, testStereo);
-		}
-
-		if( !formatOk && stereo )
-		{
-			testStereo = false;
-			formatOk = mGLSupport.selectPixelFormat(dc, mColourDepth, testFsaa, testHwGamma, testStereo);
-		}
-
-		if (!formatOk && hwGamma && (mFSAA > 0))
-		{
-			// try without both
-			testHwGamma = false;
-			testFsaa = 0;
-			testStereo = false;
-			formatOk = mGLSupport.selectPixelFormat(dc, mColourDepth, testFsaa, testHwGamma, testStereo );
-		}
-	}
+	GLSupport::PixelFormatOptions real_opts = mGLSupport.selectClosestPixelFormat(dc, opt);
 
 	// record what gamma option we used in the end
 	// this will control enabling of sRGB state flags when used
-	mHwGamma = testHwGamma;
-	mFSAA = testFsaa;
+	mHwGamma = real_opts.hwGamma;
+	mFSAA = real_opts.multisample;
 
-	return formatOk;
+	// @todo we assume here that the format was ok, but we have no way of
+	// beign sure of it.
+	return true;
 }
+

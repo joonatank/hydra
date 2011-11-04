@@ -84,7 +84,13 @@ public:
 	// @todo Where is this used? or what is its primary use case?
 	virtual unsigned int getDisplayMonitorCount() const;
 
-	bool selectPixelFormat(HDC hdc, int colourDepth, int multisample, bool hwGamma, bool stereo);
+	// Select exactly the defined pixel format
+	// @return true if pixel format was supported and selected
+	bool selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt);
+
+	// Select a pixel format with closest possible match
+	// @return the real options that were supported
+	GLSupport::PixelFormatOptions selectClosestPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt);
 
 	// Virtual override from Ogre::GLSupport
 	bool hasFBO(void) const

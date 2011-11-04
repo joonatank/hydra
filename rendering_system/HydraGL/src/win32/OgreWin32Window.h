@@ -41,6 +41,64 @@ namespace Ogre {
 class _OgreGLExport Win32Window : public GLWindow
 {
 public:
+
+	struct Options
+	{
+		Options(void)
+			: left(-1)	// Defaults to screen center
+			, top(-1)	// Defaults to screen center
+			, parent(0)
+			, hwnd(0)
+			, glrc(0)
+			, title()
+			, hidden(false)
+			, border()
+			, outerSize(false)
+			, hwGamma(false)
+			, enableDoubleClick(false)
+			, monitorIndex(-1)
+			, hMonitor(0)
+			, stereo(false)
+			, externalGLControl(false)
+			, externalGLContext(false)
+			, external_window(false)
+			, fullscreen(false)
+			, frequency(0)		// Zero defaults to free (or false)
+			, colour_depth(0)
+			, vsync(false)
+			, vsync_interval(0)
+			, fsaa(0)
+		{}
+
+		void parse(Ogre::NameValuePairList const &miscParams);
+
+		int left; 
+		int top;
+		HWND parent;
+		HWND hwnd;
+		HGLRC glrc;
+		String title;
+		bool hidden;
+		String border;
+		bool outerSize;
+		bool hwGamma;
+		bool enableDoubleClick;
+		int monitorIndex;
+		HMONITOR hMonitor;
+		bool stereo;
+		bool externalGLControl;
+		bool externalGLContext;
+		bool external_window;
+		bool fullscreen;
+		int frequency;
+		unsigned int colour_depth;
+		bool vsync;
+		unsigned int vsync_interval;
+		unsigned int fsaa;
+		String fsaa_hint;
+
+	};	// struct Options
+
 	Win32Window(Win32GLSupport &glsupport);
 	~Win32Window();
 
@@ -113,9 +171,14 @@ protected:
 	/** Return the target window style depending on the fullscreen parameter. */
 	DWORD getWindowStyle(bool fullScreen) const { if (fullScreen) return mFullscreenWinStyle; return mWindowedWinStyle; }
 
-	bool selectPixelFormat(HDC dc, bool hwGamma, bool stereo);
+	// Private Methods
+private :
+	void _initialise_gl(GLSupport::PixelFormatOptions const &opt);
 
-protected:
+	bool _selectPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt);
+
+	// Data
+private :
 	Win32GLSupport &mGLSupport;
 
 	// Windows handles
