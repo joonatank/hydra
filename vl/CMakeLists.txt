@@ -304,22 +304,18 @@ add_library(HydraMain SHARED
 	${MATH_SRC}
 	)
 
+# Copy the build time configuration
+# TODO not used for anything at the moment
+set(HYDRA_VERSION 0.3)
+
+# Generate Revision information from Mercurial
+# For this to work Mercurial needs to be on the windows Path
+add_custom_command(TARGET  HydraMain PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/revision.cmake)
+
+include_directories(${HydraMain_BINARY_DIR})
+
 target_link_libraries(HydraMain ${HYDRA_DEP_LIBS})
 
 set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
 
-set(HYDRA_LIB_NAME "HydraMain")
-# TODO this could be handleded in the MACRO
-# but we need two different macros one with extensions and other without
-# because of the .pyd ext for python modules.
-if(WIN32)
-	set(EXTE "dll")
-else()
-	set(EXTE "so")
-endif()
-
-copy_binaries(${HYDRA_LIB_NAME} ${HydraMain_BINARY_DIR} ${demos_BINARY_DIR} ${EXTE} "_d")
-
-#install
-# TODO this is here for test only the filestructure is not preserved by this
-#install( FILES ${HEADERS} DESTINATION include )

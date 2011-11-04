@@ -26,6 +26,9 @@
 // Necessary for checking 32 and 64-bit
 #include "defines.hpp"
 
+// Auto generated file that has information about the build environment
+#include "build_defines.hpp"
+
 bool add_paths(std::vector<std::string> paths)
 {
 	std::string path("PATH=");
@@ -54,42 +57,29 @@ int main( const int argc, char** argv )
 	// @todo these should use a separate search directory (main dir)
 	std::vector<std::string> extra_paths;
 	extra_paths.push_back("bin");
+
 #ifdef HYDRA_DEBUG
-#ifdef HYDRA_ARCHITECTURE_64
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/bin");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/OGRE/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/CEGUI/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/OIS/bin/debug");
-#else
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/bin");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/OGRE/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/CEGUI/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/expat/bin/debug");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/OIS/bin/debug");
-#endif
+	
+	extra_paths.push_back(std::string(OGRE_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(CEGUI_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(OIS_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(GENERAL_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
+	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/debug");
 
 	LPCTSTR const LIB_NAME = "HydraMain_d.dll";
 #else	// HYDRA_DEBUG
-#ifdef HYDRA_ARCHITECTURE_64
-	std::clog << "Adding 64 bit paths." << std::endl;
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/bin");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/OGRE/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/CEGUI/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs/OIS/bin/release");
-#else	// HYDRA_ARCHITECTURE_64
-	std::clog << "Adding 32 bit paths." << std::endl;
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/bin");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/OGRE/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/CEGUI/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/expat/bin/release");
-	extra_paths.push_back("C:/jotu/software_development/hydra_dependencies_libraries/libs32/OIS/bin/release");
-#endif	// HYDRA_ARCHITECTURE_64
+	
+	extra_paths.push_back(std::string(OGRE_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(CEGUI_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(OIS_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(GENERAL_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
+	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/release");
 
 	LPCTSTR const LIB_NAME = "HydraMain.dll";
 #endif	// HYDRA_DEBUG
