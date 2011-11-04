@@ -84,9 +84,10 @@ namespace Ogre {
  
         GLint getBlendMode(SceneBlendFactor ogreBlend) const;
 		GLint getTextureAddressingMode(TextureUnitState::TextureAddressingMode tam) const;
-		
-		void initialiseGLEW(void);
 
+		/// @brief Create a real OpenGL context
+		/// At this point now OpenGL initialisation should be necessary as
+		/// all that should have been done with a dummy context.
 		void initialiseContext(RenderWindow* primary);
 
         void setLights();

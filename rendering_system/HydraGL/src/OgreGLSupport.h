@@ -111,16 +111,24 @@ public:
     */
     virtual void* getProcAddress(const String& procname) = 0;
 
-    /** Initialises GL extensions, must be done AFTER the GL context has been
-        established.
-    */
-    virtual void initialiseExtensions();
-
 	/// @copydoc RenderSystem::getDisplayMonitorCount
 	virtual unsigned int getDisplayMonitorCount() const
 	{
 		return 1;
 	}
+
+	/// @brief check for attributes we need the GPU to have
+	/// for example only NVidia, ATI and Intel are supported
+	/// FBOs are required 
+	/// OpenGL 2.0 might became a requirement later.
+	bool isValidGPU(void) const;
+
+protected:
+	/// @brief Initialises GL extensions.
+	///	@preconditions Valid OpenGL Context is set (can be temporary)
+	/// @todo replace with Template Method Pattern
+	///  and call _initialiseExtensions from this Classes init method
+	virtual void _initialiseExtensions(void);
 
 protected:
 	// Stored options
@@ -128,6 +136,7 @@ protected:
 
 	// This contains the complete list of supported extensions
     set<String>::type extensionList;
+
 private:
     String mVersion;
     String mVendor;

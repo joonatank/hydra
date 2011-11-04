@@ -16,7 +16,12 @@ String translateWGLError();
 	class _OgreGLExport Win32GLSupport : public GLSupport
 	{
 	public:
-        Win32GLSupport();
+		/** @brief Constructor initialises WGL
+		 *	Creates a valid dummy context and initialises GLEW so we can query
+		 *	the available functions.
+		 */
+		Win32GLSupport();
+
 		/**
 		* Add any special config values to the system.
 		* Must have a "Full Screen" value that is a bool and a "Video Mode" value
@@ -59,12 +64,6 @@ String translateWGLError();
 		* Virtual override from Ogre::GLSupport
 		*/
 		void* getProcAddress(const String& procname);
-
-		/**
-		 * Initialise extensions
-		 * Virtual override from Ogre::GLSupport
-		 */
-		virtual void initialiseExtensions();
 		
 		// Virtual override from Ogre::GLSupport
 		virtual unsigned int getDisplayMonitorCount() const;
@@ -72,7 +71,20 @@ String translateWGLError();
 		// Virtual override from Ogre::GLSupport
 		bool selectPixelFormat(HDC hdc, int colourDepth, int multisample, bool hwGamma, bool stereo);
 
+	// Private Typedefs
 	private:
+
+		struct DisplayMonitorInfo
+		{
+			HMONITOR		hMonitor;
+			MONITORINFOEX	monitorInfoEx;
+		};
+
+		typedef vector<DisplayMonitorInfo>::type DisplayMonitorInfoList;
+		typedef DisplayMonitorInfoList::iterator DisplayMonitorInfoIterator;
+
+	/// Private data
+	private :
 		// Allowed video modes
 		vector<DEVMODE>::type mDevModes;
 		Win32Window *mInitialWindow;
@@ -84,19 +96,28 @@ String translateWGLError();
 		bool mHasNvSwapGroup;
 		bool mHasStereo;
 
-		struct DisplayMonitorInfo
-		{
-			HMONITOR		hMonitor;
-			MONITORINFOEX	monitorInfoEx;
-		};
-
-		typedef vector<DisplayMonitorInfo>::type DisplayMonitorInfoList;
-		typedef DisplayMonitorInfoList::iterator DisplayMonitorInfoIterator;
+		// WGL extensions available, retrieved with the dummy window
+		set<String>::type _wgl_extension_list;
 
 		DisplayMonitorInfoList mMonitorInfoList;
 
-		void refreshConfig();
-		void initialiseWGL();
+	/// Private methods
+	private :
+		void _refreshConfig(void);
+		
+		// Create a dummy window and destroy it for providing a valid
+		// GLContext for GLEW
+		// Using native window creation because the Ogre's Window system is so screwed up
+		// you can never be sure which functions call back to the RenderSystem and
+		// set up some global state variables...
+		void _initialiseWGL(void);
+
+		/**
+		 * Initialise extensions
+		 * Virtual override from Ogre::GLSupport
+		 */
+		void _initialiseExtensions(void);
+
 		static LRESULT CALLBACK dummyWndProc(HWND hwnd, UINT umsg, WPARAM wp, LPARAM lp);
 		static BOOL CALLBACK sCreateMonitorsInfoEnumProc(HMONITOR hMonitor, HDC hdcMonitor, 
 			LPRECT lprcMonitor, LPARAM dwData);

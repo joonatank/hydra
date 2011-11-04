@@ -51,8 +51,8 @@ namespace Ogre {
     {
 		// immediately test WGL_ARB_pixel_format and FSAA support
 		// so we can set configuration options appropriately
-		initialiseWGL();
-    } 
+		_initialiseWGL();
+    }
 
 	template<class C> void remove_duplicates(C& c)
 	{
@@ -180,10 +180,10 @@ namespace Ogre {
 		mOptions[optEnableFixedPipeline.name] = optEnableFixedPipeline;
 #endif
 
-		refreshConfig();
+		_refreshConfig();
 	}
 
-	void Win32GLSupport::refreshConfig()
+	void Win32GLSupport::_refreshConfig()
 	{
 		ConfigOptionMap::iterator optVideoMode = mOptions.find("Video Mode");
 		ConfigOptionMap::iterator moptColourDepth = mOptions.find("Colour Depth");
@@ -233,7 +233,7 @@ namespace Ogre {
 		}
 
 		if( name == "Video Mode" )
-			refreshConfig();
+			_refreshConfig();
 
 		if( name == "Full Screen" )
 		{
@@ -439,30 +439,17 @@ namespace Ogre {
 		mInitialWindow = 0; // Since there is no removeWindow, although there should be...
 	}
 
-	void Win32GLSupport::initialiseExtensions()
+	void Win32GLSupport::_initialiseExtensions(void)
 	{
-		assert(mInitialWindow);
 		// First, initialise the normal extensions
-		GLSupport::initialiseExtensions();
-		// wglew init
+		GLSupport::_initialiseExtensions();
 
-		// Check for W32 specific extensions probe function
-		/// @todo replace with GLEW
-		PFNWGLGETEXTENSIONSSTRINGARBPROC _wglGetExtensionsStringARB = 
-			(PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
-		if(!_wglGetExtensionsStringARB)
-			return;
-		const char *wgl_extensions = _wglGetExtensionsStringARB(mInitialWindow->getHDC());
-        LogManager::getSingleton().stream()
-			<< "Supported WGL extensions: " << wgl_extensions;
-		// Parse them, and add them to the main list
-		StringStream ext;
-        String instr;
-		ext << wgl_extensions;
-        while(ext >> instr)
-        {
-            extensionList.insert(instr);
-        }
+		// Just copy the extension list from the one we saved from dummy window
+		for(set<String>::type::iterator iter = _wgl_extension_list.begin(); 
+			iter != _wgl_extension_list.end(); ++iter)
+		{
+			extensionList.insert(*iter);
+		}
 	}
 
 
@@ -470,8 +457,10 @@ namespace Ogre {
 	{
         	return (void*)wglGetProcAddress( procname.c_str() );
 	}
-	void Win32GLSupport::initialiseWGL()
+
+	void Win32GLSupport::_initialiseWGL(void)
 	{
+		std::clog << "Win32GLSupport::initialiseWGL" << std::endl;
 		// wglGetProcAddress does not work without an active OpenGL context,
 		// but we need wglChoosePixelFormatARB's address before we can
 		// create our main window.  Thank you very much, Microsoft!
@@ -485,13 +474,15 @@ namespace Ogre {
 		// take this opportunity to enumerate the valid FSAA modes.
 		
 		LPCSTR dummyText = "OgreWglDummy";
+		// @todo this is idotic I have replaced the modelu name from at least
+		// four files already. Can't we make it a const.
 #ifdef OGRE_STATIC_LIB
 		HINSTANCE hinst = GetModuleHandle( NULL );
 #else
 #  if OGRE_DEBUG_MODE == 1
-		HINSTANCE hinst = GetModuleHandle("RenderSystem_GL_d.dll");
+		HINSTANCE hinst = GetModuleHandle("HydraGL_d.dll");
 #  else
-		HINSTANCE hinst = GetModuleHandle("RenderSystem_GL.dll");
+		HINSTANCE hinst = GetModuleHandle("HydraGL.dll");
 #  endif
 #endif
 		
@@ -535,18 +526,29 @@ namespace Ogre {
 		{
 			HGLRC oldrc = wglGetCurrentContext();
 			HDC oldhdc = wglGetCurrentDC();
-			// if wglMakeCurrent fails, wglGetProcAddress will return null
-			wglMakeCurrent(hdc, hrc);
-			
-			/// @todo replace with GLEW
-			PFNWGLGETEXTENSIONSSTRINGARBPROC _wglGetExtensionsStringARB =
-				(PFNWGLGETEXTENSIONSSTRINGARBPROC)
-				wglGetProcAddress("wglGetExtensionsStringARB");
-			
-			// check for pixel format and multisampling support
-			if (_wglGetExtensionsStringARB)
+
+			if(!wglMakeCurrent(hdc, hrc))
 			{
-				std::istringstream wglexts(_wglGetExtensionsStringARB(hdc));
+				OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+					"Failed to make the Dummy window OpenGL context current.", 
+					"Win32GLSupport::_initialiseWGL");
+			}
+
+			GLenum err = glewInit();
+			if(GLEW_OK != err)
+			{
+				OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+					"Failed to Initialise GLEW.", 
+					"Win32GLSupport::_initialiseWGL");
+			}
+
+			// check for pixel format and multisampling support
+			// @todo we should use GLEW to check the extensions
+			// @todo add all used extensions here (from Win32Window)
+			// then we can query the support if they are available.
+			if(WGLEW_ARB_extensions_string)
+			{
+				std::istringstream wglexts(wglGetExtensionsStringARB(hdc));
 				std::string ext;
 				while (wglexts >> ext)
 				{
@@ -581,32 +583,48 @@ namespace Ogre {
 				};
 				int formats[256];
 				unsigned int count;
-                // cheating here.  wglChoosePixelFormatARB procc address needed later on
-                // when a valid GL context does not exist and glew is not initialized yet.
-                /// @todo replace with GLEW
-				WGLEW_GET_FUN(__wglewChoosePixelFormatARB) =
-                    (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
-                if (WGLEW_GET_FUN(__wglewChoosePixelFormatARB)(hdc, iattr, 0, 256, formats, &count))
-                {
-                    // determine what multisampling levels are offered
-                    int query = WGL_SAMPLES_ARB, samples;
-                    for (unsigned int i = 0; i < count; ++i)
-                    {
-						/// @todo replace with GLEW
-                        PFNWGLGETPIXELFORMATATTRIBIVARBPROC _wglGetPixelFormatAttribivARB =
-                            (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)
-                            wglGetProcAddress("wglGetPixelFormatAttribivARB");
-                        if (_wglGetPixelFormatAttribivARB(hdc, formats[i], 0, 1, &query, &samples))
-                        {
-                            mFSAALevels.push_back(samples);
-                        }
-                    }
-                    remove_duplicates(mFSAALevels);
-                }
+
+                if(WGLEW_ARB_pixel_format)
+				{
+					if(wglChoosePixelFormatARB(hdc, iattr, 0, 256, formats, &count))
+					{
+						// determine what multisampling levels are offered
+						int query = WGL_SAMPLES_ARB, samples;
+						for (unsigned int i = 0; i < count; ++i)
+						{
+							if(wglGetPixelFormatAttribivARB(hdc, formats[i], 0, 1, &query, &samples))
+							{
+								mFSAALevels.push_back(samples);
+							}
+						}
+						remove_duplicates(mFSAALevels);
+					}
+				}
 			}
-			
-			wglMakeCurrent(oldhdc, oldrc);
-			wglDeleteContext(hrc);
+
+			/// Retrieve WGL extensions
+			if(WGLEW_ARB_extensions_string)
+			{
+				const char *wgl_extensions = wglGetExtensionsStringARB(hdc);
+				// Parse them, and add them to the wgl extension list
+				StringStream ext;
+				String instr;
+				ext << wgl_extensions;
+				while(ext >> instr)
+				{
+					_wgl_extension_list.insert(instr);
+				}
+			}
+
+			// Setup GLSupport this needs a valid OpenGL context but it doesn't
+			// care if the context is the one we are going to use as
+			// extensions can only change if the system changes.
+			// @todo this needs to be here because we need valid OpenGL context for
+			// this.
+			_initialiseExtensions();
+
+			::wglMakeCurrent(oldhdc, oldrc);
+			::wglDeleteContext(hrc);
 		}
 
 		// clean up our dummy window and class
@@ -662,11 +680,12 @@ namespace Ogre {
 			attribList.push_back(WGL_DEPTH_BITS_ARB); attribList.push_back(24);
 			attribList.push_back(WGL_STENCIL_BITS_ARB); attribList.push_back(8);
 			attribList.push_back(WGL_SAMPLES_ARB); attribList.push_back(multisample);
-			if (useHwGamma && checkExtension("WGL_EXT_framebuffer_sRGB"))
+			if (useHwGamma && WGLEW_EXT_framebuffer_sRGB)
 			{
 				attribList.push_back(WGL_FRAMEBUFFER_SRGB_CAPABLE_EXT); attribList.push_back(GL_TRUE);
 			}
-			if( stereo )
+
+			if(stereo)
 			{
 				attribList.push_back(WGL_STEREO_ARB); attribList.push_back(GL_TRUE);
 			}
@@ -676,9 +695,10 @@ namespace Ogre {
 
 
 			UINT nformats;
+
 			// ChoosePixelFormatARB proc address was obtained when setting up a dummy GL context in initialiseWGL()
 			// since glew hasn't been initialized yet, we have to cheat and use the previously obtained address
-			if (!WGLEW_GET_FUN(__wglewChoosePixelFormatARB)(hdc, &(attribList[0]), NULL, 1, &format, &nformats) || nformats <= 0)
+			if(wglChoosePixelFormatARB(hdc, &(attribList[0]), NULL, 1, &format, &nformats) || nformats <= 0)
 				return false;
 		}
 		else

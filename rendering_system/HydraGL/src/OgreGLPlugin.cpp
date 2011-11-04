@@ -31,44 +31,44 @@ THE SOFTWARE.
 
 #include <OGRE/OgreRoot.h>
 
-namespace Ogre 
+std::string const Ogre::GLPlugin::PLUGIN_NAME = "Hydra OpenGL Rasterizer";
+
+//---------------------------------------------------------------------
+Ogre::GLPlugin::GLPlugin()
+	: mRenderSystem(0)
 {
-	const String sPluginName = "Hydra OpenGL Rasterizer";
-	//---------------------------------------------------------------------
-	GLPlugin::GLPlugin()
-		: mRenderSystem(0)
-	{
 
-	}
-	//---------------------------------------------------------------------
-	const String& GLPlugin::getName() const
-	{
-		return sPluginName;
-	}
-	//---------------------------------------------------------------------
-	void GLPlugin::install()
-	{
-		mRenderSystem = new GLRenderSystem();
+}
+//---------------------------------------------------------------------
+std::string const & 
+Ogre::GLPlugin::getName(void) const
+{
+	return GLPlugin::PLUGIN_NAME;
+}
+//---------------------------------------------------------------------
+void
+Ogre::GLPlugin::install()
+{
+	mRenderSystem = new GLRenderSystem();
 
-		Root::getSingleton().addRenderSystem(mRenderSystem);
-	}
-	//---------------------------------------------------------------------
-	void GLPlugin::initialise()
-	{
-		// nothing to do
-	}
-	//---------------------------------------------------------------------
-	void GLPlugin::shutdown()
-	{
-		// nothing to do
-	}
-	//---------------------------------------------------------------------
-	void GLPlugin::uninstall()
-	{
-		delete mRenderSystem;
-		mRenderSystem = 0;
-
-	}
-
-
+	Root::getSingleton().addRenderSystem(mRenderSystem);
+}
+//---------------------------------------------------------------------
+void
+Ogre::GLPlugin::initialise()
+{
+	// nothing to do
+}
+//---------------------------------------------------------------------
+void
+Ogre::GLPlugin::shutdown()
+{
+	// nothing to do
+}
+//---------------------------------------------------------------------
+void
+Ogre::GLPlugin::uninstall()
+{
+	delete mRenderSystem;
+	mRenderSystem = 0;
 }

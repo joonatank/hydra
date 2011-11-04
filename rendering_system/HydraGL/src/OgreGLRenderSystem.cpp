@@ -53,197 +53,8 @@ THE SOFTWARE.s
 
 #include "OgreGLFBORenderTexture.h"
 
-// HydraMain
-// Seems like the exceptions are not working well
-// through couple of dlls: this (HydraGL), OgreMain and HydraMain
-// @todo remove after all exceptions have been replaced with either
-// throwing Ogre::Exceptions or assertions
-#include "base/exceptions.hpp"
-
 // Convenience macro from ARB_vertex_buffer_object spec
 #define VBO_BUFFER_OFFSET(i) ((char *)NULL + (i))
-
-// @todo this code should be in GLWindow class
-// but as it's bloated with OpenGL code it is completely unusable for this
-// before we clean it up and move that stuff either back here or
-// to either GLContext or GLSupport.
-#ifdef _WIN32
-
-
-#include <GL/glew.h>
-
-#ifdef _WIN32
-#include <windows.h>		// Header File For Windows
-#include <GL/wglew.h>
-#endif
-
-#include <gl\gl.h>			// Header File For The OpenGL32 Library
-#include <gl\glu.h>			// Header File For The GLu32 Library
-
-PIXELFORMATDESCRIPTOR getPixelFormat(DWORD dwFlags, int bits)
-{
-	PIXELFORMATDESCRIPTOR pfd=				// pfd Tells Windows How We Want Things To Be
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),				// Size Of This Pixel Format Descriptor
-		1,											// Version Number
-		dwFlags,
-		PFD_TYPE_RGBA,								// Request An RGBA Format
-		bits,										// Select Our Color Depth
-		0, 0, 0, 0, 0, 0,							// Color Bits Ignored
-		0,											// No Alpha Buffer
-		0,											// Shift Bit Ignored
-		0,											// No Accumulation Buffer
-		0, 0, 0, 0,									// Accumulation Bits Ignored
-		16,											// 16Bit Z-Buffer (Depth Buffer)  
-		0,											// No Stencil Buffer
-		0,											// No Auxiliary Buffer
-		PFD_MAIN_PLANE,								// Main Drawing Layer
-		0,											// Reserved
-		0, 0, 0										// Layer Masks Ignored
-	};
-
-	return pfd;
-}
-
-LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
-							UINT	uMsg,			// Message For This Window
-							WPARAM	wParam,			// Additional Message Information
-							LPARAM	lParam)	
-{ return DefWindowProc(hWnd,uMsg,wParam,lParam); }
-
-void initGLEW(void)
-{
-	char const *title = "dummy";
-	int width = 800;
-	int height = 640;
-	int bits = 16;
-
-	GLuint		PixelFormat;			// Holds The Results After Searching For A Match
-	WNDCLASS	wc;						// Windows Class Structure
-	DWORD		dwExStyle;				// Window Extended Style
-	DWORD		dwStyle;				// Window Style
-	RECT		WindowRect;				// Grabs Rectangle Upper Left / Lower Right Values
-	WindowRect.left=(long)0;			// Set Left Value To 0
-	WindowRect.right=(long)width;		// Set Right Value To Requested Width
-	WindowRect.top=(long)0;				// Set Top Value To 0
-	WindowRect.bottom=(long)height;		// Set Bottom Value To Requested Height
-
-	HINSTANCE hInstance	= GetModuleHandle(NULL);				// Grab An Instance For Our Window
-	
-	wc.style			= CS_HREDRAW | CS_VREDRAW | CS_OWNDC;	// Redraw On Size, And Own DC For Window.
-	wc.lpfnWndProc		= (WNDPROC) WndProc;
-	wc.cbClsExtra		= 0;									// No Extra Window Data
-	wc.cbWndExtra		= 0;									// No Extra Window Data
-	wc.hInstance		= hInstance;							// Set The Instance
-	wc.hIcon			= LoadIcon(NULL, IDI_WINLOGO);			// Load The Default Icon
-	wc.hCursor			= LoadCursor(NULL, IDC_ARROW);			// Load The Arrow Pointer
-	wc.hbrBackground	= NULL;									// No Background Required For GL
-	wc.lpszMenuName		= NULL;									// We Don't Want A Menu
-	wc.lpszClassName	= "dummy";								// Set The Class Name
-
-	if (!RegisterClass(&wc))									// Attempt To Register The Window Class
-	{
-		std::string msg("Failed To Register The Window Class.");
-		std::clog << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-	}
-
-	dwExStyle=WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;			// Window Extended Style
-	dwStyle=WS_OVERLAPPEDWINDOW;							// Windows Style
-
-	AdjustWindowRectEx(&WindowRect, dwStyle, FALSE, dwExStyle);		// Adjust Window To True Requested Size
-
-	// Create The Window
-	HWND hWnd = CreateWindowEx(	dwExStyle,							// Extended Style For The Window
-								"dummy",							// Class Name
-								title,								// Window Title
-								dwStyle |							// Defined Window Style
-								WS_CLIPSIBLINGS |					// Required Window Style
-								WS_CLIPCHILDREN,					// Required Window Style
-								0, 0,								// Window Position
-								WindowRect.right-WindowRect.left,	// Calculate Window Width
-								WindowRect.bottom-WindowRect.top,	// Calculate Window Height
-								NULL,								// No Parent Window
-								NULL,								// No Menu
-								hInstance,							// Instance
-								NULL);								// Dont Pass Anything To WM_CREATE
-	if(!hWnd)
-	{
-		std::stringstream msg;
-		msg << "Window Creation Error : " << ::GetLastError();
-		std::clog << msg.str() << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg.str()));
-	}
-	
-	HDC hDC = 0;
-	
-	if( !(hDC=GetDC(hWnd)) )
-	{
-		std::string msg("Can't Create A GL Device Context.");
-		std::clog << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-	}
-
-	DWORD dwFlags = PFD_DRAW_TO_WINDOW |	// Format Must Support Window
-		PFD_SUPPORT_OPENGL |				// Format Must Support OpenGL
-		PFD_DOUBLEBUFFER;					// Must Support Double Buffering
-
-	PIXELFORMATDESCRIPTOR pfd = getPixelFormat(dwFlags | PFD_STEREO, bits);
-	if( !(PixelFormat=ChoosePixelFormat(hDC, &pfd)) )
-	{
-		// Without quad-buffer stereo 
-		pfd = getPixelFormat(dwFlags, bits);
-		if( !(PixelFormat=ChoosePixelFormat(hDC,&pfd)) )
-		{
-			std::string msg("Can't Find A Suitable PixelFormat.");
-			std::clog << msg << std::endl;
-			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-		}
-	}
-
-	if(!SetPixelFormat(hDC, PixelFormat, &pfd))		// Are We Able To Set The Pixel Format?
-	{
-		std::string msg("Can't Set The PixelFormat.");
-		std::clog << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-	}
-
-	// Init WGL
-	HGLRC ctx = wglCreateContext(hDC);
-	if(!ctx)
-	{
-		std::string msg("wglCreateContext failed.");
-		std::clog << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-	}
-
-	if(!wglMakeCurrent(hDC, ctx))
-	{
-		std::string msg("wglMakeCurrent failed.");
-		std::clog << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-
-	}
-
-	GLenum err = glewInit();
-	if(GLEW_OK != err)
-	{
-		std::stringstream msg;
-		msg << "GLEW init failed : error code = " << err;
-		std::clog << msg.str() << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg.str()));
-	}
-
-	// Clean up destroying all objects
-	bool retval = ::wglMakeCurrent(NULL, NULL);
-	assert(retval);
-	retval = ::wglDeleteContext(ctx);
-	assert(retval);
-	
-	retval = ::DestroyWindow(hWnd);
-	assert(retval);
-}
-#endif	// _WIN32
 
 namespace Ogre {
 
@@ -302,8 +113,13 @@ namespace Ogre {
         mRenderInstanceAttribsBound.reserve(100);
 
 		// Get our GLSupport
-
 		mGLSupport = Ogre::GLSupport::create();
+		if(!mGLSupport->isValidGPU())
+		{
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"Only NVidia, ATI and Intel GPUs are supported.", 
+				"GLRenderSystem::createRenderSystemCapabilities");
+		}
 
 		for( i=0; i<MAX_LIGHTS; i++ )
 			mLights[i] = NULL;
@@ -334,11 +150,6 @@ namespace Ogre {
 		mCurrentVertexProgram = 0;
 		mCurrentGeometryProgram = 0;
 		mCurrentFragmentProgram = 0;
-
-		// Initialise GLEW with a dummy window
-		// Needs to be here because before Ogre::Root calls _initialise
-		// it retrieves the rendering capabilities of the system, argh.
-		initialiseGLEW();
 	}
 
 	GLRenderSystem::~GLRenderSystem()
@@ -672,7 +483,7 @@ namespace Ogre {
 			rsc->setGeometryProgramNumOutputVertices(maxOutputVertices);
 		}
 		
-		if (mGLSupport->checkExtension("GL_ARB_get_program_binary"))
+		if(GLEW_ARB_get_program_binary)
 		{
 			// states 3.0 here: http://developer.download.nvidia.com/opengl/specs/GL_ARB_get_program_binary.txt
 			// but not here: http://www.opengl.org/sdk/docs/man4/xhtml/glGetProgramBinary.xml
@@ -811,17 +622,18 @@ namespace Ogre {
 		}
 
 		// Vertex texture fetching
-		if (mGLSupport->checkExtension("GL_ARB_vertex_shader"))
+		if(GLEW_ARB_vertex_shader)
 		{
-		GLint vUnits;
-		glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB, &vUnits);
-		rsc->setNumVertexTextureUnits(static_cast<ushort>(vUnits));
-		if (vUnits > 0)
-		{
-			rsc->setCapability(RSC_VERTEX_TEXTURE_FETCH);
-		}
-		// GL always shares vertex and fragment texture units (for now?)
-		rsc->setVertexTextureUnitsShared(true);
+			GLint vUnits;
+			glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB, &vUnits);
+			rsc->setNumVertexTextureUnits(static_cast<ushort>(vUnits));
+			if (vUnits > 0)
+			{
+				rsc->setCapability(RSC_VERTEX_TEXTURE_FETCH);
+			}
+
+			// GL always shares vertex and fragment texture units (for now?)
+			rsc->setVertexTextureUnitsShared(true);
 		}
 
 		// Mipmap LOD biasing?
@@ -831,7 +643,7 @@ namespace Ogre {
 		}
 
 		// Alpha to coverage?
-		if (mGLSupport->checkExtension("GL_ARB_multisample"))
+		if(GLEW_ARB_multisample)
 		{
 			// Alpha to coverage always 'supported' when MSAA is available
 			// although card may ignore it if it doesn't specifically support A2C
@@ -1267,9 +1079,7 @@ namespace Ogre {
 	{
 		GLDepthBuffer *retVal = 0;
 
-		//Only FBO & pbuffer support different depth buffers, so everything
-		//else creates dummy (empty) containers
-		//retVal = mRTTManager->_createDepthBufferFor( renderTarget );
+		//Only FBO & pbuffer support different depth buffers, so everything returns NULL
 		GLFrameBufferObject *fbo = 0;
         renderTarget->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbo);
 
@@ -1305,24 +1115,6 @@ namespace Ogre {
 		mRTTManager->getBestDepthStencil( internalColourFormat, depthFormat, stencilFormat );
 	}
 
-	void GLRenderSystem::initialiseGLEW(void)
-	{
-		// Create a dummy window and destroy it for providing a valid
-		// GLContext for GLEW
-		// Using native window creation because the Ogre's Window system is so screwed up
-		// you can never be sure which functions call back to the RenderSystem and
-		// set up some global state variables...
-
-#ifndef _WIN32
-#error "Linux And Mac is not yet supported."
-#else
-		std::clog << "Initialising GLEW" << std::endl;
-		initGLEW();
-#endif
-
-		// Get extension function pointers
-	}
-
 	void GLRenderSystem::initialiseContext(RenderWindow* primary)
 	{
 		// Set main and current context
@@ -1333,9 +1125,6 @@ namespace Ogre {
 		// Set primary context as active
 		if(mCurrentContext)
 			mCurrentContext->setCurrent();
-
-		// Setup GLSupport
-		mGLSupport->initialiseExtensions();
 
 		LogManager::getSingleton().logMessage("***************************");
 		LogManager::getSingleton().logMessage("*** GL Renderer Started ***");
@@ -3622,21 +3411,21 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
 	//---------------------------------------------------------------------
 	void GLRenderSystem::_oneTimeContextInitialization()
 	{
-		if (GLEW_VERSION_1_2)
+		if(GLEW_VERSION_1_2)
 		{
-		// Set nicer lighting model -- d3d9 has this by default
-		glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);        
+			// Set nicer lighting model -- d3d9 has this by default
+			glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+			glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);        
 		}
-		if (GLEW_VERSION_1_4)
+		if(GLEW_VERSION_1_4)
 		{
-		glEnable(GL_COLOR_SUM);
-		glDisable(GL_DITHER);
+			glEnable(GL_COLOR_SUM);
+			glDisable(GL_DITHER);
 		}
 
 		// Check for FSAA
 		// Enable the extension if it was enabled by the GLSupport
-		if (mGLSupport->checkExtension("GL_ARB_multisample"))
+		if(GLEW_ARB_multisample)
 		{
 			int fsaa_active = false;
 			glGetIntegerv(GL_SAMPLE_BUFFERS_ARB,(GLint*)&fsaa_active);

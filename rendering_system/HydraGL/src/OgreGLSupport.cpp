@@ -59,7 +59,7 @@ namespace Ogre {
 		return mOptions;
 	}
 
-    void GLSupport::initialiseExtensions(void)
+    void GLSupport::_initialiseExtensions(void)
     {
         // Set version string
         const GLubyte* pcVer = glGetString(GL_VERSION);
@@ -143,4 +143,17 @@ namespace Ogre {
         
         return true;
     }
+
+	bool GLSupport::isValidGPU(void) const
+	{
+		// For now just check the vendor
+		if(mVendor == "NVIDIA" || mVendor == "ATI" || mVendor == "Intel")
+		{ return true; }
+
+		// @todo check OpenGL version
+
+		// @todo check FBO support
+
+		return false;
+	}
 }
