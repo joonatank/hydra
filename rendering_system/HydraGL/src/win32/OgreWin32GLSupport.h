@@ -68,19 +68,6 @@ public:
 	* Virtual override from Ogre::GLSupport
 	*/
 	String validateConfig();
-
-	// Virtual override from Ogre::GLSupport
-	// @todo these should be removed
-	// we should directly use Win32Window class to create any windows we need
-	// passing a pointer to this there so we can check the features
-	// supported.
-	virtual RenderWindow* createWindow(bool autoCreateWindow, GLRenderSystem* renderSystem, const String& windowTitle = "OGRE Render Window");
-		
-	/// @copydoc RenderSystem::_createRenderWindow
-	// Virtual override from Ogre::GLSupport
-	virtual RenderWindow* newWindow(const String &name, unsigned int width, unsigned int height, 
-		bool fullScreen, const NameValuePairList *miscParams = 0);
-
 		
 	/**
 	* Start anything special
@@ -94,6 +81,7 @@ public:
 	void stop();
 
 	// Virtual override from Ogre::GLSupport
+	// @todo Where is this used? or what is its primary use case?
 	virtual unsigned int getDisplayMonitorCount() const;
 
 	// Virtual override from Ogre::GLSupport
@@ -145,8 +133,8 @@ private :
 		*/
 	void _initialiseExtensions(void);
 
-	static LRESULT CALLBACK dummyWndProc(HWND hwnd, UINT umsg, WPARAM wp, LPARAM lp);
-	static BOOL CALLBACK sCreateMonitorsInfoEnumProc(HMONITOR hMonitor, HDC hdcMonitor, 
+	static LRESULT CALLBACK _dummyWndProc(HWND hwnd, UINT umsg, WPARAM wp, LPARAM lp);
+	static BOOL CALLBACK _sCreateMonitorsInfoEnumProc(HMONITOR hMonitor, HDC hdcMonitor, 
 		LPRECT lprcMonitor, LPARAM dwData);
 
 };	// class Win32GLSupport

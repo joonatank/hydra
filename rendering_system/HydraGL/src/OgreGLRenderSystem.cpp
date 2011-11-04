@@ -50,8 +50,9 @@ THE SOFTWARE.s
 #include "OgreGLHardwarePixelBuffer.h"
 #include "OgreGLContext.h"
 #include "OgreGLSLProgramFactory.h"
-
 #include "OgreGLFBORenderTexture.h"
+// Necessary for creating windows through common interface
+#include "OgreGLWindow.hpp"
 
 // Convenience macro from ARB_vertex_buffer_object spec
 #define VBO_BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -118,8 +119,10 @@ namespace Ogre {
 		{
 			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
 				"Only NVidia, ATI and Intel GPUs are supported.", 
-				"GLRenderSystem::createRenderSystemCapabilities");
+				"GLRenderSystem::GLRenderSystem");
 		}
+
+		mDriverVersion = mGLSupport->getGLVersion();
 
 		for( i=0; i<MAX_LIGHTS; i++ )
 			mLights[i] = NULL;
@@ -195,15 +198,130 @@ namespace Ogre {
 		return mGLSupport->validateConfig();
 	}
 
-	RenderWindow* GLRenderSystem::_initialise(bool autoCreateWindow, const String& windowTitle)
+	RenderWindow *
+	GLRenderSystem::_initialise(bool autoCreateWindow, const String& windowTitle)
 	{
 		mGLSupport->start();
 		
-		RenderWindow* autoWindow = mGLSupport->createWindow(autoCreateWindow, this, windowTitle);
+		RenderWindow* autoWindow = 0;
+		if(autoCreateWindow)
+		{
+			autoWindow = _createAutoWindow(windowTitle);
+		}
 
 		RenderSystem::_initialise(autoCreateWindow, windowTitle);
 
 		return autoWindow;
+	}
+
+	/// @todo still can't quite fathom why we need a separate function
+	/// for creating the auto window.
+	/// There is a custom config parser in there but shouldn't it be
+	/// just a function that converts ConfigOptionMap to WindowOptions
+	/// and then create the window using miscParams as normally?
+	RenderWindow *
+	GLRenderSystem::_createAutoWindow(String const &windowTitle)
+	{
+		ConfigOptionMap const &options = mGLSupport->getConfigOptions();
+		ConfigOptionMap::const_iterator opt = options.find("Full Screen");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find full screen options!", "GLRenderSystem::_createAutoWindow");
+		}
+		bool fullscreen = (opt->second.currentValue == "Yes");
+
+		opt = options.find("Video Mode");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find video mode options!", "GLRenderSystem::_createAutoWindow");
+		}
+		String val = opt->second.currentValue;
+		String::size_type pos = val.find('x');
+		if (pos == String::npos)
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Invalid Video Mode provided", "GLRenderSystem::_createAutoWindow");
+		}
+		unsigned int w = StringConverter::parseUnsignedInt(val.substr(0, pos));
+		unsigned int h = StringConverter::parseUnsignedInt(val.substr(pos + 1));
+
+		// Parse optional parameters
+		NameValuePairList winOptions;
+		opt = options.find("Colour Depth");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find Colour Depth options!", "GLRenderSystem::_createAutoWindow");
+		}
+		unsigned int colourDepth =
+			StringConverter::parseUnsignedInt(opt->second.currentValue);
+		winOptions["colourDepth"] = StringConverter::toString(colourDepth);
+
+		opt = options.find("VSync");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
+				"Can't find VSync options!", "GLRenderSystem::_createAutoWindow");
+		}
+		bool vsync = (opt->second.currentValue == "Yes");
+		winOptions["vsync"] = StringConverter::toString(vsync);
+		setWaitForVerticalBlank(vsync);
+
+		opt = options.find("VSync Interval");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find VSync Interval options!", "GLRenderSystem::_createAutoWindow");
+		}
+		winOptions["vsyncInterval"] = opt->second.currentValue;
+
+
+		opt = options.find("Display Frequency");
+		if (opt != options.end())
+		{
+			unsigned int displayFrequency =
+				StringConverter::parseUnsignedInt(opt->second.currentValue);
+			winOptions["displayFrequency"] = StringConverter::toString(displayFrequency);
+		}
+
+		opt = options.find("FSAA");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find FSAA options!", "GLRenderSystem::_createAutoWindow");
+		}
+		StringVector aavalues = StringUtil::split(opt->second.currentValue, " ", 1);
+		unsigned int multisample = StringConverter::parseUnsignedInt(aavalues[0]);
+		String multisample_hint;
+		if (aavalues.size() > 1)
+			multisample_hint = aavalues[1];
+
+#ifdef RTSHADER_SYSTEM_BUILD_CORE_SHADERS
+		opt = options.find("Fixed Pipeline Enabled");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
+				"Can't find Fixed Pipeline enabled options!", "GLRenderSystem::_createAutoWindow");
+		}
+		bool enableFixedPipeline = (opt->second.currentValue == "Yes");
+		setFixedPipelineEnabled(enableFixedPipeline);
+#endif
+
+		winOptions["FSAA"] = StringConverter::toString(multisample);
+		winOptions["FSAAHint"] = multisample_hint;
+
+		opt = options.find("sRGB Gamma Conversion");
+		if (opt == options.end())
+		{
+			OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS, 
+				"Can't find sRGB options!", "GLRenderSystem::_createAutoWindow");
+		}
+		bool hwGamma = (opt->second.currentValue == "Yes");
+		winOptions["gamma"] = StringConverter::toString(hwGamma);
+
+		return _createRenderWindow(windowTitle, w, h, fullscreen, &winOptions);
 	}
 
 	RenderSystemCapabilities* GLRenderSystem::createRenderSystemCapabilities() const
@@ -1015,30 +1133,29 @@ namespace Ogre {
 		}
 
 		// Create the window
-		RenderWindow* win = mGLSupport->newWindow(name, width, height, 
-			fullScreen, miscParams);
+		GLWindow *window = GLWindow::createWindow(*mGLSupport);
+		assert(window);
+		window->create(name, width, height, fullScreen, miscParams);
 
-		attachRenderTarget( *win );
+		attachRenderTarget(*window);
 
+		// @todo this should never happend
 		if (!mGLInitialised) 
-		{                
+		{
+			// Set up main context
+			initialiseContext(window);
 
-			// set up glew and GLSupport
-			initialiseContext(win);
-
-			StringVector tokens = StringUtil::split(mGLSupport->getGLVersion(), ".");
-
-			if (!tokens.empty())
-			{
-				mDriverVersion.major = StringConverter::parseInt(tokens[0]);
-				if (tokens.size() > 1)
-					mDriverVersion.minor = StringConverter::parseInt(tokens[1]);
-				if (tokens.size() > 2)
-					mDriverVersion.release = StringConverter::parseInt(tokens[2]); 
-			}
-			mDriverVersion.build = 0;
 			// Initialise GL after the first window has been created
 			// TODO: fire this from emulation options, and don't duplicate Real and Current capabilities
+			
+			// @todo We can call this before window creation 
+			// because we initialse GLEW and Support with a dummy window.
+			// If this is to be moved then we need to:
+			//		check is it a virtual override
+			//		move it to GLSupport so it's created when we have the dummy context
+			// This would improve the architecture quite a bit as the
+			// GLSupport should be the one who tells us what is possible with the system
+			// we are running at the moment.
 			mRealCapabilities = createRenderSystemCapabilities();
 
 			// use real capabilities if custom capabilities are not available
@@ -1047,32 +1164,33 @@ namespace Ogre {
 
 			fireEvent("RenderSystemCapabilitiesCreated");
 
-			initialiseFromRenderSystemCapabilities(mCurrentCapabilities, win);
+			initialiseFromRenderSystemCapabilities(mCurrentCapabilities, window);
 
 			// Initialise the main context
+			// If there is already initialiseContext(window), why do we need this one?
 			_oneTimeContextInitialization();
 			if(mCurrentContext)
 				mCurrentContext->setInitialized();
 		}
 
-		if( win->getDepthBufferPool() != DepthBuffer::POOL_NO_DEPTH )
+		if( window->getDepthBufferPool() != DepthBuffer::POOL_NO_DEPTH )
 		{
 			//Unlike D3D9, OGL doesn't allow sharing the main depth buffer, so keep them separate.
 			//Only Copy does, but Copy means only one depth buffer...
 			GLContext *windowContext;
-			win->getCustomAttribute( GLRenderTexture::CustomAttributeString_GLCONTEXT, &windowContext );
+			window->getCustomAttribute( GLRenderTexture::CustomAttributeString_GLCONTEXT, &windowContext );
 
  			GLDepthBuffer *depthBuffer = new GLDepthBuffer( DepthBuffer::POOL_DEFAULT, this,
 															windowContext, 0, 0,
- 															win->getWidth(), win->getHeight(),
- 															win->getFSAA(), 0, true );
+ 															window->getWidth(), window->getHeight(),
+ 															window->getFSAA(), 0, true );
 
 			mDepthBufferPool[depthBuffer->getPoolId()].push_back( depthBuffer );
 
-			win->attachDepthBuffer( depthBuffer );
+			window->attachDepthBuffer( depthBuffer );
 		}
 
-		return win;
+		return window;
 	}
 	//---------------------------------------------------------------------
 	DepthBuffer* GLRenderSystem::_createDepthBufferFor( RenderTarget *renderTarget )

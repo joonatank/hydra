@@ -99,6 +99,26 @@ namespace Ogre {
         }
     }
 
+	Ogre::DriverVersion GLSupport::getGLVersion(void) const
+	{
+		Ogre::DriverVersion ver;
+
+		StringVector tokens = StringUtil::split(getGLVersionString(), ".");
+
+		if (!tokens.empty())
+		{
+			ver.major = StringConverter::parseInt(tokens[0]);
+			if (tokens.size() > 1)
+				ver.minor = StringConverter::parseInt(tokens[1]);
+			if (tokens.size() > 2)
+				ver.release = StringConverter::parseInt(tokens[2]); 
+		}
+		ver.build = 0;
+
+		return ver;
+	}
+
+
     bool GLSupport::checkMinGLVersion(const String& v) const
     {
         unsigned int first, second, third;

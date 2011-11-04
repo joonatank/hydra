@@ -32,6 +32,7 @@ set(HEADER_FILES
   src/OgreGLRenderToVertexBuffer.h
   src/OgreGLSupport.h
   src/OgreGLTexture.h
+  src/OgreGLWindow.hpp
   src/OgreGLTextureManager.h
 )
 
@@ -58,6 +59,7 @@ set(SOURCE_FILES
   src/OgreGLRenderToVertexBuffer.cpp
   src/OgreGLSupport.cpp
   src/OgreGLTexture.cpp
+  src/OgreGLWindow.cpp
   src/OgreGLTextureManager.cpp
 )
 

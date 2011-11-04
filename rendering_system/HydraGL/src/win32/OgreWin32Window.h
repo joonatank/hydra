@@ -29,15 +29,16 @@ THE SOFTWARE.
 #ifndef __Win32Window_H__
 #define __Win32Window_H__
 
-#include "OgreWin32Prerequisites.h"
-
-#include <OGRE/OgreRenderWindow.h>
+// Base class
+#include "OgreGLWindow.hpp"
 
 #include <stdint.h>
 
+#include "OgreWin32Prerequisites.h"
+
 namespace Ogre {
 
-class _OgreGLExport Win32Window : public RenderWindow
+class _OgreGLExport Win32Window : public GLWindow
 {
 public:
 	Win32Window(Win32GLSupport &glsupport);

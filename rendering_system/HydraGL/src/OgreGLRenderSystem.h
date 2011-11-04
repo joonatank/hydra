@@ -152,6 +152,11 @@ namespace Ogre {
         vector<GLuint>::type mRenderInstanceAttribsBound;
 
 
+	// Private methods
+	private :
+		// Replacement for GLSupport::createWindow
+		RenderWindow *_createAutoWindow(String const &windowTitle);
+
 	protected:
 		void setClipPlanesImpl(const PlaneList& clipPlanes);
 		bool activateGLTextureUnit(size_t unit);
