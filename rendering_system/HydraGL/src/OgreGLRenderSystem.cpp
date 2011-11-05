@@ -955,24 +955,28 @@ namespace Ogre {
 		assert(caps->hasCapability(RSC_FBO));
 
 		// Before GL version 2.0, we need to get one of the extensions
-		if(caps->hasCapability(RSC_FBO_ARB))
-			GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersARB;
-		else if(caps->hasCapability(RSC_FBO_ATI))
-			GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersATI;
-
-		if(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE))
+		if(!GLEW_VERSION_2_0)
 		{
-			// Create FBO manager
-			LogManager::getSingleton().logMessage("GL: Using GL_EXT_framebuffer_object for rendering to textures (best)");
-			mRTTManager = new GLFBOManager(false);
-			caps->setCapability(RSC_RTT_SEPARATE_DEPTHBUFFER);
-
-			//TODO: Check if we're using OpenGL 3.0 and add RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL flag
-			if(GLEW_VERSION_3_0)
-			{
-				caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
-			}
+			if(caps->hasCapability(RSC_FBO_ARB))
+				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersARB;
+			else if(caps->hasCapability(RSC_FBO_ATI))
+				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersATI;
 		}
+
+		assert(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE));
+		
+		// Create FBO manager
+		LogManager::getSingleton().logMessage("GL: Using GL_EXT_framebuffer_object for rendering to textures (best)");
+		mRTTManager = new GLFBOManager(false);
+		caps->setCapability(RSC_RTT_SEPARATE_DEPTHBUFFER);
+
+		//TODO: Check if we're using OpenGL 3.0 and add RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL flag
+		/*
+		if(GLEW_VERSION_3_0)
+		{
+			caps->setCapability(RSC_RTT_DEPTHBUFFER_RESOLUTION_LESSEQUAL);
+		}
+		*/
 
 		Log* defaultLog = LogManager::getSingleton().getDefaultLog();
 		if (defaultLog)
@@ -1176,6 +1180,7 @@ namespace Ogre {
 
 		return window;
 	}
+
 	//---------------------------------------------------------------------
 	DepthBuffer* GLRenderSystem::_createDepthBufferFor( RenderTarget *renderTarget )
 	{
@@ -3087,7 +3092,7 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
         {
 			for (int i = 0; i < mFixedFunctionTextureUnits; i++)
 			{
-            glClientActiveTextureARB(GL_TEXTURE0 + i);
+				glClientActiveTextureARB(GL_TEXTURE0 + i);
 				glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 			}
 			glClientActiveTextureARB(GL_TEXTURE0);
