@@ -68,17 +68,108 @@ namespace
 	}
 }
 
-/// ----------------------------- Public ---------------------------------------
+/// -------------------- StereoRenderTargetListener --------------------------
+void
+vl::StereoRenderTargetListener::preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
+{
+	if(stereo)
+	{
+		// No need to check the Draw buffer because we always have either
+		// GL_BACK_RIGHT or GL_BACK here.
+		if(_left)
+		{ glDrawBuffer(GL_BACK_LEFT); }
+		else
+		{ glDrawBuffer(GL_BACK_RIGHT); }
+		_left = !_left;
+	}
+	else
+	{
+		GLint draw_mode;
+		glGetIntegerv(GL_DRAW_BUFFER, &draw_mode);
+		// We need to test for the mode here
+		// because setting draw buffer to the previous value will
+		// raise OpenGL INVALID_OPERATION error
+		// Here we can either have GL_BACK or GL_BACK_RIGHT and
+		// for stereo rendering -> mono rendering we need to change the buffer
+		//
+		// This seems to cause the error under some circumstances so enable it
+		// only after testing with a stereo enabled system.
+		//if(draw_mode != GL_BACK)
+		//{ glDrawBuffer(GL_BACK); }
+	}
+}
+
+
+
+/// -------------------------- StereoCamera ----------------------------------
+vl::StereoCamera::StereoCamera(void)
+	: _camera(0)
+	, _ogre_camera(0)
+{}
+
+vl::StereoCamera::~StereoCamera(void)
+{
+}
+
+void
+vl::StereoCamera::setHead(vl::Transform const &head)
+{
+	_head = head;
+}
+
+void
+vl::StereoCamera::setCamera(vl::CameraPtr cam)
+{
+	_camera = cam;
+	assert(_camera->getNative());
+	_ogre_camera = (Ogre::Camera *)_camera->getNative();
+}
+
+
+void
+vl::StereoCamera::update(vl::scalar eye_x)
+{
+	assert(_camera);
+	assert(_ogre_camera);
+
+	_frustum.setClipping(_camera->getNearClipDistance(), _camera->getFarClipDistance());
+
+	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
+
+	Ogre::Vector3 cam_pos = _camera->getPosition();
+	Ogre::Quaternion cam_quat = _camera->getOrientation();
+
+	Ogre::Vector3 eye(eye_x, 0, 0);
+
+	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(eye_x);
+	_ogre_camera->setCustomProjectionMatrix(true, projMat);
+
+	// Combine eye and camera positions
+	// Needs to be rotated with head for correct stereo
+	// Do not rotate with wall will cause incorrect view for the side walls
+	Ogre::Vector3 eye_d = (_head.quaternion*cam_quat)*eye 
+		+ cam_quat*_head.position + cam_pos;
+
+	// Combine camera and wall orientation to get the projection on correct wall
+	// Seems like the wallRotation needs to be inverse for this one, otherwise
+	// left and right wall are switched.
+	Ogre::Quaternion eye_orientation = cam_quat*wallRot.Inverse();
+
+	_ogre_camera->setPosition(eye_d);
+	_ogre_camera->setOrientation(eye_orientation);
+}
+
+
+/// ----------------------------- Window -------------------------------------
+/// ----------------------------- Public -------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
 	: _name(windowConf.name)
 	, _renderer( parent )
 	, _ogre_window(0)
-	, _camera(0)
-	, _left_viewport(0)
-	, _right_viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _window_listener(0)
 {
 	assert( _renderer );
 
@@ -108,44 +199,38 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	}
 
 	/// Set frustum
-	_frustum.setWall(wall);
+	_stereo_camera.getFrustum().setWall(wall);
 	vl::config::Projection const &projection = windowConf.renderer.projection;
-	_frustum.setFov(Ogre::Degree(projection.fov));
+	_stereo_camera.getFrustum().setFov(Ogre::Degree(projection.fov));
 	if(projection.perspective_type == vl::config::Projection::FOV)
-	{ _frustum.setType(Frustum::FOV); }
-	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
-	_frustum.enableTransformationModifications(projection.modify_transformations);
-	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
+	{ _stereo_camera.getFrustum().setType(Frustum::FOV); }
+	_stereo_camera.getFrustum().enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
+	_stereo_camera.getFrustum().enableTransformationModifications(projection.modify_transformations);
+	_stereo_camera.getFrustum().enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
 
 	if(windowConf.renderer.projection.use_asymmetric_stereo)
 	{
 		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
 	}
 
-	if(windowConf.renderer.type == vl::config::Renderer::FBO)
+	_renderer_type = windowConf.renderer.type;
+	if(_renderer_type == vl::config::Renderer::FBO)
 	{
 		std::cout << "NOT IMPLEMENTED : Should Render to FBO." << std::endl;
 	}
 
+	// Set listener
+	// @todo add the stereo attribute
+	_window_listener = new StereoRenderTargetListener(false);
+	_ogre_window->addListener(_window_listener);
+
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
 
-	Ogre::Camera *og_cam = 0;
-	if( _camera )
-	{ og_cam = (Ogre::Camera *)_camera->getNative(); }
-
-	_left_viewport = _ogre_window->addViewport(og_cam);	
-	_left_viewport->setBackgroundColour(background_col);
-	// This is necessary because we are using single camera and single viewport
-	// to draw to both backbuffers when using stereo.
-	_left_viewport->setAutoUpdated(false);
-
-	if(hasStereo())
-	{
-		_right_viewport = _ogre_window->addViewport(og_cam, 1);
-		_right_viewport->setBackgroundColour(background_col);
-		_right_viewport->setAutoUpdated(false);
-	}
+	/// We don't yet have a valid SceneManager
+	/// So we need to wait till the camera is set here
+	_ogre_window->addViewport(0);
+	_ogre_window->getViewport(0)->setBackgroundColour(background_col);
 }
 
 vl::Window::~Window( void )
@@ -182,16 +267,11 @@ void
 vl::Window::setCamera(vl::CameraPtr camera)
 {
 	// @todo does not allow removing the camera, should it?
-	if( !camera )
-	{ return; }
+	if(!camera)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
-	_camera = camera;
-	
-	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
-	if(_left_viewport)
-	{ _left_viewport->setCamera(og_cam); }
-	if(_right_viewport)
-	{ _right_viewport->setCamera(og_cam); }
+	_stereo_camera.setCamera(camera);	
+	_ogre_window->getViewport(0)->setCamera((Ogre::Camera *)camera->getNative());
 }
 
 void
@@ -424,102 +504,57 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
-	// @todo this should probably never happen
-	if(!_camera)
-	{
-		std::cout << "vl::Window::draw : no camera." << std::endl;
-		return;
-	}
+	_stereo_camera.setHead(getPlayer().getHeadTransform());
 
-	if(!_left_viewport)
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	Ogre::Real c_near = _camera->getNearClipDistance();
-	Ogre::Real c_far = _camera->getFarClipDistance();
-
-	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
-	if(!og_cam)
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	/// @todo checking these every frame is bit too much
-	if(og_cam != _left_viewport->getCamera())
-	{ _left_viewport->setCamera(og_cam); }
-	if(_right_viewport && _right_viewport->getCamera() != og_cam)
-	{ _right_viewport->setCamera(og_cam); }
+	/// @todo these shouldn't be copied at every frame
+	/// use the distribution system to distribute
+	/// the Frustum.
+	_stereo_camera.getFrustum().setHeadTransformation(getPlayer().getCyclopWorldTransform());
+	_stereo_camera.getFrustum().enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
+	_stereo_camera.getFrustum().enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
 
 	// if stereo is not enabled ipd should be zero 
 	// TODO should it be forced though?
 	if(!hasStereo())
 	{ _ipd = 0; }
 
-	// @todo is there performance problems with stereo?
-	// If they are still present we need to add a separate camera also
-	// @todo rendering GUI for both eyes
+	_render_to_screen();
+}
 
-	Transform const &head = getPlayer().getHeadTransform();
 
-	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
-	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
-	_frustum.enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
-	_frustum.setClipping(c_near, c_far);
-
-	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
-
-	// Should not be rotated with wall, all the walls would be out of sync with each other
-	Ogre::Vector3 headTrans = head.position;
-
-	Ogre::Vector3 cam_pos = og_cam->getPosition();
-	Ogre::Quaternion cam_quat = og_cam->getOrientation();
+void
+vl::Window::_render_to_screen(void)
+{
+	assert(_ogre_window);
+	assert(_ogre_window->getViewport(0));
+	assert(_stereo_camera.getCamera());
 
 	// Force ipd to zero if has GUI window
 	vl::scalar ipd = _ipd;
 	if(_renderer->guiShown())
 	{ ipd = 0; }
 
-	/// @todo should really be replaced with a stereo camera setup	
-
-	/// Use tuples to eliminate code copying
-	typedef boost::tuple<Ogre::Viewport *, double, GLenum> view_tuple;
-	std::vector<view_tuple> views;
-	if(hasStereo())
+	std::vector<vl::scalar> eyes;
+	// Left is first, so it's negative
+	if(ipd != 0)
 	{
-		if(!_left_viewport || !_right_viewport)
-		{
-			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing left or right viewport for stereo."));
-		}
-		views.push_back( view_tuple(_left_viewport, -ipd/2, GL_BACK_LEFT) );
-		views.push_back( view_tuple(_right_viewport, ipd/2, GL_BACK_RIGHT) );
+		eyes.push_back(-ipd/2);
+		eyes.push_back(ipd/2);
+		_window_listener->stereo = true;
 	}
 	else
 	{
-		assert(_left_viewport);
-		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
+		eyes.push_back(ipd/2);
+		_window_listener->stereo = false;
 	}
 
-	for(size_t i = 0; i < views.size(); ++i)
+	for(size_t i = 0; i < eyes.size(); ++i)
 	{
-		view_tuple const &view = views.at(i);
-		Ogre::Vector3 eye(view.get<1>(), 0, 0);
-		glDrawBuffer(view.get<2>());
-
-		Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(view.get<1>());
-		og_cam->setCustomProjectionMatrix(true, projMat);
-
-		// Combine eye and camera positions
-		// Needs to be rotated with head for correct stereo
-		// Do not rotate with wall will cause incorrect view for the side walls
-		Ogre::Vector3 eye_d = (head.quaternion*cam_quat)*eye 
-			+ cam_quat*headTrans + cam_pos;
-
-		// Combine camera and wall orientation to get the projection on correct wall
-		// Seems like the wallRotation needs to be inverse for this one, otherwise
-		// left and right wall are switched.
-		Ogre::Quaternion eye_orientation = cam_quat*wallRot.Inverse();
-
-		og_cam->setPosition(eye_d);
-		og_cam->setOrientation(eye_orientation);
-
-		view.get<0>()->update();
+		_stereo_camera.update(eyes.at(i));
+		// @todo this needs to toggle the RenderingTarget listener for stereo
+		// Render the window as many times as there is buffers
+		// once for mono viewing and twice for stereo
+		_ogre_window->update(false);
 
 		// @todo test with stereo setup if this really renders the gui for
 		// both left and right eye
@@ -528,14 +563,8 @@ vl::Window::draw(void)
 			CEGUI::System::getSingleton().renderGUI();
 		}
 	}
-
-	// Push back the original position and orientation
-	og_cam->setPosition(_camera->getPosition());
-	og_cam->setOrientation(_camera->getOrientation());
-
-	assert(_ogre_window);
-	_ogre_window->update(false);
 }
+
 
 void
 vl::Window::swap( void )

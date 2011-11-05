@@ -35,12 +35,84 @@
 #include <OIS/OISJoyStick.h>
 
 #include <OGRE/OgreRenderWindow.h>
+#include <OGRE/OgreRenderTargetListener.h>
 
 // GUI
 #include <CEGUI/CEGUIEventArgs.h>
 
 namespace vl
 {
+
+/// Toggles stereo mode for OpenGL
+/// The render target needs to be renderer twice for this to work
+class StereoRenderTargetListener : public Ogre::RenderTargetListener
+{
+public :
+	StereoRenderTargetListener(bool s)
+		: stereo(s)
+	{}
+
+	virtual void preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt);
+
+	virtual void postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
+	{
+	}
+
+	bool stereo;
+	bool _left;
+
+};	// class StereoRenderTargetListener
+
+/// @todo this should be implemented as an Ogre Movable object
+/// a replacement for the Ogre::Camera class
+/// before rendering it should be updated with 
+///		head matrix
+///		cyclop transformation
+///		ipd
+class StereoCamera
+{
+public :
+	StereoCamera(void);
+
+	~StereoCamera(void);
+
+	void setHead(vl::Transform const &head);
+
+	void setCamera(vl::CameraPtr cam);
+
+	vl::CameraPtr getCamera(void) const
+	{ return _camera; }
+
+	/// @brief updates the Ogre::Camera's projection and view matrices
+	/// @param eye_x the eye x direction used for this rendering
+	/// For stereo rendering this needs to be called twice with different
+	/// eye_x values. Also you need to call Viewport::update also.
+	void update(vl::scalar eye_x);
+
+	/// @todo should this store the ipd value and have separate updateLeft
+	/// and updateRight methods for the left and right eye?
+//	void setIPD(vl::scalar ipd);
+
+	vl::Frustum &getFrustum(void)
+	{ return _frustum; }
+
+	vl::Frustum const &getFrustum(void) const
+	{ return _frustum; }
+
+	void setFrustum(vl::Frustum const &f)
+	{ _frustum = f; }
+
+private :
+	vl::CameraPtr _camera;
+
+	Ogre::Camera *_ogre_camera;
+
+	vl::Transform _head;
+
+	vl::Frustum _frustum;
+
+};	// class StereoCamera
+
 
 /**	@class Window represent an OpenGL drawable and context
  *
@@ -111,26 +183,28 @@ protected :
 
 	void _sendEvent( vl::cluster::EventData const &event );
 
+	void _render_to_screen(void);
+
 	std::string _name;
 
 	vl::RendererInterface *_renderer;
 
-	vl::Frustum _frustum;
+	vl::StereoCamera _stereo_camera;
 
 	double _ipd;
 
-	vl::Camera *_camera;
-
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
-	Ogre::Viewport *_left_viewport;
-	Ogre::Viewport *_right_viewport;
 
 	// OIS variables
 	OIS::InputManager *_input_manager;
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
+
+	vl::config::Renderer::Type _renderer_type;
+
+	StereoRenderTargetListener *_window_listener;
 
 };	// class Window
 
