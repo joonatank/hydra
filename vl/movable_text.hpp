@@ -179,6 +179,14 @@ private :
 	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
 	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
 
+	virtual void _transformation_updated(void)
+	{
+		if(_ogre_text)
+		{
+			_ogre_text->setPosition(_position);
+		}
+	}
+
 	void _clear(void);
 
 	/************************** private data *******************************/
@@ -189,7 +197,6 @@ private :
 	Ogre::ColourValue _colour;
 	Ogre::Real _char_height;
 	Ogre::Real _space_width;
-	Ogre::Vector3 _position;
 	bool _on_top;
 
 	vl::ogre::MovableText::VerticalAlignment _vertical_alignment;

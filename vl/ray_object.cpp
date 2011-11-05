@@ -50,21 +50,11 @@ vl::RayObject::setRecording(RecordingRefPtr rec)
 }
 
 void
-vl::RayObject::setPosition(Ogre::Vector3 const &pos)
-{
-	if(_position != pos)
-	{
-		setDirty(DIRTY_TRANSFORM);
-		_position = pos;
-	}
-}
-
-void
 vl::RayObject::setDirection(Ogre::Vector3 const &dir)
 {
 	if(_direction != dir)
 	{
-		setDirty(DIRTY_TRANSFORM);
+		setDirty(DIRTY_DIRECTION);
 		_direction = dir;
 	}
 }
@@ -283,9 +273,9 @@ vl::RayObject::_doCreateNative(void)
 void
 vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const
 {
-	if(dirtyBits & DIRTY_TRANSFORM)
+	if(dirtyBits & DIRTY_DIRECTION)
 	{
-		msg << _position << _direction;
+		msg << _direction;
 	}
 
 	if(dirtyBits & DIRTY_PARAMS)
@@ -320,9 +310,9 @@ void
 vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 {
 	bool dirty = false;
-	if(dirtyBits & DIRTY_TRANSFORM)
+	if(dirtyBits & DIRTY_DIRECTION)
 	{
-		msg >> _position >> _direction;
+		msg >> _direction;
 		dirty = true;
 	}
 
@@ -381,7 +371,6 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 void
 vl::RayObject::_clear(void)
 {
-	_position = Ogre::Vector3::ZERO;
 	_direction = -Ogre::Vector3::UNIT_Z;
 	_length = 1000;
 	_sphere_radius = 1;

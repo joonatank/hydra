@@ -110,11 +110,6 @@ public :
 	{ return _direction; }
 
 	void setDirection(Ogre::Vector3 const &q);
-	
-	Ogre::Vector3 const &getPosition(void) const
-	{ return _position; }
-
-	void setPosition(Ogre::Vector3 const &pos);
 
 	bool getCastShadows(void) const
 	{ return _cast_shadows; }
@@ -137,7 +132,7 @@ public :
 	{
 		DIRTY_TYPE = vl::MovableObject::DIRTY_CUSTOM << 0,
 		DIRTY_COLOUR = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_TRANSFORM = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_DIRECTION = vl::Distributed::DIRTY_CUSTOM << 2,
 		/// General parameters, anything that does not fit with the others
 		DIRTY_GEN_PARAMS = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_ATTENUATION = vl::Distributed::DIRTY_CUSTOM << 4,
@@ -161,6 +156,14 @@ private :
 
 	virtual bool _doCreateNative(void);
 
+	virtual void _transformation_updated(void)
+	{
+		if(_ogre_light)
+		{
+			_ogre_light->setPosition(_position);
+		}
+	}
+
 	/// clears the structure to default values, called from constructors
 	void _clear(void);
 	
@@ -171,7 +174,6 @@ private :
 	Ogre::ColourValue _diffuse_colour;
 	Ogre::ColourValue _specular_colour;
 
-	Ogre::Vector3 _position;
 	Ogre::Vector3 _direction;
 
 	bool _cast_shadows;

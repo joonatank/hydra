@@ -565,16 +565,6 @@ vl::MovableText::setTextAlignment(std::string const &vertical)
 }
 
 void
-vl::MovableText::setPosition(Ogre::Vector3 const &pos)
-{
-	if(_position != pos)
-	{
-		setDirty(DIRTY_TEXT_PARAMS);
-		_position = pos;
-	}
-}
-
-void
 vl::MovableText::showOnTop(bool show)
 {
 	if(_on_top != show)
@@ -599,7 +589,6 @@ vl::MovableText::_doCreateNative(void)
 	{
 		_ogre_text = new vl::ogre::MovableText(getName(), _caption, _font_name, _char_height, _colour);
 		_ogre_text->setTextAlignment(_vertical_alignment);
-		_ogre_text->setPosition(_position);
 		_ogre_text->showOnTop(_on_top);
 	}
 
@@ -616,7 +605,7 @@ vl::MovableText::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 
 	if(DIRTY_TEXT_PARAMS & dirtyBits)
 	{
-		msg << _font_name << _colour << _char_height << _space_width << _position << _on_top;
+		msg << _font_name << _colour << _char_height << _space_width << _on_top;
 	}
 }
 
@@ -632,14 +621,13 @@ vl::MovableText::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirt
 
 	if(DIRTY_TEXT_PARAMS & dirtyBits)
 	{
-		msg >> _font_name >> _colour >> _char_height >> _space_width >> _position >> _on_top;
+		msg >> _font_name >> _colour >> _char_height >> _space_width >> _on_top;
 		if(_ogre_text)
 		{
 			_ogre_text->setFontName(_font_name);
 			_ogre_text->setColor(_colour);
 			_ogre_text->setCharacterHeight(_char_height);
 			_ogre_text->setSpaceWidth(_space_width);
-			_ogre_text->setPosition(_position);
 			_ogre_text->showOnTop(_on_top);
 		}
 	}
@@ -653,7 +641,6 @@ vl::MovableText::_clear(void)
 	_colour =  Ogre::ColourValue::White;
 	_char_height =  1.0;
 	_space_width = 0;
-	_position = Ogre::Vector3::ZERO;
 	_on_top = false;
 	_vertical_alignment = vl::ogre::MovableText::V_CENTER;
 

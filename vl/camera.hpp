@@ -33,16 +33,6 @@ public :
 	Ogre::Real getFarClipDistance(void) const
 	{ return _far_clip; }
 
-	void setPosition(Ogre::Vector3 const &pos);
-
-	Ogre::Vector3 const &getPosition(void) const
-	{ return _position; }
-
-	void setOrientation(Ogre::Quaternion const &q);
-
-	Ogre::Quaternion const &getOrientation(void) const
-	{ return _orientation; }
-
 	virtual MovableObjectPtr clone(std::string const &append_to_name) const;
 
 	enum DirtyBits
@@ -67,11 +57,18 @@ private :
 
 	virtual bool _doCreateNative(void);
 
+	virtual void _transformation_updated(void)
+	{
+		if(_ogre_camera)
+		{
+			_ogre_camera->setPosition(_position);
+			_ogre_camera->setOrientation(_orientation);
+		}
+	}
+
 	/// clears the structure to default values, called from constructors
 	void _clear(void);
 
-	Ogre::Vector3 _position;
-	Ogre::Quaternion _orientation;
 	Ogre::Real _near_clip;
 	Ogre::Real _far_clip;
 

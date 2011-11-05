@@ -154,18 +154,8 @@ vl::Light::setDirection(Ogre::Vector3 const &dir)
 {
 	if( _direction != dir )
 	{
-		setDirty(DIRTY_TRANSFORM);
+		setDirty(DIRTY_DIRECTION);
 		_direction = dir;
-	}
-}
-	
-void 
-vl::Light::setPosition(Ogre::Vector3 const &pos)
-{
-	if( _position != pos )
-	{
-		setDirty(DIRTY_TRANSFORM);
-		_position = pos;
 	}
 }
 
@@ -241,9 +231,9 @@ vl::Light::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 		msg << _diffuse_colour << _specular_colour;
 	}
 
-	if( DIRTY_TRANSFORM & dirtyBits )
+	if( DIRTY_DIRECTION & dirtyBits )
 	{
-		msg << _position << _direction;
+		msg << _direction;
 	}
 	
 	if( DIRTY_GEN_PARAMS & dirtyBits )
@@ -292,12 +282,11 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		}
 	}
 
-	if( DIRTY_TRANSFORM & dirtyBits )
+	if( DIRTY_DIRECTION & dirtyBits )
 	{
-		msg >> _position >> _direction;
+		msg >> _direction;
 		if( _ogre_light )
 		{ 
-			_ogre_light->setPosition(_position);
 			_ogre_light->setDirection(_direction);
 		}
 	}
