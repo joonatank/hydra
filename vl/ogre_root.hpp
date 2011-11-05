@@ -54,6 +54,8 @@ namespace ogre
 			virtual Ogre::SceneManager *createSceneManager(
 					std::string const &name );
 
+			Ogre::SceneManager *getSceneManager(void) const;
+
 			virtual void addResource( std::string const &resource_path );
 
 			virtual void setupResources( void );
@@ -71,10 +73,9 @@ namespace ogre
 
 			Ogre::LogManager *_log_manager;
 
-			// Wether we own the Ogre::Root instance
-			bool _primary;
-
 			std::vector<std::string> _resources;
+
+			Ogre::SceneManager *_scene_manager;
 
 	};	// class Root
 

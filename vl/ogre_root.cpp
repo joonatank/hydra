@@ -20,9 +20,9 @@
 #include "logger.hpp"
 
 vl::ogre::Root::Root(vl::config::LogLevel level)
-	: _ogre_root(0),
-	  _log_manager(0),
-	  _primary(false)
+	: _ogre_root(0)
+	, _log_manager(0)
+	, _scene_manager(0)
 {
 	std::cout << vl::TRACE << "vl::ogre::Root::Root" << std::endl;
 
@@ -45,7 +45,6 @@ vl::ogre::Root::Root(vl::config::LogLevel level)
 
 		std::cout << vl::TRACE << "vl::ogre::Root::Root : create Ogre Root" << std::endl;
 		_ogre_root = new Ogre::Root( "", "", "" );
-		_primary = true;
 	}
 
 	std::cout << vl::TRACE << "vl::ogre::Root::Root : done" << std::endl;
@@ -55,20 +54,14 @@ vl::ogre::Root::~Root( void )
 {
 	// root and log manager point to same ogre singletons.
 	// destroy them only on the primary
-	if( _primary )
-	{
-		delete _ogre_root;
-		delete _log_manager;
-	}
+	delete _ogre_root;
+	delete _log_manager;
 }
 
 void
 vl::ogre::Root::createRenderSystem( void )
 {
 	std::cout << vl::TRACE << "vl::ogre::Root::createRenderSystem" << std::endl;
-
-	if( !_primary )
-	{ return; }
 
 	if( !_ogre_root )
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
@@ -231,10 +224,17 @@ Ogre::SceneManager *
 vl::ogre::Root::createSceneManager(std::string const &name )
 {
 	if( !_ogre_root )
-	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Ogre Root hasn't been created yet.")); }
+	if(_scene_manager)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Only single Scene Manager is supported at this point.")); }
+	
+	_scene_manager = _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
 
-	Ogre::SceneManager *og_man
-		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
+	return _scene_manager;
+}
 
-	return og_man;
+Ogre::SceneManager *
+vl::ogre::Root::getSceneManager(void) const
+{
+	return _scene_manager;
 }
