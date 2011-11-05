@@ -148,6 +148,10 @@ vl::MovableObject::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 		if(getNative())
 		{ getNative()->setVisible(_visible); }
 
+		// Possible to avoid rendering them to the window directly
+		if(getNative())
+		{ getNative()->setVisibilityFlags(1); }
+
 		_transformation_updated();
 	}
 }

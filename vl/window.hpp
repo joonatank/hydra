@@ -183,7 +183,13 @@ protected :
 
 	void _sendEvent( vl::cluster::EventData const &event );
 
+	void _render_to_fbo(void);
+
+	void _draw_fbo_to_screen(void);
+
 	void _render_to_screen(void);
+
+	void _initialise_fbo(vl::CameraPtr camera);
 
 	std::string _name;
 
@@ -203,6 +209,9 @@ protected :
 	std::vector<OIS::JoyStick *> _joysticks;
 
 	vl::config::Renderer::Type _renderer_type;
+	Ogre::RenderTexture *_fbo;
+	Ogre::MaterialPtr _fbo_material;
+	Ogre::TexturePtr _fbo_texture;
 
 	StereoRenderTargetListener *_window_listener;
 

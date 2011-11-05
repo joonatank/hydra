@@ -33,6 +33,12 @@
 
 #include <OGRE/OgreLogManager.h>
 
+/// Necessary for RenderTexture code
+#include <OGRE/OgreRenderTexture.h>
+#include <OGRE/OgreSceneManager.h>
+#include <OGRE/OgreSceneNode.h>
+#include <OGRE/OgreHardwarePixelBuffer.h>
+
 /// GUI
 #include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
@@ -169,6 +175,7 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _fbo(0)
 	, _window_listener(0)
 {
 	assert( _renderer );
@@ -214,10 +221,6 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	}
 
 	_renderer_type = windowConf.renderer.type;
-	if(_renderer_type == vl::config::Renderer::FBO)
-	{
-		std::cout << "NOT IMPLEMENTED : Should Render to FBO." << std::endl;
-	}
 
 	// Set listener
 	// @todo add the stereo attribute
@@ -227,10 +230,31 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	// TODO this should be configurable
 	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
 
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{
+		std::cout << "EXPERIMENTAL : Should Render to FBO." << std::endl;
+
+		_fbo_texture = Ogre::TextureManager::getSingleton()
+			.createManual("RttTex", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
+					Ogre::TEX_TYPE_2D, _ogre_window->getWidth(), _ogre_window->getHeight(), 
+					0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+
+		_fbo = _fbo_texture->getBuffer()->getRenderTarget();
+
+	}
+
 	/// We don't yet have a valid SceneManager
 	/// So we need to wait till the camera is set here
 	_ogre_window->addViewport(0);
 	_ogre_window->getViewport(0)->setBackgroundColour(background_col);
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{
+		/// The window will not be rendering the Scene
+		_ogre_window->getViewport(0)->setVisibilityMask(1<<1);
+		_ogre_window->getViewport(0)->setShadowsEnabled(false);
+		_ogre_window->getViewport(0)->setSkiesEnabled(false);
+		_ogre_window->getViewport(0)->setOverlaysEnabled(false);
+	}
 }
 
 vl::Window::~Window( void )
@@ -272,6 +296,19 @@ vl::Window::setCamera(vl::CameraPtr camera)
 
 	_stereo_camera.setCamera(camera);	
 	_ogre_window->getViewport(0)->setCamera((Ogre::Camera *)camera->getNative());
+
+
+	if(_fbo)
+	{
+		if(_fbo->getNumViewports() == 0)
+		{
+			_initialise_fbo(camera);
+		}
+		else
+		{
+			_fbo->getViewport(0)->setCamera((Ogre::Camera *)camera->getNative());
+		}
+	}
 }
 
 void
@@ -518,9 +555,39 @@ vl::Window::draw(void)
 	if(!hasStereo())
 	{ _ipd = 0; }
 
-	_render_to_screen();
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{
+		_render_to_fbo();
+
+		_render_to_screen();
+		//_draw_fbo_to_screen();
+	}
+	else
+	{
+		_render_to_screen();
+	}
 }
 
+void
+vl::Window::_render_to_fbo(void)
+{
+	assert(_stereo_camera.getCamera());
+	assert(_fbo->getViewport(0));
+
+	// for now hard coded to zero ipd because we need right and left fbo
+	// for stereo rendering.
+	_stereo_camera.update(0);
+	_fbo->update(false);
+}
+
+void
+vl::Window::_draw_fbo_to_screen(void)
+{
+	/// Disable all other objects than the fbo
+	/// Draw to quad
+
+	// Enable all objects
+}
 
 void
 vl::Window::_render_to_screen(void)
@@ -563,6 +630,42 @@ vl::Window::_render_to_screen(void)
 			CEGUI::System::getSingleton().renderGUI();
 		}
 	}
+}
+
+void
+vl::Window::_initialise_fbo(vl::CameraPtr camera)
+{
+	assert(camera);
+	assert(_fbo);
+
+	_fbo->addViewport((Ogre::Camera *)camera->getNative());
+	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
+	_fbo->getViewport(0)->setOverlaysEnabled(false);
+	_fbo->getViewport(0)->setVisibilityMask(1);
+
+	Ogre::Rectangle2D *mMiniScreen = new Ogre::Rectangle2D(true);
+	mMiniScreen->setCorners(-1.0f, 1.0f, 1.0f, -1.0f);
+	mMiniScreen->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
+	mMiniScreen->setVisibilityFlags(1<<1);
+
+	Ogre::SceneManager *sm = getOgreRoot()->getSceneManager();
+	assert(sm);
+	Ogre::SceneNode* miniScreenNode = sm->getRootSceneNode()->createChildSceneNode("internal/fbo_screen");
+	miniScreenNode->attachObject(mMiniScreen);
+
+	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName("rtt");
+	_fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone("internal/fbo_material");
+	//Ogre::Technique* matTechnique = _fbo_material->createTechnique();
+	//_fbo_material->getTechnique(0)->getPass(0)->createTextureUnitState("RttTex");
+	Ogre::AliasTextureNamePairList alias_list;
+	std::clog << "Trying to replace diffuseTexture alias with " << _fbo_texture->getName() << std::endl;
+	alias_list["rtt_texture"] = _fbo_texture->getName();
+	if(_fbo_material->applyTextureAliases(alias_list))
+	{
+		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
+	}
+
+	mMiniScreen->setMaterial("internal/fbo_material");
 }
 
 

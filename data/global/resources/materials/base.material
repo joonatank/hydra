@@ -7,7 +7,7 @@
 
 import * from "normal_map.material"
 
-material CloudySky
+material sky/cloudy/ffp
 {
 	technique
 	{
@@ -19,7 +19,65 @@ material CloudySky
 			texture_unit
 			{
 				texture clouds.jpg
+				// The animation doesn't seem to work
 				scroll_anim 0.15 0
+			}
+		}
+	}
+}
+
+/// Seems like the glsl version is working as well as the ffp
+material sky/cloudy/glsl
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+			polygon_mode_overrideable false
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref flat_texture_ps
+			{
+			}
+
+			texture_unit sky
+			{
+				texture clouds.jpg
+				// The animation doesn't seem to work
+				scroll_anim 0.15 0
+			}
+		}
+	}
+}
+
+material CloudySky : sky/cloudy/glsl
+{}
+
+material sky/cloudy : sky/cloudy/glsl
+{}
+
+material rtt
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref flat_texture_ps
+			{
+			}
+
+			texture_unit rtt_texture
+			{
+				texture white.tga
 			}
 		}
 	}
