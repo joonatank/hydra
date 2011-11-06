@@ -270,6 +270,9 @@ vl::Hydra_Run(const int argc, char** argv)
 		if( env->isMaster() && settings.empty() )
 		{ return ExceptionMessage(); }
 
+		// @todo this doesn't allow an exception to be thrown through it
+		// we need to use some other method
+		// this is true for exception thrown by our GLRenderer
 		vl::Application application(env, settings, logger, options.auto_fork, options.show_system_console);
 
 		application.run();
