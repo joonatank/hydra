@@ -229,11 +229,11 @@ def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, ro
 def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
 	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
 	trigger.addKeyDownListener(selection_movements.right)
 	trigger.addKeyUpListener(selection_movements.left)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
 	trigger.addKeyDownListener(selection_movements.left)
 	trigger.addKeyUpListener(selection_movements.right)
 
@@ -253,13 +253,13 @@ def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference
 	trigger.addKeyDownListener(selection_movements.down)
 	trigger.addKeyUpListener(selection_movements.up)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_left)
-	trigger.addKeyUpListener(selection_movements.rotate_right)
-
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6, KEY_MOD.CTRL)
 	trigger.addKeyDownListener(selection_movements.rotate_right)
 	trigger.addKeyUpListener(selection_movements.rotate_left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_left)
+	trigger.addKeyUpListener(selection_movements.rotate_right)
 
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8, KEY_MOD.CTRL)
 	trigger.addKeyDownListener(selection_movements.roll_right)
