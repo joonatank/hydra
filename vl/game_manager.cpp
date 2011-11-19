@@ -124,13 +124,14 @@ vl::GameManager::step(void)
 		for(size_t i = 0; i < _analog_clients.size(); ++i )
 		{ _analog_clients.at(i)->mainloop(); }
 
+		_kinematic_world->step(getDeltaTime());
+
 		if( _physics_world )
 		{
 			_physics_world->step(getDeltaTime());
 		}
 
-		_kinematic_world->step(getDeltaTime());
-
+		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());
 	}
 

@@ -179,6 +179,21 @@ public :
 	virtual void setWorldTransform(Transform const &worldTrans)
 	{ _bt_body->setWorldTransform(convert_bt_transform(worldTrans)); }
 
+	virtual void enableKinematicObject(bool enable)
+	{
+		if(enable)
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+		else
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+	}
+
+	virtual bool isKinematicObject(void) const
+	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
+
 	btRigidBody *getNative(void)
 	{ return _bt_body; }
 

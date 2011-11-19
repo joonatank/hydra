@@ -165,6 +165,9 @@ public :
 	void addFixingPoint(RigidBodyRefPtr body, vl::scalar length = -1);
 
 	void removeFixingPoint(RigidBodyRefPtr body);
+
+	void create(void);
+
 /*
 	struct TubeElement
 	{
@@ -188,6 +191,8 @@ private :
 
 	void _setConstraint(ConstraintRefPtr constraint, Ogre::Vector3 const &lower, Ogre::Vector3 const &upper);
 
+	void _add_fixing_point(RigidBodyRefPtr body, vl::scalar length);
+
 	RigidBodyRefPtr _findBodyByLength(vl::scalar length);
 	RigidBodyRefPtr _findBodyByPosition(Ogre::Vector3 const &pos);
 
@@ -200,7 +205,9 @@ private :
 	RigidBodyList _bodies;
 	ConstraintList _constraints;
 	
+	std::map<vl::scalar, RigidBodyRefPtr> _fixing_bodies;
 	ConstraintList _external_fixings;
+
 	vl::scalar _length;
 	vl::scalar _stiffness;
 	vl::scalar _damping;
@@ -211,6 +218,8 @@ private :
 	bool _spring;
 	bool _disable_internal_collisions;
 
+	Ogre::Vector3 _inertia;
+
 	// Angular limits
 	Ogre::Vector3 _lower_lim;
 	Ogre::Vector3 _upper_lim;
@@ -218,6 +227,9 @@ private :
 	Ogre::Vector3 _fixing_upper_lim;
 
 	std::string _material_name;
+
+	vl::Transform _start_body_frame;
+	vl::Transform _end_body_frame;
 
 	WorldPtr _world;
 

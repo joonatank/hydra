@@ -169,10 +169,12 @@ void export_physics_objects(void)
 		.add_property("motion_state", python::make_function(getMotionState_ov1, python::return_value_policy<python::reference_existing_object>()), &vl::physics::RigidBody::setMotionState )
 		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
 		.add_property("mass", &vl::physics::RigidBody::getMass, &vl::physics::RigidBody::setMass)
+		.add_property("kinematic", &vl::physics::RigidBody::isKinematicObject, &vl::physics::RigidBody::enableKinematicObject)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
+	void (vl::physics::MotionState::*setWorldTransform_ov0)(vl::Transform const &) = &vl::physics::MotionState::setWorldTransform;
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
@@ -180,7 +182,8 @@ void export_physics_objects(void)
 					  &vl::physics::MotionState::setNode )
 		.add_property("position", &vl::physics::MotionState::getPosition, &vl::physics::MotionState::setPosition)
 		.add_property("orientation", &vl::physics::MotionState::getOrientation, &vl::physics::MotionState::setOrientation)
-		.add_property("world_transform", getWorldTransform_ov0)
+		.add_property("world_transformation", getWorldTransform_ov0, setWorldTransform_ov0)
+		.def("set_world_transformation", setWorldTransform_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -226,6 +229,8 @@ void export_physics_objects(void)
 		.add_property("spring_damping", &vl::physics::Tube::getSpringDamping, &vl::physics::Tube::setSpringDamping)
 		.add_property("mass", &vl::physics::Tube::getMass, &vl::physics::Tube::setMass)
 		.add_property("damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
+		.add_property("lower_limit", python::make_function(&vl::physics::Tube::getLowerLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setLowerLim)
+		.add_property("upper_limit", python::make_function(&vl::physics::Tube::getUpperLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setUpperLim)
 		.add_property("material", python::make_function(&vl::physics::Tube::getMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setMaterial)
 		// Setters here would need to modify the meshes, both physics and graphics
 		.add_property("element_size", &vl::physics::Tube::getElementSize)
@@ -235,6 +240,7 @@ void export_physics_objects(void)
 		.def("show", &vl::physics::Tube::show)
 		.def("set_equilibrium", &vl::physics::Tube::setEquilibrium)
 		.def("add_fixing", &vl::physics::Tube::addFixingPoint, addFixingPoint_ovs())
+		.def("create", &vl::physics::Tube::create)
 	;
 }
 

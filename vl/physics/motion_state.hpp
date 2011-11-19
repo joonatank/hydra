@@ -84,6 +84,11 @@ public:
 		return vl::math::convert_transform(_trans);
 	}
 
+	void setWorldTransform(vl::Transform const &worldTrans)
+	{
+		_trans = vl::math::convert_bt_transform(worldTrans);
+	}
+
 	virtual void getWorldTransform(btTransform &worldTrans) const
 	{
 		worldTrans = _trans;
@@ -93,13 +98,9 @@ public:
 	{
 		_trans = worldTrans;
 
-		if( !_visibleobj)
-			return; // silently return before we set a node
-
-		Transform t = vl::math::convert_transform(_trans);
-		/// @todo these should set the world transform
-		_visibleobj->setOrientation(t.quaternion);
-		_visibleobj->setPosition(t.position);
+		// silently return before we set a node
+		if(_visibleobj)
+		{ _visibleobj->setWorldTransform(vl::math::convert_transform(_trans)); }
 	}
 
 protected:

@@ -48,12 +48,15 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _body_damping(info.body_damping)
 	, _spring(info.spring)
 	, _disable_internal_collisions(info.disable_collisions)
+	, _inertia(info.inertia)
 	, _lower_lim(info.lower_lim)
 	, _upper_lim(info.upper_lim)
 	, _fixing_lower_lim(info.fixing_lower_lim)
 	, _fixing_upper_lim(info.fixing_upper_lim)
-	, _world(world)
 	, _material_name(info.material_name)
+	, _world(world)
+	, _start_body_frame(info.start_body_frame)
+	, _end_body_frame(info.end_body_frame)
 {
 	assert(_world);
 
@@ -78,63 +81,6 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Tube end body is mandatory."));
 	}
-
-	/// @todo create the tube bodies using a user given length
-	/// this is usually different than the length between start and end bodies
-	/// but should never be less than.
-	
-	/// @todo check the distance between the two bodies
-	uint16_t n_elements = std::ceil(_length/_element_size);
-	vl::scalar elem_length = _length/n_elements;
-	Ogre::Vector3 bounds(_tube_radius, _tube_radius, elem_length/2);
-	BoxShapeRefPtr shape = BoxShape::create(bounds);
-	Ogre::Vector3 inertia(info.inertia);
-	vl::scalar elem_mass = _mass/n_elements;
-	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl;
-
-	Ogre::Vector3 from_start_to_end = _end_body->getWorldTransform().position - _start_body->getWorldTransform().position;
-	from_start_to_end.normalise();
-	std::clog << "start body to end body vector : " << from_start_to_end << std::endl;
-	
-	/// Set parameters to start and end bodies
-	_start_body->setUserControlled(true);
-	_start_body->setDamping(_body_damping, _body_damping);
-	_end_body->setUserControlled(true);
-	_end_body->setDamping(_body_damping, _body_damping);
-	
-	for(uint16_t i = 0; i < n_elements; ++i)
-	{
-		std::stringstream name;
-		name << "tube_" << n_tubes << "_element_" << i;
-		// @todo fix the transformations for the bodies now they are on top of each other
-		// Motions state transformation is correct, tested without mass it creates a nice string
-		// to the world zero that goes upwards.
-		// Of course we should have the string going in the z-axis
-		// Of course we should have the bodies created between start and end body
-		Ogre::Vector3 pos = _start_body->getWorldTransform().position 
-			+ from_start_to_end*((i-n_elements/2)*elem_length);
-		Ogre::Quaternion orient(1, 0, 0, 0); //(0.7071, 0.7071, 0, 0);
-		Transform ms_t(pos, orient);
-		MotionState *ms = _world->createMotionState(ms_t);
-		// @todo should check what axis is up and so on, set mass and inertia to zero for testing
-		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, inertia);
-		_bodies.push_back(body);
-		
-		// Needs to be here so that it will not be deactivated
-		body->setUserControlled(true);
-		body->setDamping(_body_damping, _body_damping);
-	}
-
-	_createConstraints(info.start_body_frame, info.end_body_frame, elem_length);
-
-	std::clog << "Created " << _bodies.size() << " rigid bodies and "
-		<< _constraints.size() << " constraints for the tube." << std::endl;
-
-	/// Create the SceneNodes
-	assert(_start_body->getMotionState() && _start_body->getMotionState()->getNode());
-	_createMesh(_start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
-	
-	++n_tubes;
 }
 
 vl::physics::Tube::~Tube(void)
@@ -147,28 +93,52 @@ vl::physics::Tube::~Tube(void)
 void
 vl::physics::Tube::setSpringStiffness(vl::scalar stiffness)
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if(_spring && _stiffness != stiffness)
+	{
+		for(ConstraintList::iterator iter = _constraints.begin()+1;
+			iter != _constraints.end()-1; ++iter)
+		{
+			SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+			
+			for(uint16_t i = 3; i < 6; ++i)
+			{ spring->setStiffness(i, stiffness); }
+		}
+	}
 
-	// @todo needs to reconfigure the constraints
 	_stiffness = stiffness;
 }
 
 void
 vl::physics::Tube::setSpringDamping(vl::scalar damping)
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if(_spring && _damping != damping)
+	{
+		for(ConstraintList::iterator iter = _constraints.begin()+1;
+			iter != _constraints.end()-1; ++iter)
+		{
+			SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+			
+			for(uint16_t i = 3; i < 6; ++i)
+			{ spring->setDamping(i, damping); }
+		}
+	}
 
-	// @todo needs to reconfigure the constraints
 	_damping = damping;
 }
 
 void
 vl::physics::Tube::setDamping(vl::scalar damping)
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if(_body_damping != damping)
+	{
+		for(RigidBodyList::iterator iter = _bodies.begin();
+			iter != _bodies.end(); ++iter)
+		{
+			(*iter)->setDamping(damping, damping);
+		}
 
-	// @todo needs to reconfigure the constraints
-	_body_damping = damping;
+		_body_damping = damping;
+	}
 }
 
 void
@@ -188,17 +158,33 @@ vl::physics::Tube::setMaterial(std::string const &material)
 void
 vl::physics::Tube::setLowerLim(Ogre::Vector3 const &lim)
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	
-	_lower_lim = lim;
+	if(_lower_lim != lim)
+	{
+		_lower_lim = lim;
+
+		for(ConstraintList::iterator iter = _constraints.begin()+1;
+			iter != _constraints.end()-1; ++iter)
+		{
+			SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+			spring->setAngularLowerLimit(lim);
+		}
+	}
 }
 
 void
 vl::physics::Tube::setUpperLim(Ogre::Vector3 const &lim)
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	if(_upper_lim != lim)
+	{
+		_upper_lim = lim;
 
-	_upper_lim = lim;
+		for(ConstraintList::iterator iter = _constraints.begin()+1;
+			iter != _constraints.end()-1; ++iter)
+		{
+			SixDofConstraintRefPtr spring = boost::dynamic_pointer_cast<SixDofConstraint>(*iter);
+			spring->setAngularUpperLimit(lim);
+		}
+	}
 }
 
 void
@@ -247,40 +233,19 @@ vl::physics::Tube::addFixingPoint(RigidBodyRefPtr body, vl::scalar length)
 		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Body where to fix is mandatory."));
 	}
 
-	RigidBodyRefPtr tube_body;
-
-	// Find the closest body
-	if(length < 0)
+	if(_fixing_bodies.find(length) != _fixing_bodies.end())
 	{
-		tube_body = _findBodyByPosition(body->getWorldTransform().position);
-	}
-	else
-	{
-		tube_body = _findBodyByLength(length);
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Already has a fixing at the point."));
 	}
 
-	if(!tube_body)
+	_fixing_bodies[length] = body;
+
+
+	// Just record the fixing poinsts as the tube has not yet been created
+	if(!_bodies.empty())
 	{
-		std::string msg = "Finding a RigidBody failed.";
-		std::clog << "Tube::addFixingPoint : " << msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc(msg));
+		_add_fixing_point(body, length);
 	}
-
-	// Create the fixed constraint
-	// @todo fix the frames, we should have the option to pass either local or world frame here
-	vl::Transform frameA, frameB;
-	SixDofConstraintRefPtr constraint = SixDofConstraint::create(body, tube_body, frameA, frameB, true);
-
-	// @todo this should be changed to use _setConstraint
-	constraint->setLinearLowerLimit(Ogre::Vector3::ZERO);
-	constraint->setLinearUpperLimit(Ogre::Vector3::ZERO);
-	constraint->setAngularLowerLimit(_fixing_lower_lim);
-	constraint->setAngularUpperLimit(_fixing_upper_lim);
-	body->setUserControlled(true);
-	body->setDamping(_body_damping, _body_damping);
-
-	_world->addConstraint(constraint, _disable_internal_collisions);
-	_external_fixings.push_back(constraint);
 }
 
 /// @todo even though this is implemented here physics::World::removeConstraint is not
@@ -303,6 +268,124 @@ vl::physics::Tube::removeFixingPoint(RigidBodyRefPtr body)
 	}
 
 	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No such constraint."));
+}
+
+void
+vl::physics::Tube::create(void)
+{
+	if(!_bodies.empty())
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Tube already created"));
+	}
+
+	/// General parameters that stay constant for the whole tube
+	uint16_t n_elements = std::ceil(_length/_element_size);
+	vl::scalar elem_length = _length/n_elements;
+	Ogre::Vector3 bounds(_tube_radius, _tube_radius, elem_length/2);
+	BoxShapeRefPtr shape = BoxShape::create(bounds);
+	vl::scalar elem_mass = _mass/n_elements;
+	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl;
+
+	/// Set parameters to start and end bodies
+	_start_body->setUserControlled(true);
+	_start_body->setDamping(_body_damping, _body_damping);
+	_end_body->setUserControlled(true);
+	_end_body->setDamping(_body_damping, _body_damping);
+
+	std::map<vl::scalar, RigidBodyRefPtr>::iterator fixing_iter = _fixing_bodies.begin();
+
+	// Create the bodies
+	// between the fixing points
+	RigidBodyRefPtr body0 = _start_body;
+	RigidBodyRefPtr body1 = _end_body;
+	Ogre::Vector3 pos = _start_body->getWorldTransform().position;
+	Ogre::Vector3 old_dir = -Ogre::Vector3::UNIT_Z;
+	std::clog << "Start position = " << pos << std::endl;
+	for(uint16_t i = 0; i < n_elements; ++i)
+	{
+		// Direction between the bodies
+		// @todo change to use consecutive bodies
+		// we need to calculate the current position based on last fixing and
+		// the direction from that to the next fixing
+		if(fixing_iter != _fixing_bodies.end())
+		{
+			// Still valid body
+			if(fixing_iter->first < i*elem_length)
+			{
+				body1 = fixing_iter->second;
+			}
+			// Move to next fixing point
+			else
+			{
+				// We assume that no fixing points are so close to each other 
+				// that we would need to move the iterator multiple times.
+				++fixing_iter;
+				if(fixing_iter != _fixing_bodies.end())
+				{ body1 = fixing_iter->second; }
+			}
+		}
+
+		// @todo this way of calculating the direction does not take the limits
+		// into account
+		Ogre::Vector3 dir = body1->getWorldTransform().position - body0->getWorldTransform().position;
+		dir.normalise();
+		vl::scalar angle = dir.angleBetween(old_dir).valueRadians();
+		vl::scalar max_lim = vl::max(_upper_lim.x, vl::max(_upper_lim.y, _upper_lim.z));
+		if(angle > max_lim)
+		{
+			std::clog << "Direction vector = " << dir << std::endl;
+			std::clog << "Direction vector with too steep curve. Difference = " 
+				<< angle - max_lim << std::endl;
+			std::clog << "Direction vector dot product = " << dir.dotProduct(old_dir) << std::endl;
+		}
+		old_dir = dir;
+		//std::clog << "direction vector : " << dir << std::endl;
+
+		std::stringstream name;
+		name << "tube_" << n_tubes << "_element_" << i;
+
+		//pos += dir*((i-n_elements/2)*elem_length);
+		// This seems to work fine for everything except when we are moving backwards
+		// but the limits are constricting so that we need to make a u-turn.
+		pos = body0->getWorldTransform().position + dir*elem_length;
+
+		// @todo this should maybe be modified to combine both the direction 
+		// and the orginal orientation
+		Ogre::Quaternion orient = body0->getWorldTransform().quaternion;
+		//std::clog << "Position = " << pos << " orientation = " << orient << std::endl;
+
+		Transform ms_t(pos, orient);
+		MotionState *ms = _world->createMotionState(ms_t);
+		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, _inertia);
+		_bodies.push_back(body);
+		
+		// Needs to be here so that it will not be deactivated
+		body->setUserControlled(true);
+		body->setDamping(_body_damping, _body_damping);
+		body0 = body;
+	}
+
+	// Create the constraints
+	_createConstraints(_start_body_frame, _end_body_frame, elem_length);
+
+	std::clog << "Created " << _bodies.size() << " rigid bodies and "
+		<< _constraints.size() << " constraints for the tube." << std::endl;
+
+
+	// Create the fixing point constraints
+	for(std::map<vl::scalar, RigidBodyRefPtr>::iterator iter = _fixing_bodies.begin();
+		iter != _fixing_bodies.end(); ++iter)
+	{
+		_add_fixing_point(iter->second, iter->first);
+	}
+
+
+	// Create the mesh
+	_createMesh(_start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
+
+
+	// Increase the static counter
+	++n_tubes;
 }
 
 
@@ -390,10 +473,14 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	mesh_name << "tube_" << n_tubes << "_element";
 	mesh_manager->createCube(mesh_name.str(), Ogre::Vector3(_tube_radius*2, _tube_radius*2, _length/_bodies.size()));
 
+	/// Create the SceneNodes
+	if(!_start_body->getMotionState() || !_start_body->getMotionState()->getNode())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Motion state or node.")); }
+
 	SceneNodePtr parent_node = _start_body->getMotionState()->getNode();
-	assert(parent_node);
 	SceneManagerPtr sm = parent_node->getCreator();
 	assert(sm);
+
 	// We need to use root node for the physics engine to work correctly
 	parent_node = sm->getRootSceneNode();
 	assert(parent_node);
@@ -465,4 +552,44 @@ vl::physics::Tube::_findBodyByPosition(Ogre::Vector3 const &pos)
 		<< "m from the requested position." << std::endl;
 
 	return closest;
+}
+
+
+void
+vl::physics::Tube::_add_fixing_point(RigidBodyRefPtr body, vl::scalar length)
+{
+	// Find the closest body
+	RigidBodyRefPtr tube_body;
+	
+	if(length < 0)
+	{
+		tube_body = _findBodyByPosition(body->getWorldTransform().position);
+	}
+	else
+	{
+		tube_body = _findBodyByLength(length);
+	}
+
+	if(!tube_body)
+	{
+		std::string msg = "Finding a RigidBody failed.";
+		std::clog << "Tube::addFixingPoint : " << msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc(msg));
+	}
+
+	// Create the fixed constraint
+	// @todo fix the frames, we should have the option to pass either local or world frame here
+	vl::Transform frameA, frameB;
+	SixDofConstraintRefPtr constraint = SixDofConstraint::create(body, tube_body, frameA, frameB, true);
+
+	// @todo this should be changed to use _setConstraint
+	constraint->setLinearLowerLimit(Ogre::Vector3::ZERO);
+	constraint->setLinearUpperLimit(Ogre::Vector3::ZERO);
+	constraint->setAngularLowerLimit(_fixing_lower_lim);
+	constraint->setAngularUpperLimit(_fixing_upper_lim);
+	body->setUserControlled(true);
+	body->setDamping(_body_damping, _body_damping);
+
+	_world->addConstraint(constraint, _disable_internal_collisions);
+	_external_fixings.push_back(constraint);
 }

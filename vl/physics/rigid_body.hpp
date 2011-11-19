@@ -141,6 +141,10 @@ public :
 
 	virtual void setWorldTransform(Transform const &worldTrans) = 0;
 
+	virtual void enableKinematicObject(bool enable) = 0;
+
+	virtual bool isKinematicObject(void) const = 0;
+
 	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ return -1; }
 
