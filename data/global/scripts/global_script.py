@@ -469,7 +469,8 @@ class FrustumToggler:
 		game.player.head_frustum_x = False
 		game.player.head_frustum_y = True
 		game.player.head_frustum_z = False
-		self.cyclop_vector = Vector3(0, 0, -0.15)
+		#self.cyclop_vector = Vector3(0, 0, -0.15)
+		self.cyclop_vector = Vector3(0, 0, 0)
 		self.cyclop = False
 
 		game.player.asymmetric_stereo_frustum = True
