@@ -357,36 +357,21 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	if(!_link)
 	{ return; }
 
-	/// @todo add configurable axis using _axisInA
-	/// @todo starting position is in Frame A, so we should fix the offset from Frame B
-	/// that is in the start, 
-	/// as WT*_start_local_frame_a.position.y != WT*_start_local_frame_b.position.y
-	/// which causes the zero position for Frame B be in the origin of Frame A
-	/// but this does not change it before the target has been changed.
-
-	Ogre::Vector3 translate = Ogre::Vector3::ZERO;
-
 	Ogre::Vector3 v = _link->getTransform().position - _link->getInitialTransform().position;
 	vl::scalar pos_size = _axisInA.dotProduct(v);
-	Ogre::Vector3 pos = pos_size*_axisInA;
-	Ogre::Vector3 target = _target_position * _axisInA;
+	vl::scalar mov = 0;
 
-	if(isActuator() && !target.positionEquals(pos))
+	if(isActuator() && _target_position != pos_size)
 	{
 		/// Axis is either not limited (lower limit is greater than upper)
 		/// or if it's current position is within the limits
 		/// @todo should we update the target position based on limits, 
 		/// so that there is no impossible target
 
-		Ogre::Vector3 s = vl::sign(target - pos);
-		vl::scalar mov = vl::abs(_speed) * double(t); 
-		vl::scalar target_to_pos_dist = pos.distance(target);
-		if(mov > target_to_pos_dist)
-		{
-			mov = target_to_pos_dist;
-		}
-
-		translate = s*mov;
+		vl::scalar s = vl::sign(_target_position - pos_size);
+		vl::scalar m_step = vl::abs(_speed) * double(t);
+		vl::scalar max_step = vl::abs(_target_position - pos_size); 
+		mov = s * std::min(m_step, max_step); 
 	}
 	else
 	{
@@ -400,26 +385,13 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	// Clamp only if not free
 	if(!free)
 	{
-		// @todo should we clamp the target instead of the result? 
-		// then again any subsequent change in limits would not get the actuator moving
-		Ogre::Vector3 low_limit = _lower_limit*_axisInA - pos;
-		Ogre::Vector3 up_limit = _upper_limit*_axisInA - pos;
-		// Rearrange the vectors to handle negative axes
-		Ogre::Vector3 max, min;
-		min.x = low_limit.x < up_limit.x ? low_limit.x : up_limit.x;
-		min.y = low_limit.y < up_limit.y ? low_limit.y : up_limit.y;
-		min.z = low_limit.z < up_limit.z ? low_limit.z : up_limit.z;
-		max.x = low_limit.x < up_limit.x ? up_limit.x : low_limit.x;
-		max.y = low_limit.y < up_limit.y ? up_limit.y : low_limit.y;
-		max.x = low_limit.z < up_limit.z ? up_limit.z : low_limit.z;
-
-		vl::clamp(translate, min, max);
+		vl::clamp(mov, _lower_limit-pos_size, _upper_limit-pos_size);
 	}
 
-	if(!translate.positionEquals(Ogre::Vector3::ZERO))
+	if(mov != 0)
 	{
 		/// Update object B
-		_link->getTransform().position += translate;
+		_link->getTransform().position += mov*_axisInA;
 	}
 }
 
@@ -491,10 +463,6 @@ vl::HingeConstraint::_progress(vl::time const &t)
 {
 	if(!_link)
 	{ return; }
-
-	/// @todo add configurable axis using _axisInA
-	/// Something really wrong with the axes, using x-axis in code will result in model
-	/// local z-axis...
 
 	// @todo add some checking if the actuator parameters are even plausable
 	// like isActuator == true -> _speed != 0 and so on, some error reporting
