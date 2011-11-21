@@ -298,9 +298,6 @@ vl::physics::Tube::create(void)
 	// between the fixing points
 	RigidBodyRefPtr body0 = _start_body;
 	RigidBodyRefPtr body1 = _end_body;
-	Ogre::Vector3 pos = _start_body->getWorldTransform().position;
-	Ogre::Vector3 old_dir = -Ogre::Vector3::UNIT_Z;
-	std::clog << "Start position = " << pos << std::endl;
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		// Direction between the bodies
@@ -325,29 +322,27 @@ vl::physics::Tube::create(void)
 			}
 		}
 
-		// @todo this way of calculating the direction does not take the limits
-		// into account
-		Ogre::Vector3 dir = body1->getWorldTransform().position - body0->getWorldTransform().position;
+		// Find the start and end transformations
+		// start transformation is the transformation of the last body
+		// end transformation is the transformation of the next fixing point 
+		// or a helper if one is defined
+		vl::Transform wt_start(body0->getWorldTransform());
+		vl::Transform wt_end(body1->getWorldTransform());
+		
+		// Using the last body instead of calculating real direction vector
+		// does better job at keeping the tubes from tangeling when they backtrack
+		// real method would be to take the limits into account when calculating
+		// the direction.
+		Ogre::Vector3 dir = wt_end.quaternion*Ogre::Vector3::UNIT_Y; //NEGATIVE_UNIT_Y; //wt_end.position - wt_start.position;
 		dir.normalise();
-		vl::scalar angle = dir.angleBetween(old_dir).valueRadians();
-		vl::scalar max_lim = vl::max(_upper_lim.x, vl::max(_upper_lim.y, _upper_lim.z));
-		if(angle > max_lim)
-		{
-			std::clog << "Direction vector = " << dir << std::endl;
-			std::clog << "Direction vector with too steep curve. Difference = " 
-				<< angle - max_lim << std::endl;
-			std::clog << "Direction vector dot product = " << dir.dotProduct(old_dir) << std::endl;
-		}
-		old_dir = dir;
-		//std::clog << "direction vector : " << dir << std::endl;
-
+	
 		std::stringstream name;
 		name << "tube_" << n_tubes << "_element_" << i;
 
 		//pos += dir*((i-n_elements/2)*elem_length);
 		// This seems to work fine for everything except when we are moving backwards
 		// but the limits are constricting so that we need to make a u-turn.
-		pos = body0->getWorldTransform().position + dir*elem_length;
+		Ogre::Vector3 pos = wt_start.position + dir*elem_length;
 
 		// @todo this should maybe be modified to combine both the direction 
 		// and the orginal orientation
@@ -397,8 +392,6 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 	/// Maximum number of constraint is N+1 where N is the number of elements
 	vl::Transform frameA(Ogre::Vector3(0, elem_length/2, 0));
 	vl::Transform frameB = -frameA;
-//	frameA.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);
-//	frameB.quaternion = Ogre::Quaternion(0.7071, 0.7071, 0, 0);
 	if(_start_body && _bodies.size() > 0)
 	{
 		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), start_frame, frameB, true);
