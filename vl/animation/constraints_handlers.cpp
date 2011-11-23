@@ -18,7 +18,7 @@
 
 #include "constraints.hpp"
 
-
+/// ------------------------------ Public ------------------------------------
 void
 vl::ConstraintJoystickHandler::set_axis_constraint(int axis, ConstraintRefPtr constraint)
 {
@@ -115,3 +115,8 @@ vl::ConstraintJoystickHandler::_apply_event(JoystickEvent const &evt)
 	}
 
 }
+
+/// ------------------------------ Protected ---------------------------------
+vl::ConstraintJoystickHandler::ConstraintJoystickHandler(void)
+	: _velocity_multiplier(1.0)
+{}

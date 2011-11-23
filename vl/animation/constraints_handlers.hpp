@@ -71,7 +71,7 @@ struct ConstraintJoystickHandler : public JoystickHandler
 	static ConstraintJoystickHandlerRefPtr create(void);
 	
 protected :
-	ConstraintJoystickHandler(void) {}
+	ConstraintJoystickHandler(void);
 
 	void _apply_event(JoystickEvent const &evt);
 
