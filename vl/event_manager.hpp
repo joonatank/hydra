@@ -123,8 +123,10 @@ private :
 
 	std::map<std::string, JoystickRefPtr> _joysticks;
 
+	std::map<std::string, SerialJoystickRefPtr> _serial_joysticks;
+
 	// stored also separately to avoid searching and casting
-	GameJoystickRefPtr _game_joystick;
+	JoystickRefPtr _game_joystick;
 
 };	// class EventManager
 

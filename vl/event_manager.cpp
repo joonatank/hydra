@@ -12,7 +12,7 @@
 #include "base/string_utils.hpp"
 
 #include "input/serial_joystick.hpp"
-#include "input/game_joystick.hpp"
+#include "input/joystick.hpp"
 
 #include "input/ois_converters.hpp"
 
@@ -196,15 +196,34 @@ vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
 	std::string str(name);
 	vl::to_lower(str);
 	// only com ports are supported by name
-	bool serial = false;
+	// the full name is comX:N
+	// where X is the serial port number (in Windows)
+	// and N is the joystick number in that serial port
+	// comX is a short hand for comX:0
+	std::string serial_port;
 	if(str.substr(0, 3) != "com")
 	{
 		str = "default";
 	}
 	else
-	{ serial = true; }
+	{
+		if(str.size() > 3)
+		{
+			serial_port = str.substr(0, 4);
+		}
+		else
+		{
+			serial_port = "com1";
+		}
+
+		/// No joystick specified default to 0
+		if(str.size() < 6)
+		{
+			str = serial_port + ":0";
+		}
+	}
 	
-	std::map<std::string, JoystickRefPtr>::iterator iter =_joysticks.find(str);
+	std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.find(str);
 	if(iter != _joysticks.end())
 	{
 		return iter->second;
@@ -212,26 +231,48 @@ vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
 	else
 	{
 		JoystickRefPtr joy;
-		if(serial)
+		if(!serial_port.empty())
 		{
-			// @todo add bit more descriptive exception handling
-			try {
-				joy = SerialJoystick::create(str);
-			}
-			catch(...)
+			std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.find(serial_port);
+			// Create the serial connection
+			if(iter == _serial_joysticks.end())
 			{
-				std::cout << vl::CRITICAL << "Exception in creating SerialJoystick." 
-					<< std::endl;
+				// @todo add bit more descriptive exception handling
+				try {
+					SerialJoystickRefPtr sj = SerialJoystick::create(str);
+					_serial_joysticks[serial_port] = sj; 
+				}
+				catch(vl::exception const &e)
+				{
+					std::cout << vl::CRITICAL << "Exception : " 
+						<< boost::diagnostic_information<>(e) << std::endl;
+				}
+				catch(...)
+				{
+					std::cout << vl::CRITICAL << "Exception in creating SerialJoystick." 
+						<< std::endl;
+				}
+			}
+
+			// Get the joystick from connection
+			iter = _serial_joysticks.find(serial_port);
+			if(iter != _serial_joysticks.end())
+			{
+				std::stringstream ss(str.substr(5));
+				int number;
+				ss >> number;
+				assert(number < iter->second->getNJoysticks());
+				joy = iter->second->getJoystick(number);
 			}
 		}
 
 		// Create joystick if not already created
 		// If no fallbacking is requested will not create default joystick
 		// for serial joysticks
-		if(!joy && (!serial || fallback_to_all))
+		if(!joy && (serial_port.empty() || fallback_to_all))
 		{
 			if(!_game_joystick)
-			{ _game_joystick = GameJoystick::create(); }
+			{ _game_joystick = Joystick::create(); }
 
 			joy = _game_joystick;
 		}
@@ -259,8 +300,8 @@ vl::EventManager::update_joystick(vl::JoystickEvent const &evt)
 void
 vl::EventManager::mainloop(void)
 {
-	for(std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.begin();
-		iter != _joysticks.end(); ++iter)
+	for(std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.begin();
+		iter != _serial_joysticks.end(); ++iter)
 	{
 		iter->second->mainloop();
 	}

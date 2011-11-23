@@ -82,10 +82,21 @@ struct options
 	std::string input_file;
 };
 
-void joystickValueChanged(vl::JoystickEvent const &evt)
+void joystickValueChanged0(vl::JoystickEvent const &evt)
 {
-	std::cout << "New joystick values : " << evt << std::endl;
+	std::cout << "Joystick 1 : new values : " << evt << std::endl;
 }
+
+void joystickValueChanged1(vl::JoystickEvent const &evt)
+{
+	std::cout << "Joystick 2 : new values : " << evt << std::endl;
+}
+
+void joystickValueChanged2(vl::JoystickEvent const &evt)
+{
+	std::cout << "Joystick 3 : new values : " << evt << std::endl;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -93,15 +104,31 @@ int main(int argc, char **argv)
 		options opt;
 		opt.parse(argc, argv);
 
-		vl::SerialJoystick joy(opt.com_port);
-		joy.addListener(&joystickValueChanged);
+		vl::SerialJoystickRefPtr serial = vl::SerialJoystick::create(opt.com_port);
+		assert(serial->getNJoysticks() > 0);
+
+		serial->getJoystick(0)->addListener(&joystickValueChanged0);
+
+		if(serial->getNJoysticks() > 1)
+		{
+			serial->getJoystick(1)->addListener(&joystickValueChanged1);
+		}
+		if(serial->getNJoysticks() > 2)
+		{
+			serial->getJoystick(2)->addListener(&joystickValueChanged2);
+		}
+
 		// Read the response
 		while(true)
 		{
-			joy.mainloop();
+			serial->mainloop();
 
 			Sleep(100);
 		}
+	}
+	catch(boost::exception const &e)
+	{
+		std::cerr << "Boost Exception : \n" << boost::diagnostic_information<>(e) << std::endl;
 	}
 	catch(std::string const &e)
 	{

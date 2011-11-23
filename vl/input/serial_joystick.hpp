@@ -1,10 +1,24 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-07
  *	@file input/serial_joystick.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Serial joystick interface for custom Arduino setup
+ *	This is the concrete implemention used to update the Joystcik
+ *	proxy which is the same for both Arduino joysticks and
+ *	game joysticks.
  */
 
 /**	Specifications for communications
@@ -30,8 +44,7 @@
 #ifndef HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 #define HYDRA_INPUT_SERIAL_JOYSTICK_HPP
 
-// Interface
-#include "input.hpp"
+#include "joystick.hpp"
 
 #include "math/math.hpp"
 
@@ -42,7 +55,19 @@ namespace vl
 {
 
 // Serial message ids
-const int MSG_READ_JOYSTICK = 75;
+// Main message id (request - response)
+// Single joystick
+const uint8_t MSG_READ_JOYSTICK = 75;
+// Multiple joysticks
+const uint8_t MSG_READ_MULTIPLE_JOYSTICKS = 77;
+// Separator for multiple joysticks
+const uint8_t MSG_JOYSTICK_START = 40;
+const uint8_t MSG_ERROR = 41;
+const uint8_t MSG_STOP = 36;
+
+// Error messages
+const uint8_t ERR_INCORRECT_BYTES_WRITEN = 1;
+const uint8_t ERR_UNKNOWN_MSG = 2;
 
 const uint8_t ANALOG_ID = 0;
 const uint8_t DIGITAL_ID = 1;
@@ -53,37 +78,49 @@ inline vl::scalar convert_analog(uint16_t data)
 	return ((double)data)/(1024.0/2) - 1.0;
 }
 
-class SerialJoystick : public Joystick
+class SerialJoystick
 {
 public :
 	SerialJoystick(std::string const &device);
 
 	virtual ~SerialJoystick(void) {}
 
-	virtual void mainloop(void);
+	void mainloop(void);
+
+	/// @brief checks that the connection is valid and the number of
+	/// joysticks available.
+	/// Creates the joysticks.
+	void initialise(void);
 
 	static SerialJoystickRefPtr create(std::string const &dev)
 	{
 		SerialJoystickRefPtr joy(new SerialJoystick(dev));
+		joy->initialise();
 		joy->calibrate_zero();
 		return joy;
 	}
 
 	void calibrate_zero(void);
 
+	size_t getNJoysticks(void) const
+	{ return _joysticks.size(); }
+
+	JoystickRefPtr getJoystick(size_t i)
+	{ return _joysticks.at(i); }
+
 private :
-	// New parse function that creates the event structure
-	JoystickEvent _parse(std::vector<char> msg, size_t bytes);
 
-	// combined write/read the serial
-	bool _request_data(JoystickEvent &evt);
+	JoystickEvent _parse(std::vector<char> msg, size_t bytes, size_t offset);
 
-	// only read the serial for new data
-	bool _read_data(JoystickEvent &evt);
+	bool _request_multi_data(std::vector<vl::JoystickEvent> &evt = std::vector<vl::JoystickEvent>() );
+
+	bool _read_multi_data(std::vector<vl::JoystickEvent> &evt);
 
 	Serial _serial;
 
-	JoystickEvent _zero;
+	std::vector<JoystickRefPtr> _joysticks;
+
+	std::vector<JoystickEvent> _zeros;
 
 };	// Class SerialJoystickReader
 

@@ -42,7 +42,7 @@
 // Input
 #include "input/joystick_event.hpp"
 #include "input/serial_joystick.hpp"
-#include "input/game_joystick.hpp"
+#include "input/joystick.hpp"
 
 
 #include "vrpn_analog_client.hpp"
@@ -166,12 +166,6 @@ void export_managers(void)
 		.def("add_handler", &vl::Joystick::add_handler)
 		.def("remove_handler", &vl::Joystick::remove_handler)
 		.add_property("zero_size", &vl::Joystick::get_zero_size, &vl::Joystick::set_zero_size)
-	;
-
-	python::class_<vl::GameJoystick, vl::GameJoystickRefPtr, boost::noncopyable, python::bases<vl::Joystick> >("GameJoystick", python::no_init)
-	;
-
-	python::class_<vl::SerialJoystick, vl::SerialJoystickRefPtr, boost::noncopyable, python::bases<vl::Joystick> >("SerialJoystick", python::no_init)
 	;
 
 	python::def( "getKeyName", getKeyName );

@@ -192,19 +192,31 @@ game.scene.mapCollisionBarriers()
 # Joystick control
 # Falls back to game joysticks, if none exists the movements
 # are just disabled...
-joy = game.event_manager.getJoystick("COM5")
-joy.zero_size = 0.1
+left_joy = game.event_manager.getJoystick("COM4:0")
+right_joy_1 = game.event_manager.getJoystick("COM4:1")
+right_joy_2 = game.event_manager.getJoystick("COM4:2")
+left_joy.zero_size = 0.1
+right_joy_1.zero_size = 0.1
+right_joy_2.zero_size = 0.1
 
 # TODO check the mapping
 joy_handler = ConstraintJoystickHandler.create()
+joy_handler.velocity_multiplier = 0.4
+joy_handler.set_axis_constraint(1, teleskooppi)
+joy_handler.set_axis_constraint(0, pulttaus_hinge)
+
+left_joy.add_handler(joy_handler)
+
+joy_handler = ConstraintJoystickHandler.create()
+joy_handler.velocity_multiplier = 0.4
+joy_handler.set_axis_constraint(1, motor_hinge)
+right_joy_1.add_handler(joy_handler)
+
+joy_handler = ConstraintJoystickHandler.create()
+joy_handler.velocity_multiplier = 0.4
 joy_handler.set_axis_constraint(1, puomi_hinge)
 joy_handler.set_axis_constraint(0, kaanto_hinge)
-joy_handler.set_axis_constraint(1, 0, teleskooppi)
-joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
-joy_handler.set_axis_constraint(1, 1, motor_hinge)
-joy_handler.velocity_multiplier = 0.4
-
-joy.add_handler(joy_handler)
+right_joy_2.add_handler(joy_handler)
 
 # Add tube simulation
 game.enablePhysics(True)
