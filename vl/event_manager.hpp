@@ -1,14 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/9 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
- *	@file event_manager.hpp
+ *	@file event_manager.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	EventManager used to create and retrieve Triggers
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_EVENT_MANAGER_HPP
-#define VL_EVENT_MANAGER_HPP
+#ifndef HYDRA_EVENT_MANAGER_HPP
+#define HYDRA_EVENT_MANAGER_HPP
 
 #include <vector>
 
@@ -139,5 +147,4 @@ operator<<( std::ostream &os, EventManager const &man )
 
 }	// namespace vl
 
-#endif	// VL_EVENT_MANAGER_HPP
-
+#endif	// HYDRA_EVENT_MANAGER_HPP

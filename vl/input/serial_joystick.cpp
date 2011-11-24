@@ -28,6 +28,8 @@ const int BAUD_RATE = CBR_128000;
 /// --------------------------------- Public ---------------------------------
 vl::SerialJoystick::SerialJoystick(std::string const &device)
 	: _serial(device, BAUD_RATE)
+	, _request_sent(false)
+	, _incomplete_joystick_msg(false)
 {
 	// If necessary to decrease the timeouts be sure to increase baud rate also
 	// on both arduino and here. Otherwise part of the message is lost.
@@ -39,38 +41,45 @@ vl::SerialJoystick::mainloop(void)
 {
 	std::vector<JoystickEvent> events;
 
-	assert(_joysticks.size() > 0);
-
-	bool res = _request_multi_data(events);
-	while(!res)
+	if(_joysticks.size() == 0)
+	{
+		std::string err_msg("SerialJoystick shouldn't be able to be created without any joysticks.");
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
+	}
+	
+	bool res = _read_multi_data(events, false);
+	if(!res)
 	{
 		assert(events.empty());
-		res = _read_multi_data(events);
+	}
+	else
+	{
+		// @todo this will use same zero for all joysticks
+		// even though they differ
+		for(size_t i = 0; i < events.size(); ++i)
+		{
+			assert(_zeros.size() > i);
+			events.at(i) -= _zeros.at(i);
+			assert(_joysticks.size() > i);
+			_joysticks.at(i)->_update(events.at(i));
+		}
 	}
 
-	// @todo this will use same zero for all joysticks
-	// even though they differ
-	for(size_t i = 0; i < events.size(); ++i)
-	{
-		assert(_zeros.size() > i);
-		events.at(i) -= _zeros.at(i);
-		assert(_joysticks.size() > i);
-		_joysticks.at(i)->_update(events.at(i));
-	}
+	// Request more data for next read
+	_request_multi_data();
 }
 
 void
 vl::SerialJoystick::initialise(void)
 {
+	_serial.set_read_timeout(1000, 200);
 	std::vector<JoystickEvent> events;
-	if(!_request_multi_data(events))
+
+	_request_multi_data();
+	vl::msleep(1);
+	if(!_read_multi_data(events, true))
 	{
-		assert(events.empty());
-		vl::msleep(1);
-		while(!_read_multi_data(events))
-		{
-			vl::msleep(1);
-		}
+		BOOST_THROW_EXCEPTION(vl::exception());
 	}
 
 	/// Resize the joystick array
@@ -87,18 +96,19 @@ vl::SerialJoystick::initialise(void)
 void
 vl::SerialJoystick::calibrate_zero(void)
 {
+	_serial.set_read_timeout(1000, 200);
 	// Needs to be zeroed because the events are pushed back
 	_zeros.clear();
 
-	if(!_request_multi_data(_zeros))
+	_request_multi_data();
+	vl::msleep(1);
+	if(!_read_multi_data(_zeros, true))
 	{
-		assert(_zeros.empty());
-		vl::msleep(1);
-		while(!_read_multi_data(_zeros))
-		{
-			vl::msleep(1);
-		}
+		BOOST_THROW_EXCEPTION(vl::exception());
 	}
+
+	// Send a new request for next call
+	_request_multi_data();
 
 	std::clog << "Zero calibrated." << std::endl;
 
@@ -164,8 +174,8 @@ vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes, size_t offset)
 	return evt;
 }
 
-bool
-vl::SerialJoystick::_request_multi_data(std::vector<vl::JoystickEvent> &evt)
+void
+vl::SerialJoystick::_request_multi_data(void)
 {
 	// The reading and request are switched because otherwise we don't have the
 	// buffer filled when read.
@@ -173,75 +183,94 @@ vl::SerialJoystick::_request_multi_data(std::vector<vl::JoystickEvent> &evt)
 	// and custom buffer that is converted to JoyEvent when complete message
 	// is received.
 
-	// Read old data
-	bool res = _read_multi_data(evt);
-
 	// Request new data
-	std::vector<char> buf(128);
-	buf.at(0) = MSG_READ_MULTIPLE_JOYSTICKS;
-	size_t bytes = _serial.write(buf, 1);
-
-	if(bytes != 1)
+	if(!_request_sent)
 	{
-		std::stringstream ss;
-		ss << "Something fishy : wrote " << bytes << " bytes instead of 1." << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
-	}
+		std::vector<char> buf(128);
+		buf.at(0) = MSG_READ_MULTIPLE_JOYSTICKS;
+		size_t bytes = _serial.write(buf, 1);
 
-	return res;
+		if(bytes != 1)
+		{
+			std::stringstream ss;
+			ss << "Something fishy : wrote " << bytes << " bytes instead of 1." << std::endl;
+			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+		}
+
+		_request_sent = true;
+	}
 }
 
 bool
-vl::SerialJoystick::_read_multi_data(std::vector<vl::JoystickEvent> &evt)
+vl::SerialJoystick::_read_multi_data(std::vector<vl::JoystickEvent> &evt, bool blocking)
 {
 	// Read data
 	std::vector<char> buf(128);
-	
-	size_t bytes = _serial.read(buf, 2);
 	bool ret_val = false;
+	size_t bytes = 0;
 
-	while(bytes > 0)
+	/// Finish an incomplete message
+	if(_incomplete_joystick_msg)
+	{
+		bytes = _serial.read(buf, _joystick_msg_size, blocking);
+			
+		if(bytes)
+		{
+			// This shouldn't ever happen
+			if(bytes != _joystick_msg_size )
+			{
+				std::stringstream ss;
+				ss << "Incorrect number of bytes. Read " << bytes 
+					<< " bytes instead of " << _joystick_msg_size;
+				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+			}
+				
+			_parse_joystick_msg(evt, buf);
+			_incomplete_joystick_msg = false;
+			_request_sent = false;
+			ret_val = true;
+			
+			bytes = _serial.read(buf, 2, blocking);
+		}
+	}
+	else
+	{ bytes = _serial.read(buf, 2, blocking); }
+
+	/// Process a new message
+	while(bytes)
 	{
 		size_t offset = 0;
 		assert(bytes == 2);
-		switch(buf.at(offset++)) 
+		uint16_t type = buf.at(offset++);
+		switch(type) 
 		{
 			case MSG_READ_MULTIPLE_JOYSTICKS:
 			{
-				size_t msg_length = buf.at(offset++);
+				_joystick_msg_size = buf.at(offset++);
 
 				// Read the real message
-				bytes = _serial.read(buf, msg_length);
-				offset = 0;
-		
-				// Needs to throw because we can't handle partial messages
-				if(bytes != msg_length)
-				{
-					std::stringstream ss;
-					ss << "Incorrect number of bytes. Read " << bytes 
-						<< " bytes instead of " << msg_length;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
-				}
-
-				// Check that there is a stop
-				assert(buf.at(msg_length-1) == MSG_STOP);
-
-				uint16_t n_joysticks = buf.at(offset++);
-				uint16_t joystick_size = buf.at(offset++);
-
-				for(size_t i = 0; i < n_joysticks; ++i)
-				{
-					// check that all joysticks are valid
-					assert(buf.at(offset) == MSG_JOYSTICK_START);
-
-					JoystickEvent eve;
-			
-					eve = _parse(buf, joystick_size, offset);
-					offset += joystick_size;
-					evt.push_back(eve);
-				}
+				bytes = _serial.read(buf, _joystick_msg_size, blocking);
 				
-				ret_val = true;
+				if(!bytes)
+				{
+					_incomplete_joystick_msg = true; 
+				}
+				else
+				{
+					// This shouldn't ever happen
+					if(bytes != _joystick_msg_size )
+					{
+						std::stringstream ss;
+						ss << "Incorrect number of bytes. Read " << bytes 
+							<< " bytes instead of " << _joystick_msg_size;
+						BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+					}
+				
+					_parse_joystick_msg(evt, buf);
+					_incomplete_joystick_msg = false;
+					_request_sent = false;
+					ret_val = true;
+				}
 			}
 			break;
 
@@ -275,11 +304,36 @@ vl::SerialJoystick::_read_multi_data(std::vector<vl::JoystickEvent> &evt)
 			break;
 
 			default:
-				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknow Message received from Serial."));
+				std::cout << vl::CRITICAL << "Unknow Message " << type << " received from Serial." << std::endl;
 		}
-
-		bytes = _serial.read(buf, 2);
+		
+		if(!_incomplete_joystick_msg)
+		{ bytes = _serial.read(buf, 2, blocking); }
 	}
 
 	return ret_val;
+}
+
+void
+vl::SerialJoystick::_parse_joystick_msg(std::vector<vl::JoystickEvent> &evt, std::vector<char> msg)
+{
+	size_t offset = 0;
+
+	// Check that there is a stop
+	assert(msg.at(_joystick_msg_size-1) == MSG_STOP);
+
+	uint16_t n_joysticks = msg.at(offset++);
+	uint16_t joystick_size = msg.at(offset++);
+
+	for(size_t i = 0; i < n_joysticks; ++i)
+	{
+		// check that all joysticks are valid
+		assert(msg.at(offset) == MSG_JOYSTICK_START);
+
+		JoystickEvent eve;
+			
+		eve = _parse(msg, joystick_size, offset);
+		offset += joystick_size;
+		evt.push_back(eve);
+	}
 }

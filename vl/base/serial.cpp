@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-07
- *	@file base/serial.hpp
+ *	@file base/serial.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Low level serial device reader.
  *	@todo add Linux implementation
  */
@@ -17,7 +28,10 @@
 
 vl::Serial::Serial(std::string const &dev_name, uint32_t baud_rate)
 	: _hSerial(0)
+	, _buffer_size(0)
 {
+	_buffer.resize(512);
+
 	try {
 		if(!dev_name.empty())
 		{ open(dev_name, baud_rate); }
@@ -40,19 +54,19 @@ vl::Serial::open(std::string const &dev_name, uint32_t baud_rate)
 	_hSerial = CreateFile(dev_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if(_hSerial==INVALID_HANDLE_VALUE)
 	{
+		std::stringstream ss;
+		ss << "Serial port : " << _name << " : ";
+		
 		if(GetLastError()==ERROR_FILE_NOT_FOUND)
 		{
-			//serial port does not exist. Inform user.
-			// @todo should throw
-			std::cerr << "ERROR : No such COM port." << std::endl;
+			ss << "No such COM port.";
 		}
 		else
 		{
-			//some other error occurred. Inform user.
-			// @todo should throw
-			std::cerr << "ERROR : Unknow error type." << std::endl;
+			ss << "Unknow error.";
 		}
-		throw std::string("error");
+
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
 	}
 
 	// Set options
@@ -61,9 +75,9 @@ vl::Serial::open(std::string const &dev_name, uint32_t baud_rate)
 	if (!GetCommState(_hSerial, &dcbSerialParams)) 
 	{
 		//error getting state
-		std::cerr << "Serial port : " << _name
-			<< " couldn't get the state." << std::endl;
-		throw std::string("error");
+		std::stringstream ss;
+		ss << "Serial port : " << _name << " couldn't get the state.";
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
 	}
 
 	dcbSerialParams.BaudRate = baud_rate;
@@ -73,13 +87,13 @@ vl::Serial::open(std::string const &dev_name, uint32_t baud_rate)
 	if(!SetCommState(_hSerial, &dcbSerialParams))
 	{
 		//error setting serial port state
-		std::cerr << "Serial port : " << _name
-			<< " couldn't set the state." << std::endl;
-		throw std::string("error");
+		std::stringstream ss;
+		ss << "Serial port : " << _name << " couldn't set the state.";
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
 	}
 
 	// set some default timeouts so the application will not hang
-	set_read_timeout(5, 50);
+	set_read_timeout(50, 5);
 	set_write_timeout(100);
 }
 
@@ -94,22 +108,42 @@ vl::Serial::close(void)
 }
 
 size_t
-vl::Serial::read(std::vector<char> &buf, size_t n_bytes)
+vl::Serial::read(std::vector<char> &buf, size_t n_bytes, bool blocking)
 {
-	if(buf.size() == 0)
-	{ throw(std::string("ERROR : in Serial::read buffer can't be zero length.")); }
-
 	if(n_bytes == 0)
-	{ n_bytes = buf.size(); }
+	{ return 0; }
 
-	DWORD dwBytesRead = 0;
-	if(!ReadFile(_hSerial, &buf[0], n_bytes, &dwBytesRead, NULL))
+	if(buf.size() < n_bytes)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Buffer size can not be less than bytes to read.")); }
+
+	_copy_os_buffer();
+	if(_buffer_size < n_bytes && blocking)
 	{
-		//error occurred. Report to user.
-		throw(std::string("ERROR : in Serial::read"));
+		// do an extra blocking copy
+		_copy_os_buffer(n_bytes - _buffer_size);
 	}
 
-	return dwBytesRead;
+	// @todo this should of course throw as we don't allow invalid messages
+	// and assertion will not do in release version
+	// this would come as a problem when there is a large message that can not
+	// be completely read because of too low timeout values.
+	// rather we should keep our buffer intanct and return a problem to the caller
+	// either as a zero bytes read or as throwing
+	if(_buffer_size >= n_bytes)
+	{
+		// copy the buffers
+		::memcpy(&buf[0], &_buffer[0], n_bytes);
+		
+		// reorganise the internal buffer
+		_buffer_size -= n_bytes;
+		::memmove(&_buffer[0], &_buffer[n_bytes], _buffer_size);
+		
+		return n_bytes;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 size_t
@@ -135,27 +169,11 @@ vl::Serial::write(std::vector<char> const &buf, size_t n_bytes)
 void
 vl::Serial::set_read_timeout(uint32_t total_ms, uint32_t per_byte_ms)
 {
-	if(!_hSerial)
-	{ return; }
+	_read_total_timeout = total_ms;
+	_read_per_byte_timeout = per_byte_ms;
 
-	// @todo test with very low timelimit or zero if possible
-	COMMTIMEOUTS timeouts={0};
-	
-	GetCommTimeouts(_hSerial, &timeouts);
-	
-	// Time limit between two bytes in milliseconds
-	timeouts.ReadIntervalTimeout=per_byte_ms;
-	// Total time limit for the whole operation, calculated with multiplier * bytes
-	timeouts.ReadTotalTimeoutMultiplier=0;
-	// Constant total timelimit for the whole read operation
-	timeouts.ReadTotalTimeoutConstant=total_ms;
-	
-	if(!SetCommTimeouts(_hSerial, &timeouts))
-	{
-		//error occureed. Inform user
-		std::string err("Serial port : " + _name + " couldn't set Timeouts.");
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
-	}
+	if(_hSerial)
+	{ _set_os_read_timeout(_read_total_timeout, _read_per_byte_timeout); }
 }
 
 void
@@ -170,6 +188,81 @@ vl::Serial::set_write_timeout(uint32_t total_ms)
 
 	timeouts.WriteTotalTimeoutConstant=total_ms;
 	timeouts.WriteTotalTimeoutMultiplier=0;
+
+	if(!SetCommTimeouts(_hSerial, &timeouts))
+	{
+		//error occureed. Inform user
+		std::string err("Serial port : " + _name + " couldn't set Timeouts.");
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
+	}
+}
+
+size_t
+vl::Serial::available(void)
+{
+	_copy_os_buffer();
+	return _buffer_size != 0;
+}
+
+void
+vl::Serial::_copy_os_buffer(void)
+{
+	_set_os_nonblocking_read();
+
+	DWORD dwBytesRead = 0;
+	if(!ReadFile(_hSerial, &_buffer[_buffer_size], _buffer.size()-_buffer_size, &dwBytesRead, NULL))
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Win32 API : Serial ReadFile"));
+	}
+	_buffer_size += dwBytesRead;
+
+	_set_os_read_timeout(_read_total_timeout, _read_per_byte_timeout);
+}
+
+void
+vl::Serial::_copy_os_buffer(size_t bytes)
+{
+	assert(_buffer.size()-_buffer_size > bytes);
+
+	DWORD dwBytesRead = 0;
+	if(!ReadFile(_hSerial, &_buffer[_buffer_size], bytes, &dwBytesRead, NULL))
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Win32 API : Serial ReadFile"));
+	}
+
+	_buffer_size += dwBytesRead;
+}
+
+void
+vl::Serial::_set_os_read_timeout(uint32_t total_ms, uint32_t per_byte_ms)
+{
+	// @todo test with very low timelimit or zero if possible
+	COMMTIMEOUTS timeouts={0};
+	
+	GetCommTimeouts(_hSerial, &timeouts);
+	
+	// Time limit between two bytes in milliseconds
+	timeouts.ReadIntervalTimeout=per_byte_ms;
+	// Total time limit for the whole operation, calculated with multiplier * bytes
+	timeouts.ReadTotalTimeoutMultiplier=per_byte_ms;
+	// Constant total timelimit for the whole read operation
+	timeouts.ReadTotalTimeoutConstant=total_ms;
+	
+	if(!SetCommTimeouts(_hSerial, &timeouts))
+	{
+		//error occureed. Inform user
+		std::string err("Serial port : " + _name + " couldn't set Timeouts.");
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
+	}
+}
+
+void
+vl::Serial::_set_os_nonblocking_read(void)
+{
+	COMMTIMEOUTS timeouts={0};
+	timeouts.ReadIntervalTimeout=MAXDWORD;
+	timeouts.ReadTotalTimeoutMultiplier=0;
+	timeouts.ReadTotalTimeoutConstant=0;
 
 	if(!SetCommTimeouts(_hSerial, &timeouts))
 	{

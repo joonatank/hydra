@@ -24,7 +24,7 @@
 /**	Specifications for communications
  *	Designed for Arduino but can be used with anything that has similar interface.
  *
- *	Used baud rate 9600 in the Arduino
+ *	Used baud rate 128000 in the Arduino
  * 
  *	Messages
  *	[MSG_READ_JOYSTICK]
@@ -112,11 +112,18 @@ private :
 
 	JoystickEvent _parse(std::vector<char> msg, size_t bytes, size_t offset);
 
-	bool _request_multi_data(std::vector<vl::JoystickEvent> &evt = std::vector<vl::JoystickEvent>() );
+	void _request_multi_data(void);
 
-	bool _read_multi_data(std::vector<vl::JoystickEvent> &evt);
+	bool _read_multi_data(std::vector<vl::JoystickEvent> &evt, bool blocking = true);
+
+	void _parse_joystick_msg(std::vector<vl::JoystickEvent> &evt, std::vector<char> msg);
 
 	Serial _serial;
+
+	// State wether request is sent without receiving an answer
+	bool _request_sent;
+	bool _incomplete_joystick_msg;
+	size_t _joystick_msg_size;
 
 	std::vector<JoystickRefPtr> _joysticks;
 
