@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-09
- *	@file GUI/editor.hpp
- *	
+ *	@file gui/editor.hpp
+ *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_GUI_EDITOR_HPP
@@ -47,17 +56,29 @@ public :
 	bool onScriptEditorButtonClicked( CEGUI::EventArgs const &e );
 	bool onMaterialEditorButtonClicked( CEGUI::EventArgs const &e );
 
-	bool handleTreeEventSelectionChanged(const CEGUI::EventArgs& args);
+
+	// Helper functions
+	void addEditor(WindowRefPtr window);
+
+	/// @internal
+	void _addEditor(WindowRefPtr window);
 
 // Private virtual overrides
 private :
+
+	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
+
+	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+
 	virtual void _window_resetted(void);
 
 // data
 private :
-	CEGUI::Window *_script_editor;
-	CEGUI::Window *_material_editor;
-	CEGUI::Window *_graph_editor;
+	std::vector<WindowRefPtr> _editors;
+
+	std::map<WindowRefPtr, boost::signals::connection> _editors_waiting;
+
+	CEGUI::TabControl *_tab_control;
 
 };	// class EditorWindow
 

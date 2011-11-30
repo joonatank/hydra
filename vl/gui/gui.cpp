@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
- *	@file GUI/gui.cpp
+ *	@file gui/gui.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Interface
@@ -24,6 +33,10 @@
 // gui window, necessary for the windows this creates
 #include "gui_window.hpp"
 #include "editor.hpp"
+#include "console.hpp"
+#include "scene_graph_editor.hpp"
+#include "script_editor.hpp"
+#include "material_editor.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI
@@ -53,44 +66,46 @@ vl::gui::WindowRefPtr
 vl::gui::GUI::createWindow(std::string const &type, std::string const &name, std::string const &layout)
 {
 	/// @todo add name support
-	vl::gui::WindowRefPtr win;
+
 	OBJ_TYPE t;
 	if(type == "console")
 	{
-		_console.reset(new ConsoleWindow(this));
-		win = _console;
 		t = OBJ_GUI_CONSOLE;
 	}
 	else if(type == "editor")
 	{
-		_editor.reset(new EditorWindow(this));
-		win = _editor;
 		t = OBJ_GUI_EDITOR;
+	}
+	else if(type == "scene_graph_editor")
+	{
+		t = OBJ_GUI_SCENE_GRAPH_EDITOR;
+	}
+	else if(type == "material_editor")
+	{
+		t = OBJ_GUI_MATERIAL_EDITOR;
+	}
+	else if(type == "script_editor")
+	{		
+		t = OBJ_GUI_SCRIPT_EDITOR;
 	}
 	else if(type == "window")
 	{
 		t = OBJ_GUI_WINDOW;
-		win.reset(new Window(this, layout));
 	}
 	else
 	{
 		std::cout << vl::CRITICAL << "Unknown window type : " << type << std::endl;
 		t = OBJ_GUI_WINDOW;
-		win.reset(new Window(this, layout));
 	}
 
-	assert(win);
-	_session->registerObject(win.get(), t);
-
-	_windows.push_back(win);
-
-	return win;
+	return createWindow(t, 0);
 }
 
 vl::gui::WindowRefPtr
 vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 {
 	vl::gui::WindowRefPtr win;
+	bool is_editor = false;
 	switch(t)
 	{
 	case OBJ_GUI_CONSOLE:
@@ -100,6 +115,18 @@ vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 	case OBJ_GUI_EDITOR:
 		_editor.reset(new EditorWindow(this));
 		win = _editor;
+		break;
+	case OBJ_GUI_SCENE_GRAPH_EDITOR:
+		win.reset(new SceneGraphEditor(this));
+		is_editor = true;
+		break;
+	case OBJ_GUI_MATERIAL_EDITOR:
+		win.reset(new MaterialEditor(this));
+		is_editor = true;
+		break;
+	case OBJ_GUI_SCRIPT_EDITOR:
+		win.reset(new ScriptEditor(this));
+		is_editor = true;
 		break;
 	case OBJ_GUI_WINDOW:
 		win.reset(new Window(this));
@@ -114,7 +141,50 @@ vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 
 	_windows.push_back(win);
 
+	if(is_editor)
+	{
+		if(_editor)
+		{
+			_editor->addEditor(win);
+		}
+		else
+		{
+			_editors_without_parent.push_back(win);
+		}
+	}
+
+	if(!_editors_without_parent.empty() && _editor)
+	{
+		for(std::vector<vl::gui::WindowRefPtr>::iterator iter =_editors_without_parent.begin();
+			iter != _editors_without_parent.end(); ++iter)
+		{
+			_editor->addEditor(*iter);
+		}
+		_editors_without_parent.clear();
+	}
+
 	return win;
+}
+
+vl::gui::WindowRefPtr
+vl::gui::GUI::getWindow(uint64_t id)
+{
+	for(std::vector<vl::gui::WindowRefPtr>::iterator iter = _windows.begin();
+		iter != _windows.end(); ++iter)
+	{
+		if((*iter)->getID() == id)
+		{ return *iter; }
+	}
+
+	return WindowRefPtr();
+}
+
+vl::gui::WindowRefPtr
+vl::gui::GUI::getWindow(std::string const &name)
+{
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	
+	return WindowRefPtr();
 }
 
 void

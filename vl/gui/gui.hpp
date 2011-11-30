@@ -1,9 +1,19 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
- *	@file GUI/gui.hpp
+ *	@file gui/gui.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 #ifndef HYDRA_GUI_GUI_HPP
 #define HYDRA_GUI_GUI_HPP
@@ -49,6 +59,10 @@ public :
 	/// @brief Slave creator
 	WindowRefPtr createWindow(vl::OBJ_TYPE, uint64_t id);
 
+	WindowRefPtr getWindow(uint64_t id);
+
+	WindowRefPtr getWindow(std::string const &name);
+
 	void initGUI(vl::Window *win);
 	void initGUIResources(vl::Settings const &set);
 	void addGUIResourceGroup(std::string const &name, fs::path const &path);
@@ -88,6 +102,7 @@ private :
 	vl::gui::ConsoleWindowRefPtr _console;
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
+	std::vector<vl::gui::WindowRefPtr> _editors_without_parent;
 
 	vl::CommandCallback *_cmd_cb;
 

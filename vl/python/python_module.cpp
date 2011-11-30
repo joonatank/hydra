@@ -39,6 +39,7 @@
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
 #include "gui/editor.hpp"
+#include "gui/console.hpp"
 
 // Animation framework
 #include "animation/constraints.hpp"

@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-09
- *	@file GUI/editor.cpp
- *	
+ *	@file gui/editor.cpp
+ *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
@@ -17,9 +26,7 @@
 /// ------------------------------ Public -----------------------------------
 vl::gui::EditorWindow::EditorWindow(vl::gui::GUI *creator)
 	: Window(creator, "editor.layout")
-	, _script_editor(0)
-	, _material_editor(0)
-	, _graph_editor(0)
+	, _tab_control(0)
 {
 }
 
@@ -159,26 +166,46 @@ vl::gui::EditorWindow::onMaterialEditorButtonClicked( CEGUI::EventArgs const &e 
 	return true;
 }
 
-bool
-vl::gui::EditorWindow::handleTreeEventSelectionChanged(const CEGUI::EventArgs& args)
+void
+vl::gui::EditorWindow::addEditor(WindowRefPtr window)
 {
-	const CEGUI::TreeEventArgs& treeArgs = static_cast<const CEGUI::TreeEventArgs&>(args);
-	CEGUI::Editbox *editBox = (CEGUI::Editbox *)(CEGUI::WindowManager::getSingleton().getWindow("sceneGraphEditor/graph/Editbox"));
+	_editors.push_back(window);
 
-// Three different ways to get the item selected.
-//   TreeCtrlEntry *selectedItem = theTree->getFirstSelectedItem();      // the first selection in the list (may be more)
-//   TreeCtrlEntry *selectedItem = theTree->getLastSelectedItem();       // the last (time-wise) selected by the user
-	CEGUI::TreeItem *selectedItem = treeArgs.treeItem;                    // the actual item that caused this event
+	if(_tab_control)
+	{
+		assert(window->getNative());
+		_tab_control->addTab(window->getNative());
+	}
+}
 
-	if (selectedItem)
-	{ editBox->setText("Selected: " + selectedItem->getText()); }
-	else
-	{ editBox->setText("None Selected"); }
-
-	return true;
+void
+vl::gui::EditorWindow::_addEditor(vl::gui::WindowRefPtr window)
+{
+	assert(window->getNative());
+	_tab_control->addTab(window->getNative());
+	
+	// Unsubcribe and remove from connection list
+	std::map<WindowRefPtr, boost::signals::connection>::iterator iter = _editors_waiting.find(window);
+	assert(iter != _editors_waiting.end());
+	if(iter != _editors_waiting.end())
+	{
+		window->removeListener(iter->second);
+	}
+	_editors_waiting.erase(iter);
 }
 
 /// ------------------------------ Private -----------------------------------
+
+void
+vl::gui::EditorWindow::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const
+{
+}
+
+void
+vl::gui::EditorWindow::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
+{
+}
+
 void
 vl::gui::EditorWindow::_window_resetted(void)
 {
@@ -269,45 +296,22 @@ vl::gui::EditorWindow::_window_resetted(void)
 	_graph_editor->hide();
 	*/
 
+	_tab_control = static_cast<CEGUI::TabControl *>(_window->getChildRecursive("editor/Frame/editor_tabs"));
+	assert(_tab_control);
 
-    CEGUI::TabControl *tc = static_cast<CEGUI::TabControl *>(_window->getChildRecursive("editor/Frame/editor_tabs"));
-	assert(tc);
+	for(std::vector<WindowRefPtr>::iterator iter = _editors.begin(); 
+		iter != _editors.end(); ++iter)
+	{
+		if(!(*iter)->getNative())
+		{
+			assert(_editors_waiting.find(*iter) == _editors_waiting.end());
+			// Some really nifty things you can do with boost::bind
+			// calls this->_addEditor(*iter) when the signal is evoked
+			_editors_waiting[*iter] = (*iter)->addListener(boost::bind(boost::bind(&EditorWindow::_addEditor, this, _1), *iter));
+		}
+		_tab_control->addTab((*iter)->getNative());
+	}
 
-    // Add some pages to tab control
-    tc->addTab(CEGUI::WindowManager::getSingleton().loadWindowLayout("scene_graph_editor.layout"));
-    tc->addTab(CEGUI::WindowManager::getSingleton().loadWindowLayout("material_editor.layout"));
-	tc->addTab(CEGUI::WindowManager::getSingleton().loadWindowLayout("script_editor.layout"));
-	tc->addTab(CEGUI::WindowManager::getSingleton().loadWindowLayout("configuration.layout"));
-
-	CEGUI::Combobox *script_list = static_cast<CEGUI::Combobox *>(CEGUI::WindowManager::getSingleton().getWindow("scriptEditor/script_list"));
-	const CEGUI::Image* sel_img = &CEGUI::ImagesetManager::getSingleton().get("TaharezLook").getImage("ComboboxSelectionBrush");
-
-	/// Some test values for the script list
-	CEGUI::ListboxItem *list_item = new CEGUI::ListboxTextItem("script.py", 0);
-	list_item->setSelectionBrushImage(sel_img);
-	script_list->addItem(list_item);
-	list_item = new CEGUI::ListboxTextItem("physics_script.py", 1);
-	list_item->setSelectionBrushImage(sel_img);
-	script_list->addItem(list_item);
-	list_item = new CEGUI::ListboxTextItem("meh.py", 2);
-	list_item->setSelectionBrushImage(sel_img);
-	script_list->addItem(list_item);
-
-	/// Some test values for the tree widget
-	CEGUI::Tree *node_tree = static_cast<CEGUI::Tree *>(CEGUI::WindowManager::getSingleton().getWindow("sceneGraphEditor/graph/Tree"));
-	CEGUI::TreeItem *tree_item = new CEGUI::TreeItem("test");
-	tree_item->setSelectionBrushImage(sel_img);
-	node_tree->addItem(tree_item);
-	tree_item = new CEGUI::TreeItem("node1");
-	tree_item->setSelectionBrushImage(sel_img);
-	node_tree->addItem(tree_item);
-	tree_item = new CEGUI::TreeItem("node2");
-	tree_item->setSelectionBrushImage(sel_img);
-	node_tree->addItem(tree_item);
-	tree_item = new CEGUI::TreeItem("node3");
-	tree_item->setSelectionBrushImage(sel_img);
-	node_tree->addItem(tree_item);
-
-	node_tree->subscribeEvent(CEGUI::Tree::EventSelectionChanged, 
-		CEGUI::Event::Subscriber(&vl::gui::EditorWindow::handleTreeEventSelectionChanged, this));
+	/// @todo move to separate window class
+	_tab_control->addTab(CEGUI::WindowManager::getSingleton().loadWindowLayout("configuration.layout"));
 }
