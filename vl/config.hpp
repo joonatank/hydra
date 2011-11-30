@@ -79,7 +79,7 @@ public:
 
 	/// @todo this should send initialisation messages to all the rendering
 	/// threads
-	virtual void init( void );
+	virtual void init(bool enable_editor);
 
 	virtual void exit (void);
 

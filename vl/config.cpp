@@ -155,7 +155,7 @@ vl::Config::~Config( void )
 /// Anyhow it would be much more useful to call Server::poll every 1ms,
 /// for example with interrupts.
 void
-vl::Config::init( void )
+vl::Config::init(bool enable_editor)
 {
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
@@ -164,6 +164,9 @@ vl::Config::init( void )
 	if(!_game_manager->requestStateChange(GS_INIT))
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT")); }
 	std::cout << "Starting GameManager took " << t.elapsed() << std::endl;
+
+	if(enable_editor)
+	{ _game_manager->createEditor(); }
 
 	// Local renderer needs to be inited rather than send a message
 	if( _renderer.get() )

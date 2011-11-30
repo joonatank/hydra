@@ -80,6 +80,7 @@ struct ProgramOptions
 	std::string case_name;
 	bool auto_fork;
 	bool show_system_console;
+	bool editor;
 
 private :
 	bool _parseSlave( po::variables_map const &vm );

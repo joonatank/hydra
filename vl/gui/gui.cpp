@@ -314,7 +314,7 @@ vl::gui::GUI::isVisible(void) const
 {
 	/// @todo should iterate over all windows, and check all that have
 	/// value wantsInput in them
-	return _console->isVisible() || _editor->isVisible();
+	return( (_console && _console->isVisible()) || (_editor && _editor->isVisible()) );
 }
 
 void 

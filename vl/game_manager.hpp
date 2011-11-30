@@ -136,6 +136,8 @@ public :
 
 	virtual ~GameManager( void );
 
+	void createEditor(void);
+
 	vl::PythonContextPtr getPython(void)
 	{ return _python; }
 

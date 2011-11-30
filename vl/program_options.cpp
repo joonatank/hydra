@@ -100,6 +100,7 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 			"Display to use for the window. Only on X11.")
 		("system_console", po::value<bool>(&show_system_console)->default_value(false),
 			"Show the system console window on startup.")
+		("editor", po::value<bool>(&editor)->default_value(false), "Enable editor.")
     ;
 
     po::options_description cmdline_options;

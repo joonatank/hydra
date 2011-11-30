@@ -454,8 +454,17 @@ vl::GameManager::_init(void)
 	// Window creation
 	gui::WindowRefPtr win = _gui->createWindow("console");
 	win->setVisible(false);
-	/// @todo editor should be optional
-	win = _gui->createWindow("editor");
+
+	_createQuitEvent();
+}
+
+void
+vl::GameManager::createEditor(void)
+{
+	std::clog << "vl::GameManager::createEditor" << std::endl;
+	assert(_gui);
+
+	gui::WindowRefPtr win = _gui->createWindow("editor");
 	win->setVisible(false);
 	win = _gui->createWindow("scene_graph_editor");
 	win->setVisible(false);
@@ -463,8 +472,6 @@ vl::GameManager::_init(void)
 	win->setVisible(false);
 	win = _gui->createWindow("script_editor");
 	win->setVisible(false);
-
-	_createQuitEvent();
 }
 
 vl::SceneManagerPtr

@@ -68,7 +68,7 @@ public:
 	 *	and send messages to the rendering threads.
 	 */
 	Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
-		vl::Logger &logger, bool auto_fork, bool show_system_console);
+		vl::Logger &logger, ProgramOptions const &opt);
 
 	virtual ~Application( void );
 

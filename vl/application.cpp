@@ -48,6 +48,7 @@
 #include <unistd.h>
 #endif
 
+// Compile time created header
 #include "revision_defines.hpp"
 
 // Necessary for printing Ogre exceptions
@@ -270,7 +271,7 @@ vl::Hydra_Run(const int argc, char** argv)
 		if( env->isMaster() && settings.empty() )
 		{ return ExceptionMessage(); }
 
-		vl::Application application(env, settings, logger, options.auto_fork, options.show_system_console);
+		vl::Application application(env, settings, logger, options);
 
 		application.run();
 	}
@@ -312,13 +313,13 @@ vl::Hydra_Run(const int argc, char** argv)
 }
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)
+vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, vl::ProgramOptions const &opt)
 	: _master()
 	, _slave_client()
 {
 	assert( env );
 
-	if(!show_system_console)
+	if(!opt.show_system_console)
 	{ hide_system_console(); }
 
 	if(env->isMaster())
@@ -326,7 +327,7 @@ vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings con
 		_max_fps = env->getFPS();
 
 		// auto_fork is silently ignored for slaves
-		if(auto_fork)
+		if(opt.auto_fork)
 		{
 			for(size_t i = 0; i < env->getSlaves().size(); ++i)
 			{
@@ -370,8 +371,9 @@ vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings con
 
 	if( env->isMaster() )
 	{
-		_master.reset(new vl::Config( settings, env, logger, renderer ));
-		_master->init();
+		_master.reset(new vl::Config( settings, env, logger, renderer));
+		_master->init(opt.editor);
+
 		std::vector<vl::config::Program> programs = env->getUsedPrograms();
 		std::clog << "Should start " << programs.size() << " autolaunched programs."
 			<< std::endl;
