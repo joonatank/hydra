@@ -1,9 +1,19 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file physics/physics_constraints_bullet.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_BULLET_HPP
 #define HYDRA_PHYSICS_CONSTRAINTS_BULLET_HPP
@@ -86,6 +96,30 @@ public :
 
 	void setEquilibriumPoint(int index)
 	{ _bt_constraint->setEquilibriumPoint(index); }
+
+	virtual void setNormalCFM(vl::scalar cfm)
+	{
+		for(size_t i = 0; i < 6; ++i)
+		{
+			_bt_constraint->setParam(BT_6DOF_FLAGS_CFM_NORM, cfm, i);
+		}
+	}
+
+	virtual void setStopCFM(vl::scalar cfm)
+	{
+		for(size_t i = 0; i < 6; ++i)
+		{
+			_bt_constraint->setParam(BT_CONSTRAINT_STOP_CFM, cfm, i);
+		}
+	}
+
+	virtual void setStopERP(vl::scalar erp)
+	{
+		for(size_t i = 0; i < 6; ++i)
+		{
+			_bt_constraint->setParam(BT_6DOF_FLAGS_ERP_STOP, erp, i);
+		}
+	}
 
 	virtual btTypedConstraint *getNative(void)
 	{ return _bt_constraint; }

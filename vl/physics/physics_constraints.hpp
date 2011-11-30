@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/physics_constraints.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_HPP
@@ -57,7 +66,13 @@ public :
 	virtual void setDamping(int index, vl::scalar damping) = 0;
 	virtual void setEquilibriumPoint(void) = 0;
 	virtual void setEquilibriumPoint(int index) = 0;
-	
+
+	virtual void setNormalCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopERP(vl::scalar erp) = 0;
+
 	// @todo add motors
 
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 

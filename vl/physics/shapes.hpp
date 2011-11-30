@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/shapes.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_PHYSICS_SHAPES_HPP
@@ -25,6 +34,12 @@ class CollisionShape
 {
 public :
 	virtual ~CollisionShape(void) {}
+
+	virtual void setMargin(vl::scalar margin) = 0;
+
+	virtual vl::scalar getMargin(void) const = 0;
+
+	// @todo add default margin
 
 };	// class CollisionShape
 

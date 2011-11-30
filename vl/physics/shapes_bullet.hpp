@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file physics/shapes_bullet.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Concrete implementation for bullet physics engine.
  */
 
@@ -31,6 +42,8 @@ class BulletCollisionShape : public vl::physics::CollisionShape
 public :
 	virtual btCollisionShape *getNative(void) = 0;
 
+	virtual btCollisionShape const *getNative(void) const = 0;
+
 };
 
 typedef boost::shared_ptr<BulletCollisionShape> BulletCollisionShapeRefPtr;
@@ -45,7 +58,16 @@ public :
 
 	virtual ~BulletBoxShape(void) {}
 
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
 	{ return _bt_shape; }
 
 private :
@@ -61,8 +83,17 @@ public :
 	{}
 
 	virtual ~BulletSphereShape(void) {}
-		
+
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
 	{ return _bt_shape; }
 
 private :
@@ -80,9 +111,18 @@ public :
 
 	virtual ~BulletStaticPlaneShape(void) {}
 
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 	
+	virtual btCollisionShape const *getNative(void) const
+	{ return _bt_shape; }
+
 private :
 	btStaticPlaneShape *_bt_shape;
 
@@ -102,7 +142,16 @@ public :
 
 	virtual ~BulletStaticTriangleMeshShape(void) {}
 
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
 	{ return _bt_shape; }
 
 private :
@@ -125,7 +174,16 @@ public :
 
 	virtual ~BulletConvexHullShape(void) {}
 
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
 	{ return _bt_shape; }
 
 private :

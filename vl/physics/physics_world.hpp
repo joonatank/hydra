@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file physics/physics_world.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
  *	Provides object management for and the general interface for physics engine world.
@@ -37,6 +48,25 @@ namespace vl
 namespace physics
 {
 
+struct SolverParameters
+{
+	SolverParameters(void)
+		: erp(0.2)
+		, erp2(0.1)
+		, global_cfm(0)
+		, restitution(0)
+		, max_error_reduction(20)
+		, internal_time_step(1./60.0)
+	{}
+
+	vl::scalar erp;
+	vl::scalar erp2;
+	vl::scalar global_cfm;
+	vl::scalar restitution;
+	vl::scalar max_error_reduction;
+	vl::scalar internal_time_step;
+};
+
 /** @class World
  *	Interface for physics world, provides concrete implementations of object
  *	management using our wrapper objects.
@@ -54,6 +84,10 @@ public :
 	virtual Ogre::Vector3 getGravity(void) const = 0;
 
 	virtual void setGravity(Ogre::Vector3 const &gravity) = 0;
+
+	virtual void setSolverParameters(SolverParameters const &p) = 0;
+
+	virtual SolverParameters const &getSolverParameters(void) const = 0;
 
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python

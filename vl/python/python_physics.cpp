@@ -1,6 +1,5 @@
 /**
- *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
@@ -187,6 +186,15 @@ void export_physics_objects(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::physics::SolverParameters>("PhysicsSolverParameters", python::init<>())
+		.def_readwrite("erp", &vl::physics::SolverParameters::erp)
+		.def_readwrite("erp2", &vl::physics::SolverParameters::erp2)
+		.def_readwrite("global_cfm", &vl::physics::SolverParameters::global_cfm)
+		.def_readwrite("restitution", &vl::physics::SolverParameters::restitution)
+		.def_readwrite("max_error_reduction", &vl::physics::SolverParameters::max_error_reduction)
+		.def_readwrite("internal_time_step", &vl::physics::SolverParameters::internal_time_step)
+	;
+
 	/// world
 	python::class_<vl::physics::World, vl::physics::WorldRefPtr, boost::noncopyable>("PhysicsWorld", python::no_init)
 		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
@@ -199,6 +207,8 @@ void export_physics_objects(void)
 		.def("createTube", &vl::physics::World::createTube, createTube_ov())
 		.def("createTube", &vl::physics::World::createTubeEx)
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+		.add_property("solver_parameters", python::make_function(&vl::physics::World::getSolverParameters, python::return_value_policy<python::copy_const_reference>()),
+				&vl::physics::World::setSolverParameters)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
