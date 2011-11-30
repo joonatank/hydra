@@ -96,9 +96,13 @@ public :
 
 	/// @todo add params to get specifc joystick and also allow for fallbacks
 	/// @param name only valid values are COM ports for now
-	/// @param fallback_to_all do we fall to another device if not present
 	/// @return valid pointer if such joystick exists, NULL pointer if not
-	JoystickRefPtr getJoystick(std::string const &name = "default", bool fallback_to_all = true);
+	// only com ports are supported by name
+	// the full name is comX:N
+	// where X is the serial port number (in Windows)
+	// and N is the joystick number in that serial port
+	// comX is a short hand for comX:0
+	JoystickRefPtr getJoystick(std::string const &name = "default");
 
 	void update_joystick(vl::JoystickEvent const &evt);
 
@@ -117,6 +121,10 @@ private :
 	bool _keyUp( OIS::KeyCode kc );
 
 	void _update_key_modifers(std::bitset<8> new_mod);
+
+	JoystickRefPtr _getSerialJoystick(std::string const &name);
+
+	JoystickRefPtr _getGameJoystick(std::string const &name);
 
 /// Data
 private :

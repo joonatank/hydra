@@ -192,31 +192,43 @@ game.scene.mapCollisionBarriers()
 # Joystick control
 # Falls back to game joysticks, if none exists the movements
 # are just disabled...
-left_joy = game.event_manager.getJoystick("COM4:0")
-right_joy_1 = game.event_manager.getJoystick("COM4:1")
-right_joy_2 = game.event_manager.getJoystick("COM4:2")
-left_joy.zero_size = 0.1
-right_joy_1.zero_size = 0.1
-right_joy_2.zero_size = 0.1
+try :
+	left_joy = game.event_manager.getJoystick("COM4:0")
+	right_joy = game.event_manager.getJoystick("COM4:1")
+	left_joy.zero_size = 0.1
+	right_joy.zero_size = 0.1
 
-# TODO check the mapping
-joy_handler = ConstraintJoystickHandler.create()
-joy_handler.velocity_multiplier = 0.4
-joy_handler.set_axis_constraint(1, teleskooppi)
-joy_handler.set_axis_constraint(0, pulttaus_hinge)
+	joy_handler = ConstraintJoystickHandler.create()
+	joy_handler.velocity_multiplier = 0.4
+	joy_handler.set_axis_constraint(1, teleskooppi)
+	joy_handler.set_axis_constraint(0, pulttaus_hinge)
+	joy_handler.set_axis_constraint(1, 0, motor_hinge)
+	left_joy.add_handler(joy_handler)
 
-left_joy.add_handler(joy_handler)
+	joy_handler = ConstraintJoystickHandler.create()
+	joy_handler.velocity_multiplier = 0.4
+	joy_handler.set_axis_constraint(1, puomi_hinge)
+	joy_handler.set_axis_constraint(0, kaanto_hinge)
+	right_joy.add_handler(joy_handler)
+except :
+	# Lets just assume that the serial port doesn't exist as the c++
+	# exceptions has not been exposed to python
+	# Should expose the exceptions as it can throw because there was no such
+	# serial port and because there wasn't enough joysticks in there.
+	print("No COM4 serial port. Creating GameJoystick interface.")
+	# Create game joystick
+	# The game joystick needs completely different mapping and is
+	# alone where the serial joysticks are together
+	joy = game.event_manager.getJoystick()
+	joy_handler = ConstraintJoystickHandler.create()
+	joy_handler.velocity_multiplier = 0.4
+	joy_handler.set_axis_constraint(1, puomi_hinge)
+	joy_handler.set_axis_constraint(0, kaanto_hinge)
+	joy_handler.set_axis_constraint(1, 0, teleskooppi)
+	joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
+	joy_handler.set_axis_constraint(1, 1, motor_hinge)
+	joy.add_handler(joy_handler)
 
-joy_handler = ConstraintJoystickHandler.create()
-joy_handler.velocity_multiplier = 0.4
-joy_handler.set_axis_constraint(1, motor_hinge)
-right_joy_1.add_handler(joy_handler)
-
-joy_handler = ConstraintJoystickHandler.create()
-joy_handler.velocity_multiplier = 0.4
-joy_handler.set_axis_constraint(1, puomi_hinge)
-joy_handler.set_axis_constraint(0, kaanto_hinge)
-right_joy_2.add_handler(joy_handler)
 
 # Add tube simulation
 game.enablePhysics(True)

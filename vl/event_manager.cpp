@@ -201,98 +201,94 @@ vl::EventManager::getFrameTrigger( void )
 }
 
 vl::JoystickRefPtr
-vl::EventManager::getJoystick(std::string const &name, bool fallback_to_all)
+vl::EventManager::getJoystick(std::string const &name)
 {
 	std::string str(name);
 	vl::to_lower(str);
-	// only com ports are supported by name
-	// the full name is comX:N
-	// where X is the serial port number (in Windows)
-	// and N is the joystick number in that serial port
-	// comX is a short hand for comX:0
-	std::string serial_port;
+	
 	if(str.substr(0, 3) != "com")
 	{
-		str = "default";
+		return _getGameJoystick("default");
 	}
 	else
 	{
-		if(str.size() > 3)
-		{
-			serial_port = str.substr(0, 4);
-		}
-		else
-		{
-			serial_port = "com1";
-		}
+		return _getSerialJoystick(str);
+	}
+}
 
-		/// No joystick specified default to 0
-		if(str.size() < 6)
+vl::JoystickRefPtr
+vl::EventManager::_getSerialJoystick(std::string const &name)
+{
+	std::string serial_port;
+	std::string real_name;
+	if(name.size() > 3)
+	{
+		serial_port = name.substr(0, 4);
+	}
+	else
+	{
+		serial_port = "com1";
+	}
+
+	/// No joystick specified default to 0
+	if(name.size() < 6)
+	{
+		real_name = serial_port + ":0";
+	}
+	else
+	{ real_name = name; }
+
+	/// try to find already created joystick
+	{
+		std::map<std::string, JoystickRefPtr>::iterator joy_iter = _joysticks.find(real_name);
+		if(joy_iter != _joysticks.end())
 		{
-			str = serial_port + ":0";
+			return joy_iter->second;
 		}
 	}
+
+	std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.find(serial_port);
 	
-	std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.find(str);
+	// Create the serial connection
+	if(iter == _serial_joysticks.end())
+	{
+		SerialJoystickRefPtr sj = SerialJoystick::create(real_name);
+		_serial_joysticks[serial_port] = sj; 
+	}
+
+	// Get the joystick from connection
+	iter = _serial_joysticks.find(serial_port);
+	if(iter != _serial_joysticks.end())
+	{
+		std::stringstream ss(real_name.substr(5));
+		int number;
+		ss >> number;
+		if(number >= iter->second->getNJoysticks())
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Too few joysticks in the serial connection.")); }
+		
+		JoystickRefPtr joy = iter->second->getJoystick(number);
+		_joysticks[real_name] = joy;
+		return joy;
+	}
+
+}
+
+vl::JoystickRefPtr
+vl::EventManager::_getGameJoystick(std::string const &name)
+{
+	std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.find(name);
 	if(iter != _joysticks.end())
 	{
 		return iter->second;
 	}
 	else
 	{
-		JoystickRefPtr joy;
-		if(!serial_port.empty())
-		{
-			std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.find(serial_port);
-			// Create the serial connection
-			if(iter == _serial_joysticks.end())
-			{
-				// @todo add bit more descriptive exception handling
-				try {
-					SerialJoystickRefPtr sj = SerialJoystick::create(str);
-					_serial_joysticks[serial_port] = sj; 
-				}
-				catch(vl::exception const &e)
-				{
-					std::cout << vl::CRITICAL << "Exception : " 
-						<< boost::diagnostic_information<>(e) << std::endl;
-				}
-				catch(...)
-				{
-					std::cout << vl::CRITICAL << "Exception in creating SerialJoystick." 
-						<< std::endl;
-				}
-			}
+		// Create game joystick if not already created
+		if(!_game_joystick)
+		{ _game_joystick = Joystick::create(); }
 
-			// Get the joystick from connection
-			iter = _serial_joysticks.find(serial_port);
-			if(iter != _serial_joysticks.end())
-			{
-				std::stringstream ss(str.substr(5));
-				int number;
-				ss >> number;
-				assert(number < iter->second->getNJoysticks());
-				joy = iter->second->getJoystick(number);
-			}
-		}
-
-		// Create joystick if not already created
-		// If no fallbacking is requested will not create default joystick
-		// for serial joysticks
-		if(!joy && (serial_port.empty() || fallback_to_all))
-		{
-			if(!_game_joystick)
-			{ _game_joystick = Joystick::create(); }
-
-			joy = _game_joystick;
-		}
-
-		// @todo add fallback
-
-		if(joy)
-		{ _joysticks[str] = joy; }
-
-		return joy;
+		_joysticks[name] = _game_joystick;
+		return _game_joystick;
 	}
 }
 
