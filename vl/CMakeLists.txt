@@ -122,6 +122,7 @@ source_group(HydraMain\\base FILES ${BASE_HEADERS} ${BASE_SRC})
 
 set(PHYSICS_HEADERS
 	physics/motion_state.hpp
+	physics/motion_state_bullet.hpp
 	physics/rigid_body.hpp
 	physics/shapes.hpp
 	physics/physics_constraints.hpp
@@ -131,6 +132,7 @@ set(PHYSICS_HEADERS
 	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
+	physics/motion_state.cpp
 	physics/physics_events.cpp
 	physics/physics_world.cpp
 	physics/physics_constraints.cpp

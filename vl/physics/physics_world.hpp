@@ -112,7 +112,8 @@ public :
 
 
 	/// ---------------------- MotionStates ------------------
-	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
+	/// @todo this can be removed as we can use MotionState::create directly
+	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::ObjectInterface *node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 

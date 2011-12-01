@@ -30,10 +30,8 @@ std::ostream &
 vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 {
 	os << "KinematicBody : " << body.getName();
-	if(!body.getSceneNode())
-	{ os << " without a SceneNode!"; }
-	else
-	{ os << " with " << body.getSceneNode()->getID() << " : " << body.getSceneNode()->getName(); }
+	if(!body.getMotionState())
+	{ os << " without a MotionState!"; }
 	
 	os << " and ";
 	if(!body.getAnimationNode())
@@ -48,34 +46,29 @@ vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 
 
 /// ------------------------------ KinematicBody -----------------------------
-vl::KinematicBody::KinematicBody(KinematicWorld *world, 
-	animation::NodeRefPtr node, vl::SceneNodePtr sn)
+vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world, 
+	animation::NodeRefPtr node, vl::physics::MotionState *ms)
 	: _world(world)
-	, _scene_node(sn)
+	, _state(ms)
 	, _node(node)
+	, _name(name)
 	, _dirty_transformation(true)
 	, _use_dirty(false)
 	, _disable_updates(false)
 	, _assume_node_is_in_world(false)
 {
 	assert(_world);
-	assert(_scene_node);
+	assert(_state);
 	assert(_node);
 
 	// As the Node is not initialised yet we need to initialise
 	// its transformation
-	_node->setWorldTransform(_scene_node->getWorldTransform());
+	_node->setWorldTransform(_state->getWorldTransform());
 }
 
 
 vl::KinematicBody::~KinematicBody(void)
 {
-}
-
-std::string const &
-vl::KinematicBody::getName(void) const
-{
-	return _scene_node->getName();
 }
 
 void
@@ -96,7 +89,7 @@ void
 vl::KinematicBody::transform(vl::Transform const &t)
 {
 	_node->setTransform(_node->getTransform()*t);
-	_transformed_cb(_node->getWorldTransform());
+//	_transformed_cb(_node->getWorldTransform());
 }
 
 void
@@ -105,7 +98,7 @@ vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 	assert(_node);
 	_dirty_transformation = true;
 	_node->setWorldTransform(trans);
-	_transformed_cb(trans);
+//	_transformed_cb(trans);
 }
 
 vl::Transform
@@ -118,34 +111,36 @@ vl::KinematicBody::getWorldTransform(void) const
 void
 vl::KinematicBody::setVisibility(bool visible)
 {
-	if(_scene_node)
-	{ _scene_node->setVisibility(visible); }
+	if(getSceneNode())
+	{ getSceneNode()->setVisibility(visible); }
 }
 
 bool
 vl::KinematicBody::isVisible(void) const
 {
-	if(_scene_node)
-	{ return _scene_node->isVisible(); }
+	if(getSceneNode())
+	{ return getSceneNode()->isVisible(); }
+	
 	return true;
 }
 
 vl::SceneNodePtr
 vl::KinematicBody::getSceneNode(void) const
 {
-	return _scene_node;
+	// dirty hack to handle the necessity of having this function
+	return (SceneNodePtr)_state->getNode();
 }
 
 
 void
 vl::KinematicBody::_update(void)
 {
-	assert(_scene_node && _node);
+	assert(_state && _node && _state->getNode());
 
 	Transform wt = _node->getWorldTransform();
-	if(_scene_node->getWorldTransform() != wt)
+	if(_state->getWorldTransform() != wt)
 	{
-		_scene_node->setWorldTransform(wt);
+		_state->setWorldTransform(wt);
 		_transformed_cb(wt);
 	}
 }

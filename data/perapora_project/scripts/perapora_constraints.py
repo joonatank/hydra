@@ -34,15 +34,6 @@ ground_node.attachObject(ground)
 ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
-# Some test code
-class copyOrientation:
-	def __init__(self, obj, orientation_diff):
-		self.obj = obj
-		self.diff = orientation_diff
-
-	def copy(self, t):
-		self.obj.orientation = t.quaternion*self.diff 
-
 # Create the kinematics
 kiinnityslevy= game.scene.getSceneNode("cb_kiinnityslevy")
 nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
@@ -76,15 +67,6 @@ kaanto_hinge.axis = Vector3(0, 1, 0)
 
 createFixedConstraint(kaantokappale, nivel_klevy1, nivel_klevy1.world_transformation)
 
-ristikpl_kaantosyl = game.scene.getSceneNode("cb_ristikpl_kaantosyl")
-
-# Add copying of orientation from kaantokappale to ristikpl
-diff_q  = ristikpl_kaantosyl.world_transformation.quaternion * kaantokappale.world_transformation.quaternion
-# TODO these work on SceneNodes at the moment
-# they will not work anymore if we add a constraint there
-kaanto_copy_orient = copyOrientation(ristikpl_kaantosyl, diff_q)
-kaantokappale.addListener(kaanto_copy_orient.copy)
-
 # Cylinder kaanto
 nivel_kaantosyl1 = game.scene.getSceneNode("nivel_kaantosyl1_rotz")
 nivel_kaantosyl2 = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
@@ -101,7 +83,6 @@ syl_kaanto.up_axis = Vector3(0, 1, 0)
 # Create constraint for keeping the cylinder piston fixed
 # Adding this will screw up anything that uses SceneNodes
 # We need to move that code to use KinematicBodies instead
-#createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, nivel_kaantosyl2.world_transformation)
 
 # Zoom
 sisaputki = game.scene.getSceneNode("cb_sisaputki")
@@ -184,11 +165,6 @@ pulttaus_hinge.actuator = True
 # some test code
 #pulttaus_hinge.target = Radian(1)
 
-# CB mapping
-game.scene.mapCollisionBarriers()
-
-#kiinnityslevy.translate(Vector3(0, 2, 0))
-
 # Joystick control
 # Falls back to game joysticks, if none exists the movements
 # are just disabled...
@@ -230,6 +206,7 @@ except :
 	joy.add_handler(joy_handler)
 
 
+"""
 # Add tube simulation
 game.enablePhysics(True)
 # Tie the ends to SceneNodes
@@ -259,4 +236,5 @@ def setBodyTransform(t):
 	end_body.world_transform = t
 
 vaantomoottori.addListener(setBodyTransform)
+"""
 

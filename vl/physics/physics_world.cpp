@@ -123,9 +123,9 @@ vl::physics::World::hasRigidBody( const std::string& name ) const
 }
 
 vl::physics::MotionState *
-vl::physics::World::createMotionState( const vl::Transform &trans, vl::SceneNode *node )
+vl::physics::World::createMotionState(vl::Transform const &trans, vl::ObjectInterface *node)
 {
-	return new MotionState( trans, node );
+	return MotionState::create(trans, node);
 }
 
 void

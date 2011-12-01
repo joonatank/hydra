@@ -32,6 +32,8 @@
 
 #include "animation.hpp"
 
+#include "physics/motion_state.hpp"
+
 namespace vl
 {
 
@@ -40,11 +42,12 @@ class KinematicBody : public ObjectInterface
 public :
 	// Normal pointer for world, because it can not go out of scope before
 	// the bodies.
-	KinematicBody(KinematicWorld *world, animation::NodeRefPtr node, vl::SceneNodePtr sn);
+	KinematicBody(std::string const &name, KinematicWorld *world, animation::NodeRefPtr node, vl::physics::MotionState *ms);
 
 	virtual ~KinematicBody(void);
 
-	virtual std::string const &getName(void) const;
+	virtual std::string const &getName(void) const
+	{ return _name; }
 
 	void translate(Ogre::Vector3 const &);
 
@@ -79,8 +82,6 @@ public :
 	virtual void setVisibility(bool visible);
 
 	virtual bool isVisible(void) const;
-	
-	vl::SceneNodePtr vl::KinematicBody::getSceneNode(void) const;
 
 	/// @todo not implemented
 	vl::KinematicBodyRefPtr clone(void) const
@@ -89,6 +90,16 @@ public :
 	/// @todo not implemented
 	vl::KinematicBodyRefPtr clone(std::string const &) const
 	{ return KinematicBodyRefPtr(); }
+
+	// -------------------- Callbacks -----------------------
+	int addListener(TransformedCB::slot_type const &slot)
+	{ _transformed_cb.connect(slot); return 1; }
+
+	/// @depricated
+	vl::SceneNodePtr vl::KinematicBody::getSceneNode(void) const;
+	
+	physics::MotionState *getMotionState(void) const
+	{ return _state; }
 
 	// @todo do we need this?
 	// or can we use animation::Link for all purposes necessary?
@@ -124,22 +135,23 @@ public :
 	bool isAssumeInWorld(void) const
 	{ return _assume_node_is_in_world; }
 
-	// -------------------- Callbacks -----------------------
-	int addListener(TransformedCB::slot_type const &slot)
-	{ _transformed_cb.connect(slot); return 1; }
-
 	/// @internal
 	void _update(void);
+
+	/// @internal
+	//void _feedback_update(void);
 
 private :
 	// Copying is forbidden
 	KinematicBody(KinematicBody const &);
 	KinematicBody &operator=(KinematicBody const &);
 
+	std::string _name;
+
 	// the creator
 	KinematicWorld *_world;
 
-	SceneNodePtr _scene_node;
+	vl::physics::MotionState *_state;
 	animation::NodeRefPtr _node;
 
 	// Some parameters to avoid updating transformation every frame

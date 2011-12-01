@@ -125,6 +125,7 @@ void export_animation(void)
 
 	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable, python::bases<vl::ObjectInterface> >("KinematicBody", python::no_init)
 		.add_property("scene_node", python::make_function(&vl::KinematicBody::getSceneNode, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("state", python::make_function(&vl::KinematicBody::getMotionState, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("name", python::make_function(&vl::KinematicBody::getName, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("world_transformation", &vl::KinematicBody::getWorldTransform, &vl::KinematicBody::setWorldTransform)
 		.add_property("visible", &vl::KinematicBody::isVisible, &vl::KinematicBody::setVisibility)

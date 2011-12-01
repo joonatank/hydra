@@ -376,7 +376,10 @@ vl::physics::Tube::create(void)
 
 
 	// Create the mesh
-	_createMesh(_start_body->getMotionState()->getNode()->getCreator()->getMeshManager());
+	// really dangerous if the state doesn't have SceneNode but instead some
+	// other movable node...
+	SceneNodePtr sn = (SceneNodePtr)(_start_body->getMotionState()->getNode());
+	_createMesh(sn->getCreator()->getMeshManager());
 
 
 	// Increase the static counter
@@ -470,7 +473,8 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	if(!_start_body->getMotionState() || !_start_body->getMotionState()->getNode())
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Motion state or node.")); }
 
-	SceneNodePtr parent_node = _start_body->getMotionState()->getNode();
+	// @todo really dangerous if the MotionState node is not scenenode
+	SceneNodePtr parent_node = (SceneNodePtr)_start_body->getMotionState()->getNode();
 	SceneManagerPtr sm = parent_node->getCreator();
 	assert(sm);
 

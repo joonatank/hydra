@@ -29,6 +29,13 @@
 
 #include "constraints.hpp"
 
+// Necessary for collision detection
+#include "game_manager.hpp"
+#include "physics/physics_world.hpp"
+#include "physics/rigid_body.hpp"
+#include "physics/shapes.hpp"
+#include "mesh_manager.hpp"
+
 // Log leves
 #include "logger.hpp"
 
@@ -46,7 +53,7 @@ vl::KinematicWorld::step(vl::time const &t)
 {
 	_progress_constraints(t);
 
-	/// Copy transformations to visible SceneNodes
+	/// Copy transformations to Motion states
 	for(KinematicBodyList::iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter )
 	{
@@ -92,8 +99,10 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 	KinematicBodyRefPtr body = getKinematicBody(sn);
 	if(!body)
 	{
+		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
+		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
 		animation::NodeRefPtr node = _createNode();
-		body.reset(new KinematicBody(this, node, sn));
+		body.reset(new KinematicBody(sn->getName(), this, node, ms));
 		assert(body);
 		_bodies.push_back(body);
 	}
