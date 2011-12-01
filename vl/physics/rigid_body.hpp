@@ -17,6 +17,8 @@
 // Necessary for name
 #include <string>
 
+#include "motion_state.hpp"
+
 // Base class
 #include "object_interface.hpp"
 
@@ -65,7 +67,7 @@ public :
 	
 	virtual void applyTorqueImpulse(Ogre::Vector3 const &v) = 0;
 
-	void applyCentralForce(Ogre::Vector3 const &force, vl::SceneNodePtr ref);
+	void applyCentralForce(Ogre::Vector3 const &force, vl::ObjectInterface *ref);
 
 	void applyCentralForce(Ogre::Vector3 const &force, RigidBodyRefPtr ref);
 
@@ -137,13 +139,42 @@ public :
 
 	Ogre::Vector3 positionToLocal(Ogre::Vector3 const &v) const;
 
+	virtual void enableKinematicObject(bool enable) = 0;
+
+	virtual bool isKinematicObject(void) const = 0;
+
+	/// Virtual overrides from ObjectInterface
+	virtual void transform(vl::Transform const &t) {}
+
+	virtual void rotate(Ogre::Quaternion const &q) {}
+
 	virtual vl::Transform getWorldTransform(void) const = 0;
 
 	virtual void setWorldTransform(Transform const &worldTrans) = 0;
 
-	virtual void enableKinematicObject(bool enable) = 0;
+	virtual Ogre::Vector3 const &getPosition(void) const
+	{ return getMotionState()->getWorldTransform().position; }
 
-	virtual bool isKinematicObject(void) const = 0;
+	virtual void setPosition(Ogre::Vector3 const &v)
+	{
+		Transform t = getMotionState()->getWorldTransform();
+		t.position = v;
+		getMotionState()->setWorldTransform(t);
+	}
+
+	virtual Ogre::Quaternion const &getOrientation(void) const
+	{ return getMotionState()->getWorldTransform().quaternion; }
+
+	virtual void setOrientation(Ogre::Quaternion const &q)
+	{
+		Transform t = getMotionState()->getWorldTransform();
+		t.quaternion = q;
+		getMotionState()->setWorldTransform(t);
+	}
+
+	virtual void setVisibility(bool visible) {}
+
+	virtual bool isVisible(void) const { return true; }
 
 	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ return -1; }

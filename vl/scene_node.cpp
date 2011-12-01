@@ -405,7 +405,7 @@ vl::SceneNode::setDirection(Ogre::Vector3 const &dir, Ogre::Vector3 const &local
 
 
 void 
-vl::SceneNode::setVisible(bool visible, bool cascade)
+vl::SceneNode::setVisibility(bool visible, bool cascade)
 {
 	if( _visible != visible )
 	{
@@ -416,7 +416,7 @@ vl::SceneNode::setVisible(bool visible, bool cascade)
 		if(cascade)
 		{
 			for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
-			{ (*iter)->setVisible(_visible, cascade); }
+			{ (*iter)->setVisibility(_visible, cascade); }
 		}
 
 		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
@@ -481,7 +481,7 @@ vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr paren
 
 	node->setTransform(_transform);
 	node->setScale(_scale);
-	node->setVisible(_visible);
+	node->setVisibility(_visible);
 
 	// Not adding to selection because it would be more confusing than useful
 
@@ -569,7 +569,7 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		_childs.push_back(child);
 
 		// Copy cascading parameters
-		child->setVisible(_visible);
+		child->setVisibility(_visible);
 
 		/// Remove from current parent
 		if( child->getParent() )

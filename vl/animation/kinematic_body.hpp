@@ -42,14 +42,11 @@ public :
 	// the bodies.
 	KinematicBody(KinematicWorld *world, animation::NodeRefPtr node, vl::SceneNodePtr sn);
 
-	~KinematicBody(void);
+	virtual ~KinematicBody(void);
 
 	virtual std::string const &getName(void) const;
 
 	void translate(Ogre::Vector3 const &);
-
-	void translate(Ogre::Real x, Ogre::Real y, Ogre::Real z)
-	{ translate(Vector3(x, y, z)); }
 
 	void rotate(Ogre::Quaternion const &);
 
@@ -59,8 +56,31 @@ public :
 
 	virtual vl::Transform getWorldTransform(void) const;
 
-	SceneNodePtr getSceneNode(void) const
-	{ return _scene_node; }
+	virtual Ogre::Vector3 const &getPosition(void) const
+	{ return _node->getWorldTransform().position; }
+
+	virtual void setPosition(Ogre::Vector3 const &v)
+	{
+		Transform t = _node->getWorldTransform();
+		t.position = v;
+		_node->setWorldTransform(t);
+	}
+
+	virtual Ogre::Quaternion const &getOrientation(void) const
+	{ return _node->getWorldTransform().quaternion; }
+
+	virtual void setOrientation(Ogre::Quaternion const &q)
+	{
+		Transform t = _node->getWorldTransform();
+		t.quaternion = q;
+		_node->setWorldTransform(t);
+	}
+
+	virtual void setVisibility(bool visible);
+
+	virtual bool isVisible(void) const;
+	
+	vl::SceneNodePtr vl::KinematicBody::getSceneNode(void) const;
 
 	/// @todo not implemented
 	vl::KinematicBodyRefPtr clone(void) const

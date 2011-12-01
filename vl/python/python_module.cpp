@@ -111,48 +111,40 @@ void export_math(void)
 
 void export_animation(void)
 {
-	void (vl::KinematicBody::*translate_ov0)(Ogre::Vector3 const &) = &vl::KinematicBody::translate;
-	void (vl::KinematicBody::*translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::KinematicBody::translate;
-//	void (vl::KinematicBody::*translate_ov2)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::KinematicBody::translate;
-//	void (vl::KinematicBody::*translate_ov3)(Ogre::Vector3 const &, TransformSpace) = &vl::KinematicBody::translate;
-	
-	void (vl::KinematicBody::*rotate_ov0)(Ogre::Quaternion const &) = &vl::KinematicBody::rotate;
-//	void (vl::KinematicBody::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::KinematicBody::rotate;
-//	void (vl::KinematicBody::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::KinematicBody::rotate;
-	/*
-	void (vl::KinematicBody::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov4)(Ogre::Vector3 const &, Ogre::Radian const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov5)(Ogre::Degree const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
-	*/
+	/// Abstract classes can not expose any methods, they are not available for derived classes...
+	python::class_<vl::ObjectInterface, boost::noncopyable>("ObjectInterface", python::no_init)
+	;
+
+
+	void (vl::KinematicBody::*oi_translate_ov0)(Ogre::Vector3 const &) = &vl::KinematicBody::translate;
+	void (vl::KinematicBody::*oi_translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::ObjectInterface::translate;
+	void (vl::KinematicBody::*oi_rotate_ov0)(Ogre::Quaternion const &) = &vl::KinematicBody::rotate;
+
 	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov0)() const = &vl::KinematicBody::clone;
 	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov1)(std::string const &) const = &vl::KinematicBody::clone;
 
-	/// @todo most of this should be moved to abstract interface
-	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable>("KinematicBody", python::no_init)
+	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable, python::bases<vl::ObjectInterface> >("KinematicBody", python::no_init)
 		.add_property("scene_node", python::make_function(&vl::KinematicBody::getSceneNode, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("name", python::make_function(&vl::KinematicBody::getName, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("world_transformation", &vl::KinematicBody::getWorldTransform, &vl::KinematicBody::setWorldTransform)
+		.add_property("visible", &vl::KinematicBody::isVisible, &vl::KinematicBody::setVisibility)
+		.add_property("position", python::make_function( &vl::KinematicBody::getPosition, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::KinematicBody::setPosition)
+		.add_property("orientation", python::make_function( &vl::KinematicBody::getOrientation, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::KinematicBody::setOrientation)
 		.def("transform", &vl::KinematicBody::transform)
-		.def("translate", translate_ov0)
-		.def("translate", translate_ov1)
-		//.def("translate", translate_ov2)
-		//.def("translate", translate_ov3)
-		.def("rotate", rotate_ov0)
-		/*
-		.def("rotate", rotate_ov1)
-		.def("rotate", rotate_ov2)
-		.def("rotate", rotate_ov3)
-		.def("rotate", rotate_ov4)
-		.def("rotate", rotate_ov5)
-		.def("rotate", rotate_ov6)
-		*/
+		.def("translate", oi_translate_ov0)
+		.def("translate", oi_translate_ov1)
+		.def("rotate", oi_rotate_ov0)
+		.def("hide", &vl::ObjectInterface::hide)
+		.def("show", &vl::ObjectInterface::show)
 		.def("clone", kb_clone_ov0)
 		.def("clone", kb_clone_ov1)
 		/// Optimisation parameters
 		.add_property("disable", &vl::KinematicBody::isDisableUpdate, &vl::KinematicBody::setDisableUpdate)
 		.add_property("use_dirties", &vl::KinematicBody::isUseDirties, &vl::KinematicBody::setUseDirties)
 		.add_property("assume_in_world", &vl::KinematicBody::isAssumeInWorld, &vl::KinematicBody::setAssumeInWorld)
+
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -434,11 +426,8 @@ void export_scene_graph(void)
 
 	vl::Transform const &(vl::SceneNode::*getTransform_ov0)(void) const = &vl::SceneNode::getTransform;
 	vl::Transform (vl::SceneNode::*getTransform_ov1)(vl::SceneNodePtr) const = &vl::SceneNode::getTransform;
-	void (vl::SceneNode::*translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov1)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov2)(Ogre::Vector3 const &, TransformSpace) = &vl::SceneNode::translate;
-	void (vl::SceneNode::*translate_ov3)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::SceneNode::translate;
-	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
 //	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::SceneNode::rotate;
@@ -447,17 +436,35 @@ void export_scene_graph(void)
 	void (vl::SceneNode::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*scale_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::scale;
 	void (vl::SceneNode::*scale_ov1)(Ogre::Real) = &vl::SceneNode::scale;
+
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
-
 	
-	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisible;
-	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisible;
+	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisibility;
+	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisibility;
+
+	void (vl::SceneNode::*oi_translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*oi_translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::ObjectInterface::translate;
+	void (vl::SceneNode::*oi_rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 
 	// naming convention 
 	// transform is the operation of transforming
 	// transformation is the noun descriping that transform operation
-	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
+	python::class_<vl::SceneNode, boost::noncopyable, python::bases<vl::ObjectInterface> >("SceneNode", python::no_init)
+		.add_property("name", python::make_function(&vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
+		.add_property("visible", &vl::SceneNode::isVisible, setVisible_ov0)
+		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::SceneNode::setPosition)
+		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::SceneNode::setOrientation)
+		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
+		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
+		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
+		.add_property("direction", &vl::SceneNode::getDirection)
+		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
+
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)
 		.def("hasObject", &vl::SceneNode::hasObject)
@@ -465,13 +472,10 @@ void export_scene_graph(void)
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
 		.def("removeAllChildren", &vl::SceneNode::removeAllChildren)
-		.def("transform", transform_ov0)
 		.def("transform", transform_ov1)
-		.def("translate", translate_ov0)
+		.def("transform", transform_ov0)
 		.def("translate", translate_ov1)
 		.def("translate", translate_ov2)
-		.def("translate", translate_ov3)
-		.def("rotate", rotate_ov0)
 		.def("rotate", rotate_ov2)
 		.def("rotate", rotate_ov3)
 		.def("rotate", rotate_ov4)
@@ -480,28 +484,20 @@ void export_scene_graph(void)
 		.def("rotate_around", &vl::SceneNode::rotateAround)
 		.def("scale", scale_ov0)
 		.def("scale", scale_ov1)
+		.def("translate", oi_translate_ov0)
+		.def("translate", oi_translate_ov1)
+		.def("rotate", oi_rotate_ov0)
+		.def("hide", &vl::SceneNode::hide)
+		.def("show", &vl::SceneNode::show)
 		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
 		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
-		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
 		.add_property("transformation", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
-		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
-		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setPosition )
-		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setOrientation )
 		.add_property("scaling", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )
-		.add_property("visible", &SceneNode::getVisible, setVisible_ov0)
 		.def("set_visible", setVisible_ov0)
 		.def("set_visible", setVisible_ov1)
-		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
-		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
-		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
-		.add_property("direction", &vl::SceneNode::getDirection)
-		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
-		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
 		.def("set_direction", &vl::SceneNode::setDirection, setDirection_ovs())
 		.def("look_at", &vl::SceneNode::lookAt)
-		.def("hide", &vl::SceneNode::hide)
 		.def("isHidden", &vl::SceneNode::isHidden)
-		.def("show", &vl::SceneNode::show)
 		.def("isShown", &vl::SceneNode::isShown)
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
 		.def(python::self_ns::str(python::self_ns::self))

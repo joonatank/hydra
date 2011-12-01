@@ -116,6 +116,28 @@ vl::KinematicBody::getWorldTransform(void) const
 }
 
 void
+vl::KinematicBody::setVisibility(bool visible)
+{
+	if(_scene_node)
+	{ _scene_node->setVisibility(visible); }
+}
+
+bool
+vl::KinematicBody::isVisible(void) const
+{
+	if(_scene_node)
+	{ return _scene_node->isVisible(); }
+	return true;
+}
+
+vl::SceneNodePtr
+vl::KinematicBody::getSceneNode(void) const
+{
+	return _scene_node;
+}
+
+
+void
 vl::KinematicBody::_update(void)
 {
 	assert(_scene_node && _node);
