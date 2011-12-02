@@ -1,9 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Mesh data structure, no real functionality but can be copied to
  *	Ogre and/or Bullet as the user sees fit.
  *	Also used by the serialization modules used by editor and exporters.
@@ -210,7 +222,6 @@ public :
 private :
 	void _resize_buffer(size_t size);
 
-	size_t _index_count;
 	INDEX_SIZE _buffer_size;
 
 	std::vector<uint16_t> _buffer_16;
