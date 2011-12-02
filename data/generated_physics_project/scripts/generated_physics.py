@@ -47,7 +47,7 @@ box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
 # with scaling a ConvexHull
 box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
-user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 0)
+user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 20)
 user_sphere.user_controlled = True
 
 
@@ -99,6 +99,7 @@ print('Adding kinematic action')
 #addKinematicAction(user_sphere)
 addRigidBodyController(user_sphere)
 
+"""
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m
 tube_info = TubeConstructionInfo()
@@ -113,5 +114,6 @@ tube_info.radius = 0.1
 #tube_info.damping = 0.3
 
 tube = game.physics_world.createTube(tube_info)
-
+tube.create()
+"""
 

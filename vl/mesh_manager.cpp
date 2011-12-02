@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh_manager.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -17,6 +28,57 @@
 
 #include "resource_manager.hpp"
 
+#include <Procedural.h>
+
+namespace {
+
+template <typename T>
+vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T> const &generator)
+{
+	vl::MeshRefPtr mesh(new vl::Mesh(name));
+	
+	Procedural::TriangleBuffer tbuffer;
+	generator.addToTriangleBuffer(tbuffer);	
+
+	// copy vertex data
+	mesh->sharedVertexData = new vl::VertexData;
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+
+	for(std::vector<Procedural::TriangleBuffer::Vertex>::const_iterator it 
+			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end();it++)
+	{
+		vl::Vertex vert;
+		vert.position = it->mPosition;
+		vert.normal = it->mNormal;
+		vert.uv = it->mUV;
+		mesh->sharedVertexData->addVertex(vert);
+	}
+
+	// copy index data
+	vl::SubMesh *sub = mesh->createSubMesh();
+	sub->setMaterial("BaseWhiteNoLighting");
+	// @todo should check if we need to use 32-bit buffer
+	// forcing the use of 32 bit index buffer
+	//sub->indexData.setIndexSize(vl::IT_32BIT);
+	sub->indexData.setIndexCount(tbuffer.getIndices().size());
+	for(size_t i = 0; i < tbuffer.getIndices().size(); ++i)
+	{
+		sub->indexData.set(i, (uint32_t)tbuffer.getIndices().at(i));
+	}
+
+	/* tangent vector calculation is not yet implemented */
+
+	mesh->calculateBounds();
+
+	return mesh;
+}
+
+}	// unamed namespace
+
+
+/// Callbacks
 void 
 vl::ManagerMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
 {
@@ -175,28 +237,21 @@ vl::MeshRefPtr
 vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16_t longitude, uint16_t latitude)
 {
 	std::clog << "vl::MeshManager::createSphere" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+
 	if(hasMesh(name))
 	{
 		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
 	}
-	
-	// (x, y, z) = (sin(Pi * m/M) cos(2Pi * n/N), sin(Pi * m/M) sin(2Pi * n/N), cos(Pi * m/M))
-	// where M is latitude and N is longitude
-	// might need to adjust M with 1 or 2
-	MeshRefPtr mesh(new Mesh(name));
-	uint16_t M = latitude;
-	uint16_t N = longitude;
-	for(uint16_t m = 0; m < M; ++m)
-	{
-		for(uint16_t n = 0; n < N; ++n)
-		{
-			vl::scalar x = std::sin(M_PI * m/M) * std::cos(2*M_PI * n/N);
-			vl::scalar y = std::sin(M_PI * m/M) * std::sin(2*M_PI * n/N);
-			vl::scalar z = std::cos(M_PI * m/M);
-		}
-	}
 
+	std::clog << "Creating Procedural sphere" << std::endl;
+	Procedural::SphereGenerator generator;
+	generator.setRadius(1.f).setUTile(longitude).setVTile(latitude);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
 }
 
 vl::MeshRefPtr
@@ -268,6 +323,46 @@ vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 	sub->addFace(6, 5, 7);
 
 	_meshes[name] = mesh;
+	return mesh;
+}
+
+vl::MeshRefPtr
+vl::MeshManager::createPrefab(std::string const &type_name)
+{
+	vl::MeshRefPtr mesh;
+	if(type_name == "prefab_plane")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createPlane(type_name, 20, 20);
+		}
+	}
+	else if(type_name == "prefab_cube")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createCube(type_name);
+		}
+	}
+	else if(type_name == "prefab_sphere")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createSphere(type_name);
+		}
+	}
+	else
+	{ BOOST_THROW_EXCEPTION(vl::invalid_param() << vl::desc("Invalid PREFAB type name : " + type_name)); }
+
 	return mesh;
 }
 

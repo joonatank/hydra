@@ -390,7 +390,6 @@ void export_scene_graph(void)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
 		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("prefab", &vl::Entity::getPrefab)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

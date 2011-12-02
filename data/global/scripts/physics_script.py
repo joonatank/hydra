@@ -91,8 +91,8 @@ def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 def addSphere(name, mat_name, position, mass = 1, size = 1) :
 	print('Adding a sphere ' + name)
 	sphere_node = game.scene.createSceneNode(name)
-	# TODO this should be copied from the shape, using bounding boxes
-	sphere_node.scale = Vector3(0.02, 0.02, 0.02)*size
+	# Uses 1m for the size of the graphics object we should move to using
+	# MeshManager directly so we can specify the radius of the sphere
 	sphere = game.scene.createEntity(name, PF.SPHERE)
 	sphere_node.attachObject(sphere)
 	sphere.material_name = mat_name
