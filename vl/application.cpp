@@ -322,6 +322,34 @@ vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings con
 	if(!opt.show_system_console)
 	{ hide_system_console(); }
 
+	// Set the used processors
+	if(opt.n_processors != -1)
+	{
+#ifndef _WIN32
+		std::cout << "Setting number of processors is only supported on Windows." << std::endl;
+#else
+		HANDLE proc = ::GetCurrentProcess();
+		DWORD_PTR current_mask, new_mask, system_mask;
+		::GetProcessAffinityMask(proc, &current_mask, &system_mask);
+
+		new_mask = 0;
+		// @todo add checking that we don't try to use more processors than is available
+		for(size_t i = opt.start_processor; i < opt.start_processor + opt.n_processors; ++i)
+		{ new_mask |= 1<<i; }
+
+		if(new_mask > current_mask)
+		{ 
+			std::cerr << "Couldn't change the processor affinity mask because "
+				<< "there is not enough processors for the new mask." << std::endl;
+		}
+		else
+		{
+			std::clog << "Changing processor affinity mask from " << std::hex << current_mask << " to " << new_mask << std::endl;
+			::SetProcessAffinityMask(proc, new_mask);
+		}
+#endif
+	}
+
 	if(env->isMaster())
 	{
 		_max_fps = env->getFPS();
