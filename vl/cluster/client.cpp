@@ -234,7 +234,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 	{
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
-			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
+			std::clog << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
 			/// Single environment supported
 			if( !_state.environment )
 			{
@@ -259,7 +259,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 		case vl::cluster::MSG_SHUTDOWN:
 		{
-			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
+			std::clog << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
 			_state.shutdown = true;
 			_renderer.reset();
 		}
@@ -463,11 +463,11 @@ vl::cluster::Client::_receive(void)
 		/// @TODO when these do happen?
 		if( error && error == boost::asio::error::connection_refused )
 		{
-			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;
+			std::clog << "Error : Connection refused" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_aborted )
 		{
-			std::cout << vl::CRITICAL << "Error : Connection aborted" << std::endl;
+			std::clog << "Error : Connection aborted" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_reset )
 		{
@@ -475,7 +475,7 @@ vl::cluster::Client::_receive(void)
 		}
 		else if( error && error == boost::asio::error::host_unreachable )
 		{
-			std::cout << vl::CRITICAL << "Error : Host unreachable" << std::endl;
+			std::clog << "Error : Host unreachable" << std::endl;
 		}
 		else if( error && error != boost::asio::error::message_size )
 		{ throw boost::system::system_error(error); }
@@ -501,9 +501,6 @@ vl::cluster::Client::_receive(void)
 						consumed = true;
 						if( !p_m->partial() )
 						{
-							std::cout << vl::TRACE << "Partial message with type = " 
-								<< getTypeAsString(p_m->getType()) << " id = " << p_m->getID()
-								<< " made whole." << std::endl;
 							msg = p_m;
 							_partial_messages.erase(_partial_messages.begin()+i);
 						}
@@ -525,8 +522,6 @@ vl::cluster::Client::_receive(void)
 			= _msg_callbacks.find(msg->getType());
 		if(iter != _msg_callbacks.end())
 		{
-			std::cout << vl::TRACE << "Callback found for message type : " << getTypeAsString(msg->getType())
-				<< std::endl;
 			iter->second->messageReceived(msg);
 			msg.reset();
 		}
