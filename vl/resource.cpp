@@ -1,8 +1,21 @@
-/**	@author Joonatan Kuosa
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file resource.cpp
  *
- *	Class to hold memory block where data from resource is stored
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Class to hold memory block where data from resource is stored
  *	@date 2011-05 Added ResourceStream for reading and writing to Resources
  */
 

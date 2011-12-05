@@ -1,9 +1,21 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
+ *	@file session.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_SESSION_HPP
-#define VL_CLUSTER_SESSION_HPP
+#ifndef HYDRA_CLUSTER_SESSION_HPP
+#define HYDRA_CLUSTER_SESSION_HPP
 
 #include <stdint.h>
 
@@ -116,4 +128,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_CLUSTER_SESSION_HPP
+#endif // HYDRA_CLUSTER_SESSION_HPP

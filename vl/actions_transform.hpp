@@ -1,11 +1,24 @@
-/**	Joonatan Kuosa
- *	2010-12 initial implementation
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
- *	2011-01 Removed equalizer dependencies
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-12
+ *	@file actions_transform.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_ACTIONS_TRANSFORM_HPP
-#define VL_ACTIONS_TRANSFORM_HPP
+/// @depricated Will be removed from next release.
+
+
+#ifndef HYDRA_ACTIONS_TRANSFORM_HPP
+#define HYDRA_ACTIONS_TRANSFORM_HPP
 
 #include "action.hpp"
 #include "typedefs.hpp"
@@ -227,4 +240,4 @@ private :
 
 };	// namespace vl
 
-#endif // VL_ACTIONS_TRANSFORM_HPP
+#endif // HYDRA_ACTIONS_TRANSFORM_HPP
