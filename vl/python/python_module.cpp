@@ -63,8 +63,15 @@
 /// SceneGraph overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 3)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
+
+// MeshManager overloads
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 1, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createSphere_ovs, createSphere, 1, 4)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCylinder_ovs, createCylinder, 1, 5)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCapsule_ovs, createCapsule, 1, 5)
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setDirection_ovs, setDirection, 1, 4)
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(lookAt_ovs, lookAt, 3, 5)
@@ -219,12 +226,14 @@ void export_animation(void)
 void export_scene_graph(void)
 {
 	vl::MeshRefPtr (MeshManager::*loadMesh_ov0)(std::string const &) = &MeshManager::loadMesh;
-
+	
 	python::class_<vl::MeshManager, vl::MeshManagerRefPtr, boost::noncopyable>("MeshManager", python::no_init)
 		.def("loadMesh", loadMesh_ov0)
 		.def("createPlane", &vl::MeshManager::createPlane, createPlane_ovs())
-		.def("createSphere", &vl::MeshManager::createSphere)
+		.def("createSphere", &vl::MeshManager::createSphere, createSphere_ovs())
 		.def("createCube", &vl::MeshManager::createCube, createCube_ovs())
+		.def("createCylinder", &vl::MeshManager::createCylinder, createCylinder_ovs())
+		.def("createCapsule", &vl::MeshManager::createCapsule, createCapsule_ovs())
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)

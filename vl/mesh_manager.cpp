@@ -239,13 +239,10 @@ vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16
 	std::clog << "vl::MeshManager::createSphere" << std::endl;
 
 	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
-	}
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
 
-	std::clog << "Creating Procedural sphere" << std::endl;
 	Procedural::SphereGenerator generator;
-	generator.setRadius(1.f).setUTile(longitude).setVTile(latitude);
+	generator.setRadius(radius).setUTile(longitude).setVTile(latitude);
 	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
 
 	assert(mesh);
@@ -268,63 +265,65 @@ vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
 	}
 
-	MeshRefPtr mesh(new Mesh(name));
-	mesh->sharedVertexData = new VertexData;
+	Procedural::BoxGenerator generator;
+	/// @todo add configurable segments
+	generator.setSize(size).setNumSegX(1).setNumSegY(1).setNumSegZ(1);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
 
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
-	/// @todo add tangents
-
-	// y direction
-	for(uint16_t m = 0; m < 2; ++m)
-	{
-		// x direction
-		for(uint16_t n = 0; n < 2; ++n)
-		{
-			// z direction
-			for(uint16_t l = 0; l < 2; ++l)
-			{
-				Vertex vert;
-				vl::scalar x = size.x *(n - 0.5);
-				vl::scalar y = size.z *(m - 0.5);
-				vl::scalar z = size.y *(l - 0.5);
-				vert.position = Ogre::Vector3(x, y, z);
-				vert.normal = vert.position;
-				vert.normal.normalise();
-				// @todo fix UV coords
-				//vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
-				mesh->sharedVertexData->addVertex(vert);
-			}
-		}
-	}
-
-	mesh->calculateBounds();
-
-	SubMesh *sub = mesh->createSubMesh();
-	/// @todo add material (or not?) some clear default would be good
-	// bottom (0, 1, 2, 3)
-	sub->addFace(0, 2, 1);
-	sub->addFace(1, 2, 3);
-	// left side (0, 1, 4, 5)
-	sub->addFace(0, 1, 4);
-	sub->addFace(4, 1, 5);
-	// back side (0, 2, 4, 6)
-	sub->addFace(0, 4, 2);
-	sub->addFace(2, 4, 6);
-	// fron side (1, 3, 5, 7)
-	sub->addFace(1, 3, 5);
-	sub->addFace(5, 3, 7);
-	// right side
-	sub->addFace(3, 2, 6);
-	sub->addFace(3, 6, 7);
-	// top side
-	sub->addFace(4, 5, 6);
-	sub->addFace(6, 5, 7);
+	assert(mesh);
 
 	_meshes[name] = mesh;
 	return mesh;
 }
+
+vl::MeshRefPtr
+vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius, 
+		vl::scalar height, uint16_t seg_height, uint16_t seg_radius)
+{
+	std::clog << "vl::MeshManager::createCylinder" << std::endl;
+
+	if(hasMesh(name))
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+
+	Procedural::CylinderGenerator generator;
+	generator.setRadius(radius).setHeight(height).setNumSegHeight(seg_height).setNumSegBase(seg_radius);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+	
+	// Fix the origin to middle of the cylinder
+	for(size_t i = 0; i < mesh->sharedVertexData->getNVertices(); ++i)
+	{
+		mesh->sharedVertexData->getVertex(i).position -= mesh->getBounds().getCenter();
+	}	
+	mesh->calculateBounds();
+
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
+}
+
+vl::MeshRefPtr
+vl::MeshManager::createCapsule(std::string const &name, vl::scalar radius, 
+		vl::scalar height, uint16_t seg_height, uint16_t seg_radius, uint16_t segments)
+{
+	std::clog << "vl::MeshManager::createCapsule with height " << height << std::endl;
+
+	if(hasMesh(name))
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+
+	Procedural::CapsuleGenerator generator;
+	// divide height by two because we use height to mean the actual height of
+	// the capsule (as in bounding box size) not height from center.
+	generator.setRadius(radius).setHeight(height/2).setNumSegHeight(seg_height).setNumRings(seg_radius).setNumSegments(segments);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+
+	std::clog << mesh->getBounds() << std::endl;
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
+}
+
 
 vl::MeshRefPtr
 vl::MeshManager::createPrefab(std::string const &type_name)

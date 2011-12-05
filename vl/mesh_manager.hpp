@@ -22,6 +22,8 @@
 
 #include "typedefs.hpp"
 
+#include "math/types.hpp"
+
 #include <OGRE/OgreVector3.h>
 #include <stdint.h>
 
@@ -103,6 +105,8 @@ public :
 	/// @param name name for the mesh, used for storing it and writing it into a file
 	/// @param normal the normal direction the plane is facing
 	/// @param tessalation how many divisions there is in the mesh
+	// @todo normal should be fixed to NEGATIVE Z, if the user needs a ground plane he should
+	// provide the normal parameter.
 	virtual vl::MeshRefPtr createPlane(std::string const &name,	Ogre::Real size_x = 1, Ogre::Real size_y = 1,
 		 Ogre::Vector3 normal = Ogre::Vector3(0, 1, 0), uint16_t tesselation_x = 1, uint16_t tesselation_y = 1);
 
@@ -120,6 +124,15 @@ public :
 	/// @todo add version with tesselation
 	/// @param tesselation how many divisions there is in the mesh
 	//virtual vl::MeshPtr createCube(std::string const &name, Ogre::Vector3 size, uint16_t tesselation_x, uint16_t tesselation_y, uint16_t tesselation_z);
+
+	/// @brief creates a new Cylinder mesh
+	/// @todo make configurable whether to put the origin in middle of the
+	/// cylinder or in one of the ends 
+	/// for now it's always in the center for physics integration
+	virtual vl::MeshRefPtr createCylinder(std::string const &name, vl::scalar radius = 1, vl::scalar height=2, uint16_t seg_height=1, uint16_t seg_radius=8);
+
+	/// @brief create a new Capsule mesh
+	virtual vl::MeshRefPtr createCapsule(std::string const &name, vl::scalar radius = 1, vl::scalar height=2, uint16_t seg_height=1, uint16_t seg_radius=8, uint16_t segments=8);
 
 	/// @brief create some pre defined shapes available with default parameters
 	/// @param type_name the name of the prefab type

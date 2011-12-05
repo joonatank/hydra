@@ -99,6 +99,10 @@ print('Adding kinematic action')
 #addKinematicAction(user_sphere)
 addRigidBodyController(user_sphere)
 
+cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), mass=10)
+
+capsule = addCapsule('capsule', "finger_sphere/green", Vector3(.0, 5, 5), mass=10)
+
 """
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m

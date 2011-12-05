@@ -2,6 +2,12 @@
 
 # Common functions for defining physics actions and constraints
 
+# TODO split collision detection stuff to another script and rigid body
+# controllers to another
+
+# TODO rewrite the actions using GameJoysticks and listener classes
+# Action system is going to be removed in next release (0.4)
+
 def addKinematicAction(body):
 	print( 'Creating Kinematic event on ' + body.name )
 
@@ -66,19 +72,23 @@ def addDynamicAction(body, reference = None):
 	trigger = game.event_manager.getFrameTrigger()
 	trigger.action.add_action( trans_action )
 
+# TODO add an example of the use of models both static and
+# dynamic
+# we can generate the model for example a torus using mesh manager
+# and then create both static version of it and separate convex hull version
+# these are for testing the collision detection with mesh types
+
 def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	print('Physics : Adding a box ' + name)
 	box_node = game.scene.createSceneNode(name)
-	box = game.scene.createEntity(name, PF.CUBE)
+	mesh_name = name+"_box_mesh"
+	game.mesh_manager.createCube(mesh_name, size)
+	box = game.scene.createEntity(name, mesh_name, True)
 	box_node.attachObject(box)
 	box.material_name = mat_name
 	box_node.scale = size
 
-	# TODO fix the size
-	#box_shape = BoxShape.create(size)
-	box_mesh = game.mesh_manager.getMesh('prefab_cube')
-	box_shape = ConvexHullShape.create(box_mesh)
-	box_shape.scale = size
+	box_shape = BoxShape.create(size)
 	trans = Transform( position, Quaternion.identity)
 	motion_state = game.physics_world.createMotionState(trans, box_node)
 	inertia = Vector3.zero
@@ -88,22 +98,68 @@ def addBox(name, mat_name, position, size = Vector3(1,1,1), mass = 1) :
 	return box
 
 
-def addSphere(name, mat_name, position, mass = 1, size = 1) :
+def addSphere(name, mat_name, position, mass = 1, radius = 0.5) :
 	print('Adding a sphere ' + name)
 	sphere_node = game.scene.createSceneNode(name)
 	# Uses 1m for the size of the graphics object we should move to using
 	# MeshManager directly so we can specify the radius of the sphere
-	sphere = game.scene.createEntity(name, PF.SPHERE)
+	mesh_name = name+"_mesh"
+	game.mesh_manager.createSphere(mesh_name, radius, 8, 8)
+	sphere = game.scene.createEntity(name, mesh_name, True)
 	sphere_node.attachObject(sphere)
 	sphere.material_name = mat_name
 
-	sphere_shape = SphereShape.create(size)
+	sphere_shape = SphereShape.create(radius)
 	trans = Transform( position, Quaternion.identity)
 	motion_state = game.physics_world.createMotionState(trans, sphere_node)
 	inertia = Vector3.zero
 	if(mass != 0) :
 		inertia = Vector3(1,1,1)
 	body = game.physics_world.createRigidBody(name, mass, motion_state, sphere_shape, inertia)
+
+	# Set some damping so it doesn't go on endlessly
+	body.setDamping(0.3, 0.3)
+	return body 
+
+def addCylinder(name, mat_name, position, mass=1, radius=0.5, height=1) :
+	print('Adding a cylinder ' + name)
+	cylinder_node = game.scene.createSceneNode(name)
+
+	mesh_name = name + "_mesh"
+	game.mesh_manager.createCylinder(mesh_name, radius, height)
+	cylinder = game.scene.createEntity(name, mesh_name, True)
+	cylinder_node.attachObject(cylinder)
+	cylinder.material_name = mat_name
+
+	cylinder_shape = CylinderShape.create(radius, height)
+	trans = Transform( position, Quaternion.identity)
+	motion_state = game.physics_world.createMotionState(trans, cylinder_node)
+	inertia = Vector3.zero
+	if(mass != 0) :
+		inertia = Vector3(1,1,1)
+	body = game.physics_world.createRigidBody(name, mass, motion_state, cylinder_shape, inertia)
+
+	# Set some damping so it doesn't go on endlessly
+	body.setDamping(0.3, 0.3)
+	return body 
+
+def addCapsule(name, mat_name, position, mass=1, radius=0.5, height=1) :
+	print('Adding a capsule ' + name)
+	capsule_node = game.scene.createSceneNode(name)
+
+	mesh_name = name + "_mesh"
+	game.mesh_manager.createCapsule(mesh_name, radius, height)
+	capsule = game.scene.createEntity(name, mesh_name, True)
+	capsule_node.attachObject(capsule)
+	capsule.material_name = mat_name
+
+	capsule_shape = CapsuleShape.create(radius, height)
+	trans = Transform( position, Quaternion.identity)
+	motion_state = game.physics_world.createMotionState(trans, capsule_node)
+	inertia = Vector3.zero
+	if(mass != 0) :
+		inertia = Vector3(1,1,1)
+	body = game.physics_world.createRigidBody(name, mass, motion_state, capsule_shape, inertia)
 
 	# Set some damping so it doesn't go on endlessly
 	body.setDamping(0.3, 0.3)
