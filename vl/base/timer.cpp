@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
- *	@file timer.cpp
+ *	@file base/timer.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -145,20 +156,19 @@ vl::time::operator+=(vl::time const &t)
 {
 	sec += t.sec;
 	usec += t.usec;
-	if( usec >= 1e6 )
-	{
-		sec += usec/(uint32_t)1e6;
-		usec = usec%(uint32_t)1e6;
-	}
+
+	_check_usecs();
+
 	return *this;
 }
 
 vl::time &
 vl::time::operator*=(double n)
 {
-	// TODO should move usecs to secs if they qualify
 	sec *= n;
 	usec *= n;
+
+	_check_usecs();
 
 	return *this;
 }
@@ -166,27 +176,13 @@ vl::time::operator*=(double n)
 vl::time &
 vl::time::operator/=(double n)
 {
-	sec /= n;
-	usec /= n;
+	// @todo this is incorrect, needs to take into account the
+	// remaining part when divided
+	double sec_divided = sec/n;
+	double usec_divided = usec/n;
 
-	return *this;
-}
-
-vl::time &
-vl::time::operator*=(int32_t n)
-{
-	// TODO should move usecs to secs if they qualify
-	sec *= n;
-	usec *= n;
-
-	return *this;
-}
-
-vl::time &
-vl::time::operator/=(int32_t n)
-{
-	sec /= n;
-	usec /= n;
+	sec = (uint32_t)sec_divided;
+	usec = uint32_t(usec_divided + (sec_divided-sec));
 
 	return *this;
 }
@@ -194,9 +190,10 @@ vl::time::operator/=(int32_t n)
 vl::time &
 vl::time::operator*=(size_t n)
 {
-	// TODO should move usecs to secs if they qualify
 	sec *= n;
 	usec *= n;
+
+	_check_usecs();
 
 	return *this;
 }
@@ -204,8 +201,18 @@ vl::time::operator*=(size_t n)
 vl::time &
 vl::time::operator/=(size_t n)
 {
+	usec = usec/n + ((sec%n)*1e6)/n;
 	sec /= n;
-	usec /= n;
 
 	return *this;
+}
+
+void
+vl::time::_check_usecs(void)
+{
+	if( usec >= 1e6 )
+	{
+		sec += usec/(uint32_t)1e6;
+		usec = usec%(uint32_t)1e6;
+	}	
 }
