@@ -1,10 +1,22 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2011-01
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-01
+ *	@file keycode.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
-#ifndef VL_KEYCODE_HPP
-#define VL_KEYCODE_HPP
+
+#ifndef HYDRA_KEYCODE_HPP
+#define HYDRA_KEYCODE_HPP
 
 #include <string>
 #include <OIS/OISKeyboard.h>
@@ -180,4 +192,4 @@ inline std::string getCppKeyName( OIS::KeyCode key )
 
 }
 
-#endif // VL_KEYCODE_HPP
+#endif // HYDRA_KEYCODE_HPP

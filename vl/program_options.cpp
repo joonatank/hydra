@@ -101,6 +101,10 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("system_console", po::value<bool>(&show_system_console)->default_value(false),
 			"Show the system console window on startup.")
 		("editor", po::value<bool>(&editor)->default_value(false), "Enable editor.")
+		("processors", po::value<int>(&n_processors)->default_value(-1), 
+			"How many processors or cores the program can use.")
+		("start_processor", po::value<int>(&start_processor)->default_value(0), 
+			"First processor to use only has effect if processor is defined also.")
     ;
 
     po::options_description cmdline_options;

@@ -1,10 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
  *	@file config.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
+
 
 #ifndef HYDRA_CONFIG_HPP
 #define HYDRA_CONFIG_HPP

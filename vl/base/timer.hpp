@@ -1,7 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-03
- *	@file timer.hpp
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-03
+ *	@file base/timer.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Linux and Windows implementation is provided.
  *
  *	Time functions and timers provide microsecond resolution on most current machines
@@ -72,9 +86,8 @@ struct time
 
 	time &operator*=(size_t n);
 
-	time &operator/=(int32_t n);
-
-	time &operator*=(int32_t n);
+private :
+	void _check_usecs(void);
 };
 
 /// time arithmetic operators
@@ -165,6 +178,7 @@ double get_system_time_accuracy(void);
 time get_system_time(void);
 
 /// @class timer used to measure timevals between creation/reset and query
+/// @todo rename to chrono as it's what this does it's a clock not a timer
 class timer
 {
 public :

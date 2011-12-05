@@ -1,6 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
- *	@file server.cpp
+ *	@file cluser/server.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "server.hpp"
@@ -113,7 +125,7 @@ vl::cluster::Server::poll(void)
 
 /// TODO should contain only the frame update message
 void
-vl::cluster::Server::update(vl::Stats &stats)
+vl::cluster::Server::update(void)
 {
 	// Create is not part of the Rendering loop and should be separated
 	// from it.
@@ -132,6 +144,12 @@ vl::cluster::Server::update(vl::Stats &stats)
 	}
 
 	++_update_frame;
+
+	if(_report_timer.elapsed() > vl::time(10))
+	{
+		_server_report.finish();
+		_report_timer.reset();
+	}
 }
 
 // TODO
@@ -147,7 +165,7 @@ vl::cluster::Server::update(vl::Stats &stats)
 /// At the moment we probably only need the first one to keep all the
 /// frames in sync.
 bool
-vl::cluster::Server::start_draw(vl::Stats &stats)
+vl::cluster::Server::start_draw(void)
 {
 	if( _frame == 0 )
 	{ _sim_timer.reset(); }
@@ -246,7 +264,7 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		return false; 
 	}
 
-	stats.logWaitUpdateTime(tim.elapsed());
+	_server_report["wait update time"].push(tim.elapsed());
 
 	tim.reset();
 	for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
@@ -268,13 +286,13 @@ vl::cluster::Server::start_draw(vl::Stats &stats)
 		return false;
 	}
 
-	stats.logWaitDrawTime(tim.elapsed());
+	_server_report["wait draw time"].push(tim.elapsed());
 
 	return true;
 }
 
 void
-vl::cluster::Server::finish_draw(vl::Stats &stats, vl::time const &limit)
+vl::cluster::Server::finish_draw(vl::time const &limit)
 {
 	if(_rendering())
 	{
@@ -293,7 +311,7 @@ vl::cluster::Server::finish_draw(vl::Stats &stats, vl::time const &limit)
 		for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 		{ iter->state.clear_rendering_state(); }
 
-		stats.logWaitDrawDoneTime(t.elapsed());
+		_server_report["wait draw done time"].push(t.elapsed());
 	}
 }
 

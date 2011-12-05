@@ -1,7 +1,21 @@
-/**	Joonatan Kuosa
- *	2010-02
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
- *	Class for managing the application, this is basicly a Singleton
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-02
+ *	@file: ogre_root.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Class for managing the application, this is basicly a Singleton
  *	the number of instances depends on the number of pipe threads we have.
  *	No enforcement for the Singleton is done.
  *
@@ -13,8 +27,8 @@
  *	either through inheritance or aggregation.
  **/
 
-#ifndef VL_OGRE_ROOT_HPP
-#define VL_OGRE_ROOT_HPP
+#ifndef HYDRA_OGRE_ROOT_HPP
+#define HYDRA_OGRE_ROOT_HPP
 
 #include <OGRE/OgreRoot.h>
 #include <OGRE/OgreSceneManager.h>
@@ -82,4 +96,4 @@ namespace ogre
 
 }	// namespace vl
 
-#endif
+#endif // HYDRA_OGRE_ROOT_HPP

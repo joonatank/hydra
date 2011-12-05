@@ -1,7 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
  *	@file resource_manager.hpp
  *
- *	@date 2010-11
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+
+/**	
  *	@date 2011-05 Changed from Abstract to Concrete (removed the distributed version)
  *
  *	Class to load resources

@@ -546,8 +546,6 @@ void export_game(void)
 		.def(python::self /= double())
 		.def(python::self / size_t())
 		.def(python::self /= size_t())
-		.def(python::self / int32_t())
-		.def(python::self /= int32_t())
 		.def(python::self_ns::str(python::self_ns::self))
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
@@ -558,13 +556,17 @@ void export_game(void)
 		.def("reset", &vl::timer::reset)
 	;
 
+	python::class_<vl::Report<vl::time>, boost::noncopyable>("Report", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", &vl::GameManager::getGUI)
-		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("rendering_report", python::make_function( &vl::GameManager::getRenderingReport, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("init_report", python::make_function( &vl::GameManager::getInitReport, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property( "physics_world", &vl::GameManager::getPhysicsWorld)
 		.def( "enableAudio", &vl::GameManager::enableAudio )
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
@@ -596,10 +598,6 @@ void export_game(void)
 		.add_property("asymmetric_stereo_frustum", &vl::Player::isAsymmetricStereoFrustum, &vl::Player::enableAsymmetricStereoFrustum)
 		.add_property("ipd", &vl::Player::getIPD, &vl::Player::setIPD)
 		.def("takeScreenshot", &vl::Player::takeScreenshot)
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

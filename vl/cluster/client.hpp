@@ -1,9 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
+ *	@file cluster/client.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_CLIENT_HPP
-#define VL_CLUSTER_CLIENT_HPP
+#ifndef HYDRA_CLUSTER_CLIENT_HPP
+#define HYDRA_CLUSTER_CLIENT_HPP
 
 #include <boost/asio.hpp>
 
@@ -165,4 +178,4 @@ private :
 
 }	// namespace vl
 
-#endif // VL_CLUSTER_CLIENT_HPP
+#endif // HYDRA_CLUSTER_CLIENT_HPP

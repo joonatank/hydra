@@ -1,7 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file trigger.hpp
  *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
  *	Event Handling Trigger class
  *	
  *	2011-07 Updated to use boost::signals

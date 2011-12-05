@@ -1,6 +1,21 @@
-/**	Joonatan Kuosa
- *	2010-11 initial implementation
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file tracker.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
+ *	@date 2010-11
  *	Added event system support, rudimentary at the moment
  *	Triggers can be created separately from actions so they can be created from
  *	config file.

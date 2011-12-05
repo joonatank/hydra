@@ -1,10 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
- *	@file server.hpp
+ *	@file cluser/server.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_SERVER_HPP
-#define VL_CLUSTER_SERVER_HPP
+#ifndef HYDRA_CLUSTER_SERVER_HPP
+#define HYDRA_CLUSTER_SERVER_HPP
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
@@ -12,13 +24,14 @@
 #include "message.hpp"
 #include "states.hpp"
 
-#include "stats.hpp"
-
 #include "logger.hpp"
 
 #include "base/timer.hpp"
 
 #include "typedefs.hpp"
+
+/// for profiling
+#include "base/report.hpp"
 
 namespace boost
 {
@@ -75,15 +88,15 @@ public:
 
 	/// Update the SceneGraph on slaves
 	/// Blocks till they are updated
-	void update(vl::Stats &stats);
+	void update(void);
 
 	/// @brief Start drawing on all the slaves. Non blocking
 	/// @return true if at least one slave is rendering, false otherwise
-	bool start_draw(vl::Stats &stats);
+	bool start_draw(void);
 
 	/// Finish drawing on every slave
 	/// Blocks till done
-	void finish_draw(vl::Stats &stats, vl::time const &limit = vl::time());
+	void finish_draw(vl::time const &limit = vl::time());
 
 	// TODO this should block till all the clients have shutdown
 	void shutdown( void );
@@ -128,6 +141,10 @@ public:
 	virtual void logMessage(LogMessage const &msg);
 
 	virtual uint32_t nLoggedMessages(void) const;
+
+	// Return non-const reference for ease (to integrate into python)
+	vl::Report<vl::time> &getReport(void)
+	{ return _server_report; }
 
 private :
 	void _handle_message(Message &msg, ClientInfo &client);
@@ -190,10 +207,13 @@ private :
 
 	ServerDataCallback *_data_cb;
 
+	vl::Report<vl::time> _server_report;
+	vl::timer _report_timer;
+
 };	// class Server
 
 }	// namespace cluster
 
 }	// namespace vl
 
-#endif // VL_CLUSTER_SERVER_HPP
+#endif // HYDRA_CLUSTER_SERVER_HPP
