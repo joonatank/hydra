@@ -1,7 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-12
- *	@file game_manager.cpp
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-12
+ *	@file game_manager.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Game Manager
  *	Manages all the game manager and owns them
  *	Has methods to retrieve them
@@ -17,8 +31,8 @@
  *	Non copyable
  */
 
-#ifndef VL_GAME_MANAGER_HPP
-#define VL_GAME_MANAGER_HPP
+#ifndef HYDRA_GAME_MANAGER_HPP
+#define HYDRA_GAME_MANAGER_HPP
 
 #include "typedefs.hpp"
 
@@ -29,7 +43,7 @@
 
 #include "session.hpp"
 
-#include "stats.hpp"
+#include "base/report.hpp"
 #include "base/timer.hpp"
 #include "logger.hpp"
 
@@ -159,8 +173,11 @@ public :
 	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
 
-	vl::Stats &getStats(void)
-	{ return _stats; }
+	vl::Report<vl::time> &getRenderingReport(void)
+	{ return _rendering_report; }
+
+	vl::Report<vl::time> &getInitReport(void)
+	{ return _init_report; }
 
 	void toggleBackgroundSound( void );
 
@@ -336,7 +353,8 @@ private :
 
 	vl::gui::GUIRefPtr _gui;
 
-	vl::Stats _stats;
+	vl::Report<vl::time> _rendering_report;
+	vl::Report<vl::time> _init_report;
 
 	/// Audio objects
 	cAudio::IAudioManager *_audio_manager;
@@ -370,4 +388,4 @@ private :
 
 }	// namespace vl
 
-#endif // VL_GAME_MANAGER_HPP
+#endif // HYDRA_GAME_MANAGER_HPP
