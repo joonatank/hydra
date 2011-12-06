@@ -200,15 +200,15 @@ try :
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, teleskooppi)
-	joy_handler.set_axis_constraint(0, pulttaus_hinge)
-	joy_handler.set_axis_constraint(1, 0, motor_hinge)
+	joy_handler.set_axis_constraint(teleskooppi, 1)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0)
+	joy_handler.set_axis_constraint(motor_hinge, 1, 0)
 	left_joy.add_handler(joy_handler)
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, puomi_hinge)
-	joy_handler.set_axis_constraint(0, kaanto_hinge)
+	joy_handler.set_axis_constraint(puomi_hinge, 1)
+	joy_handler.set_axis_constraint(kaanto_hinge, 0)
 	right_joy.add_handler(joy_handler)
 except :
 	# Lets just assume that the serial port doesn't exist as the c++
@@ -222,11 +222,11 @@ except :
 	joy = game.event_manager.getJoystick()
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, puomi_hinge)
-	joy_handler.set_axis_constraint(0, kaanto_hinge)
-	joy_handler.set_axis_constraint(1, 0, teleskooppi)
-	joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
-	joy_handler.set_axis_constraint(1, 1, motor_hinge)
+	joy_handler.set_axis_constraint(puomi_hinge, 1)
+	joy_handler.set_axis_constraint(kaanto_hinge, 0)
+	joy_handler.set_axis_constraint(teleskooppi, 1, 0)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
+	joy_handler.set_axis_constraint(motor_hinge, 1, 1)
 	joy.add_handler(joy_handler)
 
 
