@@ -38,7 +38,7 @@ namespace vl
 class KinematicWorld
 {
 public :
-	KinematicWorld(void);
+	KinematicWorld(GameManager *man);
 
 	~KinematicWorld(void);
 
@@ -78,10 +78,14 @@ private :
 
 	void _progress_constraints(vl::time const &t);
 
+	bool _collision_detection_on;
+
 	KinematicBodyList _bodies;
 	ConstraintList _constraints;
 
 	animation::GraphRefPtr _graph;
+
+	GameManager *_game;
 
 };	// class KinematicWorld
 

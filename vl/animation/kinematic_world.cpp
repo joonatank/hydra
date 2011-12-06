@@ -39,8 +39,10 @@
 // Log leves
 #include "logger.hpp"
 
-vl::KinematicWorld::KinematicWorld(void)
-	: _graph(new animation::Graph)
+vl::KinematicWorld::KinematicWorld(GameManager *man)
+	: _collision_detection_on(true)
+	, _graph(new animation::Graph)
+	, _game(man)
 {
 }
 
@@ -83,7 +85,7 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn) const
 	for(KinematicBodyList::const_iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter)
 	{
-		if((*iter)->getSceneNode() == sn)
+		if((*iter)->getName() == sn->getName())
 		{ return *iter; }
 	}
 
@@ -105,6 +107,31 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 		body.reset(new KinematicBody(sn->getName(), this, node, ms));
 		assert(body);
 		_bodies.push_back(body);
+
+		if(_collision_detection_on && sn->getName().substr(0, 3) == "cb_")
+		{
+			std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
+			try {
+				assert(_game);
+				/// enable physics if not already
+				/// Create a kinematic rigid body and add it physics world
+				/// use same MotionStates for both kinematic and rigid body
+				_game->enablePhysics(true);
+				// We assume that the mesh name is the same as the SceneNode
+				vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(sn->getName());
+				physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
+				physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBody(sn->getName(), 0, ms, shape);
+				// necessary to set kinematic on and update the body when the
+				// kinematic object moves for updating the position of the
+				// collision models.
+				physics_body->enableKinematicObject(true);
+				body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
+			}
+			catch(vl::exception const &e)
+			{
+				std::clog << "Exception thrown when creating collision model for " << sn->getName() << std::endl;
+			}
+		}
 	}
 
 	return body;

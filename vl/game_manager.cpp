@@ -53,10 +53,11 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _state(GS_UNKNOWN)
-	, _kinematic_world(new vl::KinematicWorld)
 {
 	if(!_session || !_logger)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
+	_kinematic_world.reset(new vl::KinematicWorld(this));
 
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContext( this );
@@ -200,7 +201,7 @@ vl::GameManager::enablePhysics( bool enable )
 		// Create the physics if they don't exist
 		if(!_physics_world)
 		{
-			_physics_world = physics::World::create();
+			_physics_world = physics::World::create(this);
 			assert(_physics_world);
 		}
 	}

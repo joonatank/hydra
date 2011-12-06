@@ -36,7 +36,7 @@
 
 size_t vl::physics::Tube::n_tubes = 0;
 
-vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
+vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionInfo const &info)
 	: _start_body(info.start_body)
 	, _end_body(info.end_body)
 	, _length(info.length)
@@ -54,9 +54,10 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 	, _fixing_lower_lim(info.fixing_lower_lim)
 	, _fixing_upper_lim(info.fixing_upper_lim)
 	, _material_name(info.material_name)
-	, _world(world)
 	, _start_body_frame(info.start_body_frame)
 	, _end_body_frame(info.end_body_frame)
+	, _world(world)
+	, _scene(sm)
 {
 	assert(_world);
 
@@ -190,23 +191,27 @@ vl::physics::Tube::setUpperLim(Ogre::Vector3 const &lim)
 void
 vl::physics::Tube::hide(void)
 {
+	/*
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
 	{
 		MotionState *ms = (*iter)->getMotionState();
 		assert(ms->getNode());
 		ms->getNode()->hide();
 	}
+	*/
 }
 
 void
 vl::physics::Tube::show(void)
 {
+	/*
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
 	{
 		MotionState *ms = (*iter)->getMotionState();
 		assert(ms->getNode());
 		ms->getNode()->show();
 	}
+	*/
 }
 
 void
@@ -351,6 +356,7 @@ vl::physics::Tube::create(void)
 
 		Transform ms_t(pos, orient);
 		MotionState *ms = _world->createMotionState(ms_t);
+		assert(!ms->getNode());
 		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, _inertia);
 		_bodies.push_back(body);
 		
@@ -358,6 +364,7 @@ vl::physics::Tube::create(void)
 		body->setUserControlled(true);
 		body->setDamping(_body_damping, _body_damping);
 		body0 = body;
+		assert(!ms->getNode());
 	}
 
 	// Create the constraints
@@ -374,12 +381,9 @@ vl::physics::Tube::create(void)
 		_add_fixing_point(iter->second, iter->first);
 	}
 
-
+	assert(_scene);
 	// Create the mesh
-	// really dangerous if the state doesn't have SceneNode but instead some
-	// other movable node...
-	SceneNodePtr sn = (SceneNodePtr)(_start_body->getMotionState()->getNode());
-	_createMesh(sn->getCreator()->getMeshManager());
+	_createMesh(_scene->getMeshManager());
 
 
 	// Increase the static counter
@@ -459,6 +463,7 @@ vl::physics::Tube::_setConstraint(ConstraintRefPtr constraint,
 void
 vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 {
+	std::clog << "vl::physics::Tube::_createMesh" << std::endl;
 	/// create the graphics objects
 	/// we need access to the MeshManager and SceneManager for this
 	/// for now using simple cubes for the graphics meshes, later
@@ -473,13 +478,8 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	if(!_start_body->getMotionState() || !_start_body->getMotionState()->getNode())
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Motion state or node.")); }
 
-	// @todo really dangerous if the MotionState node is not scenenode
-	SceneNodePtr parent_node = (SceneNodePtr)_start_body->getMotionState()->getNode();
-	SceneManagerPtr sm = parent_node->getCreator();
-	assert(sm);
-
 	// We need to use root node for the physics engine to work correctly
-	parent_node = sm->getRootSceneNode();
+	SceneNodePtr parent_node = _scene->getRootSceneNode();
 	assert(parent_node);
 	size_t index = 0;
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
@@ -487,11 +487,17 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 		/// Create the SceneNode and Entity
 		std::stringstream name;
 		name << mesh_name.str() << "_" << index;
+		/// @fixme this will crash because there is a node pointer
+		/// in the MotionState though there should be none
+		/// but it's invalid.
 		MotionState *ms = (*iter)->getMotionState();
+		std::clog << "Creating node : " << name.str() << std::endl;
+		if(ms->getNode())
+		{ std::clog << "Motion state has node : " << ms->getNode()->getName() << std::endl; }
 		assert(!ms->getNode());
 		SceneNodePtr node = parent_node->createChildSceneNode(name.str());
 		ms->setNode(node);
-		EntityPtr ent = sm->createEntity(name.str(), mesh_name.str(), true);
+		EntityPtr ent = _scene->createEntity(name.str(), mesh_name.str(), true);
 		ent->setMaterialName(_material_name);
 		node->attachObject(ent);
 

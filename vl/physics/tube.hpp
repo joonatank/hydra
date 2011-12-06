@@ -97,7 +97,7 @@ public :
 	 *	@todo how to integrate this in to our animation system with out rigid body
 	 *	simulation
 	 */
-	Tube(WorldPtr world, ConstructionInfo const &info);
+	Tube(WorldPtr world, SceneManagerPtr sm, ConstructionInfo const &info);
 
 	/// @brief Destructor
 	~Tube(void);
@@ -232,6 +232,7 @@ private :
 	vl::Transform _end_body_frame;
 
 	WorldPtr _world;
+	SceneManagerPtr _scene;
 
 };	// class Tube
 

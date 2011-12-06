@@ -75,7 +75,7 @@ struct SolverParameters
 class World
 {
 public :
-	static WorldRefPtr create(void);
+	static WorldRefPtr create(GameManager *man);
 
 	virtual ~World(void);
 
@@ -156,6 +156,8 @@ protected :
 	/// World owns all of them
 	RigidBodyList _rigid_bodies;
 	ConstraintList _constraints;
+
+	GameManager *_game;
 
 };	// class World
 

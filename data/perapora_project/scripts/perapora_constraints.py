@@ -205,7 +205,7 @@ except :
 	joy_handler.set_axis_constraint(1, 1, motor_hinge)
 	joy.add_handler(joy_handler)
 
-
+# TODO tubes are not working with this version
 """
 # Add tube simulation
 game.enablePhysics(True)
@@ -231,10 +231,29 @@ tube_info.radius = 0.05
 tube_info.element_size = 0.1
 
 tube = game.physics_world.createTube(tube_info)
+tube.create()
 
 def setBodyTransform(t):
 	end_body.world_transform = t
 
 vaantomoottori.addListener(setBodyTransform)
 """
+
+# Add some primitives and possibility to move them for testing the collision
+# detection
+game.enablePhysics(True)
+pos = Vector3(-3, 3, -0.5) #Vector3(-3, 3, 1)
+box = addBox("user_box", "finger_sphere/green", pos, mass=10)
+box.user_controlled = True
+addKinematicAction(box)
+
+# Static box
+pos = Vector3(-2, 0.75, -2.5)
+box = addBox("static_box", "finger_sphere/blue", pos, mass=0)
+
+# Add collision ground
+ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
+ground_shape = StaticTriangleMeshShape.create(ground_mesh)
+g_motion_state = game.physics_world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
+ground_body = game.physics_world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
