@@ -60,10 +60,6 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 	assert(_world);
 	assert(_state);
 	assert(_node);
-
-	// As the Node is not initialised yet we need to initialise
-	// its transformation
-	_node->setWorldTransform(_state->getWorldTransform());
 }
 
 
@@ -74,15 +70,13 @@ vl::KinematicBody::~KinematicBody(void)
 void
 vl::KinematicBody::translate(Ogre::Vector3 const &v)
 {
-	Transform t(v);
-	transform(t);
+	transform(Transform(v));
 }
 
 void
 vl::KinematicBody::rotate(Ogre::Quaternion const &q)
 {
-	Transform t(q);
-	transform(t);
+	transform(Transform(q));
 }
 
 void
@@ -143,4 +137,10 @@ vl::KinematicBody::_update(void)
 		_state->setWorldTransform(wt);
 		_transformed_cb(wt);
 	}
+}
+
+void
+vl::KinematicBody::popLastTransform(void)
+{
+	_node->popLastTransform();
 }

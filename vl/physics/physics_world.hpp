@@ -145,7 +145,7 @@ protected :
 
 	// Real engine implementation using template method pattern
 	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked) = 0;
-	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body) = 0;
+	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic) = 0;
 
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
 

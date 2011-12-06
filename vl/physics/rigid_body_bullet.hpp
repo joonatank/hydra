@@ -190,6 +190,8 @@ public :
 		if(enable)
 		{
 			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			// Bullet needs the user controlled flag for kinematic objects
+			setUserControlled(true);
 		}
 		else
 		{
@@ -199,6 +201,12 @@ public :
 
 	virtual bool isKinematicObject(void) const
 	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
+
+	virtual void setUserData(void *data)
+	{ _bt_body->setUserPointer(data); }
+
+	virtual void *getUserData(void)
+	{ return _bt_body->getUserPointer(); }
 
 	btRigidBody *getNative(void)
 	{ return _bt_body; }

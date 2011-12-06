@@ -132,6 +132,9 @@ vl::GameManager::step(void)
 			_physics_world->step(getDeltaTime());
 		}
 
+		/// Check collisions and copy the SceneNode transformations
+		_kinematic_world->finalise();
+
 		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());
 	}

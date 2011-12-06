@@ -138,8 +138,11 @@ public :
 	/// @internal
 	void _update(void);
 
-	/// @internal
-	//void _feedback_update(void);
+	/// @brief for collision detection returns the last transformation
+	/// this assumes that the problem was the kinematic object
+	/// so the collision detection system needs to check that the collision 
+	/// was against a static object or another kinematic object.
+	void popLastTransform(void);
 
 private :
 	// Copying is forbidden

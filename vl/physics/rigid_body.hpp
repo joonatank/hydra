@@ -37,8 +37,8 @@ public :
 	struct ConstructionInfo
 	{
 		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
-			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert)
-			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false)
+			: name(nam), mass(m), state(sta), shape(shap), inertia(inert), kinematic(kinematic_)
 		{}
 
 		std::string name;
@@ -46,6 +46,7 @@ public :
 		vl::physics::MotionState *state;
 		CollisionShapeRefPtr shape;
 		Ogre::Vector3 inertia;
+		bool kinematic;
 
 	};	// struct ConstructionInfo
 
@@ -142,6 +143,10 @@ public :
 	virtual void enableKinematicObject(bool enable) = 0;
 
 	virtual bool isKinematicObject(void) const = 0;
+
+	virtual void setUserData(void *data) = 0;
+
+	virtual void *getUserData(void) = 0;
 
 	/// Virtual overrides from ObjectInterface
 	virtual void transform(vl::Transform const &t) {}

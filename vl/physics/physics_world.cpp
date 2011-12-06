@@ -85,7 +85,7 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 	assert(body);
 	_rigid_bodies.push_back(body);
 	// Add the body to the physics engine
-	_addRigidBody(info.name, body);
+	_addRigidBody(info.name, body, info.kinematic);
 
 	return body;
 }

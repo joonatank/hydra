@@ -44,6 +44,8 @@ public :
 
 	void step(vl::time const &t);
 
+	void finalise(void);
+
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
 	/// @brief retrieve already created by for the SceneNode
@@ -74,7 +76,7 @@ public :
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
-	vl::animation::NodeRefPtr _createNode(void);
+	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
 
 	void _progress_constraints(vl::time const &t);
 

@@ -63,6 +63,17 @@ vl::KinematicWorld::step(vl::time const &t)
 	}
 }
 
+void
+vl::KinematicWorld::finalise(void)
+{
+	/// Copy back transformations from MotionStates after collision detection
+	for(KinematicBodyList::iterator iter = _bodies.begin();
+		iter != _bodies.end(); ++iter )
+	{
+		(*iter)->_update();
+	}
+}
+
 vl::KinematicBodyRefPtr
 vl::KinematicWorld::getKinematicBody(std::string const &name) const
 {
@@ -103,7 +114,7 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 	{
 		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
 		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
-		animation::NodeRefPtr node = _createNode();
+		animation::NodeRefPtr node = _createNode(ms->getWorldTransform());
 		body.reset(new KinematicBody(sn->getName(), this, node, ms));
 		assert(body);
 		_bodies.push_back(body);
@@ -120,12 +131,13 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 				// We assume that the mesh name is the same as the SceneNode
 				vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(sn->getName());
 				physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
-				physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBody(sn->getName(), 0, ms, shape);
-				// necessary to set kinematic on and update the body when the
-				// kinematic object moves for updating the position of the
-				// collision models.
-				physics_body->enableKinematicObject(true);
+				physics::RigidBody::ConstructionInfo info(sn->getName(), 0, ms, shape, Ogre::Vector3(0, 0, 0), true);
+				physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
+				// necessary to add callback so the kinematic object updates 
+				// the the collision model.
 				body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
+				// Used by the collision detection to pop last transformation.
+				physics_body->setUserData(body.get());
 			}
 			catch(vl::exception const &e)
 			{
@@ -300,13 +312,20 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	// The correct transformation is set by the constraint
 	constraint->_setLink(link);
 
+	// @todo Not the correct place for this but for testing
+	// fixed issues with Node transformation beign returned to the one
+	// used with a previous parent.
+	// Now these should be moved to correct places in animation framework.
+	parent->setInitialState();
+	child->setInitialState();
+
 	_constraints.push_back(constraint);
 }
 
 vl::animation::NodeRefPtr
-vl::KinematicWorld::_createNode(void)
+vl::KinematicWorld::_createNode(vl::Transform const &initial_transform)
 {
-	animation::NodeRefPtr node(new animation::Node);
+	animation::NodeRefPtr node(new animation::Node(initial_transform));
 	animation::LinkRefPtr link(new animation::Link);
 	link->setParent(_graph->getRoot());
 	link->setChild(node);
