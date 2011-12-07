@@ -120,6 +120,8 @@ enum GAME_STATE
 	GS_PLAY = 2,	// Game played
 	GS_PAUSE = 3,	// Game paused
 	GS_QUIT = 4,	// Game quited
+	/// @todo add reset state
+	/// @todo add stop state
 };
 
 /** @class GameManager

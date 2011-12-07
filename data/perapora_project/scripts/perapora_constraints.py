@@ -257,3 +257,14 @@ ground_shape = StaticTriangleMeshShape.create(ground_mesh)
 g_motion_state = game.physics_world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
 ground_body = game.physics_world.createRigidBody('ground', 0, g_motion_state, ground_shape)
 
+game.pause()
+
+def toggle_pause() :
+	if game.paused:
+		game.play()
+	else:
+		game.pause()
+
+trigger = game.event_manager.createKeyTrigger(KC.SPACE)
+trigger.addKeyDownListener(toggle_pause)
+

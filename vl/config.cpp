@@ -217,7 +217,15 @@ vl::Config::init(bool enable_editor)
 	_server->poll();
 
 	// Start
-	_game_manager->play();
+	// @todo this should allow starting the simulation straight away or
+	// starting in a paused state
+	// should we use ini file for this?
+	// or should we check if the state is INIT i.e. not set from python
+	// then start automatically.
+	// for not breaking backward compatibility yet we auto set play state
+	// if user has not set the state they want in python.
+	if(_game_manager->getState() == GS_INIT)
+	{ _game_manager->play(); }
 }
 
 void

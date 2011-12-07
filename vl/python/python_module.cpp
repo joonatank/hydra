@@ -562,6 +562,14 @@ void export_game(void)
 		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
 		.add_property("kinematic_world", &vl::GameManager::getKinematicWorld)
 		.def("quit", &vl::GameManager::quit)
+		.def("pause", &vl::GameManager::pause)
+		.def("play", &vl::GameManager::play)
+		.add_property("paused", &vl::GameManager::isPaused)
+		.add_property("played", &vl::GameManager::isPlayed)
+		/// @todo add state inqueries
+		/// @todo add step function, needs to rename the current one in GameManager which is internal
+		/// called from Config...
+		/// python step function should step the simulation with a delta time (or a default one like 1/60 s)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
