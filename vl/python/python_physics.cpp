@@ -28,6 +28,9 @@
 #include "physics/tube.hpp"
 #include "physics/motion_state.hpp"
 
+// Necessary for exposing vectors
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
@@ -98,6 +101,10 @@ void export_physics_objects(void)
 		.def("setLinearUpperLimit", &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.def("setAngularLowerLimit", &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.def("setAngularUpperLimit", &vl::physics::SixDofConstraint::setAngularUpperLimit)
+		.add_property("angular_upper_limit", &vl::physics::SixDofConstraint::getAngularUpperLimit, &vl::physics::SixDofConstraint::setAngularUpperLimit)
+		.add_property("angular_lower_limit", &vl::physics::SixDofConstraint::getAngularLowerLimit, &vl::physics::SixDofConstraint::setAngularLowerLimit)
+		.add_property("linear_upper_limit", &vl::physics::SixDofConstraint::getLinearUpperLimit, &vl::physics::SixDofConstraint::setLinearUpperLimit)
+		.add_property("linear_lower_limit", &vl::physics::SixDofConstraint::getLinearLowerLimit, &vl::physics::SixDofConstraint::setLinearLowerLimit)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
 		.def("create", &vl::physics::SixDofConstraint::create)
@@ -248,6 +255,18 @@ void export_physics_objects(void)
 		.def_readwrite("body_damping", &vl::physics::Tube::ConstructionInfo::body_damping)
 	;
 
+
+	python::class_<std::vector<boost::shared_ptr<KinematicBody> > >("ConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
+	;
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<KinematicBody> > >("SixDofConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> >, true>())
+		//.def(python::self_ns::str(python::self_ns::self))
+	;
+
+
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
 		.add_property("spring_stiffness", &vl::physics::Tube::getSpringStiffness, &vl::physics::Tube::setSpringStiffness)
 		.add_property("spring_damping", &vl::physics::Tube::getSpringDamping, &vl::physics::Tube::setSpringDamping)
@@ -264,6 +283,11 @@ void export_physics_objects(void)
 		.def("show", &vl::physics::Tube::show)
 		.def("set_equilibrium", &vl::physics::Tube::setEquilibrium)
 		.def("add_fixing", &vl::physics::Tube::addFixingPoint, addFixingPoint_ovs())
+		.def("get_fixing", &vl::physics::Tube::getFixing)
+		.add_property("n_fixings", &vl::physics::Tube::getNFixings)
+		.add_property("fixings", python::make_function(&vl::physics::Tube::getFixings, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("start_fixing", &vl::physics::Tube::getStartFixing)
+		.add_property("end_fixing", &vl::physics::Tube::getEndFixing)
 		.def("create", &vl::physics::Tube::create)
 	;
 }

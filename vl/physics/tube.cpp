@@ -383,6 +383,35 @@ vl::physics::Tube::create(void)
 	++n_tubes;
 }
 
+vl::physics::SixDofConstraintRefPtr
+vl::physics::Tube::getStartFixing(void)
+{
+	return boost::dynamic_pointer_cast<SixDofConstraint>(*_constraints.begin());
+}
+
+vl::physics::SixDofConstraintRefPtr
+vl::physics::Tube::getEndFixing(void)
+{
+	return boost::dynamic_pointer_cast<SixDofConstraint>(*(_constraints.end()-1));
+}
+
+vl::physics::SixDofConstraintRefPtr
+vl::physics::Tube::getFixing(size_t index)
+{
+	return boost::dynamic_pointer_cast<SixDofConstraint>(_external_fixings.at(index));
+}
+
+size_t
+vl::physics::Tube::getNFixings(void) const
+{
+	return _external_fixings.size();
+}
+
+vl::physics::ConstraintList const &
+vl::physics::Tube::getFixings(void) const
+{
+	return _external_fixings;
+}
 
 /// ---------------------------------- Private -------------------------------
 void

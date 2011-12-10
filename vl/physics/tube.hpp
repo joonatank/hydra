@@ -137,19 +137,17 @@ public :
 	std::string const &getMaterial(void) const
 	{ return _material_name; }
 
-	/// @todo does not work yet as it does not update the entities.
+	/// @todo not implemented
 	void setMaterial(std::string const &material);
 
 	Ogre::Vector3 const &getLowerLim(void) const
 	{ return _lower_lim; }
 
-	/// @todo does not work yet as it does not update the constraints.
 	void setLowerLim(Ogre::Vector3 const &lim);
 
 	Ogre::Vector3 const &getUpperLim(void) const
 	{ return _upper_lim; }
 
-	/// @todo does not work yet as it does not update the constraints.
 	void setUpperLim(Ogre::Vector3 const &lim);
 
 	void hide(void);
@@ -168,15 +166,22 @@ public :
 
 	void create(void);
 
-/*
-	struct TubeElement
-	{
-		vl::scalar position;
-		vl::scalar legth;
-		RigidBodyRefPtr body;
-		Constraint constraint;
-	};
-*/
+	/// These are valid only after create has been called
+	/// will throw if they are called before the tube is created
+
+	SixDofConstraintRefPtr getStartFixing(void);
+
+	SixDofConstraintRefPtr getEndFixing(void);
+
+	/// @brief get one of the extra fixing points
+	/// throws if there is no such such fixing point
+	SixDofConstraintRefPtr getFixing(size_t index);
+
+	/// @brief get the number of extra fixing points
+	size_t getNFixings(void) const;
+
+	/// @brief get all fixing points except the start and end point
+	ConstraintList const &getFixings(void) const;
 
 private :
 	/// Used for naming purposes
