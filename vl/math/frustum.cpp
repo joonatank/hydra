@@ -22,6 +22,9 @@
 Ogre::Quaternion
 vl::orientation_to_wall(vl::Wall const &wall)
 {
+	if(wall.empty())
+	{ return Ogre::Quaternion::IDENTITY; }
+
 	// Create the plane for transforming the head
 	// Head doesn't need to be transformed for the view matrix
 	// Using the plane to create a correct orientation for the view
@@ -53,6 +56,7 @@ vl::Frustum::Frustum(Type type)
 	, _transformation_modifications(false)
 	, _fov(Ogre::Degree(60))
 	, _use_asymmetric_stereo(false)
+	, _aspect(4.0/3)
 {
 }
 
@@ -140,6 +144,8 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	 * some documents have B and C negative some positive, does not seem to make
 	 * any difference at all.
 	 */
+	if(_wall.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Wall can't be empty.")); }
 
 	Plane plane(_wall);
 
@@ -232,5 +238,49 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 Ogre::Matrix4
 vl::Frustum::_calculate_fov_projection(vl::scalar eye_offset) const
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("Fov projection not implemented."));
+	// Completely symmetric for now
+	// @todo add eye_offset
+
+	/* | E	0	A	0 |
+	 * | 0	F	B	0 |
+	 * | 0	0	C	D |
+	 * | 0	0	-1	0 | */
+
+	Ogre::Matrix4 projMat;
+
+	float xymax = _near_clipping * std::tan(_fov.valueRadians());
+	float ymin = -xymax;
+	float xmin = -xymax;
+
+	float width = xymax - xmin;
+	float height = xymax - ymin;
+
+	float depth = _far_clipping - _near_clipping;
+	float C = -(_far_clipping + _near_clipping) / depth;
+	float D = -2 * (_far_clipping * _near_clipping) / depth;
+
+	float E = (2 * _near_clipping / width)/_aspect;
+	float F = 2 * _near_clipping / height;
+
+	projMat[0][0] = E;
+	projMat[0][1] = 0;
+	projMat[0][2] = 0;
+	projMat[0][3] = 0;
+
+	projMat[1][0] = 0;
+	projMat[1][1] = F;
+	projMat[1][2] = 0;
+	projMat[1][3] = 0;
+
+	projMat[2][0] = 0;
+	projMat[2][1] = 0;
+	projMat[2][2] = C;
+	projMat[2][3] = D;
+
+	projMat[3][0] = 0;
+	projMat[3][1] = 0;
+	projMat[3][2] = -1;
+	projMat[3][3] = 0;
+
+	return projMat;
 }

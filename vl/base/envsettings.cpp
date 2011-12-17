@@ -811,7 +811,10 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 			{
 				projection.perspective_type = Projection::FOV;
 			}
-			// Assume Wall otherwise
+			else if(type == "wall")
+			{
+				projection.perspective_type = Projection::WALL;
+			}
 		}
 
 		attrib = xml_pers->first_attribute("asymmetric_stereo_frustum");

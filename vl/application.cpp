@@ -284,7 +284,6 @@ vl::Hydra_Run(const int argc, char** argv)
 
 /// -------------------------------- Application -----------------------------
 vl::Application::Application(ProgramOptions const &opt)
-	: _frame(0)
 {
 	vl::config::EnvSettingsRefPtr env;
 	vl::Settings settings;
@@ -316,8 +315,38 @@ vl::Application::~Application( void )
 bool
 vl::Application::progress(void)
 {
-	if(isRunning())
-	{ _mainloop(); }
+	// Necessary to catch exceptions here because our Editor can't handle them
+	try {
+		if(isRunning())
+		{
+			_mainloop(false);
+		}
+	}
+	catch(vl::exception const &e)
+	{
+		std::cout << "VL Exception : \n" << boost::diagnostic_information<>(e) << std::endl;
+		return false;
+	}
+	catch(boost::exception const &e)
+	{
+		std::cout << "Boost Exception : \n" << boost::diagnostic_information<>(e) << std::endl;
+		return false;
+	}
+	catch(Ogre::Exception const &e)
+	{
+		std::cout << "Ogre Exception: \n" << e.what() << std::endl;
+		return false;
+	}
+	catch( std::exception const &e )
+	{
+		std::cout << "STD Exception: \n" << e.what() << std::endl;
+		return false;
+	}
+	catch( ... )
+	{
+		std::cout << "An exception of unknow type occured." << std::endl;
+		return false;
+	}
 
 	return isRunning();
 }
@@ -327,7 +356,7 @@ vl::Application::run(void)
 {		
 	while( isRunning() )
 	{
-		_mainloop();	
+		_mainloop(true);	
 	}
 
 	_exit();
@@ -348,19 +377,34 @@ vl::Application::getRenderer(void)
 	if(_master)
 	{ return _master->getRenderer(); }
 	else
-	{ _slave_client->getRenderer(); }
+	{ return _slave_client->getRenderer(); }
 }
 
 
 
 /// ------------------------------- Private ------------------------------------
 void
-vl::Application::_mainloop(void)
+vl::Application::_mainloop(bool sleep)
 {
 	// run main loop
 	if(_master)
 	{
-		_render( ++_frame );
+		vl::chrono timer;
+
+		_master->render();
+
+		if(sleep)
+		{
+			vl::time sleep_time;
+			// Try to get the requested frame rate but avoid division by zero
+			// also check that the time used for the frame is less than the max fps so we
+			// don't overflow the sleep time
+			if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
+			{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
+
+			// Force context switching by zero sleep
+			vl::sleep(sleep_time);
+		}
 	}
 	else
 	{
@@ -385,24 +429,6 @@ vl::Application::_exit(void)
 {
 	if(_master)
 	{ _master->exit(); }
-}
-
-void
-vl::Application::_render( uint32_t const frame )
-{
-	vl::chrono timer;
-
-	_master->render();
-
-	vl::time sleep_time;
-	// Try to get the requested frame rate but avoid division by zero
-	// also check that the time used for the frame is less than the max fps so we
-	// don't overflow the sleep time
-	if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
-	{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
-
-	// Force context switching by zero sleep
-	vl::sleep(sleep_time);
 }
 
 void

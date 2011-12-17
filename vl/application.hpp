@@ -84,14 +84,12 @@ public:
 	RendererInterface *getRenderer(void);
 
 protected:
-	void _mainloop(void);
+	void _mainloop(bool sleep);
 
 	void _exit(void);
 
 	void _init(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
 		ProgramOptions const &opt);
-
-	void _render( uint32_t const frame );
 
 	vl::ConfigRefPtr _master;
 
@@ -102,8 +100,6 @@ protected:
 	std::vector<uint32_t> _spawned_processes;
 
 	vl::Logger _logger;
-
-	uint32_t _frame;
 
 };	// class Application
 

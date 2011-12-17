@@ -114,8 +114,11 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	_frustum.setWall(wall);
 	vl::config::Projection const &projection = windowConf.renderer.projection;
 	_frustum.setFov(Ogre::Degree(projection.fov));
+	// @todo this is unmanagable if we need to add new types
 	if(projection.perspective_type == vl::config::Projection::FOV)
 	{ _frustum.setType(Frustum::FOV); }
+	else
+	{ _frustum.setType(Frustum::WALL); }
 	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
 	_frustum.enableTransformationModifications(projection.modify_transformations);
 	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);

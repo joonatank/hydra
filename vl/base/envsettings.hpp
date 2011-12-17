@@ -106,7 +106,7 @@ struct Projection
 
 	Projection(void)
 		: type(PERSPECTIVE)
-		, perspective_type(WALL)
+		, perspective_type(FOV)
 		, fov(60)
 		, horizontal(-1)
 		, head_x(false)
