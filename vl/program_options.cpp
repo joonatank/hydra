@@ -30,7 +30,49 @@ vl::ProgramOptions::ProgramOptions( void )
 	, _slave(false)
 	, auto_fork(false)
 	, show_system_console(false)
-{}
+	, _cmd_options("Command line options")
+	, _config("Configuration")
+{
+	// Declare a group of options that will be 
+	// allowed only on command line
+	_cmd_options.add_options()
+		("version,v", "print version string")
+		("verbose", "print the output to system console")
+		("help,h", "produce help message")
+		("slave", po::value< std::string >(), "start a named rendering slave")
+		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
+		("show_system_console", "Show the system console window on startup.")
+		("config,c", po::value<std::string>(&_config_file)->default_value("hydra.ini"),
+				"name of a file of a configuration.")
+	;
+
+	// Declare a group of options that will be 
+	// allowed both on command line and in config file
+	_config.add_options()
+		("log_level,l", po::value<int>(), "how much detail is logged")
+		("log_dir", po::value<std::string>(&log_dir), "where to write the log files")
+		("environment,e", po::value< std::string >(&environment_file), "environment file")
+		("project,p", po::value< std::string >(&project_file), "project file")
+		("global,g", po::value< std::string >(&global_file), "global file")
+		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
+		("display", po::value<int>(&display_n)->default_value(0), 
+			"Display to use for the window. Only on X11.")
+		("system_console", po::value<bool>(&show_system_console)->default_value(false),
+			"Show the system console window on startup.")
+		("editor", po::value<bool>(&editor)->default_value(false), "Enable editor.")
+		("processors", po::value<int>(&n_processors)->default_value(-1), 
+			"How many processors or cores the program can use.")
+		("start_processor", po::value<int>(&start_processor)->default_value(0), 
+			"First processor to use only has effect if processor is defined also.")
+	;
+
+	_cmdline_options.add(_cmd_options).add(_config);   
+    _config_file_options.add(_config);
+}
+
+vl::ProgramOptions::~ProgramOptions(void)
+{
+}
 
 bool
 vl::ProgramOptions::master( void ) const
@@ -69,81 +111,21 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
 	// TODO add control for the log level at least ERROR, INFO, TRACE
 
-	std::string config_file;
-
-	// Declare a group of options that will be 
-    // allowed only on command line
-    po::options_description cmd_options("Command line options");
-    cmd_options.add_options()
-		("version,v", "print version string")
-		("verbose", "print the output to system console")
-		("help,h", "produce help message")
-		("slave", po::value< std::string >(), "start a named rendering slave")
-		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
-		("show_system_console", "Show the system console window on startup.")
-		("config,c", po::value<std::string>(&config_file)->default_value("hydra.ini"),
-				"name of a file of a configuration.")
-	;
-    
-    // Declare a group of options that will be 
-    // allowed both on command line and in
-    // config file
-    po::options_description config("Configuration");
-    config.add_options()
-		("log_level,l", po::value<int>(), "how much detail is logged")
-		("log_dir", po::value<std::string>(&log_dir), "where to write the log files")
-		("environment,e", po::value< std::string >(), "environment file")
-		("project,p", po::value< std::string >(), "project file")
-		("global,g", po::value< std::string >(), "global file")
-		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
-		("display", po::value<int>(&display_n)->default_value(0), 
-			"Display to use for the window. Only on X11.")
-		("system_console", po::value<bool>(&show_system_console)->default_value(false),
-			"Show the system console window on startup.")
-		("editor", po::value<bool>(&editor)->default_value(false), "Enable editor.")
-		("processors", po::value<int>(&n_processors)->default_value(-1), 
-			"How many processors or cores the program can use.")
-		("start_processor", po::value<int>(&start_processor)->default_value(0), 
-			"First processor to use only has effect if processor is defined also.")
-    ;
-
-    po::options_description cmdline_options;
-    cmdline_options.add(cmd_options).add(config);
-
-    po::options_description config_file_options;
-    config_file_options.add(config);
-
     po::options_description visible("Allowed options");
-    visible.add(cmd_options).add(config);
+    visible.add(_cmd_options).add(_config);
 
 	// Parse command line
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).
-            options(cmdline_options).run(), vm);
+            options(_cmdline_options).run(), vm);
     po::notify(vm);
-    
-	/// Config file
-	if(fs::exists(config_file))
-	{
-		std::ifstream ifs(config_file.c_str());
-	
-		if (!ifs)
-		{
-			std::cout << "can not open config file: " << config_file << std::endl;
-			return 0;
-		}
-		else
-		{
-			std::cout << "parsing config file : " << config_file << std::endl;
-			po::store(po::parse_config_file(ifs, config_file_options), vm);
-			po::notify(vm);
-		}
-	}
+
+	parseIni(_config_file, vm);
 
 	// Print help
 	if( vm.count("help") )
 	{
-		std::cout << "Help : " << cmdline_options << std::endl;
+		std::cout << "Help : " << _cmdline_options << std::endl;
 		return false;
 	}
 
@@ -188,6 +170,28 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 }
 
 bool
+vl::ProgramOptions::parseIni(std::string const &file, po::variables_map vm)
+{
+	/// Config file
+	if(fs::exists(file))
+	{
+		std::ifstream ifs(file.c_str());
+	
+		if (!ifs)
+		{
+			std::cout << "can not open config file: " << file << std::endl;
+			return 0;
+		}
+		else
+		{
+			std::cout << "parsing config file : " << file << std::endl;
+			po::store(po::parse_config_file(ifs, _config_file_options), vm);
+			po::notify(vm);
+		}
+	}
+}
+
+bool
 vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
 {
 	if( vm.count("slave") )
@@ -220,21 +224,6 @@ vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
 bool
 vl::ProgramOptions::_parseMaster( po::variables_map const &vm )
 {
-	if (vm.count("environment"))
-	{
-		environment_file = vm["environment"].as<std::string>();
-	}
-
-	if (vm.count("project"))
-	{
-		project_file = vm["project"].as<std::string>();
-	}
-
-	if (vm.count("global"))
-	{
-		global_file = vm["global"].as<std::string>();
-	}
-
 	if( vm.count("auto_fork") )
 	{
 		auto_fork = true;

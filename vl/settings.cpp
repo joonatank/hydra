@@ -91,6 +91,11 @@ vl::Settings::getAuxDirectories(void ) const
 	std::vector<std::string> paths;
 	for( size_t i = 0; i < _aux_projs.size(); ++i )
 	{
+		// Never should there be extra projects without filenames
+		// This will be relaxed when the projects can be created using the editor
+		if(_aux_projs.at(i).getFile().empty())
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty project file")); }
+
 		fs::path file( _aux_projs.at(i).getFile() );
 		fs::path dir = file.parent_path();
 		if( !fs::exists( dir ) )
@@ -106,8 +111,6 @@ vl::Settings::getProjectDir( void ) const
 {
 	fs::path projFile( _proj.getFile() );
 	fs::path projDir = projFile.parent_path();
-	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.string() ) ); }
 
 	return projDir.string();
 }
@@ -157,8 +160,6 @@ vl::Settings::getDir( vl::ProjSettings const &proj ) const
 {
 	fs::path projFile( proj.getFile() );
 	fs::path projDir = projFile.parent_path();
-	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name(projDir.string()) ); }
 
 	return projDir.string();
 }

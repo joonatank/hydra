@@ -236,12 +236,18 @@ vl::config::EnvSettings::getLogDir(vl::PATH_TYPE const type) const
 std::string
 vl::config::EnvSettings::getEnvironementDir(void) const
 {
-	fs::path envFile( getFile() );
-	fs::path envDir = envFile.parent_path();
-	if( !fs::exists( envDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.string() ) ); }
+	if(!getFile().empty())
+	{
+		fs::path envFile( getFile() );
+		fs::path envDir = envFile.parent_path();
+	
+		if( !fs::exists( envDir ) )
+		{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.string() ) ); }
 
-	return envDir.string();
+		return envDir.string();
+	}
+	
+	return std::string();
 }
 
 void

@@ -109,6 +109,8 @@ public :
 
 	virtual vl::config::Window const &getWindowConf(std::string const &name) const = 0;
 
+	virtual void createWindow(vl::config::Window const &winConf) = 0;
+
 	// Callbacks
 //	virtual void setRegisterForOutputCallback(RendererCallback *cb) = 0;
 

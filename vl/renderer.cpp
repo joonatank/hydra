@@ -84,13 +84,20 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 	_createOgre(env);
 
 	vl::config::Node const &node = getNodeConf();
-	if(node.empty())
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Node configuration")); }
+	if(!node.empty())
+	{ 
+		std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
 
-	std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
-
-	for( size_t i = 0; i < node.getNWindows(); ++i )
-	{ _createWindow( node.getWindow(i) ); }
+		for( size_t i = 0; i < node.getNWindows(); ++i )
+		{ createWindow( node.getWindow(i) ); }
+	}
+	// Hack to handle Ogre's depency on Window creation before the use of
+	// the RenderingEngine
+	else
+	{
+		// @todo should destroy the window after the init
+		createWindow(vl::config::Window("test", vl::config::Channel(), 400, 320, 0, 0));
+	}
 }
 
 vl::config::Node const &
@@ -228,6 +235,8 @@ vl::Renderer::initScene(vl::cluster::Message& msg)
 void
 vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 {
+	std::cout << vl::TRACE << "vl::Renderer::createSceneObjects" << std::endl;
+
 	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
 	
 	size_t size;
@@ -276,9 +285,10 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
 					assert(_windows.size() > 0);
 					_gui->initGUI(_windows.at(0));
-					assert(!_settings.empty());
-
-					_gui->initGUIResources(_settings);
+					if(_settings.empty())
+					{ std::cout << "No GUI resources" << std::endl; }
+					else
+					{ _gui->initGUIResources(_settings); }
 
 					// Request output updates for the console
 					if(logEnabled())
@@ -426,6 +436,19 @@ vl::Renderer::logMessage(vl::LogMessage const &msg)
 uint32_t 
 vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
+
+
+void
+vl::Renderer::createWindow(vl::config::Window const &winConf)
+{
+	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
+
+	vl::Window *window = new vl::Window(winConf, this);
+	if(_player)
+	{ window->setCamera(_player->getCamera()); }
+	_windows.push_back(window);
+}
+
 
 /// ------------------------ Protected -----------------------------------------
 
@@ -591,17 +614,6 @@ vl::Renderer::_sendEvents( void )
 		assert(_send_message_cb);
 		(*_send_message_cb)(msg);
 	}
-}
-
-void
-vl::Renderer::_createWindow(vl::config::Window const &winConf)
-{
-	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
-
-	vl::Window *window = new vl::Window(winConf, this);
-	if(_player)
-	{ window->setCamera(_player->getCamera()); }
-	_windows.push_back(window);
 }
 
 void

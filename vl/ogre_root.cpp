@@ -109,7 +109,10 @@ vl::ogre::Root::init( void )
 void
 vl::ogre::Root::addResource(const std::string& resource_path)
 {
-	_resources.push_back( resource_path );
+	if(resource_path.empty())
+	{ std::cout << "Trying to add empty resource path." << std::endl; }
+	else
+	{ _resources.push_back( resource_path ); }
 
 	// TODO this is confusing as this does not really setup the resource
 	// but adds it into stack which is not cleared at any point

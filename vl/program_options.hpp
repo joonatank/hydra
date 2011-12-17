@@ -44,11 +44,16 @@ struct HYDRA_API ProgramOptions
 {
 	ProgramOptions( void );
 
-	/**	Parse command line options and create the structure
+	~ProgramOptions(void);
+
+	/**	Parse options from both ini file and command line
 	 *	@ Post-condition valid or invalid configuration with all the parameters
 	 *	parsed
 	 */
 	bool parseOptions( int argc, char **argv );
+
+	/// @brief Parse only ini file
+	bool parseIni(std::string const &file, po::variables_map vm = po::variables_map());
 
 	/// Is the configuration for a slave,
 	/// true for both valid and invalid configurations
@@ -79,7 +84,6 @@ struct HYDRA_API ProgramOptions
 	std::string environment_file;
 	std::string project_file;
 	std::string global_file;
-	std::string case_name;
 	bool auto_fork;
 	bool show_system_console;
 	bool editor;
@@ -90,6 +94,15 @@ struct HYDRA_API ProgramOptions
 private :
 	bool _parseSlave( po::variables_map const &vm );
 	bool _parseMaster( po::variables_map const &vm );
+
+private :
+	po::options_description _cmd_options;
+	po::options_description _config;
+
+    po::options_description _cmdline_options;
+    po::options_description _config_file_options;
+
+	std::string _config_file;
 
 };	// class ProgramOptions
 

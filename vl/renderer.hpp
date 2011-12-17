@@ -139,6 +139,8 @@ public :
 
 	virtual uint32_t nLoggedMessages(void) const;
 
+	void createWindow(vl::config::Window const &winConf);
+
 protected :
 
 	/// Ogre helpers
@@ -155,8 +157,6 @@ protected :
 
 	/// Input events
 	void _sendEvents( void );
-
-	void _createWindow(vl::config::Window const &winConf);
 
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory

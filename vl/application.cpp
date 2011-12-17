@@ -58,8 +58,9 @@
 vl::config::EnvSettingsRefPtr
 vl::getMasterSettings( vl::ProgramOptions const &options )
 {
+	// Should never happen
 	if( options.slave() )
-	{ return vl::config::EnvSettingsRefPtr(); }
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	fs::path env_path = options.environment_file;
 	if( !fs::is_regular(env_path) )
@@ -92,25 +93,18 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 
 	vl::config::EnvSettingsRefPtr env;
 
-	if( !fs::is_regular(env_path) )
-	{
-		return env;
-	}
-	else
-	{
-		/// This point both env_path and project_path are valid
-		env.reset( new vl::config::EnvSettings );
+	env.reset( new vl::config::EnvSettings );
 
-		/// Read the Environment config
-		if( fs::is_regular(env_path) )
-		{
-			std::string env_data;
-			env_data = vl::readFileToString( env_path.string() );
-			// TODO check that the files are correct and we have good settings
-			vl::config::EnvSerializer env_ser( env );
-			env_ser.readString(env_data);
-			env->setFile( env_path.string() );
-		}
+	// Read the Environment config
+	// if there is no such file we return the default configuration
+	if( fs::is_regular(env_path) )
+	{
+		std::string env_data;
+		env_data = vl::readFileToString( env_path.string() );
+		// TODO check that the files are correct and we have good settings
+		vl::config::EnvSerializer env_ser( env );
+		env_ser.readString(env_data);
+		env->setFile( env_path.string() );
 	}
 
 	env->setLogDir( options.log_dir );
@@ -235,8 +229,6 @@ vl::Hydra_Run(const int argc, char** argv)
 	vl::ProgramOptions options;
 	try
 	{
-		// Options need to be parsed before creating logger because logger
-		// is designed to redirect logging out of console
 		if(!options.parseOptions(argc, argv))
 		{ return ExceptionMessage(); }
 
@@ -307,9 +299,6 @@ vl::Application::Application(ProgramOptions const &opt)
 	}
 
 	if( !env )
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	if( env->isMaster() && settings.empty() )
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	_logger.setOutputFile(opt.getOutputFile());

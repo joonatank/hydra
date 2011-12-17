@@ -294,21 +294,38 @@ vl::GameManager::requestStateChange(vl::GAME_STATE state)
 void
 vl::GameManager::setupResources(vl::Settings const &settings, vl::config::EnvSettings const &env)
 {
-	std::cout << vl::TRACE << "Adding project directories to resources. "
-		<< "Only project directory and global directory is added." << std::endl;
+	std::cout << vl::TRACE << "Adding project directories to resources." << std::endl;
 
 	std::vector<std::string> paths = settings.getAuxDirectories();
-	paths.push_back(settings.getProjectDir());
-	for( size_t i = 0; i < paths.size(); ++i )
-	{ getResourceManager()->addResourcePath( paths.at(i) ); }
+	std::string proj_dir = settings.getProjectDir();
+	if(!proj_dir.empty())
+	{
+		paths.push_back(settings.getProjectDir());
+	}
 
-	// TODO add case directory
+	for( size_t i = 0; i < paths.size(); ++i )
+	{
+		// check that the paths are valid
+		if(fs::is_directory(fs::path(paths.at(i))))
+		{
+			getResourceManager()->addResourcePath( paths.at(i) );
+		}
+		else
+		{ 
+			BOOST_THROW_EXCEPTION(vl::missing_dir() 
+				<< vl::file_name(paths.at(i)) 
+				<< vl::desc("Resource dir is not a directory."));
+		}
+	}
 
 	// Add environment directory, used for tracking configurations
-	std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
-	fs::path tracking_path( fs::path(env.getEnvironementDir()) / "tracking" );
-	if( fs::is_directory(tracking_path) )
-	{ getResourceManager()->addResourcePath( tracking_path.string() ); }
+	if(!env.getEnvironementDir().empty())
+	{
+		std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
+		fs::path tracking_path( fs::path(env.getEnvironementDir()) / "tracking" );
+		if( fs::is_directory(tracking_path) )
+		{ getResourceManager()->addResourcePath( tracking_path.string() ); }
+	}
 }
 
 void
