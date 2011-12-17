@@ -18,6 +18,12 @@
 #ifndef HYDRA_WINDOW_HPP
 #define HYDRA_WINDOW_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
+// Interface
+#include "window_interface.hpp"
+
 #include "player.hpp"
 #include "typedefs.hpp"
 
@@ -45,7 +51,7 @@ namespace vl
 /**	@class Window represent an OpenGL drawable and context
  *
  */
-class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
+class HYDRA_API Window : public IWindow, public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
 	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
@@ -72,12 +78,23 @@ public:
 	void setIPD(double ipd)
 	{ _ipd = ipd; }
 
+	/// @brief return the system handle for the window
+	uint64_t getHandle(void) const;
+
 	/// @brief Get wether hardware stereo is enabled or not
 	/// @return true if the window has stereo enabled
 	bool hasStereo(void) const;
 
 	/// Capture input events
 	virtual void capture( void );
+
+	/// Instruct the Channels to draw the Scene
+	virtual void draw( void );
+
+	/// Swap the back buffer to front
+	virtual void swap( void );
+
+	virtual void resize(int w, int h);
 
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);
@@ -92,12 +109,6 @@ public:
 	bool axisMoved(OIS::JoyStickEvent const &evt, int axis);
 	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
-
-	/// Instruct the Channels to draw the Scene
-	virtual void draw( void );
-
-	/// Swap the back buffer to front
-	virtual void swap( void );
 
 protected :
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);

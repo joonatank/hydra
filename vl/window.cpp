@@ -88,7 +88,8 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	std::cout << vl::TRACE << "vl::Window::Window : " << getName() << std::endl;
 
 	_ogre_window = _createOgreWindow(windowConf);
-	_createInputHandling();
+	if(windowConf.input_handler)
+	{ _createInputHandling(); }
 
 	// If the channel has a name we try to find matching wall
 
@@ -170,6 +171,11 @@ vl::Window::~Window( void )
 	}
 
 	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
+	// The render target can not be destroyed if we are still using the
+	// context, this is a problem with Ogres GL system. 
+	// Or more specifically GLSL.
+	//getOgreRoot()->getNative()->destroyRenderTarget(_ogre_window);
+	_ogre_window->setHidden(true);
 }
 
 vl::config::EnvSettingsRefPtr
@@ -570,6 +576,24 @@ vl::Window::capture( void )
 	}
 }
 
+void
+vl::Window::resize(int w, int h)
+{
+	// works with both Ogre and external windows
+	_ogre_window->resize(w, h);
+	_ogre_window->windowMovedOrResized();
+	_frustum.setAspect(vl::scalar(w)/vl::scalar(h));
+}
+
+uint64_t
+vl::Window::getHandle(void) const
+{
+	uint64_t ogreWinId = 0x0;
+	_ogre_window->getCustomAttribute( "WINDOW", &ogreWinId );
+
+	return ogreWinId;
+}
+
 /// ------------------------------- Protected ----------------------------------
 void
 vl::Window::_sendEvent( vl::cluster::EventData const &event )
@@ -618,6 +642,14 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	}
 	std::cout << std::endl;
 
+	// Add user defined params
+	for(NamedParamList::const_iterator iter = winConf.params.begin();
+		iter != winConf.params.end(); ++iter)
+	{
+		std::clog << "Adding param : " << iter->first << " with value : " << iter->second << std::endl;
+		params[iter->first] = iter->second;
+	}
+
 	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 	win->setAutoUpdated(false);
 	
@@ -633,8 +665,9 @@ vl::Window::_createInputHandling(void)
 	assert( _ogre_window );
 
 	std::ostringstream windowHndStr;
-	size_t windowHnd = 0;
-	_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
+	uint64_t windowHnd = getHandle();
+	//size_t windowHnd = 0;
+	//_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
 	windowHndStr << windowHnd;
 
 	OIS::ParamList pl;

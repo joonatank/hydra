@@ -26,6 +26,9 @@
 #ifndef HYDRA_ENVSETTINGS_HPP
 #define HYDRA_ENVSETTINGS_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -52,7 +55,7 @@ enum LogLevel
 	LL_BOREME = 2,
 };
 
-struct Tracking
+struct HYDRA_API Tracking
 {
 	Tracking( std::string const &file_name, bool u = "true" )
 		: file(file_name), use(u)
@@ -70,7 +73,7 @@ struct Tracking
 	bool use;
 };
 
-struct Channel
+struct HYDRA_API Channel
 {
 	Channel( std::string const &nam, std::string const &wall )
 		: name(nam), wall_name(wall)
@@ -90,7 +93,7 @@ struct Channel
 
 };	// struct Channel
 
-struct Projection
+struct HYDRA_API Projection
 {
 	enum Type
 	{
@@ -138,7 +141,7 @@ struct Projection
 /// usually either a window or a FBO
 /// this is completely independent of the two though and does not reference 
 /// either of them.
-struct Renderer
+struct HYDRA_API Renderer
 {
 	enum Type
 	{
@@ -155,7 +158,7 @@ struct Renderer
 	Projection projection;
 };
 
-struct Window
+struct HYDRA_API Window
 {
 	Window( std::string const &nam, Channel const &chan,
 			int width, int height, int px, int py,
@@ -164,6 +167,7 @@ struct Window
 		, w(width), h(height), x(px), y(py), stereo(s)
 		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
 		, vert_sync(false), n_display(-1)
+		, input_handler(true)
 	{
 		if( h < 0 || w < 0 )
 		{
@@ -191,6 +195,8 @@ struct Window
 
 	Renderer renderer;
 
+	NamedParamList params;
+
 	// Width of the window
 	int w;
 	// Height of the window
@@ -207,12 +213,12 @@ struct Window
 	uint32_t nv_swap_barrier;
 
 	bool vert_sync;
-
+	bool input_handler;
 	int n_display;
 
 };	// struct Window
 
-struct Node
+struct HYDRA_API Node
 {
 	Node( std::string const &nam )
 		: name(nam)
@@ -241,7 +247,7 @@ struct Node
 	std::vector<Window> windows;
 };
 
-struct Server
+struct HYDRA_API Server
 {
 	Server( uint16_t por, std::string const hostnam )
 		: port(por), hostname(hostnam)
@@ -256,7 +262,7 @@ struct Server
 };
 
 /// External program description
-struct Program
+struct HYDRA_API Program
 {
 	std::string name;
 	std::string directory;
@@ -277,7 +283,7 @@ struct Program
  *	Includes configuration for the Windows, Walls, Tracking, Cluster, Stereo,
  *	and Server.
  */
-class EnvSettings
+class HYDRA_API EnvSettings
 {
 public :
 	/// Constructor
@@ -611,7 +617,7 @@ private :
 
 
 
-class EnvSerializer
+class HYDRA_API EnvSerializer
 {
 public :
 	/// Will completely over-ride the provided EnvSettings

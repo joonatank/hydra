@@ -96,7 +96,7 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 	else
 	{
 		// @todo should destroy the window after the init
-		createWindow(vl::config::Window("test", vl::config::Channel(), 400, 320, 0, 0));
+		createWindow(vl::config::Window("dummy", vl::config::Channel(), 400, 320, 0, 0));
 	}
 }
 
@@ -438,15 +438,24 @@ vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
 
 
-void
+vl::IWindow *
 vl::Renderer::createWindow(vl::config::Window const &winConf)
 {
 	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
+
+	// Destroy dummy window
+	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
+	{
+		delete _windows.at(0);
+		_windows.clear();
+	}
 
 	vl::Window *window = new vl::Window(winConf, this);
 	if(_player)
 	{ window->setCamera(_player->getCamera()); }
 	_windows.push_back(window);
+
+	return window;
 }
 
 

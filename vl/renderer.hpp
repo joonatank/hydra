@@ -139,7 +139,7 @@ public :
 
 	virtual uint32_t nLoggedMessages(void) const;
 
-	void createWindow(vl::config::Window const &winConf);
+	vl::IWindow *createWindow(vl::config::Window const &winConf);
 
 protected :
 

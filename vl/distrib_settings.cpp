@@ -157,6 +157,13 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window&
 		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
 		<< window.renderer;
 
+	msg << window.params.size();
+	for(NamedParamList::const_iterator iter = window.params.begin(); 
+		iter != window.params.end(); ++iter)
+	{
+		msg << iter->first << iter->second;
+	}
+
 	return msg;
 }
 
@@ -164,10 +171,18 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
+	size_t params_size;
 	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
 		>> window.w >> window.n_display >> window.stereo >> window.nv_swap_sync
 		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
-		>> window.renderer;
+		>> window.renderer >> params_size;
+	
+	for(size_t i = 0; i < params_size; ++i)
+	{
+		std::string param_name, param_value;
+		msg >> param_name >> param_value;
+		window.params[param_name] = param_value;
+	}
 
 	return msg;
 }

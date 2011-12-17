@@ -27,6 +27,8 @@
 
 #include <string>
 
+#include "window_interface.hpp"
+
 namespace vl
 {
 
@@ -109,7 +111,7 @@ public :
 
 	virtual vl::config::Window const &getWindowConf(std::string const &name) const = 0;
 
-	virtual void createWindow(vl::config::Window const &winConf) = 0;
+	virtual vl::IWindow *createWindow(vl::config::Window const &winConf) = 0;
 
 	// Callbacks
 //	virtual void setRegisterForOutputCallback(RendererCallback *cb) = 0;

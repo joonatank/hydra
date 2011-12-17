@@ -234,6 +234,7 @@ set( HEADERS
 	distrib_settings.hpp
 	program_options.hpp
 	window.hpp
+	window_interface.hpp
 	config.hpp
 	renderer.hpp
 	renderer_interface.hpp
