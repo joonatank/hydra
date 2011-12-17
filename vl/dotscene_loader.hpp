@@ -25,6 +25,9 @@
 #ifndef HYDRA_DOTSCENE_LOADER_HPP
 #define HYDRA_DOTSCENE_LOADER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <string>
 
 // Necessary for XML parsing
@@ -37,7 +40,7 @@
 namespace vl
 {
 
-class DotSceneLoader
+class HYDRA_API DotSceneLoader
 {
 public :
 	DotSceneLoader(bool use_new_mesh_manager = false);

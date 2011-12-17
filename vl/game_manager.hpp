@@ -34,6 +34,9 @@
 #ifndef HYDRA_GAME_MANAGER_HPP
 #define HYDRA_GAME_MANAGER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include "typedefs.hpp"
 
 #include "tracker.hpp"
@@ -59,7 +62,7 @@ namespace vl
 /// @struct Weather
 /// @brief definition for the weather
 /// @todo Not implemented yet
-struct Weather
+struct HYDRA_API Weather
 {
 	Weather(void)
 		: clouds(0), lighting(0), rain(0)
@@ -73,7 +76,7 @@ struct Weather
 /// @struct Date
 /// @brief Holds the current time and day
 /// For now only time of day is implemented
-struct Date
+struct HYDRA_API Date
 {
 	/// @brief Construct a time of day from string "hours:minutes"
 	/// hours and minutes should both be integers 
@@ -138,7 +141,7 @@ enum GAME_STATE
 
 /** @class GameManager
  */
-class GameManager
+class HYDRA_API GameManager
 {
 public :
 	/// @brief constructor

@@ -18,6 +18,8 @@
 #ifndef HYDRA_ENTITY_HPP
 #define HYDRA_ENTITY_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "movable_object.hpp"
 
@@ -57,7 +59,7 @@ struct EntityMeshLoadedCallback : public vl::MeshLoadedCallback
  *	@brief Entity that can be drawn to the scene, is distributed
  *	Currently only supports prefabs
  */
-class Entity : public MovableObject
+class HYDRA_API Entity : public MovableObject
 {
 public :
 	/// Constructor

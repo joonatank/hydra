@@ -18,6 +18,9 @@
 #ifndef HYDRA_MESH_MANAGER_HPP
 #define HYDRA_MESH_MANAGER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include "mesh.hpp"
 
 #include "typedefs.hpp"
@@ -74,7 +77,7 @@ struct MasterMeshLoaderCallback : public MeshLoaderCallback
 /// @todo add non-blocking callback for Master
 
 
-class MeshManager
+class HYDRA_API MeshManager
 {
 public :
 	MeshManager(MeshLoaderCallback *cb)

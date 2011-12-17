@@ -18,6 +18,9 @@
 #ifndef HYDRA_EVENT_MANAGER_HPP
 #define HYDRA_EVENT_MANAGER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <vector>
 
 #include "trigger.hpp"
@@ -47,7 +50,7 @@ inline vl::KEY_MOD getModifier( OIS::KeyCode kc )
 	return vl::KEY_MOD_NONE;
 }
 
-class EventManager
+class HYDRA_API EventManager
 {
 public :
 	EventManager( void );

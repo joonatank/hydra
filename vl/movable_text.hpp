@@ -18,6 +18,9 @@
 #ifndef HYDRA_MOVABLE_TEXT_HPP
 #define HYDRA_MOVABLE_TEXT_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <OGRE/OgreMovableObject.h>
 
 /// Necessary for the distributed 3d text class
@@ -129,7 +132,7 @@ protected:
 
 /// @class MovableText
 /// @brief Distributed 3d text class, used for interfacing the Rendering system
-class MovableText : public vl::MovableObject
+class HYDRA_API MovableText : public vl::MovableObject
 {
 public :
 	MovableText(std::string const &name, vl::SceneManagerPtr creator);

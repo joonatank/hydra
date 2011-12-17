@@ -36,6 +36,9 @@
 #ifndef HYDRA_PLAYER_HPP
 #define HYDRA_PLAYER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <string>
 
 #include "math/transform.hpp"
@@ -47,7 +50,7 @@
 namespace vl
 {
 
-class Player : public vl::Distributed
+class HYDRA_API Player : public vl::Distributed
 {
 public :
 	/// @brief Constructor

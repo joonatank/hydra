@@ -30,6 +30,8 @@
 
 #include <string>
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Used for command line option parsing
 #include <boost/program_options.hpp>
 
@@ -38,7 +40,7 @@ namespace po = boost::program_options;
 namespace vl
 {
 
-struct ProgramOptions
+struct HYDRA_API ProgramOptions
 {
 	ProgramOptions( void );
 

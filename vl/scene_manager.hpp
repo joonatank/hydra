@@ -18,6 +18,9 @@
 #ifndef HYDRA_SCENE_MANAGER_HPP
 #define HYDRA_SCENE_MANAGER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreColourValue.h>
@@ -79,7 +82,7 @@ std::string getShadowTechniqueAsString(ShadowTechnique tech);
 
 ShadowTechnique getShadowTechniqueFromString(std::string const &str);
 
-struct SkyDomeInfo
+struct HYDRA_API SkyDomeInfo
 {
 	SkyDomeInfo( std::string const &mat_name = std::string(), Ogre::Real curv = 10, 
 			Ogre::Real tile = 8, Ogre::Real dist = 50, bool drawFirst = true, 
@@ -110,7 +113,7 @@ struct SkyDomeInfo
 	int ysegments_keep;
 };
 
-struct FogInfo
+struct HYDRA_API FogInfo
 {
 	FogInfo( FogMode fog_mode = FOG_NONE, 
 			 Ogre::ColourValue const &diff = Ogre::ColourValue::White,
@@ -164,7 +167,7 @@ struct FogInfo
  *	them and disabled. 
  *	Disabled would need the SceneManager to reset the shadow textures.
  */
-class ShadowInfo
+class HYDRA_API ShadowInfo
 {
 public :
 	/// @brief constructor
@@ -263,7 +266,7 @@ bool operator!=(ShadowInfo const &a, ShadowInfo const &b)
 	return !(a==b);
 }
 
-class SceneManager : public vl::Distributed
+class HYDRA_API SceneManager : public vl::Distributed
 {
 public :
 	/// Master constructor

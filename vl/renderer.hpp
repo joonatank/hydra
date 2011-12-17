@@ -18,6 +18,9 @@
 #ifndef HYDRA_RENDERER_HPP
 #define HYDRA_RENDERER_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 #include "ogre_root.hpp"
 #include "base/envsettings.hpp"
 #include "player.hpp"
@@ -42,7 +45,7 @@ namespace vl
  *	At the moment the application supports only a single Pipe objects because
  *	of the limitations in Ogre Design.
  */
-class Renderer : public vl::RendererInterface, public Session
+class HYDRA_API Renderer : public vl::RendererInterface, public Session
 {
 public :
 	Renderer(std::string const &name);

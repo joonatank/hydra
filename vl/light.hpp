@@ -18,6 +18,9 @@
 #ifndef HYDRA_LIGHT_HPP
 #define HYDRA_LIGHT_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 // Base class
 #include "movable_object.hpp"
 
@@ -26,7 +29,7 @@
 namespace vl
 {
 
-struct LightAttenuation
+struct HYDRA_API LightAttenuation
 {
 	LightAttenuation(Ogre::Real r, Ogre::Real c, Ogre::Real l, Ogre::Real q)
 		: range(r), constant(c), linear(l), quadratic(q)
@@ -79,7 +82,7 @@ operator!=(LightAttenuation const &att1, LightAttenuation const &att2)
 	return !(att1 == att2);
 }
 
-class Light : public MovableObject
+class HYDRA_API Light : public MovableObject
 {
 public :
 	enum LightType

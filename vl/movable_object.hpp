@@ -18,6 +18,8 @@
 #ifndef HYDRA_MOVABLE_OBJECT_HPP
 #define HYDRA_MOVABLE_OBJECT_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "distributed.hpp"
 
@@ -32,7 +34,7 @@ namespace vl
  *	@brief A base class for anything that can be attached to a SceneNode
  *	Does not distribute anything for now.
  */
-class MovableObject : public vl::Distributed
+class HYDRA_API MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator)

@@ -54,7 +54,7 @@ extern "C"
 
 class Config;
 
-class Application
+class HYDRA_API Application
 {
 public:
 	/** @brief start the rendering threads and initialise the application
