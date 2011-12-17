@@ -249,29 +249,7 @@ vl::Hydra_Run(const int argc, char** argv)
 		// Otherwise the file exists and it's a directory
 		std::cout << "Using log file: " << options.getOutputFile() << std::endl;
 
-		vl::Logger logger;
-		logger.setOutputFile(options.getOutputFile());
-
-		vl::config::EnvSettingsRefPtr env;
-		vl::Settings settings;
-		if( options.master() )
-		{
-			env = vl::getMasterSettings(options);
-			settings = vl::getProjectSettings(options);
-		}
-		else
-		{
-			env = vl::getSlaveSettings(options);
-		}
-
-		// 2. initialization of local client node
-		if( !env )
-		{ return ExceptionMessage(); }
-
-		if( env->isMaster() && settings.empty() )
-		{ return ExceptionMessage(); }
-
-		vl::Application application(env, settings, logger, options);
+		vl::Application application(options);
 
 		application.run();
 	}
@@ -313,9 +291,134 @@ vl::Hydra_Run(const int argc, char** argv)
 }
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, vl::ProgramOptions const &opt)
-	: _master()
-	, _slave_client()
+vl::Application::Application(ProgramOptions const &opt)
+	: _frame(0)
+{
+	vl::config::EnvSettingsRefPtr env;
+	vl::Settings settings;
+	if( opt.master() )
+	{
+		env = vl::getMasterSettings(opt);
+		settings = vl::getProjectSettings(opt);
+	}
+	else
+	{
+		env = vl::getSlaveSettings(opt);
+	}
+
+	if( !env )
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	if( env->isMaster() && settings.empty() )
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	_logger.setOutputFile(opt.getOutputFile());
+	_init(env, settings, opt);
+}
+
+vl::Application::~Application( void )
+{
+	for(size_t i = 0; i < _spawned_processes.size(); ++i)
+	{
+		kill_process(_spawned_processes.at(i));
+	}
+}
+
+bool
+vl::Application::progress(void)
+{
+	if(isRunning())
+	{ _mainloop(); }
+
+	return isRunning();
+}
+
+void
+vl::Application::run(void)
+{		
+	while( isRunning() )
+	{
+		_mainloop();	
+	}
+
+	_exit();
+}
+
+bool
+vl::Application::isRunning(void) const
+{
+	if(_master)
+	{ return _master->isRunning(); }
+	else
+	{ return _slave_client->isRunning(); }
+}
+
+vl::RendererInterface *
+vl::Application::getRenderer(void)
+{
+	if(_master)
+	{ return _master->getRenderer(); }
+	else
+	{ _slave_client->getRenderer(); }
+}
+
+
+
+/// ------------------------------- Private ------------------------------------
+void
+vl::Application::_mainloop(void)
+{
+	// run main loop
+	if(_master)
+	{
+		_render( ++_frame );
+	}
+	else
+	{
+		_slave_client->mainloop();
+
+		/// @todo test
+		/// Windows can have problems with context switching.
+		/// At least this is the case for Windows XP.
+		/// Might need a workaround for some or all Windows versions
+		/// For now use WIN_ZERO_SLEEP define for testing.
+		/// Real solution will need a separate busy-wait while rendering 
+		/// and context switching while not.
+		///
+		/// Linux can not handle busy wait,
+		/// much faster with context switching in every iteration.
+		vl::msleep(0);
+	}
+}
+
+void
+vl::Application::_exit(void)
+{
+	if(_master)
+	{ _master->exit(); }
+}
+
+void
+vl::Application::_render( uint32_t const frame )
+{
+	vl::timer timer;
+
+	_master->render();
+
+	vl::time sleep_time;
+	// Try to get the requested frame rate but avoid division by zero
+	// also check that the time used for the frame is less than the max fps so we
+	// don't overflow the sleep time
+	if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
+	{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
+
+	// Force context switching by zero sleep
+	vl::sleep(sleep_time);
+}
+
+void
+vl::Application::_init(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
+			ProgramOptions const &opt)
 {
 	assert( env );
 
@@ -399,7 +502,7 @@ vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings con
 
 	if( env->isMaster() )
 	{
-		_master.reset(new vl::Config( settings, env, logger, renderer));
+		_master.reset(new vl::Config( settings, env, _logger, renderer));
 		_master->init(opt.editor);
 
 		std::vector<vl::config::Program> programs = env->getUsedPrograms();
@@ -419,70 +522,4 @@ vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings con
 		uint16_t port = env->getServer().port;
 		_slave_client.reset(new vl::cluster::Client(host, port, renderer));
 	}
-}
-
-vl::Application::~Application( void )
-{
-	for(size_t i = 0; i < _spawned_processes.size(); ++i)
-	{
-		kill_process(_spawned_processes.at(i));
-	}
-}
-
-
-void
-vl::Application::run( void )
-{
-	if(_master)
-	{
-		// run main loop
-		uint32_t frame = 0;
-		while( _master->isRunning() )
-		{
-			_render( ++frame );
-		}
-
-		_master->exit();
-	}
-	else
-	{
-		assert(_slave_client);
-		while( _slave_client->isRunning() )
-		{
-			_slave_client->mainloop();
-
-			/// @todo test
-			/// Windows can have problems with context switching.
-			/// At least this is the case for Windows XP.
-			/// Might need a workaround for some or all Windows versions
-			/// For now use WIN_ZERO_SLEEP define for testing.
-			/// Real solution will need a separate busy-wait while rendering 
-			/// and context switching while not.
-			///
-			/// Linux can not handle busy wait,
-			/// much faster with context switching in every iteration.
-			vl::msleep(0);
-		}
-
-		// TODO add clean exit
-	}
-}
-
-/// ------------------------------- Private ------------------------------------
-void
-vl::Application::_render( uint32_t const frame )
-{
-	vl::timer timer;
-
-	_master->render();
-
-	vl::time sleep_time;
-	// Try to get the requested frame rate but avoid division by zero
-	// also check that the time used for the frame is less than the max fps so we
-	// don't overflow the sleep time
-	if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
-	{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
-
-	// Force context switching by zero sleep
-	vl::sleep(sleep_time);
 }

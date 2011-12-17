@@ -104,6 +104,9 @@ public:
 	vl::GameManagerPtr getGameManager(void)
 	{ return _game_manager; }
 
+	RendererInterface *getRenderer(void)
+	{ return _renderer.get(); }
+
 	/// Message callback system functions
 	bool messages(void) const
 	{ return _messages.size(); }
