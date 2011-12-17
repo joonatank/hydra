@@ -390,7 +390,7 @@ vl::Application::_exit(void)
 void
 vl::Application::_render( uint32_t const frame )
 {
-	vl::timer timer;
+	vl::chrono timer;
 
 	_master->render();
 

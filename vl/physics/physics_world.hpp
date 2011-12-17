@@ -29,7 +29,7 @@
 
 #include "typedefs.hpp"
 // Necessary for time step
-#include "base/timer.hpp"
+#include "base/time.hpp"
 // Necessary for vl::scalar
 #include "math/types.hpp"
 // Necesessary for Transform

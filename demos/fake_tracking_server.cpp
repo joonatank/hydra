@@ -40,7 +40,7 @@
 #include "math/conversion.hpp"
 #include "base/filesystem.hpp"
 #include "base/sleep.hpp"
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 #include <vrpn_Tracker.h>
 
@@ -334,7 +334,7 @@ private :
 
 	Output *_output;
 
-	vl::timer _timer;
+	vl::chrono _timer;
 	vrpn_Connection *_connection;
 	vrpn_Tracker_Server *_tracker;
 

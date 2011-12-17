@@ -4,7 +4,7 @@
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
- *	@file base/timer.cpp
+ *	@file base/time.cpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.3
@@ -16,7 +16,7 @@
  */
 
 /// Interface
-#include "timer.hpp"
+#include "time.hpp"
 
 // Necessary for debug assertions
 #include <assert.h>

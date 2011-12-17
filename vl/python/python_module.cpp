@@ -541,10 +541,10 @@ void export_game(void)
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
 
-	python::class_<vl::timer>("timer", python::init<>())
+	python::class_<vl::chrono>("chrono", python::init<>())
 		.def(python::init<vl::time const &>())
-		.def("elapsed", &vl::timer::elapsed)
-		.def("reset", &vl::timer::reset)
+		.def("elapsed", &vl::chrono::elapsed)
+		.def("reset", &vl::chrono::reset)
 	;
 
 	python::class_<vl::Report<vl::time>, boost::noncopyable>("Report", python::no_init)

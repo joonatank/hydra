@@ -2,7 +2,7 @@
  *	@date 2011-09
  */
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 #include "base/sleep.hpp"
 
 #include <vrpn_Analog.h>

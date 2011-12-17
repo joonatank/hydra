@@ -176,7 +176,7 @@ vl::cluster::Server::start_draw(void)
 	if( _clients.empty() )
 	{ return false; }
 
-	vl::timer tim;
+	vl::chrono tim;
 
 	// timilimit for blocking operations
 	vl::time limit(1, 0);
@@ -296,7 +296,7 @@ vl::cluster::Server::finish_draw(vl::time const &limit)
 {
 	if(_rendering())
 	{
-		vl::timer t;
+		vl::chrono t;
 		ClientRefList renderers;
 		for( ClientList::iterator iter = _clients.begin(); iter != _clients.end(); ++iter )
 		{
@@ -840,7 +840,7 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 bool
 vl::cluster::Server::_block_till_state(CLIENT_STATE cs,  ClientRefList clients, vl::time const &limit)
 {
-	vl::timer t;
+	vl::chrono t;
 	bool ready = false;
 	while( !ready )
 	{

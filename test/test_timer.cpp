@@ -6,7 +6,7 @@
 #include <boost/test/unit_test.hpp>
 
 /// tested class
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 #include "base/sleep.hpp"
 
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE( time_arithmetic )
 
 BOOST_AUTO_TEST_CASE( timer_sleep )
 {
-	vl::timer t;
+	vl::chrono t;
 
 	// Probably does not work on Windows, for sure not on XP
 	// because they sleep way too much if you allow them to sleep at all :)

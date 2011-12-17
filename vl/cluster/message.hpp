@@ -30,7 +30,7 @@
 #include "base/string_utils.hpp"
 
 // Necessary for saving timestamps into Messages
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 namespace vl
 {

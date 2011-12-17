@@ -31,7 +31,7 @@
 // Necessary for the Callback structs
 #include "renderer_interface.hpp"
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 #include "base/report.hpp"
 /// Necessary for the MeshLoader callback base
@@ -154,7 +154,7 @@ private :
 
 	ClientState _state;
 
-	vl::timer _request_timer;
+	vl::chrono _request_timer;
 
 	vl::RendererUniquePtr _renderer;
 

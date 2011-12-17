@@ -168,10 +168,10 @@ void
 vl::Config::init(bool enable_editor)
 {
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
-	vl::timer init_timer;
+	vl::chrono init_timer;
 
 	vl::Report<vl::time> &report = _game_manager->getInitReport();
-	vl::timer t;
+	vl::chrono t;
 	if(!_game_manager->requestStateChange(GS_INIT))
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT")); }
 	report["Starting GameManager"].push(t.elapsed());
@@ -255,10 +255,10 @@ vl::Config::render( void )
 {
 	assert(_server);
 
-	vl::timer loop_timer;
+	vl::chrono loop_timer;
 	vl::Report<vl::time> &report = _game_manager->getRenderingReport();
 
-	vl::timer timer;
+	vl::chrono timer;
 
 	// Get new event messages that are processed in GameManager::step
 	_server->poll();
@@ -286,7 +286,7 @@ vl::Config::render( void )
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
-		vl::timer l;
+		vl::chrono l;
 		_renderer->draw();
 		report["local rendering"].push(l.elapsed());
 	}
@@ -299,7 +299,7 @@ vl::Config::render( void )
 	// Finish local renderer
 	if( _renderer.get() )
 	{
-		vl::timer l;
+		vl::chrono l;
 		_renderer->swap();
 		report["local swap"].push(l.elapsed());
 

@@ -17,7 +17,7 @@
 // Interface
 #include "serial_joystick.hpp"
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 // Necessary for waiting the controller to respond
 #include "base/sleep.hpp"
 

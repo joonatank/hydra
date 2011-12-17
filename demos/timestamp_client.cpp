@@ -10,7 +10,7 @@
 
 #include <deque>
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 /// Used for gathering the timings and printing the avarage at finish
 #include "base/report.hpp"
 
@@ -61,7 +61,7 @@ public :
 			_socket.send_to( boost::asio::buffer(buf), _master );
 		}
 
-		vl::timer send_timer;
+		vl::chrono send_timer;
 
 		vl::Number<vl::time> &wait_times = _report.get_number("wait time");
 		vl::Number<vl::time> &time_differences = _report.get_number("difference");

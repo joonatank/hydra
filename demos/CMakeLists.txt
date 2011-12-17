@@ -59,8 +59,10 @@ copy_start_scripts( hydra
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	${HydraMain_SOURCE_DIR}/math/conversion.hpp
 	${HydraMain_SOURCE_DIR}/math/math.hpp
 	${HydraMain_SOURCE_DIR}/math/math.cpp
@@ -84,8 +86,10 @@ target_link_libraries(fake_tracking_server
 add_executable(vrpn_tracker_recorder 
 	vrpn_tracker_recorder.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
 	)
 
 target_link_libraries(vrpn_tracker_recorder
@@ -96,8 +100,8 @@ target_link_libraries(vrpn_tracker_recorder
 add_executable(vrpn_analog_server
 	vrpn_analog_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
 	)
 
 target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
@@ -142,8 +146,10 @@ target_link_libraries(angles_to_quaternion ${Ogre_LIBRARY})
 
 # These should not need to link to anything else than boost
 set( SRC
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	${HydraMain_SOURCE_DIR}/base/report.hpp
 	)
 add_executable(timestamp_client timestamp_client.cpp ${SRC})

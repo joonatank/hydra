@@ -40,8 +40,10 @@ include_directories( SYSTEM
 subdirs(gl_tests)
 
 add_executable( test_timer test_timer.cpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	)
 
 target_link_libraries(test_timer ${TEST_LIB})

@@ -332,7 +332,7 @@ void
 vl::GameManager::load(vl::config::EnvSettings const &env)
 {
 	// Create Tracker needs the SceneNodes for mapping
-	timer t;
+	chrono t;
 	createTrackers(env);
 	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
 
@@ -343,7 +343,7 @@ vl::GameManager::load(vl::config::EnvSettings const &env)
 void
 vl::GameManager::load(vl::Settings const &proj)
 {
-	timer t;
+	chrono t;
 	loadScenes(proj);
 	std::cout << "Loading scenes took : " <<  t.elapsed() << std::endl;
 

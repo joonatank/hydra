@@ -101,7 +101,8 @@ set(BASE_HEADERS
 	base/rapidxml_print.hpp
 	base/sleep.hpp
 	base/string_utils.hpp
-	base/timer.hpp
+	base/time.hpp
+	base/chrono.hpp
 	base/report.hpp
 	base/wall.hpp
 	)
@@ -111,7 +112,8 @@ set(BASE_SRC
 	base/envsettings.cpp
 	base/projsettings.cpp
 	base/string_utils.cpp
-	base/timer.cpp
+	base/time.cpp
+	base/chrono.cpp
 	)
 if(WIN32)
 	list(APPEND BASE_SRC base/serial.cpp)

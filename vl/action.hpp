@@ -30,7 +30,7 @@
 // Necessary for Transform
 #include "math/transform.hpp"
 // Necessary for timed action
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 namespace vl
 {
@@ -262,7 +262,7 @@ public :
 private :
 	BasicActionPtr _action;
 
-	vl::timer _clock;
+	vl::chrono _clock;
 
 	/// Time limit in seconds, easier to compare to clock output
 	/// @todo replace with time structure

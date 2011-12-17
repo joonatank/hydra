@@ -6,7 +6,7 @@
 
 /// @todo add tracker element with time support
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 #include "base/sleep.hpp"
 
 #include <vrpn_Tracker.h>
@@ -121,7 +121,7 @@ struct data
 	std::vector<sensor_elem> sensors;
 };
 
-vl::timer g_timer;
+vl::chrono g_timer;
 
 std::ostream &
 operator<<(std::ostream &os, data const &d)

@@ -36,7 +36,7 @@
 #include "cluster/server.hpp"
 
 // Necessary for timing statistics
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 namespace vl
 {
@@ -161,9 +161,9 @@ protected :
 
 	vl::cluster::ServerRefPtr _server;
 	/// timer used to see how much delay there is with server updates
-	vl::timer _server_timer;
+	vl::chrono _server_timer;
 
-	vl::timer _stats_timer;
+	vl::chrono _stats_timer;
 
 	bool _running;
 

@@ -26,7 +26,7 @@
 
 #include "logger.hpp"
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 #include "typedefs.hpp"
 
@@ -74,7 +74,7 @@ public:
 		ClientState state;
 
 		/// Used for not trying to send environment less than a couple of seconds a part
-		vl::timer environment_sent_time;
+		vl::chrono environment_sent_time;
 
 		/// What messages have been sent to the client without receiving an ACK
 		std::map<vl::time, MessagePart> _sent_msgs;
@@ -200,7 +200,7 @@ private :
 	uint32_t _update_frame;
 
 	// @todo this should be moved to GameManager
-	vl::timer _sim_timer;
+	vl::chrono _sim_timer;
 
 	uint32_t _n_log_messages;
 	std::vector<vl::LogMessage> _new_log_messages;
@@ -208,7 +208,7 @@ private :
 	ServerDataCallback *_data_cb;
 
 	vl::Report<vl::time> _server_report;
-	vl::timer _report_timer;
+	vl::chrono _report_timer;
 
 };	// class Server
 

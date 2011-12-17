@@ -36,7 +36,7 @@
 
 #include "cluster/message.hpp"
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "resource.hpp"
 

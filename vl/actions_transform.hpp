@@ -26,7 +26,7 @@
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 namespace vl
 {
@@ -120,7 +120,7 @@ protected :
 	// What reference to use for movements
 	vl::SceneNode *_reference;
 
-	vl::timer _clock;
+	vl::chrono _clock;
 };
 
 // This is identical for both MoveAction and ApplyForce actions

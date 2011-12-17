@@ -22,7 +22,7 @@
 #ifndef HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 #define HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "typedefs.hpp"
 

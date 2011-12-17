@@ -47,7 +47,7 @@
 #include "session.hpp"
 
 #include "base/report.hpp"
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 #include "logger.hpp"
 
 // Necessary for SceneInfo
@@ -371,9 +371,9 @@ private :
 	Date _date;
 
 	/// Timers
-	vl::timer _program_timer;
-	vl::stop_timer _game_timer;
-	vl::timer _step_timer;
+	vl::chrono _program_timer;
+	vl::stop_chrono _game_timer;
+	vl::chrono _step_timer;
 	vl::time _delta_time;
 
 	/// State
