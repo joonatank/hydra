@@ -70,7 +70,10 @@ vl::findPlugin( std::string const &plugin )
 #ifdef HYDRA_WIN32
 	std::string const postfix(".dll");
 	char const delimiter(';');
-	std::string paths = std::string(::getenv( "PATH" )) + ';' + std::string("./");
+	std::string paths = std::string(::getenv( "PATH" ));
+	if(*(paths.end()-1) != delimiter)
+	{ paths.append(std::string(1, delimiter)); }
+	paths.append("./");
 #else
 	std::string const postfix(".so");
 	char const delimiter(':');
