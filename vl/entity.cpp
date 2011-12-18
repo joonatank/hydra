@@ -28,6 +28,7 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSubMesh.h>
 #include <OGRE/OgreMeshManager.h>
+#include <OGRE/OgreSubEntity.h>
 
 /// ------------------------------------- Global -----------------------------
 std::ostream &
@@ -108,6 +109,23 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 		Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
 	}
 	_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+
+
+	// Check materials
+	for(uint16_t i = 0; i < _ogre_object->getNumSubEntities(); ++i)
+	{
+		Ogre::SubEntity *og_se = _ogre_object->getSubEntity(i);
+		if(og_se->getMaterialName() == "BaseWhite")
+		{
+			// @todo this of course should add listener to MaterialManager
+			// and it should be mesh attribute, but as our architecture does not
+			// support it...
+			// Empty sub mesh materials are purposefully so, they are usually overriden
+			// from entity and in any case would make it impossible to load a such material...
+			if(!og_se->getSubMesh()->getMaterialName().empty())
+			{ _creator->getMeshManager()->_addSubEntityWithInvalidMaterial(og_se); }
+		}
+	}
 
 	delete _loader_cb;
 	_loader_cb = 0;

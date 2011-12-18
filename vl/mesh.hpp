@@ -76,6 +76,43 @@ struct Vertex
 
 std::ostream &operator<<( std::ostream &os, Vertex const &v );
 
+/* VertexElementSematic
+VES_POSITION 	Position, 3 reals per vertex.
+
+VES_BLEND_WEIGHTS 	Blending weights.
+
+VES_BLEND_INDICES 	Blending indices.
+
+VES_NORMAL 	Normal, 3 reals per vertex.
+
+VES_DIFFUSE 	Diffuse colours.
+
+VES_SPECULAR 	Specular colours.
+
+VES_TEXTURE_COORDINATES 	Texture coordinates.
+
+VES_BINORMAL 	Binormal (Y axis if normal is Z)
+
+VES_TANGENT 
+*/
+
+/* VertexElementType
+VET_FLOAT1 	
+VET_FLOAT2 	
+VET_FLOAT3 	
+VET_FLOAT4 	
+VET_COLOUR 	alias to more specific colour type - use the current rendersystem's colour packing
+
+VET_SHORT1 	
+VET_SHORT2 	
+VET_SHORT3 	
+VET_SHORT4 	
+VET_UBYTE4 	
+VET_COLOUR_ARGB 	D3D style compact colour.
+
+VET_COLOUR_ABGR 	GL style compact colour.
+*/
+
 struct VertexDeclaration
 {
 	VertexDeclaration(void)
@@ -131,6 +168,9 @@ struct VertexData
 	Vertex &getVertex(size_t i)
 	{ return _vertices.at(i); }
 
+	void setNVertices(size_t n)
+	{ _vertices.resize(n); }
+
 	size_t getNVertices(void) const
 	{ return _vertices.size(); }
 
@@ -139,9 +179,6 @@ struct VertexData
 
 	VertexList const &getVertices(void) const
 	{ return _vertices; }
-
-	void setNVertices(size_t size)
-	{ _vertices.resize(size); }
 
 	VertexList _vertices;
 
@@ -217,6 +254,9 @@ public :
 
 	void set(size_t i, uint16_t index);
 
+	// can't define operator[] 
+	// because the only difference for overloads can't be the return type
+
 	/// @brief Calculate the index count from the 
 	//void recalculateIndexCount(void)
 private :
@@ -275,6 +315,10 @@ public :
 	IndexBuffer indexData;
 
 private :
+	// Non-copyable
+	SubMesh(SubMesh const &);
+	SubMesh &operator=(SubMesh const &);
+
 	/// --------------- Private Data --------------------
 	std::string _name;
 	std::string _material;
@@ -350,13 +394,17 @@ public :
 	/// and adding them to the shared geometry
 	void calculateBounds(void);
 
-	void createVertexData(void)
+	void createSharedVertexData(void)
 	{ sharedVertexData = new VertexData; }
 
 	/// ---------------------- Public Data ------------------------
 	VertexData *sharedVertexData;
 
 private :
+	// Non-copyable
+	Mesh(Mesh const &);
+	Mesh &operator=(Mesh const &);
+
 	/// ---------------------- Private Data ------------------------
 	std::string _name;
 

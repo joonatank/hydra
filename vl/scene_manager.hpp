@@ -28,8 +28,8 @@
 // Necessary for PREFAB type
 #include "entity.hpp"
 
-#include "distributed.hpp"
-#include "session.hpp"
+#include "cluster/distributed.hpp"
+#include "cluster/session.hpp"
 
 #include "typedefs.hpp"
 

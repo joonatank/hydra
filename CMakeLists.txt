@@ -119,6 +119,7 @@ find_package(Bullet)
 find_package(Newton)
 
 find_package(OgreProcedural REQUIRED)
+find_package(OpenCollada REQUIRED)
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM
@@ -137,6 +138,10 @@ include_directories( SYSTEM
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
 	${OgreProcedural_INCLUDE_DIR}
+	${OPENCOLLADA_INCLUDE_DIR}
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	)
 
 # Libraries that Hydra library depends on
@@ -157,6 +162,7 @@ set( HYDRA_DEP_LIBS
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
+	${OPENCOLLADA_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

@@ -2,7 +2,7 @@
  *	Copyright (c) 2011 Tampere University of Technology
  *	Copyright (c) 2011/10 Savant Simulators
  *
- *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.hpp
  *
@@ -166,6 +166,8 @@ protected :
 	 */
 	void _takeScreenshot( void );
 
+	void _check_materials(uint64_t const id);
+
 	std::string _name;
 
 	/// EnvSettings mapped from Master
@@ -173,6 +175,7 @@ protected :
 	vl::Settings _settings;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
@@ -205,6 +208,8 @@ protected :
 
 	// LogReceiver
 	uint32_t _n_log_messages;
+
+	std::vector<vl::MaterialRefPtr> _materials_to_check;
 
 };	// class Renderer
 

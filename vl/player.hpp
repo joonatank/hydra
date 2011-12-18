@@ -39,13 +39,13 @@
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
-#include <string>
-
 #include "math/transform.hpp"
 
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 
 #include "typedefs.hpp"
+
+#include <string>
 
 namespace vl
 {

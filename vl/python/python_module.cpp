@@ -3,7 +3,7 @@
  *	Copyright (c) 2011/10 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-08
+ *	@date 2011-01
  *	@file python/python_module.cpp
  *
  *	This file is part of Hydra VR game engine.
@@ -29,6 +29,9 @@
 #include "camera.hpp"
 #include "movable_text.hpp"
 #include "ray_object.hpp"
+
+#include "material.hpp"
+#include "material_manager.hpp"
 
 #include "player.hpp"
 
@@ -239,6 +242,36 @@ void export_scene_graph(void)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
 	;
 
+	
+	python::class_<vl::Material, vl::MaterialRefPtr, boost::noncopyable>("Material", python::no_init)
+		.add_property("shader", python::make_function(&vl::Material::getShader, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setShader)
+		.add_property("texture", python::make_function(&vl::Material::getTexture, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setTexture)
+		.add_property("diffuse", python::make_function(&vl::Material::getDiffuse, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setDiffuse)
+		.add_property("specular", python::make_function(&vl::Material::getSpecular, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setSpecular)
+		.add_property("emissive", python::make_function(&vl::Material::getEmissive, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setEmissive)
+		.add_property("ambient", python::make_function(&vl::Material::getAmbient, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setAmbient)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<MaterialRefPtr> >("MaterialList")
+		.def(python::vector_indexing_suite<std::vector<MaterialRefPtr>, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::MaterialManager, vl::MaterialManagerRefPtr, boost::noncopyable>("MaterialManager", python::no_init)
+		.def("create_material", &vl::MaterialManager::createMaterial)
+		.def("get_material", &vl::MaterialManager::getMaterial)
+		.def("has_material", &vl::MaterialManager::hasMaterial)
+		.add_property("materials", python::make_function(&vl::MaterialManager::getMaterialList, python::return_value_policy<python::copy_const_reference>()) )
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
 		.def(python::init<std::string, python::optional<Ogre::ColourValue, Ogre::Real, Ogre::Real, Ogre::Real> >())
 		.def(python::init<vl::FogInfo>())
@@ -399,6 +432,7 @@ void export_scene_graph(void)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
 		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
+		.add_property("mesh", &vl::Entity::getMesh)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -550,6 +584,8 @@ void export_game(void)
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
 
+	void (vl::GameManager::*loadScene_ov0)(std::string const &)= &vl::GameManager::loadScene;
+
 	python::class_<vl::chrono>("chrono", python::init<>())
 		.def(python::init<vl::time const &>())
 		.def("elapsed", &vl::chrono::elapsed)
@@ -577,7 +613,10 @@ void export_game(void)
 		.def("quit", &vl::GameManager::quit)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
+		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
+		.def("load_scene", loadScene_ov0)
+		.def("save_scene", &vl::GameManager::saveScene)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 

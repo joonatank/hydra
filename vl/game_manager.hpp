@@ -44,7 +44,7 @@
 // TODO this should not need to be included here
 #include "tracker_serializer.hpp"
 
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 #include "base/report.hpp"
 #include "base/chrono.hpp"
@@ -172,6 +172,9 @@ public :
 
 	MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
+	
+	MaterialManagerRefPtr getMaterialManager(void)
+	{ return _material_manager; }
 
 	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
@@ -309,6 +312,10 @@ public :
 
 	void loadScene(vl::SceneInfo const &scene_info);
 
+	/// Test functions for Collada importer/exporter
+	void loadScene(std::string const &file_name);
+	void saveScene(std::string const &file_name);
+
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 
@@ -366,6 +373,8 @@ private :
 	vl::Logger *_logger;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
+
 	bool _env_effects_enabled;
 	Weather _weather;
 	Date _date;

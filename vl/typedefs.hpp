@@ -3,7 +3,7 @@
  *	Copyright (c) 2011/10 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-05
+ *	@date 2011-01
  *	@file typedefs.hpp
  *
  *	This file is part of Hydra VR game engine.
@@ -112,6 +112,12 @@ namespace vl
 
 	typedef boost::shared_ptr<Mesh> MeshRefPtr;
 	typedef boost::shared_ptr<MeshManager> MeshManagerRefPtr;
+
+	class Material;
+	class MaterialManager;
+
+	typedef boost::shared_ptr<Material> MaterialRefPtr;
+	typedef boost::shared_ptr<MaterialManager> MaterialManagerRefPtr;
 
 	class Recording;
 	typedef boost::shared_ptr<Recording> RecordingRefPtr;

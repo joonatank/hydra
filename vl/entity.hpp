@@ -75,6 +75,9 @@ public :
 	std::string const &getMeshName(void) const
 	{ return _mesh_name; }
 
+	MeshRefPtr getMesh(void) const
+	{ return _mesh; }
+
 	void setCastShadows(bool shadows);
 
 	bool getCastShadows(void) const

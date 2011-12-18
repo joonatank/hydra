@@ -49,6 +49,8 @@ set(SRC
 	mesh_manager.cpp
 	mesh.cpp
 	mesh_ogre.cpp
+	material.cpp
+	material_manager.cpp
 	ray_object.cpp
 	ray_cast.cpp
 	)
@@ -117,6 +119,18 @@ if(WIN32)
 	list(APPEND BASE_HEADERS base/serial.hpp)
 endif()
 source_group(HydraMain\\base FILES ${BASE_HEADERS} ${BASE_SRC})
+
+
+set(COLLADA_HEADERS
+	collada/dae_common.hpp
+	collada/dae_importer.hpp
+	collada/dae_exporter.hpp
+	collada/dae_mesh_importer.hpp)
+set(COLLADA_SRC
+	collada/dae_importer.cpp
+	collada/dae_exporter.cpp
+	collada/dae_mesh_importer.cpp)
+source_group(HydraMain\\collada FILES ${COLLADA_HEADERS} ${COLLADA_SRC})
 
 set(PHYSICS_HEADERS
 	physics/motion_state.hpp
@@ -195,6 +209,7 @@ set( HEADERS
 	tracker.hpp
 	entity.hpp
 	light.hpp
+	camera.hpp
 	movable_object.hpp
 	movable_text.hpp
 	serializer.hpp
@@ -203,7 +218,8 @@ set( HEADERS
 	mesh.hpp
 	mesh_ogre.hpp
 	mesh_manager.hpp
-	camera.hpp
+	material.hpp
+	material_manager.hpp
 	tracker_serializer.hpp
 	vrpn_tracker.hpp
 	vrpn_analog_client.hpp
@@ -221,7 +237,6 @@ set( HEADERS
 	trigger.hpp
 	event_manager.hpp
 	keycode.hpp
-	session.hpp
 	logger.hpp
 	distrib_settings.hpp
 	program_options.hpp
@@ -232,7 +247,6 @@ set( HEADERS
 	renderer_interface.hpp
 	application.hpp
 	ogre_root.hpp
-	distributed.hpp
 	ray_object.hpp
 	ray_cast.hpp
 	)
@@ -265,6 +279,9 @@ set(CLUSTER_HEADERS
 	cluster/client.hpp
 	cluster/message.hpp
 	cluster/states.hpp
+	cluster/session.hpp
+	cluster/object_types.hpp
+	cluster/distributed.hpp
 	)
 
 set(CLUSTER_SRC
@@ -288,6 +305,8 @@ add_library(HydraMain SHARED
 	${HEADERS}
 	${BASE_HEADERS}
 	${BASE_SRC}
+	${COLLADA_HEADERS}
+	${COLLADA_SRC}
 	${INPUT_HEADERS}
 	${INPUT_SRC}
 	${PHYSICS_HEADERS}

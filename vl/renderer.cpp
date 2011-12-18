@@ -26,6 +26,7 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
+#include "material_manager.hpp"
 
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
@@ -33,6 +34,10 @@
 
 #include "logger.hpp"
 
+// Necessary for checking materials after deserialize
+#include "material.hpp"
+
+// Necessary for message pump
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// ------------------------- Public -------------------------------------------
@@ -57,6 +62,9 @@ vl::Renderer::~Renderer(void)
 	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
 	{ delete *iter; }
 	_windows.clear();
+
+	// Necessary because this holds Ogre resources.
+	_material_manager.reset();
 
 	// Shouldn't be necessary anymore, if _root handles destruction cleanly
 	if( _root && _ogre_sm )
@@ -330,7 +338,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_SCENE_MANAGER :
 			{
-				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
+				std::cout << vl::TRACE << "Renderer : Creating SceneManager" << std::endl;
 				// TODO support multiple SceneManagers
 				if(_scene_manager || _ogre_sm)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
@@ -340,7 +348,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-				std::clog << "SceneManager created." << std::endl;
+				std::clog << "Renderer : SceneManager created." << std::endl;
 			}
 			break;
 
@@ -349,6 +357,24 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				if(!_scene_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
 				_scene_manager->_createSceneNode(id);
+			}
+			break;
+
+			case OBJ_MATERIAL_MANAGER :
+			{
+				if(_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
+				_material_manager.reset(new MaterialManager(this, id));
+				std::clog << "Renderer : MaterialManager created" << std::endl;
+			}
+			break;
+
+			case OBJ_MATERIAL :
+			{
+				if(!_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO Material Manager.")); }
+				vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
+				_materials_to_check.push_back(mat);
 			}
 			break;
 
@@ -568,6 +594,10 @@ vl::Renderer::_syncData(void)
 			if( obj )
 			{
 				obj->unpack(stream);
+
+					// Check materials, needs to be here because we only have
+					// the correct name after first unpack
+				_check_materials(iter->getId());
 			}
 			else
 			{
@@ -636,3 +666,21 @@ vl::Renderer::_takeScreenshot( void )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 }
 
+void
+vl::Renderer::_check_materials(uint64_t const id)
+{
+	// @todo move to a separate function and maybe
+	// make bit more universal (any object can have a callback)
+	for(std::vector<vl::MaterialRefPtr>::iterator mat_iter = _materials_to_check.begin();
+		mat_iter != _materials_to_check.end(); ++mat_iter)
+	{
+		if((*mat_iter)->getID() == id)
+		{
+			assert(_mesh_manager);
+			_mesh_manager->checkMaterialUsers(*mat_iter);
+			// remove from the check list
+			_materials_to_check.erase(mat_iter);
+			break;
+		}
+	}
+}
