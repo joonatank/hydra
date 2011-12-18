@@ -19,7 +19,7 @@
 #include "game_manager.hpp"
 
 // Managers that we own
-#include "python/python.hpp"
+#include "python/python_context_impl.hpp"
 #include "event_manager.hpp"
 #include "resource_manager.hpp"
 #include "mesh_manager.hpp"
@@ -50,6 +50,10 @@
 
 #include "vrpn_analog_client.hpp"
 
+#include "tracker.hpp"
+#include "tracker_serializer.hpp"
+
+
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	: _session(session)
 	, _python(0)
@@ -69,7 +73,7 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
-	_python = new vl::PythonContext( this );
+	_python = new vl::PythonContextImpl( this );
 
 	_material_manager.reset(new MaterialManager(_session));
 

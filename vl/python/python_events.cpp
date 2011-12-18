@@ -18,6 +18,11 @@
 // Interface
 #include "python_module.hpp"
 
+// Callback helpers
+#include <toast/python/callback.hpp>
+// For namespace renaming
+#include "python_context_impl.hpp"
+
 // Event handling
 #include "event_manager.hpp"
 #include "trigger.hpp"

@@ -19,6 +19,9 @@
 
 #include "typedefs.hpp"
 
+// For namespace renaming
+#include "python_context_impl.hpp"
+
 // Physics
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"

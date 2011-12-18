@@ -83,6 +83,8 @@ public:
 
 	RendererInterface *getRenderer(void);
 
+	GameManagerPtr getGameManager(void);
+
 protected:
 	void _mainloop(bool sleep);
 

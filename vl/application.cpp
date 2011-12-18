@@ -380,6 +380,15 @@ vl::Application::getRenderer(void)
 	{ return _slave_client->getRenderer(); }
 }
 
+vl::GameManagerPtr
+vl::Application::getGameManager(void)
+{
+	if(_master)
+	{ return _master->getGameManager(); }
+	
+	return 0;
+}
+
 
 
 /// ------------------------------- Private ------------------------------------

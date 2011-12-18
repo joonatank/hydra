@@ -39,11 +39,6 @@
 
 #include "typedefs.hpp"
 
-#include "tracker.hpp"
-
-// TODO this should not need to be included here
-#include "tracker_serializer.hpp"
-
 #include "cluster/session.hpp"
 
 #include "base/report.hpp"

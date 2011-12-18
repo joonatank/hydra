@@ -191,12 +191,13 @@ source_group(HydraMain\\animation FILES ${ANIMATION_HEADERS} ${ANIMATION_SRC})
 
 
 set(PYTHON_HEADERS
-	python/python.hpp
+	python/python_context.hpp
+	python/python_context_impl.hpp
 	python/python_module.hpp
 	)
 
 set(PYTHON_SRC
-	python/python.cpp
+	python/python_context_impl.cpp
 	python/python_module.cpp
 	python/python_events.cpp
 	python/python_physics.cpp

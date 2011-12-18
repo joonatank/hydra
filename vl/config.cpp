@@ -23,7 +23,10 @@
 // Necessary for retrieving other managers
 #include "game_manager.hpp"
 // Necessary for executing python commands from slaves
-#include "python/python.hpp"
+#include "python/python_context.hpp"
+// Necessary for adding server report using templates
+#include "python/python_context_impl.hpp"
+
 // Necessary for retrieving registered triggers, KeyTrigger and FrameTrigger and sending events.
 #include "event_manager.hpp"
 // Necessary for the Event handling
@@ -221,7 +224,9 @@ vl::Config::init(bool enable_editor)
 	
 	_stats_timer.reset();
 
-	_game_manager->getPython()->addVariable("server_report", _server->getReport());
+	// We need implementation here
+	static_cast<PythonContextImpl *>(_game_manager->getPython())
+		->addVariable("server_report", _server->getReport());
 	
 	// TODO this should block till both slaves and local renderer are ready
 	// Problematic as this does not take into account clients that are started

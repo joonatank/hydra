@@ -27,8 +27,14 @@
  *	This receives data in TextResource format.
  */
 
-#ifndef HYDRA_PYTHON_HPP
-#define HYDRA_PYTHON_HPP
+#ifndef HYDRA_PYTHON_CONTEXT_IMPL_HPP
+#define HYDRA_PYTHON_CONTEXT_IMPL_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
+// Interface
+#include "python_context.hpp"
 
 #include <boost/python.hpp>
 
@@ -41,12 +47,12 @@ namespace python = boost::python;
 namespace vl
 {
 
-class PythonContext
+class HYDRA_API PythonContextImpl : public vl::PythonContext
 {
 public :
-	PythonContext( vl::GameManagerPtr game );
+	PythonContextImpl(vl::GameManagerPtr game);
 
-	~PythonContext( void );
+	~PythonContextImpl(void);
 
 	/// @todo depricated
 	void executeScript( vl::TextResource const &script );
@@ -67,8 +73,13 @@ public :
 
 	/// @brief get the whole script resource
 	/// throws vl::missing_resource if no such script has been added
-	vl::TextResource const &getScript(std::string const &name) const;	
+	vl::TextResource const &getScript(std::string const &name) const;
 	vl::TextResource &getScript(std::string const &name);
+
+	vl::Script const &getScript(size_t index) const;
+	vl::Script &getScript(size_t index);
+	
+	size_t getNScripts(void) const;
 
 	/// @brief do there exist a script with that name
 	/// @return true if there is a script with that nam,e
@@ -82,21 +93,10 @@ public :
 	void addVariable(std::string variable_name, T &var);
 
 private :
-	struct Script
-	{
-		Script(vl::TextResource const &res = vl::TextResource(), bool aut = false)
-			: script(res), auto_run(aut), executed(false)
-		{}
 
-		std::string name;
-		vl::TextResource script;
-		bool auto_run;
-		bool executed;
-	};
+	PythonContextImpl(PythonContextImpl const &);
 
-	PythonContext( PythonContext const & );
-
-	PythonContext & operator=( PythonContext const & );
+	PythonContextImpl &operator=(PythonContextImpl const &);
 
 	bool _auto_run;
 
@@ -109,7 +109,7 @@ private :
 
 template<typename T>
 void
-PythonContext::addVariable(std::string variable_name, T &var)
+PythonContextImpl::addVariable(std::string variable_name, T &var)
 {
 	_global[variable_name] = python::ptr<>(&var);
 }
@@ -117,4 +117,4 @@ PythonContext::addVariable(std::string variable_name, T &var)
 }	// namespace vl
 
 
-#endif // HYDRA_PYTHON_HPP
+#endif // HYDRA_PYTHON_CONTEXT_IMPL_HPP

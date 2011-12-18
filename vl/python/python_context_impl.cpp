@@ -15,8 +15,8 @@
  *
  */
 
-/// Interface
-#include "python.hpp"
+/// Definition
+#include "python_context_impl.hpp"
 
 /// Module
 #include "python_module.hpp"
@@ -58,7 +58,7 @@ char const *script =
 	"def quit():\n"
 	"	game.quit()\n";
 
-vl::PythonContext::PythonContext(vl::GameManagerPtr game_man)
+vl::PythonContextImpl::PythonContextImpl(vl::GameManagerPtr game_man)
 	: _auto_run(false)
 {
 	try {
@@ -102,12 +102,12 @@ vl::PythonContext::PythonContext(vl::GameManagerPtr game_man)
 	}
 }
 
-vl::PythonContext::~PythonContext( void )
+vl::PythonContextImpl::~PythonContextImpl( void )
 {
 }
 
 void
-vl::PythonContext::executeScript( vl::TextResource const &script )
+vl::PythonContextImpl::executeScript( vl::TextResource const &script )
 {
 	std::cout << vl::TRACE << "Running python script file " + script.getName() + "."
 		<< std::endl;
@@ -130,7 +130,7 @@ vl::PythonContext::executeScript( vl::TextResource const &script )
 }
 
 void
-vl::PythonContext::executeCommand(const std::string& cmd)
+vl::PythonContextImpl::executeCommand(const std::string& cmd)
 {
 	try
 	{
@@ -146,21 +146,27 @@ vl::PythonContext::executeCommand(const std::string& cmd)
 }
 
 void 
-vl::PythonContext::addScript(std::string const &name, vl::TextResource const &script, bool auto_run)
+vl::PythonContextImpl::addScript(std::string const &name, vl::TextResource const &script, bool auto_run)
 {
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION(vl::empty_param() << vl::desc("Name can not be empty")); }
+
 	if( hasScript(name) )
 	{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
 
-	_scripts.push_back(Script(script, auto_run));
+	// @todo this will create multiple copies of the script data
+	_scripts.push_back(Script(name, script, auto_run));
 	if(_auto_run && auto_run)
 	{
 		executeScript(script);
 		_scripts.back().executed = true;
 	}
+
+	std::clog << "Script : " << _scripts.back().name << " added." << std::endl;
 }
 
 void 
-vl::PythonContext::autoRunScripts(void)
+vl::PythonContextImpl::autoRunScripts(void)
 {
 	_auto_run = true;
 	std::vector<Script>::iterator iter;
@@ -175,7 +181,7 @@ vl::PythonContext::autoRunScripts(void)
 }
 
 vl::TextResource const &
-vl::PythonContext::getScript(std::string const &name) const
+vl::PythonContextImpl::getScript(std::string const &name) const
 {
 	for(std::vector<Script>::const_iterator iter = _scripts.begin(); iter != _scripts.end(); ++iter)
 	{
@@ -188,7 +194,7 @@ vl::PythonContext::getScript(std::string const &name) const
 }
 	
 vl::TextResource &
-vl::PythonContext::getScript(std::string const &name)
+vl::PythonContextImpl::getScript(std::string const &name)
 {	
 	for(std::vector<Script>::iterator iter = _scripts.begin(); iter != _scripts.end(); ++iter)
 	{
@@ -199,8 +205,26 @@ vl::PythonContext::getScript(std::string const &name)
 	BOOST_THROW_EXCEPTION(vl::missing_script());
 }
 
+vl::Script const &
+vl::PythonContextImpl::getScript(size_t index) const
+{
+	return _scripts.at(index);
+}
+
+vl::Script &
+vl::PythonContextImpl::getScript(size_t index)
+{
+	return _scripts.at(index);
+}
+	
+size_t
+vl::PythonContextImpl::getNScripts(void) const
+{
+	return _scripts.size();
+}
+
 bool 
-vl::PythonContext::hasScript(std::string const &name) const
+vl::PythonContextImpl::hasScript(std::string const &name) const
 {
 	for(std::vector<Script>::const_iterator iter = _scripts.begin(); iter != _scripts.end(); ++iter)
 	{
@@ -212,7 +236,7 @@ vl::PythonContext::hasScript(std::string const &name) const
 }
 
 bool 
-vl::PythonContext::hasBeenExecuted(std::string const &name) const
+vl::PythonContextImpl::hasBeenExecuted(std::string const &name) const
 {
 	for(std::vector<Script>::const_iterator iter = _scripts.begin(); iter != _scripts.end(); ++iter)
 	{
