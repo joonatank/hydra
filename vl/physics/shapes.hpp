@@ -141,11 +141,15 @@ private :
 class CylinderShape : public CollisionShape
 {
 public :
+	static CylinderShapeRefPtr create(Ogre::Vector3 const &bounds);
 
-private :
+	static CylinderShapeRefPtr create(vl::scalar radius, vl::scalar height);
+
+protected :
 	CylinderShape(void)
 	{}
 
+private :
 	CylinderShape(CylinderShape const &);
 	CylinderShape &operator=(CylinderShape const &);
 
@@ -155,11 +159,13 @@ private :
 class CapsuleShape : public CollisionShape
 {
 public :
+	static CapsuleShapeRefPtr create(vl::scalar radius, vl::scalar height);
 
-private :
+protected :
 	CapsuleShape(void)
 	{}
 
+private:
 	CapsuleShape(CapsuleShape const &);
 	CapsuleShape operator=(CapsuleShape const &);
 

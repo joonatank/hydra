@@ -72,6 +72,20 @@ void export_physics_objects(void)
 		.staticmethod("create")
 	;
 
+	vl::physics::CylinderShapeRefPtr (*cyl_create_0)(vl::scalar, vl::scalar) = &vl::physics::CylinderShape::create;
+	vl::physics::CylinderShapeRefPtr (*cyl_create_1)(Ogre::Vector3 const &) = &vl::physics::CylinderShape::create;
+
+	python::class_<vl::physics::CylinderShape, boost::noncopyable, vl::physics::CylinderShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CylinderShape", python::no_init )
+		.def("create", cyl_create_0)
+		.def("create", cyl_create_1)
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::CapsuleShape, boost::noncopyable, vl::physics::CapsuleShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CapsuleShape", python::no_init )
+		.def("create", &vl::physics::CapsuleShape::create)
+		.staticmethod("create")
+	;
+
 	/// Abstract master class for all physics constraints
 	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 	;

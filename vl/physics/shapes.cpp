@@ -80,3 +80,37 @@ vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 #endif
 	return shape;
 }
+
+vl::physics::CylinderShapeRefPtr
+vl::physics::CylinderShape::create(Ogre::Vector3 const &bounds)
+{
+CylinderShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletCylinderShape(bounds));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
+vl::physics::CylinderShapeRefPtr
+vl::physics::CylinderShape::create(vl::scalar radius, vl::scalar height)
+{
+CylinderShapeRefPtr shape;
+#ifdef USE_BULLET
+	// convert to bounds
+	shape.reset(new BulletCylinderShape(Ogre::Vector3(radius*2, height, radius)));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
+vl::physics::CapsuleShapeRefPtr
+vl::physics::CapsuleShape::create(vl::scalar radius, vl::scalar height)
+{
+CapsuleShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletCapsuleShape(radius, height));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
