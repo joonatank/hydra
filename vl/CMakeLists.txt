@@ -25,9 +25,6 @@ set(SRC
 	game_manager.cpp
 	player.cpp
 	dotscene_loader.cpp
-	action.cpp
-	actions_misc.cpp
-	actions_transform.cpp
 	scene_manager.cpp
 	scene_node.cpp
 	trigger.cpp
@@ -126,13 +123,11 @@ set(PHYSICS_HEADERS
 	physics/rigid_body.hpp
 	physics/shapes.hpp
 	physics/physics_constraints.hpp
-	physics/physics_events.hpp
 	physics/physics_world.hpp
 	physics/tube.hpp
 	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
-	physics/physics_events.cpp
 	physics/physics_world.cpp
 	physics/physics_constraints.cpp
 	physics/shapes.cpp
@@ -221,9 +216,6 @@ set( HEADERS
 	recording.hpp
 	resource_manager.hpp
 	dotscene_loader.hpp
-	action.hpp
-	actions_misc.hpp
-	actions_transform.hpp
 	scene_manager.hpp
 	scene_node.hpp
 	trigger.hpp

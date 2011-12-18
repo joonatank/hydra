@@ -21,6 +21,8 @@
 #include "scene_manager.hpp"
 #include "entity.hpp"
 
+#include "math/math.hpp"
+
 /// ---------------------------- Global --------------------------------------
 std::ostream &
 vl::operator<<(std::ostream &os, vl::SceneNode const &a)
@@ -860,33 +862,3 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		}
 	}
 }
-
-/// --------- Actions ----------
-void
-vl::HideAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->hide();
-}
-
-void
-vl::ShowAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->show();
-}
-
-void
-vl::SetTransformation::execute(const vl::Transform& trans)
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->setPosition( trans.position );
-	_node->setOrientation( trans.quaternion );
-}
-

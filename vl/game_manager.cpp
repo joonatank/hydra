@@ -44,8 +44,6 @@
 
 #include "recording.hpp"
 
-#include "actions_misc.hpp"
-
 #include "settings.hpp"
 
 #include "vrpn_analog_client.hpp"
@@ -527,11 +525,8 @@ void
 vl::GameManager::_createQuitEvent(void)
 {
 	// Add a trigger event to Quit the Application
-	QuitAction *quit = QuitAction::create();
-	quit->data = this;
-	// Add trigger
 	vl::KeyTrigger *trig = getEventManager()->createKeyTrigger( OIS::KC_ESCAPE, KEY_MOD_META );
-	trig->setKeyDownAction(quit);
+	trig->addKeyDownListener( boost::bind(&GameManager::quit, this) );
 }
 
 void

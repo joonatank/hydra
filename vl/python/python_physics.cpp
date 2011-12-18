@@ -20,7 +20,6 @@
 #include "typedefs.hpp"
 
 // Physics
-#include "physics/physics_events.hpp"
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
@@ -254,60 +253,6 @@ void export_physics_objects(void)
 	;
 }
 
-void export_physics_actions(void)
-{
-	/// Physics Actions
-	python::class_<vl::physics::SliderMotorAction, boost::noncopyable, python::bases<vl::BasicAction> >("SliderMotorAction", python::no_init )
-		.def_readwrite("velocity", &vl::physics::SliderMotorAction::velocity)
-		.def_readwrite("constraint", &vl::physics::SliderMotorAction::constraint)
-		.def("create",&vl::physics::SliderMotorAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::KinematicAction, boost::noncopyable, python::bases<vl::MoveAction> >("KinematicAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::KinematicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::KinematicAction::setRigidBody )
-		.def("create",&vl::physics::KinematicAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::DynamicAction, boost::noncopyable, python::bases<vl::MoveAction> >("DynamicAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::DynamicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::DynamicAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::DynamicAction::getForce, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::DynamicAction::setForce )
-		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::DynamicAction::setTorque )
-		.add_property("max_speed", &vl::physics::DynamicAction::getSpeed, &vl::physics::DynamicAction::setSpeed)
-		.def("create",&vl::physics::DynamicAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyForce", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::ApplyForce::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::ApplyForce::setForce )
-		.add_property("local", &vl::physics::ApplyForce::getLocal, &vl::physics::ApplyForce::setLocal)
-		.def("create",&vl::physics::ApplyForce::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyTorque", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::ApplyTorque::setRigidBody )
-		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::ApplyTorque::setTorque )
-		.def("create",&vl::physics::ApplyTorque::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-}
-
 }
 
 /// Physics
@@ -316,5 +261,5 @@ void export_physics_actions(void)
 void export_physics(void)
 {
 	export_physics_objects();
-	export_physics_actions();
 }
+

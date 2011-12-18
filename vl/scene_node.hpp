@@ -25,7 +25,6 @@
 #include <OGRE/OgreSceneManager.h>
 
 
-#include "action.hpp"
 #include "base/exceptions.hpp"
 #include "typedefs.hpp"
 
@@ -321,70 +320,6 @@ private :
 
 std::ostream &
 operator<<(std::ostream &os, SceneNode const &a);
-
-
-/// ---------------------- SceneNode Actions -------------------------
-
-/// Concrete class used to store and act as an interface for Actions needing
-/// SceneNode access
-/// Is not an action because doesn't do anything.
-class SceneNodeActionBase
-{
-public :
-	SceneNodeActionBase( void )
-		: _node(0)
-	{}
-
-	void setSceneNode( SceneNodePtr node )
-	{ _node = node; }
-
-	SceneNodePtr getSceneNode( void )
-	{ return _node; }
-
-protected :
-	SceneNodePtr _node;
-};
-
-
-
-class HideAction : public SceneNodeActionBase, public vl::BasicAction
-{
-public :
-	virtual void execute( void );
-
-	virtual std::string getTypeName( void ) const
-	{ return "HideAction"; }
-
-	static HideAction *create( void )
-	{ return new HideAction; }
-};
-
-
-class ShowAction : public SceneNodeActionBase, public  vl::BasicAction
-{
-public :
-	virtual void execute( void );
-
-	virtual std::string getTypeName( void ) const
-	{ return "ShowAction"; }
-
-	static ShowAction *create( void )
-	{ return new ShowAction; }
-};
-
-
-/// Set a new transformation to a SceneNode
-class SetTransformation : public SceneNodeActionBase, public vl::TransformAction
-{
-public :
-	virtual std::string getTypeName( void ) const
-	{ return "SetTransformation"; }
-
-	virtual void execute( vl::Transform const &trans );
-
-	static SetTransformation *create( void )
-	{ return new SetTransformation; }
-};
 
 
 }	// namespace vl

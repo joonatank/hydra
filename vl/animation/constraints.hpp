@@ -31,9 +31,6 @@
 
 #include "animation.hpp"
 
-/// Necessary for constraint actions
-#include "action.hpp"
-
 namespace vl
 {
 
@@ -369,57 +366,6 @@ operator<<(std::ostream &os, HingeConstraint const &c);
 
 std::ostream &
 operator<<(std::ostream &os, SliderConstraint const &c);
-
-class SliderActuatorAction : public vl::BasicAction
-{
-public :
-	SliderActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "SliderActuatorAction"; }
-
-	static SliderActuatorAction *create(void)
-	{ return new SliderActuatorAction; }
-
-	vl::scalar target;
-
-	vl::SliderConstraintRefPtr constraint;
-
-};
-
-class HingeActuatorAction : public vl::BasicAction
-{
-public :
-	HingeActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "HingeActuatorAction"; }
-
-	static HingeActuatorAction *create(void)
-	{ return new HingeActuatorAction; }
-
-	Ogre::Radian target;
-
-	vl::HingeConstraintRefPtr constraint;
-
-};
-
 
 }	// namespace vl
 

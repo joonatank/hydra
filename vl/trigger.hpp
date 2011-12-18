@@ -24,11 +24,13 @@
 #ifndef HYDRA_TRIGGER_HPP
 #define HYDRA_TRIGGER_HPP
 
+#include <boost/signal.hpp>
+
 #include "keycode.hpp"
 
-#include "action.hpp"
+#include "math/transform.hpp"
 
-#include <boost/signal.hpp>
+#include "base/time.hpp"
 
 namespace vl
 {
@@ -69,11 +71,6 @@ class BasicActionTrigger : public vl::Trigger
 public :
 	BasicActionTrigger(void);
 
-	/// @brief Action to execute when updated, a group of multiple actions
-	/// Can not be replaced and will always exist
-	GroupActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
 	void update(void);
 
@@ -82,8 +79,6 @@ public :
 
 protected :
 	Tripped _signal;
-
-	GroupActionProxyPtr _action;
 
 };	// class BasicActionTrigger
 
@@ -94,11 +89,6 @@ class TransformActionTrigger : public vl::Trigger
 public :
 	TransformActionTrigger(void);
 
-	/// @brief Action to execute when updated, a group of multiple actions
-	/// Can not be replaced and will always exist
-	GroupTransformActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
 	void update(Transform const &data);
 
@@ -106,8 +96,6 @@ public :
 
 protected :
 	Tripped _signal;
-	GroupTransformActionProxyPtr _action;
-
 
 	Transform _value;
 
@@ -151,18 +139,6 @@ public :
 	KEY_MOD getModifiers( void ) const
 	{ return _modifiers; }
 
-	void setKeyDownAction(BasicActionPtr action)
-	{ _action_down = action; }
-
-	BasicActionPtr getKeyDownAction(void)
-	{ return _action_down; }
-
-	void setKeyUpAction(BasicActionPtr action)
-	{ _action_up = action; }
-
-	BasicActionPtr getKeyUpAction(void)
-	{ return _action_up; }
-
 	KEY_STATE getState(void) const
 	{ return _state; }
 
@@ -199,9 +175,7 @@ private :
 
 	OIS::KeyCode _key;
 	KEY_MOD _modifiers;
-	
-	BasicActionPtr _action_down;
-	BasicActionPtr _action_up;
+
 	KEY_STATE _state;
 };
 
@@ -227,7 +201,6 @@ class FrameTrigger : public Trigger
 	typedef boost::signal<void (vl::time const &)> Tripped;
 public :
 	FrameTrigger( void )
-		: _action(new GroupActionProxy)
 	{}
 
 	virtual std::string getTypeName( void ) const
@@ -242,16 +215,10 @@ public :
 	virtual std::string getName( void ) const
 	{ return "FrameTrigger"; }
 
-	/// Action to execute when updated
-	/// Can not be replaced and will always exist
-	GroupActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
 	void update(vl::time const &t)
 	{
 		_delta_time = t;
-		_action->execute();
 		_signal(t);
 	}
 
@@ -261,12 +228,10 @@ public :
 private :
 	Tripped _signal;
 
-	GroupActionProxyPtr _action;
-
 	vl::time _delta_time;
 
 };
 
 }	// namespace vl
 
-#endif // VL_TRIGGER_HPP
+#endif // HYDRA_TRIGGER_HPP
