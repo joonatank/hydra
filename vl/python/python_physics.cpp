@@ -256,12 +256,12 @@ void export_physics_objects(void)
 	;
 
 
-	python::class_<std::vector<boost::shared_ptr<KinematicBody> > >("ConstraintList")
+	python::class_<std::vector<boost::shared_ptr<vl::physics::Constraint> > >("ConstraintList")
 		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
 	;
 
 	/// Shared pointer needs Proxies to be turned off
-	python::class_<std::vector<boost::shared_ptr<KinematicBody> > >("SixDofConstraintList")
+	python::class_<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> > >("SixDofConstraintList")
 		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> >, true>())
 		//.def(python::self_ns::str(python::self_ns::self))
 	;
