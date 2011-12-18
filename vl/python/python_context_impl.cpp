@@ -60,46 +60,9 @@ char const *script =
 
 vl::PythonContextImpl::PythonContextImpl(vl::GameManagerPtr game_man)
 	: _auto_run(false)
+	, _game(game_man)
 {
-	try {
-		Py_Initialize();
-
-		// Add the module to the python interpreter
-		// NOTE the name parameter does not rename the module
-		// No idea why it's there
-#if PY_MAJOR_VERSION > 2
-		if(PyImport_AppendInittab("vl", PyInit_vl) == -1)
-#else
-		if(PyImport_AppendInittab("vl", initvl) == -1)
-#endif
-			throw std::runtime_error("Failed to add vl to the interpreter's "
-					"builtin modules");
-
-		// Retrieve the main module
-		python::object main = python::import("__main__");
-
-		// Retrieve the main module's namespace
-		_global = main.attr("__dict__");
-
-		// Import vl module
-		python::handle<> ignored(( PyRun_String(script,
-										Py_file_input,
-										_global.ptr(),
-										_global.ptr() ) ));
-
-		// Add a global managers i.e. this and EventManager
-		_global["game"] = python::ptr<>( game_man );
-		vl::sink &python_sink_out = *(*game_man->getLogger()->getPythonOut());
-		vl::sink &python_sink_err = *(*game_man->getLogger()->getPythonErr());
-		boost::python::import("sys").attr("stdout") = python_sink_out;
-		boost::python::import("sys").attr("stderr") = python_sink_err;
-	}
-	// Some error handling so that we can continue the application
-	catch( ... ) {}
-	if (PyErr_Occurred())
-	{
-		PyErr_Print();
-	}
+	_init();
 }
 
 vl::PythonContextImpl::~PythonContextImpl( void )
@@ -245,4 +208,65 @@ vl::PythonContextImpl::hasBeenExecuted(std::string const &name) const
 	}
 
 	BOOST_THROW_EXCEPTION(vl::missing_script());
+}
+
+void
+vl::PythonContextImpl::reset(void)
+{
+	std::clog << "vl::PythonContextImpl::reset : NOT IMPLEMENTED" << std::endl;
+
+	/// @todo this seems to work but there are some errors caused by it down the road
+
+	_auto_run = false;
+
+	_scripts.clear();
+
+	// how to really reset the context?
+	// this way should clear all the python defines but it will naturally not
+	// remove any modifications done to the engine side...
+	_init();
+}
+
+void
+vl::PythonContextImpl::_init(void)
+{
+	try {
+		Py_Initialize();
+
+		// Add the module to the python interpreter
+		// NOTE the name parameter does not rename the module
+		// No idea why it's there
+#if PY_MAJOR_VERSION > 2
+		if(PyImport_AppendInittab("vl", PyInit_vl) == -1)
+#else
+		if(PyImport_AppendInittab("vl", initvl) == -1)
+#endif
+			throw std::runtime_error("Failed to add vl to the interpreter's "
+					"builtin modules");
+
+		// Retrieve the main module
+		python::object main = python::import("__main__");
+
+		// Retrieve the main module's namespace
+		_global = main.attr("__dict__");
+
+		// Import vl module
+		python::handle<> ignored(( PyRun_String(script,
+										Py_file_input,
+										_global.ptr(),
+										_global.ptr() ) ));
+
+		// Add a global managers i.e. this and EventManager
+		_global["game"] = python::ptr<>( _game );
+		vl::sink &python_sink_out = *(*_game->getLogger()->getPythonOut());
+		vl::sink &python_sink_err = *(*_game->getLogger()->getPythonErr());
+		boost::python::import("sys").attr("stdout") = python_sink_out;
+		boost::python::import("sys").attr("stderr") = python_sink_err;
+	}
+	// Some error handling so that we can continue the application
+	catch( ... ) {}
+	if (PyErr_Occurred())
+	{
+		PyErr_Print();
+	}
 }

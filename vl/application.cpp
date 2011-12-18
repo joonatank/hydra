@@ -24,9 +24,7 @@
 #include "config.hpp"
 
 // Necessary for Settings
-#include "settings.hpp"
 #include "base/envsettings.hpp"
-#include "base/projsettings.hpp"
 
 // Necessary for vl::msleep
 #include "base/sleep.hpp"
@@ -116,6 +114,9 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 
 }
 
+/* This function is useless and depricated
+ but it has quite a few nice default paths which should be incorporated into the GameManager
+
 vl::Settings
 vl::getProjectSettings( vl::ProgramOptions const &options )
 {
@@ -191,6 +192,7 @@ vl::getProjectSettings( vl::ProgramOptions const &options )
 
 	return settings;
 }
+*/
 
 vl::config::EnvSettingsRefPtr
 vl::getSlaveSettings( vl::ProgramOptions const &options )
@@ -286,11 +288,9 @@ vl::Hydra_Run(const int argc, char** argv)
 vl::Application::Application(ProgramOptions const &opt)
 {
 	vl::config::EnvSettingsRefPtr env;
-	vl::Settings settings;
 	if( opt.master() )
 	{
 		env = vl::getMasterSettings(opt);
-		settings = vl::getProjectSettings(opt);
 	}
 	else
 	{
@@ -301,7 +301,7 @@ vl::Application::Application(ProgramOptions const &opt)
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	_logger.setOutputFile(opt.getOutputFile());
-	_init(env, settings, opt);
+	_init(env, opt);
 }
 
 vl::Application::~Application( void )
@@ -441,8 +441,7 @@ vl::Application::_exit(void)
 }
 
 void
-vl::Application::_init(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
-			ProgramOptions const &opt)
+vl::Application::_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt)
 {
 	assert( env );
 
@@ -526,8 +525,8 @@ vl::Application::_init(vl::config::EnvSettingsRefPtr env, vl::Settings const &se
 
 	if( env->isMaster() )
 	{
-		_master.reset(new vl::Config( settings, env, _logger, renderer));
-		_master->init(opt.editor);
+		_master.reset(new vl::Config(env, _logger, renderer));
+		_master->init(opt.global_file, opt.project_file, opt.editor);
 
 		std::vector<vl::config::Program> programs = env->getUsedPrograms();
 		std::clog << "Should start " << programs.size() << " autolaunched programs."

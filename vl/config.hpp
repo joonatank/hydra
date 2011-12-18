@@ -80,8 +80,7 @@ struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
 class Config : public vl::Session
 {
 public:
-	Config( vl::Settings const &settings,
-			vl::config::EnvSettingsRefPtr env,
+	Config( vl::config::EnvSettingsRefPtr env,
 			vl::Logger &logger,
 			vl::RendererUniquePtr rend );
 
@@ -89,7 +88,8 @@ public:
 
 	/// @todo this should send initialisation messages to all the rendering
 	/// threads
-	virtual void init(bool enable_editor);
+	virtual void init(std::string const &global_file,
+			std::string const &project_file, bool enable_editor);
 
 	virtual void exit (void);
 
@@ -128,6 +128,9 @@ public:
 	vl::cluster::Message createMsgEnvironment(void) const;
 
 	vl::cluster::Message createMsgProject(void) const;
+
+	// Callback for Project settings changes
+	void settingsChanged(vl::Settings const &new_settings);
 
 protected :
 	// Cluster rpc calss

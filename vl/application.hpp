@@ -42,7 +42,6 @@ namespace vl
 {
 
 vl::config::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
-vl::Settings getProjectSettings( vl::ProgramOptions const &options );
 vl::config::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
 
 
@@ -90,8 +89,7 @@ protected:
 
 	void _exit(void);
 
-	void _init(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
-		ProgramOptions const &opt);
+	void _init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
 
 	vl::ConfigRefPtr _master;
 

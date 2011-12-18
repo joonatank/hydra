@@ -43,54 +43,52 @@ namespace vl
 {
 namespace ogre
 {
-	class Root
-	{
-		public :
-			Root(vl::config::LogLevel level);
+class Root
+{
+	public :
+		Root(vl::config::LogLevel level);
 
-			virtual ~Root( void );
+		~Root( void );
 
-			// Hack to provide native access, we should really never
-			// need this for the Root object.
-			Ogre::Root *getNative( void )
-			{ return _ogre_root; }
+		// Hack to provide native access, we should really never
+		// need this for the Root object.
+		Ogre::Root *getNative( void )
+		{ return _ogre_root; }
 
-			virtual void createRenderSystem( void );
+		void createRenderSystem( void );
 
-			virtual void init( void );
+		void init( void );
 
-			virtual Ogre::RenderWindow *createWindow(
-					std::string const &name, unsigned int width,
-					unsigned int height,
-					Ogre::NameValuePairList const &params
-						= Ogre::NameValuePairList() );
+		Ogre::RenderWindow *createWindow(
+				std::string const &name, unsigned int width,
+				unsigned int height,
+				Ogre::NameValuePairList const &params
+					= Ogre::NameValuePairList() );
 
-			virtual Ogre::SceneManager *createSceneManager(
-					std::string const &name );
+		Ogre::SceneManager *createSceneManager(std::string const &name);
 
-			virtual void addResource( std::string const &resource_path );
+		/// Method which will define the source of resources (other than current folder)
+		void setupResources(std::vector<std::string> const &paths);
 
-			virtual void setupResources( void );
+		void removeResources(void);
 
-			virtual void loadResources(void);
+		void loadResources(void);
 
-		protected :
-			void _loadPlugins( void );
+	protected :
+		void _loadPlugins( void );
 
-			void _setupResourceDir( std::string const &dir );
+		void _setupResourceDir( std::string const &dir );
 
-			void _setupResource( std::string const &file, std::string const &typeName );
+		void _setupResource( std::string const &file, std::string const &typeName );
 
-			Ogre::Root *_ogre_root;
+		Ogre::Root *_ogre_root;
 
-			Ogre::LogManager *_log_manager;
+		Ogre::LogManager *_log_manager;
 
-			// Wether we own the Ogre::Root instance
-			bool _primary;
+		// Wether we own the Ogre::Root instance
+		bool _primary;
 
-			std::vector<std::string> _resources;
-
-	};	// class Root
+};	// class Root
 
 }	// namespace ogre
 

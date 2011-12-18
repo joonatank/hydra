@@ -197,6 +197,11 @@ vl::ResourceManager::addResourcePath(std::string const &resource_dir, bool recur
 	}
 }
 
+void
+vl::ResourceManager::removeResourcePath(std::string const &resource_dir)
+{
+	std::clog << "vl::ResourceManager::removeResourcePath : NOT IMPLEMENTED" << std::endl;
+}
 
 std::vector< std::string > const &
 vl::ResourceManager::getResourcePaths( void ) const

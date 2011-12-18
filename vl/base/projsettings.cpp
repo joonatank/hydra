@@ -332,6 +332,17 @@ vl::ProjSettingsSerializer::~ProjSettingsSerializer( void )
 }
 
 bool
+vl::ProjSettingsSerializer::readFile(std::string const &file_path)
+{
+	std::string file;
+	vl::readFileToString(file_path, file);
+	bool retval = readString(file);
+	_projSettings->setFile(file_path);
+
+	return retval;
+}
+
+bool
 vl::ProjSettingsSerializer::readString( std::string const &str )
 {
 	delete[] _xml_data;

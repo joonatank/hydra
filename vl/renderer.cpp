@@ -225,8 +225,38 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	std::cout << vl::TRACE << "vl::Renderer::setProject" << std::endl;
 
 	_settings = settings;
+	
+	assert(_root);
 
-	_initialiseResources(_settings);
+	// @todo this doesn't allow resetting the resources
+
+	std::vector<std::string> paths;
+
+	// Add resources
+	if(!settings.getProjectDir().empty())
+	{ paths.push_back(settings.getProjectDir()); }
+	for(size_t i = 0; i < settings.getAuxDirectories().size(); ++i)
+	{
+		if(!settings.getAuxDirectories().at(i).empty())
+		{ paths.push_back(settings.getAuxDirectories().at(i)); }
+	}
+
+	std::clog << "Setting up the Ogre resources." << std::endl;
+
+	std::clog << "Adding paths to resources : " << std::endl;
+	for(size_t i = 0; i < paths.size(); ++i)
+	{
+		std::clog << "\t" << paths.at(i) << std::endl;
+	}
+
+	// remove all old resources
+	_root->removeResources();
+	// add all resources
+	_root->setupResources(paths);
+	// initialise them
+	_root->loadResources();
+
+	// @todo reset CEGUI resources also
 }
 
 void
@@ -293,6 +323,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
 					assert(_windows.size() > 0);
 					_gui->initGUI(_windows.at(0));
+					// @todo this should copy the resources from vl::ogre::Root not settings
 					if(_settings.empty())
 					{ std::cout << "No GUI resources" << std::endl; }
 					else
@@ -521,25 +552,6 @@ vl::Renderer::_createOgre(vl::config::EnvSettingsRefPtr env)
 	_root.reset( new vl::ogre::Root(env->getLogLevel()) );
 	// Initialise ogre
 	_root->createRenderSystem();
-}
-
-void
-vl::Renderer::_initialiseResources( vl::Settings const &set )
-{
-	assert(_root);
-
-	// Add resources
-	_root->addResource( set.getProjectDir() );
-	for( size_t i = 0; i < set.getAuxDirectories().size(); ++i )
-	{
-		_root->addResource( set.getAuxDirectories().at(i) );
-	}
-
-	std::string msg("Setting up the resources.");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	_root->setupResources();
-	_root->loadResources();
 }
 
 Ogre::SceneManager *

@@ -113,12 +113,11 @@ vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE t
 }
 
 /// ---------------------------------- Config --------------------------------
-vl::Config::Config( vl::Settings const & settings,
-					vl::config::EnvSettingsRefPtr env,
+vl::Config::Config( vl::config::EnvSettingsRefPtr env,
 					vl::Logger &logger,
-					vl::RendererUniquePtr rend)
+					vl::RendererUniquePtr rend )
 	: _game_manager(0)
-	, _proj(settings)
+	, _proj()
 	, _env(env)
 	, _server()
 	, _running(true)
@@ -127,7 +126,6 @@ vl::Config::Config( vl::Settings const & settings,
 	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
 	assert( _env );
 	assert( _env->isMaster() );
-	// @todo should check that the environment settings are valid
 
 	_game_manager = new vl::GameManager(this, &logger);
 
@@ -145,7 +143,9 @@ vl::Config::Config( vl::Settings const & settings,
 		_callbacks.push_back(callback);
 	}
 
-	_game_manager->setupResources(settings, *env);
+	_game_manager->setupResources(*env);
+
+	_game_manager->addProjectChangedListener(boost::bind(&Config::settingsChanged, this, _1));
 
 	_renderer->setMeshManager(_game_manager->getMeshManager());
 }
@@ -168,7 +168,8 @@ vl::Config::~Config( void )
 /// Anyhow it would be much more useful to call Server::poll every 1ms,
 /// for example with interrupts.
 void
-vl::Config::init(bool enable_editor)
+vl::Config::init(std::string const &global_file,
+			std::string const &project_file, bool enable_editor)
 {
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::chrono init_timer;
@@ -200,7 +201,11 @@ vl::Config::init(bool enable_editor)
 
 	/// @todo change to use GS_LOAD which is inititiated automatically after GS_INIT
 	_game_manager->load(*_env);
-	_game_manager->load(_proj);
+	
+	if(!global_file.empty())
+	{ _game_manager->loadGlobal(global_file); }
+	if(!project_file.empty())
+	{ _game_manager->loadProject(project_file); }
 
 	/// Updating the Renderers
 	t.reset();
@@ -391,6 +396,26 @@ vl::Config::createMsgProject(void) const
 	data.copyToMessage( &msg );
 
 	return msg;
+}
+
+void
+vl::Config::settingsChanged(vl::Settings const &new_settings)
+{
+	_proj = new_settings;
+	// Notify server
+	if(_server)
+	{
+		// @todo this needs changes in the Server so that it does not
+		// create the Project (or Resource path messages) using callbacks
+		// but we update it when necessary.
+		//vl::cluster::Message msg = createMsgProject();
+		//_server->sendMessage(msg);
+	}
+	// Notify local renderer
+	if(_renderer.get())
+	{
+		_renderer->setProject(_proj);
+	}
 }
 
 /// ------------ Private -------------

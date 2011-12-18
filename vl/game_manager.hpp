@@ -51,6 +51,8 @@
 // Audio
 #include <cAudio/cAudio.h>
 
+#include <boost/signal.hpp>
+
 namespace vl
 {
 
@@ -138,6 +140,7 @@ enum GAME_STATE
  */
 class HYDRA_API GameManager
 {
+	typedef boost::signal<void (vl::Settings const &)> ProjectChanged;
 public :
 	/// @brief constructor
 	/// @param session the distributed session where to register objects to
@@ -289,21 +292,30 @@ public :
 	bool isInited(void) const
 	{ return _state >= GS_INIT; }
 
-	void setupResources(vl::Settings const &settings, vl::config::EnvSettings const &env);
+	void setupResources(vl::config::EnvSettings const &env);
+
+	void addResources(vl::ProjSettings const &proj);
+
+	void removeResources(vl::ProjSettings const &proj);
 
 	/// Resource loading
 	
 	/// Main loading functions use configurations files
 	void load(vl::config::EnvSettings const &env);
-	void load(vl::Settings const &proj);
 
 	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// Project handling
-	/// @todo should the file already be loaded or not?
-	///void loadProject(std::string const &file_name);
+	void loadProject(std::string const &file_name);
 
-	void loadScenes(vl::Settings const &proj);
+	/// @brief loads a new global configuration
+	/// This will remove the old global and reset the python context
+	void loadGlobal(std::string const &file_name);
+
+	/// @brief removes the current project and resets python context
+	void removeProject(std::string const &name);
+
+	void loadScenes(vl::ProjSettings const &proj);
 
 	void loadScene(vl::SceneInfo const &scene_info);
 
@@ -314,12 +326,15 @@ public :
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 
-	void runPythonScripts(vl::Settings const &proj);
+	void runPythonScripts(vl::ProjSettings const &proj);
 
 	/// @todo this takes over 1 second to complete which is almost a second too much
 	void createTrackers(vl::config::EnvSettings const &env);
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
+
+	int addProjectChangedListener(ProjectChanged::slot_type const &slot)
+	{ _project_changed_signal.connect(slot); return 1; }
 
 private :
 	/// Non copyable
@@ -390,6 +405,12 @@ private :
 	KinematicWorldRefPtr _kinematic_world;
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
+
+	vl::ProjSettings _loaded_project;
+	vl::ProjSettings _global_project;
+
+	// signals
+	ProjectChanged _project_changed_signal;
 
 };	// class GameManager
 

@@ -78,6 +78,8 @@ public :
 	 */
 	void addResourcePath(std::string const &resource_dir, bool recursive = true);
 
+	void removeResourcePath(std::string const &resource_dir);
+
 	/**	@brief Get the current resource search paths
 	 *	@return current search paths
 	 *

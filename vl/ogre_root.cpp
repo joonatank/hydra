@@ -107,29 +107,12 @@ vl::ogre::Root::init( void )
 }
 
 void
-vl::ogre::Root::addResource(const std::string& resource_path)
+vl::ogre::Root::setupResources(std::vector<std::string> const &paths)
 {
-	if(resource_path.empty())
-	{ std::cout << "Trying to add empty resource path." << std::endl; }
-	else
-	{ _resources.push_back( resource_path ); }
+	std::clog << "vl::ogre::Root::setupResources" << std::endl;
 
-	// TODO this is confusing as this does not really setup the resource
-	// but adds it into stack which is not cleared at any point
-	// so calling first this one, then setupResources, then this again and
-	// again setupResources will cause the first entry to be added twice to the
-	// resources.
-}
-
-/// Method which will define the source of resources (other than current folder)
-void
-vl::ogre::Root::setupResources( void )
-{
-	std::string msg( "vl::ogre::Root::setupResources" );
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	for( std::vector<std::string>::iterator iter = _resources.begin();
-		iter != _resources.end(); ++iter )
+	for( std::vector<std::string>::const_iterator iter = paths.begin();
+		iter != paths.end(); ++iter )
 	{
 		// This should never happen as the resource paths settings provides
 		// should be valid.
@@ -144,10 +127,17 @@ vl::ogre::Root::setupResources( void )
 }
 
 void
+vl::ogre::Root::removeResources(void)
+{
+	Ogre::ResourceGroupManager::getSingleton().clearResourceGroup(Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+}
+
+void
 vl::ogre::Root::loadResources(void)
 {
 	// Initialise, parse scripts etc
 	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+	
 }
 
 /// Private

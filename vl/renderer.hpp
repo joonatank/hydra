@@ -106,10 +106,6 @@ public :
 
 	void reloadProjects( vl::Settings const &set );
 
-	/// Overrides from Abstract interface
-	/// @brief interface through which the Renderer is controlled
-// 	virtual void handleMessage(vl::cluster::Message &msg);
-
 	/** @todo
 	 * Problematic because the Project config should be
 	 * updatable during the application run
@@ -145,7 +141,7 @@ protected :
 
 	/// Ogre helpers
 	void _createOgre(vl::config::EnvSettingsRefPtr env);
-	void _initialiseResources(vl::Settings const &set);
+
 	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
 	/// Distribution helpers

@@ -89,6 +89,8 @@ public :
 	/// @return true if script with the name has been executed
 	bool hasBeenExecuted(std::string const &name) const;
 
+	virtual void reset(void);
+
 	template<typename T>
 	void addVariable(std::string variable_name, T &var);
 
@@ -98,6 +100,8 @@ private :
 
 	PythonContextImpl &operator=(PythonContextImpl const &);
 
+	void _init();
+
 	bool _auto_run;
 
 	// Using vector to preserve the order they are added
@@ -105,6 +109,8 @@ private :
 
 	// Python related
 	python::object _global;
+
+	vl::GameManagerPtr _game;
 };
 
 template<typename T>

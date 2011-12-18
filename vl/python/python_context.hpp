@@ -72,6 +72,8 @@ public :
 	/// @return true if script with the name has been executed
 	virtual bool hasBeenExecuted(std::string const &name) const = 0;
 
+	virtual void reset(void) = 0;
+
 };	// class PythonContex
 
 }	// namespace vl

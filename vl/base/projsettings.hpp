@@ -276,8 +276,10 @@ public :
 
 	~ProjSettingsSerializer( void );
 
+	bool readFile(std::string const &file_path);
 
 	// Read data from string buffer. Buffer is not modified.
+	// @depricated because this doesn't save the file path
 	bool readString( std::string const &str );
 
 	void writeString( std::string &str );
