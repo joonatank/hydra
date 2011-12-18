@@ -30,10 +30,6 @@ vl::break_string_down( std::vector<std::string> &broken_path,
 
 	while( path_iter != longString.end() )
 	{
-		// why do we do this checking?
-		if( path_iter == begin )
-		{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "Iterators incorrect" ) ); }
-
 		std::string str;
 		str.insert( str.begin(), begin, path_iter );
 		broken_path.push_back( str );
