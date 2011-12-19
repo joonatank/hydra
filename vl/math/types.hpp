@@ -32,6 +32,7 @@
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreMatrix4.h>
+#include <OGRE/OgreMath.h>
 
 namespace vl
 {
