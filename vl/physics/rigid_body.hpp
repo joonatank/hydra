@@ -154,6 +154,15 @@ public :
 
 	virtual bool isKinematicObject(void) const = 0;
 
+	virtual void disableCollisions(void) = 0;
+
+	virtual void enableCollisions(void) = 0;
+
+	virtual bool isCollisionsDisabled(void) const = 0;
+	
+	bool isCollisionsEnabled(void) const
+	{ return !isCollisionsDisabled(); }
+	
 	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ return -1; }
 

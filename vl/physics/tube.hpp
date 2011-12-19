@@ -45,9 +45,9 @@ public :
 		ConstructionInfo(void)
 			: length(10)
 			, radius(0.1)
-			, mass(50.0)
-			, stiffness(0.9)
-			, damping(0.1)
+			, mass_per_meter(1)
+			, stiffness(0)
+			, damping(1.0)
 			, element_size(0.6)
 			, lower_lim(Vector3::ZERO)
 			, upper_lim(Vector3(-1, -1, -1))
@@ -55,8 +55,9 @@ public :
 			, fixing_upper_lim(Vector3(-1, -1, -1))
 			, spring(true)
 			, disable_collisions(false)
-			, inertia(Vector3(1, 1, 1))
-			, body_damping(0.1)
+			, inertia_factor(1)
+			, body_damping(0)
+			, bending_radius(-1)
 		{}
 
 		RigidBodyRefPtr start_body;
@@ -66,7 +67,9 @@ public :
 
 		vl::scalar length;
 		vl::scalar radius;
-		vl::scalar mass;
+
+		// automatically calculates the mass and discard s the mass parameter
+		vl::scalar mass_per_meter;
 		vl::scalar stiffness;
 		vl::scalar damping;
 		vl::scalar element_size;
@@ -82,9 +85,14 @@ public :
 		bool spring;
 		bool disable_collisions;
 
-		Vector3 inertia;
+		// Factor to multiply the inertia calculated for the tube shapes
+		vl::scalar inertia_factor;
 
 		vl::scalar body_damping;
+
+		// If greater than zero automatically calculates the joint limits
+		// discarding the predefined ones.
+		vl::scalar bending_radius;
 	};
 
 	/**	@brief Constructor
@@ -203,6 +211,8 @@ private :
 
 	RigidBodyRefPtr _start_body;
 	RigidBodyRefPtr _end_body;
+
+	BoxShapeRefPtr _shape;
 
 	// Uses multiple bodies and constraints to build the tube
 	// @todo should this rather use a map that maps the constraint

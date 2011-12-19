@@ -57,6 +57,7 @@ struct SolverParameters
 		, restitution(0)
 		, max_error_reduction(20)
 		, internal_time_step(1./60.0)
+		, max_sub_steps(10)
 	{}
 
 	vl::scalar erp;
@@ -65,6 +66,7 @@ struct SolverParameters
 	vl::scalar restitution;
 	vl::scalar max_error_reduction;
 	vl::scalar internal_time_step;
+	int max_sub_steps;
 };
 
 /** @class World
@@ -132,8 +134,16 @@ public :
 	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
 
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
-		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass = 50.0);
+		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass_per_meter = 1.0);
 
+	RigidBodyList const &getBodies(void) const
+	{ return _rigid_bodies; }
+	
+	std::vector<TubeRefPtr> const &getTubes(void) const
+	{ return _tubes; }
+	
+	ConstraintList const &getConstraints(void) const
+	{ return _constraints; }
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
@@ -155,6 +165,7 @@ protected :
 	/// World owns all of them
 	RigidBodyList _rigid_bodies;
 	ConstraintList _constraints;
+	std::vector<TubeRefPtr> _tubes;
 
 };	// class World
 

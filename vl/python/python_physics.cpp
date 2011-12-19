@@ -214,6 +214,25 @@ void export_physics_objects(void)
 		.def_readwrite("restitution", &vl::physics::SolverParameters::restitution)
 		.def_readwrite("max_error_reduction", &vl::physics::SolverParameters::max_error_reduction)
 		.def_readwrite("internal_time_step", &vl::physics::SolverParameters::internal_time_step)
+		.def_readwrite("max_sub_steps", &vl::physics::SolverParameters::max_sub_steps)
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::Constraint> > >("ConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
+	;
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> > >("SixDofConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> >, true>())
+		//.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::RigidBody> > >("RigidBodyList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::RigidBody> >, true>())	
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::Tube> > >("TubeList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Tube> >, true>())	
 	;
 
 	/// world
@@ -227,6 +246,9 @@ void export_physics_objects(void)
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
 		.def("createTube", &vl::physics::World::createTube, createTube_ov())
 		.def("createTube", &vl::physics::World::createTubeEx)
+		.add_property("bodies", python::make_function(&vl::physics::World::getBodies, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("tubes", python::make_function(&vl::physics::World::getTubes, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("constraints", python::make_function(&vl::physics::World::getConstraints, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
 		.add_property("solver_parameters", python::make_function(&vl::physics::World::getSolverParameters, python::return_value_policy<python::copy_const_reference>()),
 				&vl::physics::World::setSolverParameters)
@@ -240,7 +262,7 @@ void export_physics_objects(void)
 		.def_readwrite("end_frame", &vl::physics::Tube::ConstructionInfo::end_body_frame)
 		.def_readwrite("length", &vl::physics::Tube::ConstructionInfo::length)
 		.def_readwrite("radius", &vl::physics::Tube::ConstructionInfo::radius)
-		.def_readwrite("mass", &vl::physics::Tube::ConstructionInfo::mass)
+		.def_readwrite("mass_per_meter", &vl::physics::Tube::ConstructionInfo::mass_per_meter)
 		.def_readwrite("stiffness", &vl::physics::Tube::ConstructionInfo::stiffness)
 		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
 		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
@@ -250,20 +272,10 @@ void export_physics_objects(void)
 		.def_readwrite("fixing_upper_lim", &vl::physics::Tube::ConstructionInfo::fixing_upper_lim)
 		.def_readwrite("fixing_lower_lim", &vl::physics::Tube::ConstructionInfo::fixing_lower_lim)
 		.def_readwrite("spring", &vl::physics::Tube::ConstructionInfo::spring)
-		.def_readwrite("inertia", &vl::physics::Tube::ConstructionInfo::inertia)
+		.def_readwrite("inertia_factor", &vl::physics::Tube::ConstructionInfo::inertia_factor)
 		.def_readwrite("disable_collisions", &vl::physics::Tube::ConstructionInfo::disable_collisions)
 		.def_readwrite("body_damping", &vl::physics::Tube::ConstructionInfo::body_damping)
-	;
-
-
-	python::class_<std::vector<boost::shared_ptr<vl::physics::Constraint> > >("ConstraintList")
-		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
-	;
-
-	/// Shared pointer needs Proxies to be turned off
-	python::class_<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> > >("SixDofConstraintList")
-		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> >, true>())
-		//.def(python::self_ns::str(python::self_ns::self))
+		.def_readwrite("bending_radius", &vl::physics::Tube::ConstructionInfo::bending_radius)
 	;
 
 
@@ -271,7 +283,7 @@ void export_physics_objects(void)
 		.add_property("spring_stiffness", &vl::physics::Tube::getSpringStiffness, &vl::physics::Tube::setSpringStiffness)
 		.add_property("spring_damping", &vl::physics::Tube::getSpringDamping, &vl::physics::Tube::setSpringDamping)
 		.add_property("mass", &vl::physics::Tube::getMass, &vl::physics::Tube::setMass)
-		.add_property("damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
+		.add_property("body_damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
 		.add_property("lower_limit", python::make_function(&vl::physics::Tube::getLowerLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setLowerLim)
 		.add_property("upper_limit", python::make_function(&vl::physics::Tube::getUpperLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setUpperLim)
 		.add_property("material", python::make_function(&vl::physics::Tube::getMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setMaterial)
