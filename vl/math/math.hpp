@@ -24,6 +24,11 @@
 // Necessary for printing
 #include <iostream>
 
+// Using boost floating point for isnan is isinf
+// because there is no standard way for this till c++0x
+// all functions from here are in our namespace
+#include <boost/math/special_functions/fpclassify.hpp>
+
 // Necessary for the Wall configuration needed for calculating view and frustum matrices
 #include "base/envsettings.hpp"
 
@@ -121,6 +126,11 @@ inline T const &min(T const &a, T const &b)
 {
 	return (a < b ? a : b);
 }
+
+using boost::math::isfinite;
+using boost::math::isinf;
+using boost::math::isnan;
+using boost::math::isnormal;
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 
