@@ -257,6 +257,12 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	_root->loadResources();
 
 	// @todo reset CEGUI resources also
+
+	// Remove cameras and wait for them to be reset
+	for(size_t i = 0; i < _windows.size(); ++i)
+	{
+		_windows.at(i)->setCamera(0);
+	}
 }
 
 void

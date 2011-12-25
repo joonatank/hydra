@@ -45,14 +45,15 @@
 #include "animation/kinematic_world.hpp"
 
 #include "recording.hpp"
-
+// Necessary for passing Settings to a callback signal
 #include "settings.hpp"
 
 #include "vrpn_analog_client.hpp"
-
+// Necessary for creating and processing trackers
 #include "tracker.hpp"
 #include "tracker_serializer.hpp"
-
+// Necessary for unloading a scene
+#include "scene_node.hpp"
 
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	: _session(session)
@@ -409,10 +410,9 @@ vl::GameManager::loadProject(std::string const &file_name)
 			return; 
 		}
 
-		// @todo remove resource paths
 		removeResources(_loaded_project);
 
-		// @todo remove scene nodes
+		unloadScenes(_loaded_project);
 		
 		// reset python
 		_python->reset();
@@ -464,6 +464,8 @@ vl::GameManager::loadGlobal(std::string const &file_name)
 	{
 		removeResources(_global_project);
 
+		unloadScenes(_global_project);
+
 		_global_project = global;
 
 		addResources(_global_project);
@@ -494,8 +496,7 @@ vl::GameManager::removeProject(std::string const &name)
 		// reset the python context
 		_python->reset();
 
-		// @todo should clean up
-		// needs to remove scenes also
+		unloadScenes(_loaded_project);
 
 		// rerun the python context
 		runPythonScripts(_global_project);
@@ -644,6 +645,35 @@ vl::GameManager::loadScene(std::string const &file_name)
 	scene_info.setName(file_name);
 
 	loadScene(scene_info);
+}
+
+void
+vl::GameManager::unloadScene(std::string const &name)
+{
+	std::vector<SceneNodePtr> nodes_to_destroy;
+
+	for(SceneNodeList::const_iterator iter = _scene_manager->getSceneNodeList().begin();
+		iter != _scene_manager->getSceneNodeList().end(); ++iter)
+	{
+		if((*iter)->getSceneFile() == name)
+		{ nodes_to_destroy.push_back(*iter); }
+	}
+
+	for(std::vector<SceneNodePtr>::iterator iter = nodes_to_destroy.begin();
+		iter != nodes_to_destroy.end(); ++iter)
+	{
+		std::clog << "Destroying node : " << (*iter)->getName() << std::endl;
+		_scene_manager->destroySceneNode(*iter);
+	}
+}
+
+void
+vl::GameManager::unloadScenes(vl::ProjSettings const &proj)
+{
+	for(size_t i = 0; i < proj.getCase().getNscenes(); ++i)
+	{
+		unloadScene(proj.getCase().getScene(i).getName());
+	}
 }
 
 void

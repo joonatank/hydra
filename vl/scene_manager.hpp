@@ -281,6 +281,7 @@ public :
 
 	virtual ~SceneManager( void );
 
+	void destroyScene(bool destroyEditorCamera = false);
 
 	vl::MeshManagerRefPtr getMeshManager(void) const
 	{
@@ -310,7 +311,9 @@ public :
 	size_t getNSceneNodes( void ) const
 	{ return _scene_nodes.size(); }
 
-	// TODO add SceneNode removal
+
+	/// @brief removes the SceneNode and deallocates the memory
+	void destroySceneNode(SceneNodePtr node);
 
 
 	/// --- Entity ---

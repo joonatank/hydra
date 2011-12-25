@@ -25,13 +25,14 @@ namespace vl
 struct Script
 {
 	Script(std::string const &nam, vl::TextResource const &res = vl::TextResource(), bool aut = false)
-		: name(nam), script(res), auto_run(aut), executed(false)
+		: name(nam), script(res), auto_run(aut), executed(false), modified(false)
 	{}
 
 	std::string name;
 	vl::TextResource script;
 	bool auto_run;
 	bool executed;
+	bool modified;
 };
 
 class PythonContext

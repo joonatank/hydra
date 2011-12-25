@@ -47,7 +47,7 @@ enum TransformSpace
 class SceneNode : public vl::Distributed, vl::ObjectInterface
 {
 public :
-	SceneNode( std::string const &name, vl::SceneManager *creator );
+	SceneNode(std::string const &name, vl::SceneManager *creator);
 
 	virtual ~SceneNode( void ) {}
 
@@ -257,6 +257,12 @@ public :
 	SceneManagerPtr getCreator(void) const
 	{ return _creator; }
 
+	std::string const &getSceneFile(void) const
+	{ return _origin_file; }
+
+	void setSceneFile(std::string const &file)
+	{ _origin_file = file; }
+
 	// -------------------- Callbacks -----------------------
 	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ _transformed_cb.connect(slot); return 1; }
@@ -315,6 +321,8 @@ private :
 	Ogre::SceneNode *_ogre_node;
 
 	vl::SceneManager *_creator;
+
+	std::string _origin_file;
 
 };	// class SceneNode
 

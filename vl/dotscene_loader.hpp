@@ -119,6 +119,8 @@ private :
 
 	bool _use_new_mesh_manager;
 
+	std::string _file_name;
+
 };	// class DotSceneLoader
 
 }	// namespace vl

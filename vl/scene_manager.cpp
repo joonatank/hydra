@@ -255,10 +255,31 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 
 vl::SceneManager::~SceneManager( void )
 {
-	for( size_t i = 0; i < _scene_nodes.size(); ++i )
-	{ delete _scene_nodes.at(i); }
+//	destroyScene(true);
 
-	_scene_nodes.clear();
+//	delete _root;
+}
+
+void
+vl::SceneManager::destroyScene(bool destroyEditorCamera)
+{
+	// @todo this is rather unefficient way to destroy the nodes
+	// we should use the tree graph for these things...
+	SceneNodeList nodes_to_destroy;
+	nodes_to_destroy.reserve(_scene_nodes.size());
+	for( size_t i = 0; i < _scene_nodes.size(); ++i )
+	{
+		// Can't destroy the root object with this function
+		if((destroyEditorCamera || _scene_nodes.at(i)->getName() != "editor/perspective")
+			&& _scene_nodes.at(i)->getName() != "Root")
+		{ nodes_to_destroy.push_back(_scene_nodes.at(i)); }
+	}
+
+	for(SceneNodeList::iterator iter = nodes_to_destroy.begin();
+		iter != nodes_to_destroy.end(); ++iter)
+	{ destroySceneNode(*iter); }
+
+	// @todo destroy also the Movable objects
 }
 
 vl::SceneNodePtr
@@ -313,6 +334,26 @@ vl::SceneManager::getSceneNodeID(uint64_t id) const
 	}
 
 	return 0;
+}
+
+void
+vl::SceneManager::destroySceneNode(SceneNodePtr node)
+{
+	// Remove linking
+	node->removeAllChildren();
+	SceneNodePtr parent = node->getParent();
+	// @todo does this move the node under Root?
+	parent->removeChild(node);
+	assert(!node->getParent());
+
+	_session->deregisterObject(node);
+	assert(node->getID() == vl::ID_UNDEFINED);
+
+	// @todo we probably need to do deregistering here
+	delete node;
+
+	SceneNodeList::iterator iter = std::find(_scene_nodes.begin(), _scene_nodes.end(), node);
+	_scene_nodes.erase(iter);
 }
 
 /// --------------------- SceneManager Entity --------------------------------

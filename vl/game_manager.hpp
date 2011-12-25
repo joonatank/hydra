@@ -323,6 +323,12 @@ public :
 	void loadScene(std::string const &file_name);
 	void saveScene(std::string const &file_name);
 
+	/// @todo not really working
+	void unloadScene(std::string const &name);
+
+	/// @todo not really working
+	void unloadScenes(vl::ProjSettings const &proj);
+
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 

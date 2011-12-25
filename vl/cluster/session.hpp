@@ -65,6 +65,21 @@ public :
 		}
 	}
 
+	void deregisterObject(vl::Distributed *obj)
+	{
+		assert(obj);
+		assert(obj->getID() != vl::ID_UNDEFINED);
+		
+		// this could be optimized by starting from id
+		std::vector<vl::Distributed *>::iterator iter 
+			= std::find(_registered_objects.begin(), _registered_objects.end(), obj);
+		assert(iter != _registered_objects.end());
+		_registered_objects.erase(iter);
+		_destroyed_objects.push_back(obj->getID());
+
+		obj->registered(vl::ID_UNDEFINED);
+	}
+
 	void mapObject( vl::Distributed *obj, uint64_t const id )
 	{
 		assert(obj);
@@ -99,6 +114,8 @@ public :
 protected :
 
 	CreatedObjectsList _new_objects;
+
+	std::vector<uint64_t> _destroyed_objects;
 
 	/// Registered data
 	std::vector<vl::Distributed *> _registered_objects;

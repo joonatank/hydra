@@ -80,6 +80,8 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("TextResource has invalid XML file") );
 	}
 
+	std::clog << "SceneNodes loaded from file = " << scene_data.getName() << std::endl;
+	_file_name = scene_data.getName();
 	_parse( xml_data );
 
 	// Reset data so that we don't end up with dangling pointers (or holding resources)
@@ -313,6 +315,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
+	node->setSceneFile(_file_name);
 
 	rapidxml::xml_node<>* pElement;
 
