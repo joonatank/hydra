@@ -897,7 +897,7 @@ vl::SceneManager::hideSceneNodes(std::string const &pattern, bool cascade, bool 
 		{ name = name.substr(0, pos); }
 		
 		if(find_name == name)
-		{ (*iter)->setVisible(false, cascade); }
+		{ (*iter)->setVisibility(false, cascade); }
 	}
 }
 

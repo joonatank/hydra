@@ -25,7 +25,7 @@
 /// Necessary for casting collision shapes
 #include "shapes_bullet.hpp"
 /// Necessary for passing MotionState
-#include "motion_state.hpp"
+#include "motion_state_bullet.hpp"
 
 /// Engine implementation
 #include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
@@ -43,13 +43,19 @@ namespace
 	{
 		using vl::physics::BulletCollisionShape;
 		using vl::physics::BulletCollisionShapeRefPtr;
+		using vl::physics::BulletMotionState;
+		
+		assert(dynamic_cast<BulletMotionState *>(info.state));
+		//assert(boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape));
 
 		btVector3 inertia(convert_bt_vec(info.inertia));
+		
 		BulletCollisionShapeRefPtr shape = boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape);
 		if(info.mass == 0)
 		{ inertia = btVector3(0, 0, 0); }
 
-		return btRigidBody::btRigidBodyConstructionInfo(info.mass, info.state, shape->getNative(), inertia);
+		return btRigidBody::btRigidBodyConstructionInfo(info.mass, 
+				(BulletMotionState *)info.state, shape->getNative(), inertia);
 	}
 }
 
@@ -180,7 +186,7 @@ public :
 	{ return (MotionState const *)_bt_body->getMotionState(); }
 
 	virtual void setMotionState(MotionState *motionState)
-	{ _bt_body->setMotionState(motionState); }
+	{ _bt_body->setMotionState((BulletMotionState *)motionState); }
 
 	virtual vl::Transform getWorldTransform(void) const
 	{ return convert_transform(_bt_body->getWorldTransform()); }
@@ -193,6 +199,8 @@ public :
 		if(enable)
 		{
 			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			// Bullet needs the user controlled flag for kinematic objects
+			setUserControlled(true);
 		}
 		else
 		{
@@ -202,6 +210,12 @@ public :
 
 	virtual bool isKinematicObject(void) const
 	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
+
+	virtual void setUserData(void *data)
+	{ _bt_body->setUserPointer(data); }
+
+	virtual void *getUserData(void)
+	{ return _bt_body->getUserPointer(); }
 
 	btRigidBody *getNative(void)
 	{ return _bt_body; }

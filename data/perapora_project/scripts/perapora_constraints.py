@@ -34,15 +34,6 @@ ground_node.attachObject(ground)
 ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
-# Some test code
-class copyOrientation:
-	def __init__(self, obj, orientation_diff):
-		self.obj = obj
-		self.diff = orientation_diff
-
-	def copy(self, t):
-		self.obj.orientation = t.quaternion*self.diff 
-
 # Create the kinematics
 kiinnityslevy= game.scene.getSceneNode("cb_kiinnityslevy")
 nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
@@ -76,15 +67,6 @@ kaanto_hinge.axis = Vector3(0, 1, 0)
 
 createFixedConstraint(kaantokappale, nivel_klevy1, nivel_klevy1.world_transformation)
 
-ristikpl_kaantosyl = game.scene.getSceneNode("cb_ristikpl_kaantosyl")
-
-# Add copying of orientation from kaantokappale to ristikpl
-diff_q  = ristikpl_kaantosyl.world_transformation.quaternion * kaantokappale.world_transformation.quaternion
-# TODO these work on SceneNodes at the moment
-# they will not work anymore if we add a constraint there
-kaanto_copy_orient = copyOrientation(ristikpl_kaantosyl, diff_q)
-kaantokappale.addListener(kaanto_copy_orient.copy)
-
 # Cylinder kaanto
 nivel_kaantosyl1 = game.scene.getSceneNode("nivel_kaantosyl1_rotz")
 nivel_kaantosyl2 = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
@@ -101,7 +83,6 @@ syl_kaanto.up_axis = Vector3(0, 1, 0)
 # Create constraint for keeping the cylinder piston fixed
 # Adding this will screw up anything that uses SceneNodes
 # We need to move that code to use KinematicBodies instead
-#createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, nivel_kaantosyl2.world_transformation)
 
 # Zoom
 sisaputki = game.scene.getSceneNode("cb_sisaputki")
@@ -184,11 +165,6 @@ pulttaus_hinge.actuator = True
 # some test code
 #pulttaus_hinge.target = Radian(1)
 
-# CB mapping
-game.scene.mapCollisionBarriers()
-
-#kiinnityslevy.translate(Vector3(0, 2, 0))
-
 # Joystick control
 # Falls back to game joysticks, if none exists the movements
 # are just disabled...
@@ -200,15 +176,15 @@ try :
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, teleskooppi)
-	joy_handler.set_axis_constraint(0, pulttaus_hinge)
-	joy_handler.set_axis_constraint(1, 0, motor_hinge)
+	joy_handler.set_axis_constraint(teleskooppi, 1)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0)
+	joy_handler.set_axis_constraint(motor_hinge, 1, 0)
 	left_joy.add_handler(joy_handler)
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, puomi_hinge)
-	joy_handler.set_axis_constraint(0, kaanto_hinge)
+	joy_handler.set_axis_constraint(puomi_hinge, 1)
+	joy_handler.set_axis_constraint(kaanto_hinge, 0)
 	right_joy.add_handler(joy_handler)
 except :
 	# Lets just assume that the serial port doesn't exist as the c++
@@ -222,14 +198,15 @@ except :
 	joy = game.event_manager.getJoystick()
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(1, puomi_hinge)
-	joy_handler.set_axis_constraint(0, kaanto_hinge)
-	joy_handler.set_axis_constraint(1, 0, teleskooppi)
-	joy_handler.set_axis_constraint(0, 0, pulttaus_hinge)
-	joy_handler.set_axis_constraint(1, 1, motor_hinge)
+	joy_handler.set_axis_constraint(puomi_hinge, 1)
+	joy_handler.set_axis_constraint(kaanto_hinge, 0)
+	joy_handler.set_axis_constraint(teleskooppi, 1, 0)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
+	joy_handler.set_axis_constraint(motor_hinge, 1, 1)
 	joy.add_handler(joy_handler)
 
-
+# TODO tubes are not working with this version
+"""
 # Add tube simulation
 game.enablePhysics(True)
 # Tie the ends to SceneNodes
@@ -254,9 +231,40 @@ tube_info.radius = 0.05
 tube_info.element_size = 0.1
 
 tube = game.physics_world.createTube(tube_info)
+tube.create()
 
 def setBodyTransform(t):
 	end_body.world_transform = t
 
 vaantomoottori.addListener(setBodyTransform)
+"""
+
+# Add some primitives and possibility to move them for testing the collision
+# detection
+game.enablePhysics(True)
+pos = Vector3(-3, 3, -0.5) #Vector3(-3, 3, 1)
+box = addBox("user_box", "finger_sphere/green", pos, mass=10)
+box.user_controlled = True
+#addKinematicAction(box)
+
+# Static box
+pos = Vector3(-2, 0.75, -2.5)
+box = addBox("static_box", "finger_sphere/blue", pos, mass=0)
+
+# Add collision ground
+ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
+ground_shape = StaticTriangleMeshShape.create(ground_mesh)
+g_motion_state = game.physics_world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
+ground_body = game.physics_world.createRigidBody('ground', 0, g_motion_state, ground_shape)
+
+game.pause()
+
+def toggle_pause() :
+	if game.paused:
+		game.play()
+	else:
+		game.pause()
+
+trigger = game.event_manager.createKeyTrigger(KC.SPACE)
+trigger.addKeyDownListener(toggle_pause)
 

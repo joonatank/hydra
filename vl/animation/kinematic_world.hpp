@@ -38,11 +38,13 @@ namespace vl
 class KinematicWorld
 {
 public :
-	KinematicWorld(void);
+	KinematicWorld(GameManager *man);
 
 	~KinematicWorld(void);
 
 	void step(vl::time const &t);
+
+	void finalise(void);
 
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
@@ -74,14 +76,18 @@ public :
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
-	vl::animation::NodeRefPtr _createNode(void);
+	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
 
 	void _progress_constraints(vl::time const &t);
+
+	bool _collision_detection_on;
 
 	KinematicBodyList _bodies;
 	ConstraintList _constraints;
 
 	animation::GraphRefPtr _graph;
+
+	GameManager *_game;
 
 };	// class KinematicWorld
 

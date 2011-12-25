@@ -17,7 +17,6 @@
 /// Interface
 #include "rigid_body.hpp"
 
-#include "motion_state.hpp"
 #include "shapes.hpp"
 
 /// Concrete implementations
@@ -73,7 +72,7 @@ vl::physics::RigidBody::applyForce(Ogre::Vector3 const &force, Ogre::Vector3 con
 }
 
 void 
-vl::physics::RigidBody::applyCentralForce(Ogre::Vector3 const &force, vl::SceneNodePtr ref)
+vl::physics::RigidBody::applyCentralForce(Ogre::Vector3 const &force, vl::ObjectInterface *ref)
 {
 	if(ref)
 	{ applyCentralForce(ref->getWorldTransform().quaternion * force); }

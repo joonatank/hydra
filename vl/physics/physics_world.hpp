@@ -75,7 +75,7 @@ struct SolverParameters
 class World
 {
 public :
-	static WorldRefPtr create(void);
+	static WorldRefPtr create(GameManager *man);
 
 	virtual ~World(void);
 
@@ -112,7 +112,8 @@ public :
 
 
 	/// ---------------------- MotionStates ------------------
-	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
+	/// @todo this can be removed as we can use MotionState::create directly
+	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::ObjectInterface *node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
@@ -144,7 +145,7 @@ protected :
 
 	// Real engine implementation using template method pattern
 	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked) = 0;
-	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body) = 0;
+	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic) = 0;
 
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
 
@@ -155,6 +156,8 @@ protected :
 	/// World owns all of them
 	RigidBodyList _rigid_bodies;
 	ConstraintList _constraints;
+
+	GameManager *_game;
 
 };	// class World
 

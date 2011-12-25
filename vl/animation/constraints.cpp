@@ -391,7 +391,9 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	if(mov != 0)
 	{
 		/// Update object B
-		_link->getTransform().position += mov*_axisInA;
+		/// needs to call setTransform because it does other things besides
+		/// updating the transformation.
+		_link->setTransform(_link->getTransform().position + mov*_axisInA);
 	}
 }
 
@@ -515,10 +517,6 @@ vl::HingeConstraint::_progress(vl::time const &t)
 		// where Tp is the translation matrix (for the axis) and R is the rotation matrix.
 		Ogre::Vector3 axis = _link->getInitialTransform().quaternion * _axisInA;
 		Quaternion rot = Ogre::Quaternion(_angle, axis);
-		
-		// test code inefficent
-		// if it does work we should use the model matrix and do an inverse rotation to position
-		Vector3 child_pos = _link->getChild()->getWorldTransform().position;
 
 		_link->setOrientation(rot);
 	}

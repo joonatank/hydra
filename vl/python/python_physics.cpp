@@ -188,17 +188,17 @@ void export_physics_objects(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
-	void (vl::physics::MotionState::*setWorldTransform_ov0)(vl::Transform const &) = &vl::physics::MotionState::setWorldTransform;
+//	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
+//	void (vl::physics::MotionState::*setWorldTransform_ov0)(vl::Transform const &) = &vl::physics::MotionState::setWorldTransform;
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
 		.add_property("node", python::make_function( &vl::physics::MotionState::getNode, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::MotionState::setNode )
-		.add_property("position", &vl::physics::MotionState::getPosition, &vl::physics::MotionState::setPosition)
-		.add_property("orientation", &vl::physics::MotionState::getOrientation, &vl::physics::MotionState::setOrientation)
-		.add_property("world_transformation", getWorldTransform_ov0, setWorldTransform_ov0)
-		.def("set_world_transformation", setWorldTransform_ov0)
+		.add_property("position", python::make_function(&vl::physics::MotionState::getPosition, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setPosition)
+		.add_property("orientation", python::make_function(&vl::physics::MotionState::getOrientation, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setOrientation)
+		.add_property("world_transformation", python::make_function(&vl::physics::MotionState::getWorldTransform, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setWorldTransform)
+		.def("set_world_transformation", &vl::physics::MotionState::setWorldTransform)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

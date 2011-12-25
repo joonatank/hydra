@@ -134,20 +134,20 @@ source_group(HydraMain\\collada FILES ${COLLADA_HEADERS} ${COLLADA_SRC})
 
 set(PHYSICS_HEADERS
 	physics/motion_state.hpp
+	physics/motion_state_bullet.hpp
 	physics/rigid_body.hpp
 	physics/shapes.hpp
 	physics/physics_constraints.hpp
 	physics/physics_world.hpp
 	physics/tube.hpp
-	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
+	physics/motion_state.cpp
 	physics/physics_world.cpp
 	physics/physics_constraints.cpp
 	physics/shapes.cpp
 	physics/rigid_body.cpp
 	physics/tube.cpp
-	physics/mesh_bullet.cpp
 	)
 if(HYDRA_PHYSICS STREQUAL "Bullet")
 	list(APPEND PHYSICS_HEADERS
@@ -155,9 +155,11 @@ if(HYDRA_PHYSICS STREQUAL "Bullet")
 		physics/rigid_body_bullet.hpp
 		physics/shapes_bullet.hpp
 		physics/physics_constraints_bullet.hpp
+		physics/mesh_bullet.hpp
 		)
 	list(APPEND PHYSICS_SRC
 		physics/physics_world_bullet.cpp
+		physics/mesh_bullet.cpp
 		)
 elseif(HYDRA_PHYSICS STREQUAL "Newton")
 	list(APPEND PHYSICS_HEADERS

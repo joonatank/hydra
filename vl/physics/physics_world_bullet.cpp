@@ -25,6 +25,9 @@
 #include "physics_constraints_bullet.hpp"
 #include "rigid_body_bullet.hpp"
 
+// Necessary for updating kinematic bodies with collision detection
+#include "animation/kinematic_body.hpp"
+
 vl::physics::BulletWorld::BulletWorld(void)
 	: _broadphase( new btDbvtBroadphase() ),
 	  _collision_config( new btDefaultCollisionConfiguration() ),
@@ -64,6 +67,9 @@ vl::physics::BulletWorld::step(vl::time const &time_step)
 	// Some hard-coded parameters for the simulation
 	// Small internal timestep is necessary for small objects < 100mm
 	_dynamicsWorld->stepSimulation((double)time_step, 10, _solver_params.internal_time_step);
+
+	// update kinematic bodies
+	_collision_feedback();
 }
 
 Ogre::Vector3
@@ -93,13 +99,21 @@ vl::physics::BulletWorld::setSolverParameters(vl::physics::SolverParameters cons
 }
 
 void
-vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body)
+vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic)
 {
 	// for some reason we can not do static_pointer_cast here
 	BulletRigidBodyRefPtr b = boost::dynamic_pointer_cast<BulletRigidBody>(body);
 
 	assert(b && b->getNative());
-	_dynamicsWorld->addRigidBody(b->getNative());
+	// kinematic objects need to collide with static objects
+	if(kinematic)
+	{
+		_dynamicsWorld->addRigidBody(b->getNative(), btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::DefaultFilter|btBroadphaseProxy::StaticFilter);
+		body->enableKinematicObject(true);
+	}
+	else
+	{ _dynamicsWorld->addRigidBody(b->getNative()); }
+
 }
 
 void
@@ -120,4 +134,57 @@ vl::physics::BulletWorld::_removeConstraint(vl::physics::ConstraintRefPtr constr
 
 	assert(c && c->getNative());
 	_dynamicsWorld->removeConstraint(c->getNative());
+}
+
+void
+vl::physics::BulletWorld::_collision_feedback(void)
+{
+	//Assume world->stepSimulation or world->performDiscreteCollisionDetection has been called
+	
+	// @todo this should be replaced with GhostObjects and a custom interface
+	// GhostObjects for speed (so we don't need to do the checking for all objects)
+	// custom interface so we don't need to do the dirty casting here and we can remove
+	// the kinematic body include.
+
+	// @fixme this does work for rigid bodies and kinematic bodies which is
+	// exactly what we don't want.
+	int numManifolds = _dynamicsWorld->getDispatcher()->getNumManifolds();
+	for(int i=0; i < numManifolds; ++i)
+	{
+		btPersistentManifold* contactManifold =  _dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->getBody0());
+		btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->getBody1());
+
+		// We are only interested in collisions between kinematic objects (KinematicBody)
+		// and static objects.
+		// Static - Static collisions should never happen anyway.
+		// Kinematic - Kinematic collisions should not happen if the flags are correctly set.
+		if(obA->isStaticOrKinematicObject() && obB->isStaticOrKinematicObject())
+		{
+			int numContacts = contactManifold->getNumContacts();
+			for(int j=0; j < numContacts; ++j)
+			{
+				btManifoldPoint& pt = contactManifold->getContactPoint(j);
+				if (pt.getDistance()<0.f)
+				{
+					const btVector3& ptA = pt.getPositionWorldOnA();
+					const btVector3& ptB = pt.getPositionWorldOnB();
+					const btVector3& normalOnB = pt.m_normalWorldOnB;
+
+					// Update the motion states so that kinematic objects can copy them back
+					KinematicBody *bA = (KinematicBody *)obA->getUserPointer();
+					if(bA)
+					{
+						bA->popLastTransform();
+					}
+				
+					KinematicBody *bB = (KinematicBody *)obB->getUserPointer();
+					if(bB)
+					{
+						bB->popLastTransform();
+					}
+				}
+			}
+		}
+	}
 }

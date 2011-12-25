@@ -17,13 +17,10 @@
 #ifndef HYDRA_PHYSICS_MOTION_STATE_HPP
 #define HYDRA_PHYSICS_MOTION_STATE_HPP
 
-// This class initialises Bullet physics so they are necessary
-#include <bullet/btBulletDynamicsCommon.h>
-
 #include "math/math.hpp"
-#include "math/conversion.hpp"
+#include "math/transform.hpp"
 
-#include "scene_node.hpp"
+#include "object_interface.hpp"
 
 namespace vl
 {
@@ -34,87 +31,67 @@ namespace physics
 /** @class MotionState
  *
  */
-class MotionState : public btMotionState
+class MotionState
 {
 public:
-	MotionState( Ogre::Vector3 const &pos,
-				 Ogre::Quaternion const &orient,
-				 vl::SceneNode *node = 0)
+	MotionState(Transform const &t, vl::ObjectInterface *node = 0)
 		: _visibleobj(node)
+		, _trans(t)
 	{
-		_trans = vl::math::convert_bt_transform(orient, pos);
-	}
-
-	MotionState(vl::Transform const &trans, vl::SceneNode *node = 0)
-		: _visibleobj(node)
-	{
-		_trans = vl::math::convert_bt_transform(trans);
 		// set the object transform especially useful for static objects
 		if(_visibleobj)
 		{
-			_visibleobj->setPosition(trans.position);
-			_visibleobj->setOrientation(trans.quaternion);
+			_visibleobj->setWorldTransform(_trans);
 		}
 	}
+
+	static MotionState *create(Transform const &t, vl::ObjectInterface *node);
 
 	virtual ~MotionState()
 	{}
 
-	vl::SceneNodePtr getNode(void) const
+	vl::ObjectInterface *getNode(void) const
 	{ return _visibleobj; }
 
-	void setNode(vl::SceneNodePtr node)
+	void setNode(vl::ObjectInterface *node)
 	{
 		_visibleobj = node;
 		// set the object transform especially useful for static objects
 		if(_visibleobj)
 		{
-			/// @todo these should set the world transform
-			Transform trans = vl::math::convert_transform(_trans);
-			_visibleobj->setPosition(trans.position);
-			_visibleobj->setOrientation(trans.quaternion);
+			_visibleobj->setWorldTransform(_trans);
 		}
 	}
 
-	Ogre::Vector3 getPosition(void) const
-	{ return vl::math::convert_vec(_trans.getOrigin()); }
+	Ogre::Vector3 const &getPosition(void) const
+	{ return _trans.position; }
 
 	void setPosition(Ogre::Vector3 const &v)
-	{ _trans.setOrigin(vl::math::convert_bt_vec(v)); }
+	{ _trans.position = v; }
 
-	Ogre::Quaternion getOrientation(void) const
-	{ return vl::math::convert_quat(_trans.getRotation()); }
+	Ogre::Quaternion const &getOrientation(void) const
+	{ return _trans.quaternion; }
 
 	void setOrientation(Ogre::Quaternion const &q)
-	{ _trans.setRotation(vl::math::convert_bt_quat(q)); }
+	{ _trans.quaternion = q; }
 
-	Transform getWorldTransform(void) const
+	Transform const &getWorldTransform(void) const
 	{
-		return vl::math::convert_transform(_trans);
+		return _trans;
 	}
 
 	void setWorldTransform(vl::Transform const &worldTrans)
-	{
-		_trans = vl::math::convert_bt_transform(worldTrans);
-	}
-
-	virtual void getWorldTransform(btTransform &worldTrans) const
-	{
-		worldTrans = _trans;
-	}
-
-	virtual void setWorldTransform(const btTransform &worldTrans)
 	{
 		_trans = worldTrans;
 
 		// silently return before we set a node
 		if(_visibleobj)
-		{ _visibleobj->setWorldTransform(vl::math::convert_transform(_trans)); }
+		{ _visibleobj->setWorldTransform(_trans); }
 	}
 
 protected:
-	SceneNodePtr _visibleobj;
-	btTransform _trans;
+	vl::ObjectInterface *_visibleobj;
+	vl::Transform _trans;
 
 };	// class MotionState
 

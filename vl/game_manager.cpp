@@ -68,10 +68,11 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _state(GS_UNKNOWN)
-	, _kinematic_world(new vl::KinematicWorld)
 {
 	if(!_session || !_logger)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
+	_kinematic_world.reset(new vl::KinematicWorld(this));
 
 	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
 	_python = new vl::PythonContextImpl( this );
@@ -123,13 +124,28 @@ vl::GameManager::step(void)
 {
 	_fire_step_start();
 
+	/// Process triggers wether we are paused or not
+	/// @todo should have at least two categories for events 
+	/// those that are In Game events and those that are not
+	/// (probably going to need more than two categories but for now).
+	/// this allows pausing the updating of all bodies (In Game)
+	/// but retains the ability move cameras using event system.
+	/// We need at least three categories for this
+	/// Editor, In Game, In Game GUI
+	/// Probably matching the Event categories to the Game States would
+	/// also work just fine. And if they need to be expanded then we can
+	/// allow users to add more game states which would auto create more
+	/// event categories.
+	/// This elaborate system also needs to allow masking events so
+	/// they belong to more than just one category or an ALL category.
+
+	getEventManager()->getFrameTrigger()->update(getDeltaTime());
+
+	// Process input devices
+	getEventManager()->mainloop();
+
 	if(isPlayed())
 	{
-		getEventManager()->getFrameTrigger()->update(getDeltaTime());
-
-		// Process input devices
-		getEventManager()->mainloop();
-
 		// Process Tracking
 		// If we have a tracker object update it, the update will handle all the
 		// callbacks and appropriate updates (head matrix and scene nodes).
@@ -147,6 +163,9 @@ vl::GameManager::step(void)
 		{
 			_physics_world->step(getDeltaTime());
 		}
+
+		/// Check collisions and copy the SceneNode transformations
+		_kinematic_world->finalise();
 
 		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());
@@ -217,7 +236,7 @@ vl::GameManager::enablePhysics( bool enable )
 		// Create the physics if they don't exist
 		if(!_physics_world)
 		{
-			_physics_world = physics::World::create();
+			_physics_world = physics::World::create(this);
 			assert(_physics_world);
 		}
 	}

@@ -29,11 +29,20 @@
 
 #include "constraints.hpp"
 
+// Necessary for collision detection
+#include "game_manager.hpp"
+#include "physics/physics_world.hpp"
+#include "physics/rigid_body.hpp"
+#include "physics/shapes.hpp"
+#include "mesh_manager.hpp"
+
 // Log leves
 #include "logger.hpp"
 
-vl::KinematicWorld::KinematicWorld(void)
-	: _graph(new animation::Graph)
+vl::KinematicWorld::KinematicWorld(GameManager *man)
+	: _collision_detection_on(true)
+	, _graph(new animation::Graph)
+	, _game(man)
 {
 }
 
@@ -46,7 +55,18 @@ vl::KinematicWorld::step(vl::time const &t)
 {
 	_progress_constraints(t);
 
-	/// Copy transformations to visible SceneNodes
+	/// Copy transformations to Motion states
+	for(KinematicBodyList::iterator iter = _bodies.begin();
+		iter != _bodies.end(); ++iter )
+	{
+		(*iter)->_update();
+	}
+}
+
+void
+vl::KinematicWorld::finalise(void)
+{
+	/// Copy back transformations from MotionStates after collision detection
 	for(KinematicBodyList::iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter )
 	{
@@ -76,7 +96,7 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn) const
 	for(KinematicBodyList::const_iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter)
 	{
-		if((*iter)->getSceneNode() == sn)
+		if((*iter)->getName() == sn->getName())
 		{ return *iter; }
 	}
 
@@ -92,10 +112,38 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 	KinematicBodyRefPtr body = getKinematicBody(sn);
 	if(!body)
 	{
-		animation::NodeRefPtr node = _createNode();
-		body.reset(new KinematicBody(this, node, sn));
+		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
+		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
+		animation::NodeRefPtr node = _createNode(ms->getWorldTransform());
+		body.reset(new KinematicBody(sn->getName(), this, node, ms));
 		assert(body);
 		_bodies.push_back(body);
+
+		if(_collision_detection_on && sn->getName().substr(0, 3) == "cb_")
+		{
+			std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
+			try {
+				assert(_game);
+				/// enable physics if not already
+				/// Create a kinematic rigid body and add it physics world
+				/// use same MotionStates for both kinematic and rigid body
+				_game->enablePhysics(true);
+				// We assume that the mesh name is the same as the SceneNode
+				vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(sn->getName());
+				physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
+				physics::RigidBody::ConstructionInfo info(sn->getName(), 0, ms, shape, Ogre::Vector3(0, 0, 0), true);
+				physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
+				// necessary to add callback so the kinematic object updates 
+				// the the collision model.
+				body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
+				// Used by the collision detection to pop last transformation.
+				physics_body->setUserData(body.get());
+			}
+			catch(vl::exception const &e)
+			{
+				std::clog << "Exception thrown when creating collision model for " << sn->getName() << std::endl;
+			}
+		}
 	}
 
 	return body;
@@ -264,13 +312,20 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	// The correct transformation is set by the constraint
 	constraint->_setLink(link);
 
+	// @todo Not the correct place for this but for testing
+	// fixed issues with Node transformation beign returned to the one
+	// used with a previous parent.
+	// Now these should be moved to correct places in animation framework.
+	parent->setInitialState();
+	child->setInitialState();
+
 	_constraints.push_back(constraint);
 }
 
 vl::animation::NodeRefPtr
-vl::KinematicWorld::_createNode(void)
+vl::KinematicWorld::_createNode(vl::Transform const &initial_transform)
 {
-	animation::NodeRefPtr node(new animation::Node);
+	animation::NodeRefPtr node(new animation::Node(initial_transform));
 	animation::LinkRefPtr link(new animation::Link);
 	link->setParent(_graph->getRoot());
 	link->setChild(node);
