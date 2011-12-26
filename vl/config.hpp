@@ -95,11 +95,8 @@ public:
 
 	virtual void render( void );
 
-	virtual bool isRunning( void )
+	bool isRunning(void)
 	{ return _running; }
-
-	virtual void stopRunning( void )
-	{ _running = false; }
 
 	vl::GameManagerPtr getGameManager(void)
 	{ return _game_manager; }
@@ -131,6 +128,12 @@ public:
 
 	// Callback for Project settings changes
 	void settingsChanged(vl::Settings const &new_settings);
+
+	void quit_callback(void)
+	{
+		std::clog << "vl::Config : Quit callback called." << std::endl;
+		_running = false; 
+	}
 
 protected :
 	// Cluster rpc calss

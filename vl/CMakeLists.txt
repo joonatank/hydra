@@ -104,6 +104,7 @@ set(BASE_HEADERS
 	base/chrono.hpp
 	base/report.hpp
 	base/wall.hpp
+	base/state_machines.hpp
 	)
 set(BASE_SRC
 	base/system_util.cpp

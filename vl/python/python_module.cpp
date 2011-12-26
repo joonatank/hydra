@@ -615,8 +615,12 @@ void export_game(void)
 		.def("quit", &vl::GameManager::quit)
 		.def("pause", &vl::GameManager::pause)
 		.def("play", &vl::GameManager::play)
+		.def("stop", &vl::GameManager::stop)
+		.def("restart", &vl::GameManager::restart)
 		.add_property("paused", &vl::GameManager::isPaused)
-		.add_property("played", &vl::GameManager::isPlayed)
+		.add_property("playing", &vl::GameManager::isPlaying)
+		.add_property("quited", &vl::GameManager::isQuited)
+		.add_property("auto_start", &vl::GameManager::auto_start, &vl::GameManager::set_auto_start)
 		/// @todo add state inqueries
 		/// @todo add step function, needs to rename the current one in GameManager which is internal
 		/// called from Config...

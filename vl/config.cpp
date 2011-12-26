@@ -146,6 +146,7 @@ vl::Config::Config( vl::config::EnvSettingsRefPtr env,
 	_game_manager->setupResources(*env);
 
 	_game_manager->addProjectChangedListener(boost::bind(&Config::settingsChanged, this, _1));
+	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Config::quit_callback, this));
 
 	_renderer->setMeshManager(_game_manager->getMeshManager());
 }
@@ -176,14 +177,12 @@ vl::Config::init(std::string const &global_file,
 
 	vl::Report<vl::time> &report = _game_manager->getInitReport();
 	vl::chrono t;
-	if(!_game_manager->requestStateChange(GS_INIT))
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT")); }
-	report["Starting GameManager"].push(t.elapsed());
-
-	if(enable_editor)
-	{ _game_manager->createEditor(); }
 
 	// Local renderer needs to be inited rather than send a message
+	// needs to be before we init GameManager
+	// because for now the GameManager will send project (global) as a signal
+	// and it is assumed that environment is set before processing
+	// project signal.
 	if( _renderer.get() )
 	{
 		t.reset();
@@ -191,21 +190,17 @@ vl::Config::init(std::string const &global_file,
 		report["Initing Renderer"].push(t.elapsed());
 	}
 
-	// Send the project to the local Renderer
-	if(_renderer.get())
-	{
-		t.reset();
-		_renderer->setProject(_proj);
-		report["Setting project to Renderer"].push(t.elapsed());
-	}
+	_game_manager->process_event(vl::init(_env, global_file));
 
-	/// @todo change to use GS_LOAD which is inititiated automatically after GS_INIT
-	_game_manager->load(*_env);
-	
-	if(!global_file.empty())
-	{ _game_manager->loadGlobal(global_file); }
+	report["Starting GameManager"].push(t.elapsed());
+
+	if(enable_editor)
+	{ _game_manager->createEditor(); }
+
 	if(!project_file.empty())
-	{ _game_manager->loadProject(project_file); }
+	{
+		_game_manager->process_event(vl::load(project_file));
+	}
 
 	/// Updating the Renderers
 	t.reset();
@@ -245,17 +240,6 @@ vl::Config::init(std::string const &global_file,
 //	std::clog << "blocking till slave clients are ready." << std::endl;
 //	_server->block_till_initialised();
 	_server->poll();
-
-	// Start
-	// @todo this should allow starting the simulation straight away or
-	// starting in a paused state
-	// should we use ini file for this?
-	// or should we check if the state is INIT i.e. not set from python
-	// then start automatically.
-	// for not breaking backward compatibility yet we auto set play state
-	// if user has not set the state they want in python.
-	if(_game_manager->getState() == GS_INIT)
-	{ _game_manager->play(); }
 }
 
 void
@@ -271,6 +255,9 @@ vl::Config::exit(void)
 void
 vl::Config::render( void )
 {
+	if(!isRunning())
+	{ return; }
+
 	assert(_server);
 
 	vl::chrono loop_timer;
@@ -284,8 +271,8 @@ vl::Config::render( void )
 
 	// Process a time step in the game
 	timer.reset();
-	if( !_game_manager->step() )
-	{ stopRunning(); }
+	_game_manager->step();
+
 	report["step time"].push(timer.elapsed());
 
 	/// Provide the updates to slaves

@@ -157,3 +157,18 @@ analog.get_sensor(0).addListener(printAnalog)
 #stats_window = game.gui.createWindow("window", "stats", "stats.layout")
 #menu_window = game.gui.createWindow("window", "menu", "menu.layout")
 
+def toggle_pause():
+	# Game can be in both stopped and paused state so test for played instead
+	# of paused
+	if game.playing:
+		print("pausing")
+		game.pause()
+	else:
+		print("playing")
+		game.play()
+
+game.auto_start = False
+
+trigger = game.event_manager.createKeyTrigger(KC.SPACE)
+trigger.addListener(toggle_pause)
+
