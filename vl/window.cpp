@@ -21,8 +21,6 @@
 
 #include "base/exceptions.hpp"
 
-#include "config.hpp"
-
 #include "renderer_interface.hpp"
 
 #include "camera.hpp"

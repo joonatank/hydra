@@ -24,10 +24,6 @@
 #ifndef HYDRA_APPLICATION_HPP
 #define HYDRA_APPLICATION_HPP
 
-#include <boost/thread.hpp>
-
-#include <stdint.h>
-
 // Necessary for HYDRA_API
 #include "defines.hpp"
 // Necessary for Ref ptrs
@@ -64,9 +60,11 @@ public:
 	 *	and send messages to the rendering threads.
 	 *
 	 */
-	Application(ProgramOptions const &opt);
+	Application(void);
 
 	virtual ~Application( void );
+
+	void init(ProgramOptions const &opt);
 
 	/// @brief progress a single frame
 	/// @todo this is problematic because this both renders the scene and
@@ -78,26 +76,24 @@ public:
 	void run(void);
 
 	/// @returns true if the application is still running
-	bool isRunning(void) const;
+	virtual bool isRunning(void) const = 0;
 
-	RendererInterface *getRenderer(void);
+	virtual RendererInterface *getRenderer(void) const = 0;
 
-	GameManagerPtr getGameManager(void);
+	virtual GameManagerPtr getGameManager(void) const = 0;
 
-protected:
-	void _mainloop(bool sleep);
+	static ApplicationUniquePtr create(ProgramOptions const &opt);
+	
+	// Private virtual overrides
+private :
+	virtual void _mainloop(bool sleep) = 0;
 
-	void _exit(void);
+	virtual void _exit(void) = 0;
 
-	void _init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
+	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt) = 0;
 
-	vl::ConfigRefPtr _master;
-
-	vl::cluster::ClientRefPtr _slave_client;
-
-	uint32_t _max_fps;
-
-	std::vector<uint32_t> _spawned_processes;
+// Data
+protected :
 
 	vl::Logger _logger;
 

@@ -4,7 +4,7 @@
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
- *	@file config.hpp
+ *	@file master.hpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.3
@@ -16,11 +16,12 @@
  */
 
 
-#ifndef HYDRA_CONFIG_HPP
-#define HYDRA_CONFIG_HPP
+#ifndef HYDRA_MASTER_HPP
+#define HYDRA_MASTER_HPP
 
-// Base class
+// Base classes
 #include "cluster/session.hpp"
+#include "application.hpp"
 
 // Necessary for the project settings
 #include "settings.hpp"
@@ -41,23 +42,23 @@
 namespace vl
 {
 
-class Config;
+class Master;
 
 /// Callbacks
 struct ConfigMsgCallback : public vl::MsgCallback
 {
-	ConfigMsgCallback(vl::Config *own);
+	ConfigMsgCallback(vl::Master *own);
 
 	virtual ~ConfigMsgCallback(void) {}
 
 	virtual void operator()(vl::cluster::Message const &msg);
 
-	vl::Config *owner;
+	vl::Master *owner;
 };
 
 struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
 {
-	ConfigServerDataCallback(vl::Config *own);
+	ConfigServerDataCallback(vl::Master *own);
 
 	virtual ~ConfigServerDataCallback(void) {}
 
@@ -71,20 +72,18 @@ struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
 
 	virtual vl::cluster::Message createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name);
 
-	vl::Config *owner;
+	vl::Master *owner;
 };
 
 /**	@class Config
  *
  */
-class Config : public vl::Session
+class HYDRA_API Master : public vl::Session, public vl::Application
 {
 public:
-	Config( vl::config::EnvSettingsRefPtr env,
-			vl::Logger &logger,
-			vl::RendererUniquePtr rend );
+	Master(void);
 
-	virtual ~Config (void);
+	virtual ~Master(void);
 
 	/// @todo this should send initialisation messages to all the rendering
 	/// threads
@@ -95,13 +94,13 @@ public:
 
 	virtual void render( void );
 
-	bool isRunning(void)
+	bool isRunning(void) const
 	{ return _running; }
 
-	vl::GameManagerPtr getGameManager(void)
+	vl::GameManagerPtr getGameManager(void) const
 	{ return _game_manager; }
 
-	RendererInterface *getRenderer(void)
+	RendererInterface *getRenderer(void) const
 	{ return _renderer.get(); }
 
 	/// Message callback system functions
@@ -134,6 +133,14 @@ public:
 		std::clog << "vl::Config : Quit callback called." << std::endl;
 		_running = false; 
 	}
+
+/// Private virtual overrides from Application
+private :
+	virtual void _mainloop(bool sleep);
+
+	virtual void _exit(void);
+
+	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
 
 protected :
 	// Cluster rpc calss
@@ -186,12 +193,10 @@ protected :
 	// Callbacks owned by us
 	std::vector<vl::Callback *> _callbacks;
 
-	/// receivers for logging
-	/// first is the last logged message, second is the receiver it self
-	//std::vector<std::pair<uint32_t, vl::LogReceiver *> _log_receivers;
+	std::vector<uint32_t> _spawned_processes;
 
-};	// class Config
+};	// class Master
 
 }	// namespace vl
 
-#endif	// HYDRA_CONFIG_HPP
+#endif	// HYDRA_MASTER_HPP

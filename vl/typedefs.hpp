@@ -33,7 +33,10 @@
 namespace vl
 {
 	typedef std::map<std::string, std::string> NamedParamList;
-	
+
+	class Application;
+	typedef std::auto_ptr<Application> ApplicationUniquePtr;
+
 	class Window;
 
 	/// Settings

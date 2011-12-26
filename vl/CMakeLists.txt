@@ -34,7 +34,8 @@ set(SRC
 	program_options.cpp
 	logger.cpp
 	window.cpp
-	config.cpp
+	master.cpp
+	slave.cpp
 	renderer.cpp
 	application.cpp
 	ogre_root.cpp
@@ -246,7 +247,8 @@ set( HEADERS
 	program_options.hpp
 	window.hpp
 	window_interface.hpp
-	config.hpp
+	master.hpp
+	slave.hpp
 	renderer.hpp
 	renderer_interface.hpp
 	application.hpp

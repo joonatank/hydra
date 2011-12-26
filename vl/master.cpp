@@ -4,7 +4,7 @@
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
- *	@file config.cpp
+ *	@file master.cpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.3
@@ -16,7 +16,7 @@
  */
 
 /// Interface
-#include "config.hpp"
+#include "master.hpp"
 
 #include "base/exceptions.hpp"
 
@@ -40,11 +40,15 @@
 // Necessary for loading meshes to Server
 #include "mesh_manager.hpp"
 
-// Necessary for local renderer
-#include "renderer_interface.hpp"
+// Necessary for creating local renderer
+#include "renderer.hpp"
+// Necessary for sleeping
+#include "base/sleep.hpp"
+// Necessary for spawning external processes
+#include "base/system_util.hpp"
 
 /// ---------------------------------- Callbacks -----------------------------
-vl::ConfigMsgCallback::ConfigMsgCallback(vl::Config *own)
+vl::ConfigMsgCallback::ConfigMsgCallback(vl::Master *own)
 	: owner(own)
 {
 	assert(owner);
@@ -57,7 +61,7 @@ vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
 	owner->pushMessage(msg);
 }
 
-vl::ConfigServerDataCallback::ConfigServerDataCallback(vl::Config *own)
+vl::ConfigServerDataCallback::ConfigServerDataCallback(vl::Master *own)
 	: owner(own)
 {
 	assert(owner);
@@ -112,54 +116,33 @@ vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE t
 	return msg;
 }
 
-/// ---------------------------------- Config --------------------------------
-vl::Config::Config( vl::config::EnvSettingsRefPtr env,
-					vl::Logger &logger,
-					vl::RendererUniquePtr rend )
-	: _game_manager(0)
+/// ---------------------------------- Master --------------------------------
+vl::Master::Master(void)
+	: Application()
+	, _game_manager(0)
 	, _proj()
-	, _env(env)
+	, _env()
 	, _server()
 	, _running(true)
-	, _renderer(rend)
+	, _renderer()
 {
-	std::cout << vl::TRACE << "vl::Config::Config" << std::endl;
-	assert( _env );
-	assert( _env->isMaster() );
-
-	_game_manager = new vl::GameManager(this, &logger);
-
-	/// Server can be created here because the callback is only called
-	/// when the Server has environment and project
-	vl::ConfigServerDataCallback *cb = new vl::ConfigServerDataCallback(this);
-	_server.reset(new vl::cluster::Server(_env->getServer().port, cb));
-	_callbacks.push_back(cb);
-
-	// if we have a renderer we have to set callbacks
-	if(_renderer.get())
-	{
-		vl::MsgCallback *callback = new vl::ConfigMsgCallback(this);
-		_renderer->setSendMessageCB(callback);
-		_callbacks.push_back(callback);
-	}
-
-	_game_manager->setupResources(*env);
-
-	_game_manager->addProjectChangedListener(boost::bind(&Config::settingsChanged, this, _1));
-	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Config::quit_callback, this));
-
-	_renderer->setMeshManager(_game_manager->getMeshManager());
+	std::cout << vl::TRACE << "vl::Master::Master" << std::endl;
 }
 
-vl::Config::~Config( void )
+vl::Master::~Master( void )
 {
-	std::cout << vl::TRACE << "vl::Config::~Config" << std::endl;
+	std::cout << vl::TRACE << "vl::Master::~Master" << std::endl;
 
 	delete _game_manager;
 
 	for( std::vector<vl::Callback *>::iterator iter = _callbacks.begin();
 		iter != _callbacks.end(); ++iter )
 	{ delete *iter; }
+
+	for(size_t i = 0; i < _spawned_processes.size(); ++i)
+	{
+		kill_process(_spawned_processes.at(i));
+	}
 }
 
 /// @todo this is taking way too long
@@ -169,10 +152,10 @@ vl::Config::~Config( void )
 /// Anyhow it would be much more useful to call Server::poll every 1ms,
 /// for example with interrupts.
 void
-vl::Config::init(std::string const &global_file,
+vl::Master::init(std::string const &global_file,
 			std::string const &project_file, bool enable_editor)
 {
-	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
+	std::cout << vl::TRACE << "vl::Master::init" << std::endl;
 	vl::chrono init_timer;
 
 	vl::Report<vl::time> &report = _game_manager->getInitReport();
@@ -243,9 +226,9 @@ vl::Config::init(std::string const &global_file,
 }
 
 void
-vl::Config::exit(void)
+vl::Master::exit(void)
 {
-	std::cout << vl::TRACE << "vl::Config::exit" << std::endl;
+	std::cout << vl::TRACE << "vl::Master::exit" << std::endl;
 
 	_renderer.reset();
 
@@ -253,7 +236,7 @@ vl::Config::exit(void)
 }
 
 void
-vl::Config::render( void )
+vl::Master::render( void )
 {
 	if(!isRunning())
 	{ return; }
@@ -325,7 +308,7 @@ vl::Config::render( void )
 }
 
 vl::cluster::Message
-vl::Config::popMessage(void)
+vl::Master::popMessage(void)
 {
 	if( !messages() )
 	{ return vl::cluster::Message(); }
@@ -336,13 +319,13 @@ vl::Config::popMessage(void)
 }
 
 void
-vl::Config::pushMessage(vl::cluster::Message const &msg)
+vl::Master::pushMessage(vl::cluster::Message const &msg)
 {
 	_messages.push_back(msg);
 }
 
 vl::cluster::Message
-vl::Config::createMsgInit(void)
+vl::Master::createMsgInit(void)
 {
 	vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
 
@@ -362,9 +345,9 @@ vl::Config::createMsgInit(void)
 }
 
 vl::cluster::Message 
-vl::Config::createMsgEnvironment(void) const
+vl::Master::createMsgEnvironment(void) const
 {
-	std::cout << vl::TRACE << "vl::Config::createMsgEnvironemnt" << std::endl;
+	std::cout << vl::TRACE << "vl::Master::createMsgEnvironemnt" << std::endl;
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteDataStream stream( &data );
@@ -379,9 +362,9 @@ vl::Config::createMsgEnvironment(void) const
 /// @todo this should be replace by sending of a vector of paths
 /// that's the only thing needed in the Renderer
 vl::cluster::Message 
-vl::Config::createMsgProject(void) const
+vl::Master::createMsgProject(void) const
 {
-	std::cout << vl::TRACE << "vl::Config::createMsgProject" << std::endl;
+	std::cout << vl::TRACE << "vl::Master::createMsgProject" << std::endl;
 
 	vl::SettingsByteData data;
 	vl::cluster::ByteDataStream stream( &data );
@@ -394,7 +377,7 @@ vl::Config::createMsgProject(void) const
 }
 
 void
-vl::Config::settingsChanged(vl::Settings const &new_settings)
+vl::Master::settingsChanged(vl::Settings const &new_settings)
 {
 	_proj = new_settings;
 	// Notify server
@@ -413,9 +396,122 @@ vl::Config::settingsChanged(vl::Settings const &new_settings)
 	}
 }
 
+/// -------------------- Private virtual overrides ---------------------------
+void
+vl::Master::_mainloop(bool sleep)
+{
+	vl::chrono timer;
+
+	render();
+
+	if(sleep)
+	{
+		vl::time sleep_time;
+		// Try to get the requested frame rate but avoid division by zero
+		// also check that the time used for the frame is less than the max fps so we
+		// don't overflow the sleep time
+		if( _env->getFPS() > 0 && (vl::time(1.0/_env->getFPS()) > timer.elapsed()) )
+		{ sleep_time = vl::time(1.0/_env->getFPS()) - timer.elapsed(); }
+
+		// Force context switching by zero sleep
+		vl::sleep(sleep_time);
+	}
+}
+
+void
+vl::Master::_exit(void)
+{
+	exit();
+}
+
+void
+vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt)
+{
+	_env = env;
+	assert(_env && _env->isMaster());
+
+	if(opt.auto_fork)
+	{
+		for(size_t i = 0; i < env->getSlaves().size(); ++i)
+		{
+#ifndef _WIN32
+			pid_t pid = ::fork();
+			// Reset the environment file for a slave
+			if(pid != 0)
+			{
+				env->setSlave();
+				env->getMaster().name = env->getSlaves().at(i).name;
+				// Master needs to continue the loop and create the remaining slaves
+				break;
+			}
+#else
+			std::clog << "Windows autoforking local slaves." << std::endl;
+			/// @todo use a more general parameter for the program name
+			std::vector<std::string> params;
+			// Add slave param
+			params.push_back("--slave");
+			params.push_back(env->getSlaves().at(i).name);
+			// Add server param
+			params.push_back("--server");
+			std::stringstream ss;
+			ss << env->getServer().hostname << ":" << env->getServer().port;
+			params.push_back(ss.str());
+			params.push_back("--log_dir");
+			params.push_back(env->getLogDir());
+			// Create the process
+			uint32_t pid = create_process("hydra.exe", params, true);
+			_spawned_processes.push_back(pid);
+		}
+#endif
+	}
+
+	/// Correct name has been set
+	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
+
+	// We should hand over the Renderer to either client or config
+	_renderer.reset( new Renderer(env->getName()) );
+
+	_game_manager = new vl::GameManager(this, &_logger);
+
+	/// Server can be created here because the callback is only called
+	/// when the Server has environment and project
+	vl::ConfigServerDataCallback *cb = new vl::ConfigServerDataCallback(this);
+	_server.reset(new vl::cluster::Server(_env->getServer().port, cb));
+	_callbacks.push_back(cb);
+
+	// if we have a renderer we have to set callbacks
+	if(_renderer.get())
+	{
+		vl::MsgCallback *callback = new vl::ConfigMsgCallback(this);
+		_renderer->setSendMessageCB(callback);
+		_callbacks.push_back(callback);
+	}
+
+	_game_manager->setupResources(*env);
+
+	_game_manager->addProjectChangedListener(boost::bind(&Master::settingsChanged, this, _1));
+	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Master::quit_callback, this));
+
+	_renderer->setMeshManager(_game_manager->getMeshManager());
+
+	init(opt.global_file, opt.project_file, opt.editor);
+
+	std::vector<vl::config::Program> programs = env->getUsedPrograms();
+	std::clog << "Should start " << programs.size() << " autolaunched programs."
+		<< std::endl;
+	for(size_t i = 0; i < programs.size(); ++i)
+	{
+		std::clog << "Starting : " << programs.at(i).name 
+			<< " with command : " << programs.at(i).command << std::endl;
+		uint32_t pid = create_process(programs.at(i).command, programs.at(i).params, programs.at(i).new_console);
+		_spawned_processes.push_back(pid);
+	}
+}
+
+
 /// ------------ Private -------------
 void
-vl::Config::_updateServer( void )
+vl::Master::_updateServer( void )
 {
 	assert( _server );
 
@@ -440,7 +536,7 @@ vl::Config::_updateServer( void )
 }
 
 void
-vl::Config::_updateRenderer(void)
+vl::Master::_updateRenderer(void)
 {
 	if( !_renderer.get() )
 	{ return; }
@@ -466,14 +562,14 @@ vl::Config::_updateRenderer(void)
 }
 
 void
-vl::Config::_updateFrameMsgs(void)
+vl::Master::_updateFrameMsgs(void)
 {
 	_createMsgCreate();
 	_createMsgUpdate();
 }
 
 void
-vl::Config::_createMsgCreate(void)
+vl::Master::_createMsgCreate(void)
 {
 	// New objects created need to send SG_CREATE message
 	if( !getNewObjects().empty() )
@@ -497,7 +593,7 @@ vl::Config::_createMsgCreate(void)
 }
 
 void
-vl::Config::_createMsgUpdate(void)
+vl::Master::_createMsgUpdate(void)
 {
 	// Create SceneGraph updates
 	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
@@ -521,7 +617,7 @@ vl::Config::_createMsgUpdate(void)
 
 /// Event Handling
 void
-vl::Config::_handleMessages( void )
+vl::Master::_handleMessages( void )
 {
 	// Check local messages, pushed there by callbacks
 	while( messages() )
@@ -539,7 +635,7 @@ vl::Config::_handleMessages( void )
 }
 
 void
-vl::Config::_handleMessage(vl::cluster::Message &msg)
+vl::Master::_handleMessage(vl::cluster::Message &msg)
 {
 	switch( msg.getType() )
 	{
@@ -558,13 +654,13 @@ vl::Config::_handleMessage(vl::cluster::Message &msg)
 			break;
 
 		default :
-			std::cout << vl::CRITICAL << "Unhandled Message in Config : type = "
+			std::cout << vl::CRITICAL << "Unhandled Message in Master : type = "
 				<< vl::cluster::getTypeAsString(msg.getType()) << std::endl;
 	}
 }
 
 void
-vl::Config::_handleEventMessage(vl::cluster::Message &msg)
+vl::Master::_handleEventMessage(vl::cluster::Message &msg)
 {
 	while( msg.size() )
 	{
@@ -671,7 +767,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 			break;
 
 			default :
-				std::cout << vl::CRITICAL << "vl::Config::_receiveEventMessages : "
+				std::cout << vl::CRITICAL << "vl::Master::_receiveEventMessages : "
 					<< "Unhandleded message type." << std::endl;
 				break;
 		}
@@ -679,7 +775,7 @@ vl::Config::_handleEventMessage(vl::cluster::Message &msg)
 }
 
 void
-vl::Config::_handleCommandMessage(vl::cluster::Message &msg)
+vl::Master::_handleCommandMessage(vl::cluster::Message &msg)
 {
 	// TODO there should be a maximum amount of messages stored
 	// TODO works only on ASCII at the moment
