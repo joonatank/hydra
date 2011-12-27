@@ -350,7 +350,7 @@ vl::Application::run(void)
 		_mainloop(true);	
 	}
 
-	_exit();
+	exit();
 }
 
 void

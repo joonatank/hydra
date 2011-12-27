@@ -31,6 +31,8 @@ public :
 
 	/// virtual overrides from Application
 
+	virtual void exit(void);
+
 	/// @returns true if the application is still running
 	virtual bool isRunning(void) const;
 
@@ -41,8 +43,6 @@ public :
 	/// Private virtual overrides from Application
 private :
 	virtual void _mainloop(bool sleep);
-
-	virtual void _exit(void);
 
 	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
 

@@ -151,13 +151,6 @@ vl::Renderer::sendCommand( std::string const &cmd )
 void
 vl::Renderer::capture(void)
 {
-	// Here we should wait for the EnvSettings from master
-	// TODO we should have a wait for Message function
-	if( !_env )
-	{
-		return;
-	}
-
 	// Process input events
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->capture(); }
@@ -250,17 +243,6 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	{
 		_windows.at(i)->setCamera(0);
 	}
-}
-
-void
-vl::Renderer::initScene(vl::cluster::Message& msg)
-{
-	/// @todo change to use a custom type
-	assert(msg.getType() == vl::cluster::MSG_SG_INIT);
-	
-	std::cout << vl::TRACE << "vl::Renderer::initScene" << std::endl;
-	
-	updateScene(msg);
 }
 
 void
@@ -430,29 +412,6 @@ vl::Renderer::updateScene(vl::cluster::Message& msg)
 
 	_syncData();
 	_updateDistribData();
-}
-
-void
-vl::Renderer::print(vl::cluster::Message& msg)
-{
-	assert( msg.getType() == vl::cluster::MSG_PRINT );
-	size_t msgs;
-	msg.read(msgs);
-	while(msgs > 0)
-	{
-		std::string type;
-		msg.read(type);
-		double time;
-		msg.read(time);
-		std::string str;
-		msg.read(str);
-		vl::LOG_MESSAGE_LEVEL lvl;
-		msg.read(lvl);
-
-		printToConsole(str, time, type, lvl);
-
-		msgs--;
-	}
 }
 
 /// ----------------------- Log Receiver overrides ---------------------------

@@ -280,11 +280,6 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		break;
 
 		case vl::cluster::MSG_SG_INIT :
-			_renderer->initScene(msg);
-			_state.has_init = true;
-			/// @todo add reply
-			break;
-		
 		case vl::cluster::MSG_SG_UPDATE :
 		{
 			uint32_t frame = 0;
@@ -313,7 +308,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			}
 			else if(!_state.has_init)
 			{
-				_renderer->initScene(msg);
+				_renderer->updateScene(msg);
 				_state.has_init = true;
 			}
 

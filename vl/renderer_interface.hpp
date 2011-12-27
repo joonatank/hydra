@@ -55,14 +55,11 @@ public :
 	/// @brief specialisation of handleMessage
 	virtual void setProject(vl::Settings const &settings) = 0;
 	
-	virtual void initScene(vl::cluster::Message &msg) = 0;
-	
 	virtual void updateScene(vl::cluster::Message &msg) = 0;
 	
 	virtual void createSceneObjects(vl::cluster::Message &msg) = 0;
-	
-	virtual void print(vl::cluster::Message &msg) = 0;
 
+	/// @brief push event upwards to Application
 	virtual void sendEvent(vl::cluster::EventData const &event) = 0;
 
 	virtual void sendCommand(std::string const &cmd) = 0;

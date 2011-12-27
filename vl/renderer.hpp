@@ -123,13 +123,9 @@ public :
 	/// and commands the Renderer (same with Master)
 	/// At later point we might even combine some of the functionality
 	/// into Application and use pure virtual for Message sending/receiving
-	virtual void initScene(vl::cluster::Message &msg);
-	
 	virtual void updateScene(vl::cluster::Message &msg);
 	
 	virtual void createSceneObjects(vl::cluster::Message &msg);
-	
-	virtual void print(vl::cluster::Message &msg);
 
 	virtual void addCommandListener(CommandSent::slot_type const &slot)
 	{ _command_signal.connect(slot); }

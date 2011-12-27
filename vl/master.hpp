@@ -110,8 +110,6 @@ public:
 private :
 	virtual void _mainloop(bool sleep);
 
-	virtual void _exit(void);
-
 	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
 
 protected :

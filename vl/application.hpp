@@ -75,6 +75,8 @@ public:
 	// blocks till the program has exited calling progress
 	void run(void);
 
+	virtual void exit(void) = 0;
+
 	/// @returns true if the application is still running
 	virtual bool isRunning(void) const = 0;
 
@@ -87,8 +89,6 @@ public:
 	// Private virtual overrides
 private :
 	virtual void _mainloop(bool sleep) = 0;
-
-	virtual void _exit(void) = 0;
 
 	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt) = 0;
 

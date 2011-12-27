@@ -125,7 +125,7 @@ vl::Master::init(std::string const &global_file,
 		vl::cluster::Message msg(_msg_create);
 		_renderer->createSceneObjects(msg);
 		msg = createMsgInit();
-		_renderer->initScene(msg);
+		_renderer->updateScene(msg);
 		report["Creating objects in Renderer"].push(t.elapsed());
 	}
 
@@ -371,12 +371,6 @@ vl::Master::_mainloop(bool sleep)
 		// Force context switching by zero sleep
 		vl::sleep(sleep_time);
 	}
-}
-
-void
-vl::Master::_exit(void)
-{
-	exit();
 }
 
 void
