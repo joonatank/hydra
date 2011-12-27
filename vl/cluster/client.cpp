@@ -35,18 +35,6 @@
 const size_t MSG_BUFFER_SIZE = 128;
 
 /// ------------------------------ Callbacks ---------------------------------
-vl::cluster::ClientMsgCallback::ClientMsgCallback(vl::cluster::Client *own)
-	: owner(own)
-{
-	assert(owner);
-}
-
-void
-vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
-{
-	assert(owner);
-	owner->sendMessage(msg);
-}
 
 vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::Client *own)
 	: owner(own)
@@ -115,10 +103,6 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	assert(_renderer.get());
 	
 	// set callbacks to Renderer
-	vl::MsgCallback *cb = new ClientMsgCallback(this);
-	_renderer->setSendMessageCB(cb);
-	_callbacks.push_back(cb);
-
 	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(this);
 	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
 	_renderer->setMeshManager(mesh_man);

@@ -49,9 +49,8 @@ vl::gui::GUI::GUI(vl::Session *session)
 	_session->registerObject(this, OBJ_GUI);
 }
 
-vl::gui::GUI::GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb)
-	: _cmd_cb(cb)
-	, _session(session)
+vl::gui::GUI::GUI(vl::Session *session, uint64_t id)
+	: _session(session)
 	, _root(0)
 {
 	assert(_session);
@@ -320,8 +319,7 @@ vl::gui::GUI::isVisible(void) const
 void 
 vl::gui::GUI::sendCommand(std::string const &cmd)
 {
-	assert(_cmd_cb);
-	(*_cmd_cb)(cmd);
+	// @todo missing a signal
 }
 
 /// --------------------------------- Private --------------------------------

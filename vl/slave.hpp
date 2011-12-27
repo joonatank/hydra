@@ -25,6 +25,10 @@ class HYDRA_API Slave : public vl::Session, public vl::Application
 public :
 	Slave(void);
 
+	void injectCommand(std::string const &cmd);
+
+	void injectEvent(vl::cluster::EventData const &event);
+
 	/// virtual overrides from Application
 
 	/// @returns true if the application is still running
@@ -48,6 +52,9 @@ private :
 	RendererUniquePtr _renderer;
 
 	vl::cluster::ClientRefPtr _slave_client;
+
+	/// Input events to be sent
+	std::vector<vl::cluster::EventData> _events;
 
 };	// class Slave
 

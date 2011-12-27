@@ -42,40 +42,7 @@
 namespace vl
 {
 
-class Master;
-
-/// Callbacks
-struct ConfigMsgCallback : public vl::MsgCallback
-{
-	ConfigMsgCallback(vl::Master *own);
-
-	virtual ~ConfigMsgCallback(void) {}
-
-	virtual void operator()(vl::cluster::Message const &msg);
-
-	vl::Master *owner;
-};
-
-struct ConfigServerDataCallback : public vl::cluster::ServerDataCallback
-{
-	ConfigServerDataCallback(vl::Master *own);
-
-	virtual ~ConfigServerDataCallback(void) {}
-
-	virtual vl::cluster::Message createInitMessage(void);
-
-	virtual vl::cluster::Message createEnvironmentMessage(void);
-
-	virtual vl::cluster::Message createProjectMessage(void);
-
-	/// @todo add CREATE_MSG and UPDATE_MSG also
-
-	virtual vl::cluster::Message createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name);
-
-	vl::Master *owner;
-};
-
-/**	@class Config
+/**	@class Master
  *
  */
 class HYDRA_API Master : public vl::Session, public vl::Application
@@ -116,14 +83,19 @@ public:
 	/// by the Rendering clients.
 	/// Which message is needed depends on the client state. That's why these
 	/// are implemented as callbacks.
-
-	// This should always be called after createMsgUpdate
-	/// @todo fix const correctness, this method should not modify the object 
-	vl::cluster::Message createMsgInit(void);
+	/// @todo these can be moved to private as we are using requests now
+	vl::cluster::Message createMsgInit(void) const;
 
 	vl::cluster::Message createMsgEnvironment(void) const;
 
 	vl::cluster::Message createMsgProject(void) const;
+
+	vl::cluster::Message createResourceMessage(
+			vl::cluster::RESOURCE_TYPE type, std::string const &name) const;
+
+	void messageRequested(vl::cluster::RequestedMessage const &);
+
+	void injectEvent(vl::cluster::EventData const &);
 
 	// Callback for Project settings changes
 	void settingsChanged(vl::Settings const &new_settings);
@@ -161,6 +133,10 @@ protected :
 	void _handleMessages( void );
 	void _handleMessage(vl::cluster::Message &msg);
 	void _handleEventMessage(vl::cluster::Message &msg);
+	// @todo should use a custom data structure that is not tied to the cluster
+	// also no handle necessary here, move to EventManager after implementing
+	// custom type
+	void _handleEvent(vl::cluster::EventData &evt);
 	void _handleCommandMessage(vl::cluster::Message &msg);
 
 	vl::GameManagerPtr _game_manager;
@@ -189,9 +165,6 @@ protected :
 
 	// callback provided messages
 	std::deque<vl::cluster::Message> _messages;
-
-	// Callbacks owned by us
-	std::vector<vl::Callback *> _callbacks;
 
 	std::vector<uint32_t> _spawned_processes;
 

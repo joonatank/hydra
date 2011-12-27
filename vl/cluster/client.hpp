@@ -54,15 +54,6 @@ namespace cluster
 class Client;
 
 /// Callbacks
-struct ClientMsgCallback : public vl::MsgCallback
-{
-	ClientMsgCallback(Client *own);
-
-	virtual void operator()(vl::cluster::Message const &msg);
-
-	Client *owner;
-
-};	// struct ClientMsgCallback
 
 /// No blocking loader is provided, because it would disrubt the message system
 struct SlaveMeshLoaderCallback : public MeshLoaderCallback
@@ -75,8 +66,6 @@ struct SlaveMeshLoaderCallback : public MeshLoaderCallback
 	Client *owner;
 
 };	// class SlaveMeshLoaderCallback
-
-class Client;
 
 /// @brief callback structure for Waiting for certain type of message
 struct ClientMessageCallback
@@ -163,14 +152,6 @@ private :
 	std::vector<MessageRefPtr> _partial_messages;
 
 	std::map<MSG_TYPES, ClientMessageCallback *> _msg_callbacks;
-
-	// @todo this should save the simulation time and frame
-	// vl::time _sim_time;
-
-	/// Rendering pipeline performance checks
-//	vl::timer _rend_timer;
-//	vl::Report<vl::time> _rend_report;
-//	vl::timer _print_timer;
 
 };	// class Client
 

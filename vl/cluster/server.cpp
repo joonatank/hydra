@@ -21,15 +21,12 @@
 // Necessary for blocking functions
 #include "base/sleep.hpp"
 
-vl::cluster::Server::Server(uint16_t const port, ServerDataCallback *cb)
+vl::cluster::Server::Server(uint16_t const port)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _frame(1)
 	, _update_frame(1)
 	, _n_log_messages(0)
-	, _data_cb(cb)
 {
-	assert(_data_cb);
-
 	std::cout << vl::TRACE << "vl::cluster::Server::Server : " << "Creating server to port "
 		<< port << std::endl;
 
@@ -318,6 +315,7 @@ vl::cluster::Server::finish_draw(vl::time const &limit)
 void
 vl::cluster::Server::sendMessage(Message const &msg)
 {
+	ClientInfo *client = 0;
 	switch( msg.getType() )
 	{
 		
@@ -325,13 +323,34 @@ vl::cluster::Server::sendMessage(Message const &msg)
 			sendCreate(msg);
 			break;
 
-		case MSG_SG_UPDATE:
-			sendUpdate(msg);
+		case MSG_SG_UPDATE :
+			// this will probably be called for INIT which we should
+			// now move to a separate MSG_TYPE
+			assert( false && "MSG_SG_UPDATE message type to be sent." );
 			break;
 
-		// Uses the new callback interface
+		case MSG_SG_INIT :
 		case MSG_ENVIRONMENT:
+			// Find which client requested environment	
 		case MSG_PROJECT:
+			// Find which client requested project
+		case MSG_RESOURCE:
+			{
+				// Find which client requested resource
+				for(size_t i = 0; i < _requested_msgs.size(); ++i)
+				{
+					if(_requested_msgs.at(i).second == msg.getType())
+					{
+						client = &_requested_msgs.at(i).first;
+						_requested_msgs.erase(_requested_msgs.begin()+i);
+						break;
+					}
+				}
+				assert(client);
+				_sendMessage(*client, msg);
+			}
+			break;
+
 		// Uses the LogReceiver interface
 		case MSG_PRINT:
 		// Not yet supported
@@ -433,11 +452,9 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 			// @todo Using ACKs and resend would be even better.
 			if(client.environment_sent_time.elapsed() > vl::time(1, 0))
 			{
-				assert(_data_cb);
-				vl::cluster::Message msg = _data_cb->createEnvironmentMessage();
-				assert(!msg.empty() && msg.getType() == MSG_ENVIRONMENT);
-				_sendMessage(client, msg);
-				client.environment_sent_time.reset();
+				assert(!_request_message.empty());
+				_requested_msgs.push_back(std::make_pair(client, MSG_ENVIRONMENT));
+				_request_message(MSG_ENVIRONMENT);
 
 				// TODO this should save the client as one that requested
 				// environment if no environment is set so that one will be sent
@@ -584,10 +601,9 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 			std::string name;
 			msg.read(type);
 			msg.read(name);
-			Message resource_msg = _data_cb->createResourceMessage(type, name);
-			assert(!resource_msg.empty() && resource_msg.getType() == MSG_RESOURCE);
-
-			_sendMessage(client, resource_msg);
+			assert(!_request_message.empty());
+			_requested_msgs.push_back(std::make_pair(client, MSG_RESOURCE));
+			_request_message(RequestedMessage(MSG_RESOURCE, name, type));
 		}
 		break;
 
@@ -621,7 +637,6 @@ vl::cluster::Server::_has_client(boost::udp::endpoint const &address) const
 vl::cluster::Server::ClientInfo &
 vl::cluster::Server::_find_client(boost::udp::endpoint const &address)
 {
-	// TODO should throw on NULL
 	return *_find_client_ptr(address);
 }
 
@@ -675,7 +690,7 @@ vl::cluster::Server::_sendCreate(ClientInfo &client)
 }
 
 void
-vl::cluster::Server::_sendUpdate(ClientInfo const &client)
+vl::cluster::Server::_sendUpdate(ClientInfo &client)
 {
 	// @todo should we send zero data messages?
 	// the client can not handle not receiving updates but only receiving a draw message
@@ -683,15 +698,9 @@ vl::cluster::Server::_sendUpdate(ClientInfo const &client)
 	// then the draw message or is the update message optional?
 	if( !client.state.has_init )
 	{
-		assert(_data_cb);
-		// @todo check that these are created as valid, so no need to reset
-		// time and frame number
-		Message msg = _data_cb->createInitMessage();
-		msg.setFrame(_frame);
-		msg.setTimestamp(getSimulationTime());
-		assert(!msg.empty() && msg.getType() == MSG_SG_UPDATE);
-		_sendMessage(client, msg);
-		// TODO add frame and timestamp
+		assert(!_request_message.empty());
+		_requested_msgs.push_back(std::make_pair(client, MSG_SG_INIT));
+		_request_message(MSG_SG_INIT);
 	}
 	else
 	{
@@ -724,17 +733,23 @@ vl::cluster::Server::_sendOuput(ClientInfo &client)
 		}
 
 		_new_log_messages.clear();
-		_sendMessage(client.address, msg);
+		_sendMessage(client, msg);
 	}
 }
 
 void 
-vl::cluster::Server::_sendMessage(ClientInfo const &client, vl::cluster::Message const &msg)
+vl::cluster::Server::_sendMessage(ClientInfo &client, vl::cluster::Message const &msg)
 {
 	/// @todo remove the copying that is needed both createParts and dump
 	std::vector<char> buf;
 	std::vector<MessagePart> parts = msg.createParts();
 	
+	/// Modify state
+	if(msg.getType() == MSG_ENVIRONMENT)
+	{
+		client.environment_sent_time.reset();
+	}
+
 	for(size_t i = 0; i < parts.size(); ++i)
 	{
 		parts.at(i).dump(buf);
@@ -765,10 +780,10 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 				client.state.environment = true;
 				// Send the Project message
 				// TODO this should be moved to use a separate REQ_PROJECT message
-				assert(_data_cb);
-				vl::cluster::Message msg =_data_cb->createProjectMessage();
-				assert(!msg.empty() && msg.getType() == MSG_PROJECT);
-				_sendMessage(client, msg);
+				//assert(_data_cb);
+				assert(!_request_message.empty());
+				_requested_msgs.push_back(std::make_pair(client, MSG_PROJECT));
+				_request_message(MSG_PROJECT);
 			}
 		}
 		break;

@@ -19,6 +19,8 @@
 
 #include "gui_window.hpp"
 
+#include <boost/signal.hpp>
+
 namespace vl
 {
 
@@ -27,6 +29,8 @@ namespace gui
 
 class ConsoleWindow : public Window
 {
+	typedef boost::signal<void (std::string const &)> CommandSent;
+
 public :
 	ConsoleWindow(vl::gui::GUI *creator);
 
@@ -50,6 +54,9 @@ public :
 	bool wantsLogging(void) const
 	{ return true; }
 
+	virtual void addCommandListener(CommandSent::slot_type const &slot)
+	{ _command_signal.connect(slot); }
+
 // Private virtual overrides
 private :
 	virtual void _window_resetted(void);
@@ -63,6 +70,8 @@ private :
 	CEGUI::colour _py_out_colour;
 	CEGUI::colour _error_colour;
 	CEGUI::colour _out_colour;
+
+	CommandSent _command_signal;
 
 };	// class ConsoleWindow
 

@@ -48,7 +48,7 @@ public :
 	/// @param session the distributed session this GUI is attached to
 	/// @param id ID of this GUI, has to be valid
 	/// @param cb callback for sendCommand, ownership is passed to this
-	GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb);
+	GUI(vl::Session *session, uint64_t id);
 	
 	/// @brief Master creator
 	WindowRefPtr createWindow(std::string const &type, std::string const &name, std::string const &layout);
@@ -106,8 +106,6 @@ private :
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
 	std::vector<vl::gui::WindowRefPtr> _editors_without_parent;
-
-	vl::CommandCallback *_cmd_cb;
 
 	vl::Session *_session;
 

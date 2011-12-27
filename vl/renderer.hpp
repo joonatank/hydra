@@ -118,6 +118,11 @@ public :
 	 */
 	virtual void setProject(vl::Settings const &settings);
 	
+	/// @todo everything with a Message in it should be moved to Slave
+	/// Slave handles the translation from Message to discrete commands
+	/// and commands the Renderer (same with Master)
+	/// At later point we might even combine some of the functionality
+	/// into Application and use pure virtual for Message sending/receiving
 	virtual void initScene(vl::cluster::Message &msg);
 	
 	virtual void updateScene(vl::cluster::Message &msg);
@@ -126,7 +131,11 @@ public :
 	
 	virtual void print(vl::cluster::Message &msg);
 
-	virtual void setSendMessageCB(vl::MsgCallback *cb);
+	virtual void addCommandListener(CommandSent::slot_type const &slot)
+	{ _command_signal.connect(slot); }
+
+	virtual void addEventListener(EventSent::slot_type const &slot)
+	{ _event_signal.connect(slot); }
 
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
@@ -150,9 +159,6 @@ protected :
 	/// Updates command data, uses versioning to and indexes to provide an
 	/// Commands that can be sent from Master thread
 	void _updateDistribData( void );
-
-	/// Input events
-	void _sendEvents( void );
 
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory
@@ -182,9 +188,6 @@ protected :
 	vl::Player *_player;
 	uint32_t _screenshot_num;
 
-	/// Input events to be sent
-	std::vector<vl::cluster::EventData> _events;
-
 	std::vector<vl::Window *> _windows;
 
 	/// GUI related
@@ -199,8 +202,9 @@ protected :
 
 	std::vector<vl::cluster::ObjectData> _objects;
 
-	// Callbacks
-	vl::MsgCallback *_send_message_cb;
+	// Signals
+	CommandSent _command_signal;
+	EventSent _event_signal;
 
 	// LogReceiver
 	uint32_t _n_log_messages;

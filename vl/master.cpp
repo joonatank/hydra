@@ -47,75 +47,6 @@
 // Necessary for spawning external processes
 #include "base/system_util.hpp"
 
-/// ---------------------------------- Callbacks -----------------------------
-vl::ConfigMsgCallback::ConfigMsgCallback(vl::Master *own)
-	: owner(own)
-{
-	assert(owner);
-}
-
-void
-vl::ConfigMsgCallback::operator()(vl::cluster::Message const &msg)
-{
-	assert(owner);
-	owner->pushMessage(msg);
-}
-
-vl::ConfigServerDataCallback::ConfigServerDataCallback(vl::Master *own)
-	: owner(own)
-{
-	assert(owner);
-}
-
-vl::cluster::Message
-vl::ConfigServerDataCallback::createInitMessage(void)
-{
-	assert(owner);
-	return owner->createMsgInit();
-}
-
-
-vl::cluster::Message 
-vl::ConfigServerDataCallback::createEnvironmentMessage(void)
-{
-	assert(owner);
-	return owner->createMsgEnvironment();
-}
-
-vl::cluster::Message 
-vl::ConfigServerDataCallback::createProjectMessage(void)
-{
-	assert(owner);
-	return owner->createMsgProject();
-}
-
-vl::cluster::Message
-vl::ConfigServerDataCallback::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name)
-{
-	std::clog << "vl::ConfigServerDataCallback::createResourceMessage" << std::endl;
-
-	vl::cluster::Message msg(vl::cluster::MSG_RESOURCE, 0, vl::time());
-	if( type == vl::cluster::RES_MESH )
-	{
-		assert(owner->getGameManager()->getMeshManager()->hasMesh(name));
-		if(!owner->getGameManager()->getMeshManager()->hasMesh(name))
-		{
-			BOOST_THROW_EXCEPTION(vl::null_pointer());
-		}
-
-		vl::MeshRefPtr mesh = owner->getGameManager()->getMeshManager()->getMesh(name);
-		
-		vl::cluster::MessageDataStream stream = msg.getStream();
-		stream << vl::cluster::RES_MESH << name << *mesh;
-	}
-	else
-	{
-		BOOST_THROW_EXCEPTION(vl::not_implemented());
-	}
-
-	return msg;
-}
-
 /// ---------------------------------- Master --------------------------------
 vl::Master::Master(void)
 	: Application()
@@ -134,10 +65,6 @@ vl::Master::~Master( void )
 	std::cout << vl::TRACE << "vl::Master::~Master" << std::endl;
 
 	delete _game_manager;
-
-	for( std::vector<vl::Callback *>::iterator iter = _callbacks.begin();
-		iter != _callbacks.end(); ++iter )
-	{ delete *iter; }
 
 	for(size_t i = 0; i < _spawned_processes.size(); ++i)
 	{
@@ -325,11 +252,11 @@ vl::Master::pushMessage(vl::cluster::Message const &msg)
 }
 
 vl::cluster::Message
-vl::Master::createMsgInit(void)
+vl::Master::createMsgInit(void) const
 {
-	vl::cluster::Message msg( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
+	vl::cluster::Message msg( vl::cluster::MSG_SG_INIT, 0, vl::time() );
 
-	std::vector<vl::Distributed *>::iterator iter;
+	std::vector<vl::Distributed *>::const_iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
 		++iter )
 	{
@@ -375,6 +302,34 @@ vl::Master::createMsgProject(void) const
 
 	return msg;
 }
+
+vl::cluster::Message
+vl::Master::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name) const
+{
+	std::clog << "vl::Master::createResourceMessage" << std::endl;
+
+	vl::cluster::Message msg(vl::cluster::MSG_RESOURCE, 0, vl::time());
+	if( type == vl::cluster::RES_MESH )
+	{
+		assert(getGameManager()->getMeshManager()->hasMesh(name));
+		if(!getGameManager()->getMeshManager()->hasMesh(name))
+		{
+			BOOST_THROW_EXCEPTION(vl::null_pointer());
+		}
+
+		vl::MeshRefPtr mesh = getGameManager()->getMeshManager()->getMesh(name);
+		
+		vl::cluster::MessageDataStream stream = msg.getStream();
+		stream << vl::cluster::RES_MESH << name << *mesh;
+	}
+	else
+	{
+		BOOST_THROW_EXCEPTION(vl::not_implemented());
+	}
+
+	return msg;
+}
+
 
 void
 vl::Master::settingsChanged(vl::Settings const &new_settings)
@@ -473,18 +428,14 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	_game_manager = new vl::GameManager(this, &_logger);
 
-	/// Server can be created here because the callback is only called
-	/// when the Server has environment and project
-	vl::ConfigServerDataCallback *cb = new vl::ConfigServerDataCallback(this);
-	_server.reset(new vl::cluster::Server(_env->getServer().port, cb));
-	_callbacks.push_back(cb);
+	_server.reset(new vl::cluster::Server(_env->getServer().port));
+	_server->addRequestMessageListener(boost::bind(&Master::messageRequested, this, _1));
 
 	// if we have a renderer we have to set callbacks
 	if(_renderer.get())
 	{
-		vl::MsgCallback *callback = new vl::ConfigMsgCallback(this);
-		_renderer->setSendMessageCB(callback);
-		_callbacks.push_back(callback);
+		_renderer->addEventListener(boost::bind(&Master::injectEvent, this, _1));
+		_renderer->addCommandListener(boost::bind(&PythonContext::executeCommand, _game_manager->getPython(), _1));
 	}
 
 	_game_manager->setupResources(*env);
@@ -508,6 +459,39 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	}
 }
 
+void
+vl::Master::messageRequested(vl::cluster::RequestedMessage const &req_msg)
+{
+	switch(req_msg.type)
+	{
+	case vl::cluster::MSG_ENVIRONMENT :
+		{
+			_server->sendMessage(createMsgEnvironment());
+		}
+		break;
+	case vl::cluster::MSG_PROJECT :
+		{
+			_server->sendMessage(createMsgProject());
+		}
+		break;
+	case vl::cluster::MSG_SG_INIT :
+		{
+			_server->sendMessage(createMsgInit());
+		}
+		break;
+	case vl::cluster::MSG_RESOURCE :
+		{
+			_server->sendMessage(createResourceMessage(req_msg.res_type, req_msg.name));
+		}
+		break;
+	}
+}
+
+void
+vl::Master::injectEvent(vl::cluster::EventData const &evt)
+{
+	_handleEvent(vl::cluster::EventData(evt));
+}
 
 /// ------------ Private -------------
 void
@@ -666,111 +650,117 @@ vl::Master::_handleEventMessage(vl::cluster::Message &msg)
 	{
 		vl::cluster::EventData data;
 		data.copyFromMessage(&msg);
-		vl::cluster::ByteDataStream stream = data.getStream();
-		switch( data.getType() )
+		_handleEvent(data);
+	}
+}
+
+void
+vl::Master::_handleEvent(vl::cluster::EventData &event)
+{
+	vl::cluster::ByteDataStream stream = event.getStream();
+	switch( event.getType() )
+	{
+		case vl::cluster::EVT_KEY_PRESSED :
 		{
-			case vl::cluster::EVT_KEY_PRESSED :
-			{
-				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
-				stream >> evt;
-				// @todo should pass the whole event structure
-				_game_manager->getEventManager()->keyPressed(evt.key);
-			}
-			break;
-
-			case vl::cluster::EVT_KEY_RELEASED :
-			{
-				OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
-				stream >> evt;
-				// @todo should pass the whole event structure
-				_game_manager->getEventManager()->keyReleased(evt.key);
-			}
-			break;
-
-			case vl::cluster::EVT_MOUSE_PRESSED :
-			{
-				OIS::MouseButtonID b_id;
-				OIS::MouseEvent evt( 0, OIS::MouseState() );
-				stream >> b_id >> evt;
-
-				// @todo should pass the mouse state to event manager
-			}
-			break;
-
-			case vl::cluster::EVT_MOUSE_RELEASED :
-			{
-				OIS::MouseButtonID b_id;
-				OIS::MouseEvent evt( 0, OIS::MouseState() );
-				stream >> b_id >> evt;
-
-				// @todo should pass the mouse state to event manager
-			}
-			break;
-
-			case vl::cluster::EVT_MOUSE_MOVED :
-			{
-				OIS::MouseEvent evt( 0, OIS::MouseState() );
-				stream >> evt;
-
-				// @todo should pass the mouse state to event manager
-			}
-			break;
-
-			case vl::cluster::EVT_JOYSTICK_PRESSED :
-			{
-				vl::JoystickEvent evt;
-				int button;
-				stream >> button >> evt;
-
-				_game_manager->getEventManager()->update_joystick(evt);
-			}
-			break;
-
-			case vl::cluster::EVT_JOYSTICK_RELEASED :
-			{
-				vl::JoystickEvent evt;
-				int button;
-				stream >> button >> evt;
-
-				_game_manager->getEventManager()->update_joystick(evt);
-			}
-			break;
-
-			case vl::cluster::EVT_JOYSTICK_AXIS :
-			{
-				vl::JoystickEvent evt;
-				int axis;
-				stream >> axis >> evt;
-
-				_game_manager->getEventManager()->update_joystick(evt);
-			}
-			break;
-
-			case vl::cluster::EVT_JOYSTICK_POV :
-			{
-				vl::JoystickEvent evt;
-				int pov;
-				stream >> pov >> evt;
-
-				_game_manager->getEventManager()->update_joystick(evt);
-			}
-			break;
-
-			case vl::cluster::EVT_JOYSTICK_VECTOR3 :
-			{
-				vl::JoystickEvent evt;
-				int index;
-				stream >> index >> evt;
-
-				_game_manager->getEventManager()->update_joystick(evt);
-			}
-			break;
-
-			default :
-				std::cout << vl::CRITICAL << "vl::Master::_receiveEventMessages : "
-					<< "Unhandleded message type." << std::endl;
-				break;
+			OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+			stream >> evt;
+			// @todo should pass the whole event structure
+			_game_manager->getEventManager()->keyPressed(evt.key);
 		}
+		break;
+
+		case vl::cluster::EVT_KEY_RELEASED :
+		{
+			OIS::KeyEvent evt( 0, OIS::KC_UNASSIGNED, 0 );
+			stream >> evt;
+			// @todo should pass the whole event structure
+			_game_manager->getEventManager()->keyReleased(evt.key);
+		}
+		break;
+
+		case vl::cluster::EVT_MOUSE_PRESSED :
+		{
+			OIS::MouseButtonID b_id;
+			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			stream >> b_id >> evt;
+
+			// @todo should pass the mouse state to event manager
+		}
+		break;
+
+		case vl::cluster::EVT_MOUSE_RELEASED :
+		{
+			OIS::MouseButtonID b_id;
+			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			stream >> b_id >> evt;
+
+			// @todo should pass the mouse state to event manager
+		}
+		break;
+
+		case vl::cluster::EVT_MOUSE_MOVED :
+		{
+			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			stream >> evt;
+
+			// @todo should pass the mouse state to event manager
+		}
+		break;
+
+		case vl::cluster::EVT_JOYSTICK_PRESSED :
+		{
+			vl::JoystickEvent evt;
+			int button;
+			stream >> button >> evt;
+
+			_game_manager->getEventManager()->update_joystick(evt);
+		}
+		break;
+
+		case vl::cluster::EVT_JOYSTICK_RELEASED :
+		{
+			vl::JoystickEvent evt;
+			int button;
+			stream >> button >> evt;
+
+			_game_manager->getEventManager()->update_joystick(evt);
+		}
+		break;
+
+		case vl::cluster::EVT_JOYSTICK_AXIS :
+		{
+			vl::JoystickEvent evt;
+			int axis;
+			stream >> axis >> evt;
+
+			_game_manager->getEventManager()->update_joystick(evt);
+		}
+		break;
+
+		case vl::cluster::EVT_JOYSTICK_POV :
+		{
+			vl::JoystickEvent evt;
+			int pov;
+			stream >> pov >> evt;
+
+			_game_manager->getEventManager()->update_joystick(evt);
+		}
+		break;
+
+		case vl::cluster::EVT_JOYSTICK_VECTOR3 :
+		{
+			vl::JoystickEvent evt;
+			int index;
+			stream >> index >> evt;
+
+			_game_manager->getEventManager()->update_joystick(evt);
+		}
+		break;
+
+		default :
+			std::cout << vl::CRITICAL << "vl::Master::_receiveEventMessages : "
+				<< "Unhandleded message type." << std::endl;
+			break;
 	}
 }
 

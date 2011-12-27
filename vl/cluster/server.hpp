@@ -33,6 +33,8 @@
 /// for profiling
 #include "base/report.hpp"
 
+#include <boost/signal.hpp>
+
 namespace boost
 {
 	using boost::asio::ip::udp;
@@ -44,23 +46,27 @@ namespace vl
 namespace cluster
 {
 
-struct ServerDataCallback : public vl::Callback
+struct RequestedMessage
 {
-	/// Create the SceneGraph init message
-	virtual Message createInitMessage(void) = 0;
+	RequestedMessage(MSG_TYPES type_)
+		: type(type_)
+	{}
 
-	virtual Message createEnvironmentMessage(void) = 0;
+	RequestedMessage(MSG_TYPES type_, std::string const &name_, RESOURCE_TYPE res_type_)
+		: type(type_), name(name_), res_type(res_type_)
+	{}
 
-	virtual Message createProjectMessage(void) = 0;
-
-	/// @todo add CREATE_MSG and UPDATE_MSG also
-
-	/// Create a resource message containing certain type of resource with the name
-	virtual Message createResourceMessage(RESOURCE_TYPE type, std::string const &name) = 0;
+	MSG_TYPES type;
+	// extra data only useful for resource messages
+	std::string name;
+	RESOURCE_TYPE res_type;
 };
 
 class Server : public LogReceiver
 {
+	typedef boost::signal<void (RequestedMessage const &)> RequestMessage;
+	typedef boost::signal<void (vl::cluster::Message const &)> MessageReceived;
+
 public:
 
 	struct ClientInfo
@@ -80,7 +86,7 @@ public:
 		std::map<vl::time, MessagePart> _sent_msgs;
 	};
 
-	Server(uint16_t const port, ServerDataCallback *cb);
+	Server(uint16_t const port);
 
 	~Server();
 
@@ -106,7 +112,31 @@ public:
 	/// first it will simplify the interface (no duplicate methods)
 	/// second it will always provide the latest version when it's needed
 	/// no more copying temporaries and sending them when requested.
+	///
+	/// mhhh should it?
+	/// we can do easily boost::signal mapping if necessary
+	/// but what is driving what?
+	/// architecture wise Master should be deciding when new messages
+	/// are available and Server (or similar instance) should store
+	/// those messages and forward them when convienient
+	///
+	/// this would imply that we map a Master method to sendMessage
+	/// and we can remove all callbacks and specific send methods
+	/// when the order matters the Master should insure that
+	/// sendMessage is called in correct order as 
+	/// it should be FIFO
+	/// Sender doesn't need to care about the Method he is calling
+	/// or the order that different types of messages is sent
+	/// Server handles that.
+	/// Sender needs to care that same type type of Messages are sent
+	/// in correct order.
 	void sendMessage(Message const &msg);
+
+	int addRequestMessageListener(RequestMessage::slot_type const &slot)
+	{ _request_message.connect(slot); return 1; }
+
+	int addMessageListener(MessageReceived::slot_type const &slot)
+	{ _message_received.connect(slot); return 1; }
 
 	/// Send an SceneGraph update
 	void sendUpdate( Message const &msg );
@@ -164,11 +194,11 @@ private :
 	// this is called the same messaage will never be sent more than once
 	void _sendCreate(ClientInfo &client);
 
-	void _sendUpdate(ClientInfo const &client);
+	void _sendUpdate(ClientInfo &client);
 
 	void _sendOuput(ClientInfo &client);
 
-	void _sendMessage(ClientInfo const &client, vl::cluster::Message const &msg);
+	void _sendMessage(ClientInfo &client, vl::cluster::Message const &msg);
 
 	void _handle_ack(ClientInfo &client, MSG_TYPES ack_to);
 
@@ -205,7 +235,11 @@ private :
 	uint32_t _n_log_messages;
 	std::vector<vl::LogMessage> _new_log_messages;
 
-	ServerDataCallback *_data_cb;
+	//ServerDataCallback *_data_cb;
+	// signals
+	MessageReceived _message_received;
+	RequestMessage _request_message;
+	std::vector<std::pair<ClientInfo &, MSG_TYPES> > _requested_msgs;
 
 	vl::Report<vl::time> _server_report;
 	vl::chrono _report_timer;

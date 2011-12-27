@@ -128,7 +128,7 @@ vl::gui::ConsoleWindow::onConsoleInputAccepted( CEGUI::EventArgs const &e )
 			// TODO add support for time
 			printTo(command, 0);
 
-			_creator->sendCommand(command);
+			_command_signal(command);
 		}
 
 		// Reset the memory index because the user has accepted the command

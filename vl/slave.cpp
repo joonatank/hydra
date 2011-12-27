@@ -24,6 +24,27 @@ vl::Slave::Slave(void)
 	: Application()
 {}
 
+void
+vl::Slave::injectCommand(std::string const &cmd)
+{
+	assert(_slave_client);
+
+	vl::cluster::Message msg( vl::cluster::MSG_COMMAND, 0, vl::time() );
+	// Write size and string and terminating character
+	msg.write( cmd.size()+1 );
+	msg.write( cmd.c_str(), cmd.size()+1 );
+
+	_slave_client->sendMessage(msg);
+}
+
+void
+vl::Slave::injectEvent(vl::cluster::EventData const &event)
+{
+		// Add to event stack for sending them at once in one message to the Master
+	_events.push_back(event);
+}
+
+
 bool
 vl::Slave::isRunning(void) const
 {
@@ -48,6 +69,19 @@ vl::Slave::getGameManager(void) const
 void
 vl::Slave::_mainloop(bool sleep)
 {
+	if( !_events.empty() )
+	{
+		// @todo fix the time and frame number
+		vl::cluster::Message msg(vl::cluster::MSG_INPUT, 0, vl::time());
+		std::vector<vl::cluster::EventData>::iterator iter;
+		for( iter = _events.begin(); iter != _events.end(); ++iter )
+		{
+			iter->copyToMessage(&msg);
+		}
+		_events.clear();
+		_slave_client->sendMessage(msg);
+	}
+
 	// run main loop
 	_slave_client->mainloop();
 
@@ -79,6 +113,9 @@ vl::Slave::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt
 
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
+
+	_renderer->addCommandListener(boost::bind(&Slave::injectCommand, this, _1));
+	_renderer->addEventListener(boost::bind(&Slave::injectEvent, this, _1));
 
 	char const *host = env->getServer().hostname.c_str();
 	uint16_t port = env->getServer().port;

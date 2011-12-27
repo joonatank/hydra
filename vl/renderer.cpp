@@ -41,14 +41,12 @@
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// ------------------------- Public -------------------------------------------
-// TODO should probably copy the env settings and not store the reference
 vl::Renderer::Renderer(std::string const &name)
 	: _name(name)
 	, _ogre_sm(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
-	, _send_message_cb(0)
 	, _n_log_messages(0)
 {
 	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
@@ -139,23 +137,15 @@ vl::Renderer::getWindowConf(std::string const &window_name) const
 }
 
 void
-vl::Renderer::sendEvent( vl::cluster::EventData const &event )
+vl::Renderer::sendEvent(vl::cluster::EventData const &event)
 {
-	// Add to event stack for sending them at once in one message to the Master
-	_events.push_back(event);
+	_event_signal(event);
 }
 
 void
 vl::Renderer::sendCommand( std::string const &cmd )
 {
-	vl::cluster::Message msg( vl::cluster::MSG_COMMAND, 0, vl::time() );
-	// Write size and string and terminating character
-	msg.write( cmd.size()+1 );
-	msg.write( cmd.c_str(), cmd.size()+1 );
-
-	// Callback
-	assert(_send_message_cb);
-	(*_send_message_cb)(msg);
+	_command_signal(cmd);
 }
 
 void
@@ -171,9 +161,6 @@ vl::Renderer::capture(void)
 	// Process input events
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->capture(); }
-
-	// Send messages
-	_sendEvents();
 }
 
 bool 
@@ -269,7 +256,7 @@ void
 vl::Renderer::initScene(vl::cluster::Message& msg)
 {
 	/// @todo change to use a custom type
-	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+	assert(msg.getType() == vl::cluster::MSG_SG_INIT);
 	
 	std::cout << vl::TRACE << "vl::Renderer::initScene" << std::endl;
 	
@@ -326,7 +313,8 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					if(_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
-					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
+					// @todo fix callback with a signal
+					_gui.reset(new vl::gui::GUI(this, id));
 					assert(_windows.size() > 0);
 					_gui->initGUI(_windows.at(0));
 					// @todo this should copy the resources from vl::ogre::Root not settings
@@ -334,14 +322,6 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					{ std::cout << "No GUI resources" << std::endl; }
 					else
 					{ _gui->initGUIResources(_settings); }
-
-					// Request output updates for the console
-					if(logEnabled())
-					{
-						assert( _send_message_cb );
-						vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
-						(*_send_message_cb)(msg);
-					}
 				}
 				else
 				{
@@ -364,6 +344,10 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					if(!_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
 					_gui->createWindow(type, id);
+					if(type == OBJ_GUI_CONSOLE)
+					{
+						_gui->getConsole()->addCommandListener(boost::bind(&Renderer::sendCommand, this, _1));
+					}
 				}
 				else
 				{
@@ -430,7 +414,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 void
 vl::Renderer::updateScene(vl::cluster::Message& msg)
 {
-	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE || msg.getType() == vl::cluster::MSG_SG_INIT);
 
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
@@ -469,14 +453,6 @@ vl::Renderer::print(vl::cluster::Message& msg)
 
 		msgs--;
 	}
-}
-
-void 
-vl::Renderer::setSendMessageCB(vl::MsgCallback *cb)
-{
-	// Only single instances are supported for now
-	assert(!_send_message_cb && cb);
-	_send_message_cb = cb;
 }
 
 /// ----------------------- Log Receiver overrides ---------------------------
@@ -652,24 +628,6 @@ vl::Renderer::_updateDistribData( void )
 
 			_screenshot_num = _player->getScreenshotVersion();
 		}
-	}
-}
-
-void
-vl::Renderer::_sendEvents( void )
-{
-	if( !_events.empty() )
-	{
-		vl::cluster::Message msg( vl::cluster::MSG_INPUT, 0, vl::time() );
-		std::vector<vl::cluster::EventData>::iterator iter;
-		for( iter = _events.begin(); iter != _events.end(); ++iter )
-		{
-			iter->copyToMessage(&msg);
-		}
-		_events.clear();
-
-		assert(_send_message_cb);
-		(*_send_message_cb)(msg);
 	}
 }
 

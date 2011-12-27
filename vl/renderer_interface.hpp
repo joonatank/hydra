@@ -29,29 +29,20 @@
 
 #include "window_interface.hpp"
 
+#include <boost/signal.hpp>
+
 namespace vl
 {
-
-/// callback functors
-struct MsgCallback : public Callback
-{
-	virtual ~MsgCallback(void) {}
-
-	virtual void operator()(vl::cluster::Message const &) = 0;
-};
-
-struct CommandCallback : public Callback
-{
-	virtual ~CommandCallback(void) {}
-
-	virtual void operator()(std::string const &) = 0;
-};
 
 /**	@class RendererInterface
  *	@brief Abstract interface for the renderer
  */
 class RendererInterface : public LogReceiver
 {
+protected :
+	typedef boost::signal<void (std::string const &)> CommandSent;
+	typedef boost::signal<void (vl::cluster::EventData const &)> EventSent;
+
 public :
 
 	virtual ~RendererInterface(void) {}
@@ -71,13 +62,6 @@ public :
 	virtual void createSceneObjects(vl::cluster::Message &msg) = 0;
 	
 	virtual void print(vl::cluster::Message &msg) = 0;
-
-	// Interface for sending local changes
-// 	void sendMessage(vl::cluster::Message const &msg)
-// 	{
-// 		vl::cluster::Message msg_cpy(msg);
-// 		handleMessage(msg_cpy);
-// 	}
 
 	virtual void sendEvent(vl::cluster::EventData const &event) = 0;
 
@@ -113,29 +97,11 @@ public :
 
 	virtual vl::IWindow *createWindow(vl::config::Window const &winConf) = 0;
 
-	// Callbacks
-//	virtual void setRegisterForOutputCallback(RendererCallback *cb) = 0;
+	virtual void addCommandListener(CommandSent::slot_type const &slot) = 0;
 
-//	virtual void setInputEventCallback(RendererMsgCallback *cb) = 0;
-
-	virtual void setSendMessageCB(MsgCallback *cb) = 0;
+	virtual void addEventListener(EventSent::slot_type const &slot) = 0;
 
 };	// class RendererInterface
-
-struct RendererCommandCallback : public CommandCallback
-{
-	RendererCommandCallback(RendererInterface *rend)
-		: renderer(rend)
-	{}
-
-	virtual void operator()(std::string const &cmd)
-	{
-		assert(renderer);
-		renderer->sendCommand(cmd);
-	}
-
-	RendererInterface *renderer;
-};
 
 }	// namespace vl
 
