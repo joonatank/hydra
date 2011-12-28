@@ -56,6 +56,7 @@ vl::Master::Master(void)
 	, _server()
 	, _running(true)
 	, _renderer()
+	, _frame(0)
 {
 	std::cout << vl::TRACE << "vl::Master::Master" << std::endl;
 }
@@ -116,7 +117,12 @@ vl::Master::init(std::string const &global_file,
 	t.reset();
 	_server->poll();
 	_updateFrameMsgs();
-	_updateServer();
+	// Not necessary to send update at start because Server will request
+	// INIT message anyway
+	if( !_msg_create.empty() )
+	{
+		_server->sendCreate(_msg_create);
+	}
 	report["Updating server"].push(t.elapsed());
 
 	if(_renderer.get())
@@ -138,6 +144,8 @@ vl::Master::init(std::string const &global_file,
 	static_cast<PythonContextImpl *>(_game_manager->getPython())
 		->addVariable("server_report", _server->getReport());
 	
+	_server->process_event(vl::cluster::init());
+
 	// TODO this should block till both slaves and local renderer are ready
 	// Problematic as this does not take into account clients that are started
 	// later than this function is ran.
@@ -163,10 +171,15 @@ vl::Master::exit(void)
 }
 
 void
-vl::Master::render( void )
+vl::Master::render(void)
 {
 	if(!isRunning())
 	{ return; }
+
+	if( _frame == 0 )
+	{ _sim_timer.reset(); }
+
+	++_frame;
 
 	assert(_server);
 
@@ -192,12 +205,12 @@ vl::Master::render( void )
 	_updateRenderer();
 
 	// TODO separate stats for rendering slaves and local
-	_server->update();
+	_server->update(_frame, getSimulationTime());
 	report["scene graph update time"].push(timer.elapsed());
 
 	/// Render the scene
 	timer.reset();
-	bool rendering = _server->start_draw();
+	_server->start_draw(_frame, getSimulationTime());
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
@@ -205,11 +218,8 @@ vl::Master::render( void )
 		_renderer->draw();
 		report["local rendering"].push(l.elapsed());
 	}
-	if(rendering)
-	{
-		vl::time limit(1, 0);
-		_server->finish_draw(limit);
-	}
+
+	_server->finish_draw(_frame, getSimulationTime());
 
 	// Finish local renderer
 	if( _renderer.get() )
@@ -254,7 +264,7 @@ vl::Master::pushMessage(vl::cluster::Message const &msg)
 vl::cluster::Message
 vl::Master::createMsgInit(void) const
 {
-	vl::cluster::Message msg( vl::cluster::MSG_SG_INIT, 0, vl::time() );
+	vl::cluster::Message msg(vl::cluster::MSG_SG_INIT, _frame, getSimulationTime());
 
 	std::vector<vl::Distributed *>::const_iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();
@@ -280,7 +290,7 @@ vl::Master::createMsgEnvironment(void) const
 	vl::cluster::ByteDataStream stream( &data );
 	stream << _env;
 
-	vl::cluster::Message msg( vl::cluster::MSG_ENVIRONMENT, 0, vl::time() );
+	vl::cluster::Message msg(vl::cluster::MSG_ENVIRONMENT, _frame, getSimulationTime());
 	data.copyToMessage( &msg );
 
 	return msg;
@@ -297,7 +307,7 @@ vl::Master::createMsgProject(void) const
 	vl::cluster::ByteDataStream stream( &data );
 	stream << _proj;
 
-	vl::cluster::Message msg( vl::cluster::MSG_PROJECT, 0, vl::time() );
+	vl::cluster::Message msg(vl::cluster::MSG_PROJECT, _frame, getSimulationTime());
 	data.copyToMessage( &msg );
 
 	return msg;
@@ -308,7 +318,7 @@ vl::Master::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string c
 {
 	std::clog << "vl::Master::createResourceMessage" << std::endl;
 
-	vl::cluster::Message msg(vl::cluster::MSG_RESOURCE, 0, vl::time());
+	vl::cluster::Message msg(vl::cluster::MSG_RESOURCE, _frame, getSimulationTime());
 	if( type == vl::cluster::RES_MESH )
 	{
 		assert(getGameManager()->getMeshManager()->hasMesh(name));
@@ -487,6 +497,15 @@ vl::Master::injectEvent(vl::cluster::EventData const &evt)
 	_handleEvent(vl::cluster::EventData(evt));
 }
 
+vl::time 
+vl::Master::getSimulationTime(void) const
+{
+	if( _frame == 0 )
+	{ return vl::time(); }
+	else
+	{ return _sim_timer.elapsed(); }
+}
+
 /// ------------ Private -------------
 void
 vl::Master::_updateServer( void )
@@ -521,12 +540,10 @@ vl::Master::_updateRenderer(void)
 
 	if( !_msg_create.empty() )
 	{
-		vl::cluster::Message msg(_msg_create);
-		_renderer->createSceneObjects(msg);
+		_renderer->createSceneObjects(vl::cluster::Message(_msg_create));
 	}
 
-	vl::cluster::Message msg(_msg_update);
-	_renderer->updateScene(msg);
+	_renderer->updateScene(vl::cluster::Message(_msg_update));
 
 	// Send logs
 	if( _renderer->logEnabled() )
@@ -552,7 +569,7 @@ vl::Master::_createMsgCreate(void)
 	// New objects created need to send SG_CREATE message
 	if( !getNewObjects().empty() )
 	{
-		_msg_create = vl::cluster::Message( vl::cluster::MSG_SG_CREATE, 0, vl::time() );
+		_msg_create = vl::cluster::Message( vl::cluster::MSG_SG_CREATE, _frame, getSimulationTime());
 		_msg_create.write( getNewObjects().size() );
 		for( size_t i = 0; i < getNewObjects().size(); ++i )
 		{
@@ -574,7 +591,7 @@ void
 vl::Master::_createMsgUpdate(void)
 {
 	// Create SceneGraph updates
-	_msg_update = vl::cluster::Message( vl::cluster::MSG_SG_UPDATE, 0, vl::time() );
+	_msg_update = vl::cluster::Message(vl::cluster::MSG_SG_UPDATE, _frame, getSimulationTime());
 
 	std::vector<vl::Distributed *>::iterator iter;
 	for( iter = _registered_objects.begin(); iter != _registered_objects.end();

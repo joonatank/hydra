@@ -106,6 +106,8 @@ public:
 		_running = false; 
 	}
 
+	vl::time getSimulationTime(void) const;
+
 /// Private virtual overrides from Application
 private :
 	virtual void _mainloop(bool sleep);
@@ -156,6 +158,9 @@ protected :
 
 	// Renderer
 	RendererUniquePtr _renderer;
+
+	uint32_t _frame;
+	vl::chrono _sim_timer;
 
 	// Update messages for this frame
 	vl::cluster::Message _msg_create;
