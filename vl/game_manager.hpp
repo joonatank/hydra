@@ -610,7 +610,7 @@ struct GameManagerFSM_ : public msm::front::state_machine_def<GameManagerFSM_, v
 		return !_impl->auto_start();
 	}
 
-	// the initial state of the player SM. Must be defined
+	// the initial state of the FSM. Must be defined
 	typedef Unknown initial_state;
 
 	typedef GameManagerFSM_ g;
