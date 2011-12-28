@@ -419,6 +419,8 @@ public :
 	};
 
 	// the initial state of the FSM. Must be defined
+	// @todo replace with a region where another one is for errors
+	// needs to be able to reset the other regions state though.
 	typedef Unknown initial_state;
 
 	typedef ServerFSM_ s;
@@ -429,16 +431,16 @@ a_row< Unknown , init				,	Initing    , &s::_do_init  >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
 a_row< Initing , vl::none			,	Resting    , &s::_do_rest  >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
-  row< Resting , update				,	Updating    , &s::_do_update,  &s::has_rendering_clients >,
+  row< Resting , update				,	Updating    , &s::_do_update	,  &s::has_rendering_clients >,
 a_row< Resting , timer_expired		,	Error		, &s::_report_error >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
-a_row< Updating, render				,	Rendering   , &s::_do_render >,
+  row< Updating, render				,	Rendering   , &s::_do_render	, &s::has_rendering_clients >,
 a_row< Updating, timer_expired		,	Error		, &s::_report_error >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
-a_row< Rendering , swap				,	Swapping    , &s::_do_swap  >,
+  row< Rendering , swap				,	Swapping    , &s::_do_swap		, &s::has_rendering_clients >,
 a_row< Rendering , timer_expired	,	Error		, &s::_report_error >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
-a_row< Swapping , swap_done			,	Resting		, &s::_do_swap_done >,
+  row< Swapping , swap_done			,	Resting		, &s::_do_swap_done , &s::has_rendering_clients >,
 a_row< Swapping , timer_expired		,	Error		, &s::_report_error >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
 a_row< Error	, clear_error		,	Resting		, &s::_do_rest >
@@ -448,8 +450,12 @@ a_row< Error	, clear_error		,	Resting		, &s::_do_rest >
     template <class FSM,class Event>
     void no_transition(Event const& e, FSM&, int state)
     {
-        std::clog << "no transition from state " << state
-            << " on event " << typeid(e).name() << std::endl;
+		// @fixme just a Hack so this will not print endlessly when there are no clients
+		if(state != 2)
+		{
+			std::clog << "no transition from state " << state
+				<< " on event " << typeid(e).name() << std::endl;
+		}
     }
 
 };	// class ServerFSM_
