@@ -109,7 +109,7 @@ vl::physics::Tube::Tube(WorldPtr world, Tube::ConstructionInfo const &info)
 		if(vl::isnormal(alfa))
 		{			
 			// @todo the forward axis (y) should have lower limit
-			_lower_lim = Ogre::Vector3(-alfa, -alfa, -alfa);
+			_lower_lim = Ogre::Vector3(-alfa, -0, -alfa);
 			// Upper and lower limits are same except for the sign
 			_upper_lim = -_lower_lim;
 			std::clog << "Calculated limits : lower = " << _lower_lim << " upper = " 
@@ -521,14 +521,12 @@ vl::physics::Tube::_setConstraint(ConstraintRefPtr constraint,
 	// Enable spring for rotations around x, y and z
 	if(_spring)
 	{
-		std::clog << "Tube : Enabling spring-damper" << std::endl;
 		for(uint16_t i = 3; i < 6; ++i)
 		{
 			spring->enableSpring(i, true);
 			spring->setStiffness(i, _stiffness);
 			spring->setDamping(i, _damping);
 		}
-		//spring->setEquilibriumPoint();
 	}
 }
 
@@ -657,13 +655,9 @@ vl::physics::Tube::_add_fixing_point(RigidBodyRefPtr body, vl::scalar length)
 	SixDofConstraintRefPtr constraint = SixDofConstraint::create(body, tube_body, frameA, frameB, true);
 
 	// @todo this should be changed to use _setConstraint
-	constraint->setLinearLowerLimit(Ogre::Vector3::ZERO);
-	constraint->setLinearUpperLimit(Ogre::Vector3::ZERO);
-	constraint->setAngularLowerLimit(_fixing_lower_lim);
-	constraint->setAngularUpperLimit(_fixing_upper_lim);
+	_setConstraint(constraint, _fixing_lower_lim, _fixing_upper_lim);
 	body->setUserControlled(true);
 	body->setDamping(_body_damping, _body_damping);
 
-	_world->addConstraint(constraint, _disable_internal_collisions);
 	_external_fixings.push_back(constraint);
 }
