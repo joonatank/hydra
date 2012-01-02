@@ -216,20 +216,21 @@ class Cylinder2 :
 		# get the direction vector
 		direction = self._get_direction_vec()
 
-		# TODO add tolerance
-		# TODO break into two parts one for barrel and one for rod
-		if self.current_dir != direction:
-			barrel_solved = self._run_solver_loop(direction, self.barrel, self.barrel_axis)
-			if not barrel_solved:
-				barrel_solved = self._run_solver_loop(direction, self.barrel, -self.barrel_axis)
+		# If we do direction checking here for some reason we end up
+		# incorrect directions in the start, no idea why but...
+		# Anyway this is called at maximum two times per frame so we are losing
+		# some cycles because of not doing checking but not that much.
+		barrel_solved = self._run_solver_loop(direction, self.barrel, self.barrel_axis)
+		if not barrel_solved:
+			barrel_solved = self._run_solver_loop(direction, self.barrel, -self.barrel_axis)
 
-			rod_solved = self._run_solver_loop(direction, self.rod, self.rod_axis)
-			if not rod_solved:
-				rod_solved = self._run_solver_loop(direction, self.rod, -self.rod_axis)
+		rod_solved = self._run_solver_loop(direction, self.rod, self.rod_axis)
+		if not rod_solved:
+			rod_solved = self._run_solver_loop(direction, self.rod, -self.rod_axis)
 
-			if not barrel_solved or not rod_solved:
-				self.unsolved += 1
-			self.current_dir = self._get_direction_vec() 
+		if not barrel_solved or not rod_solved:
+			self.unsolved += 1
+		self.current_dir = self._get_direction_vec() 
 
 		self.times_solve_took.append(t.elapsed())
 
@@ -274,22 +275,6 @@ class Cylinder2 :
 			return False
 		else :
 			return True
-
-
-# Develop the rotate around method
-# FIXME this doesn't work
-# TODO create a simple test case for this and move it to global script
-def rotate_around(node, q, ref):
-	ref_world = ref.world_transformation
-	pos = ref_world.position - q*ref_world.position
-	t = Transform(q, pos)
-	#t = t*Transform(ref_world.quaternion)
-
-	# The problem is that this does not take into account the local
-	# frame of the node
-	# So if we have different than default orientation on the node this does
-	# not work
-	node.transformation = node.transformation*t
 
 def closer(compared, old, new):
 	if compared.dot(old) < compared.dot(new): return True
