@@ -7,11 +7,8 @@
  *	@file cluster/client.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -233,6 +230,8 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			/// Single environment supported
 			if( !_state.environment )
 			{
+				std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_ENVIRONMENT received." << std::endl;
 				_state.environment = true;
 				assert(_renderer.get());
 
@@ -277,13 +276,15 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			_state.frame = msg.getFrame();
 			_state.set_rendering_state(CS_UPDATE_READY);
 
-			Message reply(MSG_SG_UPDATE_READY, msg.getFrame(), vl::time());
+			Message reply(MSG_REQ_SG_UPDATE, msg.getFrame(), vl::time());
 			sendMessage(reply);
 		}
 		break;
 
 		case vl::cluster::MSG_SG_INIT :
 		{
+			std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_SG_INIT received." << std::endl;
 			assert(!_state.has_init);
 			
 			_renderer->updateScene(msg);
@@ -348,7 +349,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				if(_state.frame == msg.getFrame())
 				{
 					if(!_state.has_rendering_state(CS_UPDATE))
-					{ std::clog << "Client should render though it has invalid state." << std::endl; }
+					{ std::clog << "Client should start draw though it has invalid state." << std::endl; }
 					
 					frame = _state.frame;
 					_state.set_rendering_state(CS_DRAW);
@@ -367,7 +368,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			if(_state.is_rendering())
 			{
 				if(!_state.has_rendering_state(CS_DRAW))
-				{ std::clog << "Client should render though it has invalid state." << std::endl; }
+				{ std::clog << "Client should draw though it has invalid state." << std::endl; }
 
 				_renderer->draw();
 				_renderer->swap();
@@ -394,6 +395,8 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			/// Only single project is supported, discards the rest
 			if( !_state.project )
 			{
+				std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_PROJECT received." << std::endl;
 				_state.project = true;
 
 				/// @todo replace ByteDataStream with MessageStream, reduces copying
@@ -418,6 +421,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			break;
 
 		case vl::cluster::MSG_SG_CREATE :
+			std::clog << "Client : MSG_SG_CREATE Received." << std::endl;
 			assert(_renderer.get());
 			_renderer->createSceneObjects(msg);
 			break;

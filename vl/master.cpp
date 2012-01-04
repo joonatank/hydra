@@ -204,8 +204,6 @@ vl::Master::render(void)
 	_updateServer();
 	_updateRenderer();
 
-	// TODO separate stats for rendering slaves and local
-	_server->update(_frame, getSimulationTime());
 	report["scene graph update time"].push(timer.elapsed());
 
 	/// Render the scene

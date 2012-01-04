@@ -107,7 +107,7 @@ enum MSG_TYPES
 	MSG_PROJECT,		// Send the project configuration
 	MSG_SG_CREATE,		// Create SceneGraph elements
 	MSG_FRAME_START,	// Send from master to start a frame loop
-	MSG_SG_UPDATE_READY,
+	MSG_REQ_SG_UPDATE,	// Sent from slave to Master to request an SG update
 	MSG_SG_INIT,		// Same as MSG_SG_UPDATE but sent before any other updates
 	MSG_SG_UPDATE,		// Send updated SceneGraph
 	MSG_SG_UPDATE_DONE,	// NOT IN USE
@@ -168,8 +168,8 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_SG_CREATE";
 	case MSG_FRAME_START:
 		return "MSG_FRAME_START";
-	case MSG_SG_UPDATE_READY :
-		return "MSG_SG_UPDATE_READY";
+	case MSG_REQ_SG_UPDATE :
+		return "MSG_REQ_SG_UPDATE";
 	case MSG_SG_UPDATE :
 		return "MSG_SG_UPDATE";
 	case MSG_SG_UPDATE_DONE :

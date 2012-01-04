@@ -7,11 +7,8 @@
  *	@file cluser/server.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -21,6 +18,84 @@
 // Necessary for blocking functions
 #include "base/sleep.hpp"
 
+/// Server::Client
+void
+vl::cluster::Server::ClientFSM::_do_rest(void)
+{
+	assert(_server);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_quit(vl::cluster::event::quit const &evt)
+{
+	assert(_server);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_init(vl::cluster::event::init_done const &evt)
+{
+	assert(_server);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_load(vl::cluster::event::load_done const &evt)
+{
+	assert(_server);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_init_requested(vl::cluster::event::init_requested const &evt)
+{
+	assert(_server);
+}
+void
+vl::cluster::Server::ClientFSM::_do_load_requested(vl::cluster::event::load_requested const &evt)
+{
+	assert(_server);
+
+	// Send the Project message
+	_server->_request_message(this, MSG_PROJECT);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_graph_requested(vl::cluster::event::graph_requested const &evt)
+{
+	assert(_server);
+
+	_server->_request_message(this, MSG_SG_INIT);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_graph_load(vl::cluster::event::graph_loaded const &evt)
+{
+	assert(_server);
+
+	_ready_for_rendering = true;
+	_ready_for_updates = true;
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_start_frame(vl::cluster::event::start_frame const &evt)
+{
+	assert(_server);
+
+	vl::cluster::Message msg(vl::cluster::MSG_FRAME_START, evt.frame, evt.timestamp);
+	_server->_send_message(this, msg);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_frame_done(vl::cluster::event::frame_done const &evt)
+{
+	assert(_server);
+}
+
+void
+vl::cluster::Server::ClientFSM::_do_handle_error(vl::cluster::event::timer_expired const &evt)
+{
+	assert(_server);
+}
+
+/// Server
 vl::cluster::Server::Server(uint16_t const port)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _n_log_messages(0)
@@ -69,17 +144,9 @@ vl::cluster::Server::shutdown(void)
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		_sendMessage(*iter, msg);
-		iter->state.shutdown = true;
+		_sendMessage(**iter, msg);
+		(*iter)->process_event(vl::cluster::quit());
 	}
-
-	// Block till successfull
-	// TODO should resent the Shutdown message if no response is received
-	// TODO should also have a timeout system which exits with an error
-	// TODO also best to create a blockTillState function for blocking
-	// while state is not correct
-	// The new state structure needs some work for blocking
-	//_block_till_state(CS_UNDEFINED);
 }
 
 void
@@ -105,9 +172,9 @@ vl::cluster::Server::poll(void)
 		MessagePart part(recv_buf);
 
 		/// Create new clients for everyone who isn't already present
-		ClientInfo *cl_ptr = _find_client_ptr(remote_endpoint);
+		Client *cl_ptr = _find_client_ptr(remote_endpoint);
 		if( !cl_ptr )
-			cl_ptr = &_add_client(remote_endpoint);
+			cl_ptr = _add_client(remote_endpoint);
 
 		if(part.parts == 1)
 		{
@@ -123,35 +190,6 @@ vl::cluster::Server::poll(void)
 			std::string msg("Server does not support partial messages.");
 			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg)); 
 		}
-	}
-}
-
-/// @todo this shouldn't really exists...
-/// All messages should be sent from the state machine especially those that
-/// are part of the Rendering loop
-void
-vl::cluster::Server::update(uint32_t frame, vl::time const &timestamp)
-{
-	// Create is not part of the Rendering loop and should be separated
-	// from it.
-	// TODO this is really bad system
-	// The creates should be sent from sendCreate directly with sequence
-	// and stored for new clients
-	// for whome they should be sent after project
-	// And similar system for init messages also so we can remove the stupid frame checking
-	ClientList::iterator iter;
-	// Create does not need to wait for, they should how ever be
-	// timestamped with frames so the correct order can be established
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{
-		if( iter->state.environment && iter->state.project )
-		{ _sendCreate(*iter); }
-	}
-
-	if(_report_timer.elapsed() > vl::time(10))
-	{
-		_server_report.finish();
-		_report_timer.reset();
 	}
 }
 
@@ -189,7 +227,7 @@ vl::cluster::Server::finish_draw(uint32_t frame, vl::time const &timestamp)
 void
 vl::cluster::Server::sendMessage(Message const &msg)
 {
-	ClientInfo *client = 0;
+	Client *client = 0;
 	switch( msg.getType() )
 	{
 		
@@ -215,7 +253,7 @@ vl::cluster::Server::sendMessage(Message const &msg)
 				{
 					if(_requested_msgs.at(i).second == msg.getType())
 					{
-						client = &_requested_msgs.at(i).first;
+						client = _requested_msgs.at(i).first;
 						_requested_msgs.erase(_requested_msgs.begin()+i);
 						break;
 					}
@@ -257,20 +295,13 @@ vl::cluster::Server::popMessage( void )
 	return tmp;
 }
 
-void
-vl::cluster::Server::block_till_initialised(vl::time const &limit)
-{
-	// This doesn't work at the moment
-	//_block_till_state(CS_PROJ, timelimit);
-}
-
 bool
 vl::cluster::Server::logEnabled(void) const
 {
 	ClientList::const_iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->state.wants_output )
+		if((*iter)->is_output_enabled())
 		{ return true; }
 	}
 
@@ -298,14 +329,34 @@ vl::cluster::Server::nLoggedMessages(void) const
 	return _n_log_messages;
 }
 
+
+void
+vl::cluster::Server::_request_message(ClientFSM *client, MSG_TYPES type)
+{
+	assert(!_request_message_signal.empty());
+	assert(dynamic_cast<Client *>(client));
+	Client *c = static_cast<Client *>(client);
+	_requested_msgs.push_back(std::make_pair(c, type));
+	_request_message_signal(type);
+}
+
+void
+vl::cluster::Server::_send_message(Server::ClientFSM *client, Message const &msg)
+{
+	assert(dynamic_cast<Client *>(client));
+	Client *c = static_cast<Client *>(client);
+
+	_sendMessage(*c, msg);
+}
+
 /// ---------------------------- FSM public ------------------------------------
 void
-vl::cluster::Server::_do_init(init const &evt)
+vl::cluster::Server::_do_init(vl::cluster::event::init const &evt)
 {
 }
 
 void
-vl::cluster::Server::_do_update(vl::cluster::update const &evt)
+vl::cluster::Server::_do_update(vl::cluster::event::update const &evt)
 {
 	vl::chrono tim;
 
@@ -317,8 +368,8 @@ vl::cluster::Server::_do_update(vl::cluster::update const &evt)
 	for(ClientList::iterator iter = _clients.begin();
 		iter != _clients.end(); ++iter)
 	{
-		if( iter->state.wants_render && iter->state.has_init )
-		{ _renderers.push_back( &(*iter) ); }
+		if((*iter)->is_ready_for_rendering())
+		{ _renderers.push_back(*iter); }
 	}
 
 	// Send frame start
@@ -326,91 +377,64 @@ vl::cluster::Server::_do_update(vl::cluster::update const &evt)
 	// Updates should not be sent
 	// this is sent to all
 	// why is it sent to all? I'll change it for now.
-	for(ClientRefList::iterator iter = _renderers.begin(); 
+	for(ClientList::iterator iter = _renderers.begin(); 
 		iter != _renderers.end(); ++iter )
 	{
-		(*iter)->state.frame = evt.frame;
-		(*iter)->state.set_rendering_state(CS_START);
-		vl::cluster::Message msg(vl::cluster::MSG_FRAME_START, evt.frame, evt.timestamp);
-		_sendMessage(**iter, msg);
+		// Send SG_CREATE which is not part of the Rendering Loop darned.
+		_sendCreate(**iter);
+		// Start the rendering loop on slaves.
+		vl::cluster::event::start_frame evt(evt.frame, evt.timestamp);
+		(*iter)->process_event(evt);
 	}
 
 	tim.reset();
-	if(!_block_till_state(CS_UPDATE_READY, _renderers, evt.timelimit))
-	{
-		std::clog << "vl::cluster::Server::start_draw : failed UPDATE_READY" << std::endl;
-		// @todo switch to bit cleaner system
-		process_event(vl::cluster::timer_expired());
-	}
-
-	// Send update message to all
-	for( ClientRefList::iterator iter = _renderers.begin();
-		iter != _renderers.end(); ++iter )
-	{ _sendUpdate(**iter); }
 
 	// @todo this should be somewhere else
 	// Send the output messages
-	for( ClientRefList::iterator iter = _renderers.begin();
+	/*
+	for( ClientList::iterator iter = _renderers.begin();
 		iter != _renderers.end(); ++iter )
 	{ _sendOuput(**iter); }
-	
-	/// Wait till ready for DRAW
+	*/
 
-	/// @todo this fails because the slaves are really slow to init
-	/// we need to fallback and not render on slaves before they have
-	/// been inited
-	/// Clear the rendering states if fails
-	if(!_block_till_state(CS_DRAW_READY, _renderers, evt.timelimit))
-	{
-		std::clog << "vl::cluster::Server::start_draw : failed DRAW_READY" << std::endl;
-		// @todo switch to bit cleaner system
-		process_event(vl::cluster::timer_expired());
-	}
+	// Block till update done
+	_block_till_state_has_flag<UpdateDoneFlag>();
 
 	_server_report["wait update time"].push(tim.elapsed());
 
 }
 
 void
-vl::cluster::Server::_do_render(render const &evt)
+vl::cluster::Server::_do_render(vl::cluster::event::render const &evt)
 {
 	vl::chrono tim;
 
-	for( ClientRefList::iterator iter = _renderers.begin();
-		iter != _renderers.end(); ++iter )
-	{
-		vl::cluster::Message msg( vl::cluster::MSG_DRAW, evt.frame, evt.timestamp);
-		_sendMessage(**iter, msg);
-	}
-	// Check that all clients started drawing
-	// @todo on Windows if we use the time limit the block call will fail
-	// Some real performance problems with it.
-	if(!_block_till_state(CS_DRAW, _renderers, evt.timelimit))
-	{
-		std::clog << "vl::cluster::Server::_do_render : failed DRAW" << std::endl;
-		// @todo switch to bit cleaner system
-		process_event(vl::cluster::timer_expired());
-	}
+	// Block till draw started
+	_block_till_state_has_flag<DrawStartedFlag>();
 
 	_server_report["wait draw time"].push(tim.elapsed());
 }
 
 void
-vl::cluster::Server::_do_swap(swap const &evt)
+vl::cluster::Server::_do_swap(vl::cluster::event::swap const &evt)
 {
 	vl::chrono t;
-	if(!_block_till_state(CS_DRAW_DONE, _renderers, evt.timelimit))
-	{
-		std::clog << "vl::cluster::Server::_do_render : failed DRAW_DONE" << std::endl;
-		process_event(vl::cluster::timer_expired());
-	}
+
+	// Block till draw done
+	_block_till_state_has_flag<NotRenderingFlag>();
 
 	_server_report["wait draw done time"].push(t.elapsed());
 }
 
 void
-vl::cluster::Server::_do_swap_done(swap_done const &evt)
+vl::cluster::Server::_do_swap_done(vl::cluster::event::swap_done const &evt)
 {
+	for( ClientList::iterator iter = _renderers.begin();
+		iter != _renderers.end(); ++iter )
+	{
+		(*iter)->process_event(vl::cluster::event::frame_done(evt.frame, evt.timestamp));
+	}
+
 	// we need to explicitly call _do_rest because it clears the Rendering Context
 	// for now we like to keep _do_swap_done also
 	_do_rest(vl::none());
@@ -419,19 +443,12 @@ vl::cluster::Server::_do_swap_done(swap_done const &evt)
 void
 vl::cluster::Server::_do_rest(vl::none const &evt)
 {
-	// Clear client rendering state
-	for(ClientList::iterator iter = _clients.begin(); 
-		iter != _clients.end(); ++iter)
-	{
-		iter->state.clear_rendering_state();
-	}
-
 	// Clear renderer list
 	_renderers.clear();
 }
 
 void
-vl::cluster::Server::_report_error(timer_expired const &evt)
+vl::cluster::Server::_report_error(vl::cluster::event::timer_expired const &evt)
 {
 	std::clog << "Timer has expired in the Remote Rendering loop." << std::endl;
 
@@ -444,7 +461,7 @@ vl::cluster::Server::_report_error(timer_expired const &evt)
 	}
 
 	// just clear the error
-	process_event(vl::cluster::clear_error());
+	process_event(vl::cluster::event::clear_error());
 	_draw_error = true;
 }
 
@@ -463,7 +480,7 @@ vl::cluster::Server::has_rendering_clients(void) const
 	for(ClientList::const_iterator iter = _clients.begin(); 
 		iter != _clients.end(); ++iter)
 	{
-		if(iter->state.wants_render)
+		if((*iter)->is_ready_for_rendering())
 		{ return true; }
 	}
 
@@ -473,32 +490,35 @@ vl::cluster::Server::has_rendering_clients(void) const
 
 /// ----------------------------- Private --------------------------------------
 void 
-vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &client)
+vl::cluster::Server::_handle_message(vl::cluster::Message &msg, Client &client)
 {
 	switch( msg.getType() )
 	{
 		case vl::cluster::MSG_REG_UPDATES :
 		{
+			std::clog << "vl::cluster::MSG_REG_UPDATES : received" << std::endl;
 			// Don't send the environment more than once. 
 			// @todo Using ACKs and resend would be even better.
 			if(client.environment_sent_time.elapsed() > vl::time(1, 0))
 			{
-				assert(!_request_message.empty());
-				_requested_msgs.push_back(std::make_pair(client, MSG_ENVIRONMENT));
-				_request_message(MSG_ENVIRONMENT);
+				assert(!_request_message_signal.empty());
+				client.process_event(event::init_requested());
+				_requested_msgs.push_back(std::make_pair(&client, MSG_ENVIRONMENT));
+				_request_message_signal(MSG_ENVIRONMENT);
 			}
 		}
 		break;
 
 		case vl::cluster::MSG_REG_RENDERING :
-			client.state.wants_render = true;
+			// @todo replace with an event
+			client.enable_rendering(true);
 		break;
 
 		case vl::cluster::MSG_ACK :
 		{
 			vl::cluster::MSG_TYPES type;
 			msg.read(type);
-			_handle_ack(client, type);
+			_handle_ack(client, type, msg);
 		}
 		break;
 
@@ -511,29 +531,14 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 		break;
 
 		case vl::cluster::MSG_REG_OUTPUT :
-			client.state.wants_output = true;
+			client.enable_output(true);
 		break;
 
-		case vl::cluster::MSG_SG_UPDATE_READY :
+		case vl::cluster::MSG_REQ_SG_UPDATE :
 		{
-			if(client.state.is_rendering())
-			{
-				if(msg.getFrame() != _frame)
-				{
-					std::clog << "Server : MSG_SG_UPDATE_READY Client has incorrect frame number."
-						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
-						<< std::endl;
-				}
-				else
-				{
-					// change the state
-					client.state.set_rendering_state(CS_UPDATE_READY);
-				}
-			}
-			else
-			{
-				std::clog << "Server : MSG_SG_UPDATE_READY received even though not rendering." << std::endl;
-			}
+			event::update_requested evt(msg.getFrame(), msg.getTimestamp());
+			evt.callback = boost::bind(&Server::_send_message, this, &client, _msg_update);
+			client.process_event(evt);
 		}
 		break;
 
@@ -548,87 +553,36 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 		/// for MSG_UPDATE and can be sent by slaves not receiving draw messages
 		case vl::cluster::MSG_DRAW_READY :
 		{
-			/// Change state for those that are rendering, ignore otherwise
-			if(client.state.is_rendering())
-			{
-				if(msg.getFrame() != _frame)
-				{
-					std::clog << "Server : MSG_DRAW_READY Client has incorrect frame number."
-						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
-						<< std::endl;
-				}
-				else
-				{
-					client.state.set_rendering_state(CS_DRAW_READY);
-				}
-			}
-			else
-			{
-				std::clog << "Server : MSG_DRAW_READY received even though not rendering." << std::endl;
-			}
+			// @todo add evt.callback
+			event::update_done evt(msg.getFrame(), msg.getTimestamp());
+			Message reply(MSG_DRAW, msg.getFrame(), msg.getTimestamp());
+			evt.callback = boost::bind(&Server::_send_message, this, &client, reply);
+			client.process_event(evt);
 		}
 		break;
 
 		case vl::cluster::MSG_DRAWING :
 		{
-			/// Change state for those that are rendering, ignore otherwise
-			if(client.state.is_rendering())
-			{
-				if(msg.getFrame() != _frame)
-				{
-					std::clog << "Server : MSG_DRAWING Client has incorrect frame number."
-						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
-						<< std::endl;
-				}
-				// TODO all the clients in the rendering loop needs to be
-				// on the same state at this point so that they swap the same time
-				// change the state
-				else
-				{
-					client.state.set_rendering_state(CS_DRAW);
-				}
-			}
-			else
-			{
-				std::clog << "Server : MSG_DRAWING received even though not rendering." << std::endl;
-			}
+			client.process_event(event::draw(msg.getFrame(), msg.getTimestamp()));
 		}
 		break;
 		
 		case vl::cluster::MSG_DRAW_DONE :
 		{
-			if(client.state.is_rendering())
-			{
-				if(msg.getFrame() != _frame)
-				{
-					std::clog << "Server : MSG_DRAW_DONE Client has incorrect frame number."
-						<< " Master frame = " << _frame << " : client frame = " << msg.getFrame()
-						<< std::endl;
-				}
-				// change the state
-				else
-				{
-					client.state.set_rendering_state(CS_DRAW_DONE);
-				}
-			}
-			else
-			{
-				std::clog << "Server : MSG_DRAW_DONE received even though not rendering." << std::endl;
-			}
+			client.process_event(event::draw_done(msg.getFrame(), msg.getTimestamp()));
 		}
 		break;
 
 		case vl::cluster::MSG_REG_RESOURCE :
 		{
 			std::clog << "vl::cluster::MSG_REG_RESOURCE message received." << std::endl;
-			/// @todo add the real code
 			RESOURCE_TYPE type;
 			std::string name;
 			msg.read(type);
 			msg.read(name);
-			assert(!_request_message.empty());
-			_requested_msgs.push_back(std::make_pair(client, MSG_RESOURCE));
-			_request_message(RequestedMessage(MSG_RESOURCE, name, type));
+			assert(!_request_message_signal.empty());
+			_requested_msgs.push_back(std::make_pair(&client, MSG_RESOURCE));
+			_request_message_signal(RequestedMessage(MSG_RESOURCE, name, type));
 		}
 		break;
 
@@ -642,15 +596,19 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, ClientInfo &clie
 
 }
 
-vl::cluster::Server::ClientInfo &
+vl::cluster::Server::Client *
 vl::cluster::Server::_add_client( boost::udp::endpoint const &endpoint )
 {
 	if( _has_client(endpoint) )
 	{ assert(false && "Trying to add client twice"); }
 
-	_clients.push_back( ClientInfo( endpoint ) );
+	Client *client = new Server::Client();
+	client->start();
+	client->address = endpoint;
+	client->_server = this;
+	_clients.push_back(client);
 
-	return _clients.back();
+	return client;
 }
 
 bool
@@ -659,40 +617,40 @@ vl::cluster::Server::_has_client(boost::udp::endpoint const &address) const
 	return _find_client_ptr(address);
 }
 
-vl::cluster::Server::ClientInfo &
+vl::cluster::Server::Client &
 vl::cluster::Server::_find_client(boost::udp::endpoint const &address)
 {
 	return *_find_client_ptr(address);
 }
 
-vl::cluster::Server::ClientInfo *
+vl::cluster::Server::Client *
 vl::cluster::Server::_find_client_ptr(boost::udp::endpoint const &address)
 {
 	ClientList::iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->address == address )
-		{ return &(*iter); }
+		if( (*iter)->address == address )
+		{ return *iter; }
 	}
 
 	return 0;
 }
 
-vl::cluster::Server::ClientInfo const *
+vl::cluster::Server::Client const *
 vl::cluster::Server::_find_client_ptr(boost::udp::endpoint const &address) const
 {
 	ClientList::const_iterator iter;
 	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
 	{
-		if( iter->address == address )
-		{ return &(*iter); }
+		if( (*iter)->address == address )
+		{ return *iter; }
 	}
 
 	return 0;
 }
 
 void
-vl::cluster::Server::_sendCreate(ClientInfo &client)
+vl::cluster::Server::_sendCreate(Client &client)
 {
 	std::vector<Message> msgs;
 
@@ -700,11 +658,11 @@ vl::cluster::Server::_sendCreate(ClientInfo &client)
 	for( std::vector< std::pair<uint32_t, Message> >::const_reverse_iterator iter = _msg_creates.rbegin();
 		iter != _msg_creates.rend(); ++iter )
 	{
-		if( client.state.create_frame >= int64_t(iter->first) )
+		if( client.create_frame >= int64_t(iter->first) )
 		{ break; }
 		msgs.push_back( iter->second );
 		// Update the update frame so that the same message will not be sent again
-		client.state.create_frame = iter->first;
+		client.create_frame = iter->first;
 	}
 
 	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin();
@@ -716,43 +674,9 @@ vl::cluster::Server::_sendCreate(ClientInfo &client)
 }
 
 void
-vl::cluster::Server::_sendInit(ClientInfo &client)
+vl::cluster::Server::_sendOuput(Client &client)
 {
-	if(client.state.has_init)
-	{
-		std::clog << "vl::cluster::Server::_sendInit called on Client with already an init." << std::endl;
-	}
-
-	assert(!_request_message.empty());
-	_requested_msgs.push_back(std::make_pair(client, MSG_SG_INIT));
-	_request_message(MSG_SG_INIT);
-}
-
-
-void
-vl::cluster::Server::_sendUpdate(ClientInfo &client)
-{
-	if( !client.state.has_init )
-	{
-		std::clog << "vl::cluster::Server::_sendUpdate called on Client without init." << std::endl;
-		return;
-	}
-
-	// @todo should we send zero data messages?
-	// the client can not handle not receiving updates but only receiving a draw message
-	// at the moment, so should there always be an update message and
-	// then the draw message or is the update message optional?
-
-	// @todo create these here when needed so no need to reset
-	// time and frame number
-	// also minimises the overhead from useless creations
-	_sendMessage(client, _msg_update);
-}
-
-void
-vl::cluster::Server::_sendOuput(ClientInfo &client)
-{
-	if( !client.state.wants_output )
+	if(!client.is_output_enabled())
 	{ return; }
 
 	if( !_new_log_messages.empty() )
@@ -774,7 +698,7 @@ vl::cluster::Server::_sendOuput(ClientInfo &client)
 }
 
 void 
-vl::cluster::Server::_sendMessage(ClientInfo &client, vl::cluster::Message const &msg)
+vl::cluster::Server::_sendMessage(Client &client, vl::cluster::Message const &msg)
 {
 	/// @todo remove the copying that is needed both createParts and dump
 	std::vector<char> buf;
@@ -795,44 +719,23 @@ vl::cluster::Server::_sendMessage(ClientInfo &client, vl::cluster::Message const
 }
 
 void
-vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_to )
+vl::cluster::Server::_handle_ack(Client &client, vl::cluster::MSG_TYPES ack_to,  vl::cluster::Message const &msg)
 {
-	// Hack to bypass other ACK messages than Shutdown
-	// if it has been started
-	if( client.state.shutdown && ack_to != MSG_SHUTDOWN )
-	{
-		return;
-	}
-
 	switch( ack_to )
 	{
 		case vl::cluster::MSG_ENVIRONMENT :
 		{
-			// Resetting environment NOT allowed
-			// TODO this should have environment sent and environment received field
-			if( !client.state.environment )
-			{
-				// Change the state of the client
-				client.state.environment = true;
-				// Send the Project message
-				// TODO this should be moved to use a separate REQ_PROJECT message
-				//assert(_data_cb);
-				assert(!_request_message.empty());
-				_requested_msgs.push_back(std::make_pair(client, MSG_PROJECT));
-				_request_message(MSG_PROJECT);
-			}
+			std::clog << "Received an ACK for vl::cluster::MSG_ENVIRONMENT " << std::endl;
+			client.process_event(event::init_done());
+			client.process_event(event::load_requested());
 		}
 		break;
 
 		case vl::cluster::MSG_PROJECT :
 		{
-			// Reseting project NOT allowed
-			if( !client.state.project )
-			{
-				// change the state
-				client.state.project = true;
-				_sendInit(client);
-			}
+			std::clog << "Received an ACK for vl::cluster::MSG_PROJECT " << std::endl;
+			client.process_event(event::load_done());
+			client.process_event(event::graph_requested());
 		}
 		break;
 
@@ -843,18 +746,14 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 		// The rendering loop Messages don't send any new messages
 		// because they are tied to the master rendering loop
 		case vl::cluster::MSG_FRAME_START :
-			// Move to rendering loop
-			// Not yet implemented
-			//client.state.rendering = true;
-			// @todo this does not work for some reason
-			//assert( iter->state.rendering_state == CS_CLEAR );
-
 		break;
 
 		case vl::cluster::MSG_SG_INIT :
-			{
-				client.state.has_init = true;
-			}
+		{
+			std::clog << "Received an ACK for vl::cluster::MSG_SG_INIT" << std::endl;
+			// @todo is this correct event for this? and do we need separate loaded?
+			client.process_event(event::graph_loaded());
+		}
 
 		case vl::cluster::MSG_SG_UPDATE :
 		{
@@ -867,17 +766,21 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 			// from the application loop
 			// change the state
 			//	iter->state  = CS_UPDATE;
+			
 		}
 		break;
 
 		case vl::cluster::MSG_DRAW :
 		{
+			client.process_event(event::draw_requested(msg.getFrame(), msg.getTimestamp()));
 		}
 		break;
 
 		case vl::cluster::MSG_SHUTDOWN :
 		{
-			client.state.shutdown = true;
+			// @todo is this in the wrong place?
+			// or should we have a preliminary quit state which is waiting for the reply?
+			client.process_event(event::quit());
 		}
 		break;
 
@@ -892,54 +795,4 @@ vl::cluster::Server::_handle_ack(ClientInfo &client, vl::cluster::MSG_TYPES ack_
 				<< vl::cluster::getTypeAsString(ack_to) << std::endl;
 		}
 	}	// switch
-}
-
-bool
-vl::cluster::Server::_block_till_state(CLIENT_STATE cs,  ClientRefList clients, vl::time const &limit)
-{
-	vl::chrono t;
-	bool ready = false;
-	while( !ready )
-	{
-		poll();
-
-		ready = true;
-		ClientRefList::const_iterator iter;
-		for( iter = clients.begin(); iter != clients.end(); ++iter )
-		{
-			/// Break the block if one of the clients has failed its rendering loop
-			if(!(*iter)->state.is_rendering())
-			{ return false; }
-			
-			if( !(*iter)->state.has_rendering_state(cs) )
-			{
-				ready = false;
-				break;
-			}
-		}
-
-		if( limit != vl::time() && t.elapsed() > limit )
-		{
-			return false;
-		}
-
-		// TODO should wait only for a while and then resent the last message
-
-		// Needs to sleep in Linux at least. Busy wait will cause a huge lag.
-		vl::msleep(0);
-	}
-
-	return true;
-}
-
-bool
-vl::cluster::Server::_rendering( void )
-{
-	ClientList::iterator iter;
-	for( iter = _clients.begin(); iter != _clients.end(); ++iter )
-	{
-		if(iter->state.is_rendering())
-		{ return true; }
-	}
-	return false;
 }

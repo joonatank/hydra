@@ -13,6 +13,10 @@
 #ifndef HYDRA_BASE_STATE_MACHINES_HPP
 #define HYDRA_BASE_STATE_MACHINES_HPP
 
+#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 30 
+#define BOOST_MPL_LIMIT_MAP_SIZE 30
+
 // back-end
 #include <boost/msm/back/state_machine.hpp>
 //front-end
