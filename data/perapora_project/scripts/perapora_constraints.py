@@ -266,5 +266,5 @@ def toggle_pause() :
 		game.pause()
 
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
-trigger.addKeyDownListener(toggle_pause)
+trigger.addKeyUpListener(toggle_pause)
 

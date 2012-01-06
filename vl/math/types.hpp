@@ -43,7 +43,7 @@ typedef Ogre::Quaternion Quaternion;
 typedef Ogre::Matrix4 Matrix4;
 
 /// Constants
-const scalar epsilon = scalar(1e-6);
+const scalar EPSILON = scalar(1e-6);
 
 const scalar PHI = (1 + std::sqrt(5.0))/2;
 

@@ -33,45 +33,49 @@
 namespace vl
 {
 
-inline bool equal( scalar const &a, scalar const &b )
+template<typename T>
+inline bool equal(T const &a, T const &b, T const &epsilon)
 {
 	if( a-epsilon < b && a+epsilon > b )
 	{ return true; }
 	return false;
 }
 
-inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2 )
+// Specializations
+// Not template specialisation because the parameters don't match
+// so just ordinary overloads
+inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 3; ++i )
 	{
-		if( !equal( v1[i], v2[i] ) )
+		if( !equal(v1[i], v2[i], epsilon) )
 		{ return false; }
 	}
 	return true;
 }
 
-inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2 )
+inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 4; ++i )
 	{
-		if( !equal( q1[i], q2[i] ) )
+		if( !equal(q1[i], q2[i], epsilon) )
 		{ return false; }
 	}
 	return true;
 }
 
-inline bool equal(vl::Transform const &t1, vl::Transform const &t2)
+inline bool equal(vl::Transform const &t1, vl::Transform const &t2, vl::scalar const &epsilon = EPSILON)
 {
-	return equal(t1.position, t2.position) && equal(t1.quaternion, t2.quaternion);
+	return equal(t1.position, t2.position, epsilon) && equal(t1.quaternion, t2.quaternion, epsilon);
 }
 
-inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
+inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 4; ++i )
 	{
 		for( size_t j = 0; j < 4; ++j )
 		{
-			if( !equal( m1[i][j], m2[i][j] ) )
+			if(!equal( m1[i][j], m2[i][j], epsilon) )
 			{ return false; }
 		}
 	}
@@ -120,6 +124,17 @@ template<typename T>
 inline T const &min(T const &a, T const &b)
 {
 	return (a < b ? a : b);
+}
+
+/// @brief Get the distance (angle between) two quaternions
+/// @return angle between the quaternions in radians
+inline vl::scalar
+distance(Quaternion const &vecA, Quaternion const & vecB)
+{
+	Vector3 const &axis = Vector3::NEGATIVE_UNIT_Z;
+	Vector3 snaDir = vecA * axis;
+	Vector3 snbDir = vecB * axis; 
+	return Ogre::Math::ACos(snaDir.dotProduct(snbDir)).valueRadians();
 }
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );

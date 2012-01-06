@@ -463,62 +463,73 @@ vl::HingeConstraint::getAxisInWorld(void) const
 void
 vl::HingeConstraint::_progress(vl::time const &t)
 {
+	// No state variables should be stored in the Constraint itself
+	// because the Constraint is not updated from collision detection
+	// the Link and Node in the animation namespace are so
+	// we should use their state (transformation) for calculating
+	// all temporary values we need here.
+
 	if(!_link)
 	{ return; }
 
-	// @todo add some checking if the actuator parameters are even plausable
-	// like isActuator == true -> _speed != 0 and so on, some error reporting
-	// to the user.
+	// for now following constraints are not supported
+	if(!isActuator() || _speed == Ogre::Radian(0))
+	{ return; }
 
-	Ogre::Radian rotate;
-	/// @todo add tolerance
-	if(isActuator() && _target != _angle)
-	{
-		/// Axis is either not limited (lower limit is greater than upper)
-		/// or if it's current position is within the limits
-		/// @todo should we update the target position based on limits, 
-		/// so that there is no impossible target
-		/// Or should we? We could also report to user that the system is impossible
-		/// and the possible target closest to it would be x.
-		/// This would handle gracefully incorrect limits resulted from user errors.
+	// Calculate the progression rate using angular velocity
+	Ogre::Radian max_angle = _speed*t;
+	Ogre::Radian angle = max_angle;
 
-		Ogre::Radian s = vl::sign(_target - _angle);
-		assert(vl::sign(_speed) >= Ogre::Radian(0));
-		rotate = s*_speed * double(t);
+	Ogre::Quaternion const &current_q(_link->getTransform().quaternion);
+	Ogre::Quaternion target_q = _link->getInitialTransform().quaternion*Quaternion(_target, _axisInA) ;
 
-		if(rotate < Ogre::Radian(0))
-		{ vl::clamp(rotate, _target-_angle, Ogre::Radian(0)); }
-		else
-		{ vl::clamp(rotate, Ogre::Radian(0), _target-_angle); }
-	}
+	vl::scalar dist = distance(current_q, target_q);
+	// clamped version of the distance and maximum movement per step
+	vl::scalar limit = vl::min(angle.valueRadians(), dist);
 
-	/// Wether the joint is limited or not
-	/// @todo this is common for all joints, though the constraint type linear/angular changes
-	bool free = _lower_limit > _upper_limit;
-	/// Check constraints
-	if(!free)
-	{
-		// Clamp only if not free
-		// @todo should we clamp the target instead of the result? 
-		// then again any subsequent change in limits would not get the actuator moving
-		vl::clamp(rotate, _lower_limit-_angle, _upper_limit-_angle);
-		assert(rotate+_angle >= _lower_limit);
-		assert(rotate+_angle <= _upper_limit);
-	}
-
-	if(rotate != Ogre::Radian(0))
-	{
-		_angle = _angle + rotate;
+	// needs some tolerance because of inaccuracies in the quaternions
+	// and maybe some missing normalisations.
+	vl::scalar epsilon = 0.001;
+	if(!vl::equal(dist, vl::scalar(0), epsilon)
+		&& !vl::equal(angle, Ogre::Radian(0), Ogre::Radian(epsilon)))
+	{		
+		Ogre::Quaternion q(Ogre::Radian(limit), _axisInA);
 		
-		// @todo this will rotate around the parents axis
-		// it should rotate around the current link axis
-		// but rotate around an axis is not working correctly for the moment.
-		// Basic matrix formulae is inv(Tp)*R*Tp
-		// where Tp is the translation matrix (for the axis) and R is the rotation matrix.
-		Ogre::Vector3 axis = _link->getInitialTransform().quaternion * _axisInA;
-		Quaternion rot = Ogre::Quaternion(_angle, axis);
+		// reverse the rotation if new distance would be more than the old one
+		vl::scalar new_dist = distance(current_q*q, target_q);
+		if(dist < new_dist)
+		{ q = q.Inverse(); }
 
-		_link->setOrientation(rot);
+		// Constraint is free if upper limit is less than lower limit
+		if( !(_upper_limit < _lower_limit) )
+		{
+			Ogre::Quaternion lower_lim_q(_link->getInitialTransform()*Quaternion(_lower_limit, _axisInA));
+			Ogre::Quaternion upper_lim_q(_link->getInitialTransform()*Quaternion(_upper_limit, _axisInA));
+			vl::scalar lower_lim_dist = distance(current_q*q, lower_lim_q);
+			vl::scalar upper_lim_dist = distance(current_q*q, upper_lim_q);
+
+			// @fixme this allows for shooting past the limit if the speed is high enough
+			// also this is a pretty dirty hack to handle the limits, we need to
+			// have the direction of rotation here also...
+			// Though this does work acceptably when speed < 1.
+			vl::scalar eps = epsilon*_speed.valueRadians()*10;
+			bool lower_limit_achieved = vl::equal(lower_lim_dist, vl::scalar(0), eps);
+			bool upper_limit_achieved = vl::equal(upper_lim_dist, vl::scalar(0), eps);
+
+			if(lower_limit_achieved || upper_limit_achieved)
+			{
+				q = Ogre::Quaternion::IDENTITY;
+			}
+		}
+
+		// Only one point where the transformation occurs this ensures that
+		// there will never be more than one transformation
+		if(q != Ogre::Quaternion::IDENTITY)
+		{
+			// @todo should be replaced with Link::rotate
+			_link->rotate(q);
+			//_link->setOrientation(_link->getTransform().quaternion*q);
+		}
 	}
 }
 
