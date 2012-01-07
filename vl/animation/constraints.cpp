@@ -526,9 +526,7 @@ vl::HingeConstraint::_progress(vl::time const &t)
 		// there will never be more than one transformation
 		if(q != Ogre::Quaternion::IDENTITY)
 		{
-			// @todo should be replaced with Link::rotate
 			_link->rotate(q);
-			//_link->setOrientation(_link->getTransform().quaternion*q);
 		}
 	}
 }
