@@ -75,7 +75,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 fragment_program bling_phong_sl_shadows_ps glsl
 {
 	source bling_phong_sl_ps.glsl
-	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,NEW_ATTENUATION=1
+	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,NEW_ATTENUATION=1,USE_PCF=1
 
 	default_params
 	{
@@ -90,6 +90,13 @@ fragment_program bling_phong_sl_shadows_ps glsl
 
 		// light casts shadows or not
 		param_named_auto lightCastsShadows light_casts_shadows 0
+
+		// Extra params for shadows
+        param_named_auto inverseShadowmapSize inverse_texture_size 2
+        //param_named inverseShadowmapSize float 0.0009765625
+		param_named fixedDepthBias float 0.0005
+		param_named gradientClamp float 0.0098
+		param_named gradientScaleBias float 0
 
 		// Don't change the order, because they are mapped with index
 		param_named diffuseTexture int 0
@@ -124,7 +131,7 @@ vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 {
 	source bling_phong_sl_ps.glsl
-	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=1
+	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=1,USE_PCF=1
 
 	default_params
 	{
@@ -139,6 +146,12 @@ fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 
 		// light casts shadows or not
 		param_named_auto lightCastsShadows light_casts_shadows 0
+
+		// Extra params for shadows
+		param_named_auto inverseShadowmapSize inverse_texture_size 2
+		param_named fixedDepthBias float 0.0005
+		param_named gradientClamp float 0.0098
+		param_named gradientScaleBias float 0
 
 		// Don't change the order, because they are mapped with index
 		param_named diffuseTexture int 0
