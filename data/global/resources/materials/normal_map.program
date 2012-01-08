@@ -53,7 +53,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 {
 	source tangent_space_sl_vs.glsl
 
-	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1
+	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,USE_SCENE_RANGE=1
 
 	default_params
 	{
@@ -67,6 +67,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 		param_named_auto model world_matrix
 		// first shadow camera transformation
 		param_named_auto texViewProj texture_viewproj_matrix 0
+		param_named_auto shadowSceneRange shadow_scene_depth_range 0
 	}
 }
 
@@ -102,7 +103,7 @@ fragment_program bling_phong_sl_shadows_ps glsl
 vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 {
 	source eye_space_sl_vs.glsl
-	preprocessor_defines SHADOW_MAP=1
+	preprocessor_defines SHADOW_MAP=1,USE_SCENE_RANGE=1
 
 	default_params
 	{
@@ -115,6 +116,7 @@ vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 		param_named_auto model world_matrix
 		// first shadow camera transformation
 		param_named_auto texViewProj texture_viewproj_matrix 0
+		param_named_auto shadowSceneRange shadow_scene_depth_range 0
 	}
 }
 
