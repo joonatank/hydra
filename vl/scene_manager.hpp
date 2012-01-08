@@ -63,22 +63,6 @@ getFogModeAsString(FogMode mode)
 	}
 }
 
-enum ShadowTechnique
-{
-	SHADOWTYPE_NOT_VALID,
-	SHADOWTYPE_NONE,
-	SHADOWTYPE_TEXTURE_MODULATIVE,
-	SHADOWTYPE_TEXTURE_ADDITIVE,
-	SHADOWTYPE_STENCIL_MODULATIVE,
-	SHADOWTYPE_STENCIL_ADDITIVE,
-	SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED,
-	SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED,
-};
-
-std::string getShadowTechniqueAsString(ShadowTechnique tech);
-
-ShadowTechnique getShadowTechniqueFromString(std::string const &str);
-
 struct SkyDomeInfo
 {
 	SkyDomeInfo( std::string const &mat_name = std::string(), Ogre::Real curv = 10, 
@@ -163,64 +147,51 @@ struct FogInfo
  *	@todo add real disablation of the Shadows distinction between not updating
  *	them and disabled. 
  *	Disabled would need the SceneManager to reset the shadow textures.
+ *
+ *	@todo add shadow debug colours
+ *	Shadow colours should only be used for debugging (as long as we have no
+ *	easy access to the depth map.
+ *	So they should not be accessable by the user except for a boolean debug value.
  */
 class ShadowInfo
 {
 public :
 	/// @brief constructor
 	/// Shadows are disabled by default, so call to enable is necessary.
-	/// @todo remove shadow colours because we use ADDITATIVE INTEGRATED shadows
-	/// always.
-	/// Shadow colours should only be used for debugging (as long as we have no
-	/// easy access to the depth map.
-	/// So they should not be accessable by the user except for a boolean debug value.
-	ShadowInfo(std::string const &tech = "none", 
-		Ogre::ColourValue const &col = Ogre::ColourValue(0.3, 0.3, 0.3), 
-		std::string const &cam = "default");
+	ShadowInfo(std::string const &cam = "default");
 
 	/// @brief enable the shadows
-	/// Remembers the technique user selected.
-	/// If no technique is selected uses the current default.
-	void enable(void);
+	void enable(void)
+	{ setEnabled(true); }
 
 	/// @brief disable the shadows
-	void disable(void);
+	void disable(void)
+	{ setEnabled(false); }
+
+	void setEnabled(bool enabled);
 
 	bool isEnabled(void) const
-	{ return _enabled && (_technique != SHADOWTYPE_NONE); }
+	{ return _enabled; }
 
-	/// @brief set the shadow technique using a string, mostly for python
-	/// valid strings (upper or lower case):
-	/// texture_modulative, texture_additive, none, stencil_modulative, stencil_additive,
-	/// texture and stencil (for the modulative version)
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	///
-	/// @todo remove Stencil shadows, because we don't really need them and
-	/// will never fully support them. They are way too slow to be used with CAD
-	/// models so the extra work to get them working is wasted anyway.
-	void setShadowTechnique(std::string const &tech);
+	void setMaxDistance(vl::scalar dist);
 
-	/// @brief the shadow technique
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	///
-	/// Additative shadows create almost black shadows. Good if one want's to
-	/// see which objects are in shadow, for visual appeal they need some extra work.
-	/// Use case visibility checking.
-	/// Additative shadows need a shader that handles the addition of multiple lights.
-	///
-	/// Also by default they don't do shadowed side of an object correctly
-	/// object is lit too uniformly everywhere with little regard to the light position.
-	///
-	/// Stencil shadows will crash at least the test model, 
-	/// problems with bounding boxes.
-	void setShadowTechnique(ShadowTechnique tech);
+	vl::scalar getMaxDistance(void) const
+	{ return _max_distance; }
 
-	std::string getShadowTechniqueName(void) const;
+	void setShadowCasterMaterial(std::string const &material_name);
 
-	ShadowTechnique getShadowTechnique(void) const
-	{ return _technique; }
+	std::string const &getShadowCasterMaterial(void) const
+	{ return _caster_material; }
+
+	void setShelfShadowEnabled(bool enable);
+
+	bool isShelfShadowEnabled(void) const
+	{ return _shelf_shadow; }
+
+	void setDirLightTextureOffset(vl::scalar offset);
+
+	vl::scalar getDirLightTextureOffset(void) const
+	{ return _dir_light_texture_offset; }
 
 	/// Valid values for camera are "Default", "LiSPSM", "Focused", "PSSM"
 	/// others may be added later. Values are case insensitive.
@@ -288,11 +259,6 @@ public :
 	std::string const &getCamera(void) const
 	{ return _camera; }
 
-	Ogre::ColourValue const &getColour(void) const
-	{ return _colour; }
-
-	void setColour(Ogre::ColourValue const &col);
-
 	void setTextureSize(int);
 
 	int getTextureSize(void) const
@@ -308,15 +274,18 @@ private :
 	void _setDirty(void)
 	{ _dirty = true; }
 
-	ShadowTechnique _technique;
-
-	Ogre::ColourValue _colour;
-
 	std::string _camera;
 
 	bool _enabled;
 
 	int _texture_size;
+
+	vl::scalar _max_distance;
+	vl::scalar _dir_light_texture_offset;
+
+	std::string _caster_material;
+
+	bool _shelf_shadow;
 
 	bool _dirty;
 };
@@ -324,9 +293,8 @@ private :
 inline
 bool operator==(ShadowInfo const &a, ShadowInfo const &b)
 {
-	return( a.getShadowTechnique() == b.getShadowTechnique()
-		&& a.getColour() == b.getColour()
-		&& a.getCamera() == b.getCamera());
+	return( a.getTextureSize() == b.getTextureSize()
+		&& a.getCamera() == b.getCamera() );
 }
 
 inline

@@ -39,9 +39,6 @@
 
 const char *vl::EDITOR_CAMERA = "editor/perspective";
 
-namespace
-{
-
 Ogre::FogMode
 getOgreFogMode(vl::FogMode m)
 {
@@ -60,135 +57,27 @@ getOgreFogMode(vl::FogMode m)
 	}
 }
 
-Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
-{
-	switch(t)
-	{
-	case vl::SHADOWTYPE_NONE:
-		return Ogre::SHADOWTYPE_NONE;
-	case vl::SHADOWTYPE_TEXTURE_MODULATIVE:
-		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE;
-	case vl::SHADOWTYPE_TEXTURE_ADDITIVE:
-		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE;
-	case vl::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
-		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED;
-	case vl::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
-		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-	case vl::SHADOWTYPE_STENCIL_MODULATIVE:
-		return Ogre::SHADOWTYPE_STENCIL_MODULATIVE;
-	case vl::SHADOWTYPE_STENCIL_ADDITIVE:
-		return Ogre::SHADOWTYPE_STENCIL_ADDITIVE;
-	default:
-		return Ogre::SHADOWTYPE_NONE;
-	}
-}
-
-}
-
-std::string vl::getShadowTechniqueAsString(ShadowTechnique tech)
-{
-	switch(tech)
-	{
-	case SHADOWTYPE_TEXTURE_MODULATIVE:
-		return "texture_modulative";
-	case SHADOWTYPE_STENCIL_MODULATIVE:
-		return "stencil_modulative";
-	case SHADOWTYPE_TEXTURE_ADDITIVE:
-		return "texture_additive";
-	case SHADOWTYPE_STENCIL_ADDITIVE:
-		return "stencil_additive";
-	case SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
-		return "texture_modulative_integrated";
-	case SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
-		return "texture_additive_integrated";
-	case SHADOWTYPE_NONE:
-		return "none";
-	default :
-		return "UNKNOWN";
-	}
-}
-
-vl::ShadowTechnique vl::getShadowTechniqueFromString(std::string const &tech)
-{
-	std::string str(tech);
-	vl::to_lower(str);
-	if( str == "texture_modulative" || str == "texture" )
-	{ return SHADOWTYPE_TEXTURE_MODULATIVE; }
-	else if( str == "stencil_modulative" || str == "stencil" )
-	{ return SHADOWTYPE_STENCIL_MODULATIVE; }
-	else if( str == "texture_modulative_integrated" )
-	{ return SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED; }
-	else if( str == "texture_additive" )
-	{ return SHADOWTYPE_TEXTURE_ADDITIVE; }
-	else if( str == "texture_additive_integrated" )
-	{ return SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
-	else if( str == "stencil_additive" )
-	{ return SHADOWTYPE_STENCIL_ADDITIVE; }
-	else if( str == "none" )
-	{ return SHADOWTYPE_NONE; }
-	else
-	{ return SHADOWTYPE_NOT_VALID; }
-}
 
 /// ------------------------------ ShadowInfo --------------------------------
-vl::ShadowInfo::ShadowInfo(std::string const &tech, Ogre::ColourValue const &col, std::string const &cam)
-	: _technique(SHADOWTYPE_NONE)
-	, _colour(col)
-	, _camera(cam)
+vl::ShadowInfo::ShadowInfo(std::string const &cam)
+	: _camera(cam)
 	, _enabled(false)
 	, _texture_size(1024)
+	, _max_distance(250)
+	, _caster_material("ShadowCaster")
+	, _shelf_shadow(true)
+	, _dir_light_texture_offset(2)
 	, _dirty(true)
 {
-	setShadowTechnique(tech);
 }
 
 void
-vl::ShadowInfo::disable(void)
+vl::ShadowInfo::setEnabled(bool enabled)
 {
-	if(_enabled)
+	if(enabled != _enabled)
 	{
+		_enabled = enabled;
 		_setDirty();
-		_enabled = false;
-	}
-}
-
-void
-vl::ShadowInfo::enable(void)
-{
-	if(!_enabled || _technique == SHADOWTYPE_NONE)
-	{
-		_setDirty();
-		_enabled = true;
-		// Only change technique if we have no shadows
-		if(_technique == SHADOWTYPE_NONE)
-		{ _technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
-	}
-}
-
-void
-vl::ShadowInfo::setShadowTechnique(std::string const &tech)
-{
-	ShadowTechnique technique = getShadowTechniqueFromString(tech);
-	if(technique != SHADOWTYPE_NOT_VALID && technique != _technique)
-	{
-		_setDirty();
-		_technique = technique;
-	}
-}
-
-std::string
-vl::ShadowInfo::getShadowTechniqueName(void) const
-{
-	return getShadowTechniqueAsString(_technique);
-}
-
-void 
-vl::ShadowInfo::setShadowTechnique(ShadowTechnique tech)
-{
-	if(tech != _technique)
-	{
-		_setDirty();
-		_technique = tech;
 	}
 }
 
@@ -201,16 +90,6 @@ vl::ShadowInfo::setCamera(std::string const &str)
 	{
 		_setDirty();
 		_camera = name;
-	}
-}
-
-void 
-vl::ShadowInfo::setColour(Ogre::ColourValue const &col)
-{
-	if(col != _colour)
-	{
-		_setDirty();
-		_colour = col;
 	}
 }
 
@@ -238,6 +117,47 @@ vl::ShadowInfo::setTextureSize(int size)
 	if(_texture_size != final_size)
 	{
 		_texture_size = final_size;
+		_setDirty();
+	}
+}
+
+void
+vl::ShadowInfo::setMaxDistance(vl::scalar dist)
+{
+	if(_max_distance != dist)
+	{
+		_max_distance = dist;
+		_setDirty();
+	}
+
+}
+
+void
+vl::ShadowInfo::setShadowCasterMaterial(std::string const &material_name)
+{
+	if(material_name != _caster_material)
+	{
+		_caster_material = material_name;
+		_setDirty();
+	}
+}
+
+void
+vl::ShadowInfo::setShelfShadowEnabled(bool enable)
+{
+	if(enable != _shelf_shadow)
+	{
+		_shelf_shadow = enable;
+		_setDirty();
+	}
+}
+
+void
+vl::ShadowInfo::setDirLightTextureOffset(vl::scalar offset)
+{
+	if(offset != _dir_light_texture_offset)
+	{
+		_dir_light_texture_offset = offset;
 		_setDirty();
 	}
 }
@@ -1028,8 +948,8 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// and most of them need to be static during the simulation
 		if(_shadows.isEnabled())
 		{
-			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadows.getShadowTechnique()) );
-			_ogre_sm->setShadowColour(_shadows.getColour());
+			_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
+			//_ogre_sm->setShadowColour(_shadows.getColour());
 			Ogre::ShadowCameraSetupPtr cam_setup;
 			if( _shadows.getCamera() == "default" )
 			{
@@ -1106,20 +1026,19 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 
 		/// @todo for self shadowing we need to use custom shaders
 		/// @todo make configurable
-		_ogre_sm->setShadowTextureSelfShadow(true);
+		_ogre_sm->setShadowTextureSelfShadow(_shadows.isShelfShadowEnabled());
 		/// Hard coded floating point texture, needs current hardware
 		/// provides much better depth map
 		/// @todo these are not runtime configurable variables they should
 		/// be set elsewhere
 		_ogre_sm->setShadowTexturePixelFormat(Ogre::PF_FLOAT32_R);
-		_ogre_sm->setShadowTextureCasterMaterial("ShadowCaster");
+		_ogre_sm->setShadowTextureCasterMaterial(_shadows.getShadowCasterMaterial());
 
 		/// For fixed functionality texture shadows to work this must be set
 		/// @todo make configurable
 		/// @todo add support for it in Shaders (just clip the shadow)
-		_ogre_sm->setShadowFarDistance(250);
-		//_ogre_sm->setShadowTextureCount(10);
-		_ogre_sm->setShadowDirLightTextureOffset(2);
+		_ogre_sm->setShadowFarDistance(_shadows.getMaxDistance());
+		_ogre_sm->setShadowDirLightTextureOffset(_shadows.getDirLightTextureOffset());
 	}
 }
 
@@ -1246,11 +1165,14 @@ vl::operator<<(std::ostream &os, vl::ShadowInfo const &shadows)
 	{ os << "enabled "; }
 	else
 	{ os << "disabled "; }
-	os << ": technique " << shadows.getShadowTechniqueName()
+	if(shadows.isShelfShadowEnabled())
+	{ os << " : with shelf shadowing"; }
+	else
+	{ os << " : without shelf shadowing"; }
+	os  << " : camera " << shadows.getCamera()
 		<< " : texture size " << shadows.getTextureSize()
-		/*<< " : colour " << shadows.getColour()*/
-		<< " : camera " << shadows.getCamera();
-		
+		<< " : max distance " << shadows.getMaxDistance()
+		<< " : caster material " << shadows.getShadowCasterMaterial();
 
 	return os;
 }
@@ -1319,8 +1241,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shadows)
 {
-	msg << shadows.getShadowTechnique() << shadows.getColour() << shadows.getCamera() << shadows.isEnabled()
-		<< shadows.getTextureSize();
+	msg << shadows.isEnabled() << shadows.getCamera() << shadows.getTextureSize()
+		<< shadows.getShadowCasterMaterial() << shadows.getMaxDistance()
+		<< shadows.isShelfShadowEnabled() << shadows.getDirLightTextureOffset();
 
 	return msg;
 }
@@ -1329,21 +1252,21 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 {
-	ShadowTechnique tech;
-	Ogre::ColourValue col;
-	std::string camera;
-	bool enabled;
+	std::string camera, caster_material;
+	bool enabled, shelf_shadow;
 	int texture_size;
-	msg >> tech >> col >> camera >> enabled >> texture_size;
+	vl::scalar dist, dir_offset;
 
-	shadows.setShadowTechnique(tech);
-	shadows.setColour(col);
+	msg >> enabled >> camera >> texture_size >> caster_material >> dist
+		>> shelf_shadow >> dir_offset;
+
 	shadows.setCamera(camera);
 	shadows.setTextureSize(texture_size);
-	if(enabled)
-	{ shadows.enable(); }
-	else
-	{ shadows.disable(); }
+	shadows.setEnabled(enabled);
+	shadows.setShadowCasterMaterial(caster_material);
+	shadows.setMaxDistance(dist);
+	shadows.setShelfShadowEnabled(shelf_shadow);
+	shadows.setDirLightTextureOffset(dir_offset);
 
 	return msg;
 }
