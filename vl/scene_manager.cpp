@@ -136,6 +136,7 @@ vl::ShadowInfo::ShadowInfo(std::string const &tech, Ogre::ColourValue const &col
 	, _colour(col)
 	, _camera(cam)
 	, _enabled(false)
+	, _texture_size(1024)
 	, _dirty(true)
 {
 	setShadowTechnique(tech);
@@ -210,6 +211,34 @@ vl::ShadowInfo::setColour(Ogre::ColourValue const &col)
 	{
 		_setDirty();
 		_colour = col;
+	}
+}
+
+void
+vl::ShadowInfo::setTextureSize(int size)
+{
+	int final_size = size;
+	// default to 128 texture
+	if(size < 128)
+	{
+		final_size = 128;
+		std::clog << "vl::ShadowInfo::setTextureSize : " << size 
+			<< " is too small. Trying to fix the problem by using "
+			<< final_size << " instead." << std::endl;
+	}
+	// square textures thank you very much
+	else if(!is_power_of_two(size))
+	{
+		final_size = next_power_of_two(size);
+		std::clog << "vl::ShadowInfo::setTextureSize : " << size 
+			<< " is not power of two. Trying to fix the problem by using "
+			<< final_size << " instead." << std::endl;
+	}
+
+	if(_texture_size != final_size)
+	{
+		_texture_size = final_size;
+		_setDirty();
 	}
 }
 
@@ -1057,15 +1086,17 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// @todo the number of textures (four at the moment) should be user configurable
 		if(Ogre::Root::getSingleton().getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
 		{
-			std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
-			_ogre_sm->setShadowTextureSettings(1024, 4);
+			std::cout << "Using " << _shadows.getTextureSize() << " x " 
+				<< _shadows.getTextureSize() << " shadow textures." << std::endl;
+			_ogre_sm->setShadowTextureSettings(_shadows.getTextureSize(), 4);
 		}
 		else
 		{
 			/// @todo this doesn't work on Windows with size < (512,512)
 			/// should check the window size and select the largest
 			/// possible shadow texture based on that.
-			std::cout << "Using 512 x 512 shadow textures." << std::endl;
+			std::cout << "Hardware does not support offscreen buffers. " <<
+				" So using 512 x 512 shadow textures for compatibility." << std::endl;
 			_ogre_sm->setShadowTextureSettings(512, 4);
 		}
 
@@ -1216,8 +1247,10 @@ vl::operator<<(std::ostream &os, vl::ShadowInfo const &shadows)
 	else
 	{ os << "disabled "; }
 	os << ": technique " << shadows.getShadowTechniqueName()
-		<< " : colour " << shadows.getColour()
+		<< " : texture size " << shadows.getTextureSize()
+		/*<< " : colour " << shadows.getColour()*/
 		<< " : camera " << shadows.getCamera();
+		
 
 	return os;
 }
@@ -1286,7 +1319,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shadows)
 {
-	msg << shadows.getShadowTechnique() << shadows.getColour() << shadows.getCamera() << shadows.isEnabled();
+	msg << shadows.getShadowTechnique() << shadows.getColour() << shadows.getCamera() << shadows.isEnabled()
+		<< shadows.getTextureSize();
 
 	return msg;
 }
@@ -1299,11 +1333,13 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	Ogre::ColourValue col;
 	std::string camera;
 	bool enabled;
-	msg >> tech >> col >> camera >> enabled;
+	int texture_size;
+	msg >> tech >> col >> camera >> enabled >> texture_size;
 
 	shadows.setShadowTechnique(tech);
 	shadows.setColour(col);
 	shadows.setCamera(camera);
+	shadows.setTextureSize(texture_size);
 	if(enabled)
 	{ shadows.enable(); }
 	else

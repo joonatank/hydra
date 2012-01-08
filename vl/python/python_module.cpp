@@ -274,6 +274,7 @@ void export_scene_graph(void)
 		.add_property("technique", &vl::ShadowInfo::getShadowTechniqueName, setShadowTechnique_ov0)
 		.add_property("colour", python::make_function(&vl::ShadowInfo::getColour, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setColour)
 		.add_property("camera", python::make_function(&vl::ShadowInfo::getCamera, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setCamera)
+		.add_property("texture_size", &vl::ShadowInfo::getTextureSize, &vl::ShadowInfo::setTextureSize)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

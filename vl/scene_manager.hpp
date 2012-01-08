@@ -293,6 +293,11 @@ public :
 
 	void setColour(Ogre::ColourValue const &col);
 
+	void setTextureSize(int);
+
+	int getTextureSize(void) const
+	{ return _texture_size; }
+
 	bool isDirty(void) const
 	{ return _dirty; }
 
@@ -310,6 +315,8 @@ private :
 	std::string _camera;
 
 	bool _enabled;
+
+	int _texture_size;
 
 	bool _dirty;
 };

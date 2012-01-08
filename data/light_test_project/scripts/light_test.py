@@ -48,6 +48,7 @@ athene2 = athene.clone();
 athene2.position = Vector3(3, 4, 5)
 
 game.scene.shadows.enable()
+game.scene.shadows.texture_size = 4024
 # some shadow testing
 #game.scene.shadows.camera = "focused"
 #game.scene.shadows.camera = "lispsm"

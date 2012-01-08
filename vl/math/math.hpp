@@ -38,6 +38,27 @@
 namespace vl
 {
 
+inline
+bool is_power_of_two(uint64_t x)
+{
+    return (x & (x - 1)) == 0;
+}
+
+inline
+uint64_t next_power_of_two(uint64_t x)
+{
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	x++;
+
+	return x;
+}
+
 inline bool equal( scalar const &a, scalar const &b )
 {
 	if( a-epsilon < b && a+epsilon > b )
