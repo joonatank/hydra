@@ -74,7 +74,7 @@ in vec3 dirToEye;
 // Of course the position does not make any sense if it's not a position from the vertex.
 // Attenuation in pixel shader otherwise large objects
 // with few vertices are incorrectly lit
-in vec3 lightPos;
+in vec4 lightPos;
 
 // Spotlight direction, should be in the same space as the rest of the parameters,
 in vec3 spotlightDir;
@@ -177,7 +177,8 @@ void main(void)
 
 	// Light vector needs to be calculated in fragment shader for low
 	// poly objects like flat walls.
-	vec3 fragmentToLight = lightPos - vVertex;
+	// For directional lights lightPos.w is 0 others 1
+	vec3 fragmentToLight = lightPos.xyz - (vVertex*lightPos.w);
 
 	// Normalize interpolated direction to light
 	vec3 normDirToLight = normalize(fragmentToLight);

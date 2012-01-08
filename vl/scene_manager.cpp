@@ -30,6 +30,11 @@
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
+#include <OGRE/OgreShadowCameraSetupPSSM.h>
+
+// Necessary for Rendering system harware capabilities
+#include <OGRE/OgreRoot.h>
+
 #include "logger.hpp"
 
 const char *vl::EDITOR_CAMERA = "editor/perspective";
@@ -999,18 +1004,42 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			Ogre::ShadowCameraSetupPtr cam_setup;
 			if( _shadows.getCamera() == "default" )
 			{
+				std::clog << "Using Default shadow camera" << std::endl;
 				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
 			}
 			else if( _shadows.getCamera() == "planeoptimal" )
 			{
+				std::clog << "Trying to use PlaneOptimal shadow camera" 
+					<< " but it's not implemented so using the previous setting." << std::endl;
 				/// @todo needs a plane of interest
 				// cam_setup.bind(new Ogre::PlaneOptimalShadowCameraSetup());
 			}
 			else if( _shadows.getCamera() == "lispsm" )
 			{
-				/// LiSPSM has creately softer shadows compared to the default one
-				/// i.e. less pixelisation in the edges.
-				cam_setup.bind(new Ogre::LiSPSMShadowCameraSetup());
+				std::clog << "Using LiSPSM shadow camera" << std::endl;
+				Ogre::LiSPSMShadowCameraSetup *lispsm = new Ogre::LiSPSMShadowCameraSetup();
+				//setOptimalAdjustFactor
+				//setCameraLightDirectionThreshold
+				cam_setup.bind(lispsm);
+			}
+			else if( _shadows.getCamera() == "pssm" )
+			{
+				std::clog << "Using PSSM shadow camera" << std::endl;
+				Ogre::PSSMShadowCameraSetup *pssm = new Ogre::PSSMShadowCameraSetup();
+				size_t const n_maps = 3;
+				pssm->calculateSplitPoints(n_maps, 0.1, 100);
+				cam_setup.bind(pssm);
+
+				// Necessary for PSSM for other types we should reset this
+				_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_DIRECTIONAL, n_maps);
+				_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_SPOTLIGHT, n_maps);
+				// Hard coded max lights for shadows, 4 at the moment
+				_ogre_sm->setShadowTextureCount(4*n_maps);
+			}
+			else if( _shadows.getCamera() == "focused" )
+			{
+				std::clog << "Using Focused shadow camera" << std::endl;
+				cam_setup.bind(new Ogre::FocusedShadowCameraSetup());
 			}
 
 			if( !cam_setup.isNull() )
@@ -1018,7 +1047,32 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		}
 		else
 		{ _ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_NONE); }
-	
+
+		/// @todo these should only be set the first time or after they
+		/// have changed.
+
+		/// These can not be moved to SceneManager at least not yet
+		/// because they need the RenderSystem capabilities.
+		/// @todo this should be user configurable (if the hardware supports it)
+		/// @todo the number of textures (four at the moment) should be user configurable
+		if(Ogre::Root::getSingleton().getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
+		{
+			std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
+			_ogre_sm->setShadowTextureSettings(1024, 4);
+		}
+		else
+		{
+			/// @todo this doesn't work on Windows with size < (512,512)
+			/// should check the window size and select the largest
+			/// possible shadow texture based on that.
+			std::cout << "Using 512 x 512 shadow textures." << std::endl;
+			_ogre_sm->setShadowTextureSettings(512, 4);
+		}
+
+		// Disable shadow textures for POINT lights as they are not supported
+		// All textures are available for spot and directional lights.
+		_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_POINT, 0);
+
 		/// @todo for self shadowing we need to use custom shaders
 		/// @todo make configurable
 		_ogre_sm->setShadowTextureSelfShadow(true);
@@ -1032,7 +1086,9 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// For fixed functionality texture shadows to work this must be set
 		/// @todo make configurable
 		/// @todo add support for it in Shaders (just clip the shadow)
-		_ogre_sm->setShadowFarDistance(50);
+		_ogre_sm->setShadowFarDistance(250);
+		//_ogre_sm->setShadowTextureCount(10);
+		_ogre_sm->setShadowDirLightTextureOffset(2);
 	}
 }
 

@@ -169,6 +169,11 @@ class ShadowInfo
 public :
 	/// @brief constructor
 	/// Shadows are disabled by default, so call to enable is necessary.
+	/// @todo remove shadow colours because we use ADDITATIVE INTEGRATED shadows
+	/// always.
+	/// Shadow colours should only be used for debugging (as long as we have no
+	/// easy access to the depth map.
+	/// So they should not be accessable by the user except for a boolean debug value.
 	ShadowInfo(std::string const &tech = "none", 
 		Ogre::ColourValue const &col = Ogre::ColourValue(0.3, 0.3, 0.3), 
 		std::string const &cam = "default");
@@ -190,6 +195,10 @@ public :
 	/// texture and stencil (for the modulative version)
 	/// Be mindful that setting the technique can cause instabilities as they
 	/// are not quarantied to work, this is mostly a development features.
+	///
+	/// @todo remove Stencil shadows, because we don't really need them and
+	/// will never fully support them. They are way too slow to be used with CAD
+	/// models so the extra work to get them working is wasted anyway.
 	void setShadowTechnique(std::string const &tech);
 
 	/// @brief the shadow technique
@@ -213,11 +222,67 @@ public :
 	ShadowTechnique getShadowTechnique(void) const
 	{ return _technique; }
 
-	/// Valid values for camera are "Default", "LiSPSM"
-	/// others maybe added later. Values are case insensitive.
+	/// Valid values for camera are "Default", "LiSPSM", "Focused", "PSSM"
+	/// others may be added later. Values are case insensitive.
 	/// Any other value will default to "Default" camera
-	/// @todo LiSPSM camera crashes Ogre Release version so don't use it
+	/// PSSM is completely experimental and WILL NOT work as excepted.
+	///
+	/// Default is generally the best and should always be used 
+	/// for benchmarking other methods.
+	/// Other methods not only cost more computing resources but also
+	/// use aproximation algorithms that might or might not lower the
+	/// quality depending on the scene.
+	///
+	/// At the moment the real draw back with Default is that it does not
+	/// work with directional lights so one needs to use one of the others
+	/// for directional lights.
+	/// This is at the moment handleded by overriding shadow camera setup
+	/// for directional lights. They use Focused camera and this can not
+	/// be overriden by the user.
+	///
+	/// The quality draw back with Default is that it produces hard shadows
+	/// with lots of aliasing e.g. jagged edges. Also the aliasing might produce
+	/// lots of tiny shadow artifacts where one or two pixels are in shadow,
+	/// depending on the scene.
+	/// These are more of errors in the shadow mapping shader than the camera though.
+	///
+	/// All the other methods except Default (and PSSM might be an exception but
+	/// is not yet supported) produce softer shadows
+	/// but there might be really significant amount of shadow "swimming"
+	/// where the shadow seems to be moving when camera is moved.
+	/// also moving camera parrallel to the light might produce huge amount of
+	/// artifacts.
+	/// Unless the scene is just perfect for the particular shadow camera
+	/// and does not have these artifacts the jagged shadows produced
+	/// by Default are usually ten times better.
+	///
+	/// Focused is not necessary better than default but it only uses
+	/// one shadow map per light as the default and sometimes provides better
+	/// results. Focused is the only one which works with directional lights
+	/// at the moment.
+	/// 
+	/// LiSPSM has creately softer shadows compared to the default one
+	/// i.e. less pixelisation in the edges.
+	/// If the camera is not parallel to the light, 
+	/// if the camera is parallel to light LiSPSM shadows can be really crappy.
+	///
+	/// PSSM needs more than one shadow map per light
+	/// so it's hugely more inefficient than other methods.
+	///
+	/// Also PSSM needs all shadow maps to be exposed and used in shaders
+	/// so PSSM is not supported at the moment because our shaders
+	/// can not handle more than one shadow map per light.
+	///
+	/// PSSM is probably the "best" shadow technique assuming you use at least
+	/// three textures per shadow. PSSM is most useful in large scenes e.g. out-door.
+	///
+	/// @fixme LiSPSM crashes Ogre Release version so don't use it
 	/// @todo "PlaneOptimal" camera needs a plane of interest
+	/// @todo add PSSM shaders
+	/// @todo add a separate variable for choosing what camera to use for 
+	/// directional lights (as opposed to spot lights)
+	///
+	/// @note point lights will not be supported anytime soon.
 	void setCamera(std::string const &str);
 
 	std::string const &getCamera(void) const

@@ -39,7 +39,7 @@ out vec3 dirToEye;
 // Eye space light position for attenuation and spotlight
 // For low poly object this needs to pass through to get the correct
 // interpolated values for fragment.
-out vec3 lightPos;
+out vec4 lightPos;
 // Spotlight direction vector in eye space
 out vec3 spotlightDir;
 // Vertex in eye space for calculating light direction
@@ -84,7 +84,7 @@ void main(void)
 	dirToEye = normalize(mvDirToEye);
 
 	// Light direction from vertex
-	lightPos = vec3(mvLightPos);
+	lightPos = mvLightPos;
 
 	spotlightDir = spotDirection.xyz;
 }

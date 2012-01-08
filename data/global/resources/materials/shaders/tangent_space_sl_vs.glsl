@@ -49,7 +49,7 @@ out vec3 dirToEye;
 // Tangent space light position for attenuation and spotlight
 // For low poly object this needs to pass through to get the correct
 // interpolated values for fragment.
-out vec3 lightPos;
+out vec4 lightPos;
 // Light to vertex in tangent space
 // Spotlight direction vector in tangent space
 out vec3 spotlightDir;
@@ -117,6 +117,8 @@ void main(void)
 	lightPos.x = dot(tbnLightPos, mvTangent);
 	lightPos.y = dot(tbnLightPos, mvBinormal);
 	lightPos.z = dot(tbnLightPos, mvNormal);
+	// Copy w so that directional lights are handleded correctly
+	lightPos.w = mvLightPos.w;
 	
 	// lightDirection is in eye space already and it's direction vector
 	// not a position
