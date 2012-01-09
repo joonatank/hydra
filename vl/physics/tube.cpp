@@ -356,7 +356,6 @@ vl::physics::Tube::create(void)
 
 		Transform ms_t(pos, orient);
 		MotionState *ms = _world->createMotionState(ms_t);
-		assert(!ms->getNode());
 		RigidBodyRefPtr body = _world->createRigidBody(name.str(), elem_mass, ms, shape, _inertia);
 		_bodies.push_back(body);
 		
@@ -364,7 +363,11 @@ vl::physics::Tube::create(void)
 		body->setUserControlled(true);
 		body->setDamping(_body_damping, _body_damping);
 		body0 = body;
-		assert(!ms->getNode());
+
+		// Some of the casting might go wrong 
+		// so lets assert that we still have valid state
+		assert(ms == body->getMotionState());
+		assert(!body->getMotionState()->getNode());
 	}
 
 	// Create the constraints
@@ -372,7 +375,6 @@ vl::physics::Tube::create(void)
 
 	std::clog << "Created " << _bodies.size() << " rigid bodies and "
 		<< _constraints.size() << " constraints for the tube." << std::endl;
-
 
 	// Create the fixing point constraints
 	for(std::map<vl::scalar, RigidBodyRefPtr>::iterator iter = _fixing_bodies.begin();
@@ -487,14 +489,11 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 		/// Create the SceneNode and Entity
 		std::stringstream name;
 		name << mesh_name.str() << "_" << index;
-		/// @fixme this will crash because there is a node pointer
-		/// in the MotionState though there should be none
-		/// but it's invalid.
+
 		MotionState *ms = (*iter)->getMotionState();
-		std::clog << "Creating node : " << name.str() << std::endl;
-		if(ms->getNode())
-		{ std::clog << "Motion state has node : " << ms->getNode()->getName() << std::endl; }
+		// check that there the MotionState is still valid
 		assert(!ms->getNode());
+
 		SceneNodePtr node = parent_node->createChildSceneNode(name.str());
 		ms->setNode(node);
 		EntityPtr ent = _scene->createEntity(name.str(), mesh_name.str(), true);

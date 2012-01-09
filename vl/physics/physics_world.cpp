@@ -84,6 +84,7 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 	RigidBodyRefPtr body = RigidBody::create(info);
 	assert(body);
 	_rigid_bodies.push_back(body);
+	assert(body->getMotionState() == info.state);
 	// Add the body to the physics engine
 	_addRigidBody(info.name, body, info.kinematic);
 
