@@ -35,7 +35,6 @@ set(SRC
 	resource_manager.cpp
 	distrib_settings.cpp
 	program_options.cpp
-	stats.cpp
 	logger.cpp
 	window.cpp
 	config.cpp
@@ -217,7 +216,6 @@ set( HEADERS
 	ogre_xml_helpers.hpp
 	game_manager.hpp
 	player.hpp
-	stats.hpp
 	typedefs.hpp
 	resource.hpp
 	recording.hpp

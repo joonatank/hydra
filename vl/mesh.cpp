@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Declaration
@@ -269,8 +279,7 @@ size_t vl::VertexDeclaration::getTypeSize(Ogre::VertexElementType type)
 
 /// ---------------------------- IndexBuffer ---------------------------------
 vl::IndexBuffer::IndexBuffer(void)
-	: _index_count(0)
-	, _buffer_size(IT_16BIT)
+	: _buffer_size(IT_16BIT)
 {}
 
 vl::IndexBuffer::~IndexBuffer(void)
@@ -326,14 +335,13 @@ vl::IndexBuffer::push_back(uint32_t index)
 	{
 		_buffer_16.push_back((uint16_t)index);
 	}
-	++_index_count;
 }
 
 void
 vl::IndexBuffer::set(size_t i, uint32_t index)
 {
 	// @todo replace with a real exception
-	if(i-1 > _index_count)
+	if(i >= indexCount())
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	if(_buffer_size == IT_32BIT)

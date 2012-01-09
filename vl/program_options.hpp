@@ -82,6 +82,9 @@ struct ProgramOptions
 	bool show_system_console;
 	bool editor;
 
+	int n_processors;
+	int start_processor;
+
 private :
 	bool _parseSlave( po::variables_map const &vm );
 	bool _parseMaster( po::variables_map const &vm );

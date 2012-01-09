@@ -118,10 +118,14 @@ find_package( Boost COMPONENTS system filesystem program_options signals REQUIRE
 find_package(Bullet)
 find_package(Newton)
 
+find_package(OgreProcedural REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${Ogre_INCLUDE_DIR}
+	# Necessary for OgreProcedurial
+ 	${Ogre_INCLUDE_DIR}/Ogre
 	${OIS_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIR}
@@ -132,6 +136,7 @@ include_directories( SYSTEM
 	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
+	${OgreProcedural_INCLUDE_DIR}
 	)
 
 # Libraries that Hydra library depends on
@@ -151,6 +156,7 @@ set( HYDRA_DEP_LIBS
 	${Vorbis_FILE_LIBRARY}
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
+	${OgreProcedural_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

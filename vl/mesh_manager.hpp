@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh_manager.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -10,6 +21,8 @@
 #include "mesh.hpp"
 
 #include "typedefs.hpp"
+
+#include "math/types.hpp"
 
 #include <OGRE/OgreVector3.h>
 #include <stdint.h>
@@ -92,18 +105,18 @@ public :
 	/// @param name name for the mesh, used for storing it and writing it into a file
 	/// @param normal the normal direction the plane is facing
 	/// @param tessalation how many divisions there is in the mesh
-	virtual vl::MeshRefPtr createPlane(std::string const &name,	Ogre::Real size_x, Ogre::Real size_y,
+	// @todo normal should be fixed to NEGATIVE Z, if the user needs a ground plane he should
+	// provide the normal parameter.
+	virtual vl::MeshRefPtr createPlane(std::string const &name,	Ogre::Real size_x = 1, Ogre::Real size_y = 1,
 		 Ogre::Vector3 normal = Ogre::Vector3(0, 1, 0), uint16_t tesselation_x = 1, uint16_t tesselation_y = 1);
 
-	/// @todo not implemented
 	/// @brief creates a sphere mesh
 	/// @param name name for the mesh, used for storing it and writing it into a file
 	/// @param radius the radius of the sphere in meters
 	/// @param longitude how many divisions there is in the mesh vertically
 	/// @param latitude how many divisions there is in the mesh horizontally
-	virtual vl::MeshRefPtr createSphere(std::string const &name, Ogre::Real radius, uint16_t longitude, uint16_t latitude);
+	virtual vl::MeshRefPtr createSphere(std::string const &name, Ogre::Real radius = 1, uint16_t longitude = 8, uint16_t latitude = 8);
 
-	/// @todo not implemented
 	/// @brief creates a cube mesh with minimum polygon count
 	/// @param name name for the mesh, used for storing it and writing it into a file
 	/// @param size the size of the mesh in meters
@@ -111,6 +124,22 @@ public :
 	/// @todo add version with tesselation
 	/// @param tesselation how many divisions there is in the mesh
 	//virtual vl::MeshPtr createCube(std::string const &name, Ogre::Vector3 size, uint16_t tesselation_x, uint16_t tesselation_y, uint16_t tesselation_z);
+
+	/// @brief creates a new Cylinder mesh
+	/// @todo make configurable whether to put the origin in middle of the
+	/// cylinder or in one of the ends 
+	/// for now it's always in the center for physics integration
+	virtual vl::MeshRefPtr createCylinder(std::string const &name, vl::scalar radius = 1, vl::scalar height=2, uint16_t seg_height=1, uint16_t seg_radius=8);
+
+	/// @brief create a new Capsule mesh
+	virtual vl::MeshRefPtr createCapsule(std::string const &name, vl::scalar radius = 1, vl::scalar height=2, uint16_t seg_height=1, uint16_t seg_radius=8, uint16_t segments=8);
+
+	/// @brief create some pre defined shapes available with default parameters
+	/// @param type_name the name of the prefab type
+	/// @return mesh for the prefab, already created if one exists or a new one
+	/// Only single mesh instance is created for each of these types 
+	/// so the tesselation and size parameters are equal.
+	virtual vl::MeshRefPtr createPrefab(std::string const &type_name);
 
 	/// @brief Get an already created mesh
 	/// @param name the name of the Mesh

@@ -1,9 +1,20 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**
+ *	Copyright (c) 2011 Savant Simulators
  *
- *	Updated 2011-01
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
+ *	@file physics/physics_events.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
+
+// @date 2011-12 Depricated! Will be removed from next release.
 
 #include "physics_events.hpp"
 

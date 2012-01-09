@@ -1,10 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_manager.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_SCENE_MANAGER_HPP
-#define VL_SCENE_MANAGER_HPP
+#ifndef HYDRA_SCENE_MANAGER_HPP
+#define HYDRA_SCENE_MANAGER_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -581,4 +593,4 @@ ByteStream &operator>>(ByteStream &msg, vl::ShadowInfo &shadows);
 }	// namespace cluster
 }	// namespace vl
 
-#endif	// VL_SCENE_MANAGER_HPP
+#endif	// HYDRA_SCENE_MANAGER_HPP

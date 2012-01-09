@@ -1,7 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file entity.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 #include "entity.hpp"
 
@@ -22,11 +35,8 @@ vl::operator<<(std::ostream &os, vl::Entity const &ent)
 {
 	// @todo either mesh name or prefab should be printed
 	os << "Entity : " << ent.getName()
-		<< " : material " << ent.getMaterialName();
-	if(ent.getPrefab() != vl::PF_NONE)
-	{ os << " : prefab " << ent.getPrefab(); }
-	else
-	{ os << " : mesh " << ent.getMeshName(); }
+		<< " : material " << ent.getMaterialName()
+		<< " : mesh " << ent.getMeshName();
 	os << " : cast shadows " << ent.getCastShadows() << std::endl;
 
 	return os;
@@ -46,13 +56,7 @@ vl::EntityMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
 }
 
 /// -------------------------------------- Entity ----------------------------
-vl::Entity::Entity(std::string const &name, vl::PREFAB type, vl::SceneManagerPtr creator)
-	: MovableObject(name, creator)
-{
-	_clear();
-	_prefab = type;
-}
-
+/// -------------------------------------- Public ----------------------------
 vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager)
 	: MovableObject(name, creator)
 {
@@ -118,9 +122,7 @@ vl::Entity::clone(std::string const &append_to_name) const
 	{ return MovableObject::clone(); }
 
 	EntityPtr ent = 0;
-	if(_prefab != PF_NONE)
-	{ ent = _creator->createEntity(_name + append_to_name, _prefab); }
-	else if(_use_new_mesh_manager)
+	if(_use_new_mesh_manager)
 	{ ent = _creator->createEntity(_name + append_to_name, _mesh_name, _use_new_mesh_manager); }
 	else
 	{ ent = _creator->createEntity(_name + append_to_name, _mesh_name); }
@@ -135,11 +137,6 @@ vl::Entity::clone(std::string const &append_to_name) const
 void 
 vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const
 {
-	if( DIRTY_PREFAB & dirtyBits )
-	{
-		msg << _prefab;
-	}
-
 	if( DIRTY_MESH_NAME & dirtyBits )
 	{
 		msg << _mesh_name << _use_new_mesh_manager;
@@ -159,11 +156,6 @@ vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 void 
 vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
-	if( DIRTY_PREFAB & dirtyBits )
-	{
-		msg >> _prefab;
-	}
-
 	if( DIRTY_MESH_NAME & dirtyBits )
 	{
 		msg >> _mesh_name >> _use_new_mesh_manager;
@@ -212,23 +204,6 @@ vl::Entity::_doCreateNative(void)
 		{
 			_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
 		}
-	}
-	else if( PF_NONE != _prefab )
-	{
-		// Lets create the entity
-		Ogre::SceneManager::PrefabType t;
-		if( PF_PLANE == _prefab )
-		{ t = Ogre::SceneManager::PT_PLANE; }
-		else if( PF_SPHERE == _prefab )
-		{ t = Ogre::SceneManager::PT_SPHERE; }
-		else if(PF_CUBE == _prefab)
-		{ t = Ogre::SceneManager::PT_CUBE; }
-		else
-		{
-			std::cerr << "Trying to create unknow prefab entity. Not supported." << std::endl;
-			return false;
-		}
-		_ogre_object = _creator->getNative()->createEntity(_name, t);
 	}
 	else
 	{
@@ -289,7 +264,6 @@ vl::Entity::_finishCreateNative(void)
 void 
 vl::Entity::_clear(void)
 {
-	_prefab = PF_NONE;
 	_cast_shadows = true;
 	_use_new_mesh_manager = false;
 	_ogre_object = 0;

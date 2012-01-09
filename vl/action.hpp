@@ -1,12 +1,26 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-03
- *	@file action.cpp
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
- *	Event Handling Action class
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-10
+ *	@file action.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_ACTION_HPP
-#define VL_ACTION_HPP
+/**	Event Handling Action class
+ */
+
+/// @depricated Will be removed from next release.
+
+#ifndef HYDRA_ACTION_HPP
+#define HYDRA_ACTION_HPP
 
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
@@ -338,4 +352,4 @@ private :
 
 }	// namespace vl
 
-#endif // VL_ACTION_HPP
+#endif // HYDRA_ACTION_HPP

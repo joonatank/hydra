@@ -1,6 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_manager.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "scene_manager.hpp"
@@ -307,8 +319,6 @@ vl::SceneManager::getSceneNodeID(uint64_t id) const
 vl::EntityPtr
 vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 {
-	/// @todo change to use createMovableObject
-
 	/// Disallow empty names for now, we need to generate one otherwise
 	if(name.empty())
 	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
@@ -316,50 +326,27 @@ vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
 	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
 
 	EntityPtr ent = 0;
+	std::string mesh_name;
+
+	assert(_mesh_manager);
+
 	/// Test code for new MeshManager
 	if(type == PF_PLANE)
-	{
-		if(!_mesh_manager)
-		{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
-		
-		std::string mesh_name("prefab_plane");
-		if(!_mesh_manager->hasMesh(mesh_name))
-		{
-			/// Creating a mesh leaves it in the manager for as long as
-			/// cleanup is called on the manager, which gives us enough
-			/// time even if we don't store the ref pointer.
-			_mesh_manager->createPlane(mesh_name, 20, 20);
-		}
-
-		ent = new Entity(name, mesh_name, this, true);
-	}
+	{ mesh_name = "prefab_plane"; }
 	else if(type == PF_CUBE)
-	{
-		if(!_mesh_manager)
-		{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
-		
-		std::string mesh_name("prefab_cube");
-		if(!_mesh_manager->hasMesh(mesh_name))
-		{
-			/// Creating a mesh leaves it in the manager for as long as
-			/// cleanup is called on the manager, which gives us enough
-			/// time even if we don't store the ref pointer.
-			_mesh_manager->createCube(mesh_name);
-		}
+	{ mesh_name = "prefab_cube"; }
+	else if(type == PF_SPHERE)
+	{ mesh_name = "prefab_sphere"; }
 
-		ent = new Entity(name, mesh_name, this, true);
-	}
-	/// Old system for other PREFABS
-	else
-	{
-		ent = new Entity(name, type, this);
-	}
+	if(mesh_name.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown Prefab type.")); }
 
-	_session->registerObject( ent, OBJ_ENTITY, vl::ID_UNDEFINED );
-	assert( ent->getID() != vl::ID_UNDEFINED );
-	_objects.push_back(ent);
+	/// Creating a mesh leaves it in the manager for as long as
+	/// cleanup is called on the manager, which gives us enough
+	/// time even if we don't store the ref pointer.
+	_mesh_manager->createPrefab(mesh_name);
 
-	return ent;
+	return createEntity(name, mesh_name, true);
 }
 
 vl::EntityPtr 
@@ -1078,10 +1065,6 @@ vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList cons
 	NamedParamList::const_iterator iter = params.find("mesh");
 	if(iter != params.end())
 	{ mesh_name = iter->second; }
-	std::string prefab;
-	iter = params.find("prefab");
-	if(iter != params.end())
-	{ prefab = iter->second; }
 
 	bool use_new_manager = false;
 	iter = params.find("use_new_mesh_manager");
@@ -1090,28 +1073,13 @@ vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList cons
 		use_new_manager = vl::from_string<bool>(iter->second);
 	}
 
-	if(mesh_name.empty() && prefab.empty())
-	{
-		BOOST_THROW_EXCEPTION(vl::invalid_param() << vl::desc("Mesh name can not be empty"));
-	}
-	else if(!mesh_name.empty())
+	if(!mesh_name.empty())
 	{
 		return new Entity(name, mesh_name, this, use_new_manager);
 	}
-	else // !prefab.empty()
+	else
 	{
-		PREFAB pf = PF_NONE;
-		vl::to_lower(prefab);
-		if(prefab == "plane")
-		{ pf = PF_PLANE;}
-		else if(prefab == "cube")
-		{ pf = PF_CUBE;}
-		else if(prefab == "sphere")
-		{ pf = PF_SPHERE;}
-		else
-		{ BOOST_THROW_EXCEPTION(vl::invalid_param() << vl::desc("Mesh Prefab invalid.")); }
-		
-		return new Entity(name, pf, this);
+		BOOST_THROW_EXCEPTION(vl::invalid_param() << vl::desc("Mesh name can not be empty"));
 	}
 }
 

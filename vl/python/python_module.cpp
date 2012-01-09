@@ -63,8 +63,15 @@
 /// SceneGraph overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 3)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
+
+// MeshManager overloads
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 1, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createSphere_ovs, createSphere, 1, 4)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCylinder_ovs, createCylinder, 1, 5)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCapsule_ovs, createCapsule, 1, 5)
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setDirection_ovs, setDirection, 1, 4)
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(lookAt_ovs, lookAt, 3, 5)
@@ -212,12 +219,14 @@ void export_animation(void)
 void export_scene_graph(void)
 {
 	vl::MeshRefPtr (MeshManager::*loadMesh_ov0)(std::string const &) = &MeshManager::loadMesh;
-
+	
 	python::class_<vl::MeshManager, vl::MeshManagerRefPtr, boost::noncopyable>("MeshManager", python::no_init)
 		.def("loadMesh", loadMesh_ov0)
 		.def("createPlane", &vl::MeshManager::createPlane, createPlane_ovs())
-		.def("createSphere", &vl::MeshManager::createSphere)
+		.def("createSphere", &vl::MeshManager::createSphere, createSphere_ovs())
 		.def("createCube", &vl::MeshManager::createCube, createCube_ovs())
+		.def("createCylinder", &vl::MeshManager::createCylinder, createCylinder_ovs())
+		.def("createCapsule", &vl::MeshManager::createCapsule, createCapsule_ovs())
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
@@ -383,7 +392,6 @@ void export_scene_graph(void)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
 		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("prefab", &vl::Entity::getPrefab)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -535,8 +543,6 @@ void export_game(void)
 		.def(python::self /= double())
 		.def(python::self / size_t())
 		.def(python::self /= size_t())
-		.def(python::self / int32_t())
-		.def(python::self /= int32_t())
 		.def(python::self_ns::str(python::self_ns::self))
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
@@ -547,13 +553,17 @@ void export_game(void)
 		.def("reset", &vl::timer::reset)
 	;
 
+	python::class_<vl::Report<vl::time>, boost::noncopyable>("Report", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", &vl::GameManager::getGUI)
-		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("rendering_report", python::make_function( &vl::GameManager::getRenderingReport, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("init_report", python::make_function( &vl::GameManager::getInitReport, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property( "physics_world", &vl::GameManager::getPhysicsWorld)
 		.def( "enableAudio", &vl::GameManager::enableAudio )
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
@@ -593,10 +603,6 @@ void export_game(void)
 		.add_property("asymmetric_stereo_frustum", &vl::Player::isAsymmetricStereoFrustum, &vl::Player::enableAsymmetricStereoFrustum)
 		.add_property("ipd", &vl::Player::getIPD, &vl::Player::setIPD)
 		.def("takeScreenshot", &vl::Player::takeScreenshot)
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

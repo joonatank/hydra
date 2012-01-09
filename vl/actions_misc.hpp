@@ -1,11 +1,23 @@
-/**	Joonatan Kuosa
- *	2010-11 initial implementation
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
- *	2011-01 Dependencies to Equalizer removed and moved to more suitable place
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
+ *	@file actions_misc.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_ACTIONS_MISC_HPP
-#define VL_ACTIONS_MISC_HPP
+/// @depricated Will be removed from next release.
+
+#ifndef HYDRA_ACTIONS_MISC_HPP
+#define HYDRA_ACTIONS_MISC_HPP
 
 #include "tracker.hpp"
 #include "action.hpp"
@@ -205,4 +217,4 @@ public :
 
 }	// namespace vl
 
-#endif	// VL_ACTIONS_MISC_HPP
+#endif	// HYDRA_ACTIONS_MISC_HPP

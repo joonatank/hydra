@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef VL_RENDERER_HPP
-#define VL_RENDERER_HPP
+#ifndef HYDRA_RENDERER_HPP
+#define HYDRA_RENDERER_HPP
 
 #include "ogre_root.hpp"
 #include "base/envsettings.hpp"
@@ -207,4 +207,4 @@ protected :
 
 }	// namespace vl
 
-#endif // VL_RENDERER_HPP
+#endif // HYDRA_RENDERER_HPP

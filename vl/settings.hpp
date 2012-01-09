@@ -1,6 +1,20 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-05
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file settings.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
  *	Major Update 2010-11
  *	Master Settings file, has references to Project and Environment Settings
  *	Also contains file paths and necessary functions for starting the
@@ -16,8 +30,9 @@
  *	This provides auxialiary functions for retrieving the information from all
  *	project settings in one container.
  **/
-#ifndef VL_SETTINGS_HPP
-#define VL_SETTINGS_HPP
+
+#ifndef HYDRA_SETTINGS_HPP
+#define HYDRA_SETTINGS_HPP
 
 // Necessary because most parameters are strings
 #include <string>
@@ -120,4 +135,4 @@ class Settings
 
 }	// namespace vl
 
-#endif	// VL_SETTINGS_HPP
+#endif	// HYDRA_SETTINGS_HPP

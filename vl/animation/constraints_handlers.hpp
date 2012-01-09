@@ -35,9 +35,10 @@ struct ConstraintJoystickHandler : public JoystickHandler
 		int axis;
 		int button;
 		ConstraintRefPtr constraint;
+		bool inverted;
 
-		AxisConstraintElem(int axis_, int button_, ConstraintRefPtr constraint_ = ConstraintRefPtr())
-			: axis(axis_), button(button_), constraint(constraint_)
+		AxisConstraintElem(int axis_, int button_, bool inverted_ = false, ConstraintRefPtr constraint_ = ConstraintRefPtr())
+			: axis(axis_), button(button_), inverted(inverted_), constraint(constraint_)
 		{}
 
 		bool operator==(AxisConstraintElem const &elem) const
@@ -57,8 +58,7 @@ struct ConstraintJoystickHandler : public JoystickHandler
 	/// @param axis, axis which is used to control constraint 0 = x, 1 = y, 2 = z
 	/// @param button, button that needs to be pressed for this constraint
 	/// @param constraint, the constraint to control
-	void set_axis_constraint(int axis, ConstraintRefPtr constraint);
-	void set_axis_constraint(int axis, int button, ConstraintRefPtr constraint);
+	void set_axis_constraint(ConstraintRefPtr constraint, int axis, int button = -1, bool inverted = false);
 	
 	void set_velocity_multiplier(vl::scalar multi)
 	{ _velocity_multiplier = vl::abs(multi); }

@@ -53,6 +53,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyTrigger_ov, getKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyTrigger_ov, hasKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getJoystick_ov, getJoystick, 0, 1)
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_axis_constraint_ovs, set_axis_constraint, 2, 4)
+
+
 using namespace vl;
 
 namespace
@@ -145,14 +148,9 @@ void export_managers(void)
 	python::class_<vl::JoystickHandler, vl::JoystickHandlerRefPtr, boost::noncopyable>("JoystickHandler", python::no_init)
 	;
 
-	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov0)(int, ConstraintRefPtr)
-		= &vl::ConstraintJoystickHandler::set_axis_constraint;
-	void (vl::ConstraintJoystickHandler::*set_axis_constraint_ov1)(int, int, ConstraintRefPtr)
-		= &vl::ConstraintJoystickHandler::set_axis_constraint;
-
 	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::JoystickHandler> >("ConstraintJoystickHandler", python::no_init)
-		.def("set_axis_constraint", set_axis_constraint_ov0)
-		.def("set_axis_constraint", set_axis_constraint_ov1)
+		.def("set_axis_constraint", &vl::ConstraintJoystickHandler::set_axis_constraint, set_axis_constraint_ovs())
+		//.def("set_axis_constraint", set_axis_constraint_ov1)
 		.add_property("velocity_multiplier", &vl::ConstraintJoystickHandler::get_velocity_multiplier, &vl::ConstraintJoystickHandler::set_velocity_multiplier)
 		.def("create", &vl::ConstraintJoystickHandler::create)
 		.staticmethod("create")

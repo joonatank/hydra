@@ -1,7 +1,20 @@
-/**	@author Joonatan Kuosa
- *	@date 2010-11 initial implementation
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
  *	@file actions_misc.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
+/// @depricated Will be removed from next release.
 
 #include "actions_misc.hpp"
 

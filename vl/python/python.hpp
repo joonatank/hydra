@@ -78,6 +78,9 @@ public :
 	/// @return true if script with the name has been executed
 	bool hasBeenExecuted(std::string const &name) const;
 
+	template<typename T>
+	void addVariable(std::string variable_name, T &var);
+
 private :
 	struct Script
 	{
@@ -104,8 +107,14 @@ private :
 	python::object _global;
 };
 
-
+template<typename T>
+void
+PythonContext::addVariable(std::string variable_name, T &var)
+{
+	_global[variable_name] = python::ptr<>(&var);
 }
+
+}	// namespace vl
 
 
 #endif // HYDRA_PYTHON_HPP

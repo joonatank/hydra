@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
  *	@file config.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
@@ -160,10 +170,11 @@ vl::Config::init(bool enable_editor)
 	std::cout << vl::TRACE << "vl::Config::init" << std::endl;
 	vl::timer init_timer;
 
+	vl::Report<vl::time> &report = _game_manager->getInitReport();
 	vl::timer t;
 	if(!_game_manager->requestStateChange(GS_INIT))
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Couldn't change state to INIT")); }
-	std::cout << "Starting GameManager took " << t.elapsed() << std::endl;
+	report["Starting GameManager"].push(t.elapsed());
 
 	if(enable_editor)
 	{ _game_manager->createEditor(); }
@@ -173,7 +184,7 @@ vl::Config::init(bool enable_editor)
 	{
 		t.reset();
 		_renderer->init(_env);
-		std::cout << "Initing Renderer took : " << t.elapsed() << std::endl;
+		report["Initing Renderer"].push(t.elapsed());
 	}
 
 	// Send the project to the local Renderer
@@ -181,7 +192,7 @@ vl::Config::init(bool enable_editor)
 	{
 		t.reset();
 		_renderer->setProject(_proj);
-		std::cout << "Setting project to Renderer took " << t.elapsed() << std::endl;	
+		report["Setting project to Renderer"].push(t.elapsed());
 	}
 
 	/// @todo change to use GS_LOAD which is inititiated automatically after GS_INIT
@@ -193,7 +204,7 @@ vl::Config::init(bool enable_editor)
 	_server->poll();
 	_updateFrameMsgs();
 	_updateServer();
-	std::cout << "Updating server took : " <<  t.elapsed() << std::endl;
+	report["Updating server"].push(t.elapsed());
 
 	if(_renderer.get())
 	{
@@ -202,16 +213,25 @@ vl::Config::init(bool enable_editor)
 		_renderer->createSceneObjects(msg);
 		msg = createMsgInit();
 		_renderer->initScene(msg);
-		std::cout << "Loading Renderer with new created objects took : "
-			<<  t.elapsed() << std::endl;
+		report["Creating objects in Renderer"].push(t.elapsed());
 	}
 
-	_game_manager->getStats().logInitTime(init_timer.elapsed());
+	report["Total init"].push(init_timer.elapsed());
+	report.finish();
+	
 	_stats_timer.reset();
 
+	_game_manager->getPython()->addVariable("server_report", _server->getReport());
+	
 	// TODO this should block till both slaves and local renderer are ready
 	// Problematic as this does not take into account clients that are started
 	// later than this function is ran.
+	// Another problem is that if we block here the starting is going to take
+	// longer no matter what
+	// For example problematic configurations and so on.
+	// We should rather block the simulation till all slaves are up,
+	// which should be configurable from ini file, but allow the use of
+	// global actions like EXIT.
 //	std::clog << "blocking till slave clients are ready." << std::endl;
 //	_server->block_till_initialised();
 	_server->poll();
@@ -243,6 +263,9 @@ vl::Config::render( void )
 {
 	assert(_server);
 
+	vl::timer loop_timer;
+	vl::Report<vl::time> &report = _game_manager->getRenderingReport();
+
 	vl::timer timer;
 
 	// Get new event messages that are processed in GameManager::step
@@ -253,7 +276,7 @@ vl::Config::render( void )
 	timer.reset();
 	if( !_game_manager->step() )
 	{ stopRunning(); }
-	_game_manager->getStats().logStepTime(timer.elapsed());
+	report["step time"].push(timer.elapsed());
 
 	/// Provide the updates to slaves
 	timer.reset();
@@ -262,23 +285,23 @@ vl::Config::render( void )
 	_updateRenderer();
 
 	// TODO separate stats for rendering slaves and local
-	_server->update(_game_manager->getStats());
-	_game_manager->getStats().logUpdateTime(timer.elapsed());
+	_server->update();
+	report["scene graph update time"].push(timer.elapsed());
 
 	/// Render the scene
 	timer.reset();
-	bool rendering = _server->start_draw(_game_manager->getStats());
+	bool rendering = _server->start_draw();
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
 		vl::timer l;
 		_renderer->draw();
-		_game_manager->getStats().logLocalRenderingTime(l.elapsed());
+		report["local rendering"].push(l.elapsed());
 	}
 	if(rendering)
 	{
 		vl::time limit(1, 0);
-		_server->finish_draw(_game_manager->getStats(), limit);
+		_server->finish_draw(limit);
 	}
 
 	// Finish local renderer
@@ -286,18 +309,20 @@ vl::Config::render( void )
 	{
 		vl::timer l;
 		_renderer->swap();
-		_game_manager->getStats().logLocalSwapTime(l.elapsed());
+		report["local swap"].push(l.elapsed());
+
 		l.reset();
 		_renderer->capture();
-		_game_manager->getStats().logLocalCaptureTime(l.elapsed());
+		report.get_number("local capture").push(l.elapsed());
 	}
-	_game_manager->getStats().logRenderingTime(timer.elapsed());
+
+	report["Rendering loop"].push(loop_timer.elapsed());
 
 	// Update statistics every 10 seconds
 	// @todo time limit should be configurable
 	if( _stats_timer.elapsed() > vl::time(10) )
 	{
-		_game_manager->getStats().update();
+		report.finish();
 		_stats_timer.reset();
 	}
 }

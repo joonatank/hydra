@@ -1,11 +1,22 @@
-/**	@author Joonatan Kuosa
- *	@date 2010-02
- *	@file exceptions.hpp
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
- *	Exceptions.
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-02
+ *	@file base/exceptions.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
-#ifndef VL_EXCEPTIONS_HPP
-#define VL_EXCEPTIONS_HPP
+
+#ifndef HYDRA_EXCEPTIONS_HPP
+#define HYDRA_EXCEPTIONS_HPP
 
 #include <boost/exception/all.hpp>
 
@@ -274,4 +285,4 @@ namespace vl
 
 }	// namespace vl
 
-#endif	// VL_EXCEPTIONS_HPP
+#endif	// HYDRA_EXCEPTIONS_HPP

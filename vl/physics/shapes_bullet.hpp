@@ -31,6 +31,8 @@
 // Concrete physics engine implementation
 #include "bullet/btBulletCollisionCommon.h"
 
+#include "math/conversion.hpp"
+
 namespace vl
 {
 
@@ -53,7 +55,8 @@ class BulletBoxShape : public BulletCollisionShape, public vl::physics::BoxShape
 public :
 	BulletBoxShape(Ogre::Vector3 const &bounds)
 		: BoxShape()
-		, _bt_shape( new btBoxShape(vl::math::convert_bt_vec(bounds)) )
+		// dividing by two because Bullet uses halfExtends and we use bounds
+		, _bt_shape( new btBoxShape(vl::math::convert_bt_vec(bounds/2)) )
 	{}
 
 	virtual ~BulletBoxShape(void) {}
@@ -190,6 +193,60 @@ private :
 	/// @todo move to using btConvexHull for this, better performance
 	/// needs a separate conversion algorithm
 	btConvexTriangleMeshShape *_bt_shape;
+};
+
+class BulletCylinderShape : public BulletCollisionShape, public vl::physics::CylinderShape
+{
+public :
+
+	BulletCylinderShape(Ogre::Vector3 const &bounds)
+		// dividing by two because Bullet uses halfExtends and we use bounds
+		: _bt_shape(new btCylinderShape(vl::math::convert_bt_vec(bounds/2)))
+	{}
+	
+	virtual ~BulletCylinderShape(void) {}
+
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
+	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
+	{ return _bt_shape; }
+
+private :
+	btCylinderShape *_bt_shape;
+};
+
+class BulletCapsuleShape : public BulletCollisionShape, public vl::physics::CapsuleShape
+{
+public :
+	BulletCapsuleShape(vl::scalar radius, vl::scalar height)
+		// divide by two because we use height to mean the actual height of
+		// the capsule (as in bounding box size) not height from center.
+		: _bt_shape(new btCapsuleShape(radius, height/2))
+	{}
+	
+	virtual ~BulletCapsuleShape(void) {}
+
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
+	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
+	{ return _bt_shape; }
+
+private :
+	btCapsuleShape *_bt_shape;
 };
 
 }	// namespace physics
