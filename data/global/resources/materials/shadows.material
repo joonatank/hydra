@@ -7,12 +7,14 @@
 vertex_program ShadowCasterVP glsl
 {
 	source shadow_caster_vp.glsl
+	preprocessor_defines USE_SCENE_RANGE=1
 
 	default_params
 	{
 		param_named_auto modelViewProj worldviewproj_matrix
 		// Needs to be present for depth shadows to work
 		param_named_auto texelOffsets texel_offsets
+		param_named_auto sceneRange scene_depth_range
 	}
 }
 

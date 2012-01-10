@@ -63,22 +63,6 @@ getFogModeAsString(FogMode mode)
 	}
 }
 
-enum ShadowTechnique
-{
-	SHADOWTYPE_NOT_VALID,
-	SHADOWTYPE_NONE,
-	SHADOWTYPE_TEXTURE_MODULATIVE,
-	SHADOWTYPE_TEXTURE_ADDITIVE,
-	SHADOWTYPE_STENCIL_MODULATIVE,
-	SHADOWTYPE_STENCIL_ADDITIVE,
-	SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED,
-	SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED,
-};
-
-std::string getShadowTechniqueAsString(ShadowTechnique tech);
-
-ShadowTechnique getShadowTechniqueFromString(std::string const &str);
-
 struct SkyDomeInfo
 {
 	SkyDomeInfo( std::string const &mat_name = std::string(), Ogre::Real curv = 10, 
@@ -163,70 +147,122 @@ struct FogInfo
  *	@todo add real disablation of the Shadows distinction between not updating
  *	them and disabled. 
  *	Disabled would need the SceneManager to reset the shadow textures.
+ *
+ *	@todo add shadow debug colours
+ *	Shadow colours should only be used for debugging (as long as we have no
+ *	easy access to the depth map.
+ *	So they should not be accessable by the user except for a boolean debug value.
  */
 class ShadowInfo
 {
 public :
 	/// @brief constructor
 	/// Shadows are disabled by default, so call to enable is necessary.
-	ShadowInfo(std::string const &tech = "none", 
-		Ogre::ColourValue const &col = Ogre::ColourValue(0.3, 0.3, 0.3), 
-		std::string const &cam = "default");
+	ShadowInfo(std::string const &cam = "default");
 
 	/// @brief enable the shadows
-	/// Remembers the technique user selected.
-	/// If no technique is selected uses the current default.
-	void enable(void);
+	void enable(void)
+	{ setEnabled(true); }
 
 	/// @brief disable the shadows
-	void disable(void);
+	void disable(void)
+	{ setEnabled(false); }
+
+	void setEnabled(bool enabled);
 
 	bool isEnabled(void) const
-	{ return _enabled && (_technique != SHADOWTYPE_NONE); }
+	{ return _enabled; }
 
-	/// @brief set the shadow technique using a string, mostly for python
-	/// valid strings (upper or lower case):
-	/// texture_modulative, texture_additive, none, stencil_modulative, stencil_additive,
-	/// texture and stencil (for the modulative version)
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	void setShadowTechnique(std::string const &tech);
+	void setMaxDistance(vl::scalar dist);
 
-	/// @brief the shadow technique
-	/// Be mindful that setting the technique can cause instabilities as they
-	/// are not quarantied to work, this is mostly a development features.
-	///
-	/// Additative shadows create almost black shadows. Good if one want's to
-	/// see which objects are in shadow, for visual appeal they need some extra work.
-	/// Use case visibility checking.
-	/// Additative shadows need a shader that handles the addition of multiple lights.
-	///
-	/// Also by default they don't do shadowed side of an object correctly
-	/// object is lit too uniformly everywhere with little regard to the light position.
-	///
-	/// Stencil shadows will crash at least the test model, 
-	/// problems with bounding boxes.
-	void setShadowTechnique(ShadowTechnique tech);
+	vl::scalar getMaxDistance(void) const
+	{ return _max_distance; }
 
-	std::string getShadowTechniqueName(void) const;
+	void setShadowCasterMaterial(std::string const &material_name);
 
-	ShadowTechnique getShadowTechnique(void) const
-	{ return _technique; }
+	std::string const &getShadowCasterMaterial(void) const
+	{ return _caster_material; }
 
-	/// Valid values for camera are "Default", "LiSPSM"
-	/// others maybe added later. Values are case insensitive.
+	void setShelfShadowEnabled(bool enable);
+
+	bool isShelfShadowEnabled(void) const
+	{ return _shelf_shadow; }
+
+	void setDirLightTextureOffset(vl::scalar offset);
+
+	vl::scalar getDirLightTextureOffset(void) const
+	{ return _dir_light_texture_offset; }
+
+	/// Valid values for camera are "Default", "LiSPSM", "Focused", "PSSM"
+	/// others may be added later. Values are case insensitive.
 	/// Any other value will default to "Default" camera
-	/// @todo LiSPSM camera crashes Ogre Release version so don't use it
+	/// PSSM is completely experimental and WILL NOT work as excepted.
+	///
+	/// Default is generally the best and should always be used 
+	/// for benchmarking other methods.
+	/// Other methods not only cost more computing resources but also
+	/// use aproximation algorithms that might or might not lower the
+	/// quality depending on the scene.
+	///
+	/// At the moment the real draw back with Default is that it does not
+	/// work with directional lights so one needs to use one of the others
+	/// for directional lights.
+	/// This is at the moment handleded by overriding shadow camera setup
+	/// for directional lights. They use Focused camera and this can not
+	/// be overriden by the user.
+	///
+	/// The quality draw back with Default is that it produces hard shadows
+	/// with lots of aliasing e.g. jagged edges. Also the aliasing might produce
+	/// lots of tiny shadow artifacts where one or two pixels are in shadow,
+	/// depending on the scene.
+	/// These are more of errors in the shadow mapping shader than the camera though.
+	///
+	/// All the other methods except Default (and PSSM might be an exception but
+	/// is not yet supported) produce softer shadows
+	/// but there might be really significant amount of shadow "swimming"
+	/// where the shadow seems to be moving when camera is moved.
+	/// also moving camera parrallel to the light might produce huge amount of
+	/// artifacts.
+	/// Unless the scene is just perfect for the particular shadow camera
+	/// and does not have these artifacts the jagged shadows produced
+	/// by Default are usually ten times better.
+	///
+	/// Focused is not necessary better than default but it only uses
+	/// one shadow map per light as the default and sometimes provides better
+	/// results. Focused is the only one which works with directional lights
+	/// at the moment.
+	/// 
+	/// LiSPSM has creately softer shadows compared to the default one
+	/// i.e. less pixelisation in the edges.
+	/// If the camera is not parallel to the light, 
+	/// if the camera is parallel to light LiSPSM shadows can be really crappy.
+	///
+	/// PSSM needs more than one shadow map per light
+	/// so it's hugely more inefficient than other methods.
+	///
+	/// Also PSSM needs all shadow maps to be exposed and used in shaders
+	/// so PSSM is not supported at the moment because our shaders
+	/// can not handle more than one shadow map per light.
+	///
+	/// PSSM is probably the "best" shadow technique assuming you use at least
+	/// three textures per shadow. PSSM is most useful in large scenes e.g. out-door.
+	///
+	/// @fixme LiSPSM crashes Ogre Release version so don't use it
 	/// @todo "PlaneOptimal" camera needs a plane of interest
+	/// @todo add PSSM shaders
+	/// @todo add a separate variable for choosing what camera to use for 
+	/// directional lights (as opposed to spot lights)
+	///
+	/// @note point lights will not be supported anytime soon.
 	void setCamera(std::string const &str);
 
 	std::string const &getCamera(void) const
 	{ return _camera; }
 
-	Ogre::ColourValue const &getColour(void) const
-	{ return _colour; }
+	void setTextureSize(int);
 
-	void setColour(Ogre::ColourValue const &col);
+	int getTextureSize(void) const
+	{ return _texture_size; }
 
 	bool isDirty(void) const
 	{ return _dirty; }
@@ -238,13 +274,18 @@ private :
 	void _setDirty(void)
 	{ _dirty = true; }
 
-	ShadowTechnique _technique;
-
-	Ogre::ColourValue _colour;
-
 	std::string _camera;
 
 	bool _enabled;
+
+	int _texture_size;
+
+	vl::scalar _max_distance;
+	vl::scalar _dir_light_texture_offset;
+
+	std::string _caster_material;
+
+	bool _shelf_shadow;
 
 	bool _dirty;
 };
@@ -252,9 +293,8 @@ private :
 inline
 bool operator==(ShadowInfo const &a, ShadowInfo const &b)
 {
-	return( a.getShadowTechnique() == b.getShadowTechnique()
-		&& a.getColour() == b.getColour()
-		&& a.getCamera() == b.getCamera());
+	return( a.getTextureSize() == b.getTextureSize()
+		&& a.getCamera() == b.getCamera() );
 }
 
 inline

@@ -67,6 +67,13 @@ public :
 	virtual vl::scalar getMargin(void) const
 	{ return _bt_shape->getMargin(); }
 
+	virtual Ogre::Vector3 getSize(void)
+	{
+		btVector3 min, max;
+		_bt_shape->getAabb(btTransform::getIdentity(), min, max);
+		return vl::math::convert_vec(max - min);
+	}
+
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 

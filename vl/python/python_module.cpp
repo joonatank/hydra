@@ -256,17 +256,18 @@ void export_scene_graph(void)
 		.def_readwrite("ysegments_keep", &vl::SkyDomeInfo::ysegments_keep)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
-	
-	void (vl::ShadowInfo::*setShadowTechnique_ov0)(std::string const &) = &vl::ShadowInfo::setShadowTechnique;
 
-	python::class_<vl::ShadowInfo>("ShadowInfo",  python::init< python::optional<std::string, Ogre::ColourValue, std::string> >())
+	python::class_<vl::ShadowInfo>( "ShadowInfo", python::init<std::string>() )
 		.def(python::init<vl::ShadowInfo>())
 		.def("enable", &vl::ShadowInfo::enable)
 		.def("disable", &vl::ShadowInfo::disable)
-		.def("isEnabled", &vl::ShadowInfo::isEnabled)
-		.add_property("technique", &vl::ShadowInfo::getShadowTechniqueName, setShadowTechnique_ov0)
-		.add_property("colour", python::make_function(&vl::ShadowInfo::getColour, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setColour)
+		.add_property("enabled", &vl::ShadowInfo::isEnabled, &vl::ShadowInfo::setEnabled)
 		.add_property("camera", python::make_function(&vl::ShadowInfo::getCamera, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setCamera)
+		.add_property("shelf_shadow", &vl::ShadowInfo::isShelfShadowEnabled, &vl::ShadowInfo::setShelfShadowEnabled)
+		.add_property("dir_light_texture_offset", &vl::ShadowInfo::getDirLightTextureOffset, &vl::ShadowInfo::setDirLightTextureOffset)
+		.add_property("max_distance", &vl::ShadowInfo::getMaxDistance, &vl::ShadowInfo::setMaxDistance)
+		.add_property("caster_material", python::make_function(&vl::ShadowInfo::getShadowCasterMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setShadowCasterMaterial)
+		.add_property("texture_size", &vl::ShadowInfo::getTextureSize, &vl::ShadowInfo::setTextureSize)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

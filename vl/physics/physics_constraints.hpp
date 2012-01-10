@@ -51,12 +51,16 @@ public :
 	RigidBodyRefPtr getBodyB(void)
 	{ return _bodyB.lock(); }
 
+	virtual Ogre::Vector3 getLinearLowerLimit(void) const = 0;
 	virtual void setLinearLowerLimit(Ogre::Vector3 const &linearLower) = 0;
 	
+	virtual Ogre::Vector3 getLinearUpperLimit(void) const = 0;
 	virtual void setLinearUpperLimit(Ogre::Vector3 const &linearUpper) = 0;
 
+	virtual Ogre::Vector3 getAngularLowerLimit(void) const = 0;
 	virtual void setAngularLowerLimit(Ogre::Vector3 const &angularLower) = 0;
 
+	virtual Ogre::Vector3 getAngularUpperLimit(void) const = 0;
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
 
 	/// Index 0-2 for translation (x, y, z)

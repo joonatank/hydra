@@ -220,6 +220,22 @@ public :
 		}
 	}
 
+	virtual void disableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual void enableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual bool isCollisionsDisabled(void) const
+	{
+		return _bt_body->getCollisionFlags() && btCollisionObject::CF_NO_CONTACT_RESPONSE;
+	}
+
+
 	virtual bool isKinematicObject(void) const
 	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
 

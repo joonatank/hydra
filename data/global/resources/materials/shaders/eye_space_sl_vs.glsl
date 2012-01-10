@@ -7,6 +7,7 @@
 // Defines:
 // These values must correspond to the ones in pixel shader.
 // SHADOW_MAP : Shadows can be turned on/off.
+// USE_SCENE_RANGE : use depth range parameters from Ogre, only with shadows
 
 
 #version 140
@@ -21,6 +22,9 @@ uniform vec4 spotDirection;
 uniform mat4 model;
 // Shadow texture transform
 uniform mat4 texViewProj;
+#ifdef USE_SCENE_RANGE
+uniform vec4 shadowSceneRange;
+#endif
 #endif
 
 // The order of these is significant
@@ -39,7 +43,7 @@ out vec3 dirToEye;
 // Eye space light position for attenuation and spotlight
 // For low poly object this needs to pass through to get the correct
 // interpolated values for fragment.
-out vec3 lightPos;
+out vec4 lightPos;
 // Spotlight direction vector in eye space
 out vec3 spotlightDir;
 // Vertex in eye space for calculating light direction
@@ -63,6 +67,11 @@ void main(void)
 	// Shadow map tex coords
 	vec4 worldPos = model * vertex;
 	shadowUV = texViewProj * worldPos;
+#ifdef USE_SCENE_RANGE
+   // make linear
+   shadowUV.z = (shadowUV.z - shadowSceneRange.x) * shadowSceneRange.w;
+#endif
+
 #endif
 
 	// Vertex coords from eye position
@@ -84,7 +93,7 @@ void main(void)
 	dirToEye = normalize(mvDirToEye);
 
 	// Light direction from vertex
-	lightPos = vec3(mvLightPos);
+	lightPos = mvLightPos;
 
 	spotlightDir = spotDirection.xyz;
 }

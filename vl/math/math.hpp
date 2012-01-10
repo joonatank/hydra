@@ -24,6 +24,11 @@
 // Necessary for printing
 #include <iostream>
 
+// Using boost floating point for isnan is isinf
+// because there is no standard way for this till c++0x
+// all functions from here are in our namespace
+#include <boost/math/special_functions/fpclassify.hpp>
+
 // Necessary for the Wall configuration needed for calculating view and frustum matrices
 #include "base/envsettings.hpp"
 
@@ -32,6 +37,27 @@
 
 namespace vl
 {
+
+inline
+bool is_power_of_two(uint64_t x)
+{
+    return (x & (x - 1)) == 0;
+}
+
+inline
+uint64_t next_power_of_two(uint64_t x)
+{
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	x++;
+
+	return x;
+}
 
 template<typename T>
 inline bool equal(T const &a, T const &b, T const &epsilon)
@@ -136,6 +162,11 @@ distance(Quaternion const &vecA, Quaternion const & vecB)
 	Vector3 snbDir = vecB * axis; 
 	return Ogre::Math::ACos(snaDir.dotProduct(snbDir)).valueRadians();
 }
+
+using boost::math::isfinite;
+using boost::math::isinf;
+using boost::math::isnan;
+using boost::math::isnormal;
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 

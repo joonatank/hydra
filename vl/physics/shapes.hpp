@@ -46,10 +46,13 @@ public :
 class BoxShape : public CollisionShape
 {
 public :
-	// Create a box shape around origin: with size [-bounds, bounds]
+	// Create a box shape around origin: with size [-bounds/2, bounds/2]
 	static BoxShapeRefPtr create(Ogre::Vector3 const &bounds);
 
 	virtual ~BoxShape(void) {}
+
+	/// @brief Return the size of the cube.
+	virtual Ogre::Vector3 getSize(void) = 0;
 
 protected :
 	BoxShape(void) {}
