@@ -125,6 +125,9 @@ set(GENERAL_BINARY_DIR
 	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/bin\"")
 Set(EXPAT_BINARY_DIR
 	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin\"")
+set(SKYX_BINARY_DIR 
+	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/SkyX/bin\"")
+
 
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )

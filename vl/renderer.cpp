@@ -33,6 +33,10 @@
 
 #include "logger.hpp"
 
+// SkyX updates
+#include "camera.hpp"
+#include "scene_manager.hpp"
+
 #include <OGRE/OgreWindowEventUtilities.h>
 
 /// ------------------------- Public -------------------------------------------
@@ -190,6 +194,15 @@ vl::Renderer::draw(void)
 
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
+
+	// Hack to update SkyX
+	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
+		&& _scene_manager && _scene_manager->getSkyX())
+	{
+		// @todo should we just add a listener for now?
+		Ogre::Camera *cam = (Ogre::Camera *)_windows.at(0)->getPlayer().getCamera()->getNative();
+		_scene_manager->getSkyX()->notifyCameraRender(cam);
+	}
 
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameEnd(); }

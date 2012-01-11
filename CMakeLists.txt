@@ -120,6 +120,8 @@ find_package(Newton)
 
 find_package(OgreProcedural REQUIRED)
 
+find_package(SkyX REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -137,6 +139,7 @@ include_directories( SYSTEM
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
 	${OgreProcedural_INCLUDE_DIR}
+	${SkyX_INCLUDE_DIR}
 	)
 
 # Libraries that Hydra library depends on
@@ -157,6 +160,7 @@ set( HYDRA_DEP_LIBS
 	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
+	${SkyX_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

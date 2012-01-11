@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011/10 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_manager.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -31,6 +27,9 @@
 #include "typedefs.hpp"
 
 #include "math/transform.hpp"
+
+// Necessary for sky simulation
+#include <SkyX.h>
 
 namespace vl
 {
@@ -92,6 +91,40 @@ struct SkyDomeInfo
 	int xsegments;
 	int ysegments;
 	int ysegments_keep;
+};
+
+/** @class SkyInfo
+ *	For more realistic and complex Sky rendering.
+ *	
+ *	For now only supports presets
+ */
+class SkyInfo
+{
+public :
+	SkyInfo(std::string const &preset_name = "none");
+
+	// Valid presets "none", "clear", "desert", "thunderstorm", "sunset", and "night"
+	// case insensitive
+	// none is a special case that will disable the Sky and switch to regular SkyDome
+	// passing an incorrect preset or an empty string will switch to "none"
+	void setPreset(std::string const &preset_name);
+
+	std::string const &getPreset(void) const
+	{ return _preset; }
+
+	bool isDirty(void) const
+	{ return _dirty; }
+
+	void clearDirty(void)
+	{ _dirty = false; }
+
+private :
+	void _setDirty(void)
+	{ _dirty = true; }
+
+	std::string _preset;
+
+	bool _dirty;
 };
 
 struct FogInfo
@@ -303,6 +336,59 @@ bool operator!=(ShadowInfo const &a, ShadowInfo const &b)
 	return !(a==b);
 }
 
+/** SkyX settings struct
+    @remarks These just are the most important SkyX parameters, not all SkyX parameters.
+ */
+struct SkyXSettings
+{
+	/** Constructor
+	 */
+	SkyXSettings(const Ogre::Vector3 t, const Ogre::Real& tm, const Ogre::Real& mp, const SkyX::AtmosphereManager::Options& atmOpt,
+		const bool& lc, const bool& vc, const Ogre::Real& vcws, const bool& vcauto, const Ogre::Radian& vcwd, 
+		const Ogre::Vector3& vcac, const Ogre::Vector4& vclr,  const Ogre::Vector4& vcaf, const Ogre::Vector2& vcw)
+		: time(t), timeMultiplier(tm), moonPhase(mp), atmosphereOpt(atmOpt), layeredClouds(lc), volumetricClouds(vc), vcWindSpeed(vcws)
+		, vcAutoupdate(vcauto), vcWindDir(vcwd), vcAmbientColor(vcac), vcLightResponse(vclr), vcAmbientFactors(vcaf), vcWheater(vcw)
+	{}
+
+	/** Constructor
+	 */
+	SkyXSettings(const Ogre::Vector3 t, const Ogre::Real& tm, const Ogre::Real& mp, const SkyX::AtmosphereManager::Options& atmOpt,
+		const bool& lc, const bool& vc)
+		: time(t), timeMultiplier(tm), moonPhase(mp), atmosphereOpt(atmOpt), layeredClouds(lc), volumetricClouds(vc)
+	{}
+
+	// Must be for std::map
+	SkyXSettings(void)
+	{}
+
+	/// Time
+	Ogre::Vector3 time;
+	/// Time multiplier
+	Ogre::Real timeMultiplier;
+	/// Moon phase
+	Ogre::Real moonPhase;
+	/// Atmosphere options
+	SkyX::AtmosphereManager::Options atmosphereOpt;
+	/// Layered clouds?
+	bool layeredClouds;
+	/// Volumetric clouds?
+	bool volumetricClouds;
+	/// VClouds wind speed
+	Ogre::Real vcWindSpeed;
+	/// VClouds autoupdate
+	bool vcAutoupdate;
+	/// VClouds wind direction
+	Ogre::Radian vcWindDir;
+	/// VClouds ambient color
+	Ogre::Vector3 vcAmbientColor;
+	/// VClouds light response
+	Ogre::Vector4 vcLightResponse;
+	/// VClouds ambient factors
+	Ogre::Vector4 vcAmbientFactors;
+	/// VClouds wheater
+	Ogre::Vector2 vcWheater;
+};
+
 class SceneManager : public vl::Distributed
 {
 public :
@@ -453,6 +539,12 @@ public :
 	SkyDomeInfo const &getSkyDome(void) const
 	{ return _sky_dome; }
 
+	/// @brief set and get Sky value for Sky simulator
+	/// Setting a valid SkyInfo (not none) will override any SkyDome settings
+	void setSky(SkyInfo const &sky);
+	SkyInfo &getSky(void)
+	{ return _sky; }
+
 	void setFog(FogInfo const &fog);
 
 	FogInfo const &getFog(void) const
@@ -520,7 +612,7 @@ public :
 	enum DirtyBits
 	{
 		DIRTY_RELOAD_SCENE = vl::Distributed::DIRTY_CUSTOM << 0,
-		DIRTY_SKY_DOME = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_SKY = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_FOG = vl::Distributed::DIRTY_CUSTOM << 2,
 		DIRTY_AMBIENT_LIGHT = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_BACKGROUND_COLOUR = vl::Distributed::DIRTY_CUSTOM << 4,
@@ -530,6 +622,9 @@ public :
 
 	Ogre::SceneManager *getNative( void )
 	{ return _ogre_sm; }
+
+	SkyX::SkyX *getSkyX(void)
+	{ return _skyX; }
 
 	/// @internal
 	/// @brief step the SceneManager does things like progression of automatic mappings
@@ -557,6 +652,12 @@ private :
 	// @todo rename to avoid confusion
 	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);
 
+	// @brief helper functions for creating a Sky and changing presets
+	// only working on Rendering copies
+	void _initialiseSky(SkyXSettings const &preset);
+	void _changeSkyPreset(SkyXSettings const &preset);
+	bool _isSkyEnabled(void) const;
+
 	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;
 	MovableObjectList _objects;
@@ -579,6 +680,7 @@ private :
 	SceneNodePtr _active_object;
 
 	SkyDomeInfo _sky_dome;
+	SkyInfo _sky;
 	FogInfo _fog;
 
 	// Reload the scene
@@ -598,6 +700,11 @@ private :
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
+
+	/// SkyX stuff
+	SkyX::BasicController *_skyX_controller;
+	SkyX::SkyX *_skyX;
+	std::map<std::string, SkyXSettings> _sky_presets;
 
 };	// class SceneManager
 
@@ -629,6 +736,12 @@ ByteStream &operator<<(ByteStream &msg, vl::ShadowInfo const &shadows);
 
 template<>
 ByteStream &operator>>(ByteStream &msg, vl::ShadowInfo &shadows);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::SkyInfo const &sky);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::SkyInfo &sky);
 
 }	// namespace cluster
 }	// namespace vl

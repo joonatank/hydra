@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011/10 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_manager.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -162,6 +158,27 @@ vl::ShadowInfo::setDirLightTextureOffset(vl::scalar offset)
 	}
 }
 
+/// ------------------------------ SkyInfo -----------------------------------
+vl::SkyInfo::SkyInfo(std::string const &preset_name)
+	: _preset(preset_name)
+	, _dirty(true)
+{
+	vl::to_lower(_preset);
+}
+
+void
+vl::SkyInfo::setPreset(std::string const &preset_name)
+{
+	std::clog << "Setting preset = " << preset_name << std::endl;
+	if(preset_name != _preset)
+	{
+		_preset = preset_name;
+		vl::to_lower(_preset);
+		_setDirty();
+	}
+}
+
+
 /// ------------------------------ SceneManager ------------------------------
 /// Public
 /// Master constructor
@@ -172,6 +189,8 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
+	, _skyX_controller(0)
+	, _skyX(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -197,6 +216,8 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
+	, _skyX_controller(0)
+	, _skyX(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -205,6 +226,14 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	assert(_ogre_sm);
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
+
+	/// Add skyX presets hard coded for now
+	_sky_presets["sunset"] = SkyXSettings(Ogre::Vector3(8.85f, 7.5f, 20.5f),  -0.08f, 0, SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.0022f, 0.000675f, 30, Ogre::Vector3(0.57f, 0.52f, 0.44f), -0.991f, 3, 4), false, true, 300, false, Ogre::Radian(270), Ogre::Vector3(0.63f,0.63f,0.7f), Ogre::Vector4(0.35, 0.2, 0.92, 0.1), Ogre::Vector4(0.4, 0.7, 0, 0), Ogre::Vector2(0.8,1));
+	_sky_presets["clear"] = SkyXSettings(Ogre::Vector3(17.16f, 7.5f, 20.5f), 0, 0, SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.0017f, 0.000675f, 30, Ogre::Vector3(0.57f, 0.54f, 0.44f), -0.991f, 2.5f, 4), false, false);
+	_sky_presets["thunderstorm"] = SkyXSettings(Ogre::Vector3(12.23, 7.5f, 20.5f),  0, 0, SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.00545f, 0.000375f, 30, Ogre::Vector3(0.55f, 0.54f, 0.52f), -0.991f, 1, 4), false, true, 300, false, Ogre::Radian(0), Ogre::Vector3(0.63f,0.63f,0.7f), Ogre::Vector4(0.25, 0.4, 0.5, 0.1), Ogre::Vector4(0.45, 0.3, 0.6, 0.1), Ogre::Vector2(1,1));
+	_sky_presets["desert"] = SkyXSettings(Ogre::Vector3(7.59f, 7.5f, 20.5f), 0, -0.8f, SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.0072f, 0.000925f, 30, Ogre::Vector3(0.71f, 0.59f, 0.53f), -0.997f, 2.5f, 1), true, false);
+	_sky_presets["night"] = SkyXSettings(Ogre::Vector3(21.5f, 7.5, 20.5), 0.03, -0.25, SkyX::AtmosphereManager::Options(), true, false);
+
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -620,8 +649,16 @@ void
 vl::SceneManager::setSkyDome(SkyDomeInfo const &dome)
 {
 	/// @todo add checking that the previous SkyDome is different
-	setDirty(DIRTY_SKY_DOME);
+	setDirty(DIRTY_SKY);
 	_sky_dome = dome;
+}
+
+void 
+vl::SceneManager::setSky(vl::SkyInfo const &sky)
+{
+	/// @todo add checking that the previous Sky is different
+	setDirty(DIRTY_SKY);
+	_sky = sky;
 }
 
 void 
@@ -847,6 +884,12 @@ vl::SceneManager::recaluclateDirties(void)
 		setDirty(DIRTY_SHADOW_INFO);
 		_shadows.clearDirty();
 	}
+
+	if(_sky.isDirty())
+	{
+		setDirty(DIRTY_SKY);
+		_sky.clearDirty();
+	}
 }
 
 void
@@ -857,9 +900,9 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		msg << _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_SKY_DOME )
+	if( dirtyBits & DIRTY_SKY )
 	{
-		msg << _sky_dome;
+		msg << _sky << _sky_dome;
 	}
 
 	if( dirtyBits & DIRTY_FOG )
@@ -893,20 +936,38 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		msg >> _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_SKY_DOME )
+	if( dirtyBits & DIRTY_SKY )
 	{
-		msg >> _sky_dome;
-		if( _ogre_sm )
+		msg >> _sky >> _sky_dome;
+
+		assert( _ogre_sm );
+
+		// @todo handle updated sky and switch of sky dome
+		std::map<std::string, SkyXSettings>::iterator iter 
+				= _sky_presets.find(_sky.getPreset());
+		if( iter != _sky_presets.end() )
+		{
+			std::clog << "Should enable SkyX with " << _sky.getPreset() << " preset." << std::endl;
+			if(_isSkyEnabled())
+			{
+				_changeSkyPreset(iter->second);
+			}
+			else
+			{
+				_initialiseSky(iter->second);
+			}
+		}
+		else
 		{
 			if( _sky_dome.empty() )
 			{ _ogre_sm->setSkyDome(false, ""); }
 			else
 			{
-				 _ogre_sm->setSkyDome( true, _sky_dome.material_name,
-					 _sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
-					 _sky_dome.draw_first, _sky_dome.orientation, 
-					 _sky_dome.xsegments, _sky_dome.ysegments,
-					 _sky_dome.ysegments_keep );
+					_ogre_sm->setSkyDome( true, _sky_dome.material_name,
+						_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
+						_sky_dome.draw_first, _sky_dome.orientation, 
+						_sky_dome.xsegments, _sky_dome.ysegments,
+						_sky_dome.ysegments_keep );
 			}
 		}
 	}
@@ -1118,6 +1179,104 @@ vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList c
 	return new RayObject(name, this);
 }
 
+void
+vl::SceneManager::_initialiseSky(SkyXSettings const &preset)
+{
+	std::clog << "vl::SceneManager::_initialiseSky" << std::endl;
+	assert(_ogre_sm);
+	assert(!_skyX && !_skyX_controller);
+	_skyX_controller = new SkyX::BasicController();
+	_skyX = new SkyX::SkyX(_ogre_sm, _skyX_controller);
+	_skyX->create();
+
+	// Distance geometry falling is a feature introduced in SkyX 0.2
+	// When distance falling is enabled, the geometry linearly falls with the distance and the
+	// amount of falling in world units is determinated by the distance between the cloud field "plane"
+	// and the camera height multiplied by the falling factor.
+	// For this demo, a falling factor of two is good enough for the point of view we're using. That means that if the camera
+	// is at a distance of 100 world units from the cloud field, the fartest geometry will fall 2*100 = 200 world units.
+	// This way the cloud field covers a big part of the sky even if the camera is in at a very low altitude.
+	// The second parameter is the max amount of falling distance in world units. That's needed when for example, you've an 
+	// ocean and you don't want to have the volumetric cloud field geometry falling into the water when the camera is underwater.
+	// -1 means that there's not falling limit.
+	//_skyX->getVCloudsManager()->getVClouds()->setDistanceFallingParams(Ogre::Vector2(2,-1));
+
+	// Register SkyX listeners
+	Ogre::Root::getSingleton().addFrameListener(_skyX);
+	// Window listener necessary?
+	// if it's we can retrieve the first window and always attach to that...
+	//mWindow->addListener(_skyX);
+
+	_changeSkyPreset(preset);
+}
+
+void
+vl::SceneManager::_changeSkyPreset(SkyXSettings const &preset)
+{
+	std::clog << "vl::SceneManager::_changeSkyPreset" << std::endl;
+	_skyX->setTimeMultiplier(preset.timeMultiplier);
+	_skyX_controller->setTime(preset.time);
+	_skyX_controller->setMoonPhase(preset.moonPhase);
+	_skyX->getAtmosphereManager()->setOptions(preset.atmosphereOpt);
+
+	// Layered clouds
+	if (preset.layeredClouds)
+	{
+		// Create layer cloud
+		if (_skyX->getCloudsManager()->getCloudLayers().empty())
+		{
+			_skyX->getCloudsManager()->add(SkyX::CloudLayer::Options(/* Default options */));
+		}
+	}
+	else
+	{
+		// Remove layer cloud
+		if (!_skyX->getCloudsManager()->getCloudLayers().empty())
+		{
+			_skyX->getCloudsManager()->removeAll();
+		}
+	}
+
+	_skyX->getVCloudsManager()->setWindSpeed(preset.vcWindSpeed);
+	_skyX->getVCloudsManager()->setAutoupdate(preset.vcAutoupdate);
+
+	SkyX::VClouds::VClouds* vclouds = _skyX->getVCloudsManager()->getVClouds();
+
+	vclouds->setWindDirection(preset.vcWindDir);
+	vclouds->setAmbientColor(preset.vcAmbientColor);
+	vclouds->setLightResponse(preset.vcLightResponse);
+	vclouds->setAmbientFactors(preset.vcAmbientFactors);
+	vclouds->setWheater(preset.vcWheater.x, preset.vcWheater.y, false);
+
+	if (preset.volumetricClouds)
+	{
+		std::clog << "Craeting Volumetric clouds." << std::endl;
+		// Create VClouds
+		if (!_skyX->getVCloudsManager()->isCreated())
+		{
+			// SkyX::MeshManager::getSkydomeRadius(...) works for both finite and infinite(=0) camera far clip distances
+			// @todo fix the camera stuff
+			// @todo we can not easily access Ogre camera so lets just guess a value
+			_skyX->getVCloudsManager()->create(2000); //_skyX->getMeshManager()->getSkydomeRadius(cam));
+		}
+	}
+	else
+	{
+		// Remove VClouds
+		if (_skyX->getVCloudsManager()->isCreated())
+		{
+			_skyX->getVCloudsManager()->remove();
+		}
+	}
+
+	_skyX->update(0);
+}
+
+bool
+vl::SceneManager::_isSkyEnabled(void) const
+{
+	return _skyX;
+}
 
 /// --------------------------------- Global ---------------------------------
 std::ostream &
@@ -1257,7 +1416,8 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	int texture_size;
 	vl::scalar dist, dir_offset;
 
-	msg >> enabled >> camera >> texture_size >> caster_material >> dist
+	msg >> enabled >> camera >> texture_size
+		>> caster_material >> dist
 		>> shelf_shadow >> dir_offset;
 
 	shadows.setCamera(camera);
@@ -1267,6 +1427,26 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	shadows.setMaxDistance(dist);
 	shadows.setShelfShadowEnabled(shelf_shadow);
 	shadows.setDirLightTextureOffset(dir_offset);
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SkyInfo const &sky)
+{
+	msg << sky.getPreset();
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SkyInfo &sky)
+{
+	std::string str;
+	msg >> str;
+	sky.setPreset(str);
 
 	return msg;
 }

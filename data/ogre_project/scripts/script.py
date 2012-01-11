@@ -66,11 +66,13 @@ athene.position = Vector3(-3, 4, 5)
 athene.scale(0.05)
 
 game.scene.shadows.enable()
+game.scene.shadows.max_distance = 50
+game.scene.sky.preset = "sunset" #"clear"
 
 if game.scene.hasSceneNode("spot"):
 	spot = game.scene.getLight("spot")
-	spot.setSpotRange(Radian(1.5), Radian(1.7), 0.7)
-	spot.attenuation = LightAttenuation(35, 0.9, 0.09, 0.01)
+	spot.setSpotRange(Radian(1.0), Radian(1.2), 0.7)
+	spot.attenuation = LightAttenuation(50, 0.9, 0.09, 0.01)
 	spot_n = game.scene.getSceneNode("spot")
 	spot_n.position = Vector3(0, 20, 0)
 	# Test code for lights at a distance

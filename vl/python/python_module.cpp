@@ -257,6 +257,10 @@ void export_scene_graph(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::SkyInfo>( "SkyInfo", python::init< python::optional< std::string> >() )
+		.add_property("preset", python::make_function(&vl::SkyInfo::getPreset, python::return_value_policy<python::copy_const_reference>()), &vl::SkyInfo::setPreset)
+	;
+
 	python::class_<vl::ShadowInfo>( "ShadowInfo", python::init<std::string>() )
 		.def(python::init<vl::ShadowInfo>())
 		.def("enable", &vl::ShadowInfo::enable)
@@ -322,12 +326,13 @@ void export_scene_graph(void)
 
 		/// Scene parameters
 		/// returns copies of the objects
-		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
+		.add_property("sky_dome", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
 		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
-		
+		.add_property("sky", python::make_function(&vl::SceneManager::getSky, python::return_internal_reference<>()), &vl::SceneManager::setSky)
+
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)

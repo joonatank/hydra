@@ -195,7 +195,15 @@ vl::ogre::Root::_setupResourceDir( const std::string& dir )
 void
 vl::ogre::Root::_setupResource( std::string const &file, std::string const &typeName)
 {
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation( file, typeName );
+	if(fs::path(file).leaf() == "SkyX")
+	{
+		std::clog << "Setting up SkyX resource." << std::endl;
+		Ogre::ResourceGroupManager::getSingleton().addResourceLocation( file, typeName,"SkyX" );
+	}
+	else
+	{
+		Ogre::ResourceGroupManager::getSingleton().addResourceLocation( file, typeName );
+	}
 }
 
 Ogre::RenderWindow *
