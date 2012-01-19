@@ -67,6 +67,7 @@ int main( const int argc, char** argv )
 	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
 	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(SKYX_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(CAELUM_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/debug");
 
@@ -80,6 +81,7 @@ int main( const int argc, char** argv )
 	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
 	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(SKYX_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(CAELUM_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/release");
 

@@ -127,6 +127,8 @@ Set(EXPAT_BINARY_DIR
 	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin\"")
 set(SKYX_BINARY_DIR 
 	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/SkyX/bin\"")
+set(CAELUM_BINARY_DIR 
+	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/Caelum/bin\"")
 
 
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp

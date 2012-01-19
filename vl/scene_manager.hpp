@@ -29,7 +29,7 @@
 #include "math/transform.hpp"
 
 // Necessary for sky simulation
-#include <SkyX.h>
+#include "sky_interface.hpp"
 
 namespace vl
 {
@@ -336,59 +336,6 @@ bool operator!=(ShadowInfo const &a, ShadowInfo const &b)
 	return !(a==b);
 }
 
-/** SkyX settings struct
-    @remarks These just are the most important SkyX parameters, not all SkyX parameters.
- */
-struct SkyXSettings
-{
-	/** Constructor
-	 */
-	SkyXSettings(const Ogre::Vector3 t, const Ogre::Real& tm, const Ogre::Real& mp, const SkyX::AtmosphereManager::Options& atmOpt,
-		const bool& lc, const bool& vc, const Ogre::Real& vcws, const bool& vcauto, const Ogre::Radian& vcwd, 
-		const Ogre::Vector3& vcac, const Ogre::Vector4& vclr,  const Ogre::Vector4& vcaf, const Ogre::Vector2& vcw)
-		: time(t), timeMultiplier(tm), moonPhase(mp), atmosphereOpt(atmOpt), layeredClouds(lc), volumetricClouds(vc), vcWindSpeed(vcws)
-		, vcAutoupdate(vcauto), vcWindDir(vcwd), vcAmbientColor(vcac), vcLightResponse(vclr), vcAmbientFactors(vcaf), vcWheater(vcw)
-	{}
-
-	/** Constructor
-	 */
-	SkyXSettings(const Ogre::Vector3 t, const Ogre::Real& tm, const Ogre::Real& mp, const SkyX::AtmosphereManager::Options& atmOpt,
-		const bool& lc, const bool& vc)
-		: time(t), timeMultiplier(tm), moonPhase(mp), atmosphereOpt(atmOpt), layeredClouds(lc), volumetricClouds(vc)
-	{}
-
-	// Must be for std::map
-	SkyXSettings(void)
-	{}
-
-	/// Time
-	Ogre::Vector3 time;
-	/// Time multiplier
-	Ogre::Real timeMultiplier;
-	/// Moon phase
-	Ogre::Real moonPhase;
-	/// Atmosphere options
-	SkyX::AtmosphereManager::Options atmosphereOpt;
-	/// Layered clouds?
-	bool layeredClouds;
-	/// Volumetric clouds?
-	bool volumetricClouds;
-	/// VClouds wind speed
-	Ogre::Real vcWindSpeed;
-	/// VClouds autoupdate
-	bool vcAutoupdate;
-	/// VClouds wind direction
-	Ogre::Radian vcWindDir;
-	/// VClouds ambient color
-	Ogre::Vector3 vcAmbientColor;
-	/// VClouds light response
-	Ogre::Vector4 vcLightResponse;
-	/// VClouds ambient factors
-	Ogre::Vector4 vcAmbientFactors;
-	/// VClouds wheater
-	Ogre::Vector2 vcWheater;
-};
-
 class SceneManager : public vl::Distributed
 {
 public :
@@ -541,8 +488,8 @@ public :
 
 	/// @brief set and get Sky value for Sky simulator
 	/// Setting a valid SkyInfo (not none) will override any SkyDome settings
-	void setSky(SkyInfo const &sky);
-	SkyInfo &getSky(void)
+	void setSkyInfo(SkyInfo const &sky);
+	SkyInfo &getSkyInfo(void)
 	{ return _sky; }
 
 	void setFog(FogInfo const &fog);
@@ -623,8 +570,8 @@ public :
 	Ogre::SceneManager *getNative( void )
 	{ return _ogre_sm; }
 
-	SkyX::SkyX *getSkyX(void)
-	{ return _skyX; }
+	vl::Sky *getSkySimulator(void)
+	{ return _sky_sim; }
 
 	/// @internal
 	/// @brief step the SceneManager does things like progression of automatic mappings
@@ -654,8 +601,8 @@ private :
 
 	// @brief helper functions for creating a Sky and changing presets
 	// only working on Rendering copies
-	void _initialiseSky(SkyXSettings const &preset);
-	void _changeSkyPreset(SkyXSettings const &preset);
+	void _initialiseSky(SkySettings const &preset);
+	void _changeSkyPreset(SkySettings const &preset);
 	bool _isSkyEnabled(void) const;
 
 	SceneNodePtr _root;
@@ -701,10 +648,9 @@ private :
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
 
-	/// SkyX stuff
-	SkyX::BasicController *_skyX_controller;
-	SkyX::SkyX *_skyX;
-	std::map<std::string, SkyXSettings> _sky_presets;
+	// skies
+	vl::Sky *_sky_sim;
+	std::map<std::string, vl::SkySettings> _sky_presets;
 
 };	// class SceneManager
 

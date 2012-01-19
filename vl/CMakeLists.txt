@@ -54,6 +54,8 @@ set(SRC
 	mesh_ogre.cpp
 	ray_object.cpp
 	ray_cast.cpp
+	sky_skyx.cpp
+	sky_caelum.cpp
 	)
 
 set(MATH_HEADERS
@@ -242,6 +244,9 @@ set( HEADERS
 	distributed.hpp
 	ray_object.hpp
 	ray_cast.hpp
+	sky_interface.hpp
+	sky_skyx.hpp
+	sky_caelum.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

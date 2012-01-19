@@ -195,13 +195,11 @@ vl::Renderer::draw(void)
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 
-	// Hack to update SkyX
+	// Hack to update Sky
 	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
-		&& _scene_manager && _scene_manager->getSkyX())
+		&& _scene_manager && _scene_manager->getSkySimulator())
 	{
-		// @todo should we just add a listener for now?
-		Ogre::Camera *cam = (Ogre::Camera *)_windows.at(0)->getPlayer().getCamera()->getNative();
-		_scene_manager->getSkyX()->notifyCameraRender(cam);
+		_scene_manager->getSkySimulator()->notifyCameraRender(_windows.at(0)->getPlayer().getCamera());
 	}
 
 	if(_scene_manager)

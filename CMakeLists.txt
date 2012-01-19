@@ -120,7 +120,9 @@ find_package(Newton)
 
 find_package(OgreProcedural REQUIRED)
 
+# TODO Sky plugisn should be optional and only one of them should be used
 find_package(SkyX REQUIRED)
+find_package(Caelum REQUIRED)
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM
@@ -140,6 +142,7 @@ include_directories( SYSTEM
 	${CEGUI_INCLUDE_DIR}/CEGUI
 	${OgreProcedural_INCLUDE_DIR}
 	${SkyX_INCLUDE_DIR}
+	${Caelum_INCLUDE_DIR}
 	)
 
 # Libraries that Hydra library depends on
@@ -161,6 +164,7 @@ set( HYDRA_DEP_LIBS
 	${CEGUI_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
 	${SkyX_LIBRARIES}
+	${Caelum_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

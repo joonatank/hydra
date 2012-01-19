@@ -18,6 +18,9 @@ print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
 camera.position = Vector3(0, 3, 15)
 createCameraMovements(camera, speed=10)
+# for the clouds we need to increase far clipping
+cam = game.scene.getCamera("Omakamera")
+cam.far_clip = 1e5
 
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
@@ -38,7 +41,7 @@ addToggleMusicEvent(KC.M)
 # TODO should create the mesh using MeshManager so the size can be assigned
 # Create a large plane for shader testing
 # This shows the usage of the new mesh manager
-ground_length = 40;
+ground_length = 100;
 ground_mesh = game.mesh_manager.createPlane("ground", ground_length, ground_length)
 print(ground_mesh)
 ground_ent = game.scene.createEntity('ground', "ground", True)
