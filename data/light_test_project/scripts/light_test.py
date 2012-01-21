@@ -106,7 +106,7 @@ hytti = game.scene.createSceneNode('hytti')
 hytti.attachObject(hytti_ent)
 hytti.position = Vector3(10, 1.2, -10)
 
-game.scene.sky = SkyDomeInfo("CloudySky")
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
 
 # TODO create a configuration for lights toggled by keyboard/python commands

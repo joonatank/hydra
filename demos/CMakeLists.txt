@@ -113,22 +113,32 @@ include_directories(${demos_BINARY_DIR})
 set(HYDRA_GL_BINARY_DIR \"${HydraGL_BINARY_DIR}\")
 set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 
-set(OGRE_BINARY_DIR 
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/Ogre/bin\"")
-set(CEGUI_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/CEGUI/bin\"")
-set(OIS_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/OIS/bin\"")
-set(BOOST_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/bin\"")
-set(GENERAL_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/bin\"")
-Set(EXPAT_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin\"")
-set(SKYX_BINARY_DIR 
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/SkyX/bin\"")
-set(CAELUM_BINARY_DIR 
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/Caelum/bin\"")
+# set the bin dir variable
+# TODO these should be auto resolved
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(BASE_BIN_DIR 
+		"C:/jotu/software_development/hydra_dependencies_libraries/libs")
+else()
+	set(BASE_BIN_DIR 
+		"C:/jotu/software_development/hydra_dependencies_libraries/libs32")
+endif()
+
+set(OGRE_BINARY_DIR "\"${BASE_BIN_DIR}/Ogre/bin\"")
+set(CEGUI_BINARY_DIR "\"${BASE_BIN_DIR}/CEGUI/bin\"")
+set(OIS_BINARY_DIR "\"${BASE_BIN_DIR}/OIS/bin\"")
+set(BOOST_BINARY_DIR "\"${BASE_BIN_DIR}/bin\"")
+set(GENERAL_BINARY_DIR "\"${BASE_BIN_DIR}/bin\"")
+Set(EXPAT_BINARY_DIR "\"${BASE_BIN_DIR}/expat/bin\"")
+set(SKYX_BINARY_DIR "\"${BASE_BIN_DIR}/SkyX/bin\"")
+set(CAELUM_BINARY_DIR "\"${BASE_BIN_DIR}/Caelum/bin\"")
+
+# Get the CameraSDK binary dir
+# TODO the above should also be replaced with this system for other libraries
+# TODO this should use the LIBRARY_DEBUG and LIBRARY_RELEASE
+# because LIBRARY contains both (debug and optimazed)
+#get_filename_component(file_name "${CameraSDK_LIBRARY}" NAME)
+#set(bin_dir "\"${CameraSDK_LIBRARY}\"")
+#string(REPLACE ${file_name} "" CAMERASDK_BINARY_DIR ${bin_dir})
 
 
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp

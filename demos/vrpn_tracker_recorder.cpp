@@ -143,7 +143,7 @@ operator<<(std::ostream &os, data const &d)
 }
 
 /// @brief VRPN callback handler
-void handle_tracker(void *userdata, const vrpn_TRACKERCB t)
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	assert(userdata);
 	data *d = (data *)userdata;

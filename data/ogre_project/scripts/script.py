@@ -20,7 +20,7 @@ camera.position = Vector3(0, 3, 15)
 createCameraMovements(camera, speed=10)
 # for the clouds we need to increase far clipping
 cam = game.scene.getCamera("Omakamera")
-cam.far_clip = 1e5
+cam.far_clip = 5e5
 
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
@@ -57,7 +57,6 @@ sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
-sphere.scale(0.003)
 sphere_ent.cast_shadows = True
 
 athene = game.scene.createSceneNode("athene")
