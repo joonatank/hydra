@@ -70,14 +70,36 @@ public :
 
 	virtual ~BulletSixDofConstraint(void) {}
 
+	virtual Ogre::Vector3 getLinearLowerLimit(void) const
+	{ return convert_vec(_bt_constraint->getTranslationalLimitMotor()->m_lowerLimit); }
+
 	void setLinearLowerLimit(Ogre::Vector3 const &linearLower)
 	{ _bt_constraint->setLinearLowerLimit(convert_bt_vec(linearLower)); }
+
+	virtual Ogre::Vector3 getLinearUpperLimit(void) const
+	{ return convert_vec(_bt_constraint->getTranslationalLimitMotor()->m_upperLimit); }
 
 	void setLinearUpperLimit(Ogre::Vector3 const &linearUpper)
 	{ _bt_constraint->setLinearUpperLimit(convert_bt_vec(linearUpper)); }
 
+	virtual Ogre::Vector3 getAngularLowerLimit(void) const
+	{
+		vl::scalar x = _bt_constraint->getRotationalLimitMotor(0)->m_loLimit;
+		vl::scalar y = _bt_constraint->getRotationalLimitMotor(1)->m_loLimit;
+		vl::scalar z = _bt_constraint->getRotationalLimitMotor(2)->m_loLimit;
+		return Ogre::Vector3(x, y, z);
+	}
+
 	void setAngularLowerLimit(Ogre::Vector3 const &angularLower)
 	{ _bt_constraint->setAngularLowerLimit(convert_bt_vec(angularLower)); }
+
+	virtual Ogre::Vector3 getAngularUpperLimit(void) const
+	{
+		vl::scalar x = _bt_constraint->getRotationalLimitMotor(0)->m_hiLimit;
+		vl::scalar y = _bt_constraint->getRotationalLimitMotor(1)->m_hiLimit;
+		vl::scalar z = _bt_constraint->getRotationalLimitMotor(2)->m_hiLimit;
+		return Ogre::Vector3(x, y, z);
+	}
 
 	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
 	{ _bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper)); }

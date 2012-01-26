@@ -34,6 +34,10 @@
 
 #include "logger.hpp"
 
+// SkyX updates
+#include "camera.hpp"
+#include "scene_manager.hpp"
+
 // Necessary for checking materials after deserialize
 #include "material.hpp"
 
@@ -176,7 +180,7 @@ void
 vl::Renderer::draw(void)
 {
 	Ogre::WindowEventUtilities::messagePump();
-	
+
 	// @todo move the callback notifiying to Root
 	_root->getNative()->_fireFrameStarted();
 
@@ -185,6 +189,13 @@ vl::Renderer::draw(void)
 
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
+
+	// Hack to update Sky
+	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
+		&& _scene_manager && _scene_manager->getSkySimulator())
+	{
+		_scene_manager->getSkySimulator()->notifyCameraRender(_windows.at(0)->getPlayer().getCamera());
+	}
 
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameEnd(); }
@@ -500,24 +511,6 @@ vl::Renderer::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string con
 {
 	assert(root);
 	Ogre::SceneManager *sm = _root->createSceneManager(name);
-
-	/// These can not be moved to SceneManager at least not yet
-	/// because they need the RenderSystem capabilities.
-	/// @todo this should be user configurable (if the hardware supports it)
-	/// @todo the number of textures (four at the moment) should be user configurable
-	if (root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
-	{
-		std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
-		sm->setShadowTextureSettings(1024, 4);
-	}
-	else
-	{
-		/// @todo this doesn't work on Windows with size < (512,512)
-		/// should check the window size and select the largest
-		/// possible shadow texture based on that.
-		std::cout << "Using 512 x 512 shadow textures." << std::endl;
-		sm->setShadowTextureSettings(512, 4);
-	}
 
 	return sm;
 }

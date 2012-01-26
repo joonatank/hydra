@@ -24,6 +24,11 @@
 // Necessary for printing
 #include <iostream>
 
+// Using boost floating point for isnan is isinf
+// because there is no standard way for this till c++0x
+// all functions from here are in our namespace
+#include <boost/math/special_functions/fpclassify.hpp>
+
 // Necessary for the Wall configuration needed for calculating view and frustum matrices
 #include "base/envsettings.hpp"
 
@@ -35,18 +40,43 @@
 namespace vl
 {
 
-inline bool equal( scalar const &a, scalar const &b )
+inline
+bool is_power_of_two(uint64_t x)
+{
+    return (x & (x - 1)) == 0;
+}
+
+inline
+uint64_t next_power_of_two(uint64_t x)
+{
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	x++;
+
+	return x;
+}
+
+template<typename T>
+inline bool equal(T const &a, T const &b, T const &epsilon)
 {
 	if( a-epsilon < b && a+epsilon > b )
 	{ return true; }
 	return false;
 }
 
-inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2 )
+// Specializations
+// Not template specialisation because the parameters don't match
+// so just ordinary overloads
+inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 3; ++i )
 	{
-		if( !equal( v1[i], v2[i] ) )
+		if( !equal(v1[i], v2[i], epsilon) )
 		{ return false; }
 	}
 	return true;
@@ -54,31 +84,31 @@ inline bool equal( Ogre::Vector3 const &v1, Ogre::Vector3 const &v2 )
 
 inline bool equal(Ogre::Vector2 const &v1, Ogre::Vector2 const &v2 )
 {
-	return( equal(v1.x, v2.x) && equal(v1.y, v2.y) );
+	return( equal(v1.x, v2.x, EPSILON) && equal(v1.y, v2.y, EPSILON) );
 }
 
-inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2 )
+inline bool equal( Ogre::Quaternion const &q1, Ogre::Quaternion const &q2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 4; ++i )
 	{
-		if( !equal( q1[i], q2[i] ) )
+		if( !equal(q1[i], q2[i], epsilon) )
 		{ return false; }
 	}
 	return true;
 }
 
-inline bool equal(vl::Transform const &t1, vl::Transform const &t2)
+inline bool equal(vl::Transform const &t1, vl::Transform const &t2, vl::scalar const &epsilon = EPSILON)
 {
-	return equal(t1.position, t2.position) && equal(t1.quaternion, t2.quaternion);
+	return equal(t1.position, t2.position, epsilon) && equal(t1.quaternion, t2.quaternion, epsilon);
 }
 
-inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2 )
+inline bool equal( Ogre::Matrix4 const &m1, Ogre::Matrix4 const &m2, vl::scalar const &epsilon = EPSILON)
 {
 	for( size_t i = 0; i < 4; ++i )
 	{
 		for( size_t j = 0; j < 4; ++j )
 		{
-			if( !equal( m1[i][j], m2[i][j] ) )
+			if(!equal( m1[i][j], m2[i][j], epsilon) )
 			{ return false; }
 		}
 	}
@@ -128,6 +158,22 @@ inline T const &min(T const &a, T const &b)
 {
 	return (a < b ? a : b);
 }
+
+/// @brief Get the distance (angle between) two quaternions
+/// @return angle between the quaternions in radians
+inline vl::scalar
+distance(Quaternion const &vecA, Quaternion const & vecB)
+{
+	Vector3 const &axis = Vector3::NEGATIVE_UNIT_Z;
+	Vector3 snaDir = vecA * axis;
+	Vector3 snbDir = vecB * axis; 
+	return Ogre::Math::ACos(snaDir.dotProduct(snbDir)).valueRadians();
+}
+
+using boost::math::isfinite;
+using boost::math::isinf;
+using boost::math::isnan;
+using boost::math::isnormal;
 
 void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 

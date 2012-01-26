@@ -45,8 +45,7 @@ namespace
 		using vl::physics::BulletCollisionShapeRefPtr;
 		using vl::physics::BulletMotionState;
 		
-		assert(dynamic_cast<BulletMotionState *>(info.state));
-		//assert(boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape));
+		vl::physics::BulletMotionState *state = dynamic_cast<vl::physics::BulletMotionState *>(info.state);
 
 		btVector3 inertia(convert_bt_vec(info.inertia));
 		
@@ -54,8 +53,13 @@ namespace
 		if(info.mass == 0)
 		{ inertia = btVector3(0, 0, 0); }
 
-		return btRigidBody::btRigidBodyConstructionInfo(info.mass, 
-				(BulletMotionState *)info.state, shape->getNative(), inertia);
+		btRigidBody::btRigidBodyConstructionInfo btInfo 
+			= btRigidBody::btRigidBodyConstructionInfo(info.mass, state, shape->getNative(), inertia);
+		btMotionState *bt_state = btInfo.m_motionState;
+		assert(dynamic_cast<vl::physics::BulletMotionState *>(bt_state));
+		assert(state == dynamic_cast<vl::physics::BulletMotionState *>(bt_state));
+
+		return btInfo;
 	}
 }
 
@@ -80,6 +84,8 @@ public :
 		, _bt_body(0)
 	{
 		_bt_body = new btRigidBody(convert_construction_info(info));
+
+		assert(getMotionState() == info.state);
 	}
 
 	// @todo can we delete the body here?
@@ -180,10 +186,16 @@ public :
 	{ _bt_body->setActivationState(state); }
 
 	virtual MotionState *getMotionState(void)
-	{ return (MotionState *)_bt_body->getMotionState(); }
+	{
+		// Needs to be dynamic_cast otherwise we get incorrect pointer
+		return dynamic_cast<vl::physics::MotionState *>(_bt_body->getMotionState());
+	}
 
 	virtual MotionState const *getMotionState(void) const
-	{ return (MotionState const *)_bt_body->getMotionState(); }
+	{
+		// Needs to be dynamic_cast otherwise we get incorrect pointer
+		return dynamic_cast<vl::physics::MotionState const *>(_bt_body->getMotionState());
+	}
 
 	virtual void setMotionState(MotionState *motionState)
 	{ _bt_body->setMotionState((BulletMotionState *)motionState); }
@@ -207,6 +219,22 @@ public :
 			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_KINEMATIC_OBJECT);
 		}
 	}
+
+	virtual void disableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual void enableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual bool isCollisionsDisabled(void) const
+	{
+		return _bt_body->getCollisionFlags() && btCollisionObject::CF_NO_CONTACT_RESPONSE;
+	}
+
 
 	virtual bool isKinematicObject(void) const
 	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }

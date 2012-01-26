@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011/10 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_manager.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -30,12 +26,20 @@
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
+#include <OGRE/OgreShadowCameraSetupPSSM.h>
+
+// Necessary for Rendering system harware capabilities
+#include <OGRE/OgreRoot.h>
+
 #include "logger.hpp"
 
-const char *vl::EDITOR_CAMERA = "editor/perspective";
+// Necessary for Different sky plugins
+#include "sky_skyx.hpp"
+#include "sky_caelum.hpp"
 
-namespace
-{
+#include "math/math.hpp"
+
+const char *vl::EDITOR_CAMERA = "editor/perspective";
 
 Ogre::FogMode
 getOgreFogMode(vl::FogMode m)
@@ -55,134 +59,27 @@ getOgreFogMode(vl::FogMode m)
 	}
 }
 
-Ogre::ShadowTechnique getOgreShadowTechnique(vl::ShadowTechnique t)
-{
-	switch(t)
-	{
-	case vl::SHADOWTYPE_NONE:
-		return Ogre::SHADOWTYPE_NONE;
-	case vl::SHADOWTYPE_TEXTURE_MODULATIVE:
-		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE;
-	case vl::SHADOWTYPE_TEXTURE_ADDITIVE:
-		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE;
-	case vl::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
-		return Ogre::SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED;
-	case vl::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
-		return Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED;
-	case vl::SHADOWTYPE_STENCIL_MODULATIVE:
-		return Ogre::SHADOWTYPE_STENCIL_MODULATIVE;
-	case vl::SHADOWTYPE_STENCIL_ADDITIVE:
-		return Ogre::SHADOWTYPE_STENCIL_ADDITIVE;
-	default:
-		return Ogre::SHADOWTYPE_NONE;
-	}
-}
-
-}
-
-std::string vl::getShadowTechniqueAsString(ShadowTechnique tech)
-{
-	switch(tech)
-	{
-	case SHADOWTYPE_TEXTURE_MODULATIVE:
-		return "texture_modulative";
-	case SHADOWTYPE_STENCIL_MODULATIVE:
-		return "stencil_modulative";
-	case SHADOWTYPE_TEXTURE_ADDITIVE:
-		return "texture_additive";
-	case SHADOWTYPE_STENCIL_ADDITIVE:
-		return "stencil_additive";
-	case SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED:
-		return "texture_modulative_integrated";
-	case SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED:
-		return "texture_additive_integrated";
-	case SHADOWTYPE_NONE:
-		return "none";
-	default :
-		return "UNKNOWN";
-	}
-}
-
-vl::ShadowTechnique vl::getShadowTechniqueFromString(std::string const &tech)
-{
-	std::string str(tech);
-	vl::to_lower(str);
-	if( str == "texture_modulative" || str == "texture" )
-	{ return SHADOWTYPE_TEXTURE_MODULATIVE; }
-	else if( str == "stencil_modulative" || str == "stencil" )
-	{ return SHADOWTYPE_STENCIL_MODULATIVE; }
-	else if( str == "texture_modulative_integrated" )
-	{ return SHADOWTYPE_TEXTURE_MODULATIVE_INTEGRATED; }
-	else if( str == "texture_additive" )
-	{ return SHADOWTYPE_TEXTURE_ADDITIVE; }
-	else if( str == "texture_additive_integrated" )
-	{ return SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
-	else if( str == "stencil_additive" )
-	{ return SHADOWTYPE_STENCIL_ADDITIVE; }
-	else if( str == "none" )
-	{ return SHADOWTYPE_NONE; }
-	else
-	{ return SHADOWTYPE_NOT_VALID; }
-}
 
 /// ------------------------------ ShadowInfo --------------------------------
-vl::ShadowInfo::ShadowInfo(std::string const &tech, Ogre::ColourValue const &col, std::string const &cam)
-	: _technique(SHADOWTYPE_NONE)
-	, _colour(col)
-	, _camera(cam)
+vl::ShadowInfo::ShadowInfo(std::string const &cam)
+	: _camera(cam)
 	, _enabled(false)
+	, _texture_size(1024)
+	, _max_distance(250)
+	, _caster_material("ShadowCaster")
+	, _shelf_shadow(true)
+	, _dir_light_texture_offset(2)
 	, _dirty(true)
 {
-	setShadowTechnique(tech);
 }
 
 void
-vl::ShadowInfo::disable(void)
+vl::ShadowInfo::setEnabled(bool enabled)
 {
-	if(_enabled)
+	if(enabled != _enabled)
 	{
+		_enabled = enabled;
 		_setDirty();
-		_enabled = false;
-	}
-}
-
-void
-vl::ShadowInfo::enable(void)
-{
-	if(!_enabled || _technique == SHADOWTYPE_NONE)
-	{
-		_setDirty();
-		_enabled = true;
-		// Only change technique if we have no shadows
-		if(_technique == SHADOWTYPE_NONE)
-		{ _technique = SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED; }
-	}
-}
-
-void
-vl::ShadowInfo::setShadowTechnique(std::string const &tech)
-{
-	ShadowTechnique technique = getShadowTechniqueFromString(tech);
-	if(technique != SHADOWTYPE_NOT_VALID && technique != _technique)
-	{
-		_setDirty();
-		_technique = technique;
-	}
-}
-
-std::string
-vl::ShadowInfo::getShadowTechniqueName(void) const
-{
-	return getShadowTechniqueAsString(_technique);
-}
-
-void 
-vl::ShadowInfo::setShadowTechnique(ShadowTechnique tech)
-{
-	if(tech != _technique)
-	{
-		_setDirty();
-		_technique = tech;
 	}
 }
 
@@ -198,15 +95,94 @@ vl::ShadowInfo::setCamera(std::string const &str)
 	}
 }
 
-void 
-vl::ShadowInfo::setColour(Ogre::ColourValue const &col)
+void
+vl::ShadowInfo::setTextureSize(int size)
 {
-	if(col != _colour)
+	int final_size = size;
+	// default to 128 texture
+	if(size < 128)
 	{
+		final_size = 128;
+		std::clog << "vl::ShadowInfo::setTextureSize : " << size 
+			<< " is too small. Trying to fix the problem by using "
+			<< final_size << " instead." << std::endl;
+	}
+	// square textures thank you very much
+	else if(!is_power_of_two(size))
+	{
+		final_size = next_power_of_two(size);
+		std::clog << "vl::ShadowInfo::setTextureSize : " << size 
+			<< " is not power of two. Trying to fix the problem by using "
+			<< final_size << " instead." << std::endl;
+	}
+
+	if(_texture_size != final_size)
+	{
+		_texture_size = final_size;
 		_setDirty();
-		_colour = col;
 	}
 }
+
+void
+vl::ShadowInfo::setMaxDistance(vl::scalar dist)
+{
+	if(_max_distance != dist)
+	{
+		_max_distance = dist;
+		_setDirty();
+	}
+
+}
+
+void
+vl::ShadowInfo::setShadowCasterMaterial(std::string const &material_name)
+{
+	if(material_name != _caster_material)
+	{
+		_caster_material = material_name;
+		_setDirty();
+	}
+}
+
+void
+vl::ShadowInfo::setShelfShadowEnabled(bool enable)
+{
+	if(enable != _shelf_shadow)
+	{
+		_shelf_shadow = enable;
+		_setDirty();
+	}
+}
+
+void
+vl::ShadowInfo::setDirLightTextureOffset(vl::scalar offset)
+{
+	if(offset != _dir_light_texture_offset)
+	{
+		_dir_light_texture_offset = offset;
+		_setDirty();
+	}
+}
+
+/// ------------------------------ SkyInfo -----------------------------------
+vl::SkyInfo::SkyInfo(std::string const &preset_name)
+	: _preset(preset_name)
+	, _dirty(true)
+{
+	vl::to_lower(_preset);
+}
+
+void
+vl::SkyInfo::setPreset(std::string const &preset_name)
+{
+	if(preset_name != _preset)
+	{
+		_preset = preset_name;
+		vl::to_lower(_preset);
+		_setDirty();
+	}
+}
+
 
 /// ------------------------------ SceneManager ------------------------------
 /// Public
@@ -218,6 +194,7 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
+	, _sky_sim(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -243,6 +220,7 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
+	, _sky_sim(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -251,6 +229,14 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	assert(_ogre_sm);
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
+
+	// SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.0022f, 0.000675f, 30, Ogre::Vector3(0.57f, 0.52f, 0.44f), -0.991f, 3, 4);
+	/// Add skyX presets hard coded for now
+	_sky_presets["sunset"] = vl::SkySettings(Ogre::Vector3(8.85f, 7.5f, 20.5f),  -0.08f, 0, false, true, 300, false, Ogre::Vector3::NEGATIVE_UNIT_X, Ogre::ColourValue(0.63f,0.63f,0.7f), Ogre::ColourValue(0.35, 0.2, 0.92, 0.1), Ogre::ColourValue(0.4, 0.7, 0, 0), Ogre::Vector2(0.8,1));
+	_sky_presets["clear"] = vl::SkySettings(Ogre::Vector3(17.16f, 7.5f, 20.5f), 0, 0, false, false);
+	_sky_presets["thunderstorm"] = vl::SkySettings(Ogre::Vector3(12.23, 7.5f, 20.5f),  0, 0, false, true, 300, false, Ogre::Vector3::UNIT_Z, Ogre::ColourValue(0.63f,0.63f,0.7f), Ogre::ColourValue(0.25, 0.4, 0.5, 0.1), Ogre::ColourValue(0.45, 0.3, 0.6, 0.1), Ogre::Vector2(1,1));
+	_sky_presets["desert"] = vl::SkySettings(Ogre::Vector3(7.59f, 7.5f, 20.5f), 0, -0.8f, true, false);
+	_sky_presets["night"] = vl::SkySettings(Ogre::Vector3(21.5f, 7.5, 20.5), 0.03, -0.25, true, false);
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -258,6 +244,9 @@ vl::SceneManager::~SceneManager( void )
 //	destroyScene(true);
 
 //	delete _root;
+	// @fixme this crashes
+	//delete _sky_sim;
+
 }
 
 void
@@ -707,11 +696,19 @@ void
 vl::SceneManager::setSkyDome(SkyDomeInfo const &dome)
 {
 	/// @todo add checking that the previous SkyDome is different
-	setDirty(DIRTY_SKY_DOME);
+	setDirty(DIRTY_SKY);
 	_sky_dome = dome;
 }
 
 void 
+vl::SceneManager::setSkyInfo(vl::SkyInfo const &sky)
+{
+	/// @todo add checking that the previous Sky is different
+	setDirty(DIRTY_SKY);
+	_sky = sky;
+}
+
+void
 vl::SceneManager::setFog(FogInfo const &fog)
 {
 	/// @todo add checking that the previous fog is different
@@ -934,6 +931,12 @@ vl::SceneManager::recaluclateDirties(void)
 		setDirty(DIRTY_SHADOW_INFO);
 		_shadows.clearDirty();
 	}
+
+	if(_sky.isDirty())
+	{
+		setDirty(DIRTY_SKY);
+		_sky.clearDirty();
+	}
 }
 
 void
@@ -944,9 +947,9 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 		msg << _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_SKY_DOME )
+	if( dirtyBits & DIRTY_SKY )
 	{
-		msg << _sky_dome;
+		msg << _sky << _sky_dome;
 	}
 
 	if( dirtyBits & DIRTY_FOG )
@@ -980,20 +983,38 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		msg >> _scene_version;
 	}
 
-	if( dirtyBits & DIRTY_SKY_DOME )
+	if( dirtyBits & DIRTY_SKY )
 	{
-		msg >> _sky_dome;
-		if( _ogre_sm )
+		msg >> _sky >> _sky_dome;
+
+		assert( _ogre_sm );
+
+		// @todo handle updated sky and switch of sky dome
+		std::map<std::string, vl::SkySettings>::iterator iter 
+				= _sky_presets.find(_sky.getPreset());
+		if( iter != _sky_presets.end() )
+		{
+			std::clog << "Should enable SkyX with " << _sky.getPreset() << " preset." << std::endl;
+			if(_isSkyEnabled())
+			{
+				_changeSkyPreset(iter->second);
+			}
+			else
+			{
+				_initialiseSky(iter->second);
+			}
+		}
+		else
 		{
 			if( _sky_dome.empty() )
 			{ _ogre_sm->setSkyDome(false, ""); }
 			else
 			{
-				 _ogre_sm->setSkyDome( true, _sky_dome.material_name,
-					 _sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
-					 _sky_dome.draw_first, _sky_dome.orientation, 
-					 _sky_dome.xsegments, _sky_dome.ysegments,
-					 _sky_dome.ysegments_keep );
+					_ogre_sm->setSkyDome( true, _sky_dome.material_name,
+						_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
+						_sky_dome.draw_first, _sky_dome.orientation, 
+						_sky_dome.xsegments, _sky_dome.ysegments,
+						_sky_dome.ysegments_keep );
 			}
 		}
 	}
@@ -1035,23 +1056,47 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// and most of them need to be static during the simulation
 		if(_shadows.isEnabled())
 		{
-			_ogre_sm->setShadowTechnique( getOgreShadowTechnique(_shadows.getShadowTechnique()) );
-			_ogre_sm->setShadowColour(_shadows.getColour());
+			_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
+			//_ogre_sm->setShadowColour(_shadows.getColour());
 			Ogre::ShadowCameraSetupPtr cam_setup;
 			if( _shadows.getCamera() == "default" )
 			{
+				std::clog << "Using Default shadow camera" << std::endl;
 				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
 			}
 			else if( _shadows.getCamera() == "planeoptimal" )
 			{
+				std::clog << "Trying to use PlaneOptimal shadow camera" 
+					<< " but it's not implemented so using the previous setting." << std::endl;
 				/// @todo needs a plane of interest
 				// cam_setup.bind(new Ogre::PlaneOptimalShadowCameraSetup());
 			}
 			else if( _shadows.getCamera() == "lispsm" )
 			{
-				/// LiSPSM has creately softer shadows compared to the default one
-				/// i.e. less pixelisation in the edges.
-				cam_setup.bind(new Ogre::LiSPSMShadowCameraSetup());
+				std::clog << "Using LiSPSM shadow camera" << std::endl;
+				Ogre::LiSPSMShadowCameraSetup *lispsm = new Ogre::LiSPSMShadowCameraSetup();
+				//setOptimalAdjustFactor
+				//setCameraLightDirectionThreshold
+				cam_setup.bind(lispsm);
+			}
+			else if( _shadows.getCamera() == "pssm" )
+			{
+				std::clog << "Using PSSM shadow camera" << std::endl;
+				Ogre::PSSMShadowCameraSetup *pssm = new Ogre::PSSMShadowCameraSetup();
+				size_t const n_maps = 3;
+				pssm->calculateSplitPoints(n_maps, 0.1, 100);
+				cam_setup.bind(pssm);
+
+				// Necessary for PSSM for other types we should reset this
+				_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_DIRECTIONAL, n_maps);
+				_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_SPOTLIGHT, n_maps);
+				// Hard coded max lights for shadows, 4 at the moment
+				_ogre_sm->setShadowTextureCount(4*n_maps);
+			}
+			else if( _shadows.getCamera() == "focused" )
+			{
+				std::clog << "Using Focused shadow camera" << std::endl;
+				cam_setup.bind(new Ogre::FocusedShadowCameraSetup());
 			}
 
 			if( !cam_setup.isNull() )
@@ -1059,21 +1104,49 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		}
 		else
 		{ _ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_NONE); }
-	
+
+		/// @todo these should only be set the first time or after they
+		/// have changed.
+
+		/// These can not be moved to SceneManager at least not yet
+		/// because they need the RenderSystem capabilities.
+		/// @todo this should be user configurable (if the hardware supports it)
+		/// @todo the number of textures (four at the moment) should be user configurable
+		if(Ogre::Root::getSingleton().getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
+		{
+			std::cout << "Using " << _shadows.getTextureSize() << " x " 
+				<< _shadows.getTextureSize() << " shadow textures." << std::endl;
+			_ogre_sm->setShadowTextureSettings(_shadows.getTextureSize(), 4);
+		}
+		else
+		{
+			/// @todo this doesn't work on Windows with size < (512,512)
+			/// should check the window size and select the largest
+			/// possible shadow texture based on that.
+			std::cout << "Hardware does not support offscreen buffers. " <<
+				" So using 512 x 512 shadow textures for compatibility." << std::endl;
+			_ogre_sm->setShadowTextureSettings(512, 4);
+		}
+
+		// Disable shadow textures for POINT lights as they are not supported
+		// All textures are available for spot and directional lights.
+		_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_POINT, 0);
+
 		/// @todo for self shadowing we need to use custom shaders
 		/// @todo make configurable
-		_ogre_sm->setShadowTextureSelfShadow(true);
+		_ogre_sm->setShadowTextureSelfShadow(_shadows.isShelfShadowEnabled());
 		/// Hard coded floating point texture, needs current hardware
 		/// provides much better depth map
 		/// @todo these are not runtime configurable variables they should
 		/// be set elsewhere
 		_ogre_sm->setShadowTexturePixelFormat(Ogre::PF_FLOAT32_R);
-		_ogre_sm->setShadowTextureCasterMaterial("ShadowCaster");
+		_ogre_sm->setShadowTextureCasterMaterial(_shadows.getShadowCasterMaterial());
 
 		/// For fixed functionality texture shadows to work this must be set
 		/// @todo make configurable
 		/// @todo add support for it in Shaders (just clip the shadow)
-		_ogre_sm->setShadowFarDistance(50);
+		_ogre_sm->setShadowFarDistance(_shadows.getMaxDistance());
+		_ogre_sm->setShadowDirLightTextureOffset(_shadows.getDirLightTextureOffset());
 	}
 }
 
@@ -1153,6 +1226,50 @@ vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList c
 	return new RayObject(name, this);
 }
 
+void
+vl::SceneManager::_initialiseSky(vl::SkySettings const &preset)
+{
+	if(_sky_sim)
+	{ return; }
+
+	_sky_sim = new vl::SkySkyX(this);
+	//_sky_sim = new vl::SkyCaelum(this);
+
+	_changeSkyPreset(preset);
+}
+
+void
+vl::SceneManager::_changeSkyPreset(vl::SkySettings const &preset)
+{
+	std::clog << "vl::SceneManager::_changeSkyPreset" << std::endl;
+	_sky_sim->setTimeMultiplier(preset.timeMultiplier);
+	_sky_sim->setTime(preset.time.x);
+	_sky_sim->setSunriseTime(preset.time.y);
+	_sky_sim->setSunsetTime(preset.time.z);
+	_sky_sim->setMoonPhase(preset.moonPhase);
+
+	//_skyX->getAtmosphereManager()->setOptions(preset.atmosphereOpt);
+
+	_sky_sim->setWindSpeed(preset.vcWindSpeed);
+	//_skyX->getVCloudsManager()->setAutoupdate(preset.vcAutoupdate);
+
+	// @todo switch from Radians to Ogre::Vector2 or Ogre::Vector3
+	_sky_sim->setWindDirection(preset.vcWindDir);
+	_sky_sim->setAmbientColor(preset.vcAmbientColor);
+	_sky_sim->setLightResponse(preset.vcLightResponse);
+	_sky_sim->setAmbientFactors(preset.vcAmbientFactors);
+	_sky_sim->setWeather(preset.vcWheater);
+
+	_sky_sim->enableVolumetricClouds(preset.volumetricClouds);
+
+	_sky_sim->update(vl::time());
+}
+
+bool
+vl::SceneManager::_isSkyEnabled(void) const
+{
+	return _sky_sim;
+}
 
 /// --------------------------------- Global ---------------------------------
 std::ostream &
@@ -1200,9 +1317,14 @@ vl::operator<<(std::ostream &os, vl::ShadowInfo const &shadows)
 	{ os << "enabled "; }
 	else
 	{ os << "disabled "; }
-	os << ": technique " << shadows.getShadowTechniqueName()
-		<< " : colour " << shadows.getColour()
-		<< " : camera " << shadows.getCamera();
+	if(shadows.isShelfShadowEnabled())
+	{ os << " : with shelf shadowing"; }
+	else
+	{ os << " : without shelf shadowing"; }
+	os  << " : camera " << shadows.getCamera()
+		<< " : texture size " << shadows.getTextureSize()
+		<< " : max distance " << shadows.getMaxDistance()
+		<< " : caster material " << shadows.getShadowCasterMaterial();
 
 	return os;
 }
@@ -1271,7 +1393,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shadows)
 {
-	msg << shadows.getShadowTechnique() << shadows.getColour() << shadows.getCamera() << shadows.isEnabled();
+	msg << shadows.isEnabled() << shadows.getCamera() << shadows.getTextureSize()
+		<< shadows.getShadowCasterMaterial() << shadows.getMaxDistance()
+		<< shadows.isShelfShadowEnabled() << shadows.getDirLightTextureOffset();
 
 	return msg;
 }
@@ -1280,19 +1404,42 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 {
-	ShadowTechnique tech;
-	Ogre::ColourValue col;
-	std::string camera;
-	bool enabled;
-	msg >> tech >> col >> camera >> enabled;
+	std::string camera, caster_material;
+	bool enabled, shelf_shadow;
+	int texture_size;
+	vl::scalar dist, dir_offset;
 
-	shadows.setShadowTechnique(tech);
-	shadows.setColour(col);
+	msg >> enabled >> camera >> texture_size
+		>> caster_material >> dist
+		>> shelf_shadow >> dir_offset;
+
 	shadows.setCamera(camera);
-	if(enabled)
-	{ shadows.enable(); }
-	else
-	{ shadows.disable(); }
+	shadows.setTextureSize(texture_size);
+	shadows.setEnabled(enabled);
+	shadows.setShadowCasterMaterial(caster_material);
+	shadows.setMaxDistance(dist);
+	shadows.setShelfShadowEnabled(shelf_shadow);
+	shadows.setDirLightTextureOffset(dir_offset);
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SkyInfo const &sky)
+{
+	msg << sky.getPreset();
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SkyInfo &sky)
+{
+	std::string str;
+	msg >> str;
+	sky.setPreset(str);
 
 	return msg;
 }

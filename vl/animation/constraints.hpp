@@ -272,6 +272,10 @@ private :
  *	@brief a constraint that has all axes locked except for one rotation axis
  *	Supports servo motors for using the constraint as an actuator.
  *	@todo rename to revolute joint, as used in Robot literature
+ *
+ *	@todo If FPS is much greater than 60 the progress method does not work correctly
+ *	This is probably because there is inaccuracies in calculating the angle from
+ *	quaternions and comparing them.
  */
 class HingeConstraint : public Constraint
 {

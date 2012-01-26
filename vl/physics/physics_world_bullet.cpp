@@ -66,7 +66,7 @@ vl::physics::BulletWorld::step(vl::time const &time_step)
 {
 	// Some hard-coded parameters for the simulation
 	// Small internal timestep is necessary for small objects < 100mm
-	_dynamicsWorld->stepSimulation((double)time_step, 10, _solver_params.internal_time_step);
+	_dynamicsWorld->stepSimulation((double)time_step, _solver_params.max_sub_steps, _solver_params.internal_time_step);
 
 	// update kinematic bodies
 	_collision_feedback();

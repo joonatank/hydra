@@ -174,7 +174,8 @@ void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
 	// filter annoying error report from CEGUI
-	if(message == "Error prior to using GLSL Program Object : invalid operation")
+	if(message == "Error prior to using GLSL Program Object : invalid operation"
+		|| message == "Error prior to using GLSL Program Object : invalid value")
 	{ return; }
 
 	// TODO fix the time

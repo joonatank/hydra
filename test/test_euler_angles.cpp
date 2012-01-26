@@ -78,17 +78,17 @@ BOOST_AUTO_TEST_CASE( convert_compined_quaternion )
 		Ogre::Real rad_x = deg_x.valueRadians();
 		Ogre::Real rad_y = deg_y.valueRadians();
 		Ogre::Real rad_z = deg_z.valueRadians();
-		if( abs(rad_x) < vl::epsilon )
+		if( abs(rad_x) < vl::EPSILON )
 			BOOST_CHECK_SMALL(  x.valueRadians(), tolerance );
 		else
 			BOOST_CHECK_CLOSE( rad_x, x.valueRadians(), tolerance );
 
-		if( abs(rad_y) < vl::epsilon )
+		if( abs(rad_y) < vl::EPSILON )
 			BOOST_CHECK_SMALL(  y.valueRadians(), tolerance );
 		else
 			BOOST_CHECK_CLOSE( rad_y, y.valueRadians(), tolerance );
 
-		if( abs(rad_z) < vl::epsilon )
+		if( abs(rad_z) < vl::EPSILON )
 			BOOST_CHECK_SMALL(  z.valueRadians(), tolerance );
 		else
 			BOOST_CHECK_CLOSE( rad_z, z.valueRadians(), tolerance );

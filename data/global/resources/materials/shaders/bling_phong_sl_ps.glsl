@@ -53,6 +53,11 @@ uniform sampler2D normalMap;
 #endif
 #ifdef SHADOW_MAP
 uniform sampler2D shadowMap;
+// Some extra parameters for shadows
+uniform float inverseShadowmapSize;
+uniform float fixedDepthBias;
+uniform float gradientClamp;
+uniform float gradientScaleBias;
 #endif
 
 in vec4 uv;
@@ -74,7 +79,7 @@ in vec3 dirToEye;
 // Of course the position does not make any sense if it's not a position from the vertex.
 // Attenuation in pixel shader otherwise large objects
 // with few vertices are incorrectly lit
-in vec3 lightPos;
+in vec4 lightPos;
 
 // Spotlight direction, should be in the same space as the rest of the parameters,
 in vec3 spotlightDir;
@@ -177,7 +182,8 @@ void main(void)
 
 	// Light vector needs to be calculated in fragment shader for low
 	// poly objects like flat walls.
-	vec3 fragmentToLight = lightPos - vVertex;
+	// For directional lights lightPos.w is 0 others 1
+	vec3 fragmentToLight = lightPos.xyz - (vVertex*lightPos.w);
 
 	// Normalize interpolated direction to light
 	vec3 normDirToLight = normalize(fragmentToLight);
@@ -222,22 +228,52 @@ void main(void)
 		}
 	}
 
-	float inShadow = 1.0;
+	float shadow = 1.0;
 #ifdef SHADOW_MAP
 	if(lightCastsShadows > 0.0 && att > 0.0)
 	{
 		// Projective shadows, and the shadow texture is a depth map
 		// note the perspective division!
 		vec3 tex_coords = shadowUV.xyz/shadowUV.w;
+
 		// read depth value from shadow map
-		float depth = texture(shadowMap, tex_coords.xy).r;
-		inShadow = (depth > tex_coords.z) ? 1.0 : 0.0;
+		float centerdepth = texture(shadowMap, tex_coords.xy).x;
+
+		// gradient calculation
+		float pixeloffset = inverseShadowmapSize;
+		vec4 depths = vec4(
+			texture(shadowMap, tex_coords.xy + vec2(-pixeloffset, 0)).x,
+			texture(shadowMap, tex_coords.xy + vec2(+pixeloffset, 0)).x,
+			texture(shadowMap, tex_coords.xy + vec2(0, -pixeloffset)).x,
+			texture(shadowMap, tex_coords.xy + vec2(0, +pixeloffset)).x);
+
+		vec2 differences = abs( depths.yw - depths.xz );
+		float gradient = min(gradientClamp, max(differences.x, differences.y));
+		float gradientFactor = gradient * gradientScaleBias;
+
+		// visibility function
+		float depthAdjust = gradientFactor + (fixedDepthBias * centerdepth);
+		float finalCenterDepth = centerdepth + depthAdjust;
+
+#if USE_PCF
+		// use depths from prev, calculate diff
+		depths += depthAdjust;
+		float final = (finalCenterDepth > tex_coords.z) ? 1.0 : 0.0;
+		final += (depths.x > tex_coords.z) ? 1.0 : 0.0;
+		final += (depths.y > tex_coords.z) ? 1.0 : 0.0;
+		final += (depths.z > tex_coords.z) ? 1.0 : 0.0;
+		final += (depths.w > tex_coords.z) ? 1.0 : 0.0;
+	
+		shadow = 0.2 * final;
+#else
+		shadow = (finalCenterDepth > tex_coords.z) ? 1.0 : 0.0;
+#endif
 	}
 #endif
 
 	// Combine diffuse alphas
 	float alpha = diffuseTexColour.a*surfaceDiffuse.a;
-	colour = inShadow*(diffuse + specular);
+	colour = shadow*(diffuse + specular);
 	colour.a = alpha;
 
 	FragmentColour = clamp(colour, 0.0, 1.0);

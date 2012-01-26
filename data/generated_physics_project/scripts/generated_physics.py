@@ -103,15 +103,14 @@ cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), ma
 
 capsule = addCapsule('capsule', "finger_sphere/green", Vector3(.0, 5, 5), mass=10)
 
-"""
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m
 tube_info = TubeConstructionInfo()
 tube_info.start_body = user_sphere
 tube_info.end_body = sphere_fixed
-tube_info.start_frame = Transform(Vector3(0, 0, 1), Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.end_frame = Transform(Vector3(0, 0, -1), Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.length = 15
+tube_info.start_frame = Transform(Vector3(0, 0, 0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.end_frame = Transform(Vector3(0, 0, -0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.length = 5
 tube_info.mass = 50
 tube_info.radius = 0.1
 #tube_info.stiffness = 0.6
@@ -119,5 +118,4 @@ tube_info.radius = 0.1
 
 tube = game.physics_world.createTube(tube_info)
 tube.create()
-"""
 

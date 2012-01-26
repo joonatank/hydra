@@ -22,14 +22,14 @@ void
 vl::getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z )
 {
 	vl::scalar test = q.x*q.y + q.z*q.w;
-	if (test > 0.5-vl::epsilon)
+	if (test > 0.5-vl::EPSILON)
 	{ // singularity at north pole
 		y = 2 * atan2(q.x,q.w);
 		z = scalar(M_PI/2);
 		x = 0;
 		return;
 	}
-	if (test < -0.5+vl::epsilon)
+	if (test < -0.5+vl::EPSILON)
 	{ // singularity at south pole
 		y = -2 * atan2(q.x,q.w);
 		z = scalar(- M_PI/2);

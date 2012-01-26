@@ -144,13 +144,13 @@ vl::GameManager::step(void)
 	/// This elaborate system also needs to allow masking events so
 	/// they belong to more than just one category or an ALL category.
 
+	getEventManager()->getFrameTrigger()->update(getDeltaTime());
+
 	// Process input devices
 	getEventManager()->mainloop();
 
 	if(isPlaying())
 	{
-		getEventManager()->getFrameTrigger()->update(getDeltaTime());
-
 		// Process Tracking
 		// If we have a tracker object update it, the update will handle all the
 		// callbacks and appropriate updates (head matrix and scene nodes).

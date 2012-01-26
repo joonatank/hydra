@@ -60,6 +60,7 @@ public :
 	/// @brief serializes the current dirties and the current modifications
 	/// Pack and unpack needs to be symmetric in every way otherwise
 	/// they will fail.
+	/// @todo why is this method const? it should update the dirties before packing
 	void pack( cluster::ByteStream &msg ) const
 	{ pack( msg, _dirtyBits ); }
 
@@ -72,8 +73,10 @@ public :
 
 	void unpack( cluster::ByteStream &msg )
 	{
+		// Can not use getDirty() because that method updates dirty bits using
+		// functions ment for packing... argh.
 		msg >> _dirtyBits;
-		deserialize(msg, getDirty() );
+		deserialize(msg, _dirtyBits);
 	}
 
 	uint64_t getID( void ) const

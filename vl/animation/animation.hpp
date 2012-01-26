@@ -206,6 +206,8 @@ public :
 	/// preseres childs translation and only affects it's orientation
 	void setOrientation(Quaternion const &);
 
+	void rotate(Quaternion const &);
+
 	/// @brief collision detection helper
 	void popLastTransform(void);
 
