@@ -149,16 +149,17 @@ vl::GameManager::step(void)
 	// Process input devices
 	getEventManager()->mainloop();
 
+	// Process Tracking
+	// If we have a tracker object update it, the update will handle all the
+	// callbacks and appropriate updates (head matrix and scene nodes).
+	// needs to be processed even if paused so we have perspective modifications
+	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
+	{
+		_trackers->getTrackerPtr(i)->mainloop();
+	}
+
 	if(isPlaying())
 	{
-		// Process Tracking
-		// If we have a tracker object update it, the update will handle all the
-		// callbacks and appropriate updates (head matrix and scene nodes).
-		for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
-		{
-			_trackers->getTrackerPtr(i)->mainloop();
-		}
-
 		for(size_t i = 0; i < _analog_clients.size(); ++i )
 		{ _analog_clients.at(i)->mainloop(); }
 
