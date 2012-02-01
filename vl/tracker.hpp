@@ -131,12 +131,6 @@ public :
 	size_t getNSensors(void) const
 	{ return _sensors.size(); }
 
-	void setTransformation(vl::Transform const &trans)
-	{ _transform = trans; }
-
-	vl::Transform const &getTransformation(void) const
-	{ return _transform; }
-
 	std::string const &getName(void) const
 	{ return _name; }
 
@@ -145,6 +139,21 @@ public :
 
 	bool incorrect_quaternion;
 
+	void setScale(Ogre::Vector3 const &s)
+	{ _scale = s; }
+
+	void setPermutation(Ogre::Vector3 const &permute)
+	{ _permute = permute; }
+
+	void setSign(Ogre::Vector3 const &s)
+	{ _sign = s; }
+
+	void setNeutralPosition(Ogre::Vector3 const &pos)
+	{ _neutral_position = pos; }
+
+	void setNeutralOrientation(Ogre::Quaternion const &q)
+	{ _neutral_quaternion = q; }
+	
 protected :
 	/// Protected constructor so that user needs to call create
 	Tracker(std::string const &trackerName);
@@ -153,9 +162,11 @@ protected :
 
 	std::vector<TrackerSensor> _sensors;
 
-	/// @todo this needs a separate Transform class with permutation, scaling and flipping
-	vl::Transform _transform;
-
+	Ogre::Vector3 _scale;
+	Ogre::Vector3 _permute;
+	Ogre::Vector3 _sign;
+	Ogre::Vector3 _neutral_position;
+	Ogre::Quaternion _neutral_quaternion;
 };	// class Tracker
 
 

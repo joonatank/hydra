@@ -82,7 +82,7 @@ private :
 	void processTracker(rapidxml::xml_node<>* XMLNode, Connection const &connection, bool incorrect_quaternion);
 
 	/// @todo Sign is not supported for the moment
-	void processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans);
+	void processTransformation(rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker);
 
 	/// Process a sensor node
 	void processSensor( rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker );

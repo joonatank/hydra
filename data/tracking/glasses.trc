@@ -3,6 +3,9 @@
 <clients>
 	<client type="VRPN" host="localhost" >
 		<tracker name="glasses">
+			<transformation>
+				<vector x="0" y="1.5" z="0" />
+			</transformation>
 			<sensor num="0">
 				<trigger type="VRPN" name="glassesTrigger" />
 				<default>
