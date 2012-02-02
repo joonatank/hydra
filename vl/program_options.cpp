@@ -40,7 +40,7 @@ vl::ProgramOptions::ProgramOptions( void )
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
 		("show_system_console", "Show the system console window on startup.")
-		("auto_fork, f", "Auto fork slave processes. Only usefull for virtual clusters.")
+		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
 		("config,c", po::value<std::string>(&_config_file)->default_value("hydra.ini"),
 				"name of a file of a configuration.")
 	;
