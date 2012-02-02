@@ -28,8 +28,6 @@ vl::ProgramOptions::ProgramOptions( void )
 	, log_level(0)
 	, display_n(0)
 	, _slave(false)
-	, auto_fork(false)
-	, show_system_console(false)
 	, _cmd_options("Command line options")
 	, _config("Configuration")
 {
@@ -42,6 +40,7 @@ vl::ProgramOptions::ProgramOptions( void )
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
 		("show_system_console", "Show the system console window on startup.")
+		("auto_fork, f", "Auto fork slave processes. Only usefull for virtual clusters.")
 		("config,c", po::value<std::string>(&_config_file)->default_value("hydra.ini"),
 				"name of a file of a configuration.")
 	;
@@ -54,11 +53,8 @@ vl::ProgramOptions::ProgramOptions( void )
 		("environment,e", po::value< std::string >(&environment_file), "environment file")
 		("project,p", po::value< std::string >(&project_file), "project file")
 		("global,g", po::value< std::string >(&global_file), "global file")
-		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
 		("display", po::value<int>(&display_n)->default_value(0), 
 			"Display to use for the window. Only on X11.")
-		("system_console", po::value<bool>(&show_system_console)->default_value(false),
-			"Show the system console window on startup.")
 		("editor", po::value<bool>(&editor)->default_value(false), "Enable editor.")
 		("processors", po::value<int>(&n_processors)->default_value(-1), 
 			"How many processors or cores the program can use.")
@@ -66,8 +62,12 @@ vl::ProgramOptions::ProgramOptions( void )
 			"First processor to use only has effect if processor is defined also.")
 	;
 
-	_cmdline_options.add(_cmd_options).add(_config);   
-    _config_file_options.add(_config);
+	_file_options.add_options()
+		("auto_fork", po::value<bool>(&auto_fork)->default_value(false),
+			"Auto fork slave processes. Only usefull for virtual clusters.")
+		("show_system_console", po::value<bool>(&show_system_console)->default_value(false),
+			"Show the system console window on startup.")
+	;
 }
 
 vl::ProgramOptions::~ProgramOptions(void)
@@ -111,21 +111,29 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
 	// TODO add control for the log level at least ERROR, INFO, TRACE
 
-    po::options_description visible("Allowed options");
-    visible.add(_cmd_options).add(_config);
+	po::options_description visible("Allowed options");
+	visible.add(_cmd_options).add(_config);
 
 	// Parse command line
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).
-            options(_cmdline_options).run(), vm);
-    po::notify(vm);
+	// @todo this is problematic because we are overriding command-line options 
+	// with ini file options when processed in this order
+	// command line should of course take precidence
+	// but this does not work if we want to allow changing the config file
+	// from command line.
+	// So we need to process the config file flag from command line first
+	// and store the rest of the options, process ini file and then process
+	// the rest of the command line.
+	po::variables_map vm;
+	po::store(po::command_line_parser(argc, argv).
+			options(visible).run(), vm);
+	po::notify(vm);
 
 	parseIni(_config_file, vm);
 
 	// Print help
 	if( vm.count("help") )
 	{
-		std::cout << "Help : " << _cmdline_options << std::endl;
+		std::cout << "Help : " << visible << std::endl;
 		return false;
 	}
 
@@ -172,6 +180,9 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 bool
 vl::ProgramOptions::parseIni(std::string const &file, po::variables_map vm)
 {
+    po::options_description visible("Allowed options");
+    visible.add(_file_options).add(_config);
+
 	/// Config file
 	if(fs::exists(file))
 	{
@@ -179,16 +190,24 @@ vl::ProgramOptions::parseIni(std::string const &file, po::variables_map vm)
 	
 		if (!ifs)
 		{
-			std::cout << "can not open config file: " << file << std::endl;
-			return 0;
+			std::cout << "Couldn't not open config file: " << file << std::endl;
+			return false;
 		}
 		else
 		{
-			std::cout << "parsing config file : " << file << std::endl;
-			po::store(po::parse_config_file(ifs, _config_file_options), vm);
+			std::clog << "Parsing config file : " << file << std::endl;
+			po::store(po::parse_config_file(ifs, visible), vm);
 			po::notify(vm);
+
+			return true;
 		}
 	}
+	else
+	{
+		std::clog << "Config file : " << file << " does not exist." << std::endl;
+	}
+
+	return false;
 }
 
 bool

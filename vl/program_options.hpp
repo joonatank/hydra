@@ -98,9 +98,7 @@ private :
 private :
 	po::options_description _cmd_options;
 	po::options_description _config;
-
-    po::options_description _cmdline_options;
-    po::options_description _config_file_options;
+	po::options_description _file_options;
 
 	std::string _config_file;
 
