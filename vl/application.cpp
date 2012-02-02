@@ -282,11 +282,13 @@ vl::Hydra_Run(const int argc, char** argv)
 
 /// -------------------------------- Application -----------------------------
 vl::Application::Application(void)
+	: _logger(0)
 {
 }
 
 vl::Application::~Application( void )
 {
+	delete _logger;
 }
 
 vl::ApplicationUniquePtr
@@ -366,7 +368,10 @@ vl::Application::init(ProgramOptions const &opt)
 	if( !env )
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	_logger.setOutputFile(opt.getOutputFile());
+	// Needs to be created here because does not currently support
+	// changing the log file at run time.
+	_logger = new Logger;
+	_logger->setOutputFile(opt.getOutputFile());
 
 	assert( env );
 

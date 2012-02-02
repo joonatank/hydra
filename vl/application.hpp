@@ -95,7 +95,7 @@ private :
 // Data
 protected :
 
-	vl::Logger _logger;
+	vl::Logger *_logger;
 
 };	// class Application
 
