@@ -10,7 +10,7 @@ camera.attachObject(cam)
 createCameraMovements(camera)
 game.player.camera = camera_name
 
-game.scene.sky = SkyDomeInfo("CloudySky")
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
 # Create light
 spot = game.scene.createSceneNode("spot")
