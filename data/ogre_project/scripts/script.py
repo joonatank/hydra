@@ -21,7 +21,7 @@ createCameraMovements(camera, speed=10)
 
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
-addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
+addMoveSelection(speed=5, angular_speed=Degree(60), reference=camera)
 key = game.event_manager.createKeyTrigger(KC.SPACE)
 addTrackerMoveSelection("fingerTrigger", key)
 ogre.position = Vector3(0, 2.5, 0)
@@ -76,7 +76,7 @@ if game.scene.hasSceneNode("spot"):
 	# Test code for lights at a distance
 	#spot_n.position = Vector3(0, 100, 0)
 	#spot.attenuation = LightAttenuation(200, 0.9, 0.09, 0.01)
-	#game.scene.addToSelection(spot_n)
+	game.scene.addToSelection(spot_n)
 
 #game.scene.addToSelection(ogre)
 #game.scene.removeFromSelection(ogre)
@@ -137,7 +137,7 @@ text.char_height = 0.4
 text_n = game.scene.createSceneNode('text')
 text_n.attachObject(text)
 text_n.translate(Vector3(3, 2, 2))
-game.scene.addToSelection(text_n)
+#game.scene.addToSelection(text_n)
 
 def rotateSpotti(t):
 	speed = Degree(10)

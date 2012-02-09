@@ -48,6 +48,8 @@ athene2 = athene.clone();
 athene2.position = Vector3(3, 4, 5)
 
 game.scene.shadows.enable()
+# Should of course be 4096 but testing the rounding to next power of two
+game.scene.shadows.texture_size = 4024
 # some shadow testing
 #game.scene.shadows.camera = "focused"
 #game.scene.shadows.camera = "lispsm"
@@ -207,4 +209,9 @@ trigger.addListener(lights.toggleHemis)
 trigger = game.event_manager.createKeyTrigger(KC.P)
 trigger.addListener(lights.toggleSun)
 
+def toggleShadows():
+	game.scene.shadows.enabled = not game.scene.shadows.enabled
+
+trigger = game.event_manager.createKeyTrigger(KC.Z)
+trigger.addListener(toggleShadows)
 
