@@ -94,8 +94,8 @@ fragment_program bling_phong_sl_shadows_ps glsl
 		// Extra params for shadows
         param_named_auto inverseShadowmapSize inverse_texture_size 2
         //param_named inverseShadowmapSize float 0.0009765625
-		param_named fixedDepthBias float 0.0005
-		param_named gradientClamp float 0.0098
+		param_named fixedDepthBias float 0.0000
+		param_named gradientClamp float 0.000
 		param_named gradientScaleBias float 0
 
 		// Don't change the order, because they are mapped with index
@@ -149,8 +149,8 @@ fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 
 		// Extra params for shadows
 		param_named_auto inverseShadowmapSize inverse_texture_size 2
-		param_named fixedDepthBias float 0.0005
-		param_named gradientClamp float 0.0098
+		param_named fixedDepthBias float 0.0000
+		param_named gradientClamp float 0.0000
 		param_named gradientScaleBias float 0
 
 		// Don't change the order, because they are mapped with index
