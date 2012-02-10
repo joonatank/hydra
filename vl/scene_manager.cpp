@@ -955,12 +955,8 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
 			//_ogre_sm->setShadowColour(_shadows.getColour());
 			Ogre::ShadowCameraSetupPtr cam_setup;
-			if( _shadows.getCamera() == "default" )
-			{
-				std::clog << "Using Default shadow camera" << std::endl;
-				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
-			}
-			else if( _shadows.getCamera() == "planeoptimal" )
+
+			if( _shadows.getCamera() == "planeoptimal" )
 			{
 				std::clog << "Trying to use PlaneOptimal shadow camera" 
 					<< " but it's not implemented so using the previous setting." << std::endl;
@@ -993,6 +989,11 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			{
 				std::clog << "Using Focused shadow camera" << std::endl;
 				cam_setup.bind(new Ogre::FocusedShadowCameraSetup());
+			}
+			else // if( _shadows.getCamera() == "default" )
+			{
+				std::clog << "Using Default shadow camera" << std::endl;
+				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
 			}
 
 			if( !cam_setup.isNull() )
