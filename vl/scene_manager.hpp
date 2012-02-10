@@ -505,6 +505,9 @@ public :
 
 	void setActiveObject(SceneNodePtr node);
 
+	/// @brief map collision models to visual models
+	/// Maps barriers with names "cb_*" or "*cb_*"
+	/// where asterisk (*) is the part that needs to be matched
 	void mapCollisionBarriers(void);
 
 	/// @brief hides Scene Nodes based on the pattern
