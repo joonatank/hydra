@@ -460,6 +460,16 @@ vl::HingeConstraint::getAxisInWorld(void) const
 	return _bodyA->getWorldTransform()*_axisInA;
 }
 
+Ogre::Radian
+vl::HingeConstraint::getHingeAngle(void) const
+{
+	Ogre::Quaternion const &current_q = _link->getTransform().quaternion;
+	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
+
+	// @todo the sign is lost
+	return Ogre::Radian(distance(current_q, init_q));
+}
+
 void
 vl::HingeConstraint::_progress(vl::time const &t)
 {
@@ -489,7 +499,7 @@ vl::HingeConstraint::_progress(vl::time const &t)
 
 	// needs some tolerance because of inaccuracies in the quaternions
 	// and maybe some missing normalisations.
-	vl::scalar epsilon = 0.001;
+	vl::scalar epsilon = 0.0001;
 	if(!vl::equal(dist, vl::scalar(0), epsilon)
 		&& !vl::equal(angle, Ogre::Radian(0), Ogre::Radian(epsilon)))
 	{		
@@ -536,7 +546,6 @@ vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPt
 	, _lower_limit()
 	, _upper_limit()
 	, _axisInA(0, 0, 1)
-	, _angle()
 	, _actuator(false)
 	, _target()
 	, _speed(Ogre::Degree(30))

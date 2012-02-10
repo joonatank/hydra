@@ -101,14 +101,16 @@ vl::ConstraintJoystickHandler::_apply_event(JoystickEvent const &evt)
 		vl::scalar sign = 1;
 		if(x_iter->inverted)
 		{ sign = -1; }
-		x_iter->constraint->setVelocity(sign*_velocity_multiplier*evt.axis_x);
+		vl::scalar velocity = sign*_velocity_multiplier*evt.axis_x;
+		x_iter->constraint->setVelocity(velocity);
 	}
 	if(y_iter != _constraint_map.end())
 	{
 		vl::scalar sign = 1;
 		if(y_iter->inverted)
 		{ sign = -1; }
-		y_iter->constraint->setVelocity(sign*_velocity_multiplier*evt.axis_y);
+		vl::scalar velocity = sign*_velocity_multiplier*evt.axis_y;
+		y_iter->constraint->setVelocity(velocity);
 	}
 	if(z_iter != _constraint_map.end())
 	{

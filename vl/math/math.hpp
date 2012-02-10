@@ -160,7 +160,7 @@ inline T const &min(T const &a, T const &b)
 }
 
 /// @brief Get the distance (angle between) two quaternions
-/// @return angle between the quaternions in radians
+/// @return angle between the quaternions in radians, always positive
 inline vl::scalar
 distance(Quaternion const &vecA, Quaternion const & vecB)
 {

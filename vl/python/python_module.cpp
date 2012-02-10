@@ -217,7 +217,7 @@ void export_animation(void)
 		.add_property("upper_limit", python::make_function(&vl::HingeConstraint::getUpperLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setUpperLimit)
 		.add_property("speed", python::make_function(&vl::HingeConstraint::getActuatorSpeed, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorSpeed)
 		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
-		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle))
 		.add_property("axis", python::make_function(&vl::HingeConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setAxis)
 		.def(python::self_ns::str(python::self_ns::self))
 	;

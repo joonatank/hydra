@@ -290,12 +290,10 @@ public :
 
 	/// Sets the target to maximum and controls the approaching velocity
 	/// provides a servo motor control for the constraint
+	/// @todo this should be moved to separate motor/actuator class
 	virtual void setVelocity(vl::scalar velocity);
 
 	virtual void addVelocity(vl::scalar velocity);
-
-	void addActuatorTarget(Ogre::Radian const &angle)
-	{ setActuatorTarget(angle+_angle); }
 
 	/// @brief set the target angle to motor
 	/// @param angle target angle which the actuator tries to achieve over time
@@ -335,8 +333,10 @@ public :
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
-	Ogre::Radian const &getHingeAngle(void) const
-	{ return _angle; }
+	/// @brief returns the shortest path to original orientation
+	/// This returns the distance so it's always positive.
+	/// @todo add sign to the distance
+	Ogre::Radian getHingeAngle(void) const;
 
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
@@ -356,8 +356,6 @@ private :
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;
 	Ogre::Vector3 _axisInA;
-
-	Ogre::Radian _angle;
 
 	bool _actuator;
 	Ogre::Radian _target;

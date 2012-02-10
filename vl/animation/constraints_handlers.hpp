@@ -43,10 +43,7 @@ struct ConstraintJoystickHandler : public JoystickHandler
 
 		bool operator==(AxisConstraintElem const &elem) const
 		{
-			if(axis == elem.axis && button == elem.button)
-			{ return true; }
-
-			return false;
+			return(axis == elem.axis && button == elem.button);
 		}
 	};
 

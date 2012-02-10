@@ -138,6 +138,7 @@ void export_managers(void)
 		.def_readonly("axis_x", &vl::JoystickEvent::axis_x)
 		.def_readonly("axis_y", &vl::JoystickEvent::axis_y)
 		.def("is_button_down", isButtonDown_ov0)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	/// Input
