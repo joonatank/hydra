@@ -333,9 +333,7 @@ public :
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
-	/// @brief returns the shortest path to original orientation
-	/// This returns the distance so it's always positive.
-	/// @todo add sign to the distance
+	/// @brief returns the angle the hinge is in along the path moved.
 	Ogre::Radian getHingeAngle(void) const;
 
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 

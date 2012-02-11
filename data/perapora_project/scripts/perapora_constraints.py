@@ -35,22 +35,22 @@ ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
 # Create the kinematics
-kiinnityslevy= game.scene.getSceneNode("cb_kiinnityslevy")
-nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
+#nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
 
-kaantokappale = game.scene.getSceneNode("cb_kaantokappale")
+kaantokappale = _create_body("cb_kaantokappale")
 
 # Nosto
-ulkoputki = game.scene.getSceneNode("cb_ulkoputki")
+ulkoputki = _create_body("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
-puomi_hinge = createHingeConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, Radian(-1), Radian(0))
+wt = nivel_puomi.world_transformation
+puomi_hinge = hinge_constraint(kaantokappale, ulkoputki, wt, min=Radian(-1), max=Radian(0))
 puomi_hinge.axis = Vector3(0, 1, 0)
 
 # Cylinder nosto
-nivel_nostosyl1 = game.scene.getSceneNode("nivel_nostosyl1_rotz")
-nivel_nostosyl2 = game.scene.getSceneNode("nivel_nostosyl2_rotz")
-createFixedConstraint(ulkoputki, nivel_nostosyl1, nivel_nostosyl1.world_transformation)
-createFixedConstraint(kaantokappale, nivel_nostosyl2, nivel_nostosyl2.world_transformation)
+nivel_nostosyl1 = _create_body("nivel_nostosyl1_rotz")
+nivel_nostosyl2 = _create_body("nivel_nostosyl2_rotz")
+fixed_constraint(ulkoputki, nivel_nostosyl1)
+fixed_constraint(kaantokappale, nivel_nostosyl2)
 
 # Not creating constraints but a Cylinder handler class
 syl_nosto_varsi = game.scene.getSceneNode("cb_syl_nosto_varsi")
@@ -59,19 +59,24 @@ syl_nosto_putki = game.scene.getSceneNode("cb_syl_nosto_putki")
 syl_nosto = Cylinder(syl_nosto_putki, syl_nosto_varsi, nivel_nostosyl1, nivel_nostosyl2)
 syl_nosto.up_axis = Vector3(0, 1, 0)
 
+
+
+kiinnityslevy = _create_body("cb_kiinnityslevy")
+
 # Kaanto
-nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
+nivel_klevy1 = _create_body("nivel_klevy1_rotz")
+wt = nivel_klevy1.world_transformation
 #transform = Transform(Quaternion(0.7071, 0, 0.7071, 0)) * 
-kaanto_hinge = createHingeConstraint(kiinnityslevy, kaantokappale, nivel_klevy1.world_transformation, Radian(-1), Radian(1))
+kaanto_hinge = hinge_constraint(kiinnityslevy, kaantokappale, wt, min=Radian(-1), max=Radian(1))
 kaanto_hinge.axis = Vector3(0, 1, 0)
 
-createFixedConstraint(kaantokappale, nivel_klevy1, nivel_klevy1.world_transformation)
+fixed_constraint(kaantokappale, nivel_klevy1)
 
 # Cylinder kaanto
-nivel_kaantosyl1 = game.scene.getSceneNode("nivel_kaantosyl1_rotz")
-nivel_kaantosyl2 = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
-createFixedConstraint(ulkoputki, nivel_kaantosyl1, nivel_kaantosyl1.world_transformation)
-createFixedConstraint(kaantokappale, nivel_kaantosyl2, nivel_kaantosyl2.world_transformation)
+nivel_kaantosyl1 = _create_body("nivel_kaantosyl1_rotz")
+nivel_kaantosyl2 = _create_body("nivel_kaantosyl2_rotz")
+fixed_constraint(ulkoputki, nivel_kaantosyl1)
+fixed_constraint(kaantokappale, nivel_kaantosyl2)
 
 # Not creating constraints but a Cylinder handler class
 syl_kaanto_varsi = game.scene.getSceneNode("cb_syl_kaanto_varsi")
@@ -80,80 +85,86 @@ syl_kaanto_putki = game.scene.getSceneNode("cb_syl_kaanto_putki")
 syl_kaanto = Cylinder(syl_kaanto_putki, syl_kaanto_varsi, nivel_kaantosyl1, nivel_kaantosyl2)
 syl_kaanto.up_axis = Vector3(0, 1, 0)
 
+
+
 # Create constraint for keeping the cylinder piston fixed
 # Adding this will screw up anything that uses SceneNodes
 # We need to move that code to use KinematicBodies instead
 
 # Zoom
-sisaputki = game.scene.getSceneNode("cb_sisaputki")
+sisaputki = _create_body("cb_sisaputki")
 nivel_telesk = game.scene.getSceneNode("nivel_telesk_trz")
-teleskooppi = createTranslationConstraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, 0., 1.05)
+zoom = slider_constraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, min=0., max=1.05)
+zoom.axis = Vector3(0, 1, 0)
 
 # Add rest of the objects with fixed joints
-syl_tilt_putki = game.scene.getSceneNode("cb_syl_tilt_putki")
-syl_tilt_varsi = game.scene.getSceneNode("cb_syl_tilt_varsi")
-nivel_tiltsyl1 = game.scene.getSceneNode("nivel_tiltsyl1_rotz")
-nivel_tiltsyl2 = game.scene.getSceneNode("nivel_tiltsyl2_rotz")
-createFixedConstraint(sisaputki, syl_tilt_putki, nivel_tiltsyl1.world_transformation)
-createFixedConstraint(syl_tilt_putki, syl_tilt_varsi, nivel_tiltsyl2.world_transformation)
+syl_tilt_putki = _create_body("cb_syl_tilt_putki")
+syl_tilt_varsi = _create_body("cb_syl_tilt_varsi")
+#nivel_tiltsyl1 = game.scene.getSceneNode("nivel_tiltsyl1_rotz")
+#nivel_tiltsyl2 = game.scene.getSceneNode("nivel_tiltsyl2_rotz")
+fixed_constraint(sisaputki, syl_tilt_putki)
+fixed_constraint(syl_tilt_putki, syl_tilt_varsi)
 
-tiltkappale = game.scene.getSceneNode("cb_tiltkappale")
-nivel_tilt = game.scene.getSceneNode("nivel_tilt_rotz")
-createFixedConstraint(sisaputki, tiltkappale, nivel_tilt.world_transformation)
+tiltkappale = _create_body("cb_tiltkappale")
+#nivel_tilt = game.scene.getSceneNode("nivel_tilt_rotz")
+fixed_constraint(sisaputki, tiltkappale)
 
-syl_swing_putki = game.scene.getSceneNode("cb_syl_swing_putki")
-syl_swing_varsi = game.scene.getSceneNode("cb_syl_swing_varsi")
-nivel_swingsyl1 = game.scene.getSceneNode("nivel_swingsyl1_rotz")
-createFixedConstraint(sisaputki, syl_swing_putki, nivel_swingsyl1.world_transformation)
-createFixedConstraint(syl_swing_putki, syl_swing_varsi, syl_swing_varsi.world_transformation)
+syl_swing_putki = _create_body("cb_syl_swing_putki")
+syl_swing_varsi = _create_body("cb_syl_swing_varsi")
+#nivel_swingsyl1 = game.scene.getSceneNode("nivel_swingsyl1_rotz")
+fixed_constraint(sisaputki, syl_swing_putki)
+fixed_constraint(syl_swing_putki, syl_swing_varsi)
 
 # TODO add constraint to riskikappale_swing
-ristikpl_swing = game.scene.getSceneNode("cb_ristikpl_swing")
-nivel_swingsyl2 = game.scene.getSceneNode("nivel_swingsyl2_rotz")
-createFixedConstraint(syl_swing_putki, ristikpl_swing, nivel_tilt.world_transformation)
+ristikpl_swing = _create_body("cb_ristikpl_swing")
+#nivel_swingsyl2 = game.scene.getSceneNode("nivel_swingsyl2_rotz")
+fixed_constraint(syl_swing_putki, ristikpl_swing)
 
-swingkappale = game.scene.getSceneNode("cb_swingkappale")
-nivel_tiltkpl = game.scene.getSceneNode("nivel_tiltkpl_rotz")
-createFixedConstraint(tiltkappale, swingkappale, nivel_tiltkpl.world_transformation)
+swingkappale = _create_body("cb_swingkappale")
+#nivel_tiltkpl = game.scene.getSceneNode("nivel_tiltkpl_rotz")
+fixed_constraint(tiltkappale, swingkappale)
 
-vaantomoottori = game.scene.getSceneNode("cb_vaantomot")
+vaantomoottori = _create_body("cb_vaantomot")
 nivel_vaantomoottori = game.scene.getSceneNode("nivel_vaantomot_rotz")
-motor_hinge = createHingeConstraint(swingkappale, vaantomoottori, nivel_vaantomoottori.world_transformation, Radian(-math.pi/2), Radian(math.pi/2))
+wt = nivel_vaantomoottori.world_transformation
+motor_hinge = hinge_constraint(swingkappale, vaantomoottori, wt, Radian(-math.pi), Radian(math.pi))
+motor_hinge.axis = Vector3(0, 1, 0)
 
-pulttausnivel = game.scene.getSceneNode("cb_pulttausnivel")
+pulttausnivel = _create_body("cb_pulttausnivel")
+fixed_constraint(vaantomoottori, pulttausnivel)
+
+pulttaus_varsi = _create_body("cb_syl_pulttaus_varsi")
+#nivel_pultsyl1 = game.scene.getSceneNode("nivel_pulttsyl1_rotz")
+fixed_constraint(pulttausnivel, pulttaus_varsi)
+
+pulttaus_putki = _create_body("cb_syl_pulttaus_putki")
+#nivel_pultsyl2 = game.scene.getSceneNode("nivel_pulttsyl2_rotz")
+fixed_constraint(pulttaus_varsi, pulttaus_putki)
+
+kehto = _create_body("cb_kehto")
 nivel_vaantomoottori2 = game.scene.getSceneNode("nivel_vaantomot2_rotz")
-createFixedConstraint(vaantomoottori, pulttausnivel, nivel_vaantomoottori2.world_transformation)
+wt = nivel_vaantomoottori2.world_transformation
+pulttaus_hinge = hinge_constraint(pulttausnivel, kehto, wt, min=Radian(0), max=Radian(math.pi/4))
+pulttaus_hinge.axis = Vector3(0, 1, 0)
 
-pulttaus_varsi = game.scene.getSceneNode("cb_syl_pulttaus_varsi")
-nivel_pultsyl1 = game.scene.getSceneNode("nivel_pulttsyl1_rotz")
-createFixedConstraint(pulttausnivel, pulttaus_varsi, nivel_pultsyl1.world_transformation)
+syl_syotto_putki = _create_body("cb_syl_syotto_putki")
+syl_syotto_varsi = _create_body("cb_syl_syotto_varsi")
+fixed_constraint(kehto, syl_syotto_putki)
+fixed_constraint(syl_syotto_putki, syl_syotto_varsi)
 
-pulttaus_putki = game.scene.getSceneNode("cb_syl_pulttaus_putki")
-nivel_pultsyl2 = game.scene.getSceneNode("nivel_pulttsyl2_rotz")
-createFixedConstraint(pulttaus_varsi, pulttaus_putki, nivel_pultsyl2.world_transformation)
+raide = _create_body("cb_syottol_kiskot")
+fixed_constraint(kehto, raide)
 
-kehto = game.scene.getSceneNode("cb_kehto")
-pulttaus_hinge = createHingeConstraint(pulttausnivel, kehto, nivel_vaantomoottori2.world_transformation, Radian(0), Radian(math.pi/4))
-pulttaus_hinge.axis = Vector3(1, 0, 0)
+ohjuri_slaite = _create_body("cb_ohjuri_slaite")
+kiinnike1_slaite = _create_body("cb_kiinnike1_slaite")
+porakelkka = _create_body("cb_porakelkka")
+porakanki = _create_body("cb_porakanki")
+fixed_constraint(raide, ohjuri_slaite)
+fixed_constraint(raide, kiinnike1_slaite)
+fixed_constraint(raide, porakelkka)
+fixed_constraint(raide, porakanki)
 
-syl_syotto_putki = game.scene.getSceneNode("cb_syl_syotto_putki")
-syl_syotto_varsi = game.scene.getSceneNode("cb_syl_syotto_varsi")
-createFixedConstraint(kehto, syl_syotto_putki, syl_syotto_putki.world_transformation)
-createFixedConstraint(syl_syotto_putki, syl_syotto_varsi, syl_syotto_putki.world_transformation)
-
-raide = game.scene.getSceneNode("cb_syottol_kiskot")
-createFixedConstraint(kehto, raide, raide.world_transformation)
-
-ohjuri_slaite = game.scene.getSceneNode("cb_ohjuri_slaite")
-kiinnike1_slaite = game.scene.getSceneNode("cb_kiinnike1_slaite")
-porakelkka = game.scene.getSceneNode("cb_porakelkka")
-porakanki = game.scene.getSceneNode("cb_porakanki")
-createFixedConstraint(raide, ohjuri_slaite, raide.world_transformation)
-createFixedConstraint(raide, kiinnike1_slaite, raide.world_transformation)
-createFixedConstraint(raide, porakelkka, raide.world_transformation)
-createFixedConstraint(raide, porakanki, raide.world_transformation)
-
-teleskooppi.actuator = True
+zoom.actuator = True
 puomi_hinge.actuator = True
 kaanto_hinge.actuator = True
 motor_hinge.actuator = True
@@ -176,7 +187,7 @@ try :
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(teleskooppi, 1)
+	joy_handler.set_axis_constraint(zoom, 1)
 	joy_handler.set_axis_constraint(pulttaus_hinge, 0)
 	joy_handler.set_axis_constraint(motor_hinge, 1, 0)
 	left_joy.add_handler(joy_handler)
@@ -196,14 +207,39 @@ except :
 	# The game joystick needs completely different mapping and is
 	# alone where the serial joysticks are together
 	joy = game.event_manager.getJoystick()
+	joy.zero_size = 0.1
+
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
 	joy_handler.set_axis_constraint(puomi_hinge, 1)
 	joy_handler.set_axis_constraint(kaanto_hinge, 0)
-	joy_handler.set_axis_constraint(teleskooppi, 1, 0)
+	joy_handler.set_axis_constraint(zoom, 1, 0)
 	joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
 	joy_handler.set_axis_constraint(motor_hinge, 1, 1)
 	joy.add_handler(joy_handler)
+
+def boom_up():
+	puomi_hinge.target = Radian(-1)
+	puomi_hinge.speed = Radian(0.5)
+
+def boom_down():
+	puomi_hinge.target = Radian(0)
+	puomi_hinge.speed = Radian(0.5)
+
+def boom_incorrect_down():
+	puomi_hinge.target = Radian(-1)
+	puomi_hinge.speed = Radian(0.5)
+
+# For testing the kinematic response
+trigger = game.event_manager.createKeyTrigger(KC.F)
+trigger.addKeyDownListener(boom_up)
+
+trigger = game.event_manager.createKeyTrigger(KC.G)
+trigger.addKeyDownListener(boom_down)
+
+trigger = game.event_manager.createKeyTrigger(KC.H)
+trigger.addKeyDownListener(boom_down)
+
 
 # TODO tubes are not working with this version
 """

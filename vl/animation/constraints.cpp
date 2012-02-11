@@ -466,8 +466,28 @@ vl::HingeConstraint::getHingeAngle(void) const
 	Ogre::Quaternion const &current_q = _link->getTransform().quaternion;
 	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
 
-	// @todo the sign is lost
-	return Ogre::Radian(distance(current_q, init_q));
+	Ogre::Quaternion q = init_q.Inverse()*current_q;
+	Ogre::Radian angle;
+	Ogre::Vector3 axis;
+	q.ToAngleAxis(angle, axis);
+
+	/// @todo add checking for negative
+	if( !vl::equal(angle, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
+	{
+		// reverse the angle if we have a negative axis
+		if( vl::equal(-axis, _axisInA) )
+		{
+			// @todo is this correct ?
+			angle = -angle;
+		}
+		else if( !vl::equal(axis, _axisInA) )
+		{
+			std::clog << "vl::HingeConstraint::getHingeAngle : axis of rotation is incorrect \n"
+				<< "\trotation axis = " << _axisInA << " got " << axis << " angle = " << angle << std::endl;
+		}
+	}
+
+	return angle;
 }
 
 void
@@ -486,55 +506,36 @@ vl::HingeConstraint::_progress(vl::time const &t)
 	if(!isActuator() || _speed == Ogre::Radian(0))
 	{ return; }
 
-	// Calculate the progression rate using angular velocity
+	// Maximum allowed change per timestep
 	Ogre::Radian max_angle = _speed*t;
-	Ogre::Radian angle = max_angle;
 
-	Ogre::Quaternion const &current_q(_link->getTransform().quaternion);
-	Ogre::Quaternion target_q = _link->getInitialTransform().quaternion*Quaternion(_target, _axisInA) ;
+	if(vl::equal(max_angle, Ogre::Radian(0), Ogre::Radian(EPSILON)))
+	{ return; }
 
-	vl::scalar dist = distance(current_q, target_q);
-	// clamped version of the distance and maximum movement per step
-	vl::scalar limit = vl::min(angle.valueRadians(), dist);
+	Ogre::Radian current_angle = getHingeAngle();
+	// The difference from current position to target
+	Ogre::Radian to_target = _target - current_angle;
+	// The angle derivative
+	Ogre::Radian angle_d = vl::sign(to_target) * vl::min(max_angle, vl::abs(to_target));
 
-	// needs some tolerance because of inaccuracies in the quaternions
-	// and maybe some missing normalisations.
-	vl::scalar epsilon = 0.0001;
-	if(!vl::equal(dist, vl::scalar(0), epsilon)
-		&& !vl::equal(angle, Ogre::Radian(0), Ogre::Radian(epsilon)))
+	if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
 	{		
-		Ogre::Quaternion q(Ogre::Radian(limit), _axisInA);
-		
-		// reverse the rotation if new distance would be more than the old one
-		vl::scalar new_dist = distance(current_q*q, target_q);
-		if(dist < new_dist)
-		{ q = q.Inverse(); }
-
 		// Constraint is free if upper limit is less than lower limit
 		if( !(_upper_limit < _lower_limit) )
-		{
-			Ogre::Quaternion lower_lim_q(_link->getInitialTransform()*Quaternion(_lower_limit, _axisInA));
-			Ogre::Quaternion upper_lim_q(_link->getInitialTransform()*Quaternion(_upper_limit, _axisInA));
-			vl::scalar lower_lim_dist = distance(current_q*q, lower_lim_q);
-			vl::scalar upper_lim_dist = distance(current_q*q, upper_lim_q);
-
-			// @fixme this allows for shooting past the limit if the speed is high enough
-			// also this is a pretty dirty hack to handle the limits, we need to
-			// have the direction of rotation here also...
-			// Though this does work acceptably when speed < 1.
-			vl::scalar eps = epsilon*_speed.valueRadians()*10;
-			bool lower_limit_achieved = vl::equal(lower_lim_dist, vl::scalar(0), eps);
-			bool upper_limit_achieved = vl::equal(upper_lim_dist, vl::scalar(0), eps);
-
-			if(lower_limit_achieved || upper_limit_achieved)
-			{
-				q = Ogre::Quaternion::IDENTITY;
-			}
+		{	
+			Ogre::Radian new_angle = current_angle + angle_d;
+			vl::clamp(new_angle, _lower_limit, _upper_limit);
+			assert( angle_d > new_angle - current_angle || 
+				vl::equal(angle_d, new_angle - current_angle, Ogre::Radian(EPSILON)) );
+			angle_d = new_angle - current_angle;
 		}
+
 		// Only one point where the transformation occurs this ensures that
 		// there will never be more than one transformation
-		if(q != Ogre::Quaternion::IDENTITY)
+		// also check for small errors so we don't get vibrations
+		if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
 		{
+			Ogre::Quaternion q(angle_d, _axisInA);			
 			_link->rotate(q);
 		}
 	}
