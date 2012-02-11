@@ -24,7 +24,7 @@ cam.far_clip = 5e5
 
 ogre = game.scene.getSceneNode("ogre")
 addHideEvent(ogre, KC.H)
-addMoveSelection(speed=5, angular_speed=Degree(60), reference=camera)
+createSelectionController(speed=5, angular_speed=Degree(60), reference=camera)
 key = game.event_manager.createKeyTrigger(KC.SPACE)
 addTrackerMoveSelection("fingerTrigger", key)
 ogre.position = Vector3(0, 2.5, 0)
@@ -80,7 +80,7 @@ if game.scene.hasSceneNode("spot"):
 	# Test code for lights at a distance
 	#spot_n.position = Vector3(0, 100, 0)
 	#spot.attenuation = LightAttenuation(200, 0.9, 0.09, 0.01)
-	game.scene.addToSelection(spot_n)
+	#game.scene.addToSelection(spot_n)
 
 #game.scene.addToSelection(ogre)
 #game.scene.removeFromSelection(ogre)
@@ -157,6 +157,9 @@ def printAnalog(val):
 analog = game.create_analog_client("meh@localhost")
 analog.n_sensors = 1
 analog.get_sensor(0).addListener(printAnalog)
+
+ogre.rotate(Quaternion(0.7071, 0, -0.7071, 0))
+game.scene.addToSelection(lightpulp_n)
 
 #stats_window = game.gui.createWindow("window", "stats", "stats.layout")
 #menu_window = game.gui.createWindow("window", "menu", "menu.layout")

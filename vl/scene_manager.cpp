@@ -808,24 +808,28 @@ vl::SceneManager::setActiveObject(vl::SceneNodePtr node)
 void
 vl::SceneManager::mapCollisionBarriers(void)
 {
-	SceneNodeList cbs;
+	std::map<std::string, SceneNodePtr> cbs;
 	for(SceneNodeList::iterator iter = _scene_nodes.begin(); iter != _scene_nodes.end(); ++iter)
 	{
-		if((*iter)->getName().substr(0, 3) == "cb_")
+		std::string const &cb_name = (*iter)->getName();
+		size_t n = cb_name.find("cb_");
+		if(n != std::string::npos)
 		{
-			cbs.push_back(*iter);
+			std::string name = cb_name.substr(0, n) + cb_name.substr(n+3);
+			cbs[name] = *iter;
 		}
 	}
 
-	for(SceneNodeList::iterator cb_iter = cbs.begin(); cb_iter != cbs.end(); ++cb_iter)
+	for(std::map<std::string, SceneNodePtr>::iterator cb_iter = cbs.begin();
+		cb_iter != cbs.end(); ++cb_iter)
 	{
-		std::string name = (*cb_iter)->getName().substr(3);
+		std::string const &name = cb_iter->first;
 		bool found = false;
 		for(SceneNodeList::iterator iter = _scene_nodes.begin(); iter != _scene_nodes.end(); ++iter)
 		{
 			if((*iter)->getName() == name)
 			{
-				_mapped_nodes[*cb_iter] = *iter;
+				_mapped_nodes[cb_iter->second] = *iter;
 				found = true;
 				break;
 			}
@@ -833,7 +837,7 @@ vl::SceneManager::mapCollisionBarriers(void)
 
 		if(!found)
 		{
-			std::cout << "Collision barrier with name: " << (*cb_iter)->getName() 
+			std::cout << "Collision barrier with name: " << cb_iter->second->getName() 
 				<< " didn't find visual object " << name << std::endl;
 		}
 	}
@@ -1059,12 +1063,8 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
 			//_ogre_sm->setShadowColour(_shadows.getColour());
 			Ogre::ShadowCameraSetupPtr cam_setup;
-			if( _shadows.getCamera() == "default" )
-			{
-				std::clog << "Using Default shadow camera" << std::endl;
-				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
-			}
-			else if( _shadows.getCamera() == "planeoptimal" )
+
+			if( _shadows.getCamera() == "planeoptimal" )
 			{
 				std::clog << "Trying to use PlaneOptimal shadow camera" 
 					<< " but it's not implemented so using the previous setting." << std::endl;
@@ -1097,6 +1097,11 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			{
 				std::clog << "Using Focused shadow camera" << std::endl;
 				cam_setup.bind(new Ogre::FocusedShadowCameraSetup());
+			}
+			else // if( _shadows.getCamera() == "default" )
+			{
+				std::clog << "Using Default shadow camera" << std::endl;
+				cam_setup.bind(new Ogre::DefaultShadowCameraSetup());
 			}
 
 			if( !cam_setup.isNull() )

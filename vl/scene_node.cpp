@@ -203,18 +203,17 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference)
 	/// World space
 	if(!reference)
 	{
-		setPosition(_transform.position + v);
+		translate(v, TS_WORLD);
 	}
 	/// Local space
 	else if(reference == this)
 	{
-		setPosition(_transform.position + _transform.rotate(v));
+		translate(v, TS_LOCAL);
 	}
 	/// Reference space
 	else
 	{
-		vl::Transform ref_world = reference->getWorldTransform();
-		setPosition(_transform.position + ref_world.rotate(v));
+		translate(reference->getWorldTransform().quaternion*v, TS_WORLD);
 	}
 }
 
@@ -223,22 +222,29 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
 {
 	if(space == TS_LOCAL)
 	{
-		translate(v, this);
+		setPosition(_transform.position + _transform.rotate(v));
 	}
 	else if(space == TS_PARENT)
 	{
-		translate(v, _parent);
+		setPosition(_transform.position + v);
 	}
 	else
 	{
-		translate(v, 0);
+		vl::Transform invWorld;
+		if(_parent)
+		{
+			invWorld = _parent->getWorldTransform().inverted();
+		}
+		
+
+		setPosition(_transform.position + invWorld.quaternion*v);
 	}
 }
 
 void 
 vl::SceneNode::translate(Ogre::Vector3 const &v)
 {
-	translate(v, this);
+	translate(v, TS_LOCAL);
 }
 
 void 
