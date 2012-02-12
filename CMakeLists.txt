@@ -71,15 +71,6 @@ find_package(OIS REQUIRED)
 find_package( CEGUI REQUIRED )
 
 
-####### Find cAudio
-# Dependencies for cAudio
-find_package( Ogg REQUIRED )
-find_package( Vorbis REQUIRED )
-find_package( OpenAL REQUIRED )
-
-find_package( cAudio REQUIRED )
-
-
 ####### Find Boost ########
 
 set(Boost_USE_MULTITHREADED ON)
@@ -135,10 +126,6 @@ include_directories( SYSTEM
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
-	${cAudio_INCLUDE_DIR}
-	${OGG_INCLUDE_DIR}
-	${VORBIS_INCLUDE_DIR}
-	${OPENAL_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}
 	${CEGUI_INCLUDE_DIR}/CEGUI
 	${OgreProcedural_INCLUDE_DIR}
@@ -161,11 +148,6 @@ set( HYDRA_DEP_LIBS
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${cAudio_LIBRARY}
-	${Ogg_LIBRARY}
-	${Vorbis_LIBRARY}
-	${Vorbis_FILE_LIBRARY}
-	${OPENAL_LIBRARY}
 	${CEGUI_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
 	${OPENCOLLADA_LIBRARIES}

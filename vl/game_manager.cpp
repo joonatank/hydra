@@ -63,8 +63,6 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _scene_manager(0)
 	, _player(0)
 	, _trackers( new vl::Clients( _event_man ) )
-	, _audio_manager(0)
-	, _background_sound(0)
 	, _logger(logger)
 	, _env_effects_enabled(true)
 	, _auto_start(true)
@@ -90,38 +88,12 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 
 vl::GameManager::~GameManager(void )
 {
-	//Shutdown cAudio
-	if( _audio_manager )
-	{
-		std::cout << "Exit audio." << std::endl;
-		_audio_manager->shutDown();
-		cAudio::destroyAudioManager(_audio_manager);
-	}
-
 	_trackers.reset();
 
 	delete _scene_manager;
 	delete _python;
 	delete _event_man;
 	delete _fsm;
-}
-
-void
-vl::GameManager::toggleBackgroundSound( void )
-{
-	if(isAudioEnabled())
-	{ return; }
-
-	if( !_background_sound )
-	{
-		std::cerr << "NO background sound to toggle." << std::endl;
-		return;
-	}
-
-	if( _background_sound->isPlaying() )
-	{ _background_sound->pause(); }
-	else
-	{ _background_sound->play2d(false); }
 }
 
 void
@@ -178,52 +150,6 @@ vl::GameManager::step(void)
 	}
 
 	_fire_step_end();
-}
-
-void
-vl::GameManager::enableAudio(bool enable)
-{
-	if( enable )
-	{
-		if(_audio_manager)
-		{ return; }
-
-		std::cout << vl::TRACE << "Init audio." << std::endl;
-
-		cAudio::ILogger *audio_logger = cAudio::getLogger();
-		if( audio_logger->isLogReceiverRegistered("File") )
-		{
-			std::cout << vl::TRACE << "Removing cAudio File logger" << std::endl;
-			audio_logger->unRegisterLogReceiver("File");
-		}
-
-		//Create an Audio Manager
-		_audio_manager = cAudio::createAudioManager(true);
-	}
-}
-
-void
-vl::GameManager::createBackgroundSound( std::string const &song_name )
-{
-	if( !isAudioEnabled() )
-	{ return; }
-
-	assert(getResourceManager());
-
-	//Create an audio source and load a sound from a file
-	std::string file_path;
-
-	if(getResourceManager()->findResource(song_name, file_path))
-	{
-		vl::Resource resource;
-		getResourceManager()->loadOggResource( song_name, resource );
-		_background_sound = _audio_manager
-			->createFromMemory(song_name.c_str(), resource.get(), resource.size(), "ogg");
-	}
-	else
-	{
-		std::cerr << "Couldn't find " << song_name << " from resources." << std::endl;
-	}
 }
 
 vl::physics::WorldRefPtr

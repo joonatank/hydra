@@ -48,9 +48,6 @@
 // Necessary for SceneInfo
 #include "base/projsettings.hpp"
 
-// Audio
-#include <cAudio/cAudio.h>
-
 #include <boost/signal.hpp>
 
 #include "base/state_machines.hpp"
@@ -205,22 +202,11 @@ public :
 	vl::Report<vl::time> &getInitReport(void)
 	{ return _init_report; }
 
-	void toggleBackgroundSound( void );
-
 	/// @brief Step the simulation forward
 	void step(void);
 
 	vl::ClientsRefPtr getTrackerClients( void )
 	{ return _trackers; }
-
-	/// @brief Enable disable audio rendering, for now disable does not work
-	/// @param enable if true creates the audio context, false is ignored
-	void enableAudio(bool enable);
-
-	bool isAudioEnabled(void)
-	{ return(_audio_manager != 0); }
-
-	void createBackgroundSound( std::string const &name );
 
 	vl::Logger *getLogger(void)
 	{ return _logger; }
@@ -397,10 +383,6 @@ private :
 
 	vl::Report<vl::time> _rendering_report;
 	vl::Report<vl::time> _init_report;
-
-	/// Audio objects
-	cAudio::IAudioManager *_audio_manager;
-	cAudio::IAudioSource *_background_sound;
 
 	vl::Logger *_logger;
 
