@@ -144,6 +144,12 @@ public :
 	/// was against a static object or another kinematic object.
 	void popLastTransform(void);
 
+	void enableCollisions(bool enable)
+	{ _collisions_enabled = enable; }
+
+	bool isCollisionsEnabled(void) const
+	{ return _collisions_enabled; }
+
 private :
 	// Copying is forbidden
 	KinematicBody(KinematicBody const &);
@@ -162,6 +168,8 @@ private :
 	bool _use_dirty;
 	bool _disable_updates;
 	bool _assume_node_is_in_world;
+
+	bool _collisions_enabled;
 
 	// Callbacks
 	TransformedCB _transformed_cb;

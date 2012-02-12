@@ -139,6 +139,9 @@ vl::physics::BulletWorld::_removeConstraint(vl::physics::ConstraintRefPtr constr
 void
 vl::physics::BulletWorld::_collision_feedback(void)
 {
+	if(!_collision_detection_enabled)
+	{ return; }
+
 	//Assume world->stepSimulation or world->performDiscreteCollisionDetection has been called
 	
 	// @todo this should be replaced with GhostObjects and a custom interface
@@ -173,13 +176,13 @@ vl::physics::BulletWorld::_collision_feedback(void)
 
 					// Update the motion states so that kinematic objects can copy them back
 					KinematicBody *bA = (KinematicBody *)obA->getUserPointer();
-					if(bA)
+					if(bA && bA->isCollisionsEnabled())
 					{
 						bA->popLastTransform();
 					}
 				
 					KinematicBody *bB = (KinematicBody *)obB->getUserPointer();
-					if(bB)
+					if(bB && bB->isCollisionsEnabled())
 					{
 						bB->popLastTransform();
 					}

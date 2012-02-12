@@ -34,6 +34,9 @@ ground_node.attachObject(ground)
 ground.material_name = "ground/bump_mapped/shadows"
 ground.cast_shadows = False
 
+# Enable collision detection before creating any bodies
+game.kinematic_world.collision_detection_enabled = True
+
 # Create the kinematics
 #nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
 

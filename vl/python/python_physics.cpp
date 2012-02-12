@@ -252,6 +252,7 @@ void export_physics_objects(void)
 		.add_property("tubes", python::make_function(&vl::physics::World::getTubes, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("constraints", python::make_function(&vl::physics::World::getConstraints, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+		.add_property("collision_detection_enabled", &vl::physics::World::isCollisionDetectionEnabled, &vl::physics::World::enableCollisionDetection)
 		.add_property("solver_parameters", python::make_function(&vl::physics::World::getSolverParameters, python::return_value_policy<python::copy_const_reference>()),
 				&vl::physics::World::setSolverParameters)
 		.def(python::self_ns::str(python::self_ns::self))

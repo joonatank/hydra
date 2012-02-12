@@ -56,6 +56,7 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 	, _use_dirty(false)
 	, _disable_updates(false)
 	, _assume_node_is_in_world(false)
+	, _collisions_enabled(true)
 {
 	assert(_world);
 	assert(_state);

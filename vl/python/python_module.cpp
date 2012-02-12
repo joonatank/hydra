@@ -160,6 +160,7 @@ void export_animation(void)
 		.add_property("disable", &vl::KinematicBody::isDisableUpdate, &vl::KinematicBody::setDisableUpdate)
 		.add_property("use_dirties", &vl::KinematicBody::isUseDirties, &vl::KinematicBody::setUseDirties)
 		.add_property("assume_in_world", &vl::KinematicBody::isAssumeInWorld, &vl::KinematicBody::setAssumeInWorld)
+		.add_property("collisions_enabled", &vl::KinematicBody::isCollisionsEnabled, &vl::KinematicBody::enableCollisions)
 
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
@@ -184,6 +185,7 @@ void export_animation(void)
 		.def("create_constraint", &vl::KinematicWorld::createConstraint)
 		.def("remove_constraint", &vl::KinematicWorld::removeConstraint)
 		.add_property("bodies", python::make_function(&vl::KinematicWorld::getBodies, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("collision_detection_enabled", &vl::KinematicWorld::isCollisionDetectionEnabled, &vl::KinematicWorld::enableCollisionDetection)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

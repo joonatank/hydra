@@ -73,12 +73,22 @@ public :
 
 	KinematicBodyList const &getBodies(void) const;
 
+	// @brief switch collision detection on/off for all kinematic bodies
+	// for now only works for bodies created after a call to this function
+	// also collision models have hard coded part of name "*cb_"
+	void enableCollisionDetection(bool enable);
+
+	bool isCollisionDetectionEnabled(void) const
+	{ return _collision_detection_on; }
+
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
 	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
 
 	void _progress_constraints(vl::time const &t);
+
+	void _create_collision_body(KinematicBodyRefPtr body);
 
 	bool _collision_detection_on;
 

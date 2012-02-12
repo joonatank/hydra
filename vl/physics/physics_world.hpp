@@ -146,6 +146,13 @@ public :
 	ConstraintList const &getConstraints(void) const
 	{ return _constraints; }
 
+	// @brief toggle collision detection on/off
+	// works for both already created bodies and new bodies
+	void enableCollisionDetection(bool enable);
+
+	bool isCollisionDetectionEnabled(void) const
+	{ return _collision_detection_enabled; }
+
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
 protected :
@@ -167,6 +174,8 @@ protected :
 	RigidBodyList _rigid_bodies;
 	ConstraintList _constraints;
 	std::vector<TubeRefPtr> _tubes;
+
+	bool _collision_detection_enabled;
 
 	GameManager *_game;
 

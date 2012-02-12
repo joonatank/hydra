@@ -40,7 +40,7 @@
 #include "logger.hpp"
 
 vl::KinematicWorld::KinematicWorld(GameManager *man)
-	: _collision_detection_on(true)
+	: _collision_detection_on(false)
 	, _graph(new animation::Graph)
 	, _game(man)
 {
@@ -119,34 +119,43 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 		assert(body);
 		_bodies.push_back(body);
 
-		if(_collision_detection_on && sn->getName().substr(0, 3) == "cb_")
+		if(_collision_detection_on)
 		{
-			std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
-			try {
-				assert(_game);
-				/// enable physics if not already
-				/// Create a kinematic rigid body and add it physics world
-				/// use same MotionStates for both kinematic and rigid body
-				_game->enablePhysics(true);
-				// We assume that the mesh name is the same as the SceneNode
-				vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(sn->getName());
-				physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
-				physics::RigidBody::ConstructionInfo info(sn->getName(), 0, ms, shape, Ogre::Vector3(0, 0, 0), true);
-				physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
-				// necessary to add callback so the kinematic object updates 
-				// the the collision model.
-				body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
-				// Used by the collision detection to pop last transformation.
-				physics_body->setUserData(body.get());
-			}
-			catch(vl::exception const &e)
+			if( sn->getName().find("cb_") != std::string::npos)
 			{
-				std::clog << "Exception thrown when creating collision model for " << sn->getName() << std::endl;
+				std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
+				_create_collision_body(body); 
 			}
 		}
 	}
 
 	return body;
+}
+
+void
+vl::KinematicWorld::_create_collision_body(KinematicBodyRefPtr body)
+{
+	try {
+		assert(_game);
+		/// enable physics if not already
+		/// Create a kinematic rigid body and add it physics world
+		/// use same MotionStates for both kinematic and rigid body
+		_game->enablePhysics(true);
+		// We assume that the mesh name is the same as the SceneNode
+		vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(body->getName());
+		physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
+		physics::RigidBody::ConstructionInfo info(body->getName(), 0, body->getMotionState(), shape, Ogre::Vector3(0, 0, 0), true);
+		physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
+		// necessary to add callback so the kinematic object updates 
+		// the the collision model.
+		body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
+		// Used by the collision detection to pop last transformation.
+		physics_body->setUserData(body.get());
+	}
+	catch(vl::exception const &e)
+	{
+		std::clog << "Exception thrown when creating collision model for " << body->getName() << std::endl;
+	}
 }
 
 void
@@ -234,6 +243,21 @@ vl::KinematicWorld::getBodies(void) const
 {
 	return _bodies;
 }
+
+void
+vl::KinematicWorld::enableCollisionDetection(bool enable)
+{
+	if(_collision_detection_on != enable)
+	{
+		for(KinematicBodyList::iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+		{
+			(*iter)->enableCollisions(enable);
+		}
+
+		_collision_detection_on = enable;
+	}	
+}
+
 
 void
 vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)

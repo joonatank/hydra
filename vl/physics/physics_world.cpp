@@ -88,6 +88,10 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 	// Add the body to the physics engine
 	_addRigidBody(info.name, body, info.kinematic);
 
+	// Collision detection is auto enabled so disable it if necessary
+	if(!_collision_detection_enabled)
+	{ body->disableCollisions(); }
+
 	return body;
 }
 
@@ -186,9 +190,31 @@ vl::physics::World::createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_b
 	return createTubeEx(info);
 }
 
+void
+vl::physics::World::enableCollisionDetection(bool enable)
+{
+	if(_collision_detection_enabled != enable)
+	{
+		for(RigidBodyList::iterator iter = _rigid_bodies.begin(); 
+			iter != _rigid_bodies.end(); ++iter)
+		{
+			if(enable)
+			{
+				(*iter)->enableCollisions();
+			}
+			else
+			{
+				(*iter)->disableCollisions();
+			}
+		}
+		_collision_detection_enabled = enable;
+	}
+}
 
 /// ------------------------------- Protected --------------------------------
 vl::physics::World::World(void)
+	: _collision_detection_enabled(true)
+	, _game(0)
 {}
 
 vl::physics::RigidBodyRefPtr
