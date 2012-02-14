@@ -34,9 +34,6 @@ ogre.position = Vector3(0, 2.5, 0)
 addToggleActiveCamera("Omakamera", "OutsideCamera")
 #game.player.camera = ""
 
-game.createBackgroundSound("The_Dummy_Song.ogg")
-addToggleMusicEvent(KC.M)
-
 # Create ground plane
 # TODO should create the mesh using MeshManager so the size can be assigned
 # Create a large plane for shader testing
