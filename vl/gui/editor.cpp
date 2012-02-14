@@ -22,6 +22,8 @@
 
 #include <CEGUI/CEGUI.h>
 
+#include <boost/bind.hpp>
+
 /// ---------------------------- EditorWindow -------------------------------
 /// ------------------------------ Public -----------------------------------
 vl::gui::EditorWindow::EditorWindow(vl::gui::GUI *creator)

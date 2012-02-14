@@ -44,6 +44,8 @@
 // Necessary for message pump
 #include <OGRE/OgreWindowEventUtilities.h>
 
+#include <boost/bind.hpp>
+
 /// ------------------------- Public -------------------------------------------
 vl::Renderer::Renderer(std::string const &name)
 	: _name(name)

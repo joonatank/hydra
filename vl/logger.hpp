@@ -29,8 +29,6 @@
 
 #include <vector>
 
-#include "base/thread.hpp"
-
 namespace io = boost::iostreams;
 
 namespace vl
@@ -168,8 +166,6 @@ private :
 
 	std::vector<LogMessage> _messages;
 	std::vector< io::stream_buffer<sink> *> _streams;
-
-	mutable vl::mutex _mutex;
 
 };	// namespace Logger
 

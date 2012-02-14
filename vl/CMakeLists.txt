@@ -92,7 +92,6 @@ else()
 endif()
 
 set(BASE_HEADERS 
-	base/thread.hpp
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp

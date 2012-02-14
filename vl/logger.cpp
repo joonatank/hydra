@@ -121,8 +121,6 @@ vl::Logger::setOutputFile( std::string const &filename )
 io::stream_buffer<vl::sink> *
 vl::Logger::addSink(std::string const &name)
 {
-	vl::scoped_lock<mutex> lock(_mutex);
-
 	io::stream_buffer<sink> *s = new io::stream_buffer<sink>(*this, name);
 	_streams.push_back(s);
 	return s;
@@ -186,8 +184,6 @@ vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_
 void
 vl::Logger::logMessage(vl::LogMessage const &message)
 {
-	vl::scoped_lock<mutex> lock(_mutex);
-
 	_messages.push_back(message);
 
 	// Print all the logs into same file
