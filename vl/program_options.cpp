@@ -60,6 +60,7 @@ vl::ProgramOptions::ProgramOptions( void )
 			"How many processors or cores the program can use.")
 		("start_processor", po::value<int>(&start_processor)->default_value(0), 
 			"First processor to use only has effect if processor is defined also.")
+		("debug_overlay", po::value<bool>(&debug_overlay)->default_value(false), "Enable debug overlay.")
 	;
 
 	_file_options.add_options()

@@ -54,6 +54,7 @@ vl::Renderer::Renderer(std::string const &name)
 	, _player(0)
 	, _screenshot_num(0)
 	, _n_log_messages(0)
+	, _enable_debug_overlay(false)
 {
 	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
 }
@@ -255,6 +256,7 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	for(size_t i = 0; i < _windows.size(); ++i)
 	{
 		_windows.at(i)->setCamera(0);
+		_windows.at(i)->resetStatistics();
 	}
 }
 

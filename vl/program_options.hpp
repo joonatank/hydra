@@ -87,6 +87,7 @@ struct HYDRA_API ProgramOptions
 	bool auto_fork;
 	bool show_system_console;
 	bool editor;
+	bool debug_overlay;
 
 	int n_processors;
 	int start_processor;

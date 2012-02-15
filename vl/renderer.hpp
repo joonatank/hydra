@@ -133,6 +133,12 @@ public :
 	virtual void addEventListener(EventSent::slot_type const &slot)
 	{ _event_signal.connect(slot); }
 
+	virtual void enableDebugOverlay(bool enable)
+	{ _enable_debug_overlay = enable; }
+
+	virtual bool isDebugOverlayEnabled(void) const
+	{ return _enable_debug_overlay; }
+
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
 
@@ -206,6 +212,8 @@ protected :
 	uint32_t _n_log_messages;
 
 	std::vector<vl::MaterialRefPtr> _materials_to_check;
+
+	bool _enable_debug_overlay;
 
 };	// class Renderer
 

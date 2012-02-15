@@ -98,6 +98,10 @@ public :
 
 	virtual void addEventListener(EventSent::slot_type const &slot) = 0;
 
+	virtual void enableDebugOverlay(bool enable) = 0;
+
+	virtual bool isDebugOverlayEnabled(void) const = 0;
+
 };	// class RendererInterface
 
 }	// namespace vl

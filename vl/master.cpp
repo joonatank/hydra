@@ -427,6 +427,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
+	_renderer->enableDebugOverlay(opt.debug_overlay);
 
 	_game_manager = new vl::GameManager(this, _logger);
 

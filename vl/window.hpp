@@ -45,6 +45,8 @@
 // GUI
 #include <CEGUI/CEGUIEventArgs.h>
 
+#include <OGRE/SdkTrays.h>
+
 namespace vl
 {
 
@@ -96,6 +98,10 @@ public:
 
 	virtual void resize(int w, int h);
 
+	Ogre::RenderTarget::FrameStats const &getStatistics(void) const;
+
+	void resetStatistics(void);
+
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);
 	bool keyReleased(const OIS::KeyEvent &key);
@@ -122,6 +128,8 @@ protected :
 
 	void _sendEvent( vl::cluster::EventData const &event );
 
+	void _lazy_initialisation(void);
+
 	std::string _name;
 
 	vl::RendererInterface *_renderer;
@@ -142,6 +150,8 @@ protected :
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
+
+	OgreBites::SdkTrayManager *_tray_mgr;
 
 };	// class Window
 

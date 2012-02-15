@@ -80,6 +80,7 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _tray_mgr(0)
 {
 	assert( _renderer );
 
@@ -222,6 +223,22 @@ vl::Window::hasStereo(void) const
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
 	return stereo;
+}
+
+Ogre::RenderTarget::FrameStats const &
+vl::Window::getStatistics(void) const
+{
+	if(_ogre_window)
+	{ return _ogre_window->getStatistics(); }
+
+	return Ogre::RenderTarget::FrameStats();
+}
+
+void
+vl::Window::resetStatistics(void)
+{
+	if(_ogre_window)
+	{ _ogre_window->resetStatistics(); }
 }
 
 /// ------------------------ Public OIS Callbacks ------------------------------
@@ -449,6 +466,8 @@ vl::Window::draw(void)
 	if(!_left_viewport)
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
+	_lazy_initialisation();
+
 	Ogre::Real c_near = _camera->getNearClipDistance();
 	Ogre::Real c_far = _camera->getFarClipDistance();
 
@@ -511,6 +530,10 @@ vl::Window::draw(void)
 		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
 	}
 
+	// Draw
+	assert(_ogre_window);
+	_ogre_window->_beginUpdate();
+
 	for(size_t i = 0; i < views.size(); ++i)
 	{
 		view_tuple const &view = views.at(i);
@@ -534,7 +557,9 @@ vl::Window::draw(void)
 		og_cam->setPosition(eye_d);
 		og_cam->setOrientation(eye_orientation);
 
-		view.get<0>()->update();
+		// Keeps track of the batches and triangles
+		// does not account for CEGUI though
+		_ogre_window->_updateViewport(view.get<0>(), true);
 
 		// @todo test with stereo setup if this really renders the gui for
 		// both left and right eye
@@ -548,8 +573,10 @@ vl::Window::draw(void)
 	og_cam->setPosition(_camera->getPosition());
 	og_cam->setOrientation(_camera->getOrientation());
 
-	assert(_ogre_window);
-	_ogre_window->update(false);
+	if(_tray_mgr)
+	{ _tray_mgr->frameRenderingQueued(Ogre::FrameEvent()); }
+
+	_ogre_window->_endUpdate();
 }
 
 void
@@ -733,4 +760,18 @@ vl::Window::_printInputInformation(void)
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
 	std::cout << std::endl;
+}
+
+void
+vl::Window::_lazy_initialisation(void)
+{
+	if(!_tray_mgr && _renderer->isDebugOverlayEnabled())
+	{
+		assert(_ogre_window && _mouse);
+		Ogre::FontManager::getSingleton().getByName("SdkTrays/Caption")->load();
+		Ogre::FontManager::getSingleton().getByName("SdkTrays/Value")->load();
+		_tray_mgr = new OgreBites::SdkTrayManager("InterfaceName", _ogre_window, _mouse);
+		_tray_mgr->showFrameStats(OgreBites::TL_BOTTOMRIGHT);
+		_tray_mgr->hideCursor();
+	}
 }
