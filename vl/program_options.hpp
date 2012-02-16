@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011-10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file program_options.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -29,20 +25,27 @@
 #define HYDRA_PROGRAM_OPTIONS_HPP
 
 #include <string>
+#include <vector>
 
 // Necessary for HYDRA_API
 #include "defines.hpp"
-// Used for command line option parsing
-#include <boost/program_options.hpp>
-
-namespace po = boost::program_options;
 
 namespace vl
 {
 
+/// @class ProgramOptions
+/// Supports configuration using a single ini file and command line parameters
+/// Ini file is always parsed before command line options so command line overrides
+/// ini options. 
+/// Ini file format is standard Windows ini file format
+/// Some options for ini file and command line differ by command line omiting the
+/// true/false values.
 struct HYDRA_API ProgramOptions
 {
-	ProgramOptions( void );
+	/// @brief Constructor
+	/// @param ini_file name of the ini file we try to parse
+	/// Ini file does not need to exist.
+	ProgramOptions(std::string const &ini_file = std::string("hydra.ini"));
 
 	~ProgramOptions(void);
 
@@ -51,9 +54,6 @@ struct HYDRA_API ProgramOptions
 	 *	parsed
 	 */
 	bool parseOptions( int argc, char **argv );
-
-	/// @brief Parse only ini file
-	bool parseIni(std::string const &file, po::variables_map vm = po::variables_map());
 
 	/// Is the configuration for a slave,
 	/// true for both valid and invalid configurations
@@ -92,16 +92,15 @@ struct HYDRA_API ProgramOptions
 	int n_processors;
 	int start_processor;
 
-private :
-	bool _parseSlave( po::variables_map const &vm );
-	bool _parseMaster( po::variables_map const &vm );
+	/// New variable for supporting multiple projects
+	/// that are loadable at runtime, single project can be active at once.
+	std::vector<std::string> project_paths;
 
 private :
-	po::options_description _cmd_options;
-	po::options_description _config;
-	po::options_description _file_options;
+	/// @brief Parse only ini file
+	void _parse_ini(void);
 
-	std::string _config_file;
+	std::string _ini_file;
 
 };	// class ProgramOptions
 
