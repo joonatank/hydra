@@ -32,11 +32,7 @@
 
 // gui window, necessary for the windows this creates
 #include "gui_window.hpp"
-#include "editor.hpp"
 #include "console.hpp"
-#include "scene_graph_editor.hpp"
-#include "script_editor.hpp"
-#include "material_editor.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI
@@ -71,22 +67,6 @@ vl::gui::GUI::createWindow(std::string const &type, std::string const &name, std
 	{
 		t = OBJ_GUI_CONSOLE;
 	}
-	else if(type == "editor")
-	{
-		t = OBJ_GUI_EDITOR;
-	}
-	else if(type == "scene_graph_editor")
-	{
-		t = OBJ_GUI_SCENE_GRAPH_EDITOR;
-	}
-	else if(type == "material_editor")
-	{
-		t = OBJ_GUI_MATERIAL_EDITOR;
-	}
-	else if(type == "script_editor")
-	{		
-		t = OBJ_GUI_SCRIPT_EDITOR;
-	}
 	else if(type == "window")
 	{
 		t = OBJ_GUI_WINDOW;
@@ -104,28 +84,11 @@ vl::gui::WindowRefPtr
 vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 {
 	vl::gui::WindowRefPtr win;
-	bool is_editor = false;
 	switch(t)
 	{
 	case OBJ_GUI_CONSOLE:
 		_console.reset(new ConsoleWindow(this));
 		win = _console;
-		break;
-	case OBJ_GUI_EDITOR:
-		_editor.reset(new EditorWindow(this));
-		win = _editor;
-		break;
-	case OBJ_GUI_SCENE_GRAPH_EDITOR:
-		win.reset(new SceneGraphEditor(this));
-		is_editor = true;
-		break;
-	case OBJ_GUI_MATERIAL_EDITOR:
-		win.reset(new MaterialEditor(this));
-		is_editor = true;
-		break;
-	case OBJ_GUI_SCRIPT_EDITOR:
-		win.reset(new ScriptEditor(this));
-		is_editor = true;
 		break;
 	case OBJ_GUI_WINDOW:
 		win.reset(new Window(this));
@@ -139,28 +102,6 @@ vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 	_session->registerObject(win.get(), t, id);
 
 	_windows.push_back(win);
-
-	if(is_editor)
-	{
-		if(_editor)
-		{
-			_editor->addEditor(win);
-		}
-		else
-		{
-			_editors_without_parent.push_back(win);
-		}
-	}
-
-	if(!_editors_without_parent.empty() && _editor)
-	{
-		for(std::vector<vl::gui::WindowRefPtr>::iterator iter =_editors_without_parent.begin();
-			iter != _editors_without_parent.end(); ++iter)
-		{
-			_editor->addEditor(*iter);
-		}
-		_editors_without_parent.clear();
-	}
 
 	return win;
 }
@@ -313,7 +254,7 @@ vl::gui::GUI::isVisible(void) const
 {
 	/// @todo should iterate over all windows, and check all that have
 	/// value wantsInput in them
-	return( (_console && _console->isVisible()) || (_editor && _editor->isVisible()) );
+	return( (_console && _console->isVisible()) );
 }
 
 void 

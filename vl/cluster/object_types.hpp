@@ -27,10 +27,6 @@ enum OBJ_TYPE
 	OBJ_GUI,			// GUI object
 	OBJ_GUI_WINDOW,		// Genera GUI window
 	OBJ_GUI_CONSOLE,	// GUI Console window
-	OBJ_GUI_EDITOR,		// GUI editor window
-	OBJ_GUI_SCENE_GRAPH_EDITOR,	// GUI scene graph editor
-	OBJ_GUI_MATERIAL_EDITOR,	// GUI material editor
-	OBJ_GUI_SCRIPT_EDITOR,	// GUI material editor
 	OBJ_SCENE_MANAGER,
 	OBJ_SCENE_NODE,
 	OBJ_ENTITY,

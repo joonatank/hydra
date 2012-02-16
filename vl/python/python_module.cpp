@@ -46,7 +46,6 @@
 // GUI
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
-#include "gui/editor.hpp"
 #include "gui/console.hpp"
 
 // Animation framework
@@ -677,9 +676,6 @@ void export_gui(void)
 	;
 
 	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
-	;
-
-	python::class_<vl::gui::EditorWindow, vl::gui::EditorWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIEditorWindow", python::no_init)
 	;
 
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;

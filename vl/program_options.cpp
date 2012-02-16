@@ -110,7 +110,6 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 		("global,g", po::value< std::string >(&global_file), "global file")
 		("display", po::value<int>(&display_n), 
 			"Display to use for the window. Only on X11.")
-		("editor", po::value<bool>(&editor), "Enable editor.")
 		("processors", po::value<int>(&n_processors), 
 			"How many processors or cores the program can use.")
 		("start_processor", po::value<int>(&start_processor), 

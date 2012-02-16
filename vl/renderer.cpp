@@ -330,10 +330,6 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_GUI_WINDOW :
 			case OBJ_GUI_CONSOLE :
-			case OBJ_GUI_EDITOR :
-			case OBJ_GUI_SCENE_GRAPH_EDITOR:
-			case OBJ_GUI_MATERIAL_EDITOR:
-			case OBJ_GUI_SCRIPT_EDITOR:
 			{
 				// GUI objects are only used by master
 				if( getName() == _env->getMaster().name )
