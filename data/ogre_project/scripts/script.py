@@ -158,9 +158,6 @@ analog.get_sensor(0).addListener(printAnalog)
 ogre.rotate(Quaternion(0.7071, 0, -0.7071, 0))
 game.scene.addToSelection(lightpulp_n)
 
-#stats_window = game.gui.createWindow("window", "stats", "stats.layout")
-#menu_window = game.gui.createWindow("window", "menu", "menu.layout")
-
 def toggle_pause():
 	# Game can be in both stopped and paused state so test for played instead
 	# of paused

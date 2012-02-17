@@ -102,6 +102,8 @@ public :
 
 	virtual bool isDebugOverlayEnabled(void) const = 0;
 
+	virtual gui::GUIRefPtr getGui(void) = 0;
+
 };	// class RendererInterface
 
 }	// namespace vl

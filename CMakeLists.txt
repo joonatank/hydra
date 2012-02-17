@@ -67,9 +67,6 @@ find_package(Ogre REQUIRED)
 ######### Find OIS ###########
 find_package(OIS REQUIRED)
 
-######### Find CEGUI #########
-find_package( CEGUI REQUIRED )
-
 
 ####### Find Boost ########
 
@@ -126,8 +123,6 @@ include_directories( SYSTEM
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
-	${CEGUI_INCLUDE_DIR}
-	${CEGUI_INCLUDE_DIR}/CEGUI
 	${OgreProcedural_INCLUDE_DIR}
 	${SkyX_INCLUDE_DIR}
 	${Caelum_INCLUDE_DIR}
@@ -148,7 +143,6 @@ set( HYDRA_DEP_LIBS
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${CEGUI_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
 	${OPENCOLLADA_LIBRARIES}
 	${SkyX_LIBRARIES}

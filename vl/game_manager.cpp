@@ -695,22 +695,6 @@ vl::GameManager::_do_quit(vl::quit const &evt)
 	_quited_signal();
 }
 
-void
-vl::GameManager::createEditor(void)
-{
-	std::clog << "vl::GameManager::createEditor" << std::endl;
-	assert(_gui);
-
-	gui::WindowRefPtr win = _gui->createWindow("editor");
-	win->setVisible(false);
-	win = _gui->createWindow("scene_graph_editor");
-	win->setVisible(false);
-	win = _gui->createWindow("material_editor");
-	win->setVisible(false);
-	win = _gui->createWindow("script_editor");
-	win->setVisible(false);
-}
-
 /// ------------------------------ Private -----------------------------------
 void
 vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)

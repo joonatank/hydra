@@ -1,16 +1,12 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file gui/gui_window.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -31,9 +27,12 @@
 #include "typedefs.hpp"
 
 // Concrete implementation
-#include <CEGUI/CEGUIWindow.h>
+#include "Gorilla.h"
+
+#include <OIS/OISKeyboard.h>
 
 #include <boost/signal.hpp>
+
 
 namespace vl
 {
@@ -51,11 +50,7 @@ public :
 
 	Window(vl::gui::GUI *creator, std::string const &layout = std::string());
 
-	virtual ~Window(void)
-	{
-		// Should not delete the CEGUI window, or if it does it needs to
-		// use CEGUI functions for that.
-	}
+	virtual ~Window(void);
 
 	bool isVisible(void) const
 	{ return _visible; }
@@ -74,9 +69,6 @@ public :
 	std::string const &getLayout(void) const
 	{ return _layout; }
 
-	CEGUI::Window *getNative(void)
-	{ return _window; }
-
 	enum DirtyBits
 	{
 		DIRTY_VISIBLE = Distributed::DIRTY_CUSTOM << 0,
@@ -84,11 +76,16 @@ public :
 		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 2,
 	};
 
+	virtual void injectKeyDown(OIS::KeyEvent const &key) {}
+	virtual void injectKeyUp(OIS::KeyEvent const &key) {}
+
 	boost::signals::connection addListener(NativeCreated::slot_type const &slot)
 	{ return _signal.connect(slot); }
 
 	void removeListener(boost::signals::connection subscriber)
 	{ subscriber.disconnect(); }
+
+	void update(void);
 
 /// Private virtual overrides
 private :
@@ -103,19 +100,25 @@ private :
 	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) {}
 
 	virtual void _window_resetted(void) {}
+	
+	virtual void _update(void) {}
 
 private :
+
 	Window(Window const &);
 	Window &operator=(Window const &);
 
 protected :
 	bool _check_valid_window(void);
 
-	CEGUI::Window *_window;
 	vl::gui::GUI *_creator;
+
+	Gorilla::Screen *mScreen;
 
 	std::string _layout;
 	bool _visible;
+
+	bool _reset;
 
 	NativeCreated _signal;
 

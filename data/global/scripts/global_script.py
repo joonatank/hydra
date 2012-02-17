@@ -447,12 +447,6 @@ def addToggleConsole(kc) :
 		trigger = game.event_manager.createKeyTrigger(kc)
 		trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
-def addToggleEditor(kc) :
-	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
-	if game.gui.editor:
-		trigger = game.event_manager.createKeyTrigger(kc)
-		trigger.addKeyDownListener(game.gui.editor.toggle_visible)
-
 # Add a head tracker support
 mapHeadTracker("glassesTrigger")
 
@@ -460,7 +454,6 @@ mapHeadTracker("glassesTrigger")
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
 addScreenshotAction(KC.F10)
-addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
 addToggleStereo(KC.F12)
 

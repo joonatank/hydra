@@ -1,16 +1,12 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file gui/gui_window.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -20,18 +16,20 @@
 // Necessary for attaching windows
 #include "gui.hpp"
 
-// Necessary for creating the real windows
-#include <CEGUI/CEGUISystem.h>
-#include <CEGUI/CEGUIWindowManager.h>
-
 /// --------------------------------- Window ---------------------------------
 /// --------------------------------- Public ---------------------------------
 vl::gui::Window::Window(vl::gui::GUI *creator, std::string const &layout)
-	: _window(0)
-	, _creator(creator)
+	: _creator(creator)
 	, _layout(layout)
+	, mScreen(0)
+	, _reset(false)
 {
 	assert(_creator);
+}
+
+vl::gui::Window::~Window(void)
+{
+	// @todo destroy screen
 }
 
 void
@@ -44,6 +42,30 @@ vl::gui::Window::setVisible(bool visible)
 	}
 }
 
+void
+vl::gui::Window::update(void)
+{
+	if(_reset && _creator->initialised())
+	{
+		std::clog << "Creating Gorilla window" << std::endl;
+		assert(!mScreen);
+		// Create Gorilla window
+		mScreen = _creator->createScreen();
+		assert(mScreen);
+
+		// Copy parameters
+		mScreen->setVisible(_visible);
+
+		_reset = false;
+
+		// Inform derived classes
+		_window_resetted();
+
+		_signal();
+	}
+
+	_update();
+}
 
 /// --------------------------------- Private --------------------------------
 void
@@ -65,42 +87,22 @@ vl::gui::Window::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 void
 vl::gui::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 {
-	bool reset = false;
-
 	if(dirtyBits & DIRTY_LAYOUT)
 	{
 		msg >> _layout;
-		/// Layout resetting is not supported
-		if(!_window)
+
+		if(!mScreen)
 		{
-			reset = true;
+			std::clog << "Should reset GUI window." << std::endl;
+			_reset = true; 
 		}
 	}
 
 	if(dirtyBits & DIRTY_VISIBLE)
 	{
 		msg >> _visible;
-		if(_window)
-		{ _window->setVisible(_visible); }
-	}
-
-	if(reset)
-	{
-		/// @todo should create an empty CEGUI window
-		if(_layout.empty())
-		{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
-
-		std::clog << "Creating window with a layout : " << _layout << std::endl;
-		_window = CEGUI::WindowManager::getSingleton().loadWindowLayout(_layout);
-		assert(_creator->getRoot());
-		_creator->getRoot()->addChildWindow(_window);
-		// Copy parameters
-		_window->setVisible(_visible);
-
-		// Inform derived classes
-		_window_resetted();
-
-		_signal();
+		if(mScreen)
+		{ mScreen->setVisible(_visible); }
 	}
 
 	doDeserialize(msg, dirtyBits);
@@ -109,7 +111,7 @@ vl::gui::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 bool
 vl::gui::Window::_check_valid_window(void)
 {
-	if(!_window)
+	if(!mScreen)
 	{
 		std::cout << "gui::Window : No native Window set so functinality does not work." << std::endl;
 		return false;

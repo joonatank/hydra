@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -41,9 +37,6 @@
 #include <OIS/OISJoyStick.h>
 
 #include <OGRE/OgreRenderWindow.h>
-
-// GUI
-#include <CEGUI/CEGUIEventArgs.h>
 
 #include <OGRE/SdkTrays.h>
 
@@ -101,6 +94,9 @@ public:
 	Ogre::RenderTarget::FrameStats const &getStatistics(void) const;
 
 	void resetStatistics(void);
+
+	Ogre::Viewport *getViewport(void)
+	{ return _left_viewport; }
 
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);

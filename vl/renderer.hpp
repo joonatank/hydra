@@ -139,6 +139,9 @@ public :
 	virtual bool isDebugOverlayEnabled(void) const
 	{ return _enable_debug_overlay; }
 
+	virtual gui::GUIRefPtr getGui(void)
+	{ return _gui; }
+
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
 

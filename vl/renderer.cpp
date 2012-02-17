@@ -175,7 +175,8 @@ void
 vl::Renderer::printToConsole(std::string const &text, double time,
 						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
 {
-	_gui->getConsole()->printTo(text, time, type, lvl);
+	if(_gui &&_gui->getConsole())
+	{ _gui->getConsole()->printTo(text, time, type, lvl); }
 }
 
 
@@ -313,12 +314,8 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					// @todo fix callback with a signal
 					_gui.reset(new vl::gui::GUI(this, id));
 					assert(_windows.size() > 0);
-					_gui->initGUI(_windows.at(0));
-					// @todo this should copy the resources from vl::ogre::Root not settings
-					if(_settings.empty())
-					{ std::cout << "No GUI resources" << std::endl; }
-					else
-					{ _gui->initGUIResources(_settings); }
+					assert(_windows.at(0)->getViewport());
+					_gui->initGUI(_windows.at(0)->getViewport());
 				}
 				else
 				{
@@ -328,7 +325,6 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			}
 			break;
 
-			case OBJ_GUI_WINDOW :
 			case OBJ_GUI_CONSOLE :
 			{
 				// GUI objects are only used by master

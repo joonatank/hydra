@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -35,39 +31,11 @@
 #include "input/ois_converters.hpp"
 
 /// GUI
-#include <CEGUI/CEGUIWindowManager.h>
-#include <CEGUI/elements/CEGUIFrameWindow.h>
-#include <CEGUI/elements/CEGUIEditbox.h>
-#include <CEGUI/elements/CEGUIMultiColumnList.h>
-#include <CEGUI/elements/CEGUIListboxTextItem.h>
+#include "gui/gui.hpp"
 
 #include <GL/gl.h>
 
 #include <stdlib.h>
-
-namespace
-{
-	/// @todo Missing conversions for the extra buttons in OIS
-	/// they could be mapped to other buttons in CEGUI if necessary
-	CEGUI::MouseButton OISButtonToGUI( OIS::MouseButtonID button )
-	{
-		switch( button )
-		{
-			case OIS::MB_Left :
-				return CEGUI::LeftButton;
-			case OIS::MB_Right :
-				return CEGUI::RightButton;
-			case OIS::MB_Middle :
-				return CEGUI::MiddleButton;
-			case OIS::MB_Button3 :
-				return CEGUI::X1Button;
-			case OIS::MB_Button4 :
-				return CEGUI::X2Button;
-			default :
-				return CEGUI::NoButton;
-		}
-	}
-}
 
 /// ----------------------------- Public ---------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
@@ -266,9 +234,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 			case OIS::KC_RMENU :
 				break;
 			default :
-				// TODO this is missing auto-repeat for text
-				CEGUI::System::getSingleton().injectKeyDown(key.key);
-				CEGUI::System::getSingleton().injectChar(key.text);
+				_renderer->getGui()->injectKeyDown(key);
 				return true;
 		}
 	}
@@ -288,7 +254,6 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
-		// TODO this might need translation for the key codes
 		switch( key.key )
 		{
 			// Keys that go to the Application always, used to control the GUI
@@ -303,8 +268,7 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 			case OIS::KC_F10 :
 				break;
 			default :
-				CEGUI::System::getSingleton().injectKeyUp(key.key);
-// 				CEGUI::System::getSingleton().injectChar(key.text);
+				_renderer->getGui()->injectKeyUp(key);
 				return true;
 		}
 	}
@@ -323,19 +287,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
 	if( _renderer->guiShown() )
 	{
-		// TODO should check if GUI window is active
-		CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
-		// NOTE this has a problem of possibly consuming some mouse movements
-		// Assuming that mouse is moved and the wheel is changed at the same time
-		// CEGUI might consume either one of them and the other one will not be
-		// passed on.
-		// This is so rare that we don't care about it.
-		if( evt.state.Z.rel != 0 )
-		{
-			// Dirty hack for scaling the wheel movement
-			float z = (float)(evt.state.Z.rel)/100;
-			CEGUI::System::getSingleton().injectMouseWheelChange(z);
-		}
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -354,7 +306,7 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -373,7 +325,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -563,10 +515,8 @@ vl::Window::draw(void)
 
 		// @todo test with stereo setup if this really renders the gui for
 		// both left and right eye
-		if( _renderer->guiShown() )
-		{
-			CEGUI::System::getSingleton().renderGUI();
-		}
+		if(_renderer->getGui())
+		{ _renderer->getGui()->update(); }
 	}
 
 	// Push back the original position and orientation

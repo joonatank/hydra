@@ -105,9 +105,6 @@ vl::Master::init(std::string const &global_file,
 
 	report["Starting GameManager"].push(t.elapsed());
 
-	if(enable_editor)
-	{ _game_manager->createEditor(); }
-
 	if(!project_file.empty())
 	{
 		_game_manager->process_event(vl::load(project_file));

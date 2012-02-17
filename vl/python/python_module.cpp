@@ -678,17 +678,7 @@ void export_gui(void)
 	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
 	;
 
-	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov0)(std::string const &)= &vl::gui::GUI::createWindow;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov1)(std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov2)(std::string const &, std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
-
 	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
-		.def("createWindow", createWindow_ov0)
-		.def("createWindow", createWindow_ov1)
-		.def("createWindow", createWindow_ov2)
 		.add_property("console", &vl::gui::GUI::getConsole)
-		.add_property("editor", &vl::gui::GUI::getEditor)
-		/// @todo add get window by name
 	;
 }

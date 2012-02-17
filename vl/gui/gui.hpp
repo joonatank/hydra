@@ -1,16 +1,12 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
  *	@file gui/gui.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -27,7 +23,10 @@
 #include "renderer_interface.hpp"
 
 // Concrete implementation
-#include <CEGUI/CEGUIWindow.h>
+#include "Gorilla.h"
+
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
 
 namespace vl
 {
@@ -50,6 +49,8 @@ public :
 	/// @param cb callback for sendCommand, ownership is passed to this
 	GUI(vl::Session *session, uint64_t id);
 	
+	~GUI(void);
+
 	/// @brief Master creator
 	WindowRefPtr createWindow(std::string const &type, std::string const &name, std::string const &layout);
 
@@ -66,12 +67,7 @@ public :
 
 	WindowRefPtr getWindow(std::string const &name);
 
-	void initGUI(vl::Window *win);
-	void initGUIResources(vl::Settings const &set);
-	void addGUIResourceGroup(std::string const &name, fs::path const &path);
-
-	EditorWindowRefPtr getEditor(void)
-	{ return _editor; }
+	void initGUI(Ogre::Viewport *view);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -80,13 +76,21 @@ public :
 
 	void sendCommand(std::string const &cmd);
 
-	CEGUI::Window *getRoot(void) const
-	{ return _root; }
+	Gorilla::Screen *createScreen(void);
+
+	bool initialised(void) const;
+
+	void injectKeyDown(OIS::KeyEvent const &key);
+	void injectKeyUp(OIS::KeyEvent const &key);
+
+	void injectMouseEvent(OIS::MouseEvent const &evt);
 
 	enum DirtyBits
 	{
 		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 0,
 	};
+
+	void update(void);
 
 /// Private virtual overrides
 private :
@@ -101,15 +105,16 @@ private :
 /// Data
 private :
 
-	vl::gui::EditorWindowRefPtr _editor;
 	vl::gui::ConsoleWindowRefPtr _console;
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
-	std::vector<vl::gui::WindowRefPtr> _editors_without_parent;
 
 	vl::Session *_session;
 
-	CEGUI::Window *_root;
+	Gorilla::Silverback *_gorilla;
+	Ogre::Viewport *mViewport;
+
+	//CEGUI::Window *_root;
 
 };	// class GUI
 
