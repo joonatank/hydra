@@ -218,7 +218,13 @@ vl::ProgramOptions::_parse_ini(void)
 		debug_overlay = pt.get("debug.overlay", false);
 		show_system_console = pt.get("debug.show_system_console", false);
 
-		BOOST_FOREACH(ptree::value_type &v, pt.get_child("projects"))
-			project_paths.push_back(v.second.data());
+		if(pt.count("projects") > 0)
+		{
+			if(!pt.get_child("projects").empty())
+			{
+				BOOST_FOREACH(ptree::value_type &v, pt.get_child("projects"))
+					project_paths.push_back(v.second.data());
+			}
+		}
 	}
 }
