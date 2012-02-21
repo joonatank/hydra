@@ -216,10 +216,10 @@ public :
 	{ return "FrameTrigger"; }
 
 	/// Callback function
-	void update(vl::time const &t)
+	void update(vl::time const &elapsed_time)
 	{
-		_delta_time = t;
-		_signal(t);
+		_delta_time = elapsed_time;
+		_signal(elapsed_time);
 	}
 
 	int addListener(Tripped::slot_type const &slot)
@@ -229,6 +229,80 @@ private :
 	Tripped _signal;
 
 	vl::time _delta_time;
+
+};
+
+class TimeTrigger : public Trigger
+{
+	typedef boost::signal<void (void)> Tripped;
+public :
+	/// Initialises parameters so that the trigger is invalid till user
+	/// changes the parameters
+	TimeTrigger(void)
+		: _continuous(true)
+		, _expired(true)
+	{}
+
+	~TimeTrigger(void) {}
+
+	virtual std::string getTypeName(void) const
+	{ return "TimeTrigger"; }
+
+	virtual std::string getName(void) const
+	{ return "unnamed"; }
+
+	int addListener(Tripped::slot_type const &slot)
+	{ _signal.connect(slot); return 1; }
+
+	bool isExpired(void) const
+	{ return _expired; }
+
+	void reset(void)
+	{
+		_expired = false;
+		_time = vl::time();
+	}
+
+	vl::time const &getInterval(void) const
+	{ return _interval; }
+
+	void setInterval(vl::time const &t)
+	{
+		_initialise();
+		_interval = t;
+	}
+
+	bool isContinous(void) const
+	{ return _continuous; }
+
+	void setContinous(bool cont)
+	{
+		_initialise();
+		_continuous = cont;
+	}
+
+	/// @brief progress function
+	/// @param elapsed_time time since last call to this function
+	void update(vl::time const &elapsed_time);
+
+private :
+	void _initialise(void)
+	{
+		if((_expired && _continuous) || (_expired && _interval == vl::time()))
+		{
+			_expired = false;
+		}
+	}
+
+	Tripped _signal;
+
+	bool _continuous;
+
+	vl::time _interval;
+
+	vl::time _time;
+
+	bool _expired;
 
 };
 

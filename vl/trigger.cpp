@@ -89,3 +89,19 @@ vl::KeyTrigger::print(std::ostream& os) const
 
 	return os;
 }
+
+void
+vl::TimeTrigger::update(vl::time const &elapsed_time)
+{
+	if(!_expired)
+	{
+		_time += elapsed_time;
+		if(_time >= _interval)
+		{
+			_signal();
+			if(!_continuous)
+			{ _expired = true; }
+			_time = vl::time();
+		}
+	}
+}

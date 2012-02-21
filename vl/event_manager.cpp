@@ -200,6 +200,28 @@ vl::EventManager::getFrameTrigger( void )
 	return _frame_trigger;
 }
 
+vl::TimeTrigger *
+vl::EventManager::createTimeTrigger(void)
+{
+	vl::TimeTrigger *trigger = new TimeTrigger;
+	_time_triggers.push_back(trigger);
+	return trigger;
+}
+
+void
+vl::EventManager::destroyTimeTrigger(vl::TimeTrigger *trigger)
+{
+	std::vector<TimeTrigger *>::iterator iter 
+		= std::find(_time_triggers.begin(), _time_triggers.end(), trigger);
+
+	if(iter != _time_triggers.end())
+	{
+		delete *iter;
+		_time_triggers.erase(iter);
+	}
+}
+
+
 vl::JoystickRefPtr
 vl::EventManager::getJoystick(std::string const &name)
 {
@@ -304,13 +326,22 @@ vl::EventManager::update_joystick(vl::JoystickEvent const &evt)
 }
 
 void
-vl::EventManager::mainloop(void)
+vl::EventManager::mainloop(vl::time const &elapsed_time)
 {
 	for(std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.begin();
 		iter != _serial_joysticks.end(); ++iter)
 	{
 		iter->second->mainloop();
 	}
+
+	for(std::vector<TimeTrigger *>::iterator iter = _time_triggers.begin();
+		iter != _time_triggers.end(); ++iter)
+	{
+		(*iter)->update(elapsed_time);
+	}
+
+	if(_frame_trigger)
+	{ _frame_trigger->update(elapsed_time); }
 }
 
 /// --------------------------- Protected ------------------------------------

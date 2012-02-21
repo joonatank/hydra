@@ -86,6 +86,8 @@ void export_managers(void)
 		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>()) )
 		.def("getJoystick", &vl::EventManager::getJoystick, getJoystick_ov())
+		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
+			python::return_value_policy<python::reference_existing_object>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
@@ -219,6 +221,14 @@ void export_triggers(void)
 	
 	python::class_<FrameTrigger, boost::noncopyable, python::bases<Trigger> >("FrameTrigger", python::no_init )
 		.def("addListener", toast::python::signal_connect<void (vl::time const &)>(&vl::FrameTrigger::addListener))
+	;
+
+	python::class_<TimeTrigger, boost::noncopyable, python::bases<Trigger> >("TimeTrigger", python::no_init )
+		.def("addListener", toast::python::signal_connect<void (void)>(&vl::TimeTrigger::addListener))
+		.def("reset", &vl::TimeTrigger::reset)
+		.add_property("expired", &vl::TimeTrigger::isExpired)
+		.add_property("interval", python::make_function(&vl::TimeTrigger::getInterval, python::return_value_policy<python::copy_const_reference>()), &vl::TimeTrigger::setInterval)
+		.add_property("continuous", &vl::TimeTrigger::isContinous, &vl::TimeTrigger::setContinous)
 	;
 
 	python::class_<vl::KeyTrigger, boost::noncopyable, python::bases<Trigger> >("KeyTrigger", python::no_init )

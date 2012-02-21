@@ -173,3 +173,22 @@ game.auto_start = False
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
 trigger.addListener(toggle_pause)
 
+def timer_callback():
+	print("Called from continuous timer")
+
+def single_timer_callback():
+	print("Called from single timer.")
+
+# TODO
+# Can not be created from callbacks because it messes the iterators
+# TODO Counting the timers start before the scene has completely loaded
+trigger = game.event_manager.createTimeTrigger()
+trigger.interval = time(2, 0)
+trigger.addListener(timer_callback)
+
+
+trigger = game.event_manager.createTimeTrigger()
+trigger.interval = time(10, 0)
+trigger.continuous = False
+trigger.addListener(single_timer_callback)
+

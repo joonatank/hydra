@@ -107,8 +107,9 @@ vl::GameManager::step(void)
 	/// (probably going to need more than two categories but for now).
 	/// this allows pausing the updating of all bodies (In Game)
 	/// but retains the ability move cameras using event system.
-	/// We need at least three categories for this
-	/// Editor, In Game, In Game GUI
+	/// We need at least two categories for this
+	/// Simulation, Paused
+	/// Usefull categories would be Menu and Debug
 	/// Probably matching the Event categories to the Game States would
 	/// also work just fine. And if they need to be expanded then we can
 	/// allow users to add more game states which would auto create more
@@ -116,10 +117,8 @@ vl::GameManager::step(void)
 	/// This elaborate system also needs to allow masking events so
 	/// they belong to more than just one category or an ALL category.
 
-	getEventManager()->getFrameTrigger()->update(getDeltaTime());
-
 	// Process input devices
-	getEventManager()->mainloop();
+	getEventManager()->mainloop(getDeltaTime());
 
 	// Process Tracking
 	// If we have a tracker object update it, the update will handle all the

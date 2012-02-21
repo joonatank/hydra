@@ -97,6 +97,10 @@ public :
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
 
+	vl::TimeTrigger *createTimeTrigger(void);
+
+	void destroyTimeTrigger(vl::TimeTrigger *trigger);
+
 	/// @todo add params to get specifc joystick and also allow for fallbacks
 	/// @param name only valid values are COM ports for now
 	/// @return valid pointer if such joystick exists, NULL pointer if not
@@ -110,7 +114,7 @@ public :
 	void update_joystick(vl::JoystickEvent const &evt);
 
 	/// @brief called from GameManager to update input devices
-	void mainloop(void);
+	void mainloop(vl::time const &elapsed_time);
 
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
@@ -143,6 +147,8 @@ private :
 	std::map<std::string, JoystickRefPtr> _joysticks;
 
 	std::map<std::string, SerialJoystickRefPtr> _serial_joysticks;
+
+	std::vector<TimeTrigger *> _time_triggers;
 
 	// stored also separately to avoid searching and casting
 	JoystickRefPtr _game_joystick;
