@@ -294,19 +294,14 @@ vl::physics::Tube::addFixingPoint(RigidBodyRefPtr body, vl::scalar length)
 	}
 }
 
-/// @todo even though this is implemented here physics::World::removeConstraint is not
-/// so this method is completely untested and unusable.
 void
 vl::physics::Tube::removeFixingPoint(RigidBodyRefPtr body)
 {
-	std::clog << "vl::physics::Tube::removeFixingPoint" << std::endl;
-
 	for(ConstraintList::iterator iter = _external_fixings.begin(); 
 		iter != _external_fixings.end(); ++iter)
 	{
 		if((*iter)->getBodyA() == body || (*iter)->getBodyB() == body)
 		{
-			std::clog << "Found constraint and removing it." << std::endl;
 			_world->removeConstraint(*iter);
 			_external_fixings.erase(iter);
 			return;
