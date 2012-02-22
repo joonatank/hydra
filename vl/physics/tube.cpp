@@ -232,27 +232,23 @@ vl::physics::Tube::setUpperLim(Ogre::Vector3 const &lim)
 void
 vl::physics::Tube::hide(void)
 {
-	/*
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
 	{
 		MotionState *ms = (*iter)->getMotionState();
 		assert(ms->getNode());
 		ms->getNode()->hide();
 	}
-	*/
 }
 
 void
 vl::physics::Tube::show(void)
 {
-	/*
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
 	{
 		MotionState *ms = (*iter)->getMotionState();
 		assert(ms->getNode());
 		ms->getNode()->show();
 	}
-	*/
 }
 
 void
