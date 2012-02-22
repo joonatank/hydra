@@ -123,22 +123,17 @@ set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 
 # set the bin dir variable
 # TODO these should be auto resolved
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(BASE_BIN_DIR 
-		"C:/jotu/software_development/hydra_dependencies_libraries/libs")
-else()
-	set(BASE_BIN_DIR 
-		"C:/jotu/software_development/hydra_dependencies_libraries/libs32")
-endif()
+set(HYDRA_DEPENDENCIES_BIN_DIR ""
+	CACHE PATH "Dependency library directory")
 
-set(OGRE_BINARY_DIR "\"${BASE_BIN_DIR}/Ogre/bin\"")
-set(CEGUI_BINARY_DIR "\"${BASE_BIN_DIR}/CEGUI/bin\"")
-set(OIS_BINARY_DIR "\"${BASE_BIN_DIR}/OIS/bin\"")
-set(BOOST_BINARY_DIR "\"${BASE_BIN_DIR}/bin\"")
-set(GENERAL_BINARY_DIR "\"${BASE_BIN_DIR}/bin\"")
-Set(EXPAT_BINARY_DIR "\"${BASE_BIN_DIR}/expat/bin\"")
-set(SKYX_BINARY_DIR "\"${BASE_BIN_DIR}/SkyX/bin\"")
-set(CAELUM_BINARY_DIR "\"${BASE_BIN_DIR}/Caelum/bin\"")
+set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Ogre/bin\"")
+set(CEGUI_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/CEGUI/bin\"")
+set(OIS_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/OIS/bin\"")
+set(BOOST_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
+set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
+Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/expat/bin\"")
+set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/SkyX/bin\"")
+set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
 
 # Get the CameraSDK binary dir
 # TODO the above should also be replaced with this system for other libraries
