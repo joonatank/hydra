@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# Joonatan Kuosa
+# Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
 # 2010-11
 #
 # This file is part of the CMake build system for Hydra
@@ -67,18 +67,6 @@ find_package(Ogre REQUIRED)
 ######### Find OIS ###########
 find_package(OIS REQUIRED)
 
-######### Find CEGUI #########
-find_package( CEGUI REQUIRED )
-
-
-####### Find cAudio
-# Dependencies for cAudio
-find_package( Ogg REQUIRED )
-find_package( Vorbis REQUIRED )
-find_package( OpenAL REQUIRED )
-
-find_package( cAudio REQUIRED )
-
 
 ####### Find Boost ########
 
@@ -118,20 +106,30 @@ find_package( Boost COMPONENTS system filesystem program_options signals REQUIRE
 find_package(Bullet)
 find_package(Newton)
 
+find_package(OgreProcedural REQUIRED)
+find_package(OpenCollada REQUIRED)
+
+# TODO Sky plugisn should be optional and only one of them should be used
+find_package(SkyX REQUIRED)
+find_package(Caelum REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
  	${Ogre_INCLUDE_DIR}
+	# Necessary for OgreProcedurial
+ 	${Ogre_INCLUDE_DIR}/Ogre
 	${OIS_INCLUDE_DIR}
 	${VRPN_INCLUDE_DIR}
 	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
-	${cAudio_INCLUDE_DIR}
-	${OGG_INCLUDE_DIR}
-	${VORBIS_INCLUDE_DIR}
-	${OPENAL_INCLUDE_DIR}
-	${CEGUI_INCLUDE_DIR}
-	${CEGUI_INCLUDE_DIR}/CEGUI
+	${OgreProcedural_INCLUDE_DIR}
+	${SkyX_INCLUDE_DIR}
+	${Caelum_INCLUDE_DIR}
+	${OPENCOLLADA_INCLUDE_DIR}
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
+	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	)
 
 # Libraries that Hydra library depends on
@@ -145,12 +143,10 @@ set( HYDRA_DEP_LIBS
 	${Boost_SYSTEM_LIBRARIES}
 	${Boost_FILESYSTEM_LIBRARIES}
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
-	${cAudio_LIBRARY}
-	${Ogg_LIBRARY}
-	${Vorbis_LIBRARY}
-	${Vorbis_FILE_LIBRARY}
-	${OPENAL_LIBRARY}
-	${CEGUI_LIBRARIES}
+	${OgreProcedural_LIBRARIES}
+	${OPENCOLLADA_LIBRARIES}
+	${SkyX_LIBRARIES}
+	${Caelum_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
  *	@file logger.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -110,8 +121,6 @@ vl::Logger::setOutputFile( std::string const &filename )
 io::stream_buffer<vl::sink> *
 vl::Logger::addSink(std::string const &name)
 {
-	vl::scoped_lock<mutex> lock(_mutex);
-
 	io::stream_buffer<sink> *s = new io::stream_buffer<sink>(*this, name);
 	_streams.push_back(s);
 	return s;
@@ -163,7 +172,8 @@ void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
 	// filter annoying error report from CEGUI
-	if(message == "Error prior to using GLSL Program Object : invalid operation")
+	if(message == "Error prior to using GLSL Program Object : invalid operation"
+		|| message == "Error prior to using GLSL Program Object : invalid value")
 	{ return; }
 
 	// TODO fix the time
@@ -174,8 +184,6 @@ vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_
 void
 vl::Logger::logMessage(vl::LogMessage const &message)
 {
-	vl::scoped_lock<mutex> lock(_mutex);
-
 	_messages.push_back(message);
 
 	// Print all the logs into same file

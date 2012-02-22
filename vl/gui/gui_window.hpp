@@ -1,26 +1,38 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-02
- *	@file GUI/gui_window.hpp
- *	
+/**
+ *	Copyright (c) 2012 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-05
+ *	@file gui/gui_window.hpp
+ *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
  */
 
 #ifndef HYDRA_GUI_WINDOW_HPP
 #define HYDRA_GUI_WINDOW_HPP
 
-#include <CEGUI/CEGUIWindow.h>
-
 #include <string>
 #include <deque>
 
+// Base class
+#include "cluster/distributed.hpp"
 // Necessary for distribution
-#include "distributed.hpp"
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 // Necessary for log level
 #include "logger.hpp"
 
 #include "typedefs.hpp"
+
+// Concrete implementation
+#include "Gorilla.h"
+
+#include <OIS/OISKeyboard.h>
+
+#include <boost/signal.hpp>
+
 
 namespace vl
 {
@@ -32,15 +44,13 @@ namespace gui
  */
 class Window : public vl::Distributed
 {
+	typedef boost::signal<void ()> NativeCreated;
+
 public :
 
 	Window(vl::gui::GUI *creator, std::string const &layout = std::string());
 
-	virtual ~Window(void)
-	{
-		// Should not delete the CEGUI window, or if it does it needs to
-		// use CEGUI functions for that.
-	}
+	virtual ~Window(void);
 
 	bool isVisible(void) const
 	{ return _visible; }
@@ -66,66 +76,53 @@ public :
 		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 2,
 	};
 
+	virtual void injectKeyDown(OIS::KeyEvent const &key) {}
+	virtual void injectKeyUp(OIS::KeyEvent const &key) {}
+
+	boost::signals::connection addListener(NativeCreated::slot_type const &slot)
+	{ return _signal.connect(slot); }
+
+	void removeListener(boost::signals::connection subscriber)
+	{ subscriber.disconnect(); }
+
+	void update(void);
 
 /// Private virtual overrides
 private :
-	virtual void serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
+	void serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
 
-	virtual void deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+	void deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+
+	/// Template method pattern, we override the masters version and childs are
+	/// required to override these if they need to add to the functionality
+	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const {}
+
+	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) {}
 
 	virtual void _window_resetted(void) {}
+	
+	virtual void _update(void) {}
 
 private :
+
 	Window(Window const &);
 	Window &operator=(Window const &);
 
 protected :
 	bool _check_valid_window(void);
 
-	CEGUI::Window *_window;
 	vl::gui::GUI *_creator;
+
+	Gorilla::Screen *mScreen;
 
 	std::string _layout;
 	bool _visible;
 
+	bool _reset;
+
+	NativeCreated _signal;
+
 };	// class Window
-
-class ConsoleWindow : public Window
-{
-public :
-	ConsoleWindow(vl::gui::GUI *creator);
-
-	~ConsoleWindow(void);
-
-	void printTo(std::string const &text, double time,
-						std::string const &type = std::string(),
-						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
-
-	/// GECUI callbacks
-	/// Console events
-	bool onConsoleInputAccepted(CEGUI::EventArgs const &e);
-
-	/// @brief Scroll the console memory using up and down arrows
-	/// If there is new user input it will be saved to the bottom of scroll
-	bool onConsoleInputKeyDown(CEGUI::EventArgs const &e);
-
-	/// @brief When console is shown it will automatically focus on the input
-	bool onConsoleShow(CEGUI::EventArgs const &e);
-
-	bool wantsLogging(void) const
-	{ return true; }
-
-// Private virtual overrides
-private :
-	virtual void _window_resetted(void);
-
-private :
-	std::deque<std::string> _console_memory;
-	int _console_memory_index;
-	std::string _console_last_command;
-
-};	// class ConsoleWindow
-
 
 }	// namespace gui
 

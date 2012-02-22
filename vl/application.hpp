@@ -24,10 +24,6 @@
 #ifndef HYDRA_APPLICATION_HPP
 #define HYDRA_APPLICATION_HPP
 
-#include <boost/thread.hpp>
-
-#include <stdint.h>
-
 // Necessary for HYDRA_API
 #include "defines.hpp"
 // Necessary for Ref ptrs
@@ -42,7 +38,6 @@ namespace vl
 {
 
 vl::config::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
-vl::Settings getProjectSettings( vl::ProgramOptions const &options );
 vl::config::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
 
 
@@ -54,37 +49,53 @@ extern "C"
 
 class Config;
 
-class Application
+class HYDRA_API Application
 {
 public:
 	/** @brief start the rendering threads and initialise the application
-	 *	@param env the environment settings to use
-	 *	@param settings the project settings to use
-	 *	@param logger the log manager instance to use
-	 *	@param auto_fork wether to autolaunch slaves or not
+	 *	@param opt Options for this application
 	 * 
 	 *	Will create a rendering thread and start it running.
 	 *	If this is the master node will also initialise the master node
 	 *	and send messages to the rendering threads.
+	 *
 	 */
-	Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, 
-		vl::Logger &logger, bool auto_fork, bool show_system_console);
+	Application(void);
 
 	virtual ~Application( void );
 
-	void run( void );
+	void init(ProgramOptions const &opt);
 
-protected:
+	/// @brief progress a single frame
+	/// @todo this is problematic because this both renders the scene and
+	/// also handles communications, we might want to separate the two
+	/// @return false if the application wants to quit
+	bool progress(void);
+	
+	// blocks till the program has exited calling progress
+	void run(void);
 
-	void _render( uint32_t const frame );
+	virtual void exit(void) = 0;
 
-	vl::ConfigRefPtr _master;
+	/// @returns true if the application is still running
+	virtual bool isRunning(void) const = 0;
 
-	vl::cluster::ClientRefPtr _slave_client;
+	virtual RendererInterface *getRenderer(void) const = 0;
 
-	uint32_t _max_fps;
+	virtual GameManagerPtr getGameManager(void) const = 0;
 
-	std::vector<uint32_t> _spawned_processes;
+	static ApplicationUniquePtr create(ProgramOptions const &opt);
+	
+	// Private virtual overrides
+private :
+	virtual void _mainloop(bool sleep) = 0;
+
+	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt) = 0;
+
+// Data
+protected :
+
+	vl::Logger *_logger;
 
 };	// class Application
 

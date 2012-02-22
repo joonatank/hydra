@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
- *	@file constraints.hpp
+ *	@file animation/constraints.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Defines basic non-physical constraints. These are based on the common
  *	constraints in physics engines, but do not do the dynamics simulation.
  */
@@ -16,12 +27,9 @@
 #include "math/math.hpp"
 #include "math/transform.hpp"
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "animation.hpp"
-
-/// Necessary for constraint actions
-#include "action.hpp"
 
 namespace vl
 {
@@ -264,6 +272,10 @@ private :
  *	@brief a constraint that has all axes locked except for one rotation axis
  *	Supports servo motors for using the constraint as an actuator.
  *	@todo rename to revolute joint, as used in Robot literature
+ *
+ *	@todo If FPS is much greater than 60 the progress method does not work correctly
+ *	This is probably because there is inaccuracies in calculating the angle from
+ *	quaternions and comparing them.
  */
 class HingeConstraint : public Constraint
 {
@@ -278,12 +290,10 @@ public :
 
 	/// Sets the target to maximum and controls the approaching velocity
 	/// provides a servo motor control for the constraint
+	/// @todo this should be moved to separate motor/actuator class
 	virtual void setVelocity(vl::scalar velocity);
 
 	virtual void addVelocity(vl::scalar velocity);
-
-	void addActuatorTarget(Ogre::Radian const &angle)
-	{ setActuatorTarget(angle+_angle); }
 
 	/// @brief set the target angle to motor
 	/// @param angle target angle which the actuator tries to achieve over time
@@ -323,8 +333,8 @@ public :
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
-	Ogre::Radian const &getHingeAngle(void) const
-	{ return _angle; }
+	/// @brief returns the angle the hinge is in along the path moved.
+	Ogre::Radian getHingeAngle(void) const;
 
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
@@ -345,8 +355,6 @@ private :
 	Ogre::Radian _upper_limit;
 	Ogre::Vector3 _axisInA;
 
-	Ogre::Radian _angle;
-
 	bool _actuator;
 	Ogre::Radian _target;
 	Ogre::Radian _speed;
@@ -358,57 +366,6 @@ operator<<(std::ostream &os, HingeConstraint const &c);
 
 std::ostream &
 operator<<(std::ostream &os, SliderConstraint const &c);
-
-class SliderActuatorAction : public vl::BasicAction
-{
-public :
-	SliderActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "SliderActuatorAction"; }
-
-	static SliderActuatorAction *create(void)
-	{ return new SliderActuatorAction; }
-
-	vl::scalar target;
-
-	vl::SliderConstraintRefPtr constraint;
-
-};
-
-class HingeActuatorAction : public vl::BasicAction
-{
-public :
-	HingeActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "HingeActuatorAction"; }
-
-	static HingeActuatorAction *create(void)
-	{ return new HingeActuatorAction; }
-
-	Ogre::Radian target;
-
-	vl::HingeConstraintRefPtr constraint;
-
-};
-
 
 }	// namespace vl
 

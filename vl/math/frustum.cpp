@@ -22,6 +22,9 @@
 Ogre::Quaternion
 vl::orientation_to_wall(vl::Wall const &wall)
 {
+	if(wall.empty())
+	{ return Ogre::Quaternion::IDENTITY; }
+
 	// Create the plane for transforming the head
 	// Head doesn't need to be transformed for the view matrix
 	// Using the plane to create a correct orientation for the view
@@ -50,6 +53,10 @@ vl::Frustum::Frustum(Type type)
 	, _head_frustum_x(false)
 	, _head_frustum_y(true)
 	, _head_frustum_z(false)
+	, _transformation_modifications(false)
+	, _fov(Ogre::Degree(60))
+	, _use_asymmetric_stereo(false)
+	, _aspect(4.0/3)
 {
 }
 
@@ -137,6 +144,8 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	 * some documents have B and C negative some positive, does not seem to make
 	 * any difference at all.
 	 */
+	if(_wall.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Wall can't be empty.")); }
 
 	Plane plane(_wall);
 
@@ -157,23 +166,31 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
 	Ogre::Vector3 head = wallRot*_head.position;
 
+	Ogre::Vector3 eye = Ogre::Vector3::ZERO;
+	if(_use_asymmetric_stereo)
+	{
+		// get the eye vector in head coordinates
+		// then in the wall coordinates we are using for this wall
+		eye = wallRot * _head.quaternion * Ogre::Vector3(eye_offset, 0, 0);
+	}
+
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
-	Ogre::Real scale = -(plane.front)/_near_clipping;
+	Ogre::Real scale = -(plane.front - eye.z)/_near_clipping;
 	// Modify the front plane (or scale in this case)
 	if(_head_frustum_z)
 	{
-		scale = (-plane.front + head.z)/_near_clipping;
+		scale = -(plane.front - head.z - eye.z)/_near_clipping;
 	}
 
-	Ogre::Real right = plane.right/scale;
-	Ogre::Real left = plane.left/scale;
+	Ogre::Real right = (plane.right - eye.x)/scale;
+	Ogre::Real left = (plane.left - eye.x)/scale;
 	// Modify the right and left planes
 	if(_head_frustum_x)
 	{
-		right = (plane.right - head.x)/scale;
-		left = (plane.left - head.x)/scale;
+		right = (plane.right - head.x - eye.x)/scale;
+		left = (plane.left - head.x - eye.x)/scale;
 	}
 
 	// Golden ratio for the frustum
@@ -186,8 +203,8 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// Modify the top and botoom planes
 	if(_head_frustum_y)
 	{
-		top = (plane.top - head.y)/scale;
-		bottom = (plane.bottom - head.y)/scale;
+		top = (plane.top - head.y - eye.y)/scale;
+		bottom = (plane.bottom - head.y - eye.y)/scale;
 	}
 
 	Ogre::Matrix4 projMat;
@@ -221,5 +238,49 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 Ogre::Matrix4
 vl::Frustum::_calculate_fov_projection(vl::scalar eye_offset) const
 {
-	BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("Fov projection not implemented."));
+	// Completely symmetric for now
+	// @todo add eye_offset
+
+	/* | E	0	A	0 |
+	 * | 0	F	B	0 |
+	 * | 0	0	C	D |
+	 * | 0	0	-1	0 | */
+
+	Ogre::Matrix4 projMat;
+
+	float xymax = _near_clipping * std::tan(_fov.valueRadians());
+	float ymin = -xymax;
+	float xmin = -xymax;
+
+	float width = xymax - xmin;
+	float height = xymax - ymin;
+
+	float depth = _far_clipping - _near_clipping;
+	float C = -(_far_clipping + _near_clipping) / depth;
+	float D = -2 * (_far_clipping * _near_clipping) / depth;
+
+	float E = (2 * _near_clipping / width)/_aspect;
+	float F = 2 * _near_clipping / height;
+
+	projMat[0][0] = E;
+	projMat[0][1] = 0;
+	projMat[0][2] = 0;
+	projMat[0][3] = 0;
+
+	projMat[1][0] = 0;
+	projMat[1][1] = F;
+	projMat[1][2] = 0;
+	projMat[1][3] = 0;
+
+	projMat[2][0] = 0;
+	projMat[2][1] = 0;
+	projMat[2][2] = C;
+	projMat[2][3] = D;
+
+	projMat[3][0] = 0;
+	projMat[3][1] = 0;
+	projMat[3][2] = -1;
+	projMat[3][3] = 0;
+
+	return projMat;
 }

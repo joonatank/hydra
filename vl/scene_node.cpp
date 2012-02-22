@@ -1,6 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_node.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
@@ -8,6 +20,8 @@
 
 #include "scene_manager.hpp"
 #include "entity.hpp"
+
+#include "math/math.hpp"
 
 /// ---------------------------- Global --------------------------------------
 std::ostream &
@@ -189,18 +203,17 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference)
 	/// World space
 	if(!reference)
 	{
-		setPosition(_transform.position + v);
+		translate(v, TS_WORLD);
 	}
 	/// Local space
 	else if(reference == this)
 	{
-		setPosition(_transform.position + _transform.rotate(v));
+		translate(v, TS_LOCAL);
 	}
 	/// Reference space
 	else
 	{
-		vl::Transform ref_world = reference->getWorldTransform();
-		setPosition(_transform.position + ref_world.rotate(v));
+		translate(reference->getWorldTransform().quaternion*v, TS_WORLD);
 	}
 }
 
@@ -209,22 +222,29 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
 {
 	if(space == TS_LOCAL)
 	{
-		translate(v, this);
+		setPosition(_transform.position + _transform.rotate(v));
 	}
 	else if(space == TS_PARENT)
 	{
-		translate(v, _parent);
+		setPosition(_transform.position + v);
 	}
 	else
 	{
-		translate(v, 0);
+		vl::Transform invWorld;
+		if(_parent)
+		{
+			invWorld = _parent->getWorldTransform().inverted();
+		}
+		
+
+		setPosition(_transform.position + invWorld.quaternion*v);
 	}
 }
 
 void 
 vl::SceneNode::translate(Ogre::Vector3 const &v)
 {
-	translate(v, this);
+	translate(v, TS_LOCAL);
 }
 
 void 
@@ -405,7 +425,7 @@ vl::SceneNode::setDirection(Ogre::Vector3 const &dir, Ogre::Vector3 const &local
 
 
 void 
-vl::SceneNode::setVisible(bool visible, bool cascade)
+vl::SceneNode::setVisibility(bool visible, bool cascade)
 {
 	if( _visible != visible )
 	{
@@ -416,7 +436,7 @@ vl::SceneNode::setVisible(bool visible, bool cascade)
 		if(cascade)
 		{
 			for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
-			{ (*iter)->setVisible(_visible, cascade); }
+			{ (*iter)->setVisibility(_visible, cascade); }
 		}
 
 		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
@@ -481,7 +501,7 @@ vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr paren
 
 	node->setTransform(_transform);
 	node->setScale(_scale);
-	node->setVisible(_visible);
+	node->setVisibility(_visible);
 
 	// Not adding to selection because it would be more confusing than useful
 
@@ -569,7 +589,7 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		_childs.push_back(child);
 
 		// Copy cascading parameters
-		child->setVisible(_visible);
+		child->setVisibility(_visible);
 
 		/// Remove from current parent
 		if( child->getParent() )
@@ -848,33 +868,3 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		}
 	}
 }
-
-/// --------- Actions ----------
-void
-vl::HideAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->hide();
-}
-
-void
-vl::ShowAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->show();
-}
-
-void
-vl::SetTransformation::execute(const vl::Transform& trans)
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->setPosition( trans.position );
-	_node->setOrientation( trans.quaternion );
-}
-

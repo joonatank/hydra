@@ -1,10 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-09
  *	@file animation/kinematic_world.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	World object that deals with Kinematic bodies and constraints.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	World object that deals with Kinematic bodies and constraints.
  *	Provides the same interface as physics world but using our own
  *	kinematic solver.
  */
@@ -12,7 +22,7 @@
 #ifndef HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 #define HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "typedefs.hpp"
 
@@ -28,11 +38,13 @@ namespace vl
 class KinematicWorld
 {
 public :
-	KinematicWorld(void);
+	KinematicWorld(GameManager *man);
 
 	~KinematicWorld(void);
 
 	void step(vl::time const &t);
+
+	void finalise(void);
 
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
@@ -61,17 +73,31 @@ public :
 
 	KinematicBodyList const &getBodies(void) const;
 
+	// @brief switch collision detection on/off for all kinematic bodies
+	// for now only works for bodies created after a call to this function
+	// also collision models have hard coded part of name "*cb_"
+	void enableCollisionDetection(bool enable);
+
+	bool isCollisionDetectionEnabled(void) const
+	{ return _collision_detection_on; }
+
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
-	vl::animation::NodeRefPtr _createNode(void);
+	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
 
 	void _progress_constraints(vl::time const &t);
+
+	void _create_collision_body(KinematicBodyRefPtr body);
+
+	bool _collision_detection_on;
 
 	KinematicBodyList _bodies;
 	ConstraintList _constraints;
 
 	animation::GraphRefPtr _graph;
+
+	GameManager *_game;
 
 };	// class KinematicWorld
 

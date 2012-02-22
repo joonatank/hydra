@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
- *	@file constraints.cpp
+ *	@file animation/constraints.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Defines basic non-physical constraints. These are based on the common
  *	constraints in physics engines, but do not do the dynamics simulation.
  */
@@ -346,36 +357,21 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	if(!_link)
 	{ return; }
 
-	/// @todo add configurable axis using _axisInA
-	/// @todo starting position is in Frame A, so we should fix the offset from Frame B
-	/// that is in the start, 
-	/// as WT*_start_local_frame_a.position.y != WT*_start_local_frame_b.position.y
-	/// which causes the zero position for Frame B be in the origin of Frame A
-	/// but this does not change it before the target has been changed.
-
-	Ogre::Vector3 translate = Ogre::Vector3::ZERO;
-
 	Ogre::Vector3 v = _link->getTransform().position - _link->getInitialTransform().position;
 	vl::scalar pos_size = _axisInA.dotProduct(v);
-	Ogre::Vector3 pos = pos_size*_axisInA;
-	Ogre::Vector3 target = _target_position * _axisInA;
+	vl::scalar mov = 0;
 
-	if(isActuator() && !target.positionEquals(pos))
+	if(isActuator() && _target_position != pos_size)
 	{
 		/// Axis is either not limited (lower limit is greater than upper)
 		/// or if it's current position is within the limits
 		/// @todo should we update the target position based on limits, 
 		/// so that there is no impossible target
 
-		Ogre::Vector3 s = vl::sign(target - pos);
-		vl::scalar mov = vl::abs(_speed) * double(t); 
-		vl::scalar target_to_pos_dist = pos.distance(target);
-		if(mov > target_to_pos_dist)
-		{
-			mov = target_to_pos_dist;
-		}
-
-		translate = s*mov;
+		vl::scalar s = vl::sign(_target_position - pos_size);
+		vl::scalar m_step = vl::abs(_speed) * double(t);
+		vl::scalar max_step = vl::abs(_target_position - pos_size); 
+		mov = s * std::min(m_step, max_step); 
 	}
 	else
 	{
@@ -389,26 +385,15 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	// Clamp only if not free
 	if(!free)
 	{
-		// @todo should we clamp the target instead of the result? 
-		// then again any subsequent change in limits would not get the actuator moving
-		Ogre::Vector3 low_limit = _lower_limit*_axisInA - pos;
-		Ogre::Vector3 up_limit = _upper_limit*_axisInA - pos;
-		// Rearrange the vectors to handle negative axes
-		Ogre::Vector3 max, min;
-		min.x = low_limit.x < up_limit.x ? low_limit.x : up_limit.x;
-		min.y = low_limit.y < up_limit.y ? low_limit.y : up_limit.y;
-		min.z = low_limit.z < up_limit.z ? low_limit.z : up_limit.z;
-		max.x = low_limit.x < up_limit.x ? up_limit.x : low_limit.x;
-		max.y = low_limit.y < up_limit.y ? up_limit.y : low_limit.y;
-		max.x = low_limit.z < up_limit.z ? up_limit.z : low_limit.z;
-
-		vl::clamp(translate, min, max);
+		vl::clamp(mov, _lower_limit-pos_size, _upper_limit-pos_size);
 	}
 
-	if(!translate.positionEquals(Ogre::Vector3::ZERO))
+	if(mov != 0)
 	{
 		/// Update object B
-		_link->getTransform().position += translate;
+		/// needs to call setTransform because it does other things besides
+		/// updating the transformation.
+		_link->setTransform(_link->getTransform().position + mov*_axisInA);
 	}
 }
 
@@ -475,73 +460,84 @@ vl::HingeConstraint::getAxisInWorld(void) const
 	return _bodyA->getWorldTransform()*_axisInA;
 }
 
+Ogre::Radian
+vl::HingeConstraint::getHingeAngle(void) const
+{
+	Ogre::Quaternion const &current_q = _link->getTransform().quaternion;
+	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
+
+	Ogre::Quaternion q = init_q.Inverse()*current_q;
+	Ogre::Radian angle;
+	Ogre::Vector3 axis;
+	q.ToAngleAxis(angle, axis);
+
+	/// @todo add checking for negative
+	if( !vl::equal(angle, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
+	{
+		// reverse the angle if we have a negative axis
+		if( vl::equal(-axis, _axisInA) )
+		{
+			// @todo is this correct ?
+			angle = -angle;
+		}
+		else if( !vl::equal(axis, _axisInA) )
+		{
+			std::clog << "vl::HingeConstraint::getHingeAngle : axis of rotation is incorrect \n"
+				<< "\trotation axis = " << _axisInA << " got " << axis << " angle = " << angle << std::endl;
+		}
+	}
+
+	return angle;
+}
+
 void
 vl::HingeConstraint::_progress(vl::time const &t)
 {
+	// No state variables should be stored in the Constraint itself
+	// because the Constraint is not updated from collision detection
+	// the Link and Node in the animation namespace are so
+	// we should use their state (transformation) for calculating
+	// all temporary values we need here.
+
 	if(!_link)
 	{ return; }
 
-	/// @todo add configurable axis using _axisInA
-	/// Something really wrong with the axes, using x-axis in code will result in model
-	/// local z-axis...
+	// for now following constraints are not supported
+	if(!isActuator() || _speed == Ogre::Radian(0))
+	{ return; }
 
-	// @todo add some checking if the actuator parameters are even plausable
-	// like isActuator == true -> _speed != 0 and so on, some error reporting
-	// to the user.
+	// Maximum allowed change per timestep
+	Ogre::Radian max_angle = _speed*t;
 
-	Ogre::Radian rotate;
-	/// @todo add tolerance
-	if(isActuator() && _target != _angle)
-	{
-		/// Axis is either not limited (lower limit is greater than upper)
-		/// or if it's current position is within the limits
-		/// @todo should we update the target position based on limits, 
-		/// so that there is no impossible target
-		/// Or should we? We could also report to user that the system is impossible
-		/// and the possible target closest to it would be x.
-		/// This would handle gracefully incorrect limits resulted from user errors.
+	if(vl::equal(max_angle, Ogre::Radian(0), Ogre::Radian(EPSILON)))
+	{ return; }
 
-		Ogre::Radian s = vl::sign(_target - _angle);
-		assert(vl::sign(_speed) >= Ogre::Radian(0));
-		rotate = s*_speed * double(t);
+	Ogre::Radian current_angle = getHingeAngle();
+	// The difference from current position to target
+	Ogre::Radian to_target = _target - current_angle;
+	// The angle derivative
+	Ogre::Radian angle_d = vl::sign(to_target) * vl::min(max_angle, vl::abs(to_target));
 
-		if(rotate < Ogre::Radian(0))
-		{ vl::clamp(rotate, _target-_angle, Ogre::Radian(0)); }
-		else
-		{ vl::clamp(rotate, Ogre::Radian(0), _target-_angle); }
-	}
+	if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
+	{		
+		// Constraint is free if upper limit is less than lower limit
+		if( !(_upper_limit < _lower_limit) )
+		{	
+			Ogre::Radian new_angle = current_angle + angle_d;
+			vl::clamp(new_angle, _lower_limit, _upper_limit);
+			assert( angle_d > new_angle - current_angle || 
+				vl::equal(angle_d, new_angle - current_angle, Ogre::Radian(EPSILON)) );
+			angle_d = new_angle - current_angle;
+		}
 
-	/// Wether the joint is limited or not
-	/// @todo this is common for all joints, though the constraint type linear/angular changes
-	bool free = _lower_limit > _upper_limit;
-	/// Check constraints
-	if(!free)
-	{
-		// Clamp only if not free
-		// @todo should we clamp the target instead of the result? 
-		// then again any subsequent change in limits would not get the actuator moving
-		vl::clamp(rotate, _lower_limit-_angle, _upper_limit-_angle);
-		assert(rotate+_angle >= _lower_limit);
-		assert(rotate+_angle <= _upper_limit);
-	}
-
-	if(rotate != Ogre::Radian(0))
-	{
-		_angle = _angle + rotate;
-		
-		// @todo this will rotate around the parents axis
-		// it should rotate around the current link axis
-		// but rotate around an axis is not working correctly for the moment.
-		// Basic matrix formulae is inv(Tp)*R*Tp
-		// where Tp is the translation matrix (for the axis) and R is the rotation matrix.
-		Ogre::Vector3 axis = _link->getInitialTransform().quaternion * _axisInA;
-		Quaternion rot = Ogre::Quaternion(_angle, axis);
-		
-		// test code inefficent
-		// if it does work we should use the model matrix and do an inverse rotation to position
-		Vector3 child_pos = _link->getChild()->getWorldTransform().position;
-
-		_link->setOrientation(rot);
+		// Only one point where the transformation occurs this ensures that
+		// there will never be more than one transformation
+		// also check for small errors so we don't get vibrations
+		if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
+		{
+			Ogre::Quaternion q(angle_d, _axisInA);			
+			_link->rotate(q);
+		}
 	}
 }
 
@@ -551,7 +547,6 @@ vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPt
 	, _lower_limit()
 	, _upper_limit()
 	, _axisInA(0, 0, 1)
-	, _angle()
 	, _actuator(false)
 	, _target()
 	, _speed(Ogre::Degree(30))

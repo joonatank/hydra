@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -20,8 +16,6 @@
 #include "window.hpp"
 
 #include "base/exceptions.hpp"
-
-#include "config.hpp"
 
 #include "renderer_interface.hpp"
 
@@ -33,40 +27,15 @@
 
 #include <OGRE/OgreLogManager.h>
 
+#include "input/joystick_event.hpp"
+#include "input/ois_converters.hpp"
+
 /// GUI
-#include <CEGUI/CEGUIWindowManager.h>
-#include <CEGUI/elements/CEGUIFrameWindow.h>
-#include <CEGUI/elements/CEGUIEditbox.h>
-#include <CEGUI/elements/CEGUIMultiColumnList.h>
-#include <CEGUI/elements/CEGUIListboxTextItem.h>
+#include "gui/gui.hpp"
 
 #include <GL/gl.h>
 
 #include <stdlib.h>
-
-namespace
-{
-	/// @todo Missing conversions for the extra buttons in OIS
-	/// they could be mapped to other buttons in CEGUI if necessary
-	CEGUI::MouseButton OISButtonToGUI( OIS::MouseButtonID button )
-	{
-		switch( button )
-		{
-			case OIS::MB_Left :
-				return CEGUI::LeftButton;
-			case OIS::MB_Right :
-				return CEGUI::RightButton;
-			case OIS::MB_Middle :
-				return CEGUI::MiddleButton;
-			case OIS::MB_Button3 :
-				return CEGUI::X1Button;
-			case OIS::MB_Button4 :
-				return CEGUI::X2Button;
-			default :
-				return CEGUI::NoButton;
-		}
-	}
-}
 
 /// ----------------------------- Public ---------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
@@ -79,13 +48,15 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _tray_mgr(0)
 {
 	assert( _renderer );
 
 	std::cout << vl::TRACE << "vl::Window::Window : " << getName() << std::endl;
 
 	_ogre_window = _createOgreWindow(windowConf);
-	_createInputHandling();
+	if(windowConf.input_handler)
+	{ _createInputHandling(); }
 
 	// If the channel has a name we try to find matching wall
 
@@ -111,14 +82,23 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	_frustum.setWall(wall);
 	vl::config::Projection const &projection = windowConf.renderer.projection;
 	_frustum.setFov(Ogre::Degree(projection.fov));
+	// @todo this is unmanagable if we need to add new types
 	if(projection.perspective_type == vl::config::Projection::FOV)
 	{ _frustum.setType(Frustum::FOV); }
+	else
+	{ _frustum.setType(Frustum::WALL); }
 	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
 	_frustum.enableTransformationModifications(projection.modify_transformations);
+	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
+
+	if(windowConf.renderer.projection.use_asymmetric_stereo)
+	{
+		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
+	}
 
 	if(windowConf.renderer.type == vl::config::Renderer::FBO)
 	{
-		std::cout << "Should Render to FBO which is not supported yet." << std::endl;
+		std::cout << "NOT IMPLEMENTED : Should Render to FBO." << std::endl;
 	}
 
 	// TODO this should be configurable
@@ -158,6 +138,11 @@ vl::Window::~Window( void )
 	}
 
 	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
+	// The render target can not be destroyed if we are still using the
+	// context, this is a problem with Ogres GL system. 
+	// Or more specifically GLSL.
+	//getOgreRoot()->getNative()->destroyRenderTarget(_ogre_window);
+	_ogre_window->setHidden(true);
 }
 
 vl::config::EnvSettingsRefPtr
@@ -208,6 +193,22 @@ vl::Window::hasStereo(void) const
 	return stereo;
 }
 
+Ogre::RenderTarget::FrameStats const &
+vl::Window::getStatistics(void) const
+{
+	if(_ogre_window)
+	{ return _ogre_window->getStatistics(); }
+
+	return Ogre::RenderTarget::FrameStats();
+}
+
+void
+vl::Window::resetStatistics(void)
+{
+	if(_ogre_window)
+	{ _ogre_window->resetStatistics(); }
+}
+
 /// ------------------------ Public OIS Callbacks ------------------------------
 bool
 vl::Window::keyPressed( OIS::KeyEvent const &key )
@@ -233,9 +234,7 @@ vl::Window::keyPressed( OIS::KeyEvent const &key )
 			case OIS::KC_RMENU :
 				break;
 			default :
-				// TODO this is missing auto-repeat for text
-				CEGUI::System::getSingleton().injectKeyDown(key.key);
-				CEGUI::System::getSingleton().injectChar(key.text);
+				_renderer->getGui()->injectKeyDown(key);
 				return true;
 		}
 	}
@@ -255,7 +254,6 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 	if( _renderer->guiShown() )
 	{
 		// TODO should check if GUI window is active
-		// TODO this might need translation for the key codes
 		switch( key.key )
 		{
 			// Keys that go to the Application always, used to control the GUI
@@ -270,8 +268,7 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 			case OIS::KC_F10 :
 				break;
 			default :
-				CEGUI::System::getSingleton().injectKeyUp(key.key);
-// 				CEGUI::System::getSingleton().injectChar(key.text);
+				_renderer->getGui()->injectKeyUp(key);
 				return true;
 		}
 	}
@@ -290,19 +287,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
 	if( _renderer->guiShown() )
 	{
-		// TODO should check if GUI window is active
-		CEGUI::System::getSingleton().injectMousePosition(evt.state.X.abs, evt.state.Y.abs);
-		// NOTE this has a problem of possibly consuming some mouse movements
-		// Assuming that mouse is moved and the wheel is changed at the same time
-		// CEGUI might consume either one of them and the other one will not be
-		// passed on.
-		// This is so rare that we don't care about it.
-		if( evt.state.Z.rel != 0 )
-		{
-			// Dirty hack for scaling the wheel movement
-			float z = (float)(evt.state.Z.rel)/100;
-			CEGUI::System::getSingleton().injectMouseWheelChange(z);
-		}
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -321,7 +306,7 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		CEGUI::System::getSingleton().injectMouseButtonDown( OISButtonToGUI(id) );
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -340,7 +325,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		CEGUI::System::getSingleton().injectMouseButtonUp( OISButtonToGUI(id) );
+		_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -360,8 +345,9 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << button << evt;
-	_sendEvent( data );
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << button << e;
+	_sendEvent(data);
 
 	return true;
 }
@@ -372,7 +358,8 @@ vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << button << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << button << e;
 	_sendEvent( data );
 
 	return true;
@@ -384,7 +371,8 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << axis << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << axis << e;
 	_sendEvent( data );
 
 	return true;
@@ -396,7 +384,8 @@ vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << pov << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << pov << e;
 	_sendEvent( data );
 
 	return true;
@@ -408,7 +397,8 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	stream << index << evt;
+	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	stream << index << e;
 	_sendEvent( data );
 
 	return true;
@@ -427,6 +417,8 @@ vl::Window::draw(void)
 
 	if(!_left_viewport)
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	_lazy_initialisation();
 
 	Ogre::Real c_near = _camera->getNearClipDistance();
 	Ogre::Real c_far = _camera->getFarClipDistance();
@@ -450,14 +442,12 @@ vl::Window::draw(void)
 	// If they are still present we need to add a separate camera also
 	// @todo rendering GUI for both eyes
 
-	Transform const &head = getPlayer().getCyclopWorldTransform();
+	Transform const &head = getPlayer().getHeadTransform();
 
-	_frustum.setHeadTransformation(head);
+	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
 	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
+	_frustum.enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
 	_frustum.setClipping(c_near, c_far);
-
-	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix();
-	og_cam->setCustomProjectionMatrix( true, projMat );
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
 
@@ -492,12 +482,18 @@ vl::Window::draw(void)
 		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
 	}
 
-	// Left viewport
+	// Draw
+	assert(_ogre_window);
+	_ogre_window->_beginUpdate();
+
 	for(size_t i = 0; i < views.size(); ++i)
 	{
 		view_tuple const &view = views.at(i);
 		Ogre::Vector3 eye(view.get<1>(), 0, 0);
 		glDrawBuffer(view.get<2>());
+
+		Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(view.get<1>());
+		og_cam->setCustomProjectionMatrix(true, projMat);
 
 		// Combine eye and camera positions
 		// Needs to be rotated with head for correct stereo
@@ -513,22 +509,24 @@ vl::Window::draw(void)
 		og_cam->setPosition(eye_d);
 		og_cam->setOrientation(eye_orientation);
 
-		view.get<0>()->update();
+		// Keeps track of the batches and triangles
+		// does not account for CEGUI though
+		_ogre_window->_updateViewport(view.get<0>(), true);
 
 		// @todo test with stereo setup if this really renders the gui for
 		// both left and right eye
-		if( _renderer->guiShown() )
-		{
-			CEGUI::System::getSingleton().renderGUI();
-		}
+		if(_renderer->getGui())
+		{ _renderer->getGui()->update(); }
 	}
 
 	// Push back the original position and orientation
 	og_cam->setPosition(_camera->getPosition());
 	og_cam->setOrientation(_camera->getOrientation());
 
-	assert(_ogre_window);
-	_ogre_window->update(false);
+	if(_tray_mgr)
+	{ _tray_mgr->frameRenderingQueued(Ogre::FrameEvent()); }
+
+	_ogre_window->_endUpdate();
 }
 
 void
@@ -551,6 +549,24 @@ vl::Window::capture( void )
 	{
 		_joysticks.at(i)->capture();
 	}
+}
+
+void
+vl::Window::resize(int w, int h)
+{
+	// works with both Ogre and external windows
+	_ogre_window->resize(w, h);
+	_ogre_window->windowMovedOrResized();
+	_frustum.setAspect(vl::scalar(w)/vl::scalar(h));
+}
+
+uint64_t
+vl::Window::getHandle(void) const
+{
+	uint64_t ogreWinId = 0x0;
+	_ogre_window->getCustomAttribute( "WINDOW", &ogreWinId );
+
+	return ogreWinId;
 }
 
 /// ------------------------------- Protected ----------------------------------
@@ -601,6 +617,14 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	}
 	std::cout << std::endl;
 
+	// Add user defined params
+	for(NamedParamList::const_iterator iter = winConf.params.begin();
+		iter != winConf.params.end(); ++iter)
+	{
+		std::clog << "Adding param : " << iter->first << " with value : " << iter->second << std::endl;
+		params[iter->first] = iter->second;
+	}
+
 	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
 	win->setAutoUpdated(false);
 	
@@ -609,16 +633,16 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 
 void
-vl::Window::_createInputHandling( void )
+vl::Window::_createInputHandling(void)
 {
-	std::string message( "Creating OIS Input system." );
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << "Creating OIS Input system." << std::endl;
 
 	assert( _ogre_window );
 
 	std::ostringstream windowHndStr;
-	size_t windowHnd = 0;
-	_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
+	uint64_t windowHnd = getHandle();
+	//size_t windowHnd = 0;
+	//_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
 	windowHndStr << windowHnd;
 
 	OIS::ParamList pl;
@@ -629,8 +653,7 @@ vl::Window::_createInputHandling( void )
 	pl.insert( std::make_pair(std::string("x11_mouse_grab"), std::string("false") ) );
 
 	// Info
-	message = "Creating OIS Input Manager";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "Creating OIS Input Manager" << std::endl;
 
 	_input_manager = OIS::InputManager::createInputSystem( pl );
 
@@ -652,7 +675,7 @@ vl::Window::_createInputHandling( void )
 		OIS::JoyStick *stick = static_cast<OIS::JoyStick *>(
 			_input_manager->createInputObject(OIS::OISJoyStick, true) );
 
-		std::cout << vl::TRACE << "Creating joystick " << i+1
+		std::cout << "Creating joystick " << i+1
 			<< "\n\t" << "Axes: " << stick->getNumberOfComponents(OIS::OIS_Axis)
 			<< "\n\t" << "Sliders: " << stick->getNumberOfComponents(OIS::OIS_Slider)
 			<< "\n\t" << "POV/HATs: " << stick->getNumberOfComponents(OIS::OIS_POV)
@@ -664,31 +687,41 @@ vl::Window::_createInputHandling( void )
 		_joysticks.push_back(stick);	
 	}
 
-	message = "Input system created.";
- 	Ogre::LogManager::getSingleton().logMessage(message, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "Input system created." << std::endl;
 }
 
 void
-vl::Window::_printInputInformation( void )
+vl::Window::_printInputInformation(void)
 {
 	// Print debugging information
-	// TODO debug information should go to Ogre Log file
 	unsigned int v = _input_manager->getVersionNumber();
-	std::stringstream ss;
-	ss << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
+
+	std::cout << "OIS Version: " << (v>>16 ) << "." << ((v>>8) & 0x000000FF) << "." << (v & 0x000000FF)
 		<< "\nRelease Name: " << _input_manager->getVersionName()
 		<< "\nManager: " << _input_manager->inputSystemName()
 		<< "\nTotal Keyboards: " << _input_manager->getNumberOfDevices(OIS::OISKeyboard)
 		<< "\nTotal Mice: " << _input_manager->getNumberOfDevices(OIS::OISMouse)
 		<< "\nTotal JoySticks: " << _input_manager->getNumberOfDevices(OIS::OISJoyStick)
-		<< '\n';
-	std::cout << ss.str() << std::endl;
+		<< std::endl;
 
-	ss.str("");
 	// List all devices
 	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
-	{ ss << "\n\tDevice: " << " Vendor: " << i->second; }
-	std::cout << ss.str() << std::endl;
+	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
+	std::cout << std::endl;
+}
+
+void
+vl::Window::_lazy_initialisation(void)
+{
+	if(!_tray_mgr && _renderer->isDebugOverlayEnabled())
+	{
+		assert(_ogre_window && _mouse);
+		Ogre::FontManager::getSingleton().getByName("SdkTrays/Caption")->load();
+		Ogre::FontManager::getSingleton().getByName("SdkTrays/Value")->load();
+		_tray_mgr = new OgreBites::SdkTrayManager("InterfaceName", _ogre_window, _mouse);
+		_tray_mgr->showFrameStats(OgreBites::TL_BOTTOMRIGHT);
+		_tray_mgr->hideCursor();
+	}
 }

@@ -1,6 +1,15 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file cluster/client.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
+ *
  */
 
 #include "client.hpp"
@@ -23,18 +32,6 @@
 const size_t MSG_BUFFER_SIZE = 128;
 
 /// ------------------------------ Callbacks ---------------------------------
-vl::cluster::ClientMsgCallback::ClientMsgCallback(vl::cluster::Client *own)
-	: owner(own)
-{
-	assert(owner);
-}
-
-void
-vl::cluster::ClientMsgCallback::operator()(vl::cluster::Message const &msg)
-{
-	assert(owner);
-	owner->sendMessage(msg);
-}
 
 vl::cluster::SlaveMeshLoaderCallback::SlaveMeshLoaderCallback(vl::cluster::Client *own)
 	: owner(own)
@@ -103,10 +100,6 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 	assert(_renderer.get());
 	
 	// set callbacks to Renderer
-	vl::MsgCallback *cb = new ClientMsgCallback(this);
-	_renderer->setSendMessageCB(cb);
-	_callbacks.push_back(cb);
-
 	vl::MeshLoaderCallback *mesh_cb = new SlaveMeshLoaderCallback(this);
 	vl::MeshManagerRefPtr mesh_man(new MeshManager(mesh_cb));
 	_renderer->setMeshManager(mesh_man);
@@ -234,10 +227,11 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 	{
 		case vl::cluster::MSG_ENVIRONMENT:
 		{
-			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_ENVIRONMENT received" << std::endl;
 			/// Single environment supported
 			if( !_state.environment )
 			{
+				std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_ENVIRONMENT received." << std::endl;
 				_state.environment = true;
 				assert(_renderer.get());
 
@@ -254,12 +248,17 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				assert( 0 == msg.size() );
 				_renderer->init(env);
 			}
+			else
+			{
+				std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_ENVIRONMENT received more than once." << std::endl;
+			}
 		}
 		break;
 
 		case vl::cluster::MSG_SHUTDOWN:
 		{
-			std::cout << vl::TRACE << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
+			std::clog << "vl::cluster::Client::_handleMessage : MSG_SHUTDOWN received" << std::endl;
 			_state.shutdown = true;
 			_renderer.reset();
 		}
@@ -269,40 +268,49 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		{
 			assert(_state.environment);
 			assert(_state.project);
+			assert(_state.has_init);
 			/// @todo add checking for the server timestamp
 			// Not necessary for anything, should restart the frame though
 			// Oh might be also that we are getting messages in the wrong order, which would need timestamp support
-			//assert( !_state.rendering );
 			assert( _state.wants_render );
-			//_state.rendering = true;
 			_state.frame = msg.getFrame();
 			_state.set_rendering_state(CS_UPDATE_READY);
 
-			Message reply(MSG_SG_UPDATE_READY, msg.getFrame(), vl::time());
+			Message reply(MSG_REQ_SG_UPDATE, msg.getFrame(), vl::time());
 			sendMessage(reply);
 		}
 		break;
 
 		case vl::cluster::MSG_SG_INIT :
-			_renderer->initScene(msg);
+		{
+			std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_SG_INIT received." << std::endl;
+			assert(!_state.has_init);
+			
+			_renderer->updateScene(msg);
 			_state.has_init = true;
-			/// @todo add reply
-			break;
-		
+				
+			// request rendering messages when initialised
+			_state.wants_render = true;
+			Message reply(MSG_REG_RENDERING, 0, vl::time());
+			sendMessage(reply);
+		}
+		break;
+
 		case vl::cluster::MSG_SG_UPDATE :
 		{
-			uint32_t frame = 0;
 			if(_state.is_rendering())
 			{
 				assert(_state.environment);
 				assert(_state.project);
 				assert(_renderer.get());
 				// Send back either the current frame if valid or 0 for errors
-				
+			
+				uint32_t frame = 0;
 				if(_state.frame == msg.getFrame())
 				{
 					if(!_state.has_rendering_state(CS_UPDATE_READY))
-					{ std::cout << vl::CRITICAL << "Client should update though it has invalid state." << std::endl; }
+					{ std::clog << "Client should update though it has invalid state." << std::endl; }
 
 					frame = _state.frame;
 					_state.set_rendering_state(CS_UPDATE);
@@ -310,19 +318,20 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				}
 				else
 				{
-					std::cout << vl::TRACE << "Incorrect frame number to for MSG_SG_UPDATE : local frame = " 
+					std::clog << "Incorrect frame number to for MSG_SG_UPDATE : local frame = " 
 						<< _state.frame << " : remote frame = " << msg.getFrame() << std::endl;
 					_state.clear_rendering_state();
 				}
+				
+				Message reply(MSG_DRAW_READY, frame, vl::time());
+				sendMessage(reply);
 			}
-			else if(!_state.has_init)
+			// @todo this can probably be moved to MSG_SG_INIT
+			else
 			{
-				_renderer->initScene(msg);
-				_state.has_init = true;
+				std::clog << "Client : Something really weird we are neither "
+					<< "in the rendering loop nor waiting for init." << std::endl;
 			}
-
-			Message reply(MSG_DRAW_READY, frame, vl::time());
-			sendMessage(reply);
 		}
 		break;
 
@@ -340,25 +349,26 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				if(_state.frame == msg.getFrame())
 				{
 					if(!_state.has_rendering_state(CS_UPDATE))
-					{ std::cout << vl::CRITICAL << "Client should render though it has invalid state." << std::endl; }
+					{ std::clog << "Client should start draw though it has invalid state." << std::endl; }
 					
 					frame = _state.frame;
 					_state.set_rendering_state(CS_DRAW);
 				}
 				else
 				{
-					std::cout << vl::TRACE << "Incorrect frame number for MSG_DRAW : local frame = " 
+					std::clog << "Incorrect frame number for MSG_DRAW : local frame = " 
 						<< _state.frame << " : remote frame = " << msg.getFrame() << std::endl;
 					_state.clear_rendering_state();
 				}
+
+				Message reply(MSG_DRAWING, frame, 0);
+				sendMessage(reply);
 			}
-			Message reply(MSG_DRAWING, frame, 0);
-			sendMessage(reply);
 
 			if(_state.is_rendering())
 			{
 				if(!_state.has_rendering_state(CS_DRAW))
-				{ std::cout << vl::CRITICAL << "Client should render though it has invalid state." << std::endl; }
+				{ std::clog << "Client should draw though it has invalid state." << std::endl; }
 
 				_renderer->draw();
 				_renderer->swap();
@@ -371,7 +381,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				/// because they measure draw calls which are async functions.
 
 				/// Reply
-				reply = Message(MSG_DRAW_DONE, frame, 0);
+				Message reply = Message(MSG_DRAW_DONE, frame, 0);
 				sendMessage(reply);
 			}
 		}
@@ -385,6 +395,8 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			/// Only single project is supported, discards the rest
 			if( !_state.project )
 			{
+				std::clog << "vl::cluster::Client::_handleMessage : "
+					<< "MSG_PROJECT received." << std::endl;
 				_state.project = true;
 
 				/// @todo replace ByteDataStream with MessageStream, reduces copying
@@ -396,11 +408,10 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 				assert(_renderer.get());
 				_renderer->setProject(settings);
-
-				// request rendering messages when initialised
-				Message reply(MSG_REG_RENDERING, 0, vl::time());
-				_state.wants_render = true;
-				sendMessage(reply);
+			}
+			else
+			{
+				std::clog << "Client::_handle_message : Project received twice." << std::endl;
 			}
 		}
 		break;
@@ -410,6 +421,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			break;
 
 		case vl::cluster::MSG_SG_CREATE :
+			std::clog << "Client : MSG_SG_CREATE Received." << std::endl;
 			assert(_renderer.get());
 			_renderer->createSceneObjects(msg);
 			break;
@@ -418,8 +430,6 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		{
 			std::cout << vl::CRITICAL << "Passing message with type = " << msg.getType()
 				<< " to renderer because it has no handler." << std::endl;
-//			assert(_renderer.get());
-//			_renderer->handleMessage(msg);
 		}
 		break;
 	}
@@ -463,11 +473,11 @@ vl::cluster::Client::_receive(void)
 		/// @TODO when these do happen?
 		if( error && error == boost::asio::error::connection_refused )
 		{
-			std::cout << vl::CRITICAL << "Error : Connection refused" << std::endl;
+			std::clog << "Error : Connection refused" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_aborted )
 		{
-			std::cout << vl::CRITICAL << "Error : Connection aborted" << std::endl;
+			std::clog << "Error : Connection aborted" << std::endl;
 		}
 		else if( error && error == boost::asio::error::connection_reset )
 		{
@@ -475,7 +485,7 @@ vl::cluster::Client::_receive(void)
 		}
 		else if( error && error == boost::asio::error::host_unreachable )
 		{
-			std::cout << vl::CRITICAL << "Error : Host unreachable" << std::endl;
+			std::clog << "Error : Host unreachable" << std::endl;
 		}
 		else if( error && error != boost::asio::error::message_size )
 		{ throw boost::system::system_error(error); }
@@ -501,9 +511,6 @@ vl::cluster::Client::_receive(void)
 						consumed = true;
 						if( !p_m->partial() )
 						{
-							std::cout << vl::TRACE << "Partial message with type = " 
-								<< getTypeAsString(p_m->getType()) << " id = " << p_m->getID()
-								<< " made whole." << std::endl;
 							msg = p_m;
 							_partial_messages.erase(_partial_messages.begin()+i);
 						}
@@ -525,8 +532,6 @@ vl::cluster::Client::_receive(void)
 			= _msg_callbacks.find(msg->getType());
 		if(iter != _msg_callbacks.end())
 		{
-			std::cout << vl::TRACE << "Callback found for message type : " << getTypeAsString(msg->getType())
-				<< std::endl;
 			iter->second->messageReceived(msg);
 			msg.reset();
 		}

@@ -76,7 +76,7 @@ public :
 		Ogre::Real front;
 	};
 
-	Frustum(Type type = WALL);
+	Frustum(Type type = FOV);
 
 	Ogre::Matrix4 getProjectionMatrix(void) const;
 
@@ -114,6 +114,12 @@ public :
 	vl::scalar getFarClipping(void) const
 	{ return _far_clipping; }
 
+	vl::scalar getAspect(void) const
+	{ return _aspect; }
+
+	void setAspect(vl::scalar asp)
+	{ _aspect = asp; }
+
 	void setHeadTransformation(vl::Transform const &head)
 	{ _head = head; }
 
@@ -128,6 +134,12 @@ public :
 		_head_frustum_y = enable_y;
 		_head_frustum_z = enable_z;
 	}
+
+	void enableAsymmetricStereoFrustum(bool enable)
+	{ _use_asymmetric_stereo = enable; }
+
+	bool isAsymmetricStereoFrustum(void) const
+	{ return _use_asymmetric_stereo; }
 
 	void setFov(Ogre::Radian const &fov)
 	{ _fov = fov; }
@@ -165,6 +177,10 @@ private :
 	Ogre::Radian _fov;
 
 	bool _transformation_modifications;
+
+	bool _use_asymmetric_stereo;
+
+	vl::scalar _aspect;
 
 };	// class Frustum
 

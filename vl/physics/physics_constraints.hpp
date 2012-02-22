@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/physics_constraints.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_HPP
@@ -42,12 +51,16 @@ public :
 	RigidBodyRefPtr getBodyB(void)
 	{ return _bodyB.lock(); }
 
+	virtual Ogre::Vector3 getLinearLowerLimit(void) const = 0;
 	virtual void setLinearLowerLimit(Ogre::Vector3 const &linearLower) = 0;
 	
+	virtual Ogre::Vector3 getLinearUpperLimit(void) const = 0;
 	virtual void setLinearUpperLimit(Ogre::Vector3 const &linearUpper) = 0;
 
+	virtual Ogre::Vector3 getAngularLowerLimit(void) const = 0;
 	virtual void setAngularLowerLimit(Ogre::Vector3 const &angularLower) = 0;
 
+	virtual Ogre::Vector3 getAngularUpperLimit(void) const = 0;
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
 
 	/// Index 0-2 for translation (x, y, z)
@@ -57,7 +70,13 @@ public :
 	virtual void setDamping(int index, vl::scalar damping) = 0;
 	virtual void setEquilibriumPoint(void) = 0;
 	virtual void setEquilibriumPoint(int index) = 0;
-	
+
+	virtual void setNormalCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopERP(vl::scalar erp) = 0;
+
 	// @todo add motors
 
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 

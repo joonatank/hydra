@@ -1,19 +1,29 @@
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-06
+ *	@file animation/constraints_handlers.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
 
 #include "constraints_handlers.hpp"
 
 #include "constraints.hpp"
 
-
+/// ------------------------------ Public ------------------------------------
 void
-vl::ConstraintJoystickHandler::set_axis_constraint(int axis, ConstraintRefPtr constraint)
+vl::ConstraintJoystickHandler::set_axis_constraint(ConstraintRefPtr constraint, 
+	int axis, int button, bool inverted)
 {
-	set_axis_constraint(axis, -1, constraint);
-}
-
-void
-vl::ConstraintJoystickHandler::set_axis_constraint(int axis, int button, ConstraintRefPtr constraint)
-{
-	AxisConstraintElem elem(axis, button, constraint);
+	AxisConstraintElem elem(axis, button, inverted, constraint);
 
 	std::vector<AxisConstraintElem>::iterator iter= std::find(_constraint_map.begin(), _constraint_map.end(), elem);
 	if(iter != _constraint_map.end())
@@ -88,15 +98,31 @@ vl::ConstraintJoystickHandler::_apply_event(JoystickEvent const &evt)
 	/// for example button was pressed is no longer so set it's velocity to zero
 	if(x_iter != _constraint_map.end())
 	{
-		x_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_x);
+		vl::scalar sign = 1;
+		if(x_iter->inverted)
+		{ sign = -1; }
+		vl::scalar velocity = sign*_velocity_multiplier*evt.axis_x;
+		x_iter->constraint->setVelocity(velocity);
 	}
 	if(y_iter != _constraint_map.end())
 	{
-		y_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_y);
+		vl::scalar sign = 1;
+		if(y_iter->inverted)
+		{ sign = -1; }
+		vl::scalar velocity = sign*_velocity_multiplier*evt.axis_y;
+		y_iter->constraint->setVelocity(velocity);
 	}
 	if(z_iter != _constraint_map.end())
 	{
-		z_iter->constraint->setVelocity(_velocity_multiplier*evt.axis_z);
+		vl::scalar sign = 1;
+		if(z_iter->inverted)
+		{ sign = -1; }
+		z_iter->constraint->setVelocity(sign*_velocity_multiplier*evt.axis_z);
 	}
 
 }
+
+/// ------------------------------ Protected ---------------------------------
+vl::ConstraintJoystickHandler::ConstraintJoystickHandler(void)
+	: _velocity_multiplier(1.0)
+{}

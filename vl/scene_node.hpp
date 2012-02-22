@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_node.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 #ifndef HYDRA_SCENE_NODE_HPP
 #define HYDRA_SCENE_NODE_HPP
@@ -14,14 +25,13 @@
 #include <OGRE/OgreSceneManager.h>
 
 
-#include "action.hpp"
 #include "base/exceptions.hpp"
 #include "typedefs.hpp"
 
 #include "math/transform.hpp"
 
 // Base class
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 #include "object_interface.hpp"
 
 namespace vl
@@ -34,10 +44,10 @@ enum TransformSpace
 	TS_WORLD,
 };
 
-class SceneNode : public vl::Distributed, vl::ObjectInterface
+class SceneNode : public vl::Distributed, public vl::ObjectInterface
 {
 public :
-	SceneNode( std::string const &name, vl::SceneManager *creator );
+	SceneNode(std::string const &name, vl::SceneManager *creator);
 
 	virtual ~SceneNode( void ) {}
 
@@ -59,7 +69,7 @@ public :
 	void setTransform(Ogre::Matrix4 const &m);
 
 	/// @brief transform the node, does not include the scale part
-	void transform(vl::Transform const &trans);
+	virtual void transform(vl::Transform const &trans);
 
 	/// @brief set the transformation, does not include the scale part
 	void setTransform(vl::Transform const &trans);
@@ -82,18 +92,18 @@ public :
 	/// @brief set the transformation in the world space
 	/// @param Transformation in world space
 	/// @todo not testes, and probably does not work correctly
-	void setWorldTransform(vl::Transform const &trans);
+	virtual void setWorldTransform(vl::Transform const &trans);
 
 	/// @brief get the transformation in the world space
 	/// @return Transformation in world space
-	vl::Transform getWorldTransform(void) const;
+	virtual vl::Transform getWorldTransform(void) const;
 	
 	/// @brief get the position in object space
-	Ogre::Vector3 const &getPosition(void) const
+	virtual Ogre::Vector3 const &getPosition(void) const
 	{ return _transform.position; }
 
 	/// @brief set the position in object space
-	void setPosition( Ogre::Vector3 const &v );
+	virtual void setPosition( Ogre::Vector3 const &v );
 
 	/// @brief translate the SceneNode
 	/// @param v how much to translate
@@ -106,17 +116,14 @@ public :
 	void translate(Ogre::Vector3 const &v, vl::TransformSpace space);
 
 	/// @brief translate the SceneNode in local coordinate system
-	/// defined separately because easier to expose for python
-	void translate(Ogre::Vector3 const &v);
-	void translate(Ogre::Real x, Ogre::Real y, Ogre::Real z)
-	{ translate(Ogre::Vector3(x, y, z)); }
+	virtual void translate(Ogre::Vector3 const &v);
 
 	/// @brief get the orientation in object space
-	Ogre::Quaternion const &getOrientation( void ) const
+	virtual Ogre::Quaternion const &getOrientation( void ) const
 	{ return _transform.quaternion; }
 
 	/// @brief set the orientation in object space
-	void setOrientation( Ogre::Quaternion const &q );
+	virtual void setOrientation( Ogre::Quaternion const &q );
 
 	/// @todo properly document the rotation functions and their uses
 
@@ -136,7 +143,7 @@ public :
 	void rotate(Ogre::Quaternion const &q, vl::TransformSpace space);
 
 	/// @brief rotates the SceneNode using World axes
-	void rotate(Ogre::Quaternion const &q);
+	virtual void rotate(Ogre::Quaternion const &q);
 
 	/// @brief helper overloads
 	void rotate(Ogre::Vector3 const &axis, Ogre::Radian const &angle)
@@ -173,25 +180,25 @@ public :
 	/// because we can not use Ogre meshes in the master node
 	//void setSize(Ogre::Vector3 const &s);
 
-	bool getVisible( void ) const
+	virtual bool isVisible(void) const
 	{ return _visible; }
 
 	/// @brief set the visibility of the object
 	/// @param visible
 	/// @param cascade wether or not affect childs also
-	void setVisible(bool visible)
-	{ setVisible(visible, true); }
-	void setVisible(bool visible, bool cascade);
+	virtual void setVisibility(bool visible)
+	{ setVisibility(visible, true); }
+	void setVisibility(bool visible, bool cascade);
 
 	void show(void)
-	{ setVisible(true); }
+	{ setVisibility(true); }
 	bool isShown(void) const
-	{ return getVisible() == true; }
+	{ return isVisible(); }
 
 	void hide(void)
-	{ setVisible(false); }
+	{ setVisibility(false); }
 	bool isHidden(void) const
-	{ return getVisible() == false; }
+	{ return !isVisible(); }
 
 	/// @brief show the bounding box of the object
 	/// Shows a combined bounding box of all childs of this node
@@ -246,6 +253,12 @@ public :
 
 	SceneManagerPtr getCreator(void) const
 	{ return _creator; }
+
+	std::string const &getSceneFile(void) const
+	{ return _origin_file; }
+
+	void setSceneFile(std::string const &file)
+	{ _origin_file = file; }
 
 	// -------------------- Callbacks -----------------------
 	virtual int addListener(TransformedCB::slot_type const &slot)
@@ -306,74 +319,12 @@ private :
 
 	vl::SceneManager *_creator;
 
+	std::string _origin_file;
+
 };	// class SceneNode
 
 std::ostream &
 operator<<(std::ostream &os, SceneNode const &a);
-
-
-/// ---------------------- SceneNode Actions -------------------------
-
-/// Concrete class used to store and act as an interface for Actions needing
-/// SceneNode access
-/// Is not an action because doesn't do anything.
-class SceneNodeActionBase
-{
-public :
-	SceneNodeActionBase( void )
-		: _node(0)
-	{}
-
-	void setSceneNode( SceneNodePtr node )
-	{ _node = node; }
-
-	SceneNodePtr getSceneNode( void )
-	{ return _node; }
-
-protected :
-	SceneNodePtr _node;
-};
-
-
-
-class HideAction : public SceneNodeActionBase, public vl::BasicAction
-{
-public :
-	virtual void execute( void );
-
-	virtual std::string getTypeName( void ) const
-	{ return "HideAction"; }
-
-	static HideAction *create( void )
-	{ return new HideAction; }
-};
-
-
-class ShowAction : public SceneNodeActionBase, public  vl::BasicAction
-{
-public :
-	virtual void execute( void );
-
-	virtual std::string getTypeName( void ) const
-	{ return "ShowAction"; }
-
-	static ShowAction *create( void )
-	{ return new ShowAction; }
-};
-
-
-/// Set a new transformation to a SceneNode
-class SetTransformation : public SceneNodeActionBase, public vl::TransformAction
-{
-public :
-	virtual std::string getTypeName( void ) const
-	{ return "SetTransformation"; }
-
-	virtual void execute( vl::Transform const &trans );
-
-	static SetTransformation *create( void )
-	{ return new SetTransformation; }
-};
 
 
 }	// namespace vl

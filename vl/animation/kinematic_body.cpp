@@ -1,10 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-09
  *	@file animation/kinematic_body.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Kinematic body used to interface custom animation framework.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*	Kinematic body used to interface custom animation framework.
  *	Interface is similar to SceneNode and RigidBody but works on animation
  *	nodes and links instead.
  */
@@ -20,10 +30,8 @@ std::ostream &
 vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 {
 	os << "KinematicBody : " << body.getName();
-	if(!body.getSceneNode())
-	{ os << " without a SceneNode!"; }
-	else
-	{ os << " with " << body.getSceneNode()->getID() << " : " << body.getSceneNode()->getName(); }
+	if(!body.getMotionState())
+	{ os << " without a MotionState!"; }
 	
 	os << " and ";
 	if(!body.getAnimationNode())
@@ -38,23 +46,21 @@ vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 
 
 /// ------------------------------ KinematicBody -----------------------------
-vl::KinematicBody::KinematicBody(KinematicWorld *world, 
-	animation::NodeRefPtr node, vl::SceneNodePtr sn)
+vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world, 
+	animation::NodeRefPtr node, vl::physics::MotionState *ms)
 	: _world(world)
-	, _scene_node(sn)
+	, _state(ms)
 	, _node(node)
+	, _name(name)
 	, _dirty_transformation(true)
 	, _use_dirty(false)
 	, _disable_updates(false)
 	, _assume_node_is_in_world(false)
+	, _collisions_enabled(true)
 {
 	assert(_world);
-	assert(_scene_node);
+	assert(_state);
 	assert(_node);
-
-	// As the Node is not initialised yet we need to initialise
-	// its transformation
-	_node->setWorldTransform(_scene_node->getWorldTransform());
 }
 
 
@@ -62,30 +68,23 @@ vl::KinematicBody::~KinematicBody(void)
 {
 }
 
-std::string const &
-vl::KinematicBody::getName(void) const
-{
-	return _scene_node->getName();
-}
-
 void
 vl::KinematicBody::translate(Ogre::Vector3 const &v)
 {
-	Transform t(v);
-	transform(t);
+	transform(Transform(v));
 }
 
 void
 vl::KinematicBody::rotate(Ogre::Quaternion const &q)
 {
-	Transform t(q);
-	transform(t);
+	transform(Transform(q));
 }
 
 void
 vl::KinematicBody::transform(vl::Transform const &t)
 {
 	_node->setTransform(_node->getTransform()*t);
+//	_transformed_cb(_node->getWorldTransform());
 }
 
 void
@@ -94,44 +93,55 @@ vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 	assert(_node);
 	_dirty_transformation = true;
 	_node->setWorldTransform(trans);
+//	_transformed_cb(trans);
 }
 
 vl::Transform
 vl::KinematicBody::getWorldTransform(void) const
 {
-	// @todo this should operate on links
 	assert(_node);
 	return _node->getWorldTransform();
 }
 
 void
+vl::KinematicBody::setVisibility(bool visible)
+{
+	if(getSceneNode())
+	{ getSceneNode()->setVisibility(visible); }
+}
+
+bool
+vl::KinematicBody::isVisible(void) const
+{
+	if(getSceneNode())
+	{ return getSceneNode()->isVisible(); }
+	
+	return true;
+}
+
+vl::SceneNodePtr
+vl::KinematicBody::getSceneNode(void) const
+{
+	// dirty hack to handle the necessity of having this function
+	return (SceneNodePtr)_state->getNode();
+}
+
+
+void
 vl::KinematicBody::_update(void)
 {
-	assert(_scene_node && _node);
+	assert(_state && _node && _state->getNode());
 
-	bool update = !_disable_updates;
-
-	if(_use_dirty)
+	Transform wt = _node->getWorldTransform();
+	if(_state->getWorldTransform() != wt)
 	{
-		update = update && _dirty_transformation;
+		_state->setWorldTransform(wt);
+		_transformed_cb(wt);
 	}
-	
-	if(update)
-	{
-		if(_assume_node_is_in_world)
-		{
-			_scene_node->setTransform(_node->getWorldTransform());
-		}
-		else
-		{
-			Transform wt = _node->getWorldTransform();
-			if(_scene_node->getWorldTransform() != wt)
-			{
-				_scene_node->setWorldTransform(wt);
-				_transformed_cb(wt);
-			}
-		}
-	}
+}
 
-	_dirty_transformation = false;
+void
+vl::KinematicBody::popLastTransform(void)
+{
+	_node->popLastTransform();
 }

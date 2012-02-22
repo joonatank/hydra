@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file physics/physics_world.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Physics World used to initialise the physics with some default
  *	values. Later they might be controllable by the user.
  *	Provides object management for and the general interface for physics engine world.
@@ -18,7 +29,7 @@
 
 #include "typedefs.hpp"
 // Necessary for time step
-#include "base/timer.hpp"
+#include "base/time.hpp"
 // Necessary for vl::scalar
 #include "math/types.hpp"
 // Necesessary for Transform
@@ -37,6 +48,27 @@ namespace vl
 namespace physics
 {
 
+struct SolverParameters
+{
+	SolverParameters(void)
+		: erp(0.2)
+		, erp2(0.1)
+		, global_cfm(0)
+		, restitution(0)
+		, max_error_reduction(20)
+		, internal_time_step(1./60.0)
+		, max_sub_steps(10)
+	{}
+
+	vl::scalar erp;
+	vl::scalar erp2;
+	vl::scalar global_cfm;
+	vl::scalar restitution;
+	vl::scalar max_error_reduction;
+	vl::scalar internal_time_step;
+	int max_sub_steps;
+};
+
 /** @class World
  *	Interface for physics world, provides concrete implementations of object
  *	management using our wrapper objects.
@@ -45,7 +77,7 @@ namespace physics
 class World
 {
 public :
-	static WorldRefPtr create(void);
+	static WorldRefPtr create(GameManager *man);
 
 	virtual ~World(void);
 
@@ -54,6 +86,10 @@ public :
 	virtual Ogre::Vector3 getGravity(void) const = 0;
 
 	virtual void setGravity(Ogre::Vector3 const &gravity) = 0;
+
+	virtual void setSolverParameters(SolverParameters const &p) = 0;
+
+	virtual SolverParameters const &getSolverParameters(void) const = 0;
 
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
@@ -78,7 +114,8 @@ public :
 
 
 	/// ---------------------- MotionStates ------------------
-	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::SceneNodePtr node = 0);
+	/// @todo this can be removed as we can use MotionState::create directly
+	MotionState *createMotionState(vl::Transform const &trans = vl::Transform(), vl::ObjectInterface *node = 0);
 
 	void destroyMotionState(vl::physics::MotionState *state);
 
@@ -98,8 +135,23 @@ public :
 	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
 
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
-		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass = 50.0);
+		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass_per_meter = 1.0);
 
+	RigidBodyList const &getBodies(void) const
+	{ return _rigid_bodies; }
+	
+	std::vector<TubeRefPtr> const &getTubes(void) const
+	{ return _tubes; }
+	
+	ConstraintList const &getConstraints(void) const
+	{ return _constraints; }
+
+	// @brief toggle collision detection on/off
+	// works for both already created bodies and new bodies
+	void enableCollisionDetection(bool enable);
+
+	bool isCollisionDetectionEnabled(void) const
+	{ return _collision_detection_enabled; }
 
 	friend std::ostream &operator<<(std::ostream &os, World const &w);
 
@@ -110,7 +162,7 @@ protected :
 
 	// Real engine implementation using template method pattern
 	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked) = 0;
-	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body) = 0;
+	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic) = 0;
 
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
 
@@ -121,6 +173,11 @@ protected :
 	/// World owns all of them
 	RigidBodyList _rigid_bodies;
 	ConstraintList _constraints;
+	std::vector<TubeRefPtr> _tubes;
+
+	bool _collision_detection_enabled;
+
+	GameManager *_game;
 
 };	// class World
 

@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file player.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "player.hpp"
@@ -31,6 +41,7 @@ vl::Player::Player(SceneManagerPtr scene_manager)
 	, _head_frustum_x(false)
 	, _head_frustum_y(true)
 	, _head_frustum_z(false)
+	, _asymmetric_stereo_frustum(false)
 	, _scene_manager(scene_manager)
 {
 	assert(_scene_manager);
@@ -152,7 +163,7 @@ vl::Player::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) 
 	{ msg << _ipd; }
 
 	if(dirtyBits & DIRTY_FRUSTUM)
-	{ msg << _head_frustum_x << _head_frustum_y << _head_frustum_z; }
+	{ msg << _head_frustum_x << _head_frustum_y << _head_frustum_z << _asymmetric_stereo_frustum; }
 }
 
 void
@@ -182,5 +193,5 @@ vl::Player::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 	{ msg >> _ipd; }
 
 	if(dirtyBits & DIRTY_FRUSTUM)
-	{ msg >> _head_frustum_x >> _head_frustum_y >> _head_frustum_z; }
+	{ msg >> _head_frustum_x >> _head_frustum_y >> _head_frustum_z >> _asymmetric_stereo_frustum; }
 }

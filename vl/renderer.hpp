@@ -1,11 +1,25 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.hpp
  *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_RENDERER_HPP
-#define VL_RENDERER_HPP
+#ifndef HYDRA_RENDERER_HPP
+#define HYDRA_RENDERER_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "ogre_root.hpp"
 #include "base/envsettings.hpp"
@@ -31,7 +45,7 @@ namespace vl
  *	At the moment the application supports only a single Pipe objects because
  *	of the limitations in Ogre Design.
  */
-class Renderer : public vl::RendererInterface, public Session
+class HYDRA_API Renderer : public vl::RendererInterface, public Session
 {
 public :
 	Renderer(std::string const &name);
@@ -92,10 +106,6 @@ public :
 
 	void reloadProjects( vl::Settings const &set );
 
-	/// Overrides from Abstract interface
-	/// @brief interface through which the Renderer is controlled
-// 	virtual void handleMessage(vl::cluster::Message &msg);
-
 	/** @todo
 	 * Problematic because the Project config should be
 	 * updatable during the application run
@@ -108,15 +118,29 @@ public :
 	 */
 	virtual void setProject(vl::Settings const &settings);
 	
-	virtual void initScene(vl::cluster::Message &msg);
-	
+	/// @todo everything with a Message in it should be moved to Slave
+	/// Slave handles the translation from Message to discrete commands
+	/// and commands the Renderer (same with Master)
+	/// At later point we might even combine some of the functionality
+	/// into Application and use pure virtual for Message sending/receiving
 	virtual void updateScene(vl::cluster::Message &msg);
 	
 	virtual void createSceneObjects(vl::cluster::Message &msg);
-	
-	virtual void print(vl::cluster::Message &msg);
 
-	virtual void setSendMessageCB(vl::MsgCallback *cb);
+	virtual void addCommandListener(CommandSent::slot_type const &slot)
+	{ _command_signal.connect(slot); }
+
+	virtual void addEventListener(EventSent::slot_type const &slot)
+	{ _event_signal.connect(slot); }
+
+	virtual void enableDebugOverlay(bool enable)
+	{ _enable_debug_overlay = enable; }
+
+	virtual bool isDebugOverlayEnabled(void) const
+	{ return _enable_debug_overlay; }
+
+	virtual gui::GUIRefPtr getGui(void)
+	{ return _gui; }
 
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
@@ -125,11 +149,13 @@ public :
 
 	virtual uint32_t nLoggedMessages(void) const;
 
+	vl::IWindow *createWindow(vl::config::Window const &winConf);
+
 protected :
 
 	/// Ogre helpers
 	void _createOgre(vl::config::EnvSettingsRefPtr env);
-	void _initialiseResources(vl::Settings const &set);
+
 	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
 	/// Distribution helpers
@@ -139,11 +165,6 @@ protected :
 	/// Commands that can be sent from Master thread
 	void _updateDistribData( void );
 
-	/// Input events
-	void _sendEvents( void );
-
-	void _createWindow(vl::config::Window const &winConf);
-
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory
 	 *	Add the screenshot dir to DistributedSettings
@@ -152,6 +173,8 @@ protected :
 	 */
 	void _takeScreenshot( void );
 
+	void _check_materials(uint64_t const id);
+
 	std::string _name;
 
 	/// EnvSettings mapped from Master
@@ -159,6 +182,7 @@ protected :
 	vl::Settings _settings;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
@@ -168,9 +192,6 @@ protected :
 	vl::SceneManagerPtr _scene_manager;
 	vl::Player *_player;
 	uint32_t _screenshot_num;
-
-	/// Input events to be sent
-	std::vector<vl::cluster::EventData> _events;
 
 	std::vector<vl::Window *> _windows;
 
@@ -186,14 +207,19 @@ protected :
 
 	std::vector<vl::cluster::ObjectData> _objects;
 
-	// Callbacks
-	vl::MsgCallback *_send_message_cb;
+	// Signals
+	CommandSent _command_signal;
+	EventSent _event_signal;
 
 	// LogReceiver
 	uint32_t _n_log_messages;
+
+	std::vector<vl::MaterialRefPtr> _materials_to_check;
+
+	bool _enable_debug_overlay;
 
 };	// class Renderer
 
 }	// namespace vl
 
-#endif // VL_RENDERER_HPP
+#endif // HYDRA_RENDERER_HPP

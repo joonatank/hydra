@@ -1,13 +1,26 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-02
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-02
  *	@file distrib_settings.hpp
- *	Classes for distributing Environment Settings and Project settings
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Classes for distributing Environment Settings and Project settings
  *	using ByteStream
  */
 
-#ifndef VL_DISTRIB_SETTINGS_HPP
-#define VL_DISTRIB_SETTINGS_HPP
+#ifndef HYDRA_DISTRIB_SETTINGS_HPP
+#define HYDRA_DISTRIB_SETTINGS_HPP
 
 // Base class
 #include "cluster/message.hpp"
@@ -101,4 +114,4 @@ ByteStream &operator>>( ByteStream &msg, vl::ProjSettings &proj );
 
 }	// namespace vl
 
-#endif // VL_DISTRIB_SETTINGS_HPP
+#endif // HYDRA_DISTRIB_SETTINGS_HPP

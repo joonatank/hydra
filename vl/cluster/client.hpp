@@ -1,9 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
+ *	@file cluster/client.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_CLIENT_HPP
-#define VL_CLUSTER_CLIENT_HPP
+#ifndef HYDRA_CLUSTER_CLIENT_HPP
+#define HYDRA_CLUSTER_CLIENT_HPP
 
 #include <boost/asio.hpp>
 
@@ -18,7 +31,7 @@
 // Necessary for the Callback structs
 #include "renderer_interface.hpp"
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 
 #include "base/report.hpp"
 /// Necessary for the MeshLoader callback base
@@ -41,15 +54,6 @@ namespace cluster
 class Client;
 
 /// Callbacks
-struct ClientMsgCallback : public vl::MsgCallback
-{
-	ClientMsgCallback(Client *own);
-
-	virtual void operator()(vl::cluster::Message const &msg);
-
-	Client *owner;
-
-};	// struct ClientMsgCallback
 
 /// No blocking loader is provided, because it would disrubt the message system
 struct SlaveMeshLoaderCallback : public MeshLoaderCallback
@@ -62,8 +66,6 @@ struct SlaveMeshLoaderCallback : public MeshLoaderCallback
 	Client *owner;
 
 };	// class SlaveMeshLoaderCallback
-
-class Client;
 
 /// @brief callback structure for Waiting for certain type of message
 struct ClientMessageCallback
@@ -141,7 +143,7 @@ private :
 
 	ClientState _state;
 
-	vl::timer _request_timer;
+	vl::chrono _request_timer;
 
 	vl::RendererUniquePtr _renderer;
 
@@ -151,18 +153,10 @@ private :
 
 	std::map<MSG_TYPES, ClientMessageCallback *> _msg_callbacks;
 
-	// @todo this should save the simulation time and frame
-	// vl::time _sim_time;
-
-	/// Rendering pipeline performance checks
-//	vl::timer _rend_timer;
-//	vl::Report<vl::time> _rend_report;
-//	vl::timer _print_timer;
-
 };	// class Client
 
 }	// namespace cluster
 
 }	// namespace vl
 
-#endif // VL_CLUSTER_CLIENT_HPP
+#endif // HYDRA_CLUSTER_CLIENT_HPP

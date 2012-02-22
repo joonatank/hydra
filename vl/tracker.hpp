@@ -1,3 +1,19 @@
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file tracker.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	2010-05 initial
  *	2010-06 some meat
@@ -115,12 +131,6 @@ public :
 	size_t getNSensors(void) const
 	{ return _sensors.size(); }
 
-	void setTransformation(vl::Transform const &trans)
-	{ _transform = trans; }
-
-	vl::Transform const &getTransformation(void) const
-	{ return _transform; }
-
 	std::string const &getName(void) const
 	{ return _name; }
 
@@ -129,6 +139,21 @@ public :
 
 	bool incorrect_quaternion;
 
+	void setScale(Ogre::Vector3 const &s)
+	{ _scale = s; }
+
+	void setPermutation(Ogre::Vector3 const &permute)
+	{ _permute = permute; }
+
+	void setSign(Ogre::Vector3 const &s)
+	{ _sign = s; }
+
+	void setNeutralPosition(Ogre::Vector3 const &pos)
+	{ _neutral_position = pos; }
+
+	void setNeutralOrientation(Ogre::Quaternion const &q)
+	{ _neutral_quaternion = q; }
+	
 protected :
 	/// Protected constructor so that user needs to call create
 	Tracker(std::string const &trackerName);
@@ -137,9 +162,11 @@ protected :
 
 	std::vector<TrackerSensor> _sensors;
 
-	/// @todo this needs a separate Transform class with permutation, scaling and flipping
-	vl::Transform _transform;
-
+	Ogre::Vector3 _scale;
+	Ogre::Vector3 _permute;
+	Ogre::Vector3 _sign;
+	Ogre::Vector3 _neutral_position;
+	Ogre::Quaternion _neutral_quaternion;
 };	// class Tracker
 
 

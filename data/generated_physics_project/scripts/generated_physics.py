@@ -47,7 +47,7 @@ box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
 # with scaling a ConvexHull
 box2 = addBox("box2", "finger_sphere/blue", Vector3(-5.0, 10, -5), size=Vector3(1, 1, 1), mass=20)
 
-user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 0)
+user_sphere = addSphere("user_sphere", "finger_sphere/blue", Vector3(5.0, 20, 0), 20)
 user_sphere.user_controlled = True
 
 
@@ -99,19 +99,23 @@ print('Adding kinematic action')
 #addKinematicAction(user_sphere)
 addRigidBodyController(user_sphere)
 
+cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), mass=10)
+
+capsule = addCapsule('capsule', "finger_sphere/green", Vector3(.0, 5, 5), mass=10)
+
 print('Creating a tube')
 # The distance between the bodies is ~11m so lets put the tube length to 15m
 tube_info = TubeConstructionInfo()
 tube_info.start_body = user_sphere
 tube_info.end_body = sphere_fixed
-tube_info.start_frame = Transform(Vector3(0, 0, 1), Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.end_frame = Transform(Vector3(0, 0, -1), Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.length = 15
+tube_info.start_frame = Transform(Vector3(0, 0, 0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.end_frame = Transform(Vector3(0, 0, -0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
+tube_info.length = 5
 tube_info.mass = 50
 tube_info.radius = 0.1
 #tube_info.stiffness = 0.6
 #tube_info.damping = 0.3
 
 tube = game.physics_world.createTube(tube_info)
-
+tube.create()
 

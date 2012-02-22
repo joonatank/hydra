@@ -93,6 +93,7 @@ material bling_phong/normal_map/shadows/multi_pass
 			// that is gotten from the order of the texture_units
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 
@@ -127,6 +128,7 @@ material bling_phong/normal_map/shadows/multi_pass
 
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 		}
@@ -201,6 +203,7 @@ material bling_phong/shadows/multi_pass
 			// that is gotten from the order of the texture_units
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 
@@ -230,6 +233,7 @@ material bling_phong/shadows/multi_pass
 
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 		}
@@ -299,6 +303,7 @@ material bling_phong/multi_pass
 			// that is gotten from the order of the texture_units
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 
@@ -321,6 +326,7 @@ material bling_phong/multi_pass
 
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 
@@ -366,6 +372,7 @@ material bling_phong/shadows/single_pass
 			// that is gotten from the order of the texture_units
 			texture_unit diffuseTexture
 			{
+				tex_address_mode wrap
 				texture white.tga
 			}
 

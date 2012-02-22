@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file renderer.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 // Interface
 #include "renderer.hpp"
@@ -15,24 +26,35 @@
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
 #include "distrib_settings.hpp"
+#include "material_manager.hpp"
 
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
+#include "gui/console.hpp"
 
 #include "logger.hpp"
 
+// SkyX updates
+#include "camera.hpp"
+#include "scene_manager.hpp"
+
+// Necessary for checking materials after deserialize
+#include "material.hpp"
+
+// Necessary for message pump
 #include <OGRE/OgreWindowEventUtilities.h>
 
+#include <boost/bind.hpp>
+
 /// ------------------------- Public -------------------------------------------
-// TODO should probably copy the env settings and not store the reference
 vl::Renderer::Renderer(std::string const &name)
 	: _name(name)
 	, _ogre_sm(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
-	, _send_message_cb(0)
 	, _n_log_messages(0)
+	, _enable_debug_overlay(false)
 {
 	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
 }
@@ -45,6 +67,9 @@ vl::Renderer::~Renderer(void)
 	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
 	{ delete *iter; }
 	_windows.clear();
+
+	// Necessary because this holds Ogre resources.
+	_material_manager.reset();
 
 	// Shouldn't be necessary anymore, if _root handles destruction cleanly
 	if( _root && _ogre_sm )
@@ -72,13 +97,20 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 	_createOgre(env);
 
 	vl::config::Node const &node = getNodeConf();
-	if(node.empty())
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Node configuration")); }
+	if(!node.empty())
+	{ 
+		std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
 
-	std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
-
-	for( size_t i = 0; i < node.getNWindows(); ++i )
-	{ _createWindow( node.getWindow(i) ); }
+		for( size_t i = 0; i < node.getNWindows(); ++i )
+		{ createWindow( node.getWindow(i) ); }
+	}
+	// Hack to handle Ogre's depency on Window creation before the use of
+	// the RenderingEngine
+	else
+	{
+		// @todo should destroy the window after the init
+		createWindow(vl::config::Window("dummy", vl::config::Channel(), 400, 320, 0, 0));
+	}
 }
 
 vl::config::Node const &
@@ -112,41 +144,23 @@ vl::Renderer::getWindowConf(std::string const &window_name) const
 }
 
 void
-vl::Renderer::sendEvent( vl::cluster::EventData const &event )
+vl::Renderer::sendEvent(vl::cluster::EventData const &event)
 {
-	// Add to event stack for sending them at once in one message to the Master
-	_events.push_back(event);
+	_event_signal(event);
 }
 
 void
 vl::Renderer::sendCommand( std::string const &cmd )
 {
-	vl::cluster::Message msg( vl::cluster::MSG_COMMAND, 0, vl::time() );
-	// Write size and string and terminating character
-	msg.write( cmd.size()+1 );
-	msg.write( cmd.c_str(), cmd.size()+1 );
-
-	// Callback
-	assert(_send_message_cb);
-	(*_send_message_cb)(msg);
+	_command_signal(cmd);
 }
 
 void
 vl::Renderer::capture(void)
 {
-	// Here we should wait for the EnvSettings from master
-	// TODO we should have a wait for Message function
-	if( !_env )
-	{
-		return;
-	}
-
 	// Process input events
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->capture(); }
-
-	// Send messages
-	_sendEvents();
 }
 
 bool 
@@ -161,7 +175,8 @@ void
 vl::Renderer::printToConsole(std::string const &text, double time,
 						 std::string const &type, vl::LOG_MESSAGE_LEVEL lvl)
 {
-	_gui->getConsole()->printTo(text, time, type, lvl);
+	if(_gui &&_gui->getConsole())
+	{ _gui->getConsole()->printTo(text, time, type, lvl); }
 }
 
 
@@ -169,7 +184,7 @@ void
 vl::Renderer::draw(void)
 {
 	Ogre::WindowEventUtilities::messagePump();
-	
+
 	// @todo move the callback notifiying to Root
 	_root->getNative()->_fireFrameStarted();
 
@@ -178,6 +193,13 @@ vl::Renderer::draw(void)
 
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
+
+	// Hack to update Sky
+	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
+		&& _scene_manager && _scene_manager->getSkySimulator())
+	{
+		_scene_manager->getSkySimulator()->notifyCameraRender(_windows.at(0)->getPlayer().getCamera());
+	}
 
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameEnd(); }
@@ -198,24 +220,52 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	std::cout << vl::TRACE << "vl::Renderer::setProject" << std::endl;
 
 	_settings = settings;
-
-	_initialiseResources(_settings);
-}
-
-void
-vl::Renderer::initScene(vl::cluster::Message& msg)
-{
-	/// @todo change to use a custom type
-	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
 	
-	std::cout << vl::TRACE << "vl::Renderer::initScene" << std::endl;
-	
-	updateScene(msg);
+	assert(_root);
+
+	// @todo this doesn't allow resetting the resources
+
+	std::vector<std::string> paths;
+
+	// Add resources
+	if(!settings.getProjectDir().empty())
+	{ paths.push_back(settings.getProjectDir()); }
+	for(size_t i = 0; i < settings.getAuxDirectories().size(); ++i)
+	{
+		if(!settings.getAuxDirectories().at(i).empty())
+		{ paths.push_back(settings.getAuxDirectories().at(i)); }
+	}
+
+	std::clog << "Setting up the Ogre resources." << std::endl;
+
+	std::clog << "Adding paths to resources : " << std::endl;
+	for(size_t i = 0; i < paths.size(); ++i)
+	{
+		std::clog << "\t" << paths.at(i) << std::endl;
+	}
+
+	// remove all old resources
+	_root->removeResources();
+	// add all resources
+	_root->setupResources(paths);
+	// initialise them
+	_root->loadResources();
+
+	// @todo reset CEGUI resources also
+
+	// Remove cameras and wait for them to be reset
+	for(size_t i = 0; i < _windows.size(); ++i)
+	{
+		_windows.at(i)->setCamera(0);
+		_windows.at(i)->resetStatistics();
+	}
 }
 
 void
 vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 {
+	std::cout << vl::TRACE << "vl::Renderer::createSceneObjects" << std::endl;
+
 	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
 	
 	size_t size;
@@ -261,20 +311,11 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					if(_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
-					_gui.reset(new vl::gui::GUI(this, id, new RendererCommandCallback(this)));
+					// @todo fix callback with a signal
+					_gui.reset(new vl::gui::GUI(this, id));
 					assert(_windows.size() > 0);
-					_gui->initGUI(_windows.at(0));
-					assert(!_settings.empty());
-
-					_gui->initGUIResources(_settings);
-
-					// Request output updates for the console
-					if(logEnabled())
-					{
-						assert( _send_message_cb );
-						vl::cluster::Message msg(vl::cluster::MSG_REG_OUTPUT, 0, vl::time());
-						(*_send_message_cb)(msg);
-					}
+					assert(_windows.at(0)->getViewport());
+					_gui->initGUI(_windows.at(0)->getViewport());
 				}
 				else
 				{
@@ -284,9 +325,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			}
 			break;
 
-			case OBJ_GUI_WINDOW :
 			case OBJ_GUI_CONSOLE :
-			case OBJ_GUI_EDITOR :
 			{
 				// GUI objects are only used by master
 				if( getName() == _env->getMaster().name )
@@ -294,6 +333,10 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					if(!_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
 					_gui->createWindow(type, id);
+					if(type == OBJ_GUI_CONSOLE)
+					{
+						_gui->getConsole()->addCommandListener(boost::bind(&Renderer::sendCommand, this, _1));
+					}
 				}
 				else
 				{
@@ -305,7 +348,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_SCENE_MANAGER :
 			{
-				std::cout << vl::TRACE << "Creating SceneManager" << std::endl;
+				std::cout << vl::TRACE << "Renderer : Creating SceneManager" << std::endl;
 				// TODO support multiple SceneManagers
 				if(_scene_manager || _ogre_sm)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
@@ -315,7 +358,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-				std::clog << "SceneManager created." << std::endl;
+				std::clog << "Renderer : SceneManager created." << std::endl;
 			}
 			break;
 
@@ -324,6 +367,24 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 				if(!_scene_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
 				_scene_manager->_createSceneNode(id);
+			}
+			break;
+
+			case OBJ_MATERIAL_MANAGER :
+			{
+				if(_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
+				_material_manager.reset(new MaterialManager(this, id));
+				std::clog << "Renderer : MaterialManager created" << std::endl;
+			}
+			break;
+
+			case OBJ_MATERIAL :
+			{
+				if(!_material_manager)
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO Material Manager.")); }
+				vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
+				_materials_to_check.push_back(mat);
 			}
 			break;
 
@@ -342,7 +403,7 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 void
 vl::Renderer::updateScene(vl::cluster::Message& msg)
 {
-	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE);
+	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE || msg.getType() == vl::cluster::MSG_SG_INIT);
 
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
@@ -358,37 +419,6 @@ vl::Renderer::updateScene(vl::cluster::Message& msg)
 
 	_syncData();
 	_updateDistribData();
-}
-
-void
-vl::Renderer::print(vl::cluster::Message& msg)
-{
-	assert( msg.getType() == vl::cluster::MSG_PRINT );
-	size_t msgs;
-	msg.read(msgs);
-	while(msgs > 0)
-	{
-		std::string type;
-		msg.read(type);
-		double time;
-		msg.read(time);
-		std::string str;
-		msg.read(str);
-		vl::LOG_MESSAGE_LEVEL lvl;
-		msg.read(lvl);
-
-		printToConsole(str, time, type, lvl);
-
-		msgs--;
-	}
-}
-
-void 
-vl::Renderer::setSendMessageCB(vl::MsgCallback *cb)
-{
-	// Only single instances are supported for now
-	assert(!_send_message_cb && cb);
-	_send_message_cb = cb;
 }
 
 /// ----------------------- Log Receiver overrides ---------------------------
@@ -411,6 +441,28 @@ vl::Renderer::logMessage(vl::LogMessage const &msg)
 uint32_t 
 vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
+
+
+vl::IWindow *
+vl::Renderer::createWindow(vl::config::Window const &winConf)
+{
+	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
+
+	// Destroy dummy window
+	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
+	{
+		delete _windows.at(0);
+		_windows.clear();
+	}
+
+	vl::Window *window = new vl::Window(winConf, this);
+	if(_player)
+	{ window->setCamera(_player->getCamera()); }
+	_windows.push_back(window);
+
+	return window;
+}
+
 
 /// ------------------------ Protected -----------------------------------------
 
@@ -450,48 +502,11 @@ vl::Renderer::_createOgre(vl::config::EnvSettingsRefPtr env)
 	_root->createRenderSystem();
 }
 
-void
-vl::Renderer::_initialiseResources( vl::Settings const &set )
-{
-	assert(_root);
-
-	// Add resources
-	_root->addResource( set.getProjectDir() );
-	for( size_t i = 0; i < set.getAuxDirectories().size(); ++i )
-	{
-		_root->addResource( set.getAuxDirectories().at(i) );
-	}
-
-	std::string msg("Setting up the resources.");
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
-
-	_root->setupResources();
-	_root->loadResources();
-}
-
 Ogre::SceneManager *
 vl::Renderer::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name)
 {
 	assert(root);
 	Ogre::SceneManager *sm = _root->createSceneManager(name);
-
-	/// These can not be moved to SceneManager at least not yet
-	/// because they need the RenderSystem capabilities.
-	/// @todo this should be user configurable (if the hardware supports it)
-	/// @todo the number of textures (four at the moment) should be user configurable
-	if (root->getNative()->getRenderSystem()->getCapabilities()->hasCapability(Ogre::RSC_HWRENDER_TO_TEXTURE))
-	{
-		std::cout << "Using 1024 x 1024 shadow textures." << std::endl;
-		sm->setShadowTextureSettings(1024, 4);
-	}
-	else
-	{
-		/// @todo this doesn't work on Windows with size < (512,512)
-		/// should check the window size and select the largest
-		/// possible shadow texture based on that.
-		std::cout << "Using 512 x 512 shadow textures." << std::endl;
-		sm->setShadowTextureSettings(512, 4);
-	}
 
 	return sm;
 }
@@ -521,6 +536,10 @@ vl::Renderer::_syncData(void)
 			if( obj )
 			{
 				obj->unpack(stream);
+
+					// Check materials, needs to be here because we only have
+					// the correct name after first unpack
+				_check_materials(iter->getId());
 			}
 			else
 			{
@@ -561,35 +580,6 @@ vl::Renderer::_updateDistribData( void )
 }
 
 void
-vl::Renderer::_sendEvents( void )
-{
-	if( !_events.empty() )
-	{
-		vl::cluster::Message msg( vl::cluster::MSG_INPUT, 0, vl::time() );
-		std::vector<vl::cluster::EventData>::iterator iter;
-		for( iter = _events.begin(); iter != _events.end(); ++iter )
-		{
-			iter->copyToMessage(&msg);
-		}
-		_events.clear();
-
-		assert(_send_message_cb);
-		(*_send_message_cb)(msg);
-	}
-}
-
-void
-vl::Renderer::_createWindow(vl::config::Window const &winConf)
-{
-	std::cout << vl::TRACE << "vl::Renderer::_createWindow : " << winConf.name << std::endl;
-
-	vl::Window *window = new vl::Window(winConf, this);
-	if(_player)
-	{ window->setCamera(_player->getCamera()); }
-	_windows.push_back(window);
-}
-
-void
 vl::Renderer::_takeScreenshot( void )
 {
 	std::string prefix( "screenshot_" );
@@ -600,3 +590,21 @@ vl::Renderer::_takeScreenshot( void )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 }
 
+void
+vl::Renderer::_check_materials(uint64_t const id)
+{
+	// @todo move to a separate function and maybe
+	// make bit more universal (any object can have a callback)
+	for(std::vector<vl::MaterialRefPtr>::iterator mat_iter = _materials_to_check.begin();
+		mat_iter != _materials_to_check.end(); ++mat_iter)
+	{
+		if((*mat_iter)->getID() == id)
+		{
+			assert(_mesh_manager);
+			_mesh_manager->checkMaterialUsers(*mat_iter);
+			// remove from the check list
+			_materials_to_check.erase(mat_iter);
+			break;
+		}
+	}
+}

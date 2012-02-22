@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file python/python_physics.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
@@ -10,14 +19,19 @@
 
 #include "typedefs.hpp"
 
+// For namespace renaming
+#include "python_context_impl.hpp"
+
 // Physics
-#include "physics/physics_events.hpp"
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
 #include "physics/physics_constraints.hpp"
 #include "physics/tube.hpp"
 #include "physics/motion_state.hpp"
+
+// Necessary for exposing vectors
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 /// Physics world member overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
@@ -64,6 +78,20 @@ void export_physics_objects(void)
 		.staticmethod("create")
 	;
 
+	vl::physics::CylinderShapeRefPtr (*cyl_create_0)(vl::scalar, vl::scalar) = &vl::physics::CylinderShape::create;
+	vl::physics::CylinderShapeRefPtr (*cyl_create_1)(Ogre::Vector3 const &) = &vl::physics::CylinderShape::create;
+
+	python::class_<vl::physics::CylinderShape, boost::noncopyable, vl::physics::CylinderShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CylinderShape", python::no_init )
+		.def("create", cyl_create_0)
+		.def("create", cyl_create_1)
+		.staticmethod("create")
+	;
+
+	python::class_<vl::physics::CapsuleShape, boost::noncopyable, vl::physics::CapsuleShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CapsuleShape", python::no_init )
+		.def("create", &vl::physics::CapsuleShape::create)
+		.staticmethod("create")
+	;
+
 	/// Abstract master class for all physics constraints
 	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 	;
@@ -75,6 +103,10 @@ void export_physics_objects(void)
 		.def("setLinearUpperLimit", &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.def("setAngularLowerLimit", &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.def("setAngularUpperLimit", &vl::physics::SixDofConstraint::setAngularUpperLimit)
+		.add_property("angular_upper_limit", &vl::physics::SixDofConstraint::getAngularUpperLimit, &vl::physics::SixDofConstraint::setAngularUpperLimit)
+		.add_property("angular_lower_limit", &vl::physics::SixDofConstraint::getAngularLowerLimit, &vl::physics::SixDofConstraint::setAngularLowerLimit)
+		.add_property("linear_upper_limit", &vl::physics::SixDofConstraint::getLinearUpperLimit, &vl::physics::SixDofConstraint::setLinearUpperLimit)
+		.add_property("linear_lower_limit", &vl::physics::SixDofConstraint::getLinearLowerLimit, &vl::physics::SixDofConstraint::setLinearLowerLimit)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
 		.def("create", &vl::physics::SixDofConstraint::create)
@@ -159,19 +191,50 @@ void export_physics_objects(void)
 		.add_property("motion_state", python::make_function(getMotionState_ov1, python::return_value_policy<python::reference_existing_object>()), &vl::physics::RigidBody::setMotionState )
 		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
 		.add_property("mass", &vl::physics::RigidBody::getMass, &vl::physics::RigidBody::setMass)
+		.add_property("kinematic", &vl::physics::RigidBody::isKinematicObject, &vl::physics::RigidBody::enableKinematicObject)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
+//	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
+//	void (vl::physics::MotionState::*setWorldTransform_ov0)(vl::Transform const &) = &vl::physics::MotionState::setWorldTransform;
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
 		.add_property("node", python::make_function( &vl::physics::MotionState::getNode, python::return_value_policy< python::reference_existing_object>() ),
 					  &vl::physics::MotionState::setNode )
-		.add_property("position", &vl::physics::MotionState::getPosition, &vl::physics::MotionState::setPosition)
-		.add_property("orientation", &vl::physics::MotionState::getOrientation, &vl::physics::MotionState::setOrientation)
-		.add_property("world_transform", getWorldTransform_ov0)
+		.add_property("position", python::make_function(&vl::physics::MotionState::getPosition, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setPosition)
+		.add_property("orientation", python::make_function(&vl::physics::MotionState::getOrientation, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setOrientation)
+		.add_property("world_transformation", python::make_function(&vl::physics::MotionState::getWorldTransform, python::return_value_policy<python::copy_const_reference>()), &vl::physics::MotionState::setWorldTransform)
+		.def("set_world_transformation", &vl::physics::MotionState::setWorldTransform)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::physics::SolverParameters>("PhysicsSolverParameters", python::init<>())
+		.def_readwrite("erp", &vl::physics::SolverParameters::erp)
+		.def_readwrite("erp2", &vl::physics::SolverParameters::erp2)
+		.def_readwrite("global_cfm", &vl::physics::SolverParameters::global_cfm)
+		.def_readwrite("restitution", &vl::physics::SolverParameters::restitution)
+		.def_readwrite("max_error_reduction", &vl::physics::SolverParameters::max_error_reduction)
+		.def_readwrite("internal_time_step", &vl::physics::SolverParameters::internal_time_step)
+		.def_readwrite("max_sub_steps", &vl::physics::SolverParameters::max_sub_steps)
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::Constraint> > >("ConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
+	;
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> > >("SixDofConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::SixDofConstraint> >, true>())
+		//.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::RigidBody> > >("RigidBodyList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::RigidBody> >, true>())	
+	;
+
+	python::class_<std::vector<boost::shared_ptr<vl::physics::Tube> > >("TubeList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Tube> >, true>())	
 	;
 
 	/// world
@@ -185,7 +248,13 @@ void export_physics_objects(void)
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
 		.def("createTube", &vl::physics::World::createTube, createTube_ov())
 		.def("createTube", &vl::physics::World::createTubeEx)
+		.add_property("bodies", python::make_function(&vl::physics::World::getBodies, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("tubes", python::make_function(&vl::physics::World::getTubes, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("constraints", python::make_function(&vl::physics::World::getConstraints, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("gravity", &vl::physics::World::getGravity, &vl::physics::World::setGravity )
+		.add_property("collision_detection_enabled", &vl::physics::World::isCollisionDetectionEnabled, &vl::physics::World::enableCollisionDetection)
+		.add_property("solver_parameters", python::make_function(&vl::physics::World::getSolverParameters, python::return_value_policy<python::copy_const_reference>()),
+				&vl::physics::World::setSolverParameters)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -196,7 +265,7 @@ void export_physics_objects(void)
 		.def_readwrite("end_frame", &vl::physics::Tube::ConstructionInfo::end_body_frame)
 		.def_readwrite("length", &vl::physics::Tube::ConstructionInfo::length)
 		.def_readwrite("radius", &vl::physics::Tube::ConstructionInfo::radius)
-		.def_readwrite("mass", &vl::physics::Tube::ConstructionInfo::mass)
+		.def_readwrite("mass_per_meter", &vl::physics::Tube::ConstructionInfo::mass_per_meter)
 		.def_readwrite("stiffness", &vl::physics::Tube::ConstructionInfo::stiffness)
 		.def_readwrite("damping", &vl::physics::Tube::ConstructionInfo::damping)
 		.def_readwrite("element_size", &vl::physics::Tube::ConstructionInfo::element_size)
@@ -206,16 +275,20 @@ void export_physics_objects(void)
 		.def_readwrite("fixing_upper_lim", &vl::physics::Tube::ConstructionInfo::fixing_upper_lim)
 		.def_readwrite("fixing_lower_lim", &vl::physics::Tube::ConstructionInfo::fixing_lower_lim)
 		.def_readwrite("spring", &vl::physics::Tube::ConstructionInfo::spring)
-		.def_readwrite("inertia", &vl::physics::Tube::ConstructionInfo::inertia)
+		.def_readwrite("inertia_factor", &vl::physics::Tube::ConstructionInfo::inertia_factor)
 		.def_readwrite("disable_collisions", &vl::physics::Tube::ConstructionInfo::disable_collisions)
 		.def_readwrite("body_damping", &vl::physics::Tube::ConstructionInfo::body_damping)
+		.def_readwrite("bending_radius", &vl::physics::Tube::ConstructionInfo::bending_radius)
 	;
+
 
 	python::class_<vl::physics::Tube, vl::physics::TubeRefPtr, boost::noncopyable>("Tube", python::no_init)
 		.add_property("spring_stiffness", &vl::physics::Tube::getSpringStiffness, &vl::physics::Tube::setSpringStiffness)
 		.add_property("spring_damping", &vl::physics::Tube::getSpringDamping, &vl::physics::Tube::setSpringDamping)
 		.add_property("mass", &vl::physics::Tube::getMass, &vl::physics::Tube::setMass)
-		.add_property("damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
+		.add_property("body_damping", &vl::physics::Tube::getDamping, &vl::physics::Tube::setDamping)
+		.add_property("lower_limit", python::make_function(&vl::physics::Tube::getLowerLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setLowerLim)
+		.add_property("upper_limit", python::make_function(&vl::physics::Tube::getUpperLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setUpperLim)
 		.add_property("material", python::make_function(&vl::physics::Tube::getMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setMaterial)
 		// Setters here would need to modify the meshes, both physics and graphics
 		.add_property("element_size", &vl::physics::Tube::getElementSize)
@@ -225,60 +298,13 @@ void export_physics_objects(void)
 		.def("show", &vl::physics::Tube::show)
 		.def("set_equilibrium", &vl::physics::Tube::setEquilibrium)
 		.def("add_fixing", &vl::physics::Tube::addFixingPoint, addFixingPoint_ovs())
-	;
-}
-
-void export_physics_actions(void)
-{
-	/// Physics Actions
-	python::class_<vl::physics::SliderMotorAction, boost::noncopyable, python::bases<vl::BasicAction> >("SliderMotorAction", python::no_init )
-		.def_readwrite("velocity", &vl::physics::SliderMotorAction::velocity)
-		.def_readwrite("constraint", &vl::physics::SliderMotorAction::constraint)
-		.def("create",&vl::physics::SliderMotorAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::KinematicAction, boost::noncopyable, python::bases<vl::MoveAction> >("KinematicAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::KinematicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::KinematicAction::setRigidBody )
-		.def("create",&vl::physics::KinematicAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::DynamicAction, boost::noncopyable, python::bases<vl::MoveAction> >("DynamicAction", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::DynamicAction::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::DynamicAction::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::DynamicAction::getForce, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::DynamicAction::setForce )
-		.add_property("torque", python::make_function( &vl::physics::DynamicAction::getTorque, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::DynamicAction::setTorque )
-		.add_property("max_speed", &vl::physics::DynamicAction::getSpeed, &vl::physics::DynamicAction::setSpeed)
-		.def("create",&vl::physics::DynamicAction::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::ApplyForce, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyForce", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::ApplyForce::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::ApplyForce::setRigidBody )
-		.add_property("force", python::make_function( &vl::physics::ApplyForce::getForce, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::ApplyForce::setForce )
-		.add_property("local", &vl::physics::ApplyForce::getLocal, &vl::physics::ApplyForce::setLocal)
-		.def("create",&vl::physics::ApplyForce::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
-	;
-
-	python::class_<vl::physics::ApplyTorque, boost::noncopyable, python::bases<vl::BasicAction> >("ApplyTorque", python::no_init )
-		.add_property("body", python::make_function( &vl::physics::ApplyTorque::getRigidBody, python::return_value_policy< python::reference_existing_object>() ),
-					  &vl::physics::ApplyTorque::setRigidBody )
-		.add_property("torque", python::make_function( &vl::physics::ApplyTorque::getTorque, python::return_value_policy<python::copy_const_reference>() ),
-					  &vl::physics::ApplyTorque::setTorque )
-		.def("create",&vl::physics::ApplyTorque::create,
-			 python::return_value_policy<python::reference_existing_object>() )
-		.staticmethod("create")
+		.def("remove_fixing", &vl::physics::Tube::removeFixingPoint)
+		.def("get_fixing", &vl::physics::Tube::getFixing)
+		.add_property("n_fixings", &vl::physics::Tube::getNFixings)
+		.add_property("fixings", python::make_function(&vl::physics::Tube::getFixings, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("start_fixing", &vl::physics::Tube::getStartFixing)
+		.add_property("end_fixing", &vl::physics::Tube::getEndFixing)
+		.def("create", &vl::physics::Tube::create)
 	;
 }
 
@@ -290,5 +316,5 @@ void export_physics_actions(void)
 void export_physics(void)
 {
 	export_physics_objects();
-	export_physics_actions();
 }
+

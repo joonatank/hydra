@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file base/envsettings.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -227,12 +236,18 @@ vl::config::EnvSettings::getLogDir(vl::PATH_TYPE const type) const
 std::string
 vl::config::EnvSettings::getEnvironementDir(void) const
 {
-	fs::path envFile( getFile() );
-	fs::path envDir = envFile.parent_path();
-	if( !fs::exists( envDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.string() ) ); }
+	if(!getFile().empty())
+	{
+		fs::path envFile( getFile() );
+		fs::path envDir = envFile.parent_path();
+	
+		if( !fs::exists( envDir ) )
+		{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( envDir.string() ) ); }
 
-	return envDir.string();
+		return envDir.string();
+	}
+	
+	return std::string();
 }
 
 void
@@ -796,7 +811,16 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 			{
 				projection.perspective_type = Projection::FOV;
 			}
-			// Assume Wall otherwise
+			else if(type == "wall")
+			{
+				projection.perspective_type = Projection::WALL;
+			}
+		}
+
+		attrib = xml_pers->first_attribute("asymmetric_stereo_frustum");
+		if(attrib)
+		{
+			projection.use_asymmetric_stereo = vl::from_string<bool>(attrib->value());
 		}
 
 		rapidxml::xml_node<> *wall = xml_pers->first_node("wall");

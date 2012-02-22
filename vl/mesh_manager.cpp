@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh_manager.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -17,6 +28,60 @@
 
 #include "resource_manager.hpp"
 
+// Necessary for comparing sub mesh materials
+#include "material.hpp"
+
+#include <Procedural.h>
+
+namespace {
+
+template <typename T>
+vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T> const &generator)
+{
+	vl::MeshRefPtr mesh(new vl::Mesh(name));
+	
+	Procedural::TriangleBuffer tbuffer;
+	generator.addToTriangleBuffer(tbuffer);	
+
+	// copy vertex data
+	mesh->sharedVertexData = new vl::VertexData;
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+
+	for(std::vector<Procedural::TriangleBuffer::Vertex>::const_iterator it 
+			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end();it++)
+	{
+		vl::Vertex vert;
+		vert.position = it->mPosition;
+		vert.normal = it->mNormal;
+		vert.uv = it->mUV;
+		mesh->sharedVertexData->addVertex(vert);
+	}
+
+	// copy index data
+	vl::SubMesh *sub = mesh->createSubMesh();
+	sub->setMaterial("BaseWhiteNoLighting");
+	// @todo should check if we need to use 32-bit buffer
+	// forcing the use of 32 bit index buffer
+	//sub->indexData.setIndexSize(vl::IT_32BIT);
+	sub->indexData.setIndexCount(tbuffer.getIndices().size());
+	for(size_t i = 0; i < tbuffer.getIndices().size(); ++i)
+	{
+		sub->indexData.set(i, (uint32_t)tbuffer.getIndices().at(i));
+	}
+
+	/* tangent vector calculation is not yet implemented */
+
+	mesh->calculateBounds();
+
+	return mesh;
+}
+
+}	// unamed namespace
+
+
+/// Callbacks
 void 
 vl::ManagerMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
 {
@@ -175,28 +240,18 @@ vl::MeshRefPtr
 vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16_t longitude, uint16_t latitude)
 {
 	std::clog << "vl::MeshManager::createSphere" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
-	}
-	
-	// (x, y, z) = (sin(Pi * m/M) cos(2Pi * n/N), sin(Pi * m/M) sin(2Pi * n/N), cos(Pi * m/M))
-	// where M is latitude and N is longitude
-	// might need to adjust M with 1 or 2
-	MeshRefPtr mesh(new Mesh(name));
-	uint16_t M = latitude;
-	uint16_t N = longitude;
-	for(uint16_t m = 0; m < M; ++m)
-	{
-		for(uint16_t n = 0; n < N; ++n)
-		{
-			vl::scalar x = std::sin(M_PI * m/M) * std::cos(2*M_PI * n/N);
-			vl::scalar y = std::sin(M_PI * m/M) * std::sin(2*M_PI * n/N);
-			vl::scalar z = std::cos(M_PI * m/M);
-		}
-	}
 
+	if(hasMesh(name))
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+
+	Procedural::SphereGenerator generator;
+	generator.setRadius(radius).setUTile(longitude).setVTile(latitude);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
 }
 
 vl::MeshRefPtr
@@ -213,61 +268,103 @@ vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
 	}
 
-	MeshRefPtr mesh(new Mesh(name));
-	mesh->sharedVertexData = new VertexData;
+	Procedural::BoxGenerator generator;
+	/// @todo add configurable segments
+	generator.setSize(size).setNumSegX(1).setNumSegY(1).setNumSegZ(1);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
 
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
-	/// @todo add tangents
-
-	// y direction
-	for(uint16_t m = 0; m < 2; ++m)
-	{
-		// x direction
-		for(uint16_t n = 0; n < 2; ++n)
-		{
-			// z direction
-			for(uint16_t l = 0; l < 2; ++l)
-			{
-				Vertex vert;
-				vl::scalar x = size.x *(n - 0.5);
-				vl::scalar y = size.z *(m - 0.5);
-				vl::scalar z = size.y *(l - 0.5);
-				vert.position = Ogre::Vector3(x, y, z);
-				vert.normal = vert.position;
-				vert.normal.normalise();
-				// @todo fix UV coords
-				//vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
-				mesh->sharedVertexData->addVertex(vert);
-			}
-		}
-	}
-
-	mesh->calculateBounds();
-
-	SubMesh *sub = mesh->createSubMesh();
-	/// @todo add material (or not?) some clear default would be good
-	// bottom (0, 1, 2, 3)
-	sub->addFace(0, 2, 1);
-	sub->addFace(1, 2, 3);
-	// left side (0, 1, 4, 5)
-	sub->addFace(0, 1, 4);
-	sub->addFace(4, 1, 5);
-	// back side (0, 2, 4, 6)
-	sub->addFace(0, 4, 2);
-	sub->addFace(2, 4, 6);
-	// fron side (1, 3, 5, 7)
-	sub->addFace(1, 3, 5);
-	sub->addFace(5, 3, 7);
-	// right side
-	sub->addFace(3, 2, 6);
-	sub->addFace(3, 6, 7);
-	// top side
-	sub->addFace(4, 5, 6);
-	sub->addFace(6, 5, 7);
+	assert(mesh);
 
 	_meshes[name] = mesh;
+	return mesh;
+}
+
+vl::MeshRefPtr
+vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius, 
+		vl::scalar height, uint16_t seg_height, uint16_t seg_radius)
+{
+	std::clog << "vl::MeshManager::createCylinder" << std::endl;
+
+	if(hasMesh(name))
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+
+	Procedural::CylinderGenerator generator;
+	generator.setRadius(radius).setHeight(height).setNumSegHeight(seg_height).setNumSegBase(seg_radius);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+	
+	// Fix the origin to middle of the cylinder
+	for(size_t i = 0; i < mesh->sharedVertexData->getNVertices(); ++i)
+	{
+		mesh->sharedVertexData->getVertex(i).position -= mesh->getBounds().getCenter();
+	}	
+	mesh->calculateBounds();
+
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
+}
+
+vl::MeshRefPtr
+vl::MeshManager::createCapsule(std::string const &name, vl::scalar radius, 
+		vl::scalar height, uint16_t seg_height, uint16_t seg_radius, uint16_t segments)
+{
+	std::clog << "vl::MeshManager::createCapsule with height " << height << std::endl;
+
+	if(hasMesh(name))
+	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+
+	Procedural::CapsuleGenerator generator;
+	// divide height by two because we use height to mean the actual height of
+	// the capsule (as in bounding box size) not height from center.
+	generator.setRadius(radius).setHeight(height/2).setNumSegHeight(seg_height).setNumRings(seg_radius).setNumSegments(segments);
+	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
+
+	std::clog << mesh->getBounds() << std::endl;
+	assert(mesh);
+
+	_meshes[name] = mesh;
+	return mesh;
+}
+
+
+vl::MeshRefPtr
+vl::MeshManager::createPrefab(std::string const &type_name)
+{
+	vl::MeshRefPtr mesh;
+	if(type_name == "prefab_plane")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createPlane(type_name, 20, 20);
+		}
+	}
+	else if(type_name == "prefab_cube")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createCube(type_name);
+		}
+	}
+	else if(type_name == "prefab_sphere")
+	{
+		if(!hasMesh(type_name))
+		{
+			/// Creating a mesh leaves it in the manager for as long as
+			/// cleanup is called on the manager, which gives us enough
+			/// time even if we don't store the ref pointer.
+			mesh = createSphere(type_name);
+		}
+	}
+	else
+	{ BOOST_THROW_EXCEPTION(vl::invalid_param() << vl::desc("Invalid PREFAB type name : " + type_name)); }
+
 	return mesh;
 }
 
@@ -299,6 +396,42 @@ vl::MeshManager::cleanup_unused(void)
 	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
+vl::MeshRefPtr 
+vl::MeshManager::createMesh(std::string const &name)
+{
+	MeshRefPtr mesh(new Mesh(name));
+	_meshes[name] = mesh;
+	return mesh;
+}
+
+bool
+vl::MeshManager::checkMaterialUsers(vl::MaterialRefPtr mat)
+{
+	bool retval = false;
+
+	// temp array for the ones that are left
+	std::vector<Ogre::SubEntity *> remaining;
+	for(std::vector<Ogre::SubEntity *>::iterator iter = _og_sub_entities.begin();
+		iter != _og_sub_entities.end(); ++iter)
+	{
+		// sub mesh has the original material name before Ogre overwrote it with "BaseWhite"
+		if((*iter)->getSubMesh()->getMaterialName() == mat->getName())
+		{
+			assert(mat->getNative().get());
+			(*iter)->setMaterial(mat->getNative());
+			retval = true;
+		}
+		else
+		{ remaining.push_back(*iter); }
+	}
+
+	_og_sub_entities = remaining;
+
+	// @todo needs to loop through Ogre meshes also... as they are copies of our meshes. Argh.
+	//Ogre::MeshManager::getSingleton().
+	return retval;
+}
+
 void 
 vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 {
@@ -319,4 +452,12 @@ vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 		_waiting_for_loading.erase(iter);
 	}
 	// else this was called using a blocking loader
+}
+
+void
+vl::MeshManager::_addSubEntityWithInvalidMaterial(Ogre::SubEntity *se)
+{
+	if(std::find(_og_sub_entities.begin(), _og_sub_entities.end(), se)
+		== _og_sub_entities.end())
+	{ _og_sub_entities.push_back(se); }
 }

@@ -1,8 +1,21 @@
-/**	@uathor Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-03
- *	@file conversion.hpp
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
- *	Functions to convert math objects from one library to another.
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-03
+ *	@file math/conversion.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Functions to convert math objects from one library to another.
  *	Ogre Math is our main math library.
  *
  *	VMMLib <-> Ogre, added 2010-03

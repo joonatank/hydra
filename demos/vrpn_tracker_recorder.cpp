@@ -6,7 +6,7 @@
 
 /// @todo add tracker element with time support
 
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 #include "base/sleep.hpp"
 
 #include <vrpn_Tracker.h>
@@ -121,7 +121,7 @@ struct data
 	std::vector<sensor_elem> sensors;
 };
 
-vl::timer g_timer;
+vl::chrono g_timer;
 
 std::ostream &
 operator<<(std::ostream &os, data const &d)
@@ -143,7 +143,7 @@ operator<<(std::ostream &os, data const &d)
 }
 
 /// @brief VRPN callback handler
-void handle_tracker(void *userdata, const vrpn_TRACKERCB t)
+void VRPN_CALLBACK handle_tracker(void *userdata, const vrpn_TRACKERCB t)
 {
 	assert(userdata);
 	data *d = (data *)userdata;

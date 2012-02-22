@@ -1,6 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file player.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *
  *	Player class
  *	Manages the player or observer in the Game world
@@ -21,18 +36,21 @@
 #ifndef HYDRA_PLAYER_HPP
 #define HYDRA_PLAYER_HPP
 
-#include <string>
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "math/transform.hpp"
 
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 
 #include "typedefs.hpp"
+
+#include <string>
 
 namespace vl
 {
 
-class Player : public vl::Distributed
+class HYDRA_API Player : public vl::Distributed
 {
 public :
 	/// @brief Constructor
@@ -104,6 +122,14 @@ public :
 		_head_frustum_z = e;
 	}
 
+	void enableAsymmetricStereoFrustum(bool e)
+	{
+		setDirty(DIRTY_FRUSTUM);
+		_asymmetric_stereo_frustum = e;
+	}
+
+	bool isAsymmetricStereoFrustum(void) const
+	{ return _asymmetric_stereo_frustum; }
 
 	enum DirtyBits
 	{
@@ -137,6 +163,8 @@ private :
 	bool _head_frustum_x;
 	bool _head_frustum_y;
 	bool _head_frustum_z;
+
+	bool _asymmetric_stereo_frustum;
 
 	SceneManagerPtr _scene_manager;
 

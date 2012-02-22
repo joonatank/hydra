@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# Joonatan Kuosa
+# Joonatan Kuosa <joonatan.kuosa@savantsimulatos.com>
 # 2010-11
 #
 # This file is part of the CMake build system for Hydra
@@ -40,8 +40,10 @@ include_directories( SYSTEM
 subdirs(gl_tests)
 
 add_executable( test_timer test_timer.cpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	)
 
 target_link_libraries(test_timer ${TEST_LIB})
@@ -113,6 +115,9 @@ add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 if(WIN32)
 	add_executable(serial_reader
 		serial_reader.cpp
+		${HydraMain_SOURCE_DIR}/input/input.hpp
+		${HydraMain_SOURCE_DIR}/input/joystick.hpp
+		${HydraMain_SOURCE_DIR}/input/joystick.cpp
 		${HydraMain_SOURCE_DIR}/input/serial_joystick.cpp
 		${HydraMain_SOURCE_DIR}/input/serial_joystick.hpp
 		${HydraMain_SOURCE_DIR}/base/serial.cpp

@@ -1,3 +1,19 @@
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-10
+ *	@file base/projsettings.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
 /**	Joonas Reunamo <joonas.reunamo@tut.fi>
  *	2010-10
  *
@@ -313,6 +329,17 @@ vl::ProjSettingsSerializer::ProjSettingsSerializer( vl::ProjSettingsRefPtr projS
 vl::ProjSettingsSerializer::~ProjSettingsSerializer( void )
 {
 	delete [] _xml_data;
+}
+
+bool
+vl::ProjSettingsSerializer::readFile(std::string const &file_path)
+{
+	std::string file;
+	vl::readFileToString(file_path, file);
+	bool retval = readString(file);
+	_projSettings->setFile(file_path);
+
+	return retval;
 }
 
 bool

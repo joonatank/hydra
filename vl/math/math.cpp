@@ -1,6 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
- *	@file math.cpp
+ *	@file math/math.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -11,14 +22,14 @@ void
 vl::getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z )
 {
 	vl::scalar test = q.x*q.y + q.z*q.w;
-	if (test > 0.5-vl::epsilon)
+	if (test > 0.5-vl::EPSILON)
 	{ // singularity at north pole
 		y = 2 * atan2(q.x,q.w);
 		z = scalar(M_PI/2);
 		x = 0;
 		return;
 	}
-	if (test < -0.5+vl::epsilon)
+	if (test < -0.5+vl::EPSILON)
 	{ // singularity at south pole
 		y = -2 * atan2(q.x,q.w);
 		z = scalar(- M_PI/2);

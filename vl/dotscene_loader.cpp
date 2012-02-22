@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file dotscene_loader.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "dotscene_loader.hpp"
@@ -70,6 +80,8 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("TextResource has invalid XML file") );
 	}
 
+	std::clog << "SceneNodes loaded from file = " << scene_data.getName() << std::endl;
+	_file_name = scene_data.getName();
 	_parse( xml_data );
 
 	// Reset data so that we don't end up with dangling pointers (or holding resources)
@@ -303,6 +315,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
+	node->setSceneFile(_file_name);
 
 	rapidxml::xml_node<>* pElement;
 

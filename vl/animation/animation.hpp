@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
- *	@file animation.hpp
+ *	@file animation/animation.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/*
  *	Internal Kinematic animation implementation. Defined in a separate namespace.
  */
 
@@ -39,6 +50,11 @@ typedef boost::weak_ptr<Link> LinkWeakPtr;
 typedef boost::weak_ptr<Node> NodeWeakPtr;
 typedef boost::weak_ptr<Graph> GraphWeakPtr;
 
+/// @todo most of the code is duplicated in Node and Link
+/// with just few independent methods
+/// really should use a common master class for both
+/// that implements common transformation methods etc.
+
 /// @class Node
 /// @brief A node in the animation graph
 class Node : public boost::enable_shared_from_this<Node>
@@ -48,10 +64,19 @@ public :
 	typedef std::vector<LinkWeakPtr> LinkWeakList;
 
 	/// @brief Constructor
-	Node(void);
+	Node(vl::Transform const &initial_transform);
 
 	/// @brief Destructor
 	~Node(void);
+
+	/// @brief collision detection helper
+	/// when the graph is modified (parents changed) the node
+	/// previous transformation reflects the one used when it was
+	/// created or the one from last parent.
+	/// How ever this is not what we want, we want the last transformation
+	/// with the current parent.
+	void setInitialState(void)
+	{ _prev_transform = _transform; }
 
 	/// @brief is this node a leaf in the graph i.e. contains no child nodes
 	bool isLeaf(void) const;
@@ -77,7 +102,8 @@ public :
 
 	/// @brief get the local transformation
 	/// @return Transformation of the Node in local coordinates
-	Transform &getTransform(void);
+	/// Only const version is provided because we need to manage the old
+	/// transformations for collision detection.
 	Transform const &getTransform(void) const;
 
 	/// @brief set the local transformation
@@ -91,6 +117,9 @@ public :
 	/// @brief set the current world transformation
 	/// @param t a new Transformation for the Node in world coordinates
 	void setWorldTransform(Transform const &t);
+
+	/// @brief collision detection helper
+	void popLastTransform(void);
 
 	size_t length_to_root(void) const;
 
@@ -124,6 +153,8 @@ private :
 	LinkWeakList _aux_parents;
 
 	Transform _transform;
+
+	Transform _prev_transform;
 	
 };	// class Node
 
@@ -153,7 +184,8 @@ public :
 
 	/// @brief get the local transformation
 	/// @return Transformation of the Link in local coordinates
-	Transform &getTransform(void);
+	/// Only const version is provided because we need to manage the old
+	/// transformations for collision detection.
 	Transform const &getTransform(void) const;
 
 	/// @brief set the local transformation
@@ -173,6 +205,11 @@ public :
 	/// @brief set the current orientation relative to the initial transformation
 	/// preseres childs translation and only affects it's orientation
 	void setOrientation(Quaternion const &);
+
+	void rotate(Quaternion const &);
+
+	/// @brief collision detection helper
+	void popLastTransform(void);
 
 	/// @brief get the initial state transformation
 	/// Purposefully non-const method is not provided as the initial state 
@@ -198,6 +235,8 @@ private :
 
 	Transform _transform;
 	Transform _initial_transform;
+
+	Transform _prev_transform;
 
 };	// class Link
 

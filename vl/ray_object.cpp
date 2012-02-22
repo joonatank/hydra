@@ -1,10 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-07
  *	@file: ray_object.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	description: Creates a ray object that can be attached to a SceneNode and
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
+ *	@description: Creates a ray object that can be attached to a SceneNode and
  *	drawn to screen.
  *
  */

@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file physics/rigid_body_bullet.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_RIGID_BODY_BULLET_HPP
@@ -16,7 +25,7 @@
 /// Necessary for casting collision shapes
 #include "shapes_bullet.hpp"
 /// Necessary for passing MotionState
-#include "motion_state.hpp"
+#include "motion_state_bullet.hpp"
 
 /// Engine implementation
 #include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
@@ -34,13 +43,23 @@ namespace
 	{
 		using vl::physics::BulletCollisionShape;
 		using vl::physics::BulletCollisionShapeRefPtr;
+		using vl::physics::BulletMotionState;
+		
+		vl::physics::BulletMotionState *state = dynamic_cast<vl::physics::BulletMotionState *>(info.state);
 
 		btVector3 inertia(convert_bt_vec(info.inertia));
+		
 		BulletCollisionShapeRefPtr shape = boost::dynamic_pointer_cast<BulletCollisionShape>(info.shape);
 		if(info.mass == 0)
 		{ inertia = btVector3(0, 0, 0); }
 
-		return btRigidBody::btRigidBodyConstructionInfo(info.mass, info.state, shape->getNative(), inertia);
+		btRigidBody::btRigidBodyConstructionInfo btInfo 
+			= btRigidBody::btRigidBodyConstructionInfo(info.mass, state, shape->getNative(), inertia);
+		btMotionState *bt_state = btInfo.m_motionState;
+		assert(dynamic_cast<vl::physics::BulletMotionState *>(bt_state));
+		assert(state == dynamic_cast<vl::physics::BulletMotionState *>(bt_state));
+
+		return btInfo;
 	}
 }
 
@@ -65,6 +84,8 @@ public :
 		, _bt_body(0)
 	{
 		_bt_body = new btRigidBody(convert_construction_info(info));
+
+		assert(getMotionState() == info.state);
 	}
 
 	// @todo can we delete the body here?
@@ -165,19 +186,64 @@ public :
 	{ _bt_body->setActivationState(state); }
 
 	virtual MotionState *getMotionState(void)
-	{ return (MotionState *)_bt_body->getMotionState(); }
+	{
+		// Needs to be dynamic_cast otherwise we get incorrect pointer
+		return dynamic_cast<vl::physics::MotionState *>(_bt_body->getMotionState());
+	}
 
 	virtual MotionState const *getMotionState(void) const
-	{ return (MotionState const *)_bt_body->getMotionState(); }
+	{
+		// Needs to be dynamic_cast otherwise we get incorrect pointer
+		return dynamic_cast<vl::physics::MotionState const *>(_bt_body->getMotionState());
+	}
 
 	virtual void setMotionState(MotionState *motionState)
-	{ _bt_body->setMotionState(motionState); }
+	{ _bt_body->setMotionState((BulletMotionState *)motionState); }
 
 	virtual vl::Transform getWorldTransform(void) const
 	{ return convert_transform(_bt_body->getWorldTransform()); }
 
 	virtual void setWorldTransform(Transform const &worldTrans)
 	{ _bt_body->setWorldTransform(convert_bt_transform(worldTrans)); }
+
+	virtual void enableKinematicObject(bool enable)
+	{
+		if(enable)
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			// Bullet needs the user controlled flag for kinematic objects
+			setUserControlled(true);
+		}
+		else
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+	}
+
+	virtual void disableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual void enableCollisions(void)
+	{
+		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+
+	virtual bool isCollisionsDisabled(void) const
+	{
+		return _bt_body->getCollisionFlags() && btCollisionObject::CF_NO_CONTACT_RESPONSE;
+	}
+
+
+	virtual bool isKinematicObject(void) const
+	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
+
+	virtual void setUserData(void *data)
+	{ _bt_body->setUserPointer(data); }
+
+	virtual void *getUserData(void)
+	{ return _bt_body->getUserPointer(); }
 
 	btRigidBody *getNative(void)
 	{ return _bt_body; }

@@ -1,7 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file trigger.hpp
  *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
  *	Event Handling Trigger class
  *	
  *	2011-07 Updated to use boost::signals
@@ -10,11 +24,13 @@
 #ifndef HYDRA_TRIGGER_HPP
 #define HYDRA_TRIGGER_HPP
 
+#include <boost/signal.hpp>
+
 #include "keycode.hpp"
 
-#include "action.hpp"
+#include "math/transform.hpp"
 
-#include <boost/signal.hpp>
+#include "base/time.hpp"
 
 namespace vl
 {
@@ -55,11 +71,6 @@ class BasicActionTrigger : public vl::Trigger
 public :
 	BasicActionTrigger(void);
 
-	/// @brief Action to execute when updated, a group of multiple actions
-	/// Can not be replaced and will always exist
-	GroupActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
 	void update(void);
 
@@ -68,8 +79,6 @@ public :
 
 protected :
 	Tripped _signal;
-
-	GroupActionProxyPtr _action;
 
 };	// class BasicActionTrigger
 
@@ -80,11 +89,6 @@ class TransformActionTrigger : public vl::Trigger
 public :
 	TransformActionTrigger(void);
 
-	/// @brief Action to execute when updated, a group of multiple actions
-	/// Can not be replaced and will always exist
-	GroupTransformActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
 	void update(Transform const &data);
 
@@ -92,8 +96,6 @@ public :
 
 protected :
 	Tripped _signal;
-	GroupTransformActionProxyPtr _action;
-
 
 	Transform _value;
 
@@ -137,18 +139,6 @@ public :
 	KEY_MOD getModifiers( void ) const
 	{ return _modifiers; }
 
-	void setKeyDownAction(BasicActionPtr action)
-	{ _action_down = action; }
-
-	BasicActionPtr getKeyDownAction(void)
-	{ return _action_down; }
-
-	void setKeyUpAction(BasicActionPtr action)
-	{ _action_up = action; }
-
-	BasicActionPtr getKeyUpAction(void)
-	{ return _action_up; }
-
 	KEY_STATE getState(void) const
 	{ return _state; }
 
@@ -185,9 +175,7 @@ private :
 
 	OIS::KeyCode _key;
 	KEY_MOD _modifiers;
-	
-	BasicActionPtr _action_down;
-	BasicActionPtr _action_up;
+
 	KEY_STATE _state;
 };
 
@@ -213,7 +201,6 @@ class FrameTrigger : public Trigger
 	typedef boost::signal<void (vl::time const &)> Tripped;
 public :
 	FrameTrigger( void )
-		: _action(new GroupActionProxy)
 	{}
 
 	virtual std::string getTypeName( void ) const
@@ -228,17 +215,11 @@ public :
 	virtual std::string getName( void ) const
 	{ return "FrameTrigger"; }
 
-	/// Action to execute when updated
-	/// Can not be replaced and will always exist
-	GroupActionProxyPtr getAction(void)
-	{ return _action; }
-
 	/// Callback function
-	void update(vl::time const &t)
+	void update(vl::time const &elapsed_time)
 	{
-		_delta_time = t;
-		_action->execute();
-		_signal(t);
+		_delta_time = elapsed_time;
+		_signal(elapsed_time);
 	}
 
 	int addListener(Tripped::slot_type const &slot)
@@ -247,12 +228,84 @@ public :
 private :
 	Tripped _signal;
 
-	GroupActionProxyPtr _action;
-
 	vl::time _delta_time;
+
+};
+
+class TimeTrigger : public Trigger
+{
+	typedef boost::signal<void (void)> Tripped;
+public :
+	/// Initialises parameters so that the trigger is invalid till user
+	/// changes the parameters
+	TimeTrigger(void)
+		: _continuous(true)
+		, _expired(true)
+	{}
+
+	~TimeTrigger(void) {}
+
+	virtual std::string getTypeName(void) const
+	{ return "TimeTrigger"; }
+
+	virtual std::string getName(void) const
+	{ return "unnamed"; }
+
+	int addListener(Tripped::slot_type const &slot)
+	{ _signal.connect(slot); return 1; }
+
+	bool isExpired(void) const
+	{ return _expired; }
+
+	void reset(void)
+	{
+		_expired = false;
+		_time = vl::time();
+	}
+
+	vl::time const &getInterval(void) const
+	{ return _interval; }
+
+	void setInterval(vl::time const &t)
+	{
+		_initialise();
+		_interval = t;
+	}
+
+	bool isContinous(void) const
+	{ return _continuous; }
+
+	void setContinous(bool cont)
+	{
+		_initialise();
+		_continuous = cont;
+	}
+
+	/// @brief progress function
+	/// @param elapsed_time time since last call to this function
+	void update(vl::time const &elapsed_time);
+
+private :
+	void _initialise(void)
+	{
+		if((_expired && _continuous) || (_expired && _interval == vl::time()))
+		{
+			_expired = false;
+		}
+	}
+
+	Tripped _signal;
+
+	bool _continuous;
+
+	vl::time _interval;
+
+	vl::time _time;
+
+	bool _expired;
 
 };
 
 }	// namespace vl
 
-#endif // VL_TRIGGER_HPP
+#endif // HYDRA_TRIGGER_HPP

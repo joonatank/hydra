@@ -1,12 +1,23 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
- *	@file mesh_bullet.hpp
+ *	@file physics/mesh_bullet.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Bullet conversion from our Mesh structure, 
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Bullet conversion from our Mesh structure, 
  *	in separate file so that the Bullet dependency is easily avoided
  */
+
 
 #ifndef HYDRA_MESH_BULLET_HPP
 #define HYDRA_MESH_BULLET_HPP

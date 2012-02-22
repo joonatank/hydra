@@ -1,5 +1,17 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-10
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-10
+ *	@file tracker_serializer.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "tracker_serializer.hpp"
@@ -115,6 +127,8 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 									   Connection const &connection, 
 									   bool incorrect_quaternion)
 {
+	std::clog << "vl::TrackerSerializer::processTracker" << std::endl;
+
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = XMLNode->first_attribute("name");
 	if( attrib )
@@ -129,9 +143,7 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 	rapidxml::xml_node<> *elem = XMLNode->first_node("transformation");
 	if( elem )
 	{
-		vl::Transform trans;
-		processTransformation(elem, trans);
-		tracker->setTransformation(trans);
+		processTransformation(elem, tracker);
 	}
 
 	std::cout << vl::TRACE << "Finding sensors" << std::endl;
@@ -144,25 +156,33 @@ vl::TrackerSerializer::processTracker( rapidxml::xml_node< char >* XMLNode,
 }
 
 void
-vl::TrackerSerializer::processTransformation(rapidxml::xml_node<>* XMLNode, vl::Transform &trans)
+vl::TrackerSerializer::processTransformation(rapidxml::xml_node<>* XMLNode, TrackerRefPtr tracker)
 {
+	std::clog << "vl::TrackerSerializer::processTransformation" << std::endl;
+
 	vl::Transform t;
 	rapidxml::xml_node<> *elem = XMLNode->first_node("quaternion");
 	if( elem )
-	{ t.quaternion = parseQuaternion( elem ); }
+	{ tracker->setNeutralOrientation(parseQuaternion( elem )); }
 
 	elem = XMLNode->first_node("vector");
 	if( elem )
-	{ t.position = parseVector3( elem ); }
+	{ tracker->setNeutralPosition(parseVector3( elem )); }
 
-	// Update the original transformation
-	// Mutiplication Order creates a coordinate conversion matrix that applies
-	// the transformations to the input in correct order for transforming
-	// from third party coordinate system to ours.
-	trans *= t;
+	elem = XMLNode->first_node("sign");
+	if( elem )
+	{ tracker->setSign(parseVector3( elem )); }
+
+	elem = XMLNode->first_node("permute");
+	if( elem )
+	{ tracker->setPermutation(parseVector3( elem )); }
+
+
 	elem = XMLNode->first_node("transformation");
 	if( elem )
-	{ processTransformation( elem, trans ); }
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Only one transformation element is supported in VRPN config"));
+	}
 }
 
 void

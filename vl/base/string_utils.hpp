@@ -1,14 +1,26 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-04
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-12
  *	@file base/string_utils.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Basic utilities for strings. Mostly used by the parsers.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Basic utilities for strings. Mostly used by the parsers.
  *
  *	Update 2011-01
  *	Added to_lower and to_upper. Change case of the whole string.
  */
+
 #ifndef HYDRA_STRING_UTILS_HPP
 #define HYDRA_STRING_UTILS_HPP
 

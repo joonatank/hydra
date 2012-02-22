@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011-10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file program_options.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -21,16 +17,40 @@
 // Used for error printing
 #include <iostream>
 
+// Used for ini file parsing
+// because program_options uses Linux config file syntax
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/foreach.hpp>
+
+// Used for command line option parsing
+#include <boost/program_options.hpp>
+
 #include "base/filesystem.hpp"
 
-vl::ProgramOptions::ProgramOptions( void )
+// Compile time created header
+// necessary for the version flag
+#include "revision_defines.hpp"
+
+namespace po = boost::program_options;
+
+
+vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
 	: verbose(false)
 	, log_level(0)
 	, display_n(0)
+	, editor(false)
+	, n_processors(-1)
+	, start_processor(0)
+	, debug_overlay(false)
 	, _slave(false)
-	, auto_fork(false)
-	, show_system_console(false)
-{}
+	, _ini_file(ini_file)
+{
+}
+
+vl::ProgramOptions::~ProgramOptions(void)
+{
+}
 
 bool
 vl::ProgramOptions::master( void ) const
@@ -67,84 +87,53 @@ vl::ProgramOptions::getOutputFile(void) const
 bool
 vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
-	// TODO add control for the log level at least ERROR, INFO, TRACE
-
-	std::string config_file;
+	_parse_ini();
 
 	// Declare a group of options that will be 
-    // allowed only on command line
-    po::options_description cmd_options("Command line options");
-    cmd_options.add_options()
+	// allowed only on command line
+	po::options_description cmd_options("Command line options");
+	cmd_options.add_options()
 		("version,v", "print version string")
 		("verbose", "print the output to system console")
 		("help,h", "produce help message")
 		("slave", po::value< std::string >(), "start a named rendering slave")
 		("server", po::value< std::string >(), "master server where to connect to, hostname:port")
 		("show_system_console", "Show the system console window on startup.")
-		("config,c", po::value<std::string>(&config_file)->default_value("hydra.ini"),
-				"name of a file of a configuration.")
-	;
-    
-    // Declare a group of options that will be 
-    // allowed both on command line and in
-    // config file
-    po::options_description config("Configuration");
-    config.add_options()
+		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
+//		For now removed
+//		("config,c", po::value<std::string>(&_config_file)->default_value("hydra.ini"),
+//				"name of a file of a configuration.")
 		("log_level,l", po::value<int>(), "how much detail is logged")
 		("log_dir", po::value<std::string>(&log_dir), "where to write the log files")
-		("environment,e", po::value< std::string >(), "environment file")
-		("project,p", po::value< std::string >(), "project file")
-		("global,g", po::value< std::string >(), "global file")
-		("auto_fork,f", "Auto fork slave processes. Only usefull for virtual clusters.")
-		("display", po::value<int>(&display_n)->default_value(0), 
+		("environment,e", po::value< std::string >(&environment_file), "environment file")
+		("project,p", po::value< std::string >(&project_file), "project file")
+		("global,g", po::value< std::string >(&global_file), "global file")
+		("display", po::value<int>(&display_n), 
 			"Display to use for the window. Only on X11.")
-		("system_console", po::value<bool>(&show_system_console)->default_value(false),
-			"Show the system console window on startup.")
-    ;
-
-    po::options_description cmdline_options;
-    cmdline_options.add(cmd_options).add(config);
-
-    po::options_description config_file_options;
-    config_file_options.add(config);
-
-    po::options_description visible("Allowed options");
-    visible.add(cmd_options).add(config);
+		("processors", po::value<int>(&n_processors), 
+			"How many processors or cores the program can use.")
+		("start_processor", po::value<int>(&start_processor), 
+			"First processor to use only has effect if processor is defined also.")
+		("debug_overlay", po::value<bool>(&debug_overlay), "Enable debug overlay.")
+	;
 
 	// Parse command line
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).
-            options(cmdline_options).run(), vm);
-    po::notify(vm);
-    
-	/// Config file
-	if(fs::exists(config_file))
-	{
-		std::ifstream ifs(config_file.c_str());
-	
-		if (!ifs)
-		{
-			std::cout << "can not open config file: " << config_file << std::endl;
-			return 0;
-		}
-		else
-		{
-			std::cout << "parsing config file : " << config_file << std::endl;
-			po::store(po::parse_config_file(ifs, config_file_options), vm);
-			po::notify(vm);
-		}
-	}
+	po::variables_map vm;
+	po::store(po::command_line_parser(argc, argv).
+			options(cmd_options).run(), vm);
+	po::notify(vm);
 
 	// Print help
 	if( vm.count("help") )
 	{
-		std::cout << "Help : " << cmdline_options << std::endl;
+		std::cout << "Help : " << cmd_options << std::endl;
 		return false;
 	}
 
 	if( vm.count("version") )
 	{
-		std::cout << "Version flag not supported for the moment." << std::endl;
+		// @todo add version information
+		std::cout << "Hydra revision : " << HYDRA_REVISION << std::endl;
 		return false;
 	}
 
@@ -173,67 +162,69 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 	if( vm.count("slave") )
 	{
 		_slave = true;
-		return _parseSlave( vm );
-	}
-	else
-	{
-		_slave = false;
-		return _parseMaster( vm );
-	}
-}
-
-bool
-vl::ProgramOptions::_parseSlave( po::variables_map const &vm )
-{
-	if( vm.count("slave") )
-	{
 		slave_name = vm["slave"].as<std::string>();
-	}
 
-	if( slave_name.empty() )
-	{
-		std::cerr << "A slave without a name is not allowed."
-			<< std::endl;
-		return false;
-	}
+		// @todo the validity checking should be last
+		// maybe even in a different function
+		if( slave_name.empty() )
+		{
+			std::cerr << "A slave without a name is not allowed."
+				<< std::endl;
+			return false;
+		}
 
-	if( vm.count("server") )
-	{
-		server_address = vm["server"].as<std::string>();
-	}
+		if( vm.count("server") )
+		{
+			server_address = vm["server"].as<std::string>();
+		}
 
-	if( server_address.empty() )
-	{
-		std::cerr << "A slave without a server address to connect to is not allowed."
-			<< std::endl;
-		return false;
-	}
-
-	return true;
-}
-
-bool
-vl::ProgramOptions::_parseMaster( po::variables_map const &vm )
-{
-	if (vm.count("environment"))
-	{
-		environment_file = vm["environment"].as<std::string>();
-	}
-
-	if (vm.count("project"))
-	{
-		project_file = vm["project"].as<std::string>();
-	}
-
-	if (vm.count("global"))
-	{
-		global_file = vm["global"].as<std::string>();
+		if( server_address.empty() )
+		{
+			std::cerr << "A slave without a server address to connect to is not allowed."
+				<< std::endl;
+			return false;
+		}
 	}
 
 	if( vm.count("auto_fork") )
 	{
 		auto_fork = true;
 	}
+}
 
-	return true;
+void
+vl::ProgramOptions::_parse_ini(void)
+{
+    // Create an empty property tree object
+    using boost::property_tree::ptree;
+    ptree pt;
+
+	if(fs::exists(_ini_file))
+	{
+		// Load the INI file into the property tree. If reading fails
+		// (cannot open file, parse error), an exception is thrown.
+		read_ini(_ini_file, pt);
+
+		// Parse ptree
+		environment_file = pt.get("environment", "");
+		project_file = pt.get("project", "");
+		global_file = pt.get("global", "");
+		display_n = pt.get("display", 0);
+		log_level = pt.get("log.level", 0);
+		log_dir = pt.get("log.dir", "");
+		n_processors = pt.get("multicore.processors", -1);
+		start_processor = pt.get("multicore.start_processor", 0);
+		auto_fork = pt.get("multicore.auto_fork", false);
+		debug_overlay = pt.get("debug.overlay", false);
+		show_system_console = pt.get("debug.show_system_console", false);
+
+		if(pt.count("projects") > 0)
+		{
+			if(!pt.get_child("projects").empty())
+			{
+				BOOST_FOREACH(ptree::value_type &v, pt.get_child("projects"))
+					project_paths.push_back(v.second.data());
+			}
+		}
+	}
 }
