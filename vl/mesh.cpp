@@ -425,10 +425,8 @@ vl::Mesh::nameSubMesh(std::string const &name, uint16_t index)
 void
 vl::Mesh::calculateBounds(void)
 {
-	if(!sharedVertexData || sharedVertexData->getNVertices() == 0)
-	{ return; }
-
-	calculate_bounds(sharedVertexData, _bounds, _bound_radius);
+	if(sharedVertexData && sharedVertexData->getNVertices() > 0)
+	{ calculate_bounds(sharedVertexData, _bounds, _bound_radius); }
 
 	// Iterate over the sub meshes for dedicated geometry
 	for(size_t i = 0; i < _sub_meshes.size(); ++i)

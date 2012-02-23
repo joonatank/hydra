@@ -43,11 +43,18 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 	Procedural::TriangleBuffer tbuffer;
 	generator.addToTriangleBuffer(tbuffer);	
 
+	vl::SubMesh *sub = mesh->createSubMesh();
+	sub->setMaterial("BaseWhiteNoLighting");
+
+	// Using independent vertex data because of instancing
+	// also shared vertex data provides very little benefits
+
 	// copy vertex data
-	mesh->sharedVertexData = new vl::VertexData;
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	sub->vertexData = new vl::VertexData;
+	sub->useSharedGeometry = false;
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
 
 	for(std::vector<Procedural::TriangleBuffer::Vertex>::const_iterator it 
 			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end();it++)
@@ -56,12 +63,11 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 		vert.position = it->mPosition;
 		vert.normal = it->mNormal;
 		vert.uv = it->mUV;
-		mesh->sharedVertexData->addVertex(vert);
+		sub->vertexData->addVertex(vert);
 	}
 
 	// copy index data
-	vl::SubMesh *sub = mesh->createSubMesh();
-	sub->setMaterial("BaseWhiteNoLighting");
+
 	// @todo should check if we need to use 32-bit buffer
 	// forcing the use of 32 bit index buffer
 	//sub->indexData.setIndexSize(vl::IT_32BIT);
@@ -197,11 +203,13 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 	Ogre::Quaternion vert_rot = Ogre::Vector3(0, 1, 0).getRotationTo(normal);
 
 	MeshRefPtr mesh(new Mesh(name));
-	mesh->sharedVertexData = new VertexData;
+	SubMesh *sub = mesh->createSubMesh();
 
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	mesh->sharedVertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	sub->vertexData = new VertexData;
+	sub->useSharedGeometry = false;
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
 	/// @todo add tangents
 
 	uint16_t M = tesselation_x;
@@ -215,13 +223,12 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 			vert.position = vert_rot*pos;
 			vert.normal = normal;
 			vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
-			mesh->sharedVertexData->addVertex(vert);
+			sub->vertexData->addVertex(vert);
 		}
 	}
 
 	mesh->calculateBounds();
 
-	SubMesh *sub = mesh->createSubMesh();
 	/// @todo add material (or not?) some clear default would be good
 	for(uint16_t m = 0; m < M; ++m)
 	{
@@ -293,9 +300,11 @@ vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius,
 	vl::MeshRefPtr mesh = make_to_mesh(name, generator);
 	
 	// Fix the origin to middle of the cylinder
-	for(size_t i = 0; i < mesh->sharedVertexData->getNVertices(); ++i)
+	assert(mesh->getNumSubMeshes() > 0);
+	SubMesh *sub = mesh->getSubMesh(0);
+	for(size_t i = 0; i < sub->vertexData->getNVertices(); ++i)
 	{
-		mesh->sharedVertexData->getVertex(i).position -= mesh->getBounds().getCenter();
+		sub->vertexData->getVertex(i).position -= mesh->getBounds().getCenter();
 	}	
 	mesh->calculateBounds();
 
