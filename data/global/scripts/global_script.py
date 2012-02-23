@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+def eulerToQuat(x, y, z):
+	q_x = Quaternion(Degree(x), Vector3(1, 0, 0))
+	q_y = Quaternion(Degree(y), Vector3(0, 1, 0))
+	q_z = Quaternion(Degree(z), Vector3(0, 0, 1))
+	return q_x*q_y*q_z
+
 def setVectorActionFromKey( vector_action, kc, mod ):
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
