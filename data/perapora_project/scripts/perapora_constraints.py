@@ -2,6 +2,7 @@
 
 import math
 
+# Setup player
 camera_name = "Camera"
 camera = game.scene.createSceneNode(camera_name)
 camera.position = Vector3(-0.77, 0, 4)
@@ -10,29 +11,16 @@ camera.attachObject(cam)
 createCameraMovements(camera)
 game.player.camera = camera_name
 
+# Setup environment
 game.scene.sky_dome = SkyDomeInfo("CloudySky")
+game.scene.shadows.enable()
+game.scene.shadows.texture_size = 4096
+create_sun()
 
-# Create light
-spot = game.scene.createSceneNode("spot")
-spot_l = game.scene.createLight("spot")
-#spot_l.type = "spot"
-spot_l.diffuse = ColourValue(0.6, 0.6, 0.6)
-spot.attachObject(spot_l)
-spot.position = Vector3(0, 1.5, 3)
-#spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
-camera.addChild(spot)
+# For collision detection
+game.enablePhysics(True)
 
-light = game.scene.createSceneNode("light")
-light_l = game.scene.createLight("light")
-light_l.diffuse = ColourValue(0.6, 0.6, 0.8)
-light.attachObject(light_l)
-light.position = Vector3(0, 20, 0)
-
-ground_node = game.scene.createSceneNode("ground")
-ground = game.scene.createEntity("ground", PF.PLANE)
-ground_node.attachObject(ground)
-ground.material_name = "ground/bump_mapped/shadows"
-ground.cast_shadows = False
+ground = physics_create_ground()
 
 # Enable collision detection before creating any bodies
 game.kinematic_world.collision_detection_enabled = True
@@ -174,10 +162,7 @@ motor_hinge.actuator = True
 pulttaus_hinge.actuator = True
 
 # Hide links
-#game.scene.hideSceneNodes("nivel*")
-
-# some test code
-#pulttaus_hinge.target = Radian(1)
+game.scene.hideSceneNodes("nivel*")
 
 # Joystick control
 # Falls back to game joysticks, if none exists the movements
@@ -247,7 +232,6 @@ trigger.addKeyDownListener(boom_down)
 # TODO tubes are not working with this version
 """
 # Add tube simulation
-game.enablePhysics(True)
 # Tie the ends to SceneNodes
 tube_info = TubeConstructionInfo()
 # Some test bodies
@@ -280,29 +264,16 @@ vaantomoottori.addListener(setBodyTransform)
 
 # Add some primitives and possibility to move them for testing the collision
 # detection
-game.enablePhysics(True)
-pos = Vector3(-3, 3, -0.5) #Vector3(-3, 3, 1)
+pos = Vector3(-3, 3, -0.5)
 box = addBox("user_box", "finger_sphere/green", pos, mass=10)
 box.user_controlled = True
-#addKinematicAction(box)
+addRigidBodyController(box)
 
 # Static box
 pos = Vector3(-2, 0.75, -2.5)
 box = addBox("static_box", "finger_sphere/blue", pos, mass=0)
 
-# Add collision ground
-ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
-ground_shape = StaticTriangleMeshShape.create(ground_mesh)
-g_motion_state = game.physics_world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
-ground_body = game.physics_world.createRigidBody('ground', 0, g_motion_state, ground_shape)
-
-game.pause()
-
-def toggle_pause() :
-	if game.paused:
-		game.play()
-	else:
-		game.pause()
+game.auto_start = False
 
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
 trigger.addKeyUpListener(toggle_pause)

@@ -447,6 +447,39 @@ def addToggleConsole(kc) :
 		trigger = game.event_manager.createKeyTrigger(kc)
 		trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
+# Create a basic directional light with a decent angle
+# Return the sun scene node
+# TODO this should be a bit more complex and use the sky simulator
+# so the sun angle and intensity is dependent on the sky state
+def create_sun():
+	sun = game.scene.createSceneNode("sun")
+	sun_l = game.scene.createLight("sun")
+	sun_l.type = "directional"
+	sun.attachObject(sun_l)
+	sun.orientation = Quaternion(-0.4114, 0.9114, 0, 0)
+
+	return sun
+
+# Creates basic plane ground for demos
+# Return ground scene node
+def create_ground(size=40):
+	ground_mesh = game.mesh_manager.createPlane("ground", size, size)
+	ground_node = game.scene.createSceneNode("ground")
+	ground = game.scene.createEntity("ground", 'ground', True)
+	ground_node.attachObject(ground)
+	ground.material_name = "ground/bump_mapped/shadows"
+	ground.cast_shadows = False
+
+	return ground_node
+
+def toggle_pause():
+	# Game can be in both stopped and paused state so test for played instead
+	# of paused
+	if game.playing:
+		game.pause()
+	else:
+		game.play()
+
 # Add a head tracker support
 mapHeadTracker("glassesTrigger")
 

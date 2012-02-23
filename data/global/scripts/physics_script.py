@@ -8,6 +8,21 @@
 # TODO rewrite the actions using GameJoysticks and listener classes
 # Action system is going to be removed in next release (0.4)
 
+# TODO rename the functions using syntax
+# physics_{function_name}
+# because we have same functions for kinematics solver also
+# also use lower case names with _ separator instead of camelCase
+
+def physics_create_ground():
+	ground = create_ground()
+
+	ground_mesh = game.mesh_manager.loadMesh("ground")
+	ground_shape = StaticTriangleMeshShape.create(ground_mesh)
+	g_motion_state = game.physics_world.createMotionState(Transform(Vector3(0, 0, 0)), ground)
+	return game.physics_world.createRigidBody('ground', 0, g_motion_state, ground_shape)
+
+
+
 def addKinematicAction(body):
 	print( 'Creating Kinematic event on ' + body.name )
 

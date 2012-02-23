@@ -149,26 +149,7 @@
 			</game>
 			<entity actor="True" anisotropic_friction="False" collisionPrim="triangle_mesh" damping_rot="0.10000000149" damping_trans="0.0399999991059" friction_x="1.0" friction_y="1.0" friction_z="1.0" ghost="False" inertia_tensor="0.40000000596" lock_rot_x="False" lock_rot_y="False" lock_rot_z="False" lock_trans_x="False" lock_trans_y="False" lock_trans_z="False" mass="10.0" mass_radius="1.0" meshFile="cb_link6.mesh" name="cb_link6" physics_type="NO_COLLISION" velocity_max="0.0" velocity_min="0.0"/>
 		</node>
-		<node name="Sun" uuid="4480089f14e575cac2f8fc6a85b173ab">
-			<position x="-0.000000" y="5.000000" z="0.000000"/>
-			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
-			<scale x="1.000000" y="1.000000" z="1.000000"/>
-			<game>
-				<sensors/>
-				<actuators/>
-			</game>
-			<light name="Sun" type="sun">
-				<lightAttenuation constant="1.0" linear="0.04" quadratic="0.0" range="5000"/>
-				<colorDiffuse b="1.0" g="1.0" r="1.0"/>
-				<colorSpecular b="1.0" g="1.0" r="1.0"/>
-			</light>
-		</node>
 	</nodes>
-	<externals>
-		<item type="material">
-			<file name="Scene.material"/>
-		</item>
-	</externals>
 	<environment>
 		<skyDome material="CloudySky" distance="50" />
 		<colourBackground b="0.0508760884404" g="0.0508760884404" r="0.0508760884404"/>

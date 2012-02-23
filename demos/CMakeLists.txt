@@ -33,10 +33,6 @@ copy_start_scripts( hydra
 	"light_test" )
 
 copy_start_scripts( hydra
-	signal_test_project/signal_test.prj
-	"signal_test" )
-
-copy_start_scripts( hydra
 	generated_physics_project/generated_physics.prj
 	"generated_physics" )
 
@@ -51,14 +47,6 @@ copy_start_scripts( hydra
 copy_start_scripts( hydra
 	perapora_project/perapora_physics.prj
 	"perapora_physics" )
-
-copy_start_scripts( renderer
-	tracking_test_project/tracking.prj
-	tracking )
-
-copy_start_scripts( hydra
-	large_test_project/large_test.prj
-	large_test )
 
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp

@@ -11,20 +11,12 @@ game.player.camera = "camera"
 # Create ground plane
 # Create a large plane for shader testing
 # This shows the usage of the new mesh manager
-ground_length = 40;
-ground_mesh = game.mesh_manager.createPlane("ground", ground_length, ground_length)
-print(ground_mesh)
-ground_ent = game.scene.createEntity('ground', "ground", True)
-ground = game.scene.createSceneNode('ground')
-ground.attachObject(ground_ent)
-# Shader material with shadows
-ground_ent.material_name = 'ground/bump_mapped/shadows'
-ground_ent.cast_shadows = False
+create_ground()
 
 wall_ent = game.scene.createEntity('wall', "ground", True)
 wall = game.scene.createSceneNode("wall")
 wall.attachObject(wall_ent)
-wall_ent.material_name = ground_ent.material_name
+wall_ent.material_name = 'ground/bump_mapped/shadows'
 wall_ent.cast_shadows = False
 wall.orientation = Quaternion(0.7071, 0.7071, 0, 0)
 wall.position = Vector3(0, 20, -20)

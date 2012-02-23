@@ -6,41 +6,28 @@ print('Creating Camera SceneNode')
 camera_n = game.scene.createSceneNode("Camera")
 camera = game.scene.createCamera("Camera")
 camera_n.attachObject(camera)
-createCameraMovements(camera_n)
+createCameraMovements()
 camera_n.position = Vector3(0, 5, 20)
 
 game.player.camera = "Camera"
 
-game.scene.sky = SkyDomeInfo("CloudySky")
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
+game.scene.shadows.enable()
+game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 
 # Create physics
 # TODO these should be in the project file
 game.enablePhysics( True )
 world = game.physics_world
 
-# Create light
-spot = game.scene.createSceneNode("spot")
-spot_l = game.scene.createLight("spot")
-#spot_l.type = "spot"
-spot.attachObject(spot_l)
-spot.position = Vector3(0, 20, 0)
-spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
+create_sun()
 
-ground_mesh = game.mesh_manager.createPlane("ground", 40, 40)
-ground_node = game.scene.createSceneNode("ground")
-ground = game.scene.createEntity("ground", 'ground', True)
-ground_node.attachObject(ground)
-ground.material_name = "ground/bump_mapped/shadows"
-ground.cast_shadows = False
 
-print('Physics : Adding ground plane')
-ground_mesh = game.mesh_manager.loadMesh("ground")
-ground_shape = StaticTriangleMeshShape.create(ground_mesh)
-g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
-world.createRigidBody('ground', 0, g_motion_state, ground_shape)
+ground = physics_create_ground()
 
 # TODO add some boxes
 box1 = addBox("box1", "finger_sphere/blue", Vector3(5.0, 1, -5), mass=10)
+# These comments are probably not the case anymore because we use primitives now
 # FIXME Mass 30 causes the box to go through the ground plane
 # Also size 3 causes lots of accuracy problems in the collision detection
 # size 2 causes less accuracy problems but still does, probably a problem
@@ -69,34 +56,27 @@ six_dof.setLinearUpperLimit(Vector3(10, 5, 5))
 #world.addConstraint(six_dof)
 
 # Add force action
-"""
-print('Adding Force action to KC_F')
-action = ScriptAction.create()
-action.game = game
-action.script = 'user_sphere.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))'
-trigger = game.event_manager.createKeyTrigger( KC.F )
-trigger.action_down = action
+def force_to_sphere():
+	user_sphere.applyForce(Vector3(0, 2500, 0), Vector3(0,0,0))
 
-# Add torque action
+def torque_to_sphere():
+	user_sphere.applyTorque(Vector3(0, 500, 0))
+
+def set_sphere_velocity():
+	user_sphere.setLinearVelocity(Vector3(1, 0, 0))
+
+print('Adding Force action to KC_F')
+trigger = game.event_manager.createKeyTrigger( KC.F )
+trigger.addListener(force_to_sphere)
+
 print('Adding Torque action to KC_G')
-action = ScriptAction.create()
-action.game = game
-action.script = 'user_sphere.applyTorque(Vector3(0, 500, 0))'
 trigger = game.event_manager.createKeyTrigger( KC.G )
-trigger.action_down = action
+trigger.addListener(torque_to_sphere)
 
 print('Adding set Liner velocity action to KC_T')
-action = ScriptAction.create()
-action.game = game
-action.script = 'user_sphere.setLinearVelocity(Vector3(1, 0, 0))'
 trigger = game.event_manager.createKeyTrigger(KC.T)
-trigger.action_down = action
-"""
+trigger.addListener(set_sphere_velocity)
 
-
-
-print('Adding kinematic action')
-#addKinematicAction(user_sphere)
 addRigidBodyController(user_sphere)
 
 cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), mass=10)
@@ -104,17 +84,21 @@ cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), ma
 capsule = addCapsule('capsule', "finger_sphere/green", Vector3(.0, 5, 5), mass=10)
 
 print('Creating a tube')
-# The distance between the bodies is ~11m so lets put the tube length to 15m
 tube_info = TubeConstructionInfo()
 tube_info.start_body = user_sphere
 tube_info.end_body = sphere_fixed
-tube_info.start_frame = Transform(Vector3(0, 0, 0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.end_frame = Transform(Vector3(0, 0, -0.5))#, Quaternion(0.7071, 0.7071, 0, 0))
-tube_info.length = 5
+tube_info.start_frame = Transform(Vector3(0, 0, 0.5))
+tube_info.end_frame = Transform(Vector3(0, 0, -0.5))
+tube_info.length = 8
 tube_info.mass = 50
 tube_info.radius = 0.1
-#tube_info.stiffness = 0.6
+tube_info.spring = True
+tube_info.stiffness = 70
+tube_info.bending_radius = 0.3
 #tube_info.damping = 0.3
+#tube_info.body_damping = 0.2
+# TODO should enable collision detection
+# TODO the tube should be stiffer
 
 tube = game.physics_world.createTube(tube_info)
 tube.create()
