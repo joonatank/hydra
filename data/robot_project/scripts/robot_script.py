@@ -69,7 +69,8 @@ transform.position += Vector3(-0.25, 0, 0)
 createFixedConstraint(link3_body, link4_body, transform)
 
 cylinder_actuator_body.user_controlled = True
-addKinematicAction(cylinder_actuator_body)
+# TODO add dynamic action
+#addKinematicAction(cylinder_actuator_body)
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0))
 #sphere.user_controlled = True
