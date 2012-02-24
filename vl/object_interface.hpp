@@ -83,6 +83,10 @@ public :
 
 	virtual bool isVisible(void) const = 0;
 
+	virtual void setShowBoundingBox(bool show) {}
+
+	virtual bool getShowBoundingBox(void) const { return false; }
+
 };	// class ObjectInterface
 
 }	// namespace vl

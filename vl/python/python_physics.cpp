@@ -279,6 +279,7 @@ void export_physics_objects(void)
 		.def_readwrite("disable_collisions", &vl::physics::Tube::ConstructionInfo::disable_collisions)
 		.def_readwrite("body_damping", &vl::physics::Tube::ConstructionInfo::body_damping)
 		.def_readwrite("bending_radius", &vl::physics::Tube::ConstructionInfo::bending_radius)
+		.def_readwrite("use_instancing", &vl::physics::Tube::ConstructionInfo::use_instancing)
 	;
 
 
@@ -290,6 +291,7 @@ void export_physics_objects(void)
 		.add_property("lower_limit", python::make_function(&vl::physics::Tube::getLowerLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setLowerLim)
 		.add_property("upper_limit", python::make_function(&vl::physics::Tube::getUpperLim, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setUpperLim)
 		.add_property("material", python::make_function(&vl::physics::Tube::getMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::physics::Tube::setMaterial)
+		.add_property("show_bounding_boxes", &vl::physics::Tube::isShowBoundingBoxes, &vl::physics::Tube::setShowBoundingBoxes)
 		// Setters here would need to modify the meshes, both physics and graphics
 		.add_property("element_size", &vl::physics::Tube::getElementSize)
 		.add_property("radius", &vl::physics::Tube::getRadius)

@@ -5,6 +5,7 @@
 print('Creating Camera SceneNode')
 camera_n = game.scene.createSceneNode("Camera")
 camera = game.scene.createCamera("Camera")
+camera.near_clip = 0.001
 camera_n.attachObject(camera)
 createCameraMovements()
 camera_n.position = Vector3(0, 5, 20)
@@ -99,7 +100,17 @@ tube_info.bending_radius = 0.3
 #tube_info.body_damping = 0.2
 # TODO should enable collision detection
 # TODO the tube should be stiffer
+# If instancing is enabled material is discarded
+# With this simple demo, using instancing for tubes increases fps
+# from 450 to 500. Batch count is 31 compared to 50.
+# Somehow I'd guess that the problem is more our shaders than batching.
+tube_info.material_name = "tube_material"
+tube_info.use_instancing = True
 
+# TODO there is an annoying shadow in the tube
+# TODO enabling instancing causes clipping problems
+# decreasing near_clip does not help
 tube = game.physics_world.createTube(tube_info)
 tube.create()
+tube.show_bounding_boxes = True
 

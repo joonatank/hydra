@@ -48,6 +48,7 @@ vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionIn
 	, _body_damping(info.body_damping)
 	, _spring(info.spring)
 	, _disable_internal_collisions(info.disable_collisions)
+	, _use_instancing(info.use_instancing)
 	, _inertia(Vector3(0, 0, 0))
 	, _lower_lim(info.lower_lim)
 	, _upper_lim(info.upper_lim)
@@ -249,6 +250,26 @@ vl::physics::Tube::show(void)
 		assert(ms->getNode());
 		ms->getNode()->show();
 	}
+}
+
+void
+vl::physics::Tube::setShowBoundingBoxes(bool show)
+{
+	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+	{
+		MotionState *ms = (*iter)->getMotionState();
+		assert(ms->getNode());
+		ms->getNode()->setShowBoundingBox(show);
+	}
+}
+
+bool
+vl::physics::Tube::isShowBoundingBoxes(void) const
+{
+	if(_bodies.size() > 0 && _bodies.at(0)->getMotionState() && _bodies.at(0)->getMotionState()->getNode())
+	{ return _bodies.at(0)->getMotionState()->getNode()->getShowBoundingBox(); }
+	
+	return false;
 }
 
 void
@@ -550,9 +571,6 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 	if(!_start_body->getMotionState() || !_start_body->getMotionState()->getNode())
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid Motion state or node.")); }
 
-	// We need to use root node for the physics engine to work correctly
-	SceneNodePtr parent_node = _scene->getRootSceneNode();
-	assert(parent_node);
 	size_t index = 0;
 	for(RigidBodyList::const_iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
 	{
@@ -564,9 +582,14 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 		// check that there the MotionState is still valid
 		assert(!ms->getNode());
 
-		SceneNodePtr node = parent_node->createChildSceneNode(name.str());
+		// We need to use root node for the physics engine to work correctly
+		SceneNodePtr node = _scene->getRootSceneNode()->createChildSceneNode(name.str());
 		ms->setNode(node);
 		EntityPtr ent = _scene->createEntity(name.str(), mesh_name.str(), true);
+		ent->setInstanced(_use_instancing);
+		// Force instanced material
+		if(_use_instancing)
+		{ _material_name = "tube/instanced"; }
 		ent->setMaterialName(_material_name);
 		node->attachObject(ent);
 

@@ -102,6 +102,15 @@ material glass/blue : bling_phong/shadows
 	set $diffuse_scene_blend "alpha_blend"
 }
 
+material tube_material : bling_phong/shadows
+{
+	set $ambientCol "0.3 0.3 0.3 1.0"
+	set $diffuseCol "0.25 0.25 0.25 1.0"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+
 material debug_red 
 {
 	technique

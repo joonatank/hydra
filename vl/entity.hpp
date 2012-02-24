@@ -88,6 +88,11 @@ public :
 	std::string const &getMaterialName(void) const
 	{ return _material_name; }
 
+	void setInstanced(bool enabled);
+
+	bool isInstanced(void) const
+	{ return _is_instanced; }
+
 	virtual vl::MovableObjectPtr clone(std::string const &append_to_name) const;
 
 	enum DirtyBits
@@ -95,7 +100,8 @@ public :
 		DIRTY_MESH_NAME = vl::MovableObject::DIRTY_CUSTOM << 0,
 		DIRTY_CAST_SHADOWS = vl::MovableObject::DIRTY_CUSTOM << 1,
 		DIRTY_MATERIAL = vl::MovableObject::DIRTY_CUSTOM << 2,
-		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 3,
+		DIRTY_INSTANCED = vl::MovableObject::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 4,
 	};
 
 	/// Internal
@@ -122,6 +128,8 @@ private :
 	/// clears the structure to default values, called from constructors
 	void _clear(void);
 
+	Ogre::MovableObject *_createNativeEntity(std::string const &_name, std::string const &_mesh_name);
+
 	std::string _mesh_name;
 
 	/// For new MeshManager
@@ -131,7 +139,9 @@ private :
 	bool _cast_shadows;
 	std::string _material_name;
 
-	Ogre::Entity *_ogre_object;
+	bool _is_instanced;
+
+	Ogre::MovableObject *_ogre_object;
 
 	// Save the loader pointer so it can be destroyed when not needed anymore
 	EntityMeshLoadedCallback *_loader_cb;

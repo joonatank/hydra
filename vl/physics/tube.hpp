@@ -48,6 +48,7 @@ public :
 			, mass_per_meter(1)
 			, stiffness(0)
 			, damping(1.0)
+			, material_name("BaseWhite")
 			, element_size(0.6)
 			, lower_lim(Vector3::ZERO)
 			, upper_lim(Vector3(-1, -1, -1))
@@ -58,6 +59,7 @@ public :
 			, inertia_factor(1)
 			, body_damping(0)
 			, bending_radius(-1)
+			, use_instancing(false)
 		{}
 
 		RigidBodyRefPtr start_body;
@@ -93,6 +95,9 @@ public :
 		// If greater than zero automatically calculates the joint limits
 		// discarding the predefined ones.
 		vl::scalar bending_radius;
+
+		// rendering optimisation, still experimental
+		bool use_instancing;
 	};
 
 	/**	@brief Constructor
@@ -161,6 +166,10 @@ public :
 	void hide(void);
 
 	void show(void);
+
+	void setShowBoundingBoxes(bool show);
+
+	bool isShowBoundingBoxes(void) const;
 
 	void setEquilibrium(void);
 
@@ -232,6 +241,7 @@ private :
 	vl::scalar _body_damping;
 	bool _spring;
 	bool _disable_internal_collisions;
+	bool _use_instancing;
 
 	Ogre::Vector3 _inertia;
 

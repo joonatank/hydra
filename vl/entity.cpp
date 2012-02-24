@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file entity.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -29,6 +25,8 @@
 #include <OGRE/OgreSubMesh.h>
 #include <OGRE/OgreMeshManager.h>
 #include <OGRE/OgreSubEntity.h>
+#include <OGRE/OgreInstancedEntity.h>
+#include <OGRE/OgreInstanceBatch.h>
 
 /// ------------------------------------- Global -----------------------------
 std::ostream &
@@ -100,6 +98,16 @@ vl::Entity::setMaterialName(std::string const &name)
 }
 
 void 
+vl::Entity::setInstanced(bool enable)
+{
+	if(_is_instanced != enable)
+	{
+		setDirty(DIRTY_INSTANCED);
+		_is_instanced = enable;
+	}
+}
+
+void 
 vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 {
 	_mesh = mesh;
@@ -108,22 +116,26 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 	{
 		Ogre::MeshPtr og_mesh = vl::create_ogre_mesh(_mesh_name, mesh);
 	}
-	_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+	_ogre_object = _createNativeEntity(_name, _mesh_name);
 
 
 	// Check materials
-	for(uint16_t i = 0; i < _ogre_object->getNumSubEntities(); ++i)
+	if(!_is_instanced)
 	{
-		Ogre::SubEntity *og_se = _ogre_object->getSubEntity(i);
-		if(og_se->getMaterialName() == "BaseWhite")
+		Ogre::Entity *ent = (Ogre::Entity *)_ogre_object;
+		for(uint16_t i = 0; i < ent->getNumSubEntities(); ++i)
 		{
-			// @todo this of course should add listener to MaterialManager
-			// and it should be mesh attribute, but as our architecture does not
-			// support it...
-			// Empty sub mesh materials are purposefully so, they are usually overriden
-			// from entity and in any case would make it impossible to load a such material...
-			if(!og_se->getSubMesh()->getMaterialName().empty())
-			{ _creator->getMeshManager()->_addSubEntityWithInvalidMaterial(og_se); }
+			Ogre::SubEntity *og_se = ent->getSubEntity(i);
+			if(og_se->getMaterialName() == "BaseWhite")
+			{
+				// @todo this of course should add listener to MaterialManager
+				// and it should be mesh attribute, but as our architecture does not
+				// support it...
+				// Empty sub mesh materials are purposefully so, they are usually overriden
+				// from entity and in any case would make it impossible to load a such material...
+				if(!og_se->getSubMesh()->getMaterialName().empty())
+				{ _creator->getMeshManager()->_addSubEntityWithInvalidMaterial(og_se); }
+			}
 		}
 	}
 
@@ -148,6 +160,7 @@ vl::Entity::clone(std::string const &append_to_name) const
 	ent->setCastShadows(_cast_shadows);
 	ent->setMaterialName(_material_name);
 	ent->setVisible(_visible);
+	ent->setInstanced(_is_instanced);
 
 	return ent;
 }
@@ -169,6 +182,11 @@ vl::Entity::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 	{
 		msg << _material_name;
 	}
+
+	if( DIRTY_INSTANCED & dirtyBits )
+	{
+		msg << _is_instanced;
+	}
 }
 
 void 
@@ -189,8 +207,22 @@ vl::Entity::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	if( DIRTY_MATERIAL & dirtyBits )
 	{
 		msg >> _material_name;
-		if( _ogre_object )
-		{ _ogre_object->setMaterialName(_material_name); }
+		if( _ogre_object && !_is_instanced )
+		{
+			Ogre::Entity *ent = (Ogre::Entity *)_ogre_object;
+			ent->setMaterialName(_material_name);
+		}
+		else if(_ogre_object)
+		{
+			std::clog << "WARNING : " << " reseting material for instanced entities is not supported." << std::endl;
+		}
+	}
+
+	if( DIRTY_INSTANCED & dirtyBits )
+	{
+		msg >> _is_instanced;
+		// For now we don't support changing from not instanced to instanced entities
+		assert(!_ogre_object);
 	}
 }
 
@@ -204,9 +236,6 @@ vl::Entity::_doCreateNative(void)
 	assert( _creator->getNative() );
 	assert( !_name.empty() );
 
-	
-	/// Catching the throw can not be used for mesh file 
-	/// because the ogre entity is not created then
 	if( _creator->getNative()->hasEntity( _name ) )
 	{
 		_ogre_object = _creator->getNative()->getEntity( _name );
@@ -220,7 +249,7 @@ vl::Entity::_doCreateNative(void)
 		}
 		else
 		{
-			_ogre_object = _creator->getNative()->createEntity(_name, _mesh_name);
+			_ogre_object = _createNativeEntity(_name, _mesh_name);
 		}
 	}
 	else
@@ -254,11 +283,15 @@ vl::Entity::_finishCreateNative(void)
 		// into the meshe files.
 		// TODO this does not work for the Ogre test object for some reason
 		// it still has the zero tangents even though it has UVs.
-		Ogre::MeshPtr mesh = _ogre_object->getMesh();
-		unsigned short src, dest;
-		if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
+		if(!_is_instanced)
 		{
-			mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
+			Ogre::Entity *ent = (Ogre::Entity *)_ogre_object;
+			Ogre::MeshPtr mesh = ent->getMesh();
+			unsigned short src, dest;
+			if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
+			{
+				mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
+			}
 		}
 	}
 	catch( Ogre::Exception const &e)
@@ -268,7 +301,13 @@ vl::Entity::_finishCreateNative(void)
 
 	_ogre_object->setCastShadows(_cast_shadows);
 	if( !_material_name.empty() )
-	{ _ogre_object->setMaterialName(_material_name); }
+	{
+		if(!_is_instanced)
+		{
+			Ogre::Entity *ent = (Ogre::Entity *)_ogre_object;
+			ent->setMaterialName(_material_name); 
+		}
+	}
 
 	/// Reset parent for those that are background loaded
 	if(_parent && !_ogre_object->isAttached())
@@ -284,6 +323,61 @@ vl::Entity::_clear(void)
 {
 	_cast_shadows = true;
 	_use_new_mesh_manager = false;
+	_is_instanced = false;
 	_ogre_object = 0;
 	_loader_cb = 0;
+}
+
+Ogre::MovableObject *
+vl::Entity::_createNativeEntity(std::string const &name, std::string const &mesh_name)
+{
+	assert(_creator);
+	Ogre::SceneManager *og_sm = _creator->getNative();
+	assert(og_sm);
+
+	if(_is_instanced)
+	{
+		Ogre::InstanceManager *inst_mgr = 0;
+		// Create instance manager if one does not already exist
+		// managers are mesh specific
+		if(!og_sm->hasInstanceManager(mesh_name))
+		{
+			std::clog << "Entity : Instanced : creating new manager : " << mesh_name << std::endl;
+			// parameters
+			uint32_t const inst_per_patch = 80;
+			// Technique chosen on basis of beign really fast when there is no sketal animation
+			Ogre::InstanceManager::InstancingTechnique technique = Ogre::InstanceManager::HWInstancingBasic; //HWInstancingBasic;
+			// Other possibilities
+			//	ShaderBased
+			//	TextureVTF
+			//	HWInstancingVTF
+
+			inst_mgr = og_sm->createInstanceManager(mesh_name, mesh_name, 
+				Ogre::ResourceGroupManager::AUTODETECT_RESOURCE_GROUP_NAME, technique, inst_per_patch);
+		}
+		else
+		{
+			std::clog << "Entity : Instanced : retrieving manager : " << mesh_name << std::endl;
+			inst_mgr = og_sm->getInstanceManager(mesh_name);
+		}
+		
+		if(_mesh)
+		{
+			// Instancing only works if the sub mesh has independ geometry
+			assert(_mesh->getNumSubMeshes() > 0);
+			assert(_mesh->getSubMesh(0)->vertexData);
+		}
+		assert(inst_mgr);
+		assert(!_material_name.empty());
+		// @todo does this work if the Mesh defines a material and we don't?
+		// Material needs to be derived from specific hw instance template
+		// but we can not check it here.
+		Ogre::InstancedEntity *inst = inst_mgr->createInstancedEntity(_material_name);
+		//inst->_getOwner()->getParentSceneNode()->showBoundingBox(true);
+		return inst;
+	}
+	else
+	{
+		return og_sm->createEntity(name, mesh_name);
+	}
 }
