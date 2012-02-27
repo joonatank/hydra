@@ -73,8 +73,11 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _visible(true)
 	, _show_boundingbox(false)
 	, _inherit_scale(true)
+	, _show_debug_display(false)
+	, _show_axes(false)
 	, _parent(0)
 	, _ogre_node(0)
+	, _debug_axes(0)
 	, _creator(creator)
 {
 	assert( _creator );
@@ -449,8 +452,28 @@ vl::SceneNode::setShowBoundingBox(bool show)
 {
 	if( _show_boundingbox != show )
 	{
-		setDirty(DIRTY_BOUNDING_BOX);
+		setDirty(DIRTY_PARAMS);
 		_show_boundingbox = show;
+	}
+}
+
+void 
+vl::SceneNode::setShowDebugDisplay(bool show)
+{
+	if(_show_debug_display != show)
+	{
+		setDirty(DIRTY_PARAMS);
+		_show_debug_display = show;
+	}
+}
+
+void
+vl::SceneNode::setShowAxes(bool show)
+{
+	if(_show_axes != show)
+	{
+		setDirty(DIRTY_PARAMS);
+		_show_axes = show;
 	}
 }
 
@@ -707,16 +730,6 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _visible;
 	}
 
-	if( dirtyBits & DIRTY_BOUNDING_BOX )
-	{
-		msg << _show_boundingbox;
-	}
-
-	if(dirtyBits & DIRTY_PARAMS)
-	{
-		msg << _inherit_scale;
-	}
-
 	if( dirtyBits & DIRTY_CHILDS )
 	{
 		msg << _childs.size();
@@ -736,6 +749,12 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 			msg << (*iter)->getID();
 		}
 	}
+
+	if(dirtyBits & DIRTY_PARAMS)
+	{
+		msg << _show_boundingbox << _inherit_scale << _show_debug_display << _show_axes;
+	}
+
 }
 
 void
@@ -771,19 +790,6 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		msg >> _visible;
 		if( _ogre_node )
 		{ _ogre_node->setVisible(_visible, false); }
-	}
-
-	if( dirtyBits & DIRTY_BOUNDING_BOX )
-	{
-		msg >> _show_boundingbox;
-		if( _ogre_node )
-		{ _ogre_node->showBoundingBox(_show_boundingbox); }
-	}
-
-	if(dirtyBits & DIRTY_PARAMS)
-	{
-		msg >> _inherit_scale;
-		_ogre_node->setInheritScale(_inherit_scale);
 	}
 
 	if( dirtyBits & DIRTY_CHILDS )
@@ -865,6 +871,33 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		for( id_iter = obj_ids.begin(); id_iter != obj_ids.end(); ++id_iter )
 		{
 			attachObject(_creator->getMovableObjectID(*id_iter));
+		}
+	}
+
+
+	if(dirtyBits & DIRTY_PARAMS)
+	{
+		msg >> _show_boundingbox >> _inherit_scale >> _show_debug_display >> _show_axes;
+		assert(_ogre_node);
+		
+		_ogre_node->showBoundingBox(_show_boundingbox);
+		_ogre_node->setInheritScale(_inherit_scale);
+		_ogre_node->setDebugDisplayEnabled(_show_debug_display, true);
+		
+		if(_show_axes)
+		{
+			if(!_debug_axes)
+			{
+				_debug_axes = new ogre::Axes(3.0/_scale.length());
+				_ogre_node->attachObject(_debug_axes);
+			}
+
+			_debug_axes->setVisible(true);
+		}
+		else
+		{
+			if(_debug_axes)
+			{ _debug_axes->setVisible(false); }
 		}
 	}
 }

@@ -776,6 +776,40 @@ vl::SceneManager::printBoundingBoxes(void)
 	std::clog << std::endl;
 }
 
+void
+vl::SceneManager::showBoundingBoxes(bool show)
+{
+	SceneNodeList::iterator iter = _scene_nodes.begin();
+	SceneNodeList::iterator eiter = _scene_nodes.end();
+	for(;iter != eiter; ++iter)
+	{
+		(*iter)->setShowBoundingBox(show);
+	}
+}
+
+void
+vl::SceneManager::showDebugDisplays(bool show)
+{
+	SceneNodeList::iterator iter = _scene_nodes.begin();
+	SceneNodeList::iterator eiter = _scene_nodes.end();
+	for(;iter != eiter; ++iter)
+	{
+		(*iter)->setShowDebugDisplay(show);
+	}
+}
+
+void
+vl::SceneManager::showAxes(bool show)
+{
+	SceneNodeList::iterator iter = _scene_nodes.begin();
+	SceneNodeList::iterator eiter = _scene_nodes.end();
+	for(;iter != eiter; ++iter)
+	{
+		(*iter)->setShowAxes(show);
+	}
+}
+
+
 /// ------------------------ SceneManager Selection --------------------------
 void
 vl::SceneManager::addToSelection(vl::SceneNodePtr node)

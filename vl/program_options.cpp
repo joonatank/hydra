@@ -34,15 +34,12 @@
 
 namespace po = boost::program_options;
 
-
 vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
 	: verbose(false)
 	, log_level(0)
 	, display_n(0)
-	, editor(false)
 	, n_processors(-1)
 	, start_processor(0)
-	, debug_overlay(false)
 	, _slave(false)
 	, _ini_file(ini_file)
 {
@@ -114,7 +111,7 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 			"How many processors or cores the program can use.")
 		("start_processor", po::value<int>(&start_processor), 
 			"First processor to use only has effect if processor is defined also.")
-		("debug_overlay", po::value<bool>(&debug_overlay), "Enable debug overlay.")
+		("debug_overlay", po::value<bool>(&debug.overlay), "Enable debug overlay.")
 	;
 
 	// Parse command line
@@ -215,8 +212,10 @@ vl::ProgramOptions::_parse_ini(void)
 		n_processors = pt.get("multicore.processors", -1);
 		start_processor = pt.get("multicore.start_processor", 0);
 		auto_fork = pt.get("multicore.auto_fork", false);
-		debug_overlay = pt.get("debug.overlay", false);
+		debug.overlay = pt.get("debug.overlay", false);
 		show_system_console = pt.get("debug.show_system_console", false);
+		debug.axes = pt.get("debug.axes", false);
+		debug.display = pt.get("debug.display", false);
 
 		if(pt.count("projects") > 0)
 		{

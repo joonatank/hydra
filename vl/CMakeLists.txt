@@ -56,6 +56,7 @@ set(SRC
 	ray_cast.cpp
 	sky_skyx.cpp
 	sky_caelum.cpp
+	ogre_axes.cpp
 	)
 
 set(MATH_HEADERS
@@ -259,6 +260,7 @@ set( HEADERS
 	sky_interface.hpp
 	sky_skyx.hpp
 	sky_caelum.hpp
+	ogre_axes.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

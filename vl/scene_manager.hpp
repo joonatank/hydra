@@ -531,7 +531,15 @@ public :
 	uint32_t getSceneVersion( void ) const
 	{ return _scene_version; }
 
+
+	/// Debug helpers
 	void printBoundingBoxes(void);
+
+	void showBoundingBoxes(bool show);
+
+	void showDebugDisplays(bool show);
+
+	void showAxes(bool show);
 
 	/// --------------------- Selection -----------------------
 	void addToSelection( SceneNodePtr node );

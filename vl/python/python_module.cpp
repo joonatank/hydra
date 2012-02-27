@@ -362,6 +362,9 @@ void export_scene_graph(void)
 		.def("createRayObject", &SceneManager::createRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("getRayObject", &SceneManager::getRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasRayObject", &SceneManager::hasRayObject)
+		.def("show_debug_displays", &SceneManager::showDebugDisplays)
+		.def("show_bounding_boxes", &SceneManager::showBoundingBoxes)
+		.def("show_axes", &SceneManager::showAxes)
 
 		/// Scene parameters
 		/// returns copies of the objects
@@ -519,6 +522,8 @@ void export_scene_graph(void)
 		.add_property("direction", &vl::SceneNode::getDirection)
 		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("show_debug_display", &SceneNode::isShowDebugDisplay, &vl::SceneNode::setShowDebugDisplay)
+		.add_property("show_axes", &SceneNode::isShowAxes, &vl::SceneNode::setShowAxes)
 
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)

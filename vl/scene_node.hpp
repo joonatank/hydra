@@ -34,6 +34,9 @@
 #include "cluster/distributed.hpp"
 #include "object_interface.hpp"
 
+// Debug helper
+#include "ogre_axes.hpp"
+
 namespace vl
 {
 
@@ -207,6 +210,16 @@ public :
 	bool getShowBoundingBox(void) const
 	{ return _show_boundingbox; }
 
+	void setShowDebugDisplay(bool show);
+
+	bool isShowDebugDisplay(void) const
+	{ return _show_debug_display; }
+
+	void setShowAxes(bool show);
+
+	bool isShowAxes(void) const
+	{ return _show_axes; }
+
 	/// @brief get if the node inherits scale from it's parent
 	/// Default value is true, because this will mess up reflections also
 	/// as they use negative scale along an axis to do the reflection
@@ -270,11 +283,10 @@ public :
 		DIRTY_TRANSFORM = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_SCALE = vl::Distributed::DIRTY_CUSTOM << 3,
 		DIRTY_VISIBILITY = vl::Distributed::DIRTY_CUSTOM << 4,
-		DIRTY_BOUNDING_BOX = vl::Distributed::DIRTY_CUSTOM << 5,
-		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 6,
-		DIRY_ATTACHED = vl::Distributed::DIRTY_CUSTOM << 7,
-		DIRTY_PARAMS = vl::Distributed::DIRTY_CUSTOM << 8,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 9,
+		DIRTY_CHILDS = vl::Distributed::DIRTY_CUSTOM << 5,
+		DIRY_ATTACHED = vl::Distributed::DIRTY_CUSTOM << 6,
+		DIRTY_PARAMS = vl::Distributed::DIRTY_CUSTOM << 7,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 8,
 	};
 
 	Ogre::SceneNode *getNative(void) const
@@ -302,9 +314,11 @@ private :
 	// @todo combine the boolean attributes
 	bool _visible;
 
+	// @params
 	bool _show_boundingbox;
-
 	bool _inherit_scale;
+	bool _show_debug_display;
+	bool _show_axes;
 
 	/// Keep track of the parent, so we can inform it when hierarchy is changed
 	vl::SceneNodePtr _parent;
@@ -316,6 +330,7 @@ private :
 	TransformedCB _transformed_cb;
 
 	Ogre::SceneNode *_ogre_node;
+	vl::ogre::Axes *_debug_axes;
 
 	vl::SceneManager *_creator;
 

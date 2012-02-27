@@ -55,7 +55,7 @@ public:
 	/// @todo this should send initialisation messages to all the rendering
 	/// threads
 	virtual void init(std::string const &global_file,
-			std::string const &project_file, bool enable_editor);
+			std::string const &project_file);
 
 	virtual void exit (void);
 

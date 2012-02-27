@@ -118,8 +118,8 @@ analog = game.create_analog_client("meh@localhost")
 analog.n_sensors = 1
 analog.get_sensor(0).addListener(printAnalog)
 
-ogre.rotate(Quaternion(0.7071, 0, -0.7071, 0))
-game.scene.addToSelection(lightpulp_n)
+#ogre.rotate(Quaternion(0.7071, 0, -0.7071, 0))
+#game.scene.addToSelection(lightpulp_n)
 
 # Start with paused and toggle state with space
 # TODO this is pretty useless because all events except for physics
@@ -138,6 +138,10 @@ def timer_callback():
 def single_timer_callback():
 	print("Called from single timer.")
 
+def show_debug():
+	#ogre.show_debug_display = True
+	game.scene.show_axes(True)
+
 # TODO
 # Can not be created from callbacks because it messes the iterators
 # TODO Counting the timers start before the scene has completely loaded
@@ -150,4 +154,8 @@ trigger = game.event_manager.createTimeTrigger()
 trigger.interval = time(10, 0)
 trigger.continuous = False
 trigger.addListener(single_timer_callback)
+
+ogre.translate(0, 1, 0)
+trigger = game.event_manager.createKeyTrigger(KC.Y)
+trigger.addListener(show_debug)
 

@@ -33,6 +33,19 @@
 namespace vl
 {
 
+struct HYDRA_API DebugOptions
+{
+	DebugOptions(void)
+		: overlay(false)
+		, axes(false)
+		, display(false)
+	{}
+
+	bool overlay;
+	bool axes;
+	bool display;
+};
+
 /// @class ProgramOptions
 /// Supports configuration using a single ini file and command line parameters
 /// Ini file is always parsed before command line options so command line overrides
@@ -86,8 +99,8 @@ struct HYDRA_API ProgramOptions
 	std::string global_file;
 	bool auto_fork;
 	bool show_system_console;
-	bool editor;
-	bool debug_overlay;
+
+	DebugOptions debug;
 
 	int n_processors;
 	int start_processor;

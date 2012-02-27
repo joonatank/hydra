@@ -80,8 +80,7 @@ vl::Master::~Master( void )
 /// Anyhow it would be much more useful to call Server::poll every 1ms,
 /// for example with interrupts.
 void
-vl::Master::init(std::string const &global_file,
-			std::string const &project_file, bool enable_editor)
+vl::Master::init(std::string const &global_file, std::string const &project_file)
 {
 	std::cout << vl::TRACE << "vl::Master::init" << std::endl;
 	vl::chrono init_timer;
@@ -424,7 +423,8 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
-	_renderer->enableDebugOverlay(opt.debug_overlay);
+
+	_renderer->enableDebugOverlay(opt.debug.overlay);
 
 	_game_manager = new vl::GameManager(this, _logger);
 
@@ -445,7 +445,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	_renderer->setMeshManager(_game_manager->getMeshManager());
 
-	init(opt.global_file, opt.project_file, opt.editor);
+	init(opt.global_file, opt.project_file);
 
 	std::vector<vl::config::Program> programs = env->getUsedPrograms();
 	std::clog << "Should start " << programs.size() << " autolaunched programs."
