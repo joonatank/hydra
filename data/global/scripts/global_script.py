@@ -453,6 +453,38 @@ def addToggleConsole(kc) :
 		trigger = game.event_manager.createKeyTrigger(kc)
 		trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
+# Selection Buffer
+class SelectionSet:
+	def __init__(self):
+		self.selection = []
+		self.index = 0
+
+	# Add an array of objects that are to be controlled as one
+	def add_objects(self, names):
+		self.selection.append([])
+		for n in names:
+			sn = game.scene.getSceneNode(n)
+			if sn:
+				self.selection[-1].append(sn)
+
+	def __str__(self):
+		s = "SelectionSet :\n"
+		for sn_list in self.selection:
+			for sn in sn_list:
+				s += (" " + sn.name)
+			s += "\n"
+		return s
+
+	def change_selection(self):
+		self.index += 1
+		if self.index >= len(self.selection):
+			self.index = 0
+
+		game.scene.clearSelection()
+		for sn in self.selection[self.index]:
+			game.scene.addToSelection(sn)
+
+
 # Create a basic directional light with a decent angle
 # Return the sun scene node
 # TODO this should be a bit more complex and use the sky simulator
