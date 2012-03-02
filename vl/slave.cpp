@@ -112,7 +112,7 @@ vl::Slave::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt
 
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
-	_renderer->enableDebugOverlay(opt.debug_overlay);
+	_renderer->enableDebugOverlay(opt.debug.overlay);
 
 	_renderer->addCommandListener(boost::bind(&Slave::injectCommand, this, _1));
 	_renderer->addEventListener(boost::bind(&Slave::injectEvent, this, _1));
