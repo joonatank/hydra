@@ -220,14 +220,16 @@ public :
 		}
 	}
 
-	virtual void disableCollisions(void)
+	virtual void disableCollisions(bool disable)
 	{
-		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-	}
-
-	virtual void enableCollisions(void)
-	{
-		_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		if(disable)
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		}
+		else
+		{
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		}
 	}
 
 	virtual bool isCollisionsDisabled(void) const

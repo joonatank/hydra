@@ -419,7 +419,7 @@ vl::physics::Tube::create(void)
 		// Needs to be here so that it will not be deactivated
 		body->setUserControlled(true);
 		body->setDamping(_body_damping, _body_damping);
-		body->disableCollisions();
+		body->disableCollisions(_disable_internal_collisions);
 		body0 = body;
 
 		// Some of the casting might go wrong 

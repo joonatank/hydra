@@ -192,6 +192,7 @@ void export_physics_objects(void)
 		.add_property("name", python::make_function(&vl::physics::RigidBody::getName, python::return_value_policy<python::copy_const_reference>()) )
 		.add_property("mass", &vl::physics::RigidBody::getMass, &vl::physics::RigidBody::setMass)
 		.add_property("kinematic", &vl::physics::RigidBody::isKinematicObject, &vl::physics::RigidBody::enableKinematicObject)
+		.add_property("disable_collisions", &vl::physics::RigidBody::isCollisionsDisabled, &vl::physics::RigidBody::disableCollisions)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
