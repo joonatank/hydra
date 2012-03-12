@@ -22,13 +22,6 @@ std::string getDefaultIniFile(void)
 	return p.generic_string();
 }
 
-int install(void)
-{
-	std::cout << "Should install to " << vl::get_global_path(vl::GP_STARTUP) << std::endl;
-
-	return 0;
-}
-
 Options getOptions(void)
 {
 	std::cout << "Getting config file stored in " << getDefaultIniFile() << std::endl;
@@ -137,10 +130,11 @@ std::ostream &operator<<(std::ostream &os, Options const &opt)
 	return os;
 }
 
-RemoteLauncher::RemoteLauncher(Options const &opt)
-	: _socket(_io_service) //, boost::udp::endpoint(boost::udp::v4(), opt.launcher_port))
+RemoteLauncher::RemoteLauncher(Options const &opt, std::string const &exe_path)
+	: _socket(_io_service)
 	, _options(opt)
 	, _running(false)
+	, _exe_path(exe_path)
 {
 	if(_options.launcher_auto_start)
 	{
@@ -209,11 +203,6 @@ RemoteLauncher::setRunning(bool running)
 	}
 
 	_running = running;
-}
-
-void
-RemoteLauncher::install(void)
-{
 }
 
 void

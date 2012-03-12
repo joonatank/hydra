@@ -30,6 +30,10 @@
 // Necessary for log levels
 #include "logger.hpp"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 std::string
 vl::findPlugin( std::string const &plugin )
 {
@@ -170,6 +174,14 @@ vl::get_global_path(GLOBAL_PATH type)
 			path = app_data;
 
 			path /= fs::path("/Microsoft/Windows/Start Menu/Programs/Startup");
+		}
+		break;
+
+		case GP_EXE:
+		{
+			char strExePath[1024];
+			GetModuleFileName(NULL, strExePath, 1024);
+			path = strExePath;
 		}
 		break;
 

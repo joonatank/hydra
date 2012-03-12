@@ -35,6 +35,9 @@
 LauncherWindow *g_launcher_gui = 0;
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, int iCmdShow )
 {
+	// @todo Check that there isn't multiple instances of this program
+	// atm crashes with unhandled exception.
+
 	Options opt = getOptions();
 	std::cout << "Starting remote launcher" << std::endl
 		<< opt << std::endl;
@@ -47,7 +50,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, in
 		return -1;
 	}
 
-	RemoteLauncher launcher(opt);
+	RemoteLauncher launcher(opt, vl::get_global_path(vl::GP_EXE).string());
 	
 	g_launcher_gui = new LauncherWindow(&launcher, hInstance, iCmdShow);
 

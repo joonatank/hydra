@@ -69,8 +69,6 @@ struct Options
 /// Global functions
 std::string getDefaultIniFile(void);
 
-int install(void);
-
 Options getOptions(void);
 
 std::ostream &operator<<(std::ostream &os, Options const &opt);
@@ -78,7 +76,7 @@ std::ostream &operator<<(std::ostream &os, Options const &opt);
 class RemoteLauncher
 {
 public :
-	RemoteLauncher(Options const &opt);
+	RemoteLauncher(Options const &opt, std::string const &exe_path);
 
 	void start_hydra(std::string const server_address);
 
@@ -94,11 +92,12 @@ public :
 	Options const &getOptions(void) const
 	{ return _options; }
 
+	std::string const &getExePath(void) const
+	{ return _exe_path; }
+
 	bool isRunning(void) const;
 
 	void setRunning(bool running);
-
-	void install(void);
 
 private :
 	void _handle_messages(void);
@@ -115,6 +114,7 @@ private :
 
 	Options _options;
 
+	std::string _exe_path;
 };
 
 #endif	// REMOTE_LAUNCHER_HPP

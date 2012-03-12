@@ -102,6 +102,7 @@ enum GLOBAL_PATH
 	GP_APP_DATA,
 	GP_TMP,
 	GP_STARTUP,
+	GP_EXE,
 };
 
 /// @brief Get the application data directory where config files are stored

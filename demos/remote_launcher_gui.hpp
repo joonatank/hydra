@@ -173,11 +173,44 @@ LauncherWindow::~LauncherWindow(void)
 	}
 }
 
+#include "base/filesystem.hpp"
+
 void
 LauncherWindow::_install(void)
 {
-	MessageBox(_hwnd, "Should install the Remote Launcher", "Remote Launcher", MB_OK);
-	_launcher->install();
+	assert(_launcher);
+	fs::path exe(_launcher->getExePath());
+	fs::path icon(exe);
+	icon.remove_leaf();
+	icon /= "Security.ico";
+
+	fs::path dest(vl::get_global_path(vl::GP_STARTUP));
+
+	std::string msg;
+
+	if(!fs::exists(dest))
+	{
+		msg = "Error installing : Install directory does not exist.";
+	}
+	if(!fs::exists(icon))
+	{
+		msg = "Error installing icon : icon does not exist.";
+	}
+	else if(!fs::exists(exe))
+	{
+		msg = "Error installing exe : exe does not exist.";
+	}
+	else
+	{
+		msg.clear();
+		fs::copy_file(exe, dest / exe.leaf());
+		fs::copy_file(icon, dest / icon.leaf());
+	}
+
+	if(!msg.empty())
+	{
+		MessageBox(_hwnd, msg.c_str(), "Remote Launcher", MB_OK);
+	}
 }
 
 void
