@@ -98,6 +98,40 @@ add_executable(vrpn_analog_server
 
 target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
+set(LAUNCHER_SOURCES
+	remote_launcher.cpp
+	remote_launcher.hpp
+	remote_launcher_app.cpp
+	${HydraMain_SOURCE_DIR}/base/sleep.hpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.hpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
+	${HydraMain_SOURCE_DIR}/base/system_util.hpp
+	${HydraMain_SOURCE_DIR}/base/system_util.cpp
+	)
+
+# Launcher
+# Windows has a GUI for ease of management
+# Linux version is designed to work as a daemon (started when system starts)
+if(WIN32)
+	add_executable(hydra_remote_launcher WIN32
+		remote_launcher_gui.hpp
+		${LAUNCHER_SOURCES}
+		)
+	# TODO copy the incon file to output directory
+else()
+	add_executable(hydra_remote_launcher
+		${LAUNCHER_SOURCES}
+		)
+endif()
+
+
+	target_link_libraries(hydra_remote_launcher
+		${Boost_ASIO_LIBRARIES}
+		)
+
+
 include_directories(${demos_BINARY_DIR})
 
 

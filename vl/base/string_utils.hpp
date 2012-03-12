@@ -79,6 +79,10 @@ namespace vl
 							std::string &longString,
 							char delimeter );
 
+	void break_string_down( std::vector<std::string> &parts,
+							std::string const &longString,
+							char delimeter );
+
 	/// @brief replaces Windows line endings with unix ones
 	/// @param str string which should have it's line endings altered
 	/// @throws nothing

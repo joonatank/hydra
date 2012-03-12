@@ -42,6 +42,7 @@ vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
 	, start_processor(0)
 	, _slave(false)
 	, _ini_file(ini_file)
+	, launcher_port(9556)
 {
 }
 
@@ -216,6 +217,7 @@ vl::ProgramOptions::_parse_ini(void)
 		show_system_console = pt.get("debug.show_system_console", false);
 		debug.axes = pt.get("debug.axes", false);
 		debug.display = pt.get("debug.display", false);
+		launcher_port = pt.get("launcher.port", 9556);
 
 		if(pt.count("projects") > 0)
 		{

@@ -24,6 +24,7 @@
 #ifndef HYDRA_BASE_FILESYSTEM_HPP
 #define HYDRA_BASE_FILESYSTEM_HPP
 
+//#define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 
 #include <string>
@@ -38,27 +39,6 @@ enum PATH_TYPE
 	PATH_ABS,
 	PATH_REL
 };
-
-/**	@brief Create a log file path with pid
- *	@param project_name the name of the project this will start the filename
- *	@param identifier to distinguish multiple log files of same project
- *	@param prefix a custom prefix for this file (for example debug)
- *	@param log_dir directory where the log file is to be stored
- *	@return a path with the format
- *	${log_dir}/${project_name}_${identifier}_${pid}_${prefix}.log
- *
- *	Returns a filename which is in the log dir and has the project and pid
- *	If no project name is set will substitute unamed for project name
- *
- *	If some of the parameters are missing that part of the file is omited
- *	including the _ used to separate parts of the name.
- *	If the parameter is required like project_name, unamed is used instead.
- */
-std::string
-createLogFilePath( const std::string &project_name,
-				   const std::string &identifier,
-				   const std::string &prefix = std::string(),
-				   const std::string &log_dir = std::string() );
 
 
 /**	@brief Find a plugin from system path or environment path
@@ -116,6 +96,21 @@ readFileToString( std::string const &filePath, std::string &output );
  */
 bool
 writeFileFromString( std::string const &filePath, std::string const &content );
+
+enum GLOBAL_PATH
+{
+	GP_APP_DATA,
+	GP_TMP,
+	GP_STARTUP,
+};
+
+/// @brief Get the application data directory where config files are stored
+/// @todo support for non ASCII characters missing
+/// @brief Get the startup directory on Windows system
+/// storing a symlink or an exe in this directory will make the system to execute it when started
+/// @todo support for non ASCII characters missing
+fs::path
+get_global_path(GLOBAL_PATH type);
 
 }	// namespace vl
 

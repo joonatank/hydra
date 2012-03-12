@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <cstdint>
+
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
@@ -104,6 +106,8 @@ struct HYDRA_API ProgramOptions
 
 	int n_processors;
 	int start_processor;
+
+	uint16_t launcher_port;
 
 	/// New variable for supporting multiple projects
 	/// that are loadable at runtime, single project can be active at once.
