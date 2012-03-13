@@ -21,6 +21,8 @@
 
 #include "remote_launcher.hpp"
 
+#include "res/remote_launcher_resource.hpp"
+
 // Windows headers
 #include <windows.h>
 #include <shellapi.h>
@@ -65,6 +67,7 @@ private :
 
 	RemoteLauncher *_launcher;
 
+	HINSTANCE _instance;
 	HWND _hwnd;
 	HMENU _tray_menu;
 	HMENU _main_menu;
@@ -75,6 +78,7 @@ extern LauncherWindow *g_launcher_gui;
 
 LauncherWindow::LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, int iCmdShow)
 	: _launcher(launcher)
+	, _instance(hInstance)
 	, _hwnd(0)
 	, _tray_menu(0)
 	, _main_menu(0)
@@ -110,6 +114,14 @@ LauncherWindow::LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, in
 		FatalAppExit( 0, TEXT("Couldn't register window class!") );
 	}
 
+
+	if(!_launcher->getOptions().valid())
+	{
+		std::string msg = "Can't start remote launcher because the config is invalid.";
+		MessageBox(_hwnd, msg.c_str(), "Remote Launcher", MB_OK);
+		throw(msg);
+	}
+
 	_hwnd = CreateWindowEx(
 		0, className,
 		TEXT( "HydraRemoteLauncher" ),
@@ -119,7 +131,13 @@ LauncherWindow::LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, in
 		NULL, NULL,
 		hInstance, NULL
 	);
-	assert(_hwnd);
+
+	if(!_hwnd)
+	{
+		std::string msg = "Can't create the MainWindow.";
+		MessageBox(_hwnd, msg.c_str(), "Remote Launcher", MB_OK);
+		throw(msg);
+	}
 
 	_set_title();
 
@@ -180,9 +198,6 @@ LauncherWindow::_install(void)
 {
 	assert(_launcher);
 	fs::path exe(_launcher->getExePath());
-	fs::path icon(exe);
-	icon.remove_leaf();
-	icon /= "Security.ico";
 
 	fs::path dest(vl::get_global_path(vl::GP_STARTUP));
 
@@ -192,19 +207,15 @@ LauncherWindow::_install(void)
 	{
 		msg = "Error installing : Install directory does not exist.";
 	}
-	if(!fs::exists(icon))
-	{
-		msg = "Error installing icon : icon does not exist.";
-	}
 	else if(!fs::exists(exe))
 	{
 		msg = "Error installing exe : exe does not exist.";
 	}
 	else
 	{
-		msg.clear();
+		msg = "Installed successfully to Startup directory.\n"
+			+ dest.string();
 		fs::copy_file(exe, dest / exe.leaf());
-		fs::copy_file(icon, dest / icon.leaf());
 	}
 
 	if(!msg.empty())
@@ -297,7 +308,7 @@ LauncherWindow::initNotifyIconData(void)
 
 	_notifyIconData.uCallbackMessage = WM_TRAYICON;
 
-	_notifyIconData.hIcon = (HICON)LoadImage( NULL, TEXT("Security.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE  ) ;
+	_notifyIconData.hIcon = LoadIcon(GetModuleHandle(0), MAKEINTRESOURCE(IDI_MAIN));
 
 	// set the tooltip text.  must be LESS THAN 64 chars
 	strcpy(_notifyIconData.szTip, TEXT("HydraRemoteLauncher : stopped"));

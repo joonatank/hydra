@@ -117,6 +117,8 @@ set(LAUNCHER_SOURCES
 if(WIN32)
 	add_executable(hydra_remote_launcher WIN32
 		remote_launcher_gui.hpp
+		res/remote_launcher.rc
+		res/remote_launcher_resource.hpp
 		${LAUNCHER_SOURCES}
 		)
 	# TODO copy the incon file to output directory

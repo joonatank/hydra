@@ -44,12 +44,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, in
 
 	opt.save_ini();
 
-	if(!opt.valid())
-	{
-		std::cerr << "Can't start remote launcher because the config is invalid." << std::endl;
-		return -1;
-	}
-
 	RemoteLauncher launcher(opt, vl::get_global_path(vl::GP_EXE).string());
 	
 	g_launcher_gui = new LauncherWindow(&launcher, hInstance, iCmdShow);
