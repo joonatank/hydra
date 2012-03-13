@@ -136,9 +136,17 @@ set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )
 
-add_executable(hydra hydra.cpp
-	build_defines.hpp
-	system_tools/message_box.hpp)
+if(WIN32)
+	add_executable(hydra 
+		hydra.cpp
+		res/resource.rc
+		build_defines.hpp
+		system_tools/message_box.hpp)
+else()
+	add_executable(hydra hydra.cpp
+		build_defines.hpp
+		system_tools/message_box.hpp)
+endif()
 
 add_executable(angles_to_quaternion
 	angles_to_quaternion.cpp

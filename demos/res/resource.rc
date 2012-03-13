@@ -1,4 +1,4 @@
 // Necessary to include resource so we can use the image in our code
 #include "resource.hpp"
 
-IDI_MAIN ICON "vinyl.ico"
+IDI_MAIN ICON "betty-boop.ico"
