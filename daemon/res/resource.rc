@@ -1,0 +1,4 @@
+// Necessary to include resource so we can use the image in our code
+#include "resource.hpp"
+
+IDI_MAIN ICON "Security.ico"

@@ -12,69 +12,19 @@
  *
  */
 
-#ifndef REMOTE_LAUNCHER_GUI_HPP
-#define REMOTE_LAUNCHER_GUI_HPP
+// Interface
+#include "daemon_gui.hpp"
 
-#ifndef _WIN32
-#error "Only Windows implementation provided"
-#endif
+// Hydra sources
+#include "base/filesystem.hpp"
 
-#include "remote_launcher.hpp"
-
-#include "res/remote_launcher_resource.hpp"
-
-// Windows headers
-#include <windows.h>
-#include <shellapi.h>
-
-#define ID_TRAY_APP_ICON                5000
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
-#define WM_TRAYICON ( WM_USER + 1 )
-
-UINT WM_TASKBARCREATED = 0;
-
-LRESULT CALLBACK WndProc (HWND, UINT, WPARAM, LPARAM);
-
-
-#define     ID_START       1000
-#define     ID_INSTALL     1001
-#define     ID_EXIT        1002
-#define		ID_KILL		   1003
-
-class LauncherWindow
+LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-public :
-	LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, int iCmdShow);
+	if(g_launcher_gui)
+		return g_launcher_gui->injectEvent(hwnd, message, wParam, lParam);
 
-	~LauncherWindow(void);
-
-	LRESULT injectEvent(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-	void initNotifyIconData(void);
-
-	void minimise(void);
-
-	void restore(void);
-
-private :
-	void _install(void);
-	void _start(void);
-	void _kill(void);
-	void _exit(void);
-	void _save_ini(void);
-	
-	void _set_title(void);
-
-	RemoteLauncher *_launcher;
-
-	HINSTANCE _instance;
-	HWND _hwnd;
-	HMENU _tray_menu;
-	HMENU _main_menu;
-	NOTIFYICONDATA _notifyIconData;
-};
-
-extern LauncherWindow *g_launcher_gui;
+	return DefWindowProc(hwnd, message, wParam, lParam);
+}
 
 LauncherWindow::LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, int iCmdShow)
 	: _launcher(launcher)
@@ -82,6 +32,7 @@ LauncherWindow::LauncherWindow(RemoteLauncher *launcher, HINSTANCE hInstance, in
 	, _hwnd(0)
 	, _tray_menu(0)
 	, _main_menu(0)
+	, WM_TASKBARCREATED(0)
 {
 	TCHAR className[] = TEXT( "HydraRemoteLauncher" );
 
@@ -191,8 +142,6 @@ LauncherWindow::~LauncherWindow(void)
 	}
 }
 
-#include "base/filesystem.hpp"
-
 void
 LauncherWindow::_install(void)
 {
@@ -273,7 +222,6 @@ LauncherWindow::_save_ini(void)
 	_launcher->getOptions().save_ini();
 }
 
-
 // Initialize the NOTIFYICONDATA structure.
 // See MSDN docs http://msdn.microsoft.com/en-us/library/bb773352(VS.85).aspx
 // for details on the NOTIFYICONDATA structure.
@@ -342,14 +290,6 @@ LauncherWindow::restore(void)
 
 	// ..and show the window
 	ShowWindow(_hwnd, SW_SHOW);
-}
-
-LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	if(g_launcher_gui)
-		return g_launcher_gui->injectEvent(hwnd, message, wParam, lParam);
-
-	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 LRESULT
@@ -510,5 +450,3 @@ LauncherWindow::injectEvent(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 	return DefWindowProc( hwnd, message, wParam, lParam ) ;
 }
-
-#endif	// REMOTE_LAUNCHER_GUI_HPP

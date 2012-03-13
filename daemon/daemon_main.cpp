@@ -10,13 +10,15 @@
  *
  */
 
-#include "remote_launcher.hpp"
+#include "daemon.hpp"
 
+// Hydra sources
 #include "base/sleep.hpp"
+#include "base/filesystem.hpp"
 
 // Windows GUI, needs to be after asio including
 #ifdef _WIN32
-#include "remote_launcher_gui.hpp"
+#include "daemon_gui.hpp"
 #endif
 
 #include <iostream>
