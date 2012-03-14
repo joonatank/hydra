@@ -614,6 +614,8 @@ a_row< Playing , pause       ,  Paused     , &g::_do_pause >,
 a_row< Paused  , play		 ,  Playing    , &g::_do_play  >,
 a_row< Paused  , stop        ,  Stopped    , &g::_do_stop  >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
+// @todo should be replaced with a second FSM so we can always exit
+a_row< Initing , quit        ,  Quited    , &g::_do_quit  >,
 a_row< Paused  , quit        ,  Quited    , &g::_do_quit  >,
 a_row< Stopped , quit        ,  Quited    , &g::_do_quit  >,
 a_row< Playing , quit        ,  Quited    , &g::_do_quit  >
