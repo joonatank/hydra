@@ -101,13 +101,12 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 		env->setFile( env_path.string() );
 	}
 
-	env->setLogDir( options.log_dir );
+	env->setLogDir( options.getLogDir() );
 	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
 
 	env->display_n = options.display_n;
 
 	return env;
-
 }
 
 /* This function is useless and depricated
@@ -231,13 +230,13 @@ vl::Hydra_Run(const int argc, char** argv)
 		{ return ExceptionMessage(); }
 
 		// File doesn't exist (checked earlier)
-		if(!options.log_dir.empty() && !fs::exists(options.log_dir))
+		if(!options.getLogDir().empty() && !fs::exists(options.getLogDir()))
 		{
-			fs::create_directory(options.log_dir);
+			fs::create_directory(options.getLogDir());
 		}
 
 		// Otherwise the file exists and it's a directory
-		std::cout << "Using log file: " << options.getOutputFile() << std::endl;
+		std::cout << "Using log file: " << options.getLogFile() << std::endl;
 
 		vl::ApplicationUniquePtr app = Application::create(options);
 
@@ -371,7 +370,7 @@ vl::Application::init(ProgramOptions const &opt)
 	// Needs to be created here because does not currently support
 	// changing the log file at run time.
 	_logger = new Logger;
-	_logger->setOutputFile(opt.getOutputFile());
+	_logger->setOutputFile(opt.getLogFile());
 
 	assert( env );
 
