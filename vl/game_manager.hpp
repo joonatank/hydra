@@ -620,13 +620,28 @@ a_row< Playing , quit        ,  Quited    , &g::_do_quit  >
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
 > {};
 
-    // Replaces the default no-transition response.
+protected:
+    /// Replaces the default no-transition response.
+	/// Default is asserting false which is not exactly what we want
+	/// better to report the error for user, might even use
+	/// clog instead of cout so that they are debug messages.
     template <class FSM,class Event>
     void no_transition(Event const& e, FSM&, int state)
     {
         std::cout << "no transition from state " << state
             << " on event " << typeid(e).name() << std::endl;
     }
+
+	/// We need to override this to get valid exception handling
+	/// default is asserting a failure which makes the exceptions message carbage.
+	/// Also we need exceptions in Release code which makes the default
+	/// implemantion very dangorous.
+	template <class Fsm,class Event>
+	void exception_caught(Event const& ,Fsm&, std::exception &e)
+	{
+		boost::exception_ptr ex = boost::current_exception();
+		boost::rethrow_exception(ex);
+	}
 
 };	// struct GameManagerFSM_
 
