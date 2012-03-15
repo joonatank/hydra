@@ -89,7 +89,7 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 	_addRigidBody(info.name, body, info.kinematic);
 
 	// Collision detection is auto enabled so disable it if necessary
-	body->disableCollisions(_collision_detection_enabled);
+	body->disableCollisions(!_collision_detection_enabled);
 
 	return body;
 }
@@ -199,7 +199,7 @@ vl::physics::World::enableCollisionDetection(bool enable)
 		for(RigidBodyList::iterator iter = _rigid_bodies.begin(); 
 			iter != _rigid_bodies.end(); ++iter)
 		{
-			(*iter)->disableCollisions(enable);
+			(*iter)->disableCollisions(!enable);
 		}
 		_collision_detection_enabled = enable;
 	}
