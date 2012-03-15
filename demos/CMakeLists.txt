@@ -98,6 +98,7 @@ add_executable(vrpn_analog_server
 
 target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
 
+
 include_directories(${demos_BINARY_DIR})
 
 
@@ -135,9 +136,20 @@ set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )
 
-add_executable(hydra hydra.cpp
+set(HYDRA_SRC 
+	hydra.cpp
 	build_defines.hpp
-	system_tools/message_box.hpp)
+	system_tools/message_box.hpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.cpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.hpp
+	)
+if(WIN32)
+	add_executable( hydra ${HYDRA_SRC} res/resource.rc )
+else()
+	add_executable( hydra ${HYDRA_SRC} )
+endif()
 
 add_executable(angles_to_quaternion
 	angles_to_quaternion.cpp

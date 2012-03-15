@@ -594,6 +594,7 @@ vl::GameManager::_do_init(init const &evt)
 
 	_createQuitEvent();
 
+	assert(evt.environment);
 	_loadEnvironment(*evt.environment);
 	_loadGlobal(evt.global);
 
@@ -698,6 +699,7 @@ vl::GameManager::_do_quit(vl::quit const &evt)
 void
 vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)
 {
+	std::clog << "vl::GameManager::_loadEnvironment" << std::endl;
 	// Create Tracker needs the SceneNodes for mapping
 	chrono t;
 	createTrackers(env);
@@ -710,7 +712,7 @@ vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)
 void
 vl::GameManager::_loadGlobal(std::string const &file_name)
 {
-	// @todo this should check that the global is not already loaded
+	std::clog << "vl::GameManager::_loadGlobal" << std::endl;
 
 	// reset the python context
 	_python->reset();
@@ -718,8 +720,11 @@ vl::GameManager::_loadGlobal(std::string const &file_name)
 	// reset the global
 	vl::ProjSettings global;
 	vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&global, vl::null_deleter()));
-	bool retval = ser.readFile(file_name);
-	assert(retval);
+	// We must have a global file because we need resources for the GUI.
+	if(!ser.readFile(file_name))
+	{
+		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Global project file"));
+	}
 
 	std::clog << "Loading Global : " << global.getName() << std::endl;
 

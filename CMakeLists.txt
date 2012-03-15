@@ -201,6 +201,7 @@ endif()
 
 if(HYDRA_BUILD_DEMOS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
+	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/daemon )
 endif()
 
 include( Packaging )

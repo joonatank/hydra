@@ -57,6 +57,7 @@ set(SRC
 	sky_skyx.cpp
 	sky_caelum.cpp
 	ogre_axes.cpp
+	remote_launcher_helper.cpp
 	)
 
 set(MATH_HEADERS
@@ -261,6 +262,7 @@ set( HEADERS
 	sky_skyx.hpp
 	sky_caelum.hpp
 	ogre_axes.hpp
+	remote_launcher_helper.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

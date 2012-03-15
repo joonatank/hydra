@@ -43,6 +43,15 @@ vl::break_string_down( std::vector<std::string> &broken_path,
 }
 
 void
+vl::break_string_down( std::vector<std::string> &parts,
+						std::string const &longString,
+						char delimeter )
+{
+	std::string str(longString);
+	break_string_down(parts, str, delimeter);
+}
+
+void
 vl::replace_line_endings(std::string &str)
 {
 	size_t index = str.find( "\r\n" ); 

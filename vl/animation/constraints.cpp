@@ -467,6 +467,7 @@ vl::HingeConstraint::getHingeAngle(void) const
 	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
 
 	Ogre::Quaternion q = init_q.Inverse()*current_q;
+	q.normalise();
 	Ogre::Radian angle;
 	Ogre::Vector3 axis;
 	q.ToAngleAxis(angle, axis);
@@ -482,8 +483,8 @@ vl::HingeConstraint::getHingeAngle(void) const
 		}
 		else if( !vl::equal(axis, _axisInA) )
 		{
-			std::clog << "vl::HingeConstraint::getHingeAngle : axis of rotation is incorrect \n"
-				<< "\trotation axis = " << _axisInA << " got " << axis << " angle = " << angle << std::endl;
+			//std::clog << "vl::HingeConstraint::getHingeAngle : axis of rotation is incorrect \n"
+			//	<< "\trotation axis = " << _axisInA << " got " << axis << " angle = " << angle << std::endl;
 		}
 	}
 
@@ -518,26 +519,23 @@ vl::HingeConstraint::_progress(vl::time const &t)
 	// The angle derivative
 	Ogre::Radian angle_d = vl::sign(to_target) * vl::min(max_angle, vl::abs(to_target));
 
-	if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
-	{		
-		// Constraint is free if upper limit is less than lower limit
-		if( !(_upper_limit < _lower_limit) )
-		{	
-			Ogre::Radian new_angle = current_angle + angle_d;
-			vl::clamp(new_angle, _lower_limit, _upper_limit);
-			assert( angle_d > new_angle - current_angle || 
-				vl::equal(angle_d, new_angle - current_angle, Ogre::Radian(EPSILON)) );
-			angle_d = new_angle - current_angle;
-		}
+	// Constraint is free if upper limit is less than lower limit
+	if( _upper_limit >= _lower_limit )
+	{	
+		Ogre::Radian new_angle = current_angle + angle_d;
+		vl::clamp(new_angle, _lower_limit, _upper_limit);
+		assert( angle_d > new_angle - current_angle || 
+			vl::equal(angle_d, new_angle - current_angle, Ogre::Radian(EPSILON)) );
+		angle_d = new_angle - current_angle;
+	}
 
-		// Only one point where the transformation occurs this ensures that
-		// there will never be more than one transformation
-		// also check for small errors so we don't get vibrations
-		if( !vl::equal(angle_d, Ogre::Radian(0), Ogre::Radian(EPSILON)) )
-		{
-			Ogre::Quaternion q(angle_d, _axisInA);			
-			_link->rotate(q);
-		}
+	// Only one point where the transformation occurs this ensures that
+	// there will never be more than one transformation
+	// also check for small errors so we don't get vibrations
+	if( !vl::equal(angle_d.valueRadians(), vl::scalar(0.0), vl::scalar(1e-3)) )
+	{
+		Ogre::Quaternion q(angle_d, _axisInA);			
+		_link->rotate(q);
 	}
 }
 

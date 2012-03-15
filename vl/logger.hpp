@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
  *	@file logger.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -47,19 +43,16 @@ char const TRACE = 19;
 
 struct LogMessage
 {
-LogMessage( std::string const &ty = std::string(),
-			double tim = 0,
-			std::string const &msg = std::string(),
-			LOG_MESSAGE_LEVEL lvl = LML_CRITICAL )
-	: type(ty), time(tim), message(msg), level(lvl)
-{
-	if( message.size() > 0 )
-	{
-		// Remove the line ending because we are using custom line endings
-		if(*(message.end()-1) == '\n')
-		{ message.erase(message.end()-1); }
-	}
-}
+	LogMessage( std::string const &ty = std::string(),
+				double tim = 0,
+				std::string const &msg = std::string(),
+				LOG_MESSAGE_LEVEL lvl = LML_CRITICAL );
+
+	void append(std::string const &str);
+
+	void clear(void);
+
+	bool empty(void) const;
 
 std::string type;
 double time;
@@ -166,6 +159,8 @@ private :
 
 	std::vector<LogMessage> _messages;
 	std::vector< io::stream_buffer<sink> *> _streams;
+
+	LogMessage _current_msg;
 
 };	// namespace Logger
 

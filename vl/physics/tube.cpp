@@ -109,9 +109,8 @@ vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionIn
 		vl::scalar alfa = std::asin(height/c);
 
 		if(vl::isnormal(alfa))
-		{			
-			// @todo the forward axis (y) should have lower limit
-			_lower_lim = Ogre::Vector3(-alfa, -0, -alfa);
+		{
+			_lower_lim = Ogre::Vector3(-alfa, -alfa, -0);
 			// Upper and lower limits are same except for the sign
 			_upper_lim = -_lower_lim;
 			std::clog << "Calculated limits : lower = " << _lower_lim << " upper = " 
@@ -339,12 +338,12 @@ vl::physics::Tube::create(void)
 	/// General parameters that stay constant for the whole tube
 	uint16_t n_elements = std::ceil(_length/_element_size);
 	vl::scalar elem_length = _length/n_elements;
-	// @fixme for some reason the tube element needs to be created on the y-axis
-	// should be z-axis imo.
-	Ogre::Vector3 bounds(_tube_radius*2, elem_length, _tube_radius*2);
+	// Create the tube along z-axis
+	Ogre::Vector3 bounds(_tube_radius*2, _tube_radius*2, elem_length);
 	_shape = BoxShape::create(bounds);
 	vl::scalar elem_mass = _mass/n_elements;
-	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl;
+	std::clog << "Creating a tube with " << n_elements << " elements." << std::endl
+		<< " and with " << _fixing_bodies.size() << " fixing points." << std::endl;
 
 	/// Set parameters to start and end bodies
 	_start_body->setUserControlled(true);
@@ -358,6 +357,7 @@ vl::physics::Tube::create(void)
 	// between the fixing points
 	RigidBodyRefPtr body0 = _start_body;
 	RigidBodyRefPtr body1 = _end_body;
+	size_t count = 0;
 	for(uint16_t i = 0; i < n_elements; ++i)
 	{
 		// Direction between the bodies
@@ -367,7 +367,7 @@ vl::physics::Tube::create(void)
 		if(fixing_iter != _fixing_bodies.end())
 		{
 			// Still valid body
-			if(fixing_iter->first < i*elem_length)
+			if(fixing_iter->first > i*elem_length)
 			{
 				body1 = fixing_iter->second;
 			}
@@ -379,6 +379,9 @@ vl::physics::Tube::create(void)
 				++fixing_iter;
 				if(fixing_iter != _fixing_bodies.end())
 				{ body1 = fixing_iter->second; }
+				else
+				{ body1 = _end_body; }
+				count = 0;
 			}
 		}
 
@@ -394,22 +397,25 @@ vl::physics::Tube::create(void)
 		// real method would be to take the limits into account when calculating
 		// the direction.
 		// update
-		// Creatibg the tube to Y direction so that we can set the equilibrium point
-		Ogre::Vector3 dir = wt_end.quaternion*Ogre::Vector3::UNIT_Y; //NEGATIVE_UNIT_Y; //wt_end.position - wt_start.position;
+		Ogre::Vector3 length = wt_end.position - wt_start.position;
+		Ogre::Vector3 dir = length;
 		dir.normalise();
 	
 		std::stringstream name;
 		name << "tube_" << n_tubes << "_element_" << i;
 
-		//pos += dir*((i-n_elements/2)*elem_length);
 		// This seems to work fine for everything except when we are moving backwards
 		// but the limits are constricting so that we need to make a u-turn.
-		Ogre::Vector3 pos = wt_start.position + dir*elem_length;
+		Ogre::Vector3 v = dir * elem_length;
+		Ogre::Vector3 pos = wt_start.position;
+		if(v.length() < length.length())
+		{ pos += v; }
+		else
+		{ pos += length; }
 
 		// @todo this should maybe be modified to combine both the direction 
 		// and the orginal orientation
 		Ogre::Quaternion orient = body0->getWorldTransform().quaternion;
-		//std::clog << "Position = " << pos << " orientation = " << orient << std::endl;
 
 		Transform ms_t(pos, orient);
 		MotionState *ms = _world->createMotionState(ms_t);
@@ -426,6 +432,8 @@ vl::physics::Tube::create(void)
 		// so lets assert that we still have valid state
 		assert(ms == body->getMotionState());
 		assert(!body->getMotionState()->getNode());
+
+		++count;
 	}
 
 	if(body0->isCollisionsDisabled())
@@ -491,8 +499,9 @@ vl::physics::Tube::_createConstraints(vl::Transform const &start_frame, vl::Tran
 {
 	/// Create spring-damper constraints
 	/// Maximum number of constraint is N+1 where N is the number of elements
-	vl::Transform frameA(Ogre::Vector3(0, elem_length/2, 0));
+	vl::Transform frameA(Ogre::Vector3(0, 0, elem_length/2));
 	vl::Transform frameB = -frameA;
+
 	if(_start_body && _bodies.size() > 0)
 	{
 		ConstraintRefPtr constraint = SixDofConstraint::create(_start_body, _bodies.front(), start_frame, frameB, true);

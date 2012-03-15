@@ -27,40 +27,12 @@
 #include "defines.hpp"
 // Necessary for break_string_down
 #include "string_utils.hpp"
-// Necessary for creating file path with pid
-#include "system_util.hpp"
 // Necessary for log levels
 #include "logger.hpp"
 
-std::string
-vl::createLogFilePath( const std::string &project_name,
-					   const std::string &identifier,
-					   const std::string &prefix,
-					   const std::string &log_dir )
-{
-	uint32_t pid = vl::getPid();
-	std::stringstream ss;
-
-	if( !log_dir.empty() )
-	{ ss << log_dir << "/"; }
-
-	if( project_name.empty() )
-	{ ss << "unamed"; }
-	else
-	{ ss << project_name; }
-
-	if( !identifier.empty() )
-	{ ss << '_' << identifier; }
-
-	ss << '_' << pid;
-
-	if( !prefix.empty() )
-	{ ss << '_' << prefix; }
-
-	ss << ".log";
-
-	return ss.str();
-}
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 std::string
 vl::findPlugin( std::string const &plugin )
@@ -173,4 +145,51 @@ vl::writeFileFromString(const std::string& filePath, const std::string& content)
 		return false;
 	}
 	return true;
+}
+
+fs::path
+vl::get_global_path(GLOBAL_PATH type)
+{
+	fs::path path;
+#ifdef _WIN32
+	const char *data = 0;
+	switch(type)
+	{
+		case GP_APP_DATA:
+		{
+			data = ::getenv("LOCALAPPDATA");
+			if(!data)
+			{
+				data = ::getenv("APPDATA");
+			}
+			assert(data);
+			path = fs::path(data);
+		}
+		break;
+
+		case GP_STARTUP:
+		{
+			const char *app_data = ::getenv("APPDATA");
+			assert(app_data);
+			path = app_data;
+
+			path /= fs::path("/Microsoft/Windows/Start Menu/Programs/Startup");
+		}
+		break;
+
+		case GP_EXE:
+		{
+			char strExePath[1024];
+			GetModuleFileName(NULL, strExePath, 1024);
+			path = strExePath;
+		}
+		break;
+
+		default :
+			std::cerr << "Not supported path type" << std::endl;
+	}
+#else
+#error "Linux not supported"
+#endif
+	return path;
 }

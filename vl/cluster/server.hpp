@@ -477,6 +477,7 @@ a_row< AllOk	, timer_expired		,	Error		, &s::_report_error >,
 a_row< Error	, clear_error		,	AllOk		, &s::_do_rest >
 > {};
 
+protected:
     // Replaces the default no-transition response.
     template <class FSM,class Event>
     void no_transition(Event const& e, FSM&, int state)
@@ -488,6 +489,17 @@ a_row< Error	, clear_error		,	AllOk		, &s::_do_rest >
 				<< " on event " << typeid(e).name() << std::endl;
 		}
     }
+
+	/// We need to override this to get valid exception handling
+	/// default is asserting a failure which makes the exceptions message carbage.
+	/// Also we need exceptions in Release code which makes the default
+	/// implemantion very dangorous.
+	template <class Fsm,class Event>
+	void exception_caught(Event const& ,Fsm&, std::exception &e)
+	{
+		boost::exception_ptr ex = boost::current_exception();
+		boost::rethrow_exception(ex);
+	}
 
 };	// class ServerFSM_
 

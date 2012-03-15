@@ -26,8 +26,6 @@
 // Used for command line option parsing
 #include <boost/program_options.hpp>
 
-#include "base/filesystem.hpp"
-
 // Compile time created header
 // necessary for the version flag
 #include "revision_defines.hpp"
@@ -42,7 +40,32 @@ vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
 	, start_processor(0)
 	, _slave(false)
 	, _ini_file(ini_file)
+	, launcher_port(9556)
 {
+	/// Find search directories for the ini file
+	/// The executable path
+	fs::path exe_dir = vl::get_global_path(vl::GP_EXE);
+	exe_dir.remove_leaf();
+
+	/// The application directory
+	fs::path app_dir = vl::get_global_path(vl::GP_APP_DATA);
+	app_dir.remove_leaf();
+
+	/// App dir overrides the exe path
+	if( fs::exists(app_dir / _ini_file) )
+	{
+		_ini_file_path = app_dir / _ini_file;
+	}
+	else if( fs::exists(exe_dir / _ini_file) )
+	{
+		_ini_file_path = exe_dir / _ini_file;
+	}
+	else
+	{
+		// Not a deal breaker if we can't find ini file
+		// we should really create a default ini file to app dir here
+		std::clog << "No ini file found." << std::endl;
+	}
 }
 
 vl::ProgramOptions::~ProgramOptions(void)
@@ -62,7 +85,7 @@ vl::ProgramOptions::slave( void ) const
 }
 
 std::string
-vl::ProgramOptions::getOutputFile(void) const
+vl::ProgramOptions::getLogFile(void) const
 {
 	std::string name;
 	if(master())
@@ -76,15 +99,33 @@ vl::ProgramOptions::getOutputFile(void) const
 		{ name += ("_" + slave_name); }
 	}
 
-	fs::path log = fs::path(log_dir) / fs::path(name + ".log");
+	fs::path log = fs::path(getLogDir()) / fs::path(name + ".log");
 
 	return log.string();
+}
+
+std::string
+vl::ProgramOptions::getLogDir(void) const
+{
+	if(fs::path(_log_dir_name).is_absolute())
+	{ return _log_dir_name; }
+	else
+	{
+		fs::path exe_dir = vl::get_global_path(vl::GP_EXE);
+		exe_dir.remove_leaf();
+		fs::path ldir = exe_dir / fs::path(_log_dir_name);
+
+		return ldir.string();
+	}
 }
 
 bool
 vl::ProgramOptions::parseOptions( int argc, char **argv )
 {
-	_parse_ini();
+	if(fs::exists(_ini_file_path))
+	{
+		_parse_ini();
+	}
 
 	// Declare a group of options that will be 
 	// allowed only on command line
@@ -101,7 +142,7 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 //		("config,c", po::value<std::string>(&_config_file)->default_value("hydra.ini"),
 //				"name of a file of a configuration.")
 		("log_level,l", po::value<int>(), "how much detail is logged")
-		("log_dir", po::value<std::string>(&log_dir), "where to write the log files")
+		("log_dir", po::value<std::string>(&_log_dir_name), "where to write the log files")
 		("environment,e", po::value< std::string >(&environment_file), "environment file")
 		("project,p", po::value< std::string >(&project_file), "project file")
 		("global,g", po::value< std::string >(&global_file), "global file")
@@ -196,34 +237,32 @@ vl::ProgramOptions::_parse_ini(void)
     using boost::property_tree::ptree;
     ptree pt;
 
-	if(fs::exists(_ini_file))
+	// Load the INI file into the property tree. If reading fails
+	// (cannot open file, parse error), an exception is thrown.
+	read_ini(_ini_file_path.string(), pt);
+
+	// Parse ptree
+	environment_file = pt.get("environment", "");
+	project_file = pt.get("project", "");
+	global_file = pt.get("global", "");
+	display_n = pt.get("display", 0);
+	log_level = pt.get("log.level", 0);
+	_log_dir_name = pt.get("log.dir", "");
+	n_processors = pt.get("multicore.processors", -1);
+	start_processor = pt.get("multicore.start_processor", 0);
+	auto_fork = pt.get("multicore.auto_fork", false);
+	debug.overlay = pt.get("debug.overlay", false);
+	show_system_console = pt.get("debug.show_system_console", false);
+	debug.axes = pt.get("debug.axes", false);
+	debug.display = pt.get("debug.display", false);
+	launcher_port = pt.get("launcher.port", 9556);
+
+	if(pt.count("projects") > 0)
 	{
-		// Load the INI file into the property tree. If reading fails
-		// (cannot open file, parse error), an exception is thrown.
-		read_ini(_ini_file, pt);
-
-		// Parse ptree
-		environment_file = pt.get("environment", "");
-		project_file = pt.get("project", "");
-		global_file = pt.get("global", "");
-		display_n = pt.get("display", 0);
-		log_level = pt.get("log.level", 0);
-		log_dir = pt.get("log.dir", "");
-		n_processors = pt.get("multicore.processors", -1);
-		start_processor = pt.get("multicore.start_processor", 0);
-		auto_fork = pt.get("multicore.auto_fork", false);
-		debug.overlay = pt.get("debug.overlay", false);
-		show_system_console = pt.get("debug.show_system_console", false);
-		debug.axes = pt.get("debug.axes", false);
-		debug.display = pt.get("debug.display", false);
-
-		if(pt.count("projects") > 0)
+		if(!pt.get_child("projects").empty())
 		{
-			if(!pt.get_child("projects").empty())
-			{
-				BOOST_FOREACH(ptree::value_type &v, pt.get_child("projects"))
-					project_paths.push_back(v.second.data());
-			}
+			BOOST_FOREACH(ptree::value_type &v, pt.get_child("projects"))
+				project_paths.push_back(v.second.data());
 		}
 	}
 }

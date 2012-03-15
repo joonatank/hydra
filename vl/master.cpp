@@ -47,6 +47,8 @@
 // Necessary for spawning external processes
 #include "base/system_util.hpp"
 
+#include "remote_launcher_helper.hpp"
+
 /// ---------------------------------- Master --------------------------------
 vl::Master::Master(void)
 	: Application()
@@ -398,7 +400,6 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 				break;
 			}
 #else
-			std::clog << "Windows autoforking local slaves." << std::endl;
 			/// @todo use a more general parameter for the program name
 			std::vector<std::string> params;
 			// Add slave param
@@ -416,6 +417,18 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 			_spawned_processes.push_back(pid);
 		}
 #endif
+	}
+	
+	// Auto forking is incompatible with launchers so either or
+	// if we have no slaves there is no reason what so ever to send a message
+	if(!opt.auto_fork && !env->getSlaves().empty())
+	{
+		// Try to find launchers by broadcasting, 
+		// launchers will start automatically when they receive start command
+
+		/// @todo make port configurable
+		RemoteLauncherHelper launcher_helper(opt.launcher_port);
+		launcher_helper.send_start(env->getServer().port);
 	}
 
 	/// Correct name has been set

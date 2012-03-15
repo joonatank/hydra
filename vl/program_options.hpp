@@ -27,6 +27,10 @@
 #include <string>
 #include <vector>
 
+#include <cstdint>
+
+// Necessary for storing the ini file path
+#include "base/filesystem.hpp"
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
@@ -58,6 +62,10 @@ struct HYDRA_API ProgramOptions
 	/// @brief Constructor
 	/// @param ini_file name of the ini file we try to parse
 	/// Ini file does not need to exist.
+	/// We search the ini file with the name from multiple default locations
+	/// primary location is the application directory (os specific configuration storage)
+	/// secondary location is the directory where the program was started.
+	/// @todo does this use HydraMain.dll location or hydra.exe location?
 	ProgramOptions(std::string const &ini_file = std::string("hydra.ini"));
 
 	~ProgramOptions(void);
@@ -78,14 +86,20 @@ struct HYDRA_API ProgramOptions
 	/// If this is true slave is always false
 	bool master( void ) const;
 
-	std::string getOutputFile(void) const;
+	/// @brief Get the log file name for this specific instance
+	/// Different names for master and all slaves.
+	std::string getLogFile(void) const;
+
+	/// @brief Get the log directory we want to use.
+	/// If user specified an absolute directory path this will return it unmodified.
+	/// if the user specified a relative path the path will be relative to exe dir.
+	std::string getLogDir(void) const;
 
 	/// Global options
 	bool verbose;
 	int log_level;
 	std::string exe_name;
 	std::string program_directory;
-	std::string log_dir;
 	int display_n;
 
 	/// Slave specific options
@@ -105,6 +119,8 @@ struct HYDRA_API ProgramOptions
 	int n_processors;
 	int start_processor;
 
+	uint16_t launcher_port;
+
 	/// New variable for supporting multiple projects
 	/// that are loadable at runtime, single project can be active at once.
 	std::vector<std::string> project_paths;
@@ -114,6 +130,10 @@ private :
 	void _parse_ini(void);
 
 	std::string _ini_file;
+
+	std::string _log_dir_name;
+
+	fs::path _ini_file_path;
 
 };	// class ProgramOptions
 
