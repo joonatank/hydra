@@ -109,6 +109,7 @@ void export_physics_objects(void)
 		.add_property("linear_lower_limit", &vl::physics::SixDofConstraint::getLinearLowerLimit, &vl::physics::SixDofConstraint::setLinearLowerLimit)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
+		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::SixDofConstraint::create)
 		.staticmethod("create")
 	;
@@ -127,6 +128,7 @@ void export_physics_objects(void)
 		.add_property("powered_ang_motor", &vl::physics::SliderConstraint::getPoweredAngMotor, &vl::physics::SliderConstraint::setPoweredAngMotor)
 		.add_property("target_ang_motor_velocity", &vl::physics::SliderConstraint::getTargetAngMotorVelocity, &vl::physics::SliderConstraint::setTargetAngMotorVelocity)
 		.add_property("max_ang_motor_force", &vl::physics::SliderConstraint::getMaxAngMotorForce, &vl::physics::SliderConstraint::setMaxAngMotorForce)
+		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::SliderConstraint::create)
 		.staticmethod("create")
 	;
@@ -145,7 +147,7 @@ void export_physics_objects(void)
 		.def("set_motor_max_impulse", &vl::physics::HingeConstraint::setMaxMotorImpulse)
 		.def("set_axis", &vl::physics::HingeConstraint::setAxis)
 		
-
+		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::HingeConstraint::create)
 		.staticmethod("create")
 	;
@@ -221,7 +223,8 @@ void export_physics_objects(void)
 	;
 
 	python::class_<std::vector<boost::shared_ptr<vl::physics::Constraint> > >("ConstraintList")
-		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())	
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Constraint> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	/// Shared pointer needs Proxies to be turned off
@@ -231,11 +234,13 @@ void export_physics_objects(void)
 	;
 
 	python::class_<std::vector<boost::shared_ptr<vl::physics::RigidBody> > >("RigidBodyList")
-		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::RigidBody> >, true>())	
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::RigidBody> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<std::vector<boost::shared_ptr<vl::physics::Tube> > >("TubeList")
-		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Tube> >, true>())	
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<vl::physics::Tube> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	/// world
@@ -307,6 +312,7 @@ void export_physics_objects(void)
 		.add_property("fixings", python::make_function(&vl::physics::Tube::getFixings, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("start_fixing", &vl::physics::Tube::getStartFixing)
 		.add_property("end_fixing", &vl::physics::Tube::getEndFixing)
+		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::Tube::create)
 	;
 }

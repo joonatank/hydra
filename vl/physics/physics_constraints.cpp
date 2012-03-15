@@ -24,6 +24,56 @@
 #include "physics_constraints_newton.hpp"
 #endif
 
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::Constraint const &c)
+{
+	os << "Constraint between " << c.getBodyA()->getName() 
+			<< " and " << c.getBodyA()->getName() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::HingeConstraint const &c)
+{
+	os << "Hinge constraint between " << c.getBodyA()->getName() 
+			<< " and " << c.getBodyA()->getName() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::SliderConstraint const &c)
+{
+	os << "Slider constraint between " << c.getBodyA()->getName() 
+			<< " and " << c.getBodyA()->getName() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::SixDofConstraint const &c)
+{
+	os << "Six Dof constraint between " << c.getBodyA()->getName() 
+			<< " and " << c.getBodyA()->getName() << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::ConstraintList const &cl)
+{
+	os << "Constraint list with " << cl.size() << " constraints." << std::endl;
+	for(ConstraintList::const_iterator iter = cl.begin(); iter != cl.end(); ++iter)
+	{
+		os << " between " << (*iter)->getBodyA()->getName() 
+			<< " and " << (*iter)->getBodyA()->getName() << std::endl;
+	}
+
+	return os;
+}
+
+
 vl::physics::SixDofConstraintRefPtr
 vl::physics::SixDofConstraint::create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)

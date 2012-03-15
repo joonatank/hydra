@@ -39,6 +39,19 @@ vl::physics::operator<<(std::ostream &os, vl::physics::RigidBody const &body)
 	return os;
 }
 
+std::ostream &
+vl::physics::operator<<(std::ostream &os, std::vector<vl::physics::RigidBodyRefPtr> const &bodies)
+{
+	os << "Rigid body list with bodies : " << std::endl;
+	for(std::vector<vl::physics::RigidBodyRefPtr>::const_iterator iter = bodies.begin();
+		iter != bodies.end(); ++iter)
+	{
+		os << (*iter)->getName() << std::endl;
+	}
+
+	return os;
+}
+
 vl::physics::RigidBodyRefPtr
 vl::physics::RigidBody::create(vl::physics::RigidBody::ConstructionInfo const &info)
 {

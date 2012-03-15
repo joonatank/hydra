@@ -31,9 +31,9 @@ namespace physics
 class Constraint
 {
 public :
-	virtual RigidBodyRefPtr getBodyA(void) = 0;
+	virtual RigidBodyRefPtr getBodyA(void) const = 0;
 
-	virtual RigidBodyRefPtr getBodyB(void) = 0;
+	virtual RigidBodyRefPtr getBodyB(void) const = 0;
 
 	virtual ~Constraint(void) {}
 };
@@ -45,10 +45,10 @@ class SixDofConstraint : public vl::physics::Constraint
 public :
 	virtual ~SixDofConstraint(void) {}
 
-	RigidBodyRefPtr getBodyA(void)
+	RigidBodyRefPtr getBodyA(void) const
 	{ return _bodyA.lock(); }
 
-	RigidBodyRefPtr getBodyB(void)
+	RigidBodyRefPtr getBodyB(void) const
 	{ return _bodyB.lock(); }
 
 	virtual Ogre::Vector3 getLinearLowerLimit(void) const = 0;
@@ -100,10 +100,10 @@ class SliderConstraint : public vl::physics::Constraint
 public :
 	virtual ~SliderConstraint(void) {}
 
-	RigidBodyRefPtr getBodyA(void)
+	RigidBodyRefPtr getBodyA(void) const
 	{ return _bodyA.lock(); }
 
-	RigidBodyRefPtr getBodyB(void)
+	RigidBodyRefPtr getBodyB(void) const
 	{ return _bodyB.lock(); }
 
 	virtual vl::scalar getLowerLinLimit(void) const = 0;
@@ -245,10 +245,10 @@ class HingeConstraint : public vl::physics::Constraint
 public :
 	virtual ~HingeConstraint(void) {}
 
-	RigidBodyRefPtr getBodyA(void)
+	RigidBodyRefPtr getBodyA(void) const
 	{ return _bodyA.lock(); }
 
-	RigidBodyRefPtr getBodyB(void)
+	RigidBodyRefPtr getBodyB(void) const
 	{ return _bodyB.lock(); }
 
 	virtual void setAngularOnly(bool angularOnly) = 0;
@@ -285,6 +285,15 @@ protected :
 	RigidBodyWeakPtr _bodyB;
 
 };	// class HingeConstraint
+
+
+std::ostream &operator<<(std::ostream &os, Constraint const &c);
+std::ostream &operator<<(std::ostream &os, HingeConstraint const &c);
+std::ostream &operator<<(std::ostream &os, SliderConstraint const &c);
+std::ostream &operator<<(std::ostream &os, SixDofConstraint const &c);
+
+std::ostream &operator<<(std::ostream &os, ConstraintList const &cl);
+
 
 }	// namespace physics
 

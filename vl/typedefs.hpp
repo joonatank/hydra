@@ -242,6 +242,7 @@ namespace physics
 	// Containers
 	typedef std::vector<RigidBodyRefPtr> RigidBodyList;
 	typedef std::vector<ConstraintRefPtr> ConstraintList;
+	typedef std::vector<TubeRefPtr> TubeList;
 }
 
 namespace cluster

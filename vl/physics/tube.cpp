@@ -6,11 +6,8 @@
  *	@file physics/tube.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -35,6 +32,27 @@
 #include "scene_manager.hpp"
 
 size_t vl::physics::Tube::n_tubes = 0;
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::Tube const &tube)
+{
+	// @todo we don't have an identifier for the tube
+	os << "Tube";
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, vl::physics::TubeList const &tubes)
+{
+	os << "TubeList with " << tubes.size() << " tubes.";
+	for(TubeList::const_iterator iter = tubes.begin(); iter != tubes.end(); ++iter)
+	{
+		// @todo we don't have an identifier for the tube
+	}
+
+	return os;
+}
 
 vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionInfo const &info)
 	: _start_body(info.start_body)

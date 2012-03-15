@@ -6,11 +6,8 @@
  *	@file physics/tube.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -260,6 +257,10 @@ private :
 	SceneManagerPtr _scene;
 
 };	// class Tube
+
+std::ostream &operator<<(std::ostream &os, Tube const &tube);
+
+std::ostream &operator<<(std::ostream &os, TubeList const &tube);
 
 }	// namespace physics
 

@@ -214,6 +214,8 @@ protected :
 
 std::ostream &operator<<(std::ostream &os, RigidBody const &body);
 
+std::ostream &operator<<(std::ostream &os, std::vector<RigidBodyRefPtr> const &bodies);
+
 }	// namespace physics
 
 }	// namespace vl
