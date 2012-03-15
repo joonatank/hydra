@@ -206,7 +206,7 @@ vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_
 	}
 
 	// check for ready messages
-	if(*(message.end()-1) == '\n' )
+	if(message.size() > 0 && *(message.end()-1) == '\n' )
 	{
 		logMessage(_current_msg);
 		_current_msg.clear();
