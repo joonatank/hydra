@@ -43,9 +43,6 @@ set_include_paths(INCLUDE_PATHS OPENCOLLADA)
 
 set_lib_paths(LIBRARY_PATHS OPENCOLLADA)
 
-message("Include paths : ${INCLUDE_PATHS}")
-message("Library paths : ${LIBRARY_PATHS}")
-
 find_path( OPENCOLLADA_INCLUDE_DIR
 	NAMES COLLADAFramework/COLLADAFW.h
 	PATHS ${INCLUDE_PATHS}
@@ -65,7 +62,7 @@ lib_finder("OPENCOLLADA_GENERATED_SAX_PARSER" GeneratedSaxParser)
 lib_finder("OPENCOLLADA_PCRE" pcre)
 lib_finder("OPENCOLLADA_LIBXML" xml)
 
-message( "${LIB_HELP_STRING} = ${OPENCOLLADA_BASE_UTILS_LIBRARY}" )
+message(STATUS "${LIB_HELP_STRING} = ${OPENCOLLADA_BASE_UTILS_LIBRARY}" )
 
 # TODO should check all the libraries
 
@@ -82,7 +79,7 @@ set(OPENCOLLADA_LIBRARIES
 	CACHE INTERNAL "" FORCE
 	)
 
-message("OpenCollada libraries = ${OPENCOLLADA_LIBRARIES}")
+message(STATUS "OpenCollada libraries = ${OPENCOLLADA_LIBRARIES}")
 
 if( OPENCOLLADA_LIBRARIES AND OPENCOLLADA_INCLUDE_DIR )
 	set( OPENCOLLADA_FOUND "YES" )

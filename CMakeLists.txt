@@ -94,7 +94,7 @@ endif()
 
 find_package(Python REQUIRED )
 
-message( "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION} : "
+message(STATUS "Python library ${PYTHON_LIBRARY} : Python version ${PYTHON_VERSION} : "
 	"Python include dir = ${PYTHON_INCLUDE_DIR}" )
 
 if( WIN32 )
