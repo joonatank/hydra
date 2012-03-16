@@ -89,6 +89,8 @@ private :
 	int mStartline;
 	std::list<Ogre::String> _lines;
 
+	uint16_t _caret_position;
+
 };	// class ConsoleWindow
 
 }	// namespace gui

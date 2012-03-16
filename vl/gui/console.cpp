@@ -54,6 +54,7 @@ vl::gui::ConsoleWindow::ConsoleWindow(vl::gui::GUI *creator)
 	, mUpdateConsole(false)
 	, mUpdatePrompt(false)
 	, mIsInitialised(false)
+	, _caret_position(0)
 {
 }
 
@@ -79,15 +80,30 @@ vl::gui::ConsoleWindow::injectKeyDown(OIS::KeyEvent const &arg)
 	if(!_visible)
 		return;
 
+	// @todo add modifier support
+	// e.g. CTRL, ALT and SHIFT
+	// SHIFT should be passed to the text reader if not consumed
+	// ALT and CTRL should not be passed
+	// Primarily add CTRL+HOME and CTRL+END
+
 	if (arg.key == OIS::KC_RETURN || arg.key == OIS::KC_NUMPADENTER)
 	{
 		_input_accepted();
 	}
 	else if (arg.key == OIS::KC_BACK)
 	{
-		if (_prompt.size())
+		if(_caret_position > 0)
 		{
-			_prompt.erase(_prompt.end() - 1);
+			_prompt.erase(_prompt.begin()+_caret_position-1);
+			_caret_position--;
+			mUpdatePrompt = true;
+		}
+	}
+	else if(arg.key == OIS::KC_DELETE)
+	{
+		if(_caret_position < _prompt.size())
+		{
+			_prompt.erase(_prompt.begin()+_caret_position);
 			mUpdatePrompt = true;
 		}
 	}
@@ -119,6 +135,7 @@ vl::gui::ConsoleWindow::injectKeyDown(OIS::KeyEvent const &arg)
 		{
 			_prompt = _console_memory.at(_console_memory_index);
 		}
+		_caret_position = _prompt.size();
 	}
 	else if(arg.key == OIS::KC_DOWN)
 	{
@@ -132,31 +149,37 @@ vl::gui::ConsoleWindow::injectKeyDown(OIS::KeyEvent const &arg)
 		{
 			_prompt = _console_memory.at(_console_memory_index);
 		}
+		_caret_position = _prompt.size();
 	}
 	else if(arg.key == OIS::KC_LEFT)
 	{
-		// @todo add moving carret to left
+		if(_caret_position > 0)
+		{ _caret_position--; }
+		mUpdatePrompt = true;
 	}
 	else if(arg.key == OIS::KC_RIGHT)
 	{
-		// @todo add moving carret to right
+		if(_caret_position < _prompt.size())
+		{ ++_caret_position; }
+		mUpdatePrompt = true;
 	}
 	else if(arg.key == OIS::KC_END)
 	{
-		// @todo add scrolling to end
+		_caret_position = _prompt.size();
+		mUpdatePrompt = true;
 	}
 	else if(arg.key == OIS::KC_HOME)
 	{
-		// @todo add scrolling to begin
-	}
-	else if(arg.key == OIS::KC_DELETE)
-	{
-		// @todo add destroying to right
+		_caret_position = 0;
+		mUpdatePrompt = true;
 	}
 	else
 	{
 		if(isValidChar(arg.text))
-		{ _prompt += arg.text; }
+		{
+			_prompt.insert(_caret_position, 1, char(arg.text));
+			++_caret_position;
+		}
 	}
 
 	mUpdatePrompt = true;
@@ -229,6 +252,7 @@ vl::gui::ConsoleWindow::_input_accepted(void)
 	mUpdateConsole = true;
 	mUpdatePrompt = true;
 	_prompt.clear();
+	_caret_position = 0;
 }
 
 /// ------------------------------ Private -----------------------------------
@@ -324,7 +348,7 @@ vl::gui::ConsoleWindow::_updatePrompt(void)
 
 	mUpdatePrompt = false;
 	std::stringstream text;
-	text << "> " << _prompt << "_";
+	text << "> " << _prompt.substr(0, _caret_position) << "_" << _prompt.substr(_caret_position);
 	mPromptText->text(text.str());
 }
 
