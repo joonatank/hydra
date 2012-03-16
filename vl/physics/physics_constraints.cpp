@@ -27,8 +27,14 @@
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::Constraint const &c)
 {
-	os << "Constraint between " << c.getBodyA()->getName() 
-			<< " and " << c.getBodyA()->getName() << std::endl;
+	std::string name1, name2;
+	if(c.getBodyA())
+	{ name1 = c.getBodyA()->getName(); }
+	if(c.getBodyB())
+	{ name2 = c.getBodyB()->getName(); }
+	
+	// @todo if there is no body we should print so
+	os << "Constraint between " << name1 << " and " << name2 << std::endl;
 
 	return os;
 }
@@ -36,8 +42,14 @@ vl::physics::operator<<(std::ostream &os, vl::physics::Constraint const &c)
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::HingeConstraint const &c)
 {
-	os << "Hinge constraint between " << c.getBodyA()->getName() 
-			<< " and " << c.getBodyA()->getName() << std::endl;
+	std::string name1, name2;
+	if(c.getBodyA())
+	{ name1 = c.getBodyA()->getName(); }
+	if(c.getBodyB())
+	{ name2 = c.getBodyB()->getName(); }
+	
+	// @todo if there is no body we should print so
+	os << "Hinge constraint between " << name1 << " and " << name2 << std::endl;
 
 	return os;
 }
@@ -45,8 +57,14 @@ vl::physics::operator<<(std::ostream &os, vl::physics::HingeConstraint const &c)
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::SliderConstraint const &c)
 {
-	os << "Slider constraint between " << c.getBodyA()->getName() 
-			<< " and " << c.getBodyA()->getName() << std::endl;
+	std::string name1, name2;
+	if(c.getBodyA())
+	{ name1 = c.getBodyA()->getName(); }
+	if(c.getBodyB())
+	{ name2 = c.getBodyB()->getName(); }
+	
+	// @todo if there is no body we should print so
+	os << "Slider constraint between " << name1 << " and " << name2 << std::endl;
 
 	return os;
 }
@@ -54,8 +72,14 @@ vl::physics::operator<<(std::ostream &os, vl::physics::SliderConstraint const &c
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::SixDofConstraint const &c)
 {
-	os << "Six Dof constraint between " << c.getBodyA()->getName() 
-			<< " and " << c.getBodyA()->getName() << std::endl;
+	std::string name1, name2;
+	if(c.getBodyA())
+	{ name1 = c.getBodyA()->getName(); }
+	if(c.getBodyB())
+	{ name2 = c.getBodyB()->getName(); }
+	
+	// @todo if there is no body we should print so
+	os << "Six dof constraint between " << name1 << " and " << name2 << std::endl;
 
 	return os;
 }
@@ -66,8 +90,7 @@ vl::physics::operator<<(std::ostream &os, vl::physics::ConstraintList const &cl)
 	os << "Constraint list with " << cl.size() << " constraints." << std::endl;
 	for(ConstraintList::const_iterator iter = cl.begin(); iter != cl.end(); ++iter)
 	{
-		os << " between " << (*iter)->getBodyA()->getName() 
-			<< " and " << (*iter)->getBodyA()->getName() << std::endl;
+		os << **iter << std::endl;
 	}
 
 	return os;
