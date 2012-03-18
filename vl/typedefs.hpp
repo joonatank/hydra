@@ -90,6 +90,9 @@ namespace vl
 	typedef boost::shared_ptr<ResourceManager> ResourceManagerRefPtr;
 	typedef PythonContext * PythonContextPtr;
 
+	class GameObject;
+	typedef boost::shared_ptr<GameObject> GameObjectRefPtr;
+
 	/// SceneObjects
 	class SceneManager;
 	class SceneNode;

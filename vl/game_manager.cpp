@@ -37,6 +37,7 @@
 
 /// File Loaders
 #include "dotscene_loader.hpp"
+#include "hsf_loader.hpp"
 #include "collada/dae_importer.hpp"
 
 // File writers
@@ -54,6 +55,8 @@
 #include "tracker_serializer.hpp"
 // Necessary for unloading a scene
 #include "scene_node.hpp"
+
+#include "game_object.hpp"
 
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	: _session(session)
@@ -151,10 +154,35 @@ vl::GameManager::step(void)
 	_fire_step_end();
 }
 
-vl::physics::WorldRefPtr
-vl::GameManager::getPhysicsWorld( void )
+vl::GameObjectRefPtr
+vl::GameManager::createGameObject(std::string const &name)
 {
-	return _physics_world;
+	GameObjectRefPtr obj = getGameObject(name);
+	if(!obj)
+	{
+		obj.reset(new GameObject(name, this));
+		_game_objects.push_back(obj);
+	}
+	return obj;
+}
+
+bool
+vl::GameManager::hasGameObject(std::string const &name)
+{
+	return getGameObject(name) != GameObjectRefPtr();
+}
+
+vl::GameObjectRefPtr
+vl::GameManager::getGameObject(std::string const &name)
+{
+	for(std::vector<GameObjectRefPtr>::iterator iter = _game_objects.begin();
+		iter != _game_objects.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{ return *iter; }
+	}
+
+	return GameObjectRefPtr();
 }
 
 void
@@ -452,59 +480,87 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 
 	vl::chrono t;
 	fs::path file(scene_info.getFile());
-	if(file.extension() == ".dae")
+	try
 	{
-		std::clog << "Loading Collada file." << std::endl;
-
-		/// @todo this needs to find the absolute path using ResourceManager
-		/// OpenCollada needs file name not the complete file
-		/// per it's design to handle large files.
-		std::string path;
-		if(getResourceManager()->findResource(file.string(), path))
+		if(file.extension() == ".dae")
 		{
-			vl::dae::ImporterSettings settings;
-			// Settings for testing Anark core importing, cleanup
-			// can't be enabled as long as we are testing cube importing
-			// we could use runtime for changing settings but there is no such functionality yet.
-			//settings.handle_duplicates = vl::dae::ImporterSettings::HDN_USE_ORIGINAL;
-			//settings.remove_duplicate_materials = true;
-			vl::dae::Managers man;
-			man.material = _material_manager;
-			man.scene = _scene_manager;
-			man.mesh = _mesh_manager;
-			vl::dae::Importer loader(settings, man);
-			loader.read(path);
+			std::clog << "Loading Collada file." << std::endl;
+
+			/// @todo this needs to find the absolute path using ResourceManager
+			/// OpenCollada needs file name not the complete file
+			/// per it's design to handle large files.
+			std::string path;
+			if(getResourceManager()->findResource(file.string(), path))
+			{
+				vl::dae::ImporterSettings settings;
+				// Settings for testing Anark core importing, cleanup
+				// can't be enabled as long as we are testing cube importing
+				// we could use runtime for changing settings but there is no such functionality yet.
+				//settings.handle_duplicates = vl::dae::ImporterSettings::HDN_USE_ORIGINAL;
+				//settings.remove_duplicate_materials = true;
+				vl::dae::Managers man;
+				man.material = _material_manager;
+				man.scene = _scene_manager;
+				man.mesh = _mesh_manager;
+				vl::dae::Importer loader(settings, man);
+				loader.read(path);
+			}
+			else
+			{
+				std::cout << "Couldn't find DAE resource : " << file << std::endl;
+			}
+		}
+		else if(file.extension() == ".scene")
+		{
+			std::clog << "Loading Ogre scene file." << std::endl;
+
+			vl::TextResource resource;
+			getResourceManager()->loadResource(scene_info.getFile(), resource);
+
+			// Default to false for now
+			bool use_mesh = false;
+			if(scene_info.getUseNewMeshManager() == CFG_ON)
+			{ use_mesh = true; }
+
+			if(scene_info.getUsePhysics())
+			{ enablePhysics(true); }
+
+			vl::DotSceneLoader loader(use_mesh);
+			// TODO pass attach node based on the scene
+			// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+			// @todo add physics
+			loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
+		}
+		else if(file.extension() == ".hsf")
+		{
+			std::clog << "Loading Hydra scene file." << std::endl;
+
+			vl::TextResource resource;
+			getResourceManager()->loadResource(scene_info.getFile(), resource);
+
+			// Enable physics engine, might be needed might not be needed
+			// shoudln't matter other than longer loading times and memory consumption
+			// if no bodies are created the physics step should be almost a NOP.
+			enablePhysics(true);
+
+			// Force the use of new mesh manager
+			vl::HSFLoader loader;
+			// TODO pass attach node based on the scene
+			// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
+			// @todo add physics
+			loader.parseScene(resource, this);
 		}
 		else
 		{
-			std::cout << "Couldn't find DAE resource : " << file << std::endl;
+			// @todo should throw or do some default magic
+			std::cout << "ERROR : Unknown scene file extension." << std::endl;
 		}
 	}
-	else if(file.extension() == ".scene")
+	catch(rapidxml::parse_error const &e)
 	{
-		std::clog << "Loading scene file." << std::endl;
-
-		vl::TextResource resource;
-		getResourceManager()->loadResource(scene_info.getFile(), resource);
-
-		// Default to false for now
-		bool use_mesh = false;
-		if(scene_info.getUseNewMeshManager() == CFG_ON)
-		{ use_mesh = true; }
-
-		if(scene_info.getUsePhysics())
-		{ enablePhysics(true); }
-
-		vl::DotSceneLoader loader(use_mesh);
-		// TODO pass attach node based on the scene
-		// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
-		// @todo add physics
-		loader.parseDotScene(resource, getSceneManager(), getPhysicsWorld());
-	}
-	else
-	{
-		// @todo should throw or do some default magic
-		std::clog << "ERROR : Unknown scene file extension." << std::endl;
+		std::clog << "XML parsing error : " << e.what() << std::endl
+			<< " in file " << file.string() << std::endl
+			<< e.where<char>() << std::endl;
 	}
 
 	std::cout << "Scene " << scene_info.getName() << " loaded. Loading took " << t.elapsed() << "." << std::endl;

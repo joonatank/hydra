@@ -209,6 +209,12 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	GameObjectRefPtr createGameObject(std::string const &name);
+
+	bool hasGameObject(std::string const &name);
+
+	GameObjectRefPtr getGameObject(std::string const &name);
+
 	/// ------------------------------ Kinematics ----------------------------
 	KinematicWorldRefPtr getKinematicWorld(void)
 	{ return _kinematic_world; }
@@ -216,7 +222,8 @@ public :
 	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
-	physics::WorldRefPtr getPhysicsWorld( void );
+	physics::WorldRefPtr getPhysicsWorld(void)
+	{ return _physics_world; }
 
 	/// Enable physics to be used in this game
 	/// First call to this function will create the physics world with true
@@ -409,6 +416,8 @@ private :
 	vl::ProjSettings _global_project;
 
 	bool _auto_start;
+
+	std::vector<GameObjectRefPtr> _game_objects;
 
 	// signals
 	ProjectChanged _project_changed_signal;

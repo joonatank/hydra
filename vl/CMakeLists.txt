@@ -58,6 +58,8 @@ set(SRC
 	sky_caelum.cpp
 	ogre_axes.cpp
 	remote_launcher_helper.cpp
+	game_object.cpp
+	hsf_loader.cpp
 	)
 
 set(MATH_HEADERS
@@ -93,7 +95,7 @@ else()
 	set(INPUT_SRC "")
 endif()
 
-set(BASE_HEADERS 
+set(BASE_HEADERS
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp
@@ -261,6 +263,8 @@ set( HEADERS
 	sky_interface.hpp
 	sky_skyx.hpp
 	sky_caelum.hpp
+	game_object.hpp
+	hsf_loader.hpp
 	ogre_axes.hpp
 	remote_launcher_helper.hpp
 	)
@@ -330,10 +334,6 @@ add_library(HydraMain SHARED
 	${MATH_HEADERS}
 	${MATH_SRC}
 	)
-
-# Copy the build time configuration
-# TODO not used for anything at the moment
-set(HYDRA_VERSION 0.3)
 
 # Generate Revision information from Mercurial
 # For this to work Mercurial needs to be on the windows Path

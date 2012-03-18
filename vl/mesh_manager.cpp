@@ -103,7 +103,6 @@ vl::MasterMeshLoaderCallback::MasterMeshLoaderCallback(vl::ResourceManagerRefPtr
 void 
 vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName, vl::MeshLoadedCallback *cb)
 {
-	std::clog << "vl::MasterMeshLoaderCallback::loadMesh : " << fileName << std::endl;
 	if(!manager)
 	{
 		BOOST_THROW_EXCEPTION(vl::null_pointer());
@@ -118,8 +117,6 @@ vl::MasterMeshLoaderCallback::loadMesh(std::string const &fileName, vl::MeshLoad
 	MeshRefPtr mesh(new Mesh(fileName));
 	ser.readMesh(mesh, data);
 
-	std::clog << "Read mesh " << mesh->getName() << " from file resource." << std::endl;
-	
 	cb->meshLoaded(mesh);
 }
 
@@ -444,8 +441,6 @@ vl::MeshManager::checkMaterialUsers(vl::MaterialRefPtr mat)
 void 
 vl::MeshManager::meshLoaded(std::string const &mesh_name, vl::MeshRefPtr mesh)
 {
-	std::clog << "vl::MeshManager::meshLoaded : " << mesh_name 
-		<< " :  waiting for loading size " << _waiting_for_loading.size() << std::endl;
 	// add to loaded stack
 	assert(!hasMesh(mesh_name));
 	_meshes[mesh_name] = mesh;

@@ -13,8 +13,6 @@ project( "demos" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
-#set(LIB_DIR "C:\\jotu\\software_development\\hydra_dependencies_libraries\\libs" CACHE PATH "Dependencies library dir")
-
 # Copy configs
 copy_start_scripts( hydra
 	ogre_project/ogre.prj
@@ -48,6 +46,10 @@ copy_start_scripts( hydra
 	perapora_project/perapora_physics.prj
 	"perapora_physics" )
 
+copy_start_scripts( hydra
+	hsf_test_project/perapora.prj
+	"hsf_test" )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
@@ -75,7 +77,7 @@ target_link_libraries(fake_tracking_server
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
 	)
 
-add_executable(vrpn_tracker_recorder 
+add_executable(vrpn_tracker_recorder
 	vrpn_tracker_recorder.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
 	${HydraMain_SOURCE_DIR}/base/time.hpp
@@ -136,7 +138,7 @@ set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )
 
-set(HYDRA_SRC 
+set(HYDRA_SRC
 	hydra.cpp
 	build_defines.hpp
 	system_tools/message_box.hpp
