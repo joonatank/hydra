@@ -274,6 +274,11 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 vl::SceneNodePtr
 vl::SceneManager::createSceneNode(std::string const &name)
 {
+	if(name.empty())
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty SceneNode name not allowed"));
+	}
+
 	vl::SceneNodePtr node = _createSceneNode(name, vl::ID_UNDEFINED);
 	assert(_root);
 	_root->addChild(node);
@@ -1198,7 +1203,8 @@ vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
 	if( !name.empty() && hasSceneNode(name) )
 	{
 		// TODO is this the right exception?
-		BOOST_THROW_EXCEPTION( vl::duplicate() );
+		std::string msg("SceneNode with that name already exists");
+		BOOST_THROW_EXCEPTION( vl::duplicate() << vl::desc(msg) << vl::name(name) );
 	}
 	assert( _session );
 

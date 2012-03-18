@@ -366,6 +366,10 @@ public :
 	{ return _root; }
 
 	/// @brief create a SceneNode that is attached to the Root node
+	/// @param name a valid unique name for the node
+	/// @todo we should have another method that auto generates the name
+	/// This method should be separate so we can check if the user accidentially
+	/// gave an empty name.
 	SceneNodePtr createSceneNode(std::string const &name);
 
 	/// @brief create a SceneNode that is not attached anywhere
