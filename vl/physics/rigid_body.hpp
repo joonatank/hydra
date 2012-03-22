@@ -121,6 +121,8 @@ public :
 
 	virtual Ogre::Real getMass(void) const = 0;
 
+	virtual Ogre::Vector3 getInertia(void) const = 0;
+	
 	virtual void setInertia(Ogre::Vector3 const &inertia) = 0;
 
 	virtual void setMassProps(Ogre::Real mass, Ogre::Vector3 const &inertia) = 0;

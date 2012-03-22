@@ -159,6 +159,19 @@ public :
 		{ return 0; }
 	}
 
+	virtual Ogre::Vector3 getInertia(void) const
+	{
+		btVector3 const &v =_bt_body->getInvInertiaDiagLocal();
+		Ogre::Real x = 0, y = 0, z = 0;
+		if(v.x() > 0)
+		{ x = 1/v.x(); }
+		if(v.y() > 0)
+		{ y = 1/v.y(); }
+		if(v.z() > 0)
+		{ z = 1/v.z(); }
+		return Ogre::Vector3(x, y, z);
+	}
+
 	void setInertia(Ogre::Vector3 const &inertia)
 	{ setMassProps( 1/getInvMass(), inertia ); }
 
@@ -216,7 +229,7 @@ public :
 		}
 		else
 		{
-			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_KINEMATIC_OBJECT);
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() & ~btCollisionObject::CF_KINEMATIC_OBJECT);
 		}
 	}
 
@@ -228,18 +241,16 @@ public :
 		}
 		else
 		{
-			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() && ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+			_bt_body->setCollisionFlags(_bt_body->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
 		}
 	}
 
 	virtual bool isCollisionsDisabled(void) const
-	{
-		return _bt_body->getCollisionFlags() && btCollisionObject::CF_NO_CONTACT_RESPONSE;
-	}
+	{ return _bt_body->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE; }
 
 
 	virtual bool isKinematicObject(void) const
-	{ return _bt_body->getCollisionFlags() && btCollisionObject::CF_KINEMATIC_OBJECT; }
+	{ return _bt_body->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT; }
 
 	virtual void setUserData(void *data)
 	{ _bt_body->setUserPointer(data); }
