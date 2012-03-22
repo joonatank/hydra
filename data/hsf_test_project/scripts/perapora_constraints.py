@@ -280,3 +280,6 @@ game.auto_start = False
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
 trigger.addKeyUpListener(toggle_pause)
 
+# TODO test with separate directory
+game.save_scene("test.hsf")
+

@@ -215,6 +215,9 @@ public :
 
 	GameObjectRefPtr getGameObject(std::string const &name);
 
+	GameObjectList const &getGameObjectList(void) const
+	{ return _game_objects; }
+
 	/// ------------------------------ Kinematics ----------------------------
 	KinematicWorldRefPtr getKinematicWorld(void)
 	{ return _kinematic_world; }
@@ -417,7 +420,7 @@ private :
 
 	bool _auto_start;
 
-	std::vector<GameObjectRefPtr> _game_objects;
+	GameObjectList _game_objects;
 
 	// signals
 	ProjectChanged _project_changed_signal;

@@ -56,6 +56,8 @@
 // Necessary for unloading a scene
 #include "scene_node.hpp"
 
+#include "hsf_writer.hpp"
+
 #include "game_object.hpp"
 
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
@@ -612,7 +614,7 @@ vl::GameManager::saveScene(std::string const &file_name)
 	fs::path file(file_name);
 	if(file.extension() == ".dae")
 	{
-		std::cout << vl::TRACE << "Writing dae file" << std::endl;
+		std::cout << vl::TRACE << "Writing Collada file" << std::endl;
 		vl::dae::ExporterSettings settings;
 		vl::dae::Managers man;
 		man.material = _material_manager;
@@ -620,6 +622,13 @@ vl::GameManager::saveScene(std::string const &file_name)
 		man.mesh = _mesh_manager;
 		vl::dae::Exporter writer(settings, man);
 		writer.write(file);
+	}
+	else if(file.extension() == ".hsf")
+	{
+		std::clog << "Writing HSF file" << std::endl;
+
+		vl::HSFWriter writer(this);
+		writer.write(file, true);
 	}
 	else
 	{

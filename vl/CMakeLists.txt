@@ -60,6 +60,7 @@ set(SRC
 	remote_launcher_helper.cpp
 	game_object.cpp
 	hsf_loader.cpp
+	hsf_writer.cpp
 	)
 
 set(MATH_HEADERS
@@ -265,6 +266,7 @@ set( HEADERS
 	sky_caelum.hpp
 	game_object.hpp
 	hsf_loader.hpp
+	hsf_writer.hpp
 	ogre_axes.hpp
 	remote_launcher_helper.hpp
 	)

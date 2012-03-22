@@ -172,7 +172,7 @@ class BulletConvexHullShape : public BulletCollisionShape, public vl::physics::C
 {
 public :
 	BulletConvexHullShape(vl::MeshRefPtr mesh)
-		: ConvexHullShape(), _bt_shape(0)
+		: ConvexHullShape(mesh), _bt_shape(0)
 	{
 		btTriangleIndexVertexArray *bt_mesh = new btTriangleIndexVertexArray;
 		vl::convert_bullet_geometry(mesh.get(), bt_mesh);

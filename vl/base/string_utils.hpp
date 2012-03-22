@@ -97,6 +97,17 @@ namespace vl
 		return ss.str();
 	}
 
+
+	template<>
+	inline
+	std::string to_string(bool const &val)
+	{
+		if(val)
+		{ return "true"; }
+		else
+		{ return "false"; }
+	}
+
 	template<typename T>
 	inline
 	T from_string( std::string const &str )

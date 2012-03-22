@@ -131,12 +131,19 @@ public :
 	{ return vl::math::convert_vec(_bt_shape->getLocalScaling()); }
 	*/
 
+	vl::MeshRefPtr getMesh(void) const
+	{ return _mesh; }
+
 protected :
-	ConvexHullShape(void) {}
+	ConvexHullShape(vl::MeshRefPtr mesh)
+		: _mesh(mesh)
+	{}
 
 private :
 	ConvexHullShape(ConvexHullShape const &);
 	ConvexHullShape &operator=(ConvexHullShape const &);
+
+	vl::MeshRefPtr _mesh;
 
 };	// class ConvexHullShape
 

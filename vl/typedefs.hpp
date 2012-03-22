@@ -92,6 +92,7 @@ namespace vl
 
 	class GameObject;
 	typedef boost::shared_ptr<GameObject> GameObjectRefPtr;
+	typedef std::vector<GameObjectRefPtr> GameObjectList;
 
 	/// SceneObjects
 	class SceneManager;
