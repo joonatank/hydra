@@ -31,11 +31,38 @@ namespace physics
 class Constraint
 {
 public :
-	virtual RigidBodyRefPtr getBodyA(void) const = 0;
+	RigidBodyRefPtr getBodyA(void) const
+	{ return _bodyA.lock(); }
 
-	virtual RigidBodyRefPtr getBodyB(void) const = 0;
+	RigidBodyRefPtr getBodyB(void) const
+	{ return _bodyB.lock(); }
+
+	virtual Transform const &getLocalFrameA(void) const
+	{ return _frameA; }
+
+	virtual Transform const &getLocalFrameB(void) const
+	{ return _frameB; }
+
+	virtual std::string getTypeName(void) const = 0;
 
 	virtual ~Constraint(void) {}
+
+protected :
+	Constraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
+		: _bodyA(rbA)
+		, _bodyB(rbB)
+		, _frameA(frameInA)
+		, _frameB(frameInB)
+	{}
+
+private :
+	RigidBodyWeakPtr _bodyA;
+	RigidBodyWeakPtr _bodyB;
+
+	Transform _frameA;
+	Transform _frameB;
+
 };
 
 /// @class SixDofConstraint
@@ -44,12 +71,6 @@ class SixDofConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SixDofConstraint(void) {}
-
-	RigidBodyRefPtr getBodyA(void) const
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void) const
-	{ return _bodyB.lock(); }
 
 	virtual Ogre::Vector3 getLinearLowerLimit(void) const = 0;
 	virtual void setLinearLowerLimit(Ogre::Vector3 const &linearLower) = 0;
@@ -79,19 +100,19 @@ public :
 
 	// @todo add motors
 
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "6dof"; }
+
+	// static methods
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
 protected :
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
-
-
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
 
 };	// class SixDofConstraint
 
@@ -99,12 +120,6 @@ class SliderConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SliderConstraint(void) {}
-
-	RigidBodyRefPtr getBodyA(void) const
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void) const
-	{ return _bodyB.lock(); }
 
 	virtual vl::scalar getLowerLinLimit(void) const = 0;
 	
@@ -224,19 +239,19 @@ public :
 	
 	virtual vl::scalar getMaxAngMotorForce(void) = 0;
 
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "slider"; }
 
+	// static
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
 protected :
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
-
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
 
 };	// class SliderConstraint
 
@@ -244,12 +259,6 @@ class HingeConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~HingeConstraint(void) {}
-
-	RigidBodyRefPtr getBodyA(void) const
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void) const
-	{ return _bodyB.lock(); }
 
 	virtual void setAngularOnly(bool angularOnly) = 0;
 
@@ -271,18 +280,19 @@ public :
 
 	virtual vl::scalar getHingeAngle(void) = 0;
 	
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "hinge"; }
+
+	// static
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
 protected :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
-
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
 
 };	// class HingeConstraint
 

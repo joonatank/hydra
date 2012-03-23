@@ -46,6 +46,12 @@ public :
 	KinematicBodyRefPtr getBodyB(void) const
 	{ return _bodyB; }
 
+	Transform const &getLocalFrameA(void) const
+	{ return _local_frame_a; }
+
+	Transform const &getLocalFrameB(void) const
+	{ return _local_frame_b; }
+
 	/// @brief change between constraint and actuator
 	/// @param enable weather the constraint is an actuator or not
 	virtual void setActuator(bool enable) = 0;
@@ -57,6 +63,8 @@ public :
 	virtual void addVelocity(vl::scalar velocity) = 0;
 
 	friend std::ostream &operator<<(std::ostream &, vl::Constraint const &c);
+
+	virtual std::string getTypeName(void) const = 0;
 
 	/// @internal
 	void _solve(vl::time const &t);
@@ -86,6 +94,8 @@ protected :
 	/// only child classes are allowed to use the constructor
 	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame);
 
+	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB);
+
 	KinematicBodyRefPtr _bodyA;
 	KinematicBodyRefPtr _bodyB;
 
@@ -110,6 +120,10 @@ public :
 
 	virtual void addVelocity(vl::scalar velocity) {}
 
+	virtual std::string getTypeName(void) const
+	{ return "fixed"; }
+
+	// static
 	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
@@ -243,6 +257,10 @@ public :
 
 	vl::scalar getPosition(void) const;
 
+	virtual std::string getTypeName(void) const
+	{ return "slider"; }
+
+	// static
 	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{
@@ -336,6 +354,10 @@ public :
 	/// @brief returns the angle the hinge is in along the path moved.
 	Ogre::Radian getHingeAngle(void) const;
 
+	virtual std::string getTypeName(void) const
+	{ return "hinge"; }
+
+	// static
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame)
 	{

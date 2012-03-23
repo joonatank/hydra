@@ -12,6 +12,7 @@ createCameraMovements(camera)
 game.player.camera = camera_name
 
 # Setup environment
+game.scene.ambient_light = ColourValue(0.2, 0.2, 0.2)
 game.scene.sky_dome = SkyDomeInfo("CloudySky")
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096

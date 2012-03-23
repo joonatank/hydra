@@ -3,9 +3,9 @@
 <scene version="0.1">
 	<environment>
 		<sky type="dynamic" fallback="true">
-		  <!--- For now missing the sky parameters --->
+		  <!--- For now missing the sky parameters -->
 		  <dynamic />
-		  <dome texture="sky_dome.jpg" />
+		  <static type="dome" material="sky_dome" />
 		</sky>
 		
 		<ambient_light r="0.3" g="0.3" b="0.3" />

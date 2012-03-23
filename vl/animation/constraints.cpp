@@ -102,6 +102,20 @@ vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl:
 	_local_frame_a = wtA*worldFrame;
 }
 
+vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB)
+	: _bodyA(rbA)
+	, _bodyB(rbB)
+	, _local_frame_a(frameInA)
+	, _local_frame_b(frameInB)
+{
+	if(!_bodyA || !_bodyB)
+	{
+		std::string err_msg("Missing a body.");
+		std::cout << vl::CRITICAL << err_msg << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
+	}
+}
+
 void
 vl::Constraint::_setLink(vl::animation::LinkRefPtr link)
 {

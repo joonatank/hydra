@@ -23,6 +23,8 @@
 
 #include "math/types.hpp"
 
+#include "scene_manager.hpp"
+
 namespace vl
 {
 
@@ -70,12 +72,18 @@ private :
 	/// Environment nodes
 	void writeEnvironment(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game);
 
-	void writeFog(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game);
+	void writeFog(rapidxml::xml_node<> *xml_node, vl::FogInfo const &fog);
 
-	void writeSky(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game);
+	void writeSky(rapidxml::xml_node<> *xml_node, vl::SceneManagerPtr scene);
 
+	void writeShadows(rapidxml::xml_node<> *xml_node, vl::ShadowInfo const &shadows);
+
+	/// Helpers
 	void _writeVector3(rapidxml::xml_node<> *xml_node, Ogre::Vector3 const &v);
 	void _writeQuaternion(rapidxml::xml_node<> *xml_node, Ogre::Quaternion const &q);
+	void _writeColour(rapidxml::xml_node<> *xml_node, Ogre::ColourValue const &col);
+
+	void _writeTransform(rapidxml::xml_node<> *xml_node, vl::Transform const &t);
 
 	vl::GameManagerPtr _game;
 

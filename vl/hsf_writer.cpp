@@ -26,9 +26,11 @@
 #include "physics/physics_world.hpp"
 #include "physics/rigid_body.hpp"
 #include "physics/shapes.hpp"
+#include "physics/physics_constraints.hpp"
 
 #include "animation/kinematic_world.hpp"
 #include "animation/kinematic_body.hpp"
+#include "animation/constraints.hpp"
 
 #include "mesh.hpp"
 
@@ -273,36 +275,283 @@ void
 vl::HSFWriter::writeConstraints(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game)
 {
 	std::clog << "vl::HSFWriter::writeConstraints" << std::endl;
+
+	physics::ConstraintList const &cl = game->getPhysicsWorld()->getConstraints();
+	for(physics::ConstraintList::const_iterator iter = cl.begin();
+		iter != cl.end(); ++iter)
+	{
+		rapidxml::xml_node<> *c_node = _doc.allocate_node(rapidxml::node_element, "constraint");
+		xml_node->append_node(c_node);
+		writeConstraint(c_node, *iter);
+	}
+
+	ConstraintList const &cl_ = game->getKinematicWorld()->getConstraints();
+	for(ConstraintList::const_iterator iter = cl_.begin();
+		iter != cl_.end(); ++iter)
+	{
+		rapidxml::xml_node<> *c_node = _doc.allocate_node(rapidxml::node_element, "constraint");
+		xml_node->append_node(c_node);
+		writeConstraint(c_node, *iter);
+	}
 }
 
 void
 vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::ConstraintRefPtr constraint)
 {
 	std::clog << "vl::HSFWriter::writeConstraint" << std::endl;
+	assert(constraint->getBodyA());
+	assert(constraint->getBodyB());
+
+	xml_node->append_attribute(_doc.allocate_attribute("physics_type", "kinematic"));
+
+	char *str = _doc.allocate_string(constraint->getTypeName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("type", str));
+
+	str = _doc.allocate_string(constraint->getBodyA()->getName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("body_a", str));
+
+	str = _doc.allocate_string(constraint->getBodyB()->getName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("body_b", str));
+
+	str = _doc.allocate_string(vl::to_string(constraint->isActuator()).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("actuator", str));
+
+	// write local frames
+	// @todo should have information if there is a frame object for this constraint
+	// this object would be one that came with the CAD data
+	// and it would supercede the frame information otherwise
+
+	rapidxml::xml_node<> *frameA= _doc.allocate_node(rapidxml::node_element, "frame_a");
+	xml_node->append_node(frameA);
+	_writeTransform(frameA, constraint->getLocalFrameA());
+
+	rapidxml::xml_node<> *frameB= _doc.allocate_node(rapidxml::node_element, "frame_b");
+	xml_node->append_node(frameB);
+	_writeTransform(frameB, constraint->getLocalFrameB());
+
+	rapidxml::xml_node<> *limit = _doc.allocate_node(rapidxml::node_element, "limit");
+	xml_node->append_node(limit);
+
+	// needs to be casted to get limits
+	if(HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<HingeConstraint>(constraint))
+	{
+		limit->append_attribute(_doc.allocate_attribute("unit", "degree"));
+
+		str = _doc.allocate_string(vl::to_string(hinge->getLowerLimit().valueDegrees()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("min", str));
+
+		str = _doc.allocate_string(vl::to_string(hinge->getUpperLimit().valueDegrees()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("max", str));
+	}
+	else if(SliderConstraintRefPtr slider = boost::dynamic_pointer_cast<SliderConstraint>(constraint))
+	{
+		str = _doc.allocate_string(vl::to_string(slider->getLowerLimit()).c_str());
+		xml_node->append_attribute(_doc.allocate_attribute("min", str));
+
+		str = _doc.allocate_string(vl::to_string(slider->getUpperLimit()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("max", str));
+	}
+	else
+	{
+		assert(boost::dynamic_pointer_cast<FixedConstraint>(constraint));
+	}
 }
 
 void
 vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::physics::ConstraintRefPtr constraint)
 {
 	std::clog << "vl::HSFWriter::writeConstraint" << std::endl;
+	assert(constraint->getBodyA());
+	assert(constraint->getBodyB());
+
+	xml_node->append_attribute(_doc.allocate_attribute("physics_type", "dynamic"));
+
+	char *str = _doc.allocate_string(constraint->getTypeName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("type", str));
+
+	str = _doc.allocate_string(constraint->getBodyA()->getName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("body_a", str));
+
+	str = _doc.allocate_string(constraint->getBodyB()->getName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("body_b", str));
+
+	// write local frames
+	// @todo should have information if there is a frame object for this constraint
+	// this object would be one that came with the CAD data
+	// and it would supercede the frame information otherwise
+
+	rapidxml::xml_node<> *frameA= _doc.allocate_node(rapidxml::node_element, "frame_a");
+	xml_node->append_node(frameA);
+	_writeTransform(frameA, constraint->getLocalFrameA());
+
+	rapidxml::xml_node<> *frameB= _doc.allocate_node(rapidxml::node_element, "frame_b");
+	xml_node->append_node(frameB);
+	_writeTransform(frameB, constraint->getLocalFrameB());
+
+	rapidxml::xml_node<> *limit = _doc.allocate_node(rapidxml::node_element, "limit");
+	xml_node->append_node(limit);
+	
+	// needs to be casted to get limits
+	// @todo needs to write motors and damping
+	if(physics::HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<physics::HingeConstraint>(constraint))
+	{
+		limit->append_attribute(_doc.allocate_attribute("unit", "radian"));
+
+		str = _doc.allocate_string(vl::to_string(hinge->getLowerLimit()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("min", str));
+
+		str = _doc.allocate_string(vl::to_string(hinge->getUpperLimit()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("max", str));
+	}
+	else if(physics::SliderConstraintRefPtr slider = boost::dynamic_pointer_cast<physics::SliderConstraint>(constraint))
+	{
+		str = _doc.allocate_string(vl::to_string(slider->getLowerLinLimit()).c_str());
+		xml_node->append_attribute(_doc.allocate_attribute("min", str));
+
+		str = _doc.allocate_string(vl::to_string(slider->getUpperLinLimit()).c_str());
+		limit->append_attribute(_doc.allocate_attribute("max", str));
+	}
+	else
+	{
+		physics::SixDofConstraintRefPtr sixdof = boost::dynamic_pointer_cast<physics::SixDofConstraint>(constraint);
+		assert(sixdof);
+
+		rapidxml::xml_node<> *low_linear = _doc.allocate_node(rapidxml::node_element, "low_linear");
+		xml_node->append_node(low_linear);
+		_writeVector3(low_linear, sixdof->getLinearLowerLimit());
+		
+		rapidxml::xml_node<> *high_linear = _doc.allocate_node(rapidxml::node_element, "high_linear");
+		xml_node->append_node(high_linear);
+		_writeVector3(high_linear, sixdof->getLinearUpperLimit());
+
+		rapidxml::xml_node<> *low_angular = _doc.allocate_node(rapidxml::node_element, "low_angular");
+		xml_node->append_node(low_angular);
+		_writeVector3(low_angular, sixdof->getAngularLowerLimit());
+
+		rapidxml::xml_node<> *high_angular = _doc.allocate_node(rapidxml::node_element, "high_angular");
+		xml_node->append_node(high_angular);
+		_writeVector3(high_angular, sixdof->getAngularUpperLimit());
+	}
+}
+
+void
+vl::HSFWriter::_writeTransform(rapidxml::xml_node<> *xml_node, vl::Transform const &t)
+{
+	rapidxml::xml_node<> *vec= _doc.allocate_node(rapidxml::node_element, "vector");
+	xml_node->append_node(vec);
+	_writeVector3(vec, t.position);
+
+	rapidxml::xml_node<> *q= _doc.allocate_node(rapidxml::node_element, "quaternion");
+	xml_node->append_node(q);
+	_writeQuaternion(q, t.quaternion);
 }
 
 void
 vl::HSFWriter::writeEnvironment(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game)
 {
 	std::clog << "vl::HSFWriter::writeEnvironment" << std::endl;
+	
+	assert(game->getSceneManager());
+
+	rapidxml::xml_node<> *fog_node = _doc.allocate_node(rapidxml::node_element, "fog");
+	xml_node->append_node(fog_node);
+	writeFog(fog_node, game->getSceneManager()->getFog());
+
+	rapidxml::xml_node<> *sky_node = _doc.allocate_node(rapidxml::node_element, "sky");
+	xml_node->append_node(sky_node);
+	writeSky(sky_node, game->getSceneManager());
+
+	rapidxml::xml_node<> *shadow_node = _doc.allocate_node(rapidxml::node_element, "shadows");
+	xml_node->append_node(shadow_node);
+	writeShadows(shadow_node, game->getSceneManager()->getShadowInfo());
+
+	// Write ambient
+	rapidxml::xml_node<> *ambient_node = _doc.allocate_node(rapidxml::node_element, "ambient_light");
+	xml_node->append_node(ambient_node);
+	_writeColour(ambient_node, game->getSceneManager()->getAmbientLight());
 }
 
 void
-vl::HSFWriter::writeFog(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game)
+vl::HSFWriter::writeFog(rapidxml::xml_node<> *xml_node, vl::FogInfo const &fog)
 {
 	std::clog << "vl::HSFWriter::writeFog" << std::endl;
+	
+	char *type = _doc.allocate_string(fog.getMode().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("type", type));
+
+	char *density = _doc.allocate_string(vl::to_string(fog.exp_density).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("density", density));
+
+	char *start = _doc.allocate_string(vl::to_string(fog.linear_start).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("start", start));
+
+	char *end = _doc.allocate_string(vl::to_string(fog.linear_end).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("end", end));
+
+	rapidxml::xml_node<> *colour = _doc.allocate_node(rapidxml::node_element, "colour");
+	xml_node->append_node(colour);
+	_writeColour(colour, fog.colour_diffuse);
 }
 
 void
-vl::HSFWriter::writeSky(rapidxml::xml_node<> *xml_node, vl::GameManagerPtr game)
+vl::HSFWriter::writeSky(rapidxml::xml_node<> *xml_node, vl::SceneManagerPtr scene)
 {
 	std::clog << "vl::HSFWriter::writeSky" << std::endl;
+	SkyInfo const &info = scene->getSkyInfo();
+	SkyDomeInfo const &dome = scene->getSkyDome();
+
+	std::string type("static");
+	if(info.getPreset() != "none")
+	{
+		type = "dynamic";
+	}
+
+	char *str = _doc.allocate_string(type.c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("type", str));
+
+	xml_node->append_attribute(_doc.allocate_attribute("fallback", "true"));
+
+
+	/// Write dynamic parameters
+	rapidxml::xml_node<> *dyn = _doc.allocate_node(rapidxml::node_element, "dynamic");
+	xml_node->append_node(dyn);
+
+	char *preset = _doc.allocate_string(info.getPreset().c_str());
+	dyn->append_attribute(_doc.allocate_attribute("preset", preset));
+
+	/// Write static parameters
+	rapidxml::xml_node<> *stat = _doc.allocate_node(rapidxml::node_element, "static");
+	xml_node->append_node(stat);
+
+	stat->append_attribute(_doc.allocate_attribute("type", "dome"));
+
+	char *mat = _doc.allocate_string(dome.material_name.c_str());
+	stat->append_attribute(_doc.allocate_attribute("material", mat));
+}
+
+void
+vl::HSFWriter::writeShadows(rapidxml::xml_node<> *xml_node, vl::ShadowInfo const &shadows)
+{
+	std::clog << "vl::HSFWriter::writeShadows" << std::endl;
+
+
+	char *str = _doc.allocate_string(vl::to_string(shadows.isEnabled()).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("enabled", str));
+
+	str = _doc.allocate_string(shadows.getCamera().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("camera", str));
+	
+	str = _doc.allocate_string(vl::to_string(shadows.isShelfShadowEnabled()).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("shelf_shadowing", str));
+
+	str = _doc.allocate_string(vl::to_string(shadows.getTextureSize()).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("texture_size", str));
+
+	str = _doc.allocate_string(vl::to_string(shadows.getMaxDistance()).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("max_distance", str));
+
+	str = _doc.allocate_string(shadows.getShadowCasterMaterial().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("caster_material", str));
 }
 
 void
@@ -330,3 +579,18 @@ vl::HSFWriter::_writeQuaternion(rapidxml::xml_node<> *xml_node, Ogre::Quaternion
 	xml_node->append_attribute(_doc.allocate_attribute("y", y));
 	xml_node->append_attribute(_doc.allocate_attribute("z", z));
 }
+
+void
+vl::HSFWriter::_writeColour(rapidxml::xml_node<> *xml_node, Ogre::ColourValue const &col)
+{
+	// @todo we need to round the output, zeroes seem to be turning to really small numbers
+	char *r = _doc.allocate_string(vl::to_string(col.r).c_str());
+	char *g = _doc.allocate_string(vl::to_string(col.g).c_str());
+	char *b = _doc.allocate_string(vl::to_string(col.b).c_str());
+	char *a = _doc.allocate_string(vl::to_string(col.a).c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("r", r));
+	xml_node->append_attribute(_doc.allocate_attribute("g", g));
+	xml_node->append_attribute(_doc.allocate_attribute("b", b));
+	xml_node->append_attribute(_doc.allocate_attribute("a", a));
+}
+
