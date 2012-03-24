@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file: ogre_xml_helpers.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
- *
+ *	Version 0.4
  */
 
 /**	Helper functions for parsing XML files
@@ -29,18 +25,46 @@
 namespace vl
 {
 
-std::string getAttrib(rapidxml::xml_node<>* XMLNode,
-		const std::string &parameter,
-		const std::string &defaultValue = "");
-
 Ogre::Real getAttribReal(rapidxml::xml_node<>* XMLNode,
 		const std::string &parameter, Ogre::Real defaultValue = 0);
-
-bool getAttribBool(rapidxml::xml_node<>* XMLNode,
-		const std::string &parameter, bool defaultValue = false);
 
 Ogre::Vector3 parseVector3(rapidxml::xml_node<>* XMLNode);
 Ogre::Quaternion parseQuaternion(rapidxml::xml_node<>* XMLNode);
 Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
+
+template<typename T>
+T getAttrib( rapidxml::xml_node<> *xml_node,
+		const std::string &attrib, T const &defaultValue )
+{
+	if( !xml_node->first_attribute(attrib.c_str()) )
+	{ return defaultValue; }
+
+	return vl::from_string<T>(xml_node->first_attribute(attrib.c_str())->value());
+}
+
+template<> inline
+std::string getAttrib(rapidxml::xml_node<>* XMLNode,
+		std::string const &attrib,
+		std::string const &defaultValue)
+{
+	if(XMLNode->first_attribute(attrib.c_str()))
+	{ return XMLNode->first_attribute(attrib.c_str())->value(); }
+	else
+	{ return defaultValue; }
+}
+
+inline
+std::string getAttrib(rapidxml::xml_node<>* XMLNode,
+		const std::string &parameter)
+{
+	return getAttrib(XMLNode, parameter, std::string());
+}
+
+inline
+bool getAttribBool(rapidxml::xml_node<>* XMLNode,
+		const std::string &parameter, bool defaultValue = false)
+{
+	return getAttrib(XMLNode, parameter, defaultValue);
+}
 
 }	// namespace vl

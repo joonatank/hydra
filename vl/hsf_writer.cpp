@@ -132,13 +132,10 @@ vl::HSFWriter::writeNode(rapidxml::xml_node<> *xml_node, GameObjectRefPtr obj)
 	writeBody(xml_body, obj);
 
 	// Write transformation
-	rapidxml::xml_node<> *pos = _doc.allocate_node(rapidxml::node_element, "position");
-	xml_node->append_node(pos);
-	_writeVector3(pos, obj->getPosition());
-	rapidxml::xml_node<> *orient = _doc.allocate_node(rapidxml::node_element, "quaternion");
-	xml_node->append_node(orient);
-	_writeQuaternion(orient, obj->getOrientation());
-	
+	rapidxml::xml_node<> *trans = _doc.allocate_node(rapidxml::node_element, "transform");
+	xml_node->append_node(trans);
+	_writeTransform(trans, obj->getTransform());
+
 	// @todo write scale
 
 	// Write collisions models
@@ -160,6 +157,9 @@ vl::HSFWriter::writeNode(rapidxml::xml_node<> *xml_node, GameObjectRefPtr obj)
 	
 
 	// Write graphics
+
+	// @todo write visible
+
 	SceneNodePtr sn = obj->getGraphicsNode();
 	for(vl::SceneNodeList::const_iterator iter = sn->getChilds().begin();
 		iter != sn->getChilds().end(); ++iter)
@@ -245,6 +245,14 @@ vl::HSFWriter::writeEntity(rapidxml::xml_node<> *xml_node, vl::EntityPtr ent)
 
 	char *name = _doc.allocate_string(ent->getName().c_str());
 	xml_node->append_attribute(_doc.allocate_attribute("name", name));
+
+	// @todo write material
+
+	// @todo write cast shadows
+
+	// @todo write instanced
+
+	// @todo write visible
 }
 
 void
@@ -437,7 +445,7 @@ vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::physics::Cons
 void
 vl::HSFWriter::_writeTransform(rapidxml::xml_node<> *xml_node, vl::Transform const &t)
 {
-	rapidxml::xml_node<> *vec= _doc.allocate_node(rapidxml::node_element, "vector");
+	rapidxml::xml_node<> *vec= _doc.allocate_node(rapidxml::node_element, "position");
 	xml_node->append_node(vec);
 	_writeVector3(vec, t.position);
 

@@ -1,16 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file: ogre_xml_helpers.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -18,15 +15,6 @@
 
 #include "base/string_utils.hpp"
 
-std::string
-vl::getAttrib(rapidxml::xml_node<>* XMLNode,
-		const std::string &attrib, const std::string &defaultValue )
-{
-	if(XMLNode->first_attribute(attrib.c_str()))
-	{ return XMLNode->first_attribute(attrib.c_str())->value(); }
-	else
-	{ return defaultValue; }
-}
 
 Ogre::Real
 vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
@@ -39,16 +27,6 @@ vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
 	}
 	else
 	{ return defaultValue; }
-}
-
-bool
-vl::getAttribBool( rapidxml::xml_node<> *xml_node,
-		const std::string &attrib, bool defaultValue )
-{
-	if( !xml_node->first_attribute(attrib.c_str()) )
-	{ return defaultValue; }
-
-	return vl::from_string<bool>(xml_node->first_attribute(attrib.c_str())->value());
 }
 
 Ogre::Vector3

@@ -111,7 +111,7 @@ vl::HSFLoader::_parse(char *xml_data)
 	// OgreMax exports angles in Radians by default so if the scene file is
 	// created with Maya we assume Radians
 	// Blender how ever uses Degrees by default so we will assume Degrees otherwise
-	std::string app( vl::getAttrib(xml_root, "application", "") );
+	std::string app( vl::getAttrib(xml_root, "application") );
 	vl::to_lower( app );
 	// Mind you we might process multiple scene files some made with Maya and
 	// some with Blender so this setting needs to be changed for each file.
@@ -182,8 +182,15 @@ vl::HSFLoader::processEnvironment(rapidxml::xml_node<> *xml_node)
 	if( pElement )
 	{ processSky(pElement); }
 
+	pElement = xml_node->first_node("shadows");
+	if( pElement )
+	{ processShadows(pElement); }
+
 	// Process colourAmbient (?)
-	pElement = xml_node->first_node("colourAmbient");
+	pElement = xml_node->first_node("ambient_light");
+	// Backward compatibility
+	if(!pElement)
+	{ pElement = xml_node->first_node("colourAmbient"); }
 	if( pElement )
 	{ _game->getSceneManager()->setAmbientLight( vl::parseColour(pElement) ); }
 }
@@ -191,7 +198,6 @@ vl::HSFLoader::processEnvironment(rapidxml::xml_node<> *xml_node)
 void
 vl::HSFLoader::processFog(rapidxml::xml_node<> *xml_node)
 {
-	std::clog << "vl::HSFLoader::processFog" << std::endl;
 	// Process attributes
 	Ogre::Real expDensity = vl::getAttribReal(xml_node, "density", 0.001);
 	Ogre::Real linearStart = vl::getAttribReal(xml_node, "start", 0.0);
@@ -223,35 +229,71 @@ vl::HSFLoader::processFog(rapidxml::xml_node<> *xml_node)
 void
 vl::HSFLoader::processSky(rapidxml::xml_node<> *xml_node)
 {
-	std::clog << "vl::HSFLoader::processSky" << std::endl;
-	// @todo select sky simulation and sky dome
+	/// Sky simulation
+	rapidxml::xml_node<> *dynamic = xml_node->first_node("dynamic");
+	if(dynamic)
+	{
+		std::string preset = vl::getAttrib<std::string>(dynamic, "preset", "none");
+		if(preset != "none")
+		{
+			SkyInfo sky(preset);
+			_game->getSceneManager()->setSkyInfo(sky);
+		}
+	}
 
-	// Process attributes
-	// material attribute is required, all others are optional and have defaults
-	std::string material = xml_node->first_attribute("material")->value();
-	Ogre::Real curvature = vl::getAttribReal(xml_node, "curvature", 10);
-	Ogre::Real tiling = vl::getAttribReal(xml_node, "tiling", 8);
-	Ogre::Real distance = vl::getAttribReal(xml_node, "distance", 4000);
-	bool drawFirst = vl::getAttribBool(xml_node, "drawFirst", true);
+	// Sky dome
+	rapidxml::xml_node<> *dome = xml_node->first_node("static");
+	if(dome)
+	{
+		vl::SkyDomeInfo info;
+		// Process attributes
+		info.material_name = vl::getAttrib(dome, "material", info.material_name);
+		info.curvature = vl::getAttrib<vl::scalar>(dome, "curvature", info.curvature);
+		info.tiling = vl::getAttrib<vl::scalar>(dome, "tiling", info.tiling);
+		info.distance = vl::getAttrib<vl::scalar>(dome, "distance", info.distance);
+		info.draw_first = vl::getAttrib(dome, "drawFirst", info.draw_first);
 
-	rapidxml::xml_node<>* pElement;
+		// Process rotation (?)
+		rapidxml::xml_node<> *pElement = dome->first_node("rotation");
+		if(pElement)
+		{ info.orientation = vl::parseQuaternion(pElement); }
 
-	// Process rotation (?)
-	Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
-	pElement = xml_node->first_node("rotation");
-	if(pElement)
-	{ rotation = vl::parseQuaternion(pElement); }
+		// Setup the sky dome
+		_game->getSceneManager()->setSkyDome(info);
+	}
+}
 
-	// Setup the sky dome
-	_game->getSceneManager()->setSkyDome( vl::SkyDomeInfo(material, curvature, tiling,
-			distance, drawFirst, rotation, 16, 16, -1) );
+void
+vl::HSFLoader::processShadows(rapidxml::xml_node<> *xml_node)
+{
+	bool enabled = vl::getAttrib(xml_node, "enabled", false);
+	std::string camera = vl::getAttrib(xml_node, "camera", std::string());
+	bool shelf_shadows = vl::getAttrib(xml_node, "shelf_shadowing", false);
+	int tex_size = vl::getAttrib(xml_node, "texture_size", 1024);
+	vl::scalar max_distance = vl::getAttribReal(xml_node, "max_disantace", vl::scalar(250.0));
+	std::string caster_material = vl::getAttrib(xml_node, "caster_material", std::string());
+	
+	// @todo add directional light offset
+	ShadowInfo info(camera);
+	info.setEnabled(enabled);
+	info.setShelfShadowEnabled(shelf_shadows);
+	info.setShadowCasterMaterial(caster_material);
+	info.setTextureSize(tex_size);
+	info.setMaxDistance(max_distance);
+	_game->getSceneManager()->setShadowInfo(info);
 }
 
 void
 vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 {
 	// Construct the node's name
-	std::string name = _sPrependNode + vl::getAttrib(xml_node, "name");
+	std::string name = vl::getAttrib(xml_node, "name");
+
+	if(name.empty())
+	{
+		// @todo replace with a real exception
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid node name."));
+	}
 
 	// Create the scene node
 	vl::GameObjectRefPtr node = _game->createGameObject(name);
@@ -260,7 +302,7 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 
 	bool dynamic = false;
 	bool kinematic = false;
-	std::string physics_engine_name = vl::getAttrib(xml_node, "physics_type");
+	std::string physics_engine_name = vl::getAttrib(xml_node, "physics_type", std::string());
 	if(physics_engine_name == "auto")
 	{
 		std::cout << "Object : " << name 
@@ -285,7 +327,7 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 	if(pElement)
 	{
 		// @todo add type parameter
-		collision_detection = vl::getAttribBool(pElement, "enabled");
+		collision_detection = vl::getAttrib(pElement, "enabled", false);
 		collision_mesh_name = vl::getAttrib(pElement, "model");
 	}
 
@@ -298,27 +340,44 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 		if(!collision_mesh_name.empty())
 		{
 			// Load the collision mesh
-			vl::MeshRefPtr mesh = _game->getMeshManager()->getMesh(collision_mesh_name);
-			assert(mesh);
+			vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(collision_mesh_name);
 			vl::physics::ConvexHullShapeRefPtr shape = vl::physics::ConvexHullShape::create(mesh);
 			node->setCollisionModel(shape);
 		}
 	}
 
-	// Process position (?)
-	pElement = xml_node->first_node("position");
-	if( pElement )
-	{ node->setPosition(vl::parseVector3(pElement)); }
-
-	// Process rotation (?)
-	pElement = xml_node->first_node("quaternion");
-	if(!pElement)
-	{ pElement = xml_node->first_node("rotation"); }
-
-	if( pElement )
+	pElement = xml_node->first_node("transform");
+	if(pElement)
 	{
-		Ogre::Quaternion q = vl::parseQuaternion(pElement);
-		node->setOrientation(q);
+		Transform t;
+		rapidxml::xml_node<> *pos = pElement->first_node("position");
+		if(pos)
+		{ t.position = vl::parseVector3(pos); }
+
+		rapidxml::xml_node<> *orient = pElement->first_node("quaternion");
+		if(orient)
+		{ t.quaternion = vl::parseQuaternion(orient); }
+
+		node->setTransform(t);
+	}
+	else
+	{
+		/// For backward compatibility
+		// Process position (?)
+		pElement = xml_node->first_node("position");
+		if( pElement )
+		{ node->setPosition(vl::parseVector3(pElement)); }
+
+		// Process rotation (?)
+		pElement = xml_node->first_node("quaternion");
+		if(!pElement)
+		{ pElement = xml_node->first_node("rotation"); }
+
+		if( pElement )
+		{
+			Ogre::Quaternion q = vl::parseQuaternion(pElement);
+			node->setOrientation(q);
+		}
 	}
 
 	// Process scale (?)
@@ -405,6 +464,8 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 			node->enableCollisionDetection(true);
 		}
 	}
+
+	assert(collision_detection == node->isCollisionDetectionEnabled());
 }
 
 void
@@ -477,6 +538,24 @@ vl::HSFLoader::processChildNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 }
 
 void
+vl::HSFLoader::processBody(rapidxml::xml_node<> *xml_node, vl::GameObjectRefPtr obj)
+{
+	std::clog << "vl::HSFLoader::processBody" << std::endl;
+}
+
+void
+vl::HSFLoader::processConstraints(rapidxml::xml_node<> *xml_node)
+{
+	std::clog << "vl::HSFLoader::processConstraints" << std::endl;
+}
+	
+void
+vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
+{
+	std::clog << "vl::HSFLoader::processConstraint" << std::endl;
+}
+
+void
 vl::HSFLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent)
 {
 	assert(parent);
@@ -533,9 +612,9 @@ vl::HSFLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr par
 	else if(sValue == "spot" || sValue == "spotLight" )
 	{ light->setType( vl::Light::LT_SPOT ); }
 
-	light->setVisible(vl::getAttribBool(xml_node, "visible", true));
-	bool shadow = vl::getAttribBool(xml_node, "shadow", true);
-	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
+	light->setVisible(vl::getAttrib(xml_node, "visible", true));
+	bool shadow = vl::getAttrib(xml_node, "shadow", true);
+	bool castShadows = vl::getAttrib(xml_node, "castShadows", true);
 	light->setCastShadows(shadow || castShadows);
 
 	rapidxml::xml_node<>* pElement;

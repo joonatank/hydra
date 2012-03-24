@@ -53,35 +53,41 @@ private :
 
 	void processScene(rapidxml::xml_node<> *xml_root);
 
+	/// Nodes part
 	void processNodes(rapidxml::xml_node<> *xml_node);
 	
-	void processEnvironment(rapidxml::xml_node<> *xml_node);
-
-	void processFog(rapidxml::xml_node<> *xml_node);
-
-	void processSky(rapidxml::xml_node<> *xml_node);
-
 	/// @brief process node directly attached to Root
 	void processNode(rapidxml::xml_node<> *xml_node);
 
 	/// @brief process child nodes of direct childs
 	void processChildNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
+	void processBody(rapidxml::xml_node<> *xml_node, vl::GameObjectRefPtr obj);
+
 	void processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
 	void processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
-	
-	/** Not supported elements
-	 *	normal
-	 *	lookTarget
-	 *	trackTarget
-	 *	userDataReference
-	 */
+
 	void processCamera(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr parent);
 
 	void processLightRange(rapidxml::xml_node<> *xml_node, vl::LightPtr light);
 
 	void processLightAttenuation(rapidxml::xml_node<> *xml_node, vl::LightPtr light);
+
+	/// Environment part
+	void processEnvironment(rapidxml::xml_node<> *xml_node);
+
+	void processFog(rapidxml::xml_node<> *xml_node);
+
+	void processSky(rapidxml::xml_node<> *xml_node);
+
+	void processShadows(rapidxml::xml_node<> *xml_node);
+
+	/// Constraint part
+	void processConstraints(rapidxml::xml_node<> *xml_node);
+	
+	void processConstraint(rapidxml::xml_node<> *xml_node);
+
 
 	vl::GameManagerPtr _game;
 

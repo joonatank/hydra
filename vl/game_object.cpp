@@ -95,7 +95,6 @@ vl::GameObject::enableCollisionDetection(bool enable)
 	{
 		_rigid_body->disableCollisions(!enable);
 	}
-
 }
 
 bool
@@ -183,6 +182,9 @@ vl::GameObject::getCollisionModel(void) const
 vl::Transform const &
 vl::GameObject::getTransform(void) const
 {
+	// @todo for some reason if we return the kinematic body transformation
+	// here we get really large numbers.
+	/*
 	if(_kinematic_body)
 	{
 		return _kinematic_body->getWorldTransform();
@@ -192,6 +194,7 @@ vl::GameObject::getTransform(void) const
 		return _rigid_body->getWorldTransform();
 	}
 	else
+		*/
 	{
 		assert(_graphics_node);
 		return _graphics_node->getTransform();
