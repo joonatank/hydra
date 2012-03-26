@@ -85,24 +85,8 @@ vl::operator<<(std::ostream &os, vl::SliderConstraint const &c)
 /// ------------------------------ Public ------------------------------------
 
 /// ------------------------------ Protected ---------------------------------
-vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame)
-	: _bodyA(rbA)
-	, _bodyB(rbB)
-{
-	if(!_bodyA || !_bodyB)
-	{
-		std::string err_msg("Missing a body.");
-		std::cout << vl::CRITICAL << err_msg << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
-	}
-
-	vl::Transform wtA(_bodyA->getWorldTransform());
-	wtA.invert();
-
-	_local_frame_a = wtA*worldFrame;
-}
-
-vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB)
+vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB)
 	: _bodyA(rbA)
 	, _bodyB(rbB)
 	, _local_frame_a(frameInA)
@@ -204,105 +188,22 @@ vl::FixedConstraint::_progress(vl::time const &t)
 	// is always fixed.
 }
 
-/// ------------------------------ Private -----------------------------------
-vl::FixedConstraint::FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-	: Constraint(rbA, rbB, worldFrame)
-{}
-
-/// ------------------------------ SixDofConstraint --------------------------
-/*
-/// ------------------------------ Public ------------------------------------	
-void
-vl::SixDofConstraint::enableMotor(bool enable)
+vl::FixedConstraintRefPtr
+vl::FixedConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &worldFrame)
 {
-	_motor_enabled = enable;
-}
+	assert(rbA &&rbB);
 
-bool
-vl::SixDofConstraint::getMotorEnabled(void) const
-{
-	return _motor_enabled;
-}
-
-void
-vl::SixDofConstraint::setLinearLowerLimit(Ogre::Vector3 const &linearLower)
-{
-	_linear_lower_limit = linearLower;
-}
-
-Ogre::Vector3 const &
-vl::SixDofConstraint::getLinearLowerLimit(void) const
-{
-	return _linear_lower_limit;
-}
-
-void
-vl::SixDofConstraint::setLinearUpperLimit(Ogre::Vector3 const &linearUpper)
-{
-	_linear_upper_limit = linearUpper;
-}
-
-Ogre::Vector3 const &
-vl::SixDofConstraint::getLinearUpperLimit(void) const
-{
-	return _linear_upper_limit;
-}
-
-void
-vl::SixDofConstraint::setAngularLowerLimit(Ogre::Vector3 const &angularLower)
-{
-	_ang_lower_limit = angularLower;
-}
-
-Ogre::Vector3 const &
-vl::SixDofConstraint::getAngularLowerLimit(void) const
-{
-	return _ang_lower_limit;
-}
-
-void
-vl::SixDofConstraint::setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
-{
-	_ang_upper_limit = angularUpper;
-}
-
-Ogre::Vector3 const &
-vl::SixDofConstraint::getAngularUpperLimit(void) const
-{
-	return _ang_upper_limit;
-}
-
-void
-vl::SixDofConstraint::_proggress(vl::time const &t)
-{
-	std::vector<bool> free;
-	free.push_back(_linear_upper_limit.x < _linear_lower_limit.x);
-	free.push_back(_linear_upper_limit.y < _linear_lower_limit.y);
-	free.push_back(_linear_upper_limit.z < _linear_lower_limit.z);
-	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
-	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
-	free.push_back(_ang_upper_limit.z < _ang_lower_limit.z);
-
-	if(_motor_enabled)
-	{
-	}
-	else
-	{
-	}
-
-	_update_bodies();
+	FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, 
+		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
+	return constraint;
 }
 
 /// ------------------------------ Private -----------------------------------
-vl::SixDofConstraint::SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame)
-	: Constraint(rbA, rbB, worldFrame)
-	, _motor_enabled(false)
-	, _linear_lower_limit(0, 0, 0)
-	, _linear_upper_limit(0, 0, 0)
-	, _ang_lower_limit(0, 0, 0)
-	, _ang_upper_limit(0, 0, 0)
+vl::FixedConstraint::FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
+	: Constraint(rbA, rbB, frameInA, frameInB)
 {}
-*/
 
 /// ------------------------------ SliderConstraint --------------------------
 /// ------------------------------ Public ------------------------------------	
@@ -411,9 +312,20 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	}
 }
 
+vl::SliderConstraintRefPtr
+vl::SliderConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
+{
+	assert(rbA &&rbB);
+
+	SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, 
+		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
+	return constraint;
+}
+
 /// ------------------------------ Private -----------------------------------
-vl::SliderConstraint::SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-	: Constraint(rbA, rbB, worldFrame)
+vl::SliderConstraint::SliderConstraint(KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
+	: Constraint(rbA, rbB, frameInA, frameInB)
 	, _lower_limit(0)
 	, _upper_limit(0)
 	, _axisInA(0, 0, 1)
@@ -553,9 +465,19 @@ vl::HingeConstraint::_progress(vl::time const &t)
 	}
 }
 
+vl::HingeConstraintRefPtr
+vl::HingeConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
+{
+	assert(rbA &&rbB);
+
+	HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, 
+		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
+	return constraint;
+}
+
 /// ------------------------------ Private -----------------------------------
-vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-	: Constraint(rbA, rbB, worldFrame)
+vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
+	: Constraint(rbA, rbB, frameInA, frameInB)
 	, _lower_limit()
 	, _upper_limit()
 	, _axisInA(0, 0, 1)

@@ -34,6 +34,12 @@
 namespace vl
 {
 
+/** @class Constraint
+ *	Abstract base class for all kinematic constraints
+ *	@todo should we add name or id for identifying constraints?
+ *	We should add name for retrieving the constraints from python
+ *	or GUI. Name should be optional though.
+ */
 class Constraint
 {
 public :
@@ -92,8 +98,6 @@ private :
 
 protected :
 	/// only child classes are allowed to use the constructor
-	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame);
-
 	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB);
 
 	KinematicBodyRefPtr _bodyA;
@@ -125,11 +129,14 @@ public :
 
 	// static
 	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		 vl::Transform const &frameInA, vl::Transform const &frameInB)
 	{
-		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, worldFrame));
+		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
+
+	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &worldFrame);
 
 	/// Private virtual overrides
 private :
@@ -137,56 +144,9 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
+	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 };	// class FixedConstraint
-
-/* For now no SixDof constraint
-class SixDofConstraint : public Constraint
-{
-public :
-	void enableMotor(bool enable);
-
-	bool getMotorEnabled(void) const;
-
-	void setLinearLowerLimit(Ogre::Vector3 const &linearLower);
-	
-	Ogre::Vector3 const &getLinearLowerLimit(void) const;
-
-	void setLinearUpperLimit(Ogre::Vector3 const &linearUpper);
-
-	Ogre::Vector3 const &getLinearUpperLimit(void) const;
-
-	void setAngularLowerLimit(Ogre::Vector3 const &angularLower);
-
-	Ogre::Vector3 const &getAngularLowerLimit(void) const;
-
-	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper);
-
-	Ogre::Vector3 const &getAngularUpperLimit(void) const;
-
-	static SixDofConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
-		Transform const &worldFrame)
-	{
-		SixDofConstraintRefPtr constraint(new SixDofConstraint(rbA, rbB, worldFrame));
-		return constraint;
-	}
-
-	/// @internal
-	void _proggress(vl::time const &t);
-
-private :
-	SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame);
-
-	bool _motor_enabled;
-
-	Ogre::Vector3 _linear_lower_limit;
-	Ogre::Vector3 _linear_upper_limit;
-	Ogre::Vector3 _ang_lower_limit;
-	Ogre::Vector3 _ang_upper_limit;
-
-};	// class SixDofConstraint
-*/
 
 /** @class SliderConstraint
  *	@brief constraint that allows for one axis of freedom between two bodies
@@ -262,11 +222,16 @@ public :
 
 	// static
 	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		Transform const &worldFrame);
+
+	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
 	{
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, worldFrame));
+
+		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
+
 
 	/// Private virtual overrides
 private :
@@ -275,7 +240,8 @@ private :
 
 private :
 	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
-
+	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
 	Ogre::Vector3 _axisInA;
@@ -359,9 +325,12 @@ public :
 
 	// static
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		Transform const &worldFrame);
+
+	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
 	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, worldFrame));
+		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
 
@@ -371,7 +340,7 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
+	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;

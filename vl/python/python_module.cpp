@@ -174,6 +174,11 @@ void export_animation(void)
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov0)(std::string const &) const = &vl::KinematicWorld::getKinematicBody;
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov1)(vl::SceneNodePtr) const = &vl::KinematicWorld::getKinematicBody;
 
+	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov0)(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans) = &vl::KinematicWorld::createConstraint;
+	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov1)(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &, vl::Transform const &) = &vl::KinematicWorld::createConstraint;
+
 	/// @todo add list getters
 	// bodies not yet working as we would like, probably something to do with ref ptrs
 	python::class_<vl::KinematicWorld, vl::KinematicWorldRefPtr, boost::noncopyable>("KinematicWorld", python::no_init)
@@ -181,7 +186,8 @@ void export_animation(void)
 		.def("get_kinematic_body", getKinematicBody_ov1)
 		.def("create_kinematic_body", &vl::KinematicWorld::createKinematicBody)
 		.def("remove_kinematic_body", &vl::KinematicWorld::removeKinematicBody)
-		.def("create_constraint", &vl::KinematicWorld::createConstraint)
+		.def("create_constraint", createConstraint_ov0)
+		.def("create_constraint", createConstraint_ov1)
 		.def("remove_constraint", &vl::KinematicWorld::removeConstraint)
 		.add_property("bodies", python::make_function(&vl::KinematicWorld::getBodies, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("collision_detection_enabled", &vl::KinematicWorld::isCollisionDetectionEnabled, &vl::KinematicWorld::enableCollisionDetection)

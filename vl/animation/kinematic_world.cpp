@@ -173,21 +173,38 @@ vl::KinematicWorld::createConstraint(std::string const &type,
 	if(!body0 || !body1)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
 
+	vl::ConstraintRefPtr c;
+
+	vl::Transform fA = body0->transformToLocal(trans);
+	vl::Transform fB = body1->transformToLocal(trans);
+
+	return createConstraint(type, body0, body1, fA, fB);
+}
+
+vl::ConstraintRefPtr
+vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyRefPtr body0, 
+		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB)
+{
+	if(body0 == body1)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
+	if(!body0 || !body1)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
+
 	std::string type_name(type);
 	vl::to_lower(type_name);
 
 	vl::ConstraintRefPtr c;
 	if(type_name == "slider")
 	{
-		c = SliderConstraint::create(body0, body1, trans);
+		c = SliderConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "hinge")
 	{
-		c = HingeConstraint::create(body0, body1, trans);
+		c = HingeConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "fixed")
 	{
-		c = FixedConstraint::create(body0, body1, trans);
+		c = FixedConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	
 	// Do not allow empties, should have some real exception types for it though

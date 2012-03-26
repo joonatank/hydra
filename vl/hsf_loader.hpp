@@ -41,12 +41,10 @@ public :
 	 *				 name of every node
 	 */
 	void parseScene( std::string const &scene_data,
-			vl::GameManagerPtr game_manager,
-			std::string const &sPrependNode = std::string() );
+			vl::GameManagerPtr game_manager );
 
 	void parseScene( vl::TextResource &scene_data,
-			vl::GameManagerPtr game_manager,
-			std::string const &sPrependNode = std::string() );
+			vl::GameManagerPtr game_manager );
 
 private :
 	void _parse( char *xml_data );
@@ -90,8 +88,6 @@ private :
 
 
 	vl::GameManagerPtr _game;
-
-	std::string _sPrependNode;
 
 };	// class DotSceneLoader
 

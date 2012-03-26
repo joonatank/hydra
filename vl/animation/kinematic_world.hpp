@@ -64,6 +64,9 @@ public :
 	ConstraintRefPtr createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
 
+	ConstraintRefPtr createConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB);
+
 	void removeConstraint(ConstraintRefPtr constraint);
 
 	bool hasConstraint(vl::ConstraintRefPtr constraint) const;

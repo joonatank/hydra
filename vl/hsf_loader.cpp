@@ -31,9 +31,11 @@
 
 // Necessary for physics import
 #include "physics/shapes.hpp"
+#include "physics/physics_constraints.hpp"
 
 // Necessary for disabling and enabling auto collision shape creation
 #include "animation/kinematic_world.hpp"
+#include "animation/constraints.hpp"
 
 vl::HSFLoader::HSFLoader(void)
 {}
@@ -43,13 +45,10 @@ vl::HSFLoader::~HSFLoader(void)
 
 void
 vl::HSFLoader::parseScene( std::string const &scene_data,
-						   vl::GameManagerPtr game_manager,
-						   std::string const &sPrependNode )
+						   vl::GameManagerPtr game_manager )
 {
 	_game = game_manager;
 	assert(_game);
-
-	_sPrependNode = sPrependNode;
 
 	char *xml_data = new char[scene_data.length()+1];
 	::strcpy( xml_data, scene_data.c_str() );
@@ -61,8 +60,7 @@ vl::HSFLoader::parseScene( std::string const &scene_data,
 
 void
 vl::HSFLoader::parseScene( vl::TextResource &scene_data,
-						   vl::GameManagerPtr game_manager,
-						   std::string const &sPrependNode )
+						   vl::GameManagerPtr game_manager )
 {
 	_game = game_manager;
 	assert(_game);
@@ -74,8 +72,6 @@ vl::HSFLoader::parseScene( vl::TextResource &scene_data,
 	assert(_game->getKinematicWorld());
 	bool col_detection = _game->getKinematicWorld()->isCollisionDetectionEnabled();
 	_game->getKinematicWorld()->enableCollisionDetection(false);
-
-	_sPrependNode = sPrependNode;
 	
 	// Get the ownership of the memory
 	char *xml_data = scene_data.get();
@@ -149,6 +145,10 @@ vl::HSFLoader::processScene(rapidxml::xml_node<> *xml_root)
 	pElement = xml_root->first_node("nodes");
 	if( pElement )
 	{ processNodes(pElement); }
+
+	pElement = xml_root->first_node("constraints");
+	if( pElement )
+	{ processConstraints(pElement); }
 }
 
 void
@@ -473,8 +473,10 @@ vl::HSFLoader::processChildNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 {
 	assert(parent);
 
-	// Construct the node's name
-	std::string name = _sPrependNode + vl::getAttrib(xml_node, "name");
+	std::string name = vl::getAttrib(xml_node, "name");
+	
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION(vl::invalid_dotscene() << vl::desc("Node without name is not supported.")); }
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
@@ -547,12 +549,116 @@ void
 vl::HSFLoader::processConstraints(rapidxml::xml_node<> *xml_node)
 {
 	std::clog << "vl::HSFLoader::processConstraints" << std::endl;
+	rapidxml::xml_node<> *pElement = xml_node->first_node("constraint");
+	while(pElement)
+	{
+		processConstraint(pElement);
+		pElement = pElement->next_sibling("constraint");
+	}	
 }
 	
 void
 vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 {
 	std::clog << "vl::HSFLoader::processConstraint" << std::endl;
+
+	std::string engine = vl::getAttrib(xml_node, "physics_type");
+	std::string type = vl::getAttrib(xml_node, "type");
+	std::string body_a = vl::getAttrib(xml_node, "body_a");
+	std::string body_b = vl::getAttrib(xml_node, "body_b");
+	bool actuator = vl::getAttrib(xml_node, "actuator", false);
+
+	assert(!engine.empty() && !type.empty() && !body_a.empty() && !body_b.empty());
+
+	rapidxml::xml_node<> *frame_a = xml_node->first_node("frame_a");
+	rapidxml::xml_node<> *frame_b = xml_node->first_node("frame_b");
+
+	assert(frame_a && frame_b);
+	Transform fA = parseTransform(frame_a);
+	Transform fB = parseTransform(frame_b);
+
+	// @todo this can not be done this way because
+	// sixdof constraint has more complex min and max
+	rapidxml::xml_node<> *limit = xml_node->first_node("limit");
+	std::string unit = vl::getAttrib(limit, "unit");
+	vl::scalar min = vl::getAttrib<vl::scalar>(limit, "min", 0);
+	vl::scalar max = vl::getAttrib<vl::scalar>(limit, "max", -1);
+
+	if(engine == "kinematic")
+	{
+		KinematicBodyRefPtr bodyA = _game->getKinematicWorld()->getKinematicBody(body_a);
+		KinematicBodyRefPtr bodyB = _game->getKinematicWorld()->getKinematicBody(body_b);
+
+		assert(bodyA && bodyB);
+
+		// throws if such type is not available
+		ConstraintRefPtr con = _game->getKinematicWorld()->createConstraint(type, bodyA, bodyB, fA, fB);
+		con->setActuator(actuator);
+		if(HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<HingeConstraint>(con))
+		{
+			Ogre::Radian min_, max_;
+			if(unit == "degree")
+			{
+				min_ = Ogre::Radian(Ogre::Degree(min));
+				max_ = Ogre::Radian(Ogre::Degree(max));
+			}
+			else
+			{
+				min_ = Ogre::Radian(min);
+				max_ = Ogre::Radian(max);
+			}
+
+			hinge->setLowerLimit(min_);
+			hinge->setUpperLimit(max_);
+		}
+		else if(SliderConstraintRefPtr slider = boost::dynamic_pointer_cast<SliderConstraint>(con))
+		{
+			slider->setLowerLimit(min);
+			slider->setUpperLimit(max);
+		}
+		// other constraints don't have limits
+	}
+	else if(engine == "dynamic")
+	{
+		assert(_game->getPhysicsWorld());
+		physics::RigidBodyRefPtr bodyA = _game->getPhysicsWorld()->getRigidBody(body_a);
+		physics::RigidBodyRefPtr bodyB = _game->getPhysicsWorld()->getRigidBody(body_b);
+
+		assert(bodyA && bodyB);
+
+		vl::physics::ConstraintRefPtr constraint;
+		if(type == "hinge")
+		{
+			vl::physics::HingeConstraintRefPtr hinge = physics::HingeConstraint::create(bodyA, bodyB, fA, fB);
+			constraint = hinge;
+		}
+		else if(type == "fixed")
+		{
+			assert(false && "Physics solver does not yet support fixed constraints.");
+		}
+		else if(type == "slider")
+		{
+			vl::physics::SliderConstraintRefPtr slider = physics::SliderConstraint::create(bodyA, bodyB, fA, fB);
+			constraint = slider;
+		}
+		else if(type == "6dof")
+		{
+			vl::physics::SixDofConstraintRefPtr dof = physics::SixDofConstraint::create(bodyA, bodyB, fA, fB);
+			constraint = dof;
+		}
+		else
+		{
+			assert(false && "Unsupported constraint type");
+		}
+
+
+		assert(constraint);
+		_game->getPhysicsWorld()->addConstraint(constraint);
+	}
+	else
+	{
+		assert(false && "Incorrect physics engine parameter");
+	}
 }
 
 void

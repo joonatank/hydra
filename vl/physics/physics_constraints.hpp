@@ -1,16 +1,12 @@
-/**
- *	Copyright (c) 2011 Savant Simulators
+/*
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/physics_constraints.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -106,7 +102,7 @@ public :
 
 	// static methods
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
@@ -245,7 +241,7 @@ public :
 
 	// static
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
@@ -286,7 +282,7 @@ public :
 
 	// static
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 

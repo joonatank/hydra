@@ -79,6 +79,13 @@ public :
 		_node->setWorldTransform(t);
 	}
 
+	vl::Transform transformToLocal(vl::Transform const &t) const
+	{
+		vl::Transform wtB(getWorldTransform());
+		wtB.invert();
+		return wtB*t;
+	}
+
 	virtual void setVisibility(bool visible);
 
 	virtual bool isVisible(void) const;

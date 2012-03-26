@@ -76,6 +76,20 @@ vl::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	return Ogre::Quaternion( w, x, y, z );
 }
 
+vl::Transform
+vl::parseTransform(rapidxml::xml_node<>* xml_node)
+{
+	rapidxml::xml_node<> *vec = xml_node->first_node("position");
+	rapidxml::xml_node<> *quat = xml_node->first_node("quaternion");
+
+	assert(vec && quat);
+
+	Ogre::Vector3 v = parseVector3(vec);
+	Ogre::Quaternion q = parseQuaternion(quat);
+
+	return Transform(v, q);
+}
+
 Ogre::ColourValue
 vl::parseColour(rapidxml::xml_node<>* XMLNode)
 {
