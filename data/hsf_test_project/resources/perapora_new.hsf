@@ -202,7 +202,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_nosto_varsi.mesh" name="cb_syl_nosto_varsi"/>
 		</node>
-		<node name="cb_syl_pulttaus_putki" physics_type="none">
+		<node name="cb_syl_pulttaus_putki" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-4.62675" y="1.05965" z="-0.941499"/>
@@ -211,7 +211,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_pulttaus_putki.mesh" name="cb_syl_pulttaus_putki"/>
 		</node>
-		<node name="cb_syl_pulttaus_varsi" physics_type="none">
+		<node name="cb_syl_pulttaus_varsi" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-4.26638" y="1.05956" z="-0.861812"/>
@@ -220,7 +220,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_pulttaus_varsi.mesh" name="cb_syl_pulttaus_varsi"/>
 		</node>
-		<node name="cb_syl_swing_putki" physics_type="none">
+		<node name="cb_syl_swing_putki" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-2.82701" y="0.847459" z="-1.13012"/>
@@ -229,7 +229,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_swing_putki.mesh" name="cb_syl_swing_putki"/>
 		</node>
-		<node name="cb_syl_swing_varsi" physics_type="none">
+		<node name="cb_syl_swing_varsi" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-3.31775" y="0.765278" z="-1.17373"/>
@@ -238,7 +238,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_swing_varsi.mesh" name="cb_syl_swing_varsi"/>
 		</node>
-		<node name="cb_syl_syotto_putki" physics_type="none">
+		<node name="cb_syl_syotto_putki" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-4.52625" y="1.26013" z="-0.972997"/>
@@ -247,7 +247,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_syotto_putki.mesh" name="cb_syl_syotto_putki"/>
 		</node>
-		<node name="cb_syl_syotto_varsi" physics_type="none">
+		<node name="cb_syl_syotto_varsi" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-5.29104" y="1.26007" z="-0.973035"/>
@@ -256,7 +256,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_syotto_varsi.mesh" name="cb_syl_syotto_varsi"/>
 		</node>
-		<node name="cb_syl_tilt_putki" physics_type="none">
+		<node name="cb_syl_tilt_putki" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-2.83601" y="0.88317" z="-0.900083"/>
@@ -265,7 +265,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="cb_syl_tilt_putki.mesh" name="cb_syl_tilt_putki"/>
 		</node>
-		<node name="cb_syl_tilt_varsi" physics_type="none">
+		<node name="cb_syl_tilt_varsi" physics_type="kinematic">
 			<body/>
 			<transform>
 				<position x="-3.29584" y="0.931904" z="-0.899889"/>
@@ -368,7 +368,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_kaantosyl2_rotz.mesh" name="nivel_kaantosyl2_rotz"/>
 		</node>
-		<node name="nivel_kehto_rotz" physics_type="kinematic">
+		<node name="nivel_kehto_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.96669" y="1.01385" z="-0.976944"/>
@@ -386,7 +386,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_klevy1_rotz.mesh" name="nivel_klevy1_rotz"/>
 		</node>
-		<node name="nivel_klevy2_rotz" physics_type="kinematic">
+		<node name="nivel_klevy2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-0.543382" y="0.796393" z="-0.521969"/>
@@ -413,7 +413,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_nostosyl2_rotz.mesh" name="nivel_nostosyl2_rotz"/>
 		</node>
-		<node name="nivel_pulttsyl1_rotz" physics_type="kinematic">
+		<node name="nivel_pulttsyl1_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-4.77783" y="1.07642" z="-0.975772"/>
@@ -422,7 +422,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_pulttsyl1_rotz.mesh" name="nivel_pulttsyl1_rotz"/>
 		</node>
-		<node name="nivel_pulttsyl2_rotz" physics_type="kinematic">
+		<node name="nivel_pulttsyl2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-4.11387" y="1.0623" z="-0.828773"/>
@@ -431,7 +431,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_pulttsyl2_rotz.mesh" name="nivel_pulttsyl2_rotz"/>
 		</node>
-		<node name="nivel_puomi_rotz" physics_type="kinematic">
+		<node name="nivel_puomi_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-0.714921" y="0.870382" z="-0.891257"/>
@@ -440,7 +440,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_puomi_rotz.mesh" name="nivel_puomi_rotz"/>
 		</node>
-		<node name="nivel_swingristi_rotz" physics_type="kinematic">
+		<node name="nivel_swingristi_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.6167" y="0.701169" z="-1.19949"/>
@@ -449,7 +449,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_swingristi_rotz.mesh" name="nivel_swingristi_rotz"/>
 		</node>
-		<node name="nivel_swingsyl1_rotz" physics_type="kinematic">
+		<node name="nivel_swingsyl1_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-2.68222" y="0.871643" z="-1.12175"/>
@@ -458,7 +458,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_swingsyl1_rotz.mesh" name="nivel_swingsyl1_rotz"/>
 		</node>
-		<node name="nivel_swingsyl2_rotz" physics_type="kinematic">
+		<node name="nivel_swingsyl2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.45789" y="0.742643" z="-1.18795"/>
@@ -467,7 +467,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_swingsyl2_rotz.mesh" name="nivel_swingsyl2_rotz"/>
 		</node>
-		<node name="nivel_syottlaite_trz" physics_type="kinematic">
+		<node name="nivel_syottlaite_trz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-5.57671" y="1.26021" z="-0.973774"/>
@@ -476,7 +476,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_syottlaite_trz.mesh" name="nivel_syottlaite_trz"/>
 		</node>
-		<node name="nivel_syottosyl1_rotz" physics_type="kinematic">
+		<node name="nivel_syottosyl1_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-4.1205" y="1.26" z="-0.974997"/>
@@ -485,7 +485,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_syottosyl1_rotz.mesh" name="nivel_syottosyl1_rotz"/>
 		</node>
-		<node name="nivel_syottosyl2_rotz" physics_type="kinematic">
+		<node name="nivel_syottosyl2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-5.7" y="1.26" z="-0.974996"/>
@@ -494,7 +494,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_syottosyl2_rotz.mesh" name="nivel_syottosyl2_rotz"/>
 		</node>
-		<node name="nivel_telesk_trz" physics_type="kinematic">
+		<node name="nivel_telesk_trz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-2.31034" y="0.871746" z="-0.901945"/>
@@ -503,7 +503,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_telesk_trz.mesh" name="nivel_telesk_trz"/>
 		</node>
-		<node name="nivel_tilt_rotz" physics_type="kinematic">
+		<node name="nivel_tilt_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.45408" y="0.742879" z="-0.899005"/>
@@ -512,7 +512,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_tilt_rotz.mesh" name="nivel_tilt_rotz"/>
 		</node>
-		<node name="nivel_tiltkpl_rotz" physics_type="kinematic">
+		<node name="nivel_tiltkpl_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.61664" y="0.747343" z="-0.977916"/>
@@ -521,7 +521,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_tiltkpl_rotz.mesh" name="nivel_tiltkpl_rotz"/>
 		</node>
-		<node name="nivel_tiltsyl1_rotz" physics_type="kinematic">
+		<node name="nivel_tiltsyl1_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-2.68478" y="0.871643" z="-0.900192"/>
@@ -530,7 +530,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_tiltsyl1_rotz.mesh" name="nivel_tiltsyl1_rotz"/>
 		</node>
-		<node name="nivel_tiltsyl2_rotz" physics_type="kinematic">
+		<node name="nivel_tiltsyl2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.44279" y="0.947137" z="-0.902685"/>
@@ -539,7 +539,7 @@
 			<collision enabled="false"/>
 			<entity mesh_file="nivel_tiltsyl2_rotx.mesh" name="nivel_tiltsyl2_rotx"/>
 		</node>
-		<node name="nivel_vaantomot2_rotz" physics_type="kinematic">
+		<node name="nivel_vaantomot2_rotz" physics_type="none">
 			<body/>
 			<transform>
 				<position x="-3.96703" y="1.00134" z="-0.974913"/>
@@ -559,7 +559,7 @@
 		</node>
 	</nodes>
 	<constraints>
-		<constraint physics_type="kinematic" type="hinge" body_a="cb_kaantokappale" body_b="cb_ulkoputki" actuator="true">
+		<constraint physics_type="kinematic" type="hinge" name="nosto" body_a="cb_kaantokappale" body_b="cb_ulkoputki" actuator="true">
 			<frame_a>
 				<position x="-0.11548" y="0.194185" z="0.00871599"/>
 				<quaternion w="0" x="0" y="0.707107" z="0.707107"/>
@@ -570,7 +570,7 @@
 			</frame_b>
 			<limit unit="degree" min="-57.2958" max="0"/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_ulkoputki" body_b="nivel_nostosyl1_rotz" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_ulkoputki" body_b="nivel_nostosyl1_rotz" actuator="false">
 			<frame_a>
 				<position x="-0.0267848" y="0.579063" z="-0.23031"/>
 				<quaternion w="0.707107" x="0" y="0" z="-0.707107"/>
@@ -581,7 +581,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_kaantokappale" body_b="nivel_nostosyl2_rotz" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kaantokappale" body_b="nivel_nostosyl2_rotz" actuator="false">
 			<frame_a>
 				<position x="-0.150618" y="-0.225503" z="-0.000222027"/>
 				<quaternion w="0" x="0" y="0.707107" z="0.707107"/>
@@ -592,7 +592,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="hinge" body_a="cb_kiinnityslevy" body_b="cb_kaantokappale" actuator="true">
+		<constraint physics_type="kinematic" type="hinge" name="kaanto" body_a="cb_kiinnityslevy" body_b="cb_kaantokappale" actuator="true">
 			<frame_a>
 				<position x="0.106568" y="0.122094" z="-0.0587389"/>
 				<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
@@ -603,7 +603,7 @@
 			</frame_b>
 			<limit unit="degree" min="-57.2958" max="57.2958"/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_kaantokappale" body_b="nivel_klevy1_rotz" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kaantokappale" body_b="nivel_klevy1_rotz" actuator="false">
 			<frame_a>
 				<position x="0.0571849" y="0.0370139" z="-0.00197315"/>
 				<quaternion w="0" x="-0.707107" y="0" z="0.707107"/>
@@ -614,7 +614,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_ulkoputki" body_b="nivel_kaantosyl1_rotz" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_ulkoputki" body_b="nivel_kaantosyl1_rotz" actuator="false">
 			<frame_a>
 				<position x="-0.925594" y="-1.53687" z="-0.850508"/>
 				<quaternion w="0.675591" x="0" y="-9.31323e-009" z="-0.737277"/>
@@ -625,7 +625,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_kaantokappale" body_b="nivel_kaantosyl2_rotz" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kaantokappale" body_b="nivel_kaantosyl2_rotz" actuator="false">
 			<frame_a>
 				<position x="-0.112314" y="0.193996" z="0.356926"/>
 				<quaternion w="0.043167" x="-0.043167" y="0.705788" z="0.705788"/>
@@ -636,7 +636,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="slider" body_a="cb_ulkoputki" body_b="cb_sisaputki" actuator="true" min="0">
+		<constraint physics_type="kinematic" type="slider" name="zoom" body_a="cb_ulkoputki" body_b="cb_sisaputki" actuator="true" min="0">
 			<frame_a>
 				<position x="-0.0236486" y="0.77347" z="0.0212383"/>
 				<quaternion w="1" x="0" y="0" z="0"/>
@@ -647,7 +647,29 @@
 			</frame_b>
 			<limit max="1.05"/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_sisaputki" body_b="cb_tiltkappale" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_sisaputki" body_b="cb_syl_tilt_putki" actuator="false">
+			<frame_a>
+				<position x="-0.114101" y="-0.0642431" z="0.0523289"/>
+				<quaternion w="0.706138" x="0.037007" y="0.706138" z="0.037007"/>
+			</frame_a>
+			<frame_b>
+				<position x="0" y="0" z="1.78814e-007"/>
+				<quaternion w="1" x="-1.10289e-009" y="-2.10445e-008" z="5.96046e-008"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syl_tilt_putki" body_b="cb_syl_tilt_varsi" actuator="false">
+			<frame_a>
+				<position x="-0.000403166" y="0.462396" z="-0.000194013"/>
+				<quaternion w="1" x="-5.80208e-017" y="1.14292e-015" z="-5.96046e-008"/>
+			</frame_a>
+			<frame_b>
+				<position x="0" y="0" z="-1.19209e-007"/>
+				<quaternion w="1" x="-8.11125e-024" y="-2.06604e-023" z="5.96046e-008"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_sisaputki" body_b="cb_tiltkappale" actuator="false">
 			<frame_a>
 				<position x="-0.0431039" y="0.654859" z="-0.0242312"/>
 				<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
@@ -658,7 +680,40 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_tiltkappale" body_b="cb_swingkappale" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_sisaputki" body_b="cb_syl_swing_putki" actuator="false">
+			<frame_a>
+				<position x="0.115936" y="-0.073245" z="0.0166183"/>
+				<quaternion w="0.703372" x="-0.0268135" y="0.704699" z="-0.0891555"/>
+			</frame_a>
+			<frame_b>
+				<position x="1.19209e-007" y="-2.38419e-007" z="0"/>
+				<quaternion w="1" x="-3.72529e-009" y="3.35276e-008" z="-8.9407e-008"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syl_swing_putki" body_b="cb_syl_swing_varsi" actuator="false">
+			<frame_a>
+				<position x="0.000585556" y="0.499479" z="-0.000158668"/>
+				<quaternion w="1" x="3.72529e-009" y="1.86265e-009" z="5.96046e-008"/>
+			</frame_a>
+			<frame_b>
+				<position x="0" y="0" z="4.76837e-007"/>
+				<quaternion w="1" x="0" y="-3.72529e-009" z="-2.98023e-008"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syl_swing_putki" body_b="cb_ristikpl_swing" actuator="false">
+			<frame_a>
+				<position x="-0.0141895" y="0.729243" z="0.0102017"/>
+				<quaternion w="0.00143386" x="-0.646766" y="-0.762683" z="0.00229786"/>
+			</frame_a>
+			<frame_b>
+				<position x="0" y="5.96046e-008" z="-2.38419e-007"/>
+				<quaternion w="1" x="-1.21873e-009" y="3.72529e-009" z="1.72789e-008"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_tiltkappale" body_b="cb_swingkappale" actuator="false">
 			<frame_a>
 				<position x="0.0654035" y="0.0638161" z="0.163619"/>
 				<quaternion w="1" x="0" y="0" z="0"/>
@@ -669,7 +724,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="hinge" body_a="cb_swingkappale" body_b="cb_vaantomot" actuator="true">
+		<constraint physics_type="kinematic" type="hinge" name="motor" body_a="cb_swingkappale" body_b="cb_vaantomot" actuator="true">
 			<frame_a>
 				<position x="-0.0575948" y="-0.000211" z="0.241328"/>
 				<quaternion w="0.707107" x="0.707107" y="0" z="0"/>
@@ -680,7 +735,7 @@
 			</frame_b>
 			<limit unit="degree" min="-180" max="180"/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_vaantomot" body_b="cb_pulttausnivel" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_vaantomot" body_b="cb_pulttausnivel" actuator="false">
 			<frame_a>
 				<position x="0.00172234" y="-0.104502" z="0.258873"/>
 				<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
@@ -691,7 +746,29 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="hinge" body_a="cb_pulttausnivel" body_b="cb_kehto" actuator="true">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_pulttausnivel" body_b="cb_syl_pulttaus_varsi" actuator="false">
+			<frame_a>
+				<position x="-0.114115" y="-0.0548537" z="0.237769"/>
+				<quaternion w="-0.0769798" x="-0.0769798" y="0.702904" z="-0.702904"/>
+			</frame_a>
+			<frame_b>
+				<position x="4.76837e-007" y="9.53674e-007" z="0"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syl_pulttaus_varsi" body_b="cb_syl_pulttaus_putki" actuator="false">
+			<frame_a>
+				<position x="0.000198364" y="-0.36907" z="9.08375e-005"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_a>
+			<frame_b>
+				<position x="-5.24521e-006" y="9.53674e-007" z="3.21865e-006"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="hinge" name="pulttaus" body_a="cb_pulttausnivel" body_b="cb_kehto" actuator="true">
 			<frame_a>
 				<position x="-0.00101423" y="0.00336933" z="-0.0615835"/>
 				<quaternion w="0" x="0" y="1" z="0"/>
@@ -702,7 +779,29 @@
 			</frame_b>
 			<limit unit="degree" min="0" max="45"/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_kehto" body_b="cb_syottol_kiskot" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kehto" body_b="cb_syl_syotto_putki" actuator="false">
+			<frame_a>
+				<position x="0.0890007" y="0.0020144" z="0.0169849"/>
+				<quaternion w="0.5" x="0.5" y="0.5" z="-0.5"/>
+			</frame_a>
+			<frame_b>
+				<position x="4.76837e-007" y="-9.53674e-007" z="-1.78814e-007"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syl_syotto_putki" body_b="cb_syl_syotto_varsi" actuator="false">
+			<frame_a>
+				<position x="6.19888e-005" y="0.764791" z="3.82066e-005"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_a>
+			<frame_b>
+				<position x="0" y="4.76837e-007" z="-1.19209e-007"/>
+				<quaternion w="1" x="0" y="0" z="0"/>
+			</frame_b>
+			<limit/>
+		</constraint>
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kehto" body_b="cb_syottol_kiskot" actuator="false">
 			<frame_a>
 				<position x="-1.20149" y="0.0143849" z="0.290655"/>
 				<quaternion w="0.707107" x="0" y="0" z="-0.707107"/>
@@ -713,7 +812,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_syottol_kiskot" body_b="cb_ohjuri_slaite" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syottol_kiskot" body_b="cb_ohjuri_slaite" actuator="false">
 			<frame_a>
 				<position x="0.00413811" y="1.35312" z="-0.0171707"/>
 				<quaternion w="1" x="0" y="0" z="0"/>
@@ -724,7 +823,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_syottol_kiskot" body_b="cb_kiinnike1_slaite" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syottol_kiskot" body_b="cb_kiinnike1_slaite" actuator="false">
 			<frame_a>
 				<position x="-0.199776" y="0.307188" z="-0.0318569"/>
 				<quaternion w="1" x="0" y="0" z="0"/>
@@ -735,7 +834,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_syottol_kiskot" body_b="cb_porakelkka" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syottol_kiskot" body_b="cb_porakelkka" actuator="false">
 			<frame_a>
 				<position x="0.0128956" y="-1.54329" z="0.110041"/>
 				<quaternion w="1" x="0" y="0" z="0"/>
@@ -746,7 +845,7 @@
 			</frame_b>
 			<limit/>
 		</constraint>
-		<constraint physics_type="kinematic" type="fixed" body_a="cb_syottol_kiskot" body_b="cb_porakanki" actuator="false">
+		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_syottol_kiskot" body_b="cb_porakanki" actuator="false">
 			<frame_a>
 				<position x="0.0144165" y="-0.296668" z="0.164837"/>
 				<quaternion w="1" x="0" y="0" z="0"/>

@@ -102,6 +102,8 @@ public :
 	/// Convienience functions so our interface resemplaces SceneNodes
 
 	/// @brief adds a game object as a child, only works without physics
+	/// @todo should this work with physics also, creates a constraint
+	/// between the two bodies?
 	void addChild(GameObjectRefPtr child);
 
 	/// Private methdos
@@ -122,6 +124,10 @@ private :
 	GameManager *_creator;
 
 };	// class GameObject
+
+std::ostream &operator<<(std::ostream &os, GameObject const &obj);
+
+std::ostream &operator<<(std::ostream &os, GameObjectList const &list);
 
 }	// namespace vl
 

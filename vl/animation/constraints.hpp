@@ -36,9 +36,6 @@ namespace vl
 
 /** @class Constraint
  *	Abstract base class for all kinematic constraints
- *	@todo should we add name or id for identifying constraints?
- *	We should add name for retrieving the constraints from python
- *	or GUI. Name should be optional though.
  */
 class Constraint
 {
@@ -72,6 +69,18 @@ public :
 
 	virtual std::string getTypeName(void) const = 0;
 
+	/// @brief get the name of the constraint
+	/// If no name has been set this will return empty string
+	/// Names are not required to be unique, but if they are not their use
+	/// from python interface is really confusing.
+	std::string const &getName(void) const
+	{ return _name; }
+
+	/// @brief set the name for identifying the constraint
+	/// @param name optional name for the constraint
+	void setName(std::string const &name)
+	{ _name = name; }
+
 	/// @internal
 	void _solve(vl::time const &t);
 
@@ -97,8 +106,14 @@ private :
 	void _solve_aux_parents(void);
 
 protected :
+	/// @brief Constructor
 	/// only child classes are allowed to use the constructor
-	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB);
+	/// @param rbA the body to which we want to constraint
+	/// @param rbB the body we are constraining
+	/// @param frameInA the pivot point in rbA coordinates
+	/// @param frameInB the pivot point in rbB coordinates
+	Constraint( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB );
 
 	KinematicBodyRefPtr _bodyA;
 	KinematicBodyRefPtr _bodyB;
@@ -106,6 +121,8 @@ protected :
 	/// Current frames in object coordinates
 	vl::Transform _local_frame_a;
 	vl::Transform _local_frame_b;
+
+	std::string _name;
 
 	vl::animation::LinkRefPtr _link;
 
@@ -357,6 +374,9 @@ operator<<(std::ostream &os, HingeConstraint const &c);
 
 std::ostream &
 operator<<(std::ostream &os, SliderConstraint const &c);
+
+std::ostream &
+operator<<(std::ostream &os, ConstraintList const &list);
 
 }	// namespace vl
 

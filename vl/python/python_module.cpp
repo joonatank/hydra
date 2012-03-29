@@ -62,6 +62,8 @@
 // Necessary for hide/show system console
 #include "base/system_util.hpp"
 
+#include "game_object.hpp"
+
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -171,6 +173,13 @@ void export_animation(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<Constraint> > >("ConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<Constraint> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov0)(std::string const &) const = &vl::KinematicWorld::getKinematicBody;
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov1)(vl::SceneNodePtr) const = &vl::KinematicWorld::getKinematicBody;
 
@@ -189,17 +198,18 @@ void export_animation(void)
 		.def("create_constraint", createConstraint_ov0)
 		.def("create_constraint", createConstraint_ov1)
 		.def("remove_constraint", &vl::KinematicWorld::removeConstraint)
+		.add_property("constraints", python::make_function(&vl::KinematicWorld::getConstraints, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("bodies", python::make_function(&vl::KinematicWorld::getBodies, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("collision_detection_enabled", &vl::KinematicWorld::isCollisionDetectionEnabled, &vl::KinematicWorld::enableCollisionDetection)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	/// Abstract master class for all constraints, both physics and non-physics constraint
-	/// derive from this
+	/// Abstract master class for all non-physics constraints
 	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 		.add_property("body_a", &vl::Constraint::getBodyA)
 		.add_property("body_b", &vl::Constraint::getBodyB)
 		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
+		.add_property("name", python::make_function(&vl::Constraint::getName, python::return_value_policy<python::copy_const_reference>()), &vl::Constraint::setName)
 		.def("set_velocity", &vl::Constraint::setVelocity)
 		.def("add_velocity", &vl::Constraint::addVelocity)
 		.def(python::self_ns::str(python::self_ns::self))
@@ -620,6 +630,37 @@ void export_game(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	void (vl::GameObject::*setCollisionModel_ov0)(physics::CollisionShapeRefPtr shape) = &vl::GameObject::setCollisionModel;
+
+	python::class_<vl::GameObject, vl::GameObjectRefPtr, boost::noncopyable, python::bases<vl::ObjectInterface> >("GameObject", python::no_init)
+		.add_property("graphics_node", python::make_function( &vl::GameObject::getGraphicsNode, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("kinematic_node", &vl::GameObject::getKinematicsNode)
+		.add_property("dynamics_node", &vl::GameObject::getPhysicsNode)
+		.add_property("collision_detection", &vl::GameObject::isCollisionDetectionEnabled, &vl::GameObject::enableCollisionDetection)
+		.add_property("visible", &vl::GameObject::isVisible, &vl::GameObject::setVisibility)
+		.add_property("name", python::make_function(&vl::GameObject::getName, python::return_value_policy<python::copy_const_reference>()) )
+		.add_property("transformation", python::make_function(&vl::GameObject::getTransform, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setTransform)
+		.add_property("world_transformation", &vl::GameObject::getWorldTransform, &vl::GameObject::setWorldTransform)
+		.add_property("position", python::make_function(&vl::GameObject::getPosition, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setPosition)
+		.add_property("orientation", python::make_function(&vl::GameObject::getOrientation, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setOrientation)
+		.add_property("collision_model", &vl::GameObject::getCollisionModel, setCollisionModel_ov0)
+		.add_property("kinematic", &vl::GameObject::isKinematic, &vl::GameObject::setKinematic)		
+		.def("transform", &vl::GameObject::transform)
+		.def("translate", &vl::GameObject::translate)
+		.def("rotate", &vl::GameObject::rotate)
+		.def("set_world_transformation", &vl::GameObject::setWorldTransform)
+		// @todo create rigid body should be changed, but needs redesign in the GameObject class itself
+		.def("create_rigid_body", &vl::GameObject::createRigidBody)
+		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::GameObject::addListener))
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<GameObject> > >("GameObjectList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<GameObject> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -631,6 +672,13 @@ void export_game(void)
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("kinematic_world", &vl::GameManager::getKinematicWorld)
+		// GameObject
+		.add_property("objects", python::make_function( &vl::GameManager::getGameObjectList, python::return_value_policy<python::reference_existing_object>() ) )
+		.def("get_object", &vl::GameManager::getGameObject)
+		.def("has_object", &vl::GameManager::hasGameObject)
+		.def("create_object", &vl::GameManager::createGameObject)
+
+		// State management
 		.def("quit", &vl::GameManager::quit)
 		.def("pause", &vl::GameManager::pause)
 		.def("play", &vl::GameManager::play)

@@ -65,11 +65,20 @@ def fixed_constraint(body0, body1):
 	return game.kinematic_world.create_constraint('fixed', body0, body1, body1.world_transformation)
 
 
+# Returns a kinematic body
+# if GameObject with the name already exists returns kinematic body from it
+# otherwise returns a newly created kinematic body
 def _create_body(name) :
-	node = game.scene.getSceneNode(name)
-	body = game.kinematic_world.create_kinematic_body(node)
-	assert(body)
-	return body
+	if game.has_object(name) :
+		obj = game.get_object(name)
+		obj.kinematic = True
+		assert(obj.kinematic_node)
+		return obj.kinematic_node
+	else :
+		node = game.scene.getSceneNode(name)
+		body = game.kinematic_world.create_kinematic_body(node)
+		assert(body)
+		return body
 
 
 # Cylinder type actuator

@@ -44,7 +44,15 @@ vl::operator<<(std::ostream &os, vl::Constraint const &c)
 std::ostream &
 vl::operator<<(std::ostream &os, vl::HingeConstraint const &c)
 {
-	os << "HingeConstraint with bodies : " << c.getBodyA()->getName() << " and " 
+	if(c.getName().empty())
+	{
+		os << "Unamed HingeConstraint" << "\n";
+	}
+	else
+	{
+		os << "HingeConstraint with name " << c.getName() << "\n";
+	}
+	os << "with bodies : " << c.getBodyA()->getName() << " and " 
 		<< c.getBodyB()->getName() << "\n"
 		<< "   Transformation = " << c._getLink()->getTransform() << "\n"
 		<< "   Initial transformation = " << c._getLink()->getInitialTransform() << "\n";
@@ -64,7 +72,15 @@ vl::operator<<(std::ostream &os, vl::HingeConstraint const &c)
 std::ostream &
 vl::operator<<(std::ostream &os, vl::SliderConstraint const &c)
 {
-	os << "SliderConstraint with bodies : " << c.getBodyA()->getName() << " and " 
+	if(c.getName().empty())
+	{
+		os << "Unamed SliderConstraint " << "\n";
+	}
+	else
+	{
+		os << "SliderConstraint with name " << c.getName() << "\n";
+	}
+	os << " with bodies : " << c.getBodyA()->getName() << " and " 
 		<< c.getBodyB()->getName() << "\n"
 		<< "   Transformation = " << c._getLink()->getTransform() << "\n"
 		<< "   Initial transformation = " << c._getLink()->getInitialTransform() << "\n";
@@ -80,6 +96,26 @@ vl::operator<<(std::ostream &os, vl::SliderConstraint const &c)
 
 	return os;
 }
+
+std::ostream &
+vl::operator<<(std::ostream &os, ConstraintList const &list)
+{
+	for(ConstraintList::const_iterator iter = list.begin();
+		iter != list.end(); ++iter)
+	{
+		if((*iter)->getName().empty())
+		{
+			os << "Unnamed " << (*iter)->getTypeName() << " constraint." << std::endl;
+		}
+		else
+		{
+			os << (*iter)->getTypeName() << " constraint with name " << (*iter)->getName() << std::endl;
+		}
+	}
+
+	return os;
+}
+
 
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------

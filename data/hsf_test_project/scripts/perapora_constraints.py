@@ -3,6 +3,7 @@
 import math
 
 # Setup player
+# TODO move to using GameObjects instead of SceneNodes directly
 camera_name = "Camera"
 camera = game.scene.createSceneNode(camera_name)
 camera.position = Vector3(-0.77, 0, 4)
@@ -38,6 +39,7 @@ ulkoputki = _create_body("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
 wt = nivel_puomi.world_transformation
 puomi_hinge = hinge_constraint(kaantokappale, ulkoputki, wt, min=Radian(-1), max=Radian(0))
+puomi_hinge.name = "nosto"
 puomi_hinge.axis = Vector3(0, 1, 0)
 
 # Cylinder nosto
@@ -62,6 +64,7 @@ nivel_klevy1 = _create_body("nivel_klevy1_rotz")
 wt = nivel_klevy1.world_transformation
 #transform = Transform(Quaternion(0.7071, 0, 0.7071, 0)) * 
 kaanto_hinge = hinge_constraint(kiinnityslevy, kaantokappale, wt, min=Radian(-1), max=Radian(1))
+kaanto_hinge.name = "kaanto"
 kaanto_hinge.axis = Vector3(0, 1, 0)
 
 fixed_constraint(kaantokappale, nivel_klevy1)
@@ -89,6 +92,7 @@ syl_kaanto.up_axis = Vector3(0, 1, 0)
 sisaputki = _create_body("cb_sisaputki")
 nivel_telesk = game.scene.getSceneNode("nivel_telesk_trz")
 zoom = slider_constraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, min=0., max=1.05)
+zoom.name = "zoom"
 zoom.axis = Vector3(0, 1, 0)
 
 # Add rest of the objects with fixed joints
@@ -122,6 +126,7 @@ vaantomoottori = _create_body("cb_vaantomot")
 nivel_vaantomoottori = game.scene.getSceneNode("nivel_vaantomot_rotz")
 wt = nivel_vaantomoottori.world_transformation
 motor_hinge = hinge_constraint(swingkappale, vaantomoottori, wt, Radian(-math.pi), Radian(math.pi))
+motor_hinge.name = "motor"
 motor_hinge.axis = Vector3(0, 1, 0)
 
 pulttausnivel = _create_body("cb_pulttausnivel")
@@ -139,6 +144,7 @@ kehto = _create_body("cb_kehto")
 nivel_vaantomoottori2 = game.scene.getSceneNode("nivel_vaantomot2_rotz")
 wt = nivel_vaantomoottori2.world_transformation
 pulttaus_hinge = hinge_constraint(pulttausnivel, kehto, wt, min=Radian(0), max=Radian(math.pi/4))
+pulttaus_hinge.name = "pulttaus"
 pulttaus_hinge.axis = Vector3(0, 1, 0)
 
 syl_syotto_putki = _create_body("cb_syl_syotto_putki")
@@ -267,6 +273,7 @@ vaantomoottori.addListener(setBodyTransform)
 
 # Add some primitives and possibility to move them for testing the collision
 # detection
+# TODO move to using GameObjects instead of RigidBodies directly
 pos = Vector3(-3, 3, -0.5)
 box = addBox("user_box", "finger_sphere/green", pos, mass=10)
 box.user_controlled = True

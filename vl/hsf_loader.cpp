@@ -563,6 +563,7 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 	std::clog << "vl::HSFLoader::processConstraint" << std::endl;
 
 	std::string engine = vl::getAttrib(xml_node, "physics_type");
+	std::string name = vl::getAttrib(xml_node, "name");
 	std::string type = vl::getAttrib(xml_node, "type");
 	std::string body_a = vl::getAttrib(xml_node, "body_a");
 	std::string body_b = vl::getAttrib(xml_node, "body_b");
@@ -594,6 +595,7 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 		// throws if such type is not available
 		ConstraintRefPtr con = _game->getKinematicWorld()->createConstraint(type, bodyA, bodyB, fA, fB);
 		con->setActuator(actuator);
+		con->setName(name);
 		if(HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<HingeConstraint>(con))
 		{
 			Ogre::Radian min_, max_;

@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file game_manager.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -209,6 +205,9 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	/// @brief creates a new GameObject
+	/// @return new GameObject if none with that name exist, otherwise already existing object
+	/// @param name the name of the GameObject to create
 	GameObjectRefPtr createGameObject(std::string const &name);
 
 	bool hasGameObject(std::string const &name);

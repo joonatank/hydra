@@ -315,6 +315,9 @@ vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::ConstraintRef
 	char *str = _doc.allocate_string(constraint->getTypeName().c_str());
 	xml_node->append_attribute(_doc.allocate_attribute("type", str));
 
+	str = _doc.allocate_string(constraint->getName().c_str());
+	xml_node->append_attribute(_doc.allocate_attribute("name", str));
+
 	str = _doc.allocate_string(constraint->getBodyA()->getName().c_str());
 	xml_node->append_attribute(_doc.allocate_attribute("body_a", str));
 

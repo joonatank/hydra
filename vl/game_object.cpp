@@ -29,6 +29,29 @@
 #include "scene_manager.hpp"
 #include "scene_node.hpp"
 
+/// ----------------------------- Global -------------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::GameObject const &obj)
+{
+	os << "GameObject : " << obj.getName();
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, GameObjectList const &list)
+{
+	for(GameObjectList::const_iterator iter = list.begin();
+		iter != list.end(); ++iter)
+	{
+		os << *(*iter) << std::endl;
+	}
+
+	return os;
+}
+
+
+/// -------------------------- GameObject ------------------------------------
+/// ----------------------------- Public -------------------------------------
 vl::GameObject::GameObject(std::string const &name, GameManager *manager)
 	: _name(name)
 	, _graphics_node(0)
