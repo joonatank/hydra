@@ -451,9 +451,6 @@ vl::Window::draw(void)
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
 
-	// Should not be rotated with wall, all the walls would be out of sync with each other
-	Ogre::Vector3 headTrans = head.position;
-
 	Ogre::Vector3 cam_pos = og_cam->getPosition();
 	Ogre::Quaternion cam_quat = og_cam->getOrientation();
 
@@ -498,8 +495,8 @@ vl::Window::draw(void)
 		// Combine eye and camera positions
 		// Needs to be rotated with head for correct stereo
 		// Do not rotate with wall will cause incorrect view for the side walls
-		Ogre::Vector3 eye_d = (head.quaternion*cam_quat)*eye 
-			+ cam_quat*headTrans + cam_pos;
+		Ogre::Vector3 eye_d = cam_quat*(head.quaternion*eye + head.position) + cam_pos;
+		// cam*head*eye
 
 		// Combine camera and wall orientation to get the projection on correct wall
 		// Seems like the wallRotation needs to be inverse for this one, otherwise
