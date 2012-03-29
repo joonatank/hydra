@@ -438,12 +438,10 @@ vl::Window::draw(void)
 	if(!hasStereo())
 	{ _ipd = 0; }
 
-	// @todo is there performance problems with stereo?
-	// If they are still present we need to add a separate camera also
-	// @todo rendering GUI for both eyes
-
 	Transform const &head = getPlayer().getHeadTransform();
 
+	/// @todo setting all the parameters at every frame is too much
+	/// should be replaced by distributing the frustum.
 	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
 	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
 	_frustum.enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
@@ -453,11 +451,6 @@ vl::Window::draw(void)
 
 	Ogre::Vector3 cam_pos = og_cam->getPosition();
 	Ogre::Quaternion cam_quat = og_cam->getOrientation();
-
-	// Force ipd to zero if has GUI window
-	vl::scalar ipd = _ipd;
-	if(_renderer->guiShown())
-	{ ipd = 0; }
 
 	/// @todo should really be replaced with a stereo camera setup	
 
@@ -470,8 +463,8 @@ vl::Window::draw(void)
 		{
 			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing left or right viewport for stereo."));
 		}
-		views.push_back( view_tuple(_left_viewport, -ipd/2, GL_BACK_LEFT) );
-		views.push_back( view_tuple(_right_viewport, ipd/2, GL_BACK_RIGHT) );
+		views.push_back( view_tuple(_left_viewport, -_ipd/2, GL_BACK_LEFT) );
+		views.push_back( view_tuple(_right_viewport, _ipd/2, GL_BACK_RIGHT) );
 	}
 	else
 	{
