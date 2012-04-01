@@ -152,10 +152,13 @@ struct HYDRA_API Renderer
 	Renderer(void)
 		: type(WINDOW)
 		, projection()
+		, hardware_gamma(false)
 	{}
 
 	Type type;
 	Projection projection;
+
+	bool hardware_gamma;
 };
 
 struct HYDRA_API Window
@@ -461,6 +464,13 @@ public :
 	void setStereo( bool stereo )
 	{ _stereo = stereo; }
 
+	bool hasHardwareGamma(void) const
+	{ return _renderer.hardware_gamma; }
+
+	void setHardwareGamma(bool g)
+	{ _renderer.hardware_gamma = g; }
+
+
 	/**	@brief using NVidia swap sync or not
 	 *	@return true if should use NVidia swap sync false otherwise
 	 */
@@ -592,7 +602,7 @@ private :
 	std::vector<Wall> _walls;
 
 	bool _stereo;
-	
+
 	bool _nv_swap_sync;
 	uint32_t _swap_group;
 	uint32_t _swap_barrier;

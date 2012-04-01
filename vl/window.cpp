@@ -576,16 +576,15 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	params["left"] = vl::to_string( winConf.x );
 	params["top"] = vl::to_string( winConf.y );
 	params["border"] = "none";
+	params["gamma"] = vl::to_string(winConf.renderer.hardware_gamma);
+	params["stereo"] = vl::to_string(winConf.stereo);
+	params["vert_sync"] = vl::to_string(winConf.vert_sync);
 
 	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
 		<< "left = " << winConf.x << " top = " << winConf.y
 		<< " width = " << winConf.w << " height = " << winConf.h;
 
-	if( winConf.stereo )
-	{
-		std::cout << " with stereo : ";
-		params["stereo"] = "true";
-	}
+	// @todo we should overload print operator for window config
 	if( winConf.nv_swap_sync )
 	{
 		std::cout << "with NV swap sync, group ";
@@ -600,18 +599,26 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		params["swapBarrier"] = ss.str();
 	}
 
-	if( winConf.vert_sync )
+	if(winConf.stereo)
 	{
-		std::cout << "with vertical sync";
-		params["vert_sync"] = "true";
+		std::cout << "\n with quad buffer stereo";
 	}
+	if(winConf.renderer.hardware_gamma)
+	{
+		std::cout << "\n with hardware gamma correction";
+	}
+	if(winConf.vert_sync)
+	{
+		std::cout << "\n with vertical sync";
+	}
+	
 	std::cout << std::endl;
 
 	// Add user defined params
 	for(NamedParamList::const_iterator iter = winConf.params.begin();
 		iter != winConf.params.end(); ++iter)
 	{
-		std::clog << "Adding param : " << iter->first << " with value : " << iter->second << std::endl;
+		std::clog << "Adding user param : " << iter->first << " with value : " << iter->second << std::endl;
 		params[iter->first] = iter->second;
 	}
 

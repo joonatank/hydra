@@ -81,6 +81,13 @@ material ground/bump_mapped/shadows : bling_phong/normal_map/shadows
 	set_texture_alias normalMap rock_NM.jpg
 }
 
+material ground/bump_mapped/shadows/gamma : bling_phong/normal_map/shadows
+{
+//	set $ambientCol "1 0 0 1"
+	set $specularCol "0 0 0"
+	set_texture_alias diffuseTexture rock_correct_gamma.png
+	set_texture_alias normalMap rock_NM.jpg
+}
 
 material athene_material : bling_phong/shadows
 {

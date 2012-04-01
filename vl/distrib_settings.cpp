@@ -210,7 +210,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Renderer const &rend)
 {
-	msg << rend.type << rend.projection;
+	msg << rend.type << rend.projection << rend.hardware_gamma;
 
 	return msg;
 }
@@ -219,7 +219,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Renderer &rend)
 {
-	msg >> rend.type >> rend.projection;
+	msg >> rend.type >> rend.projection >> rend.hardware_gamma;
 
 	return msg;
 }

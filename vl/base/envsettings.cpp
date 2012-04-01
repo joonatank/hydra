@@ -359,7 +359,7 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	if( xml_elem )
 	{ processFPS( xml_elem ); }
 
-	// renderer and projection needs to be processed before Nodes 
+	// renderer and projection needs to be processed before Nodes (master and slave)
 	// because the global configs are copied to every node
 	xml_elem = xml_root->first_node("renderer");
 	if( xml_elem )
@@ -780,6 +780,12 @@ vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::c
 			renderer.type = Renderer::FBO;
 		}
 		// Assume type window otherwise
+	}
+
+	attrib = xml_node->first_attribute("hardware_gamma");
+	if(attrib)
+	{
+		renderer.hardware_gamma = vl::from_string<bool>(attrib->value());
 	}
 }
 

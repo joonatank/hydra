@@ -75,7 +75,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 fragment_program bling_phong_sl_shadows_ps glsl
 {
 	source bling_phong_sl_ps.glsl
-	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,NEW_ATTENUATION=1,USE_PCF=1
+	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,NEW_ATTENUATION=0,USE_PCF=1
 
 	default_params
 	{
@@ -131,7 +131,7 @@ vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 fragment_program bling_phong_eye_space_sl_shadows_ps glsl
 {
 	source bling_phong_sl_ps.glsl
-	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=1,USE_PCF=1
+	preprocessor_defines SHADOW_MAP=1,NEW_ATTENUATION=0,USE_PCF=1
 
 	default_params
 	{
@@ -184,7 +184,7 @@ vertex_program bling_phong_eye_space_sl_vs glsl
 fragment_program bling_phong_eye_space_sl_ps glsl
 {
 	source bling_phong_sl_ps.glsl
-	preprocessor_defines NEW_ATTENUATION=1
+	preprocessor_defines NEW_ATTENUATION=0
 
 	default_params
 	{
@@ -229,7 +229,7 @@ fragment_program bling_phong_eye_space_ml_shadows_ps glsl
 {
 	source bling_phong_ml_ps.glsl
 	//preprocessor_defines SPECULAR_MAP=1,AMBIENT_OCCLUSION=1,SHADOW_MAP=1,NEW_ATTENUATION=1
-	preprocessor_defines MAX_LIGHTS=8,AMBIENT_OCCLUSION=1,SHADOW_MAP=1,NEW_ATTENUATION=1
+	preprocessor_defines MAX_LIGHTS=8,AMBIENT_OCCLUSION=1,SHADOW_MAP=1,NEW_ATTENUATION=0
 
 	default_params
 	{
