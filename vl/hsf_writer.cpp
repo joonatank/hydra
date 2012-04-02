@@ -343,6 +343,10 @@ vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::ConstraintRef
 	rapidxml::xml_node<> *limit = _doc.allocate_node(rapidxml::node_element, "limit");
 	xml_node->append_node(limit);
 
+	// Don't write the axis node to xml file here
+	// only write it if we have a valid axis for the constraint
+	rapidxml::xml_node<> *axis = _doc.allocate_node(rapidxml::node_element, "axis");
+
 	// needs to be casted to get limits
 	if(HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<HingeConstraint>(constraint))
 	{
@@ -353,6 +357,9 @@ vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::ConstraintRef
 
 		str = _doc.allocate_string(vl::to_string(hinge->getUpperLimit().valueDegrees()).c_str());
 		limit->append_attribute(_doc.allocate_attribute("max", str));
+
+		xml_node->append_node(axis);
+		_writeVector3(axis, hinge->getAxis());
 	}
 	else if(SliderConstraintRefPtr slider = boost::dynamic_pointer_cast<SliderConstraint>(constraint))
 	{
@@ -361,6 +368,9 @@ vl::HSFWriter::writeConstraint(rapidxml::xml_node<> *xml_node, vl::ConstraintRef
 
 		str = _doc.allocate_string(vl::to_string(slider->getUpperLimit()).c_str());
 		limit->append_attribute(_doc.allocate_attribute("max", str));
+
+		xml_node->append_node(axis);
+		_writeVector3(axis, slider->getAxis());
 	}
 	else
 	{

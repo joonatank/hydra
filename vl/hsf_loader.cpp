@@ -585,6 +585,12 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 	vl::scalar min = vl::getAttrib<vl::scalar>(limit, "min", 0);
 	vl::scalar max = vl::getAttrib<vl::scalar>(limit, "max", -1);
 
+	Ogre::Vector3 axis(Ogre::Vector3::UNIT_Z);
+	// Constraint does not have to define axis
+	rapidxml::xml_node<> *xml_axis = xml_node->first_node("axis");
+	if(xml_axis)
+	{ axis = vl::parseVector3(xml_axis); }
+
 	if(engine == "kinematic")
 	{
 		KinematicBodyRefPtr bodyA = _game->getKinematicWorld()->getKinematicBody(body_a);
@@ -612,11 +618,13 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 
 			hinge->setLowerLimit(min_);
 			hinge->setUpperLimit(max_);
+			hinge->setAxis(axis);
 		}
 		else if(SliderConstraintRefPtr slider = boost::dynamic_pointer_cast<SliderConstraint>(con))
 		{
 			slider->setLowerLimit(min);
 			slider->setUpperLimit(max);
+			slider->setAxis(axis);
 		}
 		// other constraints don't have limits
 	}

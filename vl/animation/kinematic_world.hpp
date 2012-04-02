@@ -71,6 +71,8 @@ public :
 
 	bool hasConstraint(vl::ConstraintRefPtr constraint) const;
 
+	ConstraintRefPtr getConstraint(std::string const &name) const;
+
 	/// -------------- List access ----------------------
 	ConstraintList const &getConstraints(void) const;
 

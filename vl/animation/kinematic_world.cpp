@@ -249,6 +249,21 @@ vl::KinematicWorld::hasConstraint(vl::ConstraintRefPtr constraint) const
 	return false;
 }
 
+vl::ConstraintRefPtr
+vl::KinematicWorld::getConstraint(std::string const &name) const
+{
+	for(ConstraintList::const_iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{
+			return *iter;
+		}
+	}
+
+	return ConstraintRefPtr();
+}
+
 vl::ConstraintList const &
 vl::KinematicWorld::getConstraints(void) const
 {

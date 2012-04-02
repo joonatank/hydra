@@ -569,6 +569,7 @@
 				<quaternion w="0.707107" x="0" y="0" z="-0.707107"/>
 			</frame_b>
 			<limit unit="degree" min="-57.2958" max="0"/>
+			<axis x="0" y="1" z="0"/>
 		</constraint>
 		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_ulkoputki" body_b="nivel_nostosyl1_rotz" actuator="false">
 			<frame_a>
@@ -602,6 +603,7 @@
 				<quaternion w="0" x="0.707107" y="0" z="-0.707107"/>
 			</frame_b>
 			<limit unit="degree" min="-57.2958" max="57.2958"/>
+			<axis x="0" y="1" z="0"/>
 		</constraint>
 		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kaantokappale" body_b="nivel_klevy1_rotz" actuator="false">
 			<frame_a>
@@ -646,6 +648,7 @@
 				<quaternion w="1" x="0" y="0" z="0"/>
 			</frame_b>
 			<limit max="1.05"/>
+			<axis x="0" y="1" z="0"/>
 		</constraint>
 		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_sisaputki" body_b="cb_syl_tilt_putki" actuator="false">
 			<frame_a>
@@ -734,6 +737,7 @@
 				<quaternion w="1" x="0" y="0" z="0"/>
 			</frame_b>
 			<limit unit="degree" min="-180" max="180"/>
+			<axis x="0" y="1" z="0"/>
 		</constraint>
 		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_vaantomot" body_b="cb_pulttausnivel" actuator="false">
 			<frame_a>
@@ -778,6 +782,7 @@
 				<quaternion w="-0.5" x="-0.5" y="-0.5" z="0.5"/>
 			</frame_b>
 			<limit unit="degree" min="0" max="45"/>
+			<axis x="0" y="1" z="0"/>
 		</constraint>
 		<constraint physics_type="kinematic" type="fixed" name="" body_a="cb_kehto" body_b="cb_syl_syotto_putki" actuator="false">
 			<frame_a>
