@@ -33,8 +33,9 @@ ogre.position = Vector3(0, 2.5, 0)
 # first one is the camera not active at the moment, second one is active at the moment
 addToggleActiveCamera("Omakamera", "OutsideCamera")
 
-game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
+game.scene.ambient_light = ColourValue(0.01, 0.01, 0.01)
 game.scene.shadows.enable()
+game.scene.shadows.texture_size = 4096
 game.scene.shadows.max_distance = 50
 game.scene.sky.preset = "sunset" #"clear"
 
@@ -60,7 +61,8 @@ if game.scene.hasSceneNode("spot"):
 	spot = game.scene.getLight("spot")
 	spot.hide()
 
-create_sun()
+sun = create_sun()
+sun.orientation = Quaternion(-0.900988, 0.43373, 0, 0)
 
 # Create spotlight and hehkulamppu objects
 spotti_n = game.scene.createSceneNode("spotti")

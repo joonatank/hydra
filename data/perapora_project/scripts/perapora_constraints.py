@@ -5,7 +5,9 @@ import math
 # Setup player
 camera_name = "Camera"
 camera = game.scene.createSceneNode(camera_name)
-camera.position = Vector3(-0.77, 0, 4)
+#camera.position = Vector3(-0.77, 0, 4)
+camera.position = Vector3(-3.3, 0, -7)
+camera.orientation = Quaternion(0, 0, -1, 0)
 cam = game.scene.createCamera(camera_name)
 camera.attachObject(cam)
 createCameraMovements(camera)

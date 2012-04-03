@@ -5,13 +5,13 @@ import * from "normal_map.material"
 
 material ogre.mat/SOLID/TEX/ogre.tex.jpg/VertCol : bling_phong/shadows
 {
-	set $diffuseCol "0.7 0.7 0.7 1"
-	set_texture_alias diffuseTexture ogre.tex.jpg
+	set $specularCol "0.0 0.0 0.0 1"
+	set_texture_alias diffuseTexture ogre_tex.png
 }
 
 material Material.001/SOLID/TEX/ogreahead.tex.jpg/VertCol : bling_phong/shadows
 {
-	set $diffuseCol "0.7 0.7 0.7 1"
-	set_texture_alias diffuseTexture ogreahead.tex.jpg
+	set $specularCol "0.0 0.0 0.0 1"
+	set_texture_alias diffuseTexture ogreahead_tex.png
 }
 

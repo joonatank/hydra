@@ -493,6 +493,7 @@ def create_sun():
 	sun = game.scene.createSceneNode("sun")
 	sun_l = game.scene.createLight("sun")
 	sun_l.type = "directional"
+	sun_l.diffuse = ColourValue(0.5, 0.5, 0.5)
 	sun.attachObject(sun_l)
 	sun.orientation = Quaternion(-0.4114, 0.9114, 0, 0)
 

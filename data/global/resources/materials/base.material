@@ -54,7 +54,7 @@ material ground/basic
 		{
 			texture_unit
 			{
-				texture rock.jpg
+				texture rock.png
 			}
 		}
 	}
@@ -63,29 +63,21 @@ material ground/basic
 material ground/flat : bling_phong
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
+	set_texture_alias diffuseTexture rock.png
 }
 
 material ground/flat/shadows : bling_phong/shadows
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
+	set_texture_alias diffuseTexture rock.png
 }
 
 material ground/bump_mapped/shadows : bling_phong/normal_map/shadows
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
-	set_texture_alias specularMap rock.jpg
-	set_texture_alias normalMap rock_NM.jpg
-}
-
-material ground/bump_mapped/shadows/gamma : bling_phong/normal_map/shadows
-{
-//	set $ambientCol "1 0 0 1"
-	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock_correct_gamma.png
+	set_texture_alias diffuseTexture rock.png
+//	set_texture_alias specularMap rock.png
 	set_texture_alias normalMap rock_NM.jpg
 }
 
@@ -93,8 +85,6 @@ material athene_material : bling_phong/shadows
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
-// TODO add normal map
-//	set_texture_alias normalMap ogre.tex.jpg
 }
 
 // Basic class material without any texture effects

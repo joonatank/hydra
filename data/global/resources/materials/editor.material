@@ -27,22 +27,14 @@ import * from "normal_map.material"
 
 material editor/hehkulamppu_material : bling_phong/shadows
 {
-//	set $emissiveCol "0.5 0.5 0.0 1.0"
-	set $diffuseCol "0.64 0.64 0.64 1.0"
-	set $specularCol "0.7 0.7 0.7"
-	set $shininess "50"
+	set $shininess "100"
 
 	set_texture_alias diffuseTexture hehkulamppu_tex.png
 }
 
 material editor/spotlight_material : bling_phong/shadows
 {
-	// TODO add emissive support to ambient shader
-	set $emissiveCol "0.0 0.0 0.0 1.0"
-	set $diffuseCol "0.64 0.64 0.64 1.0"
-	set $specularCol "0.6 0.6 0.6"
-	// TODO fix the shininess
-	set $shininess "12.5"
+	set $shininess "100"
 
 	set_texture_alias diffuseTexture spotlight_tex.png
 }
