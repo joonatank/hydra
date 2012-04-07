@@ -21,31 +21,22 @@
 
 #include "base/exceptions.hpp"
 
-#include "config.hpp"
-
-#include "renderer_interface.hpp"
-
 #include "camera.hpp"
 // Necessary for calculating projection matrix
 #include "math/frustum.hpp"
 
 #include "ogre_root.hpp"
-
-#include <OGRE/OgreLogManager.h>
-
-/// Necessary for RenderTexture code
-#include <OGRE/OgreRenderTexture.h>
-#include <OGRE/OgreSceneManager.h>
-#include <OGRE/OgreSceneNode.h>
-#include <OGRE/OgreHardwarePixelBuffer.h>
+// Necessary for copying ipd
+#include "player.hpp"
 
 /// GUI
-#include <CEGUI/CEGUIWindowManager.h>
 #include <CEGUI/elements/CEGUIFrameWindow.h>
 #include <CEGUI/elements/CEGUIEditbox.h>
 #include <CEGUI/elements/CEGUIMultiColumnList.h>
 #include <CEGUI/elements/CEGUIListboxTextItem.h>
-
+/// Necessary for Rendering the GUI
+#include <CEGUI/CEGUIWindowManager.h>
+// Necessary for glDrawBuffer
 #include <GL/gl.h>
 
 #include <stdlib.h>
@@ -76,10 +67,17 @@ namespace
 
 /// -------------------- StereoRenderTargetListener --------------------------
 void
-vl::StereoRenderTargetListener::preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
+vl::StereoRenderTargetListener::postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
 {
+}
+
+void
+vl::StereoRenderTargetListener::preViewportUpdate(Ogre::RenderTargetViewportEvent const &evt)
+{
+	std::clog << "vl::StereoRenderTargetListener::preViewportUpdate" << std::endl;
 	if(stereo)
 	{
+		std::clog << "Switching eye" << std::endl;
 		// No need to check the Draw buffer because we always have either
 		// GL_BACK_RIGHT or GL_BACK here.
 		if(_left)
@@ -103,6 +101,16 @@ vl::StereoRenderTargetListener::preRenderTargetUpdate(Ogre::RenderTargetEvent co
 		//if(draw_mode != GL_BACK)
 		//{ glDrawBuffer(GL_BACK); }
 	}
+}
+
+void
+vl::StereoRenderTargetListener::postViewportUpdate(Ogre::RenderTargetViewportEvent const &evt)
+{
+}
+
+void
+vl::StereoRenderTargetListener::preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
+{
 }
 
 
@@ -175,7 +183,6 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
-	, _fbo(0)
 	, _window_listener(0)
 {
 	assert( _renderer );
@@ -185,36 +192,6 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	_ogre_window = _createOgreWindow(windowConf);
 	_createInputHandling();
 
-	// If the channel has a name we try to find matching wall
-
-	Wall wall;
-	if( !windowConf.channel.name.empty() )
-	{
-		std::cout << vl::TRACE << "Finding Wall for channel : " << getName() << std::endl;
-		wall = getEnvironment()->findWall(windowConf.channel.wall_name);
-	}
-
-	// Get the first wall definition if no named one was found
-	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
-	{
-		wall = getEnvironment()->getWall(0);
-		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
-	}
-	else
-	{
-		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
-	}
-
-	/// Set frustum
-	_stereo_camera.getFrustum().setWall(wall);
-	vl::config::Projection const &projection = windowConf.renderer.projection;
-	_stereo_camera.getFrustum().setFov(Ogre::Degree(projection.fov));
-	if(projection.perspective_type == vl::config::Projection::FOV)
-	{ _stereo_camera.getFrustum().setType(Frustum::FOV); }
-	_stereo_camera.getFrustum().enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
-	_stereo_camera.getFrustum().enableTransformationModifications(projection.modify_transformations);
-	_stereo_camera.getFrustum().enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
-
 	if(windowConf.renderer.projection.use_asymmetric_stereo)
 	{
 		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
@@ -222,39 +199,24 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 
 	_renderer_type = windowConf.renderer.type;
 
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{
+		std::cout << "EXPERIMENTAL : Should Render to FBO." << std::endl;
+	}
+
+	vl::config::Projection const &projection = windowConf.renderer.projection;
+	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
+	{
+		_create_channel(windowConf.get_channel(i), projection);
+	}
+	std::clog << "All channel created." << std::endl;
+
 	// Set listener
 	// @todo add the stereo attribute
 	_window_listener = new StereoRenderTargetListener(false);
 	_ogre_window->addListener(_window_listener);
 
-	// TODO this should be configurable
-	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
-
-	if(_renderer_type == vl::config::Renderer::FBO)
-	{
-		std::cout << "EXPERIMENTAL : Should Render to FBO." << std::endl;
-
-		_fbo_texture = Ogre::TextureManager::getSingleton()
-			.createManual("RttTex", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
-					Ogre::TEX_TYPE_2D, _ogre_window->getWidth(), _ogre_window->getHeight(), 
-					0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
-
-		_fbo = _fbo_texture->getBuffer()->getRenderTarget();
-
-	}
-
-	/// We don't yet have a valid SceneManager
-	/// So we need to wait till the camera is set here
-	_ogre_window->addViewport(0);
-	_ogre_window->getViewport(0)->setBackgroundColour(background_col);
-	if(_renderer_type == vl::config::Renderer::FBO)
-	{
-		/// The window will not be rendering the Scene
-		_ogre_window->getViewport(0)->setVisibilityMask(1<<1);
-		_ogre_window->getViewport(0)->setShadowsEnabled(false);
-		_ogre_window->getViewport(0)->setSkiesEnabled(false);
-		_ogre_window->getViewport(0)->setOverlaysEnabled(false);
-	}
+	std::clog << "Window::Window : done" << std::endl;
 }
 
 vl::Window::~Window( void )
@@ -294,20 +256,9 @@ vl::Window::setCamera(vl::CameraPtr camera)
 	if(!camera)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
-	_stereo_camera.setCamera(camera);	
-	_ogre_window->getViewport(0)->setCamera((Ogre::Camera *)camera->getNative());
-
-
-	if(_fbo)
+	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		if(_fbo->getNumViewports() == 0)
-		{
-			_initialise_fbo(camera);
-		}
-		else
-		{
-			_fbo->getViewport(0)->setCamera((Ogre::Camera *)camera->getNative());
-		}
+		_channels.at(i)->setCamera(camera);
 	}
 }
 
@@ -541,64 +492,16 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
-	_stereo_camera.setHead(getPlayer().getHeadTransform());
-
-	/// @todo these shouldn't be copied at every frame
-	/// use the distribution system to distribute
-	/// the Frustum.
-	_stereo_camera.getFrustum().setHeadTransformation(getPlayer().getCyclopWorldTransform());
-	_stereo_camera.getFrustum().enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
-	_stereo_camera.getFrustum().enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		_channels.at(i)->update(getPlayer());
+	}
 
 	// if stereo is not enabled ipd should be zero 
 	// TODO should it be forced though?
-	if(!hasStereo())
-	{ _ipd = 0; }
-
-	if(_renderer_type == vl::config::Renderer::FBO)
-	{
-		_render_to_fbo();
-
-		_render_to_screen();
-		//_draw_fbo_to_screen();
-	}
-	else
-	{
-		_render_to_screen();
-	}
-}
-
-void
-vl::Window::_render_to_fbo(void)
-{
-	assert(_stereo_camera.getCamera());
-	assert(_fbo->getViewport(0));
-
-	// for now hard coded to zero ipd because we need right and left fbo
-	// for stereo rendering.
-	_stereo_camera.update(0);
-	_fbo->update(false);
-}
-
-void
-vl::Window::_draw_fbo_to_screen(void)
-{
-	/// Disable all other objects than the fbo
-	/// Draw to quad
-
-	// Enable all objects
-}
-
-void
-vl::Window::_render_to_screen(void)
-{
-	assert(_ogre_window);
-	assert(_ogre_window->getViewport(0));
-	assert(_stereo_camera.getCamera());
-
+	vl::scalar ipd = getPlayer().getIPD();
 	// Force ipd to zero if has GUI window
-	vl::scalar ipd = _ipd;
-	if(_renderer->guiShown())
+	if(!hasStereo() || _renderer->guiShown())
 	{ ipd = 0; }
 
 	std::vector<vl::scalar> eyes;
@@ -611,61 +514,24 @@ vl::Window::_render_to_screen(void)
 	}
 	else
 	{
-		eyes.push_back(ipd/2);
+		eyes.push_back(0);
 		_window_listener->stereo = false;
 	}
 
-	for(size_t i = 0; i < eyes.size(); ++i)
+	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		_stereo_camera.update(eyes.at(i));
-		// @todo this needs to toggle the RenderingTarget listener for stereo
-		// Render the window as many times as there is buffers
-		// once for mono viewing and twice for stereo
-		_ogre_window->update(false);
+		assert(eyes.size() > 0);
+		{ _channels.at(i)->draw(eyes.at(0), true); }
+		if(eyes.size() > 1)
+		{ _channels.at(i)->draw(eyes.at(1), false); }
 
-		// @todo test with stereo setup if this really renders the gui for
-		// both left and right eye
+		// GUI doesn't work with stereo anyway
 		if( _renderer->guiShown() )
-		{
-			CEGUI::System::getSingleton().renderGUI();
-		}
-	}
-}
-
-void
-vl::Window::_initialise_fbo(vl::CameraPtr camera)
-{
-	assert(camera);
-	assert(_fbo);
-
-	_fbo->addViewport((Ogre::Camera *)camera->getNative());
-	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
-	_fbo->getViewport(0)->setOverlaysEnabled(false);
-	_fbo->getViewport(0)->setVisibilityMask(1);
-
-	Ogre::Rectangle2D *mMiniScreen = new Ogre::Rectangle2D(true);
-	mMiniScreen->setCorners(-1.0f, 1.0f, 1.0f, -1.0f);
-	mMiniScreen->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
-	mMiniScreen->setVisibilityFlags(1<<1);
-
-	Ogre::SceneManager *sm = getOgreRoot()->getSceneManager();
-	assert(sm);
-	Ogre::SceneNode* miniScreenNode = sm->getRootSceneNode()->createChildSceneNode("internal/fbo_screen");
-	miniScreenNode->attachObject(mMiniScreen);
-
-	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName("rtt");
-	_fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone("internal/fbo_material");
-	//Ogre::Technique* matTechnique = _fbo_material->createTechnique();
-	//_fbo_material->getTechnique(0)->getPass(0)->createTextureUnitState("RttTex");
-	Ogre::AliasTextureNamePairList alias_list;
-	std::clog << "Trying to replace diffuseTexture alias with " << _fbo_texture->getName() << std::endl;
-	alias_list["rtt_texture"] = _fbo_texture->getName();
-	if(_fbo_material->applyTextureAliases(alias_list))
-	{
-		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
+		{ CEGUI::System::getSingleton().renderGUI(); }
 	}
 
-	mMiniScreen->setMaterial("internal/fbo_material");
+	assert(_ogre_window);
+	_ogre_window->update(false);
 }
 
 
@@ -705,13 +571,13 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 	assert( !winConf.empty() );
 
-	params["left"] = vl::to_string( winConf.x );
-	params["top"] = vl::to_string( winConf.y );
+	params["left"] = vl::to_string(winConf.rect.x);
+	params["top"] = vl::to_string(winConf.rect.y);
 	params["border"] = "none";
 
 	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
-		<< "left = " << winConf.x << " top = " << winConf.y
-		<< " width = " << winConf.w << " height = " << winConf.h;
+		<< "left = " << winConf.rect.x << " top = " << winConf.rect.y
+		<< " width = " << winConf.rect.w << " height = " << winConf.rect.h;
 
 	if( winConf.stereo )
 	{
@@ -739,10 +605,61 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	}
 	std::cout << std::endl;
 
-	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
+	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(),
+			winConf.rect.w, winConf.rect.h, params );
 	win->setAutoUpdated(false);
 	
 	return win;
+}
+
+
+void
+vl::Window::_create_channel(vl::config::Channel const &channel_config,
+			vl::config::Projection const &projection)
+{
+	assert(!channel_config.name.empty());
+	std::clog << "Creating channel : " << channel_config.name << std::endl;
+
+	std::cout << vl::TRACE << "Finding Wall for channel : " << channel_config.name << std::endl;
+	Wall wall = getEnvironment()->findWall(channel_config.wall_name);
+
+	// Get the first wall definition if no named one was found
+	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
+	{
+		wall = getEnvironment()->getWall(0);
+		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
+	}
+	else
+	{
+		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
+	}
+
+	// TODO this should be configurable
+	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
+	/// We don't yet have a valid SceneManager
+	/// So we need to wait till the camera is set here
+	vl::config::Rect<double> const &rect = channel_config.area;
+	assert(rect.valid());
+	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
+
+	// @todo these should be moved to channel
+	view->setBackgroundColour(background_col);
+	view->setAutoUpdated(false);
+
+	bool use_fbo = false;
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{ use_fbo = true; }
+
+	Channel *channel = new Channel(channel_config, view, use_fbo);
+	_channels.push_back(channel);
+
+	std::clog << "Channel created." << std::endl;
+
+	/// Set frustum
+	channel->camera.getFrustum().setWall(wall);
+	channel->camera.getFrustum().setFov(Ogre::Degree(projection.fov));
+	if(projection.perspective_type == vl::config::Projection::FOV)
+	{ channel->camera.getFrustum().setType(Frustum::FOV); }
 }
 
 

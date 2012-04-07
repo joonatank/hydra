@@ -38,6 +38,7 @@ set(SRC
 	stats.cpp
 	logger.cpp
 	window.cpp
+	channel.cpp
 	config.cpp
 	renderer.cpp
 	application.cpp
@@ -234,6 +235,7 @@ set( HEADERS
 	distrib_settings.hpp
 	program_options.hpp
 	window.hpp
+	channel.hpp
 	config.hpp
 	renderer.hpp
 	renderer_interface.hpp

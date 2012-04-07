@@ -447,7 +447,7 @@ vl::config::EnvSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 }
 
 void
-vl::config::EnvSerializer::processCameraRotations( rapidxml::xml_node<>* xml_node )
+vl::config::EnvSerializer::processCameraRotations(rapidxml::xml_node<> *xml_node)
 {
 	uint32_t flags = 0;
 	std::string const F("false");
@@ -471,7 +471,7 @@ vl::config::EnvSerializer::processCameraRotations( rapidxml::xml_node<>* xml_nod
 }
 
 void
-vl::config::EnvSerializer::processWalls( rapidxml::xml_node<>* xml_node )
+vl::config::EnvSerializer::processWalls(rapidxml::xml_node<>* xml_node)
 {
 	rapidxml::xml_node<> *pWall = xml_node->first_node("wall");
 
@@ -518,7 +518,7 @@ vl::config::EnvSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 }
 
 void
-vl::config::EnvSerializer::processServer(rapidxml::xml_node< char > *xml_node)
+vl::config::EnvSerializer::processServer(rapidxml::xml_node<> *xml_node)
 {
 	std::string hostname;
 	uint16_t port;
@@ -538,7 +538,7 @@ vl::config::EnvSerializer::processServer(rapidxml::xml_node< char > *xml_node)
 }
 
 void
-vl::config::EnvSerializer::processNode(rapidxml::xml_node< char > *xml_node, vl::config::Node &node)
+vl::config::EnvSerializer::processNode(rapidxml::xml_node<> *xml_node, vl::config::Node &node)
 {
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("name");
@@ -564,27 +564,31 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		std::string name = attrib->value();
 
 		// Process w, h, x, y
+		// @todo these should have default values
+		Rect<int> area;
 		attrib = pWindow->first_attribute("w");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no w") ); }
-		int w = vl::from_string<int>( attrib->value() );
+		area.w = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("h");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no h") ); }
-		int h = vl::from_string<int>( attrib->value() );
+		area.h = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("x");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no x") ); }
-		int x = vl::from_string<int>( attrib->value() );
+		area.x = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("y");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
-		int y = vl::from_string<int>( attrib->value() );
+		area.y = vl::from_string<int>( attrib->value() );
 
-		vl::config::Window window(name, vl::config::Channel(), w, h, x, y, x);
+		vl::config::Window window(name, area);
+		
+		// Copy env settings values
 		window.stereo = _env->hasStereo();
 		window.nv_swap_sync = _env->hasNVSwapSync();
 		window.nv_swap_group = _env->getNVSwapGroup();
@@ -598,8 +602,13 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 			window.vert_sync= vl::from_string<bool>(attrib->value());
 		}
 
+		/// Process channels
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
-		processChannel(channel_elem, window);
+		while(channel_elem)
+		{
+			processChannel(channel_elem, window);
+			channel_elem = channel_elem->next_sibling(channel_elem->name());
+		}
 
 		// Copy render parameters
 		window.renderer = _env->getRenderer();
@@ -614,7 +623,7 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 }
 
 void
-vl::config::EnvSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
+vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 										   vl::config::Window& window )
 {
 	assert( xml_node );
@@ -628,13 +637,27 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no name") ); }
 
+	Rect<double> r(1, 1, 0, 0);
+	attrib = xml_node->first_attribute("w");
+	if(attrib)
+	{ r.w = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("h");
+	if(attrib)
+	{ r.h = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("x");
+	if(attrib)
+	{ r.x = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("y");
+	if(attrib)
+	{ r.y = vl::from_string<double>(attrib->value()); }
+
 	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
 	if( wall_elem )
 	{ wall_name = wall_elem->value(); }
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
 
-	window.channel = vl::config::Channel( channel_name, wall_name );
+	window.add_channel(vl::config::Channel(channel_name, wall_name, r));
 }
 
 void

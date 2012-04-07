@@ -18,15 +18,14 @@
 #ifndef HYDRA_WINDOW_HPP
 #define HYDRA_WINDOW_HPP
 
-#include "player.hpp"
 #include "typedefs.hpp"
 
 // Necessary for Window config and Wall
 #include "base/envsettings.hpp"
-
+// Parent
 #include "renderer_interface.hpp"
-// Necessary for frustum type used in projection calculation
-#include "math/frustum.hpp"
+// Child
+#include "channel.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -49,69 +48,21 @@ class StereoRenderTargetListener : public Ogre::RenderTargetListener
 {
 public :
 	StereoRenderTargetListener(bool s)
-		: stereo(s)
+		: stereo(s), _left(true)
 	{}
 
 	virtual void preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt);
 
-	virtual void postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
-	{
-	}
+	virtual void postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt);
+	
+	virtual void preViewportUpdate(Ogre::RenderTargetViewportEvent const &evt);
+	virtual void postViewportUpdate(Ogre::RenderTargetViewportEvent const &evt);
 
 	bool stereo;
 	bool _left;
 
 };	// class StereoRenderTargetListener
 
-/// @todo this should be implemented as an Ogre Movable object
-/// a replacement for the Ogre::Camera class
-/// before rendering it should be updated with 
-///		head matrix
-///		cyclop transformation
-///		ipd
-class StereoCamera
-{
-public :
-	StereoCamera(void);
-
-	~StereoCamera(void);
-
-	void setHead(vl::Transform const &head);
-
-	void setCamera(vl::CameraPtr cam);
-
-	vl::CameraPtr getCamera(void) const
-	{ return _camera; }
-
-	/// @brief updates the Ogre::Camera's projection and view matrices
-	/// @param eye_x the eye x direction used for this rendering
-	/// For stereo rendering this needs to be called twice with different
-	/// eye_x values. Also you need to call Viewport::update also.
-	void update(vl::scalar eye_x);
-
-	/// @todo should this store the ipd value and have separate updateLeft
-	/// and updateRight methods for the left and right eye?
-//	void setIPD(vl::scalar ipd);
-
-	vl::Frustum &getFrustum(void)
-	{ return _frustum; }
-
-	vl::Frustum const &getFrustum(void) const
-	{ return _frustum; }
-
-	void setFrustum(vl::Frustum const &f)
-	{ _frustum = f; }
-
-private :
-	vl::CameraPtr _camera;
-
-	Ogre::Camera *_ogre_camera;
-
-	vl::Transform _head;
-
-	vl::Frustum _frustum;
-
-};	// class StereoCamera
 
 
 /**	@class Window represent an OpenGL drawable and context
@@ -141,9 +92,6 @@ public:
 
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
-	void setIPD(double ipd)
-	{ _ipd = ipd; }
-
 	/// @brief Get wether hardware stereo is enabled or not
 	/// @return true if the window has stereo enabled
 	bool hasStereo(void) const;
@@ -172,7 +120,10 @@ public:
 	virtual void swap( void );
 
 protected :
+
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
+
+	void _create_channel(vl::config::Channel const &channel, vl::config::Projection const &projection);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -195,9 +146,7 @@ protected :
 
 	vl::RendererInterface *_renderer;
 
-	vl::StereoCamera _stereo_camera;
-
-	double _ipd;
+	std::vector<Channel *> _channels;
 
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
@@ -209,9 +158,6 @@ protected :
 	std::vector<OIS::JoyStick *> _joysticks;
 
 	vl::config::Renderer::Type _renderer_type;
-	Ogre::RenderTexture *_fbo;
-	Ogre::MaterialPtr _fbo_material;
-	Ogre::TexturePtr _fbo_texture;
 
 	StereoRenderTargetListener *_window_listener;
 
