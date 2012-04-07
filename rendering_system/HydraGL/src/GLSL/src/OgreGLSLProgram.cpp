@@ -182,9 +182,6 @@ namespace Ogre {
             {
 			    reportGLSLError( glErr, "GLSLProgram::loadFromSource", "Error creating GLSL shader object", 0 );
             }
-
-			// Some debug testing if the shader is supported it should not return 0
-			assert(mGLHandle != 0);
 		}
 
 		// Add preprocessor extras and main source
@@ -218,14 +215,16 @@ namespace Ogre {
 				logObjectInfo("GLSL compiled : " + mName, mGLHandle);
 			}
 		}
-
 		return (mCompiled == 1);
+
 	}
 
 	//-----------------------------------------------------------------------
 	void GLSLProgram::createLowLevelImpl(void)
 	{
 		mAssemblerProgram = GpuProgramPtr(OGRE_NEW GLSLGpuProgram( this ));
+        // Shader params need to be forwarded to low level implementation
+        mAssemblerProgram->setAdjacencyInfoRequired(isAdjacencyInfoRequired());
 	}
 	//---------------------------------------------------------------------------
 	void GLSLProgram::unloadImpl()
@@ -240,10 +239,7 @@ namespace Ogre {
 	//-----------------------------------------------------------------------
 	void GLSLProgram::unloadHighLevelImpl(void)
 	{
-		// we have an invalid mGLHandle (0) if the program is supported 
-		// but was not compiled
-		// so check for it because it will raise OpenGL error
-		if(isSupported() && mCompiled)
+		if (isSupported())
 		{
 			glDeleteObjectARB(mGLHandle);
 		}

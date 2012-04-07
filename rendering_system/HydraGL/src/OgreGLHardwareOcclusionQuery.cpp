@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
-Copyright (c) 2000-2009 Torus Knot Software Ltd
+Copyright (c) 2000-2012 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -127,19 +127,19 @@ bool GLHardwareOcclusionQuery::pullOcclusionQuery( unsigned int* NumOfFragments 
 //------------------------------------------------------------------
 bool GLHardwareOcclusionQuery::isStillOutstanding(void)
 {    
-      GLuint available;
+	GLuint available = GL_FALSE;
 
-    if(GLEW_VERSION_1_5 || GLEW_ARB_occlusion_query)
+	if(GLEW_VERSION_1_5 || GLEW_ARB_occlusion_query)
 	{
-	    glGetQueryObjectuivARB(mQueryID, GL_QUERY_RESULT_AVAILABLE_ARB, &available);
+		glGetQueryObjectuivARB(mQueryID, GL_QUERY_RESULT_AVAILABLE_ARB, &available);
 	}
 	else if (GLEW_NV_occlusion_query)
 	{
-	    glGetOcclusionQueryuivNV(mQueryID, GL_PIXEL_COUNT_AVAILABLE_NV, &available);
+		glGetOcclusionQueryuivNV(mQueryID, GL_PIXEL_COUNT_AVAILABLE_NV, &available);
 	}
 
 	// GL_TRUE means a wait would occur
-    return !(available == GL_TRUE);  
+	return !(available == GL_TRUE);  
 } 
 
 }

@@ -42,10 +42,15 @@ const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_GLCONTEXT = "GLC
 
 //-----------------------------------------------------------------------------
 
-template<> Ogre::GLRTTManager* Ogre::Singleton<Ogre::GLRTTManager>::ms_Singleton = 0;
+template<> Ogre::GLRTTManager* Ogre::Singleton<Ogre::GLRTTManager>::msSingleton = 0;
     
-Ogre::GLRTTManager::~GLRTTManager()
+Ogre::GLRTTManager::~GLRTTManager(void)
+{}
+
+Ogre::MultiRenderTarget *
+Ogre::GLRTTManager::createMultiRenderTarget(Ogre::String const &name)
 {
+    OGRE_EXCEPT(Exception::ERR_NOT_IMPLEMENTED, "MultiRenderTarget can only be used with GL_EXT_framebuffer_object extension", "GLRTTManager::createMultiRenderTarget");
 }
 
 Ogre::PixelFormat

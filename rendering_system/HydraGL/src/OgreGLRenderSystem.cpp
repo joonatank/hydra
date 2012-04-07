@@ -4,7 +4,7 @@ This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
-Copyright (c) 2000-2009 Torus Knot Software Ltd
+Copyright (c) 2000-2012 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -358,6 +358,8 @@ namespace Ogre {
 			rsc->setVendor(GPU_NVIDIA);
 		else if (strstr(vendorName, "ATI"))
 			rsc->setVendor(GPU_ATI);
+		else if (strstr(vendorName, "AMD"))
+			rsc->setVendor(GPU_ATI);
 		else if (strstr(vendorName, "Intel"))
 			rsc->setVendor(GPU_INTEL);
 		else if (strstr(vendorName, "S3"))
@@ -571,6 +573,12 @@ namespace Ogre {
 			{
 				rsc->addShaderProfile("fp40");
 			}        
+
+			if (GLEW_NV_fragment_program4)
+			{
+				rsc->addShaderProfile("gp4fp");
+				rsc->addShaderProfile("gpu_fp");
+			}
 		}
 
 		// NFZ - Check if GLSL is supported
@@ -924,6 +932,16 @@ namespace Ogre {
 				mGpuProgramManager->registerProgramFactory("fp30", createGLArbGpuProgram);
 			}
 
+			if(caps->isShaderProfileSupported("gp4fp"))
+			{
+				mGpuProgramManager->registerProgramFactory("gp4fp", createGLArbGpuProgram);
+			}
+
+			if(caps->isShaderProfileSupported("gpu_fp"))
+			{
+				mGpuProgramManager->registerProgramFactory("gpu_fp", createGLArbGpuProgram);
+			}
+
 		}
 
 		if(caps->isShaderProfileSupported("glsl"))
@@ -951,17 +969,10 @@ namespace Ogre {
 			}
 		}
 
-		// Check for framebuffer which is required now.
+		// RTT is only supported using Framebuffer objects
+		// We only plan to OpenGL 2.0 for which all platforms has FBO extensions
+		// Check for framebuffer object extension
 		assert(caps->hasCapability(RSC_FBO));
-
-		// Before GL version 2.0, we need to get one of the extensions
-		if(!GLEW_VERSION_2_0)
-		{
-			if(caps->hasCapability(RSC_FBO_ARB))
-				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersARB;
-			else if(caps->hasCapability(RSC_FBO_ATI))
-				GLEW_GET_FUN(__glewDrawBuffers) = glDrawBuffersATI;
-		}
 
 		assert(caps->hasCapability(RSC_HWRENDER_TO_TEXTURE));
 		
@@ -1133,6 +1144,8 @@ namespace Ogre {
 			// Set up main context
 			initialiseContext(window);
 
+			mDriverVersion = mGLSupport->getGLVersion();
+
 			// Initialise GL after the first window has been created
 			// TODO: fire this from emulation options, and don't duplicate Real and Current capabilities
 			
@@ -1186,7 +1199,9 @@ namespace Ogre {
 	{
 		GLDepthBuffer *retVal = 0;
 
-		//Only FBO & pbuffer support different depth buffers, so everything returns NULL
+		//Only FBO & pbuffer support different depth buffers, so everything
+		//else creates dummy (empty) containers
+		//retVal = mRTTManager->_createDepthBufferFor( renderTarget );
 		GLFrameBufferObject *fbo = 0;
         renderTarget->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbo);
 
@@ -1202,7 +1217,7 @@ namespace Ogre {
 																fbo->getHeight(), fbo->getFSAA() );
 
 			GLRenderBuffer *stencilBuffer = depthBuffer;
-			if( depthFormat != GL_DEPTH24_STENCIL8_EXT && stencilBuffer != GL_NONE )
+			if( depthFormat != GL_DEPTH24_STENCIL8_EXT && stencilBuffer )
 			{
 				stencilBuffer = new GLRenderBuffer( stencilFormat, fbo->getWidth(),
 													fbo->getHeight(), fbo->getFSAA() );
@@ -3143,6 +3158,13 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
 	//---------------------------------------------------------------------
 	void GLRenderSystem::bindGpuProgram(GpuProgram* prg)
 	{
+		if (!prg)
+		{
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"Null program bound.",
+				"GLRenderSystem::bindGpuProgram");
+		}
+
 		GLGpuProgram* glprg = static_cast<GLGpuProgram*>(prg);
 
 		// Unbind previous gpu program first.
@@ -3782,7 +3804,6 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
             pBufferData = static_cast<char*>(pBufferData) + vertexStart * vertexBuffer->getVertexSize();
         }
 
-        unsigned int i = 0;
         VertexElementSemantic sem = elem.getSemantic();
         bool multitexturing = (getCapabilities()->getNumTextureUnits() > 1);
 
@@ -3887,7 +3908,7 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
                 else
                 {
                     // fixed function matching to units based on tex_coord_set
-                    for (i = 0; i < mDisabledTexUnitsFrom; i++)
+                    for (unsigned int i = 0; i < mDisabledTexUnitsFrom; i++)
                     {
                         // Only set this texture unit's texcoord pointer if it
                         // is supposed to be using this element's index

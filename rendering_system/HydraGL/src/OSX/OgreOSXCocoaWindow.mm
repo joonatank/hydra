@@ -4,7 +4,7 @@ This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
-Copyright (c) 2000-2009 Torus Knot Software Ltd
+Copyright (c) 2000-2012 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -129,6 +129,10 @@ namespace Ogre {
 			if(opt != miscParams->end())
 				fsaa_samples = StringConverter::parseUnsignedInt(opt->second);
 			
+            opt = miscParams->find("gamma");
+			if(opt != miscParams->end())
+				mHwGamma = StringConverter::parseBool(opt->second);
+
 			opt = miscParams->find("colourDepth");
 			if(opt != miscParams->end())
 				depth = StringConverter::parseUnsignedInt(opt->second);
@@ -173,7 +177,6 @@ namespace Ogre {
 			attribs[i++] = NSOpenGLPFAScreenMask;
 			attribs[i++] = (NSOpenGLPixelFormatAttribute)CGDisplayIDToOpenGLDisplayMask(CGMainDisplayID());
 
-            
             // Specifying "NoRecovery" gives us a context that cannot fall back to the software renderer.
             // This makes the View-based context a compatible with the fullscreen context, enabling us to use
             // the "shareContext" feature to share textures, display lists, and other OpenGL objects between the two.
@@ -182,6 +185,9 @@ namespace Ogre {
             attribs[i++] = NSOpenGLPFAAccelerated;
             attribs[i++] = NSOpenGLPFADoubleBuffer;
 
+            attribs[i++] = NSOpenGLPFAColorSize;
+            attribs[i++] = (NSOpenGLPixelFormatAttribute) depth;
+
             attribs[i++] = NSOpenGLPFAAlphaSize;
             attribs[i++] = (NSOpenGLPixelFormatAttribute) 8;
             
@@ -189,7 +195,7 @@ namespace Ogre {
             attribs[i++] = (NSOpenGLPixelFormatAttribute) 8;
 
             attribs[i++] = NSOpenGLPFADepthSize;
-            attribs[i++] = (NSOpenGLPixelFormatAttribute) depth;
+            attribs[i++] = (NSOpenGLPixelFormatAttribute) (hasDepthBuffer? 16 : 0);
             
             if(fsaa_samples > 0)
             {
@@ -209,10 +215,22 @@ namespace Ogre {
 			OSXCocoaContext *mainContext = (OSXCocoaContext*)rs->_getMainContext();
 			NSOpenGLContext *shareContext = mainContext == 0? nil : mainContext->getContext();
             mGLContext = [[NSOpenGLContext alloc] initWithFormat:mGLPixelFormat shareContext:shareContext];
+            GLint swapInterval = 1;
+            [mGLContext setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 
             if(miscParams)
                 opt = miscParams->find("externalWindowHandle");
-            
+
+            // Make active
+            mActive = true;
+            mClosed = false;
+            mName = [windowTitle cStringUsingEncoding:NSUTF8StringEncoding];
+            mWidth = width;
+            mHeight = height;
+            mColourDepth = depth;
+            mFSAA = fsaa_samples;
+            mIsFullScreen = fullScreen;
+
             if(!miscParams || opt == miscParams->end())
             {
                 createNewWindow(width, height, [windowTitle cStringUsingEncoding:NSUTF8StringEncoding]);
@@ -254,19 +272,11 @@ namespace Ogre {
             // Create register the context with the rendersystem and associate it with this window
             mContext = OGRE_NEW OSXCocoaContext(mGLContext, mGLPixelFormat);
         }
-		// make active
-        setHidden(hidden);
-		mActive = true;
-        mClosed = false;
-        mName = [windowTitle cStringUsingEncoding:NSUTF8StringEncoding];
-        mWidth = width;
-        mHeight = height;
-        mColourDepth = depth;
-        mFSAA = fsaa_samples;
-        mIsFullScreen = fullScreen;
-		
+
 		// Create the window delegate instance to handle window resizing and other window events
         mWindowDelegate = [[OSXCocoaWindowDelegate alloc] initWithNSWindow:mWindow ogreWindow:this];
+
+        setHidden(hidden);
 
         [pool drain];
     }
@@ -518,7 +528,7 @@ namespace Ogre {
     void OSXCocoaWindow::createNewWindow(unsigned int width, unsigned int height, String title)
     {
         mWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
-                                              styleMask:NSResizableWindowMask
+                                              styleMask:NSResizableWindowMask|NSTitledWindowMask
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
         [mWindow setTitle:[NSString stringWithCString:title.c_str() encoding:NSUTF8StringEncoding]];

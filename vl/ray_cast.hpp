@@ -10,12 +10,12 @@
 #ifndef HYDRA_RAY_CAST_HPP
 #define HYDRA_RAY_CAST_HPP
 
-#include <OGRE/OgreEntity.h>
-#include <OGRE/OgreVector3.h>
-#include <OGRE/OgreQuaternion.h>
-#include <OGRE/OgreSceneQuery.h>
-
 #include "typedefs.hpp"
+
+#include <cstdint>
+
+#include <OGRE/OgreEntity.h>
+#include <OGRE/OgreSceneQuery.h>
 
 namespace vl
 {

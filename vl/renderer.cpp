@@ -34,6 +34,8 @@
 
 #include <OGRE/OgreWindowEventUtilities.h>
 
+#include <boost/bind.hpp>
+
 /// ------------------------- Public -------------------------------------------
 // TODO should probably copy the env settings and not store the reference
 vl::Renderer::Renderer(std::string const &name)

@@ -4,7 +4,7 @@ This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
-Copyright (c) 2000-2009 Torus Knot Software Ltd
+Copyright (c) 2000-2012 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -91,6 +91,9 @@ namespace Ogre
             if((opt = miscParams->find("hidden")) != end) 
                 hidden = StringConverter::parseBool(opt->second);
 
+            if((opt = miscParams->find("gamma")) != end) 
+				mHwGamma = StringConverter::parseBool(opt->second);
+
             if((opt = miscParams->find("depthBuffer")) != end) 
                 hasDepthBuffer = StringConverter::parseBool( opt->second );
             
@@ -100,7 +103,7 @@ namespace Ogre
             if((opt = miscParams->find("Full Screen")) != end) 
                 fullScreen = StringConverter::parseBool( opt->second );
         }
-        
+
         if(fullScreen)
         {
             setFullscreen(fullScreen, width, height);
@@ -137,20 +140,20 @@ namespace Ogre
             }
         }
 
-        // apply vsync settings. call setVSyncInterval first to avoid 
+        // Apply vsync settings. call setVSyncInterval first to avoid 
 		// setting vsync more than once.
         setVSyncEnabled(vsync);
-
         setHidden(hidden);
+
         mName = name;
         mWidth = width;
         mHeight = height;
         mColourDepth = depth;
         mFSAA = fsaa_samples;
+        mIsFullScreen = fullScreen;
         mActive = true;
         mClosed = false;
         mCreated = true;
-        mIsFullScreen = fullScreen;
     }
 
     void OSXCarbonWindow::createAGLContext(size_t fsaa_samples, int depth)
@@ -234,6 +237,7 @@ namespace Ogre
             // Set the title of our window
             CFStringRef titleRef = CFStringCreateWithCString( kCFAllocatorDefault, title.c_str(), kCFStringEncodingASCII );
             SetWindowTitleWithCFString( mWindow, titleRef );
+            CFRelease(titleRef);
             mWindowTitle = title;
             
             // Center our window on the screen

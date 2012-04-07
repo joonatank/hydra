@@ -4,7 +4,7 @@ This source file is part of OGRE
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2009 Torus Knot Software Ltd
+Copyright (c) 2000-2012 Torus Knot Software Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -260,13 +260,18 @@ namespace Ogre {
 	{
 		if (mMultisampleFB)
 		{
-			// blit from multisample buffer to final buffer, triggers resolve
+			GLint oldfb = 0;
+			glGetIntegerv(GL_FRAMEBUFFER_BINDING_EXT, &oldfb);
+
+			// Blit from multisample buffer to final buffer, triggers resolve
 			size_t width = mColour[0].buffer->getWidth();
 			size_t height = mColour[0].buffer->getHeight();
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, mMultisampleFB);
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, mFB);
 			glBlitFramebufferEXT(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+			// Unbind
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, oldfb);
 		}
 	}
 
