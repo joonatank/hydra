@@ -219,7 +219,7 @@ class Cylinder2 :
 
 	# Callback from fixing points
 	def moved(self, trans):
-		t = timer()
+		t = chrono()
 
 
 		# get the direction vector
