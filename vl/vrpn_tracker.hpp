@@ -1,7 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-05 initial implementation
- *	@date 2010-11 removed mapping and added Trigger support
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file vrpn_tracker.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	VRPN Tracker implementation.
  *
  *	Has add callback method which user can use to add a callback functor for

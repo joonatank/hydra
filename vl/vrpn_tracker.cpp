@@ -1,7 +1,19 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-11 major update to new event handling system
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file vrpn_tracker.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
+
 #include "vrpn_tracker.hpp"
 
 #include "base/exceptions.hpp"
@@ -86,6 +98,7 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 		TrackerSensor &sensor = _sensors.at(t.sensor);
 
 		vrpn_float64 quat[4];
+		vrpn_float64 vec[3];
 		if( incorrect_quaternion )
 		{
 			quat[Q_W] = t.quat[Q_X];
@@ -101,10 +114,19 @@ vl::vrpnTracker::update( vrpn_TRACKERCB const t )
 			quat[Q_W] = t.quat[Q_W];
 		}
 
-		vl::Transform trans = vl::createTransform( t.pos, quat);
+		// @todo should check that the permute and sign are valid
+		// Lets modify the transformation
+		vec[0] = _scale.x*_sign.x*t.pos[(int)_permute.x];
+		vec[1] = _scale.y*_sign.y*t.pos[(int)_permute.y];
+		vec[2] = _scale.z*_sign.z*t.pos[(int)_permute.z];
+
+		vl::Transform trans = vl::createTransform(vec, quat);
+		trans.position += _neutral_position;
+		// @todo check quaternion
+		trans.quaternion = trans.quaternion*_neutral_quaternion.Inverse();
+		
 		if(trans.isValid())
 		{
-			trans = trans*_transform;
 			sensor.update( trans );
 		}
 	}

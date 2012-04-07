@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<!-- TODO should we rename the root element -->
+<scene version="0.1">
+	<environment>
+		<sky type="dynamic" fallback="true">
+		  <!--- For now missing the sky parameters -->
+		  <dynamic />
+		  <static type="dome" material="sky_dome" />
+		</sky>
+		
+		<ambient_light r="0.3" g="0.3" b="0.3" />
+	</environment>
+	<nodes>
+		<node name="object" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.599441" y="0.676197" z="-0.899973"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1" y="1" z="1"/>
+			<collision enabled="true" model="cb_object.mesh" />
+			<entity mesh_file="object.mesh" name="object"/>
+		</node>
+		<node name="object2" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.599441" y="0.676197" z="-0.899973"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1" y="1" z="1"/>
+			<collision enabled="true" model="cb_object.mesh" />
+			<entity mesh_file="object.mesh" name="object2"/>
+		</node>
+	</nodes>
+	<constraints>
+		<constraint name="hinge_constraint" type="hinge">
+			<body name="object1" />
+			<body name="object2" />
+			<frame object="hinge_frame" />
+			<limit unit="degree" min="-60" max="60" />
+		</constraint>
+	</constraints>
+</scene>
+

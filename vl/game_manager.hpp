@@ -1,7 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2010-12
- *	@file game_manager.cpp
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2012 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-12
+ *	@file game_manager.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
+ */
+
+/**
  *	Game Manager
  *	Manages all the game manager and owns them
  *	Has methods to retrieve them
@@ -17,27 +27,26 @@
  *	Non copyable
  */
 
-#ifndef VL_GAME_MANAGER_HPP
-#define VL_GAME_MANAGER_HPP
+#ifndef HYDRA_GAME_MANAGER_HPP
+#define HYDRA_GAME_MANAGER_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "typedefs.hpp"
 
-#include "tracker.hpp"
+#include "cluster/session.hpp"
 
-// TODO this should not need to be included here
-#include "tracker_serializer.hpp"
-
-#include "session.hpp"
-
-#include "stats.hpp"
-#include "base/timer.hpp"
+#include "base/report.hpp"
+#include "base/chrono.hpp"
 #include "logger.hpp"
 
 // Necessary for SceneInfo
 #include "base/projsettings.hpp"
 
-// Audio
-#include <cAudio/cAudio.h>
+#include <boost/signal.hpp>
+
+#include "base/state_machines.hpp"
 
 namespace vl
 {
@@ -45,7 +54,7 @@ namespace vl
 /// @struct Weather
 /// @brief definition for the weather
 /// @todo Not implemented yet
-struct Weather
+struct HYDRA_API Weather
 {
 	Weather(void)
 		: clouds(0), lighting(0), rain(0)
@@ -59,7 +68,7 @@ struct Weather
 /// @struct Date
 /// @brief Holds the current time and day
 /// For now only time of day is implemented
-struct Date
+struct HYDRA_API Date
 {
 	/// @brief Construct a time of day from string "hours:minutes"
 	/// hours and minutes should both be integers 
@@ -111,21 +120,42 @@ struct Date
 	uint16_t min;
 };
 
-// Only one state can be active at a time
-// Do not change the order Init needs to be lower than other states
-enum GAME_STATE
+
+// SM events
+struct init
 {
-	GS_UNKNOWN = 0,	// Starting state
-	GS_INIT = 1,	// Game initialised
-	GS_PLAY = 2,	// Game played
-	GS_PAUSE = 3,	// Game paused
-	GS_QUIT = 4,	// Game quited
+	init(vl::config::EnvSettingsRefPtr env, std::string const global_file)
+		: environment(env), global(global_file)
+	{}
+
+	vl::config::EnvSettingsRefPtr environment;
+	std::string global;
 };
+
+struct play {};
+struct quit {};
+struct stop {};
+struct pause {};
+struct load
+{
+	load(std::string const project_file)
+		: project(project_file)
+	{}
+
+	std::string project;
+};
+
+// Forward declaration
+struct GameManagerFSM_;
+// Pick a back-end
+typedef vl::msm::back::state_machine<GameManagerFSM_> GameManagerFSM;
 
 /** @class GameManager
  */
-class GameManager
+class HYDRA_API GameManager 
 {
+	typedef boost::signal<void (vl::Settings const &)> ProjectChanged;
+	typedef boost::signal<void (void)> StateChanged;
 public :
 	/// @brief constructor
 	/// @param session the distributed session where to register objects to
@@ -153,33 +183,39 @@ public :
 
 	MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
+	
+	MaterialManagerRefPtr getMaterialManager(void)
+	{ return _material_manager; }
 
 	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
 
-	vl::Stats &getStats(void)
-	{ return _stats; }
+	vl::Report<vl::time> &getRenderingReport(void)
+	{ return _rendering_report; }
 
-	void toggleBackgroundSound( void );
+	vl::Report<vl::time> &getInitReport(void)
+	{ return _init_report; }
 
 	/// @brief Step the simulation forward
-	/// @return true if the simulation is still running, false if it's not
-	bool step( void );
+	void step(void);
 
 	vl::ClientsRefPtr getTrackerClients( void )
 	{ return _trackers; }
 
-	/// @brief Enable disable audio rendering, for now disable does not work
-	/// @param enable if true creates the audio context, false is ignored
-	void enableAudio(bool enable);
-
-	bool isAudioEnabled(void)
-	{ return(_audio_manager != 0); }
-
-	void createBackgroundSound( std::string const &name );
-
 	vl::Logger *getLogger(void)
 	{ return _logger; }
+
+	/// @brief creates a new GameObject
+	/// @return new GameObject if none with that name exist, otherwise already existing object
+	/// @param name the name of the GameObject to create
+	GameObjectRefPtr createGameObject(std::string const &name);
+
+	bool hasGameObject(std::string const &name);
+
+	GameObjectRefPtr getGameObject(std::string const &name);
+
+	GameObjectList const &getGameObjectList(void) const
+	{ return _game_objects; }
 
 	/// ------------------------------ Kinematics ----------------------------
 	KinematicWorldRefPtr getKinematicWorld(void)
@@ -188,7 +224,8 @@ public :
 	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
-	physics::WorldRefPtr getPhysicsWorld( void );
+	physics::WorldRefPtr getPhysicsWorld(void)
+	{ return _physics_world; }
 
 	/// Enable physics to be used in this game
 	/// First call to this function will create the physics world with true
@@ -237,76 +274,93 @@ public :
 	{ return _game_timer.elapsed(); }
 
 	/// State management
-
-	/// @return true if the change is allowed
-	bool requestStateChange(GAME_STATE state);
 	
 	/// @brief quit the game/simulation
 	/// Short hand for state change request
-	void quit(void)
-	{ requestStateChange(GS_QUIT); }
-
-	bool isQuited(void) const
-	{ return _state == GS_QUIT; }
+	void quit(void);
 
 	/// @brief pause the game/simulation
 	/// Short hand for state change request
-	void pause(void)
-	{ requestStateChange(GS_PAUSE); }
+	void pause(void);
 
-	bool isPaused(void) const
-	{ return _state == GS_PAUSE; }
+	void play(void);
 
-	void play(void)
-	{ requestStateChange(GS_PLAY); }
+	void stop(void);
 
-	bool isPlayed(void) const
-	{ return _state == GS_PLAY; }
+	void restart(void);
 
-	GAME_STATE getState(void) const
-	{ return _state; }
+	bool isQuited(void) const;
+	bool isPaused(void) const;
+	bool isPlaying(void) const;
 
-	bool isInited(void) const
-	{ return _state >= GS_INIT; }
+	void setupResources(vl::config::EnvSettings const &env);
 
-	void setupResources(vl::Settings const &settings, vl::config::EnvSettings const &env);
+	void addResources(vl::ProjSettings const &proj);
+
+	void removeResources(vl::ProjSettings const &proj);
 
 	/// Resource loading
-	
-	/// Main loading functions use configurations files
-	void load(vl::config::EnvSettings const &env);
-	void load(vl::Settings const &proj);
 
 	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// Project handling
-	/// @todo should the file already be loaded or not?
-	///void loadProject(std::string const &file_name);
+	void loadProject(std::string const &file_name);
 
-	void loadScenes(vl::Settings const &proj);
+	/// @brief removes the current project and resets python context
+	void removeProject(std::string const &name);
+
+	void loadScenes(vl::ProjSettings const &proj);
 
 	void loadScene(vl::SceneInfo const &scene_info);
+
+	/// Test functions for Collada importer/exporter
+	void loadScene(std::string const &file_name);
+	void saveScene(std::string const &file_name);
+
+	/// @todo not really working
+	void unloadScene(std::string const &name);
+
+	/// @todo not really working
+	void unloadScenes(vl::ProjSettings const &proj);
 
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 
-	void runPythonScripts(vl::Settings const &proj);
+	void runPythonScripts(vl::ProjSettings const &proj);
 
 	/// @todo this takes over 1 second to complete which is almost a second too much
 	void createTrackers(vl::config::EnvSettings const &env);
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 
+	int addProjectChangedListener(ProjectChanged::slot_type const &slot)
+	{ _project_changed_signal.connect(slot); return 1; }
+
+	template<typename T>
+	void process_event(T const &evt);
+
+	bool auto_start(void) const
+	{ return _auto_start; }
+
+	void set_auto_start(bool start)
+	{ _auto_start = start; }
+
+	// void addListener
+	// @todo this should probably return the connection
+	// @todo add a list of possible states for which we have listeners
+	int addStateChangedListener(vl::state const &state, StateChanged::slot_type const &slot);
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
 
-	/// Session is not valid in the constructor because 
-	/// GameManager is created from sessions constructor
-	/// so the init function is provided for creating distributed objects.
-	/// Called when user initiates INIT state change.
-	void _init(void);
+	/// Main loading functions use configurations files
+	void _loadEnvironment(vl::config::EnvSettings const &env);
+
+	/// @brief loads a new global configuration
+	/// This will remove the old global and reset the python context
+	void _loadGlobal(std::string const &file_name);
 
 	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);
@@ -334,27 +388,23 @@ private :
 
 	vl::gui::GUIRefPtr _gui;
 
-	vl::Stats _stats;
-
-	/// Audio objects
-	cAudio::IAudioManager *_audio_manager;
-	cAudio::IAudioSource *_background_sound;
+	vl::Report<vl::time> _rendering_report;
+	vl::Report<vl::time> _init_report;
 
 	vl::Logger *_logger;
 
 	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
+
 	bool _env_effects_enabled;
 	Weather _weather;
 	Date _date;
 
 	/// Timers
-	vl::timer _program_timer;
-	vl::stop_timer _game_timer;
-	vl::timer _step_timer;
+	vl::chrono _program_timer;
+	vl::stop_chrono _game_timer;
+	vl::chrono _step_timer;
 	vl::time _delta_time;
-
-	/// State
-	GAME_STATE _state;
 
 	/// Physics
 	physics::WorldRefPtr _physics_world;
@@ -364,8 +414,259 @@ private :
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
 
+	vl::ProjSettings _loaded_project;
+	vl::ProjSettings _global_project;
+
+	bool _auto_start;
+
+	GameObjectList _game_objects;
+
+	// signals
+	ProjectChanged _project_changed_signal;
+
+	StateChanged _inited_signal;
+	StateChanged _quited_signal;
+	StateChanged _loaded_signal;
+	StateChanged _played_signal;
+	StateChanged _paused_signal;
+	StateChanged _stopped_signal;
+
+	/// Finite State Machine definition
+	GameManagerFSM *_fsm;
+
+/// Internal state machine
+public :
+	/// Session is not valid in the constructor because 
+	/// GameManager is created from sessions constructor
+	/// so the init function is provided for creating distributed objects.
+	/// Called when user initiates INIT state change.
+	void _do_init(vl::init const &evt);
+
+	void _do_load(vl::load const &evt);
+
+	void _do_play(vl::play const &evt);
+
+	void _do_pause(vl::pause const &evt);
+
+	void _do_stop(vl::stop const &evt);
+
+	void _do_quit(vl::quit const &evt);
+
 };	// class GameManager
+
+/// @class GameManagerSM
+/// the internal state machine for GameManager
+struct GameManagerFSM_ : public msm::front::state_machine_def<GameManagerFSM_, vl::state>
+{
+	GameManager *_impl;
+
+	GameManagerFSM_(void)
+		: _impl(0)
+	{}
+
+	template <class Event,class FSM>
+	void on_entry(Event const& ,FSM&) 
+	{
+		std::cout << "entering: GameManager FSM" << std::endl;
+	}
+
+	template <class Event,class FSM>
+	void on_exit(Event const&,FSM& ) 
+	{
+		std::cout << "leaving: GameManager FSM" << std::endl;
+	}
+
+	// The list of FSM states
+	// Initial state
+	struct Unknown : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Unknown" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Unknown" << std::endl;}
+	};
+	// State that is before we have loaded anything
+	struct Initing : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Initing" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Initing" << std::endl;}
+	};
+	// State that is when we are still loading a project
+	struct Loading : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Loading" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Loading" << std::endl;}
+	};
+	// State that is when we are in play
+	struct Playing : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Playing" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Playing" << std::endl;}
+	};
+	struct Stopped : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Stopped" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Stopped" << std::endl;}
+	};
+	struct Paused : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Paused" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Paused" << std::endl;}
+	};
+	struct Quited : public vl::msm::front::state<vl::state>
+	{
+		// every (optional) entry/exit methods get the event passed.
+		template <class Event,class FSM>
+		void on_entry(Event const&,FSM& ) {std::cout << "entering: Quited" << std::endl;}
+		template <class Event,class FSM>
+		void on_exit(Event const&,FSM& ) {std::cout << "leaving: Quited" << std::endl;}
+	};
+
+	void setGameManager(GameManager *game)
+	{ _impl = game; }
+
+	void _do_init(init const &evt)
+	{
+		assert(_impl);
+		_impl->_do_init(evt);
+	}
+
+	void _do_load(load const &evt)
+	{
+		assert(_impl);
+		_impl->_do_load(evt);
+	}
+
+	void _do_play(play const &evt)
+	{
+		assert(_impl);
+		_impl->_do_play(evt);
+	}
+
+	void _do_play(vl::none const &evt)
+	{
+		assert(_impl);
+		_impl->_do_play(vl::play());
+	}
+
+	void _do_pause(pause const &evt)
+	{
+		assert(_impl);
+		_impl->_do_pause(evt);
+	}
+
+	void _do_stop(stop const &evt)
+	{
+		assert(_impl);
+		_impl->_do_stop(evt);
+	}
+
+	void _do_stop(vl::none const &evt)
+	{
+		assert(_impl);
+		_impl->_do_stop(vl::stop());
+	}
+
+	void _do_quit(quit const &evt)
+	{
+		assert(_impl);
+		_impl->_do_quit(evt);
+	}
+
+	bool auto_start(vl::none const &)
+	{
+		assert(_impl);
+		return _impl->auto_start();
+	}
+
+	bool no_auto_start(vl::none const &)
+	{
+		assert(_impl);
+		return !_impl->auto_start();
+	}
+
+	// the initial state of the FSM. Must be defined
+	typedef Unknown initial_state;
+
+	typedef GameManagerFSM_ g;
+struct transition_table : vl::mpl::vector<
+//    Start     Event        Target      Action                      Guard 
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Unknown , init		 ,	Initing    , &g::_do_init  >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Initing , load		 ,	Loading    , &g::_do_load  >,
+a_row< Initing , stop		 ,	Stopped    , &g::_do_stop  >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+  row< Loading , vl::none	 ,  Stopped    , &g::_do_stop , &g::no_auto_start >,
+  row< Loading , vl::none	 ,  Playing	   , &g::_do_play , &g::auto_start >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Stopped , play        ,  Playing    , &g::_do_play  >,
+a_row< Stopped , pause		 ,  Paused     , &g::_do_pause >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Playing , stop        ,  Stopped    , &g::_do_stop  >,
+a_row< Playing , pause       ,  Paused     , &g::_do_pause >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Paused  , play		 ,  Playing    , &g::_do_play  >,
+a_row< Paused  , stop        ,  Stopped    , &g::_do_stop  >,
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+// @todo should be replaced with a second FSM so we can always exit
+a_row< Initing , quit        ,  Quited    , &g::_do_quit  >,
+a_row< Paused  , quit        ,  Quited    , &g::_do_quit  >,
+a_row< Stopped , quit        ,  Quited    , &g::_do_quit  >,
+a_row< Playing , quit        ,  Quited    , &g::_do_quit  >
+//   +---------+------------+-----------+---------------------------+----------------------------+ 
+> {};
+
+protected:
+    /// Replaces the default no-transition response.
+	/// Default is asserting false which is not exactly what we want
+	/// better to report the error for user, might even use
+	/// clog instead of cout so that they are debug messages.
+    template <class FSM,class Event>
+    void no_transition(Event const& e, FSM&, int state)
+    {
+        std::cout << "no transition from state " << state
+            << " on event " << typeid(e).name() << std::endl;
+    }
+
+	/// We need to override this to get valid exception handling
+	/// default is asserting a failure which makes the exceptions message carbage.
+	/// Also we need exceptions in Release code which makes the default
+	/// implemantion very dangorous.
+	template <class Fsm,class Event>
+	void exception_caught(Event const& ,Fsm&, std::exception &e)
+	{
+		boost::exception_ptr ex = boost::current_exception();
+		boost::rethrow_exception(ex);
+	}
+
+};	// struct GameManagerFSM_
 
 }	// namespace vl
 
-#endif // VL_GAME_MANAGER_HPP
+/// Templates
+template<typename T>
+void
+vl::GameManager::process_event(T const &evt)
+{
+	std::clog << "vl::GameManager::process_event" << std::endl;
+	_fsm->process_event(evt);
+}
+
+#endif // HYDRA_GAME_MANAGER_HPP

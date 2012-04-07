@@ -1,0 +1,109 @@
+//---------------------------------------------------------------------------
+//These materials/shaders are part of the NEW InstanceManager implementation
+//Written by Matias N. Goldberg ("dark_sylinc")
+//---------------------------------------------------------------------------
+
+//--------------------------------------------------------------
+// GLSL Programs
+//--------------------------------------------------------------
+vertex_program Instancing/HWBasic_glsl_vs glsl
+{
+	source HWBasicInstancing.vert
+
+	preprocessor_defines DEPTH_SHADOWRECEIVER=1
+
+	default_params
+	{
+		param_named_auto	viewProjMatrix				viewproj_matrix
+
+		param_named_auto	depthRange					shadow_scene_depth_range 0
+		param_named_auto	texViewProjMatrix			texture_viewproj_matrix 0
+	}
+}
+
+// Shadow caster for instances needs a special vertex program
+vertex_program Instancing/HWBasic/shadow_caster_glsl_vs glsl
+{
+	source HWBasicInstancing.vert
+
+	preprocessor_defines DEPTH_SHADOWCASTER=1
+
+	default_params
+	{
+		param_named_auto	viewProjMatrix				viewproj_matrix
+		param_named_auto	depthRange					scene_depth_range
+	}
+}
+
+
+material Instancing/HWBasic/shadow_caster
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref Instancing/HWBasic/shadow_caster_glsl_vs
+			{
+			}
+
+			fragment_program_ref Instancing/shadow_caster_glsl_ps
+			{
+			}
+		}
+	}
+}
+
+abstract material Instancing/HWBasic
+{
+	set $ambientCol "0 0 0 0"
+	set $diffuseCol "0 0 0 0"
+	set $specularCol "0 0 0"
+	set $shininess "32"
+
+	technique
+	{
+		shadow_caster_material Instancing/HWBasic/shadow_caster
+
+		pass
+		{
+			ambient $ambientCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			vertex_program_ref Instancing/HWBasic_glsl_vs
+			{
+			}
+
+			fragment_program_ref Instancing_glsl_ps
+			{
+			}
+
+			texture_unit Diffuse
+			{
+				texture_alias		DiffuseMap
+				texture white.tga
+				tex_address_mode	clamp
+			}
+
+			texture_unit shadow0
+			{
+				content_type shadow
+				tex_address_mode border
+				tex_border_colour 1 1 1 1
+			}
+		}
+	}
+}
+
+// Rename material
+abstract material Instancing : Instancing/HWBasic
+{}
+
+// TODO tube material
+material tube/instanced : Instancing/HWBasic
+{
+//	set $ambientCol "0.3 0.3 0.3 1.0"
+//	set $diffuseCol "0.25 0.25 0.25 1.0"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+

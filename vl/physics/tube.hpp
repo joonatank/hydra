@@ -6,11 +6,8 @@
  *	@file physics/tube.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -45,9 +42,10 @@ public :
 		ConstructionInfo(void)
 			: length(10)
 			, radius(0.1)
-			, mass(50.0)
-			, stiffness(0.9)
-			, damping(0.1)
+			, mass_per_meter(1)
+			, stiffness(0)
+			, damping(1.0)
+			, material_name("BaseWhite")
 			, element_size(0.6)
 			, lower_lim(Vector3::ZERO)
 			, upper_lim(Vector3(-1, -1, -1))
@@ -55,8 +53,10 @@ public :
 			, fixing_upper_lim(Vector3(-1, -1, -1))
 			, spring(true)
 			, disable_collisions(false)
-			, inertia(Vector3(1, 1, 1))
-			, body_damping(0.1)
+			, inertia_factor(1)
+			, body_damping(0)
+			, bending_radius(-1)
+			, use_instancing(false)
 		{}
 
 		RigidBodyRefPtr start_body;
@@ -66,7 +66,9 @@ public :
 
 		vl::scalar length;
 		vl::scalar radius;
-		vl::scalar mass;
+
+		// automatically calculates the mass and discard s the mass parameter
+		vl::scalar mass_per_meter;
 		vl::scalar stiffness;
 		vl::scalar damping;
 		vl::scalar element_size;
@@ -82,9 +84,17 @@ public :
 		bool spring;
 		bool disable_collisions;
 
-		Vector3 inertia;
+		// Factor to multiply the inertia calculated for the tube shapes
+		vl::scalar inertia_factor;
 
 		vl::scalar body_damping;
+
+		// If greater than zero automatically calculates the joint limits
+		// discarding the predefined ones.
+		vl::scalar bending_radius;
+
+		// rendering optimisation, still experimental
+		bool use_instancing;
 	};
 
 	/**	@brief Constructor
@@ -97,7 +107,7 @@ public :
 	 *	@todo how to integrate this in to our animation system with out rigid body
 	 *	simulation
 	 */
-	Tube(WorldPtr world, ConstructionInfo const &info);
+	Tube(WorldPtr world, SceneManagerPtr sm, ConstructionInfo const &info);
 
 	/// @brief Destructor
 	~Tube(void);
@@ -137,24 +147,26 @@ public :
 	std::string const &getMaterial(void) const
 	{ return _material_name; }
 
-	/// @todo does not work yet as it does not update the entities.
+	/// @todo not implemented
 	void setMaterial(std::string const &material);
 
 	Ogre::Vector3 const &getLowerLim(void) const
 	{ return _lower_lim; }
 
-	/// @todo does not work yet as it does not update the constraints.
 	void setLowerLim(Ogre::Vector3 const &lim);
 
 	Ogre::Vector3 const &getUpperLim(void) const
 	{ return _upper_lim; }
 
-	/// @todo does not work yet as it does not update the constraints.
 	void setUpperLim(Ogre::Vector3 const &lim);
 
 	void hide(void);
 
 	void show(void);
+
+	void setShowBoundingBoxes(bool show);
+
+	bool isShowBoundingBoxes(void) const;
 
 	void setEquilibrium(void);
 
@@ -165,15 +177,25 @@ public :
 	void addFixingPoint(RigidBodyRefPtr body, vl::scalar length = -1);
 
 	void removeFixingPoint(RigidBodyRefPtr body);
-/*
-	struct TubeElement
-	{
-		vl::scalar position;
-		vl::scalar legth;
-		RigidBodyRefPtr body;
-		Constraint constraint;
-	};
-*/
+
+	void create(void);
+
+	/// These are valid only after create has been called
+	/// will throw if they are called before the tube is created
+
+	SixDofConstraintRefPtr getStartFixing(void);
+
+	SixDofConstraintRefPtr getEndFixing(void);
+
+	/// @brief get one of the extra fixing points
+	/// throws if there is no such such fixing point
+	SixDofConstraintRefPtr getFixing(size_t index);
+
+	/// @brief get the number of extra fixing points
+	size_t getNFixings(void) const;
+
+	/// @brief get all fixing points except the start and end point
+	ConstraintList const &getFixings(void) const;
 
 private :
 	/// Used for naming purposes
@@ -188,11 +210,15 @@ private :
 
 	void _setConstraint(ConstraintRefPtr constraint, Ogre::Vector3 const &lower, Ogre::Vector3 const &upper);
 
+	void _add_fixing_point(RigidBodyRefPtr body, vl::scalar length);
+
 	RigidBodyRefPtr _findBodyByLength(vl::scalar length);
 	RigidBodyRefPtr _findBodyByPosition(Ogre::Vector3 const &pos);
 
 	RigidBodyRefPtr _start_body;
 	RigidBodyRefPtr _end_body;
+
+	BoxShapeRefPtr _shape;
 
 	// Uses multiple bodies and constraints to build the tube
 	// @todo should this rather use a map that maps the constraint
@@ -200,7 +226,9 @@ private :
 	RigidBodyList _bodies;
 	ConstraintList _constraints;
 	
+	std::map<vl::scalar, RigidBodyRefPtr> _fixing_bodies;
 	ConstraintList _external_fixings;
+
 	vl::scalar _length;
 	vl::scalar _stiffness;
 	vl::scalar _damping;
@@ -210,6 +238,9 @@ private :
 	vl::scalar _body_damping;
 	bool _spring;
 	bool _disable_internal_collisions;
+	bool _use_instancing;
+
+	Ogre::Vector3 _inertia;
 
 	// Angular limits
 	Ogre::Vector3 _lower_lim;
@@ -219,9 +250,17 @@ private :
 
 	std::string _material_name;
 
+	vl::Transform _start_body_frame;
+	vl::Transform _end_body_frame;
+
 	WorldPtr _world;
+	SceneManagerPtr _scene;
 
 };	// class Tube
+
+std::ostream &operator<<(std::ostream &os, Tube const &tube);
+
+std::ostream &operator<<(std::ostream &os, TubeList const &tube);
 
 }	// namespace physics
 

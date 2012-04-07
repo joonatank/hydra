@@ -1,20 +1,20 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2012 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
+ *	@file: ogre_xml_helpers.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
  */
 
 #include "ogre_xml_helpers.hpp"
 
 #include "base/string_utils.hpp"
 
-std::string
-vl::getAttrib(rapidxml::xml_node<>* XMLNode,
-		const std::string &attrib, const std::string &defaultValue )
-{
-	if(XMLNode->first_attribute(attrib.c_str()))
-	{ return XMLNode->first_attribute(attrib.c_str())->value(); }
-	else
-	{ return defaultValue; }
-}
 
 Ogre::Real
 vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
@@ -27,16 +27,6 @@ vl::getAttribReal( rapidxml::xml_node<>* XMLNode,
 	}
 	else
 	{ return defaultValue; }
-}
-
-bool
-vl::getAttribBool( rapidxml::xml_node<> *xml_node,
-		const std::string &attrib, bool defaultValue )
-{
-	if( !xml_node->first_attribute(attrib.c_str()) )
-	{ return defaultValue; }
-
-	return vl::from_string<bool>(xml_node->first_attribute(attrib.c_str())->value());
 }
 
 Ogre::Vector3
@@ -84,6 +74,20 @@ vl::parseQuaternion(rapidxml::xml_node<>* XMLNode)
 	w = vl::from_string<Ogre::Real>( attrW->value() );
 
 	return Ogre::Quaternion( w, x, y, z );
+}
+
+vl::Transform
+vl::parseTransform(rapidxml::xml_node<>* xml_node)
+{
+	rapidxml::xml_node<> *vec = xml_node->first_node("position");
+	rapidxml::xml_node<> *quat = xml_node->first_node("quaternion");
+
+	assert(vec && quat);
+
+	Ogre::Vector3 v = parseVector3(vec);
+	Ogre::Quaternion q = parseQuaternion(quat);
+
+	return Transform(v, q);
 }
 
 Ogre::ColourValue

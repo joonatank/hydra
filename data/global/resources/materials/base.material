@@ -83,6 +83,27 @@ material rtt
 	}
 }
 
+/// Basic Fixed function pipeline material used for testing
+/// uses the same interface as our custom shader materials but
+/// gives all the goodies that FFP has.
+/// Used mostly testing when we make assumptions based on Ogre's material
+/// system and are not certain whether those assumptions are scene, object,
+/// material or shading dependant i.e. if they work only with FFP shading or not.
+material ffp/basic
+{
+	technique
+	{
+		pass
+		{
+			texture_unit diffuseTexture
+			{
+				tex_address_mode wrap
+				texture white.tga
+			}
+		}
+	}
+}
+
 material ground/basic
 {
 	technique
@@ -91,7 +112,7 @@ material ground/basic
 		{
 			texture_unit
 			{
-				texture rock.jpg
+				texture rock.png
 			}
 		}
 	}
@@ -100,31 +121,28 @@ material ground/basic
 material ground/flat : bling_phong
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
+	set_texture_alias diffuseTexture rock.png
 }
 
 material ground/flat/shadows : bling_phong/shadows
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
+	set_texture_alias diffuseTexture rock.png
 }
 
 material ground/bump_mapped/shadows : bling_phong/normal_map/shadows
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.jpg
-	set_texture_alias specularMap rock.jpg
+	set_texture_alias diffuseTexture rock.png
+//	set_texture_alias specularMap rock.png
 	set_texture_alias normalMap rock_NM.jpg
 }
-
 
 material athene_material : bling_phong/shadows
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
-// TODO add normal map
-//	set_texture_alias normalMap ogre.tex.jpg
 }
 
 // Basic class material without any texture effects
@@ -138,6 +156,15 @@ material glass/blue : bling_phong/shadows
 	set $ambient_scene_blend "alpha_blend"
 	set $diffuse_scene_blend "alpha_blend"
 }
+
+material tube_material : bling_phong/shadows
+{
+	set $ambientCol "0.3 0.3 0.3 1.0"
+	set $diffuseCol "0.25 0.25 0.25 1.0"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
 
 material debug_red 
 {

@@ -1,14 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
  *	@file physics/rigid_body.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
 #include "rigid_body.hpp"
 
-#include "motion_state.hpp"
 #include "shapes.hpp"
 
 /// Concrete implementations
@@ -27,6 +35,19 @@ vl::physics::operator<<(std::ostream &os, vl::physics::RigidBody const &body)
 	{ os << " : user controlled"; }
 
 	// TODO add the rest
+
+	return os;
+}
+
+std::ostream &
+vl::physics::operator<<(std::ostream &os, std::vector<vl::physics::RigidBodyRefPtr> const &bodies)
+{
+	os << "Rigid body list with bodies : " << std::endl;
+	for(std::vector<vl::physics::RigidBodyRefPtr>::const_iterator iter = bodies.begin();
+		iter != bodies.end(); ++iter)
+	{
+		os << (*iter)->getName() << std::endl;
+	}
 
 	return os;
 }
@@ -64,7 +85,7 @@ vl::physics::RigidBody::applyForce(Ogre::Vector3 const &force, Ogre::Vector3 con
 }
 
 void 
-vl::physics::RigidBody::applyCentralForce(Ogre::Vector3 const &force, vl::SceneNodePtr ref)
+vl::physics::RigidBody::applyCentralForce(Ogre::Vector3 const &force, vl::ObjectInterface *ref)
 {
 	if(ref)
 	{ applyCentralForce(ref->getWorldTransform().quaternion * force); }

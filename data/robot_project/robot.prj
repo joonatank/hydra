@@ -22,6 +22,7 @@ Ogre test project used for testing and demonstrating eqOgre
 
 		They are in scripts directory relative to the project directory
 		-->
+		<file use="true">physics_script.py</file>
 		<file use="true">robot_script.py</file>
 	</scripts>
 

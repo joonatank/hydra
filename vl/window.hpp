@@ -1,22 +1,24 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
 #ifndef HYDRA_WINDOW_HPP
 #define HYDRA_WINDOW_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
+// Interface
+#include "window_interface.hpp"
 
 #include "typedefs.hpp"
 
@@ -36,8 +38,7 @@
 #include <OGRE/OgreRenderWindow.h>
 #include <OGRE/OgreRenderTargetListener.h>
 
-// GUI
-#include <CEGUI/CEGUIEventArgs.h>
+#include <OGRE/SdkTrays.h>
 
 namespace vl
 {
@@ -68,7 +69,7 @@ public :
 /**	@class Window represent an OpenGL drawable and context
  *
  */
-class Window : public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
+class HYDRA_API Window : public IWindow, public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
 	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
@@ -92,12 +93,30 @@ public:
 
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
+	/// @brief return the system handle for the window
+	uint64_t getHandle(void) const;
+
 	/// @brief Get wether hardware stereo is enabled or not
 	/// @return true if the window has stereo enabled
 	bool hasStereo(void) const;
 
 	/// Capture input events
 	virtual void capture( void );
+
+	/// Instruct the Channels to draw the Scene
+	virtual void draw( void );
+
+	/// Swap the back buffer to front
+	virtual void swap( void );
+
+	virtual void resize(int w, int h);
+
+	std::vector<Channel *> const &getChannels(void)
+	{ return _channels; }
+
+	Ogre::RenderTarget::FrameStats const &getStatistics(void) const;
+
+	void resetStatistics(void);
 
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);
@@ -112,12 +131,6 @@ public:
 	bool axisMoved(OIS::JoyStickEvent const &evt, int axis);
 	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
-
-	/// Instruct the Channels to draw the Scene
-	virtual void draw( void );
-
-	/// Swap the back buffer to front
-	virtual void swap( void );
 
 protected :
 
@@ -135,6 +148,9 @@ protected :
 	void _sendEvent( vl::cluster::EventData const &event );
 
 	void _render_to_fbo(void);
+
+	void _lazy_initialisation(void);
+
 
 	void _draw_fbo_to_screen(void);
 
@@ -158,6 +174,8 @@ protected :
 	std::vector<OIS::JoyStick *> _joysticks;
 
 	vl::config::Renderer::Type _renderer_type;
+
+	OgreBites::SdkTrayManager *_tray_mgr;
 
 	StereoRenderTargetListener *_window_listener;
 

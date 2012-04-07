@@ -29,11 +29,20 @@
 
 #include "constraints.hpp"
 
+// Necessary for collision detection
+#include "game_manager.hpp"
+#include "physics/physics_world.hpp"
+#include "physics/rigid_body.hpp"
+#include "physics/shapes.hpp"
+#include "mesh_manager.hpp"
+
 // Log leves
 #include "logger.hpp"
 
-vl::KinematicWorld::KinematicWorld(void)
-	: _graph(new animation::Graph)
+vl::KinematicWorld::KinematicWorld(GameManager *man)
+	: _collision_detection_on(false)
+	, _graph(new animation::Graph)
+	, _game(man)
 {
 }
 
@@ -46,7 +55,18 @@ vl::KinematicWorld::step(vl::time const &t)
 {
 	_progress_constraints(t);
 
-	/// Copy transformations to visible SceneNodes
+	/// Copy transformations to Motion states
+	for(KinematicBodyList::iterator iter = _bodies.begin();
+		iter != _bodies.end(); ++iter )
+	{
+		(*iter)->_update();
+	}
+}
+
+void
+vl::KinematicWorld::finalise(void)
+{
+	/// Copy back transformations from MotionStates after collision detection
 	for(KinematicBodyList::iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter )
 	{
@@ -76,7 +96,7 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn) const
 	for(KinematicBodyList::const_iterator iter = _bodies.begin();
 		iter != _bodies.end(); ++iter)
 	{
-		if((*iter)->getSceneNode() == sn)
+		if((*iter)->getName() == sn->getName())
 		{ return *iter; }
 	}
 
@@ -92,13 +112,50 @@ vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 	KinematicBodyRefPtr body = getKinematicBody(sn);
 	if(!body)
 	{
-		animation::NodeRefPtr node = _createNode();
-		body.reset(new KinematicBody(this, node, sn));
+		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
+		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
+		animation::NodeRefPtr node = _createNode(ms->getWorldTransform());
+		body.reset(new KinematicBody(sn->getName(), this, node, ms));
 		assert(body);
 		_bodies.push_back(body);
+
+		if(_collision_detection_on)
+		{
+			if( sn->getName().find("cb_") != std::string::npos)
+			{
+				std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
+				_create_collision_body(body); 
+			}
+		}
 	}
 
 	return body;
+}
+
+void
+vl::KinematicWorld::_create_collision_body(KinematicBodyRefPtr body)
+{
+	try {
+		assert(_game);
+		/// enable physics if not already
+		/// Create a kinematic rigid body and add it physics world
+		/// use same MotionStates for both kinematic and rigid body
+		_game->enablePhysics(true);
+		// We assume that the mesh name is the same as the SceneNode
+		vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(body->getName());
+		physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
+		physics::RigidBody::ConstructionInfo info(body->getName(), 0, body->getMotionState(), shape, Ogre::Vector3(0, 0, 0), true);
+		physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
+		// necessary to add callback so the kinematic object updates 
+		// the the collision model.
+		body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, physics_body, _1));
+		// Used by the collision detection to pop last transformation.
+		physics_body->setUserData(body.get());
+	}
+	catch(vl::exception const &e)
+	{
+		std::clog << "Exception thrown when creating collision model for " << body->getName() << std::endl;
+	}
 }
 
 void
@@ -116,21 +173,38 @@ vl::KinematicWorld::createConstraint(std::string const &type,
 	if(!body0 || !body1)
 	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
 
+	vl::ConstraintRefPtr c;
+
+	vl::Transform fA = body0->transformToLocal(trans);
+	vl::Transform fB = body1->transformToLocal(trans);
+
+	return createConstraint(type, body0, body1, fA, fB);
+}
+
+vl::ConstraintRefPtr
+vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyRefPtr body0, 
+		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB)
+{
+	if(body0 == body1)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
+	if(!body0 || !body1)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
+
 	std::string type_name(type);
 	vl::to_lower(type_name);
 
 	vl::ConstraintRefPtr c;
 	if(type_name == "slider")
 	{
-		c = SliderConstraint::create(body0, body1, trans);
+		c = SliderConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "hinge")
 	{
-		c = HingeConstraint::create(body0, body1, trans);
+		c = HingeConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "fixed")
 	{
-		c = FixedConstraint::create(body0, body1, trans);
+		c = FixedConstraint::create(body0, body1, frameInA, frameInB);
 	}
 	
 	// Do not allow empties, should have some real exception types for it though
@@ -175,6 +249,21 @@ vl::KinematicWorld::hasConstraint(vl::ConstraintRefPtr constraint) const
 	return false;
 }
 
+vl::ConstraintRefPtr
+vl::KinematicWorld::getConstraint(std::string const &name) const
+{
+	for(ConstraintList::const_iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{
+			return *iter;
+		}
+	}
+
+	return ConstraintRefPtr();
+}
+
 vl::ConstraintList const &
 vl::KinematicWorld::getConstraints(void) const
 {
@@ -186,6 +275,21 @@ vl::KinematicWorld::getBodies(void) const
 {
 	return _bodies;
 }
+
+void
+vl::KinematicWorld::enableCollisionDetection(bool enable)
+{
+	if(_collision_detection_on != enable)
+	{
+		for(KinematicBodyList::iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+		{
+			(*iter)->enableCollisions(enable);
+		}
+
+		_collision_detection_on = enable;
+	}	
+}
+
 
 void
 vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
@@ -264,13 +368,20 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	// The correct transformation is set by the constraint
 	constraint->_setLink(link);
 
+	// @todo Not the correct place for this but for testing
+	// fixed issues with Node transformation beign returned to the one
+	// used with a previous parent.
+	// Now these should be moved to correct places in animation framework.
+	parent->setInitialState();
+	child->setInitialState();
+
 	_constraints.push_back(constraint);
 }
 
 vl::animation::NodeRefPtr
-vl::KinematicWorld::_createNode(void)
+vl::KinematicWorld::_createNode(vl::Transform const &initial_transform)
 {
-	animation::NodeRefPtr node(new animation::Node);
+	animation::NodeRefPtr node(new animation::Node(initial_transform));
 	animation::LinkRefPtr link(new animation::Link);
 	link->setParent(_graph->getRoot());
 	link->setChild(node);

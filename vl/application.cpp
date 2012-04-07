@@ -20,26 +20,14 @@
 
 // Necessary for checking architecture
 #include "defines.hpp"
-// Necessary for creating the Master
-#include "config.hpp"
 
 // Necessary for Settings
-#include "settings.hpp"
 #include "base/envsettings.hpp"
-#include "base/projsettings.hpp"
 
-// Necessary for vl::msleep
-#include "base/sleep.hpp"
-
-//#include "game_manager.hpp"
-// Necessary for creating Renderer for slave and master
-#include "renderer.hpp"
 // Necessary for creating the Logger
 #include "logger.hpp"
 
-#include "cluster/client.hpp"
-// Necessary for spawning external processes
-#include "base/system_util.hpp"
+
 
 #include "base/string_utils.hpp"
 
@@ -48,6 +36,13 @@
 #include <unistd.h>
 #endif
 
+// Necessaru for Hydra_RUN
+#include "master.hpp"
+#include "slave.hpp"
+// Necessary for hiding system console
+#include "base/system_util.hpp"
+
+// Compile time created header
 #include "revision_defines.hpp"
 
 // Necessary for printing Ogre exceptions
@@ -57,8 +52,9 @@
 vl::config::EnvSettingsRefPtr
 vl::getMasterSettings( vl::ProgramOptions const &options )
 {
+	// Should never happen
 	if( options.slave() )
-	{ return vl::config::EnvSettingsRefPtr(); }
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	fs::path env_path = options.environment_file;
 	if( !fs::is_regular(env_path) )
@@ -91,35 +87,30 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 
 	vl::config::EnvSettingsRefPtr env;
 
-	if( !fs::is_regular(env_path) )
-	{
-		return env;
-	}
-	else
-	{
-		/// This point both env_path and project_path are valid
-		env.reset( new vl::config::EnvSettings );
+	env.reset( new vl::config::EnvSettings );
 
-		/// Read the Environment config
-		if( fs::is_regular(env_path) )
-		{
-			std::string env_data;
-			env_data = vl::readFileToString( env_path.string() );
-			// TODO check that the files are correct and we have good settings
-			vl::config::EnvSerializer env_ser( env );
-			env_ser.readString(env_data);
-			env->setFile( env_path.string() );
-		}
+	// Read the Environment config
+	// if there is no such file we return the default configuration
+	if( fs::is_regular(env_path) )
+	{
+		std::string env_data;
+		env_data = vl::readFileToString( env_path.string() );
+		// TODO check that the files are correct and we have good settings
+		vl::config::EnvSerializer env_ser( env );
+		env_ser.readString(env_data);
+		env->setFile( env_path.string() );
 	}
 
-	env->setLogDir( options.log_dir );
+	env->setLogDir( options.getLogDir() );
 	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
 
 	env->display_n = options.display_n;
 
 	return env;
-
 }
+
+/* This function is useless and depricated
+ but it has quite a few nice default paths which should be incorporated into the GameManager
 
 vl::Settings
 vl::getProjectSettings( vl::ProgramOptions const &options )
@@ -196,6 +187,7 @@ vl::getProjectSettings( vl::ProgramOptions const &options )
 
 	return settings;
 }
+*/
 
 vl::config::EnvSettingsRefPtr
 vl::getSlaveSettings( vl::ProgramOptions const &options )
@@ -234,48 +226,24 @@ vl::Hydra_Run(const int argc, char** argv)
 	vl::ProgramOptions options;
 	try
 	{
-		// Options need to be parsed before creating logger because logger
-		// is designed to redirect logging out of console
 		if(!options.parseOptions(argc, argv))
 		{ return ExceptionMessage(); }
 
 		// File doesn't exist (checked earlier)
-		if(!options.log_dir.empty() && !fs::exists(options.log_dir))
+		if(!options.getLogDir().empty() && !fs::exists(options.getLogDir()))
 		{
-			fs::create_directory(options.log_dir);
+			fs::create_directory(options.getLogDir());
 		}
 
 		// Otherwise the file exists and it's a directory
-		std::cout << "Using log file: " << options.getOutputFile() << std::endl;
+		std::cout << "Using log file: " << options.getLogFile() << std::endl;
 
-		vl::Logger logger;
-		logger.setOutputFile(options.getOutputFile());
-
-		vl::config::EnvSettingsRefPtr env;
-		vl::Settings settings;
-		if( options.master() )
-		{
-			env = vl::getMasterSettings(options);
-			settings = vl::getProjectSettings(options);
-		}
-		else
-		{
-			env = vl::getSlaveSettings(options);
-		}
-
-		// 2. initialization of local client node
-		if( !env )
-		{ return ExceptionMessage(); }
-
-		if( env->isMaster() && settings.empty() )
-		{ return ExceptionMessage(); }
-
+		vl::ApplicationUniquePtr app = Application::create(options);
 		// @todo this doesn't allow an exception to be thrown through it
 		// we need to use some other method
 		// this is true for exception thrown by our GLRenderer
-		vl::Application application(env, settings, logger, options.auto_fork, options.show_system_console);
 
-		application.run();
+		app->run();
 	}
 	catch(vl::exception const &e)
 	{
@@ -315,147 +283,130 @@ vl::Hydra_Run(const int argc, char** argv)
 }
 
 /// -------------------------------- Application -----------------------------
-vl::Application::Application(vl::config::EnvSettingsRefPtr env, vl::Settings const &settings, vl::Logger &logger, bool auto_fork, bool show_system_console)
-	: _master()
-	, _slave_client()
+vl::Application::Application(void)
+	: _logger(0)
 {
-	assert( env );
-
-	if(!show_system_console)
-	{ hide_system_console(); }
-
-	if(env->isMaster())
-	{
-		_max_fps = env->getFPS();
-
-		// auto_fork is silently ignored for slaves
-		if(auto_fork)
-		{
-			for(size_t i = 0; i < env->getSlaves().size(); ++i)
-			{
-#ifndef _WIN32
-				pid_t pid = ::fork();
-				// Reset the environment file for a slave
-				if(pid != 0)
-				{
-					env->setSlave();
-					env->getMaster().name = env->getSlaves().at(i).name;
-					// Master needs to continue the loop and create the remaining slaves
-					break;
-				}
-#else
-				std::clog << "Windows autoforking local slaves." << std::endl;
-				/// @todo use a more general parameter for the program name
-				std::vector<std::string> params;
-				// Add slave param
-				params.push_back("--slave");
-				params.push_back(env->getSlaves().at(i).name);
-				// Add server param
-				params.push_back("--server");
-				std::stringstream ss;
-				ss << env->getServer().hostname << ":" << env->getServer().port;
-				params.push_back(ss.str());
-				params.push_back("--log_dir");
-				params.push_back(env->getLogDir());
-				// Create the process
-				uint32_t pid = create_process("hydra.exe", params, true);
-				_spawned_processes.push_back(pid);
-			}
-#endif
-		}
-	}
-
-	/// Correct name has been set
-	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
-
-	// We should hand over the Renderer to either client or config
-	vl::RendererUniquePtr renderer( new Renderer(env->getName()) );
-
-	if( env->isMaster() )
-	{
-		_master.reset(new vl::Config( settings, env, logger, renderer ));
-		_master->init();
-		std::vector<vl::config::Program> programs = env->getUsedPrograms();
-		std::clog << "Should start " << programs.size() << " autolaunched programs."
-			<< std::endl;
-		for(size_t i = 0; i < programs.size(); ++i)
-		{
-			std::clog << "Starting : " << programs.at(i).name 
-				<< " with command : " << programs.at(i).command << std::endl;
-			uint32_t pid = create_process(programs.at(i).command, programs.at(i).params, programs.at(i).new_console);
-			_spawned_processes.push_back(pid);
-		}
-	}
-	else
-	{
-		char const *host = env->getServer().hostname.c_str();
-		uint16_t port = env->getServer().port;
-		_slave_client.reset(new vl::cluster::Client(host, port, renderer));
-	}
 }
 
 vl::Application::~Application( void )
 {
-	for(size_t i = 0; i < _spawned_processes.size(); ++i)
-	{
-		kill_process(_spawned_processes.at(i));
-	}
+	delete _logger;
 }
 
-
-void
-vl::Application::run( void )
+vl::ApplicationUniquePtr
+vl::Application::create(ProgramOptions const &opt)
 {
-	if(_master)
-	{
-		// run main loop
-		uint32_t frame = 0;
-		while( _master->isRunning() )
-		{
-			_render( ++frame );
-		}
-
-		_master->exit();
-	}
+	ApplicationUniquePtr ptr;
+	if(opt.master())
+	{ ptr.reset(new vl::Master()); }
 	else
-	{
-		assert(_slave_client);
-		while( _slave_client->isRunning() )
-		{
-			_slave_client->mainloop();
+	{ ptr.reset(new vl::Slave()); }
+	
+	ptr->init(opt);
 
-			/// @todo test
-			/// Windows can have problems with context switching.
-			/// At least this is the case for Windows XP.
-			/// Might need a workaround for some or all Windows versions
-			/// For now use WIN_ZERO_SLEEP define for testing.
-			/// Real solution will need a separate busy-wait while rendering 
-			/// and context switching while not.
-			///
-			/// Linux can not handle busy wait,
-			/// much faster with context switching in every iteration.
-			vl::msleep(0);
-		}
-
-		// TODO add clean exit
-	}
+	return ptr;
 }
 
-/// ------------------------------- Private ------------------------------------
-void
-vl::Application::_render( uint32_t const frame )
+bool
+vl::Application::progress(void)
 {
-	vl::timer timer;
+	// Necessary to catch exceptions here because our Editor can't handle them
+	try {
+		if(isRunning())
+		{
+			_mainloop(false);
+		}
+	}
+	catch(vl::exception const &e)
+	{
+		std::cout << "VL Exception : \n" << boost::diagnostic_information<>(e) << std::endl;
+		return false;
+	}
+	catch(boost::exception const &e)
+	{
+		std::cout << "Boost Exception : \n" << boost::diagnostic_information<>(e) << std::endl;
+		return false;
+	}
+	catch(Ogre::Exception const &e)
+	{
+		std::cout << "Ogre Exception: \n" << e.what() << std::endl;
+		return false;
+	}
+	catch( std::exception const &e )
+	{
+		std::cout << "STD Exception: \n" << e.what() << std::endl;
+		return false;
+	}
+	catch( ... )
+	{
+		std::cout << "An exception of unknow type occured." << std::endl;
+		return false;
+	}
 
-	_master->render();
+	return isRunning();
+}
 
-	vl::time sleep_time;
-	// Try to get the requested frame rate but avoid division by zero
-	// also check that the time used for the frame is less than the max fps so we
-	// don't overflow the sleep time
-	if( _max_fps > 0 && (vl::time(1.0/_max_fps) > timer.elapsed()) )
-	{ sleep_time = vl::time(1.0/_max_fps) - timer.elapsed(); }
+void
+vl::Application::run(void)
+{		
+	while( isRunning() )
+	{
+		_mainloop(true);	
+	}
 
-	// Force context switching by zero sleep
-	vl::sleep(sleep_time);
+	exit();
+}
+
+void
+vl::Application::init(ProgramOptions const &opt)
+{
+	vl::config::EnvSettingsRefPtr env;
+
+	if( opt.master() )
+	{ env = vl::getMasterSettings(opt); }
+	else
+	{ env = vl::getSlaveSettings(opt); }
+
+	if( !env )
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	// Needs to be created here because does not currently support
+	// changing the log file at run time.
+	_logger = new Logger;
+	_logger->setOutputFile(opt.getLogFile());
+
+	assert( env );
+
+	if(!opt.show_system_console)
+	{ hide_system_console(); }
+
+	// Set the used processors
+	if(opt.n_processors != -1)
+	{
+#ifndef _WIN32
+		std::cout << "Setting number of processors is only supported on Windows." << std::endl;
+#else
+		HANDLE proc = ::GetCurrentProcess();
+		DWORD_PTR current_mask, new_mask, system_mask;
+		::GetProcessAffinityMask(proc, &current_mask, &system_mask);
+
+		new_mask = 0;
+		// @todo add checking that we don't try to use more processors than is available
+		for(size_t i = opt.start_processor; i < opt.start_processor + opt.n_processors; ++i)
+		{ new_mask |= 1<<i; }
+
+		if(new_mask > current_mask)
+		{ 
+			std::cerr << "Couldn't change the processor affinity mask because "
+				<< "there is not enough processors for the new mask." << std::endl;
+		}
+		else
+		{
+			std::clog << "Changing processor affinity mask from " << std::hex << current_mask << " to " << new_mask << std::endl;
+			::SetProcessAffinityMask(proc, new_mask);
+		}
+#endif
+	}
+
+	_do_init(env, opt);
 }

@@ -1,9 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file base/envsettings.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	2010-11-29 Added camera rotations to env file
  *	moved ref ptr definition to typedefs.hpp
  *
@@ -13,6 +25,9 @@
 
 #ifndef HYDRA_ENVSETTINGS_HPP
 #define HYDRA_ENVSETTINGS_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include <string>
 #include <vector>
@@ -90,7 +105,7 @@ struct Tracking
 	bool use;
 };
 
-struct Channel
+struct HYDRA_API Channel
 {
 	Channel(std::string const &nam, std::string const &wall, Rect<double> const &a)
 		: name(nam), wall_name(wall), area(a)
@@ -112,7 +127,7 @@ struct Channel
 
 };	// struct Channel
 
-struct Projection
+struct HYDRA_API Projection
 {
 	enum Type
 	{
@@ -128,7 +143,7 @@ struct Projection
 
 	Projection(void)
 		: type(PERSPECTIVE)
-		, perspective_type(WALL)
+		, perspective_type(FOV)
 		, fov(60)
 		, horizontal(-1)
 		, head_x(false)
@@ -160,7 +175,7 @@ struct Projection
 /// usually either a window or a FBO
 /// this is completely independent of the two though and does not reference 
 /// either of them.
-struct Renderer
+struct HYDRA_API Renderer
 {
 	enum Type
 	{
@@ -171,19 +186,23 @@ struct Renderer
 	Renderer(void)
 		: type(WINDOW)
 		, projection()
+		, hardware_gamma(false)
 	{}
 
 	Type type;
 	Projection projection;
+
+	bool hardware_gamma;
 };
 
-struct Window
+struct HYDRA_API Window
 {
 	Window( std::string const &nam, int width, int height, int px, int py,
 			bool s = false, bool nv_swap = false )
 		: name(nam), rect(width, height, px, py), stereo(s)
 		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
 		, vert_sync(false), n_display(-1)
+		, input_handler(true)
 	{
 		if( rect.h < 0 || rect.w < 0 )
 		{
@@ -226,6 +245,9 @@ struct Window
 
 	Rect<int> rect;
 
+	NamedParamList params;
+
+
 	bool stereo;
 
 	bool nv_swap_sync;
@@ -233,7 +255,7 @@ struct Window
 	uint32_t nv_swap_barrier;
 
 	bool vert_sync;
-
+	bool input_handler;
 	int n_display;
 
 	void add_channel(Channel const &channel)
@@ -277,7 +299,7 @@ private :
 
 };	// struct Window
 
-struct Node
+struct HYDRA_API Node
 {
 	Node( std::string const &nam )
 		: name(nam)
@@ -306,7 +328,7 @@ struct Node
 	std::vector<Window> windows;
 };
 
-struct Server
+struct HYDRA_API Server
 {
 	Server( uint16_t por, std::string const hostnam )
 		: port(por), hostname(hostnam)
@@ -321,7 +343,7 @@ struct Server
 };
 
 /// External program description
-struct Program
+struct HYDRA_API Program
 {
 	std::string name;
 	std::string directory;
@@ -342,7 +364,7 @@ struct Program
  *	Includes configuration for the Windows, Walls, Tracking, Cluster, Stereo,
  *	and Server.
  */
-class EnvSettings
+class HYDRA_API EnvSettings
 {
 public :
 	/// Constructor
@@ -520,6 +542,13 @@ public :
 	void setStereo( bool stereo )
 	{ _stereo = stereo; }
 
+	bool hasHardwareGamma(void) const
+	{ return _renderer.hardware_gamma; }
+
+	void setHardwareGamma(bool g)
+	{ _renderer.hardware_gamma = g; }
+
+
 	/**	@brief using NVidia swap sync or not
 	 *	@return true if should use NVidia swap sync false otherwise
 	 */
@@ -651,7 +680,7 @@ private :
 	std::vector<Wall> _walls;
 
 	bool _stereo;
-	
+
 	bool _nv_swap_sync;
 	uint32_t _swap_group;
 	uint32_t _swap_barrier;
@@ -676,7 +705,7 @@ private :
 
 
 
-class EnvSerializer
+class HYDRA_API EnvSerializer
 {
 public :
 	/// Will completely over-ride the provided EnvSettings

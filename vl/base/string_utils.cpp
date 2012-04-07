@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
  *	@file base/string_utils.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "string_utils.hpp"
@@ -20,9 +30,6 @@ vl::break_string_down( std::vector<std::string> &broken_path,
 
 	while( path_iter != longString.end() )
 	{
-		if( path_iter == begin )
-		{ BOOST_THROW_EXCEPTION( vl::exception() << vl::desc( "Iterators incorrect" ) ); }
-
 		std::string str;
 		str.insert( str.begin(), begin, path_iter );
 		broken_path.push_back( str );
@@ -33,6 +40,15 @@ vl::break_string_down( std::vector<std::string> &broken_path,
 	std::string str;
 	str.insert( str.begin(), begin, path_iter );
 	broken_path.push_back( str );
+}
+
+void
+vl::break_string_down( std::vector<std::string> &parts,
+						std::string const &longString,
+						char delimeter )
+{
+	std::string str(longString);
+	break_string_down(parts, str, delimeter);
 }
 
 void

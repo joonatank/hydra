@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# Setup player
 camera_name = "Camera"
 camera = game.scene.createSceneNode(camera_name)
 camera.position = Vector3(-0.77, 0, 4)
@@ -8,42 +9,17 @@ camera.attachObject(cam)
 createCameraMovements(camera)
 game.player.camera = camera_name
 
-game.scene.sky = SkyDomeInfo("CloudySky")
-
-# Create light
-spot = game.scene.createSceneNode("spot")
-spot_l = game.scene.createLight("spot")
-# does not work for some reason
-#spot_l.type = "spot"
-spot_l.diffuse = ColourValue(1.0, 1.0, 0.6)
-spot.attachObject(spot_l)
-#spot.orientation = Quaternion(0, 0, 0.7071, 0.7071)
-#camera.addChild(spot)
-#spot.position = camera.position + Vector3(0, 1.5, 0)
-spot.position = Vector3(-5, 25, 20)
-
-light = game.scene.createSceneNode("light")
-light_l = game.scene.createLight("light")
-light_l.diffuse = ColourValue(0.6, 0.6, 0.8)
-light.attachObject(light_l)
-light.position = Vector3(0, 20, -5)
+# Setup environment
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
+game.scene.shadows.enable()
+create_sun()
 
 
-# Create physics
+# Setup physics
 game.enablePhysics( True )
 world = game.physics_world
 
-ground_node = game.scene.createSceneNode("ground")
-ground = game.scene.createEntity("ground", PF.PLANE)
-ground_node.attachObject(ground)
-ground.material_name = "ground/bump_mapped/shadows"
-ground.cast_shadows = False
-
-print('Physics : Adding ground plane')
-ground_mesh = game.mesh_manager.loadMesh("prefab_plane")
-ground_shape = StaticTriangleMeshShape.create(ground_mesh)
-g_motion_state = world.createMotionState(Transform(Vector3(0, 0, 0)), ground_node)
-ground_body = world.createRigidBody('ground', 0, g_motion_state, ground_shape)
+physics_create_ground()
 
 print('Physics: adding kiinnityslevy joint')
 kiinnityslevy = game.physics_world.getRigidBody("cb_kiinnityslevy")
@@ -116,48 +92,26 @@ zoom.powered_lin_motor = True
 zoom.max_lin_motor_force = 10
 zoom.target_lin_motor_velocity = 0.5
 
-sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), size=0.5, mass=10)
+sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), radius=0.5, mass=10)
 sphere.user_controlled = True
-addDynamicAction(sphere, reference=camera)
+addRigidBodyController(sphere)
 
+# Add force action, just as an example
+# This does of course not work as we would like because applyForce is an
+# external force.
+# To correctly model the cylinders we would need to use actuators/motors.
 
-#kiinnityslevy.translate(Vector3(0, 2, 0))
+def nosto_more_force():
+	# needs two vectors as a parameter
+	# (first is the force, second the local position)
+	syl_nosto_putki.applyForce(Vector3(0, 2000, 0), Vector3(0, 0, 0))
 
-# Add a motor action to nosto cylinder
-# Note this action does not repeat so it's executed once for every key down 
-"""
-action = SliderMotorAction.create()
-action.velocity = 0.01
-action.constraint = nosto_joint
-trigger = game.event_manager.createKeyTrigger(KC.Z)
-trigger.action_down = action
+def nosto_less_force():
+	syl_nosto_putki.applyForce(Vector3(0, -2000, 0), Vector3(0, 0, 0))
 
-action = SliderMotorAction.create()
-action.velocity = -0.01
-action.constraint = nosto_joint
-trigger = game.event_manager.createKeyTrigger(KC.X)
-trigger.action_down = action
-"""
-
-# Add force action
-# This is correct
-# TODO this needs a motor action
-# This can not work without the motor, because the joint is alligned in
-# different coordinates that the body, so if we try to use the bodies local
-# coordinates we are using incorrect coordinate system
-action = ApplyForce.create()
-action.body = syl_nosto_putki
-#action.force = Vector3(0, 0, 200)
-action.force = Vector3(0, 2000, 0)
-action.local = True
 trigger = game.event_manager.createKeyTrigger( KC.F )
-trigger.action_down = action
+trigger.addListener(nosto_more_force)
 
-action = ApplyForce.create()
-action.body = syl_nosto_putki
-#action.force = Vector3(0, 0, -200)
-action.force = Vector3(0, -2000, 0)
-action.local = True
 trigger = game.event_manager.createKeyTrigger( KC.G )
-trigger.action_down = action
+trigger.addListener(nosto_less_force)
 

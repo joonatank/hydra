@@ -1,9 +1,22 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
+ *	@file cluster/message.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_CLUSTER_MESSAGE_HPP
-#define VL_CLUSTER_MESSAGE_HPP
+#ifndef HYDRA_CLUSTER_MESSAGE_HPP
+#define HYDRA_CLUSTER_MESSAGE_HPP
 
 #include <stdint.h>
 
@@ -17,7 +30,7 @@
 #include "base/string_utils.hpp"
 
 // Necessary for saving timestamps into Messages
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 namespace vl
 {
@@ -94,7 +107,7 @@ enum MSG_TYPES
 	MSG_PROJECT,		// Send the project configuration
 	MSG_SG_CREATE,		// Create SceneGraph elements
 	MSG_FRAME_START,	// Send from master to start a frame loop
-	MSG_SG_UPDATE_READY,
+	MSG_REQ_SG_UPDATE,	// Sent from slave to Master to request an SG update
 	MSG_SG_INIT,		// Same as MSG_SG_UPDATE but sent before any other updates
 	MSG_SG_UPDATE,		// Send updated SceneGraph
 	MSG_SG_UPDATE_DONE,	// NOT IN USE
@@ -155,8 +168,8 @@ std::string getTypeAsString( MSG_TYPES type )
 		return "MSG_SG_CREATE";
 	case MSG_FRAME_START:
 		return "MSG_FRAME_START";
-	case MSG_SG_UPDATE_READY :
-		return "MSG_SG_UPDATE_READY";
+	case MSG_REQ_SG_UPDATE :
+		return "MSG_REQ_SG_UPDATE";
 	case MSG_SG_UPDATE :
 		return "MSG_SG_UPDATE";
 	case MSG_SG_UPDATE_DONE :
@@ -714,9 +727,11 @@ msg_size Message::read(std::string &str)
 namespace std
 {
 
+
 /// Print byte data
+// Why is this added to namespace std?
 std::ostream &operator<<( std::ostream &os, vector<char> const &v );
 
-}
+}	// namespace std
 
-#endif // VL_CLUSTER_MESSAGE_HPP
+#endif // HYDRA_CLUSTER_MESSAGE_HPP

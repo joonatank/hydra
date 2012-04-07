@@ -1,6 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_node.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 /// Interface
@@ -8,6 +20,8 @@
 
 #include "scene_manager.hpp"
 #include "entity.hpp"
+
+#include "math/math.hpp"
 
 /// ---------------------------- Global --------------------------------------
 std::ostream &
@@ -59,8 +73,11 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _visible(true)
 	, _show_boundingbox(false)
 	, _inherit_scale(true)
+	, _show_debug_display(false)
+	, _show_axes(false)
 	, _parent(0)
 	, _ogre_node(0)
+	, _debug_axes(0)
 	, _creator(creator)
 {
 	assert( _creator );
@@ -189,18 +206,17 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference)
 	/// World space
 	if(!reference)
 	{
-		setPosition(_transform.position + v);
+		translate(v, TS_WORLD);
 	}
 	/// Local space
 	else if(reference == this)
 	{
-		setPosition(_transform.position + _transform.rotate(v));
+		translate(v, TS_LOCAL);
 	}
 	/// Reference space
 	else
 	{
-		vl::Transform ref_world = reference->getWorldTransform();
-		setPosition(_transform.position + ref_world.rotate(v));
+		translate(reference->getWorldTransform().quaternion*v, TS_WORLD);
 	}
 }
 
@@ -209,22 +225,29 @@ vl::SceneNode::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
 {
 	if(space == TS_LOCAL)
 	{
-		translate(v, this);
+		setPosition(_transform.position + _transform.rotate(v));
 	}
 	else if(space == TS_PARENT)
 	{
-		translate(v, _parent);
+		setPosition(_transform.position + v);
 	}
 	else
 	{
-		translate(v, 0);
+		vl::Transform invWorld;
+		if(_parent)
+		{
+			invWorld = _parent->getWorldTransform().inverted();
+		}
+		
+
+		setPosition(_transform.position + invWorld.quaternion*v);
 	}
 }
 
 void 
 vl::SceneNode::translate(Ogre::Vector3 const &v)
 {
-	translate(v, this);
+	translate(v, TS_LOCAL);
 }
 
 void 
@@ -405,7 +428,7 @@ vl::SceneNode::setDirection(Ogre::Vector3 const &dir, Ogre::Vector3 const &local
 
 
 void 
-vl::SceneNode::setVisible(bool visible, bool cascade)
+vl::SceneNode::setVisibility(bool visible, bool cascade)
 {
 	if( _visible != visible )
 	{
@@ -416,7 +439,7 @@ vl::SceneNode::setVisible(bool visible, bool cascade)
 		if(cascade)
 		{
 			for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
-			{ (*iter)->setVisible(_visible, cascade); }
+			{ (*iter)->setVisibility(_visible, cascade); }
 		}
 
 		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
@@ -429,8 +452,28 @@ vl::SceneNode::setShowBoundingBox(bool show)
 {
 	if( _show_boundingbox != show )
 	{
-		setDirty(DIRTY_BOUNDING_BOX);
+		setDirty(DIRTY_PARAMS);
 		_show_boundingbox = show;
+	}
+}
+
+void 
+vl::SceneNode::setShowDebugDisplay(bool show)
+{
+	if(_show_debug_display != show)
+	{
+		setDirty(DIRTY_PARAMS);
+		_show_debug_display = show;
+	}
+}
+
+void
+vl::SceneNode::setShowAxes(bool show)
+{
+	if(_show_axes != show)
+	{
+		setDirty(DIRTY_PARAMS);
+		_show_axes = show;
 	}
 }
 
@@ -481,7 +524,7 @@ vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr paren
 
 	node->setTransform(_transform);
 	node->setScale(_scale);
-	node->setVisible(_visible);
+	node->setVisibility(_visible);
 
 	// Not adding to selection because it would be more confusing than useful
 
@@ -569,7 +612,7 @@ vl::SceneNode::addChild(vl::SceneNodePtr child)
 		_childs.push_back(child);
 
 		// Copy cascading parameters
-		child->setVisible(_visible);
+		child->setVisibility(_visible);
 
 		/// Remove from current parent
 		if( child->getParent() )
@@ -687,16 +730,6 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		msg << _visible;
 	}
 
-	if( dirtyBits & DIRTY_BOUNDING_BOX )
-	{
-		msg << _show_boundingbox;
-	}
-
-	if(dirtyBits & DIRTY_PARAMS)
-	{
-		msg << _inherit_scale;
-	}
-
 	if( dirtyBits & DIRTY_CHILDS )
 	{
 		msg << _childs.size();
@@ -716,6 +749,12 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 			msg << (*iter)->getID();
 		}
 	}
+
+	if(dirtyBits & DIRTY_PARAMS)
+	{
+		msg << _show_boundingbox << _inherit_scale << _show_debug_display << _show_axes;
+	}
+
 }
 
 void
@@ -751,19 +790,6 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		msg >> _visible;
 		if( _ogre_node )
 		{ _ogre_node->setVisible(_visible, false); }
-	}
-
-	if( dirtyBits & DIRTY_BOUNDING_BOX )
-	{
-		msg >> _show_boundingbox;
-		if( _ogre_node )
-		{ _ogre_node->showBoundingBox(_show_boundingbox); }
-	}
-
-	if(dirtyBits & DIRTY_PARAMS)
-	{
-		msg >> _inherit_scale;
-		_ogre_node->setInheritScale(_inherit_scale);
 	}
 
 	if( dirtyBits & DIRTY_CHILDS )
@@ -847,34 +873,31 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 			attachObject(_creator->getMovableObjectID(*id_iter));
 		}
 	}
+
+
+	if(dirtyBits & DIRTY_PARAMS)
+	{
+		msg >> _show_boundingbox >> _inherit_scale >> _show_debug_display >> _show_axes;
+		assert(_ogre_node);
+		
+		_ogre_node->showBoundingBox(_show_boundingbox);
+		_ogre_node->setInheritScale(_inherit_scale);
+		_ogre_node->setDebugDisplayEnabled(_show_debug_display, true);
+		
+		if(_show_axes)
+		{
+			if(!_debug_axes)
+			{
+				_debug_axes = new ogre::Axes(3.0/_scale.length());
+				_ogre_node->attachObject(_debug_axes);
+			}
+
+			_debug_axes->setVisible(true);
+		}
+		else
+		{
+			if(_debug_axes)
+			{ _debug_axes->setVisible(false); }
+		}
+	}
 }
-
-/// --------- Actions ----------
-void
-vl::HideAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->hide();
-}
-
-void
-vl::ShowAction::execute(void )
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->show();
-}
-
-void
-vl::SetTransformation::execute(const vl::Transform& trans)
-{
-	if( !_node )
-	{ BOOST_THROW_EXCEPTION( vl::null_pointer() ); }
-
-	_node->setPosition( trans.position );
-	_node->setOrientation( trans.quaternion );
-}
-

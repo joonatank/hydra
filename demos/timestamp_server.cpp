@@ -38,7 +38,7 @@
 #include <boost/bind.hpp>
 
 // Necessary for retrieving timestamp information
-#include "base/timer.hpp"
+#include "base/chrono.hpp"
 // Necessary for sleeping
 #include "base/sleep.hpp"
 
@@ -181,7 +181,7 @@ protected:
 	asio::io_service _io_service;
 	udp::socket _socket;
 
-	vl::timer _start_timer;
+	vl::chrono _start_timer;
 };
 
 

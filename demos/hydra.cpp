@@ -15,13 +15,15 @@
  */
 
 
-// Necessary for vl::exceptions
-#include "base/exceptions.hpp"
-
 #include "system_tools/message_box.hpp"
 
 #include <string>
 #include <vector>
+
+// Hydra includes
+// Necessary for vl::exceptions
+#include "base/exceptions.hpp"
+#include "base/filesystem.hpp"
 
 // Necessary for checking 32 and 64-bit
 #include "defines.hpp"
@@ -56,7 +58,11 @@ int main( const int argc, char** argv )
 	// so it's compile time configurable and can be configured automatically with CMake
 	// @todo these should use a separate search directory (main dir)
 	std::vector<std::string> extra_paths;
-	extra_paths.push_back("bin");
+
+	fs::path exe_dir = vl::get_global_path(vl::GP_EXE);
+	exe_dir.remove_leaf();
+	extra_paths.push_back(exe_dir.string());
+	extra_paths.push_back(fs::path(exe_dir / "bin").string());
 
 #ifdef HYDRA_DEBUG
 	
@@ -66,6 +72,8 @@ int main( const int argc, char** argv )
 	extra_paths.push_back(std::string(GENERAL_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
 	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(SKYX_BINARY_DIR) + "/debug");
+	extra_paths.push_back(std::string(CAELUM_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/debug");
 	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/debug");
 
@@ -78,6 +86,8 @@ int main( const int argc, char** argv )
 	extra_paths.push_back(std::string(GENERAL_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(BOOST_BINARY_DIR));
 	extra_paths.push_back(std::string(EXPAT_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(SKYX_BINARY_DIR) + "/release");
+	extra_paths.push_back(std::string(CAELUM_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(HYDRA_MAIN_BINARY_DIR) + "/release");
 	extra_paths.push_back(std::string(HYDRA_GL_BINARY_DIR) + "/release");
 

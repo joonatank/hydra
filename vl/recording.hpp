@@ -1,9 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-07
  *	@file recording.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Recording of the the user interaction
  *	Can be loaded using ResourceManager and integrates to the clusters resource system.
  *
@@ -25,7 +36,7 @@
 
 #include "cluster/message.hpp"
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "resource.hpp"
 

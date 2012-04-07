@@ -1,10 +1,20 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-09
  *	@file input/ois_converters.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Converters from OIS event structures to Hydra event structures.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Converters from OIS event structures to Hydra event structures.
  */
 
 #ifndef HYDRA_INPUT_OIS_CONVERS_HPP

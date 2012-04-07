@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/shapes.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_PHYSICS_SHAPES_HPP
@@ -26,15 +35,24 @@ class CollisionShape
 public :
 	virtual ~CollisionShape(void) {}
 
+	virtual void setMargin(vl::scalar margin) = 0;
+
+	virtual vl::scalar getMargin(void) const = 0;
+
+	// @todo add default margin
+
 };	// class CollisionShape
 
 class BoxShape : public CollisionShape
 {
 public :
-	// Create a box shape around origin: with size [-bounds, bounds]
+	// Create a box shape around origin: with size [-bounds/2, bounds/2]
 	static BoxShapeRefPtr create(Ogre::Vector3 const &bounds);
 
 	virtual ~BoxShape(void) {}
+
+	/// @brief Return the size of the cube.
+	virtual Ogre::Vector3 getSize(void) = 0;
 
 protected :
 	BoxShape(void) {}
@@ -113,12 +131,19 @@ public :
 	{ return vl::math::convert_vec(_bt_shape->getLocalScaling()); }
 	*/
 
+	vl::MeshRefPtr getMesh(void) const
+	{ return _mesh; }
+
 protected :
-	ConvexHullShape(void) {}
+	ConvexHullShape(vl::MeshRefPtr mesh)
+		: _mesh(mesh)
+	{}
 
 private :
 	ConvexHullShape(ConvexHullShape const &);
 	ConvexHullShape &operator=(ConvexHullShape const &);
+
+	vl::MeshRefPtr _mesh;
 
 };	// class ConvexHullShape
 
@@ -126,11 +151,15 @@ private :
 class CylinderShape : public CollisionShape
 {
 public :
+	static CylinderShapeRefPtr create(Ogre::Vector3 const &bounds);
 
-private :
+	static CylinderShapeRefPtr create(vl::scalar radius, vl::scalar height);
+
+protected :
 	CylinderShape(void)
 	{}
 
+private :
 	CylinderShape(CylinderShape const &);
 	CylinderShape &operator=(CylinderShape const &);
 
@@ -140,11 +169,13 @@ private :
 class CapsuleShape : public CollisionShape
 {
 public :
+	static CapsuleShapeRefPtr create(vl::scalar radius, vl::scalar height);
 
-private :
+protected :
 	CapsuleShape(void)
 	{}
 
+private:
 	CapsuleShape(CapsuleShape const &);
 	CapsuleShape operator=(CapsuleShape const &);
 

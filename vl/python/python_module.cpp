@@ -3,7 +3,7 @@
  *	Copyright (c) 2011/10 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2011-08
+ *	@date 2011-01
  *	@file python/python_module.cpp
  *
  *	This file is part of Hydra VR game engine.
@@ -18,6 +18,11 @@
 // Interface
 #include "python_module.hpp"
 
+// Callback helpers
+#include <toast/python/callback.hpp>
+// For namespace renaming
+#include "python_context_impl.hpp"
+
 // Game
 #include "game_manager.hpp"
 
@@ -30,6 +35,9 @@
 #include "movable_text.hpp"
 #include "ray_object.hpp"
 
+#include "material.hpp"
+#include "material_manager.hpp"
+
 #include "player.hpp"
 
 // For some reason necessary
@@ -38,7 +46,7 @@
 // GUI
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
-#include "gui/editor.hpp"
+#include "gui/console.hpp"
 
 // Animation framework
 #include "animation/constraints.hpp"
@@ -54,6 +62,8 @@
 // Necessary for hide/show system console
 #include "base/system_util.hpp"
 
+#include "game_object.hpp"
+
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -62,8 +72,15 @@
 /// SceneGraph overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setSpotlightRange_ov, setSpotlightRange, 2, 3)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hideSceneNodes_ov, hideSceneNodes, 1, 3)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 3, 6)
+
+// MeshManager overloads
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createPlane_ovs, createPlane, 1, 6)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCube_ovs, createCube, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createSphere_ovs, createSphere, 1, 4)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCylinder_ovs, createCylinder, 1, 5)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createCapsule_ovs, createCapsule, 1, 5)
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(setDirection_ovs, setDirection, 1, 4)
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(lookAt_ovs, lookAt, 3, 5)
@@ -110,48 +127,42 @@ void export_math(void)
 
 void export_animation(void)
 {
-	void (vl::KinematicBody::*translate_ov0)(Ogre::Vector3 const &) = &vl::KinematicBody::translate;
-	void (vl::KinematicBody::*translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::KinematicBody::translate;
-//	void (vl::KinematicBody::*translate_ov2)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::KinematicBody::translate;
-//	void (vl::KinematicBody::*translate_ov3)(Ogre::Vector3 const &, TransformSpace) = &vl::KinematicBody::translate;
-	
-	void (vl::KinematicBody::*rotate_ov0)(Ogre::Quaternion const &) = &vl::KinematicBody::rotate;
-//	void (vl::KinematicBody::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::KinematicBody::rotate;
-//	void (vl::KinematicBody::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::KinematicBody::rotate;
-	/*
-	void (vl::KinematicBody::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov4)(Ogre::Vector3 const &, Ogre::Radian const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov5)(Ogre::Degree const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
-	void (vl::KinematicBody::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::KinematicBody::rotate;
-	*/
+	/// Abstract classes can not expose any methods, they are not available for derived classes...
+	python::class_<vl::ObjectInterface, boost::noncopyable>("ObjectInterface", python::no_init)
+	;
+
+
+	void (vl::KinematicBody::*oi_translate_ov0)(Ogre::Vector3 const &) = &vl::KinematicBody::translate;
+	void (vl::KinematicBody::*oi_translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::ObjectInterface::translate;
+	void (vl::KinematicBody::*oi_rotate_ov0)(Ogre::Quaternion const &) = &vl::KinematicBody::rotate;
+
 	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov0)() const = &vl::KinematicBody::clone;
 	KinematicBodyRefPtr (vl::KinematicBody::*kb_clone_ov1)(std::string const &) const = &vl::KinematicBody::clone;
 
-	/// @todo most of this should be moved to abstract interface
-	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable>("KinematicBody", python::no_init)
+	python::class_<vl::KinematicBody, vl::KinematicBodyRefPtr, boost::noncopyable, python::bases<vl::ObjectInterface> >("KinematicBody", python::no_init)
 		.add_property("scene_node", python::make_function(&vl::KinematicBody::getSceneNode, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("state", python::make_function(&vl::KinematicBody::getMotionState, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("name", python::make_function(&vl::KinematicBody::getName, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("world_transformation", &vl::KinematicBody::getWorldTransform, &vl::KinematicBody::setWorldTransform)
+		.add_property("visible", &vl::KinematicBody::isVisible, &vl::KinematicBody::setVisibility)
+		.add_property("position", python::make_function( &vl::KinematicBody::getPosition, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::KinematicBody::setPosition)
+		.add_property("orientation", python::make_function( &vl::KinematicBody::getOrientation, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::KinematicBody::setOrientation)
 		.def("transform", &vl::KinematicBody::transform)
-		.def("translate", translate_ov0)
-		.def("translate", translate_ov1)
-		//.def("translate", translate_ov2)
-		//.def("translate", translate_ov3)
-		.def("rotate", rotate_ov0)
-		/*
-		.def("rotate", rotate_ov1)
-		.def("rotate", rotate_ov2)
-		.def("rotate", rotate_ov3)
-		.def("rotate", rotate_ov4)
-		.def("rotate", rotate_ov5)
-		.def("rotate", rotate_ov6)
-		*/
+		.def("translate", oi_translate_ov0)
+		.def("translate", oi_translate_ov1)
+		.def("rotate", oi_rotate_ov0)
+		.def("hide", &vl::ObjectInterface::hide)
+		.def("show", &vl::ObjectInterface::show)
 		.def("clone", kb_clone_ov0)
 		.def("clone", kb_clone_ov1)
 		/// Optimisation parameters
 		.add_property("disable", &vl::KinematicBody::isDisableUpdate, &vl::KinematicBody::setDisableUpdate)
 		.add_property("use_dirties", &vl::KinematicBody::isUseDirties, &vl::KinematicBody::setUseDirties)
 		.add_property("assume_in_world", &vl::KinematicBody::isAssumeInWorld, &vl::KinematicBody::setAssumeInWorld)
+		.add_property("collisions_enabled", &vl::KinematicBody::isCollisionsEnabled, &vl::KinematicBody::enableCollisions)
+
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -162,8 +173,20 @@ void export_animation(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<Constraint> > >("ConstraintList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<Constraint> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov0)(std::string const &) const = &vl::KinematicWorld::getKinematicBody;
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov1)(vl::SceneNodePtr) const = &vl::KinematicWorld::getKinematicBody;
+
+	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov0)(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans) = &vl::KinematicWorld::createConstraint;
+	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov1)(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &, vl::Transform const &) = &vl::KinematicWorld::createConstraint;
 
 	/// @todo add list getters
 	// bodies not yet working as we would like, probably something to do with ref ptrs
@@ -172,18 +195,22 @@ void export_animation(void)
 		.def("get_kinematic_body", getKinematicBody_ov1)
 		.def("create_kinematic_body", &vl::KinematicWorld::createKinematicBody)
 		.def("remove_kinematic_body", &vl::KinematicWorld::removeKinematicBody)
-		.def("create_constraint", &vl::KinematicWorld::createConstraint)
+		.def("create_constraint", createConstraint_ov0)
+		.def("create_constraint", createConstraint_ov1)
 		.def("remove_constraint", &vl::KinematicWorld::removeConstraint)
+		.def("get_constraint", &vl::KinematicWorld::getConstraint)
+		.add_property("constraints", python::make_function(&vl::KinematicWorld::getConstraints, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("bodies", python::make_function(&vl::KinematicWorld::getBodies, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("collision_detection_enabled", &vl::KinematicWorld::isCollisionDetectionEnabled, &vl::KinematicWorld::enableCollisionDetection)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	/// Abstract master class for all constraints, both physics and non-physics constraint
-	/// derive from this
+	/// Abstract master class for all non-physics constraints
 	python::class_<vl::Constraint, vl::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 		.add_property("body_a", &vl::Constraint::getBodyA)
 		.add_property("body_b", &vl::Constraint::getBodyB)
 		.add_property("actuator", &vl::Constraint::isActuator, &vl::Constraint::setActuator)
+		.add_property("name", python::make_function(&vl::Constraint::getName, python::return_value_policy<python::copy_const_reference>()), &vl::Constraint::setName)
 		.def("set_velocity", &vl::Constraint::setVelocity)
 		.def("add_velocity", &vl::Constraint::addVelocity)
 		.def(python::self_ns::str(python::self_ns::self))
@@ -208,7 +235,7 @@ void export_animation(void)
 		.add_property("upper_limit", python::make_function(&vl::HingeConstraint::getUpperLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setUpperLimit)
 		.add_property("speed", python::make_function(&vl::HingeConstraint::getActuatorSpeed, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorSpeed)
 		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
-		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle))
 		.add_property("axis", python::make_function(&vl::HingeConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setAxis)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -218,15 +245,47 @@ void export_animation(void)
 void export_scene_graph(void)
 {
 	vl::MeshRefPtr (MeshManager::*loadMesh_ov0)(std::string const &) = &MeshManager::loadMesh;
-
+	
 	python::class_<vl::MeshManager, vl::MeshManagerRefPtr, boost::noncopyable>("MeshManager", python::no_init)
 		.def("loadMesh", loadMesh_ov0)
 		.def("createPlane", &vl::MeshManager::createPlane, createPlane_ovs())
-		.def("createSphere", &vl::MeshManager::createSphere)
+		.def("createSphere", &vl::MeshManager::createSphere, createSphere_ovs())
 		.def("createCube", &vl::MeshManager::createCube, createCube_ovs())
+		.def("createCylinder", &vl::MeshManager::createCylinder, createCylinder_ovs())
+		.def("createCapsule", &vl::MeshManager::createCapsule, createCapsule_ovs())
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
+	;
+
+	
+	python::class_<vl::Material, vl::MaterialRefPtr, boost::noncopyable>("Material", python::no_init)
+		.add_property("shader", python::make_function(&vl::Material::getShader, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setShader)
+		.add_property("texture", python::make_function(&vl::Material::getTexture, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setTexture)
+		.add_property("diffuse", python::make_function(&vl::Material::getDiffuse, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setDiffuse)
+		.add_property("specular", python::make_function(&vl::Material::getSpecular, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setSpecular)
+		.add_property("emissive", python::make_function(&vl::Material::getEmissive, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setEmissive)
+		.add_property("ambient", python::make_function(&vl::Material::getAmbient, 
+			python::return_value_policy<python::copy_const_reference>() ), &vl::Material::setAmbient)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<MaterialRefPtr> >("MaterialList")
+		.def(python::vector_indexing_suite<std::vector<MaterialRefPtr>, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::MaterialManager, vl::MaterialManagerRefPtr, boost::noncopyable>("MaterialManager", python::no_init)
+		.def("create_material", &vl::MaterialManager::createMaterial)
+		.def("get_material", &vl::MaterialManager::getMaterial)
+		.def("has_material", &vl::MaterialManager::hasMaterial)
+		.add_property("materials", python::make_function(&vl::MaterialManager::getMaterialList, python::return_value_policy<python::copy_const_reference>()) )
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::FogInfo>("FogInfo", python::init<>())
@@ -253,17 +312,22 @@ void export_scene_graph(void)
 		.def_readwrite("ysegments_keep", &vl::SkyDomeInfo::ysegments_keep)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
-	
-	void (vl::ShadowInfo::*setShadowTechnique_ov0)(std::string const &) = &vl::ShadowInfo::setShadowTechnique;
 
-	python::class_<vl::ShadowInfo>("ShadowInfo",  python::init< python::optional<std::string, Ogre::ColourValue, std::string> >())
+	python::class_<vl::SkyInfo>( "SkyInfo", python::init< python::optional<std::string> >() )
+		.add_property("preset", python::make_function(&vl::SkyInfo::getPreset, python::return_value_policy<python::copy_const_reference>()), &vl::SkyInfo::setPreset)
+	;
+
+	python::class_<vl::ShadowInfo>( "ShadowInfo", python::init<std::string>() )
 		.def(python::init<vl::ShadowInfo>())
 		.def("enable", &vl::ShadowInfo::enable)
 		.def("disable", &vl::ShadowInfo::disable)
-		.def("isEnabled", &vl::ShadowInfo::isEnabled)
-		.add_property("technique", &vl::ShadowInfo::getShadowTechniqueName, setShadowTechnique_ov0)
-		.add_property("colour", python::make_function(&vl::ShadowInfo::getColour, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setColour)
+		.add_property("enabled", &vl::ShadowInfo::isEnabled, &vl::ShadowInfo::setEnabled)
 		.add_property("camera", python::make_function(&vl::ShadowInfo::getCamera, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setCamera)
+		.add_property("shelf_shadow", &vl::ShadowInfo::isShelfShadowEnabled, &vl::ShadowInfo::setShelfShadowEnabled)
+		.add_property("dir_light_texture_offset", &vl::ShadowInfo::getDirLightTextureOffset, &vl::ShadowInfo::setDirLightTextureOffset)
+		.add_property("max_distance", &vl::ShadowInfo::getMaxDistance, &vl::ShadowInfo::setMaxDistance)
+		.add_property("caster_material", python::make_function(&vl::ShadowInfo::getShadowCasterMaterial, python::return_value_policy<python::copy_const_reference>()), &vl::ShadowInfo::setShadowCasterMaterial)
+		.add_property("texture_size", &vl::ShadowInfo::getTextureSize, &vl::ShadowInfo::setTextureSize)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -315,15 +379,19 @@ void export_scene_graph(void)
 		.def("createRayObject", &SceneManager::createRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("getRayObject", &SceneManager::getRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasRayObject", &SceneManager::hasRayObject)
+		.def("show_debug_displays", &SceneManager::showDebugDisplays)
+		.def("show_bounding_boxes", &SceneManager::showBoundingBoxes)
+		.def("show_axes", &SceneManager::showAxes)
 
 		/// Scene parameters
 		/// returns copies of the objects
-		.add_property("sky", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
+		.add_property("sky_dome", python::make_function( &vl::SceneManager::getSkyDome, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setSkyDome )
 		.add_property("fog", python::make_function( &vl::SceneManager::getFog, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setFog )
 		.add_property("ambient_light", python::make_function( &vl::SceneManager::getAmbientLight, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneManager::setAmbientLight )
 		.add_property("shadows", python::make_function(getShadowInfo_ov0, python::return_internal_reference<>()), &vl::SceneManager::setShadowInfo)
 		.add_property("root", python::make_function(&vl::SceneManager::getRootSceneNode, python::return_value_policy<python::reference_existing_object>()))
-		
+		.add_property("sky", python::make_function(&vl::SceneManager::getSkyInfo, python::return_internal_reference<>()), &vl::SceneManager::setSkyInfo)
+
 		/// Selection
 		.def("addToSelection", &SceneManager::addToSelection)
 		.def("removeFromSelection", &SceneManager::removeFromSelection)
@@ -390,7 +458,7 @@ void export_scene_graph(void)
 		.add_property("material_name", python::make_function( &vl::Entity::getMaterialName, python::return_value_policy<python::copy_const_reference>() ), &vl::Entity::setMaterialName )
 		.add_property("cast_shadows", &vl::Entity::getCastShadows, &vl::Entity::setCastShadows )
 		.add_property("mesh_name", python::make_function( &vl::Entity::getMeshName, python::return_value_policy<python::copy_const_reference>() ) )
-		.add_property("prefab", &vl::Entity::getPrefab)
+		.add_property("mesh", &vl::Entity::getMesh)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -432,11 +500,8 @@ void export_scene_graph(void)
 
 	vl::Transform const &(vl::SceneNode::*getTransform_ov0)(void) const = &vl::SceneNode::getTransform;
 	vl::Transform (vl::SceneNode::*getTransform_ov1)(vl::SceneNodePtr) const = &vl::SceneNode::getTransform;
-	void (vl::SceneNode::*translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov1)(Ogre::Vector3 const &, vl::SceneNodePtr) = &vl::SceneNode::translate;
 	void (vl::SceneNode::*translate_ov2)(Ogre::Vector3 const &, TransformSpace) = &vl::SceneNode::translate;
-	void (vl::SceneNode::*translate_ov3)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::SceneNode::translate;
-	void (vl::SceneNode::*rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov2)(Ogre::Quaternion const &, TransformSpace) = &vl::SceneNode::rotate;
 //	void (vl::SceneNode::*rotate_ov1)(Ogre::Quaternion const &, vl::SceneNodePtr) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*rotate_ov3)(Ogre::Vector3 const &, Ogre::Degree const &) = &vl::SceneNode::rotate;
@@ -445,17 +510,37 @@ void export_scene_graph(void)
 	void (vl::SceneNode::*rotate_ov6)(Ogre::Radian const &, Ogre::Vector3 const &) = &vl::SceneNode::rotate;
 	void (vl::SceneNode::*scale_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::scale;
 	void (vl::SceneNode::*scale_ov1)(Ogre::Real) = &vl::SceneNode::scale;
+
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
 	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
-
 	
-	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisible;
-	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisible;
+	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisibility;
+	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisibility;
+
+	void (vl::SceneNode::*oi_translate_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::translate;
+	void (vl::SceneNode::*oi_translate_ov1)(Ogre::Real, Ogre::Real, Ogre::Real) = &vl::ObjectInterface::translate;
+	void (vl::SceneNode::*oi_rotate_ov0)(Ogre::Quaternion const &) = &vl::SceneNode::rotate;
 
 	// naming convention 
 	// transform is the operation of transforming
 	// transformation is the noun descriping that transform operation
-	python::class_<vl::SceneNode, boost::noncopyable>("SceneNode", python::no_init)
+	python::class_<vl::SceneNode, boost::noncopyable, python::bases<vl::ObjectInterface> >("SceneNode", python::no_init)
+		.add_property("name", python::make_function(&vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
+		.add_property("visible", &vl::SceneNode::isVisible, setVisible_ov0)
+		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::SceneNode::setPosition)
+		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), 
+				&vl::SceneNode::setOrientation)
+		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
+		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
+		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
+		.add_property("direction", &vl::SceneNode::getDirection)
+		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("show_debug_display", &SceneNode::isShowDebugDisplay, &vl::SceneNode::setShowDebugDisplay)
+		.add_property("show_axes", &SceneNode::isShowAxes, &vl::SceneNode::setShowAxes)
+
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)
 		.def("hasObject", &vl::SceneNode::hasObject)
@@ -463,13 +548,10 @@ void export_scene_graph(void)
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
 		.def("removeAllChildren", &vl::SceneNode::removeAllChildren)
-		.def("transform", transform_ov0)
 		.def("transform", transform_ov1)
-		.def("translate", translate_ov0)
+		.def("transform", transform_ov0)
 		.def("translate", translate_ov1)
 		.def("translate", translate_ov2)
-		.def("translate", translate_ov3)
-		.def("rotate", rotate_ov0)
 		.def("rotate", rotate_ov2)
 		.def("rotate", rotate_ov3)
 		.def("rotate", rotate_ov4)
@@ -478,28 +560,24 @@ void export_scene_graph(void)
 		.def("rotate_around", &vl::SceneNode::rotateAround)
 		.def("scale", scale_ov0)
 		.def("scale", scale_ov1)
+		.def("translate", oi_translate_ov0)
+		.def("translate", oi_translate_ov1)
+		.def("rotate", oi_rotate_ov0)
+		.def("hide", &vl::SceneNode::hide)
+		.def("show", &vl::SceneNode::show)
 		.def("clone", sn_clone_ov0, python::return_value_policy<python::reference_existing_object>())
 		.def("clone", sn_clone_ov1, python::return_value_policy<python::reference_existing_object>())
-		.add_property("name", python::make_function( &vl::SceneNode::getName, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setName )
+		.def("set_transformation", setTransform_ov0)
+		.def("set_transformation", setTransform_ov1)
+		.def("set_transformation", setTransform_ov2)
+		.def("set_world_transformation", &vl::SceneNode::setWorldTransform)
 		.add_property("transformation", python::make_function( getTransform_ov0, python::return_value_policy<python::copy_const_reference>() ), setTransform_ov0)
-		.add_property("world_transformation", &vl::SceneNode::getWorldTransform, &vl::SceneNode::setWorldTransform)
-		.add_property("position", python::make_function( &vl::SceneNode::getPosition, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setPosition )
-		.add_property("orientation", python::make_function( &vl::SceneNode::getOrientation, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setOrientation )
 		.add_property("scaling", python::make_function( &vl::SceneNode::getScale, python::return_value_policy<python::copy_const_reference>() ), &vl::SceneNode::setScale )
-		.add_property("visible", &SceneNode::getVisible, setVisible_ov0)
 		.def("set_visible", setVisible_ov0)
 		.def("set_visible", setVisible_ov1)
-		.add_property("inherit_scale", &SceneNode::getInheritScale, &vl::SceneNode::setInheritScale)
-		.add_property("show_bounding_box", &SceneNode::getShowBoundingBox, &vl::SceneNode::setShowBoundingBox)
-		.add_property("parent", python::make_function(&vl::SceneNode::getParent, python::return_value_policy<python::reference_existing_object>()) )
-		.add_property("direction", &vl::SceneNode::getDirection)
-		.add_property("childs", python::make_function(&vl::SceneNode::getChilds, python::return_value_policy<python::copy_const_reference>()))
-		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
 		.def("set_direction", &vl::SceneNode::setDirection, setDirection_ovs())
 		.def("look_at", &vl::SceneNode::lookAt)
-		.def("hide", &vl::SceneNode::hide)
 		.def("isHidden", &vl::SceneNode::isHidden)
-		.def("show", &vl::SceneNode::show)
 		.def("isShown", &vl::SceneNode::isShown)
 		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
@@ -536,36 +614,90 @@ void export_game(void)
 		.def(python::self /= double())
 		.def(python::self / size_t())
 		.def(python::self /= size_t())
-		.def(python::self / int32_t())
-		.def(python::self /= int32_t())
 		.def(python::self_ns::str(python::self_ns::self))
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
 
-	python::class_<vl::timer>("timer", python::init<>())
+	void (vl::GameManager::*loadScene_ov0)(std::string const &)= &vl::GameManager::loadScene;
+
+	python::class_<vl::chrono>("chrono", python::init<>())
 		.def(python::init<vl::time const &>())
-		.def("elapsed", &vl::timer::elapsed)
-		.def("reset", &vl::timer::reset)
+		.def("elapsed", &vl::chrono::elapsed)
+		.def("reset", &vl::chrono::reset)
 	;
 
+	python::class_<vl::Report<vl::time>, boost::noncopyable>("Report", python::no_init)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	void (vl::GameObject::*setCollisionModel_ov0)(physics::CollisionShapeRefPtr shape) = &vl::GameObject::setCollisionModel;
+
+	python::class_<vl::GameObject, vl::GameObjectRefPtr, boost::noncopyable, python::bases<vl::ObjectInterface> >("GameObject", python::no_init)
+		.add_property("graphics_node", python::make_function( &vl::GameObject::getGraphicsNode, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("kinematic_node", &vl::GameObject::getKinematicsNode)
+		.add_property("dynamics_node", &vl::GameObject::getPhysicsNode)
+		.add_property("collision_detection", &vl::GameObject::isCollisionDetectionEnabled, &vl::GameObject::enableCollisionDetection)
+		.add_property("visible", &vl::GameObject::isVisible, &vl::GameObject::setVisibility)
+		.add_property("name", python::make_function(&vl::GameObject::getName, python::return_value_policy<python::copy_const_reference>()) )
+		.add_property("transformation", python::make_function(&vl::GameObject::getTransform, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setTransform)
+		.add_property("world_transformation", &vl::GameObject::getWorldTransform, &vl::GameObject::setWorldTransform)
+		.add_property("position", python::make_function(&vl::GameObject::getPosition, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setPosition)
+		.add_property("orientation", python::make_function(&vl::GameObject::getOrientation, python::return_value_policy<python::copy_const_reference>()), &vl::GameObject::setOrientation)
+		.add_property("collision_model", &vl::GameObject::getCollisionModel, setCollisionModel_ov0)
+		.add_property("kinematic", &vl::GameObject::isKinematic, &vl::GameObject::setKinematic)		
+		.def("transform", &vl::GameObject::transform)
+		.def("translate", &vl::GameObject::translate)
+		.def("rotate", &vl::GameObject::rotate)
+		.def("set_world_transformation", &vl::GameObject::setWorldTransform)
+		// @todo create rigid body should be changed, but needs redesign in the GameObject class itself
+		.def("create_rigid_body", &vl::GameObject::createRigidBody)
+		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::GameObject::addListener))
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	/// Shared pointer needs Proxies to be turned off
+	python::class_<std::vector<boost::shared_ptr<GameObject> > >("GameObjectList")
+		.def(python::vector_indexing_suite<std::vector<boost::shared_ptr<GameObject> >, true>())
+		.def(python::self_ns::str(python::self_ns::self))
+	;
 
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", &vl::GameManager::getGUI)
-		.add_property("stats", python::make_function( &vl::GameManager::getStats, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("rendering_report", python::make_function( &vl::GameManager::getRenderingReport, python::return_value_policy<python::reference_existing_object>() ) )
+		.add_property("init_report", python::make_function( &vl::GameManager::getInitReport, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property( "physics_world", &vl::GameManager::getPhysicsWorld)
-		.def( "enableAudio", &vl::GameManager::enableAudio )
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
-		.def("createBackgroundSound", &vl::GameManager::createBackgroundSound)
-		.def("toggleBackgroundSound", &vl::GameManager::toggleBackgroundSound)
 		.add_property("kinematic_world", &vl::GameManager::getKinematicWorld)
+		// GameObject
+		.add_property("objects", python::make_function( &vl::GameManager::getGameObjectList, python::return_value_policy<python::reference_existing_object>() ) )
+		.def("get_object", &vl::GameManager::getGameObject)
+		.def("has_object", &vl::GameManager::hasGameObject)
+		.def("create_object", &vl::GameManager::createGameObject)
+
+		// State management
 		.def("quit", &vl::GameManager::quit)
+		.def("pause", &vl::GameManager::pause)
+		.def("play", &vl::GameManager::play)
+		.def("stop", &vl::GameManager::stop)
+		.def("restart", &vl::GameManager::restart)
+		.add_property("paused", &vl::GameManager::isPaused)
+		.add_property("playing", &vl::GameManager::isPlaying)
+		.add_property("quited", &vl::GameManager::isQuited)
+		.add_property("auto_start", &vl::GameManager::auto_start, &vl::GameManager::set_auto_start)
+		/// @todo add state inqueries
+		/// @todo add step function, needs to rename the current one in GameManager which is internal
+		/// called from Config...
+		/// python step function should step the simulation with a delta time (or a default one like 1/60 s)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
+		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
+		.def("load_scene", loadScene_ov0)
+		.def("save_scene", &vl::GameManager::saveScene)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 
@@ -589,10 +721,6 @@ void export_game(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	python::class_<vl::Stats, boost::noncopyable>("Stats", python::no_init)
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
 	python::class_<vl::Recording, vl::RecordingRefPtr, boost::noncopyable>("Recording", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -613,20 +741,7 @@ void export_gui(void)
 	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
 	;
 
-	python::class_<vl::gui::EditorWindow, vl::gui::EditorWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIEditorWindow", python::no_init)
-	;
-
-	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov0)(std::string const &)= &vl::gui::GUI::createWindow;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov1)(std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
-	vl::gui::WindowRefPtr (vl::gui::GUI::*createWindow_ov2)(std::string const &, std::string const &, std::string const &) = &vl::gui::GUI::createWindow;
-
 	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
-		.def("createWindow", createWindow_ov0)
-		.def("createWindow", createWindow_ov1)
-		.def("createWindow", createWindow_ov2)
 		.add_property("console", &vl::gui::GUI::getConsole)
-		.add_property("editor", &vl::gui::GUI::getEditor)
-		/// @todo add get window by name
 	;
 }

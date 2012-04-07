@@ -1,11 +1,25 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file entity.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
-#ifndef VL_ENTITY_HPP
-#define VL_ENTITY_HPP
+#ifndef HYDRA_ENTITY_HPP
+#define HYDRA_ENTITY_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "movable_object.hpp"
 
@@ -45,17 +59,14 @@ struct EntityMeshLoadedCallback : public vl::MeshLoadedCallback
  *	@brief Entity that can be drawn to the scene, is distributed
  *	Currently only supports prefabs
  */
-class Entity : public MovableObject
+class HYDRA_API Entity : public MovableObject
 {
 public :
 	/// Constructor
 	/// Should not be called from user code, use SceneManager to create these
-	Entity(std::string const &name, PREFAB type, vl::SceneManagerPtr creator);
-
-	/// Should not be called from user code, use SceneManager to create these
 	Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager = false);
 
-	/// Internal used by slave mapping
+	/// @internal used by slave mapping
 	Entity(vl::SceneManagerPtr creator);
 
 	/// Destructor
@@ -64,11 +75,8 @@ public :
 	std::string const &getMeshName(void) const
 	{ return _mesh_name; }
 
-	bool isPrefab(void) const
-	{ return _prefab != PF_NONE; }
-
-	PREFAB getPrefab(void) const
-	{ return _prefab; }
+	MeshRefPtr getMesh(void) const
+	{ return _mesh; }
 
 	void setCastShadows(bool shadows);
 
@@ -80,14 +88,19 @@ public :
 	std::string const &getMaterialName(void) const
 	{ return _material_name; }
 
+	void setInstanced(bool enabled);
+
+	bool isInstanced(void) const
+	{ return _is_instanced; }
+
 	virtual vl::MovableObjectPtr clone(std::string const &append_to_name) const;
 
 	enum DirtyBits
 	{
 		DIRTY_MESH_NAME = vl::MovableObject::DIRTY_CUSTOM << 0,
-		DIRTY_PREFAB = vl::MovableObject::DIRTY_CUSTOM << 1,
-		DIRTY_CAST_SHADOWS = vl::MovableObject::DIRTY_CUSTOM << 2,
-		DIRTY_MATERIAL = vl::MovableObject::DIRTY_CUSTOM << 3,
+		DIRTY_CAST_SHADOWS = vl::MovableObject::DIRTY_CUSTOM << 1,
+		DIRTY_MATERIAL = vl::MovableObject::DIRTY_CUSTOM << 2,
+		DIRTY_INSTANCED = vl::MovableObject::DIRTY_CUSTOM << 3,
 		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 4,
 	};
 
@@ -115,8 +128,7 @@ private :
 	/// clears the structure to default values, called from constructors
 	void _clear(void);
 
-	/// Name, _prefab and _mesh_name should not be changed after creation
-	PREFAB _prefab;
+	Ogre::MovableObject *_createNativeEntity(std::string const &_name, std::string const &_mesh_name);
 
 	std::string _mesh_name;
 
@@ -127,7 +139,9 @@ private :
 	bool _cast_shadows;
 	std::string _material_name;
 
-	Ogre::Entity *_ogre_object;
+	bool _is_instanced;
+
+	Ogre::MovableObject *_ogre_object;
 
 	// Save the loader pointer so it can be destroyed when not needed anymore
 	EntityMeshLoadedCallback *_loader_cb;
@@ -137,4 +151,4 @@ std::ostream &operator<<(std::ostream &os, vl::Entity const &ent);
 
 }	// namespace vl
 
-#endif	// VL_ENTITY_HPP
+#endif	// HYDRA_ENTITY_HPP

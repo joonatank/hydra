@@ -1,0 +1,513 @@
+<?xml version="1.0" ?>
+<scene>
+	<nodes>
+		<node name="cb_kaantokappale" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.599441" y="0.676197" z="-0.899973"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_kaantokappale.mesh" name="cb_kaantokappale"/>
+		</node>
+		<node name="cb_kehto" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.437250" y="1.243146" z="-0.975012"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_kehto.mesh" name="cb_kehto"/>
+		</node>
+		<node name="cb_kiinnike1_slaite" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.542942" y="1.501945" z="-0.760851"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_kiinnike1_slaite.mesh" name="cb_kiinnike1_slaite"/>
+		</node>
+		<node name="cb_kiinnityslevy" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.420162" y="0.771950" z="-0.795378"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_kiinnityslevy.mesh" name="cb_kiinnityslevy"/>
+		</node>
+		<node name="cb_ohjaamo" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="0.981347" y="1.118069" z="-0.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_ohjaamo.mesh" name="cb_ohjaamo"/>
+		</node>
+		<node name="cb_ohjuri_slaite" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.588869" y="1.516631" z="-0.964765"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_ohjuri_slaite.mesh" name="cb_ohjuri_slaite"/>
+		</node>
+		<node name="cb_porakanki" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-2.939086" y="1.698639" z="-0.975043"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_porakanki.mesh" name="cb_porakanki"/>
+		</node>
+		<node name="cb_porakelkka" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-1.692466" y="1.643843" z="-0.973522"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_porakelkka.mesh" name="cb_porakelkka"/>
+		</node>
+		<node name="cb_pulttausnivel" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.028614" y="1.004707" z="-0.975927"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_pulttausnivel.mesh" name="cb_pulttausnivel"/>
+		</node>
+		<node name="cb_puomiteline" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.223366" y="0.498850" z="-0.000000"/>
+			<quaternion w="1.000000" x="-0.000000" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_puomiteline.mesh" name="cb_puomiteline"/>
+		</node>
+		<node name="cb_ristikpl_kaantosyl" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.586807" y="0.833269" z="-0.527194"/>
+			<quaternion w="-0.000000" x="-0.748955" y="-0.000000" z="0.662620"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_ristikpl_kaantosyl.mesh" name="cb_ristikpl_kaantosyl"/>
+		</node>
+		<node name="cb_ristikpl_swing" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.545033" y="0.742372" z="-1.204313"/>
+			<quaternion w="0.000000" x="-0.043619" y="-0.000000" z="0.999048"/>
+			<scale x="1" y="1" z="1"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_ristikpl_swing.mesh" name="cb_ristikpl_swing"/>
+		</node>
+		<node name="cb_sisaputki" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-2.900258" y="0.830841" z="-1.014184"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_sisaputki.mesh" name="cb_sisaputki"/>
+		</node>
+		<node name="cb_swingkappale" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.718737" y="0.742794" z="-1.036484"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_swingkappale.mesh" name="cb_swingkappale"/>
+		</node>
+		<node name="cb_syl_kaanto_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-1.836645" y="0.669309" z="-0.684036"/>
+			<quaternion w="0.765564" x="0.039172" y="-0.046816" z="-0.640457"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_kaanto_putki.mesh" name="cb_syl_kaanto_putki"/>
+		</node>
+		<node name="cb_syl_kaanto_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-0.985954" y="0.823374" z="-0.579570"/>
+			<quaternion w="0.765565" x="0.039174" y="-0.046819" z="-0.640456"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_kaanto_varsi.mesh" name="cb_syl_kaanto_varsi"/>
+		</node>
+		<node name="cb_syl_nosto_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-1.832236" y="0.583379" z="-0.900571"/>
+			<quaternion w="-0.000001" x="-0.748956" y="-0.662620" z="-0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_nosto_putki.mesh" name="cb_syl_nosto_putki"/>
+		</node>
+		<node name="cb_syl_nosto_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-1.015957" y="0.483045" z="-0.900068"/>
+			<quaternion w="-0.000001" x="-0.748956" y="-0.662620" z="-0.000001"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_nosto_varsi.mesh" name="cb_syl_nosto_varsi"/>
+		</node>
+		<node name="cb_syl_pulttaus_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.626746" y="1.059652" z="-0.941499"/>
+			<quaternion w="0.442595" x="-0.442595" y="-0.551461" z="-0.551461"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_pulttaus_putki.mesh" name="cb_syl_pulttaus_putki"/>
+		</node>
+		<node name="cb_syl_pulttaus_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.266383" y="1.059561" z="-0.861812"/>
+			<quaternion w="0.442595" x="-0.442595" y="-0.551461" z="-0.551461"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_pulttaus_varsi.mesh" name="cb_syl_pulttaus_varsi"/>
+		</node>
+		<node name="cb_syl_swing_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-2.827013" y="0.847459" z="-1.130120"/>
+			<quaternion w="0.030507" x="-0.762020" y="0.646051" z="-0.031835"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_swing_putki.mesh" name="cb_syl_swing_putki"/>
+		</node>
+		<node name="cb_syl_swing_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.317752" y="0.765278" z="-1.173725"/>
+			<quaternion w="0.030507" x="-0.762020" y="0.646051" z="-0.031835"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_swing_varsi.mesh" name="cb_syl_swing_varsi"/>
+		</node>
+		<node name="cb_syl_syotto_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.526251" y="1.260131" z="-0.972997"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_syotto_putki.mesh" name="cb_syl_syotto_putki"/>
+		</node>
+		<node name="cb_syl_syotto_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-5.291042" y="1.260068" z="-0.973035"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_syotto_varsi.mesh" name="cb_syl_syotto_varsi"/>
+		</node>
+		<node name="cb_syl_tilt_putki" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-2.836015" y="0.883170" z="-0.900083"/>
+			<quaternion w="0.000000" x="-0.669131" y="0.743145" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_tilt_putki.mesh" name="cb_syl_tilt_putki"/>
+		</node>
+		<node name="cb_syl_tilt_varsi" physics_type="none">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.295836" y="0.931904" z="-0.899889"/>
+			<quaternion w="0.000000" x="-0.669131" y="0.743145" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="false" model="" />
+			<entity mesh_file="cb_syl_tilt_varsi.mesh" name="cb_syl_tilt_varsi"/>
+		</node>
+		<node name="cb_syottol_kiskot" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.235755" y="1.533802" z="-0.960627"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_syottol_kiskot.mesh" name="cb_syottol_kiskot"/>
+		</node>
+		<node name="cb_tiltkappale" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-3.555117" y="0.806610" z="-0.971080"/>
+			<quaternion w="0.000000" x="-0.707107" y="0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<inertia x="1" y="1" z="1" />
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_tiltkappale.mesh" name="cb_tiltkappale"/>
+		</node>
+		<node name="cb_ulkoputki" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-1.536867" y="0.850508" z="-0.925594"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_ulkoputki.mesh" name="cb_ulkoputki"/>
+		</node>
+		<node name="cb_vaantomot" physics_type="kinematic">
+			<body type="rigid" mass="1">
+				<inertia x="1" y="1" z="1" />
+			</body>
+			<position x="-4.133116" y="0.745834" z="-0.974205"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="true" model="" />
+			<entity mesh_file="cb_vaantomot.mesh" name="cb_vaantomot"/>
+		</node>
+		<node name="letkukiinnikepiste1">
+			<position x="-2.117021" y="0.459675" z="-0.800235"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+		</node>
+		<node name="letkukiinnikepiste2">
+			<position x="-2.983557" y="0.596923" z="-0.843991"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+		</node>
+		<node name="letkukiinnikepiste3">
+			<position x="-2.983557" y="0.596517" z="-0.956041"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+		</node>
+		<node name="letkukiinnikepiste4">
+			<position x="-4.301990" y="0.500000" z="-0.974936"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+		</node>
+		<node name="nivel_kaantosyl1_rotz" physics_type="none">
+			<quaternion w="0.706434" x="-0.706434" y="-0.030843" z="-0.030843"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_kaantosyl1_rotz.mesh" name="nivel_kaantosyl1_rotz"/>
+		</node>
+		<node name="nivel_kaantosyl2_rotz" physics_type="none">
+			<position x="-0.711755" y="0.870193" z="-0.543047"/>
+			<quaternion w="0.043167" x="-0.043167" y="0.705788" z="0.705788"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_kaantosyl2_rotz.mesh" name="nivel_kaantosyl2_rotz"/>
+		</node>
+		<node name="nivel_kehto_rotz" physics_type="none">
+			<position x="-3.966688" y="1.013855" z="-0.976944"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_kehto_rotz.mesh" name="nivel_kehto_rotz"/>
+		</node>
+		<node name="nivel_klevy1_rotz" physics_type="none">
+			<position x="-0.542256" y="0.713211" z="-0.901946"/>
+			<quaternion w="0.000000" x="-0.707107" y="-0.000000" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_klevy1_rotz.mesh" name="nivel_klevy1_rotz"/>
+		</node>
+		<node name="nivel_klevy2_rotz" physics_type="none">
+			<position x="-0.543382" y="0.796393" z="-0.521969"/>
+			<quaternion w="0.000000" x="0.000000" y="-0.000000" z="1.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_klevy2_rotz.mesh" name="nivel_klevy2_rotz"/>
+		</node>
+		<node name="nivel_nostosyl1_rotz" physics_type="none">
+			<position x="-2.115930" y="0.620198" z="-0.898809"/>
+			<quaternion w="0.707107" x="-0.707107" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_nostosyl1_rotz.mesh" name="nivel_nostosyl1_rotz"/>
+		</node>
+		<node name="nivel_nostosyl2_rotz" physics_type="none">
+			<position x="-0.750059" y="0.450694" z="-0.900195"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_nostosyl2_rotz.mesh" name="nivel_nostosyl2_rotz"/>
+		</node>
+		<node name="nivel_pulttsyl1_rotz" physics_type="none">
+			<position x="-4.777830" y="1.076423" z="-0.975772"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_pulttsyl1_rotz.mesh" name="nivel_pulttsyl1_rotz"/>
+		</node>
+		<node name="nivel_pulttsyl2_rotz" physics_type="none">
+			<position x="-4.113870" y="1.062304" z="-0.828773"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_pulttsyl2_rotz.mesh" name="nivel_pulttsyl2_rotz"/>
+		</node>
+		<node name="nivel_puomi_rotz" physics_type="none">
+			<position x="-0.714921" y="0.870382" z="-0.891257"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_puomi_rotz.mesh" name="nivel_puomi_rotz"/>
+		</node>
+		<node name="nivel_swingristi_rotz" physics_type="none">
+			<position x="-3.616704" y="0.701169" z="-1.199487"/>
+			<quaternion w="0.000000" x="0.000000" y="-0.000000" z="1.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_swingristi_rotz.mesh" name="nivel_swingristi_rotz"/>
+		</node>
+		<node name="nivel_swingsyl1_rotz" physics_type="none">
+			<position x="-2.682216" y="0.871643" z="-1.121748"/>
+			<quaternion w="0.706865" x="-0.706864" y="-0.018510" z="-0.018510"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_swingsyl1_rotz.mesh" name="nivel_swingsyl1_rotz"/>
+		</node>
+		<node name="nivel_swingsyl2_rotz" physics_type="none">
+			<position x="-3.457887" y="0.742643" z="-1.187951"/>
+			<quaternion w="0.030843" x="-0.030843" y="0.706434" z="0.706434"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_swingsyl2_rotz.mesh" name="nivel_swingsyl2_rotz"/>
+		</node>
+		<node name="nivel_syottlaite_trz" physics_type="none">
+			<position x="-5.576707" y="1.260212" z="-0.973774"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_syottlaite_trz.mesh" name="nivel_syottlaite_trz"/>
+		</node>
+		<node name="nivel_syottosyl1_rotz" physics_type="none">
+			<position x="-4.120500" y="1.260000" z="-0.974997"/>
+			<quaternion w="0.500000" x="0.500000" y="-0.500000" z="-0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_syottosyl1_rotz.mesh" name="nivel_syottosyl1_rotz"/>
+		</node>
+		<node name="nivel_syottosyl2_rotz" physics_type="none">
+			<position x="-5.700000" y="1.260000" z="-0.974996"/>
+			<quaternion w="0.500000" x="0.500000" y="-0.500000" z="-0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_syottosyl2_rotz.mesh" name="nivel_syottosyl2_rotz"/>
+		</node>
+		<node name="nivel_telesk_trz" physics_type="none">
+			<position x="-2.310337" y="0.871746" z="-0.901945"/>
+			<quaternion w="0.500000" x="-0.500000" y="0.500000" z="0.500000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_telesk_trz.mesh" name="nivel_telesk_trz"/>
+		</node>
+		<node name="nivel_tilt_rotz" physics_type="none">
+			<position x="-3.454082" y="0.742879" z="-0.899005"/>
+			<quaternion w="0.707107" x="-0.707107" y="0.000000" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_tilt_rotz.mesh" name="nivel_tilt_rotz"/>
+		</node>
+		<node name="nivel_tiltkpl_rotz" physics_type="none">
+			<position x="-3.616638" y="0.747343" z="-0.977916"/>
+			<quaternion w="0.707107" x="0.000000" y="0.707107" z="0.000000"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_tiltkpl_rotz.mesh" name="nivel_tiltkpl_rotz"/>
+		</node>
+		<node name="nivel_tiltsyl1_rotz" physics_type="none">
+			<position x="-2.684781" y="0.871643" z="-0.900192"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_tiltsyl1_rotz.mesh" name="nivel_tiltsyl1_rotz"/>
+		</node>
+		<node name="nivel_tiltsyl2_rotz" physics_type="none">
+			<position x="-3.442786" y="0.947137" z="-0.902685"/>
+			<quaternion w="-0.000000" x="0.000000" y="0.707107" z="0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_tiltsyl2_rotx.mesh" name="nivel_tiltsyl2_rotx"/>
+		</node>
+		<node name="nivel_vaantomot2_rotz" physics_type="none">
+			<position x="-3.967031" y="1.001338" z="-0.974913"/>
+			<quaternion w="-0.000000" x="-0.707107" y="0.000000" z="-0.707107"/>
+			<scale x="1.000000" y="1.000000" z="1.000000"/>
+			<collision enabled="false" model="" />
+			<entity mesh_file="nivel_vaantomot2_rotz.mesh" name="nivel_vaantomot2_rotz"/>
+		</node>
+		<node name="nivel_vaantomot_rotz" physics_type="none">
+			<position x="-3.960065" y="0.743005" z="-0.978889"/>
+			<quaternion w="0.5" x="-0.5" y="0.5" z="0.5"/>
+			<scale x="1." y="1." z="1."/>
+			<collision enabled="false" model="nivel_vaantomot_rotz.mesh" />
+			<entity mesh_file="nivel_vaantomot_rotz.mesh" name="nivel_vaantomot_rotz"/>
+		</node>
+	</nodes>
+</scene>
+

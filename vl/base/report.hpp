@@ -1,7 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-03
- *	@file report.hpp
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-03
+ *	@file base/report.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**
  *	Class for saving strings and associated performance numbers,
  *	performance numbers can be anything number of clock cycles, time, number of
  *	meshes, number of vertices, number of bytes.
@@ -14,8 +28,6 @@
  *	Constraint it creates is that all numbers in a single report needs to be same type
  *	i.e. time, double, integer
  */
-
-/// @todo Report doesn't work correctly for times for some reason
 
 #ifndef HYDRA_REPORT_HPP
 #define HYDRA_REPORT_HPP
@@ -61,22 +73,14 @@ enum CALC_PROTO
 	CALC_SUM,
 };
 
-/// When printing the number, should it be recalculated or not?
-/// Removed because doesn't seem to have a really good reason for this
-/// also we would need to provide const and non-const methods for printing
-/*
-enum PRINT_PROTO
-{
-	PRINT_OLD,
-	PRINT_RECALC,
-};
-*/
-
 template<typename T>
 class Number
 {
 public :
-	Number( CALC_PROTO = CALC_AVARAGE );//, PRINT_PROTO = PRINT_OLD );
+	/// @param priority for this number
+	/// The highest priority is always printed first
+	/// if two numbers have the same priority their print order is undefined
+	Number(int priority = -1, CALC_PROTO = CALC_AVARAGE);
 
 	/// @brief calculates a new result based on the real values
 	/// if the proto is avarage does not touch the real values
@@ -92,13 +96,17 @@ public :
 
 	bool empty(void) const;
 
-	T result(void) const;
+	T const &result(void) const;
+
+	int priority(void) const
+	{ return _priority; }
 
 private:
 	CALC_PROTO _calc_proto;
 
 	T _result;
 	std::vector<T> _values;
+	int _priority;
 };
 
 template<typename T>
@@ -127,6 +135,9 @@ public :
 	/// @param name is the name of the number
 	/// @return true if number with name exists in report, false otherwise
 	bool has_number(std::string const &name) const;
+
+	Number<T> &operator[](std::string const &name)
+	{ return _numbers[name]; }
 
 	/// @brief removes all numbers
 	void clear(void);
@@ -161,9 +172,10 @@ private :
 
 /// -------------------------------- Number ------------------------------------
 template<typename T>
-vl::Number<T>::Number(vl::CALC_PROTO cp)
+vl::Number<T>::Number(int priority, vl::CALC_PROTO cp)
 	: _calc_proto(cp)
 	, _result(0)
+	, _priority(priority)
 {}
 
 template<typename T>
@@ -178,6 +190,7 @@ vl::Number<T>::calculate(void)
 	else
 	{
 		_result = calculate_avarage(_values);
+		_values.clear();
 	}
 }
 
@@ -203,7 +216,7 @@ vl::Number<T>::empty(void) const
 }
 
 template<typename T>
-T
+T const &
 vl::Number<T>::result(void) const
 {
 	return _result;
@@ -264,7 +277,6 @@ template<typename T>
 void
 vl::Report<T>::clear(void)
 {
-	_numbers.clear();
 }
 
 /// @brief is container empty
@@ -293,7 +305,6 @@ vl::Report<T>::finish(void)
 	for( iter = _numbers.begin(); iter != _numbers.end(); ++iter )
 	{
 		iter->second.calculate();
-		iter->second.clear();
 	}
 }
 
@@ -301,9 +312,11 @@ template<typename T>
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Report<T> const &r)
 {
-	/// Using '\n' rather than endl so that the buffer is not flushed
-	/// When using the Hydra logging system the message is kept in one piece
-	/// till the buffer is flushed.
+	// @todo should rearrange the array using priorities
+
+	// Using '\n' rather than endl so that the buffer is not flushed
+	// When using the Hydra logging system the message is kept in one piece
+	// till the buffer is flushed.
 	os << "Report: \n";
 	typename std::map< std::string, vl::Number<T> >::const_iterator iter;
 	for( iter = r._numbers.begin(); iter != r._numbers.end(); ++iter )

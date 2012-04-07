@@ -1,14 +1,27 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file movable_object.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
 #ifndef HYDRA_MOVABLE_OBJECT_HPP
 #define HYDRA_MOVABLE_OBJECT_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
-#include "distributed.hpp"
+#include "cluster/distributed.hpp"
 
 #include "typedefs.hpp"
 
@@ -23,7 +36,7 @@ namespace vl
  *	@brief A base class for anything that can be attached to a SceneNode
  *	Does not distribute anything for now.
  */
-class MovableObject : public vl::Distributed
+class HYDRA_API MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator)

@@ -27,16 +27,16 @@
 #include "math/math.hpp"
 #include "math/transform.hpp"
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "animation.hpp"
-
-/// Necessary for constraint actions
-#include "action.hpp"
 
 namespace vl
 {
 
+/** @class Constraint
+ *	Abstract base class for all kinematic constraints
+ */
 class Constraint
 {
 public :
@@ -49,6 +49,12 @@ public :
 	KinematicBodyRefPtr getBodyB(void) const
 	{ return _bodyB; }
 
+	Transform const &getLocalFrameA(void) const
+	{ return _local_frame_a; }
+
+	Transform const &getLocalFrameB(void) const
+	{ return _local_frame_b; }
+
 	/// @brief change between constraint and actuator
 	/// @param enable weather the constraint is an actuator or not
 	virtual void setActuator(bool enable) = 0;
@@ -60,6 +66,20 @@ public :
 	virtual void addVelocity(vl::scalar velocity) = 0;
 
 	friend std::ostream &operator<<(std::ostream &, vl::Constraint const &c);
+
+	virtual std::string getTypeName(void) const = 0;
+
+	/// @brief get the name of the constraint
+	/// If no name has been set this will return empty string
+	/// Names are not required to be unique, but if they are not their use
+	/// from python interface is really confusing.
+	std::string const &getName(void) const
+	{ return _name; }
+
+	/// @brief set the name for identifying the constraint
+	/// @param name optional name for the constraint
+	void setName(std::string const &name)
+	{ _name = name; }
 
 	/// @internal
 	void _solve(vl::time const &t);
@@ -86,8 +106,14 @@ private :
 	void _solve_aux_parents(void);
 
 protected :
+	/// @brief Constructor
 	/// only child classes are allowed to use the constructor
-	Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, vl::Transform const &worldFrame);
+	/// @param rbA the body to which we want to constraint
+	/// @param rbB the body we are constraining
+	/// @param frameInA the pivot point in rbA coordinates
+	/// @param frameInB the pivot point in rbB coordinates
+	Constraint( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB );
 
 	KinematicBodyRefPtr _bodyA;
 	KinematicBodyRefPtr _bodyB;
@@ -95,6 +121,8 @@ protected :
 	/// Current frames in object coordinates
 	vl::Transform _local_frame_a;
 	vl::Transform _local_frame_b;
+
+	std::string _name;
 
 	vl::animation::LinkRefPtr _link;
 
@@ -113,12 +141,19 @@ public :
 
 	virtual void addVelocity(vl::scalar velocity) {}
 
+	virtual std::string getTypeName(void) const
+	{ return "fixed"; }
+
+	// static
 	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		 vl::Transform const &frameInA, vl::Transform const &frameInB)
 	{
-		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, worldFrame));
+		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
+
+	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &worldFrame);
 
 	/// Private virtual overrides
 private :
@@ -126,56 +161,9 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
+	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 };	// class FixedConstraint
-
-/* For now no SixDof constraint
-class SixDofConstraint : public Constraint
-{
-public :
-	void enableMotor(bool enable);
-
-	bool getMotorEnabled(void) const;
-
-	void setLinearLowerLimit(Ogre::Vector3 const &linearLower);
-	
-	Ogre::Vector3 const &getLinearLowerLimit(void) const;
-
-	void setLinearUpperLimit(Ogre::Vector3 const &linearUpper);
-
-	Ogre::Vector3 const &getLinearUpperLimit(void) const;
-
-	void setAngularLowerLimit(Ogre::Vector3 const &angularLower);
-
-	Ogre::Vector3 const &getAngularLowerLimit(void) const;
-
-	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper);
-
-	Ogre::Vector3 const &getAngularUpperLimit(void) const;
-
-	static SixDofConstraintRefPtr create(SceneNodePtr rbA, SceneNodePtr rbB, 
-		Transform const &worldFrame)
-	{
-		SixDofConstraintRefPtr constraint(new SixDofConstraint(rbA, rbB, worldFrame));
-		return constraint;
-	}
-
-	/// @internal
-	void _proggress(vl::time const &t);
-
-private :
-	SixDofConstraint(SceneNodePtr rbA, SceneNodePtr rbB, Transform const &worldFrame);
-
-	bool _motor_enabled;
-
-	Ogre::Vector3 _linear_lower_limit;
-	Ogre::Vector3 _linear_upper_limit;
-	Ogre::Vector3 _ang_lower_limit;
-	Ogre::Vector3 _ang_upper_limit;
-
-};	// class SixDofConstraint
-*/
 
 /** @class SliderConstraint
  *	@brief constraint that allows for one axis of freedom between two bodies
@@ -246,12 +234,21 @@ public :
 
 	vl::scalar getPosition(void) const;
 
+	virtual std::string getTypeName(void) const
+	{ return "slider"; }
+
+	// static
 	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		Transform const &worldFrame);
+
+	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
 	{
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, worldFrame));
+
+		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
+
 
 	/// Private virtual overrides
 private :
@@ -260,7 +257,8 @@ private :
 
 private :
 	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
-
+	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
 	Ogre::Vector3 _axisInA;
@@ -275,6 +273,10 @@ private :
  *	@brief a constraint that has all axes locked except for one rotation axis
  *	Supports servo motors for using the constraint as an actuator.
  *	@todo rename to revolute joint, as used in Robot literature
+ *
+ *	@todo If FPS is much greater than 60 the progress method does not work correctly
+ *	This is probably because there is inaccuracies in calculating the angle from
+ *	quaternions and comparing them.
  */
 class HingeConstraint : public Constraint
 {
@@ -289,12 +291,10 @@ public :
 
 	/// Sets the target to maximum and controls the approaching velocity
 	/// provides a servo motor control for the constraint
+	/// @todo this should be moved to separate motor/actuator class
 	virtual void setVelocity(vl::scalar velocity);
 
 	virtual void addVelocity(vl::scalar velocity);
-
-	void addActuatorTarget(Ogre::Radian const &angle)
-	{ setActuatorTarget(angle+_angle); }
 
 	/// @brief set the target angle to motor
 	/// @param angle target angle which the actuator tries to achieve over time
@@ -334,13 +334,20 @@ public :
 
 	Ogre::Vector3 getAxisInWorld(void) const;
 
-	Ogre::Radian const &getHingeAngle(void) const
-	{ return _angle; }
+	/// @brief returns the angle the hinge is in along the path moved.
+	Ogre::Radian getHingeAngle(void) const;
+
+	virtual std::string getTypeName(void) const
+	{ return "hinge"; }
+
+	// static
+	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &worldFrame);
 
 	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+		Transform const &frameInA, Transform const &frameInB)
 	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, worldFrame));
+		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
 
@@ -350,13 +357,11 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
+	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;
 	Ogre::Vector3 _axisInA;
-
-	Ogre::Radian _angle;
 
 	bool _actuator;
 	Ogre::Radian _target;
@@ -370,56 +375,8 @@ operator<<(std::ostream &os, HingeConstraint const &c);
 std::ostream &
 operator<<(std::ostream &os, SliderConstraint const &c);
 
-class SliderActuatorAction : public vl::BasicAction
-{
-public :
-	SliderActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "SliderActuatorAction"; }
-
-	static SliderActuatorAction *create(void)
-	{ return new SliderActuatorAction; }
-
-	vl::scalar target;
-
-	vl::SliderConstraintRefPtr constraint;
-
-};
-
-class HingeActuatorAction : public vl::BasicAction
-{
-public :
-	HingeActuatorAction(void)
-		: target(0)
-	{}
-
-	virtual void execute(void)
-	{
-		if(constraint)
-		{ constraint->addActuatorTarget(target); }
-	}
-
-	virtual std::string getTypeName( void ) const
-	{ return "HingeActuatorAction"; }
-
-	static HingeActuatorAction *create(void)
-	{ return new HingeActuatorAction; }
-
-	Ogre::Radian target;
-
-	vl::HingeConstraintRefPtr constraint;
-
-};
-
+std::ostream &
+operator<<(std::ostream &os, ConstraintList const &list);
 
 }	// namespace vl
 

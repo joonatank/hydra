@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
- *	@file  physics/shapes.cpp
+ *	@file physics/shapes.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Declaration
@@ -67,6 +76,40 @@ vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 	ConvexHullShapeRefPtr shape;
 #ifdef USE_BULLET
 	shape.reset(new BulletConvexHullShape(mesh));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
+vl::physics::CylinderShapeRefPtr
+vl::physics::CylinderShape::create(Ogre::Vector3 const &bounds)
+{
+CylinderShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletCylinderShape(bounds));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
+vl::physics::CylinderShapeRefPtr
+vl::physics::CylinderShape::create(vl::scalar radius, vl::scalar height)
+{
+CylinderShapeRefPtr shape;
+#ifdef USE_BULLET
+	// convert to bounds
+	shape.reset(new BulletCylinderShape(Ogre::Vector3(radius*2, height, radius)));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
+vl::physics::CapsuleShapeRefPtr
+vl::physics::CapsuleShape::create(vl::scalar radius, vl::scalar height)
+{
+CapsuleShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletCapsuleShape(radius, height));
 #else if USE_NEWTON
 #endif
 	return shape;

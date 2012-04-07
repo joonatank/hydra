@@ -13,12 +13,14 @@ project( "demos" CXX )
 
 cmake_minimum_required(VERSION 2.6)
 
-#set(LIB_DIR "C:\\jotu\\software_development\\hydra_dependencies_libraries\\libs" CACHE PATH "Dependencies library dir")
-
 # Copy configs
 copy_start_scripts( hydra
 	ogre_project/ogre.prj
 	"ogre" )
+
+copy_start_scripts( hydra
+	collada_test_project/collada_test.prj
+	"collada" )
 
 copy_start_scripts( hydra
 	"eye_tracking_test_project/eye_tracking_test.prj"
@@ -27,10 +29,6 @@ copy_start_scripts( hydra
 copy_start_scripts( hydra
 	light_test_project/light_test.prj
 	"light_test" )
-
-copy_start_scripts( hydra
-	signal_test_project/signal_test.prj
-	"signal_test" )
 
 copy_start_scripts( hydra
 	generated_physics_project/generated_physics.prj
@@ -48,19 +46,17 @@ copy_start_scripts( hydra
 	perapora_project/perapora_physics.prj
 	"perapora_physics" )
 
-copy_start_scripts( renderer
-	tracking_test_project/tracking.prj
-	tracking )
-
 copy_start_scripts( hydra
-	large_test_project/large_test.prj
-	large_test )
+	hsf_test_project/perapora.prj
+	"hsf_test" )
 
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	${HydraMain_SOURCE_DIR}/math/conversion.hpp
 	${HydraMain_SOURCE_DIR}/math/math.hpp
 	${HydraMain_SOURCE_DIR}/math/math.cpp
@@ -81,11 +77,13 @@ target_link_libraries(fake_tracking_server
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
 	)
 
-add_executable(vrpn_tracker_recorder 
+add_executable(vrpn_tracker_recorder
 	vrpn_tracker_recorder.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
 	)
 
 target_link_libraries(vrpn_tracker_recorder
@@ -96,11 +94,12 @@ target_link_libraries(vrpn_tracker_recorder
 add_executable(vrpn_analog_server
 	vrpn_analog_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
 	)
 
 target_link_libraries(vrpn_analog_server ${VRPN_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
+
 
 include_directories(${demos_BINARY_DIR})
 
@@ -113,25 +112,46 @@ include_directories(${demos_BINARY_DIR})
 set(HYDRA_GL_BINARY_DIR \"${HydraGL_BINARY_DIR}\")
 set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 
-set(OGRE_BINARY_DIR 
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/Ogre/bin\"")
-set(CEGUI_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/CEGUI/bin\"")
-set(OIS_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/OIS/bin\"")
-set(BOOST_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/bin\"")
-set(GENERAL_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/bin\"")
-Set(EXPAT_BINARY_DIR
-	"\"C:/jotu/software_development/hydra_dependencies_libraries/libs/expat/bin\"")
+# set the bin dir variable
+# TODO these should be auto resolved
+set(HYDRA_DEPENDENCIES_BIN_DIR ""
+	CACHE PATH "Dependency library directory")
+
+set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Ogre/bin\"")
+set(CEGUI_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/CEGUI/bin\"")
+set(OIS_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/OIS/bin\"")
+set(BOOST_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
+set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
+Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/expat/bin\"")
+set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/SkyX/bin\"")
+set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
+
+# Get the CameraSDK binary dir
+# TODO the above should also be replaced with this system for other libraries
+# TODO this should use the LIBRARY_DEBUG and LIBRARY_RELEASE
+# because LIBRARY contains both (debug and optimazed)
+#get_filename_component(file_name "${CameraSDK_LIBRARY}" NAME)
+#set(bin_dir "\"${CameraSDK_LIBRARY}\"")
+#string(REPLACE ${file_name} "" CAMERASDK_BINARY_DIR ${bin_dir})
+
 
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )
 
-add_executable(hydra hydra.cpp
+set(HYDRA_SRC
+	hydra.cpp
 	build_defines.hpp
-	system_tools/message_box.hpp)
+	system_tools/message_box.hpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
+	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.cpp
+	${HydraMain_SOURCE_DIR}/base/filesystem.hpp
+	)
+if(WIN32)
+	add_executable( hydra ${HYDRA_SRC} res/resource.rc )
+else()
+	add_executable( hydra ${HYDRA_SRC} )
+endif()
 
 add_executable(angles_to_quaternion
 	angles_to_quaternion.cpp
@@ -142,8 +162,10 @@ target_link_libraries(angles_to_quaternion ${Ogre_LIBRARY})
 
 # These should not need to link to anything else than boost
 set( SRC
-	${HydraMain_SOURCE_DIR}/base/timer.hpp
-	${HydraMain_SOURCE_DIR}/base/timer.cpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
 	${HydraMain_SOURCE_DIR}/base/report.hpp
 	)
 add_executable(timestamp_client timestamp_client.cpp ${SRC})

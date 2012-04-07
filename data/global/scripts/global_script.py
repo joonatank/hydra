@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+def eulerToQuat(x, y, z):
+	q_x = Quaternion(Degree(x), Vector3(1, 0, 0))
+	q_y = Quaternion(Degree(y), Vector3(0, 1, 0))
+	q_z = Quaternion(Degree(z), Vector3(0, 0, 1))
+	return q_x*q_y*q_z
+
 def setVectorActionFromKey( vector_action, kc, mod ):
 	key_action = FloatActionMap.create()
 	key_action.action = vector_action
@@ -229,11 +235,11 @@ def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, ro
 def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
 	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
 	trigger.addKeyDownListener(selection_movements.right)
 	trigger.addKeyUpListener(selection_movements.left)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
 	trigger.addKeyDownListener(selection_movements.left)
 	trigger.addKeyUpListener(selection_movements.right)
 
@@ -253,13 +259,13 @@ def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference
 	trigger.addKeyDownListener(selection_movements.down)
 	trigger.addKeyUpListener(selection_movements.up)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_left)
-	trigger.addKeyUpListener(selection_movements.rotate_right)
-
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6, KEY_MOD.CTRL)
 	trigger.addKeyDownListener(selection_movements.rotate_right)
 	trigger.addKeyUpListener(selection_movements.rotate_left)
+
+	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
+	trigger.addKeyDownListener(selection_movements.rotate_left)
+	trigger.addKeyUpListener(selection_movements.rotate_right)
 
 	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8, KEY_MOD.CTRL)
 	trigger.addKeyDownListener(selection_movements.roll_right)
@@ -443,13 +449,75 @@ def addToggleStereo(kc) :
 
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
-	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addKeyDownListener(game.gui.console.toggle_visible)
+	if game.gui.console:
+		trigger = game.event_manager.createKeyTrigger(kc)
+		trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
-def addToggleEditor(kc) :
-	print( 'Creating Toggle GUI Editor Event to ' + getPythonKeyName(kc) )
-	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addKeyDownListener(game.gui.editor.toggle_visible)
+# Selection Buffer
+class SelectionSet:
+	def __init__(self):
+		self.selection = []
+		self.index = 0
+
+	# Add an array of objects that are to be controlled as one
+	def add_objects(self, names):
+		self.selection.append([])
+		for n in names:
+			sn = game.scene.getSceneNode(n)
+			if sn:
+				self.selection[-1].append(sn)
+
+	def __str__(self):
+		s = "SelectionSet :\n"
+		for sn_list in self.selection:
+			for sn in sn_list:
+				s += (" " + sn.name)
+			s += "\n"
+		return s
+
+	def change_selection(self):
+		self.index += 1
+		if self.index >= len(self.selection):
+			self.index = 0
+
+		game.scene.clearSelection()
+		for sn in self.selection[self.index]:
+			game.scene.addToSelection(sn)
+
+
+# Create a basic directional light with a decent angle
+# Return the sun scene node
+# TODO this should be a bit more complex and use the sky simulator
+# so the sun angle and intensity is dependent on the sky state
+def create_sun():
+	sun = game.scene.createSceneNode("sun")
+	sun_l = game.scene.createLight("sun")
+	sun_l.type = "directional"
+	sun_l.diffuse = ColourValue(0.5, 0.5, 0.5)
+	sun.attachObject(sun_l)
+	sun.orientation = Quaternion(-0.4114, 0.9114, 0, 0)
+
+	return sun
+
+# Creates basic plane ground for demos
+# Return ground scene node
+def create_ground(size=40):
+	ground_mesh = game.mesh_manager.createPlane("ground", size, size)
+	ground_node = game.scene.createSceneNode("ground")
+	ground = game.scene.createEntity("ground", 'ground', True)
+	ground_node.attachObject(ground)
+	ground.material_name = "ground/bump_mapped/shadows"
+	ground.cast_shadows = False
+
+	return ground_node
+
+def toggle_pause():
+	# Game can be in both stopped and paused state so test for played instead
+	# of paused
+	if game.playing:
+		game.pause()
+	else:
+		game.play()
 
 # Add a head tracker support
 mapHeadTracker("glassesTrigger")
@@ -458,7 +526,6 @@ mapHeadTracker("glassesTrigger")
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
 addScreenshotAction(KC.F10)
-addToggleEditor(KC.F2)
 addToggleConsole(KC.GRAVE)
 addToggleStereo(KC.F12)
 
@@ -469,7 +536,8 @@ class FrustumToggler:
 		game.player.head_frustum_x = False
 		game.player.head_frustum_y = True
 		game.player.head_frustum_z = False
-		self.cyclop_vector = Vector3(0, 0, -0.15)
+		#self.cyclop_vector = Vector3(0, 0, -0.15)
+		self.cyclop_vector = Vector3(0, 0, 0)
 		self.cyclop = False
 
 		game.player.asymmetric_stereo_frustum = True

@@ -1,10 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
  *	@file: movable_text.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	description: This create create a billboarding object that display a text.
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	@description: This create create a billboarding object that display a text.
  *
  *	Copied from Ogre Wiki, original created by
  *	2003 by cTh see gavocanov@rambler.ru

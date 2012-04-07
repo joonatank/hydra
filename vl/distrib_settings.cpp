@@ -1,9 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	@date 2011-02
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2011-02
  *	@file distrib_settings.cpp
- *	Classes for distributing Environment Settings and Project settings
- *	using ByteStream
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "distrib_settings.hpp"
@@ -146,7 +155,14 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window&
 	msg << window.name << window.get_channels() << window.rect
 		<< window.n_display << window.stereo << window.nv_swap_sync 
 		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
-		<< window.renderer;
+		<< window.renderer << window.input_handler;
+
+	msg << window.params.size();
+	for(NamedParamList::const_iterator iter = window.params.begin(); 
+		iter != window.params.end(); ++iter)
+	{
+		msg << iter->first << iter->second;
+	}
 
 	return msg;
 }
@@ -158,7 +174,16 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& windo
 	msg >> window.name >> window.get_channels() >> window.rect
 		>> window.n_display >> window.stereo >> window.nv_swap_sync
 		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
-		>> window.renderer;
+		>> window.renderer >> window.input_handler;
+
+	size_t params_size;
+	msg >> params_size;
+	for(size_t i = 0; i < params_size; ++i)
+	{
+		std::string param_name, param_value;
+		msg >> param_name >> param_value;
+		window.params[param_name] = param_value;
+	}
 
 	return msg;
 }
@@ -185,7 +210,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Renderer const &rend)
 {
-	msg << rend.type << rend.projection;
+	msg << rend.type << rend.projection << rend.hardware_gamma;
 
 	return msg;
 }
@@ -194,7 +219,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Renderer &rend)
 {
-	msg >> rend.type >> rend.projection;
+	msg >> rend.type >> rend.projection >> rend.hardware_gamma;
 
 	return msg;
 }

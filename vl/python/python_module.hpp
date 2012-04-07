@@ -18,12 +18,6 @@
 #ifndef HYDRA_PYTHON_MODULE_HPP
 #define HYDRA_PYTHON_MODULE_HPP
 
-// Callback helpers
-#include <toast/python/callback.hpp>
-
-// Python global
-#include "python.hpp"
-
 void export_math(void);
 
 void export_animation(void);

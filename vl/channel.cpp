@@ -61,14 +61,18 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, bool use_
 	}
 }
 
+/// @todo this seems to be called at every frame
 void
 vl::Channel::setCamera(vl::CameraPtr cam)
 {
-	/// @todo this seems to be called at every frame
-	camera.setCamera(cam);	
-	viewport->setCamera((Ogre::Camera *)cam->getNative());
+	Ogre::Camera *og_cam = 0;
+	if(cam)
+	{ og_cam = (Ogre::Camera *)cam->getNative(); }
 
-	if(_fbo)
+	camera.setCamera(cam);
+	viewport->setCamera(og_cam);
+
+	if(_fbo && cam)
 	{
 		if(_fbo->getNumViewports() == 0)
 		{
@@ -76,7 +80,10 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 		}
 		else
 		{
-			_fbo->getViewport(0)->setCamera((Ogre::Camera *)cam->getNative());
+			if(cam)
+			{
+				_fbo->getViewport(0)->setCamera(og_cam);
+			}
 		}
 	}
 }

@@ -1,20 +1,32 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2012 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
- *	@file GUI/gui.hpp
+ *	@file gui/gui.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
  */
+
 
 #ifndef HYDRA_GUI_GUI_HPP
 #define HYDRA_GUI_GUI_HPP
 
-#include <CEGUI/CEGUIWindow.h>
+// Base class
+#include "cluster/distributed.hpp"
 
-#include "distributed.hpp"
-#include "session.hpp"
+#include "cluster/session.hpp"
 
 // Necessary for command callback
 #include "renderer_interface.hpp"
+
+// Concrete implementation
+#include "Gorilla.h"
+
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISMouse.h>
 
 namespace vl
 {
@@ -35,8 +47,10 @@ public :
 	/// @param session the distributed session this GUI is attached to
 	/// @param id ID of this GUI, has to be valid
 	/// @param cb callback for sendCommand, ownership is passed to this
-	GUI(vl::Session *session, uint64_t id, vl::CommandCallback *cb);
+	GUI(vl::Session *session, uint64_t id);
 	
+	~GUI(void);
+
 	/// @brief Master creator
 	WindowRefPtr createWindow(std::string const &type, std::string const &name, std::string const &layout);
 
@@ -49,12 +63,11 @@ public :
 	/// @brief Slave creator
 	WindowRefPtr createWindow(vl::OBJ_TYPE, uint64_t id);
 
-	void initGUI(vl::Window *win);
-	void initGUIResources(vl::Settings const &set);
-	void addGUIResourceGroup(std::string const &name, fs::path const &path);
+	WindowRefPtr getWindow(uint64_t id);
 
-	EditorWindowRefPtr getEditor(void)
-	{ return _editor; }
+	WindowRefPtr getWindow(std::string const &name);
+
+	void initGUI(Ogre::Viewport *view);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -63,13 +76,21 @@ public :
 
 	void sendCommand(std::string const &cmd);
 
-	CEGUI::Window *getRoot(void) const
-	{ return _root; }
+	Gorilla::Screen *createScreen(void);
+
+	bool initialised(void) const;
+
+	void injectKeyDown(OIS::KeyEvent const &key);
+	void injectKeyUp(OIS::KeyEvent const &key);
+
+	void injectMouseEvent(OIS::MouseEvent const &evt);
 
 	enum DirtyBits
 	{
 		DIRTY_CUSTOM = Distributed::DIRTY_CUSTOM << 0,
 	};
+
+	void update(void);
 
 /// Private virtual overrides
 private :
@@ -84,16 +105,16 @@ private :
 /// Data
 private :
 
-	vl::gui::EditorWindowRefPtr _editor;
 	vl::gui::ConsoleWindowRefPtr _console;
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
 
-	vl::CommandCallback *_cmd_cb;
-
 	vl::Session *_session;
 
-	CEGUI::Window *_root;
+	Gorilla::Silverback *_gorilla;
+	Ogre::Viewport *mViewport;
+
+	//CEGUI::Window *_root;
 
 };	// class GUI
 

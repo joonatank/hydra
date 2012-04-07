@@ -1,13 +1,29 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file light.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
+
 
 #include "light.hpp"
 
 #include "scene_manager.hpp"
 
 #include <OGRE/OgreSceneManager.h>
+
+/// Necessary for better shadow camera
+#include <OGRE/OgreShadowCameraSetupFocused.h>
 
 namespace
 {
@@ -333,23 +349,51 @@ vl::Light::_doCreateNative(void)
 	if( _ogre_light )
 	{ return true; }
 
+	assert(_creator->getNative());
 	_ogre_light = _creator->getNative()->createLight(_name);
 
+	// Some debug asserts for parameters
+	assert(!_position.isNaN());
+	assert(!_direction.isNaN() && !_direction.isZeroLength());
+	assert(_outer_cone != Ogre::Radian());
+	
 	_ogre_light->setType(getOgreLightType(_type));
+	
 	_ogre_light->setDiffuseColour(_diffuse_colour);
 	_ogre_light->setSpecularColour(_specular_colour);
+	
 	_ogre_light->setPosition(_position);
 	_ogre_light->setDirection(_direction);
 	_ogre_light->setVisible(_visible);
+
+	// Avoid cast shadows for POINT lights because they need custom
+	// texture shadow camera.
+	// Without this they will mess the shading because there is no 
+	// depth shadow map for them.
 	if(_ogre_light->getType() == Ogre::Light::LT_POINT)
 	{ _ogre_light->setCastShadows(false); }
 	else
 	{ _ogre_light->setCastShadows(_cast_shadows); }
 
+	
+	// Ogre does not allow us to set spot light attributes for non-spotlights...
 	if( _ogre_light->getType() == Ogre::Light::LT_SPOTLIGHT )
 	{ _ogre_light->setSpotlightRange(_inner_cone, _outer_cone, _spot_falloff); }
-	_ogre_light->setAttenuation(_attenuation.range, 
-			_attenuation.constant, _attenuation.linear, _attenuation.quadratic);
+	
+	LightAttenuation att(_ogre_light->getAttenuationRange(), _ogre_light->getAttenuationConstant(),
+		_ogre_light->getAttenuationLinear(), _ogre_light->getAttenuationQuadric());
+
+	_ogre_light->setAttenuation(_attenuation.range, _attenuation.constant,
+			_attenuation.linear, _attenuation.quadratic);
+
+	// There is problems with getting the Default shadow camera working with Directional
+	// lights so we can just override those settings here.
+	// Later might be useful for development purposes to make this optional using a flag.
+	if(_ogre_light->getType() == Ogre::Light::LT_DIRECTIONAL)
+	{
+		Ogre::ShadowCameraSetupPtr shadow_cam(new Ogre::FocusedShadowCameraSetup());
+		_ogre_light->setCustomShadowCameraSetup(shadow_cam);
+	}
 
 	return true;
 }

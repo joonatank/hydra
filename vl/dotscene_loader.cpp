@@ -1,8 +1,18 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file dotscene_loader.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "dotscene_loader.hpp"
@@ -70,6 +80,8 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("TextResource has invalid XML file") );
 	}
 
+	std::clog << "SceneNodes loaded from file = " << scene_data.getName() << std::endl;
+	_file_name = scene_data.getName();
 	_parse( xml_data );
 
 	// Reset data so that we don't end up with dangling pointers (or holding resources)
@@ -92,7 +104,7 @@ vl::DotSceneLoader::_parse(char *xml_data)
 	// OgreMax exports angles in Radians by default so if the scene file is
 	// created with Maya we assume Radians
 	// Blender how ever uses Degrees by default so we will assume Degrees otherwise
-	std::string app( vl::getAttrib(xml_root, "application", "") );
+	std::string app( vl::getAttrib(xml_root, "application") );
 	vl::to_lower( app );
 	// Mind you we might process multiple scene files some made with Maya and
 	// some with Blender so this setting needs to be changed for each file.
@@ -146,7 +158,7 @@ void
 vl::DotSceneLoader::parseSceneHeader(rapidxml::xml_node<> *xml_root)
 {
 	// Process the scene parameters
-	std::string version = vl::getAttrib(xml_root, "formatVersion", "unknown");
+	std::string version = vl::getAttrib<std::string>(xml_root, "formatVersion", "unknown");
 
 	std::string message = "[DotSceneLoader] Parsing dotScene file with version " + version;
 	if(xml_root->first_attribute("ID"))
@@ -277,7 +289,7 @@ vl::DotSceneLoader::processSkyDome(rapidxml::xml_node<> *xml_node)
 	Ogre::Real curvature = vl::getAttribReal(xml_node, "curvature", 10);
 	Ogre::Real tiling = vl::getAttribReal(xml_node, "tiling", 8);
 	Ogre::Real distance = vl::getAttribReal(xml_node, "distance", 4000);
-	bool drawFirst = vl::getAttribBool(xml_node, "drawFirst", true);
+	bool drawFirst = vl::getAttrib(xml_node, "drawFirst", true);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -303,6 +315,7 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
+	node->setSceneFile(_file_name);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -372,7 +385,7 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 	std::string id = vl::getAttrib(xml_node, "id");
 	std::string meshFile = vl::getAttrib(xml_node, "meshFile");
 	std::string materialFile = vl::getAttrib(xml_node, "materialFile");
-	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
+	bool castShadows = vl::getAttrib(xml_node, "castShadows", true);
 
 	/// Get an unique name for the entity
 	/// This is mostly because of problematic Blender exporter that copies the
@@ -405,7 +418,7 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 		}
 
 		// Not checking collision primitive, only tiangle_mesh is supported
-		bool actor = vl::getAttribBool(xml_node, "actor", false);
+		bool actor = vl::getAttrib(xml_node, "actor", false);
 		Ogre::Real damping_rot = vl::getAttribReal(xml_node, "damping_rot", 0.1);
 		Ogre::Real damping_trans = vl::getAttribReal(xml_node, "damping_trans", 0.1);
 		// Friction and ghost not supported
@@ -415,7 +428,7 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 		Ogre::Real mass = vl::getAttribReal(xml_node, "mass", 1);
 		Ogre::Real mass_radius = vl::getAttribReal(xml_node, "mass_radius", 1.0);
 		// defaults to rigid body, should probably be static
-		std::string type = vl::getAttrib(xml_node, "physics_type", "RIGID_BODY");
+		std::string type = vl::getAttrib<std::string>(xml_node, "physics_type", "RIGID_BODY");
 		// velociy_max and velocity_min not supported
 
 		vl::Transform transform(parent->getWorldTransform());
@@ -477,8 +490,8 @@ vl::DotSceneLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePt
 	{ light->setType( vl::Light::LT_SPOT ); }
 
 	light->setVisible(vl::getAttribBool(xml_node, "visible", true));
-	bool shadow = vl::getAttribBool(xml_node, "shadow", true);
-	bool castShadows = vl::getAttribBool(xml_node, "castShadows", true);
+	bool shadow = vl::getAttrib(xml_node, "shadow", true);
+	bool castShadows = vl::getAttrib(xml_node, "castShadows", true);
 	light->setCastShadows(shadow || castShadows);
 
 	rapidxml::xml_node<>* pElement;

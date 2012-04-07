@@ -30,6 +30,8 @@
 namespace vl
 {
 
+/// @class ObjectInterface
+/// @todo Should be renamed object is such a stupid name, these are movable object (or node) types
 class ObjectInterface
 {
 protected :
@@ -39,11 +41,28 @@ public :
 
 	virtual std::string const &getName(void) const = 0;
 
+	virtual void transform(vl::Transform const &t) = 0;
+
+	virtual void translate(Ogre::Vector3 const &v) = 0;
+
+	void translate(vl::scalar x, vl::scalar y, vl::scalar z)
+	{ translate(Ogre::Vector3(x, y, z)); }
+
+	virtual void rotate(Ogre::Quaternion const &q) = 0;
+
 	virtual void setWorldTransform(vl::Transform const &trans) = 0;
 
 	/// @brief get the transformation in the world space
 	/// @return Transformation in world space
 	virtual vl::Transform getWorldTransform(void) const = 0;
+
+	virtual Ogre::Vector3 const &getPosition(void) const = 0;
+
+	virtual void setPosition(Ogre::Vector3 const &v) = 0;
+
+	virtual Ogre::Quaternion const &getOrientation(void) const = 0;
+
+	virtual void setOrientation(Ogre::Quaternion const &q) = 0;
 
 	// @todo add transformation and rotation functions
 
@@ -53,7 +72,22 @@ public :
 
 	// @todo add callbacks for all changes
 	virtual int addListener(TransformedCB::slot_type const &slot) = 0;
-};
+
+	void hide(void)
+	{ setVisibility(false); }
+
+	void show(void)
+	{ setVisibility(true); }
+
+	virtual void setVisibility(bool visible) = 0;
+
+	virtual bool isVisible(void) const = 0;
+
+	virtual void setShowBoundingBox(bool show) {}
+
+	virtual bool getShowBoundingBox(void) const { return false; }
+
+};	// class ObjectInterface
 
 }	// namespace vl
 

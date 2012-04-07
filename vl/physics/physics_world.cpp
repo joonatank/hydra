@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file physics/physics_world.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "physics_world.hpp"
@@ -13,6 +22,9 @@
 #include "tube.hpp"
 
 #include "base/exceptions.hpp"
+
+// Necessary for creating tubes
+#include "game_manager.hpp"
 
 /// Concrete implementations
 #ifdef USE_BULLET
@@ -44,13 +56,14 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 
 /// -------------------------------- Public ----------------------------------
 vl::physics::WorldRefPtr
-vl::physics::World::create(void)
+vl::physics::World::create(GameManager *man)
 {
 	WorldRefPtr world;
 #ifdef USE_BULLET
 	world.reset(new BulletWorld);
 #else if USE_NEWTON
 #endif
+	world->_game = man;
 	return world;
 }
 
@@ -71,8 +84,12 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 	RigidBodyRefPtr body = RigidBody::create(info);
 	assert(body);
 	_rigid_bodies.push_back(body);
+	assert(body->getMotionState() == info.state);
 	// Add the body to the physics engine
-	_addRigidBody(info.name, body);
+	_addRigidBody(info.name, body, info.kinematic);
+
+	// Collision detection is auto enabled so disable it if necessary
+	body->disableCollisions(!_collision_detection_enabled);
 
 	return body;
 }
@@ -114,9 +131,9 @@ vl::physics::World::hasRigidBody( const std::string& name ) const
 }
 
 vl::physics::MotionState *
-vl::physics::World::createMotionState( const vl::Transform &trans, vl::SceneNode *node )
+vl::physics::World::createMotionState(vl::Transform const &trans, vl::ObjectInterface *node)
 {
-	return new MotionState( trans, node );
+	return MotionState::create(trans, node);
 }
 
 void
@@ -153,27 +170,45 @@ vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
 vl::physics::TubeRefPtr
 vl::physics::World::createTubeEx(vl::physics::Tube::ConstructionInfo const &info)
 {
-	TubeRefPtr tube(new Tube(this, info));
+	TubeRefPtr tube(new Tube(this, _game->getSceneManager(), info));
+	_tubes.push_back(tube);
 	return tube;
 }
 
 vl::physics::TubeRefPtr
 vl::physics::World::createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
-		vl::scalar length, vl::scalar radius, vl::scalar mass)
+		vl::scalar length, vl::scalar radius, vl::scalar mass_per_meter)
 {
 	Tube::ConstructionInfo info;
 	info.start_body = start_body;
 	info.end_body = end_body;
 	info.length = length;
 	info.radius = radius;
-	info.mass = mass;
+	info.mass_per_meter = mass_per_meter;
 
 	return createTubeEx(info);
 }
 
+void
+vl::physics::World::enableCollisionDetection(bool enable)
+{
+	if(_collision_detection_enabled != enable)
+	{
+		/// @todo we should really use a system wide parameter for this
+		/// would assume that all physics engine have them
+		for(RigidBodyList::iterator iter = _rigid_bodies.begin(); 
+			iter != _rigid_bodies.end(); ++iter)
+		{
+			(*iter)->disableCollisions(!enable);
+		}
+		_collision_detection_enabled = enable;
+	}
+}
 
 /// ------------------------------- Protected --------------------------------
 vl::physics::World::World(void)
+	: _collision_detection_enabled(true)
+	, _game(0)
 {}
 
 vl::physics::RigidBodyRefPtr

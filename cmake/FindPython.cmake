@@ -96,10 +96,10 @@ foreach( _CURRENT_VERSION ${PYTHON_VERSIONS} )
 	endif( PYTHON_LIBRARY_DEBUG AND PYTHON_LIBRARY_RELEASE )
 
 	if( PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY )
-		message( "Setting python to found" )
+		message(STATUS "Setting python to found" )
 		set( PYTHON_FOUND TRUE )
 	else()
-		message( "Setting python to NOT found : because include dir = ${PYTHON_INCLUDE_DIR}"
+		message(STATUS "Setting python to NOT found : because include dir = ${PYTHON_INCLUDE_DIR}"
 			" : library = ${PYTHON_LIBRARY}" )
 		set( PYTHON_FOUND FALSE )
 	endif()
@@ -116,7 +116,7 @@ foreach( _CURRENT_VERSION ${PYTHON_VERSIONS} )
 
 	# Take the first found Python version
 	if( PYTHON_FOUND AND PYTHON_EXE_FOUND )
-		message( "Found python lib and python executable" )
+		message(STATUS "Found python lib and python executable" )
 		break()
 	endif()
 

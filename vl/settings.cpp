@@ -1,9 +1,17 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
- *	Updated 2011-02
- *	Changed to only include project specific configurations i.e. project files
- *	and project directory.
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file settings.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 // Declaration
@@ -83,6 +91,11 @@ vl::Settings::getAuxDirectories(void ) const
 	std::vector<std::string> paths;
 	for( size_t i = 0; i < _aux_projs.size(); ++i )
 	{
+		// Never should there be extra projects without filenames
+		// This will be relaxed when the projects can be created using the editor
+		if(_aux_projs.at(i).getFile().empty())
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty project file")); }
+
 		fs::path file( _aux_projs.at(i).getFile() );
 		fs::path dir = file.parent_path();
 		if( !fs::exists( dir ) )
@@ -98,8 +111,6 @@ vl::Settings::getProjectDir( void ) const
 {
 	fs::path projFile( _proj.getFile() );
 	fs::path projDir = projFile.parent_path();
-	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name( projDir.string() ) ); }
 
 	return projDir.string();
 }
@@ -149,8 +160,6 @@ vl::Settings::getDir( vl::ProjSettings const &proj ) const
 {
 	fs::path projFile( proj.getFile() );
 	fs::path projDir = projFile.parent_path();
-	if( !fs::exists( projDir ) )
-	{ BOOST_THROW_EXCEPTION( vl::missing_dir() << vl::file_name(projDir.string()) ); }
 
 	return projDir.string();
 }

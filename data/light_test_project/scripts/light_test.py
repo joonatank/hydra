@@ -8,29 +8,15 @@ createCameraMovements(camera, speed=10)
 
 game.player.camera = "camera"
 
-addMoveSelection(speed=3, angular_speed=Degree(60))
-
-#ogre = game.scene.getSceneNode("ogre")
-#ogre.position = Vector3(0, 2.5, 0)
-
 # Create ground plane
 # Create a large plane for shader testing
 # This shows the usage of the new mesh manager
-ground_length = 40;
-ground_mesh = game.mesh_manager.createPlane("ground", ground_length, ground_length)
-print(ground_mesh)
-ground_ent = game.scene.createEntity('ground', "ground", True)
-ground = game.scene.createSceneNode('ground')
-ground.attachObject(ground_ent)
-# Shader material with shadows
-ground_ent.material_name = 'ground/bump_mapped/shadows'
-#ground_ent.material_name = 'ground/flat/shadows'
-ground_ent.cast_shadows = False
+create_ground()
 
 wall_ent = game.scene.createEntity('wall', "ground", True)
 wall = game.scene.createSceneNode("wall")
 wall.attachObject(wall_ent)
-wall_ent.material_name = ground_ent.material_name
+wall_ent.material_name = 'ground/bump_mapped/shadows'
 wall_ent.cast_shadows = False
 wall.orientation = Quaternion(0.7071, 0.7071, 0, 0)
 wall.position = Vector3(0, 20, -20)
@@ -41,8 +27,6 @@ ogre_ent = game.scene.createEntity("ogre", "ogre.mesh", False)
 ogre = game.scene.createSceneNode("ogre")
 ogre.attachObject(ogre_ent)
 ogre.position = Vector3(3, 2.5, -5)
-#athene.scale = Vector3(1,1,1)*0.05;
-
 
 athene = game.scene.createSceneNode("athene")
 # Testing the new Mesh Manager for loading meshes
@@ -50,12 +34,17 @@ athene_ent = game.scene.createEntity("athene", "athene.mesh", True)
 athene_ent.material_name = "athene_material"
 athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
-athene.scale = Vector3(1,1,1)*0.05;
+athene.scaling = Vector3(1,1,1)*0.05;
 
 athene2 = athene.clone();
 athene2.position = Vector3(3, 4, 5)
 
 game.scene.shadows.enable()
+# Should of course be 4096 but testing the rounding to next power of two
+game.scene.shadows.texture_size = 4024
+# some shadow testing
+#game.scene.shadows.camera = "focused"
+#game.scene.shadows.camera = "lispsm"
 
 # Test transparency
 # a semi-transparent glass surface for testing transparency colour
@@ -109,44 +98,8 @@ hytti = game.scene.createSceneNode('hytti')
 hytti.attachObject(hytti_ent)
 hytti.position = Vector3(10, 1.2, -10)
 
-# TODO add hemi light for shader testing
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
-# TODO add directional sun light for shader testing
-
-# Test spotlight
-spot = game.scene.createLight("spot")
-spot.type = "spot"
-spot.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
-spot_n = game.scene.createSceneNode("spot")
-spot_n.attachObject(spot)
-# Really weird shadow effects when light is tied to the camera
-spot_n.position = Vector3(0, 25, 35)
-spot_n.orientation = Quaternion(0.974, -0.225, 0.025, 0.03)
-
-game.scene.addToSelection(spot_n)
-
-game.scene.sky = SkyDomeInfo("CloudySky")
-
-hemi = game.scene.createLight("hemi")
-hemi.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
-hemi_n = game.scene.createSceneNode("hemi")
-hemi_n.attachObject(hemi)
-hemi_n.position = Vector3(-20, 35, 0)
-
-hemi2 = game.scene.createLight("hemi2")
-hemi2.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
-hemi2_n = game.scene.createSceneNode("hemi2")
-hemi2_n.attachObject(hemi2)
-hemi2_n.position = Vector3(20, 35, -10)
-
-spot2 = game.scene.createLight("spot_2")
-spot2.type = "spot"
-spot2.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
-spot2_n = game.scene.createSceneNode("spot_2")
-spot2_n.attachObject(spot2)
-# Really weird shadow effects when light is tied to the camera
-spot2_n.position = Vector3(0, 50, 0)
-spot2_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
 
 # TODO create a configuration for lights toggled by keyboard/python commands
 # Easy to do with python commands
@@ -161,25 +114,67 @@ spot2_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
 
 class Lights :
 	def __init__(self):
-		self.spot1 = spot
-		self.spot2 = spot2
-		self.hemi1 = hemi
-		self.hemi2 = hemi2
 
 		self._create_sun()
+		self._create_spots()
+		self._create_hemis()
+
+		# Start with only the directional light
+		self.toggleSpots()
+		self.toggleHemis()
 
 	def _create_sun(self):
 		self.sun = game.scene.createLight("sun")
 		self.sun.type = "directional"
-		self.sun.cast_shadows = False
-		#spot2.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
+		self.sun.cast_shadows = True
+		self.sun.diffuse = ColourValue(0.5, 0.5, 0.5)
 		self.sun_n = game.scene.createSceneNode("sun")
 		self.sun_n.attachObject(self.sun)
-		# Really weird shadow effects when light is tied to the camera
-		# TODO find a better place for the light
-		#self.sun_n.position = Vector3(-30, 200, -50)
-		self.sun_n.position = Vector3(-10, 50, -5)
+		# Position is not needed for directional lights
+		# Though it would be more intuitive if there was a sphere
+		# along which the sun would move.
 		self.sun_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
+		game.scene.addToSelection(self.sun_n)
+		createSelectionController()
+
+	def _create_spots(self):
+		self.spot1 = game.scene.createLight("spot")
+		self.spot1.type = "spot"
+		self.spot1.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
+		# For PSSM shadow camera (and LiSPSM) Ogre has a bug that
+		# does not allow low range values this might of course 
+		# be because of some parameters how the split planes are created
+		# but who the hell assumes some unit system when no unit system is
+		# forced in the engine...
+		#self.spot1.attenuation = LightAttenuation(1000, 0.9, 0.1, 0)
+		self.spot1.diffuse = ColourValue(0.5, 0.5, 0.5)
+		spot_n = game.scene.createSceneNode("spot")
+		spot_n.attachObject(self.spot1)
+		spot_n.position = Vector3(0, 25, 35)
+		spot_n.orientation = Quaternion(0.974, -0.225, 0.025, 0.03)
+
+		self.spot2 = game.scene.createLight("spot_2")
+		self.spot2.type = "spot"
+		self.spot2.attenuation = LightAttenuation(100, 0.9, 0.1, 0)
+		self.spot2.diffuse = ColourValue(0.5, 0.5, 0.5)
+		spot_n = game.scene.createSceneNode("spot_2")
+		spot_n.attachObject(self.spot2)
+		spot_n.position = Vector3(0, 50, 0)
+		spot_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
+
+	def _create_hemis(self):
+		self.hemi1 = game.scene.createLight("hemi")
+		self.hemi1.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
+		hemi_n = game.scene.createSceneNode("hemi")
+		hemi_n.attachObject(self.hemi1)
+		hemi_n.position = Vector3(-20, 35, 0)
+
+		self.hemi2 = game.scene.createLight("hemi2")
+		self.hemi2.attenuation = LightAttenuation(50, 0.9, 0.1, 0)
+		hemi2_n = game.scene.createSceneNode("hemi2")
+		hemi2_n.attachObject(self.hemi2)
+		hemi2_n.position = Vector3(20, 35, -10)
+
 
 	def toggleSun(self):
 		self.sun.visible = not self.sun.visible
@@ -206,7 +201,9 @@ trigger.addListener(lights.toggleHemis)
 trigger = game.event_manager.createKeyTrigger(KC.P)
 trigger.addListener(lights.toggleSun)
 
-# Start with only the directional light
-lights.toggleSpots()
-lights.toggleHemis()
+def toggleShadows():
+	game.scene.shadows.enabled = not game.scene.shadows.enabled
+
+trigger = game.event_manager.createKeyTrigger(KC.Z)
+trigger.addListener(toggleShadows)
 

@@ -1,8 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
  *	@file physics/rigid_body.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #ifndef HYDRA_RIGID_BODY_HPP
@@ -16,6 +25,8 @@
 #include "math/transform.hpp"
 // Necessary for name
 #include <string>
+
+#include "motion_state.hpp"
 
 // Base class
 #include "object_interface.hpp"
@@ -35,8 +46,8 @@ public :
 	struct ConstructionInfo
 	{
 		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
-			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert)
-			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false)
+			: name(nam), mass(m), state(sta), shape(shap), inertia(inert), kinematic(kinematic_)
 		{}
 
 		std::string name;
@@ -44,6 +55,7 @@ public :
 		vl::physics::MotionState *state;
 		CollisionShapeRefPtr shape;
 		Ogre::Vector3 inertia;
+		bool kinematic;
 
 	};	// struct ConstructionInfo
 
@@ -65,7 +77,7 @@ public :
 	
 	virtual void applyTorqueImpulse(Ogre::Vector3 const &v) = 0;
 
-	void applyCentralForce(Ogre::Vector3 const &force, vl::SceneNodePtr ref);
+	void applyCentralForce(Ogre::Vector3 const &force, vl::ObjectInterface *ref);
 
 	void applyCentralForce(Ogre::Vector3 const &force, RigidBodyRefPtr ref);
 
@@ -109,6 +121,8 @@ public :
 
 	virtual Ogre::Real getMass(void) const = 0;
 
+	virtual Ogre::Vector3 getInertia(void) const = 0;
+	
 	virtual void setInertia(Ogre::Vector3 const &inertia) = 0;
 
 	virtual void setMassProps(Ogre::Real mass, Ogre::Vector3 const &inertia) = 0;
@@ -137,10 +151,51 @@ public :
 
 	Ogre::Vector3 positionToLocal(Ogre::Vector3 const &v) const;
 
+	virtual void enableKinematicObject(bool enable) = 0;
+
+	virtual bool isKinematicObject(void) const = 0;
+
+	virtual void setUserData(void *data) = 0;
+
+	virtual void *getUserData(void) = 0;
+
+	/// Virtual overrides from ObjectInterface
+	virtual void transform(vl::Transform const &t) {}
+
+	virtual void rotate(Ogre::Quaternion const &q) {}
+
 	virtual vl::Transform getWorldTransform(void) const = 0;
 
 	virtual void setWorldTransform(Transform const &worldTrans) = 0;
 
+	virtual Ogre::Vector3 const &getPosition(void) const
+	{ return getMotionState()->getWorldTransform().position; }
+
+	virtual void setPosition(Ogre::Vector3 const &v)
+	{
+		Transform t = getMotionState()->getWorldTransform();
+		t.position = v;
+		getMotionState()->setWorldTransform(t);
+	}
+
+	virtual Ogre::Quaternion const &getOrientation(void) const
+	{ return getMotionState()->getWorldTransform().quaternion; }
+
+	virtual void setOrientation(Ogre::Quaternion const &q)
+	{
+		Transform t = getMotionState()->getWorldTransform();
+		t.quaternion = q;
+		getMotionState()->setWorldTransform(t);
+	}
+
+	virtual void setVisibility(bool visible) {}
+
+	virtual bool isVisible(void) const { return true; }
+
+	virtual void disableCollisions(bool disable) = 0;
+
+	virtual bool isCollisionsDisabled(void) const = 0;
+	
 	virtual int addListener(TransformedCB::slot_type const &slot)
 	{ return -1; }
 
@@ -160,6 +215,8 @@ protected :
 };	// class RigidBody
 
 std::ostream &operator<<(std::ostream &os, RigidBody const &body);
+
+std::ostream &operator<<(std::ostream &os, std::vector<RigidBodyRefPtr> const &bodies);
 
 }	// namespace physics
 

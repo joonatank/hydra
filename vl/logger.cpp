@@ -1,6 +1,13 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2012 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-03
  *	@file logger.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.4
  *
  */
 
@@ -43,6 +50,34 @@ std::pair<std::string, vl::LOG_MESSAGE_LEVEL> parse_log_message(std::string &str
 
 }
 
+/// class LogMessage
+vl::LogMessage::LogMessage( std::string const &ty,
+			double tim,
+			std::string const &msg,
+			LOG_MESSAGE_LEVEL lvl )
+			: type(ty), time(tim), message(msg), level(lvl)
+{
+}
+
+void
+vl::LogMessage::append(std::string const &str)
+{
+	message.append(str);
+}
+
+void
+vl::LogMessage::clear(void)
+{
+	message.clear();
+}
+
+bool
+vl::LogMessage::empty(void) const
+{
+	return message.empty();
+}
+
+/// class sink
 vl::sink::sink(vl::Logger& logger, std::string const &type)
 	: _logger(logger)
 	, _type(type)
@@ -52,11 +87,9 @@ std::streamsize
 vl::sink::write(const char* s, std::streamsize n)
 {
 	std::string str(s, n);
-
 	std::pair<std::string, vl::LOG_MESSAGE_LEVEL> msg = parse_log_message(str);
 
-	if( msg.first != "\n" )
-	{ _logger.logMessage(_type, msg.first, msg.second); }
+	_logger.logMessage(_type, msg.first, msg.second);
 
 	return n;
 }
@@ -64,11 +97,7 @@ vl::sink::write(const char* s, std::streamsize n)
 void
 vl::sink::write(std::string const &str)
 {
-	std::string temp(str);
-	std::pair<std::string, vl::LOG_MESSAGE_LEVEL> msg = parse_log_message(temp);
-
-	if( msg.first != "\n" )
-	{ _logger.logMessage(_type, msg.first, msg.second); }
+	write(str.c_str(), str.size());
 }
 
 vl::Logger::Logger(void )
@@ -161,12 +190,27 @@ void
 vl::Logger::logMessage(std::string const &type, std::string const &message, LOG_MESSAGE_LEVEL level)
 {
 	// filter annoying error report from CEGUI
-	if(message == "Error prior to using GLSL Program Object : invalid operation")
+	if(message == "Error prior to using GLSL Program Object : invalid operation"
+		|| message == "Error prior to using GLSL Program Object : invalid value")
 	{ return; }
 
-	// TODO fix the time
-	LogMessage msg(type, 0, message, level);
-	logMessage(msg);
+	// @todo this does not take into account different types and levels
+	if(!_current_msg.empty())
+	{
+		_current_msg.append(message);
+	}
+	else
+	{
+		// @todo fix the time
+		_current_msg = LogMessage(type, 0, message, level);
+	}
+
+	// check for ready messages
+	if(message.size() > 0 && *(message.end()-1) == '\n' )
+	{
+		logMessage(_current_msg);
+		_current_msg.clear();
+	}
 }
 
 void

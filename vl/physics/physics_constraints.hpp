@@ -1,8 +1,13 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/*
+ *	Copyright (c) 2012 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file physics/physics_constraints.hpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.4
+ *
  */
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_HPP
@@ -22,11 +27,38 @@ namespace physics
 class Constraint
 {
 public :
-	virtual RigidBodyRefPtr getBodyA(void) = 0;
+	RigidBodyRefPtr getBodyA(void) const
+	{ return _bodyA.lock(); }
 
-	virtual RigidBodyRefPtr getBodyB(void) = 0;
+	RigidBodyRefPtr getBodyB(void) const
+	{ return _bodyB.lock(); }
+
+	virtual Transform const &getLocalFrameA(void) const
+	{ return _frameA; }
+
+	virtual Transform const &getLocalFrameB(void) const
+	{ return _frameB; }
+
+	virtual std::string getTypeName(void) const = 0;
 
 	virtual ~Constraint(void) {}
+
+protected :
+	Constraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
+		: _bodyA(rbA)
+		, _bodyB(rbB)
+		, _frameA(frameInA)
+		, _frameB(frameInB)
+	{}
+
+private :
+	RigidBodyWeakPtr _bodyA;
+	RigidBodyWeakPtr _bodyB;
+
+	Transform _frameA;
+	Transform _frameB;
+
 };
 
 /// @class SixDofConstraint
@@ -36,18 +68,16 @@ class SixDofConstraint : public vl::physics::Constraint
 public :
 	virtual ~SixDofConstraint(void) {}
 
-	RigidBodyRefPtr getBodyA(void)
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void)
-	{ return _bodyB.lock(); }
-
+	virtual Ogre::Vector3 getLinearLowerLimit(void) const = 0;
 	virtual void setLinearLowerLimit(Ogre::Vector3 const &linearLower) = 0;
 	
+	virtual Ogre::Vector3 getLinearUpperLimit(void) const = 0;
 	virtual void setLinearUpperLimit(Ogre::Vector3 const &linearUpper) = 0;
 
+	virtual Ogre::Vector3 getAngularLowerLimit(void) const = 0;
 	virtual void setAngularLowerLimit(Ogre::Vector3 const &angularLower) = 0;
 
+	virtual Ogre::Vector3 getAngularUpperLimit(void) const = 0;
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
 
 	/// Index 0-2 for translation (x, y, z)
@@ -57,22 +87,28 @@ public :
 	virtual void setDamping(int index, vl::scalar damping) = 0;
 	virtual void setEquilibriumPoint(void) = 0;
 	virtual void setEquilibriumPoint(int index) = 0;
-	
+
+	virtual void setNormalCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopCFM(vl::scalar cfm) = 0;
+
+	virtual void setStopERP(vl::scalar erp) = 0;
+
 	// @todo add motors
 
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "6dof"; }
+
+	// static methods
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
-
-
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
 
 };	// class SixDofConstraint
 
@@ -80,12 +116,6 @@ class SliderConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SliderConstraint(void) {}
-
-	RigidBodyRefPtr getBodyA(void)
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void)
-	{ return _bodyB.lock(); }
 
 	virtual vl::scalar getLowerLinLimit(void) const = 0;
 	
@@ -205,19 +235,19 @@ public :
 	
 	virtual vl::scalar getMaxAngMotorForce(void) = 0;
 
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "slider"; }
 
+	// static
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
-
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
 
 };	// class SliderConstraint
 
@@ -225,12 +255,6 @@ class HingeConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~HingeConstraint(void) {}
-
-	RigidBodyRefPtr getBodyA(void)
-	{ return _bodyA.lock(); }
-
-	RigidBodyRefPtr getBodyB(void)
-	{ return _bodyB.lock(); }
 
 	virtual void setAngularOnly(bool angularOnly) = 0;
 
@@ -252,20 +276,30 @@ public :
 
 	virtual vl::scalar getHingeAngle(void) = 0;
 	
+	// overloads
+	virtual std::string getTypeName(void) const
+	{ return "hinge"; }
+
+	// static
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: _bodyA(rbA)
-		, _bodyB(rbB)
+		: Constraint(rbA, rbB, frameInA, frameInB)
 	{}
 
-	RigidBodyWeakPtr _bodyA;
-	RigidBodyWeakPtr _bodyB;
-
 };	// class HingeConstraint
+
+
+std::ostream &operator<<(std::ostream &os, Constraint const &c);
+std::ostream &operator<<(std::ostream &os, HingeConstraint const &c);
+std::ostream &operator<<(std::ostream &os, SliderConstraint const &c);
+std::ostream &operator<<(std::ostream &os, SixDofConstraint const &c);
+
+std::ostream &operator<<(std::ostream &os, ConstraintList const &cl);
+
 
 }	// namespace physics
 

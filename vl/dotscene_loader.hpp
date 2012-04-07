@@ -1,15 +1,32 @@
-/**	Joonatan Kuosa <joonatan.kuosa@tut.fi>
- *	2010-11
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
- *	DotScene file loader for distributed objects. Creates the object in config.
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-11
+ *	@file dotscene_loader.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	DotScene file loader for distributed objects. Creates the object in config.
  *	So that they can be retrieved with getSceneNode later.
  *
  *	Does NOT support any other types than SceneNodes for now.
  *	Also does NOT support anything else from SceneNode than name and transformation.
  */
 
-#ifndef VL_DOTSCENE_LOADER_HPP
-#define VL_DOTSCENE_LOADER_HPP
+#ifndef HYDRA_DOTSCENE_LOADER_HPP
+#define HYDRA_DOTSCENE_LOADER_HPP
+
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include <string>
 
@@ -23,7 +40,7 @@
 namespace vl
 {
 
-class DotSceneLoader
+class HYDRA_API DotSceneLoader
 {
 public :
 	DotSceneLoader(bool use_new_mesh_manager = false);
@@ -102,9 +119,11 @@ private :
 
 	bool _use_new_mesh_manager;
 
+	std::string _file_name;
+
 };	// class DotSceneLoader
 
 }	// namespace vl
 
 
-#endif	// VL_DOTSCENE_LOADER_HPP
+#endif	// HYDRA_DOTSCENE_LOADER_HPP

@@ -53,9 +53,11 @@ vl::animation::operator<<(std::ostream &os, vl::animation::Graph const &g)
 
 /// ---------------------------------- Node ----------------------------------
 
-vl::animation::Node::Node(void)
+vl::animation::Node::Node(vl::Transform const &initial_transform)
 	: _parent()
 	, _next_child(0)
+	, _transform(initial_transform)
+	, _prev_transform(initial_transform)
 {}
 
 vl::animation::Node::~Node(void)
@@ -97,17 +99,16 @@ vl::animation::Node::getChild(size_t i)
 	return LinkRefPtr();
 }
 
-vl::Transform &
-vl::animation::Node::getTransform(void)
-{ return _transform; }
-
 vl::Transform const &
 vl::animation::Node::getTransform(void) const
 { return _transform; }
 
 void
 vl::animation::Node::setTransform(Transform const &t)
-{ _transform = t; }
+{
+	_prev_transform = _transform;
+	_transform = t;
+}
 
 vl::Transform
 vl::animation::Node::getWorldTransform(void) const
@@ -130,7 +131,16 @@ vl::animation::Node::setWorldTransform(Transform const &t)
 		wt.invert();
 	}
 
-	_transform = wt*t;
+	setTransform(wt*t);
+}
+
+void
+vl::animation::Node::popLastTransform(void)
+{
+	_transform = _prev_transform;
+	// Update parents
+	if(_parent.lock())
+	{ _parent.lock()->popLastTransform(); }
 }
 
 size_t
@@ -303,9 +313,6 @@ vl::animation::Link::_setChild(NodeRefPtr child)
 	_child = child;
 }
 
-vl::Transform &
-vl::animation::Link::getTransform(void)
-{ return _transform; }
 vl::Transform const &
 vl::animation::Link::getTransform(void) const
 { return _transform; }
@@ -313,6 +320,9 @@ vl::animation::Link::getTransform(void) const
 void
 vl::animation::Link::setTransform(Transform const &t, bool preserve_child_transforms)
 {
+	// save the last state
+	_prev_transform = _transform;
+
 	if(preserve_child_transforms && _child)
 	{
 		/// Save the old transformation before resetting link
@@ -324,6 +334,14 @@ vl::animation::Link::setTransform(Transform const &t, bool preserve_child_transf
 	}
 	else
 	{ _transform = t; }
+}
+
+void
+vl::animation::Link::setPosition(Ogre::Vector3 const &v, bool preserve_child_transforms)
+{
+	vl::Transform t(getTransform());
+	t.position = v;
+	setTransform(t);
 }
 
 vl::Transform
@@ -346,34 +364,46 @@ vl::animation::Link::setWorldTransform(Transform const &t)
 		wt.invert();
 	}
 
-	_transform = wt*t;
+	setTransform(wt*t);
 }
 
 void
 vl::animation::Link::setOrientation(Quaternion const &q)
 {
-	/// this messes up the axis of rotation, but that's easy to fix
-	/// per constraint using python.
-	/// preserves the translation correctly and center of orientation.
-	_transform.quaternion = q*_initial_transform.quaternion;
-	_transform.position = _initial_transform.position;
+	setTransform(Transform(q, _initial_transform.position));
+}
+
+void
+vl::animation::Link::rotate(Quaternion const &q)
+{
+	setOrientation(getTransform().quaternion*q);
+}
+
+void
+vl::animation::Link::popLastTransform(void)
+{
+	_transform = _prev_transform;
+	// Update parents
+	if(_parent.lock())
+	{ _parent.lock()->popLastTransform(); }
 }
 
 void 
 vl::animation::Link::setInitialState(void)
 {
 	_initial_transform = _transform;
+	_prev_transform = _transform;
 }
 
 void
 vl::animation::Link::reset(void)
 {
-	_transform = _initial_transform;
+	setTransform(_initial_transform);
 }
 
 /// ---------------------------------- Graph ---------------------------------
 vl::animation::Graph::Graph(void)
-	: _root(new Node)
+	: _root(new Node(Transform()))
 {}
 
 vl::animation::Graph::~Graph(void)

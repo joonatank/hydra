@@ -20,6 +20,15 @@ MACRO( lib_finder variable_name lib_name )
 		${INCLUDE_DIR}/../lib/Debug
 		)
 
+	# Redo the search with same name as the Release
+	# to avoid file collisions between the two we search only the dedicated Debug dir
+	if(NOT ${variable_name}_LIBRARY_DEBUG)
+		find_library(${variable_name}_LIBRARY_DEBUG
+			NAMES ${lib_name}
+			PATHS ${INCLUDE_DIR}/../lib/Debug
+			)
+	endif()
+
 	if( ${variable_name}_LIBRARY_DEBUG AND ${variable_name}_LIBRARY_RELEASE )
 		set( ${variable_name}_LIBRARY debug ${${variable_name}_LIBRARY_DEBUG}
 			optimized ${${variable_name}_LIBRARY_RELEASE}
@@ -31,3 +40,33 @@ MACRO( lib_finder variable_name lib_name )
 	endif()
 
 ENDMACRO()
+
+MACRO(set_include_paths variable lib_name)
+	list(APPEND variable
+		$ENV{${lib_name}_DIR}/include
+		$ENV{${lib_name}_HOME}/include
+		/usr/local/include
+		/usr/include
+		/sw/include
+		/opt/local/include
+		/opt/csw/include
+		/opt/include
+		)
+ENDMACRO()
+
+MACRO(set_lib_paths variable lib_name)
+	list(APPEND variable
+		$ENV{${lib_name}_DIR}/lib
+		$ENV{${lib_name}_HOME}/lib
+		/usr/local/lib
+		/usr/lib
+		/usr/local/X11R6/lib
+		/usr/X11R6/lib
+		/sw/lib
+		/opt/local/lib
+		/opt/csw/lib
+		/opt/lib
+		/usr/freeware/lib64
+		)
+ENDMACRO()
+

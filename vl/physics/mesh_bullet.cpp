@@ -1,11 +1,17 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
- *	@file mesh_bullet.cpp
+ *	@file physics/mesh_bullet.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Bullet conversion from our Mesh structure, 
- *	in separate file so that the Bullet dependency is easily avoided
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
  */
 
 #include "mesh_bullet.hpp"
@@ -21,8 +27,14 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 
 	/// Supports only single sub meshes for now
 	assert(mesh->getNumSubMeshes() == 1);
-	/// Supports only shared geometry for now
-	assert(mesh->sharedVertexData);
+
+	VertexData *vertexData = 0;
+	if(mesh->sharedVertexData)
+	{ vertexData = mesh->sharedVertexData; }
+	else
+	{ vertexData = mesh->getSubMesh(0)->vertexData; }
+
+	assert(vertexData);
 
 	SubMesh const *sm = mesh->getSubMesh(0);
 	btIndexedMesh bt_data;
@@ -41,7 +53,7 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 	bt_data.m_vertexType = PHY_FLOAT;
 	bt_data.m_vertexStride = sizeof(float)*3;
 
-	bt_data.m_numVertices = mesh->sharedVertexData->getNVertices();
+	bt_data.m_numVertices = vertexData->getNVertices();
 	/// Assumes triangle lists
 	/// @todo add support for operation type
 	assert(sm->indexData.indexCount()%3 == 0);
@@ -55,10 +67,10 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 	/// @todo this is inefficient, better would be that the VertexData structure
 	/// holds the vertex positions in a continous memory block (no need to copy them)
 	/// especially as Bullet can reuse the memory block.
-	unsigned char *vbuf = new unsigned char[mesh->sharedVertexData->getNVertices()*vertex_size];
-	for(size_t i = 0; i < mesh->sharedVertexData->getNVertices(); ++i)
+	unsigned char *vbuf = new unsigned char[vertexData->getNVertices()*vertex_size];
+	for(size_t i = 0; i < vertexData->getNVertices(); ++i)
 	{
-		::memcpy(vbuf+i*vertex_size, &mesh->sharedVertexData->getVertex(i).position, vertex_size);
+		::memcpy(vbuf+i*vertex_size, &vertexData->getVertex(i).position, vertex_size);
 	}
 
 	bt_data.m_vertexBase = vbuf;

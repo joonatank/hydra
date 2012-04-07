@@ -1,7 +1,21 @@
-/**	Joonatan Kuosa
- *	2010-02
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
  *
- *	Class for managing the application, this is basicly a Singleton
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-02
+ *	@file: ogre_root.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Class for managing the application, this is basicly a Singleton
  *	the number of instances depends on the number of pipe threads we have.
  *	No enforcement for the Singleton is done.
  *
@@ -13,8 +27,8 @@
  *	either through inheritance or aggregation.
  **/
 
-#ifndef VL_OGRE_ROOT_HPP
-#define VL_OGRE_ROOT_HPP
+#ifndef HYDRA_OGRE_ROOT_HPP
+#define HYDRA_OGRE_ROOT_HPP
 
 #include <OGRE/OgreRoot.h>
 #include <OGRE/OgreSceneManager.h>
@@ -29,58 +43,56 @@ namespace vl
 {
 namespace ogre
 {
-	class Root
-	{
-		public :
-			Root(vl::config::LogLevel level);
+class Root
+{
+	public :
+		Root(vl::config::LogLevel level);
 
-			virtual ~Root( void );
+		~Root( void );
 
-			// Hack to provide native access, we should really never
-			// need this for the Root object.
-			Ogre::Root *getNative( void )
-			{ return _ogre_root; }
+		// Hack to provide native access, we should really never
+		// need this for the Root object.
+		Ogre::Root *getNative( void )
+		{ return _ogre_root; }
 
-			virtual void createRenderSystem( void );
+		void createRenderSystem( void );
 
-			virtual void init( void );
+		void init( void );
 
-			virtual Ogre::RenderWindow *createWindow(
-					std::string const &name, unsigned int width,
-					unsigned int height,
-					Ogre::NameValuePairList const &params
-						= Ogre::NameValuePairList() );
+		Ogre::RenderWindow *createWindow(
+				std::string const &name, unsigned int width,
+				unsigned int height,
+				Ogre::NameValuePairList const &params
+					= Ogre::NameValuePairList() );
 
-			virtual Ogre::SceneManager *createSceneManager(
-					std::string const &name );
+		Ogre::SceneManager *createSceneManager(std::string const &name);
 
 			Ogre::SceneManager *getSceneManager(void) const;
 
-			virtual void addResource( std::string const &resource_path );
+		/// Method which will define the source of resources (other than current folder)
+		void setupResources(std::vector<std::string> const &paths);
 
-			virtual void setupResources( void );
+		void removeResources(void);
 
-			virtual void loadResources(void);
+		void loadResources(void);
 
-		protected :
-			void _loadPlugins( void );
+	protected :
+		void _loadPlugins( void );
 
-			void _setupResourceDir( std::string const &dir );
+		void _setupResourceDir( std::string const &dir );
 
-			void _setupResource( std::string const &file, std::string const &typeName );
+		void _setupResource( std::string const &file, std::string const &typeName );
 
-			Ogre::Root *_ogre_root;
+		Ogre::Root *_ogre_root;
 
-			Ogre::LogManager *_log_manager;
+		Ogre::LogManager *_log_manager;
 
-			std::vector<std::string> _resources;
 
 			Ogre::SceneManager *_scene_manager;
-
-	};	// class Root
+};	// class Root
 
 }	// namespace ogre
 
 }	// namespace vl
 
-#endif
+#endif // HYDRA_OGRE_ROOT_HPP

@@ -1,10 +1,21 @@
-/**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+/**
+ *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011/10 Savant Simulators
+ *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
  *	@file mesh_ogre.cpp
  *
- *	This file is part of Hydra a VR game engine.
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
  *
- *	Ogre conversion from our Mesh structure, 
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	Ogre conversion from our Mesh structure, 
  *	in separate file so that the Ogre dependency is easily avoided (or can in future)
  */
 
@@ -19,21 +30,14 @@
 Ogre::MeshPtr
 vl::create_ogre_mesh(std::string const &name, vl::MeshRefPtr mesh)
 {
-//	std::clog << "vl::create_ogre_mesh : " << name << std::endl;
-
 	Ogre::MeshPtr og_mesh = Ogre::MeshManager::getSingleton().createManual(name, 
             Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
 	// Copy the shared geometry
-	// Skip empty
-	if( !mesh->sharedVertexData || mesh->sharedVertexData->getNVertices() == 0 ) 
+	// Skip empty shared geometry
+	if(mesh->sharedVertexData && mesh->sharedVertexData->getNVertices() > 0) 
 	{
-		std::clog << "Empty shared geometry " << mesh->getName() << std::endl;
-	}
-	else
-	{
-//		std::clog << "Converting shared geometry for " << mesh->getName() << std::endl;
-		// Create shared VertexData for ease of use
+		// Create shared VertexData
 		og_mesh->sharedVertexData = new Ogre::VertexData;
 		convert_ogre_geometry(mesh->sharedVertexData, og_mesh->sharedVertexData);
 	}
@@ -69,7 +73,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 	size_t offset = 0;
 
 	// Add element
-//	std::clog << "Adding " << vertexData->vertexDeclaration.getNSemantics() << " vertex schematics." << std::endl;
 	for(size_t i = 0; i < vertexData->vertexDeclaration.getNSemantics(); ++i)
 	{
 		VertexDeclaration::Semantic semantic = vertexData->vertexDeclaration.getSemantic(i);
@@ -78,8 +81,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 	}
 
 	og_vertexData->vertexCount = vertexData->getNVertices();
-
-//	std::clog << "Converting " << og_vertexData->vertexCount << " vertices." << std::endl;
 
 	assert(og_vertexData->vertexDeclaration->getVertexSize(bufCount) == vertexData->vertexDeclaration.vertexSize());
 
@@ -145,7 +146,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 				*/
 				break;
 			case Ogre::VES_DIFFUSE:
-//				std::cout << "Writing Vertex diffuse data." << std::endl;
 				elem.baseVertexPointerToElement(pVert, &pCol);
 				{
 					Ogre::ColourValue cv = vertexData->getVertex(i).diffuse;
@@ -153,7 +153,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 				}
 				break;
 			case Ogre::VES_SPECULAR:
-//				std::cout << "Writing Vertex specular data." << std::endl;
 				elem.baseVertexPointerToElement(pVert, &pCol);
 				{
 					Ogre::ColourValue cv = vertexData->getVertex(i).specular;
@@ -161,7 +160,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 				}
 				break;
 			case Ogre::VES_TEXTURE_COORDINATES:
-//				std::cout << "Writing Vertex texture coordinates." << std::endl;
 				switch (elem.getType()) 
 				{
 				case Ogre::VET_FLOAT1:
@@ -229,7 +227,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 void 
 vl::convert_ogre_submeshes(vl::Mesh const *mesh, Ogre::Mesh *og_mesh)
 {
-//	std::clog << "vl::convert_ogre_submeshes : " << og_mesh->getName() << std::endl;
 	for(size_t i = 0; i < mesh->getNumSubMeshes(); ++i)
     {
 		// All children should be submeshes 
@@ -238,18 +235,19 @@ vl::convert_ogre_submeshes(vl::Mesh const *mesh, Ogre::Mesh *og_mesh)
 		vl::SubMesh const *sm = mesh->getSubMesh(i); 
 		convert_ogre_submesh(sm, og_sm);
 
-		og_mesh->nameSubMesh(sm->getName(), i);
+		if(!sm->getName().empty())
+		{ og_mesh->nameSubMesh(sm->getName(), i); }
     }
 }
 
 void 
 vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 {
-//	std::clog << "vl::convert_ogre_submesh" << std::endl;
 	assert(sm);
 	assert(og_sm);
 
-	og_sm->setMaterialName(sm->getMaterial());
+	if(!sm->getMaterial().empty())
+	{ og_sm->setMaterialName(sm->getMaterial()); }
 
 	if(sm->indexData.indexCount() == 0)
 	{
@@ -261,12 +259,8 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 		og_sm->operationType = sm->operationType;
 		og_sm->indexData->indexCount = sm->indexData.indexCount();
 
-//		std::clog << "Converting index buffers : operation type = " << og_sm->operationType 
-//			<< " index count = " << og_sm->indexData->indexCount << std::endl;
-
 		if(sm->indexData.getIndexSize() == vl::IT_32BIT)
 		{
-//			std::clog << "Copying 32bit index buffers." << std::endl;
 			// Allocate space
 			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
 				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
@@ -288,7 +282,6 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 		}
 		else
 		{
-//			std::clog << "Copying 16bit index buffers." << std::endl;
 			// Allocate space
 			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
 				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 
@@ -311,7 +304,6 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 	og_sm->useSharedVertices = sm->useSharedGeometry;
 	if(!sm->useSharedGeometry)
 	{
-//		std::clog << "Converting non shared geometry." << std::endl;
 		assert(sm->vertexData);
 		og_sm->vertexData = new Ogre::VertexData;
 		convert_ogre_geometry(sm->vertexData, og_sm->vertexData);

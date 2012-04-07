@@ -22,7 +22,7 @@
 #ifndef HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 #define HYDRA_ANIMATION_KINEMATIC_WORLD_HPP
 
-#include "base/timer.hpp"
+#include "base/time.hpp"
 
 #include "typedefs.hpp"
 
@@ -38,11 +38,13 @@ namespace vl
 class KinematicWorld
 {
 public :
-	KinematicWorld(void);
+	KinematicWorld(GameManager *man);
 
 	~KinematicWorld(void);
 
 	void step(vl::time const &t);
+
+	void finalise(void);
 
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
@@ -62,26 +64,45 @@ public :
 	ConstraintRefPtr createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
 
+	ConstraintRefPtr createConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB);
+
 	void removeConstraint(ConstraintRefPtr constraint);
 
 	bool hasConstraint(vl::ConstraintRefPtr constraint) const;
+
+	ConstraintRefPtr getConstraint(std::string const &name) const;
 
 	/// -------------- List access ----------------------
 	ConstraintList const &getConstraints(void) const;
 
 	KinematicBodyList const &getBodies(void) const;
 
+	// @brief switch collision detection on/off for all kinematic bodies
+	// for now only works for bodies created after a call to this function
+	// also collision models have hard coded part of name "*cb_"
+	void enableCollisionDetection(bool enable);
+
+	bool isCollisionDetectionEnabled(void) const
+	{ return _collision_detection_on; }
+
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
-	vl::animation::NodeRefPtr _createNode(void);
+	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
 
 	void _progress_constraints(vl::time const &t);
+
+	void _create_collision_body(KinematicBodyRefPtr body);
+
+	bool _collision_detection_on;
 
 	KinematicBodyList _bodies;
 	ConstraintList _constraints;
 
 	animation::GraphRefPtr _graph;
+
+	GameManager *_game;
 
 };	// class KinematicWorld
 

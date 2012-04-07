@@ -1,6 +1,21 @@
-/**	Joonatan Kuosa
- *	2010-11 initial implementation
+/**
+ *	Copyright (c) 2010-2011 Tampere University of Technology
  *
+ *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+ *	@date 2010-05
+ *	@file tracker.cpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.3
+ *
+ *	Licensed under the MIT Open Source License, 
+ *	for details please see LICENSE file or the website
+ *	http://www.opensource.org/licenses/mit-license.php
+ *
+ */
+
+/**	
+ *	@date 2010-11
  *	Added event system support, rudimentary at the moment
  *	Triggers can be created separately from actions so they can be created from
  *	config file.
@@ -39,12 +54,6 @@ std::ostream &
 vl::operator<<(std::ostream &os, vl::Tracker const &t)
 {
 	os << t.getName();
-	if(!t.getTransformation().isIdentity())
-	{
-		os << " : transform ";
-		os << " position " << t.getTransformation().position << "\n"
-			<< " orientation" << t.getTransformation().quaternion << "\n";
-	}
 
 	for(size_t i = 0; i < t.getNSensors(); ++i)
 	{
@@ -68,7 +77,8 @@ vl::operator<<(std::ostream &os, vl::Clients const &c)
 
 /// ------------------------------ Sensor ------------------------------------
 vl::TrackerSensor::TrackerSensor(const Ogre::Vector3& default_pos, const Ogre::Quaternion& default_quat)
-	: _trigger(0), _default_value( default_pos, default_quat )
+	: _trigger(0)
+	, _default_value( default_pos, default_quat )
 {}
 
 void
@@ -131,6 +141,11 @@ vl::TrackerSensor::update(const vl::Transform& data)
 vl::Tracker::Tracker(std::string const &trackerName)
 	: _name(trackerName)
 	, incorrect_quaternion(false)
+	, _scale(Ogre::Vector3::UNIT_SCALE)
+	, _permute(Ogre::Vector3(0, 1, 2))
+	, _sign(Ogre::Vector3::UNIT_SCALE)
+	, _neutral_position(Ogre::Vector3::ZERO)
+	, _neutral_quaternion(Ogre::Quaternion::IDENTITY)
 {}
 
 void
