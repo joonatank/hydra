@@ -1053,11 +1053,11 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			{ _ogre_sm->setSkyDome(false, ""); }
 			else
 			{
-					_ogre_sm->setSkyDome( true, _sky_dome.material_name,
-						_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
-						_sky_dome.draw_first, _sky_dome.orientation, 
-						_sky_dome.xsegments, _sky_dome.ysegments,
-						_sky_dome.ysegments_keep );
+				_ogre_sm->setSkyDome( true, _sky_dome.material_name,
+					_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
+					_sky_dome.draw_first, _sky_dome.orientation, 
+					_sky_dome.xsegments, _sky_dome.ysegments,
+					_sky_dome.ysegments_keep );
 			}
 		}
 	}
