@@ -74,7 +74,7 @@ template<class C> void remove_duplicates(C& c)
 	c.erase(p, c.end());
 }
 
-
+/// -------------------------- Win32GLSupport --------------------------------
 Ogre::Win32GLSupport::Win32GLSupport(void)
     : mHasPixelFormatARB(false)
     , mHasMultisample(false)
@@ -320,18 +320,7 @@ void
 Ogre::Win32GLSupport::_initialiseWGL(void)
 {
 	std::clog << "Win32GLSupport::initialiseWGL" << std::endl;
-	// wglGetProcAddress does not work without an active OpenGL context,
-	// but we need wglChoosePixelFormatARB's address before we can
-	// create our main window.  Thank you very much, Microsoft!
-	//
-	// The solution is to create a dummy OpenGL window first, and then
-	// test for WGL_ARB_pixel_format support.  If it is not supported,
-	// we make sure to never call the ARB pixel format functions.
-	//
-	// If is is supported, we call the pixel format functions at least once
-	// to initialise them (pointers are stored by glprocs.h).  We can also
-	// take this opportunity to enumerate the valid FSAA modes.
-		
+
 	LPCSTR dummyText = "OgreWglDummy";
 	// @todo this is idotic I have replaced the modelu name from at least
 	// four files already. Can't we make it a const.
@@ -359,8 +348,10 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 
 	// if a simple CreateWindow fails, then boy are we in trouble...
 	if (hwnd == NULL)
-		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "CreateWindow() failed",
-			"Win32GLSupport::initializeWGL");
+	{
+		OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+			"CreateWindow() failed", "Win32GLSupport::initializeWGL");
+	}
 
 
 	// no chance of failure and no need to release thanks to CS_OWNDC
@@ -377,8 +368,8 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 	pfd.iPixelType = PFD_TYPE_RGBA;
 		
 	// if these fail, wglCreateContext will also quietly fail
-	int format;
-	if ((format = ChoosePixelFormat(hdc, &pfd)) != 0)
+	int format = ChoosePixelFormat(hdc, &pfd);
+	if(format != 0)
 		SetPixelFormat(hdc, format, &pfd);
 
 	HGLRC hrc = wglCreateContext(hdc);
@@ -394,33 +385,25 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 				"Win32GLSupport::_initialiseWGL");
 		}
 
+		/// initialise GLEW the reason we have this function in the first place
 		GLenum err = glewInit();
 		if(GLEW_OK != err)
 		{
 			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
-				"Failed to Initialise GLEW.", 
-				"Win32GLSupport::_initialiseWGL");
+				"Failed to Initialise GLEW.", "Win32GLSupport::_initialiseWGL");
 		}
 
 		// check for pixel format and multisampling support
-		// @todo we should use GLEW to check the extensions
-		// @todo add all used extensions here (from Win32Window)
-		// then we can query the support if they are available.
 		if(WGLEW_ARB_extensions_string)
 		{
-			std::istringstream wglexts(wglGetExtensionsStringARB(hdc));
-			std::string ext;
-			while (wglexts >> ext)
-			{
-				if (ext == "WGL_ARB_pixel_format")
-					mHasPixelFormatARB = true;
-				else if (ext == "WGL_ARB_multisample")
-					mHasMultisample = true;
-				else if (ext == "WGL_EXT_framebuffer_sRGB")
-					mHasHardwareGamma = true;
-				else if( ext == "WGL_NV_swap_group" )
-					mHasNvSwapGroup = true;
-			}
+			if(WGLEW_ARB_pixel_format)
+				mHasPixelFormatARB = true;
+			if(WGLEW_ARB_multisample)
+				mHasMultisample = true;
+			if(WGLEW_EXT_framebuffer_sRGB)
+				mHasHardwareGamma = true;
+			if(WGLEW_NV_swap_group)
+				mHasNvSwapGroup = true;
 		}
 
 		if (mHasPixelFormatARB && mHasMultisample)
@@ -464,13 +447,10 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 
 		// Get OpenGL extensions we need
 		mHasFBO = (GLEW_VERSION_3_0 || GLEW_EXT_framebuffer_object || GLEW_ARB_framebuffer_object);
-		if(mHasFBO)
+		if(!mHasFBO)
 		{
-			std::clog << "Has FBO support" << std::endl;
-		}
-		else
-		{
-			std::clog << "Shouldn't happen! Doesn't have FBO support" << std::endl;
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"FBOs are not supported.", "Win32GLSupport::_initialiseWGL");
 		}
 		
 		/// Retrieve WGL extensions
@@ -501,6 +481,8 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 	// clean up our dummy window and class
 	DestroyWindow(hwnd);
 	UnregisterClass(dummyText, hinst);
+
+	std::clog << "Win32GLSupport::initialiseWGL : successful" << std::endl;
 }
 
 bool
@@ -518,9 +500,7 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions c
 	pfd.cStencilBits = 8;
 
 	if(opt.stereo)
-	{
 		pfd.dwFlags |= PFD_STEREO;
-	}
 
 	int format = 0;
 
@@ -531,10 +511,11 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions c
 
 	if(opt.hwGamma && !mHasHardwareGamma)
 		return false;
-		
-	if((opt.multisample || opt.hwGamma ) && WGLEW_ARB_pixel_format)
-	{
 
+	// Removing legacy functionality so we use the ARB function if available
+	// if it works as desired the fallback to Win32 API call will be removed.
+	if(WGLEW_ARB_pixel_format)
+	{
 		// Use WGL to test extended caps (multisample, sRGB)
 		vector<int>::type attribList;
 		attribList.push_back(WGL_DRAW_TO_WINDOW_ARB); attribList.push_back(GL_TRUE);
@@ -547,25 +528,22 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions c
 		attribList.push_back(WGL_DEPTH_BITS_ARB); attribList.push_back(24);
 		attribList.push_back(WGL_STENCIL_BITS_ARB); attribList.push_back(8);
 		attribList.push_back(WGL_SAMPLES_ARB); attribList.push_back(opt.multisample);
+		// hardware gamma
 		if (useHwGamma && WGLEW_EXT_framebuffer_sRGB)
 		{
 			attribList.push_back(WGL_FRAMEBUFFER_SRGB_CAPABLE_EXT); attribList.push_back(GL_TRUE);
 		}
-
+		// stereo
 		if(opt.stereo)
 		{
 			attribList.push_back(WGL_STEREO_ARB); attribList.push_back(GL_TRUE);
 		}
-
 		// terminator
 		attribList.push_back(0);
 
-
 		UINT nformats;
 
-		// ChoosePixelFormatARB proc address was obtained when setting up a dummy GL context in initialiseWGL()
-		// since glew hasn't been initialized yet, we have to cheat and use the previously obtained address
-		if(wglChoosePixelFormatARB(hdc, &(attribList[0]), NULL, 1, &format, &nformats) || nformats <= 0)
+		if(!wglChoosePixelFormatARB(hdc, &attribList[0], NULL, 1, &format, &nformats) || nformats == 0)
 			return false;
 	}
 	else
@@ -577,40 +555,45 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions c
 	return (format && SetPixelFormat(hdc, format, &pfd));
 }
 
-GLSupport::PixelFormatOptions 
-Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt)
+bool
+Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt, GLSupport::PixelFormatOptions &real_opts)
 {
-	GLSupport::PixelFormatOptions real_opts(opt);
+	real_opts = opt;
 
 	// @todo this doesn't go through all the combinations
 	// also should be bit more general using than this
 	bool formatOk = selectPixelFormat(dc, real_opts);
 	if (!formatOk)
 	{
-		if (opt.multisample > 0)
-		{
-			// try without FSAA
-			real_opts.multisample = 0;
-			formatOk = selectPixelFormat(dc, real_opts);
-		}
-
-		if (!formatOk && opt.hwGamma)
-		{
-			// try without sRGB
-			real_opts.hwGamma = false;
-			real_opts.multisample = opt.multisample;
-			formatOk = selectPixelFormat(dc, real_opts);
-		}
-
+		// First try without stereo because it's most likely missing
 		if( !formatOk && opt.stereo )
 		{
 			real_opts.stereo = false;
 			formatOk = selectPixelFormat(dc, real_opts);
 		}
+		
+		// Try with stereo but without FSAA
+		if (opt.multisample > 0)
+		{
+			real_opts.stereo = true;
+			real_opts.multisample = 0;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
 
+		// Try without hwGamma and stereo but with FSAA
+		if (!formatOk && opt.hwGamma)
+		{
+			real_opts.hwGamma = false;
+			real_opts.multisample = opt.multisample;
+			real_opts.stereo = false;
+			formatOk = selectPixelFormat(dc, real_opts);
+		}
+
+		// @todo missing hwGamma, no stereo and no FSAA
+
+		// Try without any of them
 		if (!formatOk && opt.hwGamma && (opt.multisample > 0))
 		{
-			// try without both
 			real_opts.hwGamma = false;
 			real_opts.multisample = 0;
 			real_opts.stereo = false;
@@ -618,7 +601,7 @@ Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOpt
 		}
 	}
 
-	return real_opts;
+	return formatOk;
 }
 
 unsigned int

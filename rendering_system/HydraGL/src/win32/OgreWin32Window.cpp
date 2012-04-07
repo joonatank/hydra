@@ -948,15 +948,13 @@ Ogre::Win32Window::setActive(bool state)
 bool
 Ogre::Win32Window::_selectPixelFormat(HDC dc, GLSupport::PixelFormatOptions const &opt)
 {
-	GLSupport::PixelFormatOptions real_opts = mGLSupport.selectClosestPixelFormat(dc, opt);
+	GLSupport::PixelFormatOptions real_opts;
+	bool retval = mGLSupport.selectClosestPixelFormat(dc, opt, real_opts);
 
 	// record what gamma option we used in the end
 	// this will control enabling of sRGB state flags when used
 	mHwGamma = real_opts.hwGamma;
 	mFSAA = real_opts.multisample;
 
-	// @todo we assume here that the format was ok, but we have no way of
-	// beign sure of it.
-	return true;
+	return retval;
 }
-

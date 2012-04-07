@@ -89,8 +89,9 @@ public:
 	bool selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt);
 
 	// Select a pixel format with closest possible match
-	// @return the real options that were supported
-	GLSupport::PixelFormatOptions selectClosestPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt);
+	// @param real_opts, output the real options that were supported
+	// @return true if successful false otherwise
+	bool selectClosestPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt, GLSupport::PixelFormatOptions &real_opts);
 
 	// Virtual override from Ogre::GLSupport
 	bool hasFBO(void) const
@@ -129,7 +130,8 @@ private :
 /// Private methods
 private :
 	void _refreshConfig(void);
-		
+
+	// @brief Initialises GLEW, automatically called from the constructor
 	// Create a dummy window and destroy it for providing a valid
 	// GLContext for GLEW
 	// Using native window creation because the Ogre's Window system is so screwed up
