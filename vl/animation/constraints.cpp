@@ -344,7 +344,7 @@ vl::SliderConstraint::_progress(vl::time const &t)
 		/// Update object B
 		/// needs to call setTransform because it does other things besides
 		/// updating the transformation.
-		_link->setTransform(_link->getTransform().position + mov*_axisInA);
+		_link->setPosition(_link->getTransform().position + mov*_axisInA);
 	}
 }
 

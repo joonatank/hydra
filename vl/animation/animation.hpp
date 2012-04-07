@@ -194,6 +194,8 @@ public :
 	/// childs world coordinate frame.
 	void setTransform(Transform const &t, bool preserve_child_transforms = false);
 
+	void setPosition(Ogre::Vector3 const &v, bool preserve_child_transforms = false);
+
 	/// @brief get the current world transformation
 	/// @return Transformation of the Link in world coordinates
 	Transform getWorldTransform(void) const;

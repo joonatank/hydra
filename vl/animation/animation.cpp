@@ -336,6 +336,14 @@ vl::animation::Link::setTransform(Transform const &t, bool preserve_child_transf
 	{ _transform = t; }
 }
 
+void
+vl::animation::Link::setPosition(Ogre::Vector3 const &v, bool preserve_child_transforms)
+{
+	vl::Transform t(getTransform());
+	t.position = v;
+	setTransform(t);
+}
+
 vl::Transform
 vl::animation::Link::getWorldTransform(void) const
 {
