@@ -714,10 +714,11 @@ vl::Window::_lazy_initialisation(void)
 {
 	if(!_tray_mgr && _renderer->isDebugOverlayEnabled())
 	{
+		std::string name = "InterfaceName/" + _name;
 		assert(_ogre_window && _mouse);
 		Ogre::FontManager::getSingleton().getByName("SdkTrays/Caption")->load();
 		Ogre::FontManager::getSingleton().getByName("SdkTrays/Value")->load();
-		_tray_mgr = new OgreBites::SdkTrayManager("InterfaceName", _ogre_window, _mouse);
+		_tray_mgr = new OgreBites::SdkTrayManager(name, _ogre_window, _mouse);
 		_tray_mgr->showFrameStats(OgreBites::TL_BOTTOMRIGHT);
 		_tray_mgr->hideCursor();
 	}
