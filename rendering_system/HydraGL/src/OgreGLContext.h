@@ -49,8 +49,7 @@ namespace Ogre {
          */
         virtual void setCurrent() = 0;
         /**
-         * This is called before another context is made current. By default,
-         * nothing is done here.
+         * This is called before another context is made current.
          */
         virtual void endCurrent() = 0;
         
