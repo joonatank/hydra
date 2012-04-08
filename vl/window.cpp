@@ -1,6 +1,6 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
@@ -44,10 +44,8 @@ vl::StereoRenderTargetListener::postRenderTargetUpdate(Ogre::RenderTargetEvent c
 void
 vl::StereoRenderTargetListener::preViewportUpdate(Ogre::RenderTargetViewportEvent const &evt)
 {
-	std::clog << "vl::StereoRenderTargetListener::preViewportUpdate" << std::endl;
 	if(stereo)
 	{
-		std::clog << "Switching eye" << std::endl;
 		// No need to check the Draw buffer because we always have either
 		// GL_BACK_RIGHT or GL_BACK here.
 		if(_left)
@@ -235,10 +233,6 @@ vl::Window::getOgreRoot( void )
 void
 vl::Window::setCamera(vl::CameraPtr camera)
 {
-	// @todo does not allow removing the camera, should it?
-//	if(!camera)
-//	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
-
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
 		_channels.at(i)->setCamera(camera);
@@ -480,26 +474,27 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
+	_lazy_initialisation();
+	
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
 		_channels.at(i)->update(getPlayer());
 	}
 
-	_lazy_initialisation();
-
-	// if stereo is not enabled ipd should be zero 
-	// TODO should it be forced though?
-	vl::scalar ipd = getPlayer().getIPD();
 	std::vector<vl::scalar> eyes;
 	// Left is first, so it's negative
-	if(ipd != 0)
+	if(hasStereo())
 	{
+		vl::scalar ipd = getPlayer().getIPD();
 		eyes.push_back(-ipd/2);
 		eyes.push_back(ipd/2);
 		_window_listener->stereo = true;
 	}
 	else
 	{
+		// if stereo is not enabled ipd should be zero
+		// this is to avoid akward problems without stereo
+		// when config has it enabled.
 		eyes.push_back(0);
 		_window_listener->stereo = false;
 	}
@@ -516,6 +511,9 @@ vl::Window::draw(void)
 		{ _channels.at(i)->draw(eyes.at(1), false); }
 
 		// Keeps track of the batches and triangles
+		// @todo these seem to be off if we are rendering to a FBO
+		// at least they are different than if we are rendering
+		// to a window, 4-6 times lower for FBO.
 		_ogre_window->_updateViewport(_channels.at(i)->viewport, true);
 
 		// @todo test with stereo setup if this really renders the gui for
@@ -713,8 +711,6 @@ vl::Window::_createInputHandling(void)
 
 	std::ostringstream windowHndStr;
 	uint64_t windowHnd = getHandle();
-	//size_t windowHnd = 0;
-	//_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
 	windowHndStr << windowHnd;
 
 	OIS::ParamList pl;

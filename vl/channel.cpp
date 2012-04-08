@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2012 Savant Simulators
+ *	Copyright (c) 2011-2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
@@ -23,6 +23,9 @@
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreHardwarePixelBuffer.h>
+#include <OGRE/OgreMaterial.h>
+#include <OGRE/OgreTechnique.h>
+#include <OGRE/OgrePass.h>
 // Necessary for glDrawBuffer
 #include <GL/gl.h>
 
@@ -32,33 +35,11 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, bool use_
 	, camera()
 	, viewport(view)
 	, _fbo(0)
+	, _use_fbo(use_fbo)
 {
 	assert(viewport);
 
 	std::clog << "Channel::Channel" << std::endl;
-	if(use_fbo)
-	{
-		assert(viewport->getActualWidth() > 0);
-		assert(viewport->getActualHeight() > 0);
-		std::clog << "Channel::Channel : FBO of size : " << viewport->getActualWidth() << "x" 
-			<< viewport->getActualHeight() << std::endl;
-		std::string name(getName() + "_rtt_text");
-		_fbo_texture = Ogre::TextureManager::getSingleton()
-			.createManual(name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
-					Ogre::TEX_TYPE_2D, viewport->getActualWidth(), viewport->getActualHeight(), 
-					0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
-
-		std::clog << "Channel::Channel : FBO texture created." << std::endl;
-
-		_fbo = _fbo_texture->getBuffer()->getRenderTarget();
-
-		std::clog << "Channel::Channel : setting viewport settings" << std::endl;
-		/// The channel will not be rendering the Scene
-		viewport->setVisibilityMask(1<<1);
-		viewport->setShadowsEnabled(false);
-		viewport->setSkiesEnabled(false);
-		viewport->setOverlaysEnabled(false);
-	}
 }
 
 /// @todo this seems to be called at every frame
@@ -72,18 +53,16 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	camera.setCamera(cam);
 	viewport->setCamera(og_cam);
 
-	if(_fbo && cam)
+	if(_use_fbo && cam)
 	{
-		if(_fbo->getNumViewports() == 0)
+		/// FBO needs to be initialised here because we need Ogre::SceneManager for it
+		if(!_fbo)
 		{
 			_initialise_fbo(cam);
 		}
 		else
 		{
-			if(cam)
-			{
-				_fbo->getViewport(0)->setCamera(og_cam);
-			}
+			_fbo->getViewport(0)->setCamera(og_cam);
 		}
 	}
 }
@@ -144,12 +123,54 @@ vl::Channel::_render_to_fbo(void)
 void
 vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 {
+	std::clog << "vl::Channel::_initialise_fbo" << std::endl;
+
+	assert(viewport->getActualWidth() > 0);
+	assert(viewport->getActualHeight() > 0);
+	std::clog << "Channel::Channel : FBO of size : " << viewport->getActualWidth() << "x" 
+		<< viewport->getActualHeight() << std::endl;
+	std::string fbo_tex_name("internal/" + getName() + "/rtt_tex");
+	_fbo_texture = Ogre::TextureManager::getSingleton()
+		.createManual(fbo_tex_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
+				Ogre::TEX_TYPE_2D, viewport->getActualWidth(), viewport->getActualHeight(), 
+				0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+
+	std::clog << "Channel::Channel : FBO texture \"" << fbo_tex_name << "\" created." << std::endl;
+
+	_fbo = _fbo_texture->getBuffer()->getRenderTarget();
+
+	std::string material_name = "internal/" + getName() + "/fbo_material";
+	/* For some reason dynamically created material does not work
+	_fbo_material = Ogre::MaterialManager::getSingleton().create(material_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+	Ogre::Technique* matTechnique = _fbo_material->createTechnique();
+	matTechnique->createPass();
+	matTechnique->getPass(0)->setLightingEnabled(false);
+	matTechnique->getPass(0)->createTextureUnitState(_fbo_texture->getName());
+	*/
+	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName("rtt");
+	_fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(material_name);
+	Ogre::AliasTextureNamePairList alias_list;
+	std::clog << "Trying to replace diffuseTexture alias with " << _fbo_texture->getName() << std::endl;
+	alias_list["rtt_texture"] = _fbo_texture->getName();
+	if(_fbo_material->applyTextureAliases(alias_list))
+	{
+		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
+	}
+
+	std::clog << "Channel::Channel : setting viewport settings" << std::endl;
+	/// The channel will not be rendering the Scene
+	viewport->setVisibilityMask(1<<1);
+	viewport->setShadowsEnabled(false);
+	viewport->setSkiesEnabled(false);
+	viewport->setOverlaysEnabled(false);
+
 	assert(camera);
+	assert(camera->getNative());
 	assert(_fbo);
 
 	_fbo->addViewport((Ogre::Camera *)camera->getNative());
 	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
-	_fbo->getViewport(0)->setOverlaysEnabled(false);
+	//_fbo->getViewport(0)->setOverlaysEnabled(false);
 	_fbo->getViewport(0)->setVisibilityMask(1);
 
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);
@@ -163,16 +184,5 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	Ogre::SceneNode* miniScreenNode = sm->getRootSceneNode()->createChildSceneNode(sn_name);
 	miniScreenNode->attachObject(quad);
 
-	std::string material_name = "internal/" + getName() + "/fbo_material";
-	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName("rtt");
-	_fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(material_name);
-	Ogre::AliasTextureNamePairList alias_list;
-	std::clog << "Trying to replace diffuseTexture alias with " << _fbo_texture->getName() << std::endl;
-	alias_list["rtt_texture"] = _fbo_texture->getName();
-	if(_fbo_material->applyTextureAliases(alias_list))
-	{
-		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
-	}
-
-	quad->setMaterial(material_name);
+	quad->setMaterial(_fbo_material->getName());
 }

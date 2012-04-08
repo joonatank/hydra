@@ -45,6 +45,10 @@ namespace vl
 
 /// Toggles stereo mode for OpenGL
 /// The render target needs to be renderer twice for this to work
+/// @todo needs testing in an environment that supports quad buffer stereo
+/// @todo should be renamed to QuadBufferRenderTargetListener
+/// @todo should be moved to separate header file
+/// @todo this depends on OpenGL Renderer which is problematic to include in high level
 class StereoRenderTargetListener : public Ogre::RenderTargetListener
 {
 public :

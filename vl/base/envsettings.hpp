@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011-2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file base/envsettings.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -199,11 +195,14 @@ struct HYDRA_API Window
 {
 	Window( std::string const &nam, int width, int height, int px, int py,
 			bool s = false, bool nv_swap = false )
-		: name(nam), rect(width, height, px, py), stereo(s)
-		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
-		, vert_sync(false), n_display(-1)
-		, input_handler(true)
 	{
+		clear();
+
+		name = nam;
+		rect = Rect<int>(width, height, px, py);
+		stereo = s;
+		nv_swap_sync = nv_swap;
+
 		if( rect.h < 0 || rect.w < 0 )
 		{
 			std::string desc("Width or height of a Window can not be negative");
@@ -212,10 +211,14 @@ struct HYDRA_API Window
 	}
 
 	Window( std::string const &nam, Rect<int> area, bool s = false, bool nv_swap = false )
-		: name(nam), rect(area), stereo(s)
-		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
-		, vert_sync(false), n_display(-1)
 	{
+		clear();
+	
+		name = nam;
+		rect = area;
+		stereo = s;
+		nv_swap_sync = nv_swap;
+
 		if( rect.h < 0 || rect.w < 0 )
 		{
 			std::string desc("Width or height of a Window can not be negative");
@@ -226,11 +229,22 @@ struct HYDRA_API Window
 
 	// Default constructor to allow vector resize
 	Window(void)
-		: stereo(false)
-		, nv_swap_sync(false)
-		, vert_sync(false)
-		, n_display(-1)
-	{}
+	{
+		clear();
+	}
+
+	void clear(void)
+	{
+		stereo = false;
+		vert_sync = false;
+		input_handler = true;
+
+		n_display = -1;
+
+		nv_swap_sync = false;
+		nv_swap_group = 0;
+		nv_swap_barrier = 0;
+	}
 
 	// Wether or not the Window has been initialised
 	bool empty( void ) const

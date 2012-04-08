@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011-2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file base/envsettings.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -802,7 +798,11 @@ vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::c
 		{
 			renderer.type = Renderer::FBO;
 		}
-		// Assume type window otherwise
+		else
+		{
+			// Assume type window otherwise
+			renderer.type = Renderer::WINDOW;
+		}
 	}
 
 	attrib = xml_node->first_attribute("hardware_gamma");
@@ -824,7 +824,11 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 		{
 			projection.type = Projection::ORTHO;
 		}
-		// Assume perspective otherwise
+		else
+		{
+			// Assume perspective otherwise
+			projection.type = Projection::PERSPECTIVE;
+		}
 	}
 
 	rapidxml::xml_node<> *xml_pers = xml_node->first_node("perspective");
