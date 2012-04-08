@@ -35,6 +35,7 @@ set(SRC
 	logger.cpp
 	window.cpp
 	channel.cpp
+	stereo_camera.cpp
 	master.cpp
 	slave.cpp
 	renderer.cpp
@@ -255,6 +256,7 @@ set( HEADERS
 	window.hpp
 	window_interface.hpp
 	channel.hpp
+	stereo_camera.hpp
 	master.hpp
 	slave.hpp
 	renderer.hpp
