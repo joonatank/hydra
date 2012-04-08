@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2010-2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011-2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file: ogre_root.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -156,19 +152,19 @@ vl::ogre::Root::_loadPlugins(void)
 #endif
 
 	std::string plugin_path = vl::findPlugin( gl_plugin_name );
-
+	
 	/// Fallback to Ogre GL plugin
 	if(plugin_path.empty())
 	{
 // Check if this is a debug version, only Windows uses debug versions of the libraries
 // So we need to load the debug versions of the Ogre plugins only on Windows.
 #if defined(_WIN32) && defined(_DEBUG)
-	gl_plugin_name = "RenderSystem_GL_d";
+		gl_plugin_name = "RenderSystem_GL_d";
 #else
-	gl_plugin_name = "RenderSystem_GL";
+		gl_plugin_name = "RenderSystem_GL";
 #endif
 
-	std::string plugin_path = vl::findPlugin( gl_plugin_name );
+		plugin_path = vl::findPlugin( gl_plugin_name );
 	}
 
 	/// @todo this should throw if not found, because we don't have a rendering system
