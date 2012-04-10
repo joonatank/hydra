@@ -44,7 +44,7 @@ vl::StereoCamera::setCamera(vl::CameraPtr cam)
 
 
 void
-vl::StereoCamera::update(vl::scalar eye_x)
+vl::StereoCamera::update(STEREO_EYE eye_cfg)
 {
 	assert(_camera);
 	assert(_ogre_camera);
@@ -56,9 +56,15 @@ vl::StereoCamera::update(vl::scalar eye_x)
 	Ogre::Vector3 cam_pos = _camera->getPosition();
 	Ogre::Quaternion cam_quat = _camera->getOrientation();
 
-	Ogre::Vector3 eye(eye_x, 0, 0);
+	Ogre::Vector3 eye;
+	if(eye_cfg == HS_LEFT)
+	{ eye = Ogre::Vector3(-_ipd/2, 0, 0); }
+	else if(eye_cfg == HS_RIGHT)
+	{ eye = Ogre::Vector3(_ipd/2, 0, 0); }
+	else
+	{ eye = Ogre::Vector3::ZERO; }
 
-	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(eye_x);
+	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(eye.x);
 	_ogre_camera->setCustomProjectionMatrix(true, projMat);
 
 	// Combine eye and camera positions

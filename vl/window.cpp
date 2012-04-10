@@ -35,54 +35,6 @@
 
 #include <stdlib.h>
 
-/// -------------------- StereoRenderTargetListener --------------------------
-void
-vl::StereoRenderTargetListener::postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
-{
-}
-
-void
-vl::StereoRenderTargetListener::preViewportUpdate(Ogre::RenderTargetViewportEvent const &evt)
-{
-	if(stereo)
-	{
-		// No need to check the Draw buffer because we always have either
-		// GL_BACK_RIGHT or GL_BACK here.
-		if(_left)
-		{ glDrawBuffer(GL_BACK_LEFT); }
-		else
-		{ glDrawBuffer(GL_BACK_RIGHT); }
-		_left = !_left;
-	}
-	else
-	{
-		GLint draw_mode;
-		glGetIntegerv(GL_DRAW_BUFFER, &draw_mode);
-		// We need to test for the mode here
-		// because setting draw buffer to the previous value will
-		// raise OpenGL INVALID_OPERATION error
-		// Here we can either have GL_BACK or GL_BACK_RIGHT and
-		// for stereo rendering -> mono rendering we need to change the buffer
-		//
-		// This seems to cause the error under some circumstances so enable it
-		// only after testing with a stereo enabled system.
-		//if(draw_mode != GL_BACK)
-		//{ glDrawBuffer(GL_BACK); }
-	}
-}
-
-void
-vl::StereoRenderTargetListener::postViewportUpdate(Ogre::RenderTargetViewportEvent const &evt)
-{
-}
-
-void
-vl::StereoRenderTargetListener::preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt)
-{
-}
-
-
-
 /// ----------------------------- Window -------------------------------------
 /// ----------------------------- Public -------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
@@ -92,7 +44,6 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
-	, _window_listener(0)
 	, _tray_mgr(0)
 {
 	assert( _renderer );
@@ -118,14 +69,17 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	vl::config::Projection const &projection = windowConf.renderer.projection;
 	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
 	{
-		_create_channel(windowConf.get_channel(i), projection);
+		// We already have a window so it should be safe to check for stereo
+		if(hasStereo())
+		{
+			_create_channel(windowConf.get_channel(i), HS_LEFT, projection);
+			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection);
+		}
+		else
+		{
+			_create_channel(windowConf.get_channel(i), HS_MONO, projection);
+		}
 	}
-	std::clog << "All channel created." << std::endl;
-
-	// Set listener
-	// @todo add the stereo attribute
-	_window_listener = new StereoRenderTargetListener(false);
-	_ogre_window->addListener(_window_listener);
 
 	std::clog << "Window::Window : done" << std::endl;
 }
@@ -161,6 +115,12 @@ vl::Player const &
 vl::Window::getPlayer( void ) const
 { return _renderer->getPlayer(); }
 
+vl::Player *
+vl::Window::getPlayerPtr(void)
+{
+	return _renderer->getPlayerPtr();
+}
+
 vl::ogre::RootRefPtr
 vl::Window::getOgreRoot( void )
 { return _renderer->getRoot(); }
@@ -191,7 +151,7 @@ vl::Window::hasStereo(void) const
 {
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
-	return stereo;
+	return stereo == GL_TRUE;
 }
 
 Ogre::RenderTarget::FrameStats const &
@@ -410,45 +370,37 @@ void
 vl::Window::draw(void)
 {
 	_lazy_initialisation();
-	
+
+	// Updating FBOs and channel data is separated from drawing to screen
+	// because we want to keep them separate for later extensions
+	// mainly distributing FBOs, where these two needs to be separated.
+
+	// Update FBOs
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		_channels.at(i)->update(getPlayer());
-	}
-
-	std::vector<vl::scalar> eyes;
-	// Left is first, so it's negative
-	if(hasStereo())
-	{
-		vl::scalar ipd = getPlayer().getIPD();
-		eyes.push_back(-ipd/2);
-		eyes.push_back(ipd/2);
-		_window_listener->stereo = true;
-	}
-	else
-	{
-		// if stereo is not enabled ipd should be zero
-		// this is to avoid akward problems without stereo
-		// when config has it enabled.
-		eyes.push_back(0);
-		_window_listener->stereo = false;
+		/// @todo setting player shouldn't be called each frame
+		/// it should be implemented with either dirty data or callbacks
+		_channels.at(i)->setPlayer(getPlayerPtr());
+		_channels.at(i)->update();
 	}
 
 	// Draw
 	assert(_ogre_window);
 	_ogre_window->_beginUpdate();
 
+	// Draw to screen
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		assert(eyes.size() > 0);
-		{ _channels.at(i)->draw(eyes.at(0), true); }
-		if(eyes.size() > 1)
-		{ _channels.at(i)->draw(eyes.at(1), false); }
+		_channels.at(i)->draw();
 
 		// Keeps track of the batches and triangles
 		// @todo these seem to be off if we are rendering to a FBO
 		// at least they are different than if we are rendering
 		// to a window, 4-6 times lower for FBO.
+		// This is because only the Sky (with SkyX) is rendered directly
+		// to the screen other objects are rendered to the FBO
+		// so they don't show here.
+		// We need to implement custom counters for this.
 		_ogre_window->_updateViewport(_channels.at(i)->viewport, true);
 
 		// @todo test with stereo setup if this really renders the gui for
@@ -579,14 +531,17 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 }
 
 
-void
-vl::Window::_create_channel(vl::config::Channel const &channel_config,
+vl::Channel *
+vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
 			vl::config::Projection const &projection)
 {
-	assert(!channel_config.name.empty());
-	std::clog << "Creating channel : " << channel_config.name << std::endl;
+	// @todo replace with throwing because this is user controlled
+	assert(!chan_cfg.name.empty());
 
-	std::cout << vl::TRACE << "Finding Wall for channel : " << channel_config.name << std::endl;
+	// Make a copy of channel config and rename it
+	vl::config::Channel channel_config(chan_cfg);
+	channel_config.name += ("_" + stereo_eye_to_string(stereo_cfg));
+
 	Wall wall = getEnvironment()->findWall(channel_config.wall_name);
 
 	// Get the first wall definition if no named one was found
@@ -600,17 +555,11 @@ vl::Window::_create_channel(vl::config::Channel const &channel_config,
 		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
 	}
 
-	// TODO this should be configurable
-	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
 	/// We don't yet have a valid SceneManager
 	/// So we need to wait till the camera is set here
 	vl::config::Rect<double> const &rect = channel_config.area;
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
-
-	// @todo these should be moved to channel
-	view->setBackgroundColour(background_col);
-	view->setAutoUpdated(false);
 
 	bool use_fbo = false;
 	if(_renderer_type == vl::config::Renderer::FBO)
@@ -618,8 +567,6 @@ vl::Window::_create_channel(vl::config::Channel const &channel_config,
 
 	Channel *channel = new Channel(channel_config, view, use_fbo);
 	_channels.push_back(channel);
-
-	std::clog << "Channel created." << std::endl;
 
 	/// Set frustum
 	channel->camera.getFrustum().setWall(wall);
@@ -634,6 +581,10 @@ vl::Window::_create_channel(vl::config::Channel const &channel_config,
 		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
 		channel->camera.getFrustum().setType(Frustum::WALL);
 	}
+
+	channel->setStereoEyeCfg(stereo_cfg);
+
+	return channel;
 }
 
 

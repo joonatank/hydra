@@ -30,16 +30,23 @@
 #include <GL/gl.h>
 
 /// ---------------------------------- Public --------------------------------
-vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, bool use_fbo)
+vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
+		bool use_fbo)
 	: _name(config.name)
 	, camera()
 	, viewport(view)
 	, _fbo(0)
 	, _use_fbo(use_fbo)
+	, _stereo_eye_cfg(HS_UNDEFINED)
 {
 	assert(viewport);
 
-	std::clog << "Channel::Channel" << std::endl;
+	// @todo background colour should be configurable
+	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
+	view->setBackgroundColour(background_col);
+	view->setAutoUpdated(false);
+
+	std::clog << "Channel::Channel : name " << _name << std::endl;
 }
 
 /// @todo this seems to be called at every frame
@@ -68,16 +75,22 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 }
 
 void
-vl::Channel::update(vl::Player const &player)
+vl::Channel::update(void)
 {
-	camera.setHead(player.getHeadTransform());
+	// It's possible that update is called without Player beign set
+	// just return then, we are assuming that the engine will set
+	// valid player when one is available.
+	if(!_player)
+	{ return; }
 
-	/// @todo these shouldn't be copied at every frame
-	/// use the distribution system to distribute
-	/// the Frustum.
-	camera.getFrustum().setHeadTransformation(player.getCyclopWorldTransform());
-	camera.getFrustum().enableHeadFrustum(player.isHeadFrustumX(), player.isHeadFrustumY(), player.isHeadFrustumZ());
-	camera.getFrustum().enableAsymmetricStereoFrustum(player.isAsymmetricStereoFrustum());
+	camera.setHead(_player->getHeadTransform());
+
+	/// @todo these shouldn't be copied at every frame use the distribution
+	/// system to distribute the Frustum.
+	camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
+	camera.getFrustum().enableHeadFrustum(_player->isHeadFrustumX(), _player->isHeadFrustumY(), _player->isHeadFrustumZ());
+	camera.getFrustum().enableAsymmetricStereoFrustum(_player->isAsymmetricStereoFrustum());
+	camera.setIPD(_player->getIPD());
 
 	if(_fbo)
 	{ _render_to_fbo(); }
@@ -85,24 +98,24 @@ vl::Channel::update(vl::Player const &player)
 
 
 void
-vl::Channel::draw(double ipd, bool eye_left )
+vl::Channel::draw(void)
 {
-	// @todo this is messy
-	// replace by removing the draw method
-	// and passing Channel to RenderTargetListener
-	if(ipd != 0)
+	// @todo this should be replaced with single inline function call
+	// that hides the implementation (OpenGL) details
+	if(_stereo_eye_cfg == HS_LEFT)
 	{
-		if(eye_left)
-		{ glDrawBuffer(GL_BACK_LEFT); }
-		else
-		{ glDrawBuffer(GL_BACK_RIGHT); }
+		glDrawBuffer(GL_BACK_LEFT);
+	}
+	else if(_stereo_eye_cfg == HS_RIGHT)
+	{
+		glDrawBuffer(GL_BACK_RIGHT);
 	}
 
 	assert(camera.getCamera());
-	camera.update(ipd);
-	// @todo this needs to toggle the RenderingTarget listener for stereo
-	// Render the window as many times as there is buffers
-	// once for mono viewing and twice for stereo
+	
+	// Camera only needs to be updated if we are rendering directly to screen.
+	if(!_use_fbo)
+	{ camera.update(_stereo_eye_cfg); }
 
 	viewport->update();
 }
@@ -114,9 +127,7 @@ vl::Channel::_render_to_fbo(void)
 	assert(camera.getCamera());
 	assert(_fbo->getViewport(0));
 
-	// for now hard coded to zero ipd because we need right and left fbo
-	// for stereo rendering.
-	camera.update(0);
+	camera.update(_stereo_eye_cfg);
 	_fbo->update(false);
 }
 
@@ -170,7 +181,6 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 
 	_fbo->addViewport((Ogre::Camera *)camera->getNative());
 	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
-	//_fbo->getViewport(0)->setOverlaysEnabled(false);
 	_fbo->getViewport(0)->setVisibilityMask(1);
 
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);

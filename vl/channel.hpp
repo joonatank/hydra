@@ -35,12 +35,26 @@ public:
 	std::string const &getName(void) const
 	{ return _name; }
 
-	void update(vl::Player const &player);
+	void update(void);
 
-	void draw(double ipd, bool eye_left = true);
+	void draw(void);
 
 	StereoCamera camera;
 	Ogre::Viewport *viewport;
+
+	STEREO_EYE getStereoEyeCfg(void) const
+	{ return _stereo_eye_cfg; }
+
+	void setStereoEyeCfg(STEREO_EYE eye_cfg)
+	{ _stereo_eye_cfg = eye_cfg; }
+	
+	/// Necessary to provide getter/setter because player does not exists
+	/// when the Channel is created.
+	Player *getPlayer(void) const
+	{ return _player; }
+
+	void setPlayer(Player *player)
+	{ _player = player; }
 
 	/// Methods
 private :
@@ -54,6 +68,9 @@ private:
 	std::string _name;
 
 	bool _use_fbo;
+
+	STEREO_EYE _stereo_eye_cfg;
+	vl::Player *_player;
 
 	Ogre::RenderTexture *_fbo;
 	Ogre::MaterialPtr _fbo_material;

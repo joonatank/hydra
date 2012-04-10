@@ -23,6 +23,32 @@
 namespace vl
 {
 
+enum STEREO_EYE
+{
+	HS_UNDEFINED,
+	HS_MONO,
+	HS_LEFT,
+	HS_RIGHT,
+};
+
+inline
+std::string stereo_eye_to_string(STEREO_EYE cfg)
+{
+	switch(cfg)
+	{
+	case HS_UNDEFINED:
+		return "undefined";
+	case HS_MONO:
+		return "mono";
+	case HS_LEFT:
+		return "left";
+	case HS_RIGHT:
+		return "right";
+	default :
+		return "";
+	}
+}
+
 /// @todo this should be implemented as an Ogre Movable object
 /// a replacement for the Ogre::Camera class
 /// before rendering it should be updated with 
@@ -47,11 +73,13 @@ public :
 	/// @param eye_x the eye x direction used for this rendering
 	/// For stereo rendering this needs to be called twice with different
 	/// eye_x values. Also you need to call Viewport::update also.
-	void update(vl::scalar eye_x);
+	void update(STEREO_EYE eye);
 
-	/// @todo should this store the ipd value and have separate updateLeft
-	/// and updateRight methods for the left and right eye?
-//	void setIPD(vl::scalar ipd);
+	void setIPD(vl::scalar ipd)
+	{ _ipd = ipd; }
+
+	vl::scalar getIPD(void) const
+	{ return _ipd; }
 
 	vl::Frustum &getFrustum(void)
 	{ return _frustum; }
@@ -70,6 +98,8 @@ private :
 	vl::Transform _head;
 
 	vl::Frustum _frustum;
+
+	vl::scalar _ipd;
 
 };	// class StereoCamera
 

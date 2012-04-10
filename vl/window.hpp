@@ -43,33 +43,6 @@
 namespace vl
 {
 
-/// Toggles stereo mode for OpenGL
-/// The render target needs to be renderer twice for this to work
-/// @todo needs testing in an environment that supports quad buffer stereo
-/// @todo should be renamed to QuadBufferRenderTargetListener
-/// @todo should be moved to separate header file
-/// @todo this depends on OpenGL Renderer which is problematic to include in high level
-class StereoRenderTargetListener : public Ogre::RenderTargetListener
-{
-public :
-	StereoRenderTargetListener(bool s)
-		: stereo(s), _left(true)
-	{}
-
-	virtual void preRenderTargetUpdate(Ogre::RenderTargetEvent const &evt);
-
-	virtual void postRenderTargetUpdate(Ogre::RenderTargetEvent const &evt);
-	
-	virtual void preViewportUpdate(Ogre::RenderTargetViewportEvent const &evt);
-	virtual void postViewportUpdate(Ogre::RenderTargetViewportEvent const &evt);
-
-	bool stereo;
-	bool _left;
-
-};	// class StereoRenderTargetListener
-
-
-
 /**	@class Window represent an OpenGL drawable and context
  *
  */
@@ -87,6 +60,8 @@ public:
 	vl::config::EnvSettingsRefPtr getEnvironment(void) const;
 
 	vl::Player const &getPlayer( void ) const;
+
+	vl::Player *getPlayerPtr(void);
 
 	vl::ogre::RootRefPtr getOgreRoot( void );
 
@@ -140,7 +115,7 @@ protected :
 
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
 
-	void _create_channel(vl::config::Channel const &channel, vl::config::Projection const &projection);
+	vl::Channel *_create_channel(vl::config::Channel const &channel, STEREO_EYE stereo_cfg, vl::config::Projection const &projection);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -180,8 +155,6 @@ protected :
 	vl::config::Renderer::Type _renderer_type;
 
 	OgreBites::SdkTrayManager *_tray_mgr;
-
-	StereoRenderTargetListener *_window_listener;
 
 };	// class Window
 
