@@ -192,7 +192,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
-	msg << chan.name << chan.wall_name << chan.area;
+	msg << chan.name << chan.wall_name << chan.area << chan.background_colour;
 
 	return msg;
 }
@@ -201,7 +201,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
-	msg >> chan.name >> chan.wall_name >> chan.area;
+	msg >> chan.name >> chan.wall_name >> chan.area >> chan.background_colour;
 
 	return msg;
 }

@@ -25,7 +25,7 @@
 #include "light.hpp"
 
 #include "base/string_utils.hpp"
-#include "ogre_xml_helpers.hpp"
+#include "base/xml_helpers.hpp"
 
 #include "game_object.hpp"
 

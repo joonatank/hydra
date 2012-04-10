@@ -18,7 +18,7 @@
 
 #include "base/string_utils.hpp"
 #include "vrpn_tracker.hpp"
-#include "ogre_xml_helpers.hpp"
+#include "base/xml_helpers.hpp"
 
 #include "event_manager.hpp"
 

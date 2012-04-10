@@ -24,7 +24,7 @@
 #include "light.hpp"
 
 #include "base/string_utils.hpp"
-#include "ogre_xml_helpers.hpp"
+#include "base/xml_helpers.hpp"
 
 // Necessary for physics import
 #include "physics/shapes.hpp"

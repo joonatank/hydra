@@ -40,10 +40,8 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	, _stereo_eye_cfg(HS_UNDEFINED)
 {
 	assert(viewport);
-
-	// @todo background colour should be configurable
-	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
-	view->setBackgroundColour(background_col);
+ 
+	view->setBackgroundColour(config.background_colour);
 	view->setAutoUpdated(false);
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;
@@ -181,6 +179,7 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 
 	_fbo->addViewport((Ogre::Camera *)camera->getNative());
 	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
+	_fbo->getViewport(0)->setBackgroundColour(viewport->getBackgroundColour());
 	_fbo->getViewport(0)->setVisibilityMask(1);
 
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);

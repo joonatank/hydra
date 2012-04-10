@@ -101,15 +101,15 @@ target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${Boost_FILESYSTEM_LIBR
 
 
 # Test env settings
-add_executable( test_env_settings
-    test_env_settings.cpp
-    ${HydraMain_SOURCE_DIR}/base/envsettings.cpp
-    ${HydraMain_SOURCE_DIR}/base/envsettings.hpp
-    )
+#add_executable( test_env_settings
+#    test_env_settings.cpp
+#    ${HydraMain_SOURCE_DIR}/base/envsettings.cpp
+#    ${HydraMain_SOURCE_DIR}/base/envsettings.hpp
+#    )
 
-target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
+#target_link_libraries( test_env_settings ${TEST_LIB} ${FS_LIB} )
 
-add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
+#add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
 # @todo Linux support missing
 if(WIN32)

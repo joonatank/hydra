@@ -38,6 +38,8 @@
 
 #include "wall.hpp"
 
+#include "xml_helpers.hpp"
+
 namespace vl
 {
 
@@ -103,8 +105,9 @@ struct Tracking
 
 struct HYDRA_API Channel
 {
-	Channel(std::string const &nam, std::string const &wall, Rect<double> const &a)
-		: name(nam), wall_name(wall), area(a)
+	Channel(std::string const &nam, std::string const &wall, 
+			Rect<double> const &a, Ogre::ColourValue const &colour)
+		: name(nam), wall_name(wall), area(a), background_colour(colour)
 	{}
 
 	/// Default constructor for vector resizes
@@ -120,6 +123,8 @@ struct HYDRA_API Channel
 	std::string wall_name;
 
 	Rect<double> area;
+
+	Ogre::ColourValue background_colour;
 
 };	// struct Channel
 

@@ -662,13 +662,21 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 	if(attrib)
 	{ r.y = vl::from_string<double>(attrib->value()); }
 
+	Ogre::ColourValue background_col(0, 0, 0);
+	rapidxml::xml_node<> *background = xml_node->first_node("background");
+	if(background)
+	{
+		std::clog << "EnvConfig : Processing channel" << std::endl;
+		background_col = parseColour(background);
+	}
+
 	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
 	if( wall_elem )
 	{ wall_name = wall_elem->value(); }
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
 
-	window.add_channel(vl::config::Channel(channel_name, wall_name, r));
+	window.add_channel(vl::config::Channel(channel_name, wall_name, r, background_col));
 }
 
 void
