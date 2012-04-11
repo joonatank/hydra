@@ -126,15 +126,6 @@ public :
 	vl::Transform const &getHeadTransformation(void)
 	{ return _head; }
 
-	// The head tracker y needs to be present for there to be no disjoint
-	// between side and front walls.
-	void enableHeadFrustum(bool enable_x, bool enable_y, bool enable_z)
-	{
-		_head_frustum_x = enable_x;
-		_head_frustum_y = enable_y;
-		_head_frustum_z = enable_z;
-	}
-
 	void enableAsymmetricStereoFrustum(bool enable)
 	{ _use_asymmetric_stereo = enable; }
 
@@ -146,14 +137,6 @@ public :
 
 	Ogre::Radian const &getFov(void) const
 	{ return _fov; }
-
-	void enableTransformationModifications(bool enable)
-	{ _transformation_modifications = enable; }
-
-	bool isTransformationModifications(void) const
-	{ return _transformation_modifications; }
-
-	Transform getModificationTransformation(void) const;
 
 private :
 
@@ -170,13 +153,7 @@ private :
 
 	vl::Transform _head;
 
-	bool _head_frustum_x;
-	bool _head_frustum_y;
-	bool _head_frustum_z;
-
 	Ogre::Radian _fov;
-
-	bool _transformation_modifications;
 
 	bool _use_asymmetric_stereo;
 

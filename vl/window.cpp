@@ -87,14 +87,7 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	{ _frustum.setType(Frustum::FOV); }
 	else
 	{ _frustum.setType(Frustum::WALL); }
-	_frustum.enableHeadFrustum(projection.head_x, projection.head_y, projection.head_z);
-	_frustum.enableTransformationModifications(projection.modify_transformations);
 	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
-
-	if(windowConf.renderer.projection.use_asymmetric_stereo)
-	{
-		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
-	}
 
 	if(windowConf.renderer.type == vl::config::Renderer::FBO)
 	{
@@ -443,8 +436,6 @@ vl::Window::draw(void)
 	/// @todo setting all the parameters at every frame is too much
 	/// should be replaced by distributing the frustum.
 	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
-	_frustum.enableHeadFrustum(getPlayer().isHeadFrustumX(), getPlayer().isHeadFrustumY(), getPlayer().isHeadFrustumZ());
-	_frustum.enableAsymmetricStereoFrustum(getPlayer().isAsymmetricStereoFrustum());
 	_frustum.setClipping(c_near, c_far);
 
 	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
