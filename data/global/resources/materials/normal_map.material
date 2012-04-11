@@ -334,7 +334,8 @@ material bling_phong/multi_pass
 	}	// technique FFP
 }
 
-material bling_phong/shadows/single_pass
+/// Shadows don't work with single pass shader for some reason
+material bling_phong/single_pass
 {
 	set $ambientCol "0 0 0 0.0"
 	set $emissiveCol "0 0 0 0.0"
@@ -352,11 +353,12 @@ material bling_phong/shadows/single_pass
 			scene_blend $diffuse_scene_blend 
 			depth_write $depthWrite
 
-			vertex_program_ref bling_phong_eye_space_ml_shadows_vs
+
+			vertex_program_ref bling_phong/multi_light/vertex
 			{
 			}
 
-			fragment_program_ref bling_phong_eye_space_ml_shadows_ps
+			fragment_program_ref bling_phong/multi_light/fragment
 			{
 			}
 
@@ -385,30 +387,6 @@ material bling_phong/shadows/single_pass
 			{
 				texture white.tga
 			}
-
-			// shadowmap 1
-			texture_unit
-			{
-				content_type shadow
-				tex_address_mode clamp
-				filtering none
-			}
-
-			// shadowmap 2
-			texture_unit
-			{
-				content_type shadow
-				tex_address_mode clamp
-				filtering none
-			}
-
-			// shadowmap 3
-			texture_unit
-			{
-				content_type shadow
-				tex_address_mode clamp
-				filtering none
-			}
 		}
 	}
 }
@@ -418,6 +396,6 @@ material bling_phong/shadows/single_pass
 // not need to worry about it.
 material bling_phong/normal_map/shadows : bling_phong/normal_map/shadows/multi_pass {}
 material bling_phong/shadows : bling_phong/shadows/multi_pass {}
-//material bling_phong/shadows : bling_phong/shadows/single_pass {}
+//material bling_phong/shadows : bling_phong/single_pass {}
 material bling_phong : bling_phong/multi_pass {}
 
