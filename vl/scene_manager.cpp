@@ -68,7 +68,7 @@ vl::ShadowInfo::ShadowInfo(std::string const &cam)
 	, _max_distance(250)
 	, _caster_material("ShadowCaster")
 	, _shelf_shadow(true)
-	, _dir_light_texture_offset(2)
+	, _dir_light_extrusion_distance(100)
 	, _dirty(true)
 {
 }
@@ -96,7 +96,7 @@ vl::ShadowInfo::setCamera(std::string const &str)
 }
 
 void
-vl::ShadowInfo::setTextureSize(int size)
+vl::ShadowInfo::setTextureSize(int const size)
 {
 	int final_size = size;
 	// default to 128 texture
@@ -124,7 +124,7 @@ vl::ShadowInfo::setTextureSize(int size)
 }
 
 void
-vl::ShadowInfo::setMaxDistance(vl::scalar dist)
+vl::ShadowInfo::setMaxDistance(vl::scalar const dist)
 {
 	if(_max_distance != dist)
 	{
@@ -155,11 +155,11 @@ vl::ShadowInfo::setShelfShadowEnabled(bool enable)
 }
 
 void
-vl::ShadowInfo::setDirLightTextureOffset(vl::scalar offset)
+vl::ShadowInfo::setDirLightExtrusionDistance(vl::scalar const dist)
 {
-	if(offset != _dir_light_texture_offset)
+	if(dist != _dir_light_extrusion_distance)
 	{
-		_dir_light_texture_offset = offset;
+		_dir_light_extrusion_distance = dist;
 		_setDirty();
 	}
 }
@@ -1134,6 +1134,7 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 			}
 			else if( _shadows.getCamera() == "focused" )
 			{
+				// Focused shadow camera causes artifacts when ran on multiple screen.
 				std::clog << "Using Focused shadow camera" << std::endl;
 				cam_setup.bind(new Ogre::FocusedShadowCameraSetup());
 			}
@@ -1174,6 +1175,11 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 
 		// Disable shadow textures for POINT lights as they are not supported
 		// All textures are available for spot and directional lights.
+		// @todo
+		// POINT light shadows are supported by Ogre, we just don't know the
+		// parameters we should use with those. Also they can cause problems
+		// because they use the camera direction (like directional lights)
+		// so synchronisation issues with multiple viewports might be a problem.
 		_ogre_sm->setShadowTextureCountPerLightType(Ogre::Light::LT_POINT, 0);
 
 		/// @todo for self shadowing we need to use custom shaders
@@ -1190,7 +1196,16 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 		/// @todo make configurable
 		/// @todo add support for it in Shaders (just clip the shadow)
 		_ogre_sm->setShadowFarDistance(_shadows.getMaxDistance());
-		_ogre_sm->setShadowDirLightTextureOffset(_shadows.getDirLightTextureOffset());
+		_ogre_sm->setShadowDirectionalLightExtrusionDistance(_shadows.getDirLightExtrusionDistance());
+
+		// Dir light texture offset gives better looking shadows, but
+		// the catch 22 is that it breaks synchronisation of multiple screens
+		// because it implicitly uses different camera setups of those
+		// screens.
+		// If necessary we should implement our own shadow camera type that
+		// would use the Player position and head data, but not the
+		// screen specific camera information.
+		_ogre_sm->setShadowDirLightTextureOffset(0);
 	}
 }
 
@@ -1440,7 +1455,7 @@ vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::ShadowInfo const &shad
 {
 	msg << shadows.isEnabled() << shadows.getCamera() << shadows.getTextureSize()
 		<< shadows.getShadowCasterMaterial() << shadows.getMaxDistance()
-		<< shadows.isShelfShadowEnabled() << shadows.getDirLightTextureOffset();
+		<< shadows.isShelfShadowEnabled() << shadows.getDirLightExtrusionDistance();
 
 	return msg;
 }
@@ -1452,11 +1467,11 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	std::string camera, caster_material;
 	bool enabled, shelf_shadow;
 	int texture_size;
-	vl::scalar dist, dir_offset;
+	vl::scalar dist, dir_extrusion_dist;
 
 	msg >> enabled >> camera >> texture_size
 		>> caster_material >> dist
-		>> shelf_shadow >> dir_offset;
+		>> shelf_shadow >> dir_extrusion_dist;
 
 	shadows.setCamera(camera);
 	shadows.setTextureSize(texture_size);
@@ -1464,7 +1479,7 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	shadows.setShadowCasterMaterial(caster_material);
 	shadows.setMaxDistance(dist);
 	shadows.setShelfShadowEnabled(shelf_shadow);
-	shadows.setDirLightTextureOffset(dir_offset);
+	shadows.setDirLightExtrusionDistance(dir_extrusion_dist);
 
 	return msg;
 }

@@ -37,6 +37,7 @@ game.scene.ambient_light = ColourValue(0.01, 0.01, 0.01)
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
 game.scene.shadows.max_distance = 50
+#game.scene.shadows.dir_light_extrusion_distance = 100
 game.scene.sky.preset = "sunset" #"clear"
 
 create_ground(size=100)
