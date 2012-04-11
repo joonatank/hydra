@@ -86,8 +86,6 @@ vl::Channel::update(void)
 	/// @todo these shouldn't be copied at every frame use the distribution
 	/// system to distribute the Frustum.
 	camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
-	camera.getFrustum().enableHeadFrustum(_player->isHeadFrustumX(), _player->isHeadFrustumY(), _player->isHeadFrustumZ());
-	camera.getFrustum().enableAsymmetricStereoFrustum(_player->isAsymmetricStereoFrustum());
 	camera.setIPD(_player->getIPD());
 
 	if(_fbo)

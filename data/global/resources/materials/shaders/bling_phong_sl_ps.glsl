@@ -60,6 +60,7 @@ uniform float gradientClamp;
 uniform float gradientScaleBias;
 #endif
 
+
 in vec4 uv;
 
 // Used if no normal mapping
@@ -97,75 +98,21 @@ in vec4 shadowUV;
 
 out vec4 FragmentColour;
 
-// Calculate the attenuation parameter
-float calculate_attenuation(vec3 light_pos, vec4 attenuation)
-{
-	float distSqr = dot(light_pos, light_pos);
-	// Calculating everything as squared
-	// TODO this will fail for range = 0
-	float invRadius = 1.0/attenuation.x;
-	float invRadiusSqr = invRadius*invRadius;
-	float radiusSqr = attenuation.x*attenuation.x;
-	
-	// distance attenuation
-	// larger than 1 if the distance < radius, 1 for distance = radius
-	// we want the distance attenuation to be
-	// distAtt > 1 when distance << radius
-	// distAtt = [0, 1] when distance < radius
-	// distAtt = 0 when distance == radius
-	// this is because for large distances the quadratic term in attenuation
-	// will dominate the light intensity so we compensate it with the
-	// difference in radius and distance
-#ifdef NEW_ATTENUATION
-	// Taking a square root would help with objects that are close
-	// but would ruin this function if objects are far away
-	float distAtt = radiusSqr/distSqr -1;
-#else
-	// Old function creates values in [0, 1]
-	float distAtt = clamp(1.0 - invRadiusSqr * distSqr, 0.0, 1.0);
-#endif
+// Declarations for external functions to be linked
+float calculate_attenuation(vec3 light_pos, vec4 attenuation);
+float calculate_spot(vec3 light_dir, vec3 spot_dir, vec4 spot_params);
 
-	float d = length(light_pos);
-	float att =  distAtt/( attenuation.y +
-		(attenuation.z * d) +
-		(attenuation.w * d*d) );
+float is_in_shadow(sampler2D shadow_map, vec4 shadow_uv,
+		float inverse_shadowmap_size, float fixed_depth_bias,
+		float gradient_clamp, float gradient_scale_bias);
 
-	return clamp(att, 0.0, 1.0);
-}
+vec4 bling_phong_lighting(vec3 dir_to_light, vec3 dir_to_eye, vec3 normal,
+		vec4 surface_diffuse, vec4 surface_specular, float shininess,
+		vec4 light_diffuse, vec4 light_specular, float attenuation);
 
-// @param light_dir normalized direction vector from vertex to light
-// @param spot_dir normalized spotlight direction vector (the direction where the spot is at full strength)
-// @param spot_params spotlight parameters as provided by Ogre
-float calculate_spot(vec3 light_dir, vec3 spot_dir, vec4 spot_params)
-{
-	// Needs checking because otherwise would calculate the spot factor for
-	// point and directional lights which creates incorrect shading in some positions
-	if( spot_params == vec4(1.0, 0.0, 0.0, 1.0) )
-	{ return 1.0; }
-
-	// angle between surface vector and a spotlight direction vector
-	float rho = dot(spot_dir, -light_dir);
-	// Ogre gives us spotlight params as a
-	// vec4(cos(inner_angle/2), cos(outer_angle/2), falloff, 1)
-	float inner_a = spotlightParams.x;
-	float outer_a = spotlightParams.y;
-	float falloff = spotlightParams.z;
-	// from DirectX documentation the spotlight factor
-	// factor = (rho - cos(outer/2) / cos(inner/2) - cos(outer/2)) ^ falloff
-	float factor = clamp((rho - outer_a)/(inner_a - outer_a), 0.0, 1.0);
-	
-
-	if(factor > 0.0)
-	{
-		factor = pow(factor, falloff);
-	}
-	return factor;
-}
 
 void main(void)
 {
-	// Base colour from diffuse texture
-	vec4 diffuseTexColour = texture2D(diffuseTexture, uv.xy);
 #ifdef NORMAL_MAP
 	vec4 normalTexColour = texture2D(normalMap, uv.xy);
 
@@ -174,11 +121,6 @@ void main(void)
 #else
 	vec3 normal = vNormal;
 #endif
-
-	// TODO should be moved to respective positions
-	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
-	vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
-	vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
 
 	// Light vector needs to be calculated in fragment shader for low
 	// poly objects like flat walls.
@@ -191,91 +133,43 @@ void main(void)
 
 	float spotFactor = calculate_spot(normDirToLight, normSpotDir, spotlightParams);
 
-	// TODO move attenuation calculation here and add checking for zero to skip
-	// the light calculation
 	float attenuation = 0.0;
 	// Spotlight check
 	if(spotFactor > 0.0)
-	{ attenuation = calculate_attenuation(fragmentToLight, lightAttenuation); }
+	{ attenuation = spotFactor * calculate_attenuation(fragmentToLight, lightAttenuation); }
 
-	float att = spotFactor * attenuation;
-	if(att > 0.0)
+	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
+
+	if(attenuation > 0.0)
 	{
-		// Full strength if normal points directly at light
-		float lambertTerm = max(dot(normDirToLight, normal), 0.0);
-		// Only calculate diffuse and specular if light reaches the fragment.
-		if (lambertTerm > 0.0)
-		{
-			// Diffuse
-			vec4 diffuseColour = diffuseTexColour * surfaceDiffuse;
-			diffuse = att * lightDiffuse * diffuseColour
-				* lambertTerm;
+		// Using both texture and surface colours for all objects cause minimal
+		// (less than a precent) overhead so we definitely shouldn't change it.
 
-			// Specular
-			// Colour of specular reflection
-			vec4 specularColour = texture2D(specularMap, uv.xy); 
-			specularColour *= surfaceSpecular;
+		// Texture colours
+		vec4 diffuseTexColour = texture2D(diffuseTexture, uv.xy);
+		vec4 specularTexColour = texture2D(specularMap, uv.xy);
 
-			// Shouldn't need to be normalized but lets try it for now
-			vec3 normDirToEye = normalize(dirToEye);
-			vec3 half_v = normalize(normDirToEye + normDirToLight);
+		// Combined surface colours
+		vec4 diffuseColour = diffuseTexColour * surfaceDiffuse;
+		vec4 specularColour = specularTexColour * surfaceSpecular;
 
-			// Specular strength, Blinn-Phong shading model
-			float HdotN = max(dot(half_v, normal), 0.0); 
-			// FIXME the speculars don't work correctly
-			specular = att * lightSpecular * specularColour
-				* pow(HdotN, shininess);
-		}
+		colour = bling_phong_lighting(normDirToLight, dirToEye, normal, diffuseColour, specularColour,
+				shininess, lightDiffuse, lightSpecular, attenuation);
 	}
 
-	float shadow = 1.0;
+	float inShadow = 1.0;
 #ifdef SHADOW_MAP
-	if(lightCastsShadows > 0.0 && att > 0.0)
+	// Checking for fragment colour is more expensive so unless we expect
+	// scenes with lots of completely black surfaces we shouldn't do it
+	//if(lightCastsShadows > 0.0 && any(greaterThan(colour.xyz, vec3(0.0, 0.0, 0.0))) )
+	if(lightCastsShadows > 0.0 && attenuation > 0.0)
 	{
-		// Projective shadows, and the shadow texture is a depth map
-		// note the perspective division!
-		vec3 tex_coords = shadowUV.xyz/shadowUV.w;
-
-		// read depth value from shadow map
-		float centerdepth = texture(shadowMap, tex_coords.xy).x;
-
-		// gradient calculation
-		float pixeloffset = inverseShadowmapSize;
-		vec4 depths = vec4(
-			texture(shadowMap, tex_coords.xy + vec2(-pixeloffset, 0)).x,
-			texture(shadowMap, tex_coords.xy + vec2(+pixeloffset, 0)).x,
-			texture(shadowMap, tex_coords.xy + vec2(0, -pixeloffset)).x,
-			texture(shadowMap, tex_coords.xy + vec2(0, +pixeloffset)).x);
-
-		vec2 differences = abs( depths.yw - depths.xz );
-		float gradient = min(gradientClamp, max(differences.x, differences.y));
-		float gradientFactor = gradient * gradientScaleBias;
-
-		// visibility function
-		float depthAdjust = gradientFactor + (fixedDepthBias * centerdepth);
-		float finalCenterDepth = centerdepth + depthAdjust;
-
-#if USE_PCF
-		// use depths from prev, calculate diff
-		depths += depthAdjust;
-		float final = (finalCenterDepth > tex_coords.z) ? 1.0 : 0.0;
-		final += (depths.x > tex_coords.z) ? 1.0 : 0.0;
-		final += (depths.y > tex_coords.z) ? 1.0 : 0.0;
-		final += (depths.z > tex_coords.z) ? 1.0 : 0.0;
-		final += (depths.w > tex_coords.z) ? 1.0 : 0.0;
-	
-		shadow = 0.2 * final;
-#else
-		shadow = (finalCenterDepth > tex_coords.z) ? 1.0 : 0.0;
-#endif
+		inShadow = is_in_shadow(shadowMap, shadowUV, inverseShadowmapSize,
+				fixedDepthBias, gradientClamp, gradientScaleBias);
 	}
 #endif
 
-	// Combine diffuse alphas
-	float alpha = diffuseTexColour.a*surfaceDiffuse.a;
-	colour = shadow*(diffuse + specular);
-	colour.a = alpha;
-
-	FragmentColour = clamp(colour, 0.0, 1.0);
+	// TODO this will distort the alpha channel
+	FragmentColour = clamp(inShadow * colour, 0.0, 1.0);
 }
 

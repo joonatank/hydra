@@ -224,10 +224,10 @@ public :
 	bool isShelfShadowEnabled(void) const
 	{ return _shelf_shadow; }
 
-	void setDirLightTextureOffset(vl::scalar offset);
+	void setDirLightExtrusionDistance(vl::scalar offset);
 
-	vl::scalar getDirLightTextureOffset(void) const
-	{ return _dir_light_texture_offset; }
+	vl::scalar getDirLightExtrusionDistance(void) const
+	{ return _dir_light_extrusion_distance; }
 
 	/// Valid values for camera are "Default", "LiSPSM", "Focused", "PSSM"
 	/// others may be added later. Values are case insensitive.
@@ -317,7 +317,7 @@ private :
 	int _texture_size;
 
 	vl::scalar _max_distance;
-	vl::scalar _dir_light_texture_offset;
+	vl::scalar _dir_light_extrusion_distance;
 
 	std::string _caster_material;
 

@@ -50,12 +50,8 @@ vl::Frustum::Frustum(Type type)
 	, _near_clipping(0.01)
 	, _far_clipping(100)
 	, _head()
-	, _head_frustum_x(false)
-	, _head_frustum_y(true)
-	, _head_frustum_z(false)
-	, _transformation_modifications(false)
 	, _fov(Ogre::Degree(60))
-	, _use_asymmetric_stereo(false)
+	, _use_asymmetric_stereo(true)
 	, _aspect(4.0/3)
 {
 }
@@ -82,47 +78,6 @@ vl::Frustum::getProjectionMatrix(vl::scalar eye_offset) const
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown projection type."));
 	}
 }
-
-vl::Transform
-vl::Frustum::getModificationTransformation(void) const
-{
-	if(_transformation_modifications)
-	{
-		Transform t;
-		// Transformation is different for every wall
-		Quaternion const toWall = orientation_to_wall(_wall);
-		if(_head_frustum_x)
-		{
-		}
-
-		// Only y direction supported for the moment
-		if(_head_frustum_y)
-		{
-			Plane plane(_wall);
-			// Calculate the difference from center point to current height
-			//Ogre::Real top = (plane.top - _head.position.y);
-			//Ogre::Real bottom = (plane.bottom - _head.position.y);
-			
-			Ogre::Vector3 screen_center(0, plane.top - plane.bottom, plane.front);
-			Ogre::Vector3 user(0, _head.position.y, 0);
-			Ogre::Vector3 frustum_center(0, plane.top - plane.bottom, 0);
-
-			Ogre::Vector3 user_to_screen = screen_center - user;
-			Ogre::Vector3 center_to_screen = screen_center - frustum_center;
-			// the angle between user and frustum center vectors
-			t.quaternion = user_to_screen.getRotationTo(center_to_screen);
-		}
-
-		if(_head_frustum_z)
-		{
-		}
-
-		return t;
-	}
-	else
-	{ return Transform(); }
-}
-
 
 /// ------------------------------ Private -----------------------------------
 Ogre::Matrix4
@@ -178,20 +133,16 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
 	// and if we decrease it we the the same part on both front and side screens (too large fov) 
 	Ogre::Real scale = -(plane.front - eye.z)/_near_clipping;
+	
 	// Modify the front plane (or scale in this case)
-	if(_head_frustum_z)
-	{
-		scale = -(plane.front - head.z - eye.z)/_near_clipping;
-	}
+	scale = -(plane.front - head.z - eye.z)/_near_clipping;
 
 	Ogre::Real right = (plane.right - eye.x)/scale;
 	Ogre::Real left = (plane.left - eye.x)/scale;
+
 	// Modify the right and left planes
-	if(_head_frustum_x)
-	{
-		right = (plane.right - head.x - eye.x)/scale;
-		left = (plane.left - head.x - eye.x)/scale;
-	}
+	right = (plane.right - head.x - eye.x)/scale;
+	left = (plane.left - head.x - eye.x)/scale;
 
 	// Golden ratio for the frustum
 	// Should be tested with the head tracking if it doesn't work provide an
@@ -200,12 +151,9 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	Ogre::Real top = (plane.top - (1/PHI)*wall_height)/scale;
 	Ogre::Real bottom = (plane.bottom - (1/PHI)*wall_height)/scale;
 
-	// Modify the top and botoom planes
-	if(_head_frustum_y)
-	{
-		top = (plane.top - head.y - eye.y)/scale;
-		bottom = (plane.bottom - head.y - eye.y)/scale;
-	}
+	// Modify the top and botom planes
+	top = (plane.top - head.y - eye.y)/scale;
+	bottom = (plane.bottom - head.y - eye.y)/scale;
 
 	Ogre::Matrix4 projMat;
 

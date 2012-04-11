@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011-2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file light.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -21,9 +17,6 @@
 #include "scene_manager.hpp"
 
 #include <OGRE/OgreSceneManager.h>
-
-/// Necessary for better shadow camera
-#include <OGRE/OgreShadowCameraSetupFocused.h>
 
 namespace
 {
@@ -385,15 +378,6 @@ vl::Light::_doCreateNative(void)
 
 	_ogre_light->setAttenuation(_attenuation.range, _attenuation.constant,
 			_attenuation.linear, _attenuation.quadratic);
-
-	// There is problems with getting the Default shadow camera working with Directional
-	// lights so we can just override those settings here.
-	// Later might be useful for development purposes to make this optional using a flag.
-	if(_ogre_light->getType() == Ogre::Light::LT_DIRECTIONAL)
-	{
-		Ogre::ShadowCameraSetupPtr shadow_cam(new Ogre::FocusedShadowCameraSetup());
-		_ogre_light->setCustomShadowCameraSetup(shadow_cam);
-	}
 
 	return true;
 }

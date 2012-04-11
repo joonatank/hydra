@@ -94,43 +94,6 @@ public :
 	double getIPD(void) const
 	{ return _ipd; }
 
-	
-	bool isHeadFrustumX(void) const
-	{ return _head_frustum_x; }
-	
-	bool isHeadFrustumY(void) const
-	{ return _head_frustum_y; }
-
-	bool isHeadFrustumZ(void) const
-	{ return _head_frustum_z; }
-
-	void enableHeadFrustumX(bool e)
-	{
-		setDirty(DIRTY_FRUSTUM);
-		_head_frustum_x = e;
-	}
-
-	void enableHeadFrustumY(bool e)
-	{
-		setDirty(DIRTY_FRUSTUM);
-		_head_frustum_y = e;
-	}
-
-	void enableHeadFrustumZ(bool e)
-	{
-		setDirty(DIRTY_FRUSTUM);
-		_head_frustum_z = e;
-	}
-
-	void enableAsymmetricStereoFrustum(bool e)
-	{
-		setDirty(DIRTY_FRUSTUM);
-		_asymmetric_stereo_frustum = e;
-	}
-
-	bool isAsymmetricStereoFrustum(void) const
-	{ return _asymmetric_stereo_frustum; }
-
 	enum DirtyBits
 	{
 		DIRTY_HEAD = vl::Distributed::DIRTY_CUSTOM << 0,
@@ -159,12 +122,6 @@ private :
 	uint32_t _screenshot_version;
 
 	double _ipd;
-
-	bool _head_frustum_x;
-	bool _head_frustum_y;
-	bool _head_frustum_z;
-
-	bool _asymmetric_stereo_frustum;
 
 	SceneManagerPtr _scene_manager;
 
