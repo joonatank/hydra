@@ -118,6 +118,44 @@ vl::Channel::draw(void)
 	viewport->update();
 }
 
+
+vl::scalar
+vl::Channel::getLastFPS(void) const
+{
+	if(_fbo)
+	{ return _fbo->getLastFPS(); }
+	else
+	{
+		assert(viewport->getTarget());
+		return viewport->getTarget()->getLastFPS();
+	}
+}
+
+size_t
+vl::Channel::getTriangleCount(void) const
+{
+	if(_fbo)
+	{ return _fbo->getTriangleCount(); }
+	else
+	{
+		assert(viewport->getTarget());
+		return viewport->getTarget()->getTriangleCount();
+	}
+}
+
+size_t
+vl::Channel::getBatchCount(void) const
+{
+
+	if(_fbo)
+	{ return _fbo->getBatchCount(); }
+	else
+	{
+		assert(viewport->getTarget());
+		return viewport->getTarget()->getBatchCount();
+	}
+}
+
 /// ---------------------------------- Private -------------------------------
 void
 vl::Channel::_render_to_fbo(void)

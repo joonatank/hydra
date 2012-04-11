@@ -388,29 +388,38 @@ vl::Window::draw(void)
 	assert(_ogre_window);
 	_ogre_window->_beginUpdate();
 
+	Ogre::RenderTarget::FrameStats stats;
+	stats.lastFPS = 0;
+	stats.avgFPS = 0;
+	stats.bestFPS = 0;
+	stats.worstFPS = 0;
+	stats.bestFrameTime = 0;
+	stats.worstFrameTime = 0;
+	stats.triangleCount = 0;
+	stats.batchCount = 0;
+
 	// Draw to screen
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
 		_channels.at(i)->draw();
 
-		// Keeps track of the batches and triangles
-		// @todo these seem to be off if we are rendering to a FBO
-		// at least they are different than if we are rendering
-		// to a window, 4-6 times lower for FBO.
-		// This is because only the Sky (with SkyX) is rendered directly
-		// to the screen other objects are rendered to the FBO
-		// so they don't show here.
-		// We need to implement custom counters for this.
-		_ogre_window->_updateViewport(_channels.at(i)->viewport, true);
-
-		// @todo test with stereo setup if this really renders the gui for
-		// both left and right eye
+		// GUI is not rendered as part of the FBO which might become problematic
+		// instead it is overlayed on the Window.
+		// For post screen effects and distribution of the Channels this shouldn't
+		// be a problem, but we should tread carefully anyway.
 		if(_renderer->getGui())
 		{ _renderer->getGui()->update(); }
+
+		stats.lastFPS = _channels.at(i)->getLastFPS();
+		stats.triangleCount = _channels.at(i)->getTriangleCount();
+		stats.batchCount = _channels.at(i)->getBatchCount();
 	}
 
 	if(_tray_mgr)
-	{ _tray_mgr->frameRenderingQueued(Ogre::FrameEvent()); }
+	{
+		_tray_mgr->update(stats);
+		_tray_mgr->frameRenderingQueued(Ogre::FrameEvent());
+	}
 
 	_ogre_window->_endUpdate();
 }

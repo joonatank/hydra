@@ -56,6 +56,13 @@ public:
 	void setPlayer(Player *player)
 	{ _player = player; }
 
+	/// Per frame statistics
+	vl::scalar getLastFPS(void) const;
+
+	size_t getTriangleCount(void) const;
+
+	size_t getBatchCount(void) const;
+
 	/// Methods
 private :
 
