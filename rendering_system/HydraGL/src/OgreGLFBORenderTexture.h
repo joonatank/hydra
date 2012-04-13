@@ -55,6 +55,11 @@ namespace Ogre {
 		virtual bool attachDepthBuffer( DepthBuffer *depthBuffer );
 		virtual void detachDepthBuffer();
 		virtual void _detachDepthBuffer();
+
+		virtual void _beginUpdate(void);
+
+		virtual void _endUpdate(void);
+
     protected:
         GLFrameBufferObject mFB;
     };

@@ -239,7 +239,7 @@ namespace Ogre {
 	//-----------------------------------------------------------------------
 	void GLSLProgram::unloadHighLevelImpl(void)
 	{
-		if (isSupported())
+		if (isSupported() && mGLHandle)
 		{
 			glDeleteObjectARB(mGLHandle);
 		}

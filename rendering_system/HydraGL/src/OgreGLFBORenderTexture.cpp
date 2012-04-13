@@ -92,7 +92,21 @@ namespace Ogre {
 		mFB.detachDepthBuffer();
 		GLRenderTexture::_detachDepthBuffer();
 	}
-   
+
+	void GLFBORenderTexture::_beginUpdate(void)
+	{
+		// Bind the frame buffer
+		mFB.bind();
+	}
+
+	void GLFBORenderTexture::_endUpdate(void)
+	{
+		// Completely unbind the Framebuffer
+		// This is because we want the window framebuffer to be restored
+		// and Ogre does not unbind framebuffers when they are no longer used.
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	}
+
 /// Size of probe texture
 #define PROBE_SIZE 16
 

@@ -86,16 +86,12 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 
 vl::Window::~Window( void )
 {
-	std::string msg("vl::Window::~Window");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "vl::Window::~Window" << std::endl;
 
-	msg = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	if( _input_manager )
 	{
-		msg = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-        OIS::InputManager::destroyInputSystem(_input_manager);
+		std::cout << vl::TRACE << "Destroy OIS input manager." << std::endl;
+		OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
 
@@ -386,6 +382,7 @@ vl::Window::draw(void)
 
 	// Draw
 	assert(_ogre_window);
+
 	_ogre_window->_beginUpdate();
 
 	Ogre::RenderTarget::FrameStats stats;
@@ -397,6 +394,8 @@ vl::Window::draw(void)
 	stats.worstFrameTime = 0;
 	stats.triangleCount = 0;
 	stats.batchCount = 0;
+
+	stats.lastFPS = _ogre_window->getLastFPS();
 
 	// Draw to screen
 	for(size_t i = 0; i < _channels.size(); ++i)
@@ -410,9 +409,9 @@ vl::Window::draw(void)
 		if(_renderer->getGui())
 		{ _renderer->getGui()->update(); }
 
-		stats.lastFPS = _channels.at(i)->getLastFPS();
-		stats.triangleCount = _channels.at(i)->getTriangleCount();
-		stats.batchCount = _channels.at(i)->getBatchCount();
+		// @todo Batch and triangle counts does not work at all. Always zero.
+		stats.triangleCount += _channels.at(i)->getTriangleCount();
+		stats.batchCount += _channels.at(i)->getBatchCount();
 	}
 
 	if(_tray_mgr)

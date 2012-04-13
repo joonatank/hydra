@@ -41,8 +41,8 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 {
 	assert(viewport);
  
-	view->setBackgroundColour(config.background_colour);
-	view->setAutoUpdated(false);
+	viewport->setBackgroundColour(config.background_colour);
+	viewport->setAutoUpdated(false);
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;
 }
@@ -98,6 +98,12 @@ vl::Channel::draw(void)
 {
 	// @todo this should be replaced with single inline function call
 	// that hides the implementation (OpenGL) details
+	// @todo this does not work when using FBO for rendering
+	// My assumption would be that the FBO is still bound when we try to switch
+	// draw buffers. OpenGL does not allow switching BACK buffers with FBOs
+	// naturally.
+	// HydraGL has been fixed for this and debugger gives no errors for this.
+	// Stereo needs to be tested still.
 	if(_stereo_eye_cfg == HS_LEFT)
 	{
 		glDrawBuffer(GL_BACK_LEFT);
@@ -105,6 +111,13 @@ vl::Channel::draw(void)
 	else if(_stereo_eye_cfg == HS_RIGHT)
 	{
 		glDrawBuffer(GL_BACK_RIGHT);
+	}
+	else
+	{
+		// This needs to be set because we want to be able to switch
+		// stereo mode on/off
+		// Draw both back buffers
+		glDrawBuffer(GL_BACK);
 	}
 
 	assert(camera.getCamera());
@@ -158,11 +171,18 @@ vl::Channel::getBatchCount(void) const
 void
 vl::Channel::_render_to_fbo(void)
 {
+	// @todo when this is working with stereo we can replace with auto updating
+	// the whole FBO
+	// remove _begin and _end update, viewport updating and separate swapBuffers.
+	_fbo->_beginUpdate();
 	assert(camera.getCamera());
 	assert(_fbo->getViewport(0));
 
 	camera.update(_stereo_eye_cfg);
-	_fbo->update(false);
+	_fbo->getViewport(0)->update();
+	_fbo->swapBuffers();
+
+	_fbo->_endUpdate();
 }
 
 void
@@ -170,19 +190,16 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 {
 	std::clog << "vl::Channel::_initialise_fbo" << std::endl;
 
-	assert(viewport->getActualWidth() > 0);
-	assert(viewport->getActualHeight() > 0);
-	std::clog << "Channel::Channel : FBO of size : " << viewport->getActualWidth() << "x" 
-		<< viewport->getActualHeight() << std::endl;
+	// Texture size will be complete garbage till it's used
+	// so do not check the texture size here. Use a OpenGL debugger instead.
 	std::string fbo_tex_name("internal/" + getName() + "/rtt_tex");
 	_fbo_texture = Ogre::TextureManager::getSingleton()
 		.createManual(fbo_tex_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
 				Ogre::TEX_TYPE_2D, viewport->getActualWidth(), viewport->getActualHeight(), 
 				0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
 
-	std::clog << "Channel::Channel : FBO texture \"" << fbo_tex_name << "\" created." << std::endl;
-
 	_fbo = _fbo_texture->getBuffer()->getRenderTarget();
+	_fbo->setAutoUpdated (false);
 
 	std::string material_name = "internal/" + getName() + "/fbo_material";
 	/* For some reason dynamically created material does not work
@@ -201,10 +218,18 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	{
 		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
 	}
-
-	std::clog << "Channel::Channel : setting viewport settings" << std::endl;
+	
 	/// The channel will not be rendering the Scene
-	viewport->setVisibilityMask(1<<1);
+	// We are using z order to mask different viewports
+	if(viewport->getZOrder() + 1 >= 32)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	uint32_t window_mask = 1 << (viewport->getZOrder()+1);
+	uint32_t fbo_mask = 1;
+	if(window_mask == fbo_mask)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	viewport->setVisibilityMask(window_mask);
 	viewport->setShadowsEnabled(false);
 	viewport->setSkiesEnabled(false);
 	viewport->setOverlaysEnabled(false);
@@ -214,14 +239,14 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	assert(_fbo);
 
 	_fbo->addViewport((Ogre::Camera *)camera->getNative());
-	_fbo->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
 	_fbo->getViewport(0)->setBackgroundColour(viewport->getBackgroundColour());
-	_fbo->getViewport(0)->setVisibilityMask(1);
+	_fbo->getViewport(0)->setVisibilityMask(fbo_mask);
+	_fbo->getViewport(0)->setAutoUpdated(false);
 
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);
 	quad->setCorners(-1.0f, 1.0f, 1.0f, -1.0f);
 	quad->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
-	quad->setVisibilityFlags(1<<1);
+	quad->setVisibilityFlags(window_mask);
 
 	std::string sn_name = "internal/" + getName() + "/fbo_screen";
 	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
@@ -230,4 +255,8 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	miniScreenNode->attachObject(quad);
 
 	quad->setMaterial(_fbo_material->getName());
+
+	// @todo we should use a separate default camera for FBO
+	// not one with all the VIEW and PROJECTION modifications we use for
+	// scene rendering.
 }
