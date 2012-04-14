@@ -28,7 +28,7 @@ namespace vl
 class Channel
 {
 public:
-	Channel(vl::config::Channel config, Ogre::Viewport *view, bool use_fbo);
+	Channel(vl::config::Channel config, Ogre::Viewport *view, bool use_fbo, uint32_t fsaa);
 
 	void setCamera(vl::CameraPtr cam);
 
@@ -75,6 +75,7 @@ private:
 	std::string _name;
 
 	bool _use_fbo;
+	uint32_t _fsaa;
 
 	STEREO_EYE _stereo_eye_cfg;
 	vl::Player *_player;

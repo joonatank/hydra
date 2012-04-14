@@ -606,12 +606,15 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		window.nv_swap_barrier = _env->getNVSwapBarrier();
 		attrib = pWindow->first_attribute("display");
 		if(attrib)
-		window.n_display = vl::from_string<int>( attrib->value() );
+		{ window.n_display = vl::from_string<int>( attrib->value() ); }
 
-		if( attrib = pWindow->first_attribute("vert_sync"))
-		{
-			window.vert_sync= vl::from_string<bool>(attrib->value());
-		}
+		attrib = pWindow->first_attribute("vert_sync");
+		if(attrib)
+		{ window.vert_sync= vl::from_string<bool>(attrib->value()); }
+
+		attrib = pWindow->first_attribute("fsaa");
+		if(attrib)
+		{ window.fsaa = vl::from_string<int>(attrib->value()); }
 
 		/// Process channels
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");

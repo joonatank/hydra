@@ -115,7 +115,8 @@ protected :
 
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
 
-	vl::Channel *_create_channel(vl::config::Channel const &channel, STEREO_EYE stereo_cfg, vl::config::Projection const &projection);
+	vl::Channel *_create_channel(vl::config::Channel const &channel, 
+		STEREO_EYE stereo_cfg, vl::config::Projection const &projection, uint32_t fsaa);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard

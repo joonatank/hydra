@@ -72,12 +72,12 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 		// We already have a window so it should be safe to check for stereo
 		if(hasStereo())
 		{
-			_create_channel(windowConf.get_channel(i), HS_LEFT, projection);
-			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection);
+			_create_channel(windowConf.get_channel(i), HS_LEFT, projection, windowConf.fsaa);
+			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection, windowConf.fsaa);
 		}
 		else
 		{
-			_create_channel(windowConf.get_channel(i), HS_MONO, projection);
+			_create_channel(windowConf.get_channel(i), HS_MONO, projection, windowConf.fsaa);
 		}
 	}
 
@@ -488,6 +488,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	params["gamma"] = vl::to_string(winConf.renderer.hardware_gamma);
 	params["stereo"] = vl::to_string(winConf.stereo);
 	params["vert_sync"] = vl::to_string(winConf.vert_sync);
+	params["FSAA"] = vl::to_string(winConf.fsaa);
 
 	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
 		<< "left = " << winConf.rect.x << " top = " << winConf.rect.y
@@ -520,6 +521,10 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	{
 		std::cout << "\n with vertical sync";
 	}
+	if(winConf.fsaa)
+	{
+		std::cout << "\n with FSAA " << winConf.fsaa;
+	}
 	
 	std::cout << std::endl;
 
@@ -541,7 +546,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
-			vl::config::Projection const &projection)
+			vl::config::Projection const &projection, uint32_t fsaa)
 {
 	// @todo replace with throwing because this is user controlled
 	assert(!chan_cfg.name.empty());
@@ -573,7 +578,7 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	if(_renderer_type == vl::config::Renderer::FBO)
 	{ use_fbo = true; }
 
-	Channel *channel = new Channel(channel_config, view, use_fbo);
+	Channel *channel = new Channel(channel_config, view, use_fbo, fsaa);
 	_channels.push_back(channel);
 
 	/// Set frustum

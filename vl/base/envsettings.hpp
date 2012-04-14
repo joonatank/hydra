@@ -246,6 +246,8 @@ struct HYDRA_API Window
 
 		n_display = -1;
 
+		fsaa = 0;
+
 		nv_swap_sync = false;
 		nv_swap_group = 0;
 		nv_swap_barrier = 0;
@@ -276,6 +278,8 @@ struct HYDRA_API Window
 	bool vert_sync;
 	bool input_handler;
 	int n_display;
+
+	int fsaa;
 
 	void add_channel(Channel const &channel)
 	{

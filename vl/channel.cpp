@@ -31,12 +31,13 @@
 
 /// ---------------------------------- Public --------------------------------
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		bool use_fbo)
+		bool use_fbo, uint32_t fsaa)
 	: _name(config.name)
 	, camera()
 	, viewport(view)
 	, _fbo(0)
 	, _use_fbo(use_fbo)
+	, _fsaa(fsaa)
 	, _stereo_eye_cfg(HS_UNDEFINED)
 {
 	assert(viewport);
@@ -196,7 +197,7 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	_fbo_texture = Ogre::TextureManager::getSingleton()
 		.createManual(fbo_tex_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
 				Ogre::TEX_TYPE_2D, viewport->getActualWidth(), viewport->getActualHeight(), 
-				0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+				0, Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET, 0, false, _fsaa);
 
 	_fbo = _fbo_texture->getBuffer()->getRenderTarget();
 	_fbo->setAutoUpdated (false);

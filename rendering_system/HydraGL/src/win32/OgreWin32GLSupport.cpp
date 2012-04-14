@@ -560,8 +560,8 @@ Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOpt
 {
 	real_opts = opt;
 
-	// @todo this doesn't go through all the combinations
-	// also should be bit more general using than this
+	/// Does not try without Gamma correction if user requested it
+	/// Because it will affect all the resources also.
 	bool formatOk = selectPixelFormat(dc, real_opts);
 	if (!formatOk)
 	{
@@ -573,28 +573,16 @@ Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOpt
 		}
 		
 		// Try with stereo but without FSAA
-		if (opt.multisample > 0)
+		if( !formatOk && opt.multisample > 0 )
 		{
 			real_opts.stereo = true;
 			real_opts.multisample = 0;
 			formatOk = selectPixelFormat(dc, real_opts);
 		}
 
-		// Try without hwGamma and stereo but with FSAA
-		if (!formatOk && opt.hwGamma)
+		// Try without stereo and withoutFSAA
+		if( !formatOk && opt.multisample > 0 && opt.stereo )
 		{
-			real_opts.hwGamma = false;
-			real_opts.multisample = opt.multisample;
-			real_opts.stereo = false;
-			formatOk = selectPixelFormat(dc, real_opts);
-		}
-
-		// @todo missing hwGamma, no stereo and no FSAA
-
-		// Try without any of them
-		if (!formatOk && opt.hwGamma && (opt.multisample > 0))
-		{
-			real_opts.hwGamma = false;
 			real_opts.multisample = 0;
 			real_opts.stereo = false;
 			formatOk = selectPixelFormat(dc, real_opts);
