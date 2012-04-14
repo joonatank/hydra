@@ -76,12 +76,6 @@ template<class C> void remove_duplicates(C& c)
 
 /// -------------------------- Win32GLSupport --------------------------------
 Ogre::Win32GLSupport::Win32GLSupport(void)
-    : mHasPixelFormatARB(false)
-    , mHasMultisample(false)
-	, mHasHardwareGamma(false)
-	, mHasNvSwapGroup(false)
-	, mHasStereo(false)
-	, mHasFBO(false)
 {
 	// immediately test WGL_ARB_pixel_format and FSAA support
 	// so we can set configuration options appropriately
@@ -393,20 +387,7 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 				"Failed to Initialise GLEW.", "Win32GLSupport::_initialiseWGL");
 		}
 
-		// check for pixel format and multisampling support
-		if(WGLEW_ARB_extensions_string)
-		{
-			if(WGLEW_ARB_pixel_format)
-				mHasPixelFormatARB = true;
-			if(WGLEW_ARB_multisample)
-				mHasMultisample = true;
-			if(WGLEW_EXT_framebuffer_sRGB)
-				mHasHardwareGamma = true;
-			if(WGLEW_NV_swap_group)
-				mHasNvSwapGroup = true;
-		}
-
-		if (mHasPixelFormatARB && mHasMultisample)
+		if (WGLEW_ARB_pixel_format && WGLEW_ARB_multisample)
 		{
 			// enumerate all formats w/ multisampling
 			static const int iattr[] = {
@@ -446,8 +427,7 @@ Ogre::Win32GLSupport::_initialiseWGL(void)
 		}
 
 		// Get OpenGL extensions we need
-		mHasFBO = (GLEW_VERSION_3_0 || GLEW_EXT_framebuffer_object || GLEW_ARB_framebuffer_object);
-		if(!mHasFBO)
+		if(!hasFBO())
 		{
 			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
 				"FBOs are not supported.", "Win32GLSupport::_initialiseWGL");
@@ -506,10 +486,10 @@ Ogre::Win32GLSupport::selectPixelFormat(HDC hdc, GLSupport::PixelFormatOptions c
 
 	int useHwGamma = opt.hwGamma? GL_TRUE : GL_FALSE;
 
-	if(opt.multisample && (!mHasMultisample || !mHasPixelFormatARB))
+	if(opt.multisample && (!WGLEW_ARB_multisample || !WGLEW_ARB_pixel_format))
 		return false;
 
-	if(opt.hwGamma && !mHasHardwareGamma)
+	if(opt.hwGamma && !WGLEW_EXT_framebuffer_sRGB)
 		return false;
 
 	// Removing legacy functionality so we use the ARB function if available
@@ -590,6 +570,12 @@ Ogre::Win32GLSupport::selectClosestPixelFormat(HDC dc, GLSupport::PixelFormatOpt
 	}
 
 	return formatOk;
+}
+
+bool
+Ogre::Win32GLSupport::hasFBO(void) const
+{
+	return (GLEW_VERSION_3_0 || GLEW_EXT_framebuffer_object || GLEW_ARB_framebuffer_object);
 }
 
 unsigned int

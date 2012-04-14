@@ -32,26 +32,31 @@ THE SOFTWARE.
 #include "OgreGLPixelFormat.h"
 #include "OgreGLHardwarePixelBuffer.h"
 
-#include <OGRE/OgreLogManager.h>
-#include <OGRE/OgreStringConverter.h>
-#include <OGRE/OgreRoot.h>
+
+// -------------------------------- GLRenderTexture ---------------------------
+//-----------------------------------------------------------------------------  
+Ogre::GLRenderTexture::GLRenderTexture(const String &name, 
+	const GLSurfaceDesc &target, bool writeGamma, uint fsaa)
+	: RenderTexture(target.buffer, target.zoffset)
+{
+    mName = name;
+	mHwGamma = writeGamma;
+	mFSAA = fsaa;
+}
+
+Ogre::GLRenderTexture::~GLRenderTexture()
+{}
 
 const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_FBO = "FBO";
 const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_TARGET = "TARGET";
 const Ogre::String Ogre::GLRenderTexture::CustomAttributeString_GLCONTEXT = "GLCONTEXT";
 
 //-----------------------------------------------------------------------------
-
+// -------------------------------- GLRTTManager ------------------------------
 template<> Ogre::GLRTTManager* Ogre::Singleton<Ogre::GLRTTManager>::msSingleton = 0;
     
 Ogre::GLRTTManager::~GLRTTManager(void)
 {}
-
-Ogre::MultiRenderTarget *
-Ogre::GLRTTManager::createMultiRenderTarget(Ogre::String const &name)
-{
-    OGRE_EXCEPT(Exception::ERR_NOT_IMPLEMENTED, "MultiRenderTarget can only be used with GL_EXT_framebuffer_object extension", "GLRTTManager::createMultiRenderTarget");
-}
 
 Ogre::PixelFormat
 Ogre::GLRTTManager::getSupportedAlternative(Ogre::PixelFormat format)
@@ -73,15 +78,3 @@ Ogre::GLRTTManager::getSupportedAlternative(Ogre::PixelFormat format)
     /// If none at all, return to default
     return PF_A8R8G8B8;
 }
-
-//-----------------------------------------------------------------------------  
-Ogre::GLRenderTexture::GLRenderTexture(const String &name, const GLSurfaceDesc &target, bool writeGamma, uint fsaa)
-	: RenderTexture(target.buffer, target.zoffset)
-{
-    mName = name;
-	mHwGamma = writeGamma;
-	mFSAA = fsaa;
-}
-
-Ogre::GLRenderTexture::~GLRenderTexture()
-{}

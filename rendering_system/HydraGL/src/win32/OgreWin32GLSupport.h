@@ -94,8 +94,7 @@ public:
 	bool selectClosestPixelFormat(HDC hdc, GLSupport::PixelFormatOptions const &opt, GLSupport::PixelFormatOptions &real_opts);
 
 	// Virtual override from Ogre::GLSupport
-	bool hasFBO(void) const
-	{ return mHasFBO; }
+	bool hasFBO(void) const;
 
 // Private Typedefs
 private:
@@ -114,13 +113,6 @@ private :
 	// Allowed video modes
 	vector<DEVMODE>::type mDevModes;
 	vector<int>::type mFSAALevels;
-	bool mHasPixelFormatARB;
-    bool mHasMultisample;
-	bool mHasHardwareGamma;
-
-	bool mHasNvSwapGroup;
-	bool mHasStereo;
-	bool mHasFBO;
 
 	// WGL extensions available, retrieved with the dummy window
 	set<String>::type _wgl_extension_list;

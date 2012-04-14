@@ -146,34 +146,12 @@ namespace Ogre {
             size_t width;
             size_t height;
 			uint samples;
+
             // Overloaded comparison operator for usage in map
-            bool operator < (const RBFormat &other) const
-            {
-                if(format < other.format)
-                {
-                    return true;
-                }
-                else if(format == other.format)
-                {
-                    if(width < other.width)
-                    {
-                        return true;
-                    }
-                    else if(width == other.width)
-                    {
-                        if(height < other.height)
-                            return true;
-						else if (height == other.height)
-						{
-							if (samples < other.samples)
-								return true;
-						}
-                    }
-                }
-                return false;
-            }
+            bool operator < (const RBFormat &other) const;
         };
-        struct RBRef
+        
+		struct RBRef
         {
             RBRef(){}
             RBRef(GLRenderBuffer *inBuffer):
@@ -198,8 +176,35 @@ namespace Ogre {
         GLuint _tryFormat(GLenum depthFormat, GLenum stencilFormat);
         bool _tryPackedFormat(GLenum packedFormat);
     };
-    
 
+}	// namespace Ogre
+
+inline bool
+Ogre::GLFBOManager::RBFormat::operator<(const RBFormat &other) const
+{
+	if(format < other.format)
+	{
+		return true;
+	}
+	else if(format == other.format)
+	{
+		if(width < other.width)
+		{
+			return true;
+		}
+		else if(width == other.width)
+		{
+			if(height < other.height)
+				return true;
+			else if (height == other.height)
+			{
+				if (samples < other.samples)
+					return true;
+			}
+		}
+	}
+	
+	return false;
 }
 
 #endif

@@ -110,9 +110,6 @@ Ogre::Win32Window::Options::parse(Ogre::NameValuePairList const &miscParams)
 	if ((opt = miscParams.find("FSAA")) != end)
 		fsaa = StringConverter::parseUnsignedInt(opt->second);
 
-	if ((opt = miscParams.find("FSAAHint")) != end)
-		fsaa_hint = opt->second;
-
 	if ((opt = miscParams.find("gamma")) != end)
 		hwGamma = StringConverter::parseBool(opt->second);
 
