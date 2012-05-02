@@ -50,18 +50,25 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, in
 	
 	g_launcher_gui = new LauncherWindow(&launcher, hInstance, iCmdShow);
 
-	MSG msg ;
-	while (GetMessage (&msg, NULL, 0, 0))
+	while(true)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		MSG msg;
+		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if( msg.message == WM_QUIT )
+			{ break; }
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		
 		launcher.mainloop();
-		vl::msleep(1);
+		vl::msleep(10);
 	}
 
 	delete g_launcher_gui;
 
-	return msg.wParam;
+	return 0; // msg.wParam;
 }
 #else
 int main(int argc, char **argv)
