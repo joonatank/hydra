@@ -13,6 +13,9 @@ world = game.physics_world
 
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
+game.scene.shadows.max_distance = 50
+game.scene.shadows.dir_light_extrusion_distance = 100
+game.scene.shadows.texture_size = 4096
 
 create_sun()
 physics_create_ground()

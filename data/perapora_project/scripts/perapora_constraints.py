@@ -17,6 +17,8 @@ game.player.camera = camera_name
 game.scene.sky_dome = SkyDomeInfo("CloudySky")
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
+game.scene.shadows.max_distance = 50
+game.scene.shadows.dir_light_extrusion_distance = 100
 create_sun()
 
 # For collision detection

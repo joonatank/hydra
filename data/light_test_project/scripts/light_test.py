@@ -42,9 +42,8 @@ athene2.position = Vector3(3, 4, 5)
 game.scene.shadows.enable()
 # Should of course be 4096 but testing the rounding to next power of two
 game.scene.shadows.texture_size = 4024
-# some shadow testing
-#game.scene.shadows.camera = "focused"
-#game.scene.shadows.camera = "lispsm"
+game.scene.shadows.max_distance = 50
+game.scene.shadows.dir_light_extrusion_distance = 100
 
 # Test transparency
 # a semi-transparent glass surface for testing transparency colour
