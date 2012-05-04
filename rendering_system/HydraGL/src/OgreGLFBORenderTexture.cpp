@@ -100,6 +100,7 @@ Ogre::GLFBORenderTexture::_detachDepthBuffer()
 void
 Ogre::GLFBORenderTexture::_beginUpdate(void)
 {
+	Ogre::GLRenderTexture::_beginUpdate();
 	// Bind the frame buffer
 	mFB.bind();
 }
@@ -111,6 +112,8 @@ Ogre::GLFBORenderTexture::_endUpdate(void)
 	// This is because we want the window framebuffer to be restored
 	// and Ogre does not unbind framebuffers when they are no longer used.
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	Ogre::GLRenderTexture::_endUpdate();
 }
 //-----------------------------------------------------------------------------
 

@@ -93,7 +93,7 @@ public:
 	std::vector<Channel *> const &getChannels(void)
 	{ return _channels; }
 
-	Ogre::RenderTarget::FrameStats const &getStatistics(void) const;
+	Ogre::RenderTarget::FrameStats getStatistics(void) const;
 
 	void resetStatistics(void);
 
@@ -131,6 +131,7 @@ protected :
 
 	void _lazy_initialisation(void);
 
+	void _update_debug_overlay(Ogre::RenderTarget::FrameStats const &stats);
 
 	void _draw_fbo_to_screen(void);
 

@@ -161,13 +161,28 @@ vl::Window::hasStereo(void) const
 	return stereo == GL_TRUE;
 }
 
-Ogre::RenderTarget::FrameStats const &
+Ogre::RenderTarget::FrameStats 
 vl::Window::getStatistics(void) const
 {
-	if(_ogre_window)
-	{ return _ogre_window->getStatistics(); }
+	if(!_ogre_window)
+	{ return Ogre::RenderTarget::FrameStats(); }
 
-	return Ogre::RenderTarget::FrameStats();
+	/// @todo should we store the frame stats instead of calculating them here?
+
+	/// Compine the statistics from Window 
+	/// (all viewports that render directly to the window).
+	/// And more specialised channels that render first to FBO.
+	Ogre::RenderTarget::FrameStats stats = _ogre_window->getStatistics();
+
+	/// Append statistics from other than window channels
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		// @todo Batch and triangle counts does not work at all. Always zero.
+		stats.triangleCount += _channels.at(i)->getTriangleCount();
+		stats.batchCount += _channels.at(i)->getBatchCount();
+	}
+
+	return stats;
 }
 
 void
@@ -175,6 +190,11 @@ vl::Window::resetStatistics(void)
 {
 	if(_ogre_window)
 	{ _ogre_window->resetStatistics(); }
+
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		_channels.at(i)->resetStatistics();
+	}
 }
 
 /// ------------------------ Public OIS Callbacks ------------------------------
@@ -396,18 +416,6 @@ vl::Window::draw(void)
 
 	_ogre_window->_beginUpdate();
 
-	Ogre::RenderTarget::FrameStats stats;
-	stats.lastFPS = 0;
-	stats.avgFPS = 0;
-	stats.bestFPS = 0;
-	stats.worstFPS = 0;
-	stats.bestFrameTime = 0;
-	stats.worstFrameTime = 0;
-	stats.triangleCount = 0;
-	stats.batchCount = 0;
-
-	stats.lastFPS = _ogre_window->getLastFPS();
-
 	// Draw to screen
 	for(size_t i = 0; i < _channels.size(); ++i)
 	{
@@ -417,21 +425,19 @@ vl::Window::draw(void)
 		// instead it is overlayed on the Window.
 		// For post screen effects and distribution of the Channels this shouldn't
 		// be a problem, but we should tread carefully anyway.
+		//
+		// @todo
+		// Do we want to overlay the GUI for all Channels
+		// Probably not, but how do we decide it?
+		// And should we bind the GUI to Channel?
 		if(_renderer->getGui())
 		{ _renderer->getGui()->update(); }
-
-		// @todo Batch and triangle counts does not work at all. Always zero.
-		stats.triangleCount += _channels.at(i)->getTriangleCount();
-		stats.batchCount += _channels.at(i)->getBatchCount();
-	}
-
-	if(_tray_mgr)
-	{
-		_tray_mgr->update(stats);
-		_tray_mgr->frameRenderingQueued(Ogre::FrameEvent());
 	}
 
 	_ogre_window->_endUpdate();
+
+	/// @todo how does this work with stereo rendering?
+	_update_debug_overlay(getStatistics());
 }
 
 
@@ -466,7 +472,7 @@ vl::Window::resize(int w, int h)
 	// @todo does not handle correctly multiple channels
 	if(_channels.size() > 0)
 	{
-		_channels.at(0)->camera.getFrustum().setAspect(vl::scalar(w)/vl::scalar(h));
+		_channels.at(0)->getCamera().getFrustum().setAspect(vl::scalar(w)/vl::scalar(h));
 	}
 }
 
@@ -600,17 +606,17 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	_channels.push_back(channel);
 
 	/// Set frustum
-	channel->camera.getFrustum().setWall(wall);
-	channel->camera.getFrustum().setFov(Ogre::Degree(projection.fov));
+	channel->getCamera().getFrustum().setWall(wall);
+	channel->getCamera().getFrustum().setFov(Ogre::Degree(projection.fov));
 	if(projection.perspective_type == vl::config::Projection::FOV)
 	{
 		std::clog << "Setting channel " << channel->getName() << " to use FOV frustum." << std::endl;
-		channel->camera.getFrustum().setType(Frustum::FOV);
+		channel->getCamera().getFrustum().setType(Frustum::FOV);
 	}
 	else
 	{
 		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
-		channel->camera.getFrustum().setType(Frustum::WALL);
+		channel->getCamera().getFrustum().setType(Frustum::WALL);
 	}
 
 	channel->setStereoEyeCfg(stereo_cfg);
@@ -709,5 +715,14 @@ vl::Window::_lazy_initialisation(void)
 		_tray_mgr = new OgreBites::SdkTrayManager(name, _ogre_window, _mouse);
 		_tray_mgr->showFrameStats(OgreBites::TL_BOTTOMRIGHT);
 		_tray_mgr->hideCursor();
+	}
+}
+
+void
+vl::Window::_update_debug_overlay(Ogre::RenderTarget::FrameStats const &stats)
+{
+	if(_tray_mgr)
+	{
+		_tray_mgr->update(stats);
 	}
 }

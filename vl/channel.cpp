@@ -33,18 +33,18 @@
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
 		RENDER_MODE rm, uint32_t fsaa)
 	: _name(config.name)
-	, camera()
-	, viewport(view)
+	, _camera()
+	, _viewport(view)
 	, _fbo(0)
 	, _fsaa(fsaa)
 	, _stereo_eye_cfg(HS_UNDEFINED)
 	, _render_mode(rm)
 	, _mrt(0)
 {
-	assert(viewport);
+	assert(_viewport);
  
-	viewport->setBackgroundColour(config.background_colour);
-	viewport->setAutoUpdated(false);
+	_viewport->setBackgroundColour(config.background_colour);
+	_viewport->setAutoUpdated(false);
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;
 }
@@ -120,23 +120,21 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	
 	Ogre::Viewport *view = _mrt->addViewport((Ogre::Camera *)camera->getNative());
 	// Overlays and Sky need to be rendered using forward renderer
-	//view->setClearEveryFrame(true);
 	view->setOverlaysEnabled(false);
 	view->setSkiesEnabled(false);
-	view->setAutoUpdated(false);
 	// Needs the scene mask without lights
 	view->setVisibilityMask(_get_scene_mask());
-	view->setBackgroundColour(viewport->getBackgroundColour());
+	view->setBackgroundColour(_viewport->getBackgroundColour());
 	view->setMaterialScheme("Deferred");
 
 	// Set screen viewport attributes
 	// Needs both screen and light mask because we are doing lighting
 	// in this pass.
-	viewport->setVisibilityMask(_get_window_mask() | _get_light_mask());
+	_viewport->setVisibilityMask(_get_window_mask() | _get_light_mask());
 	// Overlays and Sky need to be rendered using forward renderer
 	//viewport->setShadowsEnabled(false);
-	viewport->setSkiesEnabled(true);
-	viewport->setOverlaysEnabled(true);
+	_viewport->setSkiesEnabled(true);
+	_viewport->setOverlaysEnabled(true);
 	// @todo there is a possibility for selecting material scheme on the viewport
 
 	// Create camera that is not movable for rendering 2D screens
@@ -146,7 +144,7 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	_rtt_camera = sm->createCamera(camera_name);
 	_rtt_camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
 
-	viewport->setCamera(_rtt_camera);
+	_viewport->setCamera(_rtt_camera);
 }
 
 /// nop if null parameter is passed here
@@ -195,8 +193,8 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	// @todo viewport camera should only be set if we are rendering directly to screen
 	// for now FBO does not have separate camera as it should
 	// instead it is using view masking.
-	camera.setCamera(cam);
-	viewport->setCamera(og_cam);
+	_camera.setCamera(cam);
+	_viewport->setCamera(og_cam);
 
 	if(_render_mode == RM_FBO)
 	{
@@ -217,19 +215,17 @@ vl::Channel::update(void)
 	if(!_player)
 	{ return; }
 
-	camera.setHead(_player->getHeadTransform());
+	_camera.setHead(_player->getHeadTransform());
 
 	/// @todo these shouldn't be copied at every frame use the distribution
 	/// system to distribute the Frustum.
-	camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
-	camera.setIPD(_player->getIPD());
+	_camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
+	_camera.setIPD(_player->getIPD());
 
 	if(_render_mode == RM_FBO)
 	{ _render_to_fbo(); }
 	else if(_render_mode == RM_DEFERRED)
-	{
-		_deferred_geometry_pass();
-	}
+	{ _deferred_geometry_pass(); }
 }
 
 void
@@ -260,11 +256,9 @@ vl::Channel::draw(void)
 		glDrawBuffer(GL_BACK);
 	}
 
-	assert(camera.getCamera());
-	
 	// Camera only needs to be updated if we are rendering directly to screen.
 	if(_render_mode == RM_WINDOW)
-	{ camera.update(_stereo_eye_cfg); }
+	{ _camera.update(_stereo_eye_cfg); }
 	else if(_render_mode == RM_DEFERRED)
 	{
 		// Does not do anything at the moment
@@ -279,7 +273,9 @@ vl::Channel::draw(void)
 		//_rtt_camera->setOrientation(_player->getCamera()->getWorldOrientation());
 	}
 
-	viewport->update();
+	// Must be using this stupid syntax for
+	// keeping track of the batches and triangles
+	_viewport->getTarget()->_updateViewport(_viewport, true);
 }
 
 
@@ -288,35 +284,65 @@ vl::Channel::getLastFPS(void) const
 {
 	if(_fbo)
 	{ return _fbo->getLastFPS(); }
+	else if(_mrt)
+	{ return _mrt->getLastFPS(); }
 	else
 	{
-		assert(viewport->getTarget());
-		return viewport->getTarget()->getLastFPS();
+		assert(_viewport->getTarget());
+		return _viewport->getTarget()->getLastFPS();
 	}
 }
 
 size_t
 vl::Channel::getTriangleCount(void) const
 {
-	if(_fbo)
-	{ return _fbo->getTriangleCount(); }
-	else
+	switch(_render_mode)
 	{
-		assert(viewport->getTarget());
-		return viewport->getTarget()->getTriangleCount();
+		case RM_FBO: 
+			assert(_fbo);
+			return _fbo->getTriangleCount();
+		case RM_DEFERRED: 
+			assert(_mrt);
+			return _mrt->getTriangleCount();
+		default:
+			return 0;
 	}
 }
 
 size_t
 vl::Channel::getBatchCount(void) const
 {
-
-	if(_fbo)
-	{ return _fbo->getBatchCount(); }
-	else
+	/// Deferred rendering needs both viewport and mrt
+	/// Because skies and overlays are not deferred
+	///
+	/// FBO needs almost exculisively the FBO stats
+	/// Because only one quad is rendered outside of the FBO
+	switch(_render_mode)
 	{
-		assert(viewport->getTarget());
-		return viewport->getTarget()->getBatchCount();
+		case RM_FBO: 
+			assert(_fbo);
+			return _fbo->getBatchCount();
+		case RM_DEFERRED: 
+			assert(_mrt);
+			return _mrt->getBatchCount();
+		default:
+			return 0;
+	}
+}
+
+void
+vl::Channel::resetStatistics(void)
+{
+	switch(_render_mode)
+	{
+		case RM_FBO: 
+			if(_fbo)
+			{ _fbo->resetStatistics(); }
+			break;
+		case RM_DEFERRED: 
+			if(_mrt)
+			{ _mrt->resetStatistics(); }
+			break;
 	}
 }
 
@@ -324,34 +350,19 @@ vl::Channel::getBatchCount(void) const
 void
 vl::Channel::_render_to_fbo(void)
 {
-	// @todo when this is working with stereo we can replace with auto updating
-	// the whole FBO
-	// remove _begin and _end update, viewport updating and separate swapBuffers.
-	_fbo->_beginUpdate();
-	assert(camera.getCamera());
-	assert(_fbo->getViewport(0));
+	assert(_fbo);
 
-	camera.update(_stereo_eye_cfg);
-	_fbo->getViewport(0)->update();
-	// @todo should swap buffers be here or after _endUpdate?
-	_fbo->swapBuffers();
-
-	_fbo->_endUpdate();
+	_camera.update(_stereo_eye_cfg);
+	_fbo->update();
 }
 
 void
 vl::Channel::_deferred_geometry_pass(void)
 {
 	assert(_mrt);
-	// @todo is there something special about this?
-	_mrt->_beginUpdate();
 
-	camera.update(_stereo_eye_cfg);
-	_mrt->getViewport(0)->update(); //update();
-
-	_mrt->_endUpdate();
-
-	_mrt->swapBuffers();
+	_camera.update(_stereo_eye_cfg);
+	_mrt->update();
 }
 
 void
@@ -406,24 +417,23 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	/// Create viewport, necessary for FBO
 	Ogre::Viewport *view = _fbo->addViewport((Ogre::Camera *)camera->getNative());
 	assert(view);
-	view->setBackgroundColour(viewport->getBackgroundColour());
+	view->setBackgroundColour(_viewport->getBackgroundColour());
 	// Needs the scene mask
 	view->setVisibilityMask(_get_fbo_mask());
 	view->setClearEveryFrame(true, Ogre::FBT_COLOUR|Ogre::FBT_DEPTH);
 
 	// Implementation specifics for FBO rendering
 	_fbo->setAutoUpdated (false);
-	view->setAutoUpdated(false);
 
 	_create_screen_quad(name, material_name);
 
 	// Set viewport attributes
 	// @todo there is a possibility to use material scheme in the viewport
 	// this could help us with deferred and forward rendering selection
-	viewport->setVisibilityMask(_get_window_mask());
-	viewport->setShadowsEnabled(false);
-	viewport->setSkiesEnabled(false);
-	viewport->setOverlaysEnabled(false);
+	_viewport->setVisibilityMask(_get_window_mask());
+	_viewport->setShadowsEnabled(false);
+	_viewport->setSkiesEnabled(false);
+	_viewport->setOverlaysEnabled(false);
 
 	// @todo we should use a separate default camera for FBO
 	// not one with all the VIEW and PROJECTION modifications we use for
@@ -461,7 +471,7 @@ vl::Channel::_create_fbo(vl::CameraPtr camera, std::string const &name, Ogre::Pi
 	// so do not check the texture size here. Use an OpenGL debugger instead.
 	Ogre::TexturePtr fbo_texture = Ogre::TextureManager::getSingleton()
 		.createManual(fbo_tex_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
-				Ogre::TEX_TYPE_2D, viewport->getActualWidth(), viewport->getActualHeight(), 
+				Ogre::TEX_TYPE_2D, _viewport->getActualWidth(), _viewport->getActualHeight(), 
 				0, pf, Ogre::TU_RENDERTARGET, 0, false, _fsaa);
 	_fbo_textures.push_back(fbo_texture);
 

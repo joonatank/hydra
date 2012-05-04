@@ -55,9 +55,6 @@ public:
 
 	void draw(void);
 
-	StereoCamera camera;
-	Ogre::Viewport *viewport;
-
 	STEREO_EYE getStereoEyeCfg(void) const
 	{ return _stereo_eye_cfg; }
 
@@ -75,9 +72,23 @@ public:
 	/// Per frame statistics
 	vl::scalar getLastFPS(void) const;
 
+	/// @brief returns the number of triangles rendered in a frame
+	/// For window targets this returns zero intentionally because
+	/// windows can't provide statistics per viewport.
 	size_t getTriangleCount(void) const;
 
+	/// @brief returns the number of batches rendered in a frame
+	/// For window targets this returns zero intentionally because
+	/// windows can't provide statistics per viewport.
 	size_t getBatchCount(void) const;
+
+	void resetStatistics(void);
+
+	StereoCamera &getCamera(void)
+	{ return _camera; }
+
+	Ogre::Viewport *getWindowViewport(void)
+	{ return _viewport; }
 
 	/// Methods
 private :
@@ -104,7 +115,7 @@ private :
 	{
 		// minimum 1<<2 because 1<<0 is the scene mask
 		// and 1<<1 is the light mask
-		return 1 << (viewport->getZOrder()+2); 
+		return 1 << (_viewport->getZOrder()+2); 
 	}
 
 	uint32_t _get_scene_mask(void)
@@ -120,6 +131,9 @@ private :
 	/// Data
 private:
 	std::string _name;
+
+	StereoCamera _camera;
+	Ogre::Viewport *_viewport;
 
 	RENDER_MODE _render_mode;
 	uint32_t _fsaa;

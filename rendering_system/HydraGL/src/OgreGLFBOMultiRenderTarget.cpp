@@ -117,6 +117,8 @@ Ogre::GLFBOMultiRenderTarget::_detachDepthBuffer()
 void
 Ogre::GLFBOMultiRenderTarget::_beginUpdate(void)
 {
+	Ogre::MultiRenderTarget::_beginUpdate();
+
 	// Bind the frame buffer
 	fbo.bind();
 }
@@ -128,4 +130,6 @@ Ogre::GLFBOMultiRenderTarget::_endUpdate(void)
 	// This is because we want the window framebuffer to be restored
 	// and Ogre does not unbind framebuffers when they are no longer used.
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	Ogre::MultiRenderTarget::_endUpdate();
 }

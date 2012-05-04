@@ -314,12 +314,12 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 					// @todo fix callback with a signal
 					_gui.reset(new vl::gui::GUI(this, id));
 					if(_windows.size() == 0 || _windows.at(0)->getChannels().size() == 0
-						|| _windows.at(0)->getChannels().at(0)->viewport == 0)
+						|| _windows.at(0)->getChannels().at(0)->getWindowViewport() == 0)
 					{
 						std::string err_msg("Something really funny with Viewports when creating GUI");
 						BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg)); 
 					}
-					_gui->initGUI( _windows.at(0)->getChannels().at(0)->viewport );
+					_gui->initGUI( _windows.at(0)->getChannels().at(0)->getWindowViewport() );
 				}
 				else
 				{
