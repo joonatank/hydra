@@ -696,7 +696,6 @@ vl::Window::_printInputInformation(void)
 		<< std::endl;
 
 	// List all devices
-	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
@@ -709,10 +708,11 @@ vl::Window::_lazy_initialisation(void)
 	if(!_tray_mgr && _renderer->isDebugOverlayEnabled())
 	{
 		std::string name = "InterfaceName/" + _name;
-		assert(_ogre_window && _mouse);
 		Ogre::FontManager::getSingleton().getByName("SdkTrays/Caption")->load();
 		Ogre::FontManager::getSingleton().getByName("SdkTrays/Value")->load();
-		_tray_mgr = new OgreBites::SdkTrayManager(name, _ogre_window, _mouse);
+		// Passing NULL to window is allowed because we don't use the Ogre Rendering loop
+		// Also after some modifications we can pass zero for mouse also.
+		_tray_mgr = new OgreBites::SdkTrayManager(name, 0, 0);
 		_tray_mgr->showFrameStats(OgreBites::TL_BOTTOMRIGHT);
 		_tray_mgr->hideCursor();
 	}
