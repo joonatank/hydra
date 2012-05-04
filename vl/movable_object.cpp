@@ -166,7 +166,15 @@ vl::MovableObject::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 
 		// Possible to avoid rendering them to the window directly
 		if(getNative())
-		{ getNative()->setVisibilityFlags(1); }
+		{
+			// When using Deferred shading lights need to be in the second pass
+			// while other objects are in the first.
+			// For other renderers we render both in the first pass.
+			if(getTypeName() == "Light")
+			{ getNative()->setVisibilityFlags(1<<1); }
+			else
+			{ getNative()->setVisibilityFlags(1); }
+		}
 
 		_transformation_updated();
 	}

@@ -829,7 +829,7 @@ vl::config::EnvSerializer::processProgram(rapidxml::xml_node<> *xml_node)
 void
 vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::config::Renderer &renderer)
 {
-	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("surface");
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
 	if(attrib)
 	{
 		std::string type(attrib->value());
@@ -837,6 +837,10 @@ vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::c
 		if(type == "fbo")
 		{
 			renderer.type = Renderer::FBO;
+		}
+		else if(type == "deferred")
+		{
+			renderer.type = Renderer::DEFERRED;
 		}
 		else
 		{

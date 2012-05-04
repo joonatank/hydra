@@ -588,11 +588,15 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 
-	bool use_fbo = false;
+	RENDER_MODE rend_mode;
 	if(_renderer_type == vl::config::Renderer::FBO)
-	{ use_fbo = true; }
+	{ rend_mode = RM_FBO; }
+	else if(_renderer_type == vl::config::Renderer::DEFERRED)
+	{ rend_mode = RM_DEFERRED; }
+	else
+	{ rend_mode = RM_WINDOW; }
 
-	Channel *channel = new Channel(channel_config, view, use_fbo, fsaa);
+	Channel *channel = new Channel(channel_config, view, rend_mode, fsaa);
 	_channels.push_back(channel);
 
 	/// Set frustum

@@ -48,6 +48,12 @@ namespace Ogre {
 		virtual bool attachDepthBuffer( DepthBuffer *depthBuffer );
 		virtual void detachDepthBuffer();
 		virtual void _detachDepthBuffer();
+
+		// Virtual overrides from RenderTarget
+		// We need to correctly bind and unbind the target
+		void _beginUpdate(void);
+		void _endUpdate(void);
+
 	private:
 		virtual void bindSurfaceImpl(size_t attachment, RenderTexture *target);
 		virtual void unbindSurfaceImpl(size_t attachment); 

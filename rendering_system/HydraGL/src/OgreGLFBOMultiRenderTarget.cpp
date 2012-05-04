@@ -34,81 +34,98 @@ THE SOFTWARE.
 #include "OgreGLPixelFormat.h"
 #include "OgreGLHardwarePixelBuffer.h"
 
-namespace Ogre {
+Ogre::GLFBOMultiRenderTarget::GLFBOMultiRenderTarget(Ogre::GLFBOManager *manager, const Ogre::String &name):
+	MultiRenderTarget(name),
+	fbo(manager, 0 /* TODO: multisampling on MRTs? */)
+{
+}
+//-----------------------------------------------------------------------------
+Ogre::GLFBOMultiRenderTarget::~GLFBOMultiRenderTarget()
+{
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::bindSurfaceImpl(size_t attachment, RenderTexture *target)
 
-	GLFBOMultiRenderTarget::GLFBOMultiRenderTarget(GLFBOManager *manager, const String &name):
-		MultiRenderTarget(name),
-		fbo(manager, 0 /* TODO: multisampling on MRTs? */)
-	{
-	}
-	GLFBOMultiRenderTarget::~GLFBOMultiRenderTarget()
-	{
-	}
+{
 
-
-	void GLFBOMultiRenderTarget::bindSurfaceImpl(size_t attachment, RenderTexture *target)
-
-	{
-
-		/// Check if the render target is in the rendertarget->FBO map
-        GLFrameBufferObject *fbobj = 0;
-        target->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbobj);
-		assert(fbobj);
-		fbo.bindSurface(attachment, fbobj->getSurface(0));
-
+	/// Check if the render target is in the rendertarget->FBO map
+    GLFrameBufferObject *fbobj = 0;
+    target->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbobj);
+	assert(fbobj);
+	fbo.bindSurface(attachment, fbobj->getSurface(0));
 
 
-		// Initialise?
+
+	// Initialise?
 
 		
 
-		// Set width and height
+	// Set width and height
 
-		mWidth = fbo.getWidth();
+	mWidth = fbo.getWidth();
 
-		mHeight = fbo.getHeight();
+	mHeight = fbo.getHeight();
 
-	}
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::unbindSurfaceImpl(size_t attachment)
+{
+	fbo.unbindSurface(attachment);
 
+	// Set width and height
 
+	mWidth = fbo.getWidth();
 
-	void GLFBOMultiRenderTarget::unbindSurfaceImpl(size_t attachment)
-	{
-		fbo.unbindSurface(attachment);
+	mHeight = fbo.getHeight();
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::getCustomAttribute( const String& name, void *pData )
+{
+	if( name == GLRenderTexture::CustomAttributeString_FBO )
+    {
+        *static_cast<GLFrameBufferObject **>(pData) = &fbo;
+    }
+}
+//-----------------------------------------------------------------------------
+bool
+Ogre::GLFBOMultiRenderTarget::attachDepthBuffer( DepthBuffer *depthBuffer )
+{
+	bool result;
+	if( (result = MultiRenderTarget::attachDepthBuffer( depthBuffer )) )
+		fbo.attachDepthBuffer( depthBuffer );
 
-		// Set width and height
-
-		mWidth = fbo.getWidth();
-
-		mHeight = fbo.getHeight();
-	}
-
-	void GLFBOMultiRenderTarget::getCustomAttribute( const String& name, void *pData )
-	{
-		if( name == GLRenderTexture::CustomAttributeString_FBO )
-        {
-            *static_cast<GLFrameBufferObject **>(pData) = &fbo;
-        }
-	}
-	//-----------------------------------------------------------------------------
-	bool GLFBOMultiRenderTarget::attachDepthBuffer( DepthBuffer *depthBuffer )
-	{
-		bool result;
-		if( (result = MultiRenderTarget::attachDepthBuffer( depthBuffer )) )
-			fbo.attachDepthBuffer( depthBuffer );
-
-		return result;
-	}
-	//-----------------------------------------------------------------------------
-	void GLFBOMultiRenderTarget::detachDepthBuffer()
-	{
-		fbo.detachDepthBuffer();
-		MultiRenderTarget::detachDepthBuffer();
-	}
-	//-----------------------------------------------------------------------------
-	void GLFBOMultiRenderTarget::_detachDepthBuffer()
-	{
-		fbo.detachDepthBuffer();
-		MultiRenderTarget::_detachDepthBuffer();
-	}
+	return result;
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::detachDepthBuffer()
+{
+	fbo.detachDepthBuffer();
+	MultiRenderTarget::detachDepthBuffer();
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::_detachDepthBuffer()
+{
+	fbo.detachDepthBuffer();
+	MultiRenderTarget::_detachDepthBuffer();
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::_beginUpdate(void)
+{
+	// Bind the frame buffer
+	fbo.bind();
+}
+//-----------------------------------------------------------------------------
+void
+Ogre::GLFBOMultiRenderTarget::_endUpdate(void)
+{
+	// Completely unbind the Framebuffer
+	// This is because we want the window framebuffer to be restored
+	// and Ogre does not unbind framebuffers when they are no longer used.
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }

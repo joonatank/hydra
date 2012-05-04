@@ -38,6 +38,7 @@ material bling_phong/normal_map/shadows/multi_pass
 
 	technique
 	{
+		scheme "Forward"
 		// ambient pass
 		// Do not name the passes, when using inheritance it's ok to reference
 		// a parents pass with an index. Names are not ok.
@@ -91,7 +92,7 @@ material bling_phong/normal_map/shadows/multi_pass
 			// doesn't work if they are in the base_material for some reason
 			// Don't change the order, because textures are mapped with index
 			// that is gotten from the order of the texture_units
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
@@ -102,7 +103,7 @@ material bling_phong/normal_map/shadows/multi_pass
 				texture white.tga
 			}
 
-			texture_unit normalMap
+			texture_unit normal_map
 			{
 				texture flat_NM.tga
 			}
@@ -113,23 +114,6 @@ material bling_phong/normal_map/shadows/multi_pass
 				content_type shadow
 				tex_address_mode clamp
 				filtering none
-			}
-		}
-	}
-	// Fallback to fixed functions for OpenGL 2 cards
-	technique FFP
-	{
-		pass
-		{
-			ambient $ambientCol
-			emissive $emissiveCol
-			diffuse $diffuseCol
-			specular $specularCol $shininess
-
-			texture_unit diffuseTexture
-			{
-				tex_address_mode wrap
-				texture white.tga
 			}
 		}
 	}
@@ -148,6 +132,8 @@ material bling_phong/shadows/multi_pass
 
 	technique
 	{
+		scheme "Forward"
+
 		// ambient pass
 		// Do not name the passes, when using inheritance it's ok to reference
 		// a parents pass with an index. Names are not ok.
@@ -201,7 +187,7 @@ material bling_phong/shadows/multi_pass
 			// doesn't work if they are in the base_material for some reason
 			// Don't change the order, because textures are mapped with index
 			// that is gotten from the order of the texture_units
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
@@ -221,17 +207,29 @@ material bling_phong/shadows/multi_pass
 			}
 		}
 	}
-	// Fallback to fixed functions for OpenGL 2 cards
-	technique FFP
+	technique
 	{
+		scheme "Deferred"
+		// Geometry pass
 		pass
 		{
+			//lighting off
+			//depth_write on
+
+			vertex_program_ref defered_shading/geometry_pass/vp
+			{
+			}
+ 
+			fragment_program_ref defered_shading/geometry_pass/fp
+			{
+			}
+
+			// @todo add texture units
 			ambient $ambientCol
 			emissive $emissiveCol
 			diffuse $diffuseCol
 			specular $specularCol $shininess
-
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
@@ -301,7 +299,7 @@ material bling_phong/multi_pass
 			// doesn't work if they are in the base_material for some reason
 			// Don't change the order, because textures are mapped with index
 			// that is gotten from the order of the texture_units
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
@@ -313,25 +311,6 @@ material bling_phong/multi_pass
 			}
 		}	// pass
 	}	// technique
-	
-	// Fallback to fixed functions for OpenGL 2 cards
-	technique FFP
-	{
-		pass
-		{
-			ambient $ambientCol
-			emissive $emissiveCol
-			diffuse $diffuseCol
-			specular $specularCol $shininess
-
-			texture_unit diffuseTexture
-			{
-				tex_address_mode wrap
-				texture white.tga
-			}
-
-		}	// pass
-	}	// technique FFP
 }
 
 /// Shadows don't work with single pass shader for some reason
@@ -372,7 +351,7 @@ material bling_phong/single_pass
 			// doesn't work if they are in the base_material for some reason
 			// Don't change the order, because textures are mapped with index
 			// that is gotten from the order of the texture_units
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga

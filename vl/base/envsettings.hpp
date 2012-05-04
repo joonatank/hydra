@@ -182,6 +182,7 @@ struct HYDRA_API Renderer
 	{
 		WINDOW,
 		FBO,
+		DEFERRED,
 	};
 
 	Renderer(void)
