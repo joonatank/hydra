@@ -65,7 +65,8 @@ vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionIn
 	, _mass(0)
 	, _body_damping(info.body_damping)
 	, _spring(info.spring)
-	, _disable_internal_collisions(info.disable_collisions)
+	, _disable_collisions(info.disable_collisions)
+	, _disable_internal_collisions(info.disable_internal_collisions)
 	, _use_instancing(info.use_instancing)
 	, _inertia(Vector3(0, 0, 0))
 	, _lower_lim(info.lower_lim)
@@ -443,7 +444,7 @@ vl::physics::Tube::create(void)
 		// Needs to be here so that it will not be deactivated
 		body->setUserControlled(true);
 		body->setDamping(_body_damping, _body_damping);
-		body->disableCollisions(_disable_internal_collisions);
+		body->disableCollisions(_disable_collisions);
 		body0 = body;
 
 		// Some of the casting might go wrong 

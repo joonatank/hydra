@@ -53,6 +53,7 @@ public :
 			, fixing_upper_lim(Vector3(-1, -1, -1))
 			, spring(true)
 			, disable_collisions(false)
+			, disable_internal_collisions(true)
 			, inertia_factor(1)
 			, body_damping(0)
 			, bending_radius(-1)
@@ -83,6 +84,7 @@ public :
 
 		bool spring;
 		bool disable_collisions;
+		bool disable_internal_collisions;
 
 		// Factor to multiply the inertia calculated for the tube shapes
 		vl::scalar inertia_factor;
@@ -197,6 +199,9 @@ public :
 	/// @brief get all fixing points except the start and end point
 	ConstraintList const &getFixings(void) const;
 
+	RigidBodyList const &getBodies(void) const
+	{ return _bodies; }
+
 private :
 	/// Used for naming purposes
 	static size_t n_tubes;
@@ -238,6 +243,7 @@ private :
 	vl::scalar _body_damping;
 	bool _spring;
 	bool _disable_internal_collisions;
+	bool _disable_collisions;
 	bool _use_instancing;
 
 	Ogre::Vector3 _inertia;
