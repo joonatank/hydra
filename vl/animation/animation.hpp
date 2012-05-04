@@ -100,6 +100,11 @@ public :
 	/// Modifies the current child index used by getNextChild.
 	LinkRefPtr getChild(size_t i = 0);
 
+	LinkRefPtr getChild(size_t i = 0) const;
+
+	size_t getNChildren(void) const
+	{ return _childs.size(); }
+
 	/// @brief get the local transformation
 	/// @return Transformation of the Node in local coordinates
 	/// Only const version is provided because we need to manage the old
@@ -108,7 +113,8 @@ public :
 
 	/// @brief set the local transformation
 	/// @param t a new Transformation for the Node in local coordinates
-	void setTransform(Transform const &t);
+	/// @param reset_memory resets the transformation memory for collision detection
+	void setTransform(Transform const &t, bool reset_memory = false);
 
 	/// @brief get the current world transformation
 	/// @return Transformation of the Node in world coordinates
@@ -116,7 +122,8 @@ public :
 	
 	/// @brief set the current world transformation
 	/// @param t a new Transformation for the Node in world coordinates
-	void setWorldTransform(Transform const &t);
+	/// @param reset_memory resets the transformation memory for collision detection
+	void setWorldTransform(Transform const &t, bool reset_memory = false);
 
 	/// @brief collision detection helper
 	void popLastTransform(void);

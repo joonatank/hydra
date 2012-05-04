@@ -6,12 +6,7 @@
  *	@file physics_world_bullet.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
- *
+ *	Version 0.4
  */
 
 /*
@@ -68,7 +63,9 @@ vl::physics::BulletWorld::step(vl::time const &time_step)
 	// Small internal timestep is necessary for small objects < 100mm
 	_dynamicsWorld->stepSimulation((double)time_step, _solver_params.max_sub_steps, _solver_params.internal_time_step);
 
-	// update kinematic bodies
+	// Check for collisions
+	// here instead of a tick callback because we only store the transformations
+	// once every frame.
 	_collision_feedback();
 }
 
@@ -108,7 +105,17 @@ vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::R
 	// kinematic objects need to collide with static objects
 	if(kinematic)
 	{
-		_dynamicsWorld->addRigidBody(b->getNative(), btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::DefaultFilter|btBroadphaseProxy::StaticFilter);
+		// Use group and mask to control collisions
+		// we want collisions to other kinematic objects (CharacterFilter)
+		// Static objects (StaticFilter)
+		// and dynamics objects (DefaultFilter)
+		//
+		// @todo
+		// Disabled kinematic object collisions for now because there are
+		// some problems with it.
+		short group = btBroadphaseProxy::CharacterFilter;
+		short mask = btBroadphaseProxy::DefaultFilter|btBroadphaseProxy::StaticFilter; //|btBroadphaseProxy::CharacterFilter;
+		_dynamicsWorld->addRigidBody(b->getNative(), group, mask);
 		body->enableKinematicObject(true);
 	}
 	else
@@ -161,14 +168,20 @@ vl::physics::BulletWorld::_collision_feedback(void)
 		// We are only interested in collisions between kinematic objects (KinematicBody)
 		// and static objects.
 		// Static - Static collisions should never happen anyway.
-		// Kinematic - Kinematic collisions should not happen if the flags are correctly set.
-		if(obA->isStaticOrKinematicObject() && obB->isStaticOrKinematicObject())
+		// Kinematic - Kinematic collisions are disabled using collision flags
+		// because there is some problems with them for now.
+		//
+		// We need to check the collision flags from bt objects because we use them to
+		// disable collision in bullet dynamics objects against our kinematic objects.
+		bool aColEnabled = !(obA->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		bool bColEnabled = !(obB->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		if(obA->isStaticOrKinematicObject() && obB->isStaticOrKinematicObject() && aColEnabled && bColEnabled)
 		{
 			int numContacts = contactManifold->getNumContacts();
 			for(int j=0; j < numContacts; ++j)
 			{
 				btManifoldPoint& pt = contactManifold->getContactPoint(j);
-				if (pt.getDistance()<0.f)
+				if(pt.getDistance() < 0.f)
 				{
 					const btVector3& ptA = pt.getPositionWorldOnA();
 					const btVector3& ptB = pt.getPositionWorldOnB();
@@ -176,13 +189,39 @@ vl::physics::BulletWorld::_collision_feedback(void)
 
 					// Update the motion states so that kinematic objects can copy them back
 					KinematicBody *bA = (KinematicBody *)obA->getUserPointer();
-					if(bA && bA->isCollisionsEnabled())
-					{
-						bA->popLastTransform();
-					}
-				
 					KinematicBody *bB = (KinematicBody *)obB->getUserPointer();
-					if(bB && bB->isCollisionsEnabled())
+
+					// Only pop the first body transformation if both are kinematic
+					// @todo this might need ignoring all collisions between kinematic objects
+					// or ignoring them when directly linked.
+					// @todo we should have a flag for these that could be set
+					// because the simulation needs modifications to either collision models
+					// or kinematics and setting collisions flags on objects because of this.
+					if( bA && bB)
+					{
+						// Kinematic-Kinematic collisions
+
+						/// @todo where this checking belongs?
+						/// Here because this is the only place where they are both valid
+						if(bB->isCollisionsEnabled() && bA->isCollisionsEnabled() )
+						{
+							// @todo here we need to check if the two parts are joined or not
+							// because of collision model inaccuracies joined objects should never
+							// collide (directly joined that is).
+							/*
+							if(!bA->isJoined(bB))
+							{
+								std::clog << "Collision between non joined bodies " << bA->getName()
+									<< " and " << bB->getName() << std::endl;
+							}
+							*/
+						}
+					}
+					else if(bA && bA->isCollisionsEnabled())
+					{	
+						bA->popLastTransform();
+					}			
+					else if(bB && bB->isCollisionsEnabled())
 					{
 						bB->popLastTransform();
 					}

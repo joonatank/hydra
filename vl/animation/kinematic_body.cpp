@@ -92,7 +92,7 @@ vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 {
 	assert(_node);
 	_dirty_transformation = true;
-	_node->setWorldTransform(trans);
+	_node->setWorldTransform(trans, true);
 //	_transformed_cb(trans);
 }
 

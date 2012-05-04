@@ -99,14 +99,25 @@ vl::animation::Node::getChild(size_t i)
 	return LinkRefPtr();
 }
 
+vl::animation::LinkRefPtr
+vl::animation::Node::getChild(size_t i) const
+{
+	if(i < _childs.size())
+	{
+		return _childs.at(i);
+	}
+
+	return LinkRefPtr();
+}
+
 vl::Transform const &
 vl::animation::Node::getTransform(void) const
 { return _transform; }
 
 void
-vl::animation::Node::setTransform(Transform const &t)
+vl::animation::Node::setTransform(Transform const &t, bool reset_memory)
 {
-	_prev_transform = _transform;
+	_prev_transform = reset_memory ? t : _transform;
 	_transform = t;
 }
 
@@ -121,7 +132,7 @@ vl::animation::Node::getWorldTransform(void) const
 }
 
 void
-vl::animation::Node::setWorldTransform(Transform const &t)
+vl::animation::Node::setWorldTransform(Transform const &t, bool reset_memory)
 {
 	Transform wt;
 	// Nodes don't need to have parents
@@ -131,7 +142,7 @@ vl::animation::Node::setWorldTransform(Transform const &t)
 		wt.invert();
 	}
 
-	setTransform(wt*t);
+	setTransform(wt*t, reset_memory);
 }
 
 void

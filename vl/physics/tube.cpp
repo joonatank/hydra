@@ -454,6 +454,13 @@ vl::physics::Tube::create(void)
 		++count;
 	}
 
+	// For integration to our kinematics solver with collision detection
+	// start and end bodies can't have collision detection enabled
+	// real fix would be to automatically position them outside of collision models
+	// or use the collision engine for it but alas not implemented at this point.
+	_start_body->disableCollisions(true);
+	_end_body->disableCollisions(true);
+
 	if(body0->isCollisionsDisabled())
 	{
 		std::clog << "Rigid body collisions disabled." << std::endl;
