@@ -17,9 +17,3 @@ Ogre::GLWindow *Ogre::GLWindow::createWindow(GLSupport &support)
 	return new Win32Window((Win32GLSupport &)support);
 }
 #endif
-
-void
-Ogre::GLWindow::update(bool swapBuffers)
-{
-	RenderWindow::update(swapBuffers);
-}
