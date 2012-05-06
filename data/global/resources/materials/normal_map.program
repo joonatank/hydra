@@ -60,6 +60,7 @@ vertex_program bling_phong_sl_shadows_vs glsl
 {
 	source tangent_space_sl_vs.glsl
 
+	// Turning of Scene range causes the shadows to disappear
 	preprocessor_defines SHADOW_MAP=1,NORMAL_MAP=1,USE_SCENE_RANGE=1
 
 	default_params
@@ -118,6 +119,8 @@ fragment_program bling_phong_sl_shadows_ps glsl
 vertex_program bling_phong_eye_space_sl_shadows_vs glsl
 {
 	source eye_space_sl_vs.glsl
+	// Turning of Scene range causes the shadows to disappear
+	// Also only way to turn of the preprocessor define is to comment it out
 	preprocessor_defines SHADOW_MAP=1,USE_SCENE_RANGE=1
 
 	default_params
