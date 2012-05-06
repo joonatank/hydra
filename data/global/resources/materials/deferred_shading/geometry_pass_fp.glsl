@@ -1,3 +1,21 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2012-05
+//
+// Deferred shading geometric pass vertex program
+//
+// G-buffer (size 384 bits per pixel)
+// 32		32			32			32
+// pos.x	pos.y		pos.z		specular
+// normal.x	normal.y	normal.z	power
+// albedo.r	albedo.g	albedo.b	GA
+//
+// @todo by storing depth we could get 3 times smaller G-buffer
+// 8			8			8			8
+//					depth
+// normal.x					normal.y
+// albedo.r		albedo.g	albedo.b	GA
+// specular		power		xxx			xxx
 
 #version 120
 
@@ -17,7 +35,6 @@ varying vec3 v_normal;
 
 void main()
 {
-	// @todo Probably should move things to screen space here
 	// First world positions
 	float spec = g_surface_specular.x + g_surface_specular.y
 		+ g_surface_specular.z;
@@ -34,12 +51,6 @@ void main()
 	vec4 col = g_surface_diffuse * tex_col;
 	gl_FragData[2] = vec4(col.xyz, global_ambient);
 	// Fourth not needed
-	// FSout.TexCoord = vec3(FSin.TexCoord, 0.0);	
-	/*
-	gl_FragData[0] = vec4(1.0, 0.0, 1.0, 1.0);
-	gl_FragData[1] = vec4(0.0, 1.0, 1.0, 1.0);
-	gl_FragData[2] = vec4(0.5, 0.5, 0.5, 1.0);
-	*/
 }
 
 

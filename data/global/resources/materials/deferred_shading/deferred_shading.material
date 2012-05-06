@@ -47,7 +47,8 @@ material deferred_shading/light_pass
 		// Mhhh the problem was not the named passes
 		pass
 		{
-			//depth_write $depthWrite
+			depth_write off
+			light_clip_planes off
 
 			vertex_program_ref pass_through_vs
 			{

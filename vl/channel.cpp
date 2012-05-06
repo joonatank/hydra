@@ -120,10 +120,20 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	
 	Ogre::Viewport *view = _mrt->addViewport((Ogre::Camera *)camera->getNative());
 	// Overlays and Sky need to be rendered using forward renderer
+	// Also transparent objects need to be rendered using forward renderer
+	// but for those we need to use material schemes or something.
+	// Shadows are rendered here because we need the forward renderer for them.
+	// Ogre's shadow system needs all lights and objects to be present
+	// for the shadow maps to be correct.
+	// Using custom shadow map rendering would solve this issue but
+	// it's an optimisation not a functionality issue.
+	view->setShadowsEnabled(true);
 	view->setOverlaysEnabled(false);
 	view->setSkiesEnabled(false);
 	// Needs the scene mask without lights
-	view->setVisibilityMask(_get_scene_mask());
+	// With lights till we have custom shadow mapping that is rendered
+	// before the geometric pass.
+	view->setVisibilityMask(_get_scene_mask() | _get_light_mask());
 	view->setBackgroundColour(_viewport->getBackgroundColour());
 	view->setMaterialScheme("Deferred");
 
@@ -132,10 +142,11 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	// in this pass.
 	_viewport->setVisibilityMask(_get_window_mask() | _get_light_mask());
 	// Overlays and Sky need to be rendered using forward renderer
-	//viewport->setShadowsEnabled(false);
+	// Overlays are working nicely
+	// @todo skies are not working
+	_viewport->setShadowsEnabled(false);
 	_viewport->setSkiesEnabled(true);
 	_viewport->setOverlaysEnabled(true);
-	// @todo there is a possibility for selecting material scheme on the viewport
 
 	// Create camera that is not movable for rendering 2D screens
 	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
@@ -190,13 +201,16 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	if(cam)
 	{ og_cam = (Ogre::Camera *)cam->getNative(); }
 
+	_camera.setCamera(cam);
+
 	// @todo viewport camera should only be set if we are rendering directly to screen
 	// for now FBO does not have separate camera as it should
 	// instead it is using view masking.
-	_camera.setCamera(cam);
-	_viewport->setCamera(og_cam);
-
-	if(_render_mode == RM_FBO)
+	if(_render_mode == RM_WINDOW)
+	{
+		_viewport->setCamera(og_cam);
+	}
+	else if(_render_mode == RM_FBO)
 	{
 		_set_fbo_camera(cam);
 	}
@@ -261,16 +275,7 @@ vl::Channel::draw(void)
 	{ _camera.update(_stereo_eye_cfg); }
 	else if(_render_mode == RM_DEFERRED)
 	{
-		// Does not do anything at the moment
-		// viewport->update() handles all that.
-		// _deferred_light_pass();
-
-		// @todo this is not proper or useful
-		// we need to expose two custom matrix parameters
-		// one for the shadow camera texture view projection matrix
-		// one for the view matrix used for rendering (camera modelview)
-		//_rtt_camera->setPosition(_player->getCamera()->getWorldPosition());
-		//_rtt_camera->setOrientation(_player->getCamera()->getWorldOrientation());
+		_deferred_light_pass();
 	}
 
 	// Must be using this stupid syntax for
@@ -362,6 +367,7 @@ vl::Channel::_deferred_geometry_pass(void)
 	assert(_mrt);
 
 	_camera.update(_stereo_eye_cfg);
+
 	_mrt->update();
 }
 
@@ -380,6 +386,15 @@ vl::Channel::_deferred_light_pass(void)
 
 	// Don't think there is any need for this function... at least without
 	// the light shape optimisation.
+
+	assert(_fbo_materials.size() > 0);
+	Ogre::Technique *tech = _fbo_materials.at(0)->getBestTechnique();
+	// First pass is the ambient pass
+	Ogre::Pass *pass = tech->getPass(1);
+	Ogre::GpuProgramParametersSharedPtr params = pass->getFragmentProgramParameters();
+	// @todo does this take into account IPD?
+	Ogre::Vector3 const &pos =_camera.getCamera()->getWorldPosition();
+	params->setNamedConstant("g_camera_position", Ogre::Vector4(pos.x, pos.y, pos.z, 1));
 }
 
 
@@ -435,9 +450,14 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera)
 	_viewport->setSkiesEnabled(false);
 	_viewport->setOverlaysEnabled(false);
 
-	// @todo we should use a separate default camera for FBO
-	// not one with all the VIEW and PROJECTION modifications we use for
-	// scene rendering.
+	// Create camera that is not movable for rendering 2D screens
+	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
+	assert(sm);
+	std::string camera_name = getName() + "/rtt_camera";
+	_rtt_camera = sm->createCamera(camera_name);
+	_rtt_camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
+
+	_viewport->setCamera(_rtt_camera);
 }
 
 Ogre::SceneNode *
@@ -445,7 +465,6 @@ vl::Channel::_create_screen_quad(std::string const &name, std::string const &mat
 {
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);
 	quad->setCorners(-1.0f, 1.0f, 1.0f, -1.0f);
-	//quad->setCorners(-1.0f, -1.0f, 1.0f, 1.0f);
 	quad->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
 	quad->setVisibilityFlags(_get_window_mask());
 
@@ -460,7 +479,6 @@ vl::Channel::_create_screen_quad(std::string const &name, std::string const &mat
 	return miniScreenNode;
 }
 
-/// @todo add PixelFormat to parameters
 Ogre::RenderTexture *
 vl::Channel::_create_fbo(vl::CameraPtr camera, std::string const &name, Ogre::PixelFormat pf)
 {

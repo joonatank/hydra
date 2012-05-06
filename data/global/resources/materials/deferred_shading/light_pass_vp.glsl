@@ -1,3 +1,8 @@
+// Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+// Savant Simulators
+// 2012-05
+//
+// Deferred shading light pass vertex program
 
 #version 120
 

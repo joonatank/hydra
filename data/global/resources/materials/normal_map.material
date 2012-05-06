@@ -56,7 +56,7 @@ material bling_phong/normal_map/shadows/multi_pass
 			{
 			}
 
-			texture_unit ambientOcclusionMap
+			texture_unit ao_map 
 			{
 				texture white.tga
 			}
@@ -98,7 +98,7 @@ material bling_phong/normal_map/shadows/multi_pass
 				texture white.tga
 			}
 
-			texture_unit specularMap
+			texture_unit specular_map
 			{
 				texture white.tga
 			}
@@ -115,6 +115,38 @@ material bling_phong/normal_map/shadows/multi_pass
 				tex_address_mode clamp
 				filtering none
 			}
+		}
+	}
+	technique
+	{
+		scheme "Deferred"
+		// Geometry pass
+		pass
+		{
+			//lighting off
+			//depth_write on
+
+			vertex_program_ref defered_shading/geometry_pass/vp
+			{
+			}
+ 
+			fragment_program_ref defered_shading/geometry_pass/fp
+			{
+			}
+
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			texture_unit diffuse_map
+			{
+				tex_address_mode wrap
+				texture white.tga
+			}
+
+			// @todo add normal map
+
+			// @todo add ao map
 		}
 	}
 }
@@ -151,7 +183,7 @@ material bling_phong/shadows/multi_pass
 			{
 			}
 
-			texture_unit ambientOcclusionMap
+			texture_unit ao_map 
 			{
 				texture white.tga
 			}
@@ -193,7 +225,7 @@ material bling_phong/shadows/multi_pass
 				texture white.tga
 			}
 
-			texture_unit specularMap
+			texture_unit specular_map
 			{
 				texture white.tga
 			}
@@ -224,16 +256,18 @@ material bling_phong/shadows/multi_pass
 			{
 			}
 
-			// @todo add texture units
 			ambient $ambientCol
 			emissive $emissiveCol
 			diffuse $diffuseCol
 			specular $specularCol $shininess
+
 			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
 			}
+
+			// @todo add ao map
 		}
 	}
 }
@@ -362,7 +396,7 @@ material bling_phong/single_pass
 			//	texture white.tga
 			//}
 
-			texture_unit ambientOcclusionMap
+			texture_unit ao_map
 			{
 				texture white.tga
 			}
