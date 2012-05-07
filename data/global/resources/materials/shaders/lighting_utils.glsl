@@ -118,7 +118,10 @@ vec4 bling_phong_lighting(vec3 dir_to_light, vec3 dir_to_eye, vec3 normal,
 	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
 
 	if(attenuation == 0.0)
-	{ return colour; }
+	{
+		colour.a = surface_diffuse.a;
+		return colour;
+	}
 
 	// Full strength if normal points directly at light
 	float lambertTerm = max(dot(dir_to_light, normal), 0.0);

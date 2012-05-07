@@ -153,8 +153,8 @@ material bling_phong/normal_map/shadows/multi_pass
 
 material bling_phong/shadows/multi_pass
 {
-	set $ambientCol "0 0 0 0.0"
-	set $emissiveCol "0 0 0 0.0"
+	set $ambientCol "0 0 0 1.0"
+	set $emissiveCol "0 0 0 1.0"
 	set $diffuseCol "1 1 1 1"
 	set $specularCol "1 1 1"
 	set $shininess "32"
@@ -190,8 +190,8 @@ material bling_phong/shadows/multi_pass
 
 			ambient $ambientCol
 			emissive $emissiveCol
-			diffuse 0 0 0 0
-			specular 0 0 0 0
+			diffuse 0 0 0 1
+			specular 0 0 0 1
 		}
 
 		// diffuse pass
@@ -201,7 +201,7 @@ material bling_phong/shadows/multi_pass
 			iteration once_per_light
 
 			scene_blend $diffuse_scene_blend 
-			depth_write $depthWrite
+			depth_write off //$depthWrite
 
 			vertex_program_ref bling_phong_eye_space_sl_shadows_vs
 			{
@@ -213,7 +213,7 @@ material bling_phong/shadows/multi_pass
 
 			diffuse $diffuseCol
 			specular $specularCol $shininess
-			ambient 0 0 0 0
+			ambient 0 0 0 1
 
 			// TODO these should be in base_material or abstract pass
 			// doesn't work if they are in the base_material for some reason

@@ -140,22 +140,23 @@ void main(void)
 
 	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
 
-	if(attenuation > 0.0)
-	{
-		// Using both texture and surface colours for all objects cause minimal
-		// (less than a precent) overhead so we definitely shouldn't change it.
+	// Combined diffuse surface colours
+	// Needs to be here because we need alpha value even when attenuation == 0
+	// Otherwise will cause problems with transparent materials if even one light
+	// doesn't reach them.
+	vec4 diffuseTexColour = texture2D(diffuseTexture, uv.xy);
+	vec4 diffuseColour = diffuseTexColour * surfaceDiffuse;
 
-		// Texture colours
-		vec4 diffuseTexColour = texture2D(diffuseTexture, uv.xy);
-		vec4 specularTexColour = texture2D(specularMap, uv.xy);
+	// Using both texture and surface colours for all objects cause minimal
+	// (less than a precent) overhead so we definitely shouldn't change it.
 
-		// Combined surface colours
-		vec4 diffuseColour = diffuseTexColour * surfaceDiffuse;
-		vec4 specularColour = specularTexColour * surfaceSpecular;
+	// Combine specular colours
+	vec4 specularTexColour = texture2D(specularMap, uv.xy);
+	vec4 specularColour = specularTexColour * surfaceSpecular;
 
-		colour = bling_phong_lighting(normDirToLight, dirToEye, normal, diffuseColour, specularColour,
-				shininess, lightDiffuse, lightSpecular, attenuation);
-	}
+	// bling_phong_lighting will return if attenuation == 0
+	colour = bling_phong_lighting(normDirToLight, dirToEye, normal, diffuseColour, specularColour,
+			shininess, lightDiffuse, lightSpecular, attenuation);
 
 	float inShadow = 1.0;
 #ifdef SHADOW_MAP
@@ -169,7 +170,7 @@ void main(void)
 	}
 #endif
 
-	// TODO this will distort the alpha channel
-	FragmentColour = clamp(inShadow * colour, 0.0, 1.0);
+	colour = vec4(inShadow*colour.xyz, diffuseColour.a);
+	FragmentColour = clamp(colour, 0.0, 1.0);
 }
 

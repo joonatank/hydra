@@ -20,13 +20,15 @@ void main(void)
 {
 #ifdef AMBIENT_OCCLUSION
 	vec4 aoColour = texture2D(aoMap, uv.xy);
-	vec4 ambient = surfaceAmbient*aoColour*lightAmbient;
+	vec4 final_surface_ambient = surfaceAmbient*aoColour;
 #else
-	vec4 ambient = surfaceAmbient*lightAmbient;
+	vec4 final_surface_ambient = surfaceAmbient;
 #endif
+	vec4 ambient = final_surface_ambient*lightAmbient;
 	vec4 colour = ambient + surfaceEmissive;
 
-	colour.a = surfaceAmbient.a;
+	// For decals we need to use the ambient occlusion maps transparency
+	colour.a = final_surface_ambient.a;
 	FragmentColour = clamp(colour, 0.0, 1.0);
 }
 
