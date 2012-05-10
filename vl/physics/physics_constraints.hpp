@@ -26,6 +26,60 @@ namespace vl
 
 namespace physics
 {
+//API (virtual) Class for rotational 3dof or translational 3dof joint motor
+class Motor3Dof
+{
+public:
+	//Constraint lowerlimit:
+	virtual void			setLowerLimit(Ogre::Vector3 const& lowlimit)=0;
+    virtual Ogre::Vector3	getLowerLimit(void)=0;
+	
+	//Constraint upper limits:
+	virtual void			setUpperLimit(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getUpperLimit(void)=0;
+	
+	//Softness for limits:
+    virtual void			setLimitSoftness(vl::scalar const&)=0;
+	virtual vl::scalar		getLimitSoftness(void)=0;
+	
+	//Damping for limits:
+    virtual void			setDamping(vl::scalar const&)=0;
+	virtual vl::scalar		getDamping(void)=0;
+
+	//Restitution parameter (0 = totally inelastic collision, 1 = totally elastic collision):
+	virtual void			setRestitution(vl::scalar const&)=0;
+	virtual vl::scalar		getRestitution(void)=0;
+	
+	//Normal constraint force mixing factor:
+	virtual void			setNormalCFM(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getNormalCFM(void)=0;
+	
+	//Error tolerance factor when joint is at limit:
+	virtual void			setStopERP(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getStopERP(void)=0;
+
+	//Constraint force mixing factor when joint is at limit:
+	virtual void			setStopCFM(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getStopCFM(void)=0;
+    
+	//Target motor velocity:
+	virtual void			setTargetVelocity(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getTargetVelocity(void)=0;
+	
+    //Maximum force on motor, eg. maximum force used to achieve needed velocity:
+	virtual void			setMaxMotorForce(Ogre::Vector3 const&)=0;
+    virtual Ogre::Vector3	getMaxMotorForce(void)=0;	
+	
+	//Maximum returning torque when limit is violated (this is applied with rotational motors only):
+	virtual void			setMaxLimitTorque(Ogre::Vector3 const&)=0;
+    virtual	Ogre::Vector3	getMaxLimitTorque(void)=0;
+
+	//Is one of 3 dof's enabled:
+	virtual void			enableMotor(int const)=0;
+	virtual void			disableMotor(int const)=0;	
+	virtual void			enableAllMotors(void)=0;
+	virtual void			disableAllMotors(void)=0;
+};
 
 /// The base constraint for physics needs to be abstract interface
 class Constraint
@@ -78,7 +132,12 @@ public :
 	virtual void setStopERP(vl::scalar erp) = 0;
 
 	// @todo add motors
-
+	//Ville lisännyt:
+	//Get motors as pointers so you can straightaway edit those, no need for setter.
+	virtual Motor3Dof *getTranslationalMotor(void) = 0;
+	virtual Motor3Dof *getRotationalMotor(void) = 0;
+	
+	
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 

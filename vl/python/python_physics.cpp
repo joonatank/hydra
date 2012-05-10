@@ -95,6 +95,27 @@ void export_physics_objects(void)
 	/// Abstract master class for all physics constraints
 	python::class_<vl::physics::Constraint, vl::physics::ConstraintRefPtr, boost::noncopyable>("Constraint", python::no_init)
 	;
+	
+	python::class_<vl::physics::Motor3Dof, boost::noncopyable>("Motor", python::no_init)
+		//Constraint lowerlimit:
+		.add_property("lower_limit",&vl::physics::Motor3Dof::getLowerLimit,&vl::physics::Motor3Dof::setLowerLimit)
+		.add_property("upper_limit",&vl::physics::Motor3Dof::getUpperLimit,&vl::physics::Motor3Dof::setUpperLimit)
+		.add_property("limit_softness",&vl::physics::Motor3Dof::getLimitSoftness,&vl::physics::Motor3Dof::setLimitSoftness)	
+		.add_property("damping",&vl::physics::Motor3Dof::getDamping,&vl::physics::Motor3Dof::setDamping)
+		.add_property("restitution",&vl::physics::Motor3Dof::getRestitution,&vl::physics::Motor3Dof::setRestitution)	
+		.add_property("normal_CFM",&vl::physics::Motor3Dof::getNormalCFM,&vl::physics::Motor3Dof::setNormalCFM)	
+		.add_property("stop_ERP",&vl::physics::Motor3Dof::getStopERP,&vl::physics::Motor3Dof::setStopERP)	
+		.add_property("stop_CFM",&vl::physics::Motor3Dof::getStopCFM,&vl::physics::Motor3Dof::setStopCFM)
+		.add_property("target_velocity",&vl::physics::Motor3Dof::getTargetVelocity,&vl::physics::Motor3Dof::setTargetVelocity)
+		.add_property("max_motor_force",&vl::physics::Motor3Dof::getMaxMotorForce,&vl::physics::Motor3Dof::setMaxMotorForce)
+		.add_property("max_limit_torque",&vl::physics::Motor3Dof::getMaxLimitTorque,&vl::physics::Motor3Dof::setMaxLimitTorque)
+		
+		.def("enableMotor", &vl::physics::Motor3Dof::enableMotor)
+		.def("disableMotor", &vl::physics::Motor3Dof::disableMotor)
+		.def("enableMotors", &vl::physics::Motor3Dof::enableAllMotors)
+		.def("disableMotors", &vl::physics::Motor3Dof::disableAllMotors)
+	;
+
 
 	/// 6dof constraint
 	python::class_<vl::physics::SixDofConstraint, vl::physics::SixDofConstraintRefPtr, python::bases<vl::physics::Constraint>, boost::noncopyable>("PSixDofConstraint", python::no_init)
@@ -103,14 +124,23 @@ void export_physics_objects(void)
 		.def("setLinearUpperLimit", &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.def("setAngularLowerLimit", &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.def("setAngularUpperLimit", &vl::physics::SixDofConstraint::setAngularUpperLimit)
+		.def("setDamping", &vl::physics::SixDofConstraint::setDamping)
+		.def("setNormalCFM", &vl::physics::SixDofConstraint::setNormalCFM)
+		.def("setStiffness", &vl::physics::SixDofConstraint::setStiffness)
+		.def("setStopCFM", &vl::physics::SixDofConstraint::setStopCFM)
+		.def("setStopERP", &vl::physics::SixDofConstraint::setStopERP)
 		.add_property("angular_upper_limit", &vl::physics::SixDofConstraint::getAngularUpperLimit, &vl::physics::SixDofConstraint::setAngularUpperLimit)
 		.add_property("angular_lower_limit", &vl::physics::SixDofConstraint::getAngularLowerLimit, &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.add_property("linear_upper_limit", &vl::physics::SixDofConstraint::getLinearUpperLimit, &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.add_property("linear_lower_limit", &vl::physics::SixDofConstraint::getLinearLowerLimit, &vl::physics::SixDofConstraint::setLinearLowerLimit)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
+		.add_property("rotation_motor", python::make_function(&vl::physics::SixDofConstraint::getRotationalMotor, python::return_value_policy<python::reference_existing_object>()))
+		.add_property("translation_motor", python::make_function(&vl::physics::SixDofConstraint::getTranslationalMotor, python::return_value_policy<python::reference_existing_object>())) 
+		
 		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::SixDofConstraint::create)
+		
 		.staticmethod("create")
 	;
 

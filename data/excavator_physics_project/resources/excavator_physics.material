@@ -14,67 +14,6 @@ material _missing_material_
 	}
 }
 
-material muovi_keltainen 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.661852 0.517449 0 1 
-			emissive 0 0 0 1 
-			diffuse 0.529482 0.413959 0 1 
-			specular 0.5 0.5 0.5 1 50 
-		}
-	}
-}
-
-material metalli_kromi 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
-		}
-	}
-}
-
-material metalli_alumiini 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.350548 0.350548 0.350548 1 
-			emissive 0 0 0 1 
-			diffuse 0.280438 0.280438 0.280438 1 
-			specular 0.31913 0.31913 0.31913 1 15 
-		}
-	}
-}
-
-material lasi 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 1 1 1 0.1 
-			emissive 0 0 0 0.1 
-			diffuse 0.8 0.8 0.8 0.1 
-			specular 0 0 0 1 20 
-			depth_write off
-		}
-	}
-}
-
 material kangas_harmaa 
 {
 	receive_shadows on
@@ -90,7 +29,7 @@ material kangas_harmaa
 	}
 }
 
-material base_mat 
+material cylinder_ext_mat 
 {
 	receive_shadows on
 	technique
@@ -100,11 +39,26 @@ material base_mat
 			ambient 0.8 0.8 0.8 1 
 			emissive 0 0 0 1 
 			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
+			specular 0.71875 0.71875 0.71875 1 50 
 			texture_unit
 			{
-				texture base_tekst.png
+				texture cylinder_ext_tekst.png
 			}
+		}
+	}
+}
+
+material muovi_musta 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.0444523 0.0444523 0.0444523 1 
+			emissive 0 0 0 1 
+			diffuse 0.0355618 0.0355618 0.0355618 1 
+			specular 0.5 0.5 0.5 1 50 
 		}
 	}
 }
@@ -147,7 +101,22 @@ material boom_mat
 	}
 }
 
-material track_mat 
+material muovi_keltainen 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.661852 0.517449 0 1 
+			emissive 0 0 0 1 
+			diffuse 0.529482 0.413959 0 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material arm_mat 
 {
 	receive_shadows on
 	technique
@@ -160,72 +129,8 @@ material track_mat
 			specular 0.5 0.5 0.5 1 50 
 			texture_unit
 			{
-				texture telat_tekst_2.png
+				texture arm_tekst.png
 			}
-		}
-	}
-}
-
-material muovi_vharmaa 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.147309 0.147309 0.147309 1 
-			emissive 0 0 0 1 
-			diffuse 0.117847 0.117847 0.117847 1 
-			specular 0.5 0.5 0.5 1 50 
-		}
-	}
-}
-
-material cylinder_ext_mat 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.71875 0.71875 0.71875 1 50 
-			texture_unit
-			{
-				texture cylinder_ext_tekst.png
-			}
-		}
-	}
-}
-
-material muovi_musta 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.0444523 0.0444523 0.0444523 1 
-			emissive 0 0 0 1 
-			diffuse 0.0355618 0.0355618 0.0355618 1 
-			specular 0.5 0.5 0.5 1 50 
-		}
-	}
-}
-
-material muovi_punainen 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.281003 0.0259791 0.036716 1 
-			emissive 0 0 0 1 
-			diffuse 0.224802 0.0207833 0.0293728 1 
-			specular 0.5 0.5 0.5 1 50 
 		}
 	}
 }
@@ -245,6 +150,21 @@ material metalli_rauta
 	}
 }
 
+material muovi_tharmaa 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.114931 0.114931 0.114931 1 
+			emissive 0 0 0 1 
+			diffuse 0.091945 0.091945 0.091945 1 
+			specular 0.123094 0.123094 0.123094 1 50 
+		}
+	}
+}
+
 material metalli_harmaa 
 {
 	receive_shadows on
@@ -260,7 +180,7 @@ material metalli_harmaa
 	}
 }
 
-material arm_mat 
+material rails_mat 
 {
 	receive_shadows on
 	technique
@@ -273,7 +193,7 @@ material arm_mat
 			specular 0.5 0.5 0.5 1 50 
 			texture_unit
 			{
-				texture arm_tekst.png
+				texture rails_tekst.png
 			}
 		}
 	}
@@ -309,20 +229,20 @@ material kumi_musta
 	}
 }
 
-material cylinder_mat 
+material jopec 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.8 0.8 0.8 1 
+			ambient 0.233009 0.223124 0.211827 1 
 			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
+			diffuse 0.186407 0.178499 0.169461 1 
+			specular 0 0 0 1 20 
 			texture_unit
 			{
-				texture cylinder_tekst.png
+				texture jopec.png
 			}
 		}
 	}
@@ -362,7 +282,7 @@ material bucket_control_mat
 	}
 }
 
-material rails_mat 
+material cylinder_mat 
 {
 	receive_shadows on
 	technique
@@ -375,23 +295,141 @@ material rails_mat
 			specular 0.5 0.5 0.5 1 50 
 			texture_unit
 			{
-				texture rails_tekst.png
+				texture cylinder_tekst.png
 			}
 		}
 	}
 }
 
-material muovi_tharmaa 
+material base_mat 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.114931 0.114931 0.114931 1 
+			ambient 0.8 0.8 0.8 1 
 			emissive 0 0 0 1 
-			diffuse 0.091945 0.091945 0.091945 1 
-			specular 0.123094 0.123094 0.123094 1 50 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture base_tekst.png
+			}
+		}
+	}
+}
+
+material muovi_punainen 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.281003 0.0259791 0.036716 1 
+			emissive 0 0 0 1 
+			diffuse 0.224802 0.0207833 0.0293728 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material amplifier 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.467192 0.467192 0.467192 1 
+			emissive 0 0 0 1 
+			diffuse 0.373753 0.373753 0.373753 1 
+			specular 0.509205 0.503879 0.542857 1 50 
+			texture_unit
+			{
+				texture amplifier.jpg
+			}
+		}
+	}
+}
+
+material metalli_kromi 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material muovi_vharmaa 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.147309 0.147309 0.147309 1 
+			emissive 0 0 0 1 
+			diffuse 0.117847 0.117847 0.117847 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material metalli_alumiini 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.350548 0.350548 0.350548 1 
+			emissive 0 0 0 1 
+			diffuse 0.280438 0.280438 0.280438 1 
+			specular 0.31913 0.31913 0.31913 1 15 
+		}
+	}
+}
+
+material track_mat 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture telat_tekst_2.png
+			}
+		}
+	}
+}
+
+material lasi 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 1 1 1 0.1 
+			emissive 0 0 0 0.1 
+			diffuse 0.8 0.8 0.8 0.1 
+			specular 0 0 0 1 20 
+			depth_write off
 		}
 	}
 }
