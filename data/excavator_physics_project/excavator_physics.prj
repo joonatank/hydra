@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2010-11
+
+Ogre test project used for testing and demonstrating eqOgre
+-->
+<project_config name="excavator_physics">
+
+	<scenes>
+		<scene name="excavator_physics" use="true" use_new_mesh_manager="true">
+			<file>excavator_physics.scene</file>
+		</scene>
+
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">physics_script.py</file>
+		<file use="true">excavator_physics.py</file>
+	</scripts>
+
+</project_config>
