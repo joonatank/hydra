@@ -6,11 +6,7 @@
  *	@file animation/kinematic_body.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -130,9 +126,11 @@ vl::KinematicBody::getSceneNode(void) const
 void
 vl::KinematicBody::_update(void)
 {
-	assert(_state && _node && _state->getNode());
+	assert(_state && _node);
 
-	Transform wt = _node->getWorldTransform();
+	Transform wt = _node->_getCachedWorldTransform();
+	// This comparison might be counter productive
+	// @todo do some real profiling on it.
 	if(_state->getWorldTransform() != wt)
 	{
 		_state->setWorldTransform(wt);

@@ -138,16 +138,22 @@ vl::GameManager::step(void)
 	{
 		for(size_t i = 0; i < _analog_clients.size(); ++i )
 		{ _analog_clients.at(i)->mainloop(); }
-
+		
+		vl::chrono c;
 		_kinematic_world->step(getDeltaTime());
+		_rendering_report["kinematic world step"].push(c.elapsed());
 
 		if( _physics_world )
 		{
+			c.reset();
 			_physics_world->step(getDeltaTime());
+			_rendering_report["physics world step"].push(c.elapsed());
 		}
 
+		c.reset();
 		/// Check collisions and copy the SceneNode transformations
 		_kinematic_world->finalise();
+		_rendering_report["kinematic collision detection"].push(c.elapsed());
 
 		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());

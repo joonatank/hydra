@@ -6,11 +6,7 @@
  *	@file animation/animation.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -57,6 +53,18 @@ typedef boost::weak_ptr<Graph> GraphWeakPtr;
 
 /// @class Node
 /// @brief A node in the animation graph
+///
+/// Nodes don't support collision detection only Links do.
+/// Supports dirties in Transformations and caching of the World transformation.
+///
+/// @todo add cache of Collision detection to the node
+/// Best would probably to use a transformation list and indices
+/// when a transformation is popped we only increase the index
+/// and mark World transformation dirty.
+/// More trivial implementation would be to use two variables
+/// and a boolean for collision. When transformation is popped
+/// the boolean goes true if boolean value was changed mark as dirty.
+/// When transformation is set mark the boolean false (and always mark as dirty).
 class Node : public boost::enable_shared_from_this<Node>
 {
 public :
@@ -76,7 +84,7 @@ public :
 	/// How ever this is not what we want, we want the last transformation
 	/// with the current parent.
 	void setInitialState(void)
-	{ _prev_transform = _transform; }
+	{ /*_prev_transform = _transform;*/ }
 
 	/// @brief is this node a leaf in the graph i.e. contains no child nodes
 	bool isLeaf(void) const;
@@ -150,6 +158,15 @@ public :
 
 	bool _hasChild(LinkRefPtr link);
 
+	/// @internal
+	/// @brief Update the cached transformation
+	void _updateCachedTransform(vl::Transform const &parent_t, bool parent_dirty);
+
+	/// @internal
+	/// Get the last cached transformation
+	vl::Transform const &_getCachedWorldTransform(void) const
+	{ return _wt_cached; }
+
 private :
 
 	LinkWeakPtr _parent;
@@ -160,9 +177,12 @@ private :
 	LinkWeakList _aux_parents;
 
 	Transform _transform;
-
-	Transform _prev_transform;
 	
+	/// Internal states
+	bool _transformation_dirty;
+
+	vl::Transform _wt_cached;
+
 };	// class Node
 
 /// @class Link
@@ -238,6 +258,14 @@ public :
 	/// @internal
 	void _setChild(NodeRefPtr child);
 
+	/// @internal
+	void _updateCachedTransform(vl::Transform const &parent_t, bool parent_dirty);
+
+	/// @internal
+	/// Get the last cached transformation
+	vl::Transform const &_getCachedWorldTransform(void) const
+	{ return _wt_cached; }
+
 private :
 	NodeWeakPtr _parent;
 	NodeRefPtr _child;
@@ -246,6 +274,11 @@ private :
 	Transform _initial_transform;
 
 	Transform _prev_transform;
+
+	/// Internal states
+	bool _transformation_dirty;
+
+	vl::Transform _wt_cached;
 
 };	// class Link
 
@@ -262,6 +295,8 @@ public :
 
 	/// @brief get the start node i.e. root for the whole graph
 	NodeRefPtr getRoot(void);
+
+	void _update(void);
 
 	/// @todo Transformation Stack is not in use for the moment
 

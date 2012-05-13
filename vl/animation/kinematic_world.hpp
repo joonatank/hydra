@@ -6,11 +6,7 @@
  *	@file animation/kinematic_world.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -42,6 +38,9 @@ public :
 
 	~KinematicWorld(void);
 
+	/// @todo we need to use internal timer similar to the one Bullet uses
+	/// this will fix issues in Hinge with high FPS
+	/// Clamps to 120Hz (or something else) and this is nop if we are called before.
 	void step(vl::time const &t);
 
 	void finalise(void);

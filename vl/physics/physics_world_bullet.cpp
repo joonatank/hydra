@@ -59,13 +59,13 @@ vl::physics::BulletWorld::~BulletWorld(void)
 void
 vl::physics::BulletWorld::step(vl::time const &time_step)
 {
-	// Some hard-coded parameters for the simulation
-	// Small internal timestep is necessary for small objects < 100mm
 	_dynamicsWorld->stepSimulation((double)time_step, _solver_params.max_sub_steps, _solver_params.internal_time_step);
 
 	// Check for collisions
 	// here instead of a tick callback because we only store the transformations
 	// once every frame.
+	// This function takes about 10us in complex models
+	// So it's completely inconsequential.
 	_collision_feedback();
 }
 

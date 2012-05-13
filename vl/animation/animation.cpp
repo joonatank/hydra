@@ -6,11 +6,7 @@
  *	@file animation/animation.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -57,7 +53,6 @@ vl::animation::Node::Node(vl::Transform const &initial_transform)
 	: _parent()
 	, _next_child(0)
 	, _transform(initial_transform)
-	, _prev_transform(initial_transform)
 {}
 
 vl::animation::Node::~Node(void)
@@ -117,7 +112,8 @@ vl::animation::Node::getTransform(void) const
 void
 vl::animation::Node::setTransform(Transform const &t, bool reset_memory)
 {
-	_prev_transform = reset_memory ? t : _transform;
+	// @todo should we check if we need to update transform?
+	_transformation_dirty = true;
 	_transform = t;
 }
 
@@ -148,8 +144,7 @@ vl::animation::Node::setWorldTransform(Transform const &t, bool reset_memory)
 void
 vl::animation::Node::popLastTransform(void)
 {
-	_transform = _prev_transform;
-	// Update parents
+	// Update parent
 	if(_parent.lock())
 	{ _parent.lock()->popLastTransform(); }
 }
@@ -263,6 +258,24 @@ vl::animation::Node::_hasChild(LinkRefPtr link)
 	return true;
 }
 
+void
+vl::animation::Node::_updateCachedTransform(vl::Transform const &parent_t, bool parent_dirty)
+{
+	bool dirty = (parent_dirty || _transformation_dirty);
+	if(dirty)
+	{
+		_wt_cached = parent_t * _transform;
+
+		_transformation_dirty = false;
+	}
+
+	for(LinkList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
+	{
+		(*iter)->_updateCachedTransform(_wt_cached, dirty);
+	}
+}
+
+
 /// ---------------------------------- Link ----------------------------------
 vl::animation::Link::Link(Transform const &t)
 	: _transform(t)
@@ -331,6 +344,9 @@ vl::animation::Link::getTransform(void) const
 void
 vl::animation::Link::setTransform(Transform const &t, bool preserve_child_transforms)
 {
+	// @todo should we check if we need to update Transform or not?
+	_transformation_dirty = true;
+
 	// save the last state
 	_prev_transform = _transform;
 
@@ -393,7 +409,10 @@ vl::animation::Link::rotate(Quaternion const &q)
 void
 vl::animation::Link::popLastTransform(void)
 {
+	// @todo should we check if we need to update transform?
+	_transformation_dirty = true;
 	_transform = _prev_transform;
+
 	// Update parents
 	if(_parent.lock())
 	{ _parent.lock()->popLastTransform(); }
@@ -402,6 +421,7 @@ vl::animation::Link::popLastTransform(void)
 void 
 vl::animation::Link::setInitialState(void)
 {
+	_transformation_dirty = true;
 	_initial_transform = _transform;
 	_prev_transform = _transform;
 }
@@ -411,6 +431,23 @@ vl::animation::Link::reset(void)
 {
 	setTransform(_initial_transform);
 }
+
+void
+vl::animation::Link::_updateCachedTransform(vl::Transform const &parent_t, bool parent_dirty)
+{
+	bool dirty = (parent_dirty || _transformation_dirty);
+	if(dirty)
+	{
+		// @todo add collision flag based selection of either
+		// _transform or _prev_transform
+		_wt_cached = parent_t * _transform;
+
+		_transformation_dirty = false;
+	}
+
+	_child->_updateCachedTransform(_wt_cached, dirty);
+}
+
 
 /// ---------------------------------- Graph ---------------------------------
 vl::animation::Graph::Graph(void)
@@ -423,6 +460,13 @@ vl::animation::Graph::~Graph(void)
 vl::animation::NodeRefPtr
 vl::animation::Graph::getRoot(void)
 { return _root; }
+
+void
+vl::animation::Graph::_update(void)
+{
+	/// Update the cached transformations of all children
+	_root->_updateCachedTransform(vl::Transform(), false);
+}
 
 /// @brief push a transform to the transformation stack
 void

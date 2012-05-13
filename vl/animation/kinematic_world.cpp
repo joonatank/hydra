@@ -6,11 +6,7 @@
  *	@file animation/kinematic_world.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -54,6 +50,9 @@ void
 vl::KinematicWorld::step(vl::time const &t)
 {
 	_progress_constraints(t);
+
+	// Update all the nodes
+	_graph->_update();
 
 	/// Copy transformations to Motion states
 	for(KinematicBodyList::iterator iter = _bodies.begin();
