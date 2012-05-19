@@ -136,6 +136,21 @@ RemoteLauncher::RemoteLauncher(Options const &opt, std::string const &exe_path)
 	, _running(false)
 	, _exe_path(exe_path)
 {
+	// Check that we have a valid hydra binary
+	if(!fs::is_regular(_options.hydra_exe))
+	{
+		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Hydra Exe missing"));
+	}
+	// @todo this is Windows specific
+	// We should wrap this to a function call that checks for execution permissions
+	// on *NIX and extension on Windows.
+#ifdef _WIN32
+	if(fs::extension(_options.hydra_exe) != ".exe")
+	{
+		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Hydra Exe not valid exe"));
+	}
+#endif
+
 	if(_options.launcher_auto_start)
 	{
 		setRunning(true);

@@ -96,14 +96,19 @@ int main( const int argc, char** argv )
 
 	if(!add_paths(extra_paths))
 	{
-		std::cout << "Problem with setting the path." << std::endl;
+		std::string title("Hydra Error");
+		std::string msg("Problem with setting the path.");
+		vl::MessageDialog dialog(title, msg);
 		return -1;
 	}
 
 	HMODULE hydra_library = LoadLibrary(LIB_NAME);
 	if(hydra_library == NULL)
 	{
-		std::cout << "Couldn't open library : " << LIB_NAME << std::endl;
+		std::string title("Hydra Error");
+		std::string msg("Couldn't open library : ");
+		msg += LIB_NAME;
+		vl::MessageDialog dialog(title, msg);
 		return -1;
 	}
 
@@ -111,7 +116,9 @@ int main( const int argc, char** argv )
 	FARPROC run = GetProcAddress(hydra_library,"Hydra_Run");
 	if(run == NULL)
 	{
-		std::cout << "Didn't find function pointer for Hydra_Run." << std::endl;
+		std::string title("Hydra Error");
+		std::string msg("Didn't find function pointer for Hydra_Run.");
+		vl::MessageDialog dialog(title, msg);
 		return -1;
 	}
 	else

@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <string>
 
+#include <boost/exception/all.hpp>
+
 /// Config directory Local AppData
 
 /// Commands
@@ -39,34 +41,48 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, in
 {
 	// @todo Check that there isn't multiple instances of this program
 	// atm crashes with unhandled exception.
-
-	Options opt = getOptions();
-	std::cout << "Starting remote launcher" << std::endl
-		<< opt << std::endl;
-
-	opt.save_ini();
-
-	RemoteLauncher launcher(opt, vl::get_global_path(vl::GP_EXE).string());
-	
-	g_launcher_gui = new LauncherWindow(&launcher, hInstance, iCmdShow);
-
-	while(true)
+	try
 	{
-		MSG msg;
-		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		Options opt = getOptions();
+		std::cout << "Starting remote launcher" << std::endl
+			<< opt << std::endl;
+
+		opt.save_ini();
+
+		RemoteLauncher launcher(opt, vl::get_global_path(vl::GP_EXE).string());
+	
+		g_launcher_gui = new LauncherWindow(&launcher, hInstance, iCmdShow);
+
+		while(true)
 		{
-			if( msg.message == WM_QUIT )
-			{ break; }
+			MSG msg;
+			if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			{
+				if( msg.message == WM_QUIT )
+				{ break; }
 
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		
-		launcher.mainloop();
-		vl::msleep(10);
-	}
+			launcher.mainloop();
+			vl::msleep(10);
+		}
 
-	delete g_launcher_gui;
+		delete g_launcher_gui;
+	}
+	catch(boost::exception const &e)
+	{
+		std::string err_msg("Unhandled boost exception \n");
+		err_msg += boost::diagnostic_information<>(e);
+		MessageBox(NULL, err_msg.c_str(), "Remote Launcher", MB_ICONERROR | MB_OK);
+	}
+	catch(std::exception const &e)
+	{
+		std::string err_msg("Unhandled std exception \n");
+		err_msg += e.what();
+		MessageBox(NULL, err_msg.c_str(), "Remote Launcher", MB_ICONERROR | MB_OK);
+	}
 
 	return 0; // msg.wParam;
 }
