@@ -26,8 +26,8 @@ kiinnityslevy = game.physics_world.getRigidBody("cb_kiinnityslevy")
 ristikpl_kaantosyl = game.physics_world.getRigidBody("cb_ristikpl_kaantosyl")
 nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
 transform = nivel_klevy2.world_transformation
-nivel_klevy2_hinge = createHingeConstraint(kiinnityslevy, ristikpl_kaantosyl, transform, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(kiinnityslevy, ristikpl_kaantosyl, transform, True)
+nivel_klevy2_hinge = physics_hinge_constraint(kiinnityslevy, ristikpl_kaantosyl, transform, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(kiinnityslevy, ristikpl_kaantosyl, transform, True)
 
 print('Physics: adding kaanto sylinteri joint')
 # Sylinteri kaanto
@@ -38,49 +38,49 @@ syl_kaanto_varsi = game.physics_world.getRigidBody("cb_syl_kaanto_varsi")
 # reference joint
 nivel_kaantosyl2_rotz = game.scene.getSceneNode("nivel_kaantosyl2_rotz")
 transform = nivel_kaantosyl2_rotz.world_transformation
-createHingeConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform, True)
+physics_hinge_constraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(ristikpl_kaantosyl, syl_kaanto_varsi, transform, True)
 
 print('Physics: adding kaanto sylinteri')
 transform = syl_kaanto_varsi.world_transformation
 syl_kaanto_putki = game.physics_world.getRigidBody("cb_syl_kaanto_putki")
-kaanto = createTranslationConstraint(syl_kaanto_varsi, syl_kaanto_putki, transform, -0.3, 0.6)
+kaanto = physics_slider_constraint(syl_kaanto_varsi, syl_kaanto_putki, transform, -0.3, 0.6)
 
 nivel_klevy1 = game.scene.getSceneNode("nivel_klevy1_rotz")
 transform = nivel_klevy1.world_transformation
 kaantokappale = game.physics_world.getRigidBody("cb_kaantokappale")
-createHingeConstraint(kiinnityslevy, kaantokappale, transform, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(kiinnityslevy, kaantokappale, transform, True)
+physics_hinge_constraint(kiinnityslevy, kaantokappale, transform, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(kiinnityslevy, kaantokappale, transform, True)
 
 # Sylinteri nosto
 nivel_sylnosto_rotz = game.scene.getSceneNode("nivel_nostosyl2_rotz")
 transform = nivel_sylnosto_rotz.world_transformation
 syl_nosto_varsi = game.physics_world.getRigidBody("cb_syl_nosto_varsi")
-createHingeConstraint(kaantokappale, syl_nosto_varsi, transform, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(kaantokappale, syl_nosto_varsi, transform, True)
+physics_hinge_constraint(kaantokappale, syl_nosto_varsi, transform, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(kaantokappale, syl_nosto_varsi, transform, True)
 
 syl_nosto_putki = game.physics_world.getRigidBody("cb_syl_nosto_putki")
 transform = syl_nosto_varsi.world_transformation
-nosto = createTranslationConstraint(syl_nosto_varsi, syl_nosto_putki, transform, -0.3, 0.6)
+nosto = physics_slider_constraint(syl_nosto_varsi, syl_nosto_putki, transform, -0.3, 0.6)
 
 # Ulkoputki constraints:
 # kaantokappale, nostosylinteri, kaantosylinteri and sisaputki
 ulkoputki = game.physics_world.getRigidBody("cb_ulkoputki")
 nivel_puomi = game.scene.getSceneNode("nivel_puomi_rotz")
-createHingeConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, True)
+physics_hinge_constraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(kaantokappale, ulkoputki, nivel_puomi.world_transformation, True)
 
 nivel_nostosyl1 = game.scene.getSceneNode("nivel_nostosyl1_rotz")
-createHingeConstraint(syl_nosto_putki, ulkoputki, nivel_nostosyl1.world_transformation, True, min=Degree(-45), max=Degree(45))
-#createFixedConstraint(syl_nosto_putki, ulkoputki, nivel_nostosyl1.world_transformation, True)
+physics_hinge_constraint(syl_nosto_putki, ulkoputki, nivel_nostosyl1.world_transformation, True, min=Degree(-45), max=Degree(45))
+#physics_fixed_constraint(syl_nosto_putki, ulkoputki, nivel_nostosyl1.world_transformation, True)
 
 nivel_kaantosyl1 = game.scene.getSceneNode("nivel_kaantosyl1_rotz")
-#createHingeConstraint(syl_kaanto_putki, ulkoputki, nivel_kaantosyl1.world_transformation, True, min=Degree(-45), max=Degree(45))
-createFixedConstraint(syl_kaanto_putki, ulkoputki, nivel_kaantosyl1.world_transformation, True)
+#physics_hinge_constraint(syl_kaanto_putki, ulkoputki, nivel_kaantosyl1.world_transformation, True, min=Degree(-45), max=Degree(45))
+physics_fixed_constraint(syl_kaanto_putki, ulkoputki, nivel_kaantosyl1.world_transformation, True)
 
 sisaputki = game.physics_world.getRigidBody("cb_sisaputki")
 nivel_telesk = game.scene.getSceneNode("nivel_telesk_trz")
-zoom = createTranslationConstraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, -1, 1)
+zoom = physics_slider_constraint(ulkoputki, sisaputki, nivel_telesk.world_transformation, -1, 1)
 
 # enable motors for cylinders
 kaanto.powered_lin_motor = True

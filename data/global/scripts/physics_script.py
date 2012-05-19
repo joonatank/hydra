@@ -180,7 +180,7 @@ def addCapsule(name, mat_name, position, mass=1, radius=0.5, height=1) :
 	body.setDamping(0.3, 0.3)
 	return body 
 
-def createFixedConstraint(body0, body1, transform, disableCollision = True):
+def physics_fixed_constraint(body0, body1, transform, disableCollision = True):
 	local0_trans = body0.transform_to_local(transform)
 	local1_trans = body1.transform_to_local(transform)
 	constraint = PSixDofConstraint.create(body0, body1, local0_trans, local1_trans, False)
@@ -197,7 +197,7 @@ def createFixedConstraint(body0, body1, transform, disableCollision = True):
 # Depending on wether the original coordinates have positive or negative
 # z forward, you need to use positive or negative velocity for driving
 # positive z forward positive velocity
-def createTranslationConstraint(body0, body1, transform, min, max, disableCollision = True) :
+def physics_slider_constraint(body0, body1, transform, min, max, disableCollision = True) :
 	# SliderConstraint works on x-axis, so we rotate the reference
 	# z-axis to x-axis
 	trans = transform*Transform(Quaternion(-0.7071, 0, 0, 0.7071))
@@ -214,8 +214,8 @@ def createTranslationConstraint(body0, body1, transform, min, max, disableCollis
 # Define a hinge constraint using objects +y axis
 # +y because the objects were modeled in Blender with +z as the rotation axis
 # but the exporter flips y and z
-def createHingeConstraint(body0, body1, transform, disableCollision = True, min = Degree(0), max = Degree(0)) :
-	trans = transform*Transform(Quaternion(0.7071, 0.7071, 0, 0))
+def physics_hinge_constraint(body0, body1, transform, disableCollision = True, min = Degree(0), max = Degree(0)) :
+	trans = transform#*Transform(Quaternion(0.7071, 0.7071, 0, 0))
 	local0_trans = body0.transform_to_local(trans)
 	local1_trans = body1.transform_to_local(trans)
 	constraint = PHingeConstraint.create(body0, body1, local0_trans, local1_trans, False)
