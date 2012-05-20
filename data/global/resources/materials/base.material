@@ -96,7 +96,7 @@ material glass/blue : bling_phong/shadows
 	set $shininess 250
 	set $depthWrite off
 	set $ambient_scene_blend "alpha_blend"
-	set $diffuse_scene_blend "alpha_blend"
+	set $diffuse_scene_blend "src_alpha one"
 }
 
 material tube_material : bling_phong/shadows
@@ -136,7 +136,7 @@ material collision_sphere/transparent/red : bling_phong/shadows
 	set $specularCol "0 0 0"
 	set $depthWrite off
 	set $ambient_scene_blend "alpha_blend"
-	set $diffuse_scene_blend "alpha_blend"
+	set $diffuse_scene_blend "src_alpha one"
 }
 
 material finger_sphere/red : bling_phong/shadows

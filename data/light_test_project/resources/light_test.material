@@ -6,7 +6,7 @@ material hytti_mat : bling_phong/shadows/multi_pass
 	set $specularCol "0.4 0.4 0.4"
 	set $shininess 50 
 	set $depthWrite off
-	set $diffuse_scene_blend "alpha_blend"
+	set $diffuse_scene_blend "src_alpha one"
 	set_texture_alias diffuseTexture hytti_tekstuuri.png
 }
 
@@ -15,7 +15,7 @@ material ash_tree : bling_phong/shadows/multi_pass
 	set $specularCol "0 0 0"
 	set $depthWrite off
 //	set $ambient_scene_blend "alpha_blend"
-	set $diffuse_scene_blend "alpha_blend"
+	set $diffuse_scene_blend "src_alpha one"
 	set_texture_alias diffuseTexture ash_tree.png
 }
 

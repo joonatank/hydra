@@ -2,6 +2,8 @@
 // Savant Simulators
 // 2012-04
 
+#version 130
+
 // Calculate the attenuation parameter
 float calculate_attenuation(vec3 light_pos, vec4 attenuation)
 {
