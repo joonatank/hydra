@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -164,6 +160,10 @@ protected :
 	/// Updates command data, uses versioning to and indexes to provide an
 	/// Commands that can be sent from Master thread
 	void _updateDistribData( void );
+
+	typedef std::map<uint64_t, OBJ_TYPE> IdTypeMap;
+	void _create_objects(IdTypeMap const &objects, IdTypeMap &left_overs);
+	IdTypeMap _objects_not_yet_created;
 
 	/**	@todo should write the screenshot to the project directory not
 	 *	to current directory

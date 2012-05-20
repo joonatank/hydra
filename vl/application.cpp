@@ -1,17 +1,13 @@
 /**
- *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011-10 Savant Simulators
+ *	Copyright (c) 2010 - 2011 Tampere University of Technology
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file application.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -201,11 +197,13 @@ vl::getSlaveSettings( vl::ProgramOptions const &options )
 		return vl::config::EnvSettingsRefPtr();
 	}
 
+	uint16_t port = DEFAULT_HYDRA_PORT;
 	size_t pos = options.server_address.find_last_of(":");
-	if( pos == std::string::npos )
-	{ return vl::config::EnvSettingsRefPtr(); }
 	std::string hostname = options.server_address.substr(0, pos);
-	uint16_t port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
+	if( pos != std::string::npos )
+	{
+		port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
+	}
 
 	vl::config::EnvSettingsRefPtr env( new vl::config::EnvSettings );
 	env->setSlave();
@@ -218,16 +216,20 @@ vl::getSlaveSettings( vl::ProgramOptions const &options )
 }
 
 
-vl::ExceptionMessage
-vl::Hydra_Run(const int argc, char** argv)
+void
+vl::Hydra_Run(const int argc, char** argv, vl::ExceptionMessage *msg)
 {
 	std::clog << "Starting Hydra : " << HYDRA_REVISION << std::endl;
 	std::string exception_msg;
 	vl::ProgramOptions options;
 	try
 	{
+		// Does not set exception message 
+		// because returns false for valid configuration
+		// when user requested information and not really running the app.
+		// If the options are incorrect this will throw instead.
 		if(!options.parseOptions(argc, argv))
-		{ return ExceptionMessage(); }
+		{ return; }
 
 		// File doesn't exist (checked earlier)
 		if(!options.getLogDir().empty() && !fs::exists(options.getLogDir()))
@@ -263,20 +265,24 @@ vl::Hydra_Run(const int argc, char** argv)
 		exception_msg = std::string("An exception of unknow type occured.");
 	}
 
-	if(!exception_msg.empty())
+	// Only set exception message if we have one
+	if(msg)
 	{
-		std::string title;
-		if(options.master())
-		{ title = "Master"; }
-		else
-		{ title = "Slave"; }
-		/// @todo We need a decent name function to options
-		title += " " + options.slave_name + " ERROR";
+		if(!exception_msg.empty())
+		{
+			if(options.master())
+			{ msg->title = "Master"; }
+			else
+			{ msg->title = "Slave"; }
+			/// @todo We need a decent name function to options
+			msg->title += " " + options.slave_name + " ERROR";
 
-		return ExceptionMessage(title, exception_msg);
+			msg->message = exception_msg;
+		}
+		// Clear
+		else
+		{ msg->clear();}
 	}
-	else
-	{ return ExceptionMessage(); }
 }
 
 /// -------------------------------- Application -----------------------------

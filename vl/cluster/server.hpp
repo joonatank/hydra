@@ -96,6 +96,7 @@ public:
 			: address()
 			, _server(0)
 			, environment_sent_time(vl::time(10, 0))
+			, last_alive()
 			, create_frame(-1)
 		{}
 		
@@ -105,7 +106,13 @@ public:
 
 		/// Used for not trying to send environment less than a couple of seconds a part
 		// @todo this should be in the State not here
+		// @todo why is this chrono and not time?
 		vl::chrono environment_sent_time;
+		
+		/// @brief When the client was last seen alive, in servers internal clock time
+		/// There is a timeout when the Client is consired dead if not seen.
+		/// This timeout and the action taken depend on the server.
+		vl::time last_alive;
 
 		/// What messages have been sent to the client without receiving an ACK
 		std::map<vl::time, MessagePart> _sent_msgs;
@@ -346,7 +353,11 @@ private :
 
 	vl::Report<vl::time> _server_report;
 	vl::chrono _report_timer;
+	// The running clock of this server used to manage clients (timeouts etc.)
+	vl::chrono _internal_clock;
 
+	/// Maximum time till we consider a slave to be dead
+	vl::time _maximum_time_to_timeout;
 
 	/// Rendering loop state variables
 	/// only valid while the rendering is in progress
@@ -524,6 +535,11 @@ vl::cluster::Server::_block_till_state_has_flag(void)
 	bool ready = false;
 	while( !ready )
 	{
+		// @todo
+		// We should here mark the client as lost for this round of rendering
+		// This allows us to render and accept input on the master when the
+		// slaves are still initialising.
+
 		poll();
 
 		ready = true;

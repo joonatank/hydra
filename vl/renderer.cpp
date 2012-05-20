@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file renderer.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -268,39 +264,82 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
 	
+	std::string err_no_data("Message does not have enough bytes.");
 	size_t size;
-	assert( msg.size() >= sizeof(size) );
+	if( msg.size() < sizeof(size) )
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_no_data)); }
 
 	msg.read( size );
 	for( size_t i = 0; i < size; ++i )
 	{
-		assert( msg.size() > 0 );
+		if( msg.size() < (sizeof(OBJ_TYPE) + sizeof(uint64_t)) )
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_no_data)); }
+		
 		OBJ_TYPE type;
 		uint64_t id;
 
 		msg.read(type);
 		msg.read(id);
 
-		switch( type )
+		// @todo check for unique id
+		_objects_not_yet_created[id] = type;
+	}
+
+	IdTypeMap saved_for_later;
+
+	// This method should work when ever we have create message
+	// divided into two separate messages in the same or concecutive
+	// frames.
+	// Because first message is going to leave some objects not created
+	// second causes us to re run this function and create all of them.
+	// This depends on the ordering of the objects so manager objects
+	// should have lowest ids which the current implementation enforces.
+	// because ids are ordered by creation and managers need to be created
+	// first.
+	// For later if there seems to be need for checking this every frame
+	// we can move it to data synchronisation instead of creation.
+	_create_objects(_objects_not_yet_created, saved_for_later);
+
+	size_t n_objects = _objects_not_yet_created.size();
+	size_t n_saved = saved_for_later.size();
+	size_t n_created = n_objects - n_saved;
+	std::cout << vl::TRACE << n_created << " objects created from " << n_objects
+		<< " and " << n_saved << " objects were left to be created later." << std::endl;
+
+	_objects_not_yet_created = saved_for_later;
+}
+
+void
+vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
+{
+	for(std::map<uint64_t, OBJ_TYPE>::const_iterator iter = objects.begin();
+		iter != objects.end(); ++iter)
+	{
+		uint64_t id = iter->first;
+		switch(iter->second)
 		{
 			case OBJ_PLAYER :
 			{
 				std::cout << vl::TRACE << "Creating Player with ID : " << id << std::endl;
-				if(!_scene_manager)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager")); }
-
-				vl::Player *player = new vl::Player(_scene_manager);
-				mapObject(player, id);
+				// Create the Player if we have a SceneManager
+				if(_scene_manager)
+				{
+					vl::Player *player = new vl::Player(_scene_manager);
+					mapObject(player, id);
 				
-				// Only single instances are supported for now
-				assert(!_player && player);
-				_player = player;
+					// Only single instances are supported for now
+					assert(!_player && player);
+					_player = player;
+				}
+				// Store it for later if we don't
+				else
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
 			case OBJ_GUI :
 			{
-				std::cout << vl::TRACE << "Creating GUI with id " << id << std::endl;
+				std::cout << vl::TRACE << "Renderer : Creating GUI with id " << id << std::endl;
 				
 				// Only creating GUI on the master for now
 				// @todo add support for selecting the window
@@ -327,13 +366,14 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 
 			case OBJ_GUI_CONSOLE :
 			{
+				std::cout << vl::TRACE << "Renderer : Creating GUI console" << std::endl;
 				// GUI objects are only used by master
 				if( getName() == _env->getMaster().name )
 				{
 					if(!_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
-					_gui->createWindow(type, id);
-					if(type == OBJ_GUI_CONSOLE)
+					_gui->createWindow(iter->second, id);
+					if(iter->second == OBJ_GUI_CONSOLE)
 					{
 						_gui->getConsole()->addCommandListener(boost::bind(&Renderer::sendCommand, this, _1));
 					}
@@ -349,42 +389,45 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			case OBJ_SCENE_MANAGER :
 			{
 				std::cout << vl::TRACE << "Renderer : Creating SceneManager" << std::endl;
-				// TODO support multiple SceneManagers
 				if(_scene_manager || _ogre_sm)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
 				if(!_mesh_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
 
-				// TODO should pass the _ogre_sm to there also or vl::Root as creator
 				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
 				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
-				std::clog << "Renderer : SceneManager created." << std::endl;
 			}
 			break;
 
 			case OBJ_SCENE_NODE :
 			{
-				if(!_scene_manager)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
-				_scene_manager->_createSceneNode(id);
+				if(_scene_manager)
+				{ _scene_manager->_createSceneNode(id); }
+				else
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
 			case OBJ_MATERIAL_MANAGER :
 			{
+				std::cout << vl::TRACE << "Renderer : Creating MaterialManager" << std::endl;
 				if(_material_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
 				_material_manager.reset(new MaterialManager(this, id));
-				std::clog << "Renderer : MaterialManager created" << std::endl;
+				std::cout << vl::TRACE << "Renderer : MaterialManager created" << std::endl;
 			}
 			break;
 
 			case OBJ_MATERIAL :
 			{
-				if(!_material_manager)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO Material Manager.")); }
-				vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
-				_materials_to_check.push_back(mat);
+				if(_material_manager)
+				{
+					std::cout << vl::TRACE << "Renderer : Creating Material" << std::endl;
+					vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
+					_materials_to_check.push_back(mat);
+				}
+				else
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
@@ -392,10 +435,13 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 			/// the movable object type and other one dynamic so more movable objects
 			/// can be created with ease.
 			default :
-				if(!_scene_manager)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No SceneManager.")); }
-				_scene_manager->_createMovableObject(type, id);
-				break;
+			{
+				if(_scene_manager)
+				{ _scene_manager->_createMovableObject(iter->second, id); }
+				else
+				{ left_overs[id] = iter->second; }
+			}
+			break;
 		}
 	}
 }
@@ -543,7 +589,7 @@ vl::Renderer::_syncData(void)
 			}
 			else
 			{
-				std::cout << vl::CRITICAL << "No ID " << iter->getId() << " found in mapped objects."
+				std::cout << "No ID " << iter->getId() << " found in mapped objects. Saving for later."
 					<< std::endl;
 				tmp.push_back( *iter );
 			}

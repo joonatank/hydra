@@ -1,21 +1,22 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-10
  *	@file hydra.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
 #ifndef HYDRA_DEFINES_HPP
 #define HYDRA_DEFINES_HPP
+
+#define HYDRA_VERSION "0.4"
+
+#define DEFAULT_HYDRA_PORT 4699
+
 
 // Determine the Operating System
 // Only supported OS are Windows and Linux for now

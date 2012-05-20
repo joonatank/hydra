@@ -1,17 +1,13 @@
 /**
- *	Copyright (c) 2010-2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2010 - 2011 Tampere University of Technology
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-02
  *	@file base/exceptions.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -33,16 +29,18 @@ namespace vl
 	/// File name used
 	typedef boost::error_info<struct tag_file, std::string> file_name;
 	/// Resource name
-	typedef boost::error_info<struct tag_file, std::string> resource_name;
+	typedef boost::error_info<struct tag_resource_name, std::string> resource_name;
 
 	/// Name of the Factory used for object creation
-	typedef boost::error_info<struct tag_file, std::string> factory_name;
+	typedef boost::error_info<struct tag_factory_name, std::string> factory_name;
 
 	/// requested object type name
-	typedef boost::error_info<struct tag_file, std::string> object_type_name;
+	typedef boost::error_info<struct tag_object_type_name, std::string> object_type_name;
 
 	/// UDP number of bytes
 	typedef boost::error_info<struct tag_bytes, size_t> bytes;
+	/// IP address
+	typedef boost::error_info<struct tag_address, std::string> address;
 
 	/// @struct ExceptionMessage
 	/// @brief struct that is returned from Hydra_run library functio
@@ -57,6 +55,12 @@ namespace vl
 
 		bool empty(void) const
 		{ return title.empty() && message.empty(); }
+
+		void clear(void)
+		{
+			title.clear();
+			message.clear();
+		}
 
 		std::string title;
 		std::string message;
@@ -260,6 +264,13 @@ namespace vl
 		virtual const char* what() const throw()
 		{ return "Received message constains extra bytes."; }
 	};
+
+	struct client_timeout : public exception
+	{
+		virtual const char* what() const throw()
+		{ return "Client TIMEOUT"; }
+	};
+	
 
 	/// ----------- Resource errors -------------
 	/// @brief thrown by Resource loaders

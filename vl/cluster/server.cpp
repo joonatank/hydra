@@ -99,6 +99,7 @@ vl::cluster::Server::ClientFSM::_do_handle_error(vl::cluster::event::timer_expir
 vl::cluster::Server::Server(uint16_t const port)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _n_log_messages(0)
+	, _maximum_time_to_timeout(10)
 	, _frame(0)
 	, _draw_error(false)
 	, _fsm(new ServerFSM())
@@ -176,6 +177,9 @@ vl::cluster::Server::poll(void)
 		if( !cl_ptr )
 			cl_ptr = _add_client(remote_endpoint);
 
+		/// Mark the client as alive
+		cl_ptr->last_alive = _internal_clock.elapsed();
+
 		if(part.parts == 1)
 		{
 			Message msg_part(part);
@@ -189,6 +193,21 @@ vl::cluster::Server::poll(void)
 		{
 			std::string msg("Server does not support partial messages.");
 			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg)); 
+		}
+	}
+
+	// Check for dead clients
+	// Timeout if one of the client is taking too long to respond at all
+	// @todo we should really use a separate alive socket for this
+	// @todo this is extremely dangerous with complex models and needs probably
+	// be adjusted for them.
+	for(ClientList::const_iterator iter = _renderers.begin(); 
+		iter != _renderers.end(); ++iter)
+	{
+		if((*iter)->last_alive + _maximum_time_to_timeout < _internal_clock.elapsed())
+		{
+			std::string name((*iter)->address.address().to_string());
+			BOOST_THROW_EXCEPTION(vl::client_timeout() << vl::address(name));
 		}
 	}
 }
@@ -401,7 +420,6 @@ vl::cluster::Server::_do_update(vl::cluster::event::update const &evt)
 	_block_till_state_has_flag<UpdateDoneFlag>();
 
 	_server_report["wait update time"].push(tim.elapsed());
-
 }
 
 void
@@ -661,8 +679,6 @@ vl::cluster::Server::_sendCreate(Client &client)
 		if( client.create_frame >= int64_t(iter->first) )
 		{ break; }
 		msgs.push_back( iter->second );
-		// Update the update frame so that the same message will not be sent again
-		client.create_frame = iter->first;
 	}
 
 	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin();
@@ -670,6 +686,11 @@ vl::cluster::Server::_sendCreate(Client &client)
 	{
 		assert(iter->getType() == MSG_SG_CREATE);
 		_sendMessage(client, *iter);
+		// Update the update frame so that the same message will not be sent again
+		// Here because if it's above we end up invalidating all the other messages
+		// Because the array is set from older to newer we can update this at
+		// every iteration.
+		client.create_frame = iter->getFrame();
 	}
 }
 

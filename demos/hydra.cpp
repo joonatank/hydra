@@ -1,16 +1,13 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-10
  *	@file hydra.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -116,24 +113,25 @@ int main( const int argc, char** argv )
 	FARPROC run = GetProcAddress(hydra_library,"Hydra_Run");
 	if(run == NULL)
 	{
-		std::string title("Hydra Error");
-		std::string msg("Didn't find function pointer for Hydra_Run.");
-		vl::MessageDialog dialog(title, msg);
-		return -1;
+		// set error message here but proceed with normal execution
+		// so we unload the library correctly
+		msg.title = "Hydra Error";
+		msg.message = "Didn't find function pointer for Hydra_Run.";
 	}
 	else
 	{
 	   // cast initializer to its proper type and use
-		typedef vl::ExceptionMessage(*hydra_run_function_type)(const int argc, char** argv);
+		typedef void(*hydra_run_function_type)(const int argc, char** argv, vl::ExceptionMessage *msg);
 		hydra_run_function_type hydra_run = (hydra_run_function_type)run;
 
-		msg = hydra_run(argc, argv);
+		hydra_run(argc, argv, &msg);
 	}
 #endif	// HYDRA_WIN32
 
 	/// Show the exception message
 	if(!msg.empty())
 	{
+		// @todo this crashes if launched from the daemon
 		vl::MessageDialog dialog(msg.title, msg.message);
 	}
 
