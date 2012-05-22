@@ -231,9 +231,9 @@ vl::Master::render(void)
 
 	report["Rendering loop"].push(loop_timer.elapsed());
 
-	// Update statistics every 10 seconds
+	// Update statistics every second
 	// @todo time limit should be configurable
-	if( _stats_timer.elapsed() > vl::time(10) )
+	if( _stats_timer.elapsed() > vl::time(1) )
 	{
 		report.finish();
 		_stats_timer.reset();
@@ -437,9 +437,8 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
 
-	_renderer->enableDebugOverlay(opt.debug.overlay);
-
 	_game_manager = new vl::GameManager(this, _logger);
+	_game_manager->setOptions(opt);
 
 	_server.reset(new vl::cluster::Server(_env->getServer().port));
 	_server->addRequestMessageListener(boost::bind(&Master::messageRequested, this, _1));

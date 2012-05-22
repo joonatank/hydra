@@ -7,11 +7,7 @@
  *	@file base/report.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -98,6 +94,9 @@ public :
 
 	T const &result(void) const;
 
+	void set_result(T const &res)
+	{ _result = res; }
+
 	int priority(void) const
 	{ return _priority; }
 
@@ -139,6 +138,21 @@ public :
 	Number<T> &operator[](std::string const &name)
 	{ return _numbers[name]; }
 
+	Number<T> const &operator[](std::string const &name) const
+	{ return _numbers[name]; }
+
+	typename std::map< std::string, Number<T> >::const_iterator begin(void) const
+	{ return _numbers.begin(); }
+
+	typename std::map< std::string, Number<T> >::const_iterator end(void) const
+	{ return _numbers.end(); }
+
+	typename std::map< std::string, Number<T> >::iterator begin(void)
+	{ return _numbers.begin(); }
+
+	typename std::map< std::string, Number<T> >::iterator end(void)
+	{ return _numbers.end(); }
+
 	/// @brief removes all numbers
 	void clear(void);
 
@@ -159,10 +173,21 @@ public :
 
 	friend std::ostream &operator<< <>(std::ostream &os, Report<T> const &r);
 
+	bool isDirty(void) const
+	{ return _dirty; }
+
+	void _clearDirty(void)
+	{ _dirty = false; }
+
 private :
+	void _setDirty(void)
+	{ _dirty = true; }
+
 	/// Can not do a typedef on a template when using C++98 standard
-	/// Can be updated when C++0x is realeased (and if compilers are up to date)
+	/// Could be using C++12 but that's not really a solution...
 	std::map< std::string, Number<T> > _numbers;
+
+	bool _dirty;
 
 };	// class Report
 
@@ -234,6 +259,7 @@ vl::operator<<(std::ostream &os, vl::Number<T> const &n)
 /// -------------------------------- Report ------------------------------------
 template<typename T>
 vl::Report<T>::Report(void)
+	: _dirty(false)
 {
 }
 
@@ -301,6 +327,7 @@ template<typename T>
 void
 vl::Report<T>::finish(void)
 {
+	_setDirty();
 	typename std::map< std::string, vl::Number<T> >::iterator iter;
 	for( iter = _numbers.begin(); iter != _numbers.end(); ++iter )
 	{

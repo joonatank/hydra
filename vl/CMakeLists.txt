@@ -277,6 +277,7 @@ set(GUI_HEADERS
 	gui/gui.hpp
 	gui/gui_window.hpp
 	gui/console.hpp
+	gui/performance_overlay.hpp
 	gui/Gorilla.h
 	)
 
@@ -284,6 +285,7 @@ set(GUI_SRC
 	gui/gui.cpp
 	gui/gui_window.cpp
 	gui/console.cpp
+	gui/performance_overlay.cpp
 	gui/Gorilla.cpp
 	)
 source_group(HydraMain\\GUI FILES ${GUI_HEADERS} ${GUI_SRC})

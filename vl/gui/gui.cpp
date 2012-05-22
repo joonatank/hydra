@@ -16,6 +16,7 @@
 // gui window, necessary for the windows this creates
 #include "gui_window.hpp"
 #include "console.hpp"
+#include "performance_overlay.hpp"
 
 #include "settings.hpp"
 // Necessary for init GUI
@@ -52,20 +53,8 @@ vl::gui::GUI::~GUI(void)
 }
 
 vl::gui::WindowRefPtr
-vl::gui::GUI::createWindow(std::string const &type, std::string const &name, std::string const &layout)
+vl::gui::GUI::createWindow(vl::OBJ_TYPE t)
 {
-	/// @todo add name support
-
-	OBJ_TYPE t;
-	if(type == "console")
-	{
-		t = OBJ_GUI_CONSOLE;
-	}
-	else
-	{
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown GUI window type"));
-	}
-
 	return createWindow(t, 0);
 }
 
@@ -78,6 +67,10 @@ vl::gui::GUI::createWindow(vl::OBJ_TYPE t, uint64_t id)
 	case OBJ_GUI_CONSOLE:
 		_console.reset(new ConsoleWindow(this));
 		win = _console;
+		break;
+	case OBJ_GUI_PERFORMANCE_OVERLAY:
+		_overlay.reset(new PerformanceOverlay(this));
+		win = _overlay;
 		break;
 	default :
 		std::cout << vl::CRITICAL << "GUI::createWindow : Incorrect type for Window" << std::endl;
@@ -185,9 +178,10 @@ vl::gui::GUI::sendCommand(std::string const &cmd)
 void
 vl::gui::GUI::update(void)
 {
-	if(_console)
+	for(std::vector<vl::gui::WindowRefPtr>::iterator iter = _windows.begin();
+		iter != _windows.end(); ++iter)
 	{
-		_console->update();
+		(*iter)->update();
 	}
 }
 

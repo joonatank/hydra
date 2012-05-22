@@ -189,12 +189,12 @@ namespace gui
 {
 	class GUI;
 	class Window;
-	class EditorWindow;
+	class PerformanceOverlay;
 	class ConsoleWindow;
 
 	typedef boost::shared_ptr<GUI> GUIRefPtr;
 	typedef boost::shared_ptr<Window> WindowRefPtr;
-	typedef boost::shared_ptr<EditorWindow> EditorWindowRefPtr;
+	typedef boost::shared_ptr<PerformanceOverlay> PerformanceOverlayRefPtr;
 	typedef boost::shared_ptr<ConsoleWindow> ConsoleWindowRefPtr;
 }
 

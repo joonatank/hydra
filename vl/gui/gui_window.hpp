@@ -85,6 +85,9 @@ public :
 	void removeListener(boost::signals::connection subscriber)
 	{ subscriber.disconnect(); }
 
+	/// @internal called from GUI every frame
+	/// Should decide if this Window needs a redraw and proceed to draw if necessary.
+	/// @todo these various update methods need to be renamed properly
 	void update(void);
 
 /// Private virtual overrides
@@ -101,6 +104,7 @@ private :
 
 	virtual void _window_resetted(void) {}
 	
+	/// @todo these various update methods need to be renamed properly
 	virtual void _update(void) {}
 
 private :

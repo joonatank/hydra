@@ -51,14 +51,8 @@ public :
 	
 	~GUI(void);
 
-	/// @brief Master creator
-	WindowRefPtr createWindow(std::string const &type, std::string const &name, std::string const &layout);
-
-	WindowRefPtr createWindow(std::string const &type)
-	{ return createWindow(type, std::string(), std::string()); }
-
-	WindowRefPtr createWindow(std::string const &type, std::string const &name)
-	{ return createWindow(type, name, std::string()); }
+	/// @brief Master creation
+	WindowRefPtr createWindow(vl::OBJ_TYPE);
 
 	/// @brief Slave creator
 	WindowRefPtr createWindow(vl::OBJ_TYPE, uint64_t id);
@@ -71,6 +65,9 @@ public :
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
+	
+	PerformanceOverlayRefPtr getPerformanceOverlay(void)
+	{ return _overlay; }
 
 	bool isVisible(void) const;
 
@@ -106,6 +103,7 @@ private :
 private :
 
 	vl::gui::ConsoleWindowRefPtr _console;
+	vl::gui::PerformanceOverlayRefPtr _overlay;
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
 

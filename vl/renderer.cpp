@@ -365,11 +365,12 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			break;
 
 			case OBJ_GUI_CONSOLE :
+			case OBJ_GUI_PERFORMANCE_OVERLAY:
 			{
-				std::cout << vl::TRACE << "Renderer : Creating GUI console" << std::endl;
 				// GUI objects are only used by master
 				if( getName() == _env->getMaster().name )
 				{
+					std::cout << vl::TRACE << "Renderer : Creating GUI Widnow" << std::endl;
 					if(!_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
 					_gui->createWindow(iter->second, id);
@@ -436,10 +437,16 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			/// can be created with ease.
 			default :
 			{
-				if(_scene_manager)
-				{ _scene_manager->_createMovableObject(iter->second, id); }
+				// Movable object
+				if(iter->second >= OBJ_MOVABLE)
+				{
+					if(_scene_manager)
+					{ _scene_manager->_createMovableObject(iter->second, id); }
+					else
+					{ left_overs[id] = iter->second; }
+				}
 				else
-				{ left_overs[id] = iter->second; }
+				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown distributed object type.")); }
 			}
 			break;
 		}

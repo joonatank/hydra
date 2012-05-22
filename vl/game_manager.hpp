@@ -48,6 +48,8 @@
 
 #include "base/state_machines.hpp"
 
+#include "program_options.hpp"
+
 namespace vl
 {
 
@@ -333,6 +335,14 @@ public :
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 
+	void setOptions(vl::ProgramOptions const &opt)
+	{ _options = opt; }
+
+	vl::ProgramOptions const &getOptions(void) const
+	{ return _options; }
+	vl::ProgramOptions &getOptions(void)
+	{ return _options; }
+
 	int addProjectChangedListener(ProjectChanged::slot_type const &slot)
 	{ _project_changed_signal.connect(slot); return 1; }
 
@@ -418,6 +428,8 @@ private :
 	vl::ProjSettings _global_project;
 
 	bool _auto_start;
+
+	vl::ProgramOptions _options;
 
 	GameObjectList _game_objects;
 

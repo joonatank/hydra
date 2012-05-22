@@ -6,11 +6,7 @@
  *	@file cluster/object_types.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -20,21 +16,29 @@
 namespace vl
 {
 
+// @todo we should divide this into primary objects
+// gui objects and movable objects
+// @todo should also not be hard coded
+// And should be completely unique
 enum OBJ_TYPE
 {
 	OBJ_INVALID,
 	OBJ_PLAYER,
-	OBJ_GUI,			// GUI object
+	OBJ_GUI,			// Master GUI object
 	OBJ_GUI_CONSOLE,	// GUI Console window
+	OBJ_GUI_PERFORMANCE_OVERLAY,	// GUI performance overlay
 	OBJ_SCENE_MANAGER,
 	OBJ_SCENE_NODE,
+	OBJ_MATERIAL,		// Dynamic material definition
+	OBJ_MATERIAL_MANAGER,
+	// Movable Objects
+	// Don't put anything below these we are using greater than compares
+	OBJ_MOVABLE,
 	OBJ_ENTITY,
 	OBJ_LIGHT,
 	OBJ_CAMERA,
 	OBJ_MOVABLE_TEXT,
 	OBJ_RAY_OBJECT,
-	OBJ_MATERIAL,		// Dynamic material definition
-	OBJ_MATERIAL_MANAGER,
 };
 
 }	// namespace vl

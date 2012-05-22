@@ -216,7 +216,6 @@ vl::gui::ConsoleWindow::printTo(std::string const &text, double time,
 	_print(text);
 }
 
-/// ------------------------- GECUI callbacks ----------------------------------
 void
 vl::gui::ConsoleWindow::_input_accepted(void)
 {

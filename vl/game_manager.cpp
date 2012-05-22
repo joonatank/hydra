@@ -31,6 +31,8 @@
 
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
+// Necessary because we need to access some special functions
+#include "gui/performance_overlay.hpp"
 
 // Physics
 #include "physics/physics_world.hpp"
@@ -660,8 +662,16 @@ vl::GameManager::_do_init(init const &evt)
 	_gui.reset(new vl::gui::GUI(_session));
 
 	// Window creation
-	gui::WindowRefPtr win = _gui->createWindow("console");
+	gui::WindowRefPtr win = _gui->createWindow(OBJ_GUI_CONSOLE);
 	win->setVisible(false);
+	
+	win = _gui->createWindow(OBJ_GUI_PERFORMANCE_OVERLAY);
+	gui::PerformanceOverlayRefPtr ov = boost::dynamic_pointer_cast<gui::PerformanceOverlay>(win);
+	if(!ov)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+	ov->setReport(&_rendering_report);
+	ov->setVisible(_options.debug.overlay);
+
 
 	_createQuitEvent();
 

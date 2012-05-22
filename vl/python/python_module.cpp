@@ -47,6 +47,7 @@
 #include "gui/gui.hpp"
 #include "gui/gui_window.hpp"
 #include "gui/console.hpp"
+#include "gui/performance_overlay.hpp"
 
 // Animation framework
 #include "animation/constraints.hpp"
@@ -738,7 +739,12 @@ void export_gui(void)
 	python::class_<vl::gui::ConsoleWindow, vl::gui::ConsoleWindowRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIConsoleWindow", python::no_init)
 	;
 
+	python::class_<vl::gui::PerformanceOverlay, vl::gui::PerformanceOverlayRefPtr, boost::noncopyable, python::bases<vl::gui::Window> >("GUIPerformanceOverlay", python::no_init)
+		.add_property("advanced", &vl::gui::PerformanceOverlay::isShowAdvanced, &vl::gui::PerformanceOverlay::setShowAdvanced)
+	;
+
 	python::class_<vl::gui::GUI, vl::gui::GUIRefPtr, boost::noncopyable>("GUI", python::no_init )
 		.add_property("console", &vl::gui::GUI::getConsole)
+		.add_property("overlay", &vl::gui::GUI::getPerformanceOverlay)
 	;
 }

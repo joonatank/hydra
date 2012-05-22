@@ -38,8 +38,6 @@
 
 #include <OGRE/OgreRenderWindow.h>
 
-#include <OGRE/SdkTrays.h>
-
 namespace vl
 {
 
@@ -124,8 +122,6 @@ protected :
 
 	void _sendEvent( vl::cluster::EventData const &event );
 
-	void _lazy_initialisation(void);
-
 	std::string _name;
 
 	vl::RendererInterface *_renderer;
@@ -146,8 +142,6 @@ protected :
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
-
-	OgreBites::SdkTrayManager *_tray_mgr;
 
 };	// class Window
 
