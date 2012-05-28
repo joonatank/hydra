@@ -182,7 +182,7 @@ vl::Master::render(void)
 	assert(_server);
 
 	vl::chrono loop_timer;
-	vl::Report<vl::time> &report = _game_manager->getRenderingReport();
+	vl::ProfilerReport &report = _game_manager->getRenderingReport();
 
 	vl::chrono timer;
 
@@ -194,7 +194,7 @@ vl::Master::render(void)
 	timer.reset();
 	_game_manager->step();
 
-	report["step time"].push(timer.elapsed());
+//	report["step time"].push(timer.elapsed());
 
 	/// Provide the updates to slaves
 	timer.reset();
@@ -202,7 +202,7 @@ vl::Master::render(void)
 	_updateServer();
 	_updateRenderer();
 
-	report["scene graph update time"].push(timer.elapsed());
+	//report["scene graph update time"].push(timer.elapsed());
 
 	/// Render the scene
 	timer.reset();
@@ -210,9 +210,9 @@ vl::Master::render(void)
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
-		vl::chrono l;
+		//vl::chrono l;
 		_renderer->draw();
-		report["local rendering"].push(l.elapsed());
+		//report["local rendering"].push(l.elapsed());
 	}
 
 	_server->finish_draw(_frame, getSimulationTime());
@@ -220,16 +220,17 @@ vl::Master::render(void)
 	// Finish local renderer
 	if( _renderer.get() )
 	{
-		vl::chrono l;
+		//vl::chrono l;
 		_renderer->swap();
-		report["local swap"].push(l.elapsed());
+		//report["local swap"].push(l.elapsed());
 
-		l.reset();
+		//l.reset();
 		_renderer->capture();
-		report.get_number("local capture").push(l.elapsed());
+		//report.get_number("local capture").push(l.elapsed());
 	}
+	report[PT_RENDERING].push(timer.elapsed());
 
-	report["Rendering loop"].push(loop_timer.elapsed());
+	report[PT_FRAME].push(loop_timer.elapsed());
 
 	// Update statistics every second
 	// @todo time limit should be configurable

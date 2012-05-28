@@ -50,6 +50,8 @@
 
 #include "program_options.hpp"
 
+#include "profiler_report.hpp"
+
 namespace vl
 {
 
@@ -192,7 +194,7 @@ public :
 	vl::gui::GUIRefPtr getGUI(void)
 	{ return _gui; }
 
-	vl::Report<vl::time> &getRenderingReport(void)
+	vl::ProfilerReport &getRenderingReport(void)
 	{ return _rendering_report; }
 
 	vl::Report<vl::time> &getInitReport(void)
@@ -398,7 +400,7 @@ private :
 
 	vl::gui::GUIRefPtr _gui;
 
-	vl::Report<vl::time> _rendering_report;
+	vl::ProfilerReport _rendering_report;
 	vl::Report<vl::time> _init_report;
 
 	vl::Logger *_logger;

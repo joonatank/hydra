@@ -41,11 +41,13 @@ struct HYDRA_API DebugOptions
 {
 	DebugOptions(void)
 		: overlay(false)
+		, overlay_advanced(false)
 		, axes(false)
 		, display(false)
 	{}
 
 	bool overlay;
+	bool overlay_advanced;
 	bool axes;
 	bool display;
 };

@@ -252,6 +252,7 @@ vl::ProgramOptions::_parse_ini(void)
 	start_processor = pt.get("multicore.start_processor", 0);
 	auto_fork = pt.get("multicore.auto_fork", false);
 	debug.overlay = pt.get("debug.overlay", false);
+	debug.overlay_advanced = pt.get("debug.overlay_advanced", false);
 	show_system_console = pt.get("debug.show_system_console", false);
 	debug.axes = pt.get("debug.axes", false);
 	debug.display = pt.get("debug.display", false);

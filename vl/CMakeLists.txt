@@ -61,6 +61,7 @@ set(SRC
 	game_object.cpp
 	hsf_loader.cpp
 	hsf_writer.cpp
+	profiler_report.cpp
 	)
 
 set(MATH_HEADERS
@@ -269,6 +270,7 @@ set( HEADERS
 	hsf_writer.hpp
 	ogre_axes.hpp
 	remote_launcher_helper.hpp
+	profiler_report.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

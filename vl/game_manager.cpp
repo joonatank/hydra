@@ -143,19 +143,19 @@ vl::GameManager::step(void)
 		
 		vl::chrono c;
 		_kinematic_world->step(getDeltaTime());
-		_rendering_report["kinematic world step"].push(c.elapsed());
+		_rendering_report[PT_KINEMATICS].push(c.elapsed());
 
 		if( _physics_world )
 		{
 			c.reset();
 			_physics_world->step(getDeltaTime());
-			_rendering_report["physics world step"].push(c.elapsed());
+			_rendering_report[PT_PHYSICS].push(c.elapsed());
 		}
 
 		c.reset();
 		/// Check collisions and copy the SceneNode transformations
 		_kinematic_world->finalise();
-		_rendering_report["kinematic collision detection"].push(c.elapsed());
+		_rendering_report[PT_COLLISIONS].push(c.elapsed());
 
 		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());
@@ -669,9 +669,9 @@ vl::GameManager::_do_init(init const &evt)
 	gui::PerformanceOverlayRefPtr ov = boost::dynamic_pointer_cast<gui::PerformanceOverlay>(win);
 	if(!ov)
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-	ov->setReport(&_rendering_report);
+	ov->setRenderingReport(&_rendering_report);
 	ov->setVisible(_options.debug.overlay);
-
+	ov->setShowAdvanced(_options.debug.overlay_advanced);
 
 	_createQuitEvent();
 

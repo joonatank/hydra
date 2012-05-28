@@ -18,7 +18,9 @@
 // Base data stucture
 #include "base/report.hpp"
 
-#include "Math/types.hpp"
+#include "math/types.hpp"
+
+#include "profiler_report.hpp"
 
 namespace vl
 {
@@ -43,11 +45,23 @@ public :
 
 	void shutdown(void);
 
-	void setReport(Report<vl::time> *report)
-	{ _report = report; }
+	void setInitReport(Report<vl::time> *report)
+	{
+		setDirty(DIRTY_INIT_REPORT);
+		_init_report = report;
+	}
 
-	Report<vl::time> *getReport(void)
-	{ return _report; }
+	Report<vl::time> *getInitReport(void)
+	{ return _init_report; }
+
+	void setRenderingReport(ProfilerReport *report)
+	{
+		setDirty(DIRTY_RENDERING_REPORT);
+		_rendering_report = report;
+	}
+
+	ProfilerReport *getRenderingReport(void)
+	{ return _rendering_report; }
 
 	void setShowAdvanced(bool show)
 	{
@@ -63,8 +77,9 @@ public :
 
 	enum DirtyBits
 	{
-		DIRTY_REPORT = Window::DIRTY_CUSTOM << 0,
-		DIRTY_SHOW_ADVANCED = Window::DIRTY_CUSTOM << 1,
+		DIRTY_SHOW_ADVANCED = Window::DIRTY_CUSTOM << 0,
+		DIRTY_RENDERING_REPORT = Window::DIRTY_CUSTOM << 1,
+		DIRTY_INIT_REPORT = Window::DIRTY_CUSTOM << 2,
 	};
 
 	// Renderer specific stats (updated by the Renderer)
@@ -97,7 +112,8 @@ private :
 
 private :
 	// From master
-	Report<vl::time> *_report;
+	Report<vl::time> *_init_report;
+	ProfilerReport *_rendering_report;
 
 	// From local renderer
 	vl::scalar _fps;
@@ -107,10 +123,33 @@ private :
 	bool _show_advanced;
 
 	/// Gorilla
-	Gorilla::Layer *_advanced_layer;
-	Gorilla::Caption*    _advanced_caption;
-	Gorilla::MarkupText* _advance_text;
 
+	/// Advanced layer
+	Gorilla::Layer *_advanced_layer;
+	Gorilla::Caption *_advanced_caption;
+	Gorilla::MarkupText *_advance_text;
+	// Total frame time
+	Gorilla::LineList *_frame_line;
+	Gorilla::MarkupText *_frame_text;
+	// Kinematics
+	Gorilla::LineList *_kinematics_line;
+	Gorilla::MarkupText *_kinematics_text;
+	// Physics
+	Gorilla::LineList *_physics_line;
+	Gorilla::MarkupText *_physics_text;
+	// Collisions
+	Gorilla::LineList *_collisions_line;
+	Gorilla::MarkupText *_collisions_text;
+	// Rendering
+	Gorilla::LineList *_rendering_line;
+	Gorilla::MarkupText *_rendering_text;
+
+	// CPU usage
+	Gorilla::MarkupText *_cpu_text;
+	// GPU usage
+	Gorilla::MarkupText *_gpu_text;
+
+	/// Basic layer
 	Gorilla::Layer *_basic_layer;
 	Gorilla::Rectangle*  _basic_decoration;
 	Gorilla::MarkupText* _basic_text;
@@ -137,6 +176,13 @@ ByteStream &operator<<(ByteStream &msg, vl::Number<vl::time> const &num);
 
 template<>
 ByteStream &operator>>(ByteStream &msg, vl::Number<vl::time> &num);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::ProfilerReport const &report);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::ProfilerReport &report);
+
 
 }
 
