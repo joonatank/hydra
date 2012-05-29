@@ -503,7 +503,7 @@ vl::Window::draw(void)
 	og_cam->setPosition(_camera->getPosition());
 	og_cam->setOrientation(_camera->getOrientation());
 
-	if(_renderer->getGui()->getPerformanceOverlay())
+	if(_renderer->getGui() && _renderer->getGui()->getPerformanceOverlay())
 	{
 		vl::scalar fps = _ogre_window->getLastFPS();
 		size_t batches = _ogre_window->getBatchCount();
