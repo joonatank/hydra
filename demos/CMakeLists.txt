@@ -50,6 +50,10 @@ copy_start_scripts( hydra
 	hsf_test_project/perapora.prj
 	"hsf_test" )
 
+copy_start_scripts( hydra
+	excavator_physics_project/excavator_physics.prj
+	"excavator_physics" )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
