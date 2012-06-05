@@ -298,7 +298,7 @@ public :
 
 		// Hard coded timeval
 		// @todo should be configured from command-line
-		const int msecs = 8;
+		const uint32_t msecs = 8;
 		struct timeval t;
 		t.tv_sec = 0;
 		t.tv_usec = msecs*1e3;

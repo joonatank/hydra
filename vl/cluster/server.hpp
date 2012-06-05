@@ -556,7 +556,7 @@ vl::cluster::Server::_block_till_state_has_flag(void)
 		// TODO should wait only for a while and then resent the last message
 
 		// Needs to sleep in Linux at least. Busy wait will cause a huge lag.
-		vl::msleep(0);
+		vl::msleep(uint32_t(0));
 	}
 }
 

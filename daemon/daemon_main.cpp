@@ -66,7 +66,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, in
 			}
 		
 			launcher.mainloop();
-			vl::msleep(10);
+			vl::msleep((uint32_t)10);
 		}
 
 		delete g_launcher_gui;

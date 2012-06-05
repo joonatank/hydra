@@ -294,7 +294,7 @@ struct Options
 	{}
 
 	uint16_t port;
-	uint16_t sleep;
+	uint32_t sleep;
 	bool verbose;
 	bool async;
 
@@ -305,7 +305,7 @@ struct Options
 			("help,h", "produce a help message")
 			("verbose,v", "print the output to system console")
 			("async,a", "use async server rather than sync")
-			("sleep,s", po::value<int>(), "how long to sleep")
+			("sleep,s", po::value<uint32_t>(), "how long to sleep")
 			("port,p", po::value<int>(), "port for the time stamp server")
 		;
 
@@ -354,7 +354,7 @@ struct Options
 				std::cout << "Sleep time can not be negative" << std::endl;
 				return false;
 			}
-			sleep = vm["sleep"].as<int>();
+			sleep = vm["sleep"].as<uint32_t>();
 		}
 
 		return true;

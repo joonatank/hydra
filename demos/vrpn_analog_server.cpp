@@ -103,6 +103,6 @@ int main (int argc, char **argv)
 		// Needs to be larger than 1ms because otherwise client will go into
 		// infinite loop O_o
 		// dunno how much larger though
-		vl::msleep(100);
+		vl::msleep((uint32_t)100);
 	}
 }

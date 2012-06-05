@@ -99,7 +99,7 @@ vl::Slave::_mainloop(bool sleep)
 	///
 	/// Linux can not handle busy wait,
 	/// much faster with context switching in every iteration.
-	vl::msleep(0);
+	vl::msleep(uint32_t(0));
 }
 
 void

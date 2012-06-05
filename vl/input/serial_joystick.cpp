@@ -76,7 +76,7 @@ vl::SerialJoystick::initialise(void)
 	std::vector<JoystickEvent> events;
 
 	_request_multi_data();
-	vl::msleep(1);
+	vl::msleep(uint32_t(1));
 	if(!_read_multi_data(events, true))
 	{
 		BOOST_THROW_EXCEPTION(vl::exception());
@@ -101,7 +101,7 @@ vl::SerialJoystick::calibrate_zero(void)
 	_zeros.clear();
 
 	_request_multi_data();
-	vl::msleep(1);
+	vl::msleep((uint32_t)1);
 	if(!_read_multi_data(_zeros, true))
 	{
 		BOOST_THROW_EXCEPTION(vl::exception());

@@ -30,6 +30,13 @@
 namespace vl
 {
 
+// Forbid implicit conversions
+// primitive types allow conversions but overloads take precidence
+// over implicit conversion so this function is used if user does
+// not use explicit conversions.
+template <typename T>
+inline void msleep(T) = delete;
+
 inline void msleep(uint32_t milliseconds)
 {
 #ifdef _WIN32
