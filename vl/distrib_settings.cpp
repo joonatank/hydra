@@ -153,7 +153,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
 	msg << window.name << window.get_channels() << window.rect
-		<< window.n_display << window.stereo << window.nv_swap_sync 
+		<< window.n_display << window.stereo_type << window.nv_swap_sync 
 		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
 		<< window.renderer << window.input_handler;
 
@@ -172,7 +172,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
 	msg >> window.name >> window.get_channels() >> window.rect
-		>> window.n_display >> window.stereo >> window.nv_swap_sync
+		>> window.n_display >> window.stereo_type >> window.nv_swap_sync
 		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
 		>> window.renderer >> window.input_handler;
 

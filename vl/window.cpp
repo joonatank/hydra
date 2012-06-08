@@ -70,11 +70,22 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
 	{
 		// We already have a window so it should be safe to check for stereo
+		// quad buffer stereo
 		if(hasStereo())
 		{
 			_create_channel(windowConf.get_channel(i), HS_LEFT, projection, windowConf.fsaa);
 			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection, windowConf.fsaa);
 		}
+		else if(windowConf.stereo_type == vl::config::ST_SIDE_BY_SIDE)
+		{
+			std::clog << "Using side by side stereo" << std::endl;
+			config::Channel chan_cfg(windowConf.get_channel(i));
+			chan_cfg.area.w /= 2;
+			_create_channel(chan_cfg, HS_LEFT, projection, windowConf.fsaa);
+			chan_cfg.area.x += chan_cfg.area.w;
+			_create_channel(chan_cfg, HS_RIGHT, projection, windowConf.fsaa);
+		}
+		// no stereo
 		else
 		{
 			_create_channel(windowConf.get_channel(i), HS_MONO, projection, windowConf.fsaa);
@@ -486,7 +497,10 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	params["top"] = vl::to_string(winConf.rect.y);
 	params["border"] = "none";
 	params["gamma"] = vl::to_string(winConf.renderer.hardware_gamma);
-	params["stereo"] = vl::to_string(winConf.stereo);
+	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
+	{
+		params["stereo"] = vl::to_string(true);
+	}
 	params["vert_sync"] = vl::to_string(winConf.vert_sync);
 	params["FSAA"] = vl::to_string(winConf.fsaa);
 
@@ -509,7 +523,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		params["swapBarrier"] = ss.str();
 	}
 
-	if(winConf.stereo)
+	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
 	{
 		std::cout << "\n with quad buffer stereo";
 	}

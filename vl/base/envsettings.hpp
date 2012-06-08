@@ -199,14 +199,13 @@ struct HYDRA_API Renderer
 struct HYDRA_API Window
 {
 	Window( std::string const &nam, int width, int height, int px, int py,
-			bool s = false, bool nv_swap = false )
+			StereoType stereo_t = ST_OFF )
 	{
 		clear();
 
 		name = nam;
 		rect = Rect<int>(width, height, px, py);
-		stereo = s;
-		nv_swap_sync = nv_swap;
+		stereo_type = stereo_t;
 
 		if( rect.h < 0 || rect.w < 0 )
 		{
@@ -215,14 +214,13 @@ struct HYDRA_API Window
 		}
 	}
 
-	Window( std::string const &nam, Rect<int> area, bool s = false, bool nv_swap = false )
+	Window( std::string const &nam, Rect<int> area, StereoType stereo_t = ST_OFF )
 	{
 		clear();
 	
 		name = nam;
 		rect = area;
-		stereo = s;
-		nv_swap_sync = nv_swap;
+		stereo_type = stereo_t;
 
 		if( rect.h < 0 || rect.w < 0 )
 		{
@@ -240,7 +238,7 @@ struct HYDRA_API Window
 
 	void clear(void)
 	{
-		stereo = false;
+		stereo_type = ST_OFF;
 		vert_sync = false;
 		input_handler = true;
 
@@ -269,7 +267,7 @@ struct HYDRA_API Window
 	NamedParamList params;
 
 
-	bool stereo;
+	StereoType stereo_type;
 
 	bool nv_swap_sync;
 	uint32_t nv_swap_group;
@@ -556,14 +554,14 @@ public :
 	/**	@brief get the configuration of stereo
 	 *	@return true if should use stereo false otherwise
 	 */
-	bool hasStereo( void ) const
-	{ return _stereo; }
+	StereoType getStereoType( void ) const
+	{ return _stereo_type; }
 
 	/**	@brief set if we use stereo or not
 	 *	@param stereo true if should use stereo false otherwise
 	 */
-	void setStereo( bool stereo )
-	{ _stereo = stereo; }
+	void setStereoType(StereoType type)
+	{ _stereo_type = type; }
 
 	bool hasHardwareGamma(void) const
 	{ return _renderer.hardware_gamma; }
@@ -702,7 +700,7 @@ private :
 
 	std::vector<Wall> _walls;
 
-	bool _stereo;
+	StereoType _stereo_type;
 
 	bool _nv_swap_sync;
 	uint32_t _swap_group;

@@ -47,7 +47,7 @@ vl::config::Node::getWindow( size_t i ) const
 /// ------------------------------ vl::EnvSettings -----------------------------
 vl::config::EnvSettings::EnvSettings( void )
 	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
-	, _stereo(false)
+	, _stereo_type(ST_OFF)
 	, _nv_swap_sync(false)
 	, _swap_group(0)
 	, _swap_barrier(0)
@@ -600,7 +600,35 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		vl::config::Window window(name, area);
 		
 		// Copy env settings values
-		window.stereo = _env->hasStereo();
+		window.stereo_type = _env->getStereoType();
+		// @todo we can override stereo type in window config
+		// xml node stereo, attribute "type" and "use"
+		rapidxml::xml_node<> *xml_stereo = pWindow->first_node("stereo");
+		if(xml_stereo)
+		{
+			attrib = xml_stereo->first_attribute("type");
+			if(attrib)
+			{
+				std::string type_str(attrib->value());
+				vl::to_lower(type_str);
+				if(type_str == "side_by_side")
+				{ window.stereo_type = ST_SIDE_BY_SIDE; }
+				else if(type_str == "quad_buffer" || type_str.empty())
+				{ window.stereo_type = ST_QUAD_BUFFER; }
+				else if(type_str == "top_bottom")
+				{
+					std::clog << "EnvConfig : stereo type is top bottom" << std::endl;
+					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Top bottom stereo is not supported."));
+				}
+				else
+				{
+					std::clog << "EnvConfig : stereo type " << type_str << std::endl;
+					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Stereo type not recognised."));
+				}
+			}
+			// @todo add use attrib
+		}
+
 		window.nv_swap_sync = _env->hasNVSwapSync();
 		window.nv_swap_group = _env->getNVSwapGroup();
 		window.nv_swap_barrier = _env->getNVSwapBarrier();
@@ -687,10 +715,11 @@ vl::config::EnvSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
 	bool stereo = vl::from_string<bool>(xml_node->value());
 
+	// @todo this is bad it's confusing when side-by-side stereo is used
 	if(stereo)
-	{ _env->setStereo(true); }
+	{ _env->setStereoType(ST_QUAD_BUFFER); }
 	else
-	{ _env->setStereo(false); }
+	{ _env->setStereoType(ST_OFF); }
 
 	_checkUniqueNode(xml_node);
 }
