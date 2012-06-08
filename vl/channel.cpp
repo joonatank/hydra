@@ -99,12 +99,13 @@ vl::Channel::draw(void)
 {
 	// @todo this should be replaced with single inline function call
 	// that hides the implementation (OpenGL) details
-	// @todo this does not work when using FBO for rendering
-	// My assumption would be that the FBO is still bound when we try to switch
-	// draw buffers. OpenGL does not allow switching BACK buffers with FBOs
-	// naturally.
-	// HydraGL has been fixed for this and debugger gives no errors for this.
-	// Stereo needs to be tested still.
+	//
+	// Switching back buffers only works with HydraGL not Ogre RenderingSystem_GL
+	// because Ogre does not correctly unbind framebuffers after using them.
+	//
+	// Switching backbuffers has no negative effects if quad buffering 
+	// is not available they fallback to GL_BACK 
+	// (and probably to GL_FRONT if ever we had no back buffer).
 	if(_stereo_eye_cfg == HS_LEFT)
 	{
 		glDrawBuffer(GL_BACK_LEFT);
