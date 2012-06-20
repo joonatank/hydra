@@ -98,6 +98,7 @@ public:
 			, environment_sent_time(vl::time(10, 0))
 			, last_alive()
 			, create_frame(-1)
+			, ignore_updates(false)
 		{}
 		
 		boost::udp::endpoint address;
@@ -133,6 +134,8 @@ public:
 
 		// Last received create message
 		int64_t create_frame;
+
+		bool ignore_updates;
 
 		/// Data
 	private :
@@ -261,8 +264,7 @@ public:
 
 	virtual uint32_t nLoggedMessages(void) const;
 
-	// Return non-const reference for ease (to integrate into python)
-	vl::Report<vl::time> &getReport(void)
+	vl::Report<vl::time> const &getReport(void) const
 	{ return _server_report; }
 
 
@@ -270,6 +272,10 @@ public:
 	bool has_clients(void) const;
 
 	bool has_rendering_clients(void) const;
+
+	/// @brief introduce an artificial lag to all clients
+	/// This method should never be used for anything else than testing.
+	void inject_lag(vl::time const &t);
 
 	/// @internal called from ClientFSM
 	void _request_message(Server::ClientFSM *client, MSG_TYPES type);
@@ -546,7 +552,7 @@ vl::cluster::Server::_block_till_state_has_flag(void)
 		ClientList::const_iterator iter;
 		for( iter = _renderers.begin(); iter != _renderers.end(); ++iter )
 		{
-			if(!(*iter)->is_flag_active<T>())
+			if( !(*iter)->is_flag_active<T>() && !(*iter)->ignore_updates )
 			{
 				ready = false;
 				break;

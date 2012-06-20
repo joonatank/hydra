@@ -505,6 +505,21 @@ vl::cluster::Server::has_rendering_clients(void) const
 	return false;
 }
 
+void
+vl::cluster::Server::inject_lag(vl::time const &t)
+{
+	Message msg(MSG_INJECT_LAG, _frame, vl::time());
+	msg.write(t);
+
+	for(ClientList::const_iterator iter = _clients.begin(); 
+		iter != _clients.end(); ++iter)
+	{
+		_sendMessage(*(*iter), msg);
+		(*iter)->ignore_updates = true;
+		// @todo we need to clear the lag after time t
+	}
+}
+
 
 /// ----------------------------- Private --------------------------------------
 void 

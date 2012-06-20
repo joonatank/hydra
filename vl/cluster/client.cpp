@@ -264,6 +264,13 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		}
 		break;
 
+		case vl::cluster::MSG_INJECT_LAG :
+		{
+			vl::time lag;
+			msg.read(lag);
+			vl::sleep(lag);
+		}
+		break;
 		case vl::cluster::MSG_FRAME_START :
 		{
 			assert(_state.environment);

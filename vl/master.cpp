@@ -140,8 +140,8 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 
 	// We need implementation here
 	static_cast<PythonContextImpl *>(_game_manager->getPython())
-		->addVariable("server_report", _server->getReport());
-	
+		->addVariableVal("server", _server);
+
 	_server->process_event(vl::cluster::init());
 
 	// TODO this should block till both slaves and local renderer are ready

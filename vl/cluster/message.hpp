@@ -124,6 +124,7 @@ enum MSG_TYPES
 	MSG_SHUTDOWN,		// Shutdown the rendering threads
 	MSG_REG_RESOURCE,	// Request a resource from Server
 	MSG_RESOURCE,		// Resource message, resource can be anything
+	MSG_INJECT_LAG,		// Test message that introduces an artificial lag
 };
 
 enum EVENT_TYPES

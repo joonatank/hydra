@@ -92,7 +92,10 @@ public :
 	virtual void reset(void);
 
 	template<typename T>
-	void addVariable(std::string variable_name, T &var);
+	void addVariableRef(std::string variable_name, T &var);
+
+	template<typename T>
+	void addVariableVal(std::string variable_name, T const &var);
 
 private :
 
@@ -115,9 +118,16 @@ private :
 
 template<typename T>
 void
-PythonContextImpl::addVariable(std::string variable_name, T &var)
+PythonContextImpl::addVariableRef(std::string variable_name, T &var)
 {
 	_global[variable_name] = python::ptr<>(&var);
+}
+
+template<typename T>
+void
+PythonContextImpl::addVariableVal(std::string variable_name, T const &var)
+{
+	_global[variable_name] = var;
 }
 
 }	// namespace vl

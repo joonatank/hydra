@@ -65,6 +65,9 @@
 
 #include "game_object.hpp"
 
+// Necessary for exposing some server functionality
+#include "cluster/server.hpp"
+
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -628,7 +631,7 @@ void export_game(void)
 		.def("reset", &vl::chrono::reset)
 	;
 
-	python::class_<vl::Report<vl::time>, boost::noncopyable>("Report", python::no_init)
+	python::class_<vl::Report<vl::time>>("Report", python::init<>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -668,6 +671,7 @@ void export_game(void)
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("event_manager", python::make_function( &vl::GameManager::getEventManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("gui", &vl::GameManager::getGUI)
+		// @todo fix these to use const versions and copying, they of course shouldn't be modified from python
 		.add_property("rendering_report", python::make_function( &vl::GameManager::getRenderingReport, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("init_report", python::make_function( &vl::GameManager::getInitReport, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property( "physics_world", &vl::GameManager::getPhysicsWorld)
@@ -701,6 +705,11 @@ void export_game(void)
 		.def("load_scene", loadScene_ov0)
 		.def("save_scene", &vl::GameManager::saveScene)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
+	;
+
+	python::class_<vl::cluster::Server, boost::noncopyable, vl::cluster::ServerRefPtr>("Server", python::no_init)
+		.def("inject_lag", &vl::cluster::Server::inject_lag)
+		.add_property("report", python::make_function(&vl::cluster::Server::getReport, python::return_value_policy<python::copy_const_reference>()))
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;
