@@ -99,7 +99,7 @@ vl::cluster::Server::ClientFSM::_do_handle_error(vl::cluster::event::timer_expir
 vl::cluster::Server::Server(uint16_t const port)
 	: _socket(_io_service, boost::udp::endpoint(boost::udp::v4(), port))
 	, _n_log_messages(0)
-	, _maximum_time_to_timeout(10)
+	, _maximum_time_to_timeout(100)
 	, _frame(0)
 	, _draw_error(false)
 	, _fsm(new ServerFSM())
@@ -294,7 +294,7 @@ vl::cluster::Server::sendMessage(Message const &msg)
 void
 vl::cluster::Server::sendUpdate( vl::cluster::Message const &msg )
 {
-	_msg_update = msg;
+	_msg_updates.push_back(msg);
 }
 
 void
@@ -303,7 +303,7 @@ vl::cluster::Server::sendCreate(Message const &msg)
 	assert(msg.getType() == MSG_SG_CREATE);
 	assert(msg.getFrame() >= _frame);
 
-	_msg_creates.push_back(std::make_pair(msg.getFrame(), msg));
+	_msg_creates.push_back(msg);
 }
 
 vl::cluster::Message
@@ -348,6 +348,43 @@ vl::cluster::Server::nLoggedMessages(void) const
 	return _n_log_messages;
 }
 
+bool
+vl::cluster::Server::has_clients(void) const
+{
+	return !_clients.empty();
+}
+
+bool
+vl::cluster::Server::has_rendering_clients(void) const
+{
+	// Returning true because we have messed up client initialisation
+	//return true;
+
+	for(ClientList::const_iterator iter = _clients.begin(); 
+		iter != _clients.end(); ++iter)
+	{
+		if((*iter)->is_ready_for_rendering())
+		{ return true; }
+	}
+
+	return false;
+}
+
+void
+vl::cluster::Server::inject_lag(vl::time const &t)
+{
+	Message msg(MSG_INJECT_LAG, _frame, vl::time());
+	msg.write(t);
+
+	for(ClientList::const_iterator iter = _clients.begin(); 
+		iter != _clients.end(); ++iter)
+	{
+		_sendMessage(*(*iter), msg);
+		(*iter)->ignore_updates = true;
+		// @todo we need to clear the lag after time t
+		(*iter)->ignore_expires = _internal_clock.elapsed() + t;
+	}
+}
 
 void
 vl::cluster::Server::_request_message(ClientFSM *client, MSG_TYPES type)
@@ -387,7 +424,11 @@ vl::cluster::Server::_do_update(vl::cluster::event::update const &evt)
 	for(ClientList::iterator iter = _clients.begin();
 		iter != _clients.end(); ++iter)
 	{
-		if((*iter)->is_ready_for_rendering())
+		// Clear ignores for clients which should be responsive now
+		if( (*iter)->ignore_expires <= _internal_clock.elapsed() )
+		{ (*iter)->ignore_updates = false; }
+
+		if( (*iter)->is_ready_for_rendering() && !(*iter)->ignore_updates )
 		{ _renderers.push_back(*iter); }
 	}
 
@@ -483,43 +524,6 @@ vl::cluster::Server::_report_error(vl::cluster::event::timer_expired const &evt)
 	_draw_error = true;
 }
 
-bool
-vl::cluster::Server::has_clients(void) const
-{
-	return !_clients.empty();
-}
-
-bool
-vl::cluster::Server::has_rendering_clients(void) const
-{
-	// Returning true because we have messed up client initialisation
-	//return true;
-
-	for(ClientList::const_iterator iter = _clients.begin(); 
-		iter != _clients.end(); ++iter)
-	{
-		if((*iter)->is_ready_for_rendering())
-		{ return true; }
-	}
-
-	return false;
-}
-
-void
-vl::cluster::Server::inject_lag(vl::time const &t)
-{
-	Message msg(MSG_INJECT_LAG, _frame, vl::time());
-	msg.write(t);
-
-	for(ClientList::const_iterator iter = _clients.begin(); 
-		iter != _clients.end(); ++iter)
-	{
-		_sendMessage(*(*iter), msg);
-		(*iter)->ignore_updates = true;
-		// @todo we need to clear the lag after time t
-	}
-}
-
 
 /// ----------------------------- Private --------------------------------------
 void 
@@ -569,8 +573,44 @@ vl::cluster::Server::_handle_message(vl::cluster::Message &msg, Client &client)
 
 		case vl::cluster::MSG_REQ_SG_UPDATE :
 		{
+			// create events for all update messages that are newer than the client has
+			
+			std::vector<Message> update_msgs;
+			for(std::vector<Message>::const_reverse_iterator iter = _msg_updates.rbegin();
+				iter != _msg_updates.rend(); ++iter)
+			{
+				// We required frame is always lower
+				// One less when there is no lag
+				// More than one less if there was a lag.
+				if(iter->getFrame() <= msg.getFrame())
+				{ break;}
+				// @todo this is inefficent (copying)
+				else
+				{ update_msgs.push_back(*iter); }
+			}
+
+			// We need at least a single update message now
+			// otherwise the client doesn't know if it lost the message or there was none.
+			//
+			// Not using events for sending messages because the FSM does not like
+			// multiple events for the same thing.
+			if(update_msgs.empty())
+			{
+				// @todo fix timestamp
+				this->_send_message( &client, Message(MSG_SG_UPDATE, _frame, vl::time()) );
+			}
+			else
+			{
+				if(update_msgs.size() != 1)
+				{ std::clog << "Sending " << update_msgs.size() << " update messages." << std::endl; }
+
+				for(std::vector<Message>::const_iterator iter = update_msgs.begin();
+					iter != update_msgs.end(); ++iter)
+				{
+					this->_send_message( &client, *iter);
+				}
+			}
 			event::update_requested evt(msg.getFrame(), msg.getTimestamp());
-			evt.callback = boost::bind(&Server::_send_message, this, &client, _msg_update);
 			client.process_event(evt);
 		}
 		break;
@@ -685,15 +725,16 @@ vl::cluster::Server::_find_client_ptr(boost::udp::endpoint const &address) const
 void
 vl::cluster::Server::_sendCreate(Client &client)
 {
+	// @todo remove the temporary objects
 	std::vector<Message> msgs;
 
 	// Copy all the create messages that are newer than the client
-	for( std::vector< std::pair<uint32_t, Message> >::const_reverse_iterator iter = _msg_creates.rbegin();
+	for( std::vector<Message>::const_reverse_iterator iter = _msg_creates.rbegin();
 		iter != _msg_creates.rend(); ++iter )
 	{
-		if( client.create_frame >= int64_t(iter->first) )
+		if( client.create_frame >= int64_t(iter->getFrame()) )
 		{ break; }
-		msgs.push_back( iter->second );
+		msgs.push_back(*iter);
 	}
 
 	for( std::vector<Message>::const_reverse_iterator iter = msgs.rbegin();

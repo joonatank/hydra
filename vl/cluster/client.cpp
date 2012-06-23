@@ -271,6 +271,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			vl::sleep(lag);
 		}
 		break;
+
 		case vl::cluster::MSG_FRAME_START :
 		{
 			assert(_state.environment);
@@ -283,7 +284,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			_state.frame = msg.getFrame();
 			_state.set_rendering_state(CS_UPDATE_READY);
 
-			Message reply(MSG_REQ_SG_UPDATE, msg.getFrame(), vl::time());
+			Message reply(MSG_REQ_SG_UPDATE, _state.update_frame, vl::time());
 			sendMessage(reply);
 		}
 		break;
@@ -294,50 +295,70 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 					<< "MSG_SG_INIT received." << std::endl;
 			assert(!_state.has_init);
 			
+			uint32_t frame = msg.getFrame();
 			_renderer->updateScene(msg);
+
 			_state.has_init = true;
-				
+			_state.update_frame = frame;
+
 			// request rendering messages when initialised
 			_state.wants_render = true;
-			Message reply(MSG_REG_RENDERING, 0, vl::time());
+			Message reply(MSG_REG_RENDERING, frame, vl::time());
 			sendMessage(reply);
 		}
 		break;
 
+		/// Add a new update to the stack to be applied
+		/// If we have all updates required for the next frame proceed
+		/// with the rendering loop by informing master that we are ready.
+		/// Updates can come in any order but all of them are required for
+		/// proceeding with the drawing of next frame.
 		case vl::cluster::MSG_SG_UPDATE :
 		{
-			if(_state.is_rendering())
+			// @todo this is really error prone
+			// Update shouldn't depend on rendering state.
+			// @this can be removed later when we rearrange the rendering loop
+			if(!_state.is_rendering())
 			{
-				assert(_state.environment);
-				assert(_state.project);
-				assert(_renderer.get());
-				// Send back either the current frame if valid or 0 for errors
-			
-				uint32_t frame = 0;
-				if(_state.frame == msg.getFrame())
-				{
-					if(!_state.has_rendering_state(CS_UPDATE_READY))
-					{ std::clog << "Client should update though it has invalid state." << std::endl; }
-
-					frame = _state.frame;
-					_state.set_rendering_state(CS_UPDATE);
-					_renderer->updateScene(msg);
-				}
-				else
-				{
-					std::clog << "Incorrect frame number to for MSG_SG_UPDATE : local frame = " 
-						<< _state.frame << " : remote frame = " << msg.getFrame() << std::endl;
-					_state.clear_rendering_state();
-				}
-				
-				Message reply(MSG_DRAW_READY, frame, vl::time());
-				sendMessage(reply);
-			}
-			// @todo this can probably be moved to MSG_SG_INIT
-			else
-			{
-				std::clog << "Client : Something really weird we are neither "
+				std::stringstream ss;
+				ss << "Client : Something really weird we are neither "
 					<< "in the rendering loop nor waiting for init." << std::endl;
+				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+				
+			}
+
+			// @todo this client state should be removed
+			if(!_state.has_rendering_state(CS_UPDATE_READY))
+			{
+				std::stringstream ss;
+				ss << "Client should update though it has invalid state." << std::endl;
+				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+			}
+
+			if(_update_messages.find(msg.getFrame()) != _update_messages.end())
+			{
+				std::stringstream ss;
+				ss << "Already has a update message for " << msg.getFrame();
+				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
+			}
+			_update_messages[msg.getFrame()] = msg;
+
+			// We only sent the DRAW_READY message if we are ready for draw
+			// i.e. we have all messages between update_frame and frame (server/draw frame)
+			if(_state.update_frame + _update_messages.size() == _state.frame)
+			{
+				// Update state for the next message
+				_state.update_frame = (--_update_messages.end())->first;
+
+				_state.set_rendering_state(CS_UPDATE);
+				/// Sending DRAW_READY from here always will cause multiple incorrect state 
+				/// changes in the Server.
+				/// This happens when we need more than one update message.
+				/// This does not cause functional errors, but introduces lot of error printing.
+				/// Fixing this should probably be done in the Server side or
+				/// we need to separate update from drawing.
+				Message reply(MSG_DRAW_READY, _state.frame, vl::time());
+				sendMessage(reply);
 			}
 		}
 		break;
@@ -346,13 +367,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		{
 			uint32_t frame = 0;
 			if(_state.is_rendering())
-			{
-				assert(_state.environment);
-				assert(_state.project);
-				/// @todo move drawing to occure only if all the states required are
-				/// set, or should we?
-				assert(_renderer.get());
-				
+			{	
 				if(_state.frame == msg.getFrame())
 				{
 					if(!_state.has_rendering_state(CS_UPDATE))
@@ -374,6 +389,29 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 			if(_state.is_rendering())
 			{
+				// Apply all updates in correct order
+				assert(_state.environment);
+				assert(_state.project);
+				assert(_renderer.get());
+				
+				// Map has all the updates in correct order already
+				// from the oldest to the newest.
+				// Previous step already guaranties that we have all the update messages
+				// because we only proceed here if we have them all.
+				// @todo this also creates huge lag in start even with simple 
+				// models which is rather odd.
+				for(std::map<uint32_t, Message>::iterator iter = _update_messages.begin();
+					iter != _update_messages.end(); ++iter)
+				{
+					_renderer->updateScene(iter->second);
+				}
+				// clear the update messages after applying them
+				_update_messages.clear();
+				
+
+
+				// Start rendering
+
 				if(!_state.has_rendering_state(CS_DRAW))
 				{ std::clog << "Client should draw though it has invalid state." << std::endl; }
 
@@ -431,6 +469,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 			std::clog << "Client : MSG_SG_CREATE Received." << std::endl;
 			assert(_renderer.get());
 			_renderer->createSceneObjects(msg);
+			
 			break;
 		
 		default:

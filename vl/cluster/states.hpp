@@ -50,8 +50,9 @@ struct ClientState
 	ClientState(void)
 		: environment(false), project(false)
 		, wants_render(false), wants_output(false)
-		, has_init(false), frame(-1), create_frame(-1)
-		, rendering_state(CS_CLEAR), shutdown(false)
+		, has_init(false), frame(-1), update_frame(-1)
+		, create_frame(-1), rendering_state(CS_CLEAR)
+		, shutdown(false)
 	{}
 
 	void clear_rendering_state(void)
@@ -84,6 +85,7 @@ struct ClientState
 	// Last renderer frame
 	// needs to be int so that we can have it negative
 	int64_t frame;
+	int64_t update_frame;
 	// Last received create message
 	int64_t create_frame;
 	// Rendering state, only valid if rendering is true
@@ -543,8 +545,6 @@ public :
 
 		void _update_requested(update_requested const &evt)
 		{
-			// Dirty way to handle the event
-			evt.callback();
 		}
 
 		void _update(update const &evt)

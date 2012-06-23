@@ -135,7 +135,9 @@ private :
 
 	boost::udp::endpoint _master;
 
-	std::vector<Message *> _messages;
+	// Frame update message map
+	// @todo should use ref ptr, but we need to modify all the messages for that
+	std::map<uint32_t, Message> _update_messages;
 
 	ClientState _state;
 

@@ -136,6 +136,7 @@ public:
 		int64_t create_frame;
 
 		bool ignore_updates;
+		vl::time ignore_expires;
 
 		/// Data
 	private :
@@ -168,7 +169,6 @@ public:
 	private :
 		ClientFSM(ClientFSM const &);
 		ClientFSM &operator=(ClientFSM const &);
-
 
 	};	// ClientFSM
 
@@ -342,12 +342,15 @@ private :
 
 	std::deque<Message> _messages;
 
-	/// @todo this should be removed, use a callback to create it when needed
-	/// Last update message? Might need a whole vector of these
-	Message _msg_update;
-
-	/// Create MSGs
-	std::vector< std::pair<uint32_t, Message> > _msg_creates;
+	/// @todo these messages could be changed to be pointers
+	/// preferably pre allocated in the start
+	/// We could use ref counted messages, at least it should be faster
+	/// than copying, not as fast a memory pool but still.
+	///
+	/// Create MSGs, per frame
+	std::vector<Message> _msg_creates;
+	/// Update MSGs, per frame
+	std::vector<Message> _msg_updates;
 
 	uint32_t _n_log_messages;
 	std::vector<vl::LogMessage> _new_log_messages;
@@ -502,7 +505,7 @@ protected:
 		// @fixme just a Hack so this will not print endlessly when there are no clients
 		if(state != 2 && state != 6)
 		{
-			std::clog << "no transition from state " << state
+			std::clog << "ServerFSM_ : " << "no transition from state " << state
 				<< " on event " << typeid(e).name() << std::endl;
 		}
     }
@@ -545,6 +548,8 @@ vl::cluster::Server::_block_till_state_has_flag(void)
 		// We should here mark the client as lost for this round of rendering
 		// This allows us to render and accept input on the master when the
 		// slaves are still initialising.
+		// Using timers so we can retain decent frame rate on master even if
+		// slaves are initialising or lagging.
 
 		poll();
 
@@ -552,7 +557,7 @@ vl::cluster::Server::_block_till_state_has_flag(void)
 		ClientList::const_iterator iter;
 		for( iter = _renderers.begin(); iter != _renderers.end(); ++iter )
 		{
-			if( !(*iter)->is_flag_active<T>() && !(*iter)->ignore_updates )
+			if( !(*iter)->is_flag_active<T>() )
 			{
 				ready = false;
 				break;
