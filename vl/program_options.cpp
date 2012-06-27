@@ -119,6 +119,15 @@ vl::ProgramOptions::getLogDir(void) const
 	}
 }
 
+void
+vl::ProgramOptions::parseOptions(void)
+{
+	if(fs::exists(_ini_file_path))
+	{
+		_parse_ini();
+	}
+}
+
 bool
 vl::ProgramOptions::parseOptions( int argc, char **argv )
 {

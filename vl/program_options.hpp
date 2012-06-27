@@ -78,6 +78,8 @@ struct HYDRA_API ProgramOptions
 	 */
 	bool parseOptions( int argc, char **argv );
 
+	void parseOptions(void);
+
 	/// Is the configuration for a slave,
 	/// true for both valid and invalid configurations
 	/// If this is true master() is always false
