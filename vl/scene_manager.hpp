@@ -329,8 +329,13 @@ private :
 inline
 bool operator==(ShadowInfo const &a, ShadowInfo const &b)
 {
-	return( a.getTextureSize() == b.getTextureSize()
-		&& a.getCamera() == b.getCamera() );
+	return( a.isEnabled() == b.isEnabled() 
+		&& a.getTextureSize() == b.getTextureSize()
+		&& a.getCamera() == b.getCamera()
+		&& a.getDirLightExtrusionDistance() == b.getDirLightExtrusionDistance()
+		&& a.getMaxDistance() == b.getMaxDistance()
+		&& a.getShadowCasterMaterial() == b.getShadowCasterMaterial()
+		&& a.isShelfShadowEnabled() == b.isShelfShadowEnabled() );
 }
 
 inline
