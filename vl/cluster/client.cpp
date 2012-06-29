@@ -116,7 +116,13 @@ vl::cluster::Client::Client( char const *hostname, uint16_t port,
 
 	// Large receive buffer is necessary for receiving multiple messages
 	// have a look at Server for more information.
-	boost::asio::socket_base::receive_buffer_size rec_buf_size(1024*1024);
+	// Really huge buffer (24Mbytes)
+	// because if the server sends update messages back to back we would
+	// overload the buffer.
+	// @todo This needs a more elegant solution for clients that lag for more 
+	// than few seconds e.g. if we are missing few hundred updates then we 
+	// send the whole graph to the client not the individual update messages.
+	boost::asio::socket_base::receive_buffer_size rec_buf_size(24*1024*1024);
 	boost::asio::socket_base::send_buffer_size send_buf_size;
 	_socket.set_option(rec_buf_size);
 	_socket.get_option(send_buf_size);
@@ -345,6 +351,10 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 
 			// We only sent the DRAW_READY message if we are ready for draw
 			// i.e. we have all messages between update_frame and frame (server/draw frame)
+			//
+			// @todo this is problematic if we lag for long while because we will
+			// miss some of the update messages (the receive buffer is not large enough).
+			// This has been somewhat worked around by using huge receive buffer.
 			if(_state.update_frame + _update_messages.size() == _state.frame)
 			{
 				// Update state for the next message
@@ -359,6 +369,12 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				/// we need to separate update from drawing.
 				Message reply(MSG_DRAW_READY, _state.frame, vl::time());
 				sendMessage(reply);
+			}
+			else
+			{
+				size_t msgs_missing = _state.frame - (_state.update_frame + _update_messages.size());
+				std::clog << "Waiting for " << msgs_missing << "We have " 
+					<< _update_messages.size() << " messages." << std::endl;
 			}
 		}
 		break;
