@@ -19,11 +19,6 @@ vl::ogre::Axes::Axes(vl::scalar length)
 	, _length(length)
 {
 	// Create material, has to be first because _setupGeometry needs it
-/*	
-	mpMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName("debug_red");
-	assert(!mpMaterial.isNull());
-	mpMaterial->load();
-*/
 	mpMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName("AxesMaterial");
 
 	if(mpMaterial.isNull())
@@ -31,15 +26,8 @@ vl::ogre::Axes::Axes(vl::scalar length)
 		mpMaterial = Ogre::MaterialManager::getSingletonPtr()
 			->create("AxesMaterial", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 		mpMaterial->load();
- 
-		/*
-		mpMaterial->setDepthCheckEnabled(false);
-		mpMaterial->setDepthBias(1.0,1.0);
-		mpMaterial->setDepthWriteEnabled(true);
-		mpMaterial->setLightingEnabled(false);
-		*/
-		//mpMaterial->setSelfIllumination(Ogre::ColourValue(0, 1, 0));
-		mpMaterial->getTechnique(0)->getPass(0)->setVertexColourTracking(Ogre::TVC_AMBIENT);
+
+		mpMaterial->getTechnique(0)->getPass(0)->setVertexColourTracking(Ogre::TVC_EMISSIVE);
 	}
 
     mRenderOp.vertexData = NULL;
