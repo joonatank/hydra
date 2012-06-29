@@ -220,6 +220,11 @@ public :
 	bool isShowAxes(void) const
 	{ return _show_axes; }
 
+	void setAxesSize(vl::scalar size);
+
+	vl::scalar getAxesSize(void) const
+	{ return _axes_size; }
+
 	/// @brief get if the node inherits scale from it's parent
 	/// Default value is true, because this will mess up reflections also
 	/// as they use negative scale along an axis to do the reflection
@@ -319,6 +324,7 @@ private :
 	bool _inherit_scale;
 	bool _show_debug_display;
 	bool _show_axes;
+	vl::scalar _axes_size;
 
 	/// Keep track of the parent, so we can inform it when hierarchy is changed
 	vl::SceneNodePtr _parent;

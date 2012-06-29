@@ -75,6 +75,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _inherit_scale(true)
 	, _show_debug_display(false)
 	, _show_axes(false)
+	, _axes_size(3.0)
 	, _parent(0)
 	, _ogre_node(0)
 	, _debug_axes(0)
@@ -478,6 +479,16 @@ vl::SceneNode::setShowAxes(bool show)
 }
 
 void
+vl::SceneNode::setAxesSize(vl::scalar size)
+{
+	if(_axes_size != size)
+	{
+		setDirty(DIRTY_PARAMS);
+		_axes_size = size;
+	}
+}
+
+void
 vl::SceneNode::setInheritScale(bool b)
 {
 	if(_inherit_scale != b)
@@ -752,7 +763,8 @@ vl::SceneNode::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 
 	if(dirtyBits & DIRTY_PARAMS)
 	{
-		msg << _show_boundingbox << _inherit_scale << _show_debug_display << _show_axes;
+		msg << _show_boundingbox << _inherit_scale << _show_debug_display 
+			<< _show_axes << _axes_size;
 	}
 
 }
@@ -877,7 +889,8 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 
 	if(dirtyBits & DIRTY_PARAMS)
 	{
-		msg >> _show_boundingbox >> _inherit_scale >> _show_debug_display >> _show_axes;
+		msg >> _show_boundingbox >> _inherit_scale >> _show_debug_display 
+			>> _show_axes >> _axes_size;
 		assert(_ogre_node);
 		
 		_ogre_node->showBoundingBox(_show_boundingbox);
@@ -888,11 +901,12 @@ vl::SceneNode::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBi
 		{
 			if(!_debug_axes)
 			{
-				_debug_axes = new ogre::Axes(3.0/_scale.length());
+				_debug_axes = new ogre::Axes(_axes_size/_scale.length());
 				_ogre_node->attachObject(_debug_axes);
 			}
 
 			_debug_axes->setVisible(true);
+			_debug_axes->setLength(_axes_size/_scale.length());
 		}
 		else
 		{

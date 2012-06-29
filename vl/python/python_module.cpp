@@ -545,6 +545,7 @@ void export_scene_graph(void)
 		.add_property("objects", python::make_function(&vl::SceneNode::getObjects, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("show_debug_display", &SceneNode::isShowDebugDisplay, &vl::SceneNode::setShowDebugDisplay)
 		.add_property("show_axes", &SceneNode::isShowAxes, &vl::SceneNode::setShowAxes)
+		.add_property("axes_size", &SceneNode::getAxesSize, &vl::SceneNode::setAxesSize)
 
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)
