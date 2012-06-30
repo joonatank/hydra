@@ -1,16 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file camera.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -37,41 +34,25 @@ vl::Camera::Camera(vl::SceneManagerPtr creator)
 void 
 vl::Camera::setNearClipDistance(Ogre::Real n)
 {
-	if( _near_clip != n )
-	{
-		setDirty(DIRTY_CLIPPING);
-		_near_clip = n;
-	}
+	update_variable(_near_clip, n, DIRTY_CLIPPING);
 }
 
 void 
 vl::Camera::setFarClipDistance(Ogre::Real n)
 {
-	if( _far_clip != n )
-	{
-		setDirty(DIRTY_CLIPPING);
-		_far_clip = n;
-	}
+	update_variable(_far_clip, n, DIRTY_CLIPPING);
 }
 
 void 
 vl::Camera::setPosition(Ogre::Vector3 const &pos)
 {
-	if( _position != pos )
-	{
-		setDirty(DIRTY_POSITION);
-		_position = pos;
-	}
+	update_variable(_position, pos, DIRTY_TRANSFORM);
 }
 
 void 
 vl::Camera::setOrientation(Ogre::Quaternion const &q)
 {
-	if( _orientation != q )
-	{
-		setDirty(DIRTY_ORIENTATION);
-		_orientation = q;
-	}
+	update_variable(_orientation, q, DIRTY_TRANSFORM);
 }
 
 vl::MovableObjectPtr
@@ -97,14 +78,9 @@ vl::Camera::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 		msg << _near_clip << _far_clip;
 	}
 
-	if( DIRTY_POSITION & dirtyBits )
+	if( DIRTY_TRANSFORM & dirtyBits )
 	{
-		msg << _position;
-	}
-
-	if( DIRTY_ORIENTATION & dirtyBits )
-	{
-		msg << _orientation;
+		msg << _position << _orientation;
 	}
 }
 
@@ -121,18 +97,14 @@ vl::Camera::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 		}
 	}
 
-	if( DIRTY_POSITION & dirtyBits )
+	if( DIRTY_TRANSFORM & dirtyBits )
 	{
-		msg >> _position;
+		msg >> _position >> _orientation;
 		if( _ogre_camera )
-		{ _ogre_camera->setPosition(_position); }
-	}
-
-	if( DIRTY_ORIENTATION & dirtyBits )
-	{
-		msg >> _orientation;
-		if( _ogre_camera )
-		{ _ogre_camera->setOrientation(_orientation); }
+		{
+			_ogre_camera->setPosition(_position);
+			_ogre_camera->setOrientation(_orientation);
+		}
 	}
 }
 

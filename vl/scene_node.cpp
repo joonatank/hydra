@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_node.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -334,30 +330,21 @@ vl::SceneNode::rotate(Ogre::Quaternion const &q)
 void 
 vl::SceneNode::scale(Ogre::Real s)
 {
-	if( s != 0 && s != 1 )
-	{
-		setDirty(DIRTY_SCALE);
-		_scale *= s;
-	}
+	setScale(s*_scale);
 }
 
 void 
 vl::SceneNode::scale(Ogre::Vector3 const &s)
 {
-	if( !s.isNaN() && !s.isZeroLength() && s != Ogre::Vector3(1,1,1) )
-	{
-		setDirty(DIRTY_SCALE);
-		_scale *= s;
-	}
+	setScale(s*_scale);
 }
 
 void
 vl::SceneNode::setScale(Ogre::Vector3 const &s)
 {
-	if( !s.isNaN() && !s.isZeroLength() && s != _scale )
+	if( !s.isNaN() && !s.isZeroLength() )
 	{
-		setDirty(DIRTY_SCALE);
-		_scale = s;
+		update_variable(_scale, s, DIRTY_SCALE);
 	}
 }
 
@@ -451,51 +438,31 @@ vl::SceneNode::setVisibility(bool visible, bool cascade)
 void 
 vl::SceneNode::setShowBoundingBox(bool show)
 {
-	if( _show_boundingbox != show )
-	{
-		setDirty(DIRTY_PARAMS);
-		_show_boundingbox = show;
-	}
+	update_variable(_show_boundingbox, show, DIRTY_PARAMS);
 }
 
 void 
 vl::SceneNode::setShowDebugDisplay(bool show)
 {
-	if(_show_debug_display != show)
-	{
-		setDirty(DIRTY_PARAMS);
-		_show_debug_display = show;
-	}
+	update_variable(_show_debug_display, show, DIRTY_PARAMS);
 }
 
 void
 vl::SceneNode::setShowAxes(bool show)
 {
-	if(_show_axes != show)
-	{
-		setDirty(DIRTY_PARAMS);
-		_show_axes = show;
-	}
+	update_variable(_show_axes, show, DIRTY_PARAMS);
 }
 
 void
 vl::SceneNode::setAxesSize(vl::scalar size)
 {
-	if(_axes_size != size)
-	{
-		setDirty(DIRTY_PARAMS);
-		_axes_size = size;
-	}
+	update_variable(_axes_size, size, DIRTY_PARAMS);
 }
 
 void
 vl::SceneNode::setInheritScale(bool b)
 {
-	if(_inherit_scale != b)
-	{
-		setDirty(DIRTY_PARAMS);
-		_inherit_scale = b;
-	}
+	update_variable(_inherit_scale, b, DIRTY_PARAMS);
 }
 
 vl::SceneNodePtr

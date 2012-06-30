@@ -1,17 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file distributed.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -40,22 +36,11 @@ public :
 		return _dirtyBits;
 	}
 
-	/// @todo this should probably be protected?
-	void setDirty( uint64_t const bits )
-	{ _dirtyBits |= bits; }
-
 	bool isDirty(void)
 	{
 		recaluclateDirties();
 		return( _dirtyBits != DIRTY_NONE );
 	}
-
-	enum DirtyBits
-	{
-		DIRTY_NONE = 0,
-		DIRTY_CUSTOM = 1,
-		DIRTY_ALL = 0xFFFFFFFFFFFFFFFFull
-	};
 
 	/// @brief serializes the current dirties and the current modifications
 	/// Pack and unpack needs to be symmetric in every way otherwise
@@ -88,8 +73,32 @@ public :
 		setDirty( DIRTY_ALL );
 	}
 
+	/// @brief Clears all dirty bits
+	/// Needs to be public because this is called from Session
 	void clearDirty( void )
 	{ _dirtyBits = DIRTY_NONE; }
+
+	enum DirtyBits
+	{
+		DIRTY_NONE = 0,
+		DIRTY_CUSTOM = 1,
+		DIRTY_ALL = 0xFFFFFFFFFFFFFFFFull
+	};
+
+protected:
+	/// @brief set a dirty flag
+	void setDirty( uint64_t const bits )
+	{ _dirtyBits |= bits; }
+
+	/// @brief update a variable and set dirty flag
+	template<typename T> void update_variable(T &new_val, T const &old_val, uint64_t dirty)
+	{
+		if(old_val != new_val)
+		{
+			setDirty(dirty);
+			new_val = old_val;
+		}
+	}
 
 private :
 	/// @brief Recalculate member dirties if necessary

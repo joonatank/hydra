@@ -7,11 +7,7 @@
  *	@file movable_object.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
- *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Version 0.4
  *
  */
 
@@ -46,11 +42,7 @@ vl::MovableObject::setParent(vl::SceneNodePtr parent)
 void 
 vl::MovableObject::setVisible(bool visible)
 {
-	if(_visible != visible)
-	{
-		setDirty(DIRTY_VISIBLE);
-		_visible = visible;
-	}
+	update_variable(_visible, visible, DIRTY_VISIBLE);
 }
 
 /// -------------------------------------- Private ---------------------------

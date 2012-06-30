@@ -58,9 +58,8 @@ public :
 	enum DirtyBits
 	{
 		DIRTY_CLIPPING = vl::MovableObject::DIRTY_CUSTOM << 0,
-		DIRTY_POSITION = vl::MovableObject::DIRTY_CUSTOM << 1,
-		DIRTY_ORIENTATION = vl::MovableObject::DIRTY_CUSTOM << 2,
-		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 3,
+		DIRTY_TRANSFORM = vl::MovableObject::DIRTY_CUSTOM << 1,
+		DIRTY_CUSTOM = vl::MovableObject::DIRTY_CUSTOM << 2,
 	};
 
 /// Virtual overrides

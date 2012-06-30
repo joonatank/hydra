@@ -96,6 +96,18 @@ struct HYDRA_API SkyDomeInfo
 	int ysegments_keep;
 };
 
+
+// Not implemented
+inline bool
+operator==(SkyDomeInfo const &a, SkyDomeInfo const &b)
+{
+	return false;
+}
+
+inline bool
+operator!=(SkyDomeInfo const &a, SkyDomeInfo const &b)
+{ return a == b; }
+
 /** @class SkyInfo
  *	For more realistic and complex Sky rendering.
  *	
@@ -129,6 +141,18 @@ private :
 
 	bool _dirty;
 };
+
+// Not implemented
+inline bool
+operator==(SkyInfo const &a, SkyInfo const &b)
+{
+	return false;
+}
+
+inline bool
+operator!=(SkyInfo const &a, SkyInfo const &b)
+{ return a == b; }
+
 
 struct FogInfo
 {
@@ -178,6 +202,17 @@ struct FogInfo
 	Ogre::Real linear_start;
 	Ogre::Real linear_end;
 };
+
+// Not implemented
+inline bool
+operator==(FogInfo const &a, FogInfo const &b)
+{
+	return false;
+}
+
+inline bool
+operator!=(FogInfo const &a, FogInfo const &b)
+{ return a == b; }
 
 /**	@class ShadowInfo
  *	@todo add real disablation of the Shadows distinction between not updating

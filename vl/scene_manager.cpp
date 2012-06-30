@@ -700,55 +700,37 @@ vl::SceneManager::getCameraList(void) const
 void 
 vl::SceneManager::setSkyDome(SkyDomeInfo const &dome)
 {
-	/// @todo add checking that the previous SkyDome is different
-	setDirty(DIRTY_SKY);
-	_sky_dome = dome;
+	update_variable(_sky_dome, dome, DIRTY_SKY);
 }
 
 void 
 vl::SceneManager::setSkyInfo(vl::SkyInfo const &sky)
 {
-	/// @todo add checking that the previous Sky is different
-	setDirty(DIRTY_SKY);
-	_sky = sky;
+	update_variable(_sky, sky, DIRTY_SKY);
 }
 
 void
 vl::SceneManager::setFog(FogInfo const &fog)
 {
-	/// @todo add checking that the previous fog is different
-	setDirty(DIRTY_FOG);
-	_fog = fog;
+	update_variable(_fog, fog, DIRTY_FOG);
 }
 
 void 
 vl::SceneManager::setAmbientLight( Ogre::ColourValue const &colour )
 {
-	if( _ambient_light != colour )
-	{
-		setDirty( DIRTY_AMBIENT_LIGHT );
-		_ambient_light = colour;
-	}
+	update_variable(_ambient_light, colour, DIRTY_AMBIENT_LIGHT);
 }
 
 void
 vl::SceneManager::setBackgroundColour(Ogre::ColourValue const &colour)
 {
-	if(_background_colour != colour)
-	{
-		setDirty(DIRTY_BACKGROUND_COLOUR);
-		_background_colour = colour;
-	}
+	update_variable(_background_colour, colour, DIRTY_BACKGROUND_COLOUR);
 }
 
 void 
 vl::SceneManager::setShadowInfo(ShadowInfo const &info)
 {
-	if( info != _shadows )
-	{
-		setDirty(DIRTY_SHADOW_INFO);
-		_shadows = info;
-	}
+	update_variable(_shadows, info, DIRTY_SHADOW_INFO);
 }
 
 void

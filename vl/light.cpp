@@ -112,11 +112,7 @@ vl::Light::getLightTypeName(void) const
 void 
 vl::Light::setType(vl::Light::LightType type)
 {
-	if( _type != type )
-	{
-		setDirty(DIRTY_TYPE);
-		_type = type;
-	}
+	update_variable(_type, type, DIRTY_TYPE);
 }
 
 void 
@@ -141,74 +137,46 @@ vl::Light::setType(std::string const &type)
 void 
 vl::Light::setDiffuseColour(Ogre::ColourValue const &col)
 {
-	if( _diffuse_colour != col )
-	{
-		setDirty(DIRTY_COLOUR);
-		_diffuse_colour = col;
-	}
+	update_variable(_diffuse_colour, col, DIRTY_COLOUR);
 }
 
 void 
 vl::Light::setSpecularColour(Ogre::ColourValue const &col)
 {
-	if( _specular_colour != col )
-	{
-		setDirty(DIRTY_COLOUR);
-		_specular_colour = col;
-	}
+	update_variable(_specular_colour, col, DIRTY_COLOUR);
 }
 
 void 
 vl::Light::setDirection(Ogre::Vector3 const &dir)
 {
-	if( _direction != dir )
-	{
-		setDirty(DIRTY_TRANSFORM);
-		_direction = dir;
-	}
+	update_variable(_direction, dir, DIRTY_TRANSFORM);
 }
 	
 void 
 vl::Light::setPosition(Ogre::Vector3 const &pos)
 {
-	if( _position != pos )
-	{
-		setDirty(DIRTY_TRANSFORM);
-		_position = pos;
-	}
+	update_variable(_position, pos, DIRTY_TRANSFORM);
 }
 
 void 
 vl::Light::setCastShadows(bool v)
 {
-	if( _cast_shadows != v )
-	{
-		setDirty(DIRTY_GEN_PARAMS );
-		_cast_shadows = v;
-	}
+	update_variable(_cast_shadows, v, DIRTY_GEN_PARAMS);
 }
 
 void 
 vl::Light::setSpotlightRange(Ogre::Radian const &inner, 
 	Ogre::Radian const &outer, Ogre::Real falloff)
 {
-	if( _inner_cone != inner || _outer_cone != outer || _spot_falloff != falloff)
-	{
-		setDirty(DIRTY_SPOT_PARAMS);
-		_inner_cone = inner;
-		_outer_cone = outer;
-		_spot_falloff = falloff;
-	}
+	update_variable(_inner_cone, inner, DIRTY_SPOT_PARAMS);
+	update_variable(_outer_cone, outer, DIRTY_SPOT_PARAMS);
+	update_variable(_spot_falloff, falloff, DIRTY_SPOT_PARAMS);
 }
 
 void 
 vl::Light::setAttenuation(LightAttenuation const &att)
 {
-	if( att != _attenuation )
-	{
-		setDirty(DIRTY_ATTENUATION);
-		_attenuation = att;
-	}
+	update_variable(_attenuation, att, DIRTY_ATTENUATION);
 }
 
 
