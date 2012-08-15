@@ -7,6 +7,9 @@
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
+ *
+ *	Licensed under commercial license.
+ *
  */
 
 #ifndef HYDRA_HSF_WRITER_HPP

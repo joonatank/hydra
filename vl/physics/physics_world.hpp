@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
@@ -7,6 +7,8 @@
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
+ *
+ *	Licensed under commercial license.
  *
  */
 
