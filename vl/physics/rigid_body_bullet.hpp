@@ -250,6 +250,22 @@ public :
 	btRigidBody *getNative(void)
 	{ return _bt_body; }
 
+	//Ville lisännyt:
+	virtual Ogre::Vector3 getAnisotropicFriction(void) const {
+		return math::convert_vec(_bt_body->getAnisotropicFriction());
+	}
+	virtual void setAnisotropicFriction(const Ogre::Vector3 &anisotropicFriction) {
+		_bt_body->setAnisotropicFriction(math::convert_bt_vec(anisotropicFriction));
+	}
+	virtual vl::scalar getFriction(void) const {
+		return _bt_body->getFriction();
+	}
+	virtual void setFriction(vl::scalar const &friction) {
+		_bt_body->setFriction(friction);
+	}
+	virtual void setSleepingThresholds(vl::scalar const &linear,vl::scalar const &angular) {
+		_bt_body->setSleepingThresholds(linear,angular);
+	}
 private :
 	btRigidBody *_bt_body;
 
