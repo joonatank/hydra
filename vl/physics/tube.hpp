@@ -21,6 +21,8 @@
 #include "math/transform.hpp"
 // Necessary for pointer types and forward declarations
 #include "typedefs.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 namespace vl
 {
@@ -31,7 +33,7 @@ namespace physics
 /**	@class Tube
  *	@brief Simulates a single hydraulic tube with two endpoints
  */
-class Tube
+class HYDRA_API Tube
 {
 public :
 	struct ConstructionInfo

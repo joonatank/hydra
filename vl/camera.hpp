@@ -16,6 +16,8 @@
 #ifndef HYDRA_CAMERA_HPP
 #define HYDRA_CAMERA_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "movable_object.hpp"
 
@@ -24,7 +26,7 @@
 namespace vl
 {
 
-class Camera : public MovableObject
+class HYDRA_API Camera : public MovableObject
 {
 public :
 	Camera(std::string const &name, vl::SceneManagerPtr creator);

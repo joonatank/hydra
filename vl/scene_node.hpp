@@ -27,7 +27,8 @@
 #include "typedefs.hpp"
 
 #include "math/transform.hpp"
-
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "cluster/distributed.hpp"
 #include "object_interface.hpp"
@@ -45,7 +46,7 @@ enum TransformSpace
 	TS_WORLD,
 };
 
-class SceneNode : public vl::Distributed, public vl::ObjectInterface
+class HYDRA_API SceneNode : public vl::Distributed, public vl::ObjectInterface
 {
 public :
 	SceneNode(std::string const &name, vl::SceneManager *creator);

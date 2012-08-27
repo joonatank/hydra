@@ -21,6 +21,8 @@
 #include "typedefs.hpp"
 
 #include "math/types.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 // Concrete implementation
 #include <OGRE/OgreMaterial.h>
@@ -28,7 +30,7 @@
 namespace vl
 {
 
-class Material : public vl::Distributed
+class HYDRA_API Material : public vl::Distributed
 {
 public :
 	/// @brief Master constructor

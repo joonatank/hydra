@@ -16,6 +16,8 @@
 #define HYDRA_GAME_OBJECT_HPP
 
 #include "typedefs.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 // Abstract base
 #include "object_interface.hpp"
@@ -23,7 +25,7 @@
 namespace vl
 {
 
-class GameObject : public ObjectInterface
+class HYDRA_API GameObject : public ObjectInterface
 {
 public :
 	/// @todo fix the constructor to take is at least the basic parameters

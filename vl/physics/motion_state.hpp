@@ -17,6 +17,8 @@
 
 #include "math/math.hpp"
 #include "math/transform.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "object_interface.hpp"
 
@@ -29,7 +31,7 @@ namespace physics
 /** @class MotionState
  *
  */
-class MotionState
+class HYDRA_API MotionState
 {
 public:
 	MotionState(Transform const &t, vl::ObjectInterface *node = 0)

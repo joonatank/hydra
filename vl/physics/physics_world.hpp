@@ -36,6 +36,8 @@
 #include "rigid_body.hpp"
 // Necessary for Tube::ConstructionInfo
 #include "tube.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include <vector>
 #include <string>
@@ -75,7 +77,7 @@ struct SolverParameters
  *	management using our wrapper objects.
  *	Provides abstract interface for physics engine implementation.
  */
-class World
+class HYDRA_API World
 {
 public :
 	static WorldRefPtr create(GameManager *man);

@@ -16,6 +16,8 @@
 #define HYDRA_PHYSICS_CONSTRAINTS_HPP
 
 #include "math/transform.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "rigid_body.hpp"
 
@@ -119,7 +121,7 @@ private :
 
 /// @class SixDofConstraint
 /// Generic six dof constraint with a spring damper system
-class SixDofConstraint : public vl::physics::Constraint
+class HYDRA_API SixDofConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SixDofConstraint(void) {}
@@ -173,7 +175,7 @@ protected :
 
 };	// class SixDofConstraint
 
-class SliderConstraint : public vl::physics::Constraint
+class HYDRA_API SliderConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SliderConstraint(void) {}
@@ -312,7 +314,7 @@ protected :
 
 };	// class SliderConstraint
 
-class HingeConstraint : public vl::physics::Constraint
+class HYDRA_API HingeConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~HingeConstraint(void) {}
