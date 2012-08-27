@@ -137,6 +137,7 @@ void export_managers(void)
 	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
 		.def_readonly("axis_x", &vl::JoystickEvent::axis_x)
 		.def_readonly("axis_y", &vl::JoystickEvent::axis_y)
+		.def_readonly("axis_z", &vl::JoystickEvent::axis_z)
 		.def("is_button_down", isButtonDown_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
 	;

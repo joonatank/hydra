@@ -108,10 +108,10 @@ void export_physics_objects(void)
 		.add_property("max_motor_force",&vl::physics::Motor3Dof::getMaxMotorForce,&vl::physics::Motor3Dof::setMaxMotorForce)
 		.add_property("max_limit_torque",&vl::physics::Motor3Dof::getMaxLimitTorque,&vl::physics::Motor3Dof::setMaxLimitTorque)
 		
-		.def("enableMotor", &vl::physics::Motor3Dof::enableMotor)
-		.def("disableMotor", &vl::physics::Motor3Dof::disableMotor)
-		.def("enableMotors", &vl::physics::Motor3Dof::enableAllMotors)
-		.def("disableMotors", &vl::physics::Motor3Dof::disableAllMotors)
+		.def("enable_motor", &vl::physics::Motor3Dof::enableMotor)
+		.def("disable_motor", &vl::physics::Motor3Dof::disableMotor)
+		.def("enable_motors", &vl::physics::Motor3Dof::enableAllMotors)
+		.def("disable_motors", &vl::physics::Motor3Dof::disableAllMotors)
 	;
 
 
@@ -208,6 +208,7 @@ void export_physics_objects(void)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
 		.def("transform_to_local", &vl::physics::RigidBody::transformToLocal)
 		.def("translate", &vl::physics::RigidBody::translate)
+		.def("set_sleeping_thresholds",&vl::physics::RigidBody::setSleepingThresholds)
 		.add_property("total_force", &vl::physics::RigidBody::getTotalForce )
 		.add_property("total_torque", &vl::physics::RigidBody::getTotalTorque )
 		.add_property("center_of_mass_transform", &vl::physics::RigidBody::getCenterOfMassTransform, &vl::physics::RigidBody::setCenterOfMassTransform)
@@ -224,6 +225,8 @@ void export_physics_objects(void)
 		.add_property("inertia", &vl::physics::RigidBody::getInertia, &vl::physics::RigidBody::setInertia)
 		.add_property("kinematic", &vl::physics::RigidBody::isKinematicObject, &vl::physics::RigidBody::enableKinematicObject)
 		.add_property("disable_collisions", &vl::physics::RigidBody::isCollisionsDisabled, &vl::physics::RigidBody::disableCollisions)
+		.add_property("anisotropic_friction", &vl::physics::RigidBody::getAnisotropicFriction, &vl::physics::RigidBody::setAnisotropicFriction)
+		.add_property("friction", &vl::physics::RigidBody::getFriction, &vl::physics::RigidBody::setFriction)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
