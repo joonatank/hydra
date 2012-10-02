@@ -215,6 +215,7 @@ void export_animation(void)
 		.add_property("name", python::make_function(&vl::Constraint::getName, python::return_value_policy<python::copy_const_reference>()), &vl::Constraint::setName)
 		.def("set_velocity", &vl::Constraint::setVelocity)
 		.def("add_velocity", &vl::Constraint::addVelocity)
+		.def("add_listener", toast::python::signal_connect<void (void)>(&vl::Constraint::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

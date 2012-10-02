@@ -29,6 +29,8 @@
 
 #include "animation.hpp"
 
+#include <boost/signal.hpp>
+
 namespace vl
 {
 
@@ -37,6 +39,8 @@ namespace vl
  */
 class Constraint
 {
+	typedef boost::signal<void (void)> ChangedCB;
+
 public :
 	virtual ~Constraint(void)
 	{}
@@ -78,6 +82,9 @@ public :
 	/// @param name optional name for the constraint
 	void setName(std::string const &name)
 	{ _name = name; }
+
+	int addListener(ChangedCB::slot_type const &slot)
+	{ _changed_cb.connect(slot); return 1; }
 
 	/// @internal
 	void _solve(vl::time const &t);
@@ -123,6 +130,8 @@ protected :
 	std::string _name;
 
 	vl::animation::LinkRefPtr _link;
+
+	ChangedCB _changed_cb;
 
 };	// class Constraint
 
