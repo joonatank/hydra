@@ -52,18 +52,33 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 	// copy vertex data
 	sub->vertexData = new vl::VertexData;
 	sub->useSharedGeometry = false;
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+	
+	size_t offset = 0;
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+	offset += vl::VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_NORMAL);
+	offset += vl::VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES);
+	offset += vl::VertexDeclaration::getTypeSize(Ogre::VET_FLOAT2);
 
+	size_t vertexSize = offset;
+	sub->vertexData->buffer = new vl::VertexBuffer(vertexSize, tbuffer.getVertices().size());
+	// @todo modify to use the new Iterators (Position, Normal and UV)
+	size_t vertex = 0;
 	for(std::vector<Procedural::TriangleBuffer::Vertex>::const_iterator it 
-			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end();it++)
+			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end(); ++it, ++vertex)
 	{
-		vl::Vertex vert;
-		vert.position = it->mPosition;
-		vert.normal = it->mNormal;
-		vert.uv = it->mUV;
-		sub->vertexData->addVertex(vert);
+		vl::VertexBuffer *buf = sub->vertexData->buffer;
+		offset = 0;
+		
+		buf->write(vertex*vertexSize + offset, it->mPosition);
+		offset += sizeof(it->mPosition);
+
+		buf->write(vertex*vertexSize + offset, it->mNormal);
+		offset += sizeof(it->mNormal);
+
+		buf->write(vertex*vertexSize + offset, it->mUV);
+		offset += sizeof(it->mUV);
 	}
 
 	// copy index data
@@ -71,6 +86,9 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 	// @todo should check if we need to use 32-bit buffer
 	// forcing the use of 32 bit index buffer
 	//sub->indexData.setIndexSize(vl::IT_32BIT);
+	// Nope we should move to using 32-bit index buffers everywhere
+	// because the memory overhead is not too high any way.
+	// 16-bit buffers can be used in the GPU pipeline when the software buffer is converted.
 	sub->indexData.setIndexCount(tbuffer.getIndices().size());
 	for(size_t i = 0; i < tbuffer.getIndices().size(); ++i)
 	{
@@ -204,23 +222,51 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 
 	sub->vertexData = new VertexData;
 	sub->useSharedGeometry = false;
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
-	sub->vertexData->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
-	/// @todo add tangents
 
-	uint16_t M = tesselation_x;
-	uint16_t N = tesselation_y;
+	/// @todo add tangents
+	size_t offset = 0;
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+	offset += VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_NORMAL);
+	offset += VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3);
+	sub->vertexData->vertexDeclaration.addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES);
+	offset += VertexDeclaration::getTypeSize(Ogre::VET_FLOAT2);
+
+	uint16_t const M = tesselation_x;
+	uint16_t const N = tesselation_y;
+
+	size_t const vertexSize = offset;
+	size_t const n_vertices = (M+1)*(N+1);
+	sub->vertexData->buffer = new vl::VertexBuffer(vertexSize, n_vertices);
+
+	size_t vertex_count = 0;
+	vl::VertexBuffer *buf = sub->vertexData->buffer;
 	for(uint16_t m = 0; m < M+1; ++m)
 	{
 		for(uint16_t n = 0; n < N+1; ++n)
 		{
-			Vertex vert;
 			Ogre::Vector3 pos(size_x*m/M - size_x/2, 0, size_y*n/N - size_y/2);
-			vert.position = vert_rot*pos;
-			vert.normal = normal;
-			vert.uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
-			sub->vertexData->addVertex(vert);
+			Ogre::Vector2 uv = Ogre::Vector2(((double)m)/M, ((double)n)/N);
+
+			// @todo change to using vector iterators
+			offset = 0;
+			size_t vertex = vertex_count; //m*(N+1) + n;
+
+			assert(vertex < n_vertices);
+			buf->write(vertex*vertexSize + offset, vert_rot*pos);
+			assert(sizeof(pos) == VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3));
+			offset += sizeof(pos);
+
+			buf->write(vertex*vertexSize + offset, normal);
+			assert(sizeof(normal) == VertexDeclaration::getTypeSize(Ogre::VET_FLOAT3));
+			offset += sizeof(normal);
+
+			buf->write(vertex*vertexSize + offset, uv);
+			assert(sizeof(uv) == VertexDeclaration::getTypeSize(Ogre::VET_FLOAT2));
+			offset += sizeof(uv);
+			assert(offset == vertexSize);
+
+			++vertex_count;
 		}
 	}
 
@@ -299,13 +345,15 @@ vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius,
 	// Fix the origin to middle of the cylinder
 	assert(mesh->getNumSubMeshes() > 0);
 	SubMesh *sub = mesh->getSubMesh(0);
-	for(size_t i = 0; i < sub->vertexData->getNVertices(); ++i)
+	Ogre::Vector3 offset = mesh->getBounds().getCenter();
+	
+	PositionIterator iter = sub->vertexData->getPositionIterator();
+	for( ; !iter.end(); ++iter)
 	{
-		sub->vertexData->getVertex(i).position -= mesh->getBounds().getCenter();
-	}	
-	mesh->calculateBounds();
+		*iter -= offset;
+	}
 
-	assert(mesh);
+	mesh->calculateBounds();
 
 	_meshes[name] = mesh;
 	return mesh;

@@ -498,6 +498,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 			std::string path;
 			if(getResourceManager()->findResource(file.string(), path))
 			{
+				/* @fixme
 				vl::dae::ImporterSettings settings;
 				// Settings for testing Anark core importing, cleanup
 				// can't be enabled as long as we are testing cube importing
@@ -510,6 +511,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 				man.mesh = _mesh_manager;
 				vl::dae::Importer loader(settings, man);
 				loader.read(path);
+				*/
 			}
 			else
 			{
@@ -618,6 +620,7 @@ vl::GameManager::saveScene(std::string const &file_name)
 	fs::path file(file_name);
 	if(file.extension() == ".dae")
 	{
+		/* @fixme
 		std::cout << vl::TRACE << "Writing Collada file" << std::endl;
 		vl::dae::ExporterSettings settings;
 		vl::dae::Managers man;
@@ -626,6 +629,7 @@ vl::GameManager::saveScene(std::string const &file_name)
 		man.mesh = _mesh_manager;
 		vl::dae::Exporter writer(settings, man);
 		writer.write(file);
+		*/
 	}
 	else if(file.extension() == ".hsf")
 	{

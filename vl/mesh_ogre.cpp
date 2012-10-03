@@ -35,7 +35,7 @@ vl::create_ogre_mesh(std::string const &name, vl::MeshRefPtr mesh)
 
 	// Copy the shared geometry
 	// Skip empty shared geometry
-	if(mesh->sharedVertexData && mesh->sharedVertexData->getNVertices() > 0) 
+	if(mesh->sharedVertexData && mesh->sharedVertexData->buffer->getNVertices() > 0) 
 	{
 		// Create shared VertexData
 		og_mesh->sharedVertexData = new Ogre::VertexData;
@@ -57,170 +57,43 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 {
 	assert(vertexData && og_vertexData);
 
-	unsigned char *pVert = 0;
-	float *pFloat = 0;
-	Ogre::uint16 *pShort = 0;
-	Ogre::uint8 *pChar = 0;
-	Ogre::ARGB *pCol = 0;
-
 	Ogre::VertexDeclaration *decl = og_vertexData->vertexDeclaration;
-	Ogre::VertexBufferBinding *bind = og_vertexData->vertexBufferBinding;
-	unsigned short bufCount = 0;
+	
+	// What is bufCount? it's the binding we are using. Currently we only support one bindibng
+	// this need to be changed if we want to properly read all Ogre files
+	// like the ogre.mesh file.
+	const unsigned short bufCount = 0;
 	unsigned short totalTexCoords = 0; // across all buffers
 
-	// Assume single vertexbuffer
-
-	size_t offset = 0;
-
-	// Add element
-	for(size_t i = 0; i < vertexData->vertexDeclaration.getNSemantics(); ++i)
+	// Add elements
+	std::vector<Ogre::VertexElement> const &elements = vertexData->vertexDeclaration.getElements();
+	for(size_t i = 0; i < elements.size(); ++i)
 	{
-		VertexDeclaration::Semantic semantic = vertexData->vertexDeclaration.getSemantic(i);
-		decl->addElement(bufCount, offset, semantic.second, semantic.first);
-		offset += Ogre::VertexElement::getTypeSize(semantic.second);
+		size_t index = elements.at(i).getIndex();
+		size_t source = elements.at(i).getSource();
+		size_t offset = elements.at(i).getOffset();
+		decl->addElement(source, offset, elements.at(i).getType(), elements.at(i).getSemantic(), index);
+		assert(bufCount == source);
 	}
 
-	og_vertexData->vertexCount = vertexData->getNVertices();
-
-	assert(og_vertexData->vertexDeclaration->getVertexSize(bufCount) == vertexData->vertexDeclaration.vertexSize());
+	og_vertexData->vertexCount = vertexData->buffer->getNVertices();
+	
+	assert(og_vertexData->vertexDeclaration->getVertexSize(bufCount) == vertexData->buffer->getVertexSize());
 
 	// Now create the vertex buffer
 	Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().
-		createVertexBuffer(offset, og_vertexData->vertexCount, 
-			Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
+		createVertexBuffer(vertexData->buffer->getVertexSize(), og_vertexData->vertexCount, 
+			Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+
+	/// direct copy of the Vertex data
+	vbuf->writeData(0, vertexData->buffer->size(), vertexData->buffer->_buffer, true);
+	
 	// Bind it
+	Ogre::VertexBufferBinding *bind = og_vertexData->vertexBufferBinding;
 	bind->setBinding(bufCount, vbuf);
-	// Lock it
-	pVert = static_cast<unsigned char*>(vbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
 
-	// Get the element list for this buffer alone
-	Ogre::VertexDeclaration::VertexElementList elems = decl->findElementsBySource(bufCount);
+	/// @todo add support for multiple bindings
 
-	// Now the buffer is set up, parse all the vertices
-	/// @todo this can probably use a direct copy of the Vertex data
-	for(size_t i = 0; i < vertexData->getNVertices(); ++i)
-	{
-		// Now parse the elements, ensure they are all matched
-		Ogre::VertexDeclaration::VertexElementList::const_iterator ielem, ielemend;
-
-		ielemend = elems.end();
-		for (ielem = elems.begin(); ielem != ielemend; ++ielem)
-		{
-			const Ogre::VertexElement& elem = *ielem;
-			// Find child for this element
-			switch(elem.getSemantic())
-			{
-				case Ogre::VES_POSITION:
-				{
-					elem.baseVertexPointerToElement(pVert, &pFloat);
-
-					Ogre::Vector3 const &pos = vertexData->getVertex(i).position;
-					*pFloat++ = pos.x;
-					*pFloat++ = pos.y;
-					*pFloat++ = pos.z;
-				}
-				break;
-
-			case Ogre::VES_NORMAL:
-				elem.baseVertexPointerToElement(pVert, &pFloat);
-
-				*pFloat++ = vertexData->getVertex(i).normal.x;
-				*pFloat++ = vertexData->getVertex(i).normal.y;
-				*pFloat++ = vertexData->getVertex(i).normal.z;
-				break;
-
-			case Ogre::VES_TANGENT:
-				elem.baseVertexPointerToElement(pVert, &pFloat);
-
-				*pFloat++ = vertexData->getVertex(i).tangent.x;
-				*pFloat++ = vertexData->getVertex(i).tangent.y;
-				*pFloat++ = vertexData->getVertex(i).tangent.z;
-				break;
-			case Ogre::VES_BINORMAL:
-				/*	Binormals are not supported
-				elem.baseVertexPointerToElement(pVert, &pFloat);
-
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("x"));
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("y"));
-				*pFloat++ = StringConverter::parseReal(xmlElem->Attribute("z"));
-				*/
-				break;
-			case Ogre::VES_DIFFUSE:
-				elem.baseVertexPointerToElement(pVert, &pCol);
-				{
-					Ogre::ColourValue cv = vertexData->getVertex(i).diffuse;
-					*pCol++ = Ogre::VertexElement::convertColourValue(cv, elem.getType());
-				}
-				break;
-			case Ogre::VES_SPECULAR:
-				elem.baseVertexPointerToElement(pVert, &pCol);
-				{
-					Ogre::ColourValue cv = vertexData->getVertex(i).specular;
-					*pCol++ = Ogre::VertexElement::convertColourValue(cv, elem.getType());
-				}
-				break;
-			case Ogre::VES_TEXTURE_COORDINATES:
-				switch (elem.getType()) 
-				{
-				case Ogre::VET_FLOAT1:
-					elem.baseVertexPointerToElement(pVert, &pFloat);
-					*pFloat++ = vertexData->getVertex(i).uv.x;
-					break;
-
-				case Ogre::VET_FLOAT2:
-					elem.baseVertexPointerToElement(pVert, &pFloat);
-					*pFloat++ = vertexData->getVertex(i).uv.x;
-					*pFloat++ = vertexData->getVertex(i).uv.y;
-					break;
-
-				case Ogre::VET_FLOAT3:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_FLOAT3"));
-					break;
-
-				case Ogre::VET_FLOAT4:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_FLOAT4"));
-					break;
-
-				case Ogre::VET_SHORT1:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_SHORT1"));
-					break;
-
-				case Ogre::VET_SHORT2:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_SHORT2"));
-					break;
-
-				case Ogre::VET_SHORT3:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_SHORT3"));
-					break;
-
-				case Ogre::VET_SHORT4:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_SHORT4"));
-					break;
-
-				case Ogre::VET_UBYTE4:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_UBYTE4"));
-					break;
-
-				case Ogre::VET_COLOUR:
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_COLOUR"));
-					break;
-
-				case Ogre::VET_COLOUR_ARGB:
-				case Ogre::VET_COLOUR_ABGR: 
-					BOOST_THROW_EXCEPTION(vl::not_implemented() << vl::desc("VET_COLOUR_ABGR"));
-					break;
-				}
-
-				break;
-			default:
-				break;
-			}
-		}	// semantic
-		pVert += vbuf->getVertexSize();
-	}	// vertices
-
-	bufCount++;
-    vbuf->unlock();
 	// Vertexbuffer done
 }
 
@@ -265,20 +138,12 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
 				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
 					og_sm->indexData->indexCount,
-					Ogre::HardwareBuffer::HBU_DYNAMIC,
-					false);
+					Ogre::HardwareBuffer::HBU_DYNAMIC);
+
+			/// Upload the index data to the card
+			ibuf->writeData(0, ibuf->getSizeInBytes(), sm->indexData.getBuffer32(), true);
 
 			og_sm->indexData->indexBuffer = ibuf;
-			unsigned int *pInt = 0;
-			unsigned short *pShort = 0;
-		
-			pInt = static_cast<unsigned int*>(ibuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
-
-			assert(sm->indexData.getVec32().size() == sm->indexData.indexCount());
-			/// @todo replace with memcpy
-			::memcpy(pInt, sm->indexData.getBuffer32(), sm->indexData.indexCount()*sizeof(uint32_t));
-
-			ibuf->unlock();
 		}
 		else
 		{
@@ -286,16 +151,12 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
 				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 
 					og_sm->indexData->indexCount,
-					Ogre::HardwareBuffer::HBU_DYNAMIC,
-					false);
+					Ogre::HardwareBuffer::HBU_DYNAMIC);
+			
+			/// Upload the index data to the card
+			ibuf->writeData(0, ibuf->getSizeInBytes(), sm->indexData.getBuffer16(), true);
 
 			og_sm->indexData->indexBuffer = ibuf;
-			unsigned short *pShort = static_cast<unsigned short *>(ibuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
-
-			assert(sm->indexData.getVec16().size() == sm->indexData.indexCount());
-			::memcpy(pShort, sm->indexData.getBuffer16(), sm->indexData.indexCount()*sizeof(uint16_t));
-
-			ibuf->unlock();
 		}
 	}
 

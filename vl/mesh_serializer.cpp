@@ -47,9 +47,6 @@ vl::MeshSerializer::writeMesh(vl::MeshRefPtr mesh, std::string const &filename)
 	ser.exportMesh(og_mesh.get(), filename);
 }
 
-/// @todo this is quite problematic because it needs to read the Data in Ogre
-/// format and then convert it to Hydra structure then send it forward
-/// before it can be displayed it will be converted back to Ogre format.
 void
 vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
 {
@@ -69,8 +66,10 @@ vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
     }
 
     // Read version
-    std::string ver = readString(stream);
-    // Jump back to start
+    std::string ver = stream.getLine();
+	std::clog << "Mesh version = " << ver << std::endl;
+    
+	// Jump back to start
     stream.seek(0);
 
     // Find the implementation to use
@@ -78,15 +77,8 @@ vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
 
     // Call implementation
     impl->importMesh(stream, mesh.get());
-    // Warn on old version of mesh
-    /*
-	if (ver != mVersionData[0]->versionString)
-    {
-        std::cout << "WARNING: " << pDest->getName()
-            << " is an older format (" << ver << "); you should upgrade it as soon as possible"
-            << " using the OgreMeshUpgrade tool.";
-    }
-	*/
+
+	delete impl;
 }
 
 /// ------------------------------- Private ----------------------------------

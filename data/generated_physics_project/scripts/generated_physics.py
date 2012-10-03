@@ -105,12 +105,12 @@ tube_info.bending_radius = 0.3
 # from 450 to 500. Batch count is 31 compared to 50.
 # Somehow I'd guess that the problem is more our shaders than batching.
 tube_info.material_name = "tube_material"
-tube_info.use_instancing = True
+#tube_info.use_instancing = True
 
 # TODO there is an annoying shadow in the tube
 # TODO enabling instancing causes clipping problems
 # decreasing near_clip does not help
 tube = game.physics_world.createTube(tube_info)
 tube.create()
-tube.show_bounding_boxes = True
+#tube.show_bounding_boxes = True
 

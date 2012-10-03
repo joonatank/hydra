@@ -40,7 +40,7 @@ public :
 	void skip(int bytes);
 
 	/// @brief did we hit end of file
-	bool eof(void);
+	bool eof(void) const;
 
 	/// @brief Where in the stream are we
 	size_t tell(void) const

@@ -137,7 +137,7 @@ vl::MeshSerializerImpl::writeMesh(vl::Mesh const *pMesh)
 	writeBools(&skelAnim, 1);
 
     // Write shared geometry
-	if(pMesh->sharedVertexData && pMesh->sharedVertexData->getNVertices())
+	if(pMesh->sharedVertexData && pMesh->sharedVertexData->buffer->getNVertices())
 		writeGeometry(pMesh, pMesh->sharedVertexData);
 
     // Write Submeshes
@@ -548,7 +548,7 @@ vl::MeshSerializerImpl::calcMeshSize(vl::Mesh const *pMesh)
     size += sizeof(uint32_t);
 
     // Geometry
-	if(pMesh->sharedVertexData && pMesh->sharedVertexData->getNVertices() > 0)
+	if(pMesh->sharedVertexData && pMesh->sharedVertexData->buffer->getNVertices() > 0)
 	{
 		size += calcGeometrySize(pMesh->sharedVertexData);
 	}
@@ -697,12 +697,9 @@ vl::MeshSerializerImpl::readGeometry(vl::ResourceStream &stream, vl::Mesh *pMesh
 {
 //	std::clog << "vl::MeshSerializerImpl::readGeometry" << std::endl;
 	assert(pMesh && pDest);
-//    dest->vertexStart = 0;
 
     unsigned int vertexCount = 0;
     readInts(stream, &vertexCount, 1);
-    pDest->setNVertices(vertexCount);
-	//dest->vertexCount = vertexCount;
 
     // Find optional geometry streams
     if (!stream.eof())
@@ -718,7 +715,7 @@ vl::MeshSerializerImpl::readGeometry(vl::ResourceStream &stream, vl::Mesh *pMesh
                 readGeometryVertexDeclaration(stream, pMesh, pDest);
                 break;
             case Ogre::M_GEOMETRY_VERTEX_BUFFER:
-                readGeometryVertexBuffer(stream, pMesh, pDest);
+                readGeometryVertexBuffer(stream, pMesh, pDest, vertexCount);
                 break;
             }
 			// Get next stream
@@ -790,10 +787,7 @@ vl::MeshSerializerImpl::readGeometryVertexElement(vl::ResourceStream &stream, vl
 	// unsigned short index;	// index of the semantic
 	readShorts(stream, &index, 1);
 
-//	std::clog << "Data read : type =" << vType << " semantic = " << vSemantic << std::endl;
-	pDest->vertexDeclaration.addSemantic(vSemantic, vType);
-
-	//dest->vertexDeclaration->addElement(source, offset, vType, vSemantic, index);
+	pDest->vertexDeclaration.addElement(source, offset, vType, vSemantic, index);
 
 	if (vType == Ogre::VET_COLOUR)
 	{
@@ -806,14 +800,15 @@ vl::MeshSerializerImpl::readGeometryVertexElement(vl::ResourceStream &stream, vl
 }
 //---------------------------------------------------------------------
 void 
-vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, vl::Mesh* pMesh, VertexData *pDest)
+vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, 
+	vl::Mesh* pMesh, VertexData *pDest, size_t vertexCount)
 {
 //	std::clog << "vl::MeshSerializerImpl::readGeometryVertexBuffer" << std::endl;
 
 	unsigned short bindIndex, vertexSize;
-	// unsigned short bindIndex;	// Index to bind this buffer to
+	// Index to bind this buffer to
 	readShorts(stream, &bindIndex, 1);
-	// unsigned short vertexSize;	// Per-vertex size, must agree with declaration at this index
+	// Per-vertex size, must agree with declaration at this index
 	readShorts(stream, &vertexSize, 1);
 
 	// Check for vertex data header
@@ -838,36 +833,20 @@ vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, vl:
 	}
 
 	// Create / populate vertex buffer
-	size_t vertexCount = pDest->getNVertices();
-	size_t bufferSize = vertexCount * vertexSize;
+	// Create the vertex buffer
+	assert(!pDest->buffer);
+	pDest->buffer = new VertexBuffer(vertexSize, vertexCount);
 
 	if(bindIndex != 0)
 	{
-		std::clog << "Trying to bind data to other than first Buffer. Not supported." << std::endl;
+		std::string err_msg("Trying to bind data to other than first Buffer. Not supported.");
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
 	}
 
-//	std::clog << "Adding " << vertexCount << " vertices." << std::endl;
-	/// @todo replace with copying the whole stream at once
-	char *pBuf = new char[vertexSize];
-	for(size_t i = 0; i < vertexCount; ++i)
-	{
-		stream.read(pBuf, vertexSize);
+	// No endian conversion, we don't support Mac OSX
+	stream.read(pDest->buffer->_buffer, pDest->buffer->size());
 
-		pDest->setVertex(i, pBuf, vertexSize);
-	}
-
-	// endian conversion for OSX
-	/*	Endian conversion not supported
-	flipFromLittleEndian(
-		pBuf,
-		dest->vertexCount,
-		vertexSize,
-		dest->vertexDeclaration->findElementsBySource(bindIndex));
-	*/
-
-//	vbuf->unlock();
-
-	// Set binding
+	// @todo Set binding
 //	dest->vertexBufferBinding->setBinding(bindIndex, vbuf);
 }
 
@@ -1074,66 +1053,32 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 
     SubMesh* sm = pMesh->createSubMesh();
 
-    // char* materialName
     std::string materialName = readString(stream);
     sm->setMaterial(materialName);
 
     readBools(stream, &sm->useSharedGeometry, 1);
-	
-	// @todo should we clear the sub mesh indexes?
-//    sm->indexData->indexStart = 0;
+
     unsigned int indexCount = 0;
     readInts(stream, &indexCount, 1);
-    //sm->indexData->indexCount = indexCount;
+
 	if(indexCount%3)
 	{
 		std::clog << "Something fishy in SubMesh index count is not dividable with three." << std::endl;
 		BOOST_THROW_EXCEPTION(vl::not_implemented());
 	}
 
-    //HardwareIndexBufferSharedPtr ibuf;
     bool idx32bit;
     readBools(stream, &idx32bit, 1);
     if (indexCount > 0)
     {
         if (idx32bit)
         {
-//			std::clog << "Reading 32-bit indexes, " << indexCount << " of them." << std::endl;
-			/*
-            ibuf = HardwareBufferManager::getSingleton().
-                createIndexBuffer(
-                    HardwareIndexBuffer::IT_32BIT,
-                    sm->indexData->indexCount,
-                    pMesh->mIndexBufferUsage,
-					pMesh->mIndexBufferShadowBuffer);
-            // unsigned int* faceVertexIndices
-            unsigned int* pIdx = static_cast<unsigned int*>(
-                ibuf->lock(HardwareBuffer::HBL_DISCARD)
-                );
-			*/
 			sm->indexData.setIndexSize(vl::IT_32BIT);
 			sm->indexData.setIndexCount(indexCount);
 			readInts(stream, sm->indexData.getBuffer32(), indexCount);
-
-            //ibuf->unlock();
         }
         else // 16-bit
         {
-			/*
-            ibuf = HardwareBufferManager::getSingleton().
-                createIndexBuffer(
-                    HardwareIndexBuffer::IT_16BIT,
-                    sm->indexData->indexCount,
-                    pMesh->mIndexBufferUsage,
-					pMesh->mIndexBufferShadowBuffer);
-            // unsigned short* faceVertexIndices
-            unsigned short* pIdx = static_cast<unsigned short*>(
-                ibuf->lock(HardwareBuffer::HBL_DISCARD)
-                );
-            readShorts(stream, pIdx, sm->indexData->indexCount);
-            ibuf->unlock();
-			*/
-//			std::clog << "Reading 16-bit indexes, " << indexCount << " of them." << std::endl;
 			sm->indexData.setIndexSize(vl::IT_16BIT);
 			/// Get the half count of indexes, if it's odd it will be increased
 			/// by one half, if it's even then the odd one is out in the division
@@ -1141,25 +1086,8 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 			/// of course done with the correct number of indices.
 			sm->indexData.setIndexCount(indexCount);
 			readShorts(stream, sm->indexData.getBuffer16(), indexCount);
-			/*
-			std::clog << "Index buffer = ";
-			for(size_t i = 0; i < indexCount; ++i)
-			{
-				std::clog << sm->indexData.getVec16().at(i) << ", ";
-			}
-			std::clog << std::endl;
-			*/
-			/*
-			for(size_t i = 0; i < indexCount/3; ++i)
-			{
-				uint16_t buf[3];
-				readShorts(stream, buf, 3);
-				sm->addFace(buf[0], buf[1], buf[3]);
-			}
-			*/
 		}
 	}
-//    sm->indexData->indexBuffer = ibuf;
 
     // M_GEOMETRY stream (Optional: present only if useSharedVertices = false)
     if(!sm->useSharedGeometry)

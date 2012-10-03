@@ -7,14 +7,12 @@
 # Global scripts are always processed first
 # Other than that order of script processing is not guaranteed.
 
-print( 'Getting Ogre SceneNode' )
 # config.getSceneNode gets a reference to already created SceneNode
 # For now it's not possible to create SceneNodes from python
 # So use this function to get a SceneNode created from .scene file.
 # All SceneNodes in .scene file are created and can be retrieved here.
 # Tangent space lighting does not work on the ogre_ent
 
-print( 'Getting Camera SceneNode' )
 camera = game.scene.getSceneNode("CameraNode")
 camera.position = Vector3(0, 3, 15)
 createCameraMovements(camera, speed=10)
@@ -33,14 +31,14 @@ ogre.position = Vector3(0, 2.5, 0)
 # first one is the camera not active at the moment, second one is active at the moment
 addToggleActiveCamera("Omakamera", "OutsideCamera")
 
-game.scene.ambient_light = ColourValue(0.01, 0.01, 0.01)
+game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
 game.scene.shadows.max_distance = 50
 #game.scene.shadows.dir_light_extrusion_distance = 100
-game.scene.sky.preset = "sunset" #"clear"
+#game.scene.sky.preset = "sunset" #"clear"
 
-create_ground(size=100)
+ground = create_ground(size=100)
 
 sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
 sphere_ent.material_name = 'finger_sphere/red'
@@ -135,15 +133,16 @@ game.auto_start = False
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
 trigger.addListener(toggle_pause)
 
+def show_debug():
+	#ogre.show_debug_display = True
+	game.scene.show_axes(True)
+
+"""
 def timer_callback():
 	print("Called from continuous timer")
 
 def single_timer_callback():
 	print("Called from single timer.")
-
-def show_debug():
-	#ogre.show_debug_display = True
-	game.scene.show_axes(True)
 
 # TODO
 # Can not be created from callbacks because it messes the iterators
@@ -157,6 +156,7 @@ trigger = game.event_manager.createTimeTrigger()
 trigger.interval = time(10, 0)
 trigger.continuous = False
 trigger.addListener(single_timer_callback)
+"""
 
 ogre.translate(0, 1, 0)
 trigger = game.event_manager.createKeyTrigger(KC.Y)

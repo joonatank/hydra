@@ -275,6 +275,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.add_property("maximum", make_function(box_max2, return_value_policy<copy_const_reference>()), box_set_max )
 	;
 
+	/*
 	class_<vl::Vertex>("Vertex")
 		.def_readwrite("position", &vl::Vertex::position)
 		.def_readwrite("normal", &vl::Vertex::normal)
@@ -283,6 +284,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def_readwrite("uv", &vl::Vertex::uv)
 		.def(self_ns::str(self_ns::self))
 	;
+	*/
 
 	enum_<Ogre::VertexElementSemantic>("VES")
 		.value("position", Ogre::VES_POSITION)
@@ -310,17 +312,17 @@ BOOST_PYTHON_MODULE(pyogre)
 	;
 
 	class_<vl::VertexDeclaration>("VertexDeclaration")
-		.def("addSemantic", &vl::VertexDeclaration::addSemantic)
-		.def("getNSemantics", &vl::VertexDeclaration::getNSemantics)
-		.def("getSemantic", &vl::VertexDeclaration::getSemantic)
+//		.def("addSemantic", &vl::VertexDeclaration::addSemantic)
+//		.def("getNSemantics", &vl::VertexDeclaration::getNSemantics)
+//		.def("getSemantic", &vl::VertexDeclaration::getSemantic)
 	;
 
-	vl::Vertex &(vl::VertexData::*getVertex_ov0)(size_t) = &vl::VertexData::getVertex;
+//	vl::Vertex &(vl::VertexData::*getVertex_ov0)(size_t) = &vl::VertexData::getVertex;
 
 	class_<vl::VertexData>("VertexData")
-		.def("addVertex", &vl::VertexData::addVertex)
+//		.def("addVertex", &vl::VertexData::addVertex)
 //		.def("getVertex", getVertex_ov0)
-		.add_property("n_vertices", &vl::VertexData::getNVertices)
+//		.add_property("n_vertices", &vl::VertexData::getNVertices)
 		.def_readwrite("vertex_declaration", &vl::VertexData::vertexDeclaration)
 	;
 

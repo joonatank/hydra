@@ -39,58 +39,47 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 	SubMesh const *sm = mesh->getSubMesh(0);
 	btIndexedMesh bt_data;
 	
-	// Stride is the size of the type
-	// assuming 16bit index buffer, we will change it to 32bit later if necessary
-	bt_data.m_triangleIndexStride = sizeof(uint16_t)*3;
-
-	PHY_ScalarType indexType = PHY_SHORT;
-	if(sm->indexData.getIndexSize() == IT_32BIT)
-	{
-		indexType = PHY_INTEGER;
-		bt_data.m_triangleIndexStride = sizeof(uint32_t)*3;
-	}
 	// Ogre meshes use 16bit float for vertices
 	bt_data.m_vertexType = PHY_FLOAT;
-	bt_data.m_vertexStride = sizeof(float)*3;
 
-	bt_data.m_numVertices = vertexData->getNVertices();
+	assert(vertexData->buffer);
+	bt_data.m_numVertices = vertexData->buffer->getNVertices();
 	/// Assumes triangle lists
 	/// @todo add support for operation type
 	assert(sm->indexData.indexCount()%3 == 0);
 	bt_data.m_numTriangles = sm->indexData.indexCount()/3;
 
-	// copy the vertex buffer
-	size_t vertex_size = 3*sizeof(float);
-	assert(vertex_size == sizeof(Ogre::Vector3));
-
-	/// @todo these will leak memory when the bullet mesh is destroyed
-	/// @todo this is inefficient, better would be that the VertexData structure
-	/// holds the vertex positions in a continous memory block (no need to copy them)
-	/// especially as Bullet can reuse the memory block.
-	unsigned char *vbuf = new unsigned char[vertexData->getNVertices()*vertex_size];
-	for(size_t i = 0; i < vertexData->getNVertices(); ++i)
+	// Find the position schematic place in the buffer
+	size_t pos_offset = 0;
+	for(size_t i = 0; i < vertexData->vertexDeclaration.getElements().size(); ++i)
 	{
-		::memcpy(vbuf+i*vertex_size, &vertexData->getVertex(i).position, vertex_size);
+		Ogre::VertexElement const &elem = vertexData->vertexDeclaration.getElements().at(i);
+		if(elem.getSemantic() != Ogre::VES_POSITION)
+		{ pos_offset += elem.getSize(); }
+		else
+		{ break; }
 	}
 
-	bt_data.m_vertexBase = vbuf;
+	// Set the pointer to vertex buffer
+	bt_data.m_vertexBase = (const unsigned char *)vertexData->buffer->_buffer + pos_offset;
+	// Stride is the size of the type
+	// so vertex stride is the size of a vertex in the buffer
+	bt_data.m_vertexStride = vertexData->buffer->getVertexSize();
 
-	unsigned char *ibf = 0;
+	// set the pointer to index buffer
+	PHY_ScalarType indexType = PHY_INTEGER;
 	if(sm->indexData.getIndexSize() == IT_32BIT)
 	{
-		//ibf = (unsigned char const *)sm->indexData.getBuffer32();
-		size_t arr_size = sm->indexData.indexCount()*sizeof(uint32_t);
-		ibf = new unsigned char[arr_size];
-		memcpy(ibf, sm->indexData.getBuffer32(), arr_size);
+		bt_data.m_triangleIndexBase = (const unsigned char *)sm->indexData.getBuffer32();
+		bt_data.m_triangleIndexStride = 3*sizeof(uint32_t);
+		indexType = PHY_INTEGER;
 	}
 	else
 	{
-		//ibf = (unsigned char const *)sm->indexData.getBuffer16(); 
-		size_t arr_size = sm->indexData.indexCount()*sizeof(uint16_t);
-		ibf = new unsigned char[arr_size];
-		memcpy(ibf, sm->indexData.getBuffer16(), arr_size);
+		bt_data.m_triangleIndexBase = (const unsigned char *)sm->indexData.getBuffer16();
+		bt_data.m_triangleIndexStride = 3*sizeof(uint16_t);
+		indexType = PHY_SHORT;
 	}
-	bt_data.m_triangleIndexBase = ibf;
 
 	// Pass the index type because the one in btIndexedMesh is overwriten
 	bt_mesh->addIndexedMesh(bt_data, indexType);

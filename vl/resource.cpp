@@ -47,21 +47,20 @@ vl::ResourceStream::skip(int bytes)
 }
 
 bool 
-vl::ResourceStream::eof(void)
+vl::ResourceStream::eof(void) const
 {
 	assert(_resource);
-	if( _index >= _resource->size()-1 )
-	{ return true; }
-	else
-	{ return false; }
+	
+	return( _index >= _resource->size()-1 );
 }
 
 void
 vl::ResourceStream::seek(size_t index)
 {
 	assert(_resource);
+	assert(index <= _resource->size());
+
 	_index = index;
-	assert(_index <= _resource->size());
 }
 
 size_t

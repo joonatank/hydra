@@ -47,35 +47,6 @@
 namespace vl
 {
 
-/// @todo the parameters in the vertex should be optional
-/// for example we could use an array with offsets (similar to VertexData), hard to use
-/// or we could use a stack of Vertex attributes
-/// or we could use multiple Vertex structures
-///
-/// At the moment best approach seems to be to use vertexSemantics to map different attributes
-/// like position, normal, uv, tangent to float arrays
-/// vertexType would indicate the size of the float array (or the amount useful data in it)
-/// Provide an interface to the vertex with setPosition and so on
-/// Probably  best to use just a single floating point array, size determined by
-/// VertexDeclaration and really a static array for every vertex if possible.
-/// Oh it's not possible to create variable size array on the stack
-/// so we should probably do a similar implementation as in Ogre using a single
-/// VertexData array in Mesh/SubMesh and just provide an interface for that.
-/// The upside for using single dynamic array is that the amount of costly allocation
-/// calls on the head is minimized. Also we can calculate the Mesh size first when
-/// the declaration is made so that we only need single allocation call.
-struct Vertex
-{
-	Ogre::Vector3 position;
-	Ogre::Vector3 normal;
-	Ogre::Vector3 tangent;
-	Ogre::ColourValue diffuse;
-	Ogre::ColourValue specular;
-	Ogre::Vector2 uv;
-};
-
-std::ostream &operator<<( std::ostream &os, Vertex const &v );
-
 /* VertexElementSematic
 VES_POSITION 	Position, 3 reals per vertex.
 
@@ -120,32 +91,216 @@ struct VertexDeclaration
 
 	size_t vertexSize(void) const;
 
-	typedef std::pair<Ogre::VertexElementSemantic, Ogre::VertexElementType> Semantic;
-
-	void addSemantic(Ogre::VertexElementSemantic semantic, Ogre::VertexElementType type)
+	void addElement(unsigned short source, size_t offset, Ogre::VertexElementType theType, 
+		Ogre::VertexElementSemantic semantic, unsigned short index = 0)
 	{
-		_semantics.push_back(std::make_pair(semantic, type));
+		_elements.push_back(Ogre::VertexElement(source, offset, theType, semantic, index));
 	}
 
-	std::vector<Semantic> const &getSemantics(void) const
-	{ return _semantics; }
+	std::vector<Ogre::VertexElement> const &getElements(void) const
+	{ return _elements; }
 
-	std::vector<Semantic> &getSemantics(void)
-	{ return _semantics; }
+	std::vector<Ogre::VertexElement> &getElements(void)
+	{ return _elements; }
 
-	Semantic getSemantic(size_t i) const
-	{ return _semantics.at(i); }
+	/// @return position and size pair
+	std::pair<size_t, size_t> getSemanticPosition(Ogre::VertexElementSemantic type) const
+	{
+		size_t pos = 0;
+		for(std::vector<Ogre::VertexElement>::const_iterator iter = _elements.begin();
+			iter != _elements.end(); ++iter)
+		{
+			if(iter->getSemantic() == type)
+			{
+				return std::make_pair(pos, iter->getSize());
+			}
+			pos += iter->getSize();
+		}
 
-	size_t getNSemantics(void) const
-	{ return _semantics.size(); }
+		return std::make_pair(0, 0);
+	}
+
+	bool hasSemantic(Ogre::VertexElementSemantic type) const
+	{
+		for(std::vector<Ogre::VertexElement>::const_iterator iter = _elements.begin();
+			iter != _elements.end(); ++iter)
+		{
+			if(iter->getSemantic() == type)
+			{ return true; }
+		}
+	}
 
 	/// @todo not sure if these are correct
 	static size_t getTypeSize(Ogre::VertexElementType type);
 
 private :
-	std::vector<Semantic> _semantics;
+	std::vector<Ogre::VertexElement> _elements;
 
 };
+
+/**	@class VertexBuffer
+ *
+ *	@brief Data structure to hold the actual vertex information of a mesh
+ *	Does not allow resizing of the buffer it needs to be recreated instead.
+ *	This is so marginal case that it was deemed unnecessary overhead.
+ *
+ *	@todo add stream operator for VertexBuffer
+ *	We need to lock and unlock the buffer to receive an input/output stream
+ *	that counts the current position.
+ **/
+class VertexBuffer
+{
+public :
+	VertexBuffer(size_t vertex_size, size_t n_vertices)
+		: _buffer(0)
+		, _n_vertices(n_vertices)
+		, _vertex_size(vertex_size)
+	{
+		// Forbid empty buffers, any buffer that has less than 3 vertices
+		// can not represent a triangle
+		// it could represent a line so we keep the limit to at least 2 vertices.
+		assert(_n_vertices > 1 && _vertex_size > 0);
+		_buffer = new char[_n_vertices * _vertex_size];
+	}
+
+	void read(size_t offset, void *data, size_t size_) const
+	{
+		assert(offset + size_ <= this->size());
+
+		memcpy(data, _buffer + offset, size_);
+	}
+
+	/// @brief write data
+	/// You must ensure that the buffer is long enough
+	void write(size_t offset, void const *data, size_t size_)
+	{
+		assert(offset + size_ <= this->size());
+
+		memcpy(_buffer + offset, data, size_);
+	}
+
+	template<typename T>
+	void write(size_t offset, T const &data)
+	{
+		write(offset, &data, sizeof(data));
+	}
+
+	template<typename T>
+	void read(size_t offset, T &data) const
+	{
+		read(offset, &data, sizeof(data));
+	}
+
+	/// Copy data from this buffer to another char buffer
+	/// Ensure that the dest buffer is long enough to hold the data
+	void copy(char *dest)
+	{
+		memcpy(dest, _buffer, size());
+	}
+
+	size_t getNVertices(void) const
+	{ return _n_vertices; }
+
+	size_t getVertexSize(void) const
+	{ return _vertex_size; }
+
+	size_t size(void) const
+	{ return _n_vertices*_vertex_size; }
+
+	// @todo cleaner design the bit buffer should be private
+	// no getters and no friends
+	char *_buffer;
+
+private :
+	size_t _n_vertices;
+	size_t _vertex_size;
+};
+
+template<typename T>
+class VertexIterator
+{
+public :
+	VertexIterator(VertexBuffer *buf, size_t offset)
+		: _buffer(buf), _offset(offset), _position(0)
+	{}
+
+	// Invalid iterator constructor
+	VertexIterator(void)
+		: _buffer(0), _offset(0), _position(0)
+	{}
+
+	T* value(void)
+	{	
+		T *a = reinterpret_cast<T *>(_buffer->_buffer + _buffer_position());
+		return a;
+	}
+
+	T& operator*(void)
+	{
+		return *value();
+	}
+
+	T* operator->(void)
+	{
+		return value();
+	}
+	
+	VertexIterator &operator++(void)
+	{
+		++_position;
+		return *this;
+	}
+
+	VertexIterator operator++(int)
+	{
+		VertexIterator iter(*this);
+		++_position;
+		return iter;
+	}
+
+	VertexIterator &operator--(void)
+	{
+		--_position;
+		return *this;
+	}
+
+	VertexIterator operator--(int)
+	{
+		VertexIterator iter(*this);
+		--_position;
+		return iter;
+	}
+
+	bool operator==(VertexIterator const &i) const
+	{
+		return _buffer == i._buffer 
+			&& _offset == i._offset 
+			&& _position == i._position;
+	}
+
+	bool operator!=(VertexIterator const &i) const
+	{ return !(*this == i); }
+	
+	bool end(void) const
+	{ return _buffer && ((_buffer->size()-1) <= _buffer_position()); }
+
+	/// @internal
+	size_t _buffer_position(void) const
+	{
+		return _buffer->getVertexSize()*_position + _offset;
+	}
+
+private :
+	VertexBuffer *_buffer;
+	// static offset between values in the buffer
+	const size_t _offset;
+	// current position in the buffer
+	size_t _position;
+};
+
+typedef VertexIterator<Ogre::Vector3> PositionIterator;
+typedef VertexIterator<Ogre::Vector3> NormalIterator;
+typedef VertexIterator<Ogre::Vector2> UVIterator;
 
 /// @class VertexData
 /// @todo Replace Vertex structure with a buffer where VertexElememt arrays
@@ -155,32 +310,45 @@ private :
 /// different array, so it's easier to resize it.
 struct VertexData
 {
-	typedef std::vector<Vertex> VertexList;
+	VertexData(void)
+		: buffer(0)
+	{}
 
-	void setVertex(size_t i, char const *buf, size_t size);
+	PositionIterator getPositionIterator(void)
+	{
+		if(vertexDeclaration.hasSemantic(Ogre::VES_POSITION))
+		{
+			std::pair<size_t, size_t> pos = vertexDeclaration.getSemanticPosition(Ogre::VES_POSITION);
+			// Semantic size needs to be some as the return type size
+			assert(sizeof(Ogre::Vector3) == pos.second);
 
-	void addVertex(Vertex const &vertex)
-	{ _vertices.push_back(vertex); }
+			return PositionIterator(buffer, pos.first);
+		}
+		else
+		{
+			std::clog << "VertexData has no Position semantics" << std::endl;
+			throw;
+		}
+	}
 
-	Vertex const &getVertex(size_t i) const
-	{ return _vertices.at(i); }
+	NormalIterator getNormalIterator(void)
+	{
+		if(vertexDeclaration.hasSemantic(Ogre::VES_NORMAL))
+		{
+			std::pair<size_t, size_t> pos = vertexDeclaration.getSemanticPosition(Ogre::VES_NORMAL);
+			// Semantic size needs to be some as the return type size
+			assert(sizeof(Ogre::Vector3) == pos.second);
 
-	Vertex &getVertex(size_t i)
-	{ return _vertices.at(i); }
+			return NormalIterator(buffer, pos.first);
+		}
+		else
+		{
+			std::clog << "VertexData has no Normal semantics" << std::endl;
+			throw;
+		}		
+	}
 
-	void setNVertices(size_t n)
-	{ _vertices.resize(n); }
-
-	size_t getNVertices(void) const
-	{ return _vertices.size(); }
-
-	VertexList &getVertices(void)
-	{ return _vertices; }
-
-	VertexList const &getVertices(void) const
-	{ return _vertices; }
-
-	VertexList _vertices;
+	VertexBuffer *buffer;
 
 	VertexDeclaration vertexDeclaration;
 
@@ -428,6 +596,19 @@ ByteStream &operator<<(ByteStream &msg, vl::VertexDeclaration const &decl);
 
 template<>
 ByteStream &operator>>(ByteStream &msg, vl::VertexDeclaration &decl);
+
+template<>
+ByteStream &operator<<(ByteStream &msg, Ogre::VertexElement const &elem);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, Ogre::VertexElement &elem);
+
+
+template<>
+ByteStream &operator<<(ByteStream &msg, vl::VertexBuffer const &vbuf);
+
+template<>
+ByteStream &operator>>(ByteStream &msg, vl::VertexBuffer &vbuf);
 
 template<>
 ByteStream &operator<<(ByteStream &msg, vl::VertexData const &vbuf);

@@ -174,7 +174,7 @@ protected:
 	virtual void readGeometry(vl::ResourceStream &stream, Mesh* pMesh, VertexData *pDest);
 	virtual void readGeometryVertexDeclaration(vl::ResourceStream &stream, Mesh* pMesh, VertexData *pDest);
 	virtual void readGeometryVertexElement(vl::ResourceStream &stream, Mesh* pMesh, VertexData *pDest);
-	virtual void readGeometryVertexBuffer(vl::ResourceStream &stream, Mesh* pMesh, VertexData *pDest);
+	virtual void readGeometryVertexBuffer(vl::ResourceStream &stream, Mesh* pMesh, VertexData *pDest, size_t vertexCount);
 
 	/// Skeleton not supported, only stubs provided
 	virtual void readSkeletonLink(vl::ResourceStream &stream, Mesh* pMesh);

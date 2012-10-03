@@ -27,27 +27,21 @@ vl::calculate_bounds(vl::VertexData const *vertexData, Ogre::AxisAlignedBox &box
 	Ogre::Vector3 min, max;
 	Ogre::Real maxSquaredRadius;
 
-	Ogre::Vector3 pos = vertexData->getVertex(0).position;
-	min = max = pos;
-	maxSquaredRadius = pos.squaredLength();	
-	for(size_t i = 1; i < vertexData->getNVertices(); ++i)
+	// @todo const casting is bad we need to add const iterator
+	vl::VertexData *data = const_cast<vl::VertexData *>(vertexData);
+	PositionIterator iter = data->getPositionIterator();
+	assert(iter != PositionIterator() && !iter.end());
+	min = max = *iter;
+	maxSquaredRadius = iter->squaredLength();	
+	for(size_t i = 1; i < vertexData->buffer->getNVertices(); ++i, ++iter)
 	{
-		pos = vertexData->getVertex(i).position;
-		min.makeFloor(pos);
-		max.makeCeil(pos);
-		maxSquaredRadius = std::max(pos.squaredLength(), maxSquaredRadius);
+		min.makeFloor(*iter);
+		max.makeCeil(*iter);
+		maxSquaredRadius = std::max(iter->squaredLength(), maxSquaredRadius);
 	}
 	
 	box.setExtents(min, max);
 	sphere = Ogre::Math::Sqrt(maxSquaredRadius);
-}
-
-std::ostream &
-vl::operator<<(std::ostream &os, vl::Vertex const &v)
-{
-	os << "Vertex : position " << v.position << " : normal " << v.normal
-		<< " : tangent " << v.tangent << " : uvs " << v.uv;
-	return os;
 }
 
 std::ostream &
@@ -56,7 +50,8 @@ vl::operator<<( std::ostream &os, vl::Mesh const &m )
 	os << "Mesh " << m.getName();
 	if(m.sharedVertexData)
 	{
-		os << " : has " << m.sharedVertexData->getNVertices() << " vertices";
+		assert(m.sharedVertexData && m.sharedVertexData->buffer);
+		os << " : has " << m.sharedVertexData->buffer->getNVertices() << " vertices";
 	}
 	else
 	{
@@ -176,77 +171,15 @@ vl::SubMesh::addFace(uint32_t i1, uint32_t i2, uint32_t i3)
 	}
 }
 
-/// --------------------------------- VertexData -----------------------------
-void 
-vl::VertexData::setVertex(size_t i, char const *buf, size_t size)
-{
-	assert(i < _vertices.size());
-
-	Vertex &vert = _vertices.at(i);
-	size_t offset = 0;
-	for(size_t i = 0; i < vertexDeclaration.getNSemantics(); ++i)
-	{
-		/// Parse the buffer based on the current Declaration
-		VertexDeclaration::Semantic semantic = vertexDeclaration.getSemantic(i);
-		
-		assert(offset+vertexDeclaration.getTypeSize(semantic.second) <= size);
-		switch(semantic.first)
-		{
-		case Ogre::VES_POSITION:
-			if(semantic.second == Ogre::VET_FLOAT3)
-			{
-				vert.position = Ogre::Vector3((float const *)(buf+offset));
-			}
-			else
-			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
-			break;
-		case Ogre::VES_NORMAL:
-			if(semantic.second == Ogre::VET_FLOAT3)
-			{
-				vert.normal = Ogre::Vector3((float const *)(buf+offset));
-			}
-			else
-			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
-			break;
-		case Ogre::VES_TEXTURE_COORDINATES:
-			if(semantic.second == Ogre::VET_FLOAT2)
-			{
-				vert.uv = Ogre::Vector2((float const *)(buf+offset));
-			}
-			else
-			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
-			break;
-		case Ogre::VES_TANGENT:
-			if(semantic.second == Ogre::VET_FLOAT3)
-			{
-				vert.tangent = Ogre::Vector3((float const *)(buf+offset));
-			}
-			else
-			{ BOOST_THROW_EXCEPTION(vl::not_implemented()); }
-			break;
-		case Ogre::VES_BLEND_WEIGHTS:
-		case Ogre::VES_BLEND_INDICES:
-		case Ogre::VES_DIFFUSE:
-		case Ogre::VES_SPECULAR:
-		case Ogre::VES_BINORMAL:
-		default :
-			BOOST_THROW_EXCEPTION(vl::not_implemented());
-		}
-		offset += vertexDeclaration.getTypeSize(semantic.second);
-	}
-
-	assert(offset == size);
-}
-
 /// --------------------------VertexDeclaration ------------------------------
 size_t 
 vl::VertexDeclaration::vertexSize(void) const
 {
 	size_t size = 0;
 		
-	for(size_t i =0; i < _semantics.size(); ++i)
+	for(size_t i = 0; i < _elements.size(); ++i)
 	{
-		size += getTypeSize(_semantics.at(i).second);
+		size += _elements.at(i).getSize(); //getTypeSize(_semantics.at(i).second);
 	}
 
 	return size;
@@ -425,7 +358,7 @@ vl::Mesh::nameSubMesh(std::string const &name, uint16_t index)
 void
 vl::Mesh::calculateBounds(void)
 {
-	if(sharedVertexData && sharedVertexData->getNVertices() > 0)
+	if(sharedVertexData && sharedVertexData->buffer && sharedVertexData->buffer->getNVertices() > 0)
 	{ calculate_bounds(sharedVertexData, _bounds, _bound_radius); }
 
 	// Iterate over the sub meshes for dedicated geometry
@@ -447,7 +380,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexDeclaration const &decl)
 {
-	msg << decl.getSemantics();
+	std::clog << "Serializing VertexDeclaration" << std::endl;
+	msg << decl.getElements();
 
 	return msg;
 }
@@ -456,7 +390,75 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexDeclaration &decl)
 {
-	msg >> decl.getSemantics();
+	std::clog << "Deserializing VertexDeclaration" << std::endl;
+	msg >> decl.getElements();
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, Ogre::VertexElement const &elem)
+{
+	std::clog << "Serializing VertexElement" << std::endl;
+	msg << elem.getSource() << elem.getOffset() << elem.getType() << elem.getSemantic()
+		<< elem.getIndex();
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, Ogre::VertexElement &elem)
+{
+	std::clog << "Deserializing VertexElement" << std::endl;
+	unsigned short source;
+	size_t offset;
+	Ogre::VertexElementType type;
+	Ogre::VertexElementSemantic semantic;
+	unsigned short index;
+
+	msg >> source >> offset >> type >> semantic >> index;
+
+	elem = Ogre::VertexElement(source, offset, type, semantic, index);
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexBuffer const &vbuf)
+{
+	msg << vbuf.getNVertices() << vbuf.getVertexSize();
+	msg.write(vbuf._buffer, vbuf.size());
+
+	std::clog << "Wrote a vbuffer : ";
+	for(size_t i = 0 ; i < vbuf.size(); ++i)
+	{
+		std::clog << vbuf._buffer[i] << " ";
+	}
+	std::clog << std::endl;
+
+	return msg;
+}
+
+template<>
+vl::cluster::ByteStream &
+vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexBuffer &vbuf)
+{
+	size_t vertex_size, vertices;
+	msg >> vertices >> vertex_size;
+	
+	vbuf = VertexBuffer(vertex_size, vertices);
+	msg.read(vbuf._buffer, vbuf.size());
+
+	std::clog << "Read a vbuffer : ";
+	for(size_t i = 0 ; i < vbuf.size(); ++i)
+	{
+		std::clog << vbuf._buffer[i] << " ";
+	}
+	std::clog << std::endl;
+
 
 	return msg;
 }
@@ -465,7 +467,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
 {
-	msg << vbuf.vertexDeclaration << vbuf._vertices;
+	std::clog << "Serializing VertexData" << std::endl;
+	msg << vbuf.vertexDeclaration << vbuf.buffer;
 
 	return msg;
 }
@@ -474,7 +477,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
 {
-	msg >> vbuf.vertexDeclaration >> vbuf._vertices;
+	std::clog << "Deserializing VertexData" << std::endl;
+	msg >> vbuf.vertexDeclaration >> vbuf.buffer;
 
 	return msg;
 }
@@ -521,8 +525,12 @@ vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &sm)
 {
 	msg << sm.getName() << sm.getMaterial() << sm.operationType << sm.indexData << sm.useSharedGeometry;
 
-	if(!sm.useSharedGeometry)
+	if(!sm.useSharedGeometry && sm.vertexData)
 	{ msg << *sm.vertexData; }
+	else if(sm.useSharedGeometry)
+	{
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NULL shared geometry with shared flag true."));
+	}
 
 	return msg;
 }
@@ -545,7 +553,10 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SubMesh &sm)
 		msg >> *sm.vertexData;
 	}
 	else if(sm.vertexData)
+	{
 		delete sm.vertexData;
+		sm.vertexData = 0;
+	}
 
 	return msg;
 }
