@@ -130,32 +130,18 @@ vl::convert_ogre_submesh(vl::SubMesh const *sm, Ogre::SubMesh *og_sm)
 		og_sm->operationType = sm->operationType;
 		og_sm->indexData->indexCount = sm->indexData.indexCount();
 
-		if(sm->indexData.getIndexSize() == vl::IT_32BIT)
-		{
-			// Allocate space
-			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
-				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
-					og_sm->indexData->indexCount,
-					Ogre::HardwareBuffer::HBU_DYNAMIC);
+		// @todo we should use the index count for deciding if we
+		// need to use 32-bit indeces or not
 
-			/// Upload the index data to the card
-			ibuf->writeData(0, ibuf->getSizeInBytes(), sm->indexData.getBuffer32(), true);
+		// Allocate space in hardware buffer
+		Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
+			createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, 
+				og_sm->indexData->indexCount, Ogre::HardwareBuffer::HBU_DYNAMIC);
 
-			og_sm->indexData->indexBuffer = ibuf;
-		}
-		else
-		{
-			// Allocate space
-			Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().
-				createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 
-					og_sm->indexData->indexCount,
-					Ogre::HardwareBuffer::HBU_DYNAMIC);
-			
-			/// Upload the index data to the card
-			ibuf->writeData(0, ibuf->getSizeInBytes(), sm->indexData.getBuffer16(), true);
+		/// Upload the index data to the card
+		ibuf->writeData(0, ibuf->getSizeInBytes(), sm->indexData.getBuffer(), true);
 
-			og_sm->indexData->indexBuffer = ibuf;
-		}
+		og_sm->indexData->indexBuffer = ibuf;
 	}
 
 

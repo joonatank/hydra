@@ -578,32 +578,33 @@ size_t
 vl::MeshSerializerImpl::calcSubMeshSize(vl::SubMesh const *pSub)
 {
 	std::clog << "vl::MeshSerializerImpl::calcSubMeshSize" << std::endl;
-    size_t size = STREAM_OVERHEAD_SIZE;
-		
-	bool idx32bit = (pSub->indexData.indexCount() && pSub->indexData.getIndexSize() == vl::IT_32BIT);
+	size_t size = STREAM_OVERHEAD_SIZE;
 
-    // Material name
-    size += pSub->getMaterial().length() + 1;
+	// Always use 32-bit indeces when exporting
+	bool idx32bit = true;
 
-    // bool useSharedVertices
-    size += sizeof(bool);
-    // unsigned int indexCount
-    size += sizeof(unsigned int);
-    // bool indexes32bit
-    size += sizeof(bool);
-    // unsigned int* / unsigned short* faceVertexIndices
+	// Material name
+	size += pSub->getMaterial().length() + 1;
+
+	// bool useSharedVertices
+	size += sizeof(bool);
+	// unsigned int indexCount
+	size += sizeof(unsigned int);
+	// bool indexes32bit
+	size += sizeof(bool);
+	// unsigned int* / unsigned short* faceVertexIndices
 	if (idx32bit)
 		size += sizeof(unsigned int) * pSub->indexData.indexCount();
 	else
 		size += sizeof(unsigned short) * pSub->indexData.indexCount();
-    // Geometry
-    if (!pSub->useSharedGeometry)
-    {
-        size += calcGeometrySize(pSub->vertexData);
-    }
+	// Geometry
+	if (!pSub->useSharedGeometry)
+	{
+		size += calcGeometrySize(pSub->vertexData);
+	}
 
-    size += calcSubMeshTextureAliasesSize(pSub);
-    size += calcSubMeshOperationSize(pSub);
+	size += calcSubMeshTextureAliasesSize(pSub);
+	size += calcSubMeshOperationSize(pSub);
 
     // Bone assignments
 	/* not supported
@@ -1051,25 +1052,33 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 		BOOST_THROW_EXCEPTION(vl::not_implemented());
 	}
 
-    bool idx32bit;
-    readBools(stream, &idx32bit, 1);
-    if (indexCount > 0)
-    {
-        if (idx32bit)
-        {
-			sm->indexData.setIndexSize(vl::IT_32BIT);
-			sm->indexData.setIndexCount(indexCount);
-			readInts(stream, sm->indexData.getBuffer32(), indexCount);
-        }
-        else // 16-bit
-        {
-			sm->indexData.setIndexSize(vl::IT_16BIT);
+	// We need to check the 32-bit flag so we can use the correct read function
+	bool idx32bit;
+	readBools(stream, &idx32bit, 1);
+	if (indexCount > 0)
+	{
+		sm->indexData.setIndexCount(indexCount);
+
+		if (idx32bit)
+		{	
+			std::clog << "32-bit indices." << std::endl;
+			readInts(stream, sm->indexData.getBuffer(), indexCount);
+		}
+		else // 16-bit
+		{
+			std::clog << "16-bit indices." << std::endl;
 			/// Get the half count of indexes, if it's odd it will be increased
 			/// by one half, if it's even then the odd one is out in the division
 			/// We use the half size to resize the container, but the read is
 			/// of course done with the correct number of indices.
 			sm->indexData.setIndexCount(indexCount);
-			readShorts(stream, sm->indexData.getBuffer16(), indexCount);
+			std::vector<uint16_t> temp_buf(indexCount);
+			readShorts(stream, &temp_buf[0], indexCount);
+			// conversion to 32-bit buffer
+			for(size_t i = 0; i < indexCount; ++i)
+			{
+				sm->indexData[i] = temp_buf[i];
+			}
 		}
 	}
 

@@ -357,81 +357,50 @@ struct VertexBoneAssignment
 {
 };
 
-enum INDEX_SIZE
-{
-	IT_16BIT,
-	IT_32BIT,
-};
-
 class IndexBuffer
 {
 public :
-	IndexBuffer(void);
+	IndexBuffer(void) {}
 
-	~IndexBuffer(void);
-
-	/// @todo these should return pointers to the correct data strucures
-	/// i.e. for 16-bit indices they should be uint16_t and for
-	/// 32-bit uint32_t. Just plain pointers are fine.
-	uint16_t const *getBuffer16(void) const
-	{ return &_buffer_16[0]; }
-
-	uint16_t *getBuffer16(void)
-	{ return &_buffer_16[0]; }
+	~IndexBuffer(void) {}
 	
-	uint32_t const *getBuffer32(void) const
-	{ return &_buffer_32[0]; }
+	uint32_t const *getBuffer(void) const
+	{ return &_buffer[0]; }
 
-	uint32_t *getBuffer32(void)
-	{ return &_buffer_32[0]; }
-	
-	std::vector<uint16_t> const &getVec16(void) const
-	{ return _buffer_16; }
+	uint32_t *getBuffer(void)
+	{ return &_buffer[0]; }
 
-	std::vector<uint16_t> &getVec16(void)
-	{ return _buffer_16; }
+	std::vector<uint32_t> const &getVec(void) const
+	{ return _buffer; }
 
-	std::vector<uint32_t> const &getVec32(void) const
-	{ return _buffer_32; }
+	std::vector<uint32_t> &getVec(void)
+	{ return _buffer; }
 
-	std::vector<uint32_t> &getVec32(void)
-	{ return _buffer_32; }
+	uint32_t &operator[](size_t i)
+	{ return _buffer[i]; }
+
+	uint32_t const &operator[](size_t i) const
+	{ return _buffer[i]; }
 
 	/// @todo this should change the current buffer automatically to 16-bit or 32-bit
 	/// depending on the count
-	void setIndexCount(size_t count);
+	void setIndexCount(size_t count)
+	{ _buffer.resize(count); }
 
-	size_t indexCount(void) const;
+	size_t indexCount(void) const
+	{ return _buffer.size(); }
 
-	INDEX_SIZE getIndexSize(void) const
-	{ return _buffer_size; }
-
-	/// @todo resetting the index size should invalidate the index buffer
-	/// or resize all the indices in it.
-	/// this will reset the buffer
-	/// @todo after adding the automatic buffer change this can be removed
-	void setIndexSize(INDEX_SIZE size);
-
-	void push_back(uint16_t index);
-
-	void push_back(uint32_t index);
+	// @brief convenience function that works like std::vector::push_back
+	// do not use if you are concerned with performance
+	void push_back(uint32_t index)
+	{ _buffer.push_back(index); }
 
 	void set(size_t i, uint32_t index);
 
-	void set(size_t i, uint16_t index);
-
-	// can't define operator[] 
-	// because the only difference for overloads can't be the return type
-
-	/// @brief Calculate the index count from the 
-	//void recalculateIndexCount(void)
 private :
 	void _resize_buffer(size_t size);
 
-	INDEX_SIZE _buffer_size;
-
-	std::vector<uint16_t> _buffer_16;
-	std::vector<uint32_t> _buffer_32;
+	std::vector<uint32_t> _buffer;
 
 };	// class IndexBuffer
 

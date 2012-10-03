@@ -217,65 +217,6 @@ size_t vl::VertexDeclaration::getTypeSize(Ogre::VertexElementType type)
 }
 
 /// ---------------------------- IndexBuffer ---------------------------------
-vl::IndexBuffer::IndexBuffer(void)
-	: _buffer_size(IT_16BIT)
-{}
-
-vl::IndexBuffer::~IndexBuffer(void)
-{}
-
-void 
-vl::IndexBuffer::setIndexCount(size_t count)
-{
-	if(indexCount() != count)
-	{
-		_resize_buffer(count);
-	}
-}
-
-size_t 
-vl::IndexBuffer::indexCount(void) const
-{
-	if(_buffer_size == IT_32BIT)
-	{
-		return _buffer_32.size();
-	}
-	else
-	{
-		return _buffer_16.size();
-	}
-}
-
-void 
-vl::IndexBuffer::setIndexSize(vl::INDEX_SIZE size)
-{
-	if( size != _buffer_size )
-	{
-		_buffer_size = size;
-		_buffer_32.clear();
-		_buffer_16.clear();
-	}
-}
-
-void
-vl::IndexBuffer::push_back(uint16_t index)
-{
-	push_back((uint32_t)(index));
-}
-
-void
-vl::IndexBuffer::push_back(uint32_t index)
-{
-	if(_buffer_size == IT_32BIT)
-	{
-		_buffer_32.push_back(index);
-	}
-	else
-	{
-		_buffer_16.push_back((uint16_t)index);
-	}
-}
-
 void
 vl::IndexBuffer::set(size_t i, uint32_t index)
 {
@@ -283,36 +224,8 @@ vl::IndexBuffer::set(size_t i, uint32_t index)
 	if(i >= indexCount())
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	if(_buffer_size == IT_32BIT)
-	{
-		_buffer_32.at(i) = index;
-	}
-	else
-	{
-		_buffer_16.at(i) = (uint16_t)index;
-	}
+	_buffer.at(i) = index;
 }
-
-void
-vl::IndexBuffer::set(size_t i, uint16_t index)
-{
-	set(i, (uint32_t)index);
-}
-
-
-void 
-vl::IndexBuffer::_resize_buffer(size_t size)
-{
-	if(_buffer_size == IT_32BIT)
-	{
-		_buffer_32.resize(size);
-	}
-	else
-	{
-		_buffer_16.resize(size);
-	}
-}
-
 
 /// -------------------------------- Mesh ------------------------------------
 vl::Mesh::Mesh(std::string const &name)
@@ -485,15 +398,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::IndexBuffer const &ibf)
 {
-	msg << ibf.getIndexSize();
-	if(ibf.getIndexSize() == IT_32BIT)
-	{
-		msg << ibf.getVec32();
-	}
-	else
-	{
-		msg << ibf.getVec16();
-	}
+	msg << ibf.getVec();
 
 	return msg;
 }
@@ -502,17 +407,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::IndexBuffer &ibf)
 {
-	INDEX_SIZE index_size;
-	msg >> index_size;
-	ibf.setIndexSize(index_size);
-	if(index_size == IT_32BIT)
-	{
-		msg >> ibf.getVec32();
-	}
-	else
-	{
-		msg >> ibf.getVec16();
-	}
+	msg >> ibf.getVec();
 
 	return msg;
 }

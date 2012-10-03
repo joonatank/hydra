@@ -66,18 +66,8 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 
 	// set the pointer to index buffer
 	PHY_ScalarType indexType = PHY_INTEGER;
-	if(sm->indexData.getIndexSize() == IT_32BIT)
-	{
-		bt_data.m_triangleIndexBase = (const unsigned char *)sm->indexData.getBuffer32();
-		bt_data.m_triangleIndexStride = 3*sizeof(uint32_t);
-		indexType = PHY_INTEGER;
-	}
-	else
-	{
-		bt_data.m_triangleIndexBase = (const unsigned char *)sm->indexData.getBuffer16();
-		bt_data.m_triangleIndexStride = 3*sizeof(uint16_t);
-		indexType = PHY_SHORT;
-	}
+	bt_data.m_triangleIndexBase = (const unsigned char *)sm->indexData.getBuffer();
+	bt_data.m_triangleIndexStride = 3*sizeof(uint32_t);
 
 	// Pass the index type because the one in btIndexedMesh is overwriten
 	bt_mesh->addIndexedMesh(bt_data, indexType);

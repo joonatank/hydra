@@ -356,17 +356,9 @@ BOOST_PYTHON_MODULE(pyogre)
 		*/
 		.def(self_ns::str(self_ns::self))
 	;
-
-	enum_<vl::INDEX_SIZE>("IT")
-		.value("16BIT", vl::IT_16BIT)
-		.value("32BIT", vl::IT_32BIT)
-	;
-
-	void (vl::IndexBuffer::*push_back_ov0)(uint32_t) = &vl::IndexBuffer::push_back;
 	
 	class_<vl::IndexBuffer, boost::noncopyable>("IndexBuffer", no_init )
-		.def("push_back", push_back_ov0)
-		.add_property("index_size", &vl::IndexBuffer::getIndexSize, &vl::IndexBuffer::setIndexSize)
+		.def("push_back", &vl::IndexBuffer::push_back)
 	;
 
 
