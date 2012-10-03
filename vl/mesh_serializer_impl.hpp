@@ -203,48 +203,11 @@ protected:
 	virtual void readPoseKeyFrame(vl::Resource &resource, VertexAnimationTrack* track);
 	*/
 	virtual void readExtremes(vl::ResourceStream &stream, Mesh *pMesh);
-
-
-	/// Flip an entire vertex buffer from little endian
-//	virtual void flipFromLittleEndian(void* pData, size_t vertexCount, size_t vertexSize, const VertexDeclaration::VertexElementList& elems);
-	/// Flip an entire vertex buffer to little endian
-//	virtual void flipToLittleEndian(void* pData, size_t vertexCount, size_t vertexSize, const VertexDeclaration::VertexElementList& elems);
-	/// Flip the endianness of an entire vertex buffer, passed in as a 
-	/// pointer to locked or temporary memory 
-//	virtual void flipEndian(void* pData, size_t vertexCount, size_t vertexSize, const VertexDeclaration::VertexElementList& elems);
-
-	/// Determine the endianness of the incoming stream compared to native
-//	virtual void determineEndianness(vl::ResourceStream &stream);
-	/// Determine the endianness to write with based on option
-//	virtual void determineEndianness(Endian requestedEndian);
 	
 	std::string mVersion;
 
 };	// class MeshSerializerImpl
 
-/** Class for providing backwards-compatibility for loading version 1.41 of the .mesh format. 
-	This mesh format was used from Ogre v1.7.
-	*/
-class MeshSerializerImpl_v1_41 : public MeshSerializerImpl
-{
-public:
-    MeshSerializerImpl_v1_41();
-    ~MeshSerializerImpl_v1_41();
-protected:
-	// Animation not supported
-	/*
-	void writeMorphKeyframe(const VertexMorphKeyFrame* kf, size_t vertexCount);
-	void readMorphKeyFrame(DataStreamPtr& stream, VertexAnimationTrack* track);
-	void writePose(const Pose* pose);
-	void readPose(DataStreamPtr& stream, Mesh* pMesh);
-
-	size_t calcMorphKeyframeSize(const VertexMorphKeyFrame* kf, size_t vertexCount);
-	size_t calcPoseSize(const Pose* pose);
-	size_t calcPoseVertexSize(void);
-	*/
-};
-
 }	// namespace vl
 
 #endif	// HYDRA_MESH_SERIALIZER_IMPL_HPP
-

@@ -490,24 +490,8 @@ vl::MeshSerializerImpl::writeGeometry(Mesh const *pMesh, VertexData const *pSrc)
 		writeChunkHeader(Ogre::M_GEOMETRY_VERTEX_BUFFER_DATA, size);
 		void* pBuf = vbuf->lock(HardwareBuffer::HBL_READ_ONLY);
 
-		if (mFlipEndian)
-		{
-			// endian conversion
-			// Copy data
-			unsigned char* tempData = OGRE_ALLOC_T(unsigned char, vbuf->getSizeInBytes(), MEMCATEGORY_GEOMETRY);
-			memcpy(tempData, pBuf, vbuf->getSizeInBytes());
-			flipToLittleEndian(
-				tempData,
-				vertexData->vertexCount,
-				vbuf->getVertexSize(),
-				vertexData->vertexDeclaration->findElementsBySource(vbi->first));
-			writeData(tempData, vbuf->getVertexSize(), vertexData->vertexCount);
-			OGRE_FREE(tempData, MEMCATEGORY_GEOMETRY);
-		}
-		else
-		{
-			writeData(pBuf, vbuf->getVertexSize(), vertexData->vertexCount);
-		}
+		writeData(pBuf, vbuf->getVertexSize(), vertexData->vertexCount);
+
         vbuf->unlock();
 	}
 	*/
@@ -1092,7 +1076,6 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
     // M_GEOMETRY stream (Optional: present only if useSharedVertices = false)
     if(!sm->useSharedGeometry)
     {
-//		std::clog << "Reading non shared geometry." << std::endl;
         streamID = readChunk(stream);
         if (streamID != Ogre::M_GEOMETRY)
         {
@@ -1107,7 +1090,6 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
     // Find all bone assignments, submesh operation, and texture aliases (if present)
     if(!stream.eof())
     {
-//		std::clog << "Reading all other submesh attributes." << std::endl;
         streamID = readChunk(stream);
         while(!stream.eof() &&
             (streamID == Ogre::M_SUBMESH_BONE_ASSIGNMENT ||
@@ -1645,78 +1627,6 @@ void MeshSerializerImpl::readMeshLodUsageGenerated(DataStreamPtr& stream,
 */
 //---------------------------------------------------------------------
 
-//void 
-//vl::MeshSerializerImpl::flipFromLittleEndian(void* pData, size_t vertexCount,
-//    size_t vertexSize, const VertexDeclaration::VertexElementList& elems)
-//{
-	/*
-	if(_flip_endian)
-	{
-	    flipEndian(pData, vertexCount, vertexSize, elems);
-	}
-	*/
-//}
-//---------------------------------------------------------------------
-//void 
-//vl::MeshSerializerImpl::flipToLittleEndian(void* pData, size_t vertexCount,
-//		size_t vertexSize, const VertexDeclaration::VertexElementList& elems)
-//{
-	/*
-	if (_flip_endian)
-	{
-	    flipEndian(pData, vertexCount, vertexSize, elems);
-	}
-	*/
-//}
-//---------------------------------------------------------------------
-//void 
-//vl::MeshSerializerImpl::flipEndian(void* pData, size_t vertexCount,
-//    size_t vertexSize, const VertexDeclaration::VertexElementList& elems)
-//{
-	// Endian flipping not supported
-	/*
-	void *pBase = pData;
-	for (size_t v = 0; v < vertexCount; ++v)
-	{
-		VertexDeclaration::VertexElementList::const_iterator ei, eiend;
-		eiend = elems.end();
-		for (ei = elems.begin(); ei != eiend; ++ei)
-		{
-			void *pElem;
-			// re-base pointer to the element
-			(*ei).baseVertexPointerToElement(pBase, &pElem);
-			// Flip the endian based on the type
-			size_t typeSize = 0;
-			switch (VertexElement::getBaseType((*ei).getType()))
-			{
-				case VET_FLOAT1:
-					typeSize = sizeof(float);
-					break;
-				case VET_SHORT1:
-					typeSize = sizeof(short);
-					break;
-				case VET_COLOUR:
-				case VET_COLOUR_ABGR:
-				case VET_COLOUR_ARGB:
-					typeSize = sizeof(RGBA);
-					break;
-				case VET_UBYTE4:
-					typeSize = 0; // NO FLIPPING
-					break;
-				default:
-					assert(false); // Should never happen
-			};
-            Serializer::flipEndian(pElem, typeSize,
-				VertexElement::getTypeCount((*ei).getType()));
-
-		}
-
-		pBase = static_cast<void*>(
-			static_cast<unsigned char*>(pBase) + vertexSize);
-
-	}
-	*/
-//}
 //---------------------------------------------------------------------
 /*	Edge list not supported
 size_t MeshSerializerImpl::calcEdgeListSize(const Mesh* pMesh)
@@ -1938,36 +1848,6 @@ vl::MeshSerializerImpl::readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh
                 // Read detail information of the edge list
 				// for the purpose of removing that data from the stream
                 readEdgeListLodInfo(stream, &dummy);
-
-                // Postprocessing edge groups
-                /*
-				EdgeData::EdgeGroupList::iterator egi, egend;
-                egend = usage.edgeData->edgeGroups.end();
-                for (egi = usage.edgeData->edgeGroups.begin(); egi != egend; ++egi)
-                {
-                    EdgeData::EdgeGroup& edgeGroup = *egi;
-                    // Populate edgeGroup.vertexData pointers
-                    // If there is shared vertex data, vertexSet 0 is that,
-                    // otherwise 0 is first dedicated
-                    if (pMesh->sharedVertexData)
-                    {
-                        if (edgeGroup.vertexSet == 0)
-                        {
-                            edgeGroup.vertexData = pMesh->sharedVertexData;
-                        }
-                        else
-                        {
-                            edgeGroup.vertexData = pMesh->getSubMesh(
-                                (unsigned short)edgeGroup.vertexSet-1)->vertexData;
-                        }
-                    }
-                    else
-                    {
-                        edgeGroup.vertexData = pMesh->getSubMesh(
-                            (unsigned short)edgeGroup.vertexSet)->vertexData;
-                    }
-                }
-				*/
             }
 
 			if(!stream.eof())
@@ -1982,9 +1862,6 @@ vl::MeshSerializerImpl::readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh
             stream.skip(-STREAM_OVERHEAD_SIZE);
         }
     }
-	
-	//pMesh->mEdgeListsBuilt = true;
-//	std::clog << "vl::MeshSerializerImpl::readEdgeList : DONE" << std::endl;
 }
 
 //---------------------------------------------------------------------
@@ -2701,166 +2578,3 @@ vl::MeshSerializerImpl::readExtremes(vl::ResourceStream &stream, vl::Mesh *pMesh
 	delete [] vert;
 	*/
 }
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-vl::MeshSerializerImpl_v1_41::MeshSerializerImpl_v1_41()
-{
-    // Version number
-    mVersion = "[MeshSerializer_v1.41]";
-}
-//---------------------------------------------------------------------
-vl::MeshSerializerImpl_v1_41::~MeshSerializerImpl_v1_41()
-{
-}
-
-/*	Animation not supported
-//---------------------------------------------------------------------
-void MeshSerializerImpl_v1_41::writeMorphKeyframe(const VertexMorphKeyFrame* kf, size_t vertexCount)
-{
-	writeChunkHeader(M_ANIMATION_MORPH_KEYFRAME, calcMorphKeyframeSize(kf, vertexCount));
-	// float time
-	float timePos = kf->getTime();
-	writeFloats(&timePos, 1);
-	// float x,y,z			// repeat by number of vertices in original geometry
-	float* pSrc = static_cast<float*>(
-		kf->getVertexBuffer()->lock(HardwareBuffer::HBL_READ_ONLY));
-	writeFloats(pSrc, vertexCount * 3);
-	kf->getVertexBuffer()->unlock();
-}
-//---------------------------------------------------------------------
-void MeshSerializerImpl_v1_41::readMorphKeyFrame(DataStreamPtr& stream, VertexAnimationTrack* track)
-{
-	// float time
-	float timePos;
-	readFloats(stream, &timePos, 1);
-
-	VertexMorphKeyFrame* kf = track->createVertexMorphKeyFrame(timePos);
-
-	// Create buffer, allow read and use shadow buffer
-	size_t vertexCount = track->getAssociatedVertexData()->vertexCount;
-	HardwareVertexBufferSharedPtr vbuf =
-		HardwareBufferManager::getSingleton().createVertexBuffer(
-			VertexElement::getTypeSize(VET_FLOAT3), vertexCount,
-			HardwareBuffer::HBU_STATIC, true);
-	// float x,y,z			// repeat by number of vertices in original geometry
-	float* pDst = static_cast<float*>(
-		vbuf->lock(HardwareBuffer::HBL_DISCARD));
-	readFloats(stream, pDst, vertexCount * 3);
-	vbuf->unlock();
-	kf->setVertexBuffer(vbuf);
-}
-//---------------------------------------------------------------------
-void MeshSerializerImpl_v1_41::writePose(const Pose* pose)
-{
-	writeChunkHeader(M_POSE, calcPoseSize(pose));
-
-	// char* name (may be blank)
-	writeString(pose->getName());
-
-	// unsigned short target
-	ushort val = pose->getTarget();
-	writeShorts(&val, 1);
-
-	size_t vertexSize = calcPoseVertexSize();
-	Pose::ConstVertexOffsetIterator vit = pose->getVertexOffsetIterator();
-	while (vit.hasMoreElements())
-	{
-		uint32 vertexIndex = (uint32)vit.peekNextKey();
-		Vector3 offset = vit.getNext();
-		writeChunkHeader(M_POSE_VERTEX, vertexSize);
-		// unsigned long vertexIndex
-		writeInts(&vertexIndex, 1);
-		// float xoffset, yoffset, zoffset
-		writeFloats(offset.ptr(), 3);
-	}
-}
-//---------------------------------------------------------------------
-void MeshSerializerImpl_v1_41::readPose(DataStreamPtr& stream, Mesh* pMesh)
-{
-	// char* name (may be blank)
-	String name = readString(stream);
-	// unsigned short target
-	unsigned short target;
-	readShorts(stream, &target, 1);
-
-	Pose* pose = pMesh->createPose(target, name);
-
-	// Find all substreams
-	unsigned short streamID;
-	if (!stream->eof())
-	{
-		streamID = readChunk(stream);
-		while(!stream->eof() &&
-			(streamID == M_POSE_VERTEX))
-		{
-			switch(streamID)
-			{
-			case M_POSE_VERTEX:
-				// create vertex offset
-				uint32 vertIndex;
-				Vector3 offset;
-				// unsigned long vertexIndex
-				readInts(stream, &vertIndex, 1);
-				// float xoffset, yoffset, zoffset
-				readFloats(stream, offset.ptr(), 3);
-
-				pose->addVertex(vertIndex, offset);
-				break;
-
-			}
-
-			if (!stream->eof())
-			{
-				streamID = readChunk(stream);
-			}
-
-		}
-		if (!stream->eof())
-		{
-			// Backpedal back to start of stream
-			stream->skip(-STREAM_OVERHEAD_SIZE);
-		}
-	}
-}
-//---------------------------------------------------------------------
-size_t MeshSerializerImpl_v1_41::calcPoseSize(const Pose* pose)
-{
-	size_t size = STREAM_OVERHEAD_SIZE;
-
-	// char* name (may be blank)
-	size += pose->getName().length() + 1;
-	// unsigned short target
-	size += sizeof(uint16);
-
-	// vertex offsets
-	size += pose->getVertexOffsets().size() * calcPoseVertexSize();
-
-	return size;
-
-}
-//---------------------------------------------------------------------
-size_t MeshSerializerImpl_v1_41::calcPoseVertexSize(void)
-{
-	size_t size = STREAM_OVERHEAD_SIZE;
-	// unsigned long vertexIndex
-	size += sizeof(uint32);
-	// float xoffset, yoffset, zoffset
-	size += sizeof(float) * 3;
-
-	return size;
-}
-//---------------------------------------------------------------------
-size_t MeshSerializerImpl_v1_41::calcMorphKeyframeSize(const VertexMorphKeyFrame* kf,
-	size_t vertexCount)
-{
-	size_t size = STREAM_OVERHEAD_SIZE;
-	// float time
-	size += sizeof(float);
-	// float x,y,z
-	size += sizeof(float) * 3 * vertexCount;
-
-	return size;
-}
-*/
