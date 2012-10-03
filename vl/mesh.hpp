@@ -42,6 +42,8 @@
 //#include <OGRE/OgreMesh.h>
 #include <OGRE/OgreRenderOperation.h>
 
+#include "math/types.hpp"
+
 namespace vl
 {
 
@@ -84,10 +86,13 @@ VET_COLOUR_ABGR 	GL style compact colour.
 
 struct VertexDeclaration
 {
-	VertexDeclaration(void)
-	{}
+	VertexDeclaration(void) {}
 
-	size_t vertexSize(void) const;
+	~VertexDeclaration(void) {}
+
+	size_t getVertexBindingSize(size_t bind) const;
+
+	size_t getVertexSize(void) const;
 
 	void addElement(unsigned short source, size_t offset, Ogre::VertexElementType theType, 
 		Ogre::VertexElementSemantic semantic, unsigned short index = 0)
@@ -102,20 +107,18 @@ struct VertexDeclaration
 	{ return _elements; }
 
 	/// @return position and size pair
-	std::pair<size_t, size_t> getSemanticPosition(Ogre::VertexElementSemantic type) const
+	Ogre::VertexElement getVertexElement(Ogre::VertexElementSemantic type) const
 	{
-		size_t pos = 0;
 		for(std::vector<Ogre::VertexElement>::const_iterator iter = _elements.begin();
 			iter != _elements.end(); ++iter)
 		{
 			if(iter->getSemantic() == type)
 			{
-				return std::make_pair(pos, iter->getSize());
+				return *iter;
 			}
-			pos += iter->getSize();
 		}
 
-		return std::make_pair(0, 0);
+		return Ogre::VertexElement();
 	}
 
 	bool hasSemantic(Ogre::VertexElementSemantic type) const
@@ -149,17 +152,7 @@ private :
 class VertexBuffer
 {
 public :
-	VertexBuffer(size_t vertex_size, size_t n_vertices)
-		: _buffer(0)
-		, _n_vertices(n_vertices)
-		, _vertex_size(vertex_size)
-	{
-		// Forbid empty buffers, any buffer that has less than 3 vertices
-		// can not represent a triangle
-		// it could represent a line so we keep the limit to at least 2 vertices.
-		assert(_n_vertices > 1 && _vertex_size > 0);
-		_buffer = new char[_n_vertices * _vertex_size];
-	}
+
 
 	void read(size_t offset, void *data, size_t size_) const
 	{
@@ -205,11 +198,40 @@ public :
 	size_t size(void) const
 	{ return _n_vertices*_vertex_size; }
 
+	static VertexBufferRefPtr create(size_t vertex_size, size_t n_vertices)
+	{
+		VertexBufferRefPtr buf(new VertexBuffer(vertex_size, n_vertices));
+		return buf;
+	}
+
 	// @todo cleaner design the bit buffer should be private
 	// no getters and no friends
 	char *_buffer;
 
+	/// @internal
+	/// @brief used instead of a constructor for copying data
+	void _reset(size_t vertex_size, size_t n_vertices)
+	{
+		delete [] _buffer;
+		_n_vertices = n_vertices;
+		_vertex_size = vertex_size;
+		_buffer = new char[_n_vertices*_vertex_size];
+	}
+
 private :
+	// Private constructor, use static create method
+	VertexBuffer(size_t vertex_size, size_t n_vertices)
+		: _buffer(0)
+		, _n_vertices(n_vertices)
+		, _vertex_size(vertex_size)
+	{
+		// Forbid empty buffers, any buffer that has less than 3 vertices
+		// can not represent a triangle
+		// it could represent a line so we keep the limit to at least 2 vertices.
+		assert(_n_vertices > 1 && _vertex_size > 0);
+		_buffer = new char[_n_vertices * _vertex_size];
+	}
+
 	size_t _n_vertices;
 	size_t _vertex_size;
 };
@@ -309,44 +331,62 @@ typedef VertexIterator<Ogre::Vector2> UVIterator;
 struct VertexData
 {
 	VertexData(void)
-		: buffer(0)
 	{}
 
-	PositionIterator getPositionIterator(void)
-	{
-		if(vertexDeclaration.hasSemantic(Ogre::VES_POSITION))
-		{
-			std::pair<size_t, size_t> pos = vertexDeclaration.getSemanticPosition(Ogre::VES_POSITION);
-			// Semantic size needs to be some as the return type size
-			assert(sizeof(Ogre::Vector3) == pos.second);
+	VertexBufferRefPtr getPositionBuffer(void);
 
-			return PositionIterator(buffer, pos.first);
+	PositionIterator getPositionIterator(void);
+
+	NormalIterator getNormalIterator(void);
+
+	void setBinding(size_t bind, VertexBufferRefPtr buffer)
+	{
+		_bindings[bind] = buffer;
+	}
+
+	// @brief get the number of vertices in this vertex data
+	// Assumption is that all the bindings will have the same number of vertices
+	// if this assumption doesn't hold we have more problems else where.
+	size_t getVertexCount(void) const
+	{
+		if(empty()) return 0;
+		else return _bindings.begin()->second->getNVertices();
+	}
+
+	// @todo should this check that we have vertices in the bindings?
+	bool empty(void) const
+	{
+		return _bindings.empty();
+	}
+
+	VertexBufferRefPtr getBuffer(size_t binding)
+	{
+		std::map<size_t, VertexBufferRefPtr>::iterator iter = _bindings.find(binding);
+		if(iter != _bindings.end())
+		{
+			return iter->second;
 		}
 		else
 		{
-			std::clog << "VertexData has no Position semantics" << std::endl;
-			throw;
+			return VertexBufferRefPtr();
 		}
 	}
 
-	NormalIterator getNormalIterator(void)
+	VertexBufferConstRefPtr getBuffer(size_t binding) const
 	{
-		if(vertexDeclaration.hasSemantic(Ogre::VES_NORMAL))
+		std::map<size_t, VertexBufferRefPtr>::const_iterator iter = _bindings.find(binding);
+		if(iter != _bindings.end())
 		{
-			std::pair<size_t, size_t> pos = vertexDeclaration.getSemanticPosition(Ogre::VES_NORMAL);
-			// Semantic size needs to be some as the return type size
-			assert(sizeof(Ogre::Vector3) == pos.second);
-
-			return NormalIterator(buffer, pos.first);
+			return iter->second;
 		}
 		else
 		{
-			std::clog << "VertexData has no Normal semantics" << std::endl;
-			throw;
-		}		
+			return VertexBufferRefPtr();
+		}
 	}
 
-	VertexBuffer *buffer;
+	// Binding buffer map
+	std::map<size_t, VertexBufferRefPtr> _bindings;
 
 	VertexDeclaration vertexDeclaration;
 
@@ -355,6 +395,9 @@ struct VertexData
 /// Stub
 struct VertexBoneAssignment
 {
+	unsigned int vertexIndex;
+	unsigned short boneIndex;
+	vl::scalar weight;
 };
 
 class IndexBuffer

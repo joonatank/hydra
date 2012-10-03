@@ -182,26 +182,27 @@ protected:
 	virtual void readSubMeshBoneAssignment(vl::ResourceStream &stream, Mesh* pMesh, 
 		SubMesh* sub);
 
-	/* LOD not supported
+	// LOD not supported, only stubs
 	virtual void readMeshLodInfo(vl::ResourceStream &stream, Mesh* pMesh);
 	virtual void readMeshLodUsageManual(vl::ResourceStream &stream, Mesh* pMesh, 
-		unsigned short lodNum, MeshLodUsage& usage);
+		unsigned short lodNum);
 	virtual void readMeshLodUsageGenerated(vl::ResourceStream &stream, Mesh* pMesh, 
-		unsigned short lodNum, MeshLodUsage& usage);
-	*/
+		unsigned short lodNum);
+
 	virtual void readBoundsInfo(vl::ResourceStream &stream, Mesh *pMesh);
 	/// @todo Dummy functions
 	virtual void readEdgeList(vl::ResourceStream &stream, vl::Mesh *pMesh);
 	virtual void readEdgeListLodInfo(vl::ResourceStream &stream, Ogre::EdgeData *edgeData);
-	/* Animation not supported
-	virtual void readPoses(vl::Resource &resource, Mesh* pMesh);
-	virtual void readPose(vl::Resource &resource, Mesh* pMesh);
-	virtual void readAnimations(vl::Resource &resource, Mesh* pMesh);
-	virtual void readAnimation(vl::Resource &resource, Mesh* pMesh);
-	virtual void readAnimationTrack(vl::Resource &resource, Animation* anim, Mesh* pMesh);
-	virtual void readMorphKeyFrame(vl::Resource &resource, VertexAnimationTrack* track);
-	virtual void readPoseKeyFrame(vl::Resource &resource, VertexAnimationTrack* track);
-	*/
+	
+	// Animation not supported, only stubs
+	virtual void readPoses(vl::ResourceStream &stream, Mesh* pMesh);
+	virtual void readPose(vl::ResourceStream &stream, Mesh* pMesh);
+	virtual void readAnimations(vl::ResourceStream &stream, Mesh* pMesh);
+	virtual void readAnimation(vl::ResourceStream &stream, Mesh* pMesh);
+	//virtual void readAnimationTrack(vl::ResourceStream &stream, Animation* anim, Mesh* pMesh);
+	//virtual void readMorphKeyFrame(vl::ResourceStream &stream, VertexAnimationTrack* track);
+	//virtual void readPoseKeyFrame(vl::ResourceStream &stream, VertexAnimationTrack* track);
+
 	virtual void readExtremes(vl::ResourceStream &stream, Mesh *pMesh);
 	
 	std::string mVersion;

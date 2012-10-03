@@ -40,14 +40,19 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 	// Ogre meshes use 16bit float for vertices
 	bt_data.m_vertexType = PHY_FLOAT;
 
-	assert(vertexData->buffer);
-	bt_data.m_numVertices = vertexData->buffer->getNVertices();
+	// @todo we need to find the vertex position buffer
+	// from the multiple buffers
+	VertexBufferRefPtr vbuf = vertexData->getPositionBuffer();
+	assert(vbuf);
+	bt_data.m_numVertices = vbuf->getNVertices();
 	/// Assumes triangle lists
 	/// @todo add support for operation type
 	assert(sm->indexData.indexCount()%3 == 0);
 	bt_data.m_numTriangles = sm->indexData.indexCount()/3;
 
 	// Find the position schematic place in the buffer
+	// @todo this is incorrect when there is multiple vertex buffers,
+	// we should only check the one which has the position in it
 	size_t pos_offset = 0;
 	for(size_t i = 0; i < vertexData->vertexDeclaration.getElements().size(); ++i)
 	{
@@ -59,10 +64,10 @@ vl::convert_bullet_geometry(vl::Mesh const *mesh, btTriangleIndexVertexArray *bt
 	}
 
 	// Set the pointer to vertex buffer
-	bt_data.m_vertexBase = (const unsigned char *)vertexData->buffer->_buffer + pos_offset;
+	bt_data.m_vertexBase = (const unsigned char *)vbuf->_buffer + pos_offset;
 	// Stride is the size of the type
 	// so vertex stride is the size of a vertex in the buffer
-	bt_data.m_vertexStride = vertexData->buffer->getVertexSize();
+	bt_data.m_vertexStride = vbuf->getVertexSize();
 
 	// set the pointer to index buffer
 	PHY_ScalarType indexType = PHY_INTEGER;

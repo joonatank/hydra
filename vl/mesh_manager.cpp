@@ -60,13 +60,12 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 	offset += vl::VertexDeclaration::getTypeSize(Ogre::VET_FLOAT2);
 
 	size_t vertexSize = offset;
-	sub->vertexData->buffer = new vl::VertexBuffer(vertexSize, tbuffer.getVertices().size());
+	vl::VertexBufferRefPtr buf = vl::VertexBuffer::create(vertexSize, tbuffer.getVertices().size());
 	// @todo modify to use the new Iterators (Position, Normal and UV)
 	size_t vertex = 0;
 	for(std::vector<Procedural::TriangleBuffer::Vertex>::const_iterator it 
 			= tbuffer.getVertices().begin(); it != tbuffer.getVertices().end(); ++it, ++vertex)
 	{
-		vl::VertexBuffer *buf = sub->vertexData->buffer;
 		offset = 0;
 		
 		buf->write(vertex*vertexSize + offset, it->mPosition);
@@ -78,6 +77,8 @@ vl::MeshRefPtr make_to_mesh(std::string const &name, Procedural::MeshGenerator<T
 		buf->write(vertex*vertexSize + offset, it->mUV);
 		offset += sizeof(it->mUV);
 	}
+
+	sub->vertexData->setBinding(0, buf);
 
 	// copy index data
 
@@ -235,10 +236,9 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 
 	size_t const vertexSize = offset;
 	size_t const n_vertices = (M+1)*(N+1);
-	sub->vertexData->buffer = new vl::VertexBuffer(vertexSize, n_vertices);
+	vl::VertexBufferRefPtr buf = vl::VertexBuffer::create(vertexSize, n_vertices);
 
 	size_t vertex_count = 0;
-	vl::VertexBuffer *buf = sub->vertexData->buffer;
 	for(uint16_t m = 0; m < M+1; ++m)
 	{
 		for(uint16_t n = 0; n < N+1; ++n)
@@ -267,6 +267,8 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 			++vertex_count;
 		}
 	}
+
+	sub->vertexData->setBinding(0, buf);
 
 	mesh->calculateBounds();
 

@@ -65,13 +65,13 @@ sun.orientation = Quaternion(-0.900988, 0.43373, 0, 0)
 
 # Create spotlight and hehkulamppu objects
 spotti_n = game.scene.createSceneNode("spotti")
-spotti = game.scene.createEntity("spotti", "spotlight.mesh")
+spotti = game.scene.createEntity("spotti", "spotlight.mesh", True)
 spotti.material_name = "editor/spotlight_material"
 spotti_n.position = Vector3(5, 4, 0)
 spotti_n.attachObject(spotti)
 
 lightpulp_n = game.scene.createSceneNode("hehkulamppu")
-lightpulp = game.scene.createEntity("hehkulamppu", "light_pulp.mesh")
+lightpulp = game.scene.createEntity("hehkulamppu", "light_pulp.mesh", True)
 lightpulp.material_name = "editor/hehkulamppu_material"
 lightpulp_n.position = Vector3(5, 4, -4)
 lightpulp_n.attachObject(lightpulp)

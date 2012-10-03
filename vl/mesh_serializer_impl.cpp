@@ -137,7 +137,7 @@ vl::MeshSerializerImpl::writeMesh(vl::Mesh const *pMesh)
 	writeBools(&skelAnim, 1);
 
     // Write shared geometry
-	if(pMesh->sharedVertexData && pMesh->sharedVertexData->buffer->getNVertices())
+	if(pMesh->sharedVertexData && pMesh->sharedVertexData->getVertexCount())
 		writeGeometry(pMesh, pMesh->sharedVertexData);
 
     // Write Submeshes
@@ -532,7 +532,7 @@ vl::MeshSerializerImpl::calcMeshSize(vl::Mesh const *pMesh)
     size += sizeof(uint32_t);
 
     // Geometry
-	if(pMesh->sharedVertexData && pMesh->sharedVertexData->buffer->getNVertices() > 0)
+	if(pMesh->sharedVertexData && pMesh->sharedVertexData->getVertexCount() > 0)
 	{
 		size += calcGeometrySize(pMesh->sharedVertexData);
 	}
@@ -788,8 +788,6 @@ void
 vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream, 
 	vl::Mesh* pMesh, VertexData *pDest, size_t vertexCount)
 {
-//	std::clog << "vl::MeshSerializerImpl::readGeometryVertexBuffer" << std::endl;
-
 	unsigned short bindIndex, vertexSize;
 	// Index to bind this buffer to
 	readShorts(stream, &bindIndex, 1);
@@ -807,32 +805,25 @@ vl::MeshSerializerImpl::readGeometryVertexBuffer(vl::ResourceStream &stream,
 	}
 	// Check that vertex size agrees
 	// @todo this needs a vertex attributes to be disabled/enabled on need
-	if(pDest->vertexDeclaration.vertexSize() != vertexSize)
+	if(pDest->vertexDeclaration.getVertexBindingSize(bindIndex) != vertexSize)
 	{
 		std::stringstream ss;
 		ss << "Buffer vertex size " << vertexSize
 			<< " does not agree with vertex declaration size "
-			<< pDest->vertexDeclaration.vertexSize();
+			<< pDest->vertexDeclaration.getVertexBindingSize(bindIndex);
 		std::clog << ss.str() << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(ss.str()));
 	}
 
 	// Create / populate vertex buffer
 	// Create the vertex buffer
-	assert(!pDest->buffer);
-	pDest->buffer = new VertexBuffer(vertexSize, vertexCount);
-
-	if(bindIndex != 0)
-	{
-		std::string err_msg("Trying to bind data to other than first Buffer. Not supported.");
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg));
-	}
+	VertexBufferRefPtr vbuf = vl::VertexBuffer::create(vertexSize, vertexCount);
 
 	// No endian conversion, we don't support Mac OSX
-	stream.read(pDest->buffer->_buffer, pDest->buffer->size());
+	stream.read(vbuf->_buffer, vbuf->size());
 
 	// @todo Set binding
-//	dest->vertexBufferBinding->setBinding(bindIndex, vbuf);
+	pDest->setBinding(bindIndex, vbuf);
 }
 
 //---------------------------------------------------------------------
@@ -924,62 +915,24 @@ vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 				case Ogre::M_GEOMETRY:
 					assert(!pMesh->sharedVertexData);
 					pMesh->sharedVertexData = new VertexData;
-					try {
-//						std::clog << "Reading Mesh shared geometry." << std::endl;
-						readGeometry(stream, pMesh, pMesh->sharedVertexData);
-					}
-					catch(...)
-					{
-						std::clog << "Exception thrown by readGeometry" << std::endl;
-						throw;
-					}
-					/*
-					catch(Exception& e)
-					{
-						if (e.getNumber() == Exception::ERR_ITEM_NOT_FOUND)
-						{
-							// duff geometry data entry with 0 vertices
-							OGRE_DELETE pMesh->sharedVertexData;
-							pMesh->sharedVertexData = 0;
-							// Skip this stream (pointer will have been returned to just after header)
-							stream->skip(mCurrentstreamLen - STREAM_OVERHEAD_SIZE);
-						}
-						else
-						{
-							throw;
-						}
-					}
-					*/
+					readGeometry(stream, pMesh, pMesh->sharedVertexData);
 					break;
+
 				case Ogre::M_SUBMESH:
 					readSubMesh(stream, pMesh);
 					break;
+
 				case Ogre::M_MESH_SKELETON_LINK:
-				{
-					std::string msg("Trying to read Skeleton link, NO READER");
-					std::clog << msg << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-					//readSkeletonLink(stream, pMesh, listener);
-				}
-				break;
+					readSkeletonLink(stream, pMesh);
+					break;
 
 				case Ogre::M_MESH_BONE_ASSIGNMENT:
-				{
-					std::string msg("Trying to read Bone assigments, NO READER");
-					std::clog << msg << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-					//readMeshBoneAssignment(stream, pMesh);
-				}
-				break;
+					readMeshBoneAssignment(stream, pMesh);
+					break;
 			
 				case Ogre::M_MESH_LOD:
-				{
-					std::string msg("Trying to read LOD, NO READER");
-					std::clog << msg << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-					//readMeshLodInfo(stream, pMesh);
-				}
-				break;
+					readMeshLodInfo(stream, pMesh);
+					break;
 			
 				case Ogre::M_MESH_BOUNDS:
 					readBoundsInfo(stream, pMesh);
@@ -994,22 +947,12 @@ vl::MeshSerializerImpl::readMesh(vl::ResourceStream &stream, Mesh *pMesh)
 					break;
 
 				case Ogre::M_POSES:
-				{
-					std::string msg("Trying to read Poses, NO READER");
-					std::clog << msg << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-					//readPoses(stream, pMesh);
-				}
-				break;
+					readPoses(stream, pMesh);
+					break;
 			
 				case Ogre::M_ANIMATIONS:
-				{
-					std::string msg("Trying to read Animations, NO READER");
-					std::clog << msg << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(msg));
-					//readAnimations(stream, pMesh);
-				}
-				break;
+					readAnimations(stream, pMesh);
+					break;
 			
 				case Ogre::M_TABLE_EXTREMES:
 					readExtremes(stream, pMesh);
@@ -1136,20 +1079,21 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 void
 vl::MeshSerializerImpl::readSubMeshOperation(vl::ResourceStream &stream, vl::SubMesh *sm)
 {
-//	std::clog << "vl::MeshSerializerImpl::readSubMeshOperation" << std::endl;
-    // unsigned short operationType
-    unsigned short opType;
-    readShorts(stream, &opType, 1);
-    sm->operationType = static_cast<Ogre::RenderOperation::OperationType>(opType);
+	// unsigned short operationType
+	unsigned short opType;
+	readShorts(stream, &opType, 1);
+	sm->operationType = static_cast<Ogre::RenderOperation::OperationType>(opType);
 }
 //---------------------------------------------------------------------
 void
 vl::MeshSerializerImpl::readSubMeshTextureAlias(vl::ResourceStream &stream, vl::SubMesh *sub)
 {
-//	std::clog << "vl::MeshSerializerImpl::readSubMeshTextureAlias" << std::endl;
-    std::string aliasName = readString(stream);
-    std::string textureName = readString(stream);
-    std::cout << "vl::SubMesh::addTextureAlias does not exists." << std::endl;
+	std::clog << "vl::MeshSerializerImpl::readSubMeshTextureAlias : stub" << std::endl;
+
+	std::string aliasName = readString(stream);
+	std::string textureName = readString(stream);
+
+	// @todo implement
 	//sub->addTextureAlias(aliasName, textureName);
 }
 //---------------------------------------------------------------------
@@ -1157,129 +1101,104 @@ vl::MeshSerializerImpl::readSubMeshTextureAlias(vl::ResourceStream &stream, vl::
 void 
 vl::MeshSerializerImpl::writeSkeletonLink(std::string const &skelName)
 {
-	std::clog << "vl::MeshSerializerImpl::writeSkeletonLink" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*	Skeletons not supported
-    writeChunkHeader(M_MESH_SKELETON_LINK, calcSkeletonLinkSize(skelName));
+	writeChunkHeader(Ogre::M_MESH_SKELETON_LINK, calcSkeletonLinkSize(skelName));
 
-    writeString(skelName);
-	*/
-
+	writeString(skelName);
 }
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::readSkeletonLink(vl::ResourceStream &stream, vl::Mesh* pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readSkeletonLink" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*
-    std::string skelName = readString(stream);
+	std::clog << "vl::MeshSerializerImpl::readSkeletonLink : stub" << std::endl;
 
-    pMesh->setSkeletonName(skelName);
-	*/
+	std::string skelName = readString(stream);
+
+	// @todo not implemented
+	//pMesh->setSkeletonName(skelName);
 }
 //---------------------------------------------------------------------
 size_t 
 vl::MeshSerializerImpl::calcSkeletonLinkSize(std::string const &skelName)
 {
-	std::clog << "vl::MeshSerializerImpl::calcSkeletonLinkSize" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-    size_t size = STREAM_OVERHEAD_SIZE;
+	size_t size = STREAM_OVERHEAD_SIZE;
 
-    size += skelName.length() + 1;
+	size += skelName.length() + 1;
 
-    return size;
+	return size;
 }
 
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::writeMeshBoneAssignment(vl::VertexBoneAssignment const &assign)
 {
-	std::clog << "vl::MeshSerializerImpl::writeMeshBoneAssignment" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*
-    writeChunkHeader(Ogre::M_MESH_BONE_ASSIGNMENT, calcBoneAssignmentSize());
+	writeChunkHeader(Ogre::M_MESH_BONE_ASSIGNMENT, calcBoneAssignmentSize());
 
-    // unsigned int vertexIndex;
-    writeInts(&(assign.vertexIndex), 1);
-    // unsigned short boneIndex;
-    writeShorts(&(assign.boneIndex), 1);
-    // float weight;
-    writeFloats(&(assign.weight), 1);
-	*/
+	// unsigned int vertexIndex;
+	writeInts(&(assign.vertexIndex), 1);
+	// unsigned short boneIndex;
+	writeShorts(&(assign.boneIndex), 1);
+	// float weight;
+	writeFloats(&(assign.weight), 1);
 }
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::writeSubMeshBoneAssignment(vl::VertexBoneAssignment const &assign)
 {
-	std::clog << "vl::MeshSerializerImpl::writeSubMeshBoneAssignment" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*
-    writeChunkHeader(M_SUBMESH_BONE_ASSIGNMENT, calcBoneAssignmentSize());
+	writeChunkHeader(Ogre::M_SUBMESH_BONE_ASSIGNMENT, calcBoneAssignmentSize());
 
-    // unsigned int vertexIndex;
-    writeInts(&(assign.vertexIndex), 1);
-    // unsigned short boneIndex;
-    writeShorts(&(assign.boneIndex), 1);
-    // float weight;
-    writeFloats(&(assign.weight), 1);
-	*/
+	// unsigned int vertexIndex;
+	writeInts(&(assign.vertexIndex), 1);
+	// unsigned short boneIndex;
+	writeShorts(&(assign.boneIndex), 1);
+	// float weight;
+	writeFloats(&(assign.weight), 1);
 }
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::readMeshBoneAssignment(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-	std::clog << "vl::MeshSerializerImpl::readMeshBoneAssignment" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*
-    VertexBoneAssignment assign;
+	VertexBoneAssignment assign;
 
-    // unsigned int vertexIndex;
-    readInts(stream, &(assign.vertexIndex),1);
-    // unsigned short boneIndex;
-    readShorts(stream, &(assign.boneIndex),1);
-    // float weight;
-    readFloats(stream, &(assign.weight), 1);
+	// unsigned int vertexIndex;
+	readInts(stream, &(assign.vertexIndex),1);
+	// unsigned short boneIndex;
+	readShorts(stream, &(assign.boneIndex),1);
+	// float weight;
+	readFloats(stream, &(assign.weight), 1);
 
-    pMesh->addBoneAssignment(assign);
-	*/
-
+	// @todo not implemented
+	//pMesh->addBoneAssignment(assign);
 }
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::readSubMeshBoneAssignment(vl::ResourceStream &stream, vl::Mesh *pMesh, vl::SubMesh *sub)
 {
-	std::clog << "vl::MeshSerializerImpl::readSubMeshBoneAssignment" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	/*
-    VertexBoneAssignment assign;
+	VertexBoneAssignment assign;
 
-    // unsigned int vertexIndex;
-    readInts(stream, &(assign.vertexIndex),1);
-    // unsigned short boneIndex;
-    readShorts(stream, &(assign.boneIndex),1);
-    // float weight;
-    readFloats(stream, &(assign.weight), 1);
+	// unsigned int vertexIndex;
+	readInts(stream, &(assign.vertexIndex),1);
+	// unsigned short boneIndex;
+	readShorts(stream, &(assign.boneIndex),1);
+	// float weight;
+	readFloats(stream, &(assign.weight), 1);
 
-    sub->addBoneAssignment(assign);
-	*/
+	// @todo not implemented
+	//sub->addBoneAssignment(assign);
 }
 //---------------------------------------------------------------------
 size_t 
 vl::MeshSerializerImpl::calcBoneAssignmentSize(void)
 {
-	std::clog << "vl::MeshSerializerImpl::calcBoneAssignmentSize" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-    size_t size = STREAM_OVERHEAD_SIZE;
+	size_t size = STREAM_OVERHEAD_SIZE;
 
-    // Vert index
-    size += sizeof(unsigned int);
-    // Bone index
-    size += sizeof(unsigned short);
-    // weight
-    size += sizeof(float);
+	// Vert index
+	size += sizeof(unsigned int);
+	// Bone index
+	size += sizeof(unsigned short);
+	// weight
+	size += sizeof(float);
 
-    return size;
+	return size;
 }
 
 //---------------------------------------------------------------------
@@ -1452,52 +1371,53 @@ vl::MeshSerializerImpl::writeBoundsInfo(const Mesh* pMesh)
 {
 	std::clog << "vl::MeshSerializerImpl::writeBoundsInfo" << std::endl;
 	// Usage Header
-    unsigned long size = STREAM_OVERHEAD_SIZE;
+	unsigned long size = STREAM_OVERHEAD_SIZE;
 
-    size += sizeof(float) * 7;
-    writeChunkHeader(Ogre::M_MESH_BOUNDS, size);
+	size += sizeof(float) * 7;
+	writeChunkHeader(Ogre::M_MESH_BOUNDS, size);
 
-    // float minx, miny, minz
-    const Ogre::Vector3& min = pMesh->getBounds().getMinimum();
-    const Ogre::Vector3& max = pMesh->getBounds().getMaximum();
-    writeFloats(&min.x, 1);
-    writeFloats(&min.y, 1);
-    writeFloats(&min.z, 1);
-    // float maxx, maxy, maxz
-    writeFloats(&max.x, 1);
-    writeFloats(&max.y, 1);
-    writeFloats(&max.z, 1);
-    // float radius
+	// float minx, miny, minz
+	const Ogre::Vector3& min = pMesh->getBounds().getMinimum();
+	const Ogre::Vector3& max = pMesh->getBounds().getMaximum();
+	writeFloats(&min.x, 1);
+	writeFloats(&min.y, 1);
+	writeFloats(&min.z, 1);
+	// float maxx, maxy, maxz
+	writeFloats(&max.x, 1);
+	writeFloats(&max.y, 1);
+	writeFloats(&max.z, 1);
+	// float radius
 	Ogre::Real radius = pMesh->getBoundingSphereRadius();
-    writeFloats(&radius, 1);
+	writeFloats(&radius, 1);
 }
 
 //---------------------------------------------------------------------
 void 
 vl::MeshSerializerImpl::readBoundsInfo(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-//	std::clog << "vl::MeshSerializerImpl::readBoundsInfo" << std::endl;
-    Ogre::Vector3 min, max;
-    // float minx, miny, minz
-    readFloats(stream, &min.x, 1);
-    readFloats(stream, &min.y, 1);
-    readFloats(stream, &min.z, 1);
-    // float maxx, maxy, maxz
-    readFloats(stream, &max.x, 1);
-    readFloats(stream, &max.y, 1);
-    readFloats(stream, &max.z, 1);
-    Ogre::AxisAlignedBox box(min, max);
-    pMesh->setBounds(box);
-    // float radius
-    float radius;
-    readFloats(stream, &radius, 1);
-    pMesh->setBoundingSphereRadius(radius);
+	Ogre::Vector3 min, max;
+	// float minx, miny, minz
+	readFloats(stream, &min.x, 1);
+	readFloats(stream, &min.y, 1);
+	readFloats(stream, &min.z, 1);
+	// float maxx, maxy, maxz
+	readFloats(stream, &max.x, 1);
+	readFloats(stream, &max.y, 1);
+	readFloats(stream, &max.z, 1);
+	Ogre::AxisAlignedBox box(min, max);
+	pMesh->setBounds(box);
+	// float radius
+	float radius;
+	readFloats(stream, &radius, 1);
+	pMesh->setBoundingSphereRadius(radius);
 }
 
 //---------------------------------------------------------------------
-/*	LOD not supported
-void MeshSerializerImpl::readMeshLodInfo(DataStreamPtr& stream, Mesh* pMesh)
+void
+vl::MeshSerializerImpl::readMeshLodInfo(vl::ResourceStream &stream, vl::Mesh* pMesh)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/*
 	unsigned short streamID, i;
 
     // Read the strategy to be used for this mesh
@@ -1548,13 +1468,15 @@ void MeshSerializerImpl::readMeshLodInfo(DataStreamPtr& stream, Mesh* pMesh)
 		// Save usage
 		pMesh->mMeshLodUsageList.push_back(usage);
 	}
-
-
+	*/
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readMeshLodUsageManual(DataStreamPtr& stream,
-    Mesh* pMesh, unsigned short lodNum, MeshLodUsage& usage)
+void
+vl::MeshSerializerImpl::readMeshLodUsageManual(vl::ResourceStream &stream,
+    vl::Mesh* pMesh, unsigned short lodNum)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/*
 	unsigned long streamID;
 	// Read detail stream
 	streamID = readChunk(stream);
@@ -1567,11 +1489,14 @@ void MeshSerializerImpl::readMeshLodUsageManual(DataStreamPtr& stream,
 
 	usage.manualName = readString(stream);
 	usage.manualMesh.setNull(); // will trigger load later
+	*/
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readMeshLodUsageGenerated(DataStreamPtr& stream,
-    Mesh* pMesh, unsigned short lodNum, MeshLodUsage& usage)
+void
+vl::MeshSerializerImpl::readMeshLodUsageGenerated(vl::ResourceStream &stream,
+    vl::Mesh* pMesh, unsigned short lodNum)
 {
+	/*
 	usage.manualName = "";
 	usage.manualMesh.setNull();
 
@@ -1632,8 +1557,8 @@ void MeshSerializerImpl::readMeshLodUsageGenerated(DataStreamPtr& stream,
         }
 
 	}
+	*/
 }
-*/
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
@@ -2266,44 +2191,47 @@ void MeshSerializerImpl::writePoseKeyframePoseRef(
 	// float influence
 	writeFloats(&(poseRef.influence), 1);
 }
+*/
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readPoses(DataStreamPtr& stream, Mesh* pMesh)
+void
+vl::MeshSerializerImpl::readPoses(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
 	unsigned short streamID;
 
 	// Find all substreams
-	if (!stream->eof())
+	if (!stream.eof())
 	{
 		streamID = readChunk(stream);
-		while(!stream->eof() &&
-			(streamID == M_POSE))
+		while(!stream.eof() && (streamID == Ogre::M_POSE))
 		{
 			switch(streamID)
 			{
-			case M_POSE:
+			case Ogre::M_POSE:
 				readPose(stream, pMesh);
 				break;
-
 			}
 
-			if (!stream->eof())
+			if (!stream.eof())
 			{
 				streamID = readChunk(stream);
 			}
 
 		}
-		if (!stream->eof())
+		if (!stream.eof())
 		{
 			// Backpedal back to start of stream
-			stream->skip(-STREAM_OVERHEAD_SIZE);
+			stream.skip(-STREAM_OVERHEAD_SIZE);
 		}
 	}
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readPose(DataStreamPtr& stream, Mesh* pMesh)
+void
+vl::MeshSerializerImpl::readPose(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/*
 	// char* name (may be blank)
-	String name = readString(stream);
+	std::string name = readString(stream);
 	// unsigned short target
 	unsigned short target;
 	readShorts(stream, &target, 1);
@@ -2360,11 +2288,14 @@ void MeshSerializerImpl::readPose(DataStreamPtr& stream, Mesh* pMesh)
 			stream->skip(-STREAM_OVERHEAD_SIZE);
 		}
 	}
-
+	*/
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readAnimations(DataStreamPtr& stream, Mesh* pMesh)
+void
+vl::MeshSerializerImpl::readAnimations(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/*
 	unsigned short streamID;
 
 	// Find all substreams
@@ -2394,13 +2325,14 @@ void MeshSerializerImpl::readAnimations(DataStreamPtr& stream, Mesh* pMesh)
 			stream->skip(-STREAM_OVERHEAD_SIZE);
 		}
 	}
-
-
+	*/
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readAnimation(DataStreamPtr& stream, Mesh* pMesh)
+void
+vl::MeshSerializerImpl::readAnimation(vl::ResourceStream &stream, vl::Mesh *pMesh)
 {
-
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	/*
 	// char* name
 	String name = readString(stream);
 	// float length
@@ -2436,9 +2368,12 @@ void MeshSerializerImpl::readAnimation(DataStreamPtr& stream, Mesh* pMesh)
 			stream->skip(-STREAM_OVERHEAD_SIZE);
 		}
 	}
+	*/
 }
 //---------------------------------------------------------------------
-void MeshSerializerImpl::readAnimationTrack(DataStreamPtr& stream,
+/*
+void
+vl::MeshSerializerImpl::readAnimationTrack(vl::ResourceStream &stream,
 	Animation* anim, Mesh* pMesh)
 {
 	// ushort type
@@ -2486,7 +2421,9 @@ void MeshSerializerImpl::readAnimationTrack(DataStreamPtr& stream,
 	}
 
 }
+*/
 //---------------------------------------------------------------------
+/*
 void MeshSerializerImpl::readMorphKeyFrame(DataStreamPtr& stream, VertexAnimationTrack* track)
 {
 	// float time
@@ -2514,7 +2451,9 @@ void MeshSerializerImpl::readMorphKeyFrame(DataStreamPtr& stream, VertexAnimatio
 	kf->setVertexBuffer(vbuf);
 
 }
+*/
 //---------------------------------------------------------------------
+/*
 void MeshSerializerImpl::readPoseKeyFrame(DataStreamPtr& stream, VertexAnimationTrack* track)
 {
 	// float time

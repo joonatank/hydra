@@ -10,7 +10,7 @@ Ogre test project used for testing and demonstrating eqOgre
 
 	<scenes>
 		<!-- multiple scenes for testing use attribute is not working -->
-		<scene name="ogre" use="true" use_new_mesh_manager="false">
+		<scene name="ogre" use="true" use_new_mesh_manager="true">
 			<file>ogre.scene</file>
 		</scene>
 		<scene name="athene" use="true" use_new_mesh_manager="true">

@@ -32,8 +32,7 @@ vl::create_ogre_mesh(std::string const &name, vl::MeshRefPtr mesh)
             Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
 	// Copy the shared geometry
-	// Skip empty shared geometry
-	if(mesh->sharedVertexData && mesh->sharedVertexData->buffer->getNVertices() > 0) 
+	if(mesh->sharedVertexData)
 	{
 		// Create shared VertexData
 		og_mesh->sharedVertexData = new Ogre::VertexData;
@@ -56,12 +55,6 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 	assert(vertexData && og_vertexData);
 
 	Ogre::VertexDeclaration *decl = og_vertexData->vertexDeclaration;
-	
-	// What is bufCount? it's the binding we are using. Currently we only support one bindibng
-	// this need to be changed if we want to properly read all Ogre files
-	// like the ogre.mesh file.
-	const unsigned short bufCount = 0;
-	unsigned short totalTexCoords = 0; // across all buffers
 
 	// Add elements
 	std::vector<Ogre::VertexElement> const &elements = vertexData->vertexDeclaration.getElements();
@@ -71,26 +64,29 @@ vl::convert_ogre_geometry(vl::VertexData const *vertexData, Ogre::VertexData *og
 		size_t source = elements.at(i).getSource();
 		size_t offset = elements.at(i).getOffset();
 		decl->addElement(source, offset, elements.at(i).getType(), elements.at(i).getSemantic(), index);
-		assert(bufCount == source);
 	}
 
-	og_vertexData->vertexCount = vertexData->buffer->getNVertices();
+	assert(!vertexData->empty());
+
+	og_vertexData->vertexCount = vertexData->getVertexCount();
+
+	// Copy vertex buffers
+	std::map<size_t, VertexBufferRefPtr>::const_iterator iter = vertexData->_bindings.begin();
+	for(; iter != vertexData->_bindings.end(); ++iter)
+	{
+		size_t vertexSize = vertexData->vertexDeclaration.getVertexBindingSize(iter->first);
+		// Now create the vertex buffer
+		Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().
+			createVertexBuffer(vertexSize, og_vertexData->vertexCount, 
+				Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+
+		/// direct copy of the Vertex data
+		assert(iter->second->_buffer);
+		vbuf->writeData(0, iter->second->size(), iter->second->_buffer, true);
 	
-	assert(og_vertexData->vertexDeclaration->getVertexSize(bufCount) == vertexData->buffer->getVertexSize());
-
-	// Now create the vertex buffer
-	Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().
-		createVertexBuffer(vertexData->buffer->getVertexSize(), og_vertexData->vertexCount, 
-			Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-
-	/// direct copy of the Vertex data
-	vbuf->writeData(0, vertexData->buffer->size(), vertexData->buffer->_buffer, true);
-	
-	// Bind it
-	Ogre::VertexBufferBinding *bind = og_vertexData->vertexBufferBinding;
-	bind->setBinding(bufCount, vbuf);
-
-	/// @todo add support for multiple bindings
+		// Bind it
+		og_vertexData->vertexBufferBinding->setBinding(iter->first, vbuf);
+	}
 
 	// Vertexbuffer done
 }

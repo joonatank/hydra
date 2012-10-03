@@ -112,9 +112,12 @@ namespace vl
 	typedef RayObject * RayObjectPtr;
 
 	/// Resources
+	class VertexBuffer;
 	class Mesh;
 	class MeshManager;
 
+	typedef boost::shared_ptr<VertexBuffer> VertexBufferRefPtr;
+	typedef boost::shared_ptr<VertexBuffer const> VertexBufferConstRefPtr;
 	typedef boost::shared_ptr<Mesh> MeshRefPtr;
 	typedef boost::shared_ptr<MeshManager> MeshManagerRefPtr;
 
