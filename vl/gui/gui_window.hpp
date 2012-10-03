@@ -8,6 +8,8 @@
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
  *
+ *	Licensed under commercial license.
+ *
  */
 
 #ifndef HYDRA_GUI_WINDOW_HPP

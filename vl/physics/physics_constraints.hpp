@@ -1,5 +1,5 @@
 /*
- *	Copyright (c) 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-05
@@ -8,12 +8,16 @@
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
  *
+ *	Licensed under commercial license.
+ *
  */
 
 #ifndef HYDRA_PHYSICS_CONSTRAINTS_HPP
 #define HYDRA_PHYSICS_CONSTRAINTS_HPP
 
 #include "math/transform.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include "rigid_body.hpp"
 
@@ -117,7 +121,7 @@ private :
 
 /// @class SixDofConstraint
 /// Generic six dof constraint with a spring damper system
-class SixDofConstraint : public vl::physics::Constraint
+class HYDRA_API SixDofConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SixDofConstraint(void) {}
@@ -171,7 +175,7 @@ protected :
 
 };	// class SixDofConstraint
 
-class SliderConstraint : public vl::physics::Constraint
+class HYDRA_API SliderConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~SliderConstraint(void) {}
@@ -310,7 +314,7 @@ protected :
 
 };	// class SliderConstraint
 
-class HingeConstraint : public vl::physics::Constraint
+class HYDRA_API HingeConstraint : public vl::physics::Constraint
 {
 public :
 	virtual ~HingeConstraint(void) {}

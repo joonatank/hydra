@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
@@ -7,6 +7,8 @@
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
+ *
+ *	Licensed under commercial license.
  *
  */
 
@@ -34,6 +36,8 @@
 #include "rigid_body.hpp"
 // Necessary for Tube::ConstructionInfo
 #include "tube.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 #include <vector>
 #include <string>
@@ -73,7 +77,7 @@ struct SolverParameters
  *	management using our wrapper objects.
  *	Provides abstract interface for physics engine implementation.
  */
-class World
+class HYDRA_API World
 {
 public :
 	static WorldRefPtr create(GameManager *man);

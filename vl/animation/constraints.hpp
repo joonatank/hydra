@@ -1,16 +1,14 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
  *	@file animation/constraints.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -31,6 +29,8 @@
 
 #include "animation.hpp"
 
+#include <boost/signal.hpp>
+
 namespace vl
 {
 
@@ -39,6 +39,8 @@ namespace vl
  */
 class Constraint
 {
+	typedef boost::signal<void (void)> ChangedCB;
+
 public :
 	virtual ~Constraint(void)
 	{}
@@ -80,6 +82,9 @@ public :
 	/// @param name optional name for the constraint
 	void setName(std::string const &name)
 	{ _name = name; }
+
+	int addListener(ChangedCB::slot_type const &slot)
+	{ _changed_cb.connect(slot); return 1; }
 
 	/// @internal
 	void _solve(vl::time const &t);
@@ -125,6 +130,8 @@ protected :
 	std::string _name;
 
 	vl::animation::LinkRefPtr _link;
+
+	ChangedCB _changed_cb;
 
 };	// class Constraint
 

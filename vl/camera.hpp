@@ -1,22 +1,23 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-04
  *	@file camera.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
 #ifndef HYDRA_CAMERA_HPP
 #define HYDRA_CAMERA_HPP
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "movable_object.hpp"
 
@@ -25,7 +26,7 @@
 namespace vl
 {
 
-class Camera : public MovableObject
+class HYDRA_API Camera : public MovableObject
 {
 public :
 	Camera(std::string const &name, vl::SceneManagerPtr creator);

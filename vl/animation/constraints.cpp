@@ -1,16 +1,14 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-06
  *	@file animation/constraints.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -253,6 +251,8 @@ vl::SliderConstraint::setVelocity(vl::scalar velocity)
 	else
 	{ _target_position = _upper_limit; }
 	_speed = vl::abs(velocity);
+
+	_changed_cb();
 }
 
 void
@@ -266,34 +266,42 @@ void
 vl::SliderConstraint::setLowerLimit(vl::scalar lowerLimit)
 {
 	_lower_limit = lowerLimit;
+	_changed_cb();
 }
 
 void
 vl::SliderConstraint::setUpperLimit(vl::scalar upperLimit)
 {
 	_upper_limit = upperLimit;
+	_changed_cb();
 }
 
 void 
 vl::SliderConstraint::addActuatorTarget(vl::scalar target_pos_addition)
-{ _target_position += target_pos_addition; }
+{
+	_target_position += target_pos_addition;
+	_changed_cb();
+}
 
 void 
 vl::SliderConstraint::setActuatorTarget(vl::scalar target_pos)
 {
-	_target_position = target_pos; 
+	_target_position = target_pos;
+	_changed_cb();
 }
 
 void
 vl::SliderConstraint::addActuatorSpeed(vl::scalar velocity)
 {
 	_speed = vl::max(vl::scalar(0), _speed + velocity);
+	_changed_cb();
 }
 
 void
 vl::SliderConstraint::setActuatorSpeed(vl::scalar velocity)
 {
 	_speed = vl::max(vl::scalar(0), velocity);
+	_changed_cb();
 }
 
 vl::scalar
@@ -382,6 +390,7 @@ vl::HingeConstraint::setVelocity(vl::scalar velocity)
 	else
 	{ _target = _upper_limit; }
 	_speed = Ogre::Radian(vl::abs(velocity));
+	_changed_cb();
 }
 
 void
@@ -395,24 +404,28 @@ void
 vl::HingeConstraint::setActuatorTarget(Ogre::Radian const &angle)
 {
 	_target = angle;
+	_changed_cb();
 }
 
 void 
 vl::HingeConstraint::setActuatorSpeed(Ogre::Radian const &dt)
 {
 	_speed = vl::max(Ogre::Radian(0), dt);
+	_changed_cb();
 }
 
 void
 vl::HingeConstraint::setLowerLimit(Ogre::Radian const &lower)
 {
 	_lower_limit = lower;
+	_changed_cb();
 }
 
 void
 vl::HingeConstraint::setUpperLimit(Ogre::Radian const &upper)
 {
 	_upper_limit = upper;
+	_changed_cb();
 }
 
 Ogre::Vector3

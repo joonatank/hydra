@@ -1,17 +1,15 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file python/python_module.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -217,6 +215,7 @@ void export_animation(void)
 		.add_property("name", python::make_function(&vl::Constraint::getName, python::return_value_policy<python::copy_const_reference>()), &vl::Constraint::setName)
 		.def("set_velocity", &vl::Constraint::setVelocity)
 		.def("add_velocity", &vl::Constraint::addVelocity)
+		.def("add_listener", toast::python::signal_connect<void (void)>(&vl::Constraint::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

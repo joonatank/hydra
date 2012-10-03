@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-08
@@ -8,6 +8,7 @@
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
  *
+ *	Licensed under commercial license.
  *
  */
 
@@ -20,6 +21,8 @@
 #include "math/transform.hpp"
 // Necessary for pointer types and forward declarations
 #include "typedefs.hpp"
+// Necessary for HYDRA_API
+#include "defines.hpp"
 
 namespace vl
 {
@@ -30,7 +33,7 @@ namespace physics
 /**	@class Tube
  *	@brief Simulates a single hydraulic tube with two endpoints
  */
-class Tube
+class HYDRA_API Tube
 {
 public :
 	struct ConstructionInfo

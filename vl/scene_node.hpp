@@ -1,17 +1,15 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011/10 Savant Simulators
+ *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file scene_node.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -29,7 +27,8 @@
 #include "typedefs.hpp"
 
 #include "math/transform.hpp"
-
+// Necessary for HYDRA_API
+#include "defines.hpp"
 // Base class
 #include "cluster/distributed.hpp"
 #include "object_interface.hpp"
@@ -47,7 +46,7 @@ enum TransformSpace
 	TS_WORLD,
 };
 
-class SceneNode : public vl::Distributed, public vl::ObjectInterface
+class HYDRA_API SceneNode : public vl::Distributed, public vl::ObjectInterface
 {
 public :
 	SceneNode(std::string const &name, vl::SceneManager *creator);
