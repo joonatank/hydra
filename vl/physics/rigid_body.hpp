@@ -203,6 +203,13 @@ public :
 	CollisionShapeRefPtr getShape(void)
 	{ return _shape; }
 
+	//Ville added anisotropic and normal friction here:
+	virtual Ogre::Vector3 getAnisotropicFriction(void) const = 0;
+	virtual void setAnisotropicFriction(Ogre::Vector3 const&) = 0;
+	virtual vl::scalar getFriction(void) const = 0;
+	virtual void setFriction(vl::scalar const&) = 0;
+	virtual void setSleepingThresholds(vl::scalar const&,vl::scalar const&) = 0;
+
 protected :
 	RigidBody(ConstructionInfo const &info);
 
