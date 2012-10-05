@@ -40,7 +40,6 @@ THE SOFTWARE.s
 #include "OgreGLTextureManager.h"
 #include "OgreGLHardwareVertexBuffer.h"
 #include "OgreGLHardwareIndexBuffer.h"
-#include "OgreGLDefaultHardwareBufferManager.h"
 #include "OgreGLGpuProgram.h"
 #include "OgreGLGpuProgramManager.h"
 
@@ -71,33 +70,6 @@ namespace Ogre {
 		ret->setSyntaxCode(syntaxCode);
 		return ret;
 	}
-
-	/*
-	GpuProgram* createGLGpuNvparseProgram(ResourceManager* creator, 
-		const String& name, ResourceHandle handle, 
-		const String& group, bool isManual, ManualResourceLoader* loader,
-		GpuProgramType gptype, const String& syntaxCode)
-	{
-		GLGpuNvparseProgram* ret = new GLGpuNvparseProgram(
-			creator, name, handle, group, isManual, loader);
-		ret->setType(gptype);
-		ret->setSyntaxCode(syntaxCode);
-		return ret;
-	}
-
-	GpuProgram* createGL_ATI_FS_GpuProgram(ResourceManager* creator, 
-		const String& name, ResourceHandle handle, 
-		const String& group, bool isManual, ManualResourceLoader* loader,
-		GpuProgramType gptype, const String& syntaxCode)
-	{
-
-		ATI_FS_GLGpuProgram* ret = new ATI_FS_GLGpuProgram(
-			creator, name, handle, group, isManual, loader);
-		ret->setType(gptype);
-		ret->setSyntaxCode(syntaxCode);
-		return ret;
-	}
-	*/
 
 	GLRenderSystem::GLRenderSystem()
 		: mDepthWrite(true), mStencilMask(0xFFFFFFFF), mHardwareBufferManager(0),
@@ -487,7 +459,8 @@ namespace Ogre {
 			rsc->setStencilBufferBitDepth(stencil);
 		}
 
-
+		// We should always have VBOs
+		// still not sure if we can remove the ARB check from here
 		if(GLEW_VERSION_1_5 || GLEW_ARB_vertex_buffer_object)
 		{
 			if (!GLEW_ARB_vertex_buffer_object)
@@ -828,15 +801,15 @@ namespace Ogre {
 			glUnmapBufferARB = glUnmapBuffer;
 		}
 
-		if(caps->hasCapability(RSC_VBO))
+		// VBOs are mandatory
+		if(!caps->hasCapability(RSC_VBO))
 		{
+			OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, 
+				"Rendering system does not support VBOs.",
+				"GLRenderSystem::initialiseFromRenderSystemCapabilities");
+		}
 
-			mHardwareBufferManager = new GLHardwareBufferManager;
-		}
-		else
-		{
-			mHardwareBufferManager = new GLDefaultHardwareBufferManager;
-		}
+		mHardwareBufferManager = new GLHardwareBufferManager;
 
 		// XXX Need to check for nv2 support and make a program manager for it
 		// XXX Probably nv1 as well for older cards
@@ -2456,49 +2429,27 @@ namespace Ogre {
 			// culling mode. Therefore, we must take care with two-sided stencil settings.
 			flip = (mInvertVertexWinding && !mActiveRenderTarget->requiresTextureFlipping()) ||
 				(!mInvertVertexWinding && mActiveRenderTarget->requiresTextureFlipping());
-			if(GLEW_VERSION_2_0) // New GL2 commands
-			{
-				// Back
-				glStencilMaskSeparate(GL_BACK, mask);
-				glStencilFuncSeparate(GL_BACK, convertCompareFunction(func), refValue, mask);
-				glStencilOpSeparate(GL_BACK, 
-					convertStencilOp(stencilFailOp, !flip), 
-					convertStencilOp(depthFailOp, !flip), 
-					convertStencilOp(passOp, !flip));
-				// Front
-				glStencilMaskSeparate(GL_FRONT, mask);
-				glStencilFuncSeparate(GL_FRONT, convertCompareFunction(func), refValue, mask);
-				glStencilOpSeparate(GL_FRONT, 
-					convertStencilOp(stencilFailOp, flip),
-					convertStencilOp(depthFailOp, flip), 
-					convertStencilOp(passOp, flip));
-			}
-			else // EXT_stencil_two_side
-			{
-				glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-				// Back
-				glActiveStencilFaceEXT(GL_BACK);
-				glStencilMask(mask);
-				glStencilFunc(convertCompareFunction(func), refValue, mask);
-				glStencilOp(
-					convertStencilOp(stencilFailOp, !flip), 
-					convertStencilOp(depthFailOp, !flip), 
-					convertStencilOp(passOp, !flip));
-				// Front
-				glActiveStencilFaceEXT(GL_FRONT);
-				glStencilMask(mask);
-				glStencilFunc(convertCompareFunction(func), refValue, mask);
-				glStencilOp(
-					convertStencilOp(stencilFailOp, flip),
-					convertStencilOp(depthFailOp, flip), 
-					convertStencilOp(passOp, flip));
-			}
+			
+			// We use OpenGL 2 anyway
+			assert(GLEW_VERSION_2_0); // New GL2 commands
+
+			// Back
+			glStencilMaskSeparate(GL_BACK, mask);
+			glStencilFuncSeparate(GL_BACK, convertCompareFunction(func), refValue, mask);
+			glStencilOpSeparate(GL_BACK, 
+				convertStencilOp(stencilFailOp, !flip), 
+				convertStencilOp(depthFailOp, !flip), 
+				convertStencilOp(passOp, !flip));
+			// Front
+			glStencilMaskSeparate(GL_FRONT, mask);
+			glStencilFuncSeparate(GL_FRONT, convertCompareFunction(func), refValue, mask);
+			glStencilOpSeparate(GL_FRONT, 
+				convertStencilOp(stencilFailOp, flip),
+				convertStencilOp(depthFailOp, flip), 
+				convertStencilOp(passOp, flip));
 		}
 		else
 		{
-            if(!GLEW_VERSION_2_0)
-                glDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-
 			flip = false;
 			glStencilMask(mask);
 			glStencilFunc(convertCompareFunction(func), refValue, mask);
@@ -3040,24 +2991,18 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
 		{
             void* pBufferData = 0;
 
-			if(mCurrentCapabilities->hasCapability(RSC_VBO))
-			{
-				glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 
-					static_cast<GLHardwareIndexBuffer*>(
-					op.indexData->indexBuffer.get())->getGLBufferId());
+			assert(mCurrentCapabilities->hasCapability(RSC_VBO));
 
-				pBufferData = VBO_BUFFER_OFFSET(
-					op.indexData->indexStart * op.indexData->indexBuffer->getIndexSize());
-			}
-			else
-			{
-				pBufferData = static_cast<GLDefaultHardwareIndexBuffer*>(
-					op.indexData->indexBuffer.get())->getDataPtr(
-					op.indexData->indexStart * op.indexData->indexBuffer->getIndexSize());
-			}
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 
+				static_cast<GLHardwareIndexBuffer*>(
+				op.indexData->indexBuffer.get())->getGLBufferId());
+
+			pBufferData = VBO_BUFFER_OFFSET(
+				op.indexData->indexStart * op.indexData->indexBuffer->getIndexSize());
 
 			GLenum indexType = (op.indexData->indexBuffer->getType() == HardwareIndexBuffer::IT_16BIT) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
 
+			// @todo this and the code block below are almost identical
 			do
 			{
 				// Update derived depth bias
@@ -3789,16 +3734,13 @@ GL_RGB_SCALE : GL_ALPHA_SCALE, 1);
         void* pBufferData = 0;
         const GLHardwareVertexBuffer* hwGlBuffer = static_cast<const GLHardwareVertexBuffer*>(vertexBuffer.get()); 
 
-        if(mCurrentCapabilities->hasCapability(RSC_VBO))
-        {
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, 
-                hwGlBuffer->getGLBufferId());
-            pBufferData = VBO_BUFFER_OFFSET(elem.getOffset());
-        }
-        else
-        {
-            pBufferData = static_cast<const GLDefaultHardwareVertexBuffer*>(vertexBuffer.get())->getDataPtr(elem.getOffset());
-        }
+		// VBOs are mandatory
+        assert(mCurrentCapabilities->hasCapability(RSC_VBO));
+        
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 
+            hwGlBuffer->getGLBufferId());
+        pBufferData = VBO_BUFFER_OFFSET(elem.getOffset());
+
         if (vertexStart)
         {
             pBufferData = static_cast<char*>(pBufferData) + vertexStart * vertexBuffer->getVertexSize();

@@ -12,7 +12,6 @@ project("HydraGL" CXX)
 
 set(HEADER_FILES
   src/OgreGLContext.h
-  src/OgreGLDefaultHardwareBufferManager.h
   src/OgreGLDepthBuffer.h
   src/OgreGLFBOMultiRenderTarget.h
   src/OgreGLFBORenderTexture.h
@@ -39,7 +38,6 @@ set(HEADER_FILES
 
 set(SOURCE_FILES
   src/OgreGLContext.cpp
-  src/OgreGLDefaultHardwareBufferManager.cpp
   src/OgreGLDepthBuffer.cpp
   src/OgreGLEngineDll.cpp
   src/OgreGLFBOMultiRenderTarget.cpp
