@@ -108,7 +108,7 @@ operator==(SkyDomeInfo const &a, SkyDomeInfo const &b)
 
 inline bool
 operator!=(SkyDomeInfo const &a, SkyDomeInfo const &b)
-{ return a == b; }
+{ return !(a == b); }
 
 /** @class SkyInfo
  *	For more realistic and complex Sky rendering.
@@ -153,7 +153,7 @@ operator==(SkyInfo const &a, SkyInfo const &b)
 
 inline bool
 operator!=(SkyInfo const &a, SkyInfo const &b)
-{ return a == b; }
+{ return !(a == b); }
 
 
 struct FogInfo

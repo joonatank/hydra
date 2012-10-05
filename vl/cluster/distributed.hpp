@@ -93,12 +93,12 @@ protected:
 	{ _dirtyBits |= bits; }
 
 	/// @brief update a variable and set dirty flag
-	template<typename T> void update_variable(T &new_val, T const &old_val, uint64_t dirty)
+	template<typename T> void update_variable(T &val, T const &new_val, uint64_t dirty)
 	{
-		if(old_val != new_val)
+		if(val != new_val)
 		{
 			setDirty(dirty);
-			new_val = old_val;
+			val = new_val;
 		}
 	}
 
