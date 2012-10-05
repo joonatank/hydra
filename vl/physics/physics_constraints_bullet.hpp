@@ -35,103 +35,129 @@ namespace vl
 
 namespace physics
 {
+
+class BulletSixDofConstraint;
+
 // Interfaces for 3dof rotational and translational motors, both inherited from Motor3Dof.
 // Warning: user never should create these types by it's own, one always should retrieve pointer to this type from Generic6Dof constraint:
 class Motor3DofTranslational : public Motor3Dof
 {
 public:
 	//Constructor
-	Motor3DofTranslational(btTranslationalLimitMotor* input) {
-	mot=input;
-	}
+	Motor3DofTranslational(btTranslationalLimitMotor* input, BulletSixDofConstraint *joint)
+		: _mot(input)
+		, _constraint(joint)
+		, _lock_hack(true)
+	{}
 
 	//Constraint lowerlimit:
 	virtual void			setLowerLimit(Ogre::Vector3 const& limit) {
-		mot->m_lowerLimit = convert_bt_vec(limit);
+		_mot->m_lowerLimit = convert_bt_vec(limit);
 	}
     virtual Ogre::Vector3	getLowerLimit(void) {
-		return convert_vec(mot->m_lowerLimit);
+		return convert_vec(_mot->m_lowerLimit);
 	}
 	
 	//Constraint upper limits:
 	virtual void			setUpperLimit(Ogre::Vector3 const& limit) {
-		mot->m_upperLimit = convert_bt_vec(limit);
+		_mot->m_upperLimit = convert_bt_vec(limit);
 	}
     virtual Ogre::Vector3	getUpperLimit(void) {
-		return convert_vec(mot->m_upperLimit);
+		return convert_vec(_mot->m_upperLimit);
 	}
 	
 	//Softness for limits:
     virtual void			setLimitSoftness(vl::scalar const& soft) {
-		mot->m_limitSoftness = soft;
+		_mot->m_limitSoftness = soft;
 	}
 	virtual vl::scalar		getLimitSoftness(void) {
-		return mot->m_limitSoftness;
+		return _mot->m_limitSoftness;
 	}
 	
 	//Damping for limits:
     virtual void			setDamping(vl::scalar const& damp) {
-		mot->m_damping = damp;
+		_mot->m_damping = damp;
 	}
+	
 	virtual vl::scalar		getDamping(void) {
-		return mot->m_damping;
+		return _mot->m_damping;
 	}
 
 	//Restitution parameter (0 = totally inelastic collision, 1 = totally elastic collision):
 	virtual void			setRestitution(vl::scalar const& restitution) {
-		mot->m_restitution = restitution;
+		_mot->m_restitution = restitution;
 	}
+	
 	virtual vl::scalar		getRestitution(void) {
-		return mot->m_restitution;
+		return _mot->m_restitution;
 	}
 	
 	//Normal constraint force mixing factor:
 	virtual void			setNormalCFM(Ogre::Vector3 const& ncfm) {
-		mot->m_normalCFM = convert_bt_vec(ncfm);
+		_mot->m_normalCFM = convert_bt_vec(ncfm);
 	}
-    virtual Ogre::Vector3	getNormalCFM(void) {
-		return convert_vec(mot->m_normalCFM);
+    
+	virtual Ogre::Vector3	getNormalCFM(void) {
+		return convert_vec(_mot->m_normalCFM);
 	}
+	
 	//Error tolerance factor when joint is at limit:
 	virtual void			setStopERP(Ogre::Vector3 const& serp) {
-		mot->m_stopERP = convert_bt_vec(serp);
+		_mot->m_stopERP = convert_bt_vec(serp);
 	}
+	
 	virtual Ogre::Vector3	getStopERP(void) {
-		return convert_vec(mot->m_stopERP);
+		return convert_vec(_mot->m_stopERP);
 	}
+	
 	//Constraint force mixing factor when joint is at limit:
 	virtual void			setStopCFM(Ogre::Vector3 const& scfm) {
-		mot->m_stopCFM = convert_bt_vec(scfm);
+		_mot->m_stopCFM = convert_bt_vec(scfm);
 	}
+	
 	virtual Ogre::Vector3	getStopCFM(void) {
-		return convert_vec(mot->m_stopCFM);
-	}    
-	//Target motor velocity:
-	virtual void			setTargetVelocity(Ogre::Vector3 const& vel) {
-		mot->m_targetVelocity = convert_bt_vec(vel);
+		return convert_vec(_mot->m_stopCFM);
 	}
+
+	//Target motor velocity:
+	virtual void			setTargetVelocity(Ogre::Vector3 const& vel);
+
 	virtual Ogre::Vector3	getTargetVelocity(void) {
-		return convert_vec(mot->m_targetVelocity);
+		return convert_vec(_mot->m_targetVelocity);
 	}
 	
     //Maximum force on motor, eg. maximum force used to achieve needed velocity:
 	virtual void			setMaxMotorForce(Ogre::Vector3 const& force) {
-		mot->m_maxMotorForce = convert_bt_vec(force);
+		_mot->m_maxMotorForce = convert_bt_vec(force);
 	}
+
 	virtual Ogre::Vector3	getMaxMotorForce(void) {
-		return convert_vec(mot->m_maxMotorForce);
-	}	
+		return convert_vec(_mot->m_maxMotorForce);
+	}
+
 	//Maximum returning torque when limit is violated (this is applied with rotational motors only):
 	virtual void			setMaxLimitTorque(Ogre::Vector3 const& torq) {
 		
 	}
+
 	virtual	Ogre::Vector3	getMaxLimitTorque(void) {
 		return Ogre::Vector3::ZERO; 
 	}
+
+	virtual void enableLocking(bool enable)
+	{
+		_lock_hack = enable;
+	}
+
+	virtual bool isLockingEnabled(void)
+	{
+		return _lock_hack;
+	}
+
 	//Is one of 3 dof's enabled:
 	virtual void			enableMotor(int const index) {
 		if(index == 0 || index == 1 || index == 2) {
-			mot->m_enableMotor[index] = true;
+			_mot->m_enableMotor[index] = true;
 		}
 		else {
 		//@TODO: add error report
@@ -139,7 +165,7 @@ public:
 	}
 	virtual void			disableMotor(int const index) {
 		if(index == 0 || index == 1 || index == 2) {
-			mot->m_enableMotor[index] = false;
+			_mot->m_enableMotor[index] = false;
 		}
 		else {
 		//@TODO: add error report
@@ -148,170 +174,212 @@ public:
 	}
 	
 	virtual void			enableAllMotors(void) {
-		mot->m_enableMotor[0] = true;
-		mot->m_enableMotor[1] = true;
-		mot->m_enableMotor[2] = true;
+		_mot->m_enableMotor[0] = true;
+		_mot->m_enableMotor[1] = true;
+		_mot->m_enableMotor[2] = true;
 	}
+
 	virtual void			disableAllMotors(void) {
-		mot->m_enableMotor[0] = false;
-		mot->m_enableMotor[1] = false;
-		mot->m_enableMotor[2] = false;
-		
+		_mot->m_enableMotor[0] = false;
+		_mot->m_enableMotor[1] = false;
+		_mot->m_enableMotor[2] = false;
 	}
+
 private:
-	btTranslationalLimitMotor* mot;
+	btTranslationalLimitMotor *_mot;
+	BulletSixDofConstraint *_constraint;
+
+	// Used when locking a constraint
+	bool _locked[3];
+	btVector3 _lower_limit;
+	btVector3 _upper_limit;
+	bool _lock_hack;
 };
+
 class Motor3DofRotational : public Motor3Dof
 {
 public:
 	//Constructor
-	Motor3DofRotational(std::vector<btRotationalLimitMotor*> input) {
-		mot=input;
-		assert(mot.size() == 3);
+	Motor3DofRotational(std::vector<btRotationalLimitMotor*> input, BulletSixDofConstraint *joint)
+		: _constraint(joint)
+		, _lock_hack(true)
+	{
+		_mot = input;
+		assert(_mot.size() == 3);
 	}
 
 	//Constraint lowerlimit:
 	virtual void			setLowerLimit(Ogre::Vector3 const& limit) {
-		mot.at(0)->m_loLimit = (convert_bt_vec(limit)).getX();
-		mot.at(1)->m_loLimit = (convert_bt_vec(limit)).getY();
-		mot.at(2)->m_loLimit = (convert_bt_vec(limit)).getZ();
+		_mot.at(0)->m_loLimit = limit.x;
+		_mot.at(1)->m_loLimit = limit.y;
+		_mot.at(2)->m_loLimit = limit.z;
 	}
-    virtual Ogre::Vector3	getLowerLimit(void) {
-		return convert_vec(btVector3(mot.at(0)->m_loLimit, mot.at(1)->m_loLimit, mot.at(2)->m_loLimit));
+    
+	virtual Ogre::Vector3	getLowerLimit(void) {
+		return Ogre::Vector3(_mot.at(0)->m_loLimit, _mot.at(1)->m_loLimit, _mot.at(2)->m_loLimit);
 	}
 	
 	//Constraint upper limits:
 	virtual void			setUpperLimit(Ogre::Vector3 const& limit) {
-		mot.at(0)->m_hiLimit = (convert_bt_vec(limit)).getX();
-		mot.at(1)->m_hiLimit = (convert_bt_vec(limit)).getY();
-		mot.at(2)->m_hiLimit = (convert_bt_vec(limit)).getZ();
+		_mot.at(0)->m_hiLimit = (convert_bt_vec(limit)).getX();
+		_mot.at(1)->m_hiLimit = (convert_bt_vec(limit)).getY();
+		_mot.at(2)->m_hiLimit = (convert_bt_vec(limit)).getZ();
 	}
+
     virtual Ogre::Vector3	getUpperLimit(void) {
-		return convert_vec(btVector3(mot.at(0)->m_hiLimit, mot.at(1)->m_hiLimit, mot.at(2)->m_hiLimit));
+		return Ogre::Vector3(_mot.at(0)->m_hiLimit, _mot.at(1)->m_hiLimit, _mot.at(2)->m_hiLimit);
 	}
 	
 	//Softness for limits, , it's scalar on bullet documentation:
     virtual void			setLimitSoftness(vl::scalar const& soft) {
-		mot.at(0)->m_limitSoftness = soft;
-		mot.at(1)->m_limitSoftness = soft;
-		mot.at(2)->m_limitSoftness = soft;
+		_mot.at(0)->m_limitSoftness = soft;
+		_mot.at(1)->m_limitSoftness = soft;
+		_mot.at(2)->m_limitSoftness = soft;
 	}
+	
 	virtual vl::scalar		getLimitSoftness(void) {
-		return mot.at(0)->m_limitSoftness;
+		return _mot.at(0)->m_limitSoftness;
 	}
 	
 	//Damping for limits, it's scalar on bullet documentation:
     virtual void			setDamping(vl::scalar const& damp) {
-		mot.at(0)->m_damping = damp;
-		mot.at(1)->m_damping = damp;
-		mot.at(2)->m_damping = damp;
+		_mot.at(0)->m_damping = damp;
+		_mot.at(1)->m_damping = damp;
+		_mot.at(2)->m_damping = damp;
 	}
 	virtual vl::scalar		getDamping(void) {
-		return mot.at(0)->m_damping;
+		return _mot.at(0)->m_damping;
 	}
 
 	//Restitution parameter (0 = totally inelastic collision, 1 = totally elastic collision),
 	//it's scalar on bullet documentation:
 	virtual void			setRestitution(vl::scalar const& restitution) {
-		mot.at(0)->m_bounce = restitution;
-		mot.at(1)->m_bounce = restitution;
-		mot.at(2)->m_bounce = restitution;
+		_mot.at(0)->m_bounce = restitution;
+		_mot.at(1)->m_bounce = restitution;
+		_mot.at(2)->m_bounce = restitution;
 	}
+	
 	virtual vl::scalar		getRestitution(void) {
-		return mot.at(0)->m_bounce;
+		return _mot.at(0)->m_bounce;
 	}
 	
 	//Normal constraint force mixing factor:
 	virtual void			setNormalCFM(Ogre::Vector3 const& ncfm) {
-		mot.at(0)->m_normalCFM = (convert_bt_vec(ncfm)).getX();
-		mot.at(1)->m_normalCFM = (convert_bt_vec(ncfm)).getY();
-		mot.at(2)->m_normalCFM = (convert_bt_vec(ncfm)).getZ();
+		_mot.at(0)->m_normalCFM = ncfm.x;
+		_mot.at(1)->m_normalCFM = ncfm.y;
+		_mot.at(2)->m_normalCFM = ncfm.z;
 	}
+
     virtual Ogre::Vector3	getNormalCFM(void) {
-		return convert_vec(btVector3(mot.at(0)->m_normalCFM,mot.at(1)->m_normalCFM,mot.at(2)->m_normalCFM));
+		return Ogre::Vector3(_mot.at(0)->m_normalCFM, _mot.at(1)->m_normalCFM, _mot.at(2)->m_normalCFM);
 	}
+	
 	//Error tolerance factor when joint is at limit:
 	virtual void			setStopERP(Ogre::Vector3 const& serp) {
-		mot.at(0)->m_stopERP = (convert_bt_vec(serp)).getX();
-		mot.at(1)->m_stopERP = (convert_bt_vec(serp)).getY();
-		mot.at(2)->m_stopERP = (convert_bt_vec(serp)).getZ();
+		_mot.at(0)->m_stopERP = serp.x;
+		_mot.at(1)->m_stopERP = serp.y;
+		_mot.at(2)->m_stopERP = serp.z;
 	}
+	
 	virtual Ogre::Vector3	getStopERP(void) {
-		return convert_vec(btVector3(mot.at(0)->m_stopERP,mot.at(1)->m_stopERP,mot.at(2)->m_stopERP));
+		return Ogre::Vector3(_mot.at(0)->m_stopERP, _mot.at(1)->m_stopERP, _mot.at(2)->m_stopERP);
 	}
+	
 	//Constraint force mixing factor when joint is at limit:
 	virtual void			setStopCFM(Ogre::Vector3 const& scfm) {
-		mot.at(0)->m_stopCFM = (convert_bt_vec(scfm)).getX();
-		mot.at(1)->m_stopCFM = (convert_bt_vec(scfm)).getY();
-		mot.at(2)->m_stopCFM = (convert_bt_vec(scfm)).getZ();
+		_mot.at(0)->m_stopCFM = scfm.x;
+		_mot.at(1)->m_stopCFM = scfm.y;
+		_mot.at(2)->m_stopCFM = scfm.z;
 	}
+	
 	virtual Ogre::Vector3	getStopCFM(void) {
-		return convert_vec(btVector3(mot.at(0)->m_stopCFM,mot.at(1)->m_stopCFM,mot.at(2)->m_stopCFM));
+		return Ogre::Vector3(_mot.at(0)->m_stopCFM, _mot.at(1)->m_stopCFM, _mot.at(2)->m_stopCFM);
 	}    
+	
 	//Target motor velocity:
-	virtual void			setTargetVelocity(Ogre::Vector3 const& vel) {
-		mot.at(0)->m_targetVelocity = (convert_bt_vec(vel)).getX();
-		mot.at(1)->m_targetVelocity = (convert_bt_vec(vel)).getY();
-		mot.at(2)->m_targetVelocity = (convert_bt_vec(vel)).getZ();
-	}
+	virtual void			setTargetVelocity(Ogre::Vector3 const& vel);
+
 	virtual Ogre::Vector3	getTargetVelocity(void) {
-		return convert_vec(btVector3(mot.at(0)->m_targetVelocity,mot.at(1)->m_targetVelocity,mot.at(2)->m_targetVelocity));
+		return Ogre::Vector3(_mot.at(0)->m_targetVelocity, _mot.at(1)->m_targetVelocity, _mot.at(2)->m_targetVelocity);
 	}
 	
     //Maximum force on motor, eg. maximum force used to achieve needed velocity:
 	virtual void			setMaxMotorForce(Ogre::Vector3 const& force) {
-		mot.at(0)->m_maxMotorForce = convert_bt_vec(force).getX();
-		mot.at(1)->m_maxMotorForce = convert_bt_vec(force).getY();
-		mot.at(2)->m_maxMotorForce = convert_bt_vec(force).getZ();
-
+		_mot.at(0)->m_maxMotorForce = force.x;
+		_mot.at(1)->m_maxMotorForce = force.y;
+		_mot.at(2)->m_maxMotorForce = force.z;
 	}
+
 	virtual Ogre::Vector3	getMaxMotorForce(void) {
-		return convert_vec(btVector3(mot.at(0)->m_maxMotorForce,
-			mot.at(1)->m_maxMotorForce,
-			mot.at(2)->m_maxMotorForce));
-	}	
+		return Vector3(_mot.at(0)->m_maxMotorForce,
+			_mot.at(1)->m_maxMotorForce,
+			_mot.at(2)->m_maxMotorForce);
+	}
+
 	//Maximum returning torque when limit is violated (this is applied with rotational motors only):
 	virtual void			setMaxLimitTorque(Ogre::Vector3 const& torq) {
-		mot.at(0)->m_maxMotorForce = (convert_bt_vec(torq)).getX();
-		mot.at(1)->m_maxMotorForce = (convert_bt_vec(torq)).getY();
-		mot.at(2)->m_maxMotorForce = (convert_bt_vec(torq)).getZ();
+		_mot.at(0)->m_maxMotorForce = torq.x;
+		_mot.at(1)->m_maxMotorForce = torq.y;
+		_mot.at(2)->m_maxMotorForce = torq.z;
 	}
+
 	virtual	Ogre::Vector3	getMaxLimitTorque(void) {
-		return convert_vec(btVector3(mot.at(0)->m_maxMotorForce,
-			mot.at(1)->m_maxMotorForce,
-			mot.at(2)->m_maxMotorForce));
+		return Vector3(_mot.at(0)->m_maxMotorForce,
+			_mot.at(1)->m_maxMotorForce,
+			_mot.at(2)->m_maxMotorForce);
 	}
+
+	virtual void enableLocking(bool enable)
+	{
+		_lock_hack = enable;
+	}
+
+	virtual bool isLockingEnabled(void)
+	{
+		return _lock_hack;
+	}
+
 	//Disabling and enabling motors:
 	virtual void			enableMotor(int const index) {		
 		if(index == 0 || index == 1 || index == 2) {
-			mot[index]->m_enableMotor = true;
+			_mot[index]->m_enableMotor = true;
 		}
 		else {
 		//@TODO: add error report
 		}
 	}
+
 	virtual void			disableMotor(int const index) {
 		if(index == 0 || index == 1 || index == 2) {
-			mot[index]->m_enableMotor = false;
+			_mot[index]->m_enableMotor = false;
 		}
 		else {
 		//@TODO: add error report
 		}
 		
 	}
+
 	virtual void			enableAllMotors(void) {
-		mot.at(0)->m_enableMotor = true;
-		mot.at(1)->m_enableMotor = true;
-		mot.at(2)->m_enableMotor = true;
+		_mot.at(0)->m_enableMotor = true;
+		_mot.at(1)->m_enableMotor = true;
+		_mot.at(2)->m_enableMotor = true;
 	}
+
 	virtual void			disableAllMotors(void) {
-		mot.at(0)->m_enableMotor = false;
-		mot.at(1)->m_enableMotor = false;
-		mot.at(2)->m_enableMotor = false;
+		_mot.at(0)->m_enableMotor = false;
+		_mot.at(1)->m_enableMotor = false;
+		_mot.at(2)->m_enableMotor = false;
 	}
 
 private: 
-	std::vector<btRotationalLimitMotor*>  mot;
+	std::vector<btRotationalLimitMotor*> _mot;
+	BulletSixDofConstraint *_constraint;
+
+	// Used when locking a constraint
+	bool _locked[3];
+	btVector3 _lower_limit;
+	btVector3 _upper_limit;
+	bool _lock_hack;
 };
 
 /// The base constraint for physics needs to be abstract interface
@@ -330,30 +398,12 @@ class BulletSixDofConstraint : public BulletConstraint, public SixDofConstraint
 {
 public :
 	BulletSixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
-		, _bt_constraint(0)
-	{
-		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));
-		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbB));
-		BulletRigidBodyRefPtr body1 = boost::static_pointer_cast<BulletRigidBody>(rbA);
-		BulletRigidBodyRefPtr body2 = boost::static_pointer_cast<BulletRigidBody>(rbB);
-		
-		_bt_constraint = new btGeneric6DofSpringConstraint(*body1->getNative(), 
-			*body2->getNative(), convert_bt_transform(frameInA), 
-			convert_bt_transform(frameInB), useLinearReferenceFrameA);
-		
-		_transmot = new Motor3DofTranslational(_bt_constraint->getTranslationalLimitMotor());
-		
-		std::vector<btRotationalLimitMotor*> tmpvec;
-		tmpvec.push_back(_bt_constraint->getRotationalLimitMotor(0));
-		tmpvec.push_back(_bt_constraint->getRotationalLimitMotor(1));
-		tmpvec.push_back(_bt_constraint->getRotationalLimitMotor(2));
-		_rotmot = new Motor3DofRotational(tmpvec);
-	}
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
 
-	virtual ~BulletSixDofConstraint(void) {
-	
+	virtual ~BulletSixDofConstraint(void) 
+	{
+		delete _transmot;
+		delete _rotmot;
 	}
 
 	virtual Ogre::Vector3 getLinearLowerLimit(void) const
@@ -389,6 +439,26 @@ public :
 
 	void setAngularUpperLimit(Ogre::Vector3 const &angularUpper)
 	{ _bt_constraint->setAngularUpperLimit(convert_bt_vec(angularUpper)); }
+
+	/// @brief Get the current position of the constraint relative to starting position
+	Ogre::Vector3 getCurrentPosition(void) const
+	{
+		vl::scalar x = _bt_constraint->getRelativePivotPosition(0);
+		vl::scalar y = _bt_constraint->getRelativePivotPosition(1);
+		vl::scalar z = _bt_constraint->getRelativePivotPosition(2);
+
+		return Ogre::Vector3(x, y, z);
+	}
+
+	/// @brief Get the current angle of the constraint relative to starting angle
+	Ogre::Vector3 getCurrentAngle(void) const
+	{
+		vl::scalar x = _bt_constraint->getAngle(0);
+		vl::scalar y = _bt_constraint->getAngle(1);
+		vl::scalar z = _bt_constraint->getAngle(2);
+
+		return Ogre::Vector3(x, y, z);
+	}
 
 	void enableSpring(int index, bool onOff)
 	{ _bt_constraint->enableSpring(index, onOff); }

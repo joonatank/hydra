@@ -168,6 +168,7 @@ if(HYDRA_PHYSICS STREQUAL "Bullet")
 		)
 	list(APPEND PHYSICS_SRC
 		physics/physics_world_bullet.cpp
+		physics/physics_constraints_bullet.cpp
 		physics/mesh_bullet.cpp
 		)
 elseif(HYDRA_PHYSICS STREQUAL "Newton")

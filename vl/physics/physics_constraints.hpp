@@ -74,6 +74,11 @@ public:
 	virtual void			setMaxLimitTorque(Ogre::Vector3 const&)=0;
     virtual	Ogre::Vector3	getMaxLimitTorque(void)=0;
 
+	//Use the lock hack, defaults to which ever is working better
+	//Do not change at run time only when creating the motor
+	virtual void enableLocking(bool enable) = 0;
+	virtual bool isLockingEnabled(void) = 0;
+
 	//Is one of 3 dof's enabled:
 	virtual void			enableMotor(int const)=0;
 	virtual void			disableMotor(int const)=0;	
@@ -137,6 +142,9 @@ public :
 
 	virtual Ogre::Vector3 getAngularUpperLimit(void) const = 0;
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
+
+	virtual Ogre::Vector3 getCurrentPosition(void) const = 0;
+	virtual Ogre::Vector3 getCurrentAngle(void) const = 0;
 
 	/// Index 0-2 for translation (x, y, z)
 	/// Index 3-5 for rotations (x, y, z)
