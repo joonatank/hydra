@@ -291,8 +291,12 @@ if __name__ == "__main__":
     world = initphysics()
     game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
     game.scene.shadows.enable()
+    game.scene.shadows.texture_size = 4096
+    game.scene.shadows.max_distance = 50
     create_sun()
     ground = physics_create_ground()
+    game.scene.sky_dome = SkyDomeInfo("CloudySky")
+
     #ground.disable_collisions = True
     # RIGID BODY PARAMETER TABLE:
     rigidbody_dict = dict(track_L=(11.1,Vector3(34.02,33.37,3.26)),
