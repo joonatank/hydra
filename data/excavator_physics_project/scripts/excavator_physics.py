@@ -210,8 +210,8 @@ def createSliderConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimi
     constraint = PSixDofConstraint.create(bodyA.body, bodyB.body, localA_trans, localB_trans, False)
     assert(constraint)
     
-    constraint.angular_lower_limit = 10.0*axis_vector
-    constraint.angular_upper_limit = -10.0*axis_vector
+    constraint.angular_lower_limit = 1.0*axis_vector
+    constraint.angular_upper_limit = -1.0*axis_vector
     
     constraint.linear_lower_limit = lowerlimit*axis_vector
     constraint.linear_upper_limit = upperlimit*axis_vector
@@ -222,11 +222,11 @@ def createSliderConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimi
     if max_motor_force:
         motor.max_motor_force = max_motor_force*axis_vector
         motor.target_velocity = Vector3.zero
-        motor.restitution = 0.0
+        motor.restitution = 1.0
         motor.normal_CFM = Vector3(0.1,0.1,0.1)
         motor.stop_ERP = Vector3(0.8,0.8,0.8)
         motor.stop_CFM = Vector3(0.1,0.1,0.1)
-        motor.limit_softness = 0.0
+        motor.limit_softness = 1.0
         motor.enable_motor(axis_number)
     return(constraint, motor)
         
@@ -254,11 +254,11 @@ def createHingeConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimit
         motor.max_limit_torque = max_limit_torque*axis_vector
         motor.max_motor_force = max_motor_force*axis_vector
         motor.target_velocity = Vector3.zero
-        motor.restitution = 0.0
+        motor.restitution = 1.0
         motor.normal_CFM = Vector3(0.1,0.1,0.1)
         motor.stop_ERP = Vector3(0.8,0.8,0.8)
         motor.stop_CFM = Vector3(0.1,0.1,0.1)
-        motor.limit_softness = 0.0
+        motor.limit_softness = 1.0
         motor.enable_motor(axis_number)
     return(constraint, motor)
 
@@ -301,8 +301,8 @@ if __name__ == "__main__":
     # RIGID BODY PARAMETER TABLE:
     rigidbody_dict = dict(track_L=(11.1,Vector3(34.02,33.37,3.26)),
                           track_R=(11.1,Vector3(34.02,33.37,3.26)),
-                          hull=(23.04,Vector3(43.63,67.97,41.43)),
-                          base=(7.96,Vector3(6.65,10.62,6.35)),
+                          hull=(7.96,Vector3(15.07, 23.48, 14.31)),
+                          base=(23.04,Vector3(19.23,30.743,18.37)),
                           boom1=(2.786,Vector3(30.84,29.16,2.52)),
                           boom2=(1.045,Vector3(6.0,0.61,5.58)),
                           bucket=(2.13,Vector3(1.74,1.78,1.22)),
@@ -420,14 +420,17 @@ if __name__ == "__main__":
     basecylinderr.name = "Cylinder0R"
     basecylinderl = KBandJoystickController(constraints["jt_cyl_hull_L_trans"][1], Vector3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE, 'Y')
     basecylinderl.name = "Cylinder0L"
-    boom1cylinder = KBandJoystickController(constraints["jt_cyl_boom1_trans"][1], Vector3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.CTRL, 'Y', 0)
+    boom1cylinder = KBandJoystickController(constraints["jt_cyl_boom1_trans"][1], Vector3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.CTRL, 'Y', 0)
     boom1cylinder.name = "boom1cylinder"
-    boom2cylinder = KBandJoystickController(constraints["jt_cyl_boom2_trans"][1], Vector3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.SHIFT, 'Y', 1)
+    boom2cylinder = KBandJoystickController(constraints["jt_cyl_boom2_trans"][1], Vector3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.SHIFT, 'Y', 1)
     boom2cylinder.name = "Boom2cylinder"
-    """
-    hull_base_motor = ControlledTorqueMotor(constraints["jt_base_to_hull_rot"],194.0,500.0,0.5,KC.LEFT,KC.RIGHT)
-    basecylinderr = ControlledCylinderMotor(constraints["jt_cyl_hull_R_trans"],490.0,0.5,KC.UP,KC.DOWN)
-    basecylinderl = ControlledCylinderMotor(constraints["jt_cyl_hull_L_trans"],490.0,0.5,KC.UP,KC.DOWN)
-    boom1cylinder = ControlledCylinderMotor(constraints["jt_cyl_boom1_trans"],521.0,0.5,KC.UP,KC.DOWN, MOD_KEY.CTRL)
-    boom2cylinder = ControlledCylinderMotor(constraints["jt_cyl_boom2_trans"],388.0,0.5,KC.UP,KC.DOWN, MOD_KEY.SHIFT)
-    """
+    
+    ground.friction = 1.0
+    ground.anisotropic_friction = Vector3(1.0, 1.0, 1.0)
+    #rigidbodies['bucket'].body.friction = 1.0
+    #rigidbodies['track_L'].body.friction = 1.0
+    #rigidbodies['track_R'].body.friction = 1.0
+    
+    rigidbodies['bucket'].body.anisotropic_friction = Vector3(1.3, 1.3, 1.3)
+    rigidbodies['track_L'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
+    rigidbodies['track_R'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
