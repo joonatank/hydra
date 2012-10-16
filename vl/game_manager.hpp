@@ -289,10 +289,13 @@ public :
 	/// Short hand for state change request
 	void pause(void);
 
+	/// @brief start or resume the game/simulation
+	/// Short hand for state change request
 	void play(void);
 
+	/// @brief place holders for unimplemented state changes
+	/// DO NOT USE
 	void stop(void);
-
 	void restart(void);
 
 	bool isQuited(void) const;
