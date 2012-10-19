@@ -153,3 +153,15 @@ trigger.addKeyUpListener(toggle_pause)
 # TODO test with separate directory
 #game.save_scene("test.hsf")
 
+# TODO the loader should work with absolute path names
+# We need to fix the resource manager to load with absolute paths
+hsf_file = "C:/jotu/software_development/hydra_source/hydra_0.4/data/hsf_test_project/resources/perapora_new.hsf"
+
+hsf_name = "perapora_new.hsf"
+
+def reload() :
+	game.load_scene(hsf_name, LOADER_FLAG.OVERWRITE)
+
+trigger = game.event_manager.createKeyTrigger(KC.F5)
+trigger.addKeyUpListener(reload)
+

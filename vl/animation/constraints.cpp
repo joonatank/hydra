@@ -117,6 +117,26 @@ vl::operator<<(std::ostream &os, ConstraintList const &list)
 
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------
+vl::Constraint::~Constraint(void)
+{}
+
+void
+vl::Constraint::reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+	vl::Transform const &frameInA, vl::Transform const &frameInB )
+{
+	assert(rbA && rbB);
+
+	_bodyA = rbA;
+	_bodyB = rbB;
+	_local_frame_a = frameInA;
+	_local_frame_b = frameInB;
+
+	assert(_link);
+
+	_link->setTransform(_local_frame_a, true);
+	_link->setInitialState();
+	_local_frame_b = _link->getChild()->getTransform();
+}
 
 /// ------------------------------ Protected ---------------------------------
 vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 

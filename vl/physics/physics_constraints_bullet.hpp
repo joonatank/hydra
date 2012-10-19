@@ -513,6 +513,10 @@ public :
 	}
 
 private :
+	// Called from reset function to finilise the reseting
+	// @todo implement
+	virtual void _reseted(void) {}
+
 	btGeneric6DofSpringConstraint *_bt_constraint;
 	
 	Motor3DofTranslational *_transmot;
@@ -714,6 +718,10 @@ public :
 	{ return _bt_constraint; }
 
 private :
+	// Called from reset function to finilise the reseting
+	// @todo implement
+	virtual void _reseted(void) {}
+
 	btSliderConstraint *_bt_constraint;
 };
 
@@ -771,6 +779,10 @@ public :
 	{ return _bt_constraint; }
 
 private :
+	// Called from reset function to finilise the reseting
+	// @todo implement
+	virtual void _reseted(void) {}
+
 	btHingeConstraint *_bt_constraint;
 };
 

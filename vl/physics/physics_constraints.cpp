@@ -94,6 +94,18 @@ vl::physics::operator<<(std::ostream &os, vl::physics::ConstraintList const &cl)
 	return os;
 }
 
+void
+vl::physics::Constraint::reset(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB)
+{
+	_bodyA = rbA;
+	_bodyB = rbB;
+	_frameA = frameInA;
+	_frameB = frameInB;
+
+	_reseted();
+}
+
 
 vl::physics::SixDofConstraintRefPtr
 vl::physics::SixDofConstraint::create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 

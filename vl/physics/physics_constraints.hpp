@@ -104,6 +104,15 @@ public :
 
 	virtual std::string getTypeName(void) const = 0;
 
+	std::string const &getName(void) const
+	{ return _name; }
+
+	void setName(std::string const &name)
+	{ _name = name; }
+
+	void reset(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB);
+
 	virtual ~Constraint(void) {}
 
 protected :
@@ -116,12 +125,22 @@ protected :
 	{}
 
 private :
+	Constraint &operator=(Constraint const &);
+	Constraint(Constraint const &);
+
+	// Called from reset function to finilise the reseting
+	virtual void _reseted(void) = 0;
+
+	// @todo these probably shouldn't be weak pointers
+	// we don't own them, but the bodies should never be destroyed before the
+	// constraint has been destroyed.
 	RigidBodyWeakPtr _bodyA;
 	RigidBodyWeakPtr _bodyB;
 
 	Transform _frameA;
 	Transform _frameB;
 
+	std::string _name;
 };
 
 /// @class SixDofConstraint

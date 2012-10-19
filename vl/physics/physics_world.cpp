@@ -164,6 +164,33 @@ vl::physics::World::removeConstraint(vl::physics::ConstraintRefPtr constraint)
 	}
 }
 
+bool
+vl::physics::World::hasConstraint(vl::physics::ConstraintRefPtr constraint) const
+{
+	return( std::find(_constraints.begin(), _constraints.end(), constraint) != _constraints.end() );
+}
+
+bool
+vl::physics::World::hasConstraint(std::string const &name) const
+{
+	return (getConstraint(name) != ConstraintRefPtr());
+}
+
+vl::physics::ConstraintRefPtr
+vl::physics::World::getConstraint(std::string const &name) const
+{
+	for(ConstraintList::const_iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if((*iter)->getName() == name)
+		{
+			return *iter;
+		}
+	}
+
+	return ConstraintRefPtr();
+}
+
 /// ----------------------- Tubes --------------------------
 vl::physics::TubeRefPtr
 vl::physics::World::createTubeEx(vl::physics::Tube::ConstructionInfo const &info)

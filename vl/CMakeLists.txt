@@ -272,6 +272,7 @@ set( HEADERS
 	ogre_axes.hpp
 	remote_launcher_helper.hpp
 	profiler_report.hpp
+	flags.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

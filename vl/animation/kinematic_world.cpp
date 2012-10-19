@@ -230,6 +230,7 @@ vl::KinematicWorld::removeConstraint(ConstraintRefPtr constraint)
 		{
 			_constraints.erase(iter);
 			// @todo remove the link and Node also from the map and graph
+			// at the moment they are in the destructor which is not good
 			break;
 		}
 	}
@@ -238,16 +239,13 @@ vl::KinematicWorld::removeConstraint(ConstraintRefPtr constraint)
 bool
 vl::KinematicWorld::hasConstraint(vl::ConstraintRefPtr constraint) const
 {
-	for(ConstraintList::const_iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		if(*iter == constraint)
-		{
-			return true;
-		}
-	}
+	return( std::find(_constraints.begin(), _constraints.end(), constraint) != _constraints.end() );
+}
 
-	return false;
+bool
+vl::KinematicWorld::hasConstraint(std::string const &name) const
+{
+	return (getConstraint(name) != ConstraintRefPtr());
 }
 
 vl::ConstraintRefPtr

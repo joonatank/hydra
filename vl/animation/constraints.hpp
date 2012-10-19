@@ -42,8 +42,7 @@ class Constraint
 	typedef boost::signal<void (void)> ChangedCB;
 
 public :
-	virtual ~Constraint(void)
-	{}
+	virtual ~Constraint(void);
 
 	KinematicBodyRefPtr getBodyA(void) const
 	{ return _bodyA; }
@@ -82,6 +81,9 @@ public :
 	/// @param name optional name for the constraint
 	void setName(std::string const &name)
 	{ _name = name; }
+
+	void reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB );
 
 	int addListener(ChangedCB::slot_type const &slot)
 	{ _changed_cb.connect(slot); return 1; }

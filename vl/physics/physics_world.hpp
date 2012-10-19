@@ -133,6 +133,11 @@ public :
 
 	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
 
+	bool hasConstraint(vl::physics::ConstraintRefPtr constraint) const;
+
+	bool hasConstraint(std::string const &name) const;
+
+	vl::physics::ConstraintRefPtr getConstraint(std::string const &name) const;
 
 	/// ----------------------- Tubes --------------------------
 	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);

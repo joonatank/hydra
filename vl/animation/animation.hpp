@@ -123,8 +123,8 @@ public :
 
 	/// @brief set the local transformation
 	/// @param t a new Transformation for the Node in local coordinates
-	/// @param reset_memory resets the transformation memory for collision detection
-	void setTransform(Transform const &t, bool reset_memory = false);
+	/// @todo add a variable to keep child transformations
+	void setTransform(Transform const &t);
 
 	/// @brief get the current world transformation
 	/// @return Transformation of the Node in world coordinates
@@ -132,8 +132,8 @@ public :
 	
 	/// @brief set the current world transformation
 	/// @param t a new Transformation for the Node in world coordinates
-	/// @param reset_memory resets the transformation memory for collision detection
-	void setWorldTransform(Transform const &t, bool reset_memory = false);
+	/// @todo add a variable to keep child transformations
+	void setWorldTransform(Transform const &t);
 
 	/// @brief collision detection helper
 	void popLastTransform(void);

@@ -164,12 +164,19 @@ vl::GameObject::setKinematic(bool kinematic)
 	if(_rigid_body && kinematic)
 	{
 		assert(_kinematic_body);
-		_rigid_body->enableKinematicObject(true);
-		// necessary to add callback so the kinematic object updates 
-		// the the collision model.
-		_kinematic_body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, _rigid_body, _1));
-		// Used by the collision detection to pop last transformation.
-		_rigid_body->setUserData(_kinematic_body.get());
+		// Hack to avoid adding the same listener multiple times
+		if(_kinematic_body.get() != _rigid_body->getUserData())
+		{
+			_rigid_body->enableKinematicObject(true);
+			// necessary to add callback so the kinematic object updates 
+			// the the collision model.
+			// @todo this is problematic if the kinematic body already has a listener
+			// especially if it's the same rigid body
+			// The if hack above should take care of it, but it's rather dirty
+			_kinematic_body->addListener(boost::bind(&physics::RigidBody::setWorldTransform, _rigid_body, _1));
+			// Used by the collision detection to pop last transformation.
+			_rigid_body->setUserData(_kinematic_body.get());
+		}
 	}
 }
 

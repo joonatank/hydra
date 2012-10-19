@@ -26,6 +26,8 @@
 #include "resource_manager.hpp"
 
 #include "typedefs.hpp"
+// Necessary for LOADER_FLAGS
+#include "flags.hpp"
 
 namespace vl
 {
@@ -44,10 +46,10 @@ public :
 	 *				 name of every node
 	 */
 	void parseScene( std::string const &scene_data,
-			vl::GameManagerPtr game_manager );
+			vl::GameManagerPtr game_manager, LOADER_FLAGS flags );
 
 	void parseScene( vl::TextResource &scene_data,
-			vl::GameManagerPtr game_manager );
+			vl::GameManagerPtr game_manager, LOADER_FLAGS flags );
 
 private :
 	void _parse( char *xml_data );
@@ -91,6 +93,7 @@ private :
 
 
 	vl::GameManagerPtr _game;
+	vl::LOADER_FLAGS _flags;
 
 };	// class DotSceneLoader
 

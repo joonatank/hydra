@@ -393,9 +393,9 @@ vl::GameManager::loadRecording(std::string const &path)
 }
 
 void
-vl::GameManager::loadProject(std::string const &file_name)
+vl::GameManager::loadProject(std::string const &file_name, LOADER_FLAGS flags)
 {
-	process_event(vl::load(file_name));
+	process_event(vl::load(file_name, flags));
 }
 
 void
@@ -423,11 +423,11 @@ vl::GameManager::removeProject(std::string const &name)
 }
 
 void
-vl::GameManager::loadScenes(vl::ProjSettings const &proj)
+vl::GameManager::loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags)
 {
 	for( size_t i = 0; i < proj.getCase().getNscenes(); ++i )
 	{
-		loadScene(proj.getCase().getScene(i));
+		loadScene(proj.getCase().getScene(i), flags);
 	}
 }
 
@@ -482,7 +482,7 @@ vl::GameManager::createAnalogClient(std::string const &name)
 }
 
 void
-vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
+vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
@@ -541,7 +541,8 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		}
 		else if(file.extension() == ".hsf")
 		{
-			std::clog << "Loading Hydra scene file." << std::endl;
+			std::clog << "Loading Hydra scene file : "
+				<< file << std::endl;
 
 			vl::TextResource resource;
 			getResourceManager()->loadResource(scene_info.getFile(), resource);
@@ -556,7 +557,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 			// TODO pass attach node based on the scene
 			// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 			// @todo add physics
-			loader.parseScene(resource, this);
+			loader.parseScene(resource, this, flags);
 		}
 		else
 		{
@@ -575,14 +576,14 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 }
 
 void
-vl::GameManager::loadScene(std::string const &file_name)
+vl::GameManager::loadScene(std::string const &file_name, LOADER_FLAGS flags)
 {
 	vl::SceneInfo scene_info;
 	scene_info.setUse(true);
 	scene_info.setFile(file_name);
 	scene_info.setName(file_name);
 
-	loadScene(scene_info);
+	loadScene(scene_info, flags);
 }
 
 void

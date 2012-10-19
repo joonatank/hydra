@@ -53,6 +53,8 @@
 #include "program_options.hpp"
 
 #include "profiler_report.hpp"
+// Necessary for LOADER_FLAGS
+#include "flags.hpp"
 
 namespace vl
 {
@@ -144,11 +146,12 @@ struct stop {};
 struct pause {};
 struct load
 {
-	load(std::string const project_file)
+	load(std::string const project_file, LOADER_FLAGS flags = LOADER_FLAG_NONE)
 		: project(project_file)
 	{}
 
 	std::string project;
+	LOADER_FLAGS flags;
 };
 
 // Forward declaration
@@ -309,28 +312,50 @@ public :
 	void removeResources(vl::ProjSettings const &proj);
 
 	/// Resource loading
+	/// @todo all resource loading should be moved to ResourceManager or similar
 
 	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// Project handling
-	void loadProject(std::string const &file_name);
+	void loadProject(std::string const &file_name, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
+	/// @todo NOT WORKING
 	/// @brief removes the current project and resets python context
 	void removeProject(std::string const &name);
 
-	void loadScenes(vl::ProjSettings const &proj);
+	/// Scene handling
 
-	void loadScene(vl::SceneInfo const &scene_info);
+	/// @brief Load all scenes for the project configuration
+	void loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
-	/// Test functions for Collada importer/exporter
-	void loadScene(std::string const &file_name);
+	/// @brief Load a scene from the scene configuration
+	void loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags = LOADER_FLAG_NONE);
+
+	/// @brief filename based scene loading
+	/// @param file_name
+	/// @param flags for controlling loading process, only available for HSF format
+	/// Two separate versions instead of automatic overloading for easier python integration
+	void loadScene(std::string const &file_name, LOADER_FLAGS flags);
+	void loadScene(std::string const &file_name)
+	{ loadScene(file_name, LOADER_FLAG_NONE); }
+
+	/// @brief saves the scene file
+	/// This does not respect any of the Scene configuration and will always
+	/// save all the objects to one scene file.
+	/// Works only for GameObjects and files read from HSF 
+	/// old .scene format is not supported.
 	void saveScene(std::string const &file_name);
 
-	/// @todo not really working
+	/// @todo NOT WORKING
+	/// @brief Unloads a scene based on the given name
+	/// For file based scenes this is the file name, for SceneInfo based loads this is SceneInfo.name
 	void unloadScene(std::string const &name);
 
-	/// @todo not really working
+	/// @todo NOT WORKING
+	/// @brief Unload all scenes from specific project config
 	void unloadScenes(vl::ProjSettings const &proj);
+
+	/// @todo Add a function to unload all scenes from all projects
 
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }

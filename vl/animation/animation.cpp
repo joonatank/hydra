@@ -112,7 +112,7 @@ vl::animation::Node::getTransform(void) const
 { return _transform; }
 
 void
-vl::animation::Node::setTransform(Transform const &t, bool reset_memory)
+vl::animation::Node::setTransform(Transform const &t)
 {
 	// @todo should we check if we need to update transform?
 	_transformation_dirty = true;
@@ -130,7 +130,7 @@ vl::animation::Node::getWorldTransform(void) const
 }
 
 void
-vl::animation::Node::setWorldTransform(Transform const &t, bool reset_memory)
+vl::animation::Node::setWorldTransform(Transform const &t)
 {
 	Transform wt;
 	// Nodes don't need to have parents
@@ -140,7 +140,7 @@ vl::animation::Node::setWorldTransform(Transform const &t, bool reset_memory)
 		wt.invert();
 	}
 
-	setTransform(wt*t, reset_memory);
+	setTransform(wt*t);
 }
 
 void
@@ -210,7 +210,6 @@ vl::animation::Node::getAuxilaryParents(void) const
 void
 vl::animation::Node::setParent(LinkRefPtr link)
 {
-	// Check that the link has our already
 	if(link)
 	{
 		link->_setChild(shared_from_this());
@@ -254,10 +253,7 @@ vl::animation::Node::_removeChild(LinkRefPtr link)
 bool
 vl::animation::Node::_hasChild(LinkRefPtr link)
 {
-	if(std::find(_childs.begin(), _childs.end(), link) == _childs.end())
-	{ return false; }
-
-	return true;
+	return( std::find(_childs.begin(), _childs.end(), link) != _childs.end() );
 }
 
 void
@@ -370,7 +366,7 @@ vl::animation::Link::setPosition(Ogre::Vector3 const &v, bool preserve_child_tra
 {
 	vl::Transform t(getTransform());
 	t.position = v;
-	setTransform(t);
+	setTransform(t, preserve_child_transforms);
 }
 
 vl::Transform

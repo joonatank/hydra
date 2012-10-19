@@ -423,6 +423,8 @@ public :
 
 	bool hasSceneNode( std::string const &name ) const;
 
+	/// @brief retrieve a named SceneNode
+	/// @return SceneNode pointer if one with that name is found, NULL otherwise
 	SceneNodePtr getSceneNode( std::string const &name ) const;
 
 	SceneNodePtr getSceneNodeID(uint64_t id) const;
