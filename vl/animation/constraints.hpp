@@ -30,6 +30,8 @@
 #include "animation.hpp"
 
 #include <boost/signal.hpp>
+// Necessary for generating random names
+#include "base/string_utils.hpp"
 
 namespace vl
 {
@@ -115,12 +117,15 @@ private :
 protected :
 	/// @brief Constructor
 	/// only child classes are allowed to use the constructor
+	/// @param name unique identifier
 	/// @param rbA the body to which we want to constraint
 	/// @param rbB the body we are constraining
 	/// @param frameInA the pivot point in rbA coordinates
 	/// @param frameInB the pivot point in rbB coordinates
-	Constraint( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+	Constraint( std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
 		vl::Transform const &frameInA, vl::Transform const &frameInB );
+
+	std::string _name;
 
 	KinematicBodyRefPtr _bodyA;
 	KinematicBodyRefPtr _bodyB;
@@ -128,8 +133,6 @@ protected :
 	/// Current frames in object coordinates
 	vl::Transform _local_frame_a;
 	vl::Transform _local_frame_b;
-
-	std::string _name;
 
 	vl::animation::LinkRefPtr _link;
 
@@ -154,15 +157,31 @@ public :
 	{ return "fixed"; }
 
 	// static
-	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+	static FixedConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		 vl::Transform const &frameInA, vl::Transform const &frameInB)
 	{
-		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, frameInA, frameInB));
+		FixedConstraintRefPtr constraint(new FixedConstraint(name, rbA, rbB, frameInA, frameInB));
 		return constraint;
 	}
 
 	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
+		 vl::Transform const &frameInA, vl::Transform const &frameInB)
+	{
+		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInA);
+	}
+
+	static FixedConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &worldFrame);
+
+	// With autogenerate name
+	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &worldFrame)
+	{
+		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
+	}
+
+	// @todo we should add a method without frame because the frame is not
+	// needed for anything as long as the constraint is fixed.
 
 	/// Private virtual overrides
 private :
@@ -170,7 +189,7 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	FixedConstraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 };	// class FixedConstraint
 
@@ -247,15 +266,29 @@ public :
 	{ return "slider"; }
 
 	// static
-	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+	static SliderConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &worldFrame);
+
+	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &worldFrame)
+	{
+		// @todo this has the possibility that the generated name is not unique
+		// especially when we have huge number of objects
+		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
+	}
+
+	static SliderConstraintRefPtr create(std::string const &name,KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB)
+	{
+
+		SliderConstraintRefPtr constraint(new SliderConstraint(name, rbA, rbB, frameInA, frameInB));
+		return constraint;
+	}
 
 	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB)
 	{
-
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB));
-		return constraint;
+		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInB);
 	}
 
 
@@ -265,8 +298,7 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
-	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	SliderConstraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 	
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
@@ -350,14 +382,26 @@ public :
 	{ return "hinge"; }
 
 	// static
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
+	static HingeConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &worldFrame);
 
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
+	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &worldFrame)
 	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB));
+		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
+	}
+
+	static HingeConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
+	{
+		HingeConstraintRefPtr constraint(new HingeConstraint(name, rbA, rbB, frameInA, frameInB));
 		return constraint;
+	}
+
+	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
+	{
+		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInB);
 	}
 
 	/// Private virtual overrides
@@ -366,7 +410,8 @@ private :
 	void _progress(vl::time const &t);
 
 private :
-	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	HingeConstraint(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;

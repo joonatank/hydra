@@ -62,11 +62,22 @@ public :
 	void removeKinematicBody(KinematicBodyRefPtr body);
 
 	/// -------------- Constraints -----------------------
+	/// @todo createConstraint should be changed to creating the constraint
+	/// without adding it to the world, this allows us to add/remove constraints
+	/// without destroying them. This will break compatibility with older
+	/// python scripts so it's not changed yet.
+
 	ConstraintRefPtr createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
 
 	ConstraintRefPtr createConstraint(std::string const &type, 
-		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB);
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB, std::string const &name);
+
+	// For backwards compatibility
+	ConstraintRefPtr createConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB);
 
 	void removeConstraint(ConstraintRefPtr constraint);
 

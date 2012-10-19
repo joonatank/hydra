@@ -184,7 +184,7 @@ vl::KinematicWorld::createConstraint(std::string const &type,
 
 vl::ConstraintRefPtr
 vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyRefPtr body0, 
-		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB)
+		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB, std::string const &name)
 {
 	if(body0 == body1)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
@@ -197,15 +197,15 @@ vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyR
 	vl::ConstraintRefPtr c;
 	if(type_name == "slider")
 	{
-		c = SliderConstraint::create(body0, body1, frameInA, frameInB);
+		c = SliderConstraint::create(name, body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "hinge")
 	{
-		c = HingeConstraint::create(body0, body1, frameInA, frameInB);
+		c = HingeConstraint::create(name, body0, body1, frameInA, frameInB);
 	}
 	else if(type_name == "fixed")
 	{
-		c = FixedConstraint::create(body0, body1, frameInA, frameInB);
+		c = FixedConstraint::create(name, body0, body1, frameInA, frameInB);
 	}
 	
 	// Do not allow empties, should have some real exception types for it though
@@ -218,6 +218,14 @@ vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyR
 	_addConstraint(c);
 
 	return c;
+}
+
+
+vl::ConstraintRefPtr
+vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyRefPtr body0, 
+		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB)
+{
+	return createConstraint(type, body0, body1, frameInA, frameInB, vl::generate_random_string());
 }
 
 void

@@ -718,8 +718,7 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 				new_name << name << "_" << counter;
 			}
 
-			con = world->createConstraint(type, bodyA, bodyB, fA, fB);
-			con->setName(name);
+			con = world->createConstraint(type, bodyA, bodyB, fA, fB, name);
 		}
 		// Default behavior we don't allow to read objects with duplicate names
 		else
@@ -728,8 +727,7 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 			{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
 
 			// throws if such type is not available
-			con = world->createConstraint(type, bodyA, bodyB, fA, fB);
-			con->setName(name);
+			con = world->createConstraint(type, bodyA, bodyB, fA, fB, name);
 		}
 
 		assert(con);
