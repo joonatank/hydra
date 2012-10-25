@@ -173,9 +173,9 @@ using boost::math::isinf;
 using boost::math::isnan;
 using boost::math::isnormal;
 
-void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
+HYDRA_API void getEulerAngles( Ogre::Quaternion const &q, Ogre::Radian &x, Ogre::Radian &y, Ogre::Radian &z );
 
-void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
+HYDRA_API void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 						Ogre::Radian const &rad_y, Ogre::Radian const &rad_z );
 
 /// @brief create a rotation that can be used to transform look to a point
@@ -186,7 +186,7 @@ void fromEulerAngles( Ogre::Quaternion &q, Ogre::Radian const &rad_x,
 /// @return quaternion that can be used to rotate from current orientation to target
 /// @todo break this function to yaw fixed version that takes up axis as a param
 /// and free yaw that does not.
-Ogre::Quaternion
+HYDRA_API Ogre::Quaternion
 lookAt(Ogre::Vector3 const &target, Ogre::Vector3 const &current, 
 	Ogre::Vector3 const &eye, Ogre::Vector3 const &up = Ogre::Vector3::UNIT_Y,
 	bool yawFixed = true);

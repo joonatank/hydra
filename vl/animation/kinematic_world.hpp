@@ -33,7 +33,7 @@
 namespace vl
 {
 
-class KinematicWorld
+class HYDRA_API KinematicWorld
 {
 public :
 	KinematicWorld(GameManager *man);

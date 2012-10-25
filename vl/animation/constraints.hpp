@@ -39,7 +39,7 @@ namespace vl
 /** @class Constraint
  *	Abstract base class for all kinematic constraints
  */
-class Constraint
+class HYDRA_API Constraint
 {
 	typedef boost::signal<void (void)> ChangedCB;
 
@@ -133,7 +133,7 @@ protected :
 
 };	// class Constraint
 
-class FixedConstraint : public Constraint
+class HYDRA_API FixedConstraint : public Constraint
 {
 public :
 
@@ -193,7 +193,7 @@ private :
  *	Supports servo motors so that the constraint can be used as an actuator.
  *	@todo rename to prismatic joint, as used in Robot literature
  */
-class SliderConstraint : public Constraint
+class HYDRA_API SliderConstraint : public Constraint
 {
 public :
 	vl::scalar getLowerLimit(void) const

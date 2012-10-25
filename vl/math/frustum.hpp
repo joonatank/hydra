@@ -19,16 +19,18 @@
 
 #include "math/math.hpp"
 
+#include "defines.hpp"
+
 namespace vl
 {
 
 /// @brief calculate the orientation from eye space to wall
-Ogre::Quaternion orientation_to_wall(vl::Wall const &wall);
+HYDRA_API Ogre::Quaternion orientation_to_wall(vl::Wall const &wall);
 
 /// @todo only type supported for the moment is WALL
 /// @todo there is a problem if either x or z is enabled and not the other one 
 /// in three wall system, because x and z axes switch between front and side walls
-class Frustum
+class HYDRA_API Frustum
 {
 public :
 	enum Type

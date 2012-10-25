@@ -37,7 +37,7 @@ namespace physics {
  *	@brief Abstract interface for Physics engine rigid body
  *	Derived classes implement this for specific physics engines.
  */
-class RigidBody : vl::ObjectInterface
+class HYDRA_API RigidBody : vl::ObjectInterface
 {
 
 public :

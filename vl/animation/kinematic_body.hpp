@@ -41,7 +41,7 @@ namespace vl
  *	@todo Add methods for removing the body from the world without destroying it.
  *	Basicly remove animation::Node from the graph but preserve the pointer.
  */
-class KinematicBody : public ObjectInterface
+class HYDRA_API KinematicBody : public ObjectInterface
 {
 public :
 	// Normal pointer for world, because it can not go out of scope before

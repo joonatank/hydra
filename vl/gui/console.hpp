@@ -23,7 +23,7 @@ namespace vl
 namespace gui
 {
 
-class ConsoleWindow : public Window
+class HYDRA_API ConsoleWindow : public Window
 {
 	typedef boost::signal<void (std::string const &)> CommandSent;
 

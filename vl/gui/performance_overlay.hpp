@@ -38,7 +38,7 @@ namespace gui
  *	special case ProfilerReport would be useful.
  *	We can still keep Report distribution for displaying init report for example.
  */
-class PerformanceOverlay : public Window
+class HYDRA_API PerformanceOverlay : public Window
 {
 public :
 	PerformanceOverlay(vl::gui::GUI *creator);
