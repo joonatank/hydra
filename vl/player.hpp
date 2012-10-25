@@ -57,12 +57,12 @@ public :
 
 	virtual ~Player( void );
 
+	/// Depricated Camera functions
 	void setActiveCamera( std::string const &name );
 
 	std::string const &getActiveCamera(void) const;
 
-	// New functions, should in the long run replace the name retrieval
-
+	// New functions, will replace the old name based
 	void setCamera(CameraPtr cam);
 
 	CameraPtr getCamera(void) const

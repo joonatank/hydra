@@ -35,6 +35,12 @@
 namespace vl
 {
 
+/**	@class KinematicBody
+ *	@brief
+ *
+ *	@todo Add methods for removing the body from the world without destroying it.
+ *	Basicly remove animation::Node from the graph but preserve the pointer.
+ */
 class KinematicBody : public ObjectInterface
 {
 public :

@@ -75,6 +75,7 @@ public :
 		_registered_objects.erase(iter);
 		_destroyed_objects.push_back(obj->getID());
 
+		// Set the object as deregistered
 		obj->registered(vl::ID_UNDEFINED);
 	}
 
