@@ -211,18 +211,34 @@ vl::PythonContextImpl::hasBeenExecuted(std::string const &name) const
 void
 vl::PythonContextImpl::reset(void)
 {
-	std::clog << "vl::PythonContextImpl::reset : NOT IMPLEMENTED" << std::endl;
-
-	/// @todo this seems to work but there are some errors caused by it down the road
+	std::clog << "vl::PythonContextImpl::reset" << std::endl;
 
 	_auto_run = false;
 
 	_scripts.clear();
 
-	// how to really reset the context?
-	// this way should clear all the python defines but it will naturally not
-	// remove any modifications done to the engine side...
-	_init();
+	// As of boost::python 1.51 Py_Finalize is still not working so we can't use
+	// the method that was designed for clearing the context and need to resort
+	// to hacks.
+	// Reset the names
+	_global.clear();
+	_global["__builtins__"] = _main["__builtins__"];
+
+	// Import vl module
+	python::handle<> ignored(( PyRun_String(script,
+									Py_file_input,
+									_global.ptr(),
+									_global.ptr() ) ));
+
+	// Add a global managers i.e. this and EventManager
+	_global["game"] = python::ptr<>( _game );
+	vl::sink &python_sink_out = *(*_game->getLogger()->getPythonOut());
+	vl::sink &python_sink_err = *(*_game->getLogger()->getPythonErr());
+	boost::python::import("sys").attr("stdout") = python_sink_out;
+	boost::python::import("sys").attr("stderr") = python_sink_err;
+
+	// We don't need to call _init, 
+	// we don't want to call Py_Initialize without Py_Finalize
 }
 
 void
@@ -246,8 +262,10 @@ vl::PythonContextImpl::_init(void)
 		python::object main = python::import("__main__");
 
 		// Retrieve the main module's namespace
-		_global = main.attr("__dict__");
-
+		_main = main.attr("__dict__");
+		// add the builtins
+		_global["__builtins__"] = _main["__builtins__"];
+		
 		// Import vl module
 		python::handle<> ignored(( PyRun_String(script,
 										Py_file_input,
