@@ -37,6 +37,28 @@
 // Log leves
 #include "logger.hpp"
 
+/// ---------------------------- Global --------------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::KinematicWorld const &world)
+
+{
+	os << "KinematicWorld with " << world.getBodies().size() << " bodies and " 
+		<< world.getConstraints().size() << " constraints. " 
+		<< *world._graph << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::KinematicBodyList const &bodies)
+{
+	os << "Kinematic body list : length = " << bodies.size() << std::endl;
+
+	return os;
+}
+
+
+/// ---------------------------- KinematicWorld ------------------------------
 vl::KinematicWorld::KinematicWorld(GameManager *man)
 	: _collision_detection_on(false)
 	, _graph(new animation::Graph)
@@ -46,6 +68,9 @@ vl::KinematicWorld::KinematicWorld(GameManager *man)
 
 vl::KinematicWorld::~KinematicWorld(void)
 {
+	 _constraints.clear();
+	 _bodies.clear();
+	 _graph.reset();
 }
 
 void
@@ -73,6 +98,38 @@ vl::KinematicWorld::finalise(void)
 	{
 		(*iter)->_update();
 	}
+}
+
+void
+vl::KinematicWorld::removeAll(void)
+{
+	std::clog << "vl::KinematicWorld::removeAll" << std::endl;
+	// Constraints need to be removed first
+	// This should make graph nodes dangling
+	// so they can be added to the world again using different constraints.
+	// Because these are ref counted we let the destructor handle them.
+	//ConstraintList _constraints;
+	_constraints.clear();
+
+	// Removing bodies should remove the animation::Nodes completely
+	// Because these are ref counted we let the destructor handle them.
+	//KinematicBodyList _bodies;
+	_bodies.clear();
+	
+	// We need to clean up the Graph because some links are not mapped to constraints.
+	// This is because we create a Link for every Node and then
+	// when constraint is created it will retrieve that Link so some Links
+	// have not been mapped to constraints.
+	_graph->getRoot()->removeChildren();
+
+	// Just check that we don't have any links/nodes left but leave the
+	// graph which can be reused.
+	//animation::GraphRefPtr _graph;
+	std::clog << *_graph << std::endl;
+	// This assert fails always, why?
+	// because the test project has collision detection which saves
+	// the pointers to kinematic bodies for updates.
+	//assert(_graph->getRoot()->isLeaf());
 }
 
 vl::KinematicBodyRefPtr
@@ -318,12 +375,7 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	// Using either already existing parent, for kinematic chains
 	// or a new parent under root Node for new chains
 	KinematicBodyList::iterator iter = std::find(_bodies.begin(), _bodies.end(), constraint->getBodyA());
-	if(iter != getBodies().end())
-	{
-		// Does this work or should we use Kinematic Body here?
-		parent = (*iter)->getAnimationNode();
-	}
-	else
+	if(iter == getBodies().end())
 	{
 		std::stringstream err_msg;
 		err_msg << "No Kinematic node \"" << constraint->getBodyA()->getName()
@@ -331,11 +383,11 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
+	// Does this work or should we use Kinematic Body here?
+	parent = (*iter)->getAnimationNode();
 
 	iter = std::find(_bodies.begin(), _bodies.end(), constraint->getBodyB());
-	if(iter != getBodies().end())
-	{ child = (*iter)->getAnimationNode(); }
-	else
+	if(iter == getBodies().end())
 	{
 		std::stringstream err_msg;
 		err_msg << "No Kinematic node \"" << constraint->getBodyB()->getName()
@@ -343,28 +395,22 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
+	child = (*iter)->getAnimationNode();
+	assert(parent && child);
 
-	animation::LinkRefPtr link;
-	if(child)
+	animation::LinkRefPtr link = child->getParent();
+
+	// If bodyB has already a parent it can't be added
+	assert(link);
+
+	if(link->getParent() != _graph->getRoot())
 	{
-		// If bodyB has already a parent it can't be added
-		if(child->getParent())
-		{
+		std::cout << vl::CRITICAL << constraint->getBodyB()->getName() 
+			<< " already has a parent and it's not root so the constraint to "
+			<< constraint->getBodyA()->getName() << " can't be added." 
+			<< std::endl;
 
-			if(child->getParent()->getParent() != _graph->getRoot())
-			{
-				std::cout << vl::CRITICAL << constraint->getBodyB()->getName() 
-					<< " already has a parent and it's not root so the constraint to "
-					<< constraint->getBodyA()->getName() << " can't be added."
-					<< std::endl;
-
-				return;
-			}
-			else
-			{
-				link = child->getParent();
-			}
-		}
+		return;
 	}
 
 	// @todo throw

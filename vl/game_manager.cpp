@@ -379,6 +379,73 @@ vl::GameManager::removeResources(vl::ProjSettings const &proj)
 	}
 }
 
+void
+vl::GameManager::removeAll(void)
+{
+	std::clog << "vl::GameManager::removeAll" << std::endl;
+	assert(_scene_manager);
+	assert(_python);
+
+	// Reset python to pointers so that ref counted objects are destroyed
+	std::clog << "vl::GameManager::removeAll : reset python" << std::endl;
+	_python->reset();
+	// Destroy event handlers
+	// @todo this is problematic because it removes both Quit and Console events
+	// also, which are rather necessary for us.
+	std::clog << "vl::GameManager::removeAll : destroy events" << std::endl;
+	_event_man->removeAll();
+	_createQuitEvent();
+
+	// Game objects need to be first because they can own bodies and nodes
+	// ref counted so we let the destroyer handle these
+	std::clog << "vl::GameManager::removeAll : destroy game objects" << std::endl;
+	_game_objects.clear();
+
+	std::clog << "vl::GameManager::removeAll : destroy kinematic bodies" << std::endl;
+	if(_kinematic_world)
+	{ _kinematic_world->removeAll(); }
+
+	std::clog << "vl::GameManager::removeAll : destroy dynamic bodies" << std::endl;
+	if(_physics_world)
+	{ _physics_world->removeAll(); }
+
+	// Handle all the rest Scene resources that are not handled by game objects
+	// mostly for backwards compatibility with old system
+	std::clog << "vl::GameManager::removeAll : destroy scene" << std::endl;
+	_scene_manager->destroyScene();
+
+	// @todo remove _analog_clients
+	// created from python, so we should remove them
+
+	// @todo remove _trackers
+	// not a good idea, created from env so it's not affected by project loading
+
+	// @todo clean projects
+	_loaded_project = vl::ProjSettings();
+	_global_project = vl::ProjSettings();
+
+	// Recordings???
+
+	// Reset stats
+	_rendering_report = vl::ProfilerReport();
+	_init_report = vl::Report<vl::time>();
+
+	// Reset player
+	CameraPtr cam = _scene_manager->getCamera("editor/perspective");
+	assert(cam);
+	_player->setCamera(cam);
+
+	// Optional remove loaded meshes
+	
+	// Optional remove all resource paths
+
+	// @todo Reset timers
+	// not sure if it's necessary here, we could just reset them when loading
+
+	// @todo add checks that confirm the kinematic, dynamic bodies and scene nodes
+	// have been destroyed and the animation graph is empty.
+}
+
 vl::RecordingRefPtr
 vl::GameManager::loadRecording(std::string const &path)
 {

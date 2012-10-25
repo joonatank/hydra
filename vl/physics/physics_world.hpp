@@ -94,6 +94,9 @@ public :
 
 	virtual SolverParameters const &getSolverParameters(void) const = 0;
 
+	/// @brief Remove everything from the world
+	void removeAll(void);
+
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
@@ -107,11 +110,14 @@ public :
 
 	vl::physics::RigidBodyRefPtr getRigidBody( std::string const &name ) const;
 
-	/// @TODO implement
-	/// Should this remove the body from the world and return a pointer or
-	/// should it just destroy the body altogether
-	/// if this returns a shared_ptr it's not a problem at all
+	/// @brief Remove rigid body from the World and return it
+	/// After this is called the rigid body can be stored for later use
+	/// or if it's left to go out of scope it will be destroyed.
+	/// @return Silently retun NULL if no such body exists
 	vl::physics::RigidBodyRefPtr removeRigidBody( std::string const &name );
+
+	/// @brief Removes rigid body from the World
+	void removeRigidBody(vl::physics::RigidBodyRefPtr body);
 
 	bool hasRigidBody( std::string const &name ) const;
 
@@ -173,6 +179,7 @@ protected :
 	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic) = 0;
 
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
+	virtual void _removeBody(vl::physics::RigidBodyRefPtr body) = 0;
 
 
 	RigidBodyRefPtr _findRigidBody( std::string const &name ) const;

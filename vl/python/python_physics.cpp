@@ -283,7 +283,8 @@ void export_physics_objects(void)
 		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody)
 		.def("hasRigidBody", &vl::physics::World::hasRigidBody)
-		.def("removeRigidBody", &vl::physics::World::removeRigidBody)
+		// @todo add both overloads
+		//.def("removeRigidBody", &vl::physics::World::removeRigidBody)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )

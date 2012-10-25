@@ -47,6 +47,9 @@ public :
 
 	void finalise(void);
 
+	/// @brief Remove everything from the world
+	void removeAll(void);
+
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
 	/// @brief retrieve already created by for the SceneNode
@@ -101,6 +104,8 @@ public :
 	bool isCollisionDetectionEnabled(void) const
 	{ return _collision_detection_on; }
 
+	friend std::ostream &operator<<(std::ostream &os, KinematicWorld const &world);
+
 private :
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
@@ -121,23 +126,9 @@ private :
 
 };	// class KinematicWorld
 
-inline
-std::ostream &
-operator<<(std::ostream &os, KinematicWorld const &world)
-{
-	os << "KinematicWorld with " << world.getBodies().size() << " bodies and " 
-		<< world.getConstraints().size() << " constraints." << std::endl;
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, KinematicWorld const &world);
 
-inline
-std::ostream &
-operator<<(std::ostream &os, KinematicBodyList const &bodies)
-{
-	os << "Kinematic body list : length = " << bodies.size() << std::endl;
-
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, KinematicBodyList const &bodies);
 
 }	// namespace vl
 

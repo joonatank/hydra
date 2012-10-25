@@ -21,6 +21,8 @@ game.scene.shadows.max_distance = 50
 game.scene.shadows.dir_light_extrusion_distance = 100
 create_sun()
 
+""" Collision detection needs to be disabled at the moment
+	because clearing the scene doesn't work with physics.
 # For collision detection
 game.enablePhysics(True)
 
@@ -28,6 +30,7 @@ ground = physics_create_ground()
 
 # Enable collision detection before creating any bodies
 game.kinematic_world.collision_detection_enabled = True
+"""
 
 # Create the kinematics
 #nivel_klevy2 = game.scene.getSceneNode("nivel_klevy2_rotz")
@@ -268,6 +271,7 @@ vaantomoottori.addListener(setBodyTransform)
 
 # Add some primitives and possibility to move them for testing the collision
 # detection
+""" addBox does not work at the moment
 pos = Vector3(-3, 3, -0.5)
 box = addBox("user_box", "finger_sphere/green", pos, mass=10)
 box.user_controlled = True
@@ -281,4 +285,5 @@ game.auto_start = False
 
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
 trigger.addKeyUpListener(toggle_pause)
+"""
 

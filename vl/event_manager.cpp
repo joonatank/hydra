@@ -33,19 +33,15 @@ vl::EventManager::EventManager( void )
 
 vl::EventManager::~EventManager( void )
 {
-	delete _frame_trigger;
+	removeAll();
 
-	for( std::vector<vl::TrackerTrigger *>::iterator iter = _tracker_triggers.begin();
-		iter != _tracker_triggers.end(); ++iter )
+	// Cleanup objects created from environment config
+	for(std::vector<vl::TrackerTrigger *>::iterator iter = _tracker_triggers.begin();
+		iter != _tracker_triggers.end(); ++iter)
 	{
 		delete *iter;
 	}
-
-	for( std::vector<vl::KeyTrigger *>::iterator iter = _key_triggers.begin();
-		iter != _key_triggers.end(); ++iter )
-	{
-		delete *iter;
-	}
+	_tracker_triggers.clear();
 }
 
 
@@ -76,10 +72,7 @@ vl::EventManager::getTrackerTrigger(const std::string& name)
 bool
 vl::EventManager::hasTrackerTrigger(const std::string& name)
 {
-	if( _findTrackerTrigger( name ) )
-	{ return true; }
-
-	return false;
+	return( _findTrackerTrigger(name) );
 }
 
 vl::KeyTrigger *
@@ -234,6 +227,38 @@ vl::EventManager::getJoystick(std::string const &name)
 	{
 		return _getSerialJoystick(str);
 	}
+}
+
+void
+vl::EventManager::removeAll(void)
+{
+	// We don't destroy tracker triggers because this function is ment
+	// to use when reloading or reseting python context
+	// and tracker triggers are created from environment config.
+
+	for(std::vector<vl::KeyTrigger *>::iterator iter = _key_triggers.begin();
+		iter != _key_triggers.end(); ++iter)
+	{
+		delete *iter;
+	}
+	_key_triggers.clear();
+
+	delete _frame_trigger;
+	_frame_trigger = 0;
+
+	// Joysticks are destroyed when they go out of scope
+	_joysticks.clear();
+
+	_serial_joysticks.clear();
+
+	for(std::vector<TimeTrigger *>::iterator iter = _time_triggers.begin();
+		iter != _time_triggers.end(); ++iter)
+	{
+		delete *iter;
+	}
+	_time_triggers.clear();
+
+	_game_joystick.reset();
 }
 
 vl::JoystickRefPtr

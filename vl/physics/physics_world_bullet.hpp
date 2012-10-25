@@ -59,6 +59,7 @@ protected :
 	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic);
 	virtual void _addConstraint(vl::physics::ConstraintRefPtr constraint, bool disableCollisionBetweenLinked);
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint);
+	virtual void _removeBody(vl::physics::RigidBodyRefPtr body);
 
 	virtual void _collision_feedback(void);
 

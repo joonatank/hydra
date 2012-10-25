@@ -107,13 +107,6 @@ private :
 	/// @param t time since last call, i.e. simulation time step
 	virtual void _progress(vl::time const &t) = 0;
 
-	/// @todo this is not used for anything as it does not work
-	/// as excepted.
-	/// Left because we don't have any other implementations planned
-	/// in the near future so this might be useful when such implementation
-	/// is going to be done.
-	void _solve_aux_parents(void);
-
 protected :
 	/// @brief Constructor
 	/// only child classes are allowed to use the constructor

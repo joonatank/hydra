@@ -243,12 +243,34 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 
 vl::SceneManager::~SceneManager( void )
 {
-//	destroyScene(true);
+	// @todo this is rather complex compared to what it needs to be
+	// we never need to send messages or gather ids here because it only matters
+	// on Master and if the master scene manager is destroyed all the
+	// slaves need to destroy their scene managers also.
+	// More simpler version that does not handle distribution of SceneNodes
+	// This would allow us to destroy the SceneManager distribute that change
+	// and all slaves would comply, at least in theory.
+	for(SceneNodeList::iterator iter = _scene_nodes.begin();
+		iter != _scene_nodes.end(); ++iter)
+	{
+		delete *iter;
+	}
 
-//	delete _root;
+	// @todo destroy movable objects
+	for(MovableObjectList::iterator iter = _objects.begin();
+		iter != _objects.end(); ++iter)
+	{
+		delete *iter;
+	}
+
 	// @fixme this crashes
 	//delete _sky_sim;
+	//_sky_sim = 0;
 
+	// @todo destroy Ogre::SceneManager
+
+	// Root is already in the scene node list so don't double delete
+	_root = 0;
 }
 
 void
@@ -270,7 +292,12 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 		iter != nodes_to_destroy.end(); ++iter)
 	{ destroySceneNode(*iter); }
 
-	// @todo destroy also the Movable objects
+	// @todo add destroying of movable objects
+
+	delete _sky_sim;
+	_sky_sim = 0;
+	// Reset skydome also
+	_sky_dome = SkyDomeInfo("");
 }
 
 vl::SceneNodePtr
@@ -335,11 +362,18 @@ vl::SceneManager::getSceneNodeID(uint64_t id) const
 void
 vl::SceneManager::destroySceneNode(SceneNodePtr node)
 {
+	assert(node);
+	std::clog << "vl::SceneManager::destroySceneNode : " << node->getName() << std::endl;
+	
+	// @todo we need to remove MovableObjects
 	// Remove linking
 	node->removeAllChildren();
 	SceneNodePtr parent = node->getParent();
 	// @todo does this move the node under Root?
-	parent->removeChild(node);
+	if(parent)
+	{
+		parent->removeChild(node);
+	}
 	assert(!node->getParent());
 
 	_session->deregisterObject(node);
@@ -1286,6 +1320,8 @@ void
 vl::SceneManager::_changeSkyPreset(vl::SkySettings const &preset)
 {
 	std::clog << "vl::SceneManager::_changeSkyPreset" << std::endl;
+	assert(_sky_sim);
+
 	_sky_sim->setTimeMultiplier(preset.timeMultiplier);
 	_sky_sim->setTime(preset.time.x);
 	_sky_sim->setSunriseTime(preset.time.y);

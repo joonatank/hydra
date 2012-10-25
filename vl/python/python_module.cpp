@@ -712,6 +712,7 @@ void export_game(void)
 		.def("load_scene", loadScene_ov0)
 		.def("load_scene", loadScene_ov1)
 		.def("save_scene", &vl::GameManager::saveScene)
+		.def("remove_all", &vl::GameManager::removeAll)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 

@@ -118,7 +118,13 @@ vl::operator<<(std::ostream &os, ConstraintList const &list)
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------
 vl::Constraint::~Constraint(void)
-{}
+{
+	if(_link)
+	{
+		_link->setParent(animation::NodeRefPtr());
+		_link->setChild(animation::NodeRefPtr());
+	}
+}
 
 void
 vl::Constraint::reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
@@ -182,54 +188,6 @@ void
 vl::Constraint::_solve(vl::time const &t)
 {
 	_progress(t);
-}
-
-void
-vl::Constraint::_solve_aux_parents(void)
-{
-	assert(_link);
-
-	std::vector<animation::LinkRefPtr> aux_parents = _link->getChild()->getAuxilaryParents();
-	if(aux_parents.empty())
-	{ return; }
-
-	for(std::vector<animation::LinkRefPtr>::iterator p_iter = aux_parents.begin();
-		p_iter != aux_parents.end(); ++p_iter)
-	{
-		// Just testing something
-		// p_iter parent is the auxilary parent that should follow the child
-		// parent is the link that has been modified.
-		// @todo initial transformation for the p_iter parent 
-		// needs be set and we need to calculate
-		// this using a transformation to local space.
-		animation::NodeRefPtr node = (*p_iter)->getParent();
-		animation::LinkRefPtr ref_link = node->getParent();
-		// This needs to be the ref link instead of Node because otherwise
-		// we are setting the same transformation over and over.
-		// Because we are modifying the transformation of "node"
-		// so we need to use it's parent for the world transformation.
-		Transform wtA = ref_link->getWorldTransform();
-		wtA.invert();
-		// Initial transfromation is in the Link
-		// The initial transformation is correct, because without it
-		// the object is offsetted to the right (same if not inverted).
-		// diffA is the difference between node and the child link.
-		Transform diffA = (*p_iter)->getTransform();
-		diffA.invert();
-		//Transform link_world = (*p_iter)->getWorldTransform();
-		// transform real parent transformation to local space and then apply
-		// the initial transformation from the link to it.
-		// @todo fix the transformation
-		// should we get the child or link world transformation?
-		// child because we want to follow the child not the link.
-		// we need to transform the node, because transforming the link would have
-		// no effect (it only transforms the child).
-		Transform t(Quaternion(0, 0, 0, 1));
-		Transform t2(Quaternion(0.7071, 0, 0, 0.7071));
-		node->setTransform(wtA * _link->getChild()->getWorldTransform() * t2*diffA);
-		// @todo this needs to go through the whole kinematic chain to the base
-		// and update all nodes that are linked as a parent to the modified link.
-	}
 }
 
 /// ------------------------------ FixedConstraint ---------------------------

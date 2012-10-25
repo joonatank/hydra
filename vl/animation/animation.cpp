@@ -17,13 +17,16 @@
  */
 #include "animation.hpp"
 
+#include "base/exceptions.hpp"
+
 /// ---------------------------------- Global --------------------------------
 std::ostream &
 vl::animation::operator<<(std::ostream &os, vl::animation::Node const &n)
 {
 	os << "Animation Node : length to root = " << n.length_to_root() << "\n"
 		<< " transformation = " << n.getTransform() << "\n"
-		<< " world transformation = " << n.getWorldTransform() << std::endl;
+		<< " world transformation = " << n.getWorldTransform() << "\n"
+		<< " " << n.getNChildren() << " children" << std::endl;
 
 	return os;
 }
@@ -43,7 +46,8 @@ vl::animation::operator<<(std::ostream &os, vl::animation::Graph const &g)
 {
 	// Not that many attributes we can print. Might add size of the graph
 	// the longest path and so on.
-	os << "Animation graph : ";
+	os << "Animation graph : size " << g.size() << "\n"
+		<< " root : \n" << *g.getRoot();
 
 	return os;
 }
@@ -157,6 +161,7 @@ vl::animation::Node::length_to_root(void) const
 	// Count the number of links from this node upwards
 	// the first node not having a link is the root node.
 
+	// @todo this function should be implemented as recursive
 	size_t count = 0;
 	animation::LinkRefPtr l(getParent());
 	while(l)
@@ -174,86 +179,79 @@ vl::animation::Node::length_to_root(void) const
 }
 
 void
-vl::animation::Node::addAuxilaryParent(vl::animation::LinkRefPtr link)
-{
-	// Never add same link twice
-	for(std::vector<LinkWeakPtr>::iterator iter =_aux_parents.begin();
-		iter != _aux_parents.end(); ++iter)
-	{
-		// @todo remove expired
-		if(!iter->expired())
-		{
-			if(iter->lock() == link)
-			{ return; }
-		}
-	}
-
-	_aux_parents.push_back(link);
-}
-
-vl::animation::Node::LinkList
-vl::animation::Node::getAuxilaryParents(void) const
-{
-	// @todo should we store ref pointers still?
-	// this makes for a bit akward code and also probably inefficient.
-	vl::animation::Node::LinkList parents;
-	for(size_t i = 0; i < _aux_parents.size(); ++i)
-	{
-		// @todo should remove expired
-		if(!_aux_parents.at(i).expired())
-		{ parents.push_back(_aux_parents.at(i).lock()); }
-	}
-
-	return parents;
-}
-
-void
 vl::animation::Node::setParent(LinkRefPtr link)
 {
+	// Keep the transformation
+	Transform wt(getWorldTransform());
+
+	if(!_parent.expired())
+	{
+		_parent.lock()->_setChild(NodeRefPtr());
+	}
+
 	if(link)
 	{
 		link->_setChild(shared_from_this());
 	}
 
-	_setParent(link);
+	_parent = link;
+	setWorldTransform(wt);
+}
+
+bool
+vl::animation::Node::hasChild(LinkRefPtr link) const
+{
+	return( std::find(_childs.begin(), _childs.end(), link) != _childs.end() );
 }
 
 void
-vl::animation::Node::_setParent(LinkRefPtr link)
+vl::animation::Node::removeChildren(void)
 {
-	// Keep the transformation
-	Transform wt(getWorldTransform());
-	_parent = link;
-	setWorldTransform(wt);
+	// We need to use a copy because the removal will modify the original
+	LinkList childs(_childs);
+	for(LinkList::iterator iter = childs.begin(); iter != childs.end(); ++iter)
+	{
+		removeChild(*iter);
+	}
+}
+
+void
+vl::animation::Node::removeChild(vl::animation::LinkRefPtr link)
+{
+	if(link && hasChild(link))
+	{
+		link->setParent(NodeRefPtr());
+	}
+}
+
+size_t
+vl::animation::Node::size(void) const
+{
+	size_t n = 1;
+	for(LinkList::const_iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
+	{
+		n += (*iter)->size();
+	}
+	
+	return n;
 }
 
 void
 vl::animation::Node::_addChild(LinkRefPtr link)
 {
-	if(!_hasChild(link))
+	if(!hasChild(link))
 	{ _childs.push_back(link); }
 }
 
 void
 vl::animation::Node::_removeChild(LinkRefPtr link)
 {
-	for(std::vector<LinkRefPtr>::iterator iter = _childs.begin(); 
-		iter != _childs.end(); ++iter)
-	{
-		if(*iter == link)
-		{
-			// The link can only exist once in the node so we can safely
-			// do an erase here and return.
-			_childs.erase(iter);
-			return;
-		}
-	}
-}
-
-bool
-vl::animation::Node::_hasChild(LinkRefPtr link)
-{
-	return( std::find(_childs.begin(), _childs.end(), link) != _childs.end() );
+	std::vector<LinkRefPtr>::iterator iter = std::find(_childs.begin(), _childs.end(), link);
+	
+	if(iter != _childs.end())
+	{ _childs.erase(iter); }
+	else
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No such child.")); }
 }
 
 void
@@ -290,6 +288,9 @@ vl::animation::Link::getParent(void) const
 void
 vl::animation::Link::setParent(NodeRefPtr parent)
 {
+	// Keep the transformation
+	Transform wt(getWorldTransform());
+
 	if(!_parent.expired())
 	{
 		_parent.lock()->_removeChild(shared_from_this());
@@ -299,15 +300,6 @@ vl::animation::Link::setParent(NodeRefPtr parent)
 	{
 		parent->_addChild(shared_from_this());
 	}
-
-	_setParent(parent);
-}
-
-void
-vl::animation::Link::_setParent(NodeRefPtr parent)
-{
-	// Keep the transformation
-	Transform wt(getWorldTransform());
 
 	_parent = parent;
 
@@ -321,7 +313,12 @@ vl::animation::Link::getChild(void) const
 void
 vl::animation::Link::setChild(NodeRefPtr child, bool primary_parent)
 {
-	if(child && primary_parent)
+	if(_child)
+	{
+		_child->setParent(LinkRefPtr());
+	}
+
+	if(child)
 	{
 		child->setParent(shared_from_this());
 	}
@@ -430,6 +427,12 @@ vl::animation::Link::reset(void)
 	setTransform(_initial_transform);
 }
 
+size_t
+vl::animation::Link::size(void) const
+{
+	return _child ? _child->size() : 0;
+}
+
 void
 vl::animation::Link::_updateCachedTransform(vl::Transform const &parent_t, bool parent_dirty)
 {
@@ -443,7 +446,8 @@ vl::animation::Link::_updateCachedTransform(vl::Transform const &parent_t, bool 
 		_transformation_dirty = false;
 	}
 
-	_child->_updateCachedTransform(_wt_cached, dirty);
+	if(_child)
+	{ _child->_updateCachedTransform(_wt_cached, dirty); }
 }
 
 
@@ -455,13 +459,19 @@ vl::animation::Graph::Graph(void)
 vl::animation::Graph::~Graph(void)
 {}
 
-vl::animation::NodeRefPtr
-vl::animation::Graph::getRoot(void)
-{ return _root; }
+size_t
+vl::animation::Graph::size(void) const
+{
+	assert(_root);
+
+	// traverse the graph calculating the size
+	return _root->size();
+}
 
 void
 vl::animation::Graph::_update(void)
 {
+	assert(_root);
 	/// Update the cached transformations of all children
 	_root->_updateCachedTransform(vl::Transform(), false);
 }

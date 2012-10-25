@@ -160,6 +160,28 @@ struct GameManagerFSM_;
 typedef vl::msm::back::state_machine<GameManagerFSM_> GameManagerFSM;
 
 /** @class GameManager
+ *	@brief Main manager that handles resource loading a simulation
+ *	states
+ *
+ *	Following up coming changes will break compatibility
+ *	@todo break into Program manager and Simulation (game) manager
+ *	Program manager handles the running of the program, i.e. exiting 
+ *	starting/stopping simulations
+ *	Simulation manager handles the running of a individual simulation
+ *	Only one simulation can be ran at a time.
+ *	Object creation belongs to Simulation manager
+ *	Project loading replaced by loading a simulation
+ *	Global resources are loaded by Program manager and can not be reset
+ *	Project resources are loaded when a simulation is created
+ *
+ *	@todo support for multiple projects removed
+ *	One global configuration for setting up shared resources
+ *	One project configuration that defines the simulation
+ *	Sharing resources need to be either done using global resources
+ *	python modules etc. or if a more complex system is necessary we
+ *	can implement specific systems to allow resource sharing for some
+ *	resources.
+ *
  */
 class HYDRA_API GameManager 
 {
@@ -310,6 +332,25 @@ public :
 	void addResources(vl::ProjSettings const &proj);
 
 	void removeResources(vl::ProjSettings const &proj);
+
+	/// @brief remove all loaded resources and destroy objects
+	/// Resets python context, destroys all objects (bodies, gameobjects, scenenodes),
+	/// removes all loaded resources, removes all resources paths, 
+	/// removes all event triggers.
+	/// Usefull when reloading all projects
+	///
+	/// Does not remove any managers only simulation objects
+	/// that are created from either project configs or python.
+	/// Does also not remove any objects created from environment config,
+	/// changing environment config is not supported, the program needs to be
+	/// restarted.
+	/// This might be changed in the future but more likely change is to allow
+	/// changing individual parameters and saving them to env config.
+	/// 
+	/// This is a hack to get project reloading working.
+	/// Will be replaced by more sophisticated functionality when new
+	/// simulation manager is implemented.
+	void removeAll(void);
 
 	/// Resource loading
 	/// @todo all resource loading should be moved to ResourceManager or similar

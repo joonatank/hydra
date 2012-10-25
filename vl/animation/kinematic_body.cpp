@@ -64,6 +64,25 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 
 vl::KinematicBody::~KinematicBody(void)
 {
+	if(_state)
+	{
+		delete _state;
+	}
+
+	if(_node)
+	{
+		if(_node->getParent())
+		{
+			// @todo this is bit problematic
+			// it works fine when we destroy all the bodies and constraints
+			// but if we only need to destroy a body it will probably fail
+			// reason why we need this is because every node that is created
+			// 
+			//_node->getParent()->setParent(animation::NodeRefPtr());
+			_node->setParent(animation::LinkRefPtr());
+		}
+		_node->removeChildren();
+	}
 }
 
 void

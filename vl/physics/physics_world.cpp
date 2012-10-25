@@ -69,6 +69,32 @@ vl::physics::World::create(GameManager *man)
 vl::physics::World::~World(void)
 {}
 
+void
+vl::physics::World::removeAll(void)
+{
+	std::clog << "vl::physics::World::removeAll" << std::endl;
+	// Tubes can just be cleared, their bodies and constraints
+	// are in the other lists
+	// They are first so we don't have dangling pointers
+	// std::vector<TubeRefPtr> _tubes;
+
+	// Call removeConstraint for all members
+	// ConstraintList _constraints;
+
+	// Call removeRigidBody for all members
+	// 	RigidBodyList _rigid_bodies;
+	// @todo this also needs to destroy all MotionStates attached to the bodies
+	// making the assumption that they would be detached if the user wants
+	// to reuse them is much more managable than assuming the user will destroy them
+	// especially since python has no memory management system.
+	//
+	// Of course this can be directly in the destructor of RigidBody
+	// we just need to make comments to the relevant sections of the headers
+	// rigid_body.hpp, physics_world.hpp, (motion_state.hpp)
+	//
+	// We could also make MotionStates ref counted, 
+	// which might be a better solution in the long run.
+}
 
 vl::physics::RigidBodyRefPtr
 vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
@@ -119,7 +145,22 @@ vl::physics::World::getRigidBody( const std::string& name ) const
 vl::physics::RigidBodyRefPtr
 vl::physics::World::removeRigidBody( const std::string& name )
 {
-	BOOST_THROW_EXCEPTION( vl::not_implemented() );
+	RigidBodyRefPtr body = getRigidBody(name);
+	removeRigidBody(body);
+	return body;
+}
+
+void
+vl::physics::World::removeRigidBody(vl::physics::RigidBodyRefPtr body)
+{
+	if(!body)
+	{ return; }
+
+	_removeBody(body);
+
+	RigidBodyList::iterator iter = std::find(_rigid_bodies.begin(), _rigid_bodies.end(), body);
+	if(iter != _rigid_bodies.end())
+	{ _rigid_bodies.erase(iter); }
 }
 
 bool
