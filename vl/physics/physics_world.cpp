@@ -37,9 +37,11 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 {
 	os << "Physics World : "
 		<< " gravity " << w.getGravity()
-		<< " with " << w._rigid_bodies.size() << " rigid bodies "
-		<< "\n";
+		<< " with " << w._rigid_bodies.size() << " rigid bodies"
+		<< " and " << w._constraints.size() << " constraints"
+		<< " and " << w._tubes.size() << " tubes.\n";
 	
+	/*
 	os << "Bodies : \n";
 	RigidBodyList::const_iterator iter;
 	for( iter = w._rigid_bodies.begin(); iter != w._rigid_bodies.end(); ++iter )
@@ -48,6 +50,7 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 		if( iter+1 != w._rigid_bodies.end() )
 		{ os << "\n"; }
 	}
+	*/
 
 	return os;
 }
@@ -76,13 +79,28 @@ vl::physics::World::removeAll(void)
 	// Tubes can just be cleared, their bodies and constraints
 	// are in the other lists
 	// They are first so we don't have dangling pointers
-	// std::vector<TubeRefPtr> _tubes;
+	std::vector<TubeRefPtr> tubes = _tubes;
+	for(std::vector<TubeRefPtr>::iterator iter = tubes.begin(); iter != tubes.end(); ++iter)
+	{
+		removeTube(*iter);
+	}
 
 	// Call removeConstraint for all members
 	// ConstraintList _constraints;
+	ConstraintList constraints = _constraints;
+	for(ConstraintList::iterator iter = constraints.begin(); iter != constraints.end(); ++iter)
+	{
+		removeConstraint(*iter);
+	}
 
 	// Call removeRigidBody for all members
-	// 	RigidBodyList _rigid_bodies;
+	// Make a copy because removing will invalidate iterators
+	RigidBodyList bodies = _rigid_bodies;
+	for(RigidBodyList::iterator iter = bodies.begin(); iter != bodies.end(); ++iter)
+	{
+		removeRigidBody(*iter);
+	}
+
 	// @todo this also needs to destroy all MotionStates attached to the bodies
 	// making the assumption that they would be detached if the user wants
 	// to reuse them is much more managable than assuming the user will destroy them
@@ -253,6 +271,27 @@ vl::physics::World::createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_b
 	info.mass_per_meter = mass_per_meter;
 
 	return createTubeEx(info);
+}
+
+bool
+vl::physics::World::hasTube(vl::physics::TubeConstRefPtr tube) const
+{
+	return(std::find(_tubes.begin(), _tubes.end(), tube) != _tubes.end());
+}
+
+void
+vl::physics::World::removeTube(vl::physics::TubeRefPtr tube)
+{
+	if(!tube)
+	{ return; }
+
+	std::vector<TubeRefPtr>::iterator iter = std::find(_tubes.begin(), _tubes.end(), tube);
+
+	if(iter != _tubes.end())
+	{
+		(*iter)->removeFromWorld();
+		_tubes.erase(iter);
+	}
 }
 
 void

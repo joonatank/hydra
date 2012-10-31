@@ -57,7 +57,7 @@ public :
 
 	};	// struct ConstructionInfo
 
-	virtual ~RigidBody(void) {}
+	virtual ~RigidBody(void);
 
 	static RigidBodyRefPtr create(ConstructionInfo const &info);
 

@@ -24,6 +24,8 @@
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
+#include <boost/enable_shared_from_this.hpp>
+
 namespace vl
 {
 
@@ -33,7 +35,7 @@ namespace physics
 /**	@class Tube
  *	@brief Simulates a single hydraulic tube with two endpoints
  */
-class HYDRA_API Tube
+class HYDRA_API Tube : public boost::enable_shared_from_this<Tube>
 {
 public :
 	struct ConstructionInfo
@@ -185,6 +187,14 @@ public :
 
 	void create(void);
 
+	/// @brief remove the tube from the simulator without destroying it
+	void removeFromWorld(void);
+
+	/// @brief Return true if this tube is in the World
+	/// Tubes can exists without beign simulated, if this is False
+	/// they are not simulated at the moment.
+	bool isInWorld(void) const;
+
 	/// These are valid only after create has been called
 	/// will throw if they are called before the tube is created
 
@@ -236,6 +246,9 @@ private :
 	
 	std::map<vl::scalar, RigidBodyRefPtr> _fixing_bodies;
 	ConstraintList _external_fixings;
+
+	SceneNodeList _nodes;
+	EntityList _entities; 
 
 	vl::scalar _length;
 	vl::scalar _stiffness;

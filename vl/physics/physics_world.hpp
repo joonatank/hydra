@@ -151,6 +151,10 @@ public :
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
 		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass_per_meter = 1.0);
 
+	bool hasTube(TubeConstRefPtr tube) const;
+
+	void removeTube(vl::physics::TubeRefPtr tube);
+
 	RigidBodyList const &getBodies(void) const
 	{ return _rigid_bodies; }
 	

@@ -433,9 +433,13 @@ public :
 	{ return _scene_nodes.size(); }
 
 
-	/// @brief removes the SceneNode and deallocates the memory
+	/// @brief removes the SceneNode and deallocates memory
+	/// If the pointer is stored elsewhere this will invalidate it
 	void destroySceneNode(SceneNodePtr node);
 
+	/// @brief removes the MovableObject and deallocates memory
+	/// If the pointer is stored elsewhere this will invalidate it
+	void destroyMovableObject(MovableObjectPtr object);
 
 	/// --- Entity ---
 	EntityPtr createEntity(std::string const &name, vl::PREFAB type);

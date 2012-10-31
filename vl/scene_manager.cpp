@@ -292,7 +292,21 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 		iter != nodes_to_destroy.end(); ++iter)
 	{ destroySceneNode(*iter); }
 
-	// @todo add destroying of movable objects
+
+	// Destroy movable objects
+	MovableObjectList objects;
+	objects.reserve(_objects.size());
+	for(MovableObjectList::iterator iter = _objects.begin(); 
+		iter != _objects.end(); ++iter)
+	{
+		if(destroyEditorCamera || (*iter)->getName() != "editor/perspective")
+		{ objects.push_back(*iter); }
+	}
+
+	for(MovableObjectList::iterator iter = objects.begin(); 
+		iter != objects.end(); ++iter)
+	{ destroyMovableObject(*iter); }
+	
 
 	delete _sky_sim;
 	_sky_sim = 0;
@@ -384,6 +398,26 @@ vl::SceneManager::destroySceneNode(SceneNodePtr node)
 
 	SceneNodeList::iterator iter = std::find(_scene_nodes.begin(), _scene_nodes.end(), node);
 	_scene_nodes.erase(iter);
+}
+
+void
+vl::SceneManager::destroyMovableObject(vl::MovableObjectPtr object)
+{
+	assert(object);
+	std::clog << "vl::SceneManager::destroyMovableObject: " << object->getName() << std::endl;
+
+	// @todo this might be problematic if the user doesn't remove
+	// the linkage from SceneNode
+	// because unlike SceneNode we don't have a reference from
+	// MovableObject to it's parent.
+
+	_session->deregisterObject(object);
+	assert(object->getID() == vl::ID_UNDEFINED);
+
+	delete object;
+
+	MovableObjectList::iterator iter = std::find(_objects.begin(), _objects.end(), object);
+	_objects.erase(iter);
 }
 
 /// --------------------- SceneManager Entity --------------------------------

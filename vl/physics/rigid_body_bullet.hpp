@@ -86,9 +86,10 @@ public :
 		assert(getMotionState() == info.state);
 	}
 
-	// @todo can we delete the body here?
 	virtual ~BulletRigidBody(void)
 	{
+		// We can't delete motion state here, why?
+		//delete _bt_body->getMotionState();
 		delete _bt_body;
 	}
 
