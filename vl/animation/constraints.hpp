@@ -255,6 +255,8 @@ public :
 
 	vl::scalar getPosition(void) const;
 
+	void setPosition(vl::scalar pos);
+
 	virtual std::string getTypeName(void) const
 	{ return "slider"; }
 
@@ -370,6 +372,8 @@ public :
 
 	/// @brief returns the angle the hinge is in along the path moved.
 	Ogre::Radian getHingeAngle(void) const;
+
+	void setHingeAngle(Ogre::Radian const &angle);
 
 	virtual std::string getTypeName(void) const
 	{ return "hinge"; }

@@ -292,6 +292,12 @@ vl::SliderConstraint::getPosition(void) const
 }
 
 void
+vl::SliderConstraint::setPosition(vl::scalar pos)
+{
+	_link->setPosition(_link->getInitialTransform().position + pos*_axisInA);
+}
+
+void
 vl::SliderConstraint::_progress(vl::time const &t)
 {
 	if(!_link)
@@ -446,6 +452,13 @@ vl::HingeConstraint::getHingeAngle(void) const
 	}
 
 	return angle;
+}
+
+void
+vl::HingeConstraint::setHingeAngle(Ogre::Radian const &angle)
+{
+	Ogre::Quaternion q(angle, _axisInA);			
+	_link->setOrientation(_link->getInitialTransform().quaternion*q);
 }
 
 void
