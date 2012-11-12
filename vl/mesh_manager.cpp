@@ -397,7 +397,47 @@ void
 vl::MeshManager::cleanup_unused(void)
 {
 	std::clog << "vl::MeshManager::cleanup_unused" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	MeshMap new_map;
+	for(MeshMap::iterator iter = _meshes.begin(); iter != _meshes.end(); ++iter)
+	{
+		// We are sharing the mesh manager on master between the renderer
+		// and application.
+		// We can't use unique() because renderer side Entities are not destroyed
+		// when this function is called.
+		// This is so upside down, but would need some architectural changes to get
+		// it working properly.
+		// The mesh is in use when it has at least 3 users:
+		// one master entity, one renderer entity and this list.
+		// 
+		// This obviously does not work when there are more than one entity using the mesh
+		// because then we have N*2+1 users where N is the number of entities.
+		// If renderer entities are not destroyed when this is called we still have N+1
+		// users where we can not determine N.
+		//
+		// Probably this will need a proper solution using callbacks from Application
+		// to Renderer when objects are destroyed. This would make sure all object
+		// destructions happen instantly and we don't need to make multi pass algorithms
+		// that first destroy something on master then something on slaves and so on.
+		if(iter->second.use_count() > 2)
+		{
+			std::clog << "Mesh \"" << iter->first << "\" has " << iter->second.use_count()
+				<< " users, not removing." << std::endl;
+			new_map[iter->first] = iter->second;
+		}
+		// debug stuff
+		else
+		{
+			std::clog << "Going to remove mesh \"" << iter->first << "\"." << std::endl;
+		}
+	}
+
+	_meshes = new_map;
+}
+
+void
+vl::MeshManager::removeAll(void)
+{
+	_meshes.clear();
 }
 
 vl::MeshRefPtr 

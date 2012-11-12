@@ -77,7 +77,13 @@ vl::Entity::Entity(vl::SceneManagerPtr creator)
 }
 
 vl::Entity::~Entity(void)
-{}
+{
+	if(_ogre_object)
+	{
+		assert(_creator->getNative());
+		_creator->getNative()->destroyMovableObject(_ogre_object);
+	}
+}
 
 void 
 vl::Entity::setCastShadows(bool shadows)

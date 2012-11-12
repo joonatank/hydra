@@ -51,7 +51,7 @@ class HYDRA_API SceneNode : public vl::Distributed, public vl::ObjectInterface
 public :
 	SceneNode(std::string const &name, vl::SceneManager *creator);
 
-	virtual ~SceneNode( void ) {}
+	virtual ~SceneNode(void);
 
 	std::string const &getName( void ) const
 	{ return _name; }

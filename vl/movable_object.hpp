@@ -43,6 +43,8 @@ public :
 		: _name(), _visible(true), _creator(creator), _parent(0), _listener(0)
 	{}
 
+	virtual ~MovableObject(void) {}
+
 	std::string const &getName(void) const
 	{ return _name; }
 
@@ -110,6 +112,9 @@ public :
 
 	Listener *getListener(void)
 	{ return _listener; }
+
+	SceneManagerPtr getCreator(void) const
+	{ return _creator; }
 
 	/// Update rendering callbacks
 	void _notifyFrameStart(void)

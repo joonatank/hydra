@@ -43,6 +43,9 @@
 #include <OGRE/OgreWindowEventUtilities.h>
 
 #include <boost/bind.hpp>
+// For debugging
+#include "movable_object.hpp"
+#include "scene_node.hpp"
 
 /// ------------------------- Public -------------------------------------------
 vl::Renderer::Renderer(std::string const &name)
@@ -215,17 +218,22 @@ vl::Renderer::swap(void)
 void
 vl::Renderer::setProject(vl::Settings const &settings)
 {
-	std::cout << vl::TRACE << "vl::Renderer::setProject" << std::endl;
+	std::clog << "vl::Renderer::setProject" << std::endl;
 
 	_settings = settings;
 	
-	assert(_root);
-
-	// @todo this doesn't allow resetting the resources
-
-	std::vector<std::string> paths;
+	if(!_root)
+	{ return; }
+	
+	// remove all old resources
+	// Needs to be here because we need the global resources to be available 
+	// all times. When project is unloaded we leave old resources so that
+	// shadow materials and Gorilla resources are available till new project
+	// is loaded.
+	_root->removeResources();
 
 	// Add resources
+	std::vector<std::string> paths;
 	if(!settings.getProjectDir().empty())
 	{ paths.push_back(settings.getProjectDir()); }
 	for(size_t i = 0; i < settings.getAuxDirectories().size(); ++i)
@@ -242,14 +250,21 @@ vl::Renderer::setProject(vl::Settings const &settings)
 		std::clog << "\t" << paths.at(i) << std::endl;
 	}
 
-	// remove all old resources
-	_root->removeResources();
 	// add all resources
 	_root->setupResources(paths);
 	// initialise them
 	_root->loadResources();
+}
 
-	// @todo reset CEGUI resources also
+void
+vl::Renderer::clearProject(void)
+{
+	std::clog << "vl::Renderer::clearProject" << std::endl;
+
+	if(_scene_manager)
+	{
+		_scene_manager->destroyScene();
+	}
 
 	// Remove cameras and wait for them to be reset
 	for(size_t i = 0; i < _windows.size(); ++i)
@@ -327,7 +342,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 				if(_scene_manager)
 				{
 					vl::Player *player = new vl::Player(_scene_manager);
-					mapObject(player, id);
+					registerObject(player, id);
 				
 					// Only single instances are supported for now
 					assert(!_player && player);

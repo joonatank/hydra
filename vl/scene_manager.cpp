@@ -250,6 +250,11 @@ vl::SceneManager::~SceneManager( void )
 	// More simpler version that does not handle distribution of SceneNodes
 	// This would allow us to destroy the SceneManager distribute that change
 	// and all slaves would comply, at least in theory.
+	//
+	// I think we can't destory the SceneNodes like this because
+	// the destructor for each scene Node will destroy destroy it
+	// and all it's childs by calling Ogre's destroySceneNode
+	/*
 	for(SceneNodeList::iterator iter = _scene_nodes.begin();
 		iter != _scene_nodes.end(); ++iter)
 	{
@@ -262,6 +267,7 @@ vl::SceneManager::~SceneManager( void )
 	{
 		delete *iter;
 	}
+	*/
 
 	// @fixme this crashes
 	//delete _sky_sim;
@@ -312,6 +318,18 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 	_sky_sim = 0;
 	// Reset skydome also
 	_sky_dome = SkyDomeInfo("");
+
+	// Reset shadows
+	_shadows = ShadowInfo();
+
+	// Reset ogre
+	// For some reason deserialize is not properly called after destroying
+	// the Scene so we need to reset these here.
+	if(_ogre_sm)
+	{
+		_ogre_sm->setSkyDome(false, "");
+		_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_NONE);
+	}
 }
 
 vl::SceneNodePtr
@@ -393,7 +411,6 @@ vl::SceneManager::destroySceneNode(SceneNodePtr node)
 	_session->deregisterObject(node);
 	assert(node->getID() == vl::ID_UNDEFINED);
 
-	// @todo we probably need to do deregistering here
 	delete node;
 
 	SceneNodeList::iterator iter = std::find(_scene_nodes.begin(), _scene_nodes.end(), node);

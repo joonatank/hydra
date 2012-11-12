@@ -95,6 +95,8 @@ public :
 	/// Internal used by slave mapping
 	Light(vl::SceneManagerPtr creator);
 
+	virtual ~Light(void);
+
 	LightType getType(void) const
 	{ return _type; }
 

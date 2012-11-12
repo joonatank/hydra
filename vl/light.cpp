@@ -95,6 +95,12 @@ vl::Light::Light(vl::SceneManagerPtr creator)
 	_clear();
 }
 
+vl::Light::~Light(void)
+{
+	if(_ogre_light && _creator->getNative())
+	{ _creator->getNative()->destroyMovableObject(_ogre_light); }
+}
+
 std::string 
 vl::Light::getLightTypeName(void) const
 {

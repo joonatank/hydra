@@ -53,6 +53,9 @@ public :
 	/// @brief specialisation of handleMessage
 	virtual void setProject(vl::Settings const &settings) = 0;
 	
+	/// @brief clears project settings
+	virtual void clearProject(void) = 0;
+
 	virtual void updateScene(vl::cluster::Message &msg) = 0;
 	
 	virtual void createSceneObjects(vl::cluster::Message &msg) = 0;

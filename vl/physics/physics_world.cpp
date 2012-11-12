@@ -112,6 +112,10 @@ vl::physics::World::removeAll(void)
 	//
 	// We could also make MotionStates ref counted, 
 	// which might be a better solution in the long run.
+
+
+	// Reset parameters
+	setGravity(Vector3(0, -9.81, 0));
 }
 
 vl::physics::RigidBodyRefPtr

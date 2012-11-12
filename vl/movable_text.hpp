@@ -138,7 +138,7 @@ public :
 	/// Slave constructor
 	MovableText(vl::SceneManagerPtr creator);
 
-	virtual ~MovableText(void) {}
+	virtual ~MovableText(void);
 
 	// Set settings
 	void    setFontName(const std::string &fontName);

@@ -249,9 +249,18 @@ namespace vl
 		{ return "parsing error"; }
 	};
 
-	struct invalid_settings  : public parsing_error {};
+	struct invalid_settings  : public parsing_error 
+	{
+		virtual const char* what() const throw()
+		{ return "invalid settings"; }
+	};
 
-	struct invalid_dotscene : public parsing_error {};
+	struct invalid_dotscene : public parsing_error
+	{
+		virtual const char* what() const throw()
+		{ return "invalid dotscene"; }
+	};
+
 	struct invalid_tracking : public parsing_error {};
 
 	/// ---------- UDP errors --------------

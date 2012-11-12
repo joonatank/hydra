@@ -34,6 +34,8 @@ public :
 	/// Internal used by slave mapping
 	Camera(vl::SceneManagerPtr creator);
 
+	virtual ~Camera(void);
+
 	void setNearClipDistance(Ogre::Real n);
 
 	Ogre::Real getNearClipDistance(void) const

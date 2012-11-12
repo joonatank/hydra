@@ -95,6 +95,15 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	}
 }
 
+vl::SceneNode::~SceneNode(void)
+{
+	if(_ogre_node && _name != "Root")
+	{
+		assert(_creator->getNative());
+		_creator->getNative()->destroySceneNode(_ogre_node);
+	}
+}
+
 void 
 vl::SceneNode::transform(Ogre::Matrix4 const &m)
 {

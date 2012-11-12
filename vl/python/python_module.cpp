@@ -697,6 +697,10 @@ void export_game(void)
 		.def("play", &vl::GameManager::play)
 		.def("stop", &vl::GameManager::stop)
 		.def("restart", &vl::GameManager::restart)
+		.def("unload", &vl::GameManager::unload)
+		.def("load", &vl::GameManager::load)
+		.def("reload", &vl::GameManager::reload)
+
 		.add_property("paused", &vl::GameManager::isPaused)
 		.add_property("playing", &vl::GameManager::isPlaying)
 		.add_property("quited", &vl::GameManager::isQuited)
@@ -712,7 +716,6 @@ void export_game(void)
 		.def("load_scene", loadScene_ov0)
 		.def("load_scene", loadScene_ov1)
 		.def("save_scene", &vl::GameManager::saveScene)
-		.def("remove_all", &vl::GameManager::removeAll)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 

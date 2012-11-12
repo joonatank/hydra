@@ -33,6 +33,15 @@ vl::Camera::Camera(vl::SceneManagerPtr creator)
 	_clear();
 }
 
+vl::Camera::~Camera(void)
+{
+	if(_ogre_camera)
+	{
+		assert(_creator->getNative());
+		_creator->getNative()->destroyMovableObject(_ogre_camera);
+	}
+}
+
 void 
 vl::Camera::setNearClipDistance(Ogre::Real n)
 {

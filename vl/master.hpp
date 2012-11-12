@@ -96,11 +96,14 @@ public:
 	void injectEvent(vl::cluster::EventData const &);
 
 	// Callback for Project settings changes
-	void settingsChanged(vl::Settings const &new_settings);
+	void settingsChanged(void);
+	
+	// Callback for clearing the project
+	void clearProjectCallback(void);
 
 	void quit_callback(void)
 	{
-		std::clog << "vl::Config : Quit callback called." << std::endl;
+		std::clog << "vl::Master : Quit callback called." << std::endl;
 		_running = false; 
 	}
 

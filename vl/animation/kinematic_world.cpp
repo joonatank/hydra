@@ -130,6 +130,9 @@ vl::KinematicWorld::removeAll(void)
 	// because the test project has collision detection which saves
 	// the pointers to kinematic bodies for updates.
 	//assert(_graph->getRoot()->isLeaf());
+
+	// Reset parameters
+	enableCollisionDetection(false);
 }
 
 vl::KinematicBodyRefPtr

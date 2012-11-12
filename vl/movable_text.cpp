@@ -26,6 +26,9 @@
  
 #include "base/exceptions.hpp"
 
+// Necessary for destroying the object
+#include "scene_manager.hpp"
+
 #define POS_TEX_BINDING    0
 #define COLOUR_BINDING     1
  
@@ -517,6 +520,14 @@ vl::MovableText::MovableText(vl::SceneManagerPtr creator)
 	_clear();
 }
 
+
+vl::MovableText::~MovableText(void)
+{
+	// Can't be removed using SceneManager::destroyMovableObject
+	// because we don't have a factory for MovableText
+	delete _ogre_text;
+}
+
 void
 vl::MovableText::setCaption(const std::string &caption)
 {
@@ -597,7 +608,7 @@ vl::MovableObjectPtr
 vl::MovableText::clone(std::string const &append_to_name) const
 {
 	/// @todo implement
-	return 0;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
 /// ---------------------------- protected -----------------------------------
