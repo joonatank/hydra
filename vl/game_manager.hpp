@@ -363,6 +363,9 @@ public :
 	bool isQuited(void) const;
 	bool isPaused(void) const;
 	bool isPlaying(void) const;
+	bool isStopped(void) const;
+
+	std::string getStateName(void) const;
 
 	/// Resource loading
 	/// @todo all resource loading should be moved to ResourceManager or similar
@@ -412,6 +415,12 @@ public :
 	{ return _options; }
 	vl::ProgramOptions &getOptions(void)
 	{ return _options; }
+
+	vl::ProjSettings const &getProjectSettings(void) const
+	{ return _loaded_project; }
+
+	vl::ProjSettings const &getGlobalSettings(void) const
+	{ return _global_project; }
 
 	template<typename T>
 	void process_event(T const &evt);

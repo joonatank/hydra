@@ -104,7 +104,7 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 
 	report["Starting GameManager"].push(t.elapsed());
 
-	_game_manager->process_event(vl::load(project_file, global_file));
+	_game_manager->load(project_file, global_file);
 
 	/// Updating the Renderers
 	t.reset();

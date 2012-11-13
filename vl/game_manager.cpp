@@ -261,6 +261,38 @@ vl::GameManager::isPlaying(void) const
 	return false;
 }
 
+bool
+vl::GameManager::isStopped(void) const
+{
+	vl::state *s = _fsm->get_state_by_id(_fsm->current_state()[0]);
+	
+	if(dynamic_cast<GameManagerFSM_::Stopped *>(s))
+	{ return true; }
+
+	return false;
+}
+
+std::string
+vl::GameManager::getStateName(void) const
+{
+	vl::state *s = _fsm->get_state_by_id(_fsm->current_state()[0]);
+
+	if(dynamic_cast<GameManagerFSM_::Stopped *>(s))
+	{ return "Stopped"; }
+	else if(dynamic_cast<GameManagerFSM_::Initing *>(s))
+	{ return "Initing"; }
+	else if(dynamic_cast<GameManagerFSM_::Loading *>(s))
+	{ return "Loading"; }
+	else if(dynamic_cast<GameManagerFSM_::Playing *>(s))
+	{ return "Playing"; }
+	else if(dynamic_cast<GameManagerFSM_::Paused *>(s))
+	{ return "Paused"; }
+	else if(dynamic_cast<GameManagerFSM_::Quited *>(s))
+	{ return "Quited"; }
+	else
+	{ return "Unkown"; }
+}
+
 /// State Management
 void
 vl::GameManager::quit(void)
@@ -588,35 +620,34 @@ vl::GameManager::_do_load(vl::load const &evt)
 {
 	std::clog << "vl::GameManager::_do_load" << std::endl;
 
+	/// We do not allow loading when we already have project or global
+	/// This should of course never happen because the FSM doesn't
+	/// allow it.
+	if(!_global_project.empty() || !_loaded_project.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
 	std::clog << "Loading Global " << evt.global << std::endl;
 	_loadGlobal(evt.global);
 
-	/// @todo the cleanup should be separated
-	vl::ProjSettings project;
 	// load the project
-	vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&project, vl::null_deleter()));
-	if(!ser.readFile(evt.project))
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+	if(!evt.project.empty())
+	{
+		vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&_loaded_project, vl::null_deleter()));
+		if(!ser.readFile(evt.project))
+		{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	std::clog << "Loading project " << project.getName() << std::endl;
+		std::clog << "Loading project " << _loaded_project.getName() << std::endl;
 
-	std::vector<vl::ProjSettings *> _run_scripts;
+		_addResources(_loaded_project);
 
-	// remove the already loaded project because we only support one for now
-	// @todo these should be removed because we need to call unload anyway
-	// before calling load again
-	if(!_loaded_project.empty())
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	_loaded_project = project;
-
-	_addResources(_loaded_project);
-
-	loadScenes(_loaded_project);
+		loadScenes(_loaded_project);
+	}
 
 	// run the python context
-	runPythonScripts(_global_project);
-	runPythonScripts(_loaded_project);
+	if(!_global_project.empty())
+	{ runPythonScripts(_global_project); }
+	if(!_loaded_project.empty())
+	{ runPythonScripts(_loaded_project); }
 
 	_loaded_signal();
 }
