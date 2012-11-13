@@ -287,7 +287,10 @@ def initphysics():
     game.scene.hideSceneNodes(PREFIX_COLLISION+"*")
     return game.physics_world
 
-if __name__ == "__main__":
+# This method does not work anymore, because we use different namespace
+# so we can clear the python context.
+#if __name__ == "__main__":
+if True :
     world = initphysics()
     game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
     game.scene.shadows.enable()
