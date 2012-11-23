@@ -314,7 +314,7 @@ private :
  *	This is probably because there is inaccuracies in calculating the angle from
  *	quaternions and comparing them.
  */
-class HingeConstraint : public Constraint
+class HYDRA_API HingeConstraint : public Constraint
 {
 public :
 	/// @brief change between constraint and actuator
