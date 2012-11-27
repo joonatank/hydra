@@ -65,7 +65,7 @@ vl::operator<<(std::ostream &os, vl::SceneNode const &a)
 
 
 /// ------------------------------ Public ------------------------------------
-vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
+vl::SceneNode::SceneNode(std::string const &name, vl::SceneManager *creator, bool is_dynamic)
 	: _name(name)
 	, _scale(Ogre::Vector3::UNIT_SCALE)
 	, _visible(true)
@@ -78,6 +78,7 @@ vl::SceneNode::SceneNode( std::string const &name, vl::SceneManager *creator )
 	, _ogre_node(0)
 	, _debug_axes(0)
 	, _creator(creator)
+	, _is_dynamic(is_dynamic)
 {
 	assert( _creator );
 	// On renderers (where the native version is available)
@@ -491,18 +492,43 @@ vl::SceneNode::clone(std::string const &append_to_name) const
 	if(append_to_name.empty())
 	{ return clone(); }
 
-	return doClone(append_to_name, _parent);
+	return _do_clone(append_to_name, _parent, false);
+}
+
+vl::SceneNodePtr
+vl::SceneNode::cloneDynamic(void) const
+{
+	std::string name = vl::generate_random_string();
+	assert(!name.empty());
+
+	return cloneDynamic(name);
+}
+
+vl::SceneNodePtr
+vl::SceneNode::cloneDynamic(std::string const &append_to_name) const
+{
+	if(append_to_name.empty())
+	{ return cloneDynamic(); }
+
+	return _do_clone(append_to_name, _parent, true);
 }
 
 vl::SceneNodePtr 
-vl::SceneNode::doClone(std::string const &append_to_name, vl::SceneNodePtr parent) const
+vl::SceneNode::_do_clone(std::string const &append_to_name, vl::SceneNodePtr parent, bool dynamic) const
 {
-	SceneNodePtr node = parent->createChildSceneNode(_name + append_to_name);
+	SceneNodePtr node = 0;
+	if(dynamic)
+	{
+		node = parent->getCreator()->createDynamicSceneNode(_name + append_to_name);
+		parent->addChild(node);
+	}
+	else
+	{ node = parent->createChildSceneNode(_name + append_to_name); }
 
 	for(SceneNodeList::const_iterator iter = _childs.begin(); 
 		iter != _childs.end(); ++iter)
 	{
-		SceneNodePtr child = (*iter)->doClone(append_to_name, node);
+		SceneNodePtr child = (*iter)->_do_clone(append_to_name, node, dynamic);
 	}
 	
 	for(MovableObjectList::const_iterator iter = _objects.begin(); 

@@ -97,6 +97,9 @@ public :
 	/// @brief Remove everything from the world
 	void removeAll(void);
 
+	/// @brief remove at run time created objects
+	void destroyDynamicObjects(void);
+
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
@@ -106,6 +109,10 @@ public :
 	/// Automatically adds the RigidBody to the world.
 	vl::physics::RigidBodyRefPtr createRigidBody( std::string const &name, vl::scalar mass,
 								  vl::physics::MotionState *state, CollisionShapeRefPtr shape,
+								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
+
+	RigidBodyRefPtr createDynamicRigidBody(std::string const &name, vl::scalar mass,
+								  MotionState *state, CollisionShapeRefPtr shape,
 								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
 
 	vl::physics::RigidBodyRefPtr getRigidBody( std::string const &name ) const;
@@ -146,6 +153,8 @@ public :
 	vl::physics::ConstraintRefPtr getConstraint(std::string const &name) const;
 
 	/// ----------------------- Tubes --------------------------
+	/// All tubes are treated as dynamic for the time beign
+	/// as there is no way to save them into a scene file.
 	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
 
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,

@@ -133,7 +133,7 @@ protected:
 class HYDRA_API MovableText : public vl::MovableObject
 {
 public :
-	MovableText(std::string const &name, vl::SceneManagerPtr creator);
+	MovableText(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
 
 	/// Slave constructor
 	MovableText(vl::SceneManagerPtr creator);

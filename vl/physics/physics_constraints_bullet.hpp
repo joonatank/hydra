@@ -398,7 +398,7 @@ class BulletSixDofConstraint : public BulletConstraint, public SixDofConstraint
 {
 public :
 	BulletSixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA);
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
 
 	virtual ~BulletSixDofConstraint(void) 
 	{
@@ -528,8 +528,8 @@ class BulletSliderConstraint : public BulletConstraint, public vl::physics::Slid
 {
 public :
 	BulletSliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: SliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: SliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic)
 		, _bt_constraint(0)
 	{
 		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));
@@ -729,8 +729,8 @@ class BulletHingeConstraint : public BulletConstraint, public vl::physics::Hinge
 {
 public :
 	BulletHingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: HingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic)
 		, _bt_constraint(0)
 	{
 		assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));

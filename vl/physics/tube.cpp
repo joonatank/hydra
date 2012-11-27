@@ -31,6 +31,7 @@
 #include "scene_node.hpp"
 // Necessary for creating SceneNodes and retriving mesh manager
 #include "scene_manager.hpp"
+#include "entity.hpp"
 
 size_t vl::physics::Tube::n_tubes = 0;
 
@@ -203,6 +204,8 @@ vl::physics::Tube::removeFromWorld(void)
 	{
 		_world->removeRigidBody(*iter);
 	}
+
+	// @todo destroy SceneNodes and Entities
 }
 
 bool

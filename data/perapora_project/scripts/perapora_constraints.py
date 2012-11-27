@@ -159,8 +159,8 @@ fixed_constraint(raide, kiinnike1_slaite)
 fixed_constraint(raide, porakelkka)
 fixed_constraint(raide, porakanki)
 
-#zoom.actuator = True
-#puomi_hinge.actuator = True
+zoom.actuator = True
+puomi_hinge.actuator = True
 kaanto_hinge.actuator = True
 motor_hinge.actuator = True
 pulttaus_hinge.actuator = True
@@ -179,8 +179,8 @@ try :
 
 	joy_handler = ConstraintJoystickHandler.create()
 	joy_handler.velocity_multiplier = 0.4
-	#joy_handler.set_axis_constraint(zoom, 1)
-	#joy_handler.set_axis_constraint(pulttaus_hinge, 0)
+	joy_handler.set_axis_constraint(zoom, 1)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0)
 	joy_handler.set_axis_constraint(motor_hinge, 1, 0)
 	left_joy.add_handler(joy_handler)
 
@@ -205,8 +205,8 @@ except :
 	joy_handler.velocity_multiplier = 0.4
 	joy_handler.set_axis_constraint(puomi_hinge, 1)
 	joy_handler.set_axis_constraint(kaanto_hinge, 0)
-	#joy_handler.set_axis_constraint(zoom, 1, 0)
-	#joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
+	joy_handler.set_axis_constraint(zoom, 1, 0)
+	joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
 	joy_handler.set_axis_constraint(motor_hinge, 1, 1)
 	joy.add_handler(joy_handler)
 

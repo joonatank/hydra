@@ -43,7 +43,9 @@ game.scene.shadows.dir_light_extrusion_distance = 100
 
 create_ground(size=100)
 
-sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
+print("Create Sphere")
+game.mesh_manager.createSphere('sphere')
+sphere_ent = game.scene.createEntity('sphere', 'sphere', True)
 sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)

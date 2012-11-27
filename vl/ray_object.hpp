@@ -41,7 +41,8 @@ class RayObject : public vl::MovableObject
 {
 public :
 	/// @brief Master constructor
-	RayObject(std::string const &name, vl::SceneManagerPtr creator);
+	/// Should not be called from user code, use SceneManager to create these
+	RayObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
 
 	/// @brief Slave constructor
 	RayObject(vl::SceneManagerPtr creator);

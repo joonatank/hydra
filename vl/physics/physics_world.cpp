@@ -118,6 +118,53 @@ vl::physics::World::removeAll(void)
 	setGravity(Vector3(0, -9.81, 0));
 }
 
+void
+vl::physics::World::destroyDynamicObjects(void)
+{
+	std::clog << "vl::physics::World::removeDynamicObjects" << std::endl;
+
+	std::clog << "Destroying " << _tubes.size() << " tubes" << std::endl;
+	// Remove all of them for now
+	TubeList tubes = _tubes;
+	for(TubeList::iterator iter = tubes.begin(); iter != tubes.end(); ++iter)
+	{ removeTube(*iter); }
+
+	std::clog << "Removing constraints" << std::endl;
+	// @todo constraints need dynamic flags
+	ConstraintList constraints_to_destroy;
+	for(ConstraintList::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ constraints_to_destroy.push_back(*iter); }
+	}
+	std::clog << "Destroying " << constraints_to_destroy.size() << " constraints." << std::endl;
+	for(ConstraintList::iterator iter = constraints_to_destroy.begin();
+		iter != constraints_to_destroy.end(); ++iter)
+	{
+		removeConstraint(*iter);
+	}
+
+	// Destroy Rigid Bodies
+	std::clog << "Removing rigid bodies" << std::endl;
+	RigidBodyList bodies_to_destroy;
+	for(RigidBodyList::iterator iter = _rigid_bodies.begin(); 
+		iter != _rigid_bodies.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ bodies_to_destroy.push_back(*iter); }
+	}
+
+	std::clog << "Destroying " << bodies_to_destroy.size() << " rigid bodies." << std::endl;
+	for(RigidBodyList::iterator iter = bodies_to_destroy.begin(); 
+		iter != bodies_to_destroy.end(); ++iter)
+	{
+		removeRigidBody(*iter);
+	}
+
+	std::clog << "vl::physics::World::removeDynamicObjects : DONE" << std::endl;
+}
+
 vl::physics::RigidBodyRefPtr
 vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 {
@@ -148,6 +195,17 @@ vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 									 Ogre::Vector3 const &inertia)
 {
 	RigidBody::ConstructionInfo info(name, mass, state, shape, inertia);
+	return createRigidBodyEx(info);
+}
+
+vl::physics::RigidBodyRefPtr
+vl::physics::World::createDynamicRigidBody(std::string const &name, vl::scalar mass,
+								MotionState *state, CollisionShapeRefPtr shape,
+								Ogre::Vector3 const &inertia)
+
+{
+	std::clog << "vl::physics::World::createDynamicRigidBody" << std::endl;
+	RigidBody::ConstructionInfo info(name, mass, state, shape, inertia, false, true);
 	return createRigidBodyEx(info);
 }
 

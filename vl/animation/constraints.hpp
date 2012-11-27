@@ -87,6 +87,9 @@ public :
 	void reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
 		vl::Transform const &frameInA, vl::Transform const &frameInB );
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	int addListener(ChangedCB::slot_type const &slot)
 	{ _changed_cb.connect(slot); return 1; }
 
@@ -115,8 +118,8 @@ protected :
 	/// @param rbB the body we are constraining
 	/// @param frameInA the pivot point in rbA coordinates
 	/// @param frameInB the pivot point in rbB coordinates
-	Constraint( std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
-		vl::Transform const &frameInA, vl::Transform const &frameInB );
+	Constraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB, bool dynamic);
 
 	std::string _name;
 
@@ -128,6 +131,8 @@ protected :
 	vl::Transform _local_frame_b;
 
 	vl::animation::LinkRefPtr _link;
+
+	bool _is_dynamic;
 
 	ChangedCB _changed_cb;
 
@@ -150,27 +155,12 @@ public :
 	{ return "fixed"; }
 
 	// static
-	static FixedConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		 vl::Transform const &frameInA, vl::Transform const &frameInB)
+	static FixedConstraintRefPtr create(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		 vl::Transform const &frameInA, vl::Transform const &frameInB, bool dynamic)
 	{
-		FixedConstraintRefPtr constraint(new FixedConstraint(name, rbA, rbB, frameInA, frameInB));
+		FixedConstraintRefPtr constraint(new FixedConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
-	}
-
-	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		 vl::Transform const &frameInA, vl::Transform const &frameInB)
-	{
-		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInA);
-	}
-
-	static FixedConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &worldFrame);
-
-	// With autogenerate name
-	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &worldFrame)
-	{
-		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
 	}
 
 	// @todo we should add a method without frame because the frame is not
@@ -181,8 +171,9 @@ private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	FixedConstraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	FixedConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA, 
+		Transform const &frameInB, bool dynamic);
 
 };	// class FixedConstraint
 
@@ -261,29 +252,12 @@ public :
 	{ return "slider"; }
 
 	// static
-	static SliderConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
-
-	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
+	static SliderConstraintRefPtr create(std::string const &name,
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
 	{
-		// @todo this has the possibility that the generated name is not unique
-		// especially when we have huge number of objects
-		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
-	}
-
-	static SliderConstraintRefPtr create(std::string const &name,KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
-	{
-
-		SliderConstraintRefPtr constraint(new SliderConstraint(name, rbA, rbB, frameInA, frameInB));
+		SliderConstraintRefPtr constraint(new SliderConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
-	}
-
-	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
-	{
-		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInB);
 	}
 
 
@@ -292,8 +266,9 @@ private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	SliderConstraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	SliderConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA,
+		Transform const &frameInB, bool dynamic);
 	
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
@@ -380,35 +355,21 @@ public :
 
 	// static
 	static HingeConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &worldFrame);
-
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &worldFrame)
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB, bool dynamic)
 	{
-		return create(vl::generate_random_string(), rbA, rbB, worldFrame);
-	}
-
-	static HingeConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(name, rbA, rbB, frameInA, frameInB));
+		HingeConstraintRefPtr constraint(new HingeConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
 	}
 
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	{
-		return create(vl::generate_random_string(), rbA, rbB, frameInA, frameInB);
-	}
 
 	/// Private virtual overrides
 private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	HingeConstraint(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	HingeConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA,
+		Transform const &frameInB, bool dynamic);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;

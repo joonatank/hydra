@@ -111,9 +111,23 @@ vl::physics::SixDofConstraintRefPtr
 vl::physics::SixDofConstraint::create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 {
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, false);
+}
+
+vl::physics::SixDofConstraintRefPtr
+vl::physics::SixDofConstraint::createDynamic(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+{
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, true);
+}
+
+vl::physics::SixDofConstraintRefPtr
+vl::physics::SixDofConstraint::_create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+{
 	SixDofConstraintRefPtr constraint;
 #ifdef USE_BULLET
-	constraint.reset(new BulletSixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
+	constraint.reset(new BulletSixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 #else if USE_NEWTON
 #endif
 	return constraint;
@@ -123,9 +137,23 @@ vl::physics::SliderConstraintRefPtr
 vl::physics::SliderConstraint::create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 {
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, false);
+}
+
+vl::physics::SliderConstraintRefPtr
+vl::physics::SliderConstraint::createDynamic(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+{
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, true);
+}
+
+vl::physics::SliderConstraintRefPtr
+vl::physics::SliderConstraint::_create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+{
 	SliderConstraintRefPtr constraint;
 #ifdef USE_BULLET
-	constraint.reset(new BulletSliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
+	constraint.reset(new BulletSliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 #else if USE_NEWTON
 #endif
 	return constraint;
@@ -135,9 +163,23 @@ vl::physics::HingeConstraintRefPtr
 vl::physics::HingeConstraint::create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
 {
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, false);
+}
+
+vl::physics::HingeConstraintRefPtr
+vl::physics::HingeConstraint::createDynamic(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
+{
+	return _create(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, true);
+}
+
+vl::physics::HingeConstraintRefPtr
+vl::physics::HingeConstraint::_create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+{
 	HingeConstraintRefPtr  constraint;
 #ifdef USE_BULLET
-	constraint.reset(new BulletHingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA));
+	constraint.reset(new BulletHingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 #else if USE_NEWTON
 #endif
 	return constraint;

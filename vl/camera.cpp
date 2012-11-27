@@ -20,15 +20,15 @@
 #include <OGRE/OgreSceneManager.h>
 
 /// ------------------------------ Public ------------------------------------
-vl::Camera::Camera(std::string const &name, vl::SceneManagerPtr creator)
-	: MovableObject(name, creator)
+vl::Camera::Camera(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: MovableObject(name, creator, dynamic)
 {
 	_clear();
 }
 
 /// Internal used by slave mapping
 vl::Camera::Camera(vl::SceneManagerPtr creator)
-	: MovableObject("", creator)
+	: MovableObject(creator)
 {
 	_clear();
 }
@@ -128,7 +128,10 @@ vl::Camera::_doCreateNative(void)
 	if( _ogre_camera )
 	{ return true; }
 
-	_ogre_camera = _creator->getNative()->createCamera(_name);
+	if(_creator->getNative()->hasCamera(_name))
+	{ _ogre_camera = _creator->getNative()->getCamera(_name); }
+	else
+	{ _ogre_camera = _creator->getNative()->createCamera(_name); }
 
 	_ogre_camera->setNearClipDistance(_near_clip);
 	_ogre_camera->setFarClipDistance(_far_clip);

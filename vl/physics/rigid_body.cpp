@@ -127,4 +127,5 @@ vl::physics::RigidBody::positionToLocal(Ogre::Vector3 const &v) const
 vl::physics::RigidBody::RigidBody(vl::physics::RigidBody::ConstructionInfo const &info)
 	: _name(info.name)
 	, _shape(info.shape)
+	, _is_dynamic(info.dynamic)
 {}

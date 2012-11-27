@@ -37,24 +37,24 @@ cylinder_piston_body = game.physics_world.getRigidBody(body_name)
 
 transform = link0_body.world_transformation
 transform.position += Vector3(0, -0.5, 0)
-createFixedConstraint(link0_body, link1_body, transform)
+physics_fixed_constraint(link0_body, link1_body, transform)
 
 transform = link1_body.world_transformation
-createFixedConstraint(link1_body, cylinder_actuator_body, transform)
+physics_fixed_constraint(link1_body, cylinder_actuator_body, transform)
 
 transform = cylinder_piston_body.world_transformation
-createFixedConstraint(cylinder_actuator_body, cylinder_piston_body, transform)
+physics_fixed_constraint(cylinder_actuator_body, cylinder_piston_body, transform)
 
 transform = cylinder_piston_body.world_transformation
-createFixedConstraint(cylinder_piston_body, link2_body, transform)
+physics_fixed_constraint(cylinder_piston_body, link2_body, transform)
 
 transform = link2_body.world_transformation
 transform.position += Vector3(0, 0.5, 0)
-createFixedConstraint(link2_body, link3_body, transform)
+physics_fixed_constraint(link2_body, link3_body, transform)
 
 transform = link3_body.world_transformation
 transform.position += Vector3(-0.25, 0, 0)
-createFixedConstraint(link3_body, link4_body, transform)
+physics_fixed_constraint(link3_body, link4_body, transform)
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0))
 sphere.user_controlled = True

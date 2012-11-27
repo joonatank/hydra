@@ -215,6 +215,9 @@ vl::PythonContextImpl::reset(void)
 
 	_auto_run = false;
 
+	/// Remove all objects created from python
+	_game->_destroyDynamicObjects();
+
 	_scripts.clear();
 
 	// As of boost::python 1.51 Py_Finalize is still not working so we can't use

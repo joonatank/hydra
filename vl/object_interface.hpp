@@ -85,6 +85,14 @@ public :
 
 	virtual bool getShowBoundingBox(void) const { return false; }
 
+	/// @brief Is the object created by run time using a script
+	/// @return True if the dynamic flag is set.
+	/// Technically this can be true for any object but practically
+	/// it should be true only for objects created from python.
+	/// Allows some objects to be cleared without destroying the scene.
+	/// Dynamic objects are also ignored when saving the scene.
+	virtual bool isDynamic(void) const = 0;
+
 };	// class ObjectInterface
 
 }	// namespace vl

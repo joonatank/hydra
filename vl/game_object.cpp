@@ -54,9 +54,10 @@ vl::operator<<(std::ostream &os, GameObjectList const &list)
 
 /// -------------------------- GameObject ------------------------------------
 /// ----------------------------- Public -------------------------------------
-vl::GameObject::GameObject(std::string const &name, GameManager *manager)
+vl::GameObject::GameObject(std::string const &name, GameManager *manager, bool dynamic)
 	: _name(name)
 	, _graphics_node(0)
+	, _is_dynamic(dynamic)
 	, _creator(manager)
 {
 	_graphics_node = _creator->getSceneManager()->createSceneNode(_name);

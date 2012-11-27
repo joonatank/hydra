@@ -45,7 +45,7 @@ vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 
 /// ------------------------------ KinematicBody -----------------------------
 vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world, 
-	animation::NodeRefPtr node, vl::physics::MotionState *ms)
+	animation::NodeRefPtr node, vl::physics::MotionState *ms, bool dynamic)
 	: _world(world)
 	, _state(ms)
 	, _node(node)
@@ -55,6 +55,7 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 	, _disable_updates(false)
 	, _assume_node_is_in_world(false)
 	, _collisions_enabled(true)
+	, _is_dynamic(dynamic)
 {
 	assert(_world);
 	assert(_state);

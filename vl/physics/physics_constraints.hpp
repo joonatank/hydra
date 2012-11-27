@@ -113,15 +113,19 @@ public :
 	void reset(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB);
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	virtual ~Constraint(void) {}
 
 protected :
 	Constraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
 		: _bodyA(rbA)
 		, _bodyB(rbB)
 		, _frameA(frameInA)
 		, _frameB(frameInB)
+		, _is_dynamic(dynamic)
 	{}
 
 private :
@@ -141,6 +145,8 @@ private :
 	Transform _frameB;
 
 	std::string _name;
+
+	bool _is_dynamic;
 };
 
 /// @class SixDofConstraint
@@ -194,10 +200,16 @@ public :
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
+	static SixDofConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+
 protected :
+	static SixDofConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class SixDofConstraint
@@ -332,11 +344,17 @@ public :
 	// static
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+		
+	static SliderConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
+	static SliderConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class SliderConstraint
@@ -373,11 +391,17 @@ public :
 	// static
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+	
+	static HingeConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
+	static HingeConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class HingeConstraint

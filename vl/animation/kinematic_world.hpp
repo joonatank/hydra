@@ -50,6 +50,9 @@ public :
 	/// @brief Remove everything from the world
 	void removeAll(void);
 
+	/// @brief remove at run time created objects
+	void destroyDynamicObjects(void);
+
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
 	/// @brief retrieve already created by for the SceneNode
@@ -61,6 +64,8 @@ public :
 	/// @param sn the scene node which this body controls
 	/// @return always valid body node, new one if none exists
 	KinematicBodyRefPtr createKinematicBody(vl::SceneNodePtr sn);
+
+	KinematicBodyRefPtr createDynamicKinematicBody(vl::SceneNodePtr sn);
 
 	void removeKinematicBody(KinematicBodyRefPtr body);
 
@@ -80,6 +85,14 @@ public :
 	// For backwards compatibility
 	ConstraintRefPtr createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB);
+
+	/// @brief python versions
+	ConstraintRefPtr createDynamicConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
+
+	ConstraintRefPtr createDynamicConstraint(std::string const &type,
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1,
 		vl::Transform const &frameInA, vl::Transform const &frameInB);
 
 	void removeConstraint(ConstraintRefPtr constraint);
@@ -107,6 +120,14 @@ public :
 	friend std::ostream &operator<<(std::ostream &os, KinematicWorld const &world);
 
 private :
+
+	KinematicBodyRefPtr _create_kinematic_body(vl::SceneNodePtr sn, bool dynamic);
+
+	ConstraintRefPtr _create_constraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB, 
+		std::string const &name, bool dynamic);
+
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
 	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);

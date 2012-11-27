@@ -38,14 +38,12 @@
 
 // Necessary for checking materials after deserialize
 #include "material.hpp"
+#include "mesh_manager.hpp"
 
 // Necessary for message pump
 #include <OGRE/OgreWindowEventUtilities.h>
 
 #include <boost/bind.hpp>
-// For debugging
-#include "movable_object.hpp"
-#include "scene_node.hpp"
 
 /// ------------------------- Public -------------------------------------------
 vl::Renderer::Renderer(std::string const &name)

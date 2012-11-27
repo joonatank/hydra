@@ -243,6 +243,10 @@ public :
 	/// @param name the name of the GameObject to create
 	GameObjectRefPtr createGameObject(std::string const &name);
 
+	GameObjectRefPtr createDynamicGameObject(std::string const &name);
+
+	void removeGameObject(GameObjectRefPtr obj);
+
 	bool hasGameObject(std::string const &name);
 
 	GameObjectRefPtr getGameObject(std::string const &name);
@@ -353,11 +357,15 @@ public :
 	/// This is because of technical limitations
 	void reload(void);
 
-	/// @brief shorthand for stop play
+	/// @brief stops the current simulation and returns it to the initial state
 	/// Clears all changes done by the simulation and returns to initial state
 	/// which is set when the project is loaded.
-	/// End state is PLAY
-	/// @todo this does not work properly till stop has been fully implemented
+	/// Reloads the project files (loading them from the disc) and overwrites all
+	/// changes made by the simulation then
+	/// resets the python context and reruns all python scripts.
+	/// End state is PLAY or PAUSE depending on auto_run
+	///
+	/// @note Does not reload project files, this feature may be added later.
 	void restart(void);
 
 	bool isQuited(void) const;
@@ -404,8 +412,6 @@ public :
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 
-	void runPythonScripts(vl::ProjSettings const &proj);
-
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 
 	void setOptions(vl::ProgramOptions const &opt)
@@ -436,10 +442,26 @@ public :
 	// @todo add a list of possible states for which we have listeners
 	int addStateChangedListener(vl::state const &state, StateChanged::slot_type const &slot);
 
+	/// @internal
+	/// @brief Test function
+	/// This function destroys all dynamic objects (created from python)
+	/// If python context is not also cleared this will most likely
+	/// cause crashing because of dangling pointers.
+	/// DO NOT USE
+	void _destroyDynamicObjects(void);
+
+	/// @internal
+	/// @brief Reset python context and ran all python functions again
+	/// Used for testing before properly implementing GameManager::reset
+	/// DO NOT USE
+	void _rerunPythonScripts(void);
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
+
+	vl::GameObjectRefPtr _createGameObject(std::string const &name, bool dynamic);
 
 	/// Main loading functions use configurations files
 	void _loadEnvironment(vl::config::EnvSettings const &env);
@@ -477,6 +499,8 @@ private :
 	void _addResources(vl::ProjSettings const &proj);
 
 	void _removeResources(vl::ProjSettings const &proj);
+	
+	void _addPythonScripts(vl::ProjSettings const &proj);
 
 	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);

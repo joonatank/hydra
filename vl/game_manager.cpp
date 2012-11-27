@@ -165,13 +165,20 @@ vl::GameManager::step(void)
 vl::GameObjectRefPtr
 vl::GameManager::createGameObject(std::string const &name)
 {
-	GameObjectRefPtr obj = getGameObject(name);
-	if(!obj)
-	{
-		obj.reset(new GameObject(name, this));
-		_game_objects.push_back(obj);
-	}
-	return obj;
+	return _createGameObject(name, false);
+}
+
+vl::GameObjectRefPtr
+vl::GameManager::createDynamicGameObject(std::string const &name)
+{
+	return _createGameObject(name, true);
+}
+
+void
+vl::GameManager::removeGameObject(GameObjectRefPtr obj)
+{
+	std::clog << "vl::GameManager::removeGameObject" << std::endl;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
 bool
@@ -343,7 +350,25 @@ void
 vl::GameManager::restart(void)
 {
 	stop();
-	play();
+
+	/// @todo this only works for new HSF files
+	try {
+		loadScenes(_global_project, LOADER_FLAG_OVERWRITE);
+		loadScenes(_loaded_project, LOADER_FLAG_OVERWRITE);
+	}
+	catch(...)
+	{
+		std::cerr << "Problem with reloading the project. Only HSF files are supported" << std::endl;
+	}
+
+	/// remove all created objects
+	/// rerun all the python scripts
+	_rerunPythonScripts();
+
+	if(auto_start())
+	{ play(); }
+	else
+	{ pause(); }
 }
 
 /// @todo this is going to be really complex when more states is added
@@ -383,6 +408,65 @@ vl::GameManager::addStateChangedListener(vl::state const &state, StateChanged::s
 }
 
 
+void
+vl::GameManager::_destroyDynamicObjects(void)
+{
+	std::clog << "vl::GameManager::removeDynamicObjects" << std::endl;
+
+	// Destroy dynamic GameObjects
+	GameObjectList obj_to_destroy;
+	for(GameObjectList::iterator iter = _game_objects.begin();
+		iter != _game_objects.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ obj_to_destroy.push_back(*iter); }
+	}
+	for(GameObjectList::iterator iter = obj_to_destroy.begin();
+		iter != obj_to_destroy.end(); ++iter)
+	{
+		removeGameObject(*iter);
+	}
+
+	if(_physics_world)
+	{
+		_physics_world->destroyDynamicObjects();
+	}
+	if(_kinematic_world)
+	{
+		_kinematic_world->destroyDynamicObjects();
+	}
+	if(_scene_manager)
+	{
+		_scene_manager->destroyDynamicObjects();
+	}
+
+	/// Destroy dynamic events i.e. all events except those we have created
+	_event_man->removeAll();
+	_createQuitEvent();
+
+	// Reset player
+	_player->setCamera(_scene_manager->getEditorCamera());
+}
+
+void
+vl::GameManager::_rerunPythonScripts(void)
+{
+	std::clog << "vl::GameManager::rerunPythonScripts" << std::endl;
+
+	_python->reset();
+	
+	// run the python context
+	if(!_global_project.empty())
+	{ _addPythonScripts(_global_project); }
+	if(!_loaded_project.empty())
+	{ _addPythonScripts(_loaded_project); }
+
+	/// Run the python scripts
+	getPython()->autoRunScripts();
+
+	std::clog << "vl::GameManager::rerunPythonScripts : DONE" << std::endl;
+}
+
 vl::RecordingRefPtr
 vl::GameManager::loadRecording(std::string const &path)
 {
@@ -413,24 +497,6 @@ vl::GameManager::loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags)
 	{
 		loadScene(proj.getCase().getScene(i), flags);
 	}
-}
-
-void
-vl::GameManager::runPythonScripts(vl::ProjSettings const &proj)
-{
-	for( size_t i = 0; i < proj.getCase().getNscripts(); ++i )
-	{
-		// Load the python scripts
-		ProjSettings::Script const &script = proj.getCase().getScript(i);
-		
-		// scripts that are in use are set to be auto ran others are just stored.
-		vl::TextResource script_resource;
-		getResourceManager()->loadResource(script.getFile(), script_resource);
-		getPython()->addScript(script.getFile(), script_resource, script.getUse());
-	}
-
-	/// Run the python scripts
-	getPython()->autoRunScripts();
 }
 
 vl::vrpn_analog_client_ref_ptr
@@ -645,9 +711,12 @@ vl::GameManager::_do_load(vl::load const &evt)
 
 	// run the python context
 	if(!_global_project.empty())
-	{ runPythonScripts(_global_project); }
+	{ _addPythonScripts(_global_project); }
 	if(!_loaded_project.empty())
-	{ runPythonScripts(_loaded_project); }
+	{ _addPythonScripts(_loaded_project); }
+
+	/// Run the python scripts
+	getPython()->autoRunScripts();
 
 	_loaded_signal();
 }
@@ -673,12 +742,6 @@ vl::GameManager::_do_stop(vl::stop const &evt)
 {
 	std::clog << "vl::GameManager::_do_stop" << std::endl;
 
-	/// @todo this needs to reload the scene (LOADER_FLAG_OVERWRITE)
-
-	/// @todo this needs to reset the python context
-	/// remove all created objects
-	/// rerun all the python scripts
-
 	_game_timer.reset();
 	_game_timer.stop();
 	_stopped_signal();
@@ -703,6 +766,18 @@ vl::GameManager::_do_quit(vl::quit const &evt)
 }
 
 /// ------------------------------ Private -----------------------------------
+vl::GameObjectRefPtr
+vl::GameManager::_createGameObject(std::string const &name, bool dynamic)
+{
+	GameObjectRefPtr obj = getGameObject(name);
+	if(!obj)
+	{
+		obj.reset(new GameObject(name, this, dynamic));
+		_game_objects.push_back(obj);
+	}
+	return obj;
+}
+
 void
 vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)
 {
@@ -912,6 +987,22 @@ vl::GameManager::_removeResources(vl::ProjSettings const &proj)
 		getResourceManager()->removeResourcePath(proj_dir.string());
 	}
 }
+
+void
+vl::GameManager::_addPythonScripts(vl::ProjSettings const &proj)
+{
+	for( size_t i = 0; i < proj.getCase().getNscripts(); ++i )
+	{
+		// Load the python scripts
+		ProjSettings::Script const &script = proj.getCase().getScript(i);
+		
+		// scripts that are in use are set to be auto ran others are just stored.
+		vl::TextResource script_resource;
+		getResourceManager()->loadResource(script.getFile(), script_resource);
+		getPython()->addScript(script.getFile(), script_resource, script.getUse());
+	}
+}
+
 vl::SceneManagerPtr
 vl::GameManager::_createSceneManager(void)
 {

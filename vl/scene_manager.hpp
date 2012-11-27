@@ -23,9 +23,6 @@
 #include <OGRE/OgreQuaternion.h>
 #include <OGRE/OgreColourValue.h>
 
-// Necessary for PREFAB type
-#include "entity.hpp"
-
 #include "cluster/distributed.hpp"
 #include "cluster/session.hpp"
 
@@ -398,10 +395,10 @@ public :
 
 	void destroyScene(bool destroyEditorCamera = false);
 
+	void destroyDynamicObjects(void);
+
 	vl::MeshManagerRefPtr getMeshManager(void) const
-	{
-		return _mesh_manager;
-	}
+	{ return _mesh_manager; }
 
 	/// ---------- SceneNode ---------------
 	SceneNodePtr getRootSceneNode(void)
@@ -413,6 +410,12 @@ public :
 	/// This method should be separate so we can check if the user accidentially
 	/// gave an empty name.
 	SceneNodePtr createSceneNode(std::string const &name);
+
+	/// @brief create SceneNode that is dynamic
+	/// Dynamic SceneNodes are destroyed when python context is reseted
+	/// they also are never saved into scene files.
+	/// Primarily for python use.
+	SceneNodePtr createDynamicSceneNode(std::string const &name);
 
 	/// @brief create a SceneNode that is not attached anywhere
 	/// Mostly for internal use and maybe for file parsers
@@ -442,7 +445,6 @@ public :
 	void destroyMovableObject(MovableObjectPtr object);
 
 	/// --- Entity ---
-	EntityPtr createEntity(std::string const &name, vl::PREFAB type);
 
 	/// @brief create and entity
 	/// @return a newly create Entity
@@ -453,8 +455,11 @@ public :
 	/// Don't use the new Mesh Manager other than for testing it's not stable yet
 	/// Mesh name can either be a file name or a precreated mesh name
 	EntityPtr createEntity(std::string const &name, 
+		std::string const &mesh_name, bool use_new_mesh_manager = false);
+
+	EntityPtr createDynamicEntity(std::string const &name, 
 		std::string const &mesh_name);
-	EntityPtr createEntity(std::string const &name, 
+	EntityPtr createDynamicEntity(std::string const &name, 
 		std::string const &mesh_name, bool use_new_mesh_manager);
 
 	bool hasEntity( std::string const &name ) const;
@@ -465,6 +470,8 @@ public :
 	/// --------- Light -------
 	LightPtr createLight(std::string const &name);
 
+	LightPtr createDynamicLight(std::string const &name);
+
 	bool hasLight(std::string const &name) const;
 
 	LightPtr getLight(std::string const &name) const;
@@ -472,6 +479,8 @@ public :
 
 	/// --------- Camera -------
 	CameraPtr createCamera(std::string const &name);
+
+	CameraPtr createDynamicCamera(std::string const &name);
 
 	bool hasCamera(std::string const &name) const;
 
@@ -482,6 +491,8 @@ public :
 
 	MovableTextPtr createMovableText(std::string const &name, std::string const &text);
 
+	MovableTextPtr createDynamicMovableText(std::string const &name, std::string const &text);
+
 	bool hasMovableText(std::string const &name) const;
 
 	MovableTextPtr getMovableText(std::string const &name) const;
@@ -490,6 +501,8 @@ public :
 	/// --------- RayObject ----------------
 	RayObjectPtr createRayObject(std::string const &name, std::string const &material_name);
 
+	RayObjectPtr createDynamicRayObject(std::string const &name, std::string const &material_name);
+
 	bool hasRayObject(std::string const &name) const;
 
 	RayObjectPtr getRayObject(std::string const &name) const;
@@ -497,7 +510,8 @@ public :
 	/// --------- MovableObject ------------
 	/// @brief Common creator for all the movable objects, extra params are passed using a param list
 	MovableObjectPtr createMovableObject(std::string const &type_name, std::string const &name, vl::NamedParamList const &params = vl::NamedParamList());
-	MovableObjectPtr createMovableObject(vl::OBJ_TYPE type, std::string const &name, vl::NamedParamList const &params = vl::NamedParamList());
+	/// @todo should we move this to private?
+	MovableObjectPtr createMovableObject(vl::OBJ_TYPE type, std::string const &name, bool dynamic = false, vl::NamedParamList const &params = vl::NamedParamList());
 
 	/// @internal
 	MovableObjectPtr _createMovableObject(std::string const &type, uint64_t id);
@@ -659,14 +673,14 @@ private :
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
-	MovableObjectPtr _createEntity(std::string const &name, vl::NamedParamList const &params);
-	MovableObjectPtr _createLight(std::string const &name, vl::NamedParamList const &params);
-	MovableObjectPtr _createCamera(std::string const &name, vl::NamedParamList const &params);
-	MovableObjectPtr _createMovableText(std::string const &name, vl::NamedParamList const &params);
-	MovableObjectPtr _createRayObject(std::string const &name, vl::NamedParamList const &params);
+	MovableObjectPtr _createEntity(std::string const &name, vl::NamedParamList const &params, bool dynamic);
+	MovableObjectPtr _createLight(std::string const &name, vl::NamedParamList const &params, bool dynamic);
+	MovableObjectPtr _createCamera(std::string const &name, vl::NamedParamList const &params, bool dynamic);
+	MovableObjectPtr _createMovableText(std::string const &name, vl::NamedParamList const &params, bool dynamic);
+	MovableObjectPtr _createRayObject(std::string const &name, vl::NamedParamList const &params, bool dynamic);
 
 	// @todo rename to avoid confusion
-	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id);
+	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id, bool dynamic = false);
 
 	// @brief helper functions for creating a Sky and changing presets
 	// only working on Rendering copies

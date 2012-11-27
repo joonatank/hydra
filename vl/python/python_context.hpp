@@ -71,8 +71,9 @@ public :
 	/// @return true if script with the name has been executed
 	virtual bool hasBeenExecuted(std::string const &name) const = 0;
 
-	// @brief Clear all the python defines
-	// Does not remove any modifications done to the engine side.
+	/// @brief resets the python context
+	/// Clear all the python defines.
+	/// Removes all objects created by the python scripts or commands.
 	virtual void reset(void) = 0;
 
 };	// class PythonContex

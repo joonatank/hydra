@@ -31,8 +31,8 @@
 #include <OGRE/OgreSceneManager.h>
 
 /// ----------------------------- Public -------------------------------------
-vl::RayObject::RayObject(std::string const &name, vl::SceneManagerPtr creator)
-	: MovableObject(name, creator)
+vl::RayObject::RayObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: MovableObject(name, creator, dynamic)
 { _clear(); }
 
 vl::RayObject::RayObject(vl::SceneManagerPtr creator)

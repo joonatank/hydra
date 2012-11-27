@@ -128,8 +128,8 @@ vl::physics::Motor3DofRotational::setTargetVelocity(Ogre::Vector3 const& vel)
 /// ------------------------------ BulletSixDofConstraint --------------------
 vl::physics::BulletSixDofConstraint::BulletSixDofConstraint(RigidBodyRefPtr rbA, 
 	RigidBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB, 
-	bool useLinearReferenceFrameA)
-	: SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA)
+	bool useLinearReferenceFrameA, bool dynamic)
+	: SixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic)
 	, _bt_constraint(0)
 {
 	assert(boost::dynamic_pointer_cast<BulletRigidBody>(rbA));

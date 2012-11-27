@@ -146,12 +146,14 @@ vl::Constraint::reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
 
 /// ------------------------------ Protected ---------------------------------
 vl::Constraint::Constraint(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, vl::Transform const &frameInA, vl::Transform const &frameInB)
+		KinematicBodyRefPtr rbB, vl::Transform const &frameInA, 
+		vl::Transform const &frameInB, bool dynamic)
 	: _name(name)
 	, _bodyA(rbA)
 	, _bodyB(rbB)
 	, _local_frame_a(frameInA)
 	, _local_frame_b(frameInB)
+	, _is_dynamic(dynamic)
 {
 	if(!_bodyA || !_bodyB)
 	{
@@ -201,24 +203,12 @@ vl::FixedConstraint::_progress(vl::time const &t)
 	// is always fixed.
 }
 
-vl::FixedConstraintRefPtr
-vl::FixedConstraint::create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	FixedConstraintRefPtr constraint(new FixedConstraint(name, rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::FixedConstraint::FixedConstraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
-	: Constraint(name, rbA, rbB, frameInA, frameInB)
-{
-	assert(rbA &&rbB);
-}
+vl::FixedConstraint::FixedConstraint(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
+{}
 
 /// ------------------------------ SliderConstraint --------------------------
 /// ------------------------------ Public ------------------------------------	
@@ -343,21 +333,11 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	}
 }
 
-vl::SliderConstraintRefPtr
-vl::SliderConstraint::create(std::string const &name, KinematicBodyRefPtr rbA,
-		KinematicBodyRefPtr rbB, Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	SliderConstraintRefPtr constraint(new SliderConstraint(name, rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::SliderConstraint::SliderConstraint(std::string const &name, KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	: Constraint(name, rbA, rbB, frameInA, frameInB)
+vl::SliderConstraint::SliderConstraint(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
 	, _lower_limit(0)
 	, _upper_limit(0)
 	, _axisInA(0, 0, 1)
@@ -509,20 +489,11 @@ vl::HingeConstraint::_progress(vl::time const &t)
 	}
 }
 
-vl::HingeConstraintRefPtr
-vl::HingeConstraint::create(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	HingeConstraintRefPtr constraint(new HingeConstraint(name, rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::HingeConstraint::HingeConstraint(std::string const &name, KinematicBodyRefPtr rbA, 
-	KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	: Constraint(name, rbA, rbB, frameInA, frameInB)
+vl::HingeConstraint::HingeConstraint(std::string const &name,
+	KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+	Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
 	, _lower_limit()
 	, _upper_limit()
 	, _axisInA(0, 0, 1)

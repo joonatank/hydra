@@ -315,7 +315,6 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
-	node->setSceneFile(_file_name);
 
 	rapidxml::xml_node<>* pElement;
 

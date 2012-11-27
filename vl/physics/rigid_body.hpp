@@ -44,8 +44,9 @@ public :
 	struct ConstructionInfo
 	{
 		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
-			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false)
-			: name(nam), mass(m), state(sta), shape(shap), inertia(inert), kinematic(kinematic_)
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false, bool dynamic_ = false)
+			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
+			, kinematic(kinematic_), dynamic(dynamic_)
 		{}
 
 		std::string name;
@@ -54,6 +55,7 @@ public :
 		CollisionShapeRefPtr shape;
 		Ogre::Vector3 inertia;
 		bool kinematic;
+		bool dynamic;
 
 	};	// struct ConstructionInfo
 
@@ -200,6 +202,9 @@ public :
 	std::string const &getName(void) const
 	{ return _name; }
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	CollisionShapeRefPtr getShape(void)
 	{ return _shape; }
 
@@ -216,6 +221,8 @@ protected :
 	std::string _name;
 
 	CollisionShapeRefPtr _shape;
+
+	bool _is_dynamic;
 
 };	// class RigidBody
 

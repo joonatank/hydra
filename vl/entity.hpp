@@ -32,14 +32,6 @@
 namespace vl
 {
 
-enum PREFAB
-{
-	PF_NONE,
-	PF_PLANE,
-	PF_SPHERE,
-	PF_CUBE,
-};
-
 /// @brief Callback functor for non-blocking mesh loading
 /// Called from MeshManager when mesh has been loaded.
 /// We need to use non-blocking mesh loading, because loading a mesh
@@ -55,14 +47,14 @@ struct EntityMeshLoadedCallback : public vl::MeshLoadedCallback
 
 /**	@class Entity
  *	@brief Entity that can be drawn to the scene, is distributed
- *	Currently only supports prefabs
  */
 class HYDRA_API Entity : public MovableObject
 {
 public :
 	/// Constructor
 	/// Should not be called from user code, use SceneManager to create these
-	Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager = false);
+	Entity(std::string const &name, std::string const &mesh_name, 
+		vl::SceneManagerPtr creator, bool dynamic, bool use_new_mesh_manager = false);
 
 	/// @internal used by slave mapping
 	Entity(vl::SceneManagerPtr creator);

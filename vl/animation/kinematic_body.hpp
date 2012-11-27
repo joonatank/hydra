@@ -46,7 +46,8 @@ class HYDRA_API KinematicBody : public ObjectInterface
 public :
 	// Normal pointer for world, because it can not go out of scope before
 	// the bodies.
-	KinematicBody(std::string const &name, KinematicWorld *world, animation::NodeRefPtr node, vl::physics::MotionState *ms);
+	KinematicBody(std::string const &name, KinematicWorld *world, 
+		animation::NodeRefPtr node, vl::physics::MotionState *ms, bool dynamic);
 
 	virtual ~KinematicBody(void);
 
@@ -120,6 +121,9 @@ public :
 	animation::NodeRefPtr getAnimationNode(void) const
 	{ return _node; }
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	/// Update parameters
 	/// default values use lots of resources (prosessing time) 
 	/// but should work in every situtation
@@ -181,6 +185,8 @@ private :
 	bool _assume_node_is_in_world;
 
 	bool _collisions_enabled;
+
+	bool _is_dynamic;
 
 	// Callbacks
 	TransformedCB _transformed_cb;

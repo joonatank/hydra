@@ -188,10 +188,10 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 		// @todo replace with real exception
 		BOOST_THROW_EXCEPTION(vl::exception());
 	}
+
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
-	}
+	{ return getMesh(name); }
 
 	/// Mesh is created with the assumption that normal is +y
 	/// so we rotate every vertex to the normal
@@ -243,8 +243,9 @@ vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16
 {
 	std::clog << "vl::MeshManager::createSphere" << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::SphereGenerator generator;
 	generator.setRadius(radius).setUTile(longitude).setVTile(latitude);
@@ -260,14 +261,15 @@ vl::MeshRefPtr
 vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 {
 	std::clog << "vl::MeshManager::createCube" << std::endl;
+
+	/// For now retrieve mesh instead of making it an error
+	if(hasMesh(name))
+	{ return getMesh(name); }
+
 	if(size.isZeroLength())
 	{
 		// @todo replace with real exception
 		BOOST_THROW_EXCEPTION(vl::exception());
-	}
-	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
 	}
 
 	Procedural::BoxGenerator generator;
@@ -287,8 +289,9 @@ vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius,
 {
 	std::clog << "vl::MeshManager::createCylinder" << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::CylinderGenerator generator;
 	generator.setRadius(radius).setHeight(height).setNumSegHeight(seg_height).setNumSegBase(seg_radius);
@@ -315,8 +318,9 @@ vl::MeshManager::createCapsule(std::string const &name, vl::scalar radius,
 {
 	std::clog << "vl::MeshManager::createCapsule with height " << height << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::CapsuleGenerator generator;
 	// divide height by two because we use height to mean the actual height of

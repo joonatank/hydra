@@ -29,7 +29,9 @@ namespace vl
 class HYDRA_API Camera : public MovableObject
 {
 public :
-	Camera(std::string const &name, vl::SceneManagerPtr creator);
+	/// Constructor
+	/// Should not be called from user code, use SceneManager to create these
+	Camera(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
 
 	/// Internal used by slave mapping
 	Camera(vl::SceneManagerPtr creator);

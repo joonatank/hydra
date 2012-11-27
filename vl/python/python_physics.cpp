@@ -32,7 +32,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 /// Physics world member overloads
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createDynamicRigidBody_ov, createDynamicRigidBody, 4, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( setLimit_ovs, setLimit, 2, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
@@ -140,7 +140,7 @@ void export_physics_objects(void)
 		.add_property("translation_motor", python::make_function(&vl::physics::SixDofConstraint::getTranslationalMotor, python::return_value_policy<python::reference_existing_object>())) 
 		
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::SixDofConstraint::create)
+		.def("create", &vl::physics::SixDofConstraint::createDynamic)
 		
 		.staticmethod("create")
 	;
@@ -160,7 +160,7 @@ void export_physics_objects(void)
 		.add_property("target_ang_motor_velocity", &vl::physics::SliderConstraint::getTargetAngMotorVelocity, &vl::physics::SliderConstraint::setTargetAngMotorVelocity)
 		.add_property("max_ang_motor_force", &vl::physics::SliderConstraint::getMaxAngMotorForce, &vl::physics::SliderConstraint::setMaxAngMotorForce)
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::SliderConstraint::create)
+		.def("create", &vl::physics::SliderConstraint::createDynamic)
 		.staticmethod("create")
 	;
 
@@ -179,7 +179,7 @@ void export_physics_objects(void)
 		.def("set_axis", &vl::physics::HingeConstraint::setAxis)
 		
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::HingeConstraint::create)
+		.def("create", &vl::physics::HingeConstraint::createDynamic)
 		.staticmethod("create")
 	;
 
@@ -280,7 +280,7 @@ void export_physics_objects(void)
 
 	/// world
 	python::class_<vl::physics::World, vl::physics::WorldRefPtr, boost::noncopyable>("PhysicsWorld", python::no_init)
-		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
+		.def("createRigidBody", &vl::physics::World::createDynamicRigidBody, createDynamicRigidBody_ov() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody)
 		.def("hasRigidBody", &vl::physics::World::hasRigidBody)
 		// @todo add both overloads

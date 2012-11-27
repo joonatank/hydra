@@ -508,8 +508,8 @@ vl::ogre::MovableText::_updateRenderQueue(Ogre::RenderQueue *queue)
 
 /// ---------------------------- vl::MovableText -----------------------------
 /// ---------------------------- public -----------------------------------
-vl::MovableText::MovableText(std::string const &name, vl::SceneManagerPtr creator)
-	: vl::MovableObject(name, creator)
+vl::MovableText::MovableText(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: vl::MovableObject(name, creator, dynamic)
 {
 	_clear();
 }
