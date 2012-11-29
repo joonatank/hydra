@@ -32,8 +32,8 @@
 // Necessary for conversions
 #include <sstream>
 
-// Necessary for throwing
-#include "exceptions.hpp"
+// Necessary for exposing the API
+#include "defines.hpp"
 
 namespace vl
 {
@@ -73,18 +73,18 @@ namespace vl
 
 	/// Breaks a string containing multiple substrings separated by a delimiter
 	/// to those substrings and adds them to the broken_path vector parameter
-	void break_string_down( std::vector<std::string> &broken_path,
+	HYDRA_API void break_string_down( std::vector<std::string> &broken_path,
 							std::string &longString,
 							char delimeter );
 
-	void break_string_down( std::vector<std::string> &parts,
+	HYDRA_API void break_string_down( std::vector<std::string> &parts,
 							std::string const &longString,
 							char delimeter );
 
 	/// @brief replaces Windows line endings with unix ones
 	/// @param str string which should have it's line endings altered
 	/// @throws nothing
-	void replace_line_endings(std::string &str);
+	HYDRA_API void replace_line_endings(std::string &str);
 
 	template<typename T>
 	inline
@@ -131,7 +131,7 @@ namespace vl
 		return false;
 	}
 
-	std::string generate_random_string(size_t len = 8);
+	HYDRA_API std::string generate_random_string(size_t len = 8);
 
 }	// namespace vl
 
