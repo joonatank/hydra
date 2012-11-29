@@ -278,12 +278,18 @@ vl::SliderConstraint::setActuatorSpeed(vl::scalar velocity)
 vl::scalar
 vl::SliderConstraint::getPosition(void) const
 {
+	if(!_link)
+	{ return 0; }
+
 	return _link->getTransform().position.y - _link->getInitialTransform().position.y;
 }
 
 void
 vl::SliderConstraint::setPosition(vl::scalar pos)
 {
+	if(!_link)
+	{ return; }
+
 	_link->setPosition(_link->getInitialTransform().position + pos*_axisInA);
 }
 
@@ -406,6 +412,9 @@ vl::HingeConstraint::getAxisInWorld(void) const
 Ogre::Radian
 vl::HingeConstraint::getHingeAngle(void) const
 {
+	if(!_link)
+	{ return Ogre::Radian(0); }
+
 	Ogre::Quaternion const &current_q = _link->getTransform().quaternion;
 	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
 
@@ -437,6 +446,9 @@ vl::HingeConstraint::getHingeAngle(void) const
 void
 vl::HingeConstraint::setHingeAngle(Ogre::Radian const &angle)
 {
+	if(!_link)
+	{ return; }
+
 	Ogre::Quaternion q(angle, _axisInA);			
 	_link->setOrientation(_link->getInitialTransform().quaternion*q);
 }

@@ -59,76 +59,6 @@
 namespace vl
 {
 
-/// @struct Weather
-/// @brief definition for the weather
-/// @todo Not implemented yet
-struct HYDRA_API Weather
-{
-	Weather(void)
-		: clouds(0), lighting(0), rain(0)
-	{}
-
-	uint16_t clouds;
-	uint16_t lighting;
-	uint16_t rain;
-};
-
-/// @struct Date
-/// @brief Holds the current time and day
-/// For now only time of day is implemented
-struct HYDRA_API Date
-{
-	/// @brief Construct a time of day from string "hours:minutes"
-	/// hours and minutes should both be integers 
-	/// they should be withing limits, hours [0, 23] minutes [0, 59]
-	/// The implementation can choose to handle incorrect format as it likes.
-	Date(std::string const &time)
-	{
-		setTime(time);
-	}
-
-	Date(uint16_t h = 0, uint16_t m = 0)
-		: hours(0), min(0)
-	{
-		setTime(h, m);
-	}
-
-	std::string getTime(void) const
-	{
-		std::stringstream ss;
-		ss << hours << ":" << min;
-		return ss.str();
-	}
-
-	/// @brief Set the time of day from string "hours:minutes"
-	void setTime(std::string const &time)
-	{
-		std::stringstream ss(time);
-		char tmp;
-		uint16_t h, m;
-		ss >> h >> tmp >> m;
-		setTime(h, m);
-	}
-
-	/// @brief set time using hours and minutes
-	/// @param h hours, is clamped to interval [0, 23]
-	/// @param m minutes, is clamped to interval [0, 59]
-	void setTime(uint16_t h, uint16_t m)
-	{
-		hours = h % 23;
-		min = m % 59;
-	}
-
-	void addTime(uint16_t h, uint16_t m)
-	{
-		setTime(hours+h, min+m);
-	}
-
-	uint16_t hours;
-	uint16_t min;
-};
-
-
 // SM events
 struct init
 {
@@ -273,34 +203,6 @@ public :
 
 	bool isPhysicsEnabled(void)
 	{ return(_physics_world != 0); }
-
-	/// Parameters that control all the scenes, 
-	/// what they do is dependent on the implementation of the scene and they
-	/// might be totally ignored.
-
-	/// @brief enable/disable automatic environment modification of the scene
-	/// Enabled by default
-	/// If disabled setting weather, sky or time of day will not affect any
-	/// of the scenes in the Game.
-	/// Mind you these can also be disabled in the SceneManager and usually
-	/// are better suited there, but this is provided so that the user can
-	/// have a fine grain control over the game environment.
-	void enableEnvironmentalEffects(bool enable);
-
-	/// @brief Set the current weather
-	/// These usually modify the sky, global lighting and possibly add effects
-	void setWeather(Weather const &weather);
-
-	/// @brief Get the current weather
-	Weather const &getWeather(void) const
-	{ return _weather; }
-
-	/// @brief Set the current time of the day
-	/// This usually modifies the sky, lighting (moon, stars, sun)
-	void setTimeOfDay(Date const &date);
-
-	Date const &getTimeOfDay(void) const
-	{ return _date; }
 
 
 	/// Timers
@@ -535,10 +437,6 @@ private :
 
 	vl::MeshManagerRefPtr _mesh_manager;
 	vl::MaterialManagerRefPtr _material_manager;
-
-	bool _env_effects_enabled;
-	Weather _weather;
-	Date _date;
 
 	/// Timers
 	vl::chrono _program_timer;

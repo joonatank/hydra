@@ -69,7 +69,6 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _player(0)
 	, _trackers( new vl::Clients( _event_man ) )
 	, _logger(logger)
-	, _env_effects_enabled(true)
 	, _auto_start(true)
 	, _fsm(new GameManagerFSM)
 {
@@ -212,27 +211,6 @@ vl::GameManager::enablePhysics( bool enable )
 			assert(_physics_world);
 		}
 	}
-}
-
-void 
-vl::GameManager::enableEnvironmentalEffects(bool enable)
-{
-	_env_effects_enabled = enable;
-	// @todo reset the scene
-}
-
-void 
-vl::GameManager::setWeather(vl::Weather const &weather)
-{
-	_weather = weather;
-	/// @todo should do changes in the scenes
-}
-
-void 
-vl::GameManager::setTimeOfDay(vl::Date const &date)
-{
-	_date = date;
-	/// @todo should do changes in the scenes
 }
 
 bool
