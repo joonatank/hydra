@@ -1,10 +1,9 @@
 /**
- *	Copyright (c) 2010 - 2011 Tampere University of Technology
  *	Copyright (c) 2011 - 2012 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
- *	@date 2010-12
- *	@file game_manager.hpp
+ *	@date 2012-11
+ *	@file flags.hpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
