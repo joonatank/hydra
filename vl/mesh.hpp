@@ -149,6 +149,13 @@ private :
 class VertexBuffer
 {
 public :
+	/// @brief Dummy constructor, used by the serializers
+	VertexBuffer(void)
+		: _buffer(0)
+		, _n_vertices(0)
+		, _vertex_size(0)
+	{}
+
 	VertexBuffer(size_t vertex_size, size_t n_vertices)
 		: _buffer(0)
 		, _n_vertices(n_vertices)

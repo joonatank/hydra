@@ -427,15 +427,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexBuffer const &vbuf)
 {
+	std::clog << "Serializing vbuffer" << std::endl;
 	msg << vbuf.getNVertices() << vbuf.getVertexSize();
 	msg.write(vbuf._buffer, vbuf.size());
-
-	std::clog << "Wrote a vbuffer : ";
-	for(size_t i = 0 ; i < vbuf.size(); ++i)
-	{
-		std::clog << vbuf._buffer[i] << " ";
-	}
-	std::clog << std::endl;
 
 	return msg;
 }
@@ -444,19 +438,12 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexBuffer &vbuf)
 {
+	std::clog << "Deserializing vbuffer" << std::endl;
 	size_t vertex_size, vertices;
 	msg >> vertices >> vertex_size;
 	
 	vbuf = VertexBuffer(vertex_size, vertices);
 	msg.read(vbuf._buffer, vbuf.size());
-
-	std::clog << "Read a vbuffer : ";
-	for(size_t i = 0 ; i < vbuf.size(); ++i)
-	{
-		std::clog << vbuf._buffer[i] << " ";
-	}
-	std::clog << std::endl;
-
 
 	return msg;
 }
@@ -466,7 +453,8 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
 {
 	std::clog << "Serializing VertexData" << std::endl;
-	msg << vbuf.vertexDeclaration << vbuf.buffer;
+	assert(vbuf.buffer);
+	msg << vbuf.vertexDeclaration << *vbuf.buffer;
 
 	return msg;
 }
@@ -476,7 +464,9 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
 {
 	std::clog << "Deserializing VertexData" << std::endl;
-	msg >> vbuf.vertexDeclaration >> vbuf.buffer;
+	if(!vbuf.buffer)
+	{ vbuf.buffer = new vl::VertexBuffer(); }
+	msg >> vbuf.vertexDeclaration >> *vbuf.buffer;
 
 	return msg;
 }
