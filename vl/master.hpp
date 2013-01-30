@@ -65,6 +65,7 @@ public:
 	vl::GameManagerPtr getGameManager(void) const
 	{ return _game_manager; }
 
+	/// @todo why is this necessary?
 	RendererInterface *getRenderer(void) const
 	{ return _renderer.get(); }
 
@@ -155,7 +156,7 @@ protected :
 	bool _running;
 
 	// Renderer
-	RendererUniquePtr _renderer;
+	boost::scoped_ptr<RendererInterface> _renderer;
 
 	uint32_t _frame;
 	vl::chrono _sim_timer;

@@ -377,8 +377,7 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 
 	if( _env->getMaster().getNWindows() == 0 )
 	{
-		std::string str("Master needs to have at least one window.");
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(str) );
+		std::clog << "Warning! : Master without windows." << std::endl;
 	}
 
 	xml_elem = xml_root->first_node("slave");

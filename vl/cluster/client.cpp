@@ -371,12 +371,14 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				Message reply(MSG_DRAW_READY, _state.frame, vl::time());
 				sendMessage(reply);
 			}
+			/* @todo there should be a verbose argument in config (ini) for this print
 			else
 			{
 				size_t msgs_missing = _state.frame - (_state.update_frame + _update_messages.size());
 				std::clog << "Waiting for " << msgs_missing << "We have " 
 					<< _update_messages.size() << " messages." << std::endl;
 			}
+			*/
 		}
 		break;
 
