@@ -433,8 +433,11 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	/// Correct name has been set
 	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
 
-	// We should hand over the Renderer to either client or config
-	_renderer.reset( new Renderer(env->getName()) );
+	/// Only create local Renderer if we have Windows defined
+	if(env->getMaster().getNWindows())
+	{ _renderer.reset( new Renderer(env->getName()) ); }
+	else
+	{ std::clog << "Not creating local Renderer." << std::endl; }
 
 	_game_manager = new vl::GameManager(this, _logger);
 	_game_manager->setOptions(opt);
@@ -454,7 +457,8 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	_game_manager->addProjectChangedListener(boost::bind(&Master::settingsChanged, this, _1));
 	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Master::quit_callback, this));
 
-	_renderer->setMeshManager(_game_manager->getMeshManager());
+	if(_renderer.get())
+	{ _renderer->setMeshManager(_game_manager->getMeshManager()); }
 
 	init(opt.global_file, opt.project_file);
 

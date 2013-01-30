@@ -404,15 +404,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexBuffer const &vbuf)
 {
+	std::clog << "Serializing vbuffer" << std::endl;
 	msg << vbuf.getNVertices() << vbuf.getVertexSize();
 	msg.write(vbuf._buffer, vbuf.size());
-
-	std::clog << "Wrote a vbuffer : ";
-	for(size_t i = 0 ; i < vbuf.size(); ++i)
-	{
-		std::clog << vbuf._buffer[i] << " ";
-	}
-	std::clog << std::endl;
 
 	return msg;
 }
@@ -421,19 +415,12 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexBuffer &vbuf)
 {
+	std::clog << "Deserializing vbuffer" << std::endl;
 	size_t vertex_size, vertices;
 	msg >> vertices >> vertex_size;
 	
 	vbuf._reset(vertex_size, vertices);
 	msg.read(vbuf._buffer, vbuf.size());
-
-	std::clog << "Read a vbuffer : ";
-	for(size_t i = 0 ; i < vbuf.size(); ++i)
-	{
-		std::clog << vbuf._buffer[i] << " ";
-	}
-	std::clog << std::endl;
-
 
 	return msg;
 }
@@ -443,8 +430,12 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
 {
 	std::clog << "Serializing VertexData" << std::endl;
+
 	msg << vbuf.vertexDeclaration;
 
+	/// We need to write this open because one of the stored values is a pointer
+	/// yes we could write partial template specializations for them
+	/// but for now lets leave it.
 	msg << vbuf._bindings.size();
 	for(std::map<size_t, VertexBufferRefPtr>::const_iterator iter = vbuf._bindings.begin();
 		iter != vbuf._bindings.end(); ++iter)
@@ -461,10 +452,17 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
 {
 	std::clog << "Deserializing VertexData" << std::endl;
 	msg >> vbuf.vertexDeclaration;
+
 	
-	// @todo real implementation
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
-	
+	size_t bindings_size;
+	msg >> bindings_size;
+	for(size_t i = 0; i < bindings_size; ++i)
+	{
+		size_t bind;
+		VertexBufferRefPtr buffer = VertexBuffer::create(0, 0);
+		msg >> bind >> *buffer;
+		vbuf.setBinding(bind, buffer);
+	}
 
 	return msg;
 }
@@ -493,12 +491,11 @@ vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SubMesh const &sm)
 {
 	msg << sm.getName() << sm.getMaterial() << sm.operationType << sm.indexData << sm.useSharedGeometry;
 
-	if(!sm.useSharedGeometry && sm.vertexData)
+	if(sm.vertexData)
 	{ msg << *sm.vertexData; }
-	else if(sm.useSharedGeometry)
-	{
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NULL shared geometry with shared flag true."));
-	}
+
+	// Check that we have some kind of geometry either shared or local
+	assert(sm.useSharedGeometry || sm.vertexData);
 
 	return msg;
 }

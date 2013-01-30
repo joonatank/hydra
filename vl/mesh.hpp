@@ -152,8 +152,6 @@ private :
 class VertexBuffer
 {
 public :
-
-
 	void read(size_t offset, void *data, size_t size_) const
 	{
 		assert(offset + size_ <= this->size());
@@ -225,11 +223,10 @@ private :
 		, _n_vertices(n_vertices)
 		, _vertex_size(vertex_size)
 	{
-		// Forbid empty buffers, any buffer that has less than 3 vertices
-		// can not represent a triangle
-		// it could represent a line so we keep the limit to at least 2 vertices.
-		assert(_n_vertices > 1 && _vertex_size > 0);
-		_buffer = new char[_n_vertices * _vertex_size];
+		if(_n_vertices*_vertex_size > 0)
+		{
+			_buffer = new char[_n_vertices * _vertex_size];
+		}
 	}
 
 	size_t _n_vertices;
