@@ -369,16 +369,14 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
-	{ processNode( xml_elem, _env->getMaster() ); }
+	{
+		processNode( xml_elem, _env->getMaster() );
+		_env->getMaster().gui_enabled = true;
+	}
 
 	xml_elem = xml_root->first_node("programs");
 	if(xml_elem)
 	{ processPrograms(xml_elem); }
-
-	if( _env->getMaster().getNWindows() == 0 )
-	{
-		std::clog << "Warning! : Master without windows." << std::endl;
-	}
 
 	xml_elem = xml_root->first_node("slave");
 	while( xml_elem )
@@ -389,6 +387,23 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 
 		xml_elem = xml_elem->next_sibling("slave");
 	}
+
+	if( _env->getMaster().getNWindows() == 0 )
+	{
+		std::clog << "Warning! : Master without windows." << std::endl;
+		// GUI is available on master (because it has no window) 
+		// so enable it on first slave that has a Window
+		for(size_t i = 0; i < _env->getSlaves().size(); ++i)
+		{
+			if(_env->getSlaves().at(i).getNWindows() > 0)
+			{
+				std::clog << "Enabling GUI on slave : " << _env->getSlaves().at(i).name << std::endl;
+				_env->getSlaves().at(i).gui_enabled = true;
+				break;
+			}
+		}
+	}
+
 }
 
 

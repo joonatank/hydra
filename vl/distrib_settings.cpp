@@ -111,7 +111,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Node const &node )
 {
-	msg << node.name << node.windows;
+	msg << node.name << node.windows << node.gui_enabled;
 
 	return msg;
 }
@@ -120,7 +120,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Node& node )
 {
-	msg >> node.name >> node.windows;
+	msg >> node.name >> node.windows >> node.gui_enabled;
 
 	return msg;
 }

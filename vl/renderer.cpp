@@ -355,10 +355,10 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			case OBJ_GUI :
 			{
 				std::cout << vl::TRACE << "Renderer : Creating GUI with id " << id << std::endl;
-				
-				// Only creating GUI on the master for now
-				// @todo add support for selecting the window
-				if( getName() == _env->getMaster().name )
+
+				// Create GUI on the Node if it was enabled
+				// The config parser automatically enables GUI on master if possible.
+				if( getNodeConf().gui_enabled )
 				{
 					std::cout << vl::TRACE << "Creating GUI" << std::endl;
 					// Do not create the GUI multiple times
@@ -383,7 +383,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			case OBJ_GUI_PERFORMANCE_OVERLAY:
 			{
 				// GUI objects are only used by master
-				if( getName() == _env->getMaster().name )
+				if( getNodeConf().gui_enabled )
 				{
 					std::cout << vl::TRACE << "Renderer : Creating GUI Widnow" << std::endl;
 					if(!_gui)

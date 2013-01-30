@@ -223,10 +223,12 @@ struct HYDRA_API Node
 {
 	Node( std::string const &nam )
 		: name(nam)
+		, gui_enabled(false)
 	{}
 
 	// Default constructor to allow vector resize
 	Node( void )
+		: gui_enabled(false)
 	{}
 
 	bool empty( void ) const
@@ -246,6 +248,7 @@ struct HYDRA_API Node
 
 	std::string name;
 	std::vector<Window> windows;
+	bool gui_enabled;
 };
 
 struct HYDRA_API Server
