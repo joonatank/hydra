@@ -181,16 +181,15 @@ vl::Master::render(void)
 
 	vl::chrono timer;
 
+	// We need to start drawing before we process the next frame
 	// Get new event messages that are processed in GameManager::step
 	_server->poll();
 	_handleMessages();
 
 	// Process a time step in the game
-	timer.reset();
 	_game_manager->step();
 
 	/// Provide the updates to slaves
-	timer.reset();
 	_updateFrameMsgs();
 	_updateServer();
 	_updateRenderer();
@@ -204,13 +203,13 @@ vl::Master::render(void)
 		_renderer->draw();
 	}
 
+	// @todo For some reason finish_draw takes the same time as local rendering.
 	_server->finish_draw(_frame, getSimulationTime());
 
 	// Finish local renderer
 	if( _renderer.get() )
 	{
 		_renderer->swap();
-
 		_renderer->capture();
 	}
 	report[PT_RENDERING].push(timer.elapsed());
