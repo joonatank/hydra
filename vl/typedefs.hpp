@@ -125,7 +125,9 @@ namespace vl
 	typedef boost::shared_ptr<MaterialManager> MaterialManagerRefPtr;
 
 	class Recording;
+	class EyeTracker;
 	typedef boost::shared_ptr<Recording> RecordingRefPtr;
+	typedef boost::shared_ptr<EyeTracker> EyeTrackerRefPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;

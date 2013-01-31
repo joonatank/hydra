@@ -53,6 +53,7 @@
 #include "animation/kinematic_world.hpp"
 
 #include "recording.hpp"
+#include "eye_tracker.hpp"
 
 /// Necessary for exporting math
 #include "math/transform.hpp"
@@ -710,6 +711,7 @@ void export_game(void)
 		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.add_property("material_manager", &vl::GameManager::getMaterialManager)
+		.add_property("eye_tracker", &vl::GameManager::getEyeTracker)
 		.def("loadRecording", &vl::GameManager::loadRecording)
 		.def("load_scene", loadScene_ov0)
 		.def("load_scene", loadScene_ov1)
@@ -735,6 +737,14 @@ void export_game(void)
 		.add_property("cyclop_transformation", python::make_function(&Player::getCyclopTransform, python::return_value_policy<python::copy_const_reference>()), &Player::setCyclopTransform)
 		.add_property("ipd", &vl::Player::getIPD, &vl::Player::setIPD)
 		.def("takeScreenshot", &vl::Player::takeScreenshot)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::EyeTracker, vl::EyeTrackerRefPtr, boost::noncopyable>("EyeTracker", python::no_init)
+		.def("start", &vl::EyeTracker::start)
+		.def("stop", &vl::EyeTracker::stop)
+		.add_property("started", &vl::EyeTracker::isStarted)
+		// @todo add parameter configuring or RayObject retrieval
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

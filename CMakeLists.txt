@@ -155,6 +155,18 @@ set( HYDRA_DEP_LIBS
 	${Caelum_LIBRARIES}
 	)
 
+# Find the Eye tracking package which is not required
+find_package(Eyes QUIET)
+find_package(GLM QUIET)
+# Link if we found it
+if(EYES_FOUND AND GLM_FOUND)
+	message("Linking to eyes")
+	include_directories(SYSTEM ${EYES_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
+	list(APPEND HYDRA_DEP_LIBS ${EYES_LIBRARIES})
+	# Add define so we can build the support for Eyes
+	add_definitions(-DUSE_EYES)
+endif()
+
 # Libraries used to build project binaries
 set( HYDRA_LIBRARIES HydraMain )
 

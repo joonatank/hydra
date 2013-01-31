@@ -225,6 +225,9 @@ vl::RayObject::_updateRay(void)
 		Ogre::Vector3 const &direction = iter->second;
 		
 		// Parent transformation
+		// @todo add proper handling of objects without parents
+		assert(_ogre_object->getParentNode());
+
 		Ogre::Vector3 const &translate = _ogre_object->getParentNode()->_getDerivedPosition();
 		Ogre::Vector3 const &scale = _ogre_object->getParentNode()->_getDerivedScale();
 		Ogre::Quaternion const &q = _ogre_object->getParentNode()->_getDerivedOrientation();

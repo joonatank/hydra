@@ -133,6 +133,9 @@ vl::GameManager::step(void)
 		_trackers->getTrackerPtr(i)->mainloop();
 	}
 
+	if(_eye_tracker)
+	{ _eye_tracker->progress(); }
+
 	if(isPlaying())
 	{
 		for(size_t i = 0; i < _analog_clients.size(); ++i )
@@ -652,6 +655,11 @@ vl::GameManager::_do_init(init const &evt)
 	ov->setShowAdvanced(_options.debug.overlay_advanced);
 
 	_createQuitEvent();
+
+	// Create the eye tracker
+	// For now auto start it
+	assert(_player && _scene_manager);
+	_eye_tracker.reset(new EyeTracker(_player, _scene_manager));
 
 	assert(evt.environment);
 	_loadEnvironment(*evt.environment);

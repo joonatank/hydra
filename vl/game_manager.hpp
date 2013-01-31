@@ -55,6 +55,8 @@
 #include "profiler_report.hpp"
 // Necessary for LOADER_FLAGS
 #include "flags.hpp"
+// Necessary for EyeTracker
+#include "eye_tracker.hpp"
 
 namespace vl
 {
@@ -168,6 +170,9 @@ public :
 	vl::Logger *getLogger(void)
 	{ return _logger; }
 
+	EyeTrackerRefPtr getEyeTracker(void)
+	{ return _eye_tracker; }
+
 	/// @brief creates a new GameObject
 	/// @return new GameObject if none with that name exist, otherwise already existing object
 	/// @param name the name of the GameObject to create
@@ -279,7 +284,8 @@ public :
 
 	/// Resource loading
 	/// @todo all resource loading should be moved to ResourceManager or similar
-
+	/// @todo this is going to be removed and moved to Eyes project since
+	/// it's the only one using this Recording file format.
 	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// @brief get the current project and global settings
@@ -451,6 +457,8 @@ private :
 	KinematicWorldRefPtr _kinematic_world;
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
+
+	EyeTrackerRefPtr _eye_tracker;
 
 	vl::ProjSettings _loaded_project;
 	vl::ProjSettings _global_project;

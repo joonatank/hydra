@@ -62,6 +62,7 @@ set(SRC
 	hsf_loader.cpp
 	hsf_writer.cpp
 	profiler_report.cpp
+	eye_tracker.cpp
 	)
 
 set(MATH_HEADERS
@@ -273,6 +274,7 @@ set( HEADERS
 	remote_launcher_helper.hpp
 	profiler_report.hpp
 	flags.hpp
+	eye_tracker.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})
