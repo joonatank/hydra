@@ -70,6 +70,7 @@ public :
 	void progress(void);
 
 private :
+	void _update_head(void);
 #ifdef USE_EYES
 	boost::scoped_ptr<eyes::EyeTracker> _eyes;
 #endif

@@ -414,8 +414,6 @@ vl::RayObject::_clear(void)
 void
 vl::RayObject::_create(void)
 {
-	std::clog << "vl::RayObject::_create" << std::endl;
-
 	// Specification does not allow empty objects
 	assert((_draw_collision_sphere && _collision_detection) || _draw_ray);
 

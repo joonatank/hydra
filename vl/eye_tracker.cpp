@@ -39,6 +39,10 @@ void
 vl::EyeTracker::progress(void)
 {}
 
+void
+vl::EyeTracker::_update_head(void)
+{}
+
 #else
 vl::EyeTracker::EyeTracker(PlayerPtr player, SceneManager *creator)
 	: _player(player)
@@ -63,9 +67,6 @@ vl::EyeTracker::EyeTracker(PlayerPtr player, SceneManager *creator)
 	_drawable = creator->createRayObject("EyeRay", "collision_sphere/red");
 	_drawable->setDirection(Ogre::Vector3(0, 0, -1));
 	_drawable->setSphereRadius(0.2);
-	// Some debug values
-	_drawable->setPosition(Vector3(0, 2, 10));
-	_drawable->setLength(20);
 	// Doesn't affect performance that much if the spheres are on or off
 	_drawable->setDrawCollisionSphere(true);
 	_drawable->setCollisionDetection(true);
@@ -91,6 +92,14 @@ vl::EyeTracker::start(void)
 
 	// Do start
 	// @todo we should have separated calibration function
+
+	// @todo tecnically the calibration function uses head data
+	// for calculating the initial position, problem with this
+	// is that if we use it we get really skewed results without
+	// head tracking. 
+	// Need to test if this is the case with real head tracking also
+	// if so we need to fix the calibration.
+	//_update_head();
 	_eyes->init();
 	_node->show();
 
@@ -110,6 +119,16 @@ vl::EyeTracker::stop(void)
 }
 
 void
+vl::EyeTracker::_update_head(void)
+{
+	vl::Transform const &t = _player->getHeadTransform();
+	glm::vec3 v(t.position.x, t.position.y, t.position.z);
+	glm::quat q(t.quaternion.w, t.quaternion.x, t.quaternion.y, t.quaternion.z);
+
+	_eyes->updateHead(v, q);
+}
+
+void
 vl::EyeTracker::progress(void)
 {
 	if(!_started)
@@ -118,31 +137,24 @@ vl::EyeTracker::progress(void)
 	assert(_eyes);
 	assert(_node && _player && _drawable);
 
-	// @todo set the head position from Player
-	vl::Transform const &t = _player->getHeadTransform();
-	glm::vec3 v(t.position.x, t.position.y, t.position.z);
-	glm::quat q(t.quaternion.w, t.quaternion.x, t.quaternion.y, t.quaternion.z);
-	_eyes->updateHead(v, q);
+	_update_head();
 
 	_eyes->mainloop();
 	
-	// @todo copy the transformation from Player::currentCamera
-	// to our Ray SceneNode
-	// Update the camera positions
+	// Copy the transformation from Player::currentCamera to our Ray SceneNode
+	// @todo might make this configurable so we can debug more easily
 	_node->setWorldTransform(_player->getCameraNode()->getWorldTransform());
 
 	// No reason to check this because we update the head transformation every frame
 //	if(_eyes->hasChanged())
 	{
 		// Get new data
-		v = _eyes->getEye().pos;
-		q = _eyes->getEye().quat;
-
-		Ogre::Vector3 dir = Ogre::Quaternion(q.w, q.x, q.y, q.z) * (-Ogre::Vector3::UNIT_Z);
+		glm::vec3 v = _eyes->getEyePosition();
+		glm::vec3 dir = _eyes->getEyeDirection();
 
 		// Update the drawable
 		_drawable->setPosition(Ogre::Vector3(v.x, v.y, v.z));
-		_drawable->setDirection(dir);
+		_drawable->setDirection(Ogre::Vector3(dir.x, dir.y, dir.z));;
 
 //		_eyes->clearChanged();
 	}
