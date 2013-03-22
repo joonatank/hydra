@@ -491,6 +491,13 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
+	if(!scene_info.getUse())
+	{
+		std::cout << "Trying to load scene : " << scene_info.getName() 
+			<< " that is not in use." << std::endl;
+		return;
+	}
+
 	vl::chrono t;
 	fs::path file(scene_info.getFile());
 	try
