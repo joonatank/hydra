@@ -303,7 +303,18 @@ vl::dae::Importer::writeNode(const COLLADAFW::Node* nodeToWriter, vl::SceneNodeP
 {
 	assert(parent);
 
-	vl::SceneNodePtr node = parent->createChildSceneNode(nodeToWriter->getName());
+	std::string name = nodeToWriter->getName();
+	size_t i = 0;
+	while(_scene_manager->hasSceneNode(name))
+	{
+		std::clog << "Scene Already has an object with name : " << name << " renaming." << std::endl;
+		std::stringstream ss;
+		ss << nodeToWriter->getName() << "_" << i;
+		name = ss.str();
+		++i;
+	}
+
+	vl::SceneNodePtr node = parent->createChildSceneNode(name);
 
 	// copy transformation matrix
 	COLLADABU::Math::Matrix4 mat = nodeToWriter->getTransformationMatrix();
