@@ -79,6 +79,18 @@ vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 	return shape;
 }
 
+vl::physics::CompoundShapeRefPtr
+vl::physics::CompoundShape::create(bool useDynamicAABBTree)
+{
+	CompoundShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletCompoundShape(useDynamicAABBTree));
+#else if USE_NEWTON
+#endif
+	return shape;
+
+}
+
 vl::physics::CylinderShapeRefPtr
 vl::physics::CylinderShape::create(Ogre::Vector3 const &bounds)
 {

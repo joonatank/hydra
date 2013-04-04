@@ -14,22 +14,7 @@ material _missing_material_
 	}
 }
 
-material kangas_harmaa 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.0985002 0.0985002 0.0985002 1 
-			emissive 0 0 0 1 
-			diffuse 0.0788002 0.0788002 0.0788002 1 
-			specular 0 0 0 1 1 
-		}
-	}
-}
-
-material cylinder_ext_mat 
+material cylinder_mat 
 {
 	receive_shadows on
 	technique
@@ -39,64 +24,61 @@ material cylinder_ext_mat
 			ambient 0.8 0.8 0.8 1 
 			emissive 0 0 0 1 
 			diffuse 0.64 0.64 0.64 1 
-			specular 0.71875 0.71875 0.71875 1 50 
+			specular 0.0366209 0.0366209 0.0366209 1 61 
 			texture_unit
 			{
-				texture cylinder_ext_tekst.png
+				texture cylinder_tube_Color.tga
 			}
 		}
 	}
 }
 
-material muovi_musta 
+material roadsign_textfield_incollaboration 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.0444523 0.0444523 0.0444523 1 
-			emissive 0 0 0 1 
-			diffuse 0.0355618 0.0355618 0.0355618 1 
-			specular 0.5 0.5 0.5 1 50 
+			ambient 0.100625 0 1 0 
+			emissive 0 0 0 0 
+			diffuse 0.0860903 0 0.855556 0 
+			specular 0.0255565 0.185834 0.666667 1 50 
+			depth_write off
+			texture_unit
+			{
+				texture roadsign_textfield_incollaboration.png
+			}
 		}
 	}
 }
 
-material bucket_mat 
+material collision 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.8 0.8 0.8 1 
+			ambient 0.8 0 0.745638 1 
 			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
-			texture_unit
-			{
-				texture bucket_tekst.png
-			}
+			diffuse 0.64 0 0.59651 1 
+			specular 0.496667 0.5 0.493333 1 50 
 		}
 	}
 }
 
-material boom_mat 
+material roadsign_nail 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.8 0.8 0.8 1 
+			ambient 0.214029 0.214029 0.214029 1 
 			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
-			texture_unit
-			{
-				texture boom_tekst.png
-			}
+			diffuse 0.171223 0.171223 0.171223 1 
+			specular 0.210008 0.210008 0.210008 1 75 
 		}
 	}
 }
@@ -116,21 +98,36 @@ material muovi_keltainen
 	}
 }
 
-material arm_mat 
+material roadsign_banner_tut 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.8 0.8 0.8 1 
+			ambient 0.429217 0.429217 0.429217 1 
 			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
+			diffuse 0.343373 0.343373 0.343373 1 
+			specular 0.0373208 0.0373208 0.0373208 1 50 
 			texture_unit
 			{
-				texture arm_tekst.png
+				texture roadsign_banner_tut.png
 			}
+		}
+	}
+}
+
+material plastic_grey 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.114931 0.114931 0.114931 1 
+			emissive 0 0 0 1 
+			diffuse 0.091945 0.091945 0.091945 1 
+			specular 0.123094 0.123094 0.123094 1 50 
 		}
 	}
 }
@@ -150,17 +147,21 @@ material metalli_rauta
 	}
 }
 
-material muovi_tharmaa 
+material roadsign_plywood_board 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.114931 0.114931 0.114931 1 
+			ambient 0.250158 0.181164 0.144129 1 
 			emissive 0 0 0 1 
-			diffuse 0.091945 0.091945 0.091945 1 
-			specular 0.123094 0.123094 0.123094 1 50 
+			diffuse 0.200127 0.144931 0.115303 1 
+			specular 0.0188131 0.0175766 0.0166226 1 4 
+			texture_unit
+			{
+				texture roadsign_plywood_board.jpg
+			}
 		}
 	}
 }
@@ -180,25 +181,6 @@ material metalli_harmaa
 	}
 }
 
-material rails_mat 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
-			texture_unit
-			{
-				texture rails_tekst.png
-			}
-		}
-	}
-}
-
 material metal_yellow 
 {
 	receive_shadows on
@@ -214,17 +196,424 @@ material metal_yellow
 	}
 }
 
-material kumi_musta 
+material lasi 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.0331007 0.0331007 0.0331007 1 
+			ambient 1 1 1 0.1 
+			emissive 0 0 0 0.1 
+			diffuse 0.8 0.8 0.8 0.1 
+			specular 0 0 0 1 20 
+			depth_write off
+		}
+	}
+}
+
+material bucket 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
 			emissive 0 0 0 1 
-			diffuse 0.0264805 0.0264805 0.0264805 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture bucket.png
+			}
+		}
+	}
+}
+
+material kangas_harmaa 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.0985002 0.0985002 0.0985002 1 
+			emissive 0 0 0 1 
+			diffuse 0.0788002 0.0788002 0.0788002 1 
+			specular 0 0 0 1 1 
+		}
+	}
+}
+
+material terrain_pit 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
 			specular 0 0 0 1 50 
+			texture_unit
+			{
+				texture terrain_pit_Bump.tga
+			}
+			texture_unit
+			{
+				texture terrain_pit_Color.tga
+			}
+		}
+	}
+}
+
+material arm_mat 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture boom2.png
+			}
+		}
+	}
+}
+
+material hull 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.134366 0.095424 0 1 100 
+			texture_unit
+			{
+				texture hull_Color.tga
+			}
+		}
+	}
+}
+
+material terrain_dirt_tracks 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0 0 0 1 50 
+			texture_unit
+			{
+				texture terrain_dirt_tracks_Bump.tga
+			}
+			texture_unit
+			{
+				texture terrain_dirt_tracks_Color.tga
+			}
+		}
+	}
+}
+
+material cylinder_rod1 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.673856 0.673856 0.673856 1 
+			emissive 0 0 0 1 
+			diffuse 0.539085 0.539085 0.539085 1 
+			specular 0.724659 0.724659 0.724659 1 127 
+			texture_unit
+			{
+				texture cyl_hull_rod_Color.tga
+			}
+		}
+	}
+}
+
+material boom_mat 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture boom1.png
+			}
+		}
+	}
+}
+
+material cyl_boom2_rod 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.673856 0.673856 0.673856 1 
+			emissive 0 0 0 1 
+			diffuse 0.539085 0.539085 0.539085 1 
+			specular 0.724659 0.724659 0.724659 1 127 
+			texture_unit
+			{
+				texture cyl_boom2_rod_Color.tga
+			}
+		}
+	}
+}
+
+material banner_savant 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.239546 0.239546 0.239546 1 
+			emissive 0 0 0 1 
+			diffuse 0.239546 0.239546 0.239546 1 
+			specular 0.126468 0.126468 0.126468 1 10 
+			texture_unit
+			{
+				texture roadsign_banner_savant.png
+			}
+		}
+	}
+}
+
+material roadsign_metal_frame 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.184475 0.021219 0.021219 1 
+			emissive 0 0 0 1 
+			diffuse 0.14758 0.0169752 0.0169752 1 
+			specular 0.18787 0.0214051 0.0214051 1 50 
+			texture_unit
+			{
+				texture roadsign_metal_frame.png
+			}
+		}
+	}
+}
+
+material rock 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.792157 0.819608 0.933333 1 
+			emissive 0 0 0 1 
+			diffuse 0.633726 0.655686 0.746666 1 
+			specular 0 0 0 1 20 
+			texture_unit
+			{
+				texture rock_Bump.tga
+			}
+			texture_unit
+			{
+				texture rock_Color.tga
+			}
+		}
+	}
+}
+
+material muovi_punainen 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.281003 0.0259791 0.036716 1 
+			emissive 0 0 0 1 
+			diffuse 0.224802 0.0207833 0.0293728 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material muovi_vharmaa 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.147309 0.147309 0.147309 1 
+			emissive 0 0 0 1 
+			diffuse 0.117847 0.117847 0.117847 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material metalli_kromi 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material metalli_alumiini 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.350548 0.350548 0.350548 1 
+			emissive 0 0 0 1 
+			diffuse 0.280438 0.280438 0.280438 1 
+			specular 0.31913 0.31913 0.31913 1 15 
+		}
+	}
+}
+
+material base 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.11494 0.11494 0.11494 1 
+			emissive 0 0 0 1 
+			diffuse 0.0919522 0.0919522 0.0919522 1 
+			specular 0.0585932 0.0585932 0.0585932 1 60 
+			texture_unit
+			{
+				texture hull_Color.tga
+			}
+		}
+	}
+}
+
+material rails_mat 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture rails.png
+			}
+		}
+	}
+}
+
+material man 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.8 0.8 0.8 1 
+			specular 0 0 0 1 50 
+			texture_unit
+			{
+				texture human.png
+			}
+		}
+	}
+}
+
+material lamp 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.220251 0.198872 0.204554 1 
+			emissive 0 0 0 1 
+			diffuse 0.176201 0.159098 0.163643 1 
+			specular 0.414048 0.414048 0.414048 1 50 
+		}
+	}
+}
+
+material track 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture track.png
+			}
+		}
+	}
+}
+
+material bucket_control_mat 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.8 0.8 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.64 0.64 1 
+			specular 0.5 0.5 0.5 1 50 
+			texture_unit
+			{
+				texture fourbarlink.png
+			}
 		}
 	}
 }
@@ -248,22 +637,7 @@ material jopec
 	}
 }
 
-material collision 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0 0.745638 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0 0.59651 1 
-			specular 0.496667 0.5 0.493333 1 50 
-		}
-	}
-}
-
-material bucket_control_mat 
+material terrain_leveled 
 {
 	receive_shadows on
 	technique
@@ -273,64 +647,15 @@ material bucket_control_mat
 			ambient 0.8 0.8 0.8 1 
 			emissive 0 0 0 1 
 			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
+			specular 0 0 0 1 50 
 			texture_unit
 			{
-				texture bucket_controller_1.png
+				texture terrain_leveled_Bump.tga
 			}
-		}
-	}
-}
-
-material cylinder_mat 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
 			texture_unit
 			{
-				texture cylinder_tekst.png
+				texture terrain_leveled_Color.tga
 			}
-		}
-	}
-}
-
-material base_mat 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
-			texture_unit
-			{
-				texture base_tekst.png
-			}
-		}
-	}
-}
-
-material muovi_punainen 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.281003 0.0259791 0.036716 1 
-			emissive 0 0 0 1 
-			diffuse 0.224802 0.0207833 0.0293728 1 
-			specular 0.5 0.5 0.5 1 50 
 		}
 	}
 }
@@ -354,82 +679,51 @@ material amplifier
 	}
 }
 
-material metalli_kromi 
+material muovi_musta 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.8 0.8 0.8 1 
+			ambient 0.0444523 0.0444523 0.0444523 1 
 			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
+			diffuse 0.0355618 0.0355618 0.0355618 1 
 			specular 0.5 0.5 0.5 1 50 
 		}
 	}
 }
 
-material muovi_vharmaa 
+material cylinder_rod2 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 0.147309 0.147309 0.147309 1 
+			ambient 0.673856 0.673856 0.673856 1 
 			emissive 0 0 0 1 
-			diffuse 0.117847 0.117847 0.117847 1 
-			specular 0.5 0.5 0.5 1 50 
-		}
-	}
-}
-
-material metalli_alumiini 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.350548 0.350548 0.350548 1 
-			emissive 0 0 0 1 
-			diffuse 0.280438 0.280438 0.280438 1 
-			specular 0.31913 0.31913 0.31913 1 15 
-		}
-	}
-}
-
-material track_mat 
-{
-	receive_shadows on
-	technique
-	{
-		pass
-		{
-			ambient 0.8 0.8 0.8 1 
-			emissive 0 0 0 1 
-			diffuse 0.64 0.64 0.64 1 
-			specular 0.5 0.5 0.5 1 50 
+			diffuse 0.539085 0.539085 0.539085 1 
+			specular 0.724659 0.724659 0.724659 1 127 
 			texture_unit
 			{
-				texture telat_tekst_2.png
+				texture cyl_boom1_rod_Color.tga
 			}
 		}
 	}
 }
 
-material lasi 
+material rubber_black 
 {
 	receive_shadows on
 	technique
 	{
 		pass
 		{
-			ambient 1 1 1 0.1 
-			emissive 0 0 0 0.1 
-			diffuse 0.8 0.8 0.8 0.1 
-			specular 0 0 0 1 20 
-			depth_write off
+			ambient 0.0331007 0.0331007 0.0331007 1 
+			emissive 0 0 0 1 
+			diffuse 0.0264805 0.0264805 0.0264805 1 
+			specular 0 0 0 1 50 
 		}
 	}
 }

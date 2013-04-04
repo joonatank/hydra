@@ -5,6 +5,151 @@
 		<colourAmbient b="0" g="0" r="0"/>
 	</environment>
 	<nodes>
+		<node name="cb_rock">
+			<position x="-0" y="0" z="-10.5492"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cb_rock.mesh" name="cb_rock"/>
+		</node>
+		<node name="cyl_boom2_rod">
+			<position x="1.16683e-24" y="2.1804" z="-7.88194"/>
+			<quaternion w="0.592941" x="-0.805246" y="-7.0015e-19" z="-1.47198e-18"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cyl_boom2_rod.mesh" name="cyl_boom2_rod"/>
+		</node>
+		<node name="cyl_boom1_rod">
+			<position x="6.67158e-09" y="6.42911" z="-7.98841"/>
+			<quaternion w="0.999534" x="0.0305385" y="-1.60914e-18" z="-2.59982e-19"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cyl_boom1_rod.mesh" name="cyl_boom1_rod"/>
+		</node>
+		<node name="cyl_hull_R_rod">
+			<position x="0.5" y="5.27982" z="-3.39888"/>
+			<quaternion w="0.851952" x="0.52362" y="-1.52531e-18" z="5.74774e-19"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cyl_hull_R_rod.mesh" name="cyl_hull_R_rod"/>
+		</node>
+		<node name="cyl_boom1_tube">
+			<position x="1.96296e-09" y="6.25337" z="-5.13821"/>
+			<quaternion w="0.0305378" x="-0.999534" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cyl_boom1_tube.mesh" name="cyl_boom1_tube"/>
+		</node>
+		<node name="cyl_boom2_tube">
+			<position x="1.96296e-09" y="4.22656" z="-8.52203"/>
+			<quaternion w="0.805246" x="0.59294" y="0" z="0"/>
+			<scale x="1" y="0.999999" z="1"/>
+			<entity meshFile="cyl_boom2_tube.mesh" name="cyl_boom2_tube"/>
+		</node>
+		<node name="cyl_hull_R_tube">
+			<position x="0.5" y="3.09868" z="-2.29716"/>
+			<quaternion w="0.523621" x="-0.851951" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cyl_hull_R_tube.mesh" name="cyl_hull_R_tube"/>
+		</node>
+		<node name="terrain">
+			<position x="-0" y="0" z="-5"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<node name="t1_1_terrain_grass">
+				<position x="23" y="0" z="27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t1_1_terrain_grass.mesh" name="t1_1_terrain_grass"/>
+			</node>
+			<node name="t1_2_terrain_grass">
+				<position x="23" y="0" z="9.00001"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t1_2_terrain_grass.mesh" name="t1_2_terrain_grass"/>
+			</node>
+			<node name="t1_3_terrain_grass">
+				<position x="23" y="0" z="-8.99999"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t1_3_terrain_grass.mesh" name="t1_3_terrain_grass"/>
+			</node>
+			<node name="t1_4_terrain_grass">
+				<position x="23" y="0" z="-27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t1_4_terrain_grass.mesh" name="t1_4_terrain_grass"/>
+			</node>
+			<node name="t2_1_terrain_grass">
+				<position x="-3.71933e-05" y="0" z="27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t2_1_terrain_grass.mesh" name="t2_1_terrain_grass"/>
+			</node>
+			<node name="t2_2_terrain_dirt_tracks">
+				<position x="-3.71933e-05" y="0" z="9.00001"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t2_2_terrain_dirt_tracks.mesh" name="t2_2_terrain_dirt_tracks"/>
+			</node>
+			<node name="t2_3_terrain_pit">
+				<position x="-2.38419e-07" y="0" z="-9"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t2_3_terrain_pit.mesh" name="t2_3_terrain_pit"/>
+			</node>
+			<node name="t2_4_terrain_grass">
+				<position x="-3.71933e-05" y="0" z="-27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t2_4_terrain_grass.mesh" name="t2_4_terrain_grass"/>
+			</node>
+			<node name="t3_1_terrain_grass">
+				<position x="-23" y="0" z="27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t3_1_terrain_grass.mesh" name="t3_1_terrain_grass"/>
+			</node>
+			<node name="t3_2_terrain_grass">
+				<position x="-23" y="0" z="9.00001"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t3_2_terrain_grass.mesh" name="t3_2_terrain_grass"/>
+			</node>
+			<node name="t3_3_terrain_grass">
+				<position x="-23" y="0" z="-8.99999"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t3_3_terrain_grass.mesh" name="t3_3_terrain_grass"/>
+			</node>
+			<node name="t3_4_terrain_grass">
+				<position x="-23" y="0" z="-27"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="t3_4_terrain_grass.mesh" name="t3_4_terrain_grass"/>
+			</node>
+		</node>
+		<node name="Hemi">
+			<position x="-0" y="50" z="-5"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<light castShadows="false" name="Hemi" type="hemi">
+				<lightAttenuation constant="1.0" linear="0.04" quadratic="0.0" range="5000"/>
+				<colourDiffuse b="1" g="0.694011" r="0.689016"/>
+				<colourSpecular b="1" g="0.694011" r="0.689016"/>
+			</light>
+		</node>
+		<node name="human">
+			<position x="-3.25306" y="0.0611546" z="-7.01118"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="human.mesh" name="human"/>
+		</node>
+		<node name="Sun">
+			<position x="-0" y="40" z="40"/>
+			<quaternion w="0.92388" x="0.382684" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<light castShadows="false" name="Sun" type="sun">
+				<lightAttenuation constant="1.0" linear="0.04" quadratic="0.0" range="5000"/>
+				<colourDiffuse b="0.766762" g="0.996254" r="1"/>
+				<colourSpecular b="0.766762" g="0.996254" r="1"/>
+			</light>
+		</node>
 		<node name="jt_cyl_boom2_trans">
 			<position x="0.000182097" y="3.41152" z="-8.26465"/>
 			<quaternion w="0.805246" x="0.59294" y="0" z="0"/>
@@ -70,13 +215,13 @@
 			<entity meshFile="cb_cyl_boom2_rod.mesh" name="cb_cyl_boom2_rod"/>
 		</node>
 		<node name="cb_cyl_boom2_tube">
-			<position x="-0" y="3.8114" z="-8.39421"/>
+			<position x="1.96296e-09" y="4.22656" z="-8.52203"/>
 			<quaternion w="0.805246" x="0.59294" y="0" z="0"/>
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cb_cyl_boom2_tube.mesh" name="cb_cyl_boom2_tube"/>
 		</node>
 		<node name="cb_cyl_boom1_tube">
-			<position x="-0" y="6.26443" z="-5.21609"/>
+			<position x="1.96296e-09" y="6.25337" z="-5.13821"/>
 			<quaternion w="0.0305378" x="-0.999534" y="0" z="0"/>
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cb_cyl_boom1_tube.mesh" name="cb_cyl_boom1_tube"/>
@@ -110,6 +255,71 @@
 			<quaternion w="0.523621" x="-0.851951" y="0" z="0"/>
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cb_cyl_hull_R_tube.mesh" name="cb_cyl_hull_R_tube"/>
+		</node>
+		<node name="hull">
+			<position x="-0" y="2.7" z="1.3"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="hull.mesh" name="hull"/>
+			<node name="cabins">
+				<position x="-1.35" y="0.380111" z="-3.53754"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="amplifier">
+					<position x="-1.19209e-07" y="0.871046" z="-0.134568"/>
+					<quaternion w="1.84649e-07" x="-1.70371e-07" y="1" z="1.11162e-07"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="amplifier.mesh" name="amplifier"/>
+				</node>
+				<node name="cabin1_frame">
+					<position x="-0" y="-2.38419e-07" z="2.38419e-07"/>
+					<quaternion w="1" x="-8.04746e-09" y="-1.00583e-08" z="7.45058e-09"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="cabin1_frame.mesh" name="cabin1_frame"/>
+				</node>
+				<node name="cabin2_frame">
+					<position x="-0" y="-2.38419e-07" z="2.38419e-07"/>
+					<quaternion w="1" x="-8.04746e-09" y="-1.00583e-08" z="7.45058e-09"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="cabin2_frame.mesh" name="cabin2_frame"/>
+				</node>
+				<node name="chair">
+					<position x="0.00265872" y="-0.941604" z="7.15256e-07"/>
+					<quaternion w="1" x="6.61105e-08" y="-5.80696e-09" z="-6.01007e-08"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="istuin.mesh" name="istuin"/>
+				</node>
+				<node name="control_panel_L">
+					<position x="-0.293948" y="-0.163048" z="-0.439288"/>
+					<quaternion w="1" x="7.40571e-08" y="-5.80696e-09" z="-3.02984e-08"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="control_panel_L.mesh" name="control_panel_L"/>
+				</node>
+				<node name="control_panel_R">
+					<position x="0.293947" y="-0.163048" z="-0.439289"/>
+					<quaternion w="1" x="7.40571e-08" y="-5.80696e-09" z="-3.02984e-08"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="control_panel_R.mesh" name="control_panel_R"/>
+				</node>
+				<node name="jopec_L">
+					<position x="-0.494247" y="-0.0815313" z="-0.851238"/>
+					<quaternion w="0.299562" x="0.0262084" y="-0.950088" z="0.0831219"/>
+					<scale x="1" y="0.999999" z="1"/>
+					<entity meshFile="jopec_L.mesh" name="jopec_L"/>
+				</node>
+				<node name="jopec_R">
+					<position x="0.561964" y="0.0649848" z="-0.8338"/>
+					<quaternion w="0.215616" x="0.0188641" y="0.972581" z="-0.0850896"/>
+					<scale x="1" y="0.999999" z="1"/>
+					<entity meshFile="jopec_R.mesh" name="jopec_R"/>
+				</node>
+			</node>
+			<node name="rails">
+				<position x="-2.03532" y="-0.229951" z="-1.59456"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="rails.mesh" name="rails"/>
+			</node>
 		</node>
 		<node name="jt_hull_to_boom1_rot">
 			<position x="-0" y="2.27777" z="-0.815151"/>
@@ -212,29 +422,41 @@
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="bucket.mesh" name="bucket"/>
 		</node>
-		<node name="cb_bucket">
+		<node name="cb_bucket0">
 			<position x="8.13152e-20" y="2.24083" z="-6.68238"/>
 			<quaternion w="0.993549" x="0.113408" y="-1.03112e-13" z="-4.45913e-13"/>
 			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cb_bucket.mesh" name="cb_bucket"/>
+			<entity meshFile="cb_bucket0.mesh" name="cb_bucket0"/>
+			<node name="cb_bucket1">
+				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
+				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket1.mesh" name="cb_bucket1"/>
+			</node>
+			<node name="cb_bucket2">
+				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
+				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket2.mesh" name="cb_bucket2"/>
+			</node>
+			<node name="cb_bucket3">
+				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
+				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket3.mesh" name="cb_bucket3"/>
+			</node>
+			<node name="cb_bucket4">
+				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
+				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket4.mesh" name="cb_bucket4"/>
+			</node>
 		</node>
 		<node name="fourbarlink2">
 			<position x="-2.41048e-08" y="1.67795" z="-7.41276"/>
 			<quaternion w="0.130526" x="-0.991445" y="-7.84574e-17" z="1.87176e-16"/>
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="fourbarlink2.mesh" name="fourbarlink2"/>
-		</node>
-		<node name="cyl_boom2_rod">
-			<position x="-0" y="2.1804" z="-7.88194"/>
-			<quaternion w="0.592938" x="-0.805248" y="4.32275e-17" z="-1.82563e-17"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cyl_boom2_rod.mesh" name="cyl_boom2_rod"/>
-		</node>
-		<node name="cyl_boom2_tube">
-			<position x="-0" y="3.8114" z="-8.39421"/>
-			<quaternion w="0.805246" x="0.59294" y="0" z="0"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cyl_boom2_tube.mesh" name="cyl_boom2_tube"/>
 		</node>
 		<node name="fourbarlink1">
 			<position x="-2.7611e-08" y="2.16772" z="-7.6777"/>
@@ -254,24 +476,10 @@
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cb_boom2.mesh" name="cb_boom2"/>
 		</node>
-		<node name="cyl_boom1_rod">
-			<position x="6.67158e-09" y="6.42911" z="-7.98841"/>
-			<quaternion w="0.999534" x="0.0305385" y="-1.59185e-18" z="-3.50641e-19"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cyl_boom1_rod.mesh" name="cyl_boom1_rod"/>
-		</node>
-		<node name="cyl_boom1_tube">
-			<position x="-4.96705e-10" y="6.25816" z="-5.21657"/>
-			<quaternion w="0.0305378" x="-0.999534" y="0" z="0"/>
-			<scale x="1" y="1" z="1"/>
-			<user_data name="cycles_visibility" type="Blender IDProperty" value="&lt;bpy id property from &quot;OBcyl_boom1_tube&quot;&gt;"/>
-			<entity meshFile="cyl_boom1_tube.mesh" name="cyl_boom1_tube"/>
-		</node>
 		<node name="boom1">
 			<position x="-0" y="5.28052" z="-4.06495"/>
 			<quaternion w="0.976296" x="0.21644" y="-9.10432e-19" z="-3.46545e-18"/>
 			<scale x="1" y="1" z="1"/>
-			<user_data name="cycles_visibility" type="Blender IDProperty" value="&lt;bpy id property from &quot;OBboom1&quot;&gt;"/>
 			<entity meshFile="boom1.mesh" name="boom1"/>
 		</node>
 		<node name="cb_boom1">
@@ -279,19 +487,6 @@
 			<quaternion w="0.979661" x="0.200657" y="-1.6299e-18" z="1.84254e-20"/>
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cb_boom1.mesh" name="cb_boom1"/>
-		</node>
-		<node name="cyl_hull_R_rod">
-			<position x="0.5" y="5.27982" z="-3.39888"/>
-			<quaternion w="0.851952" x="0.52362" y="-1.52531e-18" z="5.74774e-19"/>
-			<scale x="1" y="1" z="1"/>
-			<user_data name="cycles_visibility" type="Blender IDProperty" value="&lt;bpy id property from &quot;OBcyl_hull_R_rod&quot;&gt;"/>
-			<entity meshFile="cyl_hull_R_rod.mesh" name="cyl_hull_R_rod"/>
-		</node>
-		<node name="cyl_hull_R_tube">
-			<position x="0.5" y="3.09868" z="-2.29716"/>
-			<quaternion w="0.523621" x="-0.851951" y="0" z="0"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cyl_hull_R_tube.mesh" name="cyl_hull_R_tube"/>
 		</node>
 		<node name="cyl_hull_L_rod">
 			<position x="-0.5" y="5.27982" z="-3.39888"/>
@@ -305,71 +500,6 @@
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="cyl_hull_L_tube.mesh" name="cyl_hull_L_tube"/>
 		</node>
-		<node name="hull">
-			<position x="-0" y="2.7" z="1.3"/>
-			<quaternion w="1" x="-0" y="0" z="0"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="hull.mesh" name="hull"/>
-			<node name="ohjaamot">
-				<position x="-1.35" y="0.380111" z="-3.53754"/>
-				<quaternion w="1" x="-0" y="0" z="0"/>
-				<scale x="1" y="1" z="1"/>
-				<node name="amplifier">
-					<position x="-1.19209e-07" y="0.871047" z="-0.134568"/>
-					<quaternion w="1.84649e-07" x="-1.70371e-07" y="1" z="1.11162e-07"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="amplifier.mesh" name="amplifier"/>
-				</node>
-				<node name="istuin">
-					<position x="0.00265872" y="-0.941603" z="7.15256e-07"/>
-					<quaternion w="1" x="6.61105e-08" y="-5.80696e-09" z="-6.01007e-08"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="istuin.mesh" name="istuin"/>
-				</node>
-				<node name="jopec_L">
-					<position x="-0.494247" y="-0.0815308" z="-0.851238"/>
-					<quaternion w="0.299562" x="0.0262084" y="-0.950088" z="0.0831219"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="jopec_L.mesh" name="jopec_L"/>
-				</node>
-				<node name="jopec_R">
-					<position x="0.561964" y="0.0649853" z="-0.8338"/>
-					<quaternion w="0.215616" x="0.0188641" y="0.972581" z="-0.0850896"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="jopec_R.mesh" name="jopec_R"/>
-				</node>
-				<node name="ohj1_runko">
-					<position x="-0" y="2.38419e-07" z="2.38419e-07"/>
-					<quaternion w="1" x="-8.04746e-09" y="-1.00583e-08" z="7.45058e-09"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="ohj1_runko.mesh" name="ohj1_runko"/>
-				</node>
-				<node name="ohj2_runko">
-					<position x="-0" y="2.38419e-07" z="2.38419e-07"/>
-					<quaternion w="1" x="-8.04746e-09" y="-1.00583e-08" z="7.45058e-09"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="ohj2_runko.mesh" name="ohj2_runko"/>
-				</node>
-				<node name="panel_L">
-					<position x="-0.293948" y="-0.163047" z="-0.439288"/>
-					<quaternion w="1" x="7.40571e-08" y="-5.80696e-09" z="-3.02984e-08"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="panel_L.mesh" name="panel_L"/>
-				</node>
-				<node name="panel_R">
-					<position x="0.293947" y="-0.163047" z="-0.439289"/>
-					<quaternion w="1" x="7.40571e-08" y="-5.80696e-09" z="-3.02984e-08"/>
-					<scale x="1" y="1" z="1"/>
-					<entity meshFile="panel_R.mesh" name="panel_R"/>
-				</node>
-			</node>
-			<node name="rails">
-				<position x="-2.03532" y="-0.229951" z="-1.59456"/>
-				<quaternion w="1" x="-0" y="0" z="0"/>
-				<scale x="1" y="1" z="1"/>
-				<entity meshFile="rails.mesh" name="rails"/>
-			</node>
-		</node>
 		<node name="track_L">
 			<position x="-2.3" y="0.735039" z="-1.14147"/>
 			<quaternion w="1" x="-0" y="0" z="0"/>
@@ -380,8 +510,94 @@
 			<position x="-0" y="1.28355" z="-1.05389"/>
 			<quaternion w="1" x="-0" y="0" z="0"/>
 			<scale x="1" y="1" z="1"/>
-			<user_data name="cycles_visibility" type="Blender IDProperty" value="&lt;bpy id property from &quot;OBbase&quot;&gt;"/>
 			<entity meshFile="base.mesh" name="base"/>
+		</node>
+		<node name="roadsign">
+			<position x="-5" y="0" z="-18"/>
+			<quaternion w="-7.54979e-08" x="-0" y="1" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<node name="roadsign_banner_savant">
+				<position x="2.56347" y="4.33337" z="-0.280264"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_banner_savant.mesh" name="roadsign_banner_savant"/>
+			</node>
+			<node name="roadsign_banner_tut">
+				<position x="2.56347" y="1.70955" z="-0.0233612"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_banner_tut.mesh" name="roadsign_banner_tut"/>
+			</node>
+			<node name="roadsign_lamps">
+				<position x="2.8995" y="5.16114" z="-1.32133"/>
+				<quaternion w="0.866025" x="0.5" y="-3.95735e-08" z="-6.95453e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_lamps.mesh" name="roadsign_lamps"/>
+			</node>
+			<node name="roadsign_metal_frame">
+				<position x="-0.000495434" y="3.00001" z="-0.00749016"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_metal_frame.mesh" name="roadsign_metal_frame"/>
+			</node>
+			<node name="roadsign_nail0">
+				<position x="2.41207" y="4.75736" z="0.00979805"/>
+				<quaternion w="0.885082" x="-0.465434" y="-3.8197e-08" z="6.47375e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="nail0.mesh" name="nail0"/>
+			</node>
+			<node name="roadsign_nail1">
+				<position x="-1.10923" y="4.71664" z="-0.00172234"/>
+				<quaternion w="0.869182" x="-0.494492" y="-3.93421e-08" z="6.87792e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="nail1.mesh" name="nail1"/>
+			</node>
+			<node name="roadsign_nail2">
+				<position x="-1.3839" y="3.81947" z="0.00429535"/>
+				<quaternion w="0.707107" x="-0.707107" y="-5.33851e-08" z="9.8352e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="nail2.mesh" name="nail2"/>
+			</node>
+			<node name="roadsign_nail3">
+				<position x="2.66308" y="3.86514" z="0.0175362"/>
+				<quaternion w="0.707107" x="-0.707107" y="-5.33851e-08" z="9.8352e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="nail3.mesh" name="nail3"/>
+			</node>
+			<node name="roadsign_nail4">
+				<position x="2.52155" y="2.18356" z="0.0175362"/>
+				<quaternion w="0.707107" x="-0.707107" y="-5.33851e-08" z="9.8352e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="nail4.mesh" name="nail4"/>
+			</node>
+			<node name="roadsign_plywood_board">
+				<position x="-0.000495434" y="3.00001" z="-0.00749016"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_plywood_board.mesh" name="roadsign_plywood_board"/>
+			</node>
+			<node name="roadsign_spot">
+				<position x="0.0210094" y="4.90578" z="-1.75959"/>
+				<quaternion w="0.97437" x="-0.224951" y="-3.23268e-08" z="3.12886e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<light castShadows="true" name="sign_spot2" type="spot">
+					<lightAttenuation constant="1.0" linear="0.1" quadratic="0.0" range="5000"/>
+					<colourDiffuse b="0.55" g="0.9" r="1"/>
+					<colourSpecular b="0.55" g="0.9" r="1"/>
+				</light>
+			</node>
+			<node name="roadsign_textfield_incollaboration">
+				<position x="-0.96215" y="3.2494" z="-0.0233631"/>
+				<quaternion w="0.976296" x="1.63407e-08" y="-2.79194e-08" z="-0.21644"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="roadsign_textfield_incollaboration.mesh" name="roadsign_textfield_incollaboration"/>
+			</node>
+		</node>
+		<node name="rock">
+			<position x="-0" y="0" z="-10.5492"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="rock.mesh" name="rock"/>
 		</node>
 	</nodes>
 </scene>

@@ -145,6 +145,25 @@ private :
 
 };	// class ConvexHullShape
 
+
+class HYDRA_API CompoundShape : public CollisionShape
+{
+public:
+	static CompoundShapeRefPtr create(bool useDynamicAABBTree = true);
+
+	virtual ~CompoundShape(void) {}
+
+protected:
+	CompoundShape(bool useDynamicAABBTree = true)
+	{}
+
+private:
+	CompoundShape(CompoundShape const &);
+	CompoundShape &operator=(CompoundShape const &);
+
+}; // class CompoundShape
+
+
 /// @todo not implemented
 class HYDRA_API CylinderShape : public CollisionShape
 {
@@ -175,7 +194,7 @@ protected :
 
 private:
 	CapsuleShape(CapsuleShape const &);
-	CapsuleShape operator=(CapsuleShape const &);
+	CapsuleShape &operator=(CapsuleShape const &);
 
 };	// class CapsuleShape
 

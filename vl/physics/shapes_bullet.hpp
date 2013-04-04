@@ -200,6 +200,37 @@ private :
 	btConvexTriangleMeshShape *_bt_shape;
 };
 
+class BulletCompoundShape : public BulletCollisionShape, public vl::physics::CompoundShape
+{
+public:
+	BulletCompoundShape(bool enableDynamicAABBTree = true)
+		: _bt_shape(0) 
+	{
+		_bt_shape = new btCompoundShape(enableDynamicAABBTree);
+	}
+	
+	virtual ~BulletCompoundShape(void)
+	{}
+	
+	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
+	{ return _bt_shape; }
+
+	void addChildShape(vl::Transform const &localTrans, vl::physics::CollisionShapeRefPtr shape)
+	{	
+		BulletCollisionShapeRefPtr jepulis = boost::dynamic_pointer_cast<BulletCollisionShape>(shape);
+		assert(jepulis);
+		
+		//Muunna CollisionShapeRefPtr johonkin bulletin ymmärtämään dynaamisella castauksella ja getNative metodilla!
+		_bt_shape->addChildShape(vl::math::convert_bt_transform(localTrans), jepulis->getNative());
+	}
+	
+private:
+	btCompoundShape *_bt_shape;
+};
+
 class BulletCylinderShape : public BulletCollisionShape, public vl::physics::CylinderShape
 {
 public :
