@@ -35,6 +35,9 @@ namespace vl
 	class Application;
 	typedef std::auto_ptr<Application> ApplicationUniquePtr;
 
+	class CadImporter;
+	typedef boost::shared_ptr<CadImporter> CadImporterRefPtr;
+
 	class Window;
 
 	/// Settings

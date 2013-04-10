@@ -17,13 +17,16 @@ ground = create_ground()
 #ground.translate(0, -6, 0)
 create_sun()
 
+# We need to create a callback here
+cb = CadImporterCallback.create(game)
+#import_file = "assy1.SLDASM"
+import_file = "puominosturi.SLDASM"
+game.cad_importer.load(import_file, cb)
+
+"""
 camera = game.player.camera_node
 assert(camera)
 camera.position = Vector3(-3., -2.1, -10)
 camera.orientation = Quaternion(-0.1629, 0, 0.9866, 0)
-
-# TODO fix the enity name in the DAE importer
-#cube_ent = game.scene.getEntity("Cube-mesh")
-#material = game.material_manager.get_material("Material")
-#material.emissive = ColourValue(0.5, 0, 0)
+"""
 
