@@ -88,6 +88,8 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 	vl::Report<vl::time> &report = _game_manager->getInitReport();
 	vl::chrono t;
 
+	_game_manager->process_event(vl::init(_env));
+
 	// Local renderer needs to be inited rather than send a message
 	// needs to be before we init GameManager
 	// because for now the GameManager will send project (global) as a signal
@@ -100,14 +102,9 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 		report["Initing Renderer"].push(t.elapsed());
 	}
 
-	_game_manager->process_event(vl::init(_env, global_file));
-
 	report["Starting GameManager"].push(t.elapsed());
 
-	if(!project_file.empty())
-	{
-		_game_manager->process_event(vl::load(project_file));
-	}
+	_game_manager->load(project_file, global_file);
 
 	/// Updating the Renderers
 	t.reset();
@@ -192,15 +189,11 @@ vl::Master::render(void)
 	timer.reset();
 	_game_manager->step();
 
-//	report["step time"].push(timer.elapsed());
-
 	/// Provide the updates to slaves
 	timer.reset();
 	_updateFrameMsgs();
 	_updateServer();
 	_updateRenderer();
-
-	//report["scene graph update time"].push(timer.elapsed());
 
 	/// Render the scene
 	timer.reset();
@@ -208,9 +201,7 @@ vl::Master::render(void)
 	// Rendering after the server has sent the command to slaves
 	if( _renderer.get() )
 	{
-		//vl::chrono l;
 		_renderer->draw();
-		//report["local rendering"].push(l.elapsed());
 	}
 
 	_server->finish_draw(_frame, getSimulationTime());
@@ -218,13 +209,9 @@ vl::Master::render(void)
 	// Finish local renderer
 	if( _renderer.get() )
 	{
-		//vl::chrono l;
 		_renderer->swap();
-		//report["local swap"].push(l.elapsed());
 
-		//l.reset();
 		_renderer->capture();
-		//report.get_number("local capture").push(l.elapsed());
 	}
 	report[PT_RENDERING].push(timer.elapsed());
 
@@ -337,9 +324,9 @@ vl::Master::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string c
 
 
 void
-vl::Master::settingsChanged(vl::Settings const &new_settings)
+vl::Master::settingsChanged(void)
 {
-	_proj = new_settings;
+	_proj = _game_manager->getSettings();
 	// Notify server
 	if(_server)
 	{
@@ -353,6 +340,20 @@ vl::Master::settingsChanged(vl::Settings const &new_settings)
 	if(_renderer.get())
 	{
 		_renderer->setProject(_proj);
+	}
+}
+
+void
+vl::Master::clearProjectCallback(void)
+{
+	if(_server)
+	{
+		// @todo add Server clear project
+	}
+
+	if(_renderer.get())
+	{
+		_renderer->clearProject();
 	}
 }
 
@@ -452,9 +453,8 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 		_renderer->addCommandListener(boost::bind(&PythonContext::executeCommand, _game_manager->getPython(), _1));
 	}
 
-	_game_manager->setupResources(*env);
-
-	_game_manager->addProjectChangedListener(boost::bind(&Master::settingsChanged, this, _1));
+	_game_manager->addStateChangedListener(GameManagerFSM_::Initing(), boost::bind(&Master::clearProjectCallback, this));
+	_game_manager->addStateChangedListener(GameManagerFSM_::Loading(), boost::bind(&Master::settingsChanged, this));
 	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Master::quit_callback, this));
 
 	if(_renderer.get())

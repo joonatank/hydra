@@ -105,6 +105,9 @@ tube_info.bending_radius = 0.3
 # from 450 to 500. Batch count is 31 compared to 50.
 # Somehow I'd guess that the problem is more our shaders than batching.
 tube_info.material_name = "tube_material"
+# Instancing is not working correctly at the moment
+# it needs special materials, has clipping problems and can't
+# be destroyed properly.
 #tube_info.use_instancing = True
 
 # TODO there is an annoying shadow in the tube

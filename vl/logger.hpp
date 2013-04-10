@@ -27,6 +27,9 @@
 
 #include <vector>
 
+// Necessary for HYDRA_API
+#include "defines.hpp"
+
 namespace io = boost::iostreams;
 
 namespace vl
@@ -43,7 +46,7 @@ char const CRITICAL = 17;
 char const NORMAL = 18;
 char const TRACE = 19;
 
-struct LogMessage
+struct HYDRA_API LogMessage
 {
 	LogMessage( std::string const &ty = std::string(),
 				double tim = 0,
@@ -56,9 +59,15 @@ struct LogMessage
 
 	bool empty(void) const;
 
+// Type denotes the message origin i.e. which stream it was written into
+// for example ERROR for std::cerr, OUT for std::out 
+// and PY_OUT for python cout, PY_ERROR for python cerr
 std::string type;
+// Time the message was logged, can be 0 when the time is not tracked
 double time;
+// The log message
 std::string message;
+// Optional log level defaults to LML_NORMAL
 LOG_MESSAGE_LEVEL level;
 
 };	// class LogMessage
@@ -114,7 +123,7 @@ private :
 	std::string _type;
 };
 
-class Logger
+class HYDRA_API Logger
 {
 public :
 	Logger( void );

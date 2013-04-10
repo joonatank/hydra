@@ -69,7 +69,6 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _player(0)
 	, _trackers( new vl::Clients( _event_man ) )
 	, _logger(logger)
-	, _env_effects_enabled(true)
 	, _auto_start(true)
 	, _fsm(new GameManagerFSM)
 {
@@ -165,13 +164,20 @@ vl::GameManager::step(void)
 vl::GameObjectRefPtr
 vl::GameManager::createGameObject(std::string const &name)
 {
-	GameObjectRefPtr obj = getGameObject(name);
-	if(!obj)
-	{
-		obj.reset(new GameObject(name, this));
-		_game_objects.push_back(obj);
-	}
-	return obj;
+	return _createGameObject(name, false);
+}
+
+vl::GameObjectRefPtr
+vl::GameManager::createDynamicGameObject(std::string const &name)
+{
+	return _createGameObject(name, true);
+}
+
+void
+vl::GameManager::removeGameObject(GameObjectRefPtr obj)
+{
+	std::clog << "vl::GameManager::removeGameObject" << std::endl;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
 bool
@@ -207,27 +213,6 @@ vl::GameManager::enablePhysics( bool enable )
 	}
 }
 
-void 
-vl::GameManager::enableEnvironmentalEffects(bool enable)
-{
-	_env_effects_enabled = enable;
-	// @todo reset the scene
-}
-
-void 
-vl::GameManager::setWeather(vl::Weather const &weather)
-{
-	_weather = weather;
-	/// @todo should do changes in the scenes
-}
-
-void 
-vl::GameManager::setTimeOfDay(vl::Date const &date)
-{
-	_date = date;
-	/// @todo should do changes in the scenes
-}
-
 bool
 vl::GameManager::isQuited(void) const
 {
@@ -261,6 +246,38 @@ vl::GameManager::isPlaying(void) const
 	return false;
 }
 
+bool
+vl::GameManager::isStopped(void) const
+{
+	vl::state *s = _fsm->get_state_by_id(_fsm->current_state()[0]);
+	
+	if(dynamic_cast<GameManagerFSM_::Stopped *>(s))
+	{ return true; }
+
+	return false;
+}
+
+std::string
+vl::GameManager::getStateName(void) const
+{
+	vl::state *s = _fsm->get_state_by_id(_fsm->current_state()[0]);
+
+	if(dynamic_cast<GameManagerFSM_::Stopped *>(s))
+	{ return "Stopped"; }
+	else if(dynamic_cast<GameManagerFSM_::Initing *>(s))
+	{ return "Initing"; }
+	else if(dynamic_cast<GameManagerFSM_::Loading *>(s))
+	{ return "Loading"; }
+	else if(dynamic_cast<GameManagerFSM_::Playing *>(s))
+	{ return "Playing"; }
+	else if(dynamic_cast<GameManagerFSM_::Paused *>(s))
+	{ return "Paused"; }
+	else if(dynamic_cast<GameManagerFSM_::Quited *>(s))
+	{ return "Quited"; }
+	else
+	{ return "Unkown"; }
+}
+
 /// State Management
 void
 vl::GameManager::quit(void)
@@ -279,7 +296,58 @@ vl::GameManager::stop(void)
 { _fsm->process_event(vl::stop()); }
 
 void
-vl::GameManager::restart(void) {}
+vl::GameManager::unload(void)
+{
+	std::clog << "vl::GameManager::unload" << std::endl;
+
+	_old_project = _loaded_project.getFile();
+	_old_global = _global_project.getFile();
+
+	_fsm->process_event(vl::unload());
+}
+
+void
+vl::GameManager::load(std::string const &project, std::string const &global)
+{ _fsm->process_event(vl::load(project, global)); }
+
+void
+vl::GameManager::reload(void)
+{
+	// Unload needs to be called before calling this
+	// load will only work when if state is Initing so the state
+	// change handles rest of error checking for us.
+	if(_old_project.empty() || _old_global.empty())
+	{ return; }
+
+	std::clog << "Reloading project : " << _old_project << " global : " << _old_global << std::endl;
+
+	load(_old_project, _old_global);
+}
+
+void
+vl::GameManager::restart(void)
+{
+	stop();
+
+	/// @todo this only works for new HSF files
+	try {
+		loadScenes(_global_project, LOADER_FLAG_OVERWRITE);
+		loadScenes(_loaded_project, LOADER_FLAG_OVERWRITE);
+	}
+	catch(...)
+	{
+		std::cerr << "Problem with reloading the project. Only HSF files are supported" << std::endl;
+	}
+
+	/// remove all created objects
+	/// rerun all the python scripts
+	_rerunPythonScripts();
+
+	if(auto_start())
+	{ play(); }
+	else
+	{ pause(); }
+}
 
 /// @todo this is going to be really complex when more states is added
 /// so we should move the signals to their respective states
@@ -319,64 +387,62 @@ vl::GameManager::addStateChangedListener(vl::state const &state, StateChanged::s
 
 
 void
-vl::GameManager::setupResources(vl::config::EnvSettings const &env)
+vl::GameManager::_destroyDynamicObjects(void)
 {
-	std::cout << vl::TRACE << "Adding project directories to resources." << std::endl;
+	std::clog << "vl::GameManager::removeDynamicObjects" << std::endl;
 
-	// Add environment directory, used for tracking configurations
-	if(!env.getEnvironementDir().empty())
+	// Destroy dynamic GameObjects
+	GameObjectList obj_to_destroy;
+	for(GameObjectList::iterator iter = _game_objects.begin();
+		iter != _game_objects.end(); ++iter)
 	{
-		std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
-		fs::path tracking_path( fs::path(env.getEnvironementDir()) / "tracking" );
-		if( fs::is_directory(tracking_path) )
-		{ getResourceManager()->addResourcePath( tracking_path.string() ); }
+		if((*iter)->isDynamic())
+		{ obj_to_destroy.push_back(*iter); }
 	}
+	for(GameObjectList::iterator iter = obj_to_destroy.begin();
+		iter != obj_to_destroy.end(); ++iter)
+	{
+		removeGameObject(*iter);
+	}
+
+	if(_physics_world)
+	{
+		_physics_world->destroyDynamicObjects();
+	}
+	if(_kinematic_world)
+	{
+		_kinematic_world->destroyDynamicObjects();
+	}
+	if(_scene_manager)
+	{
+		_scene_manager->destroyDynamicObjects();
+	}
+
+	/// Destroy dynamic events i.e. all events except those we have created
+	_event_man->removeAll();
+	_createQuitEvent();
+
+	// Reset player
+	_player->setCamera(_scene_manager->getEditorCamera());
 }
 
 void
-vl::GameManager::addResources(vl::ProjSettings const &proj)
+vl::GameManager::_rerunPythonScripts(void)
 {
-	if(proj.empty())
-	{
-		std::clog << "Trying to add Empty project to Resources." << std::endl;
-		return;
-	}
+	std::clog << "vl::GameManager::rerunPythonScripts" << std::endl;
 
-	std::clog << "Project file = " << proj.getFile() << std::endl;
+	_python->reset();
+	
+	// run the python context
+	if(!_global_project.empty())
+	{ _addPythonScripts(_global_project); }
+	if(!_loaded_project.empty())
+	{ _addPythonScripts(_loaded_project); }
 
-	fs::path proj_file(proj.getFile());
+	/// Run the python scripts
+	getPython()->autoRunScripts();
 
-	// check that the paths are valid
-	fs::path proj_dir = proj_file.parent_path();
-	if(fs::is_directory(proj_dir))
-	{
-		getResourceManager()->addResourcePath(proj_dir.string());
-	}
-	else
-	{ 
-		BOOST_THROW_EXCEPTION(vl::missing_dir() 
-			<< vl::file_name(proj_dir.string()) 
-			<< vl::desc("Resource dir is not a directory."));
-	}
-}
-
-void
-vl::GameManager::removeResources(vl::ProjSettings const &proj)
-{
-	if(proj.empty())
-	{
-		std::clog << "Trying to remove Empty project from Resources." << std::endl;
-		return;
-	}
-
-	fs::path proj_file(proj.getFile());
-
-	// check that the paths are valid
-	fs::path proj_dir = proj_file.parent_path().string();
-	if(!fs::is_directory(proj_dir))
-	{
-		getResourceManager()->removeResourcePath(proj_dir.string());
-	}
+	std::clog << "vl::GameManager::rerunPythonScripts : DONE" << std::endl;
 }
 
 vl::RecordingRefPtr
@@ -392,83 +458,22 @@ vl::GameManager::loadRecording(std::string const &path)
 	return rec;
 }
 
-void
-vl::GameManager::loadProject(std::string const &file_name)
+vl::Settings
+vl::GameManager::getSettings(void) const
 {
-	process_event(vl::load(file_name));
+	vl::Settings set;
+	set.setProjectSettings(_loaded_project);
+	set.addAuxilarySettings(_global_project);
+
+	return set;
 }
 
 void
-vl::GameManager::removeProject(std::string const &name)
-{
-	// remove project
-	if(_loaded_project.getName() == name)
-	{
-		removeResources(_loaded_project);
-
-		// reset the python context
-		_python->reset();
-
-		unloadScenes(_loaded_project);
-
-		// rerun the python context
-		runPythonScripts(_global_project);
-
-		vl::Settings set;
-		set.addAuxilarySettings(_global_project);
-	
-		// Send new settings
-		_project_changed_signal(set);
-	}
-}
-
-void
-vl::GameManager::loadScenes(vl::ProjSettings const &proj)
+vl::GameManager::loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags)
 {
 	for( size_t i = 0; i < proj.getCase().getNscenes(); ++i )
 	{
-		loadScene(proj.getCase().getScene(i));
-	}
-}
-
-void
-vl::GameManager::runPythonScripts(vl::ProjSettings const &proj)
-{
-	for( size_t i = 0; i < proj.getCase().getNscripts(); ++i )
-	{
-		// Load the python scripts
-		ProjSettings::Script const &script = proj.getCase().getScript(i);
-		
-		// scripts that are in use are set to be auto ran others are just stored.
-		vl::TextResource script_resource;
-		getResourceManager()->loadResource(script.getFile(), script_resource);
-		getPython()->addScript(script.getFile(), script_resource, script.getUse());
-	}
-
-	/// Run the python scripts
-	getPython()->autoRunScripts();
-}
-
-void
-vl::GameManager::createTrackers(vl::config::EnvSettings const &env)
-{
-	assert(_trackers);
-
-	std::vector<std::string> tracking_files = env.getTrackingFiles();
-
-	std::cout << vl::TRACE << "Processing " << tracking_files.size()
-		<< " tracking files." << std::endl;
-
-	/// @todo This part is the great time consumer, need to pin point the time hog
-	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
-		 iter != tracking_files.end(); ++iter )
-	{
-		// Read a file
-		vl::TextResource resource;
-		getResourceManager()->loadResource(*iter, resource);
-
-		vl::TrackerSerializer ser(_trackers);
-		ser.parseTrackers(resource);
+		loadScene(proj.getCase().getScene(i), flags);
 	}
 }
 
@@ -482,7 +487,7 @@ vl::GameManager::createAnalogClient(std::string const &name)
 }
 
 void
-vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
+vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
@@ -522,7 +527,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		}
 		else if(file.extension() == ".scene")
 		{
-			std::clog << "Loading Ogre scene file." << std::endl;
+			std::clog << "Loading Ogre scene file \"" << scene_info.getFile() << "\"" << std::endl;
 
 			vl::TextResource resource;
 			getResourceManager()->loadResource(scene_info.getFile(), resource);
@@ -543,7 +548,8 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 		}
 		else if(file.extension() == ".hsf")
 		{
-			std::clog << "Loading Hydra scene file." << std::endl;
+			std::clog << "Loading Hydra scene file : "
+				<< file << std::endl;
 
 			vl::TextResource resource;
 			getResourceManager()->loadResource(scene_info.getFile(), resource);
@@ -558,7 +564,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 			// TODO pass attach node based on the scene
 			// TODO add a prefix to the SceneNode names ${scene_name}/${node_name}
 			// @todo add physics
-			loader.parseScene(resource, this);
+			loader.parseScene(resource, this, flags);
 		}
 		else
 		{
@@ -577,43 +583,14 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info)
 }
 
 void
-vl::GameManager::loadScene(std::string const &file_name)
+vl::GameManager::loadScene(std::string const &file_name, LOADER_FLAGS flags)
 {
 	vl::SceneInfo scene_info;
 	scene_info.setUse(true);
 	scene_info.setFile(file_name);
 	scene_info.setName(file_name);
 
-	loadScene(scene_info);
-}
-
-void
-vl::GameManager::unloadScene(std::string const &name)
-{
-	std::vector<SceneNodePtr> nodes_to_destroy;
-
-	for(SceneNodeList::const_iterator iter = _scene_manager->getSceneNodeList().begin();
-		iter != _scene_manager->getSceneNodeList().end(); ++iter)
-	{
-		if((*iter)->getSceneFile() == name)
-		{ nodes_to_destroy.push_back(*iter); }
-	}
-
-	for(std::vector<SceneNodePtr>::iterator iter = nodes_to_destroy.begin();
-		iter != nodes_to_destroy.end(); ++iter)
-	{
-		std::clog << "Destroying node : " << (*iter)->getName() << std::endl;
-		_scene_manager->destroySceneNode(*iter);
-	}
-}
-
-void
-vl::GameManager::unloadScenes(vl::ProjSettings const &proj)
-{
-	for(size_t i = 0; i < proj.getCase().getNscenes(); ++i)
-	{
-		unloadScene(proj.getCase().getScene(i).getName());
-	}
+	loadScene(scene_info, flags);
 }
 
 void
@@ -654,6 +631,9 @@ vl::GameManager::_do_init(init const &evt)
 {
 	std::clog << "vl::GameManager::_do_init" << std::endl;
 
+	// Setup resources
+	_setupResources(*evt.environment);
+
 	// Create the distributed objects
 	_createSceneManager();
 	_createPlayer();
@@ -679,7 +659,6 @@ vl::GameManager::_do_init(init const &evt)
 
 	assert(evt.environment);
 	_loadEnvironment(*evt.environment);
-	_loadGlobal(evt.global);
 
 	_inited_signal();
 }
@@ -689,59 +668,37 @@ vl::GameManager::_do_load(vl::load const &evt)
 {
 	std::clog << "vl::GameManager::_do_load" << std::endl;
 
-	/// @todo the cleanup should be separated
-	vl::ProjSettings project;
+	/// We do not allow loading when we already have project or global
+	/// This should of course never happen because the FSM doesn't
+	/// allow it.
+	if(!_global_project.empty() || !_loaded_project.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	std::clog << "Loading Global " << evt.global << std::endl;
+	_loadGlobal(evt.global);
+
 	// load the project
-	vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&project, vl::null_deleter()));
-	bool retval = ser.readFile(evt.project);
-	assert(retval);
+	if(!evt.project.empty())
+	{
+		vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&_loaded_project, vl::null_deleter()));
+		if(!ser.readFile(evt.project))
+		{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	std::clog << "Loading project " << project.getName() << std::endl;
+		std::clog << "Loading project " << _loaded_project.getName() << std::endl;
 
-	std::vector<vl::ProjSettings *> _run_scripts;
+		_addResources(_loaded_project);
 
-	// remove the already loaded project because we only support one for now
+		loadScenes(_loaded_project);
+	}
+
+	// run the python context
+	if(!_global_project.empty())
+	{ _addPythonScripts(_global_project); }
 	if(!_loaded_project.empty())
-	{
-		// @todo this probably should work on file paths rather than names
-		if(project.getName() == _loaded_project.getName())
-		{
-			std::cout << "Trying to load already loaded project " << project.getName() << std::endl;
-			return; 
-		}
+	{ _addPythonScripts(_loaded_project); }
 
-		removeResources(_loaded_project);
-
-		unloadScenes(_loaded_project);
-		
-		// reset python
-		_python->reset();
-
-		// rerun the python context
-		_run_scripts.push_back(&_global_project);	
-	}
-	// for loading a new project we don't need to do any reseting
-
-	_run_scripts.push_back(&project);
-
-	_loaded_project = project;
-
-	addResources(_loaded_project);
-
-	loadScenes(_loaded_project);
-
-	for(size_t i = 0; i < _run_scripts.size(); ++i)
-	{
-		runPythonScripts(*_run_scripts.at(i));
-	}
-	
-
-	vl::Settings set;
-	set.setProjectSettings(_loaded_project);
-	set.addAuxilarySettings(_global_project);
-
-	// Send new settings
-	_project_changed_signal(set);
+	/// Run the python scripts
+	getPython()->autoRunScripts();
 
 	_loaded_signal();
 }
@@ -766,9 +723,21 @@ void
 vl::GameManager::_do_stop(vl::stop const &evt)
 {
 	std::clog << "vl::GameManager::_do_stop" << std::endl;
+
 	_game_timer.reset();
 	_game_timer.stop();
 	_stopped_signal();
+}
+
+void
+vl::GameManager::_do_unload(vl::unload const &evt)
+{
+	std::clog << "vl::GameManager::_do_unload" << std::endl;
+
+	_removeAll();
+
+	// No signal because we don't have unload state
+	_inited_signal();
 }
 
 void
@@ -779,13 +748,26 @@ vl::GameManager::_do_quit(vl::quit const &evt)
 }
 
 /// ------------------------------ Private -----------------------------------
+vl::GameObjectRefPtr
+vl::GameManager::_createGameObject(std::string const &name, bool dynamic)
+{
+	GameObjectRefPtr obj = getGameObject(name);
+	if(!obj)
+	{
+		obj.reset(new GameObject(name, this, dynamic));
+		_game_objects.push_back(obj);
+	}
+	return obj;
+}
+
 void
 vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)
 {
 	std::clog << "vl::GameManager::_loadEnvironment" << std::endl;
+	
 	// Create Tracker needs the SceneNodes for mapping
 	chrono t;
-	createTrackers(env);
+	_createTrackers(env);
 	std::cout << "Creating trackers took : " <<  t.elapsed() << std::endl;
 
 	assert(_player);
@@ -811,31 +793,197 @@ vl::GameManager::_loadGlobal(std::string const &file_name)
 
 	std::clog << "Loading Global : " << global.getName() << std::endl;
 
-	if(global.getName() != _global_project.getName())
+	/// Should never already have a global config here
+	if(!_global_project.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	_global_project = global;
+
+	_addResources(_global_project);
+
+	loadScenes(_global_project);
+}
+
+void
+vl::GameManager::_removeAll(void)
+{
+	std::clog << "vl::GameManager::removeAll" << std::endl;
+	assert(_scene_manager);
+	assert(_python);
+
+	// Reset python to pointers so that ref counted objects are destroyed
+	std::clog << "vl::GameManager::removeAll : reset python" << std::endl;
+	_python->reset();
+	// Destroy event handlers
+	// @todo this is problematic because it removes both Quit and Console events
+	// also, which are rather necessary for us.
+	std::clog << "vl::GameManager::removeAll : destroy events" << std::endl;
+	_event_man->removeAll();
+	_createQuitEvent();
+
+	// Game objects need to be first because they can own bodies and nodes
+	// ref counted so we let the destroyer handle these
+	std::clog << "vl::GameManager::removeAll : destroy game objects" << std::endl;
+	_game_objects.clear();
+
+	std::clog << "vl::GameManager::removeAll : destroy kinematic bodies" << std::endl;
+	if(_kinematic_world)
+	{ _kinematic_world->removeAll(); }
+
+	std::clog << "vl::GameManager::removeAll : destroy dynamic bodies" << std::endl;
+	if(_physics_world)
+	{ _physics_world->removeAll(); }
+
+	// Handle all the rest Scene resources that are not handled by game objects
+	// mostly for backwards compatibility with old system
+	std::clog << "vl::GameManager::removeAll : destroy scene" << std::endl;
+	_scene_manager->destroyScene();
+
+	// @todo remove _analog_clients
+	// created from python, so we should remove them
+
+	// @todo remove _trackers
+	// not a good idea, created from env so it's not affected by project loading
+
+	// @todo clean projects
+	_loaded_project = vl::ProjSettings();
+	_global_project = vl::ProjSettings();
+
+	// Recordings???
+
+	// Reset stats
+	_rendering_report = vl::ProfilerReport();
+	_init_report = vl::Report<vl::time>();
+
+	// Reset player
+	CameraPtr cam = _scene_manager->getCamera("editor/perspective");
+	assert(cam);
+	_player->setCamera(cam);
+
+	// remove loaded meshes
+	// We need remove meshes because the mesh loader will throw if they are still loaded
+	// python, scene manager and physics manager needs to be before this
+	// @todo This should use cleanup_unused but it's broken atm.
+	_mesh_manager->removeAll();
+
+	// @todo Remove all loaded materials
+	// Not yet necessary as the material system is not complete
+
+	// Optional remove all resource paths
+
+	// @todo Reset timers
+	// not sure if it's necessary here, we could just reset them when loading
+
+	// @todo add checks that confirm the kinematic, dynamic bodies and scene nodes
+	// have been destroyed and the animation graph is empty.
+	assert(_kinematic_world->getBodies().empty());
+	assert(_kinematic_world->getConstraints().empty());
+	if(_physics_world)
 	{
-		removeResources(_global_project);
-
-		unloadScenes(_global_project);
-
-		_global_project = global;
-
-		addResources(_global_project);
-
-		loadScenes(_global_project);
-
-		// rerun the python context
-		runPythonScripts(_global_project);
-		runPythonScripts(_loaded_project);
-
-		vl::Settings set;
-		set.setProjectSettings(_loaded_project);
-		set.addAuxilarySettings(_global_project);
-
-		// Send new settings
-		_project_changed_signal(set);
+		assert(_physics_world->getTubes().empty());
+		assert(_physics_world->getBodies().empty());
+		assert(_physics_world->getConstraints().empty());
 	}
 }
 
+void
+vl::GameManager::_createTrackers(vl::config::EnvSettings const &env)
+{
+	assert(_trackers);
+
+	std::vector<std::string> tracking_files = env.getTrackingFiles();
+
+	std::cout << vl::TRACE << "Processing " << tracking_files.size()
+		<< " tracking files." << std::endl;
+
+	/// @todo This part is the great time consumer, need to pin point the time hog
+	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
+		 iter != tracking_files.end(); ++iter )
+	{
+		// Read a file
+		vl::TextResource resource;
+		getResourceManager()->loadResource(*iter, resource);
+
+		vl::TrackerSerializer ser(_trackers);
+		ser.parseTrackers(resource);
+	}
+}
+
+void
+vl::GameManager::_setupResources(vl::config::EnvSettings const &env)
+{
+	std::clog << "Adding project directories to resources." << std::endl;
+
+	// Add environment directory, used for tracking configurations
+	if(!env.getEnvironementDir().empty())
+	{
+		std::cout << vl::TRACE << "Adding ${environment}/tracking to the resources paths." << std::endl;
+		fs::path tracking_path( fs::path(env.getEnvironementDir()) / "tracking" );
+		if( fs::is_directory(tracking_path) )
+		{ getResourceManager()->addResourcePath( tracking_path.string() ); }
+	}
+}
+
+void
+vl::GameManager::_addResources(vl::ProjSettings const &proj)
+{
+	if(proj.empty())
+	{
+		std::clog << "Trying to add Empty project to Resources." << std::endl;
+		return;
+	}
+
+	std::clog << "Project file = " << proj.getFile() << std::endl;
+
+	fs::path proj_file(proj.getFile());
+
+	// check that the paths are valid
+	fs::path proj_dir = proj_file.parent_path();
+	if(fs::is_directory(proj_dir))
+	{
+		getResourceManager()->addResourcePath(proj_dir.string());
+	}
+	else
+	{ 
+		BOOST_THROW_EXCEPTION(vl::missing_dir() 
+			<< vl::file_name(proj_dir.string()) 
+			<< vl::desc("Resource dir is not a directory."));
+	}
+}
+
+void
+vl::GameManager::_removeResources(vl::ProjSettings const &proj)
+{
+	if(proj.empty())
+	{
+		std::clog << "Trying to remove Empty project from Resources." << std::endl;
+		return;
+	}
+
+	fs::path proj_file(proj.getFile());
+
+	// check that the paths are valid
+	fs::path proj_dir = proj_file.parent_path().string();
+	if(!fs::is_directory(proj_dir))
+	{
+		getResourceManager()->removeResourcePath(proj_dir.string());
+	}
+}
+
+void
+vl::GameManager::_addPythonScripts(vl::ProjSettings const &proj)
+{
+	for( size_t i = 0; i < proj.getCase().getNscripts(); ++i )
+	{
+		// Load the python scripts
+		ProjSettings::Script const &script = proj.getCase().getScript(i);
+		
+		// scripts that are in use are set to be auto ran others are just stored.
+		vl::TextResource script_resource;
+		getResourceManager()->loadResource(script.getFile(), script_resource);
+		getPython()->addScript(script.getFile(), script_resource, script.getUse());
+	}
+}
 
 vl::SceneManagerPtr
 vl::GameManager::_createSceneManager(void)

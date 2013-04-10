@@ -34,6 +34,12 @@ elseif( WIN32 )
 					 -bigobj		# We have lots of inlines for python
 					 -DWIN_ZERO_SLEEP	# Rather do context switching than busy-wait
 					 )
+	# For debugging we want to enable symbols for both Debug and Release
+	add_definitions(-Zi)
+	# Add to linker /INCREMENTAL:NO /Zi /DEBUG /OPT:REF /OPT:ICF)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF")
+
 endif( UNIX )
 
 # For Visual Studio

@@ -17,6 +17,8 @@
 
 #include "base/string_utils.hpp"
 
+// Necessary for excpetions
+#include "base/exceptions.hpp"
 
 Ogre::Real
 vl::getAttribReal( rapidxml::xml_node<>* XMLNode,

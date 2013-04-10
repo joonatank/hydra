@@ -114,6 +114,9 @@ public :
 	/// @brief called from GameManager to update input devices
 	void mainloop(vl::time const &elapsed_time);
 
+	/// @brief remove all triggers
+	void removeAll(void);
+
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
 

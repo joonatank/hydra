@@ -36,7 +36,7 @@ namespace vl
 {
 
 /// @class ResourceManager
-class ResourceManager
+class HYDRA_API ResourceManager
 {
 public :
 	ResourceManager(void);

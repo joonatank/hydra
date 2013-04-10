@@ -207,10 +207,10 @@ vl::MeshManager::createPlane(std::string const &name, Ogre::Real size_x, Ogre::R
 		// @todo replace with real exception
 		BOOST_THROW_EXCEPTION(vl::exception());
 	}
+
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
-	}
+	{ return getMesh(name); }
 
 	/// Mesh is created with the assumption that normal is +y
 	/// so we rotate every vertex to the normal
@@ -291,8 +291,9 @@ vl::MeshManager::createSphere(std::string const &name, Ogre::Real radius, uint16
 {
 	std::clog << "vl::MeshManager::createSphere" << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::SphereGenerator generator;
 	generator.setRadius(radius).setUTile(longitude).setVTile(latitude);
@@ -308,14 +309,15 @@ vl::MeshRefPtr
 vl::MeshManager::createCube(std::string const &name, Ogre::Vector3 size)
 {
 	std::clog << "vl::MeshManager::createCube" << std::endl;
+
+	/// For now retrieve mesh instead of making it an error
+	if(hasMesh(name))
+	{ return getMesh(name); }
+
 	if(size.isZeroLength())
 	{
 		// @todo replace with real exception
 		BOOST_THROW_EXCEPTION(vl::exception());
-	}
-	if(hasMesh(name))
-	{
-		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name));
 	}
 
 	Procedural::BoxGenerator generator;
@@ -335,8 +337,9 @@ vl::MeshManager::createCylinder(std::string const &name, vl::scalar radius,
 {
 	std::clog << "vl::MeshManager::createCylinder" << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::CylinderGenerator generator;
 	generator.setRadius(radius).setHeight(height).setNumSegHeight(seg_height).setNumSegBase(seg_radius);
@@ -365,8 +368,9 @@ vl::MeshManager::createCapsule(std::string const &name, vl::scalar radius,
 {
 	std::clog << "vl::MeshManager::createCapsule with height " << height << std::endl;
 
+	/// For now retrieve mesh instead of making it an error
 	if(hasMesh(name))
-	{ BOOST_THROW_EXCEPTION(vl::duplicate() << vl::name(name)); }
+	{ return getMesh(name); }
 
 	Procedural::CapsuleGenerator generator;
 	// divide height by two because we use height to mean the actual height of
@@ -447,7 +451,47 @@ void
 vl::MeshManager::cleanup_unused(void)
 {
 	std::clog << "vl::MeshManager::cleanup_unused" << std::endl;
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+	MeshMap new_map;
+	for(MeshMap::iterator iter = _meshes.begin(); iter != _meshes.end(); ++iter)
+	{
+		// We are sharing the mesh manager on master between the renderer
+		// and application.
+		// We can't use unique() because renderer side Entities are not destroyed
+		// when this function is called.
+		// This is so upside down, but would need some architectural changes to get
+		// it working properly.
+		// The mesh is in use when it has at least 3 users:
+		// one master entity, one renderer entity and this list.
+		// 
+		// This obviously does not work when there are more than one entity using the mesh
+		// because then we have N*2+1 users where N is the number of entities.
+		// If renderer entities are not destroyed when this is called we still have N+1
+		// users where we can not determine N.
+		//
+		// Probably this will need a proper solution using callbacks from Application
+		// to Renderer when objects are destroyed. This would make sure all object
+		// destructions happen instantly and we don't need to make multi pass algorithms
+		// that first destroy something on master then something on slaves and so on.
+		if(iter->second.use_count() > 2)
+		{
+			std::clog << "Mesh \"" << iter->first << "\" has " << iter->second.use_count()
+				<< " users, not removing." << std::endl;
+			new_map[iter->first] = iter->second;
+		}
+		// debug stuff
+		else
+		{
+			std::clog << "Going to remove mesh \"" << iter->first << "\"." << std::endl;
+		}
+	}
+
+	_meshes = new_map;
+}
+
+void
+vl::MeshManager::removeAll(void)
+{
+	_meshes.clear();
 }
 
 vl::MeshRefPtr 

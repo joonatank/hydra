@@ -32,7 +32,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 /// Physics world member overloads
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createRigidBody_ov, createRigidBody, 4, 5 )
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createDynamicRigidBody_ov, createDynamicRigidBody, 4, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( addConstraint_ovs, addConstraint, 1, 2 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( setLimit_ovs, setLimit, 2, 5 )
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( createMotionState_ov, createMotionState, 0, 2 )
@@ -107,11 +107,12 @@ void export_physics_objects(void)
 		.add_property("target_velocity",&vl::physics::Motor3Dof::getTargetVelocity,&vl::physics::Motor3Dof::setTargetVelocity)
 		.add_property("max_motor_force",&vl::physics::Motor3Dof::getMaxMotorForce,&vl::physics::Motor3Dof::setMaxMotorForce)
 		.add_property("max_limit_torque",&vl::physics::Motor3Dof::getMaxLimitTorque,&vl::physics::Motor3Dof::setMaxLimitTorque)
-		
-		.def("enableMotor", &vl::physics::Motor3Dof::enableMotor)
-		.def("disableMotor", &vl::physics::Motor3Dof::disableMotor)
-		.def("enableMotors", &vl::physics::Motor3Dof::enableAllMotors)
-		.def("disableMotors", &vl::physics::Motor3Dof::disableAllMotors)
+		.add_property("lock_hack",&vl::physics::Motor3Dof::isLockingEnabled, &vl::physics::Motor3Dof::enableLocking)
+
+		.def("enable_motor", &vl::physics::Motor3Dof::enableMotor)
+		.def("disable_motor", &vl::physics::Motor3Dof::disableMotor)
+		.def("enable_motors", &vl::physics::Motor3Dof::enableAllMotors)
+		.def("disable_motors", &vl::physics::Motor3Dof::disableAllMotors)
 	;
 
 
@@ -131,13 +132,15 @@ void export_physics_objects(void)
 		.add_property("angular_lower_limit", &vl::physics::SixDofConstraint::getAngularLowerLimit, &vl::physics::SixDofConstraint::setAngularLowerLimit)
 		.add_property("linear_upper_limit", &vl::physics::SixDofConstraint::getLinearUpperLimit, &vl::physics::SixDofConstraint::setLinearUpperLimit)
 		.add_property("linear_lower_limit", &vl::physics::SixDofConstraint::getLinearLowerLimit, &vl::physics::SixDofConstraint::setLinearLowerLimit)
+		.add_property("angle", &vl::physics::SixDofConstraint::getCurrentAngle)
+		.add_property("position", &vl::physics::SixDofConstraint::getCurrentPosition)
 		.add_property("bodyA", &vl::physics::SixDofConstraint::getBodyA)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
 		.add_property("rotation_motor", python::make_function(&vl::physics::SixDofConstraint::getRotationalMotor, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("translation_motor", python::make_function(&vl::physics::SixDofConstraint::getTranslationalMotor, python::return_value_policy<python::reference_existing_object>())) 
 		
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::SixDofConstraint::create)
+		.def("create", &vl::physics::SixDofConstraint::createDynamic)
 		
 		.staticmethod("create")
 	;
@@ -157,7 +160,7 @@ void export_physics_objects(void)
 		.add_property("target_ang_motor_velocity", &vl::physics::SliderConstraint::getTargetAngMotorVelocity, &vl::physics::SliderConstraint::setTargetAngMotorVelocity)
 		.add_property("max_ang_motor_force", &vl::physics::SliderConstraint::getMaxAngMotorForce, &vl::physics::SliderConstraint::setMaxAngMotorForce)
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::SliderConstraint::create)
+		.def("create", &vl::physics::SliderConstraint::createDynamic)
 		.staticmethod("create")
 	;
 
@@ -176,7 +179,7 @@ void export_physics_objects(void)
 		.def("set_axis", &vl::physics::HingeConstraint::setAxis)
 		
 		.def(python::self_ns::str(python::self_ns::self))
-		.def("create", &vl::physics::HingeConstraint::create)
+		.def("create", &vl::physics::HingeConstraint::createDynamic)
 		.staticmethod("create")
 	;
 
@@ -208,6 +211,7 @@ void export_physics_objects(void)
 		.def("setMassProps", &vl::physics::RigidBody::setMassProps)
 		.def("transform_to_local", &vl::physics::RigidBody::transformToLocal)
 		.def("translate", &vl::physics::RigidBody::translate)
+		.def("set_sleeping_thresholds",&vl::physics::RigidBody::setSleepingThresholds)
 		.add_property("total_force", &vl::physics::RigidBody::getTotalForce )
 		.add_property("total_torque", &vl::physics::RigidBody::getTotalTorque )
 		.add_property("center_of_mass_transform", &vl::physics::RigidBody::getCenterOfMassTransform, &vl::physics::RigidBody::setCenterOfMassTransform)
@@ -224,6 +228,8 @@ void export_physics_objects(void)
 		.add_property("inertia", &vl::physics::RigidBody::getInertia, &vl::physics::RigidBody::setInertia)
 		.add_property("kinematic", &vl::physics::RigidBody::isKinematicObject, &vl::physics::RigidBody::enableKinematicObject)
 		.add_property("disable_collisions", &vl::physics::RigidBody::isCollisionsDisabled, &vl::physics::RigidBody::disableCollisions)
+		.add_property("anisotropic_friction", &vl::physics::RigidBody::getAnisotropicFriction, &vl::physics::RigidBody::setAnisotropicFriction)
+		.add_property("friction", &vl::physics::RigidBody::getFriction, &vl::physics::RigidBody::setFriction)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -274,10 +280,11 @@ void export_physics_objects(void)
 
 	/// world
 	python::class_<vl::physics::World, vl::physics::WorldRefPtr, boost::noncopyable>("PhysicsWorld", python::no_init)
-		.def("createRigidBody", &vl::physics::World::createRigidBody, createRigidBody_ov() )
+		.def("createRigidBody", &vl::physics::World::createDynamicRigidBody, createDynamicRigidBody_ov() )
 		.def("getRigidBody", &vl::physics::World::getRigidBody)
 		.def("hasRigidBody", &vl::physics::World::hasRigidBody)
-		.def("removeRigidBody", &vl::physics::World::removeRigidBody)
+		// @todo add both overloads
+		//.def("removeRigidBody", &vl::physics::World::removeRigidBody)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )

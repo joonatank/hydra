@@ -58,8 +58,9 @@ vl::EntityMeshLoadedCallback::meshLoaded(vl::MeshRefPtr mesh)
 
 /// -------------------------------------- Entity ----------------------------
 /// -------------------------------------- Public ----------------------------
-vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::SceneManagerPtr creator, bool use_new_mesh_manager)
-	: MovableObject(name, creator)
+vl::Entity::Entity(std::string const &name, std::string const &mesh_name,
+		vl::SceneManagerPtr creator, bool dynamic, bool use_new_mesh_manager)
+	: MovableObject(name, creator, dynamic)
 {
 	_clear();
 	_mesh_name = mesh_name;
@@ -71,13 +72,19 @@ vl::Entity::Entity(std::string const &name, std::string const &mesh_name, vl::Sc
 }
 
 vl::Entity::Entity(vl::SceneManagerPtr creator)
-	: MovableObject("", creator)
+	: MovableObject(creator)
 {
 	_clear();
 }
 
 vl::Entity::~Entity(void)
-{}
+{
+	if(_ogre_object)
+	{
+		assert(_creator->getNative());
+		_creator->getNative()->destroyMovableObject(_ogre_object);
+	}
+}
 
 void 
 vl::Entity::setCastShadows(bool shadows)

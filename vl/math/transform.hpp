@@ -19,10 +19,12 @@
 // Necessary for vl::scalar, vector, quaternion and matrix types
 #include "math/types.hpp"
 
+#include "defines.hpp"
+
 namespace vl
 {
 
-struct Transform
+struct HYDRA_API Transform
 {
 	/// Constructors allows for defining Vector and Quaternion pair in any order
 	Transform( Ogre::Vector3 const &pos = Ogre::Vector3::ZERO,

@@ -117,14 +117,43 @@ vl::operator<<(std::ostream &os, ConstraintList const &list)
 
 /// ------------------------------ Constraint --------------------------------
 /// ------------------------------ Public ------------------------------------
+vl::Constraint::~Constraint(void)
+{
+	if(_link)
+	{
+		_link->setParent(animation::NodeRefPtr());
+		_link->setChild(animation::NodeRefPtr());
+	}
+}
+
+void
+vl::Constraint::reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+	vl::Transform const &frameInA, vl::Transform const &frameInB )
+{
+	assert(rbA && rbB);
+
+	_bodyA = rbA;
+	_bodyB = rbB;
+	_local_frame_a = frameInA;
+	_local_frame_b = frameInB;
+
+	assert(_link);
+
+	_link->setTransform(_local_frame_a, true);
+	_link->setInitialState();
+	_local_frame_b = _link->getChild()->getTransform();
+}
 
 /// ------------------------------ Protected ---------------------------------
-vl::Constraint::Constraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		vl::Transform const &frameInA, vl::Transform const &frameInB)
-	: _bodyA(rbA)
+vl::Constraint::Constraint(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, vl::Transform const &frameInA, 
+		vl::Transform const &frameInB, bool dynamic)
+	: _name(name)
+	, _bodyA(rbA)
 	, _bodyB(rbB)
 	, _local_frame_a(frameInA)
 	, _local_frame_b(frameInB)
+	, _is_dynamic(dynamic)
 {
 	if(!_bodyA || !_bodyB)
 	{
@@ -163,54 +192,6 @@ vl::Constraint::_solve(vl::time const &t)
 	_progress(t);
 }
 
-void
-vl::Constraint::_solve_aux_parents(void)
-{
-	assert(_link);
-
-	std::vector<animation::LinkRefPtr> aux_parents = _link->getChild()->getAuxilaryParents();
-	if(aux_parents.empty())
-	{ return; }
-
-	for(std::vector<animation::LinkRefPtr>::iterator p_iter = aux_parents.begin();
-		p_iter != aux_parents.end(); ++p_iter)
-	{
-		// Just testing something
-		// p_iter parent is the auxilary parent that should follow the child
-		// parent is the link that has been modified.
-		// @todo initial transformation for the p_iter parent 
-		// needs be set and we need to calculate
-		// this using a transformation to local space.
-		animation::NodeRefPtr node = (*p_iter)->getParent();
-		animation::LinkRefPtr ref_link = node->getParent();
-		// This needs to be the ref link instead of Node because otherwise
-		// we are setting the same transformation over and over.
-		// Because we are modifying the transformation of "node"
-		// so we need to use it's parent for the world transformation.
-		Transform wtA = ref_link->getWorldTransform();
-		wtA.invert();
-		// Initial transfromation is in the Link
-		// The initial transformation is correct, because without it
-		// the object is offsetted to the right (same if not inverted).
-		// diffA is the difference between node and the child link.
-		Transform diffA = (*p_iter)->getTransform();
-		diffA.invert();
-		//Transform link_world = (*p_iter)->getWorldTransform();
-		// transform real parent transformation to local space and then apply
-		// the initial transformation from the link to it.
-		// @todo fix the transformation
-		// should we get the child or link world transformation?
-		// child because we want to follow the child not the link.
-		// we need to transform the node, because transforming the link would have
-		// no effect (it only transforms the child).
-		Transform t(Quaternion(0, 0, 0, 1));
-		Transform t2(Quaternion(0.7071, 0, 0, 0.7071));
-		node->setTransform(wtA * _link->getChild()->getWorldTransform() * t2*diffA);
-		// @todo this needs to go through the whole kinematic chain to the base
-		// and update all nodes that are linked as a parent to the modified link.
-	}
-}
-
 /// ------------------------------ FixedConstraint ---------------------------
 /// ------------------------------ Public ------------------------------------
 void
@@ -222,21 +203,11 @@ vl::FixedConstraint::_progress(vl::time const &t)
 	// is always fixed.
 }
 
-vl::FixedConstraintRefPtr
-vl::FixedConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::FixedConstraint::FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
-	: Constraint(rbA, rbB, frameInA, frameInB)
+vl::FixedConstraint::FixedConstraint(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
 {}
 
 /// ------------------------------ SliderConstraint --------------------------
@@ -307,7 +278,19 @@ vl::SliderConstraint::setActuatorSpeed(vl::scalar velocity)
 vl::scalar
 vl::SliderConstraint::getPosition(void) const
 {
+	if(!_link)
+	{ return 0; }
+
 	return _link->getTransform().position.y - _link->getInitialTransform().position.y;
+}
+
+void
+vl::SliderConstraint::setPosition(vl::scalar pos)
+{
+	if(!_link)
+	{ return; }
+
+	_link->setPosition(_link->getInitialTransform().position + pos*_axisInA);
 }
 
 void
@@ -356,20 +339,11 @@ vl::SliderConstraint::_progress(vl::time const &t)
 	}
 }
 
-vl::SliderConstraintRefPtr
-vl::SliderConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::SliderConstraint::SliderConstraint(KinematicBodyRefPtr rbA, 
-		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	: Constraint(rbA, rbB, frameInA, frameInB)
+vl::SliderConstraint::SliderConstraint(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
 	, _lower_limit(0)
 	, _upper_limit(0)
 	, _axisInA(0, 0, 1)
@@ -438,6 +412,9 @@ vl::HingeConstraint::getAxisInWorld(void) const
 Ogre::Radian
 vl::HingeConstraint::getHingeAngle(void) const
 {
+	if(!_link)
+	{ return Ogre::Radian(0); }
+
 	Ogre::Quaternion const &current_q = _link->getTransform().quaternion;
 	Ogre::Quaternion const &init_q =_link->getInitialTransform().quaternion;
 
@@ -464,6 +441,16 @@ vl::HingeConstraint::getHingeAngle(void) const
 	}
 
 	return angle;
+}
+
+void
+vl::HingeConstraint::setHingeAngle(Ogre::Radian const &angle)
+{
+	if(!_link)
+	{ return; }
+
+	Ogre::Quaternion q(angle, _axisInA);			
+	_link->setOrientation(_link->getInitialTransform().quaternion*q);
 }
 
 void
@@ -514,19 +501,11 @@ vl::HingeConstraint::_progress(vl::time const &t)
 	}
 }
 
-vl::HingeConstraintRefPtr
-vl::HingeConstraint::create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame)
-{
-	assert(rbA &&rbB);
-
-	HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, 
-		rbA->transformToLocal(worldFrame), rbB->transformToLocal(worldFrame)));
-	return constraint;
-}
-
 /// ------------------------------ Private -----------------------------------
-vl::HingeConstraint::HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB)
-	: Constraint(rbA, rbB, frameInA, frameInB)
+vl::HingeConstraint::HingeConstraint(std::string const &name,
+	KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+	Transform const &frameInA, Transform const &frameInB, bool dynamic)
+	: Constraint(name, rbA, rbB, frameInA, frameInB, dynamic)
 	, _lower_limit()
 	, _upper_limit()
 	, _axisInA(0, 0, 1)

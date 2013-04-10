@@ -26,6 +26,9 @@
  
 #include "base/exceptions.hpp"
 
+// Necessary for destroying the object
+#include "scene_manager.hpp"
+
 #define POS_TEX_BINDING    0
 #define COLOUR_BINDING     1
  
@@ -505,8 +508,8 @@ vl::ogre::MovableText::_updateRenderQueue(Ogre::RenderQueue *queue)
 
 /// ---------------------------- vl::MovableText -----------------------------
 /// ---------------------------- public -----------------------------------
-vl::MovableText::MovableText(std::string const &name, vl::SceneManagerPtr creator)
-	: vl::MovableObject(name, creator)
+vl::MovableText::MovableText(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: vl::MovableObject(name, creator, dynamic)
 {
 	_clear();
 }
@@ -515,6 +518,14 @@ vl::MovableText::MovableText(vl::SceneManagerPtr creator)
 	: vl::MovableObject(creator)
 {
 	_clear();
+}
+
+
+vl::MovableText::~MovableText(void)
+{
+	// Can't be removed using SceneManager::destroyMovableObject
+	// because we don't have a factory for MovableText
+	delete _ogre_text;
 }
 
 void
@@ -597,7 +608,7 @@ vl::MovableObjectPtr
 vl::MovableText::clone(std::string const &append_to_name) const
 {
 	/// @todo implement
-	return 0;
+	BOOST_THROW_EXCEPTION(vl::not_implemented());
 }
 
 /// ---------------------------- protected -----------------------------------

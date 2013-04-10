@@ -74,6 +74,11 @@ public:
 	virtual void			setMaxLimitTorque(Ogre::Vector3 const&)=0;
     virtual	Ogre::Vector3	getMaxLimitTorque(void)=0;
 
+	//Use the lock hack, defaults to which ever is working better
+	//Do not change at run time only when creating the motor
+	virtual void enableLocking(bool enable) = 0;
+	virtual bool isLockingEnabled(void) = 0;
+
 	//Is one of 3 dof's enabled:
 	virtual void			enableMotor(int const)=0;
 	virtual void			disableMotor(int const)=0;	
@@ -99,24 +104,49 @@ public :
 
 	virtual std::string getTypeName(void) const = 0;
 
+	std::string const &getName(void) const
+	{ return _name; }
+
+	void setName(std::string const &name)
+	{ _name = name; }
+
+	void reset(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB);
+
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	virtual ~Constraint(void) {}
 
 protected :
 	Constraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
 		: _bodyA(rbA)
 		, _bodyB(rbB)
 		, _frameA(frameInA)
 		, _frameB(frameInB)
+		, _is_dynamic(dynamic)
 	{}
 
 private :
+	Constraint &operator=(Constraint const &);
+	Constraint(Constraint const &);
+
+	// Called from reset function to finilise the reseting
+	virtual void _reseted(void) = 0;
+
+	// @todo these probably shouldn't be weak pointers
+	// we don't own them, but the bodies should never be destroyed before the
+	// constraint has been destroyed.
 	RigidBodyWeakPtr _bodyA;
 	RigidBodyWeakPtr _bodyB;
 
 	Transform _frameA;
 	Transform _frameB;
 
+	std::string _name;
+
+	bool _is_dynamic;
 };
 
 /// @class SixDofConstraint
@@ -137,6 +167,9 @@ public :
 
 	virtual Ogre::Vector3 getAngularUpperLimit(void) const = 0;
 	virtual void setAngularUpperLimit(Ogre::Vector3 const &angularUpper) = 0;
+
+	virtual Ogre::Vector3 getCurrentPosition(void) const = 0;
+	virtual Ogre::Vector3 getCurrentAngle(void) const = 0;
 
 	/// Index 0-2 for translation (x, y, z)
 	/// Index 3-5 for rotations (x, y, z)
@@ -167,10 +200,16 @@ public :
 	static SixDofConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
+	static SixDofConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+
 protected :
+	static SixDofConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	SixDofConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class SixDofConstraint
@@ -305,11 +344,17 @@ public :
 	// static
 	static SliderConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+		
+	static SliderConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
+	static SliderConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	SliderConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class SliderConstraint
@@ -346,11 +391,17 @@ public :
 	// static
 	static HingeConstraintRefPtr create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
+	
+	static HingeConstraintRefPtr createDynamic(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA = true);
 
 protected :
+	static HingeConstraintRefPtr _create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic);
+
 	HingeConstraint(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA)
-		: Constraint(rbA, rbB, frameInA, frameInB)
+		Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
+		: Constraint(rbA, rbB, frameInA, frameInB, dynamic)
 	{}
 
 };	// class HingeConstraint

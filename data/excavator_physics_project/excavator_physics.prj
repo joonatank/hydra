@@ -12,7 +12,11 @@ Ogre test project used for testing and demonstrating eqOgre
 		<scene name="excavator_physics" use="true" use_new_mesh_manager="true">
 			<file>excavator_physics.scene</file>
 		</scene>
-
+		<!-- Missing data files
+		<scene name="kyltti" use="true" use_new_mesh_manager="true">
+			<file>kyltti.scene</file>
+		</scene>
+		-->
 	</scenes>
 
 	<scripts>

@@ -47,33 +47,29 @@ vl::HSFLoader::~HSFLoader(void)
 
 void
 vl::HSFLoader::parseScene( std::string const &scene_data,
-						   vl::GameManagerPtr game_manager )
+						   vl::GameManagerPtr game_manager, LOADER_FLAGS flags )
 {
 	_game = game_manager;
+	_flags = flags;
 	assert(_game);
 
 	char *xml_data = new char[scene_data.length()+1];
 	::strcpy( xml_data, scene_data.c_str() );
 
 	_parse( xml_data );
+
+	// Reset data so that we don't end up with dangling pointers (or holding resources)
+	_game = 0;
 }
 
 
 
 void
 vl::HSFLoader::parseScene( vl::TextResource &scene_data,
-						   vl::GameManagerPtr game_manager )
+						   vl::GameManagerPtr game_manager, LOADER_FLAGS flags )
 {
 	_game = game_manager;
-	assert(_game);
-
-	// We need to disable auto creation of collision objects because they are
-	// well defined in the HSF file itself.
-	// But we want to maintain compatibility with older scripts and scene files 
-	// which do not have these features so we restore it after we are done.
-	assert(_game->getKinematicWorld());
-	bool col_detection = _game->getKinematicWorld()->isCollisionDetectionEnabled();
-	_game->getKinematicWorld()->enableCollisionDetection(false);
+	_flags = flags;
 	
 	// Get the ownership of the memory
 	char *xml_data = scene_data.get();
@@ -84,8 +80,6 @@ vl::HSFLoader::parseScene( vl::TextResource &scene_data,
 	}
 
 	_parse( xml_data );
-
-	_game->getKinematicWorld()->enableCollisionDetection(col_detection);
 
 	// Reset data so that we don't end up with dangling pointers (or holding resources)
 	_game = 0;
@@ -135,6 +129,16 @@ vl::HSFLoader::processScene(rapidxml::xml_node<> *xml_root)
 {
 	rapidxml::xml_node<>* pElement;
 
+	assert(_game);
+
+	// We need to disable auto creation of collision objects because they are
+	// well defined in the HSF file itself.
+	// But we want to maintain compatibility with older scripts and scene files 
+	// which do not have these features so we restore it after we are done.
+	assert(_game->getKinematicWorld());
+	bool col_detection = _game->getKinematicWorld()->isCollisionDetectionEnabled();
+	_game->getKinematicWorld()->enableCollisionDetection(false);
+
 	// @todo add checking for multiple nodes
 	// it should throw an error for invalid file.
 
@@ -142,6 +146,19 @@ vl::HSFLoader::processScene(rapidxml::xml_node<> *xml_root)
 	pElement = xml_root->first_node("environment");
 	if(pElement)
 	{ processEnvironment(pElement); }
+
+	// HACK
+	// Reset constraints
+	// This needs to be done before reading the nodes so we preserve
+	// the correct positions.
+	// Proper fix would be to find the constraints for the specific node
+	// and reset those instead of them all.
+	vl::ConstraintList constraints = _game->getKinematicWorld()->getConstraints();
+	for(vl::ConstraintList::iterator iter = constraints.begin(); 
+		iter != constraints.end(); ++iter)
+	{
+		(*iter)->_getLink()->reset();
+	}
 
 	// Process nodes (?)
 	pElement = xml_root->first_node("nodes");
@@ -151,6 +168,8 @@ vl::HSFLoader::processScene(rapidxml::xml_node<> *xml_root)
 	pElement = xml_root->first_node("constraints");
 	if( pElement )
 	{ processConstraints(pElement); }
+
+	_game->getKinematicWorld()->enableCollisionDetection(col_detection);
 }
 
 void
@@ -297,8 +316,39 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Invalid node name."));
 	}
 
-	// Create the scene node
-	vl::GameObjectRefPtr node = _game->createGameObject(name);
+	// Create the game object
+	vl::GameObjectRefPtr node;
+	if( (_flags & LOADER_FLAG_OVERWRITE) && _game->hasGameObject(name) )
+	{
+		node = _game->getGameObject(name);
+	}
+	else if( (_flags & LOADER_FLAG_RENAME) && _game->hasGameObject(name) )
+	{
+		_game->hasGameObject(name);
+		
+		// Find a name that is available
+		size_t counter = 0;
+		std::stringstream new_name;
+		new_name << name << "_" << counter;
+		while(_game->hasGameObject(new_name.str()))
+		{
+			new_name.str("");
+			++counter;
+			new_name << name << "_" << counter;
+		}
+
+		node = _game->createGameObject(new_name.str());
+	}
+	// Default behavior we don't allow to read objects with duplicate names
+	else
+	{
+		if(_game->hasGameObject(name))
+		{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
+
+		node = _game->createGameObject(name);
+	}
+
+	assert(node);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -455,7 +505,12 @@ vl::HSFLoader::processNode(rapidxml::xml_node<> *xml_node)
 			{ inertia = vl::parseVector3(inertia_xml); }
 		}
 
-		node->createRigidBody(mass, inertia);
+		// Create missing rigid bodies
+		if(!node->getPhysicsNode())
+		{ node->createRigidBody(mass, inertia); }
+		// Otherwise reset parameters
+		else
+		{ node->getPhysicsNode()->setMassProps(mass, inertia); }
 	}
 
 	if(kinematic)
@@ -480,8 +535,40 @@ vl::HSFLoader::processChildNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 	if(name.empty())
 	{ BOOST_THROW_EXCEPTION(vl::invalid_dotscene() << vl::desc("Node without name is not supported.")); }
 
+	vl::SceneManagerPtr scene = _game->getSceneManager();
 	// Create the scene node
-	vl::SceneNodePtr node = parent->createChildSceneNode(name);
+	vl::SceneNodePtr node = 0;
+	if( (_flags & LOADER_FLAG_OVERWRITE) && scene->hasSceneNode(name) )
+	{
+		node = scene->getSceneNode(name);
+		assert(node);
+		parent->addChild(node);
+	}
+	else if( (_flags & LOADER_FLAG_RENAME) && scene->hasSceneNode(name) )
+	{	
+		// Find a name that is available
+		size_t counter = 0;
+		std::stringstream new_name;
+		new_name << name << "_" << counter;
+		while(_game->getSceneManager()->hasSceneNode(new_name.str()))
+		{
+			new_name.str("");
+			++counter;
+			new_name << name << "_" << counter;
+		}
+
+		node = parent->createChildSceneNode(new_name.str());
+	}
+	// Default behavior we don't allow to read objects with duplicate names
+	else
+	{
+		if( _game->getSceneManager()->hasSceneNode(name) )
+		{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
+
+		node = parent->createChildSceneNode(name);
+	}
+
+	assert(node);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -600,10 +687,53 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 
 		assert(bodyA && bodyB);
 
-		// throws if such type is not available
-		ConstraintRefPtr con = _game->getKinematicWorld()->createConstraint(type, bodyA, bodyB, fA, fB);
+		if(name.empty())
+		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Constraint with no name.")); }
+
+		vl::KinematicWorldRefPtr world = _game->getKinematicWorld();
+		// Create the constraint
+		ConstraintRefPtr con;
+		if( (_flags & LOADER_FLAG_OVERWRITE) && world->getConstraint(name) )
+		{
+			con = world->getConstraint(name);
+			// @todo this does not respect the bodyA and bodyB
+			// they need to be reconfigured to the constraint or it needs to be remade.
+			// remove old constraints because they can't be reconfigured
+			// Not a good idea, all the pointers (from python) are lost
+			// also we need to handle the removal properly
+			//_game->getKinematicWorld()->removeConstraint(con);
+			assert(con->getTypeName() == type);
+			con->reset(bodyA, bodyB, fA, fB);
+		}
+		else if( (_flags & LOADER_FLAG_RENAME) && world->getConstraint(name) )
+		{	
+			// Find a name that is available
+			size_t counter = 0;
+			std::stringstream new_name;
+			new_name << name << "_" << counter;
+			while(world->getConstraint(new_name.str()))
+			{
+				new_name.str("");
+				++counter;
+				new_name << name << "_" << counter;
+			}
+
+			con = world->createConstraint(type, bodyA, bodyB, fA, fB, name);
+		}
+		// Default behavior we don't allow to read objects with duplicate names
+		else
+		{
+			if( world->getConstraint(name) )
+			{ BOOST_THROW_EXCEPTION(vl::duplicate()); }
+
+			// throws if such type is not available
+			con = world->createConstraint(type, bodyA, bodyB, fA, fB, name);
+		}
+
+		assert(con);
+
+		// Set parameters
 		con->setActuator(actuator);
-		con->setName(name);
 		if(HingeConstraintRefPtr hinge = boost::dynamic_pointer_cast<HingeConstraint>(con))
 		{
 			Ogre::Radian min_, max_;
@@ -632,6 +762,7 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 	}
 	else if(engine == "dynamic")
 	{
+		/// @todo this is still a stub
 		assert(_game->getPhysicsWorld());
 		physics::RigidBodyRefPtr bodyA = _game->getPhysicsWorld()->getRigidBody(body_a);
 		physics::RigidBodyRefPtr bodyB = _game->getPhysicsWorld()->getRigidBody(body_b);
@@ -639,33 +770,49 @@ vl::HSFLoader::processConstraint(rapidxml::xml_node<> *xml_node)
 		assert(bodyA && bodyB);
 
 		vl::physics::ConstraintRefPtr constraint;
-		if(type == "hinge")
+
+		// If we have a named constraint modify it's parameters instead of creating a new
+		// @todo this functions like the OVERWRITE flag always, implement RENAME and DEFAULT also
+		if(_game->getPhysicsWorld()->hasConstraint(name))
 		{
-			vl::physics::HingeConstraintRefPtr hinge = physics::HingeConstraint::create(bodyA, bodyB, fA, fB);
-			constraint = hinge;
-		}
-		else if(type == "fixed")
-		{
-			assert(false && "Physics solver does not yet support fixed constraints.");
-		}
-		else if(type == "slider")
-		{
-			vl::physics::SliderConstraintRefPtr slider = physics::SliderConstraint::create(bodyA, bodyB, fA, fB);
-			constraint = slider;
-		}
-		else if(type == "6dof")
-		{
-			vl::physics::SixDofConstraintRefPtr dof = physics::SixDofConstraint::create(bodyA, bodyB, fA, fB);
-			constraint = dof;
+			// Remove old constraints because they can't be reconfigured
+			constraint = _game->getPhysicsWorld()->getConstraint(name);
+			//_game->getPhysicsWorld()->removeConstraint(constraint);
+			//constraint.reset();
+			assert(type == constraint->getTypeName());
+			constraint->reset(bodyA, bodyB, fA, fB);
 		}
 		else
 		{
-			assert(false && "Unsupported constraint type");
+			// Create constraints
+			// @todo parameter processing
+			if(type == "hinge")
+			{
+				vl::physics::HingeConstraintRefPtr hinge = physics::HingeConstraint::create(bodyA, bodyB, fA, fB);
+				constraint = hinge;
+			}
+			else if(type == "fixed")
+			{
+				assert(false && "Physics solver does not yet support fixed constraints.");
+			}
+			else if(type == "slider")
+			{
+				vl::physics::SliderConstraintRefPtr slider = physics::SliderConstraint::create(bodyA, bodyB, fA, fB);
+				constraint = slider;
+			}
+			else if(type == "6dof")
+			{
+				vl::physics::SixDofConstraintRefPtr dof = physics::SixDofConstraint::create(bodyA, bodyB, fA, fB);
+				constraint = dof;
+			}
+			else
+			{
+				assert(false && "Unsupported constraint type");
+			}
+
+			assert(constraint);
+			_game->getPhysicsWorld()->addConstraint(constraint);
 		}
-
-
-		assert(constraint);
-		_game->getPhysicsWorld()->addConstraint(constraint);
 	}
 	else
 	{
@@ -682,26 +829,42 @@ vl::HSFLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr pa
 	std::string base_name = vl::getAttrib(xml_node, "name");
 	std::string meshFile = vl::getAttrib(xml_node, "mesh_file");
 
-	/// @todo should be removed after we have file saving as we don't need compatibility
-	/// with Ogre scene file exporters after that.
-	///
-	/// Get an unique name for the entity
-	/// This is mostly because of problematic Blender exporter that copies the
-	/// entity name from the mesh name.
-	uint16_t index = 0;
-	std::stringstream name_ss(base_name);
-	while( _game->getSceneManager()->hasEntity(name_ss.str()) )
-	{
-		name_ss.str("");
-		name_ss << base_name << "_" << index;
-		++index;
-	}
+	vl::SceneManagerPtr scene = _game->getSceneManager();
 
 	// Create the entity
-	vl::EntityPtr entity = _game->getSceneManager()->createEntity(name_ss.str(), meshFile, true);
+	vl::EntityPtr entity = 0;
+	if( (_flags & LOADER_FLAG_OVERWRITE) && scene->hasEntity(base_name) )
+	{
+		entity = scene->getEntity(base_name);
+	}
+	/// Old default behavior here for compatibility
+	else if(scene->hasEntity(base_name))
+	{
+		/// @todo should be removed after we have file saving as we don't need compatibility
+		/// with Ogre scene file exporters after that.
+		///
+		/// Get an unique name for the entity
+		/// This is mostly because of problematic Blender exporter that copies the
+		/// entity name from the mesh name.
+		uint16_t index = 0;
+		std::stringstream name_ss(base_name);
+		while( _game->getSceneManager()->hasEntity(name_ss.str()) )
+		{
+			name_ss.str("");
+			name_ss << base_name << "_" << index;
+			++index;
+		}
+		entity = _game->getSceneManager()->createEntity(name_ss.str(), meshFile, true);
+	}
+	else
+	{ entity = _game->getSceneManager()->createEntity(base_name, meshFile, true); }
+	
+	assert(entity);
+
 	//entity->setCastShadows(castShadows);
 	parent->attachObject(entity);
 
+	// @todo why there is no support for material?
 //	if( !materialFile.empty() )
 //	{ entity->setMaterialName(materialFile); }
 }
@@ -715,8 +878,32 @@ vl::HSFLoader::processLight(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr par
 	// Process attributes
 	std::string name = vl::getAttrib(xml_node, "name");
 
+	vl::SceneManagerPtr scene = _game->getSceneManager();
+	
 	// Create the light
-	vl::LightPtr light = _game->getSceneManager()->createLight(name);
+	vl::LightPtr light = 0;
+	if( _flags & LOADER_FLAG_OVERWRITE && scene->hasLight(name) )
+	{
+		light = scene->getLight(name);
+	}
+	else if(_flags & LOADER_FLAG_RENAME && scene->hasLight(name) )
+	{
+		uint16_t index = 0;
+		std::stringstream name_ss(name);
+		while( scene->hasLight(name_ss.str()) )
+		{
+			name_ss.str("");
+			name_ss << name << "_" << index;
+			++index;
+		}
+		light = scene->createLight(name_ss.str());
+	}
+	else
+	{
+		light = scene->createLight(name);
+	}
+
+	assert(light);
 
 	parent->attachObject(light);
 
@@ -790,8 +977,33 @@ vl::HSFLoader::processCamera(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr pa
 	std::string name = vl::getAttrib(xml_node, "name");
 	std::string id = vl::getAttrib(xml_node, "id");
 
+	vl::SceneManagerPtr scene = _game->getSceneManager();
+
 	// Create the camera
-	vl::CameraPtr camera = _game->getSceneManager()->createCamera( name );
+	vl::CameraPtr camera;
+	if( _flags & LOADER_FLAG_OVERWRITE && scene->hasCamera(name) )
+	{
+		camera = scene->getCamera(name);
+	}
+	else if(_flags & LOADER_FLAG_RENAME && scene->hasCamera(name))
+	{
+		uint16_t index = 0;
+		std::stringstream name_ss(name);
+		while( scene->hasCamera(name_ss.str()) )
+		{
+			name_ss.str("");
+			name_ss << name << "_" << index;
+			++index;
+		}
+		camera = scene->createCamera(name_ss.str());
+	}
+	else
+	{
+		camera = scene->createCamera(name);
+	}
+
+	assert(camera);
+	
 	parent->attachObject( camera );
 
 	rapidxml::xml_node<> *pElement;

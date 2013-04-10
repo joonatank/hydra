@@ -31,6 +31,7 @@
 #include "scene_node.hpp"
 // Necessary for creating SceneNodes and retriving mesh manager
 #include "scene_manager.hpp"
+#include "entity.hpp"
 
 size_t vl::physics::Tube::n_tubes = 0;
 
@@ -147,9 +148,70 @@ vl::physics::Tube::Tube(WorldPtr world, SceneManagerPtr sm, Tube::ConstructionIn
 
 vl::physics::Tube::~Tube(void)
 {
-	/// @todo should remove constraints and bodies from world
-	/// and destroy them
+	/// Remove constraints and bodies from world and destroy them
+	removeFromWorld();
+	_fixing_bodies.clear();
+	_external_fixings.clear();
+	_constraints.clear();
+	_bodies.clear();
+
 	/// @todo should remove and destroy all used SceneNodes
+	/// and MovableObjects
+	/// We need to keep a list of them for easy removal.
+	for(EntityList::iterator iter = _entities.begin(); 
+		iter != _entities.end(); ++iter)
+	{
+		_scene->destroyMovableObject(*iter);
+	}
+	_entities.clear();
+
+	for(SceneNodeList::iterator iter = _nodes.begin(); 
+		iter != _nodes.end(); ++iter)
+	{
+		_scene->destroySceneNode(*iter);
+	}
+	_nodes.clear();
+}
+
+void
+vl::physics::Tube::removeFromWorld(void)
+{
+	std::clog << "vl::physics::Tube::removeFromWorld" << std::endl;
+	// Can't do isInWorld() checking because this can be called from destructor
+	// and the weak_ptr is not valid anymore
+
+	// Fixing bodies are created outside of the Tube, so we don't remove them
+	// _fixing_bodies
+	
+	// External fixings are constraints created by us so we destroy them
+	// We can use the original lists here because they are not modified
+	// here.
+	for(ConstraintList::iterator iter = _external_fixings.begin(); 
+		iter != _external_fixings.end(); ++iter)
+	{
+		_world->removeConstraint(*iter);
+	}
+
+	// Constraints are created by us
+	for(ConstraintList::iterator iter = _constraints.begin(); 
+		iter != _constraints.end(); ++iter)
+	{
+		_world->removeConstraint(*iter);
+	}
+
+	// Bodies are created by us
+	for(RigidBodyList::iterator iter = _bodies.begin(); iter != _bodies.end(); ++iter)
+	{
+		_world->removeRigidBody(*iter);
+	}
+
+	// @todo destroy SceneNodes and Entities
+}
+
+bool
+vl::physics::Tube::isInWorld(void) const
+{
+	return _world->hasTube(shared_from_this());
 }
 
 void
@@ -621,6 +683,8 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 		// We need to use root node for the physics engine to work correctly
 		SceneNodePtr node = _scene->getRootSceneNode()->createChildSceneNode(name.str());
 		ms->setNode(node);
+		_nodes.push_back(node);
+
 		EntityPtr ent = _scene->createEntity(name.str(), mesh_name.str(), true);
 		ent->setInstanced(_use_instancing);
 		// Force instanced material
@@ -628,6 +692,7 @@ vl::physics::Tube::_createMesh(MeshManagerRefPtr mesh_manager)
 		{ _material_name = "tube/instanced"; }
 		ent->setMaterialName(_material_name);
 		node->attachObject(ent);
+		_entities.push_back(ent);
 
 		++index;
 	}

@@ -186,16 +186,16 @@ void export_animation(void)
 	vl::KinematicBodyRefPtr (vl::KinematicWorld::*getKinematicBody_ov1)(vl::SceneNodePtr) const = &vl::KinematicWorld::getKinematicBody;
 
 	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov0)(std::string const &type, 
-		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans) = &vl::KinematicWorld::createConstraint;
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans) = &vl::KinematicWorld::createDynamicConstraint;
 	vl::ConstraintRefPtr (vl::KinematicWorld::*createConstraint_ov1)(std::string const &type, 
-		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &, vl::Transform const &) = &vl::KinematicWorld::createConstraint;
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &, vl::Transform const &) = &vl::KinematicWorld::createDynamicConstraint;
 
 	/// @todo add list getters
 	// bodies not yet working as we would like, probably something to do with ref ptrs
 	python::class_<vl::KinematicWorld, vl::KinematicWorldRefPtr, boost::noncopyable>("KinematicWorld", python::no_init)
 		.def("get_kinematic_body", getKinematicBody_ov0)
 		.def("get_kinematic_body", getKinematicBody_ov1)
-		.def("create_kinematic_body", &vl::KinematicWorld::createKinematicBody)
+		.def("create_kinematic_body", &vl::KinematicWorld::createDynamicKinematicBody)
 		.def("remove_kinematic_body", &vl::KinematicWorld::removeKinematicBody)
 		.def("create_constraint", createConstraint_ov0)
 		.def("create_constraint", createConstraint_ov1)
@@ -228,7 +228,7 @@ void export_animation(void)
 		.add_property("upper_limit", &vl::SliderConstraint::getUpperLimit, &vl::SliderConstraint::setUpperLimit)
 		.add_property("speed", &vl::SliderConstraint::getActuatorSpeed, &vl::SliderConstraint::setActuatorSpeed)
 		.add_property("target", &vl::SliderConstraint::getActuatorTarget, &vl::SliderConstraint::setActuatorTarget)
-		.add_property("position", &vl::SliderConstraint::getPosition)
+		.add_property("position", &vl::SliderConstraint::getPosition, &vl::SliderConstraint::setPosition)
 		.add_property("axis", python::make_function(&vl::SliderConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::SliderConstraint::setAxis)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -238,7 +238,7 @@ void export_animation(void)
 		.add_property("upper_limit", python::make_function(&vl::HingeConstraint::getUpperLimit, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setUpperLimit)
 		.add_property("speed", python::make_function(&vl::HingeConstraint::getActuatorSpeed, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorSpeed)
 		.add_property("target", python::make_function(&vl::HingeConstraint::getActuatorTarget, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setActuatorTarget)
-		.add_property("angle", python::make_function(&vl::HingeConstraint::getHingeAngle))
+		.add_property("angle", &vl::HingeConstraint::getHingeAngle, &vl::HingeConstraint::setHingeAngle)
 		.add_property("axis", python::make_function(&vl::HingeConstraint::getAxis, python::return_value_policy<python::copy_const_reference>()), &vl::HingeConstraint::setAxis)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -334,9 +334,8 @@ void export_scene_graph(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	vl::EntityPtr (SceneManager::*createEntity_ov0)(std::string const &, vl::PREFAB) = &SceneManager::createEntity;
-	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createEntity;
-	vl::EntityPtr (SceneManager::*createEntity_ov2)(std::string const &, std::string const &, bool) = &SceneManager::createEntity;
+	vl::EntityPtr (SceneManager::*createEntity_ov1)(std::string const &, std::string const &) = &SceneManager::createDynamicEntity;
+	vl::EntityPtr (SceneManager::*createEntity_ov2)(std::string const &, std::string const &, bool) = &SceneManager::createDynamicEntity;
 	vl::ShadowInfo &(SceneManager::*getShadowInfo_ov0)(void) = &vl::SceneManager::getShadowInfo;
 
 	python::class_<std::vector<SceneNode *> >("SceneNodeList")
@@ -362,24 +361,24 @@ void export_scene_graph(void)
 		.add_property("scene_nodes", python::make_function(&vl::SceneManager::getSceneNodeList, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("objects", python::make_function(&vl::SceneManager::getMovableObjectList, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("cameras", &vl::SceneManager::getCameraList )
-		.def("createSceneNode", &vl::SceneManager::createSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		.def("createSceneNode", &vl::SceneManager::createDynamicSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasSceneNode", &SceneManager::hasSceneNode )
 		.def("getSceneNode", &SceneManager::getSceneNode, python::return_value_policy<python::reference_existing_object>() )
-		.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
+		//.def("createEntity", createEntity_ov0, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov1, python::return_value_policy<python::reference_existing_object>() )
 		.def("createEntity", createEntity_ov2, python::return_value_policy<python::reference_existing_object>() )
 		.def("getEntity", &SceneManager::getEntity, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasEntity", &SceneManager::hasEntity)
-		.def("createCamera", &SceneManager::createCamera, python::return_value_policy<python::reference_existing_object>() )
+		.def("createCamera", &SceneManager::createDynamicCamera, python::return_value_policy<python::reference_existing_object>() )
 		.def("getCamera", &SceneManager::getCamera, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasCamera", &SceneManager::hasCamera)
-		.def("createLight", &SceneManager::createLight, python::return_value_policy<python::reference_existing_object>() )
+		.def("createLight", &SceneManager::createDynamicLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("getLight", &SceneManager::getLight, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasLight", &SceneManager::hasLight)
-		.def("createMovableText", &SceneManager::createMovableText, python::return_value_policy<python::reference_existing_object>() )
+		.def("createMovableText", &SceneManager::createDynamicMovableText, python::return_value_policy<python::reference_existing_object>() )
 		.def("getMovableText", &SceneManager::getMovableText, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasMovableText", &SceneManager::hasMovableText)
-		.def("createRayObject", &SceneManager::createRayObject, python::return_value_policy<python::reference_existing_object>() )
+		.def("createRayObject", &SceneManager::createDynamicRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("getRayObject", &SceneManager::getRayObject, python::return_value_policy<python::reference_existing_object>() )
 		.def("hasRayObject", &SceneManager::hasRayObject)
 		.def("show_debug_displays", &SceneManager::showDebugDisplays)
@@ -404,13 +403,6 @@ void export_scene_graph(void)
 		.def("mapCollisionBarriers", &vl::SceneManager::mapCollisionBarriers)
 		.def("reloadScene", &SceneManager::reloadScene)
 		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	python::enum_<vl::PREFAB>("PF")
-		.value("NONE", PF_NONE)
-		.value("PLANE", PF_PLANE)
-		.value("SPHERE", PF_SPHERE)
-		.value("CUBE", PF_CUBE)
 	;
 
 	python::class_<vl::MovableObject, boost::noncopyable>("MovableObject", python::no_init)
@@ -515,8 +507,8 @@ void export_scene_graph(void)
 	void (vl::SceneNode::*scale_ov0)(Ogre::Vector3 const &) = &vl::SceneNode::scale;
 	void (vl::SceneNode::*scale_ov1)(Ogre::Real) = &vl::SceneNode::scale;
 
-	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::clone;
-	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::clone;
+	SceneNodePtr (vl::SceneNode::*sn_clone_ov0)() const = &vl::SceneNode::cloneDynamic;
+	SceneNodePtr (vl::SceneNode::*sn_clone_ov1)(std::string const &) const = &vl::SceneNode::cloneDynamic;
 	
 	void (vl::SceneNode::*setVisible_ov0)(bool) = &vl::SceneNode::setVisibility;
 	void (vl::SceneNode::*setVisible_ov1)(bool, bool) = &vl::SceneNode::setVisibility;
@@ -549,7 +541,8 @@ void export_scene_graph(void)
 		.def("attachObject", &vl::SceneNode::attachObject)
 		.def("detachObject", &vl::SceneNode::detachObject)
 		.def("hasObject", &vl::SceneNode::hasObject)
-		.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
+		// We can't create dynamic objects with this method so lets not expose it
+		//.def("createChildSceneNode", &vl::SceneNode::createChildSceneNode, python::return_value_policy<python::reference_existing_object>() )
 		.def("addChild", &vl::SceneNode::addChild)
 		.def("removeChild", &vl::SceneNode::removeChild)
 		.def("removeAllChildren", &vl::SceneNode::removeAllChildren)
@@ -623,8 +616,6 @@ void export_game(void)
 		.def(python::self_ns::float_(python::self_ns::self))
  	;
 
-	void (vl::GameManager::*loadScene_ov0)(std::string const &)= &vl::GameManager::loadScene;
-
 	python::class_<vl::chrono>("chrono", python::init<>())
 		.def(python::init<vl::time const &>())
 		.def("elapsed", &vl::chrono::elapsed)
@@ -666,6 +657,15 @@ void export_game(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::enum_<vl::LOADER_FLAGS>("LOADER_FLAG")
+		.value("NONE", LOADER_FLAG_NONE)
+		.value("RENAME", LOADER_FLAG_RENAME)
+		.value("OVERWRITE", LOADER_FLAG_OVERWRITE)
+	;
+
+	void (vl::GameManager::*loadScene_ov0)(std::string const &)= &vl::GameManager::loadScene;
+	void (vl::GameManager::*loadScene_ov1)(std::string const &, LOADER_FLAGS)= &vl::GameManager::loadScene;
+
 	python::class_<vl::GameManager, boost::noncopyable>("GameManager", python::no_init)
 		.add_property("scene", python::make_function( &vl::GameManager::getSceneManager, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("player", python::make_function( &vl::GameManager::getPlayer, python::return_value_policy<python::reference_existing_object>() ) )
@@ -682,7 +682,7 @@ void export_game(void)
 		.add_property("objects", python::make_function( &vl::GameManager::getGameObjectList, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("get_object", &vl::GameManager::getGameObject)
 		.def("has_object", &vl::GameManager::hasGameObject)
-		.def("create_object", &vl::GameManager::createGameObject)
+		.def("create_object", &vl::GameManager::createDynamicGameObject)
 
 		// State management
 		.def("quit", &vl::GameManager::quit)
@@ -690,10 +690,19 @@ void export_game(void)
 		.def("play", &vl::GameManager::play)
 		.def("stop", &vl::GameManager::stop)
 		.def("restart", &vl::GameManager::restart)
+		.def("unload", &vl::GameManager::unload)
+		.def("load", &vl::GameManager::load)
+		.def("reload", &vl::GameManager::reload)
+
 		.add_property("paused", &vl::GameManager::isPaused)
 		.add_property("playing", &vl::GameManager::isPlaying)
 		.add_property("quited", &vl::GameManager::isQuited)
 		.add_property("auto_start", &vl::GameManager::auto_start, &vl::GameManager::set_auto_start)
+		
+		/// test functions
+		.def("destroy_dynamic_objects", &vl::GameManager::_destroyDynamicObjects)
+		.def("rerun_python", &vl::GameManager::_rerunPythonScripts)
+
 		/// @todo add state inqueries
 		/// @todo add step function, needs to rename the current one in GameManager which is internal
 		/// called from Config...
@@ -703,6 +712,7 @@ void export_game(void)
 		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.def("loadRecording", &vl::GameManager::loadRecording)
 		.def("load_scene", loadScene_ov0)
+		.def("load_scene", loadScene_ov1)
 		.def("save_scene", &vl::GameManager::saveScene)
 		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;

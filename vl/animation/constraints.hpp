@@ -30,6 +30,8 @@
 #include "animation.hpp"
 
 #include <boost/signal.hpp>
+// Necessary for generating random names
+#include "base/string_utils.hpp"
 
 namespace vl
 {
@@ -37,13 +39,12 @@ namespace vl
 /** @class Constraint
  *	Abstract base class for all kinematic constraints
  */
-class Constraint
+class HYDRA_API Constraint
 {
 	typedef boost::signal<void (void)> ChangedCB;
 
 public :
-	virtual ~Constraint(void)
-	{}
+	virtual ~Constraint(void);
 
 	KinematicBodyRefPtr getBodyA(void) const
 	{ return _bodyA; }
@@ -83,6 +84,12 @@ public :
 	void setName(std::string const &name)
 	{ _name = name; }
 
+	void reset( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB );
+
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	int addListener(ChangedCB::slot_type const &slot)
 	{ _changed_cb.connect(slot); return 1; }
 
@@ -103,22 +110,18 @@ private :
 	/// @param t time since last call, i.e. simulation time step
 	virtual void _progress(vl::time const &t) = 0;
 
-	/// @todo this is not used for anything as it does not work
-	/// as excepted.
-	/// Left because we don't have any other implementations planned
-	/// in the near future so this might be useful when such implementation
-	/// is going to be done.
-	void _solve_aux_parents(void);
-
 protected :
 	/// @brief Constructor
 	/// only child classes are allowed to use the constructor
+	/// @param name unique identifier
 	/// @param rbA the body to which we want to constraint
 	/// @param rbB the body we are constraining
 	/// @param frameInA the pivot point in rbA coordinates
 	/// @param frameInB the pivot point in rbB coordinates
-	Constraint( KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
-		vl::Transform const &frameInA, vl::Transform const &frameInB );
+	Constraint(std::string const &name, KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		vl::Transform const &frameInA, vl::Transform const &frameInB, bool dynamic);
+
+	std::string _name;
 
 	KinematicBodyRefPtr _bodyA;
 	KinematicBodyRefPtr _bodyB;
@@ -127,15 +130,15 @@ protected :
 	vl::Transform _local_frame_a;
 	vl::Transform _local_frame_b;
 
-	std::string _name;
-
 	vl::animation::LinkRefPtr _link;
+
+	bool _is_dynamic;
 
 	ChangedCB _changed_cb;
 
 };	// class Constraint
 
-class FixedConstraint : public Constraint
+class HYDRA_API FixedConstraint : public Constraint
 {
 public :
 
@@ -152,23 +155,25 @@ public :
 	{ return "fixed"; }
 
 	// static
-	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		 vl::Transform const &frameInA, vl::Transform const &frameInB)
+	static FixedConstraintRefPtr create(std::string const &name, 
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		 vl::Transform const &frameInA, vl::Transform const &frameInB, bool dynamic)
 	{
-		FixedConstraintRefPtr constraint(new FixedConstraint(rbA, rbB, frameInA, frameInB));
+		FixedConstraintRefPtr constraint(new FixedConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
 	}
 
-	static FixedConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
+	// @todo we should add a method without frame because the frame is not
+	// needed for anything as long as the constraint is fixed.
 
 	/// Private virtual overrides
 private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	FixedConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	FixedConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA, 
+		Transform const &frameInB, bool dynamic);
 
 };	// class FixedConstraint
 
@@ -179,7 +184,7 @@ private :
  *	Supports servo motors so that the constraint can be used as an actuator.
  *	@todo rename to prismatic joint, as used in Robot literature
  */
-class SliderConstraint : public Constraint
+class HYDRA_API SliderConstraint : public Constraint
 {
 public :
 	vl::scalar getLowerLimit(void) const
@@ -241,18 +246,17 @@ public :
 
 	vl::scalar getPosition(void) const;
 
+	void setPosition(vl::scalar pos);
+
 	virtual std::string getTypeName(void) const
 	{ return "slider"; }
 
 	// static
-	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
-
-	static SliderConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
+	static SliderConstraintRefPtr create(std::string const &name,
+		KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB,
+		Transform const &frameInA, Transform const &frameInB, bool dynamic)
 	{
-
-		SliderConstraintRefPtr constraint(new SliderConstraint(rbA, rbB, frameInA, frameInB));
+		SliderConstraintRefPtr constraint(new SliderConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
 	}
 
@@ -262,9 +266,9 @@ private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &worldFrame);
-	SliderConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	SliderConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA,
+		Transform const &frameInB, bool dynamic);
 	
 	vl::scalar _lower_limit;
 	vl::scalar _upper_limit;
@@ -285,7 +289,7 @@ private :
  *	This is probably because there is inaccuracies in calculating the angle from
  *	quaternions and comparing them.
  */
-class HingeConstraint : public Constraint
+class HYDRA_API HingeConstraint : public Constraint
 {
 public :
 	/// @brief change between constraint and actuator
@@ -344,27 +348,28 @@ public :
 	/// @brief returns the angle the hinge is in along the path moved.
 	Ogre::Radian getHingeAngle(void) const;
 
+	void setHingeAngle(Ogre::Radian const &angle);
+
 	virtual std::string getTypeName(void) const
 	{ return "hinge"; }
 
 	// static
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &worldFrame);
-
-	static HingeConstraintRefPtr create(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, 
-		Transform const &frameInA, Transform const &frameInB)
+	static HingeConstraintRefPtr create(std::string const &name, KinematicBodyRefPtr rbA, 
+		KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB, bool dynamic)
 	{
-		HingeConstraintRefPtr constraint(new HingeConstraint(rbA, rbB, frameInA, frameInB));
+		HingeConstraintRefPtr constraint(new HingeConstraint(name, rbA, rbB, frameInA, frameInB, dynamic));
 		return constraint;
 	}
+
 
 	/// Private virtual overrides
 private :
 	/// @internal
 	void _progress(vl::time const &t);
 
-private :
-	HingeConstraint(KinematicBodyRefPtr rbA, KinematicBodyRefPtr rbB, Transform const &frameInA, Transform const &frameInB);
+	HingeConstraint(std::string const &name, KinematicBodyRefPtr rbA,
+		KinematicBodyRefPtr rbB, Transform const &frameInA,
+		Transform const &frameInB, bool dynamic);
 
 	Ogre::Radian _lower_limit;
 	Ogre::Radian _upper_limit;

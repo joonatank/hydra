@@ -83,16 +83,22 @@ vl::operator<<(std::ostream &os, vl::Light const &light)
 }
 
 /// ------------------------------ Public ------------------------------------
-vl::Light::Light(std::string const &name, vl::SceneManagerPtr creator)
-	: MovableObject(name, creator)
+vl::Light::Light(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: MovableObject(name, creator, dynamic)
 {
 	_clear();
 }
 
 vl::Light::Light(vl::SceneManagerPtr creator)
-	: MovableObject("", creator)
+	: MovableObject(creator)
 {
 	_clear();
+}
+
+vl::Light::~Light(void)
+{
+	if(_ogre_light && _creator->getNative())
+	{ _creator->getNative()->destroyMovableObject(_ogre_light); }
 }
 
 std::string 
@@ -324,8 +330,12 @@ vl::Light::_doCreateNative(void)
 	{ return true; }
 
 	assert(_creator->getNative());
-	_ogre_light = _creator->getNative()->createLight(_name);
-
+	// @todo hack because we can't for the moment destroy Ogre objects
+	if(_creator->getNative()->hasLight(_name))
+	{ _ogre_light = _creator->getNative()->getLight(_name); }
+	else
+	{ _ogre_light = _creator->getNative()->createLight(_name); }
+	
 	// Some debug asserts for parameters
 	assert(!_position.isNaN());
 	assert(!_direction.isNaN() && !_direction.isZeroLength());

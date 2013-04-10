@@ -150,9 +150,14 @@ public :
 	/// @brief is a mesh with the name already loaded
 	bool hasMesh(std::string const &name) const;
 
-	/// @todo not implemented
 	/// @brief checks every Mesh loaded and unloads it if there is no users
+	/// @todo NOT WORKING do not use
 	void cleanup_unused(void);
+
+	/// @brief remove all meshes
+	/// This function should be replaced with cleanup_unused when it's working
+	/// @todo this is problematic because it is naive and can leave dangling pointers
+	void removeAll(void);
 
 	/// @brief create an empty mesh object where the user can add data
 	vl::MeshRefPtr createMesh(std::string const &name);
@@ -166,6 +171,11 @@ public :
 	void _addSubEntityWithInvalidMaterial(Ogre::SubEntity *sm);
 
 	typedef std::map<std::string, vl::MeshRefPtr> MeshMap;
+
+	/// @brief get all the meshes loaded at the moment
+	/// @todo this method allows modification of the meshes which is problematic
+	MeshMap const &getMeshes(void) const
+	{ return _meshes; }
 
 	// Methods
 private :

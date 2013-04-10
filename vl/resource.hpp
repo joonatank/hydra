@@ -17,12 +17,14 @@
  *	@date 2011-05 Added ResourceStream for reading and writing to Resources
  */
 
-#ifndef VL_RESOURCE_HPP
-#define VL_RESOURCE_HPP
+#ifndef HYDRA_RESOURCE_HPP
+#define HYDRA_RESOURCE_HPP
 
 #include <string>
 #include <vector>
 #include <iterator>
+
+#include "defines.hpp"
 
 namespace vl
 {
@@ -30,7 +32,7 @@ namespace vl
 // Forward declaration for ResourceStream
 class Resource;
 
-class ResourceStream
+class HYDRA_API ResourceStream
 {
 public :
 	ResourceStream(Resource *resource);
@@ -99,7 +101,7 @@ private :
 
 };
 
-class Resource
+class HYDRA_API Resource
 {
 public :
 	typedef std::vector<char>::iterator iterator;
@@ -171,7 +173,7 @@ protected :
  *	Stores a text into memory.
  *	The resource has UNIX line-endings and is NULL ended.
  */
-class TextResource : public Resource
+class HYDRA_API TextResource : public Resource
 {
 public :
 	virtual void set( char const *mem, size_t size );
@@ -193,4 +195,4 @@ loadResource( vl::Resource &res, std::string const &path );
 
 }	// namespace vl
 
-#endif // VL_RESOURCE_HPP
+#endif // HYDRA_RESOURCE_HPP

@@ -39,7 +39,7 @@ namespace gui
 /**	@class GUI
  *	@brief Distributed class for GUI modifications
  */
-class GUI : public vl::Distributed
+class HYDRA_API GUI : public vl::Distributed
 {
 public :
 	/// @brief Master constructor

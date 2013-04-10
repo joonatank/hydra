@@ -492,7 +492,6 @@ vl::Window::draw(void)
 		og_cam->setOrientation(eye_orientation);
 
 		// Keeps track of the batches and triangles
-		// does not account for CEGUI though
 		_ogre_window->_updateViewport(view.get<0>(), true);
 
 		// @todo test with stereo setup if this really renders the gui for

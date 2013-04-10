@@ -37,6 +37,28 @@
 // Log leves
 #include "logger.hpp"
 
+/// ---------------------------- Global --------------------------------------
+std::ostream &
+vl::operator<<(std::ostream &os, vl::KinematicWorld const &world)
+
+{
+	os << "KinematicWorld with " << world.getBodies().size() << " bodies and " 
+		<< world.getConstraints().size() << " constraints. " 
+		<< *world._graph << std::endl;
+
+	return os;
+}
+
+std::ostream &
+vl::operator<<(std::ostream &os, vl::KinematicBodyList const &bodies)
+{
+	os << "Kinematic body list : length = " << bodies.size() << std::endl;
+
+	return os;
+}
+
+
+/// ---------------------------- KinematicWorld ------------------------------
 vl::KinematicWorld::KinematicWorld(GameManager *man)
 	: _collision_detection_on(false)
 	, _graph(new animation::Graph)
@@ -46,6 +68,9 @@ vl::KinematicWorld::KinematicWorld(GameManager *man)
 
 vl::KinematicWorld::~KinematicWorld(void)
 {
+	 _constraints.clear();
+	 _bodies.clear();
+	 _graph.reset();
 }
 
 void
@@ -73,6 +98,81 @@ vl::KinematicWorld::finalise(void)
 	{
 		(*iter)->_update();
 	}
+}
+
+void
+vl::KinematicWorld::removeAll(void)
+{
+	std::clog << "vl::KinematicWorld::removeAll" << std::endl;
+	// Constraints need to be removed first
+	// This should make graph nodes dangling
+	// so they can be added to the world again using different constraints.
+	// Because these are ref counted we let the destructor handle them.
+	//ConstraintList _constraints;
+	_constraints.clear();
+
+	// Removing bodies should remove the animation::Nodes completely
+	// Because these are ref counted we let the destructor handle them.
+	//KinematicBodyList _bodies;
+	_bodies.clear();
+	
+	// We need to clean up the Graph because some links are not mapped to constraints.
+	// This is because we create a Link for every Node and then
+	// when constraint is created it will retrieve that Link so some Links
+	// have not been mapped to constraints.
+	_graph->getRoot()->removeChildren();
+
+	// Just check that we don't have any links/nodes left but leave the
+	// graph which can be reused.
+	//animation::GraphRefPtr _graph;
+	std::clog << *_graph << std::endl;
+	// This assert fails always, why?
+	// because the test project has collision detection which saves
+	// the pointers to kinematic bodies for updates.
+	//assert(_graph->getRoot()->isLeaf());
+
+	// Reset parameters
+	enableCollisionDetection(false);
+}
+
+
+void
+vl::KinematicWorld::destroyDynamicObjects(void)
+{
+	std::clog << "vl::KinematicWorld::removeDynamicObjects" << std::endl;
+
+	// @todo Destroy dynamic Constraints
+	// needs the dynamic variable added to Constraints
+	ConstraintList const_to_destroy;
+	for(ConstraintList::iterator iter = _constraints.begin();
+		iter != _constraints.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ const_to_destroy.push_back(*iter); }
+	}
+	std::clog << "Destroying " << const_to_destroy.size() << " constraints." << std::endl;
+	for(ConstraintList::iterator iter = const_to_destroy.begin();
+		iter != const_to_destroy.end(); ++iter)
+	{
+		removeConstraint(*iter);
+	}
+
+	// Destroy dynamic Kinematic bodies
+	KinematicBodyList obj_to_destroy;
+	for(KinematicBodyList ::iterator iter = _bodies.begin();
+		iter != _bodies.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ obj_to_destroy.push_back(*iter); }
+	}
+	std::clog << "Destroying " << obj_to_destroy.size() << " kinematic bodies." << std::endl;
+	for(KinematicBodyList ::iterator iter = obj_to_destroy.begin();
+		iter != obj_to_destroy.end(); ++iter)
+	{
+		removeKinematicBody(*iter);
+	}
+
+	std::clog << "vl::KinematicWorld::removeDynamicObjects : DONE" << std::endl;
 }
 
 vl::KinematicBodyRefPtr
@@ -107,30 +207,14 @@ vl::KinematicWorld::getKinematicBody(vl::SceneNodePtr sn) const
 vl::KinematicBodyRefPtr
 vl::KinematicWorld::createKinematicBody(vl::SceneNodePtr sn)
 {
-	if(!sn)
-	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+	return _create_kinematic_body(sn, false);
+}
 
-	KinematicBodyRefPtr body = getKinematicBody(sn);
-	if(!body)
-	{
-		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
-		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
-		animation::NodeRefPtr node = _createNode(ms->getWorldTransform());
-		body.reset(new KinematicBody(sn->getName(), this, node, ms));
-		assert(body);
-		_bodies.push_back(body);
-
-		if(_collision_detection_on)
-		{
-			if( sn->getName().find("cb_") != std::string::npos)
-			{
-				std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
-				_create_collision_body(body); 
-			}
-		}
-	}
-
-	return body;
+vl::KinematicBodyRefPtr
+vl::KinematicWorld::createDynamicKinematicBody(vl::SceneNodePtr sn)
+{
+	std::clog << "vl::KinematicWorld::createDynamicKinematicBody" << std::endl;
+	return _create_kinematic_body(sn, true);
 }
 
 void
@@ -145,7 +229,7 @@ vl::KinematicWorld::_create_collision_body(KinematicBodyRefPtr body)
 		// We assume that the mesh name is the same as the SceneNode
 		vl::MeshRefPtr mesh = _game->getMeshManager()->loadMesh(body->getName());
 		physics::ConvexHullShapeRefPtr shape = physics::ConvexHullShape::create(mesh);
-		physics::RigidBody::ConstructionInfo info(body->getName(), 0, body->getMotionState(), shape, Ogre::Vector3(0, 0, 0), true);
+		physics::RigidBody::ConstructionInfo info(body->getName(), 0, body->getMotionState(), shape, Ogre::Vector3(0, 0, 0), true, body->isDynamic());
 		physics::RigidBodyRefPtr physics_body = _game->getPhysicsWorld()->createRigidBodyEx(info);
 		// necessary to add callback so the kinematic object updates 
 		// the the collision model.
@@ -161,63 +245,56 @@ vl::KinematicWorld::_create_collision_body(KinematicBodyRefPtr body)
 
 void
 vl::KinematicWorld::removeKinematicBody(vl::KinematicBodyRefPtr body)
-{
-	BOOST_THROW_EXCEPTION(vl::not_implemented());
+{	
+	KinematicBodyList::iterator iter = std::find(_bodies.begin(), _bodies.end(), body);
+	if(iter != _bodies.end())
+	{
+		_bodies.erase(iter);
+	}
 }
 
 vl::ConstraintRefPtr
 vl::KinematicWorld::createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans)
 {
-	if(body0 == body1)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
-	if(!body0 || !body1)
-	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
-
-	vl::ConstraintRefPtr c;
-
 	vl::Transform fA = body0->transformToLocal(trans);
 	vl::Transform fB = body1->transformToLocal(trans);
 
-	return createConstraint(type, body0, body1, fA, fB);
+	return _create_constraint(type, body0, body1, fA, fB, vl::generate_random_string(), false);
+}
+
+vl::ConstraintRefPtr
+vl::KinematicWorld::createConstraint(std::string const &type,
+	vl::KinematicBodyRefPtr body0, vl::KinematicBodyRefPtr body1,
+	vl::Transform const &frameInA, vl::Transform const &frameInB, std::string const &name)
+{
+	return _create_constraint(type, body0, body1, frameInA, frameInB, name, false);
 }
 
 vl::ConstraintRefPtr
 vl::KinematicWorld::createConstraint(std::string const &type, vl::KinematicBodyRefPtr body0, 
 		vl::KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB)
 {
-	if(body0 == body1)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
-	if(!body0 || !body1)
-	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
+	/// @todo we need to check that the random string is unique
+	return _create_constraint(type, body0, body1, frameInA, frameInB, vl::generate_random_string(), false);
+}
 
-	std::string type_name(type);
-	vl::to_lower(type_name);
+vl::ConstraintRefPtr
+vl::KinematicWorld::createDynamicConstraint(std::string const &type, 
+	KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans)
+{
+	vl::Transform fA = body0->transformToLocal(trans);
+	vl::Transform fB = body1->transformToLocal(trans);
 
-	vl::ConstraintRefPtr c;
-	if(type_name == "slider")
-	{
-		c = SliderConstraint::create(body0, body1, frameInA, frameInB);
-	}
-	else if(type_name == "hinge")
-	{
-		c = HingeConstraint::create(body0, body1, frameInA, frameInB);
-	}
-	else if(type_name == "fixed")
-	{
-		c = FixedConstraint::create(body0, body1, frameInA, frameInB);
-	}
-	
-	// Do not allow empties, should have some real exception types for it though
-	if(!c)
-	{
-		std::cout << vl::CRITICAL << "Constraint type not valid." << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception());
-	}
+	return _create_constraint(type, body0, body1, fA, fB, vl::generate_random_string(), true);
+}
 
-	_addConstraint(c);
-
-	return c;
+vl::ConstraintRefPtr
+vl::KinematicWorld::createDynamicConstraint(std::string const &type,
+	KinematicBodyRefPtr body0, KinematicBodyRefPtr body1,
+	vl::Transform const &frameInA, vl::Transform const &frameInB)
+{
+	return _create_constraint(type, body0, body1, frameInA, frameInB, vl::generate_random_string(), true);
 }
 
 void
@@ -230,6 +307,7 @@ vl::KinematicWorld::removeConstraint(ConstraintRefPtr constraint)
 		{
 			_constraints.erase(iter);
 			// @todo remove the link and Node also from the map and graph
+			// at the moment they are in the destructor which is not good
 			break;
 		}
 	}
@@ -238,16 +316,13 @@ vl::KinematicWorld::removeConstraint(ConstraintRefPtr constraint)
 bool
 vl::KinematicWorld::hasConstraint(vl::ConstraintRefPtr constraint) const
 {
-	for(ConstraintList::const_iterator iter = _constraints.begin();
-		iter != _constraints.end(); ++iter)
-	{
-		if(*iter == constraint)
-		{
-			return true;
-		}
-	}
+	return( std::find(_constraints.begin(), _constraints.end(), constraint) != _constraints.end() );
+}
 
-	return false;
+bool
+vl::KinematicWorld::hasConstraint(std::string const &name) const
+{
+	return (getConstraint(name) != ConstraintRefPtr());
 }
 
 vl::ConstraintRefPtr
@@ -292,6 +367,83 @@ vl::KinematicWorld::enableCollisionDetection(bool enable)
 }
 
 
+/// ------------------------------- Private ----------------------------------
+vl::ConstraintRefPtr
+vl::KinematicWorld::_create_constraint(std::string const &type,
+	KinematicBodyRefPtr body0, KinematicBodyRefPtr body1,
+	vl::Transform const &frameInA, vl::Transform const &frameInB,
+	std::string const &name, bool dynamic)
+{
+	if(body0 == body1)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Can't create constraint between object and itself.")); }
+	if(!body0 || !body1)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Can't create constraint without second body.")); }
+
+	std::string type_name(type);
+	vl::to_lower(type_name);
+
+	/// @todo check that the name is unique
+	if(hasConstraint(name))
+	{
+		std::string msg("Constraint with that name already exists");
+		BOOST_THROW_EXCEPTION(vl::duplicate() << vl::desc(msg) << vl::name(name));
+	}
+
+	vl::ConstraintRefPtr c;
+	if(type_name == "slider")
+	{
+		c = SliderConstraint::create(name, body0, body1, frameInA, frameInB, dynamic);
+	}
+	else if(type_name == "hinge")
+	{
+		c = HingeConstraint::create(name, body0, body1, frameInA, frameInB, dynamic);
+	}
+	else if(type_name == "fixed")
+	{
+		c = FixedConstraint::create(name, body0, body1, frameInA, frameInB, dynamic);
+	}
+	
+	// Do not allow empties, should have some real exception types for it though
+	if(!c)
+	{
+		std::cout << vl::CRITICAL << "Constraint type not valid." << std::endl;
+		BOOST_THROW_EXCEPTION(vl::exception());
+	}
+
+	_addConstraint(c);
+
+	return c;
+}
+
+vl::KinematicBodyRefPtr
+vl::KinematicWorld::_create_kinematic_body(vl::SceneNodePtr sn, bool dynamic)
+{
+	if(!sn)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
+
+	KinematicBodyRefPtr body = getKinematicBody(sn);
+	if(!body)
+	{
+		std::clog << "Creating kinematic body for : " << sn->getName() << std::endl;
+		physics::MotionState *ms = physics::MotionState::create(sn->getWorldTransform(), sn);
+		animation::NodeRefPtr node = _createNode(ms->getWorldTransform());
+		body.reset(new KinematicBody(sn->getName(), this, node, ms, dynamic));
+		assert(body);
+		_bodies.push_back(body);
+
+		if(_collision_detection_on)
+		{
+			if( sn->getName().find("cb_") != std::string::npos)
+			{
+				std::clog << "Auto creating a collision model for " << sn->getName() << std::endl;
+				_create_collision_body(body); 
+			}
+		}
+	}
+
+	return body;
+}
+
 void
 vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 {
@@ -312,12 +464,7 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 	// Using either already existing parent, for kinematic chains
 	// or a new parent under root Node for new chains
 	KinematicBodyList::iterator iter = std::find(_bodies.begin(), _bodies.end(), constraint->getBodyA());
-	if(iter != getBodies().end())
-	{
-		// Does this work or should we use Kinematic Body here?
-		parent = (*iter)->getAnimationNode();
-	}
-	else
+	if(iter == getBodies().end())
 	{
 		std::stringstream err_msg;
 		err_msg << "No Kinematic node \"" << constraint->getBodyA()->getName()
@@ -325,11 +472,11 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
+	// Does this work or should we use Kinematic Body here?
+	parent = (*iter)->getAnimationNode();
 
 	iter = std::find(_bodies.begin(), _bodies.end(), constraint->getBodyB());
-	if(iter != getBodies().end())
-	{ child = (*iter)->getAnimationNode(); }
-	else
+	if(iter == getBodies().end())
 	{
 		std::stringstream err_msg;
 		err_msg << "No Kinematic node \"" << constraint->getBodyB()->getName()
@@ -337,28 +484,22 @@ vl::KinematicWorld::_addConstraint(vl::ConstraintRefPtr constraint)
 		std::cout << vl::CRITICAL << err_msg.str() << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg.str()));
 	}
+	child = (*iter)->getAnimationNode();
+	assert(parent && child);
 
-	animation::LinkRefPtr link;
-	if(child)
+	animation::LinkRefPtr link = child->getParent();
+
+	// If bodyB has already a parent it can't be added
+	assert(link);
+
+	if(link->getParent() != _graph->getRoot())
 	{
-		// If bodyB has already a parent it can't be added
-		if(child->getParent())
-		{
+		std::cout << vl::CRITICAL << constraint->getBodyB()->getName() 
+			<< " already has a parent and it's not root so the constraint to "
+			<< constraint->getBodyA()->getName() << " can't be added." 
+			<< std::endl;
 
-			if(child->getParent()->getParent() != _graph->getRoot())
-			{
-				std::cout << vl::CRITICAL << constraint->getBodyB()->getName() 
-					<< " already has a parent and it's not root so the constraint to "
-					<< constraint->getBodyA()->getName() << " can't be added."
-					<< std::endl;
-
-				return;
-			}
-			else
-			{
-				link = child->getParent();
-			}
-		}
+		return;
 	}
 
 	// @todo throw

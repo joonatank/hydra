@@ -94,6 +94,12 @@ public :
 
 	virtual SolverParameters const &getSolverParameters(void) const = 0;
 
+	/// @brief Remove everything from the world
+	void removeAll(void);
+
+	/// @brief remove at run time created objects
+	void destroyDynamicObjects(void);
+
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
@@ -105,13 +111,20 @@ public :
 								  vl::physics::MotionState *state, CollisionShapeRefPtr shape,
 								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
 
+	RigidBodyRefPtr createDynamicRigidBody(std::string const &name, vl::scalar mass,
+								  MotionState *state, CollisionShapeRefPtr shape,
+								  Ogre::Vector3 const &inertia = Ogre::Vector3(0, 0, 0) );
+
 	vl::physics::RigidBodyRefPtr getRigidBody( std::string const &name ) const;
 
-	/// @TODO implement
-	/// Should this remove the body from the world and return a pointer or
-	/// should it just destroy the body altogether
-	/// if this returns a shared_ptr it's not a problem at all
+	/// @brief Remove rigid body from the World and return it
+	/// After this is called the rigid body can be stored for later use
+	/// or if it's left to go out of scope it will be destroyed.
+	/// @return Silently retun NULL if no such body exists
 	vl::physics::RigidBodyRefPtr removeRigidBody( std::string const &name );
+
+	/// @brief Removes rigid body from the World
+	void removeRigidBody(vl::physics::RigidBodyRefPtr body);
 
 	bool hasRigidBody( std::string const &name ) const;
 
@@ -133,12 +146,23 @@ public :
 
 	void removeConstraint(vl::physics::ConstraintRefPtr constraint);
 
+	bool hasConstraint(vl::physics::ConstraintRefPtr constraint) const;
+
+	bool hasConstraint(std::string const &name) const;
+
+	vl::physics::ConstraintRefPtr getConstraint(std::string const &name) const;
 
 	/// ----------------------- Tubes --------------------------
+	/// All tubes are treated as dynamic for the time beign
+	/// as there is no way to save them into a scene file.
 	TubeRefPtr createTubeEx(Tube::ConstructionInfo const &info);
 
 	TubeRefPtr createTube(RigidBodyRefPtr start_body, RigidBodyRefPtr end_body,
 		vl::scalar length, vl::scalar radius = 0.1, vl::scalar mass_per_meter = 1.0);
+
+	bool hasTube(TubeConstRefPtr tube) const;
+
+	void removeTube(vl::physics::TubeRefPtr tube);
 
 	RigidBodyList const &getBodies(void) const
 	{ return _rigid_bodies; }
@@ -168,6 +192,7 @@ protected :
 	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic) = 0;
 
 	virtual void _removeConstraint(vl::physics::ConstraintRefPtr constraint) = 0;
+	virtual void _removeBody(vl::physics::RigidBodyRefPtr body) = 0;
 
 
 	RigidBodyRefPtr _findRigidBody( std::string const &name ) const;

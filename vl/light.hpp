@@ -90,10 +90,14 @@ public :
 		LT_DIRECTIONAL,
 	};
 
-	Light(std::string const &name, vl::SceneManagerPtr creator);
+	/// Constructor
+	/// Should not be called from user code, use SceneManager to create these
+	Light(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
 
 	/// Internal used by slave mapping
 	Light(vl::SceneManagerPtr creator);
+
+	virtual ~Light(void);
 
 	LightType getType(void) const
 	{ return _type; }

@@ -142,8 +142,19 @@ vl::physics::BulletWorld::_removeConstraint(vl::physics::ConstraintRefPtr constr
 	// for some reason we can not do static_pointer_cast here
 	BulletConstraintRefPtr c = boost::dynamic_pointer_cast<BulletConstraint>(constraint);
 
+	// @todo replace asserts with real checking
 	assert(c && c->getNative());
 	_dynamicsWorld->removeConstraint(c->getNative());
+}
+
+void
+vl::physics::BulletWorld::_removeBody(vl::physics::RigidBodyRefPtr body)
+{
+	BulletRigidBodyRefPtr b = boost::dynamic_pointer_cast<BulletRigidBody>(body);
+
+	// @todo replace asserts with real checking
+	assert(b && b->getNative());
+	_dynamicsWorld->removeRigidBody(b->getNative());
 }
 
 void

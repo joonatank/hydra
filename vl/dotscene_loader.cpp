@@ -67,6 +67,7 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 	_physics_world = physics_world;
 	_sPrependNode = sPrependNode;
 	_attach_node = attachNode;
+
 	if( !_attach_node )
 	{ _attach_node = _scene->getRootSceneNode(); }
 	
@@ -75,16 +76,13 @@ vl::DotSceneLoader::parseDotScene( vl::TextResource &scene_data,
 
 	if( !xml_data || ::strlen( xml_data ) != scene_data.size()-1 )
 	{
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc("TextResource has invalid XML file") );
+		BOOST_THROW_EXCEPTION(vl::invalid_dotscene() << vl::desc("TextResource has invalid XML file"));
 	}
 
-	std::clog << "SceneNodes loaded from file = " << scene_data.getName() << std::endl;
 	_file_name = scene_data.getName();
-	_parse( xml_data );
+	std::clog << "Loaded file \"" << _file_name << "\"" << std::endl;
 
-	// Reset data so that we don't end up with dangling pointers (or holding resources)
-	_physics_world.reset();
-	_scene = 0;
+	_parse( xml_data );
 }
 
 void
@@ -119,6 +117,10 @@ vl::DotSceneLoader::_parse(char *xml_data)
 
 	// Process the scene
 	processScene(xml_root);
+
+	// Reset data so that we don't end up with dangling pointers (or holding resources)
+	_physics_world.reset();
+	_scene = 0;
 }
 
 
@@ -313,7 +315,6 @@ vl::DotSceneLoader::processNode(rapidxml::xml_node<> *xml_node, vl::SceneNodePtr
 
 	// Create the scene node
 	vl::SceneNodePtr node = parent->createChildSceneNode(name);
-	node->setSceneFile(_file_name);
 
 	rapidxml::xml_node<>* pElement;
 
@@ -406,15 +407,11 @@ vl::DotSceneLoader::processEntity(rapidxml::xml_node<> *xml_node, vl::SceneNodeP
 	{ entity->setMaterialName(materialFile); }
 
 	/// Create RigidBody for the entity
-	if( _physics_world )
+	/// @todo this is problematic even if we have physics world and are using new mesh manager
+	/// it still does not mean we want the rigid bodies
+	/// This problem is handeled in the new format so we might as well leave it as is.
+	if( _physics_world && _use_new_mesh_manager )
 	{
-		// @todo would it just be easier to enable the mesh manager automatically?
-		if(!_use_new_mesh_manager)
-		{
-			std::string msg("Physics needs the new mesh manager.");
-			BOOST_THROW_EXCEPTION(vl::invalid_dotscene() << vl::desc(msg));
-		}
-
 		// Not checking collision primitive, only tiangle_mesh is supported
 		bool actor = vl::getAttrib(xml_node, "actor", false);
 		Ogre::Real damping_rot = vl::getAttribReal(xml_node, "damping_rot", 0.1);

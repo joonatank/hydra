@@ -33,7 +33,7 @@
 namespace vl
 {
 
-class KinematicWorld
+class HYDRA_API KinematicWorld
 {
 public :
 	KinematicWorld(GameManager *man);
@@ -47,6 +47,12 @@ public :
 
 	void finalise(void);
 
+	/// @brief Remove everything from the world
+	void removeAll(void);
+
+	/// @brief remove at run time created objects
+	void destroyDynamicObjects(void);
+
 	KinematicBodyRefPtr getKinematicBody(std::string const &name) const;
 
 	/// @brief retrieve already created by for the SceneNode
@@ -59,20 +65,44 @@ public :
 	/// @return always valid body node, new one if none exists
 	KinematicBodyRefPtr createKinematicBody(vl::SceneNodePtr sn);
 
+	KinematicBodyRefPtr createDynamicKinematicBody(vl::SceneNodePtr sn);
+
 	void removeKinematicBody(KinematicBodyRefPtr body);
 
 	/// -------------- Constraints -----------------------
+	/// @todo createConstraint should be changed to creating the constraint
+	/// without adding it to the world, this allows us to add/remove constraints
+	/// without destroying them. This will break compatibility with older
+	/// python scripts so it's not changed yet.
+
 	ConstraintRefPtr createConstraint(std::string const &type, 
 		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
 
 	ConstraintRefPtr createConstraint(std::string const &type, 
-		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &frameInA, vl::Transform const &frameInB);
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB, std::string const &name);
+
+	// For backwards compatibility
+	ConstraintRefPtr createConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB);
+
+	/// @brief python versions
+	ConstraintRefPtr createDynamicConstraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, vl::Transform const &trans);
+
+	ConstraintRefPtr createDynamicConstraint(std::string const &type,
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1,
+		vl::Transform const &frameInA, vl::Transform const &frameInB);
 
 	void removeConstraint(ConstraintRefPtr constraint);
 
 	bool hasConstraint(vl::ConstraintRefPtr constraint) const;
 
+	bool hasConstraint(std::string const &name) const;
+
 	ConstraintRefPtr getConstraint(std::string const &name) const;
+
 
 	/// -------------- List access ----------------------
 	ConstraintList const &getConstraints(void) const;
@@ -87,7 +117,17 @@ public :
 	bool isCollisionDetectionEnabled(void) const
 	{ return _collision_detection_on; }
 
+	friend std::ostream &operator<<(std::ostream &os, KinematicWorld const &world);
+
 private :
+
+	KinematicBodyRefPtr _create_kinematic_body(vl::SceneNodePtr sn, bool dynamic);
+
+	ConstraintRefPtr _create_constraint(std::string const &type, 
+		KinematicBodyRefPtr body0, KinematicBodyRefPtr body1, 
+		vl::Transform const &frameInA, vl::Transform const &frameInB, 
+		std::string const &name, bool dynamic);
+
 	void _addConstraint(vl::ConstraintRefPtr constraint);
 
 	vl::animation::NodeRefPtr _createNode(vl::Transform const &initial_transform);
@@ -107,23 +147,9 @@ private :
 
 };	// class KinematicWorld
 
-inline
-std::ostream &
-operator<<(std::ostream &os, KinematicWorld const &world)
-{
-	os << "KinematicWorld with " << world.getBodies().size() << " bodies and " 
-		<< world.getConstraints().size() << " constraints." << std::endl;
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, KinematicWorld const &world);
 
-inline
-std::ostream &
-operator<<(std::ostream &os, KinematicBodyList const &bodies)
-{
-	os << "Kinematic body list : length = " << bodies.size() << std::endl;
-
-	return os;
-}
+std::ostream &operator<<(std::ostream &os, KinematicBodyList const &bodies);
 
 }	// namespace vl
 

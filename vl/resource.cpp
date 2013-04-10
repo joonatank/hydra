@@ -25,6 +25,8 @@
 
 // Necessary for replacing line endings
 #include "base/string_utils.hpp"
+// Necessary for excpetions
+#include "base/exceptions.hpp"
 
 /// ----------------------- ResourceStream -----------------------------------
 vl::ResourceStream::ResourceStream(vl::Resource *resource)

@@ -89,7 +89,7 @@ public :
 	/// @return true if script with the name has been executed
 	bool hasBeenExecuted(std::string const &name) const;
 
-	virtual void reset(void);
+	void reset(void);
 
 	template<typename T>
 	void addVariableRef(std::string variable_name, T &var);
@@ -111,7 +111,10 @@ private :
 	std::vector<Script> _scripts;
 
 	// Python related
-	python::object _global;
+	// Our namespace
+	python::dict _global;
+	// Original namespace
+	python::object _main;
 
 	vl::GameManagerPtr _game;
 };

@@ -41,7 +41,7 @@ public :
 
 };	// class CollisionShape
 
-class BoxShape : public CollisionShape
+class HYDRA_API BoxShape : public CollisionShape
 {
 public :
 	// Create a box shape around origin: with size [-bounds/2, bounds/2]
@@ -62,7 +62,7 @@ private :
 
 };	// class BoxShape
 
-class SphereShape : public CollisionShape
+class HYDRA_API SphereShape : public CollisionShape
 {
 public :
 	static SphereShapeRefPtr create(vl::scalar radius);
@@ -78,7 +78,7 @@ private :
 
 };	// class SphereShape
 
-class StaticPlaneShape : public CollisionShape
+class HYDRA_API StaticPlaneShape : public CollisionShape
 {
 public :
 	// Plane constant for some reason affects also in the direction of plane normal
@@ -97,7 +97,7 @@ private :
 
 };	// class ConvexHullShape
 
-class StaticTriangleMeshShape : public CollisionShape
+class HYDRA_API StaticTriangleMeshShape : public CollisionShape
 {
 public :
 	static StaticTriangleMeshShapeRefPtr create(vl::MeshRefPtr mesh);
@@ -114,7 +114,7 @@ private :
 
 };	// class StaticTriangleMeshShape
 
-class ConvexHullShape : public CollisionShape
+class HYDRA_API ConvexHullShape : public CollisionShape
 {
 public :
 	static ConvexHullShapeRefPtr create(vl::MeshRefPtr mesh);
@@ -146,7 +146,7 @@ private :
 };	// class ConvexHullShape
 
 /// @todo not implemented
-class CylinderShape : public CollisionShape
+class HYDRA_API CylinderShape : public CollisionShape
 {
 public :
 	static CylinderShapeRefPtr create(Ogre::Vector3 const &bounds);
@@ -164,7 +164,7 @@ private :
 };	// class CylinderShape
 
 /// @todo not implemented
-class CapsuleShape : public CollisionShape
+class HYDRA_API CapsuleShape : public CollisionShape
 {
 public :
 	static CapsuleShapeRefPtr create(vl::scalar radius, vl::scalar height);
@@ -180,7 +180,7 @@ private:
 };	// class CapsuleShape
 
 /// @todo not implemented
-class ConeShape : public CollisionShape
+class HYDRA_API ConeShape : public CollisionShape
 {
 public :
 

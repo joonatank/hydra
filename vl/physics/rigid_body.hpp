@@ -37,15 +37,16 @@ namespace physics {
  *	@brief Abstract interface for Physics engine rigid body
  *	Derived classes implement this for specific physics engines.
  */
-class RigidBody : vl::ObjectInterface
+class HYDRA_API RigidBody : vl::ObjectInterface
 {
 
 public :
 	struct ConstructionInfo
 	{
 		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
-			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false)
-			: name(nam), mass(m), state(sta), shape(shap), inertia(inert), kinematic(kinematic_)
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false, bool dynamic_ = false)
+			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
+			, kinematic(kinematic_), dynamic(dynamic_)
 		{}
 
 		std::string name;
@@ -54,10 +55,11 @@ public :
 		CollisionShapeRefPtr shape;
 		Ogre::Vector3 inertia;
 		bool kinematic;
+		bool dynamic;
 
 	};	// struct ConstructionInfo
 
-	virtual ~RigidBody(void) {}
+	virtual ~RigidBody(void);
 
 	static RigidBodyRefPtr create(ConstructionInfo const &info);
 
@@ -200,8 +202,18 @@ public :
 	std::string const &getName(void) const
 	{ return _name; }
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	CollisionShapeRefPtr getShape(void)
 	{ return _shape; }
+
+	//Ville added anisotropic and normal friction here:
+	virtual Ogre::Vector3 getAnisotropicFriction(void) const = 0;
+	virtual void setAnisotropicFriction(Ogre::Vector3 const&) = 0;
+	virtual vl::scalar getFriction(void) const = 0;
+	virtual void setFriction(vl::scalar const&) = 0;
+	virtual void setSleepingThresholds(vl::scalar const&,vl::scalar const&) = 0;
 
 protected :
 	RigidBody(ConstructionInfo const &info);
@@ -209,6 +221,8 @@ protected :
 	std::string _name;
 
 	CollisionShapeRefPtr _shape;
+
+	bool _is_dynamic;
 
 };	// class RigidBody
 

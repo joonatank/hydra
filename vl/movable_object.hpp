@@ -35,13 +35,17 @@ namespace vl
 class HYDRA_API MovableObject : public vl::Distributed
 {
 public :
-	MovableObject(std::string const &name, vl::SceneManagerPtr creator)
-		: _name(name), _visible(true), _creator(creator), _parent(0), _listener(0)
+	MovableObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+		: _name(name), _visible(true), _creator(creator), _parent(0)
+		, _listener(0), _is_dynamic(dynamic)
 	{}
 
 	MovableObject(vl::SceneManagerPtr creator)
-		: _name(), _visible(true), _creator(creator), _parent(0), _listener(0)
+		: _name(), _visible(true), _creator(creator), _parent(0)
+		, _listener(0), _is_dynamic(false)
 	{}
+
+	virtual ~MovableObject(void) {}
 
 	std::string const &getName(void) const
 	{ return _name; }
@@ -66,6 +70,9 @@ public :
 
 	void show(void)
 	{ setVisible(true); }
+
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
 
 	/// @brief make a deep copy of the SceneNode
 	/// Shallow copies would not make much sense with SceneGraphs because you
@@ -111,6 +118,9 @@ public :
 	Listener *getListener(void)
 	{ return _listener; }
 
+	SceneManagerPtr getCreator(void) const
+	{ return _creator; }
+
 	/// Update rendering callbacks
 	void _notifyFrameStart(void)
 	{
@@ -150,6 +160,8 @@ protected :
 	vl::SceneManagerPtr _creator;
 	
 	vl::SceneNodePtr _parent;
+
+	bool _is_dynamic;
 
 	Listener *_listener;
 

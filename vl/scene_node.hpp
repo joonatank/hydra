@@ -49,9 +49,9 @@ enum TransformSpace
 class HYDRA_API SceneNode : public vl::Distributed, public vl::ObjectInterface
 {
 public :
-	SceneNode(std::string const &name, vl::SceneManager *creator);
+	SceneNode(std::string const &name, vl::SceneManager *creator, bool is_dynamic);
 
-	virtual ~SceneNode( void ) {}
+	virtual ~SceneNode(void);
 
 	std::string const &getName( void ) const
 	{ return _name; }
@@ -237,9 +237,11 @@ public :
 	/// Shallow copies would not make much sense with SceneGraphs because you
 	/// can not have multiple parents unlike DAGs.
 	SceneNodePtr clone(void) const;
-
 	SceneNodePtr clone(std::string const &append_to_name) const;
 
+	SceneNodePtr cloneDynamic(void) const;
+	SceneNodePtr cloneDynamic(std::string const &append_to_name) const;
+	
 	/// --------------- MovableObjects ----------------------
 	void attachObject(vl::MovableObjectPtr obj);
 
@@ -271,11 +273,8 @@ public :
 	SceneManagerPtr getCreator(void) const
 	{ return _creator; }
 
-	std::string const &getSceneFile(void) const
-	{ return _origin_file; }
-
-	void setSceneFile(std::string const &file)
-	{ _origin_file = file; }
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
 
 	// -------------------- Callbacks -----------------------
 	virtual int addListener(TransformedCB::slot_type const &slot)
@@ -303,7 +302,7 @@ protected :
 	virtual void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
 	virtual void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
-	vl::SceneNodePtr doClone(std::string const &append_to_name, vl::SceneNodePtr parent) const;
+	vl::SceneNodePtr _do_clone(std::string const &append_to_name, vl::SceneNodePtr parent, bool dynamic) const;
 
 private :
 	// Disallow copying use clone instead
@@ -339,7 +338,7 @@ private :
 
 	vl::SceneManager *_creator;
 
-	std::string _origin_file;
+	bool _is_dynamic;
 
 };	// class SceneNode
 

@@ -61,6 +61,12 @@ vl::physics::RigidBody::create(vl::physics::RigidBody::ConstructionInfo const &i
 	return body;
 }
 
+vl::physics::RigidBody::~RigidBody(void)
+{
+	// Motion state is destroyed by derived class, because of stack
+	// unwinding we can not call virtual methods here
+}
+
 void 
 vl::physics::RigidBody::applyForce(Ogre::Vector3 const &force, Ogre::Vector3 const &rel_pos, vl::physics::RigidBodyRefPtr ref)
 {
@@ -121,4 +127,5 @@ vl::physics::RigidBody::positionToLocal(Ogre::Vector3 const &v) const
 vl::physics::RigidBody::RigidBody(vl::physics::RigidBody::ConstructionInfo const &info)
 	: _name(info.name)
 	, _shape(info.shape)
+	, _is_dynamic(info.dynamic)
 {}

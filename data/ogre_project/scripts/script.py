@@ -35,12 +35,15 @@ game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
 game.scene.shadows.max_distance = 50
-#game.scene.shadows.dir_light_extrusion_distance = 100
+game.scene.shadows.dir_light_extrusion_distance = 100
+# SkyX does not work with reloading the scene
 #game.scene.sky.preset = "sunset" #"clear"
 
 ground = create_ground(size=100)
 
-sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
+print("Create Sphere")
+game.mesh_manager.createSphere('sphere')
+sphere_ent = game.scene.createEntity('sphere', 'sphere', True)
 sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)

@@ -211,6 +211,7 @@ namespace physics
 	typedef boost::shared_ptr<RigidBody> RigidBodyRefPtr;
 	typedef boost::weak_ptr<RigidBody> RigidBodyWeakPtr;
 	typedef boost::shared_ptr<Tube> TubeRefPtr;
+	typedef boost::shared_ptr<const Tube> TubeConstRefPtr;
 
 	// collision shapes
 	class CollisionShape;

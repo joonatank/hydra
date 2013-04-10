@@ -53,102 +53,38 @@
 #include "program_options.hpp"
 
 #include "profiler_report.hpp"
+// Necessary for LOADER_FLAGS
+#include "flags.hpp"
 
 namespace vl
 {
 
-/// @struct Weather
-/// @brief definition for the weather
-/// @todo Not implemented yet
-struct HYDRA_API Weather
-{
-	Weather(void)
-		: clouds(0), lighting(0), rain(0)
-	{}
-
-	uint16_t clouds;
-	uint16_t lighting;
-	uint16_t rain;
-};
-
-/// @struct Date
-/// @brief Holds the current time and day
-/// For now only time of day is implemented
-struct HYDRA_API Date
-{
-	/// @brief Construct a time of day from string "hours:minutes"
-	/// hours and minutes should both be integers 
-	/// they should be withing limits, hours [0, 23] minutes [0, 59]
-	/// The implementation can choose to handle incorrect format as it likes.
-	Date(std::string const &time)
-	{
-		setTime(time);
-	}
-
-	Date(uint16_t h = 0, uint16_t m = 0)
-		: hours(0), min(0)
-	{
-		setTime(h, m);
-	}
-
-	std::string getTime(void) const
-	{
-		std::stringstream ss;
-		ss << hours << ":" << min;
-		return ss.str();
-	}
-
-	/// @brief Set the time of day from string "hours:minutes"
-	void setTime(std::string const &time)
-	{
-		std::stringstream ss(time);
-		char tmp;
-		uint16_t h, m;
-		ss >> h >> tmp >> m;
-		setTime(h, m);
-	}
-
-	/// @brief set time using hours and minutes
-	/// @param h hours, is clamped to interval [0, 23]
-	/// @param m minutes, is clamped to interval [0, 59]
-	void setTime(uint16_t h, uint16_t m)
-	{
-		hours = h % 23;
-		min = m % 59;
-	}
-
-	void addTime(uint16_t h, uint16_t m)
-	{
-		setTime(hours+h, min+m);
-	}
-
-	uint16_t hours;
-	uint16_t min;
-};
-
-
 // SM events
 struct init
 {
-	init(vl::config::EnvSettingsRefPtr env, std::string const global_file)
-		: environment(env), global(global_file)
+	init(vl::config::EnvSettingsRefPtr env)
+		: environment(env)
 	{}
 
 	vl::config::EnvSettingsRefPtr environment;
-	std::string global;
 };
 
 struct play {};
 struct quit {};
 struct stop {};
 struct pause {};
+struct unload {};
 struct load
 {
-	load(std::string const project_file)
+	load(std::string const &project_file, std::string const &global_file, LOADER_FLAGS f = LOADER_FLAG_NONE)
 		: project(project_file)
+		, global(global_file)
+		, flags(f)
 	{}
 
 	std::string project;
+	std::string global;
+	LOADER_FLAGS flags;
 };
 
 // Forward declaration
@@ -157,10 +93,31 @@ struct GameManagerFSM_;
 typedef vl::msm::back::state_machine<GameManagerFSM_> GameManagerFSM;
 
 /** @class GameManager
+ *	@brief Main manager that handles resource loading a simulation
+ *	states
+ *
+ *	Following up coming changes will break compatibility
+ *	@todo break into Program manager and Simulation (game) manager
+ *	Program manager handles the running of the program, i.e. exiting 
+ *	starting/stopping simulations
+ *	Simulation manager handles the running of a individual simulation
+ *	Only one simulation can be ran at a time.
+ *	Object creation belongs to Simulation manager
+ *	Project loading replaced by loading a simulation
+ *	Global resources are loaded by Program manager and can not be reset
+ *	Project resources are loaded when a simulation is created
+ *
+ *	@todo support for multiple projects removed
+ *	One global configuration for setting up shared resources
+ *	One project configuration that defines the simulation
+ *	Sharing resources need to be either done using global resources
+ *	python modules etc. or if a more complex system is necessary we
+ *	can implement specific systems to allow resource sharing for some
+ *	resources.
+ *
  */
 class HYDRA_API GameManager 
 {
-	typedef boost::signal<void (vl::Settings const &)> ProjectChanged;
 	typedef boost::signal<void (void)> StateChanged;
 public :
 	/// @brief constructor
@@ -216,6 +173,10 @@ public :
 	/// @param name the name of the GameObject to create
 	GameObjectRefPtr createGameObject(std::string const &name);
 
+	GameObjectRefPtr createDynamicGameObject(std::string const &name);
+
+	void removeGameObject(GameObjectRefPtr obj);
+
 	bool hasGameObject(std::string const &name);
 
 	GameObjectRefPtr getGameObject(std::string const &name);
@@ -243,34 +204,6 @@ public :
 	bool isPhysicsEnabled(void)
 	{ return(_physics_world != 0); }
 
-	/// Parameters that control all the scenes, 
-	/// what they do is dependent on the implementation of the scene and they
-	/// might be totally ignored.
-
-	/// @brief enable/disable automatic environment modification of the scene
-	/// Enabled by default
-	/// If disabled setting weather, sky or time of day will not affect any
-	/// of the scenes in the Game.
-	/// Mind you these can also be disabled in the SceneManager and usually
-	/// are better suited there, but this is provided so that the user can
-	/// have a fine grain control over the game environment.
-	void enableEnvironmentalEffects(bool enable);
-
-	/// @brief Set the current weather
-	/// These usually modify the sky, global lighting and possibly add effects
-	void setWeather(Weather const &weather);
-
-	/// @brief Get the current weather
-	Weather const &getWeather(void) const
-	{ return _weather; }
-
-	/// @brief Set the current time of the day
-	/// This usually modifies the sky, lighting (moon, stars, sun)
-	void setTimeOfDay(Date const &date);
-
-	Date const &getTimeOfDay(void) const
-	{ return _date; }
-
 
 	/// Timers
 	vl::time getProgramTime(void) const
@@ -283,59 +216,103 @@ public :
 	
 	/// @brief quit the game/simulation
 	/// Short hand for state change request
+	/// End state is QUIT
 	void quit(void);
 
 	/// @brief pause the game/simulation
 	/// Short hand for state change request
+	/// End state is PAUSE
 	void pause(void);
 
+	/// @brief start or resume the game/simulation
+	/// Short hand for state change request
+	/// End state is PLAY
 	void play(void);
 
+	/// @brief Stop the simulation, ready for restart or unloading
+	/// @todo should clear all changes made during simulation
+	/// End state is STOP
 	void stop(void);
 
+	/// @brief Unloads the current project and global
+	/// Always unloads both project and global so both need to be reloaded
+	/// End state is INITING
+	/// @todo after calling unload calling load immediately will cause
+	/// undefined behaviour (possible crashes). Please let the mainloop
+	/// roll at least once before calling load after this.
+	void unload(void);
+
+	/// @brief Loads new project and global
+	/// At the moment both need to be loaded, you can't just use new project
+	/// @param project config file name
+	/// @param global config file name
+	/// Valid states for calling this INITING
+	/// End state is STOP unless autoplay is true then PLAY
+	void load(std::string const &project, std::string const &global);
+
+	/// @brief unload, load rolled into one
+	/// Mostly for testing that unload and load works.
+	/// Valid states for calling this INITING
+	/// End state is STOP
+	/// @todo this does not unload
+	/// Usage at the moment is unload followed by reload
+	/// This is because of technical limitations
+	void reload(void);
+
+	/// @brief stops the current simulation and returns it to the initial state
+	/// Clears all changes done by the simulation and returns to initial state
+	/// which is set when the project is loaded.
+	/// Reloads the project files (loading them from the disc) and overwrites all
+	/// changes made by the simulation then
+	/// resets the python context and reruns all python scripts.
+	/// End state is PLAY or PAUSE depending on auto_run
+	///
+	/// @note Does not reload project files, this feature may be added later.
 	void restart(void);
 
 	bool isQuited(void) const;
 	bool isPaused(void) const;
 	bool isPlaying(void) const;
+	bool isStopped(void) const;
 
-	void setupResources(vl::config::EnvSettings const &env);
-
-	void addResources(vl::ProjSettings const &proj);
-
-	void removeResources(vl::ProjSettings const &proj);
+	std::string getStateName(void) const;
 
 	/// Resource loading
+	/// @todo all resource loading should be moved to ResourceManager or similar
 
 	RecordingRefPtr loadRecording(std::string const &path);
 
-	/// Project handling
-	void loadProject(std::string const &file_name);
+	/// @brief get the current project and global settings
+	/// Mostly usefull for project change callbacks
+	vl::Settings getSettings(void) const;
 
-	/// @brief removes the current project and resets python context
-	void removeProject(std::string const &name);
+	/// Scene handling
 
-	void loadScenes(vl::ProjSettings const &proj);
+	// @todo loadScene should be removed and use the load state instead
+	/// @brief Load all scenes for the project configuration
+	void loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
-	void loadScene(vl::SceneInfo const &scene_info);
+	/// @brief Load a scene from the scene configuration
+	void loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
-	/// Test functions for Collada importer/exporter
-	void loadScene(std::string const &file_name);
+	/// @brief filename based scene loading
+	/// @param file_name
+	/// @param flags for controlling loading process, only available for HSF format
+	/// Two separate versions instead of automatic overloading for easier python integration
+	void loadScene(std::string const &file_name, LOADER_FLAGS flags);
+	void loadScene(std::string const &file_name)
+	{ loadScene(file_name, LOADER_FLAG_NONE); }
+
+	/// @brief saves the scene file
+	/// This does not respect any of the Scene configuration and will always
+	/// save all the objects to one scene file.
+	/// Works only for GameObjects and files read from HSF 
+	/// old .scene format is not supported.
+	/// @todo this should be replaced with save project
 	void saveScene(std::string const &file_name);
-
-	/// @todo not really working
-	void unloadScene(std::string const &name);
-
-	/// @todo not really working
-	void unloadScenes(vl::ProjSettings const &proj);
 
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
-
-	void runPythonScripts(vl::ProjSettings const &proj);
-
-	/// @todo this takes over 1 second to complete which is almost a second too much
-	void createTrackers(vl::config::EnvSettings const &env);
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 
@@ -347,8 +324,11 @@ public :
 	vl::ProgramOptions &getOptions(void)
 	{ return _options; }
 
-	int addProjectChangedListener(ProjectChanged::slot_type const &slot)
-	{ _project_changed_signal.connect(slot); return 1; }
+	vl::ProjSettings const &getProjectSettings(void) const
+	{ return _loaded_project; }
+
+	vl::ProjSettings const &getGlobalSettings(void) const
+	{ return _global_project; }
 
 	template<typename T>
 	void process_event(T const &evt);
@@ -364,10 +344,26 @@ public :
 	// @todo add a list of possible states for which we have listeners
 	int addStateChangedListener(vl::state const &state, StateChanged::slot_type const &slot);
 
+	/// @internal
+	/// @brief Test function
+	/// This function destroys all dynamic objects (created from python)
+	/// If python context is not also cleared this will most likely
+	/// cause crashing because of dangling pointers.
+	/// DO NOT USE
+	void _destroyDynamicObjects(void);
+
+	/// @internal
+	/// @brief Reset python context and ran all python functions again
+	/// Used for testing before properly implementing GameManager::reset
+	/// DO NOT USE
+	void _rerunPythonScripts(void);
+
 private :
 	/// Non copyable
 	GameManager( GameManager const &);
 	GameManager & operator=( GameManager const &);
+
+	vl::GameObjectRefPtr _createGameObject(std::string const &name, bool dynamic);
 
 	/// Main loading functions use configurations files
 	void _loadEnvironment(vl::config::EnvSettings const &env);
@@ -375,6 +371,38 @@ private :
 	/// @brief loads a new global configuration
 	/// This will remove the old global and reset the python context
 	void _loadGlobal(std::string const &file_name);
+
+	/// @todo this needs to be moved to State Machine which handles loading
+	/// and this method needs to be private
+	/// @brief remove all loaded resources and destroy objects
+	/// Resets python context, destroys all objects (bodies, gameobjects, scenenodes),
+	/// removes all loaded resources, removes all resources paths, 
+	/// removes all event triggers.
+	/// Usefull when reloading all projects
+	///
+	/// Does not remove any managers only simulation objects
+	/// that are created from either project configs or python.
+	/// Does also not remove any objects created from environment config,
+	/// changing environment config is not supported, the program needs to be
+	/// restarted.
+	/// This might be changed in the future but more likely change is to allow
+	/// changing individual parameters and saving them to env config.
+	/// 
+	/// This is a hack to get project reloading working.
+	/// Will be replaced by more sophisticated functionality when new
+	/// simulation manager is implemented.
+	void _removeAll(void);
+
+	/// @todo this takes over 1 second to complete which is almost a second too much
+	void _createTrackers(vl::config::EnvSettings const &env);
+
+	void _setupResources(vl::config::EnvSettings const &env);
+
+	void _addResources(vl::ProjSettings const &proj);
+
+	void _removeResources(vl::ProjSettings const &proj);
+	
+	void _addPythonScripts(vl::ProjSettings const &proj);
 
 	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);
@@ -410,10 +438,6 @@ private :
 	vl::MeshManagerRefPtr _mesh_manager;
 	vl::MaterialManagerRefPtr _material_manager;
 
-	bool _env_effects_enabled;
-	Weather _weather;
-	Date _date;
-
 	/// Timers
 	vl::chrono _program_timer;
 	vl::stop_chrono _game_timer;
@@ -437,9 +461,10 @@ private :
 
 	GameObjectList _game_objects;
 
-	// signals
-	ProjectChanged _project_changed_signal;
+	std::string _old_project;
+	std::string _old_global;
 
+	// signals
 	StateChanged _inited_signal;
 	StateChanged _quited_signal;
 	StateChanged _loaded_signal;
@@ -468,12 +493,17 @@ public :
 
 	void _do_quit(vl::quit const &evt);
 
+	void _do_unload(vl::unload const &evt);
+
 };	// class GameManager
 
 /// @class GameManagerSM
 /// the internal state machine for GameManager
 struct GameManagerFSM_ : public msm::front::state_machine_def<GameManagerFSM_, vl::state>
 {
+	/// Experimental solution for exceptions to interrupt the state machine
+	typedef int no_exception_thrown; 
+
 	GameManager *_impl;
 
 	GameManagerFSM_(void)
@@ -599,6 +629,12 @@ struct GameManagerFSM_ : public msm::front::state_machine_def<GameManagerFSM_, v
 		_impl->_do_stop(vl::stop());
 	}
 
+	void _do_unload(unload const &evt)
+	{
+		assert(_impl);
+		_impl->_do_unload(evt);
+	}
+
 	void _do_quit(quit const &evt)
 	{
 		assert(_impl);
@@ -624,14 +660,18 @@ struct GameManagerFSM_ : public msm::front::state_machine_def<GameManagerFSM_, v
 struct transition_table : vl::mpl::vector<
 //    Start     Event        Target      Action                      Guard 
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
+/// Load environment config and create necessary objects
+/// Init should never be called more than once per program run
 a_row< Unknown , init		 ,	Initing    , &g::_do_init  >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
+/// Load global and project
 a_row< Initing , load		 ,	Loading    , &g::_do_load  >,
 a_row< Initing , stop		 ,	Stopped    , &g::_do_stop  >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
   row< Loading , vl::none	 ,  Stopped    , &g::_do_stop , &g::no_auto_start >,
   row< Loading , vl::none	 ,  Playing	   , &g::_do_play , &g::auto_start >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
+a_row< Stopped , unload      ,  Initing    , &g::_do_unload  >,
 a_row< Stopped , play        ,  Playing    , &g::_do_play  >,
 a_row< Stopped , pause		 ,  Paused     , &g::_do_pause >,
 //   +---------+------------+-----------+---------------------------+----------------------------+ 
@@ -665,12 +705,15 @@ protected:
 	/// default is asserting a failure which makes the exceptions message carbage.
 	/// Also we need exceptions in Release code which makes the default
 	/// implemantion very dangorous.
+	/*
 	template <class Fsm,class Event>
 	void exception_caught(Event const& ,Fsm&, std::exception &e)
 	{
+		std::clog << "exception : " << e.what() << std::endl;
 		boost::exception_ptr ex = boost::current_exception();
 		boost::rethrow_exception(ex);
 	}
+	*/
 
 };	// struct GameManagerFSM_
 

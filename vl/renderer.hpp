@@ -55,9 +55,6 @@ public :
 	vl::config::EnvSettingsRefPtr getEnvironment(void)
 	{ return _env; }
 
-	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man)
-	{ _mesh_manager = mesh_man; }
-
 	vl::config::Node const &getNodeConf(void) const;
 
 	vl::config::Window const &getWindowConf(std::string const &window_name) const;
@@ -77,6 +74,9 @@ public :
 	virtual vl::MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
 
+	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man)
+	{ _mesh_manager = mesh_man; }
+
 	/// Messaging system
 	void sendEvent( vl::cluster::EventData const &event );
 
@@ -93,16 +93,12 @@ public :
 	std::string const &getName( void ) const
 	{ return _name; }
 
-	typedef std::vector<vl::ProjSettingsRefPtr> ProjectList;
-
 	virtual bool guiShown(void) const;
 
 	/// @brief passes the messages to GUI::Console
 	void printToConsole(std::string const &text, double time,
 						std::string const &type = std::string(),
 						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
-
-	void reloadProjects( vl::Settings const &set );
 
 	/** @todo
 	 * Problematic because the Project config should be
@@ -116,6 +112,9 @@ public :
 	 */
 	virtual void setProject(vl::Settings const &settings);
 	
+	/// @brief clears project settings
+	virtual void clearProject(void);
+
 	/// @todo everything with a Message in it should be moved to Slave
 	/// Slave handles the translation from Message to discrete commands
 	/// and commands the Renderer (same with Master)

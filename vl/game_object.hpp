@@ -29,7 +29,7 @@ class HYDRA_API GameObject : public ObjectInterface
 {
 public :
 	/// @todo fix the constructor to take is at least the basic parameters
-	GameObject(std::string const &name, GameManager *manager);
+	GameObject(std::string const &name, GameManager *manager, bool dynamic);
 
 	~GameObject(void);
 
@@ -100,6 +100,9 @@ public :
 
 	virtual bool isVisible(void) const;
 
+	bool isDynamic(void) const
+	{ return _is_dynamic; }
+
 	/// Callbacks
 	virtual int addListener(TransformedCB::slot_type const &slot);
 
@@ -124,6 +127,8 @@ private :
 	KinematicBodyRefPtr _kinematic_body;
 
 	physics::CollisionShapeRefPtr _collision_shape;
+
+	bool _is_dynamic;
 
 	GameManager *_creator;
 

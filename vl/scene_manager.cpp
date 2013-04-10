@@ -22,9 +22,6 @@
 #include "movable_text.hpp"
 #include "ray_object.hpp"
 
-/// Necessary for creating PREFABS
-#include "mesh_manager.hpp"
-
 /// Necessary for better shadow camera
 #include <OGRE/OgreShadowCameraSetupLiSPSM.h>
 #include <OGRE/OgreShadowCameraSetupPlaneOptimal.h>
@@ -243,12 +240,40 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 
 vl::SceneManager::~SceneManager( void )
 {
-//	destroyScene(true);
+	// @todo this is rather complex compared to what it needs to be
+	// we never need to send messages or gather ids here because it only matters
+	// on Master and if the master scene manager is destroyed all the
+	// slaves need to destroy their scene managers also.
+	// More simpler version that does not handle distribution of SceneNodes
+	// This would allow us to destroy the SceneManager distribute that change
+	// and all slaves would comply, at least in theory.
+	//
+	// I think we can't destory the SceneNodes like this because
+	// the destructor for each scene Node will destroy destroy it
+	// and all it's childs by calling Ogre's destroySceneNode
+	/*
+	for(SceneNodeList::iterator iter = _scene_nodes.begin();
+		iter != _scene_nodes.end(); ++iter)
+	{
+		delete *iter;
+	}
 
-//	delete _root;
+	// @todo destroy movable objects
+	for(MovableObjectList::iterator iter = _objects.begin();
+		iter != _objects.end(); ++iter)
+	{
+		delete *iter;
+	}
+	*/
+
 	// @fixme this crashes
 	//delete _sky_sim;
+	//_sky_sim = 0;
 
+	// @todo destroy Ogre::SceneManager
+
+	// Root is already in the scene node list so don't double delete
+	_root = 0;
 }
 
 void
@@ -270,18 +295,94 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 		iter != nodes_to_destroy.end(); ++iter)
 	{ destroySceneNode(*iter); }
 
-	// @todo destroy also the Movable objects
+
+	// Destroy movable objects
+	MovableObjectList objects;
+	objects.reserve(_objects.size());
+	for(MovableObjectList::iterator iter = _objects.begin(); 
+		iter != _objects.end(); ++iter)
+	{
+		if(destroyEditorCamera || (*iter)->getName() != "editor/perspective")
+		{ objects.push_back(*iter); }
+	}
+
+	for(MovableObjectList::iterator iter = objects.begin(); 
+		iter != objects.end(); ++iter)
+	{ destroyMovableObject(*iter); }
+	
+
+	delete _sky_sim;
+	_sky_sim = 0;
+	// Reset skydome also
+	_sky_dome = SkyDomeInfo("");
+
+	// Reset shadows
+	_shadows = ShadowInfo();
+
+	// Reset ogre
+	// For some reason deserialize is not properly called after destroying
+	// the Scene so we need to reset these here.
+	if(_ogre_sm)
+	{
+		_ogre_sm->setSkyDome(false, "");
+		_ogre_sm->setShadowTechnique(Ogre::SHADOWTYPE_NONE);
+	}
+}
+
+void
+vl::SceneManager::destroyDynamicObjects(void)
+{
+	std::clog << "vl::SceneManager::removeDynamicObjects" << std::endl;
+	SceneNodeList nodes_to_destroy;
+	for(SceneNodeList::iterator iter = _scene_nodes.begin();
+		iter != _scene_nodes.end(); ++iter)
+	{
+		if((*iter)->isDynamic())
+		{ nodes_to_destroy.push_back(*iter); }
+	}
+
+	std::clog << "Destorying " << nodes_to_destroy.size() << " SceneNodes." << std::endl;
+	for(SceneNodeList::iterator iter = nodes_to_destroy.begin();
+		iter != nodes_to_destroy.end(); ++iter)
+	{ destroySceneNode(*iter); }
+
+
+	/// @todo should destroy dynamic MovableObjects also
+	MovableObjectList objs_to_destroy;
+	for(MovableObjectList::iterator iter = _objects.begin();
+		iter != _objects.end(); ++iter)
+	{
+		// Can't destroy the root object with this function
+		if((*iter)->isDynamic())
+		{ objs_to_destroy.push_back(*iter); }
+	}
+
+	std::clog << "Destorying " << nodes_to_destroy.size() << " MovableObjects." << std::endl;
+	for(MovableObjectList::iterator iter = objs_to_destroy.begin();
+		iter != objs_to_destroy.end(); ++iter)
+	{ destroyMovableObject(*iter); }
+
 }
 
 vl::SceneNodePtr
 vl::SceneManager::createSceneNode(std::string const &name)
 {
 	if(name.empty())
-	{
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty SceneNode name not allowed"));
-	}
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty SceneNode name not allowed")); }
 
 	vl::SceneNodePtr node = _createSceneNode(name, vl::ID_UNDEFINED);
+	assert(_root);
+	_root->addChild(node);
+	return node;
+}
+
+vl::SceneNodePtr
+vl::SceneManager::createDynamicSceneNode(std::string const &name)
+{
+	if(name.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty SceneNode name not allowed")); }
+
+	vl::SceneNodePtr node = _createSceneNode(name, vl::ID_UNDEFINED, true);
 	assert(_root);
 	_root->addChild(node);
 	return node;
@@ -335,63 +436,50 @@ vl::SceneManager::getSceneNodeID(uint64_t id) const
 void
 vl::SceneManager::destroySceneNode(SceneNodePtr node)
 {
+	assert(node);
+	std::clog << "vl::SceneManager::destroySceneNode : " << node->getName() << std::endl;
+	
+	// @todo we need to remove MovableObjects
 	// Remove linking
 	node->removeAllChildren();
 	SceneNodePtr parent = node->getParent();
 	// @todo does this move the node under Root?
-	parent->removeChild(node);
+	if(parent)
+	{
+		parent->removeChild(node);
+	}
 	assert(!node->getParent());
 
 	_session->deregisterObject(node);
 	assert(node->getID() == vl::ID_UNDEFINED);
 
-	// @todo we probably need to do deregistering here
 	delete node;
 
 	SceneNodeList::iterator iter = std::find(_scene_nodes.begin(), _scene_nodes.end(), node);
 	_scene_nodes.erase(iter);
 }
 
+void
+vl::SceneManager::destroyMovableObject(vl::MovableObjectPtr object)
+{
+	assert(object);
+	std::clog << "vl::SceneManager::destroyMovableObject: " << object->getName() << std::endl;
+
+	// @todo this might be problematic if the user doesn't remove
+	// the linkage from SceneNode
+	// because unlike SceneNode we don't have a reference from
+	// MovableObject to it's parent.
+
+	_session->deregisterObject(object);
+	assert(object->getID() == vl::ID_UNDEFINED);
+
+	delete object;
+
+	MovableObjectList::iterator iter = std::find(_objects.begin(), _objects.end(), object);
+	_objects.erase(iter);
+}
+
 /// --------------------- SceneManager Entity --------------------------------
-vl::EntityPtr
-vl::SceneManager::createEntity(std::string const &name, vl::PREFAB type)
-{
-	/// Disallow empty names for now, we need to generate one otherwise
-	if(name.empty())
-	{ BOOST_THROW_EXCEPTION( vl::empty_param() ); }
-	if(hasEntity(name))
-	{ BOOST_THROW_EXCEPTION( vl::duplicate() << vl::name(name) ); }
-
-	EntityPtr ent = 0;
-	std::string mesh_name;
-
-	assert(_mesh_manager);
-
-	/// Test code for new MeshManager
-	if(type == PF_PLANE)
-	{ mesh_name = "prefab_plane"; }
-	else if(type == PF_CUBE)
-	{ mesh_name = "prefab_cube"; }
-	else if(type == PF_SPHERE)
-	{ mesh_name = "prefab_sphere"; }
-
-	if(mesh_name.empty())
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown Prefab type.")); }
-
-	/// Creating a mesh leaves it in the manager for as long as
-	/// cleanup is called on the manager, which gives us enough
-	/// time even if we don't store the ref pointer.
-	_mesh_manager->createPrefab(mesh_name);
-
-	return createEntity(name, mesh_name, true);
-}
-
-vl::EntityPtr 
-vl::SceneManager::createEntity(std::string const &name, std::string const &mesh_name)
-{
-	return createEntity(name, mesh_name, false);
-}
-
 vl::EntityPtr
 vl::SceneManager::createEntity(std::string const &name, 
 	std::string const &mesh_name, bool use_new_mesh_manager)
@@ -403,8 +491,33 @@ vl::SceneManager::createEntity(std::string const &name,
 		params["use_new_mesh_manager"] = "true";
 	}
 	
-	return static_cast<EntityPtr>(createMovableObject(OBJ_ENTITY, name, params));
+	return static_cast<EntityPtr>(createMovableObject(OBJ_ENTITY, name, false, params));
 }
+
+vl::EntityPtr
+vl::SceneManager::createDynamicEntity(std::string const &name, 
+	std::string const &mesh_name)
+{
+	NamedParamList params;
+	params["mesh"] = mesh_name;
+	
+	return static_cast<EntityPtr>(createMovableObject(OBJ_ENTITY, name, true, params));
+}
+
+vl::EntityPtr
+vl::SceneManager::createDynamicEntity(std::string const &name, 
+	std::string const &mesh_name, bool use_new_mesh_manager)
+{
+	NamedParamList params;
+	params["mesh"] = mesh_name;
+	if(use_new_mesh_manager)
+	{
+		params["use_new_mesh_manager"] = "true";
+	}
+	
+	return static_cast<EntityPtr>(createMovableObject(OBJ_ENTITY, name, true, params));
+}
+
 
 bool 
 vl::SceneManager::hasEntity( std::string const &name ) const
@@ -423,6 +536,12 @@ vl::LightPtr
 vl::SceneManager::createLight(std::string const &name)
 {
 	return static_cast<LightPtr>(createMovableObject(OBJ_LIGHT, name));
+}
+
+vl::LightPtr
+vl::SceneManager::createDynamicLight(std::string const &name)
+{
+	return static_cast<LightPtr>(createMovableObject(OBJ_LIGHT, name, true));
 }
 
 bool 
@@ -444,6 +563,13 @@ vl::SceneManager::createCamera(std::string const &name)
 	return static_cast<CameraPtr>(createMovableObject(OBJ_CAMERA, name));
 }
 
+
+vl::CameraPtr
+vl::SceneManager::createDynamicCamera(std::string const &name)
+{
+	return static_cast<CameraPtr>(createMovableObject(OBJ_CAMERA, name, true));
+}
+
 bool 
 vl::SceneManager::hasCamera(std::string const &name) const
 {
@@ -460,6 +586,16 @@ vl::MovableTextPtr
 vl::SceneManager::createMovableText(std::string const &name, std::string const &text)
 {
 	MovableTextPtr obj = static_cast<MovableTextPtr>(createMovableObject(OBJ_MOVABLE_TEXT, name));
+	if(obj)
+	{ obj->setCaption(text); }
+
+	return obj;
+}
+
+vl::MovableTextPtr
+vl::SceneManager::createDynamicMovableText(std::string const &name, std::string const &text)
+{
+	MovableTextPtr obj = static_cast<MovableTextPtr>(createMovableObject(OBJ_MOVABLE_TEXT, name, true));
 	if(obj)
 	{ obj->setCaption(text); }
 
@@ -487,6 +623,15 @@ vl::SceneManager::createRayObject(std::string const &name, std::string const &ma
 	return obj;
 }
 
+vl::RayObjectPtr
+vl::SceneManager::createDynamicRayObject(std::string const &name, std::string const &material_name)
+{
+	vl::RayObjectPtr obj = static_cast<RayObjectPtr>(createMovableObject(OBJ_RAY_OBJECT, name, true));
+	obj->setMaterial(material_name);
+
+	return obj;
+}
+
 bool
 vl::SceneManager::hasRayObject(std::string const &name) const
 {
@@ -503,11 +648,11 @@ vl::SceneManager::getRayObject(std::string const &name) const
 vl::MovableObjectPtr 
 vl::SceneManager::createMovableObject(std::string const &type_name, std::string const &name, vl::NamedParamList const &params)
 {
-	return createMovableObject(getMovableObjectType(type_name), name, params);
+	return createMovableObject(getMovableObjectType(type_name), name, false, params);
 }
 
 vl::MovableObjectPtr
-vl::SceneManager::createMovableObject(vl::OBJ_TYPE type, std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::createMovableObject(vl::OBJ_TYPE type, std::string const &name, bool dynamic, vl::NamedParamList const &params)
 {
 	/// Disallow empty names for now, we need to generate one otherwise
 	if(name.empty())
@@ -520,19 +665,19 @@ vl::SceneManager::createMovableObject(vl::OBJ_TYPE type, std::string const &name
 	switch(type)
 	{
 	case vl::OBJ_ENTITY:
-		obj = _createEntity(name, params);
+		obj = _createEntity(name, params, dynamic);
 		break;
 	case vl::OBJ_LIGHT:
-		obj = _createLight(name, params);
+		obj = _createLight(name, params, dynamic);
 		break;
 	case vl::OBJ_CAMERA:
-		obj = _createCamera(name, params);
+		obj = _createCamera(name, params, dynamic);
 		break;
 	case vl::OBJ_MOVABLE_TEXT:
-		obj = _createMovableText(name, params);
+		obj = _createMovableText(name, params, dynamic);
 		break;
 	case vl::OBJ_RAY_OBJECT:
-		obj = _createRayObject(name, params);
+		obj = _createRayObject(name, params, dynamic);
 		break;
 	default:
 		std::cout << vl::CRITICAL << "Object type : " << type << " not a movable object." << std::endl;
@@ -1194,7 +1339,7 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 }
 
 vl::SceneNodePtr 
-vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
+vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id, bool dynamic)
 {
 	assert( !name.empty() || vl::ID_UNDEFINED != id );
 
@@ -1207,7 +1352,7 @@ vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
 	}
 	assert( _session );
 
-	SceneNodePtr node = new SceneNode( name, this );
+	SceneNodePtr node = new SceneNode(name, this, dynamic);
 
 	_session->registerObject( node, OBJ_SCENE_NODE, id );
 	assert( node->getID() != vl::ID_UNDEFINED );
@@ -1217,7 +1362,7 @@ vl::SceneManager::_createSceneNode(std::string const &name, uint64_t id)
 }
 
 vl::MovableObjectPtr
-vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList const &params, bool dynamic)
 {
 	std::string mesh_name;
 	NamedParamList::const_iterator iter = params.find("mesh");
@@ -1233,7 +1378,7 @@ vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList cons
 
 	if(!mesh_name.empty())
 	{
-		return new Entity(name, mesh_name, this, use_new_manager);
+		return new Entity(name, mesh_name, this, dynamic, use_new_manager);
 	}
 	else
 	{
@@ -1242,32 +1387,33 @@ vl::SceneManager::_createEntity(std::string const &name, vl::NamedParamList cons
 }
 
 vl::MovableObjectPtr
-vl::SceneManager::_createLight(std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::_createLight(std::string const &name, vl::NamedParamList const &params, bool dynamic)
 {
+	std::clog << "vl::SceneManager::_createLight" << std::endl;
 	// Does not accept any params for now
-	return new Light(name, this);
+	return new Light(name, this, dynamic);
 }
 
 vl::MovableObjectPtr
-vl::SceneManager::_createCamera(std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::_createCamera(std::string const &name, vl::NamedParamList const &params, bool dynamic)
 {
 	// Does not accept any params for now
-	return new Camera(name, this);
+	return new Camera(name, this, dynamic);
 }
 
 vl::MovableObjectPtr
-vl::SceneManager::_createMovableText(std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::_createMovableText(std::string const &name, vl::NamedParamList const &params, bool dynamic)
 {
 	// Does not accept any params for now
-	return new MovableText(name, this);
+	return new MovableText(name, this, dynamic);
 }
 
 
 vl::MovableObjectPtr
-vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList const &params)
+vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList const &params, bool dynamic)
 {
 	// Does not accept any params for now
-	return new RayObject(name, this);
+	return new RayObject(name, this, dynamic);
 }
 
 void
@@ -1286,6 +1432,8 @@ void
 vl::SceneManager::_changeSkyPreset(vl::SkySettings const &preset)
 {
 	std::clog << "vl::SceneManager::_changeSkyPreset" << std::endl;
+	assert(_sky_sim);
+
 	_sky_sim->setTimeMultiplier(preset.timeMultiplier);
 	_sky_sim->setTime(preset.time.x);
 	_sky_sim->setSunriseTime(preset.time.y);

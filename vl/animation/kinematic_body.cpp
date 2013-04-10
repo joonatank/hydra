@@ -45,7 +45,7 @@ vl::operator<<(std::ostream &os, vl::KinematicBody const &body)
 
 /// ------------------------------ KinematicBody -----------------------------
 vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world, 
-	animation::NodeRefPtr node, vl::physics::MotionState *ms)
+	animation::NodeRefPtr node, vl::physics::MotionState *ms, bool dynamic)
 	: _world(world)
 	, _state(ms)
 	, _node(node)
@@ -55,6 +55,7 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 	, _disable_updates(false)
 	, _assume_node_is_in_world(false)
 	, _collisions_enabled(true)
+	, _is_dynamic(dynamic)
 {
 	assert(_world);
 	assert(_state);
@@ -64,6 +65,25 @@ vl::KinematicBody::KinematicBody(std::string const &name, KinematicWorld *world,
 
 vl::KinematicBody::~KinematicBody(void)
 {
+	if(_state)
+	{
+		delete _state;
+	}
+
+	if(_node)
+	{
+		if(_node->getParent())
+		{
+			// @todo this is bit problematic
+			// it works fine when we destroy all the bodies and constraints
+			// but if we only need to destroy a body it will probably fail
+			// reason why we need this is because every node that is created
+			// 
+			//_node->getParent()->setParent(animation::NodeRefPtr());
+			_node->setParent(animation::LinkRefPtr());
+		}
+		_node->removeChildren();
+	}
 }
 
 void
@@ -90,7 +110,7 @@ vl::KinematicBody::setWorldTransform(vl::Transform const &trans)
 {
 	assert(_node);
 	_dirty_transformation = true;
-	_node->setWorldTransform(trans, true);
+	_node->setWorldTransform(trans);
 //	_transformed_cb(trans);
 }
 

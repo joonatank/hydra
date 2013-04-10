@@ -35,6 +35,7 @@
 
 #include <boost/signal.hpp>
 
+#include "defines.hpp"
 
 namespace vl
 {
@@ -44,7 +45,7 @@ namespace gui
 /** @class Window
  *	@brief Wrapper around CEGUI Window, provides the callbacks
  */
-class Window : public vl::Distributed
+class HYDRA_API Window : public vl::Distributed
 {
 	typedef boost::signal<void ()> NativeCreated;
 

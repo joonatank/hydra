@@ -67,6 +67,8 @@ typedef boost::weak_ptr<Graph> GraphWeakPtr;
 /// and a boolean for collision. When transformation is popped
 /// the boolean goes true if boolean value was changed mark as dirty.
 /// When transformation is set mark the boolean false (and always mark as dirty).
+///
+/// @todo add methods for determining if the Node is in Graph or not
 class Node : public boost::enable_shared_from_this<Node>
 {
 public :
@@ -92,6 +94,9 @@ public :
 	bool isLeaf(void) const;
 
 	/// @brief is this the root of the graph i.e. contains no parent node
+	/// @todo this is not necessary true though, in theory we allow free nodes
+	/// that are not part of the graph (or are not yet linked) which would
+	/// return true here even though they are not root nodes.
 	bool isRoot(void) const;
 
 	/// @brief get the link to a parent node
@@ -123,8 +128,8 @@ public :
 
 	/// @brief set the local transformation
 	/// @param t a new Transformation for the Node in local coordinates
-	/// @param reset_memory resets the transformation memory for collision detection
-	void setTransform(Transform const &t, bool reset_memory = false);
+	/// @todo add a variable to keep child transformations
+	void setTransform(Transform const &t);
 
 	/// @brief get the current world transformation
 	/// @return Transformation of the Node in world coordinates
@@ -132,23 +137,26 @@ public :
 	
 	/// @brief set the current world transformation
 	/// @param t a new Transformation for the Node in world coordinates
-	/// @param reset_memory resets the transformation memory for collision detection
-	void setWorldTransform(Transform const &t, bool reset_memory = false);
+	/// @todo add a variable to keep child transformations
+	void setWorldTransform(Transform const &t);
 
 	/// @brief collision detection helper
 	void popLastTransform(void);
 
 	size_t length_to_root(void) const;
 
-	void addAuxilaryParent(LinkRefPtr link);
-
-	LinkList getAuxilaryParents(void) const;
+	/// @brief Returns how many direct and indirect children this node has.
+	/// Calculates only Nodes not Links
+	size_t size(void) const;
 
 	/// @brief set the parent link
 	void setParent(LinkRefPtr link);
-	
-	/// @internal
-	void _setParent(LinkRefPtr link);
+
+	bool hasChild(LinkRefPtr link) const;
+
+	void removeChildren(void);
+
+	void removeChild(LinkRefPtr link);
 
 	/// @internal
 	/// @brief add a child link
@@ -157,8 +165,6 @@ public :
 	/// @internal
 	/// @brief remove a child link
 	void _removeChild(LinkRefPtr link);
-
-	bool _hasChild(LinkRefPtr link);
 
 	/// @internal
 	/// @brief Update the cached transformation
@@ -175,9 +181,6 @@ private :
 	LinkList _childs;
 	size_t _next_child;
 
-	// Does not own parents
-	LinkWeakList _aux_parents;
-
 	Transform _transform;
 	
 	/// Internal states
@@ -191,6 +194,8 @@ private :
 /// @brief A link between two Nodes in the animation graph
 /// All links are owned by their parent Nodes so when the parent node
 /// is destroyed it destroys all the links owned by it also.
+///
+/// @todo add methods for determining if the Link is in Graph or not
 class Link : public boost::enable_shared_from_this<Link>
 {
 public :
@@ -254,8 +259,9 @@ public :
 	/// @brief resets the link to initial state
 	void reset(void);
 
-	/// @internal
-	void _setParent(NodeRefPtr parent);
+	/// @brief Returns how many direct and indirect children this node has.
+	/// Calculates only Nodes not Links
+	size_t size(void) const;
 
 	/// @internal
 	void _setChild(NodeRefPtr child);
@@ -296,7 +302,16 @@ public :
 	~Graph(void);
 
 	/// @brief get the start node i.e. root for the whole graph
-	NodeRefPtr getRoot(void);
+	/// @todo const is wrong here, we should return const Node pointer
+	/// it's added for compatibility with const methods, but
+	/// can be abused because it returns non-const pointer.
+	NodeRefPtr getRoot(void) const
+	{ return _root; }
+
+	/// @brief calculate the size of the graph
+	/// Number of Nodes connected to the Graph (including root node)
+	/// Minimum size is one because root node exists always.
+	size_t size(void) const;
 
 	void _update(void);
 
