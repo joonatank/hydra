@@ -416,6 +416,12 @@ public :
 	std::vector<uint32_t> &getVec(void)
 	{ return _buffer; }
 
+	uint32_t &at(size_t i)
+	{ return _buffer.at(i); }
+
+	uint32_t const &at(size_t i) const
+	{ return _buffer.at(i); }
+
 	uint32_t &operator[](size_t i)
 	{ return _buffer[i]; }
 

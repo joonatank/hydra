@@ -270,7 +270,7 @@ vl::VertexData::getNormalIterator(void)
 		Ogre::VertexElement elem = vertexDeclaration.getVertexElement(Ogre::VES_NORMAL);
 
 		VertexBufferRefPtr buffer = _bindings.at(elem.getSource());
-		return PositionIterator(buffer.get(), elem.getOffset());
+		return NormalIterator(buffer.get(), elem.getOffset());
 	}
 	else
 	{

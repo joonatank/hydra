@@ -6,11 +6,9 @@
  *	@file collada/dae_mesh_importer.hpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.5
  *
- 
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 

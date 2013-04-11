@@ -6,11 +6,9 @@
  *	@file collada/dae_mesh_importer.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.5
  *
- 
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -38,6 +36,32 @@
 #include "math/math.hpp"
 
 namespace {
+
+void convert_vertex_data(vl::VertexBufferRefPtr vbf, COLLADAFW::MeshVertexData const &data, size_t offset)
+{
+	size_t vbf_i = offset;
+	for(size_t i = 0; i < vbf->getNVertices(); ++i)
+	{
+		assert(data.getValuesCount() <= vbf->getNVertices()*3);
+		if(data.getType() == COLLADAFW::MeshVertexData::DATA_TYPE_DOUBLE )
+		{
+			const double* arr = data.getDoubleValues()->getData();
+			arr += 3*i;
+			vbf->write(vbf_i, (Ogre::Real)arr[0]);
+			vbf->write(vbf_i+1*sizeof(Ogre::Real), (Ogre::Real)arr[1]);
+			vbf->write(vbf_i+2*sizeof(Ogre::Real), (Ogre::Real)arr[2]);
+		}
+		else
+		{
+			const float* arr = data.getFloatValues()->getData();
+			arr += 3*i;
+			vbf->write(vbf_i, (Ogre::Real)arr[0]);
+			vbf->write(vbf_i+1*sizeof(Ogre::Real), (Ogre::Real)arr[1]);
+			vbf->write(vbf_i+2*sizeof(Ogre::Real), (Ogre::Real)arr[2]);
+		}
+		vbf_i += vbf->getVertexSize();
+	}
+}
 
 Ogre::Vector3 convert_vertex_data(COLLADAFW::MeshVertexData const &data, size_t index)
 {
@@ -101,7 +125,7 @@ vl::dae::MeshImporter::~MeshImporter()
 bool
 vl::dae::MeshImporter::read(COLLADAFW::Mesh const *mesh, ImporterSettings const &settings)
 {
-	std::clog << "vl::dae::MeshImporter::write" << std::endl;
+	std::clog << "vl::dae::MeshImporter::read" << std::endl;
 
 //	bool skelAnim = _collada_mesh->hasSkeleton();
 
@@ -112,7 +136,7 @@ vl::dae::MeshImporter::read(COLLADAFW::Mesh const *mesh, ImporterSettings const 
 	_mesh->createSharedVertexData();
 	handleVertexBuffer(mesh, _mesh->sharedVertexData);
 
-	std::clog << "Mesh with " << _mesh->sharedVertexData->getNVertices() << " vertices created." << std::endl;
+	std::clog << "Mesh with " << _mesh->sharedVertexData->getVertexCount() << " vertices created." << std::endl;
 
 	/// Submeshes
 	COLLADAFW::MeshPrimitiveArray const &submesh_array = mesh->getMeshPrimitives();
@@ -197,6 +221,7 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 		has_uv_coords = false;
 	}
 
+	/* We handle uvs and normals later after creating index lists
 	if(has_uv_coords)
 	{
 		std::clog << "Submesh has face uvs : NOT SUPPORTED" << std::endl;
@@ -208,15 +233,12 @@ vl::dae::MeshImporter::handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive
 		std::clog << "Submesh has face normals : NOT SUPPORTED" << std::endl;
 		std::clog << normalIndices.getCount() << " face normals." << std::endl;
 	}
+	*/
 
 	assert( !has_normals || (positionIndicesCount == normalIndicesCount));
 	assert( !has_uv_coords || (positionIndicesCount == uvIndicesCount));
 
 	std::clog << positionIndicesCount << " indeces." << std::endl;
-
-	// Should calculate the necessary size of the index buffer
-	// select either 16bit or 32bit buffer and then resize the buffer
-	ibf->setIndexSize(vl::IT_32BIT);
 
 	// Do not resize the index buffer here
 	// because we don't have the exact size before handling the type of indeces 
@@ -387,31 +409,38 @@ vl::dae::MeshImporter::handleSubMesh(COLLADAFW::MeshPrimitive* meshPrimitive,
 
 //-----------------------------------------------------------------------
 void
-vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::VertexData *vbf)
+vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::VertexData *vdata)
 {
 	std::clog << "vl::dae::MeshImporter::handleVertexBuffer" << std::endl;
-	assert(vbf);
+	assert(vdata);
 
 	/// Correct semantics
-	/// Not used yet but later on these will be crucial
-	vbf->vertexDeclaration.addSemantic(Ogre::VES_POSITION, Ogre::VET_FLOAT3);
+	size_t pos_offset, n_offset, uv_offset, col_offset;
+	pos_offset = 0;
+	vdata->vertexDeclaration.addElement(0, pos_offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+	n_offset = vdata->vertexDeclaration.getTypeSize(Ogre::VET_FLOAT3);
+
 	if(mesh->hasNormals())
 	{
-		std::clog << "Mesh has normals." << std::endl;
-		vbf->vertexDeclaration.addSemantic(Ogre::VES_NORMAL, Ogre::VET_FLOAT3);
+		vdata->vertexDeclaration.addElement(0, n_offset, Ogre::VET_FLOAT3, Ogre::VES_NORMAL);
+		uv_offset = pos_offset + vdata->vertexDeclaration.getTypeSize(Ogre::VET_FLOAT3);
 	}
+	
+
 	COLLADAFW::MeshVertexData const &colours = mesh->getColors();
 	COLLADAFW::MeshVertexData const &uvs = mesh->getUVCoords();
 	bool has_uvs = (uvs.getValuesCount() != 0);
 	if(has_uvs)
 	{
-		vbf->vertexDeclaration.addSemantic(Ogre::VES_TEXTURE_COORDINATES, Ogre::VET_FLOAT2);
+		vdata->vertexDeclaration.addElement(0, uv_offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES);
+		col_offset = uv_offset + vdata->vertexDeclaration.getTypeSize(Ogre::VET_FLOAT2);
 	}
 
 	bool has_colours = (colours.getValuesCount() != 0);
 	if(has_colours)
 	{
-		vbf->vertexDeclaration.addSemantic(Ogre::VES_DIFFUSE, Ogre::VET_COLOUR);
+		vdata->vertexDeclaration.addElement(0, col_offset, Ogre::VET_COLOUR, Ogre::VES_DIFFUSE);
+		col_offset += vdata->vertexDeclaration.getTypeSize(Ogre::VET_FLOAT2);
 	}
 
 	// @todo should resize the vertex buffer here
@@ -419,15 +448,16 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 	COLLADAFW::MeshVertexData const &positions = mesh->getPositions();
 	assert(positions.getValuesCount() % 3 == 0);
 	size_t n_vertices = positions.getValuesCount()/3; 
-	vbf->setNVertices(n_vertices);
-	for(size_t i = 0; i < n_vertices; ++i)
-	{
-		vbf->getVertex(i).position = convert_vertex_data(positions, i);
-	}
 
-	//	TODO add support for normals
+	VertexBufferRefPtr vbuf = VertexBuffer::create(vdata->vertexDeclaration.getVertexSize(), n_vertices);
+	vdata->setBinding(0, vbuf);
+	convert_vertex_data(vbuf, positions, pos_offset);
+
 	// Collada uses real normals (aka face normals) so we don't process them here
 	// but store them for use when faces are processed.
+	// todo
+	// figure out what these normals actually are and how they relate to the vertices
+	// at the moment it's bit iffy
 	if(mesh->hasNormals())
 	{
 		COLLADAFW::MeshVertexData const &normals = mesh->getNormals();
@@ -435,6 +465,8 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 		// and some don't. Doh.
 		// this fails for some reason
 		//assert(normals.getValuesCount() / 3 == n_vertices);
+		// These are not vertex normals though, they are face normals of course
+		// because vertex normals are a rasterization helper not a real thing.
 		size_t n_normals = normals.getValuesCount()/3;
 		assert(normals.getValuesCount() % 3 == 0);
 
@@ -444,10 +476,14 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 		{
 			_normals.at(i) = convert_vertex_data(normals, i);
 		}
+
+		std::clog << "Mesh has " << vbuf->getNVertices() 
+			<< " vertices and " << n_normals << " normals." << std::endl;
 	}
 
 	if(has_uvs)
 	{
+		std::clog << "Mesh has UVs." << std::endl;
 		/// What type of uvs are these? two double values?
 		// The 2 dimensional uv coordinates array. 
         // UV coordinates can be stored as float or double values.
@@ -497,6 +533,9 @@ struct VertexNormal
 		return s;
 	}
 
+	size_t size() const
+	{ return normals.size(); }
+
 	std::vector<Ogre::Vector3> normals;
 };
 
@@ -509,17 +548,21 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 	// we have a map from vertices -> faces (ibf)
 	// we need a map from vertices -> normals
 	std::vector<VertexNormal> vert_to_normal;
-	vert_to_normal.resize(_mesh->sharedVertexData->getNVertices());
+	vert_to_normal.resize(_mesh->sharedVertexData->getVertexCount());
 
-	for(size_t i = 0; i < _mesh->sharedVertexData->getNVertices(); ++i)
+	// @todo can we reduce the complexity of this function?
+	// it will take a significant amount of time considering it iterates
+	// twice over the indexes
+	for(size_t i = 0; i < _mesh->sharedVertexData->getVertexCount(); ++i)
 	{
 		for(size_t j = 0; j < ibf->indexCount(); ++j)
 		{
 			// Find the face id
 			// @todo this should be done before by using a temporary array
-			if(ibf->getVec32().at(j) == i)
+			if(ibf->at(j) == i)
 			{
 				Ogre::Vector3 const &normal = _normals.at(normalIndices.at(j));
+				// @todo we should not be using push_back but resize and at
 				vert_to_normal.at(i).normals.push_back(normal);
 			}
 		}
@@ -528,19 +571,46 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 	// if smooth shading is on
 	// the vertex normal is the avarage of all the face normals
 	// @todo flat shading is not implemented
+	// because flat shading needs vertices to be added
+	// we should create this mesh first and then use an operation
+	// that creates a flat shaded one.
+	
+	// trying to figure out if the normal array is same size as vertices array
+	std::clog << "Copy vertex normals. Mesh has "
+		<< _mesh->sharedVertexData->getVertexCount() << " vertices and "
+		<< vert_to_normal.size() << " normals." << std::endl;
+	// just do some checking here if this is true all the time
+	// we can remove some dynamic array resizing from code above
+	assert(vert_to_normal.size() == _mesh->sharedVertexData->getVertexCount());
+
+	size_t index = 0;
+	for(NormalIterator iter = _mesh->sharedVertexData->getNormalIterator(); !iter.end(); ++iter)
 	{
-		for(size_t i = 0; i < vert_to_normal.size(); ++i)
+		// @todo can we assume that the normal array is the same size as vertex array?
+		// it should be by design unless there are vertices without normals which is really
+		// weird.
+		// Well seems like we have four times as many normals than vertices because normals
+		// are mapped to indices instead of vertices.
+		assert(index < vert_to_normal.size());
+		
+		VertexNormal const &vn = vert_to_normal.at(index);
+		if(vn.size() > 0)
 		{
-			VertexNormal const &vn = vert_to_normal.at(i);
-			Vertex &vertex = _mesh->sharedVertexData->getVertex(i);
-			vertex.normal = vn.avarage();
-			// just to check
-			if(vertex.normal == Ogre::Vector3::ZERO)
+			*iter = vn.avarage();
+			if(*iter == Ogre::Vector3::ZERO)
 			{
 				std::clog << "Something very funny we have a zero length normal vector." << std::endl;
 			}
 		}
+		else
+		{
+			// some meshes in Firebird model end here for some reason
+			// why?
+			//std::clog << "We don't have a proper normal for some reason." << std::endl;
+		}
+		++index;
 	}
+
 	// if flat shading is on
 	// we need to create new vertices when fn1 != fn2 or fn1 != fn3 or fn2 != fn3
 	// so that every normal that is different has a dedicated vertex
@@ -550,7 +620,6 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 	{
 		// first we need to create new map which has unique
 	}
-
 }
 
 /// @brief adds a copy of vertex and remaps the face in index buffer 
@@ -560,6 +629,7 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 /// to remap multiple faces to a single new vertex
 /// Only works on 32bit indices.
 /// @return vertex index which we added
+/* Removed for the moment
 size_t split_vertex(vl::IndexBuffer *ibf, vl::VertexData *vbf, size_t face_index, size_t vertex_index)
 {
 	assert(ibf->indexCount() > face_index);
@@ -588,15 +658,14 @@ struct VertexUV
 	void add(size_t face_index, Ogre::Vector2 const &uv, size_t v_index)
 	{
 		bool unique = true;
-		/* This opmisation breaks the splitting for some reason
-		 * now we split all vertices so we get all uvs correct
-		for(size_t i = 0; i < uvs.size(); ++i)
-		{
-			// @todo add tolerance
-			if(vl::equal(uv, uvs.at(i).second))
-			{ unique = false; break; }
-		}
-		*/
+		// This opmisation breaks the splitting for some reason
+		// now we split all vertices so we get all uvs correct
+		//for(size_t i = 0; i < uvs.size(); ++i)
+		//{
+		//	// @todo add tolerance
+		//	if(vl::equal(uv, uvs.at(i).second))
+		//	{ unique = false; break; }
+		//}
 
 		if(unique)
 		{ uvs.push_back(std::make_pair(face_index, uv)); }
@@ -647,6 +716,8 @@ std::ostream &operator<<(std::ostream &os, VertexUV const &uv)
 
 	return os;
 }
+*/
+
 
 void
 vl::dae::MeshImporter::_calculate_vertex_uvs(std::vector<uint32_t> const &uvIndices, vl::IndexBuffer *ibf)
@@ -655,6 +726,7 @@ vl::dae::MeshImporter::_calculate_vertex_uvs(std::vector<uint32_t> const &uvIndi
 
 	assert(!_uvs.empty());
 
+	/* Removed for the moment
 	std::clog << "uv array size = " << _uvs.size() << " uv indices size = " << uvIndices.size() << std::endl;
 	/// For now just assume that every vertex has an unique uv coordinate
 	/// later we need to implement vertex splitting
@@ -744,6 +816,7 @@ vl::dae::MeshImporter::_calculate_vertex_uvs(std::vector<uint32_t> const &uvIndi
 		else
 		{ std::clog << "Warning : vertex has no uvs." << std::endl; }
 	}
+	*/
 }
 
 size_t

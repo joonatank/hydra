@@ -6,11 +6,9 @@
  *	@file collada/dae_importer.cpp
  *
  *	This file is part of Hydra VR game engine.
+ *	Version 0.5
  *
- 
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ *	Licensed under commercial license.
  *
  */
 
@@ -582,26 +580,26 @@ vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 		COLLADAFW::ColorOrTexture const &reflective = effect_common->getReflective();
 		if(reflective.isValid())
 		{
-			std::clog << "Effect has Reflective param : NOT SUPPORTED" << std::endl;
+		//	std::clog << "Effect has Reflective param : NOT SUPPORTED" << std::endl;
 		}
 
 
 		COLLADAFW::FloatOrParam const &reflectivity = effect_common->getReflectivity();
 		if(reflectivity.getFloatValue())
 		{
-			std::clog << "Effect has Reflectivity param : NOT SUPPORTED" << std::endl;
+		//	std::clog << "Effect has Reflectivity param : NOT SUPPORTED" << std::endl;
 		}
 
 		COLLADAFW::ColorOrTexture const &opacity = effect_common->getOpacity();
 		if(opacity.isValid())
 		{
-			std::clog << "Effect has opacity param : NOT SUPPORTED" << std::endl;
+		//	std::clog << "Effect has opacity param : NOT SUPPORTED" << std::endl;
 		}
 
 		COLLADAFW::FloatOrParam const &refraction = effect_common->getIndexOfRefraction();
 		if(refraction.getFloatValue())
 		{
-			std::clog << "Effect has Refraction param : NOT SUPPORTED" << std::endl;
+		//	std::clog << "Effect has Refraction param : NOT SUPPORTED" << std::endl;
 		}
 
 		COLLADAFW::SamplerPointerArray const &samplers  = effect_common->getSamplerPointerArray();
