@@ -443,7 +443,7 @@ vl::ProjSettingsSerializer::readScene( rapidxml::xml_node<>* xml_node, vl::ProjS
 	attrib = xml_node->first_attribute("use");
 	if(!attrib)
 	{
-		s.setUse( true );
+		s.setUse(false);
 		std::cerr << "Defaultin use of scene " << s.getName()
 			<< " to false." << std::endl;
 	}

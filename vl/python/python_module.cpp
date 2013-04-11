@@ -63,6 +63,8 @@
 
 #include "game_object.hpp"
 
+#include "cad_importer.hpp"
+
 // Necessary for exposing some server functionality
 #include "cluster/server.hpp"
 
@@ -683,6 +685,8 @@ void export_game(void)
 		.def("get_object", &vl::GameManager::getGameObject)
 		.def("has_object", &vl::GameManager::hasGameObject)
 		.def("create_object", &vl::GameManager::createDynamicGameObject)
+		// CadImporter
+		.add_property("cad_importer", &vl::GameManager::getCadImporter)
 
 		// State management
 		.def("quit", &vl::GameManager::quit)
@@ -740,6 +744,19 @@ void export_game(void)
 
 	python::class_<vl::Recording, vl::RecordingRefPtr, boost::noncopyable>("Recording", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::ImporterCallback, boost::noncopyable>("ImporterCallback", python::no_init)
+	;
+
+	python::class_<vl::CadImporterCallback, boost::noncopyable,  python::bases<vl::ImporterCallback> >("CadImporterCallback", python::no_init)
+		.def("create", python::make_function(&vl::CadImporterCallback::create, python::return_value_policy<python::reference_existing_object>()))
+		.staticmethod("create")
+	;
+
+	python::class_<vl::CadImporter, vl::CadImporterRefPtr, boost::noncopyable>("CadImporter", python::no_init)
+		.def("load", &vl::CadImporter::import)
+		.add_property("loading", &vl::CadImporter::isLoading)
 	;
 }
 

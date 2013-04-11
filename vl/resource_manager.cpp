@@ -149,6 +149,13 @@ vl::ResourceManager::loadRecording(std::string const &name, vl::Resource &data)
 bool
 vl::ResourceManager::findResource(const std::string& name, std::string& path) const
 {
+	// For global filepaths we just copy them
+	if(fs::exists(name))
+	{
+		path = name;
+		return true;
+	}
+
 	for( std::vector<std::string>::const_iterator iter = _search_paths.begin();
 		 iter != _search_paths.end(); ++iter )
 	{
@@ -156,7 +163,6 @@ vl::ResourceManager::findResource(const std::string& name, std::string& path) co
 		fs::path file_path = dir/name;
 		if( fs::exists( file_path ) )
 		{
-
 			path = file_path.string();
 			return true;
 		}

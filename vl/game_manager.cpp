@@ -40,6 +40,8 @@
 #include "hsf_loader.hpp"
 #include "collada/dae_importer.hpp"
 
+#include "cad_importer.hpp"
+
 // File writers
 #include "collada/dae_exporter.hpp"
 
@@ -60,7 +62,7 @@
 
 #include "game_object.hpp"
 
-vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
+vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt)
 	: _session(session)
 	, _python(0)
 	, _resource_man(new vl::ResourceManager)
@@ -70,6 +72,7 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	, _trackers( new vl::Clients( _event_man ) )
 	, _logger(logger)
 	, _auto_start(true)
+	, _options(opt)
 	, _fsm(new GameManagerFSM)
 {
 	if(!_session || !_logger)
@@ -85,6 +88,13 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger)
 	// Not creating audio context because user needs to enable it separately.
 
 	// Not Create the physics world because the user needs to enable it.
+	
+	// Create cad importer
+	std::string cad_exe = opt.cad_importer_exe;
+	if(!opt.cad_importer_enabled)
+	{ cad_exe.clear(); }
+
+	_cad_importer.reset(new CadImporter(cad_exe));
 
 	_fsm->setGameManager(this);
 	_fsm->start();
@@ -157,6 +167,8 @@ vl::GameManager::step(void)
 		// Copy collision barrier transformations to visual objects
 		_scene_manager->_step(getDeltaTime());
 	}
+
+	_cad_importer->mainloop();
 
 	_fire_step_end();
 }
@@ -490,6 +502,13 @@ void
 vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
+
+	if(!scene_info.getUse())
+	{
+		std::cout << "Trying to load scene : " << scene_info.getName() 
+			<< " that is not in use." << std::endl;
+		return;
+	}
 
 	vl::chrono t;
 	fs::path file(scene_info.getFile());
@@ -1023,4 +1042,20 @@ void
 vl::GameManager::_fire_step_end(void)
 {
 	_step_timer.reset();
+}
+
+
+void
+vl::CadImporterCallback::_load(std::string const &filename, std::string const &file_path)
+{
+	std::clog << "CadImporterCallback::_load" << std::endl;
+	// @todo we need to replace the extension
+	fs::path file(file_path);
+	if(!fs::exists(file))
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Imported file does not exists.") << vl::file_name(file_path)); }
+
+	if(file.extension() != ".dae")
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Imported file is not Collada.") << vl::file_name(file_path)); }
+
+	_game->loadScene(file_path);
 }
