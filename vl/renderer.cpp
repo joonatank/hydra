@@ -438,7 +438,6 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			{
 				if(_material_manager)
 				{
-					std::cout << vl::TRACE << "Renderer : Creating Material" << std::endl;
 					vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
 					_materials_to_check.push_back(mat);
 				}

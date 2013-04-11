@@ -1003,13 +1003,11 @@ vl::MeshSerializerImpl::readSubMesh(vl::ResourceStream &stream, vl::Mesh *pMesh)
 		sm->indexData.setIndexCount(indexCount);
 
 		if (idx32bit)
-		{	
-			std::clog << "32-bit indices." << std::endl;
+		{
 			readInts(stream, sm->indexData.getBuffer(), indexCount);
 		}
 		else // 16-bit
 		{
-			std::clog << "16-bit indices." << std::endl;
 			/// Get the half count of indexes, if it's odd it will be increased
 			/// by one half, if it's even then the odd one is out in the division
 			/// We use the half size to resize the container, but the read is

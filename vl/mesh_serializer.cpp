@@ -50,32 +50,31 @@ void
 vl::MeshSerializer::readMesh(vl::MeshRefPtr mesh, vl::Resource &res)
 {
 	ResourceStream stream = res.getStream();
-    determineEndianness(stream);
+	determineEndianness(stream);
 
-    // Read header and determine the version
-    unsigned short headerID;
+	// Read header and determine the version
+	unsigned short headerID;
         
-    // Read header ID
-    readShorts(stream, &headerID, 1);
+	// Read header ID
+	readShorts(stream, &headerID, 1);
         
-    if(headerID != HEADER_CHUNK_ID)
-    {
+	if(headerID != HEADER_CHUNK_ID)
+	{
 		std::clog << "vl::MeshSerializer::readMesh : NO header" << std::endl;
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("File header not found"));
-    }
+	}
 
-    // Read version
-    std::string ver = stream.getLine();
-	std::clog << "Mesh version = " << ver << std::endl;
+	// Read version
+	std::string ver = stream.getLine();
     
 	// Jump back to start
-    stream.seek(0);
+	stream.seek(0);
 
-    // Find the implementation to use
+	// Find the implementation to use
 	MeshSerializerImpl* impl = new MeshSerializerImpl;
 
-    // Call implementation
-    impl->importMesh(stream, mesh.get());
+	// Call implementation
+	impl->importMesh(stream, mesh.get());
 
 	delete impl;
 }

@@ -119,25 +119,19 @@ vl::dae::Importer::start()
 void
 vl::dae::Importer::finish()
 {
-	// Create material instance map
-	//std::map<COLLADAFW::MaterialId, std::string> instance_material_map;
-
 	/// Attach entities
 	/// @todo should rename Meshes also using instance names rather than the proto name
 	for(std::vector<NodeEntityDefinition>::iterator iter =
 		_node_entity_map.begin(); iter != _node_entity_map.end(); ++iter)
 	{
-		std::clog << "Mapping node " << iter->node->getName() << " to entity." << std::endl;
 		std::map<COLLADAFW::UniqueId, vl::EntityPtr>::iterator l_iter = _entities.find(iter->geometry_id);
-		if(l_iter == _entities.end())
+		if(l_iter != _entities.end())
 		{
-			std::clog << "Something really wrong! Couldn't find the entity." << std::endl;
+			iter->node->attachObject(l_iter->second);
 		}
 		else
 		{
-			std::clog << "Found the entity and attaching : " << l_iter->second->getName() 
-				<< " to node " << iter->node->getName() << std::endl;
-			iter->node->attachObject(l_iter->second);
+			std::clog << "Something really wrong! Couldn't find the entity." << std::endl;
 		}
 	}
 
@@ -146,15 +140,15 @@ vl::dae::Importer::finish()
 		_node_camera_map.begin(); iter != _node_camera_map.end(); ++iter)
 	{
 		std::map<COLLADAFW::UniqueId, vl::CameraPtr>::iterator l_iter = _cameras.find(iter->second);
-		if(l_iter == _cameras.end())
-		{
-			std::clog << "Something really wrong! Couldn't find the camera." << std::endl;
-		}
-		else
+		if(l_iter != _cameras.end())
 		{
 			std::clog << "Found the camera and attaching : " << l_iter->second->getName() 
 				<< " to node " << iter->first->getName() << std::endl;
 			iter->first->attachObject(l_iter->second);
+		}
+		else
+		{
+			std::clog << "Something really wrong! Couldn't find the camera." << std::endl;
 		}
 	}
 
@@ -163,15 +157,15 @@ vl::dae::Importer::finish()
 		_node_light_map.begin(); iter != _node_light_map.end(); ++iter)
 	{
 		std::map<COLLADAFW::UniqueId, vl::LightPtr>::iterator l_iter = _lights.find(iter->second);
-		if(l_iter == _lights.end())
-		{
-			std::clog << "Something really wrong! Couldn't find the light." << std::endl;
-		}
-		else
+		if(l_iter != _lights.end())
 		{
 			std::clog << "Found the light and attaching : " << l_iter->second->getName() 
 				<< " to node " << iter->first->getName() << std::endl;
-			iter->first->attachObject(l_iter->second);
+			iter->first->attachObject(l_iter->second);			
+		}
+		else
+		{
+			std::clog << "Something really wrong! Couldn't find the light." << std::endl;
 		}
 	}
 
@@ -180,11 +174,7 @@ vl::dae::Importer::finish()
 		_materials.begin(); iter != _materials.end(); ++iter)
 	{
 		std::map<COLLADAFW::UniqueId, EffectMapEntry>::iterator l_iter = _effect_map.find(iter->effect_id);
-		if(l_iter == _effect_map.end())
-		{
-			std::clog << "Something really wrong! Couldn't find the Effect." << std::endl;
-		}
-		else
+		if(l_iter != _effect_map.end())
 		{
 			vl::MaterialRefPtr material = l_iter->second.material;
 			/// @todo needs to check the uniqueness of the name before resetting it
@@ -192,6 +182,10 @@ vl::dae::Importer::finish()
 			/// This will of course be problematic for meshes... as they already said to use
 			/// certain material. Ah well.
 			material->setName(iter->name);
+		}
+		else
+		{
+			std::clog << "Something really wrong! Couldn't find the Effect." << std::endl;
 		}
 	}
 
@@ -252,6 +246,7 @@ vl::dae::Importer::finish()
 bool
 vl::dae::Importer::writeGlobalAsset( const COLLADAFW::FileInfo* asset )
 {
+	std::clog << "vl::dae::Importer::writeGlobalAsset : NOT IMPLEMENTED" << std::endl;
 	return true;
 }
 
@@ -272,6 +267,7 @@ vl::dae::Importer::writeVisualScene(COLLADAFW::VisualScene const *visualScene)
 bool
 vl::dae::Importer::writeScene( const COLLADAFW::Scene* scene )
 {
+	std::clog << "vl::dae::Importer::writeScene : NOT IMPLEMENTED" << std::endl;
 	return true;
 }
 
@@ -305,7 +301,6 @@ vl::dae::Importer::writeNode(const COLLADAFW::Node* nodeToWriter, vl::SceneNodeP
 	size_t i = 0;
 	while(_scene_manager->hasSceneNode(name))
 	{
-		std::clog << "Scene Already has an object with name : " << name << " renaming." << std::endl;
 		std::stringstream ss;
 		ss << nodeToWriter->getName() << "_" << i;
 		name = ss.str();
@@ -418,7 +413,6 @@ vl::dae::Importer::handleInstanceNodes(COLLADAFW::InstanceNodePointerArray const
 bool
 vl::dae::Importer::writeGeometry(COLLADAFW::Geometry const *geometry)
 {
-	std::clog << "vl::dae::Importer::writeGeometry" << std::endl;
 	if ( geometry->getType() != COLLADAFW::Geometry::GEO_TYPE_MESH )
 	{
 		std::clog << "vl::dae::Importer::writeGeometry " 
@@ -470,7 +464,6 @@ vl::dae::Importer::writeMaterial( const COLLADAFW::Material* material )
 
 	_materials.push_back(MaterialMapEntry(material->getUniqueId(), material->getInstantiatedEffect(), material->getName() )); 
 
-	//	mUniqueIdFWMaterialMap.insert(std::make_pair(material->getUniqueId(), *material ));
 	return true;
 }
 
@@ -478,8 +471,6 @@ vl::dae::Importer::writeMaterial( const COLLADAFW::Material* material )
 bool
 vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 {
-	std::clog << "vl::dae::Importer::writeEffect" << std::endl;
-
 	MaterialRefPtr mat = _material_manager->createMaterial(effect->getName());
 
 	COLLADAFW::Color const &col = effect->getStandardColor();
@@ -499,7 +490,6 @@ vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 
 	if(effect->getCommonEffects().getCount() > 0)
 	{
-		std::clog << "Has a effects common." << std::endl;
 		COLLADAFW::EffectCommon const *effect_common = effect->getCommonEffects()[0];
 
 		COLLADAFW::EffectCommon::ShaderType const &shader = effect_common->getShaderType();
@@ -521,9 +511,6 @@ vl::dae::Importer::writeEffect( const COLLADAFW::Effect* effect )
 				shader_name = "Lambert";
 				break;
 		}
-
-		if(!shader_name.empty())
-		{ std::clog << "Effect : " << effect->getName() << " has shader : " << shader_name << std::endl; }
 
 		COLLADAFW::ColorOrTexture const &emission = effect_common->getEmission();
 		COLLADAFW::ColorOrTexture const &ambient = effect_common->getAmbient();

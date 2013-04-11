@@ -261,6 +261,7 @@ void export_scene_graph(void)
 		.def("getMesh", &vl::MeshManager::getMesh)
 		.def("hasMesh", &vl::MeshManager::hasMesh)
 		.def("cleanup_unused", &vl::MeshManager::cleanup_unused)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	

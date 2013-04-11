@@ -549,10 +549,10 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 			vl::TextResource resource;
 			getResourceManager()->loadResource(scene_info.getFile(), resource);
 
-			// Default to false for now
-			bool use_mesh = false;
-			if(scene_info.getUseNewMeshManager() == CFG_ON)
-			{ use_mesh = true; }
+			// Default to true
+			bool use_mesh = true;
+			if(scene_info.getUseNewMeshManager() == CFG_OFF)
+			{ use_mesh = false; }
 
 			if(scene_info.getUsePhysics())
 			{ enablePhysics(true); }

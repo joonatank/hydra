@@ -150,6 +150,9 @@ public :
 	/// @brief is a mesh with the name already loaded
 	bool hasMesh(std::string const &name) const;
 
+	size_t nMeshes(void) const
+	{ return _meshes.size(); }
+
 	/// @brief checks every Mesh loaded and unloads it if there is no users
 	/// @todo NOT WORKING do not use
 	void cleanup_unused(void);
@@ -195,6 +198,19 @@ private :
 
 	std::vector<Ogre::SubEntity *> _og_sub_entities;
 };
+
+inline
+std::ostream &operator<<(std::ostream &os, vl::MeshManager const &man)
+{
+	os << "MeshManager has " << man.nMeshes() << " meshes." << std::endl;
+	for(MeshManager::MeshMap::const_iterator iter = man.getMeshes().begin(); 
+		iter != man.getMeshes().end(); ++iter)
+	{
+		os << iter->first << std::endl;
+	}
+
+	return os;
+}
 
 }	// namespace vl
 

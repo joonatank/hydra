@@ -297,16 +297,17 @@ vl::Entity::_finishCreateNative(void)
 			Ogre::Entity *ent = (Ogre::Entity *)_ogre_object;
 			Ogre::MeshPtr mesh = ent->getMesh();
 			unsigned short src, dest;
+			// @todo we should not do this if the mesh has no normals or no uvs
 			if (!mesh->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dest))
 			{
 				mesh->buildTangentVectors(Ogre::VES_TANGENT, src, dest);
 			}
 		}
 	}
+	// Catch exceptions thrown by buildTangentVectors because we are too lazy to add
+	// proper checking for meshes that do not have uvs or normals
 	catch( Ogre::Exception const &e)
-	{
-		std::cout << "Exception : " << e.what() << std::endl;
-	}
+	{}
 
 	_ogre_object->setCastShadows(_cast_shadows);
 	if( !_material_name.empty() )
