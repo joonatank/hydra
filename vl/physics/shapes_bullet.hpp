@@ -203,28 +203,42 @@ private :
 class BulletCompoundShape : public BulletCollisionShape, public vl::physics::CompoundShape
 {
 public:
-	BulletCompoundShape(bool enableDynamicAABBTree = true)
-		: _bt_shape(0) 
+	BulletCompoundShape(bool dynamicTree)
+		:_bt_shape(0)
 	{
-		_bt_shape = new btCompoundShape(enableDynamicAABBTree);
+		_bt_shape = new btCompoundShape(dynamicTree);
 	}
-	
+
 	virtual ~BulletCompoundShape(void)
 	{}
 	
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
 	virtual btCollisionShape *getNative(void)
 	{ return _bt_shape; }
 
 	virtual btCollisionShape const *getNative(void) const
-	{ return _bt_shape; }
-
-	void addChildShape(vl::Transform const &localTrans, vl::physics::CollisionShapeRefPtr shape)
+	{ return _bt_shape; }	
+	
+	virtual void addChildShape(vl::Transform const &localTrans, vl::physics::CollisionShapeRefPtr shape)
 	{	
-		BulletCollisionShapeRefPtr jepulis = boost::dynamic_pointer_cast<BulletCollisionShape>(shape);
-		assert(jepulis);
-		
-		//Muunna CollisionShapeRefPtr johonkin bulletin ymmärtämään dynaamisella castauksella ja getNative metodilla!
-		_bt_shape->addChildShape(vl::math::convert_bt_transform(localTrans), jepulis->getNative());
+		//@warning: IS THIS ALLOWED?
+		BulletCollisionShapeRefPtr shape_bullet( boost::dynamic_pointer_cast<BulletCollisionShape>(shape) );
+		assert(shape_bullet);
+		_bt_shape->addChildShape(vl::math::convert_bt_transform(localTrans), shape_bullet->getNative());
+	}
+
+	virtual void removeChildShapeByIndex(int idx)
+	{
+		//@warning: IS THIS ALLOWED?
+		//BulletCollisionShapeRefPtr shape_bullet = boost::dynamic_pointer_cast<BulletCollisionShape>(shape);
+		//assert(shape_bullet);
+		_bt_shape->removeChildShapeByIndex(idx);
+		//_bt_shape->removeChildShape(shape_bullet->getNative());
 	}
 	
 private:

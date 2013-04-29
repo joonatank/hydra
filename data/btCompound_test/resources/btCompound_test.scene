@@ -1,0 +1,111 @@
+<?xml version="1.0" ?>
+<scene formatVersion="1.0.0">
+	<environment>
+		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
+		<colourAmbient b="0" g="0" r="0"/>
+	</environment>
+	<nodes>
+		<node name="camera_correct">
+			<position x="-0" y="12.5" z="10"/>
+			<quaternion w="-7.40392e-09" x="-1.79411e-07" y="0.92388" z="0.382683"/>
+			<scale x="1" y="1" z="1"/>
+			<camera fov="28.841546255021967" name="camera_correct" projectionType="perspective">
+				<clipping farPlaneDist="100" nearPlaneDist="0.1"/>
+			</camera>
+		</node>
+		<node name="Point">
+			<position x="-0" y="8.5" z="4.76837e-07"/>
+			<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<light castShadows="false" name="Point" type="point">
+				<lightAttenuation constant="1.0" linear="0.11831516966982249" quadratic="0.0" range="5000"/>
+				<colourDiffuse b="1" g="0.805678" r="0.789181"/>
+				<colourSpecular b="1" g="0.805678" r="0.789181"/>
+			</light>
+		</node>
+		<node name="ball22">
+			<position x="-0" y="4.5" z="2.38419e-07"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball12">
+			<position x="-0" y="4.5" z="1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball31">
+			<position x="1.75" y="4.5" z="-1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball32">
+			<position x="-0" y="4.5" z="-1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball33">
+			<position x="-1.75" y="4.5" z="-1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball23">
+			<position x="-1.75" y="4.5" z="2.38419e-07"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball13">
+			<position x="-1.75" y="4.5" z="1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball11">
+			<position x="1.75" y="4.5" z="1.75"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="ball21">
+			<position x="1.75" y="4.5" z="2.38419e-07"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="ball.mesh" name="ball"/>
+		</node>
+		<node name="collision_pool">
+			<position x="5.96046e-08" y="0.7" z="0"/>
+			<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
+			<scale x="1" y="0.999999" z="1"/>
+			<entity meshFile="collision_pool.mesh" name="collision_pool"/>
+			<node name="wall_B">
+				<position x="5.96046e-08" y="-2.125" z="1.125"/>
+				<quaternion w="4.74853e-07" x="4.74854e-07" y="0.707107" z="0.707107"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_F">
+				<position x="-2.38419e-07" y="2.125" z="1.125"/>
+				<quaternion w="0.707107" x="0.707107" y="0" z="0"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_L">
+				<position x="-2.125" y="-9.83476e-07" z="1.125"/>
+				<quaternion w="0.5" x="0.5" y="0.5" z="0.5"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_R">
+				<position x="2.125" y="-5.66243e-07" z="1.125"/>
+				<quaternion w="0.5" x="0.500001" y="-0.499999" z="-0.5"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+		</node>
+	</nodes>
+</scene>

@@ -80,11 +80,11 @@ vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 }
 
 vl::physics::CompoundShapeRefPtr
-vl::physics::CompoundShape::create(bool useDynamicAABBTree)
+vl::physics::CompoundShape::create(bool dynamicTree)
 {
 	CompoundShapeRefPtr shape;
 #ifdef USE_BULLET
-	shape.reset(new BulletCompoundShape(useDynamicAABBTree));
+	shape.reset(new BulletCompoundShape(dynamicTree));
 #else if USE_NEWTON
 #endif
 	return shape;

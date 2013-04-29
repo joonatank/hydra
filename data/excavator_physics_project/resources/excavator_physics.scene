@@ -1,10 +1,76 @@
 <?xml version="1.0" ?>
 <scene formatVersion="1.0.0">
 	<environment>
-		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
 		<colourAmbient b="0" g="0" r="0"/>
+		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
 	</environment>
 	<nodes>
+		<node name="cb_bucket0">
+			<position x="-0" y="2.24083" z="-6.68238"/>
+			<quaternion w="0.993548" x="0.11341" y="3.88179e-17" z="1.24457e-16"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="cb_bucket0.mesh" name="cb_bucket0"/>
+			<node name="cb_bucket1">
+				<position x="-0.778748" y="-0.162912" z="0.154186"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket1.mesh" name="cb_bucket1"/>
+			</node>
+			<node name="cb_bucket10">
+				<position x="-0.00290978" y="0.818809" z="0.207329"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket10.mesh" name="cb_bucket10"/>
+			</node>
+			<node name="cb_bucket2">
+				<position x="0.750042" y="-0.162912" z="0.154186"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket1.mesh" name="cb_bucket1"/>
+			</node>
+			<node name="cb_bucket3">
+				<position x="-0.00290981" y="-0.573648" z="-0.118541"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket3.mesh" name="cb_bucket3"/>
+			</node>
+			<node name="cb_bucket4">
+				<position x="-0.00290981" y="-0.55915" z="0.291338"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket4.mesh" name="cb_bucket4"/>
+			</node>
+			<node name="cb_bucket5">
+				<position x="-0.00290981" y="-0.517318" z="0.403562"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket5.mesh" name="cb_bucket5"/>
+			</node>
+			<node name="cb_bucket6">
+				<position x="-0.00290981" y="-0.438982" z="0.505455"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket6.mesh" name="cb_bucket6"/>
+			</node>
+			<node name="cb_bucket7">
+				<position x="-0.00290981" y="-0.318977" z="0.581107"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket7.mesh" name="cb_bucket7"/>
+			</node>
+			<node name="cb_bucket8">
+				<position x="-0.00290981" y="-0.17424" z="0.621917"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket8.mesh" name="cb_bucket8"/>
+			</node>
+			<node name="cb_bucket9">
+				<position x="-0.00290981" y="0.14873" z="0.54103"/>
+				<quaternion w="1" x="1.49012e-08" y="1.65436e-24" z="-7.88861e-31"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="cb_bucket9.mesh" name="cb_bucket9"/>
+			</node>
+		</node>
 		<node name="cb_rock">
 			<position x="-0" y="0" z="-10.5492"/>
 			<quaternion w="1" x="-0" y="0" z="0"/>
@@ -422,36 +488,6 @@
 			<scale x="1" y="1" z="1"/>
 			<entity meshFile="bucket.mesh" name="bucket"/>
 		</node>
-		<node name="cb_bucket0">
-			<position x="8.13152e-20" y="2.24083" z="-6.68238"/>
-			<quaternion w="0.993549" x="0.113408" y="-1.03112e-13" z="-4.45913e-13"/>
-			<scale x="1" y="1" z="1"/>
-			<entity meshFile="cb_bucket0.mesh" name="cb_bucket0"/>
-			<node name="cb_bucket1">
-				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
-				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
-				<scale x="1" y="1" z="1"/>
-				<entity meshFile="cb_bucket1.mesh" name="cb_bucket1"/>
-			</node>
-			<node name="cb_bucket2">
-				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
-				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
-				<scale x="1" y="1" z="1"/>
-				<entity meshFile="cb_bucket2.mesh" name="cb_bucket2"/>
-			</node>
-			<node name="cb_bucket3">
-				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
-				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
-				<scale x="1" y="1" z="1"/>
-				<entity meshFile="cb_bucket3.mesh" name="cb_bucket3"/>
-			</node>
-			<node name="cb_bucket4">
-				<position x="-2.1684e-19" y="-5.96046e-08" z="9.53674e-07"/>
-				<quaternion w="1" x="-8.88178e-16" y="-3.38813e-20" z="-1.49078e-19"/>
-				<scale x="1" y="1" z="1"/>
-				<entity meshFile="cb_bucket4.mesh" name="cb_bucket4"/>
-			</node>
-		</node>
 		<node name="fourbarlink2">
 			<position x="-2.41048e-08" y="1.67795" z="-7.41276"/>
 			<quaternion w="0.130526" x="-0.991445" y="-7.84574e-17" z="1.87176e-16"/>
@@ -522,6 +558,18 @@
 				<scale x="1" y="1" z="1"/>
 				<entity meshFile="roadsign_banner_savant.mesh" name="roadsign_banner_savant"/>
 			</node>
+			<node name="roadsign_banner_savant.002">
+				<position x="2.56347" y="4.33337" z="-0.280264"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="Mesh.001.mesh" name="Mesh.001"/>
+			</node>
+			<node name="roadsign_banner_savant.003">
+				<position x="2.56347" y="4.33337" z="-0.280264"/>
+				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="Mesh.002.mesh" name="Mesh.002"/>
+			</node>
 			<node name="roadsign_banner_tut">
 				<position x="2.56347" y="1.70955" z="-0.0233612"/>
 				<quaternion w="1" x="-0" y="-3.07944e-08" z="0"/>
@@ -576,11 +624,31 @@
 				<scale x="1" y="1" z="1"/>
 				<entity meshFile="roadsign_plywood_board.mesh" name="roadsign_plywood_board"/>
 			</node>
-			<node name="roadsign_spot">
+			<node name="roadsign_spot1">
+				<position x="2.91832" y="4.90578" z="-1.75959"/>
+				<quaternion w="0.97437" x="-0.224951" y="-3.23268e-08" z="3.12886e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<light castShadows="true" name="sign_spot1" type="spot">
+					<lightAttenuation constant="1.0" linear="0.1" quadratic="0.0" range="5000"/>
+					<colourDiffuse b="0.55" g="0.9" r="1"/>
+					<colourSpecular b="0.55" g="0.9" r="1"/>
+				</light>
+			</node>
+			<node name="roadsign_spot2">
 				<position x="0.0210094" y="4.90578" z="-1.75959"/>
 				<quaternion w="0.97437" x="-0.224951" y="-3.23268e-08" z="3.12886e-09"/>
 				<scale x="1" y="1" z="1"/>
 				<light castShadows="true" name="sign_spot2" type="spot">
+					<lightAttenuation constant="1.0" linear="0.1" quadratic="0.0" range="5000"/>
+					<colourDiffuse b="0.55" g="0.9" r="1"/>
+					<colourSpecular b="0.55" g="0.9" r="1"/>
+				</light>
+			</node>
+			<node name="roadsign_spot3">
+				<position x="-2.87899" y="4.90578" z="-1.75959"/>
+				<quaternion w="0.97437" x="-0.224951" y="-3.23268e-08" z="3.12886e-09"/>
+				<scale x="1" y="1" z="1"/>
+				<light castShadows="true" name="sign_spot3" type="spot">
 					<lightAttenuation constant="1.0" linear="0.1" quadratic="0.0" range="5000"/>
 					<colourDiffuse b="0.55" g="0.9" r="1"/>
 					<colourSpecular b="0.55" g="0.9" r="1"/>

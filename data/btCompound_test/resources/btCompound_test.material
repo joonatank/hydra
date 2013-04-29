@@ -1,0 +1,61 @@
+
+material _missing_material_ 
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			ambient 0.1 0.1 0.1 1.0
+			diffuse 0.8 0.0 0.0 1.0
+			specular 0.5 0.5 0.5 1.0 12.5
+			emissive 0.3 0.3 0.3 1.0
+		}
+	}
+}
+
+material ball 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.485552 0 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.388441 0 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+
+material floor 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.8 0.0203671 0 1 
+			emissive 0 0 0 1 
+			diffuse 0.64 0.0162936 0 1 
+			specular 0.226415 0.226415 0.226415 1 50 
+		}
+	}
+}
+
+material walls 
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0 0.8 0.172232 1 
+			emissive 0 0 0 1 
+			diffuse 0 0.64 0.137786 1 
+			specular 0.5 0.5 0.5 1 50 
+		}
+	}
+}
+

@@ -25,7 +25,7 @@ namespace vl
 
 namespace physics
 {
-
+	
 /// @brief abstract interface for collision shapes
 /// To avoid collisions this can not have any concrete data as it's inherited multiple times.
 class CollisionShape
@@ -132,6 +132,7 @@ public :
 	vl::MeshRefPtr getMesh(void) const
 	{ return _mesh; }
 
+
 protected :
 	ConvexHullShape(vl::MeshRefPtr mesh)
 		: _mesh(mesh)
@@ -148,14 +149,19 @@ private :
 
 class HYDRA_API CompoundShape : public CollisionShape
 {
-public:
-	static CompoundShapeRefPtr create(bool useDynamicAABBTree = true);
+public:	
+	static CompoundShapeRefPtr create(bool);
 
 	virtual ~CompoundShape(void) {}
 
+	virtual void addChildShape(Transform const &, CollisionShapeRefPtr) = 0;
+	
+	virtual void removeChildShapeByIndex(int idx) = 0;
+
 protected:
-	CompoundShape(bool useDynamicAABBTree = true)
-	{}
+	CompoundShape(void)
+	{
+	}
 
 private:
 	CompoundShape(CompoundShape const &);

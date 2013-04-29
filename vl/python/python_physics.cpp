@@ -76,6 +76,15 @@ void export_physics_objects(void)
 		.staticmethod("create")
 	;
 
+	python::class_<vl::physics::CompoundShape, boost::noncopyable, vl::physics::CompoundShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CompoundShape", python::no_init )
+		.def("create", &vl::physics::CompoundShape::create)
+		.staticmethod("create")
+		.def("add_child_shape", &vl::physics::CompoundShape::addChildShape)
+		.def("remove_child_shape_by_idx", &vl::physics::CompoundShape::removeChildShapeByIndex)
+		
+		
+	;
+
 	vl::physics::CylinderShapeRefPtr (*cyl_create_0)(vl::scalar, vl::scalar) = &vl::physics::CylinderShape::create;
 	vl::physics::CylinderShapeRefPtr (*cyl_create_1)(Ogre::Vector3 const &) = &vl::physics::CylinderShape::create;
 

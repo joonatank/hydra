@@ -5,6 +5,51 @@ PREFIX_RIGIDBODY = "rb_"
 PREFIX_COLLISION = "cb_"
 import math
 
+
+#Shorter way to express Vector3, dunno if this is allowed or what?
+Vec3 = Vector3
+
+
+def initphysics():
+    ##Warning this function has to be run before using any physics.
+    ##Also it's return value has to be assigned into a variable named "phy"
+    createCameraMovements(10)               
+    game.enablePhysics( True )
+    #CUSTOM SOLVER PARAMETERS:
+    solverparams = PhysicsSolverParameters() 
+    #Joint normal error reduction parameter (slow(0.0) - fast(1.0)):
+    solverparams.erp = 0.8
+    #Contact error reduction parameter (slow(0.0) - fast(1.0)) : 
+    solverparams.erp2 = 0.8
+    #Constraint force mixing parameter, when set to 0.0 constraints will be hard:
+    solverparams.global_cfm = 0.0
+    #On collisions how much the momentum is conserved: (totally_inelastic(0.0) - totally_elastic(1.0))
+    solverparams.restitution = 0.0
+    #I have no idea of this, so setting it to default:
+    solverparams.max_error_reduction = game.physics_world.solver_parameters.max_error_reduction
+    #Internal time step (1/fps)
+    solverparams.internal_time_step = 1.0/240.0
+    #No idea what substep, has it something to do with interpolation, well higher value should be more precise but wastes much more computing power?
+    solverparams.max_sub_steps = 2
+    #Now we set the solver parameters to current physics world:
+    game.physics_world.solver_parameters = solverparams
+    #We hide all the collision objects:
+    game.scene.hideSceneNodes(PREFIX_COLLISION+"*")
+    return game.physics_world
+"""
+class RumblePad:
+    pass
+class MotorContoller:
+    def __init__(motors):
+        self.motors = motors
+    def positive_x():
+        pass
+    def negative_x():
+        pass
+    def 
+        
+    pass
+"""
 class KBandJoystickController:
     def __init__(self, motor, max_velocity, key1, key2, keymodifier=KEY_MOD.NONE, joystick_axis = 'X', *buttonmods):
         self.name = "default"
@@ -88,126 +133,98 @@ class KBandJoystickController:
         else:
             return signal
 
+def createRigidBody(name, mstate, shape, mass=0.0, inertia=Vec3.zero, user_controlled=False):
+    rb = phy.createRigidBody(phy, name, mstate, shape)
+    rb.mass = mass
+    rb.inertia = inertia
+    rb.user_controlled = user_controlled
+    return rb
 
-"""
+def createCompoundShape(parentname, childnamelist):
+##    Creates a compound collision shape. Parent is used only for base coordinate system of the shape.
+##    in practice parent is the visual node of the rigid body. (eg. it's shape isn't added to compound) All child shape
+##    coordinates are transformed to the parents coordinates.
+##    Namelist is a list of node names corresponding all the nodes of the compound shape NOTE: node and mesh names
+##    doesn't have to correspond each other, script collects meshes from nodes.
+    gnode = game.scene.getSceneNode(parentname)
+    cshape = CompoundShape.create(True)
+    for childname in childnamelist:
+        childnode = game.scene.getSceneNode(childname)
+        childmsh = childnode.objects[0].mesh
+        #Create child shapes:
+        childshape = ConvexHullShape.create(childmsh)
+        #We need to input child shapes local position and orientation in graphics node coordinate system:
+        local_transformation = gnode.world_transformation.inverted()*childnode.world_transformation
+        cshape.add_child_shape(local_transformation, childshape)
+    return cshape
 
 
-class ControlledCylinderMotor:
-    def __init__(self,slider=None,maxmotorforce=300.0,maxspeed=0.1,key1=None,key2=None, modifier=KEY_MOD.NONE):
-        assert(slider)
-        assert(key1)
-        assert(key2)
-        self.motor = slider.constraint.translation_motor
-        assert(self.motor)
-        self.maxspeed=maxspeed
-        self.axis = slider.axis
-        self.axisvec = slider.axisopts[self.axis]
-        self.axisnumber = slider.axisnumbers[self.axis]
-        self.motor.max_motor_force = maxmotorforce*self.axisvec
-        self.motor.target_velocity = Vector3(0.0,0.0,0.0)
-        self.motor.restitution = 0.0
-        self.motor.normal_CFM = Vector3(0.1,0.1,0.1)
-        self.motor.stop_ERP = Vector3(0.8,0.8,0.8)
-        self.motor.stop_CFM = Vector3(0.1,0.1,0.1)
-        self.motor.limit_softness = 0.0
-        self.motor.enableMotor(self.axisnumber)
-        self.control = game.event_manager.createKeyTrigger(key1, modifier)
-        assert(self.control)
-        self.control.addKeyDownListener(self.subtract)
-        self.control.addKeyUpListener(self.zero)
-        
-        self.control = game.event_manager.createKeyTrigger(key2, modifier)
-        assert(self.control)
-        self.control.addKeyDownListener(self.extend)
-        self.control.addKeyUpListener(self.zero)
-        
-    def extend(self):
-        self.motor.target_velocity = self.maxspeed*self.axisvec
-    def subtract(self):
-        self.motor.target_velocity = -self.maxspeed*self.axisvec
-    def zero(self):
-        self.motor.target_velocity = Vector3.zero
-class ControlledTorqueMotor:
-    def __init__(self,hinge=None,maxmotorforce=300.0,maxlimittorque=600.0,maxspeed=0.1,key1=None,key2=None, modifier=KEY_MOD.NONE):
-        assert(hinge)
-        assert(key1)
-        assert(key2)
-        self.motor = hinge.constraint.rotation_motor
-        assert(self.motor)
-        self.maxspeed=maxspeed
-        self.axis = hinge.axis
-        self.axisvec = hinge.axisopts[self.axis]
-        self.axisnumber = hinge.axisnumbers[self.axis]
-        self.motor.max_motor_force = maxmotorforce*self.axisvec
-        self.motor.max_limit_torque = maxlimittorque*self.axisvec
-        self.motor.target_velocity = Vector3(0.0,0.0,0.0)
-        self.motor.restitution = 0.0
-        self.motor.normal_CFM = Vector3(0.1,0.1,0.1)
-        self.motor.stop_ERP = Vector3(0.8,0.8,0.8)
-        self.motor.stop_CFM = Vector3(0.1,0.1,0.1)
-        self.motor.limit_softness = 0.0                
-        self.motor.enableMotor(self.axisnumber)
-        self.control = game.event_manager.createKeyTrigger(key1, modifier)
-        assert(self.control)
-        self.control.addKeyDownListener(self.rotatepositive)
-        self.control.addKeyUpListener(self.zero)
-        
-        self.control = game.event_manager.createKeyTrigger(key2, modifier)
-        assert(self.control)
-        self.control.addKeyDownListener(self.rotatenegative)
-        self.control.addKeyUpListener(self.zero)
-    def rotatepositive(self):
-        self.motor.target_velocity = self.maxspeed*self.axisvec
-    def rotatenegative(self):
-        self.motor.target_velocity = -self.maxspeed*self.axisvec
-    def zero(self):
-        self.motor.target_velocity = Vector3.zero
-"""
-class RigidBody:
-    def __init__(self,name=None,mass=1.0,inertia=Vector3(0.0,0.0,0.0),controlled=True):
-        # Get scene node, check if it exists:
-        self.snode = game.scene.getSceneNode(name)
-        assert self.snode, "Object named: {0} does not exist!".format(name)
-        # Get object collision mesh cb_{object_name}, if it exists:
-        self.msh = game.mesh_manager.loadMesh("cb_" + name)
-        assert self.msh, "Mesh name does not correspond to object name {0} + {1}!".format(PREFIX_COLLISION,name)
-        self.cshape = ConvexHullShape.create(self.msh)
-        self.motion_state = game.physics_world.createMotionState(self.snode.world_transformation,self.snode)
-        assert(self.motion_state)
-        self.body = game.physics_world.createRigidBody(name, mass, self.motion_state, self.cshape, inertia)
-        assert(self.body)
-        self.body.user_controlled = controlled
-        self.body.linear_damping = 0.0
-        self.body.angular_damping = 0.0
-        self.body.kinematic = False
-        self.body.set_sleeping_thresholds(0.0, 0.0)
+##class RigidBody:
+##    def __init__(self, world, name=None, shape=None, mass=0.0, inertia=Vec3(0.0, 0.0, 0.0), controlled=True):
+##        # Get scene node, check if it exists:
+##        self.snode = game.scene.getSceneNode(name)
+##        assert self.snode, "Object named: {0} does not exist!".format(name)
+##        # Get object collision mesh cb_{object_name}, if it exists:
+##        #self.msh = game.mesh_manager.loadMesh("cb_" + name)
+##        #assert self.msh, "Mesh name does not correspond to object name {0} + {1}!".format(PREFIX_COLLISION,name)
+##        #self.cshape = ConvexHullShape.create(self.msh)
+##        self.shape = shape
+##        self.motion_state = phy.createMotionState(self.snode.world_transformation,self.snode)
+##        assert(self.motion_state)
+##        self.body = world.createRigidBody(name, mass, self.motion_state, self.shape, inertia)
+##        assert(self.body)
+##        self.body.user_controlled = controlled
+##        self.body.linear_damping = 0.0
+##        self.body.angular_damping = 0.0
+##        self.body.kinematic = False
+##        self.body.set_sleeping_thresholds(0.0, 0.0)
+##
+##    def getShape(self):
+##        return self.shape
+##    def getNative(self):
+##        return body
+##    def getMotionState(self):
+##        return self.motion_state
+##    def setLinearDamping(self, value):
+##        self.body.linear_damping = value
+##    def getLinearDamping(self):
+##        return self.body.linear_damping
+##    def setAngularDamping(self,value):
+##        self.body.angular_damping = value
+##    def getAngularDamping(self):
+##        return self.body.angular_damping
+##    def setKinematic(self,boolean):
+##        self.body.kinematic = boolean
+##    def isKinematic(self):
+##        return self.body.kinematic
+##    def setSleepingThresholds(self, value1,value2):
+##        self.body.set_sleeping_thresholds(value1,value2)
+
 
 def createFixedConstraint2(bodyA, bodyB, joint_transform, disableCollision):
-    assert(isinstance(bodyA,RigidBody))
-    assert(isinstance(bodyB,RigidBody))
-    localA_trans = bodyA.body.transform_to_local(joint_transform)
-    localB_trans = bodyB.body.transform_to_local(joint_transform)
-    constraint = PSixDofConstraint.create(bodyA.body, bodyB.body, localA_trans, localB_trans, False)
+    localA_trans = bodyA.transform_to_local(joint_transform)
+    localB_trans = bodyB.transform_to_local(joint_transform)
+    constraint = PSixDofConstraint.create(bodyA, bodyB, localA_trans, localB_trans, False)
     assert(constraint)
     
-    constraint.angular_lower_limit = Vector3.zero
-    constraint.angular_upper_limit = Vector3.zero
+    constraint.angular_lower_limit = Vec3.zero
+    constraint.angular_upper_limit = Vec3.zero
     
-    constraint.linear_lower_limit = Vector3.zero
-    constraint.linear_upper_limit = Vector3.zero
+    constraint.linear_lower_limit = Vec3.zero
+    constraint.linear_upper_limit = Vec3.zero
     
-    game.physics_world.addConstraint(constraint, disableCollision)
+    phy.addConstraint(constraint, disableCollision)
     return(constraint, "No_Motor")
     
 def createSliderConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimit, disableCollision, max_motor_force):
     assert(isinstance(bodyA,RigidBody))
     assert(isinstance(bodyB,RigidBody))
     #(axis_number, axis_vector) = convert_axis_char(axis)
-    axis_vector = Vector3.unit_z
+    axis_vector = Vec3.unit_z
     axis_number = 2
-    localA_trans = bodyA.body.transform_to_local(joint_transform)
-    localB_trans = bodyB.body.transform_to_local(joint_transform)
-    constraint = PSixDofConstraint.create(bodyA.body, bodyB.body, localA_trans, localB_trans, False)
+    localA_trans = bodyA.transform_to_local(joint_transform)
+    localB_trans = bodyB.transform_to_local(joint_transform)
+    constraint = PSixDofConstraint.create(bodyA, bodyB, localA_trans, localB_trans, False)
     assert(constraint)
     
     constraint.angular_lower_limit = 1.0*axis_vector
@@ -216,16 +233,16 @@ def createSliderConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimi
     constraint.linear_lower_limit = lowerlimit*axis_vector
     constraint.linear_upper_limit = upperlimit*axis_vector
     
-    game.physics_world.addConstraint(constraint, disableCollision)
+    phy.addConstraint(constraint, disableCollision)
     motor=constraint.translation_motor
     assert(motor)
     if max_motor_force:
         motor.max_motor_force = max_motor_force*axis_vector
-        motor.target_velocity = Vector3.zero
+        motor.target_velocity = Vec3.zero
         motor.restitution = 1.0
-        motor.normal_CFM = Vector3(0.1,0.1,0.1)
-        motor.stop_ERP = Vector3(0.8,0.8,0.8)
-        motor.stop_CFM = Vector3(0.1,0.1,0.1)
+        motor.normal_CFM = Vec3(0.1,0.1,0.1)
+        motor.stop_ERP = Vec3(0.8,0.8,0.8)
+        motor.stop_CFM = Vec3(0.1,0.1,0.1)
         motor.limit_softness = 1.0
         motor.enable_motor(axis_number)
     return(constraint, motor)
@@ -234,139 +251,188 @@ def createHingeConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimit
     assert(isinstance(bodyA,RigidBody))
     assert(isinstance(bodyB,RigidBody))
     #(axis_number, axis_vector) = convert_axis_char(axis)
-    axis_vector = Vector3.unit_x
+    axis_vector = Vec3.unit_x
     axis_number = 0
-    localA_trans = bodyA.body.transform_to_local(joint_transform)
-    localB_trans = bodyB.body.transform_to_local(joint_transform)
-    constraint = PSixDofConstraint.create(bodyA.body, bodyB.body, localA_trans, localB_trans, False)
+    localA_trans = bodyA.transform_to_local(joint_transform)
+    localB_trans = bodyB.transform_to_local(joint_transform)
+    constraint = PSixDofConstraint.create(bodyA, bodyB, localA_trans, localB_trans, False)
     assert(constraint)
     
     constraint.angular_lower_limit = lowerlimit*axis_vector
     constraint.angular_upper_limit = upperlimit*axis_vector
     
-    constraint.linear_lower_limit = Vector3.zero
-    constraint.linear_upper_limit = Vector3.zero
+    constraint.linear_lower_limit = Vec3.zero
+    constraint.linear_upper_limit = Vec3.zero
     
-    game.physics_world.addConstraint(constraint, disableCollision)
+    phy.addConstraint(constraint, disableCollision)
     motor=constraint.rotation_motor
     assert(motor)
     if max_motor_force and max_limit_torque:
         motor.max_limit_torque = max_limit_torque*axis_vector
         motor.max_motor_force = max_motor_force*axis_vector
-        motor.target_velocity = Vector3.zero
+        motor.target_velocity = Vec3.zero
         motor.restitution = 1.0
-        motor.normal_CFM = Vector3(0.1,0.1,0.1)
-        motor.stop_ERP = Vector3(0.8,0.8,0.8)
-        motor.stop_CFM = Vector3(0.1,0.1,0.1)
+        motor.normal_CFM = Vec3(0.1,0.1,0.1)
+        motor.stop_ERP = Vec3(0.8,0.8,0.8)
+        motor.stop_CFM = Vec3(0.1,0.1,0.1)
         motor.limit_softness = 1.0
         motor.enable_motor(axis_number)
     return(constraint, motor)
 
-def initphysics():        
-    createCameraMovements(10)               
-    game.enablePhysics( True )
-    #CUSTOM SOLVER PARAMETERS:
-    solverparams = PhysicsSolverParameters() 
-    #Joint normal error reduction parameter (slow(0.0) - fast(1.0)):
-    solverparams.erp = 0.8
-    #Contact error reduction parameter (slow(0.0) - fast(1.0)) : 
-    solverparams.erp2 = 0.8
-    #Constraint force mixing parameter, when set to 0.0 constraints will be hard:
-    solverparams.global_cfm = 0.0
-    #On collisions how much the momentum is conserved: (totally_inelastic(0.0) - totally_elastic(1.0))
-    solverparams.restitution = 0.0
-    #I have no idea of this, so setting it to default:
-    solverparams.max_error_reduction = game.physics_world.solver_parameters.max_error_reduction
-    #Internal time step (1/fps)
-    solverparams.internal_time_step = 1/480
-    #No idea what substep, has it something to do with interpolation, well higher value should be more precise but wastes much more computing power?
-    solverparams.max_sub_steps = 20
-    #Now we set the solver parameters to current physics world:
-    game.physics_world.solver_parameters = solverparams
-    #We hide all the collision objects:
-    game.scene.hideSceneNodes(PREFIX_COLLISION+"*")
-    return game.physics_world
 
-# This method does not work anymore, because we use different namespace
-# so we can clear the python context.
-#if __name__ == "__main__":
+
 if True :
-    world = initphysics()
+    phy = initphysics()
     game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
     game.scene.shadows.enable()
     game.scene.shadows.texture_size = 4096
     game.scene.shadows.max_distance = 50
     create_sun()
-    ground = physics_create_ground()
+        
+
+    #ground = physics_create_ground()
+
     game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
     #ground.disable_collisions = True
     # RIGID BODY PARAMETER TABLE:
-    rigidbody_dict = dict(track_L=(11.1,Vector3(34.02,33.37,3.26)),
-                          track_R=(11.1,Vector3(34.02,33.37,3.26)),
-                          hull=(7.96,Vector3(15.07, 23.48, 14.31)),
-                          base=(23.04,Vector3(19.23,30.743,18.37)),
-                          boom1=(2.786,Vector3(30.84,29.16,2.52)),
-                          boom2=(1.045,Vector3(6.0,0.61,5.58)),
-                          bucket=(2.13,Vector3(1.74,1.78,1.22)),
-                          fourbarlink1=(0.1,Vector3(0.05,0.03,0.05)),
-                          fourbarlink2=(0.1,Vector3(0.05,0.03,0.05)),
-                          cyl_hull_R_rod=(0.22,Vector3(0.07,0.002,0.07)),
-                          cyl_hull_R_tube=(0.33,Vector3(0.11,0.01,0.11)),
-                          cyl_hull_L_rod=(0.22,Vector3(0.07,0.002,0.07)),
-                          cyl_hull_L_tube=(0.33,Vector3(0.11,0.01,0.11)),
-                          cyl_boom1_rod=(0.305,Vector3(0.12,0.003,0.12)),
-                          cyl_boom1_tube=(0.46,Vector3(0.18,0.014,0.18)),
-                          cyl_boom2_rod=(0.19,Vector3(0.04,0.002,0.04)),
-                          cyl_boom2_tube=(0.285,Vector3(0.06,0.01,0.06))
+    dynamic_rigidbody_data = dict(track_L=(11.1,Vec3(34.02,33.37,3.26)),
+                          track_R=(11.1,Vec3(34.02,33.37,3.26)),
+                          hull=(7.96,Vec3(15.07, 23.48, 14.31)),
+                          base=(23.04,Vec3(19.23,30.743,18.37)),
+                          boom1=(2.786,Vec3(30.84,29.16,2.52)),
+                          boom2=(1.045,Vec3(6.0,0.61,5.58)),
+                          fourbarlink1=(0.1,Vec3(0.05,0.03,0.05)),
+                          fourbarlink2=(0.1,Vec3(0.05,0.03,0.05)),
+                          cyl_hull_R_rod=(0.22,Vec3(0.07,0.002,0.07)),
+                          cyl_hull_R_tube=(0.33,Vec3(0.11,0.01,0.11)),
+                          cyl_hull_L_rod=(0.22,Vec3(0.07,0.002,0.07)),
+                          cyl_hull_L_tube=(0.33,Vec3(0.11,0.01,0.11)),
+                          cyl_boom1_rod=(0.305,Vec3(0.12,0.003,0.12)),
+                          cyl_boom1_tube=(0.46,Vec3(0.18,0.014,0.18)),
+                          cyl_boom2_rod=(0.19,Vec3(0.04,0.002,0.04)),
+                          cyl_boom2_tube=(0.285,Vec3(0.06,0.01,0.06))                          
                           )
-    OIKEErigidbody_dict = dict(track_L=(11.1,Vector3(34.02,33.37,3.26)),
-                          track_R=(11.1,Vector3(34.02,33.37,3.26)),
-                          hull=(23.04,Vector3(43.63,67.97,41.43)),
-                          base=(7.96,Vector3(6.65,10.62,6.35)),
-                          boom1=(5.786,Vector3(30.84,29.16,2.52)),
-                          boom2=(3.045,Vector3(6.0,0.61,5.58)),
-                          bucket=(3.13,Vector3(1.74,1.78,1.22)),
-                          fourbarlink1=(0.1,Vector3(0.05,0.03,0.05)),
-                          fourbarlink2=(0.1,Vector3(0.05,0.03,0.05)),
-                          cyl_hull_R_rod=(0.22,Vector3(0.07,0.002,0.07)),
-                          cyl_hull_R_tube=(0.33,Vector3(0.11,0.01,0.11)),
-                          cyl_hull_L_rod=(0.22,Vector3(0.07,0.002,0.07)),
-                          cyl_hull_L_tube=(0.33,Vector3(0.11,0.01,0.11)),
-                          cyl_boom1_rod=(0.305,Vector3(0.12,0.003,0.12)),
-                          cyl_boom1_tube=(0.46,Vector3(0.18,0.014,0.18)),
-                          cyl_boom2_rod=(0.19,Vector3(0.04,0.002,0.04)),
-                          cyl_boom2_tube=(0.285,Vector3(0.06,0.01,0.06))
+    static_rigidbody_data = ["t1_1_terrain_grass",
+                          "t1_2_terrain_grass",
+                          "t1_3_terrain_grass",
+                          "t2_1_terrain_grass",
+                          "t2_2_terrain_dirt_tracks",
+                          "t2_3_terrain_pit",
+                          "t3_1_terrain_grass",
+                          "t3_2_terrain_grass",
+                          "t3_3_terrain_grass"]
+    compound_rigidbody_data = dict(bucket = ((2.13, Vec3(1.74,1.78,1.22)), ("cb_bucket0", "cb_bucket1", "cb_bucket2", "cb_bucket3", "cb_bucket4", "cb_bucket5", "cb_bucket6", "cb_bucket7", "cb_bucket8", "cb_bucket9", "cb_bucket10")))
+
+    OIKEErigidbody_dict = dict(track_L=(11.1,Vec3(34.02,33.37,3.26)),
+                          track_R=(11.1,Vec3(34.02,33.37,3.26)),
+                          hull=(23.04,Vec3(43.63,67.97,41.43)),
+                          base=(7.96,Vec3(6.65,10.62,6.35)),
+                          boom1=(5.786,Vec3(30.84,29.16,2.52)),
+                          boom2=(3.045,Vec3(6.0,0.61,5.58)),
+                          bucket=(3.13,Vec3(1.74,1.78,1.22)),
+                          fourbarlink1=(0.1,Vec3(0.05,0.03,0.05)),
+                          fourbarlink2=(0.1,Vec3(0.05,0.03,0.05)),
+                          cyl_hull_R_rod=(0.22,Vec3(0.07,0.002,0.07)),
+                          cyl_hull_R_tube=(0.33,Vec3(0.11,0.01,0.11)),
+                          cyl_hull_L_rod=(0.22,Vec3(0.07,0.002,0.07)),
+                          cyl_hull_L_tube=(0.33,Vec3(0.11,0.01,0.11)),
+                          cyl_boom1_rod=(0.305,Vec3(0.12,0.003,0.12)),
+                          cyl_boom1_tube=(0.46,Vec3(0.18,0.014,0.18)),
+                          cyl_boom2_rod=(0.19,Vec3(0.04,0.002,0.04)),
+                          cyl_boom2_tube=(0.285,Vec3(0.06,0.01,0.06))
                           )
-    # We'll loop trough the rigidbody_params and create rigid bodies.
+    # We'll loop trough the dynamic_rigidbody_data and create rigid bodies with Convex Shapes.
     rigidbodies = dict()
-    for name in rigidbody_dict:
+    for name,data in dynamic_rigidbody_data.items():
             # Get mass:
-            mass = rigidbody_dict[name][0]
-            assert mass, "Mass wasn't defined for object: {0}".format(name)
+            mass = data[0]
+            #assert mass, "Mass {0} wasn't defined for object: {1}".format(mass, name)
             # Get inertia:
-            inert = rigidbody_dict[name][1]
-            assert inert, "Inertia wasn't defined for object: {0}".format(name)
-            rigidbodies[name] = RigidBody(name,mass,inert,True)
+            inertia = data[1]
+            assert inertia, "Inertia wasn't defined for object: {0}".format(name)
+            try :
+                controlled = data[2]
+            except IndexError:
+                controlled = True
+            #Get node, mesh and shape:
+            node = game.scene.getSceneNode(name)
+            cbnode = game.scene.getSceneNode(PREFIX_COLLISION+name)
+            msh = cbnode.objects[0].mesh
+            shape = ConvexHullShape.create(msh)
+            mstate = phy.createMotionState(node.world_transformation, node)
+            rigidbodies[name] = phy.createRigidBody(name, mass, mstate ,shape, inertia)
+            rigidbodies[name].user_controlled = controlled
+            rigidbodies[name].linear_damping = 0.0
+            rigidbodies[name].angular_damping = 0.0
+            rigidbodies[name].kinematic = False
+            rigidbodies[name].set_sleeping_thresholds(0.0, 0.0)
+
+    #Handling static triangle mesh shape geometry:
+    for name in static_rigidbody_data:
+        node = game.scene.getSceneNode(name)
+        msh = node.objects[0].mesh
+        shape = StaticTriangleMeshShape.create(msh)
+        mstate = phy.createMotionState(node.world_transformation,node)
+        rigidbodies[name] = phy.createRigidBody(name, 0.0, mstate, shape, Vec3(0,0,0))
+
+    #Handling dynamic rigidbodies with compound shapes :
+    for name, (params, childlist) in compound_rigidbody_data.items():    
+        #First create the compound shape out of graphics node and childnodes:
+        cshape = createCompoundShape(name, childlist)
+        #Create a rigidbody out of it:
+        mass = params[0]
+        inertia = params[1]
+        try:
+            controlled = params[3]
+        except IndexError:
+            controlled = True
+        gnode = game.scene.getSceneNode(name)
+        mstate = phy.createMotionState(gnode.world_transformation, gnode)
+        rigidbodies[name] = phy.createRigidBody(name, mass, mstate, cshape, inertia)
+        rigidbodies[name].user_controlled = controlled
+
+    #Creating the rocks:
+    cbnode = game.scene.getSceneNode("cb_rock")
+    msh = cbnode.objects[0].mesh
+    shape = ConvexHullShape.create(msh)
+    for x in range(-2,2):
+        for y in range(5,10):
+            for z in range(-10,-5):
+                new_name = "rock"+"_"+str(x)+"_"+str(y)+"_"+str(z)
+                new_node = game.scene.createSceneNode(new_name)
+                new_entity = game.scene.createEntity(new_name, "rock", True)
+                new_node.attachObject(new_entity)
+                new_node.position = Vec3(x, y, z)
+                #Don't change this earlier to set position:
+                mstate = phy.createMotionState(new_node.world_transformation, new_node)
+                rigidbodies[new_name] = phy.createRigidBody(new_name, 0.2, mstate, shape, Vec3(0.026,0.029,0.037))
+                rigidbodies[new_name].user_controlled = False
+                rigidbodies[new_name].linear_damping = 0.00
+                rigidbodies[new_name].angular_damping = 0.00
+                rigidbodies[new_name].kinematic = False
+                rigidbodies[new_name].set_sleeping_thresholds(0.001,math.pi/180)
+                rigidbodies[new_name].anisotropic_friction = Vec3(2.0, 2.0, 2.0)
+                print("ROCK: ", new_name, "CREATED!")
     #Disable collision from few rigidbodies:
-    rigidbodies['fourbarlink1'].body.disable_collisions = True
-    rigidbodies['fourbarlink2'].body.disable_collisions = True
-    rigidbodies['cyl_boom2_rod'].body.disable_collisions = True
-    rigidbodies['cyl_hull_R_rod'].body.disable_collisions = True
-    rigidbodies['cyl_hull_R_tube'].body.disable_collisions = True
-    rigidbodies['cyl_hull_L_rod'].body.disable_collisions = True
-    rigidbodies['cyl_hull_L_tube'].body.disable_collisions = True
-    rigidbodies['cyl_boom1_rod'].body.disable_collisions = True
-    rigidbodies['cyl_boom1_tube'].body.disable_collisions = True
-    rigidbodies['cyl_boom2_rod'].body.disable_collisions = True
-    rigidbodies['cyl_boom2_tube'].body.disable_collisions = True
-    #rigidbodies['track_L'].body.disable_collisions = True
-    #rigidbodies['track_R'].body.disable_collisions = True
-    rigidbodies['hull'].body.disable_collisions = True
-    rigidbodies['base'].body.disable_collisions = True
-    #rigidbodies['boom1'].body.disable_collisions = True
-    #rigidbodies['boom2'].body.disable_collisions = True
-    #rigidbodies['bucket'].body.disable_collisions = True
+    rigidbodies['fourbarlink1'].disable_collisions = True
+    rigidbodies['fourbarlink2'].disable_collisions = True
+    rigidbodies['cyl_boom2_rod'].disable_collisions = True
+    rigidbodies['cyl_hull_R_rod'].disable_collisions = True
+    rigidbodies['cyl_hull_R_tube'].disable_collisions = True
+    rigidbodies['cyl_hull_L_rod'].disable_collisions = True
+    rigidbodies['cyl_hull_L_tube'].disable_collisions = True
+    rigidbodies['cyl_boom1_rod'].disable_collisions = True
+    rigidbodies['cyl_boom1_tube'].disable_collisions = True
+    rigidbodies['cyl_boom2_rod'].disable_collisions = True
+    rigidbodies['cyl_boom2_tube'].disable_collisions = True
+    #rigidbodies['track_L'].disable_collisions = True
+    #rigidbodies['track_R'].disable_collisions = True
+    rigidbodies['hull'].disable_collisions = True
+    rigidbodies['base'].disable_collisions = True
+    rigidbodies['boom1'].disable_collisions = True
+    rigidbodies['boom2'].disable_collisions = True
+    #rigidbodies['bucket'].disable_collisions = True
     # When upperlimit < lowerlimit: constraint dof will be totally free
     # When upperlimit & lowerlimit == 0 constraint is locked
     # FORMAT:
@@ -376,10 +442,10 @@ if True :
                       jt_base_to_hull_rot=("base", "hull", "Hinge", 1.0, -1.0, True, 194.0, 300.0),
                       jt_hull_to_boom1_rot=("hull","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_hull_R_tube_rot=("hull","cyl_hull_R_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_hull_R_trans=("cyl_hull_R_tube","cyl_hull_R_rod","Slider",-0.20,0.60,True, 490.0, None),
+                      jt_cyl_hull_R_trans=("cyl_hull_R_tube","cyl_hull_R_rod","Slider",-0.20,0.50,True, 490.0, None),
                       jt_cyl_hull_R_rod_rot=("cyl_hull_R_rod","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_hull_L_tube_rot=("hull","cyl_hull_L_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_hull_L_trans=("cyl_hull_L_tube","cyl_hull_L_rod","Slider",-0.20,0.60,True, 490.0, None),
+                      jt_cyl_hull_L_trans=("cyl_hull_L_tube","cyl_hull_L_rod","Slider",-0.20,0.50,True, 490.0, None),
                       jt_cyl_hull_L_rod_rot=("cyl_hull_L_rod","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_boom1_to_boom2_rot=("boom1","boom2","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_boom1_tube_rot=("boom1","cyl_boom1_tube","Hinge",1.0,-1.0,True, None, None),
@@ -398,10 +464,10 @@ if True :
         # Collect data from joint table:
         (nameA, nameB, jtype, low, hi, disableCollision, max_force, max_torque) = joint_dict[jt]
         bodyA = rigidbodies[nameA]
-        #game.physics_world.getRigidBody(PREFIX_RIGIDBODY+jt[0])
+        #phy.getRigidBody(PREFIX_RIGIDBODY+jt[0])
         assert bodyA, "RigidBody named: {0} does not exist!".format(nameA)
         bodyB = rigidbodies[nameB]
-        #game.physics_world.getRigidBody(PREFIX_RIGIDBODY+jt[1])
+        #phy.getRigidBody(PREFIX_RIGIDBODY+jt[1])
         assert bodyB, "RigidBody named: {0} does not exist!".format(nameB)
         joint_pos_node = game.scene.getSceneNode(jt)
         jtw = joint_pos_node.world_transformation
@@ -417,23 +483,23 @@ if True :
             print("Arriba!")
             print(jt, bodyA, bodyB, jtype)
     
-    hull_base_motor = KBandJoystickController(constraints["jt_base_to_hull_rot"][1], Vector3(-0.5,0.0,0.0), KC.LEFT, KC.RIGHT, KEY_MOD.NONE, 'X')
+    hull_base_motor = KBandJoystickController(constraints["jt_base_to_hull_rot"][1], Vec3(-0.5,0.0,0.0), KC.LEFT, KC.RIGHT, KEY_MOD.NONE, 'X')
     hull_base_motor.name = "HullBase"
-    basecylinderr = KBandJoystickController(constraints["jt_cyl_hull_R_trans"][1], Vector3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE,'Y')
+    basecylinderr = KBandJoystickController(constraints["jt_cyl_hull_R_trans"][1], Vec3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE,'Y')
     basecylinderr.name = "Cylinder0R"
-    basecylinderl = KBandJoystickController(constraints["jt_cyl_hull_L_trans"][1], Vector3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE, 'Y')
+    basecylinderl = KBandJoystickController(constraints["jt_cyl_hull_L_trans"][1], Vec3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE, 'Y')
     basecylinderl.name = "Cylinder0L"
-    boom1cylinder = KBandJoystickController(constraints["jt_cyl_boom1_trans"][1], Vector3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.CTRL, 'Y', 0)
+    boom1cylinder = KBandJoystickController(constraints["jt_cyl_boom1_trans"][1], Vec3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.CTRL, 'Y', 0)
     boom1cylinder.name = "boom1cylinder"
-    boom2cylinder = KBandJoystickController(constraints["jt_cyl_boom2_trans"][1], Vector3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.SHIFT, 'Y', 1)
+    boom2cylinder = KBandJoystickController(constraints["jt_cyl_boom2_trans"][1], Vec3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.SHIFT, 'Y', 1)
     boom2cylinder.name = "Boom2cylinder"
     
-    ground.friction = 1.0
-    ground.anisotropic_friction = Vector3(1.0, 1.0, 1.0)
-    #rigidbodies['bucket'].body.friction = 1.0
-    #rigidbodies['track_L'].body.friction = 1.0
-    #rigidbodies['track_R'].body.friction = 1.0
+    #ground.friction = 1.0
+    #ground.anisotropic_friction = Vec3(1.0, 1.0, 1.0)
+    #rigidbodies['bucket'].friction = 1.0
+    #rigidbodies['track_L'].friction = 1.0
+    #rigidbodies['track_R'].friction = 1.0
     
-    rigidbodies['bucket'].body.anisotropic_friction = Vector3(1.3, 1.3, 1.3)
-    rigidbodies['track_L'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
-    rigidbodies['track_R'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
+    rigidbodies['bucket'].anisotropic_friction = Vec3(2.0, 2.0, 2.0)
+    rigidbodies['track_L'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
+    rigidbodies['track_R'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
