@@ -132,6 +132,26 @@ std::ostream &operator<<(std::ostream &os, Options const &opt)
 	return os;
 }
 
+bool is_executable(fs::path const &p)
+{
+	if(!fs::is_regular(p))
+	{
+		return false;
+	}
+	// @todo this is Windows specific
+	// We should wrap this to a function call that checks for execution permissions
+	// on *NIX and extension on Windows.
+#ifdef _WIN32
+	if(fs::extension(p) != ".exe")
+	{
+		return false;
+	}
+#endif
+
+	return true;
+}
+
+
 RemoteLauncher::RemoteLauncher(Options const &opt, std::string const &exe_path)
 	: _socket(_io_service)
 	, _options(opt)
@@ -139,19 +159,12 @@ RemoteLauncher::RemoteLauncher(Options const &opt, std::string const &exe_path)
 	, _exe_path(exe_path)
 {
 	// Check that we have a valid hydra binary
-	if(!fs::is_regular(_options.hydra_exe))
+	if(!is_executable(_options.hydra_exe))
 	{
-		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Hydra Exe missing"));
+		// We can't throw here because we need this program to create
+		// the initial config.
+		//BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Hydra Exe missing"));
 	}
-	// @todo this is Windows specific
-	// We should wrap this to a function call that checks for execution permissions
-	// on *NIX and extension on Windows.
-#ifdef _WIN32
-	if(fs::extension(_options.hydra_exe) != ".exe")
-	{
-		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Hydra Exe not valid exe"));
-	}
-#endif
 
 	if(_options.launcher_auto_start)
 	{
