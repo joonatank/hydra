@@ -87,10 +87,12 @@ if(WIN32)
 		input/serial_joystick.hpp
 		input/joystick.hpp
 		input/ois_converters.hpp
+		input/pcan.hpp
 		)
 	set(INPUT_SRC
 		input/serial_joystick.cpp
 		input/joystick.cpp
+		input/pcan.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()

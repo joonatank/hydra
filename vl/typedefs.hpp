@@ -175,12 +175,14 @@ namespace vl
 
 	class InputDevice;
 	class Joystick;
+	class PCAN;
 	class GameJoystick;
 	class SerialJoystick;
 	class JoystickHandler;
 	class ConstraintJoystickHandler;
 	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
 	typedef boost::shared_ptr<Joystick> JoystickRefPtr;
+	typedef boost::shared_ptr<PCAN> PCANRefPtr;
 	typedef boost::shared_ptr<GameJoystick> GameJoystickRefPtr;
 	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
 	typedef boost::shared_ptr<JoystickHandler> JoystickHandlerRefPtr;
