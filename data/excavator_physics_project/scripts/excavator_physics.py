@@ -28,9 +28,9 @@ def initphysics():
     #I have no idea of this, so setting it to default:
     solverparams.max_error_reduction = game.physics_world.solver_parameters.max_error_reduction
     #Internal time step (1/fps)
-    solverparams.internal_time_step = 1.0/240.0
+    solverparams.internal_time_step = 1.0/480.0
     #No idea what substep, has it something to do with interpolation, well higher value should be more precise but wastes much more computing power?
-    solverparams.max_sub_steps = 2
+    solverparams.max_sub_steps = 9
     #Now we set the solver parameters to current physics world:
     game.physics_world.solver_parameters = solverparams
     #We hide all the collision objects:
@@ -300,18 +300,18 @@ if True :
                           track_R=(11.1,Vec3(34.02,33.37,3.26)),
                           hull=(7.96,Vec3(15.07, 23.48, 14.31)),
                           base=(23.04,Vec3(19.23,30.743,18.37)),
-                          boom1=(2.786,Vec3(30.84,29.16,2.52)),
-                          boom2=(1.045,Vec3(6.0,0.61,5.58)),
-                          fourbarlink1=(0.1,Vec3(0.05,0.03,0.05)),
-                          fourbarlink2=(0.1,Vec3(0.05,0.03,0.05)),
-                          cyl_hull_R_rod=(0.22,Vec3(0.07,0.002,0.07)),
-                          cyl_hull_R_tube=(0.33,Vec3(0.11,0.01,0.11)),
-                          cyl_hull_L_rod=(0.22,Vec3(0.07,0.002,0.07)),
-                          cyl_hull_L_tube=(0.33,Vec3(0.11,0.01,0.11)),
-                          cyl_boom1_rod=(0.305,Vec3(0.12,0.003,0.12)),
-                          cyl_boom1_tube=(0.46,Vec3(0.18,0.014,0.18)),
-                          cyl_boom2_rod=(0.19,Vec3(0.04,0.002,0.04)),
-                          cyl_boom2_tube=(0.285,Vec3(0.06,0.01,0.06))                          
+                          boom1=(5.785,Vec3(30.95,29.27,2.54)),
+                          boom2=(3.045,Vec3(5.02,4.81,0.54)),
+                          fourbarlink1=(0.1,Vec3(0.05,0.05,0.03)),
+                          fourbarlink2=(0.1,Vec3(0.05,0.05,0.03)),
+                          cyl_hull_R_rod=(0.22,Vec3(0.07,0.07,0.002)),
+                          cyl_hull_R_tube=(0.33,Vec3(0.11,0.11,0.01)),
+                          cyl_hull_L_rod=(0.22,Vec3(0.07,0.07,0.002)),
+                          cyl_hull_L_tube=(0.33,Vec3(0.11,0.11,0.01)),
+                          cyl_boom1_rod=(0.305,Vec3(0.12,0.12,0.003)),
+                          cyl_boom1_tube=(0.46,Vec3(0.18,0.18,0.014)),
+                          cyl_boom2_rod=(0.19,Vec3(0.04,0.04,0.002)),
+                          cyl_boom2_tube=(0.285,Vec3(0.06,0.06,0.01))                          
                           )
     static_rigidbody_data = ["t1_1_terrain_grass",
                           "t1_2_terrain_grass",
@@ -322,9 +322,9 @@ if True :
                           "t3_1_terrain_grass",
                           "t3_2_terrain_grass",
                           "t3_3_terrain_grass"]
-    compound_rigidbody_data = dict(bucket = ((2.13, Vec3(1.74,1.78,1.22)), ("cb_bucket0", "cb_bucket1", "cb_bucket2", "cb_bucket3", "cb_bucket4", "cb_bucket5", "cb_bucket6", "cb_bucket7", "cb_bucket8", "cb_bucket9", "cb_bucket10")))
+    compound_rigidbody_data = dict(bucket = ((3.126, Vec3(1.74,1.78,1.22)), ("cb_bucket0", "cb_bucket1", "cb_bucket2", "cb_bucket3", "cb_bucket4", "cb_bucket5", "cb_bucket6", "cb_bucket7", "cb_bucket8", "cb_bucket9", "cb_bucket10")))
 
-    OIKEErigidbody_dict = dict(track_L=(11.1,Vec3(34.02,33.37,3.26)),
+    VAARArigidbody_dict = dict(track_L=(11.1,Vec3(34.02,33.37,3.26)),
                           track_R=(11.1,Vec3(34.02,33.37,3.26)),
                           hull=(23.04,Vec3(43.63,67.97,41.43)),
                           base=(7.96,Vec3(6.65,10.62,6.35)),
@@ -437,28 +437,29 @@ if True :
     # When upperlimit & lowerlimit == 0 constraint is locked
     # FORMAT:
     #1.34
+    #-0.2 ja 0.5 oikeat rajat hull cyl
     joint_dict = dict(jt_track_L_to_base_fix=("track_L","base","Fixed", True, None, None, None, None), 
                       jt_track_R_to_base_fix=("track_R","base","Fixed", True, None, None, None, None),
-                      jt_base_to_hull_rot=("base", "hull", "Hinge", 1.0, -1.0, True, 194.0, 300.0),
+                      jt_base_to_hull_rot=("base", "hull", "Hinge", 1.0, -1.0, True, 193.8*60, 193.8*60),
                       jt_hull_to_boom1_rot=("hull","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_hull_R_tube_rot=("hull","cyl_hull_R_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_hull_R_trans=("cyl_hull_R_tube","cyl_hull_R_rod","Slider",-0.20,0.50,True, 490.0, None),
+                      jt_cyl_hull_R_trans=("cyl_hull_R_tube","cyl_hull_R_rod","Slider",-1.30,0.5,True, 974.2*60, None),
                       jt_cyl_hull_R_rod_rot=("cyl_hull_R_rod","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_hull_L_tube_rot=("hull","cyl_hull_L_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_hull_L_trans=("cyl_hull_L_tube","cyl_hull_L_rod","Slider",-0.20,0.50,True, 490.0, None),
+                      jt_cyl_hull_L_trans=("cyl_hull_L_tube","cyl_hull_L_rod","Slider",-1.30,0.5,True, 974.2*60, None),
                       jt_cyl_hull_L_rod_rot=("cyl_hull_L_rod","boom1","Hinge",1.0,-1.0,True, None, None),
                       jt_boom1_to_boom2_rot=("boom1","boom2","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_boom1_tube_rot=("boom1","cyl_boom1_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_boom1_trans=("cyl_boom1_tube","cyl_boom1_rod","Slider",-1.2,0.35,True, 521.0, None),
+                      jt_cyl_boom1_trans=("cyl_boom1_tube","cyl_boom1_rod","Slider",-1.2,0.35,True, 1078.8*60, None),
                       jt_cyl_boom1_rod_rot=("cyl_boom1_rod","boom2","Hinge",1.0,-1.0,True, None, None),
                       jt_boom2_to_bucket_rot=("boom2","bucket","Hinge",1.0,-1.0,True, None, None),
                       jt_boom2_to_fourbarlink1_rot=("boom2","fourbarlink1","Hinge",1.0,-1.0,True, None, None),
                       jt_cyl_boom2_tube_rot=("boom2","cyl_boom2_tube","Hinge",1.0,-1.0,True, None, None),
-                      jt_cyl_boom2_trans=("cyl_boom2_tube","cyl_boom2_rod","Slider",-1.40,0.05,True, 388.0, None),
+                      jt_cyl_boom2_trans=("cyl_boom2_tube","cyl_boom2_rod","Slider",-1.40,0.05,True, 865.2*60, None),
                       jt_cyl_boom2_rod_rot=("cyl_boom2_rod","fourbarlink1","Hinge",1.0,-1.0,True, None, None),
                       jt_fourbarlink2_to_bucket_rot=("fourbarlink2","bucket","Hinge",1.0,-1.0,True, None, None),
                       jt_fourbarlink1_to_fourbarlink2_rot=("fourbarlink1","fourbarlink2","Hinge",1.0,-1.0,True, None, None)
-                      )   
+                      )
     constraints = dict()
     for jt in joint_dict:
         # Collect data from joint table:
@@ -485,9 +486,9 @@ if True :
     
     hull_base_motor = KBandJoystickController(constraints["jt_base_to_hull_rot"][1], Vec3(-0.5,0.0,0.0), KC.LEFT, KC.RIGHT, KEY_MOD.NONE, 'X')
     hull_base_motor.name = "HullBase"
-    basecylinderr = KBandJoystickController(constraints["jt_cyl_hull_R_trans"][1], Vec3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE,'Y')
+    basecylinderr = KBandJoystickController(constraints["jt_cyl_hull_R_trans"][1], Vec3(0, 0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE,'Y')
     basecylinderr.name = "Cylinder0R"
-    basecylinderl = KBandJoystickController(constraints["jt_cyl_hull_L_trans"][1], Vec3(0.0, 0.0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE, 'Y')
+    basecylinderl = KBandJoystickController(constraints["jt_cyl_hull_L_trans"][1], Vec3(0, 0, 0.5), KC.UP, KC.DOWN, KEY_MOD.NONE, 'Y')
     basecylinderl.name = "Cylinder0L"
     boom1cylinder = KBandJoystickController(constraints["jt_cyl_boom1_trans"][1], Vec3(0.0, 0.0, -0.5), KC.UP, KC.DOWN, KEY_MOD.CTRL, 'Y', 0)
     boom1cylinder.name = "boom1cylinder"
@@ -500,6 +501,34 @@ if True :
     #rigidbodies['track_L'].friction = 1.0
     #rigidbodies['track_R'].friction = 1.0
     
-    rigidbodies['bucket'].anisotropic_friction = Vec3(2.0, 2.0, 2.0)
-    rigidbodies['track_L'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
-    rigidbodies['track_R'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
+    #rigidbodies['bucket'].anisotropic_friction = Vec3(2.0, 2.0, 2.0)
+    #rigidbodies['track_L'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
+    #rigidbodies['track_R'].anisotropic_friction = Vec3(6.0, 6.0, 6.0)
+
+    
+    def more_power():
+        motR = constraints["jt_cyl_hull_R_trans"][1]
+        motL = constraints["jt_cyl_hull_L_trans"][1]
+        motR.max_motor_force += Vec3(0,0,100.0) 
+        motL.max_motor_force += Vec3(0,0,100.0)
+    trigu = game.event_manager.createKeyTrigger(KC.M)
+    trigu.addListener(more_power)
+    
+    def adjust_power(dt):
+        motHull = constraints["jt_base_to_hull_rot"][1]
+        motCBoomR = constraints["jt_cyl_hull_R_trans"][1]
+        motCBoomL = constraints["jt_cyl_hull_L_trans"][1]
+        motCArm = constraints["jt_cyl_boom1_trans"][1]
+        motCBucket = constraints["jt_cyl_boom2_trans"][1]
+        fdt = float(dt)
+        torqueHull = Vec3(0,0,193.8/fdt)
+        forceBoom = Vec3(0,0,974.2/fdt)
+        forceArm = Vec3(0,0,1078.8/fdt)
+        forceBucket = Vec3(0,0,865.2/fdt)
+        motHull.max_motor_torque = torqueHull
+        motCBoomR.max_motor_force = forceBoom
+        motCBoomL.max_motor_force = forceBoom
+        motCArm.max_motor_force = forceArm
+        motCBucket.max_motor_force = forceBucket
+    frame_trigu = game.event_manager.getFrameTrigger()
+    frame_trigu.addListener(adjust_power)

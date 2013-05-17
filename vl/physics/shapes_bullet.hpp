@@ -28,7 +28,7 @@
 
 // Concrete physics engine implementation
 #include "bullet/btBulletCollisionCommon.h"
-
+#include "bullet/BulletCollision/Gimpact/btGImpactShape.h"
 #include "math/conversion.hpp"
 
 namespace vl
@@ -198,6 +198,38 @@ private :
 	/// @todo move to using btConvexHull for this, better performance
 	/// needs a separate conversion algorithm
 	btConvexTriangleMeshShape *_bt_shape;
+};
+
+
+class BulletConcaveHullShape : public BulletCollisionShape, public vl::physics::ConcaveHullShape
+{
+public :
+	BulletConcaveHullShape(vl::MeshRefPtr mesh)
+		: ConcaveHullShape(mesh), _bt_shape(0)
+	{
+		btTriangleIndexVertexArray *bt_mesh = new btTriangleIndexVertexArray;
+		vl::convert_bullet_geometry(mesh.get(), bt_mesh);
+
+		_bt_shape = new btGImpactMeshShape(bt_mesh);
+		_bt_shape->updateBound();
+	}
+
+	virtual ~BulletConcaveHullShape(void) {}
+
+	virtual void setMargin(vl::scalar margin)
+	{ _bt_shape->setMargin(margin); }
+
+	virtual vl::scalar getMargin(void) const
+	{ return _bt_shape->getMargin(); }
+
+	virtual btCollisionShape *getNative(void)
+	{ return _bt_shape; }
+
+	virtual btCollisionShape const *getNative(void) const
+	{ return _bt_shape; }
+
+private :
+	btGImpactMeshShape *_bt_shape;
 };
 
 class BulletCompoundShape : public BulletCollisionShape, public vl::physics::CompoundShape

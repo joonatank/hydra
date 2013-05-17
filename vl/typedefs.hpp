@@ -223,6 +223,7 @@ namespace physics
 	class SphereShape;
 	class BoxShape;
 	class ConvexHullShape;
+	class ConcaveHullShape;
 	class CompoundShape;
 	class StaticPlaneShape;
 	class StaticTriangleMeshShape;
@@ -235,6 +236,7 @@ namespace physics
 	typedef boost::shared_ptr<SphereShape> SphereShapeRefPtr;
 	typedef boost::shared_ptr<BoxShape> BoxShapeRefPtr;
 	typedef boost::shared_ptr<ConvexHullShape> ConvexHullShapeRefPtr;
+	typedef boost::shared_ptr<ConcaveHullShape> ConcaveHullShapeRefPtr;
 	typedef boost::shared_ptr<CompoundShape> CompoundShapeRefPtr;
 	typedef boost::shared_ptr<StaticPlaneShape> StaticPlaneShapeRefPtr;
 	typedef boost::shared_ptr<StaticTriangleMeshShape> StaticTriangleMeshShapeRefPtr;

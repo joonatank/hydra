@@ -36,7 +36,7 @@ public :
 	virtual void setMargin(vl::scalar margin) = 0;
 
 	virtual vl::scalar getMargin(void) const = 0;
-
+	
 	// @todo add default margin
 
 };	// class CollisionShape
@@ -145,6 +145,29 @@ private :
 	vl::MeshRefPtr _mesh;
 
 };	// class ConvexHullShape
+
+class HYDRA_API ConcaveHullShape : public CollisionShape
+{
+public :
+	static ConcaveHullShapeRefPtr create(vl::MeshRefPtr mesh);
+
+	virtual ~ConcaveHullShape(void) {}
+
+	vl::MeshRefPtr getMesh(void) const
+	{ return _mesh; }
+
+protected :
+	ConcaveHullShape(vl::MeshRefPtr mesh)
+		: _mesh(mesh)
+	{}
+
+private :
+	ConcaveHullShape(ConcaveHullShape const &);
+	ConcaveHullShape &operator=(ConcaveHullShape const &);
+
+	vl::MeshRefPtr _mesh;
+
+};	// class ConcaveHullShape
 
 
 class HYDRA_API CompoundShape : public CollisionShape

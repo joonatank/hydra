@@ -26,7 +26,7 @@ void
 vl::physics::Motor3DofTranslational::setTargetVelocity(Ogre::Vector3 const& vel)
 {
 	_mot->m_targetVelocity = convert_bt_vec(vel);
-
+	
 	if(_lock_hack)
 	{
 		// Hack to lock the constraint when velocity is zero
@@ -68,6 +68,7 @@ vl::physics::Motor3DofTranslational::setTargetVelocity(Ogre::Vector3 const& vel)
 			}
 		}
 	}
+	
 }
 
 void
@@ -76,7 +77,7 @@ vl::physics::Motor3DofRotational::setTargetVelocity(Ogre::Vector3 const& vel)
 	_mot.at(0)->m_targetVelocity = vel.x;
 	_mot.at(1)->m_targetVelocity = vel.y;
 	_mot.at(2)->m_targetVelocity = vel.z;
-
+	
 	if(_lock_hack)
 	{
 		// Hack to lock the constraint when velocity is zero
@@ -123,6 +124,7 @@ vl::physics::Motor3DofRotational::setTargetVelocity(Ogre::Vector3 const& vel)
 			}
 		}
 	}
+	
 }
 
 /// ------------------------------ BulletSixDofConstraint --------------------

@@ -79,6 +79,17 @@ vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 	return shape;
 }
 
+vl::physics::ConcaveHullShapeRefPtr
+vl::physics::ConcaveHullShape::create(vl::MeshRefPtr mesh)
+{
+	ConcaveHullShapeRefPtr shape;
+#ifdef USE_BULLET
+	shape.reset(new BulletConcaveHullShape(mesh));
+#else if USE_NEWTON
+#endif
+	return shape;
+}
+
 vl::physics::CompoundShapeRefPtr
 vl::physics::CompoundShape::create(bool dynamicTree)
 {

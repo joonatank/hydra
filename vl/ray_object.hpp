@@ -29,7 +29,7 @@
 #include "math/types.hpp"
 
 // Necessary for ray collisions
-#include "ray_cast.hpp"
+#include "ray_cast_ogre.hpp"
 
 // Ogre object
 #include <OGRE/OgreManualObject.h>
@@ -197,7 +197,7 @@ private :
 
 	Ogre::ManualObject *_ogre_object;
 
-	vl::RayCast *_ray_cast;
+	vl::RayCastOgre *_ray_cast;
 
 	struct RayListener : public vl::MovableObject::Listener
 	{

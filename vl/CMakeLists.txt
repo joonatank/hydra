@@ -54,7 +54,7 @@ set(SRC
 	material.cpp
 	material_manager.cpp
 	ray_object.cpp
-	ray_cast.cpp
+	ray_cast_ogre.cpp
 	sky_skyx.cpp
 	sky_caelum.cpp
 	ogre_axes.cpp
@@ -151,6 +151,7 @@ set(PHYSICS_HEADERS
 	physics/physics_constraints.hpp
 	physics/physics_world.hpp
 	physics/tube.hpp
+	physics/ray_cast.hpp
 	)
 set(PHYSICS_SRC
 	physics/motion_state.cpp
@@ -159,6 +160,7 @@ set(PHYSICS_SRC
 	physics/shapes.cpp
 	physics/rigid_body.cpp
 	physics/tube.cpp
+	physics/ray_cast.cpp
 	)
 if(HYDRA_PHYSICS STREQUAL "Bullet")
 	list(APPEND PHYSICS_HEADERS
@@ -264,7 +266,7 @@ set( HEADERS
 	application.hpp
 	ogre_root.hpp
 	ray_object.hpp
-	ray_cast.hpp
+	ray_cast_ogre.hpp
 	sky_interface.hpp
 	sky_skyx.hpp
 	sky_caelum.hpp

@@ -76,6 +76,11 @@ void export_physics_objects(void)
 		.staticmethod("create")
 	;
 
+	python::class_<vl::physics::ConcaveHullShape, boost::noncopyable, vl::physics::ConcaveHullShapeRefPtr, python::bases<vl::physics::CollisionShape> >("ConcaveHullShape", python::no_init )
+		.def("create", &vl::physics::ConcaveHullShape::create)
+		.staticmethod("create")
+	;
+
 	python::class_<vl::physics::CompoundShape, boost::noncopyable, vl::physics::CompoundShapeRefPtr, python::bases<vl::physics::CollisionShape> >("CompoundShape", python::no_init )
 		.def("create", &vl::physics::CompoundShape::create)
 		.staticmethod("create")
