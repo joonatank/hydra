@@ -26,13 +26,20 @@
 // Necessary for updating kinematic bodies with collision detection
 #include "animation/kinematic_body.hpp"
 
+
+
 vl::physics::BulletWorld::BulletWorld(void)
 	: _broadphase( new btDbvtBroadphase() ),
 	  _collision_config( new btDefaultCollisionConfiguration() ),
 	  _dispatcher( new btCollisionDispatcher(_collision_config) ),
 	  _solver( new btSequentialImpulseConstraintSolver )
 {
+	// @warning: needed for checking collisions on concave rigid bodies (GImpactShapes)! Remove if we don't need GImpactShapes, it's very inefficient compared to compoundshapes. 
+	btGImpactCollisionAlgorithm::registerAlgorithm(_dispatcher);
+
 	_dynamicsWorld = new btDiscreteDynamicsWorld(_dispatcher,_broadphase,_solver,_collision_config);
+	
+	
 	// @todo for some reason normal gravity will break the constraints
 	// would guess that the impulse for the constraints is too small to work against the gravity
 	// fix the gravity after finding a real solution.
@@ -98,13 +105,75 @@ vl::physics::BulletWorld::setSolverParameters(vl::physics::SolverParameters cons
 	_dynamicsWorld->getSolverInfo().m_globalCfm = p.global_cfm;
 }
 
+// @warning: if raycasting is used when using kinematics, program will probably crash or create unpredictable events because the user pointer
+// isn't a scene node anymore. Also at the moment using a return value as reference is dangerous because the local variable rres is going to be destroyed.
+// Using new or returning a copy of the rayresults data would suffice. This function is currently only for testing purposes, that's why it hasn't been structured wisely.
+// 
+vl::physics::RayResult
+vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const
+{
+	btVector3 from = math::convert_bt_vec(rayfrom);
+	btVector3 to = math::convert_bt_vec(rayto);
+	
+	RayResult rres;
+	rres.start_point = rayfrom;
+	rres.end_point = rayto;
+	
+	//First we need the correct Result callback, as default we want all collisions maybe changing later:
+	btCollisionWorld::AllHitsRayResultCallback resultcb(from, to);
+	//Run the native bullet raytest:
+	_dynamicsWorld->rayTest(from,to,resultcb);
+	std::cerr << "Ammutaan sade!" << std::endl;
+	if(resultcb.hasHit())
+	{
+		std::cerr << "Osui" << std::endl;
+		
+		//Now we shall parse through all hits and convert bullet's result format to hydra:
+		for(unsigned int i = 0; i < resultcb.m_collisionObjects.size(); ++i)
+		{
+			rres.hit_points_world.push_back( vl::math::convert_vec(resultcb.m_hitPointWorld.at(i)) );
+			
+			rres.hit_normals_world.push_back( vl::math::convert_vec(resultcb.m_hitNormalWorld.at(i)) );
+
+			rres.hit_fractions.push_back( resultcb.m_hitFractions.at(i) );			
+
+			btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
+
+			if(btrb) {
+				std::cerr << "Bullet rigidbody on olemassa." << std::endl;
+				// cast custom void pointer as string const and push it into our objectlist
+				// @todo: check if reinterpret userpointer is null! Also take account if collision
+				//object is a compound. Then the pointer is automatically null and not pointing to the root object.
+				std::string const *udata = reinterpret_cast<std::string const *>(btrb->getUserPointer());
+				if(udata)
+				{ 
+					std::cerr << "UserData pointteri toimii!" << std::endl;
+					RigidBodyRefPtr rb = this->_findRigidBody(*udata);
+					if(rb)
+					{
+						std::cerr << "Rigidbody toimii!" << std::endl;
+						rres.hit_objects.push_back(rb);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		std::cerr << "Ei osumaa." << std::endl;
+	}
+	return rres;
+}
+
+
 void
 vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic)
 {
 	// for some reason we can not do static_pointer_cast here
+	
 	BulletRigidBodyRefPtr b = boost::dynamic_pointer_cast<BulletRigidBody>(body);
-
 	assert(b && b->getNative());
+		
 	// kinematic objects need to collide with static objects
 	if(kinematic)
 	{
@@ -122,7 +191,10 @@ vl::physics::BulletWorld::_addRigidBody( std::string const &name, vl::physics::R
 		body->enableKinematicObject(true);
 	}
 	else
-	{ _dynamicsWorld->addRigidBody(b->getNative()); }
+	{ 
+		_dynamicsWorld->addRigidBody(b->getNative());
+		
+	}
 
 }
 

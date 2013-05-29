@@ -211,6 +211,7 @@ public :
 		vl::convert_bullet_geometry(mesh.get(), bt_mesh);
 
 		_bt_shape = new btGImpactMeshShape(bt_mesh);
+		
 		_bt_shape->updateBound();
 	}
 

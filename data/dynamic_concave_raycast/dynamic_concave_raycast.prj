@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<!--
+Ville Lepokorpi <ville.lepokorpi@savantsimulators.com>
+2013-05
+
+Test project to test and demonstrate raycast for concave dynamic objects. Bullet is used for raycasts.
+-->
+<project_config name="concave_dynamic_raycast_test">
+
+	<scenes>
+		<scene name="dynamic_concave_raycast" use="true" use_new_mesh_manager="true">
+			<file>dynamic_concave_raycast.scene</file>
+		</scene>
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">physics_script.py</file>
+		<file use="true">dynamic_concave_raycast.py</file>
+	</scripts>
+
+</project_config>

@@ -87,6 +87,8 @@ vl::GameObject::createRigidBody(vl::scalar mass, Ogre::Vector3 const &inertia)
 
 	physics::MotionState *ms = _creator->getPhysicsWorld()->createMotionState(getWorldTransform(), _graphics_node);
 	_rigid_body = _creator->getPhysicsWorld()->createRigidBody(_name, mass, ms, _collision_shape, inertia);
+	
+
 }
 
 void
@@ -103,9 +105,11 @@ vl::GameObject::enableCollisionDetection(bool enable)
 			{ _createCollisionShape(); }
 
 			physics::RigidBody::ConstructionInfo info(_name, 0, _kinematic_body->getMotionState(), _collision_shape, Ogre::Vector3(0, 0, 0), true);
+
 			_rigid_body = _creator->getPhysicsWorld()->createRigidBodyEx(info);
+			
 			//_rigid_body->enableKinematicObject(true);
-		
+					
 			if(_kinematic_body)
 			{
 				// necessary to add callback so the kinematic object updates 

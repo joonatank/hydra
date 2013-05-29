@@ -218,6 +218,7 @@ namespace physics
 	typedef boost::shared_ptr<Tube> TubeRefPtr;
 	typedef boost::shared_ptr<const Tube> TubeConstRefPtr;
 
+	
 	// collision shapes
 	class CollisionShape;
 	class SphereShape;
@@ -259,6 +260,7 @@ namespace physics
 	typedef std::vector<RigidBodyRefPtr> RigidBodyList;
 	typedef std::vector<ConstraintRefPtr> ConstraintList;
 	typedef std::vector<TubeRefPtr> TubeList;
+
 }
 
 namespace cluster

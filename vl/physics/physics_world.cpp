@@ -165,6 +165,7 @@ vl::physics::World::destroyDynamicObjects(void)
 	std::clog << "vl::physics::World::removeDynamicObjects : DONE" << std::endl;
 }
 
+// @warning added udata as function argument, used purely for raycast testing:
 vl::physics::RigidBodyRefPtr
 vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 {
@@ -176,6 +177,11 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 
 	RigidBodyRefPtr body = RigidBody::create(info);
 	assert(body);
+	
+	// @warning: this sets the userdata pointer for using raycast:
+	void* udataptr = (void*)&(body->getName());
+	body->setUserData(udataptr);
+
 	_rigid_bodies.push_back(body);
 	assert(body->getMotionState() == info.state);
 	// Add the body to the physics engine
@@ -195,6 +201,7 @@ vl::physics::World::createRigidBody( const std::string& name, vl::scalar mass,
 									 Ogre::Vector3 const &inertia)
 {
 	RigidBody::ConstructionInfo info(name, mass, state, shape, inertia);
+
 	return createRigidBodyEx(info);
 }
 

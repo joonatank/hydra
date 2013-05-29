@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<scene formatVersion="1.0.0">
+	<environment>
+		<colourAmbient b="0" g="0" r="0"/>
+		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
+	</environment>
+	<nodes>
+		<node name="best_view">
+			<position x="-11.5639" y="3.58237" z="-0.979005"/>
+			<quaternion w="0.521044" x="-0.433808" y="0.564905" z="0.470325"/>
+			<scale x="1" y="1" z="1"/>
+			<camera fov="28.841546255021967" name="best_view" projectionType="perspective">
+				<clipping farPlaneDist="100" nearPlaneDist="0.1"/>
+			</camera>
+		</node>
+		<node name="pacman">
+			<position x="-0" y="0.7" z="2"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="pacman.mesh" name="pacman"/>
+		</node>
+		<node name="pacman_cube">
+			<position x="-0" y="0.7" z="0"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<entity meshFile="pacman_cube.mesh" name="pacman_cube"/>
+		</node>
+		<node name="collision_pool">
+			<position x="5.96046e-08" y="0.325" z="-4"/>
+			<quaternion w="0.707107" x="-0.707107" y="0" z="0"/>
+			<scale x="1" y="0.999999" z="1"/>
+			<entity meshFile="collision_pool.mesh" name="collision_pool"/>
+			<node name="wall_B">
+				<position x="5.96046e-08" y="-2.125" z="1.125"/>
+				<quaternion w="4.74853e-07" x="4.74854e-07" y="0.707107" z="0.707107"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_F">
+				<position x="-2.38419e-07" y="2.125" z="1.125"/>
+				<quaternion w="0.707107" x="0.707107" y="0" z="0"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_L">
+				<position x="-2.125" y="-1.19209e-06" z="1.125"/>
+				<quaternion w="0.5" x="0.5" y="0.5" z="0.5"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+			<node name="wall_R">
+				<position x="2.125" y="-9.53674e-07" z="1.125"/>
+				<quaternion w="0.5" x="0.500001" y="-0.499999" z="-0.5"/>
+				<scale x="1" y="0.999999" z="1"/>
+				<entity meshFile="wall.mesh" name="wall"/>
+			</node>
+		</node>
+	</nodes>
+</scene>

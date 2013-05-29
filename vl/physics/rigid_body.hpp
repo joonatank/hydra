@@ -33,6 +33,12 @@ namespace vl {
 
 namespace physics {
 
+	// @warning added for raycast tests:
+	struct UserData
+	{
+		SceneNodePtr scene_node;
+	};
+
 /**	@class RigidBody
  *	@brief Abstract interface for Physics engine rigid body
  *	Derived classes implement this for specific physics engines.
@@ -41,12 +47,13 @@ class HYDRA_API RigidBody : vl::ObjectInterface
 {
 
 public :
+	
 	struct ConstructionInfo
 	{
 		ConstructionInfo(std::string const &nam, vl::scalar m, vl::physics::MotionState *sta, 
-			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert, bool kinematic_ = false, bool dynamic_ = false)
+			CollisionShapeRefPtr shap, Ogre::Vector3 const &inert,bool kinematic_ = false, bool dynamic_ = false)
 			: name(nam), mass(m), state(sta), shape(shap), inertia(inert)
-			, kinematic(kinematic_), dynamic(dynamic_)
+			, kinematic(kinematic_), dynamic(dynamic_) 
 		{}
 
 		std::string name;
@@ -56,8 +63,9 @@ public :
 		Ogre::Vector3 inertia;
 		bool kinematic;
 		bool dynamic;
-
 	};	// struct ConstructionInfo
+
+	
 
 	virtual ~RigidBody(void);
 

@@ -88,10 +88,13 @@ if(WIN32)
 		input/serial_joystick.hpp
 		input/joystick.hpp
 		input/ois_converters.hpp
+		input/mouse.hpp
+		input/mouse_event.hpp
 		)
 	set(INPUT_SRC
 		input/serial_joystick.cpp
 		input/joystick.cpp
+		input/mouse.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()
@@ -151,7 +154,7 @@ set(PHYSICS_HEADERS
 	physics/physics_constraints.hpp
 	physics/physics_world.hpp
 	physics/tube.hpp
-	physics/ray_cast.hpp
+	physics/ray_picking.hpp
 	)
 set(PHYSICS_SRC
 	physics/motion_state.cpp
@@ -160,7 +163,7 @@ set(PHYSICS_SRC
 	physics/shapes.cpp
 	physics/rigid_body.cpp
 	physics/tube.cpp
-	physics/ray_cast.cpp
+	physics/ray_picking.cpp
 	)
 if(HYDRA_PHYSICS STREQUAL "Bullet")
 	list(APPEND PHYSICS_HEADERS

@@ -249,6 +249,38 @@ void export_physics_objects(void)
 
 //	vl::Transform (vl::physics::MotionState::*getWorldTransform_ov0)(void) const = &vl::physics::MotionState::getWorldTransform;
 //	void (vl::physics::MotionState::*setWorldTransform_ov0)(vl::Transform const &) = &vl::physics::MotionState::setWorldTransform;
+	
+	// @warning: added due rayresults, this is a thingy called vectorlist (list of vector3 refs)
+	
+	python::class_< std::vector<Ogre::Vector3> >("VectorList")
+		.def(python::vector_indexing_suite< std::vector<Ogre::Vector3> >())
+		//.def(python::self_ns::str(python::self_ns::self))
+	;
+	//python::class_< std::vector<std::string const *> >("NameList")
+	//	.def(python::vector_indexing_suite<std::vector<std::string const *>,true >())
+	//;
+		// @warning: added due raycast, remove if there's problems:
+	
+	python::class_<vl::physics::RayResult>("RayResult")
+		.def_readonly("ray_start", &vl::physics::RayResult::start_point)
+		.def_readonly("ray_end", &vl::physics::RayResult::end_point)
+		.def_readonly("hit_objects", &vl::physics::RayResult::hit_objects)
+		.def_readonly("hit_points", &vl::physics::RayResult::hit_points_world)
+		.def_readonly("hit_normals", &vl::physics::RayResult::hit_normals_world)
+		.def_readonly("hit_fractions", &vl::physics::RayResult::hit_fractions)
+		
+	/// RayResult:
+	//python::class_<vl::physics::RayResult>("RayResult")
+	//	.def_readonly("objects", &vl::physics::RayResult::objectlist)
+	//	.def_readonly("hitpoints", &vl::physics::RayResult::hitpoints_world)
+	//	.def_readonly("hitnormals", &vl::physics::RayResult::hitnormals_world)
+	//  tama ei kuulu .def(python::self_ns::str(python::self_ns::self))
+	;
+	
+	// .add_property("head",
+    // make_getter(&Tree::head, return_value_policy<reference_existing_object>()),
+    // make_setter(&Tree::head, return_value_policy<reference_existing_object>()))
+
 
 	/// motion state
 	python::class_<vl::physics::MotionState, boost::noncopyable>("MotionState", python::no_init)
@@ -312,7 +344,11 @@ void export_physics_objects(void)
 		.add_property("solver_parameters", python::make_function(&vl::physics::World::getSolverParameters, python::return_value_policy<python::copy_const_reference>()),
 				&vl::physics::World::setSolverParameters)
 		.def(python::self_ns::str(python::self_ns::self))
-	;
+		
+		// @warning: this was added due ray cast testing, first commented line is used when returning a reference to rayresults:
+		//.def("castRay", &vl::physics::World::castRay, python::return_value_policy<python::reference_existing_object>())
+		.def("castRay", &vl::physics::World::castRay)
+		;
 
 	python::class_<vl::physics::Tube::ConstructionInfo>("TubeConstructionInfo", python::init<>())
 		.def_readwrite("start_body", &vl::physics::Tube::ConstructionInfo::start_body)

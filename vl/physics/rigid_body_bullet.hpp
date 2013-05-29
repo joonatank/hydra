@@ -67,6 +67,8 @@ namespace vl
 namespace physics
 {
 
+
+
 /**	@class BulletRigidBody
  *	@brief Wrapper around Bullet rigid body
  *	Purpose is to provide Ogre compatible minimal interface
@@ -82,8 +84,8 @@ public :
 		, _bt_body(0)
 	{
 		_bt_body = new btRigidBody(convert_construction_info(info));
-
 		assert(getMotionState() == info.state);
+		
 	}
 
 	virtual ~BulletRigidBody(void)

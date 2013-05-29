@@ -424,7 +424,7 @@ vl::RayObject::_create(void)
 			if(!_creator)
 			{ BOOST_THROW_EXCEPTION(vl::null_pointer()); }
 
-			_ray_cast = new RayCast(_creator);
+			_ray_cast = new RayCastOgre(_creator);
 		}
 
 		if(!getListener())

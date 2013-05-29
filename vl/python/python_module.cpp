@@ -376,7 +376,7 @@ void export_scene_graph(void)
 	vl::EntityPtr (SceneManager::*createEntity_ov2)(std::string const &, std::string const &, bool) = &SceneManager::createDynamicEntity;
 	vl::ShadowInfo &(SceneManager::*getShadowInfo_ov0)(void) = &vl::SceneManager::getShadowInfo;
 
-	python::class_<std::vector<SceneNode *> >("SceneNodeList")
+	python::class_< std::vector<SceneNode *> >("SceneNodeList")
 		.def(python::vector_indexing_suite<std::vector<SceneNode *> >())
 	;
 

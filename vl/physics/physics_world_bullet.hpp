@@ -26,6 +26,11 @@
 // This class initialises Bullet physics so they are necessary
 #include <bullet/btBulletDynamicsCommon.h>
 
+// @warning: Needed for dynamic concave raycasting:
+#include <bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
+
+
+
 namespace vl
 {
 
@@ -54,6 +59,8 @@ public :
 	virtual SolverParameters const &getSolverParameters(void) const
 	{ return _solver_params; }
 
+	virtual RayResult castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const;
+
 protected :
 	/// Virtual overrides
 	virtual void _addRigidBody( std::string const &name, vl::physics::RigidBodyRefPtr body, bool kinematic);
@@ -75,7 +82,7 @@ private :
 	btCollisionDispatcher *_dispatcher;
 	btSequentialImpulseConstraintSolver *_solver;
 	btDiscreteDynamicsWorld *_dynamicsWorld;
-
+	
 };	// class BulletWorld
 
 }	// namespace physics

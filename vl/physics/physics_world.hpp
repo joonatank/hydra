@@ -72,6 +72,20 @@ struct SolverParameters
 	int max_sub_steps;
 };
 
+// @warning this is for raycasting:
+struct RayResult
+{
+	RigidBodyList hit_objects;
+	std::vector<Ogre::Vector3>	hit_points_world;
+	std::vector<Ogre::Vector3>	hit_normals_world;
+	std::vector<vl::scalar>		hit_fractions;		//Eg. distance along the ray
+	Ogre::Vector3				start_point;
+	Ogre::Vector3				end_point;
+};
+
+
+
+
 /** @class World
  *	Interface for physics world, provides concrete implementations of object
  *	management using our wrapper objects.
@@ -102,6 +116,7 @@ public :
 
 	/// ---------------------- RigidBodies ------------------
 	/// @TODO replace name, when you have the time to fix the overloads for python
+	
 	vl::physics::RigidBodyRefPtr createRigidBodyEx(RigidBody::ConstructionInfo const &info);
 
 	/// Default inertia is zero because setting it will mess up static objects. 
@@ -164,6 +179,11 @@ public :
 
 	void removeTube(vl::physics::TubeRefPtr tube);
 
+	///-----------------------Ray casting/testing---------------
+	// @warning: might not work
+	virtual RayResult castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const = 0;
+	
+	
 	RigidBodyList const &getBodies(void) const
 	{ return _rigid_bodies; }
 	

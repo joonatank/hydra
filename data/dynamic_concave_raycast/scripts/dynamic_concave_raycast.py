@@ -68,9 +68,6 @@ cp_msh = game.mesh_manager.loadMesh("collision_pool")
 cp_shape = ConvexHullShape.create(cp_msh)
 wall_msh = game.mesh_manager.loadMesh("wall")
 wall_shape = ConvexHullShape.create(wall_msh)
-ball_msh = game.mesh_manager.loadMesh("ball")
-ball_shape = ConvexHullShape.create(ball_msh)
-
 
 
 rblist = []
@@ -86,14 +83,27 @@ compound.add_child_shape(WF_local_trans, wall_shape)
 compound_body = createRB("collision_pool", compound, 5.0, Vector3(0.0, 0.0, 0.0)) 
 rblist.append(compound_body)
 
-#We'll add the balls to the scene as rigidbodies:
-nodes = game.scene.scene_nodes
-for i in range(0,len(nodes)-1):
-    nimi = nodes[i].name
-    if nimi.startswith('ball'):
-        rblist.append(createRB(nimi, ball_shape, 0.5, Vector3(0.3,0.3,0.3)))
+#Create shapes of pacmen:
+pacman_msh = game.mesh_manager.loadMesh("pacman")
+pacman_shape = ConcaveHullShape.create(pacman_msh)
+pacman_cube_msh = game.mesh_manager.loadMesh("pacman_cube")
+pacman_cube_shape = ConcaveHullShape.create(pacman_cube_msh)
 
+#Now it's time for rigidbodies:
+rblist.append(createRB("pacman", pacman_shape, 1.0, Vector3(0.33,0.33,0.33)))
+rblist.append(createRB("pacman_cube", pacman_cube_shape, 1.0, Vector3(0.33,0.33,0.33)))
 
+result1 = game.physics_world.castRay(Vector3(0.0,2.0,0.0), Vector3(0.0,-2.0,0.0))
+result2 = game.physics_world.castRay(Vector3(0.0,0.0,10.0), Vector3(0.0,0.0,-10.0))
+
+def printtaa_resultti(result, nimi):
+    obs = result.objects
+    for i in obs:
+        print("Objekti resultista ",nimi,": ", i.name)
+printtaa_resultti(result1, "pakka1")
+printtaa_resultti(result2,"pakka2")
+
+"""
 #applying force with key F:
 class Sormi:
     def __init__(self, rb, key, magnitude):
@@ -118,8 +128,9 @@ class Sormi:
 contrl = Sormi(compound_body, KC.F, 1000.0)
 
 
-"""   
+   
     rigidbodies['bucket'].body.anisotropic_friction = Vector3(1.3, 1.3, 1.3)
     rigidbodies['track_L'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
     rigidbodies['track_R'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
+
 """
