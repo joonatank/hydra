@@ -73,33 +73,38 @@ vl::PCAN::mainloop(void)
 {
 	if(_connected)
 	{
-		/// @todo move to while loop
-		TPCANMsg can_msg;
-		TPCANStatus res = CAN_Read(_channel, &can_msg, NULL);
-		if(res != PCAN_ERROR_OK && res != PCAN_ERROR_QRCVEMPTY)
+		bool finished = false;
+		while(!finished)
 		{
-			char buf[256];
-			CAN_GetErrorText(res, 0x09, buf);
-			std::cout << "Error reading the CAN data : err = " << buf << std::endl;
-		}
-		/// Read buffer is empty, not sure if this is efficient way of handling it though
-		if(res == PCAN_ERROR_QRCVEMPTY)
-		{
-			//std::cout << "CAN read buffer is empty." << std::endl;
-			// @testing fps, without this we get 320 in an empty scene
-			// With this and console printing FPS starts from 250 and drops steadily
-			// With this and without printing FPS is constantly 310-320
-			// Without the whole PCAN module FPS is constant 325
-			//
-			// For testing
-			//int8_t d[8] = {-125, 124, 0, 0, 0, 0, 0, 0};
-			//CANMsg msg(0x380, d, 8);
-			//_signal(msg);
-		}
-		else
-		{
-			CANMsg msg(can_msg.ID, can_msg.DATA, can_msg.LEN);
-			_signal(msg);
+			TPCANMsg can_msg;
+			TPCANStatus res = CAN_Read(_channel, &can_msg, NULL);
+			if(res != PCAN_ERROR_OK && res != PCAN_ERROR_QRCVEMPTY)
+			{
+				char buf[256];
+				CAN_GetErrorText(res, 0x09, buf);
+				std::cout << "Error reading the CAN data : err = " << buf << std::endl;
+				finished = true;
+			}
+			/// Read buffer is empty, not sure if this is efficient way of handling it though
+			if(res == PCAN_ERROR_QRCVEMPTY)
+			{
+				//std::cout << "CAN read buffer is empty." << std::endl;
+				// @testing fps, without this we get 320 in an empty scene
+				// With this and console printing FPS starts from 250 and drops steadily
+				// With this and without printing FPS is constantly 310-320
+				// Without the whole PCAN module FPS is constant 325
+				//
+				// For testing
+				//int8_t d[8] = {-125, 124, 0, 0, 0, 0, 0, 0};
+				//CANMsg msg(0x380, d, 8);
+				//_signal(msg);
+				finished = true;
+			}
+			else
+			{
+				CANMsg msg(can_msg.ID, can_msg.DATA, can_msg.LEN);
+				_signal(msg);
+			}
 		}
 	}
 }

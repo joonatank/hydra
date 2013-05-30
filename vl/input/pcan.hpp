@@ -86,7 +86,7 @@ std::ostream &operator<<(std::ostream &os, CANMsg const &msg)
 	os << "CAN msg 0x" << std::hex << msg.id << " with data : ";
 	for(uint8_t i = 0; i < msg.length; ++i)
 	{
-		os << (int)msg.data[i];
+		os << std::dec << (short)msg.data[i] << " ";
 	}
 	return os;
 }

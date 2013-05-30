@@ -26,59 +26,54 @@ ground = create_ground()
 controller = game.event_manager.get_pcan()
 
 # read data and print it to console
-def print_message(msg):
-	# TODO utf-8 error if we print the message
-	print("New message from CAN : ", msg)
-	#msg.print()
-	# Add deciphering the can message
+def can_message_received(msg):
 	# How to read the Sandvik joystick information
 	# length = 8 bytes
-	# id = 
+	# id = 0x380 + node_id
 	# type = 0xFF
 	#
-	node_id = 0
-	can_msg_id = 0x380 + node_id
-	print("can msg id 0x{0:x}".format(can_msg_id))
-	# For some reason 0x380 + 0 != 0x380, wut?
+	can_msg_id = 0x2b3
+	# can also be 0x3b3 or 0x2b3
+	# should be 0x2b2 because it changes if we mess around with the joystick
+	# 0x2b2 is the left hand joystick only
+	# 0x3b3 is the rightmost joystick and buttons from both of the right
+	# joysticks, yeah weird right
+	# 0x3b3 is not needed for these applications
+	# 0x2b3 is the left one of the right joysticks with buttons from both of
+	# the right joysticks, bit pattern seems to be same for both messages
+	# should not be 0x4b2 because it doesn't have zero start data
+	if msg.id == 0x2b2:
+		print("Left boom control joystick message")
+		assert(msg.length == 8)
+		pos_x = msg.data[1]
+		pos_y = msg.data[3]
+
+		# Only the top button is used in these applications
+		low_button = msg.data[6] & 1 == 1
+		top_button = msg.data[6] & 1 << 1 == 1 << 1
+		mid_button = msg.data[6] & 1 << 2 == 1 << 2
+
+		print("(x, y) ({},{}) top button {} mid button {} low button {}".format(pos_x, pos_y, top_button, mid_button, low_button))
+
 	if msg.id == can_msg_id:
-		print("Joystick message")
+		print("Right boom control joystick message")
 		assert(msg.length == 8)
 
 		# How to convert uint8_t to int so we preserve the bits (sign)?
 		# Or should the data be stored in a int8_t instead?
 		# stored in int8_t for now
-		boom_pos_x = msg.data[0]
-		boom_pos_y = msg.data[1]
-		boom_dir_x = msg.data[2]
-		boom_dir_y = msg.data[3]
-		drill_dir_x = msg.data[4]
-		drill_dir_y = msg.data[5]
-		#print("values : {} {} {} {} {} {}".format(boom_pos_x, boom_pos_y, boom_dir_x, boom_dir_y, drill_dir_x, drill_dir_y))
+		# For some reason for the joystick data the first byte is always crap
+		# so the data actually takes 16-bits but only the last 8-bits is useful
+		pos_x = msg.data[1]
+		pos_y = msg.data[3]
 
-		# Vaihda puomin liiketta, pyytopainike 0
-		boom_dir_top_button = msg.data[6] & 1 == 1
-		# Kaynnista automaattinen poraus, pyyntopainike
-		boom_dir_upper_side_button = msg.data[6] & 1 << 1 == 1 << 1
-		# Kayta TRH-kangenvaihdinta (option), pyyntopainike
-		boom_dir_lower_side_button = msg.data[6] & 1 << 2 == 1 << 2
-		# Kierteytys, pyyntopainike 0
-		drilling_top_button = msg.data[6] & 1 << 3 == 1 << 3
-		# Isku paalle, pyyntopainike 0
-		drilling_upper_side_button = msg.data[6] & 1 << 4 == 1 << 4
-		# Finish hole request active 0
-		drilling_lower_side_button = msg.data[6] & 1 << 5 == 1 << 5
+		# Only the top button is used in these applications
+		low_button = msg.data[6] & 1 == 1
+		top_button = msg.data[6] & 1 << 1 == 1 << 1
+		mid_button = msg.data[6] & 1 << 2 == 1 << 2
 
-		# Vaihda puomin liiketta, pyyntopainike 0
-		boom_pos_top_button = (msg.data[7] & 1) == 1
-		# Lukitse lahin reika paikoitusikkunaan, pyyntopainike
-		boom_pos_lower_side_button = (msg.data[7] & 1 << 1) == 1 << 1
-		# Kayta TRS-kangenvaihdinta (option), pyyntopainike
-		boom_pos_upper_side_button = (msg.data[7] & 1 << 2) == 1 << 2
-		# Kayttopaikan lukituskytkimen tila ( 1 = lukittu, 0 = kaytossa )
-		hmi_locked = (msg.data[7] & 1 << 3) == 1 << 3
-		# 1 = Valid, 0 = Not valid Normaali
-		pdo_valid = (msg.data[7] & 1 << 4) == 1 << 4
+		print("(x, y) ({},{}) top button {} mid button {} low button {}".format(pos_x, pos_y, top_button, mid_button, low_button))
 
 
-controller.add_listener(print_message)
+controller.add_listener(can_message_received)
 
