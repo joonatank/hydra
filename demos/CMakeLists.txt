@@ -138,6 +138,12 @@ set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
 Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/expat/bin\"")
 set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/SkyX/bin\"")
 set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/x64\"")
+else()
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/Win32\"")
+endif()
+
 
 # Get the CameraSDK binary dir
 # TODO the above should also be replaced with this system for other libraries
