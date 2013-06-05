@@ -437,8 +437,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	// We should hand over the Renderer to either client or config
 	_renderer.reset( new Renderer(env->getName()) );
 
-	_game_manager = new vl::GameManager(this, _logger);
-	_game_manager->setOptions(opt);
+	_game_manager = new vl::GameManager(this, _logger, opt);
 
 	_server.reset(new vl::cluster::Server(_env->getServer().port));
 	_server->addRequestMessageListener(boost::bind(&Master::messageRequested, this, _1));

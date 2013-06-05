@@ -268,6 +268,8 @@ vl::ProgramOptions::_parse_ini(void)
 	debug.axes = pt.get("debug.axes", false);
 	debug.display = pt.get("debug.display", false);
 	launcher_port = pt.get("launcher.port", 9556);
+	cad_importer_enabled = pt.get("cad_importer.enabled", false);
+	cad_importer_exe = pt.get("cad_importer.exe", "batch_importer.exe");
 
 	if(pt.count("projects") > 0)
 	{

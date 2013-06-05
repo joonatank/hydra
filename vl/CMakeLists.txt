@@ -62,6 +62,7 @@ set(SRC
 	hsf_loader.cpp
 	hsf_writer.cpp
 	profiler_report.cpp
+	cad_importer.cpp
 	)
 
 set(MATH_HEADERS
@@ -86,10 +87,12 @@ if(WIN32)
 		input/serial_joystick.hpp
 		input/joystick.hpp
 		input/ois_converters.hpp
+		input/pcan.hpp
 		)
 	set(INPUT_SRC
 		input/serial_joystick.cpp
 		input/joystick.cpp
+		input/pcan.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()
@@ -273,6 +276,7 @@ set( HEADERS
 	remote_launcher_helper.hpp
 	profiler_report.hpp
 	flags.hpp
+	cad_importer.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

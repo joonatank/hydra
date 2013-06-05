@@ -54,6 +54,15 @@ copy_start_scripts( hydra
 	excavator_physics_project/excavator_physics.prj
 	"excavator_physics" )
 
+copy_start_scripts( hydra
+	cad_import_test/cad_import.prj
+	"cad_import_test" )
+
+copy_start_scripts( hydra
+	pcan_project/pcan_project.prj
+	"pcan" )
+
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
@@ -129,6 +138,12 @@ set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
 Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/expat/bin\"")
 set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/SkyX/bin\"")
 set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/x64\"")
+else()
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/Win32\"")
+endif()
+
 
 # Get the CameraSDK binary dir
 # TODO the above should also be replaced with this system for other libraries
