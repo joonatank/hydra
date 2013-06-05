@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import struct
-
 # Project specific definitions, like object creations
 
 print('Creating Camera SceneNode')
