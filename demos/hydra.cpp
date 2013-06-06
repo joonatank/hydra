@@ -91,6 +91,7 @@ int main( const int argc, char** argv )
 
 	LPCTSTR const LIB_NAME = "HydraMain.dll";
 #endif	// HYDRA_DEBUG
+	extra_paths.push_back(std::string(PCAN_BINARY_DIR));
 
 	if(!add_paths(extra_paths))
 	{

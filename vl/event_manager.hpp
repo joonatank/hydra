@@ -109,6 +109,8 @@ public :
 	// comX is a short hand for comX:0
 	JoystickRefPtr getJoystick(std::string const &name = "default");
 
+	PCANRefPtr getPCAN(void);
+
 	void update_joystick(vl::JoystickEvent const &evt);
 
 	/// @brief called from GameManager to update input devices
@@ -153,6 +155,8 @@ private :
 
 	// stored also separately to avoid searching and casting
 	JoystickRefPtr _game_joystick;
+
+	PCANRefPtr _pcan;
 
 };	// class EventManager
 

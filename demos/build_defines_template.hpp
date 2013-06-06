@@ -6,11 +6,9 @@
  *	@file build_defines_template.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.3
+ *	Version 0.4
  *
- *	Licensed under the MIT Open Source License, 
- *	for details please see LICENSE file or the website
- *	http://www.opensource.org/licenses/mit-license.php
+ * Licensed under commercial license.
  *
  */
 
@@ -27,6 +25,7 @@
 #define EXPAT_BINARY_DIR ${EXPAT_BINARY_DIR}
 #define SKYX_BINARY_DIR ${SKYX_BINARY_DIR}
 #define CAELUM_BINARY_DIR ${CAELUM_BINARY_DIR}
+#define PCAN_BINARY_DIR ${PCAN_BINARY_DIR}
 
 #define HYDRA_MAIN_BINARY_DIR ${HYDRA_MAIN_BINARY_DIR}
 #define HYDRA_GL_BINARY_DIR ${HYDRA_GL_BINARY_DIR}

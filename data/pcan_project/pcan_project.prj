@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@tut.fi>
+2011-05
+
+Configuration for physics test scene.
+-->
+<project_config name="pcan">
+
+	<scenes>
+		<!-- No scene files. Because we create everything in script -->
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to any of the project
+		directories. So you can refer to scripts in global projects
+		directory by name here.
+		-->
+		<file use="true">pcan.py</file>
+	</scripts>
+
+</project_config>

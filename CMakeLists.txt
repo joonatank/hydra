@@ -73,7 +73,6 @@ find_package(Ogre REQUIRED)
 ######### Find OIS ###########
 find_package(OIS REQUIRED)
 
-
 ####### Find Boost ########
 
 set(Boost_USE_MULTITHREADED ON)
@@ -200,6 +199,14 @@ elseif(HYDRA_PHYSICS STREQUAL "Newton")
 	else()
 		message(FATAL_ERROR "Requested to use Newton for physics but didn't find the library.")
 	endif()
+endif()
+
+# Find PCAN and add use flag if found
+find_package(PCANBasic)
+if(PCANBasic_FOUND)
+	add_definitions(-DUSE_PCAN)
+	include_directories(SYSTEM ${PCANBasic_INCLUDE_DIR})
+	list(APPEND HYDRA_DEP_LIBS ${PCANBasic_LIBRARY})
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )

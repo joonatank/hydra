@@ -127,6 +127,31 @@ struct HYDRA_API ProgramOptions
 
 	uint16_t launcher_port;
 
+	/// CAD importer options
+
+	/// if the CAD importer is enabled or not
+	/// defaults to false
+	/// cad importer exe
+	bool cad_importer_enabled;
+
+	/// The program used for importing (in a separate project)
+	/// Defaults to searching current directory for batch_importer.exe
+	std::string cad_importer_exe;
+
+	/// Rest of the options are still bit fuzzy
+	/// They are already defined in a separate config file for CAD importer
+	/// so redefining them here is bit iffy. Do we have a good reason to have
+	/// them also here?
+	/// We might also use case by case defines or directly configure the
+	/// CAD importer class and save/load configuration from it.
+	///
+	/// import directory path
+	/// used for finding the possible files to import (since we don't have file browser)
+	/// Export directory path
+	/// used for saving the Collada file
+	/// the recipe to use for importing
+	/// Defaults to local preset settings
+
 	/// New variable for supporting multiple projects
 	/// that are loadable at runtime, single project can be active at once.
 	std::vector<std::string> project_paths;

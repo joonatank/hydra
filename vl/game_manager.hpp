@@ -57,6 +57,8 @@
 #include "flags.hpp"
 // Necessary for EyeTracker
 #include "eye_tracker.hpp"
+// Necessary for creating a proper implementation of callback functor
+#include "cad_importer.hpp"
 
 namespace vl
 {
@@ -127,7 +129,7 @@ public :
 	/// @param logger an instance of Logging class where all logging is redirected
 	/// this one should usually be the only one
 	/// @todo add passing of the exe directory (for python modules)
-	GameManager(vl::Session *session, vl::Logger *logger);
+	GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt);
 
 	virtual ~GameManager( void );
 
@@ -305,6 +307,7 @@ public :
 	/// @param file_name
 	/// @param flags for controlling loading process, only available for HSF format
 	/// Two separate versions instead of automatic overloading for easier python integration
+	/// @todo can we use a full system path here or not?
 	void loadScene(std::string const &file_name, LOADER_FLAGS flags);
 	void loadScene(std::string const &file_name)
 	{ loadScene(file_name, LOADER_FLAG_NONE); }
@@ -322,8 +325,15 @@ public :
 
 	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
 
-	void setOptions(vl::ProgramOptions const &opt)
-	{ _options = opt; }
+	/// @todo this is bad
+	/// We can not allow reseting the options like this.
+	/// We need to either use a init function that takes these options as a parameter
+	/// or we need to pass them to the Constructor.
+	/// After they have been set in init they can then be edited using getOptions.
+	/// setOptions()
+
+	CadImporterRefPtr getCadImporter(void)
+	{ return _cad_importer; }
 
 	vl::ProgramOptions const &getOptions(void) const
 	{ return _options; }
@@ -431,6 +441,8 @@ private :
 
 	PlayerPtr _player;
 
+	CadImporterRefPtr _cad_importer;
+
 	/// Tracking
 	vl::ClientsRefPtr _trackers;
 
@@ -504,6 +516,31 @@ public :
 	void _do_unload(vl::unload const &evt);
 
 };	// class GameManager
+
+
+class CadImporterCallback : public ImporterCallback
+{
+public :
+
+	// @todo add create method that creates ref counted version of this
+	// also remove public constructor after adding the method
+	static CadImporterCallback *create(GameManager *man)
+	{
+		return new CadImporterCallback(man);
+	}
+
+private :
+	CadImporterCallback(GameManager *man)
+		: _game(man)
+	{}
+
+	// Overload the private load function
+	void _load(std::string const &filename, std::string const &file_path);
+
+	GameManager *_game;
+};
+
+
 
 /// @class GameManagerSM
 /// the internal state machine for GameManager

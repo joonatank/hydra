@@ -25,6 +25,21 @@ material CloudySky
 	}
 }
 
+material dome/blue
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.5 0.5 1.0 1.0
+			diffuse 0.5 0.5 1.0 1.0
+			lighting on
+			depth_write off
+			polygon_mode_overrideable false
+		}
+	}
+}
+
 /// Basic Fixed function pipeline material used for testing
 /// uses the same interface as our custom shader materials but
 /// gives all the goodies that FFP has.

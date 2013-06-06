@@ -248,8 +248,6 @@ void
 vl::PythonContextImpl::_init(void)
 {
 	try {
-		Py_Initialize();
-
 		// Add the module to the python interpreter
 		// NOTE the name parameter does not rename the module
 		// No idea why it's there
@@ -260,6 +258,9 @@ vl::PythonContextImpl::_init(void)
 #endif
 			throw std::runtime_error("Failed to add vl to the interpreter's "
 					"builtin modules");
+
+		// Needs to be after any AppendInittab commads
+		Py_Initialize();
 
 		// Retrieve the main module
 		python::object main = python::import("__main__");
