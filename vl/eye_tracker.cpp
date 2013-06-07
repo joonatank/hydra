@@ -77,7 +77,7 @@ vl::EyeTracker::EyeTracker(PlayerPtr player, SceneManager *creator)
 	// Only supports ini file because we can not pass command line arguments here
 	eyes::Options opt;
 	opt.parse_ini();
-	// @todo reset VRPN head tracker name from the file
+	// Reset VRPN head tracker name from the file
 	// we want to provide our own head tracker data for consistency
 	opt.vrpn_head_tracker = "";
 	std::clog << "Eyes Options : " << opt << std::endl;
@@ -158,6 +158,59 @@ vl::EyeTracker::progress(void)
 
 //		_eyes->clearChanged();
 	}
+}
+
+#include "eyes_report.hpp"
+
+void
+vl::EyeTracker::loadRecording(std::string const &filename)
+{
+	// @todo this needs to disable real time tracking
+
+	// @todo this is easier to manage if we use separate report
+	// for this
+	//_eyes->getReport().read(filename);
+	if(filename.empty())
+	{
+		_loaded_report = _eyes->getReport();
+	}
+	else
+	{
+		_loaded_report.read(filename);
+	}
+}
+
+void
+vl::EyeTracker::saveRecording(std::string const &filename)
+{
+	_eyes->getReport().write(filename);
+}
+
+void
+vl::EyeTracker::showRecording(bool show)
+{
+	assert(_drawable);
+
+	RayObject::RecType recording;
+	recording.reserve(_eyes->getReport().data.size());
+
+	for(std::vector<eyes::Report::DataElem>::const_iterator iter = _loaded_report.data.begin();
+		iter != _loaded_report.data.end(); ++iter)
+	{
+		Ogre::Vector3 pos(iter->position.x, iter->position.y, iter->position.z);
+		Ogre::Vector3 dir(iter->direction.x, iter->direction.y, iter->direction.z);
+		recording.push_back(std::make_pair(pos, dir));
+	}
+
+	_drawable->setRecording(recording);
+	_drawable->showRecordedRays(true);
+}
+
+bool
+vl::EyeTracker::isRecordingShown(void) const
+{
+	assert(_drawable);
+	return _drawable->getShowRecordedRays();
 }
 
 #endif

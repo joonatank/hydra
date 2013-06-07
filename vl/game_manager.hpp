@@ -284,12 +284,6 @@ public :
 
 	std::string getStateName(void) const;
 
-	/// Resource loading
-	/// @todo all resource loading should be moved to ResourceManager or similar
-	/// @todo this is going to be removed and moved to Eyes project since
-	/// it's the only one using this Recording file format.
-	RecordingRefPtr loadRecording(std::string const &path);
-
 	/// @brief get the current project and global settings
 	/// Mostly usefull for project change callbacks
 	vl::Settings getSettings(void) const;

@@ -26,8 +26,6 @@
 
 #include "cluster/message.hpp"
 
-#include "recording.hpp"
-
 #include <OGRE/OgreSceneManager.h>
 
 /// ----------------------------- Public -------------------------------------
@@ -48,15 +46,12 @@ vl::RayObject::~RayObject(void)
 }
 
 void
-vl::RayObject::setRecording(RecordingRefPtr rec)
+vl::RayObject::setRecording(std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > const &rec)
 {
-	if(rec != _recording)
-	{
-		setDirty(DIRTY_RECORDING);
-		_recording = rec;
-		if(_recorded_rays_show)
-		{ update(); }
-	}
+	setDirty(DIRTY_RECORDING);
+	_recorded_rays = rec;
+	if(_recorded_rays_show)
+	{ update(); }
 }
 
 void
@@ -166,7 +161,7 @@ vl::RayObject::update(void)
 void
 vl::RayObject::showRecordedRays(bool show)
 {
-	if(show != _recorded_rays_show && _recording)
+	if(show != _recorded_rays_show)
 	{
 		setDirty(DIRTY_SHOW_RECORDER);
 		_recorded_rays_show = show;
@@ -175,6 +170,11 @@ vl::RayObject::showRecordedRays(bool show)
 	}
 }
 
+/// @todo this function is horrible
+/// We need to copy paste code from other places to here
+/// It also does two things it works for both recorded rays and dynamic ray
+/// meaning it's cluttered with if elses (well one really confusing one).
+/// Dividing it to two or three separate functions would be a good start.
 void
 vl::RayObject::_updateRay(void)
 {
@@ -184,7 +184,7 @@ vl::RayObject::_updateRay(void)
 
 	// Nop for recording if user has not requested recalculation
 	// because this is really slow for the number of rays recordings contain
-	if(_recording && _recorded_rays_show && !_needs_updating)
+	if(_recorded_rays_show && !_needs_updating)
 	{ return; }
 
 	/// Gather all rays that are to be drawn
@@ -194,16 +194,15 @@ vl::RayObject::_updateRay(void)
 	// pair of vectors, start_position and direction for collision detection
 	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > collision_det_array;
 	// Store the position and direction for collision detection
-	if(_recording && _recorded_rays_show)
+	if(_recorded_rays_show)
 	{
 		// Create a list of start and end positions
-		for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
-			iter != _recording->sensors.at(0).transforms.end(); ++iter)
+		for(RecordType::iterator iter = _recorded_rays.begin();
+			iter != _recorded_rays.end(); ++iter)
 		{
-			Ogre::Quaternion q = iter->second.quaternion;
 			// @todo should the direction be -Z or should it be configurable using the direction parameter?
-			Ogre::Vector3 direction = q*_direction;
-			Ogre::Vector3 start_position = iter->second.position;
+			Ogre::Vector3 direction = iter->second;
+			Ogre::Vector3 start_position = iter->first;
 
 			// No collision detection because this will only initialise the list
 
@@ -319,10 +318,11 @@ vl::RayObject::doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	// second or so.
 	if(dirtyBits & DIRTY_RECORDING)
 	{
-		if(!_recording)
-		{ msg << false; }
-		else
-		{ msg << true << *_recording; }
+		msg << _recorded_rays.size();
+		for(size_t i = 0; i < _recorded_rays.size(); ++i)
+		{
+			msg << _recorded_rays.at(i).first << _recorded_rays.at(i).second;
+		}
 	}
 
 	if(dirtyBits & DIRTY_UPDATE)
@@ -350,24 +350,24 @@ vl::RayObject::doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyB
 	{
 		msg >> _recorded_rays_show;
 		
-		if(_recording)
+		if(!_recorded_rays.empty())
 		{ dirty = true; }
 	}
 
 	if(dirtyBits & DIRTY_RECORDING)
 	{
-		bool valid;
-		msg >> valid;
-		
-		if(valid)
+		size_t size;
+		msg >> size;
+		_recorded_rays.resize(size);
+		for(size_t i = 0; i < size; ++i)
 		{
-			if(!_recording)
-			{ _recording.reset(new Recording); }
-			msg >> *_recording;
-
-			if(_recorded_rays_show)
-			{ dirty = true; }
+			Ogre::Vector3 pos, dir;
+			msg >> pos >> dir;
+			_recorded_rays.at(i) = std::make_pair(pos, dir);
 		}
+
+		if(_recorded_rays_show)
+		{ dirty = true; }
 	}
 
 	if(dirtyBits & DIRTY_UPDATE)
@@ -435,7 +435,7 @@ vl::RayObject::_create(void)
 		}
 	}
 
-	if(_recorded_rays_show && _recording)
+	if(_recorded_rays_show)
 	{ _createRecordedRays(); }
 	else
 	{ _createDynamic(); }
@@ -474,15 +474,12 @@ vl::RayObject::_createDynamic(void)
 void
 vl::RayObject::_createRecordedRays(void)
 {
-	if(!_recording)
-	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Something wrong with the recording.")); }
-
 	// Empty recording
-	if(_recording->sensors.size() == 0)
+	if(_recorded_rays.size() == 0)
 	{ return; }
 
 	std::clog << "vl::RayObject::_createRecordedRays : creating " 
-		<< _recording->sensors.at(0).transforms.size() << " recorded rays." << std::endl;
+		<< _recorded_rays.size() << " recorded rays." << std::endl;
 
 	assert(_ogre_object);
 	_ogre_object->clear();
@@ -493,12 +490,11 @@ vl::RayObject::_createRecordedRays(void)
 	std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > ray_positions;
 
 	// Create a list of start and end positions
-	for(std::map<vl::time, Transform>::iterator iter = _recording->sensors.at(0).transforms.begin();
-		iter != _recording->sensors.at(0).transforms.end(); ++iter)
+	for(RecordType::iterator iter = _recorded_rays.begin();
+		iter != _recorded_rays.end(); ++iter)
 	{
-		// @todo should the direction be -Z or should it be configurable using the direction parameter?
-		Ogre::Vector3 dir = iter->second.quaternion*_direction;
-		Ogre::Vector3 start_position = iter->second.position;
+		Ogre::Vector3 dir = iter->second;
+		Ogre::Vector3 start_position = iter->first;
 
 		Ogre::Vector3 end_position = start_position + (dir*_length);
 

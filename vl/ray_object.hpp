@@ -40,6 +40,7 @@ namespace vl
 class RayObject : public vl::MovableObject
 {
 public :
+	typedef std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > RecType;
 	/// @brief Master constructor
 	/// Should not be called from user code, use SceneManager to create these
 	RayObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
@@ -47,10 +48,11 @@ public :
 	/// @brief Slave constructor
 	RayObject(vl::SceneManagerPtr creator);
 
-	void setRecording(RecordingRefPtr rec);
+	/// Set the recorded rays
+	/// @todo rename
+	/// @param vector of position direction pairs
+	void setRecording(RecType const &rec);
 
-	RecordingRefPtr getRecording(void) const
-	{ return _recording; }
 
 	/// @brief Destructor
 	virtual ~RayObject(void);
@@ -192,7 +194,8 @@ private :
 	uint32_t _update_version;
 	bool _needs_updating;
 
-	RecordingRefPtr _recording;
+	typedef std::vector<std::pair<Ogre::Vector3, Ogre::Vector3> > RecordType;
+	RecordType _recorded_rays;
 	bool _recorded_rays_show;
 
 	Ogre::ManualObject *_ogre_object;

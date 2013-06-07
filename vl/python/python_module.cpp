@@ -52,7 +52,6 @@
 #include "animation/kinematic_body.hpp"
 #include "animation/kinematic_world.hpp"
 
-#include "recording.hpp"
 #include "eye_tracker.hpp"
 
 /// Necessary for exporting math
@@ -479,8 +478,6 @@ void export_scene_graph(void)
 		.add_property("collision_detection", &vl::RayObject::getCollisionDetection, &vl::RayObject::setCollisionDetection)
 		.add_property("draw_collision_sphere", &vl::RayObject::getDrawCollisionSphere, &vl::RayObject::setDrawCollisionSphere)
 		.add_property("draw_ray", &vl::RayObject::getDrawRay, &vl::RayObject::setDrawRay)
-		.add_property("show_recording", &vl::RayObject::getShowRecordedRays, &vl::RayObject::showRecordedRays)
-		.add_property("recording", &vl::RayObject::getRecording, &vl::RayObject::setRecording)
 		.def("update", &vl::RayObject::update)
 	;
 
@@ -716,7 +713,6 @@ void export_game(void)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.add_property("eye_tracker", &vl::GameManager::getEyeTracker)
-		.def("loadRecording", &vl::GameManager::loadRecording)
 		.def("load_scene", loadScene_ov0)
 		.def("load_scene", loadScene_ov1)
 		.def("save_scene", &vl::GameManager::saveScene)
@@ -748,11 +744,11 @@ void export_game(void)
 		.def("start", &vl::EyeTracker::start)
 		.def("stop", &vl::EyeTracker::stop)
 		.add_property("started", &vl::EyeTracker::isStarted)
+		.def("load_recording", &vl::EyeTracker::loadRecording)
+		.def("save_recording", &vl::EyeTracker::saveRecording)
+		.add_property("recording_shown", &vl::EyeTracker::isRecordingShown, &vl::EyeTracker::showRecording)
+		.add_property("ray", python::make_function(&vl::EyeTracker::getRay, python::return_value_policy<python::reference_existing_object>()))
 		// @todo add parameter configuring or RayObject retrieval
-		.def(python::self_ns::str(python::self_ns::self))
-	;
-
-	python::class_<vl::Recording, vl::RecordingRefPtr, boost::noncopyable>("Recording", python::no_init)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

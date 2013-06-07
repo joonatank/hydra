@@ -48,8 +48,10 @@ class EyeTracker
 public :
 	/// @brief constructor
 	/// Start state is always stop and no drawable will be shown
-	/// @todo we need to pass player here so we can retrieve current
-	/// camera and current head transformation
+	/// @todo this will throw an exception if compiled
+	/// with Eyes but without setting the settings
+	/// we want it to only throw exception if user tries to use
+	/// EyeTracking without configuring.
 	EyeTracker(PlayerPtr player, SceneManager *creator);
 
 	/// @brief Destructor
@@ -69,10 +71,27 @@ public :
 	// Needs to be called at each frame
 	void progress(void);
 
+	/// @brief load a recording from file to memory
+	/// Does not automatically show the recording, only one recording can be loaded at one time.
+	/// If param filename is empty uses the recording from current run.
+	void loadRecording(std::string const &finename);
+
+	void saveRecording(std::string const &filename);
+
+	/// @brief Show recording instead of real time data
+	/// Automatically disables real time eye tracking.
+	void showRecording(bool show);
+
+	bool isRecordingShown(void) const;
+
+	RayObject *getRay(void)
+	{ return _drawable; }
+
 private :
 	void _update_head(void);
 #ifdef USE_EYES
 	boost::scoped_ptr<eyes::EyeTracker> _eyes;
+	eyes::Report _loaded_report;
 #endif
 
 	PlayerPtr _player;

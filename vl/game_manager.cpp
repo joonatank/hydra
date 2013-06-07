@@ -47,7 +47,6 @@
 
 #include "animation/kinematic_world.hpp"
 
-#include "recording.hpp"
 // Necessary for passing Settings to a callback signal
 #include "settings.hpp"
 
@@ -460,19 +459,6 @@ vl::GameManager::_rerunPythonScripts(void)
 	std::clog << "vl::GameManager::rerunPythonScripts : DONE" << std::endl;
 }
 
-vl::RecordingRefPtr
-vl::GameManager::loadRecording(std::string const &path)
-{
-	std::cout << vl::TRACE << "vl::GameManager::loadRecording" << std::endl;
-	vl::Resource resource;
-	getResourceManager()->loadRecording(path, resource);
-
-	RecordingRefPtr rec(new Recording(path));
-	rec->read(resource);
-
-	return rec;
-}
-
 vl::Settings
 vl::GameManager::getSettings(void) const
 {
@@ -871,8 +857,6 @@ vl::GameManager::_removeAll(void)
 	// @todo clean projects
 	_loaded_project = vl::ProjSettings();
 	_global_project = vl::ProjSettings();
-
-	// Recordings???
 
 	// Reset stats
 	_rendering_report = vl::ProfilerReport();
