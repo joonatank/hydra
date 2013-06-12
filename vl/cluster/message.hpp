@@ -603,6 +603,20 @@ ByteStream &operator>>( ByteStream &msg, T &t )
 	return msg;
 }
 
+/// Pointers can not be serialised at the moment
+/// These are working well, they will throw a compile error if they are used
+template<typename T>
+ByteStream &operator<<( ByteStream &msg, T const *t )
+{
+	static_assert(false, "Deserialising pointers is not allowed");
+}
+
+template<typename T>
+ByteStream &operator>>( ByteStream &msg, T *t )
+{
+	static_assert(false, "Deserialising pointers is not allowed");
+}
+
 template<typename T>
 ByteStream &operator<<( ByteStream &msg, std::vector<T> const &v )
 {
@@ -625,6 +639,58 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 	return msg;
 }
 
+// Specialisation for primitives that uses memcpy directly
+// Deserializing element by element like the default implementation is 500 times slower
+// for large objects so this is necessary.
+// This implementation only works for primitive (C) types and not objects
+// because it can not handle references obviously.
+// Only provide implementation we need atm because every implementation needs
+// to be separate i.e. we need different functions for 
+// char, uint8_t, int16_t, uint16_t, int32_t, uint32_t etc.
+template<> inline
+ByteStream &operator<<( ByteStream &msg, std::vector<uint32_t> const &v )
+{
+	std::clog << "Vector of primitives to serialise." << std::endl;
+	msg << v.size();
+	
+	size_t byte_size = sizeof(uint32_t)*v.size();
+	std::clog << "Vector with " << v.size() << " members to serialise : "
+		<< byte_size << " bytes = " << (vl::msg_size)byte_size << " bytes." << std::endl;
+
+
+	msg.write( (char const *)&v[0], (vl::msg_size)(sizeof(uint32_t)*v.size()) );
+
+	return msg;
+}
+
+template<> inline
+ByteStream &operator>> ( ByteStream &msg, std::vector<uint32_t> &v )
+{
+	std::vector<std::string>::size_type v_size;
+	msg >> v_size;
+	v.resize(v_size);
+
+	msg.read( (char *)&v[0], (vl::msg_size)(sizeof(uint32_t)*v_size) );
+
+	return msg;
+}
+
+/// Vector of pointers should never happen
+/// These are working well, they will throw a compile error if they are used
+template<typename T>
+ByteStream &operator<<( ByteStream &msg, std::vector<T *> const &v )
+{
+	static_assert(false, "SHOULD NEVER HAPPEN : Vector of pointers to serialize.");
+}
+
+template<typename T>
+ByteStream &operator>>( ByteStream &msg, std::vector<T *> &v )
+{
+	static_assert(false, "SHOULD NEVER HAPPEN : Vector of pointers to deserialise.");
+}
+
+// Some syntastical bshit these specialisations will collide with other specialisations
+// without the explicit template parameter
 template<> inline
 ByteStream &operator<<(ByteStream &msg, std::string const &str)
 {

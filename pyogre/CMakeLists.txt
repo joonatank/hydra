@@ -23,6 +23,8 @@ set( SRC
 	${HydraMain_SOURCE_DIR}/mesh_serializer.cpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer_impl.cpp
 	${HydraMain_SOURCE_DIR}/resource.cpp
+	${HydraMain_SOURCE_DIR}/base/chrono.cpp
+	${HydraMain_SOURCE_DIR}/base/time.cpp
 	${HydraMain_SOURCE_DIR}/mesh.cpp
 	${HydraMain_SOURCE_DIR}/mesh_ogre.cpp
 	${HydraMain_SOURCE_DIR}/base/string_utils.cpp
@@ -33,6 +35,8 @@ set( HEADERS
 	${HydraMain_SOURCE_DIR}/base/string_utils.hpp
 	${HydraMain_SOURCE_DIR}/mesh.hpp
 	${HydraMain_SOURCE_DIR}/mesh_ogre.hpp
+	${HydraMain_SOURCE_DIR}/base/chrono.hpp
+	${HydraMain_SOURCE_DIR}/base/time.hpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer.hpp
 	${HydraMain_SOURCE_DIR}/mesh_serializer_impl.hpp
 	${HydraMain_SOURCE_DIR}/serializer.hpp

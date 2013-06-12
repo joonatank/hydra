@@ -17,6 +17,8 @@
 #include "mesh.hpp"
 
 #include "base/exceptions.hpp"
+/// Necessary for timing the serialisation
+#include "base/chrono.hpp"
 
 /// ------------------------------- Global -----------------------------------
 void 
@@ -355,7 +357,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexDeclaration const &decl)
 {
-	std::clog << "Serializing VertexDeclaration" << std::endl;
 	msg << decl.getElements();
 
 	return msg;
@@ -365,7 +366,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexDeclaration &decl)
 {
-	std::clog << "Deserializing VertexDeclaration" << std::endl;
 	msg >> decl.getElements();
 
 	return msg;
@@ -375,7 +375,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, Ogre::VertexElement const &elem)
 {
-	std::clog << "Serializing VertexElement" << std::endl;
 	msg << elem.getSource() << elem.getOffset() << elem.getType() << elem.getSemantic()
 		<< elem.getIndex();
 
@@ -386,7 +385,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, Ogre::VertexElement &elem)
 {
-	std::clog << "Deserializing VertexElement" << std::endl;
 	unsigned short source;
 	size_t offset;
 	Ogre::VertexElementType type;
@@ -404,7 +402,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexBuffer const &vbuf)
 {
-	std::clog << "Serializing vbuffer" << std::endl;
 	msg << vbuf.getNVertices() << vbuf.getVertexSize();
 	msg.write(vbuf._buffer, vbuf.size());
 
@@ -415,7 +412,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexBuffer &vbuf)
 {
-	std::clog << "Deserializing vbuffer" << std::endl;
 	size_t vertex_size, vertices;
 	msg >> vertices >> vertex_size;
 	
@@ -429,8 +425,6 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::VertexData const &vbuf)
 {
-	std::clog << "Serializing VertexData" << std::endl;
-
 	msg << vbuf.vertexDeclaration;
 
 	/// We need to write this open because one of the stored values is a pointer
@@ -450,9 +444,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::VertexData &vbuf)
 {
-	std::clog << "Deserializing VertexData" << std::endl;
 	msg >> vbuf.vertexDeclaration;
-
 	
 	size_t bindings_size;
 	msg >> bindings_size;
@@ -530,6 +522,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::Mesh const &mesh)
 {
+	std::clog << "Serializing mesh : " << mesh.getName() << std::endl;
+	vl::chrono clock;
+
 	if(mesh.sharedVertexData)
 		msg << true << *mesh.sharedVertexData;
 	else
@@ -541,6 +536,9 @@ vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::Mesh const &mesh)
 	for(size_t i = 0; i < mesh.getSubMeshes().size(); ++i)
 	{ msg << *mesh.getSubMeshes().at(i); }
 
+	// Serialisation doesn't take that long (deserialisation is the problem)
+	std::clog << "Mesh took : " << clock.elapsed() << std::endl;
+
 	return msg;
 }
 
@@ -548,6 +546,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
 {
+	std::clog << "Deserializing mesh : " << mesh.getName() << std::endl;
+	vl::chrono clock;
+
 	bool has_shared_vertex_data;
 	msg >> has_shared_vertex_data;
 
@@ -579,6 +580,8 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::Mesh &mesh)
 		{ sm = mesh.createSubMesh(); }
 		msg >> *sm;
 	}
+
+	std::clog << "Mesh took : " << clock.elapsed() << std::endl;
 
 	return msg;
 }
