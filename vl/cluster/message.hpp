@@ -723,7 +723,7 @@ ByteStream &operator>>(ByteStream &msg, std::string &str)
 }
 
 
-// TODO are these necessary still, when using the ByteStream to write data?
+/// These are used by the Stream classes for easier writing/reading
 template<typename T>
 msg_size Message::read(T& obj)
 {
@@ -794,8 +794,9 @@ namespace std
 
 
 /// Print byte data
-// Why is this added to namespace std?
-std::ostream &operator<<( std::ostream &os, vector<char> const &v );
+/// Used by other printing functions
+/// Needs to be in the std namespace otherwise it's not recognised by the compiler
+std::ostream &operator<<( std::ostream &os, std::vector<char> const &v );
 
 }	// namespace std
 

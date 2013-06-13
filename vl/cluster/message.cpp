@@ -302,8 +302,8 @@ vl::cluster::Message::read( char *mem, vl::msg_size size )
 	if(_data.size() < size)
 	{
 		// Seems like this throw is working fine for slaves so we don't need the priting
-		//std::clog << "vl::cluster::Message::read : ." << std::endl;
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("not enough data in the message"));
+		// @todo this should also include the message size and needed size
+		BOOST_THROW_EXCEPTION(vl::short_message() << vl::desc("not enough data in the message"));
 	}
 	::memcpy( mem, &_data[0], size );
 	_data.erase( _data.begin(), _data.begin()+size );
