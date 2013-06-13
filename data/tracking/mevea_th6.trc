@@ -6,7 +6,7 @@
 	of VRPN (x, y, z, w) quaternion. It's recerved for dealing with buggy
 	interfaces like Mevea's.
 	-->
-	<client type="VRPN" host="mec-0.rd.tut.fi" port="3884" incorrect_quaternion="true">
+		<client type="VRPN" host="mec-0.rd.tut.fi" port="3885" incorrect_quaternion="true">
 		<tracker name="DMTracker">
 			<!-- The first sensor is the for the Static environment i.e. the cave
 			<sensor num="0"/>

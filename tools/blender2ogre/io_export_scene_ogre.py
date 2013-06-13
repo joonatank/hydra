@@ -16,8 +16,17 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-VERSION = 'Ogre Exporter v31'
+VERSION = 'Ogre Exporter v37'
 __devnotes__ = '''
+Oct16	. Fixed copy textures (works only with unpacked textures)
+		. Uses at maximum a precission of 6, removing trailing zeros.
+		. Removed bloating of the scene file with the physics attributes.
+		. Remove more useless tool panels.
+		. Removed useless external files and user attributes.
+		By Joonatan Kuosa
+
+Jul16	. Added splitting of vertices and preserving normals for uv mapped objects by Joonatan Kuosa.
+
 Jun9	. Removed most of the unnecessary functionality by Joonatan Kuosa.
 
 Apr18
@@ -99,6 +108,9 @@ Jan 6th 2011:
 
 '''
 
+def float_to_string(f):
+	return '{0:.6g}'.format(f)
+
 ##2.49 code reference: "<quaternion x=\"%.6f\" y=\"%.6f\" z=\"%.6f\" w=\"%.6f\"/>\n" % (rot.x, rot.z, -rot.y, rot.w))
 def swap(vec):
 	if OPTIONS['SWAP_AXIS'] == 'x y z': return vec
@@ -115,43 +127,8 @@ def swap(vec):
 		print( 'unknown swap axis mode', OPTIONS['SWAP_AXIS'] )
 
 _faq_ = '''
-Q: my model is over 10,000 faces and it seems to take forever to export it!!!
-A: the current code uses an inefficient means for dealing with smooth normals,
-	you can make your export 100x faster by making dense models flat shaded.
-	(select all; then, View3D->Object Tools->Shading->Flat)
-	TIP:
-		Try making the model flat shaded and using a subsurf or multi-res modifer,
-		this will give you semi-smoothed normals without a speed hit.
-
-Q: i have hundres of objects, is there a way i can merge them on export only?
-A: yes, just add them to a group named starting with "merge"
-
-Q: can i use subsurf or multi-res on a mesh with an armature?
-A: yes.
-
-Q: can i use subsurf or multi-res on a mesh with shape animation?
-A: no.
-
-Q: i don't see any objects when i export?
-A: you must select the objects you wish to export.
-
-Q: how can i change the name of my .material file, it is always named Scene.material?
-A: rename your scene in blender.  The .material script will follow the name of the scene.
-
-Q: i don't see my animations when exported?
-A: make sure you created an NLA strip on the armature, and if you keyed bones in pose mode then only those will be exported.
-
-Q: do i need to bake my IK and other constraints into FK on my armature before export?
-A: no.
-
 Q: how do i export extra information to my game engine via OgreDotScene?
 A: You can assign 'Custom Properties' to objects in blender, and these will be saved to the .scene file.
-
-Q: i want to use a low-resolution mesh as a collision proxy for my high-resolution mesh, how?
-A: make the lowres mesh the child of the hires mesh, and name the low res mesh starting with "collision"
-
-Q: i do not want to use triangle mesh collision, can i use simple collision primitives?
-A: yes, go to Properties->Physics->Ogre Physics.  This gets save to the OgreDotScene file.
 
 Q: what version of this script am i running?
 A: %s
@@ -161,33 +138,20 @@ A: %s
 _doc_installing_ = '''
 Installing:
 	Installing the Addon:
-		You can simply copy addon_ogreDotScene.py to your blender installation under blender/2.56/scripts/addons/
-		Or you can use blenders interface, under user-prefs, click addons, and click 'install-addon'
-		( its a good idea to delete the old version first )
+		Have a look at the included README.txt
 
 	Required:
-		1. blender2.57
+		1. Blender 2.63
 '''
 
-## Nov23, tried PyOgre, it sucks - new plan: Tundra
-
-## KeyError: 'the length of IDProperty names is limited to 31 characters'		- chat with Jesterking request 64
 ## ICONS are in blender/editors/include/UI_icons.h
-## TODO exploit pynodes, currently they are disabled pending python3 support: nodes/intern/SHD_dynamic.c
-## TODO future idea: render procedural texture to images, more optimal to save settings and reimplment in Ogre, blender could also benifit from GLSL procedural shaders ##
-## TODO request IDProperties support for material-nodes
-## TODO check out https://github.com/realXtend/naali/blob/develop/bin/pymodules/webserver/webcontroller.py
 ## TODO are 1e-10 exponent numbers ok in the xml files?
-## TODO count verts, and count collision verts
-## TODO - image compression browser (previews total size)
-## useful for online content - texture load is speed hit
-
 
 bl_info = {
     "name": "OGRE Exporter (.scene, .mesh)",
     "author": "Joonatan Kuosa",
-    "version": (0,3,2),
-    "blender": (2, 5, 7),
+    "version": (0,3,7),
+    "blender": (2, 6, 3),
     "api": 36339,
     "location": "INFO Menu",
     "description": "Export to Ogre scene xml and mesh binary formats",
@@ -263,7 +227,8 @@ def get_objects_using_materials( mats ):
 		if ob.type == 'MESH':
 			for mat in ob.data.materials:
 				if mat in mats:
-					if ob not in obs: obs.append( ob )
+					if ob not in obs:
+						obs.append( ob )
 					break
 	return obs
 
@@ -284,13 +249,13 @@ class ReportSingleton(object):
 
 	def reset(self):
 		self.materials = []
+		self.textures = []
 		self.meshes = []
 		self.lights = []
 		self.cameras = []
 		self.armatures = []
 		self.armature_animations = []
 		self.shape_animations = []
-		self.textures = []
 		self.vertices = 0
 		self.faces = 0
 		self.triangles = 0
@@ -299,6 +264,8 @@ class ReportSingleton(object):
 		self.messages = []
 		self.paths = []
 		self.time = 0.0
+		self.triangle_mesh_time = 0.0
+		self.fixing_normals_time = 0.0
 
 	def report(self):
 		r = ['Report:']
@@ -321,6 +288,10 @@ class ReportSingleton(object):
 			for a in self.paths: r.append( '    . %s' %a )
 
 		r.append('  Total Export time: %.3f seconds' %self.time)
+		if self.triangle_mesh_time != 0.0:
+			r.append('  Time it took to create triangle meshes : %.3f seconds' %self.triangle_mesh_time)
+		if self.fixing_normals_time != 0.0:
+			r.append('  Time it took to fix normals : %.3f seconds' %self.fixing_normals_time )
 
 		if self.vertices:
 			r.append('  Total Vertices: %s' %self.vertices)
@@ -357,123 +328,6 @@ class Ogre_User_Report(bpy.types.Menu):
 		for line in txt.splitlines():
 			layout.label(text=line)
 
-
-
-############## mesh LOD physics #############
-class Ogre_Physics_LOD(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "data"
-	bl_label = "Ogre Collision"
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-
-	def draw(self, context):
-		layout = self.layout
-		ob = context.active_object
-		if ob.type != 'MESH': return
-		game = ob.game
-		box = layout.box()
-
-		if ob.name.startswith('collision'):
-			if ob.parent:
-				box.label(text='object is a collision proxy for: %s' %ob.parent.name)
-			else:
-				box.label(text='WARNING: collision proxy missing parent')
-
-		else:
-			colchild = None
-			for child in ob.children:
-				if child.name.startswith('collision'): colchild = child; break
-
-
-			row = box.row()
-			row.prop( game, 'use_ghost', text='Disable Collision' )
-			if game.use_ghost:
-				if ob.show_bounds: ob.show_bounds = False
-				if ob.show_wire: ob.show_wire = False
-				if colchild and not colchild.hide: colchild.hide = True
-
-			else:
-				row.prop(game, "use_collision_bounds", text="Use Collision Primitive")
-				row = box.row()
-
-				if game.use_collision_bounds:
-					if colchild and not colchild.hide: colchild.hide = True
-
-					row.prop(game, "collision_bounds_type", text="Primitive Type")
-					box.prop(game, "collision_margin", text="Collision Margin", slider=True)
-					btype = game.collision_bounds_type
-					if btype in 'BOX SPHERE CYLINDER CONE CAPSULE'.split():
-						if not ob.show_bounds: ob.show_bounds = True
-						if ob.draw_bounds_type != btype: ob.draw_bounds_type = btype
-						if ob.show_wire: ob.show_wire = False
-					elif btype == 'TRIANGLE_MESH':
-						if ob.show_bounds: ob.show_bounds = False
-						if not ob.show_wire: ob.show_wire = True
-						#ob.draw_bounds_type = 'POLYHEDRON'	#whats this?
-						box.label(text='(directly using triangles of mesh as collision)')
-					else: game.collision_bounds_type = 'BOX'
-
-				else:
-					## without these if tests, object is always redrawn and slows down view
-					if ob.show_bounds: ob.show_bounds = False
-					if ob.show_wire: ob.show_wire = False
-
-					if not colchild:
-						box.operator("ogre.create_collision", text="create new collision mesh")
-					else:
-						if colchild.hide: colchild.hide = False
-						if not colchild.select:
-							colchild.hide_select = False
-							colchild.select = True
-							colchild.hide_select = True
-
-						row.label(text='collision proxy name: %s' %colchild.name)
-						if colchild.hide_select:
-							row.prop( colchild, 'hide_select', text='', icon='LOCKED' )
-						else:
-							row.prop( colchild, 'hide_select', text='', icon='UNLOCKED' )
-
-						decmod = None
-						for mod in colchild.modifiers:
-							if mod.type == 'DECIMATE': decmod = mod; break
-						if not decmod:
-							decmod = colchild.modifiers.new('LOD', type='DECIMATE')
-							decmod.ratio = 0.5
-
-						if decmod:
-							#print(dir(decmod))
-							#row = box.row()
-							box.prop( decmod, 'ratio', 'vertex reduction ratio' )
-							box.label(text='faces: %s' %decmod.face_count )
-
-class Ogre_create_collision_op(bpy.types.Operator):                
-	'''operator: creates new collision'''  
-	bl_idname = "ogre.create_collision"  
-	bl_label = "create collision mesh"                    
-	bl_options = {'REGISTER', 'UNDO'}                              # Options for this panel type
-
-	@classmethod
-	def poll(cls, context): return True
-	def invoke(self, context, event):
-		parent = context.active_object
-		child = parent.copy()
-		bpy.context.scene.objects.link( child )
-		child.name = 'collision'
-		child.matrix_local = mathutils.Matrix()
-		child.parent = parent
-		child.hide_select = True
-		child.draw_type = 'WIRE'
-		#child.select = False
-		child.lock_location = [True]*3
-		child.lock_rotation = [True]*3
-		child.lock_scale = [True]*3
-		return {'FINISHED'}
-
-
 ##################################################################
 _game_logic_intro_doc_ = '''
 Hijacking the BGE
@@ -486,83 +340,6 @@ The rules for which Sensors trigger which Actuators is left undefined, as explai
 '''
 
 
-class Ogre_Physics(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "physics"
-	bl_label = "Ogre Physics"
-
-	@classmethod
-	def poll(cls, context):
-		if context.active_object: return True
-		else: return False
-
-	def draw(self, context):
-		layout = self.layout
-		ob = context.active_object
-		game = ob.game
-
-		#if game.physics_type:	# in ('DYNAMIC', 'RIGID_BODY'):
-		split = layout.split()
-
-		col = split.column()
-		col.prop(game, "physics_type", text='Type')
-		col.prop(game, "use_actor")
-		col.prop(game, "use_ghost")
-
-		col = split.column()
-		col.prop(game, "use_collision_bounds", text="Use Primitive Collision")
-		col.prop(game, "collision_bounds_type", text="Primitive Type")
-		col.prop(game, "collision_margin", text="Collision Margin", slider=True)
-		#col.prop(game, "use_collision_compound", text="Compound")		TODO
-
-		layout.separator()
-
-		split = layout.split()
-
-		col = split.column()
-		col.label(text="Attributes:")
-		col.prop(game, "mass")
-		col.prop(game, "radius")
-		col.prop(game, "form_factor")
-
-		col = split.column()
-		sub = col.column()
-		#sub.active = (game.physics_type == 'RIGID_BODY')
-		sub.prop(game, "use_anisotropic_friction")
-		subsub = sub.column()
-		subsub.active = game.use_anisotropic_friction
-		subsub.prop(game, "friction_coefficients", text="", slider=True)
-
-		split = layout.split()
-
-		col = split.column()
-		col.label(text="Velocity:")
-		sub = col.column(align=True)
-		sub.prop(game, "velocity_min", text="Minimum")
-		sub.prop(game, "velocity_max", text="Maximum")
-
-		col = split.column()
-		col.label(text="Damping:")
-		sub = col.column(align=True)
-		sub.prop(game, "damping", text="Translation", slider=True)
-		sub.prop(game, "rotation_damping", text="Rotation", slider=True)
-
-		layout.separator()
-
-		split = layout.split()
-
-		col = split.column()
-		col.prop(game, "lock_location_x", text="Lock Translation: X")
-		col.prop(game, "lock_location_y", text="Lock Translation: Y")
-		col.prop(game, "lock_location_z", text="Lock Translation: Z")
-
-		col = split.column()
-		col.prop(game, "lock_rotation_x", text="Lock Rotation: X")
-		col.prop(game, "lock_rotation_y", text="Lock Rotation: Y")
-		col.prop(game, "lock_rotation_z", text="Lock Rotation: Z")
-
-
 ##################################################################
 
 OPTIONS = {
@@ -573,14 +350,14 @@ _ogre_doc_classic_textures_ = '''
 Ogre texture blending is far more limited than Blender's texture slots.  While many of the blending options are the same or similar, only the blend mode "Mix" is allowed to have a variable setting.  All other texture blend modes are either on or off, for example you can not use the "Add" blend mode and set the amount to anything other than fully on (1.0).  The user also has to take into consideration the hardware multi-texturing limitations of their target platform - for example the GeForce3 can only do four texture blend operations in a single pass.  Note that Ogre will fallback to multipass rendering when the hardware won't accelerate it.
 
 ==Supported Blending Modes:==
-	* Mix				- blend_manual -
+	* Mix			- blend_manual -
 	* Multiply		- modulate -
-	* Screen			- modulate_x2 -
+	* Screen		- modulate_x2 -
 	* Lighten		- modulate_x4 -
-	* Add				- add -
+	* Add			- add -
 	* Subtract		- subtract -
 	* Overlay		- add_signed -
-	* Difference	- dotproduct -
+	* Difference		- dotproduct -
 
 ==Mapping Types:==
 	* UV
@@ -617,133 +394,10 @@ bpy.types.Material.scene_blend = EnumProperty(
 	default='one zero'
 )
 
-class Ogre_Material_Panel( bpy.types.Panel ):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "material"
-	bl_label = "Ogre Material"
-
-	def draw(self, context):
-		if not hasattr(context, "material"): return
-		if not context.active_object: return
-		if not context.active_object.active_material: return
-
-		mat = context.material
-		ob = context.object
-		slot = context.material_slot
-		layout = self.layout
-
-		box = layout.box()
-		row = box.row()
-		row.prop(mat, "diffuse_color")
-		row.prop(mat, "diffuse_intensity")
-		row = box.row()
-		row.prop(mat, "specular_color")
-		row.prop(mat, "specular_intensity")
-		row = box.row()
-		row.prop(mat, "specular_hardness")
-
-		row = box.row()
-		row.prop(mat, "emit")
-		row.prop(mat, "ambient")
-
-		row = box.row()
-		row.prop(mat, "use_shadows")
-		row.prop(mat, "use_vertex_color_paint", text="Vertex Colors")
-
-
-		box = layout.box()
-		row = box.row()
-		row.prop(mat, "use_transparency", text="Transparent")
-		if mat.use_transparency: row.prop(mat, "alpha")
-		box.prop(mat, 'scene_blend')
-
-
 def has_property( a, name ):
 	for prop in a.items():
 		n,val = prop
 		if n == name: return True
-
-
-class Ogre_Texture_Panel(bpy.types.Panel):
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = "texture"
-	bl_label = "Ogre Texture"
-	@classmethod
-	def poll(cls, context):
-		if not hasattr(context, "texture_slot"):
-			return False
-		else: return True
-
-	def draw(self, context):
-		#if not hasattr(context, "texture_slot"):
-		#	return False
-		layout = self.layout
-		#idblock = context_tex_datablock(context)
-		slot = context.texture_slot
-		if not slot or not slot.texture: return
-
-		box = layout.box()
-		row = box.row()
-		row.label(text="Mapping:")
-		row.prop(slot, "texture_coords", text="")
-		if slot.texture_coords == 'UV':
-			row.label(text="UV Layer:")
-			row.prop(slot, "uv_layer", text="")
-		else:
-			row.label(text="Projection:")
-			row.prop(slot, "mapping", text="")
-
-		if hasattr(slot.texture, 'image') and slot.texture.image:
-			row = box.row()
-			row.label(text="Repeat Mode:")
-			row.prop(slot.texture, "extension", text="")
-			if slot.texture.extension == 'CLIP':
-				row.label(text="Border Color:")
-				row.prop(slot, "color", text="")
-
-		box = layout.box()
-		row = box.row()
-		row.label(text="Blending:")
-		row.prop(slot, "blend_type", text="")
-		row.label(text="Alpha Stencil:")
-		row.prop(slot, "use_stencil", text="")
-		row = box.row()
-		if slot.blend_type == 'MIX':
-			row.label(text="Mixing:")
-			row.prop(slot, "diffuse_color_factor", text="")
-			#row.label(text="Enable:")
-			#row.prop(slot, "use_map_color_diffuse", text="")
-
-		row = box.row()
-		row.label(text="Enable Alpha:")
-		row.prop(slot, "use_map_alpha", text="")
-		if context.active_object and context.active_object.active_material:
-			row.label(text="Transparent:")
-			row.prop(context.active_object.active_material, "use_transparency", text="")
-			
-
-		box = layout.box()
-		box.prop(slot, "offset", text="X,Y = offset.  Z=rotation")
-
-		box = layout.box()
-		box.prop(slot, "scale", text="Scale in X,Y.   (Z ignored)")
-
-		box = layout.box()
-		row = box.row()
-		row.label(text='scrolling animation')
-		#cant use if its enabled by defaultrow.prop(slot, "use_map_density", text="")
-		row.prop(slot, "use_map_scatter", text="")
-		row = box.row()
-		row.prop(slot, "density_factor", text="X")
-		row.prop(slot, "emission_factor", text="Y")
-
-		box = layout.box()
-		row = box.row()
-		row.label(text='rotation animation')
-		row.prop(slot, "emission_color_factor", text="")
-		row.prop(slot, "use_map_emission", text="")
 
 
 def guess_uv_layer( layer ):
@@ -754,7 +408,8 @@ def guess_uv_layer( layer ):
 	if '.' in layer:
 		a = layer.split('.')[-1]
 		if a.isdigit(): idx = int(a)+1
-		else: print('warning: it is not allowed to give custom names to UVTexture channels ->', layer)
+		else:
+			print('warning: it is not allowed to give custom names to UVTexture channels ->', layer)
 	return idx
 
 def wordwrap( txt ):
@@ -810,24 +465,15 @@ class _ogredoc_Exporter_Features( INFO_MT_ogre_helper ):
 	mydoc = '''
 Ogre Exporter Features:
 	Export .scene:
-		pos, rot, scl
+		location, rotation, scale
 		environment colors
 		fog settings
 		lights, colors
-		array modifier (constant offset only)
 		optimize instances
 		selected only
-		force cameras
-		force lamps
-		BGE physics
-		collisions prims and external meshes
 
 	Export .mesh
-
-		verts, normals, uv
-		export `meshes` subdirectory
-		bone weights
-		shape animation (using NLA-hijacking)
+		vertices, normals, one set of uvs
 
 	Export .material
 		diffuse color
@@ -836,12 +482,9 @@ Ogre Exporter Features:
 		specular
 		receive shadows on/off
 		multiple materials per mesh
-		exports `textures` subdirectory
 
 	Export .skeleton
-		bones
-		animation
-		multi-tracks using NLA-hijacking
+		NA
 '''
 
 @ogredoc
@@ -916,34 +559,6 @@ Unresolved Development Issues:
 '''
 
 @ogredoc
-class _ogredoc_Physics( INFO_MT_ogre_helper ):
-	mydoc = '''
-Ogre Dot Scene + BGE Physics
-	extended format including external collision mesh, and BGE physics settings
-<node name="...">
-	<entity name="..." meshFile="..." collisionFile="..." collisionPrim="..." [and all BGE physics attributes] />
-</node>
-
-collisionFile : sets path to .mesh that is used for collision (ignored if collisionPrim is set)
-collisionPrim : sets optimal collision type [ cube, sphere, capsule, cylinder ]
-*these collisions are static meshes, animated deforming meshes should give the user a warning that they have chosen a static mesh collision type with an object that has an armature
-
-Blender Collision Setup:
-	1. If a mesh object has a child mesh with a name starting with 'collision', then the child becomes the collision mesh for the parent mesh.
-
-	2. If 'Collision Bounds' game option is checked, the bounds type [box, sphere, etc] is used. This will override above rule.
-
-	3. Instances (and instances generated by optimal array modifier) will share the same collision type of the first instance, you DO NOT need to set the collision type for each instance.
-
-	Tips and Tricks:
-		. instance your mesh, parent it under the source, add a Decimate modifier, set the draw type to wire.  boom! easy optimized collision mesh
-		. sphere collision type is the fastest
-
-	TODO support composite collision objects?
-
-'''
-
-@ogredoc
 class _ogredoc_Warnings( INFO_MT_ogre_helper ):
 	mydoc = '''
 General Warnings:
@@ -959,7 +574,11 @@ General Warnings:
 class _ogredoc_Bugs( INFO_MT_ogre_helper ):
 	mydoc = '''
 Known Issues:
-	. all bones must be connected
+	. UV coordinates that are disconnected and have no seams will be exported incorrectly
+	. Skeleton exporting is not supported
+	. Bones and bone weights are not exported
+	. Only single set of uv coordinates is exported
+	- Scale is not exported correctly, some issues with rotations at least for negative scales.
 '''
 
 
@@ -1439,47 +1058,6 @@ Format: transform m00 m01 m02 m03 m10 m11 m12 m13 m20 m21 m22 m23 m30 m31 m32 m3
 The indexes of the 4x4 matrix value above are expressed as m<row><col>.
 '''
 
-def _mesh_entity_helper( doc, ob, o ):
-	## extended format - BGE Physics ##
-	o.setAttribute('mass', str(ob.game.mass))
-	o.setAttribute('mass_radius', str(ob.game.radius))
-	o.setAttribute('physics_type', ob.game.physics_type)
-	o.setAttribute('actor', str(ob.game.use_actor))
-	o.setAttribute('ghost', str(ob.game.use_ghost))
-	o.setAttribute('velocity_min', str(ob.game.velocity_min))
-	o.setAttribute('velocity_max', str(ob.game.velocity_max))
-
-	o.setAttribute('lock_trans_x', str(ob.game.lock_location_x))
-	o.setAttribute('lock_trans_y', str(ob.game.lock_location_y))
-	o.setAttribute('lock_trans_z', str(ob.game.lock_location_z))
-
-	o.setAttribute('lock_rot_x', str(ob.game.lock_rotation_x))
-	o.setAttribute('lock_rot_y', str(ob.game.lock_rotation_y))
-	o.setAttribute('lock_rot_z', str(ob.game.lock_rotation_z))
-
-	o.setAttribute('anisotropic_friction', str(ob.game.use_anisotropic_friction))
-	x,y,z = ob.game.friction_coefficients
-	o.setAttribute('friction_x', str(x))
-	o.setAttribute('friction_y', str(y))
-	o.setAttribute('friction_z', str(z))
-
-	o.setAttribute('damping_trans', str(ob.game.damping))
-	o.setAttribute('damping_rot', str(ob.game.rotation_damping))
-
-	o.setAttribute('inertia_tensor', str(ob.game.form_factor))
-
-	mesh = ob.data
-	## custom user props ##
-	for prop in mesh.items():
-		propname, propvalue = prop
-		if not propname.startswith('_'):
-			user = doc.createElement('user_data')
-			o.appendChild( user )
-			user.setAttribute( 'name', propname )
-			user.setAttribute( 'value', str(propvalue) )
-			user.setAttribute( 'type', type(propvalue).__name__ )
-
-
 # Ogre supports .dds in both directx and opengl
 # http://www.ogre3d.org/forums/viewtopic.php?f=5&t=46847
 IMAGE_FORMATS = {
@@ -1511,8 +1089,6 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 	EX_SCENE = BoolProperty(name="Export Scene",
 			description="export current scene (OgreDotScene xml)", default=True)
 	EX_SELONLY = BoolProperty(name="Export Selected Only", description="export selected", default=False)
-	EX_FORCE_CAMERA = BoolProperty(name="Force Camera", description="export active camera", default=True)
-	EX_FORCE_LAMPS = BoolProperty(name="Force Lamps", description="export all lamps", default=True)
 
 	EX_MESH = BoolProperty(name="Export Meshes", description="export meshes", default=True)
 	EX_MESH_OVERWRITE = BoolProperty(name="Export Meshes (overwrite)",
@@ -1538,17 +1114,17 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 
 	def execute(self, context):
-		self.ogre_export(self.filepath, context);
+		self.export_scene(self.filepath, context);
 		return {'FINISHED'}
 
 	# @param materials list of materials to export
 	# @param file_name the name of the material file, usually scene name
 	# @param path to the export directory
-	def dot_material(self, materials, file_name, path='/tmp'):
+	def dot_material(self, materials, file_name, file_dir):
 		print('updating .material')
 
 		if not materials:
-			print('WARNING: no materials, not writting .material script');
+			Report.warnings.append('no materials, not writting .material script');
 			return
 
 		M = MISSING_MATERIAL + '\n'
@@ -1559,7 +1135,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		# Write the material file
 		if not file_name.endswith('.material'):
 			file_name += '.material'
-		url = os.path.join(path, file_name)
+		url = os.path.join(file_dir, file_name)
 		print('Writing material file to ', url)
 		f = open( url, 'wb' )
 		f.write( bytes(M,'utf-8') )
@@ -1645,20 +1221,21 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 			a = xml_doc.createElement(ctag)
 			environ.appendChild(a)
 			color = _c[ctag]
-			a.setAttribute('r', '%s'%color.r)
-			a.setAttribute('g', '%s'%color.g)
-			a.setAttribute('b', '%s'%color.b)
+
+			a.setAttribute('r', float_to_string(color.r))
+			a.setAttribute('g', float_to_string(color.g))
+			a.setAttribute('b', float_to_string(color.b))
 		if world.mist_settings.use_mist:
 			fog = xml_doc.createElement('fog')
 			environ.appendChild(fog)
-			fog.setAttribute('linearStart', '%s'%world.mist_settings.start )
+			fog.setAttribute('linearStart', float_to_string(world.mist_settings.start))
 			# only linear supported?
 			fog.setAttribute('mode', world.mist_settings.falloff.lower() )
-			fog.setAttribute('linearEnd', '%s' %(world.mist_settings.start+world.mist_settings.depth))
+			fog.setAttribute('linearEnd', float_to_string(world.mist_settings.start+world.mist_settings.depth))
 
 
 
-	def ogre_export(self, url, context):
+	def export_scene(self, url, context):
 		timer = Timer()
 		global OPTIONS
 		OPTIONS['SWAP_AXIS'] = self.EX_SWAP_MODE
@@ -1678,31 +1255,15 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		############################
 
 		## extern files ##
-		xml_extern = doc.createElement('externals')
-		xml_scene.appendChild(xml_extern)
-
-		item = doc.createElement('item');
-		xml_extern.appendChild(item)
-		item.setAttribute('type','material')
-		a = doc.createElement('file');
-		item.appendChild( a )
-		# .material file (scene mats)
-		# FIXME material name
-		a.setAttribute('name', '%s.material' %context.scene.name)
-
 		self._write_environment(xml_doc=doc, xml_scene=xml_scene, world = context.scene.world)
 
 		## nodes (objects) ##
 		objects = []
 		# gather because macros will change selection state
-		for ob in bpy.data.objects:
+		# This doesn't export objects not linked to the Blender scene
+		for ob in context.scene.objects:
 			if self.EX_SELONLY and not ob.select:
-				if ob.type == 'CAMERA' and self.EX_FORCE_CAMERA:
-					pass
-				elif ob.type == 'LAMP' and self.EX_FORCE_LAMPS:
-					pass
-				else:
-					continue
+				continue
 			objects.append(ob)
 
 		## gather roots because ogredotscene supports parents and children ##
@@ -1733,24 +1294,32 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				meshes=export_meshes,
 				xmlparent=xml_nodes )
 
-		mesh_dir = os.path.split(url)[0]
-		materials = self._export_ogre_meshes(export_meshes, mesh_dir)
+		basepath = os.path.splitext(self.filepath)[0]
+		#mesh_dir = os.path.split(url)[0]
+		mesh_dir = os.path.split(basepath)[0]
+		if len(export_meshes) > 0 :
+			materials = self._export_ogre_meshes(export_meshes, mesh_dir)
+		else :
+			Report.warnings.append("No Meshes to export.")
+			materials = []
 
 		if self.EX_SCENE:
 			self._write_scene_file(url, doc)
 
+		if self.EX_MATERIALS and len(materials) > 0 :
+			material_path = os.path.split(basepath)
 
-		basepath = os.path.splitext(self.filepath)[0]
-		material_path = os.path.split(basepath)
-		#url = basepath + '.material'
-
-		material_dir = mesh_dir
-		if self.EX_MATERIALS:
-			self.dot_material(materials, material_path[1], material_path[0]) 
+			material_dir = material_path[0]
+			self.dot_material(materials, file_name=material_path[1], file_dir=material_dir)
 			if self.EX_COPY_TEXTURES:
+				texture_dir = os.path.join(material_dir, "textures")
+				textures = []
 				for mat in materials:
-					textures = collect_used_textures(mat)
-					copy_textures(textures, material_dir)
+					textures += collect_used_textures(mat)
+
+				print("Copying textures to ", texture_dir)
+				if len(textures) > 0:
+					copy_textures(textures, texture_dir)
 
 		Report.time = timer.elapsedSecs()
 
@@ -1803,6 +1372,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		xmlparent.appendChild(xml_obj)
 
 		## custom user props ##
+		"""
 		for prop in ob.items():
 			propname, propvalue = prop
 			if not propname.startswith('_'):
@@ -1811,12 +1381,15 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 				user.setAttribute( 'name', propname )
 				user.setAttribute( 'value', str(propvalue) )
 				user.setAttribute( 'type', type(propvalue).__name__ )
+		"""
 
-		if ob.type == 'MESH' and len(ob.data.faces):
+		if ob.type == 'MESH' and len(ob.data.polygons):
 			self._write_entity( ob,
 					doc=doc,
 					meshes=meshes,
 					xmlparent=xml_obj)
+		elif ob.type == "MESH" :
+			Report.warnings.append("Empty Mesh " + ob.name + " not exporting.")
 
 		elif ob.type == 'CAMERA':
 			self._write_camera(ob, doc, xml_par=xml_obj)
@@ -1853,16 +1426,16 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		if ob.data.use_diffuse:
 			diff = doc.createElement('colourDiffuse');
 			light.appendChild(diff)
-			diff.setAttribute('r', '%s'%ob.data.color.r)
-			diff.setAttribute('g', '%s'%ob.data.color.g)
-			diff.setAttribute('b', '%s'%ob.data.color.b)
+			diff.setAttribute('r', float_to_string(ob.data.color.r))
+			diff.setAttribute('g', float_to_string(ob.data.color.g))
+			diff.setAttribute('b', float_to_string(ob.data.color.b))
 
 		if ob.data.use_specular:
 			spec = doc.createElement('colourSpecular');
 			light.appendChild(spec)
-			spec.setAttribute('r', '%s'%ob.data.color.r)
-			spec.setAttribute('g', '%s'%ob.data.color.g)
-			spec.setAttribute('b', '%s'%ob.data.color.b)
+			spec.setAttribute('r', float_to_string(ob.data.color.r))
+			spec.setAttribute('g', float_to_string(ob.data.color.g))
+			spec.setAttribute('b', float_to_string(ob.data.color.b))
 
 		## bug reported by C.L.B ##
 		# hemi lights should actually provide info for fragment/vertex-program ambient shaders
@@ -1893,8 +1466,10 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		cam.setAttribute('projectionType', "perspective")
 		clip = doc.createElement('clipping');
 		cam.appendChild(clip)
-		clip.setAttribute('nearPlaneDist', '%s' %ob.data.clip_start)
-		clip.setAttribute('farPlaneDist', '%s' %ob.data.clip_end)
+
+		
+		clip.setAttribute('nearPlaneDist', float_to_string(ob.data.clip_start))
+		clip.setAttribute('farPlaneDist', float_to_string(ob.data.clip_end))
 	## end _camera_export
 
 	#def _write_entity(self, ent, doc)
@@ -1909,7 +1484,7 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 		ent.setAttribute('name', ob.data.name)
 		ent.setAttribute('meshFile', '%s.mesh' %(ob.data.name) )
 
-		_mesh_entity_helper(doc, ob, ent)
+		#_mesh_entity_helper(doc, ob, ent)
 
 		if self.EX_MESH:
 			if ob not in meshes:
@@ -1946,13 +1521,34 @@ class INFO_OT_createOgreExport(bpy.types.Operator):
 
 from shutil import copy2
 
+def is_image_texture(tex):
+	valid = tex.type == 'IMAGE'
+	if valid:
+		valid = tex.image and tex.image.type == 'IMAGE' and tex.image.filepath != ''
+	return valid
+
 def copy_textures(textures, path):
-	if not os.path.isdir(path):
+	if not os.path.exists(path):
+		print("Creating texture export directory : ", path)
+		os.mkdir(path)
+	elif os.path.exists(path) and not os.path.isdir(path):
+		print("Changing texture export directory : ", path)
 		path = os.path.dirname(path)
 
 	for tex in textures:
-		if tex.image and tex.image.type == 'IMAGE' and tex.image.filepath != '':
-			copy2(bpy.path.abspath(tex.image.filepath), path)
+		if is_image_texture(tex) :
+			abs_path = bpy.path.abspath(tex.image.filepath)
+			if(os.path.exists(abs_path)):
+				copy2(abs_path, path)
+				Report.textures.append(tex.name)
+			else:
+				warn = str(abs_path) + " does not exists. Texture not copied."
+				Report.warnings.append(warn)
+		else :
+			warn = tex.name + " is not an image texture. Texture not copied."
+			Report.warnings.append(warn)
+
+
 
 
 # @brief get used textures for a material
@@ -1979,16 +1575,22 @@ def textures_to_string(mat):
 	M = ''
 	# Only file textures are supported
 	for tex in textures:
-		image = tex.image
-		if image and image.type == 'IMAGE' and image.filepath != '':
-			# TODO this might not not work for filepaths that are absolute
-			tex_path = os.path.split(image.filepath)[1]
-			texture = 'texture ' + tex_path
-			M += indent(3, 'texture_unit', '{')
-			# FIXME the filepath should be the new one where textures are copied
-			M += indent(4, texture)
-			M += indent(3, '}')	#end texture_unit
-			# TODO add scale, offset and other parameters
+		if is_image_texture(tex) :
+			blender_tex_path = bpy.path.abspath(tex.image.filepath)
+			tex_path = os.path.split(blender_tex_path)[1]
+			if(len(tex_path) == 0):
+				Report.warnings.append("Problem in the texture file path.")
+			else :
+				texture = 'texture ' + tex_path
+				M += indent(3, 'texture_unit', '{')
+				# FIXME the filepath should be the new one where textures are copied
+				M += indent(4, texture)
+				M += indent(3, '}')	#end texture_unit
+				# TODO add scale, offset and other parameters
+
+		else:
+			s = str("texture type " + str(tex.type) + " used by texture " + tex.name + " is not supported.")
+			Report.warnings.append(s)
 
 	return M
 
@@ -1996,46 +1598,38 @@ def textures_to_string(mat):
 
 
 
-def _ogre_node_helper( doc, ob, prefix='', pos=None, rot=None, scl=None ):
+def _ogre_node_helper(doc, ob, prefix=''):
 	mat = ob.matrix_local
 
-	o = doc.createElement('node')
-	o.setAttribute('name',prefix+ob.name)
-	p = doc.createElement('position')
-	q = doc.createElement('quaternion')
-	s = doc.createElement('scale')
-	for n in (p,q,s):
-		o.appendChild(n)
+	node = doc.createElement('node')
+	node.setAttribute('name',prefix+ob.name)
+	xml_pos = doc.createElement('position')
+	xml_q = doc.createElement('quaternion')
+	xml_scale = doc.createElement('scale')
+	for n in (xml_pos,xml_q,xml_scale):
+		node.appendChild(n)
 
-	if pos: v = swap(pos)
-	else: v = swap( mat.to_translation() )
-	p.setAttribute('x', '%6f'%v.x)
-	p.setAttribute('y', '%6f'%v.y)
-	p.setAttribute('z', '%6f'%v.z)
+	v = swap(mat.to_translation())
+	xml_pos.setAttribute('x', float_to_string(v.x))
+	xml_pos.setAttribute('y', float_to_string(v.y))
+	xml_pos.setAttribute('z', float_to_string(v.z))
 
-	if rot: v = swap(rot)
-	else: v = swap( mat.to_quaternion() )
-	q.setAttribute('x', '%6f'%v.x)
-	q.setAttribute('y', '%6f'%v.y)
-	q.setAttribute('z', '%6f'%v.z)
-	q.setAttribute('w','%6f'%v.w)
+	#q = swap(ob.rotation_quaternion)
+	q = swap(mat.to_quaternion())
+	xml_q.setAttribute('x', float_to_string(q.x))
+	xml_q.setAttribute('y', float_to_string(q.y))
+	xml_q.setAttribute('z', float_to_string(q.z))
+	xml_q.setAttribute('w', float_to_string(q.w))
 
-	if scl:		# this should not be used
-		v = swap(scl)
-		x=abs(v.x); y=abs(v.y); z=abs(v.z)
-		s.setAttribute('x', '%6f'%x)
-		s.setAttribute('y', '%6f'%y)
-		s.setAttribute('z', '%6f'%z)
-	else:		# scale is different in Ogre from blender - rotation is removed
-		ri = mat.to_quaternion().inverted().to_matrix()
-		scale = ri.to_4x4() * mat
-		v = swap( scale.to_scale() )
-		x=abs(v.x); y=abs(v.y); z=abs(v.z)
-		s.setAttribute('x', '%6f'%x)
-		s.setAttribute('y', '%6f'%y)
-		s.setAttribute('z', '%6f'%z)
+	# We may not swap the scale, this would mirror all our models :S
+	# FIXME Scale does not work at this moment
+	#s = swap(ob.scale)
+	s = mat.to_scale()
+	xml_scale.setAttribute('x', float_to_string(s.x))
+	xml_scale.setAttribute('y', float_to_string(s.y))
+	xml_scale.setAttribute('z', float_to_string(s.z))
 
-	return o
+	return node
 
 
 # sometimes the groups are out of order, this finds the right index.
@@ -2046,62 +1640,192 @@ def find_bone_index( ob, arm, groupidx):
 			return i
 
 def mesh_is_smooth( mesh ):
-	for face in mesh.faces:
+	for face in mesh.tessfaces:
 		if face.use_smooth:
 			return True
 
+# @brief get the vertices used for the particular uv layer
+# @param mesh
+# @param layer the uv layer to get the list for
+# @return the list containing vertices for the particular uvs
+# @todo not fineshed!
+def get_uv_vertex_map(mesh, layer=0):
+	uvOfVertex = {}
+
+	for layer in mesh.uv_layers:
+		uvOfVertex[layer] = {}
+		for fidx, uvface in enumerate(layer.data):
+			face = mesh.tessfaces[ fidx ]
+			for vertex in face.vertices:
+				if vertex not in uvOfVertex[layer]:
+					uv = uvface.uv[ list(face.vertices).index(vertex) ]
+					uvOfVertex[layer][vertex] = uv
+
+	return uvOfVertex
+
+def has_uv_material(b_object):
+	for mat_s in b_object.material_slots :
+		for tex_s in mat_s.material.texture_slots:
+			if tex_s != None:
+				if tex_s.texture != None:
+					if tex_s.texture.type == 'IMAGE' and tex_s.texture_coords == 'UV':
+						if tex_s.texture.image.type == 'IMAGE':
+							return True
+	
+	return False
+
+
 import pyogre
 
+# @brief Returns object copy with a new mesh linked to obj_copy.data
+# @param obj blender object with a mesh to copy
+# @return copy of the blender object with a copied mesh
+# Converts the copied mesh to triangles and splits the vertices if it has
+# face uvs and an uv mapped image texture.
+#
+# All scene states like selection and active object are returned to their initial values
+# Creates two new data blocks, object copy and mesh copy. User needs to remove them.
+#
+# @todo Does not handle hidden objects correctly
+def triangle_mesh_copy(obj) :
+	copy = obj.copy()
+
+	try:
+		# remove armature and array modifiers before collaspe
+		rem = []
+		for mod in copy.modifiers:
+			if mod.type in 'ARMATURE ARRAY'.split():
+				rem.append( mod )
+		for mod in rem:
+			copy.modifiers.remove( mod )
+
+		# Remapping Blender face indexes for meshes that need splitting
+		is_splitted = has_uv_material(copy)
+
+		# Assuming that the mesh has no duplicated vertices
+		vertex_normal_map = {}
+		for v in copy.data.vertices:
+			v_t = (v.co[0], v.co[1], v.co[2])
+			vertex_normal_map[v_t] = vertex_normal_map.get(v_t, v.normal)
+
+		## hijack blender's edge-split modifier to make this easy ##
+		# The edge-split is needed to get the Texture coordinates correct
+		# Without them a vertex is mapped to texture coordinates of multiple faces
+		# Will bloat the mesh because multiplies all of the vertices in the mesh.
+		# Will preserve all UV coordinates though as long as the mesh has a uv texture
+		# assigned to it when exporting.
+		# Objects without uv coordinates or without uv textures in them are exported
+		# using sticky uvs. For auto mapped uvs this is well suited and will minimise the
+		# bloating across a scene (CAD models in particularly).
+		# Also because this method is so slow (copying the normals) it should not
+		# be used for huge objects.
+		# O(n2) complexity where n is the number of vertices
+		if is_splitted:
+			e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
+			e.use_edge_angle = False
+			e.use_edge_sharp = True
+			for edge in copy.data.edges:
+				# All edges are splitted at the moment
+				# TODO
+				# should really find the ones that have vertices with two
+				# different uv coordinates
+				# to minimise the number of duplicated vertices
+				# and also store a list of them so we can preserve the ones which were
+				# marked as sharp
+				edge.use_edge_sharp = True
+
+		## bake mesh ##
+		mesh = copy.to_mesh(bpy.context.scene, True, "PREVIEW")
+		copy.data = mesh
+
+		original_selection = bpy.context.selected_objects
+		original_active_object = bpy.context.active_object
+		for o in original_selection:
+			o.select = False
+		bpy.context.scene.objects.link(copy)
+		copy.select = True
+		copy.hide = False
+		bpy.context.scene.objects.active = copy
+
+		# enter edit mode, selection is only allowed there
+		# FIXME this doesn't work for objects that are hidden
+		# TODO test if this works for objects that are in a different layer
+		# than the user is using
+		bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+
+		# Select all faces
+		bpy.ops.mesh.select_all(action='SELECT')
+		bpy.ops.mesh.quads_convert_to_tris()
+
+		# Invert states
+		# This shouldn't be necessary as we are operating on the copy
+		# FIXME this does not revert them to the ones they were before runing the script
+		#bpy.ops.mesh.select_all(action='DESELECT')
+		# Back to object mode because we need it for next phase
+		bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+		#bpy.ops.object.select_all(action='DESELECT')
+
+		# Return original state
+		# TODO this should be wrapped into a class so we could do this in destructor
+		# TODO does this need to switch the object mode back also?
+		for obj in original_selection:
+			obj.select = True
+		bpy.context.scene.objects.active = original_active_object
+		bpy.context.scene.objects.unlink(copy)
+
+		# Clear sharp edges created by edge split
+		# TODO this will remove all sharp edges from the mesh which is not what we want
+		# we want only the edges that we created to handle face UV maps to be cleared
+		if is_splitted:
+			t = Timer()
+			for v in mesh.vertices:
+				v_t = (v.co[0], v.co[1], v.co[2])
+				# This should never raise an exception as all vertices should be in the map
+				v.normal = vertex_normal_map[v_t]
+			Report.fixing_normals_time += t.elapsedSecs()
+
+	except :
+		# Cleanup created objects
+		if copy:
+			bpy.context.scene.objects.unlink(copy)
+			mesh = copy.data
+			bpy.data.objects.remove(copy)
+			if mesh:
+				bpy.data.meshes.remove(mesh)
+		raise
+
+	return copy;
+
+	
 # Ogre Mesh binary exporter #
 # @param ob, mesh to export
 # @param path, path where to write the mesh file
-# @return all the materials used by that mesh
-def export_ogre_mesh( ob, file_path):
+# @return all the Blender materials used by that mesh
+def export_ogre_mesh(ob, file_path):
 	print('Exporting Ogre mesh ', ob.name, " to ", file_path)
 
 	Report.meshes.append(ob.name)
 
-	copy = ob.copy()
-	rem = []
-	# remove armature and array modifiers before collaspe
-	for mod in copy.modifiers:
-		if mod.type in 'ARMATURE ARRAY'.split(): rem.append( mod )
-	for mod in rem: copy.modifiers.remove( mod )
+	# This shouldn't happen
+	if not len(ob.data.polygons):
+		Report.errors.append(ob.data.name + 'mesh without faces, skipping!')
+		return [];
 
-	## hijack blender's edge-split modifier to make this easy ##
-	# The edge-split is needed to get the Texture coordinates correct
-	# Without them a vertex is mapped to texture coordinates of multiple faces
-	# Minimal bloating by only duplicating the vertices that have seams in them
-	# so we preserve the uv coordinates.
-	# TODO should not use the EDGE_SPLIT for this, because it will screw smooth
-	# normals completely. We need to copy the vertices, just like edge split does
-	# but we want them to have same normals.
-	# Good thing though that this will only screw smooth notmals for the seams.
-	if copy.data.uv_textures.active:
-		e = copy.modifiers.new('_hack_', type='EDGE_SPLIT')
-		e.use_edge_angle = False
-		e.use_edge_sharp = True
-		for edge in copy.data.edges:
-			# Only duplicate edges with seams
-			# (and those that already are marked as sharp)
-			if(edge.use_seam):
-				edge.use_edge_sharp = True
-
-	## bake mesh ##
-	mesh = copy.to_mesh(bpy.context.scene, True, "PREVIEW")	# collaspe
-
-	# This shouldn't happen and it's not the sub mesh but the mesh
-	if not len(mesh.faces):		# bug fix dec10th, reported by Matti
-		print('ERROR : mesh without faces, skipping!', ob)
-		return;
+	# Return variable
+	t = Timer()
+	copy = triangle_mesh_copy(ob)
+	# Bake the tessfaces
+	copy.data.update(False, True)
+	Report.triangle_mesh_time += t.elapsedSecs()
 
 	# Use the copy for report as we use it for exporting
-	Report.faces += len(mesh.faces)
-	Report.vertices += len(mesh.vertices)
+	Report.faces += len(copy.data.tessfaces)
+	Report.vertices += len(copy.data.vertices)
 
 	writer = pyogre.MeshWriter()
 	og_mesh = writer.createMesh()
 
+	mats = []
 	# FIXME add armature support
 #	arm = ob.find_armature()
 #	if arm:
@@ -2163,160 +1887,93 @@ def export_ogre_mesh( ob, file_path):
 						poseref.setAttribute('influence', str(skey.value) )
 	"""
 
-	# Used timing infomation
-	vertices_time = 0
+	if( len(copy.data.uv_layers) > 1):
+		warn = "Mesh with multiple texture coordinates, only active is exported"
+		Report.warnings.append(warn)
 
-	badverts = 0
-	
-	uvOfVertex = {}
-	
-	## texture maps - vertex dictionary ##
-	if mesh.uv_textures.active:
-		for layer in mesh.uv_textures:
-			uvOfVertex[layer] = {}
-			for fidx, uvface in enumerate(layer.data):
-				face = mesh.faces[ fidx ]
-				for vertex in face.vertices:
-					if vertex not in uvOfVertex[layer]:
-						uv = uvface.uv[ list(face.vertices).index(vertex) ]
-						uvOfVertex[layer][vertex] = uv
-	
-	# Get the vertex buffer
-	for vidx, v in enumerate(mesh.vertices):
-		""" FIXME bone support
-		if arm:
-			check = 0
-			for vgroup in v.groups:
-				if vgroup.weight > opts['trim-bone-weights']:		#self.EX_TRIM_BONE_WEIGHTS:		# optimized
-					bnidx = find_bone_index(ob,arm,vgroup.group)
-					if bnidx is not None:		# allows other vertex groups, not just armature vertex groups
-						vba = doc.createElement('vertexboneassignment')
-						bweights.appendChild( vba )
-						vba.setAttribute( 'vertexindex', str(vidx) )
-						vba.setAttribute( 'boneindex', str(bnidx) )
-						vba.setAttribute( 'weight', str(vgroup.weight) )
-						check += 1
-			if check > 4:
-				badverts += 1
-				print('WARNING: vertex %s is in more than 4 vertex groups (bone weights)\n(this maybe Ogre incompatible)' %vidx)
-		"""
+	# Single uv coordinate set (active) is supported
+	# Maps vertices to uv coordinates as blender uses face uvs we need to
+	# create a map for vertex uvs
+	vertexUVmap = {}
+	layer = copy.data.tessface_uv_textures.active
+	if layer :
+		already_existed = 0
+		for fidx, uvface in enumerate(layer.data):
+			face = copy.data.tessfaces[fidx]
+			for vertex in face.vertices:
+				uv = uvface.uv[ list(face.vertices).index(vertex) ]
+				if vertex in vertexUVmap:
+					already_existed += 1
+				vertexUVmap[vertex] = uv
+		if already_existed > 0:
+			warn = str(already_existed) + " vertices already had their "\
+				"UV coordinates and were overwriten."
+			Report.warnings.append(warn)
 
+	for vidx, v in enumerate(copy.data.vertices):
 		og_vertex = pyogre.Vertex()
 
-		x,y,z = swap( v.co )
+		x,y,z = swap(v.co)
 
 		# position
 		og_vertex.position = pyogre.Vector3(x,y,z)
 
-		x,y,z = swap( v.normal )
+		x,y,z = swap(v.normal)
 		og_vertex.normal = pyogre.Vector3(x,y,z)
 
-
-		## vertex colors ##
-		"""	TODO not implemented
-		if len( mesh.vertex_colors ):		# TODO need to do proper face lookup for color1,2,3,4
-			#vb.setAttribute('colours_diffuse','true')		# fixed Dec3rd
-			#cd = doc.createElement( 'colour_diffuse' )	#'color_diffuse')
-			#vertex.appendChild( cd )
-			vchan = mesh.vertex_colors[0]
-
-			valpha = None	## hack support for vertex color alpha
-			for bloc in mesh.vertex_colors:
-				if bloc.name.lower().startswith('alpha'):
-					valpha = bloc; break
-
-			for f in mesh.faces:
-				if vidx in f.vertices:
-					k = list(f.vertices).index(vidx)
-					r,g,b = getattr( vchan.data[ f.index ], 'color%s'%(k+1) )
-					if valpha:
-						ra,ga,ba = getattr( valpha.data[ f.index ], 'color%s'%(k+1) )
-						cd.setAttribute('value', '%6f %6f %6f %6f' %(r,g,b,ra) )	
-						og_vertex.diffuse = pyogre.ColourValue(x,y,z)
-					else:
-						cd.setAttribute('value', '%6f %6f %6f 1.0' %(r,g,b) )
-						og_vertex.diffuse = pyogre.ColourValue(x,y,z)
-					break
-		"""
-
-		## texture maps ##
 		# TODO add support for multiple texture coordinates
-		if mesh.uv_textures.active:
-			layer = mesh.uv_textures.active
-			#for layer in mesh.uv_textures:
-			if vidx in uvOfVertex[layer]:
-				uv = uvOfVertex[layer][vidx]
-				og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
+		if vidx in vertexUVmap:
+			uv = vertexUVmap[vidx]
+			og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
 		
-		"""
-		if mesh.uv_textures.active:
-			layer = mesh.uv_textures.active
-			#for layer in mesh.uv_textures:
-			for fidx, uvface in enumerate(layer.data):
-				face = mesh.faces[ fidx ]
-				if vidx in face.vertices:
-					uv = uvface.uv[ list(face.vertices).index(vidx) ]
-					og_vertex.uv = pyogre.Vector2(uv[0], 1.0-uv[1])
-					break
-		"""
-
 		og_mesh.addVertex(og_vertex)
 	## end vert loop
-
-	if( len(mesh.uv_textures) > 1):
-		print("Warning mesh with multiple texture coordinates, only first one is exported")
-
-	if badverts:
-		warning_msg = '%s has %s vertices weighted to too many bones'
-		'(Ogre limits a vertex to 4 bones)\n'
-		'[try increaseing the Trim-Weights threshold option]' %(mesh.name, badverts)
-		Report.warnings.append(warning_msg)
-
 
 	######################################################
 	used_materials = []
 	matnames = []
 	for mat in ob.data.materials:
+		material_name = ""
 		if mat:
-			matnames.append( mat.name )
+			material_name = mat.name
+
+			matnames.append(mat.name)
+			if mat.name not in used_materials:
+				used_materials.append(mat.name)
 		else:
-			print('warning: bad material data', ob)
-			matnames.append( '_missing_material_' )		# fixed dec22, keep proper index
+			material_name = '_missing_material_'
+			warn = ob.data.name + ' has bad material data'
+			Report.warnings.append(warn)
+
+
 	if not matnames:
 		matnames.append( '_missing_material_' )
 
 	# Data structure for dividing the Blender mesh to Ogre SubMeshes
-	class MeshData:
-		material_name = ""
-		# Set of tri tuples of vertex indexes
-		faces = []
+	# variable faces : Set of tri tuples of vertex indexes
+	# variable material_name : name of the material used by this mesh name
+	class SubMeshData:
+		def __init__(self):
+			self.material_name = ""
+			self.faces= []
 
 	mesh_datas = []
 	for matidx, matname in enumerate( matnames ):
-		mdata = MeshData()
+		mdata = SubMeshData()
 		mdata.material_name = matname
 
 		## faces ##
-		for F in mesh.faces:
+		for fidx, F in enumerate(copy.data.tessfaces):
 			## skip faces not in this material index ##
-			if F.material_index != matidx:
-				continue
-			if matname not in used_materials:
-				used_materials.append( matname )
+			if F.material_index == matidx:
+				mdata.faces.append((F.vertices[0], F.vertices[1], F.vertices[2]))
 
-			## Ogre only supports triangles, so we will split quads
-			mdata.faces.append((F.vertices[0], F.vertices[1], F.vertices[2]))
-			x, y, z = swap(F.normal)
-			normal = pyogre.Vector3(x, y, z) 
-			if len(F.vertices) >= 4:
-				mdata.faces.append((F.vertices[0], F.vertices[2], F.vertices[3]))
 
 		# Do not add empty sub meshes, not sure if this is necessary though
 		if(len(mdata.faces) > 0):
 			mesh_datas.append(mdata)
 
 	for m in mesh_datas:
-		print("creating submesh with material name : ", m.material_name)
 		sm = og_mesh.createSubMesh()
 		sm.material = m.material_name
 
@@ -2328,9 +1985,6 @@ def export_ogre_mesh( ob, file_path):
 
 	for i in range(og_mesh.getNumSubMeshes()):
 		Report.triangles += og_mesh.getSubMesh(i).getNumFaces()
-
-	bpy.data.objects.remove(copy)
-	bpy.data.meshes.remove(mesh)
 
 	writer.writeMesh(og_mesh, file_path)
 
@@ -2346,10 +2000,16 @@ def export_ogre_mesh( ob, file_path):
 		OgreXMLConverter( xmlfile, opts )
 	"""
 
-	mats = []
 	for name in used_materials:
+		# TODO this check should be useless now anyway
 		if name != '_missing_material_':
 			mats.append( bpy.data.materials[name] )
+
+	# Cleanup after exception handling
+	mesh = copy.data
+	bpy.data.objects.remove(copy)
+	bpy.data.meshes.remove(mesh)
+
 	return mats
 ## end export_ogre_mesh##
 
@@ -2395,7 +2055,8 @@ class Bone(object):
 		self.matrix = matrix
 		#self.matrix *= mathutils.Matrix([1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1])
 		self.bone = pbone		# safe to hold pointer to pose bone, not edit bone!
-		if not pbone.bone.use_deform: print('warning: bone <%s> is non-deformabled, this is inefficient!' %self.name)
+		if not pbone.bone.use_deform:
+			print('warning: bone <%s> is non-deformabled, this is inefficient!' %self.name)
 		#TODO test
 		#if pbone.bone.use_inherit_scale:
 		#	print('warning: bone <%s> is using inherit scaling, Ogre has no support for this' %self.name)
@@ -2626,7 +2287,7 @@ def get_image_textures( mat ):
 def convert_list_to_string(l):
 	s = ''
 	for elem in l:
-		s += (str(round(elem, 6)) + ' ')
+		s += (float_to_string(elem) + ' ')
 	return s
 
 # @brief convert colour to list
@@ -2700,6 +2361,8 @@ class INFO_MT_dynamic(bpy.types.Operator):
 		bpy.data.objects[self.mystring].select = True
 		return {'FINISHED'}
 
+##############################################################################
+##### Register ######
 def export_menu_func(self, context):
 	#ext = os.path.splitext(bpy.app.binary_path)[-1]
 	#default_blend_path = bpy.data.filepath.replace(".blend", ext)
@@ -2710,41 +2373,15 @@ def export_menu_func(self, context):
 	op.filepath=os.path.join( path, name.split('.')[0]+'.scene' )
 
 def register():
-	print( VERSION )
-	# Register operators
-	bpy.utils.register_class( Ogre_create_collision_op )
-	# Register INFOs
-	bpy.utils.register_class( INFO_MT_ogre_helper )
-	bpy.utils.register_class( INFO_MT_ogre_docs )
-	bpy.utils.register_class( INFO_MT_dynamics )
-	bpy.utils.register_class( INFO_MT_dynamic )
-	bpy.utils.register_class( INFO_MT_actors )
-	bpy.utils.register_class( INFO_OT_createOgreExport )
-	bpy.utils.register_class( INFO_MT_actor )
-	# Register something, user interface panels etc.
-	bpy.utils.register_class( Ogre_User_Report )
-	bpy.utils.register_class( Ogre_Physics )
-	bpy.utils.register_class( Ogre_Material_Panel )
-	bpy.utils.register_class( Ogre_Texture_Panel )
+	bpy.utils.register_module(__name__)
 
 	bpy.types.INFO_MT_file_export.append(export_menu_func)
 
 def unregister():
-	bpy.utils.unregister_class( Ogre_create_collision_op )
-	# unregister INFOs
-	bpy.utils.unregister_class( INFO_MT_ogre_helper )
-	bpy.utils.unregister_class( INFO_MT_ogre_docs )
-	bpy.utils.unregister_class( INFO_MT_dynamics )
-	bpy.utils.unregister_class( INFO_MT_dynamic )
-	bpy.utils.unregister_class( INFO_MT_actors )
-	bpy.utils.unregister_class( INFO_OT_createOgreExport )
-	bpy.utils.unregister_class( INFO_MT_actor )
-	bpy.utils.unregister_class( Ogre_User_Report )
-	bpy.utils.unregister_class( Ogre_Physics )
-	bpy.utils.unregister_class( Ogre_Material_Panel )
-	bpy.utils.unregister_class( Ogre_Texture_Panel )
+	bpy.utils.unregister_module(__name__)
 
 	bpy.types.INFO_MT_file_export.remove(export_menu_func)
 
-if __name__ == "__main__": register()
+if __name__ == "__main__":
+	register()
 
