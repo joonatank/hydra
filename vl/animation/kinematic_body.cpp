@@ -87,22 +87,19 @@ vl::KinematicBody::~KinematicBody(void)
 }
 
 void
-vl::KinematicBody::translate(Ogre::Vector3 const &v)
+vl::KinematicBody::setTransform(vl::Transform const &trans)
 {
-	transform(Transform(v));
+	assert(_node);
+	_dirty_transformation = true;
+	_node->setWorldTransform(trans);
+//	_transformed_cb(trans);
 }
 
-void
-vl::KinematicBody::rotate(Ogre::Quaternion const &q)
+vl::Transform const &
+vl::KinematicBody::getTransform(void) const
 {
-	transform(Transform(q));
-}
-
-void
-vl::KinematicBody::transform(vl::Transform const &t)
-{
-	_node->setTransform(_node->getTransform()*t);
-//	_transformed_cb(_node->getWorldTransform());
+	assert(_node);
+	return _node->getWorldTransform();
 }
 
 void

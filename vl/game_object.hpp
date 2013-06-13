@@ -69,36 +69,30 @@ public :
 	physics::CollisionShapeRefPtr getCollisionModel(void) const;
 
 	// ObjectInterface overrides
-	virtual std::string const &getName(void) const
+	std::string const &getName(void) const
 	{ return _name; }
 
-	virtual Transform const &getTransform(void) const;
+	/// Base overrides for transforms
+	Transform const &getTransform(void) const;
 
-	virtual void setTransform(Transform const &t);
+	void setTransform(Transform const &t);
 
-	virtual void transform(vl::Transform const &t);
-
-	virtual void translate(Ogre::Vector3 const &v);
-
-	virtual void rotate(Ogre::Quaternion const &q);
-
-	virtual void setWorldTransform(vl::Transform const &trans);
+	void setWorldTransform(vl::Transform const &trans);
 
 	/// @brief get the transformation in the world space
 	/// @return Transformation in world space
-	virtual vl::Transform getWorldTransform(void) const;
+	vl::Transform getWorldTransform(void) const;
 
-	virtual Ogre::Vector3 const &getPosition(void) const;
+	void scale(Ogre::Vector3 const &v) {}
 
-	virtual void setPosition(Ogre::Vector3 const &v);
+	void setScale(Ogre::Vector3 const &v) {}
 
-	virtual Ogre::Quaternion const &getOrientation(void) const;
+	Ogre::Vector3 const &getScale(void) const
+	{ return Ogre::Vector3(1, 1, 1); }
 
-	virtual void setOrientation(Ogre::Quaternion const &q);
+	void setVisibility(bool visible);
 
-	virtual void setVisibility(bool visible);
-
-	virtual bool isVisible(void) const;
+	bool isVisible(void) const;
 
 	bool isDynamic(void) const
 	{ return _is_dynamic; }

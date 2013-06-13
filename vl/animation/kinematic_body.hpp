@@ -54,35 +54,13 @@ public :
 	virtual std::string const &getName(void) const
 	{ return _name; }
 
-	void translate(Ogre::Vector3 const &);
+	Transform const &getTransform(void) const;
 
-	void rotate(Ogre::Quaternion const &);
+	void setTransform(Transform const &t);
 
-	void transform(vl::Transform const &t);
+	void setWorldTransform(vl::Transform const &trans);
 
-	virtual void setWorldTransform(vl::Transform const &trans);
-
-	virtual vl::Transform getWorldTransform(void) const;
-
-	virtual Ogre::Vector3 const &getPosition(void) const
-	{ return _node->getWorldTransform().position; }
-
-	virtual void setPosition(Ogre::Vector3 const &v)
-	{
-		Transform t = _node->getWorldTransform();
-		t.position = v;
-		_node->setWorldTransform(t);
-	}
-
-	virtual Ogre::Quaternion const &getOrientation(void) const
-	{ return _node->getWorldTransform().quaternion; }
-
-	virtual void setOrientation(Ogre::Quaternion const &q)
-	{
-		Transform t = _node->getWorldTransform();
-		t.quaternion = q;
-		_node->setWorldTransform(t);
-	}
+	vl::Transform getWorldTransform(void) const;
 
 	vl::Transform transformToLocal(vl::Transform const &t) const
 	{
@@ -91,9 +69,16 @@ public :
 		return wtB*t;
 	}
 
-	virtual void setVisibility(bool visible);
+	void scale(Ogre::Vector3 const &v) {}
 
-	virtual bool isVisible(void) const;
+	void setScale(Ogre::Vector3 const &v) {}
+
+	Ogre::Vector3 const &getScale(void) const
+	{ return Ogre::Vector3(1, 1, 1); }
+
+	void setVisibility(bool visible);
+
+	bool isVisible(void) const;
 
 	/// @todo not implemented
 	vl::KinematicBodyRefPtr clone(void) const

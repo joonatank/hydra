@@ -159,34 +159,22 @@ public :
 
 	virtual void *getUserData(void) = 0;
 
-	/// Virtual overrides from ObjectInterface
-	virtual void transform(vl::Transform const &t) {}
-
-	virtual void rotate(Ogre::Quaternion const &q) {}
-
 	virtual vl::Transform getWorldTransform(void) const = 0;
 
 	virtual void setWorldTransform(Transform const &worldTrans) = 0;
 
-	virtual Ogre::Vector3 const &getPosition(void) const
-	{ return getMotionState()->getWorldTransform().position; }
+	vl::Transform const &getTransform(void) const
+	{ return getWorldTransform(); }
 
-	virtual void setPosition(Ogre::Vector3 const &v)
-	{
-		Transform t = getMotionState()->getWorldTransform();
-		t.position = v;
-		getMotionState()->setWorldTransform(t);
-	}
+	void setTransform(Transform const &worldTrans)
+	{ setWorldTransform(worldTrans); }
 
-	virtual Ogre::Quaternion const &getOrientation(void) const
-	{ return getMotionState()->getWorldTransform().quaternion; }
+	virtual void scale(Ogre::Vector3 const &v) {}
 
-	virtual void setOrientation(Ogre::Quaternion const &q)
-	{
-		Transform t = getMotionState()->getWorldTransform();
-		t.quaternion = q;
-		getMotionState()->setWorldTransform(t);
-	}
+	virtual void setScale(Ogre::Vector3 const &v) {}
+
+	virtual Ogre::Vector3 const &getScale(void) const
+	{ return Ogre::Vector3(1, 1, 1); }
 
 	virtual void setVisibility(bool visible) {}
 

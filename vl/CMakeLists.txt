@@ -14,6 +14,7 @@ project( "HydraMain" CXX )
 cmake_minimum_required(VERSION 2.6)
 
 set(SRC
+	object_interface.cpp
 	tracker.cpp
 	vrpn_tracker.cpp
 	vrpn_analog_client.cpp

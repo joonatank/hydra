@@ -253,25 +253,6 @@ vl::GameObject::setTransform(vl::Transform const &t)
 }
 
 void
-vl::GameObject::transform(vl::Transform const &t)
-{
-	// @todo is this correct or should they be swapped?
-	setTransform(t*getTransform());
-}
-
-void
-vl::GameObject::translate(Ogre::Vector3 const &v)
-{
-	transform(Transform(v));
-}
-
-void
-vl::GameObject::rotate(Ogre::Quaternion const &q)
-{
-	transform(Transform(q));
-}
-
-void
 vl::GameObject::setWorldTransform(vl::Transform const &trans)
 {
 	if(_kinematic_body)
@@ -305,34 +286,6 @@ vl::GameObject::getWorldTransform(void) const
 		assert(_graphics_node);
 		return _graphics_node->getWorldTransform();
 	}
-}
-
-Ogre::Vector3 const &
-vl::GameObject::getPosition(void) const
-{
-	return getTransform().position;
-}
-
-void
-vl::GameObject::setPosition(Ogre::Vector3 const &v)
-{
-	Transform t = getTransform();
-	t.position = v;
-	setTransform(t);
-}
-
-Ogre::Quaternion const &
-vl::GameObject::getOrientation(void) const
-{
-	return getTransform().quaternion;
-}
-
-void
-vl::GameObject::setOrientation(Ogre::Quaternion const &q)
-{
-	Transform t = getTransform();
-	t.quaternion = q;
-	setTransform(t);
 }
 
 void

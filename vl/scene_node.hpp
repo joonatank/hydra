@@ -39,13 +39,6 @@
 namespace vl
 {
 
-enum TransformSpace
-{
-	TS_LOCAL,
-	TS_PARENT,
-	TS_WORLD,
-};
-
 class HYDRA_API SceneNode : public vl::Distributed, public vl::ObjectInterface
 {
 public :
@@ -62,100 +55,20 @@ public :
 		_name = name;
 	}
 
-	/// @brief transform the node by a matrix, includes the scale part
-	/// @param m matrix to use for transformation
-	void transform(Ogre::Matrix4 const &m);
-
-	/// @brief set the transformation of the node by a matrix, includes the scale part
-	/// @param m matrix to replace the transformation
-	void setTransform(Ogre::Matrix4 const &m);
-
-	/// @brief transform the node, does not include the scale part
-	virtual void transform(vl::Transform const &trans);
-
+	/// Base virtual overrides for transformations
 	/// @brief set the transformation, does not include the scale part
 	void setTransform(vl::Transform const &trans);
-
-	/// @brief set the transformation in the space of an another object
-	/// @param trans Transformation in reference space
-	/// @param reference the space to use for Transformation
-	/// @todo not testes, and probably does not work correctly
-	void setTransform(vl::Transform const &trans, SceneNodePtr reference);
-
 	vl::Transform const &getTransform(void) const
 	{ return _transform; }
 
-	/// @brief get transformation in the space of an another object
-	/// @param reference the space the Transformation is returned
-	/// @return Transformation in reference space
-	/// @todo not testes, and probably does not work correctly
-	vl::Transform getTransform(SceneNodePtr reference) const;
-
 	/// @brief set the transformation in the world space
 	/// @param Transformation in world space
-	/// @todo not testes, and probably does not work correctly
-	virtual void setWorldTransform(vl::Transform const &trans);
+	virtual void setWorldTransform(Transform const &trans);
 
 	/// @brief get the transformation in the world space
 	/// @return Transformation in world space
-	virtual vl::Transform getWorldTransform(void) const;
-	
-	/// @brief get the position in object space
-	virtual Ogre::Vector3 const &getPosition(void) const
-	{ return _transform.position; }
+	virtual Transform getWorldTransform(void) const;
 
-	/// @brief set the position in object space
-	virtual void setPosition( Ogre::Vector3 const &v );
-
-	/// @brief translate the SceneNode
-	/// @param v how much to translate
-	/// @param reference the coordinate system to use for translation
-	void translate(Ogre::Vector3 const &v, vl::SceneNodePtr reference);
-
-	/// @brief translate the SceneNode
-	/// @param v how much to translate
-	/// @param which coordinate system to use
-	void translate(Ogre::Vector3 const &v, vl::TransformSpace space);
-
-	/// @brief translate the SceneNode in local coordinate system
-	virtual void translate(Ogre::Vector3 const &v);
-
-	/// @brief get the orientation in object space
-	virtual Ogre::Quaternion const &getOrientation( void ) const
-	{ return _transform.quaternion; }
-
-	/// @brief set the orientation in object space
-	virtual void setOrientation( Ogre::Quaternion const &q );
-
-	/// @todo properly document the rotation functions and their uses
-
-	/// @brief rotates the SceneNode around reference
-	/// @param q how much to rotate
-	/// @param reference the coordinate system to use for translation
-	/// @todo seems like this doesn't not work as expected for some rotations
-	/// @todo should this be renamed to rotateAround, because this is only useful for special cases
-	void rotateAround(Ogre::Quaternion const &q, vl::SceneNodePtr reference);
-
-//	void rotateAround(Ogre::Quaternion const &q, Ogre::Vector3 const &point, 
-//		TransformSpace relativeTo = TS_LOCAL);
-
-	/// @brief rotates the SceneNode in transform space
-	/// @param q how much to rotate
-	/// @param which coordinate system to use
-	void rotate(Ogre::Quaternion const &q, vl::TransformSpace space);
-
-	/// @brief rotates the SceneNode using World axes
-	virtual void rotate(Ogre::Quaternion const &q);
-
-	/// @brief helper overloads
-	void rotate(Ogre::Vector3 const &axis, Ogre::Radian const &angle)
-	{ rotate(Ogre::Quaternion(angle, axis)); }
-	void rotate(Ogre::Radian const &angle, Ogre::Vector3 const &axis)
-	{ rotate(Ogre::Quaternion(angle, axis)); }
-	void rotate(Ogre::Vector3 const &axis, Ogre::Degree const &angle)
-	{ rotate(Ogre::Quaternion(Ogre::Radian(angle), axis)); }
-	void rotate(Ogre::Degree const &angle, Ogre::Vector3 const &axis)
-	{ rotate(Ogre::Quaternion(Ogre::Radian(angle), axis)); }
 
 	void scale(Ogre::Real s);
 	void scale(Ogre::Vector3 const &s);
@@ -165,15 +78,6 @@ public :
 	Ogre::Vector3 const &getScale(void) const
 	{ return _scale; }
 
-
-	void lookAt(Ogre::Vector3 const &dir);
-
-	Ogre::Vector3 getDirection(void) const;
-
-	/// @todo move the yawFixed and upAxis to class variables
-	void setDirection(Ogre::Vector3 const &dir, 
-		Ogre::Vector3 const &localDirectionVector = Ogre::Vector3::NEGATIVE_UNIT_Z, 
-		Ogre::Vector3 const &upAxis = Ogre::Vector3::UNIT_Y, bool yawFixed = true);
 
 	/// Set the world size of the object
 	/// This is effectively equal to scale(desired_size/getSize)

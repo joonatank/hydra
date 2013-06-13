@@ -96,6 +96,7 @@ namespace vl
 	typedef std::vector<GameObjectRefPtr> GameObjectList;
 
 	/// SceneObjects
+	class ObjectInterface;
 	class SceneManager;
 	class SceneNode;
 	class MovableObject;
@@ -105,6 +106,7 @@ namespace vl
 	class MovableText;
 	class RayObject;
 
+	typedef ObjectInterface *ObjectInterfacePtr;
 	typedef SceneManager * SceneManagerPtr;
 	typedef SceneNode * SceneNodePtr;
 	typedef MovableObject * MovableObjectPtr;
