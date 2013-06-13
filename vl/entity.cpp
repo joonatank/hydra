@@ -30,6 +30,9 @@
 #include <OGRE/OgreInstancedEntity.h>
 #include <OGRE/OgreInstanceBatch.h>
 
+// Used for timing mesh loads and conversion
+#include "base/chrono.hpp"
+
 /// ------------------------------------- Global -----------------------------
 std::ostream &
 vl::operator<<(std::ostream &os, vl::Entity const &ent)
@@ -119,6 +122,8 @@ vl::Entity::setInstanced(bool enable)
 void 
 vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 {
+	vl::chrono clock;
+
 	_mesh = mesh;
 
 	if(!Ogre::MeshManager::getSingleton().resourceExists(_mesh_name))
@@ -152,6 +157,10 @@ vl::Entity::meshLoaded(vl::MeshRefPtr mesh)
 	_loader_cb = 0;
 
 	_finishCreateNative();
+
+	// For some meshes like the ground mesh this is taking almost a second to complete
+	// Why for a mesh with 4 vertices?
+	std::clog << "vl::Entity::meshLoaded : " << getName() << " took " << clock.elapsed() << std::endl;
 }
 
 vl::MovableObjectPtr
