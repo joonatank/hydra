@@ -22,6 +22,9 @@
 
 #include <OIS/OISJoyStick.h>
 
+#include <OIS/OISMouse.h>
+#include "mouse_event.hpp"
+
 namespace vl
 {
 
@@ -46,6 +49,23 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 
 	return e;
 }
+
+inline MouseEvent
+convert_ois_to_hydra(OIS::MouseEvent const &evt)
+{
+	MouseEvent mevt;
+	mevt.X.abs = evt.state.X.abs;
+	mevt.X.rel = evt.state.X.rel;
+	mevt.Y.abs = evt.state.Y.abs;
+	mevt.Y.rel = evt.state.Y.rel;
+	mevt.Z.abs = evt.state.Z.abs;
+	mevt.Z.rel = evt.state.Z.rel;
+
+	mevt.buttons = evt.state.buttons;
+	
+	return mevt;
+}
+
 
 }	// namespace vl
 

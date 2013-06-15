@@ -142,6 +142,17 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	python::class_<vl::MouseEvent>("MouseEvent", python::init<>())
+		.def_readonly("axis_x", &vl::MouseEvent::X)
+		.def_readonly("axis_y", &vl::MouseEvent::Y)
+		.def_readonly("axis_z", &vl::MouseEvent::Z)
+		.def_readonly("buttons", &vl::MouseEvent::buttons)
+		.def(python::self_ns::str(python::self_ns::self))
+		.def_readonly("head_position", &vl::MouseEvent::head_position)
+		.def_readonly("head_orientation", &vl::MouseEvent::head_orientation)
+		.def_readonly("view_matrix", &vl::MouseEvent::view_projection)
+	;
+
 	/// Input
 	
 	/// Handlers

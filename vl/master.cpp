@@ -702,18 +702,27 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 		case vl::cluster::EVT_MOUSE_PRESSED :
 		{
 			OIS::MouseButtonID b_id;
-			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			//OIS::MouseEvent evt( 0, OIS::MouseState() );
+			
+			//stream >> b_id >> evt;
+			vl::MouseEvent evt;
 			stream >> b_id >> evt;
+			_game_manager->getEventManager()->mousePressed(evt);
 
-			// @todo should pass the mouse state to event manager
+			
 		}
 		break;
 
 		case vl::cluster::EVT_MOUSE_RELEASED :
 		{
 			OIS::MouseButtonID b_id;
-			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			//OIS::MouseEvent evt( 0, OIS::MouseState() );
+			//stream >> b_id >> evt;
+			vl::MouseEvent evt;
 			stream >> b_id >> evt;
+			// @remove: print to test!
+			std::clog << b_id << evt;
+			_game_manager->getEventManager()->mouseReleased(evt);
 
 			// @todo should pass the mouse state to event manager
 		}
@@ -721,9 +730,10 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_MOUSE_MOVED :
 		{
-			OIS::MouseEvent evt( 0, OIS::MouseState() );
+			//OIS::MouseEvent evt( 0, OIS::MouseState() );
+			vl::MouseEvent evt;
 			stream >> evt;
-
+			_game_manager->getEventManager()->mouseMoved(evt);
 			// @todo should pass the mouse state to event manager
 		}
 		break;

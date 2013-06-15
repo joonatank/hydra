@@ -35,6 +35,8 @@ THE SOFTWARE.
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreQuaternion.h>
 
+//#include <OGRE/OgreMatrix4.h>
+
 #include <stdint.h>
 
 namespace vl {
@@ -80,6 +82,10 @@ protected:
 	void writeBools(const bool * const pLong, size_t count);
 	void writeObject(Ogre::Vector3 const &vec);
 	void writeObject(Ogre::Quaternion const &q);
+	// @warning added for passing viewmatrix to mouse events
+	//Generally do not send or receive anything which is a 4x4 matrix,
+	//instead if possible use quaternion and vector pairs!
+	//void writeObject(Ogre::Matrix4 const &m);
 
     void writeString(std::string const &string);
     void writeData(const void* const buf, size_t size, size_t count);
@@ -95,6 +101,11 @@ protected:
 	void readObject(vl::ResourceStream &stream, Ogre::Vector3 &pDest);
 	void readObject(vl::ResourceStream &stream, Ogre::Vector2 &pDest);
 	void readObject(vl::ResourceStream &stream, Ogre::Quaternion &pDest);
+	// @warning added for passing viewmatrix to mouse events
+	//Generally do not send or receive anything which is a 4x4 matrix,
+	//instead if possible use quaternion and vector pairs!
+	
+	//void readObject(vl::ResourceStream &stream, Ogre::Matrix4 &pDest);
 
 	std::string readString(vl::ResourceStream &stream);
 	std::string readString(vl::ResourceStream &stream, size_t numChars);

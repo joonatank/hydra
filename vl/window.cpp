@@ -328,7 +328,18 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_RELEASED );
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
-		stream << id << evt;
+		
+		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
+		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		
+		e.head_position = _camera->getPosition();
+		e.head_orientation = _camera->getOrientation();
+		
+		//Should the ipd argument be -_ipd/2 or 0?
+		e.view_projection = _frustum.getProjectionMatrix();
+	
+		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
+		stream << id << e;
 		_sendEvent( data );
 	}
 
@@ -499,6 +510,7 @@ vl::Window::draw(void)
 		if(_renderer->getGui())
 		{ _renderer->getGui()->update(); }
 	}
+	
 
 	// Push back the original position and orientation
 	og_cam->setPosition(_camera->getPosition());

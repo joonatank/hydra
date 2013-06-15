@@ -1,18 +1,23 @@
-/*
+/* Do we need this device abstraction and handlers?
+
 #include "input.hpp"
 #include "mouse_event.hpp"
 #include <boost/signal.hpp>
 #include "OIS/OISMouse.h"
 #include "math/math.hpp"
 
-class Mickey : public OIS::Mouse, public vl::InputDevice
+class Mouse : public vl::InputDevice
 {
 public:
+	Mouse(void);
+	virtual ~Mouse(void);
+
 	void addHandler(MouseHandlerRefPtr handler);
 	void removeHandler(MouseHandlerRefPtr handler);
-	void removeHandler(int idx);
+	int addListener(MouseListenerRefPtr listener);
 protected:
 private:
+	std::vector<MouseListenerRefPtr> _listeners;
 	std::vector<MouseHandlerRefPtr> _handlers;
 
 }; //Mickey mouse
@@ -26,17 +31,5 @@ struct MouseHandler
 	virtual void execute(MouseEvent const &evt) = 0;
 
 };	// struct MouseHandler
-
-struct MouseEvent
-{
-	MouseEvent(void) : axis_x(0), axis_y(0), buttons(0) {}
-
-	~MouseEvent(void) {}
-
-	vl::scalar axis_x;
-	vl::scalar axis_y;
-	uint32_t buttons;
-
-};
 
 */

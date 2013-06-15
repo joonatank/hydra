@@ -27,6 +27,8 @@
 
 #include "input/joystick_event.hpp"
 
+#include "input/mouse_event.hpp"
+
 namespace vl
 {
 
@@ -88,10 +90,21 @@ public :
 
 	bool hasKeyTrigger(OIS::KeyCode kc, KEY_MOD mod = KEY_MOD_NONE);
 
+	
 	/// Update methods for key triggers should only be called from the Input event receiver
 	void keyPressed(OIS::KeyCode kc);
 	void keyReleased(OIS::KeyCode kc);
 
+	/// mouse related:
+	// What's this? 
+	vl::MouseTrigger *createMouseTrigger(void);
+
+	
+	void mouseMoved(vl::MouseEvent const &evt);
+	void mousePressed(vl::MouseEvent const &evt);
+	void mouseReleased(vl::MouseEvent const &evt);
+	
+	
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
 
@@ -138,7 +151,9 @@ private :
 private :
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
 	std::vector<vl::KeyTrigger *> _key_triggers;
-
+	// @warning: added due mouse support and raycast picker testing:
+	std::vector<vl::MouseTrigger *> _mouse_triggers;
+	
 	vl::FrameTrigger *_frame_trigger;
 
 	std::bitset<8> _key_modifiers;

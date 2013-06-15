@@ -182,6 +182,44 @@ vl::EventManager::keyReleased(OIS::KeyCode kc)
 }
 
 
+/// mouse related:
+vl::MouseTrigger*
+vl::EventManager::createMouseTrigger(void)
+{
+	vl::MouseTrigger *trigu = new vl::MouseTrigger();
+	_mouse_triggers.push_back(trigu);
+	return trigu;
+}
+
+void
+vl::EventManager::mousePressed(vl::MouseEvent const &evt)
+{
+	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
+	{
+		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_PRESSED);
+	}
+
+}
+
+void
+vl::EventManager::mouseReleased(vl::MouseEvent const &evt)
+{
+	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
+	{
+		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_RELEASED);
+	}
+}
+
+void
+vl::EventManager::mouseMoved(vl::MouseEvent const &evt)
+{
+	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
+	{
+		(*iter)->update(evt,vl::MouseTrigger::MOUSE_STATE::MS_MOVED);
+	}
+}
+
+
 vl::FrameTrigger *
 vl::EventManager::getFrameTrigger( void )
 {

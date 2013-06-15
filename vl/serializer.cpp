@@ -370,6 +370,21 @@ vl::Serializer::writeObject(Ogre::Quaternion const &q)
     writeFloats(tmp, 4);
 }
 //---------------------------------------------------------------------
+/*void
+vl::Serializer::writeObject(Ogre::Matrix4 const &m)
+{
+	
+	float tmp[16];
+	
+	for(size_t i = 0; i < 16; ++i)
+	{
+		tmp[i] = *m[i];	
+	}
+	writeFloats(tmp,16);
+}
+
+//---------------------------------------------------------------------
+*/
 void
 vl::Serializer::readObject(vl::ResourceStream &stream, Ogre::Vector3 &pDest)
 {
@@ -394,6 +409,22 @@ vl::Serializer::readObject(vl::ResourceStream &stream, Ogre::Quaternion &pDest)
 }
 //---------------------------------------------------------------------
 
+//Generally do not send or receive anything which is a 4x4 matrix,
+//instead if possible use quaternion and vector pairs!
+/*
+void
+vl::Serializer::readObject(vl::ResourceStream &stream, Ogre::Matrix4 &pDest)
+{
+	float tmp[16];
+	readFloats(stream, tmp, 16);
+	for( size_t i = 0; i < 16; ++i)
+	{
+		*pDest[i] = tmp[i];
+	}
+}
+
+//---------------------------------------------------------------------
+*/
 
 void
 vl::Serializer::flipToLittleEndian(void* pData, size_t size, size_t count)

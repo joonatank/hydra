@@ -184,12 +184,14 @@ namespace vl
 	class SerialJoystick;
 	class JoystickHandler;
 	class ConstraintJoystickHandler;
+	class MouseHandler;
 	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
 	typedef boost::shared_ptr<Joystick> JoystickRefPtr;
 	typedef boost::shared_ptr<GameJoystick> GameJoystickRefPtr;
 	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
 	typedef boost::shared_ptr<JoystickHandler> JoystickHandlerRefPtr;
 	typedef boost::shared_ptr<ConstraintJoystickHandler> ConstraintJoystickHandlerRefPtr;
+	typedef boost::shared_ptr<MouseHandler> MouseHandlerRefPtr;
 
 namespace gui
 {

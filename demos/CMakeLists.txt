@@ -58,7 +58,14 @@ copy_start_scripts( hydra
 	cad_import_test/cad_import.prj
 	"cad_import_test" )
 
+copy_start_scripts( hydra
+	btCompound_test/btCompound_test.prj
+	"btCompound_test" )
 
+copy_start_scripts( hydra
+	dynamic_concave_raycast/dynamic_concave_raycast.prj
+	"dynamic_concave_raycast" )
+	
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp

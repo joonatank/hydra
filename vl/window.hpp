@@ -38,6 +38,8 @@
 #include <OIS/OISMouse.h>
 #include <OIS/OISJoyStick.h>
 
+#include "input/mouse_event.hpp"
+
 #include <OGRE/OgreRenderWindow.h>
 
 namespace vl

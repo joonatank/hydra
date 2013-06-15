@@ -30,6 +30,8 @@
 
 #include "base/time.hpp"
 
+#include "input/mouse_event.hpp"
+
 namespace vl
 {
 
@@ -190,6 +192,41 @@ public :
 	{ return std::string(); }
 
 };
+
+
+// @warning added due mouse and raycast picking test purposes:
+class MouseTrigger : public BasicActionTrigger
+{
+typedef boost::signal<void (vl::MouseEvent const &)> Tripped;
+
+public:
+	enum MOUSE_STATE
+	{
+		MS_PRESSED,
+		MS_RELEASED,
+		MS_MOVED
+	};
+	
+	virtual std::string getTypeName( void ) const
+	{ return "MouseTrigger"; }
+
+	virtual std::string getName( void ) const
+	{ return std::string(); }
+	int addButtonReleasedListener(Tripped::slot_type const &slot);
+	int addButtonPressedListener(Tripped::slot_type const &slot);
+	int addMovedListener(Tripped::slot_type const &slot);
+
+	void update(vl::MouseEvent const &evt, MOUSE_STATE ms);
+
+private:
+	Tripped _button_pressed_signal;
+	Tripped _button_released_signal;
+	Tripped _mouse_moved_signal;
+	
+	MOUSE_STATE _mstate;
+
+};
+
 
 /// Trigger that is triggered when a frame is rendered
 // TODO should be a float trigger, so that the frame time can be passed
