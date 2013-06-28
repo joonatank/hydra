@@ -87,6 +87,12 @@ public :
 	RayObject *getRay(void)
 	{ return _drawable; }
 
+	void setDebug(bool debug)
+	{ _debug = debug; }
+
+	bool isDebug(void) const
+	{ return _debug; }
+
 private :
 	void _update_head(void);
 #ifdef USE_EYES
@@ -103,6 +109,7 @@ private :
 	SceneManager *_creator;
 
 	bool _started;
+	bool _debug;
 
 };
 

@@ -20,6 +20,8 @@
 #include "scene_node.hpp"
 #include "player.hpp"
 
+#include "eyes_report.hpp"
+
 #ifndef USE_EYES
 /// Dummy implementation without Eyes
 vl::EyeTracker::EyeTracker(SceneManager *creator)
@@ -48,6 +50,7 @@ vl::EyeTracker::EyeTracker(PlayerPtr player, SceneManager *creator)
 	: _player(player)
 	, _drawable(0)
 	, _creator(creator)
+	, _debug(false)
 	, _started(false)
 {
 	assert(_creator);
@@ -143,7 +146,10 @@ vl::EyeTracker::progress(void)
 	
 	// Copy the transformation from Player::currentCamera to our Ray SceneNode
 	// @todo might make this configurable so we can debug more easily
-	_node->setWorldTransform(_player->getCameraNode()->getWorldTransform());
+	if(!_debug)
+	{
+		_node->setWorldTransform(_player->getCameraNode()->getWorldTransform());
+	}
 
 	// No reason to check this because we update the head transformation every frame
 //	if(_eyes->hasChanged())
@@ -160,8 +166,6 @@ vl::EyeTracker::progress(void)
 	}
 }
 
-#include "eyes_report.hpp"
-
 void
 vl::EyeTracker::loadRecording(std::string const &filename)
 {
@@ -176,8 +180,11 @@ vl::EyeTracker::loadRecording(std::string const &filename)
 	}
 	else
 	{
+		/// @todo needs to check that we actually got a report
 		_loaded_report.read(filename);
 	}
+
+	showRecording(true);
 }
 
 void
