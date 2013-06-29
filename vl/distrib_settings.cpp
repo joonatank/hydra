@@ -150,8 +150,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
-	msg << window.name << window.channel << window.x << window.y << window.h
-		<< window.w << window.n_display << window.stereo << window.nv_swap_sync 
+	msg << window.name << window.get_channels() << window.rect
+		<< window.n_display << window.stereo_type << window.nv_swap_sync 
 		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
 		<< window.renderer << window.input_handler;
 
@@ -169,8 +169,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
-	msg >> window.name >> window.channel >> window.x >> window.y >> window.h
-		>> window.w >> window.n_display >> window.stereo >> window.nv_swap_sync
+	msg >> window.name >> window.get_channels() >> window.rect
+		>> window.n_display >> window.stereo_type >> window.nv_swap_sync
 		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
 		>> window.renderer >> window.input_handler;
 
@@ -190,7 +190,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
-	msg << chan.name << chan.wall_name;
+	msg << chan.name << chan.wall_name << chan.area << chan.background_colour;
 
 	return msg;
 }
@@ -199,7 +199,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
-	msg >> chan.name >> chan.wall_name;
+	msg >> chan.name >> chan.wall_name >> chan.area >> chan.background_colour;
 
 	return msg;
 }

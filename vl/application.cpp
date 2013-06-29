@@ -243,6 +243,9 @@ vl::Hydra_Run(const int argc, char** argv, vl::ExceptionMessage *msg)
 		std::cout << "Using log file: " << options.getLogFile() << std::endl;
 
 		vl::ApplicationUniquePtr app = Application::create(options);
+		// @todo this doesn't allow an exception to be thrown through it
+		// we need to use some other method
+		// this is true for exception thrown by our GLRenderer
 
 		app->run();
 	}

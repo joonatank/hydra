@@ -1,0 +1,141 @@
+
+
+material deferred_shading/geometry_pass
+{
+	set $ambientCol "0 0 0 0"
+	set $emissiveCol "0 0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "1 1 1"
+	set $shininess "1"
+
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write on
+
+			vertex_program_ref defered_shading/geometry_pass/vp
+			{
+			}
+ 
+			fragment_program_ref defered_shading/geometry_pass/fp
+			{
+			}
+
+			// @todo add texture units
+			ambient $ambientCol
+			emissive $emissiveCol
+			diffuse $diffuseCol
+			specular $specularCol $shininess
+			texture_unit diffuse_map
+			{
+				tex_address_mode wrap
+				texture white.tga
+			}
+		}
+	}
+}
+
+material deferred_shading/light_pass
+{
+	technique
+	{
+		// ambient pass
+		// Do not name the passes, when using inheritance it's ok to reference
+		// a parents pass with an index. Names are not ok.
+		// Mhhh the problem was not the named passes
+		pass
+		{
+			depth_write off
+			light_clip_planes off
+
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref ambient_ao_ps
+			{
+			}
+
+			ambient 0 0 0 0
+			diffuse 0 0 0 0
+			specular 0 0 0 0
+		}
+
+		pass
+		{
+			// These parameters cause the material to be unusable
+			// no error message is given by Ogre though
+			illumination_stage per_light
+			iteration once_per_light
+
+			lighting on
+			//depth_write off
+			scene_blend add
+
+			vertex_program_ref defered_shading/light_pass/vp
+			{
+			}
+ 
+			fragment_program_ref defered_shading/light_pass/fp
+			{
+			}
+
+			texture_unit fbo0
+			{
+				texture white.tga
+				filtering none
+			}
+
+			texture_unit fbo1
+			{
+				texture white.tga
+				filtering none
+			}
+
+			texture_unit fbo2
+			{
+				texture white.tga
+				filtering none
+			}
+
+			// shadowmap for this light
+			texture_unit
+			{
+				content_type shadow
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+}
+
+/// Test/Example materials
+/// Real method would be to provide bling_phong style material with two
+/// schemes Deferred and Forward which could be selected at run time.
+/// All materials inherit from that base material.
+material ground/flat/deferred : deferred_shading/geometry_pass
+{
+	set $specularCol "0 0 0"
+	set $shininess "1"
+	set_texture_alias diffuse_map rock.png
+}
+
+material athene/flat/deferred : deferred_shading/geometry_pass
+{
+	// For testing
+	set $specularCol "1 1 1"
+	set $shininess "100"
+}
+
+material editor/spotlight/deferred : deferred_shading/geometry_pass
+{
+	set_texture_alias diffuse_map spotlight_tex.png
+}
+
+material editor/hehkulamppu/deferred : deferred_shading/geometry_pass
+{
+	set_texture_alias diffuse_map hehkulamppu_tex.png
+}
+

@@ -108,7 +108,7 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 	else
 	{
 		// @todo should destroy the window after the init
-		createWindow(vl::config::Window("dummy", vl::config::Channel(), 400, 320, 0, 0));
+		createWindow(vl::config::Window("dummy", 400, 320, 0, 0));
 	}
 }
 
@@ -367,9 +367,13 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 
 					// @todo fix callback with a signal
 					_gui.reset(new vl::gui::GUI(this, id));
-					assert(_windows.size() > 0);
-					assert(_windows.at(0)->getViewport());
-					_gui->initGUI(_windows.at(0)->getViewport());
+					if(_windows.size() == 0 || _windows.at(0)->getChannels().size() == 0
+						|| _windows.at(0)->getChannels().at(0)->getWindowViewport() == 0)
+					{
+						std::string err_msg("Something really funny with Viewports when creating GUI");
+						BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg)); 
+					}
+					_gui->initGUI( _windows.at(0)->getChannels().at(0)->getWindowViewport() );
 				}
 				else
 				{
@@ -632,9 +636,6 @@ vl::Renderer::_updateDistribData( void )
 
 		for( size_t i = 0; i < _windows.size(); ++i )
 		{ _windows.at(i)->setCamera(_player->getCamera()); }
-
-		for( size_t i = 0; i < _windows.size(); ++i )
-		{ _windows.at(i)->setIPD( _player->getIPD() ); }
 
 		// Take a screenshot
 		if( _player->getScreenshotVersion() > _screenshot_num )

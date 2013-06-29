@@ -37,8 +37,6 @@ public :
 
 	virtual void takeScreenshot(std::string const &prefix, std::string const &suffix) = 0;
 
-	virtual void setIPD(double ipd) = 0;
-
 	/// @brief return the system handle for the window
 	virtual uint64_t getHandle(void) const = 0;
 

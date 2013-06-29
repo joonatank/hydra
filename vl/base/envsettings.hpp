@@ -10,7 +10,6 @@
  *	Version 0.4
  *
  *	Licensed under commercial license.
- *
  */
 
 /**
@@ -40,6 +39,8 @@
 
 #include "wall.hpp"
 
+#include "xml_helpers.hpp"
+
 namespace vl
 {
 
@@ -53,7 +54,39 @@ enum LogLevel
 	LL_BOREME = 2,
 };
 
-struct HYDRA_API Tracking
+enum StereoType
+{
+	ST_OFF,
+	ST_QUAD_BUFFER,
+	ST_SIDE_BY_SIDE,
+	ST_TOP_BOTTOM,
+};
+
+template<typename T>
+struct Rect
+{
+	Rect(void) : w(0), h(0), x(0), y(0) {}
+
+	Rect(T pw, T ph, T px, T py) : w(pw), h(ph), x(px), y(py) {}
+
+	bool operator==(Rect const &other) const
+	{
+		if(other.w == w && other.h == h && other.x == x && other.y == y)
+		{ return true; }
+		return false;
+	}
+
+	bool valid(void) const
+	{ return (w > 0 && h > 0); }
+
+	T w;
+	T h;
+	T x;
+	T y;
+};
+
+
+struct Tracking
 {
 	Tracking( std::string const &file_name, bool u = "true" )
 		: file(file_name), use(u)
@@ -73,8 +106,9 @@ struct HYDRA_API Tracking
 
 struct HYDRA_API Channel
 {
-	Channel( std::string const &nam, std::string const &wall )
-		: name(nam), wall_name(wall)
+	Channel(std::string const &nam, std::string const &wall, 
+			Rect<double> const &a, Ogre::ColourValue const &colour)
+		: name(nam), wall_name(wall), area(a), background_colour(colour)
 	{}
 
 	/// Default constructor for vector resizes
@@ -82,12 +116,16 @@ struct HYDRA_API Channel
 	{}
 
 	bool empty( void ) const
-	{ return( name.empty() && wall_name.empty() ); }
+	{ return( name.empty() && wall_name.empty() && area == Rect<double>() ); }
 
 	std::string name;
 
 	// Name of the wall used for this window
 	std::string wall_name;
+
+	Rect<double> area;
+
+	Ogre::ColourValue background_colour;
 
 };	// struct Channel
 
@@ -145,6 +183,7 @@ struct HYDRA_API Renderer
 	{
 		WINDOW,
 		FBO,
+		DEFERRED,
 	};
 
 	Renderer(void)
@@ -161,53 +200,76 @@ struct HYDRA_API Renderer
 
 struct HYDRA_API Window
 {
-	Window( std::string const &nam, Channel const &chan,
-			int width, int height, int px, int py,
-			bool s = false, bool nv_swap = false )
-		: name(nam), channel(chan)
-		, w(width), h(height), x(px), y(py), stereo(s)
-		, nv_swap_sync(nv_swap), nv_swap_group(0), nv_swap_barrier(0)
-		, vert_sync(false), n_display(-1)
-		, input_handler(true)
+	Window( std::string const &nam, int width, int height, int px, int py,
+			StereoType stereo_t = ST_OFF )
 	{
-		if( h < 0 || w < 0 )
+		clear();
+
+		name = nam;
+		rect = Rect<int>(width, height, px, py);
+		stereo_type = stereo_t;
+
+		if( rect.h < 0 || rect.w < 0 )
 		{
 			std::string desc("Width or height of a Window can not be negative");
 			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 		}
 	}
 
+	Window( std::string const &nam, Rect<int> area, StereoType stereo_t = ST_OFF )
+	{
+		clear();
+	
+		name = nam;
+		rect = area;
+		stereo_type = stereo_t;
+
+		if( rect.h < 0 || rect.w < 0 )
+		{
+			std::string desc("Width or height of a Window can not be negative");
+			BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
+		}
+	}
+
+
 	// Default constructor to allow vector resize
-	Window( void )
-		: w(0), h(0), x(0), y(0)
-	{}
+	Window(void)
+	{
+		clear();
+	}
+
+	void clear(void)
+	{
+		stereo_type = ST_OFF;
+		vert_sync = false;
+		input_handler = true;
+
+		n_display = -1;
+
+		fsaa = 0;
+
+		nv_swap_sync = false;
+		nv_swap_group = 0;
+		nv_swap_barrier = 0;
+	}
 
 	// Wether or not the Window has been initialised
 	bool empty( void ) const
 	{
-		return( name.empty() && channel.empty()
-			&& w == 0 && h == 0 && x == 0 && y == 0 );
+		return( name.empty() && _channels.empty() && rect == Rect<int>() );
 	}
 
 	// Name of the window
 	std::string name;
 
-	Channel channel;
-
 	Renderer renderer;
+
+	Rect<int> rect;
 
 	NamedParamList params;
 
-	// Width of the window
-	int w;
-	// Height of the window
-	int h;
-	// x coordinate of the window
-	int x;
-	// y coordinate of the window
-	int y;
 
-	bool stereo;
+	StereoType stereo_type;
 
 	bool nv_swap_sync;
 	uint32_t nv_swap_group;
@@ -216,6 +278,47 @@ struct HYDRA_API Window
 	bool vert_sync;
 	bool input_handler;
 	int n_display;
+
+	int fsaa;
+
+	void add_channel(Channel const &channel)
+	{
+		if(has_channel(channel.name))
+		{ BOOST_THROW_EXCEPTION(vl::invalid_settings() << vl::desc("Can't have two channels with same name")); }
+
+		_channels.push_back(channel);
+	}
+
+	bool has_channel(std::string const &name) const
+	{
+		for(size_t i = 0; i < _channels.size(); ++i)
+		{
+			if(_channels.at(i).name == name)
+			{ return true; }
+		}
+
+		return false;
+	}
+
+	Channel const &get_channel(size_t i) const
+	{ return _channels.at(i); }
+
+	Channel &get_channel(size_t i)
+	{ return _channels.at(i); }
+
+	size_t get_n_channels(void) const
+	{ return _channels.size(); }
+
+
+	/// @internal distribution access
+	std::vector<Channel> const &get_channels(void) const
+	{ return _channels; }
+
+	std::vector<Channel> &get_channels(void)
+	{ return _channels; }
+
+private :
+	std::vector<Channel> _channels;
 
 };	// struct Window
 
@@ -456,14 +559,14 @@ public :
 	/**	@brief get the configuration of stereo
 	 *	@return true if should use stereo false otherwise
 	 */
-	bool hasStereo( void ) const
-	{ return _stereo; }
+	StereoType getStereoType( void ) const
+	{ return _stereo_type; }
 
 	/**	@brief set if we use stereo or not
 	 *	@param stereo true if should use stereo false otherwise
 	 */
-	void setStereo( bool stereo )
-	{ _stereo = stereo; }
+	void setStereoType(StereoType type)
+	{ _stereo_type = type; }
 
 	bool hasHardwareGamma(void) const
 	{ return _renderer.hardware_gamma; }
@@ -602,7 +705,7 @@ private :
 
 	std::vector<Wall> _walls;
 
-	bool _stereo;
+	StereoType _stereo_type;
 
 	bool _nv_swap_sync;
 	uint32_t _swap_group;

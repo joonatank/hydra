@@ -68,8 +68,11 @@ public :
 	vl::Player const &getPlayer( void ) const
 	{ return *_player; }
 
-	vl::Player const &getPlayer(void)
+	vl::Player &getPlayer(void)
 	{ return *_player; }
+
+	vl::Player *getPlayerPtr(void)
+	{ return _player; }
 
 	virtual vl::MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }

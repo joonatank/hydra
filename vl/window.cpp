@@ -19,15 +19,13 @@
 
 #include "base/exceptions.hpp"
 
-#include "renderer_interface.hpp"
-
 #include "camera.hpp"
 // Necessary for calculating projection matrix
 #include "math/frustum.hpp"
 
 #include "ogre_root.hpp"
-
-#include <OGRE/OgreLogManager.h>
+// Necessary for copying ipd
+#include "player.hpp"
 
 #include "input/joystick_event.hpp"
 #include "input/ois_converters.hpp"
@@ -36,19 +34,16 @@
 #include "gui/gui.hpp"
 // Necessary for updating frame statistics
 #include "gui/performance_overlay.hpp"
-
 #include <GL/gl.h>
 
 #include <stdlib.h>
 
-/// ----------------------------- Public ---------------------------------------
+/// ----------------------------- Window -------------------------------------
+/// ----------------------------- Public -------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
 	: _name(windowConf.name)
 	, _renderer( parent )
 	, _ogre_window(0)
-	, _camera(0)
-	, _left_viewport(0)
-	, _right_viewport(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
@@ -61,75 +56,55 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	if(windowConf.input_handler)
 	{ _createInputHandling(); }
 
-	// If the channel has a name we try to find matching wall
-
-	Wall wall;
-	if( !windowConf.channel.name.empty() )
+	if(windowConf.renderer.projection.use_asymmetric_stereo)
 	{
-		std::cout << vl::TRACE << "Finding Wall for channel : " << getName() << std::endl;
-		wall = getEnvironment()->findWall(windowConf.channel.wall_name);
+		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
 	}
 
-	// Get the first wall definition if no named one was found
-	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
+	_renderer_type = windowConf.renderer.type;
+
+	if(_renderer_type == vl::config::Renderer::FBO)
 	{
-		wall = getEnvironment()->getWall(0);
-		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
-	}
-	else
-	{
-		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
+		std::cout << "EXPERIMENTAL : Should Render to FBO." << std::endl;
 	}
 
-	/// Set frustum
-	_frustum.setWall(wall);
 	vl::config::Projection const &projection = windowConf.renderer.projection;
-	_frustum.setFov(Ogre::Degree(projection.fov));
-	// @todo this is unmanagable if we need to add new types
-	if(projection.perspective_type == vl::config::Projection::FOV)
-	{ _frustum.setType(Frustum::FOV); }
-	else
-	{ _frustum.setType(Frustum::WALL); }
-	_frustum.enableAsymmetricStereoFrustum(windowConf.renderer.projection.use_asymmetric_stereo);
-
-	if(windowConf.renderer.type == vl::config::Renderer::FBO)
+	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
 	{
-		std::cout << "NOT IMPLEMENTED : Should Render to FBO." << std::endl;
+		// We already have a window so it should be safe to check for stereo
+		// quad buffer stereo
+		if(hasStereo())
+		{
+			_create_channel(windowConf.get_channel(i), HS_LEFT, projection, windowConf.fsaa);
+			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection, windowConf.fsaa);
+		}
+		else if(windowConf.stereo_type == vl::config::ST_SIDE_BY_SIDE)
+		{
+			std::clog << "Using side by side stereo" << std::endl;
+			config::Channel chan_cfg(windowConf.get_channel(i));
+			chan_cfg.area.w /= 2;
+			_create_channel(chan_cfg, HS_LEFT, projection, windowConf.fsaa);
+			chan_cfg.area.x += chan_cfg.area.w;
+			_create_channel(chan_cfg, HS_RIGHT, projection, windowConf.fsaa);
+		}
+		// no stereo
+		else
+		{
+			_create_channel(windowConf.get_channel(i), HS_MONO, projection, windowConf.fsaa);
+		}
 	}
 
-	// TODO this should be configurable
-	Ogre::ColourValue background_col = Ogre::ColourValue(1.0, 0.0, 0.0, 0.0);
-
-	Ogre::Camera *og_cam = 0;
-	if( _camera )
-	{ og_cam = (Ogre::Camera *)_camera->getNative(); }
-
-	_left_viewport = _ogre_window->addViewport(og_cam);	
-	_left_viewport->setBackgroundColour(background_col);
-	// This is necessary because we are using single camera and single viewport
-	// to draw to both backbuffers when using stereo.
-	_left_viewport->setAutoUpdated(false);
-
-	if(hasStereo())
-	{
-		_right_viewport = _ogre_window->addViewport(og_cam, 1);
-		_right_viewport->setBackgroundColour(background_col);
-		_right_viewport->setAutoUpdated(false);
-	}
+	std::clog << "Window::Window : done" << std::endl;
 }
 
 vl::Window::~Window( void )
 {
-	std::string msg("vl::Window::~Window");
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
+	std::cout << vl::TRACE << "vl::Window::~Window" << std::endl;
 
-	msg = "Cleaning out OIS";
-	Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
 	if( _input_manager )
 	{
-		msg = "Destroy OIS input manager.";
-		Ogre::LogManager::getSingleton().logMessage(msg, Ogre::LML_TRIVIAL);
-        OIS::InputManager::destroyInputSystem(_input_manager);
+		std::cout << vl::TRACE << "Destroy OIS input manager." << std::endl;
+		OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
 
@@ -149,6 +124,12 @@ vl::Player const &
 vl::Window::getPlayer( void ) const
 { return _renderer->getPlayer(); }
 
+vl::Player *
+vl::Window::getPlayerPtr(void)
+{
+	return _renderer->getPlayerPtr();
+}
+
 vl::ogre::RootRefPtr
 vl::Window::getOgreRoot( void )
 { return _renderer->getRoot(); }
@@ -156,17 +137,10 @@ vl::Window::getOgreRoot( void )
 void
 vl::Window::setCamera(vl::CameraPtr camera)
 {
-	// @todo does not allow removing the camera, should it?
-	if( !camera )
-	{ return; }
-
-	_camera = camera;
-	
-	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
-	if(_left_viewport)
-	{ _left_viewport->setCamera(og_cam); }
-	if(_right_viewport)
-	{ _right_viewport->setCamera(og_cam); }
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		_channels.at(i)->setCamera(camera);
+	}
 }
 
 void
@@ -186,16 +160,31 @@ vl::Window::hasStereo(void) const
 {
 	GLboolean stereo;
 	glGetBooleanv( GL_STEREO, &stereo );
-	return stereo;
+	return stereo == GL_TRUE;
 }
 
-Ogre::RenderTarget::FrameStats const &
+Ogre::RenderTarget::FrameStats 
 vl::Window::getStatistics(void) const
 {
-	if(_ogre_window)
-	{ return _ogre_window->getStatistics(); }
+	if(!_ogre_window)
+	{ return Ogre::RenderTarget::FrameStats(); }
 
-	return Ogre::RenderTarget::FrameStats();
+	/// @todo should we store the frame stats instead of calculating them here?
+
+	/// Compine the statistics from Window 
+	/// (all viewports that render directly to the window).
+	/// And more specialised channels that render first to FBO.
+	Ogre::RenderTarget::FrameStats stats = _ogre_window->getStatistics();
+
+	/// Append statistics from other than window channels
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		// @todo Batch and triangle counts does not work at all. Always zero.
+		stats.triangleCount += _channels.at(i)->getTriangleCount();
+		stats.batchCount += _channels.at(i)->getBatchCount();
+	}
+
+	return stats;
 }
 
 void
@@ -203,6 +192,11 @@ vl::Window::resetStatistics(void)
 {
 	if(_ogre_window)
 	{ _ogre_window->resetStatistics(); }
+
+	for(size_t i = 0; i < _channels.size(); ++i)
+	{
+		_channels.at(i)->resetStatistics();
+	}
 }
 
 /// ------------------------ Public OIS Callbacks ------------------------------
@@ -331,12 +325,13 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		
 		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
-		
-		e.head_position = _camera->getPosition();
-		e.head_orientation = _camera->getOrientation();
-		
+
+		CameraPtr cam = _channels.at(0)->getCamera().getCamera();
+		e.head_position = cam->getPosition();
+		e.head_orientation = cam->getOrientation();
+
 		//Should the ipd argument be -_ipd/2 or 0?
-		e.view_projection = _frustum.getProjectionMatrix();
+		e.view_projection = _channels.at(0)->getCamera().getFrustum().getProjectionMatrix();
 	
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
 		stream << id << e;
@@ -415,121 +410,55 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
-	// @todo this should probably never happen
-	if(!_camera)
+	// Updating FBOs and channel data is separated from drawing to screen
+	// because we want to keep them separate for later extensions
+	// mainly distributing FBOs, where these two needs to be separated.
+
+	// Update FBOs
+	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		std::cout << "vl::Window::draw : no camera." << std::endl;
-		return;
-	}
-
-	if(!_left_viewport)
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	Ogre::Real c_near = _camera->getNearClipDistance();
-	Ogre::Real c_far = _camera->getFarClipDistance();
-
-	Ogre::Camera *og_cam = (Ogre::Camera *)_camera->getNative();
-	if(!og_cam)
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	/// @todo checking these every frame is bit too much
-	if(og_cam != _left_viewport->getCamera())
-	{ _left_viewport->setCamera(og_cam); }
-	if(_right_viewport && _right_viewport->getCamera() != og_cam)
-	{ _right_viewport->setCamera(og_cam); }
-
-	// if stereo is not enabled ipd should be zero 
-	// TODO should it be forced though?
-	if(!hasStereo())
-	{ _ipd = 0; }
-
-	Transform const &head = getPlayer().getHeadTransform();
-
-	/// @todo setting all the parameters at every frame is too much
-	/// should be replaced by distributing the frustum.
-	_frustum.setHeadTransformation(getPlayer().getCyclopWorldTransform());
-	_frustum.setClipping(c_near, c_far);
-
-	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
-
-	Ogre::Vector3 cam_pos = og_cam->getPosition();
-	Ogre::Quaternion cam_quat = og_cam->getOrientation();
-
-	/// @todo should really be replaced with a stereo camera setup	
-
-	/// Use tuples to eliminate code copying
-	typedef boost::tuple<Ogre::Viewport *, double, GLenum> view_tuple;
-	std::vector<view_tuple> views;
-	if(hasStereo())
-	{
-		if(!_left_viewport || !_right_viewport)
-		{
-			BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Missing left or right viewport for stereo."));
-		}
-		views.push_back( view_tuple(_left_viewport, -_ipd/2, GL_BACK_LEFT) );
-		views.push_back( view_tuple(_right_viewport, _ipd/2, GL_BACK_RIGHT) );
-	}
-	else
-	{
-		assert(_left_viewport);
-		views.push_back( view_tuple(_left_viewport, 0, GL_BACK) );
+		/// @todo setting player shouldn't be called each frame
+		/// it should be implemented with either dirty data or callbacks
+		_channels.at(i)->setPlayer(getPlayerPtr());
+		_channels.at(i)->update();
 	}
 
 	// Draw
 	assert(_ogre_window);
+
 	_ogre_window->_beginUpdate();
 
-	for(size_t i = 0; i < views.size(); ++i)
+	// Draw to screen
+	for(size_t i = 0; i < _channels.size(); ++i)
 	{
-		view_tuple const &view = views.at(i);
-		Ogre::Vector3 eye(view.get<1>(), 0, 0);
-		glDrawBuffer(view.get<2>());
+		_channels.at(i)->draw();
 
-		Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(view.get<1>());
-		og_cam->setCustomProjectionMatrix(true, projMat);
-
-		// Combine eye and camera positions
-		// Needs to be rotated with head for correct stereo
-		// Do not rotate with wall will cause incorrect view for the side walls
-		Ogre::Vector3 eye_d = cam_quat*(head.quaternion*eye + head.position) + cam_pos;
-		// cam*head*eye
-
-		// Combine camera and wall orientation to get the projection on correct wall
-		// Seems like the wallRotation needs to be inverse for this one, otherwise
-		// left and right wall are switched.
-		Ogre::Quaternion eye_orientation = cam_quat*wallRot.Inverse();
-
-		og_cam->setPosition(eye_d);
-		og_cam->setOrientation(eye_orientation);
-
-		// Keeps track of the batches and triangles
-		_ogre_window->_updateViewport(view.get<0>(), true);
-
-		// @todo test with stereo setup if this really renders the gui for
-		// both left and right eye
+		// GUI is not rendered as part of the FBO which might become problematic
+		// instead it is overlayed on the Window.
+		// For post screen effects and distribution of the Channels this shouldn't
+		// be a problem, but we should tread carefully anyway.
+		//
+		// @todo
+		// Do we want to overlay the GUI for all Channels
+		// Probably not, but how do we decide it?
+		// And should we bind the GUI to Channel?
 		if(_renderer->getGui())
 		{ _renderer->getGui()->update(); }
 	}
-	
-
-	// Push back the original position and orientation
-	og_cam->setPosition(_camera->getPosition());
-	og_cam->setOrientation(_camera->getOrientation());
 
 	if(_renderer->getGui() && _renderer->getGui()->getPerformanceOverlay())
 	{
-		vl::scalar fps = _ogre_window->getLastFPS();
-		size_t batches = _ogre_window->getBatchCount();
-		size_t tris = _ogre_window->getTriangleCount();
+		Ogre::RenderTarget::FrameStats stats = getStatistics();
 
 		gui::PerformanceOverlayRefPtr overlay = _renderer->getGui()->getPerformanceOverlay();
-		overlay->setFrameFrame(fps);
-		overlay->setLastBatchCount(batches);
-		overlay->setLastTriangleCount(tris);
+		overlay->setFrameFrame(stats.avgFPS);
+		overlay->setLastBatchCount(stats.batchCount);
+		overlay->setLastTriangleCount(stats.triangleCount);
 	}
 
 	_ogre_window->_endUpdate();
 }
+
 
 void
 vl::Window::swap( void )
@@ -559,7 +488,11 @@ vl::Window::resize(int w, int h)
 	// works with both Ogre and external windows
 	_ogre_window->resize(w, h);
 	_ogre_window->windowMovedOrResized();
-	_frustum.setAspect(vl::scalar(w)/vl::scalar(h));
+	// @todo does not handle correctly multiple channels
+	if(_channels.size() > 0)
+	{
+		_channels.at(0)->getCamera().getFrustum().setAspect(vl::scalar(w)/vl::scalar(h));
+	}
 }
 
 uint64_t
@@ -585,16 +518,20 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 	assert( !winConf.empty() );
 
-	params["left"] = vl::to_string( winConf.x );
-	params["top"] = vl::to_string( winConf.y );
+	params["left"] = vl::to_string(winConf.rect.x);
+	params["top"] = vl::to_string(winConf.rect.y);
 	params["border"] = "none";
 	params["gamma"] = vl::to_string(winConf.renderer.hardware_gamma);
-	params["stereo"] = vl::to_string(winConf.stereo);
+	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
+	{
+		params["stereo"] = vl::to_string(true);
+	}
 	params["vert_sync"] = vl::to_string(winConf.vert_sync);
+	params["FSAA"] = vl::to_string(winConf.fsaa);
 
 	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
-		<< "left = " << winConf.x << " top = " << winConf.y
-		<< " width = " << winConf.w << " height = " << winConf.h;
+		<< "left = " << winConf.rect.x << " top = " << winConf.rect.y
+		<< " width = " << winConf.rect.w << " height = " << winConf.rect.h;
 
 	// @todo we should overload print operator for window config
 	if( winConf.nv_swap_sync )
@@ -611,7 +548,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		params["swapBarrier"] = ss.str();
 	}
 
-	if(winConf.stereo)
+	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
 	{
 		std::cout << "\n with quad buffer stereo";
 	}
@@ -623,6 +560,10 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	{
 		std::cout << "\n with vertical sync";
 	}
+	if(winConf.fsaa)
+	{
+		std::cout << "\n with FSAA " << winConf.fsaa;
+	}
 	
 	std::cout << std::endl;
 
@@ -633,11 +574,73 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		std::clog << "Adding user param : " << iter->first << " with value : " << iter->second << std::endl;
 		params[iter->first] = iter->second;
 	}
-
-	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(), winConf.w, winConf.h, params );
+	
+	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(),
+			winConf.rect.w, winConf.rect.h, params );
 	win->setAutoUpdated(false);
 	
 	return win;
+}
+
+
+vl::Channel *
+vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
+			vl::config::Projection const &projection, uint32_t fsaa)
+{
+	// @todo replace with throwing because this is user controlled
+	assert(!chan_cfg.name.empty());
+
+	// Make a copy of channel config and rename it
+	vl::config::Channel channel_config(chan_cfg);
+	channel_config.name += ("_" + stereo_eye_to_string(stereo_cfg));
+
+	Wall wall = getEnvironment()->findWall(channel_config.wall_name);
+
+	// Get the first wall definition if no named one was found
+	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
+	{
+		wall = getEnvironment()->getWall(0);
+		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
+	}
+	else
+	{
+		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
+	}
+
+	/// We don't yet have a valid SceneManager
+	/// So we need to wait till the camera is set here
+	vl::config::Rect<double> const &rect = channel_config.area;
+	assert(rect.valid());
+	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
+
+	RENDER_MODE rend_mode;
+	if(_renderer_type == vl::config::Renderer::FBO)
+	{ rend_mode = RM_FBO; }
+	else if(_renderer_type == vl::config::Renderer::DEFERRED)
+	{ rend_mode = RM_DEFERRED; }
+	else
+	{ rend_mode = RM_WINDOW; }
+
+	Channel *channel = new Channel(channel_config, view, rend_mode, fsaa);
+	_channels.push_back(channel);
+
+	/// Set frustum
+	channel->getCamera().getFrustum().setWall(wall);
+	channel->getCamera().getFrustum().setFov(Ogre::Degree(projection.fov));
+	if(projection.perspective_type == vl::config::Projection::FOV)
+	{
+		std::clog << "Setting channel " << channel->getName() << " to use FOV frustum." << std::endl;
+		channel->getCamera().getFrustum().setType(Frustum::FOV);
+	}
+	else
+	{
+		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
+		channel->getCamera().getFrustum().setType(Frustum::WALL);
+	}
+
+	channel->setStereoEyeCfg(stereo_cfg);
+
+	return channel;
 }
 
 
@@ -650,8 +653,6 @@ vl::Window::_createInputHandling(void)
 
 	std::ostringstream windowHndStr;
 	uint64_t windowHnd = getHandle();
-	//size_t windowHnd = 0;
-	//_ogre_window->getCustomAttribute("WINDOW", &windowHnd);
 	windowHndStr << windowHnd;
 
 	OIS::ParamList pl;
@@ -714,7 +715,6 @@ vl::Window::_printInputInformation(void)
 		<< std::endl;
 
 	// List all devices
-	// TODO should go to Ogre Log file
 	OIS::DeviceList list = _input_manager->listFreeDevices();
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }

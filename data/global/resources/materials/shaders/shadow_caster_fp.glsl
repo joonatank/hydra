@@ -17,6 +17,8 @@ void main(void)
     float l_Depth = depth.x / depth.y;
 
     // Write the depth value to the depth map
+	// TODO
+	// Why are we wasting 3/4 of the space we have in the texture?
     FragmentColour = vec4(l_Depth, l_Depth, l_Depth, 1.0);
 }
 

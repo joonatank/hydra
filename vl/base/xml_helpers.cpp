@@ -4,7 +4,7 @@
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
- *	@file: ogre_xml_helpers.cpp
+ *	@file: base/xml_helpers.cpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
@@ -13,10 +13,8 @@
  *
  */
 
-#include "ogre_xml_helpers.hpp"
-
-#include "base/string_utils.hpp"
-
+/// Interface
+#include "xml_helpers.hpp"
 // Necessary for excpetions
 #include "base/exceptions.hpp"
 

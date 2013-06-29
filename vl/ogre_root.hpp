@@ -65,6 +65,8 @@ class Root
 
 		Ogre::SceneManager *createSceneManager(std::string const &name);
 
+			Ogre::SceneManager *getSceneManager(void) const;
+
 		/// Method which will define the source of resources (other than current folder)
 		void setupResources(std::vector<std::string> const &paths);
 
@@ -83,9 +85,8 @@ class Root
 
 		Ogre::LogManager *_log_manager;
 
-		// Wether we own the Ogre::Root instance
-		bool _primary;
 
+			Ogre::SceneManager *_scene_manager;
 };	// class Root
 
 }	// namespace ogre

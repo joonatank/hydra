@@ -20,7 +20,6 @@ set(SRC
 	vrpn_analog_client.cpp
 	tracker_serializer.cpp
 	settings.cpp
-	ogre_xml_helpers.cpp
 	resource.cpp
 	recording.cpp
 	game_manager.cpp
@@ -35,6 +34,8 @@ set(SRC
 	program_options.cpp
 	logger.cpp
 	window.cpp
+	channel.cpp
+	stereo_camera.cpp
 	master.cpp
 	slave.cpp
 	renderer.cpp
@@ -118,6 +119,7 @@ set(BASE_HEADERS
 	base/report.hpp
 	base/wall.hpp
 	base/state_machines.hpp
+	base/xml_helpers.hpp
 	)
 set(BASE_SRC
 	base/system_util.cpp
@@ -127,6 +129,7 @@ set(BASE_SRC
 	base/string_utils.cpp
 	base/time.cpp
 	base/chrono.cpp
+	base/xml_helpers.cpp
 	)
 if(WIN32)
 	list(APPEND BASE_SRC base/serial.cpp)
@@ -244,7 +247,6 @@ set( HEADERS
 	vrpn_tracker.hpp
 	vrpn_analog_client.hpp
 	settings.hpp
-	ogre_xml_helpers.hpp
 	game_manager.hpp
 	player.hpp
 	typedefs.hpp
@@ -262,6 +264,8 @@ set( HEADERS
 	program_options.hpp
 	window.hpp
 	window_interface.hpp
+	channel.hpp
+	stereo_camera.hpp
 	master.hpp
 	slave.hpp
 	renderer.hpp

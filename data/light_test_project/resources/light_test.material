@@ -7,16 +7,25 @@ material hytti_mat : bling_phong/shadows/multi_pass
 	set $shininess 50 
 	set $depthWrite off
 	set $diffuse_scene_blend "src_alpha one"
-	set_texture_alias diffuseTexture hytti_tekstuuri.png
+	set_texture_alias diffuse_map hytti_tekstuuri.png
 }
 
 material ash_tree : bling_phong/shadows/multi_pass
 {
 	set $specularCol "0 0 0"
+	set $diffuseCol "1 1 1 1"
+	set $ambientCol "0 0 0 1"
+	set_texture_alias diffuse_map ash_tree.png
+	// Need the ambient occlusion map for transparency
+	// should really have 16-bit texture with ao and transparency
+	// or we should do a separate decal pass that overrides the alpha.
+	set_texture_alias ao_map ash_tree.png
+
+	// Transparency
+	// we should really have decal pass
 	set $depthWrite off
-//	set $ambient_scene_blend "alpha_blend"
+	set $ambient_scene_blend "alpha_blend"
 	set $diffuse_scene_blend "src_alpha one"
-	set_texture_alias diffuseTexture ash_tree.png
 }
 
 material kontti_bump : bling_phong/normal_map/shadows/multi_pass
@@ -24,21 +33,21 @@ material kontti_bump : bling_phong/normal_map/shadows/multi_pass
 	set $diffuseCol "1.0 0.5 0.5 1.0"
 	set $specularCol "0.5 0.5 0.5"
 	set $shininess 80 
-	set_texture_alias normalMap kontti_pitka_NRM.jpg
+	set_texture_alias normal_map kontti_pitka_NRM.jpg
 }
 
 material kontti_both : bling_phong/normal_map/shadows/multi_pass
 {
 	set $specularCol "0.5 0.5 0.5"
 	set $shininess 80 
-	set_texture_alias diffuseTexture Kontti_12_Red.png
-	set_texture_alias normalMap kontti_pitka_NRM.jpg
+	set_texture_alias diffuse_map Kontti_12_Red.png
+	set_texture_alias normal_map kontti_pitka_NRM.jpg
 }
 
 material kontti_tex : bling_phong/normal_map/shadows/multi_pass
 {
 	set $specularCol "0.5 0.5 0.5"
 	set $shininess 80 
-	set_texture_alias diffuseTexture Kontti_12_Red.png
+	set_texture_alias diffuse_map Kontti_12_Red.png
 }
 

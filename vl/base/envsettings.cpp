@@ -10,7 +10,6 @@
  *	Version 0.4
  *
  *	Licensed under commercial license.
- *
  */
 
 /// Declaration
@@ -49,7 +48,7 @@ vl::config::Node::getWindow( size_t i ) const
 /// ------------------------------ vl::EnvSettings -----------------------------
 vl::config::EnvSettings::EnvSettings( void )
 	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
-	, _stereo(false)
+	, _stereo_type(ST_OFF)
 	, _nv_swap_sync(false)
 	, _swap_group(0)
 	, _swap_barrier(0)
@@ -474,7 +473,7 @@ vl::config::EnvSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 }
 
 void
-vl::config::EnvSerializer::processCameraRotations( rapidxml::xml_node<>* xml_node )
+vl::config::EnvSerializer::processCameraRotations(rapidxml::xml_node<> *xml_node)
 {
 	uint32_t flags = 0;
 	std::string const F("false");
@@ -498,7 +497,7 @@ vl::config::EnvSerializer::processCameraRotations( rapidxml::xml_node<>* xml_nod
 }
 
 void
-vl::config::EnvSerializer::processWalls( rapidxml::xml_node<>* xml_node )
+vl::config::EnvSerializer::processWalls(rapidxml::xml_node<>* xml_node)
 {
 	rapidxml::xml_node<> *pWall = xml_node->first_node("wall");
 
@@ -545,7 +544,7 @@ vl::config::EnvSerializer::processWalls( rapidxml::xml_node<>* xml_node )
 }
 
 void
-vl::config::EnvSerializer::processServer(rapidxml::xml_node< char > *xml_node)
+vl::config::EnvSerializer::processServer(rapidxml::xml_node<> *xml_node)
 {
 	std::string hostname;
 	uint16_t port;
@@ -565,7 +564,7 @@ vl::config::EnvSerializer::processServer(rapidxml::xml_node< char > *xml_node)
 }
 
 void
-vl::config::EnvSerializer::processNode(rapidxml::xml_node< char > *xml_node, vl::config::Node &node)
+vl::config::EnvSerializer::processNode(rapidxml::xml_node<> *xml_node, vl::config::Node &node)
 {
 	std::string name;
 	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("name");
@@ -591,42 +590,82 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		std::string name = attrib->value();
 
 		// Process w, h, x, y
+		// @todo these should have default values
+		Rect<int> area;
 		attrib = pWindow->first_attribute("w");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no w") ); }
-		int w = vl::from_string<int>( attrib->value() );
+		area.w = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("h");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no h") ); }
-		int h = vl::from_string<int>( attrib->value() );
+		area.h = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("x");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no x") ); }
-		int x = vl::from_string<int>( attrib->value() );
+		area.x = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("y");
 		if( !attrib )
 		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
-		int y = vl::from_string<int>( attrib->value() );
+		area.y = vl::from_string<int>( attrib->value() );
 
-		vl::config::Window window(name, vl::config::Channel(), w, h, x, y, x);
-		window.stereo = _env->hasStereo();
+		vl::config::Window window(name, area);
+		
+		// Copy env settings values
+		window.stereo_type = _env->getStereoType();
+		// @todo we can override stereo type in window config
+		// xml node stereo, attribute "type" and "use"
+		rapidxml::xml_node<> *xml_stereo = pWindow->first_node("stereo");
+		if(xml_stereo)
+		{
+			attrib = xml_stereo->first_attribute("type");
+			if(attrib)
+			{
+				std::string type_str(attrib->value());
+				vl::to_lower(type_str);
+				if(type_str == "side_by_side")
+				{ window.stereo_type = ST_SIDE_BY_SIDE; }
+				else if(type_str == "quad_buffer" || type_str.empty())
+				{ window.stereo_type = ST_QUAD_BUFFER; }
+				else if(type_str == "top_bottom")
+				{
+					std::clog << "EnvConfig : stereo type is top bottom" << std::endl;
+					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Top bottom stereo is not supported."));
+				}
+				else
+				{
+					std::clog << "EnvConfig : stereo type " << type_str << std::endl;
+					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Stereo type not recognised."));
+				}
+			}
+			// @todo add use attrib
+		}
+
 		window.nv_swap_sync = _env->hasNVSwapSync();
 		window.nv_swap_group = _env->getNVSwapGroup();
 		window.nv_swap_barrier = _env->getNVSwapBarrier();
 		attrib = pWindow->first_attribute("display");
 		if(attrib)
-		window.n_display = vl::from_string<int>( attrib->value() );
+		{ window.n_display = vl::from_string<int>( attrib->value() ); }
 
-		if( attrib = pWindow->first_attribute("vert_sync"))
-		{
-			window.vert_sync= vl::from_string<bool>(attrib->value());
-		}
+		attrib = pWindow->first_attribute("vert_sync");
+		if(attrib)
+		{ window.vert_sync= vl::from_string<bool>(attrib->value()); }
 
+		attrib = pWindow->first_attribute("fsaa");
+		if(attrib)
+		{ window.fsaa = vl::from_string<int>(attrib->value()); }
+
+		/// Process channels
 		rapidxml::xml_node<> *channel_elem = pWindow->first_node("channel");
-		processChannel(channel_elem, window);
+		while(channel_elem)
+		{
+			processChannel(channel_elem, window);
+			channel_elem = channel_elem->next_sibling(channel_elem->name());
+		}
 
 		// Copy render parameters
 		window.renderer = _env->getRenderer();
@@ -641,7 +680,7 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 }
 
 void
-vl::config::EnvSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
+vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 										   vl::config::Window& window )
 {
 	assert( xml_node );
@@ -655,13 +694,35 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node< char >* xml_node,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no name") ); }
 
+	Rect<double> r(1, 1, 0, 0);
+	attrib = xml_node->first_attribute("w");
+	if(attrib)
+	{ r.w = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("h");
+	if(attrib)
+	{ r.h = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("x");
+	if(attrib)
+	{ r.x = vl::from_string<double>(attrib->value()); }
+	attrib = xml_node->first_attribute("y");
+	if(attrib)
+	{ r.y = vl::from_string<double>(attrib->value()); }
+
+	Ogre::ColourValue background_col(0, 0, 0);
+	rapidxml::xml_node<> *background = xml_node->first_node("background");
+	if(background)
+	{
+		std::clog << "EnvConfig : Processing channel" << std::endl;
+		background_col = parseColour(background);
+	}
+
 	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
 	if( wall_elem )
 	{ wall_name = wall_elem->value(); }
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
 
-	window.channel = vl::config::Channel( channel_name, wall_name );
+	window.add_channel(vl::config::Channel(channel_name, wall_name, r, background_col));
 }
 
 void
@@ -669,10 +730,11 @@ vl::config::EnvSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
 	bool stereo = vl::from_string<bool>(xml_node->value());
 
+	// @todo this is bad it's confusing when side-by-side stereo is used
 	if(stereo)
-	{ _env->setStereo(true); }
+	{ _env->setStereoType(ST_QUAD_BUFFER); }
 	else
-	{ _env->setStereo(false); }
+	{ _env->setStereoType(ST_OFF); }
 
 	_checkUniqueNode(xml_node);
 }
@@ -782,7 +844,7 @@ vl::config::EnvSerializer::processProgram(rapidxml::xml_node<> *xml_node)
 void
 vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::config::Renderer &renderer)
 {
-	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("surface");
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
 	if(attrib)
 	{
 		std::string type(attrib->value());
@@ -791,7 +853,15 @@ vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::c
 		{
 			renderer.type = Renderer::FBO;
 		}
-		// Assume type window otherwise
+		else if(type == "deferred")
+		{
+			renderer.type = Renderer::DEFERRED;
+		}
+		else
+		{
+			// Assume type window otherwise
+			renderer.type = Renderer::WINDOW;
+		}
 	}
 
 	attrib = xml_node->first_attribute("hardware_gamma");
@@ -813,7 +883,11 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 		{
 			projection.type = Projection::ORTHO;
 		}
-		// Assume perspective otherwise
+		else
+		{
+			// Assume perspective otherwise
+			projection.type = Projection::PERSPECTIVE;
+		}
 	}
 
 	rapidxml::xml_node<> *xml_pers = xml_node->first_node("perspective");

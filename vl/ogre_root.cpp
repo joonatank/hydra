@@ -10,7 +10,6 @@
  *	Version 0.4
  *
  *	Licensed under commercial license.
- *
  */
 
 // Interface include
@@ -30,9 +29,9 @@
 #include "logger.hpp"
 
 vl::ogre::Root::Root(vl::config::LogLevel level)
-	: _ogre_root(0),
-	  _log_manager(0),
-	  _primary(false)
+	: _ogre_root(0)
+	, _log_manager(0)
+	, _scene_manager(0)
 {
 	std::cout << vl::TRACE << "vl::ogre::Root::Root" << std::endl;
 
@@ -55,7 +54,6 @@ vl::ogre::Root::Root(vl::config::LogLevel level)
 
 		std::cout << vl::TRACE << "vl::ogre::Root::Root : create Ogre Root" << std::endl;
 		_ogre_root = new Ogre::Root( "", "", "" );
-		_primary = true;
 	}
 
 	std::cout << vl::TRACE << "vl::ogre::Root::Root : done" << std::endl;
@@ -65,20 +63,14 @@ vl::ogre::Root::~Root( void )
 {
 	// root and log manager point to same ogre singletons.
 	// destroy them only on the primary
-	if( _primary )
-	{
-		delete _ogre_root;
-		delete _log_manager;
-	}
+	delete _ogre_root;
+	delete _log_manager;
 }
 
 void
 vl::ogre::Root::createRenderSystem( void )
 {
 	std::cout << vl::TRACE << "vl::ogre::Root::createRenderSystem" << std::endl;
-
-	if( !_primary )
-	{ return; }
 
 	if( !_ogre_root )
 	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
@@ -87,15 +79,24 @@ vl::ogre::Root::createRenderSystem( void )
 
 
 	// We only support OpenGL rasterizer
-	Ogre::RenderSystem *rast
-		= _ogre_root->getRenderSystemByName( "OpenGL Rendering Subsystem" );
-	if( !rast )
+	
+	// Try our own rasterizer first
+	std::string rasterizer_name = "Hydra OpenGL Rasterizer";
+	Ogre::RenderSystem *rast = _ogre_root->getRenderSystemByName(rasterizer_name);
+	if(!rast)
 	{
-		std::string err_desc( "No OpenGL rendering system plugin found" );
-		BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err_desc) );
+		// Fallback to Ogres
+		rasterizer_name = "OpenGL Rendering Subsystem";
+		rast = _ogre_root->getRenderSystemByName(rasterizer_name);
+
+		if(!rast)
+		{
+			std::string err_desc( "No OpenGL rendering system plugin found" );
+			BOOST_THROW_EXCEPTION( vl::exception() << vl::desc(err_desc) );
+		}
 	}
-	else
-	{ _ogre_root->setRenderSystem( rast ); }
+	
+	_ogre_root->setRenderSystem( rast );
 }
 
 void
@@ -141,26 +142,37 @@ vl::ogre::Root::loadResources(void)
 /// Private
 
 void
-vl::ogre::Root::_loadPlugins(void )
+vl::ogre::Root::_loadPlugins(void)
 {
-	std::string msg( "_loadPlugins" );
-	Ogre::LogManager::getSingleton().logMessage( msg, Ogre::LML_TRIVIAL );
+	std::cout << vl::TRACE << "vl::ogre::Root::_loadPlugins" << std::endl;
 
-	// TODO add support for plugins in the EnvSettings
-
-
-// Check if this is a debug version, only Windows uses debug versions of the libraries
-// So we need to load the debug versions of the Ogre plugins only on Windows.
 #if defined(_WIN32) && defined(_DEBUG)
-	std::string gl_plugin_name( "RenderSystem_GL_d" );
+	std::string gl_plugin_name("HydraGL_d");
 #else
-	std::string gl_plugin_name( "RenderSystem_GL" );
+	std::string gl_plugin_name("HydraGL");
 #endif
 
 	std::string plugin_path = vl::findPlugin( gl_plugin_name );
+	
+	/// Fallback to Ogre GL plugin
+	if(plugin_path.empty())
+	{
+// Check if this is a debug version, only Windows uses debug versions of the libraries
+// So we need to load the debug versions of the Ogre plugins only on Windows.
+#if defined(_WIN32) && defined(_DEBUG)
+		gl_plugin_name = "RenderSystem_GL_d";
+#else
+		gl_plugin_name = "RenderSystem_GL";
+#endif
+
+		plugin_path = vl::findPlugin( gl_plugin_name );
+	}
+
 	/// @todo this should throw if not found, because we don't have a rendering system
-	if( !plugin_path.empty() )
-	{ _ogre_root->loadPlugin( plugin_path ); }
+	if(plugin_path.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Neither OpenGL plugins found.")); }
+
+	_ogre_root->loadPlugin( plugin_path );
 }
 
 void
@@ -222,10 +234,17 @@ Ogre::SceneManager *
 vl::ogre::Root::createSceneManager(std::string const &name )
 {
 	if( !_ogre_root )
-	{ BOOST_THROW_EXCEPTION( vl::exception() ); }
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Ogre Root hasn't been created yet.")); }
+	if(_scene_manager)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Only single Scene Manager is supported at this point.")); }
+	
+	_scene_manager = _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
 
-	Ogre::SceneManager *og_man
-		= _ogre_root->createSceneManager( Ogre::ST_GENERIC, name );
+	return _scene_manager;
+}
 
-	return og_man;
+Ogre::SceneManager *
+vl::ogre::Root::getSceneManager(void) const
+{
+	return _scene_manager;
 }

@@ -172,7 +172,6 @@ private :
 	std::vector< io::stream_buffer<sink> *> _streams;
 
 	LogMessage _current_msg;
-
 };	// namespace Logger
 
 }	// namespace vl

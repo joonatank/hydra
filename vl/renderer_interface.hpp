@@ -89,6 +89,10 @@ public :
 
 	virtual vl::Player const &getPlayer( void ) const = 0;
 
+	virtual vl::Player &getPlayer(void) = 0;
+	
+	virtual vl::Player *getPlayerPtr(void) = 0;
+	
 	virtual vl::MeshManagerRefPtr getMeshManager(void) = 0;
 
 	virtual vl::config::Window const &getWindowConf(std::string const &name) const = 0;

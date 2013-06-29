@@ -2,7 +2,8 @@
 // Savant Simulators
 // 2012-04
 
-#version 130
+// Needs 1.20 because some of the shaders using this are GLSL 1.2
+#version 120
 
 // Calculate the attenuation parameter
 float calculate_attenuation(vec3 light_pos, vec4 attenuation)
@@ -76,15 +77,15 @@ float is_in_shadow(sampler2D shadow_map, vec4 shadow_uv,
 	vec3 tex_coords = shadow_uv.xyz/shadow_uv.w;
 
 	// read depth value from shadow map
-	float centerdepth = texture(shadow_map, tex_coords.xy).x;
+	float centerdepth = texture2D(shadow_map, tex_coords.xy).x;
 
 	// gradient calculation
 	float pixeloffset = inverse_shadowmap_size;
 	vec4 depths = vec4(
-		texture(shadow_map, tex_coords.xy + vec2(-pixeloffset, 0)).x,
-		texture(shadow_map, tex_coords.xy + vec2(+pixeloffset, 0)).x,
-		texture(shadow_map, tex_coords.xy + vec2(0, -pixeloffset)).x,
-		texture(shadow_map, tex_coords.xy + vec2(0, +pixeloffset)).x);
+		texture2D(shadow_map, tex_coords.xy + vec2(-pixeloffset, 0)).x,
+		texture2D(shadow_map, tex_coords.xy + vec2(+pixeloffset, 0)).x,
+		texture2D(shadow_map, tex_coords.xy + vec2(0, -pixeloffset)).x,
+		texture2D(shadow_map, tex_coords.xy + vec2(0, +pixeloffset)).x);
 
 	vec2 differences = abs( depths.yw - depths.xz );
 	float gradient = min(gradient_clamp, max(differences.x, differences.y));
@@ -117,7 +118,10 @@ vec4 bling_phong_lighting(vec3 dir_to_light, vec3 dir_to_eye, vec3 normal,
 	vec4 colour = vec4(0.0, 0.0, 0.0, 1.0);
 
 	if(attenuation == 0.0)
-	{ return colour; }
+	{
+		colour.a = surface_diffuse.a;
+		return colour;
+	}
 
 	// Full strength if normal points directly at light
 	float lambertTerm = max(dot(dir_to_light, normal), 0.0);

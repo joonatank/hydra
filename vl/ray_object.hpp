@@ -55,11 +55,6 @@ public :
 	/// @brief Destructor
 	virtual ~RayObject(void);
 
-	void setPosition(Ogre::Vector3 const &pos);
-
-	Ogre::Vector3 const &getPosition(void) const
-	{ return _position; }
-
 	void setDirection(Ogre::Vector3 const &dir);
 
 	Ogre::Vector3 const &getDirection(void) const
@@ -132,7 +127,7 @@ public :
 
 	enum DirtyBits
 	{
-		DIRTY_TRANSFORM = vl::MovableObject::DIRTY_CUSTOM << 0,
+		DIRTY_DIRECTION = vl::MovableObject::DIRTY_CUSTOM << 0,
 		DIRTY_PARAMS = vl::MovableObject::DIRTY_CUSTOM << 1,
 		DIRTY_SHOW_RECORDER = vl::MovableObject::DIRTY_CUSTOM << 2,
 		DIRTY_RECORDING = vl::MovableObject::DIRTY_CUSTOM << 3,
@@ -153,6 +148,10 @@ private :
 	virtual void doSerialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
 
 	virtual void doDeserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+
+	virtual void _transformation_updated(void)
+	{
+	}
 
 	void _clear(void);
 
@@ -176,7 +175,6 @@ private :
 	uint32_t _generateCollisionSphere(Ogre::Vector3 const &point, uint32_t start_index);
 
 	Ogre::Vector3 _direction;
-	Ogre::Vector3 _position;
 	std::string _material;
 
 	vl::scalar _length;

@@ -47,6 +47,48 @@ vl::MovableObject::setVisible(bool visible)
 	update_variable(_visible, visible, DIRTY_VISIBLE);
 }
 
+
+void 
+vl::MovableObject::setPosition(Ogre::Vector3 const &pos)
+{
+	if( _position != pos )
+	{
+		setDirty(DIRTY_TRANSFORMATION);
+		_position = pos;
+	}
+}
+
+void 
+vl::MovableObject::setOrientation(Ogre::Quaternion const &q)
+{
+	if( _orientation != q )
+	{
+		setDirty(DIRTY_TRANSFORMATION);
+		_orientation = q;
+	}
+}
+
+
+Ogre::Quaternion
+vl::MovableObject::getWorldOrientation(void) const	
+{
+	if(_parent)
+	{ return _parent->getWorldTransform()*_orientation; }
+	else
+	{ return _orientation; }
+}
+
+Ogre::Vector3
+vl::MovableObject::getWorldPosition(void) const
+{
+	if(_parent)
+	{ return _parent->getWorldTransform()*_position; }
+	else
+	{ return _position; }
+}
+
+
+
 /// -------------------------------------- Private ---------------------------
 bool 
 vl::MovableObject::_createNative(void)
@@ -72,6 +114,11 @@ vl::MovableObject::serialize( vl::cluster::ByteStream &msg, const uint64_t dirty
 		msg << _visible;
 	}
 
+	if(DIRTY_TRANSFORMATION & dirtyBits)
+	{
+		msg << _position << _orientation;
+	}
+
 	doSerialize(msg, dirtyBits);
 }
 
@@ -93,6 +140,14 @@ vl::MovableObject::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 		{ getNative()->setVisible(_visible); }
 	}
 
+	if(DIRTY_TRANSFORMATION & dirtyBits)
+	{
+		msg >> _position >> _orientation;
+		// Ogre objects may or may not have transformation so we use
+		// virtual callback
+		_transformation_updated();
+	}
+
 	doDeserialize(msg, dirtyBits);
 		
 	if( recreate )
@@ -102,5 +157,19 @@ vl::MovableObject::deserialize( vl::cluster::ByteStream &msg, const uint64_t dir
 		/// For background loaded they don't have natives
 		if(getNative())
 		{ getNative()->setVisible(_visible); }
+
+		// Possible to avoid rendering them to the window directly
+		if(getNative())
+		{
+			// When using Deferred shading lights need to be in the second pass
+			// while other objects are in the first.
+			// For other renderers we render both in the first pass.
+			if(getTypeName() == "Light")
+			{ getNative()->setVisibilityFlags(1<<1); }
+			else
+			{ getNative()->setVisibilityFlags(1); }
+		}
+
+		_transformation_updated();
 	}
 }

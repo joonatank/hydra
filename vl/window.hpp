@@ -22,15 +22,14 @@
 // Interface
 #include "window_interface.hpp"
 
-#include "player.hpp"
 #include "typedefs.hpp"
 
 // Necessary for Window config and Wall
 #include "base/envsettings.hpp"
-
+// Parent
 #include "renderer_interface.hpp"
-// Necessary for frustum type used in projection calculation
-#include "math/frustum.hpp"
+// Child
+#include "channel.hpp"
 
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
@@ -39,6 +38,7 @@
 #include <OIS/OISJoyStick.h>
 
 #include "input/mouse_event.hpp"
+#include <OGRE/OgreRenderTargetListener.h>
 
 #include <OGRE/OgreRenderWindow.h>
 
@@ -63,6 +63,8 @@ public:
 
 	vl::Player const &getPlayer( void ) const;
 
+	vl::Player *getPlayerPtr(void);
+
 	vl::ogre::RootRefPtr getOgreRoot( void );
 
 	void setCamera(vl::CameraPtr camera);
@@ -71,9 +73,6 @@ public:
 	{ return _name; }
 
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
-
-	void setIPD(double ipd)
-	{ _ipd = ipd; }
 
 	/// @brief return the system handle for the window
 	uint64_t getHandle(void) const;
@@ -93,12 +92,12 @@ public:
 
 	virtual void resize(int w, int h);
 
-	Ogre::RenderTarget::FrameStats const &getStatistics(void) const;
+	std::vector<Channel *> const &getChannels(void)
+	{ return _channels; }
+
+	Ogre::RenderTarget::FrameStats getStatistics(void) const;
 
 	void resetStatistics(void);
-
-	Ogre::Viewport *getViewport(void)
-	{ return _left_viewport; }
 
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);
@@ -115,7 +114,11 @@ public:
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
 
 protected :
+
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
+
+	vl::Channel *_create_channel(vl::config::Channel const &channel, 
+		STEREO_EYE stereo_cfg, vl::config::Projection const &projection, uint32_t fsaa);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -126,26 +129,32 @@ protected :
 
 	void _sendEvent( vl::cluster::EventData const &event );
 
+	void _render_to_fbo(void);
+
+	void _update_debug_overlay(Ogre::RenderTarget::FrameStats const &stats);
+
+	void _draw_fbo_to_screen(void);
+
+	void _render_to_screen(void);
+
+	void _initialise_fbo(vl::CameraPtr camera);
+
 	std::string _name;
 
 	vl::RendererInterface *_renderer;
 
-	vl::Frustum _frustum;
-
-	double _ipd;
-
-	vl::Camera *_camera;
+	std::vector<Channel *> _channels;
 
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
-	Ogre::Viewport *_left_viewport;
-	Ogre::Viewport *_right_viewport;
 
 	// OIS variables
 	OIS::InputManager *_input_manager;
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
+
+	vl::config::Renderer::Type _renderer_type;
 
 };	// class Window
 

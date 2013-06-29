@@ -157,13 +157,7 @@ vl::Light::setSpecularColour(Ogre::ColourValue const &col)
 void 
 vl::Light::setDirection(Ogre::Vector3 const &dir)
 {
-	update_variable(_direction, dir, DIRTY_TRANSFORM);
-}
-	
-void 
-vl::Light::setPosition(Ogre::Vector3 const &pos)
-{
-	update_variable(_position, pos, DIRTY_TRANSFORM);
+	update_variable(_direction, dir, DIRTY_DIRECTION);
 }
 
 void 
@@ -226,9 +220,9 @@ vl::Light::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 		msg << _diffuse_colour << _specular_colour;
 	}
 
-	if( DIRTY_TRANSFORM & dirtyBits )
+	if( DIRTY_DIRECTION & dirtyBits )
 	{
-		msg << _position << _direction;
+		msg << _direction;
 	}
 	
 	if( DIRTY_GEN_PARAMS & dirtyBits )
@@ -277,12 +271,11 @@ vl::Light::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits
 		}
 	}
 
-	if( DIRTY_TRANSFORM & dirtyBits )
+	if( DIRTY_DIRECTION & dirtyBits )
 	{
-		msg >> _position >> _direction;
+		msg >> _direction;
 		if( _ogre_light )
 		{ 
-			_ogre_light->setPosition(_position);
 			_ogre_light->setDirection(_direction);
 		}
 	}

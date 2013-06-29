@@ -25,6 +25,8 @@
 
 #include "base/string_utils.hpp"
 
+#include "math/types.hpp"
+
 namespace vl
 {
 
@@ -36,8 +38,13 @@ class HYDRA_API MovableObject : public vl::Distributed
 {
 public :
 	MovableObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
-		: _name(name), _visible(true), _creator(creator), _parent(0)
-		, _listener(0), _is_dynamic(dynamic)
+		: _name(name)
+		, _visible(true)
+		, _creator(creator)
+		, _parent(0)
+		, _listener(0)
+		, _orientation(Ogre::Quaternion::IDENTITY)
+		, _position(Ogre::Vector3::ZERO)
 	{}
 
 	MovableObject(vl::SceneManagerPtr creator)
@@ -74,6 +81,20 @@ public :
 	bool isDynamic(void) const
 	{ return _is_dynamic; }
 
+	void setPosition(Ogre::Vector3 const &pos);
+
+	Ogre::Vector3 const &getPosition(void) const
+	{ return _position; }
+	
+	void setOrientation(Ogre::Quaternion const &q);
+
+	Ogre::Quaternion const &getOrientation(void) const
+	{ return _orientation; }
+
+	Ogre::Vector3 getWorldPosition(void) const;
+	Ogre::Quaternion getWorldOrientation(void) const;
+
+
 	/// @brief make a deep copy of the SceneNode
 	/// Shallow copies would not make much sense with SceneGraphs because you
 	/// can not have multiple parents unlike DAGs.
@@ -91,7 +112,8 @@ public :
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_VISIBLE = vl::Distributed::DIRTY_CUSTOM << 1,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_TRANSFORMATION = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 3,
 	};
 
 	// Provides callbacks for rendering methods
@@ -141,13 +163,15 @@ private :
 	virtual void doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const = 0;
 	virtual void doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) = 0;
 
+	// Override if this native class has transformation attributes
+	virtual void _transformation_updated(void) {}
+
 	/// Using template method pattern for creating the native object
 	/// This manages the the common functionality
 	bool _createNative(void);
 
 	/// Template method patter for the serialization
 	void serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) const;
-
 
 	void deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits );
 
@@ -162,6 +186,9 @@ protected :
 	vl::SceneNodePtr _parent;
 
 	bool _is_dynamic;
+
+	Ogre::Vector3 _position;
+	Ogre::Quaternion _orientation;
 
 	Listener *_listener;
 

@@ -54,18 +54,6 @@ vl::Camera::setFarClipDistance(Ogre::Real n)
 	update_variable(_far_clip, n, DIRTY_CLIPPING);
 }
 
-void 
-vl::Camera::setPosition(Ogre::Vector3 const &pos)
-{
-	update_variable(_position, pos, DIRTY_TRANSFORM);
-}
-
-void 
-vl::Camera::setOrientation(Ogre::Quaternion const &q)
-{
-	update_variable(_orientation, q, DIRTY_TRANSFORM);
-}
-
 vl::MovableObjectPtr
 vl::Camera::clone(std::string const &append_to_name) const
 {
@@ -88,11 +76,6 @@ vl::Camera::doSerialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 	{
 		msg << _near_clip << _far_clip;
 	}
-
-	if( DIRTY_TRANSFORM & dirtyBits )
-	{
-		msg << _position << _orientation;
-	}
 }
 
 void
@@ -105,16 +88,6 @@ vl::Camera::doDeserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 		{
 			_ogre_camera->setNearClipDistance(_near_clip);
 			_ogre_camera->setFarClipDistance(_far_clip);
-		}
-	}
-
-	if( DIRTY_TRANSFORM & dirtyBits )
-	{
-		msg >> _position >> _orientation;
-		if( _ogre_camera )
-		{
-			_ogre_camera->setPosition(_position);
-			_ogre_camera->setOrientation(_orientation);
 		}
 	}
 }
@@ -135,8 +108,6 @@ vl::Camera::_doCreateNative(void)
 
 	_ogre_camera->setNearClipDistance(_near_clip);
 	_ogre_camera->setFarClipDistance(_far_clip);
-	_ogre_camera->setPosition(_position);
-	_ogre_camera->setOrientation(_orientation);
 
 	return true;
 }

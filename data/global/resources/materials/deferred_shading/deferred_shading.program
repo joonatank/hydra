@@ -1,0 +1,88 @@
+
+vertex_program defered_shading/geometry_pass/vp glsl
+{
+	source geometry_pass_vp.glsl
+ 
+	default_params
+	{
+		param_named_auto g_wvp worldviewproj_matrix
+		param_named_auto g_world world_matrix
+	}
+}
+ 
+// functions that are used in multiple shaders
+fragment_program hydra/lighting_utils glsl
+{
+	source lighting_utils.glsl
+	preprocessor_defines USE_PCF=1
+}
+
+
+fragment_program defered_shading/geometry_pass/fp glsl
+{
+	source geometry_pass_fp.glsl
+
+	default_params
+	{
+		param_named_auto g_surface_diffuse surface_diffuse_colour
+		param_named_auto g_surface_specular surface_specular_colour
+		param_named_auto g_surface_shininess surface_shininess
+		param_named_auto g_surface_ambient surface_ambient_colour
+		param_named_auto g_surface_emissive surface_emissive_colour
+
+		// Textures don't change the order
+		param_named g_diffuse_map int 0
+	}
+}
+
+
+vertex_program defered_shading/light_pass/vp glsl
+{
+	source light_pass_vp.glsl
+ 
+	default_params
+	{
+		param_named_auto g_wvp worldviewproj_matrix
+	}
+}
+ 
+fragment_program defered_shading/light_pass/fp glsl
+{
+	source light_pass_fp.glsl
+	attach hydra/lighting_utils
+	// Turning of Scene range causes the shadows to disappear
+	// Also only way to turn of the preprocessor define is to comment it out
+	preprocessor_defines SHADOW_MAP=1,USE_SCENE_RANGE=1
+
+	default_params
+	{
+		param_named_auto g_viewport_size viewport_size
+
+		// Light parameters
+		param_named_auto g_light_diffuse light_diffuse_colour 0
+		param_named_auto g_light_specular light_specular_colour 0
+		param_named_auto g_light_position light_position 0
+		param_named_auto g_spotlight_params spotlight_params 0
+		param_named_auto g_light_attenuation light_attenuation 0
+		param_named_auto g_spot_direction light_direction 0
+
+		// Custom camera position parameter because we need camera position
+		// that was used in the geometric pass.
+		param_named g_camera_position float4
+
+		// Parameters for shadow mapping
+		// inv_view might be inverse world view also
+		param_named_auto g_light_casts_shadows light_casts_shadows 0
+		param_named_auto g_tex_vp texture_viewproj_matrix 0
+		param_named_auto g_inverse_shadowmap_size inverse_texture_size 3
+		param_named_auto g_shadow_scene_range shadow_scene_depth_range 0
+
+		// Textures don't change the order
+		param_named g_position_buffer int 0
+		param_named g_normal_buffer int 1
+		param_named g_colour_buffer int 2
+
+		param_named g_shadow_map int 3
+	}
+}
+

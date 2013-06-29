@@ -7,6 +7,9 @@
 vertex_program ShadowCasterVP glsl
 {
 	source shadow_caster_vp.glsl
+	// To disable comment out
+	// @todo at the moment disabling scene range causes self shadow
+	// errors with directional lights. Spotlights was not tested.
 	preprocessor_defines USE_SCENE_RANGE=1
 
 	default_params

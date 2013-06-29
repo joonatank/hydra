@@ -4,7 +4,7 @@
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
- *	@file: ogre_xml_helpers.hpp
+ *	@file: base/xml_helpers.hpp
  *
  *	This file is part of Hydra VR game engine.
  *	Version 0.4
@@ -17,6 +17,9 @@
  *	Depends on Ogre Math
  */
 
+#ifndef HYDRA_XML_HELPERS_HPP
+#define HYDRA_XML_HELPERS_HPP
+
 #include "math/transform.hpp"
 
 #include <OGRE/OgreColourValue.h>
@@ -24,6 +27,8 @@
 #include <string>
 
 #include "base/rapidxml.hpp"
+
+#include "base/string_utils.hpp"
 
 namespace vl
 {
@@ -39,7 +44,7 @@ Ogre::ColourValue parseColour(rapidxml::xml_node<>* XMLNode);
 
 vl::Transform parseTransform(rapidxml::xml_node<>* xml_node);
 
-template<typename T>
+template<typename T> inline
 T getAttrib( rapidxml::xml_node<> *xml_node,
 		const std::string &attrib, T const &defaultValue )
 {
@@ -75,3 +80,5 @@ bool getAttribBool(rapidxml::xml_node<>* XMLNode,
 }
 
 }	// namespace vl
+
+#endif	// HYDRA_XML_HELPERS_HPP

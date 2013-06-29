@@ -506,7 +506,9 @@ def create_ground(size=40):
 	ground_node = game.scene.createSceneNode("ground")
 	ground = game.scene.createEntity("ground", 'ground', True)
 	ground_node.attachObject(ground)
-	ground.material_name = "ground/bump_mapped/shadows"
+	# Bump mapped do not work with deferred shading yet
+	#ground.material_name = "ground/bump_mapped/shadows"
+	ground.material_name = "ground/flat/shadows"
 	ground.cast_shadows = False
 
 	return ground_node

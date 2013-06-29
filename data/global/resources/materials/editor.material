@@ -29,13 +29,13 @@ material editor/hehkulamppu_material : bling_phong/shadows
 {
 	set $shininess "100"
 
-	set_texture_alias diffuseTexture hehkulamppu_tex.png
+	set_texture_alias diffuse_map hehkulamppu_tex.png
 }
 
 material editor/spotlight_material : bling_phong/shadows
 {
 	set $shininess "100"
 
-	set_texture_alias diffuseTexture spotlight_tex.png
+	set_texture_alias diffuse_map spotlight_tex.png
 }
 

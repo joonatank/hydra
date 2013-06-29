@@ -7,7 +7,7 @@
 
 import * from "normal_map.material"
 
-material CloudySky
+material sky/cloudy/ffp
 {
 	technique
 	{
@@ -19,7 +19,65 @@ material CloudySky
 			texture_unit
 			{
 				texture clouds.jpg
+				// The animation doesn't seem to work
 				scroll_anim 0.15 0
+			}
+		}
+	}
+}
+
+/// Seems like the glsl version is working as well as the ffp
+material sky/cloudy/glsl
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			depth_write off
+			polygon_mode_overrideable false
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref flat_texture_ps
+			{
+			}
+
+			texture_unit sky
+			{
+				texture clouds.jpg
+				// The animation doesn't seem to work
+				scroll_anim 0.15 0
+			}
+		}
+	}
+}
+
+material CloudySky : sky/cloudy/glsl
+{}
+
+material sky/cloudy : sky/cloudy/glsl
+{}
+
+material rtt
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref flat_texture_ps
+			{
+			}
+
+			texture_unit rtt_texture
+			{
+				texture white.tga
 			}
 		}
 	}
@@ -37,7 +95,7 @@ material ffp/basic
 	{
 		pass
 		{
-			texture_unit diffuseTexture
+			texture_unit diffuse_map
 			{
 				tex_address_mode wrap
 				texture white.tga
@@ -63,22 +121,22 @@ material ground/basic
 material ground/flat : bling_phong
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.png
+	set_texture_alias diffuse_map rock.png
 }
 
 material ground/flat/shadows : bling_phong/shadows
 {
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.png
+	set_texture_alias diffuse_map rock.png
 }
 
 material ground/bump_mapped/shadows : bling_phong/normal_map/shadows
 {
 //	set $ambientCol "1 0 0 1"
 	set $specularCol "0 0 0"
-	set_texture_alias diffuseTexture rock.png
+	set_texture_alias diffuse_map rock.png
 //	set_texture_alias specularMap rock.png
-	set_texture_alias normalMap rock_NM.jpg
+	set_texture_alias normal_map rock_NM.jpg
 }
 
 material athene_material : bling_phong/shadows
@@ -92,7 +150,7 @@ material glass/blue : bling_phong/shadows
 {
 	set $ambientCol "0 0 0.5 0.2"
 	set $diffuseCol "0 0 0.5 0.2"
-//	set $specularCol "0 0 0"
+	set $specularCol "0 0 0"
 	set $shininess 250
 	set $depthWrite off
 	set $ambient_scene_blend "alpha_blend"
