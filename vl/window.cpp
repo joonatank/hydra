@@ -65,8 +65,17 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 
 	if(_renderer_type == vl::config::Renderer::FBO)
 	{
-		std::cout << "EXPERIMENTAL : Should Render to FBO." << std::endl;
+		std::cout << "EXPERIMENTAL : Forward Render to FBO." << std::endl;
 	}
+	else if(_renderer_type == vl::config::Renderer::DEFERRED)
+	{
+		std::cout << "EXPERIMENTAL : Deferred Renderer." << std::endl;
+	}
+	else if(_renderer_type == vl::config::Renderer::WINDOW)
+	{
+		std::cout << "Traditional Forward Renderer." << std::endl;
+	}
+
 
 	vl::config::Projection const &projection = windowConf.renderer.projection;
 	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)

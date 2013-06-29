@@ -54,6 +54,7 @@ endif()
 
 set( script_path ${DEMO_DATA_PATH}/shell_scripts )
 copy_shell_script( ${script_path} start start_${start_suffix} )
+copy_shell_script( ${script_path} start_deferred start_deferred_${start_suffix} )
 copy_shell_script( ${script_path} start_multi_window start_multi_window_${start_suffix} )
 
 # Copy the multi node listening start script
