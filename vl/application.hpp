@@ -78,12 +78,6 @@ public:
 	/// @returns true if the application is still running
 	virtual bool isRunning(void) const = 0;
 
-	/// @todo why we need this?
-	virtual RendererInterface *getRenderer(void) const = 0;
-
-	/// @todo why we need this?
-	virtual GameManagerPtr getGameManager(void) const = 0;
-
 	static ApplicationUniquePtr create(ProgramOptions const &opt);
 	
 	// Private virtual overrides

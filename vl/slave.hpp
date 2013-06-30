@@ -38,10 +38,6 @@ public :
 	/// @returns true if the application is still running
 	virtual bool isRunning(void) const;
 
-	virtual vl::RendererInterface *getRenderer(void) const;
-
-	virtual vl::GameManagerPtr getGameManager(void) const;
-
 	/// Private virtual overrides from Application
 private :
 	virtual void _mainloop(bool sleep);

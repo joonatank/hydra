@@ -64,10 +64,16 @@ public :
 
 	void setHead(vl::Transform const &head);
 
+	/// Camera contains the position without head tracking
+	/// i.e it's actually the users feet.
 	void setCamera(vl::CameraPtr cam);
 
 	vl::CameraPtr getCamera(void) const
 	{ return _camera; }
+
+	/// Return the view transform (view/eye matrix) for this frame
+	/// returns a view for a random eye but with correct head and wall transforms
+	vl::Transform getViewTransform(void) const;
 
 	/// @brief updates the Ogre::Camera's projection and view matrices
 	/// @param eye_x the eye x direction used for this rendering

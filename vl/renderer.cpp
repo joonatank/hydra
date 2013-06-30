@@ -193,6 +193,21 @@ vl::Renderer::draw(void)
 	for( size_t i = 0; i < _windows.size(); ++i )
 	{ _windows.at(i)->draw(); }
 
+	// Copy view and projection matrices
+	if(_windows.size() > 0 && _windows.at(0)->getChannels().size() > 0)
+	{
+		// @todo does this work for deferred shading or FBOs?
+		// what projection and view matrices exacatly are left after
+		// rendering a frame?
+		// need to test more but view matrix seemed fine for deferred.
+		Channel *chan = _windows.at(0)->getChannels().at(0);
+
+		vl::Transform t = chan->getCamera().getViewTransform();
+		_view_matrix = Ogre::Matrix4(t.quaternion);
+		_view_matrix.setTrans(t.position);
+		_proj_matrix = chan->getCamera().getFrustum().getProjectionMatrix();
+	}
+
 	// Hack to update Sky
 	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
 		&& _scene_manager && _scene_manager->getSkySimulator())

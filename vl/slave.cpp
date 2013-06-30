@@ -57,20 +57,6 @@ vl::Slave::isRunning(void) const
 	return _slave_client->isRunning();
 }
 
-
-vl::RendererInterface *
-vl::Slave::getRenderer(void) const
-{
-	return _renderer.get();
-}
-
-vl::GameManagerPtr
-vl::Slave::getGameManager(void) const
-{
-	return 0;
-}
-
-
 /// -------------------- Private virtual overrides ---------------------------
 void
 vl::Slave::_mainloop(bool sleep)

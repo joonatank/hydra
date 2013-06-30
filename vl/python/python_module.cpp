@@ -67,6 +67,8 @@
 
 // Necessary for exposing some server functionality
 #include "cluster/server.hpp"
+// Necessary for minor Renderer features
+#include "renderer.hpp"
 
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -718,6 +720,11 @@ void export_game(void)
 	python::class_<vl::cluster::Server, boost::noncopyable, vl::cluster::ServerRefPtr>("Server", python::no_init)
 		.def("inject_lag", &vl::cluster::Server::inject_lag)
 		.add_property("report", python::make_function(&vl::cluster::Server::getReport, python::return_value_policy<python::copy_const_reference>()))
+	;
+
+	python::class_<vl::Renderer, boost::noncopyable>("Renderer", python::no_init)
+		.add_property("view_matrix", python::make_function(&vl::Renderer::getViewMatrix, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("projection_matrix", python::make_function(&vl::Renderer::getProjectionMatrix, python::return_value_policy<python::copy_const_reference>()))
 	;
 
 	void (sink::*write1)( std::string const & ) = &sink::write;

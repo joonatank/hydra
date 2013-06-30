@@ -55,7 +55,7 @@ vl::Master::Master(void)
 	, _env()
 	, _server()
 	, _running(true)
-	, _renderer()
+	, _renderer(0)
 	, _frame(0)
 {
 	std::cout << vl::TRACE << "vl::Master::Master" << std::endl;
@@ -95,7 +95,7 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 	// because for now the GameManager will send project (global) as a signal
 	// and it is assumed that environment is set before processing
 	// project signal.
-	if( _renderer.get() )
+	if(_renderer)
 	{
 		t.reset();
 		_renderer->init(_env);
@@ -118,7 +118,7 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 	}
 	report["Updating server"].push(t.elapsed());
 
-	if(_renderer.get())
+	if(_renderer)
 	{
 		t.reset();
 		vl::cluster::Message msg(_msg_create);
@@ -134,8 +134,15 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 	_stats_timer.reset();
 
 	// We need implementation here
+	// Bit hackish way to add global variables because we can't access them
+	// through GameManager.
 	static_cast<PythonContextImpl *>(_game_manager->getPython())
 		->addVariableVal("server", _server);
+	if(_renderer)
+	{
+		static_cast<PythonContextImpl *>(_game_manager->getPython())
+			->addVariableRef("renderer", (Renderer *)_renderer);
+	}
 
 	_server->process_event(vl::cluster::init());
 
@@ -158,7 +165,7 @@ vl::Master::exit(void)
 {
 	std::cout << vl::TRACE << "vl::Master::exit" << std::endl;
 
-	_renderer.reset();
+	delete _renderer;
 
 	_server->shutdown();
 }
@@ -198,7 +205,7 @@ vl::Master::render(void)
 	timer.reset();
 	_server->start_draw(_frame, getSimulationTime());
 	// Rendering after the server has sent the command to slaves
-	if( _renderer.get() )
+	if(_renderer)
 	{
 		_renderer->draw();
 	}
@@ -207,7 +214,7 @@ vl::Master::render(void)
 	_server->finish_draw(_frame, getSimulationTime());
 
 	// Finish local renderer
-	if( _renderer.get() )
+	if(_renderer)
 	{
 		_renderer->swap();
 		_renderer->capture();
@@ -336,7 +343,7 @@ vl::Master::settingsChanged(void)
 		//_server->sendMessage(msg);
 	}
 	// Notify local renderer
-	if(_renderer.get())
+	if(_renderer)
 	{
 		_renderer->setProject(_proj);
 	}
@@ -350,7 +357,7 @@ vl::Master::clearProjectCallback(void)
 		// @todo add Server clear project
 	}
 
-	if(_renderer.get())
+	if(_renderer)
 	{
 		_renderer->clearProject();
 	}
@@ -435,7 +442,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	/// Only create local Renderer if we have Windows defined
 	if(env->getMaster().getNWindows())
-	{ _renderer.reset( new Renderer(env->getName()) ); }
+	{ _renderer = new Renderer(env->getName()); }
 	else
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 
@@ -445,7 +452,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	_server->addRequestMessageListener(boost::bind(&Master::messageRequested, this, _1));
 
 	// if we have a renderer we have to set callbacks
-	if(_renderer.get())
+	if(_renderer)
 	{
 		_renderer->addEventListener(boost::bind(&Master::injectEvent, this, _1));
 		_renderer->addCommandListener(boost::bind(&PythonContext::executeCommand, _game_manager->getPython(), _1));
@@ -455,7 +462,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	_game_manager->addStateChangedListener(GameManagerFSM_::Loading(), boost::bind(&Master::settingsChanged, this));
 	_game_manager->addStateChangedListener(GameManagerFSM_::Quited(), boost::bind(&Master::quit_callback, this));
 
-	if(_renderer.get())
+	if(_renderer)
 	{ _renderer->setMeshManager(_game_manager->getMeshManager()); }
 
 	init(opt.global_file, opt.project_file);
@@ -544,7 +551,7 @@ vl::Master::_updateServer( void )
 void
 vl::Master::_updateRenderer(void)
 {
-	if( !_renderer.get() )
+	if(!_renderer)
 	{ return; }
 
 	if( !_msg_create.empty() )

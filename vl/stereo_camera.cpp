@@ -42,6 +42,14 @@ vl::StereoCamera::setCamera(vl::CameraPtr cam)
 	{ _ogre_camera = 0; }
 }
 
+vl::Transform
+vl::StereoCamera::getViewTransform(void) const
+{
+	Ogre::Vector3 const &pos = _ogre_camera->getDerivedPosition();
+	Ogre::Quaternion const &q = _ogre_camera->getDerivedOrientation();
+
+	return Transform(pos, q);
+}
 
 void
 vl::StereoCamera::update(STEREO_EYE eye_cfg)

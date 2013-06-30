@@ -95,6 +95,10 @@ public :
 	void addVariableRef(std::string variable_name, T &var);
 
 	template<typename T>
+	void addVariableRef(std::string variable_name, T *var);
+
+	/// Need different name so that we don't acidentially use the non-const version.
+	template<typename T>
 	void addVariableVal(std::string variable_name, T const &var);
 
 private :
@@ -124,6 +128,13 @@ void
 PythonContextImpl::addVariableRef(std::string variable_name, T &var)
 {
 	_global[variable_name] = python::ptr<>(&var);
+}
+
+template<typename T>
+void
+PythonContextImpl::addVariableRef(std::string variable_name, T *var)
+{
+	_global[variable_name] = python::ptr<>(var);
 }
 
 template<typename T>

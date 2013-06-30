@@ -34,7 +34,7 @@
 namespace vl
 {
 
-/**	@class Pipe
+/**	@class Renderer
  *	@brief Representation of a pipe i.e. a single GPU
  *
  *	A Pipe is always run on single GPU.
@@ -42,6 +42,17 @@ namespace vl
  *	and from the application thread.
  *	At the moment the application supports only a single Pipe objects because
  *	of the limitations in Ogre Design.
+ *
+ *	@todo should be distributed
+ *	Master owns N+1 Renderers/Pipes where N is the number of Slaves
+ *	- Master updates all Renderers and all Windows/Channels in them
+ *	- Distributed to slaves (all Renderers/Windows/Channels to all slaves for now)
+ *	- Update on slaves
+ *	- Render
+ *	Extension to this would be to add RPC to Renderer so we can use it for
+ *	rendering commands (draw, swap, capture).
+ *	Proper RPC framework would reduce problems in the rendering pipeline
+ *	caused by the horrible message system (with switches etc.)
  */
 class HYDRA_API Renderer : public vl::RendererInterface, public Session
 {
@@ -142,6 +153,21 @@ public :
 	virtual gui::GUIRefPtr getGui(void)
 	{ return _gui; }
 
+	/// Hack for getting current view and projection matrices
+	/// This is a hack because these don't take into account
+	/// multiple windows and multiple channels it's also useless
+	/// on slaves because these are provided mainly for python interface.
+	///
+	/// Proper solution to the problem would be to provide interface for
+	/// both Windows and Channels to python and
+	/// change Renderer, Window and Channel to be shared.
+	/// Would need modify the Renderer to be a shared Node, so master would own
+	/// N+1 of them where N is the number of slaves.
+	Ogre::Matrix4 const &getViewMatrix(void) const
+	{ return _view_matrix; }
+	Ogre::Matrix4 const &getProjectionMatrix(void) const
+	{ return _proj_matrix; }
+
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
 
@@ -221,6 +247,11 @@ protected :
 	std::vector<vl::MaterialRefPtr> _materials_to_check;
 
 	bool _enable_debug_overlay;
+
+	// Projection and View matrices used for last frame
+	// Used for the python interface.
+	Ogre::Matrix4 _view_matrix;
+	Ogre::Matrix4 _proj_matrix;
 
 };	// class Renderer
 

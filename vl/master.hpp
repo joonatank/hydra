@@ -62,12 +62,9 @@ public:
 	bool isRunning(void) const
 	{ return _running; }
 
+	/// Used internally for some reason
 	vl::GameManagerPtr getGameManager(void) const
 	{ return _game_manager; }
-
-	/// @todo why is this necessary?
-	RendererInterface *getRenderer(void) const
-	{ return _renderer.get(); }
 
 	/// Message callback system functions
 	bool messages(void) const
@@ -159,7 +156,7 @@ protected :
 	bool _running;
 
 	// Renderer
-	boost::scoped_ptr<RendererInterface> _renderer;
+	RendererInterface *_renderer;
 
 	uint32_t _frame;
 	vl::chrono _sim_timer;
