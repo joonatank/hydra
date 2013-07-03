@@ -192,31 +192,36 @@ vl::EventManager::createMouseTrigger(void)
 }
 
 void
-vl::EventManager::mousePressed(vl::MouseEvent const &evt)
+vl::EventManager::mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id)
 {
+	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_PRESSED);
+		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_PRESSED, b_id);
 	}
-
+	
 }
 
 void
-vl::EventManager::mouseReleased(vl::MouseEvent const &evt)
+vl::EventManager::mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id)
 {
+	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_RELEASED);
+		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_RELEASED, b_id);
 	}
+	
 }
 
 void
 vl::EventManager::mouseMoved(vl::MouseEvent const &evt)
 {
+	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt,vl::MouseTrigger::MOUSE_STATE::MS_MOVED);
+		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_MOVED);
 	}
+	
 }
 
 

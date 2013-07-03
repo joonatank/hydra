@@ -37,7 +37,6 @@
 #include <OIS/OISMouse.h>
 #include <OIS/OISJoyStick.h>
 
-#include "input/mouse_event.hpp"
 #include <OGRE/OgreRenderTargetListener.h>
 
 #include <OGRE/OgreRenderWindow.h>

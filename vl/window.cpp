@@ -29,6 +29,7 @@
 
 #include "input/joystick_event.hpp"
 #include "input/ois_converters.hpp"
+#include "input/mouse_event.hpp"
 
 /// GUI
 #include "gui/gui.hpp"
@@ -290,11 +291,17 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 	}
 	else
 	{
+		/*
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
+		
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
-		stream << evt;
+		
+		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		
+		stream << e;
 		_sendEvent( data );
+		*/
 	}
 
 	return true;
@@ -309,11 +316,17 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	}
 	else
 	{
+		
+		/*
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
-		stream << id << evt;
+		
+		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		
+		stream << id << e;
 		_sendEvent( data );
+		*/
 	}
 
 	return true;
@@ -334,6 +347,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		
 		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		vl::MouseEvent::BUTTON b_id = vl::MouseEvent::BUTTON(id);
 
 		CameraPtr cam = _channels.at(0)->getCamera().getCamera();
 		e.head_position = cam->getPosition();
@@ -342,8 +356,9 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		//Should the ipd argument be -_ipd/2 or 0?
 		e.view_projection = _channels.at(0)->getCamera().getFrustum().getProjectionMatrix();
 	
+		std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
-		stream << id << e;
+		stream << b_id << e;
 		_sendEvent( data );
 	}
 

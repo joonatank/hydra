@@ -69,36 +69,72 @@ struct MouseEvent
 };
 
 
+//For printing the event (debugging purposes)
 inline std::ostream &
 operator<<(std::ostream &os, MouseEvent const &evt)
 {
 	//Absolute and relative (~speed) position:
-	os << "Absolute = (" << evt.X.abs << ", " << evt.Y.abs << evt.Z.abs << ")" << std::endl;
-	os << "Relative = (" << evt.X.rel << ", " << evt.Y.rel << evt.Z.rel << ")" << std::endl;
+	os << "Absolute = ( " << evt.X.abs << ", " << evt.Y.abs << ", " << evt.Z.abs << " )" << std::endl;
+	os << "Relative = ( " << evt.X.rel << ", " << evt.Y.rel << ", " << evt.Z.rel << " )" << std::endl;
 
 	//Buttons:
 	for(size_t i = 0; i < 8; ++i)
 	{
-		os << "Button " << i << " : " << evt.isButtonDown( vl::MouseEvent::BUTTON(1 << i) ) << std::endl;
+		os << "Button " << i+1 << ": " << evt.isButtonDown( vl::MouseEvent::BUTTON(1 << i) ) << std::endl;
 	}
 
 	//Head position, orientation and viewmatrix:
-	os << "Head_Position = (" << evt.head_position << ")" << std::endl;
-	os << "Head_Orientation = (" << evt.head_orientation << ")" << std::endl;
-	os << "ViewMatrix = {" << evt.view_projection << "}" << std::endl;
-
+	os << "Head_Position = ( " << evt.head_position << " )" << std::endl;
+	os << "Head_Orientation = ( " << evt.head_orientation << " )" << std::endl;
+	os << "ViewMatrix = { "<< evt.view_projection << " }" << std::endl;
+	
 	return os;
 }
-
 
 namespace cluster {
 
 template<>
 inline ByteStream &
+operator<< <Ogre::Matrix4 const>(ByteStream &msg, Ogre::Matrix4 const &mat)
+{
+	// @todo: We should optimize this, also we should have a checking of NaN and Inf!
+	for(size_t row = 0; row < 4; ++row)
+	{
+		for(size_t col = 0; col < 4; ++col)
+		{
+			msg << mat[row][col];
+		}
+	}
+	return msg;
+}
+
+
+template<>
+inline ByteStream &
+operator>> <Ogre::Matrix4>(ByteStream &msg, Ogre::Matrix4 &mat)
+{
+	// @todo: optimize this, could be copied as a whole, no need for loop.
+	
+	for(size_t row = 0; row < 4; ++row)
+	{
+		for(size_t col = 0; col < 4; ++col)
+		{
+			msg >> mat[row][col];
+		}
+	}
+	return msg;
+}
+
+
+template<>
+inline ByteStream &
 operator<< <vl::MouseEvent const>(ByteStream &msg, vl::MouseEvent const &evt)
 {
-	msg << evt.X.abs << evt.X.rel; 
-	//<< evt.Y.abs << evt.Y.rel << evt.Z.abs << evt.Z.rel << evt.buttons << evt.head_position << evt.head_orientation;
+	msg << evt.X.abs << evt.X.rel << evt.Y.abs << evt.Y.rel << evt.Z.abs << evt.Z.rel;
+	msg	<< evt.buttons;
+	msg	<< evt.head_position;
+	msg	<< evt.head_orientation;
+	msg	<< evt.view_projection;
 	
 	return msg;
 }
@@ -109,42 +145,16 @@ inline ByteStream &
 operator>> <vl::MouseEvent>(ByteStream &msg, vl::MouseEvent &evt)
 {
 	
-	msg >> evt.X.abs >> evt.X.rel;
-		//>> evt.Y.abs >> evt.Y.rel >> evt.Z.abs >> evt.Z.rel;
-	//msg >> evt.buttons;
-	//msg >> evt.head_position;
-	//msg >> evt.head_orientation;
-
+	msg >> evt.X.abs >> evt.X.rel >> evt.Y.abs >> evt.Y.rel >> evt.Z.abs >> evt.Z.rel;
+	msg	>> evt.buttons;
+	msg	>> evt.head_position;
+	msg	>> evt.head_orientation;
+	msg	>> evt.view_projection;
 	return msg;
 }
 
 
-template<>
-inline ByteStream &
-vl::cluster::operator<< <Ogre::Matrix4 const>(ByteStream &msg, Ogre::Matrix4 const &mat)
-{
-	// @todo: optimize this, could be copied as a whole, no need for loop.
-	for( size_t i = 0; i < 16; ++i)
-	{
-		msg << *mat[i];	
-	}
-	
-	return msg;
-};
 
-
-template<>
-inline ByteStream &
-operator>> <Ogre::Matrix4>(ByteStream &msg, Ogre::Matrix4 &mat)
-{
-	// @todo: optimize this, could be copied as a whole, no need for loop.
-	//for( size_t i = 0; i < 16; ++i)
-	//{
-	//	msg >> *mat[i];
-	//}
-	
-	return msg;
-}
 
 
 } //namespace cluster

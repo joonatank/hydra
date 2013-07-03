@@ -90,7 +90,7 @@ vl::KeyTrigger::print(std::ostream& os) const
 
 ///---Mouse trigger------------------------------------------------------
 void
-vl::MouseTrigger::update(vl::MouseEvent const &evt, MOUSE_STATE ms)
+vl::MouseTrigger::update(vl::MouseEvent const &evt, MOUSE_STATE ms, vl::MouseEvent::BUTTON b_id)
 {
 	if(ms != _mstate)
 	{
@@ -101,11 +101,11 @@ vl::MouseTrigger::update(vl::MouseEvent const &evt, MOUSE_STATE ms)
 		}
 		else if(ms == MOUSE_STATE::MS_PRESSED)
 		{
-			_button_pressed_signal(evt);
+			_button_pressed_signal(evt, b_id);
 		}
 		else if(ms == MOUSE_STATE::MS_RELEASED)
 		{
-			_button_released_signal(evt);
+			_button_released_signal(evt, b_id);
 		}
 		else
 		{
@@ -115,8 +115,11 @@ vl::MouseTrigger::update(vl::MouseEvent const &evt, MOUSE_STATE ms)
 	}
 }
 
+void
+vl::MouseTrigger::update(vl::MouseEvent const &evt, MOUSE_STATE ms)
+{
 
-
+}
 
 
 

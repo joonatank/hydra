@@ -101,8 +101,8 @@ public :
 
 	
 	void mouseMoved(vl::MouseEvent const &evt);
-	void mousePressed(vl::MouseEvent const &evt);
-	void mouseReleased(vl::MouseEvent const &evt);
+	void mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
+	void mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	
 	
 	/// Frame trigger

@@ -268,13 +268,6 @@ void export_physics_objects(void)
 		.def_readonly("hit_points", &vl::physics::RayResult::hit_points_world)
 		.def_readonly("hit_normals", &vl::physics::RayResult::hit_normals_world)
 		.def_readonly("hit_fractions", &vl::physics::RayResult::hit_fractions)
-		
-	/// RayResult:
-	//python::class_<vl::physics::RayResult>("RayResult")
-	//	.def_readonly("objects", &vl::physics::RayResult::objectlist)
-	//	.def_readonly("hitpoints", &vl::physics::RayResult::hitpoints_world)
-	//	.def_readonly("hitnormals", &vl::physics::RayResult::hitnormals_world)
-	//  tama ei kuulu .def(python::self_ns::str(python::self_ns::self))
 	;
 	
 	// .add_property("head",

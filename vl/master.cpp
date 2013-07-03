@@ -32,6 +32,7 @@
 #include <OIS/OISKeyboard.h>
 
 #include "input/joystick_event.hpp"
+#include "input/mouse_event.hpp"
 
 // Necessary for sending Environment and Project configs
 #include "distrib_settings.hpp"
@@ -707,13 +708,15 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_MOUSE_PRESSED :
 		{
-			OIS::MouseButtonID b_id;
-			//OIS::MouseEvent evt( 0, OIS::MouseState() );
-			
-			//stream >> b_id >> evt;
+			vl::MouseEvent::BUTTON b_id;
 			vl::MouseEvent evt;
+			
 			stream >> b_id >> evt;
-			_game_manager->getEventManager()->mousePressed(evt);
+			
+			// @remove: print to test!
+			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			
+			_game_manager->getEventManager()->mousePressed(evt, b_id);
 
 			
 		}
@@ -721,26 +724,32 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_MOUSE_RELEASED :
 		{
-			OIS::MouseButtonID b_id;
-			//OIS::MouseEvent evt( 0, OIS::MouseState() );
-			//stream >> b_id >> evt;
+			//OIS::MouseButtonID b_id;
+			
 			vl::MouseEvent evt;
-			stream >> b_id >> evt;
-			// @remove: print to test!
-			std::clog << b_id << evt;
-			_game_manager->getEventManager()->mouseReleased(evt);
+			vl::MouseEvent::BUTTON b_id;
 
-			// @todo should pass the mouse state to event manager
+			stream >> b_id >> evt;
+			
+			// @remove: print to test!
+			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			
+			_game_manager->getEventManager()->mouseReleased(evt, b_id);
+
 		}
 		break;
 
 		case vl::cluster::EVT_MOUSE_MOVED :
 		{
-			//OIS::MouseEvent evt( 0, OIS::MouseState() );
 			vl::MouseEvent evt;
+			
 			stream >> evt;
+			
+			// @remove: print to test!
+			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+
 			_game_manager->getEventManager()->mouseMoved(evt);
-			// @todo should pass the mouse state to event manager
+			
 		}
 		break;
 

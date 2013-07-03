@@ -197,8 +197,8 @@ public :
 // @warning added due mouse and raycast picking test purposes:
 class MouseTrigger : public BasicActionTrigger
 {
-typedef boost::signal<void (vl::MouseEvent const &)> Tripped;
-
+typedef boost::signal<void (vl::MouseEvent const &, vl::MouseEvent::BUTTON)> Tripped_button;
+typedef boost::signal<void (vl::MouseEvent const &)> Tripped_moved;
 public:
 	enum MOUSE_STATE
 	{
@@ -207,23 +207,31 @@ public:
 		MS_MOVED
 	};
 	
+	MouseTrigger(void)
+	{}
+	
+	~MouseTrigger(void)
+	{}
+	
 	virtual std::string getTypeName( void ) const
 	{ return "MouseTrigger"; }
 
 	virtual std::string getName( void ) const
 	{ return std::string(); }
-	int addButtonReleasedListener(Tripped::slot_type const &slot);
-	int addButtonPressedListener(Tripped::slot_type const &slot);
-	int addMovedListener(Tripped::slot_type const &slot);
+	
+	int addButtonReleasedListener(Tripped_button::slot_type const &slot);
+	int addButtonPressedListener(Tripped_button::slot_type const &slot);
+	int addMovedListener(Tripped_moved::slot_type const &slot);
 
-	void update(vl::MouseEvent const &evt, MOUSE_STATE ms);
+	void update(vl::MouseEvent const &evt, vl::MouseTrigger::MOUSE_STATE ms, vl::MouseEvent::BUTTON b_id);
+	void update(vl::MouseEvent const &evt, vl::MouseTrigger::MOUSE_STATE ms);
 
 private:
-	Tripped _button_pressed_signal;
-	Tripped _button_released_signal;
-	Tripped _mouse_moved_signal;
+	Tripped_button _button_pressed_signal;
+	Tripped_button _button_released_signal;
+	Tripped_moved _mouse_moved_signal;
 	
-	MOUSE_STATE _mstate;
+	vl::MouseTrigger::MOUSE_STATE _mstate;
 
 };
 
