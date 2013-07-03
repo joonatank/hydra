@@ -37,12 +37,7 @@ vl::Player::Player(SceneManagerPtr scene_manager)
 	, _screenshot_version(0)
 	, _ipd(0)
 	, _scene_manager(scene_manager)
-{
-	assert(_scene_manager);
-	_active_camera = _scene_manager->getCamera(EDITOR_CAMERA);
-	// Master copy has to have the camera, but we can't assert here because
-	// the slave copy does not have it.
-}
+{}
 
 vl::Player::~Player( void )
 {}

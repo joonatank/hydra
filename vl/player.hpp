@@ -53,6 +53,8 @@ class HYDRA_API Player : public vl::Distributed
 public :
 	/// @brief Constructor
 	/// @param scene_manager used for retrieving the camera
+	/// Master needs a scene manager for retrieving camera by name
+	/// Slave needs a scene manager for retrieving objects by ID.
 	Player(SceneManagerPtr scene_manager);
 
 	virtual ~Player( void );

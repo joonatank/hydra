@@ -20,6 +20,22 @@
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreMovableObject.h>
 
+vl::MovableObject::MovableObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
+	: _name(name)
+	, _visible(true)
+	, _creator(creator)
+	, _parent(0)
+	, _listener(0)
+	, _orientation(Ogre::Quaternion::IDENTITY)
+	, _position(Ogre::Vector3::ZERO)
+	, _is_dynamic(dynamic)
+{}
+
+vl::MovableObject::MovableObject(vl::SceneManagerPtr creator)
+	: _name(), _visible(true), _creator(creator), _parent(0)
+	, _listener(0), _is_dynamic(false)
+{}
+
 void 
 vl::MovableObject::setParent(vl::SceneNodePtr parent)
 {

@@ -873,9 +873,8 @@ vl::GameManager::_removeAll(void)
 	_init_report = vl::Report<vl::time>();
 
 	// Reset player
-	CameraPtr cam = _scene_manager->getCamera("editor/perspective");
-	assert(cam);
-	_player->setCamera(cam);
+	assert(_scene_manager->getEditorCamera());
+	_player->setCamera(_scene_manager->getEditorCamera());
 
 	// remove loaded meshes
 	// We need remove meshes because the mesh loader will throw if they are still loaded
@@ -1017,9 +1016,13 @@ vl::GameManager::_createPlayer(void)
 	assert(!_player);
 	assert(_scene_manager);
 	_player = new Player(_scene_manager);
+
 	// Registering Player in init
 	// TODO move this to do an automatic registration similar to SceneManager
 	_session->registerObject(_player, OBJ_PLAYER);
+
+	assert(_scene_manager->getEditorCamera());
+	_player->setCamera(_scene_manager->getEditorCamera());
 
 	return _player;
 }

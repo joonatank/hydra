@@ -37,20 +37,9 @@ namespace vl
 class HYDRA_API MovableObject : public vl::Distributed
 {
 public :
-	MovableObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic)
-		: _name(name)
-		, _visible(true)
-		, _creator(creator)
-		, _parent(0)
-		, _listener(0)
-		, _orientation(Ogre::Quaternion::IDENTITY)
-		, _position(Ogre::Vector3::ZERO)
-	{}
+	MovableObject(std::string const &name, vl::SceneManagerPtr creator, bool dynamic);
 
-	MovableObject(vl::SceneManagerPtr creator)
-		: _name(), _visible(true), _creator(creator), _parent(0)
-		, _listener(0), _is_dynamic(false)
-	{}
+	MovableObject(vl::SceneManagerPtr creator);
 
 	virtual ~MovableObject(void) {}
 
