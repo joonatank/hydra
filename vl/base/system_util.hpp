@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include <cassert>
 
 #include "exceptions.hpp"
 
@@ -42,6 +43,24 @@ void kill_process(uint32_t pid);
 void hide_system_console(void);
 
 void show_system_console(void);
+
+/// @brief check that the value is valid and return it
+/// @todo these don't really belong here but we don't have better place for them.
+/// allow references 
+template<typename T>
+T &assert_return(T &val)
+{
+	assert(val);
+	return val;
 }
+
+template<typename T>
+T const &assert_return(T const &val)
+{
+	assert(val);
+	return val;
+}
+
+}	 //namespace vl
 
 #endif	// HYDRA_SYSTEM_UTILS_HPP

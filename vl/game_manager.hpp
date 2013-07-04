@@ -41,6 +41,8 @@
 
 #include "base/report.hpp"
 #include "base/chrono.hpp"
+#include "base/system_util.hpp"
+
 #include "logger.hpp"
 
 // Necessary for SceneInfo
@@ -131,29 +133,32 @@ public :
 
 	virtual ~GameManager( void );
 
+	// @todo all of these objects should be always available
+	// so we should add assert check to them to catch any possible problems
+	// add a function asserted_return() or something for this.
 	vl::PythonContextPtr getPython(void)
-	{ return _python; }
+	{ return assert_return(_python); }
 
 	PlayerPtr getPlayer(void)
-	{ return _player; }
+	{ return assert_return(_player); }
 
 	ResourceManagerRefPtr getResourceManager(void)
-	{ return _resource_man; }
+	{ return assert_return(_resource_man); }
 
 	EventManagerPtr getEventManager(void)
-	{ return _event_man; }
+	{ return assert_return(_event_man); }
 
 	vl::SceneManagerPtr getSceneManager(void)
-	{ return _scene_manager; }
+	{ return assert_return(_scene_manager); }
 
 	MeshManagerRefPtr getMeshManager(void)
-	{ return _mesh_manager; }
+	{ return assert_return(_mesh_manager); }
 	
 	MaterialManagerRefPtr getMaterialManager(void)
-	{ return _material_manager; }
+	{ return assert_return(_material_manager); }
 
 	vl::gui::GUIRefPtr getGUI(void)
-	{ return _gui; }
+	{ return assert_return(_gui); }
 
 	vl::ProfilerReport &getRenderingReport(void)
 	{ return _rendering_report; }
@@ -165,10 +170,10 @@ public :
 	void step(void);
 
 	vl::ClientsRefPtr getTrackerClients( void )
-	{ return _trackers; }
+	{ return assert_return(_trackers); }
 
 	vl::Logger *getLogger(void)
-	{ return _logger; }
+	{ return assert_return(_logger); }
 
 	/// @brief creates a new GameObject
 	/// @return new GameObject if none with that name exist, otherwise already existing object
@@ -188,13 +193,13 @@ public :
 
 	/// ------------------------------ Kinematics ----------------------------
 	KinematicWorldRefPtr getKinematicWorld(void)
-	{ return _kinematic_world; }
+	{ return assert_return(_kinematic_world); }
 	
 	/// ------------------------------ Physics -------------------------------
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
 	physics::WorldRefPtr getPhysicsWorld(void)
-	{ return _physics_world; }
+	{ return assert_return(_physics_world); }
 
 	/// Enable physics to be used in this game
 	/// First call to this function will create the physics world with true
