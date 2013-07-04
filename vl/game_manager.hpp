@@ -199,7 +199,7 @@ public :
 	/// Get the physics World
 	/// IF physics has not been enabled returns zero
 	physics::WorldRefPtr getPhysicsWorld(void)
-	{ return assert_return(_physics_world); }
+	{ return _physics_world; }
 
 	/// Enable physics to be used in this game
 	/// First call to this function will create the physics world with true
