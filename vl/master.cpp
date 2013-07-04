@@ -443,7 +443,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	/// Only create local Renderer if we have Windows defined
 	if(env->getMaster().getNWindows())
-	{ _renderer = new Renderer(env->getName()); }
+	{ _renderer = new Renderer(this, env->getName()); }
 	else
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 

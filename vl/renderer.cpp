@@ -46,14 +46,16 @@
 #include <boost/bind.hpp>
 
 /// ------------------------- Public -------------------------------------------
-vl::Renderer::Renderer(std::string const &name)
+vl::Renderer::Renderer(vl::Session *session, std::string const &name)
 	: _name(name)
+	, _session(session)
 	, _ogre_sm(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
 	, _n_log_messages(0)
 	, _enable_debug_overlay(false)
+	, _gui_enabled(false)
 {
 	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
 }
@@ -89,57 +91,59 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 	std::cout << vl::TRACE << "vl::Renderer::init" << std::endl;
 
 	assert(env);
-	// Single init allowed
-	assert(!_env);
-	_env = env;
 
-	_createOgre(env);
+	// TODO the project name should be used instead of the hydra for all
+	// problem is that the project name is not known at this point
+	// so we should use a tmp file and then move it.
+	_root.reset( new vl::ogre::Root(env->getLogLevel()) );
+	// Initialise ogre
+	_root->createRenderSystem();
 
-	vl::config::Node const &node = getNodeConf();
+	vl::config::Node node;
+	if(getName() == env->getMaster().name)
+	{ node = env->getMaster(); }
+	else
+	{ node = env->findSlave( getName() ); }
+
+	_gui_enabled = node.gui_enabled;
+
 	if(!node.empty())
 	{ 
 		std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
 
 		for( size_t i = 0; i < node.getNWindows(); ++i )
-		{ createWindow( node.getWindow(i) ); }
+		{ createWindow(node.getWindow(i), env); }
 	}
 	// Hack to handle Ogre's depency on Window creation before the use of
 	// the RenderingEngine
 	else
 	{
+		std::cout << vl::TRACE << "Creating dummy window" << std::endl;
 		// @todo should destroy the window after the init
-		createWindow(vl::config::Window("dummy", 400, 320, 0, 0));
+		createWindow(vl::config::Window("dummy", 400, 320, 0, 0), env);
 	}
 }
 
-vl::config::Node const &
-vl::Renderer::getNodeConf(void) const
+/// --------------------------------------------------------------------------
+/// ----------------------- Window management --------------------------------
+vl::IWindow *
+vl::Renderer::createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env)
 {
-	if(!_env)
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No environment configuration.")); }
+	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
 
-	if(getName() == _env->getMaster().name)
-	{ return _env->getMaster(); }
-	else
-	{ return _env->findSlave( getName() ); }
-}
-
-vl::config::Window const &
-vl::Renderer::getWindowConf(std::string const &window_name) const
-{
-	vl::config::Node const &node = getNodeConf();
-
-	// TODO add real errors
-	if( node.getNWindows() == 0 )
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Node has no windows.")); }
-
-	for( size_t i = 0; i < node.getNWindows(); ++i )
+	// Destroy dummy window
+	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
 	{
-		if( node.getWindow(i).name == window_name )
-		{ return node.getWindow(i); }
+		delete _windows.at(0);
+		_windows.clear();
 	}
 
-	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No such Window"));
+	vl::Window *window = new vl::Window(winConf, env, this);
+	if(_player)
+	{ window->setCamera(_player->getCamera()); }
+	_windows.push_back(window);
+
+	return window;
 }
 
 void
@@ -178,7 +182,8 @@ vl::Renderer::printToConsole(std::string const &text, double time,
 	{ _gui->getConsole()->printTo(text, time, type, lvl); }
 }
 
-
+/// --------------------------------------------------------------------------
+/// ----------------------- Rendering ----------------------------------------
 void
 vl::Renderer::draw(void)
 {
@@ -209,10 +214,10 @@ vl::Renderer::draw(void)
 	}
 
 	// Hack to update Sky
-	if(_windows.size() > 0 && _windows.at(0)->getPlayer().getCamera()
+	if(_windows.size() > 0 && _player->getCamera()
 		&& _scene_manager && _scene_manager->getSkySimulator())
 	{
-		_scene_manager->getSkySimulator()->notifyCameraRender(_windows.at(0)->getPlayer().getCamera());
+		_scene_manager->getSkySimulator()->notifyCameraRender(_player->getCamera());
 	}
 
 	if(_scene_manager)
@@ -228,13 +233,13 @@ vl::Renderer::swap(void)
 	{ _windows.at(i)->swap(); }
 }
 
+/// --------------------------------------------------------------------------
+/// ----------------------- Project management -------------------------------
 void
 vl::Renderer::setProject(vl::Settings const &settings)
 {
 	std::clog << "vl::Renderer::setProject" << std::endl;
 
-	_settings = settings;
-	
 	if(!_root)
 	{ return; }
 	
@@ -287,6 +292,8 @@ vl::Renderer::clearProject(void)
 	}
 }
 
+/// --------------------------------------------------------------------------
+/// ----------------------- Syncing -----------------------------------------
 void
 vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 {
@@ -355,7 +362,8 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 				if(_scene_manager)
 				{
 					vl::Player *player = new vl::Player(_scene_manager);
-					registerObject(player, id);
+					// @todo this needs to use Slave
+					_session->registerObject(player, id);
 				
 					// Only single instances are supported for now
 					assert(!_player && player);
@@ -373,7 +381,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 
 				// Create GUI on the Node if it was enabled
 				// The config parser automatically enables GUI on master if possible.
-				if( getNodeConf().gui_enabled )
+				if(_gui_enabled)
 				{
 					std::cout << vl::TRACE << "Creating GUI" << std::endl;
 					// Do not create the GUI multiple times
@@ -381,7 +389,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
 					// @todo fix callback with a signal
-					_gui.reset(new vl::gui::GUI(this, id));
+					_gui.reset(new vl::gui::GUI(_session, id));
 					if(_windows.size() == 0 || _windows.at(0)->getChannels().size() == 0
 						|| _windows.at(0)->getChannels().at(0)->getWindowViewport() == 0)
 					{
@@ -401,8 +409,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 			case OBJ_GUI_CONSOLE :
 			case OBJ_GUI_PERFORMANCE_OVERLAY:
 			{
-				// GUI objects are only used by master
-				if( getNodeConf().gui_enabled )
+				if(_gui_enabled)
 				{
 					std::cout << vl::TRACE << "Renderer : Creating GUI Widnow" << std::endl;
 					if(!_gui)
@@ -429,8 +436,8 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 				if(!_mesh_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
 
-				_ogre_sm = _createOgreSceneManager(_root, "SceneManager");
-				_scene_manager = new SceneManager(this, id, _ogre_sm, _mesh_manager);
+				_ogre_sm = _root->createSceneManager("SceneManager");
+				_scene_manager = new SceneManager(_session, id, _ogre_sm, _mesh_manager);
 			}
 			break;
 
@@ -448,7 +455,7 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 				std::cout << vl::TRACE << "Renderer : Creating MaterialManager" << std::endl;
 				if(_material_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
-				_material_manager.reset(new MaterialManager(this, id));
+				_material_manager.reset(new MaterialManager(_session, id));
 				std::cout << vl::TRACE << "Renderer : MaterialManager created" << std::endl;
 			}
 			break;
@@ -507,6 +514,7 @@ vl::Renderer::updateScene(vl::cluster::Message& msg)
 	_updateDistribData();
 }
 
+/// --------------------------------------------------------------------------
 /// ----------------------- Log Receiver overrides ---------------------------
 bool 
 vl::Renderer::logEnabled(void) const
@@ -529,74 +537,7 @@ vl::Renderer::nLoggedMessages(void) const
 { return _n_log_messages; }
 
 
-vl::IWindow *
-vl::Renderer::createWindow(vl::config::Window const &winConf)
-{
-	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
-
-	// Destroy dummy window
-	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
-	{
-		delete _windows.at(0);
-		_windows.clear();
-	}
-
-	vl::Window *window = new vl::Window(winConf, this);
-	if(_player)
-	{ window->setCamera(_player->getCamera()); }
-	_windows.push_back(window);
-
-	return window;
-}
-
-
 /// ------------------------ Protected -----------------------------------------
-
-
-/// Ogre helpers
-void
-vl::Renderer::_createOgre(vl::config::EnvSettingsRefPtr env)
-{
-	std::cout << vl::TRACE << "vl::Renderer::_createOgre" << std::endl;
-
-	assert(env);
-
-	// A hack to set display on Linux
-	// Should really pass the display number to Ogre Window creation
-	// but this requires modification of Ogre library
-	// Also this only sets the display using the first window config
-	// can't do much about it because when Ogre initialises the rendering
-	// system it grabs the current display.
-#ifndef _WIN32
-	if(getNodeConf().getNWindows() > 0 && getNodeConf().getWindow(0).n_display > -1)
-	{
-		std::stringstream ss_disp;
-		// format :0.x where x is the display number
-		ss_disp << ":0." << getNodeConf().getWindow(0).n_display;
-		::setenv("DISPLAY", ss_disp.str().c_str(), 1);
-	}
-	
-	char *disp_env = ::getenv("DISPLAY");
-	std::cout << "DISPLAY environment variable = " << disp_env << std::endl;
-#endif
-
-	// TODO the project name should be used instead of the hydra for all
-	// problem is that the project name is not known at this point
-	// so we should use a tmp file and then move it.
-	_root.reset( new vl::ogre::Root(env->getLogLevel()) );
-	// Initialise ogre
-	_root->createRenderSystem();
-}
-
-Ogre::SceneManager *
-vl::Renderer::_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name)
-{
-	assert(root);
-	Ogre::SceneManager *sm = _root->createSceneManager(name);
-
-	return sm;
-}
-
 
 /// Distribution helpers
 void
@@ -618,7 +559,7 @@ vl::Renderer::_syncData(void)
 			iter->getId()) == _ignored_distributed_objects.end())
 		{
 			vl::cluster::ByteDataStream stream = iter->getStream();
-			vl::Distributed *obj = findMappedObject( iter->getId() );
+			vl::Distributed *obj = _session->findMappedObject( iter->getId() );
 			if( obj )
 			{
 				obj->unpack(stream);
@@ -662,6 +603,7 @@ vl::Renderer::_updateDistribData( void )
 	}
 }
 
+/// @todo move this to public interface
 void
 vl::Renderer::_takeScreenshot( void )
 {
@@ -673,11 +615,12 @@ vl::Renderer::_takeScreenshot( void )
 	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
 }
 
+/// @todo document the purpose of this and clean it up a little bit
+/// mostly the problem is when is this supposed to be used?
+/// what are the start and end states
 void
 vl::Renderer::_check_materials(uint64_t const id)
 {
-	// @todo move to a separate function and maybe
-	// make bit more universal (any object can have a callback)
 	for(std::vector<vl::MaterialRefPtr>::iterator mat_iter = _materials_to_check.begin();
 		mat_iter != _materials_to_check.end(); ++mat_iter)
 	{

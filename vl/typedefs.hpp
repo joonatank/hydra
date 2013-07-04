@@ -53,15 +53,15 @@ namespace vl
 		typedef boost::shared_ptr<EnvSettings> EnvSettingsRefPtr;
 	}
 
-	class RendererInterface;
+	class Renderer;
 	class Config;
 
 	typedef boost::shared_ptr<Config> ConfigRefPtr;
 	// Auto ptr because Renderer has a single owner
 	// usually created elsewhere and passed to Config or Client
 	// Normal pointer for callbacks
-	typedef RendererInterface *RendererPtr;
-	typedef std::auto_ptr<RendererInterface> RendererUniquePtr;
+	typedef Renderer *RendererPtr;
+	typedef std::auto_ptr<Renderer> RendererUniquePtr;
 
 	// Tracker objects
 	class TrackerSensor;

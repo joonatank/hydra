@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -35,13 +35,20 @@
 #include "gui/gui.hpp"
 // Necessary for updating frame statistics
 #include "gui/performance_overlay.hpp"
+
+// Necessary for checking for stereo support
+// @todo should really be in the GLWindow implemetation
 #include <GL/gl.h>
+
+// Parent
+#include "renderer.hpp"
 
 #include <stdlib.h>
 
 /// ----------------------------- Window -------------------------------------
 /// ----------------------------- Public -------------------------------------
-vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *parent)
+vl::Window::Window(vl::config::Window const &windowConf, 
+	vl::config::EnvSettingsRefPtr env, vl::RendererPtr parent)
 	: _name(windowConf.name)
 	, _renderer( parent )
 	, _ogre_window(0)
@@ -57,50 +64,61 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::RendererInterface *
 	if(windowConf.input_handler)
 	{ _createInputHandling(); }
 
-	if(windowConf.renderer.projection.use_asymmetric_stereo)
-	{
-		std::cout << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
-	}
-
-	_renderer_type = windowConf.renderer.type;
-
-	if(_renderer_type == vl::config::Renderer::FBO)
+	if(windowConf.renderer.type == vl::config::Renderer::FBO)
 	{
 		std::cout << "EXPERIMENTAL : Forward Render to FBO." << std::endl;
 	}
-	else if(_renderer_type == vl::config::Renderer::DEFERRED)
+	else if(windowConf.renderer.type == vl::config::Renderer::DEFERRED)
 	{
 		std::cout << "EXPERIMENTAL : Deferred Renderer." << std::endl;
 	}
-	else if(_renderer_type == vl::config::Renderer::WINDOW)
+	else if(windowConf.renderer.type == vl::config::Renderer::WINDOW)
 	{
 		std::cout << "Traditional Forward Renderer." << std::endl;
 	}
 
-
+	/// @todo Channel creation should be in Renderer and we should 
+	/// attach channels to Windows. It's more logical.
+	/// This will also allow dynamic channel creation and destruction.
 	vl::config::Projection const &projection = windowConf.renderer.projection;
 	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
 	{
+		//config::EnvSettingsRefPtr env = _renderer->getEnvironment();
+		config::Channel channel_config = windowConf.get_channel(i);
+		
+		/// Find wall
+		Wall wall = env->findWall(channel_config.wall_name);
+
+		// Get the first wall definition if no named one was found
+		if(wall.empty() && env->getWalls().size() > 0)
+		{
+			wall = env->getWall(0);
+			std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
+		}
+		else
+		{
+			std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
+		}
+
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
 		if(hasStereo())
 		{
-			_create_channel(windowConf.get_channel(i), HS_LEFT, projection, windowConf.fsaa);
-			_create_channel(windowConf.get_channel(i), HS_RIGHT, projection, windowConf.fsaa);
+			_create_channel(channel_config, HS_LEFT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
+			_create_channel(channel_config, HS_RIGHT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
 		}
 		else if(windowConf.stereo_type == vl::config::ST_SIDE_BY_SIDE)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
-			config::Channel chan_cfg(windowConf.get_channel(i));
-			chan_cfg.area.w /= 2;
-			_create_channel(chan_cfg, HS_LEFT, projection, windowConf.fsaa);
-			chan_cfg.area.x += chan_cfg.area.w;
-			_create_channel(chan_cfg, HS_RIGHT, projection, windowConf.fsaa);
+			channel_config.area.w /= 2;
+			_create_channel(channel_config, HS_LEFT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
+			channel_config.area.x += channel_config.area.w;
+			_create_channel(channel_config, HS_RIGHT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
 		}
 		// no stereo
 		else
 		{
-			_create_channel(windowConf.get_channel(i), HS_MONO, projection, windowConf.fsaa);
+			_create_channel(windowConf.get_channel(i), HS_MONO, projection, wall, windowConf.renderer.type, windowConf.fsaa);
 		}
 	}
 
@@ -118,31 +136,17 @@ vl::Window::~Window( void )
 		_input_manager = 0;
 	}
 
-	getOgreRoot()->getNative()->detachRenderTarget(_ogre_window);
+	// @todo do we need this
+	// We should test this (destroying a window), but we don't have a test
+	// case for it.
+	//_renderer->getRoot()->getNative()->detachRenderTarget(_ogre_window);
+
 	// The render target can not be destroyed if we are still using the
 	// context, this is a problem with Ogres GL system. 
 	// Or more specifically GLSL.
 	//getOgreRoot()->getNative()->destroyRenderTarget(_ogre_window);
 	_ogre_window->setHidden(true);
 }
-
-vl::config::EnvSettingsRefPtr
-vl::Window::getEnvironment(void) const
-{ return _renderer->getEnvironment(); }
-
-vl::Player const &
-vl::Window::getPlayer( void ) const
-{ return _renderer->getPlayer(); }
-
-vl::Player *
-vl::Window::getPlayerPtr(void)
-{
-	return _renderer->getPlayerPtr();
-}
-
-vl::ogre::RootRefPtr
-vl::Window::getOgreRoot( void )
-{ return _renderer->getRoot(); }
 
 void
 vl::Window::setCamera(vl::CameraPtr camera)
@@ -443,7 +447,7 @@ vl::Window::draw(void)
 	{
 		/// @todo setting player shouldn't be called each frame
 		/// it should be implemented with either dirty data or callbacks
-		_channels.at(i)->setPlayer(getPlayerPtr());
+		_channels.at(i)->setPlayer(_renderer->getPlayer());
 		_channels.at(i)->update();
 	}
 
@@ -599,7 +603,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		params[iter->first] = iter->second;
 	}
 	
-	Ogre::RenderWindow *win = getOgreRoot()->createWindow( "Hydra-"+getName(),
+	Ogre::RenderWindow *win = _renderer->getRoot()->createWindow( "Hydra-"+getName(),
 			winConf.rect.w, winConf.rect.h, params );
 	win->setAutoUpdated(false);
 	
@@ -609,7 +613,8 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
-			vl::config::Projection const &projection, uint32_t fsaa)
+			vl::config::Projection const &projection, Wall const &wall,
+			vl::config::Renderer::Type renderer_type, uint32_t fsaa)
 {
 	// @todo replace with throwing because this is user controlled
 	assert(!chan_cfg.name.empty());
@@ -618,19 +623,6 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	vl::config::Channel channel_config(chan_cfg);
 	channel_config.name += ("_" + stereo_eye_to_string(stereo_cfg));
 
-	Wall wall = getEnvironment()->findWall(channel_config.wall_name);
-
-	// Get the first wall definition if no named one was found
-	if(wall.empty() && getEnvironment()->getWalls().size() > 0)
-	{
-		wall = getEnvironment()->getWall(0);
-		std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
-	}
-	else
-	{
-		std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
-	}
-
 	/// We don't yet have a valid SceneManager
 	/// So we need to wait till the camera is set here
 	vl::config::Rect<double> const &rect = channel_config.area;
@@ -638,9 +630,9 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 
 	RENDER_MODE rend_mode;
-	if(_renderer_type == vl::config::Renderer::FBO)
+	if(renderer_type == vl::config::Renderer::FBO)
 	{ rend_mode = RM_FBO; }
-	else if(_renderer_type == vl::config::Renderer::DEFERRED)
+	else if(renderer_type == vl::config::Renderer::DEFERRED)
 	{ rend_mode = RM_DEFERRED; }
 	else
 	{ rend_mode = RM_WINDOW; }
@@ -649,6 +641,18 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	_channels.push_back(channel);
 
 	/// Set frustum
+
+	channel->getCamera().getFrustum().enableAsymmetricStereoFrustum(projection.use_asymmetric_stereo);
+	/// @todo these can be removed when we have checked that this config is working
+	if(channel->getCamera().getFrustum().isAsymmetricStereoFrustum())
+	{
+		std::clog << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
+	}
+	else
+	{
+		std::clog << "NOT Using asymmetric stereo frustum." << std::endl;
+	}
+
 	channel->getCamera().getFrustum().setWall(wall);
 	channel->getCamera().getFrustum().setFov(Ogre::Degree(projection.fov));
 	if(projection.perspective_type == vl::config::Projection::FOV)

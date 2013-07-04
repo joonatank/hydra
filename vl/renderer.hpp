@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file renderer.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -19,17 +19,18 @@
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
-#include "ogre_root.hpp"
 #include "base/envsettings.hpp"
+/// Owned objects
+#include "ogre_root.hpp"
 #include "player.hpp"
 #include "scene_manager.hpp"
+#include "window_interface.hpp"
 
 #include "settings.hpp"
-
-#include "logger.hpp"
-
+// Necessary for callbacks
+#include <boost/signal.hpp>
 // Base class
-#include "renderer_interface.hpp"
+#include "logger.hpp"
 
 namespace vl
 {
@@ -54,41 +55,37 @@ namespace vl
  *	Proper RPC framework would reduce problems in the rendering pipeline
  *	caused by the horrible message system (with switches etc.)
  */
-class HYDRA_API Renderer : public vl::RendererInterface, public Session
+class HYDRA_API Renderer : public LogReceiver
 {
+	// signals
+	typedef boost::signal<void (std::string const &)> CommandSent;
+	typedef boost::signal<void (vl::cluster::EventData const &)> EventSent;
+
 public :
-	Renderer(std::string const &name);
+	Renderer(Session *session, std::string const &name);
 
 	virtual ~Renderer(void);
 
 	void init(vl::config::EnvSettingsRefPtr env);
 
-	vl::config::EnvSettingsRefPtr getEnvironment(void)
-	{ return _env; }
-
-	vl::config::Node const &getNodeConf(void) const;
-
-	vl::config::Window const &getWindowConf(std::string const &window_name) const;
-
+	/// Necessary for creating Ogre windows in Window
+	/// We could also have create window method here but that's confusing
+	/// We could also create Ogre windows here and pass them to Window
 	vl::ogre::RootRefPtr getRoot( void )
 	{ return _root; }
 
-	Ogre::SceneManager *getSceneManager( void )
-	{ return _ogre_sm; }
-
-	vl::Player const &getPlayer( void ) const
-	{ return *_player; }
-
-	vl::Player &getPlayer(void)
-	{ return *_player; }
-
-	vl::Player *getPlayerPtr(void)
+	vl::Player *getPlayer(void)
+	{ return _player; }
+	vl::Player const *getPlayer(void) const
 	{ return _player; }
 
-	virtual vl::MeshManagerRefPtr getMeshManager(void)
+	// Used by client for setting up Mesh loaded callbacks
+	vl::MeshManagerRefPtr getMeshManager(void)
 	{ return _mesh_manager; }
 
-	virtual void setMeshManager(vl::MeshManagerRefPtr mesh_man)
+	/// Can not be owned by Renderer because GameManager needs to create it
+	/// Not a good way to set it though, we should pass it to constructor
+	void setMeshManager(vl::MeshManagerRefPtr mesh_man)
 	{ _mesh_manager = mesh_man; }
 
 	/// Messaging system
@@ -96,18 +93,17 @@ public :
 
 	void sendCommand( std::string const &cmd );
 
-	/// RenderingInterface overrides
-	/// Loop functions
-	virtual void capture(void);
+	/// Rendering functions
+	void capture(void);
 	
-	virtual void draw( void );
+	void draw( void );
 	
-	virtual void swap( void );
+	void swap( void );
 
 	std::string const &getName( void ) const
 	{ return _name; }
 
-	virtual bool guiShown(void) const;
+	bool guiShown(void) const;
 
 	/// @brief passes the messages to GUI::Console
 	void printToConsole(std::string const &text, double time,
@@ -124,33 +120,34 @@ public :
 	 * so they either need special structure or we need to iterate over
 	 * all of them always.
 	 */
-	virtual void setProject(vl::Settings const &settings);
+	void setProject(vl::Settings const &settings);
 	
 	/// @brief clears project settings
-	virtual void clearProject(void);
+	void clearProject(void);
 
 	/// @todo everything with a Message in it should be moved to Slave
 	/// Slave handles the translation from Message to discrete commands
 	/// and commands the Renderer (same with Master)
 	/// At later point we might even combine some of the functionality
 	/// into Application and use pure virtual for Message sending/receiving
-	virtual void updateScene(vl::cluster::Message &msg);
+	void updateScene(vl::cluster::Message &msg);
 	
-	virtual void createSceneObjects(vl::cluster::Message &msg);
+	void createSceneObjects(vl::cluster::Message &msg);
 
-	virtual void addCommandListener(CommandSent::slot_type const &slot)
+	void addCommandListener(CommandSent::slot_type const &slot)
 	{ _command_signal.connect(slot); }
 
-	virtual void addEventListener(EventSent::slot_type const &slot)
+	void addEventListener(EventSent::slot_type const &slot)
 	{ _event_signal.connect(slot); }
 
-	virtual void enableDebugOverlay(bool enable)
+	/// @todo should remove these and instead use the GUI directly
+	void enableDebugOverlay(bool enable)
 	{ _enable_debug_overlay = enable; }
 
-	virtual bool isDebugOverlayEnabled(void) const
+	bool isDebugOverlayEnabled(void) const
 	{ return _enable_debug_overlay; }
 
-	virtual gui::GUIRefPtr getGui(void)
+	gui::GUIRefPtr getGui(void)
 	{ return _gui; }
 
 	/// Hack for getting current view and projection matrices
@@ -175,14 +172,14 @@ public :
 
 	virtual uint32_t nLoggedMessages(void) const;
 
-	vl::IWindow *createWindow(vl::config::Window const &winConf);
+	/// @brief
+	/// @param winConf definition for the window
+	/// @param env
+	/// @todo this should not require EnvSettings, they are required now because Window
+	/// creates Channels based of them.
+	vl::IWindow *createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env);
 
 protected :
-
-	/// Ogre helpers
-	void _createOgre(vl::config::EnvSettingsRefPtr env);
-
-	Ogre::SceneManager *_createOgreSceneManager(vl::ogre::RootRefPtr root, std::string const &name);
 
 	/// Distribution helpers
 	/// Syncs to the master copy stored when an Update message was received
@@ -207,9 +204,7 @@ protected :
 
 	std::string _name;
 
-	/// EnvSettings mapped from Master
-	vl::config::EnvSettingsRefPtr _env;
-	vl::Settings _settings;
+	vl::Session *_session;
 
 	vl::MeshManagerRefPtr _mesh_manager;
 	vl::MaterialManagerRefPtr _material_manager;
@@ -247,6 +242,8 @@ protected :
 	std::vector<vl::MaterialRefPtr> _materials_to_check;
 
 	bool _enable_debug_overlay;
+	// Temp variable we need so we don't need to save EnvSettings
+	bool _gui_enabled;
 
 	// Projection and View matrices used for last frame
 	// Used for the python interface.

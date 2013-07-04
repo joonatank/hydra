@@ -21,12 +21,14 @@
 
 #include "cluster/session.hpp"
 
-// Necessary for command callback
-#include "renderer_interface.hpp"
+// Necessary for Object types (for now hard coded)
+#include "cluster/object_types.hpp"
+
+#include "typedefs.hpp"
 
 // Concrete implementation
 #include "Gorilla.h"
-
+// Necessary for OIS::KeyEvent
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 
@@ -54,14 +56,14 @@ public :
 	~GUI(void);
 
 	/// @brief Master creation
-	WindowRefPtr createWindow(vl::OBJ_TYPE);
+	gui::WindowRefPtr createWindow(vl::OBJ_TYPE type);
 
 	/// @brief Slave creator
-	WindowRefPtr createWindow(vl::OBJ_TYPE, uint64_t id);
+	gui::WindowRefPtr createWindow(vl::OBJ_TYPE type, uint64_t id);
 
-	WindowRefPtr getWindow(uint64_t id);
+	gui::WindowRefPtr getWindow(uint64_t id);
 
-	WindowRefPtr getWindow(std::string const &name);
+	gui::WindowRefPtr getWindow(std::string const &name);
 
 	void initGUI(Ogre::Viewport *view);
 

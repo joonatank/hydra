@@ -26,11 +26,8 @@ namespace vl
 class IWindow
 {
 public :
-	
-	virtual vl::config::EnvSettingsRefPtr getEnvironment(void) const = 0;
 
-	virtual vl::Player const &getPlayer(void) const = 0;
-
+	/// @brief set the same camera to all Channels
 	virtual void setCamera(vl::CameraPtr camera) = 0;
 
 	virtual std::string const &getName( void ) const = 0;

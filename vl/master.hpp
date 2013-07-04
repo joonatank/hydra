@@ -23,17 +23,10 @@
 
 // Necessary for the project settings
 #include "settings.hpp"
-
 // Necessary for the ref pointers
 #include "typedefs.hpp"
-
-#include "logger.hpp"
-
-// Necessary for the callback structs
-#include "renderer_interface.hpp"
-// Necessary for callback structures
+// Necessary for callback structures (RequestedMessage)
 #include "cluster/server.hpp"
-
 // Necessary for timing statistics
 #include "base/chrono.hpp"
 
@@ -155,8 +148,7 @@ protected :
 
 	bool _running;
 
-	// Renderer
-	RendererInterface *_renderer;
+	RendererPtr _renderer;
 
 	uint32_t _frame;
 	vl::chrono _sim_timer;

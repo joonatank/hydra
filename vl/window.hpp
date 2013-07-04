@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file window.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -26,19 +26,17 @@
 
 // Necessary for Window config and Wall
 #include "base/envsettings.hpp"
-// Parent
-#include "renderer_interface.hpp"
 // Child
 #include "channel.hpp"
 
+// OIS
 #include <OIS/OISEvents.h>
 #include <OIS/OISInputManager.h>
 #include <OIS/OISKeyboard.h>
 #include <OIS/OISMouse.h>
 #include <OIS/OISJoyStick.h>
 
-#include <OGRE/OgreRenderTargetListener.h>
-
+// Implementation
 #include <OGRE/OgreRenderWindow.h>
 
 namespace vl
@@ -50,22 +48,19 @@ namespace vl
 class HYDRA_API Window : public IWindow, public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
+	/// @brief Constructor
+	/// @param windowConf config for this window
+	/// @param env Environment config (used for projection)
+	/// @param parent Renderer that created this window
 	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
-	Window(vl::config::Window const &windowConf, vl::RendererInterface *parent);
+	Window(vl::config::Window const &windowConf, vl::config::EnvSettingsRefPtr env, vl::RendererPtr parent);
 
 	virtual ~Window( void );
 
 	Ogre::RenderWindow *getRenderWindow( void )
 	{ return _ogre_window; }
 
-	vl::config::EnvSettingsRefPtr getEnvironment(void) const;
-
-	vl::Player const &getPlayer( void ) const;
-
-	vl::Player *getPlayerPtr(void);
-
-	vl::ogre::RootRefPtr getOgreRoot( void );
-
+	/// @brief set the same camera to all Channels
 	void setCamera(vl::CameraPtr camera);
 
 	std::string const &getName( void ) const
@@ -114,10 +109,15 @@ public:
 
 protected :
 
+	/// @todo should Ogre::RenderWindow be passed to constructor or created here?
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
 
+	/// @brief
+	/// @todo wall is tied to projection we should not need them both
+	/// @todo this should be public so we can move channel creation to Renderer
 	vl::Channel *_create_channel(vl::config::Channel const &channel, 
-		STEREO_EYE stereo_cfg, vl::config::Projection const &projection, uint32_t fsaa);
+		STEREO_EYE stereo_cfg, vl::config::Projection const &projection, Wall const &wall,
+		vl::config::Renderer::Type renderer_type, uint32_t fsaa);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -140,7 +140,7 @@ protected :
 
 	std::string _name;
 
-	vl::RendererInterface *_renderer;
+	vl::RendererPtr _renderer;
 
 	std::vector<Channel *> _channels;
 
@@ -152,8 +152,6 @@ protected :
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
-
-	vl::config::Renderer::Type _renderer_type;
 
 };	// class Window
 

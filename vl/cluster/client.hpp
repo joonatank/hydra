@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file cluster/client.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -23,20 +23,12 @@
 #include "message.hpp"
 #include "states.hpp"
 
-// Necessary for the Renderer RefPtr
+// Necessary for the Renderer pointer
 #include "typedefs.hpp"
 
-// Necessary for the Callback structs
-#include "renderer_interface.hpp"
-
 #include "base/chrono.hpp"
-
-#include "base/report.hpp"
 /// Necessary for the MeshLoader callback base
 #include "mesh_manager.hpp"
-
-/// Necessary for Callbacks that take ref ptrs
-#include <boost/enable_shared_from_this.hpp>
 
 namespace boost
 {
@@ -115,11 +107,7 @@ public:
 
 	void addMessageCallback(MSG_TYPES type, ClientMessageCallback *cb);
 
-	vl::MeshManagerRefPtr getMeshManager(void) const
-	{ return _renderer->getMeshManager(); }
-
-	vl::RendererPtr getRenderer(void) const
-	{ return _renderer.get(); }
+	vl::MeshManagerRefPtr getMeshManager(void) const;
 
 private :
 	void _handle_message(vl::cluster::Message &msg);

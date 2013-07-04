@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file cluster/client.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -26,6 +26,8 @@
 #include "mesh_manager.hpp"
 /// Necessary for parsing the settings structure from a message
 #include "settings.hpp"
+
+#include "renderer.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -516,6 +518,10 @@ vl::cluster::Client::addMessageCallback(MSG_TYPES type, ClientMessageCallback *c
 
 	_msg_callbacks[type] = cb;
 }
+
+vl::MeshManagerRefPtr
+vl::cluster::Client::getMeshManager(void) const
+{ return _renderer->getMeshManager(); }
 
 vl::cluster::MessageRefPtr 
 vl::cluster::Client::_receive(void)

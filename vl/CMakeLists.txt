@@ -269,7 +269,6 @@ set( HEADERS
 	master.hpp
 	slave.hpp
 	renderer.hpp
-	renderer_interface.hpp
 	application.hpp
 	ogre_root.hpp
 	ray_object.hpp
